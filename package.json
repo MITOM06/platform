@@ -1,0 +1,27 @@
+{
+  "name": "platform",
+  "private": true,
+  "packageManager": "pnpm@9",
+  "workspaces": ["apps/*", "packages/*"],
+  "scripts": {
+    "lint": "eslint .",
+    "format": "prettier -w .",
+    "dev:mobile": "pnpm --filter mobile start",
+    "ios": "pnpm --filter mobile react-native run-ios",
+    "android": "pnpm --filter mobile react-native run-android",
+    "dev:server": "pnpm --filter server start:dev",
+    "dev": "concurrently -n SERVER,MOBILE -c auto \"pnpm dev:server\" \"pnpm dev:mobile\""
+  },
+  "devDependencies": {
+    "concurrently": "^9.0.0",
+    "eslint": "^9.0.0",
+    "prettier": "^3.3.0",
+    "@commitlint/cli": "^19.3.0",
+    "@commitlint/config-conventional": "^19.2.2",
+    "lint-staged": "^15.2.0",
+    "husky": "^9.1.0"
+  },
+  "lint-staged": {
+    "*.{ts,tsx,js,jsx,json,md,css}": ["prettier -w"]
+  }
+}
