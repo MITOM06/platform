@@ -1,10 +1,34 @@
+version: "3.8"
 services:
   mongo:
     image: mongo:7
+    restart: unless-stopped
     ports: [ "27017:27017" ]
-    volumes: [ "mongo-data:/data/db" ]
+    volumes:
+      - mongo_data:/data/db
   redis:
     image: redis:7
+    restart: unless-stopped
     ports: [ "6379:6379" ]
+  api:
+    build:
+      context: ../../apps/server
+      dockerfile: Dockerfile
+    environment:
+      - PORT=4000
+      - MONGO_URI=mongodb://mongo:27017/messaging
+      - REDIS_URL=redis://redis:6379
+      - JWT_SECRET=changeme
+    depends_on: [ mongo, redis ]
+    ports: [ "4000:4000" ]
+  web:
+    build:
+      context: ../../apps/web
+      dockerfile: Dockerfile
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:4000
+      - NEXT_PUBLIC_WS_URL=ws://localhost:4000
+    depends_on: [ api ]
+    ports: [ "3000:3000" ]
 volumes:
-  mongo-data:
+  mongo_data:
