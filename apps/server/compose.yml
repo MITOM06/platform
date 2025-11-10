@@ -1,5 +1,3 @@
-# compose.yml
-version: "3.9"
 services:
   mongo:
     image: mongodb/mongodb-community-server:7.0-ubi8
@@ -27,11 +25,16 @@ services:
 
   api:
     build:
-      context: .
+      context: .            # <— Dockerfile nằm ngay thư mục này
+      dockerfile: Dockerfile
     container_name: chatapp-api
     env_file: .env
+    environment:
+      - PORT=3000
+      - MONGO_URI=mongodb://mongo:27017/chatapp?directConnection=true
+      - REDIS_URL=redis://redis:6379
     ports:
-      - "${PORT:-3000}:3000"
+      - "3000:3000"         # host:container
     depends_on:
       mongo:
         condition: service_healthy
