@@ -134,7 +134,7 @@ docker compose -f infra/docker/docker-compose.yml up -d
 docker compose -f infra/docker/docker-compose.yml ps
 Web client: http://localhost:3000
 
-API server (if swagger/test route exposed): http://localhost:4000
+API server (if swagger/test route exposed): http://localhost:3000
 
 MongoDB: localhost:27017
 
@@ -147,7 +147,7 @@ Environment Variables
 
 apps/server (apps/server/.env)
 
-PORT=4000
+PORT=3000
 MONGO_URI=mongodb://mongo:27017/messaging
 REDIS_URL=redis://redis:6379
 JWT_SECRET=changeme
@@ -156,8 +156,8 @@ REFRESH_EXPIRES=7d
 UPLOAD_DIR=/tmp/uploads
 apps/web (apps/web/.env)
 
-NEXT_PUBLIC_API_URL=http://localhost:4000
-NEXT_PUBLIC_WS_URL=ws://localhost:4000
+NEXT_PUBLIC_API_URL=http://localhost:3000
+NEXT_PUBLIC_WS_URL=ws://localhost:3000
 Note: do not commit actual .env files; only commit .env.sample.
 
 Running Locally without Docker
