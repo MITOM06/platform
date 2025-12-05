@@ -3,6 +3,11 @@
   "private": true,
   "scripts": {
     "up": "docker compose -f infra/docker/docker-compose.yml up -d",
-    "down": "docker compose -f infra/docker/docker-compose.yml down"
+    "down": "docker compose -f infra/docker/docker-compose.yml down",
+    "prepare": "husky",
+    "test": "echo \"Root test skipped\" && exit 0"  
+  },
+  "devDependencies": {
+    "husky": "^9.1.7"
   }
 }

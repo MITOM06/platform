@@ -1,0 +1,25 @@
+
+services:
+  server:
+    build: ./apps/server
+    ports:
+      - "3000:3000"
+    # Thêm các config khác nếu cần
+
+  web:
+    build: ./apps/web
+    ports:
+      - "80:80"
+    # Các cấu hình khác cho web app (nếu bạn có)
+  mongo:
+    image: mongo:7
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: example
+
+  redis:
+    image: redis:7
+    ports:
+      - "6379:6379"
