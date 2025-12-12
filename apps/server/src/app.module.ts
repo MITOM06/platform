@@ -19,7 +19,7 @@ import { HealthModule } from './health/health.module';
     MongooseModule.forRootAsync({
       inject: [ConfigService],
       useFactory: (cfg: ConfigService) => ({
-        uri: cfg.get<string>('MONGO_URI', ''),
+        uri: cfg.get<string>('MONGO_URI', 'mongodb://mongo:27017/chat_app?replicaSet=rsMyWebApp'),
         // tùy chọn khuyến nghị:
         // dbName: cfg.get<string>('MONGO_DBNAME'),
         // retryAttempts: 5,
@@ -31,4 +31,4 @@ import { HealthModule } from './health/health.module';
   controllers: [AppController],
   providers: [AppService],
 })
-export class AppModule {}
+export class AppModule { }

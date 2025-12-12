@@ -1,0 +1,64 @@
+.
+├── CONTRIBUTING.md
+├── LICENSE
+├── README.md
+├── SECURITY.md
+├── apps
+│   ├── mobile
+│   ├── server
+│   │   ├── Dockerfile
+│   │   ├── README.md
+│   │   ├── compose.yml
+│   │   ├── eslint.config.mjs
+│   │   ├── mongodb_config
+│   │   │   ├── data
+│   │   │   ├── logs
+│   │   │   └── mongod.conf
+│   │   ├── nest-cli.json
+│   │   ├── package.json
+│   │   ├── pnpm-lock.yaml
+│   │   ├── src
+│   │   │   ├── app.controller.spec.ts
+│   │   │   ├── app.controller.ts
+│   │   │   ├── app.module.ts
+│   │   │   ├── app.service.ts
+│   │   │   ├── config
+│   │   │   ├── database
+│   │   │   ├── health
+│   │   │   ├── main.ts
+│   │   │   ├── modules
+│   │   │   ├── scripts
+│   │   │   └── websockets
+│   │   ├── test
+│   │   │   ├── app.e2e-spec.ts
+│   │   │   └── jest-e2e.json
+│   │   ├── tsconfig.build.json
+│   │   └── tsconfig.json
+│   └── web
+│       ├── Dockerfile
+│       ├── next.config.mjs
+│       ├── package.json
+│       ├── src
+│       │   └── app
+│       └── tsconfig.json
+├── docs
+│   ├── MVP Scope Document.docx
+│   └── My_Plan
+│       ├── lo_trinh_8_tuan_ke_hoach_theo_ngay.xlsx
+│       └── ~$lo_trinh_8_tuan_ke_hoach_theo_ngay.xlsx
+├── infra
+│   └── docker
+│       └── docker-compose.yml
+├── package.json
+├── packages
+│   ├── config
+│   └── types
+│       ├── package.json
+│       └── src
+│           └── index.ts
+├── pnpm-lock.yaml
+├── pnpm-workspace.yaml
+├── project_tree.txt
+└── tsconfig.base.json
+
+26 directories, 36 files

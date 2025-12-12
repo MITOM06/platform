@@ -1,16 +1,15 @@
 services:
   mongo:
-    image: mongodb/mongodb-community-server:7.0-ubi8
-    container_name: chatapp-mongo
+    image: mongo:7
+    container_name: mongo
+    command: ["mongod", "--config", "/etc/mongod.conf"]
+    volumes:
+      - ./mongodb_config/mongod.conf:/etc/mongod.conf:ro
+      - ./mongodb_config/data:/data/db
+      - ./mongodb_config/logs:/var/log/mongodb
     ports:
       - "27017:27017"
-    healthcheck:
-      test: ["CMD", "mongosh", "--quiet", "--eval", "db.runCommand({ ping: 1 }).ok"]
-      interval: 10s
-      timeout: 3s
-      retries: 10
-    volumes:
-      - mongo_data:/data/db
+
 
   redis:
     image: redis:7
