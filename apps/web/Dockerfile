@@ -1,26 +1,17 @@
-# Stage 1: Cài dependency
-FROM node:20-alpine AS deps
+FROM node:20-alpine AS runner
 WORKDIR /app
+RUN corepack enable
 
-# Copy file khai báo dependency của web
-COPY package.json pnpm-lock.yaml* ./
+# Copy workspace (root context)
+COPY pnpm-workspace.yaml package.json pnpm-lock.yaml ./
+COPY apps ./apps
+COPY packages ./packages
 
-# Bật corepack + cài dependency
-RUN corepack enable && pnpm install --no-frozen-lockfile
+# Install toàn workspace (đơn giản nhất, ít lỗi)
+RUN pnpm install --frozen-lockfile
 
-# Stage 2: Chạy app (dev hoặc build)
-FROM node:20-alpine
-WORKDIR /app
-
-# Copy node_modules từ stage deps
-COPY --from=deps /app/node_modules ./node_modules
-
-# Copy source code web vào container
-COPY . .
+# Build đúng web package (không chạy pnpm build ở root)
+RUN pnpm -C apps/web run build
 
 EXPOSE 3000
-
-# Tuỳ mục tiêu:
-# - Nếu đang phát triển: dùng "dev"
-# - Nếu đã build prod: dùng "start" (cần thêm lệnh build)
-CMD ["pnpm", "dev"]
+CMD ["pnpm", "-C", "apps/web", "start"]

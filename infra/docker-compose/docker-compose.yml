@@ -1,0 +1,52 @@
+services:
+  server:
+    build:
+      context: ../..                   # từ infra/docker lên tới root
+      dockerfile: apps/server/Dockerfile
+    container_name: chat-server
+    env_file:
+      - ../../apps/server/.env        # nếu bạn có file .env, không có thì bỏ dòng này
+    ports:
+      - "4000:4000"
+    depends_on:
+      - mongo
+      - redis
+    networks:
+      - app-net
+
+  web:
+    build:
+      context: ../..
+      dockerfile: apps/web/Dockerfile
+    container_name: chat-web
+    ports:
+      - "3001:3000"                   # ngoài 3001, trong container 3000 (Next.js)
+    depends_on:
+      - server
+    networks:
+      - app-net
+
+  mongo:
+    image: mongo:7
+    container_name: chat-mongo
+    ports:
+      - "27017:27017"
+    volumes:
+      - ../../apps/server/mongodb_config/data:/data/db
+      - ../../apps/server/mongodb_config/logs:/var/log/mongodb
+      - ../../apps/server/mongodb_config/mongod.conf:/etc/mongod.conf
+    command: ["mongod", "--config", "/etc/mongod.conf"]
+    networks:
+      - app-net
+
+  redis:
+    image: redis:7
+    container_name: chat-redis
+    ports:
+      - "6379:6379"
+    networks:
+      - app-net
+
+networks:
+  app-net:
+    driver: bridge
