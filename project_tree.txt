@@ -20,12 +20,20 @@
 ./.husky/_/pre-commit
 ./pnpm-lock.yaml
 ./infra
-./infra/docker
-./infra/docker/.env
-./infra/docker/docker-compose.yml
-./infra/docker/.env.example
 ./infra/redis
+./infra/redis/dist
+./infra/redis/node_modules
 ./infra/redis/redis.module.ts
+./infra/redis/package.json
+./infra/redis/tsconfig.json
+./infra/redis/index.ts
+./infra/docker-compose
+./infra/docker-compose/  compose.yml
+./infra/docker-compose/.env
+./infra/docker-compose/compose.prod.yml
+./infra/docker-compose/docker-compose.yml
+./infra/docker-compose/.env.example
+./infra/docker-compose/  compose.dev.yml
 ./project_tree.txt
 ./.DS_Store
 ./LICENSE
@@ -48,7 +56,9 @@
 ./packages/types/package.json
 ./packages/types/src
 ./packages/types/src/index.ts
-./packages/config
+./packages/tsconfig
+./packages/tsconfig/tsconfig.base.json
+./packages/tsconfig/package.json
 ./.github
 ./.github/CODEOWNERS
 ./.github/workflows
@@ -64,6 +74,8 @@
 ./apps/web/Dockerfile
 ./apps/web/next.config.mjs
 ./apps/web/node_modules
+./apps/web/.next
+./apps/web/next-env.d.ts
 ./apps/web/package.json
 ./apps/web/.env
 ./apps/web/tsconfig.json

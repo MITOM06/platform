@@ -1,0 +1,27 @@
+services:
+  server:
+    build:
+      context: ../..
+      dockerfile: apps/server/Dockerfile
+    env_file:
+      - ../../apps/server/.env
+    command: node dist/main.js
+    ports:
+      - "4000:4000"
+    depends_on:
+      mongo:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks: [app-net]
+
+  web:
+    build:
+      context: ../..
+      dockerfile: apps/web/Dockerfile
+    command: pnpm install --force && pnpm run dev
+    ports:
+      - "3001:3000"
+    depends_on:
+      - server
+    networks: [app-net]
