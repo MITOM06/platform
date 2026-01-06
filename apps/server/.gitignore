@@ -63,3 +63,5 @@ db/
 WiredTiger*
 journal/
 diagnostic.data/
+.pnpm-store/
+node_modules/

@@ -3,22 +3,14 @@ services:
     image: mongo:7
     container_name: chat-mongo
     ports:
-      - "27017:27017"
+      - "27018:27017"
     volumes:
       - mongo_data:/data/db
       - ../mongodb_config/logs:/var/log/mongodb
       - ../mongodb_config/mongod.conf:/etc/mongod.conf:ro
-    command: ["mongod", "--config", "/etc/mongod.conf"]
+    command: ["--replSet", "rsMyWebApp", "--bind_ip_all"]
     healthcheck:
-      test:
-        [
-          "CMD",
-          "mongosh",
-          "--quiet",
-          "mongodb://localhost:27017/admin",
-          "--eval",
-          "db.runCommand({ ping: 1 }).ok",
-        ]
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
       interval: 10s
       timeout: 5s
       retries: 10

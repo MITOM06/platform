@@ -13,6 +13,7 @@ COPY apps ./apps
 COPY packages ./packages
 COPY infra ./infra
 
+RUN pnpm config set store-dir /root/.local/share/pnpm/store
 # Install dependencies
 RUN pnpm install --frozen-lockfile
 

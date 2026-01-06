@@ -3,3 +3,7 @@ dist
 .git
 Dockerfile
 compose.yml
+
+.pnpm-store/
+node_modules/
+npm-debug.log

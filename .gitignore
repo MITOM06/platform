@@ -5,3 +5,5 @@ dist/
 .next/
 coverage/
 *.log
+.pnpm-store/
+node_modules/
