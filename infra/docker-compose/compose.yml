@@ -16,7 +16,18 @@ services:
       retries: 10
     networks:
       - app-net
-
+   
+  mongo-setup: # 2. Đây là service PHỤ để chạy lệnh rs.initiate()
+    image: mongo:7
+    container_name: chat-mongo-setup # Tên container phải khác
+    networks:
+      - app-net
+    depends_on:
+      mongo: # Thằng phụ này ĐỢI thằng chính (Cái này mới đúng)
+        condition: service_healthy
+    entrypoint: >
+      sh -c "mongosh --host mongo:27017 --eval 'rs.initiate({_id:\"rsMyWebApp\",members:[{_id:0,host:\"mongo:27017\"}]})' || true"
+    
   redis:
     image: redis:7
     container_name: chat-redis
