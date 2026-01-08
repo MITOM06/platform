@@ -20,6 +20,6 @@ async function bootstrap() {
 
   // QUAN TRỌNG: bind 0.0.0.0 để truy cập từ ngoài container
   await app.listen(port, '0.0.0.0');
-  console.log(`✅ API started: http://localhost:${port}/v1/health`);
+  console.log(`✅ API started: http://localhost:4000/v1/health`);
 }
 bootstrap();
