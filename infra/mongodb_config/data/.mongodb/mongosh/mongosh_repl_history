@@ -1,8 +1,0 @@
-exit
-rs.status()
-})
-  ]
-    { _id: 0, host: "mongo:27017" }
-  members: [
-  _id: "rsMyWebApp",
-rs.initiate({

@@ -7,3 +7,5 @@ coverage/
 *.log
 .pnpm-store/
 node_modules/
+# Ignore MongoDB data
+infra/mongodb_config/data/
