@@ -1,0 +1,49 @@
+services:
+  server:
+    build:
+      context: ../..
+      dockerfile: apps/server/Dockerfile
+    env_file:
+      - ../../apps/server/.env
+    environment:
+      - CI=true
+    # Thêm lệnh config set để cho phép build các thư viện gốc như argon2, bcrypt
+    command: >
+      sh -lc "corepack enable && 
+      pnpm config set only-built-dependencies-all true && 
+      pnpm install --no-frozen-lockfile && 
+      pnpm --filter @platform/server start:dev"
+    working_dir: /app
+    volumes:
+      - ../..:/app
+      - /app/node_modules
+    ports:
+      - "4000:4000"
+    depends_on:
+      mongo:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks: [app-net]
+
+  web:
+    build:
+      context: ../..
+      dockerfile: apps/web/Dockerfile
+    environment:
+      - CI=true
+    # Chỉnh lại lệnh dev của Next.js để không bị lỗi đường dẫn -H
+    command: >
+      sh -lc "corepack enable && 
+      pnpm config set only-built-dependencies-all true && 
+      pnpm install --no-frozen-lockfile && 
+      pnpm --filter @platform/web dev --hostname 0.0.0.0 --port 3000"
+    working_dir: /app
+    volumes:
+      - ../..:/app
+      - /app/node_modules
+    ports:
+      - "3001:3000"
+    depends_on:
+      - server
+    networks: [app-net]
