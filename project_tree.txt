@@ -1,123 +1,131 @@
 .
-./.husky
-./.husky/_
-./.husky/_/pre-rebase
-./.husky/_/pre-applypatch
-./.husky/_/husky.sh
-./.husky/_/pre-auto-gc
-./.husky/_/pre-merge-commit
-./.husky/_/post-commit
-./.husky/_/applypatch-msg
-./.husky/_/prepare-commit-msg
-./.husky/_/h
-./.husky/_/post-checkout
-./.husky/_/post-applypatch
-./.husky/_/.gitignore
-./.husky/_/post-rewrite
-./.husky/_/commit-msg
-./.husky/_/pre-push
-./.husky/_/post-merge
-./.husky/_/pre-commit
-./pnpm-lock.yaml
-./infra
-./infra/redis
-./infra/redis/dist
-./infra/redis/node_modules
-./infra/redis/redis.module.ts
-./infra/redis/package.json
-./infra/redis/tsconfig.json
-./infra/redis/index.ts
-./infra/docker-compose
-./infra/docker-compose/  compose.yml
-./infra/docker-compose/.env
-./infra/docker-compose/compose.prod.yml
-./infra/docker-compose/docker-compose.yml
-./infra/docker-compose/.env.example
-./infra/docker-compose/  compose.dev.yml
-./project_tree.txt
-./.DS_Store
-./LICENSE
-./tsconfig.base.json
-./node_modules
-./.npmrc
-./docs
-./docs/MVP Scope Document.docx
-./docs/.DS_Store
-./docs/My_Plan
-./docs/My_Plan/~$lo_trinh_8_tuan_ke_hoach_theo_ngay.xlsx
-./docs/My_Plan/lo_trinh_8_tuan_ke_hoach_theo_ngay.xlsx
-./.editorconfig
-./README.md
-./.gitignore
-./package.json
-./CONTRIBUTING.md
-./packages
-./packages/types
-./packages/types/package.json
-./packages/types/src
-./packages/types/src/index.ts
-./packages/tsconfig
-./packages/tsconfig/tsconfig.base.json
-./packages/tsconfig/package.json
-./.github
-./.github/CODEOWNERS
-./.github/workflows
-./.github/workflows/ci.yml
-./.github/pull_request_template.md
-./.github/ISSUE_TEMPLATE
-./.github/ISSUE_TEMPLATE/feature_request.md
-./.github/ISSUE_TEMPLATE/bug_report.md
-./.git
-./apps
-./apps/web
-./apps/web/.env.local.example
-./apps/web/Dockerfile
-./apps/web/next.config.mjs
-./apps/web/node_modules
-./apps/web/.next
-./apps/web/next-env.d.ts
-./apps/web/package.json
-./apps/web/.env
-./apps/web/tsconfig.json
-./apps/web/src
-./apps/web/src/app
-./apps/server
-./apps/server/pnpm-lock.yaml
-./apps/server/mongodb_config
-./apps/server/mongodb_config/logs
-./apps/server/mongodb_config/mongod.conf
-./apps/server/mongodb_config/data
-./apps/server/test
-./apps/server/test/app.e2e-spec.ts
-./apps/server/test/jest-e2e.json
-./apps/server/dist
-./apps/server/.env.sample
-./apps/server/Dockerfile
-./apps/server/nest-cli.json
-./apps/server/node_modules
-./apps/server/README.md
-./apps/server/.dockerignore
-./apps/server/.gitignore
-./apps/server/package.json
-./apps/server/tsconfig.build.json
-./apps/server/.env
-./apps/server/.prettierrc
-./apps/server/tsconfig.json
-./apps/server/eslint.config.mjs
-./apps/server/compose.yml
-./apps/server/src
-./apps/server/src/database
-./apps/server/src/main.ts
-./apps/server/src/config
-./apps/server/src/health
-./apps/server/src/app.service.ts
-./apps/server/src/websockets
-./apps/server/src/app.module.ts
-./apps/server/src/app.controller.spec.ts
-./apps/server/src/scripts
-./apps/server/src/app.controller.ts
-./apps/server/src/modules
-./apps/server/src/ws
-./apps/mobile
-./SECURITY.md
-./pnpm-workspace.yaml
+├── CONTRIBUTING.md
+├── LICENSE
+├── README.md
+├── SECURITY.md
+├── apps
+│   ├── mobile
+│   ├── server
+│   │   └── auth-service
+│   │       ├── Dockerfile
+│   │       ├── README.md
+│   │       ├── eslint.config.mjs
+│   │       ├── nest-cli.json
+│   │       ├── package.json
+│   │       ├── src
+│   │       │   ├── app.controller.spec.ts
+│   │       │   ├── app.controller.ts
+│   │       │   ├── app.module.ts
+│   │       │   ├── app.service.ts
+│   │       │   ├── config
+│   │       │   │   ├── app.config.ts
+│   │       │   │   ├── mongo.config.ts
+│   │       │   │   └── redis.config.ts
+│   │       │   ├── database
+│   │       │   │   └── schemas
+│   │       │   │       ├── attachment.schema.ts
+│   │       │   │       ├── conversation.schema.ts
+│   │       │   │       ├── message.schema.ts
+│   │       │   │       └── user.schema.ts
+│   │       │   ├── health
+│   │       │   │   ├── health.controller.ts
+│   │       │   │   └── health.module.ts
+│   │       │   ├── main.ts
+│   │       │   ├── modules
+│   │       │   │   ├── auth
+│   │       │   │   │   ├── auth.controller.ts
+│   │       │   │   │   ├── auth.module.ts
+│   │       │   │   │   ├── auth.service.ts
+│   │       │   │   │   ├── dto
+│   │       │   │   │   │   ├── login.dto.ts
+│   │       │   │   │   │   └── register.dto.ts
+│   │       │   │   │   ├── session.service.ts
+│   │       │   │   │   └── strategies
+│   │       │   │   │       ├── google.strategy.ts
+│   │       │   │   │       └── jwt.strategy.ts
+│   │       │   │   ├── conversations
+│   │       │   │   ├── messages
+│   │       │   │   ├── presence
+│   │       │   │   └── users
+│   │       │   ├── scripts
+│   │       │   ├── websockets
+│   │       │   │   ├── chat.gateway.ts
+│   │       │   │   └── events.ts
+│   │       │   └── ws
+│   │       │       └── ws-auth.middleware.ts
+│   │       ├── test
+│   │       │   ├── app.e2e-spec.ts
+│   │       │   └── jest-e2e.json
+│   │       ├── tsconfig.build.json
+│   │       └── tsconfig.json
+│   └── web
+│       ├── Dockerfile
+│       ├── next-env.d.ts
+│       ├── next.config.mjs
+│       ├── package.json
+│       ├── pnpm-lock.yaml
+│       ├── src
+│       │   └── app
+│       │       ├── (auth)
+│       │       │   ├── login
+│       │       │   │   └── page.tsx
+│       │       │   └── register
+│       │       │       └── page.tsx
+│       │       ├── (protected)
+│       │       │   ├── chat
+│       │       │   │   └── page.tsx
+│       │       │   └── settings
+│       │       │       └── page.tsx
+│       │       └── layout.tsx
+│       └── tsconfig.json
+├── docs
+│   ├── MVP Scope Document.docx
+│   └── My_Plan
+│       ├── lo_trinh_8_tuan_ke_hoach_theo_ngay.xlsx
+│       └── ~$lo_trinh_8_tuan_ke_hoach_theo_ngay.xlsx
+├── infra
+│   ├── docker-compose
+│   │   ├── compose.dev.yml
+│   │   ├── compose.prod.yml
+│   │   └── compose.yml
+│   ├── mongodb_config
+│   │   ├── data
+│   │   │   ├── WiredTiger
+│   │   │   ├── diagnostic.data
+│   │   │   │   ├── metrics.2025-12-08T13-38-08Z-00000
+│   │   │   │   ├── metrics.2025-12-09T04-33-52Z-00000
+│   │   │   │   ├── metrics.2025-12-09T05-06-01Z-00000
+│   │   │   │   ├── metrics.2025-12-12T14-11-19Z-00000
+│   │   │   │   └── metrics.2025-12-15T13-57-51Z-00000
+│   │   │   ├── journal
+│   │   │   │   ├── WiredTigerLog.0000000005
+│   │   │   │   ├── WiredTigerPreplog.0000000001
+│   │   │   │   └── WiredTigerPreplog.0000000002
+│   │   │   └── storage.bson
+│   │   ├── logs
+│   │   │   └── mongo.log
+│   │   └── mongod.conf
+│   └── redis
+│       ├── package.json
+│       └── tsconfig.json
+├── package.json
+├── packages
+│   ├── database
+│   │   ├── package.json
+│   │   └── src
+│   │       ├── index.ts
+│   │       └── redis
+│   │           └── redis.module.ts
+│   ├── tsconfig
+│   │   ├── package.json
+│   │   └── tsconfig.base.json
+│   └── types
+│       ├── package.json
+│       └── src
+│           └── index.ts
+├── pnpm-lock.yaml
+├── pnpm-workspace.yaml
+├── project_tree.txt
+└── tsconfig.base.json
+
+48 directories, 81 files
