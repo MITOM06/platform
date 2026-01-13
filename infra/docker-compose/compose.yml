@@ -1,0 +1,49 @@
+services:
+  mongo:
+    image: mongo:7
+    container_name: chat-mongo
+    ports:
+      - "27018:27017"
+    volumes:
+      - mongo_data:/data/db
+      - ../mongodb_config/logs:/var/log/mongodb
+      - ../mongodb_config/mongod.conf:/etc/mongod.conf:ro
+    command: ["--replSet", "rsMyWebApp", "--bind_ip_all"]
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    networks:
+      - app-net
+   
+  mongo-setup: 
+    image: mongo:7
+    container_name: chat-mongo-setup 
+    networks:
+      - app-net
+    depends_on:
+      mongo: 
+        condition: service_healthy
+    entrypoint: >
+      sh -c "mongosh --host mongo:27017 --eval 'rs.initiate({_id:\"rsMyWebApp\",members:[{_id:0,host:\"mongo:27017\"}]})' || true"
+    
+  redis:
+    image: redis:7
+    container_name: chat-redis
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+    networks:
+      - app-net
+
+networks:
+  app-net:
+    driver: bridge
+
+volumes:
+  mongo_data:

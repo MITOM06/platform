@@ -6,40 +6,77 @@
 ├── apps
 │   ├── mobile
 │   ├── server
-│   │   ├── Dockerfile
-│   │   ├── README.md
-│   │   ├── compose.yml
-│   │   ├── eslint.config.mjs
-│   │   ├── mongodb_config
-│   │   │   ├── data
-│   │   │   ├── logs
-│   │   │   └── mongod.conf
-│   │   ├── nest-cli.json
-│   │   ├── package.json
-│   │   ├── pnpm-lock.yaml
-│   │   ├── src
-│   │   │   ├── app.controller.spec.ts
-│   │   │   ├── app.controller.ts
-│   │   │   ├── app.module.ts
-│   │   │   ├── app.service.ts
-│   │   │   ├── config
-│   │   │   ├── database
-│   │   │   ├── health
-│   │   │   ├── main.ts
-│   │   │   ├── modules
-│   │   │   ├── scripts
-│   │   │   └── websockets
-│   │   ├── test
-│   │   │   ├── app.e2e-spec.ts
-│   │   │   └── jest-e2e.json
-│   │   ├── tsconfig.build.json
-│   │   └── tsconfig.json
+│   │   └── auth-service
+│   │       ├── Dockerfile
+│   │       ├── README.md
+│   │       ├── eslint.config.mjs
+│   │       ├── nest-cli.json
+│   │       ├── package.json
+│   │       ├── src
+│   │       │   ├── app.controller.spec.ts
+│   │       │   ├── app.controller.ts
+│   │       │   ├── app.module.ts
+│   │       │   ├── app.service.ts
+│   │       │   ├── config
+│   │       │   │   ├── app.config.ts
+│   │       │   │   ├── mongo.config.ts
+│   │       │   │   └── redis.config.ts
+│   │       │   ├── database
+│   │       │   │   └── schemas
+│   │       │   │       ├── attachment.schema.ts
+│   │       │   │       ├── conversation.schema.ts
+│   │       │   │       ├── message.schema.ts
+│   │       │   │       └── user.schema.ts
+│   │       │   ├── health
+│   │       │   │   ├── health.controller.ts
+│   │       │   │   └── health.module.ts
+│   │       │   ├── main.ts
+│   │       │   ├── modules
+│   │       │   │   ├── auth
+│   │       │   │   │   ├── auth.controller.ts
+│   │       │   │   │   ├── auth.module.ts
+│   │       │   │   │   ├── auth.service.ts
+│   │       │   │   │   ├── dto
+│   │       │   │   │   │   ├── login.dto.ts
+│   │       │   │   │   │   └── register.dto.ts
+│   │       │   │   │   ├── session.service.ts
+│   │       │   │   │   └── strategies
+│   │       │   │   │       ├── google.strategy.ts
+│   │       │   │   │       └── jwt.strategy.ts
+│   │       │   │   ├── conversations
+│   │       │   │   ├── messages
+│   │       │   │   ├── presence
+│   │       │   │   └── users
+│   │       │   ├── scripts
+│   │       │   ├── websockets
+│   │       │   │   ├── chat.gateway.ts
+│   │       │   │   └── events.ts
+│   │       │   └── ws
+│   │       │       └── ws-auth.middleware.ts
+│   │       ├── test
+│   │       │   ├── app.e2e-spec.ts
+│   │       │   └── jest-e2e.json
+│   │       ├── tsconfig.build.json
+│   │       └── tsconfig.json
 │   └── web
 │       ├── Dockerfile
+│       ├── next-env.d.ts
 │       ├── next.config.mjs
 │       ├── package.json
+│       ├── pnpm-lock.yaml
 │       ├── src
 │       │   └── app
+│       │       ├── (auth)
+│       │       │   ├── login
+│       │       │   │   └── page.tsx
+│       │       │   └── register
+│       │       │       └── page.tsx
+│       │       ├── (protected)
+│       │       │   ├── chat
+│       │       │   │   └── page.tsx
+│       │       │   └── settings
+│       │       │       └── page.tsx
+│       │       └── layout.tsx
 │       └── tsconfig.json
 ├── docs
 │   ├── MVP Scope Document.docx
@@ -47,11 +84,41 @@
 │       ├── lo_trinh_8_tuan_ke_hoach_theo_ngay.xlsx
 │       └── ~$lo_trinh_8_tuan_ke_hoach_theo_ngay.xlsx
 ├── infra
-│   └── docker
-│       └── docker-compose.yml
+│   ├── docker-compose
+│   │   ├── compose.dev.yml
+│   │   ├── compose.prod.yml
+│   │   └── compose.yml
+│   ├── mongodb_config
+│   │   ├── data
+│   │   │   ├── WiredTiger
+│   │   │   ├── diagnostic.data
+│   │   │   │   ├── metrics.2025-12-08T13-38-08Z-00000
+│   │   │   │   ├── metrics.2025-12-09T04-33-52Z-00000
+│   │   │   │   ├── metrics.2025-12-09T05-06-01Z-00000
+│   │   │   │   ├── metrics.2025-12-12T14-11-19Z-00000
+│   │   │   │   └── metrics.2025-12-15T13-57-51Z-00000
+│   │   │   ├── journal
+│   │   │   │   ├── WiredTigerLog.0000000005
+│   │   │   │   ├── WiredTigerPreplog.0000000001
+│   │   │   │   └── WiredTigerPreplog.0000000002
+│   │   │   └── storage.bson
+│   │   ├── logs
+│   │   │   └── mongo.log
+│   │   └── mongod.conf
+│   └── redis
+│       ├── package.json
+│       └── tsconfig.json
 ├── package.json
 ├── packages
-│   ├── config
+│   ├── database
+│   │   ├── package.json
+│   │   └── src
+│   │       ├── index.ts
+│   │       └── redis
+│   │           └── redis.module.ts
+│   ├── tsconfig
+│   │   ├── package.json
+│   │   └── tsconfig.base.json
 │   └── types
 │       ├── package.json
 │       └── src
@@ -61,4 +128,4 @@
 ├── project_tree.txt
 └── tsconfig.base.json
 
-26 directories, 36 files
+48 directories, 81 files

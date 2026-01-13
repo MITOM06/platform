@@ -1,0 +1,16 @@
+{
+  "name": "@platform/database",
+  "version": "1.0.0",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc -w"
+  },
+  "dependencies": {
+    "@nestjs/common": "^10.0.0",
+    "@nestjs/mongoose": "^10.0.0",
+    "mongoose": "^7.0.0",
+    "ioredis": "^5.0.0"
+  }
+}
