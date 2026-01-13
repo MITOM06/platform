@@ -20,6 +20,9 @@ export class User {
   @Prop({ required: true })
   displayName: string;
 
+  @Prop() 
+  avatar: string;
+
   @Prop({ unique: true, sparse: true })
   email: string;
 

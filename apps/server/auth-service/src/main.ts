@@ -6,10 +6,8 @@ import { ValidationPipe } from '@nestjs/common';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
-  // prefix v1 cho tất cả routes
   app.setGlobalPrefix('v1');
 
-  // bật validation
   app.useGlobalPipes(new ValidationPipe({
     whitelist: true,
     forbidNonWhitelisted: true,
@@ -18,8 +16,7 @@ async function bootstrap() {
 
   const port = Number(process.env.PORT) || 4000;
 
-  // QUAN TRỌNG: bind 0.0.0.0 để truy cập từ ngoài container
-  await app.listen(port, '0.0.0.0');
-  console.log(`✅ API started: http://localhost:4000/v1/health`);
+  await app.listen(process.env.PORT || 4000, '0.0.0.0');
+  console.log(`Application is running on: ${await app.getUrl()}`);
 }
 bootstrap();

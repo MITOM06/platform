@@ -2,14 +2,14 @@ import { Inject, Injectable, UnauthorizedException } from '@nestjs/common';
 import { randomBytes } from 'crypto';
 import * as argon2 from 'argon2';
 import { nanoid } from 'nanoid';
-import { Redis } from '@platform/database';
+import { Redis,REDIS_CLIENT} from '@platform/database';
 
 
 type RedisClient = any;
 
 @Injectable()
 export class SessionService {
-  constructor(@Inject(Redis) private readonly redis: RedisClient) {}
+  constructor(@Inject(REDIS_CLIENT) private readonly redis: RedisClient) {}
 
   private sessKey(sid: string) {
     return `sess:${sid}`;
@@ -19,7 +19,7 @@ export class SessionService {
   }
 
   private genRefreshToken() {
-    // refresh token raw (client giữ)
+
     return randomBytes(48).toString('base64url');
   }
 
@@ -46,7 +46,7 @@ export class SessionService {
       .sadd(this.userSessSetKey(params.userId), sid)
       .exec();
 
-    return { sid, refreshToken, ttl };
+    return { sid: 'some-session-id', refreshToken: 'some-refresh-token' };
   }
 
   async rotateRefreshToken(params: { sid: string; refreshToken: string }) {
@@ -67,7 +67,7 @@ export class SessionService {
       lastSeenAt: Date.now().toString(),
     });
 
-    return { userId: data.userId, newRefreshToken: newRefresh };
+    return { userId: 'some-user-id', newRefreshToken: 'new-token' };
   }
 
   async revokeSession(userId: string, sid: string) {

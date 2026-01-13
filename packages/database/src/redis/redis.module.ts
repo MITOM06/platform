@@ -1,24 +1,21 @@
 import { Module, Global } from '@nestjs/common';
-import { ConfigModule, ConfigService } from '@nestjs/config';
 import Redis from 'ioredis';
 
-// Token để inject dependency
-export const REDIS_CLIENT = 'REDIS_CLIENT';
 
-@Global() // Global để import 1 lần dùng toàn app
+export const REDIS_CLIENT = 'REDIS_CLIENT'; 
+
+@Global()
 @Module({
-  imports: [ConfigModule],
   providers: [
     {
-      provide: REDIS_CLIENT,
-      useFactory: (configService: ConfigService) => {
+      provide: REDIS_CLIENT, 
+      useFactory: () => {
         return new Redis({
-          host: configService.get<string>('REDIS_HOST'),
-          port: configService.get<number>('REDIS_PORT'),
-          password: configService.get<string>('REDIS_PASSWORD'), // Nếu có
+          host: process.env.REDIS_HOST || 'localhost',
+          port: Number(process.env.REDIS_PORT) || 6379,
+          password: process.env.REDIS_PASSWORD,
         });
       },
-      inject: [ConfigService],
     },
   ],
   exports: [REDIS_CLIENT],

@@ -32,7 +32,7 @@ services:
       dockerfile: apps/web/Dockerfile
     environment:
       - CI=true
-    # Chỉnh lại lệnh dev của Next.js để không bị lỗi đường dẫn -H
+  
     command: >
       sh -lc "corepack enable && 
       pnpm config set only-built-dependencies-all true && 
