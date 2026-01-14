@@ -1,24 +1,25 @@
 {
-  "name": "@platform/web",
-  "private": true,
+  "name": "client",
+  "version": "1.0.0",
+  "main": "index.js",
   "scripts": {
-    "dev": "next dev -p 3000",
-    "build": "next build",
-    "start": "next start -p 3000",
-    "lint": "next lint"
+    "start": "expo start",
+    "android": "expo start --android",
+    "ios": "expo start --ios",
+    "web": "expo start --web"
   },
   "dependencies": {
-    "axios": "^1.7.7",
-    "next": "15.0.0",
-    "react": "18.3.1",
-    "react-dom": "18.3.1",
-    "socket.io-client": "^4.7.5",
-    "zustand": "^4.5.2"
+    "@expo/metro-runtime": "~6.1.2",
+    "@react-navigation/native": "^7.1.27",
+    "@react-navigation/native-stack": "^7.9.1",
+    "expo": "~54.0.31",
+    "expo-status-bar": "~3.0.9",
+    "react": "19.1.0",
+    "react-dom": "19.1.0",
+    "react-native": "0.81.5",
+    "react-native-safe-area-context": "^5.6.2",
+    "react-native-screens": "^4.16.0",
+    "react-native-web": "^0.21.0"
   },
-  "devDependencies": {
-    "@types/node": "^20.16.10",
-    "@types/react": "^18.3.6",
-    "@types/react-dom": "^18.3.0",
-    "typescript": "^5.6.3"
-  }
+  "private": true
 }
