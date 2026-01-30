@@ -2,18 +2,25 @@ import { Module } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { AuthController } from './auth.controller';
 import { SessionService } from './session.service';
-import { DatabaseRedisModule } from '@platform/database'; 
+import { DatabaseRedisModule } from '@platform/database';
 import { JwtModule } from '@nestjs/jwt';
 import { UsersModule } from '../users/users.module';
+import { JwtStrategy } from './strategies/jwt.strategy';
+import { TwitterStrategy } from './strategies/x.strategy';
+import { FacebookStrategy } from './strategies/facebook.strategy';
+import { GoogleStrategy } from './strategies/google.strategy';
 
 @Module({
   imports: [
-    DatabaseRedisModule, 
+    DatabaseRedisModule,
     UsersModule,
-    JwtModule.register({secret: process.env.JWT_ACCESS_SECRET }),
+    JwtModule.register({ secret: process.env.JWT_ACCESS_SECRET }),
   ],
   controllers: [AuthController],
-  providers: [AuthService, SessionService],
+  providers: [AuthService, SessionService, GoogleStrategy,
+    FacebookStrategy,
+    TwitterStrategy,
+    JwtStrategy],
   exports: [AuthService],
 })
-export class AuthModule {}
+export class AuthModule { }

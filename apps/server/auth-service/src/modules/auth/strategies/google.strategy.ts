@@ -6,30 +6,20 @@ import { Strategy, VerifyCallback } from 'passport-google-oauth20';
 export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
   constructor() {
     super({
-      clientID: process.env.GOOGLE_CLIENT_ID!,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
-      callbackURL: process.env.GOOGLE_CALLBACK_URL!,
+      clientID: process.env.GOOGLE_CLIENT_ID,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+      callbackURL: process.env.GOOGLE_CALLBACK_URL,
       scope: ['profile', 'email'],
     });
   }
 
-  async validate(
-    _accessToken: string,
-    _refreshToken: string,
-    profile: any,
-    done: VerifyCallback,
-  ) {
-    const email = profile?.emails?.[0]?.value ?? null;
-    const avatar = profile?.photos?.[0]?.value ?? null;
-
+  async validate(_at: string, _rt: string, profile: any, done: VerifyCallback) {
+    const { name, emails, photos, displayName } = profile;
     const user = {
-      provider: 'google',
-      providerUserId: profile.id,
-      email,
-      name: profile.displayName,
-      avatar,
+      email: emails[0].value,
+      displayName: displayName || `${name.givenName} ${name.familyName}`,
+      avatar: photos[0]?.value,
     };
-
     done(null, user);
   }
 }

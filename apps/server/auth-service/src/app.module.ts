@@ -3,6 +3,7 @@ import { ConfigModule } from '@nestjs/config';
 import { DatabaseMongoModule, DatabaseRedisModule } from '@platform/database';
 import { UsersModule } from './modules/users/users.module';
 import { AuthModule } from './modules/auth/auth.module';
+import { MailModule } from './modules/Email/mail.module';
 
 @Module({
   imports: [
@@ -15,6 +16,7 @@ import { AuthModule } from './modules/auth/auth.module';
     // 2. Kết nối Database (Lấy từ packages)
     DatabaseMongoModule,
     DatabaseRedisModule,
+    MailModule,
 
     // 3. Modules tính năng
     UsersModule,

@@ -2,13 +2,14 @@ import { IsEmail, IsNotEmpty, IsString, MinLength } from 'class-validator';
 
 export class RegisterDto {
   @IsString()
-  @IsNotEmpty()
+  @IsNotEmpty({ message: 'Tên hiển thị không được để trống' })
+  @MinLength(2, { message: 'Tên hiển thị quá ngắn' })
   displayName: string;
 
-  @IsEmail({}, { message: 'Email không hợp lệ' })
+  @IsEmail({}, { message: 'Email không đúng định dạng' })
   email: string;
 
   @IsString()
-  @MinLength(6, { message: 'Mật khẩu phải ít nhất 6 ký tự' })
+  @MinLength(8, { message: 'Mật khẩu phải từ 8 ký tự để đảm bảo bảo mật' }) // Nâng lên 8 ký tự cho pro
   password: string;
 }

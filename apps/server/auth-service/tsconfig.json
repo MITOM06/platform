@@ -34,7 +34,7 @@
   },
   "include": [
     "src/**/*.ts"
-  ],
+, "../../../packages/database/src/mongo/user.schema.ts"  ],
   "exclude": [
     "node_modules",
     "dist",

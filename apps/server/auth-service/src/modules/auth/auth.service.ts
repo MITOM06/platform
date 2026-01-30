@@ -11,6 +11,7 @@ import { LoginDto } from './dto/login.dto';
 
 @Injectable()
 export class AuthService {
+  mailService: any;
   constructor(
     private readonly jwt: JwtService,
     private readonly session: SessionService,
@@ -21,27 +22,57 @@ export class AuthService {
 
 
 
-  async ensureUserIdFromGoogle(profile: any): Promise<string> {
+  async ensureUserIdFromSocial(profile: any, provider: string): Promise<string> {
     let user = await this.usersService.findByEmail(profile.email);
+
     if (!user) {
       user = await this.usersService.create({
-        displayName: profile.displayName || profile.name,
+        displayName: profile.displayName || profile.name || profile.username,
         email: profile.email,
-        avatar: profile.avatar || profile.picture,
+        avatar: profile.avatar || profile.picture || profile.photos?.[0]?.value,
         isVerified: true,
       });
     }
     return user._id.toString();
   }
 
+  async checkBruteForce(email: string) {
+    const lockoutKey = `lockout:${email}`;
+    const isLocked = await this.redis.get(lockoutKey);
+
+    if (isLocked) {
+      throw new UnauthorizedException('Tài khoản bị tạm khóa 5 phút do nhập sai quá nhiều lần.');
+    }
+  }
+
+  async handleFailedLogin(email: string) {
+    const attemptKey = `failed_attempts:${email}`;
+    const attempts = await this.redis.incr(attemptKey);
+
+    if (attempts === 1) {
+      await this.redis.expire(attemptKey, 600); // Reset bộ đếm sau 10 phút nếu không sai thêm
+    }
+
+    if (attempts >= 5) {
+      await this.redis.set(`lockout:${email}`, '1', 'EX', 300); // Khóa 300s (5 phút)
+      await this.redis.del(attemptKey); // Xóa bộ đếm
+      throw new UnauthorizedException('Bạn đã nhập sai 5 lần. Vui lòng thử lại sau 5 phút.');
+    }
+  }
+
   async login(dto: LoginDto) {
+    await this.checkBruteForce(dto.email);
+
     const user = await this.usersService.findByEmail(dto.email);
+
     if (!user) {
       throw new UnauthorizedException('Email hoặc mật khẩu không chính xác');
     }
 
-    const isMatch = await bcrypt.compare(dto.password, user.password);
-    if (!isMatch) {
+    const isMatch = user ? await bcrypt.compare(dto.password, user.password) : false;
+
+    if (!user || !isMatch) {
+      await this.handleFailedLogin(dto.email);
       throw new UnauthorizedException('Email hoặc mật khẩu không chính xác');
     }
 
@@ -52,7 +83,7 @@ export class AuthService {
     });
 
     const accessToken = this.signAccessToken({ sub: user._id.toString(), sid });
-
+    await this.redis.del(`failed_attempts:${dto.email}`);
     return {
       message: 'Đăng nhập thành công',
       accessToken,
@@ -63,6 +94,15 @@ export class AuthService {
         displayName: user.displayName,
       },
     };
+  }
+
+  async forgotPassword(email: string) {
+
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+
+    await this.mailService.sendOtpEmail(email, otp);
+
+    return { message: 'OTP đã được gửi về Email của bạn' };
   }
 
   signAccessToken(payload: { sub: string; sid: string }) {
@@ -81,7 +121,7 @@ export class AuthService {
   async createLoginCode(userId: string) {
     const code = nanoid(32);
     const key = `login_code:${code}`;
-    await this.redis.set(key, userId, 'EX', 60);
+    await this.redis.set(key, userId, 'EX', 300);
     return code;
   }
 
