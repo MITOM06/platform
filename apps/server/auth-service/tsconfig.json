@@ -1,0 +1,45 @@
+{
+  "extends": "../../../packages/tsconfig/tsconfig.base.json",
+  "compilerOptions": {
+    "module": "CommonJS", 
+    "moduleResolution": "node",
+    "esModuleInterop": true,
+    "isolatedModules": true,
+    "declaration": true,
+    "removeComments": true,
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "allowSyntheticDefaultImports": true,
+    "target": "ES2023",
+    "sourceMap": true,
+    "outDir": "./dist",
+    /* BỎ rootDir: "src" để cho phép import từ các package khác trong Monorepo */
+    "baseUrl": "./",
+    "paths": {
+      "@platform/database": [
+        "../../../packages/database/src"
+      ],
+      "@platform/database/*": [
+        "../../../packages/database/src/*"
+      ]
+    },
+    "incremental": true,
+    "skipLibCheck": true,
+    "strictNullChecks": true,
+    "forceConsistentCasingInFileNames": true,
+    "noImplicitAny": false,
+    "strictBindCallApply": false,
+    "noFallthroughCasesInSwitch": false
+  },
+  "include": [
+    "src/**/*.ts"
+    /* XÓA đường dẫn tuyệt đối đến user.schema.ts ở đây. 
+       TypeScript sẽ tự tìm thấy nó thông qua config 'paths' ở trên */
+  ],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "test",
+    "**/*spec.ts"
+  ]
+}
