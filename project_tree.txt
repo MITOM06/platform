@@ -4,80 +4,115 @@
 ├── README.md
 ├── SECURITY.md
 ├── apps
-│   ├── mobile
-│   ├── server
-│   │   └── auth-service
-│   │       ├── Dockerfile
-│   │       ├── README.md
-│   │       ├── eslint.config.mjs
-│   │       ├── nest-cli.json
-│   │       ├── package.json
-│   │       ├── src
-│   │       │   ├── app.controller.spec.ts
-│   │       │   ├── app.controller.ts
-│   │       │   ├── app.module.ts
-│   │       │   ├── app.service.ts
-│   │       │   ├── config
-│   │       │   │   ├── app.config.ts
-│   │       │   │   ├── mongo.config.ts
-│   │       │   │   └── redis.config.ts
-│   │       │   ├── database
-│   │       │   │   └── schemas
-│   │       │   │       ├── attachment.schema.ts
-│   │       │   │       ├── conversation.schema.ts
-│   │       │   │       ├── message.schema.ts
-│   │       │   │       └── user.schema.ts
-│   │       │   ├── health
-│   │       │   │   ├── health.controller.ts
-│   │       │   │   └── health.module.ts
-│   │       │   ├── main.ts
-│   │       │   ├── modules
-│   │       │   │   ├── auth
-│   │       │   │   │   ├── auth.controller.ts
-│   │       │   │   │   ├── auth.module.ts
-│   │       │   │   │   ├── auth.service.ts
-│   │       │   │   │   ├── dto
-│   │       │   │   │   │   ├── login.dto.ts
-│   │       │   │   │   │   └── register.dto.ts
-│   │       │   │   │   ├── session.service.ts
-│   │       │   │   │   └── strategies
-│   │       │   │   │       ├── google.strategy.ts
-│   │       │   │   │       └── jwt.strategy.ts
-│   │       │   │   ├── conversations
-│   │       │   │   ├── messages
-│   │       │   │   ├── presence
-│   │       │   │   └── users
-│   │       │   ├── scripts
-│   │       │   ├── websockets
-│   │       │   │   ├── chat.gateway.ts
-│   │       │   │   └── events.ts
-│   │       │   └── ws
-│   │       │       └── ws-auth.middleware.ts
-│   │       ├── test
-│   │       │   ├── app.e2e-spec.ts
-│   │       │   └── jest-e2e.json
-│   │       ├── tsconfig.build.json
-│   │       └── tsconfig.json
-│   └── web
-│       ├── Dockerfile
-│       ├── next-env.d.ts
-│       ├── next.config.mjs
-│       ├── package.json
-│       ├── pnpm-lock.yaml
-│       ├── src
-│       │   └── app
-│       │       ├── (auth)
-│       │       │   ├── login
-│       │       │   │   └── page.tsx
-│       │       │   └── register
-│       │       │       └── page.tsx
-│       │       ├── (protected)
-│       │       │   ├── chat
-│       │       │   │   └── page.tsx
-│       │       │   └── settings
-│       │       │       └── page.tsx
-│       │       └── layout.tsx
-│       └── tsconfig.json
+│   ├── client
+│   │   ├── App.js
+│   │   ├── app.json
+│   │   ├── assets
+│   │   │   └── images
+│   │   │       └── logo.png
+│   │   ├── index.js
+│   │   ├── package.json
+│   │   ├── src
+│   │   │   ├── components
+│   │   │   │   ├── CustomButton.js
+│   │   │   │   └── CustomInput.js
+│   │   │   ├── constants
+│   │   │   │   └── Config.js
+│   │   │   ├── context
+│   │   │   │   └── AuthContext.js
+│   │   │   ├── hooks
+│   │   │   │   └── useSocialAuth.js
+│   │   │   ├── navigation
+│   │   │   │   └── AppNavigator.js
+│   │   │   ├── screens
+│   │   │   │   ├── Auth
+│   │   │   │   │   ├── ForgotPasswordScreen.js
+│   │   │   │   │   ├── LoginScreen.js
+│   │   │   │   │   ├── NewPasswordScreen.js
+│   │   │   │   │   ├── RegisterScreen.js
+│   │   │   │   │   └── VerifyOtpScreen.js
+│   │   │   │   └── HomeScreen.js
+│   │   │   ├── services
+│   │   │   │   ├── api.client.js
+│   │   │   │   ├── auth.service.js
+│   │   │   │   └── storage.service.js
+│   │   │   ├── store
+│   │   │   ├── styles
+│   │   │   │   ├── AuthStyles.js
+│   │   │   │   ├── ComponentStyles.js
+│   │   │   │   ├── GlobalStyles.js
+│   │   │   │   └── HomeStyles.js
+│   │   │   ├── theme
+│   │   │   │   ├── Colors.js
+│   │   │   │   ├── Spacing.js
+│   │   │   │   └── index.js
+│   │   │   └── utils
+│   │   └── tsconfig.json
+│   └── server
+│       ├── auth-service
+│       │   ├── Dockerfile
+│       │   ├── README.md
+│       │   ├── eslint.config.mjs
+│       │   ├── nest-cli.json
+│       │   ├── package.json
+│       │   ├── src
+│       │   │   ├── app.controller.spec.ts
+│       │   │   ├── app.controller.ts
+│       │   │   ├── app.module.ts
+│       │   │   ├── app.service.ts
+│       │   │   ├── config
+│       │   │   │   ├── app.config.ts
+│       │   │   │   ├── mongo.config.ts
+│       │   │   │   └── redis.config.ts
+│       │   │   ├── database
+│       │   │   │   └── schemas
+│       │   │   │       └── attachment.schema.ts
+│       │   │   ├── health
+│       │   │   │   ├── health.controller.ts
+│       │   │   │   └── health.module.ts
+│       │   │   ├── main.ts
+│       │   │   ├── modules
+│       │   │   │   ├── Email
+│       │   │   │   │   ├── mail.module.ts
+│       │   │   │   │   ├── mail.service.ts
+│       │   │   │   │   └── templates
+│       │   │   │   │       └── otp.ejs
+│       │   │   │   ├── auth
+│       │   │   │   │   ├── auth.controller.ts
+│       │   │   │   │   ├── auth.module.ts
+│       │   │   │   │   ├── auth.service.ts
+│       │   │   │   │   ├── dto
+│       │   │   │   │   │   ├── forgot-password.dto.ts
+│       │   │   │   │   │   ├── login.dto.ts
+│       │   │   │   │   │   └── register.dto.ts
+│       │   │   │   │   ├── session.service.ts
+│       │   │   │   │   └── strategies
+│       │   │   │   │       ├── facebook.strategy.ts
+│       │   │   │   │       ├── google.strategy.ts
+│       │   │   │   │       ├── jwt.strategy.ts
+│       │   │   │   │       └── x.strategy.ts
+│       │   │   │   └── users
+│       │   │   │       ├── users.module.ts
+│       │   │   │       └── users.service.ts
+│       │   │   ├── scripts
+│       │   │   └── ws
+│       │   │       └── ws-auth.middleware.ts
+│       │   ├── test
+│       │   │   ├── app.e2e-spec.ts
+│       │   │   └── jest-e2e.json
+│       │   ├── tsconfig.build.json
+│       │   ├── tsconfig.build.tsbuildinfo
+│       │   ├── tsconfig.json
+│       │   └── webpack.config.js
+│       └── chat-service
+│           ├── Dockerfile
+│           ├── cmd
+│           │   └── main.go
+│           ├── go.mod
+│           ├── go.sum
+│           └── internal
+│               └── ws
+│                   └── client.go
 ├── docs
 │   ├── MVP Scope Document.docx
 │   └── My_Plan
@@ -88,34 +123,49 @@
 │   │   ├── compose.dev.yml
 │   │   ├── compose.prod.yml
 │   │   └── compose.yml
-│   ├── mongodb_config
-│   │   ├── data
-│   │   │   ├── WiredTiger
-│   │   │   ├── diagnostic.data
-│   │   │   │   ├── metrics.2025-12-08T13-38-08Z-00000
-│   │   │   │   ├── metrics.2025-12-09T04-33-52Z-00000
-│   │   │   │   ├── metrics.2025-12-09T05-06-01Z-00000
-│   │   │   │   ├── metrics.2025-12-12T14-11-19Z-00000
-│   │   │   │   └── metrics.2025-12-15T13-57-51Z-00000
-│   │   │   ├── journal
-│   │   │   │   ├── WiredTigerLog.0000000005
-│   │   │   │   ├── WiredTigerPreplog.0000000001
-│   │   │   │   └── WiredTigerPreplog.0000000002
-│   │   │   └── storage.bson
-│   │   ├── logs
-│   │   │   └── mongo.log
-│   │   └── mongod.conf
-│   └── redis
-│       ├── package.json
-│       └── tsconfig.json
+│   └── mongodb_config
+│       ├── data
+│       │   ├── WiredTiger
+│       │   ├── diagnostic.data
+│       │   │   ├── metrics.2025-12-08T13-38-08Z-00000
+│       │   │   ├── metrics.2025-12-09T04-33-52Z-00000
+│       │   │   ├── metrics.2025-12-09T05-06-01Z-00000
+│       │   │   ├── metrics.2025-12-12T14-11-19Z-00000
+│       │   │   └── metrics.2025-12-15T13-57-51Z-00000
+│       │   ├── journal
+│       │   │   ├── WiredTigerLog.0000000005
+│       │   │   ├── WiredTigerPreplog.0000000001
+│       │   │   └── WiredTigerPreplog.0000000002
+│       │   └── storage.bson
+│       ├── logs
+│       │   └── mongo.log
+│       └── mongod.conf
+├── logout-debug.zip
 ├── package.json
 ├── packages
 │   ├── database
 │   │   ├── package.json
-│   │   └── src
-│   │       ├── index.ts
-│   │       └── redis
-│   │           └── redis.module.ts
+│   │   ├── src
+│   │   │   ├── index.d.ts
+│   │   │   ├── index.js
+│   │   │   ├── index.js.map
+│   │   │   ├── index.ts
+│   │   │   ├── mongo
+│   │   │   │   ├── mongo.module.d.ts
+│   │   │   │   ├── mongo.module.js
+│   │   │   │   ├── mongo.module.js.map
+│   │   │   │   ├── mongo.module.ts
+│   │   │   │   ├── user.schema.d.ts
+│   │   │   │   ├── user.schema.js
+│   │   │   │   ├── user.schema.js.map
+│   │   │   │   └── user.schema.ts
+│   │   │   └── redis
+│   │   │       ├── redis.module.d.ts
+│   │   │       ├── redis.module.js
+│   │   │       ├── redis.module.js.map
+│   │   │       └── redis.module.ts
+│   │   ├── tsconfig.json
+│   │   └── tsconfig.tsbuildinfo
 │   ├── tsconfig
 │   │   ├── package.json
 │   │   └── tsconfig.base.json
@@ -128,4 +178,4 @@
 ├── project_tree.txt
 └── tsconfig.base.json
 
-48 directories, 81 files
+56 directories, 123 files

@@ -2,7 +2,17 @@
   "name": "platform",
   "private": true,
   "scripts": {
-    "up": "docker compose -f infra/docker/docker-compose.yml up -d",
+    "tunnel": "pnpm exec ngrok http --url=donnie-readaptable-ai.ngrok-free.dev 4000",
+    "server": "pnpm --filter @platform/auth-service start:dev",
+    "client": "pnpm --filter client start",
+    "dev": "concurrently -n \"TUNNEL,SERVER,CLIENT\" -c \"magenta,blue,green\" \"pnpm:tunnel\" \"pnpm:server\" \"pnpm:client\"",
+    "infra": "docker compose -f infra/docker/docker-compose.yml up -d",
     "down": "docker compose -f infra/docker/docker-compose.yml down"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2",
+    "localtunnel": "^2.0.2",
+    "ngrok": "5.0.0-beta.2"
   }
 }
+

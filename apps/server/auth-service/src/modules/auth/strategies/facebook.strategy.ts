@@ -1,7 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { Strategy } from 'passport-facebook';
-import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class FacebookStrategy extends PassportStrategy(Strategy, 'facebook') {
@@ -16,12 +15,21 @@ export class FacebookStrategy extends PassportStrategy(Strategy, 'facebook') {
   }
 
   async validate(_at: string, _rt: string, profile: any, done: any) {
-    const { emails, name, photos, displayName } = profile;
+    const { id, emails, name, photos, displayName } = profile;
+
+    // Facebook không guarantee trả email nếu user không cấp quyền
+    const email = emails?.[0]?.value || null;
+    const fallbackName = email ? email.split('@')[0] : (name?.givenName || 'User');
+
     const user = {
-      email: emails?.[0]?.value,
-      displayName: displayName || `${name.givenName} ${name.familyName}`,
-      avatar: photos?.[0]?.value,
+      id,                 // ✅ socialId — cần cho ensureUserIdFromSocial
+      email,              // ✅ có thể null — ensureUserIdFromSocial sẽ handle
+      displayName: displayName ||
+        (name?.givenName ? `${name.givenName} ${name.familyName || ''}`.trim() : null) ||
+        fallbackName,
+      avatar: photos?.[0]?.value || '',
     };
+
     done(null, user);
   }
 }

@@ -9,16 +9,31 @@ import { JwtStrategy } from './strategies/jwt.strategy';
 import { TwitterStrategy } from './strategies/x.strategy';
 import { FacebookStrategy } from './strategies/facebook.strategy';
 import { GoogleStrategy } from './strategies/google.strategy';
+import { MailModule } from '../Email/mail.module';
+import { ConfigModule, ConfigService } from '@nestjs/config';
+import { PassportModule } from '@nestjs/passport';
 
 @Module({
   imports: [
     DatabaseRedisModule,
+    PassportModule.register({ defaultStrategy: 'jwt' }),
     UsersModule,
-    JwtModule.register({ secret: process.env.JWT_ACCESS_SECRET }),
+    MailModule,
+    JwtModule.registerAsync({
+      inject: [ConfigService],
+      imports: [ConfigModule],
+      useFactory: (configService: ConfigService) => ({
+        secret: configService.get('JWT_ACCESS_SECRET'),
+        signOptions: { expiresIn: configService.get('JWT_ACCESS_EXPIRES') },
+      }),
+
+    }),
+    DatabaseRedisModule,
   ],
   controllers: [AuthController],
   providers: [AuthService, SessionService, GoogleStrategy,
     FacebookStrategy,
+    JwtStrategy,
     TwitterStrategy,
     JwtStrategy],
   exports: [AuthService],
