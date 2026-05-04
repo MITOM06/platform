@@ -24,7 +24,7 @@ const CustomInput = ({
         placeholder={placeholder}
         placeholderTextColor={Colors.textSub}
         style={styles.input}
-        secureTextEntry={secureTextEntry}
+        secureTextEntry={!!secureTextEntry}
         keyboardType={keyboardType}
         autoCapitalize={autoCapitalize}
         // Focus events

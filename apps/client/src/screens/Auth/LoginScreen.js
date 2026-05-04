@@ -155,7 +155,7 @@ const LoginScreen = ({ navigation }) => {
           <CustomButton 
             text={loading ? "Đang xử lý..." : "Đăng Nhập"} 
             onPress={onSignInPressed} 
-            disabled={loading}
+            disabled={!!loading}
           />
 
           {/* Nút quên mật khẩu */}

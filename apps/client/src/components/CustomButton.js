@@ -10,18 +10,18 @@ const CustomButton = ({
   bgColor, 
   fgColor, 
   disabled = false,
-  loading = false
+  loading = false,
 }) => {
   return (
     <Pressable
-      onPress={(disabled || loading) ? undefined : onPress}
+      onPress={(disabled || !!loading) ? undefined : onPress}
       style={[
         styles.container,
         styles[`container_${type}`],
         bgColor ? { backgroundColor: bgColor } : {},
         (disabled || loading) && styles.containerDisabled
       ]}
-      disabled={disabled || loading}
+      disabled={disabled || !!loading}
     >
       {loading ? (
         <ActivityIndicator size="small" color={fgColor || (type === "PRIMARY" ? "white" : Colors.primary)} />

@@ -14,6 +14,7 @@
 │   │   ├── package.json
 │   │   ├── src
 │   │   │   ├── components
+│   │   │   │   ├── Alert.js
 │   │   │   │   ├── CustomButton.js
 │   │   │   │   └── CustomInput.js
 │   │   │   ├── constants
@@ -106,13 +107,23 @@
 │       │   └── webpack.config.js
 │       └── chat-service
 │           ├── Dockerfile
+│           ├── Makefile
 │           ├── cmd
 │           │   └── main.go
 │           ├── go.mod
 │           ├── go.sum
 │           └── internal
+│               ├── config
+│               │   └── config.go
+│               ├── middleware
+│               │   └── auth.go
+│               ├── models
+│               │   └── message.go
 │               └── ws
-│                   └── client.go
+│                   ├── client.go
+│                   ├── handler.go
+│                   ├── hub.go
+│                   └── message.go
 ├── docs
 │   ├── MVP Scope Document.docx
 │   └── My_Plan
@@ -140,7 +151,6 @@
 │       ├── logs
 │       │   └── mongo.log
 │       └── mongod.conf
-├── logout-debug.zip
 ├── package.json
 ├── packages
 │   ├── database
@@ -176,6 +186,7 @@
 ├── pnpm-lock.yaml
 ├── pnpm-workspace.yaml
 ├── project_tree.txt
-└── tsconfig.base.json
+├── tsconfig.base.json
+└── tsconfig.json
 
-56 directories, 123 files
+59 directories, 131 files
