@@ -116,7 +116,8 @@ Response 200: { "userId": "string", "online": true, "lastSeen": "ISO8601" }
 ### Connect
 ```
 Endpoint: ws://localhost:8080/ws
-Protocol: STOMP over SockJS
+Protocol: STOMP over raw WebSocket (KHÔNG dùng SockJS — stomp_dart_client không support)
+Spring Boot config: registry.addEndpoint("/ws").setAllowedOrigins("*")  ← KHÔNG .withSockJS()
 Headers: { "Authorization": "Bearer <token>" }
 ```
 

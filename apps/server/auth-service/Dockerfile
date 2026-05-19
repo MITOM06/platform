@@ -17,13 +17,10 @@ RUN pnpm config set store-dir /root/.local/share/pnpm/store
 # Install dependencies
 RUN pnpm install --frozen-lockfile
 
-# Build shared infra
-RUN pnpm -C infra/redis run build
+# Build auth-service → sinh dist/main.js
+RUN pnpm -C apps/server/auth-service run build
 
-# Build server → sinh dist/main.js
-RUN pnpm -C apps/server run build
-
-WORKDIR /app/apps/server
-EXPOSE 4000
+WORKDIR /app/apps/server/auth-service
+EXPOSE 3001
 
 CMD ["node", "dist/main.js"]
