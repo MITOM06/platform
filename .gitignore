@@ -1,9 +1,67 @@
-node_modules/
+# ─── Environment & Secrets ───────────────────────────────────────────────────
 .env
-**/.env
-dist/
-.next/
-coverage/
-*.log
+.env.*
+!.env.example
+!.env.sample
+
+# ─── OS ──────────────────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+
+# ─── pnpm ────────────────────────────────────────────────────────────────────
 .pnpm-store/
+.pnpm-debug.log
+
+# ─── Node / NestJS ───────────────────────────────────────────────────────────
 node_modules/
+dist/
+*.tsbuildinfo
+*.local
+.npm/
+
+# ─── Java / Spring Boot (Maven) ──────────────────────────────────────────────
+target/
+*.class
+*.jar
+!.mvn/wrapper/maven-wrapper.jar
+*.war
+*.nar
+hs_err_pid*
+replay_pid*
+
+# ─── Go ──────────────────────────────────────────────────────────────────────
+# Compiled binaries
+apps/server/chat-service/cmd/*/
+*.exe
+*.exe~
+
+# ─── Flutter / Dart ──────────────────────────────────────────────────────────
+build/
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+*.g.dart
+*.freezed.dart
+pubspec.lock
+
+# ─── Expo / React Native (legacy reference) ──────────────────────────────────
+.expo/
+.expo-shared/
+*.jks
+*.keystore
+*.p8
+*.p12
+*.mobileprovision
+
+# ─── MongoDB data (Docker volume mount) ──────────────────────────────────────
+infra/mongodb_config/data/
+infra/mongodb_config/logs/
+
+# ─── Claude (personal, không commit) ─────────────────────────────────────────
+CLAUDE.local.md
+.claude/settings.local.json
+
+# ─── IDE ─────────────────────────────────────────────────────────────────────
+.idea/
+*.iml
+.vscode/settings.json

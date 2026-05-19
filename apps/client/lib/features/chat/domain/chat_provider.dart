@@ -1,0 +1,247 @@
+import 'dart:async';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:riverpod_annotation/riverpod_annotation.dart';
+import '../../auth/domain/auth_provider.dart';
+import '../../auth/domain/auth_state.dart';
+import '../data/chat_repository.dart';
+import '../data/stomp_service.dart';
+import 'chat_state.dart';
+
+part 'chat_provider.g.dart';
+
+// ---------------------------------------------------------------------------
+// ConversationsNotifier — conversation list + realtime notification updates
+// ---------------------------------------------------------------------------
+
+@riverpod
+class ConversationsNotifier extends _$ConversationsNotifier {
+  StreamSubscription<Map<String, dynamic>>? _notifSub;
+
+  @override
+  Future<List<ConversationModel>> build() async {
+    final repo = ref.read(chatRepositoryProvider);
+    final stomp = ref.read(stompServiceProvider.notifier);
+
+    // Always disconnect first to ensure fresh token on login
+    stomp.disconnect();
+    const storage = FlutterSecureStorage();
+    final token = await storage.read(key: 'accessToken');
+    if (token != null) {
+      await stomp.connect(token);
+    }
+
+    stomp.subscribeNotifications();
+
+    _notifSub = stomp.notifications.listen(_onNotification);
+    ref.onDispose(() => _notifSub?.cancel());
+
+    return repo.listConversations();
+  }
+
+  void _onNotification(Map<String, dynamic> notif) {
+    final current = state.valueOrNull;
+    if (current == null) return;
+
+    final type = notif['type'] as String?;
+    if (type == 'message') {
+      final data = notif['data'] as Map<String, dynamic>?;
+      final convId = data?['conversationId'] as String?;
+      if (convId == null) return;
+
+      final lastMsgJson = data?['lastMessage'] as Map<String, dynamic>?;
+      final updated = current.map((c) {
+        if (c.id != convId) return c;
+        return c.copyWith(
+          lastMessage: lastMsgJson != null
+              ? LastMessageModel.fromJson(lastMsgJson)
+              : c.lastMessage,
+          lastMessageAt: DateTime.now(),
+          unreadCount: c.unreadCount + 1,
+        );
+      }).toList()
+        ..sort((a, b) => (b.lastMessageAt ?? DateTime(0))
+            .compareTo(a.lastMessageAt ?? DateTime(0)));
+      state = AsyncData(updated);
+    } else if (type == 'new_conversation') {
+      refresh();
+    }
+  }
+
+  Future<void> refresh() async {
+    state = const AsyncLoading();
+    state = await AsyncValue.guard(
+      () => ref.read(chatRepositoryProvider).listConversations(),
+    );
+  }
+
+  void markConversationRead(String conversationId) {
+    final current = state.valueOrNull;
+    if (current == null) return;
+    state = AsyncData(current.map((c) {
+      if (c.id == conversationId) return c.copyWith(unreadCount: 0);
+      return c;
+    }).toList());
+  }
+}
+
+// ---------------------------------------------------------------------------
+// ChatNotifier — messages for a single conversation
+// ---------------------------------------------------------------------------
+
+@riverpod
+class ChatNotifier extends _$ChatNotifier {
+  Timer? _typingTimer;
+  StreamSubscription<MessageModel>? _messageSub;
+  StreamSubscription<TypingEvent>? _typingSub;
+
+  @override
+  Future<ChatState> build(String conversationId) async {
+    final stomp = ref.read(stompServiceProvider.notifier);
+
+    stomp.subscribeConversation(conversationId);
+
+    _messageSub = stomp.messages
+        .where((m) => m.conversationId == conversationId)
+        .listen(_onNewMessage);
+
+    _typingSub = stomp.typing
+        .where((e) => e.conversationId == conversationId)
+        .listen(_onTypingEvent);
+
+    ref.onDispose(() {
+      _messageSub?.cancel();
+      _typingSub?.cancel();
+      _typingTimer?.cancel();
+      stomp.unsubscribeConversation(conversationId);
+    });
+
+    // API returns DESC (newest first) — use directly with ListView(reverse: true)
+    final paged =
+        await ref.read(chatRepositoryProvider).getMessages(conversationId, 0, 20);
+    return ChatState(
+      messages: paged.content,
+      hasMore: paged.content.length == 20,
+    );
+  }
+
+  void _onNewMessage(MessageModel message) {
+    final current = state.valueOrNull;
+    if (current == null) return;
+
+    // Replace optimistic message if one matches by senderId + content
+    final pendingIdx = current.messages.indexWhere(
+      (m) =>
+          m.isPending &&
+          m.senderId == message.senderId &&
+          m.content == message.content,
+    );
+
+    final List<MessageModel> updated;
+    if (pendingIdx != -1) {
+      updated = List.from(current.messages)..[pendingIdx] = message;
+    } else {
+      updated = [message, ...current.messages];
+    }
+
+    state = AsyncData(current.copyWith(messages: updated));
+
+    // Mark messages from others as read
+    if (message.senderId != _currentUserId) {
+      ref.read(chatRepositoryProvider).markAsRead(message.id).ignore();
+    }
+  }
+
+  void _onTypingEvent(TypingEvent event) {
+    final current = state.valueOrNull;
+    if (current == null) return;
+    final typingIds = Set<String>.from(current.typingUserIds);
+    if (event.isTyping) {
+      typingIds.add(event.userId);
+    } else {
+      typingIds.remove(event.userId);
+    }
+    state = AsyncData(current.copyWith(typingUserIds: typingIds));
+  }
+
+  Future<void> loadMore() async {
+    final current = state.valueOrNull;
+    if (current == null || !current.hasMore) return;
+
+    final nextPage = current.currentPage + 1;
+    final paged = await ref.read(chatRepositoryProvider).getMessages(
+          conversationId,
+          nextPage,
+          20,
+        );
+
+    state = AsyncData(current.copyWith(
+      messages: [...current.messages, ...paged.content],
+      hasMore: paged.content.length == 20,
+      currentPage: nextPage,
+    ));
+  }
+
+  Future<void> sendMessage(String content) async {
+    final current = state.valueOrNull;
+    if (current == null) return;
+
+    final uid = _currentUserId;
+    if (uid == null) return;
+
+    final optimistic = MessageModel(
+      id: 'pending_${DateTime.now().millisecondsSinceEpoch}',
+      conversationId: conversationId,
+      senderId: uid,
+      content: content,
+      type: 'text',
+      readBy: [uid],
+      createdAt: DateTime.now(),
+      isPending: true,
+    );
+
+    state = AsyncData(current.copyWith(
+      messages: [optimistic, ...current.messages],
+    ));
+
+    final stomp = ref.read(stompServiceProvider.notifier);
+    if (stomp.isConnected) {
+      stomp.sendMessage(conversationId, content);
+    } else {
+      // REST fallback when STOMP unavailable
+      try {
+        final sent = await ref
+            .read(chatRepositoryProvider)
+            .sendMessageRest(conversationId, content);
+        final c = state.valueOrNull;
+        if (c != null) {
+          state = AsyncData(c.copyWith(
+            messages: c.messages
+                .map((m) => m.id == optimistic.id ? sent : m)
+                .toList(),
+          ));
+        }
+      } catch (_) {
+        final c = state.valueOrNull;
+        if (c != null) {
+          state = AsyncData(c.copyWith(
+            messages: c.messages.where((m) => m.id != optimistic.id).toList(),
+          ));
+        }
+      }
+    }
+  }
+
+  void startTyping() {
+    final stomp = ref.read(stompServiceProvider.notifier);
+    stomp.sendTyping(conversationId, isTyping: true);
+    _typingTimer?.cancel();
+    _typingTimer = Timer(const Duration(seconds: 3), () {
+      stomp.sendTyping(conversationId, isTyping: false);
+    });
+  }
+
+  String? get _currentUserId {
+    final auth = ref.read(authNotifierProvider).valueOrNull;
+    return auth is AuthAuthenticated ? auth.user.id : null;
+  }
+}

@@ -115,7 +115,7 @@ const NewPasswordScreen = ({ route, navigation }) => {
           <CustomButton
             text={loading ? "Đang cập nhật..." : "Xác nhận"}
             onPress={onSubmitPressed}
-            disabled={loading}
+            disabled={!!loading}
           />
           
           <CustomButton

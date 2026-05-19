@@ -164,7 +164,7 @@ const VerifyOtpScreen = ({ route, navigation }) => {
           <CustomButton
             text={loading ? 'Đang kiểm tra...' : 'Xác nhận'}
             onPress={onVerifyPressed}
-            disabled={loading || blocked || otp.length < 6}
+            disabled={!!loading || blocked || otp.length < 6}
           />
         </View>
 

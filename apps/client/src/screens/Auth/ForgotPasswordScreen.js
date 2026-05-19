@@ -95,7 +95,7 @@ const ForgotPasswordScreen = ({ navigation }) => {
           <CustomButton 
             text={loading ? "Đang gửi..." : "Gửi mã xác nhận"} 
             onPress={onSendPressed} 
-            disabled={loading}
+            disabled={!!loading}
           />
           
           <CustomButton 

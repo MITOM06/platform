@@ -201,7 +201,7 @@ const RegisterScreen = ({ navigation }) => {
           <CustomButton
             text={loading ? "Đang xử lý..." : "Đăng Ký"}
             onPress={onRegisterPressed}
-            disabled={loading}
+            disabled={!!loading}
           />
 
           <Text style={styles.text}>

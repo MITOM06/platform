@@ -6,8 +6,8 @@
     "server": "pnpm --filter @platform/auth-service start:dev",
     "client": "pnpm --filter client start",
     "dev": "concurrently -n \"TUNNEL,SERVER,CLIENT\" -c \"magenta,blue,green\" \"pnpm:tunnel\" \"pnpm:server\" \"pnpm:client\"",
-    "infra": "docker compose -f infra/docker/docker-compose.yml up -d",
-    "down": "docker compose -f infra/docker/docker-compose.yml down"
+    "infra": "docker compose -f infra/docker-compose/compose.yml up -d",
+    "down": "docker compose -f infra/docker-compose/compose.yml down"
   },
   "devDependencies": {
     "concurrently": "^8.2.2",
