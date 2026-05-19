@@ -1,23 +1,23 @@
 {
   "hooks": {
-    "PostToolUse": [
-      {
-        "matcher": "Edit|Write",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "file=\"$CLAUDE_TOOL_INPUT_FILE_PATH\"; if [[ \"$file\" == *.java ]]; then echo \"[hook] Java file edited: $file — run mvn compile to verify\"; elif [[ \"$file\" == *.dart ]]; then echo \"[hook] Dart file edited: $file — run flutter analyze to verify\"; elif [[ \"$file\" == *.ts ]]; then echo \"[hook] TS file edited: $file — check auth-service, avoid editing if not needed\"; fi"
-          }
-        ]
-      }
-    ],
     "PreToolUse": [
       {
         "matcher": "Edit|Write",
         "hooks": [
           {
             "type": "command",
-            "command": "file=\"$CLAUDE_TOOL_INPUT_FILE_PATH\"; if [[ \"$file\" == *auth-service* ]]; then echo \"WARNING: Attempting to edit auth-service. This service should NOT be modified unless explicitly requested.\"; fi"
+            "command": "INPUT=$(cat); FILE=$(echo \"$INPUT\" | python3 -c \"import sys,json; d=json.load(sys.stdin); print(d.get('file_path',''))\" 2>/dev/null); if echo \"$FILE\" | grep -q 'auth-service'; then echo 'STOP: auth-service is protected. Confirm with user before editing.'; exit 1; fi"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write|Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash .claude/hooks/log-activity.sh"
           }
         ]
       }
