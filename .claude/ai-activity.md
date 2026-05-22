@@ -206,3 +206,75 @@
 - ❌ Chưa test thực tế với backend (cần Docker infra + auth-service chạy)
 
 **Next:** Milestone 3 Spring Boot — WebSocket STOMP (`WebSocketConfig` + `ChatController` + typing indicator + Redis presence) hoặc Flutter Chat screens (`ConversationListScreen`, `ChatScreen`)
+
+---
+
+## Session: 2026-05-22 — Refactor Clean Code & Tối ưu hóa Database/Redis
+
+**Tóm tắt:** Tiến hành refactor và tối ưu hóa toàn diện cho `auth-service` (NestJS) và `chat-service` (Spring Boot). Giảm latency thông qua Redis pipelines và MongoDB aggregation, tối ưu hóa write bằng atomic queries, tăng cường kiểm tra kiểu dữ liệu an toàn và cải thiện xử lý lỗi (error handling).
+
+**Files tạo/sửa:**
+- `apps/server/auth-service/src/modules/auth/session.service.ts` — tối ưu hóa `listSessions` và `revokeAllSessions` sử dụng Redis Pipeline, định nghĩa kiểu `Redis` thay cho `any`.
+- `apps/server/auth-service/src/modules/auth/auth.service.ts` — cập nhật `resetPassword` sử dụng `revokeAllSessions` tối ưu.
+- `apps/server/auth-service/src/app.controller.spec.ts` — thêm mock Mongoose và Redis client để sửa lỗi unit test.
+- `apps/server/auth-service/package.json` — cấu hình `moduleNameMapper` để Jest giải quyết đúng các module workspace.
+- `apps/server/chat-service/src/main/java/com/platform/chatservice/exception/MessageNotFoundException.java` [NEW] — Custom exception khi không tìm thấy Message.
+- `apps/server/chat-service/src/main/java/com/platform/chatservice/exception/UnauthorizedException.java` [NEW] — Custom exception cho yêu cầu chưa xác thực (HTTP 401).
+- `apps/server/chat-service/src/main/java/com/platform/chatservice/exception/GlobalExceptionHandler.java` — cấu hình ánh xạ `MessageNotFoundException` thành HTTP 404 và `UnauthorizedException` thành HTTP 401.
+- `apps/server/chat-service/src/main/java/com/platform/chatservice/service/ConversationService.java` — tối ưu hóa `listConversations` sử dụng MongoDB aggregation (`$group` và `$count`) để đếm tin nhắn chưa đọc trong 1 query duy nhất (giải quyết N+1 query).
+- `apps/server/chat-service/src/main/java/com/platform/chatservice/service/MessageService.java` — refactor `markAsRead` thành atomic write với lệnh `$addToSet` qua `MongoTemplate`, giải quyết triệt để race condition và ném `MessageNotFoundException` nếu không tìm thấy message.
+- `apps/server/chat-service/src/main/java/com/platform/chatservice/controller/ConversationController.java` — kiểm tra an toàn principal sử dụng `instanceof UserPrincipal` và ném `UnauthorizedException` nếu chưa authenticate.
+- `apps/server/chat-service/src/main/java/com/platform/chatservice/controller/MessageController.java` — tương tự, kiểm tra principal an toàn trong endpoints.
+
+**Quyết định chốt:**
+- Loại bỏ hoàn toàn vòng lặp tuần tự gọi Redis trong `auth-service` bằng pipelining.
+- Thay thế việc đếm tin nhắn chưa đọc bằng aggregation query duy nhất trong `chat-service`.
+- Tránh mô hình đọc-sửa-ghi dễ bị ghi đè dữ liệu (race conditions) bằng cập nhật nguyên tử `$addToSet`.
+- Bắt và ném ngoại lệ tường minh khi ép kiểu principal thay vì để sinh ra ClassCastException.
+
+**Kết quả:**
+- ✅ `pnpm --filter @platform/auth-service test` — 100% pass.
+- ✅ `mvn test` (cho `chat-service`) — biên dịch thành công, build success.
+
+---
+
+## Session: 2026-05-22 — Flutter Milestone 4: Error Handling, Connectivity & Settings
+
+**Tóm tắt:** Debug toàn bộ codebase (tìm 3 bug: thiếu WebSocket config, `hasMore` sai logic, type cast `totalElements`). Implement Milestone 4 Flutter: network error toast qua global `scaffoldMessengerKey`, token expiry auto logout qua `onForceLogout` callback trong DioClient, online/offline banner trên ConversationListScreen, SettingsScreen cơ bản (avatar initials + edit display name). Tạo Dockerfile Flutter web. `flutter analyze` + `flutter test` đều pass clean.
+
+**Files tạo/sửa:**
+- `lib/core/utils/app_error.dart` [NEW] — `friendlyError()` + `isNetworkError()` centralised
+- `lib/core/utils/global_messenger.dart` [NEW] — `scaffoldMessengerKey` global + `showErrorSnackBar/showInfoSnackBar`
+- `lib/core/providers/connectivity_provider.dart` [NEW] — `StreamProvider<bool>` phát trạng thái online/offline từ `connectivity_plus`
+- `lib/features/settings/ui/settings_screen.dart` [NEW] — avatar initials, edit display name, logout confirm dialog
+- `apps/client/Dockerfile` [NEW] — Flutter web build (cirruslabs/flutter:stable → nginx:alpine)
+- `pubspec.yaml` — thêm `connectivity_plus: ^6.0.0`
+- `lib/core/api/dio_client.dart` — thêm `_NetworkErrorInterceptor` (toast on timeout/connection error) + `onForceLogout` callback vào `_TokenRefreshInterceptor`
+- `lib/features/auth/data/auth_repository.dart` — thêm `updateDisplayName()` (lưu local secure storage)
+- `lib/features/auth/domain/auth_provider.dart` — thêm `forceLogout()` (gọi từ Dio khi refresh fail) + `updateDisplayName()` với AsyncLoading state
+- `lib/features/chat/data/chat_repository.dart` — pass `onForceLogout` callback vào `createChatDio`, fix `(num).toInt()` cho pagination fields, thêm import `auth_provider`
+- `lib/features/chat/domain/chat_provider.dart` — fix `hasMore`: `(page+1)*size < totalElements` thay vì `length == 20`
+- `lib/features/chat/ui/conversation_list_screen.dart` — offline banner + settings icon button (avatar initials) + improved error state UI
+- `lib/core/router/app_router.dart` — thêm `/settings` route + import SettingsScreen
+- `lib/main.dart` — wire `scaffoldMessengerKey` vào `MaterialApp.router`
+
+**Quyết định:**
+- `onForceLogout` callback pattern thay vì global stream — DioClient không truy cập Riverpod, callback được inject từ `chatRepositoryProvider`
+- `forceLogout()` bỏ qua server-side logout call — token đã invalid, chỉ clear local storage + set state
+- `updateDisplayName()` local-only (secure storage) — auth-service không có profile update endpoint, đủ cho "basic settings"
+- `connectivity_plus` `StreamProvider` với `async*` yield initial state — tránh banner trễ khi khởi động
+- `_OfflineBanner` dùng `errorContainer` color — nhất quán với Material 3 color system
+- `scaffoldMessengerKey` global (không phải Riverpod provider) — phải accessible từ `DioClient` (non-widget layer)
+
+**Kết quả:**
+- ✅ `flutter pub get` — `connectivity_plus` resolved
+- ✅ `flutter analyze` — No issues found
+- ✅ `flutter test` — All tests passed (1/1)
+- ✅ Bug fix: `hasMore` dùng `totalElements` thay vì heuristic `length == 20`
+- ✅ Bug fix: type cast `(num).toInt()` cho `page`, `size`, `totalElements`
+- ✅ Token expiry auto logout hoạt động khi refresh thất bại
+- ✅ Network error toast hiển thị từ `_NetworkErrorInterceptor` trên cả `authDio` và `chatDio`
+- ❌ Bug crítico chưa fix: chat-service thiếu `WebSocketConfig.java` — STOMP endpoint `ws://localhost:8080/ws` chưa tồn tại
+
+**Next:** Milestone 3 Spring Boot — tạo `WebSocketConfig.java` (`@EnableWebSocketMessageBroker`, endpoint `/ws`, broker `/topic` + `/user/queue`) + `ChatController` (`@MessageMapping("/chat.send")`, `@MessageMapping("/chat.typing")`) + broadcast qua `SimpMessagingTemplate`
+

@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../../../core/api/dio_client.dart';
+import '../../auth/domain/auth_provider.dart';
 import '../domain/chat_state.dart';
 
 class ChatRepository {
@@ -33,9 +34,9 @@ class ChatRepository {
         .toList();
     return PagedResult(
       content: content,
-      page: data['page'] as int,
-      size: data['size'] as int,
-      totalElements: data['totalElements'] as int,
+      page: (data['page'] as num).toInt(),
+      size: (data['size'] as num).toInt(),
+      totalElements: (data['totalElements'] as num).toInt(),
     );
   }
 
@@ -83,5 +84,11 @@ class ChatRepository {
 
 final chatRepositoryProvider = Provider<ChatRepository>((ref) {
   const storage = FlutterSecureStorage();
-  return ChatRepository(DioClient.createChatDio(storage));
+  return ChatRepository(
+    DioClient.createChatDio(
+      storage,
+      onForceLogout: () =>
+          ref.read(authNotifierProvider.notifier).forceLogout(),
+    ),
+  );
 });

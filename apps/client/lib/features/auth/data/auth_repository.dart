@@ -100,6 +100,21 @@ class AuthRepository {
   }
 
   Future<void> clearCredentials() => _storage.deleteAll();
+
+  /// Updates display name locally in secure storage (no server call).
+  Future<UserModel> updateDisplayName(String displayName) async {
+    final userJson = await _storage.read(key: _keyUser);
+    if (userJson == null) throw StateError('No user in storage');
+    final old = UserModel.fromJson(jsonDecode(userJson) as Map<String, dynamic>);
+    final updated = UserModel(
+      id: old.id,
+      email: old.email,
+      displayName: displayName,
+      avatarUrl: old.avatarUrl,
+    );
+    await _storage.write(key: _keyUser, value: jsonEncode(updated.toJson()));
+    return updated;
+  }
 }
 
 final authRepositoryProvider = Provider<AuthRepository>((ref) {

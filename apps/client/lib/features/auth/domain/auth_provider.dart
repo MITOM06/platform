@@ -25,4 +25,19 @@ class AuthNotifier extends _$AuthNotifier {
     await ref.read(authRepositoryProvider).logout();
     state = const AsyncData(AuthUnauthenticated());
   }
+
+  /// Called by DioClient when token refresh fails — skips server-side logout.
+  void forceLogout() {
+    ref.read(authRepositoryProvider).clearCredentials();
+    state = const AsyncData(AuthUnauthenticated());
+  }
+
+  Future<void> updateDisplayName(String displayName) async {
+    state = const AsyncLoading();
+    state = await AsyncValue.guard(() async {
+      final updated =
+          await ref.read(authRepositoryProvider).updateDisplayName(displayName);
+      return AuthAuthenticated(updated);
+    });
+  }
 }

@@ -1,4 +1,4 @@
-import { Document } from 'mongoose';
+import { Document, Schema } from 'mongoose';
 export type UserDocument = User & Document;
 declare class TrustedDevice {
     deviceId: string;
@@ -13,16 +13,18 @@ export declare class User {
     password: string;
     trustedDevices: TrustedDevice[];
     isVerified: boolean;
-    googleId: string;
-    facebookId: string;
-    twitterId: string;
+    socialLinks: Record<string, string>;
     status: 'active' | 'blocked' | 'pending';
     otpCode: string;
     otpExpires: Date;
 }
-export declare const UserSchema: import("mongoose").Schema<User, import("mongoose").Model<User, any, any, any, Document<unknown, any, User> & User & {
+export declare const UserSchema: Schema<User, import("mongoose").Model<User, any, any, any, Document<unknown, any, User, any, {}> & User & {
     _id: import("mongoose").Types.ObjectId;
-}, any>, {}, {}, {}, {}, import("mongoose").DefaultSchemaOptions, User, Document<unknown, {}, import("mongoose").FlatRecord<User>> & import("mongoose").FlatRecord<User> & {
+} & {
+    __v: number;
+}, any>, {}, {}, {}, {}, import("mongoose").DefaultSchemaOptions, User, Document<unknown, {}, import("mongoose").FlatRecord<User>, {}, import("mongoose").ResolveSchemaOptions<import("mongoose").DefaultSchemaOptions>> & import("mongoose").FlatRecord<User> & {
     _id: import("mongoose").Types.ObjectId;
+} & {
+    __v: number;
 }>;
 export {};
