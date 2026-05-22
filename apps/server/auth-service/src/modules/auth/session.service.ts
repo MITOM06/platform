@@ -4,12 +4,9 @@ import * as argon2 from 'argon2';
 import { nanoid } from 'nanoid';
 import { Redis, REDIS_CLIENT } from '@platform/database';
 
-
-type RedisClient = any;
-
 @Injectable()
 export class SessionService {
-  constructor(@Inject(REDIS_CLIENT) private readonly redis: RedisClient) { }
+  constructor(@Inject(REDIS_CLIENT) private readonly redis: Redis) { }
 
   private sessKey(sid: string) {
     return `sess:${sid}`;
@@ -19,7 +16,6 @@ export class SessionService {
   }
 
   private genRefreshToken() {
-
     return randomBytes(48).toString('base64url');
   }
 
@@ -78,12 +74,46 @@ export class SessionService {
       .exec();
   }
 
+  async revokeAllSessions(userId: string) {
+    const userSessKey = this.userSessSetKey(userId);
+    const sids: string[] = await this.redis.smembers(userSessKey);
+    if (!sids || sids.length === 0) {
+      return;
+    }
+
+    const pipeline = this.redis.pipeline();
+    for (const sid of sids) {
+      const key = this.sessKey(sid);
+      pipeline.hset(key, { revoked: '1' });
+      pipeline.srem(userSessKey, sid);
+    }
+    await pipeline.exec();
+  }
+
   async listSessions(userId: string) {
     const sids: string[] = await this.redis.smembers(this.userSessSetKey(userId));
-    const sessions: Array<{ sid: string } & Record<string, string>> = [];
+    if (!sids || sids.length === 0) {
+      return [];
+    }
+
+    const pipeline = this.redis.pipeline();
     for (const sid of sids) {
-      const data = await this.redis.hgetall(this.sessKey(sid));
-      if (data?.userId) sessions.push({ sid, ...data });
+      pipeline.hgetall(this.sessKey(sid));
+    }
+
+    const results = await pipeline.exec();
+    const sessions: Array<{ sid: string } & Record<string, string>> = [];
+
+    if (results) {
+      for (let i = 0; i < sids.length; i++) {
+        const result = results[i];
+        if (result) {
+          const [err, data] = result as [Error | null, Record<string, any> | null];
+          if (!err && data && data.userId) {
+            sessions.push({ sid: sids[i], ...data });
+          }
+        }
+      }
     }
     return sessions;
   }

@@ -2,6 +2,7 @@ package com.platform.chatservice.controller;
 
 import com.platform.chatservice.dto.MessageResponse;
 import com.platform.chatservice.dto.SendMessageRequest;
+import com.platform.chatservice.exception.UnauthorizedException;
 import com.platform.chatservice.security.UserPrincipal;
 import com.platform.chatservice.service.MessageService;
 import lombok.RequiredArgsConstructor;
@@ -31,6 +32,10 @@ public class MessageController {
     }
 
     private String currentUserId() {
-        return ((UserPrincipal) SecurityContextHolder.getContext().getAuthentication()).getUserId();
+        var authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication instanceof UserPrincipal principal) {
+            return principal.getUserId();
+        }
+        throw new UnauthorizedException("User is not authenticated");
     }
 }

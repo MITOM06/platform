@@ -216,10 +216,7 @@ export class AuthService {
     await this.usersService.updatePassword(user._id.toString(), hashedPass);
     
     // ✅ IMPROVEMENT: Revoke tất cả sessions cũ khi đổi mật khẩu
-    const sessions = await this.session.listSessions(user._id.toString());
-    for (const sess of sessions) {
-      await this.session.revokeSession(user._id.toString(), sess.sid);
-    }
+    await this.session.revokeAllSessions(user._id.toString());
 
     return { 
       success: true, 
