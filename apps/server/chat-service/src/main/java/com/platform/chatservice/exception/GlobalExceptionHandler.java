@@ -19,6 +19,24 @@ public class GlobalExceptionHandler {
         ));
     }
 
+    @ExceptionHandler(MessageNotFoundException.class)
+    public ResponseEntity<Map<String, Object>> handleMessageNotFound(MessageNotFoundException ex) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
+            "error", "Not found",
+            "message", ex.getMessage(),
+            "statusCode", 404
+        ));
+    }
+
+    @ExceptionHandler(UnauthorizedException.class)
+    public ResponseEntity<Map<String, Object>> handleUnauthorized(UnauthorizedException ex) {
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of(
+            "error", "Unauthorized",
+            "message", ex.getMessage(),
+            "statusCode", 401
+        ));
+    }
+
     @ExceptionHandler(DuplicateConversationException.class)
     public ResponseEntity<Map<String, Object>> handleDuplicate(DuplicateConversationException ex) {
         return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of(

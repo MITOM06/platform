@@ -97,6 +97,9 @@
     "transform": {
       "^.+\\.(t|j)s$": "ts-jest"
     },
+    "moduleNameMapper": {
+      "^@platform/database$": "<rootDir>/../../../../packages/database/src"
+    },
     "collectCoverageFrom": [
       "**/*.(t|j)s"
     ],

@@ -4,6 +4,7 @@ import com.platform.chatservice.dto.ConversationResponse;
 import com.platform.chatservice.dto.CreateConversationRequest;
 import com.platform.chatservice.dto.MessageResponse;
 import com.platform.chatservice.dto.PageResponse;
+import com.platform.chatservice.exception.UnauthorizedException;
 import com.platform.chatservice.security.UserPrincipal;
 import com.platform.chatservice.service.ConversationService;
 import com.platform.chatservice.service.MessageService;
@@ -48,6 +49,10 @@ public class ConversationController {
     }
 
     private String currentUserId() {
-        return ((UserPrincipal) SecurityContextHolder.getContext().getAuthentication()).getUserId();
+        var authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication instanceof UserPrincipal principal) {
+            return principal.getUserId();
+        }
+        throw new UnauthorizedException("User is not authenticated");
     }
 }

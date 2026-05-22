@@ -4,13 +4,19 @@ import com.platform.chatservice.dto.MessageResponse;
 import com.platform.chatservice.dto.PageResponse;
 import com.platform.chatservice.dto.SendMessageRequest;
 import com.platform.chatservice.exception.ConversationNotFoundException;
+import com.platform.chatservice.exception.MessageNotFoundException;
 import com.platform.chatservice.model.Conversation;
 import com.platform.chatservice.model.Message;
 import com.platform.chatservice.repository.ConversationRepository;
 import com.platform.chatservice.repository.MessageRepository;
+import com.mongodb.client.result.UpdateResult;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
@@ -23,6 +29,7 @@ public class MessageService {
 
     private final MessageRepository messageRepository;
     private final ConversationRepository conversationRepository;
+    private final MongoTemplate mongoTemplate;
 
     public PageResponse<MessageResponse> getMessages(String userId, String conversationId, Pageable pageable) {
         Conversation conversation = conversationRepository.findById(conversationId)
@@ -62,11 +69,11 @@ public class MessageService {
     }
 
     public void markAsRead(String userId, String messageId) {
-        Message message = messageRepository.findById(messageId)
-            .orElseThrow(() -> new RuntimeException("Message not found: " + messageId));
-        if (!message.getReadBy().contains(userId)) {
-            message.getReadBy().add(userId);
-            messageRepository.save(message);
+        Query query = new Query(Criteria.where("id").is(messageId));
+        Update update = new Update().addToSet("readBy", userId);
+        UpdateResult result = mongoTemplate.updateFirst(query, update, Message.class);
+        if (result.getMatchedCount() == 0) {
+            throw new MessageNotFoundException(messageId);
         }
     }
 
