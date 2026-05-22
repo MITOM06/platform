@@ -1,5 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import '../utils/app_error.dart';
+import '../utils/global_messenger.dart';
 
 const _authBaseUrl = 'http://localhost:3001';
 const _chatBaseUrl = 'http://localhost:8080';
@@ -17,10 +19,14 @@ class DioClient {
       headers: {'Content-Type': 'application/json'},
     ));
     dio.interceptors.add(_AuthHeaderInterceptor(storage));
+    dio.interceptors.add(const _NetworkErrorInterceptor());
     return dio;
   }
 
-  static Dio createChatDio(FlutterSecureStorage storage) {
+  static Dio createChatDio(
+    FlutterSecureStorage storage, {
+    void Function()? onForceLogout,
+  }) {
     final dio = Dio(BaseOptions(
       baseUrl: _chatBaseUrl,
       connectTimeout: const Duration(seconds: 10),
@@ -28,7 +34,10 @@ class DioClient {
       headers: {'Content-Type': 'application/json'},
     ));
     dio.interceptors.add(_AuthHeaderInterceptor(storage));
-    dio.interceptors.add(_TokenRefreshInterceptor(storage, dio));
+    dio.interceptors.add(const _NetworkErrorInterceptor());
+    dio.interceptors.add(
+      _TokenRefreshInterceptor(storage, dio, onForceLogout: onForceLogout),
+    );
     return dio;
   }
 }
@@ -52,14 +61,32 @@ class _AuthHeaderInterceptor extends Interceptor {
   }
 }
 
+/// Shows a snackbar on network-level failures (no connection, timeout, etc.).
+class _NetworkErrorInterceptor extends Interceptor {
+  const _NetworkErrorInterceptor();
+
+  @override
+  void onError(DioException err, ErrorInterceptorHandler handler) {
+    if (isNetworkError(err)) {
+      showErrorSnackBar(friendlyError(err));
+    }
+    handler.next(err);
+  }
+}
+
 /// On 401: attempt token refresh, retry original request once.
-/// On refresh failure: clear all stored credentials.
+/// On refresh failure: clear credentials and call onForceLogout if provided.
 class _TokenRefreshInterceptor extends Interceptor {
   final FlutterSecureStorage _storage;
   final Dio _dio;
+  final void Function()? onForceLogout;
   bool _isRefreshing = false;
 
-  _TokenRefreshInterceptor(this._storage, this._dio);
+  _TokenRefreshInterceptor(
+    this._storage,
+    this._dio, {
+    this.onForceLogout,
+  });
 
   @override
   void onError(DioException err, ErrorInterceptorHandler handler) async {
@@ -74,6 +101,7 @@ class _TokenRefreshInterceptor extends Interceptor {
 
       if (refreshToken == null || sid == null) {
         await _clearCredentials();
+        onForceLogout?.call();
         return handler.next(err);
       }
 
@@ -96,13 +124,12 @@ class _TokenRefreshInterceptor extends Interceptor {
       return handler.resolve(retryResponse);
     } catch (_) {
       await _clearCredentials();
+      onForceLogout?.call();
       handler.next(err);
     } finally {
       _isRefreshing = false;
     }
   }
 
-  Future<void> _clearCredentials() async {
-    await _storage.deleteAll();
-  }
+  Future<void> _clearCredentials() => _storage.deleteAll();
 }

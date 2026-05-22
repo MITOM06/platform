@@ -27,6 +27,9 @@ dependencies:
   # WebSocket (STOMP)
   stomp_dart_client: ^3.0.1
 
+  # Network connectivity
+  connectivity_plus: ^6.0.0
+
   # Icons
   cupertino_icons: ^1.0.8
 

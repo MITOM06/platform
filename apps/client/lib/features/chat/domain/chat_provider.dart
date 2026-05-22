@@ -120,7 +120,7 @@ class ChatNotifier extends _$ChatNotifier {
         await ref.read(chatRepositoryProvider).getMessages(conversationId, 0, 20);
     return ChatState(
       messages: paged.content,
-      hasMore: paged.content.length == 20,
+      hasMore: (paged.page + 1) * paged.size < paged.totalElements,
     );
   }
 
@@ -176,7 +176,7 @@ class ChatNotifier extends _$ChatNotifier {
 
     state = AsyncData(current.copyWith(
       messages: [...current.messages, ...paged.content],
-      hasMore: paged.content.length == 20,
+      hasMore: (paged.page + 1) * paged.size < paged.totalElements,
       currentPage: nextPage,
     ));
   }

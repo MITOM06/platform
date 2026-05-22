@@ -11,6 +11,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.UserSchema = exports.User = void 0;
 const mongoose_1 = require("@nestjs/mongoose");
+const mongoose_2 = require("mongoose");
 let TrustedDevice = class TrustedDevice {
     deviceId;
     deviceName;
@@ -39,9 +40,7 @@ let User = class User {
     password;
     trustedDevices;
     isVerified;
-    googleId;
-    facebookId;
-    twitterId;
+    socialLinks;
     status;
     otpCode;
     otpExpires;
@@ -76,17 +75,9 @@ __decorate([
     __metadata("design:type", Boolean)
 ], User.prototype, "isVerified", void 0);
 __decorate([
-    (0, mongoose_1.Prop)({ unique: true, sparse: true }),
-    __metadata("design:type", String)
-], User.prototype, "googleId", void 0);
-__decorate([
-    (0, mongoose_1.Prop)({ unique: true, sparse: true }),
-    __metadata("design:type", String)
-], User.prototype, "facebookId", void 0);
-__decorate([
-    (0, mongoose_1.Prop)({ unique: true, sparse: true }),
-    __metadata("design:type", String)
-], User.prototype, "twitterId", void 0);
+    (0, mongoose_1.Prop)({ type: mongoose_2.Schema.Types.Mixed, default: {} }),
+    __metadata("design:type", Object)
+], User.prototype, "socialLinks", void 0);
 __decorate([
     (0, mongoose_1.Prop)({ default: 'active' }),
     __metadata("design:type", String)
