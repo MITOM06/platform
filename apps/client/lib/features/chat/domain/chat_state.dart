@@ -189,12 +189,14 @@ class ChatState {
   final bool hasMore;
   final int currentPage;
   final Set<String> typingUserIds;
+  final bool isLoadingMore;
 
   const ChatState({
     required this.messages,
     required this.hasMore,
     this.currentPage = 0,
     this.typingUserIds = const {},
+    this.isLoadingMore = false,
   });
 
   ChatState copyWith({
@@ -202,12 +204,14 @@ class ChatState {
     bool? hasMore,
     int? currentPage,
     Set<String>? typingUserIds,
+    bool? isLoadingMore,
   }) {
     return ChatState(
       messages: messages ?? this.messages,
       hasMore: hasMore ?? this.hasMore,
       currentPage: currentPage ?? this.currentPage,
       typingUserIds: typingUserIds ?? this.typingUserIds,
+      isLoadingMore: isLoadingMore ?? this.isLoadingMore,
     );
   }
 }

@@ -41,6 +41,25 @@ services:
     networks:
       - app-net
 
+  chat-service:
+    build:
+      context: ../../apps/server/chat-service
+      dockerfile: Dockerfile
+    container_name: chat-service
+    ports:
+      - "8080:8080"
+    depends_on:
+      mongo:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      JWT_SECRET: ${JWT_SECRET}
+      SPRING_DATA_MONGODB_URI: mongodb://mongo:27017/platform
+      SPRING_DATA_REDIS_HOST: redis
+    networks:
+      - app-net
+
 networks:
   app-net:
     driver: bridge

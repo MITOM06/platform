@@ -165,20 +165,28 @@ class ChatNotifier extends _$ChatNotifier {
 
   Future<void> loadMore() async {
     final current = state.valueOrNull;
-    if (current == null || !current.hasMore) return;
+    if (current == null || !current.hasMore || current.isLoadingMore) return;
+
+    state = AsyncData(current.copyWith(isLoadingMore: true));
 
     final nextPage = current.currentPage + 1;
-    final paged = await ref.read(chatRepositoryProvider).getMessages(
-          conversationId,
-          nextPage,
-          20,
-        );
-
-    state = AsyncData(current.copyWith(
-      messages: [...current.messages, ...paged.content],
-      hasMore: (paged.page + 1) * paged.size < paged.totalElements,
-      currentPage: nextPage,
-    ));
+    try {
+      final paged = await ref.read(chatRepositoryProvider).getMessages(
+            conversationId,
+            nextPage,
+            20,
+          );
+      final fresh = state.valueOrNull ?? current;
+      state = AsyncData(fresh.copyWith(
+        messages: [...fresh.messages, ...paged.content],
+        hasMore: (paged.page + 1) * paged.size < paged.totalElements,
+        currentPage: nextPage,
+        isLoadingMore: false,
+      ));
+    } catch (_) {
+      final fresh = state.valueOrNull ?? current;
+      state = AsyncData(fresh.copyWith(isLoadingMore: false));
+    }
   }
 
   Future<void> sendMessage(String content) async {
@@ -245,3 +253,8 @@ class ChatNotifier extends _$ChatNotifier {
     return auth is AuthAuthenticated ? auth.user.id : null;
   }
 }
+
+final userStatusProvider =
+    FutureProvider.autoDispose.family<UserStatus, String>((ref, userId) {
+  return ref.read(chatRepositoryProvider).getUserStatus(userId);
+});
