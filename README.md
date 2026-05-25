@@ -1,237 +1,246 @@
-platform — Messaging Web (NestJS + Next.js + MongoDB + Redis)
+<div align="center">
 
-A monorepo for a realtime messaging application (MVP) including an API server (NestJS) and a Web client (Next.js), using MongoDB for storage, Redis for presence/typing/pub-sub, containerized and run using Docker Compose.
+# Platform
 
-Table of Contents
+**A production-grade realtime messaging platform · FPT Aptech PRJ4**
 
-Features (MVP v1)
+[![NestJS](https://img.shields.io/badge/NestJS-E0234E?style=flat-square&logo=nestjs&logoColor=white)](https://nestjs.com)
+[![Spring Boot](https://img.shields.io/badge/Spring_Boot_3-6DB33F?style=flat-square&logo=springboot&logoColor=white)](https://spring.io/projects/spring-boot)
+[![Flutter](https://img.shields.io/badge/Flutter_3-02569B?style=flat-square&logo=flutter&logoColor=white)](https://flutter.dev)
+[![MongoDB](https://img.shields.io/badge/MongoDB-47A248?style=flat-square&logo=mongodb&logoColor=white)](https://www.mongodb.com)
+[![Redis](https://img.shields.io/badge/Redis-DC382D?style=flat-square&logo=redis&logoColor=white)](https://redis.io)
+[![Docker](https://img.shields.io/badge/Docker-2496ED?style=flat-square&logo=docker&logoColor=white)](https://www.docker.com)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=flat-square)](LICENSE)
 
-Architecture
+A monorepo with two backend microservices and a Flutter mobile client delivering secure, low-latency 1-on-1 realtime chat.
 
-Directory Structure
+</div>
 
-System Requirements
+---
 
-Quick Start
+## Overview
 
-Environment Variables
+**Platform** is a full-stack messaging application composed of three independently deployable pieces:
 
-Running Locally without Docker
+| Layer | Tech | Responsibility |
+|-------|------|----------------|
+| `auth-service` | NestJS · TypeScript | Identity, JWT, OTP verification, OAuth social login |
+| `chat-service` | Spring Boot 3 · Java 21 | Realtime messaging (WebSocket/STOMP), conversations, presence |
+| `client` | Flutter 3 · Dart | Cross-platform mobile app (Android & iOS) |
 
-Testing & Quality
+Shared infrastructure: **MongoDB** (single `platform` database) + **Redis** (presence, pub/sub).
 
-Repo Conventions
+---
 
-Security
+## Architecture
 
-Roadmap
+```
+┌──────────────────────────────────────────────────────────┐
+│                     Flutter Client                        │
+│               Riverpod · go_router · Dio                  │
+└──────────┬──────────────────────────────────┬────────────┘
+           │ REST/HTTP  :3001                  │ WebSocket/STOMP  :8080
+           ▼                                  ▼
+┌──────────────────────┐          ┌───────────────────────────┐
+│    auth-service       │          │       chat-service         │
+│      (NestJS)         │          │     (Spring Boot 3)        │
+│                       │          │                            │
+│  POST /auth/register  │          │  WS  /ws  (STOMP)          │
+│  POST /auth/login     │          │  /app/chat.send            │
+│  POST /auth/refresh   │          │  /app/chat.join            │
+│  POST /auth/verify-otp│          │                            │
+│  GET  /auth/google    │          │  REST /api/conversations   │
+│  JWT issuance         │          │  REST /api/messages        │
+│  bcrypt · Passport    │          │  GET  /api/users/:id/status│
+└──────────┬────────────┘          └──────────────┬────────────┘
+           │                                      │
+           └──────────────┬───────────────────────┘
+                          │  shared
+              ┌───────────┴──────────────┐
+              ▼                          ▼
+   ┌──────────────────┐       ┌──────────────────┐
+   │    MongoDB        │       │      Redis        │
+   │   port 27018      │       │    port 6379      │
+   │  db: platform     │       │  presence, events │
+   └──────────────────┘       └──────────────────┘
+```
 
-Troubleshooting
+**JWT flow:** auth-service issues tokens signed with `JWT_SECRET`. chat-service validates the same secret on every WebSocket connection and REST request — no inter-service calls needed.
 
-License
+---
 
-Features (MVP v1)
+## Repository Structure
 
-Sign Up/Sign In (JWT + refresh), persistent login.
-
-1-on-1 realtime messaging (Socket.IO), latency < 1s (target).
-
-Typing indicator, read receipts, presence online/offline.
-
-Send images (upload + thumbnail + full view).
-
-Conversation list, unread badge, sorted by latest message.
-
-Basic search by name/recent text.
-
-Account settings page (avatar, display name, status).
-
-Docker Compose boots up api + web + mongo + redis with 1 command.
-
-Post-MVP features: group chat, voice/video calls (WebRTC), web push, admin portal, E2E encryption, mobile app.
-
-Architecture
-
-apps/server — NestJS REST + WebSocket (Socket.IO)
-
-MongoDB (Mongoose): users, conversations, messages, attachments
-
-Redis (pub/sub): presence, typing, realtime notifications
-
-DTO + Validation (class-validator), clear module separation
-
-apps/web — Next.js (App Router)
-
-Chat interface, client-side state with Zustand
-
-Calls REST + connects WS to the server
-
-infra/docker — Docker Compose orchestration
-
-packages/types — shared types/DTOs, event names
-
-Flow Diagram (simplified):
-
-Client (Next.js)
-    │ REST / WS
-    ▼
-API (NestJS) ── Mongoose ──► MongoDB
-    │  ▲
-    │  └─ Redis pub/sub ◄── Presence/Typing/Events
-Directory Structure
-
-(derived from the current repo)
-
+```
 platform/
-├─ apps/
-│  ├─ server/               # NestJS API + WS
-│  │  ├─ src/
-│  │  │  ├─ config/         # app/mongo/redis config
-│  │  │  ├─ database/
-│  │  │  │  └─ schemas/     # user, conversation, message, attachment
-│  │  │  ├─ modules/
-│  │  │  │  ├─ auth/ users/ conversations/ messages/ presence/
-│  │  │  └─ websockets/     # events.ts, chat.gateway.ts
-│  │  └─ Dockerfile
-│  └─ web/                  # Next.js (App Router)
-│     ├─ src/app/
-│     │  ├─ (auth)/{login,register}/page.tsx
-│     │  ├─ (protected)/{chat,settings}/page.tsx
-│     │  └─ layout.tsx
-│     └─ Dockerfile
-├─ infra/
-│  └─ docker/
-│     └─ docker-compose.yml # mongo, redis, api, web
-├─ packages/
-│  └─ types/                # shared types/events
-├─ pnpm-workspace.yaml
-├─ tsconfig.base.json
-├─ .gitignore
-├─ LICENSE
-├─ CONTRIBUTING.md
-├─ SECURITY.md
-└─ .editorconfig
-System Requirements
+├── apps/
+│   ├── server/
+│   │   ├── auth-service/          # NestJS — identity & tokens
+│   │   │   ├── src/modules/
+│   │   │   │   ├── auth/          # login, register, OTP, OAuth
+│   │   │   │   ├── users/         # user CRUD
+│   │   │   │   └── email/         # OTP mailer
+│   │   │   └── Dockerfile
+│   │   └── chat-service/          # Spring Boot 3 — messaging
+│   │       ├── src/main/java/.../
+│   │       │   ├── config/        # Security + WebSocket STOMP config
+│   │       │   ├── controller/    # ChatController (WS), REST controllers
+│   │       │   ├── service/       # ConversationService, MessageService
+│   │       │   ├── security/      # AuthChannelInterceptor, PresenceEventListener
+│   │       │   └── repository/    # Spring Data MongoDB repos
+│   │       └── Dockerfile
+│   └── client/                    # Flutter 3 — mobile app
+│       └── lib/
+│           ├── core/              # api clients, router, theme
+│           └── features/
+│               ├── auth/          # login, register, OTP screens
+│               └── chat/          # conversations, messages, presence
+├── infra/
+│   └── docker-compose/
+│       └── compose.yml            # full-stack with one command
+├── packages/
+│   ├── database/                  # shared MongoDB schemas (TypeScript)
+│   └── types/                     # shared DTOs & event names
+├── docs/
+│   ├── api-spec.md
+│   ├── decisions.md
+│   └── roadmap.md
+└── pnpm-workspace.yaml
+```
 
-Node.js ≥ 20 + pnpm (corepack enabled: corepack enable)
+---
 
-Docker & Docker Compose
+## Quick Start
 
-macOS / Linux / Windows (WSL2 recommended on Windows)
+### Prerequisites
 
-Quick Start
+- Docker & Docker Compose
+- Node.js ≥ 20 + pnpm (`corepack enable`)
+- Flutter SDK 3.x (`brew install --cask flutter`)
+- Java 21 + Maven (for chat-service local dev)
 
-Install dependencies
+### 1. Start infrastructure + backend services
 
-pnpm i
-Create environment files from samples
+```bash
+# Clone and install JS dependencies
+git clone https://github.com/MITOM06/platform.git && cd platform
+pnpm install
 
-cp apps/server/.env.sample apps/server/.env
-cp apps/web/.env.sample    apps/web/.env
-Run with Docker Compose (recommended)
+# Copy environment files
+cp apps/server/auth-service/.env.example apps/server/auth-service/.env
 
-docker compose -f infra/docker/docker-compose.yml up -d
-docker compose -f infra/docker/docker-compose.yml ps
-Web client: http://localhost:3000
+# Spin up MongoDB, Redis, auth-service, and chat-service
+docker compose -f infra/docker-compose/compose.yml up -d
+```
 
-API server (if swagger/test route exposed): http://localhost:4000
+Services will be available at:
 
-MongoDB: localhost:27017
+| Service | URL |
+|---------|-----|
+| auth-service | `http://localhost:3001` |
+| chat-service | `http://localhost:8080` |
+| MongoDB | `localhost:27018` |
+| Redis | `localhost:6379` |
 
-Redis: localhost:6379
+### 2. Run the Flutter client
 
-To stop:
+```bash
+cd apps/client
+flutter pub get
+dart run build_runner build --delete-conflicting-outputs
+flutter run
+```
 
-docker compose -f infra/docker/docker-compose.yml down
-Environment Variables
+### Stop everything
 
-apps/server (apps/server/.env)
+```bash
+docker compose -f infra/docker-compose/compose.yml down
+```
 
-PORT=4000
-MONGO_URI=mongodb://mongo:27017/messaging
-REDIS_URL=redis://redis:6379
-JWT_SECRET=changeme
+---
+
+## Environment Variables
+
+### auth-service (`apps/server/auth-service/.env`)
+
+```env
+PORT=3001
+MONGO_URI=mongodb://localhost:27018/platform
+REDIS_URL=redis://localhost:6379
+JWT_SECRET=your_shared_secret_here
 JWT_EXPIRES=15m
 REFRESH_EXPIRES=7d
-UPLOAD_DIR=/tmp/uploads
-apps/web (apps/web/.env)
+MAIL_HOST=smtp.example.com
+MAIL_USER=noreply@example.com
+MAIL_PASS=your_mail_password
+```
 
-NEXT_PUBLIC_API_URL=http://localhost:4000
-NEXT_PUBLIC_WS_URL=ws://localhost:4000
-Note: do not commit actual .env files; only commit .env.sample.
+### chat-service (`apps/server/chat-service/src/main/resources/application.properties`)
 
-Running Locally without Docker
+```properties
+spring.data.mongodb.uri=mongodb://localhost:27018/platform
+spring.data.redis.host=localhost
+spring.data.redis.port=6379
+app.jwt.secret=your_shared_secret_here
+```
 
-Server
+> **Important:** `JWT_SECRET` / `app.jwt.secret` must be identical across both services.
 
-cd apps/server
-pnpm i
-pnpm build       # or pnpm start:dev if configured
-Web
+---
 
-cd apps/web
-pnpm i
-pnpm dev         # http://localhost:3000
-Requires MongoDB/Redis running locally (or update .env to point to a running service).
+## Features
 
-Testing & Quality
+### Implemented
 
-Unit/E2E (server): Jest (e.g., AuthService, MessageService, PresenceService)
+- Email/password registration with OTP email verification
+- JWT access + refresh token rotation
+- OAuth 2.0 social login (Google, Facebook, Twitter)
+- 1-on-1 realtime messaging over WebSocket (STOMP protocol)
+- User presence — online/offline tracking via Redis
+- Conversation list with pagination
+- Message history with cursor-based pagination
+- New conversation creation with user search
+- JWT auth over WebSocket via channel interceptor
+- Flutter Material 3 UI — fully null-safe Dart 3
 
-E2E (web): Playwright/Cypress (scenarios: A↔B send message, typing, read)
+### Roadmap
 
-Suggested commands (customize based on your added configuration):
+- [ ] Group conversations
+- [ ] Read receipts & typing indicators
+- [ ] Push notifications (FCM)
+- [ ] Image/file attachments
+- [ ] End-to-end encryption
+- [ ] Web client (Next.js)
 
-pnpm -C apps/server test
-pnpm -C apps/web    test
-CI (recommended): .github/workflows/ci.yml runs pnpm i + pnpm -r build + pnpm -r test.
+---
 
-Repo Conventions
+## Development
 
-Branch: feat/<scope>, fix/<scope>, chore/<scope>, docs/<scope>
+### Running services individually
 
-Commit: Conventional Commits (feat:, fix:, chore:, docs:, refactor:, test:, ci:)
+**auth-service**
+```bash
+cd apps/server/auth-service
+pnpm install
+pnpm start:dev        # http://localhost:3001
+```
 
-PRs to main: require CI pass
+**chat-service**
+```bash
+cd apps/server/chat-service
+./mvnw spring-boot:run  # http://localhost:8080
+```
 
-(Recommended) CODEOWNERS for auto-requesting reviews
+### Code conventions
 
-Security
+- **Branches:** `feat/<scope>`, `fix/<scope>`, `chore/<scope>`
+- **Commits:** Conventional Commits (`feat:`, `fix:`, `refactor:`, `test:`)
+- **PRs** target `main`; CI must pass before merge
 
-Do not commit secrets; use .env locally or a secret store in CI/CD.
+See [CONTRIBUTING.md](CONTRIBUTING.md) for full guidelines and [SECURITY.md](SECURITY.md) for reporting vulnerabilities.
 
-Security issues: see SECURITY.md (how to report, response SLA).
+---
 
-Roadmap
+## License
 
-v0.1.0 — MVP: basic auth, 1-on-1 realtime chat, typing, read, presence, image upload, search, 1-command Docker up.
-
-v1.1+: group chat, web push, virtualized list optimization, deep clean architecture modularization, demo seed script.
-
-v2.x: voice/video calls (WebRTC), end-to-end encryption, admin portal, role-based features, mobile app (RN).
-
-Troubleshooting
-
-WS not connecting: check NEXT_PUBLIC_WS_URL, CORS/Origin on the gateway.
-
-API not connecting to Mongo/Redis: check MONGO_URI/REDIS_URL, Docker network.
-
-Web blank page: check NEXT_PUBLIC_API_URL, web container logs.
-
-Data loss after restart: ensure Mongo volume is in compose.
-
-View logs:
-
-docker compose -f infra/docker/docker-compose.yml logs -f api
-docker compose -f infra/docker/docker-compose.yml logs -f web
-License
-
-Source code is released under the MIT License (see LICENSE).
-
-Additional Suggestions (optional)
-
-Add screenshots to docs/ and reference them in the README.
-
-Add docs/ADR-001-architecture.md and sequence diagrams (PlantUML) when the system is stable.
-
-Enable Branch protection for main (require PR + CI pass).
+MIT © [Tran Phuc Khang](https://github.com/MITOM06) — see [LICENSE](LICENSE).
