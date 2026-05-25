@@ -10,6 +10,7 @@ import '../../features/auth/ui/forgot_password_screen.dart';
 import '../../features/auth/ui/new_password_screen.dart';
 import '../../features/chat/ui/conversation_list_screen.dart';
 import '../../features/chat/ui/chat_screen.dart';
+import '../../features/chat/ui/new_conversation_screen.dart';
 import '../../features/settings/ui/settings_screen.dart';
 
 part 'app_router.g.dart';
@@ -126,6 +127,11 @@ GoRouter appRouter(AppRouterRef ref) {
         path: '/settings',
         name: 'settings',
         builder: (context, state) => const SettingsScreen(),
+      ),
+      GoRoute(
+        path: '/new-conversation',
+        name: 'new-conversation',
+        builder: (context, state) => const NewConversationScreen(),
       ),
     ],
   );

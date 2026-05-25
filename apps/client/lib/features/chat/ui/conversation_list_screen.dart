@@ -43,6 +43,12 @@ class ConversationListScreen extends ConsumerWidget {
         ],
       ),
 
+      floatingActionButton: FloatingActionButton(
+        onPressed: () => context.push('/new-conversation'),
+        tooltip: 'Cuộc trò chuyện mới',
+        child: const Icon(Icons.add_comment_outlined),
+      ),
+
       // Offline banner
       body: Column(
         children: [

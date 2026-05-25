@@ -87,6 +87,12 @@ public class ConversationService {
             ));
     }
 
+    public List<String> getParticipants(String conversationId) {
+        return conversationRepository.findById(conversationId)
+            .map(Conversation::getParticipants)
+            .orElse(List.of());
+    }
+
     private ConversationResponse toResponse(Conversation c, String userId, long unreadCount) {
         ConversationResponse.LastMessageDto lastMsg = null;
         if (c.getLastMessage() != null) {

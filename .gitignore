@@ -60,6 +60,10 @@ infra/mongodb_config/logs/
 # ─── Claude (personal, không commit) ─────────────────────────────────────────
 CLAUDE.local.md
 .claude/settings.local.json
+.claude/ai-activity.md
+
+# ─── Personal / Project docs (không commit) ──────────────────────────────────
+*_evaluation.pdf
 
 # ─── IDE ─────────────────────────────────────────────────────────────────────
 .idea/

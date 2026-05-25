@@ -5,6 +5,7 @@ import '../../auth/domain/auth_provider.dart';
 import '../../auth/domain/auth_state.dart';
 import '../data/stomp_service.dart';
 import '../domain/chat_provider.dart';
+import '../domain/chat_state.dart';
 import 'widgets/message_bubble.dart';
 
 class ChatScreen extends ConsumerStatefulWidget {
@@ -46,7 +47,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
   void didChangeAppLifecycleState(AppLifecycleState lifecycleState) {
     final stomp = ref.read(stompServiceProvider.notifier);
     if (lifecycleState == AppLifecycleState.paused) {
-      stomp.disconnect(); // sync — deactivate and clear client
+      stomp.disconnect();
     } else if (lifecycleState == AppLifecycleState.resumed) {
       _reconnectStomp();
     }
@@ -60,8 +61,6 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
     }
   }
 
-  // With ListView(reverse: true), scrolling "up" (to older messages) increases pixels.
-  // When approaching maxScrollExtent, we're near the oldest messages — trigger loadMore.
   void _onScroll() {
     if (_scrollCtrl.position.pixels >=
         _scrollCtrl.position.maxScrollExtent - 200) {
@@ -87,8 +86,59 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
     final currentUserId =
         authState is AuthAuthenticated ? authState.user.id : '';
 
+    // Derive the other participant's ID from the conversations list
+    final conversations =
+        ref.watch(conversationsNotifierProvider).valueOrNull ?? [];
+    final matchingConvs =
+        conversations.where((c) => c.id == widget.conversationId).toList();
+    final ConversationModel? conv =
+        matchingConvs.isEmpty ? null : matchingConvs.first;
+    final others =
+        conv?.participants.where((p) => p != currentUserId).toList();
+    final String? otherUserId =
+        (others != null && others.isNotEmpty) ? others.first : null;
+
+    // Fetch online status for the other user
+    final statusAsync = (otherUserId != null && otherUserId.isNotEmpty)
+        ? ref.watch(userStatusProvider(otherUserId))
+        : null;
+
     return Scaffold(
-      appBar: AppBar(title: const Text('Chat')),
+      appBar: AppBar(
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Chat',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+            ),
+            if (statusAsync != null)
+              statusAsync.when(
+                data: (status) => Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      width: 8,
+                      height: 8,
+                      margin: const EdgeInsets.only(right: 4),
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: status.online ? Colors.green : Colors.grey,
+                      ),
+                    ),
+                    Text(
+                      status.online ? 'Online' : 'Offline',
+                      style: const TextStyle(fontSize: 12),
+                    ),
+                  ],
+                ),
+                loading: () =>
+                    const Text('...', style: TextStyle(fontSize: 12)),
+                error: (_, __) => const SizedBox.shrink(),
+              ),
+          ],
+        ),
+      ),
       body: Column(
         children: [
           Expanded(
@@ -101,12 +151,30 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
                     child: ListView.builder(
                       controller: _scrollCtrl,
                       reverse: true,
-                      itemCount: chatState.messages.length,
+                      itemCount: chatState.messages.length +
+                          (chatState.isLoadingMore ? 1 : 0),
                       itemBuilder: (context, index) {
+                        // With reverse:true, highest index = top of screen.
+                        // Spinner at top while older messages are loading.
+                        if (chatState.isLoadingMore &&
+                            index == chatState.messages.length) {
+                          return const Padding(
+                            padding: EdgeInsets.all(16),
+                            child: Center(
+                              child: SizedBox(
+                                width: 20,
+                                height: 20,
+                                child: CircularProgressIndicator(
+                                    strokeWidth: 2),
+                              ),
+                            ),
+                          );
+                        }
                         final msg = chatState.messages[index];
                         return MessageBubble(
                           message: msg,
                           isSentByMe: msg.senderId == currentUserId,
+                          otherUserId: otherUserId,
                         );
                       },
                     ),
