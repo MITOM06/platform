@@ -27,7 +27,7 @@ export class UsersService {
   }
 
   async findById(id: string): Promise<UserDocument | null> {
-    return this.userModel.findById(id).exec();
+    return this.userModel.findById(id).select('-password').exec();
   }
 
   async updatePassword(userId: string, passwordHash: string): Promise<void> {
@@ -46,6 +46,13 @@ export class UsersService {
     });
   }
 
+  async setVerified(userId: string): Promise<void> {
+    await this.userModel.findByIdAndUpdate(userId, {
+      $set: { isVerified: true },
+      $unset: { otpCode: '', otpExpires: '' },
+    });
+  }
+
   // ✅ Query đúng với socialLinks pattern
   // provider = 'google' → query { 'socialLinks.google': socialId }
   async findBySocialId(provider: string, socialId: string): Promise<UserDocument | null> {
@@ -60,6 +67,15 @@ export class UsersService {
     await this.userModel.findByIdAndUpdate(userId, {
       $set: { [`socialLinks.${provider}`]: socialId },
     });
+  }
+
+  async findBySearchQuery(query: string): Promise<UserDocument[]> {
+    return this.userModel.find({
+      $or: [
+        { email: new RegExp(query, 'i') },
+        { displayName: new RegExp(query, 'i') },
+      ],
+    }).limit(10).select('-password').exec();
   }
 
   // ❌ Xóa toàn bộ hàm logout — logic này thuộc AuthService

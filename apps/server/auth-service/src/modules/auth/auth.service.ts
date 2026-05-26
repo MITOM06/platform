@@ -137,6 +137,7 @@ export class AuthService {
       message: 'Đăng nhập thành công',
       accessToken,
       refreshToken,
+      sid,
       user: {
         id: user._id,
         email: user.email,
@@ -197,8 +198,9 @@ export class AuthService {
       throw new BadRequestException(`Mã xác thực không đúng. Còn ${remaining} lần thử`);
     }
 
-    // ✅ OTP đúng → reset counter ngay
+    // ✅ OTP đúng → reset counter + mark verified
     await this.redis.del(attemptKey);
+    await this.usersService.setVerified(user._id.toString());
     return { success: true, message: 'Mã xác thực hợp lệ' };
   }
 
@@ -283,7 +285,18 @@ export class AuthService {
   async register(dto: RegisterDto) {
     const existingUser = await this.usersService.findByEmail(dto.email);
     if (existingUser) {
-      throw new ConflictException('Email này đã được sử dụng');
+      if (existingUser.isVerified) {
+        throw new ConflictException('Email này đã được sử dụng');
+      }
+      // Tài khoản tồn tại nhưng chưa verify → gửi lại OTP thay vì báo lỗi
+      const otp = Math.floor(100000 + Math.random() * 900000).toString();
+      const expires = new Date(Date.now() + 5 * 60 * 1000);
+      await this.usersService.updateOtp(existingUser._id, otp, expires);
+      await this.mailService.sendOtpEmail(dto.email, otp);
+      return {
+        message: 'Tài khoản chưa xác thực. Mã OTP mới đã gửi tới email của bạn.',
+        userId: existingUser._id,
+      };
     }
 
     const salt = await bcrypt.genSalt(10);
@@ -296,9 +309,39 @@ export class AuthService {
       isVerified: false,
     });
 
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const expires = new Date(Date.now() + 5 * 60 * 1000);
+    await this.usersService.updateOtp(user._id, otp, expires);
+    await this.mailService.sendOtpEmail(dto.email, otp);
+
     return {
-      message: 'Đăng ký tài khoản thành công',
+      message: 'Đăng ký thành công. Mã OTP đã gửi tới email của bạn.',
       userId: user._id,
     };
+  }
+
+  async resendOtp(email: string) {
+    const cooldownKey = `otp_resend_cooldown:${email}`;
+    const cooldownTTL = Number(this.configService.get('OTP_RESEND_COOLDOWN', 60));
+
+    const existing = await this.redis.get(cooldownKey);
+    if (existing) {
+      const ttl = await this.redis.ttl(cooldownKey);
+      throw new BadRequestException(`Vui lòng đợi ${ttl} giây trước khi gửi lại.`);
+    }
+
+    const user = await this.usersService.findByEmail(email);
+    if (!user) throw new NotFoundException('Email không tồn tại trên hệ thống');
+
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const expires = new Date(Date.now() + 5 * 60 * 1000);
+    await this.usersService.updateOtp(user._id, otp, expires);
+    await this.mailService.sendOtpEmail(email, otp);
+
+    // Reset attempt counter khi gửi lại OTP mới
+    await this.redis.del(`otp_attempts:${email}`);
+    await this.redis.set(cooldownKey, '1', 'EX', cooldownTTL);
+
+    return { success: true, message: 'Mã OTP mới đã được gửi.' };
   }
 }

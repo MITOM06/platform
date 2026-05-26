@@ -44,8 +44,12 @@ class AuthRepository {
   Future<void> verifyOtp(String email, String otpCode) async {
     await _dio.post('/auth/verify-otp', data: {
       'email': email,
-      'otpCode': otpCode,
+      'otp': otpCode,
     });
+  }
+
+  Future<void> resendOtp(String email) async {
+    await _dio.post('/auth/resend-otp', data: {'email': email});
   }
 
   Future<void> forgotPassword(String email) async {
@@ -56,8 +60,8 @@ class AuthRepository {
       String email, String otpCode, String newPassword) async {
     await _dio.post('/auth/reset-password', data: {
       'email': email,
-      'otpCode': otpCode,
-      'newPassword': newPassword,
+      'otp': otpCode,
+      'password': newPassword,
     });
   }
 
@@ -102,6 +106,12 @@ class AuthRepository {
   Future<void> clearCredentials() => _storage.deleteAll();
 
   /// Updates display name locally in secure storage (no server call).
+  /// Lấy public profile của bất kỳ user nào theo id — dùng cho chat UI
+  Future<UserModel> getUserProfile(String userId) async {
+    final response = await _dio.get('/api/users/$userId');
+    return UserModel.fromJson(response.data as Map<String, dynamic>);
+  }
+
   Future<UserModel> updateDisplayName(String displayName) async {
     final userJson = await _storage.read(key: _keyUser);
     if (userJson == null) throw StateError('No user in storage');

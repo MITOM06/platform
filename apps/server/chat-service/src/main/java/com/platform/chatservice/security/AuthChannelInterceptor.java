@@ -2,6 +2,7 @@ package com.platform.chatservice.security;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.lang.NonNull;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
 import org.springframework.messaging.MessageDeliveryException;
@@ -27,7 +28,7 @@ public class AuthChannelInterceptor implements ChannelInterceptor {
     private final StringRedisTemplate redisTemplate;
 
     @Override
-    public Message<?> preSend(Message<?> message, MessageChannel channel) {
+    public Message<?> preSend(@NonNull Message<?> message, @NonNull MessageChannel channel) {
         StompHeaderAccessor accessor = MessageHeaderAccessor.getAccessor(message, StompHeaderAccessor.class);
         if (accessor == null || accessor.getCommand() == null) {
             return message;
@@ -64,6 +65,7 @@ public class AuthChannelInterceptor implements ChannelInterceptor {
         return message;
     }
 
+    @SuppressWarnings("null")
     private void refreshPresence(String userId) {
         redisTemplate.expire(STATUS_KEY_PREFIX + userId, ONLINE_TTL);
     }

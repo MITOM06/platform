@@ -41,6 +41,29 @@ services:
     networks:
       - app-net
 
+  auth-service:
+    build:
+      context: ../../apps/server/auth-service
+      dockerfile: Dockerfile
+    container_name: auth-service
+    ports:
+      - "3001:3001"
+    depends_on:
+      mongo:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET}
+      MONGODB_URI: mongodb://mongo:27017/platform
+      REDIS_HOST: redis
+      MAIL_HOST: ${MAIL_HOST}
+      MAIL_PORT: ${MAIL_PORT}
+      MAIL_USER: ${MAIL_USER}
+      MAIL_PASS: ${MAIL_PASS}
+    networks:
+      - app-net
+
   chat-service:
     build:
       context: ../../apps/server/chat-service
@@ -54,9 +77,19 @@ services:
       redis:
         condition: service_healthy
     environment:
-      JWT_SECRET: ${JWT_SECRET}
+      JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET}
       SPRING_DATA_MONGODB_URI: mongodb://mongo:27017/platform
       SPRING_DATA_REDIS_HOST: redis
+      # Bean overriding needed: @EnableWebSocketMessageBroker registers SimpleUrlHandlerMapping
+      # with same name as Spring MVC's — benign override, required by Spring WebSocket internals.
+      SPRING_MAIN_ALLOW_BEAN_DEFINITION_OVERRIDING: "true"
+      # Cấu hình Mail cho Spring Boot (Chat Service)
+      SPRING_MAIL_HOST: ${MAIL_HOST}
+      SPRING_MAIL_PORT: ${MAIL_PORT}
+      SPRING_MAIL_USERNAME: ${MAIL_USER}
+      SPRING_MAIL_PASSWORD: ${MAIL_PASS}
+      SPRING_MAIL_PROPERTIES_MAIL_SMTP_AUTH: "true"
+      SPRING_MAIL_PROPERTIES_MAIL_SMTP_STARTTLS_ENABLE: "true"
     networks:
       - app-net
 

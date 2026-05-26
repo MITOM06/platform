@@ -15,6 +15,7 @@ import java.security.Principal;
 import java.util.List;
 import java.util.Map;
 
+@SuppressWarnings("null")
 @Controller
 @RequiredArgsConstructor
 public class ChatController {
