@@ -122,6 +122,11 @@ export class AuthController {
     return this.auth.verifyOtp(email, otp);
   }
 
+  @Post('resend-otp')
+  async resend(@Body('email') email: string) {
+    return this.auth.resendOtp(email);
+  }
+
   @Post('reset-password')
   async reset(
     @Body('email') email: string,

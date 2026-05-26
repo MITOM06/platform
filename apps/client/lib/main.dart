@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'core/router/app_router.dart';
+import 'core/theme/app_theme.dart';
 import 'core/utils/global_messenger.dart';
 
 void main() async {
@@ -19,14 +20,13 @@ class PlatformApp extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final router = ref.watch(appRouterProvider);
     return MaterialApp.router(
-      title: 'Platform',
+      title: 'PON',
       scaffoldMessengerKey: scaffoldMessengerKey,
       routerConfig: router,
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF1A73E8)),
-        useMaterial3: true,
-      ),
+      theme: AppTheme.lightTheme,
+      darkTheme: AppTheme.darkTheme,
+      themeMode: ThemeMode.dark, // Keep dark mode as default for beautiful neon lights
     );
   }
 }

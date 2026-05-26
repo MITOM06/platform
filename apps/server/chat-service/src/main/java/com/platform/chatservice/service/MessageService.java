@@ -43,6 +43,9 @@ public class MessageService {
     }
 
     public MessageResponse sendMessage(String senderId, SendMessageRequest request) {
+        if (request.content() == null || request.content().trim().isEmpty()) {
+            throw new IllegalArgumentException("Message content cannot be empty");
+        }
         Conversation conversation = conversationRepository.findById(request.conversationId())
             .orElseThrow(() -> new ConversationNotFoundException(request.conversationId()));
         if (!conversation.getParticipants().contains(senderId)) {

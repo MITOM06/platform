@@ -14,14 +14,16 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 
 import java.security.Principal;
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
+@SuppressWarnings("null")
 @ExtendWith(MockitoExtension.class)
 class ChatControllerTest {
 
@@ -45,26 +47,22 @@ class ChatControllerTest {
 
     @BeforeEach
     void setUp() {
-        chatDto = new ChatMessageDto("conv-456", "Hello", "text", false);
+        chatDto = new ChatMessageDto("conv-456", "Hello", "text", false, null);
         when(principal.getName()).thenReturn(SENDER_ID);
     }
 
     @Test
     void send_ShouldSendMessageAndBroadcast() {
-        // Arrange
-        // Giả định MessageResponse là Record theo kiến trúc Java 21 của dự án
-        MessageResponse response = new MessageResponse("msg-999", "conv-456", SENDER_ID, "Hello", "text", List.of(SENDER_ID), LocalDateTime.now());
-        
+        MessageResponse response = new MessageResponse("msg-999", "conv-456", SENDER_ID, "Hello", "text", List.of(SENDER_ID), Instant.now());
+
         when(conversationService.getParticipants("conv-456")).thenReturn(List.of(SENDER_ID, "user-456"));
         when(messageService.sendMessage(eq(SENDER_ID), any(SendMessageRequest.class))).thenReturn(response);
 
-        // Act
         chatController.send(chatDto, principal);
 
-        // Assert
         verify(messageService, times(1)).sendMessage(eq(SENDER_ID), any(SendMessageRequest.class));
         verify(messagingTemplate, times(1)).convertAndSend(
-                eq("/topic/conversation/conv-456"), 
+                eq("/topic/conversation/conv-456"),
                 eq(response)
         );
         verify(messagingTemplate, times(1)).convertAndSendToUser(
@@ -76,19 +74,14 @@ class ChatControllerTest {
 
     @Test
     void typing_ShouldBroadcastTypingStatus() {
-        // Arrange
         chatDto.setTyping(true);
 
-        // Act
         chatController.typing(chatDto, principal);
 
-        // Assert
         verify(messagingTemplate, times(1)).convertAndSend(
                 eq("/topic/conversation/conv-456/typing"),
-                argThat(argument -> {
-                    Map<String, Object> payload = (Map<String, Object>) argument;
-                    return payload.get("typing").equals(true) && payload.get("userId").equals(SENDER_ID);
-                })
+                argThat((Map<String, Object> payload) ->
+                        payload.get("typing").equals(true) && payload.get("userId").equals(SENDER_ID))
         );
     }
 }

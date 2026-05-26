@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../../core/theme/app_theme.dart';
+import '../../../core/widgets/neon_widgets.dart';
 import '../data/chat_repository.dart';
 
 class NewConversationScreen extends ConsumerStatefulWidget {
@@ -50,54 +52,137 @@ class _NewConversationScreenState
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Cuộc trò chuyện mới')),
-      body: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              TextFormField(
-                controller: _controller,
-                decoration: const InputDecoration(
-                  labelText: 'Email hoặc User ID',
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.person_outline),
-                ),
-                textInputAction: TextInputAction.done,
-                onFieldSubmitted: (_) => _loading ? null : _submit(),
-                validator: (v) {
-                  if (v == null || v.trim().isEmpty) {
-                    return 'Vui lòng nhập email hoặc User ID';
-                  }
-                  return null;
-                },
-              ),
-              if (_error != null) ...[
-                const SizedBox(height: 12),
-                Text(
-                  _error!,
-                  style: TextStyle(
-                    color: Theme.of(context).colorScheme.error,
-                    fontSize: 13,
-                  ),
-                ),
-              ],
-              const SizedBox(height: 24),
-              FilledButton(
-                onPressed: _loading ? null : _submit,
-                child: _loading
-                    ? const SizedBox(
-                        height: 20,
-                        width: 20,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : const Text('Bắt đầu trò chuyện'),
-              ),
-            ],
-          ),
+      appBar: AppBar(
+        title: const Text('Cuộc Trò Chuyện Mới'),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
+          onPressed: () => context.pop(),
         ),
+      ),
+      body: Stack(
+        children: [
+          // Background ambient lights
+          Positioned(
+            top: -100,
+            left: -100,
+            child: Container(
+              width: 300,
+              height: 300,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: RadialGradient(
+                  colors: [
+                    AppTheme.neonCyan.withValues(alpha: 0.08),
+                    Colors.transparent,
+                  ],
+                ),
+              ),
+            ),
+          ),
+          Positioned(
+            bottom: -100,
+            right: -100,
+            child: Container(
+              width: 300,
+              height: 300,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: RadialGradient(
+                  colors: [
+                    AppTheme.neonPurple.withValues(alpha: 0.08),
+                    Colors.transparent,
+                  ],
+                ),
+              ),
+            ),
+          ),
+
+          // Content
+          SafeArea(
+            child: SingleChildScrollView(
+              physics: const BouncingScrollPhysics(),
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  const Center(child: PonLogo(size: 60, showText: false)),
+                  const SizedBox(height: 24),
+                  
+                  NeonCard(
+                    glowColor: AppTheme.neonCyan,
+                    glowStrength: 4,
+                    child: Padding(
+                      padding: const EdgeInsets.all(20.0),
+                      child: Form(
+                        key: _formKey,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            const Text(
+                              'Bắt đầu cuộc trò chuyện',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
+                            ),
+                            const SizedBox(height: 16),
+                            
+                            // User identifier input
+                            NeonTextField(
+                              controller: _controller,
+                              labelText: 'Email hoặc User ID đối phương',
+                              prefixIcon: Icons.person_outline_rounded,
+                              focusColor: AppTheme.neonCyan,
+                              textInputAction: TextInputAction.done,
+                              onFieldSubmitted: (_) => _loading ? null : _submit(),
+                              validator: (v) {
+                                if (v == null || v.trim().isEmpty) {
+                                  return 'Vui lòng nhập email hoặc User ID';
+                                }
+                                return null;
+                              },
+                            ),
+                            
+                            if (_error != null) ...[
+                              const SizedBox(height: 16),
+                              Row(
+                                children: [
+                                  const Icon(Icons.error_outline_rounded, color: Colors.redAccent, size: 16),
+                                  const SizedBox(width: 8),
+                                  Expanded(
+                                    child: Text(
+                                      _error!,
+                                      style: const TextStyle(
+                                        color: Colors.redAccent,
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                            const SizedBox(height: 24),
+                            
+                            // Submit Button
+                            NeonButton(
+                              onPressed: _submit,
+                              isLoading: _loading,
+                              gradientColors: const [AppTheme.neonCyan, AppTheme.neonBlue],
+                              glowColor: AppTheme.neonCyan,
+                              child: const Text('BẮT ĐẦU TRÒ CHUYỆN'),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

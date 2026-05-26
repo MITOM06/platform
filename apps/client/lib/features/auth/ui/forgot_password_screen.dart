@@ -2,6 +2,8 @@ import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../../core/theme/app_theme.dart';
+import '../../../core/widgets/neon_widgets.dart';
 import '../data/auth_repository.dart';
 
 class ForgotPasswordScreen extends ConsumerStatefulWidget {
@@ -54,71 +56,129 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Quên mật khẩu'),
-        leading: BackButton(onPressed: () => context.go('/login')),
+        title: const Text('Đặt Lại Mật Khẩu'),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
+          onPressed: () => context.go('/login'),
+        ),
       ),
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Icon(Icons.lock_reset_outlined, size: 56, color: cs.primary),
-                const SizedBox(height: 16),
-                Text(
-                  'Đặt lại mật khẩu',
-                  style: Theme.of(context).textTheme.headlineSmall,
-                  textAlign: TextAlign.center,
+      body: Stack(
+        children: [
+          // Background ambient lights
+          Positioned(
+            top: -100,
+            right: -100,
+            child: Container(
+              width: 300,
+              height: 300,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: RadialGradient(
+                  colors: [
+                    AppTheme.neonPink.withValues(alpha: 0.12),
+                    Colors.transparent,
+                  ],
                 ),
-                const SizedBox(height: 8),
-                Text(
-                  'Nhập email để nhận mã OTP đặt lại mật khẩu',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(color: cs.onSurfaceVariant),
-                ),
-                const SizedBox(height: 32),
-                TextFormField(
-                  controller: _emailController,
-                  decoration: const InputDecoration(
-                    labelText: 'Email',
-                    prefixIcon: Icon(Icons.email_outlined),
-                    border: OutlineInputBorder(),
-                  ),
-                  keyboardType: TextInputType.emailAddress,
-                  textInputAction: TextInputAction.done,
-                  onFieldSubmitted: (_) => _submit(),
-                  validator: (v) {
-                    if (v == null || v.isEmpty) return 'Nhập email';
-                    if (!v.contains('@')) return 'Email không hợp lệ';
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 24),
-                FilledButton(
-                  onPressed: _isLoading ? null : _submit,
-                  child: _isLoading
-                      ? const SizedBox(
-                          height: 20,
-                          width: 20,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : const Text('Gửi mã OTP'),
-                ),
-                const SizedBox(height: 16),
-                TextButton(
-                  onPressed: () => context.go('/login'),
-                  child: const Text('Quay lại đăng nhập'),
-                ),
-              ],
+              ),
             ),
           ),
-        ),
+          Positioned(
+            bottom: -150,
+            left: -100,
+            child: Container(
+              width: 350,
+              height: 350,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: RadialGradient(
+                  colors: [
+                    AppTheme.neonCyan.withValues(alpha: 0.15),
+                    Colors.transparent,
+                  ],
+                ),
+              ),
+            ),
+          ),
+
+          // Content
+          SafeArea(
+            child: Center(
+              child: SingleChildScrollView(
+                physics: const BouncingScrollPhysics(),
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    const Center(child: PonLogo(size: 60, showText: false)),
+                    const SizedBox(height: 16),
+                    Text(
+                      'Quên mật khẩu?',
+                      style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Nhập email của bạn để nhận mã OTP thiết lập mật khẩu mới',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        color: Colors.white.withValues(alpha: 0.5),
+                        height: 1.5,
+                      ),
+                    ),
+                    const SizedBox(height: 32),
+
+                    // Forgot Form Card
+                    NeonCard(
+                      glowColor: AppTheme.neonPurple,
+                      glowStrength: 8,
+                      child: Padding(
+                        padding: const EdgeInsets.all(24.0),
+                        child: Form(
+                          key: _formKey,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              // Email
+                              NeonTextField(
+                                controller: _emailController,
+                                labelText: 'Email',
+                                prefixIcon: Icons.email_outlined,
+                                keyboardType: TextInputType.emailAddress,
+                                textInputAction: TextInputAction.done,
+                                onFieldSubmitted: (_) => _submit(),
+                                focusColor: AppTheme.neonCyan,
+                                validator: (v) {
+                                  if (v == null || v.isEmpty) return 'Vui lòng nhập email';
+                                  if (!v.contains('@')) return 'Email không hợp lệ';
+                                  return null;
+                                },
+                              ),
+                              const SizedBox(height: 28),
+
+                              // Submit Button
+                              NeonButton(
+                                onPressed: _submit,
+                                isLoading: _isLoading,
+                                gradientColors: const [AppTheme.neonPurple, AppTheme.neonPink],
+                                glowColor: AppTheme.neonPink,
+                                child: const Text('GỬI MÃ OTP'),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

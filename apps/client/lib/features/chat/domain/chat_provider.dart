@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import '../../auth/data/auth_repository.dart';
 import '../../auth/domain/auth_provider.dart';
 import '../../auth/domain/auth_state.dart';
 import '../data/chat_repository.dart';
@@ -42,19 +43,16 @@ class ConversationsNotifier extends _$ConversationsNotifier {
     final current = state.valueOrNull;
     if (current == null) return;
 
+    // Chat-service gửi flat payload: {type, conversationId, senderName}
     final type = notif['type'] as String?;
-    if (type == 'message') {
-      final data = notif['data'] as Map<String, dynamic>?;
-      final convId = data?['conversationId'] as String?;
+    if (type == 'NEW_MESSAGE') {
+      final convId = notif['conversationId'] as String?;
       if (convId == null) return;
 
-      final lastMsgJson = data?['lastMessage'] as Map<String, dynamic>?;
+      // Đẩy conversation lên đầu + tăng unreadCount
       final updated = current.map((c) {
         if (c.id != convId) return c;
         return c.copyWith(
-          lastMessage: lastMsgJson != null
-              ? LastMessageModel.fromJson(lastMsgJson)
-              : c.lastMessage,
           lastMessageAt: DateTime.now(),
           unreadCount: c.unreadCount + 1,
         );
@@ -91,6 +89,7 @@ class ConversationsNotifier extends _$ConversationsNotifier {
 @riverpod
 class ChatNotifier extends _$ChatNotifier {
   Timer? _typingTimer;
+  final Map<String, Timer> _typingTimers = {};
   StreamSubscription<MessageModel>? _messageSub;
   StreamSubscription<TypingEvent>? _typingSub;
 
@@ -112,6 +111,10 @@ class ChatNotifier extends _$ChatNotifier {
       _messageSub?.cancel();
       _typingSub?.cancel();
       _typingTimer?.cancel();
+      for (final t in _typingTimers.values) {
+        t.cancel();
+      }
+      _typingTimers.clear();
       stomp.unsubscribeConversation(conversationId);
     });
 
@@ -155,11 +158,27 @@ class ChatNotifier extends _$ChatNotifier {
     final current = state.valueOrNull;
     if (current == null) return;
     final typingIds = Set<String>.from(current.typingUserIds);
+
+    _typingTimers[event.userId]?.cancel();
+
     if (event.isTyping) {
       typingIds.add(event.userId);
+      _typingTimers[event.userId] = Timer(const Duration(seconds: 3), () {
+        _removeTypingUser(event.userId);
+      });
     } else {
       typingIds.remove(event.userId);
+      _typingTimers.remove(event.userId);
     }
+
+    state = AsyncData(current.copyWith(typingUserIds: typingIds));
+  }
+
+  void _removeTypingUser(String userId) {
+    final current = state.valueOrNull;
+    if (current == null) return;
+    final typingIds = Set<String>.from(current.typingUserIds)..remove(userId);
+    _typingTimers.remove(userId);
     state = AsyncData(current.copyWith(typingUserIds: typingIds));
   }
 
@@ -257,4 +276,9 @@ class ChatNotifier extends _$ChatNotifier {
 final userStatusProvider =
     FutureProvider.autoDispose.family<UserStatus, String>((ref, userId) {
   return ref.read(chatRepositoryProvider).getUserStatus(userId);
+});
+
+final userProfileProvider =
+    FutureProvider.autoDispose.family<UserModel, String>((ref, userId) {
+  return ref.read(authRepositoryProvider).getUserProfile(userId);
 });

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../core/theme/app_theme.dart';
+import '../../../core/widgets/neon_widgets.dart';
 import '../../auth/domain/auth_provider.dart';
 import '../../auth/domain/auth_state.dart';
 
@@ -65,109 +67,238 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         authAsync.valueOrNull is AuthAuthenticated
             ? (authAsync.value! as AuthAuthenticated).user
             : null;
-    final cs = Theme.of(context).colorScheme;
     final initials = user != null && user.displayName.isNotEmpty
         ? user.displayName.trim()[0].toUpperCase()
         : '?';
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Cài đặt'),
+        title: const Text('Cài Đặt'),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
         actions: [
           if (_isLoading)
             const Padding(
-              padding: EdgeInsets.all(16),
+              padding: EdgeInsets.symmetric(horizontal: 20.0),
               child: SizedBox(
                 width: 20,
                 height: 20,
-                child: CircularProgressIndicator(strokeWidth: 2),
+                child: CircularProgressIndicator(
+                  strokeWidth: 2.5,
+                  valueColor: AlwaysStoppedAnimation<Color>(AppTheme.neonCyan),
+                ),
               ),
             )
           else
-            TextButton(
-              onPressed: _save,
-              child: const Text('Lưu'),
+            Padding(
+              padding: const EdgeInsets.only(right: 8.0),
+              child: TextButton(
+                onPressed: _save,
+                child: const Text('LƯU'),
+              ),
             ),
         ],
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            const SizedBox(height: 16),
-            // Avatar
-            CircleAvatar(
-              radius: 48,
-              backgroundColor: cs.primaryContainer,
-              child: Text(
-                initials,
-                style: TextStyle(
-                  fontSize: 36,
-                  fontWeight: FontWeight.bold,
-                  color: cs.onPrimaryContainer,
+      body: Stack(
+        children: [
+          // Background ambient lights
+          Positioned(
+            top: -100,
+            left: -100,
+            child: Container(
+              width: 300,
+              height: 300,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: RadialGradient(
+                  colors: [
+                    AppTheme.neonCyan.withValues(alpha: 0.08),
+                    Colors.transparent,
+                  ],
                 ),
               ),
             ),
-            const SizedBox(height: 8),
-            Text(
-              user?.email ?? '',
-              style: TextStyle(color: cs.onSurfaceVariant, fontSize: 14),
-            ),
-            const SizedBox(height: 32),
-
-            // Display name field
-            TextFormField(
-              controller: _nameController,
-              decoration: const InputDecoration(
-                labelText: 'Tên hiển thị',
-                prefixIcon: Icon(Icons.badge_outlined),
-                border: OutlineInputBorder(),
-                helperText: 'Tên sẽ hiển thị với những người dùng khác',
+          ),
+          Positioned(
+            bottom: -100,
+            right: -100,
+            child: Container(
+              width: 300,
+              height: 300,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: RadialGradient(
+                  colors: [
+                    AppTheme.neonPurple.withValues(alpha: 0.08),
+                    Colors.transparent,
+                  ],
+                ),
               ),
-              textInputAction: TextInputAction.done,
-              onFieldSubmitted: (_) => _save(),
-              enabled: !_isLoading,
-              validator: (v) =>
-                  (v == null || v.trim().isEmpty) ? 'Nhập tên của bạn' : null,
             ),
+          ),
 
-            const SizedBox(height: 32),
-            const Divider(),
-            const SizedBox(height: 8),
-
-            // Logout
-            ListTile(
-              leading: Icon(Icons.logout, color: cs.error),
-              title: Text('Đăng xuất', style: TextStyle(color: cs.error)),
-              onTap: () async {
-                final confirm = await showDialog<bool>(
-                  context: context,
-                  builder: (ctx) => AlertDialog(
-                    title: const Text('Đăng xuất'),
-                    content: const Text('Bạn có chắc muốn đăng xuất không?'),
-                    actions: [
-                      TextButton(
-                        onPressed: () => Navigator.pop(ctx, false),
-                        child: const Text('Huỷ'),
-                      ),
-                      FilledButton(
-                        style: FilledButton.styleFrom(
-                          backgroundColor: cs.error,
-                        ),
-                        onPressed: () => Navigator.pop(ctx, true),
-                        child: const Text('Đăng xuất'),
+          // Main content
+          SingleChildScrollView(
+            physics: const BouncingScrollPhysics(),
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                const SizedBox(height: 16),
+                
+                // Avatar with double neon ring
+                Container(
+                  padding: const EdgeInsets.all(4),
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    gradient: const LinearGradient(
+                      colors: [AppTheme.neonCyan, AppTheme.neonPink],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: AppTheme.neonCyan.withValues(alpha: 0.2),
+                        blurRadius: 16,
                       ),
                     ],
                   ),
-                );
-                if (confirm == true && mounted) {
-                  await ref.read(authNotifierProvider.notifier).logout();
-                }
-              },
+                  child: Container(
+                    padding: const EdgeInsets.all(3),
+                    decoration: const BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: AppTheme.obsidianBackground,
+                    ),
+                    child: CircleAvatar(
+                      radius: 48,
+                      backgroundColor: AppTheme.darkSurface,
+                      child: Text(
+                        initials,
+                        style: const TextStyle(
+                          fontSize: 36,
+                          fontWeight: FontWeight.w900,
+                          color: AppTheme.neonCyan,
+                          letterSpacing: 1.5,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  user?.email ?? '',
+                  style: TextStyle(
+                    color: Colors.white.withValues(alpha: 0.4),
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                const SizedBox(height: 36),
+
+                // Form card
+                NeonCard(
+                  glowColor: AppTheme.neonCyan,
+                  glowStrength: 4,
+                  child: Padding(
+                    padding: const EdgeInsets.all(20.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        const Text(
+                          'Thông tin cá nhân',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        NeonTextField(
+                          controller: _nameController,
+                          labelText: 'Tên hiển thị',
+                          prefixIcon: Icons.badge_outlined,
+                          focusColor: AppTheme.neonCyan,
+                          textInputAction: TextInputAction.done,
+                          onFieldSubmitted: (_) => _save(),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 24),
+
+                // Logout option card
+                NeonCard(
+                  glowColor: Colors.redAccent,
+                  glowStrength: 0,
+                  borderOpacity: 0.15,
+                  child: Material(
+                    color: Colors.transparent,
+                    child: ListTile(
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
+                      leading: Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: Colors.redAccent.withValues(alpha: 0.1),
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(Icons.logout_rounded, color: Colors.redAccent, size: 20),
+                      ),
+                      title: const Text(
+                        'Đăng xuất',
+                        style: TextStyle(
+                          color: Colors.redAccent,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 15,
+                        ),
+                      ),
+                      trailing: const Icon(Icons.arrow_forward_ios_rounded, color: Colors.white24, size: 16),
+                      onTap: () async {
+                        final confirm = await showDialog<bool>(
+                          context: context,
+                          builder: (ctx) => AlertDialog(
+                            backgroundColor: AppTheme.darkSurface,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(20),
+                              side: BorderSide(color: AppTheme.darkBorder.withValues(alpha: 0.5)),
+                            ),
+                            title: const Text(
+                              'Đăng xuất',
+                              style: TextStyle(fontWeight: FontWeight.bold),
+                            ),
+                            content: const Text('Bạn có chắc muốn đăng xuất không?'),
+                            actions: [
+                              TextButton(
+                                onPressed: () => Navigator.pop(ctx, false),
+                                child: Text(
+                                  'Huỷ',
+                                  style: TextStyle(color: Colors.white.withValues(alpha: 0.6)),
+                                ),
+                              ),
+                              FilledButton(
+                                style: FilledButton.styleFrom(
+                                  backgroundColor: Colors.redAccent,
+                                  foregroundColor: Colors.white,
+                                ),
+                                onPressed: () => Navigator.pop(ctx, true),
+                                child: const Text('Đăng xuất'),
+                              ),
+                            ],
+                          ),
+                        );
+                        if (confirm == true && mounted) {
+                          await ref.read(authNotifierProvider.notifier).logout();
+                        }
+                      },
+                    ),
+                  ),
+                ),
+              ],
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
