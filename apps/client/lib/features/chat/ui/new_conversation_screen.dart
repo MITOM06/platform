@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../../core/l10n/l10n_ext.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/neon_widgets.dart';
 import '../../auth/data/auth_repository.dart';
@@ -48,7 +49,7 @@ class _NewConversationScreenState
         if (matched.isEmpty) {
           if (mounted) {
             setState(() {
-              _error = 'Không tìm thấy người dùng có email này.';
+              _error = context.l10n.errUserNotFoundEmail;
               _loading = false;
             });
           }
@@ -63,7 +64,7 @@ class _NewConversationScreenState
     } catch (e) {
       if (mounted) {
         setState(() {
-          _error = 'Không tìm thấy người dùng hoặc lỗi kết nối.';
+          _error = context.l10n.errUserNotFoundOrConn;
           _loading = false;
         });
       }
@@ -74,7 +75,7 @@ class _NewConversationScreenState
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Cuộc Trò Chuyện Mới'),
+        title: Text(context.l10n.newConversationTitle),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
           onPressed: () => context.pop(),
@@ -139,27 +140,27 @@ class _NewConversationScreenState
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
-                            const Text(
-                              'Bắt đầu cuộc trò chuyện',
-                              style: TextStyle(
+                            Text(
+                              context.l10n.startConversationHeading,
+                              style: const TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.bold,
                                 color: Colors.white,
                               ),
                             ),
                             const SizedBox(height: 16),
-                            
+
                             // User identifier input
                             NeonTextField(
                               controller: _controller,
-                              labelText: 'Email hoặc User ID đối phương',
+                              labelText: context.l10n.fieldRecipient,
                               prefixIcon: Icons.person_outline_rounded,
                               focusColor: AppTheme.neonCyan,
                               textInputAction: TextInputAction.done,
                               onFieldSubmitted: (_) => _loading ? null : _submit(),
                               validator: (v) {
                                 if (v == null || v.trim().isEmpty) {
-                                  return 'Vui lòng nhập email hoặc User ID';
+                                  return context.l10n.valRecipientRequired;
                                 }
                                 return null;
                               },
@@ -192,7 +193,7 @@ class _NewConversationScreenState
                               isLoading: _loading,
                               gradientColors: const [AppTheme.neonCyan, AppTheme.neonBlue],
                               glowColor: AppTheme.neonCyan,
-                              child: const Text('BẮT ĐẦU TRÒ CHUYỆN'),
+                              child: Text(context.l10n.startConversationButton),
                             ),
                           ],
                         ),

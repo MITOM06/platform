@@ -95,12 +95,10 @@ class AuthRepository {
     required String sid,
     required UserModel user,
   }) async {
-    await Future.wait([
-      _storage.write(key: _keyAccessToken, value: accessToken),
-      _storage.write(key: _keyRefreshToken, value: refreshToken),
-      _storage.write(key: _keySid, value: sid),
-      _storage.write(key: _keyUser, value: jsonEncode(user.toJson())),
-    ]);
+    await _storage.write(key: _keyAccessToken, value: accessToken);
+    await _storage.write(key: _keyRefreshToken, value: refreshToken);
+    await _storage.write(key: _keySid, value: sid);
+    await _storage.write(key: _keyUser, value: jsonEncode(user.toJson()));
   }
 
   Future<void> clearCredentials() => _storage.deleteAll();

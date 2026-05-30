@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:go_router/go_router.dart';
+import '../../../core/l10n/l10n_ext.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/neon_widgets.dart';
 import '../../auth/domain/auth_provider.dart';
@@ -114,8 +115,10 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
         ? ref.watch(userProfileProvider(otherUserId))
         : null;
     
-    final String displayName = profileAsync?.valueOrNull?.displayName ?? 'Trò chuyện';
-    final String avatarLetter = displayName != 'Trò chuyện' ? displayName[0].toUpperCase() : '?';
+    final resolvedName = profileAsync?.valueOrNull?.displayName;
+    final String displayName = resolvedName ?? context.l10n.chatDefaultTitle;
+    final String avatarLetter =
+        (resolvedName != null && resolvedName.isNotEmpty) ? resolvedName[0].toUpperCase() : '?';
     final isOnline = statusAsync?.valueOrNull?.online ?? false;
 
     return Scaffold(
@@ -209,7 +212,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
                       if (statusAsync != null)
                         statusAsync.when(
                           data: (status) => Text(
-                            status.online ? 'đang hoạt động' : 'ngoại tuyến',
+                            status.online ? context.l10n.statusOnline : context.l10n.statusOffline,
                             style: TextStyle(
                               fontSize: 11,
                               color: status.online
@@ -286,7 +289,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
                       children: [
                         const Icon(Icons.error_outline, size: 40, color: Colors.redAccent),
                         const SizedBox(height: 12),
-                        Text('Lỗi: $e', style: const TextStyle(color: Colors.white60)),
+                        Text(context.l10n.errorWithMsg(e.toString()), style: const TextStyle(color: Colors.white60)),
                       ],
                     ),
                   ),
@@ -367,7 +370,7 @@ class _TypingIndicator extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                  'đang nhập',
+                  context.l10n.typingLabel,
                   style: TextStyle(
                     fontSize: 12,
                     color: Colors.white.withValues(alpha: 0.5),
@@ -460,7 +463,7 @@ class _InputBarState extends State<_InputBar> {
                   textInputAction: TextInputAction.send,
                   style: const TextStyle(color: Colors.white, fontSize: 15),
                   decoration: InputDecoration(
-                    hintText: 'Nhập tin nhắn...',
+                    hintText: context.l10n.messageHint,
                     hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.25)),
                     filled: true,
                     fillColor: AppTheme.darkSurface.withValues(alpha: 0.6),

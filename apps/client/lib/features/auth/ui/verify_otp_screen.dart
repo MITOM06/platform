@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../../core/l10n/l10n_ext.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/neon_widgets.dart';
 import '../data/auth_repository.dart';
@@ -56,18 +57,18 @@ class _VerifyOtpScreenState extends ConsumerState<VerifyOtpScreen> {
       await ref.read(authRepositoryProvider).resendOtp(widget.email);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Mã OTP mới đã được gửi tới email của bạn')));
+            SnackBar(content: Text(context.l10n.otpResent)));
         _startCooldown(60);
       }
     } on DioException catch (e) {
       if (mounted) {
-        final msg = e.response?.data?['message'] ?? 'Gửi lại thất bại, thử lại sau';
+        final msg = e.response?.data?['message'] ?? context.l10n.errResendFailed;
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
       }
     } catch (_) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Gửi lại thất bại, thử lại sau')));
+            SnackBar(content: Text(context.l10n.errResendFailed)));
       }
     } finally {
       if (mounted) setState(() => _isResending = false);
@@ -78,7 +79,7 @@ class _VerifyOtpScreenState extends ConsumerState<VerifyOtpScreen> {
     final otp = _otpController.text.trim();
     if (otp.length != 6) {
       ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Nhập đủ 6 chữ số OTP')));
+          SnackBar(content: Text(context.l10n.valOtp6)));
       return;
     }
     setState(() => _isLoading = true);
@@ -86,21 +87,21 @@ class _VerifyOtpScreenState extends ConsumerState<VerifyOtpScreen> {
       await ref.read(authRepositoryProvider).verifyOtp(widget.email, otp);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Xác thực thành công! Đăng nhập ngay')));
+            SnackBar(content: Text(context.l10n.verifySuccess)));
         context.go('/login');
       }
     } on DioException catch (e) {
       if (mounted) {
         final msg = (e.response?.data is Map)
-            ? (e.response!.data['message'] as String? ?? 'Xác thực thất bại, thử lại')
-            : 'Xác thực thất bại, thử lại';
+            ? (e.response!.data['message'] as String? ?? context.l10n.errVerifyFailed)
+            : context.l10n.errVerifyFailed;
         ScaffoldMessenger.of(context)
             .showSnackBar(SnackBar(content: Text(msg)));
       }
     } catch (_) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Xác thực thất bại, thử lại')));
+            SnackBar(content: Text(context.l10n.errVerifyFailed)));
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);
@@ -111,7 +112,7 @@ class _VerifyOtpScreenState extends ConsumerState<VerifyOtpScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Xác Thực OTP'),
+        title: Text(context.l10n.verifyOtpTitle),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
           onPressed: () => context.go('/login'),
@@ -167,7 +168,7 @@ class _VerifyOtpScreenState extends ConsumerState<VerifyOtpScreen> {
                     const Center(child: PonLogo(size: 60, showText: false)),
                     const SizedBox(height: 16),
                     Text(
-                      'Xác thực tài khoản',
+                      context.l10n.verifyAccountHeading,
                       style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                             fontWeight: FontWeight.bold,
                             color: Colors.white,
@@ -176,7 +177,7 @@ class _VerifyOtpScreenState extends ConsumerState<VerifyOtpScreen> {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      'Mã OTP 6 chữ số đã gửi đến\n${widget.email}',
+                      context.l10n.otpSentTo(widget.email),
                       textAlign: TextAlign.center,
                       style: TextStyle(
                         color: Colors.white.withValues(alpha: 0.5),
@@ -197,7 +198,7 @@ class _VerifyOtpScreenState extends ConsumerState<VerifyOtpScreen> {
                             // OTP input field
                             NeonTextField(
                               controller: _otpController,
-                              labelText: 'Mã OTP',
+                              labelText: context.l10n.fieldOtp,
                               prefixIcon: Icons.pin_outlined,
                               keyboardType: TextInputType.number,
                               maxLength: 6,
@@ -221,7 +222,7 @@ class _VerifyOtpScreenState extends ConsumerState<VerifyOtpScreen> {
                               isLoading: _isLoading,
                               gradientColors: const [AppTheme.neonCyan, AppTheme.neonBlue],
                               glowColor: AppTheme.neonCyan,
-                              child: const Text('XÁC NHẬN'),
+                              child: Text(context.l10n.confirmButton),
                             ),
                             const SizedBox(height: 16),
 
@@ -237,8 +238,8 @@ class _VerifyOtpScreenState extends ConsumerState<VerifyOtpScreen> {
                                       onPressed: _resendCooldown > 0 ? null : _resend,
                                       child: Text(
                                         _resendCooldown > 0
-                                            ? 'Gửi lại sau ${_resendCooldown}s'
-                                            : 'Gửi lại mã OTP',
+                                            ? context.l10n.resendIn(_resendCooldown)
+                                            : context.l10n.resendOtp,
                                         style: TextStyle(
                                           color: _resendCooldown > 0
                                               ? Colors.white38

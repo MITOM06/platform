@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Req, Body, Res, UseGuards, Query } from '@nestjs/common';
+import { Controller, Get, Post, Req, Body, Res, UseGuards, Query, HttpCode, HttpStatus } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { AuthService } from './auth.service';
 import type { Response } from 'express';
@@ -106,6 +106,7 @@ export class AuthController {
 
   // ✅ Logout — yêu cầu JWT token trong header
   @Post('logout')
+  @HttpCode(HttpStatus.OK)
   @UseGuards(AuthGuard('jwt'))
   async logout(@Req() req: any, @Body() body: { sid: string }) {
     return this.auth.logout(req.user.sub, body.sid);

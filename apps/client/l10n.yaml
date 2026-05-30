@@ -1,0 +1,8 @@
+# Flutter gen-l10n configuration.
+# Source of truth: lib/l10n/app_en.arb (template). Add new keys here first,
+# then translate into every other app_*.arb file. See .claude/rules/i18n.md.
+arb-dir: lib/l10n
+template-arb-file: app_en.arb
+output-localization-file: app_localizations.dart
+output-class: AppLocalizations
+nullable-getter: false

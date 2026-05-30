@@ -4,6 +4,7 @@ import { DatabaseMongoModule, DatabaseRedisModule } from '@platform/database';
 import { UsersModule } from './modules/users/users.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { MailModule } from './modules/Email/mail.module';
+import { HealthModule } from './health/health.module';
 
 @Module({
   imports: [
@@ -19,6 +20,7 @@ import { MailModule } from './modules/Email/mail.module';
     MailModule,
 
     // 3. Modules tính năng
+    HealthModule,
     UsersModule,
     AuthModule,
   ],

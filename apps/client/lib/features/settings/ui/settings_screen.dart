@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../core/l10n/l10n_ext.dart';
+import '../../../core/providers/locale_provider.dart';
 import '../../../core/providers/theme_provider.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/neon_widgets.dart';
@@ -36,7 +38,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     final name = _nameController.text.trim();
     if (name.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Tên không được để trống')),
+        SnackBar(content: Text(context.l10n.valNameEmpty)),
       );
       return;
     }
@@ -47,13 +49,13 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           .updateDisplayName(name);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Đã cập nhật tên hiển thị')),
+          SnackBar(content: Text(context.l10n.nameUpdated)),
         );
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Lỗi: $e')),
+          SnackBar(content: Text(context.l10n.errorWithMsg(e.toString()))),
         );
       }
     } finally {
@@ -72,14 +74,14 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     }
   }
 
-  String _getThemeLabel(ThemeMode mode) {
+  String _getThemeLabel(BuildContext context, ThemeMode mode) {
     switch (mode) {
       case ThemeMode.light:
-        return 'Giao diện Sáng';
+        return context.l10n.themeLight;
       case ThemeMode.dark:
-        return 'Giao diện Tối';
+        return context.l10n.themeDark;
       case ThemeMode.system:
-        return 'Hệ thống';
+        return context.l10n.themeSystem;
     }
   }
 
@@ -99,36 +101,73 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             ),
           ),
           title: Text(
-            'Chọn giao diện',
+            context.l10n.chooseThemeTitle,
             style: TextStyle(
               fontWeight: FontWeight.bold,
               color: isDark ? Colors.white : Colors.black87,
             ),
           ),
-          content: const Column(
+          content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               _ThemeDialogOption(
-                title: 'Giao diện Sáng',
+                title: context.l10n.themeLight,
                 icon: Icons.light_mode_rounded,
                 themeMode: ThemeMode.light,
                 activeColor: Colors.amber,
               ),
-              SizedBox(height: 8),
+              const SizedBox(height: 8),
               _ThemeDialogOption(
-                title: 'Giao diện Tối',
+                title: context.l10n.themeDark,
                 icon: Icons.dark_mode_rounded,
                 themeMode: ThemeMode.dark,
                 activeColor: AppTheme.neonCyan,
               ),
-              SizedBox(height: 8),
+              const SizedBox(height: 8),
               _ThemeDialogOption(
-                title: 'Hệ thống',
+                title: context.l10n.themeSystem,
                 icon: Icons.brightness_auto_rounded,
                 themeMode: ThemeMode.system,
                 activeColor: AppTheme.neonPurple,
               ),
             ],
+          ),
+        );
+      },
+    );
+  }
+
+  void _showLanguageSelectionDialog(BuildContext context, WidgetRef ref) {
+    showDialog(
+      context: context,
+      builder: (ctx) {
+        final isDark = Theme.of(context).brightness == Brightness.dark;
+        return AlertDialog(
+          backgroundColor: isDark ? AppTheme.darkSurface : Colors.white,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+            side: BorderSide(
+              color: isDark
+                  ? AppTheme.darkBorder.withValues(alpha: 0.5)
+                  : Colors.black.withValues(alpha: 0.08),
+            ),
+          ),
+          title: Text(
+            context.l10n.chooseLanguageTitle,
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              color: isDark ? Colors.white : Colors.black87,
+            ),
+          ),
+          content: SizedBox(
+            width: double.maxFinite,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                for (final locale in kSupportedLocales)
+                  _LanguageDialogOption(locale: locale),
+              ],
+            ),
           ),
         );
       },
@@ -151,7 +190,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Cài Đặt'),
+        title: Text(context.l10n.settingsTitle),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
           onPressed: () => Navigator.of(context).pop(),
@@ -179,7 +218,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 style: TextButton.styleFrom(
                   foregroundColor: isDark ? AppTheme.neonCyan : Theme.of(context).colorScheme.primary,
                 ),
-                child: const Text('LƯU'),
+                child: Text(context.l10n.actionSave),
               ),
             ),
         ],
@@ -296,7 +335,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
                         Text(
-                          'Thông tin cá nhân',
+                          context.l10n.personalInfo,
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
@@ -306,7 +345,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                         const SizedBox(height: 16),
                         NeonTextField(
                           controller: _nameController,
-                          labelText: 'Tên hiển thị',
+                          labelText: context.l10n.fieldDisplayName,
                           prefixIcon: Icons.badge_outlined,
                           focusColor: isDark ? AppTheme.neonCyan : Theme.of(context).colorScheme.primary,
                           textInputAction: TextInputAction.done,
@@ -340,7 +379,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                         ),
                       ),
                       title: Text(
-                        'Giao diện',
+                        context.l10n.appearance,
                         style: TextStyle(
                           color: isDark ? Colors.white : Colors.black87,
                           fontWeight: FontWeight.bold,
@@ -348,7 +387,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                         ),
                       ),
                       subtitle: Text(
-                        _getThemeLabel(currentThemeMode),
+                        _getThemeLabel(context, currentThemeMode),
                         style: TextStyle(
                           color: isDark ? Colors.white54 : Colors.black54,
                           fontSize: 13,
@@ -360,6 +399,52 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                         size: 16,
                       ),
                       onTap: () => _showThemeSelectionDialog(context, ref),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 24),
+
+                // Language preference card
+                NeonCard(
+                  glowColor: AppTheme.neonBlue,
+                  glowStrength: isDark ? 4 : 0,
+                  child: Material(
+                    color: Colors.transparent,
+                    child: ListTile(
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
+                      leading: Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: (isDark ? AppTheme.neonBlue : Theme.of(context).colorScheme.primary).withValues(alpha: 0.1),
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(
+                          Icons.translate_rounded,
+                          color: isDark ? AppTheme.neonBlue : Theme.of(context).colorScheme.primary,
+                          size: 20,
+                        ),
+                      ),
+                      title: Text(
+                        context.l10n.language,
+                        style: TextStyle(
+                          color: isDark ? Colors.white : Colors.black87,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 15,
+                        ),
+                      ),
+                      subtitle: Text(
+                        kLanguageNames[resolveActiveLocale(ref.watch(localeNotifierProvider)).languageCode] ?? 'English',
+                        style: TextStyle(
+                          color: isDark ? Colors.white54 : Colors.black54,
+                          fontSize: 13,
+                        ),
+                      ),
+                      trailing: Icon(
+                        Icons.arrow_forward_ios_rounded,
+                        color: isDark ? Colors.white24 : Colors.black26,
+                        size: 16,
+                      ),
+                      onTap: () => _showLanguageSelectionDialog(context, ref),
                     ),
                   ),
                 ),
@@ -382,9 +467,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                         ),
                         child: const Icon(Icons.logout_rounded, color: Colors.redAccent, size: 20),
                       ),
-                      title: const Text(
-                        'Đăng xuất',
-                        style: TextStyle(
+                      title: Text(
+                        context.l10n.actionLogout,
+                        style: const TextStyle(
                           color: Colors.redAccent,
                           fontWeight: FontWeight.bold,
                           fontSize: 15,
@@ -409,14 +494,14 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                               ),
                             ),
                             title: Text(
-                              'Đăng xuất',
+                              context.l10n.actionLogout,
                               style: TextStyle(
                                 fontWeight: FontWeight.bold,
                                 color: isDark ? Colors.white : Colors.black87,
                               ),
                             ),
                             content: Text(
-                              'Bạn có chắc muốn đăng xuất không?',
+                              context.l10n.logoutConfirmBody,
                               style: TextStyle(
                                 color: isDark ? Colors.white70 : Colors.black87,
                               ),
@@ -425,7 +510,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                               TextButton(
                                 onPressed: () => Navigator.pop(ctx, false),
                                 child: Text(
-                                  'Huỷ',
+                                  context.l10n.actionCancel,
                                   style: TextStyle(
                                     color: isDark ? Colors.white.withValues(alpha: 0.6) : Colors.black54,
                                   ),
@@ -437,7 +522,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                                   foregroundColor: Colors.white,
                                 ),
                                 onPressed: () => Navigator.pop(ctx, true),
-                                child: const Text('Đăng xuất'),
+                                child: Text(context.l10n.actionLogout),
                               ),
                             ],
                           ),
@@ -499,6 +584,38 @@ class _ThemeDialogOption extends ConsumerWidget {
           : null,
       onTap: () {
         ref.read(themeModeNotifierProvider.notifier).setThemeMode(themeMode);
+        Navigator.pop(context);
+      },
+    );
+  }
+}
+
+class _LanguageDialogOption extends ConsumerWidget {
+  final Locale locale;
+
+  const _LanguageDialogOption({required this.locale});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final active = resolveActiveLocale(ref.watch(localeNotifierProvider));
+    final isSelected = active.languageCode == locale.languageCode;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final activeColor = isDark ? AppTheme.neonBlue : Theme.of(context).colorScheme.primary;
+
+    return ListTile(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      title: Text(
+        kLanguageNames[locale.languageCode] ?? locale.languageCode,
+        style: TextStyle(
+          color: isSelected ? activeColor : (isDark ? Colors.white70 : Colors.black87),
+          fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+        ),
+      ),
+      trailing: isSelected
+          ? Icon(Icons.check_circle_rounded, color: activeColor, size: 20)
+          : null,
+      onTap: () {
+        ref.read(localeNotifierProvider.notifier).setLocale(locale);
         Navigator.pop(context);
       },
     );

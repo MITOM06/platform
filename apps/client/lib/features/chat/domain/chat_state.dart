@@ -184,6 +184,19 @@ class TypingEvent {
 }
 
 @immutable
+class ReadReceiptEvent {
+  final String conversationId;
+  final String messageId;
+  final String readerId;
+
+  const ReadReceiptEvent({
+    required this.conversationId,
+    required this.messageId,
+    required this.readerId,
+  });
+}
+
+@immutable
 class ChatState {
   final List<MessageModel> messages;
   final bool hasMore;

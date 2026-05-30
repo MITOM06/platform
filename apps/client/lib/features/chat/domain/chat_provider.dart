@@ -49,6 +49,13 @@ class ConversationsNotifier extends _$ConversationsNotifier {
       final convId = notif['conversationId'] as String?;
       if (convId == null) return;
 
+      // Conversation chưa có trong list (vd: người khác vừa tạo phòng mới với
+      // mình) → fetch lại để nó xuất hiện ngay thay vì phải reload thủ công.
+      if (!current.any((c) => c.id == convId)) {
+        refresh();
+        return;
+      }
+
       // Đẩy conversation lên đầu + tăng unreadCount
       final updated = current.map((c) {
         if (c.id != convId) return c;
@@ -92,6 +99,7 @@ class ChatNotifier extends _$ChatNotifier {
   final Map<String, Timer> _typingTimers = {};
   StreamSubscription<MessageModel>? _messageSub;
   StreamSubscription<TypingEvent>? _typingSub;
+  StreamSubscription<ReadReceiptEvent>? _readSub;
 
   @override
   Future<ChatState> build(String conversationId) async {
@@ -107,9 +115,14 @@ class ChatNotifier extends _$ChatNotifier {
         .where((e) => e.conversationId == conversationId)
         .listen(_onTypingEvent);
 
+    _readSub = stomp.readReceipts
+        .where((e) => e.conversationId == conversationId)
+        .listen(_onReadReceipt);
+
     ref.onDispose(() {
       _messageSub?.cancel();
       _typingSub?.cancel();
+      _readSub?.cancel();
       _typingTimer?.cancel();
       for (final t in _typingTimers.values) {
         t.cancel();
@@ -148,10 +161,31 @@ class ChatNotifier extends _$ChatNotifier {
 
     state = AsyncData(current.copyWith(messages: updated));
 
-    // Mark messages from others as read
+    // Mark messages from others as read. Prefer STOMP so the server broadcasts
+    // a MESSAGE_READ event (sender sees the tick update live); fall back to REST
+    // when the socket is down.
     if (message.senderId != _currentUserId) {
-      ref.read(chatRepositoryProvider).markAsRead(message.id).ignore();
+      final stomp = ref.read(stompServiceProvider.notifier);
+      if (stomp.isConnected) {
+        stomp.sendRead(conversationId, message.id);
+      } else {
+        ref.read(chatRepositoryProvider).markAsRead(message.id).ignore();
+      }
     }
+  }
+
+  void _onReadReceipt(ReadReceiptEvent event) {
+    final current = state.valueOrNull;
+    if (current == null) return;
+
+    final updated = current.messages.map((m) {
+      if (m.id == event.messageId && !m.readBy.contains(event.readerId)) {
+        return m.copyWith(readBy: [...m.readBy, event.readerId]);
+      }
+      return m;
+    }).toList();
+
+    state = AsyncData(current.copyWith(messages: updated));
   }
 
   void _onTypingEvent(TypingEvent event) {

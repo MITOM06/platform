@@ -1,0 +1,210 @@
+{
+  "@@locale": "en",
+  "appName": "PON",
+  "languageName": "English",
+
+  "actionCancel": "Cancel",
+  "actionConfirm": "Confirm",
+  "actionRetry": "RETRY",
+  "actionSave": "SAVE",
+  "actionLogout": "Log out",
+  "actionDelete": "Delete",
+  "actionLeave": "Leave",
+  "loadingDots": "...",
+  "errorWithMsg": "Error: {error}",
+  "@errorWithMsg": {
+    "placeholders": { "error": { "type": "String" } }
+  },
+
+  "loginTitle": "Sign In",
+  "fieldEmail": "Email",
+  "fieldPassword": "Password",
+  "forgotPasswordLink": "Forgot password?",
+  "loginButton": "SIGN IN",
+  "noAccountYet": "Don't have an account? ",
+  "registerNow": "Sign up now",
+  "valEmailRequired": "Please enter your email",
+  "valEmailInvalid": "Invalid email",
+  "valPasswordRequired": "Please enter your password",
+  "valPasswordMin6": "Password must be at least 6 characters",
+  "errInvalidCredentials": "Incorrect email or password",
+  "errNetwork": "Cannot reach the server, check your connection",
+  "errLoginFailed": "Sign in failed, please try again",
+
+  "registerTitle": "Create Account",
+  "welcomeToApp": "Welcome to PON",
+  "fieldDisplayName": "Display name",
+  "fieldConfirmPassword": "Confirm password",
+  "registerButton": "SIGN UP",
+  "haveAccount": "Already have an account? ",
+  "loginLink": "Sign in",
+  "valNameRequired": "Please enter your name",
+  "valNameMin2": "Name must be at least 2 characters",
+  "valPasswordMismatch": "Passwords do not match",
+  "errEmailExists": "This email is already registered",
+  "errRegisterFailed": "Sign up failed, please try again",
+
+  "verifyOtpTitle": "Verify OTP",
+  "verifyAccountHeading": "Verify your account",
+  "otpSentTo": "A 6-digit OTP was sent to\n{email}",
+  "@otpSentTo": {
+    "placeholders": { "email": { "type": "String" } }
+  },
+  "fieldOtp": "OTP code",
+  "confirmButton": "CONFIRM",
+  "resendIn": "Resend in {seconds}s",
+  "@resendIn": {
+    "placeholders": { "seconds": { "type": "int" } }
+  },
+  "resendOtp": "Resend OTP code",
+  "otpResent": "A new OTP code has been sent to your email",
+  "errResendFailed": "Resend failed, try again later",
+  "valOtp6": "Enter all 6 OTP digits",
+  "verifySuccess": "Verified successfully! Sign in now",
+  "errVerifyFailed": "Verification failed, please try again",
+
+  "forgotTitle": "Reset Password",
+  "forgotHeading": "Forgot password?",
+  "forgotSubtitle": "Enter your email to receive an OTP and set a new password",
+  "sendOtpButton": "SEND OTP CODE",
+  "errEmailNotRegistered": "This email is not registered",
+  "errSendRequestFailed": "Request failed, please try again",
+
+  "newPasswordTitle": "New Password",
+  "newPasswordHeading": "Create a new password",
+  "newPasswordSubtitle": "Enter the OTP sent to {email}\nand your new password",
+  "@newPasswordSubtitle": {
+    "placeholders": { "email": { "type": "String" } }
+  },
+  "fieldNewPassword": "New password",
+  "valNewPasswordRequired": "Enter a new password",
+  "resetPasswordSuccess": "Password reset successfully!",
+  "errOtpInvalidExpired": "OTP is incorrect or has expired",
+  "errResetFailed": "Password reset failed, please try again",
+
+  "settingsTitle": "Settings",
+  "valNameEmpty": "Name cannot be empty",
+  "nameUpdated": "Display name updated",
+  "personalInfo": "Personal information",
+  "appearance": "Appearance",
+  "chooseThemeTitle": "Choose theme",
+  "themeLight": "Light theme",
+  "themeDark": "Dark theme",
+  "themeSystem": "System",
+  "language": "Language",
+  "chooseLanguageTitle": "Choose language",
+  "logoutConfirmBody": "Are you sure you want to log out?",
+
+  "onboardingChooseTheme": "CHOOSE A THEME",
+  "onboardingChooseSubtitle": "Pick the interface style that suits you best.",
+  "themeLightSubtitle": "Bright, clear and easy to read",
+  "themeDarkSubtitle": "Modern, mysterious and easy on the eyes",
+  "themeSystemSubtitle": "Automatically match your device",
+  "startExperience": "START EXPLORING",
+  "tooltipSettings": "Settings",
+  "tooltipNewConversation": "New conversation",
+  "listLoadFailed": "Couldn't load the list",
+  "listCheckNetwork": "Check your network connection and try again.",
+  "listGenericError": "Something went wrong. Please try again later.",
+  "emptyConversations": "No conversations yet",
+  "emptyTapPlus": "Tap the \"+\" button below to start!",
+  "offlineBanner": "No network connection",
+  "conversationDefault": "Conversation",
+
+  "newConversationTitle": "New Conversation",
+  "startConversationHeading": "Start a conversation",
+  "fieldRecipient": "Recipient email or User ID",
+  "valRecipientRequired": "Please enter an email or User ID",
+  "errUserNotFoundEmail": "No user found with this email.",
+  "errUserNotFoundOrConn": "User not found or connection error.",
+  "startConversationButton": "START CHATTING",
+
+  "chatDefaultTitle": "Chat",
+  "statusOnline": "active now",
+  "statusOffline": "offline",
+  "typingLabel": "typing",
+  "messageHint": "Type a message...",
+
+  "tabChats": "Chats",
+  "newGroup": "New group",
+  "newDirect": "New chat",
+  "createGroup": "Create group",
+  "groupName": "Group name",
+  "valGroupNameRequired": "Please enter a group name",
+  "selectMembers": "Select members",
+  "valSelectMembers": "Select at least 2 members",
+  "searchUsers": "Search by name or email",
+  "groupInfo": "Group info",
+  "members": "Members",
+  "membersCount": "{count} members",
+  "@membersCount": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "addMembers": "Add members",
+  "removeMember": "Remove from group",
+  "leaveGroup": "Leave group",
+  "leaveGroupConfirm": "Are you sure you want to leave this group?",
+  "renameGroup": "Rename group",
+  "admin": "Admin",
+  "you": "You",
+  "systemAddedMember": "{actor} added {target}",
+  "@systemAddedMember": {
+    "placeholders": { "actor": { "type": "String" }, "target": { "type": "String" } }
+  },
+  "systemRemovedMember": "{actor} removed {target}",
+  "@systemRemovedMember": {
+    "placeholders": { "actor": { "type": "String" }, "target": { "type": "String" } }
+  },
+  "systemLeftGroup": "{actor} left the group",
+  "@systemLeftGroup": {
+    "placeholders": { "actor": { "type": "String" } }
+  },
+  "systemRenamedGroup": "{actor} renamed the group to {name}",
+  "@systemRenamedGroup": {
+    "placeholders": { "actor": { "type": "String" }, "name": { "type": "String" } }
+  },
+  "systemCreatedGroup": "{actor} created the group",
+  "@systemCreatedGroup": {
+    "placeholders": { "actor": { "type": "String" } }
+  },
+
+  "actionReply": "Reply",
+  "actionRecall": "Recall",
+  "actionDeleteForMe": "Delete for me",
+  "actionCopy": "Copy",
+  "actionReact": "React",
+  "messageRecalled": "Message was recalled",
+  "replyingTo": "Replying to {name}",
+  "@replyingTo": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "copiedToClipboard": "Copied to clipboard",
+  "recallConfirm": "Recall this message for everyone?",
+
+  "deleteConversation": "Delete conversation",
+  "deleteConversationConfirm": "Delete this conversation? It will be hidden from your list.",
+  "clearHistory": "Clear chat history",
+  "clearHistoryConfirm": "Clear all messages in this conversation for you?",
+  "disappearingMessages": "Disappearing messages",
+  "disappearingOff": "Off",
+  "disappearing24h": "24 hours",
+  "disappearing7d": "7 days",
+
+  "changeAvatar": "Change avatar",
+  "uploadFailed": "Upload failed, please try again",
+  "lastSeenJustNow": "active just now",
+  "lastSeenMinutes": "active {minutes}m ago",
+  "@lastSeenMinutes": {
+    "placeholders": { "minutes": { "type": "int" } }
+  },
+  "lastSeenHours": "active {hours}h ago",
+  "@lastSeenHours": {
+    "placeholders": { "hours": { "type": "int" } }
+  },
+  "lastSeenDays": "active {days}d ago",
+  "@lastSeenDays": {
+    "placeholders": { "days": { "type": "int" } }
+  },
+  "dateToday": "Today",
+  "dateYesterday": "Yesterday"
+}
