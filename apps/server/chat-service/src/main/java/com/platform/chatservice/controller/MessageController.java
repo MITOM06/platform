@@ -1,12 +1,14 @@
 package com.platform.chatservice.controller;
 
 import com.platform.chatservice.dto.MessageResponse;
+import com.platform.chatservice.dto.ReactionRequest;
 import com.platform.chatservice.dto.SendMessageRequest;
 import com.platform.chatservice.exception.UnauthorizedException;
 import com.platform.chatservice.security.UserPrincipal;
 import com.platform.chatservice.service.MessageService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
@@ -18,6 +20,7 @@ import java.util.Map;
 public class MessageController {
 
     private final MessageService messageService;
+    private final SimpMessagingTemplate messagingTemplate;
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
@@ -29,6 +32,44 @@ public class MessageController {
     public Map<String, Boolean> markAsRead(@PathVariable String id) {
         messageService.markAsRead(currentUserId(), id);
         return Map.of("success", true);
+    }
+
+    @PostMapping("/{id}/reactions")
+    public MessageResponse addReaction(@PathVariable String id, @RequestBody ReactionRequest request) {
+        MessageResponse updated = messageService.addReaction(currentUserId(), id, request.emoji());
+        broadcastReaction(updated);
+        return updated;
+    }
+
+    @DeleteMapping("/{id}/reactions")
+    public MessageResponse removeReaction(@PathVariable String id) {
+        MessageResponse updated = messageService.removeReaction(currentUserId(), id);
+        broadcastReaction(updated);
+        return updated;
+    }
+
+    @DeleteMapping("/{id}")
+    public MessageResponse recall(@PathVariable String id) {
+        MessageResponse updated = messageService.recallMessage(currentUserId(), id);
+        messagingTemplate.convertAndSend(
+            "/topic/conversation/" + updated.conversationId(),
+            Map.of("type", "MESSAGE_RECALLED", "messageId", updated.id(),
+                   "conversationId", updated.conversationId()));
+        return updated;
+    }
+
+    @PostMapping("/{id}/delete-for-me")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deleteForMe(@PathVariable String id) {
+        messageService.deleteForMe(currentUserId(), id);
+    }
+
+    private void broadcastReaction(MessageResponse message) {
+        messagingTemplate.convertAndSend(
+            "/topic/conversation/" + message.conversationId(),
+            Map.of("type", "REACTION_UPDATED",
+                   "messageId", message.id(),
+                   "reactions", message.reactions()));
     }
 
     private String currentUserId() {

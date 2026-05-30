@@ -18,4 +18,6 @@ public class ChatMessageDto {
     private Boolean typing;
 
     private String messageId;
+
+    private String replyToId;
 }

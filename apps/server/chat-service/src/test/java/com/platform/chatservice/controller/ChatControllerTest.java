@@ -47,7 +47,7 @@ class ChatControllerTest {
 
     @BeforeEach
     void setUp() {
-        chatDto = new ChatMessageDto("conv-456", "Hello", "text", false, null);
+        chatDto = new ChatMessageDto("conv-456", "Hello", "text", false, null, null);
         when(principal.getName()).thenReturn(SENDER_ID);
     }
 
