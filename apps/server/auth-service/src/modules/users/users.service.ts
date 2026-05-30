@@ -85,5 +85,18 @@ export class UsersService {
     }).limit(10).select('-password').exec();
   }
 
-  // ❌ Xóa toàn bộ hàm logout — logic này thuộc AuthService
+  async updateProfile(userId: string, data: { displayName?: string; avatarUrl?: string }): Promise<UserDocument | null> {
+    const updateData: any = {};
+    if (data.displayName !== undefined) updateData.displayName = data.displayName;
+    if (data.avatarUrl !== undefined) updateData.avatarUrl = data.avatarUrl;
+
+    if (Object.keys(updateData).length > 0) {
+      return this.userModel.findByIdAndUpdate(
+        userId,
+        { $set: updateData },
+        { new: true }
+      ).select('-password').exec();
+    }
+    return this.findById(userId);
+  }
 }

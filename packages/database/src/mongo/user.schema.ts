@@ -21,7 +21,7 @@ export class User {
   displayName: string;
 
   @Prop()
-  avatar: string;
+  avatarUrl: string;
 
   @Prop({ unique: true, sparse: true })
   email: string;
