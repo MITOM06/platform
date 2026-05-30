@@ -33,5 +33,6 @@ public class PresenceEventListener {
         Principal user = StompHeaderAccessor.wrap(event.getMessage()).getUser();
         if (user == null) return;
         redisTemplate.delete(STATUS_KEY_PREFIX + user.getName());
+        redisTemplate.opsForValue().set("user:lastseen:" + user.getName(), String.valueOf(System.currentTimeMillis()));
     }
 }

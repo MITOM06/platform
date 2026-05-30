@@ -32,11 +32,14 @@ class AuthNotifier extends _$AuthNotifier {
     state = const AsyncData(AuthUnauthenticated());
   }
 
-  Future<void> updateDisplayName(String displayName) async {
+  Future<void> updateProfile({String? displayName, String? avatarUrl}) async {
     state = const AsyncLoading();
     state = await AsyncValue.guard(() async {
       final updated =
-          await ref.read(authRepositoryProvider).updateDisplayName(displayName);
+          await ref.read(authRepositoryProvider).updateProfile(
+                displayName: displayName,
+                avatarUrl: avatarUrl,
+              );
       return AuthAuthenticated(updated);
     });
   }

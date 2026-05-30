@@ -1,5 +1,6 @@
 import 'package:emoji_picker_flutter/emoji_picker_flutter.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:go_router/go_router.dart';
@@ -278,16 +279,41 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
                         )
                       else if (statusAsync != null)
                         statusAsync.when(
-                          data: (status) => Text(
-                            status.online ? context.l10n.statusOnline : context.l10n.statusOffline,
-                            style: TextStyle(
-                              fontSize: 11,
-                              color: status.online
-                                  ? AppTheme.onlineGreen.withValues(alpha: 0.8)
-                                  : Colors.white.withValues(alpha: 0.35),
-                              fontWeight: status.online ? FontWeight.w600 : FontWeight.normal,
-                            ),
-                          ),
+                          data: (status) {
+                            String text = '';
+                            Color color = Colors.white.withValues(alpha: 0.35);
+                            FontWeight weight = FontWeight.normal;
+                            if (status.online) {
+                              text = context.l10n.statusOnline;
+                              color = AppTheme.onlineGreen.withValues(alpha: 0.8);
+                              weight = FontWeight.w600;
+                            } else {
+                              text = context.l10n.statusOffline;
+                              if (status.lastSeen != null) {
+                                try {
+                                  final last = status.lastSeen!.toLocal();
+                                  final diff = DateTime.now().difference(last);
+                                  if (diff.inMinutes < 1) {
+                                    text = context.l10n.lastSeenJustNow;
+                                  } else if (diff.inHours < 1) {
+                                    text = context.l10n.lastSeenMinutes(diff.inMinutes);
+                                  } else if (diff.inDays < 1) {
+                                    text = context.l10n.lastSeenHours(diff.inHours);
+                                  } else {
+                                    text = context.l10n.lastSeenDays(diff.inDays);
+                                  }
+                                } catch (_) {}
+                              }
+                            }
+                            return Text(
+                              text,
+                              style: TextStyle(
+                                fontSize: 11,
+                                color: color,
+                                fontWeight: weight,
+                              ),
+                            );
+                          },
                           loading: () => Text(
                             '...',
                             style: TextStyle(fontSize: 11, color: Colors.white.withValues(alpha: 0.3)),
@@ -415,12 +441,61 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
                               );
                             }
                             final msg = chatState.messages[index];
-                            return MessageBubble(
+                            bool showDate = false;
+                            if (index == chatState.messages.length - 1) {
+                              showDate = true;
+                            } else {
+                              final prevMsg = chatState.messages[index + 1];
+                              final currentDay = msg.createdAt.toLocal();
+                              final prevDay = prevMsg.createdAt.toLocal();
+                              if (currentDay.day != prevDay.day || currentDay.month != prevDay.month || currentDay.year != prevDay.year) {
+                                showDate = true;
+                              }
+                            }
+
+                            Widget child = MessageBubble(
                               message: msg,
                               isSentByMe: msg.senderId == currentUserId,
                               otherUserId: otherUserId,
                               showSenderName: isGroup,
                             );
+
+                            if (showDate) {
+                              final dt = msg.createdAt.toLocal();
+                              final now = DateTime.now();
+                              String dateText;
+                              if (dt.year == now.year && dt.month == now.month && dt.day == now.day) {
+                                dateText = context.l10n.dateToday;
+                              } else {
+                                final yest = now.subtract(const Duration(days: 1));
+                                if (dt.year == yest.year && dt.month == yest.month && dt.day == yest.day) {
+                                  dateText = context.l10n.dateYesterday;
+                                } else {
+                                  dateText = DateFormat.yMMMMd(Localizations.localeOf(context).languageCode).format(dt);
+                                }
+                              }
+                              child = Column(
+                                children: [
+                                  Padding(
+                                    padding: const EdgeInsets.symmetric(vertical: 24),
+                                    child: Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                                      decoration: BoxDecoration(
+                                        color: AppTheme.darkSurface.withValues(alpha: 0.8),
+                                        borderRadius: BorderRadius.circular(12),
+                                        border: Border.all(color: AppTheme.darkBorder.withValues(alpha: 0.5)),
+                                      ),
+                                      child: Text(
+                                        dateText,
+                                        style: const TextStyle(color: Colors.white70, fontSize: 11, fontWeight: FontWeight.bold),
+                                      ),
+                                    ),
+                                  ),
+                                  child,
+                                ],
+                              );
+                            }
+                            return child;
                           },
                         ),
                       ),

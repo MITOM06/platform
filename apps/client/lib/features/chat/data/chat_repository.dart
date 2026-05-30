@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:image_picker/image_picker.dart' show XFile;
 import '../../../core/api/dio_client.dart';
 import '../../auth/domain/auth_provider.dart';
 import '../domain/chat_state.dart';
@@ -172,6 +173,46 @@ class ChatRepository {
   Future<UserStatus> getUserStatus(String userId) async {
     final response = await _dio.get('/api/users/$userId/status');
     return UserStatus.fromJson(response.data as Map<String, dynamic>);
+  }
+
+  Future<String> uploadFile(XFile file) async {
+    // Đọc bytes thay vì fromFile(path) để hoạt động trên cả web (blob URL,
+    // không có filesystem) lẫn mobile, hỗ trợ mọi định dạng ảnh.
+    final bytes = await file.readAsBytes();
+    final filename = file.name;
+    final formData = FormData.fromMap({
+      'file': MultipartFile.fromBytes(
+        bytes,
+        filename: filename,
+        contentType: _imageMediaType(filename),
+      ),
+    });
+    final response = await _dio.post('/api/uploads', data: formData);
+    final data = response.data as Map<String, dynamic>;
+    return data['url'] as String;
+  }
+
+  DioMediaType? _imageMediaType(String filename) {
+    final ext = filename.toLowerCase().split('.').last;
+    switch (ext) {
+      case 'png':
+        return DioMediaType('image', 'png');
+      case 'jpg':
+      case 'jpeg':
+        return DioMediaType('image', 'jpeg');
+      case 'gif':
+        return DioMediaType('image', 'gif');
+      case 'webp':
+        return DioMediaType('image', 'webp');
+      case 'bmp':
+        return DioMediaType('image', 'bmp');
+      case 'heic':
+        return DioMediaType('image', 'heic');
+      case 'heif':
+        return DioMediaType('image', 'heif');
+      default:
+        return null;
+    }
   }
 }
 

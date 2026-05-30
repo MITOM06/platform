@@ -10,6 +10,10 @@ spring:
       port: 6379
   jackson:
     default-property-inclusion: non_null
+  servlet:
+    multipart:
+      max-file-size: 20MB
+      max-request-size: 25MB
 
 app:
   jwt:

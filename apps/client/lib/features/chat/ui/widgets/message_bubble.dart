@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:intl/intl.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/l10n/l10n_ext.dart';
 import '../../../../core/theme/app_theme.dart';
@@ -28,8 +29,8 @@ class MessageBubble extends ConsumerWidget {
       return _SystemMessage(content: _systemText(context, message.content));
     }
 
-    final timeStr =
-        '${message.createdAt.hour.toString().padLeft(2, '0')}:${message.createdAt.minute.toString().padLeft(2, '0')}';
+    final locale = Localizations.localeOf(context).languageCode;
+    final timeStr = DateFormat.Hm(locale).format(message.createdAt.toLocal());
 
     return TweenAnimationBuilder<double>(
       tween: Tween<double>(begin: 0.0, end: 1.0),

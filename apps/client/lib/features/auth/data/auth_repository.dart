@@ -116,17 +116,20 @@ class AuthRepository {
     return list.map((e) => UserModel.fromJson(e as Map<String, dynamic>)).toList();
   }
 
-  Future<UserModel> updateDisplayName(String displayName) async {
+  Future<UserModel> updateProfile({String? displayName, String? avatarUrl}) async {
+    final response = await _dio.patch('/api/users/me', data: {
+      if (displayName != null) 'displayName': displayName,
+      if (avatarUrl != null) 'avatarUrl': avatarUrl,
+    });
+    
+    final updated = UserModel.fromJson(response.data as Map<String, dynamic>);
+    
+    // Update local storage
     final userJson = await _storage.read(key: _keyUser);
-    if (userJson == null) throw StateError('No user in storage');
-    final old = UserModel.fromJson(jsonDecode(userJson) as Map<String, dynamic>);
-    final updated = UserModel(
-      id: old.id,
-      email: old.email,
-      displayName: displayName,
-      avatarUrl: old.avatarUrl,
-    );
-    await _storage.write(key: _keyUser, value: jsonEncode(updated.toJson()));
+    if (userJson != null) {
+      await _storage.write(key: _keyUser, value: jsonEncode(updated.toJson()));
+    }
+    
     return updated;
   }
 }

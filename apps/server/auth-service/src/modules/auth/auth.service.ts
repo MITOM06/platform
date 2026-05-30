@@ -54,7 +54,7 @@ export class AuthService {
       user = await this.usersService.create({
         displayName: profile.displayName || profile.name || fallbackName,
         email: profile.email,
-        avatar: profile.avatar || profile.picture || profile.photos?.[0]?.value || '',
+        avatarUrl: profile.avatar || profile.picture || profile.photos?.[0]?.value || '',
         isVerified: true,
         socialLinks: { [provider]: profile.id },
       });
@@ -270,7 +270,8 @@ export class AuthService {
         id: user._id,
         email: user.email,
         displayName: user.displayName,
-        avatar: user.avatar,
+        avatarUrl: user.avatarUrl,
+        isVerified: user.isVerified,
       } : null,
     };
   }
