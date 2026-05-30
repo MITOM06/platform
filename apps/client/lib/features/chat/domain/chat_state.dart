@@ -24,7 +24,13 @@ class LastMessageModel {
 @immutable
 class ConversationModel {
   final String id;
+  final String type; // "direct" | "group"
+  final String? name; // group name
+  final String? avatarUrl; // group avatar
   final List<String> participants;
+  final List<String> admins;
+  final String? createdBy;
+  final int? autoDeleteSeconds;
   final LastMessageModel? lastMessage;
   final DateTime? lastMessageAt;
   final int unreadCount;
@@ -32,17 +38,31 @@ class ConversationModel {
 
   const ConversationModel({
     required this.id,
+    this.type = 'direct',
+    this.name,
+    this.avatarUrl,
     required this.participants,
+    this.admins = const [],
+    this.createdBy,
+    this.autoDeleteSeconds,
     this.lastMessage,
     this.lastMessageAt,
     required this.unreadCount,
     required this.createdAt,
   });
 
+  bool get isGroup => type == 'group';
+
   factory ConversationModel.fromJson(Map<String, dynamic> json) {
     return ConversationModel(
       id: json['id'] as String,
-      participants: List<String>.from(json['participants'] as List),
+      type: json['type'] as String? ?? 'direct',
+      name: json['name'] as String?,
+      avatarUrl: json['avatarUrl'] as String?,
+      participants: List<String>.from(json['participants'] as List? ?? []),
+      admins: List<String>.from(json['admins'] as List? ?? []),
+      createdBy: json['createdBy'] as String?,
+      autoDeleteSeconds: (json['autoDeleteSeconds'] as num?)?.toInt(),
       lastMessage: json['lastMessage'] != null
           ? LastMessageModel.fromJson(
               json['lastMessage'] as Map<String, dynamic>)
@@ -51,13 +71,21 @@ class ConversationModel {
           ? DateTime.parse(json['lastMessageAt'] as String)
           : null,
       unreadCount: (json['unreadCount'] as num?)?.toInt() ?? 0,
-      createdAt: DateTime.parse(json['createdAt'] as String),
+      createdAt: json['createdAt'] != null
+          ? DateTime.parse(json['createdAt'] as String)
+          : DateTime.now(),
     );
   }
 
   ConversationModel copyWith({
     String? id,
+    String? type,
+    String? name,
+    String? avatarUrl,
     List<String>? participants,
+    List<String>? admins,
+    String? createdBy,
+    int? autoDeleteSeconds,
     LastMessageModel? lastMessage,
     DateTime? lastMessageAt,
     int? unreadCount,
@@ -65,7 +93,13 @@ class ConversationModel {
   }) {
     return ConversationModel(
       id: id ?? this.id,
+      type: type ?? this.type,
+      name: name ?? this.name,
+      avatarUrl: avatarUrl ?? this.avatarUrl,
       participants: participants ?? this.participants,
+      admins: admins ?? this.admins,
+      createdBy: createdBy ?? this.createdBy,
+      autoDeleteSeconds: autoDeleteSeconds ?? this.autoDeleteSeconds,
       lastMessage: lastMessage ?? this.lastMessage,
       lastMessageAt: lastMessageAt ?? this.lastMessageAt,
       unreadCount: unreadCount ?? this.unreadCount,
@@ -75,14 +109,50 @@ class ConversationModel {
 }
 
 @immutable
+class ReactionModel {
+  final String userId;
+  final String emoji;
+
+  const ReactionModel({required this.userId, required this.emoji});
+
+  factory ReactionModel.fromJson(Map<String, dynamic> json) => ReactionModel(
+        userId: json['userId'] as String,
+        emoji: json['emoji'] as String,
+      );
+}
+
+@immutable
+class ReplyPreview {
+  final String? messageId;
+  final String senderId;
+  final String content;
+
+  const ReplyPreview({
+    this.messageId,
+    required this.senderId,
+    required this.content,
+  });
+
+  factory ReplyPreview.fromJson(Map<String, dynamic> json) => ReplyPreview(
+        messageId: json['messageId'] as String?,
+        senderId: json['senderId'] as String? ?? '',
+        content: json['content'] as String? ?? '',
+      );
+}
+
+@immutable
 class MessageModel {
   final String id;
   final String conversationId;
   final String senderId;
   final String content;
-  final String type;
+  final String type; // "text" | "image" | "system"
   final List<String> readBy;
   final DateTime createdAt;
+  final String? replyToId;
+  final ReplyPreview? replyPreview;
+  final List<ReactionModel> reactions;
+  final bool recalled;
   // Client-only flag for optimistic UI — not in server response
   final bool isPending;
 
@@ -94,18 +164,32 @@ class MessageModel {
     required this.type,
     required this.readBy,
     required this.createdAt,
+    this.replyToId,
+    this.replyPreview,
+    this.reactions = const [],
+    this.recalled = false,
     this.isPending = false,
   });
+
+  bool get isSystem => type == 'system';
 
   factory MessageModel.fromJson(Map<String, dynamic> json) {
     return MessageModel(
       id: json['id'] as String,
       conversationId: json['conversationId'] as String,
       senderId: json['senderId'] as String,
-      content: json['content'] as String,
+      content: json['content'] as String? ?? '',
       type: json['type'] as String? ?? 'text',
       readBy: List<String>.from(json['readBy'] as List? ?? []),
       createdAt: DateTime.parse(json['createdAt'] as String),
+      replyToId: json['replyToId'] as String?,
+      replyPreview: json['replyPreview'] != null
+          ? ReplyPreview.fromJson(json['replyPreview'] as Map<String, dynamic>)
+          : null,
+      reactions: (json['reactions'] as List? ?? [])
+          .map((e) => ReactionModel.fromJson(e as Map<String, dynamic>))
+          .toList(),
+      recalled: json['recalled'] as bool? ?? false,
     );
   }
 
@@ -117,6 +201,10 @@ class MessageModel {
     String? type,
     List<String>? readBy,
     DateTime? createdAt,
+    String? replyToId,
+    ReplyPreview? replyPreview,
+    List<ReactionModel>? reactions,
+    bool? recalled,
     bool? isPending,
   }) {
     return MessageModel(
@@ -127,6 +215,10 @@ class MessageModel {
       type: type ?? this.type,
       readBy: readBy ?? this.readBy,
       createdAt: createdAt ?? this.createdAt,
+      replyToId: replyToId ?? this.replyToId,
+      replyPreview: replyPreview ?? this.replyPreview,
+      reactions: reactions ?? this.reactions,
+      recalled: recalled ?? this.recalled,
       isPending: isPending ?? this.isPending,
     );
   }
@@ -197,12 +289,35 @@ class ReadReceiptEvent {
 }
 
 @immutable
+class ReactionUpdateEvent {
+  final String conversationId;
+  final String messageId;
+  final List<ReactionModel> reactions;
+
+  const ReactionUpdateEvent({
+    required this.conversationId,
+    required this.messageId,
+    required this.reactions,
+  });
+}
+
+@immutable
+class RecallEvent {
+  final String conversationId;
+  final String messageId;
+
+  const RecallEvent({required this.conversationId, required this.messageId});
+}
+
+@immutable
 class ChatState {
   final List<MessageModel> messages;
   final bool hasMore;
   final int currentPage;
   final Set<String> typingUserIds;
   final bool isLoadingMore;
+  // Message the composer is currently replying to (null = not replying).
+  final MessageModel? replyingTo;
 
   const ChatState({
     required this.messages,
@@ -210,6 +325,7 @@ class ChatState {
     this.currentPage = 0,
     this.typingUserIds = const {},
     this.isLoadingMore = false,
+    this.replyingTo,
   });
 
   ChatState copyWith({
@@ -218,6 +334,8 @@ class ChatState {
     int? currentPage,
     Set<String>? typingUserIds,
     bool? isLoadingMore,
+    MessageModel? replyingTo,
+    bool clearReplyingTo = false,
   }) {
     return ChatState(
       messages: messages ?? this.messages,
@@ -225,6 +343,7 @@ class ChatState {
       currentPage: currentPage ?? this.currentPage,
       typingUserIds: typingUserIds ?? this.typingUserIds,
       isLoadingMore: isLoadingMore ?? this.isLoadingMore,
+      replyingTo: clearReplyingTo ? null : (replyingTo ?? this.replyingTo),
     );
   }
 }

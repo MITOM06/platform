@@ -10,6 +10,7 @@ import '../../auth/domain/auth_provider.dart';
 import '../../auth/domain/auth_state.dart';
 import '../domain/chat_provider.dart';
 import '../domain/chat_state.dart';
+import 'widgets/conversation_avatar.dart';
 
 class ConversationListScreen extends ConsumerStatefulWidget {
   const ConversationListScreen({super.key});
@@ -459,24 +460,30 @@ class _ConversationTile extends ConsumerWidget {
     final currentUserId = authState is AuthAuthenticated ? authState.user.id : '';
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    // Find the other participant's ID
+    final isGroup = conv.isGroup;
+
+    // Find the other participant's ID (direct chats only)
     final others = conv.participants.where((p) => p != currentUserId).toList();
-    final otherUserId = others.isNotEmpty ? others.first : '';
+    final otherUserId = !isGroup && others.isNotEmpty ? others.first : '';
 
     // Fetch online status cho người dùng kia
     final statusAsync = otherUserId.isNotEmpty
         ? ref.watch(userStatusProvider(otherUserId)).valueOrNull
         : null;
-    final isOnline = statusAsync?.online ?? false;
+    final isOnline = !isGroup && (statusAsync?.online ?? false);
 
     // Resolve displayName từ auth-service thay vì hiển thị raw userId
     final profileAsync = otherUserId.isNotEmpty
         ? ref.watch(userProfileProvider(otherUserId))
         : null;
-    final displayName = profileAsync?.valueOrNull?.displayName ?? '...';
+    final displayName = isGroup
+        ? (conv.name ?? context.l10n.conversationDefault)
+        : (profileAsync?.valueOrNull?.displayName ?? '...');
     final tileLetter = displayName.isNotEmpty && displayName != '...'
         ? displayName[0].toUpperCase()
         : '?';
+    final avatarUrl =
+        isGroup ? conv.avatarUrl : profileAsync?.valueOrNull?.avatarUrl;
 
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
@@ -508,75 +515,21 @@ class _ConversationTile extends ConsumerWidget {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
           ),
-          leading: Stack(
-            children: [
-              Container(
-                width: 48,
-                height: 48,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  gradient: LinearGradient(
-                    colors: conv.unreadCount > 0
-                        ? [
-                            isDark ? AppTheme.neonCyan : Theme.of(context).colorScheme.primary,
-                            isDark ? AppTheme.neonPink : Theme.of(context).colorScheme.secondary,
-                          ]
-                        : [
-                            isDark ? AppTheme.neonPurple.withValues(alpha: 0.6) : Colors.grey.shade400,
-                            isDark ? AppTheme.darkBorder : Colors.grey.shade300,
-                          ],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                  boxShadow: isDark
-                      ? [
-                          BoxShadow(
-                            color: (isOnline ? AppTheme.onlineGreen : AppTheme.neonPurple).withValues(alpha: 0.15),
-                            blurRadius: 8,
-                            spreadRadius: 1,
-                          )
-                        ]
-                      : null,
-                ),
-                padding: const EdgeInsets.all(2),
-                child: CircleAvatar(
-                  backgroundColor: isDark ? AppTheme.darkSurface : Colors.grey.shade100,
-                  child: Text(
-                    tileLetter,
-                    style: TextStyle(
-                      color: conv.unreadCount > 0 
-                          ? Colors.white 
-                          : (isDark ? Colors.white70 : Colors.black87),
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
-                    ),
-                  ),
-                ),
-              ),
-              if (isOnline)
-                Positioned(
-                  right: 0,
-                  bottom: 0,
-                  child: Container(
-                    width: 12,
-                    height: 12,
-                    decoration: BoxDecoration(
-                      color: AppTheme.onlineGreen,
-                      shape: BoxShape.circle,
-                      border: Border.all(
-                        color: isDark ? AppTheme.obsidianBackground : Colors.white,
-                        width: 2,
-                      ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: AppTheme.onlineGreen.withValues(alpha: 0.6),
-                          blurRadius: 4,
-                        )
-                      ],
-                    ),
-                  ),
-                ),
-            ],
+          leading: ConversationAvatar(
+            avatarUrl: avatarUrl,
+            fallbackLetter: tileLetter,
+            isGroup: isGroup,
+            size: 48,
+            online: isOnline,
+            gradientColors: conv.unreadCount > 0
+                ? [
+                    isDark ? AppTheme.neonCyan : Theme.of(context).colorScheme.primary,
+                    isDark ? AppTheme.neonPink : Theme.of(context).colorScheme.secondary,
+                  ]
+                : [
+                    isDark ? AppTheme.neonPurple.withValues(alpha: 0.6) : Colors.grey.shade400,
+                    isDark ? AppTheme.darkBorder : Colors.grey.shade300,
+                  ],
           ),
           title: Text(
             displayName.isEmpty ? context.l10n.conversationDefault : displayName,
@@ -632,6 +585,36 @@ class _ConversationTile extends ConsumerWidget {
                 )
               : null,
           onTap: () => context.push('/chat/${conv.id}'),
+          onLongPress: () => _showTileMenu(context, ref),
+        ),
+      ),
+    );
+  }
+
+  void _showTileMenu(BuildContext context, WidgetRef ref) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: AppTheme.darkSurface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (sheetCtx) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const SizedBox(height: 8),
+            ListTile(
+              leading: const Icon(Icons.delete_outline_rounded, color: Colors.redAccent),
+              title: Text(sheetCtx.l10n.deleteConversation,
+                  style: const TextStyle(color: Colors.redAccent)),
+              onTap: () {
+                Navigator.pop(sheetCtx);
+                ref
+                    .read(conversationsNotifierProvider.notifier)
+                    .deleteConversation(conv.id);
+              },
+            ),
+          ],
         ),
       ),
     );

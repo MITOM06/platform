@@ -1,3 +1,4 @@
+import 'package:emoji_picker_flutter/emoji_picker_flutter.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -7,9 +8,11 @@ import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/neon_widgets.dart';
 import '../../auth/domain/auth_provider.dart';
 import '../../auth/domain/auth_state.dart';
+import '../data/chat_repository.dart';
 import '../data/stomp_service.dart';
 import '../domain/chat_provider.dart';
 import '../domain/chat_state.dart';
+import 'widgets/conversation_avatar.dart';
 import 'widgets/message_bubble.dart';
 
 class ChatScreen extends ConsumerStatefulWidget {
@@ -25,6 +28,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
     with WidgetsBindingObserver {
   late final ScrollController _scrollCtrl;
   late final TextEditingController _textCtrl;
+  bool _showEmoji = false;
 
   @override
   void initState() {
@@ -86,9 +90,104 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
         .sendMessage(content);
   }
 
+  void _insertEmoji(String emoji) {
+    final text = _textCtrl.text;
+    final sel = _textCtrl.selection;
+    final start = sel.start < 0 ? text.length : sel.start;
+    final end = sel.end < 0 ? text.length : sel.end;
+    final newText = text.replaceRange(start, end, emoji);
+    _textCtrl.value = TextEditingValue(
+      text: newText,
+      selection: TextSelection.collapsed(offset: start + emoji.length),
+    );
+  }
+
+  Future<void> _clearHistory() async {
+    final confirm = await _confirm(
+        context.l10n.clearHistory, context.l10n.clearHistoryConfirm);
+    if (confirm != true) return;
+    try {
+      await ref.read(chatRepositoryProvider).clearHistory(widget.conversationId);
+      ref.invalidate(chatNotifierProvider(widget.conversationId));
+    } catch (_) {}
+  }
+
+  Future<void> _deleteConversation() async {
+    final confirm = await _confirm(
+        context.l10n.deleteConversation, context.l10n.deleteConversationConfirm);
+    if (confirm != true) return;
+    await ref
+        .read(conversationsNotifierProvider.notifier)
+        .deleteConversation(widget.conversationId);
+    if (mounted) context.pop();
+  }
+
+  Future<void> _chooseAutoDelete() async {
+    final l10n = context.l10n;
+    final seconds = await showModalBottomSheet<int?>(
+      context: context,
+      backgroundColor: AppTheme.darkSurface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (ctx) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const SizedBox(height: 12),
+            Text(l10n.disappearingMessages,
+                style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 8),
+            ListTile(
+              title: Text(l10n.disappearingOff, style: const TextStyle(color: Colors.white)),
+              onTap: () => Navigator.pop(ctx, 0),
+            ),
+            ListTile(
+              title: Text(l10n.disappearing24h, style: const TextStyle(color: Colors.white)),
+              onTap: () => Navigator.pop(ctx, 86400),
+            ),
+            ListTile(
+              title: Text(l10n.disappearing7d, style: const TextStyle(color: Colors.white)),
+              onTap: () => Navigator.pop(ctx, 604800),
+            ),
+          ],
+        ),
+      ),
+    );
+    if (seconds == null) return;
+    try {
+      await ref
+          .read(chatRepositoryProvider)
+          .setAutoDelete(widget.conversationId, seconds == 0 ? null : seconds);
+    } catch (_) {}
+  }
+
+  Future<bool?> _confirm(String title, String body) {
+    return showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AppTheme.darkSurface,
+        title: Text(title, style: const TextStyle(color: Colors.white)),
+        content: Text(body, style: const TextStyle(color: Colors.white70)),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text(ctx.l10n.actionCancel),
+          ),
+          FilledButton(
+            style: FilledButton.styleFrom(backgroundColor: Colors.redAccent),
+            onPressed: () => Navigator.pop(ctx, true),
+            child: Text(ctx.l10n.actionConfirm),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final chatAsync = ref.watch(chatNotifierProvider(widget.conversationId));
+    final replyingTo = chatAsync.valueOrNull?.replyingTo;
     final authState = ref.watch(authNotifierProvider).valueOrNull;
     final currentUserId =
         authState is AuthAuthenticated ? authState.user.id : '';
@@ -115,11 +214,15 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
         ? ref.watch(userProfileProvider(otherUserId))
         : null;
     
+    final bool isGroup = conv?.isGroup ?? false;
     final resolvedName = profileAsync?.valueOrNull?.displayName;
-    final String displayName = resolvedName ?? context.l10n.chatDefaultTitle;
-    final String avatarLetter =
-        (resolvedName != null && resolvedName.isNotEmpty) ? resolvedName[0].toUpperCase() : '?';
-    final isOnline = statusAsync?.valueOrNull?.online ?? false;
+    final String displayName = isGroup
+        ? (conv?.name ?? context.l10n.conversationDefault)
+        : (resolvedName ?? context.l10n.chatDefaultTitle);
+    final String avatarLetter = displayName.isNotEmpty && displayName != context.l10n.chatDefaultTitle
+        ? displayName[0].toUpperCase()
+        : '?';
+    final isOnline = !isGroup && (statusAsync?.valueOrNull?.online ?? false);
 
     return Scaffold(
       appBar: PreferredSize(
@@ -141,56 +244,12 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
             titleSpacing: 0,
             title: Row(
               children: [
-                // Avatar with online dot
-                Stack(
-                  children: [
-                    Container(
-                      width: 38,
-                      height: 38,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        gradient: LinearGradient(
-                          colors: [
-                            AppTheme.neonCyan.withValues(alpha: 0.8),
-                            AppTheme.neonPurple.withValues(alpha: 0.8)
-                          ],
-                        ),
-                      ),
-                      padding: const EdgeInsets.all(1.5),
-                      child: CircleAvatar(
-                        radius: 17,
-                        backgroundColor: AppTheme.darkSurface,
-                        child: Text(
-                          avatarLetter,
-                          style: const TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
-                          ),
-                        ),
-                      ),
-                    ),
-                    if (isOnline)
-                      Positioned(
-                        right: 0,
-                        bottom: 0,
-                        child: Container(
-                          width: 10,
-                          height: 10,
-                          decoration: BoxDecoration(
-                            color: AppTheme.onlineGreen,
-                            shape: BoxShape.circle,
-                            border: Border.all(color: AppTheme.obsidianBackground, width: 1.5),
-                            boxShadow: [
-                              BoxShadow(
-                                color: AppTheme.onlineGreen.withValues(alpha: 0.8),
-                                blurRadius: 4,
-                              )
-                            ],
-                          ),
-                        ),
-                      ),
-                  ],
+                ConversationAvatar(
+                  avatarUrl: isGroup ? conv?.avatarUrl : null,
+                  fallbackLetter: avatarLetter,
+                  isGroup: isGroup,
+                  size: 38,
+                  online: isOnline,
                 ),
                 const SizedBox(width: 12),
                 // Title and status text
@@ -209,7 +268,15 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
                         overflow: TextOverflow.ellipsis,
                       ),
                       const SizedBox(height: 2),
-                      if (statusAsync != null)
+                      if (isGroup)
+                        Text(
+                          context.l10n.membersCount(conv?.participants.length ?? 0),
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: Colors.white.withValues(alpha: 0.4),
+                          ),
+                        )
+                      else if (statusAsync != null)
                         statusAsync.when(
                           data: (status) => Text(
                             status.online ? context.l10n.statusOnline : context.l10n.statusOffline,
@@ -232,6 +299,34 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
                 ),
               ],
             ),
+            actions: [
+              PopupMenuButton<String>(
+                icon: const Icon(Icons.more_vert_rounded, color: Colors.white),
+                color: AppTheme.darkSurface,
+                onSelected: (value) {
+                  switch (value) {
+                    case 'group':
+                      context.push('/group-info/${widget.conversationId}');
+                    case 'clear':
+                      _clearHistory();
+                    case 'auto':
+                      _chooseAutoDelete();
+                    case 'delete':
+                      _deleteConversation();
+                  }
+                },
+                itemBuilder: (ctx) => [
+                  if (isGroup)
+                    PopupMenuItem(
+                      value: 'group',
+                      child: Text(ctx.l10n.groupInfo),
+                    ),
+                  PopupMenuItem(value: 'clear', child: Text(ctx.l10n.clearHistory)),
+                  PopupMenuItem(value: 'auto', child: Text(ctx.l10n.disappearingMessages)),
+                  PopupMenuItem(value: 'delete', child: Text(ctx.l10n.deleteConversation)),
+                ],
+              ),
+            ],
           ),
         ),
       ),
@@ -324,6 +419,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
                               message: msg,
                               isSentByMe: msg.senderId == currentUserId,
                               otherUserId: otherUserId,
+                              showSenderName: isGroup,
                             );
                           },
                         ),
@@ -335,14 +431,93 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
                   ),
                 ),
               ),
+              if (replyingTo != null)
+                _ReplyComposerBar(
+                  preview: replyingTo,
+                  onCancel: () => ref
+                      .read(chatNotifierProvider(widget.conversationId).notifier)
+                      .cancelReply(),
+                ),
               _InputBar(
                 controller: _textCtrl,
                 onSend: _onSend,
+                emojiActive: _showEmoji,
+                onEmojiToggle: () {
+                  FocusScope.of(context).unfocus();
+                  setState(() => _showEmoji = !_showEmoji);
+                },
                 onChanged: (_) => ref
                     .read(chatNotifierProvider(widget.conversationId).notifier)
                     .startTyping(),
               ),
+              if (_showEmoji)
+                SizedBox(
+                  height: 280,
+                  child: EmojiPicker(
+                    onEmojiSelected: (category, emoji) => _insertEmoji(emoji.emoji),
+                    config: const Config(
+                      height: 280,
+                      emojiViewConfig: EmojiViewConfig(backgroundColor: AppTheme.obsidianBackground),
+                      categoryViewConfig: CategoryViewConfig(backgroundColor: AppTheme.darkSurface),
+                      bottomActionBarConfig: BottomActionBarConfig(
+                        backgroundColor: AppTheme.darkSurface,
+                        buttonColor: AppTheme.darkSurface,
+                      ),
+                      searchViewConfig: SearchViewConfig(backgroundColor: AppTheme.darkSurface),
+                    ),
+                  ),
+                ),
             ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ReplyComposerBar extends StatelessWidget {
+  final MessageModel preview;
+  final VoidCallback onCancel;
+
+  const _ReplyComposerBar({required this.preview, required this.onCancel});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      color: AppTheme.darkSurface.withValues(alpha: 0.6),
+      padding: const EdgeInsets.fromLTRB(16, 8, 8, 8),
+      child: Row(
+        children: [
+          Container(width: 3, height: 36, color: AppTheme.neonCyan),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  context.l10n.actionReply,
+                  style: const TextStyle(
+                    color: AppTheme.neonCyan,
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                Text(
+                  preview.content,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    color: Colors.white.withValues(alpha: 0.6),
+                    fontSize: 13,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          IconButton(
+            icon: const Icon(Icons.close_rounded, color: Colors.white54, size: 20),
+            onPressed: onCancel,
           ),
         ],
       ),
@@ -392,11 +567,15 @@ class _InputBar extends StatefulWidget {
   final TextEditingController controller;
   final VoidCallback onSend;
   final ValueChanged<String> onChanged;
+  final VoidCallback onEmojiToggle;
+  final bool emojiActive;
 
   const _InputBar({
     required this.controller,
     required this.onSend,
     required this.onChanged,
+    required this.onEmojiToggle,
+    required this.emojiActive,
   });
 
   @override
@@ -444,6 +623,15 @@ class _InputBarState extends State<_InputBar> {
         top: false,
         child: Row(
           children: [
+            IconButton(
+              onPressed: widget.onEmojiToggle,
+              icon: Icon(
+                widget.emojiActive
+                    ? Icons.keyboard_rounded
+                    : Icons.emoji_emotions_outlined,
+                color: AppTheme.neonCyan.withValues(alpha: 0.8),
+              ),
+            ),
             Expanded(
               child: AnimatedContainer(
                 duration: const Duration(milliseconds: 200),
