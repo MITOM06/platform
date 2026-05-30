@@ -4,6 +4,74 @@
 
 ---
 
+## 🟡 SPRINT 7 — Avatar Upload + Polish (CHƯA LÀM — bàn giao cho AI khác)
+
+> **Nhánh:** `feat/i18n-and-messenger-features`. ĐÃ XONG ở 3 commit trước: i18n 7 ngôn ngữ,
+> chat nhóm, reactions, reply, thu hồi/xoá tin, xoá/clear hội thoại, tin tự xoá.
+> **Ngữ cảnh quan trọng để khỏi làm lại:**
+> - Model `Conversation` (BE) đã có field `avatarUrl`, `autoDeleteSeconds`, `name`, `admins`…
+> - `PUT /api/conversations/{id}` (admin) đã cập nhật `name`/`avatarUrl` (ConversationController.updateGroup).
+> - Client đã có widget `lib/features/chat/ui/widgets/conversation_avatar.dart` — tự render ảnh từ URL
+>   (relative URL được nối với `DioClient.chatBaseUrl`). Chỉ thiếu phần UPLOAD ảnh.
+> - Client `UserModel` (auth_state.dart) đã có field `avatarUrl`; `UserStatus` đã có `lastSeen`.
+> - ARB đã có sẵn key: `changeAvatar`, `uploadFailed`, `lastSeenJustNow/Minutes/Hours/Days`,
+>   `dateToday`, `dateYesterday` (cả 7 file `lib/l10n/app_*.arb`). TÁI SỬ DỤNG, đừng tạo key mới trừ khi thiếu.
+> - LUẬT i18n bắt buộc: mọi chuỗi UI lấy từ `context.l10n.<key>`; thêm key ⇒ thêm vào CẢ 7 file ARB
+>   rồi `flutter gen-l10n`. Xem `.claude/rules/i18n.md`.
+
+### TASK 22 — Upload ảnh qua GridFS (BE chat-service)
+- **File mới:** `apps/server/chat-service/src/main/java/com/platform/chatservice/controller/UploadController.java`
+    - `@RestController @RequestMapping("/api/uploads")`, inject `GridFsTemplate` + `GridFsOperations`
+      (auto-config sẵn từ `spring-boot-starter-data-mongodb`, KHÔNG thêm dependency).
+    - `POST /` (multipart field tên `file`): `gridFsTemplate.store(in, filename, contentType)` → trả
+      `{"url": "/api/uploads/" + id}`. Lấy `userId` từ `SecurityContextHolder` (theo pattern các controller khác).
+    - `GET /{id}`: đọc `GridFsResource` → stream bytes kèm `Content-Type`. Cho phép GET công khai.
+- **File sửa:** `config/SecurityConfig.java` — permitAll cho `GET /api/uploads/**`; giữ POST cần JWT.
+- **Test:** `curl -F file=@x.png -H "Authorization: Bearer <jwt>" :8080/api/uploads` → `{url}`;
+  mở `GET :8080{url}` thấy ảnh. `mvn test` vẫn 26/26.
+
+### TASK 23 — avatarUrl cho user (BE auth-service)
+- **File sửa:** `src/modules/users/users.schema.ts` (hoặc schema tương ứng) — thêm field `avatarUrl?: string`.
+- **File sửa:** `src/modules/users/users.controller.ts` — thêm `PATCH /api/users/me`
+  body `{ displayName?, avatarUrl? }` → cập nhật user hiện tại, trả profile (đã `select('-password')`).
+- **Đảm bảo** `findById`/`/me`/`/:id` trả về `avatarUrl`. (Client `UserModel.fromJson` đã đọc `avatarUrl`.)
+- **Test:** `PATCH /api/users/me {avatarUrl}` → `/me` trả đúng avatarUrl; `pnpm build` EXIT 0.
+
+### TASK 24 — Upload + đổi avatar (FE Flutter)
+- **File sửa:** `lib/features/chat/data/chat_repository.dart` — thêm
+  `Future<String> uploadFile(String path)` (dùng `dio.post('/api/uploads', data: FormData.fromMap({'file': await MultipartFile.fromFile(path)}))` → trả `url`).
+- **File sửa:** `lib/features/auth/data/auth_repository.dart` — thêm
+  `Future<UserModel> updateProfile({String? displayName, String? avatarUrl})` gọi `PATCH /api/users/me`.
+- **File sửa:** `lib/features/settings/ui/settings_screen.dart` — bấm avatar → `image_picker` chọn ảnh →
+  `uploadFile` → `updateProfile(avatarUrl: url)` → refresh `authNotifier`. Dùng key `context.l10n.changeAvatar`/`uploadFailed`.
+- **File sửa:** `lib/features/chat/ui/group_info_screen.dart` — admin bấm avatar nhóm → upload →
+  `chatRepository.updateConversation(id, avatarUrl: url)` → `ref.invalidate(groupConversationProvider(id))`.
+- **Lưu ý:** `image_picker`, `cached_network_image` ĐÃ có trong `pubspec.yaml`. `ConversationAvatar` đã render sẵn.
+- **Test:** đổi avatar user/nhóm → hiện ngay ở list/chat/settings sau khi reload provider. `flutter analyze` sạch.
+
+### TASK 25 — Last-seen presence (BE + FE)
+- **BE** `security/PresenceEventListener.java` — khi `SessionDisconnectEvent`: set Redis
+  `user:lastseen:{userId}` = epoch millis. `controller/UserStatusController.java` — trả thêm
+  `lastSeen` (đọc key, ISO-8601) trong JSON `{userId, online, lastSeen}`.
+- **FE** `lib/features/chat/ui/chat_screen.dart` — khi offline + có `lastSeen`, hiển thị
+  "hoạt động X phút/giờ/ngày trước" bằng key `lastSeenMinutes/Hours/Days` (tính delta `DateTime.now()`).
+- **Test:** A disconnect → status A `online:false` + `lastSeen` hợp lệ; chat header hiện "hoạt động … trước".
+
+### TASK 26 — Format giờ/ngày theo locale + date separator (FE)
+- **File sửa:** `lib/features/chat/ui/widgets/message_bubble.dart` — thay format giờ thủ công bằng
+  `intl` `DateFormat.Hm(localeName)`; `localeName` lấy từ `Localizations.localeOf(context)`.
+- **File sửa:** `lib/features/chat/ui/chat_screen.dart` — chèn widget ngăn cách ngày giữa các tin
+  (so sánh ngày của message kề nhau trong `ListView.builder reverse:true`); nhãn dùng
+  `context.l10n.dateToday`/`dateYesterday`, còn lại `DateFormat.yMMMMd(localeName)`.
+- **Test:** tin khác ngày có vạch "Hôm nay/Hôm qua/ngày"; đổi ngôn ngữ → giờ/ngày đổi định dạng. `flutter analyze` sạch.
+
+### Kiểm thử tổng (sau khi xong Sprint 7)
+- `cd apps/client && flutter gen-l10n && flutter analyze && flutter test`
+- `cd apps/server/chat-service && mvn test` (giữ ≥26 pass) | `cd apps/server/auth-service && pnpm build`
+- E2E cần infra: `docker compose -f infra/docker-compose/compose.yml up -d` + `pnpm auth` + `pnpm chat`.
+
+---
+
 ## 🔴 SPRINT 6 — Bug Fixes: Cross-Browser Chat, CORS & Layout (ĐANG LÀM)
 
 ### TASK 18 — Phân giải Email thành User ID khi tạo Conversation (FE) `DONE`
