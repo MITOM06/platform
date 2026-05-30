@@ -21,4 +21,4 @@ You are working on the Spring Boot 3 chat service. Follow these rules:
 
 **MongoDB URI**: `mongodb://localhost:27018/platform` (port 27018, not 27017).
 
-**JWT Secret**: Must match `apps/server/auth-service/.env` → `JWT_SECRET` value exactly.
+**JWT Secret**: Env var name is `JWT_ACCESS_SECRET`. Must match `apps/server/auth-service/.env` exactly.

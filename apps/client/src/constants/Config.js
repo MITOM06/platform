@@ -1,1 +1,0 @@
-export const API_BASE_URL = 'https://donnie-readaptable-ai.ngrok-free.dev';

@@ -105,11 +105,17 @@ class AuthRepository {
 
   Future<void> clearCredentials() => _storage.deleteAll();
 
-  /// Updates display name locally in secure storage (no server call).
   /// Lấy public profile của bất kỳ user nào theo id — dùng cho chat UI
   Future<UserModel> getUserProfile(String userId) async {
     final response = await _dio.get('/api/users/$userId');
     return UserModel.fromJson(response.data as Map<String, dynamic>);
+  }
+
+  /// Tìm kiếm user theo email hoặc displayName — dùng khi tạo conversation
+  Future<List<UserModel>> searchUsers(String query) async {
+    final response = await _dio.get('/api/users/search', queryParameters: {'q': query});
+    final list = response.data as List;
+    return list.map((e) => UserModel.fromJson(e as Map<String, dynamic>)).toList();
   }
 
   Future<UserModel> updateDisplayName(String displayName) async {

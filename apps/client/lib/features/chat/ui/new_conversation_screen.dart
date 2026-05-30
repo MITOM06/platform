@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/neon_widgets.dart';
+import '../../auth/data/auth_repository.dart';
 import '../data/chat_repository.dart';
 
 class NewConversationScreen extends ConsumerStatefulWidget {
@@ -35,9 +36,29 @@ class _NewConversationScreenState
     });
 
     try {
+      final input = _controller.text.trim();
+      String participantId = input;
+
+      if (input.contains('@')) {
+        final authRepo = ref.read(authRepositoryProvider);
+        final users = await authRepo.searchUsers(input);
+        final matched = users
+            .where((u) => u.email.toLowerCase() == input.toLowerCase())
+            .toList();
+        if (matched.isEmpty) {
+          if (mounted) {
+            setState(() {
+              _error = 'Không tìm thấy người dùng có email này.';
+              _loading = false;
+            });
+          }
+          return;
+        }
+        participantId = matched.first.id;
+      }
+
       final repo = ref.read(chatRepositoryProvider);
-      final conv =
-          await repo.getOrCreateConversation(_controller.text.trim());
+      final conv = await repo.getOrCreateConversation(participantId);
       if (mounted) context.go('/chat/${conv.id}');
     } catch (e) {
       if (mounted) {
