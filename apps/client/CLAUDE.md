@@ -53,3 +53,11 @@ lib/
 - Navigation: `go_router` only — không dùng `Navigator.push` trực tiếp
 - Null safety: full Dart 3 — không `!` force-unwrap không có lý do
 - `withValues(alpha:)` thay `withOpacity()` (deprecated Flutter 3.44)
+
+## i18n (đa ngôn ngữ) — BẮT BUỘC
+
+- App hỗ trợ 7 ngôn ngữ (en/vi/zh/ja/ko/es/fr). **KHÔNG hardcode** chuỗi hiển thị —
+  luôn dùng `context.l10n.<key>` (`lib/core/l10n/l10n_ext.dart`).
+- Template ARB: `lib/l10n/app_en.arb`. Thêm UI mới ⇒ thêm key vào **cả 7** `app_*.arb`,
+  rồi `flutter gen-l10n`. File `app_localizations*.dart` là generated — không sửa tay.
+- Ngôn ngữ chọn ở Settings, lưu qua `locale_provider.dart`. Chi tiết: `.claude/rules/i18n.md`.

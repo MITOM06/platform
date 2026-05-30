@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../../core/l10n/l10n_ext.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/neon_widgets.dart';
 import '../data/auth_repository.dart';
@@ -39,15 +40,15 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
     } on DioException catch (e) {
       if (mounted) {
         final msg = e.response?.statusCode == 404
-            ? 'Email này chưa được đăng ký'
-            : 'Gửi yêu cầu thất bại, thử lại';
+            ? context.l10n.errEmailNotRegistered
+            : context.l10n.errSendRequestFailed;
         ScaffoldMessenger.of(context)
             .showSnackBar(SnackBar(content: Text(msg)));
       }
     } catch (_) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Gửi yêu cầu thất bại, thử lại')));
+            SnackBar(content: Text(context.l10n.errSendRequestFailed)));
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);
@@ -58,7 +59,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Đặt Lại Mật Khẩu'),
+        title: Text(context.l10n.forgotTitle),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
           onPressed: () => context.go('/login'),
@@ -114,7 +115,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                     const Center(child: PonLogo(size: 60, showText: false)),
                     const SizedBox(height: 16),
                     Text(
-                      'Quên mật khẩu?',
+                      context.l10n.forgotHeading,
                       style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                             fontWeight: FontWeight.bold,
                             color: Colors.white,
@@ -123,7 +124,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      'Nhập email của bạn để nhận mã OTP thiết lập mật khẩu mới',
+                      context.l10n.forgotSubtitle,
                       textAlign: TextAlign.center,
                       style: TextStyle(
                         color: Colors.white.withValues(alpha: 0.5),
@@ -146,15 +147,15 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                               // Email
                               NeonTextField(
                                 controller: _emailController,
-                                labelText: 'Email',
+                                labelText: context.l10n.fieldEmail,
                                 prefixIcon: Icons.email_outlined,
                                 keyboardType: TextInputType.emailAddress,
                                 textInputAction: TextInputAction.done,
                                 onFieldSubmitted: (_) => _submit(),
                                 focusColor: AppTheme.neonCyan,
                                 validator: (v) {
-                                  if (v == null || v.isEmpty) return 'Vui lòng nhập email';
-                                  if (!v.contains('@')) return 'Email không hợp lệ';
+                                  if (v == null || v.isEmpty) return context.l10n.valEmailRequired;
+                                  if (!v.contains('@')) return context.l10n.valEmailInvalid;
                                   return null;
                                 },
                               ),
@@ -166,7 +167,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                                 isLoading: _isLoading,
                                 gradientColors: const [AppTheme.neonPurple, AppTheme.neonPink],
                                 glowColor: AppTheme.neonPink,
-                                child: const Text('GỬI MÃ OTP'),
+                                child: Text(context.l10n.sendOtpButton),
                               ),
                             ],
                           ),

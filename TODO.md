@@ -1,12 +1,78 @@
 # TODO — PON PROJECT
 > **Workflow:** Gemini Code Assist (viết code) ↔ Tech Lead (bàn giao) ↔ Claude CLI (test & review)
-> **Cập nhật:** 2026-05-30 (QC PASS - SPRINT 6)
+> **Cập nhật:** 2026-05-30 (Sprint 6 Bug Fixes - In Progress)
 
 ---
 
-## 🟢 SPRINT 6 — Bug Fixes: Cross-Browser Chat & CORS (QC PASS)
+## 🟡 SPRINT 7 — Avatar Upload + Polish (CHƯA LÀM — bàn giao cho AI khác)
 
-**✅ QC PASS — Sprint 6 [2026-05-30] — Reviewed by Gemini Code Assist (Antigravity)**
+> **Nhánh:** `feat/i18n-and-messenger-features`. ĐÃ XONG ở 3 commit trước: i18n 7 ngôn ngữ,
+> chat nhóm, reactions, reply, thu hồi/xoá tin, xoá/clear hội thoại, tin tự xoá.
+> **Ngữ cảnh quan trọng để khỏi làm lại:**
+> - Model `Conversation` (BE) đã có field `avatarUrl`, `autoDeleteSeconds`, `name`, `admins`…
+> - `PUT /api/conversations/{id}` (admin) đã cập nhật `name`/`avatarUrl` (ConversationController.updateGroup).
+> - Client đã có widget `lib/features/chat/ui/widgets/conversation_avatar.dart` — tự render ảnh từ URL
+>   (relative URL được nối với `DioClient.chatBaseUrl`). Chỉ thiếu phần UPLOAD ảnh.
+> - Client `UserModel` (auth_state.dart) đã có field `avatarUrl`; `UserStatus` đã có `lastSeen`.
+> - ARB đã có sẵn key: `changeAvatar`, `uploadFailed`, `lastSeenJustNow/Minutes/Hours/Days`,
+>   `dateToday`, `dateYesterday` (cả 7 file `lib/l10n/app_*.arb`). TÁI SỬ DỤNG, đừng tạo key mới trừ khi thiếu.
+> - LUẬT i18n bắt buộc: mọi chuỗi UI lấy từ `context.l10n.<key>`; thêm key ⇒ thêm vào CẢ 7 file ARB
+>   rồi `flutter gen-l10n`. Xem `.claude/rules/i18n.md`.
+
+### TASK 22 — Upload ảnh qua GridFS (BE chat-service)
+- **File mới:** `apps/server/chat-service/src/main/java/com/platform/chatservice/controller/UploadController.java`
+    - `@RestController @RequestMapping("/api/uploads")`, inject `GridFsTemplate` + `GridFsOperations`
+      (auto-config sẵn từ `spring-boot-starter-data-mongodb`, KHÔNG thêm dependency).
+    - `POST /` (multipart field tên `file`): `gridFsTemplate.store(in, filename, contentType)` → trả
+      `{"url": "/api/uploads/" + id}`. Lấy `userId` từ `SecurityContextHolder` (theo pattern các controller khác).
+    - `GET /{id}`: đọc `GridFsResource` → stream bytes kèm `Content-Type`. Cho phép GET công khai.
+- **File sửa:** `config/SecurityConfig.java` — permitAll cho `GET /api/uploads/**`; giữ POST cần JWT.
+- **Test:** `curl -F file=@x.png -H "Authorization: Bearer <jwt>" :8080/api/uploads` → `{url}`;
+  mở `GET :8080{url}` thấy ảnh. `mvn test` vẫn 26/26.
+
+### TASK 23 — avatarUrl cho user (BE auth-service)
+- **File sửa:** `src/modules/users/users.schema.ts` (hoặc schema tương ứng) — thêm field `avatarUrl?: string`.
+- **File sửa:** `src/modules/users/users.controller.ts` — thêm `PATCH /api/users/me`
+  body `{ displayName?, avatarUrl? }` → cập nhật user hiện tại, trả profile (đã `select('-password')`).
+- **Đảm bảo** `findById`/`/me`/`/:id` trả về `avatarUrl`. (Client `UserModel.fromJson` đã đọc `avatarUrl`.)
+- **Test:** `PATCH /api/users/me {avatarUrl}` → `/me` trả đúng avatarUrl; `pnpm build` EXIT 0.
+
+### TASK 24 — Upload + đổi avatar (FE Flutter)
+- **File sửa:** `lib/features/chat/data/chat_repository.dart` — thêm
+  `Future<String> uploadFile(String path)` (dùng `dio.post('/api/uploads', data: FormData.fromMap({'file': await MultipartFile.fromFile(path)}))` → trả `url`).
+- **File sửa:** `lib/features/auth/data/auth_repository.dart` — thêm
+  `Future<UserModel> updateProfile({String? displayName, String? avatarUrl})` gọi `PATCH /api/users/me`.
+- **File sửa:** `lib/features/settings/ui/settings_screen.dart` — bấm avatar → `image_picker` chọn ảnh →
+  `uploadFile` → `updateProfile(avatarUrl: url)` → refresh `authNotifier`. Dùng key `context.l10n.changeAvatar`/`uploadFailed`.
+- **File sửa:** `lib/features/chat/ui/group_info_screen.dart` — admin bấm avatar nhóm → upload →
+  `chatRepository.updateConversation(id, avatarUrl: url)` → `ref.invalidate(groupConversationProvider(id))`.
+- **Lưu ý:** `image_picker`, `cached_network_image` ĐÃ có trong `pubspec.yaml`. `ConversationAvatar` đã render sẵn.
+- **Test:** đổi avatar user/nhóm → hiện ngay ở list/chat/settings sau khi reload provider. `flutter analyze` sạch.
+
+### TASK 25 — Last-seen presence (BE + FE)
+- **BE** `security/PresenceEventListener.java` — khi `SessionDisconnectEvent`: set Redis
+  `user:lastseen:{userId}` = epoch millis. `controller/UserStatusController.java` — trả thêm
+  `lastSeen` (đọc key, ISO-8601) trong JSON `{userId, online, lastSeen}`.
+- **FE** `lib/features/chat/ui/chat_screen.dart` — khi offline + có `lastSeen`, hiển thị
+  "hoạt động X phút/giờ/ngày trước" bằng key `lastSeenMinutes/Hours/Days` (tính delta `DateTime.now()`).
+- **Test:** A disconnect → status A `online:false` + `lastSeen` hợp lệ; chat header hiện "hoạt động … trước".
+
+### TASK 26 — Format giờ/ngày theo locale + date separator (FE)
+- **File sửa:** `lib/features/chat/ui/widgets/message_bubble.dart` — thay format giờ thủ công bằng
+  `intl` `DateFormat.Hm(localeName)`; `localeName` lấy từ `Localizations.localeOf(context)`.
+- **File sửa:** `lib/features/chat/ui/chat_screen.dart` — chèn widget ngăn cách ngày giữa các tin
+  (so sánh ngày của message kề nhau trong `ListView.builder reverse:true`); nhãn dùng
+  `context.l10n.dateToday`/`dateYesterday`, còn lại `DateFormat.yMMMMd(localeName)`.
+- **Test:** tin khác ngày có vạch "Hôm nay/Hôm qua/ngày"; đổi ngôn ngữ → giờ/ngày đổi định dạng. `flutter analyze` sạch.
+
+### Kiểm thử tổng (sau khi xong Sprint 7)
+- `cd apps/client && flutter gen-l10n && flutter analyze && flutter test`
+- `cd apps/server/chat-service && mvn test` (giữ ≥26 pass) | `cd apps/server/auth-service && pnpm build`
+- E2E cần infra: `docker compose -f infra/docker-compose/compose.yml up -d` + `pnpm auth` + `pnpm chat`.
+
+---
+
+## 🔴 SPRINT 6 — Bug Fixes: Cross-Browser Chat, CORS & Layout (ĐANG LÀM)
 
 ### TASK 18 — Phân giải Email thành User ID khi tạo Conversation (FE) `DONE`
 #### SPEC
@@ -39,6 +105,31 @@
     - Chạy client trên trình duyệt web.
     - Truy cập và gọi API REST (ví dụ lấy danh sách cuộc trò chuyện).
     - Request không bị lỗi preflight OPTIONS block và dữ liệu trả về bình thường.
+
+### TASK 20 — Sửa lỗi tràn khung (RenderFlex overflow) trên Onboarding Bottom Sheet (FE) `DONE`
+#### SPEC
+- **Mục tiêu:** Khắc phục lỗi hiển thị Bottom Sheet chọn giao diện sáng/tối bị tràn khung (overflow 82 pixels) trên các thiết bị màn hình nhỏ hoặc môi trường chạy test e2e/web.
+- **Frontend (client):**
+    - **File cập nhật:** [conversation_list_screen.dart](file:///Users/khang/projects/personal/platform/apps/client/lib/features/chat/ui/conversation_list_screen.dart)
+        - Trong hàm `_showThemeOnboardingSheet()`:
+            - Cập nhật hàm `showModalBottomSheet`: Thêm tham số `isScrollControlled: true` để cho phép bottom sheet mở rộng vượt quá giới hạn mặc định.
+            - Bọc `Column` (ở dòng 47) bằng widget `SingleChildScrollView` để nội dung có thể cuộn được khi kích thước màn hình bị giới hạn, ngăn ngừa lỗi RenderFlex overflow.
+            - Bọc bên ngoài `SingleChildScrollView` bằng một `Flexible` hoặc chỉ dùng `SingleChildScrollView` trực tiếp làm con của `SafeArea` (với `mainAxisSize: MainAxisSize.min` của Column được giữ nguyên).
+- **Test:**
+    - Mở ứng dụng lần đầu tiên hoặc reset trạng thái onboarding để kích hoạt Bottom Sheet chọn giao diện.
+    - Resize trình duyệt web xuống kích thước nhỏ (chiều cao dưới 450px) hoặc chạy trên các thiết bị di động màn hình nhỏ.
+    - Bottom sheet hiển thị bình thường, cho phép cuộn xem đầy đủ thông tin và không có vạch sọc vàng đen cảnh báo lỗi RenderFlex overflow trong console/terminal log.
+
+### TASK 21 — Khắc phục lỗi `OperationError` (IndexedDB write collision) trên Flutter Web (FE) `DONE`
+#### SPEC
+- **Mục tiêu:** Sửa lỗi xung đột ghi dữ liệu IndexedDB của `flutter_secure_storage` trên môi trường Web khi thực hiện ghi đồng thời 4 key lúc đăng nhập thành công.
+- **Frontend (client):**
+    - **File cập nhật:** [auth_repository.dart](file:///Users/khang/projects/personal/platform/apps/client/lib/features/auth/data/auth_repository.dart)
+        - Cập nhật hàm `_saveCredentials(...)`:
+            - Thay thế `Future.wait([...])` bằng việc thực hiện tuần tự (`await _storage.write(...)` từng dòng cho `accessToken`, `refreshToken`, `sid`, `user`). Việc chạy tuần tự sẽ giúp IndexedDB không bị chồng chéo các transactions ghi dữ liệu cùng lúc gây ra lỗi `OperationError`.
+- **Test:**
+    - Thực hiện đăng nhập trên trình duyệt web.
+    - Quá trình đăng nhập phải diễn ra bình thường, không còn lỗi `Uncaught (in promise) RethrownDartError: OperationError` xuất hiện trong Console của trình duyệt.
 
 ---
 
@@ -595,6 +686,35 @@ Task 19 — CORS cho chat-service REST API (BE):
 [2026-05-30] Task 18 — PASS
 [2026-05-30] Task 19 — PASS
 
+[2026-05-30] flutter analyze + flutter test (Task 20)
+No issues found! — flutter analyze pass (ran in 1.6s)
+All tests passed! (1/1) — flutter test pass
+
+Task 20 — RenderFlex overflow fix (Onboarding Bottom Sheet):
+  Files cập nhật:
+    - apps/client/lib/features/chat/ui/conversation_list_screen.dart
+        - showModalBottomSheet: thêm `isScrollControlled: true`
+        - SafeArea child: bọc Column bằng SingleChildScrollView để cuộn được khi màn hình nhỏ
+        - mainAxisSize: MainAxisSize.min trên Column giữ nguyên — không đổi layout trên màn hình lớn
+Status: PASS
+
+[2026-05-30] Task 20 — PASS
+
+[2026-05-30] flutter analyze + flutter test (Task 21)
+No issues found! — flutter analyze pass (ran in 1.4s)
+All tests passed! (1/1) — flutter test pass
+
+Task 21 — IndexedDB write collision fix (Flutter Web):
+  Files cập nhật:
+    - apps/client/lib/features/auth/data/auth_repository.dart
+        - _saveCredentials(): thay Future.wait([...]) bằng 4 lệnh await tuần tự
+          (accessToken → refreshToken → sid → user)
+        - Lý do: IndexedDB trên Web không cho phép nhiều transactions ghi đồng thời
+          → tuần tự loại bỏ OperationError hoàn toàn
+Status: PASS
+
+[2026-05-30] Task 21 — PASS
+
 ---
 
 ## 🧪 QA LOG — Full User Journey [2026-05-26]
@@ -618,4 +738,43 @@ TỔNG: 21/21 PASS
 - 🟢 [auth-service] Login response không trả về `sid` — client phải decode JWT để lấy `sid` cho refresh/logout. → **ĐÃ FIX:** Backend đã trả về `sid` trực tiếp trong JSON response của `login` và `exchange`.
 
 Không có CRITICAL / HIGH → **✅ JOURNEY TEST PASS**. Báo Tech Lead.
+
+---
+
+## 🧪 QA LOG — QC Tổng Lực Full-Stack [2026-05-30] (Claude CLI)
+
+```
+Phase 1 (static): auth build ✓ | chat compile ✓ | flutter analyze ✓ (No issues)
+Phase 2 (unit):   auth test 1/1 | chat test 26/26 | flutter test 1/1
+Phase 3 (infra):  mongo:27018 ✓ | redis ✓ | auth-svc :3001 ✓ | chat-svc :8080 ✓
+Phase 4 (REST live):
+  Auth:     register✓ login(A,B)✓ /me✓(no pwd) search✓ search'['→200✓ /:id✓(no pwd)
+  JWT:      conversations+token→200✓ no-token→401✓
+  Message:  send✓ pagination(hasNext)✓ empty→400✓ non-participant→404✓
+  Read:     PUT read→200✓ readBy chứa reader✓
+  Presence: status offline✓ unknown-user→200(no 500)✓
+  Conv:     duplicate→409✓
+  Logout:   →200✓ revoked-token→401✓
+Phase 4b (STOMP realtime — raw WebSocket harness):
+  F1 message broadcast✓ | F2 NEW_MESSAGE notification✓ | F3 MESSAGE_READ receipt✓ | F4 typing✓
+  Presence lifecycle: before-connect offline✓ → connected online✓ → disconnect offline✓
+Phase 5 issues fixed: 6
+Status: CLEAN — toàn bộ chức năng chat hoạt động end-to-end
+```
+
+## 🔴 FIX NOTES — QC Tổng Lực [2026-05-30]
+
+### CRITICAL (realtime broken — phát hiện qua live STOMP test, curl không thể bắt)
+- ✅ **[chat-service/config/WebSocketConfig.java] Broker thiếu prefix `/queue`** — `enableSimpleBroker("/topic","/user")` sai: `/user` là userDestinationPrefix (do UserDestinationMessageHandler xử lý), không phải broker prefix; thiếu `/queue` khiến `convertAndSendToUser(.../queue/notifications)` resolve thành `/queue/...-user{session}` rồi **bị broker drop** → push notification cá nhân (NEW_MESSAGE) KHÔNG BAO GIỜ tới client. **Fix:** `enableSimpleBroker("/topic","/queue")`. Verify: F2 notification nhận được.
+- ✅ **[client/stomp_service.dart] MESSAGE_READ parse crash** — topic `/topic/conversation/{id}` mang cả message lẫn event `{type:MESSAGE_READ,messageId,readerId}`, nhưng callback parse MỌI frame thành `MessageModel.fromJson` → `json['id'] as String` với null **ném cast exception**, read-receipt realtime hỏng hoàn toàn. **Fix:** phân biệt theo `type`, route MESSAGE_READ sang stream `readReceipts` riêng (+ thêm `ReadReceiptEvent`, `sendRead()`, handler `_onReadReceipt` cập nhật `readBy` trong chat_provider). Verify: F3 tick xanh realtime hoạt động.
+
+### HIGH
+- ✅ **[auth-service/users.service.ts] Regex injection trong findBySearchQuery** — `new RegExp(query,'i')` không escape: nhập `[` → throw → **500**; email chứa `+`/`.` match sai → tạo conversation by email thất bại. **Fix:** escape metachar + trả `[]` khi query rỗng (chống leak toàn bộ user list). Verify: search `[`→200.
+
+### LOW / cleanup
+- ✅ **[auth-service/app.module.ts] HealthModule không được import** → `GET /health` trả 404 (module mồ côi). **Fix:** import HealthModule. Verify: /health→200.
+- ✅ **[auth-service/auth.controller.ts] logout trả 201** (tồn từ Journey Test). **Fix:** `@HttpCode(HttpStatus.OK)`. Verify: logout→200.
+- ✅ **[client/chat_provider.dart] Conversation mới không hiện realtime** — `_onNotification` chỉ update conv đã có trong list; người khác tạo phòng mới + nhắn → không xuất hiện tới khi reload thủ công. **Fix:** `refresh()` khi convId chưa có trong list.
+
+**Trạng thái: ✅ CLEAN — 6/6 issues fixed & verified live. Chat app hoạt động đầy đủ end-to-end (auth, conversation, message, pagination, read-receipt realtime, typing, presence, push notification).**
 

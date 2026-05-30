@@ -42,18 +42,111 @@ class ChatRepository {
 
   Future<MessageModel> sendMessageRest(
     String conversationId,
-    String content,
-  ) async {
+    String content, {
+    String? replyToId,
+  }) async {
     final response = await _dio.post('/api/messages', data: {
       'conversationId': conversationId,
       'content': content,
       'type': 'text',
+      if (replyToId != null) 'replyToId': replyToId,
     });
     return MessageModel.fromJson(response.data as Map<String, dynamic>);
   }
 
   Future<void> markAsRead(String messageId) async {
     await _dio.put('/api/messages/$messageId/read');
+  }
+
+  // ----- Group management -----------------------------------------------
+
+  Future<ConversationModel> createGroup(
+    String name,
+    List<String> participantIds, {
+    String? avatarUrl,
+  }) async {
+    final response = await _dio.post('/api/conversations/group', data: {
+      'name': name,
+      'avatarUrl': avatarUrl,
+      'participantIds': participantIds,
+    });
+    return ConversationModel.fromJson(response.data as Map<String, dynamic>);
+  }
+
+  Future<ConversationModel> getConversation(String conversationId) async {
+    final response = await _dio.get('/api/conversations/$conversationId');
+    return ConversationModel.fromJson(response.data as Map<String, dynamic>);
+  }
+
+  Future<ConversationModel> updateConversation(
+    String conversationId, {
+    String? name,
+    String? avatarUrl,
+  }) async {
+    final response = await _dio.put('/api/conversations/$conversationId', data: {
+      if (name != null) 'name': name,
+      if (avatarUrl != null) 'avatarUrl': avatarUrl,
+    });
+    return ConversationModel.fromJson(response.data as Map<String, dynamic>);
+  }
+
+  Future<ConversationModel> addMembers(
+    String conversationId,
+    List<String> userIds,
+  ) async {
+    final response = await _dio.post(
+      '/api/conversations/$conversationId/members',
+      data: {'userIds': userIds},
+    );
+    return ConversationModel.fromJson(response.data as Map<String, dynamic>);
+  }
+
+  Future<ConversationModel> removeMember(
+    String conversationId,
+    String userId,
+  ) async {
+    final response = await _dio
+        .delete('/api/conversations/$conversationId/members/$userId');
+    return ConversationModel.fromJson(response.data as Map<String, dynamic>);
+  }
+
+  // ----- Conversation lifecycle -----------------------------------------
+
+  Future<void> deleteConversation(String conversationId) async {
+    await _dio.delete('/api/conversations/$conversationId');
+  }
+
+  Future<void> clearHistory(String conversationId) async {
+    await _dio.post('/api/conversations/$conversationId/clear');
+  }
+
+  Future<ConversationModel> setAutoDelete(
+    String conversationId,
+    int? seconds,
+  ) async {
+    final response = await _dio.put(
+      '/api/conversations/$conversationId/settings',
+      data: {'autoDeleteSeconds': seconds},
+    );
+    return ConversationModel.fromJson(response.data as Map<String, dynamic>);
+  }
+
+  // ----- Message interactions -------------------------------------------
+
+  Future<void> addReaction(String messageId, String emoji) async {
+    await _dio.post('/api/messages/$messageId/reactions', data: {'emoji': emoji});
+  }
+
+  Future<void> removeReaction(String messageId) async {
+    await _dio.delete('/api/messages/$messageId/reactions');
+  }
+
+  Future<void> recallMessage(String messageId) async {
+    await _dio.delete('/api/messages/$messageId');
+  }
+
+  Future<void> deleteMessageForMe(String messageId) async {
+    await _dio.post('/api/messages/$messageId/delete-for-me');
   }
 
   Future<ConversationModel> getOrCreateConversation(

@@ -5,7 +5,13 @@ import java.util.List;
 
 public record ConversationResponse(
     String id,
+    String type,
+    String name,
+    String avatarUrl,
     List<String> participants,
+    List<String> admins,
+    String createdBy,
+    Integer autoDeleteSeconds,
     LastMessageDto lastMessage,
     Instant lastMessageAt,
     long unreadCount,

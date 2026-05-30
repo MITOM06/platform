@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../../core/l10n/l10n_ext.dart';
 import '../../../core/providers/connectivity_provider.dart';
 import '../../../core/providers/theme_provider.dart';
 import '../../../core/theme/app_theme.dart';
@@ -9,6 +10,7 @@ import '../../auth/domain/auth_provider.dart';
 import '../../auth/domain/auth_state.dart';
 import '../domain/chat_provider.dart';
 import '../domain/chat_state.dart';
+import 'widgets/conversation_avatar.dart';
 
 class ConversationListScreen extends ConsumerStatefulWidget {
   const ConversationListScreen({super.key});
@@ -25,6 +27,7 @@ class _ConversationListScreenState extends ConsumerState<ConversationListScreen>
       context: context,
       isDismissible: false,
       enableDrag: false,
+      isScrollControlled: true,
       backgroundColor: Colors.transparent,
       barrierColor: Colors.black.withValues(alpha: 0.7),
       builder: (context) {
@@ -44,7 +47,8 @@ class _ConversationListScreenState extends ConsumerState<ConversationListScreen>
             ),
             padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
             child: SafeArea(
-              child: Column(
+              child: SingleChildScrollView(
+                child: Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
@@ -67,10 +71,10 @@ class _ConversationListScreenState extends ConsumerState<ConversationListScreen>
                         colors: [AppTheme.neonCyan, AppTheme.neonPink],
                       ).createShader(bounds);
                     },
-                    child: const Text(
-                      'CHỌN GIAO DIỆN',
+                    child: Text(
+                      context.l10n.onboardingChooseTheme,
                       textAlign: TextAlign.center,
-                      style: TextStyle(
+                      style: const TextStyle(
                         fontSize: 22,
                         fontWeight: FontWeight.w900,
                         color: Colors.white,
@@ -80,7 +84,7 @@ class _ConversationListScreenState extends ConsumerState<ConversationListScreen>
                   ),
                   const SizedBox(height: 12),
                   Text(
-                    'Chọn phong cách giao diện phù hợp nhất với bạn.',
+                    context.l10n.onboardingChooseSubtitle,
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       fontSize: 14,
@@ -90,25 +94,25 @@ class _ConversationListScreenState extends ConsumerState<ConversationListScreen>
                     ),
                   ),
                   const SizedBox(height: 28),
-                  const _ThemeOptionCard(
-                    title: 'Giao diện Sáng',
-                    subtitle: 'Tươi sáng, rõ ràng và dễ đọc',
+                  _ThemeOptionCard(
+                    title: context.l10n.themeLight,
+                    subtitle: context.l10n.themeLightSubtitle,
                     icon: Icons.light_mode_rounded,
                     themeMode: ThemeMode.light,
                     activeColor: Colors.amber,
                   ),
                   const SizedBox(height: 16),
-                  const _ThemeOptionCard(
-                    title: 'Giao diện Tối',
-                    subtitle: 'Hiện đại, huyền bí và dịu mắt',
+                  _ThemeOptionCard(
+                    title: context.l10n.themeDark,
+                    subtitle: context.l10n.themeDarkSubtitle,
                     icon: Icons.dark_mode_rounded,
                     themeMode: ThemeMode.dark,
                     activeColor: AppTheme.neonCyan,
                   ),
                   const SizedBox(height: 16),
-                  const _ThemeOptionCard(
-                    title: 'Hệ thống',
-                    subtitle: 'Tự động đồng bộ với thiết bị của bạn',
+                  _ThemeOptionCard(
+                    title: context.l10n.themeSystem,
+                    subtitle: context.l10n.themeSystemSubtitle,
                     icon: Icons.brightness_auto_rounded,
                     themeMode: ThemeMode.system,
                     activeColor: AppTheme.neonPurple,
@@ -122,9 +126,10 @@ class _ConversationListScreenState extends ConsumerState<ConversationListScreen>
                       }
                     },
                     glowColor: AppTheme.neonCyan,
-                    child: const Text('BẮT ĐẦU TRẢI NGHIỆM'),
+                    child: Text(context.l10n.startExperience),
                   ),
                 ],
+              ),
               ),
             ),
           ),
@@ -228,7 +233,7 @@ class _ConversationListScreenState extends ConsumerState<ConversationListScreen>
                       ),
                     ),
                   ),
-                  tooltip: 'Cài đặt',
+                  tooltip: context.l10n.tooltipSettings,
                   onPressed: () => context.push('/settings'),
                 ),
               ),
@@ -253,7 +258,7 @@ class _ConversationListScreenState extends ConsumerState<ConversationListScreen>
             await context.push('/new-conversation');
             ref.read(conversationsNotifierProvider.notifier).refresh();
           },
-          tooltip: 'Cuộc trò chuyện mới',
+          tooltip: context.l10n.tooltipNewConversation,
           backgroundColor: isDark ? AppTheme.neonPink : Theme.of(context).colorScheme.secondary,
           foregroundColor: Colors.white,
           elevation: 0,
@@ -317,7 +322,7 @@ class _ConversationListScreenState extends ConsumerState<ConversationListScreen>
                               const Icon(Icons.cloud_off_outlined, size: 48, color: Colors.redAccent),
                               const SizedBox(height: 16),
                               Text(
-                                'Không tải được danh sách',
+                                context.l10n.listLoadFailed,
                                 style: TextStyle(
                                   fontWeight: FontWeight.bold,
                                   fontSize: 16,
@@ -327,8 +332,8 @@ class _ConversationListScreenState extends ConsumerState<ConversationListScreen>
                               const SizedBox(height: 8),
                               Text(
                                 e.toString().contains('connect') || e.toString().contains('network')
-                                    ? 'Kiểm tra kết nối mạng và thử lại.'
-                                    : 'Có lỗi xảy ra. Vui lòng thử lại sau.',
+                                    ? context.l10n.listCheckNetwork
+                                    : context.l10n.listGenericError,
                                 textAlign: TextAlign.center,
                                 style: TextStyle(
                                   color: isDark ? Colors.white.withValues(alpha: 0.5) : Colors.black54,
@@ -343,7 +348,7 @@ class _ConversationListScreenState extends ConsumerState<ConversationListScreen>
                                       ? const [AppTheme.neonCyan, AppTheme.neonBlue]
                                       : [Theme.of(context).colorScheme.primary, Theme.of(context).colorScheme.primaryContainer],
                                   glowColor: isDark ? AppTheme.neonCyan : Theme.of(context).colorScheme.primary,
-                                  child: const Text('THỬ LẠI'),
+                                  child: Text(context.l10n.actionRetry),
                                 ),
                               ),
                             ],
@@ -372,7 +377,7 @@ class _ConversationListScreenState extends ConsumerState<ConversationListScreen>
                                     ),
                                     const SizedBox(height: 16),
                                     Text(
-                                      'Chưa có cuộc trò chuyện nào',
+                                      context.l10n.emptyConversations,
                                       style: TextStyle(
                                         fontSize: 16,
                                         fontWeight: FontWeight.bold,
@@ -381,7 +386,7 @@ class _ConversationListScreenState extends ConsumerState<ConversationListScreen>
                                     ),
                                     const SizedBox(height: 8),
                                     Text(
-                                      'Nhấn nút "+" bên dưới để bắt đầu!',
+                                      context.l10n.emptyTapPlus,
                                       style: TextStyle(
                                         color: isDark ? Colors.white38 : Colors.black38,
                                       ),
@@ -429,7 +434,7 @@ class _OfflineBanner extends StatelessWidget {
               ),
               const SizedBox(width: 8),
               Text(
-                'Không có kết nối mạng',
+                context.l10n.offlineBanner,
                 style: TextStyle(
                   color: isDark ? Colors.white.withValues(alpha: 0.9) : Colors.redAccent.shade700,
                   fontSize: 13,
@@ -455,24 +460,30 @@ class _ConversationTile extends ConsumerWidget {
     final currentUserId = authState is AuthAuthenticated ? authState.user.id : '';
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    // Find the other participant's ID
+    final isGroup = conv.isGroup;
+
+    // Find the other participant's ID (direct chats only)
     final others = conv.participants.where((p) => p != currentUserId).toList();
-    final otherUserId = others.isNotEmpty ? others.first : '';
+    final otherUserId = !isGroup && others.isNotEmpty ? others.first : '';
 
     // Fetch online status cho người dùng kia
     final statusAsync = otherUserId.isNotEmpty
         ? ref.watch(userStatusProvider(otherUserId)).valueOrNull
         : null;
-    final isOnline = statusAsync?.online ?? false;
+    final isOnline = !isGroup && (statusAsync?.online ?? false);
 
     // Resolve displayName từ auth-service thay vì hiển thị raw userId
     final profileAsync = otherUserId.isNotEmpty
         ? ref.watch(userProfileProvider(otherUserId))
         : null;
-    final displayName = profileAsync?.valueOrNull?.displayName ?? '...';
+    final displayName = isGroup
+        ? (conv.name ?? context.l10n.conversationDefault)
+        : (profileAsync?.valueOrNull?.displayName ?? '...');
     final tileLetter = displayName.isNotEmpty && displayName != '...'
         ? displayName[0].toUpperCase()
         : '?';
+    final avatarUrl =
+        isGroup ? conv.avatarUrl : profileAsync?.valueOrNull?.avatarUrl;
 
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
@@ -504,78 +515,24 @@ class _ConversationTile extends ConsumerWidget {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
           ),
-          leading: Stack(
-            children: [
-              Container(
-                width: 48,
-                height: 48,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  gradient: LinearGradient(
-                    colors: conv.unreadCount > 0
-                        ? [
-                            isDark ? AppTheme.neonCyan : Theme.of(context).colorScheme.primary,
-                            isDark ? AppTheme.neonPink : Theme.of(context).colorScheme.secondary,
-                          ]
-                        : [
-                            isDark ? AppTheme.neonPurple.withValues(alpha: 0.6) : Colors.grey.shade400,
-                            isDark ? AppTheme.darkBorder : Colors.grey.shade300,
-                          ],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                  boxShadow: isDark
-                      ? [
-                          BoxShadow(
-                            color: (isOnline ? AppTheme.onlineGreen : AppTheme.neonPurple).withValues(alpha: 0.15),
-                            blurRadius: 8,
-                            spreadRadius: 1,
-                          )
-                        ]
-                      : null,
-                ),
-                padding: const EdgeInsets.all(2),
-                child: CircleAvatar(
-                  backgroundColor: isDark ? AppTheme.darkSurface : Colors.grey.shade100,
-                  child: Text(
-                    tileLetter,
-                    style: TextStyle(
-                      color: conv.unreadCount > 0 
-                          ? Colors.white 
-                          : (isDark ? Colors.white70 : Colors.black87),
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
-                    ),
-                  ),
-                ),
-              ),
-              if (isOnline)
-                Positioned(
-                  right: 0,
-                  bottom: 0,
-                  child: Container(
-                    width: 12,
-                    height: 12,
-                    decoration: BoxDecoration(
-                      color: AppTheme.onlineGreen,
-                      shape: BoxShape.circle,
-                      border: Border.all(
-                        color: isDark ? AppTheme.obsidianBackground : Colors.white,
-                        width: 2,
-                      ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: AppTheme.onlineGreen.withValues(alpha: 0.6),
-                          blurRadius: 4,
-                        )
-                      ],
-                    ),
-                  ),
-                ),
-            ],
+          leading: ConversationAvatar(
+            avatarUrl: avatarUrl,
+            fallbackLetter: tileLetter,
+            isGroup: isGroup,
+            size: 48,
+            online: isOnline,
+            gradientColors: conv.unreadCount > 0
+                ? [
+                    isDark ? AppTheme.neonCyan : Theme.of(context).colorScheme.primary,
+                    isDark ? AppTheme.neonPink : Theme.of(context).colorScheme.secondary,
+                  ]
+                : [
+                    isDark ? AppTheme.neonPurple.withValues(alpha: 0.6) : Colors.grey.shade400,
+                    isDark ? AppTheme.darkBorder : Colors.grey.shade300,
+                  ],
           ),
           title: Text(
-            displayName.isEmpty ? 'Cuộc trò chuyện' : displayName,
+            displayName.isEmpty ? context.l10n.conversationDefault : displayName,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: TextStyle(
@@ -628,6 +585,36 @@ class _ConversationTile extends ConsumerWidget {
                 )
               : null,
           onTap: () => context.push('/chat/${conv.id}'),
+          onLongPress: () => _showTileMenu(context, ref),
+        ),
+      ),
+    );
+  }
+
+  void _showTileMenu(BuildContext context, WidgetRef ref) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: AppTheme.darkSurface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (sheetCtx) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const SizedBox(height: 8),
+            ListTile(
+              leading: const Icon(Icons.delete_outline_rounded, color: Colors.redAccent),
+              title: Text(sheetCtx.l10n.deleteConversation,
+                  style: const TextStyle(color: Colors.redAccent)),
+              onTap: () {
+                Navigator.pop(sheetCtx);
+                ref
+                    .read(conversationsNotifierProvider.notifier)
+                    .deleteConversation(conv.id);
+              },
+            ),
+          ],
         ),
       ),
     );

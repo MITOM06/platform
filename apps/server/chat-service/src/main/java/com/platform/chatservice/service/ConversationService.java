@@ -1,9 +1,11 @@
 package com.platform.chatservice.service;
 
 import com.platform.chatservice.dto.ConversationResponse;
+import com.platform.chatservice.dto.CreateGroupRequest;
 import com.platform.chatservice.dto.PageResponse;
 import com.platform.chatservice.exception.ConversationNotFoundException;
 import com.platform.chatservice.exception.DuplicateConversationException;
+import com.platform.chatservice.exception.UnauthorizedException;
 import com.platform.chatservice.model.Conversation;
 import com.platform.chatservice.repository.ConversationRepository;
 import com.platform.chatservice.repository.MessageRepository;
@@ -16,6 +18,9 @@ import org.springframework.data.mongodb.core.aggregation.Aggregation;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.stereotype.Service;
 
+import java.time.Instant;
+import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -31,16 +36,18 @@ public class ConversationService {
     public PageResponse<ConversationResponse> listConversations(String userId, Pageable pageable) {
         Page<Conversation> page = conversationRepository
             .findByParticipantsContainingOrderByLastMessageAtDesc(userId, pageable);
-        
-        List<Conversation> conversations = page.getContent();
+
+        List<Conversation> conversations = page.getContent().stream()
+            .filter(c -> c.getHiddenFor() == null || !c.getHiddenFor().contains(userId))
+            .toList();
         List<String> conversationIds = conversations.stream().map(Conversation::getId).toList();
-        
+
         Map<String, Long> unreadCounts = getUnreadCounts(conversationIds, userId);
 
         List<ConversationResponse> content = conversations.stream()
             .map(c -> toResponse(c, userId, unreadCounts.getOrDefault(c.getId(), 0L)))
             .toList();
-            
+
         return new PageResponse<>(content, page.getNumber(), page.getSize(), page.getTotalElements());
     }
 
@@ -50,17 +57,123 @@ public class ConversationService {
             throw new DuplicateConversationException(existing.getId());
         });
         Conversation saved = conversationRepository.save(
-            Conversation.builder().participants(participants).build()
+            Conversation.builder()
+                .participants(participants)
+                .type(Conversation.TYPE_DIRECT)
+                .createdBy(currentUserId)
+                .build()
         );
         return toResponse(saved, currentUserId, 0L);
     }
 
-    public ConversationResponse getConversation(String userId, String conversationId) {
-        Conversation conversation = conversationRepository.findById(conversationId)
-            .orElseThrow(() -> new ConversationNotFoundException(conversationId));
-        if (!conversation.getParticipants().contains(userId)) {
-            throw new ConversationNotFoundException(conversationId);
+    public ConversationResponse createGroup(String creatorId, CreateGroupRequest request) {
+        if (request.name() == null || request.name().trim().isEmpty()) {
+            throw new IllegalArgumentException("Group name cannot be empty");
         }
+        // Creator is always a participant + admin; dedupe ids preserving order.
+        LinkedHashSet<String> members = new LinkedHashSet<>();
+        members.add(creatorId);
+        if (request.participantIds() != null) {
+            members.addAll(request.participantIds());
+        }
+        if (members.size() < 2) {
+            throw new IllegalArgumentException("A group needs at least 2 members");
+        }
+        Conversation saved = conversationRepository.save(
+            Conversation.builder()
+                .type(Conversation.TYPE_GROUP)
+                .name(request.name().trim())
+                .avatarUrl(request.avatarUrl())
+                .participants(new ArrayList<>(members))
+                .admins(new ArrayList<>(List.of(creatorId)))
+                .createdBy(creatorId)
+                .lastMessageAt(Instant.now())
+                .build()
+        );
+        return toResponse(saved, creatorId, 0L);
+    }
+
+    public ConversationResponse updateGroup(String userId, String conversationId, String name, String avatarUrl) {
+        Conversation conversation = requireGroupAdmin(userId, conversationId);
+        if (name != null && !name.trim().isEmpty()) {
+            conversation.setName(name.trim());
+        }
+        if (avatarUrl != null) {
+            conversation.setAvatarUrl(avatarUrl.isBlank() ? null : avatarUrl);
+        }
+        Conversation saved = conversationRepository.save(conversation);
+        return toResponse(saved, userId, messageRepository.countUnread(conversationId, userId));
+    }
+
+    public ConversationResponse addMembers(String userId, String conversationId, List<String> userIds) {
+        Conversation conversation = requireGroupAdmin(userId, conversationId);
+        List<String> participants = new ArrayList<>(conversation.getParticipants());
+        for (String id : userIds) {
+            if (id != null && !participants.contains(id)) {
+                participants.add(id);
+            }
+        }
+        conversation.setParticipants(participants);
+        Conversation saved = conversationRepository.save(conversation);
+        return toResponse(saved, userId, messageRepository.countUnread(conversationId, userId));
+    }
+
+    /** Remove a member. Self-removal (leave) is allowed for any participant;
+     *  removing others requires admin. */
+    public ConversationResponse removeMember(String userId, String conversationId, String targetUserId) {
+        Conversation conversation = getRawConversation(userId, conversationId);
+        if (!conversation.isGroup()) {
+            throw new IllegalArgumentException("Not a group conversation");
+        }
+        boolean isSelf = userId.equals(targetUserId);
+        if (!isSelf && !isAdmin(conversation, userId)) {
+            throw new UnauthorizedException("Only admins can remove members");
+        }
+        List<String> participants = new ArrayList<>(conversation.getParticipants());
+        participants.remove(targetUserId);
+        conversation.setParticipants(participants);
+        if (conversation.getAdmins() != null) {
+            List<String> admins = new ArrayList<>(conversation.getAdmins());
+            admins.remove(targetUserId);
+            // Promote someone if the group lost all admins but still has members.
+            if (admins.isEmpty() && !participants.isEmpty()) {
+                admins.add(participants.get(0));
+            }
+            conversation.setAdmins(admins);
+        }
+        Conversation saved = conversationRepository.save(conversation);
+        return toResponse(saved, userId, 0L);
+    }
+
+    /** Hide the conversation from the user's list and clear their history cutoff. */
+    public void deleteConversation(String userId, String conversationId) {
+        Conversation conversation = getRawConversation(userId, conversationId);
+        List<String> hidden = conversation.getHiddenFor() == null
+            ? new ArrayList<>() : new ArrayList<>(conversation.getHiddenFor());
+        if (!hidden.contains(userId)) {
+            hidden.add(userId);
+        }
+        conversation.setHiddenFor(hidden);
+        setClearedAt(conversation, userId, Instant.now());
+        conversationRepository.save(conversation);
+    }
+
+    /** "Start over": hide all messages up to now for this user only. */
+    public void clearHistory(String userId, String conversationId) {
+        Conversation conversation = getRawConversation(userId, conversationId);
+        setClearedAt(conversation, userId, Instant.now());
+        conversationRepository.save(conversation);
+    }
+
+    public ConversationResponse setAutoDelete(String userId, String conversationId, Integer seconds) {
+        Conversation conversation = getRawConversation(userId, conversationId);
+        conversation.setAutoDeleteSeconds(seconds != null && seconds > 0 ? seconds : null);
+        Conversation saved = conversationRepository.save(conversation);
+        return toResponse(saved, userId, messageRepository.countUnread(conversationId, userId));
+    }
+
+    public ConversationResponse getConversation(String userId, String conversationId) {
+        Conversation conversation = getRawConversation(userId, conversationId);
         long unreadCount = messageRepository.countUnread(conversationId, userId);
         return toResponse(conversation, userId, unreadCount);
     }
@@ -93,6 +206,38 @@ public class ConversationService {
             .orElse(List.of());
     }
 
+    /** Fetch a conversation, enforcing the caller is a participant. */
+    private Conversation getRawConversation(String userId, String conversationId) {
+        Conversation conversation = conversationRepository.findById(conversationId)
+            .orElseThrow(() -> new ConversationNotFoundException(conversationId));
+        if (conversation.getParticipants() == null || !conversation.getParticipants().contains(userId)) {
+            throw new ConversationNotFoundException(conversationId);
+        }
+        return conversation;
+    }
+
+    private Conversation requireGroupAdmin(String userId, String conversationId) {
+        Conversation conversation = getRawConversation(userId, conversationId);
+        if (!conversation.isGroup()) {
+            throw new IllegalArgumentException("Not a group conversation");
+        }
+        if (!isAdmin(conversation, userId)) {
+            throw new UnauthorizedException("Only admins can perform this action");
+        }
+        return conversation;
+    }
+
+    private boolean isAdmin(Conversation conversation, String userId) {
+        return conversation.getAdmins() != null && conversation.getAdmins().contains(userId);
+    }
+
+    private void setClearedAt(Conversation conversation, String userId, Instant when) {
+        Map<String, Instant> cleared = conversation.getClearedAt() == null
+            ? new java.util.HashMap<>() : new java.util.HashMap<>(conversation.getClearedAt());
+        cleared.put(userId, when);
+        conversation.setClearedAt(cleared);
+    }
+
     private ConversationResponse toResponse(Conversation c, String userId, long unreadCount) {
         ConversationResponse.LastMessageDto lastMsg = null;
         if (c.getLastMessage() != null) {
@@ -103,8 +248,9 @@ public class ConversationService {
             );
         }
         return new ConversationResponse(
-            c.getId(), c.getParticipants(), lastMsg,
-            c.getLastMessageAt(), unreadCount, c.getCreatedAt()
+            c.getId(), c.resolvedType(), c.getName(), c.getAvatarUrl(),
+            c.getParticipants(), c.getAdmins(), c.getCreatedBy(), c.getAutoDeleteSeconds(),
+            lastMsg, c.getLastMessageAt(), unreadCount, c.getCreatedAt()
         );
     }
 }

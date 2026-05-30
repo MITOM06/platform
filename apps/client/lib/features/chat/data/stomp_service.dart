@@ -16,6 +16,10 @@ class StompService extends _$StompService {
   final _messageCtrl = StreamController<MessageModel>.broadcast();
   final _typingCtrl = StreamController<TypingEvent>.broadcast();
   final _notifCtrl = StreamController<Map<String, dynamic>>.broadcast();
+  final _readCtrl = StreamController<ReadReceiptEvent>.broadcast();
+  final _reactionCtrl = StreamController<ReactionUpdateEvent>.broadcast();
+  final _recallCtrl = StreamController<RecallEvent>.broadcast();
+  final _convUpdateCtrl = StreamController<ConversationModel>.broadcast();
 
   @override
   void build() {}
@@ -23,6 +27,10 @@ class StompService extends _$StompService {
   Stream<MessageModel> get messages => _messageCtrl.stream;
   Stream<TypingEvent> get typing => _typingCtrl.stream;
   Stream<Map<String, dynamic>> get notifications => _notifCtrl.stream;
+  Stream<ReadReceiptEvent> get readReceipts => _readCtrl.stream;
+  Stream<ReactionUpdateEvent> get reactionUpdates => _reactionCtrl.stream;
+  Stream<RecallEvent> get recalledMessages => _recallCtrl.stream;
+  Stream<ConversationModel> get conversationUpdates => _convUpdateCtrl.stream;
 
   bool get isConnected => _client?.connected ?? false;
 
@@ -74,10 +82,40 @@ class StompService extends _$StompService {
       destination: '/topic/conversation/$conversationId',
       callback: (frame) {
         if (frame.body == null) return;
-        final msg = MessageModel.fromJson(
-          jsonDecode(frame.body!) as Map<String, dynamic>,
-        );
-        _messageCtrl.add(msg);
+        final data = jsonDecode(frame.body!) as Map<String, dynamic>;
+        // The conversation topic carries both new messages AND read-receipt
+        // events ({type: MESSAGE_READ, messageId, readerId}). Discriminate by
+        // `type` so a read receipt isn't parsed as a MessageModel (would throw
+        // a null-cast on the missing `id`/`content` fields).
+        switch (data['type']) {
+          case 'MESSAGE_READ':
+            _readCtrl.add(ReadReceiptEvent(
+              conversationId: conversationId,
+              messageId: data['messageId'] as String,
+              readerId: data['readerId'] as String,
+            ));
+            return;
+          case 'REACTION_UPDATED':
+            _reactionCtrl.add(ReactionUpdateEvent(
+              conversationId: conversationId,
+              messageId: data['messageId'] as String,
+              reactions: (data['reactions'] as List? ?? [])
+                  .map((e) => ReactionModel.fromJson(e as Map<String, dynamic>))
+                  .toList(),
+            ));
+            return;
+          case 'MESSAGE_RECALLED':
+            _recallCtrl.add(RecallEvent(
+              conversationId: conversationId,
+              messageId: data['messageId'] as String,
+            ));
+            return;
+          case 'CONVERSATION_UPDATED':
+            _convUpdateCtrl.add(ConversationModel.fromJson(
+                data['conversation'] as Map<String, dynamic>));
+            return;
+        }
+        _messageCtrl.add(MessageModel.fromJson(data));
       },
     );
 
@@ -119,13 +157,14 @@ class StompService extends _$StompService {
     );
   }
 
-  void sendMessage(String conversationId, String content) {
+  void sendMessage(String conversationId, String content, {String? replyToId}) {
     _client?.send(
       destination: '/app/chat.send',
       body: jsonEncode({
         'conversationId': conversationId,
         'content': content,
         'type': 'text',
+        if (replyToId != null) 'replyToId': replyToId,
       }),
     );
   }
@@ -136,6 +175,19 @@ class StompService extends _$StompService {
       body: jsonEncode({
         'conversationId': conversationId,
         'typing': isTyping,
+      }),
+    );
+  }
+
+  /// Marks a message read over STOMP. The server persists `readBy` and
+  /// broadcasts a MESSAGE_READ event back to the conversation topic so the
+  /// original sender sees the read tick update in realtime.
+  void sendRead(String conversationId, String messageId) {
+    _client?.send(
+      destination: '/app/chat.read',
+      body: jsonEncode({
+        'conversationId': conversationId,
+        'messageId': messageId,
       }),
     );
   }

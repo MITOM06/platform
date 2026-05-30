@@ -17,6 +17,7 @@ part 'chat_provider.g.dart';
 @riverpod
 class ConversationsNotifier extends _$ConversationsNotifier {
   StreamSubscription<Map<String, dynamic>>? _notifSub;
+  StreamSubscription<ConversationModel>? _convUpdateSub;
 
   @override
   Future<List<ConversationModel>> build() async {
@@ -34,9 +35,46 @@ class ConversationsNotifier extends _$ConversationsNotifier {
     stomp.subscribeNotifications();
 
     _notifSub = stomp.notifications.listen(_onNotification);
-    ref.onDispose(() => _notifSub?.cancel());
+    _convUpdateSub = stomp.conversationUpdates.listen(_onConversationUpdate);
+    ref.onDispose(() {
+      _notifSub?.cancel();
+      _convUpdateSub?.cancel();
+    });
 
     return repo.listConversations();
+  }
+
+  void _onConversationUpdate(ConversationModel updated) {
+    final current = state.valueOrNull;
+    if (current == null) return;
+    if (!current.any((c) => c.id == updated.id)) {
+      // A group the user was just added to — pull it in.
+      refresh();
+      return;
+    }
+    state = AsyncData(current.map((c) {
+      if (c.id != updated.id) return c;
+      // Preserve list-only fields (unread/lastMessage) the event doesn't carry.
+      return updated.copyWith(
+        unreadCount: c.unreadCount,
+        lastMessage: c.lastMessage,
+        lastMessageAt: c.lastMessageAt,
+      );
+    }).toList());
+  }
+
+  /// Hide a conversation locally + on the server.
+  Future<void> deleteConversation(String conversationId) async {
+    final current = state.valueOrNull;
+    if (current != null) {
+      state = AsyncData(
+          current.where((c) => c.id != conversationId).toList());
+    }
+    try {
+      await ref.read(chatRepositoryProvider).deleteConversation(conversationId);
+    } catch (_) {
+      refresh();
+    }
   }
 
   void _onNotification(Map<String, dynamic> notif) {
@@ -48,6 +86,13 @@ class ConversationsNotifier extends _$ConversationsNotifier {
     if (type == 'NEW_MESSAGE') {
       final convId = notif['conversationId'] as String?;
       if (convId == null) return;
+
+      // Conversation chưa có trong list (vd: người khác vừa tạo phòng mới với
+      // mình) → fetch lại để nó xuất hiện ngay thay vì phải reload thủ công.
+      if (!current.any((c) => c.id == convId)) {
+        refresh();
+        return;
+      }
 
       // Đẩy conversation lên đầu + tăng unreadCount
       final updated = current.map((c) {
@@ -92,6 +137,9 @@ class ChatNotifier extends _$ChatNotifier {
   final Map<String, Timer> _typingTimers = {};
   StreamSubscription<MessageModel>? _messageSub;
   StreamSubscription<TypingEvent>? _typingSub;
+  StreamSubscription<ReadReceiptEvent>? _readSub;
+  StreamSubscription<ReactionUpdateEvent>? _reactionSub;
+  StreamSubscription<RecallEvent>? _recallSub;
 
   @override
   Future<ChatState> build(String conversationId) async {
@@ -107,9 +155,24 @@ class ChatNotifier extends _$ChatNotifier {
         .where((e) => e.conversationId == conversationId)
         .listen(_onTypingEvent);
 
+    _readSub = stomp.readReceipts
+        .where((e) => e.conversationId == conversationId)
+        .listen(_onReadReceipt);
+
+    _reactionSub = stomp.reactionUpdates
+        .where((e) => e.conversationId == conversationId)
+        .listen(_onReactionUpdate);
+
+    _recallSub = stomp.recalledMessages
+        .where((e) => e.conversationId == conversationId)
+        .listen(_onRecall);
+
     ref.onDispose(() {
       _messageSub?.cancel();
       _typingSub?.cancel();
+      _readSub?.cancel();
+      _reactionSub?.cancel();
+      _recallSub?.cancel();
       _typingTimer?.cancel();
       for (final t in _typingTimers.values) {
         t.cancel();
@@ -148,10 +211,106 @@ class ChatNotifier extends _$ChatNotifier {
 
     state = AsyncData(current.copyWith(messages: updated));
 
-    // Mark messages from others as read
+    // Mark messages from others as read. Prefer STOMP so the server broadcasts
+    // a MESSAGE_READ event (sender sees the tick update live); fall back to REST
+    // when the socket is down.
     if (message.senderId != _currentUserId) {
-      ref.read(chatRepositoryProvider).markAsRead(message.id).ignore();
+      final stomp = ref.read(stompServiceProvider.notifier);
+      if (stomp.isConnected) {
+        stomp.sendRead(conversationId, message.id);
+      } else {
+        ref.read(chatRepositoryProvider).markAsRead(message.id).ignore();
+      }
     }
+  }
+
+  void _onReadReceipt(ReadReceiptEvent event) {
+    final current = state.valueOrNull;
+    if (current == null) return;
+
+    final updated = current.messages.map((m) {
+      if (m.id == event.messageId && !m.readBy.contains(event.readerId)) {
+        return m.copyWith(readBy: [...m.readBy, event.readerId]);
+      }
+      return m;
+    }).toList();
+
+    state = AsyncData(current.copyWith(messages: updated));
+  }
+
+  void _onReactionUpdate(ReactionUpdateEvent event) {
+    final current = state.valueOrNull;
+    if (current == null) return;
+    final updated = current.messages
+        .map((m) => m.id == event.messageId
+            ? m.copyWith(reactions: event.reactions)
+            : m)
+        .toList();
+    state = AsyncData(current.copyWith(messages: updated));
+  }
+
+  void _onRecall(RecallEvent event) {
+    final current = state.valueOrNull;
+    if (current == null) return;
+    final updated = current.messages
+        .map((m) => m.id == event.messageId
+            ? m.copyWith(recalled: true, content: '', reactions: const [])
+            : m)
+        .toList();
+    state = AsyncData(current.copyWith(messages: updated));
+  }
+
+  // ----- Reply / reactions / recall / delete actions --------------------
+
+  void startReply(MessageModel message) {
+    final current = state.valueOrNull;
+    if (current == null) return;
+    state = AsyncData(current.copyWith(replyingTo: message));
+  }
+
+  void cancelReply() {
+    final current = state.valueOrNull;
+    if (current == null) return;
+    state = AsyncData(current.copyWith(clearReplyingTo: true));
+  }
+
+  /// Toggle a reaction: tapping the same emoji again removes it.
+  Future<void> toggleReaction(String messageId, String emoji) async {
+    final current = state.valueOrNull;
+    final uid = _currentUserId;
+    if (current == null || uid == null) return;
+    final matches = current.messages.where((m) => m.id == messageId);
+    final msg = matches.isEmpty ? null : matches.first;
+    final alreadySame = msg != null &&
+        msg.reactions.any((r) => r.userId == uid && r.emoji == emoji);
+    final repo = ref.read(chatRepositoryProvider);
+    try {
+      if (alreadySame) {
+        await repo.removeReaction(messageId);
+      } else {
+        await repo.addReaction(messageId, emoji);
+      }
+    } catch (_) {
+      // Realtime REACTION_UPDATED broadcast keeps state authoritative.
+    }
+  }
+
+  Future<void> recallMessage(String messageId) async {
+    try {
+      await ref.read(chatRepositoryProvider).recallMessage(messageId);
+    } catch (_) {}
+  }
+
+  Future<void> deleteForMe(String messageId) async {
+    final current = state.valueOrNull;
+    if (current == null) return;
+    // Optimistically remove from this device.
+    state = AsyncData(current.copyWith(
+      messages: current.messages.where((m) => m.id != messageId).toList(),
+    ));
+    try {
+      await ref.read(chatRepositoryProvider).deleteMessageForMe(messageId);
+    } catch (_) {}
   }
 
   void _onTypingEvent(TypingEvent event) {
@@ -215,6 +374,15 @@ class ChatNotifier extends _$ChatNotifier {
     final uid = _currentUserId;
     if (uid == null) return;
 
+    final replyTo = current.replyingTo;
+    final replyPreview = replyTo == null
+        ? null
+        : ReplyPreview(
+            messageId: replyTo.id,
+            senderId: replyTo.senderId,
+            content: replyTo.content,
+          );
+
     final optimistic = MessageModel(
       id: 'pending_${DateTime.now().millisecondsSinceEpoch}',
       conversationId: conversationId,
@@ -223,22 +391,26 @@ class ChatNotifier extends _$ChatNotifier {
       type: 'text',
       readBy: [uid],
       createdAt: DateTime.now(),
+      replyToId: replyTo?.id,
+      replyPreview: replyPreview,
       isPending: true,
     );
 
+    // Adding the message also clears the reply composer.
     state = AsyncData(current.copyWith(
       messages: [optimistic, ...current.messages],
+      clearReplyingTo: true,
     ));
 
     final stomp = ref.read(stompServiceProvider.notifier);
     if (stomp.isConnected) {
-      stomp.sendMessage(conversationId, content);
+      stomp.sendMessage(conversationId, content, replyToId: replyTo?.id);
     } else {
       // REST fallback when STOMP unavailable
       try {
         final sent = await ref
             .read(chatRepositoryProvider)
-            .sendMessageRest(conversationId, content);
+            .sendMessageRest(conversationId, content, replyToId: replyTo?.id);
         final c = state.valueOrNull;
         if (c != null) {
           state = AsyncData(c.copyWith(

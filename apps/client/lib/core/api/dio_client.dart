@@ -11,6 +11,10 @@ const _keyRefreshToken = 'refreshToken';
 const _keySid = 'sid';
 
 class DioClient {
+  /// Public base URL of the chat-service, used e.g. to resolve relative
+  /// avatar/upload URLs returned by the server.
+  static const String chatBaseUrl = _chatBaseUrl;
+
   static Dio createAuthDio(FlutterSecureStorage storage) {
     final dio = Dio(BaseOptions(
       baseUrl: _authBaseUrl,

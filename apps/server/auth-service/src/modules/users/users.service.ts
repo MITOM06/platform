@@ -70,13 +70,33 @@ export class UsersService {
   }
 
   async findBySearchQuery(query: string): Promise<UserDocument[]> {
+    const trimmed = (query ?? '').trim();
+    // Empty query: trả về rỗng thay vì match-all (tránh leak toàn bộ user list)
+    if (!trimmed) return [];
+    // Escape regex metachars — email chứa '.', '+' và input '[' sẽ làm
+    // new RegExp() throw (500) hoặc match sai nếu không escape.
+    const escaped = trimmed.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const pattern = new RegExp(escaped, 'i');
     return this.userModel.find({
       $or: [
-        { email: new RegExp(query, 'i') },
-        { displayName: new RegExp(query, 'i') },
+        { email: pattern },
+        { displayName: pattern },
       ],
     }).limit(10).select('-password').exec();
   }
 
-  // ❌ Xóa toàn bộ hàm logout — logic này thuộc AuthService
+  async updateProfile(userId: string, data: { displayName?: string; avatarUrl?: string }): Promise<UserDocument | null> {
+    const updateData: any = {};
+    if (data.displayName !== undefined) updateData.displayName = data.displayName;
+    if (data.avatarUrl !== undefined) updateData.avatarUrl = data.avatarUrl;
+
+    if (Object.keys(updateData).length > 0) {
+      return this.userModel.findByIdAndUpdate(
+        userId,
+        { $set: updateData },
+        { new: true }
+      ).select('-password').exec();
+    }
+    return this.findById(userId);
+  }
 }

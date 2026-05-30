@@ -1,9 +1,13 @@
 package com.platform.chatservice.controller;
 
+import com.platform.chatservice.dto.AutoDeleteRequest;
 import com.platform.chatservice.dto.ConversationResponse;
 import com.platform.chatservice.dto.CreateConversationRequest;
+import com.platform.chatservice.dto.CreateGroupRequest;
+import com.platform.chatservice.dto.MembersRequest;
 import com.platform.chatservice.dto.MessageResponse;
 import com.platform.chatservice.dto.PageResponse;
+import com.platform.chatservice.dto.UpdateConversationRequest;
 import com.platform.chatservice.exception.UnauthorizedException;
 import com.platform.chatservice.security.UserPrincipal;
 import com.platform.chatservice.service.ConversationService;
@@ -11,8 +15,12 @@ import com.platform.chatservice.service.MessageService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/conversations")
@@ -21,6 +29,7 @@ public class ConversationController {
 
     private final ConversationService conversationService;
     private final MessageService messageService;
+    private final SimpMessagingTemplate messagingTemplate;
 
     @GetMapping
     public PageResponse<ConversationResponse> listConversations(
@@ -35,9 +44,65 @@ public class ConversationController {
         return conversationService.createConversation(currentUserId(), request.participantId());
     }
 
+    @PostMapping("/group")
+    @ResponseStatus(HttpStatus.CREATED)
+    public ConversationResponse createGroup(@RequestBody CreateGroupRequest request) {
+        ConversationResponse group = conversationService.createGroup(currentUserId(), request);
+        broadcastSystem(group.id(), "system.group.created");
+        return group;
+    }
+
     @GetMapping("/{id}")
     public ConversationResponse getConversation(@PathVariable String id) {
         return conversationService.getConversation(currentUserId(), id);
+    }
+
+    @PutMapping("/{id}")
+    public ConversationResponse updateGroup(@PathVariable String id,
+                                            @RequestBody UpdateConversationRequest request) {
+        ConversationResponse updated =
+            conversationService.updateGroup(currentUserId(), id, request.name(), request.avatarUrl());
+        broadcastConversationUpdated(updated);
+        return updated;
+    }
+
+    @PostMapping("/{id}/members")
+    public ConversationResponse addMembers(@PathVariable String id,
+                                           @RequestBody MembersRequest request) {
+        ConversationResponse updated =
+            conversationService.addMembers(currentUserId(), id, request.userIds());
+        broadcastConversationUpdated(updated);
+        broadcastSystem(id, "system.members.added");
+        return updated;
+    }
+
+    @DeleteMapping("/{id}/members/{userId}")
+    public ConversationResponse removeMember(@PathVariable String id, @PathVariable String userId) {
+        ConversationResponse updated = conversationService.removeMember(currentUserId(), id, userId);
+        broadcastConversationUpdated(updated);
+        broadcastSystem(id, currentUserId().equals(userId) ? "system.member.left" : "system.member.removed");
+        return updated;
+    }
+
+    @DeleteMapping("/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deleteConversation(@PathVariable String id) {
+        conversationService.deleteConversation(currentUserId(), id);
+    }
+
+    @PostMapping("/{id}/clear")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void clearHistory(@PathVariable String id) {
+        conversationService.clearHistory(currentUserId(), id);
+    }
+
+    @PutMapping("/{id}/settings")
+    public ConversationResponse updateSettings(@PathVariable String id,
+                                               @RequestBody AutoDeleteRequest request) {
+        ConversationResponse updated =
+            conversationService.setAutoDelete(currentUserId(), id, request.autoDeleteSeconds());
+        broadcastConversationUpdated(updated);
+        return updated;
     }
 
     @GetMapping("/{conversationId}/messages")
@@ -46,6 +111,22 @@ public class ConversationController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
         return messageService.getMessages(currentUserId(), conversationId, PageRequest.of(page, size));
+    }
+
+    private void broadcastConversationUpdated(ConversationResponse conversation) {
+        messagingTemplate.convertAndSend(
+            "/topic/conversation/" + conversation.id(),
+            Map.of("type", "CONVERSATION_UPDATED", "conversation", conversation));
+    }
+
+    /** Persist + broadcast a system message. Content is an i18n key the client maps. */
+    private void broadcastSystem(String conversationId, String contentKey) {
+        MessageResponse system = messageService.createSystemMessage(conversationId, contentKey);
+        messagingTemplate.convertAndSend("/topic/conversation/" + conversationId, system);
+        for (String participantId : conversationService.getParticipants(conversationId)) {
+            messagingTemplate.convertAndSendToUser(participantId, "/queue/notifications",
+                Map.of("type", "NEW_MESSAGE", "conversationId", conversationId, "senderName", "system"));
+        }
     }
 
     private String currentUserId() {

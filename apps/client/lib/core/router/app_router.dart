@@ -10,6 +10,7 @@ import '../../features/auth/ui/forgot_password_screen.dart';
 import '../../features/auth/ui/new_password_screen.dart';
 import '../../features/chat/ui/conversation_list_screen.dart';
 import '../../features/chat/ui/chat_screen.dart';
+import '../../features/chat/ui/group_info_screen.dart';
 import '../../features/chat/ui/new_conversation_screen.dart';
 import '../../features/settings/ui/settings_screen.dart';
 
@@ -132,6 +133,12 @@ GoRouter appRouter(AppRouterRef ref) {
         path: '/new-conversation',
         name: 'new-conversation',
         builder: (context, state) => const NewConversationScreen(),
+      ),
+      GoRoute(
+        path: '/group-info/:id',
+        name: 'group-info',
+        builder: (context, state) =>
+            GroupInfoScreen(conversationId: state.pathParameters['id']!),
       ),
     ],
   );

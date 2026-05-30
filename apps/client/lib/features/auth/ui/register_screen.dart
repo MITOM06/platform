@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../../core/l10n/l10n_ext.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/neon_widgets.dart';
 import '../data/auth_repository.dart';
@@ -31,15 +32,15 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     super.dispose();
   }
 
-  String _friendlyError(Object error) {
+  String _friendlyError(BuildContext context, Object error) {
     final msg = error.toString();
     if (msg.contains('409') || msg.contains('exists')) {
-      return 'Email này đã được đăng ký';
+      return context.l10n.errEmailExists;
     }
     if (msg.contains('network') || msg.contains('connect')) {
-      return 'Không thể kết nối server';
+      return context.l10n.errNetwork;
     }
-    return 'Đăng ký thất bại, thử lại';
+    return context.l10n.errRegisterFailed;
   }
 
   Future<void> _submit() async {
@@ -57,12 +58,12 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     } on DioException catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(_friendlyError(e))));
+            SnackBar(content: Text(_friendlyError(context, e))));
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(_friendlyError(e))));
+            SnackBar(content: Text(_friendlyError(context, e))));
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);
@@ -73,7 +74,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Tạo Tài Khoản'),
+        title: Text(context.l10n.registerTitle),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
           onPressed: () => context.go('/login'),
@@ -130,7 +131,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                     const Center(child: PonLogo(size: 60, showText: false)),
                     const SizedBox(height: 8),
                     Text(
-                      'Chào mừng bạn đến với PON',
+                      context.l10n.welcomeToApp,
                       style: TextStyle(
                         fontSize: 14,
                         color: Colors.white.withValues(alpha: 0.5),
@@ -154,12 +155,12 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                               // Full Name
                               NeonTextField(
                                 controller: _nameController,
-                                labelText: 'Tên hiển thị',
+                                labelText: context.l10n.fieldDisplayName,
                                 prefixIcon: Icons.badge_outlined,
                                 focusColor: AppTheme.neonCyan,
                                 validator: (v) {
-                                  if (v == null || v.trim().isEmpty) return 'Vui lòng nhập tên';
-                                  if (v.trim().length < 2) return 'Tên tối thiểu 2 ký tự';
+                                  if (v == null || v.trim().isEmpty) return context.l10n.valNameRequired;
+                                  if (v.trim().length < 2) return context.l10n.valNameMin2;
                                   return null;
                                 },
                               ),
@@ -168,13 +169,13 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                               // Email
                               NeonTextField(
                                 controller: _emailController,
-                                labelText: 'Email',
+                                labelText: context.l10n.fieldEmail,
                                 prefixIcon: Icons.email_outlined,
                                 keyboardType: TextInputType.emailAddress,
                                 focusColor: AppTheme.neonCyan,
                                 validator: (v) {
-                                  if (v == null || v.isEmpty) return 'Vui lòng nhập email';
-                                  if (!v.contains('@')) return 'Email không hợp lệ';
+                                  if (v == null || v.isEmpty) return context.l10n.valEmailRequired;
+                                  if (!v.contains('@')) return context.l10n.valEmailInvalid;
                                   return null;
                                 },
                               ),
@@ -183,7 +184,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                               // Password
                               NeonTextField(
                                 controller: _passwordController,
-                                labelText: 'Mật khẩu',
+                                labelText: context.l10n.fieldPassword,
                                 prefixIcon: Icons.lock_outlined,
                                 obscureText: _obscurePassword,
                                 focusColor: AppTheme.neonPink,
@@ -198,8 +199,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                                       setState(() => _obscurePassword = !_obscurePassword),
                                 ),
                                 validator: (v) {
-                                  if (v == null || v.isEmpty) return 'Vui lòng nhập mật khẩu';
-                                  if (v.length < 6) return 'Mật khẩu tối thiểu 6 ký tự';
+                                  if (v == null || v.isEmpty) return context.l10n.valPasswordRequired;
+                                  if (v.length < 6) return context.l10n.valPasswordMin6;
                                   return null;
                                 },
                               ),
@@ -208,7 +209,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                               // Confirm Password
                               NeonTextField(
                                 controller: _confirmController,
-                                labelText: 'Xác nhận mật khẩu',
+                                labelText: context.l10n.fieldConfirmPassword,
                                 prefixIcon: Icons.lock_outline,
                                 obscureText: _obscurePassword,
                                 textInputAction: TextInputAction.done,
@@ -216,7 +217,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                                 onFieldSubmitted: (_) => _submit(),
                                 validator: (v) {
                                   if (v != _passwordController.text) {
-                                    return 'Mật khẩu không khớp';
+                                    return context.l10n.valPasswordMismatch;
                                   }
                                   return null;
                                 },
@@ -229,7 +230,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                                 isLoading: _isLoading,
                                 gradientColors: const [AppTheme.neonPink, AppTheme.neonPurple],
                                 glowColor: AppTheme.neonPink,
-                                child: const Text('ĐĂNG KÝ'),
+                                child: Text(context.l10n.registerButton),
                               ),
                             ],
                           ),
@@ -243,12 +244,12 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Text(
-                          'Đã có tài khoản? ',
+                          context.l10n.haveAccount,
                           style: TextStyle(color: Colors.white.withValues(alpha: 0.6)),
                         ),
                         TextButton(
                           onPressed: () => context.go('/login'),
-                          child: const Text('Đăng nhập'),
+                          child: Text(context.l10n.loginLink),
                         ),
                       ],
                     ),

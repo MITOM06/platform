@@ -29,7 +29,8 @@ public class ChatController {
         SendMessageRequest request = new SendMessageRequest(
                 dto.getConversationId(),
                 dto.getContent(),
-                dto.getType()
+                dto.getType(),
+                dto.getReplyToId()
         );
         MessageResponse response = messageService.sendMessage(principal.getName(), request);
         messagingTemplate.convertAndSend(

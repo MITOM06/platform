@@ -10,6 +10,11 @@ dependencies:
   flutter:
     sdk: flutter
 
+  # Internationalization (i18n)
+  flutter_localizations:
+    sdk: flutter
+  intl: any
+
   # State management
   flutter_riverpod: ^2.6.1
   riverpod_annotation: ^2.3.5
@@ -30,6 +35,13 @@ dependencies:
   # Network connectivity
   connectivity_plus: ^6.0.0
 
+  # Emoji picker (message composer + reactions)
+  emoji_picker_flutter: ^3.1.0
+
+  # Image picking & remote image caching (avatars)
+  image_picker: ^1.1.2
+  cached_network_image: ^3.4.1
+
   # Icons
   cupertino_icons: ^1.0.8
 
@@ -44,6 +56,7 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+  generate: true
 
   assets:
     - assets/images/

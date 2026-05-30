@@ -1,0 +1,503 @@
+// ignore: unused_import
+import 'package:intl/intl.dart' as intl;
+import 'app_localizations.dart';
+
+// ignore_for_file: type=lint
+
+/// The translations for Spanish Castilian (`es`).
+class AppLocalizationsEs extends AppLocalizations {
+  AppLocalizationsEs([String locale = 'es']) : super(locale);
+
+  @override
+  String get appName => 'PON';
+
+  @override
+  String get languageName => 'Español';
+
+  @override
+  String get actionCancel => 'Cancelar';
+
+  @override
+  String get actionConfirm => 'Confirmar';
+
+  @override
+  String get actionRetry => 'REINTENTAR';
+
+  @override
+  String get actionSave => 'GUARDAR';
+
+  @override
+  String get actionLogout => 'Cerrar sesión';
+
+  @override
+  String get actionDelete => 'Eliminar';
+
+  @override
+  String get actionLeave => 'Salir';
+
+  @override
+  String get loadingDots => '...';
+
+  @override
+  String errorWithMsg(String error) {
+    return 'Error: $error';
+  }
+
+  @override
+  String get loginTitle => 'Iniciar sesión';
+
+  @override
+  String get fieldEmail => 'Correo';
+
+  @override
+  String get fieldPassword => 'Contraseña';
+
+  @override
+  String get forgotPasswordLink => '¿Olvidaste tu contraseña?';
+
+  @override
+  String get loginButton => 'INICIAR SESIÓN';
+
+  @override
+  String get noAccountYet => '¿No tienes una cuenta? ';
+
+  @override
+  String get registerNow => 'Regístrate ahora';
+
+  @override
+  String get valEmailRequired => 'Ingresa tu correo';
+
+  @override
+  String get valEmailInvalid => 'Correo no válido';
+
+  @override
+  String get valPasswordRequired => 'Ingresa tu contraseña';
+
+  @override
+  String get valPasswordMin6 =>
+      'La contraseña debe tener al menos 6 caracteres';
+
+  @override
+  String get errInvalidCredentials => 'Correo o contraseña incorrectos';
+
+  @override
+  String get errNetwork =>
+      'No se puede conectar al servidor, revisa tu conexión';
+
+  @override
+  String get errLoginFailed => 'Error al iniciar sesión, inténtalo de nuevo';
+
+  @override
+  String get registerTitle => 'Crear cuenta';
+
+  @override
+  String get welcomeToApp => 'Bienvenido a PON';
+
+  @override
+  String get fieldDisplayName => 'Nombre visible';
+
+  @override
+  String get fieldConfirmPassword => 'Confirmar contraseña';
+
+  @override
+  String get registerButton => 'REGISTRARSE';
+
+  @override
+  String get haveAccount => '¿Ya tienes una cuenta? ';
+
+  @override
+  String get loginLink => 'Iniciar sesión';
+
+  @override
+  String get valNameRequired => 'Ingresa tu nombre';
+
+  @override
+  String get valNameMin2 => 'El nombre debe tener al menos 2 caracteres';
+
+  @override
+  String get valPasswordMismatch => 'Las contraseñas no coinciden';
+
+  @override
+  String get errEmailExists => 'Este correo ya está registrado';
+
+  @override
+  String get errRegisterFailed => 'Error al registrarse, inténtalo de nuevo';
+
+  @override
+  String get verifyOtpTitle => 'Verificar OTP';
+
+  @override
+  String get verifyAccountHeading => 'Verifica tu cuenta';
+
+  @override
+  String otpSentTo(String email) {
+    return 'Se envió un OTP de 6 dígitos a\n$email';
+  }
+
+  @override
+  String get fieldOtp => 'Código OTP';
+
+  @override
+  String get confirmButton => 'CONFIRMAR';
+
+  @override
+  String resendIn(int seconds) {
+    return 'Reenviar en ${seconds}s';
+  }
+
+  @override
+  String get resendOtp => 'Reenviar código OTP';
+
+  @override
+  String get otpResent => 'Se envió un nuevo código OTP a tu correo';
+
+  @override
+  String get errResendFailed => 'Error al reenviar, inténtalo más tarde';
+
+  @override
+  String get valOtp6 => 'Ingresa los 6 dígitos del OTP';
+
+  @override
+  String get verifySuccess => '¡Verificado con éxito! Inicia sesión ahora';
+
+  @override
+  String get errVerifyFailed => 'Error de verificación, inténtalo de nuevo';
+
+  @override
+  String get forgotTitle => 'Restablecer contraseña';
+
+  @override
+  String get forgotHeading => '¿Olvidaste tu contraseña?';
+
+  @override
+  String get forgotSubtitle =>
+      'Ingresa tu correo para recibir un OTP y crear una nueva contraseña';
+
+  @override
+  String get sendOtpButton => 'ENVIAR CÓDIGO OTP';
+
+  @override
+  String get errEmailNotRegistered => 'Este correo no está registrado';
+
+  @override
+  String get errSendRequestFailed =>
+      'Error en la solicitud, inténtalo de nuevo';
+
+  @override
+  String get newPasswordTitle => 'Nueva contraseña';
+
+  @override
+  String get newPasswordHeading => 'Crea una nueva contraseña';
+
+  @override
+  String newPasswordSubtitle(String email) {
+    return 'Ingresa el OTP enviado a $email\ny tu nueva contraseña';
+  }
+
+  @override
+  String get fieldNewPassword => 'Nueva contraseña';
+
+  @override
+  String get valNewPasswordRequired => 'Ingresa una nueva contraseña';
+
+  @override
+  String get resetPasswordSuccess => '¡Contraseña restablecida con éxito!';
+
+  @override
+  String get errOtpInvalidExpired => 'El OTP es incorrecto o ha expirado';
+
+  @override
+  String get errResetFailed =>
+      'Error al restablecer la contraseña, inténtalo de nuevo';
+
+  @override
+  String get settingsTitle => 'Ajustes';
+
+  @override
+  String get valNameEmpty => 'El nombre no puede estar vacío';
+
+  @override
+  String get nameUpdated => 'Nombre visible actualizado';
+
+  @override
+  String get personalInfo => 'Información personal';
+
+  @override
+  String get appearance => 'Apariencia';
+
+  @override
+  String get chooseThemeTitle => 'Elegir tema';
+
+  @override
+  String get themeLight => 'Tema claro';
+
+  @override
+  String get themeDark => 'Tema oscuro';
+
+  @override
+  String get themeSystem => 'Sistema';
+
+  @override
+  String get language => 'Idioma';
+
+  @override
+  String get chooseLanguageTitle => 'Elegir idioma';
+
+  @override
+  String get logoutConfirmBody => '¿Seguro que quieres cerrar sesión?';
+
+  @override
+  String get onboardingChooseTheme => 'ELIGE UN TEMA';
+
+  @override
+  String get onboardingChooseSubtitle =>
+      'Elige el estilo de interfaz que más te guste.';
+
+  @override
+  String get themeLightSubtitle => 'Brillante, claro y fácil de leer';
+
+  @override
+  String get themeDarkSubtitle => 'Moderno, misterioso y cómodo para la vista';
+
+  @override
+  String get themeSystemSubtitle =>
+      'Coincide automáticamente con tu dispositivo';
+
+  @override
+  String get startExperience => 'EMPEZAR A EXPLORAR';
+
+  @override
+  String get tooltipSettings => 'Ajustes';
+
+  @override
+  String get tooltipNewConversation => 'Nueva conversación';
+
+  @override
+  String get listLoadFailed => 'No se pudo cargar la lista';
+
+  @override
+  String get listCheckNetwork =>
+      'Revisa tu conexión de red e inténtalo de nuevo.';
+
+  @override
+  String get listGenericError => 'Algo salió mal. Inténtalo más tarde.';
+
+  @override
+  String get emptyConversations => 'Aún no hay conversaciones';
+
+  @override
+  String get emptyTapPlus => '¡Toca el botón \"+\" de abajo para empezar!';
+
+  @override
+  String get offlineBanner => 'Sin conexión de red';
+
+  @override
+  String get conversationDefault => 'Conversación';
+
+  @override
+  String get newConversationTitle => 'Nueva conversación';
+
+  @override
+  String get startConversationHeading => 'Iniciar una conversación';
+
+  @override
+  String get fieldRecipient => 'Correo o ID de usuario del destinatario';
+
+  @override
+  String get valRecipientRequired => 'Ingresa un correo o ID de usuario';
+
+  @override
+  String get errUserNotFoundEmail =>
+      'No se encontró ningún usuario con este correo.';
+
+  @override
+  String get errUserNotFoundOrConn =>
+      'Usuario no encontrado o error de conexión.';
+
+  @override
+  String get startConversationButton => 'EMPEZAR A CHATEAR';
+
+  @override
+  String get chatDefaultTitle => 'Chat';
+
+  @override
+  String get statusOnline => 'activo ahora';
+
+  @override
+  String get statusOffline => 'desconectado';
+
+  @override
+  String get typingLabel => 'escribiendo';
+
+  @override
+  String get messageHint => 'Escribe un mensaje...';
+
+  @override
+  String get tabChats => 'Chats';
+
+  @override
+  String get newGroup => 'Nuevo grupo';
+
+  @override
+  String get newDirect => 'Nuevo chat';
+
+  @override
+  String get createGroup => 'Crear grupo';
+
+  @override
+  String get groupName => 'Nombre del grupo';
+
+  @override
+  String get valGroupNameRequired => 'Ingresa un nombre de grupo';
+
+  @override
+  String get selectMembers => 'Seleccionar miembros';
+
+  @override
+  String get valSelectMembers => 'Selecciona al menos 2 miembros';
+
+  @override
+  String get searchUsers => 'Buscar por nombre o correo';
+
+  @override
+  String get groupInfo => 'Información del grupo';
+
+  @override
+  String get members => 'Miembros';
+
+  @override
+  String membersCount(int count) {
+    return '$count miembros';
+  }
+
+  @override
+  String get addMembers => 'Añadir miembros';
+
+  @override
+  String get removeMember => 'Quitar del grupo';
+
+  @override
+  String get leaveGroup => 'Salir del grupo';
+
+  @override
+  String get leaveGroupConfirm => '¿Seguro que quieres salir de este grupo?';
+
+  @override
+  String get renameGroup => 'Renombrar grupo';
+
+  @override
+  String get admin => 'Administrador';
+
+  @override
+  String get you => 'Tú';
+
+  @override
+  String systemAddedMember(String actor, String target) {
+    return '$actor añadió a $target';
+  }
+
+  @override
+  String systemRemovedMember(String actor, String target) {
+    return '$actor quitó a $target';
+  }
+
+  @override
+  String systemLeftGroup(String actor) {
+    return '$actor salió del grupo';
+  }
+
+  @override
+  String systemRenamedGroup(String actor, String name) {
+    return '$actor renombró el grupo a $name';
+  }
+
+  @override
+  String systemCreatedGroup(String actor) {
+    return '$actor creó el grupo';
+  }
+
+  @override
+  String get actionReply => 'Responder';
+
+  @override
+  String get actionRecall => 'Retirar';
+
+  @override
+  String get actionDeleteForMe => 'Eliminar para mí';
+
+  @override
+  String get actionCopy => 'Copiar';
+
+  @override
+  String get actionReact => 'Reaccionar';
+
+  @override
+  String get messageRecalled => 'El mensaje fue retirado';
+
+  @override
+  String replyingTo(String name) {
+    return 'Respondiendo a $name';
+  }
+
+  @override
+  String get copiedToClipboard => 'Copiado al portapapeles';
+
+  @override
+  String get recallConfirm => '¿Retirar este mensaje para todos?';
+
+  @override
+  String get deleteConversation => 'Eliminar conversación';
+
+  @override
+  String get deleteConversationConfirm =>
+      '¿Eliminar esta conversación? Se ocultará de tu lista.';
+
+  @override
+  String get clearHistory => 'Borrar historial';
+
+  @override
+  String get clearHistoryConfirm =>
+      '¿Borrar todos los mensajes de esta conversación para ti?';
+
+  @override
+  String get disappearingMessages => 'Mensajes temporales';
+
+  @override
+  String get disappearingOff => 'Desactivado';
+
+  @override
+  String get disappearing24h => '24 horas';
+
+  @override
+  String get disappearing7d => '7 días';
+
+  @override
+  String get changeAvatar => 'Cambiar avatar';
+
+  @override
+  String get uploadFailed => 'Error al subir, inténtalo de nuevo';
+
+  @override
+  String get lastSeenJustNow => 'activo hace un momento';
+
+  @override
+  String lastSeenMinutes(int minutes) {
+    return 'activo hace $minutes min';
+  }
+
+  @override
+  String lastSeenHours(int hours) {
+    return 'activo hace $hours h';
+  }
+
+  @override
+  String lastSeenDays(int days) {
+    return 'activo hace $days d';
+  }
+
+  @override
+  String get dateToday => 'Hoy';
+
+  @override
+  String get dateYesterday => 'Ayer';
+}
