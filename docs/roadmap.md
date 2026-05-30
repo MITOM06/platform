@@ -1,98 +1,73 @@
 # Roadmap — Platform PRJ4
 
-Lộ trình phát triển theo milestone, ưu tiên hoàn thành PRJ4 đúng hạn.
+> **Trạng thái:** Tất cả Milestone 0–4 hoàn thành ✅ (2026-05-30 Sprint 6 DONE)
 
-## Milestone 0 — Setup (Đã xong ✅)
+---
+
+## Milestone 0 — Setup ✅ DONE
 
 - [x] Monorepo structure (pnpm)
-- [x] Docker infra: MongoDB replica set + Redis
-- [x] NestJS auth-service hoàn chỉnh
-- [x] React Native auth screens (tham khảo)
-- [x] CLAUDE.md + .claude/ directory
-- [x] Architecture decisions documented
+- [x] Docker infra: MongoDB port 27018 + Redis
+- [x] NestJS auth-service hoàn chỉnh (JWT, OTP, refresh, brute force)
+- [x] CLAUDE.md + .claude/ directory + AI workflow
 
-## Milestone 1 — Spring Boot Foundation
+## Milestone 1 — Spring Boot Foundation ✅ DONE
 
-**Mục tiêu:** Spring Boot project chạy được, connect MongoDB + Redis, JWT validation hoạt động.
+- [x] Spring Boot 3 project (Maven, Spring Initializr)
+- [x] `pom.xml` đầy đủ dependencies
+- [x] `application.yml` (port 8080, MongoDB 27018, Redis 6379)
+- [x] `JwtAuthenticationFilter` — validate JWT từ auth-service
+- [x] `SecurityConfig` + CORS config
+- [x] `GET /health` endpoint
+- [x] Dockerfile multi-stage (maven:21 → jre-alpine)
+- [x] `compose.yml` thêm chat-service container
 
-- [ ] Khởi tạo Spring Boot project (Maven, Spring Initializr)
-- [ ] `pom.xml` với đủ dependencies (web, websocket, data-mongodb, security, data-redis, lombok, jjwt)
-- [ ] `application.yml` config (port 8080, MongoDB 27018, Redis 6379)
-- [ ] `JwtAuthenticationFilter` — validate token từ auth-service
-- [ ] `SecurityConfig` — configure Spring Security 6
-- [ ] `GET /health` endpoint — verify service chạy
-- [ ] Dockerfile cho chat-service
-- [ ] Update `compose.yml` thêm chat-service container
+## Milestone 2 — Core Data Layer ✅ DONE
 
-**Verify:** `mvn spring-boot:run` → `curl http://localhost:8080/health` → `{"status":"ok"}`
+- [x] `Conversation` + `Message` entities (`@Document`) + Repositories
+- [x] `ConversationService` + `MessageService`
+- [x] REST endpoints: conversations CRUD + messages paginated
+- [x] `GlobalExceptionHandler` (404, 409, 401)
+- [x] MongoDB aggregation cho unread count (tránh N+1)
+- [x] Atomic `markAsRead` với `$addToSet`
 
-## Milestone 2 — Core Data Layer
+## Milestone 3 — WebSocket (STOMP) ✅ DONE
 
-**Mục tiêu:** MongoDB entities + repositories + service layer cho conversations và messages.
+- [x] `WebSocketConfig` — raw WebSocket `/ws` (không SockJS)
+- [x] `ChatController` (`@MessageMapping`) — send, typing, read
+- [x] `AuthChannelInterceptor` — JWT validate trên STOMP CONNECT
+- [x] Presence heartbeat: Redis TTL refresh trên mọi STOMP frame
+- [x] `PresenceEventListener` — online/offline via Redis
+- [x] `GET /api/users/{id}/status` — check online status
+- [x] Broadcast NEW_MESSAGE notification tới `/user/queue/notifications`
 
-- [ ] `Conversation` entity (`@Document`) + `ConversationRepository`
-- [ ] `Message` entity (`@Document`) + `MessageRepository`
-- [ ] `ConversationService`: tạo conversation, list by user, find by ID
-- [ ] `MessageService`: send message, get paginated messages, mark as read
-- [ ] REST endpoints:
-  - `GET /api/conversations` — list conversations của current user
-  - `POST /api/conversations` — tạo 1-on-1 conversation
-  - `GET /api/conversations/{id}/messages?page=0&size=20`
-  - `PUT /api/messages/{id}/read`
+## Milestone 4 — Flutter Client ✅ DONE
 
-**Verify:** Postman/curl với JWT token → CRUD conversations và messages
+- [x] Flutter 3.44.0 setup, pubspec.yaml, lib/ structure
+- [x] `DioClient` — authDio + chatDio với JWT interceptor + token refresh
+- [x] Auth feature: Login, Register, VerifyOtp, ForgotPassword, NewPassword screens
+- [x] Chat feature: ConversationList, Chat, NewConversation screens
+- [x] `StompService` (keepAlive) — connect/reconnect/subscribe lifecycle
+- [x] Typing indicator 3s timer per userId
+- [x] Online/offline status + read receipts (2 tick xanh)
+- [x] Message pagination (load more, spinner top)
+- [x] Settings screen (avatar initials, edit display name)
+- [x] Network error toast + token expiry auto logout
+- [x] Dark Neon UI theme: NeonButton, NeonTextField, NeonCard, PonLogo
 
-## Milestone 3 — WebSocket (STOMP)
+## Milestone 5 (Sprint 5–6) ✅ DONE
 
-**Mục tiêu:** Realtime messaging hoạt động qua WebSocket.
-
-- [ ] `WebSocketConfig` — configure STOMP endpoint `/ws`
-- [ ] `ChatController` (`@MessageMapping`) — handle incoming STOMP messages
-- [ ] Broadcast message tới `/topic/conversation/{id}`
-- [ ] Personal notification tới `/user/queue/notifications`
-- [ ] Typing indicator: `/app/chat.typing` → broadcast tới conversation
-- [ ] Presence (online/offline) via Redis: update khi connect/disconnect WebSocket
-- [ ] `GET /api/users/{id}/status` — check online status
-
-**Verify:** 2 clients WebSocket connect → gửi message → cả 2 nhận được realtime
-
-## Milestone 4 — Flutter Client
-
-**Mục tiêu:** Flutter app chạy được với đầy đủ auth flow và chat UI.
-
-- [ ] Khởi tạo Flutter project trong `apps/client/`
-- [ ] Setup dependencies: flutter_riverpod, go_router, dio, stomp_dart_client, flutter_secure_storage
-- [ ] `DioClient` với JWT interceptor
-- [ ] Auth feature:
-  - [ ] `LoginScreen` → `POST /auth/login`
-  - [ ] `RegisterScreen` → `POST /auth/register`
-  - [ ] `VerifyOtpScreen` → `POST /auth/verify-otp`
-  - [ ] `ForgotPasswordScreen` + `NewPasswordScreen`
-  - [ ] `AuthProvider` (Riverpod) — manage auth state + token storage
-- [ ] Chat feature:
-  - [ ] `ConversationListScreen` → `GET /api/conversations`
-  - [ ] `ChatScreen` → load messages + STOMP WebSocket
-  - [ ] `StompService` — manage WebSocket connection lifecycle
-  - [ ] Typing indicator UI
-  - [ ] Online/offline status indicator
-
-**Verify:** End-to-end: register → login → chat với user khác realtime
-
-## Milestone 5 — Polish & PRJ4 Submission
-
-- [ ] Error handling đầy đủ (network errors, token expiry, reconnect WebSocket)
-- [ ] Loading states ở mọi async operation
-- [ ] Read receipts (readBy tracking)
-- [ ] Basic search conversation
-- [ ] Unit tests cho Spring Boot services
-- [ ] Widget tests cho Flutter screens
-- [ ] Docker Compose full stack (auth + chat + Flutter web hoặc APK)
-- [ ] PRJ4 documentation / presentation
+- [x] `UsersController` (auth-service): GET /me, /search, /:id
+- [x] JWT env alignment: `JWT_ACCESS_SECRET` fail-fast (no hardcoded fallback)
+- [x] CORS config trên chat-service REST API
+- [x] Email → UserId resolution khi tạo conversation
+- [x] Auth flow bug fixes: OTP send, sid in login, resend OTP, verify sets isVerified
+- [x] Unit tests: 26/26 Spring Boot, flutter analyze clean
 
 ## Post-PRJ4 (Backlog)
 
-- Group chat
-- Image/file upload
-- Push notifications
-- Voice messages
-- End-to-end encryption
+- [ ] Group chat
+- [ ] Image/file upload (S3/Cloudinary)
+- [ ] Push notifications (FCM)
+- [ ] Search messages
+- [ ] End-to-end encryption

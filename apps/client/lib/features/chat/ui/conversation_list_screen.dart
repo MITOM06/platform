@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/providers/connectivity_provider.dart';
+import '../../../core/providers/theme_provider.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/neon_widgets.dart';
 import '../../auth/domain/auth_provider.dart';
@@ -9,11 +10,131 @@ import '../../auth/domain/auth_state.dart';
 import '../domain/chat_provider.dart';
 import '../domain/chat_state.dart';
 
-class ConversationListScreen extends ConsumerWidget {
+class ConversationListScreen extends ConsumerStatefulWidget {
   const ConversationListScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<ConversationListScreen> createState() => _ConversationListScreenState();
+}
+
+class _ConversationListScreenState extends ConsumerState<ConversationListScreen> {
+  bool _onboardingChecked = false;
+
+  void _showThemeOnboardingSheet(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      isDismissible: false,
+      enableDrag: false,
+      backgroundColor: Colors.transparent,
+      barrierColor: Colors.black.withValues(alpha: 0.7),
+      builder: (context) {
+        final isDarkTheme = Theme.of(context).brightness == Brightness.dark;
+        return PopScope(
+          canPop: false,
+          child: Container(
+            decoration: BoxDecoration(
+              color: isDarkTheme ? AppTheme.darkSurface : Colors.white,
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+              border: Border.all(
+                color: isDarkTheme 
+                    ? AppTheme.darkBorder 
+                    : Colors.black.withValues(alpha: 0.08),
+                width: 1.5,
+              ),
+            ),
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+            child: SafeArea(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Center(
+                    child: Container(
+                      width: 48,
+                      height: 4,
+                      decoration: BoxDecoration(
+                        color: isDarkTheme 
+                            ? Colors.white.withValues(alpha: 0.15) 
+                            : Colors.black.withValues(alpha: 0.15),
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  ShaderMask(
+                    shaderCallback: (bounds) {
+                      return const LinearGradient(
+                        colors: [AppTheme.neonCyan, AppTheme.neonPink],
+                      ).createShader(bounds);
+                    },
+                    child: const Text(
+                      'CHỌN GIAO DIỆN',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 22,
+                        fontWeight: FontWeight.w900,
+                        color: Colors.white,
+                        letterSpacing: 1.5,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    'Chọn phong cách giao diện phù hợp nhất với bạn.',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: isDarkTheme 
+                          ? Colors.white.withValues(alpha: 0.5) 
+                          : Colors.black.withValues(alpha: 0.5),
+                    ),
+                  ),
+                  const SizedBox(height: 28),
+                  const _ThemeOptionCard(
+                    title: 'Giao diện Sáng',
+                    subtitle: 'Tươi sáng, rõ ràng và dễ đọc',
+                    icon: Icons.light_mode_rounded,
+                    themeMode: ThemeMode.light,
+                    activeColor: Colors.amber,
+                  ),
+                  const SizedBox(height: 16),
+                  const _ThemeOptionCard(
+                    title: 'Giao diện Tối',
+                    subtitle: 'Hiện đại, huyền bí và dịu mắt',
+                    icon: Icons.dark_mode_rounded,
+                    themeMode: ThemeMode.dark,
+                    activeColor: AppTheme.neonCyan,
+                  ),
+                  const SizedBox(height: 16),
+                  const _ThemeOptionCard(
+                    title: 'Hệ thống',
+                    subtitle: 'Tự động đồng bộ với thiết bị của bạn',
+                    icon: Icons.brightness_auto_rounded,
+                    themeMode: ThemeMode.system,
+                    activeColor: AppTheme.neonPurple,
+                  ),
+                  const SizedBox(height: 32),
+                  NeonButton(
+                    onPressed: () async {
+                      await ref.read(themeOnboardingNotifierProvider.notifier).completeOnboarding();
+                      if (context.mounted) {
+                        Navigator.pop(context);
+                      }
+                    },
+                    glowColor: AppTheme.neonCyan,
+                    child: const Text('BẮT ĐẦU TRẢI NGHIỆM'),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final convsAsync = ref.watch(conversationsNotifierProvider);
     final isOnlineAsync = ref.watch(connectivityProvider);
     final authState = ref.watch(authNotifierProvider).valueOrNull;
@@ -22,6 +143,19 @@ class ConversationListScreen extends ConsumerWidget {
         ? user.displayName.trim()[0].toUpperCase()
         : '?';
 
+    // Show onboarding theme selector if not completed
+    if (!_onboardingChecked) {
+      final onboardingCompleted = ref.watch(themeOnboardingNotifierProvider);
+      if (!onboardingCompleted) {
+        _onboardingChecked = true;
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          _showThemeOnboardingSheet(context);
+        });
+      }
+    }
+
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Scaffold(
       appBar: PreferredSize(
         preferredSize: const Size.fromHeight(kToolbarHeight + 8),
@@ -29,7 +163,9 @@ class ConversationListScreen extends ConsumerWidget {
           decoration: BoxDecoration(
             border: Border(
               bottom: BorderSide(
-                color: AppTheme.darkBorder.withValues(alpha: 0.3),
+                color: isDark
+                    ? AppTheme.darkBorder.withValues(alpha: 0.3)
+                    : Colors.black.withValues(alpha: 0.06),
                 width: 1,
               ),
             ),
@@ -41,8 +177,10 @@ class ConversationListScreen extends ConsumerWidget {
                 const SizedBox(width: 8),
                 ShaderMask(
                   shaderCallback: (bounds) {
-                    return const LinearGradient(
-                      colors: [AppTheme.neonCyan, AppTheme.neonPink],
+                    return LinearGradient(
+                      colors: isDark
+                          ? const [AppTheme.neonCyan, AppTheme.neonPink]
+                          : [Theme.of(context).colorScheme.primary, Theme.of(context).colorScheme.secondary],
                     ).createShader(bounds);
                   },
                   child: const Text(
@@ -64,23 +202,28 @@ class ConversationListScreen extends ConsumerWidget {
                   icon: Container(
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      border: Border.all(color: AppTheme.neonCyan.withValues(alpha: 0.5), width: 1.5),
-                      boxShadow: [
-                        BoxShadow(
-                          color: AppTheme.neonCyan.withValues(alpha: 0.2),
-                          blurRadius: 8,
-                        )
-                      ],
+                      border: Border.all(
+                        color: (isDark ? AppTheme.neonCyan : Theme.of(context).colorScheme.primary).withValues(alpha: 0.5),
+                        width: 1.5,
+                      ),
+                      boxShadow: isDark
+                          ? [
+                              BoxShadow(
+                                color: AppTheme.neonCyan.withValues(alpha: 0.2),
+                                blurRadius: 8,
+                              )
+                            ]
+                          : null,
                     ),
                     child: CircleAvatar(
                       radius: 16,
-                      backgroundColor: AppTheme.darkSurface,
+                      backgroundColor: isDark ? AppTheme.darkSurface : Colors.grey.shade100,
                       child: Text(
                         initials,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 13,
                           fontWeight: FontWeight.bold,
-                          color: AppTheme.neonCyan,
+                          color: isDark ? AppTheme.neonCyan : Theme.of(context).colorScheme.primary,
                         ),
                       ),
                     ),
@@ -99,7 +242,7 @@ class ConversationListScreen extends ConsumerWidget {
           shape: BoxShape.circle,
           boxShadow: [
             BoxShadow(
-              color: AppTheme.neonPink.withValues(alpha: 0.4),
+              color: (isDark ? AppTheme.neonPink : Theme.of(context).colorScheme.secondary).withValues(alpha: 0.4),
               blurRadius: 16,
               spreadRadius: 1,
             ),
@@ -111,7 +254,7 @@ class ConversationListScreen extends ConsumerWidget {
             ref.read(conversationsNotifierProvider.notifier).refresh();
           },
           tooltip: 'Cuộc trò chuyện mới',
-          backgroundColor: AppTheme.neonPink,
+          backgroundColor: isDark ? AppTheme.neonPink : Theme.of(context).colorScheme.secondary,
           foregroundColor: Colors.white,
           elevation: 0,
           highlightElevation: 0,
@@ -133,28 +276,31 @@ class ConversationListScreen extends ConsumerWidget {
             child: Stack(
               children: [
                 // Soft background glow
-                Positioned(
-                  bottom: -100,
-                  left: -100,
-                  child: Container(
-                    width: 300,
-                    height: 300,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      gradient: RadialGradient(
-                        colors: [
-                          AppTheme.neonPurple.withValues(alpha: 0.08),
-                          Colors.transparent,
-                        ],
+                if (isDark)
+                  Positioned(
+                    bottom: -100,
+                    left: -100,
+                    child: Container(
+                      width: 300,
+                      height: 300,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        gradient: RadialGradient(
+                          colors: [
+                            AppTheme.neonPurple.withValues(alpha: 0.08),
+                            Colors.transparent,
+                          ],
+                        ),
                       ),
                     ),
                   ),
-                ),
                 
                 convsAsync.when(
-                  loading: () => const Center(
+                  loading: () => Center(
                     child: CircularProgressIndicator(
-                      valueColor: AlwaysStoppedAnimation<Color>(AppTheme.neonCyan),
+                      valueColor: AlwaysStoppedAnimation<Color>(
+                        isDark ? AppTheme.neonCyan : Theme.of(context).colorScheme.primary,
+                      ),
                     ),
                   ),
                   error: (e, _) => Center(
@@ -162,7 +308,7 @@ class ConversationListScreen extends ConsumerWidget {
                       padding: const EdgeInsets.all(24.0),
                       child: NeonCard(
                         glowColor: Colors.redAccent,
-                        glowStrength: 4,
+                        glowStrength: isDark ? 4 : 0,
                         child: Padding(
                           padding: const EdgeInsets.all(24.0),
                           child: Column(
@@ -170,9 +316,13 @@ class ConversationListScreen extends ConsumerWidget {
                             children: [
                               const Icon(Icons.cloud_off_outlined, size: 48, color: Colors.redAccent),
                               const SizedBox(height: 16),
-                              const Text(
+                              Text(
                                 'Không tải được danh sách',
-                                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 16,
+                                  color: isDark ? Colors.white : Colors.black87,
+                                ),
                               ),
                               const SizedBox(height: 8),
                               Text(
@@ -180,15 +330,19 @@ class ConversationListScreen extends ConsumerWidget {
                                     ? 'Kiểm tra kết nối mạng và thử lại.'
                                     : 'Có lỗi xảy ra. Vui lòng thử lại sau.',
                                 textAlign: TextAlign.center,
-                                style: TextStyle(color: Colors.white.withValues(alpha: 0.5)),
+                                style: TextStyle(
+                                  color: isDark ? Colors.white.withValues(alpha: 0.5) : Colors.black54,
+                                ),
                               ),
                               const SizedBox(height: 20),
                               SizedBox(
                                 width: 140,
                                 child: NeonButton(
                                   onPressed: () => ref.read(conversationsNotifierProvider.notifier).refresh(),
-                                  gradientColors: const [AppTheme.neonCyan, AppTheme.neonBlue],
-                                  glowColor: AppTheme.neonCyan,
+                                  gradientColors: isDark
+                                      ? const [AppTheme.neonCyan, AppTheme.neonBlue]
+                                      : [Theme.of(context).colorScheme.primary, Theme.of(context).colorScheme.primaryContainer],
+                                  glowColor: isDark ? AppTheme.neonCyan : Theme.of(context).colorScheme.primary,
                                   child: const Text('THỬ LẠI'),
                                 ),
                               ),
@@ -199,32 +353,38 @@ class ConversationListScreen extends ConsumerWidget {
                     ),
                   ),
                   data: (conversations) => RefreshIndicator(
-                    color: AppTheme.neonCyan,
-                    backgroundColor: AppTheme.darkSurface,
+                    color: isDark ? AppTheme.neonCyan : Theme.of(context).colorScheme.primary,
+                    backgroundColor: isDark ? AppTheme.darkSurface : Colors.white,
                     onRefresh: () => ref.read(conversationsNotifierProvider.notifier).refresh(),
                     child: conversations.isEmpty
                         ? ListView(
                             physics: const AlwaysScrollableScrollPhysics(),
                             children: [
                               SizedBox(height: MediaQuery.of(context).size.height * 0.25),
-                              const Center(
+                              Center(
                                 child: Column(
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
-                                    Icon(Icons.chat_bubble_outline, size: 64, color: AppTheme.neonPurple),
-                                    SizedBox(height: 16),
+                                    Icon(
+                                      Icons.chat_bubble_outline,
+                                      size: 64,
+                                      color: isDark ? AppTheme.neonPurple : Theme.of(context).colorScheme.primary.withValues(alpha: 0.6),
+                                    ),
+                                    const SizedBox(height: 16),
                                     Text(
                                       'Chưa có cuộc trò chuyện nào',
                                       style: TextStyle(
                                         fontSize: 16,
                                         fontWeight: FontWeight.bold,
-                                        color: Colors.white70,
+                                        color: isDark ? Colors.white70 : Colors.black87,
                                       ),
                                     ),
-                                    SizedBox(height: 8),
+                                    const SizedBox(height: 8),
                                     Text(
                                       'Nhấn nút "+" bên dưới để bắt đầu!',
-                                      style: TextStyle(color: Colors.white38),
+                                      style: TextStyle(
+                                        color: isDark ? Colors.white38 : Colors.black38,
+                                      ),
                                     ),
                                   ],
                                 ),
@@ -253,6 +413,7 @@ class ConversationListScreen extends ConsumerWidget {
 class _OfflineBanner extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Material(
       color: Colors.redAccent.withValues(alpha: 0.2),
       child: SafeArea(
@@ -270,7 +431,7 @@ class _OfflineBanner extends StatelessWidget {
               Text(
                 'Không có kết nối mạng',
                 style: TextStyle(
-                  color: Colors.white.withValues(alpha: 0.9),
+                  color: isDark ? Colors.white.withValues(alpha: 0.9) : Colors.redAccent.shade700,
                   fontSize: 13,
                   fontWeight: FontWeight.w600,
                 ),
@@ -292,6 +453,7 @@ class _ConversationTile extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final authState = ref.watch(authNotifierProvider).valueOrNull;
     final currentUserId = authState is AuthAuthenticated ? authState.user.id : '';
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     // Find the other participant's ID
     final others = conv.participants.where((p) => p != currentUserId).toList();
@@ -315,14 +477,25 @@ class _ConversationTile extends ConsumerWidget {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
       decoration: BoxDecoration(
-        color: AppTheme.darkSurface.withValues(alpha: 0.4),
+        color: isDark 
+            ? AppTheme.darkSurface.withValues(alpha: 0.4)
+            : Colors.white,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
           color: conv.unreadCount > 0 
-              ? AppTheme.neonCyan.withValues(alpha: 0.25)
-              : AppTheme.darkBorder.withValues(alpha: 0.2),
+              ? (isDark ? AppTheme.neonCyan : Theme.of(context).colorScheme.primary).withValues(alpha: 0.25)
+              : (isDark ? AppTheme.darkBorder.withValues(alpha: 0.2) : Colors.black.withValues(alpha: 0.05)),
           width: 1,
         ),
+        boxShadow: !isDark
+            ? [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.02),
+                  blurRadius: 6,
+                  offset: const Offset(0, 2),
+                )
+              ]
+            : null,
       ),
       child: Material(
         color: Colors.transparent,
@@ -340,26 +513,36 @@ class _ConversationTile extends ConsumerWidget {
                   shape: BoxShape.circle,
                   gradient: LinearGradient(
                     colors: conv.unreadCount > 0
-                        ? [AppTheme.neonCyan, AppTheme.neonPink]
-                        : [AppTheme.neonPurple.withValues(alpha: 0.6), AppTheme.darkBorder],
+                        ? [
+                            isDark ? AppTheme.neonCyan : Theme.of(context).colorScheme.primary,
+                            isDark ? AppTheme.neonPink : Theme.of(context).colorScheme.secondary,
+                          ]
+                        : [
+                            isDark ? AppTheme.neonPurple.withValues(alpha: 0.6) : Colors.grey.shade400,
+                            isDark ? AppTheme.darkBorder : Colors.grey.shade300,
+                          ],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: (isOnline ? AppTheme.onlineGreen : AppTheme.neonPurple).withValues(alpha: 0.15),
-                      blurRadius: 8,
-                      spreadRadius: 1,
-                    )
-                  ],
+                  boxShadow: isDark
+                      ? [
+                          BoxShadow(
+                            color: (isOnline ? AppTheme.onlineGreen : AppTheme.neonPurple).withValues(alpha: 0.15),
+                            blurRadius: 8,
+                            spreadRadius: 1,
+                          )
+                        ]
+                      : null,
                 ),
                 padding: const EdgeInsets.all(2),
                 child: CircleAvatar(
-                  backgroundColor: AppTheme.darkSurface,
+                  backgroundColor: isDark ? AppTheme.darkSurface : Colors.grey.shade100,
                   child: Text(
                     tileLetter,
                     style: TextStyle(
-                      color: conv.unreadCount > 0 ? Colors.white : Colors.white70,
+                      color: conv.unreadCount > 0 
+                          ? Colors.white 
+                          : (isDark ? Colors.white70 : Colors.black87),
                       fontWeight: FontWeight.bold,
                       fontSize: 16,
                     ),
@@ -376,7 +559,10 @@ class _ConversationTile extends ConsumerWidget {
                     decoration: BoxDecoration(
                       color: AppTheme.onlineGreen,
                       shape: BoxShape.circle,
-                      border: Border.all(color: AppTheme.obsidianBackground, width: 2),
+                      border: Border.all(
+                        color: isDark ? AppTheme.obsidianBackground : Colors.white,
+                        width: 2,
+                      ),
                       boxShadow: [
                         BoxShadow(
                           color: AppTheme.onlineGreen.withValues(alpha: 0.6),
@@ -394,7 +580,9 @@ class _ConversationTile extends ConsumerWidget {
             overflow: TextOverflow.ellipsis,
             style: TextStyle(
               fontWeight: conv.unreadCount > 0 ? FontWeight.bold : FontWeight.w600,
-              color: conv.unreadCount > 0 ? Colors.white : Colors.white.withValues(alpha: 0.85),
+              color: conv.unreadCount > 0 
+                  ? (isDark ? Colors.white : Colors.black)
+                  : (isDark ? Colors.white.withValues(alpha: 0.85) : Colors.black87),
               fontSize: 15,
             ),
           ),
@@ -407,8 +595,8 @@ class _ConversationTile extends ConsumerWidget {
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(
                       color: conv.unreadCount > 0 
-                          ? Colors.white.withValues(alpha: 0.8)
-                          : Colors.white.withValues(alpha: 0.45),
+                          ? (isDark ? Colors.white.withValues(alpha: 0.8) : Colors.black87)
+                          : (isDark ? Colors.white.withValues(alpha: 0.45) : Colors.black54),
                       fontSize: 13,
                     ),
                   ),
@@ -418,14 +606,16 @@ class _ConversationTile extends ConsumerWidget {
               ? Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
-                    color: AppTheme.neonPink,
+                    color: isDark ? AppTheme.neonPink : Theme.of(context).colorScheme.secondary,
                     borderRadius: BorderRadius.circular(10),
-                    boxShadow: [
-                      BoxShadow(
-                        color: AppTheme.neonPink.withValues(alpha: 0.4),
-                        blurRadius: 8,
-                      ),
-                    ],
+                    boxShadow: isDark
+                        ? [
+                            BoxShadow(
+                              color: AppTheme.neonPink.withValues(alpha: 0.4),
+                              blurRadius: 8,
+                            ),
+                          ]
+                        : null,
                   ),
                   child: Text(
                     '${conv.unreadCount}',
@@ -443,3 +633,104 @@ class _ConversationTile extends ConsumerWidget {
     );
   }
 }
+
+class _ThemeOptionCard extends ConsumerWidget {
+  final String title;
+  final String subtitle;
+  final IconData icon;
+  final ThemeMode themeMode;
+  final Color activeColor;
+
+  const _ThemeOptionCard({
+    required this.title,
+    required this.subtitle,
+    required this.icon,
+    required this.themeMode,
+    required this.activeColor,
+  });
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final currentMode = ref.watch(themeModeNotifierProvider);
+    final isSelected = currentMode == themeMode;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return GestureDetector(
+      onTap: () => ref.read(themeModeNotifierProvider.notifier).setThemeMode(themeMode),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: isSelected
+              ? activeColor.withValues(alpha: isDark ? 0.08 : 0.05)
+              : (isDark ? AppTheme.darkSurface : Colors.grey.shade50),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: isSelected
+                ? activeColor.withValues(alpha: 0.6)
+                : (isDark ? AppTheme.darkBorder : Colors.black.withValues(alpha: 0.08)),
+            width: isSelected ? 2 : 1.5,
+          ),
+          boxShadow: isSelected
+              ? [
+                  BoxShadow(
+                    color: activeColor.withValues(alpha: 0.15),
+                    blurRadius: 10,
+                    spreadRadius: 0.5,
+                  )
+                ]
+              : null,
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: isSelected
+                    ? activeColor.withValues(alpha: 0.15)
+                    : (isDark ? Colors.white.withValues(alpha: 0.05) : Colors.black.withValues(alpha: 0.03)),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                icon,
+                color: isSelected ? activeColor : (isDark ? Colors.white54 : Colors.black54),
+                size: 24,
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.bold,
+                      color: isDark ? Colors.white : Colors.black87,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    subtitle,
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: isDark ? Colors.white54 : Colors.black54,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            if (isSelected)
+              Icon(
+                Icons.check_circle_rounded,
+                color: activeColor,
+                size: 22,
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+

@@ -1,14 +1,68 @@
-name: ci
+name: CI
+
 on:
+  push:
+    branches: [main, develop]
   pull_request:
-    branches: [ main ]
+    branches: [main]
+
 jobs:
-  build:
+  # ── NestJS Auth Service ────────────────────────────────────────────────────
+  auth-service:
+    name: Auth Service (NestJS)
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/server/auth-service
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
-        with: { node-version: 20 }
+        with:
+          node-version: 20
       - run: corepack enable
-      - run: pnpm i
-      - run: pnpm -r run build || true
+      - name: Install dependencies
+        run: cd ../../../ && pnpm install --frozen-lockfile
+      - name: Build
+        run: pnpm run build
+      - name: Test
+        run: pnpm run test --passWithNoTests
+
+  # ── Spring Boot Chat Service ───────────────────────────────────────────────
+  chat-service:
+    name: Chat Service (Spring Boot)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/server/chat-service
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          java-version: 21
+          distribution: temurin
+          cache: maven
+      - name: Build & Test
+        run: mvn clean test -q
+        env:
+          JWT_ACCESS_SECRET: ci_test_secret_must_be_at_least_32_chars_long
+
+  # ── Flutter Client ─────────────────────────────────────────────────────────
+  flutter-client:
+    name: Flutter Client
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/client
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: "3.44.0"
+          channel: stable
+          cache: true
+      - name: Get dependencies
+        run: flutter pub get
+      - name: Analyze
+        run: flutter analyze
+      - name: Test
+        run: flutter test --coverage

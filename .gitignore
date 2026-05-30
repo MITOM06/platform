@@ -64,6 +64,15 @@ CLAUDE.local.md
 
 # ─── Personal / Project docs (không commit) ──────────────────────────────────
 *_evaluation.pdf
+project_tree.txt
+
+# ─── React Native (legacy reference — đã migrate sang Flutter) ───────────────
+apps/client/src/
+
+# ─── Flutter IDE / build artifacts ───────────────────────────────────────────
+apps/client/.metadata
+apps/client/.flutter-plugins
+apps/client/.flutter-plugins-dependencies
 
 # ─── IDE ─────────────────────────────────────────────────────────────────────
 .idea/

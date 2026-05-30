@@ -100,13 +100,40 @@ Response 200: { "success": true }
 
 ---
 
-## User Presence
+## Users (auth-service — port 3001)
+
+### Search users
+```
+GET /api/users/search?q={query}
+Auth: required (Bearer token → auth-service)
+Response 200: [ { "_id": "string", "email": "string", "displayName": "string" }, ... ]
+Note: regex match email OR displayName, limit 10, password field excluded
+```
+
+### Get user profile
+```
+GET /api/users/{id}
+Auth: required
+Response 200: { "_id": "string", "email": "string", "displayName": "string", "avatarUrl": "string|null" }
+```
+
+### Get current user
+```
+GET /api/users/me
+Auth: required
+Response 200: same as above for authenticated user
+```
+
+---
+
+## User Presence (chat-service — port 8080)
 
 ### Get user status
 ```
 GET /api/users/{userId}/status
 Auth: required
-Response 200: { "userId": "string", "online": true, "lastSeen": "ISO8601" }
+Response 200: { "userId": "string", "online": true }
+Note: online=false khi Redis key không tồn tại (TTL 5 phút, refresh mỗi STOMP frame)
 ```
 
 ---
@@ -142,7 +169,7 @@ Typing indicator: /topic/conversation/{conversationId}/typing
   Payload: { "userId": "string", "typing": true }
 
 Personal notifs:  /user/queue/notifications
-  Payload: { "type": "new_conversation | message", "data": {...} }
+  Payload: { "type": "NEW_MESSAGE", "conversationId": "string", "senderName": "string" }
 ```
 
 ---

@@ -81,15 +81,19 @@ class _PonLogoState extends State<PonLogo> with SingleTickerProviderStateMixin {
                   child: Container(
                     width: widget.size * 0.82,
                     height: widget.size * 0.82,
-                    decoration: const BoxDecoration(
+                    decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: AppTheme.obsidianBackground,
+                      color: Theme.of(context).brightness == Brightness.dark
+                          ? AppTheme.obsidianBackground
+                          : Colors.white,
                     ),
                     child: Center(
                       child: Icon(
                         Icons.bolt_rounded,
                         size: widget.size * 0.5,
-                        color: Colors.white,
+                        color: Theme.of(context).brightness == Brightness.dark
+                            ? Colors.white
+                            : Theme.of(context).colorScheme.primary,
                       ),
                     ),
                   ),
@@ -101,8 +105,11 @@ class _PonLogoState extends State<PonLogo> with SingleTickerProviderStateMixin {
               // Glowing Brand Name "PON"
               ShaderMask(
                 shaderCallback: (bounds) {
-                  return const LinearGradient(
-                    colors: [AppTheme.neonCyan, Colors.white, AppTheme.neonPink],
+                  final isDark = Theme.of(context).brightness == Brightness.dark;
+                  return LinearGradient(
+                    colors: isDark
+                        ? const [AppTheme.neonCyan, Colors.white, AppTheme.neonPink]
+                        : [Theme.of(context).colorScheme.primary, Theme.of(context).colorScheme.secondary],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   ).createShader(bounds);
@@ -114,16 +121,18 @@ class _PonLogoState extends State<PonLogo> with SingleTickerProviderStateMixin {
                     fontWeight: FontWeight.w900,
                     color: Colors.white,
                     letterSpacing: 4,
-                    shadows: [
-                      Shadow(
-                        color: AppTheme.neonCyan.withValues(alpha: 0.8),
-                        blurRadius: _glowAnimation.value / 2,
-                      ),
-                      Shadow(
-                        color: AppTheme.neonPink.withValues(alpha: 0.6),
-                        blurRadius: _glowAnimation.value,
-                      ),
-                    ],
+                    shadows: Theme.of(context).brightness == Brightness.dark
+                        ? [
+                            Shadow(
+                              color: AppTheme.neonCyan.withValues(alpha: 0.8),
+                              blurRadius: _glowAnimation.value / 2,
+                            ),
+                            Shadow(
+                              color: AppTheme.neonPink.withValues(alpha: 0.6),
+                              blurRadius: _glowAnimation.value,
+                            ),
+                          ]
+                        : null,
                   ),
                 ),
               ),
@@ -133,7 +142,9 @@ class _PonLogoState extends State<PonLogo> with SingleTickerProviderStateMixin {
                 style: TextStyle(
                   fontSize: 10,
                   fontWeight: FontWeight.w600,
-                  color: Colors.white.withValues(alpha: 0.4),
+                  color: Theme.of(context).brightness == Brightness.dark
+                      ? Colors.white.withValues(alpha: 0.4)
+                      : Colors.black.withValues(alpha: 0.4),
                   letterSpacing: 2,
                 ),
               ),
@@ -170,10 +181,11 @@ class NeonCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(borderRadius),
-        boxShadow: glowStrength > 0
+        boxShadow: glowStrength > 0 && isDark
             ? [
                 BoxShadow(
                   color: glowColor.withValues(alpha: 0.08),
@@ -189,10 +201,13 @@ class NeonCard extends StatelessWidget {
           filter: ImageFilter.blur(sigmaX: blur, sigmaY: blur),
           child: Container(
             decoration: BoxDecoration(
-              color: AppTheme.darkSurface.withValues(alpha: bgOpacity),
+              color: Theme.of(context).colorScheme.surface.withValues(alpha: bgOpacity),
               borderRadius: BorderRadius.circular(borderRadius),
               border: Border.all(
-                color: AppTheme.darkBorder.withValues(alpha: borderOpacity),
+                color: (isDark
+                        ? AppTheme.darkBorder
+                        : Theme.of(context).colorScheme.primary.withValues(alpha: 0.15))
+                    .withValues(alpha: borderOpacity),
                 width: 1.5,
               ),
             ),
@@ -233,6 +248,7 @@ class _NeonButtonState extends State<NeonButton> {
   @override
   Widget build(BuildContext context) {
     final isDisabled = widget.onPressed == null || widget.isLoading;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return GestureDetector(
       onTapDown: (_) => setState(() => _isPressed = true),
@@ -247,12 +263,14 @@ class _NeonButtonState extends State<NeonButton> {
             borderRadius: BorderRadius.circular(18),
             gradient: LinearGradient(
               colors: isDisabled
-                  ? [Colors.grey.shade800, Colors.grey.shade900]
+                  ? (isDark
+                      ? [Colors.grey.shade800, Colors.grey.shade900]
+                      : [Colors.grey.shade300, Colors.grey.shade400])
                   : widget.gradientColors,
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
-            boxShadow: isDisabled
+            boxShadow: isDisabled || !isDark
                 ? null
                 : [
                     BoxShadow(

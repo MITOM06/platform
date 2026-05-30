@@ -2,59 +2,54 @@
 
 ## Tech Stack
 
-- **Flutter SDK 3.x**, **Dart 3.x**
-- State management: **Riverpod** (flutter_riverpod + riverpod_annotation)
-- HTTP: **Dio** với interceptor tự động attach JWT
-- WebSocket: **stomp_dart_client** (STOMP protocol)
+- **Flutter SDK 3.44.0**, **Dart 3.x**
+- State management: **Riverpod** (`flutter_riverpod` + `riverpod_annotation`)
+- HTTP: **Dio** với interceptor auto-attach JWT
+- WebSocket: **stomp_dart_client** (STOMP over raw WebSocket)
 - Navigation: **go_router**
 - Local storage: **flutter_secure_storage** (tokens), **shared_preferences** (settings)
-- UI: Material Design 3
+- UI: Material 3 + Dark Neon Theme (NeonButton, NeonTextField, NeonCard)
 
 ## API Endpoints
 
 | Service | Base URL | Dùng cho |
 |---------|----------|---------|
-| auth-service | `http://localhost:3001` | Login, Register, OTP, Token refresh |
-| chat-service | `http://localhost:8080` | Conversations, Messages, REST |
-| chat WebSocket | `ws://localhost:8080/ws` | Realtime chat (STOMP) |
+| auth-service | `http://localhost:3001` | Login, Register, OTP, Token refresh, User search |
+| chat-service | `http://localhost:8080` | Conversations, Messages, User status |
+| chat WebSocket | `ws://localhost:8080/ws` | Realtime STOMP (raw WS, không SockJS) |
 
-## Màn hình cần implement
+## Màn hình đã implement ✅
 
-Auth flow (từ React Native cũ port sang — xem `apps/client/src/screens/Auth/` để tham khảo):
-- `LoginScreen` → `POST /auth/login`
-- `RegisterScreen` → `POST /auth/register`
-- `VerifyOtpScreen` → `POST /auth/verify-otp`
-- `ForgotPasswordScreen` → `POST /auth/forgot-password`
-
-Chat flow (viết mới):
-- `ConversationListScreen` → `GET /api/conversations`
-- `ChatScreen` → WebSocket STOMP + `GET /api/conversations/{id}/messages`
-- `SettingsScreen`
+- `LoginScreen`, `RegisterScreen`, `VerifyOtpScreen`, `ForgotPasswordScreen`, `NewPasswordScreen`
+- `ConversationListScreen`, `ChatScreen`, `NewConversationScreen`, `SettingsScreen`
 
 ## Cấu trúc thư mục Flutter
 
 ```
 lib/
 ├── core/
-│   ├── api/          # Dio client + interceptors
-│   ├── router/       # go_router config
-│   └── theme/        # AppTheme, Colors
+│   ├── api/          # DioClient (authDio + chatDio) + interceptors
+│   ├── router/       # go_router + RouterNotifier
+│   ├── theme/        # AppTheme (neon dark)
+│   └── widgets/      # NeonButton, NeonTextField, NeonCard, PonLogo
 ├── features/
 │   ├── auth/
-│   │   ├── data/     # AuthRepository, AuthApi
-│   │   ├── domain/   # AuthState, User model
-│   │   └── ui/       # Screens, Widgets
+│   │   ├── data/     # AuthRepository (login/register/OTP/searchUsers)
+│   │   ├── domain/   # AuthState, UserModel, AuthNotifier
+│   │   └── ui/       # 5 auth screens
 │   └── chat/
-│       ├── data/     # ChatRepository, StompService
-│       ├── domain/   # ChatState, Message model
-│       └── ui/       # Screens, Widgets
+│       ├── data/     # ChatRepository, StompService (keepAlive)
+│       ├── domain/   # ChatState, ChatNotifier, ConversationsNotifier
+│       └── ui/       # ChatScreen, ConversationListScreen, NewConversationScreen + widgets
 └── main.dart
 ```
 
 ## Code Conventions
 
-- Mỗi feature tách theo data/domain/ui
-- Provider đặt trong file `*_provider.dart` riêng
-- Models dùng `freezed` hoặc `copyWith` thủ công
-- Không hard-code strings, dùng `AppStrings` constants
-- Xử lý loading/error state trong mọi async operation
+- Feature-based layout: `lib/features/<name>/{data,domain,ui}/`
+- Business logic trong provider/notifier, KHÔNG trong widget
+- Mỗi screen `extends ConsumerWidget` hoặc `ConsumerStatefulWidget`
+- Async state: `AsyncValue.when(data:, loading:, error:)` — không để trống error case
+- Navigation: `go_router` only — không dùng `Navigator.push` trực tiếp
+- Null safety: full Dart 3 — không `!` force-unwrap không có lý do
+- `withValues(alpha:)` thay `withOpacity()` (deprecated Flutter 3.44)

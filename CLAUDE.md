@@ -11,11 +11,11 @@
 
 ## CRITICAL RULES
 
-- **KHÔNG sửa `apps/server/auth-service/`** — đã hoàn chỉnh, không đụng vào trừ khi được yêu cầu rõ ràng.
-- **`apps/server/chat-service/`** — đang replace toàn bộ Go code bằng Spring Boot 3. Xóa Go khi bắt đầu.
-- **`apps/client/`** — đang replace React Native bằng Flutter. React Native cũ giữ tham khảo logic.
+- **KHÔNG sửa `apps/server/auth-service/`** trừ khi được yêu cầu rõ ràng — service đã hoàn chỉnh.
+- **`apps/server/chat-service/`** — Spring Boot 3 (Go đã bị xóa, migration hoàn thành).
+- **`apps/client/`** — Flutter (React Native đã replace, migration hoàn thành).
 - MongoDB database name: `platform` — dùng chung cả 2 services.
-- JWT secret phải **giống nhau** giữa auth-service và chat-service.
+- JWT env var: `JWT_ACCESS_SECRET` — phải **giống nhau** giữa 2 services.
 - Always check existing files before creating new ones.
 - Always run build/test after changes to verify.
 
@@ -36,10 +36,11 @@ Start infra: `docker compose -f infra/docker-compose/compose.yml up -d`
 - Java: **Maven**
 - Flutter: **flutter pub**
 
-## What's Being Built (PRJ4 — Java Enterprise)
+## Stack (PRJ4 — Java Enterprise) — Sprint 6 hoàn thành
 
-1. **Spring Boot 3 chat-service**: WebSocket (STOMP) + REST API + Spring Data MongoDB + Spring Security JWT
-2. **Flutter client**: Auth flow + Chat UI + Riverpod state management
+- **Spring Boot 3 chat-service**: WebSocket (STOMP) + REST API + MongoDB + Redis + JWT validation ✅
+- **Flutter client**: Neon UI + Auth flow + Chat UI + Riverpod + STOMP wire ✅
+- **NestJS auth-service**: JWT, OTP, refresh token, user search API ✅
 
 ## Key Paths
 
