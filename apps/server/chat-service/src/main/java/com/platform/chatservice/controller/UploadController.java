@@ -40,11 +40,13 @@ public class UploadController {
             throw new BadRequestException("File is empty");
         }
 
-        // Chấp nhận mọi định dạng ảnh (png, jpg, jpeg, gif, webp, bmp, heic, ...).
+        // Chấp nhận ảnh (png, jpg, gif, webp, ...) lẫn video (mp4, mov, webm, ...).
         // Một số client gửi contentType chung chung → fallback dò theo đuôi file.
         String contentType = resolveContentType(file);
-        if (contentType == null || !contentType.toLowerCase().startsWith("image/")) {
-            throw new BadRequestException("Only image files are allowed");
+        if (contentType == null
+                || !(contentType.toLowerCase().startsWith("image/")
+                  || contentType.toLowerCase().startsWith("video/"))) {
+            throw new BadRequestException("Only image or video files are allowed");
         }
 
         var objectId = gridFsTemplate.store(
@@ -58,7 +60,9 @@ public class UploadController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Resource> getFile(@PathVariable String id) {
+    public ResponseEntity<Resource> getFile(
+            @PathVariable String id,
+            @RequestParam(name = "download", required = false) boolean download) {
         ObjectId objectId;
         try {
             objectId = new ObjectId(id);
@@ -87,10 +91,15 @@ public class UploadController {
             // contentType không hợp lệ → giữ octet-stream
         }
 
+        // download=true → buộc trình duyệt/thiết bị tải file về (attachment);
+        // mặc định inline để hiển thị ngay trong app.
+        String disposition = (download ? "attachment" : "inline")
+            + "; filename=\"" + resource.getFilename() + "\"";
+
         try {
             return ResponseEntity.ok()
                 .contentType(mediaType)
-                .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + resource.getFilename() + "\"")
+                .header(HttpHeaders.CONTENT_DISPOSITION, disposition)
                 .body(new InputStreamResource(resource.getInputStream()));
         } catch (IOException e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
@@ -99,7 +108,9 @@ public class UploadController {
 
     private String resolveContentType(MultipartFile file) {
         String contentType = file.getContentType();
-        if (contentType != null && contentType.toLowerCase().startsWith("image/")) {
+        if (contentType != null
+                && (contentType.toLowerCase().startsWith("image/")
+                 || contentType.toLowerCase().startsWith("video/"))) {
             return contentType;
         }
         // Fallback: dò theo đuôi tên file khi client không gửi đúng content-type
@@ -108,6 +119,7 @@ public class UploadController {
             return contentType;
         }
         String lower = name.toLowerCase();
+        // Ảnh
         if (lower.endsWith(".png")) return "image/png";
         if (lower.endsWith(".jpg") || lower.endsWith(".jpeg")) return "image/jpeg";
         if (lower.endsWith(".gif")) return "image/gif";
@@ -116,6 +128,14 @@ public class UploadController {
         if (lower.endsWith(".heic")) return "image/heic";
         if (lower.endsWith(".heif")) return "image/heif";
         if (lower.endsWith(".svg")) return "image/svg+xml";
+        // Video
+        if (lower.endsWith(".mp4")) return "video/mp4";
+        if (lower.endsWith(".mov")) return "video/quicktime";
+        if (lower.endsWith(".webm")) return "video/webm";
+        if (lower.endsWith(".mkv")) return "video/x-matroska";
+        if (lower.endsWith(".avi")) return "video/x-msvideo";
+        if (lower.endsWith(".m4v")) return "video/x-m4v";
+        if (lower.endsWith(".3gp")) return "video/3gpp";
         return contentType;
     }
 }

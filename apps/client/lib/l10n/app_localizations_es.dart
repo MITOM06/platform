@@ -500,4 +500,19 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get dateYesterday => 'Ayer';
+
+  @override
+  String get attachPhoto => 'Foto';
+
+  @override
+  String get attachVideo => 'Vídeo';
+
+  @override
+  String get uploading => 'Subiendo…';
+
+  @override
+  String get downloadMedia => 'Descargar';
+
+  @override
+  String get attachmentLabel => '📎 Adjunto';
 }

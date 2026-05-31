@@ -488,4 +488,19 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get dateYesterday => '어제';
+
+  @override
+  String get attachPhoto => '사진';
+
+  @override
+  String get attachVideo => '동영상';
+
+  @override
+  String get uploading => '업로드 중…';
+
+  @override
+  String get downloadMedia => '다운로드';
+
+  @override
+  String get attachmentLabel => '📎 첨부파일';
 }

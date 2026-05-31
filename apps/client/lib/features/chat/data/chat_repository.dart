@@ -44,12 +44,13 @@ class ChatRepository {
   Future<MessageModel> sendMessageRest(
     String conversationId,
     String content, {
+    String type = 'text',
     String? replyToId,
   }) async {
     final response = await _dio.post('/api/messages', data: {
       'conversationId': conversationId,
       'content': content,
-      'type': 'text',
+      'type': type,
       if (replyToId != null) 'replyToId': replyToId,
     });
     return MessageModel.fromJson(response.data as Map<String, dynamic>);
@@ -177,14 +178,14 @@ class ChatRepository {
 
   Future<String> uploadFile(XFile file) async {
     // Đọc bytes thay vì fromFile(path) để hoạt động trên cả web (blob URL,
-    // không có filesystem) lẫn mobile, hỗ trợ mọi định dạng ảnh.
+    // không có filesystem) lẫn mobile, hỗ trợ ảnh lẫn video.
     final bytes = await file.readAsBytes();
     final filename = file.name;
     final formData = FormData.fromMap({
       'file': MultipartFile.fromBytes(
         bytes,
         filename: filename,
-        contentType: _imageMediaType(filename),
+        contentType: _mediaMediaType(filename),
       ),
     });
     final response = await _dio.post('/api/uploads', data: formData);
@@ -192,9 +193,10 @@ class ChatRepository {
     return data['url'] as String;
   }
 
-  DioMediaType? _imageMediaType(String filename) {
+  DioMediaType? _mediaMediaType(String filename) {
     final ext = filename.toLowerCase().split('.').last;
     switch (ext) {
+      // Ảnh
       case 'png':
         return DioMediaType('image', 'png');
       case 'jpg':
@@ -210,6 +212,21 @@ class ChatRepository {
         return DioMediaType('image', 'heic');
       case 'heif':
         return DioMediaType('image', 'heif');
+      // Video
+      case 'mp4':
+        return DioMediaType('video', 'mp4');
+      case 'mov':
+        return DioMediaType('video', 'quicktime');
+      case 'webm':
+        return DioMediaType('video', 'webm');
+      case 'mkv':
+        return DioMediaType('video', 'x-matroska');
+      case 'avi':
+        return DioMediaType('video', 'x-msvideo');
+      case 'm4v':
+        return DioMediaType('video', 'x-m4v');
+      case '3gp':
+        return DioMediaType('video', '3gpp');
       default:
         return null;
     }

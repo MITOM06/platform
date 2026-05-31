@@ -547,7 +547,9 @@ class _ConversationTile extends ConsumerWidget {
               ? Padding(
                   padding: const EdgeInsets.only(top: 4.0),
                   child: Text(
-                    conv.lastMessage!.content,
+                    conv.lastMessage!.content.contains('/api/uploads/')
+                        ? context.l10n.attachmentLabel
+                        : conv.lastMessage!.content,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(

@@ -1,5 +1,6 @@
 import 'package:emoji_picker_flutter/emoji_picker_flutter.dart';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -89,6 +90,62 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
     ref
         .read(chatNotifierProvider(widget.conversationId).notifier)
         .sendMessage(content);
+  }
+
+  /// Let the user pick an image or video, upload it to GridFS, then send a
+  /// message whose `content` is the upload URL and `type` is image/video.
+  Future<void> _pickAndSendMedia() async {
+    final l10n = context.l10n;
+    final source = await showModalBottomSheet<String>(
+      context: context,
+      backgroundColor: AppTheme.darkSurface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (ctx) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const SizedBox(height: 12),
+            ListTile(
+              leading: const Icon(Icons.photo_outlined, color: AppTheme.neonCyan),
+              title: Text(l10n.attachPhoto,
+                  style: const TextStyle(color: Colors.white)),
+              onTap: () => Navigator.pop(ctx, 'image'),
+            ),
+            ListTile(
+              leading:
+                  const Icon(Icons.videocam_outlined, color: AppTheme.neonPurple),
+              title: Text(l10n.attachVideo,
+                  style: const TextStyle(color: Colors.white)),
+              onTap: () => Navigator.pop(ctx, 'video'),
+            ),
+          ],
+        ),
+      ),
+    );
+    if (source == null || !mounted) return;
+
+    final picker = ImagePicker();
+    final XFile? file = source == 'video'
+        ? await picker.pickVideo(source: ImageSource.gallery)
+        : await picker.pickImage(source: ImageSource.gallery);
+    if (file == null || !mounted) return;
+
+    final messenger = ScaffoldMessenger.of(context);
+    messenger.showSnackBar(
+      SnackBar(content: Text(context.l10n.uploading)),
+    );
+    try {
+      final url = await ref.read(chatRepositoryProvider).uploadFile(file);
+      await ref
+          .read(chatNotifierProvider(widget.conversationId).notifier)
+          .sendMessage(url, type: source);
+    } catch (_) {
+      messenger.showSnackBar(
+        SnackBar(content: Text(l10n.uploadFailed)),
+      );
+    }
   }
 
   void _insertEmoji(String emoji) {
@@ -516,6 +573,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
               _InputBar(
                 controller: _textCtrl,
                 onSend: _onSend,
+                onAttach: _pickAndSendMedia,
                 emojiActive: _showEmoji,
                 onEmojiToggle: () {
                   FocusScope.of(context).unfocus();
@@ -641,6 +699,7 @@ class _TypingIndicator extends StatelessWidget {
 class _InputBar extends StatefulWidget {
   final TextEditingController controller;
   final VoidCallback onSend;
+  final VoidCallback onAttach;
   final ValueChanged<String> onChanged;
   final VoidCallback onEmojiToggle;
   final bool emojiActive;
@@ -648,6 +707,7 @@ class _InputBar extends StatefulWidget {
   const _InputBar({
     required this.controller,
     required this.onSend,
+    required this.onAttach,
     required this.onChanged,
     required this.onEmojiToggle,
     required this.emojiActive,
@@ -705,6 +765,13 @@ class _InputBarState extends State<_InputBar> {
                     ? Icons.keyboard_rounded
                     : Icons.emoji_emotions_outlined,
                 color: AppTheme.neonCyan.withValues(alpha: 0.8),
+              ),
+            ),
+            IconButton(
+              onPressed: widget.onAttach,
+              icon: Icon(
+                Icons.add_photo_alternate_outlined,
+                color: AppTheme.neonPurple.withValues(alpha: 0.85),
               ),
             ),
             Expanded(

@@ -164,5 +164,11 @@
   "lastSeenHours": "actif il y a {hours} h",
   "lastSeenDays": "actif il y a {days} j",
   "dateToday": "Aujourd'hui",
-  "dateYesterday": "Hier"
+  "dateYesterday": "Hier",
+
+  "attachPhoto": "Photo",
+  "attachVideo": "Vidéo",
+  "uploading": "Envoi…",
+  "downloadMedia": "Télécharger",
+  "attachmentLabel": "📎 Pièce jointe"
 }

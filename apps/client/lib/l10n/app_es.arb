@@ -164,5 +164,11 @@
   "lastSeenHours": "activo hace {hours} h",
   "lastSeenDays": "activo hace {days} d",
   "dateToday": "Hoy",
-  "dateYesterday": "Ayer"
+  "dateYesterday": "Ayer",
+
+  "attachPhoto": "Foto",
+  "attachVideo": "Vídeo",
+  "uploading": "Subiendo…",
+  "downloadMedia": "Descargar",
+  "attachmentLabel": "📎 Adjunto"
 }

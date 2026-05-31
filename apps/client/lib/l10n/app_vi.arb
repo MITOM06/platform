@@ -164,5 +164,11 @@
   "lastSeenHours": "hoạt động {hours} giờ trước",
   "lastSeenDays": "hoạt động {days} ngày trước",
   "dateToday": "Hôm nay",
-  "dateYesterday": "Hôm qua"
+  "dateYesterday": "Hôm qua",
+
+  "attachPhoto": "Ảnh",
+  "attachVideo": "Video",
+  "uploading": "Đang tải lên…",
+  "downloadMedia": "Tải về",
+  "attachmentLabel": "📎 Tệp đính kèm"
 }

@@ -172,6 +172,9 @@ class MessageModel {
   });
 
   bool get isSystem => type == 'system';
+  bool get isImage => type == 'image';
+  bool get isVideo => type == 'video';
+  bool get isMedia => isImage || isVideo;
 
   factory MessageModel.fromJson(Map<String, dynamic> json) {
     return MessageModel(

@@ -12,8 +12,8 @@ spring:
     default-property-inclusion: non_null
   servlet:
     multipart:
-      max-file-size: 20MB
-      max-request-size: 25MB
+      max-file-size: 100MB
+      max-request-size: 105MB
 
 app:
   jwt:

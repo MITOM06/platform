@@ -38,9 +38,12 @@ dependencies:
   # Emoji picker (message composer + reactions)
   emoji_picker_flutter: ^3.1.0
 
-  # Image picking & remote image caching (avatars)
+  # Image picking & remote image caching (avatars + chat media)
   image_picker: ^1.1.2
   cached_network_image: ^3.4.1
+
+  # Open / download media (image & video) cross-platform (web + mobile)
+  url_launcher: ^6.3.0
 
   # Icons
   cupertino_icons: ^1.0.8

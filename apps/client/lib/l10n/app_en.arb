@@ -206,5 +206,11 @@
     "placeholders": { "days": { "type": "int" } }
   },
   "dateToday": "Today",
-  "dateYesterday": "Yesterday"
+  "dateYesterday": "Yesterday",
+
+  "attachPhoto": "Photo",
+  "attachVideo": "Video",
+  "uploading": "Uploading…",
+  "downloadMedia": "Download",
+  "attachmentLabel": "📎 Attachment"
 }

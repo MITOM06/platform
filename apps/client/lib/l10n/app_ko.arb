@@ -164,5 +164,11 @@
   "lastSeenHours": "{hours}시간 전 활동",
   "lastSeenDays": "{days}일 전 활동",
   "dateToday": "오늘",
-  "dateYesterday": "어제"
+  "dateYesterday": "어제",
+
+  "attachPhoto": "사진",
+  "attachVideo": "동영상",
+  "uploading": "업로드 중…",
+  "downloadMedia": "다운로드",
+  "attachmentLabel": "📎 첨부파일"
 }

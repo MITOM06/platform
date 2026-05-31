@@ -26,7 +26,7 @@ public class Message {
     private String content;
 
     @Builder.Default
-    private String type = "text"; // "text" | "image" | "system"
+    private String type = "text"; // "text" | "image" | "video" | "system"
 
     @Builder.Default
     private List<String> readBy = new ArrayList<>();

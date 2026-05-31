@@ -164,5 +164,11 @@
   "lastSeenHours": "{hours} 時間前にオンライン",
   "lastSeenDays": "{days} 日前にオンライン",
   "dateToday": "今日",
-  "dateYesterday": "昨日"
+  "dateYesterday": "昨日",
+
+  "attachPhoto": "写真",
+  "attachVideo": "動画",
+  "uploading": "アップロード中…",
+  "downloadMedia": "ダウンロード",
+  "attachmentLabel": "📎 添付ファイル"
 }
