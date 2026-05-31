@@ -493,4 +493,19 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get dateYesterday => 'Yesterday';
+
+  @override
+  String get attachPhoto => 'Photo';
+
+  @override
+  String get attachVideo => 'Video';
+
+  @override
+  String get uploading => 'Uploading…';
+
+  @override
+  String get downloadMedia => 'Download';
+
+  @override
+  String get attachmentLabel => '📎 Attachment';
 }

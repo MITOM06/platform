@@ -367,7 +367,7 @@ class ChatNotifier extends _$ChatNotifier {
     }
   }
 
-  Future<void> sendMessage(String content) async {
+  Future<void> sendMessage(String content, {String type = 'text'}) async {
     final current = state.valueOrNull;
     if (current == null) return;
 
@@ -388,7 +388,7 @@ class ChatNotifier extends _$ChatNotifier {
       conversationId: conversationId,
       senderId: uid,
       content: content,
-      type: 'text',
+      type: type,
       readBy: [uid],
       createdAt: DateTime.now(),
       replyToId: replyTo?.id,
@@ -404,13 +404,15 @@ class ChatNotifier extends _$ChatNotifier {
 
     final stomp = ref.read(stompServiceProvider.notifier);
     if (stomp.isConnected) {
-      stomp.sendMessage(conversationId, content, replyToId: replyTo?.id);
+      stomp.sendMessage(conversationId, content,
+          type: type, replyToId: replyTo?.id);
     } else {
       // REST fallback when STOMP unavailable
       try {
         final sent = await ref
             .read(chatRepositoryProvider)
-            .sendMessageRest(conversationId, content, replyToId: replyTo?.id);
+            .sendMessageRest(conversationId, content,
+                type: type, replyToId: replyTo?.id);
         final c = state.valueOrNull;
         if (c != null) {
           state = AsyncData(c.copyWith(

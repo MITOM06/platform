@@ -1,7 +1,10 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:url_launcher/url_launcher.dart';
+import '../../../../core/api/dio_client.dart';
 import '../../../../core/l10n/l10n_ext.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../domain/chat_provider.dart';
@@ -85,7 +88,9 @@ class MessageBubble extends ConsumerWidget {
                           width: 1,
                         ),
                 ),
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 11),
+                padding: message.isMedia && !message.recalled
+                    ? const EdgeInsets.all(4)
+                    : const EdgeInsets.symmetric(horizontal: 16, vertical: 11),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisSize: MainAxisSize.min,
@@ -101,6 +106,10 @@ class MessageBubble extends ConsumerWidget {
                           fontStyle: FontStyle.italic,
                         ),
                       )
+                    else if (message.isImage)
+                      _ImageContent(url: message.content)
+                    else if (message.isVideo)
+                      _VideoContent(url: message.content)
                     else
                       Text(
                         message.content,
@@ -337,6 +346,165 @@ class _ReactionChips extends StatelessWidget {
               ),
             ),
         ],
+      ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Media (image / video) content + helpers
+// ---------------------------------------------------------------------------
+
+/// GridFS upload URLs are returned relative to the chat-service root.
+String _absoluteMediaUrl(String url) {
+  if (url.startsWith('http')) return url;
+  return '${DioClient.chatBaseUrl}$url';
+}
+
+/// Opens the media in an external browser/player (used to play videos and as a
+/// universal "view original" path on web + mobile).
+Future<void> _openExternally(String rawUrl) async {
+  final uri = Uri.parse(_absoluteMediaUrl(rawUrl));
+  await launchUrl(uri, mode: LaunchMode.externalApplication);
+}
+
+/// Triggers a download by hitting the upload endpoint with `?download=true`,
+/// which makes the server respond with `Content-Disposition: attachment`.
+Future<void> _downloadMedia(String rawUrl) async {
+  final base = _absoluteMediaUrl(rawUrl);
+  final sep = base.contains('?') ? '&' : '?';
+  final uri = Uri.parse('$base${sep}download=true');
+  await launchUrl(uri, mode: LaunchMode.externalApplication);
+}
+
+class _ImageContent extends StatelessWidget {
+  final String url;
+  const _ImageContent({required this.url});
+
+  @override
+  Widget build(BuildContext context) {
+    final abs = _absoluteMediaUrl(url);
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(16),
+      child: GestureDetector(
+        onTap: () => _openImageViewer(context, abs, url),
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxHeight: 280, maxWidth: 240),
+          child: CachedNetworkImage(
+            imageUrl: abs,
+            fit: BoxFit.cover,
+            placeholder: (_, __) => Container(
+              width: 220,
+              height: 180,
+              color: Colors.black26,
+              child: const Center(
+                child: SizedBox(
+                  width: 22,
+                  height: 22,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    valueColor: AlwaysStoppedAnimation<Color>(AppTheme.neonCyan),
+                  ),
+                ),
+              ),
+            ),
+            errorWidget: (_, __, ___) => Container(
+              width: 200,
+              height: 120,
+              color: Colors.black26,
+              child: const Icon(Icons.broken_image_outlined,
+                  color: Colors.white54),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _openImageViewer(BuildContext context, String absUrl, String rawUrl) {
+    showDialog(
+      context: context,
+      barrierColor: Colors.black,
+      builder: (ctx) => Stack(
+        children: [
+          Positioned.fill(
+            child: InteractiveViewer(
+              child: Center(
+                child: CachedNetworkImage(imageUrl: absUrl, fit: BoxFit.contain),
+              ),
+            ),
+          ),
+          Positioned(
+            top: 40,
+            right: 8,
+            child: Row(
+              children: [
+                IconButton(
+                  icon: const Icon(Icons.download_rounded, color: Colors.white),
+                  tooltip: ctx.l10n.downloadMedia,
+                  onPressed: () => _downloadMedia(rawUrl),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.close_rounded, color: Colors.white),
+                  onPressed: () => Navigator.pop(ctx),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _VideoContent extends StatelessWidget {
+  final String url;
+  const _VideoContent({required this.url});
+
+  @override
+  Widget build(BuildContext context) {
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(16),
+      child: GestureDetector(
+        onTap: () => _openExternally(url),
+        child: Container(
+          width: 220,
+          height: 150,
+          color: Colors.black,
+          child: Stack(
+            alignment: Alignment.center,
+            children: [
+              const Icon(Icons.movie_creation_outlined,
+                  color: Colors.white24, size: 48),
+              Container(
+                decoration: const BoxDecoration(
+                  color: Colors.black54,
+                  shape: BoxShape.circle,
+                ),
+                padding: const EdgeInsets.all(10),
+                child: const Icon(Icons.play_arrow_rounded,
+                    color: Colors.white, size: 34),
+              ),
+              Positioned(
+                top: 6,
+                right: 6,
+                child: Material(
+                  color: Colors.black45,
+                  shape: const CircleBorder(),
+                  child: InkWell(
+                    customBorder: const CircleBorder(),
+                    onTap: () => _downloadMedia(url),
+                    child: const Padding(
+                      padding: EdgeInsets.all(6),
+                      child: Icon(Icons.download_rounded,
+                          color: Colors.white, size: 18),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

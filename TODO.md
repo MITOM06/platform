@@ -1,6 +1,52 @@
 # TODO — PON PROJECT
 > **Workflow:** Gemini Code Assist (viết code) ↔ Tech Lead (bàn giao) ↔ Claude CLI (test & review)
-> **Cập nhật:** 2026-05-30 (Sprint 6 Bug Fixes - In Progress)
+> **Cập nhật:** 2026-05-31 (Sprint 8 — Media trong chat: ảnh/video)
+
+---
+
+## 🟢 SPRINT 8 — Gửi/nhận & tải Ảnh/Video trong cuộc trò chuyện (DONE) ✅ QC PASS [2026-05-31]
+
+> **Bối cảnh:** Sprint 7 ("upload ảnh") trước đó CHỈ làm avatar (ảnh đại diện qua GridFS).
+> Việc gửi ảnh/video **trong cuộc trò chuyện** và **tải media về** vẫn chưa có. Sprint 8 bổ sung trọn vẹn.
+
+### TASK 27 — Cho phép VIDEO ở backend (chat-service) `DONE`
+- **`controller/UploadController.java`**: `POST /api/uploads` chấp nhận cả `image/*` lẫn `video/*`
+  (fallback dò đuôi: mp4, mov, webm, mkv, avi, m4v, 3gp). Thêm `GET /api/uploads/{id}?download=true`
+  → trả `Content-Disposition: attachment` (ép tải về); mặc định `inline` để hiển thị trong app.
+- **`model/Message.java`**: `type` mở rộng `"text" | "image" | "video" | "system"`.
+- **`application.yml`**: multipart `max-file-size` 20MB→**100MB**, `max-request-size` 25MB→105MB (đủ cho video).
+
+### TASK 28 — Gửi ảnh/video trong chat (FE) `DONE`
+- **`pubspec.yaml`**: thêm `url_launcher` (mở/tải media cross-platform web+mobile, không phụ thuộc native nặng).
+- **`chat_repository.dart`**: `uploadFile` set đúng `DioMediaType` cho cả ảnh & video; `sendMessageRest` nhận `type`.
+- **`stomp_service.dart` / `chat_provider.dart`**: `sendMessage(...)` truyền `type` qua optimistic UI + STOMP/REST.
+- **`chat_screen.dart`**: nút đính kèm 📷 → bottom sheet chọn Ảnh/Video (`image_picker` pickImage/pickVideo)
+  → `uploadFile` → `sendMessage(url, type)`. Có SnackBar "Đang tải lên…" / lỗi `uploadFailed`.
+
+### TASK 29 — Hiển thị & tải media trong bubble (FE) `DONE`
+- **`message_bubble.dart`**: rẽ nhánh theo `type` — ảnh dùng `CachedNetworkImage` (bấm → full-screen
+  `InteractiveViewer` + nút tải); video là thẻ play, bấm mở trình phát ngoài + nút tải.
+- **Tải về**: `url_launcher` mở `?download=true` (web tải qua trình duyệt; mobile mở/tải qua app ngoài).
+- **`chat_state.dart`**: getter `isImage`/`isVideo`/`isMedia`.
+- **`conversation_list_screen.dart`**: preview lastMessage hiện "📎 Tệp đính kèm" thay vì URL thô.
+
+### TASK 30 — i18n (FE) `DONE`
+- Thêm 5 key vào **cả 7** ARB (`app_*.arb`): `attachPhoto`, `attachVideo`, `uploading`,
+  `downloadMedia`, `attachmentLabel`. Chạy `flutter gen-l10n`.
+
+### Ghi chú kỹ thuật
+- Video phát qua trình phát ngoài/trình duyệt (chưa nhúng inline) vì endpoint GridFS stream không hỗ trợ
+  HTTP range request → tránh lỗi `video_player` (đặc biệt trên web). Muốn phát inline cần thêm
+  `video_player`+`chewie` và bật range request ở backend.
+
+```
+[2026-05-31] QC Sprint 8:
+  chat-service: mvn test → 26/26 PASS, BUILD SUCCESS
+  auth-service: pnpm build → EXIT 0
+  client:       flutter analyze → No issues found | flutter test → 1/1 PASS
+```
+
+**Trạng thái: ✅ CLEAN — Gửi/nhận ảnh & video trong cuộc trò chuyện + tải media về hoạt động (web & mobile).**
 
 ---
 

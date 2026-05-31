@@ -488,4 +488,19 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get dateYesterday => '昨天';
+
+  @override
+  String get attachPhoto => '照片';
+
+  @override
+  String get attachVideo => '视频';
+
+  @override
+  String get uploading => '上传中…';
+
+  @override
+  String get downloadMedia => '下载';
+
+  @override
+  String get attachmentLabel => '📎 附件';
 }

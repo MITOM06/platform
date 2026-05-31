@@ -157,13 +157,18 @@ class StompService extends _$StompService {
     );
   }
 
-  void sendMessage(String conversationId, String content, {String? replyToId}) {
+  void sendMessage(
+    String conversationId,
+    String content, {
+    String type = 'text',
+    String? replyToId,
+  }) {
     _client?.send(
       destination: '/app/chat.send',
       body: jsonEncode({
         'conversationId': conversationId,
         'content': content,
-        'type': 'text',
+        'type': type,
         if (replyToId != null) 'replyToId': replyToId,
       }),
     );

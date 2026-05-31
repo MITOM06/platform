@@ -502,4 +502,19 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get dateYesterday => 'Hier';
+
+  @override
+  String get attachPhoto => 'Photo';
+
+  @override
+  String get attachVideo => 'Vidéo';
+
+  @override
+  String get uploading => 'Envoi…';
+
+  @override
+  String get downloadMedia => 'Télécharger';
+
+  @override
+  String get attachmentLabel => '📎 Pièce jointe';
 }

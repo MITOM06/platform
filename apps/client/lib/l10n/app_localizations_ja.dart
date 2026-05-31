@@ -488,4 +488,19 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get dateYesterday => '昨日';
+
+  @override
+  String get attachPhoto => '写真';
+
+  @override
+  String get attachVideo => '動画';
+
+  @override
+  String get uploading => 'アップロード中…';
+
+  @override
+  String get downloadMedia => 'ダウンロード';
+
+  @override
+  String get attachmentLabel => '📎 添付ファイル';
 }

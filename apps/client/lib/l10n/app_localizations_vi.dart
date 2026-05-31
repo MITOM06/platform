@@ -493,4 +493,19 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get dateYesterday => 'Hôm qua';
+
+  @override
+  String get attachPhoto => 'Ảnh';
+
+  @override
+  String get attachVideo => 'Video';
+
+  @override
+  String get uploading => 'Đang tải lên…';
+
+  @override
+  String get downloadMedia => 'Tải về';
+
+  @override
+  String get attachmentLabel => '📎 Tệp đính kèm';
 }
