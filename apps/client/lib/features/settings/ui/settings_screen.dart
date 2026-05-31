@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/l10n/l10n_ext.dart';
 import '../../../core/providers/locale_provider.dart';
@@ -7,6 +8,8 @@ import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/neon_widgets.dart';
 import '../../auth/domain/auth_provider.dart';
 import '../../auth/domain/auth_state.dart';
+import '../../chat/data/chat_repository.dart';
+import '../../chat/ui/widgets/conversation_avatar.dart';
 
 class SettingsScreen extends ConsumerStatefulWidget {
   const SettingsScreen({super.key});
@@ -46,7 +49,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     try {
       await ref
           .read(authNotifierProvider.notifier)
-          .updateDisplayName(name);
+          .updateProfile(displayName: name);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(context.l10n.nameUpdated)),
@@ -56,6 +59,26 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(context.l10n.errorWithMsg(e.toString()))),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  Future<void> _uploadAvatar() async {
+    final picker = ImagePicker();
+    final pickedFile = await picker.pickImage(source: ImageSource.gallery);
+    if (pickedFile == null) return;
+    
+    setState(() => _isLoading = true);
+    try {
+      final url = await ref.read(chatRepositoryProvider).uploadFile(pickedFile);
+      await ref.read(authNotifierProvider.notifier).updateProfile(avatarUrl: url);
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(context.l10n.uploadFailed)),
         );
       }
     } finally {
@@ -299,17 +322,29 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       shape: BoxShape.circle,
                       color: isDark ? AppTheme.obsidianBackground : Colors.white,
                     ),
-                    child: CircleAvatar(
-                      radius: 48,
-                      backgroundColor: isDark ? AppTheme.darkSurface : Colors.grey.shade100,
-                      child: Text(
-                        initials,
-                        style: TextStyle(
-                          fontSize: 36,
-                          fontWeight: FontWeight.w900,
-                          color: isDark ? AppTheme.neonCyan : Theme.of(context).colorScheme.primary,
-                          letterSpacing: 1.5,
-                        ),
+                    child: GestureDetector(
+                      onTap: _uploadAvatar,
+                      child: Stack(
+                        alignment: Alignment.center,
+                        children: [
+                          ConversationAvatar(
+                            avatarUrl: user?.avatarUrl,
+                            fallbackLetter: initials,
+                            size: 96,
+                          ),
+                          Positioned(
+                            bottom: 0,
+                            right: 0,
+                            child: Container(
+                              padding: const EdgeInsets.all(8),
+                              decoration: const BoxDecoration(
+                                color: AppTheme.neonCyan,
+                                shape: BoxShape.circle,
+                              ),
+                              child: const Icon(Icons.camera_alt, color: Colors.white, size: 16),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ),

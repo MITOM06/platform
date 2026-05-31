@@ -19,9 +19,21 @@ public class UserStatusController {
     @GetMapping("/{userId}/status")
     public Map<String, Object> getStatus(@PathVariable String userId) {
         String value = redisTemplate.opsForValue().get("user:status:" + userId);
-        return Map.of(
-            "userId", userId,
-            "online", "online".equals(value)
-        );
+        boolean online = "online".equals(value);
+        
+        Map<String, Object> response = new java.util.HashMap<>();
+        response.put("userId", userId);
+        response.put("online", online);
+        
+        if (!online) {
+            String lastSeen = redisTemplate.opsForValue().get("user:lastseen:" + userId);
+            if (lastSeen != null) {
+                try {
+                    long epoch = Long.parseLong(lastSeen);
+                    response.put("lastSeen", java.time.Instant.ofEpochMilli(epoch).toString());
+                } catch (NumberFormatException ignored) {}
+            }
+        }
+        return response;
     }
 }

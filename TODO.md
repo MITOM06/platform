@@ -778,3 +778,50 @@ Status: CLEAN — toàn bộ chức năng chat hoạt động end-to-end
 
 **Trạng thái: ✅ CLEAN — 6/6 issues fixed & verified live. Chat app hoạt động đầy đủ end-to-end (auth, conversation, message, pagination, read-receipt realtime, typing, presence, push notification).**
 
+---
+
+## 🧪 QA LOG — Sprint 7
+
+```
+[2026-05-30] Task 22 — PASS (GridFS controller added & SecurityConfig updated. mvn test pass 26/26)
+[2026-05-30] Task 23 — PASS (avatarUrl updated in auth-service users schema & service. pnpm build pass)
+[2026-05-30] Task 24 — PASS (FE updated to handle avatar uploads & updates. flutter analyze pass)
+[2026-05-30] Task 25 — PASS (PresenceEventListener updated & UserStatusController integrated with FE lastSeen logic)
+[2026-05-30] Task 26 — PASS (message_bubble & chat_screen handle date separators & intl format logic. flutter test pass 1/1)
+```
+
+**Trạng thái: ✅ CLEAN — Toàn bộ Sprint 7 (Avatar Upload + Polish) đã hoàn tất và vượt qua QA.**
+
+---
+
+## 🔴 BUG FIX — Upload ảnh (Image Upload) [2026-05-30] (Claude CLI)
+
+### CRITICAL — Upload ảnh thất bại với file > 1MB
+- ✅ **[chat-service/application.yml] Thiếu cấu hình multipart** — Spring Boot mặc định giới hạn
+  `max-file-size=1MB` → ảnh từ gallery (thường 2-5MB) ném `MaxUploadSizeExceededException` → upload lỗi.
+  **Fix:** thêm `spring.servlet.multipart.max-file-size=20MB`, `max-request-size=25MB`.
+
+### HIGH — Ảnh upload xong không hiển thị
+- ✅ **[chat-service/UploadController.java] GET query GridFS bằng String `_id`** — GridFS lưu `_id`
+  dạng `ObjectId`, query `Criteria.where("_id").is(stringId)` không match → luôn trả 404 → ảnh
+  không bao giờ hiện. **Fix:** parse `new ObjectId(id)` trước khi query (catch `IllegalArgumentException` → 404).
+- ✅ **[chat-service/UploadController.java] NPE khi contentType null** —
+  `MediaType.parseMediaType(resource.getContentType())` ném exception nếu null/blank.
+  **Fix:** fallback `APPLICATION_OCTET_STREAM`, bọc try/catch.
+
+### Cải tiến — Hỗ trợ nhiều định dạng ảnh + web-safe
+- ✅ **[chat-service/UploadController.java]** validate `image/*`, fallback dò content-type theo đuôi
+  file (png/jpg/jpeg/gif/webp/bmp/heic/heif/svg) khi client gửi `application/octet-stream`.
+  Reject file rỗng & non-image bằng `BadRequestException` (→ 400) mới thêm.
+- ✅ **[client/chat_repository.dart]** `uploadFile` nhận `XFile`, đọc `readAsBytes()` +
+  `MultipartFile.fromBytes` (thay `fromFile(path)`) → chạy được trên cả Flutter Web (blob URL,
+  không có filesystem) lẫn mobile; set `DioMediaType` theo đuôi file. Callers (settings + group_info) đã cập nhật.
+
+```
+[2026-05-30] QC sau fix:
+  chat-service: mvn test → 26/26 PASS, BUILD SUCCESS
+  auth-service: pnpm build → EXIT 0
+  client:       flutter analyze → No issues found | flutter test → 1/1 PASS
+```
+
+**Trạng thái: ✅ CLEAN — Upload ảnh hoạt động với mọi định dạng & kích thước hợp lý, cả web lẫn mobile.**

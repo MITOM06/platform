@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/l10n/l10n_ext.dart';
@@ -42,12 +43,33 @@ class GroupInfoScreen extends ConsumerWidget {
             children: [
               const SizedBox(height: 16),
               Center(
-                child: ConversationAvatar(
-                  avatarUrl: conv.avatarUrl,
-                  fallbackLetter:
-                      (conv.name?.isNotEmpty ?? false) ? conv.name![0].toUpperCase() : '?',
-                  isGroup: true,
-                  size: 88,
+                child: GestureDetector(
+                  onTap: isAdmin ? () => _uploadGroupAvatar(context, ref) : null,
+                  child: Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      ConversationAvatar(
+                        avatarUrl: conv.avatarUrl,
+                        fallbackLetter:
+                            (conv.name?.isNotEmpty ?? false) ? conv.name![0].toUpperCase() : '?',
+                        isGroup: true,
+                        size: 88,
+                      ),
+                      if (isAdmin)
+                        Positioned(
+                          bottom: 0,
+                          right: 0,
+                          child: Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: const BoxDecoration(
+                              color: AppTheme.neonCyan,
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(Icons.camera_alt, color: Colors.white, size: 16),
+                          ),
+                        ),
+                    ],
+                  ),
                 ),
               ),
               const SizedBox(height: 12),
@@ -147,6 +169,24 @@ class GroupInfoScreen extends ConsumerWidget {
           .updateConversation(conversationId, name: newName);
       ref.invalidate(groupConversationProvider(conversationId));
     } catch (_) {}
+  }
+
+  Future<void> _uploadGroupAvatar(BuildContext context, WidgetRef ref) async {
+    final picker = ImagePicker();
+    final pickedFile = await picker.pickImage(source: ImageSource.gallery);
+    if (pickedFile == null) return;
+    
+    try {
+      final url = await ref.read(chatRepositoryProvider).uploadFile(pickedFile);
+      await ref.read(chatRepositoryProvider).updateConversation(conversationId, avatarUrl: url);
+      ref.invalidate(groupConversationProvider(conversationId));
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(context.l10n.uploadFailed)),
+        );
+      }
+    }
   }
 
   Future<void> _addMember(BuildContext context, WidgetRef ref) async {
