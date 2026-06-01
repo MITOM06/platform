@@ -8,8 +8,10 @@ import com.platform.chatservice.exception.MessageNotFoundException;
 import com.platform.chatservice.exception.UnauthorizedException;
 import com.platform.chatservice.model.Conversation;
 import com.platform.chatservice.model.Message;
+import com.platform.chatservice.model.UserBlock;
 import com.platform.chatservice.repository.ConversationRepository;
 import com.platform.chatservice.repository.MessageRepository;
+import com.platform.chatservice.repository.UserBlockRepository;
 import com.mongodb.client.result.UpdateResult;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -34,6 +36,7 @@ public class MessageService {
 
     private final MessageRepository messageRepository;
     private final ConversationRepository conversationRepository;
+    private final UserBlockRepository userBlockRepository;
     private final MongoTemplate mongoTemplate;
 
     public PageResponse<MessageResponse> getMessages(String userId, String conversationId, Pageable pageable) {
@@ -62,6 +65,13 @@ public class MessageService {
             .orElseThrow(() -> new ConversationNotFoundException(request.conversationId()));
         if (!conversation.getParticipants().contains(senderId)) {
             throw new ConversationNotFoundException(request.conversationId());
+        }
+        // Block User: reject if the sender blocked, or is blocked by, any other
+        // participant of the conversation (covers both directions).
+        for (String participant : conversation.getParticipants()) {
+            if (!participant.equals(senderId) && isBlockedBetween(senderId, participant)) {
+                throw new UnauthorizedException("Cannot send message: user is blocked");
+            }
         }
 
         Message.ReplyPreview replyPreview = buildReplyPreview(request.replyToId());
@@ -188,6 +198,18 @@ public class MessageService {
                     .and("createdAt").lt(cutoff)),
                 Message.class);
         }
+    }
+
+    /** True if either user has the other in their {@code blockedUsers} list. */
+    private boolean isBlockedBetween(String a, String b) {
+        return blocks(a, b) || blocks(b, a);
+    }
+
+    private boolean blocks(String ownerId, String targetId) {
+        return userBlockRepository.findById(ownerId)
+            .map(UserBlock::getBlockedUsers)
+            .map(list -> list != null && list.contains(targetId))
+            .orElse(false);
     }
 
     private Message requireParticipantMessage(String userId, String messageId) {

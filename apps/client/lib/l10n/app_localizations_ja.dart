@@ -584,4 +584,31 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get noFriendRequests => '保留中のリクエストはありません';
+
+  @override
+  String get friendRequestPending => '保留中';
+
+  @override
+  String get unfriend => '友達を解除';
+
+  @override
+  String get unfriendConfirm => 'この友達を解除しますか？';
+
+  @override
+  String get blockUser => 'ブロック';
+
+  @override
+  String get unblockUser => 'ブロック解除';
+
+  @override
+  String get blockUserConfirm => 'このユーザーをブロックしますか？お互いにメッセージを送れなくなります。';
+
+  @override
+  String get blockedComposerNotice => 'このチャットにはメッセージを送信できません';
+
+  @override
+  String get userBlocked => 'ユーザーをブロックしました';
+
+  @override
+  String get userUnblocked => 'ブロックを解除しました';
 }

@@ -591,4 +591,33 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get noFriendRequests => 'Không có lời mời nào';
+
+  @override
+  String get friendRequestPending => 'Đang chờ';
+
+  @override
+  String get unfriend => 'Hủy kết bạn';
+
+  @override
+  String get unfriendConfirm => 'Hủy kết bạn với người này?';
+
+  @override
+  String get blockUser => 'Chặn người này';
+
+  @override
+  String get unblockUser => 'Bỏ chặn';
+
+  @override
+  String get blockUserConfirm =>
+      'Chặn người này? Hai bạn sẽ không thể nhắn tin cho nhau.';
+
+  @override
+  String get blockedComposerNotice =>
+      'Bạn không thể gửi tin nhắn cho đoạn chat này';
+
+  @override
+  String get userBlocked => 'Đã chặn người dùng';
+
+  @override
+  String get userUnblocked => 'Đã bỏ chặn người dùng';
 }

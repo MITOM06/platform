@@ -197,5 +197,14 @@
   "friendRequestSent": "好友请求已发送",
   "acceptFriend": "接受",
   "noFriends": "还没有好友",
-  "noFriendRequests": "没有待处理的请求"
+  "noFriendRequests": "没有待处理的请求",
+  "friendRequestPending": "待处理",
+  "unfriend": "删除好友",
+  "unfriendConfirm": "确定删除该好友吗？",
+  "blockUser": "拉黑",
+  "unblockUser": "解除拉黑",
+  "blockUserConfirm": "拉黑该用户？你们将无法互相发送消息。",
+  "blockedComposerNotice": "你无法向此聊天发送消息",
+  "userBlocked": "已拉黑该用户",
+  "userUnblocked": "已解除拉黑"
 }

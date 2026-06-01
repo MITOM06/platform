@@ -242,5 +242,14 @@
   "friendRequestSent": "Friend request sent",
   "acceptFriend": "Accept",
   "noFriends": "No friends yet",
-  "noFriendRequests": "No pending requests"
+  "noFriendRequests": "No pending requests",
+  "friendRequestPending": "Pending",
+  "unfriend": "Unfriend",
+  "unfriendConfirm": "Remove this friend?",
+  "blockUser": "Block",
+  "unblockUser": "Unblock",
+  "blockUserConfirm": "Block this user? You won't be able to message each other.",
+  "blockedComposerNotice": "You can't send messages to this chat",
+  "userBlocked": "User blocked",
+  "userUnblocked": "User unblocked"
 }

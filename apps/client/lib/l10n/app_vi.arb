@@ -197,5 +197,14 @@
   "friendRequestSent": "Đã gửi lời mời kết bạn",
   "acceptFriend": "Chấp nhận",
   "noFriends": "Chưa có bạn bè",
-  "noFriendRequests": "Không có lời mời nào"
+  "noFriendRequests": "Không có lời mời nào",
+  "friendRequestPending": "Đang chờ",
+  "unfriend": "Hủy kết bạn",
+  "unfriendConfirm": "Hủy kết bạn với người này?",
+  "blockUser": "Chặn người này",
+  "unblockUser": "Bỏ chặn",
+  "blockUserConfirm": "Chặn người này? Hai bạn sẽ không thể nhắn tin cho nhau.",
+  "blockedComposerNotice": "Bạn không thể gửi tin nhắn cho đoạn chat này",
+  "userBlocked": "Đã chặn người dùng",
+  "userUnblocked": "Đã bỏ chặn người dùng"
 }

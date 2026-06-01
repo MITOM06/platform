@@ -1,10 +1,78 @@
 # TODO — PON PROJECT
 > **Workflow:** Gemini Code Assist (viết code) ↔ Tech Lead (bàn giao) ↔ Claude CLI (test & review)
-> **Cập nhật:** 2026-06-01 (Sprint 10 — Profile, UI Fixes, Active Friends & Stranger Chat)
+> **Cập nhật:** 2026-06-01 (Sprint 11 — UI Enhancements, Group Chat UI & Block User)
 
 ---
 
-## 🟢 SPRINT 10 — Profile, UI Fixes, Active Friends & Stranger Chat — DONE ✅ [2026-06-01]
+## 🟢 SPRINT 11 — UI Enhancements, Group Chat UI & Block User — QC PASS [2026-06-01]
+
+### TASK 41 — Active Friends Row Enhancement `DONE`
+#### SPEC
+- **Frontend:** Cập nhật widget `ActiveFriendsRow` trong `ConversationListScreen`. Hiện tại mới chỉ có avatar và chấm xanh. Yêu cầu: hiển thị thêm khoảng thời gian truy cập ngay dưới avatar (ví dụ: "Đang HĐ", "5p trước", "1h trước"). Sử dụng dữ liệu `lastSeen` từ `userStatusProvider`. Thiết kế giống thanh Story của Messenger.
+- **Test:** Text hiển thị gọn gàng, không bị tràn (overflow), update thời gian realtime.
+
+### TASK 42 — Chat Screen Avatar to Profile `DONE`
+#### SPEC
+- **Frontend:** Trong file `chat_screen.dart`, bọc widget `ConversationAvatar` ở `AppBar` bằng `InkWell` hoặc `GestureDetector`. Khi click vào avatar, điều hướng (`context.push`) sang `UserProfileScreen` của đối phương. 
+- **Frontend:** Tại `UserProfileScreen`, bổ sung nút "Thêm bạn bè" (Gọi API kết bạn từ Sprint 10) nếu hai người chưa là bạn. Nếu đã gửi lời mời thì hiện "Đang chờ". Nếu đã là bạn thì hiện "Hủy kết bạn".
+- **Test:** Ở khung chat, bấm avatar -> Mở Profile đối phương -> Bấm gửi lời mời kết bạn thành công.
+
+### TASK 43 — Group Chat UI (Missing Frontend Logic) `DONE`
+#### SPEC
+- **Bối cảnh:** Các API tạo nhóm (`POST /group`), thêm người (`POST /{id}/members`), xóa người (`DELETE /{id}/members/{userId}`) đã được viết sẵn dưới Backend (`ConversationController`) nhưng chưa hề có UI để dùng.
+- **Frontend:** 
+  1. Thêm nút "Tạo nhóm chat" (FAB hoặc icon góc trên) tại `ConversationListScreen`, cho phép tick chọn bạn bè để tạo nhóm.
+  2. Tại `GroupInfoScreen`, hiển thị danh sách thành viên thực tế, cấp quyền cho Admin thêm người mới hoặc kick thành viên hiện tại bằng cách gọi các API tương ứng.
+- **Test:** Tick 2 người bạn tạo nhóm -> Vào nhóm nhắn tin -> Kick 1 người ra khỏi nhóm.
+
+### TASK 44 — Block User Feature (Tính năng An toàn) `DONE`
+#### SPEC
+- **Data model:** Collection `users` bổ sung mảng `blockedUsers` chứa list các userId bị chặn.
+- **Backend:** Thêm API `POST /api/users/block/{targetId}` và `POST /api/users/unblock/{targetId}` tại auth-service. Dưới chat-service, chặn logic gửi/nhận tin nhắn trong `MessageService` nếu một trong hai bên nằm trong danh sách block của người kia.
+- **Frontend:** Tại `UserProfileScreen`, thêm nút "Chặn người này" màu đỏ. Tại `ChatScreen`, nếu trạng thái là đã bị chặn, ẩn ô nhập tin nhắn và hiện dòng chữ "Bạn không thể gửi tin nhắn cho đoạn chat này".
+- **Test:** Block 1 người -> Ra ngoài nhắn tin báo lỗi hoặc không cho nhập text -> Unblock -> Nhắn lại bình thường.
+
+## 🧪 QA LOG (Sprint 11)
+
+```
+[2026-06-01] QC Sprint 11 — implemented & verified by Claude CLI (TASK 41→44)
+  chat-service: mvn clean test → 36/36 PASS, BUILD SUCCESS (34 cũ + 2 mới:
+                sendMessage_WhenSenderBlockedByRecipient / sendMessage_WhenSenderBlockedRecipient)
+  auth-service: pnpm build → EXIT 0 | pnpm test → 6/6 PASS
+  client:       flutter gen-l10n OK | build_runner OK (1 output: relationshipProvider)
+                flutter analyze → No issues found | flutter test → 1/1 PASS
+
+Tóm tắt thay đổi:
+  TASK 41 (Active friends time): ActiveFriendsRow tách _ActiveFriendTile (ConsumerWidget) watch
+    userStatusProvider(friend.id) → hiện "active now" (online) hoặc last-seen rút gọn dưới tên
+    avatar (style story-bar Messenger). Bump chiều cao row 84→104 + mainAxisSize.min tránh overflow.
+  TASK 42 (Avatar→Profile + friend states): chat_screen bọc ConversationAvatar (AppBar) bằng
+    GestureDetector → direct: push /user/{otherId}, group: push /group-info/{id}. UserProfileScreen
+    chuyển sang relationshipProvider: nút bạn bè đổi theo trạng thái none→Add / outgoing→Pending(huỷ)
+    / incoming→Accept / accepted→Unfriend (confirm). auth-service: friends.getStatus + removeFriend;
+    GET /api/friends/status/:userId, DELETE /api/friends/:userId.
+  TASK 43 (Group Chat UI): thêm icon "Tạo nhóm" (group_add) ở AppBar ConversationListScreen →
+    NewGroupScreen (route /new-group): nhập tên + tick bạn bè (friendsListProvider, ≥2) →
+    chatRepository.createGroup → vào chat. GroupInfoScreen (đã có) hiển thị thành viên thật +
+    admin add/kick gọi addMembers / removeMember.
+  TASK 44 (Block User): User schema +blockedUsers[] (regenerate packages/database/src .js cho jest).
+    auth-service: usersService.blockUser/unblockUser/getBlockState; POST /api/users/block/:id,
+    POST /api/users/unblock/:id, GET /api/users/:id/relationship (friendStatus + iBlocked/blockedMe).
+    chat-service: UserBlock model (đọc collection users) + UserBlockRepository; MessageService.sendMessage
+    từ chối nếu 2 bên block nhau (UnauthorizedException). Client: friends_repository +getRelationship/
+    removeFriend/blockUser/unblockUser + relationshipProvider; UserProfileScreen nút "Chặn/Bỏ chặn"
+    (đỏ); ChatScreen ẩn composer + banner blockedComposerNotice khi bị block (1 chiều bất kỳ).
+  i18n: +9 key (friendRequestPending, unfriend, unfriendConfirm, blockUser, unblockUser,
+    blockUserConfirm, blockedComposerNotice, userBlocked, userUnblocked) vào CẢ 7 file ARB.
+    TASK 41/43 tái dùng key sẵn có (statusOnline, lastSeen*, createGroup, groupName, selectMembers…).
+```
+
+**Trạng thái: 🟢 CLEAN — TASK 41→44 implement xong & build/test sạch cả 3 service.**
+E2E thực tế (block 2 thiết bị, tạo nhóm & kick, presence time realtime) cần start infra + services.
+
+---
+
+## 🟢 SPRINT 10 — Profile, UI Fixes, Active Friends & Stranger Chat — QC PASS [2026-06-01]
 
 ### TASK 35 — User Profile (View & Edit) `DONE`
 #### SPEC

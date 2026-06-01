@@ -34,6 +34,27 @@ export class UsersController {
     return this.usersService.findBySearchQuery(query ?? '');
   }
 
+  @Post('block/:targetId')
+  block(@Req() req: any, @Param('targetId') targetId: string) {
+    return this.usersService.blockUser(req.user.sub, targetId);
+  }
+
+  @Post('unblock/:targetId')
+  unblock(@Req() req: any, @Param('targetId') targetId: string) {
+    return this.usersService.unblockUser(req.user.sub, targetId);
+  }
+
+  // Combined friend + block relationship between the caller and `:id`.
+  // Two-segment path, so it never collides with the bare '@Get(":id")' below.
+  @Get(':id/relationship')
+  async relationship(@Req() req: any, @Param('id') id: string) {
+    const [friendStatus, block] = await Promise.all([
+      this.friendsService.getStatus(req.user.sub, id),
+      this.usersService.getBlockState(req.user.sub, id),
+    ]);
+    return { friendStatus, ...block };
+  }
+
   // NOTE: must be declared BEFORE the ':id' param route so the two-segment
   // path is not swallowed by '@Get(":id")'.
   @Get('friends/online')

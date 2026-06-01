@@ -10,6 +10,7 @@ import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/pon_widgets.dart';
 import '../../auth/domain/auth_provider.dart';
 import '../../auth/domain/auth_state.dart';
+import '../../friends/domain/friends_provider.dart';
 import '../data/chat_repository.dart';
 import '../data/stomp_service.dart';
 import '../domain/chat_provider.dart';
@@ -318,6 +319,14 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
         conv.createdBy != null &&
         conv.createdBy != currentUserId;
 
+    // Block User: for direct chats, watch the relationship and hide the composer
+    // if either side has blocked the other.
+    final relAsync = (!isGroup && otherUserId != null && otherUserId.isNotEmpty)
+        ? ref.watch(relationshipProvider(otherUserId))
+        : null;
+    final bool isBlocked =
+        relAsync?.valueOrNull?.isBlockedEitherWay ?? false;
+
     return Scaffold(
       appBar: PreferredSize(
         preferredSize: const Size.fromHeight(kToolbarHeight + 8),
@@ -338,12 +347,23 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
             titleSpacing: 0,
             title: Row(
               children: [
-                ConversationAvatar(
-                  avatarUrl: isGroup ? conv?.avatarUrl : null,
-                  fallbackLetter: avatarLetter,
-                  isGroup: isGroup,
-                  size: 38,
-                  online: isOnline,
+                GestureDetector(
+                  // Tap the avatar to open the other user's profile (direct chat)
+                  // or the group info screen (group chat).
+                  onTap: () {
+                    if (isGroup) {
+                      context.push('/group-info/${widget.conversationId}');
+                    } else if (otherUserId != null && otherUserId.isNotEmpty) {
+                      context.push('/user/$otherUserId');
+                    }
+                  },
+                  child: ConversationAvatar(
+                    avatarUrl: isGroup ? conv?.avatarUrl : null,
+                    fallbackLetter: avatarLetter,
+                    isGroup: isGroup,
+                    size: 38,
+                    online: isOnline,
+                  ),
                 ),
                 const SizedBox(width: 12),
                 // Title and status text
@@ -623,7 +643,9 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
                   ),
                 ),
               ),
-              if (isStrangerRequest)
+              if (isBlocked)
+                const _BlockedComposerNotice()
+              else if (isStrangerRequest)
                 _StrangerRequestBanner(
                   onAccept: _acceptStranger,
                   onReject: _rejectStranger,
@@ -912,6 +934,41 @@ class _InputBarState extends State<_InputBar> {
                   Icons.send_rounded,
                   color: _hasText ? Colors.white : Colors.white24,
                   size: 20,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Shown in place of the composer when a direct conversation is blocked
+/// (either the user blocked the other person, or vice versa).
+class _BlockedComposerNotice extends StatelessWidget {
+  const _BlockedComposerNotice();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      color: AppTheme.darkSurface.withValues(alpha: 0.8),
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
+      child: SafeArea(
+        top: false,
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.block_rounded, color: Colors.white38, size: 18),
+            const SizedBox(width: 8),
+            Flexible(
+              child: Text(
+                context.l10n.blockedComposerNotice,
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: Colors.white.withValues(alpha: 0.6),
+                  fontSize: 13,
                 ),
               ),
             ),

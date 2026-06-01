@@ -1193,6 +1193,60 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No pending requests'**
   String get noFriendRequests;
+
+  /// No description provided for @friendRequestPending.
+  ///
+  /// In en, this message translates to:
+  /// **'Pending'**
+  String get friendRequestPending;
+
+  /// No description provided for @unfriend.
+  ///
+  /// In en, this message translates to:
+  /// **'Unfriend'**
+  String get unfriend;
+
+  /// No description provided for @unfriendConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove this friend?'**
+  String get unfriendConfirm;
+
+  /// No description provided for @blockUser.
+  ///
+  /// In en, this message translates to:
+  /// **'Block'**
+  String get blockUser;
+
+  /// No description provided for @unblockUser.
+  ///
+  /// In en, this message translates to:
+  /// **'Unblock'**
+  String get unblockUser;
+
+  /// No description provided for @blockUserConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Block this user? You won\'t be able to message each other.'**
+  String get blockUserConfirm;
+
+  /// No description provided for @blockedComposerNotice.
+  ///
+  /// In en, this message translates to:
+  /// **'You can\'t send messages to this chat'**
+  String get blockedComposerNotice;
+
+  /// No description provided for @userBlocked.
+  ///
+  /// In en, this message translates to:
+  /// **'User blocked'**
+  String get userBlocked;
+
+  /// No description provided for @userUnblocked.
+  ///
+  /// In en, this message translates to:
+  /// **'User unblocked'**
+  String get userUnblocked;
 }
 
 class _AppLocalizationsDelegate

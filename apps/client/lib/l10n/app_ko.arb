@@ -197,5 +197,14 @@
   "friendRequestSent": "친구 요청을 보냈습니다",
   "acceptFriend": "수락",
   "noFriends": "아직 친구가 없습니다",
-  "noFriendRequests": "대기 중인 요청이 없습니다"
+  "noFriendRequests": "대기 중인 요청이 없습니다",
+  "friendRequestPending": "대기 중",
+  "unfriend": "친구 삭제",
+  "unfriendConfirm": "이 친구를 삭제할까요?",
+  "blockUser": "차단",
+  "unblockUser": "차단 해제",
+  "blockUserConfirm": "이 사용자를 차단할까요? 서로 메시지를 보낼 수 없습니다.",
+  "blockedComposerNotice": "이 대화에는 메시지를 보낼 수 없습니다",
+  "userBlocked": "사용자를 차단했습니다",
+  "userUnblocked": "차단을 해제했습니다"
 }

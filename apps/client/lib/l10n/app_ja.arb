@@ -197,5 +197,14 @@
   "friendRequestSent": "友達リクエストを送信しました",
   "acceptFriend": "承認",
   "noFriends": "まだ友達がいません",
-  "noFriendRequests": "保留中のリクエストはありません"
+  "noFriendRequests": "保留中のリクエストはありません",
+  "friendRequestPending": "保留中",
+  "unfriend": "友達を解除",
+  "unfriendConfirm": "この友達を解除しますか？",
+  "blockUser": "ブロック",
+  "unblockUser": "ブロック解除",
+  "blockUserConfirm": "このユーザーをブロックしますか？お互いにメッセージを送れなくなります。",
+  "blockedComposerNotice": "このチャットにはメッセージを送信できません",
+  "userBlocked": "ユーザーをブロックしました",
+  "userUnblocked": "ブロックを解除しました"
 }

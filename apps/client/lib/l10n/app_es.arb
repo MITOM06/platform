@@ -197,5 +197,14 @@
   "friendRequestSent": "Solicitud de amistad enviada",
   "acceptFriend": "Aceptar",
   "noFriends": "Aún no tienes amigos",
-  "noFriendRequests": "No hay solicitudes pendientes"
+  "noFriendRequests": "No hay solicitudes pendientes",
+  "friendRequestPending": "Pendiente",
+  "unfriend": "Eliminar amigo",
+  "unfriendConfirm": "¿Eliminar a este amigo?",
+  "blockUser": "Bloquear",
+  "unblockUser": "Desbloquear",
+  "blockUserConfirm": "¿Bloquear a este usuario? No podréis enviaros mensajes.",
+  "blockedComposerNotice": "No puedes enviar mensajes a este chat",
+  "userBlocked": "Usuario bloqueado",
+  "userUnblocked": "Usuario desbloqueado"
 }

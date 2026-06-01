@@ -584,4 +584,31 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get noFriendRequests => '대기 중인 요청이 없습니다';
+
+  @override
+  String get friendRequestPending => '대기 중';
+
+  @override
+  String get unfriend => '친구 삭제';
+
+  @override
+  String get unfriendConfirm => '이 친구를 삭제할까요?';
+
+  @override
+  String get blockUser => '차단';
+
+  @override
+  String get unblockUser => '차단 해제';
+
+  @override
+  String get blockUserConfirm => '이 사용자를 차단할까요? 서로 메시지를 보낼 수 없습니다.';
+
+  @override
+  String get blockedComposerNotice => '이 대화에는 메시지를 보낼 수 없습니다';
+
+  @override
+  String get userBlocked => '사용자를 차단했습니다';
+
+  @override
+  String get userUnblocked => '차단을 해제했습니다';
 }

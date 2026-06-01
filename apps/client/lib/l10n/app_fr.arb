@@ -197,5 +197,14 @@
   "friendRequestSent": "Demande d'ami envoyée",
   "acceptFriend": "Accepter",
   "noFriends": "Aucun ami pour l'instant",
-  "noFriendRequests": "Aucune demande en attente"
+  "noFriendRequests": "Aucune demande en attente",
+  "friendRequestPending": "En attente",
+  "unfriend": "Retirer l'ami",
+  "unfriendConfirm": "Retirer cet ami ?",
+  "blockUser": "Bloquer",
+  "unblockUser": "Débloquer",
+  "blockUserConfirm": "Bloquer cet utilisateur ? Vous ne pourrez plus vous envoyer de messages.",
+  "blockedComposerNotice": "Vous ne pouvez pas envoyer de messages à ce chat",
+  "userBlocked": "Utilisateur bloqué",
+  "userUnblocked": "Utilisateur débloqué"
 }

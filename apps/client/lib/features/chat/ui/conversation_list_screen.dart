@@ -75,6 +75,11 @@ class _ConversationListScreenState extends ConsumerState<ConversationListScreen>
             ),
             actions: [
               IconButton(
+                icon: const Icon(Icons.group_add_outlined),
+                tooltip: context.l10n.createGroup,
+                onPressed: () => context.push('/new-group'),
+              ),
+              IconButton(
                 icon: const Icon(Icons.people_alt_outlined),
                 tooltip: context.l10n.contacts,
                 onPressed: () => context.push('/friends'),

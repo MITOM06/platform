@@ -584,4 +584,31 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get noFriendRequests => '没有待处理的请求';
+
+  @override
+  String get friendRequestPending => '待处理';
+
+  @override
+  String get unfriend => '删除好友';
+
+  @override
+  String get unfriendConfirm => '确定删除该好友吗？';
+
+  @override
+  String get blockUser => '拉黑';
+
+  @override
+  String get unblockUser => '解除拉黑';
+
+  @override
+  String get blockUserConfirm => '拉黑该用户？你们将无法互相发送消息。';
+
+  @override
+  String get blockedComposerNotice => '你无法向此聊天发送消息';
+
+  @override
+  String get userBlocked => '已拉黑该用户';
+
+  @override
+  String get userUnblocked => '已解除拉黑';
 }

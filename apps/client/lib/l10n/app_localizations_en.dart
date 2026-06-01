@@ -591,4 +591,32 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get noFriendRequests => 'No pending requests';
+
+  @override
+  String get friendRequestPending => 'Pending';
+
+  @override
+  String get unfriend => 'Unfriend';
+
+  @override
+  String get unfriendConfirm => 'Remove this friend?';
+
+  @override
+  String get blockUser => 'Block';
+
+  @override
+  String get unblockUser => 'Unblock';
+
+  @override
+  String get blockUserConfirm =>
+      'Block this user? You won\'t be able to message each other.';
+
+  @override
+  String get blockedComposerNotice => 'You can\'t send messages to this chat';
+
+  @override
+  String get userBlocked => 'User blocked';
+
+  @override
+  String get userUnblocked => 'User unblocked';
 }

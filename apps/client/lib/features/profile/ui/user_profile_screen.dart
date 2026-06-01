@@ -12,6 +12,7 @@ import '../../chat/data/chat_repository.dart';
 import '../../chat/domain/chat_provider.dart';
 import '../../chat/ui/widgets/conversation_avatar.dart';
 import '../../friends/data/friends_repository.dart';
+import '../../friends/domain/friends_provider.dart';
 
 /// Public profile of any user: cover photo, avatar, name, bio, friend count,
 /// and actions to message or send a friend request.
@@ -25,7 +26,6 @@ class UserProfileScreen extends ConsumerStatefulWidget {
 
 class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
   bool _busy = false;
-  bool _requestSent = false;
 
   Future<void> _message(UserModel user) async {
     setState(() => _busy = true);
@@ -45,14 +45,17 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
     }
   }
 
-  Future<void> _addFriend() async {
+  /// Runs a friend/block action then refreshes the relationship so the buttons
+  /// reflect the new state. Shows [successMsg] on success when provided.
+  Future<void> _run(Future<void> Function() action, {String? successMsg}) async {
     setState(() => _busy = true);
     try {
-      await ref.read(friendsRepositoryProvider).sendRequest(widget.userId);
-      if (mounted) {
-        setState(() => _requestSent = true);
+      await action();
+      if (!mounted) return;
+      ref.invalidate(relationshipProvider(widget.userId));
+      if (successMsg != null) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(context.l10n.friendRequestSent)),
+          SnackBar(content: Text(successMsg)),
         );
       }
     } catch (e) {
@@ -64,6 +67,60 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
     } finally {
       if (mounted) setState(() => _busy = false);
     }
+  }
+
+  Future<void> _onFriendAction(RelationshipState rel) async {
+    final repo = ref.read(friendsRepositoryProvider);
+    switch (rel.friendStatus) {
+      case 'accepted':
+        final ok = await _confirm(
+            context.l10n.unfriend, context.l10n.unfriendConfirm);
+        if (ok == true) await _run(() => repo.removeFriend(widget.userId));
+      case 'outgoing':
+        // Tapping the pending button cancels the outgoing request.
+        await _run(() => repo.removeFriend(widget.userId));
+      case 'incoming':
+        await _run(() => repo.acceptRequest(widget.userId));
+      default:
+        await _run(() => repo.sendRequest(widget.userId),
+            successMsg: context.l10n.friendRequestSent);
+    }
+  }
+
+  Future<void> _onBlockAction(RelationshipState rel) async {
+    final repo = ref.read(friendsRepositoryProvider);
+    final l10n = context.l10n;
+    if (rel.iBlocked) {
+      await _run(() => repo.unblockUser(widget.userId),
+          successMsg: l10n.userUnblocked);
+    } else {
+      final ok = await _confirm(l10n.blockUser, l10n.blockUserConfirm);
+      if (ok == true) {
+        await _run(() => repo.blockUser(widget.userId),
+            successMsg: l10n.userBlocked);
+      }
+    }
+  }
+
+  Future<bool?> _confirm(String title, String body) {
+    return showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(title),
+        content: Text(body),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text(ctx.l10n.actionCancel),
+          ),
+          FilledButton(
+            style: FilledButton.styleFrom(backgroundColor: Colors.redAccent),
+            onPressed: () => Navigator.pop(ctx, true),
+            child: Text(ctx.l10n.actionConfirm),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -143,39 +200,98 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
                       ),
                     )
                   else
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 32),
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: PonButton(
-                              onPressed: _busy ? null : () => _message(user),
-                              child: Text(context.l10n.messageAction),
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: PonButton(
-                              gradientColors: const [
-                                AppTheme.ponPeach,
-                                AppTheme.ponPink,
-                              ],
-                              glowColor: AppTheme.ponPink,
-                              onPressed:
-                                  (_busy || _requestSent) ? null : _addFriend,
-                              child: Text(_requestSent
-                                  ? context.l10n.friendRequestSent
-                                  : context.l10n.addFriend),
-                            ),
-                          ),
-                        ],
-                      ),
+                    _RelationshipActions(
+                      userId: widget.userId,
+                      busy: _busy,
+                      onMessage: () => _message(user),
+                      onFriendAction: _onFriendAction,
+                      onBlockAction: _onBlockAction,
                     ),
                 ],
               ),
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+/// Message + friend + block buttons, driven by the live relationship state.
+class _RelationshipActions extends ConsumerWidget {
+  final String userId;
+  final bool busy;
+  final VoidCallback onMessage;
+  final Future<void> Function(RelationshipState) onFriendAction;
+  final Future<void> Function(RelationshipState) onBlockAction;
+
+  const _RelationshipActions({
+    required this.userId,
+    required this.busy,
+    required this.onMessage,
+    required this.onFriendAction,
+    required this.onBlockAction,
+  });
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final relAsync = ref.watch(relationshipProvider(userId));
+    final rel = relAsync.valueOrNull ??
+        const RelationshipState(
+            friendStatus: 'none', iBlocked: false, blockedMe: false);
+
+    final String friendLabel;
+    switch (rel.friendStatus) {
+      case 'accepted':
+        friendLabel = context.l10n.unfriend;
+      case 'outgoing':
+        friendLabel = context.l10n.friendRequestPending;
+      case 'incoming':
+        friendLabel = context.l10n.acceptFriend;
+      default:
+        friendLabel = context.l10n.addFriend;
+    }
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 32),
+      child: Column(
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: PonButton(
+                  onPressed: busy ? null : onMessage,
+                  child: Text(context.l10n.messageAction),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: PonButton(
+                  gradientColors: const [AppTheme.ponPeach, AppTheme.ponPink],
+                  glowColor: AppTheme.ponPink,
+                  onPressed: busy ? null : () => onFriendAction(rel),
+                  child: Text(friendLabel),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          SizedBox(
+            width: double.infinity,
+            child: TextButton.icon(
+              onPressed: busy ? null : () => onBlockAction(rel),
+              icon: Icon(
+                rel.iBlocked ? Icons.lock_open_rounded : Icons.block_rounded,
+                color: Colors.redAccent,
+                size: 18,
+              ),
+              label: Text(
+                rel.iBlocked ? context.l10n.unblockUser : context.l10n.blockUser,
+                style: const TextStyle(color: Colors.redAccent),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

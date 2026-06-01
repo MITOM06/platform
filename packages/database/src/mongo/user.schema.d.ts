@@ -20,6 +20,7 @@ export declare class User {
     otpCode: string;
     otpExpires: Date;
     fcmTokens: string[];
+    blockedUsers: string[];
 }
 export declare const UserSchema: Schema<User, import("mongoose").Model<User, any, any, any, Document<unknown, any, User> & User & {
     _id: import("mongoose").Types.ObjectId;

@@ -116,4 +116,33 @@ export class FriendsService {
     doc.status = 'accepted';
     return doc.save();
   }
+
+  /**
+   * Friendship status between the current user and `otherId`, from the current
+   * user's point of view:
+   *   - `none`     — no relationship
+   *   - `outgoing` — current user sent a pending request
+   *   - `incoming` — current user received a pending request
+   *   - `accepted` — they are friends
+   */
+  async getStatus(
+    currentUserId: string,
+    otherId: string,
+  ): Promise<'none' | 'outgoing' | 'incoming' | 'accepted'> {
+    if (currentUserId === otherId) return 'none';
+    const doc = await this.findBetween(currentUserId, otherId);
+    if (!doc) return 'none';
+    if (doc.status === 'accepted') return 'accepted';
+    return doc.requesterId === currentUserId ? 'outgoing' : 'incoming';
+  }
+
+  /** Remove any friendship (accepted OR pending) between the two users. */
+  async removeFriend(currentUserId: string, otherId: string): Promise<void> {
+    await this.friendshipModel.deleteMany({
+      $or: [
+        { requesterId: currentUserId, recipientId: otherId },
+        { requesterId: otherId, recipientId: currentUserId },
+      ],
+    }).exec();
+  }
 }

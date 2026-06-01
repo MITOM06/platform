@@ -6,10 +6,13 @@ import com.platform.chatservice.dto.PageResponse;
 import com.platform.chatservice.dto.SendMessageRequest;
 import com.platform.chatservice.exception.ConversationNotFoundException;
 import com.platform.chatservice.exception.MessageNotFoundException;
+import com.platform.chatservice.exception.UnauthorizedException;
 import com.platform.chatservice.model.Conversation;
 import com.platform.chatservice.model.Message;
+import com.platform.chatservice.model.UserBlock;
 import com.platform.chatservice.repository.ConversationRepository;
 import com.platform.chatservice.repository.MessageRepository;
+import com.platform.chatservice.repository.UserBlockRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -36,6 +39,7 @@ class MessageServiceTest {
 
     @Mock private MessageRepository messageRepository;
     @Mock private ConversationRepository conversationRepository;
+    @Mock private UserBlockRepository userBlockRepository;
     @Mock private MongoTemplate mongoTemplate;
 
     @InjectMocks
@@ -147,6 +151,35 @@ class MessageServiceTest {
             .isInstanceOf(ConversationNotFoundException.class);
 
         verifyNoInteractions(messageRepository);
+    }
+
+    @Test
+    void sendMessage_WhenSenderBlockedByRecipient_ShouldThrow() {
+        when(conversationRepository.findById(CONV_ID)).thenReturn(Optional.of(conversation));
+        // OTHER_ID has blocked SENDER_ID → message must be rejected.
+        when(userBlockRepository.findById(SENDER_ID)).thenReturn(Optional.empty());
+        when(userBlockRepository.findById(OTHER_ID)).thenReturn(Optional.of(
+            UserBlock.builder().id(OTHER_ID).blockedUsers(List.of(SENDER_ID)).build()));
+
+        assertThatThrownBy(() -> messageService.sendMessage(SENDER_ID,
+                new SendMessageRequest(CONV_ID, "Hi", "text")))
+            .isInstanceOf(UnauthorizedException.class);
+
+        verify(messageRepository, never()).save(any(Message.class));
+    }
+
+    @Test
+    void sendMessage_WhenSenderBlockedRecipient_ShouldThrow() {
+        when(conversationRepository.findById(CONV_ID)).thenReturn(Optional.of(conversation));
+        // SENDER_ID has blocked OTHER_ID → message must be rejected too.
+        when(userBlockRepository.findById(SENDER_ID)).thenReturn(Optional.of(
+            UserBlock.builder().id(SENDER_ID).blockedUsers(List.of(OTHER_ID)).build()));
+
+        assertThatThrownBy(() -> messageService.sendMessage(SENDER_ID,
+                new SendMessageRequest(CONV_ID, "Hi", "text")))
+            .isInstanceOf(UnauthorizedException.class);
+
+        verify(messageRepository, never()).save(any(Message.class));
     }
 
     @Test

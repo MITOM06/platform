@@ -48,3 +48,10 @@ Future<List<UserModel>> friendsList(FriendsListRef ref) {
 Future<List<FriendRequestModel>> friendRequests(FriendRequestsRef ref) {
   return ref.read(friendsRepositoryProvider).getRequests();
 }
+
+/// Friend + block relationship between the current user and [userId].
+/// Used by the profile (friend/block buttons) and chat (composer gating).
+@riverpod
+Future<RelationshipState> relationship(RelationshipRef ref, String userId) {
+  return ref.read(friendsRepositoryProvider).getRelationship(userId);
+}
