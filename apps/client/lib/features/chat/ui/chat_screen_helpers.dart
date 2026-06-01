@@ -1,0 +1,184 @@
+import 'dart:convert';
+
+import 'package:file_picker/file_picker.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:image_picker/image_picker.dart';
+import '../../../core/l10n/l10n_ext.dart';
+import '../../../core/theme/app_theme.dart';
+import '../data/chat_repository.dart';
+import '../domain/chat_provider.dart';
+
+/// Pick an image or video, upload to GridFS, then send as a chat message.
+Future<void> pickAndSendMedia(
+  BuildContext context,
+  WidgetRef ref,
+  String conversationId,
+) async {
+  final l10n = context.l10n;
+  final source = await showModalBottomSheet<String>(
+    context: context,
+    backgroundColor: AppTheme.darkSurface,
+    shape: const RoundedRectangleBorder(
+      borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+    ),
+    builder: (ctx) => SafeArea(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const SizedBox(height: 12),
+          ListTile(
+            leading: const Icon(Icons.photo_outlined, color: AppTheme.ponCyan),
+            title:
+                Text(l10n.attachPhoto, style: const TextStyle(color: Colors.white)),
+            onTap: () => Navigator.pop(ctx, 'image'),
+          ),
+          ListTile(
+            leading: const Icon(Icons.videocam_outlined, color: AppTheme.ponPeach),
+            title:
+                Text(l10n.attachVideo, style: const TextStyle(color: Colors.white)),
+            onTap: () => Navigator.pop(ctx, 'video'),
+          ),
+          ListTile(
+            leading: const Icon(Icons.insert_drive_file_outlined,
+                color: AppTheme.ponCyan),
+            title:
+                Text(l10n.attachFile, style: const TextStyle(color: Colors.white)),
+            onTap: () => Navigator.pop(ctx, 'file'),
+          ),
+        ],
+      ),
+    ),
+  );
+  if (source == null || !context.mounted) return;
+
+  if (source == 'file') {
+    await pickAndSendDocument(context, ref, conversationId);
+    return;
+  }
+
+  final picker = ImagePicker();
+  final XFile? file = source == 'video'
+      ? await picker.pickVideo(source: ImageSource.gallery)
+      : await picker.pickImage(source: ImageSource.gallery);
+  if (file == null || !context.mounted) return;
+
+  final messenger = ScaffoldMessenger.of(context);
+  messenger.showSnackBar(SnackBar(content: Text(context.l10n.uploading)));
+  try {
+    final url = await ref.read(chatRepositoryProvider).uploadFile(file);
+    await ref
+        .read(chatNotifierProvider(conversationId).notifier)
+        .sendMessage(url, type: source);
+  } catch (_) {
+    messenger.showSnackBar(SnackBar(content: Text(l10n.uploadFailed)));
+  }
+}
+
+/// Pick a generic document (PDF / DOC / ZIP …), upload, then send as `file` message.
+Future<void> pickAndSendDocument(
+  BuildContext context,
+  WidgetRef ref,
+  String conversationId,
+) async {
+  final l10n = context.l10n;
+  final result = await FilePicker.platform.pickFiles(withData: true);
+  if (result == null || result.files.isEmpty || !context.mounted) return;
+  final picked = result.files.first;
+  final bytes = picked.bytes;
+  if (bytes == null) {
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text(l10n.uploadFailed)));
+    return;
+  }
+
+  final messenger = ScaffoldMessenger.of(context);
+  messenger.showSnackBar(SnackBar(content: Text(l10n.uploading)));
+  try {
+    final uploaded =
+        await ref.read(chatRepositoryProvider).uploadDocument(bytes, picked.name);
+    final content = jsonEncode(
+        {'url': uploaded.url, 'name': uploaded.name, 'size': uploaded.size});
+    await ref
+        .read(chatNotifierProvider(conversationId).notifier)
+        .sendMessage(content, type: 'file');
+  } catch (_) {
+    messenger.showSnackBar(SnackBar(content: Text(l10n.uploadFailed)));
+  }
+}
+
+/// Show the auto-delete duration picker sheet.
+Future<void> showAutoDeletePicker(
+  BuildContext context,
+  WidgetRef ref,
+  String conversationId,
+) async {
+  final l10n = context.l10n;
+  final seconds = await showModalBottomSheet<int?>(
+    context: context,
+    backgroundColor: AppTheme.darkSurface,
+    shape: const RoundedRectangleBorder(
+      borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+    ),
+    builder: (ctx) => SafeArea(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const SizedBox(height: 12),
+          Text(l10n.disappearingMessages,
+              style: const TextStyle(
+                  color: Colors.white, fontWeight: FontWeight.bold)),
+          const SizedBox(height: 8),
+          ListTile(
+            title: Text(l10n.disappearingOff,
+                style: const TextStyle(color: Colors.white)),
+            onTap: () => Navigator.pop(ctx, 0),
+          ),
+          ListTile(
+            title: Text(l10n.disappearing24h,
+                style: const TextStyle(color: Colors.white)),
+            onTap: () => Navigator.pop(ctx, 86400),
+          ),
+          ListTile(
+            title: Text(l10n.disappearing7d,
+                style: const TextStyle(color: Colors.white)),
+            onTap: () => Navigator.pop(ctx, 604800),
+          ),
+        ],
+      ),
+    ),
+  );
+  if (seconds == null) return;
+  try {
+    await ref
+        .read(chatRepositoryProvider)
+        .setAutoDelete(conversationId, seconds == 0 ? null : seconds);
+  } catch (_) {}
+}
+
+/// Show a simple confirmation dialog. Returns true when the user confirms.
+Future<bool?> showConfirmDialog(
+  BuildContext context, {
+  required String title,
+  required String body,
+}) {
+  return showDialog<bool>(
+    context: context,
+    builder: (ctx) => AlertDialog(
+      backgroundColor: AppTheme.darkSurface,
+      title: Text(title, style: const TextStyle(color: Colors.white)),
+      content: Text(body, style: const TextStyle(color: Colors.white70)),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(ctx, false),
+          child: Text(ctx.l10n.actionCancel),
+        ),
+        FilledButton(
+          style: FilledButton.styleFrom(backgroundColor: Colors.redAccent),
+          onPressed: () => Navigator.pop(ctx, true),
+          child: Text(ctx.l10n.actionConfirm),
+        ),
+      ],
+    ),
+  );
+}
