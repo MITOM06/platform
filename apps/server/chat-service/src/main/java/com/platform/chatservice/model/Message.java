@@ -49,6 +49,9 @@ public class Message {
     @Builder.Default
     private List<String> deletedFor = new ArrayList<>();
 
+    /** Set when the sender edits the message content (null if never edited). */
+    private Instant editedAt;
+
     @CreatedDate
     private Instant createdAt;
 

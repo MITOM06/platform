@@ -140,6 +140,8 @@
 
   "actionReply": "返信",
   "actionRecall": "送信取消",
+  "actionEdit": "編集",
+  "messageEdited": "(編集済み)",
   "actionDeleteForMe": "自分から削除",
   "actionCopy": "コピー",
   "actionReact": "リアクション",

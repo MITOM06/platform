@@ -423,6 +423,12 @@ class AppLocalizationsEs extends AppLocalizations {
   String get actionRecall => 'Retirar';
 
   @override
+  String get actionEdit => 'Editar';
+
+  @override
+  String get messageEdited => '(editado)';
+
+  @override
   String get actionDeleteForMe => 'Eliminar para mí';
 
   @override

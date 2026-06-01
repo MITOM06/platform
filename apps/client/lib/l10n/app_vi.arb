@@ -140,6 +140,8 @@
 
   "actionReply": "Trả lời",
   "actionRecall": "Thu hồi",
+  "actionEdit": "Chỉnh sửa",
+  "messageEdited": "(đã sửa)",
   "actionDeleteForMe": "Xoá phía tôi",
   "actionCopy": "Sao chép",
   "actionReact": "Cảm xúc",

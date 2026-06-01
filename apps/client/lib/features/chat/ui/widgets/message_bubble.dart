@@ -134,6 +134,19 @@ class MessageBubble extends ConsumerWidget {
                                 : Colors.white.withValues(alpha: 0.35),
                           ),
                         ),
+                        if (message.isEdited && !message.recalled) ...[
+                          const SizedBox(width: 4),
+                          Text(
+                            context.l10n.messageEdited,
+                            style: TextStyle(
+                              fontSize: 9.5,
+                              fontStyle: FontStyle.italic,
+                              color: isSentByMe
+                                  ? Colors.white.withValues(alpha: 0.65)
+                                  : Colors.white.withValues(alpha: 0.35),
+                            ),
+                          ),
+                        ],
                         if (isSentByMe && !message.recalled) ...[
                           const SizedBox(width: 4),
                           _buildReadTick(),
@@ -236,6 +249,16 @@ class MessageBubble extends ConsumerWidget {
                   );
                 },
               ),
+              if (isSentByMe && !message.isMedia)
+                ListTile(
+                  leading: const Icon(Icons.edit_rounded, color: AppTheme.ponCyan),
+                  title: Text(sheetCtx.l10n.actionEdit,
+                      style: const TextStyle(color: AppTheme.ponCyan)),
+                  onTap: () {
+                    notifier.startEditing(message);
+                    Navigator.pop(sheetCtx);
+                  },
+                ),
               if (isSentByMe)
                 ListTile(
                   leading: const Icon(Icons.undo_rounded, color: Colors.orangeAccent),

@@ -206,6 +206,48 @@ class MessageServiceTest {
     }
 
     @Test
+    void editMessage_BySender_ShouldUpdateContentAndStampEditedAt() {
+        when(messageRepository.findById(MSG_ID)).thenReturn(Optional.of(savedMessage));
+        when(messageRepository.save(any(Message.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        MessageResponse response = messageService.editMessage(SENDER_ID, MSG_ID, "Edited text");
+
+        assertThat(response.content()).isEqualTo("Edited text");
+        assertThat(response.editedAt()).isNotNull();
+        verify(messageRepository).save(argThat(m -> "Edited text".equals(m.getContent())
+            && m.getEditedAt() != null));
+    }
+
+    @Test
+    void editMessage_ByNonSender_ShouldThrow() {
+        when(messageRepository.findById(MSG_ID)).thenReturn(Optional.of(savedMessage));
+
+        assertThatThrownBy(() -> messageService.editMessage(OTHER_ID, MSG_ID, "Hacked"))
+            .isInstanceOf(UnauthorizedException.class);
+
+        verify(messageRepository, never()).save(any(Message.class));
+    }
+
+    @Test
+    void editMessage_WhenRecalled_ShouldThrow() {
+        savedMessage.setRecalled(true);
+        when(messageRepository.findById(MSG_ID)).thenReturn(Optional.of(savedMessage));
+
+        assertThatThrownBy(() -> messageService.editMessage(SENDER_ID, MSG_ID, "Edited"))
+            .isInstanceOf(IllegalArgumentException.class);
+
+        verify(messageRepository, never()).save(any(Message.class));
+    }
+
+    @Test
+    void editMessage_WhenContentBlank_ShouldThrow() {
+        assertThatThrownBy(() -> messageService.editMessage(SENDER_ID, MSG_ID, "   "))
+            .isInstanceOf(IllegalArgumentException.class);
+
+        verify(messageRepository, never()).findById(anyString());
+    }
+
+    @Test
     void markAsRead_WhenMessageExists_ShouldUpdateReadBy() {
         UpdateResult updateResult = mock(UpdateResult.class);
         when(updateResult.getMatchedCount()).thenReturn(1L);

@@ -1,73 +1,52 @@
-# Roadmap — Platform PRJ4
+# Roadmap — Platform Project
 
-> **Trạng thái:** Tất cả Milestone 0–4 hoàn thành ✅ (2026-05-30 Sprint 6 DONE)
+> **Status:** Milestones 0–4 Completed ✅
+> **Current Sprint:** Sprint 12 (See `TODO.md`)
 
 ---
 
 ## Milestone 0 — Setup ✅ DONE
-
-- [x] Monorepo structure (pnpm)
-- [x] Docker infra: MongoDB port 27018 + Redis
-- [x] NestJS auth-service hoàn chỉnh (JWT, OTP, refresh, brute force)
-- [x] CLAUDE.md + .claude/ directory + AI workflow
+- Monorepo structure (pnpm)
+- Docker infra: MongoDB port 27018 + Redis
+- NestJS auth-service complete (JWT, OTP, refresh, brute force)
+- CLAUDE.md + AI workflow established
 
 ## Milestone 1 — Spring Boot Foundation ✅ DONE
-
-- [x] Spring Boot 3 project (Maven, Spring Initializr)
-- [x] `pom.xml` đầy đủ dependencies
-- [x] `application.yml` (port 8080, MongoDB 27018, Redis 6379)
-- [x] `JwtAuthenticationFilter` — validate JWT từ auth-service
-- [x] `SecurityConfig` + CORS config
-- [x] `GET /health` endpoint
-- [x] Dockerfile multi-stage (maven:21 → jre-alpine)
-- [x] `compose.yml` thêm chat-service container
+- Spring Boot 3 project (Maven, Spring Initializr)
+- `JwtAuthenticationFilter` — validate JWT from auth-service
+- SecurityConfig + CORS config + GET /health endpoint
+- Dockerfile multi-stage (maven:21 → jre-alpine)
 
 ## Milestone 2 — Core Data Layer ✅ DONE
-
-- [x] `Conversation` + `Message` entities (`@Document`) + Repositories
-- [x] `ConversationService` + `MessageService`
-- [x] REST endpoints: conversations CRUD + messages paginated
-- [x] `GlobalExceptionHandler` (404, 409, 401)
-- [x] MongoDB aggregation cho unread count (tránh N+1)
-- [x] Atomic `markAsRead` với `$addToSet`
+- `Conversation` + `Message` entities (`@Document`) + Repositories
+- REST endpoints: conversations CRUD + messages paginated
+- MongoDB aggregation for unread count (avoid N+1)
+- Atomic `markAsRead` with `$addToSet`
 
 ## Milestone 3 — WebSocket (STOMP) ✅ DONE
-
-- [x] `WebSocketConfig` — raw WebSocket `/ws` (không SockJS)
-- [x] `ChatController` (`@MessageMapping`) — send, typing, read
-- [x] `AuthChannelInterceptor` — JWT validate trên STOMP CONNECT
-- [x] Presence heartbeat: Redis TTL refresh trên mọi STOMP frame
-- [x] `PresenceEventListener` — online/offline via Redis
-- [x] `GET /api/users/{id}/status` — check online status
-- [x] Broadcast NEW_MESSAGE notification tới `/user/queue/notifications`
+- Raw WebSocket `/ws` (no SockJS)
+- `ChatController` (`@MessageMapping`) — send, typing, read
+- `AuthChannelInterceptor` — JWT validate on STOMP CONNECT
+- Presence heartbeat: Redis TTL refresh on STOMP frames
 
 ## Milestone 4 — Flutter Client ✅ DONE
+- Flutter 3.44.0 setup, Neon Dark Theme UI
+- Auth features: Login, Register, VerifyOtp, ForgotPassword
+- Chat features: ConversationList, Chat, NewConversation screens
+- `StompService` — connect/reconnect/subscribe lifecycle
+- Typing indicator, Online/offline status, read receipts
 
-- [x] Flutter 3.44.0 setup, pubspec.yaml, lib/ structure
-- [x] `DioClient` — authDio + chatDio với JWT interceptor + token refresh
-- [x] Auth feature: Login, Register, VerifyOtp, ForgotPassword, NewPassword screens
-- [x] Chat feature: ConversationList, Chat, NewConversation screens
-- [x] `StompService` (keepAlive) — connect/reconnect/subscribe lifecycle
-- [x] Typing indicator 3s timer per userId
-- [x] Online/offline status + read receipts (2 tick xanh)
-- [x] Message pagination (load more, spinner top)
-- [x] Settings screen (avatar initials, edit display name)
-- [x] Network error toast + token expiry auto logout
-- [x] Dark Neon UI theme: NeonButton, NeonTextField, NeonCard, PonLogo
+## Milestone 5 (Sprint 5–11) ✅ DONE
+- User Profile (Bio, Cover Photo, Friend Counts)
+- Group Chat logic (BE/FE integration)
+- Block User feature
+- Active Friends row with presence time
+- Friend Requests / Contacts System
+- UI improvements (Neon theme fixes)
 
-## Milestone 5 (Sprint 5–6) ✅ DONE
-
-- [x] `UsersController` (auth-service): GET /me, /search, /:id
-- [x] JWT env alignment: `JWT_ACCESS_SECRET` fail-fast (no hardcoded fallback)
-- [x] CORS config trên chat-service REST API
-- [x] Email → UserId resolution khi tạo conversation
-- [x] Auth flow bug fixes: OTP send, sid in login, resend OTP, verify sets isVerified
-- [x] Unit tests: 26/26 Spring Boot, flutter analyze clean
-
-## Post-PRJ4 (Backlog)
-
-- [ ] Group chat
-- [ ] Image/file upload (S3/Cloudinary)
-- [ ] Push notifications (FCM)
-- [ ] Search messages
-- [ ] End-to-end encryption
+## Post-Milestone 5 (Upcoming Sprints 12-15) 🚀 PENDING
+*(See `TODO.md` for detailed specs)*
+- [ ] **Sprint 12:** Edit Message, Generic File Upload, Cursor-based Pagination, Link Preview
+- [ ] **Sprint 13:** Mention System, Message Search, True Unread Counts
+- [ ] **Sprint 14:** Public Channels, Pin/Forward Messages, Markdown Render
+- [ ] **Sprint 15:** Offline Catch-up, Rate Limiting

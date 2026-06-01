@@ -413,6 +413,12 @@ class AppLocalizationsKo extends AppLocalizations {
   String get actionRecall => '회수';
 
   @override
+  String get actionEdit => '편집';
+
+  @override
+  String get messageEdited => '(편집됨)';
+
+  @override
   String get actionDeleteForMe => '나에게서 삭제';
 
   @override

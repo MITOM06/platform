@@ -153,6 +153,14 @@ class ChatRepository {
     await _dio.delete('/api/messages/$messageId');
   }
 
+  Future<MessageModel> editMessage(String messageId, String content) async {
+    final response = await _dio.put(
+      '/api/messages/$messageId',
+      data: {'content': content},
+    );
+    return MessageModel.fromJson(response.data as Map<String, dynamic>);
+  }
+
   Future<void> deleteMessageForMe(String messageId) async {
     await _dio.post('/api/messages/$messageId/delete-for-me');
   }

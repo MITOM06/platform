@@ -425,6 +425,12 @@ class AppLocalizationsFr extends AppLocalizations {
   String get actionRecall => 'Annuler l\'envoi';
 
   @override
+  String get actionEdit => 'Modifier';
+
+  @override
+  String get messageEdited => '(modifié)';
+
+  @override
   String get actionDeleteForMe => 'Supprimer pour moi';
 
   @override

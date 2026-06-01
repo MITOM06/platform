@@ -211,6 +211,7 @@ class ChatNotifier extends _$ChatNotifier {
   StreamSubscription<ReadReceiptEvent>? _readSub;
   StreamSubscription<ReactionUpdateEvent>? _reactionSub;
   StreamSubscription<RecallEvent>? _recallSub;
+  StreamSubscription<MessageUpdateEvent>? _editSub;
 
   @override
   Future<ChatState> build(String conversationId) async {
@@ -238,12 +239,17 @@ class ChatNotifier extends _$ChatNotifier {
         .where((e) => e.conversationId == conversationId)
         .listen(_onRecall);
 
+    _editSub = stomp.editedMessages
+        .where((e) => e.conversationId == conversationId)
+        .listen(_onEdit);
+
     ref.onDispose(() {
       _messageSub?.cancel();
       _typingSub?.cancel();
       _readSub?.cancel();
       _reactionSub?.cancel();
       _recallSub?.cancel();
+      _editSub?.cancel();
       _typingTimer?.cancel();
       for (final t in _typingTimers.values) {
         t.cancel();
@@ -352,6 +358,17 @@ class ChatNotifier extends _$ChatNotifier {
     state = AsyncData(current.copyWith(messages: updated));
   }
 
+  void _onEdit(MessageUpdateEvent event) {
+    final current = state.valueOrNull;
+    if (current == null) return;
+    final updated = current.messages
+        .map((m) => m.id == event.messageId
+            ? m.copyWith(content: event.content, editedAt: event.editedAt)
+            : m)
+        .toList();
+    state = AsyncData(current.copyWith(messages: updated));
+  }
+
   // ----- Reply / reactions / recall / delete actions --------------------
 
   void startReply(MessageModel message) {
@@ -364,6 +381,21 @@ class ChatNotifier extends _$ChatNotifier {
     final current = state.valueOrNull;
     if (current == null) return;
     state = AsyncData(current.copyWith(clearReplyingTo: true));
+  }
+
+  /// Begin editing a sent message — the composer pre-fills with its content.
+  /// Editing and replying are mutually exclusive.
+  void startEditing(MessageModel message) {
+    final current = state.valueOrNull;
+    if (current == null) return;
+    state = AsyncData(
+        current.copyWith(editingMessage: message, clearReplyingTo: true));
+  }
+
+  void cancelEditing() {
+    final current = state.valueOrNull;
+    if (current == null) return;
+    state = AsyncData(current.copyWith(clearEditingMessage: true));
   }
 
   /// Toggle a reaction: tapping the same emoji again removes it.
@@ -391,6 +423,29 @@ class ChatNotifier extends _$ChatNotifier {
     try {
       await ref.read(chatRepositoryProvider).recallMessage(messageId);
     } catch (_) {}
+  }
+
+  /// Edit a sent message. Optimistically updates locally; the server's
+  /// MESSAGE_UPDATED broadcast keeps both peers authoritative.
+  Future<void> editMessage(String messageId, String content) async {
+    final trimmed = content.trim();
+    if (trimmed.isEmpty) return;
+    final current = state.valueOrNull;
+    if (current != null) {
+      state = AsyncData(current.copyWith(
+        messages: current.messages
+            .map((m) => m.id == messageId
+                ? m.copyWith(content: trimmed, editedAt: DateTime.now())
+                : m)
+            .toList(),
+        clearEditingMessage: true,
+      ));
+    }
+    try {
+      await ref.read(chatRepositoryProvider).editMessage(messageId, trimmed);
+    } catch (_) {
+      // Broadcast / next reload reconciles on failure.
+    }
   }
 
   Future<void> deleteForMe(String messageId) async {

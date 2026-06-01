@@ -416,6 +416,12 @@ class AppLocalizationsVi extends AppLocalizations {
   String get actionRecall => 'Thu hồi';
 
   @override
+  String get actionEdit => 'Chỉnh sửa';
+
+  @override
+  String get messageEdited => '(đã sửa)';
+
+  @override
   String get actionDeleteForMe => 'Xoá phía tôi';
 
   @override

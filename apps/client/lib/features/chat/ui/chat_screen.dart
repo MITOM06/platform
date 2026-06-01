@@ -87,10 +87,23 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
   void _onSend() {
     final content = _textCtrl.text.trim();
     if (content.isEmpty) return;
+    final notifier =
+        ref.read(chatNotifierProvider(widget.conversationId).notifier);
+    final editing =
+        ref.read(chatNotifierProvider(widget.conversationId)).valueOrNull?.editingMessage;
+    _textCtrl.clear();
+    if (editing != null) {
+      notifier.editMessage(editing.id, content);
+    } else {
+      notifier.sendMessage(content);
+    }
+  }
+
+  void _cancelEditing() {
     _textCtrl.clear();
     ref
         .read(chatNotifierProvider(widget.conversationId).notifier)
-        .sendMessage(content);
+        .cancelEditing();
   }
 
   Future<void> _acceptStranger() async {
@@ -274,8 +287,24 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
 
   @override
   Widget build(BuildContext context) {
+    // When the user taps "Edit" on a message, pre-fill the composer with its
+    // current content and move the caret to the end.
+    ref.listen(
+      chatNotifierProvider(widget.conversationId)
+          .select((s) => s.valueOrNull?.editingMessage),
+      (prev, next) {
+        if (next != null && prev?.id != next.id) {
+          _textCtrl.text = next.content;
+          _textCtrl.selection = TextSelection.collapsed(
+            offset: _textCtrl.text.length,
+          );
+        }
+      },
+    );
+
     final chatAsync = ref.watch(chatNotifierProvider(widget.conversationId));
     final replyingTo = chatAsync.valueOrNull?.replyingTo;
+    final editingMessage = chatAsync.valueOrNull?.editingMessage;
     final authState = ref.watch(authNotifierProvider).valueOrNull;
     final currentUserId =
         authState is AuthAuthenticated ? authState.user.id : '';
@@ -651,7 +680,12 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
                   onReject: _rejectStranger,
                 )
               else ...[
-                if (replyingTo != null)
+                if (editingMessage != null)
+                  _EditComposerBar(
+                    preview: editingMessage,
+                    onCancel: _cancelEditing,
+                  )
+                else if (replyingTo != null)
                   _ReplyComposerBar(
                     preview: replyingTo,
                     onCancel: () => ref
@@ -721,6 +755,58 @@ class _ReplyComposerBar extends StatelessWidget {
                   context.l10n.actionReply,
                   style: const TextStyle(
                     color: AppTheme.ponCyan,
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                Text(
+                  preview.content,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    color: Colors.white.withValues(alpha: 0.6),
+                    fontSize: 13,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          IconButton(
+            icon: const Icon(Icons.close_rounded, color: Colors.white54, size: 20),
+            onPressed: onCancel,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Shown above the composer while editing a sent message. Mirrors the reply
+/// bar but uses the peach accent and an "edit" label.
+class _EditComposerBar extends StatelessWidget {
+  final MessageModel preview;
+  final VoidCallback onCancel;
+
+  const _EditComposerBar({required this.preview, required this.onCancel});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      color: AppTheme.darkSurface.withValues(alpha: 0.6),
+      padding: const EdgeInsets.fromLTRB(16, 8, 8, 8),
+      child: Row(
+        children: [
+          const Icon(Icons.edit_rounded, color: AppTheme.ponPeach, size: 18),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  context.l10n.actionEdit,
+                  style: const TextStyle(
+                    color: AppTheme.ponPeach,
                     fontSize: 11,
                     fontWeight: FontWeight.w600,
                   ),

@@ -19,6 +19,7 @@ class StompService extends _$StompService {
   final _readCtrl = StreamController<ReadReceiptEvent>.broadcast();
   final _reactionCtrl = StreamController<ReactionUpdateEvent>.broadcast();
   final _recallCtrl = StreamController<RecallEvent>.broadcast();
+  final _editCtrl = StreamController<MessageUpdateEvent>.broadcast();
   final _convUpdateCtrl = StreamController<ConversationModel>.broadcast();
   final _webrtcCtrl = StreamController<Map<String, dynamic>>.broadcast();
   final _presenceCtrl = StreamController<PresenceEvent>.broadcast();
@@ -33,6 +34,7 @@ class StompService extends _$StompService {
   Stream<ReadReceiptEvent> get readReceipts => _readCtrl.stream;
   Stream<ReactionUpdateEvent> get reactionUpdates => _reactionCtrl.stream;
   Stream<RecallEvent> get recalledMessages => _recallCtrl.stream;
+  Stream<MessageUpdateEvent> get editedMessages => _editCtrl.stream;
   Stream<ConversationModel> get conversationUpdates => _convUpdateCtrl.stream;
   Stream<Map<String, dynamic>> get webrtcSignals => _webrtcCtrl.stream;
   Stream<PresenceEvent> get presence => _presenceCtrl.stream;
@@ -114,6 +116,14 @@ class StompService extends _$StompService {
             _recallCtrl.add(RecallEvent(
               conversationId: conversationId,
               messageId: data['messageId'] as String,
+            ));
+            return;
+          case 'MESSAGE_UPDATED':
+            _editCtrl.add(MessageUpdateEvent(
+              conversationId: conversationId,
+              messageId: data['messageId'] as String,
+              content: data['content'] as String? ?? '',
+              editedAt: DateTime.parse(data['editedAt'] as String),
             ));
             return;
           case 'CONVERSATION_UPDATED':

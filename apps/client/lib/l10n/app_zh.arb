@@ -140,6 +140,8 @@
 
   "actionReply": "回复",
   "actionRecall": "撤回",
+  "actionEdit": "编辑",
+  "messageEdited": "(已编辑)",
   "actionDeleteForMe": "删除（仅自己）",
   "actionCopy": "复制",
   "actionReact": "表态",

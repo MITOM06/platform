@@ -159,6 +159,8 @@ class MessageModel {
   final ReplyPreview? replyPreview;
   final List<ReactionModel> reactions;
   final bool recalled;
+  // Set when the sender has edited this message (null = never edited).
+  final DateTime? editedAt;
   // Client-only flag for optimistic UI — not in server response
   final bool isPending;
 
@@ -174,8 +176,11 @@ class MessageModel {
     this.replyPreview,
     this.reactions = const [],
     this.recalled = false,
+    this.editedAt,
     this.isPending = false,
   });
+
+  bool get isEdited => editedAt != null;
 
   bool get isSystem => type == 'system';
   bool get isImage => type == 'image';
@@ -199,6 +204,9 @@ class MessageModel {
           .map((e) => ReactionModel.fromJson(e as Map<String, dynamic>))
           .toList(),
       recalled: json['recalled'] as bool? ?? false,
+      editedAt: json['editedAt'] != null
+          ? DateTime.parse(json['editedAt'] as String)
+          : null,
     );
   }
 
@@ -214,6 +222,7 @@ class MessageModel {
     ReplyPreview? replyPreview,
     List<ReactionModel>? reactions,
     bool? recalled,
+    DateTime? editedAt,
     bool? isPending,
   }) {
     return MessageModel(
@@ -228,6 +237,7 @@ class MessageModel {
       replyPreview: replyPreview ?? this.replyPreview,
       reactions: reactions ?? this.reactions,
       recalled: recalled ?? this.recalled,
+      editedAt: editedAt ?? this.editedAt,
       isPending: isPending ?? this.isPending,
     );
   }
@@ -332,6 +342,21 @@ class RecallEvent {
 }
 
 @immutable
+class MessageUpdateEvent {
+  final String conversationId;
+  final String messageId;
+  final String content;
+  final DateTime editedAt;
+
+  const MessageUpdateEvent({
+    required this.conversationId,
+    required this.messageId,
+    required this.content,
+    required this.editedAt,
+  });
+}
+
+@immutable
 class ChatState {
   final List<MessageModel> messages;
   final bool hasMore;
@@ -340,6 +365,8 @@ class ChatState {
   final bool isLoadingMore;
   // Message the composer is currently replying to (null = not replying).
   final MessageModel? replyingTo;
+  // Message the composer is currently editing (null = not editing).
+  final MessageModel? editingMessage;
 
   const ChatState({
     required this.messages,
@@ -348,6 +375,7 @@ class ChatState {
     this.typingUserIds = const {},
     this.isLoadingMore = false,
     this.replyingTo,
+    this.editingMessage,
   });
 
   ChatState copyWith({
@@ -358,6 +386,8 @@ class ChatState {
     bool? isLoadingMore,
     MessageModel? replyingTo,
     bool clearReplyingTo = false,
+    MessageModel? editingMessage,
+    bool clearEditingMessage = false,
   }) {
     return ChatState(
       messages: messages ?? this.messages,
@@ -366,6 +396,9 @@ class ChatState {
       typingUserIds: typingUserIds ?? this.typingUserIds,
       isLoadingMore: isLoadingMore ?? this.isLoadingMore,
       replyingTo: clearReplyingTo ? null : (replyingTo ?? this.replyingTo),
+      editingMessage: clearEditingMessage
+          ? null
+          : (editingMessage ?? this.editingMessage),
     );
   }
 }

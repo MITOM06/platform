@@ -413,6 +413,12 @@ class AppLocalizationsJa extends AppLocalizations {
   String get actionRecall => '送信取消';
 
   @override
+  String get actionEdit => '編集';
+
+  @override
+  String get messageEdited => '(編集済み)';
+
+  @override
   String get actionDeleteForMe => '自分から削除';
 
   @override

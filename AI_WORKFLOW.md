@@ -1,126 +1,127 @@
-# AI_WORKFLOW.md — Vòng Lặp Bán Tự Động
+# AI_WORKFLOW.md — Semi-Automated Loop
+> **Note for Tech Lead:** Workflow process between Gemini (Planner) and Claude (Coder).
 
-## Phân vai
+## 1. Roles
 
-| Agent | Tool | Nhiệm vụ |
+| Agent | Tool | Role & Responsibility |
 |-------|------|----------|
-| **Gemini 2.0 Pro** | VS Code Extension (Enterprise) | **Planner + QC** — Đọc .md files → viết spec → review kết quả của Claude |
-| **Claude** | CLI Terminal (`claude`) | **Coder + Tester** — Đọc spec → viết code toàn bộ layer → tự chạy build/test/fix |
-| **Tech Lead** | VS Code | **Cầu nối + Phê duyệt** — Quyết định feature, chuyển thông tin giữa 2 AI |
+| **Gemini 2.0 Pro** | VS Code Extension (Enterprise) | **Planner + QC** — Reads .md files → writes specs → reviews Claude's output |
+| **Claude** | CLI Terminal (`claude`) | **Coder + Tester** — Reads specs → writes code across all layers → runs build/test/fix |
+| **Tech Lead** | VS Code | **Bridge + Approver** — Decides features, passes info between the two AIs |
 
 ---
 
-## Vòng lặp đầy đủ
+## 2. Full Workflow Loop
 
-```
+```text
 ① IDENTIFY → ② GEMINI SPEC → ③ CLAUDE CODE → ④ GEMINI QC → ⑤ REPORT
                                      ↑________________________|
-                                        (nếu fail: Claude fix)
+                                        (if fail: Claude fixes)
 ```
 
 ---
 
-## BƯỚC ① — Xác định thiếu sót
+## STEP ① — Identify Missing Features
 
-**Cách 1 — Hỏi Claude:**
-> "Claude, dự án PON hiện tại còn thiếu gì để đạt mức production-ready?"
+**Method 1 — Ask Claude:**
+> "Claude, what is the PON project currently missing to reach production-ready status?"
 
-**Cách 2 — Tự test trên giao diện:**
-Chạy app → thấy tính năng nào chưa có / lỗi → note lại tên feature.
+**Method 2 — Manual UI Testing:**
+Run the app → identify missing/buggy features → note the feature name.
 
 ---
 
-## BƯỚC ② — Gemini viết Spec vào TODO.md
+## STEP ② — Gemini Writes Spec into TODO.md
 
-**Prompt cho Gemini** (paste vào VS Code Extension):
-```
-Đọc các file sau để nắm context dự án (tiết kiệm token, đừng đọc toàn bộ repo):
+**Prompt for Gemini** (paste into VS Code Extension):
+```text
+Read the following files to grasp the project context (save tokens, do not read the whole repo):
 - CLAUDE.md
 - apps/server/chat-service/CLAUDE.md
 - apps/client/CLAUDE.md
-- .claude/ai-activity.md  (xem session gần nhất để biết đã làm gì)
+- .claude/ai-activity.md  (check recent sessions to see what was done)
 - docs/api-spec.md
-- TODO.md  (xem sprint hiện tại)
+- TODO.md  (check current sprint)
 
-Sau khi đọc xong, viết spec kỹ thuật đầy đủ cho feature: [TÊN FEATURE]
-vào TODO.md, mục "## SPRINT X — [tên feature]", theo đúng cấu trúc template:
+After reading, write a full technical spec for the feature: [FEATURE NAME]
+into TODO.md, under "## SPRINT X — [feature name]", following the exact template:
 
-### TASK [N] — [tên task] `PENDING`
+### TASK [N] — [task name] `PENDING`
 #### SPEC
-- **Data model:** (schema, fields mới nếu có)
-- **Backend:** (file path, class, method, logic cụ thể)
+- **Data model:** (schema, new fields if any)
+- **Backend:** (file path, class, method, specific logic)
 - **Frontend:** (file path, widget/screen, Riverpod provider, API call)
-- **Test:** (mvn test case / flutter test case cần pass)
+- **Test:** (mvn test case / flutter test case to pass)
 ```
 
-→ Tech Lead **review spec**, chốt, rồi qua bước 3.
+→ Tech Lead **reviews the spec**, confirms, then proceeds to Step 3.
 
 ---
 
-## BƯỚC ③ — Claude implement toàn bộ
+## STEP ③ — Claude Implements Everything
 
-**Prompt cho Claude** (gõ vào Terminal):
-```
-Đọc TODO.md, implement TASK [N]: [tên task].
-Viết đủ tất cả layer theo spec (data → BE → FE).
-Sau khi viết xong, tự chạy: mvn clean compile && mvn test (cho BE)
-hoặc flutter analyze && flutter test (cho FE).
-Fix tất cả lỗi cho đến khi BUILD SUCCESS / No issues.
-Ghi kết quả vào mục QA LOG của TODO.md.
+**Prompt for Claude** (type into Terminal):
+```text
+Read TODO.md, implement TASK [N]: [task name].
+Write all layers according to the spec (data → BE → FE).
+After writing, automatically run: `mvn clean compile && mvn test` (for BE)
+or `flutter analyze && flutter test` (for FE).
+Fix all errors until BUILD SUCCESS / No issues.
+Log the results into the QA LOG section of TODO.md.
 ```
 
-→ Claude tự loop trong terminal cho đến khi pass, không cần theo dõi.
+→ Claude self-loops in the terminal until passing, no need to monitor.
 
 ---
 
-## BƯỚC ④ — Gemini QC
+## STEP ④ — Gemini QC
 
-**Prompt cho Gemini** (sau khi Claude báo xong):
-```
-Claude vừa implement xong TASK [N]. Đọc lại TODO.md (mục QA LOG)
-và các file code sau để review:
-- [danh sách file Claude vừa viết — Claude sẽ báo]
+**Prompt for Gemini** (after Claude reports finishing):
+```text
+Claude just implemented TASK [N]. Read TODO.md (QA LOG section)
+and the following code files to review:
+- [list of files Claude just wrote — Claude will report this]
 
-Đánh giá:
-1. Code có đúng spec không?
-2. Có bug logic / security gap / missing edge case nào không?
-3. Nếu cần fix: viết rõ instruction vào TODO.md mục "## FIX NOTES"
-4. Nếu pass: ghi "✅ QC PASS" vào TODO.md và báo Tech Lead
+Evaluate:
+1. Does the code follow the spec correctly?
+2. Are there logic bugs / security gaps / missing edge cases?
+3. If fixes are needed: write clear instructions in TODO.md under "## FIX NOTES"
+4. If passed: write "✅ QC PASS" in TODO.md and inform Tech Lead
 ```
 
 ---
 
-## BƯỚC ⑤ — Nếu Gemini yêu cầu fix
+## STEP ⑤ — If Gemini Requests Fixes
 
-**Prompt cho Claude:**
-```
-Đọc TODO.md mục "## FIX NOTES" từ Gemini, fix theo đúng instruction.
-Sau khi fix, chạy lại test và cập nhật QA LOG.
+**Prompt for Claude:**
+```text
+Read TODO.md under "## FIX NOTES" from Gemini, and fix exactly as instructed.
+After fixing, rerun tests and update the QA LOG.
 ```
 
-→ Lặp lại bước ④ → ⑤ cho đến khi Gemini ghi "✅ QC PASS".
+→ Repeat steps ④ → ⑤ until Gemini writes "✅ QC PASS".
 
 ---
 
-## Cấu trúc TODO.md cho mỗi Sprint
+## TODO.md Structure per Sprint
 
 ```markdown
-## 🔴 SPRINT X — [Tên feature] — IN PROGRESS
+## 🔴 SPRINT X — [Feature Name] — IN PROGRESS
 
-### TASK N — [tên] `PENDING / IN_PROGRESS / DONE`
-#### SPEC         ← Gemini viết
-#### FIX NOTES    ← Gemini viết khi QC fail
-#### IMPL NOTES   ← Claude ghi khi code xong
+### TASK N — [name] `PENDING / IN_PROGRESS / DONE`
+#### SPEC         ← Gemini writes
+#### FIX NOTES    ← Gemini writes if QC fails
+#### IMPL NOTES   ← Claude writes after coding
 
 ## 🧪 QA LOG
 [timestamp] mvn test → ...
-[timestamp] Gemini QC → PASS / FAIL + lý do
+[timestamp] Gemini QC → PASS / FAIL + reason
 ```
 
 ---
 
-## Nguyên tắc tiết kiệm token
+## Token Saving Principles
 
-- Gemini **không cần đọc toàn bộ repo** — chỉ đọc 5 file .md là đủ context
-- Claude **không cần đọc lịch sử chat** — chỉ đọc `TODO.md` là đủ nhiệm vụ
-- `ai-activity.md` là memory duy nhất giữa các session — luôn append vào đó sau mỗi sprint
+- Gemini **does not need to read the whole repo** — reading 5 .md files is enough context.
+- Claude **does not need to read chat history** — reading `TODO.md` is enough to know the task.
+- `ai-activity.md` is the only memory across sessions — always append to it after each sprint.

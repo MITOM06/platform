@@ -140,6 +140,8 @@
 
   "actionReply": "답장",
   "actionRecall": "회수",
+  "actionEdit": "편집",
+  "messageEdited": "(편집됨)",
   "actionDeleteForMe": "나에게서 삭제",
   "actionCopy": "복사",
   "actionReact": "반응",

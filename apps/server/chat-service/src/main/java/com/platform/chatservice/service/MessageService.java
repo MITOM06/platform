@@ -170,6 +170,25 @@ public class MessageService {
         return toResponse(messageRepository.save(message));
     }
 
+    /** Edit a message's content — only the original sender may do this, and
+     *  recalled messages cannot be edited. Stamps {@code editedAt}. */
+    public MessageResponse editMessage(String userId, String messageId, String newContent) {
+        if (newContent == null || newContent.trim().isEmpty()) {
+            throw new IllegalArgumentException("Message content cannot be empty");
+        }
+        Message message = messageRepository.findById(messageId)
+            .orElseThrow(() -> new MessageNotFoundException(messageId));
+        if (!userId.equals(message.getSenderId())) {
+            throw new UnauthorizedException("Only the sender can edit this message");
+        }
+        if (message.isRecalled()) {
+            throw new IllegalArgumentException("Cannot edit a recalled message");
+        }
+        message.setContent(newContent.trim());
+        message.setEditedAt(Instant.now());
+        return toResponse(messageRepository.save(message));
+    }
+
     /** Hide a message for the requesting user only. */
     public void deleteForMe(String userId, String messageId) {
         Message message = messageRepository.findById(messageId)
@@ -252,7 +271,7 @@ public class MessageService {
         return new MessageResponse(
             m.getId(), m.getConversationId(), m.getSenderId(),
             m.getContent(), m.getType(), m.getReadBy(), m.getCreatedAt(),
-            m.getReplyToId(), replyPreview, reactions, m.isRecalled()
+            m.getReplyToId(), replyPreview, reactions, m.isRecalled(), m.getEditedAt()
         );
     }
 }

@@ -413,6 +413,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get actionRecall => '撤回';
 
   @override
+  String get actionEdit => '编辑';
+
+  @override
+  String get messageEdited => '(已编辑)';
+
+  @override
   String get actionDeleteForMe => '删除（仅自己）';
 
   @override

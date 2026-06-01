@@ -140,6 +140,8 @@
 
   "actionReply": "Responder",
   "actionRecall": "Retirar",
+  "actionEdit": "Editar",
+  "messageEdited": "(editado)",
   "actionDeleteForMe": "Eliminar para mí",
   "actionCopy": "Copiar",
   "actionReact": "Reaccionar",

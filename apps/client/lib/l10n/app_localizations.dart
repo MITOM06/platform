@@ -876,6 +876,18 @@ abstract class AppLocalizations {
   /// **'Recall'**
   String get actionRecall;
 
+  /// No description provided for @actionEdit.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit'**
+  String get actionEdit;
+
+  /// No description provided for @messageEdited.
+  ///
+  /// In en, this message translates to:
+  /// **'(edited)'**
+  String get messageEdited;
+
   /// No description provided for @actionDeleteForMe.
   ///
   /// In en, this message translates to:

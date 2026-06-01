@@ -1,5 +1,6 @@
 package com.platform.chatservice.controller;
 
+import com.platform.chatservice.dto.EditMessageRequest;
 import com.platform.chatservice.dto.MessageResponse;
 import com.platform.chatservice.dto.ReactionRequest;
 import com.platform.chatservice.dto.SendMessageRequest;
@@ -26,6 +27,19 @@ public class MessageController {
     @ResponseStatus(HttpStatus.CREATED)
     public MessageResponse sendMessage(@RequestBody SendMessageRequest request) {
         return messageService.sendMessage(currentUserId(), request);
+    }
+
+    @PutMapping("/{id}")
+    public MessageResponse editMessage(@PathVariable String id, @RequestBody EditMessageRequest request) {
+        MessageResponse updated = messageService.editMessage(currentUserId(), id, request.content());
+        messagingTemplate.convertAndSend(
+            "/topic/conversation/" + updated.conversationId(),
+            Map.of("type", "MESSAGE_UPDATED",
+                   "messageId", updated.id(),
+                   "conversationId", updated.conversationId(),
+                   "content", updated.content(),
+                   "editedAt", updated.editedAt().toString()));
+        return updated;
     }
 
     @PutMapping("/{id}/read")

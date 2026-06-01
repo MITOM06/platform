@@ -170,6 +170,8 @@
 
   "actionReply": "Reply",
   "actionRecall": "Recall",
+  "actionEdit": "Edit",
+  "messageEdited": "(edited)",
   "actionDeleteForMe": "Delete for me",
   "actionCopy": "Copy",
   "actionReact": "React",
