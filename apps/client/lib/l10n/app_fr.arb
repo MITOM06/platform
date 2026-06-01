@@ -170,5 +170,12 @@
   "attachVideo": "Vidéo",
   "uploading": "Envoi…",
   "downloadMedia": "Télécharger",
-  "attachmentLabel": "📎 Pièce jointe"
+  "attachmentLabel": "📎 Pièce jointe",
+
+  "callIncoming": "Appel entrant",
+  "callIncomingBody": "{name} vous appelle",
+  "callCalling": "Appel de {name}…",
+  "callConnecting": "Connexion…",
+  "callMediaError": "Impossible d'accéder à la caméra/au micro (HTTPS ou localhost requis)",
+  "callUnknownCaller": "Quelqu'un"
 }

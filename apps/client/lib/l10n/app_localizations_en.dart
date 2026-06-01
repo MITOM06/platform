@@ -508,4 +508,27 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get attachmentLabel => '📎 Attachment';
+
+  @override
+  String get callIncoming => 'Incoming call';
+
+  @override
+  String callIncomingBody(String name) {
+    return '$name is calling you';
+  }
+
+  @override
+  String callCalling(String name) {
+    return 'Calling $name…';
+  }
+
+  @override
+  String get callConnecting => 'Connecting…';
+
+  @override
+  String get callMediaError =>
+      'Cannot access camera/microphone (HTTPS or localhost required)';
+
+  @override
+  String get callUnknownCaller => 'Someone';
 }

@@ -67,7 +67,7 @@ class MessageBubble extends ConsumerWidget {
                 decoration: BoxDecoration(
                   gradient: isSentByMe && !message.recalled
                       ? const LinearGradient(
-                          colors: [AppTheme.neonCyan, AppTheme.neonPurple],
+                          colors: [AppTheme.ponCyan, AppTheme.ponPeach],
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
                         )
@@ -158,7 +158,7 @@ class MessageBubble extends ConsumerWidget {
     return Icon(
       isRead ? Icons.done_all_rounded : Icons.done_rounded,
       size: 13,
-      color: isRead ? AppTheme.neonCyan : Colors.white.withValues(alpha: 0.4),
+      color: isRead ? AppTheme.ponCyan : Colors.white.withValues(alpha: 0.4),
     );
   }
 
@@ -277,7 +277,7 @@ class _SenderName extends ConsumerWidget {
         style: TextStyle(
           fontSize: 11,
           fontWeight: FontWeight.w600,
-          color: AppTheme.neonCyan.withValues(alpha: 0.8),
+          color: AppTheme.ponCyan.withValues(alpha: 0.8),
         ),
       ),
     );
@@ -297,7 +297,7 @@ class _ReplyQuote extends StatelessWidget {
         color: Colors.black.withValues(alpha: 0.2),
         borderRadius: BorderRadius.circular(8),
         border: const Border(
-          left: BorderSide(color: AppTheme.neonCyan, width: 3),
+          left: BorderSide(color: AppTheme.ponCyan, width: 3),
         ),
       ),
       child: Text(
@@ -336,7 +336,7 @@ class _ReactionChips extends StatelessWidget {
                 color: AppTheme.darkSurface,
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(
-                  color: AppTheme.neonCyan.withValues(alpha: 0.3),
+                  color: AppTheme.ponCyan.withValues(alpha: 0.3),
                   width: 1,
                 ),
               ),
@@ -403,7 +403,7 @@ class _ImageContent extends StatelessWidget {
                   height: 22,
                   child: CircularProgressIndicator(
                     strokeWidth: 2,
-                    valueColor: AlwaysStoppedAnimation<Color>(AppTheme.neonCyan),
+                    valueColor: AlwaysStoppedAnimation<Color>(AppTheme.ponCyan),
                   ),
                 ),
               ),

@@ -170,5 +170,12 @@
   "attachVideo": "视频",
   "uploading": "上传中…",
   "downloadMedia": "下载",
-  "attachmentLabel": "📎 附件"
+  "attachmentLabel": "📎 附件",
+
+  "callIncoming": "来电",
+  "callIncomingBody": "{name} 正在呼叫您",
+  "callCalling": "正在呼叫 {name}…",
+  "callConnecting": "连接中…",
+  "callMediaError": "无法访问摄像头/麦克风（需要 HTTPS 或 localhost）",
+  "callUnknownCaller": "某人"
 }

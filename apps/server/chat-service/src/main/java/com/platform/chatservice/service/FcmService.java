@@ -1,0 +1,89 @@
+package com.platform.chatservice.service;
+
+import com.google.firebase.FirebaseApp;
+import com.google.firebase.messaging.FirebaseMessaging;
+import com.google.firebase.messaging.Message;
+import com.google.firebase.messaging.Notification;
+import com.platform.chatservice.model.Conversation;
+import lombok.RequiredArgsConstructor;
+import org.bson.Document;
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.stereotype.Service;
+
+import java.util.List;
+
+@Service
+@RequiredArgsConstructor
+public class FcmService {
+
+    private final MongoTemplate mongoTemplate;
+    private final StringRedisTemplate redisTemplate;
+    
+    private static final String STATUS_KEY_PREFIX = "user:status:";
+
+    public void sendPushNotification(String targetUserId, String senderName, String messageContent, String conversationId) {
+        // FCM disabled (no Firebase app configured) → silent no-op.
+        // NOTE: FirebaseMessaging.getInstance() THROWS when no app exists, so we must
+        // check FirebaseApp.getApps() instead — otherwise chat.send would break.
+        if (FirebaseApp.getApps().isEmpty()) {
+            return;
+        }
+
+        try {
+        // Check presence
+        String status = redisTemplate.opsForValue().get(STATUS_KEY_PREFIX + targetUserId);
+        if ("online".equals(status)) {
+            // User is online, no need to send push notification
+            return;
+        }
+
+        // Fetch target user's tokens
+        Query query = new Query(Criteria.where("_id").is(new org.bson.types.ObjectId(targetUserId)));
+        query.fields().include("fcmTokens");
+        
+        Document userDoc = mongoTemplate.findOne(query, Document.class, "users");
+        if (userDoc == null) return;
+
+        List<String> tokens = userDoc.getList("fcmTokens", String.class);
+        if (tokens == null || tokens.isEmpty()) return;
+
+        // Fetch sender's name
+        String finalSenderName = "New Message";
+        try {
+            Query senderQuery = new Query(Criteria.where("_id").is(new org.bson.types.ObjectId(senderName))); // senderName is actually senderId here
+            senderQuery.fields().include("displayName");
+            Document senderDoc = mongoTemplate.findOne(senderQuery, Document.class, "users");
+            if (senderDoc != null && senderDoc.getString("displayName") != null) {
+                finalSenderName = senderDoc.getString("displayName");
+            }
+        } catch (Exception e) {
+            // fallback
+        }
+
+        for (String token : tokens) {
+            try {
+                Message message = Message.builder()
+                        .setToken(token)
+                        .setNotification(Notification.builder()
+                                .setTitle(finalSenderName)
+                                .setBody(messageContent)
+                                .build())
+                        .putData("conversationId", conversationId)
+                        .putData("type", "chat_message")
+                        .build();
+
+                FirebaseMessaging.getInstance().sendAsync(message);
+            } catch (Exception e) {
+                System.err.println("Failed to send FCM to token: " + token + ", " + e.getMessage());
+            }
+        }
+        } catch (Exception e) {
+            // Any failure (Firebase not ready, DB, ObjectId parse, etc.) must never break
+            // the message-send flow that calls this.
+            System.err.println("FCM push skipped: " + e.getMessage());
+        }
+    }
+}

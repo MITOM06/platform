@@ -212,5 +212,14 @@
   "attachVideo": "Video",
   "uploading": "Uploading…",
   "downloadMedia": "Download",
-  "attachmentLabel": "📎 Attachment"
+  "attachmentLabel": "📎 Attachment",
+
+  "callIncoming": "Incoming call",
+  "callIncomingBody": "{name} is calling you",
+  "@callIncomingBody": { "placeholders": { "name": { "type": "String" } } },
+  "callCalling": "Calling {name}…",
+  "@callCalling": { "placeholders": { "name": { "type": "String" } } },
+  "callConnecting": "Connecting…",
+  "callMediaError": "Cannot access camera/microphone (HTTPS or localhost required)",
+  "callUnknownCaller": "Someone"
 }

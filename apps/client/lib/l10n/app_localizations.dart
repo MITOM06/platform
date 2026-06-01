@@ -1043,6 +1043,42 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'📎 Attachment'**
   String get attachmentLabel;
+
+  /// No description provided for @callIncoming.
+  ///
+  /// In en, this message translates to:
+  /// **'Incoming call'**
+  String get callIncoming;
+
+  /// No description provided for @callIncomingBody.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} is calling you'**
+  String callIncomingBody(String name);
+
+  /// No description provided for @callCalling.
+  ///
+  /// In en, this message translates to:
+  /// **'Calling {name}…'**
+  String callCalling(String name);
+
+  /// No description provided for @callConnecting.
+  ///
+  /// In en, this message translates to:
+  /// **'Connecting…'**
+  String get callConnecting;
+
+  /// No description provided for @callMediaError.
+  ///
+  /// In en, this message translates to:
+  /// **'Cannot access camera/microphone (HTTPS or localhost required)'**
+  String get callMediaError;
+
+  /// No description provided for @callUnknownCaller.
+  ///
+  /// In en, this message translates to:
+  /// **'Someone'**
+  String get callUnknownCaller;
 }
 
 class _AppLocalizationsDelegate

@@ -517,4 +517,27 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get attachmentLabel => '📎 Pièce jointe';
+
+  @override
+  String get callIncoming => 'Appel entrant';
+
+  @override
+  String callIncomingBody(String name) {
+    return '$name vous appelle';
+  }
+
+  @override
+  String callCalling(String name) {
+    return 'Appel de $name…';
+  }
+
+  @override
+  String get callConnecting => 'Connexion…';
+
+  @override
+  String get callMediaError =>
+      'Impossible d\'accéder à la caméra/au micro (HTTPS ou localhost requis)';
+
+  @override
+  String get callUnknownCaller => 'Quelqu\'un';
 }

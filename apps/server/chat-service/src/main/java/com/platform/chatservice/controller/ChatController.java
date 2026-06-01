@@ -23,6 +23,7 @@ public class ChatController {
     private final MessageService messageService;
     private final ConversationService conversationService;
     private final SimpMessagingTemplate messagingTemplate;
+    private final com.platform.chatservice.service.FcmService fcmService;
 
     @MessageMapping("/chat.send")
     public void send(@Payload ChatMessageDto dto, Principal principal) {
@@ -47,6 +48,9 @@ public class ChatController {
         for (String participantId : participants) {
             if (!participantId.equals(principal.getName())) {
                 messagingTemplate.convertAndSendToUser(participantId, "/queue/notifications", notification);
+                
+                // Trigger Push Notification
+                fcmService.sendPushNotification(participantId, principal.getName(), dto.getContent(), dto.getConversationId());
             }
         }
     }
@@ -75,6 +79,54 @@ public class ChatController {
         messagingTemplate.convertAndSend(
                 "/topic/conversation/" + dto.getConversationId(),
                 event
+        );
+    }
+
+    // WebRTC Signaling Endpoints
+    @MessageMapping("/call.offer")
+    public void callOffer(@Payload com.platform.chatservice.dto.WebRTCSignalDto dto, Principal principal) {
+        dto.setSenderId(principal.getName());
+        messagingTemplate.convertAndSendToUser(dto.getTargetId(), "/queue/webrtc", dto);
+    }
+
+    @MessageMapping("/call.answer")
+    public void callAnswer(@Payload com.platform.chatservice.dto.WebRTCSignalDto dto, Principal principal) {
+        dto.setSenderId(principal.getName());
+        messagingTemplate.convertAndSendToUser(dto.getTargetId(), "/queue/webrtc", dto);
+    }
+
+    @MessageMapping("/call.ice")
+    public void callIceCandidate(@Payload com.platform.chatservice.dto.WebRTCSignalDto dto, Principal principal) {
+        dto.setSenderId(principal.getName());
+        messagingTemplate.convertAndSendToUser(dto.getTargetId(), "/queue/webrtc", dto);
+    }
+
+    @MessageMapping("/call.end")
+    public void callEnd(@Payload com.platform.chatservice.dto.WebRTCSignalDto dto, Principal principal) {
+        dto.setSenderId(principal.getName());
+        // Notify the other peer
+        messagingTemplate.convertAndSendToUser(dto.getTargetId(), "/queue/webrtc", dto);
+
+        // Save call log
+        String content = "Call ended";
+        if (dto.getDuration() != null && dto.getDuration() > 0) {
+            int minutes = dto.getDuration() / 60;
+            int seconds = dto.getDuration() % 60;
+            content = String.format("Call ended - %02d:%02d", minutes, seconds);
+        } else {
+            content = "Missed call";
+        }
+
+        SendMessageRequest logRequest = new SendMessageRequest(
+                dto.getConversationId(),
+                content,
+                "call_log",
+                null
+        );
+        MessageResponse response = messageService.sendMessage(principal.getName(), logRequest);
+        messagingTemplate.convertAndSend(
+                "/topic/conversation/" + dto.getConversationId(),
+                response
         );
     }
 }

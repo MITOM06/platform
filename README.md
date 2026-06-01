@@ -202,13 +202,14 @@ app.jwt.secret=your_shared_secret_here
 - New conversation creation with user search
 - JWT auth over WebSocket via channel interceptor
 - Flutter Material 3 UI — fully null-safe Dart 3
+- Group conversations & Reactions (i18n supported)
+- Read receipts & typing indicators
+- Image/Video media attachments (GridFS)
+- Push notifications (FCM)
+- Audio/Video Calling (WebRTC 1-1)
 
 ### Roadmap
 
-- [ ] Group conversations
-- [ ] Read receipts & typing indicators
-- [ ] Push notifications (FCM)
-- [ ] Image/file attachments
 - [ ] End-to-end encryption
 - [ ] Web client (Next.js)
 

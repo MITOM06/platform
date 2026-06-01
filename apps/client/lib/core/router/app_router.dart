@@ -8,11 +8,14 @@ import '../../features/auth/ui/register_screen.dart';
 import '../../features/auth/ui/verify_otp_screen.dart';
 import '../../features/auth/ui/forgot_password_screen.dart';
 import '../../features/auth/ui/new_password_screen.dart';
+import '../../features/auth/ui/theme_onboarding_screen.dart';
 import '../../features/chat/ui/conversation_list_screen.dart';
 import '../../features/chat/ui/chat_screen.dart';
+import '../../features/chat/presentation/call_screen.dart';
 import '../../features/chat/ui/group_info_screen.dart';
 import '../../features/chat/ui/new_conversation_screen.dart';
 import '../../features/settings/ui/settings_screen.dart';
+import '../../../core/providers/theme_provider.dart';
 
 part 'app_router.g.dart';
 
@@ -27,6 +30,7 @@ class RouterNotifier extends _$RouterNotifier implements Listenable {
   @override
   Future<bool> build() async {
     final authValue = ref.watch(authNotifierProvider);
+    ref.watch(themeOnboardingNotifierProvider); // also listen to onboarding state
     _listener?.call();
     return authValue.valueOrNull is AuthAuthenticated;
   }
@@ -61,6 +65,7 @@ GoRouter appRouter(AppRouterRef ref) {
     refreshListenable: notifier,
     redirect: (context, state) {
       final authValue = ref.read(authNotifierProvider);
+      final onboardingCompleted = ref.read(themeOnboardingNotifierProvider);
 
       // Wait for session restore before redirecting
       if (authValue.isLoading) return null;
@@ -69,7 +74,18 @@ GoRouter appRouter(AppRouterRef ref) {
       final onPublic = _publicRoutes.contains(state.uri.path);
 
       if (!isAuth && !onPublic) return '/login';
-      if (isAuth && onPublic) return '/';
+      
+      if (isAuth) {
+        if (!onboardingCompleted && state.uri.path != '/theme-onboarding') {
+          return '/theme-onboarding';
+        }
+        
+        if (onboardingCompleted && state.uri.path == '/theme-onboarding') {
+          return '/';
+        }
+
+        if (onPublic) return '/';
+      }
       return null;
     },
     routes: [
@@ -110,6 +126,11 @@ GoRouter appRouter(AppRouterRef ref) {
 
       // ── Protected ───────────────────────────────────────────────────────
       GoRoute(
+        path: '/theme-onboarding',
+        name: 'theme-onboarding',
+        builder: (context, state) => const ThemeOnboardingScreen(),
+      ),
+      GoRoute(
         path: '/',
         name: 'conversations',
         builder: (context, state) => const ConversationListScreen(),
@@ -139,6 +160,20 @@ GoRouter appRouter(AppRouterRef ref) {
         name: 'group-info',
         builder: (context, state) =>
             GroupInfoScreen(conversationId: state.pathParameters['id']!),
+      ),
+      GoRoute(
+        path: '/call',
+        name: 'call',
+        builder: (context, state) {
+          final extra = state.extra as Map<String, dynamic>? ?? {};
+          return CallScreen(
+            targetId: extra['targetId'] as String? ?? '',
+            targetName: extra['targetName'] as String? ?? 'User',
+            conversationId: extra['conversationId'] as String? ?? '',
+            isCaller: extra['isCaller'] as bool? ?? false,
+            initialOfferSdp: extra['initialOfferSdp'] as String?,
+          );
+        },
       ),
     ],
   );

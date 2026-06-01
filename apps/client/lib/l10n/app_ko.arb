@@ -170,5 +170,12 @@
   "attachVideo": "동영상",
   "uploading": "업로드 중…",
   "downloadMedia": "다운로드",
-  "attachmentLabel": "📎 첨부파일"
+  "attachmentLabel": "📎 첨부파일",
+
+  "callIncoming": "수신 전화",
+  "callIncomingBody": "{name}님이 전화하고 있습니다",
+  "callCalling": "{name}님에게 전화 거는 중…",
+  "callConnecting": "연결 중…",
+  "callMediaError": "카메라/마이크에 접근할 수 없습니다 (HTTPS 또는 localhost 필요)",
+  "callUnknownCaller": "누군가"
 }

@@ -5,7 +5,7 @@ import '../../../core/l10n/l10n_ext.dart';
 import '../../../core/providers/locale_provider.dart';
 import '../../../core/providers/theme_provider.dart';
 import '../../../core/theme/app_theme.dart';
-import '../../../core/widgets/neon_widgets.dart';
+import '../../../core/widgets/pon_widgets.dart';
 import '../../auth/domain/auth_provider.dart';
 import '../../auth/domain/auth_state.dart';
 import '../../chat/data/chat_repository.dart';
@@ -144,14 +144,14 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 title: context.l10n.themeDark,
                 icon: Icons.dark_mode_rounded,
                 themeMode: ThemeMode.dark,
-                activeColor: AppTheme.neonCyan,
+                activeColor: AppTheme.ponCyan,
               ),
               const SizedBox(height: 8),
               _ThemeDialogOption(
                 title: context.l10n.themeSystem,
                 icon: Icons.brightness_auto_rounded,
                 themeMode: ThemeMode.system,
-                activeColor: AppTheme.neonPurple,
+                activeColor: AppTheme.ponPeach,
               ),
             ],
           ),
@@ -228,7 +228,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 child: CircularProgressIndicator(
                   strokeWidth: 2.5,
                   valueColor: AlwaysStoppedAnimation<Color>(
-                    isDark ? AppTheme.neonCyan : Theme.of(context).colorScheme.primary,
+                    isDark ? AppTheme.ponCyan : Theme.of(context).colorScheme.primary,
                   ),
                 ),
               ),
@@ -239,7 +239,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               child: TextButton(
                 onPressed: _save,
                 style: TextButton.styleFrom(
-                  foregroundColor: isDark ? AppTheme.neonCyan : Theme.of(context).colorScheme.primary,
+                  foregroundColor: isDark ? AppTheme.ponCyan : Theme.of(context).colorScheme.primary,
                 ),
                 child: Text(context.l10n.actionSave),
               ),
@@ -260,7 +260,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   shape: BoxShape.circle,
                   gradient: RadialGradient(
                     colors: [
-                      AppTheme.neonCyan.withValues(alpha: 0.08),
+                      AppTheme.ponCyan.withValues(alpha: 0.08),
                       Colors.transparent,
                     ],
                   ),
@@ -277,7 +277,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   shape: BoxShape.circle,
                   gradient: RadialGradient(
                     colors: [
-                      AppTheme.neonPurple.withValues(alpha: 0.08),
+                      AppTheme.ponPeach.withValues(alpha: 0.08),
                       Colors.transparent,
                     ],
                   ),
@@ -302,7 +302,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     shape: BoxShape.circle,
                     gradient: LinearGradient(
                       colors: isDark 
-                          ? const [AppTheme.neonCyan, AppTheme.neonPink]
+                          ? const [AppTheme.ponCyan, AppTheme.ponPink]
                           : [Theme.of(context).colorScheme.primary, Theme.of(context).colorScheme.secondary],
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
@@ -310,7 +310,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     boxShadow: isDark
                         ? [
                             BoxShadow(
-                              color: AppTheme.neonCyan.withValues(alpha: 0.2),
+                              color: AppTheme.ponCyan.withValues(alpha: 0.2),
                               blurRadius: 16,
                             ),
                           ]
@@ -320,7 +320,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     padding: const EdgeInsets.all(3),
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: isDark ? AppTheme.obsidianBackground : Colors.white,
+                      color: isDark ? AppTheme.darkBackground : Colors.white,
                     ),
                     child: GestureDetector(
                       onTap: _uploadAvatar,
@@ -338,7 +338,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                             child: Container(
                               padding: const EdgeInsets.all(8),
                               decoration: const BoxDecoration(
-                                color: AppTheme.neonCyan,
+                                color: AppTheme.ponCyan,
                                 shape: BoxShape.circle,
                               ),
                               child: const Icon(Icons.camera_alt, color: Colors.white, size: 16),
@@ -361,8 +361,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 const SizedBox(height: 36),
 
                 // Form card
-                NeonCard(
-                  glowColor: AppTheme.neonCyan,
+                PonCard(
+                  glowColor: AppTheme.ponCyan,
                   glowStrength: isDark ? 4 : 0,
                   child: Padding(
                     padding: const EdgeInsets.all(20.0),
@@ -378,11 +378,11 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                           ),
                         ),
                         const SizedBox(height: 16),
-                        NeonTextField(
+                        PonTextField(
                           controller: _nameController,
                           labelText: context.l10n.fieldDisplayName,
                           prefixIcon: Icons.badge_outlined,
-                          focusColor: isDark ? AppTheme.neonCyan : Theme.of(context).colorScheme.primary,
+                          focusColor: isDark ? AppTheme.ponCyan : Theme.of(context).colorScheme.primary,
                           textInputAction: TextInputAction.done,
                           style: TextStyle(color: isDark ? Colors.white : Colors.black87),
                           onFieldSubmitted: (_) => _save(),
@@ -394,8 +394,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 const SizedBox(height: 24),
 
                 // Theme preference card
-                NeonCard(
-                  glowColor: AppTheme.neonPurple,
+                PonCard(
+                  glowColor: AppTheme.ponPeach,
                   glowStrength: isDark ? 4 : 0,
                   child: Material(
                     color: Colors.transparent,
@@ -404,12 +404,12 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       leading: Container(
                         padding: const EdgeInsets.all(8),
                         decoration: BoxDecoration(
-                          color: (isDark ? AppTheme.neonPurple : Theme.of(context).colorScheme.primary).withValues(alpha: 0.1),
+                          color: (isDark ? AppTheme.ponPeach : Theme.of(context).colorScheme.primary).withValues(alpha: 0.1),
                           shape: BoxShape.circle,
                         ),
                         child: Icon(
                           _getThemeIcon(currentThemeMode),
-                          color: isDark ? AppTheme.neonPurple : Theme.of(context).colorScheme.primary,
+                          color: isDark ? AppTheme.ponPeach : Theme.of(context).colorScheme.primary,
                           size: 20,
                         ),
                       ),
@@ -440,8 +440,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 const SizedBox(height: 24),
 
                 // Language preference card
-                NeonCard(
-                  glowColor: AppTheme.neonBlue,
+                PonCard(
+                  glowColor: AppTheme.ponCyan,
                   glowStrength: isDark ? 4 : 0,
                   child: Material(
                     color: Colors.transparent,
@@ -450,12 +450,12 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       leading: Container(
                         padding: const EdgeInsets.all(8),
                         decoration: BoxDecoration(
-                          color: (isDark ? AppTheme.neonBlue : Theme.of(context).colorScheme.primary).withValues(alpha: 0.1),
+                          color: (isDark ? AppTheme.ponCyan : Theme.of(context).colorScheme.primary).withValues(alpha: 0.1),
                           shape: BoxShape.circle,
                         ),
                         child: Icon(
                           Icons.translate_rounded,
-                          color: isDark ? AppTheme.neonBlue : Theme.of(context).colorScheme.primary,
+                          color: isDark ? AppTheme.ponCyan : Theme.of(context).colorScheme.primary,
                           size: 20,
                         ),
                       ),
@@ -486,7 +486,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 const SizedBox(height: 24),
 
                 // Logout option card
-                NeonCard(
+                PonCard(
                   glowColor: Colors.redAccent,
                   glowStrength: 0,
                   borderOpacity: isDark ? 0.15 : 0.08,
@@ -635,7 +635,7 @@ class _LanguageDialogOption extends ConsumerWidget {
     final active = resolveActiveLocale(ref.watch(localeNotifierProvider));
     final isSelected = active.languageCode == locale.languageCode;
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final activeColor = isDark ? AppTheme.neonBlue : Theme.of(context).colorScheme.primary;
+    final activeColor = isDark ? AppTheme.ponCyan : Theme.of(context).colorScheme.primary;
 
     return ListTile(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),

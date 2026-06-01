@@ -1,4 +1,4 @@
-import { Controller, Get, Param, Query, Req, UseGuards, Patch, Body } from '@nestjs/common';
+import { Controller, Get, Param, Query, Req, UseGuards, Patch, Body, Post } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { UsersService } from './users.service';
 
@@ -15,6 +15,11 @@ export class UsersController {
   @Patch('me')
   updateMe(@Req() req: any, @Body() body: { displayName?: string; avatarUrl?: string }) {
     return this.usersService.updateProfile(req.user.sub, body);
+  }
+
+  @Post('device-tokens')
+  addDeviceToken(@Req() req: any, @Body('token') token: string) {
+    return this.usersService.addDeviceToken(req.user.sub, token);
   }
 
   @Get('search')

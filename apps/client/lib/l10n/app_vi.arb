@@ -170,5 +170,12 @@
   "attachVideo": "Video",
   "uploading": "Đang tải lên…",
   "downloadMedia": "Tải về",
-  "attachmentLabel": "📎 Tệp đính kèm"
+  "attachmentLabel": "📎 Tệp đính kèm",
+
+  "callIncoming": "Cuộc gọi đến",
+  "callIncomingBody": "{name} đang gọi cho bạn",
+  "callCalling": "Đang gọi {name}…",
+  "callConnecting": "Đang kết nối…",
+  "callMediaError": "Không thể truy cập camera/micro (cần HTTPS hoặc localhost)",
+  "callUnknownCaller": "Ai đó"
 }

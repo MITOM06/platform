@@ -4,6 +4,17 @@
 !.env.example
 !.env.sample
 
+# Firebase service account (admin SDK) — SECRET, never commit
+*firebase-adminsdk*.json
+# Firebase client config — generated per-project by `flutterfire configure`
+**/google-services.json
+**/GoogleService-Info.plist
+apps/client/lib/firebase_options.dart
+# Web push service worker chứa firebaseConfig thật (dùng .example để tái tạo)
+apps/client/web/firebase-messaging-sw.js
+# flutterfire manifest (metadata app/project id — tái tạo bằng `flutterfire configure`)
+apps/client/firebase.json
+
 # ─── OS ──────────────────────────────────────────────────────────────────────
 .DS_Store
 Thumbs.db

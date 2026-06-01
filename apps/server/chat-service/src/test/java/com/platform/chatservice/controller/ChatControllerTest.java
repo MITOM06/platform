@@ -39,6 +39,9 @@ class ChatControllerTest {
     @Mock
     private Principal principal;
 
+    @Mock
+    private com.platform.chatservice.service.FcmService fcmService;
+
     @InjectMocks
     private ChatController chatController;
 
@@ -70,6 +73,12 @@ class ChatControllerTest {
                 eq("/queue/notifications"),
                 any(Map.class)
         );
+        verify(fcmService, times(1)).sendPushNotification(
+                eq("user-456"),
+                eq(SENDER_ID),
+                eq("Hello"),
+                eq("conv-456")
+        );
     }
 
     @Test
@@ -82,6 +91,51 @@ class ChatControllerTest {
                 eq("/topic/conversation/conv-456/typing"),
                 argThat((Map<String, Object> payload) ->
                         payload.get("typing").equals(true) && payload.get("userId").equals(SENDER_ID))
+        );
+    }
+
+    @Test
+    void callOffer_ShouldRouteToTarget() {
+        com.platform.chatservice.dto.WebRTCSignalDto dto = new com.platform.chatservice.dto.WebRTCSignalDto();
+        dto.setTargetId("user-789");
+        dto.setType("offer");
+
+        chatController.callOffer(dto, principal);
+
+        verify(messagingTemplate, times(1)).convertAndSendToUser(
+                eq("user-789"),
+                eq("/queue/webrtc"),
+                eq(dto)
+        );
+    }
+
+    @Test
+    void callEnd_ShouldSaveCallLog() {
+        com.platform.chatservice.dto.WebRTCSignalDto dto = new com.platform.chatservice.dto.WebRTCSignalDto();
+        dto.setTargetId("user-789");
+        dto.setConversationId("conv-999");
+        dto.setType("end");
+        dto.setDuration(125); // 02:05
+
+        MessageResponse mockResponse = new MessageResponse("msg-1", "conv-999", SENDER_ID, "Call ended - 02:05", "call_log", List.of(SENDER_ID), Instant.now());
+        when(messageService.sendMessage(eq(SENDER_ID), any(SendMessageRequest.class))).thenReturn(mockResponse);
+
+        chatController.callEnd(dto, principal);
+
+        verify(messagingTemplate, times(1)).convertAndSendToUser(
+                eq("user-789"),
+                eq("/queue/webrtc"),
+                eq(dto)
+        );
+
+        verify(messageService, times(1)).sendMessage(
+                eq(SENDER_ID),
+                argThat(req -> req.content().equals("Call ended - 02:05") && req.type().equals("call_log"))
+        );
+
+        verify(messagingTemplate, times(1)).convertAndSend(
+                eq("/topic/conversation/conv-999"),
+                eq(mockResponse)
         );
     }
 }

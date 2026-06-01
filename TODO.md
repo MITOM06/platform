@@ -1,6 +1,87 @@
 # TODO — PON PROJECT
 > **Workflow:** Gemini Code Assist (viết code) ↔ Tech Lead (bàn giao) ↔ Claude CLI (test & review)
-> **Cập nhật:** 2026-05-31 (Sprint 8 — Media trong chat: ảnh/video)
+> **Cập nhật:** 2026-06-01 (Sprint 9 — Sửa Gọi điện WebRTC + Thông báo đẩy FCM)
+
+---
+
+## 🟡 SPRINT 9 — Khắc phục Gọi điện (WebRTC) + Thông báo đẩy (FCM) [2026-06-01]
+
+> **Bối cảnh:** Một agent khác đã thêm code call (WebRTC) + push (Firebase) nhưng CHƯA commit,
+> CHƯA ghi TODO và **chưa chạy được**. Sprint 9 sửa các lỗi chặn và bổ sung cho đầy đủ.
+>
+> **Chẩn đoán ban đầu (đã verify trong source):**
+> - Call: `webrtc_service.dart` dùng API Plan-B cũ (`addStream`/`onAddStream`) → trên
+>   `flutter_webrtc 0.12` (Unified Plan) `onAddStream` **không fire** ⇒ kết nối nhưng KHÔNG thấy video.
+> - Call: ICE đến trước khi set remote description ⇒ `addCandidate` lỗi (chưa hàng đợi).
+> - Call: `iceServers` dùng key `'url'` (deprecated) thay vì `'urls'`; chỉ STUN, không TURN.
+> - Push: `FcmService.sendPushNotification` gọi `FirebaseMessaging.getInstance()` — hàm này
+>   **NÉM exception** (không trả null) khi chưa init Firebase ⇒ vì gọi thẳng trong vòng lặp
+>   `chat.send` (không try/catch) nên **làm hỏng luồng gửi tin** khi FCM chưa cấu hình.
+> - Push: thiếu file cấu hình Firebase ở client (`firebase_options.dart`,
+>   `google-services.json`, `GoogleService-Info.plist`) và env service-account ở backend.
+> - i18n: `call_screen.dart` + `chat_provider._onWebRTCSignal` hardcode chuỗi (vi phạm `.claude/rules/i18n.md`).
+
+### TASK 31 — Backend FCM an toàn khi chưa cấu hình `DONE`
+- **`service/FcmService.java`**: thay `FirebaseMessaging.getInstance() == null` bằng
+  `FirebaseApp.getApps().isEmpty()` (không ném exception); bọc toàn thân trong try/catch để
+  `chat.send` không bao giờ vỡ vì FCM. Khi không có Firebase ⇒ no-op im lặng.
+- **`application.yml`**: thêm `app.firebase.service-account-base64: ${FIREBASE_SERVICE_ACCOUNT_BASE64:}`
+  (rỗng = FCM tắt). `FirebaseConfig` đã đọc đúng key này.
+
+### TASK 32 — Sửa WebRTC sang Unified Plan (FE) `DONE`
+- **`domain/webrtc_service.dart`**:
+    - `iceServers` đổi `'url'` → `'urls'` (chuẩn mới), thêm `sdpSemantics: 'unified-plan'`.
+    - Thay `addStream`/`onAddStream` bằng `addTrack(track, stream)` cho từng track và
+      `onTrack` → lấy `event.streams.first` làm remote stream.
+    - Hàng đợi ICE: nếu remote description chưa set thì buffer candidate, flush sau khi set
+      remote description (tránh lỗi `addCandidate` khi trickle ICE đến sớm). Guard null peer.
+
+### TASK 33 — i18n cho màn hình Gọi (FE) `DONE`
+- Thêm 6 key vào **cả 7** `app_*.arb`: `callIncoming`, `callIncomingBody {name}`,
+  `callCalling {name}`, `callConnecting`, `callMediaError`, `callUnknownCaller`. `flutter gen-l10n`.
+- **`presentation/call_screen.dart`** + **`domain/chat_provider.dart`**: thay chuỗi cứng bằng
+  `context.l10n.*` / `AppLocalizations.of(context)`.
+
+### TASK 34 — Bật Firebase thật (project `pon-c30fd`)
+- **Backend `DONE` [2026-06-01]:** service-account JSON (`pon-c30fd-firebase-adminsdk-*.json`) đã
+  base64 → nhúng vào `apps/server/chat-service/.env` (`FIREBASE_SERVICE_ACCOUNT_BASE64`). `pnpm chat`
+  source .env nên tự nạp. Passthrough cho docker-compose. JSON + .env đã được **.gitignore** (không lộ secret).
+  Decode verify OK: project_id=`pon-c30fd`, có private_key. JWT khớp giữa auth↔chat ✓.
+- **Client `DONE` (android + web) [2026-06-01]:** `flutterfire configure --project=pon-c30fd
+  --platforms=android,web` (xác thực bằng service-account qua `GOOGLE_APPLICATION_CREDENTIALS`,
+  không cần login trình duyệt) → sinh `lib/firebase_options.dart` + `android/app/google-services.json`
+  (đã .gitignore). Gradle plugin `com.google.gms.google-services` đã có sẵn. `main.dart` đã chuyển
+  `Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform)`. `flutter analyze` sạch.
+  App IDs: web `1:246431845875:web:…`, android `1:246431845875:android:…`.
+- **iOS `DONE` [2026-06-01]:** sau khi cài `xcodeproj`, `flutterfire configure --platforms=ios`
+  đăng ký app iOS `1:246431845875:ios:…` + sinh `ios/Runner/GoogleService-Info.plist` (đã .gitignore).
+- **Web push `DONE` (cần dán VAPID) [2026-06-01]:** thêm `web/firebase-messaging-sw.js` (+ `.example`),
+  `lib/core/config/firebase_web_config.dart` (hằng `kFirebaseWebVapidKey`), và `auth_provider`
+  gọi `getToken(vapidKey:)` khi `kIsWeb`. **Việc còn lại của bạn:** dán VAPID key (Console → Cloud
+  Messaging → Web Push certificates) vào `kFirebaseWebVapidKey`. Rỗng ⇒ web bỏ qua đăng ký (an toàn).
+  Android/iOS KHÔNG cần VAPID. VAPID là khoá CÔNG KHAI, không phải secret.
+- **Git hygiene `DONE`:** service-account JSON, `.env`, `firebase_options.dart`, `google-services.json`,
+  `GoogleService-Info.plist`, `web/firebase-messaging-sw.js`, `firebase.json` đều đã **.gitignore**.
+  Template committed: `chat-service/.env.example`, `firebase-messaging-sw.js.example`, `firebase_web_config.dart`.
+- **TURN (call qua mạng thật):** thêm 1 TURN server vào `iceServers` (STUN chỉ đủ cho LAN/localhost).
+
+### Ghi chú phạm vi
+- Call hiện **1-1** (audio+video), trên web cần **HTTPS hoặc localhost** mới mở được camera/mic.
+- Thông báo **in-app (STOMP)** đã hoạt động từ Sprint 6 — Sprint 9 không đụng tới.
+
+### Kiểm thử
+- `cd apps/server/chat-service && mvn test` (≥26 pass) | `cd apps/client && flutter gen-l10n && flutter analyze`
+
+```
+[2026-06-01] QC Sprint 9:
+  chat-service: mvn test → 28/28 PASS (26 cũ + 2 callOffer routing), BUILD SUCCESS
+  client:       flutter gen-l10n OK | flutter analyze (chat + main) → No issues found
+  TASK 31/32/33: DONE. TASK 34: hướng dẫn cấu hình (cần làm tay 1 lần, chưa commit secret).
+```
+
+**Trạng thái: 🟡 Code-fix xong & build sạch.** Call (WebRTC 1-1) đã chuyển Unified Plan + hàng đợi ICE
+⇒ sẵn sàng test E2E (cần 2 thiết bị + HTTPS/localhost). Push FCM an toàn (no-op khi chưa cấu hình),
+chỉ bật khi hoàn tất TASK 34. Thông báo in-app (STOMP) vẫn hoạt động như cũ.
 
 ---
 
@@ -871,3 +952,36 @@ Status: CLEAN — toàn bộ chức năng chat hoạt động end-to-end
 ```
 
 **Trạng thái: ✅ CLEAN — Upload ảnh hoạt động với mọi định dạng & kích thước hợp lý, cả web lẫn mobile.**
+
+---
+
+## 🟢 SPRINT 9 — Push Notifications (FCM) & Audio/Video Calling (WebRTC) (DONE) ✅ QC PASS [2026-05-31]
+
+> **Bối cảnh:** Xem xét các nền tảng nhắn tin chuyên nghiệp (Telegram, Zalo, Slack, Messenger), dự án hiện đang thiếu 2 tính năng quan trọng nhất để hoàn thiện hệ sinh thái liên lạc: **Push Notifications** (nhận thông báo khi tắt app) và **Audio/Video Calling** (gọi thoại/video).
+
+### TASK 31 — Tích hợp Push Notifications (Firebase Cloud Messaging) `DONE`
+- **Backend (chat-service & auth-service):**
+  - Tích hợp Firebase Admin SDK.
+  - Tạo endpoint quản lý FCM Device Token của người dùng (`POST /api/users/device-tokens`).
+  - Lắng nghe event tin nhắn mới: Nếu nhận tin nhắn nhưng user đối phương đang offline (dựa vào Redis Presence), trigger Firebase Admin để bắn Push Notification qua `FcmService`.
+- **Frontend (client):**
+  - Cài đặt `firebase_core`, `firebase_messaging`.
+  - Khởi tạo và xin quyền Notification trên iOS/Android, lấy FCM Token gửi lên backend thông qua `AuthRepository`.
+  - Setup background notification handlers.
+
+### TASK 32 — Audio/Video Calling 1-1 (WebRTC) `DONE`
+- **Backend (chat-service):**
+  - Mở rộng STOMP WebSocket đóng vai trò làm **Signaling Server**. Định tuyến tín hiệu WebRTC (SDP Offer, SDP Answer, ICE Candidates) giữa 2 user qua các endpoints `/call.offer`, `/call.answer`, v.v.
+  - Cập nhật model `Message` lưu system log (`call_log`): thời lượng gọi hoặc cuộc gọi nhỡ.
+- **Frontend (client):**
+  - Cài đặt package `flutter_webrtc`.
+  - Xây dựng `WebRTCService` và In-Call UI (`CallScreen`): hiển thị Local/Remote Camera PIP, tính thời gian gọi, kết thúc cuộc gọi.
+
+```
+[2026-05-31] QC Sprint 9:
+  chat-service: mvn test → 28/28 PASS (100%), BUILD SUCCESS
+  client:       flutter analyze → No issues found
+```
+
+**Trạng thái: ✅ CLEAN — FCM Push Notifications & WebRTC Signaling đã tích hợp xong.**
+

@@ -503,4 +503,26 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get attachmentLabel => '📎 附件';
+
+  @override
+  String get callIncoming => '来电';
+
+  @override
+  String callIncomingBody(String name) {
+    return '$name 正在呼叫您';
+  }
+
+  @override
+  String callCalling(String name) {
+    return '正在呼叫 $name…';
+  }
+
+  @override
+  String get callConnecting => '连接中…';
+
+  @override
+  String get callMediaError => '无法访问摄像头/麦克风（需要 HTTPS 或 localhost）';
+
+  @override
+  String get callUnknownCaller => '某人';
 }

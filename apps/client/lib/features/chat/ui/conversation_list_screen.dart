@@ -3,9 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/l10n/l10n_ext.dart';
 import '../../../core/providers/connectivity_provider.dart';
-import '../../../core/providers/theme_provider.dart';
+
 import '../../../core/theme/app_theme.dart';
-import '../../../core/widgets/neon_widgets.dart';
+import '../../../core/widgets/pon_widgets.dart';
 import '../../auth/domain/auth_provider.dart';
 import '../../auth/domain/auth_state.dart';
 import '../domain/chat_provider.dart';
@@ -20,124 +20,6 @@ class ConversationListScreen extends ConsumerStatefulWidget {
 }
 
 class _ConversationListScreenState extends ConsumerState<ConversationListScreen> {
-  bool _onboardingChecked = false;
-
-  void _showThemeOnboardingSheet(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      isDismissible: false,
-      enableDrag: false,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      barrierColor: Colors.black.withValues(alpha: 0.7),
-      builder: (context) {
-        final isDarkTheme = Theme.of(context).brightness == Brightness.dark;
-        return PopScope(
-          canPop: false,
-          child: Container(
-            decoration: BoxDecoration(
-              color: isDarkTheme ? AppTheme.darkSurface : Colors.white,
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
-              border: Border.all(
-                color: isDarkTheme 
-                    ? AppTheme.darkBorder 
-                    : Colors.black.withValues(alpha: 0.08),
-                width: 1.5,
-              ),
-            ),
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
-            child: SafeArea(
-              child: SingleChildScrollView(
-                child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Center(
-                    child: Container(
-                      width: 48,
-                      height: 4,
-                      decoration: BoxDecoration(
-                        color: isDarkTheme 
-                            ? Colors.white.withValues(alpha: 0.15) 
-                            : Colors.black.withValues(alpha: 0.15),
-                        borderRadius: BorderRadius.circular(2),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 24),
-                  ShaderMask(
-                    shaderCallback: (bounds) {
-                      return const LinearGradient(
-                        colors: [AppTheme.neonCyan, AppTheme.neonPink],
-                      ).createShader(bounds);
-                    },
-                    child: Text(
-                      context.l10n.onboardingChooseTheme,
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(
-                        fontSize: 22,
-                        fontWeight: FontWeight.w900,
-                        color: Colors.white,
-                        letterSpacing: 1.5,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  Text(
-                    context.l10n.onboardingChooseSubtitle,
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: isDarkTheme 
-                          ? Colors.white.withValues(alpha: 0.5) 
-                          : Colors.black.withValues(alpha: 0.5),
-                    ),
-                  ),
-                  const SizedBox(height: 28),
-                  _ThemeOptionCard(
-                    title: context.l10n.themeLight,
-                    subtitle: context.l10n.themeLightSubtitle,
-                    icon: Icons.light_mode_rounded,
-                    themeMode: ThemeMode.light,
-                    activeColor: Colors.amber,
-                  ),
-                  const SizedBox(height: 16),
-                  _ThemeOptionCard(
-                    title: context.l10n.themeDark,
-                    subtitle: context.l10n.themeDarkSubtitle,
-                    icon: Icons.dark_mode_rounded,
-                    themeMode: ThemeMode.dark,
-                    activeColor: AppTheme.neonCyan,
-                  ),
-                  const SizedBox(height: 16),
-                  _ThemeOptionCard(
-                    title: context.l10n.themeSystem,
-                    subtitle: context.l10n.themeSystemSubtitle,
-                    icon: Icons.brightness_auto_rounded,
-                    themeMode: ThemeMode.system,
-                    activeColor: AppTheme.neonPurple,
-                  ),
-                  const SizedBox(height: 32),
-                  NeonButton(
-                    onPressed: () async {
-                      await ref.read(themeOnboardingNotifierProvider.notifier).completeOnboarding();
-                      if (context.mounted) {
-                        Navigator.pop(context);
-                      }
-                    },
-                    glowColor: AppTheme.neonCyan,
-                    child: Text(context.l10n.startExperience),
-                  ),
-                ],
-              ),
-              ),
-            ),
-          ),
-        );
-      },
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final convsAsync = ref.watch(conversationsNotifierProvider);
@@ -148,16 +30,6 @@ class _ConversationListScreenState extends ConsumerState<ConversationListScreen>
         ? user.displayName.trim()[0].toUpperCase()
         : '?';
 
-    // Show onboarding theme selector if not completed
-    if (!_onboardingChecked) {
-      final onboardingCompleted = ref.watch(themeOnboardingNotifierProvider);
-      if (!onboardingCompleted) {
-        _onboardingChecked = true;
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          _showThemeOnboardingSheet(context);
-        });
-      }
-    }
 
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
@@ -184,7 +56,7 @@ class _ConversationListScreenState extends ConsumerState<ConversationListScreen>
                   shaderCallback: (bounds) {
                     return LinearGradient(
                       colors: isDark
-                          ? const [AppTheme.neonCyan, AppTheme.neonPink]
+                          ? const [AppTheme.ponCyan, AppTheme.ponPink]
                           : [Theme.of(context).colorScheme.primary, Theme.of(context).colorScheme.secondary],
                     ).createShader(bounds);
                   },
@@ -208,13 +80,13 @@ class _ConversationListScreenState extends ConsumerState<ConversationListScreen>
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
                       border: Border.all(
-                        color: (isDark ? AppTheme.neonCyan : Theme.of(context).colorScheme.primary).withValues(alpha: 0.5),
+                        color: (isDark ? AppTheme.ponCyan : Theme.of(context).colorScheme.primary).withValues(alpha: 0.5),
                         width: 1.5,
                       ),
                       boxShadow: isDark
                           ? [
                               BoxShadow(
-                                color: AppTheme.neonCyan.withValues(alpha: 0.2),
+                                color: AppTheme.ponCyan.withValues(alpha: 0.2),
                                 blurRadius: 8,
                               )
                             ]
@@ -228,7 +100,7 @@ class _ConversationListScreenState extends ConsumerState<ConversationListScreen>
                         style: TextStyle(
                           fontSize: 13,
                           fontWeight: FontWeight.bold,
-                          color: isDark ? AppTheme.neonCyan : Theme.of(context).colorScheme.primary,
+                          color: isDark ? AppTheme.ponCyan : Theme.of(context).colorScheme.primary,
                         ),
                       ),
                     ),
@@ -247,7 +119,7 @@ class _ConversationListScreenState extends ConsumerState<ConversationListScreen>
           shape: BoxShape.circle,
           boxShadow: [
             BoxShadow(
-              color: (isDark ? AppTheme.neonPink : Theme.of(context).colorScheme.secondary).withValues(alpha: 0.4),
+              color: (isDark ? AppTheme.ponPink : Theme.of(context).colorScheme.secondary).withValues(alpha: 0.4),
               blurRadius: 16,
               spreadRadius: 1,
             ),
@@ -259,7 +131,7 @@ class _ConversationListScreenState extends ConsumerState<ConversationListScreen>
             ref.read(conversationsNotifierProvider.notifier).refresh();
           },
           tooltip: context.l10n.tooltipNewConversation,
-          backgroundColor: isDark ? AppTheme.neonPink : Theme.of(context).colorScheme.secondary,
+          backgroundColor: isDark ? AppTheme.ponPink : Theme.of(context).colorScheme.secondary,
           foregroundColor: Colors.white,
           elevation: 0,
           highlightElevation: 0,
@@ -292,7 +164,7 @@ class _ConversationListScreenState extends ConsumerState<ConversationListScreen>
                         shape: BoxShape.circle,
                         gradient: RadialGradient(
                           colors: [
-                            AppTheme.neonPurple.withValues(alpha: 0.08),
+                            AppTheme.ponPeach.withValues(alpha: 0.08),
                             Colors.transparent,
                           ],
                         ),
@@ -304,14 +176,14 @@ class _ConversationListScreenState extends ConsumerState<ConversationListScreen>
                   loading: () => Center(
                     child: CircularProgressIndicator(
                       valueColor: AlwaysStoppedAnimation<Color>(
-                        isDark ? AppTheme.neonCyan : Theme.of(context).colorScheme.primary,
+                        isDark ? AppTheme.ponCyan : Theme.of(context).colorScheme.primary,
                       ),
                     ),
                   ),
                   error: (e, _) => Center(
                     child: Padding(
                       padding: const EdgeInsets.all(24.0),
-                      child: NeonCard(
+                      child: PonCard(
                         glowColor: Colors.redAccent,
                         glowStrength: isDark ? 4 : 0,
                         child: Padding(
@@ -342,12 +214,12 @@ class _ConversationListScreenState extends ConsumerState<ConversationListScreen>
                               const SizedBox(height: 20),
                               SizedBox(
                                 width: 140,
-                                child: NeonButton(
+                                child: PonButton(
                                   onPressed: () => ref.read(conversationsNotifierProvider.notifier).refresh(),
                                   gradientColors: isDark
-                                      ? const [AppTheme.neonCyan, AppTheme.neonBlue]
+                                      ? const [AppTheme.ponCyan, AppTheme.ponCyan]
                                       : [Theme.of(context).colorScheme.primary, Theme.of(context).colorScheme.primaryContainer],
-                                  glowColor: isDark ? AppTheme.neonCyan : Theme.of(context).colorScheme.primary,
+                                  glowColor: isDark ? AppTheme.ponCyan : Theme.of(context).colorScheme.primary,
                                   child: Text(context.l10n.actionRetry),
                                 ),
                               ),
@@ -358,7 +230,7 @@ class _ConversationListScreenState extends ConsumerState<ConversationListScreen>
                     ),
                   ),
                   data: (conversations) => RefreshIndicator(
-                    color: isDark ? AppTheme.neonCyan : Theme.of(context).colorScheme.primary,
+                    color: isDark ? AppTheme.ponCyan : Theme.of(context).colorScheme.primary,
                     backgroundColor: isDark ? AppTheme.darkSurface : Colors.white,
                     onRefresh: () => ref.read(conversationsNotifierProvider.notifier).refresh(),
                     child: conversations.isEmpty
@@ -373,7 +245,7 @@ class _ConversationListScreenState extends ConsumerState<ConversationListScreen>
                                     Icon(
                                       Icons.chat_bubble_outline,
                                       size: 64,
-                                      color: isDark ? AppTheme.neonPurple : Theme.of(context).colorScheme.primary.withValues(alpha: 0.6),
+                                      color: isDark ? AppTheme.ponPeach : Theme.of(context).colorScheme.primary.withValues(alpha: 0.6),
                                     ),
                                     const SizedBox(height: 16),
                                     Text(
@@ -494,7 +366,7 @@ class _ConversationTile extends ConsumerWidget {
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
           color: conv.unreadCount > 0 
-              ? (isDark ? AppTheme.neonCyan : Theme.of(context).colorScheme.primary).withValues(alpha: 0.25)
+              ? (isDark ? AppTheme.ponCyan : Theme.of(context).colorScheme.primary).withValues(alpha: 0.25)
               : (isDark ? AppTheme.darkBorder.withValues(alpha: 0.2) : Colors.black.withValues(alpha: 0.05)),
           width: 1,
         ),
@@ -523,11 +395,11 @@ class _ConversationTile extends ConsumerWidget {
             online: isOnline,
             gradientColors: conv.unreadCount > 0
                 ? [
-                    isDark ? AppTheme.neonCyan : Theme.of(context).colorScheme.primary,
-                    isDark ? AppTheme.neonPink : Theme.of(context).colorScheme.secondary,
+                    isDark ? AppTheme.ponCyan : Theme.of(context).colorScheme.primary,
+                    isDark ? AppTheme.ponPink : Theme.of(context).colorScheme.secondary,
                   ]
                 : [
-                    isDark ? AppTheme.neonPurple.withValues(alpha: 0.6) : Colors.grey.shade400,
+                    isDark ? AppTheme.ponPeach.withValues(alpha: 0.6) : Colors.grey.shade400,
                     isDark ? AppTheme.darkBorder : Colors.grey.shade300,
                   ],
           ),
@@ -565,12 +437,12 @@ class _ConversationTile extends ConsumerWidget {
               ? Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
-                    color: isDark ? AppTheme.neonPink : Theme.of(context).colorScheme.secondary,
+                    color: isDark ? AppTheme.ponPink : Theme.of(context).colorScheme.secondary,
                     borderRadius: BorderRadius.circular(10),
                     boxShadow: isDark
                         ? [
                             BoxShadow(
-                              color: AppTheme.neonPink.withValues(alpha: 0.4),
+                              color: AppTheme.ponPink.withValues(alpha: 0.4),
                               blurRadius: 8,
                             ),
                           ]
@@ -622,104 +494,3 @@ class _ConversationTile extends ConsumerWidget {
     );
   }
 }
-
-class _ThemeOptionCard extends ConsumerWidget {
-  final String title;
-  final String subtitle;
-  final IconData icon;
-  final ThemeMode themeMode;
-  final Color activeColor;
-
-  const _ThemeOptionCard({
-    required this.title,
-    required this.subtitle,
-    required this.icon,
-    required this.themeMode,
-    required this.activeColor,
-  });
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final currentMode = ref.watch(themeModeNotifierProvider);
-    final isSelected = currentMode == themeMode;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
-    return GestureDetector(
-      onTap: () => ref.read(themeModeNotifierProvider.notifier).setThemeMode(themeMode),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: isSelected
-              ? activeColor.withValues(alpha: isDark ? 0.08 : 0.05)
-              : (isDark ? AppTheme.darkSurface : Colors.grey.shade50),
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: isSelected
-                ? activeColor.withValues(alpha: 0.6)
-                : (isDark ? AppTheme.darkBorder : Colors.black.withValues(alpha: 0.08)),
-            width: isSelected ? 2 : 1.5,
-          ),
-          boxShadow: isSelected
-              ? [
-                  BoxShadow(
-                    color: activeColor.withValues(alpha: 0.15),
-                    blurRadius: 10,
-                    spreadRadius: 0.5,
-                  )
-                ]
-              : null,
-        ),
-        child: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(
-                color: isSelected
-                    ? activeColor.withValues(alpha: 0.15)
-                    : (isDark ? Colors.white.withValues(alpha: 0.05) : Colors.black.withValues(alpha: 0.03)),
-                shape: BoxShape.circle,
-              ),
-              child: Icon(
-                icon,
-                color: isSelected ? activeColor : (isDark ? Colors.white54 : Colors.black54),
-                size: 24,
-              ),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.bold,
-                      color: isDark ? Colors.white : Colors.black87,
-                    ),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    subtitle,
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: isDark ? Colors.white54 : Colors.black54,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            if (isSelected)
-              Icon(
-                Icons.check_circle_rounded,
-                color: activeColor,
-                size: 22,
-              ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-

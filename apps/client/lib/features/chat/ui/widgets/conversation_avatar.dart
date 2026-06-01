@@ -26,7 +26,7 @@ class ConversationAvatar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = gradientColors ??
-        const [AppTheme.neonCyan, AppTheme.neonPurple];
+        const [AppTheme.ponCyan, AppTheme.ponPeach];
     final hasImage = avatarUrl != null && avatarUrl!.isNotEmpty;
 
     Widget inner;
@@ -83,7 +83,7 @@ class ConversationAvatar extends StatelessWidget {
               decoration: BoxDecoration(
                 color: AppTheme.onlineGreen,
                 shape: BoxShape.circle,
-                border: Border.all(color: AppTheme.obsidianBackground, width: 2),
+                border: Border.all(color: AppTheme.darkBackground, width: 2),
               ),
             ),
           ),

@@ -4,9 +4,13 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import '../../auth/data/auth_repository.dart';
 import '../../auth/domain/auth_provider.dart';
 import '../../auth/domain/auth_state.dart';
+import '../../../core/l10n/l10n_ext.dart';
+import '../../../core/router/app_router.dart';
+import '../../../core/utils/global_messenger.dart';
 import '../data/chat_repository.dart';
 import '../data/stomp_service.dart';
 import 'chat_state.dart';
+import 'webrtc_service.dart';
 
 part 'chat_provider.g.dart';
 
@@ -18,6 +22,7 @@ part 'chat_provider.g.dart';
 class ConversationsNotifier extends _$ConversationsNotifier {
   StreamSubscription<Map<String, dynamic>>? _notifSub;
   StreamSubscription<ConversationModel>? _convUpdateSub;
+  StreamSubscription<Map<String, dynamic>>? _webrtcSub;
 
   @override
   Future<List<ConversationModel>> build() async {
@@ -36,9 +41,11 @@ class ConversationsNotifier extends _$ConversationsNotifier {
 
     _notifSub = stomp.notifications.listen(_onNotification);
     _convUpdateSub = stomp.conversationUpdates.listen(_onConversationUpdate);
+    _webrtcSub = stomp.webrtcSignals.listen(_onWebRTCSignal);
     ref.onDispose(() {
       _notifSub?.cancel();
       _convUpdateSub?.cancel();
+      _webrtcSub?.cancel();
     });
 
     return repo.listConversations();
@@ -77,15 +84,79 @@ class ConversationsNotifier extends _$ConversationsNotifier {
     }
   }
 
+  void _onWebRTCSignal(Map<String, dynamic> signal) {
+    final type = signal['type'] as String?;
+    if (type == 'offer') {
+      final senderId = signal['senderId'] as String;
+      final convId = signal['conversationId'] as String;
+      final sdp = signal['sdp'] as String;
+
+      // Show incoming call dialog
+      final router = ref.read(appRouterProvider);
+      final context = router.routerDelegate.navigatorKey.currentContext;
+      if (context == null) return;
+      final l10n = context.l10n;
+
+      // Resolve caller display name from local conversation state if available.
+      final current = state.valueOrNull;
+      String callerName = l10n.callUnknownCaller;
+      if (current != null) {
+        final conv = current.firstWhere((c) => c.id == convId, orElse: () => current.first);
+        if (conv.name != null) {
+          callerName = conv.name!;
+        }
+      }
+
+      showInAppNotification(
+        l10n.callIncoming,
+        l10n.callIncomingBody(callerName),
+        onTap: () {
+          router.push('/call', extra: {
+            'targetId': senderId, // we reply back to sender
+            'targetName': callerName,
+            'conversationId': convId,
+            'isCaller': false,
+            'initialOfferSdp': sdp,
+          });
+        },
+      );
+    } else {
+      // For answer, ice, end, we need to pass them to WebRTCService if it's active.
+      final webrtc = ref.read(webRtcServiceProvider);
+      if (type == 'answer') {
+        webrtc.handleAnswer(signal['sdp'] as String);
+      } else if (type == 'ice') {
+        webrtc.handleIceCandidate(signal['candidate'] as Map<String, dynamic>);
+      } else if (type == 'end') {
+        webrtc.endCall(duration: 0);
+      }
+    }
+  }
+
   void _onNotification(Map<String, dynamic> notif) {
     final current = state.valueOrNull;
     if (current == null) return;
 
-    // Chat-service gửi flat payload: {type, conversationId, senderName}
+    // Chat-service gửi flat payload: {type, conversationId, senderName, senderId}
     final type = notif['type'] as String?;
     if (type == 'NEW_MESSAGE') {
       final convId = notif['conversationId'] as String?;
+      final senderName = notif['senderName'] ?? 'Ai đó';
       if (convId == null) return;
+
+      // Check if user is currently inside this chat screen.
+      // If we are, ChatNotifier(convId) is alive. But we can just use router state.
+      // A simpler heuristic: if the route is /chat/:id, we are inside.
+      final currentRoute = ref.read(appRouterProvider).routeInformationProvider.value.uri.path;
+      if (currentRoute != '/chat/$convId') {
+        showInAppNotification(
+          "Tin nhắn mới",
+          "$senderName đã nhắn tin cho bạn.",
+          onTap: () {
+            ref.read(appRouterProvider).push('/chat/$convId');
+          },
+        );
+      }
 
       // Conversation chưa có trong list (vd: người khác vừa tạo phòng mới với
       // mình) → fetch lại để nó xuất hiện ngay thay vì phải reload thủ công.
