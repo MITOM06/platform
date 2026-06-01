@@ -3,23 +3,24 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/l10n/l10n_ext.dart';
 import '../../../core/providers/connectivity_provider.dart';
-
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/pon_widgets.dart';
 import '../../auth/domain/auth_provider.dart';
 import '../../auth/domain/auth_state.dart';
 import '../domain/chat_provider.dart';
-import '../domain/chat_state.dart';
-import 'widgets/conversation_avatar.dart';
+import 'widgets/active_friends_row.dart';
+import 'widgets/conversation_tile.dart';
 
 class ConversationListScreen extends ConsumerStatefulWidget {
   const ConversationListScreen({super.key});
 
   @override
-  ConsumerState<ConversationListScreen> createState() => _ConversationListScreenState();
+  ConsumerState<ConversationListScreen> createState() =>
+      _ConversationListScreenState();
 }
 
-class _ConversationListScreenState extends ConsumerState<ConversationListScreen> {
+class _ConversationListScreenState
+    extends ConsumerState<ConversationListScreen> {
   @override
   Widget build(BuildContext context) {
     final convsAsync = ref.watch(conversationsNotifierProvider);
@@ -29,8 +30,6 @@ class _ConversationListScreenState extends ConsumerState<ConversationListScreen>
     final initials = user != null && user.displayName.isNotEmpty
         ? user.displayName.trim()[0].toUpperCase()
         : '?';
-
-
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
@@ -53,13 +52,14 @@ class _ConversationListScreenState extends ConsumerState<ConversationListScreen>
                 const PonLogo(size: 26, showText: false),
                 const SizedBox(width: 8),
                 ShaderMask(
-                  shaderCallback: (bounds) {
-                    return LinearGradient(
-                      colors: isDark
-                          ? const [AppTheme.ponCyan, AppTheme.ponPink]
-                          : [Theme.of(context).colorScheme.primary, Theme.of(context).colorScheme.secondary],
-                    ).createShader(bounds);
-                  },
+                  shaderCallback: (bounds) => LinearGradient(
+                    colors: isDark
+                        ? const [AppTheme.ponCyan, AppTheme.ponPink]
+                        : [
+                            Theme.of(context).colorScheme.primary,
+                            Theme.of(context).colorScheme.secondary
+                          ],
+                  ).createShader(bounds),
                   child: const Text(
                     'PON',
                     style: TextStyle(
@@ -73,6 +73,16 @@ class _ConversationListScreenState extends ConsumerState<ConversationListScreen>
               ],
             ),
             actions: [
+              IconButton(
+                icon: const Icon(Icons.group_add_outlined),
+                tooltip: context.l10n.createGroup,
+                onPressed: () => context.push('/new-group'),
+              ),
+              IconButton(
+                icon: const Icon(Icons.people_alt_outlined),
+                tooltip: context.l10n.contacts,
+                onPressed: () => context.push('/friends'),
+              ),
               Padding(
                 padding: const EdgeInsets.only(right: 8.0),
                 child: IconButton(
@@ -80,13 +90,17 @@ class _ConversationListScreenState extends ConsumerState<ConversationListScreen>
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
                       border: Border.all(
-                        color: (isDark ? AppTheme.ponCyan : Theme.of(context).colorScheme.primary).withValues(alpha: 0.5),
+                        color: (isDark
+                                ? AppTheme.ponCyan
+                                : Theme.of(context).colorScheme.primary)
+                            .withValues(alpha: 0.5),
                         width: 1.5,
                       ),
                       boxShadow: isDark
                           ? [
                               BoxShadow(
-                                color: AppTheme.ponCyan.withValues(alpha: 0.2),
+                                color:
+                                    AppTheme.ponCyan.withValues(alpha: 0.2),
                                 blurRadius: 8,
                               )
                             ]
@@ -94,13 +108,17 @@ class _ConversationListScreenState extends ConsumerState<ConversationListScreen>
                     ),
                     child: CircleAvatar(
                       radius: 16,
-                      backgroundColor: isDark ? AppTheme.darkSurface : Colors.grey.shade100,
+                      backgroundColor: isDark
+                          ? AppTheme.darkSurface
+                          : Colors.grey.shade100,
                       child: Text(
                         initials,
                         style: TextStyle(
                           fontSize: 13,
                           fontWeight: FontWeight.bold,
-                          color: isDark ? AppTheme.ponCyan : Theme.of(context).colorScheme.primary,
+                          color: isDark
+                              ? AppTheme.ponCyan
+                              : Theme.of(context).colorScheme.primary,
                         ),
                       ),
                     ),
@@ -113,13 +131,15 @@ class _ConversationListScreenState extends ConsumerState<ConversationListScreen>
           ),
         ),
       ),
-
       floatingActionButton: Container(
         decoration: BoxDecoration(
           shape: BoxShape.circle,
           boxShadow: [
             BoxShadow(
-              color: (isDark ? AppTheme.ponPink : Theme.of(context).colorScheme.secondary).withValues(alpha: 0.4),
+              color: (isDark
+                      ? AppTheme.ponPink
+                      : Theme.of(context).colorScheme.secondary)
+                  .withValues(alpha: 0.4),
               blurRadius: 16,
               spreadRadius: 1,
             ),
@@ -131,7 +151,9 @@ class _ConversationListScreenState extends ConsumerState<ConversationListScreen>
             ref.read(conversationsNotifierProvider.notifier).refresh();
           },
           tooltip: context.l10n.tooltipNewConversation,
-          backgroundColor: isDark ? AppTheme.ponPink : Theme.of(context).colorScheme.secondary,
+          backgroundColor: isDark
+              ? AppTheme.ponPink
+              : Theme.of(context).colorScheme.secondary,
           foregroundColor: Colors.white,
           elevation: 0,
           highlightElevation: 0,
@@ -139,20 +161,18 @@ class _ConversationListScreenState extends ConsumerState<ConversationListScreen>
           child: const Icon(Icons.add_comment_outlined, size: 24),
         ),
       ),
-
       body: Column(
         children: [
           isOnlineAsync.when(
-            data: (isOnline) => isOnline
-                ? const SizedBox.shrink()
-                : _OfflineBanner(),
+            data: (isOnline) =>
+                isOnline ? const SizedBox.shrink() : const OfflineBanner(),
             loading: () => const SizedBox.shrink(),
             error: (_, __) => const SizedBox.shrink(),
           ),
+          const ActiveFriendsRow(),
           Expanded(
             child: Stack(
               children: [
-                // Soft background glow
                 if (isDark)
                   Positioned(
                     bottom: -100,
@@ -162,21 +182,20 @@ class _ConversationListScreenState extends ConsumerState<ConversationListScreen>
                       height: 300,
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
-                        gradient: RadialGradient(
-                          colors: [
-                            AppTheme.ponPeach.withValues(alpha: 0.08),
-                            Colors.transparent,
-                          ],
-                        ),
+                        gradient: RadialGradient(colors: [
+                          AppTheme.ponPeach.withValues(alpha: 0.08),
+                          Colors.transparent,
+                        ]),
                       ),
                     ),
                   ),
-                
                 convsAsync.when(
                   loading: () => Center(
                     child: CircularProgressIndicator(
                       valueColor: AlwaysStoppedAnimation<Color>(
-                        isDark ? AppTheme.ponCyan : Theme.of(context).colorScheme.primary,
+                        isDark
+                            ? AppTheme.ponCyan
+                            : Theme.of(context).colorScheme.primary,
                       ),
                     ),
                   ),
@@ -191,35 +210,58 @@ class _ConversationListScreenState extends ConsumerState<ConversationListScreen>
                           child: Column(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              const Icon(Icons.cloud_off_outlined, size: 48, color: Colors.redAccent),
+                              const Icon(Icons.cloud_off_outlined,
+                                  size: 48, color: Colors.redAccent),
                               const SizedBox(height: 16),
                               Text(
                                 context.l10n.listLoadFailed,
                                 style: TextStyle(
                                   fontWeight: FontWeight.bold,
                                   fontSize: 16,
-                                  color: isDark ? Colors.white : Colors.black87,
+                                  color: isDark
+                                      ? Colors.white
+                                      : Colors.black87,
                                 ),
                               ),
                               const SizedBox(height: 8),
                               Text(
-                                e.toString().contains('connect') || e.toString().contains('network')
+                                e.toString().contains('connect') ||
+                                        e.toString().contains('network')
                                     ? context.l10n.listCheckNetwork
                                     : context.l10n.listGenericError,
                                 textAlign: TextAlign.center,
                                 style: TextStyle(
-                                  color: isDark ? Colors.white.withValues(alpha: 0.5) : Colors.black54,
+                                  color: isDark
+                                      ? Colors.white.withValues(alpha: 0.5)
+                                      : Colors.black54,
                                 ),
                               ),
                               const SizedBox(height: 20),
                               SizedBox(
                                 width: 140,
                                 child: PonButton(
-                                  onPressed: () => ref.read(conversationsNotifierProvider.notifier).refresh(),
+                                  onPressed: () => ref
+                                      .read(conversationsNotifierProvider
+                                          .notifier)
+                                      .refresh(),
                                   gradientColors: isDark
-                                      ? const [AppTheme.ponCyan, AppTheme.ponCyan]
-                                      : [Theme.of(context).colorScheme.primary, Theme.of(context).colorScheme.primaryContainer],
-                                  glowColor: isDark ? AppTheme.ponCyan : Theme.of(context).colorScheme.primary,
+                                      ? const [
+                                          AppTheme.ponCyan,
+                                          AppTheme.ponCyan
+                                        ]
+                                      : [
+                                          Theme.of(context)
+                                              .colorScheme
+                                              .primary,
+                                          Theme.of(context)
+                                              .colorScheme
+                                              .primaryContainer
+                                        ],
+                                  glowColor: isDark
+                                      ? AppTheme.ponCyan
+                                      : Theme.of(context)
+                                          .colorScheme
+                                          .primary,
                                   child: Text(context.l10n.actionRetry),
                                 ),
                               ),
@@ -230,14 +272,22 @@ class _ConversationListScreenState extends ConsumerState<ConversationListScreen>
                     ),
                   ),
                   data: (conversations) => RefreshIndicator(
-                    color: isDark ? AppTheme.ponCyan : Theme.of(context).colorScheme.primary,
-                    backgroundColor: isDark ? AppTheme.darkSurface : Colors.white,
-                    onRefresh: () => ref.read(conversationsNotifierProvider.notifier).refresh(),
+                    color: isDark
+                        ? AppTheme.ponCyan
+                        : Theme.of(context).colorScheme.primary,
+                    backgroundColor:
+                        isDark ? AppTheme.darkSurface : Colors.white,
+                    onRefresh: () => ref
+                        .read(conversationsNotifierProvider.notifier)
+                        .refresh(),
                     child: conversations.isEmpty
                         ? ListView(
                             physics: const AlwaysScrollableScrollPhysics(),
                             children: [
-                              SizedBox(height: MediaQuery.of(context).size.height * 0.25),
+                              SizedBox(
+                                  height:
+                                      MediaQuery.of(context).size.height *
+                                          0.25),
                               Center(
                                 child: Column(
                                   mainAxisSize: MainAxisSize.min,
@@ -245,7 +295,12 @@ class _ConversationListScreenState extends ConsumerState<ConversationListScreen>
                                     Icon(
                                       Icons.chat_bubble_outline,
                                       size: 64,
-                                      color: isDark ? AppTheme.ponPeach : Theme.of(context).colorScheme.primary.withValues(alpha: 0.6),
+                                      color: isDark
+                                          ? AppTheme.ponPeach
+                                          : Theme.of(context)
+                                              .colorScheme
+                                              .primary
+                                              .withValues(alpha: 0.6),
                                     ),
                                     const SizedBox(height: 16),
                                     Text(
@@ -253,14 +308,18 @@ class _ConversationListScreenState extends ConsumerState<ConversationListScreen>
                                       style: TextStyle(
                                         fontSize: 16,
                                         fontWeight: FontWeight.bold,
-                                        color: isDark ? Colors.white70 : Colors.black87,
+                                        color: isDark
+                                            ? Colors.white70
+                                            : Colors.black87,
                                       ),
                                     ),
                                     const SizedBox(height: 8),
                                     Text(
                                       context.l10n.emptyTapPlus,
                                       style: TextStyle(
-                                        color: isDark ? Colors.white38 : Colors.black38,
+                                        color: isDark
+                                            ? Colors.white38
+                                            : Colors.black38,
                                       ),
                                     ),
                                   ],
@@ -269,11 +328,12 @@ class _ConversationListScreenState extends ConsumerState<ConversationListScreen>
                             ],
                           )
                         : ListView.builder(
-                            physics: const AlwaysScrollableScrollPhysics(),
+                            physics:
+                                const AlwaysScrollableScrollPhysics(),
                             itemCount: conversations.length,
                             itemBuilder: (context, index) {
                               final conv = conversations[index];
-                              return _ConversationTile(conv: conv);
+                              return ConversationTile(conv: conv);
                             },
                           ),
                   ),
@@ -282,214 +342,6 @@ class _ConversationListScreenState extends ConsumerState<ConversationListScreen>
             ),
           ),
         ],
-      ),
-    );
-  }
-}
-
-class _OfflineBanner extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    return Material(
-      color: Colors.redAccent.withValues(alpha: 0.2),
-      child: SafeArea(
-        bottom: false,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          child: Row(
-            children: [
-              const Icon(
-                Icons.wifi_off,
-                size: 16,
-                color: Colors.redAccent,
-              ),
-              const SizedBox(width: 8),
-              Text(
-                context.l10n.offlineBanner,
-                style: TextStyle(
-                  color: isDark ? Colors.white.withValues(alpha: 0.9) : Colors.redAccent.shade700,
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _ConversationTile extends ConsumerWidget {
-  final ConversationModel conv;
-
-  const _ConversationTile({required this.conv});
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final authState = ref.watch(authNotifierProvider).valueOrNull;
-    final currentUserId = authState is AuthAuthenticated ? authState.user.id : '';
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
-    final isGroup = conv.isGroup;
-
-    // Find the other participant's ID (direct chats only)
-    final others = conv.participants.where((p) => p != currentUserId).toList();
-    final otherUserId = !isGroup && others.isNotEmpty ? others.first : '';
-
-    // Fetch online status cho người dùng kia
-    final statusAsync = otherUserId.isNotEmpty
-        ? ref.watch(userStatusProvider(otherUserId)).valueOrNull
-        : null;
-    final isOnline = !isGroup && (statusAsync?.online ?? false);
-
-    // Resolve displayName từ auth-service thay vì hiển thị raw userId
-    final profileAsync = otherUserId.isNotEmpty
-        ? ref.watch(userProfileProvider(otherUserId))
-        : null;
-    final displayName = isGroup
-        ? (conv.name ?? context.l10n.conversationDefault)
-        : (profileAsync?.valueOrNull?.displayName ?? '...');
-    final tileLetter = displayName.isNotEmpty && displayName != '...'
-        ? displayName[0].toUpperCase()
-        : '?';
-    final avatarUrl =
-        isGroup ? conv.avatarUrl : profileAsync?.valueOrNull?.avatarUrl;
-
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-      decoration: BoxDecoration(
-        color: isDark 
-            ? AppTheme.darkSurface.withValues(alpha: 0.4)
-            : Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: conv.unreadCount > 0 
-              ? (isDark ? AppTheme.ponCyan : Theme.of(context).colorScheme.primary).withValues(alpha: 0.25)
-              : (isDark ? AppTheme.darkBorder.withValues(alpha: 0.2) : Colors.black.withValues(alpha: 0.05)),
-          width: 1,
-        ),
-        boxShadow: !isDark
-            ? [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.02),
-                  blurRadius: 6,
-                  offset: const Offset(0, 2),
-                )
-              ]
-            : null,
-      ),
-      child: Material(
-        color: Colors.transparent,
-        borderRadius: BorderRadius.circular(16),
-        child: ListTile(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
-          leading: ConversationAvatar(
-            avatarUrl: avatarUrl,
-            fallbackLetter: tileLetter,
-            isGroup: isGroup,
-            size: 48,
-            online: isOnline,
-            gradientColors: conv.unreadCount > 0
-                ? [
-                    isDark ? AppTheme.ponCyan : Theme.of(context).colorScheme.primary,
-                    isDark ? AppTheme.ponPink : Theme.of(context).colorScheme.secondary,
-                  ]
-                : [
-                    isDark ? AppTheme.ponPeach.withValues(alpha: 0.6) : Colors.grey.shade400,
-                    isDark ? AppTheme.darkBorder : Colors.grey.shade300,
-                  ],
-          ),
-          title: Text(
-            displayName.isEmpty ? context.l10n.conversationDefault : displayName,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: TextStyle(
-              fontWeight: conv.unreadCount > 0 ? FontWeight.bold : FontWeight.w600,
-              color: conv.unreadCount > 0 
-                  ? (isDark ? Colors.white : Colors.black)
-                  : (isDark ? Colors.white.withValues(alpha: 0.85) : Colors.black87),
-              fontSize: 15,
-            ),
-          ),
-          subtitle: conv.lastMessage != null
-              ? Padding(
-                  padding: const EdgeInsets.only(top: 4.0),
-                  child: Text(
-                    conv.lastMessage!.content.contains('/api/uploads/')
-                        ? context.l10n.attachmentLabel
-                        : conv.lastMessage!.content,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      color: conv.unreadCount > 0 
-                          ? (isDark ? Colors.white.withValues(alpha: 0.8) : Colors.black87)
-                          : (isDark ? Colors.white.withValues(alpha: 0.45) : Colors.black54),
-                      fontSize: 13,
-                    ),
-                  ),
-                )
-              : null,
-          trailing: conv.unreadCount > 0
-              ? Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: isDark ? AppTheme.ponPink : Theme.of(context).colorScheme.secondary,
-                    borderRadius: BorderRadius.circular(10),
-                    boxShadow: isDark
-                        ? [
-                            BoxShadow(
-                              color: AppTheme.ponPink.withValues(alpha: 0.4),
-                              blurRadius: 8,
-                            ),
-                          ]
-                        : null,
-                  ),
-                  child: Text(
-                    '${conv.unreadCount}',
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 10,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                )
-              : null,
-          onTap: () => context.push('/chat/${conv.id}'),
-          onLongPress: () => _showTileMenu(context, ref),
-        ),
-      ),
-    );
-  }
-
-  void _showTileMenu(BuildContext context, WidgetRef ref) {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: AppTheme.darkSurface,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      builder: (sheetCtx) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const SizedBox(height: 8),
-            ListTile(
-              leading: const Icon(Icons.delete_outline_rounded, color: Colors.redAccent),
-              title: Text(sheetCtx.l10n.deleteConversation,
-                  style: const TextStyle(color: Colors.redAccent)),
-              onTap: () {
-                Navigator.pop(sheetCtx);
-                ref
-                    .read(conversationsNotifierProvider.notifier)
-                    .deleteConversation(conv.id);
-              },
-            ),
-          ],
-        ),
       ),
     );
   }

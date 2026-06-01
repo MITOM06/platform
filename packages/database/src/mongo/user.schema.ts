@@ -23,6 +23,12 @@ export class User {
   @Prop()
   avatarUrl: string;
 
+  @Prop()
+  bio: string;
+
+  @Prop()
+  coverPhoto: string;
+
   @Prop({ unique: true, sparse: true })
   email: string;
 
@@ -52,6 +58,11 @@ export class User {
 
   @Prop({ type: [String], default: [] })
   fcmTokens: string[];
+
+  // User ids this user has blocked. Neither party can message the other while
+  // an id is present here (enforced in auth-service + chat-service MessageService).
+  @Prop({ type: [String], default: [] })
+  blockedUsers: string[];
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);

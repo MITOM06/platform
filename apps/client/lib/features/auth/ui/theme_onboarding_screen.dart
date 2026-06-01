@@ -117,7 +117,13 @@ class _ThemeOptionCard extends ConsumerWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return GestureDetector(
-      onTap: () => ref.read(themeModeNotifierProvider.notifier).setThemeMode(themeMode),
+      // Defer the state mutation off the current build/gesture frame: switching
+      // ThemeMode rebuilds MaterialApp, and doing it synchronously inside the tap
+      // handler can throw during the in-progress frame. Future.microtask schedules
+      // it safely after the frame settles.
+      onTap: () => Future.microtask(
+        () => ref.read(themeModeNotifierProvider.notifier).setThemeMode(themeMode),
+      ),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.all(20),

@@ -413,6 +413,12 @@ class AppLocalizationsJa extends AppLocalizations {
   String get actionRecall => '送信取消';
 
   @override
+  String get actionEdit => '編集';
+
+  @override
+  String get messageEdited => '(編集済み)';
+
+  @override
   String get actionDeleteForMe => '自分から削除';
 
   @override
@@ -496,6 +502,9 @@ class AppLocalizationsJa extends AppLocalizations {
   String get attachVideo => '動画';
 
   @override
+  String get attachFile => 'ファイル';
+
+  @override
   String get uploading => 'アップロード中…';
 
   @override
@@ -525,4 +534,107 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get callUnknownCaller => '誰か';
+
+  @override
+  String get profileTitle => 'プロフィール';
+
+  @override
+  String get editProfile => 'プロフィール編集';
+
+  @override
+  String get bio => '自己紹介';
+
+  @override
+  String friendsCountLabel(int count) {
+    return '友達 $count 人';
+  }
+
+  @override
+  String get messageAction => 'メッセージ';
+
+  @override
+  String get activeFriends => 'オンラインの友達';
+
+  @override
+  String get noFriendsOnline => 'オンラインの友達はいません';
+
+  @override
+  String get strangerBannerTitle => 'メッセージリクエスト';
+
+  @override
+  String get strangerBannerBody => 'この人は連絡先にいません。返信するには承認してください。';
+
+  @override
+  String get acceptRequest => '承認';
+
+  @override
+  String get rejectRequest => '拒否';
+
+  @override
+  String get friends => '友達';
+
+  @override
+  String get contacts => '連絡先';
+
+  @override
+  String get friendRequests => '友達リクエスト';
+
+  @override
+  String get addFriend => '友達追加';
+
+  @override
+  String get friendRequestSent => '友達リクエストを送信しました';
+
+  @override
+  String get acceptFriend => '承認';
+
+  @override
+  String get noFriends => 'まだ友達がいません';
+
+  @override
+  String get noFriendRequests => '保留中のリクエストはありません';
+
+  @override
+  String get friendRequestPending => '保留中';
+
+  @override
+  String get unfriend => '友達を解除';
+
+  @override
+  String get unfriendConfirm => 'この友達を解除しますか？';
+
+  @override
+  String get blockUser => 'ブロック';
+
+  @override
+  String get unblockUser => 'ブロック解除';
+
+  @override
+  String get blockUserConfirm => 'このユーザーをブロックしますか？お互いにメッセージを送れなくなります。';
+
+  @override
+  String get blockedComposerNotice => 'このチャットにはメッセージを送信できません';
+
+  @override
+  String get userBlocked => 'ユーザーをブロックしました';
+
+  @override
+  String get userUnblocked => 'ブロックを解除しました';
+
+  @override
+  String get mentionNotificationTitle => 'あなたへのメンション';
+
+  @override
+  String mentionNotificationBody(String name) {
+    return '$nameがあなたをメンションしました';
+  }
+
+  @override
+  String get searchMessages => 'メッセージを検索';
+
+  @override
+  String get searchHint => '会話内を検索';
+
+  @override
+  String get searchNoResults => 'メッセージが見つかりません';
 }

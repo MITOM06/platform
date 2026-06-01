@@ -413,6 +413,12 @@ class AppLocalizationsKo extends AppLocalizations {
   String get actionRecall => '회수';
 
   @override
+  String get actionEdit => '편집';
+
+  @override
+  String get messageEdited => '(편집됨)';
+
+  @override
   String get actionDeleteForMe => '나에게서 삭제';
 
   @override
@@ -496,6 +502,9 @@ class AppLocalizationsKo extends AppLocalizations {
   String get attachVideo => '동영상';
 
   @override
+  String get attachFile => '파일';
+
+  @override
   String get uploading => '업로드 중…';
 
   @override
@@ -525,4 +534,107 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get callUnknownCaller => '누군가';
+
+  @override
+  String get profileTitle => '프로필';
+
+  @override
+  String get editProfile => '프로필 편집';
+
+  @override
+  String get bio => '소개';
+
+  @override
+  String friendsCountLabel(int count) {
+    return '친구 $count명';
+  }
+
+  @override
+  String get messageAction => '메시지';
+
+  @override
+  String get activeFriends => '온라인 친구';
+
+  @override
+  String get noFriendsOnline => '온라인 친구가 없습니다';
+
+  @override
+  String get strangerBannerTitle => '메시지 요청';
+
+  @override
+  String get strangerBannerBody => '이 사람은 연락처에 없습니다. 답장하려면 수락하세요.';
+
+  @override
+  String get acceptRequest => '수락';
+
+  @override
+  String get rejectRequest => '거절';
+
+  @override
+  String get friends => '친구';
+
+  @override
+  String get contacts => '연락처';
+
+  @override
+  String get friendRequests => '친구 요청';
+
+  @override
+  String get addFriend => '친구 추가';
+
+  @override
+  String get friendRequestSent => '친구 요청을 보냈습니다';
+
+  @override
+  String get acceptFriend => '수락';
+
+  @override
+  String get noFriends => '아직 친구가 없습니다';
+
+  @override
+  String get noFriendRequests => '대기 중인 요청이 없습니다';
+
+  @override
+  String get friendRequestPending => '대기 중';
+
+  @override
+  String get unfriend => '친구 삭제';
+
+  @override
+  String get unfriendConfirm => '이 친구를 삭제할까요?';
+
+  @override
+  String get blockUser => '차단';
+
+  @override
+  String get unblockUser => '차단 해제';
+
+  @override
+  String get blockUserConfirm => '이 사용자를 차단할까요? 서로 메시지를 보낼 수 없습니다.';
+
+  @override
+  String get blockedComposerNotice => '이 대화에는 메시지를 보낼 수 없습니다';
+
+  @override
+  String get userBlocked => '사용자를 차단했습니다';
+
+  @override
+  String get userUnblocked => '차단을 해제했습니다';
+
+  @override
+  String get mentionNotificationTitle => '회원님을 언급함';
+
+  @override
+  String mentionNotificationBody(String name) {
+    return '$name님이 회원님을 언급했습니다';
+  }
+
+  @override
+  String get searchMessages => '메시지 검색';
+
+  @override
+  String get searchHint => '대화에서 검색';
+
+  @override
+  String get searchNoResults => '메시지를 찾을 수 없습니다';
 }

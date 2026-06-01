@@ -1,28 +1,28 @@
 ---
 name: session-summary
-description: Ghi tóm tắt session hiện tại vào ai-activity.md. Gọi khi sắp kết thúc session hoặc trước khi /clear
+description: Appends a summary of the current session to ai-activity.md. Call when finishing the session or prior to running /clear.
 ---
 
-Dựa trên những gì đã làm trong session này, hãy append một session summary vào `.claude/ai-activity.md` theo format:
+Based on the work accomplished during this session, append a session summary to `.claude/ai-activity.md` in the following format:
 
 ---
 
 ## Session: [DATE YYYY-MM-DD] — [ONE LINE TITLE]
 
-**Tóm tắt:** [2-3 câu mô tả]
+**Summary:** [2-3 sentences describing the session]
 
-**Files tạo/sửa:**
-- `path/to/file` — [lý do]
+**Files Created/Modified:**
+- `path/to/file` — [reason]
 
-**Quyết định:**
-- [Quyết định kỹ thuật]
+**Decisions:**
+- [Technical decision made]
 
-**Kết quả:**
-- ✅ [Hoàn thành]
-- ❌ [Chưa xong / bị block]
+**Results:**
+- ✅ [Completed items]
+- ❌ [Unfinished or blocked items]
 
-**Next:** [Task cụ thể tiếp theo]
+**Next:** [Specific next step]
 
 ---
 
-Sau khi append xong, đọc lại và confirm với user.
+After appending, read it back and confirm with the user.

@@ -133,7 +133,7 @@ Response 200: same as above for authenticated user
 GET /api/users/{userId}/status
 Auth: required
 Response 200: { "userId": "string", "online": true }
-Note: online=false khi Redis key không tồn tại (TTL 5 phút, refresh mỗi STOMP frame)
+Note: online=false when Redis key does not exist (TTL 5 minutes, refresh on each STOMP frame)
 ```
 
 ---

@@ -13,9 +13,6 @@ exports.UserSchema = exports.User = void 0;
 const mongoose_1 = require("@nestjs/mongoose");
 const mongoose_2 = require("mongoose");
 let TrustedDevice = class TrustedDevice {
-    deviceId;
-    deviceName;
-    lastLoginAt;
 };
 __decorate([
     (0, mongoose_1.Prop)({ required: true }),
@@ -33,17 +30,6 @@ TrustedDevice = __decorate([
     (0, mongoose_1.Schema)({ _id: false })
 ], TrustedDevice);
 let User = class User {
-    displayName;
-    avatar;
-    email;
-    phoneNumber;
-    password;
-    trustedDevices;
-    isVerified;
-    socialLinks;
-    status;
-    otpCode;
-    otpExpires;
 };
 exports.User = User;
 __decorate([
@@ -53,7 +39,15 @@ __decorate([
 __decorate([
     (0, mongoose_1.Prop)(),
     __metadata("design:type", String)
-], User.prototype, "avatar", void 0);
+], User.prototype, "avatarUrl", void 0);
+__decorate([
+    (0, mongoose_1.Prop)(),
+    __metadata("design:type", String)
+], User.prototype, "bio", void 0);
+__decorate([
+    (0, mongoose_1.Prop)(),
+    __metadata("design:type", String)
+], User.prototype, "coverPhoto", void 0);
 __decorate([
     (0, mongoose_1.Prop)({ unique: true, sparse: true }),
     __metadata("design:type", String)
@@ -90,6 +84,14 @@ __decorate([
     (0, mongoose_1.Prop)(),
     __metadata("design:type", Date)
 ], User.prototype, "otpExpires", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ type: [String], default: [] }),
+    __metadata("design:type", Array)
+], User.prototype, "fcmTokens", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ type: [String], default: [] }),
+    __metadata("design:type", Array)
+], User.prototype, "blockedUsers", void 0);
 exports.User = User = __decorate([
     (0, mongoose_1.Schema)({ timestamps: true })
 ], User);

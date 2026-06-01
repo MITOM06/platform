@@ -1,115 +1,115 @@
 # Architecture Decision Records (ADR)
 
-Ghi lại tất cả quyết định kiến trúc quan trọng của dự án Platform.
-Tài liệu này captures toàn bộ những gì đã được thảo luận và quyết định.
+Records all critical architectural decisions of the Platform project.
+This document captures discussions and locked choices.
 
 ---
 
-## ADR-001: Giữ NestJS auth-service, không migrate sang Java
+## ADR-001: Retain NestJS auth-service, do not migrate to Java
 
-**Ngày:** 2026-05-15  
-**Trạng thái:** Accepted
+**Date:** 2026-05-15  
+**Status:** Accepted
 
-**Bối cảnh:** Cần tech stack Java Enterprise cho PRJ4. Auth service đang chạy ổn với NestJS.
+**Context:** PRJ4 requires a Java Enterprise tech stack. The auth service is currently running stably with NestJS.
 
-**Quyết định:** Giữ nguyên NestJS auth-service. Không migrate sang Spring Boot.
+**Decision:** Keep the NestJS auth-service. Do not migrate it to Spring Boot.
 
-**Lý do:**
-- Auth service đã hoàn chỉnh: JWT, refresh token, OTP email, social login (Google/Facebook/X), brute force protection
-- Migration sẽ tốn thời gian không cần thiết và risk cao (Redis session, social OAuth flow phức tạp)
-- PRJ4 yêu cầu Java Enterprise — chat-service Spring Boot là đủ để đáp ứng
+**Rationale:**
+- The auth service is already complete: JWT, refresh tokens, OTP email, social login (Google/Facebook/X), and brute force protection.
+- Migration would consume unnecessary time and carry high risk (Redis sessions, complex social OAuth flows).
+- PRJ4 requires Java Enterprise — writing `chat-service` in Spring Boot is sufficient to satisfy the requirement.
 
-**Hệ quả:** Chat service (Spring Boot) validate JWT do auth service issue. JWT secret phải giống nhau.
+**Consequences:** The chat service (Spring Boot) validates JWTs issued by the auth service. The JWT secrets must be identical.
 
 ---
 
-## ADR-002: Replace Go chat-service bằng Spring Boot 3
+## ADR-002: Replace Go chat-service with Spring Boot 3
 
-**Ngày:** 2026-05-15  
-**Trạng thái:** Accepted
+**Date:** 2026-05-15  
+**Status:** Accepted
 
-**Bối cảnh:** chat-service hiện tại viết bằng Go (Gin), chỉ là skeleton, chưa có persistence.
+**Context:** The previous `chat-service` was written in Go (Gin), but it was only a skeleton without database persistence.
 
-**Quyết định:** Xóa toàn bộ Go code, viết lại bằng Spring Boot 3 + Jakarta EE 10.
+**Decision:** Delete all Go code, rewrite it using Spring Boot 3 + Jakarta EE 10.
 
-**Lý do:**
-- Go code chỉ là skeleton (không có MongoDB persistence, không có room/conversation management đầy đủ)
-- Spring Boot 3 đáp ứng trực tiếp PRJ4: `7091-BJWA` (Spring Framework), `7091-WCD` (Jakarta EE), `7091-CSW` (Creating Services for the Web), `7091-EAD` (Enterprise Application)
-- Spring WebSocket + STOMP là standard cho Java enterprise WebSocket
+**Rationale:**
+- The Go code was just a skeleton (lacking MongoDB persistence, conversation/room management).
+- Spring Boot 3 directly aligns with the PRJ4 curricula: `7091-BJWA` (Spring Framework), `7091-WCD` (Jakarta EE), `7091-CSW` (Creating Services for the Web), `7091-EAD` (Enterprise Application).
+- Spring WebSocket + STOMP is standard for Java enterprise WebSockets.
 
-**Tech stack chọn:**
+**Tech stack chosen:**
 - Spring Boot 3.x, Spring Framework 6.x, Jakarta EE Platform 10
-- Spring Data MongoDB (standard, không reactive)
-- Spring Security 6 cho JWT validation
-- Lombok để giảm boilerplate
+- Spring Data MongoDB (standard, non-reactive)
+- Spring Security 6 for JWT validation
+- Lombok to reduce boilerplate
 - Maven build tool
 
 ---
 
-## ADR-003: Replace React Native bằng Flutter
+## ADR-003: Replace React Native with Flutter
 
-**Ngày:** 2026-05-15  
-**Trạng thái:** Accepted
+**Date:** 2026-05-15  
+**Status:** Accepted
 
-**Bối cảnh:** Client hiện tại là React Native (Expo). PRJ4 yêu cầu Flutter/Dart (7091-IDP, 7091-ADFD).
+**Context:** The previous client was React Native (Expo). PRJ4 requires Flutter/Dart (7091-IDP, 7091-ADFD).
 
-**Quyết định:** Viết lại client bằng Flutter. React Native cũ giữ lại để tham khảo logic.
+**Decision:** Rewrite the client in Flutter. Keep the old React Native code as a logic reference.
 
-**Lý do:**
-- 7091-ADFD yêu cầu Flutter SDK 1.22+ với Dart 2.10+
-- React Native auth screens có thể port logic sang Flutter (API calls giống nhau)
-- Flutter/Dart có null safety mạnh hơn JS
+**Rationale:**
+- 7091-ADFD requires Flutter SDK 1.22+ with Dart 2.10+.
+- React Native auth screens logic can be cleanly ported to Flutter (identical API endpoints).
+- Flutter/Dart offers stronger null safety compared to JS.
 
-**State management chọn:** Riverpod (flutter_riverpod + riverpod_annotation)
+**State management chosen:** Riverpod (flutter_riverpod + riverpod_annotation)
 **Navigation:** go_router
-**WebSocket:** stomp_dart_client (STOMP protocol để connect với Spring Boot)
-**HTTP:** Dio với interceptor JWT
+**WebSocket:** stomp_dart_client (STOMP protocol to connect with Spring Boot)
+**HTTP:** Dio with JWT interceptors
 
 ---
 
-## ADR-004: MongoDB dùng chung giữa auth và chat service
+## ADR-004: Shared MongoDB between auth and chat services
 
-**Ngày:** 2026-05-15  
-**Trạng thái:** Accepted
+**Date:** 2026-05-15  
+**Status:** Accepted
 
-**Quyết định:** Cả hai service dùng cùng database `platform` trên MongoDB port 27018.
+**Decision:** Both services share the same `platform` database on MongoDB port 27018.
 
-**Lý do:** Project nhỏ (học), overhead của separate DB không cần thiết. User schema do auth-service quản lý, chat service chỉ đọc userId từ JWT.
+**Rationale:** Small project scope (academic), overhead of separate DB instances is unnecessary. User schema is managed by auth-service, chat service only reads the `userId` from JWT payload.
 
-**Lưu ý:** Chat service KHÔNG write vào `users` collection. Chỉ reference `userId` (string) trong Conversation và Message documents.
+**Caveat:** The chat service MUST NOT write to the `users` collection. It only references `userId` (string) in Conversation and Message documents.
 
 ---
 
 ## ADR-005: Monorepo pnpm workspace
 
-**Ngày:** Trước 2026-05 (giữ nguyên)  
-**Trạng thái:** Accepted
+**Date:** Pre-2026-05 (retained)  
+**Status:** Accepted
 
-**Quyết định:** Giữ monorepo structure với pnpm workspaces cho JS/TS packages. Flutter và Spring Boot là separate projects trong `apps/`.
+**Decision:** Maintain monorepo structure with pnpm workspaces for JS/TS packages. Flutter and Spring Boot are separate projects in `apps/`.
 
 **Package managers:**
-- JS/TS: pnpm (không dùng npm hoặc yarn)
+- JS/TS: pnpm (do not use npm or yarn)
 - Java: Maven
 - Flutter: flutter pub
 
 ---
 
-## ADR-006: WebSocket protocol chọn STOMP over raw WebSocket
+## ADR-006: WebSocket protocol chooses STOMP over raw WebSocket
 
-**Ngày:** 2026-05-15  
-**Trạng thái:** Accepted
+**Date:** 2026-05-15  
+**Status:** Accepted
 
-**Quyết định:** Dùng STOMP protocol trên WebSocket, không dùng raw WebSocket.
+**Decision:** Use the STOMP protocol over WebSockets, do not use raw WebSockets.
 
-**Lý do:**
-- Spring Boot có native support cho STOMP qua `spring-websocket`
-- STOMP có pub/sub model built-in (subscribe to `/topic/conversation/{id}`)
-- `stomp_dart_client` package cho Flutter hỗ trợ tốt
-- Dễ implement typing indicator và presence hơn raw WebSocket
+**Rationale:**
+- Spring Boot has native support for STOMP via `spring-websocket`.
+- STOMP has a built-in pub/sub model (subscribing to `/topic/conversation/{id}`).
+- The `stomp_dart_client` package for Flutter works well.
+- Easier implementation of typing indicators and presence than raw WebSockets.
 
 **STOMP endpoints:**
-- Connect: `/ws` (SockJS-compatible)
+- Connect: `/ws`
 - Subscribe conversations: `/topic/conversation/{conversationId}`
-- Subscribe personal: `/user/queue/notifications`
-- Send: `/app/chat.send`
-- Typing: `/app/chat.typing`
+- Subscribe personal notifications: `/user/queue/notifications`
+- Send message: `/app/chat.send`
+- Typing status: `/app/chat.typing`

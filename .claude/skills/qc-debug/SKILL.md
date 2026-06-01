@@ -1,16 +1,16 @@
 # SKILL: Full-Project QC & Debug — PON
 > 3 services: auth-service (NestJS) · chat-service (Spring Boot) · client (Flutter)
 > Gemini = QC reviewer | Claude = executor & fixer
-> Chạy TRƯỚC khi build tính năng mới. Mục tiêu: 0 lỗi, 0 warning có giá trị.
+> Run BEFORE building any new features. Target: 0 errors, 0 valuable warnings.
 
 ---
 
-## GEMINI: Đọc file này và thực hiện PHASE 5 (Code Review)
-## CLAUDE: Đọc file này và thực hiện PHASE 1→4, sau đó fix issues từ PHASE 5
+## GEMINI: Read this file and perform PHASE 5 (Code Review)
+## CLAUDE: Read this file and perform PHASE 1→4, then fix issues from PHASE 5
 
 ---
 
-## PHASE 1 — Static Analysis (Claude chạy)
+## PHASE 1 — Static Analysis (Run by Claude)
 
 ```bash
 # Auth-service
@@ -26,41 +26,41 @@ cd apps/client
 flutter analyze 2>&1
 ```
 
-**Dừng nếu có lỗi. Fix trước khi qua Phase 2.**
+**Stop if there are errors. Fix them before proceeding to Phase 2.**
 
 ---
 
-## PHASE 2 — Unit Tests (Claude chạy)
+## PHASE 2 — Unit Tests (Run by Claude)
 
 ```bash
 # Auth-service
 cd apps/server/auth-service
 pnpm test 2>&1 | tail -15
-# Mong đợi: PASS, 0 failed
+# Expected: PASS, 0 failed
 
 # Chat-service
 cd apps/server/chat-service  
 mvn test 2>&1 | grep -E "Tests run|FAIL|ERROR|BUILD"
-# Mong đợi: Tests run: 24+, Failures: 0, Errors: 0
+# Expected: Tests run: 24+, Failures: 0, Errors: 0
 
 # Flutter
 cd apps/client
 flutter test 2>&1 | tail -10
-# Mong đợi: All tests passed
+# Expected: All tests passed
 ```
 
 ---
 
-## PHASE 3 — Smoke Test Local (cần services đang chạy)
+## PHASE 3 — Smoke Test Local (requires running services)
 
 ### Start infra
 ```bash
 docker compose -f infra/docker-compose/compose.yml up -d
-# Chờ healthy trước khi tiếp tục
+# Wait for healthy status before continuing
 ```
 
-### Start services (user mở 2 terminal)
-```
+### Start services (user opens 2 terminals)
+```text
 Terminal 1: pnpm --filter @platform/auth-service start:dev
 Terminal 2: cd apps/server/chat-service && mvn spring-boot:run
 ```
@@ -73,10 +73,10 @@ curl -sf http://localhost:8080/health && echo " ✓ chat" || echo " ✗ chat DOW
 
 ---
 
-## PHASE 4 — API Integration Test (Claude chạy curl)
+## PHASE 4 — API Integration Test (Claude runs curl)
 
 ```bash
-# ── SETUP: tạo 2 user test ──────────────────────────────────────
+# ── SETUP: create 2 test users ──────────────────────────────────────
 curl -s -X POST http://localhost:3001/auth/register \
   -H "Content-Type: application/json" \
   -d '{"email":"alice@pon.dev","password":"Test1234!","displayName":"Alice"}' | python3 -m json.tool
@@ -141,132 +141,132 @@ curl -s "http://localhost:8080/api/users/$USER_B_ID/status" \
   -H "Authorization: Bearer $JWT_A" | python3 -m json.tool
 ```
 
-**Kết quả mong đợi:**
+**Expected Results:**
 - Auth: 200 + accessToken ✓
 - `/api/users/me`: 200 + {displayName, avatar} ✓
-- `/api/conversations`: 200 (không phải 401) ✓ ← JWT_SECRET alignment test
-- Conversation tạo được ✓
-- Message gửi được ✓
+- `/api/conversations`: 200 (not 401) ✓ ← JWT_SECRET alignment test
+- Conversation created successfully ✓
+- Message sent successfully ✓
 
 ---
 
-## PHASE 5 — Code Review Checklist (GEMINI thực hiện)
+## PHASE 5 — Code Review Checklist (GEMINI executes)
 
-Gemini đọc toàn bộ file source (dùng 2M context window) và check từng mục:
+Gemini reads all source files and checks each item:
 
 ### AUTH-SERVICE
-```
+```text
 ENDPOINTS
-□ GET /api/users/me — tồn tại, JWT guard, trả {id, displayName, avatar, email}
-□ GET /api/users/:id — tồn tại, JWT guard, trả public profile (KHÔNG password)
-□ GET /api/users/search?q= — tồn tại, tìm theo email/displayName
-□ POST /auth/verify-otp — xử lý OTP dùng 1 lần (xóa sau khi dùng?)
+□ GET /api/users/me — exists, JWT guard, returns {id, displayName, avatar, email}
+□ GET /api/users/:id — exists, JWT guard, returns public profile (NO password)
+□ GET /api/users/search?q= — exists, searches by email/displayName
+□ POST /auth/verify-otp — handles one-time OTP (deleted after use?)
 
 SECURITY
-□ Password không bao giờ nằm trong response (select('+password') chỉ khi cần)
-□ OTP expires được check (không accept OTP hết hạn)
-□ Rate limiting/lockout logic tồn tại
+□ Password never included in responses (select('+password') only when needed)
+□ OTP expires are checked (does not accept expired OTPs)
+□ Rate limiting/lockout logic exists
 
 JWT
-□ JWT_ACCESS_SECRET được dùng nhất quán
-□ accessToken và refreshToken có expires khác nhau
-□ Refresh token rotation khi dùng
+□ JWT_ACCESS_SECRET used consistently
+□ accessToken and refreshToken have different expiration times
+□ Refresh token rotation implemented
 
 DEAD CODE
-□ ws/ws-auth.middleware.ts — đang dùng hay orphaned?
+□ ws/ws-auth.middleware.ts — active or orphaned?
 ```
 
 ### CHAT-SERVICE
-```
+```text
 JWT ALIGNMENT
-□ JWT_SECRET trong .env = JWT_ACCESS_SECRET trong auth-service .env
-□ application.yml KHÔNG có fallback hardcoded (fail fast nếu env missing)
-□ JwtUtil.extractUserId() lấy đúng claim (sub = userId từ auth-service)
+□ JWT_SECRET in .env = JWT_ACCESS_SECRET in auth-service .env
+□ application.yml has NO hardcoded fallbacks (fail-fast if env missing)
+□ JwtUtil.extractUserId() retrieves correct claim (sub = userId from auth-service)
 
 WEBSOCKET
-□ PresenceEventListener dùng SessionConnectedEvent (KHÔNG SessionConnectEvent)
-□ ChatController.typing() broadcast có đủ: {conversationId, userId, typing: Boolean}
-□ Redis TTL refresh trên mọi STOMP message
-□ Personal notifications: /user/{id}/queue/notifications (KHÔNG /topic/)
+□ PresenceEventListener uses SessionConnectedEvent (NOT SessionConnectEvent)
+□ ChatController.typing() broadcast includes: {conversationId, userId, typing: Boolean}
+□ Redis TTL refreshed on every STOMP message
+□ Personal notifications destination: /user/{id}/queue/notifications (NOT /topic/)
 
 NULL SAFETY
-□ ChatController.send() — principal không null (đã guard bởi interceptor)
-□ getParticipants() — trả List.of() khi không tìm thấy (không null)
-□ UserStatusController — xử lý userId không tồn tại trong Redis
+□ ChatController.send() — principal is not null (guarded by interceptor)
+□ getParticipants() — returns List.of() when not found (not null)
+□ UserStatusController — handles non-existent userId in Redis
 
 DATA
-□ markAsRead() dùng $addToSet (atomic, không race condition)
-□ sendMessage() update lastMessage trong Conversation
-□ Pagination metadata đầy đủ: page, size, totalElements, hasNext
+□ markAsRead() uses $addToSet (atomic, avoids race conditions)
+□ sendMessage() updates lastMessage in Conversation
+□ Pagination metadata is complete: page, size, totalElements, hasNext
 ```
 
 ### FLUTTER CLIENT
-```
+```text
 API INTEGRATION
 □ DioClient auth base URL: http://localhost:3001
 □ DioClient chat base URL: http://localhost:8080
-□ Authorization header được attach tự động qua interceptor
-□ 401 → auto refresh token → retry (không loop vô hạn)
+□ Authorization header automatically attached via interceptor
+□ 401 → auto token refresh → retry (no infinite loop)
 □ Token refresh fail → force logout
 
 STOMP
-□ stompConnectHeaders có Authorization: Bearer $token
-□ subscribeNotifications() được gọi sau onConnect
-□ disconnect() được gọi trong AppLifecycleState.paused
-□ Reconnect tự động với subscriptions được restore
+□ stompConnectHeaders contains Authorization: Bearer $token
+□ subscribeNotifications() called after onConnect
+□ disconnect() called during AppLifecycleState.paused
+□ Reconnections auto-restore subscriptions
 
 UI STATE
-□ Mọi async operation có loading state
-□ Mọi async operation có error state visible (không silent fail)
-□ Conversation list hiển thị displayName (không raw userId)
-□ Message bubble hiển thị sender name (không raw senderId)
-□ ConversationListScreen refresh sau khi tạo conversation mới
+□ All async operations have loading states
+□ All async operations display visible error state (no silent fails)
+□ Conversation list displays displayName (no raw userId)
+□ Message bubble displays sender name (no raw senderId)
+□ ConversationListScreen refreshes after creating a new conversation
 
 MISSING FEATURE CHECK
-□ Có màn hình tạo conversation mới không? (new_conversation_screen.dart)
-□ Có search user bằng email trước khi tạo conversation không?
-□ Read receipts hiển thị đúng (tick xanh khi đối phương đọc)?
+□ Is there a screen to create a new conversation? (new_conversation_screen.dart)
+□ Does it search for a user by email before creation?
+□ Read receipts render correctly (blue ticks when read)?
 ```
 
 ### INTEGRATION
-```
-□ JWT token từ auth-service → chat-service accept 200 (không 401/403)
-□ userId trong JWT (sub claim) nhất quán giữa 2 services
-□ User displayName/avatar có thể resolve từ chat UI (cần /api/users/:id)
+```text
+□ JWT token from auth-service → chat-service accepts 200 (not 401/403)
+□ userId in JWT (sub claim) is consistent between both services
+□ User displayName/avatar resolves in chat UI (needs /api/users/:id)
 □ New conversation flow: search user → create → navigate to chat
 ```
 
 ---
 
-## GEMINI: FORMAT KẾT QUẢ
+## GEMINI: FORMAT OUTPUT
 
-Sau khi review, ghi vào `TODO.md` phần `## 🔴 FIX NOTES — Sprint QC`:
+After review, record issues in `TODO.md` under `## 🔴 FIX NOTES — Sprint QC`:
 
 ```markdown
 ## 🔴 FIX NOTES — Sprint QC [date]
 
-### CRITICAL (block chạy app)
-- [auth-service/users.module.ts] Thiếu UsersController → GET /api/users/me không tồn tại → Flutter không lấy được profile
-- [chat-service/.env + application.yml] JWT_SECRET fallback hardcoded → auth sẽ fail nếu env không set
+### CRITICAL (blocks app execution)
+- [auth-service/users.module.ts] Missing UsersController → GET /api/users/me not found → Flutter cannot retrieve profile
+- [chat-service/.env + application.yml] JWT_SECRET hardcoded fallback → auth will fail if env is not set
 
-### HIGH (feature broken)
-- [file:method] Mô tả → Cách fix
+### HIGH (broken features)
+- [file:method] Description → How to fix
 
 ### LOW (code smell / warning)
-- [file] Mô tả
+- [file] Description
 ```
 
 ---
 
-## CLAUDE: FORMAT REPORT SAU KHI FIX
+## CLAUDE: FORMAT REPORT AFTER FIX
 
-Ghi vào `TODO.md` phần `🧪 QA LOG`:
-```
+Record in `TODO.md` under `🧪 QA LOG`:
+```text
 QC Full [date]
 Phase 1: auth build ✓/✗ | chat compile ✓/✗ | flutter analyze ✓/✗
 Phase 2: auth test N/N | chat test N/N | flutter test N/N  
 Phase 3: infra ✓ | auth-svc ✓/✗ | chat-svc ✓/✗
 Phase 4: jwt ✓/✗ | profile ✓/✗ | conversation ✓/✗ | message ✓/✗
-Phase 5 issues fixed: N (list tên)
+Phase 5 issues fixed: N (list names)
 Status: CLEAN / N issues remaining
 ```

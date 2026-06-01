@@ -14,6 +14,10 @@ import '../../features/chat/ui/chat_screen.dart';
 import '../../features/chat/presentation/call_screen.dart';
 import '../../features/chat/ui/group_info_screen.dart';
 import '../../features/chat/ui/new_conversation_screen.dart';
+import '../../features/chat/ui/new_group_screen.dart';
+import '../../features/profile/ui/user_profile_screen.dart';
+import '../../features/profile/ui/edit_profile_screen.dart';
+import '../../features/friends/ui/friends_screen.dart';
 import '../../features/settings/ui/settings_screen.dart';
 import '../../../core/providers/theme_provider.dart';
 
@@ -154,6 +158,27 @@ GoRouter appRouter(AppRouterRef ref) {
         path: '/new-conversation',
         name: 'new-conversation',
         builder: (context, state) => const NewConversationScreen(),
+      ),
+      GoRoute(
+        path: '/new-group',
+        name: 'new-group',
+        builder: (context, state) => const NewGroupScreen(),
+      ),
+      GoRoute(
+        path: '/user/:id',
+        name: 'user-profile',
+        builder: (context, state) =>
+            UserProfileScreen(userId: state.pathParameters['id']!),
+      ),
+      GoRoute(
+        path: '/edit-profile',
+        name: 'edit-profile',
+        builder: (context, state) => const EditProfileScreen(),
+      ),
+      GoRoute(
+        path: '/friends',
+        name: 'friends',
+        builder: (context, state) => const FriendsScreen(),
       ),
       GoRoute(
         path: '/group-info/:id',

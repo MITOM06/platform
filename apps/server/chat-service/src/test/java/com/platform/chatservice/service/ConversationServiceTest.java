@@ -34,6 +34,7 @@ class ConversationServiceTest {
 
     @Mock private ConversationRepository conversationRepository;
     @Mock private MessageRepository messageRepository;
+    @Mock private com.platform.chatservice.repository.FriendshipRepository friendshipRepository;
     @Mock private MongoTemplate mongoTemplate;
 
     @InjectMocks
@@ -77,6 +78,66 @@ class ConversationServiceTest {
             .extracting("conversationId")
             .isEqualTo(CONV_ID);
 
+        verify(conversationRepository, never()).save(any());
+    }
+
+    @Test
+    void createConversation_WhenNotFriends_ShouldBePending() {
+        when(conversationRepository.findOneOnOneConversation(any())).thenReturn(Optional.empty());
+        when(conversationRepository.save(any(Conversation.class))).thenReturn(conversation);
+
+        conversationService.createConversation(USER_ID, OTHER_ID);
+
+        var captor = org.mockito.ArgumentCaptor.forClass(Conversation.class);
+        verify(conversationRepository).save(captor.capture());
+        assertThat(captor.getValue().getStatus()).isEqualTo(Conversation.STATUS_PENDING);
+    }
+
+    @Test
+    void createConversation_WhenFriends_ShouldBeAccepted() {
+        when(conversationRepository.findOneOnOneConversation(any())).thenReturn(Optional.empty());
+        when(friendshipRepository.findAcceptedBetween(USER_ID, OTHER_ID))
+            .thenReturn(Optional.of(new com.platform.chatservice.model.Friendship()));
+        when(conversationRepository.save(any(Conversation.class))).thenReturn(conversation);
+
+        conversationService.createConversation(USER_ID, OTHER_ID);
+
+        var captor = org.mockito.ArgumentCaptor.forClass(Conversation.class);
+        verify(conversationRepository).save(captor.capture());
+        assertThat(captor.getValue().getStatus()).isEqualTo(Conversation.STATUS_ACCEPTED);
+    }
+
+    @Test
+    void acceptConversation_ByRecipient_ShouldSetAccepted() {
+        Conversation pending = Conversation.builder()
+            .id(CONV_ID)
+            .participants(List.of(USER_ID, OTHER_ID))
+            .createdBy(USER_ID)
+            .status(Conversation.STATUS_PENDING)
+            .createdAt(Instant.now())
+            .build();
+        when(conversationRepository.findById(CONV_ID)).thenReturn(Optional.of(pending));
+        when(conversationRepository.save(any(Conversation.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(messageRepository.countUnread(CONV_ID, OTHER_ID)).thenReturn(0L);
+
+        ConversationResponse response = conversationService.acceptConversation(OTHER_ID, CONV_ID);
+
+        assertThat(response.status()).isEqualTo(Conversation.STATUS_ACCEPTED);
+    }
+
+    @Test
+    void acceptConversation_ByInitiator_ShouldThrow() {
+        Conversation pending = Conversation.builder()
+            .id(CONV_ID)
+            .participants(List.of(USER_ID, OTHER_ID))
+            .createdBy(USER_ID)
+            .status(Conversation.STATUS_PENDING)
+            .createdAt(Instant.now())
+            .build();
+        when(conversationRepository.findById(CONV_ID)).thenReturn(Optional.of(pending));
+
+        assertThatThrownBy(() -> conversationService.acceptConversation(USER_ID, CONV_ID))
+            .isInstanceOf(com.platform.chatservice.exception.UnauthorizedException.class);
         verify(conversationRepository, never()).save(any());
     }
 

@@ -1,11 +1,15 @@
 import { Controller, Get, Param, Query, Req, UseGuards, Patch, Body, Post } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { UsersService } from './users.service';
+import { FriendsService } from '../friends/friends.service';
 
 @UseGuards(AuthGuard('jwt'))
 @Controller('api/users')
 export class UsersController {
-  constructor(private readonly usersService: UsersService) {}
+  constructor(
+    private readonly usersService: UsersService,
+    private readonly friendsService: FriendsService,
+  ) {}
 
   @Get('me')
   getMe(@Req() req: any) {
@@ -13,7 +17,10 @@ export class UsersController {
   }
 
   @Patch('me')
-  updateMe(@Req() req: any, @Body() body: { displayName?: string; avatarUrl?: string }) {
+  updateMe(
+    @Req() req: any,
+    @Body() body: { displayName?: string; avatarUrl?: string; bio?: string; coverPhoto?: string },
+  ) {
     return this.usersService.updateProfile(req.user.sub, body);
   }
 
@@ -27,8 +34,39 @@ export class UsersController {
     return this.usersService.findBySearchQuery(query ?? '');
   }
 
+  @Post('block/:targetId')
+  block(@Req() req: any, @Param('targetId') targetId: string) {
+    return this.usersService.blockUser(req.user.sub, targetId);
+  }
+
+  @Post('unblock/:targetId')
+  unblock(@Req() req: any, @Param('targetId') targetId: string) {
+    return this.usersService.unblockUser(req.user.sub, targetId);
+  }
+
+  // Combined friend + block relationship between the caller and `:id`.
+  // Two-segment path, so it never collides with the bare '@Get(":id")' below.
+  @Get(':id/relationship')
+  async relationship(@Req() req: any, @Param('id') id: string) {
+    const [friendStatus, block] = await Promise.all([
+      this.friendsService.getStatus(req.user.sub, id),
+      this.usersService.getBlockState(req.user.sub, id),
+    ]);
+    return { friendStatus, ...block };
+  }
+
+  // NOTE: must be declared BEFORE the ':id' param route so the two-segment
+  // path is not swallowed by '@Get(":id")'.
+  @Get('friends/online')
+  onlineFriends(@Req() req: any) {
+    return this.friendsService.listOnlineFriends(req.user.sub);
+  }
+
   @Get(':id')
-  findById(@Param('id') id: string) {
-    return this.usersService.findById(id);
+  async findById(@Param('id') id: string) {
+    const user = await this.usersService.findById(id);
+    if (!user) return user;
+    const friendsCount = await this.friendsService.countAccepted(id);
+    return { ...user.toObject(), friendsCount };
   }
 }

@@ -116,10 +116,17 @@ class AuthRepository {
     return list.map((e) => UserModel.fromJson(e as Map<String, dynamic>)).toList();
   }
 
-  Future<UserModel> updateProfile({String? displayName, String? avatarUrl}) async {
+  Future<UserModel> updateProfile({
+    String? displayName,
+    String? avatarUrl,
+    String? bio,
+    String? coverPhoto,
+  }) async {
     final response = await _dio.patch('/api/users/me', data: {
       if (displayName != null) 'displayName': displayName,
       if (avatarUrl != null) 'avatarUrl': avatarUrl,
+      if (bio != null) 'bio': bio,
+      if (coverPhoto != null) 'coverPhoto': coverPhoto,
     });
     
     final updated = UserModel.fromJson(response.data as Map<String, dynamic>);

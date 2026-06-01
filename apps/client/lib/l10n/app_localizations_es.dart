@@ -423,6 +423,12 @@ class AppLocalizationsEs extends AppLocalizations {
   String get actionRecall => 'Retirar';
 
   @override
+  String get actionEdit => 'Editar';
+
+  @override
+  String get messageEdited => '(editado)';
+
+  @override
   String get actionDeleteForMe => 'Eliminar para mí';
 
   @override
@@ -508,6 +514,9 @@ class AppLocalizationsEs extends AppLocalizations {
   String get attachVideo => 'Vídeo';
 
   @override
+  String get attachFile => 'Archivo';
+
+  @override
   String get uploading => 'Subiendo…';
 
   @override
@@ -538,4 +547,109 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get callUnknownCaller => 'Alguien';
+
+  @override
+  String get profileTitle => 'Perfil';
+
+  @override
+  String get editProfile => 'Editar perfil';
+
+  @override
+  String get bio => 'Biografía';
+
+  @override
+  String friendsCountLabel(int count) {
+    return '$count amigos';
+  }
+
+  @override
+  String get messageAction => 'Mensaje';
+
+  @override
+  String get activeFriends => 'Activos ahora';
+
+  @override
+  String get noFriendsOnline => 'No hay amigos en línea';
+
+  @override
+  String get strangerBannerTitle => 'Solicitud de mensaje';
+
+  @override
+  String get strangerBannerBody =>
+      'Esta persona no está en tus contactos. Acepta para responder.';
+
+  @override
+  String get acceptRequest => 'Aceptar';
+
+  @override
+  String get rejectRequest => 'Rechazar';
+
+  @override
+  String get friends => 'Amigos';
+
+  @override
+  String get contacts => 'Contactos';
+
+  @override
+  String get friendRequests => 'Solicitudes de amistad';
+
+  @override
+  String get addFriend => 'Añadir amigo';
+
+  @override
+  String get friendRequestSent => 'Solicitud de amistad enviada';
+
+  @override
+  String get acceptFriend => 'Aceptar';
+
+  @override
+  String get noFriends => 'Aún no tienes amigos';
+
+  @override
+  String get noFriendRequests => 'No hay solicitudes pendientes';
+
+  @override
+  String get friendRequestPending => 'Pendiente';
+
+  @override
+  String get unfriend => 'Eliminar amigo';
+
+  @override
+  String get unfriendConfirm => '¿Eliminar a este amigo?';
+
+  @override
+  String get blockUser => 'Bloquear';
+
+  @override
+  String get unblockUser => 'Desbloquear';
+
+  @override
+  String get blockUserConfirm =>
+      '¿Bloquear a este usuario? No podréis enviaros mensajes.';
+
+  @override
+  String get blockedComposerNotice => 'No puedes enviar mensajes a este chat';
+
+  @override
+  String get userBlocked => 'Usuario bloqueado';
+
+  @override
+  String get userUnblocked => 'Usuario desbloqueado';
+
+  @override
+  String get mentionNotificationTitle => 'Te mencionó';
+
+  @override
+  String mentionNotificationBody(String name) {
+    return '$name te mencionó';
+  }
+
+  @override
+  String get searchMessages => 'Buscar mensajes';
+
+  @override
+  String get searchHint => 'Buscar en la conversación';
+
+  @override
+  String get searchNoResults => 'No se encontraron mensajes';
 }

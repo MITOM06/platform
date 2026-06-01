@@ -6,10 +6,13 @@ import com.platform.chatservice.dto.PageResponse;
 import com.platform.chatservice.dto.SendMessageRequest;
 import com.platform.chatservice.exception.ConversationNotFoundException;
 import com.platform.chatservice.exception.MessageNotFoundException;
+import com.platform.chatservice.exception.UnauthorizedException;
 import com.platform.chatservice.model.Conversation;
 import com.platform.chatservice.model.Message;
+import com.platform.chatservice.model.UserBlock;
 import com.platform.chatservice.repository.ConversationRepository;
 import com.platform.chatservice.repository.MessageRepository;
+import com.platform.chatservice.repository.UserBlockRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -17,7 +20,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
@@ -36,6 +39,7 @@ class MessageServiceTest {
 
     @Mock private MessageRepository messageRepository;
     @Mock private ConversationRepository conversationRepository;
+    @Mock private UserBlockRepository userBlockRepository;
     @Mock private MongoTemplate mongoTemplate;
 
     @InjectMocks
@@ -83,6 +87,40 @@ class MessageServiceTest {
     }
 
     @Test
+    void sendMessage_ByRecipientOnPending_ShouldAcceptConversation() {
+        Conversation pending = Conversation.builder()
+            .id(CONV_ID)
+            .participants(List.of(SENDER_ID, OTHER_ID))
+            .createdBy(OTHER_ID) // OTHER started the request; SENDER is the recipient replying
+            .status(Conversation.STATUS_PENDING)
+            .build();
+        when(conversationRepository.findById(CONV_ID)).thenReturn(Optional.of(pending));
+        when(messageRepository.save(any(Message.class))).thenReturn(savedMessage);
+        when(conversationRepository.save(any(Conversation.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        messageService.sendMessage(SENDER_ID, new SendMessageRequest(CONV_ID, "Hello", "text"));
+
+        verify(conversationRepository).save(argThat(c -> Conversation.STATUS_ACCEPTED.equals(c.getStatus())));
+    }
+
+    @Test
+    void sendMessage_ByInitiatorOnPending_ShouldStayPending() {
+        Conversation pending = Conversation.builder()
+            .id(CONV_ID)
+            .participants(List.of(SENDER_ID, OTHER_ID))
+            .createdBy(SENDER_ID) // SENDER is the initiator; their message must not auto-accept
+            .status(Conversation.STATUS_PENDING)
+            .build();
+        when(conversationRepository.findById(CONV_ID)).thenReturn(Optional.of(pending));
+        when(messageRepository.save(any(Message.class))).thenReturn(savedMessage);
+        when(conversationRepository.save(any(Conversation.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        messageService.sendMessage(SENDER_ID, new SendMessageRequest(CONV_ID, "Hi", "text"));
+
+        verify(conversationRepository).save(argThat(c -> Conversation.STATUS_PENDING.equals(c.getStatus())));
+    }
+
+    @Test
     void sendMessage_ShouldDefaultTypeToText_WhenTypeIsNull() {
         when(conversationRepository.findById(CONV_ID)).thenReturn(Optional.of(conversation));
         when(messageRepository.save(any(Message.class))).thenReturn(savedMessage);
@@ -116,26 +154,172 @@ class MessageServiceTest {
     }
 
     @Test
-    void getMessages_ShouldReturnPagedResponse() {
-        var pageable = PageRequest.of(0, 20);
+    void sendMessage_WhenSenderBlockedByRecipient_ShouldThrow() {
         when(conversationRepository.findById(CONV_ID)).thenReturn(Optional.of(conversation));
-        when(messageRepository.findByConversationIdOrderByCreatedAtDesc(CONV_ID, pageable))
+        // OTHER_ID has blocked SENDER_ID → message must be rejected.
+        when(userBlockRepository.findById(SENDER_ID)).thenReturn(Optional.empty());
+        when(userBlockRepository.findById(OTHER_ID)).thenReturn(Optional.of(
+            UserBlock.builder().id(OTHER_ID).blockedUsers(List.of(SENDER_ID)).build()));
+
+        assertThatThrownBy(() -> messageService.sendMessage(SENDER_ID,
+                new SendMessageRequest(CONV_ID, "Hi", "text")))
+            .isInstanceOf(UnauthorizedException.class);
+
+        verify(messageRepository, never()).save(any(Message.class));
+    }
+
+    @Test
+    void sendMessage_WhenSenderBlockedRecipient_ShouldThrow() {
+        when(conversationRepository.findById(CONV_ID)).thenReturn(Optional.of(conversation));
+        // SENDER_ID has blocked OTHER_ID → message must be rejected too.
+        when(userBlockRepository.findById(SENDER_ID)).thenReturn(Optional.of(
+            UserBlock.builder().id(SENDER_ID).blockedUsers(List.of(OTHER_ID)).build()));
+
+        assertThatThrownBy(() -> messageService.sendMessage(SENDER_ID,
+                new SendMessageRequest(CONV_ID, "Hi", "text")))
+            .isInstanceOf(UnauthorizedException.class);
+
+        verify(messageRepository, never()).save(any(Message.class));
+    }
+
+    @Test
+    void getMessages_ShouldReturnPagedResponse() {
+        when(conversationRepository.findById(CONV_ID)).thenReturn(Optional.of(conversation));
+        when(messageRepository.findByConversationIdOrderByCreatedAtDesc(eq(CONV_ID), any(Pageable.class)))
             .thenReturn(new PageImpl<>(List.of(savedMessage)));
 
+        // No cursor → most recent page.
         PageResponse<MessageResponse> result =
-            messageService.getMessages(SENDER_ID, CONV_ID, pageable);
+            messageService.getMessages(SENDER_ID, CONV_ID, null, 20);
 
         assertThat(result.content()).hasSize(1);
         assertThat(result.content().get(0).id()).isEqualTo(MSG_ID);
         assertThat(result.page()).isZero();
+        // Only one row (< size) → no older history.
+        assertThat(result.hasNext()).isFalse();
+    }
+
+    @Test
+    void getMessages_WithCursor_ShouldQueryOlderMessages() {
+        when(conversationRepository.findById(CONV_ID)).thenReturn(Optional.of(conversation));
+        when(messageRepository.findById(MSG_ID)).thenReturn(Optional.of(savedMessage));
+        when(messageRepository.findByConversationIdAndCreatedAtLessThanOrderByCreatedAtDesc(
+                eq(CONV_ID), any(Instant.class), any(Pageable.class)))
+            .thenReturn(List.of());
+
+        PageResponse<MessageResponse> result =
+            messageService.getMessages(SENDER_ID, CONV_ID, MSG_ID, 20);
+
+        assertThat(result.content()).isEmpty();
+        verify(messageRepository).findByConversationIdAndCreatedAtLessThanOrderByCreatedAtDesc(
+            eq(CONV_ID), any(Instant.class), any(Pageable.class));
     }
 
     @Test
     void getMessages_WhenUserNotParticipant_ShouldThrow() {
         when(conversationRepository.findById(CONV_ID)).thenReturn(Optional.of(conversation));
 
-        assertThatThrownBy(() -> messageService.getMessages("outsider", CONV_ID, PageRequest.of(0, 20)))
+        assertThatThrownBy(() -> messageService.getMessages("outsider", CONV_ID, null, 20))
             .isInstanceOf(ConversationNotFoundException.class);
+    }
+
+    @Test
+    void editMessage_BySender_ShouldUpdateContentAndStampEditedAt() {
+        when(messageRepository.findById(MSG_ID)).thenReturn(Optional.of(savedMessage));
+        when(messageRepository.save(any(Message.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        MessageResponse response = messageService.editMessage(SENDER_ID, MSG_ID, "Edited text");
+
+        assertThat(response.content()).isEqualTo("Edited text");
+        assertThat(response.editedAt()).isNotNull();
+        verify(messageRepository).save(argThat(m -> "Edited text".equals(m.getContent())
+            && m.getEditedAt() != null));
+    }
+
+    @Test
+    void editMessage_ByNonSender_ShouldThrow() {
+        when(messageRepository.findById(MSG_ID)).thenReturn(Optional.of(savedMessage));
+
+        assertThatThrownBy(() -> messageService.editMessage(OTHER_ID, MSG_ID, "Hacked"))
+            .isInstanceOf(UnauthorizedException.class);
+
+        verify(messageRepository, never()).save(any(Message.class));
+    }
+
+    @Test
+    void editMessage_WhenRecalled_ShouldThrow() {
+        savedMessage.setRecalled(true);
+        when(messageRepository.findById(MSG_ID)).thenReturn(Optional.of(savedMessage));
+
+        assertThatThrownBy(() -> messageService.editMessage(SENDER_ID, MSG_ID, "Edited"))
+            .isInstanceOf(IllegalArgumentException.class);
+
+        verify(messageRepository, never()).save(any(Message.class));
+    }
+
+    @Test
+    void editMessage_WhenContentBlank_ShouldThrow() {
+        assertThatThrownBy(() -> messageService.editMessage(SENDER_ID, MSG_ID, "   "))
+            .isInstanceOf(IllegalArgumentException.class);
+
+        verify(messageRepository, never()).findById(anyString());
+    }
+
+    @Test
+    void searchMessages_ShouldReturnMatchingMessages() {
+        when(conversationRepository.findById(CONV_ID)).thenReturn(Optional.of(conversation));
+        when(mongoTemplate.find(any(Query.class), eq(Message.class)))
+            .thenReturn(List.of(savedMessage));
+
+        List<MessageResponse> results = messageService.searchMessages(SENDER_ID, CONV_ID, "Hello");
+
+        assertThat(results).hasSize(1);
+        assertThat(results.get(0).id()).isEqualTo(MSG_ID);
+        verify(mongoTemplate).find(any(Query.class), eq(Message.class));
+    }
+
+    @Test
+    void searchMessages_WhenBlankQuery_ShouldReturnEmptyWithoutQuerying() {
+        when(conversationRepository.findById(CONV_ID)).thenReturn(Optional.of(conversation));
+
+        assertThat(messageService.searchMessages(SENDER_ID, CONV_ID, "   ")).isEmpty();
+
+        verify(mongoTemplate, never()).find(any(Query.class), eq(Message.class));
+    }
+
+    @Test
+    void searchMessages_WhenUserNotParticipant_ShouldThrow() {
+        when(conversationRepository.findById(CONV_ID)).thenReturn(Optional.of(conversation));
+
+        assertThatThrownBy(() -> messageService.searchMessages("outsider", CONV_ID, "Hello"))
+            .isInstanceOf(ConversationNotFoundException.class);
+    }
+
+    @Test
+    void sendMessage_WithMention_ShouldResolveMentionedUserIds() {
+        // Valid ObjectId hex so the users-collection lookup path runs.
+        String mentionerId = "507f1f77bcf86cd799439011";
+        String mentioneeId = "507f1f77bcf86cd799439012";
+        Conversation group = Conversation.builder()
+            .id(CONV_ID)
+            .participants(List.of(mentionerId, mentioneeId))
+            .build();
+        when(conversationRepository.findById(CONV_ID)).thenReturn(Optional.of(group));
+        when(messageRepository.save(any(Message.class))).thenAnswer(inv -> {
+            Message m = inv.getArgument(0);
+            m.setId(MSG_ID);
+            m.setCreatedAt(Instant.now());
+            return m;
+        });
+        when(conversationRepository.save(any(Conversation.class))).thenAnswer(inv -> inv.getArgument(0));
+        org.bson.Document mentioneeDoc = new org.bson.Document("displayName", "Alice");
+        when(mongoTemplate.findOne(any(Query.class), eq(org.bson.Document.class), eq("users")))
+            .thenReturn(mentioneeDoc);
+
+        MessageResponse response = messageService.sendMessage(mentionerId,
+            new SendMessageRequest(CONV_ID, "Hey @Alice check this", "text"));
+
+        assertThat(response.mentions()).containsExactly(mentioneeId);
     }
 
     @Test

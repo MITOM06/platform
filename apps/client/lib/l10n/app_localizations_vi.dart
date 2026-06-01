@@ -416,6 +416,12 @@ class AppLocalizationsVi extends AppLocalizations {
   String get actionRecall => 'Thu hồi';
 
   @override
+  String get actionEdit => 'Chỉnh sửa';
+
+  @override
+  String get messageEdited => '(đã sửa)';
+
+  @override
   String get actionDeleteForMe => 'Xoá phía tôi';
 
   @override
@@ -501,6 +507,9 @@ class AppLocalizationsVi extends AppLocalizations {
   String get attachVideo => 'Video';
 
   @override
+  String get attachFile => 'Tệp';
+
+  @override
   String get uploading => 'Đang tải lên…';
 
   @override
@@ -531,4 +540,110 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get callUnknownCaller => 'Ai đó';
+
+  @override
+  String get profileTitle => 'Trang cá nhân';
+
+  @override
+  String get editProfile => 'Chỉnh sửa trang cá nhân';
+
+  @override
+  String get bio => 'Tiểu sử';
+
+  @override
+  String friendsCountLabel(int count) {
+    return '$count bạn bè';
+  }
+
+  @override
+  String get messageAction => 'Nhắn tin';
+
+  @override
+  String get activeFriends => 'Đang hoạt động';
+
+  @override
+  String get noFriendsOnline => 'Không có bạn nào trực tuyến';
+
+  @override
+  String get strangerBannerTitle => 'Yêu cầu nhắn tin';
+
+  @override
+  String get strangerBannerBody =>
+      'Người này không nằm trong danh bạ của bạn. Chấp nhận để trả lời.';
+
+  @override
+  String get acceptRequest => 'Chấp nhận';
+
+  @override
+  String get rejectRequest => 'Từ chối';
+
+  @override
+  String get friends => 'Bạn bè';
+
+  @override
+  String get contacts => 'Danh bạ';
+
+  @override
+  String get friendRequests => 'Lời mời kết bạn';
+
+  @override
+  String get addFriend => 'Kết bạn';
+
+  @override
+  String get friendRequestSent => 'Đã gửi lời mời kết bạn';
+
+  @override
+  String get acceptFriend => 'Chấp nhận';
+
+  @override
+  String get noFriends => 'Chưa có bạn bè';
+
+  @override
+  String get noFriendRequests => 'Không có lời mời nào';
+
+  @override
+  String get friendRequestPending => 'Đang chờ';
+
+  @override
+  String get unfriend => 'Hủy kết bạn';
+
+  @override
+  String get unfriendConfirm => 'Hủy kết bạn với người này?';
+
+  @override
+  String get blockUser => 'Chặn người này';
+
+  @override
+  String get unblockUser => 'Bỏ chặn';
+
+  @override
+  String get blockUserConfirm =>
+      'Chặn người này? Hai bạn sẽ không thể nhắn tin cho nhau.';
+
+  @override
+  String get blockedComposerNotice =>
+      'Bạn không thể gửi tin nhắn cho đoạn chat này';
+
+  @override
+  String get userBlocked => 'Đã chặn người dùng';
+
+  @override
+  String get userUnblocked => 'Đã bỏ chặn người dùng';
+
+  @override
+  String get mentionNotificationTitle => 'Đã nhắc đến bạn';
+
+  @override
+  String mentionNotificationBody(String name) {
+    return '$name đã nhắc đến bạn';
+  }
+
+  @override
+  String get searchMessages => 'Tìm tin nhắn';
+
+  @override
+  String get searchHint => 'Tìm trong cuộc trò chuyện';
+
+  @override
+  String get searchNoResults => 'Không tìm thấy tin nhắn';
 }

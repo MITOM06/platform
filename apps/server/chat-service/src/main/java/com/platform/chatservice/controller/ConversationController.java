@@ -96,6 +96,14 @@ public class ConversationController {
         conversationService.clearHistory(currentUserId(), id);
     }
 
+    /** Accept a pending stranger message request. */
+    @PostMapping("/{id}/accept")
+    public ConversationResponse acceptConversation(@PathVariable String id) {
+        ConversationResponse updated = conversationService.acceptConversation(currentUserId(), id);
+        broadcastConversationUpdated(updated);
+        return updated;
+    }
+
     @PutMapping("/{id}/settings")
     public ConversationResponse updateSettings(@PathVariable String id,
                                                @RequestBody AutoDeleteRequest request) {
@@ -105,12 +113,17 @@ public class ConversationController {
         return updated;
     }
 
+    /**
+     * Cursor-based message history. Pass {@code before} = the oldest message id
+     * the client already has to fetch the next older page; omit it for the most
+     * recent page.
+     */
     @GetMapping("/{conversationId}/messages")
     public PageResponse<MessageResponse> getMessages(
             @PathVariable String conversationId,
-            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(required = false) String before,
             @RequestParam(defaultValue = "20") int size) {
-        return messageService.getMessages(currentUserId(), conversationId, PageRequest.of(page, size));
+        return messageService.getMessages(currentUserId(), conversationId, before, size);
     }
 
     private void broadcastConversationUpdated(ConversationResponse conversation) {

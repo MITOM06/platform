@@ -876,6 +876,18 @@ abstract class AppLocalizations {
   /// **'Recall'**
   String get actionRecall;
 
+  /// No description provided for @actionEdit.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit'**
+  String get actionEdit;
+
+  /// No description provided for @messageEdited.
+  ///
+  /// In en, this message translates to:
+  /// **'(edited)'**
+  String get messageEdited;
+
   /// No description provided for @actionDeleteForMe.
   ///
   /// In en, this message translates to:
@@ -1026,6 +1038,12 @@ abstract class AppLocalizations {
   /// **'Video'**
   String get attachVideo;
 
+  /// No description provided for @attachFile.
+  ///
+  /// In en, this message translates to:
+  /// **'File'**
+  String get attachFile;
+
   /// No description provided for @uploading.
   ///
   /// In en, this message translates to:
@@ -1079,6 +1097,204 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Someone'**
   String get callUnknownCaller;
+
+  /// No description provided for @profileTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Profile'**
+  String get profileTitle;
+
+  /// No description provided for @editProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit profile'**
+  String get editProfile;
+
+  /// No description provided for @bio.
+  ///
+  /// In en, this message translates to:
+  /// **'Bio'**
+  String get bio;
+
+  /// No description provided for @friendsCountLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} friends'**
+  String friendsCountLabel(int count);
+
+  /// No description provided for @messageAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Message'**
+  String get messageAction;
+
+  /// No description provided for @activeFriends.
+  ///
+  /// In en, this message translates to:
+  /// **'Active now'**
+  String get activeFriends;
+
+  /// No description provided for @noFriendsOnline.
+  ///
+  /// In en, this message translates to:
+  /// **'No friends online'**
+  String get noFriendsOnline;
+
+  /// No description provided for @strangerBannerTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Message request'**
+  String get strangerBannerTitle;
+
+  /// No description provided for @strangerBannerBody.
+  ///
+  /// In en, this message translates to:
+  /// **'This person isn\'t in your contacts. Accept to reply.'**
+  String get strangerBannerBody;
+
+  /// No description provided for @acceptRequest.
+  ///
+  /// In en, this message translates to:
+  /// **'Accept'**
+  String get acceptRequest;
+
+  /// No description provided for @rejectRequest.
+  ///
+  /// In en, this message translates to:
+  /// **'Decline'**
+  String get rejectRequest;
+
+  /// No description provided for @friends.
+  ///
+  /// In en, this message translates to:
+  /// **'Friends'**
+  String get friends;
+
+  /// No description provided for @contacts.
+  ///
+  /// In en, this message translates to:
+  /// **'Contacts'**
+  String get contacts;
+
+  /// No description provided for @friendRequests.
+  ///
+  /// In en, this message translates to:
+  /// **'Friend requests'**
+  String get friendRequests;
+
+  /// No description provided for @addFriend.
+  ///
+  /// In en, this message translates to:
+  /// **'Add friend'**
+  String get addFriend;
+
+  /// No description provided for @friendRequestSent.
+  ///
+  /// In en, this message translates to:
+  /// **'Friend request sent'**
+  String get friendRequestSent;
+
+  /// No description provided for @acceptFriend.
+  ///
+  /// In en, this message translates to:
+  /// **'Accept'**
+  String get acceptFriend;
+
+  /// No description provided for @noFriends.
+  ///
+  /// In en, this message translates to:
+  /// **'No friends yet'**
+  String get noFriends;
+
+  /// No description provided for @noFriendRequests.
+  ///
+  /// In en, this message translates to:
+  /// **'No pending requests'**
+  String get noFriendRequests;
+
+  /// No description provided for @friendRequestPending.
+  ///
+  /// In en, this message translates to:
+  /// **'Pending'**
+  String get friendRequestPending;
+
+  /// No description provided for @unfriend.
+  ///
+  /// In en, this message translates to:
+  /// **'Unfriend'**
+  String get unfriend;
+
+  /// No description provided for @unfriendConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove this friend?'**
+  String get unfriendConfirm;
+
+  /// No description provided for @blockUser.
+  ///
+  /// In en, this message translates to:
+  /// **'Block'**
+  String get blockUser;
+
+  /// No description provided for @unblockUser.
+  ///
+  /// In en, this message translates to:
+  /// **'Unblock'**
+  String get unblockUser;
+
+  /// No description provided for @blockUserConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Block this user? You won\'t be able to message each other.'**
+  String get blockUserConfirm;
+
+  /// No description provided for @blockedComposerNotice.
+  ///
+  /// In en, this message translates to:
+  /// **'You can\'t send messages to this chat'**
+  String get blockedComposerNotice;
+
+  /// No description provided for @userBlocked.
+  ///
+  /// In en, this message translates to:
+  /// **'User blocked'**
+  String get userBlocked;
+
+  /// No description provided for @userUnblocked.
+  ///
+  /// In en, this message translates to:
+  /// **'User unblocked'**
+  String get userUnblocked;
+
+  /// No description provided for @mentionNotificationTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Mentioned you'**
+  String get mentionNotificationTitle;
+
+  /// No description provided for @mentionNotificationBody.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} mentioned you'**
+  String mentionNotificationBody(String name);
+
+  /// No description provided for @searchMessages.
+  ///
+  /// In en, this message translates to:
+  /// **'Search messages'**
+  String get searchMessages;
+
+  /// No description provided for @searchHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Search in conversation'**
+  String get searchHint;
+
+  /// No description provided for @searchNoResults.
+  ///
+  /// In en, this message translates to:
+  /// **'No messages found'**
+  String get searchNoResults;
 }
 
 class _AppLocalizationsDelegate

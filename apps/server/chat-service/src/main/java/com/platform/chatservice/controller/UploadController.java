@@ -40,13 +40,12 @@ public class UploadController {
             throw new BadRequestException("File is empty");
         }
 
-        // Chấp nhận ảnh (png, jpg, gif, webp, ...) lẫn video (mp4, mov, webm, ...).
-        // Một số client gửi contentType chung chung → fallback dò theo đuôi file.
+        // Chấp nhận ảnh, video LẪN tài liệu (PDF, DOC/DOCX, ZIP, …). Một số client
+        // gửi contentType chung chung → fallback dò theo đuôi file để GridFS lưu
+        // đúng content-type (cần cho việc tải/hiển thị lại sau này).
         String contentType = resolveContentType(file);
-        if (contentType == null
-                || !(contentType.toLowerCase().startsWith("image/")
-                  || contentType.toLowerCase().startsWith("video/"))) {
-            throw new BadRequestException("Only image or video files are allowed");
+        if (!isAllowedContentType(contentType)) {
+            throw new BadRequestException("File type is not allowed");
         }
 
         var objectId = gridFsTemplate.store(
@@ -56,7 +55,24 @@ public class UploadController {
         );
 
         String url = "/api/uploads/" + objectId.toString();
-        return ResponseEntity.ok(Map.of("url", url));
+        // Trả về kèm filename + size để client dựng "file card" (tên, dung lượng).
+        return ResponseEntity.ok(Map.of(
+            "url", url,
+            "filename", file.getOriginalFilename() == null ? "" : file.getOriginalFilename(),
+            "size", String.valueOf(file.getSize()),
+            "contentType", contentType == null ? "" : contentType
+        ));
+    }
+
+    /** Allow images, videos, audio and common document/archive formats. */
+    private boolean isAllowedContentType(String contentType) {
+        if (contentType == null || contentType.isBlank()) return false;
+        String lower = contentType.toLowerCase();
+        return lower.startsWith("image/")
+            || lower.startsWith("video/")
+            || lower.startsWith("audio/")
+            || lower.startsWith("text/")
+            || lower.startsWith("application/");
     }
 
     @GetMapping("/{id}")
@@ -108,9 +124,10 @@ public class UploadController {
 
     private String resolveContentType(MultipartFile file) {
         String contentType = file.getContentType();
+        // Trust a meaningful, non-generic content type sent by the client.
         if (contentType != null
-                && (contentType.toLowerCase().startsWith("image/")
-                 || contentType.toLowerCase().startsWith("video/"))) {
+                && !contentType.isBlank()
+                && !contentType.equalsIgnoreCase("application/octet-stream")) {
             return contentType;
         }
         // Fallback: dò theo đuôi tên file khi client không gửi đúng content-type
@@ -119,6 +136,23 @@ public class UploadController {
             return contentType;
         }
         String lower = name.toLowerCase();
+        // Tài liệu
+        if (lower.endsWith(".pdf")) return "application/pdf";
+        if (lower.endsWith(".doc")) return "application/msword";
+        if (lower.endsWith(".docx"))
+            return "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+        if (lower.endsWith(".xls")) return "application/vnd.ms-excel";
+        if (lower.endsWith(".xlsx"))
+            return "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+        if (lower.endsWith(".ppt")) return "application/vnd.ms-powerpoint";
+        if (lower.endsWith(".pptx"))
+            return "application/vnd.openxmlformats-officedocument.presentationml.presentation";
+        if (lower.endsWith(".txt")) return "text/plain";
+        if (lower.endsWith(".csv")) return "text/csv";
+        if (lower.endsWith(".json")) return "application/json";
+        if (lower.endsWith(".zip")) return "application/zip";
+        if (lower.endsWith(".rar")) return "application/vnd.rar";
+        if (lower.endsWith(".7z")) return "application/x-7z-compressed";
         // Ảnh
         if (lower.endsWith(".png")) return "image/png";
         if (lower.endsWith(".jpg") || lower.endsWith(".jpeg")) return "image/jpeg";

@@ -8,6 +8,7 @@ import com.platform.chatservice.exception.DuplicateConversationException;
 import com.platform.chatservice.exception.UnauthorizedException;
 import com.platform.chatservice.model.Conversation;
 import com.platform.chatservice.repository.ConversationRepository;
+import com.platform.chatservice.repository.FriendshipRepository;
 import com.platform.chatservice.repository.MessageRepository;
 import lombok.RequiredArgsConstructor;
 import org.bson.Document;
@@ -31,6 +32,7 @@ public class ConversationService {
 
     private final ConversationRepository conversationRepository;
     private final MessageRepository messageRepository;
+    private final FriendshipRepository friendshipRepository;
     private final MongoTemplate mongoTemplate;
 
     public PageResponse<ConversationResponse> listConversations(String userId, Pageable pageable) {
@@ -56,11 +58,16 @@ public class ConversationService {
         conversationRepository.findOneOnOneConversation(participants).ifPresent(existing -> {
             throw new DuplicateConversationException(existing.getId());
         });
+        // Friends chat freely; a message to a non-friend starts as a stranger
+        // request (PENDING) until the recipient accepts or replies.
+        boolean friends = friendshipRepository
+            .findAcceptedBetween(currentUserId, participantId).isPresent();
         Conversation saved = conversationRepository.save(
             Conversation.builder()
                 .participants(participants)
                 .type(Conversation.TYPE_DIRECT)
                 .createdBy(currentUserId)
+                .status(friends ? Conversation.STATUS_ACCEPTED : Conversation.STATUS_PENDING)
                 .build()
         );
         return toResponse(saved, currentUserId, 0L);
@@ -178,6 +185,18 @@ public class ConversationService {
         return toResponse(conversation, userId, unreadCount);
     }
 
+    /** Accept a pending stranger request. Only a participant who did NOT initiate
+     *  the conversation may accept it. */
+    public ConversationResponse acceptConversation(String userId, String conversationId) {
+        Conversation conversation = getRawConversation(userId, conversationId);
+        if (userId.equals(conversation.getCreatedBy())) {
+            throw new UnauthorizedException("The initiator cannot accept their own request");
+        }
+        conversation.setStatus(Conversation.STATUS_ACCEPTED);
+        Conversation saved = conversationRepository.save(conversation);
+        return toResponse(saved, userId, messageRepository.countUnread(conversationId, userId));
+    }
+
     private Map<String, Long> getUnreadCounts(List<String> conversationIds, String userId) {
         if (conversationIds.isEmpty()) {
             return Map.of();
@@ -250,7 +269,7 @@ public class ConversationService {
         return new ConversationResponse(
             c.getId(), c.resolvedType(), c.getName(), c.getAvatarUrl(),
             c.getParticipants(), c.getAdmins(), c.getCreatedBy(), c.getAutoDeleteSeconds(),
-            lastMsg, c.getLastMessageAt(), unreadCount, c.getCreatedAt()
+            lastMsg, c.getLastMessageAt(), unreadCount, c.getCreatedAt(), c.resolvedStatus()
         );
     }
 }

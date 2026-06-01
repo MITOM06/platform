@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { ConflictException, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { User, UserDocument } from '@platform/database';
@@ -85,10 +85,15 @@ export class UsersService {
     }).limit(10).select('-password').exec();
   }
 
-  async updateProfile(userId: string, data: { displayName?: string; avatarUrl?: string }): Promise<UserDocument | null> {
+  async updateProfile(
+    userId: string,
+    data: { displayName?: string; avatarUrl?: string; bio?: string; coverPhoto?: string },
+  ): Promise<UserDocument | null> {
     const updateData: any = {};
     if (data.displayName !== undefined) updateData.displayName = data.displayName;
     if (data.avatarUrl !== undefined) updateData.avatarUrl = data.avatarUrl;
+    if (data.bio !== undefined) updateData.bio = data.bio;
+    if (data.coverPhoto !== undefined) updateData.coverPhoto = data.coverPhoto;
 
     if (Object.keys(updateData).length > 0) {
       return this.userModel.findByIdAndUpdate(
@@ -105,5 +110,45 @@ export class UsersService {
     await this.userModel.findByIdAndUpdate(userId, {
       $addToSet: { fcmTokens: token },
     });
+  }
+
+  /** Add `targetId` to the current user's block list. */
+  async blockUser(userId: string, targetId: string): Promise<{ success: true }> {
+    if (userId === targetId) {
+      throw new ConflictException('You cannot block yourself');
+    }
+    await this.userModel.findByIdAndUpdate(userId, {
+      $addToSet: { blockedUsers: targetId },
+    });
+    return { success: true };
+  }
+
+  /** Remove `targetId` from the current user's block list. */
+  async unblockUser(userId: string, targetId: string): Promise<{ success: true }> {
+    await this.userModel.findByIdAndUpdate(userId, {
+      $pull: { blockedUsers: targetId },
+    });
+    return { success: true };
+  }
+
+  /**
+   * Block relationship between two users, from `userId`'s point of view:
+   *   - `iBlocked`  — current user has blocked `otherId`
+   *   - `blockedMe` — `otherId` has blocked the current user
+   */
+  async getBlockState(
+    userId: string,
+    otherId: string,
+  ): Promise<{ iBlocked: boolean; blockedMe: boolean }> {
+    const [me, other] = await Promise.all([
+      this.userModel.findById(userId).select('blockedUsers').lean().exec(),
+      this.userModel.findById(otherId).select('blockedUsers').lean().exec(),
+    ]);
+    const myList = ((me as any)?.blockedUsers ?? []).map(String);
+    const otherList = ((other as any)?.blockedUsers ?? []).map(String);
+    return {
+      iBlocked: myList.includes(otherId),
+      blockedMe: otherList.includes(userId),
+    };
   }
 }

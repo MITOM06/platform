@@ -1,5 +1,6 @@
 package com.platform.chatservice.controller;
 
+import com.platform.chatservice.dto.EditMessageRequest;
 import com.platform.chatservice.dto.MessageResponse;
 import com.platform.chatservice.dto.ReactionRequest;
 import com.platform.chatservice.dto.SendMessageRequest;
@@ -12,6 +13,7 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -26,6 +28,26 @@ public class MessageController {
     @ResponseStatus(HttpStatus.CREATED)
     public MessageResponse sendMessage(@RequestBody SendMessageRequest request) {
         return messageService.sendMessage(currentUserId(), request);
+    }
+
+    @PutMapping("/{id}")
+    public MessageResponse editMessage(@PathVariable String id, @RequestBody EditMessageRequest request) {
+        MessageResponse updated = messageService.editMessage(currentUserId(), id, request.content());
+        messagingTemplate.convertAndSend(
+            "/topic/conversation/" + updated.conversationId(),
+            Map.of("type", "MESSAGE_UPDATED",
+                   "messageId", updated.id(),
+                   "conversationId", updated.conversationId(),
+                   "content", updated.content(),
+                   "editedAt", updated.editedAt().toString()));
+        return updated;
+    }
+
+    /** Search messages within a conversation (Task 50). */
+    @GetMapping("/search")
+    public List<MessageResponse> search(@RequestParam("q") String query,
+                                        @RequestParam("conversationId") String conversationId) {
+        return messageService.searchMessages(currentUserId(), conversationId, query);
     }
 
     @PutMapping("/{id}/read")

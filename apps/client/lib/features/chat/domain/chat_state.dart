@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:flutter/foundation.dart';
 
 @immutable
@@ -35,6 +36,7 @@ class ConversationModel {
   final DateTime? lastMessageAt;
   final int unreadCount;
   final DateTime createdAt;
+  final String status; // "pending" | "accepted"
 
   const ConversationModel({
     required this.id,
@@ -49,9 +51,11 @@ class ConversationModel {
     this.lastMessageAt,
     required this.unreadCount,
     required this.createdAt,
+    this.status = 'accepted',
   });
 
   bool get isGroup => type == 'group';
+  bool get isPending => status == 'pending';
 
   factory ConversationModel.fromJson(Map<String, dynamic> json) {
     return ConversationModel(
@@ -74,6 +78,7 @@ class ConversationModel {
       createdAt: json['createdAt'] != null
           ? DateTime.parse(json['createdAt'] as String)
           : DateTime.now(),
+      status: json['status'] as String? ?? 'accepted',
     );
   }
 
@@ -90,6 +95,7 @@ class ConversationModel {
     DateTime? lastMessageAt,
     int? unreadCount,
     DateTime? createdAt,
+    String? status,
   }) {
     return ConversationModel(
       id: id ?? this.id,
@@ -104,6 +110,7 @@ class ConversationModel {
       lastMessageAt: lastMessageAt ?? this.lastMessageAt,
       unreadCount: unreadCount ?? this.unreadCount,
       createdAt: createdAt ?? this.createdAt,
+      status: status ?? this.status,
     );
   }
 }
@@ -153,6 +160,10 @@ class MessageModel {
   final ReplyPreview? replyPreview;
   final List<ReactionModel> reactions;
   final bool recalled;
+  // Set when the sender has edited this message (null = never edited).
+  final DateTime? editedAt;
+  // User ids @-mentioned in this message (Task 49).
+  final List<String> mentions;
   // Client-only flag for optimistic UI — not in server response
   final bool isPending;
 
@@ -168,13 +179,35 @@ class MessageModel {
     this.replyPreview,
     this.reactions = const [],
     this.recalled = false,
+    this.editedAt,
+    this.mentions = const [],
     this.isPending = false,
   });
+
+  bool get isEdited => editedAt != null;
 
   bool get isSystem => type == 'system';
   bool get isImage => type == 'image';
   bool get isVideo => type == 'video';
   bool get isMedia => isImage || isVideo;
+  // Generic document attachment (PDF / DOC / ZIP …).
+  bool get isFile => type == 'file';
+
+  /// File messages encode `{url, name, size}` as JSON in [content]. These
+  /// getters decode it defensively (falling back to the raw content as a URL).
+  Map<String, dynamic>? get _fileMeta {
+    if (!isFile) return null;
+    try {
+      final decoded = jsonDecode(content);
+      return decoded is Map<String, dynamic> ? decoded : null;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  String get fileUrl => (_fileMeta?['url'] as String?) ?? content;
+  String get fileName => (_fileMeta?['name'] as String?) ?? 'file';
+  int get fileSize => (_fileMeta?['size'] as num?)?.toInt() ?? 0;
 
   factory MessageModel.fromJson(Map<String, dynamic> json) {
     return MessageModel(
@@ -193,6 +226,10 @@ class MessageModel {
           .map((e) => ReactionModel.fromJson(e as Map<String, dynamic>))
           .toList(),
       recalled: json['recalled'] as bool? ?? false,
+      editedAt: json['editedAt'] != null
+          ? DateTime.parse(json['editedAt'] as String)
+          : null,
+      mentions: List<String>.from(json['mentions'] as List? ?? []),
     );
   }
 
@@ -208,6 +245,8 @@ class MessageModel {
     ReplyPreview? replyPreview,
     List<ReactionModel>? reactions,
     bool? recalled,
+    DateTime? editedAt,
+    List<String>? mentions,
     bool? isPending,
   }) {
     return MessageModel(
@@ -222,6 +261,8 @@ class MessageModel {
       replyPreview: replyPreview ?? this.replyPreview,
       reactions: reactions ?? this.reactions,
       recalled: recalled ?? this.recalled,
+      editedAt: editedAt ?? this.editedAt,
+      mentions: mentions ?? this.mentions,
       isPending: isPending ?? this.isPending,
     );
   }
@@ -233,13 +274,47 @@ class PagedResult<T> {
   final int page;
   final int size;
   final int totalElements;
+  // Whether an older page of history exists (cursor pagination).
+  final bool hasNext;
 
   const PagedResult({
     required this.content,
     required this.page,
     required this.size,
     required this.totalElements,
+    this.hasNext = false,
   });
+}
+
+/// Open Graph metadata for a link, fetched from the chat-service unfurl endpoint.
+@immutable
+class LinkPreviewData {
+  final String url;
+  final String? title;
+  final String? description;
+  final String? image;
+  final String? siteName;
+
+  const LinkPreviewData({
+    required this.url,
+    this.title,
+    this.description,
+    this.image,
+    this.siteName,
+  });
+
+  // A preview is only worth rendering if it has at least a title or image.
+  bool get hasContent =>
+      (title != null && title!.isNotEmpty) ||
+      (image != null && image!.isNotEmpty);
+
+  factory LinkPreviewData.fromJson(Map<String, dynamic> json) => LinkPreviewData(
+        url: json['url'] as String? ?? '',
+        title: json['title'] as String?,
+        description: json['description'] as String?,
+        image: json['image'] as String?,
+        siteName: json['siteName'] as String?,
+      );
 }
 
 @immutable
@@ -263,6 +338,19 @@ class UserStatus {
           : null,
     );
   }
+}
+
+@immutable
+class PresenceEvent {
+  final String userId;
+  final bool online;
+
+  const PresenceEvent({required this.userId, required this.online});
+
+  factory PresenceEvent.fromJson(Map<String, dynamic> json) => PresenceEvent(
+        userId: json['userId'] as String,
+        online: json['online'] as bool? ?? false,
+      );
 }
 
 @immutable
@@ -313,6 +401,21 @@ class RecallEvent {
 }
 
 @immutable
+class MessageUpdateEvent {
+  final String conversationId;
+  final String messageId;
+  final String content;
+  final DateTime editedAt;
+
+  const MessageUpdateEvent({
+    required this.conversationId,
+    required this.messageId,
+    required this.content,
+    required this.editedAt,
+  });
+}
+
+@immutable
 class ChatState {
   final List<MessageModel> messages;
   final bool hasMore;
@@ -321,6 +424,10 @@ class ChatState {
   final bool isLoadingMore;
   // Message the composer is currently replying to (null = not replying).
   final MessageModel? replyingTo;
+  // Message the composer is currently editing (null = not editing).
+  final MessageModel? editingMessage;
+  // Message id to scroll to + briefly highlight after a search jump (Task 50).
+  final String? highlightMessageId;
 
   const ChatState({
     required this.messages,
@@ -329,6 +436,8 @@ class ChatState {
     this.typingUserIds = const {},
     this.isLoadingMore = false,
     this.replyingTo,
+    this.editingMessage,
+    this.highlightMessageId,
   });
 
   ChatState copyWith({
@@ -339,6 +448,10 @@ class ChatState {
     bool? isLoadingMore,
     MessageModel? replyingTo,
     bool clearReplyingTo = false,
+    MessageModel? editingMessage,
+    bool clearEditingMessage = false,
+    String? highlightMessageId,
+    bool clearHighlight = false,
   }) {
     return ChatState(
       messages: messages ?? this.messages,
@@ -347,6 +460,11 @@ class ChatState {
       typingUserIds: typingUserIds ?? this.typingUserIds,
       isLoadingMore: isLoadingMore ?? this.isLoadingMore,
       replyingTo: clearReplyingTo ? null : (replyingTo ?? this.replyingTo),
+      editingMessage: clearEditingMessage
+          ? null
+          : (editingMessage ?? this.editingMessage),
+      highlightMessageId:
+          clearHighlight ? null : (highlightMessageId ?? this.highlightMessageId),
     );
   }
 }

@@ -413,6 +413,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get actionRecall => '撤回';
 
   @override
+  String get actionEdit => '编辑';
+
+  @override
+  String get messageEdited => '(已编辑)';
+
+  @override
   String get actionDeleteForMe => '删除（仅自己）';
 
   @override
@@ -496,6 +502,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get attachVideo => '视频';
 
   @override
+  String get attachFile => '文件';
+
+  @override
   String get uploading => '上传中…';
 
   @override
@@ -525,4 +534,107 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get callUnknownCaller => '某人';
+
+  @override
+  String get profileTitle => '个人资料';
+
+  @override
+  String get editProfile => '编辑资料';
+
+  @override
+  String get bio => '简介';
+
+  @override
+  String friendsCountLabel(int count) {
+    return '$count 位好友';
+  }
+
+  @override
+  String get messageAction => '发消息';
+
+  @override
+  String get activeFriends => '在线好友';
+
+  @override
+  String get noFriendsOnline => '没有好友在线';
+
+  @override
+  String get strangerBannerTitle => '消息请求';
+
+  @override
+  String get strangerBannerBody => '此人不在你的联系人中。接受后即可回复。';
+
+  @override
+  String get acceptRequest => '接受';
+
+  @override
+  String get rejectRequest => '拒绝';
+
+  @override
+  String get friends => '好友';
+
+  @override
+  String get contacts => '通讯录';
+
+  @override
+  String get friendRequests => '好友请求';
+
+  @override
+  String get addFriend => '加为好友';
+
+  @override
+  String get friendRequestSent => '好友请求已发送';
+
+  @override
+  String get acceptFriend => '接受';
+
+  @override
+  String get noFriends => '还没有好友';
+
+  @override
+  String get noFriendRequests => '没有待处理的请求';
+
+  @override
+  String get friendRequestPending => '待处理';
+
+  @override
+  String get unfriend => '删除好友';
+
+  @override
+  String get unfriendConfirm => '确定删除该好友吗？';
+
+  @override
+  String get blockUser => '拉黑';
+
+  @override
+  String get unblockUser => '解除拉黑';
+
+  @override
+  String get blockUserConfirm => '拉黑该用户？你们将无法互相发送消息。';
+
+  @override
+  String get blockedComposerNotice => '你无法向此聊天发送消息';
+
+  @override
+  String get userBlocked => '已拉黑该用户';
+
+  @override
+  String get userUnblocked => '已解除拉黑';
+
+  @override
+  String get mentionNotificationTitle => '提到了你';
+
+  @override
+  String mentionNotificationBody(String name) {
+    return '$name 提到了你';
+  }
+
+  @override
+  String get searchMessages => '搜索消息';
+
+  @override
+  String get searchHint => '在对话中搜索';
+
+  @override
+  String get searchNoResults => '未找到消息';
 }
