@@ -1,35 +1,45 @@
 import 'package:flutter/material.dart';
 
 class AppTheme {
-  // Brand colors
-  static const Color neonCyan = Color(0xFF00F2FE);
-  static const Color neonPink = Color(0xFFFF2A85);
-  static const Color neonPurple = Color(0xFF9D4EDD);
-  static const Color neonBlue = Color(0xFF4FACFE);
-  static const Color onlineGreen = Color(0xFF00FFCC);
-  static const Color offlineGrey = Color(0xFF7E7A91);
+  // Brand colors extracted from logo (Cyan -> Peach -> Pink)
+  static const Color ponCyan = Color(0xFF6AC9FF);
+  static const Color ponPeach = Color(0xFFFBB68B);
+  static const Color ponPink = Color(0xFFFF85B3);
+  static const Color onlineGreen = Color(0xFF00E676);
+  static const Color offlineGrey = Color(0xFF9E9E9E);
   
-  // Backgrounds
-  static const Color obsidianBackground = Color(0xFF090514);
-  static const Color darkSurface = Color(0xFF130E29);
-  static const Color darkBorder = Color(0xFF2B1F4A);
+  // Gradients
+  static const LinearGradient ponGradient = LinearGradient(
+    colors: [ponCyan, ponPeach, ponPink],
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+  );
+
+  // Backgrounds - Dark
+  static const Color darkBackground = Color(0xFF121212);
+  static const Color darkSurface = Color(0xFF1E1E1E);
+  static const Color darkBorder = Color(0xFF2C2C2C);
+
+  // Backgrounds - Light
+  static const Color lightBackground = Color(0xFFF5F7FA);
+  static const Color lightSurface = Colors.white;
+  static const Color lightBorder = Color(0xFFE5E7EB);
   
   static ThemeData get darkTheme {
     return ThemeData(
       brightness: Brightness.dark,
       useMaterial3: true,
-      scaffoldBackgroundColor: obsidianBackground,
+      scaffoldBackgroundColor: darkBackground,
       colorScheme: const ColorScheme.dark(
-        primary: neonCyan,
-        secondary: neonPink,
-        tertiary: neonPurple,
+        primary: ponCyan,
+        secondary: ponPink,
+        tertiary: ponPeach,
         surface: darkSurface,
         error: Colors.redAccent,
-        onPrimary: Color(0xFF090514),
+        onPrimary: Colors.white,
         onSecondary: Colors.white,
-        primaryContainer: Color(0xFF1B133A),
-        onPrimaryContainer: neonCyan,
-        surfaceContainerHighest: Color(0xFF1E1546),
+        primaryContainer: Color(0xFF2C2C2C),
+        onPrimaryContainer: ponCyan,
       ),
       appBarTheme: const AppBarTheme(
         backgroundColor: Colors.transparent,
@@ -37,16 +47,16 @@ class AppTheme {
         centerTitle: false,
         titleTextStyle: TextStyle(
           fontSize: 20,
-          fontWeight: FontWeight.bold,
+          fontWeight: FontWeight.w700,
           color: Colors.white,
-          letterSpacing: 0.5,
+          letterSpacing: 0.2,
         ),
         iconTheme: IconThemeData(color: Colors.white),
       ),
       cardTheme: CardThemeData(
         color: darkSurface,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(24),
           side: const BorderSide(color: darkBorder, width: 1),
         ),
         elevation: 0,
@@ -54,28 +64,28 @@ class AppTheme {
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: darkSurface,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 18),
         labelStyle: TextStyle(color: Colors.white.withValues(alpha: 0.6)),
-        floatingLabelStyle: const TextStyle(color: neonCyan, fontWeight: FontWeight.w600),
+        floatingLabelStyle: const TextStyle(color: ponCyan, fontWeight: FontWeight.w600),
         hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.3)),
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
-          borderSide: const BorderSide(color: darkBorder, width: 1.5),
+          borderRadius: BorderRadius.circular(24),
+          borderSide: BorderSide.none,
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(24),
           borderSide: const BorderSide(color: darkBorder, width: 1.5),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
-          borderSide: const BorderSide(color: neonCyan, width: 2),
+          borderRadius: BorderRadius.circular(24),
+          borderSide: const BorderSide(color: ponCyan, width: 2),
         ),
         errorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(24),
           borderSide: const BorderSide(color: Colors.redAccent, width: 1.5),
         ),
         focusedErrorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(24),
           borderSide: const BorderSide(color: Colors.redAccent, width: 2),
         ),
         prefixIconColor: Colors.white.withValues(alpha: 0.5),
@@ -83,30 +93,30 @@ class AppTheme {
       ),
       filledButtonTheme: FilledButtonThemeData(
         style: FilledButton.styleFrom(
-          backgroundColor: neonCyan,
-          foregroundColor: const Color(0xFF090514),
-          padding: const EdgeInsets.symmetric(vertical: 16),
+          backgroundColor: ponCyan,
+          foregroundColor: Colors.white,
+          padding: const EdgeInsets.symmetric(vertical: 18),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(24),
           ),
           textStyle: const TextStyle(
             fontSize: 16,
-            fontWeight: FontWeight.bold,
+            fontWeight: FontWeight.w700,
             letterSpacing: 0.5,
           ),
         ),
       ),
       textButtonTheme: TextButtonThemeData(
         style: TextButton.styleFrom(
-          foregroundColor: neonCyan,
+          foregroundColor: ponCyan,
           textStyle: const TextStyle(
             fontWeight: FontWeight.bold,
-            fontSize: 14,
+            fontSize: 15,
           ),
         ),
       ),
       listTileTheme: const ListTileThemeData(
-        contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        contentPadding: EdgeInsets.symmetric(horizontal: 20, vertical: 8),
         iconColor: Colors.white70,
         textColor: Colors.white,
       ),
@@ -117,55 +127,95 @@ class AppTheme {
     return ThemeData(
       brightness: Brightness.light,
       useMaterial3: true,
-      scaffoldBackgroundColor: const Color(0xFFF9F9FC),
+      scaffoldBackgroundColor: lightBackground,
       colorScheme: const ColorScheme.light(
-        primary: Color(0xFF8B5CF6), // Neon Purple/Violet in Light mode
-        secondary: Color(0xFFEC4899), // Neon Pink in Light mode
-        surface: Colors.white,
+        primary: ponCyan,
+        secondary: ponPink,
+        tertiary: ponPeach,
+        surface: lightSurface,
         error: Colors.redAccent,
         onPrimary: Colors.white,
         onSecondary: Colors.white,
-        primaryContainer: Color(0xFFF3E8FF),
-        onPrimaryContainer: Color(0xFF6D28D9),
+        primaryContainer: Color(0xFFF3F4F6),
+        onPrimaryContainer: ponCyan,
       ),
       appBarTheme: const AppBarTheme(
         backgroundColor: Colors.transparent,
         elevation: 0,
         titleTextStyle: TextStyle(
           fontSize: 20,
-          fontWeight: FontWeight.bold,
-          color: Color(0xFF1F2937),
+          fontWeight: FontWeight.w700,
+          color: Color(0xFF111827),
+          letterSpacing: 0.2,
         ),
-        iconTheme: IconThemeData(color: Color(0xFF1F2937)),
+        iconTheme: IconThemeData(color: Color(0xFF111827)),
+      ),
+      cardTheme: CardThemeData(
+        color: lightSurface,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(24),
+          side: const BorderSide(color: lightBorder, width: 1),
+        ),
+        elevation: 0,
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: Colors.white,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+        fillColor: lightSurface,
+        contentPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 18),
         labelStyle: TextStyle(color: Colors.black.withValues(alpha: 0.5)),
+        floatingLabelStyle: const TextStyle(color: ponCyan, fontWeight: FontWeight.w600),
         hintStyle: TextStyle(color: Colors.black.withValues(alpha: 0.3)),
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
-          borderSide: BorderSide(color: Colors.black.withValues(alpha: 0.1), width: 1.5),
+          borderRadius: BorderRadius.circular(24),
+          borderSide: BorderSide.none,
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
-          borderSide: BorderSide(color: Colors.black.withValues(alpha: 0.1), width: 1.5),
+          borderRadius: BorderRadius.circular(24),
+          borderSide: const BorderSide(color: lightBorder, width: 1.5),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
-          borderSide: const BorderSide(color: Color(0xFF8B5CF6), width: 2),
+          borderRadius: BorderRadius.circular(24),
+          borderSide: const BorderSide(color: ponCyan, width: 2),
         ),
+        errorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(24),
+          borderSide: const BorderSide(color: Colors.redAccent, width: 1.5),
+        ),
+        focusedErrorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(24),
+          borderSide: const BorderSide(color: Colors.redAccent, width: 2),
+        ),
+        prefixIconColor: Colors.black.withValues(alpha: 0.4),
+        suffixIconColor: Colors.black.withValues(alpha: 0.4),
       ),
       filledButtonTheme: FilledButtonThemeData(
         style: FilledButton.styleFrom(
-          backgroundColor: const Color(0xFF8B5CF6),
+          backgroundColor: ponCyan,
           foregroundColor: Colors.white,
-          padding: const EdgeInsets.symmetric(vertical: 16),
+          padding: const EdgeInsets.symmetric(vertical: 18),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(24),
+          ),
+          textStyle: const TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w700,
+            letterSpacing: 0.5,
           ),
         ),
+      ),
+      textButtonTheme: TextButtonThemeData(
+        style: TextButton.styleFrom(
+          foregroundColor: ponCyan,
+          textStyle: const TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: 15,
+          ),
+        ),
+      ),
+      listTileTheme: const ListTileThemeData(
+        contentPadding: EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+        iconColor: Colors.black54,
+        textColor: Colors.black87,
       ),
     );
   }

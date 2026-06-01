@@ -20,6 +20,7 @@ class StompService extends _$StompService {
   final _reactionCtrl = StreamController<ReactionUpdateEvent>.broadcast();
   final _recallCtrl = StreamController<RecallEvent>.broadcast();
   final _convUpdateCtrl = StreamController<ConversationModel>.broadcast();
+  final _webrtcCtrl = StreamController<Map<String, dynamic>>.broadcast();
 
   @override
   void build() {}
@@ -31,6 +32,7 @@ class StompService extends _$StompService {
   Stream<ReactionUpdateEvent> get reactionUpdates => _reactionCtrl.stream;
   Stream<RecallEvent> get recalledMessages => _recallCtrl.stream;
   Stream<ConversationModel> get conversationUpdates => _convUpdateCtrl.stream;
+  Stream<Map<String, dynamic>> get webrtcSignals => _webrtcCtrl.stream;
 
   bool get isConnected => _client?.connected ?? false;
 
@@ -155,6 +157,15 @@ class StompService extends _$StompService {
         _notifCtrl.add(jsonDecode(frame.body!) as Map<String, dynamic>);
       },
     );
+
+    if (_subs.containsKey('webrtc')) return;
+    _subs['webrtc'] = _client!.subscribe(
+      destination: '/user/queue/webrtc',
+      callback: (frame) {
+        if (frame.body == null) return;
+        _webrtcCtrl.add(jsonDecode(frame.body!) as Map<String, dynamic>);
+      },
+    );
   }
 
   void sendMessage(
@@ -195,6 +206,10 @@ class StompService extends _$StompService {
         'messageId': messageId,
       }),
     );
+  }
+
+  void sendRawMessage({required String destination, required String body}) {
+    _client?.send(destination: destination, body: body);
   }
 
   void disconnect() {

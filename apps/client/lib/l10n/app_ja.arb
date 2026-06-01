@@ -170,5 +170,12 @@
   "attachVideo": "動画",
   "uploading": "アップロード中…",
   "downloadMedia": "ダウンロード",
-  "attachmentLabel": "📎 添付ファイル"
+  "attachmentLabel": "📎 添付ファイル",
+
+  "callIncoming": "着信",
+  "callIncomingBody": "{name} があなたを呼び出しています",
+  "callCalling": "{name} に発信中…",
+  "callConnecting": "接続中…",
+  "callMediaError": "カメラ/マイクにアクセスできません（HTTPS または localhost が必要）",
+  "callUnknownCaller": "誰か"
 }

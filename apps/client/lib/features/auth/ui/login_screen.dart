@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/l10n/l10n_ext.dart';
 import '../../../core/theme/app_theme.dart';
-import '../../../core/widgets/neon_widgets.dart';
+import '../../../core/widgets/pon_widgets.dart';
 import '../domain/auth_provider.dart';
 import '../domain/auth_state.dart';
 
@@ -82,7 +82,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 shape: BoxShape.circle,
                 gradient: RadialGradient(
                   colors: [
-                    AppTheme.neonCyan.withValues(alpha: 0.18),
+                    AppTheme.ponCyan.withValues(alpha: 0.18),
                     Colors.transparent,
                   ],
                 ),
@@ -99,7 +99,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 shape: BoxShape.circle,
                 gradient: RadialGradient(
                   colors: [
-                    AppTheme.neonPink.withValues(alpha: 0.15),
+                    AppTheme.ponPink.withValues(alpha: 0.15),
                     Colors.transparent,
                   ],
                 ),
@@ -116,7 +116,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 shape: BoxShape.circle,
                 gradient: RadialGradient(
                   colors: [
-                    AppTheme.neonPurple.withValues(alpha: 0.12),
+                    AppTheme.ponPeach.withValues(alpha: 0.12),
                     Colors.transparent,
                   ],
                 ),
@@ -138,8 +138,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     const SizedBox(height: 40),
 
                     // Frosted Glass Form Card
-                    NeonCard(
-                      glowColor: AppTheme.neonCyan,
+                    PonCard(
+                      glowColor: AppTheme.ponCyan,
                       glowStrength: 8,
                       child: Padding(
                         padding: const EdgeInsets.all(24.0),
@@ -159,13 +159,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                               const SizedBox(height: 28),
 
                               // Email
-                              NeonTextField(
+                              PonTextField(
                                 controller: _emailController,
                                 labelText: context.l10n.fieldEmail,
                                 prefixIcon: Icons.email_outlined,
                                 keyboardType: TextInputType.emailAddress,
                                 textInputAction: TextInputAction.next,
-                                focusColor: AppTheme.neonCyan,
+                                focusColor: AppTheme.ponCyan,
                                 validator: (v) {
                                   if (v == null || v.isEmpty) return context.l10n.valEmailRequired;
                                   if (!v.contains('@')) return context.l10n.valEmailInvalid;
@@ -175,13 +175,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                               const SizedBox(height: 20),
 
                               // Password
-                              NeonTextField(
+                              PonTextField(
                                 controller: _passwordController,
                                 labelText: context.l10n.fieldPassword,
                                 prefixIcon: Icons.lock_outlined,
                                 obscureText: _obscurePassword,
                                 textInputAction: TextInputAction.done,
-                                focusColor: AppTheme.neonPink,
+                                focusColor: AppTheme.ponPink,
                                 onFieldSubmitted: (_) => _submit(),
                                 suffixIcon: IconButton(
                                   icon: Icon(
@@ -211,11 +211,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                               const SizedBox(height: 12),
 
                               // Submit Button
-                              NeonButton(
+                              PonButton(
                                 onPressed: _submit,
                                 isLoading: _isLoading,
-                                gradientColors: const [AppTheme.neonCyan, AppTheme.neonBlue],
-                                glowColor: AppTheme.neonCyan,
+                                gradientColors: const [AppTheme.ponCyan, AppTheme.ponCyan],
+                                glowColor: AppTheme.ponCyan,
                                 child: Text(context.l10n.loginButton),
                               ),
                             ],

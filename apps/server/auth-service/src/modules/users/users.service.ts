@@ -99,4 +99,11 @@ export class UsersService {
     }
     return this.findById(userId);
   }
+
+  async addDeviceToken(userId: string, token: string): Promise<void> {
+    if (!token) return;
+    await this.userModel.findByIdAndUpdate(userId, {
+      $addToSet: { fcmTokens: token },
+    });
+  }
 }

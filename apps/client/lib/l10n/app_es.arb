@@ -170,5 +170,12 @@
   "attachVideo": "Vídeo",
   "uploading": "Subiendo…",
   "downloadMedia": "Descargar",
-  "attachmentLabel": "📎 Adjunto"
+  "attachmentLabel": "📎 Adjunto",
+
+  "callIncoming": "Llamada entrante",
+  "callIncomingBody": "{name} te está llamando",
+  "callCalling": "Llamando a {name}…",
+  "callConnecting": "Conectando…",
+  "callMediaError": "No se puede acceder a la cámara/micrófono (se requiere HTTPS o localhost)",
+  "callUnknownCaller": "Alguien"
 }

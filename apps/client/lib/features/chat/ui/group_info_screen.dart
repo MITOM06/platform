@@ -62,7 +62,7 @@ class GroupInfoScreen extends ConsumerWidget {
                           child: Container(
                             padding: const EdgeInsets.all(8),
                             decoration: const BoxDecoration(
-                              color: AppTheme.neonCyan,
+                              color: AppTheme.ponCyan,
                               shape: BoxShape.circle,
                             ),
                             child: const Icon(Icons.camera_alt, color: Colors.white, size: 16),
@@ -90,14 +90,14 @@ class GroupInfoScreen extends ConsumerWidget {
               const SizedBox(height: 16),
               if (isAdmin)
                 ListTile(
-                  leading: const Icon(Icons.edit_rounded, color: AppTheme.neonCyan),
+                  leading: const Icon(Icons.edit_rounded, color: AppTheme.ponCyan),
                   title: Text(context.l10n.renameGroup,
                       style: const TextStyle(color: Colors.white)),
                   onTap: () => _renameGroup(context, ref, conv),
                 ),
               if (isAdmin)
                 ListTile(
-                  leading: const Icon(Icons.person_add_alt_1_rounded, color: AppTheme.neonCyan),
+                  leading: const Icon(Icons.person_add_alt_1_rounded, color: AppTheme.ponCyan),
                   title: Text(context.l10n.addMembers,
                       style: const TextStyle(color: Colors.white)),
                   onTap: () => _addMember(context, ref),
@@ -302,7 +302,7 @@ class _MemberTile extends ConsumerWidget {
       title: Text(name, style: const TextStyle(color: Colors.white)),
       subtitle: isMemberAdmin
           ? Text(context.l10n.admin,
-              style: const TextStyle(color: AppTheme.neonCyan, fontSize: 12))
+              style: const TextStyle(color: AppTheme.ponCyan, fontSize: 12))
           : null,
       trailing: canRemove
           ? IconButton(

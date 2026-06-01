@@ -508,4 +508,27 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get attachmentLabel => '📎 Tệp đính kèm';
+
+  @override
+  String get callIncoming => 'Cuộc gọi đến';
+
+  @override
+  String callIncomingBody(String name) {
+    return '$name đang gọi cho bạn';
+  }
+
+  @override
+  String callCalling(String name) {
+    return 'Đang gọi $name…';
+  }
+
+  @override
+  String get callConnecting => 'Đang kết nối…';
+
+  @override
+  String get callMediaError =>
+      'Không thể truy cập camera/micro (cần HTTPS hoặc localhost)';
+
+  @override
+  String get callUnknownCaller => 'Ai đó';
 }

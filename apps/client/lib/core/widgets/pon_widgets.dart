@@ -6,152 +6,41 @@ import '../theme/app_theme.dart';
 // ---------------------------------------------------------------------------
 // PON Logo with Neon Pulsing Animation
 // ---------------------------------------------------------------------------
-class PonLogo extends StatefulWidget {
+class PonLogo extends StatelessWidget {
   final double size;
   final bool showText;
   const PonLogo({super.key, this.size = 80, this.showText = true});
 
   @override
-  State<PonLogo> createState() => _PonLogoState();
-}
-
-class _PonLogoState extends State<PonLogo> with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
-  late Animation<double> _glowAnimation;
-  late Animation<double> _scaleAnimation;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(seconds: 2),
-    )..repeat(reverse: true);
-
-    _glowAnimation = Tween<double>(begin: 8.0, end: 24.0).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
-    );
-
-    _scaleAnimation = Tween<double>(begin: 0.95, end: 1.05).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
-    );
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: _controller,
-      builder: (context, child) {
-        return Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // Glowing circular logo icon
-            Transform.scale(
-              scale: _scaleAnimation.value,
-              child: Container(
-                width: widget.size,
-                height: widget.size,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  gradient: const LinearGradient(
-                    colors: [AppTheme.neonCyan, AppTheme.neonPink],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: AppTheme.neonCyan.withValues(alpha: 0.4),
-                      blurRadius: _glowAnimation.value,
-                      spreadRadius: 2,
-                    ),
-                    BoxShadow(
-                      color: AppTheme.neonPink.withValues(alpha: 0.3),
-                      blurRadius: _glowAnimation.value * 1.5,
-                      spreadRadius: -2,
-                    ),
-                  ],
-                ),
-                child: Center(
-                  child: Container(
-                    width: widget.size * 0.82,
-                    height: widget.size * 0.82,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: Theme.of(context).brightness == Brightness.dark
-                          ? AppTheme.obsidianBackground
-                          : Colors.white,
-                    ),
-                    child: Center(
-                      child: Icon(
-                        Icons.bolt_rounded,
-                        size: widget.size * 0.5,
-                        color: Theme.of(context).brightness == Brightness.dark
-                            ? Colors.white
-                            : Theme.of(context).colorScheme.primary,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ),
-            if (widget.showText) ...[
-              const SizedBox(height: 16),
-              // Glowing Brand Name "PON"
-              ShaderMask(
-                shaderCallback: (bounds) {
-                  final isDark = Theme.of(context).brightness == Brightness.dark;
-                  return LinearGradient(
-                    colors: isDark
-                        ? const [AppTheme.neonCyan, Colors.white, AppTheme.neonPink]
-                        : [Theme.of(context).colorScheme.primary, Theme.of(context).colorScheme.secondary],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ).createShader(bounds);
-                },
-                child: Text(
-                  'PON',
-                  style: TextStyle(
-                    fontSize: widget.size * 0.45,
-                    fontWeight: FontWeight.w900,
-                    color: Colors.white,
-                    letterSpacing: 4,
-                    shadows: Theme.of(context).brightness == Brightness.dark
-                        ? [
-                            Shadow(
-                              color: AppTheme.neonCyan.withValues(alpha: 0.8),
-                              blurRadius: _glowAnimation.value / 2,
-                            ),
-                            Shadow(
-                              color: AppTheme.neonPink.withValues(alpha: 0.6),
-                              blurRadius: _glowAnimation.value,
-                            ),
-                          ]
-                        : null,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                'CONNECTING MINDS',
-                style: TextStyle(
-                  fontSize: 10,
-                  fontWeight: FontWeight.w600,
-                  color: Theme.of(context).brightness == Brightness.dark
-                      ? Colors.white.withValues(alpha: 0.4)
-                      : Colors.black.withValues(alpha: 0.4),
-                  letterSpacing: 2,
-                ),
-              ),
-            ],
-          ],
-        );
-      },
+    final imageWidget = Image.asset(
+      'assets/images/logo.png',
+      width: size,
+      height: size,
+      fit: BoxFit.contain,
+    );
+
+    if (!showText) {
+      return imageWidget;
+    }
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        imageWidget,
+        const SizedBox(height: 8),
+        Text(
+          'CONNECTING MINDS',
+          style: TextStyle(
+            fontSize: 10,
+            fontWeight: FontWeight.w600,
+            color: Theme.of(context).brightness == Brightness.dark
+                ? Colors.white.withValues(alpha: 0.4)
+                : Colors.black.withValues(alpha: 0.4),
+            letterSpacing: 2,
+          ),
+        ),
+      ],
     );
   }
 }
@@ -159,7 +48,7 @@ class _PonLogoState extends State<PonLogo> with SingleTickerProviderStateMixin {
 // ---------------------------------------------------------------------------
 // Frosted Glass Neon Card (Glassmorphism)
 // ---------------------------------------------------------------------------
-class NeonCard extends StatelessWidget {
+class PonCard extends StatelessWidget {
   final Widget child;
   final double borderRadius;
   final double blur;
@@ -168,14 +57,14 @@ class NeonCard extends StatelessWidget {
   final Color glowColor;
   final double glowStrength;
 
-  const NeonCard({
+  const PonCard({
     super.key,
     required this.child,
     this.borderRadius = 24.0,
     this.blur = 15.0,
     this.borderOpacity = 0.25,
     this.bgOpacity = 0.6,
-    this.glowColor = AppTheme.neonPurple,
+    this.glowColor = AppTheme.ponPeach,
     this.glowStrength = 6.0,
   });
 
@@ -222,27 +111,27 @@ class NeonCard extends StatelessWidget {
 // ---------------------------------------------------------------------------
 // Neon Gradient Button with Glow & Scale animation
 // ---------------------------------------------------------------------------
-class NeonButton extends StatefulWidget {
+class PonButton extends StatefulWidget {
   final VoidCallback? onPressed;
   final Widget child;
   final List<Color> gradientColors;
   final Color glowColor;
   final bool isLoading;
 
-  const NeonButton({
+  const PonButton({
     super.key,
     required this.onPressed,
     required this.child,
-    this.gradientColors = const [AppTheme.neonCyan, AppTheme.neonPink],
-    this.glowColor = AppTheme.neonCyan,
+    this.gradientColors = const [AppTheme.ponCyan, AppTheme.ponPink],
+    this.glowColor = AppTheme.ponCyan,
     this.isLoading = false,
   });
 
   @override
-  State<NeonButton> createState() => _NeonButtonState();
+  State<PonButton> createState() => _PonButtonState();
 }
 
-class _NeonButtonState extends State<NeonButton> {
+class _PonButtonState extends State<PonButton> {
   bool _isPressed = false;
 
   @override
@@ -310,7 +199,7 @@ class _NeonButtonState extends State<NeonButton> {
 // ---------------------------------------------------------------------------
 // Glowing Text Field (Glows neon when focused)
 // ---------------------------------------------------------------------------
-class NeonTextField extends StatefulWidget {
+class PonTextField extends StatefulWidget {
   final TextEditingController controller;
   final String labelText;
   final IconData prefixIcon;
@@ -328,7 +217,7 @@ class NeonTextField extends StatefulWidget {
   final List<dynamic>? inputFormatters;
   final ValueChanged<String>? onChanged;
 
-  const NeonTextField({
+  const PonTextField({
     super.key,
     required this.controller,
     required this.labelText,
@@ -340,7 +229,7 @@ class NeonTextField extends StatefulWidget {
     this.onFieldSubmitted,
     this.validator,
     this.focusNode,
-    this.focusColor = AppTheme.neonCyan,
+    this.focusColor = AppTheme.ponCyan,
     this.maxLength,
     this.counterText,
     this.style,
@@ -349,10 +238,10 @@ class NeonTextField extends StatefulWidget {
   });
 
   @override
-  State<NeonTextField> createState() => _NeonTextFieldState();
+  State<PonTextField> createState() => _PonTextFieldState();
 }
 
-class _NeonTextFieldState extends State<NeonTextField> {
+class _PonTextFieldState extends State<PonTextField> {
   late FocusNode _internalFocusNode;
   bool _isFocused = false;
 
@@ -431,7 +320,7 @@ class BouncingDots extends StatefulWidget {
   final double size;
   const BouncingDots({
     super.key,
-    this.color = AppTheme.neonCyan,
+    this.color = AppTheme.ponCyan,
     this.size = 6.0,
   });
 

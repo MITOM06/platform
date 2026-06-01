@@ -5,7 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/l10n/l10n_ext.dart';
 import '../../../core/theme/app_theme.dart';
-import '../../../core/widgets/neon_widgets.dart';
+import '../../../core/widgets/pon_widgets.dart';
 import '../data/auth_repository.dart';
 
 class NewPasswordScreen extends ConsumerStatefulWidget {
@@ -87,7 +87,7 @@ class _NewPasswordScreenState extends ConsumerState<NewPasswordScreen> {
                 shape: BoxShape.circle,
                 gradient: RadialGradient(
                   colors: [
-                    AppTheme.neonCyan.withValues(alpha: 0.12),
+                    AppTheme.ponCyan.withValues(alpha: 0.12),
                     Colors.transparent,
                   ],
                 ),
@@ -104,7 +104,7 @@ class _NewPasswordScreenState extends ConsumerState<NewPasswordScreen> {
                 shape: BoxShape.circle,
                 gradient: RadialGradient(
                   colors: [
-                    AppTheme.neonPink.withValues(alpha: 0.15),
+                    AppTheme.ponPink.withValues(alpha: 0.15),
                     Colors.transparent,
                   ],
                 ),
@@ -143,8 +143,8 @@ class _NewPasswordScreenState extends ConsumerState<NewPasswordScreen> {
                     const SizedBox(height: 24),
 
                     // Reset Form Card
-                    NeonCard(
-                      glowColor: AppTheme.neonPink,
+                    PonCard(
+                      glowColor: AppTheme.ponPink,
                       glowStrength: 8,
                       child: Padding(
                         padding: const EdgeInsets.all(24.0),
@@ -154,7 +154,7 @@ class _NewPasswordScreenState extends ConsumerState<NewPasswordScreen> {
                             crossAxisAlignment: CrossAxisAlignment.stretch,
                             children: [
                               // OTP
-                              NeonTextField(
+                              PonTextField(
                                 controller: _otpController,
                                 labelText: context.l10n.fieldOtp,
                                 prefixIcon: Icons.pin_outlined,
@@ -169,7 +169,7 @@ class _NewPasswordScreenState extends ConsumerState<NewPasswordScreen> {
                                 ),
                                 inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                                 textInputAction: TextInputAction.next,
-                                focusColor: AppTheme.neonCyan,
+                                focusColor: AppTheme.ponCyan,
                                 validator: (v) {
                                   if (v == null || v.length != 6) return context.l10n.valOtp6;
                                   return null;
@@ -178,12 +178,12 @@ class _NewPasswordScreenState extends ConsumerState<NewPasswordScreen> {
                               const SizedBox(height: 16),
 
                               // New Password
-                              NeonTextField(
+                              PonTextField(
                                 controller: _passwordController,
                                 labelText: context.l10n.fieldNewPassword,
                                 prefixIcon: Icons.lock_outlined,
                                 obscureText: _obscurePassword,
-                                focusColor: AppTheme.neonPink,
+                                focusColor: AppTheme.ponPink,
                                 suffixIcon: IconButton(
                                   icon: Icon(
                                     _obscurePassword
@@ -203,13 +203,13 @@ class _NewPasswordScreenState extends ConsumerState<NewPasswordScreen> {
                               const SizedBox(height: 16),
 
                               // Confirm Password
-                              NeonTextField(
+                              PonTextField(
                                 controller: _confirmController,
                                 labelText: context.l10n.fieldConfirmPassword,
                                 prefixIcon: Icons.lock_outline,
                                 obscureText: _obscurePassword,
                                 textInputAction: TextInputAction.done,
-                                focusColor: AppTheme.neonPink,
+                                focusColor: AppTheme.ponPink,
                                 onFieldSubmitted: (_) => _submit(),
                                 validator: (v) {
                                   if (v != _passwordController.text) {
@@ -221,11 +221,11 @@ class _NewPasswordScreenState extends ConsumerState<NewPasswordScreen> {
                               const SizedBox(height: 28),
 
                               // Submit Button
-                              NeonButton(
+                              PonButton(
                                 onPressed: _submit,
                                 isLoading: _isLoading,
-                                gradientColors: const [AppTheme.neonPink, AppTheme.neonPurple],
-                                glowColor: AppTheme.neonPink,
+                                gradientColors: const [AppTheme.ponPink, AppTheme.ponPeach],
+                                glowColor: AppTheme.ponPink,
                                 child: Text(context.l10n.confirmButton),
                               ),
                             ],

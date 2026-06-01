@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/l10n/l10n_ext.dart';
 import '../../../core/theme/app_theme.dart';
-import '../../../core/widgets/neon_widgets.dart';
+import '../../../core/widgets/pon_widgets.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../auth/data/auth_repository.dart';
 import '../../auth/domain/auth_state.dart';
@@ -161,8 +161,8 @@ class _NewConversationScreenState
                 }),
               ),
               const SizedBox(height: 24),
-              NeonCard(
-                glowColor: AppTheme.neonCyan,
+              PonCard(
+                glowColor: AppTheme.ponCyan,
                 glowStrength: 4,
                 child: Padding(
                   padding: const EdgeInsets.all(20.0),
@@ -208,11 +208,11 @@ class _NewConversationScreenState
                 fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
           ),
           const SizedBox(height: 16),
-          NeonTextField(
+          PonTextField(
             controller: _controller,
             labelText: l10n.fieldRecipient,
             prefixIcon: Icons.person_outline_rounded,
-            focusColor: AppTheme.neonCyan,
+            focusColor: AppTheme.ponCyan,
             textInputAction: TextInputAction.done,
             onFieldSubmitted: (_) => _loading ? null : _submitDirect(),
             validator: (v) {
@@ -223,11 +223,11 @@ class _NewConversationScreenState
             },
           ),
           const SizedBox(height: 24),
-          NeonButton(
+          PonButton(
             onPressed: _submitDirect,
             isLoading: _loading,
-            gradientColors: const [AppTheme.neonCyan, AppTheme.neonBlue],
-            glowColor: AppTheme.neonCyan,
+            gradientColors: const [AppTheme.ponCyan, AppTheme.ponCyan],
+            glowColor: AppTheme.ponCyan,
             child: Text(l10n.startConversationButton),
           ),
         ],
@@ -239,27 +239,27 @@ class _NewConversationScreenState
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        NeonTextField(
+        PonTextField(
           controller: _groupNameController,
           labelText: l10n.groupName,
           prefixIcon: Icons.group_rounded,
-          focusColor: AppTheme.neonCyan,
+          focusColor: AppTheme.ponCyan,
         ),
         const SizedBox(height: 16),
         Row(
           children: [
             Expanded(
-              child: NeonTextField(
+              child: PonTextField(
                 controller: _controller,
                 labelText: l10n.searchUsers,
                 prefixIcon: Icons.person_add_alt_1_rounded,
-                focusColor: AppTheme.neonCyan,
+                focusColor: AppTheme.ponCyan,
                 textInputAction: TextInputAction.done,
                 onFieldSubmitted: (_) => _loading ? null : _addMember(),
               ),
             ),
             IconButton(
-              icon: const Icon(Icons.add_circle, color: AppTheme.neonCyan),
+              icon: const Icon(Icons.add_circle, color: AppTheme.ponCyan),
               onPressed: _loading ? null : _addMember,
             ),
           ],
@@ -282,11 +282,11 @@ class _NewConversationScreenState
           ),
         ],
         const SizedBox(height: 20),
-        NeonButton(
+        PonButton(
           onPressed: _submitGroup,
           isLoading: _loading,
-          gradientColors: const [AppTheme.neonCyan, AppTheme.neonBlue],
-          glowColor: AppTheme.neonCyan,
+          gradientColors: const [AppTheme.ponCyan, AppTheme.ponCyan],
+          glowColor: AppTheme.ponCyan,
           child: Text(l10n.createGroup),
         ),
       ],

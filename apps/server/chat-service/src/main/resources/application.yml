@@ -18,3 +18,6 @@ spring:
 app:
   jwt:
     secret: ${JWT_ACCESS_SECRET}
+  firebase:
+    # Base64 của file service-account JSON (Firebase Console). Rỗng = FCM tắt (no-op an toàn).
+    service-account-base64: ${FIREBASE_SERVICE_ACCOUNT_BASE64:}

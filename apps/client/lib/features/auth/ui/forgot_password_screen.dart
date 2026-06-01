@@ -4,7 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/l10n/l10n_ext.dart';
 import '../../../core/theme/app_theme.dart';
-import '../../../core/widgets/neon_widgets.dart';
+import '../../../core/widgets/pon_widgets.dart';
 import '../data/auth_repository.dart';
 
 class ForgotPasswordScreen extends ConsumerStatefulWidget {
@@ -78,7 +78,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                 shape: BoxShape.circle,
                 gradient: RadialGradient(
                   colors: [
-                    AppTheme.neonPink.withValues(alpha: 0.12),
+                    AppTheme.ponPink.withValues(alpha: 0.12),
                     Colors.transparent,
                   ],
                 ),
@@ -95,7 +95,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                 shape: BoxShape.circle,
                 gradient: RadialGradient(
                   colors: [
-                    AppTheme.neonCyan.withValues(alpha: 0.15),
+                    AppTheme.ponCyan.withValues(alpha: 0.15),
                     Colors.transparent,
                   ],
                 ),
@@ -134,8 +134,8 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                     const SizedBox(height: 32),
 
                     // Forgot Form Card
-                    NeonCard(
-                      glowColor: AppTheme.neonPurple,
+                    PonCard(
+                      glowColor: AppTheme.ponPeach,
                       glowStrength: 8,
                       child: Padding(
                         padding: const EdgeInsets.all(24.0),
@@ -145,14 +145,14 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                             crossAxisAlignment: CrossAxisAlignment.stretch,
                             children: [
                               // Email
-                              NeonTextField(
+                              PonTextField(
                                 controller: _emailController,
                                 labelText: context.l10n.fieldEmail,
                                 prefixIcon: Icons.email_outlined,
                                 keyboardType: TextInputType.emailAddress,
                                 textInputAction: TextInputAction.done,
                                 onFieldSubmitted: (_) => _submit(),
-                                focusColor: AppTheme.neonCyan,
+                                focusColor: AppTheme.ponCyan,
                                 validator: (v) {
                                   if (v == null || v.isEmpty) return context.l10n.valEmailRequired;
                                   if (!v.contains('@')) return context.l10n.valEmailInvalid;
@@ -162,11 +162,11 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                               const SizedBox(height: 28),
 
                               // Submit Button
-                              NeonButton(
+                              PonButton(
                                 onPressed: _submit,
                                 isLoading: _isLoading,
-                                gradientColors: const [AppTheme.neonPurple, AppTheme.neonPink],
-                                glowColor: AppTheme.neonPink,
+                                gradientColors: const [AppTheme.ponPeach, AppTheme.ponPink],
+                                glowColor: AppTheme.ponPink,
                                 child: Text(context.l10n.sendOtpButton),
                               ),
                             ],

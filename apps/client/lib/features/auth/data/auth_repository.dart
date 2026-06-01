@@ -130,7 +130,16 @@ class AuthRepository {
       await _storage.write(key: _keyUser, value: jsonEncode(updated.toJson()));
     }
     
+    
     return updated;
+  }
+
+  Future<void> updateFcmToken(String token) async {
+    try {
+      await _dio.post('/api/users/device-tokens', data: {'token': token});
+    } catch (_) {
+      // Best-effort
+    }
   }
 }
 

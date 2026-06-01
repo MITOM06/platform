@@ -503,4 +503,26 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get attachmentLabel => '📎 添付ファイル';
+
+  @override
+  String get callIncoming => '着信';
+
+  @override
+  String callIncomingBody(String name) {
+    return '$name があなたを呼び出しています';
+  }
+
+  @override
+  String callCalling(String name) {
+    return '$name に発信中…';
+  }
+
+  @override
+  String get callConnecting => '接続中…';
+
+  @override
+  String get callMediaError => 'カメラ/マイクにアクセスできません（HTTPS または localhost が必要）';
+
+  @override
+  String get callUnknownCaller => '誰か';
 }

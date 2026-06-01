@@ -503,4 +503,26 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get attachmentLabel => '📎 첨부파일';
+
+  @override
+  String get callIncoming => '수신 전화';
+
+  @override
+  String callIncomingBody(String name) {
+    return '$name님이 전화하고 있습니다';
+  }
+
+  @override
+  String callCalling(String name) {
+    return '$name님에게 전화 거는 중…';
+  }
+
+  @override
+  String get callConnecting => '연결 중…';
+
+  @override
+  String get callMediaError => '카메라/마이크에 접근할 수 없습니다 (HTTPS 또는 localhost 필요)';
+
+  @override
+  String get callUnknownCaller => '누군가';
 }

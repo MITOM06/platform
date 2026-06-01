@@ -80,6 +80,8 @@ services:
       JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET}
       SPRING_DATA_MONGODB_URI: mongodb://mongo:27017/platform
       SPRING_DATA_REDIS_HOST: redis
+      # Firebase Admin SDK (base64 của service-account JSON). Rỗng = FCM tắt (no-op an toàn).
+      FIREBASE_SERVICE_ACCOUNT_BASE64: ${FIREBASE_SERVICE_ACCOUNT_BASE64:-}
       # Bean overriding needed: @EnableWebSocketMessageBroker registers SimpleUrlHandlerMapping
       # with same name as Spring MVC's — benign override, required by Spring WebSocket internals.
       SPRING_MAIN_ALLOW_BEAN_DEFINITION_OVERRIDING: "true"

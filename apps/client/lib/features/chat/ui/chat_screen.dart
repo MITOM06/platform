@@ -7,7 +7,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/l10n/l10n_ext.dart';
 import '../../../core/theme/app_theme.dart';
-import '../../../core/widgets/neon_widgets.dart';
+import '../../../core/widgets/pon_widgets.dart';
 import '../../auth/domain/auth_provider.dart';
 import '../../auth/domain/auth_state.dart';
 import '../data/chat_repository.dart';
@@ -108,14 +108,14 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
           children: [
             const SizedBox(height: 12),
             ListTile(
-              leading: const Icon(Icons.photo_outlined, color: AppTheme.neonCyan),
+              leading: const Icon(Icons.photo_outlined, color: AppTheme.ponCyan),
               title: Text(l10n.attachPhoto,
                   style: const TextStyle(color: Colors.white)),
               onTap: () => Navigator.pop(ctx, 'image'),
             ),
             ListTile(
               leading:
-                  const Icon(Icons.videocam_outlined, color: AppTheme.neonPurple),
+                  const Icon(Icons.videocam_outlined, color: AppTheme.ponPeach),
               title: Text(l10n.attachVideo,
                   style: const TextStyle(color: Colors.white)),
               onTap: () => Navigator.pop(ctx, 'video'),
@@ -383,6 +383,30 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
               ],
             ),
             actions: [
+              if (!isGroup && otherUserId != null) ...[
+                IconButton(
+                  icon: const Icon(Icons.call_outlined, color: Colors.white, size: 22),
+                  onPressed: () {
+                    context.push('/call', extra: {
+                      'targetId': otherUserId,
+                      'targetName': resolvedName ?? 'User',
+                      'conversationId': widget.conversationId,
+                      'isCaller': true,
+                    });
+                  },
+                ),
+                IconButton(
+                  icon: const Icon(Icons.videocam_outlined, color: Colors.white, size: 24),
+                  onPressed: () {
+                    context.push('/call', extra: {
+                      'targetId': otherUserId,
+                      'targetName': resolvedName ?? 'User',
+                      'conversationId': widget.conversationId,
+                      'isCaller': true,
+                    });
+                  },
+                ),
+              ],
               PopupMenuButton<String>(
                 icon: const Icon(Icons.more_vert_rounded, color: Colors.white),
                 color: AppTheme.darkSurface,
@@ -426,7 +450,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
                 shape: BoxShape.circle,
                 gradient: RadialGradient(
                   colors: [
-                    AppTheme.neonCyan.withValues(alpha: 0.06),
+                    AppTheme.ponCyan.withValues(alpha: 0.06),
                     Colors.transparent,
                   ],
                 ),
@@ -443,7 +467,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
                 shape: BoxShape.circle,
                 gradient: RadialGradient(
                   colors: [
-                    AppTheme.neonPurple.withValues(alpha: 0.06),
+                    AppTheme.ponPeach.withValues(alpha: 0.06),
                     Colors.transparent,
                   ],
                 ),
@@ -458,7 +482,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
                 child: chatAsync.when(
                   loading: () => const Center(
                     child: CircularProgressIndicator(
-                      valueColor: AlwaysStoppedAnimation<Color>(AppTheme.neonCyan),
+                      valueColor: AlwaysStoppedAnimation<Color>(AppTheme.ponCyan),
                     ),
                   ),
                   error: (e, _) => Center(
@@ -491,7 +515,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
                                     height: 20,
                                     child: CircularProgressIndicator(
                                       strokeWidth: 2,
-                                      valueColor: AlwaysStoppedAnimation<Color>(AppTheme.neonCyan),
+                                      valueColor: AlwaysStoppedAnimation<Color>(AppTheme.ponCyan),
                                     ),
                                   ),
                                 ),
@@ -590,7 +614,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
                     onEmojiSelected: (category, emoji) => _insertEmoji(emoji.emoji),
                     config: const Config(
                       height: 280,
-                      emojiViewConfig: EmojiViewConfig(backgroundColor: AppTheme.obsidianBackground),
+                      emojiViewConfig: EmojiViewConfig(backgroundColor: AppTheme.darkBackground),
                       categoryViewConfig: CategoryViewConfig(backgroundColor: AppTheme.darkSurface),
                       bottomActionBarConfig: BottomActionBarConfig(
                         backgroundColor: AppTheme.darkSurface,
@@ -621,7 +645,7 @@ class _ReplyComposerBar extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(16, 8, 8, 8),
       child: Row(
         children: [
-          Container(width: 3, height: 36, color: AppTheme.neonCyan),
+          Container(width: 3, height: 36, color: AppTheme.ponCyan),
           const SizedBox(width: 10),
           Expanded(
             child: Column(
@@ -631,7 +655,7 @@ class _ReplyComposerBar extends StatelessWidget {
                 Text(
                   context.l10n.actionReply,
                   style: const TextStyle(
-                    color: AppTheme.neonCyan,
+                    color: AppTheme.ponCyan,
                     fontSize: 11,
                     fontWeight: FontWeight.w600,
                   ),
@@ -667,7 +691,7 @@ class _TypingIndicator extends StatelessWidget {
       alignment: Alignment.centerLeft,
       child: Padding(
         padding: const EdgeInsets.only(left: 16, bottom: 8, top: 4),
-        child: NeonCard(
+        child: PonCard(
           borderRadius: 16,
           borderOpacity: 0.15,
           bgOpacity: 0.4,
@@ -686,7 +710,7 @@ class _TypingIndicator extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(width: 8),
-                const BouncingDots(size: 4.5, color: AppTheme.neonCyan),
+                const BouncingDots(size: 4.5, color: AppTheme.ponCyan),
               ],
             ),
           ),
@@ -745,7 +769,7 @@ class _InputBarState extends State<_InputBar> {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: AppTheme.obsidianBackground,
+        color: AppTheme.darkBackground,
         border: Border(
           top: BorderSide(
             color: AppTheme.darkBorder.withValues(alpha: 0.4),
@@ -764,14 +788,14 @@ class _InputBarState extends State<_InputBar> {
                 widget.emojiActive
                     ? Icons.keyboard_rounded
                     : Icons.emoji_emotions_outlined,
-                color: AppTheme.neonCyan.withValues(alpha: 0.8),
+                color: AppTheme.ponCyan.withValues(alpha: 0.8),
               ),
             ),
             IconButton(
               onPressed: widget.onAttach,
               icon: Icon(
                 Icons.add_photo_alternate_outlined,
-                color: AppTheme.neonPurple.withValues(alpha: 0.85),
+                color: AppTheme.ponPeach.withValues(alpha: 0.85),
               ),
             ),
             Expanded(
@@ -781,7 +805,7 @@ class _InputBarState extends State<_InputBar> {
                   borderRadius: BorderRadius.circular(24),
                   boxShadow: [
                     BoxShadow(
-                      color: AppTheme.neonCyan.withValues(alpha: 0.04),
+                      color: AppTheme.ponCyan.withValues(alpha: 0.04),
                       blurRadius: 8,
                     )
                   ],
@@ -811,7 +835,7 @@ class _InputBarState extends State<_InputBar> {
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(24),
-                      borderSide: const BorderSide(color: AppTheme.neonCyan, width: 1.5),
+                      borderSide: const BorderSide(color: AppTheme.ponCyan, width: 1.5),
                     ),
                   ),
                 ),
@@ -824,7 +848,7 @@ class _InputBarState extends State<_InputBar> {
                 shape: BoxShape.circle,
                 gradient: LinearGradient(
                   colors: _hasText
-                      ? [AppTheme.neonCyan, AppTheme.neonPink]
+                      ? [AppTheme.ponCyan, AppTheme.ponPink]
                       : [AppTheme.darkBorder, AppTheme.darkBorder],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
@@ -832,7 +856,7 @@ class _InputBarState extends State<_InputBar> {
                 boxShadow: _hasText
                     ? [
                         BoxShadow(
-                          color: AppTheme.neonCyan.withValues(alpha: 0.35),
+                          color: AppTheme.ponCyan.withValues(alpha: 0.35),
                           blurRadius: 10,
                           spreadRadius: 1,
                         )

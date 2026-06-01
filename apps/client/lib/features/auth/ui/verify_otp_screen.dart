@@ -6,7 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/l10n/l10n_ext.dart';
 import '../../../core/theme/app_theme.dart';
-import '../../../core/widgets/neon_widgets.dart';
+import '../../../core/widgets/pon_widgets.dart';
 import '../data/auth_repository.dart';
 
 class VerifyOtpScreen extends ConsumerStatefulWidget {
@@ -131,7 +131,7 @@ class _VerifyOtpScreenState extends ConsumerState<VerifyOtpScreen> {
                 shape: BoxShape.circle,
                 gradient: RadialGradient(
                   colors: [
-                    AppTheme.neonCyan.withValues(alpha: 0.12),
+                    AppTheme.ponCyan.withValues(alpha: 0.12),
                     Colors.transparent,
                   ],
                 ),
@@ -148,7 +148,7 @@ class _VerifyOtpScreenState extends ConsumerState<VerifyOtpScreen> {
                 shape: BoxShape.circle,
                 gradient: RadialGradient(
                   colors: [
-                    AppTheme.neonPurple.withValues(alpha: 0.15),
+                    AppTheme.ponPeach.withValues(alpha: 0.15),
                     Colors.transparent,
                   ],
                 ),
@@ -187,8 +187,8 @@ class _VerifyOtpScreenState extends ConsumerState<VerifyOtpScreen> {
                     const SizedBox(height: 32),
 
                     // OTP Form Card
-                    NeonCard(
-                      glowColor: AppTheme.neonCyan,
+                    PonCard(
+                      glowColor: AppTheme.ponCyan,
                       glowStrength: 8,
                       child: Padding(
                         padding: const EdgeInsets.all(24.0),
@@ -196,7 +196,7 @@ class _VerifyOtpScreenState extends ConsumerState<VerifyOtpScreen> {
                           crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
                             // OTP input field
-                            NeonTextField(
+                            PonTextField(
                               controller: _otpController,
                               labelText: context.l10n.fieldOtp,
                               prefixIcon: Icons.pin_outlined,
@@ -212,16 +212,16 @@ class _VerifyOtpScreenState extends ConsumerState<VerifyOtpScreen> {
                               inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                               textInputAction: TextInputAction.done,
                               onFieldSubmitted: (_) => _submit(),
-                              focusColor: AppTheme.neonCyan,
+                              focusColor: AppTheme.ponCyan,
                             ),
                             const SizedBox(height: 28),
 
                             // Submit Button
-                            NeonButton(
+                            PonButton(
                               onPressed: _submit,
                               isLoading: _isLoading,
-                              gradientColors: const [AppTheme.neonCyan, AppTheme.neonBlue],
-                              glowColor: AppTheme.neonCyan,
+                              gradientColors: const [AppTheme.ponCyan, AppTheme.ponCyan],
+                              glowColor: AppTheme.ponCyan,
                               child: Text(context.l10n.confirmButton),
                             ),
                             const SizedBox(height: 16),
@@ -243,7 +243,7 @@ class _VerifyOtpScreenState extends ConsumerState<VerifyOtpScreen> {
                                         style: TextStyle(
                                           color: _resendCooldown > 0
                                               ? Colors.white38
-                                              : AppTheme.neonCyan,
+                                              : AppTheme.ponCyan,
                                           fontWeight: FontWeight.w600,
                                         ),
                                       ),
