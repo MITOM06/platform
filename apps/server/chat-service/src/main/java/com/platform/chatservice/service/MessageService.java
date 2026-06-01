@@ -14,8 +14,9 @@ import com.platform.chatservice.repository.MessageRepository;
 import com.platform.chatservice.repository.UserBlockRepository;
 import com.mongodb.client.result.UpdateResult;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
@@ -39,7 +40,18 @@ public class MessageService {
     private final UserBlockRepository userBlockRepository;
     private final MongoTemplate mongoTemplate;
 
-    public PageResponse<MessageResponse> getMessages(String userId, String conversationId, Pageable pageable) {
+    /**
+     * Cursor-based pagination (newest first). When {@code beforeId} is null/blank
+     * the most recent page is returned; otherwise only messages strictly older
+     * than that message are returned. This keeps the scroll stable and avoids the
+     * duplication/jumping that offset paging suffers when new messages arrive.
+     *
+     * <p>We over-fetch one row ({@code size + 1}) to detect whether more history
+     * exists, then encode that into {@link PageResponse#hasNext()} via a synthetic
+     * {@code totalElements}.
+     */
+    public PageResponse<MessageResponse> getMessages(
+            String userId, String conversationId, String beforeId, int size) {
         Conversation conversation = conversationRepository.findById(conversationId)
             .orElseThrow(() -> new ConversationNotFoundException(conversationId));
         if (!conversation.getParticipants().contains(userId)) {
@@ -48,13 +60,32 @@ public class MessageService {
         Instant clearedAt = conversation.getClearedAt() == null ? null
             : conversation.getClearedAt().get(userId);
 
-        Page<Message> page = messageRepository.findByConversationIdOrderByCreatedAtDesc(conversationId, pageable);
-        List<MessageResponse> content = page.getContent().stream()
+        int pageSize = size <= 0 ? 20 : size;
+        Pageable pageable = PageRequest.of(0, pageSize + 1, Sort.by(Sort.Direction.DESC, "createdAt"));
+
+        List<Message> rows;
+        Instant cursor = (beforeId == null || beforeId.isBlank()) ? null
+            : messageRepository.findById(beforeId).map(Message::getCreatedAt).orElse(null);
+        if (cursor != null) {
+            rows = messageRepository.findByConversationIdAndCreatedAtLessThanOrderByCreatedAtDesc(
+                conversationId, cursor, pageable);
+        } else {
+            rows = messageRepository
+                .findByConversationIdOrderByCreatedAtDesc(conversationId, pageable)
+                .getContent();
+        }
+
+        boolean hasMore = rows.size() > pageSize;
+        List<Message> pageRows = hasMore ? rows.subList(0, pageSize) : rows;
+        List<MessageResponse> content = pageRows.stream()
             .filter(m -> m.getDeletedFor() == null || !m.getDeletedFor().contains(userId))
             .filter(m -> clearedAt == null || m.getCreatedAt() == null || m.getCreatedAt().isAfter(clearedAt))
             .map(this::toResponse)
             .toList();
-        return new PageResponse<>(content, page.getNumber(), page.getSize(), page.getTotalElements());
+
+        // page=0 always; totalElements is synthetic so hasNext() reflects `hasMore`.
+        long total = hasMore ? (long) pageSize + 1 : content.size();
+        return new PageResponse<>(content, 0, pageSize, total);
     }
 
     public MessageResponse sendMessage(String senderId, SendMessageRequest request) {
@@ -75,6 +106,8 @@ public class MessageService {
         }
 
         Message.ReplyPreview replyPreview = buildReplyPreview(request.replyToId());
+        List<String> mentions = parseMentions(
+            request.content(), conversation.getParticipants(), senderId);
 
         Message message = messageRepository.save(Message.builder()
             .conversationId(request.conversationId())
@@ -84,6 +117,7 @@ public class MessageService {
             .readBy(new ArrayList<>(List.of(senderId)))
             .replyToId(request.replyToId())
             .replyPreview(replyPreview)
+            .mentions(mentions)
             .build());
 
         Instant sentAt = message.getCreatedAt() != null ? message.getCreatedAt() : Instant.now();
@@ -271,7 +305,84 @@ public class MessageService {
         return new MessageResponse(
             m.getId(), m.getConversationId(), m.getSenderId(),
             m.getContent(), m.getType(), m.getReadBy(), m.getCreatedAt(),
-            m.getReplyToId(), replyPreview, reactions, m.isRecalled(), m.getEditedAt()
+            m.getReplyToId(), replyPreview, reactions, m.isRecalled(), m.getEditedAt(),
+            m.getMentions() == null ? List.of() : m.getMentions()
         );
+    }
+
+    /**
+     * Resolve @-mentions in {@code content} to participant user ids (Task 49).
+     * Mentions are matched against each participant's {@code displayName} from the
+     * shared {@code users} collection (the app has no separate username), so
+     * "@John Doe" resolves to John's id. The sender can't mention themselves.
+     *
+     * <p>Short-circuits when the content has no '@' so the common path (and the
+     * unit tests, which never use mentions) never touches the users collection.
+     */
+    private List<String> parseMentions(String content, List<String> participants, String senderId) {
+        if (content == null || content.indexOf('@') < 0 || participants == null) {
+            return List.of();
+        }
+        List<String> others = participants.stream()
+            .filter(p -> !p.equals(senderId))
+            .toList();
+        if (others.isEmpty()) {
+            return List.of();
+        }
+        String lower = content.toLowerCase();
+        List<String> mentioned = new ArrayList<>();
+        for (String userId : others) {
+            String displayName = lookupDisplayName(userId);
+            if (displayName != null && !displayName.isBlank()
+                && lower.contains("@" + displayName.toLowerCase())) {
+                mentioned.add(userId);
+            }
+        }
+        return mentioned;
+    }
+
+    /** Best-effort displayName lookup from the shared users collection. */
+    private String lookupDisplayName(String userId) {
+        try {
+            Query query = new Query(Criteria.where("_id").is(new org.bson.types.ObjectId(userId)));
+            query.fields().include("displayName");
+            org.bson.Document doc = mongoTemplate.findOne(query, org.bson.Document.class, "users");
+            return doc == null ? null : doc.getString("displayName");
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    /**
+     * Conversation-scoped message search (Task 50). Case-insensitive substring
+     * match on {@code content}, newest first, excluding recalled messages,
+     * messages the user deleted for themselves, and history before their
+     * clear-cutoff. Caller must be a participant.
+     */
+    public List<MessageResponse> searchMessages(String userId, String conversationId, String query) {
+        Conversation conversation = conversationRepository.findById(conversationId)
+            .orElseThrow(() -> new ConversationNotFoundException(conversationId));
+        if (!conversation.getParticipants().contains(userId)) {
+            throw new ConversationNotFoundException(conversationId);
+        }
+        if (query == null || query.trim().isEmpty()) {
+            return List.of();
+        }
+        Instant clearedAt = conversation.getClearedAt() == null ? null
+            : conversation.getClearedAt().get(userId);
+
+        String escaped = java.util.regex.Pattern.quote(query.trim());
+        Query q = new Query(Criteria.where("conversationId").is(conversationId)
+                .and("recalled").ne(true)
+                .and("content").regex(escaped, "i"))
+            .with(Sort.by(Sort.Direction.DESC, "createdAt"))
+            .limit(50);
+        List<Message> rows = mongoTemplate.find(q, Message.class);
+
+        return rows.stream()
+            .filter(m -> m.getDeletedFor() == null || !m.getDeletedFor().contains(userId))
+            .filter(m -> clearedAt == null || m.getCreatedAt() == null || m.getCreatedAt().isAfter(clearedAt))
+            .map(this::toResponse)
+            .toList();
     }
 }

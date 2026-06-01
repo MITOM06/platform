@@ -20,14 +20,20 @@ class ChatRepository {
         .toList();
   }
 
+  /// Cursor-based message history. Pass [before] = the oldest message id the
+  /// caller already has to fetch the next older page; omit it for the newest
+  /// page. Avoids the duplication/jumping of offset paging.
   Future<PagedResult<MessageModel>> getMessages(
-    String conversationId,
-    int page,
-    int size,
-  ) async {
+    String conversationId, {
+    String? before,
+    int size = 20,
+  }) async {
     final response = await _dio.get(
       '/api/conversations/$conversationId/messages',
-      queryParameters: {'page': page, 'size': size},
+      queryParameters: {
+        if (before != null) 'before': before,
+        'size': size,
+      },
     );
     final data = response.data as Map<String, dynamic>;
     final content = (data['content'] as List)
@@ -35,10 +41,35 @@ class ChatRepository {
         .toList();
     return PagedResult(
       content: content,
-      page: (data['page'] as num).toInt(),
-      size: (data['size'] as num).toInt(),
-      totalElements: (data['totalElements'] as num).toInt(),
+      page: (data['page'] as num?)?.toInt() ?? 0,
+      size: (data['size'] as num?)?.toInt() ?? size,
+      totalElements: (data['totalElements'] as num?)?.toInt() ?? content.length,
+      hasNext: data['hasNext'] as bool? ?? false,
     );
+  }
+
+  /// Search messages within a conversation by text (Task 50).
+  Future<List<MessageModel>> searchMessages(
+    String conversationId,
+    String query,
+  ) async {
+    final response = await _dio.get(
+      '/api/messages/search',
+      queryParameters: {'q': query, 'conversationId': conversationId},
+    );
+    final list = response.data as List;
+    return list
+        .map((e) => MessageModel.fromJson(e as Map<String, dynamic>))
+        .toList();
+  }
+
+  /// Fetch Open Graph metadata for a URL (server-side unfurl — bypasses CORS).
+  Future<LinkPreviewData> fetchLinkPreview(String url) async {
+    final response = await _dio.get(
+      '/api/utils/link-preview',
+      queryParameters: {'url': url},
+    );
+    return LinkPreviewData.fromJson(response.data as Map<String, dynamic>);
   }
 
   Future<MessageModel> sendMessageRest(
@@ -205,6 +236,27 @@ class ChatRepository {
     final response = await _dio.post('/api/uploads', data: formData);
     final data = response.data as Map<String, dynamic>;
     return data['url'] as String;
+  }
+
+  /// Upload a generic document (PDF / DOC / ZIP …). Returns the stored url plus
+  /// filename and size so the caller can build a "file card" message.
+  Future<({String url, String name, int size})> uploadDocument(
+    List<int> bytes,
+    String filename,
+  ) async {
+    final formData = FormData.fromMap({
+      'file': MultipartFile.fromBytes(bytes, filename: filename),
+    });
+    final response = await _dio.post('/api/uploads', data: formData);
+    final data = response.data as Map<String, dynamic>;
+    final returnedName = data['filename'] as String?;
+    return (
+      url: data['url'] as String,
+      name: (returnedName != null && returnedName.isNotEmpty)
+          ? returnedName
+          : filename,
+      size: int.tryParse(data['size']?.toString() ?? '') ?? bytes.length,
+    );
   }
 
   DioMediaType? _mediaMediaType(String filename) {

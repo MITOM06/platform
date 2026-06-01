@@ -502,6 +502,9 @@ class AppLocalizationsJa extends AppLocalizations {
   String get attachVideo => '動画';
 
   @override
+  String get attachFile => 'ファイル';
+
+  @override
   String get uploading => 'アップロード中…';
 
   @override
@@ -617,4 +620,21 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get userUnblocked => 'ブロックを解除しました';
+
+  @override
+  String get mentionNotificationTitle => 'あなたへのメンション';
+
+  @override
+  String mentionNotificationBody(String name) {
+    return '$nameがあなたをメンションしました';
+  }
+
+  @override
+  String get searchMessages => 'メッセージを検索';
+
+  @override
+  String get searchHint => '会話内を検索';
+
+  @override
+  String get searchNoResults => 'メッセージが見つかりません';
 }

@@ -502,6 +502,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get attachVideo => '视频';
 
   @override
+  String get attachFile => '文件';
+
+  @override
   String get uploading => '上传中…';
 
   @override
@@ -617,4 +620,21 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get userUnblocked => '已解除拉黑';
+
+  @override
+  String get mentionNotificationTitle => '提到了你';
+
+  @override
+  String mentionNotificationBody(String name) {
+    return '$name 提到了你';
+  }
+
+  @override
+  String get searchMessages => '搜索消息';
+
+  @override
+  String get searchHint => '在对话中搜索';
+
+  @override
+  String get searchNoResults => '未找到消息';
 }

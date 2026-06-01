@@ -2,7 +2,6 @@
   "@@locale": "ja",
   "appName": "PON",
   "languageName": "日本語",
-
   "actionCancel": "キャンセル",
   "actionConfirm": "確認",
   "actionRetry": "再試行",
@@ -12,7 +11,6 @@
   "actionLeave": "退出",
   "loadingDots": "...",
   "errorWithMsg": "エラー：{error}",
-
   "loginTitle": "ログイン",
   "fieldEmail": "メール",
   "fieldPassword": "パスワード",
@@ -27,7 +25,6 @@
   "errInvalidCredentials": "メールまたはパスワードが正しくありません",
   "errNetwork": "サーバーに接続できません。ネットワークを確認してください",
   "errLoginFailed": "ログインに失敗しました。再試行してください",
-
   "registerTitle": "アカウント作成",
   "welcomeToApp": "PON へようこそ",
   "fieldDisplayName": "表示名",
@@ -40,7 +37,6 @@
   "valPasswordMismatch": "パスワードが一致しません",
   "errEmailExists": "このメールは既に登録されています",
   "errRegisterFailed": "登録に失敗しました。再試行してください",
-
   "verifyOtpTitle": "OTP 認証",
   "verifyAccountHeading": "アカウントを認証",
   "otpSentTo": "6桁のOTPを送信しました\n{email}",
@@ -53,14 +49,12 @@
   "valOtp6": "OTP の6桁を入力してください",
   "verifySuccess": "認証に成功しました！今すぐログイン",
   "errVerifyFailed": "認証に失敗しました。再試行してください",
-
   "forgotTitle": "パスワード再設定",
   "forgotHeading": "パスワードをお忘れですか？",
   "forgotSubtitle": "OTPを受け取って新しいパスワードを設定するにはメールを入力してください",
   "sendOtpButton": "OTP を送信",
   "errEmailNotRegistered": "このメールは登録されていません",
   "errSendRequestFailed": "リクエストに失敗しました。再試行してください",
-
   "newPasswordTitle": "新しいパスワード",
   "newPasswordHeading": "新しいパスワードを作成",
   "newPasswordSubtitle": "{email} に送信したOTPと\n新しいパスワードを入力してください",
@@ -69,7 +63,6 @@
   "resetPasswordSuccess": "パスワードを再設定しました！",
   "errOtpInvalidExpired": "OTPが正しくないか、有効期限が切れています",
   "errResetFailed": "パスワードの再設定に失敗しました。再試行してください",
-
   "settingsTitle": "設定",
   "valNameEmpty": "名前を空にできません",
   "nameUpdated": "表示名を更新しました",
@@ -82,7 +75,6 @@
   "language": "言語",
   "chooseLanguageTitle": "言語を選択",
   "logoutConfirmBody": "ログアウトしてもよろしいですか？",
-
   "onboardingChooseTheme": "テーマを選択",
   "onboardingChooseSubtitle": "最も合うインターフェースのスタイルを選んでください。",
   "themeLightSubtitle": "明るく、はっきりして読みやすい",
@@ -98,7 +90,6 @@
   "emptyTapPlus": "下の「+」ボタンをタップして始めましょう！",
   "offlineBanner": "ネットワーク接続がありません",
   "conversationDefault": "会話",
-
   "newConversationTitle": "新しい会話",
   "startConversationHeading": "会話を始める",
   "fieldRecipient": "相手のメールまたはユーザーID",
@@ -106,13 +97,11 @@
   "errUserNotFoundEmail": "このメールのユーザーが見つかりません。",
   "errUserNotFoundOrConn": "ユーザーが見つからないか、接続エラーです。",
   "startConversationButton": "チャットを始める",
-
   "chatDefaultTitle": "チャット",
   "statusOnline": "オンライン",
   "statusOffline": "オフライン",
   "typingLabel": "入力中",
   "messageHint": "メッセージを入力…",
-
   "tabChats": "チャット",
   "newGroup": "新しいグループ",
   "newDirect": "新しいチャット",
@@ -137,7 +126,6 @@
   "systemLeftGroup": "{actor} がグループを退出しました",
   "systemRenamedGroup": "{actor} がグループ名を {name} に変更しました",
   "systemCreatedGroup": "{actor} がグループを作成しました",
-
   "actionReply": "返信",
   "actionRecall": "送信取消",
   "actionEdit": "編集",
@@ -149,7 +137,6 @@
   "replyingTo": "{name} に返信中",
   "copiedToClipboard": "クリップボードにコピーしました",
   "recallConfirm": "全員に対してこのメッセージを取り消しますか？",
-
   "deleteConversation": "会話を削除",
   "deleteConversationConfirm": "この会話を削除しますか？リストから非表示になります。",
   "clearHistory": "履歴を消去",
@@ -158,7 +145,6 @@
   "disappearingOff": "オフ",
   "disappearing24h": "24 時間",
   "disappearing7d": "7 日",
-
   "changeAvatar": "アバターを変更",
   "uploadFailed": "アップロードに失敗しました。再試行してください",
   "lastSeenJustNow": "たった今オンライン",
@@ -167,20 +153,18 @@
   "lastSeenDays": "{days} 日前にオンライン",
   "dateToday": "今日",
   "dateYesterday": "昨日",
-
   "attachPhoto": "写真",
   "attachVideo": "動画",
+  "attachFile": "ファイル",
   "uploading": "アップロード中…",
   "downloadMedia": "ダウンロード",
   "attachmentLabel": "📎 添付ファイル",
-
   "callIncoming": "着信",
   "callIncomingBody": "{name} があなたを呼び出しています",
   "callCalling": "{name} に発信中…",
   "callConnecting": "接続中…",
   "callMediaError": "カメラ/マイクにアクセスできません（HTTPS または localhost が必要）",
   "callUnknownCaller": "誰か",
-
   "profileTitle": "プロフィール",
   "editProfile": "プロフィール編集",
   "bio": "自己紹介",
@@ -208,5 +192,10 @@
   "blockUserConfirm": "このユーザーをブロックしますか？お互いにメッセージを送れなくなります。",
   "blockedComposerNotice": "このチャットにはメッセージを送信できません",
   "userBlocked": "ユーザーをブロックしました",
-  "userUnblocked": "ブロックを解除しました"
+  "userUnblocked": "ブロックを解除しました",
+  "mentionNotificationTitle": "あなたへのメンション",
+  "mentionNotificationBody": "{name}があなたをメンションしました",
+  "searchMessages": "メッセージを検索",
+  "searchHint": "会話内を検索",
+  "searchNoResults": "メッセージが見つかりません"
 }

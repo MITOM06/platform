@@ -3,6 +3,7 @@ package com.platform.chatservice.model;
 import lombok.*;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.index.TextIndexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.Instant;
@@ -23,6 +24,8 @@ public class Message {
 
     private String senderId;
 
+    /** Text index powers conversation-scoped message search (Task 50). */
+    @TextIndexed
     private String content;
 
     @Builder.Default
@@ -51,6 +54,10 @@ public class Message {
 
     /** Set when the sender edits the message content (null if never edited). */
     private Instant editedAt;
+
+    /** User ids @-mentioned in this message (resolved from displayNames). */
+    @Builder.Default
+    private List<String> mentions = new ArrayList<>();
 
     @CreatedDate
     private Instant createdAt;

@@ -1,7 +1,7 @@
 # Roadmap — Platform Project
 
 > **Status:** Milestones 0–4 Completed ✅
-> **Current Sprint:** Sprint 12 (See `TODO.md`)
+> **Current Sprint:** Sprint 13 (See `TODO.md`)
 
 ---
 
@@ -46,7 +46,7 @@
 
 ## Post-Milestone 5 (Upcoming Sprints 12-15) 🚀 PENDING
 *(See `TODO.md` for detailed specs)*
-- [ ] **Sprint 12:** Edit Message, Generic File Upload, Cursor-based Pagination, Link Preview
+- [x] **Sprint 12:** Edit Message, Generic File Upload, Cursor-based Pagination, Link Preview
 - [ ] **Sprint 13:** Mention System, Message Search, True Unread Counts
 - [ ] **Sprint 14:** Public Channels, Pin/Forward Messages, Markdown Render
 - [ ] **Sprint 15:** Offline Catch-up, Rate Limiting

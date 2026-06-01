@@ -139,7 +139,8 @@ class ConversationsNotifier extends _$ConversationsNotifier {
 
     // Chat-service gửi flat payload: {type, conversationId, senderName, senderId}
     final type = notif['type'] as String?;
-    if (type == 'NEW_MESSAGE') {
+    final bool isMention = type == 'MENTIONED_YOU';
+    if (type == 'NEW_MESSAGE' || isMention) {
       final convId = notif['conversationId'] as String?;
       final senderName = notif['senderName'] ?? 'Ai đó';
       if (convId == null) return;
@@ -149,9 +150,18 @@ class ConversationsNotifier extends _$ConversationsNotifier {
       // A simpler heuristic: if the route is /chat/:id, we are inside.
       final currentRoute = ref.read(appRouterProvider).routeInformationProvider.value.uri.path;
       if (currentRoute != '/chat/$convId') {
+        final context =
+            ref.read(appRouterProvider).routerDelegate.navigatorKey.currentContext;
+        // Mentions get a distinct, higher-signal in-app banner.
         showInAppNotification(
-          "Tin nhắn mới",
-          "$senderName đã nhắn tin cho bạn.",
+          isMention
+              ? (context != null ? context.l10n.mentionNotificationTitle : 'Mentioned you')
+              : "Tin nhắn mới",
+          isMention
+              ? (context != null
+                  ? context.l10n.mentionNotificationBody(senderName.toString())
+                  : "$senderName mentioned you")
+              : "$senderName đã nhắn tin cho bạn.",
           onTap: () {
             ref.read(appRouterProvider).push('/chat/$convId');
           },
@@ -260,7 +270,7 @@ class ChatNotifier extends _$ChatNotifier {
 
     // API returns DESC (newest first) — use directly with ListView(reverse: true)
     final paged =
-        await ref.read(chatRepositoryProvider).getMessages(conversationId, 0, 20);
+        await ref.read(chatRepositoryProvider).getMessages(conversationId, size: 20);
     // On entry, persist read state on the server for messages that arrived while
     // we were away. The local unread badge is already reset by
     // ConversationsNotifier.markConversationRead, but without this the badge would
@@ -268,7 +278,7 @@ class ChatNotifier extends _$ChatNotifier {
     _markLoadedAsRead(paged.content);
     return ChatState(
       messages: paged.content,
-      hasMore: (paged.page + 1) * paged.size < paged.totalElements,
+      hasMore: paged.hasNext,
     );
   }
 
@@ -448,6 +458,28 @@ class ChatNotifier extends _$ChatNotifier {
     }
   }
 
+  /// Ensure [messageId] is loaded (paging older history if needed), then mark it
+  /// as the highlight target so the UI can scroll to it (Task 50 search jump).
+  Future<void> jumpToMessage(String messageId) async {
+    // Page back until the target is loaded, capped so we never loop forever.
+    for (int i = 0; i < 20; i++) {
+      final current = state.valueOrNull;
+      if (current == null) return;
+      if (current.messages.any((m) => m.id == messageId)) break;
+      if (!current.hasMore) break;
+      await loadMore();
+    }
+    final current = state.valueOrNull;
+    if (current == null) return;
+    state = AsyncData(current.copyWith(highlightMessageId: messageId));
+  }
+
+  void clearHighlight() {
+    final current = state.valueOrNull;
+    if (current == null || current.highlightMessageId == null) return;
+    state = AsyncData(current.copyWith(clearHighlight: true));
+  }
+
   Future<void> deleteForMe(String messageId) async {
     final current = state.valueOrNull;
     if (current == null) return;
@@ -494,18 +526,27 @@ class ChatNotifier extends _$ChatNotifier {
 
     state = AsyncData(current.copyWith(isLoadingMore: true));
 
-    final nextPage = current.currentPage + 1;
+    // Cursor = oldest real (non-pending) message id. The list is newest-first,
+    // so iterating to the end leaves `before` pointing at the oldest message.
+    String? before;
+    for (final m in current.messages) {
+      if (!m.isPending) before = m.id;
+    }
+
     try {
       final paged = await ref.read(chatRepositoryProvider).getMessages(
             conversationId,
-            nextPage,
-            20,
+            before: before,
+            size: 20,
           );
       final fresh = state.valueOrNull ?? current;
+      // Guard against id overlap if a realtime message arrived mid-fetch.
+      final existingIds = fresh.messages.map((m) => m.id).toSet();
+      final older =
+          paged.content.where((m) => !existingIds.contains(m.id)).toList();
       state = AsyncData(fresh.copyWith(
-        messages: [...fresh.messages, ...paged.content],
-        hasMore: (paged.page + 1) * paged.size < paged.totalElements,
-        currentPage: nextPage,
+        messages: [...fresh.messages, ...older],
+        hasMore: paged.hasNext,
         isLoadingMore: false,
       ));
     } catch (_) {
@@ -602,4 +643,10 @@ final userStatusProvider =
 final userProfileProvider =
     FutureProvider.autoDispose.family<UserModel, String>((ref, userId) {
   return ref.read(authRepositoryProvider).getUserProfile(userId);
+});
+
+/// Fetches Open Graph metadata for a URL (cached per-url for the screen's life).
+final linkPreviewProvider =
+    FutureProvider.autoDispose.family<LinkPreviewData, String>((ref, url) {
+  return ref.read(chatRepositoryProvider).fetchLinkPreview(url);
 });

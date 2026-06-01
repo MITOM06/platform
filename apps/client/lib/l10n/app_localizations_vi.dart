@@ -507,6 +507,9 @@ class AppLocalizationsVi extends AppLocalizations {
   String get attachVideo => 'Video';
 
   @override
+  String get attachFile => 'Tệp';
+
+  @override
   String get uploading => 'Đang tải lên…';
 
   @override
@@ -626,4 +629,21 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get userUnblocked => 'Đã bỏ chặn người dùng';
+
+  @override
+  String get mentionNotificationTitle => 'Đã nhắc đến bạn';
+
+  @override
+  String mentionNotificationBody(String name) {
+    return '$name đã nhắc đến bạn';
+  }
+
+  @override
+  String get searchMessages => 'Tìm tin nhắn';
+
+  @override
+  String get searchHint => 'Tìm trong cuộc trò chuyện';
+
+  @override
+  String get searchNoResults => 'Không tìm thấy tin nhắn';
 }

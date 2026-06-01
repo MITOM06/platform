@@ -1038,6 +1038,12 @@ abstract class AppLocalizations {
   /// **'Video'**
   String get attachVideo;
 
+  /// No description provided for @attachFile.
+  ///
+  /// In en, this message translates to:
+  /// **'File'**
+  String get attachFile;
+
   /// No description provided for @uploading.
   ///
   /// In en, this message translates to:
@@ -1259,6 +1265,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'User unblocked'**
   String get userUnblocked;
+
+  /// No description provided for @mentionNotificationTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Mentioned you'**
+  String get mentionNotificationTitle;
+
+  /// No description provided for @mentionNotificationBody.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} mentioned you'**
+  String mentionNotificationBody(String name);
+
+  /// No description provided for @searchMessages.
+  ///
+  /// In en, this message translates to:
+  /// **'Search messages'**
+  String get searchMessages;
+
+  /// No description provided for @searchHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Search in conversation'**
+  String get searchHint;
+
+  /// No description provided for @searchNoResults.
+  ///
+  /// In en, this message translates to:
+  /// **'No messages found'**
+  String get searchNoResults;
 }
 
 class _AppLocalizationsDelegate

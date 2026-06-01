@@ -39,16 +39,20 @@ public class ChatController {
                 response
         );
 
-        Map<String, String> notification = Map.of(
-            "type", "NEW_MESSAGE",
-            "conversationId", dto.getConversationId(),
-            "senderName", principal.getName()
-        );
+        List<String> mentions = response.mentions() == null ? List.of() : response.mentions();
         List<String> participants = conversationService.getParticipants(dto.getConversationId());
         for (String participantId : participants) {
             if (!participantId.equals(principal.getName())) {
+                // Mentioned participants get a priority MENTIONED_YOU event instead
+                // of the generic NEW_MESSAGE so the client can surface it specially.
+                boolean mentioned = mentions.contains(participantId);
+                Map<String, String> notification = Map.of(
+                    "type", mentioned ? "MENTIONED_YOU" : "NEW_MESSAGE",
+                    "conversationId", dto.getConversationId(),
+                    "senderName", principal.getName()
+                );
                 messagingTemplate.convertAndSendToUser(participantId, "/queue/notifications", notification);
-                
+
                 // Trigger Push Notification
                 fcmService.sendPushNotification(participantId, principal.getName(), dto.getContent(), dto.getConversationId());
             }

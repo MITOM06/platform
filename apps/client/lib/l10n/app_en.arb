@@ -212,6 +212,7 @@
 
   "attachPhoto": "Photo",
   "attachVideo": "Video",
+  "attachFile": "File",
   "uploading": "Uploading…",
   "downloadMedia": "Download",
   "attachmentLabel": "📎 Attachment",
@@ -253,5 +254,11 @@
   "blockUserConfirm": "Block this user? You won't be able to message each other.",
   "blockedComposerNotice": "You can't send messages to this chat",
   "userBlocked": "User blocked",
-  "userUnblocked": "User unblocked"
+  "userUnblocked": "User unblocked",
+  "mentionNotificationTitle": "Mentioned you",
+  "mentionNotificationBody": "{name} mentioned you",
+  "@mentionNotificationBody": { "placeholders": { "name": { "type": "String" } } },
+  "searchMessages": "Search messages",
+  "searchHint": "Search in conversation",
+  "searchNoResults": "No messages found"
 }

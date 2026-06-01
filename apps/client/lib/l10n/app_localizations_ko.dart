@@ -502,6 +502,9 @@ class AppLocalizationsKo extends AppLocalizations {
   String get attachVideo => '동영상';
 
   @override
+  String get attachFile => '파일';
+
+  @override
   String get uploading => '업로드 중…';
 
   @override
@@ -617,4 +620,21 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get userUnblocked => '차단을 해제했습니다';
+
+  @override
+  String get mentionNotificationTitle => '회원님을 언급함';
+
+  @override
+  String mentionNotificationBody(String name) {
+    return '$name님이 회원님을 언급했습니다';
+  }
+
+  @override
+  String get searchMessages => '메시지 검색';
+
+  @override
+  String get searchHint => '대화에서 검색';
+
+  @override
+  String get searchNoResults => '메시지를 찾을 수 없습니다';
 }

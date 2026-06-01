@@ -514,6 +514,9 @@ class AppLocalizationsEs extends AppLocalizations {
   String get attachVideo => 'Vídeo';
 
   @override
+  String get attachFile => 'Archivo';
+
+  @override
   String get uploading => 'Subiendo…';
 
   @override
@@ -632,4 +635,21 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get userUnblocked => 'Usuario desbloqueado';
+
+  @override
+  String get mentionNotificationTitle => 'Te mencionó';
+
+  @override
+  String mentionNotificationBody(String name) {
+    return '$name te mencionó';
+  }
+
+  @override
+  String get searchMessages => 'Buscar mensajes';
+
+  @override
+  String get searchHint => 'Buscar en la conversación';
+
+  @override
+  String get searchNoResults => 'No se encontraron mensajes';
 }

@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:flutter/foundation.dart';
 
 @immutable
@@ -161,6 +162,8 @@ class MessageModel {
   final bool recalled;
   // Set when the sender has edited this message (null = never edited).
   final DateTime? editedAt;
+  // User ids @-mentioned in this message (Task 49).
+  final List<String> mentions;
   // Client-only flag for optimistic UI — not in server response
   final bool isPending;
 
@@ -177,6 +180,7 @@ class MessageModel {
     this.reactions = const [],
     this.recalled = false,
     this.editedAt,
+    this.mentions = const [],
     this.isPending = false,
   });
 
@@ -186,6 +190,24 @@ class MessageModel {
   bool get isImage => type == 'image';
   bool get isVideo => type == 'video';
   bool get isMedia => isImage || isVideo;
+  // Generic document attachment (PDF / DOC / ZIP …).
+  bool get isFile => type == 'file';
+
+  /// File messages encode `{url, name, size}` as JSON in [content]. These
+  /// getters decode it defensively (falling back to the raw content as a URL).
+  Map<String, dynamic>? get _fileMeta {
+    if (!isFile) return null;
+    try {
+      final decoded = jsonDecode(content);
+      return decoded is Map<String, dynamic> ? decoded : null;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  String get fileUrl => (_fileMeta?['url'] as String?) ?? content;
+  String get fileName => (_fileMeta?['name'] as String?) ?? 'file';
+  int get fileSize => (_fileMeta?['size'] as num?)?.toInt() ?? 0;
 
   factory MessageModel.fromJson(Map<String, dynamic> json) {
     return MessageModel(
@@ -207,6 +229,7 @@ class MessageModel {
       editedAt: json['editedAt'] != null
           ? DateTime.parse(json['editedAt'] as String)
           : null,
+      mentions: List<String>.from(json['mentions'] as List? ?? []),
     );
   }
 
@@ -223,6 +246,7 @@ class MessageModel {
     List<ReactionModel>? reactions,
     bool? recalled,
     DateTime? editedAt,
+    List<String>? mentions,
     bool? isPending,
   }) {
     return MessageModel(
@@ -238,6 +262,7 @@ class MessageModel {
       reactions: reactions ?? this.reactions,
       recalled: recalled ?? this.recalled,
       editedAt: editedAt ?? this.editedAt,
+      mentions: mentions ?? this.mentions,
       isPending: isPending ?? this.isPending,
     );
   }
@@ -249,13 +274,47 @@ class PagedResult<T> {
   final int page;
   final int size;
   final int totalElements;
+  // Whether an older page of history exists (cursor pagination).
+  final bool hasNext;
 
   const PagedResult({
     required this.content,
     required this.page,
     required this.size,
     required this.totalElements,
+    this.hasNext = false,
   });
+}
+
+/// Open Graph metadata for a link, fetched from the chat-service unfurl endpoint.
+@immutable
+class LinkPreviewData {
+  final String url;
+  final String? title;
+  final String? description;
+  final String? image;
+  final String? siteName;
+
+  const LinkPreviewData({
+    required this.url,
+    this.title,
+    this.description,
+    this.image,
+    this.siteName,
+  });
+
+  // A preview is only worth rendering if it has at least a title or image.
+  bool get hasContent =>
+      (title != null && title!.isNotEmpty) ||
+      (image != null && image!.isNotEmpty);
+
+  factory LinkPreviewData.fromJson(Map<String, dynamic> json) => LinkPreviewData(
+        url: json['url'] as String? ?? '',
+        title: json['title'] as String?,
+        description: json['description'] as String?,
+        image: json['image'] as String?,
+        siteName: json['siteName'] as String?,
+      );
 }
 
 @immutable
@@ -367,6 +426,8 @@ class ChatState {
   final MessageModel? replyingTo;
   // Message the composer is currently editing (null = not editing).
   final MessageModel? editingMessage;
+  // Message id to scroll to + briefly highlight after a search jump (Task 50).
+  final String? highlightMessageId;
 
   const ChatState({
     required this.messages,
@@ -376,6 +437,7 @@ class ChatState {
     this.isLoadingMore = false,
     this.replyingTo,
     this.editingMessage,
+    this.highlightMessageId,
   });
 
   ChatState copyWith({
@@ -388,6 +450,8 @@ class ChatState {
     bool clearReplyingTo = false,
     MessageModel? editingMessage,
     bool clearEditingMessage = false,
+    String? highlightMessageId,
+    bool clearHighlight = false,
   }) {
     return ChatState(
       messages: messages ?? this.messages,
@@ -399,6 +463,8 @@ class ChatState {
       editingMessage: clearEditingMessage
           ? null
           : (editingMessage ?? this.editingMessage),
+      highlightMessageId:
+          clearHighlight ? null : (highlightMessageId ?? this.highlightMessageId),
     );
   }
 }

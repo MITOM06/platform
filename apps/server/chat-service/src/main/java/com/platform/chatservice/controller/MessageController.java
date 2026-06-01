@@ -13,6 +13,7 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -40,6 +41,13 @@ public class MessageController {
                    "content", updated.content(),
                    "editedAt", updated.editedAt().toString()));
         return updated;
+    }
+
+    /** Search messages within a conversation (Task 50). */
+    @GetMapping("/search")
+    public List<MessageResponse> search(@RequestParam("q") String query,
+                                        @RequestParam("conversationId") String conversationId) {
+        return messageService.searchMessages(currentUserId(), conversationId, query);
     }
 
     @PutMapping("/{id}/read")

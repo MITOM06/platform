@@ -2,7 +2,6 @@
   "@@locale": "fr",
   "appName": "PON",
   "languageName": "Français",
-
   "actionCancel": "Annuler",
   "actionConfirm": "Confirmer",
   "actionRetry": "RÉESSAYER",
@@ -12,7 +11,6 @@
   "actionLeave": "Quitter",
   "loadingDots": "...",
   "errorWithMsg": "Erreur : {error}",
-
   "loginTitle": "Connexion",
   "fieldEmail": "E-mail",
   "fieldPassword": "Mot de passe",
@@ -27,7 +25,6 @@
   "errInvalidCredentials": "E-mail ou mot de passe incorrect",
   "errNetwork": "Impossible de joindre le serveur, vérifiez votre connexion",
   "errLoginFailed": "Échec de la connexion, veuillez réessayer",
-
   "registerTitle": "Créer un compte",
   "welcomeToApp": "Bienvenue sur PON",
   "fieldDisplayName": "Nom affiché",
@@ -40,7 +37,6 @@
   "valPasswordMismatch": "Les mots de passe ne correspondent pas",
   "errEmailExists": "Cet e-mail est déjà enregistré",
   "errRegisterFailed": "Échec de l'inscription, veuillez réessayer",
-
   "verifyOtpTitle": "Vérifier l'OTP",
   "verifyAccountHeading": "Vérifiez votre compte",
   "otpSentTo": "Un code OTP à 6 chiffres a été envoyé à\n{email}",
@@ -53,14 +49,12 @@
   "valOtp6": "Saisissez les 6 chiffres de l'OTP",
   "verifySuccess": "Vérifié avec succès ! Connectez-vous maintenant",
   "errVerifyFailed": "Échec de la vérification, veuillez réessayer",
-
   "forgotTitle": "Réinitialiser le mot de passe",
   "forgotHeading": "Mot de passe oublié ?",
   "forgotSubtitle": "Saisissez votre e-mail pour recevoir un OTP et définir un nouveau mot de passe",
   "sendOtpButton": "ENVOYER LE CODE OTP",
   "errEmailNotRegistered": "Cet e-mail n'est pas enregistré",
   "errSendRequestFailed": "Échec de la demande, veuillez réessayer",
-
   "newPasswordTitle": "Nouveau mot de passe",
   "newPasswordHeading": "Créer un nouveau mot de passe",
   "newPasswordSubtitle": "Saisissez l'OTP envoyé à {email}\net votre nouveau mot de passe",
@@ -69,7 +63,6 @@
   "resetPasswordSuccess": "Mot de passe réinitialisé avec succès !",
   "errOtpInvalidExpired": "L'OTP est incorrect ou a expiré",
   "errResetFailed": "Échec de la réinitialisation, veuillez réessayer",
-
   "settingsTitle": "Paramètres",
   "valNameEmpty": "Le nom ne peut pas être vide",
   "nameUpdated": "Nom affiché mis à jour",
@@ -82,7 +75,6 @@
   "language": "Langue",
   "chooseLanguageTitle": "Choisir la langue",
   "logoutConfirmBody": "Voulez-vous vraiment vous déconnecter ?",
-
   "onboardingChooseTheme": "CHOISISSEZ UN THÈME",
   "onboardingChooseSubtitle": "Choisissez le style d'interface qui vous convient le mieux.",
   "themeLightSubtitle": "Lumineux, clair et facile à lire",
@@ -98,7 +90,6 @@
   "emptyTapPlus": "Appuyez sur le bouton « + » ci-dessous pour commencer !",
   "offlineBanner": "Aucune connexion réseau",
   "conversationDefault": "Conversation",
-
   "newConversationTitle": "Nouvelle conversation",
   "startConversationHeading": "Démarrer une conversation",
   "fieldRecipient": "E-mail ou ID utilisateur du destinataire",
@@ -106,13 +97,11 @@
   "errUserNotFoundEmail": "Aucun utilisateur trouvé avec cet e-mail.",
   "errUserNotFoundOrConn": "Utilisateur introuvable ou erreur de connexion.",
   "startConversationButton": "COMMENCER À DISCUTER",
-
   "chatDefaultTitle": "Discussion",
   "statusOnline": "actif maintenant",
   "statusOffline": "hors ligne",
   "typingLabel": "en train d'écrire",
   "messageHint": "Écrivez un message...",
-
   "tabChats": "Discussions",
   "newGroup": "Nouveau groupe",
   "newDirect": "Nouvelle discussion",
@@ -137,7 +126,6 @@
   "systemLeftGroup": "{actor} a quitté le groupe",
   "systemRenamedGroup": "{actor} a renommé le groupe en {name}",
   "systemCreatedGroup": "{actor} a créé le groupe",
-
   "actionReply": "Répondre",
   "actionRecall": "Annuler l'envoi",
   "actionEdit": "Modifier",
@@ -149,7 +137,6 @@
   "replyingTo": "Réponse à {name}",
   "copiedToClipboard": "Copié dans le presse-papiers",
   "recallConfirm": "Retirer ce message pour tout le monde ?",
-
   "deleteConversation": "Supprimer la conversation",
   "deleteConversationConfirm": "Supprimer cette conversation ? Elle sera masquée de votre liste.",
   "clearHistory": "Effacer l'historique",
@@ -158,7 +145,6 @@
   "disappearingOff": "Désactivé",
   "disappearing24h": "24 heures",
   "disappearing7d": "7 jours",
-
   "changeAvatar": "Changer l'avatar",
   "uploadFailed": "Échec du téléversement, réessayez",
   "lastSeenJustNow": "actif à l'instant",
@@ -167,20 +153,18 @@
   "lastSeenDays": "actif il y a {days} j",
   "dateToday": "Aujourd'hui",
   "dateYesterday": "Hier",
-
   "attachPhoto": "Photo",
   "attachVideo": "Vidéo",
+  "attachFile": "Fichier",
   "uploading": "Envoi…",
   "downloadMedia": "Télécharger",
   "attachmentLabel": "📎 Pièce jointe",
-
   "callIncoming": "Appel entrant",
   "callIncomingBody": "{name} vous appelle",
   "callCalling": "Appel de {name}…",
   "callConnecting": "Connexion…",
   "callMediaError": "Impossible d'accéder à la caméra/au micro (HTTPS ou localhost requis)",
   "callUnknownCaller": "Quelqu'un",
-
   "profileTitle": "Profil",
   "editProfile": "Modifier le profil",
   "bio": "Bio",
@@ -208,5 +192,10 @@
   "blockUserConfirm": "Bloquer cet utilisateur ? Vous ne pourrez plus vous envoyer de messages.",
   "blockedComposerNotice": "Vous ne pouvez pas envoyer de messages à ce chat",
   "userBlocked": "Utilisateur bloqué",
-  "userUnblocked": "Utilisateur débloqué"
+  "userUnblocked": "Utilisateur débloqué",
+  "mentionNotificationTitle": "Vous a mentionné",
+  "mentionNotificationBody": "{name} vous a mentionné",
+  "searchMessages": "Rechercher des messages",
+  "searchHint": "Rechercher dans la conversation",
+  "searchNoResults": "Aucun message trouvé"
 }

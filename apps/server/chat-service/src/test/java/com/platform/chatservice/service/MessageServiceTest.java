@@ -20,7 +20,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
@@ -184,24 +184,42 @@ class MessageServiceTest {
 
     @Test
     void getMessages_ShouldReturnPagedResponse() {
-        var pageable = PageRequest.of(0, 20);
         when(conversationRepository.findById(CONV_ID)).thenReturn(Optional.of(conversation));
-        when(messageRepository.findByConversationIdOrderByCreatedAtDesc(CONV_ID, pageable))
+        when(messageRepository.findByConversationIdOrderByCreatedAtDesc(eq(CONV_ID), any(Pageable.class)))
             .thenReturn(new PageImpl<>(List.of(savedMessage)));
 
+        // No cursor → most recent page.
         PageResponse<MessageResponse> result =
-            messageService.getMessages(SENDER_ID, CONV_ID, pageable);
+            messageService.getMessages(SENDER_ID, CONV_ID, null, 20);
 
         assertThat(result.content()).hasSize(1);
         assertThat(result.content().get(0).id()).isEqualTo(MSG_ID);
         assertThat(result.page()).isZero();
+        // Only one row (< size) → no older history.
+        assertThat(result.hasNext()).isFalse();
+    }
+
+    @Test
+    void getMessages_WithCursor_ShouldQueryOlderMessages() {
+        when(conversationRepository.findById(CONV_ID)).thenReturn(Optional.of(conversation));
+        when(messageRepository.findById(MSG_ID)).thenReturn(Optional.of(savedMessage));
+        when(messageRepository.findByConversationIdAndCreatedAtLessThanOrderByCreatedAtDesc(
+                eq(CONV_ID), any(Instant.class), any(Pageable.class)))
+            .thenReturn(List.of());
+
+        PageResponse<MessageResponse> result =
+            messageService.getMessages(SENDER_ID, CONV_ID, MSG_ID, 20);
+
+        assertThat(result.content()).isEmpty();
+        verify(messageRepository).findByConversationIdAndCreatedAtLessThanOrderByCreatedAtDesc(
+            eq(CONV_ID), any(Instant.class), any(Pageable.class));
     }
 
     @Test
     void getMessages_WhenUserNotParticipant_ShouldThrow() {
         when(conversationRepository.findById(CONV_ID)).thenReturn(Optional.of(conversation));
 
-        assertThatThrownBy(() -> messageService.getMessages("outsider", CONV_ID, PageRequest.of(0, 20)))
+        assertThatThrownBy(() -> messageService.getMessages("outsider", CONV_ID, null, 20))
             .isInstanceOf(ConversationNotFoundException.class);
     }
 
@@ -245,6 +263,63 @@ class MessageServiceTest {
             .isInstanceOf(IllegalArgumentException.class);
 
         verify(messageRepository, never()).findById(anyString());
+    }
+
+    @Test
+    void searchMessages_ShouldReturnMatchingMessages() {
+        when(conversationRepository.findById(CONV_ID)).thenReturn(Optional.of(conversation));
+        when(mongoTemplate.find(any(Query.class), eq(Message.class)))
+            .thenReturn(List.of(savedMessage));
+
+        List<MessageResponse> results = messageService.searchMessages(SENDER_ID, CONV_ID, "Hello");
+
+        assertThat(results).hasSize(1);
+        assertThat(results.get(0).id()).isEqualTo(MSG_ID);
+        verify(mongoTemplate).find(any(Query.class), eq(Message.class));
+    }
+
+    @Test
+    void searchMessages_WhenBlankQuery_ShouldReturnEmptyWithoutQuerying() {
+        when(conversationRepository.findById(CONV_ID)).thenReturn(Optional.of(conversation));
+
+        assertThat(messageService.searchMessages(SENDER_ID, CONV_ID, "   ")).isEmpty();
+
+        verify(mongoTemplate, never()).find(any(Query.class), eq(Message.class));
+    }
+
+    @Test
+    void searchMessages_WhenUserNotParticipant_ShouldThrow() {
+        when(conversationRepository.findById(CONV_ID)).thenReturn(Optional.of(conversation));
+
+        assertThatThrownBy(() -> messageService.searchMessages("outsider", CONV_ID, "Hello"))
+            .isInstanceOf(ConversationNotFoundException.class);
+    }
+
+    @Test
+    void sendMessage_WithMention_ShouldResolveMentionedUserIds() {
+        // Valid ObjectId hex so the users-collection lookup path runs.
+        String mentionerId = "507f1f77bcf86cd799439011";
+        String mentioneeId = "507f1f77bcf86cd799439012";
+        Conversation group = Conversation.builder()
+            .id(CONV_ID)
+            .participants(List.of(mentionerId, mentioneeId))
+            .build();
+        when(conversationRepository.findById(CONV_ID)).thenReturn(Optional.of(group));
+        when(messageRepository.save(any(Message.class))).thenAnswer(inv -> {
+            Message m = inv.getArgument(0);
+            m.setId(MSG_ID);
+            m.setCreatedAt(Instant.now());
+            return m;
+        });
+        when(conversationRepository.save(any(Conversation.class))).thenAnswer(inv -> inv.getArgument(0));
+        org.bson.Document mentioneeDoc = new org.bson.Document("displayName", "Alice");
+        when(mongoTemplate.findOne(any(Query.class), eq(org.bson.Document.class), eq("users")))
+            .thenReturn(mentioneeDoc);
+
+        MessageResponse response = messageService.sendMessage(mentionerId,
+            new SendMessageRequest(CONV_ID, "Hey @Alice check this", "text"));
+
+        assertThat(response.mentions()).containsExactly(mentioneeId);
     }
 
     @Test

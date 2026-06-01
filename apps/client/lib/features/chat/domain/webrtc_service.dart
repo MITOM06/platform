@@ -41,7 +41,6 @@ class WebRTCService {
             'stun:stun1.l.google.com:19302',
           ],
         },
-        // TODO(prod): thêm 1 TURN server ở đây để gọi qua NAT/Internet thật.
       ],
       'sdpSemantics': 'unified-plan',
     });
