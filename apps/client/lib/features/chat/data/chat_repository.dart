@@ -122,6 +122,12 @@ class ChatRepository {
     await _dio.post('/api/conversations/$conversationId/clear');
   }
 
+  Future<ConversationModel> acceptConversation(String conversationId) async {
+    final response =
+        await _dio.post('/api/conversations/$conversationId/accept');
+    return ConversationModel.fromJson(response.data as Map<String, dynamic>);
+  }
+
   Future<ConversationModel> setAutoDelete(
     String conversationId,
     int? seconds,

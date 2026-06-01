@@ -177,5 +177,25 @@
   "callCalling": "{name} に発信中…",
   "callConnecting": "接続中…",
   "callMediaError": "カメラ/マイクにアクセスできません（HTTPS または localhost が必要）",
-  "callUnknownCaller": "誰か"
+  "callUnknownCaller": "誰か",
+
+  "profileTitle": "プロフィール",
+  "editProfile": "プロフィール編集",
+  "bio": "自己紹介",
+  "friendsCountLabel": "友達 {count} 人",
+  "messageAction": "メッセージ",
+  "activeFriends": "オンラインの友達",
+  "noFriendsOnline": "オンラインの友達はいません",
+  "strangerBannerTitle": "メッセージリクエスト",
+  "strangerBannerBody": "この人は連絡先にいません。返信するには承認してください。",
+  "acceptRequest": "承認",
+  "rejectRequest": "拒否",
+  "friends": "友達",
+  "contacts": "連絡先",
+  "friendRequests": "友達リクエスト",
+  "addFriend": "友達追加",
+  "friendRequestSent": "友達リクエストを送信しました",
+  "acceptFriend": "承認",
+  "noFriends": "まだ友達がいません",
+  "noFriendRequests": "保留中のリクエストはありません"
 }

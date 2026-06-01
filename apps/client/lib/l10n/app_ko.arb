@@ -177,5 +177,25 @@
   "callCalling": "{name}님에게 전화 거는 중…",
   "callConnecting": "연결 중…",
   "callMediaError": "카메라/마이크에 접근할 수 없습니다 (HTTPS 또는 localhost 필요)",
-  "callUnknownCaller": "누군가"
+  "callUnknownCaller": "누군가",
+
+  "profileTitle": "프로필",
+  "editProfile": "프로필 편집",
+  "bio": "소개",
+  "friendsCountLabel": "친구 {count}명",
+  "messageAction": "메시지",
+  "activeFriends": "온라인 친구",
+  "noFriendsOnline": "온라인 친구가 없습니다",
+  "strangerBannerTitle": "메시지 요청",
+  "strangerBannerBody": "이 사람은 연락처에 없습니다. 답장하려면 수락하세요.",
+  "acceptRequest": "수락",
+  "rejectRequest": "거절",
+  "friends": "친구",
+  "contacts": "연락처",
+  "friendRequests": "친구 요청",
+  "addFriend": "친구 추가",
+  "friendRequestSent": "친구 요청을 보냈습니다",
+  "acceptFriend": "수락",
+  "noFriends": "아직 친구가 없습니다",
+  "noFriendRequests": "대기 중인 요청이 없습니다"
 }

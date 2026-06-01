@@ -85,10 +85,15 @@ export class UsersService {
     }).limit(10).select('-password').exec();
   }
 
-  async updateProfile(userId: string, data: { displayName?: string; avatarUrl?: string }): Promise<UserDocument | null> {
+  async updateProfile(
+    userId: string,
+    data: { displayName?: string; avatarUrl?: string; bio?: string; coverPhoto?: string },
+  ): Promise<UserDocument | null> {
     const updateData: any = {};
     if (data.displayName !== undefined) updateData.displayName = data.displayName;
     if (data.avatarUrl !== undefined) updateData.avatarUrl = data.avatarUrl;
+    if (data.bio !== undefined) updateData.bio = data.bio;
+    if (data.coverPhoto !== undefined) updateData.coverPhoto = data.coverPhoto;
 
     if (Object.keys(updateData).length > 0) {
       return this.userModel.findByIdAndUpdate(

@@ -177,5 +177,25 @@
   "callCalling": "Llamando a {name}…",
   "callConnecting": "Conectando…",
   "callMediaError": "No se puede acceder a la cámara/micrófono (se requiere HTTPS o localhost)",
-  "callUnknownCaller": "Alguien"
+  "callUnknownCaller": "Alguien",
+
+  "profileTitle": "Perfil",
+  "editProfile": "Editar perfil",
+  "bio": "Biografía",
+  "friendsCountLabel": "{count} amigos",
+  "messageAction": "Mensaje",
+  "activeFriends": "Activos ahora",
+  "noFriendsOnline": "No hay amigos en línea",
+  "strangerBannerTitle": "Solicitud de mensaje",
+  "strangerBannerBody": "Esta persona no está en tus contactos. Acepta para responder.",
+  "acceptRequest": "Aceptar",
+  "rejectRequest": "Rechazar",
+  "friends": "Amigos",
+  "contacts": "Contactos",
+  "friendRequests": "Solicitudes de amistad",
+  "addFriend": "Añadir amigo",
+  "friendRequestSent": "Solicitud de amistad enviada",
+  "acceptFriend": "Aceptar",
+  "noFriends": "Aún no tienes amigos",
+  "noFriendRequests": "No hay solicitudes pendientes"
 }

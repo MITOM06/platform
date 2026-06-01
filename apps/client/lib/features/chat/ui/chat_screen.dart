@@ -92,6 +92,35 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
         .sendMessage(content);
   }
 
+  Future<void> _acceptStranger() async {
+    try {
+      await ref.read(chatRepositoryProvider).acceptConversation(widget.conversationId);
+      // Refresh the conversation list so the banner disappears and the composer shows.
+      ref.read(conversationsNotifierProvider.notifier).refresh();
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(context.l10n.errorWithMsg(e.toString()))),
+        );
+      }
+    }
+  }
+
+  Future<void> _rejectStranger() async {
+    try {
+      await ref
+          .read(conversationsNotifierProvider.notifier)
+          .deleteConversation(widget.conversationId);
+      if (mounted) context.pop();
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(context.l10n.errorWithMsg(e.toString()))),
+        );
+      }
+    }
+  }
+
   /// Let the user pick an image or video, upload it to GridFS, then send a
   /// message whose `content` is the upload URL and `type` is image/video.
   Future<void> _pickAndSendMedia() async {
@@ -281,6 +310,13 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
         ? displayName[0].toUpperCase()
         : '?';
     final isOnline = !isGroup && (statusAsync?.valueOrNull?.online ?? false);
+
+    // Stranger request: a pending direct conversation I did NOT start. Hide the
+    // composer and show an accept/reject banner instead (Zalo style).
+    final bool isStrangerRequest = conv != null &&
+        conv.isPending &&
+        conv.createdBy != null &&
+        conv.createdBy != currentUserId;
 
     return Scaffold(
       appBar: PreferredSize(
@@ -587,43 +623,50 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
                   ),
                 ),
               ),
-              if (replyingTo != null)
-                _ReplyComposerBar(
-                  preview: replyingTo,
-                  onCancel: () => ref
+              if (isStrangerRequest)
+                _StrangerRequestBanner(
+                  onAccept: _acceptStranger,
+                  onReject: _rejectStranger,
+                )
+              else ...[
+                if (replyingTo != null)
+                  _ReplyComposerBar(
+                    preview: replyingTo,
+                    onCancel: () => ref
+                        .read(chatNotifierProvider(widget.conversationId).notifier)
+                        .cancelReply(),
+                  ),
+                _InputBar(
+                  controller: _textCtrl,
+                  onSend: _onSend,
+                  onAttach: _pickAndSendMedia,
+                  emojiActive: _showEmoji,
+                  onEmojiToggle: () {
+                    FocusScope.of(context).unfocus();
+                    setState(() => _showEmoji = !_showEmoji);
+                  },
+                  onChanged: (_) => ref
                       .read(chatNotifierProvider(widget.conversationId).notifier)
-                      .cancelReply(),
+                      .startTyping(),
                 ),
-              _InputBar(
-                controller: _textCtrl,
-                onSend: _onSend,
-                onAttach: _pickAndSendMedia,
-                emojiActive: _showEmoji,
-                onEmojiToggle: () {
-                  FocusScope.of(context).unfocus();
-                  setState(() => _showEmoji = !_showEmoji);
-                },
-                onChanged: (_) => ref
-                    .read(chatNotifierProvider(widget.conversationId).notifier)
-                    .startTyping(),
-              ),
-              if (_showEmoji)
-                SizedBox(
-                  height: 280,
-                  child: EmojiPicker(
-                    onEmojiSelected: (category, emoji) => _insertEmoji(emoji.emoji),
-                    config: const Config(
-                      height: 280,
-                      emojiViewConfig: EmojiViewConfig(backgroundColor: AppTheme.darkBackground),
-                      categoryViewConfig: CategoryViewConfig(backgroundColor: AppTheme.darkSurface),
-                      bottomActionBarConfig: BottomActionBarConfig(
-                        backgroundColor: AppTheme.darkSurface,
-                        buttonColor: AppTheme.darkSurface,
+                if (_showEmoji)
+                  SizedBox(
+                    height: 280,
+                    child: EmojiPicker(
+                      onEmojiSelected: (category, emoji) => _insertEmoji(emoji.emoji),
+                      config: const Config(
+                        height: 280,
+                        emojiViewConfig: EmojiViewConfig(backgroundColor: AppTheme.darkBackground),
+                        categoryViewConfig: CategoryViewConfig(backgroundColor: AppTheme.darkSurface),
+                        bottomActionBarConfig: BottomActionBarConfig(
+                          backgroundColor: AppTheme.darkSurface,
+                          buttonColor: AppTheme.darkSurface,
+                        ),
+                        searchViewConfig: SearchViewConfig(backgroundColor: AppTheme.darkSurface),
                       ),
-                      searchViewConfig: SearchViewConfig(backgroundColor: AppTheme.darkSurface),
                     ),
                   ),
-                ),
+              ],
             ],
           ),
         ],
@@ -871,6 +914,70 @@ class _InputBarState extends State<_InputBar> {
                   size: 20,
                 ),
               ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Shown in place of the composer when the user receives a message from someone
+/// who isn't a contact. They must accept before they can reply (Zalo style).
+class _StrangerRequestBanner extends StatelessWidget {
+  final Future<void> Function() onAccept;
+  final Future<void> Function() onReject;
+
+  const _StrangerRequestBanner({required this.onAccept, required this.onReject});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      color: AppTheme.darkSurface.withValues(alpha: 0.8),
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+      child: SafeArea(
+        top: false,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              context.l10n.strangerBannerTitle,
+              style: const TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+                fontSize: 15,
+              ),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              context.l10n.strangerBannerBody,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: Colors.white.withValues(alpha: 0.6),
+                fontSize: 13,
+              ),
+            ),
+            const SizedBox(height: 14),
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: () => onReject(),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: Colors.redAccent,
+                      side: const BorderSide(color: Colors.redAccent),
+                    ),
+                    child: Text(context.l10n.rejectRequest),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: PonButton(
+                    onPressed: () => onAccept(),
+                    child: Text(context.l10n.acceptRequest),
+                  ),
+                ),
+              ],
             ),
           ],
         ),

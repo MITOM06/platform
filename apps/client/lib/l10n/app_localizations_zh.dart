@@ -525,4 +525,63 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get callUnknownCaller => '某人';
+
+  @override
+  String get profileTitle => '个人资料';
+
+  @override
+  String get editProfile => '编辑资料';
+
+  @override
+  String get bio => '简介';
+
+  @override
+  String friendsCountLabel(int count) {
+    return '$count 位好友';
+  }
+
+  @override
+  String get messageAction => '发消息';
+
+  @override
+  String get activeFriends => '在线好友';
+
+  @override
+  String get noFriendsOnline => '没有好友在线';
+
+  @override
+  String get strangerBannerTitle => '消息请求';
+
+  @override
+  String get strangerBannerBody => '此人不在你的联系人中。接受后即可回复。';
+
+  @override
+  String get acceptRequest => '接受';
+
+  @override
+  String get rejectRequest => '拒绝';
+
+  @override
+  String get friends => '好友';
+
+  @override
+  String get contacts => '通讯录';
+
+  @override
+  String get friendRequests => '好友请求';
+
+  @override
+  String get addFriend => '加为好友';
+
+  @override
+  String get friendRequestSent => '好友请求已发送';
+
+  @override
+  String get acceptFriend => '接受';
+
+  @override
+  String get noFriends => '还没有好友';
+
+  @override
+  String get noFriendRequests => '没有待处理的请求';
 }

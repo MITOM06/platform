@@ -35,6 +35,7 @@ class ConversationModel {
   final DateTime? lastMessageAt;
   final int unreadCount;
   final DateTime createdAt;
+  final String status; // "pending" | "accepted"
 
   const ConversationModel({
     required this.id,
@@ -49,9 +50,11 @@ class ConversationModel {
     this.lastMessageAt,
     required this.unreadCount,
     required this.createdAt,
+    this.status = 'accepted',
   });
 
   bool get isGroup => type == 'group';
+  bool get isPending => status == 'pending';
 
   factory ConversationModel.fromJson(Map<String, dynamic> json) {
     return ConversationModel(
@@ -74,6 +77,7 @@ class ConversationModel {
       createdAt: json['createdAt'] != null
           ? DateTime.parse(json['createdAt'] as String)
           : DateTime.now(),
+      status: json['status'] as String? ?? 'accepted',
     );
   }
 
@@ -90,6 +94,7 @@ class ConversationModel {
     DateTime? lastMessageAt,
     int? unreadCount,
     DateTime? createdAt,
+    String? status,
   }) {
     return ConversationModel(
       id: id ?? this.id,
@@ -104,6 +109,7 @@ class ConversationModel {
       lastMessageAt: lastMessageAt ?? this.lastMessageAt,
       unreadCount: unreadCount ?? this.unreadCount,
       createdAt: createdAt ?? this.createdAt,
+      status: status ?? this.status,
     );
   }
 }
@@ -263,6 +269,19 @@ class UserStatus {
           : null,
     );
   }
+}
+
+@immutable
+class PresenceEvent {
+  final String userId;
+  final bool online;
+
+  const PresenceEvent({required this.userId, required this.online});
+
+  factory PresenceEvent.fromJson(Map<String, dynamic> json) => PresenceEvent(
+        userId: json['userId'] as String,
+        online: json['online'] as bool? ?? false,
+      );
 }
 
 @immutable

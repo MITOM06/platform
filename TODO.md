@@ -1,6 +1,88 @@
 # TODO — PON PROJECT
 > **Workflow:** Gemini Code Assist (viết code) ↔ Tech Lead (bàn giao) ↔ Claude CLI (test & review)
-> **Cập nhật:** 2026-06-01 (Sprint 9 — Sửa Gọi điện WebRTC + Thông báo đẩy FCM)
+> **Cập nhật:** 2026-06-01 (Sprint 10 — Profile, UI Fixes, Active Friends & Stranger Chat)
+
+---
+
+## 🟢 SPRINT 10 — Profile, UI Fixes, Active Friends & Stranger Chat — DONE ✅ [2026-06-01]
+
+### TASK 35 — User Profile (View & Edit) `DONE`
+#### SPEC
+- **Data model:** User schema thêm các trường tùy chọn: `bio`, `coverPhoto`.
+- **Backend:** Cập nhật `GET /api/users/:id` trả kèm bio/thống kê friends. Update `PATCH /api/users/me` cho phép đổi bio.
+- **Frontend:** Thêm màn `UserProfileScreen` (hiển thị Avatar lớn, Tên, Bio, nút Kết bạn/Nhắn tin). Tách riêng `EditProfileScreen` cho user đang đăng nhập.
+- **Test:** Mở profile người khác hiển thị đúng. Sửa profile bản thân lưu thành công.
+
+### TASK 36 — Clear Unread Count Badge `DONE`
+#### SPEC
+- **Frontend:** Khi vào `ChatScreen`, gọi API đánh dấu đã đọc (nếu có) và cập nhật ngay lập tức `ChatNotifier` để reset số tin nhắn chưa đọc về 0 cho hội thoại đó. Kích hoạt render lại `ConversationListScreen` để ẩn badge đỏ ngoài màn hình chính.
+- **Test:** Nhận tin nhắn -> Hiện số 1 -> Bấm vào đoạn chat -> Quay ra ngoài badge biến mất.
+
+### TASK 37 — Theme Switcher Bug Fix `DONE`
+#### SPEC
+- **Frontend:** Khắc phục lỗi khi chuyển `ThemeMode` (Sáng -> Hệ thống -> Tối) gây crash hoặc in lỗi đỏ. Bọc logic gọi thay đổi state bằng `Future.microtask` hoặc kiểm tra `if (!mounted) return;` trong widget chọn Theme (Settings / Onboarding).
+- **Test:** Đổi theme liên tục qua lại 3 chế độ không bị crash.
+
+### TASK 38 — Active Friends Row (Messenger Style) `DONE`
+#### SPEC
+- **Backend:** Thêm API `GET /api/users/friends/online` lấy danh sách bạn bè đang online (query Redis presence).
+- **Frontend:** Dòng đầu tiên của `ConversationListScreen`, thêm 1 `ListView.builder` (scroll ngang). Hiển thị avatar bạn bè đang online (kèm dot xanh). Update trạng thái realtime bằng STOMP presence event.
+- **Test:** Thấy avatar bạn online ở hàng đầu. Khi bạn offline, status cập nhật tương ứng.
+
+### TASK 39 — Stranger Message Request (Zalo Style) `DONE`
+#### SPEC
+- **Data model:** Bảng `Conversation` thêm field `status: 'PENDING' | 'ACCEPTED'` (mặc định ACCEPTED nếu đã là bạn, PENDING nếu người lạ nhắn).
+- **Backend:** Khởi tạo chat giữa 2 người chưa kết bạn -> `PENDING`. Khi người B gửi tin nhắn đầu tiên vào phòng chat -> đổi `status` thành `ACCEPTED`.
+- **Frontend:** Khi mở `ChatScreen`, nếu `status == PENDING` và mình KHÔNG PHẢI người bắt đầu -> Ẩn input gửi tin, hiện banner "Người này không nằm trong danh bạ...". Kèm nút [Từ chối] / [Chấp nhận].
+- **Test:** Nhận tin người lạ -> Bấm Chấp nhận mới được nhắn tin.
+
+### TASK 40 — Friend System (Thêm/Danh sách bạn bè) `DONE`
+#### SPEC
+- **Data model:** Tạo collection `Friendship` (`requesterId`, `recipientId`, `status: PENDING | ACCEPTED`).
+- **Backend:** API `POST /api/friends/request`, `PUT /api/friends/accept`, `GET /api/friends`.
+- **Frontend:** Thêm Tab "Danh bạ" hoặc màn hình quản lý bạn bè. Nút "Thêm bạn bè" ở User Profile. List hiển thị "Lời mời kết bạn" đang chờ.
+- **Test:** Gửi kết bạn -> Đối phương nhận lời mời -> Chấp nhận -> Trở thành bạn bè.
+
+## 🧪 QA LOG (Sprint 10)
+
+```
+[2026-06-01] QC Sprint 10 — implemented & verified by Claude CLI (TASK 35→40)
+  auth-service: pnpm build → EXIT 0 | pnpm test → 6/6 PASS
+                (app health + new friends.service.spec: self/dup/create/count/online)
+  chat-service: mvn clean test → 34/34 PASS, BUILD SUCCESS (28 cũ + 6 mới:
+                createConversation pending/accepted, acceptConversation recipient/initiator,
+                sendMessage auto-accept by recipient / stay-pending by initiator)
+  client:       flutter gen-l10n OK | build_runner OK | flutter analyze → No issues found
+                flutter test → 1/1 PASS
+
+Tóm tắt thay đổi:
+  TASK 35 (Profile): User schema +bio/+coverPhoto; PATCH /api/users/me nhận bio/coverPhoto;
+    GET /api/users/:id trả kèm friendsCount. Module `friends` (auth-service) scaffold +
+    FriendsService. Client: UserModel +bio/coverPhoto/friendsCount; UserProfileScreen +
+    EditProfileScreen; routes /user/:id, /edit-profile.
+  TASK 36 (Unread badge): ChatScreen reset local (markConversationRead) + persist read lên
+    server cho tin chưa đọc lúc mở chat (ChatNotifier._markLoadedAsRead) → badge không quay lại.
+  TASK 37 (Theme crash): bọc setThemeMode trong Future.microtask ở Onboarding + Settings.
+  TASK 38 (Active friends): GET /api/users/friends/online (auth đọc Redis user:status:*);
+    chat-service broadcast /topic/presence (connect/disconnect). Client: StompService.presence
+    stream + OnlineFriendsNotifier (realtime) + ActiveFriendsRow trên ConversationListScreen.
+  TASK 39 (Stranger/Zalo): Conversation.status (pending|accepted, default accepted, legacy-safe);
+    FriendshipRepository (chat-service đọc collection `friendships`); createConversation đặt
+    pending nếu chưa là bạn; sendMessage auto-accept khi NGƯỜI NHẬN trả lời; POST
+    /api/conversations/{id}/accept. Client: ConversationModel.status + banner [Chấp nhận]/[Từ chối]
+    ẩn input khi pending và mình không phải người bắt đầu.
+  TASK 40 (Friend system): FriendsController POST /request, PUT /accept, GET /, GET /requests.
+    Client: friends_repository + friends_provider + FriendsScreen (tab Bạn bè / Lời mời),
+    nút "Danh bạ" ở AppBar, nút "Kết bạn" ở UserProfileScreen.
+  i18n: +20 key (profileTitle, editProfile, bio, friendsCountLabel, messageAction, activeFriends,
+    noFriendsOnline, strangerBanner*, accept/rejectRequest, friends, contacts, friendRequests,
+    addFriend, friendRequestSent, acceptFriend, noFriends, noFriendRequests) vào CẢ 7 file ARB.
+  Lưu ý: regenerate compiled artifacts trong packages/database/src (index.js, friendship.schema.js,
+    user.schema.js) vì jest moduleFileExtensions ưu tiên .js — cần fresh để export Friendship.
+```
+
+**Trạng thái: 🟢 CLEAN — TASK 35→40 implement xong & build/test sạch cả 3 service.**
+E2E thực tế (presence realtime 2 thiết bị, luồng kết bạn end-to-end) cần start infra + services.
 
 ---
 

@@ -255,10 +255,31 @@ class ChatNotifier extends _$ChatNotifier {
     // API returns DESC (newest first) — use directly with ListView(reverse: true)
     final paged =
         await ref.read(chatRepositoryProvider).getMessages(conversationId, 0, 20);
+    // On entry, persist read state on the server for messages that arrived while
+    // we were away. The local unread badge is already reset by
+    // ConversationsNotifier.markConversationRead, but without this the badge would
+    // reappear after the next list reload (server recomputes unreadCount).
+    _markLoadedAsRead(paged.content);
     return ChatState(
       messages: paged.content,
       hasMore: (paged.page + 1) * paged.size < paged.totalElements,
     );
+  }
+
+  void _markLoadedAsRead(List<MessageModel> messages) {
+    final uid = _currentUserId;
+    if (uid == null) return;
+    final stomp = ref.read(stompServiceProvider.notifier);
+    final repo = ref.read(chatRepositoryProvider);
+    for (final m in messages) {
+      if (m.senderId != uid && !m.readBy.contains(uid)) {
+        if (stomp.isConnected) {
+          stomp.sendRead(conversationId, m.id);
+        } else {
+          repo.markAsRead(m.id).ignore();
+        }
+      }
+    }
   }
 
   void _onNewMessage(MessageModel message) {

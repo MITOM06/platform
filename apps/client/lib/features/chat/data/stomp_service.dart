@@ -21,6 +21,8 @@ class StompService extends _$StompService {
   final _recallCtrl = StreamController<RecallEvent>.broadcast();
   final _convUpdateCtrl = StreamController<ConversationModel>.broadcast();
   final _webrtcCtrl = StreamController<Map<String, dynamic>>.broadcast();
+  final _presenceCtrl = StreamController<PresenceEvent>.broadcast();
+  bool _presenceSubPending = false;
 
   @override
   void build() {}
@@ -33,6 +35,7 @@ class StompService extends _$StompService {
   Stream<RecallEvent> get recalledMessages => _recallCtrl.stream;
   Stream<ConversationModel> get conversationUpdates => _convUpdateCtrl.stream;
   Stream<Map<String, dynamic>> get webrtcSignals => _webrtcCtrl.stream;
+  Stream<PresenceEvent> get presence => _presenceCtrl.stream;
 
   bool get isConnected => _client?.connected ?? false;
 
@@ -55,6 +58,7 @@ class StompService extends _$StompService {
   void _onConnect(StompFrame frame) {
     // Re-establish all pending subscriptions after connect/reconnect
     if (_notifSubPending) _doSubscribeNotifications();
+    if (_presenceSubPending) _doSubscribePresence();
     for (final convId in Set<String>.from(_pendingConvSubs)) {
       _doSubscribeConversation(convId);
     }
@@ -164,6 +168,26 @@ class StompService extends _$StompService {
       callback: (frame) {
         if (frame.body == null) return;
         _webrtcCtrl.add(jsonDecode(frame.body!) as Map<String, dynamic>);
+      },
+    );
+  }
+
+  void subscribePresence() {
+    _presenceSubPending = true;
+    if (_client?.connected ?? false) {
+      _doSubscribePresence();
+    }
+  }
+
+  void _doSubscribePresence() {
+    if (_subs.containsKey('presence')) return;
+    _subs['presence'] = _client!.subscribe(
+      destination: '/topic/presence',
+      callback: (frame) {
+        if (frame.body == null) return;
+        _presenceCtrl.add(
+          PresenceEvent.fromJson(jsonDecode(frame.body!) as Map<String, dynamic>),
+        );
       },
     );
   }

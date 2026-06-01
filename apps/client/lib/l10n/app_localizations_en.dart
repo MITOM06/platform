@@ -531,4 +531,64 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get callUnknownCaller => 'Someone';
+
+  @override
+  String get profileTitle => 'Profile';
+
+  @override
+  String get editProfile => 'Edit profile';
+
+  @override
+  String get bio => 'Bio';
+
+  @override
+  String friendsCountLabel(int count) {
+    return '$count friends';
+  }
+
+  @override
+  String get messageAction => 'Message';
+
+  @override
+  String get activeFriends => 'Active now';
+
+  @override
+  String get noFriendsOnline => 'No friends online';
+
+  @override
+  String get strangerBannerTitle => 'Message request';
+
+  @override
+  String get strangerBannerBody =>
+      'This person isn\'t in your contacts. Accept to reply.';
+
+  @override
+  String get acceptRequest => 'Accept';
+
+  @override
+  String get rejectRequest => 'Decline';
+
+  @override
+  String get friends => 'Friends';
+
+  @override
+  String get contacts => 'Contacts';
+
+  @override
+  String get friendRequests => 'Friend requests';
+
+  @override
+  String get addFriend => 'Add friend';
+
+  @override
+  String get friendRequestSent => 'Friend request sent';
+
+  @override
+  String get acceptFriend => 'Accept';
+
+  @override
+  String get noFriends => 'No friends yet';
+
+  @override
+  String get noFriendRequests => 'No pending requests';
 }

@@ -6,12 +6,18 @@ class UserModel {
   final String email;
   final String displayName;
   final String? avatarUrl;
+  final String? bio;
+  final String? coverPhoto;
+  final int? friendsCount;
 
   const UserModel({
     required this.id,
     required this.email,
     required this.displayName,
     this.avatarUrl,
+    this.bio,
+    this.coverPhoto,
+    this.friendsCount,
   });
 
   factory UserModel.fromJson(Map<String, dynamic> json) {
@@ -20,6 +26,9 @@ class UserModel {
       email: json['email'] as String,
       displayName: json['displayName'] as String,
       avatarUrl: json['avatarUrl'] as String?,
+      bio: json['bio'] as String?,
+      coverPhoto: json['coverPhoto'] as String?,
+      friendsCount: (json['friendsCount'] as num?)?.toInt(),
     );
   }
 
@@ -28,6 +37,9 @@ class UserModel {
         'email': email,
         'displayName': displayName,
         if (avatarUrl != null) 'avatarUrl': avatarUrl,
+        if (bio != null) 'bio': bio,
+        if (coverPhoto != null) 'coverPhoto': coverPhoto,
+        if (friendsCount != null) 'friendsCount': friendsCount,
       };
 }
 

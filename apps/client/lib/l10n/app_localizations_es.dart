@@ -538,4 +538,64 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get callUnknownCaller => 'Alguien';
+
+  @override
+  String get profileTitle => 'Perfil';
+
+  @override
+  String get editProfile => 'Editar perfil';
+
+  @override
+  String get bio => 'Biografía';
+
+  @override
+  String friendsCountLabel(int count) {
+    return '$count amigos';
+  }
+
+  @override
+  String get messageAction => 'Mensaje';
+
+  @override
+  String get activeFriends => 'Activos ahora';
+
+  @override
+  String get noFriendsOnline => 'No hay amigos en línea';
+
+  @override
+  String get strangerBannerTitle => 'Solicitud de mensaje';
+
+  @override
+  String get strangerBannerBody =>
+      'Esta persona no está en tus contactos. Acepta para responder.';
+
+  @override
+  String get acceptRequest => 'Aceptar';
+
+  @override
+  String get rejectRequest => 'Rechazar';
+
+  @override
+  String get friends => 'Amigos';
+
+  @override
+  String get contacts => 'Contactos';
+
+  @override
+  String get friendRequests => 'Solicitudes de amistad';
+
+  @override
+  String get addFriend => 'Añadir amigo';
+
+  @override
+  String get friendRequestSent => 'Solicitud de amistad enviada';
+
+  @override
+  String get acceptFriend => 'Aceptar';
+
+  @override
+  String get noFriends => 'Aún no tienes amigos';
+
+  @override
+  String get noFriendRequests => 'No hay solicitudes pendientes';
 }

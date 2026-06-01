@@ -15,7 +15,8 @@ public record ConversationResponse(
     LastMessageDto lastMessage,
     Instant lastMessageAt,
     long unreadCount,
-    Instant createdAt
+    Instant createdAt,
+    String status
 ) {
     public record LastMessageDto(String content, String senderId, Instant createdAt) {}
 }

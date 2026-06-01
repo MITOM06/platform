@@ -177,5 +177,25 @@
   "callCalling": "Appel de {name}…",
   "callConnecting": "Connexion…",
   "callMediaError": "Impossible d'accéder à la caméra/au micro (HTTPS ou localhost requis)",
-  "callUnknownCaller": "Quelqu'un"
+  "callUnknownCaller": "Quelqu'un",
+
+  "profileTitle": "Profil",
+  "editProfile": "Modifier le profil",
+  "bio": "Bio",
+  "friendsCountLabel": "{count} amis",
+  "messageAction": "Message",
+  "activeFriends": "Actifs maintenant",
+  "noFriendsOnline": "Aucun ami en ligne",
+  "strangerBannerTitle": "Demande de message",
+  "strangerBannerBody": "Cette personne n'est pas dans vos contacts. Acceptez pour répondre.",
+  "acceptRequest": "Accepter",
+  "rejectRequest": "Refuser",
+  "friends": "Amis",
+  "contacts": "Contacts",
+  "friendRequests": "Demandes d'ami",
+  "addFriend": "Ajouter",
+  "friendRequestSent": "Demande d'ami envoyée",
+  "acceptFriend": "Accepter",
+  "noFriends": "Aucun ami pour l'instant",
+  "noFriendRequests": "Aucune demande en attente"
 }

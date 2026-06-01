@@ -10,6 +10,7 @@ import '../../auth/domain/auth_provider.dart';
 import '../../auth/domain/auth_state.dart';
 import '../domain/chat_provider.dart';
 import '../domain/chat_state.dart';
+import 'widgets/active_friends_row.dart';
 import 'widgets/conversation_avatar.dart';
 
 class ConversationListScreen extends ConsumerStatefulWidget {
@@ -73,6 +74,11 @@ class _ConversationListScreenState extends ConsumerState<ConversationListScreen>
               ],
             ),
             actions: [
+              IconButton(
+                icon: const Icon(Icons.people_alt_outlined),
+                tooltip: context.l10n.contacts,
+                onPressed: () => context.push('/friends'),
+              ),
               Padding(
                 padding: const EdgeInsets.only(right: 8.0),
                 child: IconButton(
@@ -149,6 +155,7 @@ class _ConversationListScreenState extends ConsumerState<ConversationListScreen>
             loading: () => const SizedBox.shrink(),
             error: (_, __) => const SizedBox.shrink(),
           ),
+          const ActiveFriendsRow(),
           Expanded(
             child: Stack(
               children: [

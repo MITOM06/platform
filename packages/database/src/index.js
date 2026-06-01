@@ -20,6 +20,7 @@ __exportStar(require("./redis/redis.module"), exports);
 var ioredis_1 = require("ioredis");
 Object.defineProperty(exports, "Redis", { enumerable: true, get: function () { return ioredis_1.Redis; } });
 __exportStar(require("./mongo/user.schema"), exports);
+__exportStar(require("./mongo/friendship.schema"), exports);
 var redis_module_1 = require("./redis/redis.module");
 Object.defineProperty(exports, "REDIS_CLIENT", { enumerable: true, get: function () { return redis_module_1.REDIS_CLIENT; } });
 //# sourceMappingURL=index.js.map

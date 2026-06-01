@@ -23,6 +23,12 @@ export class User {
   @Prop()
   avatarUrl: string;
 
+  @Prop()
+  bio: string;
+
+  @Prop()
+  coverPhoto: string;
+
   @Prop({ unique: true, sparse: true })
   email: string;
 

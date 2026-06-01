@@ -177,5 +177,25 @@
   "callCalling": "正在呼叫 {name}…",
   "callConnecting": "连接中…",
   "callMediaError": "无法访问摄像头/麦克风（需要 HTTPS 或 localhost）",
-  "callUnknownCaller": "某人"
+  "callUnknownCaller": "某人",
+
+  "profileTitle": "个人资料",
+  "editProfile": "编辑资料",
+  "bio": "简介",
+  "friendsCountLabel": "{count} 位好友",
+  "messageAction": "发消息",
+  "activeFriends": "在线好友",
+  "noFriendsOnline": "没有好友在线",
+  "strangerBannerTitle": "消息请求",
+  "strangerBannerBody": "此人不在你的联系人中。接受后即可回复。",
+  "acceptRequest": "接受",
+  "rejectRequest": "拒绝",
+  "friends": "好友",
+  "contacts": "通讯录",
+  "friendRequests": "好友请求",
+  "addFriend": "加为好友",
+  "friendRequestSent": "好友请求已发送",
+  "acceptFriend": "接受",
+  "noFriends": "还没有好友",
+  "noFriendRequests": "没有待处理的请求"
 }

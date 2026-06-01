@@ -525,4 +525,63 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get callUnknownCaller => '누군가';
+
+  @override
+  String get profileTitle => '프로필';
+
+  @override
+  String get editProfile => '프로필 편집';
+
+  @override
+  String get bio => '소개';
+
+  @override
+  String friendsCountLabel(int count) {
+    return '친구 $count명';
+  }
+
+  @override
+  String get messageAction => '메시지';
+
+  @override
+  String get activeFriends => '온라인 친구';
+
+  @override
+  String get noFriendsOnline => '온라인 친구가 없습니다';
+
+  @override
+  String get strangerBannerTitle => '메시지 요청';
+
+  @override
+  String get strangerBannerBody => '이 사람은 연락처에 없습니다. 답장하려면 수락하세요.';
+
+  @override
+  String get acceptRequest => '수락';
+
+  @override
+  String get rejectRequest => '거절';
+
+  @override
+  String get friends => '친구';
+
+  @override
+  String get contacts => '연락처';
+
+  @override
+  String get friendRequests => '친구 요청';
+
+  @override
+  String get addFriend => '친구 추가';
+
+  @override
+  String get friendRequestSent => '친구 요청을 보냈습니다';
+
+  @override
+  String get acceptFriend => '수락';
+
+  @override
+  String get noFriends => '아직 친구가 없습니다';
+
+  @override
+  String get noFriendRequests => '대기 중인 요청이 없습니다';
 }

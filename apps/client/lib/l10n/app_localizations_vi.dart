@@ -531,4 +531,64 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get callUnknownCaller => 'Ai đó';
+
+  @override
+  String get profileTitle => 'Trang cá nhân';
+
+  @override
+  String get editProfile => 'Chỉnh sửa trang cá nhân';
+
+  @override
+  String get bio => 'Tiểu sử';
+
+  @override
+  String friendsCountLabel(int count) {
+    return '$count bạn bè';
+  }
+
+  @override
+  String get messageAction => 'Nhắn tin';
+
+  @override
+  String get activeFriends => 'Đang hoạt động';
+
+  @override
+  String get noFriendsOnline => 'Không có bạn nào trực tuyến';
+
+  @override
+  String get strangerBannerTitle => 'Yêu cầu nhắn tin';
+
+  @override
+  String get strangerBannerBody =>
+      'Người này không nằm trong danh bạ của bạn. Chấp nhận để trả lời.';
+
+  @override
+  String get acceptRequest => 'Chấp nhận';
+
+  @override
+  String get rejectRequest => 'Từ chối';
+
+  @override
+  String get friends => 'Bạn bè';
+
+  @override
+  String get contacts => 'Danh bạ';
+
+  @override
+  String get friendRequests => 'Lời mời kết bạn';
+
+  @override
+  String get addFriend => 'Kết bạn';
+
+  @override
+  String get friendRequestSent => 'Đã gửi lời mời kết bạn';
+
+  @override
+  String get acceptFriend => 'Chấp nhận';
+
+  @override
+  String get noFriends => 'Chưa có bạn bè';
+
+  @override
+  String get noFriendRequests => 'Không có lời mời nào';
 }

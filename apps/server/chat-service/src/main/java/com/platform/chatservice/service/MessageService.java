@@ -85,6 +85,11 @@ public class MessageService {
         conversation.setLastMessageAt(sentAt);
         // A new message un-hides the conversation for everyone who had deleted it.
         conversation.setHiddenFor(new ArrayList<>());
+        // A reply from the recipient of a stranger request accepts it.
+        if (Conversation.STATUS_PENDING.equals(conversation.getStatus())
+            && !senderId.equals(conversation.getCreatedBy())) {
+            conversation.setStatus(Conversation.STATUS_ACCEPTED);
+        }
         conversationRepository.save(conversation);
 
         return toResponse(message);

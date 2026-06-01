@@ -177,5 +177,25 @@
   "callCalling": "Đang gọi {name}…",
   "callConnecting": "Đang kết nối…",
   "callMediaError": "Không thể truy cập camera/micro (cần HTTPS hoặc localhost)",
-  "callUnknownCaller": "Ai đó"
+  "callUnknownCaller": "Ai đó",
+
+  "profileTitle": "Trang cá nhân",
+  "editProfile": "Chỉnh sửa trang cá nhân",
+  "bio": "Tiểu sử",
+  "friendsCountLabel": "{count} bạn bè",
+  "messageAction": "Nhắn tin",
+  "activeFriends": "Đang hoạt động",
+  "noFriendsOnline": "Không có bạn nào trực tuyến",
+  "strangerBannerTitle": "Yêu cầu nhắn tin",
+  "strangerBannerBody": "Người này không nằm trong danh bạ của bạn. Chấp nhận để trả lời.",
+  "acceptRequest": "Chấp nhận",
+  "rejectRequest": "Từ chối",
+  "friends": "Bạn bè",
+  "contacts": "Danh bạ",
+  "friendRequests": "Lời mời kết bạn",
+  "addFriend": "Kết bạn",
+  "friendRequestSent": "Đã gửi lời mời kết bạn",
+  "acceptFriend": "Chấp nhận",
+  "noFriends": "Chưa có bạn bè",
+  "noFriendRequests": "Không có lời mời nào"
 }

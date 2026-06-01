@@ -618,8 +618,13 @@ class _ThemeDialogOption extends ConsumerWidget {
           ? Icon(Icons.check_circle_rounded, color: activeColor, size: 20)
           : null,
       onTap: () {
-        ref.read(themeModeNotifierProvider.notifier).setThemeMode(themeMode);
+        // Close the dialog first, then apply the theme on the next microtask so
+        // the MaterialApp rebuild doesn't fire while the route is being popped
+        // (caused a crash / red error when toggling modes rapidly).
         Navigator.pop(context);
+        Future.microtask(
+          () => ref.read(themeModeNotifierProvider.notifier).setThemeMode(themeMode),
+        );
       },
     );
   }

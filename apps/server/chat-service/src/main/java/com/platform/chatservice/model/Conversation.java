@@ -21,6 +21,10 @@ public class Conversation {
     public static final String TYPE_DIRECT = "direct";
     public static final String TYPE_GROUP = "group";
 
+    /** Stranger-request states. Legacy/group/friend chats are ACCEPTED. */
+    public static final String STATUS_PENDING = "pending";
+    public static final String STATUS_ACCEPTED = "accepted";
+
     @Id
     private String id;
 
@@ -40,6 +44,11 @@ public class Conversation {
 
     /** User id who created the conversation/group. */
     private String createdBy;
+
+    /** "pending" (stranger request awaiting acceptance) or "accepted". Null on
+     *  legacy docs => treated as accepted. */
+    @Builder.Default
+    private String status = STATUS_ACCEPTED;
 
     /** Disappearing-messages window in seconds; null/0 = disabled. */
     private Integer autoDeleteSeconds;
@@ -65,6 +74,11 @@ public class Conversation {
     /** Effective type, defaulting legacy docs to direct. */
     public String resolvedType() {
         return type == null ? TYPE_DIRECT : type;
+    }
+
+    /** Effective status, defaulting legacy docs to accepted. */
+    public String resolvedStatus() {
+        return status == null ? STATUS_ACCEPTED : status;
     }
 
     public boolean isGroup() {

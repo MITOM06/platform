@@ -83,6 +83,40 @@ class MessageServiceTest {
     }
 
     @Test
+    void sendMessage_ByRecipientOnPending_ShouldAcceptConversation() {
+        Conversation pending = Conversation.builder()
+            .id(CONV_ID)
+            .participants(List.of(SENDER_ID, OTHER_ID))
+            .createdBy(OTHER_ID) // OTHER started the request; SENDER is the recipient replying
+            .status(Conversation.STATUS_PENDING)
+            .build();
+        when(conversationRepository.findById(CONV_ID)).thenReturn(Optional.of(pending));
+        when(messageRepository.save(any(Message.class))).thenReturn(savedMessage);
+        when(conversationRepository.save(any(Conversation.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        messageService.sendMessage(SENDER_ID, new SendMessageRequest(CONV_ID, "Hello", "text"));
+
+        verify(conversationRepository).save(argThat(c -> Conversation.STATUS_ACCEPTED.equals(c.getStatus())));
+    }
+
+    @Test
+    void sendMessage_ByInitiatorOnPending_ShouldStayPending() {
+        Conversation pending = Conversation.builder()
+            .id(CONV_ID)
+            .participants(List.of(SENDER_ID, OTHER_ID))
+            .createdBy(SENDER_ID) // SENDER is the initiator; their message must not auto-accept
+            .status(Conversation.STATUS_PENDING)
+            .build();
+        when(conversationRepository.findById(CONV_ID)).thenReturn(Optional.of(pending));
+        when(messageRepository.save(any(Message.class))).thenReturn(savedMessage);
+        when(conversationRepository.save(any(Conversation.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        messageService.sendMessage(SENDER_ID, new SendMessageRequest(CONV_ID, "Hi", "text"));
+
+        verify(conversationRepository).save(argThat(c -> Conversation.STATUS_PENDING.equals(c.getStatus())));
+    }
+
+    @Test
     void sendMessage_ShouldDefaultTypeToText_WhenTypeIsNull() {
         when(conversationRepository.findById(CONV_ID)).thenReturn(Optional.of(conversation));
         when(messageRepository.save(any(Message.class))).thenReturn(savedMessage);

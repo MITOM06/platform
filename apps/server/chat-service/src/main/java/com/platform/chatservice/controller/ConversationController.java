@@ -96,6 +96,14 @@ public class ConversationController {
         conversationService.clearHistory(currentUserId(), id);
     }
 
+    /** Accept a pending stranger message request. */
+    @PostMapping("/{id}/accept")
+    public ConversationResponse acceptConversation(@PathVariable String id) {
+        ConversationResponse updated = conversationService.acceptConversation(currentUserId(), id);
+        broadcastConversationUpdated(updated);
+        return updated;
+    }
+
     @PutMapping("/{id}/settings")
     public ConversationResponse updateSettings(@PathVariable String id,
                                                @RequestBody AutoDeleteRequest request) {
