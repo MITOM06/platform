@@ -357,7 +357,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String membersCount(int count) {
-    return '$count 位成员';
+    return '$count 名成员';
   }
 
   @override
@@ -637,4 +637,85 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get searchNoResults => '未找到消息';
+
+  @override
+  String get exploreChannels => '探索频道';
+
+  @override
+  String get searchChannelsHint => '搜索频道…';
+
+  @override
+  String get noPublicChannels => '未找到公开频道';
+
+  @override
+  String get joinChannel => '加入';
+
+  @override
+  String get pinMessage => '置顶';
+
+  @override
+  String get forwardMessage => '转发';
+
+  @override
+  String get messageForwarded => '消息已转发';
+
+  @override
+  String get forwardFailed => '转发失败';
+
+  @override
+  String get noConversationsToForward => '没有可转发的对话';
+
+  @override
+  String get rateLimitError => '消息发送过于频繁，请放慢速度。';
+
+  @override
+  String get sharedMediaTitle => '共享媒体与文件';
+
+  @override
+  String get tabMedia => '媒体';
+
+  @override
+  String get tabFiles => '文件';
+
+  @override
+  String get tabLinks => '链接';
+
+  @override
+  String get noMediaFound => '未找到媒体';
+
+  @override
+  String get noFilesFound => '未找到文件';
+
+  @override
+  String get noLinksFound => '未找到链接';
+
+  @override
+  String get reactionsDetail => '表情反应';
+
+  @override
+  String get changePasswordTitle => '修改密码';
+
+  @override
+  String get currentPassword => '当前密码';
+
+  @override
+  String get newPassword => '新密码';
+
+  @override
+  String get confirmPassword => '确认新密码';
+
+  @override
+  String get dateOfBirth => '出生日期';
+
+  @override
+  String get notSet => '未设置';
+
+  @override
+  String get passwordChangedSuccess => '密码修改成功';
+
+  @override
+  String get errCurrentPasswordIncorrect => '当前密码不正确';
+
+  @override
+  String get changeCoverPhoto => '修改背景图片';
 }

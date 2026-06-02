@@ -637,4 +637,85 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get searchNoResults => 'メッセージが見つかりません';
+
+  @override
+  String get exploreChannels => 'チャンネルを探す';
+
+  @override
+  String get searchChannelsHint => 'チャンネルを検索…';
+
+  @override
+  String get noPublicChannels => '公開チャンネルが見つかりません';
+
+  @override
+  String get joinChannel => '参加';
+
+  @override
+  String get pinMessage => 'ピン留め';
+
+  @override
+  String get forwardMessage => '転送';
+
+  @override
+  String get messageForwarded => 'メッセージを転送しました';
+
+  @override
+  String get forwardFailed => '転送に失敗しました';
+
+  @override
+  String get noConversationsToForward => '転送先の会話がありません';
+
+  @override
+  String get rateLimitError => 'メッセージを送りすぎています。少し落ち着いてください。';
+
+  @override
+  String get sharedMediaTitle => '共有メディアとファイル';
+
+  @override
+  String get tabMedia => 'メディア';
+
+  @override
+  String get tabFiles => 'ファイル';
+
+  @override
+  String get tabLinks => 'リンク';
+
+  @override
+  String get noMediaFound => 'メディアが見つかりません';
+
+  @override
+  String get noFilesFound => 'ファイルが見つかりません';
+
+  @override
+  String get noLinksFound => 'リンクが見つかりません';
+
+  @override
+  String get reactionsDetail => 'リアクション';
+
+  @override
+  String get changePasswordTitle => 'パスワード変更';
+
+  @override
+  String get currentPassword => '現在のパスワード';
+
+  @override
+  String get newPassword => '新しいパスワード';
+
+  @override
+  String get confirmPassword => '新しいパスワードを再入力';
+
+  @override
+  String get dateOfBirth => '生年月日';
+
+  @override
+  String get notSet => '未設定';
+
+  @override
+  String get passwordChangedSuccess => 'パスワードを正常に変更しました';
+
+  @override
+  String get errCurrentPasswordIncorrect => '現在のパスワードが正しくありません';
+
+  @override
+  String get changeCoverPhoto => 'カバー写真を変更';
 }

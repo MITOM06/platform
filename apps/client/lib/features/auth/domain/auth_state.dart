@@ -9,6 +9,7 @@ class UserModel {
   final String? bio;
   final String? coverPhoto;
   final int? friendsCount;
+  final DateTime? dateOfBirth;
 
   const UserModel({
     required this.id,
@@ -18,6 +19,7 @@ class UserModel {
     this.bio,
     this.coverPhoto,
     this.friendsCount,
+    this.dateOfBirth,
   });
 
   factory UserModel.fromJson(Map<String, dynamic> json) {
@@ -29,6 +31,9 @@ class UserModel {
       bio: json['bio'] as String?,
       coverPhoto: json['coverPhoto'] as String?,
       friendsCount: (json['friendsCount'] as num?)?.toInt(),
+      dateOfBirth: json['dateOfBirth'] != null
+          ? DateTime.tryParse(json['dateOfBirth'] as String)
+          : null,
     );
   }
 
@@ -40,6 +45,7 @@ class UserModel {
         if (bio != null) 'bio': bio,
         if (coverPhoto != null) 'coverPhoto': coverPhoto,
         if (friendsCount != null) 'friendsCount': friendsCount,
+        if (dateOfBirth != null) 'dateOfBirth': dateOfBirth!.toIso8601String(),
       };
 }
 

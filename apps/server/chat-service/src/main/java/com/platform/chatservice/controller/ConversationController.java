@@ -10,10 +10,12 @@ import com.platform.chatservice.dto.PageResponse;
 import com.platform.chatservice.dto.UpdateConversationRequest;
 import com.platform.chatservice.exception.UnauthorizedException;
 import com.platform.chatservice.security.UserPrincipal;
+import com.platform.chatservice.service.AttachmentService;
 import com.platform.chatservice.service.ConversationService;
 import com.platform.chatservice.service.MessageService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -29,6 +31,7 @@ public class ConversationController {
 
     private final ConversationService conversationService;
     private final MessageService messageService;
+    private final AttachmentService attachmentService;
     private final SimpMessagingTemplate messagingTemplate;
 
     @GetMapping
@@ -118,12 +121,54 @@ public class ConversationController {
      * the client already has to fetch the next older page; omit it for the most
      * recent page.
      */
+    /** List all public group channels, optionally filtered by name (Task 52). */
+    @GetMapping("/public")
+    public PageResponse<ConversationResponse> listPublicChannels(
+            @RequestParam(required = false) String q,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+        return conversationService.listPublicChannels(q, PageRequest.of(page, size));
+    }
+
+    /** Join a public channel (Task 52). */
+    @PostMapping("/{id}/join")
+    public ConversationResponse joinChannel(@PathVariable String id) {
+        ConversationResponse updated = conversationService.joinChannel(currentUserId(), id);
+        broadcastConversationUpdated(updated);
+        broadcastSystem(id, "system.member.joined");
+        return updated;
+    }
+
+    /**
+     * Cursor-based fetch ({@code before} = oldest message id known) for normal
+     * pagination, or catch-up fetch ({@code after} = ISO timestamp of newest
+     * known message) for the offline reconnect flow (Task 55).
+     */
     @GetMapping("/{conversationId}/messages")
     public PageResponse<MessageResponse> getMessages(
             @PathVariable String conversationId,
             @RequestParam(required = false) String before,
+            @RequestParam(required = false) String after,
             @RequestParam(defaultValue = "20") int size) {
+        if (after != null && !after.isBlank()) {
+            java.time.Instant afterTimestamp = java.time.Instant.parse(after);
+            List<MessageResponse> content =
+                messageService.getMessagesSince(currentUserId(), conversationId, afterTimestamp);
+            return new PageResponse<>(content, 0, content.size(), content.size());
+        }
         return messageService.getMessages(currentUserId(), conversationId, before, size);
+    }
+
+    /** Shared media/files/links gallery (Task 57). */
+    @GetMapping("/{conversationId}/attachments")
+    public PageResponse<MessageResponse> getSharedAttachments(
+            @PathVariable String conversationId,
+            @RequestParam(defaultValue = "media") String type,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "30") int size) {
+        return attachmentService.getSharedAttachments(
+            currentUserId(), conversationId, type,
+            PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt")));
     }
 
     private void broadcastConversationUpdated(ConversationResponse conversation) {

@@ -19,9 +19,17 @@ export class UsersController {
   @Patch('me')
   updateMe(
     @Req() req: any,
-    @Body() body: { displayName?: string; avatarUrl?: string; bio?: string; coverPhoto?: string },
+    @Body() body: { displayName?: string; avatarUrl?: string; bio?: string; coverPhoto?: string; dateOfBirth?: string },
   ) {
     return this.usersService.updateProfile(req.user.sub, body);
+  }
+
+  @Post('me/change-password')
+  changePassword(
+    @Req() req: any,
+    @Body() body: { currentPassword?: string; newPassword?: string },
+  ) {
+    return this.usersService.changePassword(req.user.sub, body.currentPassword, body.newPassword);
   }
 
   @Post('device-tokens')

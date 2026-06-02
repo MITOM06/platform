@@ -5,6 +5,7 @@ import com.platform.chatservice.dto.MessageResponse;
 import com.platform.chatservice.dto.SendMessageRequest;
 import com.platform.chatservice.service.ConversationService;
 import com.platform.chatservice.service.MessageService;
+import com.platform.chatservice.service.RateLimiterService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -41,6 +42,9 @@ class ChatControllerTest {
 
     @Mock
     private com.platform.chatservice.service.FcmService fcmService;
+
+    @Mock
+    private RateLimiterService rateLimiterService;
 
     @InjectMocks
     private ChatController chatController;

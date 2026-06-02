@@ -23,7 +23,12 @@ class StompService extends _$StompService {
   final _convUpdateCtrl = StreamController<ConversationModel>.broadcast();
   final _webrtcCtrl = StreamController<Map<String, dynamic>>.broadcast();
   final _presenceCtrl = StreamController<PresenceEvent>.broadcast();
+  final _pinCtrl = StreamController<PinnedMessageEvent>.broadcast();
+  // Emits whenever a STOMP reconnect completes (not on first connect).
+  final _reconnectCtrl = StreamController<void>.broadcast();
   bool _presenceSubPending = false;
+  // Tracks whether we have successfully connected at least once this session.
+  bool _everConnected = false;
 
   @override
   void build() {}
@@ -38,6 +43,9 @@ class StompService extends _$StompService {
   Stream<ConversationModel> get conversationUpdates => _convUpdateCtrl.stream;
   Stream<Map<String, dynamic>> get webrtcSignals => _webrtcCtrl.stream;
   Stream<PresenceEvent> get presence => _presenceCtrl.stream;
+  Stream<PinnedMessageEvent> get pinnedMessageUpdates => _pinCtrl.stream;
+  // Fires whenever the STOMP socket reconnects after a prior disconnect.
+  Stream<void> get reconnects => _reconnectCtrl.stream;
 
   bool get isConnected => _client?.connected ?? false;
 
@@ -58,6 +66,12 @@ class StompService extends _$StompService {
   }
 
   void _onConnect(StompFrame frame) {
+    // Emit on the reconnect stream if this is not the initial connection.
+    if (_everConnected) {
+      _reconnectCtrl.add(null);
+    }
+    _everConnected = true;
+
     // Re-establish all pending subscriptions after connect/reconnect
     if (_notifSubPending) _doSubscribeNotifications();
     if (_presenceSubPending) _doSubscribePresence();
@@ -129,6 +143,13 @@ class StompService extends _$StompService {
           case 'CONVERSATION_UPDATED':
             _convUpdateCtrl.add(ConversationModel.fromJson(
                 data['conversation'] as Map<String, dynamic>));
+            return;
+          case 'PINNED_MESSAGE':
+            _pinCtrl.add(PinnedMessageEvent(
+              conversationId: data['conversationId'] as String? ?? conversationId,
+              pinnedMessageIds: List<String>.from(
+                  data['pinnedMessages'] as List? ?? []),
+            ));
             return;
         }
         _messageCtrl.add(MessageModel.fromJson(data));

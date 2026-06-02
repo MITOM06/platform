@@ -216,6 +216,7 @@ class PonTextField extends StatefulWidget {
   final TextStyle? style;
   final List<dynamic>? inputFormatters;
   final ValueChanged<String>? onChanged;
+  final bool? enabled;
 
   const PonTextField({
     super.key,
@@ -235,6 +236,7 @@ class PonTextField extends StatefulWidget {
     this.style,
     this.inputFormatters,
     this.onChanged,
+    this.enabled,
   });
 
   @override
@@ -298,6 +300,7 @@ class _PonTextFieldState extends State<PonTextField> {
         maxLength: widget.maxLength,
         style: widget.style,
         onChanged: widget.onChanged,
+        enabled: widget.enabled,
         inputFormatters: widget.inputFormatters != null
             ? List<TextInputFormatter>.from(widget.inputFormatters!)
             : null,

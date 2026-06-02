@@ -87,13 +87,16 @@ export class UsersService {
 
   async updateProfile(
     userId: string,
-    data: { displayName?: string; avatarUrl?: string; bio?: string; coverPhoto?: string },
+    data: { displayName?: string; avatarUrl?: string; bio?: string; coverPhoto?: string; dateOfBirth?: string },
   ): Promise<UserDocument | null> {
     const updateData: any = {};
     if (data.displayName !== undefined) updateData.displayName = data.displayName;
     if (data.avatarUrl !== undefined) updateData.avatarUrl = data.avatarUrl;
     if (data.bio !== undefined) updateData.bio = data.bio;
     if (data.coverPhoto !== undefined) updateData.coverPhoto = data.coverPhoto;
+    if (data.dateOfBirth !== undefined) {
+      updateData.dateOfBirth = data.dateOfBirth ? new Date(data.dateOfBirth) : null;
+    }
 
     if (Object.keys(updateData).length > 0) {
       return this.userModel.findByIdAndUpdate(
@@ -103,6 +106,36 @@ export class UsersService {
       ).select('-password').exec();
     }
     return this.findById(userId);
+  }
+
+  async changePassword(
+    userId: string,
+    currentPassword?: string,
+    newPassword?: string,
+  ): Promise<{ success: boolean }> {
+    if (!newPassword || newPassword.length < 6) {
+      throw new ConflictException('New password must be at least 6 characters');
+    }
+
+    const user = await this.userModel.findById(userId).select('+password').exec();
+    if (!user) {
+      throw new ConflictException('User not found');
+    }
+
+    if (user.password) {
+      if (!currentPassword) {
+        throw new ConflictException('Current password is required');
+      }
+      const isMatch = await bcrypt.compare(currentPassword, user.password);
+      if (!isMatch) {
+        throw new ConflictException('Incorrect current password');
+      }
+    }
+
+    const salt = await bcrypt.genSalt(10);
+    const hash = await bcrypt.hash(newPassword, salt);
+    await this.updatePassword(userId, hash);
+    return { success: true };
   }
 
   async addDeviceToken(userId: string, token: string): Promise<void> {

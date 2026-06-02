@@ -74,6 +74,11 @@ class _ConversationListScreenState
             ),
             actions: [
               IconButton(
+                icon: const Icon(Icons.explore_outlined),
+                tooltip: context.l10n.exploreChannels,
+                onPressed: () => context.push('/explore'),
+              ),
+              IconButton(
                 icon: const Icon(Icons.group_add_outlined),
                 tooltip: context.l10n.createGroup,
                 onPressed: () => context.push('/new-group'),

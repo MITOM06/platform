@@ -1,12 +1,18 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../domain/chat_provider.dart';
 import 'link_preview_card.dart';
 
 final RegExp urlRegex = RegExp(r'(https?:\/\/[^\s]+)', caseSensitive: false);
+
+// Detects common markdown syntax so we can switch to MarkdownBody.
+final RegExp _markdownPattern =
+    RegExp(r'\*\*|__|\*|_|`|^#{1,6} |^\* |^\d+\. ', multiLine: true);
 
 class TextContent extends ConsumerStatefulWidget {
   final String content;
@@ -43,14 +49,12 @@ class _TextContentState extends ConsumerState<TextContent> {
     _recognizers.clear();
 
     final url = urlRegex.firstMatch(widget.content)?.group(0);
-    final baseStyle = TextStyle(
-      color: widget.isSentByMe
-          ? Colors.white
-          : Colors.white.withValues(alpha: 0.9),
-      fontSize: 14.5,
-      height: 1.35,
-    );
+    final baseColor = widget.isSentByMe
+        ? Colors.white
+        : Colors.white.withValues(alpha: 0.9);
+    final baseStyle = TextStyle(color: baseColor, fontSize: 14.5, height: 1.35);
 
+    // Build mention map (uid → displayName) for highlighting.
     final mentionMap = <String, String>{};
     for (final uid in widget.mentions) {
       final name =
@@ -60,13 +64,34 @@ class _TextContentState extends ConsumerState<TextContent> {
       }
     }
 
-    final Widget textWidget = mentionMap.isEmpty
-        ? Text(widget.content, style: baseStyle)
-        : Text.rich(
-            TextSpan(
-              children: _buildSpans(context, mentionMap, baseStyle),
-            ),
-          );
+    final hasMarkdown = _markdownPattern.hasMatch(widget.content);
+
+    final Widget textWidget;
+    if (!hasMarkdown || mentionMap.isNotEmpty) {
+      // Plain text or content with mentions: use Text.rich for mention spans.
+      textWidget = mentionMap.isEmpty
+          ? Text(widget.content, style: baseStyle)
+          : Text.rich(
+              TextSpan(
+                children: _buildSpans(context, mentionMap, baseStyle),
+              ),
+            );
+    } else {
+      // Markdown rendering (no mentions in this branch).
+      textWidget = MarkdownBody(
+        data: widget.content,
+        styleSheet: _mdStyleSheet(context, baseColor),
+        onTapLink: (text, href, title) async {
+          if (href == null) return;
+          final uri = Uri.tryParse(href);
+          if (uri != null && await canLaunchUrl(uri)) {
+            await launchUrl(uri, mode: LaunchMode.externalApplication);
+          }
+        },
+        shrinkWrap: true,
+        fitContent: true,
+      );
+    }
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -78,6 +103,42 @@ class _TextContentState extends ConsumerState<TextContent> {
           LinkPreviewCard(url: url),
         ],
       ],
+    );
+  }
+
+  MarkdownStyleSheet _mdStyleSheet(BuildContext context, Color textColor) {
+    final base = TextStyle(color: textColor, fontSize: 14.5, height: 1.35);
+    return MarkdownStyleSheet(
+      p: base,
+      strong: base.copyWith(fontWeight: FontWeight.bold),
+      em: base.copyWith(fontStyle: FontStyle.italic),
+      code: base.copyWith(
+        fontFamily: 'monospace',
+        fontSize: 13,
+        color: AppTheme.ponCyan,
+        backgroundColor: Colors.black26,
+      ),
+      codeblockDecoration: BoxDecoration(
+        color: Colors.black26,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      listBullet: base,
+      h1: base.copyWith(fontSize: 20, fontWeight: FontWeight.bold),
+      h2: base.copyWith(fontSize: 17, fontWeight: FontWeight.bold),
+      h3: base.copyWith(fontSize: 15, fontWeight: FontWeight.w600),
+      a: base.copyWith(
+        color: AppTheme.ponCyan,
+        decoration: TextDecoration.underline,
+      ),
+      blockquote: base.copyWith(
+        color: textColor.withValues(alpha: 0.7),
+        fontStyle: FontStyle.italic,
+      ),
+      blockquoteDecoration: BoxDecoration(
+        border: const Border(
+            left: BorderSide(color: AppTheme.ponCyan, width: 3)),
+        color: AppTheme.ponCyan.withValues(alpha: 0.05),
+      ),
     );
   }
 

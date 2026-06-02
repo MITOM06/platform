@@ -124,6 +124,14 @@ class GroupInfoScreen extends ConsumerWidget {
                 ),
               const Divider(color: Colors.white12),
               ListTile(
+                leading: const Icon(Icons.perm_media_outlined, color: AppTheme.ponCyan),
+                title: Text(context.l10n.sharedMediaTitle,
+                    style: const TextStyle(color: Colors.white)),
+                trailing: const Icon(Icons.chevron_right, color: Colors.white38),
+                onTap: () => context.push('/shared-media/$conversationId'),
+              ),
+              const Divider(color: Colors.white12),
+              ListTile(
                 leading: const Icon(Icons.logout_rounded, color: Colors.redAccent),
                 title: Text(context.l10n.leaveGroup,
                     style: const TextStyle(color: Colors.redAccent)),

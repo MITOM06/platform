@@ -121,12 +121,14 @@ class AuthRepository {
     String? avatarUrl,
     String? bio,
     String? coverPhoto,
+    DateTime? dateOfBirth,
   }) async {
     final response = await _dio.patch('/api/users/me', data: {
       if (displayName != null) 'displayName': displayName,
       if (avatarUrl != null) 'avatarUrl': avatarUrl,
       if (bio != null) 'bio': bio,
       if (coverPhoto != null) 'coverPhoto': coverPhoto,
+      if (dateOfBirth != null) 'dateOfBirth': dateOfBirth.toUtc().toIso8601String(),
     });
     
     final updated = UserModel.fromJson(response.data as Map<String, dynamic>);
@@ -137,8 +139,14 @@ class AuthRepository {
       await _storage.write(key: _keyUser, value: jsonEncode(updated.toJson()));
     }
     
-    
     return updated;
+  }
+
+  Future<void> changePassword(String currentPassword, String newPassword) async {
+    await _dio.post('/api/users/me/change-password', data: {
+      'currentPassword': currentPassword,
+      'newPassword': newPassword,
+    });
   }
 
   Future<void> updateFcmToken(String token) async {

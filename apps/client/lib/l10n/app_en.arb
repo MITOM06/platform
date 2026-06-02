@@ -260,5 +260,37 @@
   "@mentionNotificationBody": { "placeholders": { "name": { "type": "String" } } },
   "searchMessages": "Search messages",
   "searchHint": "Search in conversation",
-  "searchNoResults": "No messages found"
+  "searchNoResults": "No messages found",
+
+  "exploreChannels": "Explore Channels",
+  "searchChannelsHint": "Search channels…",
+  "noPublicChannels": "No public channels found",
+  "joinChannel": "Join",
+  "membersCount": "{count} members",
+  "@membersCount": { "placeholders": { "count": { "type": "int" } } },
+
+  "pinMessage": "Pin",
+  "forwardMessage": "Forward",
+  "messageForwarded": "Message forwarded",
+  "forwardFailed": "Failed to forward message",
+  "noConversationsToForward": "No conversations available",
+  "rateLimitError": "Too many messages. Please slow down.",
+
+  "sharedMediaTitle": "Shared Media & Files",
+  "tabMedia": "Media",
+  "tabFiles": "Files",
+  "tabLinks": "Links",
+  "noMediaFound": "No media found",
+  "noFilesFound": "No files found",
+  "noLinksFound": "No links found",
+  "reactionsDetail": "Reactions",
+  "changePasswordTitle": "Change Password",
+  "currentPassword": "Current Password",
+  "newPassword": "New Password",
+  "confirmPassword": "Confirm New Password",
+  "dateOfBirth": "Date of Birth",
+  "notSet": "Not set",
+  "passwordChangedSuccess": "Password changed successfully",
+  "errCurrentPasswordIncorrect": "Incorrect current password",
+  "changeCoverPhoto": "Change cover photo"
 }

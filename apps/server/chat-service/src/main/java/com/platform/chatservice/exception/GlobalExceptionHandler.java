@@ -6,6 +6,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
@@ -53,6 +54,13 @@ public class GlobalExceptionHandler {
             "message", ex.getMessage(),
             "statusCode", 400
         ));
+    }
+
+    @ExceptionHandler(RateLimitExceededException.class)
+    public ResponseEntity<Map<String, Object>> handleRateLimit(RateLimitExceededException ex) {
+        return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
+            .header("Retry-After", "5")
+            .body(Map.of("error", "Too Many Requests", "message", ex.getMessage(), "statusCode", 429));
     }
 
     @ExceptionHandler(RuntimeException.class)

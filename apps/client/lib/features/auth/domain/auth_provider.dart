@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import '../../../core/config/firebase_web_config.dart';
+import '../../chat/domain/chat_provider.dart';
 import '../data/auth_repository.dart';
 import 'auth_state.dart';
 
@@ -64,17 +65,22 @@ class AuthNotifier extends _$AuthNotifier {
     String? avatarUrl,
     String? bio,
     String? coverPhoto,
+    DateTime? dateOfBirth,
   }) async {
-    state = const AsyncLoading();
-    state = await AsyncValue.guard(() async {
-      final updated =
-          await ref.read(authRepositoryProvider).updateProfile(
-                displayName: displayName,
-                avatarUrl: avatarUrl,
-                bio: bio,
-                coverPhoto: coverPhoto,
-              );
-      return AuthAuthenticated(updated);
-    });
+    // Do NOT route through AsyncLoading/guard here: a transient AsyncLoading
+    // wipes the cached user (avatar/name flicker to placeholder), and an
+    // AsyncError on failure would make the router treat the user as
+    // unauthenticated and bounce them to /login. Instead keep the current
+    // authenticated state, let failures propagate to the caller's try/catch,
+    // and only commit new state on success.
+    final updated = await ref.read(authRepositoryProvider).updateProfile(
+          displayName: displayName,
+          avatarUrl: avatarUrl,
+          bio: bio,
+          coverPhoto: coverPhoto,
+          dateOfBirth: dateOfBirth,
+        );
+    ref.invalidate(userProfileProvider(updated.id));
+    state = AsyncData(AuthAuthenticated(updated));
   }
 }

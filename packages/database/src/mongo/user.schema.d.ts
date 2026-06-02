@@ -10,6 +10,7 @@ export declare class User {
     avatarUrl: string;
     bio: string;
     coverPhoto: string;
+    dateOfBirth?: Date;
     email: string;
     phoneNumber: string;
     password: string;

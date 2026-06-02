@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:dio/dio.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import '../../auth/data/auth_repository.dart';
@@ -188,6 +189,12 @@ class ConversationsNotifier extends _$ConversationsNotifier {
       state = AsyncData(updated);
     } else if (type == 'new_conversation') {
       refresh();
+    } else if (type == 'RATE_LIMITED') {
+      final context =
+          ref.read(appRouterProvider).routerDelegate.navigatorKey.currentContext;
+      showErrorSnackBar(context != null
+          ? context.l10n.rateLimitError
+          : 'Too many messages. Please slow down.');
     }
   }
 
@@ -222,6 +229,13 @@ class ChatNotifier extends _$ChatNotifier {
   StreamSubscription<ReactionUpdateEvent>? _reactionSub;
   StreamSubscription<RecallEvent>? _recallSub;
   StreamSubscription<MessageUpdateEvent>? _editSub;
+  StreamSubscription<PinnedMessageEvent>? _pinSub;
+  StreamSubscription<void>? _reconnectSub;
+
+  /// Message ids with a reaction request in flight. Guards against rapid
+  /// repeated double-taps spamming the server with add/remove churn before the
+  /// authoritative REACTION_UPDATED broadcast lands.
+  final Set<String> _reactionInFlight = {};
 
   @override
   Future<ChatState> build(String conversationId) async {
@@ -253,6 +267,12 @@ class ChatNotifier extends _$ChatNotifier {
         .where((e) => e.conversationId == conversationId)
         .listen(_onEdit);
 
+    _pinSub = stomp.pinnedMessageUpdates
+        .where((e) => e.conversationId == conversationId)
+        .listen(_onPinnedMessage);
+
+    _reconnectSub = stomp.reconnects.listen((_) => _catchupMessages());
+
     ref.onDispose(() {
       _messageSub?.cancel();
       _typingSub?.cancel();
@@ -260,6 +280,8 @@ class ChatNotifier extends _$ChatNotifier {
       _reactionSub?.cancel();
       _recallSub?.cancel();
       _editSub?.cancel();
+      _pinSub?.cancel();
+      _reconnectSub?.cancel();
       _typingTimer?.cancel();
       for (final t in _typingTimers.values) {
         t.cancel();
@@ -268,17 +290,19 @@ class ChatNotifier extends _$ChatNotifier {
       stomp.unsubscribeConversation(conversationId);
     });
 
-    // API returns DESC (newest first) — use directly with ListView(reverse: true)
-    final paged =
-        await ref.read(chatRepositoryProvider).getMessages(conversationId, size: 20);
-    // On entry, persist read state on the server for messages that arrived while
-    // we were away. The local unread badge is already reset by
-    // ConversationsNotifier.markConversationRead, but without this the badge would
-    // reappear after the next list reload (server recomputes unreadCount).
+    final repo = ref.read(chatRepositoryProvider);
+    // Fetch messages and conversation in parallel for initial load.
+    final results = await Future.wait([
+      repo.getMessages(conversationId, size: 20),
+      repo.getConversation(conversationId),
+    ]);
+    final paged = results[0] as PagedResult<MessageModel>;
+    final conv = results[1] as ConversationModel;
     _markLoadedAsRead(paged.content);
     return ChatState(
       messages: paged.content,
       hasMore: paged.hasNext,
+      pinnedMessages: conv.pinnedMessages,
     );
   }
 
@@ -295,6 +319,36 @@ class ChatNotifier extends _$ChatNotifier {
           repo.markAsRead(m.id).ignore();
         }
       }
+    }
+  }
+
+  /// Task 55 — fetch messages that arrived while we were offline and merge them
+  /// into the current state without duplicates. Called on every STOMP reconnect.
+  Future<void> _catchupMessages() async {
+    final current = state.valueOrNull;
+    if (current == null) return;
+    final nonPending = current.messages.where((m) => !m.isPending).toList();
+    if (nonPending.isEmpty) return;
+    // Messages list is newest-first; nonPending.first is the most recent.
+    final newestAt = nonPending.first.createdAt;
+    try {
+      final fresh = await ref
+          .read(chatRepositoryProvider)
+          .getMessagesSince(conversationId, newestAt);
+      if (fresh.isEmpty) return;
+      final c = state.valueOrNull;
+      if (c == null) return;
+      final existingIds = c.messages.map((m) => m.id).toSet();
+      final newMessages =
+          fresh.where((m) => !existingIds.contains(m.id)).toList();
+      if (newMessages.isEmpty) return;
+      // fresh is oldest-first; reverse so newest is at index 0.
+      state = AsyncData(c.copyWith(
+        messages: [...newMessages.reversed, ...c.messages],
+      ));
+      _markLoadedAsRead(newMessages);
+    } catch (_) {
+      // Best-effort: failed catch-up is non-fatal; user can pull-to-refresh.
     }
   }
 
@@ -379,6 +433,24 @@ class ChatNotifier extends _$ChatNotifier {
     state = AsyncData(current.copyWith(messages: updated));
   }
 
+  void _onPinnedMessage(PinnedMessageEvent event) {
+    final current = state.valueOrNull;
+    if (current == null) return;
+    // Build PinnedMessageModel list from the pinned IDs using loaded messages.
+    final loadedById = {for (final m in current.messages) m.id: m};
+    final pinned = event.pinnedMessageIds
+        .map((id) => loadedById[id])
+        .whereType<MessageModel>()
+        .map((m) => PinnedMessageModel(
+              id: m.id,
+              senderId: m.senderId,
+              content: m.content,
+              createdAt: m.createdAt,
+            ))
+        .toList();
+    state = AsyncData(current.copyWith(pinnedMessages: pinned));
+  }
+
   // ----- Reply / reactions / recall / delete actions --------------------
 
   void startReply(MessageModel message) {
@@ -413,11 +485,15 @@ class ChatNotifier extends _$ChatNotifier {
     final current = state.valueOrNull;
     final uid = _currentUserId;
     if (current == null || uid == null) return;
+    // Ignore taps while a toggle for this message is still in flight, so a
+    // burst of double-taps cannot fire overlapping add/remove requests.
+    if (_reactionInFlight.contains(messageId)) return;
     final matches = current.messages.where((m) => m.id == messageId);
     final msg = matches.isEmpty ? null : matches.first;
     final alreadySame = msg != null &&
         msg.reactions.any((r) => r.userId == uid && r.emoji == emoji);
     final repo = ref.read(chatRepositoryProvider);
+    _reactionInFlight.add(messageId);
     try {
       if (alreadySame) {
         await repo.removeReaction(messageId);
@@ -426,6 +502,8 @@ class ChatNotifier extends _$ChatNotifier {
       }
     } catch (_) {
       // Realtime REACTION_UPDATED broadcast keeps state authoritative.
+    } finally {
+      _reactionInFlight.remove(messageId);
     }
   }
 
@@ -478,6 +556,63 @@ class ChatNotifier extends _$ChatNotifier {
     final current = state.valueOrNull;
     if (current == null || current.highlightMessageId == null) return;
     state = AsyncData(current.copyWith(clearHighlight: true));
+  }
+
+  /// Pin a message in this conversation (Task 53).
+  Future<void> pinMessage(MessageModel message) async {
+    final current = state.valueOrNull;
+    if (current == null) return;
+    // Optimistic: prepend to pinned list
+    final pinned = [
+      PinnedMessageModel(
+        id: message.id,
+        senderId: message.senderId,
+        content: message.content,
+        createdAt: message.createdAt,
+      ),
+      ...current.pinnedMessages.where((p) => p.id != message.id),
+    ];
+    state = AsyncData(current.copyWith(pinnedMessages: pinned));
+    try {
+      await ref.read(chatRepositoryProvider).pinMessage(message.id);
+    } catch (_) {
+      // Revert on failure
+      final c = state.valueOrNull;
+      if (c != null) {
+        state = AsyncData(
+            c.copyWith(pinnedMessages: current.pinnedMessages));
+      }
+    }
+  }
+
+  /// Unpin a message (Task 53).
+  Future<void> unpinMessage(String messageId) async {
+    final current = state.valueOrNull;
+    if (current == null) return;
+    final reverted = current.pinnedMessages;
+    state = AsyncData(current.copyWith(
+        pinnedMessages: current.pinnedMessages
+            .where((p) => p.id != messageId)
+            .toList()));
+    try {
+      await ref.read(chatRepositoryProvider).unpinMessage(messageId);
+    } catch (_) {
+      final c = state.valueOrNull;
+      if (c != null) state = AsyncData(c.copyWith(pinnedMessages: reverted));
+    }
+  }
+
+  /// Forward a message to another conversation (Task 53).
+  Future<bool> forwardMessage(
+      String messageId, String targetConversationId) async {
+    try {
+      await ref
+          .read(chatRepositoryProvider)
+          .forwardMessage(messageId, targetConversationId);
+      return true;
+    } catch (_) {
+      return false;
+    }
   }
 
   Future<void> deleteForMe(String messageId) async {
@@ -609,12 +744,16 @@ class ChatNotifier extends _$ChatNotifier {
                 .toList(),
           ));
         }
-      } catch (_) {
+      } catch (e) {
         final c = state.valueOrNull;
         if (c != null) {
           state = AsyncData(c.copyWith(
             messages: c.messages.where((m) => m.id != optimistic.id).toList(),
           ));
+        }
+        if (e is DioException && e.response?.statusCode == 429) {
+          // Use global snackbar key — avoids BuildContext-across-async-gap lint.
+          showErrorSnackBar('Too many messages. Please slow down.');
         }
       }
     }

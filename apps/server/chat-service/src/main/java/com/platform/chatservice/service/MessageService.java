@@ -2,6 +2,7 @@ package com.platform.chatservice.service;
 
 import com.platform.chatservice.dto.MessageResponse;
 import com.platform.chatservice.dto.PageResponse;
+import com.platform.chatservice.dto.PinResult;
 import com.platform.chatservice.dto.SendMessageRequest;
 import com.platform.chatservice.exception.ConversationNotFoundException;
 import com.platform.chatservice.exception.MessageNotFoundException;
@@ -28,6 +29,7 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -236,6 +238,86 @@ public class MessageService {
         }
     }
 
+    /**
+     * Pin a message in its conversation (Task 53). Any participant may pin in
+     * a direct chat; group chats require admin rights. Keeps at most 5 pins,
+     * newest first. Returns the updated conversation so the client can refresh
+     * the pinned-message header.
+     */
+    public PinResult pinMessage(String userId, String messageId) {
+        Message message = messageRepository.findById(messageId)
+            .orElseThrow(() -> new MessageNotFoundException(messageId));
+        Conversation conversation = conversationRepository.findById(message.getConversationId())
+            .orElseThrow(() -> new ConversationNotFoundException(message.getConversationId()));
+        if (!conversation.getParticipants().contains(userId)) {
+            throw new UnauthorizedException("Not a participant of this conversation");
+        }
+        if (message.isRecalled()) {
+            throw new IllegalArgumentException("Cannot pin a recalled message");
+        }
+        if (conversation.isGroup()) {
+            boolean isAdmin = conversation.getAdmins() != null
+                && conversation.getAdmins().contains(userId);
+            if (!isAdmin) {
+                throw new UnauthorizedException("Only admins can pin messages in a group");
+            }
+        }
+        List<String> pinned = conversation.getPinnedMessages() == null
+            ? new ArrayList<>() : new ArrayList<>(conversation.getPinnedMessages());
+        pinned.remove(messageId);
+        pinned.add(0, messageId);
+        if (pinned.size() > 5) {
+            pinned = pinned.subList(0, 5);
+        }
+        conversation.setPinnedMessages(pinned);
+        conversationRepository.save(conversation);
+        return new PinResult(conversation.getId(), pinned);
+    }
+
+    /** Unpin a message. Same permission rules as pinMessage. */
+    public PinResult unpinMessage(String userId, String messageId) {
+        Message message = messageRepository.findById(messageId)
+            .orElseThrow(() -> new MessageNotFoundException(messageId));
+        Conversation conversation = conversationRepository.findById(message.getConversationId())
+            .orElseThrow(() -> new ConversationNotFoundException(message.getConversationId()));
+        if (!conversation.getParticipants().contains(userId)) {
+            throw new UnauthorizedException("Not a participant of this conversation");
+        }
+        if (conversation.isGroup()) {
+            boolean isAdmin = conversation.getAdmins() != null
+                && conversation.getAdmins().contains(userId);
+            if (!isAdmin) {
+                throw new UnauthorizedException("Only admins can unpin messages in a group");
+            }
+        }
+        List<String> pinned = conversation.getPinnedMessages() == null
+            ? new ArrayList<>() : new ArrayList<>(conversation.getPinnedMessages());
+        pinned.remove(messageId);
+        conversation.setPinnedMessages(pinned);
+        conversationRepository.save(conversation);
+        return new PinResult(conversation.getId(), pinned);
+    }
+
+    /**
+     * Forward a message to a target conversation (Task 53). Creates a copy of
+     * the original content in the target conversation as a new message from the
+     * forwarding user.
+     */
+    public MessageResponse forwardMessage(String userId, String messageId, String targetConversationId) {
+        Message original = messageRepository.findById(messageId)
+            .orElseThrow(() -> new MessageNotFoundException(messageId));
+        if (original.isRecalled()) {
+            throw new IllegalArgumentException("Cannot forward a recalled message");
+        }
+        Conversation srcConv = conversationRepository.findById(original.getConversationId())
+            .orElseThrow(() -> new ConversationNotFoundException(original.getConversationId()));
+        if (!srcConv.getParticipants().contains(userId)) {
+            throw new UnauthorizedException("Not a participant of source conversation");
+        }
+        return sendMessage(userId, new SendMessageRequest(
+            targetConversationId, original.getContent(), original.getType(), null));
+    }
+
     /** Background sweep removing messages past each conversation's
      *  disappearing-messages window. */
     @Scheduled(fixedDelayString = "${app.auto-delete.sweep-interval-ms:300000}")
@@ -292,7 +374,7 @@ public class MessageService {
         return content.length() <= 80 ? content : content.substring(0, 80) + "…";
     }
 
-    private MessageResponse toResponse(Message m) {
+    MessageResponse toResponse(Message m) {
         List<MessageResponse.ReactionDto> reactions = m.getReactions() == null ? List.of()
             : m.getReactions().stream()
                 .map(r -> new MessageResponse.ReactionDto(r.getUserId(), r.getEmoji()))
@@ -351,6 +433,34 @@ public class MessageService {
         } catch (Exception e) {
             return null;
         }
+    }
+
+    /**
+     * Catch-up fetch for Task 55 — returns messages with createdAt > afterTimestamp,
+     * oldest first, capped at 50. Called on STOMP reconnect so the client can sync
+     * any messages that arrived while it was offline.
+     */
+    public List<MessageResponse> getMessagesSince(
+            String userId, String conversationId, Instant afterTimestamp) {
+        Conversation conversation = conversationRepository.findById(conversationId)
+            .orElseThrow(() -> new ConversationNotFoundException(conversationId));
+        if (!conversation.getParticipants().contains(userId)) {
+            throw new ConversationNotFoundException(conversationId);
+        }
+        Instant clearedAt = conversation.getClearedAt() == null ? null
+            : conversation.getClearedAt().get(userId);
+
+        Pageable pageable = PageRequest.of(0, 50, Sort.by(Sort.Direction.ASC, "createdAt"));
+        List<Message> rows =
+            messageRepository.findByConversationIdAndCreatedAtGreaterThanOrderByCreatedAtAsc(
+                conversationId, afterTimestamp, pageable);
+
+        return rows.stream()
+            .filter(m -> m.getDeletedFor() == null || !m.getDeletedFor().contains(userId))
+            .filter(m -> clearedAt == null || m.getCreatedAt() == null
+                || m.getCreatedAt().isAfter(clearedAt))
+            .map(this::toResponse)
+            .toList();
     }
 
     /**

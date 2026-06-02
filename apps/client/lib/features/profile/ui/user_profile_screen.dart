@@ -2,6 +2,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
 import '../../../core/api/dio_client.dart';
 import '../../../core/l10n/l10n_ext.dart';
 import '../../../core/theme/app_theme.dart';
@@ -18,7 +19,10 @@ import '../../friends/domain/friends_provider.dart';
 /// and actions to message or send a friend request.
 class UserProfileScreen extends ConsumerStatefulWidget {
   final String userId;
-  const UserProfileScreen({super.key, required this.userId});
+  /// When navigating from a chat context, pass the DM conversation id to enable
+  /// the Shared Media button.
+  final String? conversationId;
+  const UserProfileScreen({super.key, required this.userId, this.conversationId});
 
   @override
   ConsumerState<UserProfileScreen> createState() => _UserProfileScreenState();
@@ -190,6 +194,20 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
                       ),
                     ),
                   ],
+                  if (user.dateOfBirth != null) ...[
+                    const SizedBox(height: 12),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(Icons.cake_outlined, size: 16, color: Colors.white60),
+                        const SizedBox(width: 6),
+                        Text(
+                          DateFormat.yMMMd().format(user.dateOfBirth!.toLocal()),
+                          style: const TextStyle(color: Colors.white60, fontSize: 13.5),
+                        ),
+                      ],
+                    ),
+                  ],
                   const SizedBox(height: 24),
                   if (isSelf)
                     Padding(
@@ -207,6 +225,22 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
                       onFriendAction: _onFriendAction,
                       onBlockAction: _onBlockAction,
                     ),
+                  if (!isSelf && widget.conversationId != null) ...[
+                    const SizedBox(height: 8),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 32),
+                      child: ListTile(
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10)),
+                        tileColor: Theme.of(context).colorScheme.surface,
+                        leading: const Icon(Icons.perm_media_outlined),
+                        title: Text(context.l10n.sharedMediaTitle),
+                        trailing: const Icon(Icons.chevron_right),
+                        onTap: () => context
+                            .push('/shared-media/${widget.conversationId}'),
+                      ),
+                    ),
+                  ],
                 ],
               ),
             ),

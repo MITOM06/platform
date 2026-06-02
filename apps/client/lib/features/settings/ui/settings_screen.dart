@@ -8,6 +8,7 @@ import '../../../core/widgets/pon_widgets.dart';
 import '../../auth/domain/auth_provider.dart';
 import '../../auth/domain/auth_state.dart';
 import 'widgets/settings_dialogs.dart';
+import 'widgets/change_password_dialog.dart';
 
 class SettingsScreen extends ConsumerStatefulWidget {
   const SettingsScreen({super.key});
@@ -324,6 +325,49 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       ),
                       onTap: () =>
                           showLanguageSelectionDialog(context, ref),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 24),
+                PonCard(
+                  glowColor: AppTheme.ponPink,
+                  glowStrength: isDark ? 4 : 0,
+                  child: Material(
+                    color: Colors.transparent,
+                    child: ListTile(
+                      contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 20, vertical: 4),
+                      leading: Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: (isDark
+                                  ? AppTheme.ponPink
+                                  : Theme.of(context).colorScheme.primary)
+                              .withValues(alpha: 0.1),
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(
+                          Icons.lock_outline_rounded,
+                          color: isDark
+                              ? AppTheme.ponPink
+                              : Theme.of(context).colorScheme.primary,
+                          size: 20,
+                        ),
+                      ),
+                      title: Text(
+                        context.l10n.changePasswordTitle,
+                        style: TextStyle(
+                          color: isDark ? Colors.white : Colors.black87,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 15,
+                        ),
+                      ),
+                      trailing: Icon(
+                        Icons.arrow_forward_ios_rounded,
+                        color: isDark ? Colors.white24 : Colors.black26,
+                        size: 16,
+                      ),
+                      onTap: () => showChangePasswordDialog(context, ref),
                     ),
                   ),
                 ),

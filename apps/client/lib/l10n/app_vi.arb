@@ -197,5 +197,37 @@
   "mentionNotificationBody": "{name} đã nhắc đến bạn",
   "searchMessages": "Tìm tin nhắn",
   "searchHint": "Tìm trong cuộc trò chuyện",
-  "searchNoResults": "Không tìm thấy tin nhắn"
+  "searchNoResults": "Không tìm thấy tin nhắn",
+
+  "exploreChannels": "Khám phá kênh",
+  "searchChannelsHint": "Tìm kênh…",
+  "noPublicChannels": "Không tìm thấy kênh công khai",
+  "joinChannel": "Tham gia",
+  "membersCount": "{count} thành viên",
+  "@membersCount": { "placeholders": { "count": { "type": "int" } } },
+
+  "pinMessage": "Ghim",
+  "forwardMessage": "Chuyển tiếp",
+  "messageForwarded": "Đã chuyển tiếp tin nhắn",
+  "forwardFailed": "Chuyển tiếp thất bại",
+  "noConversationsToForward": "Không có cuộc trò chuyện nào",
+  "rateLimitError": "Bạn gửi quá nhiều tin nhắn. Hãy chậm lại.",
+
+  "sharedMediaTitle": "Ảnh, video & tệp",
+  "tabMedia": "Phương tiện",
+  "tabFiles": "Tệp",
+  "tabLinks": "Liên kết",
+  "noMediaFound": "Không tìm thấy ảnh/video",
+  "noFilesFound": "Không tìm thấy tệp",
+  "noLinksFound": "Không tìm thấy liên kết",
+  "reactionsDetail": "Cảm xúc",
+  "changePasswordTitle": "Đổi mật khẩu",
+  "currentPassword": "Mật khẩu hiện tại",
+  "newPassword": "Mật khẩu mới",
+  "confirmPassword": "Xác nhận mật khẩu mới",
+  "dateOfBirth": "Ngày sinh",
+  "notSet": "Chưa thiết lập",
+  "passwordChangedSuccess": "Đổi mật khẩu thành công",
+  "errCurrentPasswordIncorrect": "Mật khẩu hiện tại không chính xác",
+  "changeCoverPhoto": "Đổi ảnh nền"
 }

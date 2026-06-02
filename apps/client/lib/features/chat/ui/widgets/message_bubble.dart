@@ -7,6 +7,7 @@ import '../../../../core/theme/app_theme.dart';
 import '../../domain/chat_provider.dart';
 import '../../domain/chat_state.dart';
 import 'file_content.dart';
+import 'forward_dialog.dart';
 import 'image_content.dart';
 import 'message_bubble_parts.dart';
 import 'text_content.dart';
@@ -67,6 +68,14 @@ class MessageBubble extends ConsumerWidget {
               GestureDetector(
                 onLongPress:
                     message.recalled ? null : () => _showActions(context, ref),
+                onDoubleTap: message.recalled
+                    ? null
+                    : () {
+                        ref
+                            .read(chatNotifierProvider(message.conversationId)
+                                .notifier)
+                            .toggleReaction(message.id, '❤️');
+                      },
                 child: Container(
                   margin: const EdgeInsets.symmetric(
                       horizontal: 16, vertical: 3),
@@ -206,6 +215,8 @@ class MessageBubble extends ConsumerWidget {
         return context.l10n.leaveGroup;
       case 'system.member.removed':
         return context.l10n.removeMember;
+      case 'system.member.joined':
+        return context.l10n.joinChannel;
       default:
         return key;
     }
@@ -296,6 +307,26 @@ class MessageBubble extends ConsumerWidget {
                   Navigator.pop(sheetCtx);
                 },
               ),
+            ListTile(
+              leading: const Icon(Icons.push_pin_outlined,
+                  color: AppTheme.ponCyan),
+              title: Text(sheetCtx.l10n.pinMessage,
+                  style: const TextStyle(color: AppTheme.ponCyan)),
+              onTap: () {
+                notifier.pinMessage(message);
+                Navigator.pop(sheetCtx);
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.forward_to_inbox_outlined,
+                  color: Colors.white70),
+              title: Text(sheetCtx.l10n.forwardMessage,
+                  style: const TextStyle(color: Colors.white)),
+              onTap: () {
+                Navigator.pop(sheetCtx);
+                showForwardDialog(context, ref, message, message.conversationId);
+              },
+            ),
             ListTile(
               leading: const Icon(Icons.delete_outline_rounded,
                   color: Colors.redAccent),

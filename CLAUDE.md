@@ -36,7 +36,7 @@ Start infra: `docker compose -f infra/docker-compose/compose.yml up -d`
 - Java: **Maven**
 - Flutter: **flutter pub**
 
-## Stack (PRJ4 — Java Enterprise) — Sprint 6 hoàn thành
+## Stack (PRJ4 — Java Enterprise) — Sprint 17 hoàn thành
 
 - **Spring Boot 3 chat-service**: WebSocket (STOMP) + REST API + MongoDB + Redis + JWT validation ✅
 - **Flutter client**: Neon UI + Auth flow + Chat UI + Riverpod + STOMP wire ✅

@@ -48,6 +48,23 @@ class ChatRepository {
     );
   }
 
+  /// Catch-up fetch (Task 55): returns messages with createdAt > [afterTimestamp],
+  /// oldest first. Called after STOMP reconnects to sync missed messages.
+  Future<List<MessageModel>> getMessagesSince(
+    String conversationId,
+    DateTime afterTimestamp,
+  ) async {
+    final response = await _dio.get(
+      '/api/conversations/$conversationId/messages',
+      queryParameters: {'after': afterTimestamp.toUtc().toIso8601String()},
+    );
+    final data = response.data as Map<String, dynamic>;
+    final content = (data['content'] as List)
+        .map((e) => MessageModel.fromJson(e as Map<String, dynamic>))
+        .toList();
+    return content;
+  }
+
   /// Search messages within a conversation by text (Task 50).
   Future<List<MessageModel>> searchMessages(
     String conversationId,
@@ -168,6 +185,73 @@ class ChatRepository {
       data: {'autoDeleteSeconds': seconds},
     );
     return ConversationModel.fromJson(response.data as Map<String, dynamic>);
+  }
+
+  // ----- Task 57: Shared Media Gallery --------------------------------------
+
+  /// Returns messages of [type] ("media", "file", "link") for the gallery screen.
+  Future<List<MessageModel>> getSharedAttachments(
+    String conversationId,
+    String type, {
+    int page = 0,
+    int size = 30,
+  }) async {
+    final response = await _dio.get(
+      '/api/conversations/$conversationId/attachments',
+      queryParameters: {'type': type, 'page': page, 'size': size},
+    );
+    final data = response.data as Map<String, dynamic>;
+    final content = (data['content'] as List)
+        .map((e) => MessageModel.fromJson(e as Map<String, dynamic>))
+        .toList();
+    return content;
+  }
+
+  // ----- Task 52: Public Channels -------------------------------------------
+
+  Future<List<ConversationModel>> listPublicChannels({String? query}) async {
+    final response = await _dio.get(
+      '/api/conversations/public',
+      queryParameters: {
+        if (query != null && query.isNotEmpty) 'q': query,
+      },
+    );
+    final data = response.data as Map<String, dynamic>;
+    final content = data['content'] as List;
+    return content
+        .map((e) => ConversationModel.fromJson(e as Map<String, dynamic>))
+        .toList();
+  }
+
+  Future<ConversationModel> joinChannel(String conversationId) async {
+    final response =
+        await _dio.post('/api/conversations/$conversationId/join');
+    return ConversationModel.fromJson(response.data as Map<String, dynamic>);
+  }
+
+  // ----- Task 53: Pin & Forward ---------------------------------------------
+
+  Future<List<String>> pinMessage(String messageId) async {
+    final response = await _dio.post('/api/messages/$messageId/pin');
+    final data = response.data as Map<String, dynamic>;
+    return List<String>.from(data['pinnedMessages'] as List? ?? []);
+  }
+
+  Future<List<String>> unpinMessage(String messageId) async {
+    final response = await _dio.delete('/api/messages/$messageId/pin');
+    final data = response.data as Map<String, dynamic>;
+    return List<String>.from(data['pinnedMessages'] as List? ?? []);
+  }
+
+  Future<MessageModel> forwardMessage(
+    String messageId,
+    String targetConversationId,
+  ) async {
+    final response = await _dio.post(
+      '/api/messages/$messageId/forward',
+      data: {'targetConversationId': targetConversationId},
+    );
+    return MessageModel.fromJson(response.data as Map<String, dynamic>);
   }
 
   // ----- Message interactions -------------------------------------------

@@ -344,4 +344,125 @@ class MessageServiceTest {
         assertThatThrownBy(() -> messageService.markAsRead(SENDER_ID, "non-existent"))
             .isInstanceOf(MessageNotFoundException.class);
     }
+
+    // -----------------------------------------------------------------------
+    // Task 53 — Pin & Forward
+    // -----------------------------------------------------------------------
+
+    @Test
+    void pinMessage_WhenParticipant_ShouldAddToPinnedList() {
+        when(messageRepository.findById(MSG_ID)).thenReturn(Optional.of(savedMessage));
+        when(conversationRepository.findById(CONV_ID)).thenReturn(Optional.of(conversation));
+        when(conversationRepository.save(any(Conversation.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        var result = messageService.pinMessage(SENDER_ID, MSG_ID);
+
+        assertThat(result.conversationId()).isEqualTo(CONV_ID);
+        assertThat(result.pinnedMessages()).containsExactly(MSG_ID);
+    }
+
+    @Test
+    void pinMessage_WhenNotParticipant_ShouldThrow() {
+        when(messageRepository.findById(MSG_ID)).thenReturn(Optional.of(savedMessage));
+        when(conversationRepository.findById(CONV_ID)).thenReturn(Optional.of(conversation));
+
+        assertThatThrownBy(() -> messageService.pinMessage("outsider", MSG_ID))
+            .isInstanceOf(UnauthorizedException.class);
+    }
+
+    @Test
+    void pinMessage_WhenRecalled_ShouldThrow() {
+        Message recalled = savedMessage;
+        recalled.setRecalled(true);
+        when(messageRepository.findById(MSG_ID)).thenReturn(Optional.of(recalled));
+        when(conversationRepository.findById(CONV_ID)).thenReturn(Optional.of(conversation));
+
+        assertThatThrownBy(() -> messageService.pinMessage(SENDER_ID, MSG_ID))
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessageContaining("recalled");
+    }
+
+    @Test
+    void unpinMessage_ShouldRemoveFromPinnedList() {
+        conversation.setPinnedMessages(new java.util.ArrayList<>(List.of(MSG_ID)));
+        when(messageRepository.findById(MSG_ID)).thenReturn(Optional.of(savedMessage));
+        when(conversationRepository.findById(CONV_ID)).thenReturn(Optional.of(conversation));
+        when(conversationRepository.save(any(Conversation.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        var result = messageService.unpinMessage(SENDER_ID, MSG_ID);
+
+        assertThat(result.pinnedMessages()).doesNotContain(MSG_ID);
+    }
+
+    @Test
+    void forwardMessage_WhenParticipant_ShouldCreateNewMessage() {
+        when(messageRepository.findById(MSG_ID)).thenReturn(Optional.of(savedMessage));
+        when(conversationRepository.findById(CONV_ID)).thenReturn(Optional.of(conversation));
+        String targetConvId = "conv-002";
+        Conversation targetConv = Conversation.builder()
+            .id(targetConvId)
+            .participants(List.of(SENDER_ID, OTHER_ID))
+            .build();
+        when(conversationRepository.findById(targetConvId)).thenReturn(Optional.of(targetConv));
+        when(messageRepository.save(any(Message.class))).thenAnswer(inv -> {
+            Message m = inv.getArgument(0);
+            m.setId("forwarded-msg");
+            m.setCreatedAt(Instant.now());
+            return m;
+        });
+        when(conversationRepository.save(any(Conversation.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(userBlockRepository.findById(anyString())).thenReturn(Optional.empty());
+
+        MessageResponse result = messageService.forwardMessage(SENDER_ID, MSG_ID, targetConvId);
+
+        assertThat(result.conversationId()).isEqualTo(targetConvId);
+        assertThat(result.content()).isEqualTo(savedMessage.getContent());
+    }
+
+    @Test
+    void forwardMessage_WhenRecalled_ShouldThrow() {
+        savedMessage.setRecalled(true);
+        when(messageRepository.findById(MSG_ID)).thenReturn(Optional.of(savedMessage));
+
+        assertThatThrownBy(() -> messageService.forwardMessage(SENDER_ID, MSG_ID, "conv-002"))
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessageContaining("recalled");
+    }
+
+    // -------------------------------------------------------------------------
+    // Task 55 — getMessagesSince (offline catch-up)
+    // -------------------------------------------------------------------------
+
+    @Test
+    void getMessagesSince_ShouldReturnNewerMessages() {
+        Instant after = Instant.now().minusSeconds(60);
+        Message newer = Message.builder()
+            .id("msg-new")
+            .conversationId(CONV_ID)
+            .senderId(OTHER_ID)
+            .content("New message")
+            .type("text")
+            .readBy(List.of(OTHER_ID))
+            .createdAt(Instant.now())
+            .build();
+        when(conversationRepository.findById(CONV_ID)).thenReturn(Optional.of(conversation));
+        when(messageRepository.findByConversationIdAndCreatedAtGreaterThanOrderByCreatedAtAsc(
+            eq(CONV_ID), eq(after), any())).thenReturn(List.of(newer));
+
+        List<MessageResponse> results = messageService.getMessagesSince(SENDER_ID, CONV_ID, after);
+
+        assertThat(results).hasSize(1);
+        assertThat(results.get(0).id()).isEqualTo("msg-new");
+    }
+
+    @Test
+    void getMessagesSince_WhenNotParticipant_ShouldThrow() {
+        when(conversationRepository.findById(CONV_ID)).thenReturn(Optional.of(conversation));
+
+        assertThatThrownBy(() ->
+            messageService.getMessagesSince("intruder-999", CONV_ID, Instant.now()))
+            .isInstanceOf(ConversationNotFoundException.class);
+
+        verifyNoInteractions(messageRepository);
+    }
 }

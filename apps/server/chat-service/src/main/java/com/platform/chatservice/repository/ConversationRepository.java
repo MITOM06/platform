@@ -15,4 +15,11 @@ public interface ConversationRepository extends MongoRepository<Conversation, St
 
     @Query("{ 'participants': { $all: ?0, $size: 2 } }")
     Optional<Conversation> findOneOnOneConversation(List<String> participants);
+
+    /** Public group channels visible to all (Task 52). */
+    @Query("{ 'publicChannel': true, 'type': 'group' }")
+    Page<Conversation> findPublicGroups(Pageable pageable);
+
+    @Query("{ 'publicChannel': true, 'type': 'group', 'name': { $regex: ?0, $options: 'i' } }")
+    Page<Conversation> findPublicGroupsByName(String nameRegex, Pageable pageable);
 }

@@ -197,5 +197,37 @@
   "mentionNotificationBody": "{name} vous a mentionné",
   "searchMessages": "Rechercher des messages",
   "searchHint": "Rechercher dans la conversation",
-  "searchNoResults": "Aucun message trouvé"
+  "searchNoResults": "Aucun message trouvé",
+
+  "exploreChannels": "Explorer les canaux",
+  "searchChannelsHint": "Rechercher des canaux…",
+  "noPublicChannels": "Aucun canal public trouvé",
+  "joinChannel": "Rejoindre",
+  "membersCount": "{count} membres",
+  "@membersCount": { "placeholders": { "count": { "type": "int" } } },
+
+  "pinMessage": "Épingler",
+  "forwardMessage": "Transférer",
+  "messageForwarded": "Message transféré",
+  "forwardFailed": "Échec du transfert",
+  "noConversationsToForward": "Aucune conversation disponible",
+  "rateLimitError": "Trop de messages. Veuillez ralentir.",
+
+  "sharedMediaTitle": "Médias et fichiers partagés",
+  "tabMedia": "Médias",
+  "tabFiles": "Fichiers",
+  "tabLinks": "Liens",
+  "noMediaFound": "Aucun média trouvé",
+  "noFilesFound": "Aucun fichier trouvé",
+  "noLinksFound": "Aucun lien trouvé",
+  "reactionsDetail": "Réactions",
+  "changePasswordTitle": "Changer le mot de passe",
+  "currentPassword": "Mot de passe actuel",
+  "newPassword": "Nouveau mot de passe",
+  "confirmPassword": "Confirmer le nouveau mot de passe",
+  "dateOfBirth": "Date de naissance",
+  "notSet": "Non défini",
+  "passwordChangedSuccess": "Mot de passe modifié avec succès",
+  "errCurrentPasswordIncorrect": "Mot de passe actuel incorrect",
+  "changeCoverPhoto": "Changer la photo de couverture"
 }

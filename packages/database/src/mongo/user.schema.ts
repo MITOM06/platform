@@ -29,6 +29,9 @@ export class User {
   @Prop()
   coverPhoto: string;
 
+  @Prop()
+  dateOfBirth: Date;
+
   @Prop({ unique: true, sparse: true })
   email: string;
 

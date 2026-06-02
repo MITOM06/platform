@@ -1,7 +1,7 @@
 # Roadmap — Platform Project
 
-> **Status:** Milestones 0–4 Completed ✅
-> **Current Sprint:** Sprint 13 (See `TODO.md`)
+> **Status:** Milestones 0–4 + Sprints 12–17 Completed ✅
+> **Current Sprint:** Sprint 17 — COMPLETED ✅ (See `TODO.md`)
 
 ---
 
@@ -44,9 +44,11 @@
 - Friend Requests / Contacts System
 - UI improvements (Neon theme fixes)
 
-## Post-Milestone 5 (Upcoming Sprints 12-15) 🚀 PENDING
+## Post-Milestone 5 (Sprints 12–17) ✅ COMPLETED
 *(See `TODO.md` for detailed specs)*
-- [x] **Sprint 12:** Edit Message, Generic File Upload, Cursor-based Pagination, Link Preview
-- [ ] **Sprint 13:** Mention System, Message Search, True Unread Counts
-- [ ] **Sprint 14:** Public Channels, Pin/Forward Messages, Markdown Render
-- [ ] **Sprint 15:** Offline Catch-up, Rate Limiting
+- [x] **Sprint 12 ✅** Edit Message, Generic File Upload, Cursor-based Pagination, Link Preview
+- [x] **Sprint 13 ✅** Mention System, Message Search, True Unread Counts
+- [x] **Sprint 14 ✅** Public Channels, Pin/Forward Messages, Markdown Render
+- [x] **Sprint 15 ✅** Offline Catch-up, Rate Limiting (Redis sliding-window + client SnackBar)
+- [x] **Sprint 16 ✅** Shared Media Gallery (3-tab), Reactions Detail Modal (draggable sheet)
+- [x] **Sprint 17 ✅** Profile & UX Enhancements — DOB selector, Cover Photo upload, Change Password, Double-Tap Quick Reaction (❤️)

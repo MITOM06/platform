@@ -21,6 +21,7 @@ import 'widgets/chat_typing_indicator.dart';
 import 'widgets/edit_composer_bar.dart';
 import 'widgets/mention_list.dart';
 import 'widgets/message_bubble.dart';
+import 'widgets/pinned_message_bar.dart';
 import 'widgets/reply_composer_bar.dart';
 import 'widgets/search_overlay.dart';
 import 'widgets/stranger_request_banner.dart';
@@ -380,6 +381,17 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
                   ),
                   data: (chatState) => Column(
                     children: [
+                      if (chatState.pinnedMessages.isNotEmpty)
+                        PinnedMessageBar(
+                          pinned: chatState.pinnedMessages.first,
+                          onTap: () => _jumpToSearchResult(
+                              chatState.pinnedMessages.first.id),
+                          onDismiss: () => ref
+                              .read(chatNotifierProvider(widget.conversationId)
+                                  .notifier)
+                              .unpinMessage(
+                                  chatState.pinnedMessages.first.id),
+                        ),
                       Expanded(
                         child: _buildMessageList(
                             chatState, currentUserId, isGroup, otherUserId),
