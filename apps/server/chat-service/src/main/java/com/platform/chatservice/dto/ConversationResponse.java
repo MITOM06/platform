@@ -18,7 +18,9 @@ public record ConversationResponse(
     Instant createdAt,
     String status,
     boolean isPublic,
-    List<PinnedMessageDto> pinnedMessages
+    List<PinnedMessageDto> pinnedMessages,
+    boolean isMuted,
+    boolean isArchived
 ) {
     public record LastMessageDto(String content, String senderId, Instant createdAt) {}
 
@@ -32,6 +34,6 @@ public record ConversationResponse(
             long unreadCount, Instant createdAt, String status) {
         this(id, type, name, avatarUrl, participants, admins, createdBy,
              autoDeleteSeconds, lastMessage, lastMessageAt, unreadCount, createdAt,
-             status, false, List.of());
+             status, false, List.of(), false, false);
     }
 }
