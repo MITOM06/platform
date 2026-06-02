@@ -219,6 +219,33 @@ public class ConversationService {
             ));
     }
 
+    /** List public group channels visible to everyone, optionally filtered by name. */
+    public PageResponse<ConversationResponse> listPublicChannels(String query, Pageable pageable) {
+        Page<Conversation> page = (query != null && !query.isBlank())
+            ? conversationRepository.findPublicGroupsByName(query.trim(), pageable)
+            : conversationRepository.findPublicGroups(pageable);
+        List<ConversationResponse> content = page.getContent().stream()
+            .map(c -> toResponse(c, null, 0L))
+            .toList();
+        return new PageResponse<>(content, page.getNumber(), page.getSize(), page.getTotalElements());
+    }
+
+    /** Join a public channel. Idempotent — no-op if the user is already a member. */
+    public ConversationResponse joinChannel(String userId, String conversationId) {
+        Conversation conversation = conversationRepository.findById(conversationId)
+            .orElseThrow(() -> new ConversationNotFoundException(conversationId));
+        if (!conversation.isPublicChannel() || !Conversation.TYPE_GROUP.equals(conversation.getType())) {
+            throw new UnauthorizedException("This channel is not publicly joinable");
+        }
+        if (!conversation.getParticipants().contains(userId)) {
+            List<String> participants = new ArrayList<>(conversation.getParticipants());
+            participants.add(userId);
+            conversation.setParticipants(participants);
+            conversationRepository.save(conversation);
+        }
+        return toResponse(conversation, userId, messageRepository.countUnread(conversationId, userId));
+    }
+
     public List<String> getParticipants(String conversationId) {
         return conversationRepository.findById(conversationId)
             .map(Conversation::getParticipants)
@@ -266,10 +293,24 @@ public class ConversationService {
                 c.getLastMessage().getCreatedAt()
             );
         }
+        List<ConversationResponse.PinnedMessageDto> pinned = resolvePinnedMessages(c);
         return new ConversationResponse(
             c.getId(), c.resolvedType(), c.getName(), c.getAvatarUrl(),
             c.getParticipants(), c.getAdmins(), c.getCreatedBy(), c.getAutoDeleteSeconds(),
-            lastMsg, c.getLastMessageAt(), unreadCount, c.getCreatedAt(), c.resolvedStatus()
+            lastMsg, c.getLastMessageAt(), unreadCount, c.getCreatedAt(), c.resolvedStatus(),
+            c.isPublicChannel(), pinned
         );
+    }
+
+    private List<ConversationResponse.PinnedMessageDto> resolvePinnedMessages(Conversation c) {
+        if (c.getPinnedMessages() == null || c.getPinnedMessages().isEmpty()) {
+            return List.of();
+        }
+        return c.getPinnedMessages().stream()
+            .map(messageId -> messageRepository.findById(messageId).orElse(null))
+            .filter(m -> m != null && !m.isRecalled())
+            .map(m -> new ConversationResponse.PinnedMessageDto(
+                m.getId(), m.getSenderId(), m.getContent(), m.getCreatedAt()))
+            .toList();
     }
 }

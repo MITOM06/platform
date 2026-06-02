@@ -197,5 +197,37 @@
   "mentionNotificationBody": "{name} 提到了你",
   "searchMessages": "搜索消息",
   "searchHint": "在对话中搜索",
-  "searchNoResults": "未找到消息"
+  "searchNoResults": "未找到消息",
+
+  "exploreChannels": "探索频道",
+  "searchChannelsHint": "搜索频道…",
+  "noPublicChannels": "未找到公开频道",
+  "joinChannel": "加入",
+  "membersCount": "{count} 名成员",
+  "@membersCount": { "placeholders": { "count": { "type": "int" } } },
+
+  "pinMessage": "置顶",
+  "forwardMessage": "转发",
+  "messageForwarded": "消息已转发",
+  "forwardFailed": "转发失败",
+  "noConversationsToForward": "没有可转发的对话",
+  "rateLimitError": "消息发送过于频繁，请放慢速度。",
+
+  "sharedMediaTitle": "共享媒体与文件",
+  "tabMedia": "媒体",
+  "tabFiles": "文件",
+  "tabLinks": "链接",
+  "noMediaFound": "未找到媒体",
+  "noFilesFound": "未找到文件",
+  "noLinksFound": "未找到链接",
+  "reactionsDetail": "表情反应",
+  "changePasswordTitle": "修改密码",
+  "currentPassword": "当前密码",
+  "newPassword": "新密码",
+  "confirmPassword": "确认新密码",
+  "dateOfBirth": "出生日期",
+  "notSet": "未设置",
+  "passwordChangedSuccess": "密码修改成功",
+  "errCurrentPasswordIncorrect": "当前密码不正确",
+  "changeCoverPhoto": "修改背景图片"
 }

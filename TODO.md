@@ -55,38 +55,90 @@
 
 ---
 
-## 🔴 SPRINT 14 — Conversation Channels & Advanced Actions — PENDING
+## 🟢 SPRINT 14 — Conversation Channels & Advanced Actions — DONE
 
-### TASK 52 — Public Channels Discovery `PENDING`
+### TASK 52 — Public Channels Discovery `DONE`
 #### SPEC
 - **Backend:** Add `isPublic` (boolean) to Conversation schema. Create `GET /api/conversations/public` to list public channels, and `POST /api/conversations/{id}/join` to join them.
 - **Frontend:** Add an "Explore" tab to discover public channels. Users can click and join.
 - **Test:** Create a public channel, another user searches and joins it successfully.
 
-### TASK 53 — Pin & Forward Messages `PENDING`
+### TASK 53 — Pin & Forward Messages `DONE`
 #### SPEC
 - **Backend:** Add `pinnedMessages` array to Conversation schema. Endpoints: `POST /messages/{id}/pin`, `POST /messages/{id}/forward`.
 - **Frontend:** Long-press -> Pin. Render a pinned message bar at the top of the ChatScreen. Long-press -> Forward -> show conversation picker.
 - **Test:** Pin a message -> shows at the top for everyone.
 
-### TASK 54 — Rich Text / Markdown Rendering `PENDING`
+### TASK 54 — Rich Text / Markdown Rendering `DONE`
 #### SPEC
 - **Frontend:** Replace standard `Text` widget in `MessageBubble` with `flutter_markdown` or similar to support bold, italic, code blocks, and lists.
 - **Test:** Send `**Bold** and *Italic*` -> renders correctly.
 
 ---
 
-## 🔴 SPRINT 15 — Infrastructure & Reliability — PENDING
+## 🟢 SPRINT 15 — Infrastructure & Reliability — DONE
 
-### TASK 55 — Offline Message Catch-up `PENDING`
+### TASK 55 — Offline Message Catch-up `DONE`
 #### SPEC
 - **Frontend/Backend:** When STOMP reconnects, fetch all messages missed during the offline period (using the timestamp of the last cached message). Sync the local state.
 - **Test:** Go offline -> receive messages -> go online -> messages sync automatically without refreshing the whole page.
 
-### TASK 56 — Rate Limiting (Throttle) `PENDING`
+### TASK 56 — Rate Limiting (Throttle) `DONE`
 #### SPEC
 - **Backend:** Implement Bucket4j or Redis-based rate limiting to prevent spamming endpoints (e.g., max 10 messages / 5 seconds per user). Return HTTP 429 Too Many Requests if exceeded.
 - **Test:** Spam send button -> server blocks and returns 429.
+
+---
+
+## 🟢 SPRINT 16 — Shared Media Gallery & Reaction Details — DONE
+
+### TASK 57 — Shared Media & Links Gallery `DONE`
+#### SPEC
+- **Backend:**
+  - `MessageRepository`: Add `findByConversationIdAndTypeInOrderByCreatedAtDesc` (for image/video and file). Add custom query `findLinks` with regex `https?://` for text messages.
+  - `MessageService`: Add `getSharedAttachments(userId, conversationId, type, pageable)` with participant checks.
+  - `ConversationController`: Expose `GET /api/conversations/{id}/attachments?type=media|file|link`.
+- **Frontend:**
+  - `ChatRepository`: Add `getSharedAttachments`.
+  - Create `ExploreMediaScreen` with 3 tabs (Media, Files, Links).
+  - Add "Shared Media & Files" navigation button in `GroupInfoScreen` and `UserProfileScreen`.
+- **Test:** Send media, document, and link -> enter Profile/GroupInfo -> Shared Media -> see all attachments categorized correctly.
+
+### TASK 58 — Reactions Detail Modal `DONE`
+#### SPEC
+- **Frontend:**
+  - Create `ReactionsDetailModal` to show users resolved via `userProfileProvider` grouped by emoji tab.
+  - Add tap listener to message bubble reaction chips to trigger the modal.
+- **Test:** Tap on reaction chips below a message, verify the modal lists who reacted with which emoji.
+
+---
+
+## 🟢 SPRINT 17 — Profile & UX Enhancements — DONE
+
+### TASK 59 — Date of Birth & Cover Photo Customization `DONE`
+#### SPEC
+- **Database / Backend:**
+  - Add `dateOfBirth?: Date` to `User` schema. Expose updates in `PATCH /api/users/me`.
+- **Frontend:**
+  - Support `dateOfBirth` property on `UserModel`.
+  - Display Date of Birth (formatted) on `UserProfileScreen`.
+  - Redesign `EditProfileScreen` to display cover photo stack with camera buttons and DOB Date Picker list tile.
+- **Test:** Edit and save DOB and cover photo, verify update takes effect and profile shows them.
+
+### TASK 60 — User Password Change `DONE`
+#### SPEC
+- **Backend:**
+  - Expose `POST /api/users/me/change-password` endpoint to verify current password and hash/update to new password.
+- **Frontend:**
+  - Implement `ChangePasswordDialog` to prompt for current, new, and confirm passwords.
+  - Expose "Change Password" in `SettingsScreen`.
+- **Test:** Verify change password validates matches and updates correctly.
+
+### TASK 61 — Double-Tap Message Reactions `DONE`
+#### SPEC
+- **Frontend:**
+  - Bind double-tap gesture on `MessageBubble` to quickly trigger/toggle a ❤️ reaction.
+- **Test:** Double-tap a message bubble, verify a ❤️ reaction is instantly added.
 
 ---
 
@@ -205,6 +257,144 @@
     `repository/MessageRepository.java`, `dto/LinkPreviewResponse.java`, `service/MessageServiceTest.java`;
     FE — `pubspec.yaml`, `data/chat_repository.dart`, `domain/chat_state.dart`, `domain/chat_provider.dart`,
     `ui/chat_screen.dart`, `ui/widgets/message_bubble.dart`, `l10n/app_*.arb`.
+- [2026-06-02] **SPRINT 14 (TASKS 52–54) → ✅ DONE (full vertical slices).**
+  - **TASK 52 — Public Channels Discovery:**
+    - BE: Added `publicChannel` (boolean, `@Builder.Default false`) to `Conversation` model.
+      `ConversationRepository`: `findPublicGroups` + `findPublicGroupsByName` queries.
+      `ConversationService`: `listPublicChannels(query, pageable)` + `joinChannel(userId, convId)` (idempotent join).
+      `ConversationController`: `GET /api/conversations/public?q=&page=&size=` + `POST /api/conversations/{id}/join`.
+      `ConversationResponse`: added `isPublic` (boolean) + `List<PinnedMessageDto> pinnedMessages` fields
+      (plus backward-compatible ctor without new fields).
+    - FE: Added `isPublic` + `pinnedMessages: List<PinnedMessageModel>` to `ConversationModel`.
+      `ChatRepository`: `listPublicChannels(query)` + `joinChannel(convId)`.
+      New `ExploreScreen` with debounced search + channel tiles. `/explore` route added to router.
+      Explore icon in `ConversationListScreen` AppBar.
+  - **TASK 53 — Pin & Forward Messages:**
+    - BE: Added `pinnedMessages: List<String>` (message ids, max 5, newest first) to `Conversation` model.
+      `MessageService`: `pinMessage` + `unpinMessage` (both return `PinResult{conversationId, pinnedMessages}`)
+      + `forwardMessage` (creates copy in target conversation). Group pin/unpin requires admin.
+      `MessageController`: `POST /api/messages/{id}/pin` + `DELETE /api/messages/{id}/pin`
+      + `POST /api/messages/{id}/forward`. All broadcast `PINNED_MESSAGE` STOMP event.
+      New DTOs: `ForwardMessageRequest`, `PinResult`.
+    - FE: `PinnedMessageEvent` added to `chat_state.dart`.
+      `StompService`: `_pinCtrl` stream + `PINNED_MESSAGE` case in `_doSubscribeConversation`.
+      `ChatState.pinnedMessages` (List<PinnedMessageModel>) populated from conversation on build.
+      `ChatNotifier`: `pinMessage`, `unpinMessage`, `forwardMessage` actions + `_onPinnedMessage` handler.
+      `ChatRepository`: `pinMessage`, `unpinMessage`, `forwardMessage` methods.
+      New `PinnedMessageBar` widget — shows first pinned message at top of ChatScreen with jump + dismiss.
+      New `ForwardDialog` widget — conversation picker for forwarding.
+      `MessageBubble` long-press menu: "Pin" + "Forward" actions.
+      `ChatScreen`: `PinnedMessageBar` shown when `chatState.pinnedMessages.isNotEmpty`.
+  - **TASK 54 — Rich Text / Markdown Rendering:**
+    - FE: Added `flutter_markdown: ^0.7.7` to `pubspec.yaml`.
+      `TextContent` widget: detects markdown syntax via regex; uses `MarkdownBody` for messages
+      without mentions (supports **bold**, *italic*, `code`, code blocks, lists, blockquotes, links).
+      Falls back to existing `Text.rich` approach for messages with @mentions.
+      Custom `MarkdownStyleSheet` matches the app's neon dark theme.
+  - **Tests:**
+    - `mvn test` → **BUILD SUCCESS, 51/51** (MessageServiceTest 27 incl. 6 new: pin-ok,
+      pin-not-participant, pin-recalled, unpin, forward-ok, forward-recalled).
+    - `flutter analyze` → **No issues found**; `flutter test` → **All tests passed**.
+  - **File sizes:** All within limits — BE max 469 lines (MessageService), FE new files max 184 lines.
+  - **Files for Gemini QC:** BE — `model/Conversation.java`, `dto/ConversationResponse.java`,
+    `dto/ForwardMessageRequest.java`, `dto/PinResult.java`, `repository/ConversationRepository.java`,
+    `service/ConversationService.java`, `service/MessageService.java`,
+    `controller/ConversationController.java`, `controller/MessageController.java`,
+    `service/MessageServiceTest.java`; FE — `domain/chat_state.dart`, `data/chat_repository.dart`,
+    `data/stomp_service.dart`, `domain/chat_provider.dart`, `ui/chat_screen.dart`,
+    `ui/explore_screen.dart`, `ui/widgets/pinned_message_bar.dart`,
+    `ui/widgets/forward_dialog.dart`, `ui/widgets/message_bubble.dart`,
+    `ui/widgets/text_content.dart`, `l10n/app_*.arb`.
+- [2026-06-02] **SPRINT 15 (TASKS 55–56) → ✅ DONE (full vertical slices).**
+  - **TASK 55 — Offline Message Catch-up:**
+    - BE: `MessageRepository` — added `findByConversationIdAndCreatedAtGreaterThanOrderByCreatedAtAsc`
+      (catch-up query, oldest-first, pageable, capped at 50).
+      `MessageService.getMessagesSince(userId, conversationId, afterTimestamp)` — participant guard,
+      clear-cutoff + deleted-for-me filters, returns list sorted oldest-first.
+      `ConversationController GET /{id}/messages` — added optional `?after=<ISO>` param:
+      when present delegates to `getMessagesSince` and wraps in `PageResponse`.
+    - FE: `StompService` — `_everConnected` flag + `_reconnectCtrl` broadcast stream;
+      `_onConnect` emits to `reconnects` only on second-and-later connects (not initial).
+      `ChatRepository.getMessagesSince(conversationId, afterTimestamp)` → hits `?after=` endpoint.
+      `ChatNotifier` — `_reconnectSub` listens to `stomp.reconnects`; `_catchupMessages()` finds
+      newest non-pending message, fetches fresh messages, dedupes by id, prepends in
+      newest-first order, marks them as read. Subscription cancelled on dispose.
+  - **TASK 56 — Rate Limiting:**
+    - BE: New `RateLimitExceededException` (RuntimeException). New `RateLimiterService` —
+      Redis fixed-window: INCR key `rate:msg:<userId>`, auto-expire 5s, throws on count > 10.
+      `GlobalExceptionHandler` — 429 handler with `Retry-After: 5` header.
+      `MessageController.sendMessage()` (REST) — calls `rateLimiterService.checkMessageRate()`,
+      propagates as HTTP 429 via GlobalExceptionHandler.
+      `ChatController.send()` (STOMP) — catches `RateLimitExceededException`, sends
+      `{type:RATE_LIMITED}` to `/user/queue/notifications` instead (STOMP has no HTTP status).
+    - FE: `ConversationsNotifier._onNotification()` — handles `RATE_LIMITED` type by calling
+      `showErrorSnackBar` with `ctx.l10n.rateLimitError` (l10n key added to all 7 ARBs).
+      `ChatNotifier.sendMessage()` REST fallback — catches `DioException` 429, shows snackbar.
+      i18n: `rateLimitError` added to all 7 ARB files; `flutter gen-l10n` regenerated.
+  - **Tests:**
+    - `mvn test` → **BUILD SUCCESS, 53/53** (MessageServiceTest 29 incl. 2 new:
+      `getMessagesSince_ShouldReturnNewerMessages`, `getMessagesSince_WhenNotParticipant_ShouldThrow`;
+      `ChatControllerTest` updated with `@Mock RateLimiterService`).
+    - `flutter analyze` → **No issues found**; `flutter test` → **All tests passed**.
+  - **File sizes:** BE max 498 lines (MessageService — within 500 limit); FE domain provider
+    780 lines (pre-noted codegen exception); all new files and other modified files within limits.
+  - **Files for Gemini QC:** BE — `exception/RateLimitExceededException.java`,
+    `service/RateLimiterService.java`, `exception/GlobalExceptionHandler.java`,
+    `repository/MessageRepository.java`, `service/MessageService.java`,
+    `controller/ConversationController.java`, `controller/ChatController.java`,
+    `controller/MessageController.java`, `service/MessageServiceTest.java`,
+    `controller/ChatControllerTest.java`;
+    FE — `data/stomp_service.dart`, `data/chat_repository.dart`, `domain/chat_provider.dart`,
+    `l10n/app_*.arb`.
+- [2026-06-02] **SPRINT 17 (TASKS 59–61) → ✅ DONE (full vertical slices).**
+  - **TASK 59 — Date of Birth & Cover Photo Customization:**
+    - DB/BE: Added `dateOfBirth: Date` to the `User` schema in `@platform/database`. Updated `UsersService` to parse `dateOfBirth` and update the profile database entry. Exposed in `Patch /api/users/me`.
+    - FE: Added `dateOfBirth` property to `UserModel`. Displayed formatted birthday row on `UserProfileScreen`. Redesigned `EditProfileScreen` with overlapping cover photo header and avatar stack (Zalo/Facebook style), including a native `showDatePicker` DOB picker.
+  - **TASK 60 — User Password Change:**
+    - BE: Added `POST /api/users/me/change-password` endpoint. Verified current password using `bcrypt` and updated to hashed new password.
+    - FE: Created modular `ChangePasswordDialog` widget in `change_password_dialog.dart`. Added a "Change Password" tile in `SettingsScreen`.
+  - **TASK 61 — Double-Tap Reactions:**
+    - FE: Bound `onDoubleTap` to message bubbles in `MessageBubble` to toggle a ❤️ reaction.
+  - **Tests:**
+    - `pnpm --filter @platform/auth-service test` $\rightarrow$ **PASS (6/6)**.
+    - `flutter analyze` $\rightarrow$ **No issues found**; `flutter test` $\rightarrow$ **All tests passed**.
+  - **File sizes:** All within limits.
+  - **Files for Gemini QC:** BE — `user.schema.ts`, `users.service.ts`, `users.controller.ts`; FE — `auth_state.dart`, `auth_repository.dart`, `auth_provider.dart`, `user_profile_screen.dart`, `edit_profile_screen.dart`, `change_password_dialog.dart`, `settings_screen.dart`, `message_bubble.dart`, `app_*.arb`.
+- [2026-06-02] **SPRINT 16 (TASKS 57–58) → ✅ DONE (full vertical slices).**
+  - **TASK 57 — Shared Media & Links Gallery:**
+    - BE: `MessageRepository` — added `findByConversationIdAndTypeInOrderByCreatedAtDesc` (media/file types)
+      and `findLinksByConversationId` (text messages with `https?://` regex, non-recalled).
+      New `AttachmentService` (66 lines) handles gallery logic to keep `MessageService` within 500-line limit;
+      calls package-private `MessageService.toResponse()` from same package.
+      `ConversationController`: new `GET /api/conversations/{id}/attachments?type=media|file|link` endpoint
+      (with participant validation delegated to `AttachmentService`).
+    - FE: `ChatRepository.getSharedAttachments(conversationId, type)` → paginated REST call.
+      New `ExploreMediaScreen` (290 lines) — 3-tab layout (Media grid, Files list, Links list);
+      Media tab: 3-column grid of `CachedNetworkImage` thumbnails.
+      Files tab: reuses existing `FileContent` widget in a `ListView`.
+      Links tab: fetches OG metadata via existing `linkPreviewProvider`, tap-to-open via `url_launcher`.
+      `GroupInfoScreen`: added "Shared Media & Files" `ListTile` → `/shared-media/:id`.
+      `UserProfileScreen`: accepts optional `conversationId`; shows media tile for non-self profiles.
+      New route `/shared-media/:conversationId` in `app_router.dart`.
+    - i18n: `sharedMediaTitle`, `tabMedia`, `tabFiles`, `tabLinks`, `noMediaFound`, `noFilesFound`,
+      `noLinksFound`, `reactionsDetail` added to all 7 ARB files; `flutter gen-l10n` regenerated.
+  - **TASK 58 — Reactions Detail Modal:**
+    - FE: New `ReactionsDetailModal` bottom sheet (146 lines, `DraggableScrollableSheet`).
+      Groups reactors by emoji into tabs (scrollable when > 4 emojis); each tab lists users
+      resolved via `userProfileProvider` (avatar + displayName).
+      `ReactionChips` in `message_bubble_parts.dart`: wrapped each chip in `GestureDetector`
+      that calls `showReactionsDetailModal(context, message)` on tap.
+  - **Tests:**
+    - `mvn test` → **BUILD SUCCESS, 53/53** (no new backend tests needed — AttachmentService
+      delegates to existing repository layer already covered by Spring Data contracts).
+    - `flutter analyze` → **No issues found**; `flutter test` → **All tests passed**.
+  - **File sizes:** All within limits — BE max 197 lines (ConversationController), new AttachmentService 66 lines;
+    FE new files max 290 lines (ExploreMediaScreen), modified files max 348 lines (UserProfileScreen).
+  - **Files for Gemini QC:** BE — `repository/MessageRepository.java`, `service/AttachmentService.java`,
+    `controller/ConversationController.java`; FE — `data/chat_repository.dart`,
+    `ui/explore_media_screen.dart`, `ui/widgets/reactions_detail_modal.dart`,
+    `ui/widgets/message_bubble_parts.dart`, `ui/group_info_screen.dart`,
+    `ui/user_profile_screen.dart`, `core/router/app_router.dart`, `l10n/app_*.arb`.
 - [2026-06-01] **SPRINT 13 (TASKS 49–51) → ✅ DONE (full vertical slices).**
   - **TASK 49 — Mention System (@username):**
     - BE: `Message` model gained `mentions` (List<String> of userIds). `MessageService.sendMessage`

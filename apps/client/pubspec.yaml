@@ -55,6 +55,9 @@ dependencies:
   # WebRTC for 1-1 Calling
   flutter_webrtc: ^0.12.11
 
+  # Rich text / markdown rendering in message bubbles (Task 54)
+  flutter_markdown: ^0.7.7
+
   # Icons
   cupertino_icons: ^1.0.8
 

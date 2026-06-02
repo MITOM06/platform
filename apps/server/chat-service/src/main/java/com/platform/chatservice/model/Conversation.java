@@ -7,6 +7,7 @@ import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -44,6 +45,14 @@ public class Conversation {
 
     /** User id who created the conversation/group. */
     private String createdBy;
+
+    /** Public group channels are discoverable and joinable by any authenticated user. */
+    @Builder.Default
+    private boolean publicChannel = false;
+
+    /** Message ids pinned in this conversation (most recent first, max 5). */
+    @Builder.Default
+    private List<String> pinnedMessages = new ArrayList<>();
 
     /** "pending" (stranger request awaiting acceptance) or "accepted". Null on
      *  legacy docs => treated as accepted. */

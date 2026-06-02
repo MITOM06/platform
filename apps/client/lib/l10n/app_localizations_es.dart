@@ -652,4 +652,85 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get searchNoResults => 'No se encontraron mensajes';
+
+  @override
+  String get exploreChannels => 'Explorar canales';
+
+  @override
+  String get searchChannelsHint => 'Buscar canales…';
+
+  @override
+  String get noPublicChannels => 'No se encontraron canales públicos';
+
+  @override
+  String get joinChannel => 'Unirse';
+
+  @override
+  String get pinMessage => 'Fijar';
+
+  @override
+  String get forwardMessage => 'Reenviar';
+
+  @override
+  String get messageForwarded => 'Mensaje reenviado';
+
+  @override
+  String get forwardFailed => 'Error al reenviar el mensaje';
+
+  @override
+  String get noConversationsToForward => 'No hay conversaciones disponibles';
+
+  @override
+  String get rateLimitError => 'Demasiados mensajes. Por favor, más despacio.';
+
+  @override
+  String get sharedMediaTitle => 'Medios y archivos compartidos';
+
+  @override
+  String get tabMedia => 'Medios';
+
+  @override
+  String get tabFiles => 'Archivos';
+
+  @override
+  String get tabLinks => 'Enlaces';
+
+  @override
+  String get noMediaFound => 'No se encontraron medios';
+
+  @override
+  String get noFilesFound => 'No se encontraron archivos';
+
+  @override
+  String get noLinksFound => 'No se encontraron enlaces';
+
+  @override
+  String get reactionsDetail => 'Reacciones';
+
+  @override
+  String get changePasswordTitle => 'Cambiar contraseña';
+
+  @override
+  String get currentPassword => 'Contraseña actual';
+
+  @override
+  String get newPassword => 'Nueva contraseña';
+
+  @override
+  String get confirmPassword => 'Confirmar nueva contraseña';
+
+  @override
+  String get dateOfBirth => 'Fecha de nacimiento';
+
+  @override
+  String get notSet => 'No establecido';
+
+  @override
+  String get passwordChangedSuccess => 'Contraseña cambiada con éxito';
+
+  @override
+  String get errCurrentPasswordIncorrect => 'Contraseña actual incorrecta';
+
+  @override
+  String get changeCoverPhoto => 'Cambiar foto de portada';
 }

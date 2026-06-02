@@ -645,4 +645,85 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get searchNoResults => 'No messages found';
+
+  @override
+  String get exploreChannels => 'Explore Channels';
+
+  @override
+  String get searchChannelsHint => 'Search channels…';
+
+  @override
+  String get noPublicChannels => 'No public channels found';
+
+  @override
+  String get joinChannel => 'Join';
+
+  @override
+  String get pinMessage => 'Pin';
+
+  @override
+  String get forwardMessage => 'Forward';
+
+  @override
+  String get messageForwarded => 'Message forwarded';
+
+  @override
+  String get forwardFailed => 'Failed to forward message';
+
+  @override
+  String get noConversationsToForward => 'No conversations available';
+
+  @override
+  String get rateLimitError => 'Too many messages. Please slow down.';
+
+  @override
+  String get sharedMediaTitle => 'Shared Media & Files';
+
+  @override
+  String get tabMedia => 'Media';
+
+  @override
+  String get tabFiles => 'Files';
+
+  @override
+  String get tabLinks => 'Links';
+
+  @override
+  String get noMediaFound => 'No media found';
+
+  @override
+  String get noFilesFound => 'No files found';
+
+  @override
+  String get noLinksFound => 'No links found';
+
+  @override
+  String get reactionsDetail => 'Reactions';
+
+  @override
+  String get changePasswordTitle => 'Change Password';
+
+  @override
+  String get currentPassword => 'Current Password';
+
+  @override
+  String get newPassword => 'New Password';
+
+  @override
+  String get confirmPassword => 'Confirm New Password';
+
+  @override
+  String get dateOfBirth => 'Date of Birth';
+
+  @override
+  String get notSet => 'Not set';
+
+  @override
+  String get passwordChangedSuccess => 'Password changed successfully';
+
+  @override
+  String get errCurrentPasswordIncorrect => 'Incorrect current password';
+
+  @override
+  String get changeCoverPhoto => 'Change cover photo';
 }

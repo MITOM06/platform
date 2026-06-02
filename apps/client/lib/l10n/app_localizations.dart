@@ -1295,6 +1295,168 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No messages found'**
   String get searchNoResults;
+
+  /// No description provided for @exploreChannels.
+  ///
+  /// In en, this message translates to:
+  /// **'Explore Channels'**
+  String get exploreChannels;
+
+  /// No description provided for @searchChannelsHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Search channels…'**
+  String get searchChannelsHint;
+
+  /// No description provided for @noPublicChannels.
+  ///
+  /// In en, this message translates to:
+  /// **'No public channels found'**
+  String get noPublicChannels;
+
+  /// No description provided for @joinChannel.
+  ///
+  /// In en, this message translates to:
+  /// **'Join'**
+  String get joinChannel;
+
+  /// No description provided for @pinMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Pin'**
+  String get pinMessage;
+
+  /// No description provided for @forwardMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Forward'**
+  String get forwardMessage;
+
+  /// No description provided for @messageForwarded.
+  ///
+  /// In en, this message translates to:
+  /// **'Message forwarded'**
+  String get messageForwarded;
+
+  /// No description provided for @forwardFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to forward message'**
+  String get forwardFailed;
+
+  /// No description provided for @noConversationsToForward.
+  ///
+  /// In en, this message translates to:
+  /// **'No conversations available'**
+  String get noConversationsToForward;
+
+  /// No description provided for @rateLimitError.
+  ///
+  /// In en, this message translates to:
+  /// **'Too many messages. Please slow down.'**
+  String get rateLimitError;
+
+  /// No description provided for @sharedMediaTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Shared Media & Files'**
+  String get sharedMediaTitle;
+
+  /// No description provided for @tabMedia.
+  ///
+  /// In en, this message translates to:
+  /// **'Media'**
+  String get tabMedia;
+
+  /// No description provided for @tabFiles.
+  ///
+  /// In en, this message translates to:
+  /// **'Files'**
+  String get tabFiles;
+
+  /// No description provided for @tabLinks.
+  ///
+  /// In en, this message translates to:
+  /// **'Links'**
+  String get tabLinks;
+
+  /// No description provided for @noMediaFound.
+  ///
+  /// In en, this message translates to:
+  /// **'No media found'**
+  String get noMediaFound;
+
+  /// No description provided for @noFilesFound.
+  ///
+  /// In en, this message translates to:
+  /// **'No files found'**
+  String get noFilesFound;
+
+  /// No description provided for @noLinksFound.
+  ///
+  /// In en, this message translates to:
+  /// **'No links found'**
+  String get noLinksFound;
+
+  /// No description provided for @reactionsDetail.
+  ///
+  /// In en, this message translates to:
+  /// **'Reactions'**
+  String get reactionsDetail;
+
+  /// No description provided for @changePasswordTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Change Password'**
+  String get changePasswordTitle;
+
+  /// No description provided for @currentPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Current Password'**
+  String get currentPassword;
+
+  /// No description provided for @newPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'New Password'**
+  String get newPassword;
+
+  /// No description provided for @confirmPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm New Password'**
+  String get confirmPassword;
+
+  /// No description provided for @dateOfBirth.
+  ///
+  /// In en, this message translates to:
+  /// **'Date of Birth'**
+  String get dateOfBirth;
+
+  /// No description provided for @notSet.
+  ///
+  /// In en, this message translates to:
+  /// **'Not set'**
+  String get notSet;
+
+  /// No description provided for @passwordChangedSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Password changed successfully'**
+  String get passwordChangedSuccess;
+
+  /// No description provided for @errCurrentPasswordIncorrect.
+  ///
+  /// In en, this message translates to:
+  /// **'Incorrect current password'**
+  String get errCurrentPasswordIncorrect;
+
+  /// No description provided for @changeCoverPhoto.
+  ///
+  /// In en, this message translates to:
+  /// **'Change cover photo'**
+  String get changeCoverPhoto;
 }
 
 class _AppLocalizationsDelegate

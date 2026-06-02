@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../domain/chat_provider.dart';
 import '../../domain/chat_state.dart';
+import 'reactions_detail_modal.dart';
 
 class SenderName extends ConsumerWidget {
   final String userId;
@@ -70,22 +71,25 @@ class ReactionChips extends StatelessWidget {
         spacing: 4,
         children: [
           for (final entry in counts.entries)
-            Container(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
-              decoration: BoxDecoration(
-                color: AppTheme.darkSurface,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                  color: AppTheme.ponCyan.withValues(alpha: 0.3),
-                  width: 1,
+            GestureDetector(
+              onTap: () => showReactionsDetailModal(context, message),
+              child: Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+                decoration: BoxDecoration(
+                  color: AppTheme.darkSurface,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: AppTheme.ponCyan.withValues(alpha: 0.3),
+                    width: 1,
+                  ),
                 ),
-              ),
-              child: Text(
-                entry.value > 1
-                    ? '${entry.key} ${entry.value}'
-                    : entry.key,
-                style: const TextStyle(fontSize: 12),
+                child: Text(
+                  entry.value > 1
+                      ? '${entry.key} ${entry.value}'
+                      : entry.key,
+                  style: const TextStyle(fontSize: 12),
+                ),
               ),
             ),
         ],

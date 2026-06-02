@@ -190,7 +190,7 @@ app.jwt.secret=your_shared_secret_here
 
 ## Features
 
-### Implemented
+### Core (Sprints 1–11)
 
 - Email/password registration with OTP email verification
 - JWT access + refresh token rotation
@@ -198,15 +198,54 @@ app.jwt.secret=your_shared_secret_here
 - 1-on-1 realtime messaging over WebSocket (STOMP protocol)
 - User presence — online/offline tracking via Redis
 - Conversation list with pagination
-- Message history with cursor-based pagination
 - New conversation creation with user search
 - JWT auth over WebSocket via channel interceptor
-- Flutter Material 3 UI — fully null-safe Dart 3
-- Group conversations & Reactions (i18n supported)
+- Flutter Neon Dark UI — fully null-safe Dart 3, i18n (7 languages)
+- Group conversations & emoji reactions
 - Read receipts & typing indicators
-- Image/Video media attachments (GridFS)
+- Image/video media attachments (GridFS)
 - Push notifications (FCM)
-- Audio/Video Calling (WebRTC 1-1)
+- Audio/Video calling (WebRTC 1-on-1)
+- User profiles (bio, avatar, cover photo, friend counts)
+- Friend request / contact system & block user
+- Active friends row with last-seen presence time
+
+### Sprint 12 — Rich Messaging
+
+- **Edit message** — inline edit with revision history (BE + FE)
+- **Generic file upload** — PDF, ZIP, DOC attachments via GridFS
+- **Cursor-based pagination** — efficient infinite scroll for message history
+- **Link preview** — Open Graph unfurl for URLs shared in chat
+
+### Sprint 13 — Discovery & Notifications
+
+- **Mention system** — `@username` tagging with in-chat highlights
+- **Message search** — full-text search within a conversation
+- **Unread badge counts** — accurate per-conversation unread indicators
+
+### Sprint 14 — Channels & Content
+
+- **Public channels** — discovery feed and one-tap join
+- **Pin messages** — pin important messages in group/channel info
+- **Forward messages** — forward any message to another conversation
+- **Markdown rendering** — bold, italic, code blocks, and lists in messages
+
+### Sprint 15 — Reliability & Safety
+
+- **Offline catch-up sync** — messages received while offline delivered on reconnect
+- **API rate limiting** — Redis-backed sliding-window throttle on the server; SnackBar notification on the client when the limit is hit
+
+### Sprint 16 — Media Gallery & Reactions
+
+- **Shared media/files/links gallery** — 3-tab bottom sheet under group/profile info (images, files, links)
+- **Reaction detail modal** — draggable bottom sheet listing who reacted with each emoji
+
+### Sprint 17 — Profile & UX Polish
+
+- **Date of Birth (DOB) selector** — calendar picker stored on the user profile
+- **Profile cover photo upload** — overlapping header with camera icon for in-place customization
+- **Change password** — dedicated security settings screen with current/new/confirm fields
+- **Double-tap quick reaction** — double-tap any message to instantly react with ❤️
 
 ### Roadmap
 

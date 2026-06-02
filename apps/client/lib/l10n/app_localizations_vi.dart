@@ -646,4 +646,85 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get searchNoResults => 'Không tìm thấy tin nhắn';
+
+  @override
+  String get exploreChannels => 'Khám phá kênh';
+
+  @override
+  String get searchChannelsHint => 'Tìm kênh…';
+
+  @override
+  String get noPublicChannels => 'Không tìm thấy kênh công khai';
+
+  @override
+  String get joinChannel => 'Tham gia';
+
+  @override
+  String get pinMessage => 'Ghim';
+
+  @override
+  String get forwardMessage => 'Chuyển tiếp';
+
+  @override
+  String get messageForwarded => 'Đã chuyển tiếp tin nhắn';
+
+  @override
+  String get forwardFailed => 'Chuyển tiếp thất bại';
+
+  @override
+  String get noConversationsToForward => 'Không có cuộc trò chuyện nào';
+
+  @override
+  String get rateLimitError => 'Bạn gửi quá nhiều tin nhắn. Hãy chậm lại.';
+
+  @override
+  String get sharedMediaTitle => 'Ảnh, video & tệp';
+
+  @override
+  String get tabMedia => 'Phương tiện';
+
+  @override
+  String get tabFiles => 'Tệp';
+
+  @override
+  String get tabLinks => 'Liên kết';
+
+  @override
+  String get noMediaFound => 'Không tìm thấy ảnh/video';
+
+  @override
+  String get noFilesFound => 'Không tìm thấy tệp';
+
+  @override
+  String get noLinksFound => 'Không tìm thấy liên kết';
+
+  @override
+  String get reactionsDetail => 'Cảm xúc';
+
+  @override
+  String get changePasswordTitle => 'Đổi mật khẩu';
+
+  @override
+  String get currentPassword => 'Mật khẩu hiện tại';
+
+  @override
+  String get newPassword => 'Mật khẩu mới';
+
+  @override
+  String get confirmPassword => 'Xác nhận mật khẩu mới';
+
+  @override
+  String get dateOfBirth => 'Ngày sinh';
+
+  @override
+  String get notSet => 'Chưa thiết lập';
+
+  @override
+  String get passwordChangedSuccess => 'Đổi mật khẩu thành công';
+
+  @override
+  String get errCurrentPasswordIncorrect => 'Mật khẩu hiện tại không chính xác';
+
+  @override
+  String get changeCoverPhoto => 'Đổi ảnh nền';
 }

@@ -23,6 +23,31 @@ class LastMessageModel {
 }
 
 @immutable
+class PinnedMessageModel {
+  final String id;
+  final String senderId;
+  final String content;
+  final DateTime? createdAt;
+
+  const PinnedMessageModel({
+    required this.id,
+    required this.senderId,
+    required this.content,
+    this.createdAt,
+  });
+
+  factory PinnedMessageModel.fromJson(Map<String, dynamic> json) =>
+      PinnedMessageModel(
+        id: json['id'] as String,
+        senderId: json['senderId'] as String,
+        content: json['content'] as String? ?? '',
+        createdAt: json['createdAt'] != null
+            ? DateTime.parse(json['createdAt'] as String)
+            : null,
+      );
+}
+
+@immutable
 class ConversationModel {
   final String id;
   final String type; // "direct" | "group"
@@ -37,6 +62,8 @@ class ConversationModel {
   final int unreadCount;
   final DateTime createdAt;
   final String status; // "pending" | "accepted"
+  final bool isPublic; // public discoverable channel (Task 52)
+  final List<PinnedMessageModel> pinnedMessages; // pinned messages (Task 53)
 
   const ConversationModel({
     required this.id,
@@ -52,6 +79,8 @@ class ConversationModel {
     required this.unreadCount,
     required this.createdAt,
     this.status = 'accepted',
+    this.isPublic = false,
+    this.pinnedMessages = const [],
   });
 
   bool get isGroup => type == 'group';
@@ -79,6 +108,11 @@ class ConversationModel {
           ? DateTime.parse(json['createdAt'] as String)
           : DateTime.now(),
       status: json['status'] as String? ?? 'accepted',
+      isPublic: json['isPublic'] as bool? ?? false,
+      pinnedMessages: (json['pinnedMessages'] as List? ?? [])
+          .map((e) =>
+              PinnedMessageModel.fromJson(e as Map<String, dynamic>))
+          .toList(),
     );
   }
 
@@ -96,6 +130,8 @@ class ConversationModel {
     int? unreadCount,
     DateTime? createdAt,
     String? status,
+    bool? isPublic,
+    List<PinnedMessageModel>? pinnedMessages,
   }) {
     return ConversationModel(
       id: id ?? this.id,
@@ -111,6 +147,8 @@ class ConversationModel {
       unreadCount: unreadCount ?? this.unreadCount,
       createdAt: createdAt ?? this.createdAt,
       status: status ?? this.status,
+      isPublic: isPublic ?? this.isPublic,
+      pinnedMessages: pinnedMessages ?? this.pinnedMessages,
     );
   }
 }
@@ -416,6 +454,17 @@ class MessageUpdateEvent {
 }
 
 @immutable
+class PinnedMessageEvent {
+  final String conversationId;
+  final List<String> pinnedMessageIds;
+
+  const PinnedMessageEvent({
+    required this.conversationId,
+    required this.pinnedMessageIds,
+  });
+}
+
+@immutable
 class ChatState {
   final List<MessageModel> messages;
   final bool hasMore;
@@ -428,6 +477,8 @@ class ChatState {
   final MessageModel? editingMessage;
   // Message id to scroll to + briefly highlight after a search jump (Task 50).
   final String? highlightMessageId;
+  // Pinned messages for this conversation (Task 53). First = shown in header bar.
+  final List<PinnedMessageModel> pinnedMessages;
 
   const ChatState({
     required this.messages,
@@ -438,6 +489,7 @@ class ChatState {
     this.replyingTo,
     this.editingMessage,
     this.highlightMessageId,
+    this.pinnedMessages = const [],
   });
 
   ChatState copyWith({
@@ -452,6 +504,7 @@ class ChatState {
     bool clearEditingMessage = false,
     String? highlightMessageId,
     bool clearHighlight = false,
+    List<PinnedMessageModel>? pinnedMessages,
   }) {
     return ChatState(
       messages: messages ?? this.messages,
@@ -465,6 +518,7 @@ class ChatState {
           : (editingMessage ?? this.editingMessage),
       highlightMessageId:
           clearHighlight ? null : (highlightMessageId ?? this.highlightMessageId),
+      pinnedMessages: pinnedMessages ?? this.pinnedMessages,
     );
   }
 }

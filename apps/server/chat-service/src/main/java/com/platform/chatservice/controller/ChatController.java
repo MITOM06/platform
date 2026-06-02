@@ -3,8 +3,10 @@ package com.platform.chatservice.controller;
 import com.platform.chatservice.dto.ChatMessageDto;
 import com.platform.chatservice.dto.MessageResponse;
 import com.platform.chatservice.dto.SendMessageRequest;
+import com.platform.chatservice.exception.RateLimitExceededException;
 import com.platform.chatservice.service.ConversationService;
 import com.platform.chatservice.service.MessageService;
+import com.platform.chatservice.service.RateLimiterService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
@@ -24,9 +26,20 @@ public class ChatController {
     private final ConversationService conversationService;
     private final SimpMessagingTemplate messagingTemplate;
     private final com.platform.chatservice.service.FcmService fcmService;
+    private final RateLimiterService rateLimiterService;
 
     @MessageMapping("/chat.send")
     public void send(@Payload ChatMessageDto dto, Principal principal) {
+        try {
+            rateLimiterService.checkMessageRate(principal.getName());
+        } catch (RateLimitExceededException e) {
+            // STOMP has no HTTP status — send an error event to the user's private queue.
+            messagingTemplate.convertAndSendToUser(
+                principal.getName(), "/queue/notifications",
+                Map.of("type", "RATE_LIMITED", "message", e.getMessage()));
+            return;
+        }
+
         SendMessageRequest request = new SendMessageRequest(
                 dto.getConversationId(),
                 dto.getContent(),

@@ -357,7 +357,7 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String membersCount(int count) {
-    return '멤버 $count명';
+    return '$count명';
   }
 
   @override
@@ -637,4 +637,85 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get searchNoResults => '메시지를 찾을 수 없습니다';
+
+  @override
+  String get exploreChannels => '채널 탐색';
+
+  @override
+  String get searchChannelsHint => '채널 검색…';
+
+  @override
+  String get noPublicChannels => '공개 채널을 찾을 수 없습니다';
+
+  @override
+  String get joinChannel => '참여';
+
+  @override
+  String get pinMessage => '고정';
+
+  @override
+  String get forwardMessage => '전달';
+
+  @override
+  String get messageForwarded => '메시지가 전달되었습니다';
+
+  @override
+  String get forwardFailed => '메시지 전달 실패';
+
+  @override
+  String get noConversationsToForward => '전달할 대화가 없습니다';
+
+  @override
+  String get rateLimitError => '메시지를 너무 많이 보내고 있습니다. 잠시 후 다시 시도하세요.';
+
+  @override
+  String get sharedMediaTitle => '공유 미디어 및 파일';
+
+  @override
+  String get tabMedia => '미디어';
+
+  @override
+  String get tabFiles => '파일';
+
+  @override
+  String get tabLinks => '링크';
+
+  @override
+  String get noMediaFound => '미디어를 찾을 수 없습니다';
+
+  @override
+  String get noFilesFound => '파일을 찾을 수 없습니다';
+
+  @override
+  String get noLinksFound => '링크를 찾을 수 없습니다';
+
+  @override
+  String get reactionsDetail => '리액션';
+
+  @override
+  String get changePasswordTitle => '비밀번호 변경';
+
+  @override
+  String get currentPassword => '현재 비밀번호';
+
+  @override
+  String get newPassword => '새 비밀번호';
+
+  @override
+  String get confirmPassword => '새 비밀번호 확인';
+
+  @override
+  String get dateOfBirth => '생년월일';
+
+  @override
+  String get notSet => '설정되지 않음';
+
+  @override
+  String get passwordChangedSuccess => '비밀번호가 성공적으로 변경되었습니다';
+
+  @override
+  String get errCurrentPasswordIncorrect => '현재 비밀번호가 올바르지 않습니다';
+
+  @override
+  String get changeCoverPhoto => '배경 사진 변경';
 }

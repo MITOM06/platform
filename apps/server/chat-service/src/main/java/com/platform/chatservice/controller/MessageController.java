@@ -1,12 +1,15 @@
 package com.platform.chatservice.controller;
 
 import com.platform.chatservice.dto.EditMessageRequest;
+import com.platform.chatservice.dto.ForwardMessageRequest;
 import com.platform.chatservice.dto.MessageResponse;
+import com.platform.chatservice.dto.PinResult;
 import com.platform.chatservice.dto.ReactionRequest;
 import com.platform.chatservice.dto.SendMessageRequest;
 import com.platform.chatservice.exception.UnauthorizedException;
 import com.platform.chatservice.security.UserPrincipal;
 import com.platform.chatservice.service.MessageService;
+import com.platform.chatservice.service.RateLimiterService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
@@ -23,10 +26,12 @@ public class MessageController {
 
     private final MessageService messageService;
     private final SimpMessagingTemplate messagingTemplate;
+    private final RateLimiterService rateLimiterService;
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public MessageResponse sendMessage(@RequestBody SendMessageRequest request) {
+        rateLimiterService.checkMessageRate(currentUserId());
         return messageService.sendMessage(currentUserId(), request);
     }
 
@@ -84,6 +89,40 @@ public class MessageController {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteForMe(@PathVariable String id) {
         messageService.deleteForMe(currentUserId(), id);
+    }
+
+    /** Pin a message in its conversation (Task 53). Broadcasts a PINNED_MESSAGE event. */
+    @PostMapping("/{id}/pin")
+    public Map<String, Object> pinMessage(@PathVariable String id) {
+        PinResult result = messageService.pinMessage(currentUserId(), id);
+        messagingTemplate.convertAndSend(
+            "/topic/conversation/" + result.conversationId(),
+            Map.of("type", "PINNED_MESSAGE", "conversationId", result.conversationId(),
+                   "messageId", id, "pinnedMessages", result.pinnedMessages()));
+        return Map.of("pinnedMessages", result.pinnedMessages());
+    }
+
+    /** Unpin a message (Task 53). Broadcasts a PINNED_MESSAGE event. */
+    @DeleteMapping("/{id}/pin")
+    public Map<String, Object> unpinMessage(@PathVariable String id) {
+        PinResult result = messageService.unpinMessage(currentUserId(), id);
+        messagingTemplate.convertAndSend(
+            "/topic/conversation/" + result.conversationId(),
+            Map.of("type", "PINNED_MESSAGE", "conversationId", result.conversationId(),
+                   "messageId", id, "pinnedMessages", result.pinnedMessages()));
+        return Map.of("pinnedMessages", result.pinnedMessages());
+    }
+
+    /** Forward a message to another conversation (Task 53). */
+    @PostMapping("/{id}/forward")
+    @ResponseStatus(HttpStatus.CREATED)
+    public MessageResponse forwardMessage(@PathVariable String id,
+                                          @RequestBody ForwardMessageRequest request) {
+        MessageResponse forwarded = messageService.forwardMessage(
+            currentUserId(), id, request.targetConversationId());
+        messagingTemplate.convertAndSend(
+            "/topic/conversation/" + forwarded.conversationId(), forwarded);
+        return forwarded;
     }
 
     private void broadcastReaction(MessageResponse message) {

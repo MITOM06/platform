@@ -655,4 +655,85 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get searchNoResults => 'Aucun message trouvé';
+
+  @override
+  String get exploreChannels => 'Explorer les canaux';
+
+  @override
+  String get searchChannelsHint => 'Rechercher des canaux…';
+
+  @override
+  String get noPublicChannels => 'Aucun canal public trouvé';
+
+  @override
+  String get joinChannel => 'Rejoindre';
+
+  @override
+  String get pinMessage => 'Épingler';
+
+  @override
+  String get forwardMessage => 'Transférer';
+
+  @override
+  String get messageForwarded => 'Message transféré';
+
+  @override
+  String get forwardFailed => 'Échec du transfert';
+
+  @override
+  String get noConversationsToForward => 'Aucune conversation disponible';
+
+  @override
+  String get rateLimitError => 'Trop de messages. Veuillez ralentir.';
+
+  @override
+  String get sharedMediaTitle => 'Médias et fichiers partagés';
+
+  @override
+  String get tabMedia => 'Médias';
+
+  @override
+  String get tabFiles => 'Fichiers';
+
+  @override
+  String get tabLinks => 'Liens';
+
+  @override
+  String get noMediaFound => 'Aucun média trouvé';
+
+  @override
+  String get noFilesFound => 'Aucun fichier trouvé';
+
+  @override
+  String get noLinksFound => 'Aucun lien trouvé';
+
+  @override
+  String get reactionsDetail => 'Réactions';
+
+  @override
+  String get changePasswordTitle => 'Changer le mot de passe';
+
+  @override
+  String get currentPassword => 'Mot de passe actuel';
+
+  @override
+  String get newPassword => 'Nouveau mot de passe';
+
+  @override
+  String get confirmPassword => 'Confirmer le nouveau mot de passe';
+
+  @override
+  String get dateOfBirth => 'Date de naissance';
+
+  @override
+  String get notSet => 'Non défini';
+
+  @override
+  String get passwordChangedSuccess => 'Mot de passe modifié avec succès';
+
+  @override
+  String get errCurrentPasswordIncorrect => 'Mot de passe actuel incorrect';
+
+  @override
+  String get changeCoverPhoto => 'Changer la photo de couverture';
 }

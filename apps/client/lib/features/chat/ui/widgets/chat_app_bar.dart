@@ -82,7 +82,7 @@ class ChatScreenAppBar extends ConsumerWidget implements PreferredSizeWidget {
                 if (isGroup) {
                   context.push('/group-info/$conversationId');
                 } else if (otherUserId != null && otherUserId.isNotEmpty) {
-                  context.push('/user/$otherUserId');
+                  context.push('/user/$otherUserId?conversationId=$conversationId');
                 }
               },
               child: ConversationAvatar(

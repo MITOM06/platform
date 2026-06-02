@@ -17,6 +17,8 @@ import '../../features/chat/ui/new_conversation_screen.dart';
 import '../../features/chat/ui/new_group_screen.dart';
 import '../../features/profile/ui/user_profile_screen.dart';
 import '../../features/profile/ui/edit_profile_screen.dart';
+import '../../features/chat/ui/explore_screen.dart';
+import '../../features/chat/ui/explore_media_screen.dart';
 import '../../features/friends/ui/friends_screen.dart';
 import '../../features/settings/ui/settings_screen.dart';
 import '../../../core/providers/theme_provider.dart';
@@ -167,8 +169,11 @@ GoRouter appRouter(AppRouterRef ref) {
       GoRoute(
         path: '/user/:id',
         name: 'user-profile',
-        builder: (context, state) =>
-            UserProfileScreen(userId: state.pathParameters['id']!),
+        builder: (context, state) {
+          final id = state.pathParameters['id']!;
+          final convId = state.uri.queryParameters['conversationId'];
+          return UserProfileScreen(userId: id, conversationId: convId);
+        },
       ),
       GoRoute(
         path: '/edit-profile',
@@ -185,6 +190,18 @@ GoRouter appRouter(AppRouterRef ref) {
         name: 'group-info',
         builder: (context, state) =>
             GroupInfoScreen(conversationId: state.pathParameters['id']!),
+      ),
+      GoRoute(
+        path: '/explore',
+        name: 'explore',
+        builder: (context, state) => const ExploreScreen(),
+      ),
+      GoRoute(
+        path: '/shared-media/:conversationId',
+        name: 'shared-media',
+        builder: (context, state) => ExploreMediaScreen(
+          conversationId: state.pathParameters['conversationId']!,
+        ),
       ),
       GoRoute(
         path: '/call',
