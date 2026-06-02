@@ -107,6 +107,48 @@ public class ConversationController {
         return updated;
     }
 
+    @PostMapping("/{id}/mute")
+    public ConversationResponse muteConversation(@PathVariable String id) {
+        ConversationResponse updated = conversationService.muteConversation(currentUserId(), id);
+        broadcastConversationUpdated(updated);
+        return updated;
+    }
+
+    @PostMapping("/{id}/unmute")
+    public ConversationResponse unmuteConversation(@PathVariable String id) {
+        ConversationResponse updated = conversationService.unmuteConversation(currentUserId(), id);
+        broadcastConversationUpdated(updated);
+        return updated;
+    }
+
+    @PostMapping("/{id}/archive")
+    public ConversationResponse archiveConversation(@PathVariable String id) {
+        ConversationResponse updated = conversationService.archiveConversation(currentUserId(), id);
+        broadcastConversationUpdated(updated);
+        return updated;
+    }
+
+    @PostMapping("/{id}/unarchive")
+    public ConversationResponse unarchiveConversation(@PathVariable String id) {
+        ConversationResponse updated = conversationService.unarchiveConversation(currentUserId(), id);
+        broadcastConversationUpdated(updated);
+        return updated;
+    }
+
+    @PostMapping("/{id}/unread")
+    public ConversationResponse markConversationUnread(@PathVariable String id) {
+        ConversationResponse updated = conversationService.markConversationUnread(currentUserId(), id);
+        broadcastConversationUpdated(updated);
+        return updated;
+    }
+
+    @PostMapping("/{id}/read")
+    public ConversationResponse markConversationRead(@PathVariable String id) {
+        ConversationResponse updated = conversationService.markConversationRead(currentUserId(), id);
+        broadcastConversationUpdated(updated);
+        return updated;
+    }
+
     @PutMapping("/{id}/settings")
     public ConversationResponse updateSettings(@PathVariable String id,
                                                @RequestBody AutoDeleteRequest request) {

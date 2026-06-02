@@ -220,4 +220,92 @@ class ConversationServiceTest {
 
         assertThat(participants).isEmpty();
     }
+
+    @Test
+    void muteConversation_ShouldAddUserToMutedUsersList() {
+        when(conversationRepository.findById(CONV_ID)).thenReturn(Optional.of(conversation));
+        when(conversationRepository.save(any(Conversation.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(messageRepository.countUnread(CONV_ID, USER_ID)).thenReturn(0L);
+
+        ConversationResponse response = conversationService.muteConversation(USER_ID, CONV_ID);
+
+        assertThat(response.isMuted()).isTrue();
+    }
+
+    @Test
+    void unmuteConversation_ShouldRemoveUserFromMutedUsersList() {
+        conversation.setMutedUsers(new java.util.ArrayList<>(List.of(USER_ID)));
+        when(conversationRepository.findById(CONV_ID)).thenReturn(Optional.of(conversation));
+        when(conversationRepository.save(any(Conversation.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(messageRepository.countUnread(CONV_ID, USER_ID)).thenReturn(0L);
+
+        ConversationResponse response = conversationService.unmuteConversation(USER_ID, CONV_ID);
+
+        assertThat(response.isMuted()).isFalse();
+    }
+
+    @Test
+    void archiveConversation_ShouldAddUserToArchivedList() {
+        when(conversationRepository.findById(CONV_ID)).thenReturn(Optional.of(conversation));
+        when(conversationRepository.save(any(Conversation.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(messageRepository.countUnread(CONV_ID, USER_ID)).thenReturn(0L);
+
+        ConversationResponse response = conversationService.archiveConversation(USER_ID, CONV_ID);
+
+        assertThat(response.isArchived()).isTrue();
+    }
+
+    @Test
+    void unarchiveConversation_ShouldRemoveUserFromArchivedList() {
+        conversation.setArchivedBy(new java.util.ArrayList<>(List.of(USER_ID)));
+        when(conversationRepository.findById(CONV_ID)).thenReturn(Optional.of(conversation));
+        when(conversationRepository.save(any(Conversation.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(messageRepository.countUnread(CONV_ID, USER_ID)).thenReturn(0L);
+
+        ConversationResponse response = conversationService.unarchiveConversation(USER_ID, CONV_ID);
+
+        assertThat(response.isArchived()).isFalse();
+    }
+
+    @Test
+    void markConversationUnread_WhenMessageExists_ShouldRemoveUserFromReadBy() {
+        when(conversationRepository.findById(CONV_ID)).thenReturn(Optional.of(conversation));
+        com.platform.chatservice.model.Message lastMsg = com.platform.chatservice.model.Message.builder()
+            .id("msg-001")
+            .conversationId(CONV_ID)
+            .senderId(OTHER_ID)
+            .readBy(new java.util.ArrayList<>(List.of(USER_ID, OTHER_ID)))
+            .createdAt(Instant.now())
+            .build();
+        when(messageRepository.findByConversationIdOrderByCreatedAtDesc(eq(CONV_ID), any()))
+            .thenReturn(new org.springframework.data.domain.PageImpl<>(List.of(lastMsg)));
+        when(messageRepository.save(any(com.platform.chatservice.model.Message.class))).thenReturn(lastMsg);
+        when(messageRepository.countUnread(CONV_ID, USER_ID)).thenReturn(1L);
+
+        ConversationResponse response = conversationService.markConversationUnread(USER_ID, CONV_ID);
+
+        assertThat(response.unreadCount()).isEqualTo(1L);
+        assertThat(lastMsg.getReadBy()).containsExactly(OTHER_ID);
+        verify(messageRepository).save(lastMsg);
+    }
+
+    @Test
+    void markConversationRead_ShouldAddUserToReadByForAllUnreadMessages() {
+        when(conversationRepository.findById(CONV_ID)).thenReturn(Optional.of(conversation));
+        com.platform.chatservice.model.Message unreadMsg = com.platform.chatservice.model.Message.builder()
+            .id("msg-001")
+            .conversationId(CONV_ID)
+            .senderId(OTHER_ID)
+            .readBy(new java.util.ArrayList<>(List.of(OTHER_ID)))
+            .createdAt(Instant.now())
+            .build();
+        when(mongoTemplate.find(any(org.springframework.data.mongodb.core.query.Query.class), eq(com.platform.chatservice.model.Message.class)))
+            .thenReturn(List.of(unreadMsg));
+
+        ConversationResponse response = conversationService.markConversationRead(USER_ID, CONV_ID);
+
+        assertThat(response.unreadCount()).isZero();
+        assertThat(unreadMsg.getReadBy()).containsExactlyInAnyOrder(OTHER_ID, USER_ID);
+        verify(messageRepository).saveAll(anyList());
+    }
 }

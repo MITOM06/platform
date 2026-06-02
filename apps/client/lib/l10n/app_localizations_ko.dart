@@ -718,4 +718,34 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get changeCoverPhoto => '배경 사진 변경';
+
+  @override
+  String get markAsRead => '읽음으로 표시';
+
+  @override
+  String get markAsUnread => '읽지 않음으로 표시';
+
+  @override
+  String get muteNotifications => '알림 음소거';
+
+  @override
+  String get unmuteNotifications => '알림 음소거 해제';
+
+  @override
+  String get viewProfile => '프로필 보기';
+
+  @override
+  String get voiceCall => '음성 통화';
+
+  @override
+  String get videoCall => '영상 통화';
+
+  @override
+  String get archiveChat => '채팅 보관';
+
+  @override
+  String get unarchiveChat => '채팅 보관 해제';
+
+  @override
+  String get mutedLabel => '음소거됨';
 }

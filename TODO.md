@@ -1,6 +1,6 @@
 # TODO — PON PROJECT
 > **Workflow:** Gemini Code Assist (Planner/QC) ↔ Tech Lead (Bridge) ↔ Claude CLI (Coder/Tester)
-> **Updated:** 2026-06-01
+> **Updated:** 2026-06-02
 > **Note to Claude:** To save tokens, historical sprints (1-11) have been archived to `TODO_ARCHIVE.md`. Please read the following sprints and implement them sequentially when requested.
 
 ---
@@ -395,6 +395,61 @@
     `ui/explore_media_screen.dart`, `ui/widgets/reactions_detail_modal.dart`,
     `ui/widgets/message_bubble_parts.dart`, `ui/group_info_screen.dart`,
     `ui/user_profile_screen.dart`, `core/router/app_router.dart`, `l10n/app_*.arb`.
+- [2026-06-02] **SPRINT 18 (TASKS 62–67) → ✅ DONE (full vertical slices).**
+  - **TASK 62 — Mute / Unmute Conversations:**
+    - BE: Added `mutedUsers: List<String>` to `Conversation` model (`@Builder.Default`).
+      `ConversationService.muteConversation / unmuteConversation` — idempotent toggle, participant-guarded.
+      `ConversationController`: `POST /api/conversations/{id}/mute` + `POST /api/conversations/{id}/unmute`;
+      both broadcast `CONVERSATION_UPDATED` STOMP event.
+      `ConversationResponse`: added `isMuted` (boolean) field; computed from caller's userId.
+      `ConversationService.isMuted(conversationId, userId)` exposed for `ChatController` notification gating.
+    - FE: `ConversationModel.isMuted` parsed from JSON. `ChatRepository.muteConversation / unmuteConversation`.
+      `ConversationsNotifier`: `mute/unmute` actions + optimistic state update.
+      `ChatScreenAppBar` overflow menu: "Mute" / "Unmute" toggle. Mute icon overlay on `ConversationTile` avatar.
+  - **TASK 63 — Archive / Unarchive Conversations:**
+    - BE: Added `archivedBy: List<String>` to `Conversation` model (`@Builder.Default`).
+      `ConversationService.archiveConversation / unarchiveConversation` — idempotent toggle.
+      `ConversationController`: `POST /api/conversations/{id}/archive` + `POST /api/conversations/{id}/unarchive`.
+      `listConversations` filters out conversations where the caller is in `archivedBy` (archived chats hidden from main list).
+      `ConversationResponse`: added `isArchived` (boolean) field.
+    - FE: `ConversationModel.isArchived` parsed. `ChatRepository.archiveConversation / unarchiveConversation`.
+      Swipe-to-archive gesture on `ConversationTile`. Archived conversations hidden from default list view.
+  - **TASK 64 — Mark Conversation Read / Unread (REST):**
+    - BE: `ConversationService.markConversationUnread` — removes the caller from `readBy` on the last message,
+      incrementing the unread badge by 1.
+      `ConversationService.markConversationRead` — bulk-marks all unread messages as read for the caller.
+      `ConversationController`: `POST /api/conversations/{id}/unread` + `POST /api/conversations/{id}/read`.
+    - FE: `ChatRepository.markConversationUnread / markConversationRead`.
+      Long-press on `ConversationTile` → context menu with "Mark as unread" / "Mark as read".
+  - **TASK 65 — Floating Glassmorphic Reaction Sheet:**
+    - FE: New `FloatingReactionSheet` (`floating_reaction_sheet.dart`) — `BackdropFilter` blur (sigmaX/Y 12),
+      frosted-glass container (`AppTheme.darkSurface` at 75% opacity + 8% white border), pull indicator.
+      Top row: 6 quick-reaction emojis (`👍 ❤️ 😂 😮 😢 😡`) in a pill container; selected emoji gets
+      a highlighted ring. Action list: Reply, Copy, Edit (own non-media), Recall (own), Pin, Forward, Delete-for-me.
+      `MessageBubble` long-press now calls `FloatingReactionSheet.show` instead of a plain `PopupMenuButton`.
+      i18n: new keys added to all 7 ARB files; `flutter gen-l10n` regenerated.
+  - **TASK 66 — Conversation Avatar & List UX Improvements:**
+    - FE: `ConversationTile` — direct chats resolve peer avatar/displayName via `userProfileProvider` +
+      `userStatusProvider`; group chats use group `avatarUrl` or generated initials via `ConversationAvatar`.
+      `ChatScreenAppBar` — same live-resolve logic; shows online-dot for direct chats.
+      Unread badge on `ConversationTile` now shows numeric count with colour-coded chip.
+      Mute icon overlay (`Icons.volume_off`, cyan tint) on muted conversation avatars.
+  - **TASK 67 — ConversationService Test Coverage (Sprint 18):**
+    - BE: `ConversationServiceTest` expanded to 19 tests covering `muteConversation`, `unmuteConversation`,
+      `archiveConversation`, `unarchiveConversation`, `markConversationUnread`, `markConversationRead`,
+      idempotency guarantees, and participant-not-found guards.
+  - **Tests:**
+    - `mvn test` → **BUILD SUCCESS, 59/59** (ConversationServiceTest 19, all new Sprint 18 paths covered).
+    - `flutter analyze` → **No issues found**; `flutter test` → **All tests passed**.
+  - **File sizes:** All within limits — BE `ConversationService.java` 411 lines, `ConversationController.java`
+    239 lines; FE `FloatingReactionSheet` 180 lines, `ConversationTile` within 400-line limit.
+  - **Files for Gemini QC:** BE — `model/Conversation.java`, `dto/ConversationResponse.java`,
+    `service/ConversationService.java`, `controller/ConversationController.java`,
+    `service/ConversationServiceTest.java`; FE — `domain/chat_state.dart`, `data/chat_repository.dart`,
+    `domain/chat_provider.dart`, `ui/conversation_list_screen.dart`, `ui/widgets/conversation_tile.dart`,
+    `ui/widgets/chat_app_bar.dart`, `ui/widgets/message_bubble.dart`,
+    `ui/widgets/floating_reaction_sheet.dart`, `l10n/app_*.arb`.
+
 - [2026-06-01] **SPRINT 13 (TASKS 49–51) → ✅ DONE (full vertical slices).**
   - **TASK 49 — Mention System (@username):**
     - BE: `Message` model gained `mentions` (List<String> of userIds). `MessageService.sendMessage`

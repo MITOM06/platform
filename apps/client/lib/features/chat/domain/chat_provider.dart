@@ -85,6 +85,65 @@ class ConversationsNotifier extends _$ConversationsNotifier {
     }
   }
 
+  Future<void> toggleMuteConversation(String conversationId, bool isMuted) async {
+    final current = state.valueOrNull;
+    if (current != null) {
+      state = AsyncData(current.map((c) {
+        if (c.id == conversationId) {
+          return c.copyWith(isMuted: isMuted);
+        }
+        return c;
+      }).toList());
+    }
+    try {
+      final repo = ref.read(chatRepositoryProvider);
+      if (isMuted) {
+        await repo.muteConversation(conversationId);
+      } else {
+        await repo.unmuteConversation(conversationId);
+      }
+    } catch (_) {
+      refresh();
+    }
+  }
+
+  Future<void> archiveConversation(String conversationId) async {
+    final current = state.valueOrNull;
+    if (current != null) {
+      state = AsyncData(
+          current.where((c) => c.id != conversationId).toList());
+    }
+    try {
+      await ref.read(chatRepositoryProvider).archiveConversation(conversationId);
+    } catch (_) {
+      refresh();
+    }
+  }
+
+  Future<void> markConversationReadServer(String conversationId) async {
+    markConversationRead(conversationId);
+    try {
+      await ref.read(chatRepositoryProvider).markConversationRead(conversationId);
+    } catch (_) {
+      refresh();
+    }
+  }
+
+  Future<void> markConversationUnreadServer(String conversationId) async {
+    final current = state.valueOrNull;
+    if (current != null) {
+      state = AsyncData(current.map((c) {
+        if (c.id == conversationId) return c.copyWith(unreadCount: 1);
+        return c;
+      }).toList());
+    }
+    try {
+      await ref.read(chatRepositoryProvider).markConversationUnread(conversationId);
+    } catch (_) {
+      refresh();
+    }
+  }
+
   void _onWebRTCSignal(Map<String, dynamic> signal) {
     final type = signal['type'] as String?;
     if (type == 'offer') {

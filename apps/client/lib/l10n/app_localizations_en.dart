@@ -726,4 +726,34 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get changeCoverPhoto => 'Change cover photo';
+
+  @override
+  String get markAsRead => 'Mark as read';
+
+  @override
+  String get markAsUnread => 'Mark as unread';
+
+  @override
+  String get muteNotifications => 'Mute notifications';
+
+  @override
+  String get unmuteNotifications => 'Unmute notifications';
+
+  @override
+  String get viewProfile => 'View profile';
+
+  @override
+  String get voiceCall => 'Voice call';
+
+  @override
+  String get videoCall => 'Video call';
+
+  @override
+  String get archiveChat => 'Archive chat';
+
+  @override
+  String get unarchiveChat => 'Unarchive chat';
+
+  @override
+  String get mutedLabel => 'Muted';
 }

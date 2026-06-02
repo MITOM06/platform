@@ -70,6 +70,14 @@ public class Conversation {
      *  new incoming message. */
     private List<String> hiddenFor;
 
+    /** Users who muted this conversation. */
+    @Builder.Default
+    private List<String> mutedUsers = new ArrayList<>();
+
+    /** Users who archived this conversation. */
+    @Builder.Default
+    private List<String> archivedBy = new ArrayList<>();
+
     private LastMessage lastMessage;
 
     private Instant lastMessageAt;

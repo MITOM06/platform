@@ -198,21 +198,23 @@
   "searchMessages": "メッセージを検索",
   "searchHint": "会話内を検索",
   "searchNoResults": "メッセージが見つかりません",
-
   "exploreChannels": "チャンネルを探す",
   "searchChannelsHint": "チャンネルを検索…",
   "noPublicChannels": "公開チャンネルが見つかりません",
   "joinChannel": "参加",
-  "membersCount": "{count} 人のメンバー",
-  "@membersCount": { "placeholders": { "count": { "type": "int" } } },
-
+  "@membersCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "pinMessage": "ピン留め",
   "forwardMessage": "転送",
   "messageForwarded": "メッセージを転送しました",
   "forwardFailed": "転送に失敗しました",
   "noConversationsToForward": "転送先の会話がありません",
   "rateLimitError": "メッセージを送りすぎています。少し落ち着いてください。",
-
   "sharedMediaTitle": "共有メディアとファイル",
   "tabMedia": "メディア",
   "tabFiles": "ファイル",
@@ -229,5 +231,15 @@
   "notSet": "未設定",
   "passwordChangedSuccess": "パスワードを正常に変更しました",
   "errCurrentPasswordIncorrect": "現在のパスワードが正しくありません",
-  "changeCoverPhoto": "カバー写真を変更"
+  "changeCoverPhoto": "カバー写真を変更",
+  "markAsRead": "既読にする",
+  "markAsUnread": "未読にする",
+  "muteNotifications": "通知をミュート",
+  "unmuteNotifications": "ミュートを解除",
+  "viewProfile": "プロフィールを表示",
+  "voiceCall": "音声通話",
+  "videoCall": "ビデオ通話",
+  "archiveChat": "チャットをアーカイブ",
+  "unarchiveChat": "アーカイブを解除",
+  "mutedLabel": "ミュート中"
 }

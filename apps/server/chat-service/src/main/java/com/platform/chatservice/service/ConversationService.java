@@ -7,6 +7,7 @@ import com.platform.chatservice.exception.ConversationNotFoundException;
 import com.platform.chatservice.exception.DuplicateConversationException;
 import com.platform.chatservice.exception.UnauthorizedException;
 import com.platform.chatservice.model.Conversation;
+import com.platform.chatservice.model.Message;
 import com.platform.chatservice.repository.ConversationRepository;
 import com.platform.chatservice.repository.FriendshipRepository;
 import com.platform.chatservice.repository.MessageRepository;
@@ -14,9 +15,12 @@ import lombok.RequiredArgsConstructor;
 import org.bson.Document;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
 import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
@@ -41,7 +45,9 @@ public class ConversationService {
 
         List<Conversation> conversations = page.getContent().stream()
             .filter(c -> c.getHiddenFor() == null || !c.getHiddenFor().contains(userId))
+            .filter(c -> c.getArchivedBy() == null || !c.getArchivedBy().contains(userId))
             .toList();
+
         List<String> conversationIds = conversations.stream().map(Conversation::getId).toList();
 
         Map<String, Long> unreadCounts = getUnreadCounts(conversationIds, userId);
@@ -172,6 +178,86 @@ public class ConversationService {
         conversationRepository.save(conversation);
     }
 
+    public ConversationResponse muteConversation(String userId, String conversationId) {
+        Conversation conversation = getRawConversation(userId, conversationId);
+        List<String> muted = conversation.getMutedUsers() == null
+            ? new ArrayList<>() : new ArrayList<>(conversation.getMutedUsers());
+        if (!muted.contains(userId)) {
+            muted.add(userId);
+            conversation.setMutedUsers(muted);
+            conversationRepository.save(conversation);
+        }
+        return toResponse(conversation, userId, messageRepository.countUnread(conversationId, userId));
+    }
+
+    public ConversationResponse unmuteConversation(String userId, String conversationId) {
+        Conversation conversation = getRawConversation(userId, conversationId);
+        List<String> muted = conversation.getMutedUsers() == null
+            ? new ArrayList<>() : new ArrayList<>(conversation.getMutedUsers());
+        if (muted.remove(userId)) {
+            conversation.setMutedUsers(muted);
+            conversationRepository.save(conversation);
+        }
+        return toResponse(conversation, userId, messageRepository.countUnread(conversationId, userId));
+    }
+
+    public ConversationResponse archiveConversation(String userId, String conversationId) {
+        Conversation conversation = getRawConversation(userId, conversationId);
+        List<String> archived = conversation.getArchivedBy() == null
+            ? new ArrayList<>() : new ArrayList<>(conversation.getArchivedBy());
+        if (!archived.contains(userId)) {
+            archived.add(userId);
+            conversation.setArchivedBy(archived);
+            conversationRepository.save(conversation);
+        }
+        return toResponse(conversation, userId, messageRepository.countUnread(conversationId, userId));
+    }
+
+    public ConversationResponse unarchiveConversation(String userId, String conversationId) {
+        Conversation conversation = getRawConversation(userId, conversationId);
+        List<String> archived = conversation.getArchivedBy() == null
+            ? new ArrayList<>() : new ArrayList<>(conversation.getArchivedBy());
+        if (archived.remove(userId)) {
+            conversation.setArchivedBy(archived);
+            conversationRepository.save(conversation);
+        }
+        return toResponse(conversation, userId, messageRepository.countUnread(conversationId, userId));
+    }
+
+    public ConversationResponse markConversationUnread(String userId, String conversationId) {
+        Conversation conversation = getRawConversation(userId, conversationId);
+        Pageable pageable = PageRequest.of(0, 1, Sort.by(Sort.Direction.DESC, "createdAt"));
+        Page<Message> page = messageRepository.findByConversationIdOrderByCreatedAtDesc(conversationId, pageable);
+        if (!page.isEmpty()) {
+            Message lastMessage = page.getContent().get(0);
+            List<String> readBy = lastMessage.getReadBy() == null
+                ? new ArrayList<>() : new ArrayList<>(lastMessage.getReadBy());
+            if (readBy.remove(userId)) {
+                lastMessage.setReadBy(readBy);
+                messageRepository.save(lastMessage);
+            }
+        }
+        return toResponse(conversation, userId, messageRepository.countUnread(conversationId, userId));
+    }
+
+    public ConversationResponse markConversationRead(String userId, String conversationId) {
+        Conversation conversation = getRawConversation(userId, conversationId);
+        List<Message> unread = mongoTemplate.find(
+            new Query(Criteria.where("conversationId").is(conversationId).and("readBy").nin(userId)),
+            Message.class
+        );
+        for (Message message : unread) {
+            List<String> readBy = message.getReadBy() == null
+                ? new ArrayList<>() : new ArrayList<>(message.getReadBy());
+            readBy.add(userId);
+            message.setReadBy(readBy);
+        }
+        if (!unread.isEmpty()) {
+            messageRepository.saveAll(unread);
+        }
+        return toResponse(conversation, userId, 0L);
+    }
+
     public ConversationResponse setAutoDelete(String userId, String conversationId, Integer seconds) {
         Conversation conversation = getRawConversation(userId, conversationId);
         conversation.setAutoDeleteSeconds(seconds != null && seconds > 0 ? seconds : null);
@@ -252,6 +338,13 @@ public class ConversationService {
             .orElse(List.of());
     }
 
+    public boolean isMuted(String conversationId, String userId) {
+        return conversationRepository.findById(conversationId)
+            .map(Conversation::getMutedUsers)
+            .map(list -> list != null && list.contains(userId))
+            .orElse(false);
+    }
+
     /** Fetch a conversation, enforcing the caller is a participant. */
     private Conversation getRawConversation(String userId, String conversationId) {
         Conversation conversation = conversationRepository.findById(conversationId)
@@ -294,11 +387,13 @@ public class ConversationService {
             );
         }
         List<ConversationResponse.PinnedMessageDto> pinned = resolvePinnedMessages(c);
+        boolean isMuted = userId != null && c.getMutedUsers() != null && c.getMutedUsers().contains(userId);
+        boolean isArchived = userId != null && c.getArchivedBy() != null && c.getArchivedBy().contains(userId);
         return new ConversationResponse(
             c.getId(), c.resolvedType(), c.getName(), c.getAvatarUrl(),
             c.getParticipants(), c.getAdmins(), c.getCreatedBy(), c.getAutoDeleteSeconds(),
             lastMsg, c.getLastMessageAt(), unreadCount, c.getCreatedAt(), c.resolvedStatus(),
-            c.isPublicChannel(), pinned
+            c.isPublicChannel(), pinned, isMuted, isArchived
         );
     }
 

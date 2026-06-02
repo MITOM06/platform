@@ -56,6 +56,7 @@ public class ChatController {
         List<String> participants = conversationService.getParticipants(dto.getConversationId());
         for (String participantId : participants) {
             if (!participantId.equals(principal.getName())) {
+                boolean muted = conversationService.isMuted(dto.getConversationId(), participantId);
                 // Mentioned participants get a priority MENTIONED_YOU event instead
                 // of the generic NEW_MESSAGE so the client can surface it specially.
                 boolean mentioned = mentions.contains(participantId);
@@ -66,8 +67,10 @@ public class ChatController {
                 );
                 messagingTemplate.convertAndSendToUser(participantId, "/queue/notifications", notification);
 
-                // Trigger Push Notification
-                fcmService.sendPushNotification(participantId, principal.getName(), dto.getContent(), dto.getConversationId());
+                // Trigger Push Notification only if the conversation is not muted for this user
+                if (!muted) {
+                    fcmService.sendPushNotification(participantId, principal.getName(), dto.getContent(), dto.getConversationId());
+                }
             }
         }
     }

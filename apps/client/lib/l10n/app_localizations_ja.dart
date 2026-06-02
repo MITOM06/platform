@@ -718,4 +718,34 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get changeCoverPhoto => 'カバー写真を変更';
+
+  @override
+  String get markAsRead => '既読にする';
+
+  @override
+  String get markAsUnread => '未読にする';
+
+  @override
+  String get muteNotifications => '通知をミュート';
+
+  @override
+  String get unmuteNotifications => 'ミュートを解除';
+
+  @override
+  String get viewProfile => 'プロフィールを表示';
+
+  @override
+  String get voiceCall => '音声通話';
+
+  @override
+  String get videoCall => 'ビデオ通話';
+
+  @override
+  String get archiveChat => 'チャットをアーカイブ';
+
+  @override
+  String get unarchiveChat => 'アーカイブを解除';
+
+  @override
+  String get mutedLabel => 'ミュート中';
 }

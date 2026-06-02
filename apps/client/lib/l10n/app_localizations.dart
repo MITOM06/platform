@@ -1457,6 +1457,66 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Change cover photo'**
   String get changeCoverPhoto;
+
+  /// No description provided for @markAsRead.
+  ///
+  /// In en, this message translates to:
+  /// **'Mark as read'**
+  String get markAsRead;
+
+  /// No description provided for @markAsUnread.
+  ///
+  /// In en, this message translates to:
+  /// **'Mark as unread'**
+  String get markAsUnread;
+
+  /// No description provided for @muteNotifications.
+  ///
+  /// In en, this message translates to:
+  /// **'Mute notifications'**
+  String get muteNotifications;
+
+  /// No description provided for @unmuteNotifications.
+  ///
+  /// In en, this message translates to:
+  /// **'Unmute notifications'**
+  String get unmuteNotifications;
+
+  /// No description provided for @viewProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'View profile'**
+  String get viewProfile;
+
+  /// No description provided for @voiceCall.
+  ///
+  /// In en, this message translates to:
+  /// **'Voice call'**
+  String get voiceCall;
+
+  /// No description provided for @videoCall.
+  ///
+  /// In en, this message translates to:
+  /// **'Video call'**
+  String get videoCall;
+
+  /// No description provided for @archiveChat.
+  ///
+  /// In en, this message translates to:
+  /// **'Archive chat'**
+  String get archiveChat;
+
+  /// No description provided for @unarchiveChat.
+  ///
+  /// In en, this message translates to:
+  /// **'Unarchive chat'**
+  String get unarchiveChat;
+
+  /// No description provided for @mutedLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Muted'**
+  String get mutedLabel;
 }
 
 class _AppLocalizationsDelegate
