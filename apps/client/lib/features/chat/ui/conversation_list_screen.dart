@@ -9,6 +9,7 @@ import '../../auth/domain/auth_provider.dart';
 import '../../auth/domain/auth_state.dart';
 import '../domain/chat_provider.dart';
 import 'widgets/active_friends_row.dart';
+import 'widgets/conversation_avatar.dart';
 import 'widgets/conversation_tile.dart';
 
 class ConversationListScreen extends ConsumerStatefulWidget {
@@ -111,21 +112,10 @@ class _ConversationListScreenState
                             ]
                           : null,
                     ),
-                    child: CircleAvatar(
-                      radius: 16,
-                      backgroundColor: isDark
-                          ? AppTheme.darkSurface
-                          : Colors.grey.shade100,
-                      child: Text(
-                        initials,
-                        style: TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.bold,
-                          color: isDark
-                              ? AppTheme.ponCyan
-                              : Theme.of(context).colorScheme.primary,
-                        ),
-                      ),
+                    child: ConversationAvatar(
+                      avatarUrl: user?.avatarUrl,
+                      fallbackLetter: initials,
+                      size: 32,
                     ),
                   ),
                   tooltip: context.l10n.tooltipSettings,

@@ -113,7 +113,7 @@
   "searchUsers": "이름 또는 이메일로 검색",
   "groupInfo": "그룹 정보",
   "members": "멤버",
-  "membersCount": "멤버 {count}명",
+  "membersCount": "{count}명",
   "addMembers": "멤버 추가",
   "removeMember": "그룹에서 제거",
   "leaveGroup": "그룹 나가기",
@@ -198,21 +198,23 @@
   "searchMessages": "메시지 검색",
   "searchHint": "대화에서 검색",
   "searchNoResults": "메시지를 찾을 수 없습니다",
-
   "exploreChannels": "채널 탐색",
   "searchChannelsHint": "채널 검색…",
   "noPublicChannels": "공개 채널을 찾을 수 없습니다",
   "joinChannel": "참여",
-  "membersCount": "{count}명",
-  "@membersCount": { "placeholders": { "count": { "type": "int" } } },
-
+  "@membersCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "pinMessage": "고정",
   "forwardMessage": "전달",
   "messageForwarded": "메시지가 전달되었습니다",
   "forwardFailed": "메시지 전달 실패",
   "noConversationsToForward": "전달할 대화가 없습니다",
   "rateLimitError": "메시지를 너무 많이 보내고 있습니다. 잠시 후 다시 시도하세요.",
-
   "sharedMediaTitle": "공유 미디어 및 파일",
   "tabMedia": "미디어",
   "tabFiles": "파일",
@@ -229,5 +231,15 @@
   "notSet": "설정되지 않음",
   "passwordChangedSuccess": "비밀번호가 성공적으로 변경되었습니다",
   "errCurrentPasswordIncorrect": "현재 비밀번호가 올바르지 않습니다",
-  "changeCoverPhoto": "배경 사진 변경"
+  "changeCoverPhoto": "배경 사진 변경",
+  "markAsRead": "읽음으로 표시",
+  "markAsUnread": "읽지 않음으로 표시",
+  "muteNotifications": "알림 음소거",
+  "unmuteNotifications": "알림 음소거 해제",
+  "viewProfile": "프로필 보기",
+  "voiceCall": "음성 통화",
+  "videoCall": "영상 통화",
+  "archiveChat": "채팅 보관",
+  "unarchiveChat": "채팅 보관 해제",
+  "mutedLabel": "음소거됨"
 }

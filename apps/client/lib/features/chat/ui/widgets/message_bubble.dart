@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import '../../../../core/l10n/l10n_ext.dart';
@@ -7,12 +6,10 @@ import '../../../../core/theme/app_theme.dart';
 import '../../domain/chat_provider.dart';
 import '../../domain/chat_state.dart';
 import 'file_content.dart';
-import 'forward_dialog.dart';
+import 'floating_reaction_sheet.dart';
 import 'image_content.dart';
 import 'message_bubble_parts.dart';
 import 'text_content.dart';
-
-const List<String> kQuickReactions = ['👍', '❤️', '😂', '😮', '😢', '😡'];
 
 class MessageBubble extends ConsumerWidget {
   final MessageModel message;
@@ -66,8 +63,10 @@ class MessageBubble extends ConsumerWidget {
               if (showSenderName && !isSentByMe)
                 SenderName(userId: message.senderId),
               GestureDetector(
-                onLongPress:
-                    message.recalled ? null : () => _showActions(context, ref),
+                onLongPress: message.recalled
+                    ? null
+                    : () => FloatingReactionSheet.show(
+                        context, ref, message, isSentByMe),
                 onDoubleTap: message.recalled
                     ? null
                     : () {
@@ -221,126 +220,4 @@ class MessageBubble extends ConsumerWidget {
         return key;
     }
   }
-
-  void _showActions(BuildContext context, WidgetRef ref) {
-    final notifier =
-        ref.read(chatNotifierProvider(message.conversationId).notifier);
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: AppTheme.darkSurface,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      builder: (sheetCtx) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const SizedBox(height: 8),
-            Padding(
-              padding:
-                  const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
-                children: [
-                  for (final emoji in kQuickReactions)
-                    InkWell(
-                      borderRadius: BorderRadius.circular(24),
-                      onTap: () {
-                        notifier.toggleReaction(message.id, emoji);
-                        Navigator.pop(sheetCtx);
-                      },
-                      child: Padding(
-                        padding: const EdgeInsets.all(6),
-                        child: Text(emoji,
-                            style: const TextStyle(fontSize: 26)),
-                      ),
-                    ),
-                ],
-              ),
-            ),
-            const Divider(height: 1, color: Colors.white12),
-            ListTile(
-              leading: const Icon(Icons.reply_rounded,
-                  color: Colors.white70),
-              title: Text(sheetCtx.l10n.actionReply,
-                  style: const TextStyle(color: Colors.white)),
-              onTap: () {
-                notifier.startReply(message);
-                Navigator.pop(sheetCtx);
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.copy_rounded, color: Colors.white70),
-              title: Text(sheetCtx.l10n.actionCopy,
-                  style: const TextStyle(color: Colors.white)),
-              onTap: () {
-                final text =
-                    message.isFile ? message.fileUrl : message.content;
-                Clipboard.setData(ClipboardData(text: text));
-                Navigator.pop(sheetCtx);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                      content: Text(context.l10n.copiedToClipboard)),
-                );
-              },
-            ),
-            if (isSentByMe && !message.isMedia && !message.isFile)
-              ListTile(
-                leading: const Icon(Icons.edit_rounded,
-                    color: AppTheme.ponCyan),
-                title: Text(sheetCtx.l10n.actionEdit,
-                    style: const TextStyle(color: AppTheme.ponCyan)),
-                onTap: () {
-                  notifier.startEditing(message);
-                  Navigator.pop(sheetCtx);
-                },
-              ),
-            if (isSentByMe)
-              ListTile(
-                leading: const Icon(Icons.undo_rounded,
-                    color: Colors.orangeAccent),
-                title: Text(sheetCtx.l10n.actionRecall,
-                    style:
-                        const TextStyle(color: Colors.orangeAccent)),
-                onTap: () {
-                  notifier.recallMessage(message.id);
-                  Navigator.pop(sheetCtx);
-                },
-              ),
-            ListTile(
-              leading: const Icon(Icons.push_pin_outlined,
-                  color: AppTheme.ponCyan),
-              title: Text(sheetCtx.l10n.pinMessage,
-                  style: const TextStyle(color: AppTheme.ponCyan)),
-              onTap: () {
-                notifier.pinMessage(message);
-                Navigator.pop(sheetCtx);
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.forward_to_inbox_outlined,
-                  color: Colors.white70),
-              title: Text(sheetCtx.l10n.forwardMessage,
-                  style: const TextStyle(color: Colors.white)),
-              onTap: () {
-                Navigator.pop(sheetCtx);
-                showForwardDialog(context, ref, message, message.conversationId);
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.delete_outline_rounded,
-                  color: Colors.redAccent),
-              title: Text(sheetCtx.l10n.actionDeleteForMe,
-                  style: const TextStyle(color: Colors.redAccent)),
-              onTap: () {
-                notifier.deleteForMe(message.id);
-                Navigator.pop(sheetCtx);
-              },
-            ),
-          ],
-        ),
-      ),
-    );
-  }
 }
-

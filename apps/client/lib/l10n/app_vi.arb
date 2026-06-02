@@ -198,21 +198,23 @@
   "searchMessages": "Tìm tin nhắn",
   "searchHint": "Tìm trong cuộc trò chuyện",
   "searchNoResults": "Không tìm thấy tin nhắn",
-
   "exploreChannels": "Khám phá kênh",
   "searchChannelsHint": "Tìm kênh…",
   "noPublicChannels": "Không tìm thấy kênh công khai",
   "joinChannel": "Tham gia",
-  "membersCount": "{count} thành viên",
-  "@membersCount": { "placeholders": { "count": { "type": "int" } } },
-
+  "@membersCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "pinMessage": "Ghim",
   "forwardMessage": "Chuyển tiếp",
   "messageForwarded": "Đã chuyển tiếp tin nhắn",
   "forwardFailed": "Chuyển tiếp thất bại",
   "noConversationsToForward": "Không có cuộc trò chuyện nào",
   "rateLimitError": "Bạn gửi quá nhiều tin nhắn. Hãy chậm lại.",
-
   "sharedMediaTitle": "Ảnh, video & tệp",
   "tabMedia": "Phương tiện",
   "tabFiles": "Tệp",
@@ -229,5 +231,15 @@
   "notSet": "Chưa thiết lập",
   "passwordChangedSuccess": "Đổi mật khẩu thành công",
   "errCurrentPasswordIncorrect": "Mật khẩu hiện tại không chính xác",
-  "changeCoverPhoto": "Đổi ảnh nền"
+  "changeCoverPhoto": "Đổi ảnh nền",
+  "markAsRead": "Đánh dấu là đã đọc",
+  "markAsUnread": "Đánh dấu là chưa đọc",
+  "muteNotifications": "Tắt thông báo",
+  "unmuteNotifications": "Bật thông báo",
+  "viewProfile": "Xem trang cá nhân",
+  "voiceCall": "Gọi thoại",
+  "videoCall": "Chat video",
+  "archiveChat": "Lưu trữ đoạn chat",
+  "unarchiveChat": "Bỏ lưu trữ đoạn chat",
+  "mutedLabel": "Đã tắt thông báo"
 }

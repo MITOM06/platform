@@ -736,4 +736,34 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get changeCoverPhoto => 'Changer la photo de couverture';
+
+  @override
+  String get markAsRead => 'Marquer comme lu';
+
+  @override
+  String get markAsUnread => 'Marquer comme non lu';
+
+  @override
+  String get muteNotifications => 'Muet';
+
+  @override
+  String get unmuteNotifications => 'Activer le son';
+
+  @override
+  String get viewProfile => 'Voir le profil';
+
+  @override
+  String get voiceCall => 'Appel vocal';
+
+  @override
+  String get videoCall => 'Appel vidéo';
+
+  @override
+  String get archiveChat => 'Archiver le chat';
+
+  @override
+  String get unarchiveChat => 'Désarchiver le chat';
+
+  @override
+  String get mutedLabel => 'Sourdine';
 }

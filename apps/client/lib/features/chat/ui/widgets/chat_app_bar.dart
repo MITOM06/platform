@@ -86,7 +86,7 @@ class ChatScreenAppBar extends ConsumerWidget implements PreferredSizeWidget {
                 }
               },
               child: ConversationAvatar(
-                avatarUrl: isGroup ? conv?.avatarUrl : null,
+                avatarUrl: isGroup ? conv?.avatarUrl : profileAsync?.valueOrNull?.avatarUrl,
                 fallbackLetter: avatarLetter,
                 isGroup: isGroup,
                 size: 38,

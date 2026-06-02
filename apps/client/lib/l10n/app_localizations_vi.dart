@@ -727,4 +727,34 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get changeCoverPhoto => 'Đổi ảnh nền';
+
+  @override
+  String get markAsRead => 'Đánh dấu là đã đọc';
+
+  @override
+  String get markAsUnread => 'Đánh dấu là chưa đọc';
+
+  @override
+  String get muteNotifications => 'Tắt thông báo';
+
+  @override
+  String get unmuteNotifications => 'Bật thông báo';
+
+  @override
+  String get viewProfile => 'Xem trang cá nhân';
+
+  @override
+  String get voiceCall => 'Gọi thoại';
+
+  @override
+  String get videoCall => 'Chat video';
+
+  @override
+  String get archiveChat => 'Lưu trữ đoạn chat';
+
+  @override
+  String get unarchiveChat => 'Bỏ lưu trữ đoạn chat';
+
+  @override
+  String get mutedLabel => 'Đã tắt thông báo';
 }

@@ -113,7 +113,7 @@
   "searchUsers": "按姓名或邮箱搜索",
   "groupInfo": "群组信息",
   "members": "成员",
-  "membersCount": "{count} 位成员",
+  "membersCount": "{count} 名成员",
   "addMembers": "添加成员",
   "removeMember": "移出群组",
   "leaveGroup": "退出群组",
@@ -198,21 +198,23 @@
   "searchMessages": "搜索消息",
   "searchHint": "在对话中搜索",
   "searchNoResults": "未找到消息",
-
   "exploreChannels": "探索频道",
   "searchChannelsHint": "搜索频道…",
   "noPublicChannels": "未找到公开频道",
   "joinChannel": "加入",
-  "membersCount": "{count} 名成员",
-  "@membersCount": { "placeholders": { "count": { "type": "int" } } },
-
+  "@membersCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "pinMessage": "置顶",
   "forwardMessage": "转发",
   "messageForwarded": "消息已转发",
   "forwardFailed": "转发失败",
   "noConversationsToForward": "没有可转发的对话",
   "rateLimitError": "消息发送过于频繁，请放慢速度。",
-
   "sharedMediaTitle": "共享媒体与文件",
   "tabMedia": "媒体",
   "tabFiles": "文件",
@@ -229,5 +231,15 @@
   "notSet": "未设置",
   "passwordChangedSuccess": "密码修改成功",
   "errCurrentPasswordIncorrect": "当前密码不正确",
-  "changeCoverPhoto": "修改背景图片"
+  "changeCoverPhoto": "修改背景图片",
+  "markAsRead": "标为已读",
+  "markAsUnread": "标为未读",
+  "muteNotifications": "静音通知",
+  "unmuteNotifications": "取消静音",
+  "viewProfile": "查看个人资料",
+  "voiceCall": "语音通话",
+  "videoCall": "视频通话",
+  "archiveChat": "归档聊天",
+  "unarchiveChat": "取消归档",
+  "mutedLabel": "已静音"
 }

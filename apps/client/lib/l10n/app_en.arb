@@ -2,7 +2,6 @@
   "@@locale": "en",
   "appName": "PON",
   "languageName": "English",
-
   "actionCancel": "Cancel",
   "actionConfirm": "Confirm",
   "actionRetry": "RETRY",
@@ -13,9 +12,12 @@
   "loadingDots": "...",
   "errorWithMsg": "Error: {error}",
   "@errorWithMsg": {
-    "placeholders": { "error": { "type": "String" } }
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
   },
-
   "loginTitle": "Sign In",
   "fieldEmail": "Email",
   "fieldPassword": "Password",
@@ -30,7 +32,6 @@
   "errInvalidCredentials": "Incorrect email or password",
   "errNetwork": "Cannot reach the server, check your connection",
   "errLoginFailed": "Sign in failed, please try again",
-
   "registerTitle": "Create Account",
   "welcomeToApp": "Welcome to PON",
   "fieldDisplayName": "Display name",
@@ -43,18 +44,25 @@
   "valPasswordMismatch": "Passwords do not match",
   "errEmailExists": "This email is already registered",
   "errRegisterFailed": "Sign up failed, please try again",
-
   "verifyOtpTitle": "Verify OTP",
   "verifyAccountHeading": "Verify your account",
   "otpSentTo": "A 6-digit OTP was sent to\n{email}",
   "@otpSentTo": {
-    "placeholders": { "email": { "type": "String" } }
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
   },
   "fieldOtp": "OTP code",
   "confirmButton": "CONFIRM",
   "resendIn": "Resend in {seconds}s",
   "@resendIn": {
-    "placeholders": { "seconds": { "type": "int" } }
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
   },
   "resendOtp": "Resend OTP code",
   "otpResent": "A new OTP code has been sent to your email",
@@ -62,26 +70,27 @@
   "valOtp6": "Enter all 6 OTP digits",
   "verifySuccess": "Verified successfully! Sign in now",
   "errVerifyFailed": "Verification failed, please try again",
-
   "forgotTitle": "Reset Password",
   "forgotHeading": "Forgot password?",
   "forgotSubtitle": "Enter your email to receive an OTP and set a new password",
   "sendOtpButton": "SEND OTP CODE",
   "errEmailNotRegistered": "This email is not registered",
   "errSendRequestFailed": "Request failed, please try again",
-
   "newPasswordTitle": "New Password",
   "newPasswordHeading": "Create a new password",
   "newPasswordSubtitle": "Enter the OTP sent to {email}\nand your new password",
   "@newPasswordSubtitle": {
-    "placeholders": { "email": { "type": "String" } }
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
   },
   "fieldNewPassword": "New password",
   "valNewPasswordRequired": "Enter a new password",
   "resetPasswordSuccess": "Password reset successfully!",
   "errOtpInvalidExpired": "OTP is incorrect or has expired",
   "errResetFailed": "Password reset failed, please try again",
-
   "settingsTitle": "Settings",
   "valNameEmpty": "Name cannot be empty",
   "nameUpdated": "Display name updated",
@@ -94,7 +103,6 @@
   "language": "Language",
   "chooseLanguageTitle": "Choose language",
   "logoutConfirmBody": "Are you sure you want to log out?",
-
   "onboardingChooseTheme": "CHOOSE A THEME",
   "onboardingChooseSubtitle": "Pick the interface style that suits you best.",
   "themeLightSubtitle": "Bright, clear and easy to read",
@@ -110,7 +118,6 @@
   "emptyTapPlus": "Tap the \"+\" button below to start!",
   "offlineBanner": "No network connection",
   "conversationDefault": "Conversation",
-
   "newConversationTitle": "New Conversation",
   "startConversationHeading": "Start a conversation",
   "fieldRecipient": "Recipient email or User ID",
@@ -118,13 +125,11 @@
   "errUserNotFoundEmail": "No user found with this email.",
   "errUserNotFoundOrConn": "User not found or connection error.",
   "startConversationButton": "START CHATTING",
-
   "chatDefaultTitle": "Chat",
   "statusOnline": "active now",
   "statusOffline": "offline",
   "typingLabel": "typing",
   "messageHint": "Type a message...",
-
   "tabChats": "Chats",
   "newGroup": "New group",
   "newDirect": "New chat",
@@ -138,7 +143,11 @@
   "members": "Members",
   "membersCount": "{count} members",
   "@membersCount": {
-    "placeholders": { "count": { "type": "int" } }
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "addMembers": "Add members",
   "removeMember": "Remove from group",
@@ -149,25 +158,53 @@
   "you": "You",
   "systemAddedMember": "{actor} added {target}",
   "@systemAddedMember": {
-    "placeholders": { "actor": { "type": "String" }, "target": { "type": "String" } }
+    "placeholders": {
+      "actor": {
+        "type": "String"
+      },
+      "target": {
+        "type": "String"
+      }
+    }
   },
   "systemRemovedMember": "{actor} removed {target}",
   "@systemRemovedMember": {
-    "placeholders": { "actor": { "type": "String" }, "target": { "type": "String" } }
+    "placeholders": {
+      "actor": {
+        "type": "String"
+      },
+      "target": {
+        "type": "String"
+      }
+    }
   },
   "systemLeftGroup": "{actor} left the group",
   "@systemLeftGroup": {
-    "placeholders": { "actor": { "type": "String" } }
+    "placeholders": {
+      "actor": {
+        "type": "String"
+      }
+    }
   },
   "systemRenamedGroup": "{actor} renamed the group to {name}",
   "@systemRenamedGroup": {
-    "placeholders": { "actor": { "type": "String" }, "name": { "type": "String" } }
+    "placeholders": {
+      "actor": {
+        "type": "String"
+      },
+      "name": {
+        "type": "String"
+      }
+    }
   },
   "systemCreatedGroup": "{actor} created the group",
   "@systemCreatedGroup": {
-    "placeholders": { "actor": { "type": "String" } }
+    "placeholders": {
+      "actor": {
+        "type": "String"
+      }
+    }
   },
-
   "actionReply": "Reply",
   "actionRecall": "Recall",
   "actionEdit": "Edit",
@@ -178,11 +215,14 @@
   "messageRecalled": "Message was recalled",
   "replyingTo": "Replying to {name}",
   "@replyingTo": {
-    "placeholders": { "name": { "type": "String" } }
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
   },
   "copiedToClipboard": "Copied to clipboard",
   "recallConfirm": "Recall this message for everyone?",
-
   "deleteConversation": "Delete conversation",
   "deleteConversationConfirm": "Delete this conversation? It will be hidden from your list.",
   "clearHistory": "Clear chat history",
@@ -191,46 +231,72 @@
   "disappearingOff": "Off",
   "disappearing24h": "24 hours",
   "disappearing7d": "7 days",
-
   "changeAvatar": "Change avatar",
   "uploadFailed": "Upload failed, please try again",
   "lastSeenJustNow": "active just now",
   "lastSeenMinutes": "active {minutes}m ago",
   "@lastSeenMinutes": {
-    "placeholders": { "minutes": { "type": "int" } }
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
   },
   "lastSeenHours": "active {hours}h ago",
   "@lastSeenHours": {
-    "placeholders": { "hours": { "type": "int" } }
+    "placeholders": {
+      "hours": {
+        "type": "int"
+      }
+    }
   },
   "lastSeenDays": "active {days}d ago",
   "@lastSeenDays": {
-    "placeholders": { "days": { "type": "int" } }
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
   },
   "dateToday": "Today",
   "dateYesterday": "Yesterday",
-
   "attachPhoto": "Photo",
   "attachVideo": "Video",
   "attachFile": "File",
   "uploading": "Uploading…",
   "downloadMedia": "Download",
   "attachmentLabel": "📎 Attachment",
-
   "callIncoming": "Incoming call",
   "callIncomingBody": "{name} is calling you",
-  "@callIncomingBody": { "placeholders": { "name": { "type": "String" } } },
+  "@callIncomingBody": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "callCalling": "Calling {name}…",
-  "@callCalling": { "placeholders": { "name": { "type": "String" } } },
+  "@callCalling": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "callConnecting": "Connecting…",
   "callMediaError": "Cannot access camera/microphone (HTTPS or localhost required)",
   "callUnknownCaller": "Someone",
-
   "profileTitle": "Profile",
   "editProfile": "Edit profile",
   "bio": "Bio",
   "friendsCountLabel": "{count} friends",
-  "@friendsCountLabel": { "placeholders": { "count": { "type": "int" } } },
+  "@friendsCountLabel": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "messageAction": "Message",
   "activeFriends": "Active now",
   "noFriendsOnline": "No friends online",
@@ -257,25 +323,26 @@
   "userUnblocked": "User unblocked",
   "mentionNotificationTitle": "Mentioned you",
   "mentionNotificationBody": "{name} mentioned you",
-  "@mentionNotificationBody": { "placeholders": { "name": { "type": "String" } } },
+  "@mentionNotificationBody": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "searchMessages": "Search messages",
   "searchHint": "Search in conversation",
   "searchNoResults": "No messages found",
-
   "exploreChannels": "Explore Channels",
   "searchChannelsHint": "Search channels…",
   "noPublicChannels": "No public channels found",
   "joinChannel": "Join",
-  "membersCount": "{count} members",
-  "@membersCount": { "placeholders": { "count": { "type": "int" } } },
-
   "pinMessage": "Pin",
   "forwardMessage": "Forward",
   "messageForwarded": "Message forwarded",
   "forwardFailed": "Failed to forward message",
   "noConversationsToForward": "No conversations available",
   "rateLimitError": "Too many messages. Please slow down.",
-
   "sharedMediaTitle": "Shared Media & Files",
   "tabMedia": "Media",
   "tabFiles": "Files",
@@ -292,5 +359,15 @@
   "notSet": "Not set",
   "passwordChangedSuccess": "Password changed successfully",
   "errCurrentPasswordIncorrect": "Incorrect current password",
-  "changeCoverPhoto": "Change cover photo"
+  "changeCoverPhoto": "Change cover photo",
+  "markAsRead": "Mark as read",
+  "markAsUnread": "Mark as unread",
+  "muteNotifications": "Mute notifications",
+  "unmuteNotifications": "Unmute notifications",
+  "viewProfile": "View profile",
+  "voiceCall": "Voice call",
+  "videoCall": "Video call",
+  "archiveChat": "Archive chat",
+  "unarchiveChat": "Unarchive chat",
+  "mutedLabel": "Muted"
 }

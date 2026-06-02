@@ -64,6 +64,8 @@ class ConversationModel {
   final String status; // "pending" | "accepted"
   final bool isPublic; // public discoverable channel (Task 52)
   final List<PinnedMessageModel> pinnedMessages; // pinned messages (Task 53)
+  final bool isMuted;
+  final bool isArchived;
 
   const ConversationModel({
     required this.id,
@@ -81,6 +83,8 @@ class ConversationModel {
     this.status = 'accepted',
     this.isPublic = false,
     this.pinnedMessages = const [],
+    this.isMuted = false,
+    this.isArchived = false,
   });
 
   bool get isGroup => type == 'group';
@@ -113,6 +117,8 @@ class ConversationModel {
           .map((e) =>
               PinnedMessageModel.fromJson(e as Map<String, dynamic>))
           .toList(),
+      isMuted: json['isMuted'] as bool? ?? false,
+      isArchived: json['isArchived'] as bool? ?? false,
     );
   }
 
@@ -132,6 +138,8 @@ class ConversationModel {
     String? status,
     bool? isPublic,
     List<PinnedMessageModel>? pinnedMessages,
+    bool? isMuted,
+    bool? isArchived,
   }) {
     return ConversationModel(
       id: id ?? this.id,
@@ -149,6 +157,8 @@ class ConversationModel {
       status: status ?? this.status,
       isPublic: isPublic ?? this.isPublic,
       pinnedMessages: pinnedMessages ?? this.pinnedMessages,
+      isMuted: isMuted ?? this.isMuted,
+      isArchived: isArchived ?? this.isArchived,
     );
   }
 }

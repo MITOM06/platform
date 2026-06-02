@@ -718,4 +718,34 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get changeCoverPhoto => '修改背景图片';
+
+  @override
+  String get markAsRead => '标为已读';
+
+  @override
+  String get markAsUnread => '标为未读';
+
+  @override
+  String get muteNotifications => '静音通知';
+
+  @override
+  String get unmuteNotifications => '取消静音';
+
+  @override
+  String get viewProfile => '查看个人资料';
+
+  @override
+  String get voiceCall => '语音通话';
+
+  @override
+  String get videoCall => '视频通话';
+
+  @override
+  String get archiveChat => '归档聊天';
+
+  @override
+  String get unarchiveChat => '取消归档';
+
+  @override
+  String get mutedLabel => '已静音';
 }

@@ -198,21 +198,23 @@
   "searchMessages": "Rechercher des messages",
   "searchHint": "Rechercher dans la conversation",
   "searchNoResults": "Aucun message trouvé",
-
   "exploreChannels": "Explorer les canaux",
   "searchChannelsHint": "Rechercher des canaux…",
   "noPublicChannels": "Aucun canal public trouvé",
   "joinChannel": "Rejoindre",
-  "membersCount": "{count} membres",
-  "@membersCount": { "placeholders": { "count": { "type": "int" } } },
-
+  "@membersCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "pinMessage": "Épingler",
   "forwardMessage": "Transférer",
   "messageForwarded": "Message transféré",
   "forwardFailed": "Échec du transfert",
   "noConversationsToForward": "Aucune conversation disponible",
   "rateLimitError": "Trop de messages. Veuillez ralentir.",
-
   "sharedMediaTitle": "Médias et fichiers partagés",
   "tabMedia": "Médias",
   "tabFiles": "Fichiers",
@@ -229,5 +231,15 @@
   "notSet": "Non défini",
   "passwordChangedSuccess": "Mot de passe modifié avec succès",
   "errCurrentPasswordIncorrect": "Mot de passe actuel incorrect",
-  "changeCoverPhoto": "Changer la photo de couverture"
+  "changeCoverPhoto": "Changer la photo de couverture",
+  "markAsRead": "Marquer comme lu",
+  "markAsUnread": "Marquer comme non lu",
+  "muteNotifications": "Muet",
+  "unmuteNotifications": "Activer le son",
+  "viewProfile": "Voir le profil",
+  "voiceCall": "Appel vocal",
+  "videoCall": "Appel vidéo",
+  "archiveChat": "Archiver le chat",
+  "unarchiveChat": "Désarchiver le chat",
+  "mutedLabel": "Sourdine"
 }

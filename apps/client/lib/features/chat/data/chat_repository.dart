@@ -187,6 +187,36 @@ class ChatRepository {
     return ConversationModel.fromJson(response.data as Map<String, dynamic>);
   }
 
+  Future<ConversationModel> muteConversation(String conversationId) async {
+    final response = await _dio.post('/api/conversations/$conversationId/mute');
+    return ConversationModel.fromJson(response.data as Map<String, dynamic>);
+  }
+
+  Future<ConversationModel> unmuteConversation(String conversationId) async {
+    final response = await _dio.post('/api/conversations/$conversationId/unmute');
+    return ConversationModel.fromJson(response.data as Map<String, dynamic>);
+  }
+
+  Future<ConversationModel> archiveConversation(String conversationId) async {
+    final response = await _dio.post('/api/conversations/$conversationId/archive');
+    return ConversationModel.fromJson(response.data as Map<String, dynamic>);
+  }
+
+  Future<ConversationModel> unarchiveConversation(String conversationId) async {
+    final response = await _dio.post('/api/conversations/$conversationId/unarchive');
+    return ConversationModel.fromJson(response.data as Map<String, dynamic>);
+  }
+
+  Future<ConversationModel> markConversationUnread(String conversationId) async {
+    final response = await _dio.post('/api/conversations/$conversationId/unread');
+    return ConversationModel.fromJson(response.data as Map<String, dynamic>);
+  }
+
+  Future<ConversationModel> markConversationRead(String conversationId) async {
+    final response = await _dio.post('/api/conversations/$conversationId/read');
+    return ConversationModel.fromJson(response.data as Map<String, dynamic>);
+  }
+
   // ----- Task 57: Shared Media Gallery --------------------------------------
 
   /// Returns messages of [type] ("media", "file", "link") for the gallery screen.
