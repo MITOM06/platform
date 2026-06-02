@@ -167,7 +167,7 @@ docker compose -f infra/docker-compose/compose.yml down
 PORT=3001
 MONGO_URI=mongodb://localhost:27018/platform
 REDIS_URL=redis://localhost:6379
-JWT_SECRET=your_shared_secret_here
+JWT_ACCESS_SECRET=your_shared_secret_here
 JWT_EXPIRES=15m
 REFRESH_EXPIRES=7d
 MAIL_HOST=smtp.example.com
@@ -181,10 +181,10 @@ MAIL_PASS=your_mail_password
 spring.data.mongodb.uri=mongodb://localhost:27018/platform
 spring.data.redis.host=localhost
 spring.data.redis.port=6379
-app.jwt.secret=your_shared_secret_here
+app.jwt.secret=${JWT_ACCESS_SECRET}
 ```
 
-> **Important:** `JWT_SECRET` / `app.jwt.secret` must be identical across both services.
+> **Important:** `JWT_ACCESS_SECRET` must be identical across both services — the chat-service reads it via `${JWT_ACCESS_SECRET}` and will fail-fast on startup if the variable is missing.
 
 ---
 
@@ -246,6 +246,15 @@ app.jwt.secret=your_shared_secret_here
 - **Profile cover photo upload** — overlapping header with camera icon for in-place customization
 - **Change password** — dedicated security settings screen with current/new/confirm fields
 - **Double-tap quick reaction** — double-tap any message to instantly react with ❤️
+
+### Sprint 18 — Meta Messenger UX & Advanced Chat Operations
+
+- **Mute / unmute conversations** — per-user mute flag; muted chats suppress notifications
+- **Archive / unarchive conversations** — archived chats hidden from the main list; re-surface via dedicated view
+- **Mark conversation read / unread** — REST endpoints give the client full control over the unread badge
+- **Floating glassmorphic reaction sheet** — Messenger-style `FloatingReactionSheet`: emoji picker row + full action menu (reply, copy, edit, recall, pin, forward, delete) rendered with `BackdropFilter` blur and a frosted-glass container
+- **Conversation avatar improvements** — direct chats resolve the peer's avatar/name via `userProfileProvider`; group chats use group avatar or generated initials
+- **Conversation list UX polish** — mute-indicator icon, archive-swipe gesture, unread badge on list tiles
 
 ### Roadmap
 
