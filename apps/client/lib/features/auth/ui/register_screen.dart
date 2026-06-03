@@ -121,25 +121,16 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
           // Content
           SafeArea(
             child: Center(
-              child: SingleChildScrollView(
-                physics: const BouncingScrollPhysics(),
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    // Small animated logo icon
-                    const Center(child: PonLogo(size: 60, showText: false)),
-                    const SizedBox(height: 8),
-                    Text(
-                      context.l10n.welcomeToApp,
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Colors.white.withValues(alpha: 0.5),
-                        fontWeight: FontWeight.w500,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 24),
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 450),
+                child: SingleChildScrollView(
+                  physics: const BouncingScrollPhysics(),
+                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      const Center(child: PonLogo(size: 100, showText: true)),
+                      const SizedBox(height: 24),
 
                     // Register Form Card
                     PonCard(
@@ -239,21 +230,22 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                     ),
                     const SizedBox(height: 24),
 
-                    // Back to login
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          context.l10n.haveAccount,
-                          style: TextStyle(color: Colors.white.withValues(alpha: 0.6)),
-                        ),
-                        TextButton(
-                          onPressed: () => context.go('/login'),
-                          child: Text(context.l10n.loginLink),
-                        ),
-                      ],
-                    ),
-                  ],
+                      // Back to login
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            context.l10n.haveAccount,
+                            style: TextStyle(color: Colors.white.withValues(alpha: 0.6)),
+                          ),
+                          TextButton(
+                            onPressed: () => context.go('/login'),
+                            child: Text(context.l10n.loginLink),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),

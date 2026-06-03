@@ -9,8 +9,10 @@ import '../../features/auth/ui/verify_otp_screen.dart';
 import '../../features/auth/ui/forgot_password_screen.dart';
 import '../../features/auth/ui/new_password_screen.dart';
 import '../../features/auth/ui/theme_onboarding_screen.dart';
-import '../../features/chat/ui/conversation_list_screen.dart';
 import '../../features/chat/ui/chat_screen.dart';
+import '../../features/chat/ui/archived_chats_screen.dart';
+import '../../features/home/ui/responsive_home_layout.dart';
+import '../utils/global_messenger.dart';
 import '../../features/chat/presentation/call_screen.dart';
 import '../../features/chat/ui/group_info_screen.dart';
 import '../../features/chat/ui/new_conversation_screen.dart';
@@ -67,6 +69,7 @@ GoRouter appRouter(AppRouterRef ref) {
   final notifier = ref.watch(routerNotifierProvider.notifier);
 
   return GoRouter(
+    navigatorKey: rootNavigatorKey,
     initialLocation: '/login',
     refreshListenable: notifier,
     redirect: (context, state) {
@@ -112,7 +115,9 @@ GoRouter appRouter(AppRouterRef ref) {
         builder: (context, state) {
           final email =
               Uri.decodeComponent(state.uri.queryParameters['email'] ?? '');
-          return VerifyOtpScreen(email: email);
+          final isForgotPassword =
+              state.uri.queryParameters['isForgotPassword'] == 'true';
+          return VerifyOtpScreen(email: email, isForgotPassword: isForgotPassword);
         },
       ),
       GoRoute(
@@ -126,7 +131,9 @@ GoRouter appRouter(AppRouterRef ref) {
         builder: (context, state) {
           final email =
               Uri.decodeComponent(state.uri.queryParameters['email'] ?? '');
-          return NewPasswordScreen(email: email);
+          final otpParam = state.uri.queryParameters['otp'];
+          final otp = otpParam != null ? Uri.decodeComponent(otpParam) : null;
+          return NewPasswordScreen(email: email, otp: otp);
         },
       ),
 
@@ -139,7 +146,7 @@ GoRouter appRouter(AppRouterRef ref) {
       GoRoute(
         path: '/',
         name: 'conversations',
-        builder: (context, state) => const ConversationListScreen(),
+        builder: (context, state) => const ResponsiveHomeLayout(),
         routes: [
           GoRoute(
             path: 'chat/:id',
@@ -150,6 +157,11 @@ GoRouter appRouter(AppRouterRef ref) {
             },
           ),
         ],
+      ),
+      GoRoute(
+        path: '/archived',
+        name: 'archived',
+        builder: (context, state) => const ArchivedChatsScreen(),
       ),
       GoRoute(
         path: '/settings',
@@ -206,6 +218,9 @@ GoRouter appRouter(AppRouterRef ref) {
       GoRoute(
         path: '/call',
         name: 'call',
+        // Always push the call over everything (incl. the web split layout and
+        // any open dialogs/sheets) on the root navigator so it is fullscreen.
+        parentNavigatorKey: rootNavigatorKey,
         builder: (context, state) {
           final extra = state.extra as Map<String, dynamic>? ?? {};
           return CallScreen(

@@ -87,7 +87,7 @@ export class UsersService {
 
   async updateProfile(
     userId: string,
-    data: { displayName?: string; avatarUrl?: string; bio?: string; coverPhoto?: string; dateOfBirth?: string },
+    data: { displayName?: string; avatarUrl?: string; bio?: string; coverPhoto?: string; dateOfBirth?: string; phoneNumber?: string; gender?: string; hideInfo?: boolean },
   ): Promise<UserDocument | null> {
     const updateData: any = {};
     if (data.displayName !== undefined) updateData.displayName = data.displayName;
@@ -97,6 +97,9 @@ export class UsersService {
     if (data.dateOfBirth !== undefined) {
       updateData.dateOfBirth = data.dateOfBirth ? new Date(data.dateOfBirth) : null;
     }
+    if (data.phoneNumber !== undefined) updateData.phoneNumber = data.phoneNumber;
+    if (data.gender !== undefined) updateData.gender = data.gender;
+    if (data.hideInfo !== undefined) updateData.hideInfo = data.hideInfo;
 
     if (Object.keys(updateData).length > 0) {
       return this.userModel.findByIdAndUpdate(

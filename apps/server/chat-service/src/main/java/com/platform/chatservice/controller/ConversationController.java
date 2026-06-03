@@ -37,8 +37,10 @@ public class ConversationController {
     @GetMapping
     public PageResponse<ConversationResponse> listConversations(
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size) {
-        return conversationService.listConversations(currentUserId(), PageRequest.of(page, size));
+            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(defaultValue = "false") boolean archived) {
+        return conversationService.listConversations(
+            currentUserId(), PageRequest.of(page, size), archived);
     }
 
     @PostMapping

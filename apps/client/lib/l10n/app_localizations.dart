@@ -1517,6 +1517,144 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Muted'**
   String get mutedLabel;
+
+  /// No description provided for @newNotificationTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'New message'**
+  String get newNotificationTitle;
+
+  /// No description provided for @newNotificationBody.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} sent you a message'**
+  String newNotificationBody(String name);
+
+  /// No description provided for @archivedChats.
+  ///
+  /// In en, this message translates to:
+  /// **'Archived chats'**
+  String get archivedChats;
+
+  /// No description provided for @archivedChatsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'View archived conversations'**
+  String get archivedChatsSubtitle;
+
+  /// No description provided for @emptyArchivedChats.
+  ///
+  /// In en, this message translates to:
+  /// **'No archived chats'**
+  String get emptyArchivedChats;
+
+  /// No description provided for @webNoChatSelected.
+  ///
+  /// In en, this message translates to:
+  /// **'Select a conversation to start chatting'**
+  String get webNoChatSelected;
+
+  /// No description provided for @endToEndEncrypted.
+  ///
+  /// In en, this message translates to:
+  /// **'End-to-end encrypted'**
+  String get endToEndEncrypted;
+
+  /// No description provided for @chatInfoCategory.
+  ///
+  /// In en, this message translates to:
+  /// **'Chat Details'**
+  String get chatInfoCategory;
+
+  /// No description provided for @customizeChatCategory.
+  ///
+  /// In en, this message translates to:
+  /// **'Customize Chat'**
+  String get customizeChatCategory;
+
+  /// No description provided for @filesAndMediaCategory.
+  ///
+  /// In en, this message translates to:
+  /// **'Media, files and links'**
+  String get filesAndMediaCategory;
+
+  /// No description provided for @privacyAndSupportCategory.
+  ///
+  /// In en, this message translates to:
+  /// **'Privacy & support'**
+  String get privacyAndSupportCategory;
+
+  /// No description provided for @callSelectMember.
+  ///
+  /// In en, this message translates to:
+  /// **'Select a member to call'**
+  String get callSelectMember;
+
+  /// No description provided for @profileHideInfo.
+  ///
+  /// In en, this message translates to:
+  /// **'Hide personal info'**
+  String get profileHideInfo;
+
+  /// No description provided for @profileInfoHidden.
+  ///
+  /// In en, this message translates to:
+  /// **'Personal information is hidden'**
+  String get profileInfoHidden;
+
+  /// No description provided for @profileGender.
+  ///
+  /// In en, this message translates to:
+  /// **'Gender'**
+  String get profileGender;
+
+  /// No description provided for @profilePhone.
+  ///
+  /// In en, this message translates to:
+  /// **'Phone number'**
+  String get profilePhone;
+
+  /// No description provided for @profileBio.
+  ///
+  /// In en, this message translates to:
+  /// **'Bio'**
+  String get profileBio;
+
+  /// No description provided for @profileDateOfBirth.
+  ///
+  /// In en, this message translates to:
+  /// **'Date of birth'**
+  String get profileDateOfBirth;
+
+  /// No description provided for @profileEditMode.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit Profile'**
+  String get profileEditMode;
+
+  /// No description provided for @profileSave.
+  ///
+  /// In en, this message translates to:
+  /// **'Save'**
+  String get profileSave;
+
+  /// No description provided for @actionMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Message'**
+  String get actionMessage;
+
+  /// No description provided for @actionAddFriend.
+  ///
+  /// In en, this message translates to:
+  /// **'Add Friend'**
+  String get actionAddFriend;
+
+  /// No description provided for @actionBlock.
+  ///
+  /// In en, this message translates to:
+  /// **'Block'**
+  String get actionBlock;
 }
 
 class _AppLocalizationsDelegate

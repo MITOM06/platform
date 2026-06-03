@@ -1,17 +1,23 @@
 import 'dart:async';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/l10n/l10n_ext.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/widgets/otp_6box_input.dart';
 import '../../../core/widgets/pon_widgets.dart';
 import '../data/auth_repository.dart';
 
 class VerifyOtpScreen extends ConsumerStatefulWidget {
   final String email;
-  const VerifyOtpScreen({super.key, required this.email});
+  final bool isForgotPassword;
+
+  const VerifyOtpScreen({
+    super.key,
+    required this.email,
+    this.isForgotPassword = false,
+  });
 
   @override
   ConsumerState<VerifyOtpScreen> createState() => _VerifyOtpScreenState();
@@ -82,6 +88,15 @@ class _VerifyOtpScreenState extends ConsumerState<VerifyOtpScreen> {
           SnackBar(content: Text(context.l10n.valOtp6)));
       return;
     }
+
+    if (widget.isForgotPassword) {
+      context.go(
+        '/new-password?email=${Uri.encodeComponent(widget.email)}'
+        '&otp=${Uri.encodeComponent(otp)}',
+      );
+      return;
+    }
+
     setState(() => _isLoading = true);
     try {
       await ref.read(authRepositoryProvider).verifyOtp(widget.email, otp);
@@ -120,7 +135,6 @@ class _VerifyOtpScreenState extends ConsumerState<VerifyOtpScreen> {
       ),
       body: Stack(
         children: [
-          // Background ambient lights
           Positioned(
             top: -120,
             left: -120,
@@ -159,101 +173,91 @@ class _VerifyOtpScreenState extends ConsumerState<VerifyOtpScreen> {
           // Content
           SafeArea(
             child: Center(
-              child: SingleChildScrollView(
-                physics: const BouncingScrollPhysics(),
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    const Center(child: PonLogo(size: 60, showText: false)),
-                    const SizedBox(height: 16),
-                    Text(
-                      context.l10n.verifyAccountHeading,
-                      style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
-                          ),
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      context.l10n.otpSentTo(widget.email),
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        color: Colors.white.withValues(alpha: 0.5),
-                        height: 1.5,
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 450),
+                child: SingleChildScrollView(
+                  physics: const BouncingScrollPhysics(),
+                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      const Center(child: PonLogo(size: 100, showText: true)),
+                      const SizedBox(height: 16),
+                      Text(
+                        context.l10n.verifyAccountHeading,
+                        style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
+                        textAlign: TextAlign.center,
                       ),
-                    ),
-                    const SizedBox(height: 32),
-
-                    // OTP Form Card
-                    PonCard(
-                      glowColor: AppTheme.ponCyan,
-                      glowStrength: 8,
-                      child: Padding(
-                        padding: const EdgeInsets.all(24.0),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            // OTP input field
-                            PonTextField(
-                              controller: _otpController,
-                              labelText: context.l10n.fieldOtp,
-                              prefixIcon: Icons.pin_outlined,
-                              keyboardType: TextInputType.number,
-                              maxLength: 6,
-                              counterText: '',
-                              style: const TextStyle(
-                                fontSize: 24,
-                                letterSpacing: 8,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.white,
-                              ),
-                              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                              textInputAction: TextInputAction.done,
-                              onFieldSubmitted: (_) => _submit(),
-                              focusColor: AppTheme.ponCyan,
-                            ),
-                            const SizedBox(height: 28),
-
-                            // Submit Button
-                            PonButton(
-                              onPressed: _submit,
-                              isLoading: _isLoading,
-                              gradientColors: const [AppTheme.ponCyan, AppTheme.ponCyan],
-                              glowColor: AppTheme.ponCyan,
-                              child: Text(context.l10n.confirmButton),
-                            ),
-                            const SizedBox(height: 16),
-
-                            // Resend OTP Button
-                            Center(
-                              child: _isResending
-                                  ? const SizedBox(
-                                      width: 20,
-                                      height: 20,
-                                      child: CircularProgressIndicator(strokeWidth: 2),
-                                    )
-                                  : TextButton(
-                                      onPressed: _resendCooldown > 0 ? null : _resend,
-                                      child: Text(
-                                        _resendCooldown > 0
-                                            ? context.l10n.resendIn(_resendCooldown)
-                                            : context.l10n.resendOtp,
-                                        style: TextStyle(
-                                          color: _resendCooldown > 0
-                                              ? Colors.white38
-                                              : AppTheme.ponCyan,
-                                          fontWeight: FontWeight.w600,
-                                        ),
-                                      ),
-                                    ),
-                            ),
-                          ],
+                      const SizedBox(height: 8),
+                      Text(
+                        context.l10n.otpSentTo(widget.email),
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          color: Colors.white.withValues(alpha: 0.5),
+                          height: 1.5,
                         ),
                       ),
-                    ),
-                  ],
+                      const SizedBox(height: 32),
+
+                      // OTP Form Card
+                      PonCard(
+                        glowColor: AppTheme.ponCyan,
+                        glowStrength: 8,
+                        child: Padding(
+                          padding: const EdgeInsets.all(24.0),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              // 6-box OTP input
+                              Otp6BoxInput(
+                                controller: _otpController,
+                                accentColor: AppTheme.ponCyan,
+                                onCompleted: (_) => _submit(),
+                              ),
+                              const SizedBox(height: 28),
+
+                              // Submit Button
+                              PonButton(
+                                onPressed: _submit,
+                                isLoading: _isLoading,
+                                gradientColors: const [AppTheme.ponCyan, AppTheme.ponCyan],
+                                glowColor: AppTheme.ponCyan,
+                                child: Text(context.l10n.confirmButton),
+                              ),
+                              const SizedBox(height: 16),
+
+                              // Resend OTP Button
+                              Center(
+                                child: _isResending
+                                    ? const SizedBox(
+                                        width: 20,
+                                        height: 20,
+                                        child: CircularProgressIndicator(strokeWidth: 2),
+                                      )
+                                    : TextButton(
+                                        onPressed: _resendCooldown > 0 ? null : _resend,
+                                        child: Text(
+                                          _resendCooldown > 0
+                                              ? context.l10n.resendIn(_resendCooldown)
+                                              : context.l10n.resendOtp,
+                                          style: TextStyle(
+                                            color: _resendCooldown > 0
+                                                ? Colors.white38
+                                                : AppTheme.ponCyan,
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                        ),
+                                      ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),

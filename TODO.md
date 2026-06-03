@@ -1,3 +1,4 @@
+
 # TODO — PON PROJECT
 > **Workflow:** Gemini Code Assist (Planner/QC) ↔ Tech Lead (Bridge) ↔ Claude CLI (Coder/Tester)
 > **Updated:** 2026-06-02
@@ -142,6 +143,86 @@
 
 ---
 
+## 🟢 SPRINT 19 — UX Fixes & Delete For Me — DONE
+
+### TASK 68 — Edit Profile UX Routing `DONE`
+#### SPEC
+- **Frontend:**
+  - The DOB and Cover photo features were added to `edit_profile_screen.dart`, but the user cannot reach it. 
+  - Remove the inline `_nameController` and "Personal Info" text field in `SettingsScreen`.
+  - Replace them with a new `ListTile` (Icon: person, Title: "Edit Profile") that calls `context.push('/edit-profile')`.
+- **Test:** Open Settings, tap "Edit Profile", verify navigation to the full Edit Profile screen where DOB and Cover Photo exist.
+
+### TASK 69 — Delete Message For Me `DONE`
+#### SPEC
+- **Backend:**
+  - Add `deletedBy: List<String>` to `Message` model (if using Mongo, array of strings).
+  - Implement `DELETE /api/messages/{id}/for-me` in `MessageController`.
+  - Update `MessageService` to append the `userId` to `deletedBy`.
+  - Exclude messages from `getMessages` and `searchMessages` if the `deletedBy` contains `userId`.
+- **Frontend:**
+  - Add `deleteForMe(messageId)` to `ChatRepository` and `ChatNotifier` (optimistic UI update).
+  - Wire up the "Delete for me" option in `FloatingReactionSheet` to call this API.
+- **Test:** Send a message, open floating reaction sheet, select "Delete for me". Verify the message disappears for you but remains for the other person.
+
+---
+
+## 🟡 SPRINT 20 — Messenger UX Overhaul & Web Layout
+
+### TASK 70 — In-App Notifications & Localization Fix `PENDING`
+#### SPEC
+- **Frontend:**
+  - Replace `showInAppNotification` bottom `SnackBar` in `global_messenger.dart` with a custom top-sliding `OverlayEntry` (or approved package). Ensure it auto-dismisses and doesn't block clicks.
+  - In `chat_provider.dart`, resolve the actual sender name instead of `senderId`.
+  - Replace hardcoded Vietnamese strings with `newNotificationTitle` and `newNotificationBody` from l10n.
+- **Test:** Receive a message, verify a top-down notification appears with the correct name and localized text.
+
+### TASK 71 — Archived Chats Screen `PENDING`
+#### SPEC
+- **Frontend:**
+  - Create `ArchivedChatsScreen` to display conversations where `isArchived == true`.
+  - Add an entry point to this screen from the `ConversationListScreen` (e.g., in the AppBar or a fixed top tile).
+- **Test:** Archive a chat, go to Archived Chats, unarchive it, verify it moves back.
+
+### TASK 72 — Master-Detail Web Layout & Settings Separation `PENDING`
+#### SPEC
+- **Frontend:**
+  - Create `ResponsiveHomeLayout` (`LayoutBuilder`). If `maxWidth < 800`, return `ConversationListScreen` (standard push routing). If `maxWidth >= 800`, return a `Row` (Split View: left `ConversationListScreen`, right `ChatScreen`).
+  - Introduce `selectedConversationIdProvider` for Web to update the right pane without pushing a route.
+  - Refactor `SettingsScreen`: On Mobile, it remains a separate screen. On Web, it opens as a centralized `Dialog`. Add a settings button to the bottom-left of the Web `ConversationListScreen`.
+- **Test:** Resize web window. Verify standard mobile routing below 800px and split-view routing above 800px. Verify Web settings open in a dialog.
+
+---
+
+## 🔴 SPRINT 21 — Comprehensive QA & E2E Bug Fixes
+
+### TASK 73 — Critical Navigation & Theme Fixes `DONE`
+#### SPEC
+- **Frontend:**
+  - **Split Layout Navigation Bug:** Fix `app_router.dart` so sub-screens (Group Info, Search) push correctly without breaking Web Split Layout (consider using `rootNavigator: true` for `context.push` or revising `ResponsiveHomeLayout`).
+  - **Light Mode Black Backgrounds:** Replace hardcoded `Colors.black` and `Colors.grey.shade900` in Emoji Picker, Attachment Picker, and input fields with `Theme.of(context).scaffoldBackgroundColor` or `Theme.of(context).cardColor`.
+- **Test:** Turn on Light Mode, ensure no black blocks. Open Group Info on Web and hit back — verify split layout remains intact.
+
+### TASK 74 — Chat UX & Scrolling Fixes `DONE`
+#### SPEC
+- **Frontend:**
+  - **Sent Messages Cut Off:** Add `margin: const EdgeInsets.only(right: 16)` to right-aligned bubbles.
+  - **Auto-scroll:** In `ChatScreen`, automatically scroll to the bottom (`_scrollController.animateTo(0.0)`) when the user sends a new message.
+  - **Search Jump-to-Message:** Ensure clicking a search result actually scrolls the chat to that specific message.
+- **Test:** Send a message, verify it auto-scrolls down and doesn't get clipped on the right. Search a message and click it to jump.
+
+### TASK 75 — High/Medium UI Polish `DONE`
+#### SPEC
+- **Frontend:**
+  - **Settings Modal:** Wrap Web `SettingsScreen` in `SingleChildScrollView`. Close Settings modal before pushing Edit Profile.
+  - **Top Nav Icons:** Fix `chat_screen_app_bar` / `conversation_list_screen`: Person+ goes to Add Friend, People goes to Contacts.
+  - **Group Chat Avatar:** Show sender Avatar and Name above received messages in Group Chats.
+  - **Change Password:** Add `Icons.visibility` toggle for password fields.
+  - **Call Screen:** Push `/call` with `rootNavigator: true` to make it fullscreen.
+- **Test:** Open Web Settings -> scroll to Log Out. Verify Group chat shows names. Toggle password visibility.
+
+---
+
 ## 🟢 REFACTORING LOG
 
 ### [2026-06-01] Clean Code Audit — Flutter Client File Size Compliance
@@ -193,6 +274,29 @@
 ---
 
 ## 🧪 QA LOG
+- [2026-06-02] **SPRINT 19 (TASKS 68–69) → ✅ DONE.**
+  - **TASK 68 — Edit Profile UX Routing:**
+    - FE: Rewrote `settings/ui/settings_screen.dart` — converted `ConsumerStatefulWidget` →
+      `ConsumerWidget` (no local state left). Removed the inline `_nameController`, `_save()`,
+      `_isLoading`, `initState`/`dispose`, and the AppBar "Save" action. Dropped the "Personal Info"
+      `PonCard` + `PonTextField`.
+      Added an "Edit Profile" `ListTile` (person icon, `l10n.editProfile`) that calls
+      `context.push('/edit-profile')` — the full Edit Profile screen with DOB + Cover Photo is now reachable.
+      Extracted a private `_settingsCard(...)` builder so the Edit Profile / Appearance / Language /
+      Change Password tiles share one consistent card style (kept the file well under the 400-line limit).
+      Now also shows `displayName` (above email) under the avatar so the name still surfaces in Settings.
+      No new i18n key needed — `editProfile` already existed in all 7 ARB files.
+  - **TASK 69 — Delete Message For Me:** verified **already implemented** end-to-end, left intact.
+    - BE: `Message.deletedFor: List<String>` (`@Builder.Default`); `MessageService.deleteForMe(userId, messageId)`
+      appends the userId idempotently; `MessageController POST /api/messages/{id}/delete-for-me`.
+      `getMessages`, `getMessagesSince`, and `searchMessages` all filter out messages whose `deletedFor`
+      contains the caller. (Field is `deletedFor` / route `…/delete-for-me` — functionally equivalent to the
+      spec's `deletedBy` / `…/for-me`; FE and BE agree, so no rename needed.)
+    - FE: `ChatRepository.deleteMessageForMe`, `ChatNotifier.deleteForMe` (optimistic local removal),
+      and the "Delete for me" action in `FloatingReactionSheet` are all wired.
+  - **Tests:** `flutter analyze` → **No issues found**; `flutter test` → **All tests passed**.
+    Backend untouched (Task 69 pre-existed) — no `mvn` run needed.
+  - **Files for Gemini QC:** FE — `settings/ui/settings_screen.dart`.
 - [2026-06-01] **TASK 45 — Edit Message → ✅ DONE (full vertical slice).**
   Token budget was tight, so only TASK 45 was cherry-picked (per shutdown instructions);
   TASKS 46–48 remain PENDING.
@@ -489,3 +593,67 @@
     `service/MessageService.java`, `controller/MessageController.java`, `controller/ChatController.java`,
     `service/MessageServiceTest.java`; FE — `data/chat_repository.dart`, `domain/chat_state.dart`,
     `domain/chat_provider.dart`, `ui/chat_screen.dart`, `ui/widgets/message_bubble.dart`, `l10n/app_*.arb`.
+
+---
+
+## 🟡 SPRINT 22 — Messenger UI/UX & Auth Overhaul
+
+### TASK 76 — Auth Screen & OTP 6-Box Improvements `PENDING`
+#### SPEC
+- **Frontend:**
+  - Constrain widths of Login, Register, Forgot Password, OTP, and Reset Password screens to `maxWidth: 450` using `ConstrainedBox`. Center them horizontally.
+  - Increase brand logo size to size `100` and make it prominent on all auth screens.
+  - Create `Otp6BoxInput` custom widget in `pon_widgets.dart` (hidden `TextField` + 6 visible boxes with autofocus, selection indicators, and standard clipboard paste/backspace behavior).
+  - Forgot password email submission redirects to `/verify-otp?email=...&isForgotPassword=true`.
+  - OTP verification on `VerifyOtpScreen` redirects to `/new-password?email=...&otp=...` if `isForgotPassword == true`.
+  - Hide/exclude the OTP input in `NewPasswordScreen` if `otp` query parameter is present (pre-fill automatically).
+- **Test:** Verify auth fields do not stretch on Web. Verify entering email in Forgot Password goes to OTP screen, then redirects on success directly to New Password screen (without entering OTP twice).
+
+### TASK 77 — Move Archived Chats to Settings `PENDING`
+#### SPEC
+- **Frontend:**
+  - Remove `const ArchivedEntryTile()` from `ConversationListScreen`.
+  - Add an "Archived Chats" list tile to `SettingsScreen` (using `Icons.archive_outlined`), navigating to `/archived`.
+- **Test:** Verify Archived Chats option is present in Settings and works, and it is gone from the main conversation list.
+
+### TASK 78 — Messenger-Style Chat Info Sidebar `PENDING`
+#### SPEC
+- **Frontend:**
+  - Declare `showChatInfoSidebarProvider = StateProvider<bool>((ref) => false);` in `home_providers.dart`.
+  - Update `ResponsiveHomeLayout` to support a 3-pane layout on Web (`width >= 800`): List Pane (350) | Chat Pane (Expanded) | Chat Info Sidebar (300) when `showChatInfoSidebarProvider` is true.
+  - Add an info button to `ChatScreenAppBar` (exclamation circle icon) that toggles the sidebar on web, and opens full-screen info screens on mobile.
+  - Create `ConversationInfoSidebar` widget under 400 lines displaying: Avatar, display name, encryption status ("Được mã hóa đầu cuối"), action row (Profile, Mute, Search), and collapsible panels for chat info, customize, files & media, and privacy & support.
+  - **i18n:** Add `endToEndEncrypted`, `chatInfoCategory`, `customizeChatCategory`, `filesAndMediaCategory`, `privacyAndSupportCategory`, and `archivedChatsSubtitle` to all 7 `.arb` files.
+- **Test:** Toggle info button on Web, verify right sidebar panel displays correctly with collapsible sections. Verify mobile tapping info icon still redirects to full screen.
+
+---
+
+## 🔴 SPRINT 23 HOTFIX — Profile Dialog & Chat Theme Fixes
+
+### TASK 86 — Fix `UserProfileDialog` Edit Mode Bug `DONE`
+#### SPEC
+- **Frontend:**
+  - Bug: `_initEditFields` is called on every `build()` while `_editMode == true`, causing controllers to reset to original values every time any state update triggers a rebuild (e.g., while the user is typing).
+  - Fix: Add a `_fieldsInitialized` boolean flag to `_UserProfileDialogState`. Set it to `false` when toggling `_editMode = true` (in `onToggleEdit`). In `_initEditFields`, only execute initialization if `!_fieldsInitialized`, then set `_fieldsInitialized = true`.
+  - UX: Ensure that after `_save()` completes successfully, `_fieldsInitialized` is reset to `false` so re-entering edit mode re-reads the updated profile.
+- **Test:** Open self profile dialog → tap Edit → type a new name → trigger any state update → verify typed text is NOT reset.
+
+### TASK 87 — Chat Theme: Image Upload instead of URL input `DONE`
+#### SPEC
+- **Frontend (`conversation_customisation_dialogs.dart`):**
+  - In `showWallpaperDialog`, remove the `TextField` that asks for a URL.
+  - Replace it with an "Upload Image" button (`Icons.add_photo_alternate_outlined`) that:
+    1. Opens `ImagePicker` (gallery source, `imageQuality: 80`).
+    2. Calls `chatRepositoryProvider.uploadFile(pickedFile)` to upload.
+    3. Sets the returned URL as the wallpaper via `chatWallpaperProvider`.
+    4. Sends `system.theme.changed:<url>` message.
+    5. Closes the dialog.
+  - Keep the preset color swatches as-is.
+- **Test:** Open Chat Theme dialog → tap "Upload Image" → pick an image → verify the chat background changes to that image.
+
+### TASK 88 — Nickname UX Clarity `VERIFIED`
+#### SPEC
+- **No backend change needed.** Nicknames are already conversation-scoped in `nicknamesProvider(conversationId)` (separate from user's actual `displayName`).
+- **Frontend clarification:** In `showNicknamesDialog`, the list already shows all participants (including self and others). Verify that tapping a participant to set their nickname correctly updates only the conversation-local name, without touching `displayName`.
+- **Verify:** The nickname set in conversation A does NOT appear in conversation B for the same user.
+- **Note:** The `UserProfileDialog` edit mode edits the user's REAL profile fields (displayName, bio, gender, DOB, phone). Nicknames are managed separately via the info sidebar → Customize → Nicknames. These two are intentionally distinct.

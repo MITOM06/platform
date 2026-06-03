@@ -35,7 +35,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
           .forgotPassword(_emailController.text.trim());
       if (mounted) {
         context.go(
-            '/new-password?email=${Uri.encodeComponent(_emailController.text.trim())}');
+            '/verify-otp?email=${Uri.encodeComponent(_emailController.text.trim())}&isForgotPassword=true');
       }
     } on DioException catch (e) {
       if (mounted) {
@@ -106,15 +106,17 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
           // Content
           SafeArea(
             child: Center(
-              child: SingleChildScrollView(
-                physics: const BouncingScrollPhysics(),
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    const Center(child: PonLogo(size: 60, showText: false)),
-                    const SizedBox(height: 16),
-                    Text(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 450),
+                child: SingleChildScrollView(
+                  physics: const BouncingScrollPhysics(),
+                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      const Center(child: PonLogo(size: 100, showText: true)),
+                      const SizedBox(height: 16),
+                      Text(
                       context.l10n.forgotHeading,
                       style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                             fontWeight: FontWeight.bold,
@@ -133,48 +135,49 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                     ),
                     const SizedBox(height: 32),
 
-                    // Forgot Form Card
-                    PonCard(
-                      glowColor: AppTheme.ponPeach,
-                      glowStrength: 8,
-                      child: Padding(
-                        padding: const EdgeInsets.all(24.0),
-                        child: Form(
-                          key: _formKey,
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.stretch,
-                            children: [
-                              // Email
-                              PonTextField(
-                                controller: _emailController,
-                                labelText: context.l10n.fieldEmail,
-                                prefixIcon: Icons.email_outlined,
-                                keyboardType: TextInputType.emailAddress,
-                                textInputAction: TextInputAction.done,
-                                onFieldSubmitted: (_) => _submit(),
-                                focusColor: AppTheme.ponCyan,
-                                validator: (v) {
-                                  if (v == null || v.isEmpty) return context.l10n.valEmailRequired;
-                                  if (!v.contains('@')) return context.l10n.valEmailInvalid;
-                                  return null;
-                                },
-                              ),
-                              const SizedBox(height: 28),
+                      // Forgot Form Card
+                      PonCard(
+                        glowColor: AppTheme.ponPeach,
+                        glowStrength: 8,
+                        child: Padding(
+                          padding: const EdgeInsets.all(24.0),
+                          child: Form(
+                            key: _formKey,
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                // Email
+                                PonTextField(
+                                  controller: _emailController,
+                                  labelText: context.l10n.fieldEmail,
+                                  prefixIcon: Icons.email_outlined,
+                                  keyboardType: TextInputType.emailAddress,
+                                  textInputAction: TextInputAction.done,
+                                  onFieldSubmitted: (_) => _submit(),
+                                  focusColor: AppTheme.ponCyan,
+                                  validator: (v) {
+                                    if (v == null || v.isEmpty) return context.l10n.valEmailRequired;
+                                    if (!v.contains('@')) return context.l10n.valEmailInvalid;
+                                    return null;
+                                  },
+                                ),
+                                const SizedBox(height: 28),
 
-                              // Submit Button
-                              PonButton(
-                                onPressed: _submit,
-                                isLoading: _isLoading,
-                                gradientColors: const [AppTheme.ponPeach, AppTheme.ponPink],
-                                glowColor: AppTheme.ponPink,
-                                child: Text(context.l10n.sendOtpButton),
-                              ),
-                            ],
+                                // Submit Button
+                                PonButton(
+                                  onPressed: _submit,
+                                  isLoading: _isLoading,
+                                  gradientColors: const [AppTheme.ponPeach, AppTheme.ponPink],
+                                  glowColor: AppTheme.ponPink,
+                                  child: Text(context.l10n.sendOtpButton),
+                                ),
+                              ],
+                            ),
                           ),
                         ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
             ),

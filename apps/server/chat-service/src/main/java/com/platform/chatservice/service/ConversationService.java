@@ -5,7 +5,7 @@ import com.platform.chatservice.dto.CreateGroupRequest;
 import com.platform.chatservice.dto.PageResponse;
 import com.platform.chatservice.exception.ConversationNotFoundException;
 import com.platform.chatservice.exception.DuplicateConversationException;
-import com.platform.chatservice.exception.UnauthorizedException;
+import com.platform.chatservice.exception.ForbiddenException;
 import com.platform.chatservice.model.Conversation;
 import com.platform.chatservice.model.Message;
 import com.platform.chatservice.repository.ConversationRepository;
@@ -40,12 +40,22 @@ public class ConversationService {
     private final MongoTemplate mongoTemplate;
 
     public PageResponse<ConversationResponse> listConversations(String userId, Pageable pageable) {
+        return listConversations(userId, pageable, false);
+    }
+
+    // Lists the user's conversations. When archived is true only archived
+    // conversations are returned; otherwise archived ones are excluded.
+    public PageResponse<ConversationResponse> listConversations(
+            String userId, Pageable pageable, boolean archived) {
         Page<Conversation> page = conversationRepository
             .findByParticipantsContainingOrderByLastMessageAtDesc(userId, pageable);
 
         List<Conversation> conversations = page.getContent().stream()
             .filter(c -> c.getHiddenFor() == null || !c.getHiddenFor().contains(userId))
-            .filter(c -> c.getArchivedBy() == null || !c.getArchivedBy().contains(userId))
+            .filter(c -> {
+                boolean isArchived = c.getArchivedBy() != null && c.getArchivedBy().contains(userId);
+                return archived == isArchived;
+            })
             .toList();
 
         List<String> conversationIds = conversations.stream().map(Conversation::getId).toList();
@@ -140,7 +150,7 @@ public class ConversationService {
         }
         boolean isSelf = userId.equals(targetUserId);
         if (!isSelf && !isAdmin(conversation, userId)) {
-            throw new UnauthorizedException("Only admins can remove members");
+            throw new ForbiddenException("Only admins can remove members");
         }
         List<String> participants = new ArrayList<>(conversation.getParticipants());
         participants.remove(targetUserId);
@@ -276,7 +286,7 @@ public class ConversationService {
     public ConversationResponse acceptConversation(String userId, String conversationId) {
         Conversation conversation = getRawConversation(userId, conversationId);
         if (userId.equals(conversation.getCreatedBy())) {
-            throw new UnauthorizedException("The initiator cannot accept their own request");
+            throw new ForbiddenException("The initiator cannot accept their own request");
         }
         conversation.setStatus(Conversation.STATUS_ACCEPTED);
         Conversation saved = conversationRepository.save(conversation);
@@ -321,7 +331,7 @@ public class ConversationService {
         Conversation conversation = conversationRepository.findById(conversationId)
             .orElseThrow(() -> new ConversationNotFoundException(conversationId));
         if (!conversation.isPublicChannel() || !Conversation.TYPE_GROUP.equals(conversation.getType())) {
-            throw new UnauthorizedException("This channel is not publicly joinable");
+            throw new ForbiddenException("This channel is not publicly joinable");
         }
         if (!conversation.getParticipants().contains(userId)) {
             List<String> participants = new ArrayList<>(conversation.getParticipants());
@@ -361,7 +371,7 @@ public class ConversationService {
             throw new IllegalArgumentException("Not a group conversation");
         }
         if (!isAdmin(conversation, userId)) {
-            throw new UnauthorizedException("Only admins can perform this action");
+            throw new ForbiddenException("Only admins can perform this action");
         }
         return conversation;
     }

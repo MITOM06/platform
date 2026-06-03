@@ -748,4 +748,75 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get mutedLabel => '음소거됨';
+
+  @override
+  String get newNotificationTitle => '새 메시지';
+
+  @override
+  String newNotificationBody(String name) {
+    return '$name님이 메시지를 보냈습니다';
+  }
+
+  @override
+  String get archivedChats => '보관된 채팅';
+
+  @override
+  String get archivedChatsSubtitle => '보관된 대화 보기';
+
+  @override
+  String get emptyArchivedChats => '보관된 채팅이 없습니다';
+
+  @override
+  String get webNoChatSelected => '대화를 선택하여 채팅을 시작하세요';
+
+  @override
+  String get endToEndEncrypted => '종단 간 암호화';
+
+  @override
+  String get chatInfoCategory => '채팅 세부 정보';
+
+  @override
+  String get customizeChatCategory => '채팅 사용자 지정';
+
+  @override
+  String get filesAndMediaCategory => '미디어, 파일 및 링크';
+
+  @override
+  String get privacyAndSupportCategory => '개인 정보 보호 및 지원';
+
+  @override
+  String get callSelectMember => '통화할 멤버를 선택하세요';
+
+  @override
+  String get profileHideInfo => '개인 정보 숨기기';
+
+  @override
+  String get profileInfoHidden => '개인 정보가 숨겨져 있습니다';
+
+  @override
+  String get profileGender => '성별';
+
+  @override
+  String get profilePhone => '전화번호';
+
+  @override
+  String get profileBio => '소개';
+
+  @override
+  String get profileDateOfBirth => '생년월일';
+
+  @override
+  String get profileEditMode => '프로필 편집';
+
+  @override
+  String get profileSave => '저장';
+
+  @override
+  String get actionMessage => '메시지';
+
+  @override
+  String get actionAddFriend => '친구 추가';
+
+  @override
+  String get actionBlock => '차단';
 }

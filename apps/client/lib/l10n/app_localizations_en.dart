@@ -756,4 +756,75 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get mutedLabel => 'Muted';
+
+  @override
+  String get newNotificationTitle => 'New message';
+
+  @override
+  String newNotificationBody(String name) {
+    return '$name sent you a message';
+  }
+
+  @override
+  String get archivedChats => 'Archived chats';
+
+  @override
+  String get archivedChatsSubtitle => 'View archived conversations';
+
+  @override
+  String get emptyArchivedChats => 'No archived chats';
+
+  @override
+  String get webNoChatSelected => 'Select a conversation to start chatting';
+
+  @override
+  String get endToEndEncrypted => 'End-to-end encrypted';
+
+  @override
+  String get chatInfoCategory => 'Chat Details';
+
+  @override
+  String get customizeChatCategory => 'Customize Chat';
+
+  @override
+  String get filesAndMediaCategory => 'Media, files and links';
+
+  @override
+  String get privacyAndSupportCategory => 'Privacy & support';
+
+  @override
+  String get callSelectMember => 'Select a member to call';
+
+  @override
+  String get profileHideInfo => 'Hide personal info';
+
+  @override
+  String get profileInfoHidden => 'Personal information is hidden';
+
+  @override
+  String get profileGender => 'Gender';
+
+  @override
+  String get profilePhone => 'Phone number';
+
+  @override
+  String get profileBio => 'Bio';
+
+  @override
+  String get profileDateOfBirth => 'Date of birth';
+
+  @override
+  String get profileEditMode => 'Edit Profile';
+
+  @override
+  String get profileSave => 'Save';
+
+  @override
+  String get actionMessage => 'Message';
+
+  @override
+  String get actionAddFriend => 'Add Friend';
+
+  @override
+  String get actionBlock => 'Block';
 }

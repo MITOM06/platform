@@ -20,6 +20,19 @@ class ChatRepository {
         .toList();
   }
 
+  /// Lists conversations the current user has archived.
+  Future<List<ConversationModel>> listArchivedConversations() async {
+    final response = await _dio.get(
+      '/api/conversations',
+      queryParameters: {'archived': true},
+    );
+    final data = response.data as Map<String, dynamic>;
+    final content = data['content'] as List;
+    return content
+        .map((e) => ConversationModel.fromJson(e as Map<String, dynamic>))
+        .toList();
+  }
+
   /// Cursor-based message history. Pass [before] = the oldest message id the
   /// caller already has to fetch the next older page; omit it for the newest
   /// page. Avoids the duplication/jumping of offset paging.

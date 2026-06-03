@@ -4,7 +4,7 @@ import 'package:flutter/services.dart';
 import '../theme/app_theme.dart';
 
 // ---------------------------------------------------------------------------
-// PON Logo with Neon Pulsing Animation
+// PON Logo
 // ---------------------------------------------------------------------------
 class PonLogo extends StatelessWidget {
   final double size;
@@ -20,24 +20,28 @@ class PonLogo extends StatelessWidget {
       fit: BoxFit.contain,
     );
 
-    if (!showText) {
-      return imageWidget;
-    }
+    if (!showText) return imageWidget;
 
-    return Column(
+    return Row(
       mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         imageWidget,
-        const SizedBox(height: 8),
-        Text(
-          'CONNECTING MINDS',
-          style: TextStyle(
-            fontSize: 10,
-            fontWeight: FontWeight.w600,
-            color: Theme.of(context).brightness == Brightness.dark
-                ? Colors.white.withValues(alpha: 0.4)
-                : Colors.black.withValues(alpha: 0.4),
-            letterSpacing: 2,
+        const SizedBox(width: 10),
+        ShaderMask(
+          shaderCallback: (bounds) => const LinearGradient(
+            colors: [AppTheme.ponCyan, AppTheme.ponPink],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ).createShader(bounds),
+          child: Text(
+            'PON',
+            style: TextStyle(
+              fontSize: size * 0.45,
+              fontWeight: FontWeight.w900,
+              color: Colors.white,
+              letterSpacing: 2,
+            ),
           ),
         ),
       ],
@@ -205,6 +209,10 @@ class PonTextField extends StatefulWidget {
   final IconData prefixIcon;
   final Widget? suffixIcon;
   final bool obscureText;
+
+  /// When true (and [obscureText] is true), renders a trailing eye icon that
+  /// toggles the field between obscured and plain text. (Task 75)
+  final bool enableVisibilityToggle;
   final TextInputType keyboardType;
   final TextInputAction textInputAction;
   final ValueChanged<String>? onFieldSubmitted;
@@ -225,6 +233,7 @@ class PonTextField extends StatefulWidget {
     required this.prefixIcon,
     this.suffixIcon,
     this.obscureText = false,
+    this.enableVisibilityToggle = false,
     this.keyboardType = TextInputType.text,
     this.textInputAction = TextInputAction.next,
     this.onFieldSubmitted,
@@ -246,10 +255,12 @@ class PonTextField extends StatefulWidget {
 class _PonTextFieldState extends State<PonTextField> {
   late FocusNode _internalFocusNode;
   bool _isFocused = false;
+  late bool _obscured;
 
   @override
   void initState() {
     super.initState();
+    _obscured = widget.obscureText;
     _internalFocusNode = widget.focusNode ?? FocusNode();
     _internalFocusNode.addListener(_handleFocusChange);
   }
@@ -292,7 +303,9 @@ class _PonTextFieldState extends State<PonTextField> {
       child: TextFormField(
         controller: widget.controller,
         focusNode: _internalFocusNode,
-        obscureText: widget.obscureText,
+        obscureText: widget.enableVisibilityToggle
+            ? _obscured
+            : widget.obscureText,
         keyboardType: widget.keyboardType,
         textInputAction: widget.textInputAction,
         onFieldSubmitted: widget.onFieldSubmitted,
@@ -307,7 +320,16 @@ class _PonTextFieldState extends State<PonTextField> {
         decoration: InputDecoration(
           labelText: widget.labelText,
           prefixIcon: Icon(widget.prefixIcon),
-          suffixIcon: widget.suffixIcon,
+          suffixIcon: widget.enableVisibilityToggle
+              ? IconButton(
+                  icon: Icon(
+                    _obscured
+                        ? Icons.visibility_outlined
+                        : Icons.visibility_off_outlined,
+                  ),
+                  onPressed: () => setState(() => _obscured = !_obscured),
+                )
+              : widget.suffixIcon,
           counterText: widget.counterText,
         ),
       ),
@@ -315,85 +337,5 @@ class _PonTextFieldState extends State<PonTextField> {
   }
 }
 
-// ---------------------------------------------------------------------------
-// Bouncing Dots for Typing Indicator
-// ---------------------------------------------------------------------------
-class BouncingDots extends StatefulWidget {
-  final Color color;
-  final double size;
-  const BouncingDots({
-    super.key,
-    this.color = AppTheme.ponCyan,
-    this.size = 6.0,
-  });
-
-  @override
-  State<BouncingDots> createState() => _BouncingDotsState();
-}
-
-class _BouncingDotsState extends State<BouncingDots>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 1200),
-    )..repeat();
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: List.generate(3, (index) {
-        return AnimatedBuilder(
-          animation: _controller,
-          builder: (context, child) {
-            final double offset = index * 0.25;
-            double animValue = _controller.value - offset;
-            if (animValue < 0) animValue += 1.0;
-            
-            // Map values to standard bounce
-            double translateY = 0.0;
-            if (animValue < 0.5) {
-              translateY = -6 * (animValue * 2); // Going up
-            } else {
-              translateY = -6 * ((1.0 - animValue) * 2); // Going down
-            }
-
-            return Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 2.0),
-              child: Transform.translate(
-                offset: Offset(0, translateY),
-                child: Container(
-                  width: widget.size,
-                  height: widget.size,
-                  decoration: BoxDecoration(
-                    color: widget.color.withValues(alpha: 0.8),
-                    shape: BoxShape.circle,
-                    boxShadow: [
-                      BoxShadow(
-                        color: widget.color.withValues(alpha: 0.4),
-                        blurRadius: 4,
-                        spreadRadius: 0.5,
-                      )
-                    ],
-                  ),
-                ),
-              ),
-            );
-          },
-        );
-      }),
-    );
-  }
-}
+// NOTE: BouncingDots was extracted to `bouncing_dots.dart` to keep this file
+// within the 400-line clean-code limit.

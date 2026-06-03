@@ -9,6 +9,7 @@ import '../../../core/theme/app_theme.dart';
 import '../../auth/domain/auth_provider.dart';
 import '../../auth/domain/auth_state.dart';
 import '../../friends/domain/friends_provider.dart';
+import '../../home/domain/home_providers.dart';
 import '../data/chat_repository.dart';
 import '../data/stomp_service.dart';
 import '../domain/chat_provider.dart';
@@ -54,6 +55,9 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
       ref
           .read(conversationsNotifierProvider.notifier)
           .markConversationRead(widget.conversationId);
+      ref.listenManual(chatSearchActiveProvider, (_, __) {
+        if (mounted) setState(() => _isSearching = true);
+      });
     });
   }
 
@@ -109,7 +113,21 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
       notifier.editMessage(editing.id, content);
     } else {
       notifier.sendMessage(content);
+      _scrollToBottom();
     }
+  }
+
+  /// Keeps the view pinned to the newest message after sending. The list is
+  /// `reverse: true`, so the bottom (latest) is offset 0.0.
+  void _scrollToBottom() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!_scrollCtrl.hasClients) return;
+      _scrollCtrl.animateTo(
+        0.0,
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeOut,
+      );
+    });
   }
 
   void _cancelEditing() {
@@ -160,6 +178,17 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
 
   GlobalKey _keyFor(String messageId) =>
       _msgKeys.putIfAbsent(messageId, () => GlobalKey());
+
+  /// Closes the current chat. On the web/tablet split layout the chat is the
+  /// right detail pane (not a pushed route), so we clear the selection rather
+  /// than popping — popping would tear down the whole ResponsiveHomeLayout.
+  void _closeChat() {
+    if (MediaQuery.of(context).size.width >= kWebBreakpoint) {
+      ref.read(selectedConversationIdProvider.notifier).state = null;
+    } else {
+      context.pop();
+    }
+  }
 
   Future<void> _jumpToSearchResult(String messageId) async {
     setState(() => _isSearching = false);
@@ -220,7 +249,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
       await ref
           .read(conversationsNotifierProvider.notifier)
           .deleteConversation(widget.conversationId);
-      if (mounted) context.pop();
+      if (mounted) _closeChat();
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -267,7 +296,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
     await ref
         .read(conversationsNotifierProvider.notifier)
         .deleteConversation(widget.conversationId);
-    if (mounted) context.pop();
+    if (mounted) _closeChat();
   }
 
   @override
@@ -314,6 +343,70 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
         conv.createdBy != null &&
         conv.createdBy != currentUserId;
 
+    final theme = Theme.of(context);
+    final bool isDark = theme.brightness == Brightness.dark;
+    final Color emojiBg =
+        isDark ? AppTheme.darkBackground : theme.scaffoldBackgroundColor;
+    final Color emojiSurface = isDark ? AppTheme.darkSurface : theme.cardColor;
+
+    final wallpaper = ref.watch(chatWallpaperProvider(widget.conversationId));
+    BoxDecoration? wallpaperBgDeco;
+    Widget? wallpaperImgWidget;
+
+    if (wallpaper != null && wallpaper.isNotEmpty) {
+      if (wallpaper.startsWith('preset:')) {
+        final preset = wallpaper.substring('preset:'.length);
+        if (preset == 'midnight_glow') {
+          wallpaperBgDeco = const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Color(0xFF0F0C20), Color(0xFF15102A), Color(0xFF050211)],
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+            ),
+          );
+        } else if (preset == 'neon_teal') {
+          wallpaperBgDeco = const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Color(0xFF0A1F1D), Color(0xFF081215), Color(0xFF02070A)],
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+            ),
+          );
+        } else if (preset == 'sunset') {
+          wallpaperBgDeco = const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Color(0xFF2C1619), Color(0xFF1C0D1A), Color(0xFF0F0611)],
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+            ),
+          );
+        } else if (preset == 'sweet_pink') {
+          wallpaperBgDeco = const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Color(0xFF2A1020), Color(0xFF160A18), Color(0xFF0C020A)],
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+            ),
+          );
+        } else if (preset == 'dark_shadow') {
+          wallpaperBgDeco = const BoxDecoration(
+            color: Color(0xFF121214),
+          );
+        }
+      } else if (wallpaper.startsWith('http')) {
+        wallpaperImgWidget = Positioned.fill(
+          child: Opacity(
+            opacity: 0.25,
+            child: Image.network(
+              wallpaper,
+              fit: BoxFit.cover,
+              errorBuilder: (context, error, stackTrace) => const SizedBox.shrink(),
+            ),
+          ),
+        );
+      }
+    }
+
     return Scaffold(
       appBar: ChatScreenAppBar(
         conversationId: widget.conversationId,
@@ -324,40 +417,45 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
             showAutoDeletePicker(context, ref, widget.conversationId),
         onDeleteConversation: _deleteConversation,
       ),
-      body: Stack(
-        children: [
-          Positioned(
-            top: 100,
-            right: -150,
-            child: Container(
-              width: 350,
-              height: 350,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                gradient: RadialGradient(colors: [
-                  AppTheme.ponCyan.withValues(alpha: 0.06),
-                  Colors.transparent,
-                ]),
+      body: Container(
+        decoration: wallpaperBgDeco,
+        child: Stack(
+          children: [
+            if (wallpaperBgDeco == null && wallpaperImgWidget == null) ...[
+              Positioned(
+                top: 100,
+                right: -150,
+                child: Container(
+                  width: 350,
+                  height: 350,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    gradient: RadialGradient(colors: [
+                      AppTheme.ponCyan.withValues(alpha: 0.06),
+                      Colors.transparent,
+                    ]),
+                  ),
+                ),
               ),
-            ),
-          ),
-          Positioned(
-            bottom: 100,
-            left: -150,
-            child: Container(
-              width: 350,
-              height: 350,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                gradient: RadialGradient(colors: [
-                  AppTheme.ponPeach.withValues(alpha: 0.06),
-                  Colors.transparent,
-                ]),
+              Positioned(
+                bottom: 100,
+                left: -150,
+                child: Container(
+                  width: 350,
+                  height: 350,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    gradient: RadialGradient(colors: [
+                      AppTheme.ponPeach.withValues(alpha: 0.06),
+                      Colors.transparent,
+                    ]),
+                  ),
+                ),
               ),
-            ),
-          ),
-          Column(
-            children: [
+            ],
+            if (wallpaperImgWidget != null) wallpaperImgWidget,
+            Column(
+              children: [
               Expanded(
                 child: chatAsync.when(
                   loading: () => const Center(
@@ -441,6 +539,12 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
                     setState(() => _showEmoji = !_showEmoji);
                   },
                   onChanged: _onComposerChanged,
+                  quickReactionEmoji: ref.watch(quickReactionProvider(widget.conversationId)),
+                  onQuickReaction: () {
+                    final emoji = ref.read(quickReactionProvider(widget.conversationId));
+                    ref.read(chatNotifierProvider(widget.conversationId).notifier).sendMessage(emoji);
+                    _scrollToBottom();
+                  },
                 ),
                 if (_showEmoji)
                   SizedBox(
@@ -448,18 +552,18 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
                     child: EmojiPicker(
                       onEmojiSelected: (_, emoji) =>
                           _insertEmoji(emoji.emoji),
-                      config: const Config(
+                      config: Config(
                         height: 280,
-                        emojiViewConfig: EmojiViewConfig(
-                            backgroundColor: AppTheme.darkBackground),
-                        categoryViewConfig: CategoryViewConfig(
-                            backgroundColor: AppTheme.darkSurface),
+                        emojiViewConfig:
+                            EmojiViewConfig(backgroundColor: emojiBg),
+                        categoryViewConfig:
+                            CategoryViewConfig(backgroundColor: emojiSurface),
                         bottomActionBarConfig: BottomActionBarConfig(
-                          backgroundColor: AppTheme.darkSurface,
-                          buttonColor: AppTheme.darkSurface,
+                          backgroundColor: emojiSurface,
+                          buttonColor: emojiSurface,
                         ),
-                        searchViewConfig: SearchViewConfig(
-                            backgroundColor: AppTheme.darkSurface),
+                        searchViewConfig:
+                            SearchViewConfig(backgroundColor: emojiSurface),
                       ),
                     ),
                   ),
@@ -475,6 +579,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
               ),
             ),
         ],
+      ),
       ),
     );
   }
@@ -548,6 +653,8 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
                   .format(dt);
             }
           }
+          final theme = Theme.of(context);
+          final isDark = theme.brightness == Brightness.dark;
           child = Column(
             children: [
               Padding(
@@ -556,15 +663,19 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
                   padding: const EdgeInsets.symmetric(
                       horizontal: 12, vertical: 4),
                   decoration: BoxDecoration(
-                    color: AppTheme.darkSurface.withValues(alpha: 0.8),
+                    color: isDark
+                        ? AppTheme.darkSurface.withValues(alpha: 0.8)
+                        : Colors.black.withValues(alpha: 0.06),
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
-                        color: AppTheme.darkBorder.withValues(alpha: 0.5)),
+                        color: isDark
+                            ? AppTheme.darkBorder.withValues(alpha: 0.5)
+                            : Colors.black.withValues(alpha: 0.08)),
                   ),
                   child: Text(
                     dateText,
-                    style: const TextStyle(
-                        color: Colors.white70,
+                    style: TextStyle(
+                        color: isDark ? Colors.white70 : Colors.black54,
                         fontSize: 11,
                         fontWeight: FontWeight.bold),
                   ),

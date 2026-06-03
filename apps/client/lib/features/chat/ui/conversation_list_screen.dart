@@ -7,10 +7,13 @@ import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/pon_widgets.dart';
 import '../../auth/domain/auth_provider.dart';
 import '../../auth/domain/auth_state.dart';
+import '../../home/domain/home_providers.dart';
 import '../domain/chat_provider.dart';
 import 'widgets/active_friends_row.dart';
 import 'widgets/conversation_avatar.dart';
 import 'widgets/conversation_tile.dart';
+import 'widgets/offline_banner.dart';
+import 'widgets/web_settings_button.dart';
 
 class ConversationListScreen extends ConsumerStatefulWidget {
   const ConversationListScreen({super.key});
@@ -32,6 +35,9 @@ class _ConversationListScreenState
         ? user.displayName.trim()[0].toUpperCase()
         : '?';
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    // On the web/tablet master-detail layout we surface a settings gear in the
+    // list pane (settings opens as a dialog instead of a pushed route).
+    final isWeb = MediaQuery.of(context).size.width >= kWebBreakpoint;
 
     return Scaffold(
       appBar: PreferredSize(
@@ -78,6 +84,14 @@ class _ConversationListScreenState
                 icon: const Icon(Icons.explore_outlined),
                 tooltip: context.l10n.exploreChannels,
                 onPressed: () => context.push('/explore'),
+              ),
+              IconButton(
+                icon: const Icon(Icons.person_add_alt_1_outlined),
+                tooltip: context.l10n.tooltipNewConversation,
+                onPressed: () async {
+                  await context.push('/new-conversation');
+                  ref.read(conversationsNotifierProvider.notifier).refresh();
+                },
               ),
               IconButton(
                 icon: const Icon(Icons.group_add_outlined),
@@ -333,6 +347,12 @@ class _ConversationListScreenState
                           ),
                   ),
                 ),
+                if (isWeb)
+                  const Positioned(
+                    left: 0,
+                    bottom: 0,
+                    child: WebSettingsButton(),
+                  ),
               ],
             ),
           ),

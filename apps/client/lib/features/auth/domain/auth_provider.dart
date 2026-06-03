@@ -66,6 +66,9 @@ class AuthNotifier extends _$AuthNotifier {
     String? bio,
     String? coverPhoto,
     DateTime? dateOfBirth,
+    String? phoneNumber,
+    String? gender,
+    bool? hideInfo,
   }) async {
     // Do NOT route through AsyncLoading/guard here: a transient AsyncLoading
     // wipes the cached user (avatar/name flicker to placeholder), and an
@@ -79,6 +82,9 @@ class AuthNotifier extends _$AuthNotifier {
           bio: bio,
           coverPhoto: coverPhoto,
           dateOfBirth: dateOfBirth,
+          phoneNumber: phoneNumber,
+          gender: gender,
+          hideInfo: hideInfo,
         );
     ref.invalidate(userProfileProvider(updated.id));
     state = AsyncData(AuthAuthenticated(updated));

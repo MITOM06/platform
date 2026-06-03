@@ -369,5 +369,35 @@
   "videoCall": "Video call",
   "archiveChat": "Archive chat",
   "unarchiveChat": "Unarchive chat",
-  "mutedLabel": "Muted"
+  "mutedLabel": "Muted",
+  "newNotificationTitle": "New message",
+  "newNotificationBody": "{name} sent you a message",
+  "@newNotificationBody": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "archivedChats": "Archived chats",
+  "archivedChatsSubtitle": "View archived conversations",
+  "emptyArchivedChats": "No archived chats",
+  "webNoChatSelected": "Select a conversation to start chatting",
+  "endToEndEncrypted": "End-to-end encrypted",
+  "chatInfoCategory": "Chat Details",
+  "customizeChatCategory": "Customize Chat",
+  "filesAndMediaCategory": "Media, files and links",
+  "privacyAndSupportCategory": "Privacy & support",
+  "callSelectMember": "Select a member to call",
+  "profileHideInfo": "Hide personal info",
+  "profileInfoHidden": "Personal information is hidden",
+  "profileGender": "Gender",
+  "profilePhone": "Phone number",
+  "profileBio": "Bio",
+  "profileDateOfBirth": "Date of birth",
+  "profileEditMode": "Edit Profile",
+  "profileSave": "Save",
+  "actionMessage": "Message",
+  "actionAddFriend": "Add Friend",
+  "actionBlock": "Block"
 }

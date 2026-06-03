@@ -1,25 +1,58 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../profile/ui/widgets/user_profile_dialog.dart';
+import '../../../../core/l10n/l10n_ext.dart';
+import '../../../auth/domain/auth_provider.dart';
+import '../../../auth/domain/auth_state.dart';
 import '../../domain/chat_provider.dart';
 import '../../domain/chat_state.dart';
+import 'conversation_avatar.dart';
 import 'reactions_detail_modal.dart';
 
-class SenderName extends ConsumerWidget {
+/// Header shown above a received message bubble in group chats: the sender's
+/// avatar followed by their display name (or custom nickname).
+class GroupSenderHeader extends ConsumerWidget {
   final String userId;
-  const SenderName({super.key, required this.userId});
+  final String conversationId;
+  const GroupSenderHeader({
+    super.key,
+    required this.userId,
+    required this.conversationId,
+  });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final profile = ref.watch(userProfileProvider(userId)).valueOrNull;
-    return Padding(
-      padding: const EdgeInsets.only(left: 24, top: 4, bottom: 2),
-      child: Text(
-        profile?.displayName ?? '…',
-        style: TextStyle(
-          fontSize: 11,
-          fontWeight: FontWeight.w600,
-          color: AppTheme.ponCyan.withValues(alpha: 0.8),
+    final nicknames = ref.watch(nicknamesProvider(conversationId));
+    final nickname = nicknames[userId];
+    final name = (nickname != null && nickname.isNotEmpty)
+        ? nickname
+        : (profile?.displayName ?? '…');
+    final letter =
+        (name.isNotEmpty && name != '…') ? name[0].toUpperCase() : '?';
+    return GestureDetector(
+      onTap: () => showUserProfileDialog(context, userId),
+      child: Padding(
+        padding: const EdgeInsets.only(left: 16, top: 6, bottom: 2),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ConversationAvatar(
+              avatarUrl: profile?.avatarUrl,
+              fallbackLetter: letter,
+              size: 22,
+            ),
+            const SizedBox(width: 6),
+            Text(
+              name,
+              style: TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w600,
+                color: AppTheme.ponCyan.withValues(alpha: 0.8),
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -98,12 +131,73 @@ class ReactionChips extends StatelessWidget {
   }
 }
 
-class SystemMessage extends StatelessWidget {
-  final String content;
-  const SystemMessage({super.key, required this.content});
+class SystemMessage extends ConsumerWidget {
+  final MessageModel message;
+  const SystemMessage({super.key, required this.message});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final authState = ref.watch(authNotifierProvider).valueOrNull;
+    final currentUserId = authState is AuthAuthenticated ? authState.user.id : '';
+    final nicknames = ref.watch(nicknamesProvider(message.conversationId));
+
+    final actorId = message.senderId;
+    final actorProfile = ref.watch(userProfileProvider(actorId)).valueOrNull;
+    final actorNickname = nicknames[actorId];
+    final actorName = actorId == currentUserId
+        ? context.l10n.you
+        : ((actorNickname != null && actorNickname.isNotEmpty)
+            ? actorNickname
+            : (actorProfile?.displayName ?? '...'));
+
+    String text = message.content;
+    final isVi = context.l10n.localeName == 'vi';
+
+    if (message.content.startsWith('system.nickname.changed:')) {
+      final parts = message.content.split(':');
+      if (parts.length >= 2) {
+        final targetId = parts[1];
+        final nickname = parts.length > 2 ? parts.sublist(2).join(':') : '';
+        final targetProfile = ref.watch(userProfileProvider(targetId)).valueOrNull;
+        final targetNickname = nicknames[targetId];
+        final targetName = targetId == currentUserId
+            ? context.l10n.you
+            : ((targetNickname != null && targetNickname.isNotEmpty)
+                ? targetNickname
+                : (targetProfile?.displayName ?? '...'));
+
+        if (nickname.isEmpty) {
+          text = isVi
+              ? (targetId == actorId
+                  ? '$actorName đã gỡ bỏ biệt danh của mình'
+                  : '$actorName đã gỡ bỏ biệt danh của $targetName')
+              : (targetId == actorId
+                  ? '$actorName cleared their own nickname'
+                  : '$actorName cleared the nickname of $targetName');
+        } else {
+          text = isVi
+              ? (targetId == actorId
+                  ? '$actorName đã đặt biệt danh cho mình là $nickname'
+                  : '$actorName đã đặt biệt danh cho $targetName là $nickname')
+              : (targetId == actorId
+                  ? '$actorName set their nickname to $nickname'
+                  : '$actorName set the nickname of $targetName to $nickname');
+        }
+      }
+    } else if (message.content.startsWith('system.theme.changed:')) {
+      text = isVi
+          ? '$actorName đã thay đổi chủ đề đoạn chat'
+          : '$actorName changed the chat theme';
+    } else if (message.content.startsWith('system.quick_reaction.changed:')) {
+      final parts = message.content.split(':');
+      final emoji = parts.length > 1 ? parts[1] : '👍';
+      text = isVi
+          ? '$actorName đã thay đổi biểu tượng cảm xúc nhanh thành $emoji'
+          : '$actorName changed the quick reaction to $emoji';
+    } else {
+      text = _systemText(context, message.content);
+    }
+
     return Center(
       child: Container(
         margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 40),
@@ -113,7 +207,7 @@ class SystemMessage extends StatelessWidget {
           borderRadius: BorderRadius.circular(12),
         ),
         child: Text(
-          content,
+          text,
           textAlign: TextAlign.center,
           style: TextStyle(
             fontSize: 11.5,
@@ -122,5 +216,22 @@ class SystemMessage extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  String _systemText(BuildContext context, String key) {
+    switch (key) {
+      case 'system.group.created':
+        return context.l10n.createGroup;
+      case 'system.members.added':
+        return context.l10n.addMembers;
+      case 'system.member.left':
+        return context.l10n.leaveGroup;
+      case 'system.member.removed':
+        return context.l10n.removeMember;
+      case 'system.member.joined':
+        return context.l10n.joinChannel;
+      default:
+        return key;
+    }
   }
 }

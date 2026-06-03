@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import '../../../core/l10n/l10n_ext.dart';
 import '../../../core/providers/locale_provider.dart';
 import '../../../core/providers/theme_provider.dart';
@@ -10,60 +11,13 @@ import '../../auth/domain/auth_state.dart';
 import 'widgets/settings_dialogs.dart';
 import 'widgets/change_password_dialog.dart';
 
-class SettingsScreen extends ConsumerStatefulWidget {
-  const SettingsScreen({super.key});
+class SettingsScreen extends ConsumerWidget {
+  /// `true` when shown inside the web/tablet [Dialog] (master-detail layout)
+  /// rather than as a pushed route. Affects how sub-navigation closes itself so
+  /// the dialog doesn't stay stacked on top of the pushed screen.
+  final bool isDialog;
 
-  @override
-  ConsumerState<SettingsScreen> createState() => _SettingsScreenState();
-}
-
-class _SettingsScreenState extends ConsumerState<SettingsScreen> {
-  late final TextEditingController _nameController;
-  bool _isLoading = false;
-
-  @override
-  void initState() {
-    super.initState();
-    final user = ref.read(authNotifierProvider).valueOrNull;
-    final displayName =
-        user is AuthAuthenticated ? user.user.displayName : '';
-    _nameController = TextEditingController(text: displayName);
-  }
-
-  @override
-  void dispose() {
-    _nameController.dispose();
-    super.dispose();
-  }
-
-  Future<void> _save() async {
-    final name = _nameController.text.trim();
-    if (name.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(context.l10n.valNameEmpty)),
-      );
-      return;
-    }
-    setState(() => _isLoading = true);
-    try {
-      await ref
-          .read(authNotifierProvider.notifier)
-          .updateProfile(displayName: name);
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(context.l10n.nameUpdated)),
-        );
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(context.l10n.errorWithMsg(e.toString()))),
-        );
-      }
-    } finally {
-      if (mounted) setState(() => _isLoading = false);
-    }
-  }
+  const SettingsScreen({super.key, this.isDialog = false});
 
   IconData _getThemeIcon(ThemeMode mode) {
     switch (mode) {
@@ -87,8 +41,64 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     }
   }
 
+  /// Reusable navigation card used for the settings action tiles.
+  Widget _settingsCard({
+    required BuildContext context,
+    required bool isDark,
+    required Color glowColor,
+    required IconData icon,
+    required String title,
+    String? subtitle,
+    required VoidCallback onTap,
+  }) {
+    final accent =
+        isDark ? glowColor : Theme.of(context).colorScheme.primary;
+    return PonCard(
+      glowColor: glowColor,
+      glowStrength: isDark ? 4 : 0,
+      child: Material(
+        color: Colors.transparent,
+        child: ListTile(
+          contentPadding:
+              const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
+          leading: Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: accent.withValues(alpha: 0.1),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(icon, color: accent, size: 20),
+          ),
+          title: Text(
+            title,
+            style: TextStyle(
+              color: isDark ? Colors.white : Colors.black87,
+              fontWeight: FontWeight.bold,
+              fontSize: 15,
+            ),
+          ),
+          subtitle: subtitle == null
+              ? null
+              : Text(
+                  subtitle,
+                  style: TextStyle(
+                    color: isDark ? Colors.white54 : Colors.black54,
+                    fontSize: 13,
+                  ),
+                ),
+          trailing: Icon(
+            Icons.arrow_forward_ios_rounded,
+            color: isDark ? Colors.white24 : Colors.black26,
+            size: 16,
+          ),
+          onTap: onTap,
+        ),
+      ),
+    );
+  }
+
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final authAsync = ref.watch(authNotifierProvider);
     final user = authAsync.valueOrNull is AuthAuthenticated
         ? (authAsync.value! as AuthAuthenticated).user
@@ -104,37 +114,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
           onPressed: () => Navigator.of(context).pop(),
         ),
-        actions: [
-          if (_isLoading)
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20.0),
-              child: SizedBox(
-                width: 20,
-                height: 20,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2.5,
-                  valueColor: AlwaysStoppedAnimation<Color>(
-                    isDark
-                        ? AppTheme.ponCyan
-                        : Theme.of(context).colorScheme.primary,
-                  ),
-                ),
-              ),
-            )
-          else
-            Padding(
-              padding: const EdgeInsets.only(right: 8.0),
-              child: TextButton(
-                onPressed: _save,
-                style: TextButton.styleFrom(
-                  foregroundColor: isDark
-                      ? AppTheme.ponCyan
-                      : Theme.of(context).colorScheme.primary,
-                ),
-                child: Text(context.l10n.actionSave),
-              ),
-            ),
-        ],
       ),
       body: Stack(
         children: [
@@ -179,6 +158,16 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 const SizedBox(height: 16),
                 const SettingsAvatarSection(),
                 const SizedBox(height: 16),
+                if (user?.displayName.isNotEmpty ?? false)
+                  Text(
+                    user!.displayName,
+                    style: TextStyle(
+                      color: isDark ? Colors.white : Colors.black87,
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                const SizedBox(height: 4),
                 Text(
                   user?.email ?? '',
                   style: TextStyle(
@@ -190,186 +179,63 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   ),
                 ),
                 const SizedBox(height: 36),
-                PonCard(
+                _settingsCard(
+                  context: context,
+                  isDark: isDark,
                   glowColor: AppTheme.ponCyan,
-                  glowStrength: isDark ? 4 : 0,
-                  child: Padding(
-                    padding: const EdgeInsets.all(20.0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        Text(
-                          context.l10n.personalInfo,
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                            color: isDark ? Colors.white : Colors.black87,
-                          ),
-                        ),
-                        const SizedBox(height: 16),
-                        PonTextField(
-                          controller: _nameController,
-                          labelText: context.l10n.fieldDisplayName,
-                          prefixIcon: Icons.badge_outlined,
-                          focusColor: isDark
-                              ? AppTheme.ponCyan
-                              : Theme.of(context).colorScheme.primary,
-                          textInputAction: TextInputAction.done,
-                          style: TextStyle(
-                              color: isDark ? Colors.white : Colors.black87),
-                          onFieldSubmitted: (_) => _save(),
-                        ),
-                      ],
-                    ),
-                  ),
+                  icon: Icons.person_rounded,
+                  title: context.l10n.editProfile,
+                  // When shown as a web dialog, close it first so Edit Profile
+                  // doesn't render underneath the still-open settings modal.
+                  onTap: () {
+                    if (isDialog) Navigator.of(context).pop();
+                    context.push('/edit-profile');
+                  },
                 ),
                 const SizedBox(height: 24),
-                PonCard(
+                _settingsCard(
+                  context: context,
+                  isDark: isDark,
                   glowColor: AppTheme.ponPeach,
-                  glowStrength: isDark ? 4 : 0,
-                  child: Material(
-                    color: Colors.transparent,
-                    child: ListTile(
-                      contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 20, vertical: 4),
-                      leading: Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          color: (isDark
-                                  ? AppTheme.ponPeach
-                                  : Theme.of(context).colorScheme.primary)
-                              .withValues(alpha: 0.1),
-                          shape: BoxShape.circle,
-                        ),
-                        child: Icon(
-                          _getThemeIcon(currentThemeMode),
-                          color: isDark
-                              ? AppTheme.ponPeach
-                              : Theme.of(context).colorScheme.primary,
-                          size: 20,
-                        ),
-                      ),
-                      title: Text(
-                        context.l10n.appearance,
-                        style: TextStyle(
-                          color: isDark ? Colors.white : Colors.black87,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 15,
-                        ),
-                      ),
-                      subtitle: Text(
-                        _getThemeLabel(context, currentThemeMode),
-                        style: TextStyle(
-                          color: isDark ? Colors.white54 : Colors.black54,
-                          fontSize: 13,
-                        ),
-                      ),
-                      trailing: Icon(
-                        Icons.arrow_forward_ios_rounded,
-                        color: isDark ? Colors.white24 : Colors.black26,
-                        size: 16,
-                      ),
-                      onTap: () =>
-                          showThemeSelectionDialog(context, ref),
-                    ),
-                  ),
+                  icon: _getThemeIcon(currentThemeMode),
+                  title: context.l10n.appearance,
+                  subtitle: _getThemeLabel(context, currentThemeMode),
+                  onTap: () => showThemeSelectionDialog(context, ref),
                 ),
                 const SizedBox(height: 24),
-                PonCard(
+                _settingsCard(
+                  context: context,
+                  isDark: isDark,
                   glowColor: AppTheme.ponCyan,
-                  glowStrength: isDark ? 4 : 0,
-                  child: Material(
-                    color: Colors.transparent,
-                    child: ListTile(
-                      contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 20, vertical: 4),
-                      leading: Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          color: (isDark
-                                  ? AppTheme.ponCyan
-                                  : Theme.of(context).colorScheme.primary)
-                              .withValues(alpha: 0.1),
-                          shape: BoxShape.circle,
-                        ),
-                        child: Icon(
-                          Icons.translate_rounded,
-                          color: isDark
-                              ? AppTheme.ponCyan
-                              : Theme.of(context).colorScheme.primary,
-                          size: 20,
-                        ),
-                      ),
-                      title: Text(
-                        context.l10n.language,
-                        style: TextStyle(
-                          color: isDark ? Colors.white : Colors.black87,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 15,
-                        ),
-                      ),
-                      subtitle: Text(
-                        kLanguageNames[resolveActiveLocale(
-                                    ref.watch(localeNotifierProvider))
-                                .languageCode] ??
-                            'English',
-                        style: TextStyle(
-                          color: isDark ? Colors.white54 : Colors.black54,
-                          fontSize: 13,
-                        ),
-                      ),
-                      trailing: Icon(
-                        Icons.arrow_forward_ios_rounded,
-                        color: isDark ? Colors.white24 : Colors.black26,
-                        size: 16,
-                      ),
-                      onTap: () =>
-                          showLanguageSelectionDialog(context, ref),
-                    ),
-                  ),
+                  icon: Icons.translate_rounded,
+                  title: context.l10n.language,
+                  subtitle: kLanguageNames[resolveActiveLocale(
+                              ref.watch(localeNotifierProvider))
+                          .languageCode] ??
+                      'English',
+                  onTap: () => showLanguageSelectionDialog(context, ref),
                 ),
                 const SizedBox(height: 24),
-                PonCard(
+                _settingsCard(
+                  context: context,
+                  isDark: isDark,
+                  glowColor: AppTheme.ponCyan,
+                  icon: Icons.archive_outlined,
+                  title: context.l10n.archivedChats,
+                  subtitle: context.l10n.archivedChatsSubtitle,
+                  onTap: () {
+                    if (isDialog) Navigator.of(context).pop();
+                    context.push('/archived');
+                  },
+                ),
+                const SizedBox(height: 24),
+                _settingsCard(
+                  context: context,
+                  isDark: isDark,
                   glowColor: AppTheme.ponPink,
-                  glowStrength: isDark ? 4 : 0,
-                  child: Material(
-                    color: Colors.transparent,
-                    child: ListTile(
-                      contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 20, vertical: 4),
-                      leading: Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          color: (isDark
-                                  ? AppTheme.ponPink
-                                  : Theme.of(context).colorScheme.primary)
-                              .withValues(alpha: 0.1),
-                          shape: BoxShape.circle,
-                        ),
-                        child: Icon(
-                          Icons.lock_outline_rounded,
-                          color: isDark
-                              ? AppTheme.ponPink
-                              : Theme.of(context).colorScheme.primary,
-                          size: 20,
-                        ),
-                      ),
-                      title: Text(
-                        context.l10n.changePasswordTitle,
-                        style: TextStyle(
-                          color: isDark ? Colors.white : Colors.black87,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 15,
-                        ),
-                      ),
-                      trailing: Icon(
-                        Icons.arrow_forward_ios_rounded,
-                        color: isDark ? Colors.white24 : Colors.black26,
-                        size: 16,
-                      ),
-                      onTap: () => showChangePasswordDialog(context, ref),
-                    ),
-                  ),
+                  icon: Icons.lock_outline_rounded,
+                  title: context.l10n.changePasswordTitle,
+                  onTap: () => showChangePasswordDialog(context, ref),
                 ),
                 const SizedBox(height: 24),
                 const SettingsLogoutCard(),
