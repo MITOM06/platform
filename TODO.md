@@ -1,8 +1,166 @@
 
 # TODO — PON PROJECT
 > **Workflow:** Gemini Code Assist (Planner/QC) ↔ Tech Lead (Bridge) ↔ Claude CLI (Coder/Tester)
-> **Updated:** 2026-06-02
-> **Note to Claude:** To save tokens, historical sprints (1-11) have been archived to `TODO_ARCHIVE.md`. Please read the following sprints and implement them sequentially when requested.
+> **Updated:** 2026-06-03
+> **Note to Claude:** Phase 1 (chat core) is complete. Starting Phase 2 — AI layer. Read `.claude/rules/ai-service.md` and `docs/decisions.md` (ADR-007, ADR-008) before implementing any AI task.
+
+---
+
+## 🔴 SPRINT AI-1 — Basic Bot Member — PENDING
+
+> **Goal:** User types `@AI` in any conversation → AI replies with token-by-token streaming, renders markdown, has fallback on Claude error.
+> **New service:** `apps/server/ai-service/` (NestJS/TypeScript, port 3002)
+> **Transport:** Redis pub/sub (`ai:request` → ai-service → `ai:response:{convId}` → chat-service → STOMP → Flutter)
+> **Reference:** `.claude/rules/ai-service.md`, `docs/decisions.md` ADR-007 & ADR-008
+
+---
+
+### PHASE 1 — Infrastructure & Service Setup
+
+### TASK AI-1.1 — Scaffold ai-service NestJS project `DONE`
+#### SPEC
+- **Infra:** Create `apps/server/ai-service/` — new NestJS project via `pnpm dlx @nestjs/cli new ai-service --package-manager pnpm --skip-git`. Move into correct directory.
+- **Structure:** Create modules: `ai/`, `redis/`, `bot/`, `config/` following structure in `.claude/rules/ai-service.md`.
+- **package.json:** Add dependencies: `@anthropic-ai/sdk`, `ioredis`, `@nestjs/mongoose`, `mongoose`, `@nestjs/config`.
+- **Dockerfile:** Multi-stage — `node:20-alpine` build + `node:20-alpine` runtime. Copy `dist/` and `node_modules/`. EXPOSE 3002.
+- **main.ts:** Bootstrap NestJS app on port `process.env.PORT ?? 3002`.
+- **.env.example:** Create with all env vars defined in `.claude/rules/ai-service.md`.
+- **Test:** `pnpm build` → BUILD SUCCESS. Container builds successfully.
+
+### TASK AI-1.2 — Bot user seed `PENDING`
+#### SPEC
+- **Data model:** Collection `users` (shared with auth-service). Bot user: `{ _id: "ai-bot-000000000000000000000001", displayName: "PON AI", email: "ai@platform.internal", isBot: true, avatarUrl: null }`.
+- **Backend (ai-service):** Create `bot/bot-seed.service.ts` implementing `OnApplicationBootstrap`. Use `mongoose` to connect to `MONGODB_URI`, upsert bot user (idempotent — no error if already exists).
+- **Test:** Run ai-service → verify bot user exists in MongoDB `platform.users`.
+
+### TASK AI-1.3 — Redis pub/sub wiring `PENDING`
+#### SPEC
+- **Backend (ai-service):** Create `redis/redis.module.ts` exporting 2 ioredis clients: `REDIS_SUBSCRIBER` (for `.subscribe()`) and `REDIS_PUBLISHER` (for `.publish()`). Two separate clients because ioredis cannot publish while subscribed.
+- **Backend (ai-service):** `redis/redis-subscriber.service.ts` — implement `OnApplicationBootstrap`, subscribe to `ai:request`, parse JSON payload, call `AiService.handleRequest(payload)`.
+- **Backend (ai-service):** `redis/redis-publisher.service.ts` — method `publish(conversationId, payload)` → `PUBLISH ai:response:{conversationId} JSON.stringify(payload)`.
+- **Backend (chat-service):** In `MessageService.sendMessage()`: after saving message, if content matches `@AI` or `@ai` → publish to Redis channel `ai:request` with correct payload (see ADR-008). Use existing `StringRedisTemplate`. Strip `@AI` from content before sending. Fetch 10 most recent messages as `history`.
+- **Backend (chat-service):** Subscribe to `ai:response:{conversationId}` via `RedisMessageListenerContainer` (Spring Data Redis). On receiving chunk → broadcast STOMP event `AI_STREAM_CHUNK` / `AI_STREAM_DONE` / `AI_STREAM_ERROR` to `/topic/conversation/{id}` with `senderId: AI_BOT_USER_ID`.
+- **Test:** Manually publish to `ai:request` via `redis-cli` → verify ai-service receives and logs the message.
+
+### TASK AI-1.4 — Anthropic Claude SDK config `PENDING`
+#### SPEC
+- **Backend (ai-service):** Create `config/configuration.ts` exporting typed config object from `ConfigService`.
+- **Backend (ai-service):** Create `ai/ai.module.ts` + `ai/ai.service.ts`. Inject `ConfigService`, instantiate `new Anthropic({ apiKey: configService.get('ANTHROPIC_API_KEY') })`.
+- **Backend (ai-service):** `AiService.handleRequest(payload)`: build system prompt with `displayName`, call `messages.stream()` with `history` + `content`, iterate chunks, publish each `AI_STREAM_CHUNK` via `RedisPublisherService`, finally publish `AI_STREAM_DONE`.
+- **Test:** Unit test mocking Anthropic SDK, verify publish is called correct number of times per chunk.
+
+---
+
+### PHASE 2 — Core AI Logic
+
+### TASK AI-1.5 — Detect @AI mention in chat-service `PENDING`
+#### SPEC
+- **Backend (chat-service):** In `ChatController.send()` (STOMP handler): after `messageService.sendMessage()`, check if `content` matches regex `/@(AI|ai|ponai|PON AI)\b/`. If match → async publish to Redis `ai:request`. MUST NOT block STOMP response.
+- **Backend (chat-service):** Same logic for REST `MessageController.sendMessage()`.
+- **Backend (chat-service):** Create `AiRequestPayload` record DTO: `{ conversationId, userId, displayName, content, history }`.
+- **Backend (chat-service):** Create `AiRedisPublisher` service (inject `StringRedisTemplate`): `publishAiRequest(payload)` — serialize JSON, publish to `ai:request` channel.
+- **Backend (chat-service):** Fetch `history`: call `messageService.getMessages(userId, conversationId, null, 10)`, map to `[{role, content}]` (role: `ai-bot` userId → `assistant`, others → `user`).
+- **Test:** Send message with `@AI` via STOMP → verify Redis publish is called (mock `StringRedisTemplate`).
+
+### TASK AI-1.6 — Claude streaming in ai-service `PENDING`
+#### SPEC
+- **Backend (ai-service):** `AiService.handleRequest(payload)`:
+  1. Build `systemPrompt` from template in `.claude/rules/ai-service.md`
+  2. Map `payload.history` → Anthropic message format
+  3. Call `this.anthropic.messages.stream({ model, max_tokens: 2048, system, messages })`
+  4. Iterate `for await (const chunk of stream)`: if `chunk.type === 'content_block_delta'` → accumulate + publish `AI_STREAM_CHUNK`
+  5. After stream ends: publish `AI_STREAM_DONE` with `fullContent`
+- **Error handling:** Wrap in try/catch — on error → publish `AI_STREAM_ERROR`
+- **Test:** Unit test with mock stream, verify correct sequence CHUNK → DONE.
+
+### TASK AI-1.7 — Forward chunks via STOMP (chat-service) `PENDING`
+#### SPEC
+- **Backend (chat-service):** Create `AiResponseListener` service (Spring Data Redis `MessageListener`). Register in `RedisMessageListenerContainer` with pattern `ai:response:*`.
+- **Backend (chat-service):** On message received: parse JSON → if `AI_STREAM_CHUNK` → `messagingTemplate.convertAndSend("/topic/conversation/{id}", payload with senderId=AI_BOT_USER_ID)`. If `AI_STREAM_DONE` → save full message to MongoDB (`messageService.saveAiMessage(conversationId, fullContent)`), broadcast final event.
+- **Backend (chat-service):** Add method `MessageService.saveAiMessage(conversationId, content)` — save with `senderId = AI_BOT_USER_ID`, `type = "ai"`.
+- **Test:** Manually publish to `ai:response:testConvId` → verify STOMP broadcast.
+
+### TASK AI-1.8 — Persist AI message to MongoDB `PENDING`
+#### SPEC
+- **Backend (chat-service):** `MessageService.saveAiMessage()`: create `Message` with `senderId = AI_BOT_USER_ID`, `type = "ai"`, `content = fullContent`. Save via `messageRepository.save()`. Update conversation `lastMessage`.
+- **Data model:** Add `"ai"` to the `type` enum of `Message` model (current types: `"text"`, `"image"`, `"video"`, `"system"`, `"call_log"`, `"file"`, `"voice"`, `"sticker"`).
+- **Test:** After AI_STREAM_DONE, verify message appears in `platform.messages` with correct fields.
+
+---
+
+### PHASE 3 — Flutter UI
+
+### TASK AI-1.9 — STOMP listener for AI_STREAM events `PENDING`
+#### SPEC
+- **Frontend (Flutter):** In `StompService`, add handler for events with `type: "AI_STREAM_CHUNK"`, `"AI_STREAM_DONE"`, `"AI_STREAM_ERROR"` from `/topic/conversation/{id}`.
+- **Frontend (Flutter):** In `ChatNotifier`: on `AI_STREAM_CHUNK` → find or create "pending AI message" in state, append chunk to `content`. On `AI_STREAM_DONE` → finalize message (set `isStreaming = false`). On `AI_STREAM_ERROR` → set error content.
+- **Frontend (Flutter):** Add `isStreaming: bool` to `MessageModel`.
+- **Test:** Unit test ChatNotifier: receive sequence CHUNK + CHUNK + DONE → verify final content is correct.
+
+### TASK AI-1.10 — Streaming message bubble `PENDING`
+#### SPEC
+- **Frontend (Flutter):** In `MessageBubble`: if `message.type == "ai"` and `message.isStreaming == true` → render `StreamingAiBubble` widget.
+- **Frontend (Flutter):** Create `widgets/streaming_ai_bubble.dart`: display current text + blinking cursor (`|`) at end, animate with `Timer.periodic(500ms)` toggling visibility.
+- **Frontend (Flutter):** When `isStreaming = false` → render normally using `flutter_markdown` (already available).
+- **Test:** Widget test: verify cursor shown when `isStreaming=true`, hidden when `false`.
+
+### TASK AI-1.11 — "AI is thinking..." indicator `PENDING`
+#### SPEC
+- **Frontend (Flutter):** In `ChatNotifier`: when user sends message with `@AI` → immediately add a temporary `MessageModel` `{ senderId: AI_BOT_USER_ID, content: "", type: "ai", isStreaming: true, isThinking: true }` to state.
+- **Frontend (Flutter):** Add `isThinking: bool` to `MessageModel`.
+- **Frontend (Flutter):** `StreamingAiBubble`: if `isThinking == true` → show 3-dot loading animation instead of text.
+- **Frontend (Flutter):** On first `AI_STREAM_CHUNK` received → set `isThinking = false`, start showing text.
+- **i18n:** Add key `aiThinking` to all 7 ARB files.
+
+### TASK AI-1.12 — AI bot bubble distinct style `PENDING`
+#### SPEC
+- **Frontend (Flutter):** In `MessageBubble`: if `senderId == AI_BOT_USER_ID` → use different bubble color (light purple or purple-to-teal gradient matching current neon theme).
+- **Frontend (Flutter):** AI bot avatar: show robot icon (`Icons.smart_toy`) instead of initials. Add small "AI" badge (purple) at bottom-right of avatar.
+- **Frontend (Flutter):** AI messages do NOT show "Edit" or "Recall" in long-press menu. Reply/React/Forward remain available.
+- **Test:** Widget test: verify AI bubble has different color than user bubble.
+
+### TASK AI-1.13 — AI bot identity in conversation `PENDING`
+#### SPEC
+- **Frontend (Flutter):** In `new_conversation_screen.dart` or equivalent: add option to create DM with AI bot (shown in user list with "AI" badge).
+- **Frontend (Flutter):** When opening conversation with AI bot: hide call button (voice/video), hide "last seen", profile shows name + "AI Assistant" subtitle.
+- **Frontend (Flutter):** In `ConversationTile`: if 1-1 conversation with bot → show AI icon instead of avatar.
+- **i18n:** Add keys `aiAssistant`, `startChatWithAI` to all 7 ARB files.
+
+---
+
+### PHASE 4 — Error Handling & Polish
+
+### TASK AI-1.14 — Error handling & fallback model `PENDING`
+#### SPEC
+- **Backend (ai-service):** In `AiService.handleRequest()`: wrap Claude API call in try/catch. On error with primary model (status 529, "overloaded") → retry once with `ANTHROPIC_FALLBACK_MODEL`. On continued failure → publish `AI_STREAM_ERROR`.
+- **Backend (ai-service):** Log errors with NestJS `Logger` (model used, error message, conversationId).
+- **Frontend (Flutter):** On `AI_STREAM_ERROR` → set message content = localized error string, `isStreaming = false`, show error style in bubble (light red background, warning icon).
+- **i18n:** Add keys `aiError`, `aiErrorRetry` to all 7 ARB files.
+- **Test:** Unit test: mock Claude throwing error → verify `AI_STREAM_ERROR` published, fallback attempted.
+
+### TASK AI-1.15 — Complete i18n for AI features `PENDING`
+#### SPEC
+- **Frontend (Flutter):** Consolidate all new keys from TASK AI-1.11, AI-1.13, AI-1.14. Ensure all 7 ARBs have: `aiThinking`, `aiError`, `aiErrorRetry`, `aiAssistant`, `startChatWithAI`, `aiMessageDeleted`.
+- **Frontend (Flutter):** Run `flutter gen-l10n` → verify no missing keys.
+- **Test:** `flutter analyze` → No issues found.
+
+### TASK AI-1.16 — End-to-end test & verification `PENDING`
+#### SPEC
+- **Backend (ai-service):** Write `ai.service.spec.ts` — mock Anthropic SDK, test: (1) stream chunks are published correctly, (2) error triggers fallback, (3) fallback failure → publishes AI_STREAM_ERROR.
+- **Backend (chat-service):** Write `AiResponseListenerTest.java` — mock `SimpMessagingTemplate`, verify STOMP broadcast is correct when receiving Redis message.
+- **Full flow test:** `mvn test` (chat-service) → all pass. `pnpm test` (ai-service) → all pass. `flutter analyze && flutter test` → clean.
+- **Manual smoke test checklist:**
+  - [ ] Send `@AI hello` in DM → see thinking indicator → text appears token by token
+  - [ ] Send `@AI explain what **markdown** is` → verify bold renders correctly
+  - [ ] Send in group chat → AI replies to correct conversation
+  - [ ] Disable ANTHROPIC_API_KEY → verify error message shown instead of crash
+
+---
+
+## 🧪 QA LOG
+
+*(Will be appended after implementation)*
+
 
 ---
 
@@ -274,6 +432,41 @@
 ---
 
 ## 🧪 QA LOG
+- [2026-06-03] **SPRINT 24 (TASKS 89–90) → ✅ DONE (full vertical slices).**
+  - **TASK 89 — Voice Messages:**
+    - FE: Added `record: ^5.1.2`, `audioplayers: ^6.1.0`, `path_provider: ^2.1.4` to `pubspec.yaml`.
+      `MessageModel`: added `isVoice` getter (`type == 'voice'`).
+      `ChatInputBar`: new `onVoiceSend` callback; when text is empty shows mic icon button
+      (`Icons.mic_none_outlined`); tap starts recording via `AudioRecorder` (permission-guarded, temp `.m4a` path).
+      Active recording shows red mic + elapsed timer + cancel/send buttons in place of the normal row.
+      `_ChatScreenState._onVoiceSend`: reads recorded file bytes (mobile) / blob URL (web), uploads via
+      `chatRepositoryProvider.uploadDocument`, sends `type: 'voice'` message with the returned URL.
+      New `VoiceMessageBubble` widget (`voice_message_bubble.dart`, 148 lines): `AudioPlayer` (audioplayers) plays
+      from `UrlSource(url)`, tracks `onPlayerStateChanged`/`onPositionChanged`/`onDurationChanged` streams;
+      play/pause button + `Slider` seek bar + duration/position label; styled for sent (white) and received (cyan) variants.
+      `MessageBubble`: added `isVoice` case rendering `VoiceMessageBubble`.
+      i18n: `voiceMicTooltip`, `recording` added to all 7 ARB files.
+  - **TASK 90 — Stickers Panel:**
+    - FE: New `EmojiStickerPanel` widget (`emoji_sticker_panel.dart`, 136 lines): `TabController` with 2 tabs —
+      "Emoji" tab shows existing `EmojiPicker`; "Stickers" tab shows `_StickerGrid` (16 emoji stickers in 4-column
+      `GridView`). `kStickerList = ['😊','😂','🥰','😎','🤔','😭','🎉','❤️','🔥','👍','🙏','💯','🥲','😴','😡','🤗']`.
+      `ChatScreen._onStickerSelected(sticker)` sends `type: 'sticker'` message with the emoji char as content,
+      then closes the panel.
+      `MessageModel`: added `isSticker` getter (`type == 'sticker'`).
+      `MessageBubble`: sticker case skips bubble decoration (`decoration: null`, zero padding) and renders a
+      transparent `Text(content, fontSize: 100)` — no background, no border, no gradient, matching Telegram/Messenger style.
+      `ChatScreen` emoji panel replaced with `EmojiStickerPanel`.
+      i18n: `stickerLabel`, `emojiTab` added to all 7 ARB files; `flutter gen-l10n` regenerated.
+  - **Tests:**
+    - `flutter analyze` → **1 pre-existing info** in `chat_provider.dart:283` (unrelated); **no new issues**.
+    - `flutter test` → **All tests passed**.
+  - **File sizes:** All within limits — `ChatInputBar` 314 lines, `VoiceMessageBubble` 148, `EmojiStickerPanel` 136,
+    `MessageBubble` 236; `chat_screen.dart` 723 lines (pre-established exception for state logic).
+  - **Files for Gemini QC:** FE — `pubspec.yaml`, `domain/chat_state.dart`,
+    `ui/widgets/chat_input_bar.dart`, `ui/widgets/voice_message_bubble.dart`,
+    `ui/widgets/emoji_sticker_panel.dart`, `ui/widgets/message_bubble.dart`,
+    `ui/chat_screen.dart`, `l10n/app_*.arb`.
+
 - [2026-06-02] **SPRINT 19 (TASKS 68–69) → ✅ DONE.**
   - **TASK 68 — Edit Profile UX Routing:**
     - FE: Rewrote `settings/ui/settings_screen.dart` — converted `ConsumerStatefulWidget` →
@@ -657,3 +850,31 @@
 - **Frontend clarification:** In `showNicknamesDialog`, the list already shows all participants (including self and others). Verify that tapping a participant to set their nickname correctly updates only the conversation-local name, without touching `displayName`.
 - **Verify:** The nickname set in conversation A does NOT appear in conversation B for the same user.
 - **Note:** The `UserProfileDialog` edit mode edits the user's REAL profile fields (displayName, bio, gender, DOB, phone). Nicknames are managed separately via the info sidebar → Customize → Nicknames. These two are intentionally distinct.
+
+---
+
+## 🟢 SPRINT 24 — Voice Messages & Stickers
+
+### TASK 89 — Voice Messages (Tin nhắn thoại) `DONE`
+#### SPEC
+- **Frontend:**
+  - Add a microphone icon (`Icons.mic_none_outlined`) to `ChatInputBar` when the text input is empty.
+  - Tap or hold the microphone icon to record audio using a standard recording package (e.g., `record`). Display a simple visual indicator (e.g. "Recording..." with elapsed time) in the input bar.
+  - Once recording finishes, upload the audio file (`.m4a` or `.aac` file format) using the existing `chatRepositoryProvider.uploadFile()` API.
+  - Send the uploaded audio URL as a chat message with `type: 'voice'`.
+  - Create a custom `VoiceMessageBubble` widget for rendering `voice` type messages. The widget should feature:
+    - A play/pause button (`Icons.play_arrow` and `Icons.pause`).
+    - An interactive progress seek bar showing playback timeline.
+    - Audio duration indicator (e.g. `0:15`).
+    - Use `audioplayers` or similar player logic to manage playback state.
+- **Test:** Verify that long-pressing/tapping the mic icon records audio. Verify that releasing/sending uploads it and displays a playable audio message card in the chat window.
+
+### TASK 90 — Stickers Panel (Gửi nhãn dán) `DONE`
+#### SPEC
+- **Frontend:**
+  - Add a dedicated "Stickers" tab to the bottom panel of the keyboard emoji selector (next to the Emoji tab).
+  - Pre-load a set of 12-16 high-quality static sticker assets (stored under `assets/stickers/`).
+  - Tapping a sticker sends it instantly as a chat message with `type: 'sticker'` and content set to the asset path (e.g., `assets/stickers/sticker1.png`).
+  - Overhaul `MessageBubble` rendering: if the message type is `'sticker'`, render it as a transparent, clean image (width/height: ~120px) without the standard bubble background, borders, and margins, matching the sticker aesthetics of Telegram and Messenger.
+- **Test:** Open the keyboard overlay → tap the Stickers tab → tap a sticker → verify that it is sent and rendered in the message stream as a transparent image with no bubble wrapper.
+

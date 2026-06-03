@@ -62,18 +62,36 @@ Future<void> pickAndSendMedia(
   }
 
   final picker = ImagePicker();
-  final XFile? file = source == 'video'
-      ? await picker.pickVideo(source: ImageSource.gallery)
-      : await picker.pickImage(source: ImageSource.gallery);
-  if (file == null || !context.mounted) return;
 
+  if (source == 'video') {
+    final XFile? file = await picker.pickVideo(source: ImageSource.gallery);
+    if (file == null || !context.mounted) return;
+    final messenger = ScaffoldMessenger.of(context);
+    messenger.showSnackBar(SnackBar(content: Text(context.l10n.uploading)));
+    try {
+      final url = await ref.read(chatRepositoryProvider).uploadFile(file);
+      await ref
+          .read(chatNotifierProvider(conversationId).notifier)
+          .sendMessage(url, type: 'video');
+    } catch (_) {
+      messenger.showSnackBar(SnackBar(content: Text(l10n.uploadFailed)));
+    }
+    return;
+  }
+
+  // Multi-image pick
+  final List<XFile> files = await picker.pickMultiImage();
+  if (files.isEmpty || !context.mounted) return;
   final messenger = ScaffoldMessenger.of(context);
   messenger.showSnackBar(SnackBar(content: Text(context.l10n.uploading)));
   try {
-    final url = await ref.read(chatRepositoryProvider).uploadFile(file);
+    final repo = ref.read(chatRepositoryProvider);
+    final urls = await Future.wait(files.map((f) => repo.uploadFile(f)));
+    // Single image → plain URL; multiple → JSON array for grid layout
+    final content = urls.length == 1 ? urls.first : jsonEncode(urls);
     await ref
         .read(chatNotifierProvider(conversationId).notifier)
-        .sendMessage(url, type: source);
+        .sendMessage(content, type: 'image');
   } catch (_) {
     messenger.showSnackBar(SnackBar(content: Text(l10n.uploadFailed)));
   }

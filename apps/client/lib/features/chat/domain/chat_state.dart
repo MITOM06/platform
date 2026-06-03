@@ -240,6 +240,10 @@ class MessageModel {
   bool get isMedia => isImage || isVideo;
   // Generic document attachment (PDF / DOC / ZIP …).
   bool get isFile => type == 'file';
+  // Recorded voice audio (m4a/aac URL stored in content).
+  bool get isVoice => type == 'voice';
+  // Emoji sticker (emoji character stored in content).
+  bool get isSticker => type == 'sticker';
 
   /// File messages encode `{url, name, size}` as JSON in [content]. These
   /// getters decode it defensively (falling back to the raw content as a URL).

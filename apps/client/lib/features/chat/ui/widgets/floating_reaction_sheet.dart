@@ -8,6 +8,7 @@ import '../../../../core/theme/app_theme.dart';
 import '../../domain/chat_provider.dart';
 import '../../domain/chat_state.dart';
 import 'forward_dialog.dart';
+import 'group_read_details_modal.dart';
 
 const List<String> kQuickReactions = ['👍', '❤️', '😂', '😮', '😢', '😡'];
 
@@ -40,6 +41,9 @@ class FloatingReactionSheet extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
     final notifier = ref.read(chatNotifierProvider(message.conversationId).notifier);
+    final convs = ref.watch(conversationsNotifierProvider).valueOrNull;
+    final isGroupChat =
+        convs?.any((c) => c.id == message.conversationId && c.isGroup) ?? false;
 
     return BackdropFilter(
       filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
@@ -145,6 +149,16 @@ class FloatingReactionSheet extends ConsumerWidget {
                   onTap: () {
                     notifier.recallMessage(message.id);
                     context.pop();
+                  },
+                ),
+              if (isSentByMe && isGroupChat)
+                ListTile(
+                  leading: const Icon(Icons.done_all_rounded, color: AppTheme.ponCyan),
+                  title: Text(l10n.readDetails,
+                      style: const TextStyle(color: AppTheme.ponCyan)),
+                  onTap: () {
+                    context.pop();
+                    showGroupReadDetailsModal(context, message);
                   },
                 ),
               ListTile(

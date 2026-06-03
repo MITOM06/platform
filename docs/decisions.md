@@ -113,3 +113,83 @@ This document captures discussions and locked choices.
 - Subscribe personal notifications: `/user/queue/notifications`
 - Send message: `/app/chat.send`
 - Typing status: `/app/chat.typing`
+
+
+---
+
+## ADR-007: ai-service uses NestJS/TypeScript
+
+**Date:** 2026-06-03
+**Status:** Accepted
+
+**Context:** Starting Phase 2 — AI layer. Need to choose language/framework for the new ai-service.
+
+**Options considered:**
+- Python/FastAPI — best AI ecosystem (LangChain, LlamaIndex), but adds a third language to the stack
+- Spring Boot Java — consistent with chat-service, but Java SDK for Anthropic is significantly weaker than Node.js
+- NestJS/TypeScript — consistent with auth-service, `@anthropic-ai/sdk` is first-class, `ioredis` already in use
+
+**Decision:** NestJS/TypeScript for ai-service.
+
+**Rationale:**
+- `@anthropic-ai/sdk` for Node.js is Anthropic's official SDK, best maintained, native streaming support
+- NestJS module/service/controller pattern already familiar — auth-service is NestJS
+- `ioredis` already used in auth-service; Redis pub/sub pattern can be reused
+- Python ecosystem (LangChain, vector DB) not needed at Sprint AI-1; Python sidecar can be added later if heavy RAG is required
+- pnpm workspace can share types/utils between auth-service and ai-service
+
+**Consequences:**
+- ai-service located at `apps/server/ai-service/`
+- Port: 3002
+- Package manager: pnpm (same as auth-service)
+- Env file: `apps/server/ai-service/.env`
+
+---
+
+## ADR-008: Redis Pub/Sub as transport between chat-service and ai-service
+
+**Date:** 2026-06-03
+**Status:** Accepted
+
+**Context:** chat-service (Spring Boot) needs to communicate with ai-service (NestJS) when an `@AI` mention is detected. Need to choose a transport mechanism.
+
+**Options considered:**
+- Direct HTTP (REST call from chat-service to ai-service) — simple but tight coupling; blocks thread while AI is slow
+- Kafka/RabbitMQ — production-grade message queue, but over-engineering at this stage; adds infra complexity
+- Redis Pub/Sub — Redis already in the stack, lightweight, sufficient for current throughput
+
+**Decision:** Redis Pub/Sub.
+
+**Rationale:**
+- Redis already exists in Docker Compose — no new dependency
+- chat-service PUBLISHes, ai-service SUBSCRIBEs — loose coupling, chat-service never blocks waiting for AI
+- ai-service PUBLISHes response chunks, chat-service SUBSCRIBEs and forwards via STOMP to Flutter
+- Easy to scale: multiple ai-service instances can subscribe to `ai:request` simultaneously
+- Sufficient throughput for Phase 1 (no need for Kafka persistence or replay)
+
+**Redis channels:**
+- `ai:request` — published by chat-service when an `@AI` mention is detected
+- `ai:response:{conversationId}` — published by ai-service per streaming chunk
+
+**Payload `ai:request`:**
+```json
+{
+  "conversationId": "string",
+  "userId": "string",
+  "displayName": "string",
+  "content": "string (message with @AI stripped out)",
+  "history": [{ "role": "user|assistant", "content": "string" }]
+}
+```
+
+**Payload `ai:response:{conversationId}`:**
+```json
+{
+  "type": "AI_STREAM_CHUNK | AI_STREAM_DONE | AI_STREAM_ERROR",
+  "chunk": "string (only present when type=AI_STREAM_CHUNK)",
+  "fullContent": "string (only present when type=AI_STREAM_DONE)",
+  "error": "string (only present when type=AI_STREAM_ERROR)"
+}
+```
+
+**Caveat:** Redis Pub/Sub is not persistent — if ai-service is down when a request arrives, the message is lost. Acceptable at Sprint AI-1; will re-evaluate at Sprint AI-3+ if durability is required.

@@ -95,6 +95,36 @@ services:
     networks:
       - app-net
 
+  ai-service:
+    build:
+      context: ../..
+      dockerfile: apps/server/ai-service/Dockerfile
+    container_name: ai-service
+    ports:
+      - "3002:3002"
+    depends_on:
+      mongo:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      PORT: 3002
+      JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET}
+      MONGODB_URI: mongodb://mongo:27017/platform
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
+      ANTHROPIC_MODEL: claude-sonnet-4-5
+      ANTHROPIC_FALLBACK_MODEL: claude-haiku-4-5-20251001
+      AI_BOT_USER_ID: ai-bot-000000000000000000000001
+      AI_BOT_DISPLAY_NAME: ${AI_BOT_DISPLAY_NAME:-PON AI}
+      REDIS_AI_REQUEST_CHANNEL: ai:request
+      REDIS_AI_RESPONSE_PREFIX: ai:response
+    networks:
+      - app-net
+    restart: unless-stopped
+
 networks:
   app-net:
     driver: bridge

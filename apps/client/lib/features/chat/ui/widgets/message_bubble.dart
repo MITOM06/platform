@@ -10,6 +10,7 @@ import 'floating_reaction_sheet.dart';
 import 'image_content.dart';
 import 'message_bubble_parts.dart';
 import 'text_content.dart';
+import 'voice_message_bubble.dart';
 
 class MessageBubble extends ConsumerWidget {
   final MessageModel message;
@@ -93,37 +94,44 @@ class MessageBubble extends ConsumerWidget {
                   constraints: BoxConstraints(
                     maxWidth: constraints.maxWidth * 0.82,
                   ),
-                  decoration: BoxDecoration(
-                    gradient: isSentByMe && !message.recalled
-                        ? const LinearGradient(
-                            colors: [AppTheme.ponCyan, AppTheme.ponPeach],
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                          )
-                        : null,
-                    color: isSentByMe && !message.recalled
-                        ? null
-                        : AppTheme.darkSurface.withValues(alpha: 0.7),
-                    borderRadius: BorderRadius.only(
-                      topLeft: const Radius.circular(20),
-                      topRight: const Radius.circular(20),
-                      bottomLeft:
-                          Radius.circular(isSentByMe ? 20 : 4),
-                      bottomRight:
-                          Radius.circular(isSentByMe ? 4 : 20),
-                    ),
-                    border: isSentByMe && !message.recalled
-                        ? null
-                        : Border.all(
-                            color: AppTheme.darkBorder
-                                .withValues(alpha: 0.4),
-                            width: 1,
+                  decoration: (message.isSticker && !message.recalled)
+                      ? null
+                      : BoxDecoration(
+                          gradient: isSentByMe && !message.recalled
+                              ? const LinearGradient(
+                                  colors: [
+                                    AppTheme.ponCyan,
+                                    AppTheme.ponPeach
+                                  ],
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
+                                )
+                              : null,
+                          color: isSentByMe && !message.recalled
+                              ? null
+                              : AppTheme.darkSurface.withValues(alpha: 0.7),
+                          borderRadius: BorderRadius.only(
+                            topLeft: const Radius.circular(20),
+                            topRight: const Radius.circular(20),
+                            bottomLeft:
+                                Radius.circular(isSentByMe ? 20 : 4),
+                            bottomRight:
+                                Radius.circular(isSentByMe ? 4 : 20),
                           ),
-                  ),
-                  padding: message.isMedia && !message.recalled
-                      ? const EdgeInsets.all(4)
-                      : const EdgeInsets.symmetric(
-                          horizontal: 16, vertical: 11),
+                          border: isSentByMe && !message.recalled
+                              ? null
+                              : Border.all(
+                                  color: AppTheme.darkBorder
+                                      .withValues(alpha: 0.4),
+                                  width: 1,
+                                ),
+                        ),
+                  padding: (message.isSticker && !message.recalled)
+                      ? const EdgeInsets.symmetric(horizontal: 8, vertical: 4)
+                      : message.isMedia && !message.recalled
+                          ? const EdgeInsets.all(4)
+                          : const EdgeInsets.symmetric(
+                              horizontal: 16, vertical: 11),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisSize: MainAxisSize.min,
@@ -141,10 +149,20 @@ class MessageBubble extends ConsumerWidget {
                             fontStyle: FontStyle.italic,
                           ),
                         )
+                      else if (message.isSticker)
+                        Text(
+                          message.content,
+                          style: const TextStyle(fontSize: 100, height: 1.1),
+                        )
                       else if (message.isImage)
                         ImageContent(url: message.content)
                       else if (message.isVideo)
                         VideoContent(url: message.content)
+                      else if (message.isVoice)
+                        VoiceMessageBubble(
+                          audioUrl: message.content,
+                          isSentByMe: isSentByMe,
+                        )
                       else if (message.isFile)
                         FileContent(
                             message: message, isSentByMe: isSentByMe)

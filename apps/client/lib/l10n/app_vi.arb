@@ -264,5 +264,12 @@
   "profileSave": "Lưu",
   "actionMessage": "Nhắn tin",
   "actionAddFriend": "Kết bạn",
-  "actionBlock": "Chặn"
+  "actionBlock": "Chặn",
+  "readDetails": "Chi tiết lượt đọc",
+  "seenStatus": "Đã xem",
+  "noReadsYet": "Chưa có ai đọc tin nhắn này",
+  "voiceMicTooltip": "Tin nhắn thoại",
+  "recording": "Đang ghi...",
+  "stickerLabel": "Nhãn dán",
+  "emojiTab": "Emoji"
 }

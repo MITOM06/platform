@@ -399,5 +399,12 @@
   "profileSave": "Save",
   "actionMessage": "Message",
   "actionAddFriend": "Add Friend",
-  "actionBlock": "Block"
+  "actionBlock": "Block",
+  "readDetails": "Read details",
+  "seenStatus": "Seen",
+  "noReadsYet": "No one has read this yet",
+  "voiceMicTooltip": "Voice message",
+  "recording": "Recording...",
+  "stickerLabel": "Stickers",
+  "emojiTab": "Emoji"
 }

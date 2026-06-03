@@ -264,5 +264,12 @@
   "profileSave": "저장",
   "actionMessage": "메시지",
   "actionAddFriend": "친구 추가",
-  "actionBlock": "차단"
+  "actionBlock": "차단",
+  "readDetails": "읽음 상세",
+  "seenStatus": "읽음",
+  "noReadsYet": "아직 아무도 읽지 않았습니다",
+  "voiceMicTooltip": "음성 메시지",
+  "recording": "녹음 중...",
+  "stickerLabel": "스티커",
+  "emojiTab": "이모지"
 }

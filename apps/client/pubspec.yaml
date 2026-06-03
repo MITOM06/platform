@@ -58,6 +58,13 @@ dependencies:
   # Rich text / markdown rendering in message bubbles (Task 54)
   flutter_markdown: ^0.7.7
 
+  # Voice message recording (Task 89)
+  record: ^5.1.2
+  path_provider: ^2.1.4
+
+  # Audio playback for voice messages (Task 89)
+  audioplayers: ^6.1.0
+
   # Icons
   cupertino_icons: ^1.0.8
 
