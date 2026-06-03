@@ -264,5 +264,12 @@
   "profileSave": "Guardar",
   "actionMessage": "Mensaje",
   "actionAddFriend": "Agregar amigo",
-  "actionBlock": "Bloquear"
+  "actionBlock": "Bloquear",
+  "readDetails": "Detalles de lectura",
+  "seenStatus": "Visto",
+  "noReadsYet": "Nadie lo ha leído aún",
+  "voiceMicTooltip": "Mensaje de voz",
+  "recording": "Grabando...",
+  "stickerLabel": "Stickers",
+  "emojiTab": "Emoji"
 }

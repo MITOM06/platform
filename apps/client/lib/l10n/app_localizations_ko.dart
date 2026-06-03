@@ -819,4 +819,25 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get actionBlock => '차단';
+
+  @override
+  String get readDetails => '읽음 상세';
+
+  @override
+  String get seenStatus => '읽음';
+
+  @override
+  String get noReadsYet => '아직 아무도 읽지 않았습니다';
+
+  @override
+  String get voiceMicTooltip => '음성 메시지';
+
+  @override
+  String get recording => '녹음 중...';
+
+  @override
+  String get stickerLabel => '스티커';
+
+  @override
+  String get emojiTab => '이모지';
 }

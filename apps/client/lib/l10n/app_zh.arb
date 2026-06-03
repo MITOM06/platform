@@ -264,5 +264,12 @@
   "profileSave": "保存",
   "actionMessage": "发消息",
   "actionAddFriend": "加好友",
-  "actionBlock": "拉黑"
+  "actionBlock": "拉黑",
+  "readDetails": "已读详情",
+  "seenStatus": "已看",
+  "noReadsYet": "暂无人阅读",
+  "voiceMicTooltip": "语音消息",
+  "recording": "录音中...",
+  "stickerLabel": "贴纸",
+  "emojiTab": "表情"
 }

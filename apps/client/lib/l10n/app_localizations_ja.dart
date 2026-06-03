@@ -819,4 +819,25 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get actionBlock => 'ブロック';
+
+  @override
+  String get readDetails => '既読詳細';
+
+  @override
+  String get seenStatus => '既読';
+
+  @override
+  String get noReadsYet => 'まだ誰も読んでいません';
+
+  @override
+  String get voiceMicTooltip => '音声メッセージ';
+
+  @override
+  String get recording => '録音中...';
+
+  @override
+  String get stickerLabel => 'スタンプ';
+
+  @override
+  String get emojiTab => '絵文字';
 }

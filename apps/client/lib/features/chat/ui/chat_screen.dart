@@ -1,4 +1,6 @@
-import 'package:emoji_picker_flutter/emoji_picker_flutter.dart';
+import 'dart:io';
+
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -20,6 +22,7 @@ import 'widgets/chat_app_bar.dart';
 import 'widgets/chat_input_bar.dart';
 import 'widgets/chat_typing_indicator.dart';
 import 'widgets/edit_composer_bar.dart';
+import 'widgets/emoji_sticker_panel.dart';
 import 'widgets/mention_list.dart';
 import 'widgets/message_bubble.dart';
 import 'widgets/pinned_message_bar.dart';
@@ -269,6 +272,47 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
       text: newText,
       selection: TextSelection.collapsed(offset: start + emoji.length),
     );
+  }
+
+  /// Uploads a locally recorded audio file and sends it as a voice message.
+  Future<void> _onVoiceSend(String path) async {
+    final l10n = context.l10n;
+    final messenger = ScaffoldMessenger.of(context);
+    messenger.showSnackBar(SnackBar(content: Text(l10n.uploading)));
+    try {
+      final List<int> bytes;
+      if (kIsWeb) {
+        // On web the recorder gives a blob URL — send as-is (no server upload).
+        await ref
+            .read(chatNotifierProvider(widget.conversationId).notifier)
+            .sendMessage(path, type: 'voice');
+        _scrollToBottom();
+        return;
+      } else {
+        bytes = await File(path).readAsBytes();
+      }
+      final filename =
+          'voice_${DateTime.now().millisecondsSinceEpoch}.m4a';
+      final uploaded = await ref
+          .read(chatRepositoryProvider)
+          .uploadDocument(bytes, filename);
+      await ref
+          .read(chatNotifierProvider(widget.conversationId).notifier)
+          .sendMessage(uploaded.url, type: 'voice');
+      _scrollToBottom();
+    } catch (_) {
+      if (mounted) {
+        messenger.showSnackBar(SnackBar(content: Text(l10n.uploadFailed)));
+      }
+    }
+  }
+
+  void _onStickerSelected(String sticker) {
+    setState(() => _showEmoji = false);
+    ref
+        .read(chatNotifierProvider(widget.conversationId).notifier)
+        .sendMessage(sticker, type: 'sticker');
+    _scrollToBottom();
   }
 
   Future<void> _clearHistory() async {
@@ -545,27 +589,14 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
                     ref.read(chatNotifierProvider(widget.conversationId).notifier).sendMessage(emoji);
                     _scrollToBottom();
                   },
+                  onVoiceSend: _onVoiceSend,
                 ),
                 if (_showEmoji)
-                  SizedBox(
-                    height: 280,
-                    child: EmojiPicker(
-                      onEmojiSelected: (_, emoji) =>
-                          _insertEmoji(emoji.emoji),
-                      config: Config(
-                        height: 280,
-                        emojiViewConfig:
-                            EmojiViewConfig(backgroundColor: emojiBg),
-                        categoryViewConfig:
-                            CategoryViewConfig(backgroundColor: emojiSurface),
-                        bottomActionBarConfig: BottomActionBarConfig(
-                          backgroundColor: emojiSurface,
-                          buttonColor: emojiSurface,
-                        ),
-                        searchViewConfig:
-                            SearchViewConfig(backgroundColor: emojiSurface),
-                      ),
-                    ),
+                  EmojiStickerPanel(
+                    onEmojiSelected: _insertEmoji,
+                    onStickerSelected: _onStickerSelected,
+                    bgColor: emojiBg,
+                    surfaceColor: emojiSurface,
                   ),
               ],
             ],

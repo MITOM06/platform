@@ -4,7 +4,7 @@
 
 - **Flutter SDK 3.44.0**, **Dart 3.x**
 - State management: **Riverpod** (`flutter_riverpod` + `riverpod_annotation`)
-- HTTP: **Dio** với interceptor auto-attach JWT
+- HTTP: **Dio** with auto-attach JWT interceptor
 - WebSocket: **stomp_dart_client** (STOMP over raw WebSocket)
 - Navigation: **go_router**
 - Local storage: **flutter_secure_storage** (tokens), **shared_preferences** (settings)
@@ -12,18 +12,18 @@
 
 ## API Endpoints
 
-| Service | Base URL | Dùng cho |
+| Service | Base URL | Used for |
 |---------|----------|---------|
 | auth-service | `http://localhost:3001` | Login, Register, OTP, Token refresh, User search |
 | chat-service | `http://localhost:8080` | Conversations, Messages, User status |
-| chat WebSocket | `ws://localhost:8080/ws` | Realtime STOMP (raw WS, không SockJS) |
+| chat WebSocket | `ws://localhost:8080/ws` | Realtime STOMP (raw WS, no SockJS) |
 
-## Màn hình đã implement ✅
+## Implemented Screens ✅
 
 - `LoginScreen`, `RegisterScreen`, `VerifyOtpScreen`, `ForgotPasswordScreen`, `NewPasswordScreen`
 - `ConversationListScreen`, `ChatScreen`, `NewConversationScreen`, `SettingsScreen`
 
-## Cấu trúc thư mục Flutter
+## Flutter Directory Structure
 
 ```
 lib/
@@ -47,17 +47,17 @@ lib/
 ## Code Conventions
 
 - Feature-based layout: `lib/features/<name>/{data,domain,ui}/`
-- Business logic trong provider/notifier, KHÔNG trong widget
-- Mỗi screen `extends ConsumerWidget` hoặc `ConsumerStatefulWidget`
-- Async state: `AsyncValue.when(data:, loading:, error:)` — không để trống error case
-- Navigation: `go_router` only — không dùng `Navigator.push` trực tiếp
-- Null safety: full Dart 3 — không `!` force-unwrap không có lý do
-- `withValues(alpha:)` thay `withOpacity()` (deprecated Flutter 3.44)
+- Business logic in provider/notifier, NOT in widgets
+- Each screen `extends ConsumerWidget` or `ConsumerStatefulWidget`
+- Async state: `AsyncValue.when(data:, loading:, error:)` — never leave error case empty
+- Navigation: `go_router` only — do not use `Navigator.push` directly
+- Null safety: full Dart 3 — no `!` force-unwrap without justification
+- `withValues(alpha:)` instead of `withOpacity()` (deprecated Flutter 3.44)
 
-## i18n (đa ngôn ngữ) — BẮT BUỘC
+## i18n (Multi-language) — REQUIRED
 
-- App hỗ trợ 7 ngôn ngữ (en/vi/zh/ja/ko/es/fr). **KHÔNG hardcode** chuỗi hiển thị —
-  luôn dùng `context.l10n.<key>` (`lib/core/l10n/l10n_ext.dart`).
-- Template ARB: `lib/l10n/app_en.arb`. Thêm UI mới ⇒ thêm key vào **cả 7** `app_*.arb`,
-  rồi `flutter gen-l10n`. File `app_localizations*.dart` là generated — không sửa tay.
-- Ngôn ngữ chọn ở Settings, lưu qua `locale_provider.dart`. Chi tiết: `.claude/rules/i18n.md`.
+- App supports 7 languages (en/vi/zh/ja/ko/es/fr). **No hardcoded** display strings —
+  always use `context.l10n.<key>` (`lib/core/l10n/l10n_ext.dart`).
+- Template ARB: `lib/l10n/app_en.arb`. Adding new UI → add key to **all 7** `app_*.arb`,
+  then run `flutter gen-l10n`. Files `app_localizations*.dart` are generated — do not edit manually.
+- Language selected in Settings, persisted via `locale_provider.dart`. Details: `.claude/rules/i18n.md`.

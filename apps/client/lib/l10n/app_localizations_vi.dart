@@ -828,4 +828,25 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get actionBlock => 'Chặn';
+
+  @override
+  String get readDetails => 'Chi tiết lượt đọc';
+
+  @override
+  String get seenStatus => 'Đã xem';
+
+  @override
+  String get noReadsYet => 'Chưa có ai đọc tin nhắn này';
+
+  @override
+  String get voiceMicTooltip => 'Tin nhắn thoại';
+
+  @override
+  String get recording => 'Đang ghi...';
+
+  @override
+  String get stickerLabel => 'Nhãn dán';
+
+  @override
+  String get emojiTab => 'Emoji';
 }

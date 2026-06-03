@@ -819,4 +819,25 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get actionBlock => '拉黑';
+
+  @override
+  String get readDetails => '已读详情';
+
+  @override
+  String get seenStatus => '已看';
+
+  @override
+  String get noReadsYet => '暂无人阅读';
+
+  @override
+  String get voiceMicTooltip => '语音消息';
+
+  @override
+  String get recording => '录音中...';
+
+  @override
+  String get stickerLabel => '贴纸';
+
+  @override
+  String get emojiTab => '表情';
 }

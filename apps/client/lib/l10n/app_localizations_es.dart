@@ -835,4 +835,25 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get actionBlock => 'Bloquear';
+
+  @override
+  String get readDetails => 'Detalles de lectura';
+
+  @override
+  String get seenStatus => 'Visto';
+
+  @override
+  String get noReadsYet => 'Nadie lo ha leído aún';
+
+  @override
+  String get voiceMicTooltip => 'Mensaje de voz';
+
+  @override
+  String get recording => 'Grabando...';
+
+  @override
+  String get stickerLabel => 'Stickers';
+
+  @override
+  String get emojiTab => 'Emoji';
 }

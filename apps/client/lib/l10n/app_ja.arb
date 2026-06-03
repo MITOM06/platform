@@ -264,5 +264,12 @@
   "profileSave": "保存",
   "actionMessage": "メッセージ",
   "actionAddFriend": "友達追加",
-  "actionBlock": "ブロック"
+  "actionBlock": "ブロック",
+  "readDetails": "既読詳細",
+  "seenStatus": "既読",
+  "noReadsYet": "まだ誰も読んでいません",
+  "voiceMicTooltip": "音声メッセージ",
+  "recording": "録音中...",
+  "stickerLabel": "スタンプ",
+  "emojiTab": "絵文字"
 }

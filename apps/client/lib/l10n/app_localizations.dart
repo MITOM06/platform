@@ -1655,6 +1655,48 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Block'**
   String get actionBlock;
+
+  /// No description provided for @readDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'Read details'**
+  String get readDetails;
+
+  /// No description provided for @seenStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'Seen'**
+  String get seenStatus;
+
+  /// No description provided for @noReadsYet.
+  ///
+  /// In en, this message translates to:
+  /// **'No one has read this yet'**
+  String get noReadsYet;
+
+  /// No description provided for @voiceMicTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Voice message'**
+  String get voiceMicTooltip;
+
+  /// No description provided for @recording.
+  ///
+  /// In en, this message translates to:
+  /// **'Recording...'**
+  String get recording;
+
+  /// No description provided for @stickerLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Stickers'**
+  String get stickerLabel;
+
+  /// No description provided for @emojiTab.
+  ///
+  /// In en, this message translates to:
+  /// **'Emoji'**
+  String get emojiTab;
 }
 
 class _AppLocalizationsDelegate
