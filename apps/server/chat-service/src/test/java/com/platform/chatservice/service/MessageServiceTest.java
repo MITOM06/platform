@@ -6,7 +6,7 @@ import com.platform.chatservice.dto.PageResponse;
 import com.platform.chatservice.dto.SendMessageRequest;
 import com.platform.chatservice.exception.ConversationNotFoundException;
 import com.platform.chatservice.exception.MessageNotFoundException;
-import com.platform.chatservice.exception.UnauthorizedException;
+import com.platform.chatservice.exception.ForbiddenException;
 import com.platform.chatservice.model.Conversation;
 import com.platform.chatservice.model.Message;
 import com.platform.chatservice.model.UserBlock;
@@ -163,7 +163,7 @@ class MessageServiceTest {
 
         assertThatThrownBy(() -> messageService.sendMessage(SENDER_ID,
                 new SendMessageRequest(CONV_ID, "Hi", "text")))
-            .isInstanceOf(UnauthorizedException.class);
+            .isInstanceOf(ForbiddenException.class);
 
         verify(messageRepository, never()).save(any(Message.class));
     }
@@ -177,7 +177,7 @@ class MessageServiceTest {
 
         assertThatThrownBy(() -> messageService.sendMessage(SENDER_ID,
                 new SendMessageRequest(CONV_ID, "Hi", "text")))
-            .isInstanceOf(UnauthorizedException.class);
+            .isInstanceOf(ForbiddenException.class);
 
         verify(messageRepository, never()).save(any(Message.class));
     }
@@ -241,7 +241,7 @@ class MessageServiceTest {
         when(messageRepository.findById(MSG_ID)).thenReturn(Optional.of(savedMessage));
 
         assertThatThrownBy(() -> messageService.editMessage(OTHER_ID, MSG_ID, "Hacked"))
-            .isInstanceOf(UnauthorizedException.class);
+            .isInstanceOf(ForbiddenException.class);
 
         verify(messageRepository, never()).save(any(Message.class));
     }
@@ -367,7 +367,7 @@ class MessageServiceTest {
         when(conversationRepository.findById(CONV_ID)).thenReturn(Optional.of(conversation));
 
         assertThatThrownBy(() -> messageService.pinMessage("outsider", MSG_ID))
-            .isInstanceOf(UnauthorizedException.class);
+            .isInstanceOf(ForbiddenException.class);
     }
 
     @Test

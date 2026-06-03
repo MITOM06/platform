@@ -1,7 +1,9 @@
 import 'dart:async';
 import 'package:dio/dio.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import '../../../core/providers/theme_provider.dart';
 import '../../auth/data/auth_repository.dart';
 import '../../auth/domain/auth_provider.dart';
 import '../../auth/domain/auth_state.dart';
@@ -118,6 +120,20 @@ class ConversationsNotifier extends _$ConversationsNotifier {
     } catch (_) {
       refresh();
     }
+    ref.invalidate(archivedConversationsProvider);
+  }
+
+  /// Restores an archived conversation back into the main list.
+  Future<void> unarchiveConversation(String conversationId) async {
+    try {
+      await ref
+          .read(chatRepositoryProvider)
+          .unarchiveConversation(conversationId);
+    } catch (_) {
+      // Even on failure, refresh both lists to reflect the true server state.
+    }
+    ref.invalidate(archivedConversationsProvider);
+    await refresh();
   }
 
   Future<void> markConversationReadServer(String conversationId) async {
@@ -197,45 +213,33 @@ class ConversationsNotifier extends _$ConversationsNotifier {
     final current = state.valueOrNull;
     if (current == null) return;
 
-    // Chat-service gửi flat payload: {type, conversationId, senderName, senderId}
+    // Chat-service gửi flat payload: {type, conversationId, senderName, senderId, content, messageType}
     final type = notif['type'] as String?;
     final bool isMention = type == 'MENTIONED_YOU';
     if (type == 'NEW_MESSAGE' || isMention) {
       final convId = notif['conversationId'] as String?;
-      final senderName = notif['senderName'] ?? 'Ai đó';
+      final senderId =
+          (notif['senderId'] ?? notif['senderName'])?.toString() ?? '';
       if (convId == null) return;
 
-      // Check if user is currently inside this chat screen.
-      // If we are, ChatNotifier(convId) is alive. But we can just use router state.
-      // A simpler heuristic: if the route is /chat/:id, we are inside.
       final currentRoute = ref.read(appRouterProvider).routeInformationProvider.value.uri.path;
       if (currentRoute != '/chat/$convId') {
-        final context =
-            ref.read(appRouterProvider).routerDelegate.navigatorKey.currentContext;
-        // Mentions get a distinct, higher-signal in-app banner.
-        showInAppNotification(
-          isMention
-              ? (context != null ? context.l10n.mentionNotificationTitle : 'Mentioned you')
-              : "Tin nhắn mới",
-          isMention
-              ? (context != null
-                  ? context.l10n.mentionNotificationBody(senderName.toString())
-                  : "$senderName mentioned you")
-              : "$senderName đã nhắn tin cho bạn.",
-          onTap: () {
-            ref.read(appRouterProvider).push('/chat/$convId');
-          },
+        final content = notif['content'] as String?;
+        final messageType = notif['messageType'] as String?;
+        _showMessageBanner(
+          convId: convId,
+          senderId: senderId,
+          isMention: isMention,
+          content: content,
+          messageType: messageType,
         );
       }
 
-      // Conversation chưa có trong list (vd: người khác vừa tạo phòng mới với
-      // mình) → fetch lại để nó xuất hiện ngay thay vì phải reload thủ công.
       if (!current.any((c) => c.id == convId)) {
         refresh();
         return;
       }
 
-      // Đẩy conversation lên đầu + tăng unreadCount
       final updated = current.map((c) {
         if (c.id != convId) return c;
         return c.copyWith(
@@ -255,6 +259,52 @@ class ConversationsNotifier extends _$ConversationsNotifier {
           ? context.l10n.rateLimitError
           : 'Too many messages. Please slow down.');
     }
+  }
+
+  /// Resolves [senderId] to a display name then shows the top in-app banner.
+  Future<void> _showMessageBanner({
+    required String convId,
+    required String senderId,
+    required bool isMention,
+    String? content,
+    String? messageType,
+  }) async {
+    String senderName = '';
+    if (senderId.isNotEmpty) {
+      try {
+        final profile = await ref.read(userProfileProvider(senderId).future);
+        senderName = profile.displayName;
+      } catch (_) {}
+    }
+
+    final context =
+        ref.read(appRouterProvider).routerDelegate.navigatorKey.currentContext;
+    if (context == null) return;
+    final l10n = context.l10n;
+    final name = senderName.isNotEmpty ? senderName : l10n.conversationDefault;
+
+    String bodyText;
+    if (isMention) {
+      bodyText = l10n.mentionNotificationBody(name);
+    } else {
+      if (messageType == 'image') {
+        bodyText = '$name: [${l10n.attachPhoto}]';
+      } else if (messageType == 'video') {
+        bodyText = '$name: [${l10n.attachVideo}]';
+      } else if (messageType == 'file') {
+        bodyText = '$name: [${l10n.attachFile}]';
+      } else if (content != null && content.isNotEmpty) {
+        bodyText = '$name: $content';
+      } else {
+        bodyText = l10n.newNotificationBody(name);
+      }
+    }
+
+    showInAppNotification(
+      isMention ? l10n.mentionNotificationTitle : l10n.newNotificationTitle,
+      bodyText,
+      onTap: () => ref.read(appRouterProvider).push('/chat/$convId'),
+    );
   }
 
   Future<void> refresh() async {
@@ -358,6 +408,30 @@ class ChatNotifier extends _$ChatNotifier {
     final paged = results[0] as PagedResult<MessageModel>;
     final conv = results[1] as ConversationModel;
     _markLoadedAsRead(paged.content);
+
+    // Parse historical system messages for config (theme, nickname, quick reaction)
+    for (final m in paged.content.reversed) {
+      if (m.isSystem) {
+        final content = m.content;
+        if (content.startsWith('system.nickname.changed:')) {
+          final parts = content.split(':');
+          if (parts.length >= 2) {
+            final targetId = parts[1];
+            final nickname = parts.length > 2 ? parts.sublist(2).join(':') : '';
+            ref.read(nicknamesProvider(conversationId).notifier).setNickname(targetId, nickname);
+          }
+        } else if (content.startsWith('system.theme.changed:')) {
+          final parts = content.split(':');
+          final url = parts.length > 1 ? parts.sublist(1).join(':') : '';
+          ref.read(chatWallpaperProvider(conversationId).notifier).setWallpaper(url);
+        } else if (content.startsWith('system.quick_reaction.changed:')) {
+          final parts = content.split(':');
+          final emoji = parts.length > 1 ? parts[1] : '👍';
+          ref.read(quickReactionProvider(conversationId).notifier).setQuickReaction(emoji);
+        }
+      }
+    }
+
     return ChatState(
       messages: paged.content,
       hasMore: paged.hasNext,
@@ -401,6 +475,29 @@ class ChatNotifier extends _$ChatNotifier {
       final newMessages =
           fresh.where((m) => !existingIds.contains(m.id)).toList();
       if (newMessages.isEmpty) return;
+
+      for (final m in newMessages) {
+        if (m.isSystem) {
+          final content = m.content;
+          if (content.startsWith('system.nickname.changed:')) {
+            final parts = content.split(':');
+            if (parts.length >= 2) {
+              final targetId = parts[1];
+              final nickname = parts.length > 2 ? parts.sublist(2).join(':') : '';
+              ref.read(nicknamesProvider(conversationId).notifier).setNickname(targetId, nickname);
+            }
+          } else if (content.startsWith('system.theme.changed:')) {
+            final parts = content.split(':');
+            final url = parts.length > 1 ? parts.sublist(1).join(':') : '';
+            ref.read(chatWallpaperProvider(conversationId).notifier).setWallpaper(url);
+          } else if (content.startsWith('system.quick_reaction.changed:')) {
+            final parts = content.split(':');
+            final emoji = parts.length > 1 ? parts[1] : '👍';
+            ref.read(quickReactionProvider(conversationId).notifier).setQuickReaction(emoji);
+          }
+        }
+      }
+
       // fresh is oldest-first; reverse so newest is at index 0.
       state = AsyncData(c.copyWith(
         messages: [...newMessages.reversed, ...c.messages],
@@ -414,6 +511,26 @@ class ChatNotifier extends _$ChatNotifier {
   void _onNewMessage(MessageModel message) {
     final current = state.valueOrNull;
     if (current == null) return;
+
+    if (message.isSystem) {
+      final content = message.content;
+      if (content.startsWith('system.nickname.changed:')) {
+        final parts = content.split(':');
+        if (parts.length >= 2) {
+          final targetId = parts[1];
+          final nickname = parts.length > 2 ? parts.sublist(2).join(':') : '';
+          ref.read(nicknamesProvider(conversationId).notifier).setNickname(targetId, nickname);
+        }
+      } else if (content.startsWith('system.theme.changed:')) {
+        final parts = content.split(':');
+        final url = parts.length > 1 ? parts.sublist(1).join(':') : '';
+        ref.read(chatWallpaperProvider(conversationId).notifier).setWallpaper(url);
+      } else if (content.startsWith('system.quick_reaction.changed:')) {
+        final parts = content.split(':');
+        final emoji = parts.length > 1 ? parts[1] : '👍';
+        ref.read(quickReactionProvider(conversationId).notifier).setQuickReaction(emoji);
+      }
+    }
 
     // Replace optimistic message if one matches by senderId + content
     final pendingIdx = current.messages.indexWhere(
@@ -843,8 +960,99 @@ final userProfileProvider =
   return ref.read(authRepositoryProvider).getUserProfile(userId);
 });
 
+/// Conversations the current user has archived (Task 71).
+final archivedConversationsProvider =
+    FutureProvider.autoDispose<List<ConversationModel>>((ref) {
+  return ref.read(chatRepositoryProvider).listArchivedConversations();
+});
+
 /// Fetches Open Graph metadata for a URL (cached per-url for the screen's life).
 final linkPreviewProvider =
     FutureProvider.autoDispose.family<LinkPreviewData, String>((ref, url) {
   return ref.read(chatRepositoryProvider).fetchLinkPreview(url);
+});
+
+// ── Collaborative Customization Sync Providers (Task 79) ────────────────────
+
+class ChatWallpaperNotifier extends StateNotifier<String?> {
+  final Ref ref;
+  final String conversationId;
+
+  ChatWallpaperNotifier(this.ref, this.conversationId) : super(null) {
+    final prefs = ref.watch(sharedPreferencesProvider);
+    state = prefs.getString('chat_wallpaper_$conversationId');
+  }
+
+  Future<void> setWallpaper(String? url) async {
+    final prefs = ref.read(sharedPreferencesProvider);
+    if (url == null || url.isEmpty) {
+      await prefs.remove('chat_wallpaper_$conversationId');
+      state = null;
+    } else {
+      await prefs.setString('chat_wallpaper_$conversationId', url);
+      state = url;
+    }
+  }
+}
+
+final chatWallpaperProvider = StateNotifierProvider.family<ChatWallpaperNotifier, String?, String>((ref, conversationId) {
+  return ChatWallpaperNotifier(ref, conversationId);
+});
+
+class NicknamesNotifier extends StateNotifier<Map<String, String>> {
+  final Ref ref;
+  final String conversationId;
+
+  NicknamesNotifier(this.ref, this.conversationId) : super(const {}) {
+    final prefs = ref.watch(sharedPreferencesProvider);
+    final List<String> list = prefs.getStringList('chat_nicknames_$conversationId') ?? [];
+    final map = <String, String>{};
+    for (final item in list) {
+      final idx = item.indexOf(':');
+      if (idx != -1) {
+        final key = item.substring(0, idx);
+        final val = item.substring(idx + 1);
+        map[key] = val;
+      }
+    }
+    state = map;
+  }
+
+  Future<void> setNickname(String userId, String nickname) async {
+    final prefs = ref.read(sharedPreferencesProvider);
+    final map = Map<String, String>.from(state);
+    if (nickname.isEmpty) {
+      map.remove(userId);
+    } else {
+      map[userId] = nickname;
+    }
+    state = map;
+
+    final list = map.entries.map((e) => '${e.key}:${e.value}').toList();
+    await prefs.setStringList('chat_nicknames_$conversationId', list);
+  }
+}
+
+final nicknamesProvider = StateNotifierProvider.family<NicknamesNotifier, Map<String, String>, String>((ref, conversationId) {
+  return NicknamesNotifier(ref, conversationId);
+});
+
+class QuickReactionNotifier extends StateNotifier<String> {
+  final Ref ref;
+  final String conversationId;
+
+  QuickReactionNotifier(this.ref, this.conversationId) : super('👍') {
+    final prefs = ref.watch(sharedPreferencesProvider);
+    state = prefs.getString('chat_quick_reaction_$conversationId') ?? '👍';
+  }
+
+  Future<void> setQuickReaction(String emoji) async {
+    final prefs = ref.read(sharedPreferencesProvider);
+    await prefs.setString('chat_quick_reaction_$conversationId', emoji);
+    state = emoji;
+  }
+}
+
+final quickReactionProvider = StateNotifierProvider.family<QuickReactionNotifier, String, String>((ref, conversationId) {
+  return QuickReactionNotifier(ref, conversationId);
 });

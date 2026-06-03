@@ -127,14 +127,16 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           // Scrollable main content
           SafeArea(
             child: Center(
-              child: SingleChildScrollView(
-                physics: const BouncingScrollPhysics(),
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    // Brand Logo
-                    const PonLogo(size: 84),
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 450),
+                child: SingleChildScrollView(
+                  physics: const BouncingScrollPhysics(),
+                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      // Brand Logo
+                      const Center(child: PonLogo(size: 100, showText: true)),
                     const SizedBox(height: 40),
 
                     // Frosted Glass Form Card
@@ -225,21 +227,22 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     ),
                     const SizedBox(height: 24),
 
-                    // Navigation to register
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          context.l10n.noAccountYet,
-                          style: TextStyle(color: Colors.white.withValues(alpha: 0.6)),
-                        ),
-                        TextButton(
-                          onPressed: () => context.go('/register'),
-                          child: Text(context.l10n.registerNow),
-                        ),
-                      ],
-                    ),
-                  ],
+                      // Navigation to register
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            context.l10n.noAccountYet,
+                            style: TextStyle(color: Colors.white.withValues(alpha: 0.6)),
+                          ),
+                          TextButton(
+                            onPressed: () => context.go('/register'),
+                            child: Text(context.l10n.registerNow),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),

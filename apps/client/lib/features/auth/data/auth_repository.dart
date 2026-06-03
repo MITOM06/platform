@@ -122,6 +122,9 @@ class AuthRepository {
     String? bio,
     String? coverPhoto,
     DateTime? dateOfBirth,
+    String? phoneNumber,
+    String? gender,
+    bool? hideInfo,
   }) async {
     final response = await _dio.patch('/api/users/me', data: {
       if (displayName != null) 'displayName': displayName,
@@ -129,6 +132,9 @@ class AuthRepository {
       if (bio != null) 'bio': bio,
       if (coverPhoto != null) 'coverPhoto': coverPhoto,
       if (dateOfBirth != null) 'dateOfBirth': dateOfBirth.toUtc().toIso8601String(),
+      if (phoneNumber != null) 'phoneNumber': phoneNumber,
+      if (gender != null) 'gender': gender,
+      if (hideInfo != null) 'hideInfo': hideInfo,
     });
     
     final updated = UserModel.fromJson(response.data as Map<String, dynamic>);

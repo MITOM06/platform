@@ -62,6 +62,12 @@ export class User {
   @Prop({ type: [String], default: [] })
   fcmTokens: string[];
 
+  @Prop()
+  gender: string;
+
+  @Prop({ default: false })
+  hideInfo: boolean;
+
   // User ids this user has blocked. Neither party can message the other while
   // an id is present here (enforced in auth-service + chat-service MessageService).
   @Prop({ type: [String], default: [] })

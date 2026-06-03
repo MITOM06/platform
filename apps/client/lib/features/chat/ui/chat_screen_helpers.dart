@@ -16,9 +16,13 @@ Future<void> pickAndSendMedia(
   String conversationId,
 ) async {
   final l10n = context.l10n;
+  final theme = Theme.of(context);
+  final isDark = theme.brightness == Brightness.dark;
+  final sheetColor = isDark ? AppTheme.darkSurface : theme.cardColor;
+  final textColor = isDark ? Colors.white : Colors.black87;
   final source = await showModalBottomSheet<String>(
     context: context,
-    backgroundColor: AppTheme.darkSurface,
+    backgroundColor: sheetColor,
     shape: const RoundedRectangleBorder(
       borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
     ),
@@ -29,21 +33,21 @@ Future<void> pickAndSendMedia(
           const SizedBox(height: 12),
           ListTile(
             leading: const Icon(Icons.photo_outlined, color: AppTheme.ponCyan),
-            title:
-                Text(l10n.attachPhoto, style: const TextStyle(color: Colors.white)),
+            title: Text(l10n.attachPhoto,
+                style: TextStyle(color: textColor)),
             onTap: () => Navigator.pop(ctx, 'image'),
           ),
           ListTile(
             leading: const Icon(Icons.videocam_outlined, color: AppTheme.ponPeach),
-            title:
-                Text(l10n.attachVideo, style: const TextStyle(color: Colors.white)),
+            title: Text(l10n.attachVideo,
+                style: TextStyle(color: textColor)),
             onTap: () => Navigator.pop(ctx, 'video'),
           ),
           ListTile(
             leading: const Icon(Icons.insert_drive_file_outlined,
                 color: AppTheme.ponCyan),
-            title:
-                Text(l10n.attachFile, style: const TextStyle(color: Colors.white)),
+            title: Text(l10n.attachFile,
+                style: TextStyle(color: textColor)),
             onTap: () => Navigator.pop(ctx, 'file'),
           ),
         ],
@@ -114,9 +118,13 @@ Future<void> showAutoDeletePicker(
   String conversationId,
 ) async {
   final l10n = context.l10n;
+  final theme = Theme.of(context);
+  final isDark = theme.brightness == Brightness.dark;
+  final sheetColor = isDark ? AppTheme.darkSurface : theme.cardColor;
+  final textColor = isDark ? Colors.white : Colors.black87;
   final seconds = await showModalBottomSheet<int?>(
     context: context,
-    backgroundColor: AppTheme.darkSurface,
+    backgroundColor: sheetColor,
     shape: const RoundedRectangleBorder(
       borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
     ),
@@ -126,22 +134,22 @@ Future<void> showAutoDeletePicker(
         children: [
           const SizedBox(height: 12),
           Text(l10n.disappearingMessages,
-              style: const TextStyle(
-                  color: Colors.white, fontWeight: FontWeight.bold)),
+              style: TextStyle(
+                  color: textColor, fontWeight: FontWeight.bold)),
           const SizedBox(height: 8),
           ListTile(
             title: Text(l10n.disappearingOff,
-                style: const TextStyle(color: Colors.white)),
+                style: TextStyle(color: textColor)),
             onTap: () => Navigator.pop(ctx, 0),
           ),
           ListTile(
             title: Text(l10n.disappearing24h,
-                style: const TextStyle(color: Colors.white)),
+                style: TextStyle(color: textColor)),
             onTap: () => Navigator.pop(ctx, 86400),
           ),
           ListTile(
             title: Text(l10n.disappearing7d,
-                style: const TextStyle(color: Colors.white)),
+                style: TextStyle(color: textColor)),
             onTap: () => Navigator.pop(ctx, 604800),
           ),
         ],
@@ -162,12 +170,17 @@ Future<bool?> showConfirmDialog(
   required String title,
   required String body,
 }) {
+  final theme = Theme.of(context);
+  final isDark = theme.brightness == Brightness.dark;
+  final dialogColor = isDark ? AppTheme.darkSurface : Colors.white;
+  final titleColor = isDark ? Colors.white : Colors.black87;
+  final bodyColor = isDark ? Colors.white70 : Colors.black54;
   return showDialog<bool>(
     context: context,
     builder: (ctx) => AlertDialog(
-      backgroundColor: AppTheme.darkSurface,
-      title: Text(title, style: const TextStyle(color: Colors.white)),
-      content: Text(body, style: const TextStyle(color: Colors.white70)),
+      backgroundColor: dialogColor,
+      title: Text(title, style: TextStyle(color: titleColor)),
+      content: Text(body, style: TextStyle(color: bodyColor)),
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(ctx, false),

@@ -6,7 +6,7 @@ import com.platform.chatservice.dto.PinResult;
 import com.platform.chatservice.dto.SendMessageRequest;
 import com.platform.chatservice.exception.ConversationNotFoundException;
 import com.platform.chatservice.exception.MessageNotFoundException;
-import com.platform.chatservice.exception.UnauthorizedException;
+import com.platform.chatservice.exception.ForbiddenException;
 import com.platform.chatservice.model.Conversation;
 import com.platform.chatservice.model.Message;
 import com.platform.chatservice.model.UserBlock;
@@ -103,7 +103,7 @@ public class MessageService {
         // participant of the conversation (covers both directions).
         for (String participant : conversation.getParticipants()) {
             if (!participant.equals(senderId) && isBlockedBetween(senderId, participant)) {
-                throw new UnauthorizedException("Cannot send message: user is blocked");
+                throw new ForbiddenException("Cannot send message: user is blocked");
             }
         }
 
@@ -197,7 +197,7 @@ public class MessageService {
         Message message = messageRepository.findById(messageId)
             .orElseThrow(() -> new MessageNotFoundException(messageId));
         if (!userId.equals(message.getSenderId())) {
-            throw new UnauthorizedException("Only the sender can recall this message");
+            throw new ForbiddenException("Only the sender can recall this message");
         }
         message.setRecalled(true);
         message.setContent("");
@@ -215,7 +215,7 @@ public class MessageService {
         Message message = messageRepository.findById(messageId)
             .orElseThrow(() -> new MessageNotFoundException(messageId));
         if (!userId.equals(message.getSenderId())) {
-            throw new UnauthorizedException("Only the sender can edit this message");
+            throw new ForbiddenException("Only the sender can edit this message");
         }
         if (message.isRecalled()) {
             throw new IllegalArgumentException("Cannot edit a recalled message");
@@ -250,7 +250,7 @@ public class MessageService {
         Conversation conversation = conversationRepository.findById(message.getConversationId())
             .orElseThrow(() -> new ConversationNotFoundException(message.getConversationId()));
         if (!conversation.getParticipants().contains(userId)) {
-            throw new UnauthorizedException("Not a participant of this conversation");
+            throw new ForbiddenException("Not a participant of this conversation");
         }
         if (message.isRecalled()) {
             throw new IllegalArgumentException("Cannot pin a recalled message");
@@ -259,7 +259,7 @@ public class MessageService {
             boolean isAdmin = conversation.getAdmins() != null
                 && conversation.getAdmins().contains(userId);
             if (!isAdmin) {
-                throw new UnauthorizedException("Only admins can pin messages in a group");
+                throw new ForbiddenException("Only admins can pin messages in a group");
             }
         }
         List<String> pinned = conversation.getPinnedMessages() == null
@@ -281,13 +281,13 @@ public class MessageService {
         Conversation conversation = conversationRepository.findById(message.getConversationId())
             .orElseThrow(() -> new ConversationNotFoundException(message.getConversationId()));
         if (!conversation.getParticipants().contains(userId)) {
-            throw new UnauthorizedException("Not a participant of this conversation");
+            throw new ForbiddenException("Not a participant of this conversation");
         }
         if (conversation.isGroup()) {
             boolean isAdmin = conversation.getAdmins() != null
                 && conversation.getAdmins().contains(userId);
             if (!isAdmin) {
-                throw new UnauthorizedException("Only admins can unpin messages in a group");
+                throw new ForbiddenException("Only admins can unpin messages in a group");
             }
         }
         List<String> pinned = conversation.getPinnedMessages() == null
@@ -312,7 +312,7 @@ public class MessageService {
         Conversation srcConv = conversationRepository.findById(original.getConversationId())
             .orElseThrow(() -> new ConversationNotFoundException(original.getConversationId()));
         if (!srcConv.getParticipants().contains(userId)) {
-            throw new UnauthorizedException("Not a participant of source conversation");
+            throw new ForbiddenException("Not a participant of source conversation");
         }
         return sendMessage(userId, new SendMessageRequest(
             targetConversationId, original.getContent(), original.getType(), null));
@@ -353,7 +353,7 @@ public class MessageService {
         Conversation conversation = conversationRepository.findById(message.getConversationId())
             .orElseThrow(() -> new ConversationNotFoundException(message.getConversationId()));
         if (!conversation.getParticipants().contains(userId)) {
-            throw new UnauthorizedException("Not a participant of this conversation");
+            throw new ForbiddenException("Not a participant of this conversation");
         }
         return message;
     }

@@ -757,4 +757,75 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get mutedLabel => 'Đã tắt thông báo';
+
+  @override
+  String get newNotificationTitle => 'Tin nhắn mới';
+
+  @override
+  String newNotificationBody(String name) {
+    return '$name đã nhắn tin cho bạn';
+  }
+
+  @override
+  String get archivedChats => 'Trò chuyện đã lưu trữ';
+
+  @override
+  String get archivedChatsSubtitle => 'Xem các đoạn chat đã lưu trữ';
+
+  @override
+  String get emptyArchivedChats => 'Chưa có trò chuyện nào được lưu trữ';
+
+  @override
+  String get webNoChatSelected => 'Chọn một cuộc trò chuyện để bắt đầu';
+
+  @override
+  String get endToEndEncrypted => 'Được mã hóa đầu cuối';
+
+  @override
+  String get chatInfoCategory => 'Thông tin về đoạn chat';
+
+  @override
+  String get customizeChatCategory => 'Tùy chỉnh đoạn chat';
+
+  @override
+  String get filesAndMediaCategory => 'File phương tiện và file';
+
+  @override
+  String get privacyAndSupportCategory => 'Quyền riêng tư và hỗ trợ';
+
+  @override
+  String get callSelectMember => 'Chọn thành viên để gọi';
+
+  @override
+  String get profileHideInfo => 'Ẩn thông tin cá nhân';
+
+  @override
+  String get profileInfoHidden => 'Thông tin cá nhân đã được ẩn';
+
+  @override
+  String get profileGender => 'Giới tính';
+
+  @override
+  String get profilePhone => 'Số điện thoại';
+
+  @override
+  String get profileBio => 'Giới thiệu';
+
+  @override
+  String get profileDateOfBirth => 'Ngày sinh';
+
+  @override
+  String get profileEditMode => 'Chỉnh sửa hồ sơ';
+
+  @override
+  String get profileSave => 'Lưu';
+
+  @override
+  String get actionMessage => 'Nhắn tin';
+
+  @override
+  String get actionAddFriend => 'Kết bạn';
+
+  @override
+  String get actionBlock => 'Chặn';
 }

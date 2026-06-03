@@ -38,6 +38,15 @@ public class GlobalExceptionHandler {
         ));
     }
 
+    @ExceptionHandler(ForbiddenException.class)
+    public ResponseEntity<Map<String, Object>> handleForbidden(ForbiddenException ex) {
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of(
+            "error", "Forbidden",
+            "message", ex.getMessage(),
+            "statusCode", 403
+        ));
+    }
+
     @ExceptionHandler(DuplicateConversationException.class)
     public ResponseEntity<Map<String, Object>> handleDuplicate(DuplicateConversationException ex) {
         return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of(

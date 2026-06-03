@@ -9,6 +9,8 @@ class ChatInputBar extends StatefulWidget {
   final ValueChanged<String> onChanged;
   final VoidCallback onEmojiToggle;
   final bool emojiActive;
+  final String quickReactionEmoji;
+  final VoidCallback onQuickReaction;
 
   const ChatInputBar({
     super.key,
@@ -18,6 +20,8 @@ class ChatInputBar extends StatefulWidget {
     required this.onChanged,
     required this.onEmojiToggle,
     required this.emojiActive,
+    required this.quickReactionEmoji,
+    required this.onQuickReaction,
   });
 
   @override
@@ -46,12 +50,28 @@ class _ChatInputBarState extends State<ChatInputBar> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final borderColor = isDark
+        ? AppTheme.darkBorder.withValues(alpha: 0.4)
+        : Colors.black.withValues(alpha: 0.08);
+    final textColor = isDark ? Colors.white : Colors.black87;
+    final hintColor = isDark
+        ? Colors.white.withValues(alpha: 0.25)
+        : Colors.black.withValues(alpha: 0.35);
+    final fillColor = isDark
+        ? AppTheme.darkSurface.withValues(alpha: 0.6)
+        : Colors.black.withValues(alpha: 0.04);
+    final fieldBorderColor = isDark
+        ? AppTheme.darkBorder.withValues(alpha: 0.5)
+        : Colors.black.withValues(alpha: 0.1);
+
     return Container(
       decoration: BoxDecoration(
-        color: AppTheme.darkBackground,
+        color: theme.scaffoldBackgroundColor,
         border: Border(
           top: BorderSide(
-            color: AppTheme.darkBorder.withValues(alpha: 0.4),
+            color: borderColor,
             width: 1,
           ),
         ),
@@ -94,27 +114,23 @@ class _ChatInputBarState extends State<ChatInputBar> {
                   onChanged: widget.onChanged,
                   onSubmitted: (_) => widget.onSend(),
                   textInputAction: TextInputAction.send,
-                  style: const TextStyle(color: Colors.white, fontSize: 15),
+                  style: TextStyle(color: textColor, fontSize: 15),
                   decoration: InputDecoration(
                     hintText: context.l10n.messageHint,
-                    hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.25)),
+                    hintStyle: TextStyle(color: hintColor),
                     filled: true,
-                    fillColor: AppTheme.darkSurface.withValues(alpha: 0.6),
+                    fillColor: fillColor,
                     contentPadding: const EdgeInsets.symmetric(
                       horizontal: 18,
                       vertical: 10,
                     ),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(24),
-                      borderSide: BorderSide(
-                          color: AppTheme.darkBorder.withValues(alpha: 0.5),
-                          width: 1),
+                      borderSide: BorderSide(color: fieldBorderColor, width: 1),
                     ),
                     enabledBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(24),
-                      borderSide: BorderSide(
-                          color: AppTheme.darkBorder.withValues(alpha: 0.5),
-                          width: 1),
+                      borderSide: BorderSide(color: fieldBorderColor, width: 1),
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(24),
@@ -126,36 +142,45 @@ class _ChatInputBarState extends State<ChatInputBar> {
               ),
             ),
             const SizedBox(width: 8),
-            AnimatedContainer(
-              duration: const Duration(milliseconds: 200),
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                gradient: LinearGradient(
-                  colors: _hasText
-                      ? [AppTheme.ponCyan, AppTheme.ponPink]
-                      : [AppTheme.darkBorder, AppTheme.darkBorder],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                boxShadow: _hasText
-                    ? [
+            _hasText
+                ? AnimatedContainer(
+                    duration: const Duration(milliseconds: 200),
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      gradient: const LinearGradient(
+                        colors: [AppTheme.ponCyan, AppTheme.ponPink],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      boxShadow: [
                         BoxShadow(
                           color: AppTheme.ponCyan.withValues(alpha: 0.35),
                           blurRadius: 10,
                           spreadRadius: 1,
                         )
-                      ]
-                    : null,
-              ),
-              child: IconButton(
-                onPressed: widget.onSend,
-                icon: Icon(
-                  Icons.send_rounded,
-                  color: _hasText ? Colors.white : Colors.white24,
-                  size: 20,
-                ),
-              ),
-            ),
+                      ],
+                    ),
+                    child: IconButton(
+                      onPressed: widget.onSend,
+                      icon: const Icon(
+                        Icons.send_rounded,
+                        color: Colors.white,
+                        size: 20,
+                      ),
+                    ),
+                  )
+                : Container(
+                    decoration: const BoxDecoration(
+                      shape: BoxShape.circle,
+                    ),
+                    child: IconButton(
+                      onPressed: widget.onQuickReaction,
+                      icon: Text(
+                        widget.quickReactionEmoji,
+                        style: const TextStyle(fontSize: 22),
+                      ),
+                    ),
+                  ),
           ],
         ),
       ),

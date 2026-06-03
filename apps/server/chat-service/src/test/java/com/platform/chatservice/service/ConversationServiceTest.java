@@ -137,7 +137,7 @@ class ConversationServiceTest {
         when(conversationRepository.findById(CONV_ID)).thenReturn(Optional.of(pending));
 
         assertThatThrownBy(() -> conversationService.acceptConversation(USER_ID, CONV_ID))
-            .isInstanceOf(com.platform.chatservice.exception.UnauthorizedException.class);
+            .isInstanceOf(com.platform.chatservice.exception.ForbiddenException.class);
         verify(conversationRepository, never()).save(any());
     }
 

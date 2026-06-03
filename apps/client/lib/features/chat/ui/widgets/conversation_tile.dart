@@ -7,43 +7,10 @@ import '../../../auth/domain/auth_provider.dart';
 import '../../../auth/domain/auth_state.dart';
 import '../../../friends/data/friends_repository.dart';
 import '../../../friends/domain/friends_provider.dart';
+import '../../../home/domain/home_providers.dart';
 import '../../domain/chat_provider.dart';
 import '../../domain/chat_state.dart';
 import 'conversation_avatar.dart';
-
-class OfflineBanner extends StatelessWidget {
-  const OfflineBanner({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    return Material(
-      color: Colors.redAccent.withValues(alpha: 0.2),
-      child: SafeArea(
-        bottom: false,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          child: Row(
-            children: [
-              const Icon(Icons.wifi_off, size: 16, color: Colors.redAccent),
-              const SizedBox(width: 8),
-              Text(
-                context.l10n.offlineBanner,
-                style: TextStyle(
-                  color: isDark
-                      ? Colors.white.withValues(alpha: 0.9)
-                      : Colors.redAccent.shade700,
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
 
 class ConversationTile extends ConsumerWidget {
   final ConversationModel conv;
@@ -58,6 +25,12 @@ class ConversationTile extends ConsumerWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final isGroup = conv.isGroup;
 
+    // On the web/tablet master-detail layout the tile drives the right pane
+    // instead of pushing a route; it also paints a selected state.
+    final isWeb = MediaQuery.of(context).size.width >= kWebBreakpoint;
+    final isSelected =
+        isWeb && ref.watch(selectedConversationIdProvider) == conv.id;
+
     final others =
         conv.participants.where((p) => p != currentUserId).toList();
     final otherUserId = !isGroup && others.isNotEmpty ? others.first : '';
@@ -70,9 +43,15 @@ class ConversationTile extends ConsumerWidget {
     final profileAsync = otherUserId.isNotEmpty
         ? ref.watch(userProfileProvider(otherUserId))
         : null;
+    final nicknames = ref.watch(nicknamesProvider(conv.id));
+    final dmNickname = (!isGroup && otherUserId.isNotEmpty)
+        ? nicknames[otherUserId]
+        : null;
     final displayName = isGroup
         ? (conv.name ?? context.l10n.conversationDefault)
-        : (profileAsync?.valueOrNull?.displayName ?? '...');
+        : ((dmNickname != null && dmNickname.isNotEmpty)
+            ? dmNickname
+            : (profileAsync?.valueOrNull?.displayName ?? '...'));
     final tileLetter = displayName.isNotEmpty && displayName != '...'
         ? displayName[0].toUpperCase()
         : '?';
@@ -82,18 +61,29 @@ class ConversationTile extends ConsumerWidget {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
       decoration: BoxDecoration(
-        color: isDark ? AppTheme.darkSurface.withValues(alpha: 0.4) : Colors.white,
+        color: isSelected
+            ? (isDark
+                ? AppTheme.ponCyan.withValues(alpha: 0.12)
+                : Theme.of(context).colorScheme.primary.withValues(alpha: 0.08))
+            : (isDark
+                ? AppTheme.darkSurface.withValues(alpha: 0.4)
+                : Colors.white),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: conv.unreadCount > 0
+          color: isSelected
               ? (isDark
                       ? AppTheme.ponCyan
                       : Theme.of(context).colorScheme.primary)
-                  .withValues(alpha: 0.25)
-              : (isDark
-                  ? AppTheme.darkBorder.withValues(alpha: 0.2)
-                  : Colors.black.withValues(alpha: 0.05)),
-          width: 1,
+                  .withValues(alpha: 0.6)
+              : conv.unreadCount > 0
+                  ? (isDark
+                          ? AppTheme.ponCyan
+                          : Theme.of(context).colorScheme.primary)
+                      .withValues(alpha: 0.25)
+                  : (isDark
+                      ? AppTheme.darkBorder.withValues(alpha: 0.2)
+                      : Colors.black.withValues(alpha: 0.05)),
+          width: isSelected ? 1.5 : 1,
         ),
         boxShadow: !isDark
             ? [
@@ -169,9 +159,7 @@ class ConversationTile extends ConsumerWidget {
               ? Padding(
                   padding: const EdgeInsets.only(top: 4.0),
                   child: Text(
-                    conv.lastMessage!.content.contains('/api/uploads/')
-                        ? context.l10n.attachmentLabel
-                        : conv.lastMessage!.content,
+                    _subtitleText(context, conv.lastMessage!.content),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(
@@ -215,11 +203,38 @@ class ConversationTile extends ConsumerWidget {
                   ),
                 )
               : null,
-          onTap: () => context.push('/chat/${conv.id}'),
+          onTap: () {
+            if (isWeb) {
+              ref.read(selectedConversationIdProvider.notifier).state = conv.id;
+            } else {
+              context.push('/chat/${conv.id}');
+            }
+          },
           onLongPress: () => _showTileMenu(context, ref),
         ),
       ),
     );
+  }
+
+  String _subtitleText(BuildContext context, String content) {
+    if (content.contains('/api/uploads/')) return context.l10n.attachmentLabel;
+    if (content.startsWith('system.nickname.changed:')) {
+      return context.l10n.localeName == 'vi'
+          ? 'Biệt danh đã được thay đổi'
+          : 'Nickname was changed';
+    }
+    if (content.startsWith('system.theme.changed:')) {
+      return context.l10n.localeName == 'vi'
+          ? 'Chủ đề đoạn chat đã thay đổi'
+          : 'Chat theme changed';
+    }
+    if (content.startsWith('system.quick_reaction.changed:')) {
+      return context.l10n.localeName == 'vi'
+          ? 'Biểu tượng cảm xúc nhanh đã thay đổi'
+          : 'Quick reaction changed';
+    }
+    if (content.startsWith('system.')) return '📢 ${content.split(':').first.replaceAll('system.', '').replaceAll('.', ' ')}';
+    return content;
   }
 
   void _showTileMenu(BuildContext context, WidgetRef ref) {

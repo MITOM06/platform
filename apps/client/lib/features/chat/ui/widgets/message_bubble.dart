@@ -30,7 +30,7 @@ class MessageBubble extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     if (message.isSystem) {
-      return SystemMessage(content: _systemText(context, message.content));
+      return SystemMessage(message: message);
     }
 
     final locale = Localizations.localeOf(context).languageCode;
@@ -61,7 +61,10 @@ class MessageBubble extends ConsumerWidget {
                 : CrossAxisAlignment.start,
             children: [
               if (showSenderName && !isSentByMe)
-                SenderName(userId: message.senderId),
+                GroupSenderHeader(
+                  userId: message.senderId,
+                  conversationId: message.conversationId,
+                ),
               GestureDetector(
                 onLongPress: message.recalled
                     ? null
@@ -75,12 +78,20 @@ class MessageBubble extends ConsumerWidget {
                                 .notifier)
                             .toggleReaction(message.id, '❤️');
                       },
-                child: Container(
-                  margin: const EdgeInsets.symmetric(
-                      horizontal: 16, vertical: 3),
+                // Constrain to the available pane width (LayoutBuilder), NOT the
+                // full window — on the web split layout MediaQuery reports the
+                // whole window, which made sent bubbles overflow/clip the pane.
+                child: LayoutBuilder(
+                  builder: (context, constraints) => Container(
+                  margin: EdgeInsets.only(
+                    // Right margin so sent bubbles never touch the edge (Task 74).
+                    left: isSentByMe ? 40 : 16,
+                    right: isSentByMe ? 16 : 40,
+                    top: 3,
+                    bottom: 3,
+                  ),
                   constraints: BoxConstraints(
-                    maxWidth:
-                        MediaQuery.of(context).size.width * 0.72,
+                    maxWidth: constraints.maxWidth * 0.82,
                   ),
                   decoration: BoxDecoration(
                     gradient: isSentByMe && !message.recalled
@@ -181,6 +192,7 @@ class MessageBubble extends ConsumerWidget {
                       ),
                     ],
                   ),
+                  ),
                 ),
               ),
               if (message.reactions.isNotEmpty && !message.recalled)
@@ -202,22 +214,5 @@ class MessageBubble extends ConsumerWidget {
           ? AppTheme.ponCyan
           : Colors.white.withValues(alpha: 0.4),
     );
-  }
-
-  String _systemText(BuildContext context, String key) {
-    switch (key) {
-      case 'system.group.created':
-        return context.l10n.createGroup;
-      case 'system.members.added':
-        return context.l10n.addMembers;
-      case 'system.member.left':
-        return context.l10n.leaveGroup;
-      case 'system.member.removed':
-        return context.l10n.removeMember;
-      case 'system.member.joined':
-        return context.l10n.joinChannel;
-      default:
-        return key;
-    }
   }
 }

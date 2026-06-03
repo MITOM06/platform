@@ -60,10 +60,15 @@ public class ChatController {
                 // Mentioned participants get a priority MENTIONED_YOU event instead
                 // of the generic NEW_MESSAGE so the client can surface it specially.
                 boolean mentioned = mentions.contains(participantId);
+                // senderName carries the sender's userId; the client resolves it
+                // to a display name. senderId is sent explicitly for clarity.
                 Map<String, String> notification = Map.of(
                     "type", mentioned ? "MENTIONED_YOU" : "NEW_MESSAGE",
                     "conversationId", dto.getConversationId(),
-                    "senderName", principal.getName()
+                    "senderId", principal.getName(),
+                    "senderName", principal.getName(),
+                    "content", dto.getContent() != null ? dto.getContent() : "",
+                    "messageType", dto.getType() != null ? dto.getType() : "text"
                 );
                 messagingTemplate.convertAndSendToUser(participantId, "/queue/notifications", notification);
 

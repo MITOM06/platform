@@ -748,4 +748,75 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get mutedLabel => 'ミュート中';
+
+  @override
+  String get newNotificationTitle => '新しいメッセージ';
+
+  @override
+  String newNotificationBody(String name) {
+    return '$name さんからメッセージが届きました';
+  }
+
+  @override
+  String get archivedChats => 'アーカイブされたチャット';
+
+  @override
+  String get archivedChatsSubtitle => 'アーカイブした会話を表示';
+
+  @override
+  String get emptyArchivedChats => 'アーカイブされたチャットはありません';
+
+  @override
+  String get webNoChatSelected => '会話を選択してチャットを始めましょう';
+
+  @override
+  String get endToEndEncrypted => 'エンドツーエンド暗号化';
+
+  @override
+  String get chatInfoCategory => 'チャット詳細';
+
+  @override
+  String get customizeChatCategory => 'チャットをカスタマイズ';
+
+  @override
+  String get filesAndMediaCategory => 'メディア、ファイル、リンク';
+
+  @override
+  String get privacyAndSupportCategory => 'プライバシーとサポート';
+
+  @override
+  String get callSelectMember => '通話するメンバーを選択';
+
+  @override
+  String get profileHideInfo => '個人情報を非表示';
+
+  @override
+  String get profileInfoHidden => '個人情報は非表示になっています';
+
+  @override
+  String get profileGender => '性別';
+
+  @override
+  String get profilePhone => '電話番号';
+
+  @override
+  String get profileBio => '自己紹介';
+
+  @override
+  String get profileDateOfBirth => '生年月日';
+
+  @override
+  String get profileEditMode => 'プロフィール編集';
+
+  @override
+  String get profileSave => '保存';
+
+  @override
+  String get actionMessage => 'メッセージ';
+
+  @override
+  String get actionAddFriend => '友達追加';
+
+  @override
+  String get actionBlock => 'ブロック';
 }

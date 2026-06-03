@@ -766,4 +766,76 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get mutedLabel => 'Sourdine';
+
+  @override
+  String get newNotificationTitle => 'Nouveau message';
+
+  @override
+  String newNotificationBody(String name) {
+    return '$name vous a envoyé un message';
+  }
+
+  @override
+  String get archivedChats => 'Discussions archivées';
+
+  @override
+  String get archivedChatsSubtitle => 'Voir les conversations archivées';
+
+  @override
+  String get emptyArchivedChats => 'Aucune discussion archivée';
+
+  @override
+  String get webNoChatSelected =>
+      'Sélectionnez une conversation pour commencer à discuter';
+
+  @override
+  String get endToEndEncrypted => 'Chiffrement de bout en bout';
+
+  @override
+  String get chatInfoCategory => 'Détails de la discussion';
+
+  @override
+  String get customizeChatCategory => 'Personnaliser la discussion';
+
+  @override
+  String get filesAndMediaCategory => 'Médias, fichiers et liens';
+
+  @override
+  String get privacyAndSupportCategory => 'Confidentialité et assistance';
+
+  @override
+  String get callSelectMember => 'Sélectionner un membre à appeler';
+
+  @override
+  String get profileHideInfo => 'Masquer les informations personnelles';
+
+  @override
+  String get profileInfoHidden => 'Les informations personnelles sont masquées';
+
+  @override
+  String get profileGender => 'Genre';
+
+  @override
+  String get profilePhone => 'Numéro de téléphone';
+
+  @override
+  String get profileBio => 'Biographie';
+
+  @override
+  String get profileDateOfBirth => 'Date de naissance';
+
+  @override
+  String get profileEditMode => 'Modifier le profil';
+
+  @override
+  String get profileSave => 'Enregistrer';
+
+  @override
+  String get actionMessage => 'Message';
+
+  @override
+  String get actionAddFriend => 'Ajouter un ami';
+
+  @override
+  String get actionBlock => 'Bloquer';
 }

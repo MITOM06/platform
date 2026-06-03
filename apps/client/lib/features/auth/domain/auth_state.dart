@@ -10,6 +10,9 @@ class UserModel {
   final String? coverPhoto;
   final int? friendsCount;
   final DateTime? dateOfBirth;
+  final String? phoneNumber;
+  final String? gender;
+  final bool hideInfo;
 
   const UserModel({
     required this.id,
@@ -20,12 +23,15 @@ class UserModel {
     this.coverPhoto,
     this.friendsCount,
     this.dateOfBirth,
+    this.phoneNumber,
+    this.gender,
+    this.hideInfo = false,
   });
 
   factory UserModel.fromJson(Map<String, dynamic> json) {
     return UserModel(
       id: json['_id'] as String? ?? json['id'] as String,
-      email: json['email'] as String,
+      email: json['email'] as String? ?? '',
       displayName: json['displayName'] as String,
       avatarUrl: json['avatarUrl'] as String?,
       bio: json['bio'] as String?,
@@ -34,6 +40,9 @@ class UserModel {
       dateOfBirth: json['dateOfBirth'] != null
           ? DateTime.tryParse(json['dateOfBirth'] as String)
           : null,
+      phoneNumber: json['phoneNumber'] as String?,
+      gender: json['gender'] as String?,
+      hideInfo: json['hideInfo'] as bool? ?? false,
     );
   }
 
@@ -46,6 +55,9 @@ class UserModel {
         if (coverPhoto != null) 'coverPhoto': coverPhoto,
         if (friendsCount != null) 'friendsCount': friendsCount,
         if (dateOfBirth != null) 'dateOfBirth': dateOfBirth!.toIso8601String(),
+        if (phoneNumber != null) 'phoneNumber': phoneNumber,
+        if (gender != null) 'gender': gender,
+        'hideInfo': hideInfo,
       };
 }
 

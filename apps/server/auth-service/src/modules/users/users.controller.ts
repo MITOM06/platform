@@ -19,7 +19,7 @@ export class UsersController {
   @Patch('me')
   updateMe(
     @Req() req: any,
-    @Body() body: { displayName?: string; avatarUrl?: string; bio?: string; coverPhoto?: string; dateOfBirth?: string },
+    @Body() body: { displayName?: string; avatarUrl?: string; bio?: string; coverPhoto?: string; dateOfBirth?: string; phoneNumber?: string; gender?: string; hideInfo?: boolean },
   ) {
     return this.usersService.updateProfile(req.user.sub, body);
   }
@@ -71,10 +71,18 @@ export class UsersController {
   }
 
   @Get(':id')
-  async findById(@Param('id') id: string) {
+  async findById(@Req() req: any, @Param('id') id: string) {
     const user = await this.usersService.findById(id);
     if (!user) return user;
     const friendsCount = await this.friendsService.countAccepted(id);
-    return { ...user.toObject(), friendsCount };
+    const obj: any = { ...user.toObject(), friendsCount };
+    if (req.user.sub !== id && obj.hideInfo) {
+      delete obj.email;
+      delete obj.phoneNumber;
+      delete obj.dateOfBirth;
+      delete obj.gender;
+      delete obj.bio;
+    }
+    return obj;
   }
 }

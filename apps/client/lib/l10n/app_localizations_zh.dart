@@ -748,4 +748,75 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get mutedLabel => '已静音';
+
+  @override
+  String get newNotificationTitle => '新消息';
+
+  @override
+  String newNotificationBody(String name) {
+    return '$name 给你发了一条消息';
+  }
+
+  @override
+  String get archivedChats => '已归档的聊天';
+
+  @override
+  String get archivedChatsSubtitle => '查看已归档的对话';
+
+  @override
+  String get emptyArchivedChats => '没有已归档的聊天';
+
+  @override
+  String get webNoChatSelected => '选择一个会话开始聊天';
+
+  @override
+  String get endToEndEncrypted => '端对端加密';
+
+  @override
+  String get chatInfoCategory => '聊天详情';
+
+  @override
+  String get customizeChatCategory => '自定义聊天';
+
+  @override
+  String get filesAndMediaCategory => '媒体、文件和链接';
+
+  @override
+  String get privacyAndSupportCategory => '隐私与支持';
+
+  @override
+  String get callSelectMember => '选择成员拨打电话';
+
+  @override
+  String get profileHideInfo => '隐藏个人信息';
+
+  @override
+  String get profileInfoHidden => '个人信息已被隐藏';
+
+  @override
+  String get profileGender => '性别';
+
+  @override
+  String get profilePhone => '电话号码';
+
+  @override
+  String get profileBio => '简介';
+
+  @override
+  String get profileDateOfBirth => '出生日期';
+
+  @override
+  String get profileEditMode => '编辑资料';
+
+  @override
+  String get profileSave => '保存';
+
+  @override
+  String get actionMessage => '发消息';
+
+  @override
+  String get actionAddFriend => '加好友';
+
+  @override
+  String get actionBlock => '拉黑';
 }

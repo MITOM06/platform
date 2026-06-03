@@ -3,9 +3,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/l10n/l10n_ext.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../home/domain/home_providers.dart';
+import '../../../profile/ui/widgets/user_profile_dialog.dart';
 import '../../domain/chat_provider.dart';
 import '../../domain/chat_state.dart';
 import 'conversation_avatar.dart';
+import 'conversation_info_sidebar.dart';
 
 class ChatScreenAppBar extends ConsumerWidget implements PreferredSizeWidget {
   final String conversationId;
@@ -51,9 +54,13 @@ class ChatScreenAppBar extends ConsumerWidget implements PreferredSizeWidget {
         : null;
 
     final resolvedName = profileAsync?.valueOrNull?.displayName;
+    final nicknames = ref.watch(nicknamesProvider(conversationId));
+    final dmNickname = (!isGroup && otherUserId != null) ? nicknames[otherUserId] : null;
     final displayName = isGroup
         ? (conv?.name ?? context.l10n.conversationDefault)
-        : (resolvedName ?? context.l10n.chatDefaultTitle);
+        : (dmNickname != null && dmNickname.isNotEmpty
+            ? dmNickname
+            : (resolvedName ?? context.l10n.chatDefaultTitle));
     final avatarLetter =
         displayName.isNotEmpty && displayName != context.l10n.chatDefaultTitle
             ? displayName[0].toUpperCase()
@@ -72,7 +79,17 @@ class ChatScreenAppBar extends ConsumerWidget implements PreferredSizeWidget {
       child: AppBar(
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
-          onPressed: () => context.pop(),
+          // On the web/tablet master-detail layout the chat lives in the right
+          // pane (it is NOT a pushed route), so popping would tear down the whole
+          // ResponsiveHomeLayout. Clear the selection to return to the empty pane
+          // instead; on mobile the chat is a pushed route, so we pop normally.
+          onPressed: () {
+            if (MediaQuery.of(context).size.width >= kWebBreakpoint) {
+              ref.read(selectedConversationIdProvider.notifier).state = null;
+            } else {
+              context.pop();
+            }
+          },
         ),
         titleSpacing: 0,
         title: Row(
@@ -82,7 +99,7 @@ class ChatScreenAppBar extends ConsumerWidget implements PreferredSizeWidget {
                 if (isGroup) {
                   context.push('/group-info/$conversationId');
                 } else if (otherUserId != null && otherUserId.isNotEmpty) {
-                  context.push('/user/$otherUserId?conversationId=$conversationId');
+                  showUserProfileDialog(context, otherUserId);
                 }
               },
               child: ConversationAvatar(
@@ -146,62 +163,64 @@ class ChatScreenAppBar extends ConsumerWidget implements PreferredSizeWidget {
           ],
         ),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.search_rounded, color: Colors.white, size: 22),
-            tooltip: context.l10n.searchMessages,
-            onPressed: onSearch,
-          ),
           if (!isGroup && otherUserId != null) ...[
             IconButton(
               icon: const Icon(Icons.call_outlined, color: Colors.white, size: 22),
               onPressed: () => context.push('/call', extra: {
                 'targetId': otherUserId,
-                'targetName': resolvedName ?? 'User',
+                'targetName': displayName,
                 'conversationId': conversationId,
                 'isCaller': true,
               }),
             ),
             IconButton(
-              icon:
-                  const Icon(Icons.videocam_outlined, color: Colors.white, size: 24),
+              icon: const Icon(Icons.videocam_outlined, color: Colors.white, size: 24),
               onPressed: () => context.push('/call', extra: {
                 'targetId': otherUserId,
-                'targetName': resolvedName ?? 'User',
+                'targetName': displayName,
                 'conversationId': conversationId,
                 'isCaller': true,
               }),
             ),
           ],
-          PopupMenuButton<String>(
-            icon: const Icon(Icons.more_vert_rounded, color: Colors.white),
-            color: AppTheme.darkSurface,
-            onSelected: (value) {
-              switch (value) {
-                case 'group':
-                  context.push('/group-info/$conversationId');
-                case 'clear':
-                  onClearHistory();
-                case 'auto':
-                  onChooseAutoDelete();
-                case 'delete':
-                  onDeleteConversation();
+          if (isGroup) ...[
+            IconButton(
+              icon: const Icon(Icons.call_outlined, color: Colors.white, size: 22),
+              onPressed: () => _showGroupCallPicker(context, ref, conv, currentUserId),
+            ),
+            IconButton(
+              icon: const Icon(Icons.videocam_outlined, color: Colors.white, size: 24),
+              onPressed: () => _showGroupCallPicker(context, ref, conv, currentUserId),
+            ),
+          ],
+          Builder(
+            builder: (ctx) {
+              final isWide = MediaQuery.of(ctx).size.width >= kWebBreakpoint;
+              if (isWide) {
+                final sidebarOpen = ref.watch(showChatInfoSidebarProvider);
+                return IconButton(
+                  icon: Icon(
+                    sidebarOpen ? Icons.info : Icons.info_outline,
+                    color: Colors.white,
+                    size: 22,
+                  ),
+                  onPressed: () => ref
+                      .read(showChatInfoSidebarProvider.notifier)
+                      .state = !sidebarOpen,
+                );
               }
+              return IconButton(
+                icon: const Icon(Icons.info_outline, color: Colors.white, size: 22),
+                onPressed: () {
+                  Navigator.of(context).push(MaterialPageRoute(
+                    builder: (context) => Scaffold(
+                      appBar: AppBar(title: Text(context.l10n.chatInfoCategory)),
+                      body: ConversationInfoSidebar(conversationId: conversationId),
+                    ),
+                  ));
+                },
+              );
             },
-            itemBuilder: (ctx) => [
-              if (isGroup)
-                PopupMenuItem(
-                  value: 'group',
-                  child: Text(ctx.l10n.groupInfo),
-                ),
-              PopupMenuItem(
-                  value: 'clear', child: Text(ctx.l10n.clearHistory)),
-              PopupMenuItem(
-                  value: 'auto',
-                  child: Text(ctx.l10n.disappearingMessages)),
-              PopupMenuItem(
-                  value: 'delete',
-                  child: Text(ctx.l10n.deleteConversation)),
-            ],
           ),
         ],
       ),
@@ -221,5 +240,77 @@ class ChatScreenAppBar extends ConsumerWidget implements PreferredSizeWidget {
     } catch (_) {
       return context.l10n.statusOffline;
     }
+  }
+
+  void _showGroupCallPicker(
+    BuildContext context,
+    WidgetRef ref,
+    ConversationModel? conv,
+    String currentUserId,
+  ) {
+    if (conv == null) return;
+    final others = conv.participants.where((p) => p != currentUserId).toList();
+    showDialog(
+      context: context,
+      builder: (ctx) => _GroupCallPickerDialog(
+        others: others,
+        conversationId: conv.id,
+      ),
+    );
+  }
+}
+
+class _GroupCallPickerDialog extends ConsumerWidget {
+  final List<String> others;
+  final String conversationId;
+
+  const _GroupCallPickerDialog({
+    required this.others,
+    required this.conversationId,
+  });
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return AlertDialog(
+      title: Text(context.l10n.callSelectMember),
+      content: SizedBox(
+        width: double.maxFinite,
+        child: ListView.builder(
+          shrinkWrap: true,
+          itemCount: others.length,
+          itemBuilder: (ctx, i) {
+            final userId = others[i];
+            final profileAsync = ref.watch(userProfileProvider(userId));
+            final name = profileAsync.valueOrNull?.displayName ?? userId;
+            final avatarUrl = profileAsync.valueOrNull?.avatarUrl;
+            return ListTile(
+              leading: CircleAvatar(
+                backgroundImage:
+                    avatarUrl != null ? NetworkImage(avatarUrl) : null,
+                child: avatarUrl == null
+                    ? Text(name.isNotEmpty ? name[0].toUpperCase() : '?')
+                    : null,
+              ),
+              title: Text(name),
+              onTap: () {
+                Navigator.of(ctx).pop();
+                GoRouter.of(context).push('/call', extra: {
+                  'targetId': userId,
+                  'targetName': name,
+                  'conversationId': conversationId,
+                  'isCaller': true,
+                });
+              },
+            );
+          },
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: Text(context.l10n.actionCancel),
+        ),
+      ],
+    );
   }
 }

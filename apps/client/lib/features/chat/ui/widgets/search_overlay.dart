@@ -6,7 +6,9 @@ import 'package:intl/intl.dart';
 import '../../../../core/l10n/l10n_ext.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../data/chat_repository.dart';
+import '../../domain/chat_provider.dart';
 import '../../domain/chat_state.dart';
+import 'conversation_avatar.dart';
 
 class SearchOverlay extends ConsumerStatefulWidget {
   final String conversationId;
@@ -59,7 +61,7 @@ class _SearchOverlayState extends ConsumerState<SearchOverlay> {
           .searchMessages(widget.conversationId, q);
       if (!mounted) return;
       setState(() {
-        _results = res;
+        _results = res.where((m) => !m.isSystem).toList();
         _loading = false;
         _searched = true;
       });
@@ -76,8 +78,17 @@ class _SearchOverlayState extends ConsumerState<SearchOverlay> {
   @override
   Widget build(BuildContext context) {
     final locale = Localizations.localeOf(context).languageCode;
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final textColor = isDark ? Colors.white : Colors.black87;
+    final mutedColor = isDark
+        ? Colors.white.withValues(alpha: 0.3)
+        : Colors.black.withValues(alpha: 0.4);
+    final dividerColor = isDark
+        ? Colors.white12
+        : Colors.black.withValues(alpha: 0.08);
     return Container(
-      color: AppTheme.darkBackground,
+      color: theme.scaffoldBackgroundColor,
       child: SafeArea(
         child: Column(
           children: [
@@ -86,7 +97,7 @@ class _SearchOverlayState extends ConsumerState<SearchOverlay> {
               child: Row(
                 children: [
                   IconButton(
-                    icon: const Icon(Icons.arrow_back_rounded, color: Colors.white),
+                    icon: Icon(Icons.arrow_back_rounded, color: textColor),
                     onPressed: widget.onClose,
                   ),
                   Expanded(
@@ -94,11 +105,10 @@ class _SearchOverlayState extends ConsumerState<SearchOverlay> {
                       controller: _ctrl,
                       autofocus: true,
                       onChanged: _onChanged,
-                      style: const TextStyle(color: Colors.white, fontSize: 15),
+                      style: TextStyle(color: textColor, fontSize: 15),
                       decoration: InputDecoration(
                         hintText: context.l10n.searchHint,
-                        hintStyle: TextStyle(
-                            color: Colors.white.withValues(alpha: 0.3)),
+                        hintStyle: TextStyle(color: mutedColor),
                         border: InputBorder.none,
                       ),
                     ),
@@ -106,7 +116,7 @@ class _SearchOverlayState extends ConsumerState<SearchOverlay> {
                 ],
               ),
             ),
-            const Divider(height: 1, color: Colors.white12),
+            Divider(height: 1, color: dividerColor),
             Expanded(
               child: _loading
                   ? const Center(
@@ -119,7 +129,7 @@ class _SearchOverlayState extends ConsumerState<SearchOverlay> {
                       ? Center(
                           child: Text(
                             context.l10n.searchNoResults,
-                            style: const TextStyle(color: Colors.white54),
+                            style: TextStyle(color: mutedColor),
                           ),
                         )
                       : ListView.builder(
@@ -129,22 +139,11 @@ class _SearchOverlayState extends ConsumerState<SearchOverlay> {
                             final time = DateFormat.yMMMd(locale)
                                 .add_Hm()
                                 .format(m.createdAt.toLocal());
-                            return ListTile(
-                              leading: const Icon(Icons.message_outlined,
-                                  color: AppTheme.ponCyan),
-                              title: Text(
-                                m.content,
-                                maxLines: 2,
-                                overflow: TextOverflow.ellipsis,
-                                style: const TextStyle(color: Colors.white),
-                              ),
-                              subtitle: Text(
-                                time,
-                                style: TextStyle(
-                                  color: Colors.white.withValues(alpha: 0.4),
-                                  fontSize: 11,
-                                ),
-                              ),
+                            return _SearchResultTile(
+                              message: m,
+                              time: time,
+                              textColor: textColor,
+                              mutedColor: mutedColor,
                               onTap: () => widget.onJump(m.id),
                             );
                           },
@@ -153,6 +152,48 @@ class _SearchOverlayState extends ConsumerState<SearchOverlay> {
           ],
         ),
       ),
+    );
+  }
+}
+
+class _SearchResultTile extends ConsumerWidget {
+  final MessageModel message;
+  final String time;
+  final Color textColor;
+  final Color mutedColor;
+  final VoidCallback onTap;
+
+  const _SearchResultTile({
+    required this.message,
+    required this.time,
+    required this.textColor,
+    required this.mutedColor,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final profileAsync = ref.watch(userProfileProvider(message.senderId));
+    final profile = profileAsync.valueOrNull;
+    final name = profile?.displayName ?? '';
+    final letter = name.isNotEmpty ? name[0].toUpperCase() : '?';
+    return ListTile(
+      leading: ConversationAvatar(
+        avatarUrl: profile?.avatarUrl,
+        fallbackLetter: letter,
+        size: 38,
+      ),
+      title: Text(
+        message.content,
+        maxLines: 2,
+        overflow: TextOverflow.ellipsis,
+        style: TextStyle(color: textColor),
+      ),
+      subtitle: Text(
+        time,
+        style: TextStyle(color: mutedColor, fontSize: 11),
+      ),
+      onTap: onTap,
     );
   }
 }
