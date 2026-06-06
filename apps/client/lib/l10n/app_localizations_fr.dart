@@ -934,4 +934,38 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get kbChunks => 'segments';
+
+  @override
+  String aiToolCalling(String toolName) {
+    return 'Utilisation de l\'outil : $toolName';
+  }
+
+  @override
+  String get aiToolTrace => 'Journal des outils';
+
+  @override
+  String get toolSearchMessages => 'Recherche de messages...';
+
+  @override
+  String get toolGetUserInfo => 'Récupération des infos utilisateur...';
+
+  @override
+  String get toolSearchKnowledgeBase =>
+      'Recherche dans la base de connaissances...';
+
+  @override
+  String get toolSummarizeConversation => 'Résumé de la conversation...';
+
+  @override
+  String get toolCreateReminder => 'Création d\'un rappel...';
+
+  @override
+  String get reminders => 'Rappels';
+
+  @override
+  String get remindersEmpty =>
+      'Aucun rappel en attente.\nDemandez à PON AI d\'en créer un.';
+
+  @override
+  String get reminderDone => 'Marquer comme fait';
 }

@@ -301,5 +301,22 @@
   "kbError": "Error",
   "kbManage": "Base de conocimiento",
   "kbSources": "fuente(s)",
-  "kbChunks": "fragmentos"
+  "kbChunks": "fragmentos",
+  "aiToolCalling": "Usando herramienta: {toolName}",
+  "@aiToolCalling": {
+    "placeholders": {
+      "toolName": {
+        "type": "String"
+      }
+    }
+  },
+  "aiToolTrace": "Registro de herramientas",
+  "toolSearchMessages": "Buscando mensajes...",
+  "toolGetUserInfo": "Consultando información de usuario...",
+  "toolSearchKnowledgeBase": "Buscando en la base de conocimiento...",
+  "toolSummarizeConversation": "Resumiendo conversación...",
+  "toolCreateReminder": "Creando recordatorio...",
+  "reminders": "Recordatorios",
+  "remindersEmpty": "Sin recordatorios pendientes.\nPídele a PON AI que configure uno.",
+  "reminderDone": "Marcar como completado"
 }

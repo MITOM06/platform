@@ -9,6 +9,8 @@ import org.springframework.data.redis.connection.MessageListener;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Component;
 
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @Component
@@ -44,20 +46,35 @@ public class AiResponseListener implements MessageListener {
                 }
                 case "AI_STREAM_DONE" -> {
                     String fullContent = (String) payload.get("fullContent");
+                    @SuppressWarnings("unchecked")
+                    List<Map<String, Object>> toolTrace =
+                        (List<Map<String, Object>>) payload.get("toolTrace");
                     if (fullContent != null && !fullContent.isBlank()) {
                         MessageResponse saved = messageService.saveAiMessage(convId, fullContent);
                         messagingTemplate.convertAndSend(topic, saved);
                     }
-                    messagingTemplate.convertAndSend(topic, Map.of(
-                        "type", "AI_STREAM_DONE",
-                        "senderId", AiConstants.AI_BOT_USER_ID,
-                        "conversationId", convId));
+                    Map<String, Object> doneEvent = new HashMap<>();
+                    doneEvent.put("type", "AI_STREAM_DONE");
+                    doneEvent.put("senderId", AiConstants.AI_BOT_USER_ID);
+                    doneEvent.put("conversationId", convId);
+                    if (toolTrace != null) doneEvent.put("toolTrace", toolTrace);
+                    messagingTemplate.convertAndSend(topic, doneEvent);
                 }
                 case "AI_STREAM_ERROR" -> {
                     String error = (String) payload.getOrDefault("error", "AI is temporarily unavailable.");
                     messagingTemplate.convertAndSend(topic, Map.of(
                         "type", "AI_STREAM_ERROR",
                         "error", error,
+                        "senderId", AiConstants.AI_BOT_USER_ID,
+                        "conversationId", convId));
+                }
+                case "AI_TOOL_CALL" -> {
+                    String toolName = (String) payload.getOrDefault("toolName", "");
+                    String inputSummary = (String) payload.getOrDefault("inputSummary", "");
+                    messagingTemplate.convertAndSend(topic, Map.of(
+                        "type", "AI_TOOL_CALL",
+                        "toolName", toolName,
+                        "inputSummary", inputSummary,
                         "senderId", AiConstants.AI_BOT_USER_ID,
                         "conversationId", convId));
                 }

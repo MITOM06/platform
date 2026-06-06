@@ -279,7 +279,7 @@ class ConversationsNotifier extends _$ConversationsNotifier {
 
     final context =
         ref.read(appRouterProvider).routerDelegate.navigatorKey.currentContext;
-    if (context == null) return;
+    if (context == null || !context.mounted) return;
     final l10n = context.l10n;
     final name = senderName.isNotEmpty ? senderName : l10n.conversationDefault;
 
@@ -652,6 +652,13 @@ class ChatNotifier extends _$ChatNotifier {
 
     final updated = List<MessageModel>.from(current.messages);
     switch (type) {
+      case 'AI_TOOL_CALL':
+        final toolName = event['toolName'] as String? ?? '';
+        if (toolName.isNotEmpty) {
+          final current2 = current.messages[idx];
+          final tools = List<String>.from(current2.activeTools)..add(toolName);
+          updated[idx] = current2.copyWith(activeTools: tools);
+        }
       case 'AI_STREAM_CHUNK':
         final chunk = event['chunk'] as String? ?? '';
         updated[idx] = current.messages[idx].copyWith(
@@ -665,16 +672,24 @@ class ChatNotifier extends _$ChatNotifier {
             .map((s) => s['documentId'] as String? ?? '')
             .where((id) => id.isNotEmpty)
             .toList();
+        final rawTrace = event['toolTrace'] as List?;
+        final toolTrace = rawTrace
+            ?.whereType<Map<String, dynamic>>()
+            .map((t) => ToolTraceEntry.fromJson(t))
+            .toList();
         updated[idx] = current.messages[idx].copyWith(
           isStreaming: false,
           isThinking: false,
           sources: sources,
+          toolTrace: toolTrace,
+          activeTools: [],
         );
       case 'AI_STREAM_ERROR':
         updated[idx] = current.messages[idx].copyWith(
           content: kAiErrorSentinel,
           isStreaming: false,
           isThinking: false,
+          activeTools: [],
         );
     }
     state = AsyncData(current.copyWith(messages: updated));

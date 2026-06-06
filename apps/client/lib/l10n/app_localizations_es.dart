@@ -931,4 +931,38 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get kbChunks => 'fragmentos';
+
+  @override
+  String aiToolCalling(String toolName) {
+    return 'Usando herramienta: $toolName';
+  }
+
+  @override
+  String get aiToolTrace => 'Registro de herramientas';
+
+  @override
+  String get toolSearchMessages => 'Buscando mensajes...';
+
+  @override
+  String get toolGetUserInfo => 'Consultando información de usuario...';
+
+  @override
+  String get toolSearchKnowledgeBase =>
+      'Buscando en la base de conocimiento...';
+
+  @override
+  String get toolSummarizeConversation => 'Resumiendo conversación...';
+
+  @override
+  String get toolCreateReminder => 'Creando recordatorio...';
+
+  @override
+  String get reminders => 'Recordatorios';
+
+  @override
+  String get remindersEmpty =>
+      'Sin recordatorios pendientes.\nPídele a PON AI que configure uno.';
+
+  @override
+  String get reminderDone => 'Marcar como completado';
 }

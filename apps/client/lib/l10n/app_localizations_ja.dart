@@ -912,4 +912,36 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get kbChunks => 'チャンク';
+
+  @override
+  String aiToolCalling(String toolName) {
+    return 'ツールを使用中：$toolName';
+  }
+
+  @override
+  String get aiToolTrace => 'ツールログ';
+
+  @override
+  String get toolSearchMessages => 'メッセージを検索中...';
+
+  @override
+  String get toolGetUserInfo => 'ユーザー情報を取得中...';
+
+  @override
+  String get toolSearchKnowledgeBase => 'ナレッジベースを検索中...';
+
+  @override
+  String get toolSummarizeConversation => '会話を要約中...';
+
+  @override
+  String get toolCreateReminder => 'リマインダーを作成中...';
+
+  @override
+  String get reminders => 'リマインダー';
+
+  @override
+  String get remindersEmpty => '保留中のリマインダーはありません。\nPON AIにリマインダーを設定してもらいましょう。';
+
+  @override
+  String get reminderDone => '完了としてマーク';
 }

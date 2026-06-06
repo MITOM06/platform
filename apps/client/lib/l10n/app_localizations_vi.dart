@@ -923,4 +923,37 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get kbChunks => 'đoạn';
+
+  @override
+  String aiToolCalling(String toolName) {
+    return 'Đang dùng công cụ: $toolName';
+  }
+
+  @override
+  String get aiToolTrace => 'Nhật ký công cụ';
+
+  @override
+  String get toolSearchMessages => 'Đang tìm kiếm tin nhắn...';
+
+  @override
+  String get toolGetUserInfo => 'Đang tra cứu thông tin người dùng...';
+
+  @override
+  String get toolSearchKnowledgeBase => 'Đang tìm kiếm cơ sở tri thức...';
+
+  @override
+  String get toolSummarizeConversation => 'Đang tóm tắt cuộc trò chuyện...';
+
+  @override
+  String get toolCreateReminder => 'Đang tạo nhắc nhở...';
+
+  @override
+  String get reminders => 'Nhắc nhở';
+
+  @override
+  String get remindersEmpty =>
+      'Không có nhắc nhở nào.\nHãy nhờ PON AI đặt nhắc nhở cho bạn.';
+
+  @override
+  String get reminderDone => 'Đánh dấu hoàn thành';
 }

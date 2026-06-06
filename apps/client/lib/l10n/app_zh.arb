@@ -301,5 +301,22 @@
   "kbError": "错误",
   "kbManage": "知识库",
   "kbSources": "来源",
-  "kbChunks": "块"
+  "kbChunks": "块",
+  "aiToolCalling": "正在使用工具：{toolName}",
+  "@aiToolCalling": {
+    "placeholders": {
+      "toolName": {
+        "type": "String"
+      }
+    }
+  },
+  "aiToolTrace": "工具日志",
+  "toolSearchMessages": "正在搜索消息...",
+  "toolGetUserInfo": "正在查询用户信息...",
+  "toolSearchKnowledgeBase": "正在搜索知识库...",
+  "toolSummarizeConversation": "正在总结对话...",
+  "toolCreateReminder": "正在创建提醒...",
+  "reminders": "提醒",
+  "remindersEmpty": "暂无待处理提醒。\n请让 PON AI 为您设置提醒。",
+  "reminderDone": "标记为完成"
 }

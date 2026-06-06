@@ -11,6 +11,7 @@ import 'image_content.dart';
 import 'message_bubble_parts.dart';
 import 'streaming_ai_bubble.dart';
 import 'text_content.dart';
+import 'tool_trace_panel.dart';
 import 'voice_message_bubble.dart';
 
 class MessageBubble extends ConsumerWidget {
@@ -197,6 +198,7 @@ class MessageBubble extends ConsumerWidget {
                         StreamingAiBubble(
                           content: message.content,
                           isThinking: message.isThinking,
+                          activeTools: message.activeTools,
                         )
                       else if (message.isAiError)
                         Row(
@@ -215,10 +217,19 @@ class MessageBubble extends ConsumerWidget {
                           ],
                         )
                       else if (message.isAiMessage && !message.isStreaming)
-                        FinalizedAiBubble(
-                          content: message.content,
-                          sources: message.sources,
-                          conversationId: message.conversationId,
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            FinalizedAiBubble(
+                              content: message.content,
+                              sources: message.sources,
+                              conversationId: message.conversationId,
+                            ),
+                            if (message.toolTrace != null &&
+                                message.toolTrace!.isNotEmpty)
+                              ToolTracePanel(trace: message.toolTrace!),
+                          ],
                         )
                       else
                         TextContent(

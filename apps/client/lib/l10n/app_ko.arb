@@ -301,5 +301,22 @@
   "kbError": "오류",
   "kbManage": "지식 베이스",
   "kbSources": "출처",
-  "kbChunks": "청크"
+  "kbChunks": "청크",
+  "aiToolCalling": "도구 사용 중: {toolName}",
+  "@aiToolCalling": {
+    "placeholders": {
+      "toolName": {
+        "type": "String"
+      }
+    }
+  },
+  "aiToolTrace": "도구 로그",
+  "toolSearchMessages": "메시지 검색 중...",
+  "toolGetUserInfo": "사용자 정보 조회 중...",
+  "toolSearchKnowledgeBase": "지식 베이스 검색 중...",
+  "toolSummarizeConversation": "대화 요약 중...",
+  "toolCreateReminder": "알림 생성 중...",
+  "reminders": "알림",
+  "remindersEmpty": "대기 중인 알림이 없습니다.\nPON AI에게 알림을 설정해 달라고 해보세요.",
+  "reminderDone": "완료로 표시"
 }

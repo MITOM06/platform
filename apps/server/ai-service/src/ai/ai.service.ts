@@ -6,6 +6,8 @@ import { MemoryService } from '../memory/memory.service';
 import { KbProcessorService } from '../kb/kb-processor.service';
 import { EmbeddingService } from '../kb/embedding.service';
 import { VectorStoreService } from '../kb/vector-store.service';
+import { ToolRegistryService } from '../tools/tool-registry.service';
+import { ToolContext } from '../tools/tool.interface';
 
 export interface AiRequestPayload {
   conversationId: string;
@@ -19,6 +21,14 @@ interface RagSource {
   documentId: string;
   score: number;
 }
+
+interface ToolTraceEntry {
+  toolName: string;
+  inputSummary: string;
+  resultSummary: string;
+}
+
+const MAX_ITER = 5;
 
 @Injectable()
 export class AiService {
@@ -36,6 +46,7 @@ export class AiService {
     private readonly kbProcessor: KbProcessorService,
     private readonly embeddingService: EmbeddingService,
     private readonly vectorStore: VectorStoreService,
+    private readonly toolRegistry: ToolRegistryService,
   ) {
     this.anthropic = new Anthropic({
       apiKey: this.configService.get<string>('config.anthropic.apiKey'),
@@ -101,37 +112,24 @@ export class AiService {
       );
     }
 
-    const messages: Anthropic.MessageParam[] = [
-      ...history.map((h) => ({ role: h.role, content: h.content })),
-      { role: 'user', content },
-    ];
-
-    let chunksPublished = false;
     try {
-      chunksPublished = await this._streamWithModel(
-        this.primaryModel, systemPrompt, messages, conversationId, false, ragSources,
+      await this._agenticLoop(
+        this.primaryModel, systemPrompt, content, history, conversationId, userId, displayName, ragSources,
       );
     } catch (primaryError) {
       this.logger.error(
         `Primary model (${this.primaryModel}) failed for conversation ${conversationId}`,
         primaryError,
       );
-      if (!chunksPublished) {
-        try {
-          await this._streamWithModel(
-            this.fallbackModel, systemPrompt, messages, conversationId, true, ragSources,
-          );
-        } catch (fallbackError) {
-          this.logger.error(
-            `Fallback model (${this.fallbackModel}) also failed for conversation ${conversationId}`,
-            fallbackError,
-          );
-          await this.publisher.publish(conversationId, {
-            type: 'AI_STREAM_ERROR',
-            error: 'AI is temporarily unavailable.',
-          });
-        }
-      } else {
+      try {
+        await this._agenticLoop(
+          this.fallbackModel, systemPrompt, content, history, conversationId, userId, displayName, ragSources,
+        );
+      } catch (fallbackError) {
+        this.logger.error(
+          `Fallback model (${this.fallbackModel}) also failed for conversation ${conversationId}`,
+          fallbackError,
+        );
         await this.publisher.publish(conversationId, {
           type: 'AI_STREAM_ERROR',
           error: 'AI is temporarily unavailable.',
@@ -152,17 +150,106 @@ export class AiService {
     }
   }
 
-  private async _streamWithModel(
+  private async _agenticLoop(
     model: string,
     system: string,
-    messages: Anthropic.MessageParam[],
+    userContent: string,
+    history: AiRequestPayload['history'],
     conversationId: string,
-    isFallback: boolean,
-    sources: RagSource[] = [],
-  ): Promise<boolean> {
-    let fullText = '';
-    let chunksPublished = false;
+    userId: string,
+    displayName: string,
+    ragSources: RagSource[],
+  ): Promise<void> {
+    const tools = this.toolRegistry.getDefinitions();
+    const ctx: ToolContext = { conversationId, userId, displayName };
+    const toolTrace: ToolTraceEntry[] = [];
 
+    let messages: Anthropic.MessageParam[] = [
+      ...history.map((h) => ({ role: h.role, content: h.content })),
+      { role: 'user', content: userContent },
+    ];
+
+    let iteration = 0;
+    let lastTextContent = '';
+
+    while (iteration < MAX_ITER) {
+      const response = await this.anthropic.messages.create({
+        model,
+        max_tokens: 4096,
+        system,
+        messages,
+        tools: tools as Anthropic.Tool[],
+        tool_choice: { type: 'auto' },
+      });
+
+      // Capture any text in the response for fallback
+      const textBlocks = response.content.filter(
+        (b): b is Anthropic.TextBlock => b.type === 'text',
+      );
+      if (textBlocks.length > 0) {
+        lastTextContent = textBlocks.map((b) => b.text).join('');
+      }
+
+      if (response.stop_reason === 'tool_use') {
+        const toolUseBlocks = response.content.filter(
+          (b): b is Anthropic.ToolUseBlock => b.type === 'tool_use',
+        );
+        const toolResults: Anthropic.ToolResultBlockParam[] = [];
+
+        for (const block of toolUseBlocks) {
+          const inputSummary = JSON.stringify(block.input).slice(0, 100);
+          await this.publisher.publish(conversationId, {
+            type: 'AI_TOOL_CALL',
+            toolName: block.name,
+            inputSummary,
+          });
+
+          const result = await this.toolRegistry.execute(
+            block.name,
+            block.input as Record<string, unknown>,
+            ctx,
+          );
+          toolTrace.push({
+            toolName: block.name,
+            inputSummary,
+            resultSummary: result.slice(0, 200),
+          });
+          toolResults.push({
+            type: 'tool_result',
+            tool_use_id: block.id,
+            content: result,
+          });
+        }
+
+        messages = [
+          ...messages,
+          { role: 'assistant', content: response.content },
+          { role: 'user', content: toolResults },
+        ];
+        iteration++;
+        continue;
+      }
+
+      // stop_reason === 'end_turn' — stream the final text response
+      break;
+    }
+
+    // If MAX_ITER exhausted without end_turn, publish what we have
+    if (iteration >= MAX_ITER) {
+      const fallback =
+        lastTextContent ||
+        "I had trouble completing that action. Please try again.";
+      await this.publisher.publish(conversationId, {
+        type: 'AI_STREAM_DONE',
+        fullContent: fallback,
+        sources: ragSources,
+        toolTrace,
+      });
+      return;
+    }
+
+    // Stream the final answer
+    let fullText = '';
     const stream = this.anthropic.messages.stream({
       model,
       max_tokens: 2048,
@@ -176,7 +263,6 @@ export class AiService {
         chunk.delta.type === 'text_delta'
       ) {
         fullText += chunk.delta.text;
-        chunksPublished = true;
         await this.publisher.publish(conversationId, {
           type: 'AI_STREAM_CHUNK',
           chunk: chunk.delta.text,
@@ -187,13 +273,9 @@ export class AiService {
     await this.publisher.publish(conversationId, {
       type: 'AI_STREAM_DONE',
       fullContent: fullText,
-      sources,
+      sources: ragSources,
+      toolTrace,
     });
-
-    if (isFallback) {
-      this.logger.log(`Fallback model (${model}) succeeded for conversation ${conversationId}`);
-    }
-    return chunksPublished;
   }
 
   private async _generateSummary(

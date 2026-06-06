@@ -199,6 +199,25 @@ const kAiBotUserId = 'ai-bot-000000000000000000000001';
 const kAiErrorSentinel = '__AI_ERROR__';
 
 @immutable
+class ToolTraceEntry {
+  final String toolName;
+  final String inputSummary;
+  final String resultSummary;
+
+  const ToolTraceEntry({
+    required this.toolName,
+    required this.inputSummary,
+    required this.resultSummary,
+  });
+
+  factory ToolTraceEntry.fromJson(Map<String, dynamic> json) => ToolTraceEntry(
+        toolName: json['toolName'] as String? ?? '',
+        inputSummary: json['inputSummary'] as String? ?? '',
+        resultSummary: json['resultSummary'] as String? ?? '',
+      );
+}
+
+@immutable
 class MessageModel {
   final String id;
   final String conversationId;
@@ -222,6 +241,10 @@ class MessageModel {
   final bool isThinking;
   // RAG citation sources — documentIds cited by the AI, from AI_STREAM_DONE payload
   final List<String>? sources;
+  // Tool trace from agentic loop — shown in collapsible panel below finalized AI messages
+  final List<ToolTraceEntry>? toolTrace;
+  // Tools actively executing during streaming (client-only)
+  final List<String> activeTools;
 
   const MessageModel({
     required this.id,
@@ -241,6 +264,8 @@ class MessageModel {
     this.isStreaming = false,
     this.isThinking = false,
     this.sources,
+    this.toolTrace,
+    this.activeTools = const [],
   });
 
   bool get isEdited => editedAt != null;
@@ -317,6 +342,8 @@ class MessageModel {
     bool? isStreaming,
     bool? isThinking,
     List<String>? sources,
+    List<ToolTraceEntry>? toolTrace,
+    List<String>? activeTools,
   }) {
     return MessageModel(
       id: id ?? this.id,
@@ -336,6 +363,8 @@ class MessageModel {
       isStreaming: isStreaming ?? this.isStreaming,
       isThinking: isThinking ?? this.isThinking,
       sources: sources ?? this.sources,
+      toolTrace: toolTrace ?? this.toolTrace,
+      activeTools: activeTools ?? this.activeTools,
     );
   }
 }
