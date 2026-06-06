@@ -856,4 +856,23 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get emojiTab => 'Emoji';
+
+  @override
+  String get aiAssistant => 'Asistente IA';
+
+  @override
+  String get startChatWithAI => 'Chatear con PON AI';
+
+  @override
+  String get aiThinking => 'La IA está pensando...';
+
+  @override
+  String get aiError =>
+      'La IA no está disponible temporalmente. Por favor, inténtelo de nuevo.';
+
+  @override
+  String get aiErrorRetry => 'Reintentar';
+
+  @override
+  String get aiMessageDeleted => 'Mensaje eliminado';
 }

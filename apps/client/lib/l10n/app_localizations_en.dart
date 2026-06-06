@@ -848,4 +848,22 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get emojiTab => 'Emoji';
+
+  @override
+  String get aiAssistant => 'AI Assistant';
+
+  @override
+  String get startChatWithAI => 'Chat with PON AI';
+
+  @override
+  String get aiThinking => 'AI is thinking...';
+
+  @override
+  String get aiError => 'AI is temporarily unavailable. Please try again.';
+
+  @override
+  String get aiErrorRetry => 'Retry';
+
+  @override
+  String get aiMessageDeleted => 'Message deleted';
 }

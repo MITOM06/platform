@@ -840,4 +840,22 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get emojiTab => '이모지';
+
+  @override
+  String get aiAssistant => 'AI 어시스턴트';
+
+  @override
+  String get startChatWithAI => 'PON AI와 채팅';
+
+  @override
+  String get aiThinking => 'AI가 생각 중...';
+
+  @override
+  String get aiError => 'AI를 일시적으로 사용할 수 없습니다. 다시 시도해주세요.';
+
+  @override
+  String get aiErrorRetry => '다시 시도';
+
+  @override
+  String get aiMessageDeleted => '메시지가 삭제되었습니다';
 }

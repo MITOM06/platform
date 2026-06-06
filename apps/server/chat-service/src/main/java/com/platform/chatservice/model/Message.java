@@ -29,7 +29,7 @@ public class Message {
     private String content;
 
     @Builder.Default
-    private String type = "text"; // "text" | "image" | "video" | "system" | "call_log"
+    private String type = "text"; // "text" | "image" | "video" | "file" | "voice" | "sticker" | "system" | "call_log" | "ai"
 
     @Builder.Default
     private List<String> readBy = new ArrayList<>();

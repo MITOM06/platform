@@ -340,6 +340,7 @@ class ChatNotifier extends _$ChatNotifier {
   StreamSubscription<MessageUpdateEvent>? _editSub;
   StreamSubscription<PinnedMessageEvent>? _pinSub;
   StreamSubscription<void>? _reconnectSub;
+  StreamSubscription<Map<String, dynamic>>? _aiStreamSub;
 
   /// Message ids with a reaction request in flight. Guards against rapid
   /// repeated double-taps spamming the server with add/remove churn before the
@@ -382,6 +383,8 @@ class ChatNotifier extends _$ChatNotifier {
 
     _reconnectSub = stomp.reconnects.listen((_) => _catchupMessages());
 
+    _aiStreamSub = stomp.aiStreamEvents.listen(_onAiStreamEvent);
+
     ref.onDispose(() {
       _messageSub?.cancel();
       _typingSub?.cancel();
@@ -391,6 +394,7 @@ class ChatNotifier extends _$ChatNotifier {
       _editSub?.cancel();
       _pinSub?.cancel();
       _reconnectSub?.cancel();
+      _aiStreamSub?.cancel();
       _typingTimer?.cancel();
       for (final t in _typingTimers.values) {
         t.cancel();
@@ -532,6 +536,13 @@ class ChatNotifier extends _$ChatNotifier {
       }
     }
 
+    // Replace finalized AI streaming placeholder with the real persisted message
+    final aiStreamingIdx = message.isAiMessage
+        ? current.messages.indexWhere(
+            (m) => m.isAiMessage && !m.isStreaming && m.senderId == kAiBotUserId,
+          )
+        : -1;
+
     // Replace optimistic message if one matches by senderId + content
     final pendingIdx = current.messages.indexWhere(
       (m) =>
@@ -541,7 +552,9 @@ class ChatNotifier extends _$ChatNotifier {
     );
 
     final List<MessageModel> updated;
-    if (pendingIdx != -1) {
+    if (aiStreamingIdx != -1) {
+      updated = List.from(current.messages)..[aiStreamingIdx] = message;
+    } else if (pendingIdx != -1) {
       updated = List.from(current.messages)..[pendingIdx] = message;
     } else {
       updated = [message, ...current.messages];
@@ -625,6 +638,39 @@ class ChatNotifier extends _$ChatNotifier {
             ))
         .toList();
     state = AsyncData(current.copyWith(pinnedMessages: pinned));
+  }
+
+  void _onAiStreamEvent(Map<String, dynamic> event) {
+    final type = event['type'] as String?;
+    final current = state.valueOrNull;
+    if (current == null || type == null) return;
+
+    final idx = current.messages.indexWhere(
+      (m) => m.isAiMessage && m.isStreaming && m.senderId == kAiBotUserId,
+    );
+    if (idx == -1) return;
+
+    final updated = List<MessageModel>.from(current.messages);
+    switch (type) {
+      case 'AI_STREAM_CHUNK':
+        final chunk = event['chunk'] as String? ?? '';
+        updated[idx] = current.messages[idx].copyWith(
+          content: current.messages[idx].content + chunk,
+          isThinking: false,
+        );
+      case 'AI_STREAM_DONE':
+        updated[idx] = current.messages[idx].copyWith(
+          isStreaming: false,
+          isThinking: false,
+        );
+      case 'AI_STREAM_ERROR':
+        updated[idx] = current.messages[idx].copyWith(
+          content: kAiErrorSentinel,
+          isStreaming: false,
+          isThinking: false,
+        );
+    }
+    state = AsyncData(current.copyWith(messages: updated));
   }
 
   // ----- Reply / reactions / recall / delete actions --------------------
@@ -866,6 +912,8 @@ class ChatNotifier extends _$ChatNotifier {
     }
   }
 
+  static final _aiMentionRe = RegExp(r'@(AI|ponai)\b', caseSensitive: false);
+
   Future<void> sendMessage(String content, {String type = 'text'}) async {
     final current = state.valueOrNull;
     if (current == null) return;
@@ -895,9 +943,29 @@ class ChatNotifier extends _$ChatNotifier {
       isPending: true,
     );
 
+    // If the message mentions @AI, also insert a thinking placeholder
+    final hasAiMention = type == 'text' && _aiMentionRe.hasMatch(content);
+    final aiPlaceholder = hasAiMention
+        ? MessageModel(
+            id: 'ai-pending-${DateTime.now().millisecondsSinceEpoch}',
+            conversationId: conversationId,
+            senderId: kAiBotUserId,
+            content: '',
+            type: 'ai',
+            readBy: const [],
+            createdAt: DateTime.now(),
+            isStreaming: true,
+            isThinking: true,
+          )
+        : null;
+
     // Adding the message also clears the reply composer.
     state = AsyncData(current.copyWith(
-      messages: [optimistic, ...current.messages],
+      messages: [
+        if (aiPlaceholder != null) aiPlaceholder,
+        optimistic,
+        ...current.messages,
+      ],
       clearReplyingTo: true,
     ));
 

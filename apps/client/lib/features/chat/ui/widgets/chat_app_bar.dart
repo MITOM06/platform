@@ -45,6 +45,7 @@ class ChatScreenAppBar extends ConsumerWidget implements PreferredSizeWidget {
         conv?.participants.where((p) => p != currentUserId).toList() ?? [];
     final String? otherUserId =
         (!isGroup && others.isNotEmpty) ? others.first : null;
+    final isAiConversation = otherUserId == kAiBotUserId;
 
     final profileAsync = (otherUserId != null)
         ? ref.watch(userProfileProvider(otherUserId))
@@ -135,6 +136,15 @@ class ChatScreenAppBar extends ConsumerWidget implements PreferredSizeWidget {
                         color: Colors.white.withValues(alpha: 0.4),
                       ),
                     )
+                  else if (isAiConversation)
+                    Text(
+                      context.l10n.aiAssistant,
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: const Color(0xFFB47FFF).withValues(alpha: 0.9),
+                        fontWeight: FontWeight.w500,
+                      ),
+                    )
                   else if (statusAsync != null)
                     statusAsync.when(
                       data: (status) => Text(
@@ -163,7 +173,7 @@ class ChatScreenAppBar extends ConsumerWidget implements PreferredSizeWidget {
           ],
         ),
         actions: [
-          if (!isGroup && otherUserId != null) ...[
+          if (!isGroup && otherUserId != null && !isAiConversation) ...[
             IconButton(
               icon: const Icon(Icons.call_outlined, color: Colors.white, size: 22),
               onPressed: () => context.push('/call', extra: {

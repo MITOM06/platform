@@ -1697,6 +1697,42 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Emoji'**
   String get emojiTab;
+
+  /// No description provided for @aiAssistant.
+  ///
+  /// In en, this message translates to:
+  /// **'AI Assistant'**
+  String get aiAssistant;
+
+  /// No description provided for @startChatWithAI.
+  ///
+  /// In en, this message translates to:
+  /// **'Chat with PON AI'**
+  String get startChatWithAI;
+
+  /// No description provided for @aiThinking.
+  ///
+  /// In en, this message translates to:
+  /// **'AI is thinking...'**
+  String get aiThinking;
+
+  /// No description provided for @aiError.
+  ///
+  /// In en, this message translates to:
+  /// **'AI is temporarily unavailable. Please try again.'**
+  String get aiError;
+
+  /// No description provided for @aiErrorRetry.
+  ///
+  /// In en, this message translates to:
+  /// **'Retry'**
+  String get aiErrorRetry;
+
+  /// No description provided for @aiMessageDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Message deleted'**
+  String get aiMessageDeleted;
 }
 
 class _AppLocalizationsDelegate

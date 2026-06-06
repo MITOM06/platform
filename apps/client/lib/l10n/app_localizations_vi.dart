@@ -849,4 +849,22 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get emojiTab => 'Emoji';
+
+  @override
+  String get aiAssistant => 'Trợ lý AI';
+
+  @override
+  String get startChatWithAI => 'Trò chuyện với PON AI';
+
+  @override
+  String get aiThinking => 'AI đang suy nghĩ...';
+
+  @override
+  String get aiError => 'AI tạm thời không khả dụng. Vui lòng thử lại.';
+
+  @override
+  String get aiErrorRetry => 'Thử lại';
+
+  @override
+  String get aiMessageDeleted => 'Tin nhắn đã bị xóa';
 }

@@ -8,6 +8,7 @@ import com.platform.chatservice.dto.ReactionRequest;
 import com.platform.chatservice.dto.SendMessageRequest;
 import com.platform.chatservice.exception.UnauthorizedException;
 import com.platform.chatservice.security.UserPrincipal;
+import com.platform.chatservice.service.AiRedisPublisher;
 import com.platform.chatservice.service.MessageService;
 import com.platform.chatservice.service.RateLimiterService;
 import lombok.RequiredArgsConstructor;
@@ -18,21 +19,40 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
+import java.util.regex.Pattern;
 
 @RestController
 @RequestMapping("/api/messages")
 @RequiredArgsConstructor
 public class MessageController {
 
+    private static final Pattern AI_MENTION_PATTERN = Pattern.compile("(?i)@(AI|ponai)\\b");
+
     private final MessageService messageService;
     private final SimpMessagingTemplate messagingTemplate;
     private final RateLimiterService rateLimiterService;
+    private final AiRedisPublisher aiRedisPublisher;
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public MessageResponse sendMessage(@RequestBody SendMessageRequest request) {
-        rateLimiterService.checkMessageRate(currentUserId());
-        return messageService.sendMessage(currentUserId(), request);
+        final String uid = currentUserId();
+        rateLimiterService.checkMessageRate(uid);
+        MessageResponse response = messageService.sendMessage(uid, request);
+
+        if (request.content() != null && AI_MENTION_PATTERN.matcher(request.content()).find()) {
+            final String convId = request.conversationId();
+            final String raw = request.content();
+            CompletableFuture.runAsync(() -> {
+                try {
+                    List<Map<String, String>> history = messageService.getAiHistory(uid, convId);
+                    String stripped = raw.replaceAll("(?i)@(AI|ponai)\\b", "").trim();
+                    aiRedisPublisher.publishAiRequest(convId, uid, uid, stripped, history);
+                } catch (Exception ignored) {}
+            });
+        }
+        return response;
     }
 
     @PutMapping("/{id}")

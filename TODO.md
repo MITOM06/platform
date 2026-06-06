@@ -6,7 +6,7 @@
 
 ---
 
-## 🔴 SPRINT AI-1 — Basic Bot Member — PENDING
+## 🟡 SPRINT AI-1 — Basic Bot Member — IN PROGRESS
 
 > **Goal:** User types `@AI` in any conversation → AI replies with token-by-token streaming, renders markdown, has fallback on Claude error.
 > **New service:** `apps/server/ai-service/` (NestJS/TypeScript, port 3002)
@@ -15,39 +15,215 @@
 
 ---
 
+## 🔴 FIX NOTES — Sprint QC [2026-06-06] ✅ RESOLVED
+
+### HIGH (file size limit & security gaps) ✅
+- **[chat-service/MessageService.java]** ✅ Extracted to `MessageServiceHelper` (package-private `@Component`). MessageService now 467 lines (was 552).
+- **[client/conversation_tile.dart]** ✅ `_showTileMenu` extracted to `conversation_tile_menu.dart` (`showConversationTileMenu`). conversation_tile.dart now 290 lines (was 448).
+- **[chat-service/AuthChannelInterceptor.java]** ✅ `StompCommand.SUBSCRIBE` intercepted; extracts conversationId from `/topic/conversation/{id}`, calls `ConversationService.getParticipants()`, throws `MessageDeliveryException` if user is not a participant.
+
+### MEDIUM (UX bug / mismatch) ✅
+- **[client/chat_provider.dart]** ✅ `_aiMentionRe` updated to `RegExp(r'@(AI|ponai)\b', caseSensitive: false)` — word boundary prevents `@ai1` from triggering a stuck streaming placeholder.
+
+---
+
 ### PHASE 1 — Infrastructure & Service Setup
 
 ### TASK AI-1.1 — Scaffold ai-service NestJS project `DONE`
-#### SPEC
-- **Infra:** Create `apps/server/ai-service/` — new NestJS project via `pnpm dlx @nestjs/cli new ai-service --package-manager pnpm --skip-git`. Move into correct directory.
-- **Structure:** Create modules: `ai/`, `redis/`, `bot/`, `config/` following structure in `.claude/rules/ai-service.md`.
-- **package.json:** Add dependencies: `@anthropic-ai/sdk`, `ioredis`, `@nestjs/mongoose`, `mongoose`, `@nestjs/config`.
-- **Dockerfile:** Multi-stage — `node:20-alpine` build + `node:20-alpine` runtime. Copy `dist/` and `node_modules/`. EXPOSE 3002.
-- **main.ts:** Bootstrap NestJS app on port `process.env.PORT ?? 3002`.
-- **.env.example:** Create with all env vars defined in `.claude/rules/ai-service.md`.
-- **Test:** `pnpm build` → BUILD SUCCESS. Container builds successfully.
+#### IMPL NOTES
+- NestJS project created at `apps/server/ai-service/` with pnpm
+- Modules: `ai/`, `redis/`, `bot/`, `config/` all created
+- Dependencies installed: `@anthropic-ai/sdk`, `ioredis`, `@nestjs/mongoose`, `mongoose`, `@nestjs/config`, `ioredis-mock` (dev)
+- Multi-stage Dockerfile, `.env.example`, `nest-cli.json` all in place
+- `pnpm build` → SUCCESS ✅
 
-### TASK AI-1.2 — Bot user seed `PENDING`
-#### SPEC
-- **Data model:** Collection `users` (shared with auth-service). Bot user: `{ _id: "ai-bot-000000000000000000000001", displayName: "PON AI", email: "ai@platform.internal", isBot: true, avatarUrl: null }`.
-- **Backend (ai-service):** Create `bot/bot-seed.service.ts` implementing `OnApplicationBootstrap`. Use `mongoose` to connect to `MONGODB_URI`, upsert bot user (idempotent — no error if already exists).
-- **Test:** Run ai-service → verify bot user exists in MongoDB `platform.users`.
+### TASK AI-1.2 — Bot user seed `DONE`
+#### IMPL NOTES
+- `bot/bot-seed.service.ts` created — implements `OnApplicationBootstrap`
+- Upserts `{ _id: "ai-bot-000000000000000000000001", displayName: "PON AI", email: "ai@platform.internal", isBot: true, avatarUrl: null }` into `users` collection on boot
+- Idempotent via `$setOnInsert` + `upsert: true` ✅
 
-### TASK AI-1.3 — Redis pub/sub wiring `PENDING`
-#### SPEC
-- **Backend (ai-service):** Create `redis/redis.module.ts` exporting 2 ioredis clients: `REDIS_SUBSCRIBER` (for `.subscribe()`) and `REDIS_PUBLISHER` (for `.publish()`). Two separate clients because ioredis cannot publish while subscribed.
-- **Backend (ai-service):** `redis/redis-subscriber.service.ts` — implement `OnApplicationBootstrap`, subscribe to `ai:request`, parse JSON payload, call `AiService.handleRequest(payload)`.
-- **Backend (ai-service):** `redis/redis-publisher.service.ts` — method `publish(conversationId, payload)` → `PUBLISH ai:response:{conversationId} JSON.stringify(payload)`.
-- **Backend (chat-service):** In `MessageService.sendMessage()`: after saving message, if content matches `@AI` or `@ai` → publish to Redis channel `ai:request` with correct payload (see ADR-008). Use existing `StringRedisTemplate`. Strip `@AI` from content before sending. Fetch 10 most recent messages as `history`.
-- **Backend (chat-service):** Subscribe to `ai:response:{conversationId}` via `RedisMessageListenerContainer` (Spring Data Redis). On receiving chunk → broadcast STOMP event `AI_STREAM_CHUNK` / `AI_STREAM_DONE` / `AI_STREAM_ERROR` to `/topic/conversation/{id}` with `senderId: AI_BOT_USER_ID`.
-- **Test:** Manually publish to `ai:request` via `redis-cli` → verify ai-service receives and logs the message.
+### TASK AI-1.3 — Redis pub/sub wiring — ai-service side `DONE`, chat-service side `DONE`
+#### IMPL NOTES (ai-service side — DONE)
+- `redis/redis.module.ts`: exports `REDIS_SUBSCRIBER` + `REDIS_PUBLISHER` (two separate ioredis instances)
+- `redis/redis-subscriber.service.ts`: subscribes to `ai:request`, parses JSON, calls `AiService.handleRequest()`
+- `redis/redis-publisher.service.ts`: `publish(conversationId, payload)` → `PUBLISH ai:response:{convId}`
+#### SPEC (chat-service side — PENDING)
+- Create `AiRedisPublisher.java` service: inject `StringRedisTemplate`, method `publishAiRequest(String json)` → `redisTemplate.convertAndSend("ai:request", json)`
+- Create `AiResponseListener.java`: implement Spring `MessageListener`, register with `RedisMessageListenerContainer` using topic pattern `ai:response:*`
+- On message: parse JSON `{type, chunk?, fullContent?, error?}` → forward via `SimpMessagingTemplate` to `/topic/conversation/{convId}` with `senderId = "ai-bot-000000000000000000000001"`
+- On `AI_STREAM_DONE`: also call `messageService.saveAiMessage(convId, fullContent)`
+- Register `RedisMessageListenerContainer` bean in a `@Configuration` class if not already present
 
-### TASK AI-1.4 — Anthropic Claude SDK config `PENDING`
+### TASK AI-1.4 — Anthropic Claude SDK — config `DONE`, streaming `DONE`
+#### IMPL NOTES (config — DONE)
+- `config/configuration.ts`: typed config via `registerAs('config', ...)` — anthropic.apiKey, anthropic.model, anthropic.fallbackModel, bot.userId, bot.displayName, redisChannels.*
+- `ai/ai.service.ts`: `Anthropic` client instantiated with `apiKey` from config
+- `AiService.handleRequest()` is a **stub** — logs the request but does not call Claude yet
+#### SPEC (streaming — PENDING, implement in TASK AI-1.6)
+
+---
+
+### PHASE 2 — Core AI Logic
+
+### TASK AI-1.5 — Detect @AI mention in chat-service `DONE`
 #### SPEC
-- **Backend (ai-service):** Create `config/configuration.ts` exporting typed config object from `ConfigService`.
-- **Backend (ai-service):** Create `ai/ai.module.ts` + `ai/ai.service.ts`. Inject `ConfigService`, instantiate `new Anthropic({ apiKey: configService.get('ANTHROPIC_API_KEY') })`.
-- **Backend (ai-service):** `AiService.handleRequest(payload)`: build system prompt with `displayName`, call `messages.stream()` with `history` + `content`, iterate chunks, publish each `AI_STREAM_CHUNK` via `RedisPublisherService`, finally publish `AI_STREAM_DONE`.
-- **Test:** Unit test mocking Anthropic SDK, verify publish is called correct number of times per chunk.
+- **Files to modify:** `ChatController.java`, `MessageController.java`, `MessageService.java`
+- In `ChatController.send()` (STOMP) and `MessageController.sendMessage()` (REST): after `messageService.sendMessage()` returns, if `dto.getContent()` matches regex `(?i)@(AI|ponai)\b` → call `aiRedisPublisher.publishAiRequest(payload)` **asynchronously** (do NOT block the response).
+- Build payload JSON: `{ conversationId, userId, displayName: principal.getName(), content: stripped_content, history: last10messages }`. Strip `@AI` from content before sending.
+- Fetch history: call `messageRepository.findTop10ByConversationIdOrderByCreatedAtDesc(convId)`, map to `[{role, content}]` (senderId equals bot userId → role `assistant`, otherwise `user`). Reverse to chronological order.
+- **New file:** `service/AiRedisPublisher.java` — `@Service`, inject `StringRedisTemplate`, method `publishAiRequest(String conversationId, String userId, String displayName, String content, List<Map<String,String>> history)` — serializes to JSON via `ObjectMapper`, publishes to `"ai:request"`.
+- **Test:** `ChatControllerTest.java` — mock `AiRedisPublisher`, verify `publishAiRequest` called when content contains `@AI`, not called when it doesn't.
+
+### TASK AI-1.6 — Claude streaming in ai-service `DONE`
+#### SPEC
+- **File to modify:** `apps/server/ai-service/src/ai/ai.service.ts` — replace stub `handleRequest()` with full implementation:
+  1. Build system prompt: `"You are PON AI, an intelligent assistant in the PON chat platform. You are helping {displayName}. Be helpful, concise, and friendly. Respond in the same language the user writes in."`
+  2. Map `payload.history` → `Anthropic.MessageParam[]` (role `user`/`assistant`, content string)
+  3. Call `this.anthropic.messages.stream({ model: primaryModel, max_tokens: 2048, system, messages: [...history, {role:'user', content}] })`
+  4. Accumulate `fullText = ''`. For each `chunk`: if `chunk.type === 'content_block_delta' && chunk.delta.type === 'text_delta'` → `fullText += chunk.delta.text`, call `await this.publisher.publish(convId, { type: 'AI_STREAM_CHUNK', chunk: chunk.delta.text })`
+  5. After loop: `await this.publisher.publish(convId, { type: 'AI_STREAM_DONE', fullContent: fullText })`
+- **Error & fallback:** wrap entire stream in try/catch. On error: if no chunks published yet → retry once with `fallbackModel` (same logic). If retry also fails → `await this.publisher.publish(convId, { type: 'AI_STREAM_ERROR', error: 'AI is temporarily unavailable.' })`. Log error with `this.logger.error()`.
+- **Test:** `src/ai/ai.service.spec.ts` — mock `@anthropic-ai/sdk` and `RedisPublisherService`. Test: (1) chunks published correctly in order, (2) primary error triggers fallback retry, (3) both fail → publishes AI_STREAM_ERROR.
+
+### TASK AI-1.7 — Forward chunks via STOMP (chat-service) `DONE`
+#### SPEC
+- **New file:** `service/AiResponseListener.java` — `@Component`, implement `org.springframework.data.redis.connection.MessageListener`
+- Constructor-inject `SimpMessagingTemplate`, `MessageService`, `ObjectMapper`
+- `onMessage()`: deserialize JSON `{ type, chunk?, fullContent?, error?, conversationId }` — NOTE: include `conversationId` in the payload published by ai-service so listener can route correctly.
+- If `AI_STREAM_CHUNK` → `messagingTemplate.convertAndSend("/topic/conversation/" + convId, Map.of("type","AI_STREAM_CHUNK","chunk",chunk,"senderId",BOT_USER_ID))`
+- If `AI_STREAM_DONE` → call `messageService.saveAiMessage(convId, fullContent)`, then broadcast `Map.of("type","AI_STREAM_DONE","senderId",BOT_USER_ID,"conversationId",convId)`
+- If `AI_STREAM_ERROR` → broadcast `Map.of("type","AI_STREAM_ERROR","error",error,"senderId",BOT_USER_ID)`
+- **New file:** `config/RedisListenerConfig.java` — `@Configuration`, define `RedisMessageListenerContainer` bean, register `AiResponseListener` with `PatternTopic("ai:response:*")`
+- **Constant:** `AI_BOT_USER_ID = "ai-bot-000000000000000000000001"` — define in a `AiConstants.java` or as a static field in `AiResponseListener`
+- **Update `ai-service` publisher:** add `conversationId` field to every published payload so listener can extract it without parsing the channel name.
+- **Test:** `AiResponseListenerTest.java` — mock `SimpMessagingTemplate` + `MessageService`, verify correct `convertAndSend` call for each event type.
+
+### TASK AI-1.8 — Persist AI message to MongoDB `DONE`
+#### SPEC
+- **File to modify:** `service/MessageService.java`
+- Add method `saveAiMessage(String conversationId, String content)`:
+  - Build `Message` with `senderId = "ai-bot-000000000000000000000001"`, `type = "ai"`, `content`, `readBy = []`, `createdAt = Instant.now()`
+  - `messageRepository.save(message)`
+  - Update conversation `lastMessage` and `lastMessageAt` via `conversationRepository`
+  - Broadcast `MessageResponse` to `/topic/conversation/{convId}` via STOMP (same pattern as regular send)
+- **File to modify:** `model/Message.java` — add `"ai"` as valid type in the inline comment (no validation annotation, just documentation)
+- **Test:** Add unit test in `MessageServiceTest.java` verifying `saveAiMessage` saves with correct fields and updates conversation.
+
+---
+
+### PHASE 3 — Flutter UI
+
+### TASK AI-1.9 — STOMP listener for AI_STREAM events `DONE`
+#### SPEC
+- **File:** `apps/client/lib/features/chat/data/stomp_service.dart`
+  - In the existing conversation topic subscription handler, add cases for `type == "AI_STREAM_CHUNK"`, `"AI_STREAM_DONE"`, `"AI_STREAM_ERROR"` — emit to a new `StreamController<Map<String,dynamic>> _aiStreamCtrl` (broadcast)
+  - Expose `Stream<Map<String,dynamic>> get aiStreamEvents => _aiStreamCtrl.stream`
+- **File:** `apps/client/lib/features/chat/domain/chat_state.dart`
+  - Add to `MessageModel`: `final bool isStreaming; final bool isThinking;` (default `false`)
+  - Add `copyWith` fields for both
+- **File:** `apps/client/lib/features/chat/domain/chat_provider.dart` (`ChatNotifier`)
+  - Subscribe to `stompService.aiStreamEvents` in `build()` or a dedicated `_listenAiStream()` method
+  - On `AI_STREAM_CHUNK`: find message in state by `senderId == AI_BOT_USER_ID && isStreaming == true`, update content by appending chunk, set `isThinking = false`
+  - On `AI_STREAM_DONE`: finalize — set `isStreaming = false`, `isThinking = false`
+  - On `AI_STREAM_ERROR`: set content = `context.l10n.aiError` (use hardcoded fallback string since no context available), `isStreaming = false`
+- When user sends a message containing `@AI`: immediately insert a placeholder `MessageModel(id: 'ai-pending', senderId: AI_BOT_USER_ID, content: '', type: 'ai', isStreaming: true, isThinking: true, createdAt: DateTime.now())` into state before the STOMP send.
+- On `AI_STREAM_DONE`: replace placeholder with the real persisted message (match by senderId+isStreaming, update with real content and `isStreaming=false`).
+
+### TASK AI-1.10 — Streaming message bubble `DONE`
+#### SPEC
+- **New file:** `apps/client/lib/features/chat/ui/widgets/streaming_ai_bubble.dart`
+  - `StreamingAiBubble(String content, bool isThinking)` — StatefulWidget
+  - If `isThinking`: show `Row` with 3 animated dots (use `AnimationController` with repeat, stagger opacity 0→1→0)
+  - If not thinking: show `flutter_markdown` `MarkdownBody(data: content)` + blinking `|` cursor (Timer.periodic 500ms toggles `_showCursor`)
+  - Dispose timer and animation controller properly
+- **File:** `apps/client/lib/features/chat/ui/widgets/message_bubble.dart`
+  - Add case: if `message.type == 'ai' && message.isStreaming` → render `StreamingAiBubble(content: message.content, isThinking: message.isThinking)`
+  - If `message.type == 'ai' && !message.isStreaming` → render `MarkdownBody` (same as current markdown path)
+
+### TASK AI-1.11 — AI bot bubble distinct style `DONE`
+#### SPEC
+- **File:** `apps/client/lib/features/chat/ui/widgets/message_bubble.dart`
+  - AI bubble background: `Color(0xFF2D1B69)` (deep purple, neon-compatible) instead of the regular received bubble color
+  - AI avatar: `CircleAvatar` with `Icons.smart_toy` icon (purple-tinted), NOT initials
+  - Add "AI" badge: small `Container` (8×8 px circle, purple) overlaid at bottom-right of avatar using `Stack`
+  - Long-press action sheet: exclude "Edit" and "Recall" options when `message.senderId == AI_BOT_USER_ID`
+
+### TASK AI-1.12 — AI bot identity in app `DONE`
+#### SPEC
+- **File:** `apps/client/lib/features/chat/ui/new_conversation_screen.dart` (or wherever user list is shown)
+  - The AI bot user (`isBot: true`) should appear at the top of the user list with an "AI" badge chip next to its name
+  - Tapping it creates a DM conversation with bot (existing `POST /api/conversations` flow works unchanged)
+- **File:** `apps/client/lib/features/chat/ui/widgets/chat_app_bar.dart`
+  - If the conversation's only other participant is the bot user ID → hide call/video buttons, show subtitle "AI Assistant" instead of online status
+- **File:** `apps/client/lib/features/chat/ui/widgets/conversation_tile.dart`
+  - If DM with bot: show `Icons.smart_toy` icon instead of avatar initials
+- **i18n:** Add to all 7 ARB files: `"aiAssistant": "AI Assistant"`, `"startChatWithAI": "Chat with PON AI"`, `"aiThinking": "AI is thinking..."`, `"aiError": "AI is temporarily unavailable. Please try again."`, `"aiErrorRetry": "Retry"`, `"aiMessageDeleted": "Message deleted"`
+- Run `flutter gen-l10n` after adding keys
+
+---
+
+### PHASE 4 — Error Handling, i18n & Tests
+
+### TASK AI-1.13 — Complete i18n + error bubble style `DONE`
+#### SPEC
+- Verify all 6 i18n keys from TASK AI-1.12 are present in all 7 ARB files (`en, vi, zh, ja, ko, es, fr`)
+- **File:** `apps/client/lib/features/chat/ui/widgets/message_bubble.dart`
+  - AI error state: if `message.type == 'ai' && content == aiError string` → wrap in light red container (`Color(0xFF3D1515)`) with `Icons.warning_amber` prefix
+- Run `flutter gen-l10n` → `flutter analyze` → No issues
+
+### TASK AI-1.14 — End-to-end tests & verification `DONE`
+#### SPEC
+- **ai-service:** `src/ai/ai.service.spec.ts` must cover: (1) chunks published in correct order, (2) primary model error → fallback triggered, (3) fallback error → AI_STREAM_ERROR published. Run `pnpm test` → all pass.
+- **chat-service:** `AiResponseListenerTest.java` and update `MessageServiceTest.java` with `saveAiMessage` test. Run `mvn test` → all pass.
+- **Flutter:** `flutter analyze` → 0 issues. `flutter test` → all pass.
+- **Append to QA LOG** in this file with results.
+
+---
+
+## 🧪 QA LOG
+
+### [2026-06-06] SPRINT QC FIX NOTES → ✅ RESOLVED
+- **chat-service/MessageService.java refactor:** Extracted 7 helper methods (`isBlockedBetween`, `blocks`, `requireParticipantMessage`, `buildReplyPreview`, `snippet`, `parseMentions`, `lookupDisplayName`) into new package-private `MessageServiceHelper` (`@Component`, `@RequiredArgsConstructor`). `MessageService` reduced from 552 → 467 lines.
+  - `MessageServiceTest` updated: `userBlockRepository` mock replaced with `messageServiceHelper` mock; block tests stub `messageServiceHelper.isBlockedBetween()`; mention test stubs `messageServiceHelper.parseMentions()`.
+- **client/conversation_tile.dart refactor:** `_showTileMenu` (156 lines) extracted to `conversation_tile_menu.dart` as `showConversationTileMenu(context, ref, conv)`. File reduced from 448 → 290 lines. Unused `friends_repository.dart` and `friends_provider.dart` imports removed.
+- **chat-service/AuthChannelInterceptor.java security fix:** `StompCommand.SUBSCRIBE` handling added. Extracts `conversationId` from destination prefix `/topic/conversation/` (handles both base and sub-paths like `/typing`). Calls `conversationService.getParticipants(conversationId)`, throws `MessageDeliveryException("Unauthorized subscription")` if user is not a participant.
+- **client/chat_provider.dart regex fix:** `_aiMentionRe` changed to `RegExp(r'@(AI|ponai)\b', caseSensitive: false)` — adds `\b` word boundary to match backend regex `(?i)@(AI|ponai)\b`, preventing `@ai1` from triggering a stuck streaming placeholder.
+- **Tests:** `mvn test` → **BUILD SUCCESS, 66/66**. `flutter analyze` → **1 pre-existing info** (chat_provider.dart:283, unchanged). `flutter test` → **All tests passed**.
+- **Files created (chat-service):** `service/MessageServiceHelper.java`.
+- **Files modified (chat-service):** `service/MessageService.java`, `service/MessageServiceTest.java`, `security/AuthChannelInterceptor.java`.
+- **Files created (Flutter):** `ui/widgets/conversation_tile_menu.dart`.
+- **Files modified (Flutter):** `ui/widgets/conversation_tile.dart`, `domain/chat_provider.dart`.
+
+### [2026-06-04] SPRINT AI-1 (TASKS AI-1.3 chat-service, AI-1.5 – AI-1.14) → ✅ DONE
+- **AI-1.3 chat-service side:** Created `AiRedisPublisher.java`, `AiResponseListener.java`, `RedisListenerConfig.java`, `AiConstants.java`, `AiRequestPayload.java`.
+  - `AiResponseListener` subscribes to `ai:response:*` pattern, handles `AI_STREAM_CHUNK/DONE/ERROR`, broadcasts via `SimpMessagingTemplate`, calls `saveAiMessage` on DONE.
+  - `RedisListenerConfig` registers `RedisMessageListenerContainer` bean with `PatternTopic("ai:response:*")`.
+- **AI-1.5 @AI detection:** `ChatController.send()` and `MessageController.sendMessage()` detect `(?i)@(AI|ponai)\b`, fire async `CompletableFuture` to publish to Redis (non-blocking).
+- **AI-1.6 Claude streaming:** `AiService.handleRequest()` fully implemented with `messages.stream()` loop, fallback model retry on error, `AI_STREAM_ERROR` on double failure.
+  - `RedisPublisherService.publish()` now merges `conversationId` into every payload.
+- **AI-1.7 STOMP forward:** `AiResponseListener.onMessage()` broadcasts `AI_STREAM_CHUNK/DONE/ERROR` events + full `MessageResponse` on DONE.
+- **AI-1.8 Persist AI message:** `MessageService.saveAiMessage()` saves with `senderId=AI_BOT_USER_ID`, `type="ai"`, broadcasts `MessageResponse` via STOMP. `Message.type` comment updated to include "ai".
+- **AI-1.9 STOMP listener Flutter:** `StompService._aiStreamCtrl` added; `AI_STREAM_CHUNK/DONE/ERROR` cases handled in `_doSubscribeConversation`. `ChatNotifier._onAiStreamEvent` accumulates chunks, finalizes on DONE, sets error sentinel on ERROR. Streaming placeholder inserted in `sendMessage` when `@AI` detected.
+- **AI-1.10 Streaming bubble:** `StreamingAiBubble` (animated dots thinking indicator + blinking cursor), `FinalizedAiBubble` (MarkdownBody). `MessageBubble` delegates to these for `type=='ai'`.
+- **AI-1.11 AI bot bubble style:** Deep purple background `Color(0xFF2D1B69)`, error state `Color(0xFF3D1515)` with warning icon. `_AiBotAvatar` widget with `Icons.smart_toy` + small "AI" badge. "PON AI" label above AI bubbles.
+- **AI-1.12 AI bot identity:** `ConversationTile` shows `_AiBotTileAvatar` with robot icon for bot DMs. `ChatScreenAppBar` hides call/video buttons for bot, shows "AI Assistant" subtitle. `NewConversationScreen` shows `_AiBotTile` at top for quick AI chat creation.
+- **AI-1.13 i18n + error bubble:** 6 keys added to all 7 ARB files: `aiAssistant`, `startChatWithAI`, `aiThinking`, `aiError`, `aiErrorRetry`, `aiMessageDeleted`. `flutter gen-l10n` regenerated. Error bubble shows `Icons.warning_amber_rounded` + red background.
+- **AI-1.14 Tests:**
+  - chat-service: `mvn test` → **BUILD SUCCESS, 66/66** (AiResponseListenerTest 4, MessageServiceTest 30 incl. `saveAiMessage` test, ChatControllerTest 6 incl. 2 new `@AI` trigger tests).
+  - ai-service: `pnpm build` → SUCCESS; `pnpm test` → **3/3** (chunks in order, fallback retry, error on both fail).
+  - Flutter: `flutter gen-l10n` → clean; `flutter analyze` → **1 pre-existing info** (chat_provider.dart:283, pre-existing, unrelated); `flutter test` → **All tests passed**.
+- **Files modified (chat-service):** `model/Message.java`, `service/MessageService.java`, `controller/ChatController.java`, `controller/MessageController.java`, `service/MessageServiceTest.java`, `controller/ChatControllerTest.java`.
+- **Files created (chat-service):** `service/AiConstants.java`, `service/AiRedisPublisher.java`, `service/AiResponseListener.java`, `config/RedisListenerConfig.java`, `dto/AiRequestPayload.java`, `service/AiResponseListenerTest.java`.
+- **Files modified (ai-service):** `src/ai/ai.service.ts`, `src/redis/redis-publisher.service.ts`.
+- **Files created (ai-service):** `src/ai/ai.service.spec.ts`.
+- **Files modified (Flutter):** `domain/chat_state.dart`, `data/stomp_service.dart`, `domain/chat_provider.dart`, `ui/widgets/message_bubble.dart`, `ui/widgets/chat_app_bar.dart`, `ui/widgets/conversation_tile.dart`, `ui/new_conversation_screen.dart`, all 7 `l10n/app_*.arb`.
+- **Files created (Flutter):** `ui/widgets/streaming_ai_bubble.dart`.
+
+### [2026-06-03] TASK AI-1.1 — Scaffold ai-service → ✅ DONE
+- NestJS project created, all modules scaffolded, `pnpm build` SUCCESS
+- Bot seed, Redis pub/sub (ai-service side), config, and AiService skeleton complete
+- `AiService.handleRequest()` is a stub — streaming to be implemented in AI-1.6
 
 ---
 

@@ -271,5 +271,11 @@
   "voiceMicTooltip": "音声メッセージ",
   "recording": "録音中...",
   "stickerLabel": "スタンプ",
-  "emojiTab": "絵文字"
+  "emojiTab": "絵文字",
+  "aiAssistant": "AIアシスタント",
+  "startChatWithAI": "PON AIとチャット",
+  "aiThinking": "AIが考え中...",
+  "aiError": "AIは一時的に利用できません。もう一度お試しください。",
+  "aiErrorRetry": "再試行",
+  "aiMessageDeleted": "メッセージが削除されました"
 }

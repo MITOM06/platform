@@ -271,5 +271,11 @@
   "voiceMicTooltip": "Message vocal",
   "recording": "Enregistrement...",
   "stickerLabel": "Autocollants",
-  "emojiTab": "Emoji"
+  "emojiTab": "Emoji",
+  "aiAssistant": "Assistant IA",
+  "startChatWithAI": "Discuter avec PON AI",
+  "aiThinking": "L'IA réfléchit...",
+  "aiError": "L'IA est temporairement indisponible. Veuillez réessayer.",
+  "aiErrorRetry": "Réessayer",
+  "aiMessageDeleted": "Message supprimé"
 }
