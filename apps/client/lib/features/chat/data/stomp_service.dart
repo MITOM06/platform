@@ -24,6 +24,7 @@ class StompService extends _$StompService {
   final _webrtcCtrl = StreamController<Map<String, dynamic>>.broadcast();
   final _presenceCtrl = StreamController<PresenceEvent>.broadcast();
   final _pinCtrl = StreamController<PinnedMessageEvent>.broadcast();
+  final _aiStreamCtrl = StreamController<Map<String, dynamic>>.broadcast();
   // Emits whenever a STOMP reconnect completes (not on first connect).
   final _reconnectCtrl = StreamController<void>.broadcast();
   bool _presenceSubPending = false;
@@ -44,6 +45,7 @@ class StompService extends _$StompService {
   Stream<Map<String, dynamic>> get webrtcSignals => _webrtcCtrl.stream;
   Stream<PresenceEvent> get presence => _presenceCtrl.stream;
   Stream<PinnedMessageEvent> get pinnedMessageUpdates => _pinCtrl.stream;
+  Stream<Map<String, dynamic>> get aiStreamEvents => _aiStreamCtrl.stream;
   // Fires whenever the STOMP socket reconnects after a prior disconnect.
   Stream<void> get reconnects => _reconnectCtrl.stream;
 
@@ -150,6 +152,11 @@ class StompService extends _$StompService {
               pinnedMessageIds: List<String>.from(
                   data['pinnedMessages'] as List? ?? []),
             ));
+            return;
+          case 'AI_STREAM_CHUNK':
+          case 'AI_STREAM_DONE':
+          case 'AI_STREAM_ERROR':
+            _aiStreamCtrl.add(data);
             return;
         }
         _messageCtrl.add(MessageModel.fromJson(data));

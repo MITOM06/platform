@@ -9,6 +9,7 @@ import 'file_content.dart';
 import 'floating_reaction_sheet.dart';
 import 'image_content.dart';
 import 'message_bubble_parts.dart';
+import 'streaming_ai_bubble.dart';
 import 'text_content.dart';
 import 'voice_message_bubble.dart';
 
@@ -61,14 +62,36 @@ class MessageBubble extends ConsumerWidget {
                 ? CrossAxisAlignment.end
                 : CrossAxisAlignment.start,
             children: [
-              if (showSenderName && !isSentByMe)
+              if (showSenderName && !isSentByMe && !message.isAiBot)
                 GroupSenderHeader(
                   userId: message.senderId,
                   conversationId: message.conversationId,
                 ),
+              if (!isSentByMe && message.isAiBot)
+                Padding(
+                  padding: const EdgeInsets.only(left: 4, bottom: 2),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      _AiBotAvatar(),
+                      const SizedBox(width: 6),
+                      Text(
+                        'PON AI',
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: const Color(0xFFB47FFF).withValues(alpha: 0.9),
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               GestureDetector(
-                onLongPress: message.recalled
-                    ? null
+                onLongPress: (message.recalled || message.isAiMessage)
+                    ? (message.isAiMessage && !message.isStreaming
+                        ? () => FloatingReactionSheet.show(
+                            context, ref, message, isSentByMe)
+                        : null)
                     : () => FloatingReactionSheet.show(
                         context, ref, message, isSentByMe),
                 onDoubleTap: message.recalled
@@ -97,7 +120,7 @@ class MessageBubble extends ConsumerWidget {
                   decoration: (message.isSticker && !message.recalled)
                       ? null
                       : BoxDecoration(
-                          gradient: isSentByMe && !message.recalled
+                          gradient: isSentByMe && !message.recalled && !message.isAiMessage
                               ? const LinearGradient(
                                   colors: [
                                     AppTheme.ponCyan,
@@ -107,9 +130,13 @@ class MessageBubble extends ConsumerWidget {
                                   end: Alignment.bottomRight,
                                 )
                               : null,
-                          color: isSentByMe && !message.recalled
-                              ? null
-                              : AppTheme.darkSurface.withValues(alpha: 0.7),
+                          color: message.isAiError
+                              ? const Color(0xFF3D1515)
+                              : message.isAiMessage && !message.recalled
+                                  ? const Color(0xFF2D1B69)
+                                  : isSentByMe && !message.recalled
+                                      ? null
+                                      : AppTheme.darkSurface.withValues(alpha: 0.7),
                           borderRadius: BorderRadius.only(
                             topLeft: const Radius.circular(20),
                             topRight: const Radius.circular(20),
@@ -166,6 +193,29 @@ class MessageBubble extends ConsumerWidget {
                       else if (message.isFile)
                         FileContent(
                             message: message, isSentByMe: isSentByMe)
+                      else if (message.isAiMessage && message.isStreaming)
+                        StreamingAiBubble(
+                          content: message.content,
+                          isThinking: message.isThinking,
+                        )
+                      else if (message.isAiError)
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(Icons.warning_amber_rounded,
+                                color: Color(0xFFFF6B6B), size: 16),
+                            const SizedBox(width: 6),
+                            Flexible(
+                              child: Text(
+                                context.l10n.aiError,
+                                style: const TextStyle(
+                                    color: Color(0xFFFF6B6B), fontSize: 14),
+                              ),
+                            ),
+                          ],
+                        )
+                      else if (message.isAiMessage && !message.isStreaming)
+                        FinalizedAiBubble(content: message.content)
                       else
                         TextContent(
                           content: message.content,
@@ -231,6 +281,51 @@ class MessageBubble extends ConsumerWidget {
       color: isRead
           ? AppTheme.ponCyan
           : Colors.white.withValues(alpha: 0.4),
+    );
+  }
+}
+
+class _AiBotAvatar extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        Container(
+          width: 28,
+          height: 28,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            gradient: const LinearGradient(
+              colors: [Color(0xFF6B2FA0), Color(0xFF2D1B69)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            border: Border.all(
+                color: const Color(0xFFB47FFF).withValues(alpha: 0.6), width: 1),
+          ),
+          child: const Icon(Icons.smart_toy_outlined,
+              color: Colors.white, size: 16),
+        ),
+        Positioned(
+          right: -2,
+          bottom: -2,
+          child: Container(
+            width: 10,
+            height: 10,
+            decoration: BoxDecoration(
+              color: const Color(0xFFB47FFF),
+              shape: BoxShape.circle,
+              border: Border.all(
+                  color: Theme.of(context).scaffoldBackgroundColor, width: 1.5),
+            ),
+            child: const Center(
+              child: Text('AI',
+                  style: TextStyle(fontSize: 4, color: Colors.white, height: 1)),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

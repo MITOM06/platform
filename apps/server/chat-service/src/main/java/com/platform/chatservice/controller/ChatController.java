@@ -4,6 +4,7 @@ import com.platform.chatservice.dto.ChatMessageDto;
 import com.platform.chatservice.dto.MessageResponse;
 import com.platform.chatservice.dto.SendMessageRequest;
 import com.platform.chatservice.exception.RateLimitExceededException;
+import com.platform.chatservice.service.AiRedisPublisher;
 import com.platform.chatservice.service.ConversationService;
 import com.platform.chatservice.service.MessageService;
 import com.platform.chatservice.service.RateLimiterService;
@@ -16,17 +17,22 @@ import org.springframework.stereotype.Controller;
 import java.security.Principal;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
+import java.util.regex.Pattern;
 
 @SuppressWarnings("null")
 @Controller
 @RequiredArgsConstructor
 public class ChatController {
 
+    private static final Pattern AI_MENTION_PATTERN = Pattern.compile("(?i)@(AI|ponai)\\b");
+
     private final MessageService messageService;
     private final ConversationService conversationService;
     private final SimpMessagingTemplate messagingTemplate;
     private final com.platform.chatservice.service.FcmService fcmService;
     private final RateLimiterService rateLimiterService;
+    private final AiRedisPublisher aiRedisPublisher;
 
     @MessageMapping("/chat.send")
     public void send(@Payload ChatMessageDto dto, Principal principal) {
@@ -51,6 +57,20 @@ public class ChatController {
                 "/topic/conversation/" + dto.getConversationId(),
                 response
         );
+
+        // Async AI trigger — must not block the STOMP response
+        if (dto.getContent() != null && AI_MENTION_PATTERN.matcher(dto.getContent()).find()) {
+            final String uid = principal.getName();
+            final String convId = dto.getConversationId();
+            final String raw = dto.getContent();
+            CompletableFuture.runAsync(() -> {
+                try {
+                    List<Map<String, String>> history = messageService.getAiHistory(uid, convId);
+                    String stripped = raw.replaceAll("(?i)@(AI|ponai)\\b", "").trim();
+                    aiRedisPublisher.publishAiRequest(convId, uid, uid, stripped, history);
+                } catch (Exception ignored) {}
+            });
+        }
 
         List<String> mentions = response.mentions() == null ? List.of() : response.mentions();
         List<String> participants = conversationService.getParticipants(dto.getConversationId());

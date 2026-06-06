@@ -8,6 +8,7 @@ import '../../../l10n/app_localizations.dart';
 import '../../auth/data/auth_repository.dart';
 import '../../auth/domain/auth_state.dart';
 import '../data/chat_repository.dart';
+import '../domain/chat_state.dart' show kAiBotUserId;
 
 class NewConversationScreen extends ConsumerStatefulWidget {
   const NewConversationScreen({super.key});
@@ -130,6 +131,18 @@ class _NewConversationScreenState
     }
   }
 
+  Future<void> _startAiChat() async {
+    setState(() => _loading = true);
+    try {
+      final repo = ref.read(chatRepositoryProvider);
+      final conv = await repo.getOrCreateConversation(kAiBotUserId);
+      if (!mounted) return;
+      context.go('/chat/${conv.id}');
+    } catch (_) {
+      if (mounted) setState(() => _loading = false);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
@@ -148,6 +161,9 @@ class _NewConversationScreenState
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
+              // AI Bot quick-start
+              _AiBotTile(loading: _loading, onTap: _startAiChat),
+              const SizedBox(height: 16),
               // Mode toggle
               SegmentedButton<bool>(
                 segments: [
@@ -290,6 +306,86 @@ class _NewConversationScreenState
           child: Text(l10n.createGroup),
         ),
       ],
+    );
+  }
+}
+
+class _AiBotTile extends StatelessWidget {
+  final bool loading;
+  final VoidCallback onTap;
+
+  const _AiBotTile({required this.loading, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: const Color(0xFF2D1B69).withValues(alpha: 0.7),
+      borderRadius: BorderRadius.circular(16),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(16),
+        onTap: loading ? null : onTap,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          child: Row(
+            children: [
+              Container(
+                width: 44,
+                height: 44,
+                decoration: const BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: LinearGradient(
+                    colors: [Color(0xFF6B2FA0), Color(0xFF2D1B69)],
+                  ),
+                ),
+                child: const Icon(Icons.smart_toy_outlined,
+                    color: Colors.white, size: 24),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        const Text(
+                          'PON AI',
+                          style: TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 15),
+                        ),
+                        const SizedBox(width: 6),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 6, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFB47FFF),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: const Text('AI',
+                              style: TextStyle(
+                                  fontSize: 9,
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold)),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      context.l10n.startChatWithAI,
+                      style: TextStyle(
+                          color: Colors.white.withValues(alpha: 0.55),
+                          fontSize: 12),
+                    ),
+                  ],
+                ),
+              ),
+              const Icon(Icons.arrow_forward_ios_rounded,
+                  color: Color(0xFFB47FFF), size: 16),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

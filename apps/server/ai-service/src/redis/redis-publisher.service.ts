@@ -18,7 +18,8 @@ export class RedisPublisherService {
 
   async publish(conversationId: string, payload: object): Promise<void> {
     const channel = `${this.responsePrefix}:${conversationId}`;
-    await this.client.publish(channel, JSON.stringify(payload));
+    const enriched = { ...payload, conversationId };
+    await this.client.publish(channel, JSON.stringify(enriched));
     this.logger.debug(`Published to ${channel}`);
   }
 }

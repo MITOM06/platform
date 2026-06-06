@@ -1,5 +1,6 @@
 package com.platform.chatservice.security;
 
+import com.platform.chatservice.service.ConversationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.lang.NonNull;
@@ -23,9 +24,11 @@ public class AuthChannelInterceptor implements ChannelInterceptor {
 
     private static final String STATUS_KEY_PREFIX = "user:status:";
     private static final Duration ONLINE_TTL = Duration.ofMinutes(5);
+    private static final String CONV_TOPIC_PREFIX = "/topic/conversation/";
 
     private final JwtUtil jwtUtil;
     private final StringRedisTemplate redisTemplate;
+    private final ConversationService conversationService;
 
     @Override
     public Message<?> preSend(@NonNull Message<?> message, @NonNull MessageChannel channel) {
@@ -54,6 +57,25 @@ public class AuthChannelInterceptor implements ChannelInterceptor {
             accessor.setUser(new UsernamePasswordAuthenticationToken(userId, null, List.of()));
             refreshPresence(userId);
             return message;
+        }
+
+        if (StompCommand.SUBSCRIBE.equals(accessor.getCommand())) {
+            String destination = accessor.getDestination();
+            if (destination != null && destination.startsWith(CONV_TOPIC_PREFIX)) {
+                String rest = destination.substring(CONV_TOPIC_PREFIX.length());
+                int slashIdx = rest.indexOf('/');
+                String conversationId = slashIdx == -1 ? rest : rest.substring(0, slashIdx);
+                if (!conversationId.isBlank()) {
+                    Principal user = accessor.getUser();
+                    if (user == null) {
+                        throw new MessageDeliveryException("Unauthorized subscription");
+                    }
+                    List<String> participants = conversationService.getParticipants(conversationId);
+                    if (!participants.contains(user.getName())) {
+                        throw new MessageDeliveryException("Unauthorized subscription");
+                    }
+                }
+            }
         }
 
         // For all subsequent messages, refresh the online TTL to act as a heartbeat

@@ -840,4 +840,22 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get emojiTab => '表情';
+
+  @override
+  String get aiAssistant => 'AI助手';
+
+  @override
+  String get startChatWithAI => '与PON AI聊天';
+
+  @override
+  String get aiThinking => 'AI正在思考...';
+
+  @override
+  String get aiError => 'AI暂时不可用。请重试。';
+
+  @override
+  String get aiErrorRetry => '重试';
+
+  @override
+  String get aiMessageDeleted => '消息已删除';
 }

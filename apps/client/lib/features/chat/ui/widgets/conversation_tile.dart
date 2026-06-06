@@ -5,12 +5,11 @@ import '../../../../core/l10n/l10n_ext.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../auth/domain/auth_provider.dart';
 import '../../../auth/domain/auth_state.dart';
-import '../../../friends/data/friends_repository.dart';
-import '../../../friends/domain/friends_provider.dart';
 import '../../../home/domain/home_providers.dart';
 import '../../domain/chat_provider.dart';
 import '../../domain/chat_state.dart';
 import 'conversation_avatar.dart';
+import 'conversation_tile_menu.dart';
 
 class ConversationTile extends ConsumerWidget {
   final ConversationModel conv;
@@ -52,9 +51,12 @@ class ConversationTile extends ConsumerWidget {
         : ((dmNickname != null && dmNickname.isNotEmpty)
             ? dmNickname
             : (profileAsync?.valueOrNull?.displayName ?? '...'));
-    final tileLetter = displayName.isNotEmpty && displayName != '...'
-        ? displayName[0].toUpperCase()
-        : '?';
+    final isAiBot = !isGroup && otherUserId == kAiBotUserId;
+    final tileLetter = isAiBot
+        ? 'AI'
+        : (displayName.isNotEmpty && displayName != '...'
+            ? displayName[0].toUpperCase()
+            : '?');
     final avatarUrl =
         isGroup ? conv.avatarUrl : profileAsync?.valueOrNull?.avatarUrl;
 
@@ -102,28 +104,30 @@ class ConversationTile extends ConsumerWidget {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
           ),
-          leading: ConversationAvatar(
-            avatarUrl: avatarUrl,
-            fallbackLetter: tileLetter,
-            isGroup: isGroup,
-            size: 48,
-            online: isOnline,
-            gradientColors: conv.unreadCount > 0
-                ? [
-                    isDark
-                        ? AppTheme.ponCyan
-                        : Theme.of(context).colorScheme.primary,
-                    isDark
-                        ? AppTheme.ponPink
-                        : Theme.of(context).colorScheme.secondary,
-                  ]
-                : [
-                    isDark
-                        ? AppTheme.ponPeach.withValues(alpha: 0.6)
-                        : Colors.grey.shade400,
-                    isDark ? AppTheme.darkBorder : Colors.grey.shade300,
-                  ],
-          ),
+          leading: isAiBot
+              ? _AiBotTileAvatar(isDark: isDark)
+              : ConversationAvatar(
+                  avatarUrl: avatarUrl,
+                  fallbackLetter: tileLetter,
+                  isGroup: isGroup,
+                  size: 48,
+                  online: isOnline,
+                  gradientColors: conv.unreadCount > 0
+                      ? [
+                          isDark
+                              ? AppTheme.ponCyan
+                              : Theme.of(context).colorScheme.primary,
+                          isDark
+                              ? AppTheme.ponPink
+                              : Theme.of(context).colorScheme.secondary,
+                        ]
+                      : [
+                          isDark
+                              ? AppTheme.ponPeach.withValues(alpha: 0.6)
+                              : Colors.grey.shade400,
+                          isDark ? AppTheme.darkBorder : Colors.grey.shade300,
+                        ],
+                ),
           title: Row(
             children: [
               Expanded(
@@ -210,7 +214,7 @@ class ConversationTile extends ConsumerWidget {
               context.push('/chat/${conv.id}');
             }
           },
-          onLongPress: () => _showTileMenu(context, ref),
+          onLongPress: () => showConversationTileMenu(context, ref, conv),
         ),
       ),
     );
@@ -237,160 +241,50 @@ class ConversationTile extends ConsumerWidget {
     return content;
   }
 
-  void _showTileMenu(BuildContext context, WidgetRef ref) {
-    final l10n = context.l10n;
-    final notifier = ref.read(conversationsNotifierProvider.notifier);
-    
-    final currentUserId = ref.read(authNotifierProvider).valueOrNull is AuthAuthenticated
-        ? (ref.read(authNotifierProvider).valueOrNull as AuthAuthenticated).user.id
-        : '';
-    final others = conv.participants.where((p) => p != currentUserId).toList();
-    final otherUserId = !conv.isGroup && others.isNotEmpty ? others.first : '';
-    
-    final rel = otherUserId.isNotEmpty
-        ? ref.read(relationshipProvider(otherUserId)).valueOrNull
-        : null;
-    final iBlocked = rel?.iBlocked ?? false;
+}
 
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: AppTheme.darkSurface,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      builder: (sheetCtx) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const SizedBox(height: 8),
-            // Mark as Read / Unread
-            if (conv.unreadCount > 0)
-              ListTile(
-                leading: const Icon(Icons.mark_chat_read_outlined, color: Colors.white70),
-                title: Text(l10n.markAsRead, style: const TextStyle(color: Colors.white)),
-                onTap: () {
-                  Navigator.pop(sheetCtx);
-                  notifier.markConversationReadServer(conv.id);
-                },
-              )
-            else
-              ListTile(
-                leading: const Icon(Icons.mark_chat_unread_outlined, color: Colors.white70),
-                title: Text(l10n.markAsUnread, style: const TextStyle(color: Colors.white)),
-                onTap: () {
-                  Navigator.pop(sheetCtx);
-                  notifier.markConversationUnreadServer(conv.id);
-                },
-              ),
-            // Mute / Unmute notifications
-            ListTile(
-              leading: Icon(conv.isMuted ? Icons.volume_up_outlined : Icons.volume_off_outlined, color: Colors.white70),
-              title: Text(conv.isMuted ? l10n.unmuteNotifications : l10n.muteNotifications, style: const TextStyle(color: Colors.white)),
-              onTap: () {
-                Navigator.pop(sheetCtx);
-                notifier.toggleMuteConversation(conv.id, !conv.isMuted);
-              },
+class _AiBotTileAvatar extends StatelessWidget {
+  final bool isDark;
+  const _AiBotTileAvatar({required this.isDark});
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        Container(
+          width: 48,
+          height: 48,
+          decoration: const BoxDecoration(
+            shape: BoxShape.circle,
+            gradient: LinearGradient(
+              colors: [Color(0xFF6B2FA0), Color(0xFF2D1B69)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
             ),
-            // View Profile
-            ListTile(
-              leading: Icon(conv.isGroup ? Icons.info_outline_rounded : Icons.person_outline_rounded, color: Colors.white70),
-              title: Text(conv.isGroup ? l10n.groupInfo : l10n.viewProfile, style: const TextStyle(color: Colors.white)),
-              onTap: () {
-                Navigator.pop(sheetCtx);
-                if (conv.isGroup) {
-                  context.push('/group-info/${conv.id}');
-                } else if (otherUserId.isNotEmpty) {
-                  context.push('/user/$otherUserId');
-                }
-              },
-            ),
-            // Voice Call & Video Call (Direct chats only)
-            if (!conv.isGroup && otherUserId.isNotEmpty) ...[
-              ListTile(
-                leading: const Icon(Icons.phone_outlined, color: Colors.white70),
-                title: Text(l10n.voiceCall, style: const TextStyle(color: Colors.white)),
-                onTap: () {
-                  Navigator.pop(sheetCtx);
-                  final profile = ref.read(userProfileProvider(otherUserId)).valueOrNull;
-                  final name = profile?.displayName ?? 'User';
-                  context.push('/call', extra: {
-                    'targetId': otherUserId,
-                    'targetName': name,
-                    'conversationId': conv.id,
-                    'isCaller': true,
-                  });
-                },
-              ),
-              ListTile(
-                leading: const Icon(Icons.videocam_outlined, color: Colors.white70),
-                title: Text(l10n.videoCall, style: const TextStyle(color: Colors.white)),
-                onTap: () {
-                  Navigator.pop(sheetCtx);
-                  final profile = ref.read(userProfileProvider(otherUserId)).valueOrNull;
-                  final name = profile?.displayName ?? 'User';
-                  context.push('/call', extra: {
-                    'targetId': otherUserId,
-                    'targetName': name,
-                    'conversationId': conv.id,
-                    'isCaller': true,
-                  });
-                },
-              ),
-              // Block / Unblock user
-              ListTile(
-                leading: Icon(iBlocked ? Icons.lock_open_rounded : Icons.block_rounded, color: Colors.redAccent),
-                title: Text(iBlocked ? l10n.unblockUser : l10n.blockUser, style: const TextStyle(color: Colors.redAccent)),
-                onTap: () async {
-                  Navigator.pop(sheetCtx);
-                  final repo = ref.read(friendsRepositoryProvider);
-                  if (iBlocked) {
-                    await repo.unblockUser(otherUserId);
-                    ref.invalidate(relationshipProvider(otherUserId));
-                  } else {
-                    final ok = await showDialog<bool>(
-                      context: context,
-                      builder: (ctx) => AlertDialog(
-                        title: Text(l10n.blockUser),
-                        content: Text(l10n.blockUserConfirm),
-                        actions: [
-                          TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(l10n.actionCancel)),
-                          FilledButton(
-                            style: FilledButton.styleFrom(backgroundColor: Colors.redAccent),
-                            onPressed: () => Navigator.pop(ctx, true),
-                            child: Text(l10n.actionConfirm),
-                          ),
-                        ],
-                      ),
-                    );
-                    if (ok == true) {
-                      await repo.blockUser(otherUserId);
-                      ref.invalidate(relationshipProvider(otherUserId));
-                    }
-                  }
-                },
-              ),
-            ],
-            // Archive chat
-            ListTile(
-              leading: const Icon(Icons.archive_outlined, color: Colors.white70),
-              title: Text(l10n.archiveChat, style: const TextStyle(color: Colors.white)),
-              onTap: () {
-                Navigator.pop(sheetCtx);
-                notifier.archiveConversation(conv.id);
-              },
-            ),
-            // Delete chat
-            ListTile(
-              leading: const Icon(Icons.delete_outline_rounded, color: Colors.redAccent),
-              title: Text(l10n.deleteConversation, style: const TextStyle(color: Colors.redAccent)),
-              onTap: () {
-                Navigator.pop(sheetCtx);
-                notifier.deleteConversation(conv.id);
-              },
-            ),
-          ],
+          ),
+          child: const Icon(Icons.smart_toy_outlined,
+              color: Colors.white, size: 26),
         ),
-      ),
+        Positioned(
+          right: -1,
+          bottom: -1,
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+            decoration: BoxDecoration(
+              color: const Color(0xFFB47FFF),
+              borderRadius: BorderRadius.circular(6),
+              border: Border.all(
+                  color: Theme.of(context).scaffoldBackgroundColor, width: 1.5),
+            ),
+            child: const Text('AI',
+                style: TextStyle(
+                    fontSize: 8,
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold)),
+          ),
+        ),
+      ],
     );
   }
 }

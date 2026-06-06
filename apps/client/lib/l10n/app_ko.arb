@@ -271,5 +271,11 @@
   "voiceMicTooltip": "음성 메시지",
   "recording": "녹음 중...",
   "stickerLabel": "스티커",
-  "emojiTab": "이모지"
+  "emojiTab": "이모지",
+  "aiAssistant": "AI 어시스턴트",
+  "startChatWithAI": "PON AI와 채팅",
+  "aiThinking": "AI가 생각 중...",
+  "aiError": "AI를 일시적으로 사용할 수 없습니다. 다시 시도해주세요.",
+  "aiErrorRetry": "다시 시도",
+  "aiMessageDeleted": "메시지가 삭제되었습니다"
 }

@@ -271,5 +271,11 @@
   "voiceMicTooltip": "Tin nhắn thoại",
   "recording": "Đang ghi...",
   "stickerLabel": "Nhãn dán",
-  "emojiTab": "Emoji"
+  "emojiTab": "Emoji",
+  "aiAssistant": "Trợ lý AI",
+  "startChatWithAI": "Trò chuyện với PON AI",
+  "aiThinking": "AI đang suy nghĩ...",
+  "aiError": "AI tạm thời không khả dụng. Vui lòng thử lại.",
+  "aiErrorRetry": "Thử lại",
+  "aiMessageDeleted": "Tin nhắn đã bị xóa"
 }

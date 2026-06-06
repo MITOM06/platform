@@ -4,15 +4,14 @@ import com.platform.chatservice.dto.MessageResponse;
 import com.platform.chatservice.dto.PageResponse;
 import com.platform.chatservice.dto.PinResult;
 import com.platform.chatservice.dto.SendMessageRequest;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import com.platform.chatservice.exception.ConversationNotFoundException;
 import com.platform.chatservice.exception.MessageNotFoundException;
 import com.platform.chatservice.exception.ForbiddenException;
 import com.platform.chatservice.model.Conversation;
 import com.platform.chatservice.model.Message;
-import com.platform.chatservice.model.UserBlock;
 import com.platform.chatservice.repository.ConversationRepository;
 import com.platform.chatservice.repository.MessageRepository;
-import com.platform.chatservice.repository.UserBlockRepository;
 import com.mongodb.client.result.UpdateResult;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
@@ -28,6 +27,7 @@ import org.springframework.stereotype.Service;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -39,8 +39,9 @@ public class MessageService {
 
     private final MessageRepository messageRepository;
     private final ConversationRepository conversationRepository;
-    private final UserBlockRepository userBlockRepository;
     private final MongoTemplate mongoTemplate;
+    private final SimpMessagingTemplate messagingTemplate;
+    private final MessageServiceHelper helper;
 
     /**
      * Cursor-based pagination (newest first). When {@code beforeId} is null/blank
@@ -102,13 +103,13 @@ public class MessageService {
         // Block User: reject if the sender blocked, or is blocked by, any other
         // participant of the conversation (covers both directions).
         for (String participant : conversation.getParticipants()) {
-            if (!participant.equals(senderId) && isBlockedBetween(senderId, participant)) {
+            if (!participant.equals(senderId) && helper.isBlockedBetween(senderId, participant)) {
                 throw new ForbiddenException("Cannot send message: user is blocked");
             }
         }
 
-        Message.ReplyPreview replyPreview = buildReplyPreview(request.replyToId());
-        List<String> mentions = parseMentions(
+        Message.ReplyPreview replyPreview = helper.buildReplyPreview(request.replyToId());
+        List<String> mentions = helper.parseMentions(
             request.content(), conversation.getParticipants(), senderId);
 
         Message message = messageRepository.save(Message.builder()
@@ -172,7 +173,7 @@ public class MessageService {
     /** Toggle a single reaction per user (Messenger-style): the new emoji
      *  replaces any existing reaction from the same user. */
     public MessageResponse addReaction(String userId, String messageId, String emoji) {
-        Message message = requireParticipantMessage(userId, messageId);
+        Message message = helper.requireParticipantMessage(userId, messageId);
         List<Message.Reaction> reactions = message.getReactions() == null
             ? new ArrayList<>() : new ArrayList<>(message.getReactions());
         reactions.removeIf(r -> userId.equals(r.getUserId()));
@@ -182,7 +183,7 @@ public class MessageService {
     }
 
     public MessageResponse removeReaction(String userId, String messageId) {
-        Message message = requireParticipantMessage(userId, messageId);
+        Message message = helper.requireParticipantMessage(userId, messageId);
         if (message.getReactions() != null) {
             List<Message.Reaction> reactions = new ArrayList<>(message.getReactions());
             reactions.removeIf(r -> userId.equals(r.getUserId()));
@@ -335,45 +336,6 @@ public class MessageService {
         }
     }
 
-    /** True if either user has the other in their {@code blockedUsers} list. */
-    private boolean isBlockedBetween(String a, String b) {
-        return blocks(a, b) || blocks(b, a);
-    }
-
-    private boolean blocks(String ownerId, String targetId) {
-        return userBlockRepository.findById(ownerId)
-            .map(UserBlock::getBlockedUsers)
-            .map(list -> list != null && list.contains(targetId))
-            .orElse(false);
-    }
-
-    private Message requireParticipantMessage(String userId, String messageId) {
-        Message message = messageRepository.findById(messageId)
-            .orElseThrow(() -> new MessageNotFoundException(messageId));
-        Conversation conversation = conversationRepository.findById(message.getConversationId())
-            .orElseThrow(() -> new ConversationNotFoundException(message.getConversationId()));
-        if (!conversation.getParticipants().contains(userId)) {
-            throw new ForbiddenException("Not a participant of this conversation");
-        }
-        return message;
-    }
-
-    private Message.ReplyPreview buildReplyPreview(String replyToId) {
-        if (replyToId == null || replyToId.isBlank()) return null;
-        return messageRepository.findById(replyToId)
-            .map(m -> Message.ReplyPreview.builder()
-                .messageId(m.getId())
-                .senderId(m.getSenderId())
-                .content(snippet(m.getContent()))
-                .build())
-            .orElse(null);
-    }
-
-    private String snippet(String content) {
-        if (content == null) return "";
-        return content.length() <= 80 ? content : content.substring(0, 80) + "…";
-    }
-
     MessageResponse toResponse(Message m) {
         List<MessageResponse.ReactionDto> reactions = m.getReactions() == null ? List.of()
             : m.getReactions().stream()
@@ -390,49 +352,6 @@ public class MessageService {
             m.getReplyToId(), replyPreview, reactions, m.isRecalled(), m.getEditedAt(),
             m.getMentions() == null ? List.of() : m.getMentions()
         );
-    }
-
-    /**
-     * Resolve @-mentions in {@code content} to participant user ids (Task 49).
-     * Mentions are matched against each participant's {@code displayName} from the
-     * shared {@code users} collection (the app has no separate username), so
-     * "@John Doe" resolves to John's id. The sender can't mention themselves.
-     *
-     * <p>Short-circuits when the content has no '@' so the common path (and the
-     * unit tests, which never use mentions) never touches the users collection.
-     */
-    private List<String> parseMentions(String content, List<String> participants, String senderId) {
-        if (content == null || content.indexOf('@') < 0 || participants == null) {
-            return List.of();
-        }
-        List<String> others = participants.stream()
-            .filter(p -> !p.equals(senderId))
-            .toList();
-        if (others.isEmpty()) {
-            return List.of();
-        }
-        String lower = content.toLowerCase();
-        List<String> mentioned = new ArrayList<>();
-        for (String userId : others) {
-            String displayName = lookupDisplayName(userId);
-            if (displayName != null && !displayName.isBlank()
-                && lower.contains("@" + displayName.toLowerCase())) {
-                mentioned.add(userId);
-            }
-        }
-        return mentioned;
-    }
-
-    /** Best-effort displayName lookup from the shared users collection. */
-    private String lookupDisplayName(String userId) {
-        try {
-            Query query = new Query(Criteria.where("_id").is(new org.bson.types.ObjectId(userId)));
-            query.fields().include("displayName");
-            org.bson.Document doc = mongoTemplate.findOne(query, org.bson.Document.class, "users");
-            return doc == null ? null : doc.getString("displayName");
-        } catch (Exception e) {
-            return null;
-        }
     }
 
     /**
@@ -461,6 +380,56 @@ public class MessageService {
                 || m.getCreatedAt().isAfter(clearedAt))
             .map(this::toResponse)
             .toList();
+    }
+
+    /**
+     * Save an AI-generated message and broadcast it to the conversation topic.
+     * Called by AiResponseListener when AI_STREAM_DONE is received from Redis.
+     */
+    public MessageResponse saveAiMessage(String conversationId, String content) {
+        Message message = messageRepository.save(Message.builder()
+            .conversationId(conversationId)
+            .senderId(AiConstants.AI_BOT_USER_ID)
+            .content(content)
+            .type("ai")
+            .readBy(new ArrayList<>())
+            .build());
+
+        Instant savedAt = message.getCreatedAt() != null ? message.getCreatedAt() : Instant.now();
+        conversationRepository.findById(conversationId).ifPresent(conv -> {
+            conv.setLastMessage(Conversation.LastMessage.builder()
+                .content(content)
+                .senderId(AiConstants.AI_BOT_USER_ID)
+                .createdAt(savedAt)
+                .build());
+            conv.setLastMessageAt(savedAt);
+            conversationRepository.save(conv);
+        });
+
+        MessageResponse response = toResponse(message);
+        messagingTemplate.convertAndSend("/topic/conversation/" + conversationId, response);
+        return response;
+    }
+
+    /**
+     * Fetch the last {@code limit} non-recalled messages in chronological order
+     * for building AI conversation history. Returns an empty list on any error
+     * so AI request failure never disrupts the main send flow.
+     */
+    public List<Map<String, String>> getAiHistory(String userId, String conversationId) {
+        try {
+            PageResponse<MessageResponse> paged = getMessages(userId, conversationId, null, 10);
+            List<Map<String, String>> history = new ArrayList<>();
+            for (MessageResponse msg : paged.content()) {
+                if (msg.recalled() || msg.content() == null || msg.content().isBlank()) continue;
+                String role = AiConstants.AI_BOT_USER_ID.equals(msg.senderId()) ? "assistant" : "user";
+                history.add(Map.of("role", role, "content", msg.content()));
+            }
+            Collections.reverse(history); // newest-first → chronological
+            return history;
+        } catch (Exception e) {
+            return List.of();
+        }
     }
 
     /**

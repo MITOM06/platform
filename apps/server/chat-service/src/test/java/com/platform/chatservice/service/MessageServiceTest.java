@@ -9,10 +9,8 @@ import com.platform.chatservice.exception.MessageNotFoundException;
 import com.platform.chatservice.exception.ForbiddenException;
 import com.platform.chatservice.model.Conversation;
 import com.platform.chatservice.model.Message;
-import com.platform.chatservice.model.UserBlock;
 import com.platform.chatservice.repository.ConversationRepository;
 import com.platform.chatservice.repository.MessageRepository;
-import com.platform.chatservice.repository.UserBlockRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -39,8 +37,9 @@ class MessageServiceTest {
 
     @Mock private MessageRepository messageRepository;
     @Mock private ConversationRepository conversationRepository;
-    @Mock private UserBlockRepository userBlockRepository;
     @Mock private MongoTemplate mongoTemplate;
+    @Mock private org.springframework.messaging.simp.SimpMessagingTemplate messagingTemplate;
+    @Mock private MessageServiceHelper messageServiceHelper;
 
     @InjectMocks
     private MessageService messageService;
@@ -156,10 +155,7 @@ class MessageServiceTest {
     @Test
     void sendMessage_WhenSenderBlockedByRecipient_ShouldThrow() {
         when(conversationRepository.findById(CONV_ID)).thenReturn(Optional.of(conversation));
-        // OTHER_ID has blocked SENDER_ID → message must be rejected.
-        when(userBlockRepository.findById(SENDER_ID)).thenReturn(Optional.empty());
-        when(userBlockRepository.findById(OTHER_ID)).thenReturn(Optional.of(
-            UserBlock.builder().id(OTHER_ID).blockedUsers(List.of(SENDER_ID)).build()));
+        when(messageServiceHelper.isBlockedBetween(SENDER_ID, OTHER_ID)).thenReturn(true);
 
         assertThatThrownBy(() -> messageService.sendMessage(SENDER_ID,
                 new SendMessageRequest(CONV_ID, "Hi", "text")))
@@ -171,9 +167,7 @@ class MessageServiceTest {
     @Test
     void sendMessage_WhenSenderBlockedRecipient_ShouldThrow() {
         when(conversationRepository.findById(CONV_ID)).thenReturn(Optional.of(conversation));
-        // SENDER_ID has blocked OTHER_ID → message must be rejected too.
-        when(userBlockRepository.findById(SENDER_ID)).thenReturn(Optional.of(
-            UserBlock.builder().id(SENDER_ID).blockedUsers(List.of(OTHER_ID)).build()));
+        when(messageServiceHelper.isBlockedBetween(SENDER_ID, OTHER_ID)).thenReturn(true);
 
         assertThatThrownBy(() -> messageService.sendMessage(SENDER_ID,
                 new SendMessageRequest(CONV_ID, "Hi", "text")))
@@ -312,9 +306,8 @@ class MessageServiceTest {
             return m;
         });
         when(conversationRepository.save(any(Conversation.class))).thenAnswer(inv -> inv.getArgument(0));
-        org.bson.Document mentioneeDoc = new org.bson.Document("displayName", "Alice");
-        when(mongoTemplate.findOne(any(Query.class), eq(org.bson.Document.class), eq("users")))
-            .thenReturn(mentioneeDoc);
+        when(messageServiceHelper.parseMentions(anyString(), anyList(), anyString()))
+            .thenReturn(List.of(mentioneeId));
 
         MessageResponse response = messageService.sendMessage(mentionerId,
             new SendMessageRequest(CONV_ID, "Hey @Alice check this", "text"));
@@ -411,7 +404,6 @@ class MessageServiceTest {
             return m;
         });
         when(conversationRepository.save(any(Conversation.class))).thenAnswer(inv -> inv.getArgument(0));
-        when(userBlockRepository.findById(anyString())).thenReturn(Optional.empty());
 
         MessageResponse result = messageService.forwardMessage(SENDER_ID, MSG_ID, targetConvId);
 
@@ -464,5 +456,38 @@ class MessageServiceTest {
             .isInstanceOf(ConversationNotFoundException.class);
 
         verifyNoInteractions(messageRepository);
+    }
+
+    // -------------------------------------------------------------------------
+    // Sprint AI-1 — saveAiMessage
+    // -------------------------------------------------------------------------
+
+    @Test
+    void saveAiMessage_ShouldSaveWithAiBotSenderAndBroadcast() {
+        String content = "Here is the AI reply";
+        Message aiMessage = Message.builder()
+            .id("ai-msg-1")
+            .conversationId(CONV_ID)
+            .senderId(com.platform.chatservice.service.AiConstants.AI_BOT_USER_ID)
+            .content(content)
+            .type("ai")
+            .readBy(new java.util.ArrayList<>())
+            .createdAt(Instant.now())
+            .build();
+        when(messageRepository.save(any(Message.class))).thenReturn(aiMessage);
+        when(conversationRepository.findById(CONV_ID)).thenReturn(Optional.of(conversation));
+        when(conversationRepository.save(any(Conversation.class))).thenReturn(conversation);
+
+        MessageResponse response = messageService.saveAiMessage(CONV_ID, content);
+
+        assertThat(response.senderId()).isEqualTo(com.platform.chatservice.service.AiConstants.AI_BOT_USER_ID);
+        assertThat(response.type()).isEqualTo("ai");
+        assertThat(response.content()).isEqualTo(content);
+        verify(messageRepository).save(argThat(m ->
+            com.platform.chatservice.service.AiConstants.AI_BOT_USER_ID.equals(m.getSenderId())
+                && "ai".equals(m.getType())
+                && content.equals(m.getContent())));
+        verify(messagingTemplate).convertAndSend(
+            eq("/topic/conversation/" + CONV_ID), (Object) eq(response));
     }
 }

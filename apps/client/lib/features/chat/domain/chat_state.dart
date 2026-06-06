@@ -195,13 +195,16 @@ class ReplyPreview {
       );
 }
 
+const kAiBotUserId = 'ai-bot-000000000000000000000001';
+const kAiErrorSentinel = '__AI_ERROR__';
+
 @immutable
 class MessageModel {
   final String id;
   final String conversationId;
   final String senderId;
   final String content;
-  final String type; // "text" | "image" | "system"
+  final String type; // "text" | "image" | "system" | "ai" | etc.
   final List<String> readBy;
   final DateTime createdAt;
   final String? replyToId;
@@ -214,6 +217,9 @@ class MessageModel {
   final List<String> mentions;
   // Client-only flag for optimistic UI — not in server response
   final bool isPending;
+  // AI streaming state — client-only, not persisted
+  final bool isStreaming;
+  final bool isThinking;
 
   const MessageModel({
     required this.id,
@@ -230,11 +236,16 @@ class MessageModel {
     this.editedAt,
     this.mentions = const [],
     this.isPending = false,
+    this.isStreaming = false,
+    this.isThinking = false,
   });
 
   bool get isEdited => editedAt != null;
 
   bool get isSystem => type == 'system';
+  bool get isAiMessage => type == 'ai';
+  bool get isAiBot => senderId == kAiBotUserId;
+  bool get isAiError => isAiMessage && content == kAiErrorSentinel;
   bool get isImage => type == 'image';
   bool get isVideo => type == 'video';
   bool get isMedia => isImage || isVideo;
@@ -300,6 +311,8 @@ class MessageModel {
     DateTime? editedAt,
     List<String>? mentions,
     bool? isPending,
+    bool? isStreaming,
+    bool? isThinking,
   }) {
     return MessageModel(
       id: id ?? this.id,
@@ -316,6 +329,8 @@ class MessageModel {
       editedAt: editedAt ?? this.editedAt,
       mentions: mentions ?? this.mentions,
       isPending: isPending ?? this.isPending,
+      isStreaming: isStreaming ?? this.isStreaming,
+      isThinking: isThinking ?? this.isThinking,
     );
   }
 }
