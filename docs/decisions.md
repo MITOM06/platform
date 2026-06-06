@@ -193,3 +193,37 @@ This document captures discussions and locked choices.
 ```
 
 **Caveat:** Redis Pub/Sub is not persistent — if ai-service is down when a request arrives, the message is lost. Acceptable at Sprint AI-1; will re-evaluate at Sprint AI-3+ if durability is required.
+
+---
+
+## ADR-009: Qdrant Vector Database and OpenAI Embeddings for Knowledge Base (RAG)
+
+**Date:** 2026-06-06  
+**Status:** Accepted
+
+**Context:** Starting Phase 2 — Sprint AI-3: Knowledge Base / RAG pipeline. Need to store and retrieve document chunk embeddings for context injection.
+
+**Options considered for Vector DB:**
+- PGVector (PostgreSQL) — Good if already using SQL DB, but stack uses MongoDB. PGVector would require setting up Postgres from scratch.
+- MongoDB Atlas Vector Search — Native to MongoDB, but local Docker setup lacks full Atlas features or requires complex setups.
+- Qdrant — High performance, extremely developer-friendly Node.js client, natively supports payload filtering, low memory footprint.
+
+**Options considered for Embedding Model:**
+- Local transformers (e.g., SentenceTransformers in Node.js) — Free, but resource intensive for CPU-bound Docker microservices.
+- OpenAI Embeddings (`text-embedding-3-small`) — Industry-standard, cheap ($0.02 / 1M tokens), high dimension accuracy (1536).
+- Anthropic API — Anthropic does not provide an embedding API (requires using Claude directly which is not built/cost-effective for embeddings).
+
+**Decision:**
+- Use **Qdrant v1.9.0** as the Vector DB.
+- Use **OpenAI `text-embedding-3-small`** for producing 1536-dimensional embeddings.
+
+**Rationale:**
+- Qdrant is lightweight, easy to integrate in Docker Compose, and supports precise logical filters (e.g. matching `documentId`).
+- OpenAI's embeddings are highly cost-efficient and provide the quality needed for conversational QA context.
+- Keep a clean separation: `ai-service` processes text and interacts with OpenAI/Qdrant, while `chat-service` manages MongoDB document status metadata and REST CRUD endpoints.
+
+**Consequences:**
+- Qdrant collection named `knowledge` is created on boot.
+- Redis channels `kb:process` and `kb:delete` are used to communicate jobs from `chat-service` to `ai-service`.
+- Custom text chunker uses 512-character chunks with 80-character overlap aligned to sentence boundaries.
+- Context is retrieved using cosine similarity with a score threshold >= `0.3` for prompt injection.
