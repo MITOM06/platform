@@ -955,4 +955,34 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get reminderDone => 'Mark as done';
+
+  @override
+  String get tokenUsage => 'Token Usage';
+
+  @override
+  String get tokenUsageTitle => 'Token Usage Dashboard';
+
+  @override
+  String get tokenUsageThisMonth => 'Total tokens this month';
+
+  @override
+  String get tokenUsageRequests => 'AI requests';
+
+  @override
+  String get tokenUsageEstCost => 'Estimated cost (USD)';
+
+  @override
+  String get tokenUsageDailyChart => 'Daily token usage (last 30 days)';
+
+  @override
+  String get aiTraceTitle => 'Agent trace';
+
+  @override
+  String get aiTraceThinking => 'Thinking';
+
+  @override
+  String get aiTraceTools => 'Tool calls';
+
+  @override
+  String get aiTraceStats => 'Stats';
 }

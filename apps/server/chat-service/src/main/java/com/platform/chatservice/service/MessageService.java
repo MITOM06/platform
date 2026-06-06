@@ -1,9 +1,11 @@
 package com.platform.chatservice.service;
 
+import com.platform.chatservice.dto.AiTraceResponse;
 import com.platform.chatservice.dto.MessageResponse;
 import com.platform.chatservice.dto.PageResponse;
 import com.platform.chatservice.dto.PinResult;
 import com.platform.chatservice.dto.SendMessageRequest;
+import com.platform.chatservice.model.AiTraceData;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import com.platform.chatservice.exception.ConversationNotFoundException;
 import com.platform.chatservice.exception.MessageNotFoundException;
@@ -385,16 +387,17 @@ public class MessageService {
     }
 
     /**
-     * Save an AI-generated message and broadcast it to the conversation topic.
+     * Save an AI-generated message (with optional trace) and broadcast it to the conversation topic.
      * Called by AiResponseListener when AI_STREAM_DONE is received from Redis.
      */
-    public MessageResponse saveAiMessage(String conversationId, String content) {
+    public MessageResponse saveAiMessage(String conversationId, String content, AiTraceData trace) {
         Message message = messageRepository.save(Message.builder()
             .conversationId(conversationId)
             .senderId(AiConstants.AI_BOT_USER_ID)
             .content(content)
             .type("ai")
             .readBy(new ArrayList<>())
+            .trace(trace)
             .build());
 
         Instant savedAt = message.getCreatedAt() != null ? message.getCreatedAt() : Instant.now();
@@ -411,6 +414,27 @@ public class MessageService {
         MessageResponse response = toResponse(message);
         messagingTemplate.convertAndSend("/topic/conversation/" + conversationId, response);
         return response;
+    }
+
+    /**
+     * Returns the AI trace for a message. Throws 404 if message not found or trace is null
+     * (regular non-AI messages have no trace).
+     */
+    public AiTraceResponse getMessageTrace(String userId, String messageId) {
+        Message message = messageRepository.findById(messageId)
+            .orElseThrow(() -> new com.platform.chatservice.exception.MessageNotFoundException(
+                "Message not found: " + messageId));
+        boolean isParticipant = conversationRepository.findById(message.getConversationId())
+            .map(c -> c.getParticipants() != null && c.getParticipants().contains(userId))
+            .orElse(false);
+        if (!isParticipant) {
+            throw new com.platform.chatservice.exception.ForbiddenException("Not a participant");
+        }
+        if (message.getTrace() == null) {
+            throw new com.platform.chatservice.exception.MessageNotFoundException(
+                "No trace for message: " + messageId);
+        }
+        return AiTraceResponse.from(message.getTrace());
     }
 
     /**

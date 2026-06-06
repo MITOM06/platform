@@ -199,21 +199,57 @@ const kAiBotUserId = 'ai-bot-000000000000000000000001';
 const kAiErrorSentinel = '__AI_ERROR__';
 
 @immutable
-class ToolTraceEntry {
+class ToolCallEntry {
   final String toolName;
   final String inputSummary;
   final String resultSummary;
 
-  const ToolTraceEntry({
+  const ToolCallEntry({
     required this.toolName,
     required this.inputSummary,
     required this.resultSummary,
   });
 
-  factory ToolTraceEntry.fromJson(Map<String, dynamic> json) => ToolTraceEntry(
+  factory ToolCallEntry.fromJson(Map<String, dynamic> json) => ToolCallEntry(
         toolName: json['toolName'] as String? ?? '',
         inputSummary: json['inputSummary'] as String? ?? '',
         resultSummary: json['resultSummary'] as String? ?? '',
+      );
+}
+
+@immutable
+class AiTrace {
+  final List<String> thinkingBlocks;
+  final List<ToolCallEntry> toolCalls;
+  final int inputTokens;
+  final int outputTokens;
+  final int thinkingTokens;
+  final int processingMs;
+  final String model;
+  final int iterationCount;
+
+  const AiTrace({
+    required this.thinkingBlocks,
+    required this.toolCalls,
+    required this.inputTokens,
+    required this.outputTokens,
+    required this.thinkingTokens,
+    required this.processingMs,
+    required this.model,
+    required this.iterationCount,
+  });
+
+  factory AiTrace.fromJson(Map<String, dynamic> json) => AiTrace(
+        thinkingBlocks: List<String>.from(json['thinkingBlocks'] as List? ?? []),
+        toolCalls: (json['toolCalls'] as List? ?? [])
+            .map((e) => ToolCallEntry.fromJson(e as Map<String, dynamic>))
+            .toList(),
+        inputTokens: (json['inputTokens'] as num?)?.toInt() ?? 0,
+        outputTokens: (json['outputTokens'] as num?)?.toInt() ?? 0,
+        thinkingTokens: (json['thinkingTokens'] as num?)?.toInt() ?? 0,
+        processingMs: (json['processingMs'] as num?)?.toInt() ?? 0,
+        model: json['model'] as String? ?? '',
+        iterationCount: (json['iterationCount'] as num?)?.toInt() ?? 0,
       );
 }
 
@@ -241,8 +277,8 @@ class MessageModel {
   final bool isThinking;
   // RAG citation sources — documentIds cited by the AI, from AI_STREAM_DONE payload
   final List<String>? sources;
-  // Tool trace from agentic loop — shown in collapsible panel below finalized AI messages
-  final List<ToolTraceEntry>? toolTrace;
+  // Agent trace — thinking blocks, tool calls, token usage; shown in trace panel below AI messages
+  final AiTrace? trace;
   // Tools actively executing during streaming (client-only)
   final List<String> activeTools;
 
@@ -264,7 +300,7 @@ class MessageModel {
     this.isStreaming = false,
     this.isThinking = false,
     this.sources,
-    this.toolTrace,
+    this.trace,
     this.activeTools = const [],
   });
 
@@ -342,7 +378,7 @@ class MessageModel {
     bool? isStreaming,
     bool? isThinking,
     List<String>? sources,
-    List<ToolTraceEntry>? toolTrace,
+    AiTrace? trace,
     List<String>? activeTools,
   }) {
     return MessageModel(
@@ -363,7 +399,7 @@ class MessageModel {
       isStreaming: isStreaming ?? this.isStreaming,
       isThinking: isThinking ?? this.isThinking,
       sources: sources ?? this.sources,
-      toolTrace: toolTrace ?? this.toolTrace,
+      trace: trace ?? this.trace,
       activeTools: activeTools ?? this.activeTools,
     );
   }

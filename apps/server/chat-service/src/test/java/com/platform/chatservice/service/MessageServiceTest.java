@@ -517,7 +517,7 @@ class MessageServiceTest {
         when(conversationRepository.findById(CONV_ID)).thenReturn(Optional.of(conversation));
         when(conversationRepository.save(any(Conversation.class))).thenReturn(conversation);
 
-        MessageResponse response = messageService.saveAiMessage(CONV_ID, content);
+        MessageResponse response = messageService.saveAiMessage(CONV_ID, content, null);
 
         assertThat(response.senderId()).isEqualTo(com.platform.chatservice.service.AiConstants.AI_BOT_USER_ID);
         assertThat(response.type()).isEqualTo("ai");

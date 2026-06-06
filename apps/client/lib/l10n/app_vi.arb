@@ -318,5 +318,15 @@
   "toolCreateReminder": "Đang tạo nhắc nhở...",
   "reminders": "Nhắc nhở",
   "remindersEmpty": "Không có nhắc nhở nào.\nHãy nhờ PON AI đặt nhắc nhở cho bạn.",
-  "reminderDone": "Đánh dấu hoàn thành"
+  "reminderDone": "Đánh dấu hoàn thành",
+  "tokenUsage": "Sử dụng Token",
+  "tokenUsageTitle": "Bảng thống kê Token",
+  "tokenUsageThisMonth": "Tổng token tháng này",
+  "tokenUsageRequests": "Số yêu cầu AI",
+  "tokenUsageEstCost": "Chi phí ước tính (USD)",
+  "tokenUsageDailyChart": "Sử dụng token hàng ngày (30 ngày qua)",
+  "aiTraceTitle": "Nhật ký AI",
+  "aiTraceThinking": "Suy nghĩ",
+  "aiTraceTools": "Công cụ đã dùng",
+  "aiTraceStats": "Thống kê"
 }

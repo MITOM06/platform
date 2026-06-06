@@ -1782,3 +1782,187 @@ Since MongoDB is shared, chat-service reads reminders written by ai-service.
 
 ---
 
+
+---
+
+## 🟢 SPRINT AI-5 — Agent Trace & Transparency — DONE
+
+> **Goal:** User sees exactly what AI did — extended thinking blocks, tool calls sequence, token usage, processing time. Token usage dashboard per user. Fully transparent AI.
+> **New feature:** Claude extended thinking (`thinking: { type: 'enabled' }`) — captures internal reasoning blocks
+> **New MongoDB collection:** `token_usage` (aggregated per user per day)
+> **New Message field:** `trace` — persisted alongside AI message content
+> **Reference:** `.claude/rules/ai-service.md`, `docs/roadmap.md` (Sprint AI-5)
+
+---
+
+### PHASE 1 — Capture Trace Data (ai-service)
+
+### TASK AI-5.1 — Extended thinking + trace capture `DONE`
+#### SPEC
+- **File:** `apps/server/ai-service/src/config/configuration.ts`
+  - Add: `ai: { enableThinking: process.env.AI_ENABLE_THINKING === 'true', thinkingBudgetTokens: parseInt(process.env.AI_THINKING_BUDGET ?? '8000') }`
+- **File:** `infra/docker-compose/compose.yml` — add to ai-service environment:
+  - `AI_ENABLE_THINKING: ${AI_ENABLE_THINKING:-false}`
+  - `AI_THINKING_BUDGET: ${AI_THINKING_BUDGET:-8000}`
+- **File:** `apps/server/ai-service/.env.example` — add both vars
+- **File:** `apps/server/ai-service/src/ai/ai.service.ts`
+  - Track `const startMs = Date.now()` at the start of `handleRequest()`
+  - In the agentic loop's `messages.create()` calls AND the final `messages.stream()` call:
+    - If `config.ai.enableThinking`: add `thinking: { type: 'enabled', budget_tokens: config.ai.thinkingBudgetTokens }` to request params. Model must be `claude-sonnet-4-5` or later — thinking is not supported on haiku fallback, skip it silently.
+    - NOTE: extended thinking requires `max_tokens >= budget_tokens + 1000`. Increase `max_tokens` to `config.ai.thinkingBudgetTokens + 2048` when thinking is enabled.
+  - Collect thinking blocks from all agentic loop iterations and the final stream:
+    - In `messages.create()` responses: `response.content.filter(b => b.type === 'thinking').map(b => b.thinking)`
+    - In `messages.stream()`: listen for `thinking` content blocks via `stream.on('streamEvent', ...)` — accumulate `thinking_delta` text blocks
+  - Collect token usage: after the final stream, `(await stream.finalMessage()).usage` → `{ input_tokens, output_tokens, cache_read_input_tokens? }`
+  - Sum token usage across ALL iterations (tool call iterations + final stream)
+  - Build `trace` object:
+    ```typescript
+    interface AiTrace {
+      thinkingBlocks: string[];          // captured thinking text blocks
+      toolCalls: ToolTraceEntry[];       // from AI-4 toolTrace
+      inputTokens: number;
+      outputTokens: number;
+      thinkingTokens: number;            // from usage.cache_read_input_tokens or thinking block length estimate
+      processingMs: number;              // Date.now() - startMs
+      model: string;                     // which model was actually used
+      iterationCount: number;            // how many agentic loop iterations ran
+    }
+    ```
+  - Include `trace` in `AI_STREAM_DONE` payload: `{ type, fullContent, sources, trace }`
+  - Remove top-level `toolTrace` from `AI_STREAM_DONE` (it is now inside `trace.toolCalls`) — update chat-service and Flutter accordingly
+- **Test:** `ai.service.spec.ts` — mock `messages.create` returning thinking block; verify `trace.thinkingBlocks` populated; verify `trace.processingMs > 0`; verify `trace.inputTokens` is sum across iterations.
+
+### TASK AI-5.2 — Token usage aggregation `DONE`
+#### SPEC
+- **New file:** `apps/server/ai-service/src/usage/token-usage.schema.ts`
+  - Mongoose schema `TokenUsage`: `userId (String, required)`, `date (String, required, format YYYY-MM-DD)`, `inputTokens (Number, default 0)`, `outputTokens (Number, default 0)`, `requestCount (Number, default 0)`, `updatedAt (Date)`
+  - Compound unique index: `{ userId: 1, date: 1 }`
+- **New file:** `apps/server/ai-service/src/usage/usage.service.ts`
+  - `recordUsage(userId: string, inputTokens: number, outputTokens: number): Promise<void>`
+    - `const date = new Date().toISOString().slice(0, 10)` (YYYY-MM-DD)
+    - `findOneAndUpdate({ userId, date }, { $inc: { inputTokens, outputTokens, requestCount: 1 }, $set: { updatedAt: new Date() } }, { upsert: true })`
+- **New file:** `apps/server/ai-service/src/usage/usage.module.ts` — exports `UsageService`
+- **Update:** `apps/server/ai-service/src/ai/ai.service.ts` — inject `UsageService`; after building `trace`, call `await usageService.recordUsage(payload.userId, trace.inputTokens, trace.outputTokens)` (fire-and-forget with `.catch(err => this.logger.warn(...))`)
+- **Update:** `apps/server/ai-service/src/app.module.ts` — import `UsageModule`
+
+---
+
+### PHASE 2 — Persist Trace (chat-service)
+
+### TASK AI-5.3 — Persist trace to Message + REST endpoint `DONE`
+#### SPEC
+- **File:** `apps/server/chat-service/.../model/Message.java`
+  - Add field: `@Field("trace") private AiTraceData trace` (nullable, only present on `type="ai"` messages)
+- **New file:** `...model/AiTraceData.java` — `@Document` NOT needed (embedded subdocument):
+  ```java
+  public class AiTraceData {
+    private List<String> thinkingBlocks;
+    private List<ToolCallEntry> toolCalls;
+    private int inputTokens;
+    private int outputTokens;
+    private int processingMs;
+    private String model;
+    private int iterationCount;
+  }
+  public class ToolCallEntry {
+    private String toolName;
+    private String inputSummary;
+    private String resultSummary;
+  }
+  ```
+- **File:** `...service/MessageService.java`
+  - Update `saveAiMessage(String conversationId, String content)` signature to `saveAiMessage(String conversationId, String content, AiTraceData trace)` — persist `trace` on the `Message` document
+- **File:** `...service/AiResponseListener.java`
+  - On `AI_STREAM_DONE`: parse `trace` JSON from payload → deserialize to `AiTraceData` via `ObjectMapper` → pass to `messageService.saveAiMessage(convId, fullContent, trace)`
+  - Update STOMP broadcast to include `trace` in the final event map
+- **New file:** `...dto/AiTraceResponse.java` — mirrors `AiTraceData` fields for API response
+- **File:** `...controller/MessageController.java`
+  - Add `GET /api/messages/{id}/trace` — fetch `Message` by id (participant check), return `AiTraceResponse` (404 if `trace == null`)
+- **Test:** `MessageServiceTest.java` — update `saveAiMessage` tests to pass trace; `AiResponseListenerTest.java` — verify trace parsed and forwarded correctly.
+
+---
+
+### PHASE 3 — Flutter UI
+
+### TASK AI-5.4 — Flutter: receive + store trace in MessageModel `DONE`
+#### SPEC
+- **File:** `apps/client/lib/features/chat/domain/chat_state.dart`
+  - Add `AiTrace` class: `thinkingBlocks (List<String>)`, `toolCalls (List<ToolCallEntry>)`, `inputTokens (int)`, `outputTokens (int)`, `processingMs (int)`, `model (String)`, `iterationCount (int)`
+  - Add `ToolCallEntry` class: `toolName, inputSummary, resultSummary`
+  - Add to `MessageModel`: `final AiTrace? trace` (nullable); parse from `AI_STREAM_DONE` payload and from REST message JSON
+  - Remove `toolTrace` field (now inside `trace.toolCalls`) — update all references
+- **File:** `apps/client/lib/features/chat/domain/chat_provider.dart`
+  - On `AI_STREAM_DONE`: parse `trace` from payload → update streaming message with trace data
+
+### TASK AI-5.5 — Flutter: full trace panel widget `DONE`
+#### SPEC
+- **File:** `apps/client/lib/features/chat/ui/widgets/tool_trace_panel.dart` — **REPLACE** entirely (was minimal in AI-4):
+  - `TracePanel(AiTrace trace)` — `ExpansionTile`, collapsed by default, title: `Icons.account_tree` + `l10n.aiTraceTitle`
+  - **Section 1 — Thinking** (only if `trace.thinkingBlocks.isNotEmpty`):
+    - `ExpansionTile` with `Icons.psychology` + `l10n.aiTraceThinking`
+    - Each block: `Container` with monospace `Text`, light purple background, rounded corners, max-height 200 with scroll
+  - **Section 2 — Tool Calls** (only if `trace.toolCalls.isNotEmpty`):
+    - Vertical list: each entry shows tool icon (per name map) + bold `toolName` + grey `inputSummary` + italic `resultSummary` (truncated 100 chars)
+  - **Section 3 — Stats row** (always shown):
+    - Chips in a `Wrap`: `🪙 ${inputTokens}in / ${outputTokens}out`, `⚡ ${processingMs}ms`, `🔄 ${iterationCount} step(s)`, `🤖 ${model}`
+    - Stats chips: small `Chip` with grey background, 12sp font
+- **File:** `apps/client/lib/features/chat/ui/widgets/message_bubble.dart`
+  - Replace old `ToolTracePanel` call with new `TracePanel(message.trace!)` — show only when `message.trace != null`
+
+### TASK AI-5.6 — Flutter: token usage dashboard `DONE`
+#### SPEC
+Token usage is read from chat-service via a new passthrough endpoint (chat-service reads `token_usage` collection from shared MongoDB).
+- **New file:** `apps/server/chat-service/.../model/TokenUsage.java`
+  - `@Document(collection = "token_usage")`, fields: `id, userId, date (String), inputTokens (int), outputTokens (int), requestCount (int)`
+- **New file:** `...repository/TokenUsageRepository.java`
+  - `List<TokenUsage> findByUserIdAndDateBetweenOrderByDateAsc(String userId, String from, String to)`
+- **New file:** `...controller/UsageController.java`
+  - `GET /api/usage/tokens?days=30` (default 30) — returns `List<TokenUsageDayResponse>` for authenticated user, last N days
+  - `TokenUsageDayResponse { date, inputTokens, outputTokens, requestCount, totalTokens }`
+- **New file:** `apps/client/lib/features/settings/ui/token_usage_screen.dart` (≤ 400 lines)
+  - `TokenUsageScreen` — `ConsumerWidget`
+  - Top summary cards: total tokens this month, total requests, estimated cost (inputTokens × $0.000003 + outputTokens × $0.000015 — claude-sonnet-4-5 pricing)
+  - Bar chart: daily token usage for last 30 days using `fl_chart` package (add to pubspec if not present, else use simple `CustomPaint` bar chart)
+  - Each bar: stacked input (blue) + output (purple)
+  - Days with 0 usage shown as empty bars
+- **New route:** `/token-usage` in `app_router.dart`
+- **Access point:** Settings screen → new `l10n.tokenUsage` list tile (below Reminders) → `/token-usage`
+- **i18n:** `"tokenUsage"`, `"tokenUsageTitle"`, `"tokenUsageThisMonth"`, `"tokenUsageRequests"`, `"tokenUsageEstCost"`, `"tokenUsageDailyChart"`, `"aiTraceTitle"`, `"aiTraceThinking"`, `"aiTraceTools"`, `"aiTraceStats"` — add to all 7 ARB files
+- Run `flutter gen-l10n`
+
+### TASK AI-5.7 — i18n + Tests + Verification `DONE`
+#### SPEC
+- Verify all 10 i18n keys from AI-5.6 in all 7 ARB files
+- **ai-service tests** (`pnpm test`):
+  - `usage.service.spec.ts` — mock Mongoose, test `recordUsage` upserts correctly, date format YYYY-MM-DD
+  - `ai.service.spec.ts` — extend: thinking enabled → thinking blocks captured; token usage summed across iterations
+- **chat-service tests** (`mvn test`): `MessageServiceTest` updated `saveAiMessage` signature; `AiResponseListenerTest` trace deserialization; all existing tests pass
+- **Flutter** (`flutter analyze && flutter test`): 0 new issues
+- **Manual smoke test checklist:**
+  - [ ] Enable `AI_ENABLE_THINKING=true` in .env → ask AI complex question → trace panel shows thinking block
+  - [ ] Tool call made → trace panel shows tool call section with input/result
+  - [ ] Stats row shows correct token count and processing time
+  - [ ] `/token-usage` screen shows bar chart with today's usage after sending AI messages
+  - [ ] Disable thinking → trace panel shows only tool calls + stats (no thinking section)
+- **Append to QA LOG** in TODO.md and mark each task DONE
+
+---
+
+## 🧪 QA LOG — Sprint AI-5 [2026-06-06]
+
+| Suite | Result | Details |
+|-------|--------|---------|
+| `pnpm build` (ai-service) | ✅ PASS | Fixed `UsageModule` DynamicModule cast (`as unknown as DynamicModule`) |
+| `pnpm test` (ai-service) | ✅ PASS | 9 suites, 55 tests — includes new trace/thinking/token-usage tests |
+| `mvn test` (chat-service) | ✅ PASS | All existing tests pass; updated `saveAiMessage` callers to 3-arg |
+| `flutter analyze` | ✅ PASS | No issues found |
+| `flutter test` | ✅ PASS | 1 test passed |
+| `flutter gen-l10n` | ✅ PASS | 10 new keys in all 7 ARBs regenerated |
+
+**Key changes:**
+- `AI_STREAM_DONE` payload: `toolTrace` → `trace: { thinkingBlocks, toolCalls, inputTokens, outputTokens, thinkingTokens, processingMs, model, iterationCount }`
+- New `UsageService` + `TokenUsage` schema (ai-service) — fire-and-forget per request
+- New `AiTraceData` embedded in `Message` (chat-service) + `GET /api/messages/{id}/trace`
+- New `GET /api/usage/tokens?days=30` (chat-service) — 30-day token aggregation
+- Flutter `TracePanel` replaces `ToolTracePanel`; new `TokenUsageScreen` at `/token-usage`
+

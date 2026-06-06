@@ -318,5 +318,15 @@
   "toolCreateReminder": "알림 생성 중...",
   "reminders": "알림",
   "remindersEmpty": "대기 중인 알림이 없습니다.\nPON AI에게 알림을 설정해 달라고 해보세요.",
-  "reminderDone": "완료로 표시"
+  "reminderDone": "완료로 표시",
+  "tokenUsage": "토큰 사용량",
+  "tokenUsageTitle": "토큰 사용량 대시보드",
+  "tokenUsageThisMonth": "이번 달 총 토큰",
+  "tokenUsageRequests": "AI 요청 수",
+  "tokenUsageEstCost": "예상 비용 (USD)",
+  "tokenUsageDailyChart": "일별 토큰 사용량 (최근 30일)",
+  "aiTraceTitle": "AI 추적",
+  "aiTraceThinking": "사고 과정",
+  "aiTraceTools": "도구 호출",
+  "aiTraceStats": "통계"
 }

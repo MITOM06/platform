@@ -226,9 +226,8 @@ class MessageBubble extends ConsumerWidget {
                               sources: message.sources,
                               conversationId: message.conversationId,
                             ),
-                            if (message.toolTrace != null &&
-                                message.toolTrace!.isNotEmpty)
-                              ToolTracePanel(trace: message.toolTrace!),
+                            if (message.trace != null)
+                              TracePanel(trace: message.trace!),
                           ],
                         )
                       else

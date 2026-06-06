@@ -6,6 +6,7 @@ import { KbProcessorService } from '../kb/kb-processor.service';
 import { EmbeddingService } from '../kb/embedding.service';
 import { VectorStoreService } from '../kb/vector-store.service';
 import { ToolRegistryService } from '../tools/tool-registry.service';
+import { UsageService } from '../usage/usage.service';
 
 function makeAsyncIterator(chunks: unknown[]) {
   return {
@@ -15,13 +16,31 @@ function makeAsyncIterator(chunks: unknown[]) {
   };
 }
 
-function makeChunks(texts: string[]) {
-  return makeAsyncIterator(
-    texts.map((t) => ({
-      type: 'content_block_delta',
-      delta: { type: 'text_delta', text: t },
-    })),
-  );
+function makeChunks(texts: string[], usage = { input_tokens: 10, output_tokens: 20 }) {
+  return {
+    ...makeAsyncIterator(
+      texts.map((t) => ({
+        type: 'content_block_delta',
+        delta: { type: 'text_delta', text: t },
+      })),
+    ),
+    finalMessage: jest.fn().mockResolvedValue({ usage }),
+  };
+}
+
+function makeThinkingStream(thinkingText: string, responseText: string) {
+  const events = [
+    { type: 'content_block_start', content_block: { type: 'thinking' } },
+    { type: 'content_block_delta', delta: { type: 'thinking_delta', thinking: thinkingText } },
+    { type: 'content_block_stop' },
+    { type: 'content_block_start', content_block: { type: 'text' } },
+    { type: 'content_block_delta', delta: { type: 'text_delta', text: responseText } },
+    { type: 'content_block_stop' },
+  ];
+  return {
+    ...makeAsyncIterator(events),
+    finalMessage: jest.fn().mockResolvedValue({ usage: { input_tokens: 50, output_tokens: 80 } }),
+  };
 }
 
 function makeErrorStream() {
@@ -31,22 +50,23 @@ function makeErrorStream() {
       // eslint-disable-next-line no-unreachable
       yield;
     },
+    finalMessage: jest.fn().mockRejectedValue(new Error('stream failed')),
   };
 }
 
-// Simulates a non-streaming response with no tool calls (end_turn)
-function makeEndTurnResponse(textContent = '') {
+function makeEndTurnResponse(textContent = '', usage = { input_tokens: 5, output_tokens: 10 }) {
   return {
     stop_reason: 'end_turn',
     content: textContent ? [{ type: 'text', text: textContent }] : [],
+    usage,
   };
 }
 
-// Simulates a non-streaming response requesting a tool call
 function makeToolUseResponse(toolName: string, toolId: string, input: Record<string, unknown>) {
   return {
     stop_reason: 'tool_use',
     content: [{ type: 'tool_use', id: toolId, name: toolName, input }],
+    usage: { input_tokens: 8, output_tokens: 12 },
   };
 }
 
@@ -64,6 +84,7 @@ describe('AiService', () => {
   let vectorSearch: jest.Mock;
   let toolRegistryExecute: jest.Mock;
   let toolRegistryGetDefinitions: jest.Mock;
+  let recordUsage: jest.Mock;
 
   const basePayload: AiRequestPayload = {
     conversationId: 'conv-test',
@@ -86,15 +107,18 @@ describe('AiService', () => {
     vectorSearch = jest.fn().mockResolvedValue([]);
     toolRegistryExecute = jest.fn().mockResolvedValue('tool result');
     toolRegistryGetDefinitions = jest.fn().mockReturnValue([]);
+    recordUsage = jest.fn().mockResolvedValue(undefined);
 
     const fakeConfig = {
       get: jest.fn().mockImplementation((key: string) => {
-        const map: Record<string, string | number> = {
+        const map: Record<string, string | number | boolean> = {
           'config.anthropic.apiKey': 'test-key',
           'config.anthropic.model': 'test-primary',
           'config.anthropic.fallbackModel': 'test-fallback',
           'config.kb.qdrantCollection': 'knowledge',
           'config.kb.topK': 4,
+          'config.ai.enableThinking': false,
+          'config.ai.thinkingBudgetTokens': 8000,
         };
         return map[key];
       }),
@@ -111,10 +135,11 @@ describe('AiService', () => {
       getDefinitions: toolRegistryGetDefinitions,
       execute: toolRegistryExecute,
     } as unknown as ToolRegistryService;
+    const fakeUsage = { recordUsage } as unknown as UsageService;
 
     service = new AiService(
       fakeConfig, fakePublisher, fakeMemory, fakeKbProcessor, fakeEmbedding,
-      fakeVectorStore, fakeToolRegistry,
+      fakeVectorStore, fakeToolRegistry, fakeUsage,
     );
     (service as any)['anthropic'] = { messages: { stream: mockStream, create: mockCreate } };
   });
@@ -141,7 +166,7 @@ describe('AiService', () => {
       type: 'AI_STREAM_DONE',
       fullContent: 'Hello World',
       sources: [],
-      toolTrace: [],
+      trace: expect.objectContaining({ toolCalls: [] }),
     }));
   });
 
@@ -340,7 +365,7 @@ describe('AiService', () => {
     }));
   });
 
-  // ─── Agentic loop (AI-4.5) ────────────────────────────────────────────────
+  // ─── Agentic loop ─────────────────────────────────────────────────────────
 
   it('executes single tool call then publishes final stream', async () => {
     mockCreate
@@ -360,9 +385,11 @@ describe('AiService', () => {
     }));
     expect(publish).toHaveBeenCalledWith('conv-test', expect.objectContaining({
       type: 'AI_STREAM_DONE',
-      toolTrace: expect.arrayContaining([
-        expect.objectContaining({ toolName: 'search_messages' }),
-      ]),
+      trace: expect.objectContaining({
+        toolCalls: expect.arrayContaining([
+          expect.objectContaining({ toolName: 'search_messages' }),
+        ]),
+      }),
     }));
   });
 
@@ -380,29 +407,26 @@ describe('AiService', () => {
     expect(toolRegistryExecute).toHaveBeenCalledTimes(2);
     expect(publish).toHaveBeenCalledWith('conv-test', expect.objectContaining({
       type: 'AI_STREAM_DONE',
-      toolTrace: expect.arrayContaining([
-        expect.objectContaining({ toolName: 'get_user_info' }),
-        expect.objectContaining({ toolName: 'search_messages' }),
-      ]),
+      trace: expect.objectContaining({
+        toolCalls: expect.arrayContaining([
+          expect.objectContaining({ toolName: 'get_user_info' }),
+          expect.objectContaining({ toolName: 'search_messages' }),
+        ]),
+      }),
     }));
   });
 
   it('publishes fallback message when MAX_ITER exhausted', async () => {
-    // Always returns tool_use — never end_turn
     mockCreate.mockResolvedValue(makeToolUseResponse('search_messages', 'tool-x', { query: 'x' }));
     toolRegistryExecute.mockResolvedValue('some result');
-    // stream should not be called in this case
     mockStream.mockReturnValue(makeChunks(['Should not be called']));
 
     await service.handleRequest(basePayload);
 
-    // MAX_ITER = 5, so create is called 5 times
     expect(mockCreate).toHaveBeenCalledTimes(5);
-    // Should publish AI_STREAM_DONE with fallback text
     expect(publish).toHaveBeenCalledWith('conv-test', expect.objectContaining({
       type: 'AI_STREAM_DONE',
     }));
-    // Stream should NOT be called since MAX_ITER was reached
     expect(mockStream).not.toHaveBeenCalled();
   });
 
@@ -415,9 +439,58 @@ describe('AiService', () => {
 
     await service.handleRequest(basePayload);
 
-    // Loop continues after error string (doesn't throw)
     expect(publish).toHaveBeenCalledWith('conv-test', expect.objectContaining({
       type: 'AI_STREAM_DONE',
     }));
+  });
+
+  // ─── Trace & token usage (AI-5) ───────────────────────────────────────────
+
+  it('trace.processingMs > 0 in AI_STREAM_DONE payload', async () => {
+    mockCreate.mockResolvedValue(makeEndTurnResponse());
+    mockStream.mockReturnValue(makeChunks(['OK']));
+
+    await service.handleRequest(basePayload);
+
+    expect(publish).toHaveBeenCalledWith('conv-test', expect.objectContaining({
+      trace: expect.objectContaining({ processingMs: expect.any(Number) }),
+    }));
+    const call = publish.mock.calls.find(
+      (c) => c[1]?.type === 'AI_STREAM_DONE',
+    );
+    expect(call?.[1].trace.processingMs).toBeGreaterThanOrEqual(0);
+  });
+
+  it('trace.inputTokens is sum across create and stream iterations', async () => {
+    // create call: 5 in + 10 out; stream: 10 in + 20 out
+    mockCreate.mockResolvedValue(makeEndTurnResponse('', { input_tokens: 5, output_tokens: 10 }));
+    mockStream.mockReturnValue(makeChunks(['OK'], { input_tokens: 10, output_tokens: 20 }));
+
+    await service.handleRequest(basePayload);
+
+    const call = publish.mock.calls.find((c) => c[1]?.type === 'AI_STREAM_DONE');
+    expect(call?.[1].trace.inputTokens).toBe(15);
+    expect(call?.[1].trace.outputTokens).toBe(30);
+  });
+
+  it('thinking blocks captured from stream when present', async () => {
+    mockCreate.mockResolvedValue(makeEndTurnResponse());
+    mockStream.mockReturnValue(makeThinkingStream('Reasoning...', 'Final answer'));
+
+    await service.handleRequest(basePayload);
+
+    const call = publish.mock.calls.find((c) => c[1]?.type === 'AI_STREAM_DONE');
+    expect(call?.[1].trace.thinkingBlocks).toContain('Reasoning...');
+    expect(call?.[1].fullContent).toBe('Final answer');
+  });
+
+  it('calls usageService.recordUsage after successful request', async () => {
+    mockCreate.mockResolvedValue(makeEndTurnResponse('', { input_tokens: 5, output_tokens: 10 }));
+    mockStream.mockReturnValue(makeChunks(['OK'], { input_tokens: 10, output_tokens: 20 }));
+
+    await service.handleRequest(basePayload);
+    await new Promise((r) => setTimeout(r, 10));
+
+    expect(recordUsage).toHaveBeenCalledWith('user-1', 15, 30);
   });
 });

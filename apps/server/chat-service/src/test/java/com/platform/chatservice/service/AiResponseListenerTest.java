@@ -67,11 +67,11 @@ class AiResponseListenerTest {
         MessageResponse saved = new MessageResponse(
             "msg-ai-1", "conv-1", AiConstants.AI_BOT_USER_ID,
             "Full AI reply", "ai", List.of(), Instant.now());
-        when(messageService.saveAiMessage("conv-1", "Full AI reply")).thenReturn(saved);
+        when(messageService.saveAiMessage(eq("conv-1"), eq("Full AI reply"), isNull())).thenReturn(saved);
 
         listener.onMessage(redisMessage, null);
 
-        verify(messageService).saveAiMessage("conv-1", "Full AI reply");
+        verify(messageService).saveAiMessage(eq("conv-1"), eq("Full AI reply"), isNull());
         verify(messagingTemplate).convertAndSend(eq("/topic/conversation/conv-1"), (Object) eq(saved));
         verify(messagingTemplate).convertAndSend(
             eq("/topic/conversation/conv-1"),
@@ -89,7 +89,7 @@ class AiResponseListenerTest {
 
         listener.onMessage(redisMessage, null);
 
-        verify(messageService, never()).saveAiMessage(any(), any());
+        verify(messageService, never()).saveAiMessage(any(), any(), any());
         verify(messagingTemplate).convertAndSend(
             eq("/topic/conversation/conv-1"),
             (Object) argThat(arg -> arg instanceof Map

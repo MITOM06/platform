@@ -318,5 +318,15 @@
   "toolCreateReminder": "リマインダーを作成中...",
   "reminders": "リマインダー",
   "remindersEmpty": "保留中のリマインダーはありません。\nPON AIにリマインダーを設定してもらいましょう。",
-  "reminderDone": "完了としてマーク"
+  "reminderDone": "完了としてマーク",
+  "tokenUsage": "トークン使用量",
+  "tokenUsageTitle": "トークン使用量ダッシュボード",
+  "tokenUsageThisMonth": "今月の合計トークン",
+  "tokenUsageRequests": "AIリクエスト数",
+  "tokenUsageEstCost": "推定コスト (USD)",
+  "tokenUsageDailyChart": "日別トークン使用量（過去30日）",
+  "aiTraceTitle": "AIトレース",
+  "aiTraceThinking": "思考",
+  "aiTraceTools": "ツール呼び出し",
+  "aiTraceStats": "統計"
 }

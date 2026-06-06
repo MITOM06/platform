@@ -7,6 +7,7 @@ import { KbProcessorService } from '../kb/kb-processor.service';
 import { EmbeddingService } from '../kb/embedding.service';
 import { VectorStoreService } from '../kb/vector-store.service';
 import { ToolRegistryService } from '../tools/tool-registry.service';
+import { UsageService } from '../usage/usage.service';
 import { ToolContext } from '../tools/tool.interface';
 
 export interface AiRequestPayload {
@@ -28,6 +29,17 @@ interface ToolTraceEntry {
   resultSummary: string;
 }
 
+export interface AiTrace {
+  thinkingBlocks: string[];
+  toolCalls: ToolTraceEntry[];
+  inputTokens: number;
+  outputTokens: number;
+  thinkingTokens: number;
+  processingMs: number;
+  model: string;
+  iterationCount: number;
+}
+
 const MAX_ITER = 5;
 
 @Injectable()
@@ -47,6 +59,7 @@ export class AiService {
     private readonly embeddingService: EmbeddingService,
     private readonly vectorStore: VectorStoreService,
     private readonly toolRegistry: ToolRegistryService,
+    private readonly usageService: UsageService,
   ) {
     this.anthropic = new Anthropic({
       apiKey: this.configService.get<string>('config.anthropic.apiKey'),
@@ -63,9 +76,9 @@ export class AiService {
 
   async handleRequest(payload: AiRequestPayload): Promise<void> {
     const { conversationId, userId, displayName, content, history } = payload;
+    const startMs = Date.now();
     this.logger.log(`AI request for conversation ${conversationId} from ${displayName}`);
 
-    // AI-2.4: Fetch long-term memory
     const memory = await this.memoryService.getMemory(conversationId);
 
     let systemPrompt =
@@ -83,7 +96,6 @@ export class AiService {
       }
     }
 
-    // AI-3.6: Inject RAG context
     const ragSources: RagSource[] = [];
     try {
       const docIds = await this.kbProcessor.getReadyDocumentIds(conversationId);
@@ -112,9 +124,11 @@ export class AiService {
       );
     }
 
+    let trace: AiTrace | null = null;
     try {
-      await this._agenticLoop(
-        this.primaryModel, systemPrompt, content, history, conversationId, userId, displayName, ragSources,
+      trace = await this._agenticLoop(
+        this.primaryModel, systemPrompt, content, history,
+        conversationId, userId, displayName, ragSources, startMs,
       );
     } catch (primaryError) {
       this.logger.error(
@@ -122,8 +136,9 @@ export class AiService {
         primaryError,
       );
       try {
-        await this._agenticLoop(
-          this.fallbackModel, systemPrompt, content, history, conversationId, userId, displayName, ragSources,
+        trace = await this._agenticLoop(
+          this.fallbackModel, systemPrompt, content, history,
+          conversationId, userId, displayName, ragSources, startMs,
         );
       } catch (fallbackError) {
         this.logger.error(
@@ -137,7 +152,12 @@ export class AiService {
       }
     }
 
-    // AI-2.3: Increment message count and trigger summarization every 20 turns
+    if (trace) {
+      this.usageService
+        .recordUsage(userId, trace.inputTokens, trace.outputTokens)
+        .catch((err) => this.logger.warn(`Usage tracking failed for ${conversationId}`, err));
+    }
+
     try {
       const count = await this.memoryService.incrementMessageCount(conversationId);
       if (count % 20 === 0) {
@@ -159,10 +179,23 @@ export class AiService {
     userId: string,
     displayName: string,
     ragSources: RagSource[],
-  ): Promise<void> {
+    startMs: number,
+  ): Promise<AiTrace> {
+    const enableThinking = this.configService.get<boolean>('config.ai.enableThinking') ?? false;
+    const thinkingBudget = this.configService.get<number>('config.ai.thinkingBudgetTokens') ?? 8000;
+    // Thinking only supported on primary (sonnet) model, not haiku fallback
+    const useThinking = enableThinking && model === this.primaryModel;
+    const thinkingParam = useThinking
+      ? { thinking: { type: 'enabled' as const, budget_tokens: thinkingBudget } }
+      : {};
+    const dynamicMaxTokens = useThinking ? thinkingBudget + 2048 : 4096;
+
     const tools = this.toolRegistry.getDefinitions();
     const ctx: ToolContext = { conversationId, userId, displayName };
-    const toolTrace: ToolTraceEntry[] = [];
+    const toolCalls: ToolTraceEntry[] = [];
+    const thinkingBlocks: string[] = [];
+    let totalInputTokens = 0;
+    let totalOutputTokens = 0;
 
     let messages: Anthropic.MessageParam[] = [
       ...history.map((h) => ({ role: h.role, content: h.content })),
@@ -175,14 +208,25 @@ export class AiService {
     while (iteration < MAX_ITER) {
       const response = await this.anthropic.messages.create({
         model,
-        max_tokens: 4096,
+        max_tokens: dynamicMaxTokens,
         system,
         messages,
         tools: tools as Anthropic.Tool[],
         tool_choice: { type: 'auto' },
-      });
+        ...thinkingParam,
+      } as Anthropic.MessageCreateParamsNonStreaming);
 
-      // Capture any text in the response for fallback
+      // Capture thinking blocks from this iteration
+      response.content
+        .filter((b) => (b as any).type === 'thinking')
+        .forEach((b) => {
+          const text = (b as any).thinking as string;
+          if (text) thinkingBlocks.push(text);
+        });
+
+      totalInputTokens += response.usage.input_tokens;
+      totalOutputTokens += response.usage.output_tokens;
+
       const textBlocks = response.content.filter(
         (b): b is Anthropic.TextBlock => b.type === 'text',
       );
@@ -209,7 +253,7 @@ export class AiService {
             block.input as Record<string, unknown>,
             ctx,
           );
-          toolTrace.push({
+          toolCalls.push({
             toolName: block.name,
             inputSummary,
             resultSummary: result.slice(0, 200),
@@ -230,52 +274,99 @@ export class AiService {
         continue;
       }
 
-      // stop_reason === 'end_turn' — stream the final text response
       break;
     }
 
-    // If MAX_ITER exhausted without end_turn, publish what we have
     if (iteration >= MAX_ITER) {
       const fallback =
-        lastTextContent ||
-        "I had trouble completing that action. Please try again.";
+        lastTextContent || 'I had trouble completing that action. Please try again.';
+      const trace: AiTrace = {
+        thinkingBlocks,
+        toolCalls,
+        inputTokens: totalInputTokens,
+        outputTokens: totalOutputTokens,
+        thinkingTokens: Math.round(thinkingBlocks.join('').length / 4),
+        processingMs: Date.now() - startMs,
+        model,
+        iterationCount: iteration,
+      };
       await this.publisher.publish(conversationId, {
         type: 'AI_STREAM_DONE',
         fullContent: fallback,
         sources: ragSources,
-        toolTrace,
+        trace,
       });
-      return;
+      return trace;
     }
 
     // Stream the final answer
     let fullText = '';
     const stream = this.anthropic.messages.stream({
       model,
-      max_tokens: 2048,
+      max_tokens: useThinking ? thinkingBudget + 2048 : 2048,
       system,
       messages,
-    });
+      ...thinkingParam,
+    } as Anthropic.MessageStreamParams);
 
-    for await (const chunk of stream) {
-      if (
-        chunk.type === 'content_block_delta' &&
-        chunk.delta.type === 'text_delta'
-      ) {
-        fullText += chunk.delta.text;
-        await this.publisher.publish(conversationId, {
-          type: 'AI_STREAM_CHUNK',
-          chunk: chunk.delta.text,
-        });
+    let isInThinkingBlock = false;
+    let currentThinkingText = '';
+
+    for await (const event of stream) {
+      const e = event as any;
+      if (e.type === 'content_block_start') {
+        if (e.content_block?.type === 'thinking') {
+          isInThinkingBlock = true;
+          currentThinkingText = '';
+        } else {
+          isInThinkingBlock = false;
+        }
+      } else if (e.type === 'content_block_stop') {
+        if (isInThinkingBlock && currentThinkingText) {
+          thinkingBlocks.push(currentThinkingText);
+        }
+        isInThinkingBlock = false;
+        currentThinkingText = '';
+      } else if (e.type === 'content_block_delta') {
+        if (isInThinkingBlock && e.delta?.type === 'thinking_delta') {
+          currentThinkingText += (e.delta.thinking ?? '') as string;
+        } else if (!isInThinkingBlock && e.delta?.type === 'text_delta') {
+          fullText += e.delta.text;
+          await this.publisher.publish(conversationId, {
+            type: 'AI_STREAM_CHUNK',
+            chunk: e.delta.text,
+          });
+        }
       }
     }
+
+    try {
+      const finalMsg = await stream.finalMessage();
+      totalInputTokens += finalMsg.usage.input_tokens;
+      totalOutputTokens += finalMsg.usage.output_tokens;
+    } catch {
+      // non-fatal: usage may be incomplete
+    }
+
+    const trace: AiTrace = {
+      thinkingBlocks,
+      toolCalls,
+      inputTokens: totalInputTokens,
+      outputTokens: totalOutputTokens,
+      thinkingTokens: Math.round(thinkingBlocks.join('').length / 4),
+      processingMs: Date.now() - startMs,
+      model,
+      iterationCount: iteration,
+    };
 
     await this.publisher.publish(conversationId, {
       type: 'AI_STREAM_DONE',
       fullContent: fullText,
       sources: ragSources,
-      toolTrace,
+      trace,
     });
+
+    return trace;
   }
 
   private async _generateSummary(

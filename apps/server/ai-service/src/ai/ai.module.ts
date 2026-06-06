@@ -5,9 +5,10 @@ import { RedisModule } from '../redis/redis.module';
 import { MemoryModule } from '../memory/memory.module';
 import { KbModule } from '../kb/kb.module';
 import { ToolsModule } from '../tools/tools.module';
+import { UsageModule } from '../usage/usage.module';
 
 @Module({
-  imports: [RedisModule, MemoryModule, KbModule, ToolsModule],
+  imports: [RedisModule, MemoryModule, KbModule, ToolsModule, UsageModule],
   controllers: [AiController],
   providers: [AiService],
   exports: [AiService],

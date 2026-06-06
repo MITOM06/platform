@@ -945,4 +945,34 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get reminderDone => '완료로 표시';
+
+  @override
+  String get tokenUsage => '토큰 사용량';
+
+  @override
+  String get tokenUsageTitle => '토큰 사용량 대시보드';
+
+  @override
+  String get tokenUsageThisMonth => '이번 달 총 토큰';
+
+  @override
+  String get tokenUsageRequests => 'AI 요청 수';
+
+  @override
+  String get tokenUsageEstCost => '예상 비용 (USD)';
+
+  @override
+  String get tokenUsageDailyChart => '일별 토큰 사용량 (최근 30일)';
+
+  @override
+  String get aiTraceTitle => 'AI 추적';
+
+  @override
+  String get aiTraceThinking => '사고 과정';
+
+  @override
+  String get aiTraceTools => '도구 호출';
+
+  @override
+  String get aiTraceStats => '통계';
 }

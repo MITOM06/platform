@@ -943,4 +943,34 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get reminderDone => '标记为完成';
+
+  @override
+  String get tokenUsage => 'Token 用量';
+
+  @override
+  String get tokenUsageTitle => 'Token 用量仪表板';
+
+  @override
+  String get tokenUsageThisMonth => '本月总 Token';
+
+  @override
+  String get tokenUsageRequests => 'AI 请求次数';
+
+  @override
+  String get tokenUsageEstCost => '预估费用 (USD)';
+
+  @override
+  String get tokenUsageDailyChart => '每日 Token 用量（最近 30 天）';
+
+  @override
+  String get aiTraceTitle => 'AI 追踪';
+
+  @override
+  String get aiTraceThinking => '思考过程';
+
+  @override
+  String get aiTraceTools => '工具调用';
+
+  @override
+  String get aiTraceStats => '统计';
 }

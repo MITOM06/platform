@@ -1895,6 +1895,66 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Mark as done'**
   String get reminderDone;
+
+  /// No description provided for @tokenUsage.
+  ///
+  /// In en, this message translates to:
+  /// **'Token Usage'**
+  String get tokenUsage;
+
+  /// No description provided for @tokenUsageTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Token Usage Dashboard'**
+  String get tokenUsageTitle;
+
+  /// No description provided for @tokenUsageThisMonth.
+  ///
+  /// In en, this message translates to:
+  /// **'Total tokens this month'**
+  String get tokenUsageThisMonth;
+
+  /// No description provided for @tokenUsageRequests.
+  ///
+  /// In en, this message translates to:
+  /// **'AI requests'**
+  String get tokenUsageRequests;
+
+  /// No description provided for @tokenUsageEstCost.
+  ///
+  /// In en, this message translates to:
+  /// **'Estimated cost (USD)'**
+  String get tokenUsageEstCost;
+
+  /// No description provided for @tokenUsageDailyChart.
+  ///
+  /// In en, this message translates to:
+  /// **'Daily token usage (last 30 days)'**
+  String get tokenUsageDailyChart;
+
+  /// No description provided for @aiTraceTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Agent trace'**
+  String get aiTraceTitle;
+
+  /// No description provided for @aiTraceThinking.
+  ///
+  /// In en, this message translates to:
+  /// **'Thinking'**
+  String get aiTraceThinking;
+
+  /// No description provided for @aiTraceTools.
+  ///
+  /// In en, this message translates to:
+  /// **'Tool calls'**
+  String get aiTraceTools;
+
+  /// No description provided for @aiTraceStats.
+  ///
+  /// In en, this message translates to:
+  /// **'Stats'**
+  String get aiTraceStats;
 }
 
 class _AppLocalizationsDelegate

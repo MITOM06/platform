@@ -318,5 +318,15 @@
   "toolCreateReminder": "Creando recordatorio...",
   "reminders": "Recordatorios",
   "remindersEmpty": "Sin recordatorios pendientes.\nPídele a PON AI que configure uno.",
-  "reminderDone": "Marcar como completado"
+  "reminderDone": "Marcar como completado",
+  "tokenUsage": "Uso de tokens",
+  "tokenUsageTitle": "Panel de uso de tokens",
+  "tokenUsageThisMonth": "Total de tokens este mes",
+  "tokenUsageRequests": "Solicitudes de IA",
+  "tokenUsageEstCost": "Costo estimado (USD)",
+  "tokenUsageDailyChart": "Uso diario de tokens (últimos 30 días)",
+  "aiTraceTitle": "Rastreo de IA",
+  "aiTraceThinking": "Pensamiento",
+  "aiTraceTools": "Llamadas de herramientas",
+  "aiTraceStats": "Estadísticas"
 }

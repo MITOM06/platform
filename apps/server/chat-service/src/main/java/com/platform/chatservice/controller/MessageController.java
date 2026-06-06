@@ -1,5 +1,6 @@
 package com.platform.chatservice.controller;
 
+import com.platform.chatservice.dto.AiTraceResponse;
 import com.platform.chatservice.dto.EditMessageRequest;
 import com.platform.chatservice.dto.ForwardMessageRequest;
 import com.platform.chatservice.dto.MessageResponse;
@@ -109,6 +110,12 @@ public class MessageController {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteForMe(@PathVariable String id) {
         messageService.deleteForMe(currentUserId(), id);
+    }
+
+    /** Returns the AI trace for a message. 404 if the message has no trace (non-AI messages). */
+    @GetMapping("/{id}/trace")
+    public AiTraceResponse getTrace(@PathVariable String id) {
+        return messageService.getMessageTrace(currentUserId(), id);
     }
 
     /** Pin a message in its conversation (Task 53). Broadcasts a PINNED_MESSAGE event. */

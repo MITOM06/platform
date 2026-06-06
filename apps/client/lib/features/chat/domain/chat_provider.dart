@@ -672,16 +672,13 @@ class ChatNotifier extends _$ChatNotifier {
             .map((s) => s['documentId'] as String? ?? '')
             .where((id) => id.isNotEmpty)
             .toList();
-        final rawTrace = event['toolTrace'] as List?;
-        final toolTrace = rawTrace
-            ?.whereType<Map<String, dynamic>>()
-            .map((t) => ToolTraceEntry.fromJson(t))
-            .toList();
+        final rawTrace = event['trace'] as Map<String, dynamic>?;
+        final trace = rawTrace != null ? AiTrace.fromJson(rawTrace) : null;
         updated[idx] = current.messages[idx].copyWith(
           isStreaming: false,
           isThinking: false,
           sources: sources,
-          toolTrace: toolTrace,
+          trace: trace,
           activeTools: [],
         );
       case 'AI_STREAM_ERROR':

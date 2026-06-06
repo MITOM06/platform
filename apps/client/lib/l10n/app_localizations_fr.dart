@@ -968,4 +968,35 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get reminderDone => 'Marquer comme fait';
+
+  @override
+  String get tokenUsage => 'Utilisation des tokens';
+
+  @override
+  String get tokenUsageTitle => 'Tableau de bord des tokens';
+
+  @override
+  String get tokenUsageThisMonth => 'Total de tokens ce mois';
+
+  @override
+  String get tokenUsageRequests => 'Requêtes IA';
+
+  @override
+  String get tokenUsageEstCost => 'Coût estimé (USD)';
+
+  @override
+  String get tokenUsageDailyChart =>
+      'Utilisation quotidienne (30 derniers jours)';
+
+  @override
+  String get aiTraceTitle => 'Trace de l\'IA';
+
+  @override
+  String get aiTraceThinking => 'Réflexion';
+
+  @override
+  String get aiTraceTools => 'Appels d\'outils';
+
+  @override
+  String get aiTraceStats => 'Statistiques';
 }

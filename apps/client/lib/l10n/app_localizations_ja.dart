@@ -944,4 +944,34 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get reminderDone => '完了としてマーク';
+
+  @override
+  String get tokenUsage => 'トークン使用量';
+
+  @override
+  String get tokenUsageTitle => 'トークン使用量ダッシュボード';
+
+  @override
+  String get tokenUsageThisMonth => '今月の合計トークン';
+
+  @override
+  String get tokenUsageRequests => 'AIリクエスト数';
+
+  @override
+  String get tokenUsageEstCost => '推定コスト (USD)';
+
+  @override
+  String get tokenUsageDailyChart => '日別トークン使用量（過去30日）';
+
+  @override
+  String get aiTraceTitle => 'AIトレース';
+
+  @override
+  String get aiTraceThinking => '思考';
+
+  @override
+  String get aiTraceTools => 'ツール呼び出し';
+
+  @override
+  String get aiTraceStats => '統計';
 }
