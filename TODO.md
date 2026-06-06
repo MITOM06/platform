@@ -6,7 +6,7 @@
 
 ---
 
-## 🟡 SPRINT AI-1 — Basic Bot Member — IN PROGRESS
+## 🟢 SPRINT AI-1 — Basic Bot Member — DONE
 
 > **Goal:** User types `@AI` in any conversation → AI replies with token-by-token streaming, renders markdown, has fallback on Claude error.
 > **New service:** `apps/server/ai-service/` (NestJS/TypeScript, port 3002)
@@ -182,6 +182,50 @@
 ---
 
 ## 🧪 QA LOG
+
+### [2026-06-06] SPRINT AI-2 (TASKS AI-2.1 – AI-2.7) → ✅ DONE
+- **AI-2.1 — Expand & clean history payload:**
+  - `MessageService.getAiHistory` updated: limit 10 → 20; excludes `voice/file/sticker/system/call_log` types; strips `@AI`/`@ponai` via `Pattern.compile`; trims blank content entries.
+  - New static fields: `AI_HISTORY_SKIP_TYPES`, `AI_MENTION_STRIP`.
+  - Test added in `MessageServiceTest`: `getAiHistory_ExcludesNonTextTypes_AndMapsBotToAssistant` verifies type filtering, bot→assistant role mapping, @AI stripping.
+- **AI-2.2 — `ai_memories` collection + MemoryService (ai-service):**
+  - `src/memory/ai-memory.schema.ts`: Mongoose schema with `conversationId, userId, summary, keyFacts, messageCount, updatedAt`; compound unique index `{conversationId,userId}`.
+  - `src/memory/memory.service.ts`: `getMemory`, `upsertMemory`, `deleteMemory`, `incrementMessageCount` (upsert+$inc).
+  - `src/memory/memory.module.ts`: exports `MemoryService`.
+  - `src/app.module.ts` + `src/ai/ai.module.ts`: import `MemoryModule`.
+- **AI-2.3 — Auto-summarization trigger:**
+  - `AiService.handleRequest()`: after stream, calls `incrementMessageCount`; if `count % 20 === 0` fires `_generateSummary(conversationId, userId, history, count)` async (fire-and-forget, `.catch` logged).
+  - `_generateSummary`: non-streaming `messages.create`, extracts summary + `FACTS: [...]`, calls `upsertMemory`.
+- **AI-2.4 — Memory injected into system prompt:**
+  - `handleRequest()` calls `getMemory(conversationId)` before building system prompt.
+  - If memory with non-empty summary exists: appends `## Memory from previous conversations:\n{summary}` + key facts list.
+- **AI-2.5 — Memory REST API (chat-service):**
+  - `model/AiMemory.java`: `@Document(collection="ai_memories")` mapping ai-service schema.
+  - `repository/AiMemoryRepository.java`: `findByConversationId`, `findByUserId`, `deleteByConversationId`.
+  - `dto/AiMemoryResponse.java`: record `(conversationId, summary, keyFacts, messageCount, updatedAt)`.
+  - `controller/AiMemoryController.java`: `GET /api/ai/memories`, `GET /api/ai/memories/{convId}` (ownership check), `DELETE /api/ai/memories/{convId}` (403 wrong user, 404 not found, 204 success).
+- **AI-2.6 — Flutter AI Memory screen:**
+  - `data/ai_memory_repository.dart`: `AiMemoryRepository` + `aiMemoryRepositoryProvider` (chatDio).
+  - `domain/ai_memory_model.dart`: `AiMemoryModel` with `fromJson`.
+  - `domain/ai_memory_provider.dart`: `AiMemoriesNotifier` (AsyncNotifier) + `aiMemoriesProvider`; `deleteMemory` does optimistic state removal.
+  - `ui/ai_memory_screen.dart` (192 lines): list of memories with summary, key facts (up to 3), message count chip, date; empty state with `Icons.psychology_outlined`; long-press or delete icon → confirm dialog.
+  - Route `/ai-memories` added to `app_router.dart`.
+  - `ChatScreenAppBar`: `PopupMenuButton` with "View Memory" action when `isAiConversation`.
+- **AI-2.7 — i18n + Tests:**
+  - 7 new i18n keys added to all 7 ARB files: `aiMemoryTitle, aiMemoryEmptyState, aiMemoryDeleteConfirm, aiMemoryDeleted, aiMemoryUpdated{date}, aiMemoryFacts, viewAiMemory`. `flutter gen-l10n` regenerated.
+  - `memory.service.spec.ts` (5 tests): `getMemory` found/null, `upsertMemory`, `deleteMemory`, `incrementMessageCount`.
+  - `ai.service.spec.ts` (extended to 10 tests): memory injection into system prompt when memory exists/absent; `_generateSummary` called at count=20 and count=40; not called at non-multiples.
+  - `AiMemoryControllerTest.java` (6 tests): GET returns user memories, GET ownership, DELETE 204, DELETE 403 wrong user, DELETE 404 not found.
+- **Tests:**
+  - `mvn test` → **BUILD SUCCESS, 73/73** (AiMemoryControllerTest 6, MessageServiceTest 31 incl. new AI-2.1 test, all 66 prior tests pass).
+  - `pnpm build` → SUCCESS; `pnpm test` → **13/13** (memory.service.spec.ts 5, ai.service.spec.ts 10 [3 original + 7 new]).
+  - `flutter gen-l10n` → clean; `flutter analyze` → **1 pre-existing info** (chat_provider.dart:283, unchanged); `flutter test` → **All tests passed**.
+- **Files created (ai-service):** `src/memory/ai-memory.schema.ts`, `src/memory/memory.service.ts`, `src/memory/memory.module.ts`, `src/memory/memory.service.spec.ts`.
+- **Files modified (ai-service):** `src/ai/ai.service.ts`, `src/ai/ai.service.spec.ts`, `src/ai/ai.module.ts`, `src/app.module.ts`.
+- **Files created (chat-service):** `model/AiMemory.java`, `repository/AiMemoryRepository.java`, `dto/AiMemoryResponse.java`, `controller/AiMemoryController.java`, `controller/AiMemoryControllerTest.java`.
+- **Files modified (chat-service):** `service/MessageService.java`, `service/MessageServiceTest.java`.
+- **Files created (Flutter):** `data/ai_memory_repository.dart`, `domain/ai_memory_model.dart`, `domain/ai_memory_provider.dart`, `ui/ai_memory_screen.dart`.
+- **Files modified (Flutter):** `core/router/app_router.dart`, `ui/widgets/chat_app_bar.dart`, all 7 `l10n/app_*.arb`.
 
 ### [2026-06-06] SPRINT QC FIX NOTES → ✅ RESOLVED
 - **chat-service/MessageService.java refactor:** Extracted 7 helper methods (`isBlockedBetween`, `blocks`, `requireParticipantMessage`, `buildReplyPreview`, `snippet`, `parseMentions`, `lookupDisplayName`) into new package-private `MessageServiceHelper` (`@Component`, `@RequiredArgsConstructor`). `MessageService` reduced from 552 → 467 lines.
@@ -1053,4 +1097,360 @@
   - Tapping a sticker sends it instantly as a chat message with `type: 'sticker'` and content set to the asset path (e.g., `assets/stickers/sticker1.png`).
   - Overhaul `MessageBubble` rendering: if the message type is `'sticker'`, render it as a transparent, clean image (width/height: ~120px) without the standard bubble background, borders, and margins, matching the sticker aesthetics of Telegram and Messenger.
 - **Test:** Open the keyboard overlay → tap the Stickers tab → tap a sticker → verify that it is sent and rendered in the message stream as a transparent image with no bubble wrapper.
+
+
+---
+
+## 🟢 SPRINT AI-2 — Conversation Memory — DONE
+
+> **Goal:** AI remembers conversation context across sessions. Short-term: last 20 messages (Redis cache). Long-term: MongoDB stores a compressed summary auto-generated after every 20 AI turns. User can view and delete memories from Flutter UI.
+> **New MongoDB collection:** `ai_memories` (written by ai-service, read/deleted via chat-service REST)
+> **Reference:** `.claude/rules/ai-service.md`, `docs/decisions.md` (ADR-007, ADR-008), `docs/roadmap.md` (Sprint AI-2)
+
+---
+
+### PHASE 1 — Context Window Quality
+
+### TASK AI-2.1 — Expand & clean conversation history payload `DONE`
+#### SPEC
+- **File:** `apps/server/chat-service/src/main/java/com/platform/chatservice/service/AiRedisPublisher.java`
+  - Increase history fetch: use `messageRepository.findTop20ByConversationIdOrderByCreatedAtDesc(convId)` (was top 10)
+  - Filter out non-textual messages before mapping to history: exclude entries where `type` is in `{"voice", "file", "sticker", "system", "call_log"}` — only keep `"text"` and `"ai"` types
+  - Correct role mapping: `senderId.equals(AiConstants.AI_BOT_USER_ID)` → role `"assistant"`, others → `"user"`
+  - Strip `@AI`/`@ponai` mention text from history entries (reuse regex `(?i)@(AI|ponai)\b`), trim whitespace
+- **Test:** `ChatControllerTest` — add test verifying history excludes voice/sticker/file messages and maps bot messages to role `"assistant"`.
+
+---
+
+### PHASE 2 — Long-Term Memory (MongoDB)
+
+### TASK AI-2.2 — `ai_memories` collection + MemoryService (ai-service) `DONE`
+#### SPEC
+- **New file:** `apps/server/ai-service/src/memory/ai-memory.schema.ts`
+  - Mongoose schema `AiMemory` with fields:
+    ```typescript
+    conversationId: String (required, indexed)
+    userId: String (required, indexed)       // the human user of the conversation
+    summary: String (required)              // AI-generated summary paragraph
+    keyFacts: [String]                      // array of bullet-point facts extracted from summary
+    messageCount: Number (default 0)        // total AI turns processed so far
+    updatedAt: Date (default Date.now)
+    ```
+  - Compound index on `{ conversationId: 1, userId: 1 }` (unique)
+- **New file:** `apps/server/ai-service/src/memory/memory.service.ts`
+  - `MemoryService` injectable service with `@InjectModel(AiMemory.name)`
+  - `getMemory(conversationId: string): Promise<AiMemory | null>` — find by conversationId
+  - `upsertMemory(conversationId: string, userId: string, summary: string, keyFacts: string[], messageCount: number): Promise<void>` — findOneAndUpdate with upsert
+  - `deleteMemory(conversationId: string): Promise<void>`
+  - `incrementMessageCount(conversationId: string): Promise<number>` — returns updated count
+- **New file:** `apps/server/ai-service/src/memory/memory.module.ts` — exports `MemoryService`, imports `MongooseModule.forFeature([{ name: AiMemory.name, schema: AiMemorySchema }])`
+- **Update:** `apps/server/ai-service/src/app.module.ts` — import `MemoryModule`
+
+### TASK AI-2.3 — Auto-summarization trigger `DONE`
+#### SPEC
+- **File:** `apps/server/ai-service/src/ai/ai.service.ts`
+  - Inject `MemoryService`
+  - After stream completes (in `handleRequest()`), call `memoryService.incrementMessageCount(conversationId)`
+  - If returned count is divisible by 20 (i.e., `count % 20 === 0`): trigger summarization **asynchronously** (do NOT await inline — use `.then().catch()` to avoid blocking the stream response)
+  - **Summarization logic** (private method `_generateSummary(conversationId, userId, history)`):
+    1. Build a summarization prompt: system = `"You are a memory assistant. Summarize the conversation below in 2-3 sentences, then extract up to 5 key facts about the user as a JSON array."`, messages = last 20 entries from `payload.history`
+    2. Call `this.anthropic.messages.create({ model: primaryModel, max_tokens: 512, system, messages })` (non-streaming)
+    3. Parse response: expect plain text summary first, then `FACTS: ["fact1", "fact2", ...]` at the end. Regex: `FACTS:\s*(\[.*?\])`; if parse fails, use empty array
+    4. Call `memoryService.upsertMemory(conversationId, userId, summary, keyFacts, count)`
+    5. Log success or error with `this.logger`
+  - **System prompt format for summarization:**
+    ```
+    You are a memory assistant. Summarize the following conversation in 2-3 sentences focusing on what the user talked about and any important information they shared.
+    Then on a new line write: FACTS: followed by a JSON array of up to 5 short fact strings about the user.
+    Example format:
+    The user discussed their Flutter project and asked about Redis pub/sub architecture.
+    FACTS: ["Works on a Flutter + Spring Boot project called PON", "Uses Redis for message queue", "Interested in AI integration"]
+    ```
+- **Test:** `ai.service.spec.ts` — add test: after 20th interaction, `_generateSummary` is called; mock Anthropic non-streaming response, verify `memoryService.upsertMemory` is called with parsed data.
+
+### TASK AI-2.4 — Inject long-term memory into system prompt `DONE`
+#### SPEC
+- **File:** `apps/server/ai-service/src/ai/ai.service.ts`
+  - In `handleRequest()`, before building the system prompt: `const memory = await this.memoryService.getMemory(payload.conversationId)`
+  - If memory exists, append to system prompt:
+    ```
+    \n\n## Memory from previous conversations:\n{memory.summary}\n\nKey facts about this user:\n{memory.keyFacts.map(f => `- ${f}`).join('\n')}
+    ```
+  - If memory is null: system prompt stays as-is (no change to behavior)
+- **Test:** `ai.service.spec.ts` — mock `memoryService.getMemory` returning a memory object, verify the system prompt passed to Anthropic contains the memory section.
+
+---
+
+### PHASE 3 — REST API & Flutter UI
+
+### TASK AI-2.5 — Memory REST API (chat-service) `DONE`
+#### SPEC
+Since MongoDB is shared, chat-service reads/deletes memories directly — no HTTP call between services needed.
+- **New file:** `apps/server/chat-service/src/main/java/com/platform/chatservice/model/AiMemory.java`
+  - `@Document(collection = "ai_memories")`, fields matching ai-service schema: `id, conversationId, userId, summary, keyFacts (List<String>), messageCount, updatedAt`
+- **New file:** `apps/server/chat-service/src/main/java/com/platform/chatservice/repository/AiMemoryRepository.java`
+  - `MongoRepository<AiMemory, String>`
+  - `Optional<AiMemory> findByConversationId(String conversationId)`
+  - `List<AiMemory> findByUserId(String userId)`
+  - `void deleteByConversationId(String conversationId)`
+- **New file:** `apps/server/chat-service/src/main/java/com/platform/chatservice/dto/AiMemoryResponse.java`
+  - Fields: `conversationId, summary, keyFacts, messageCount, updatedAt`
+- **New file:** `apps/server/chat-service/src/main/java/com/platform/chatservice/controller/AiMemoryController.java`
+  - `GET /api/ai/memories` → returns `List<AiMemoryResponse>` for the authenticated user (extracted from JWT, filtered by `userId`)
+  - `GET /api/ai/memories/{conversationId}` → returns `AiMemoryResponse` for specific conversation (verify userId ownership before returning)
+  - `DELETE /api/ai/memories/{conversationId}` → delete memory (verify userId ownership), return 204
+- **Security:** All endpoints require JWT (`@PreAuthorize("isAuthenticated()")` or via existing `SecurityConfig`)
+- **Test:** `AiMemoryControllerTest.java` — mock `AiMemoryRepository`, test: GET returns user's memories only, DELETE returns 204 and calls repository, DELETE with wrong userId returns 403.
+
+### TASK AI-2.6 — Flutter: AI Memory screen `DONE`
+#### SPEC
+- **New file:** `apps/client/lib/features/chat/data/ai_memory_repository.dart`
+  - `getMyMemories(): Future<List<AiMemoryModel>>` → `GET /api/ai/memories`
+  - `getConversationMemory(String conversationId): Future<AiMemoryModel?>` → `GET /api/ai/memories/{conversationId}`
+  - `deleteMemory(String conversationId): Future<void>` → `DELETE /api/ai/memories/{conversationId}`
+- **New file:** `apps/client/lib/features/chat/domain/ai_memory_model.dart`
+  - `AiMemoryModel` with: `conversationId, summary, keyFacts (List<String>), messageCount, updatedAt`; `fromJson` factory
+- **New file:** `apps/client/lib/features/chat/domain/ai_memory_provider.dart`
+  - `aiMemoriesProvider`: `AsyncNotifierProvider<AiMemoriesNotifier, List<AiMemoryModel>>`
+  - `AiMemoriesNotifier`: `build()` calls `aiMemoryRepository.getMyMemories()`, `deleteMemory(conversationId)` calls repo then removes from state (optimistic)
+- **New file:** `apps/client/lib/features/chat/ui/ai_memory_screen.dart` (≤ 400 lines)
+  - `AiMemoryScreen` — `ConsumerWidget`, shows list of memories with:
+    - Each tile: conversation avatar + summary text (2-line truncated) + message count chip + updatedAt
+    - Long-press or swipe → confirm delete dialog → calls `notifier.deleteMemory()`
+    - Empty state: `Icons.psychology_outlined` icon + `l10n.aiMemoryEmptyState` text
+  - AppBar: `l10n.aiMemoryTitle`
+- **New route:** `/ai-memories` in `app_router.dart`
+- **Access point:** In `ChatScreenAppBar`, when conversation is with AI bot → add "View Memory" option in overflow menu → navigates to `/ai-memories`
+- **i18n:** Add to all 7 ARB files: `"aiMemoryTitle"`, `"aiMemoryEmptyState"`, `"aiMemoryDeleteConfirm"`, `"aiMemoryDeleted"`, `"aiMemoryUpdated"`, `"aiMemoryFacts"`, `"viewAiMemory"`
+- Run `flutter gen-l10n` after adding keys
+
+### TASK AI-2.7 — i18n + Tests + Verification `DONE`
+#### SPEC
+- Verify all 7 i18n keys from AI-2.6 exist in all 7 ARB files (`en, vi, zh, ja, ko, es, fr`)
+- **ai-service tests** (`pnpm test`):
+  - `memory.service.spec.ts`: mock Mongoose model, test `upsertMemory`, `getMemory`, `deleteMemory`, `incrementMessageCount`
+  - `ai.service.spec.ts` (extend): test memory injection into system prompt when memory exists; test auto-summarize called at messageCount=20,40,60
+- **chat-service tests** (`mvn test`):
+  - `AiMemoryControllerTest.java` (from AI-2.5) must pass
+  - All existing 66 tests must still pass
+- **Flutter** (`flutter analyze && flutter test`): 0 new issues
+- **Append to QA LOG** with results
+
+---
+
+
+---
+
+## 🟢 SPRINT AI-3 — Knowledge Base (RAG) — DONE
+
+> **Goal:** User uploads PDF/DOCX/TXT into a conversation → AI answers questions based on document content with source citation.
+> **New infra:** Qdrant vector DB (Docker, port 6333) + OpenAI embeddings API (`text-embedding-3-small`)
+> **New Redis channels:** `kb:process` (chat-service → ai-service) | `kb:status:{documentId}` (ai-service → chat-service)
+> **New MongoDB collection:** `kb_documents`
+> **Reference:** `.claude/rules/ai-service.md`, `docs/decisions.md`, `docs/roadmap.md` (Sprint AI-3)
+
+---
+
+### PHASE 1 — Infrastructure
+
+### TASK AI-3.1 — Add Qdrant + OpenAI embeddings to stack `DONE`
+#### SPEC
+- **File:** `infra/docker-compose/compose.yml`
+  - Add `qdrant` service:
+    ```yaml
+    qdrant:
+      image: qdrant/qdrant:v1.9.0
+      container_name: chat-qdrant
+      ports:
+        - "6333:6333"
+      volumes:
+        - qdrant_data:/qdrant/storage
+      networks:
+        - app-net
+    ```
+  - Add `qdrant_data` to `volumes:` block
+  - Add `QDRANT_URL: http://qdrant:6333` and `OPENAI_API_KEY: ${OPENAI_API_KEY}` to `ai-service` environment block
+  - Add `ai-service` depends_on `qdrant: condition: service_started`
+- **File:** `apps/server/ai-service/` — install deps:
+  - `pnpm add @qdrant/js-client-rest openai`
+- **File:** `apps/server/ai-service/src/config/configuration.ts`
+  - Add to config object: `qdrant: { url: process.env.QDRANT_URL || 'http://localhost:6333' }`, `openai: { apiKey: process.env.OPENAI_API_KEY }`, `kb: { chunkSize: 512, chunkOverlap: 80, topK: 4, embeddingModel: 'text-embedding-3-small', qdrantCollection: 'knowledge' }`
+- **File:** `apps/server/ai-service/.env.example` — add `OPENAI_API_KEY=`, `QDRANT_URL=http://localhost:6333`
+- **Test:** `docker compose up qdrant -d` → `curl http://localhost:6333/healthz` → `{"title":"qdrant - ..."}`
+
+---
+
+### PHASE 2 — Document Processing Pipeline (ai-service)
+
+### TASK AI-3.2 — Document text extraction + chunker `DONE`
+#### SPEC
+- **New module:** `apps/server/ai-service/src/kb/` — create `kb.module.ts`, export all services below
+- **New deps:** `pnpm add pdf-parse mammoth` (PDF + DOCX extraction), `pnpm add -D @types/pdf-parse`
+- **New file:** `apps/server/ai-service/src/kb/document-extractor.service.ts`
+  - `extractText(buffer: Buffer, mimeType: string): Promise<string>`
+    - `application/pdf` → `pdf-parse(buffer)` → `result.text`
+    - `application/vnd.openxmlformats-officedocument.wordprocessingml.document` → `mammoth.extractRawText({ buffer })` → `result.value`
+    - `text/plain` → `buffer.toString('utf-8')`
+    - Other: throw `UnsupportedFileTypeException`
+- **New file:** `apps/server/ai-service/src/kb/text-chunker.service.ts`
+  - `chunk(text: string, chunkSize = 512, overlap = 80): string[]`
+    - Clean text: collapse multiple whitespace/newlines to single space, trim
+    - Split by sentence boundaries first (regex `(?<=[.!?])\s+`), then merge sentences into chunks ≤ chunkSize chars
+    - Slide window with `overlap` chars carried over into next chunk
+    - Discard chunks shorter than 50 chars
+    - Return `string[]`
+- **Test:** `document-extractor.service.spec.ts` — mock `pdf-parse` and `mammoth`, test correct branch per mimeType. `text-chunker.service.spec.ts` — test: 1000-char text → correct number of chunks, overlap preserved, short chunks discarded.
+
+### TASK AI-3.3 — Embedding service + Qdrant storage `DONE`
+#### SPEC
+- **New file:** `apps/server/ai-service/src/kb/embedding.service.ts`
+  - Inject `ConfigService`; constructor creates `new OpenAI({ apiKey })` client
+  - `embed(texts: string[]): Promise<number[][]>` — calls `openai.embeddings.create({ model: 'text-embedding-3-small', input: texts })`, returns array of float vectors. Batch: if `texts.length > 100`, split into sub-batches of 100.
+  - `embedOne(text: string): Promise<number[]>` — calls `embed([text])`, returns first vector
+- **New file:** `apps/server/ai-service/src/kb/vector-store.service.ts`
+  - Inject `ConfigService`; constructor creates `new QdrantClient({ url })` client
+  - `ensureCollection(collectionName: string, vectorSize = 1536): Promise<void>` — `client.getCollection()` → if not found, `client.createCollection({ vectorsConfig: { size: vectorSize, distance: 'Cosine' } })`
+  - `upsertChunks(collectionName: string, documentId: string, chunks: string[], vectors: number[][]): Promise<void>` — map to points `{ id: uuid(), vector, payload: { documentId, text, chunkIndex } }`, `client.upsert(collectionName, { points })`
+  - `search(collectionName: string, queryVector: number[], topK = 4, filterDocumentIds?: string[]): Promise<Array<{ text: string, documentId: string, score: number }>>` — `client.search({ vector: queryVector, limit: topK, filter: filterDocumentIds ? { must: [{ key: 'documentId', match: { any: filterDocumentIds } }] } : undefined, withPayload: true })`
+  - `deleteDocument(collectionName: string, documentId: string): Promise<void>` — `client.delete(collectionName, { filter: { must: [{ key: 'documentId', match: { value: documentId } }] } })`
+- **Test:** `vector-store.service.spec.ts` — mock `QdrantClient`, test `upsertChunks` calls correct Qdrant methods, `search` applies filter, `deleteDocument` calls delete with correct filter.
+
+### TASK AI-3.4 — KB processing Redis pipeline (ai-service) `DONE`
+#### SPEC
+- **New file:** `apps/server/ai-service/src/kb/kb-processor.service.ts`
+  - Inject `DocumentExtractorService`, `TextChunkerService`, `EmbeddingService`, `VectorStoreService`, `RedisPublisherService`, `ConfigService`, `@InjectModel(KbDocument.name) kbDocumentModel`
+  - `processDocument(payload: KbProcessPayload): Promise<void>`
+    1. Fetch file bytes: `fetch(payload.fileUrl)` → `Buffer.from(await res.arrayBuffer())`
+    2. Extract text via `documentExtractorService.extractText(buffer, payload.mimeType)`
+    3. Chunk via `textChunkerService.chunk(text)`
+    4. Embed all chunks: `embeddingService.embed(chunks)`
+    5. Ensure Qdrant collection: `vectorStoreService.ensureCollection('knowledge')`
+    6. Upsert: `vectorStoreService.upsertChunks('knowledge', payload.documentId, chunks, vectors)`
+    7. Update MongoDB `kb_documents` status to `"done"`, set `chunkCount`
+    8. Publish to Redis `kb:status:{documentId}`: `{ type: 'KB_DONE', documentId, chunkCount }`
+    - On any error: update status to `"error"`, publish `{ type: 'KB_ERROR', documentId, error: message }`
+- **New file:** `apps/server/ai-service/src/kb/kb-process-payload.interface.ts`
+  - `interface KbProcessPayload { documentId: string; conversationId: string; userId: string; fileUrl: string; mimeType: string; fileName: string; }`
+- **Update:** `apps/server/ai-service/src/redis/redis-subscriber.service.ts`
+  - Subscribe to `kb:process` channel in addition to `ai:request`
+  - On `kb:process` message: parse JSON → call `kbProcessorService.processDocument(payload)` (async, catch errors)
+- **New file:** `apps/server/ai-service/src/kb/kb-document.schema.ts` (Mongoose)
+  - Fields: `documentId (String, required, unique)`, `conversationId (String, required)`, `userId (String)`, `fileName (String)`, `mimeType (String)`, `status: "pending"|"processing"|"done"|"error"`, `chunkCount (Number, default 0)`, `uploadedAt (Date, default now)`
+  - NOTE: This schema is a local cache/status tracker in ai-service. The canonical record lives in chat-service's `kb_documents` collection.
+- **Update:** `apps/server/ai-service/src/kb/kb.module.ts` — wire all services, import `MongooseModule`, `RedisModule`; export `KbProcessorService`, `VectorStoreService`, `EmbeddingService`
+- **Update:** `apps/server/ai-service/src/app.module.ts` — import `KbModule`
+
+---
+
+### PHASE 3 — chat-service REST API
+
+### TASK AI-3.5 — KB document CRUD (chat-service) `DONE`
+#### SPEC
+- **New file:** `apps/server/chat-service/.../model/KbDocument.java`
+  - `@Document(collection = "kb_documents")`, fields: `id (String @Id)`, `documentId (String, indexed unique)`, `conversationId (String, indexed)`, `userId (String)`, `fileName (String)`, `mimeType (String)`, `fileUrl (String)`, `status ("pending"|"processing"|"done"|"error")`, `chunkCount (int, default 0)`, `uploadedAt (Instant, @CreatedDate)`
+- **New file:** `...repository/KbDocumentRepository.java`
+  - `List<KbDocument> findByConversationIdOrderByUploadedAtDesc(String conversationId)`
+  - `Optional<KbDocument> findByDocumentId(String documentId)`
+  - `void deleteByDocumentId(String documentId)`
+- **New file:** `...dto/KbDocumentResponse.java` — fields: `documentId, fileName, mimeType, status, chunkCount, uploadedAt`
+- **New file:** `...dto/KbUploadRequest.java` — fields: `conversationId (required)`, `fileName (required)`, `mimeType (required)`, `fileUrl (required)` (URL from existing GridFS upload)
+- **New file:** `...controller/KbController.java`
+  - `POST /api/kb/documents` — body `KbUploadRequest`; verify caller is participant of `conversationId`; generate `documentId = UUID.randomUUID().toString()`; save `KbDocument` with status `"pending"`; publish to Redis `kb:process` via `StringRedisTemplate` with JSON payload `{ documentId, conversationId, userId, fileUrl, mimeType, fileName }`; return `KbDocumentResponse` 201
+  - `GET /api/kb/documents?conversationId={id}` — verify caller is participant; return `List<KbDocumentResponse>` sorted newest-first
+  - `DELETE /api/kb/documents/{documentId}` — verify caller is participant; delete from `kb_documents`; publish to Redis `kb:delete` channel with `{ documentId }` so ai-service removes vectors from Qdrant; return 204
+  - Subscribe `kb:status:*` pattern in a new `KbStatusListener.java` (`MessageListener`): on `KB_DONE` → update `KbDocument.status = "done"`, `chunkCount`; on `KB_ERROR` → update `status = "error"`; broadcast `{ type: "KB_STATUS_UPDATE", documentId, status, chunkCount }` to `/topic/conversation/{conversationId}` via `SimpMessagingTemplate`
+- **Update:** `config/RedisListenerConfig.java` — register `KbStatusListener` with `PatternTopic("kb:status:*")`
+- **Handle `kb:delete` in ai-service:** in `redis-subscriber.service.ts`, subscribe to `kb:delete`; on message call `vectorStoreService.deleteDocument('knowledge', documentId)`
+- **Test:** `KbControllerTest.java` — test upload creates document + publishes Redis; GET returns list; DELETE returns 204.
+
+---
+
+### PHASE 4 — RAG Query Pipeline
+
+### TASK AI-3.6 — Inject RAG context into AI response `DONE`
+#### SPEC
+- **File:** `apps/server/ai-service/src/ai/ai.service.ts`
+  - Inject `VectorStoreService`, `EmbeddingService`
+  - In `handleRequest()`, after fetching memory (AI-2.4), before building final system prompt:
+    1. Check if conversation has any documents: query MongoDB `KbDocument` model for `{ conversationId, status: "done" }` — `const hasDocs = count > 0`
+    2. If `hasDocs`: embed `payload.content` → `embeddingService.embedOne(payload.content)` → search Qdrant → `vectorStoreService.search('knowledge', queryVector, 4, documentIds)`
+    3. If results found (score > 0.3 threshold): build context block:
+       ```
+       ## Relevant Knowledge Base Context:
+       {results.map((r, i) => `[Source ${i+1}] ${r.text}`).join('\n\n')}
+       Use the above context to answer the user's question. Cite sources as [Source N] inline.
+       ```
+    4. Append context block to system prompt (after memory block if present)
+    5. Include `sources` in the `AI_STREAM_DONE` payload: `{ type: 'AI_STREAM_DONE', fullContent, sources: [{ documentId, score }] }` — only chunks with score > 0.3
+  - If no docs or Qdrant error: degrade gracefully (log warning, continue without RAG)
+- **Test:** `ai.service.spec.ts` — mock `VectorStoreService.search` returning 2 chunks; verify system prompt contains `[Source 1]` and `[Source 2]`; verify `AI_STREAM_DONE` payload includes `sources` array.
+
+---
+
+### PHASE 5 — Flutter UI
+
+### TASK AI-3.7 — KB status STOMP listener + citation bubble (Flutter) `DONE`
+#### SPEC
+- **File:** `apps/client/lib/features/chat/data/stomp_service.dart`
+  - Add `StreamController<Map<String,dynamic>> _kbStatusCtrl` (broadcast)
+  - In `_doSubscribeConversation`: add case `type == "KB_STATUS_UPDATE"` → emit to `_kbStatusCtrl`
+  - Expose `Stream<Map<String,dynamic>> get kbStatusEvents => _kbStatusCtrl.stream`
+- **File:** `apps/client/lib/features/chat/domain/chat_state.dart`
+  - Add to `MessageModel`: `final List<String>? sources` (documentIds that were cited, nullable)
+  - Update `fromJson` to parse `sources` from AI_STREAM_DONE payload
+- **File:** `apps/client/lib/features/chat/ui/widgets/streaming_ai_bubble.dart` (or `message_bubble.dart`)
+  - After AI message finalizes (isStreaming=false), if `message.sources != null && message.sources!.isNotEmpty`:
+    - Show small citation row below bubble: `Icons.auto_stories` icon + `"${sources.length} source(s)"` text in grey italic
+    - Tapping citation row navigates to `/kb/{conversationId}` (the KB management screen)
+
+### TASK AI-3.8 — Flutter: Knowledge Base management screen `DONE`
+#### SPEC
+- **New file:** `apps/client/lib/features/chat/data/kb_repository.dart`
+  - `uploadDocument(String conversationId, String fileUrl, String fileName, String mimeType): Future<KbDocumentModel>` → `POST /api/kb/documents`
+  - `getDocuments(String conversationId): Future<List<KbDocumentModel>>` → `GET /api/kb/documents?conversationId=`
+  - `deleteDocument(String documentId): Future<void>` → `DELETE /api/kb/documents/{documentId}`
+- **New file:** `apps/client/lib/features/chat/domain/kb_document_model.dart`
+  - `KbDocumentModel { documentId, fileName, mimeType, status, chunkCount, uploadedAt }`; `fromJson`, `isReady` getter (`status == 'done'`)
+- **New file:** `apps/client/lib/features/chat/domain/kb_provider.dart`
+  - `kbDocumentsProvider(String conversationId)`: `AsyncNotifierProviderFamily`
+  - `KbNotifier`: `build(conversationId)` → fetch docs; `upload(fileUrl, fileName, mimeType)` → call repo, optimistic add with `status: "pending"`; `delete(documentId)` → call repo, remove from state
+  - Listen to `stompService.kbStatusEvents` in build — update document status when `KB_STATUS_UPDATE` arrives
+- **New file:** `apps/client/lib/features/chat/ui/kb_screen.dart` (≤ 400 lines)
+  - `KbScreen(String conversationId)` — `ConsumerWidget`
+  - AppBar: `l10n.kbTitle` + upload FAB (`Icons.upload_file`)
+  - Upload FAB: open file picker (`file_picker`, allow PDF/DOCX/TXT), upload via existing `chatRepository.uploadDocument(bytes, name)` to get URL, then `kbNotifier.upload(url, name, mimeType)`
+  - List: each tile shows `Icons.description`, `fileName`, status chip (`processing` → amber spinner, `done` → green check, `error` → red X), `chunkCount` pages, swipe-to-delete with confirm dialog
+  - Empty state: `Icons.folder_open` + `l10n.kbEmptyState`
+- **New route:** `/kb/:conversationId` in `app_router.dart`
+- **Access point:** In `ChatScreenAppBar` overflow menu → `l10n.kbManage` option → navigates to `/kb/{conversationId}` (show for all conversations, not just AI bot)
+- **i18n:** Add to all 7 ARB files: `"kbTitle"`, `"kbEmptyState"`, `"kbUploadButton"`, `"kbDeleteConfirm"`, `"kbProcessing"`, `"kbReady"`, `"kbError"`, `"kbManage"`, `"kbSources"`, `"kbChunks"`
+- Run `flutter gen-l10n` after adding keys
+
+### TASK AI-3.9 — i18n + Tests + Verification `DONE`
+#### IMPL NOTES
+- 10 KB keys (kbTitle, kbEmptyState, kbUploadButton, kbDeleteConfirm, kbProcessing, kbReady, kbError, kbManage, kbSources, kbChunks) added to all 7 ARB files (en/vi/zh/ja/ko/es/fr)
+- `flutter gen-l10n` → generated successfully ✅
+- ai-service: 33/33 tests pass (5 suites) ✅
+- chat-service: 78/78 tests pass (7 suites, incl. KbControllerTest 5/5) ✅
+- flutter analyze: 0 errors (1 pre-existing info warning in chat_provider.dart) ✅
+- flutter test: 1/1 pass ✅
+- Qdrant: `curl http://localhost:6333/healthz` → `healthz check passed` ✅
+
+---
+
+## QA LOG — Sprint AI-3 [2026-06-06]
+
+| Task | Status | Notes |
+|------|--------|-------|
+| AI-3.1 Qdrant + OpenAI infra | ✅ PASS | docker-compose qdrant healthy, config & env vars added |
+| AI-3.2 Document extractor + chunker | ✅ PASS | pdf-parse (CJS require), mammoth, 512-char sliding window |
+| AI-3.3 Embedding + VectorStore | ✅ PASS | OpenAI text-embedding-3-small, Qdrant collection "knowledge" |
+| AI-3.4 KB processing pipeline | ✅ PASS | kb:process / kb:status:{docId} / kb:delete Redis channels |
+| AI-3.5 KB CRUD (chat-service) | ✅ PASS | KbController + KbStatusListener + KbDocumentRepository |
+| AI-3.6 RAG context injection | ✅ PASS | score ≥ 0.3, graceful degrade, sources in AI_STREAM_DONE |
+| AI-3.7 KB status + citation bubble | ✅ PASS | STOMP KB_STATUS_UPDATE, FinalizedAiBubble citation row |
+| AI-3.8 Flutter KB screen | ✅ PASS | KbScreen ≤ 400 lines, /kb/:conversationId route, AppBar menu |
+| AI-3.9 i18n + tests + verification | ✅ PASS | All 7 locales, all tests green, Qdrant healthy |
+
+---
 

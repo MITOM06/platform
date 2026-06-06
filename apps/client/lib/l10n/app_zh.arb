@@ -277,5 +277,29 @@
   "aiThinking": "AI正在思考...",
   "aiError": "AI暂时不可用。请重试。",
   "aiErrorRetry": "重试",
-  "aiMessageDeleted": "消息已删除"
+  "aiMessageDeleted": "消息已删除",
+  "aiMemoryTitle": "AI记忆",
+  "aiMemoryEmptyState": "暂无记忆。与PON AI聊天以开始建立记忆。",
+  "aiMemoryDeleteConfirm": "删除此记忆？AI将不再记住此对话的上下文。",
+  "aiMemoryDeleted": "记忆已删除",
+  "aiMemoryUpdated": "更新于 {date}",
+  "@aiMemoryUpdated": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "aiMemoryFacts": "关键事实：",
+  "viewAiMemory": "查看记忆",
+  "kbTitle": "知识库",
+  "kbEmptyState": "暂无文档。\n点击上传按钮添加 PDF、DOCX 或 TXT 文件。",
+  "kbUploadButton": "上传文档",
+  "kbDeleteConfirm": "删除此文档？",
+  "kbProcessing": "处理中",
+  "kbReady": "就绪",
+  "kbError": "错误",
+  "kbManage": "知识库",
+  "kbSources": "来源",
+  "kbChunks": "块"
 }

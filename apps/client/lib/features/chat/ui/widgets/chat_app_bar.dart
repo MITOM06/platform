@@ -173,6 +173,40 @@ class ChatScreenAppBar extends ConsumerWidget implements PreferredSizeWidget {
           ],
         ),
         actions: [
+          if (isAiConversation) ...[
+            PopupMenuButton<String>(
+              icon: const Icon(Icons.more_vert, color: Colors.white, size: 22),
+              onSelected: (value) {
+                if (value == 'view_memory') {
+                  context.push('/ai-memories');
+                } else if (value == 'kb_manage') {
+                  context.push('/kb/$conversationId');
+                }
+              },
+              itemBuilder: (ctx) => [
+                PopupMenuItem(
+                  value: 'view_memory',
+                  child: Row(
+                    children: [
+                      const Icon(Icons.psychology_outlined, size: 20),
+                      const SizedBox(width: 10),
+                      Text(context.l10n.viewAiMemory),
+                    ],
+                  ),
+                ),
+                PopupMenuItem(
+                  value: 'kb_manage',
+                  child: Row(
+                    children: [
+                      const Icon(Icons.auto_stories_outlined, size: 20),
+                      const SizedBox(width: 10),
+                      Text(context.l10n.kbManage),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ],
           if (!isGroup && otherUserId != null && !isAiConversation) ...[
             IconButton(
               icon: const Icon(Icons.call_outlined, color: Colors.white, size: 22),

@@ -20,4 +20,17 @@ export default registerAs('config', () => ({
     requestChannel: process.env.REDIS_AI_REQUEST_CHANNEL ?? 'ai:request',
     responsePrefix: process.env.REDIS_AI_RESPONSE_PREFIX ?? 'ai:response',
   },
+  qdrant: {
+    url: process.env.QDRANT_URL ?? 'http://localhost:6333',
+  },
+  openai: {
+    apiKey: process.env.OPENAI_API_KEY,
+  },
+  kb: {
+    chunkSize: 512,
+    chunkOverlap: 80,
+    topK: 4,
+    embeddingModel: 'text-embedding-3-small',
+    qdrantCollection: 'knowledge',
+  },
 }));

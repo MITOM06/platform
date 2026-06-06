@@ -2,6 +2,10 @@ import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import Anthropic from '@anthropic-ai/sdk';
 import { RedisPublisherService } from '../redis/redis-publisher.service';
+import { MemoryService } from '../memory/memory.service';
+import { KbProcessorService } from '../kb/kb-processor.service';
+import { EmbeddingService } from '../kb/embedding.service';
+import { VectorStoreService } from '../kb/vector-store.service';
 
 export interface AiRequestPayload {
   conversationId: string;
@@ -11,34 +15,91 @@ export interface AiRequestPayload {
   history: Array<{ role: 'user' | 'assistant'; content: string }>;
 }
 
+interface RagSource {
+  documentId: string;
+  score: number;
+}
+
 @Injectable()
 export class AiService {
   private readonly logger = new Logger(AiService.name);
   private readonly anthropic: Anthropic;
   private readonly primaryModel: string;
   private readonly fallbackModel: string;
+  private readonly qdrantCollection: string;
+  private readonly topK: number;
 
   constructor(
     private readonly configService: ConfigService,
     private readonly publisher: RedisPublisherService,
+    private readonly memoryService: MemoryService,
+    private readonly kbProcessor: KbProcessorService,
+    private readonly embeddingService: EmbeddingService,
+    private readonly vectorStore: VectorStoreService,
   ) {
     this.anthropic = new Anthropic({
       apiKey: this.configService.get<string>('config.anthropic.apiKey'),
     });
-    this.primaryModel = this.configService.get<string>('config.anthropic.model') ?? 'claude-sonnet-4-5';
+    this.primaryModel =
+      this.configService.get<string>('config.anthropic.model') ?? 'claude-sonnet-4-5';
     this.fallbackModel =
-      this.configService.get<string>('config.anthropic.fallbackModel') ?? 'claude-haiku-4-5-20251001';
+      this.configService.get<string>('config.anthropic.fallbackModel') ??
+      'claude-haiku-4-5-20251001';
+    this.qdrantCollection =
+      this.configService.get<string>('config.kb.qdrantCollection') ?? 'knowledge';
+    this.topK = this.configService.get<number>('config.kb.topK') ?? 4;
   }
 
   async handleRequest(payload: AiRequestPayload): Promise<void> {
-    const { conversationId, displayName, content, history } = payload;
+    const { conversationId, userId, displayName, content, history } = payload;
     this.logger.log(`AI request for conversation ${conversationId} from ${displayName}`);
 
-    const systemPrompt =
+    // AI-2.4: Fetch long-term memory
+    const memory = await this.memoryService.getMemory(conversationId);
+
+    let systemPrompt =
       `You are PON AI, an intelligent assistant embedded in the PON chat platform. ` +
       `You are helping ${displayName} in a conversation. ` +
       `Be helpful, concise, and friendly. Respond in the same language the user writes in. ` +
       `If you don't know something, say so clearly.`;
+
+    if (memory && memory.summary) {
+      systemPrompt += `\n\n## Memory from previous conversations:\n${memory.summary}`;
+      if (memory.keyFacts && memory.keyFacts.length > 0) {
+        systemPrompt +=
+          `\n\nKey facts about this user:\n` +
+          memory.keyFacts.map((f) => `- ${f}`).join('\n');
+      }
+    }
+
+    // AI-3.6: Inject RAG context
+    const ragSources: RagSource[] = [];
+    try {
+      const docIds = await this.kbProcessor.getReadyDocumentIds(conversationId);
+      if (docIds.length > 0) {
+        const queryVector = await this.embeddingService.embedOne(content);
+        const results = await this.vectorStore.search(
+          this.qdrantCollection,
+          queryVector,
+          this.topK,
+          docIds,
+        );
+        const relevant = results.filter((r) => r.score > 0.3);
+        if (relevant.length > 0) {
+          relevant.forEach((r) => ragSources.push({ documentId: r.documentId, score: r.score }));
+          const contextBlock =
+            `\n\n## Relevant Knowledge Base Context:\n` +
+            relevant.map((r, i) => `[Source ${i + 1}] ${r.text}`).join('\n\n') +
+            `\nUse the above context to answer the user's question. Cite sources as [Source N] inline.`;
+          systemPrompt += contextBlock;
+        }
+      }
+    } catch (err) {
+      this.logger.warn(
+        `RAG context fetch failed for ${conversationId}, proceeding without context`,
+        err,
+      );
+    }
 
     const messages: Anthropic.MessageParam[] = [
       ...history.map((h) => ({ role: h.role, content: h.content })),
@@ -48,7 +109,7 @@ export class AiService {
     let chunksPublished = false;
     try {
       chunksPublished = await this._streamWithModel(
-        this.primaryModel, systemPrompt, messages, conversationId, false,
+        this.primaryModel, systemPrompt, messages, conversationId, false, ragSources,
       );
     } catch (primaryError) {
       this.logger.error(
@@ -58,7 +119,7 @@ export class AiService {
       if (!chunksPublished) {
         try {
           await this._streamWithModel(
-            this.fallbackModel, systemPrompt, messages, conversationId, true,
+            this.fallbackModel, systemPrompt, messages, conversationId, true, ragSources,
           );
         } catch (fallbackError) {
           this.logger.error(
@@ -77,6 +138,18 @@ export class AiService {
         });
       }
     }
+
+    // AI-2.3: Increment message count and trigger summarization every 20 turns
+    try {
+      const count = await this.memoryService.incrementMessageCount(conversationId);
+      if (count % 20 === 0) {
+        this._generateSummary(conversationId, userId, history, count).catch((err) => {
+          this.logger.error(`Summary generation failed for ${conversationId}`, err);
+        });
+      }
+    } catch (err) {
+      this.logger.error(`Failed to increment message count for ${conversationId}`, err);
+    }
   }
 
   private async _streamWithModel(
@@ -85,6 +158,7 @@ export class AiService {
     messages: Anthropic.MessageParam[],
     conversationId: string,
     isFallback: boolean,
+    sources: RagSource[] = [],
   ): Promise<boolean> {
     let fullText = '';
     let chunksPublished = false;
@@ -113,11 +187,61 @@ export class AiService {
     await this.publisher.publish(conversationId, {
       type: 'AI_STREAM_DONE',
       fullContent: fullText,
+      sources,
     });
 
     if (isFallback) {
       this.logger.log(`Fallback model (${model}) succeeded for conversation ${conversationId}`);
     }
     return chunksPublished;
+  }
+
+  private async _generateSummary(
+    conversationId: string,
+    userId: string,
+    history: AiRequestPayload['history'],
+    count: number,
+  ): Promise<void> {
+    const systemPrompt =
+      `You are a memory assistant. Summarize the following conversation in 2-3 sentences ` +
+      `focusing on what the user talked about and any important information they shared.\n` +
+      `Then on a new line write: FACTS: followed by a JSON array of up to 5 short fact strings about the user.\n` +
+      `Example format:\n` +
+      `The user discussed their Flutter project and asked about Redis pub/sub architecture.\n` +
+      `FACTS: ["Works on a Flutter + Spring Boot project called PON", "Uses Redis for message queue", "Interested in AI integration"]`;
+
+    const messages: Anthropic.MessageParam[] = history.slice(-20).map((h) => ({
+      role: h.role,
+      content: h.content,
+    }));
+
+    if (messages.length === 0) return;
+
+    const response = await this.anthropic.messages.create({
+      model: this.primaryModel,
+      max_tokens: 512,
+      system: systemPrompt,
+      messages,
+    });
+
+    const text = response.content
+      .filter((b): b is Anthropic.TextBlock => b.type === 'text')
+      .map((b) => b.text)
+      .join('');
+
+    const factsMatch = text.match(/FACTS:\s*(\[[\s\S]*?\])/);
+    let keyFacts: string[] = [];
+    if (factsMatch) {
+      try {
+        keyFacts = JSON.parse(factsMatch[1]);
+      } catch {
+        keyFacts = [];
+      }
+    }
+
+    const summary = text.replace(/FACTS:\s*\[[\s\S]*?\]/, '').trim();
+
+    await this.memoryService.upsertMemory(conversationId, userId, summary, keyFacts, count);
+    this.logger.log(`Memory summary updated for conversation ${conversationId} at ${count} turns`);
   }
 }

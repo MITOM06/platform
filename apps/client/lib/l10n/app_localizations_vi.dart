@@ -867,4 +867,60 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get aiMessageDeleted => 'Tin nhắn đã bị xóa';
+
+  @override
+  String get aiMemoryTitle => 'Bộ nhớ AI';
+
+  @override
+  String get aiMemoryEmptyState =>
+      'Chưa có bộ nhớ nào. Hãy chat với PON AI để bắt đầu tạo bộ nhớ.';
+
+  @override
+  String get aiMemoryDeleteConfirm =>
+      'Xóa bộ nhớ này? AI sẽ không còn nhớ ngữ cảnh cuộc trò chuyện này nữa.';
+
+  @override
+  String get aiMemoryDeleted => 'Đã xóa bộ nhớ';
+
+  @override
+  String aiMemoryUpdated(String date) {
+    return 'Cập nhật $date';
+  }
+
+  @override
+  String get aiMemoryFacts => 'Thông tin chính:';
+
+  @override
+  String get viewAiMemory => 'Xem bộ nhớ';
+
+  @override
+  String get kbTitle => 'Cơ sở tri thức';
+
+  @override
+  String get kbEmptyState =>
+      'Chưa có tài liệu nào.\nNhấn nút tải lên để thêm tệp PDF, DOCX hoặc TXT.';
+
+  @override
+  String get kbUploadButton => 'Tải tài liệu lên';
+
+  @override
+  String get kbDeleteConfirm => 'Xóa tài liệu này?';
+
+  @override
+  String get kbProcessing => 'Đang xử lý';
+
+  @override
+  String get kbReady => 'Sẵn sàng';
+
+  @override
+  String get kbError => 'Lỗi';
+
+  @override
+  String get kbManage => 'Cơ sở tri thức';
+
+  @override
+  String get kbSources => 'nguồn';
+
+  @override
+  String get kbChunks => 'đoạn';
 }

@@ -30,6 +30,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.regex.Pattern;
 
 @Service
 @RequiredArgsConstructor
@@ -416,14 +418,22 @@ public class MessageService {
      * for building AI conversation history. Returns an empty list on any error
      * so AI request failure never disrupts the main send flow.
      */
+    private static final Set<String> AI_HISTORY_SKIP_TYPES =
+        Set.of("voice", "file", "sticker", "system", "call_log");
+    private static final Pattern AI_MENTION_STRIP =
+        Pattern.compile("(?i)@(AI|ponai)\\b");
+
     public List<Map<String, String>> getAiHistory(String userId, String conversationId) {
         try {
-            PageResponse<MessageResponse> paged = getMessages(userId, conversationId, null, 10);
+            PageResponse<MessageResponse> paged = getMessages(userId, conversationId, null, 20);
             List<Map<String, String>> history = new ArrayList<>();
             for (MessageResponse msg : paged.content()) {
                 if (msg.recalled() || msg.content() == null || msg.content().isBlank()) continue;
+                if (AI_HISTORY_SKIP_TYPES.contains(msg.type())) continue;
                 String role = AiConstants.AI_BOT_USER_ID.equals(msg.senderId()) ? "assistant" : "user";
-                history.add(Map.of("role", role, "content", msg.content()));
+                String content = AI_MENTION_STRIP.matcher(msg.content()).replaceAll("").trim();
+                if (content.isBlank()) continue;
+                history.add(Map.of("role", role, "content", content));
             }
             Collections.reverse(history); // newest-first → chronological
             return history;

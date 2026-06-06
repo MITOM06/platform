@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
+import 'package:go_router/go_router.dart';
 
 class StreamingAiBubble extends StatefulWidget {
   final String content;
@@ -113,27 +114,69 @@ class _ThinkingDots extends StatelessWidget {
 
 class FinalizedAiBubble extends StatelessWidget {
   final String content;
+  final List<String>? sources;
+  final String? conversationId;
 
-  const FinalizedAiBubble({super.key, required this.content});
+  const FinalizedAiBubble({
+    super.key,
+    required this.content,
+    this.sources,
+    this.conversationId,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return MarkdownBody(
-      data: content,
-      styleSheet: MarkdownStyleSheet(
-        p: const TextStyle(color: Colors.white, fontSize: 15, height: 1.45),
-        code: const TextStyle(
-          color: Color(0xFFB47FFF),
-          backgroundColor: Color(0x33B47FFF),
-          fontSize: 13,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        MarkdownBody(
+          data: content,
+          styleSheet: MarkdownStyleSheet(
+            p: const TextStyle(color: Colors.white, fontSize: 15, height: 1.45),
+            code: const TextStyle(
+              color: Color(0xFFB47FFF),
+              backgroundColor: Color(0x33B47FFF),
+              fontSize: 13,
+            ),
+            codeblockDecoration: BoxDecoration(
+              color: Colors.black.withValues(alpha: 0.35),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            strong: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+            em: const TextStyle(color: Colors.white, fontStyle: FontStyle.italic),
+          ),
         ),
-        codeblockDecoration: BoxDecoration(
-          color: Colors.black.withValues(alpha: 0.35),
-          borderRadius: BorderRadius.circular(8),
-        ),
-        strong: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-        em: const TextStyle(color: Colors.white, fontStyle: FontStyle.italic),
-      ),
+        if (sources != null && sources!.isNotEmpty) ...[
+          const SizedBox(height: 6),
+          GestureDetector(
+            onTap: () {
+              if (conversationId != null) {
+                context.push('/kb/$conversationId');
+              }
+            },
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  Icons.auto_stories,
+                  size: 13,
+                  color: Colors.white.withValues(alpha: 0.5),
+                ),
+                const SizedBox(width: 4),
+                Text(
+                  '${sources!.length} source${sources!.length == 1 ? '' : 's'}',
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontStyle: FontStyle.italic,
+                    color: Colors.white.withValues(alpha: 0.5),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ],
     );
   }
 }

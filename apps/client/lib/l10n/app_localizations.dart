@@ -1733,6 +1733,108 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Message deleted'**
   String get aiMessageDeleted;
+
+  /// No description provided for @aiMemoryTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'AI Memory'**
+  String get aiMemoryTitle;
+
+  /// No description provided for @aiMemoryEmptyState.
+  ///
+  /// In en, this message translates to:
+  /// **'No memories yet. Chat with PON AI to start building memories.'**
+  String get aiMemoryEmptyState;
+
+  /// No description provided for @aiMemoryDeleteConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete this memory? The AI will no longer remember this conversation\'s context.'**
+  String get aiMemoryDeleteConfirm;
+
+  /// No description provided for @aiMemoryDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Memory deleted'**
+  String get aiMemoryDeleted;
+
+  /// No description provided for @aiMemoryUpdated.
+  ///
+  /// In en, this message translates to:
+  /// **'Updated {date}'**
+  String aiMemoryUpdated(String date);
+
+  /// No description provided for @aiMemoryFacts.
+  ///
+  /// In en, this message translates to:
+  /// **'Key facts:'**
+  String get aiMemoryFacts;
+
+  /// No description provided for @viewAiMemory.
+  ///
+  /// In en, this message translates to:
+  /// **'View Memory'**
+  String get viewAiMemory;
+
+  /// No description provided for @kbTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Knowledge Base'**
+  String get kbTitle;
+
+  /// No description provided for @kbEmptyState.
+  ///
+  /// In en, this message translates to:
+  /// **'No documents yet.\nTap the upload button to add a PDF, DOCX, or TXT file.'**
+  String get kbEmptyState;
+
+  /// No description provided for @kbUploadButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Upload Document'**
+  String get kbUploadButton;
+
+  /// No description provided for @kbDeleteConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete this document?'**
+  String get kbDeleteConfirm;
+
+  /// No description provided for @kbProcessing.
+  ///
+  /// In en, this message translates to:
+  /// **'Processing'**
+  String get kbProcessing;
+
+  /// No description provided for @kbReady.
+  ///
+  /// In en, this message translates to:
+  /// **'Ready'**
+  String get kbReady;
+
+  /// No description provided for @kbError.
+  ///
+  /// In en, this message translates to:
+  /// **'Error'**
+  String get kbError;
+
+  /// No description provided for @kbManage.
+  ///
+  /// In en, this message translates to:
+  /// **'Knowledge Base'**
+  String get kbManage;
+
+  /// No description provided for @kbSources.
+  ///
+  /// In en, this message translates to:
+  /// **'source(s)'**
+  String get kbSources;
+
+  /// No description provided for @kbChunks.
+  ///
+  /// In en, this message translates to:
+  /// **'chunks'**
+  String get kbChunks;
 }
 
 class _AppLocalizationsDelegate

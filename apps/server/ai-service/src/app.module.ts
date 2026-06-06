@@ -4,6 +4,8 @@ import { MongooseModule } from '@nestjs/mongoose';
 import configuration from './config/configuration';
 import { AiModule } from './ai/ai.module';
 import { RedisModule } from './redis/redis.module';
+import { MemoryModule } from './memory/memory.module';
+import { KbModule } from './kb/kb.module';
 import { BotSeedService } from './bot/bot-seed.service';
 import { RedisSubscriberService } from './redis/redis-subscriber.service';
 
@@ -23,6 +25,8 @@ const mongooseModule: DynamicModule = MongooseModule.forRootAsync({
     }),
     mongooseModule,
     RedisModule,
+    MemoryModule,
+    KbModule,
     AiModule,
   ],
   providers: [BotSeedService, RedisSubscriberService],

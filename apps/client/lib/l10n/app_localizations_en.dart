@@ -866,4 +866,60 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get aiMessageDeleted => 'Message deleted';
+
+  @override
+  String get aiMemoryTitle => 'AI Memory';
+
+  @override
+  String get aiMemoryEmptyState =>
+      'No memories yet. Chat with PON AI to start building memories.';
+
+  @override
+  String get aiMemoryDeleteConfirm =>
+      'Delete this memory? The AI will no longer remember this conversation\'s context.';
+
+  @override
+  String get aiMemoryDeleted => 'Memory deleted';
+
+  @override
+  String aiMemoryUpdated(String date) {
+    return 'Updated $date';
+  }
+
+  @override
+  String get aiMemoryFacts => 'Key facts:';
+
+  @override
+  String get viewAiMemory => 'View Memory';
+
+  @override
+  String get kbTitle => 'Knowledge Base';
+
+  @override
+  String get kbEmptyState =>
+      'No documents yet.\nTap the upload button to add a PDF, DOCX, or TXT file.';
+
+  @override
+  String get kbUploadButton => 'Upload Document';
+
+  @override
+  String get kbDeleteConfirm => 'Delete this document?';
+
+  @override
+  String get kbProcessing => 'Processing';
+
+  @override
+  String get kbReady => 'Ready';
+
+  @override
+  String get kbError => 'Error';
+
+  @override
+  String get kbManage => 'Knowledge Base';
+
+  @override
+  String get kbSources => 'source(s)';
+
+  @override
+  String get kbChunks => 'chunks';
 }

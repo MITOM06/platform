@@ -878,4 +878,60 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get aiMessageDeleted => 'Message supprimé';
+
+  @override
+  String get aiMemoryTitle => 'Mémoire IA';
+
+  @override
+  String get aiMemoryEmptyState =>
+      'Aucun souvenir pour l\'instant. Discutez avec PON AI pour commencer à créer des souvenirs.';
+
+  @override
+  String get aiMemoryDeleteConfirm =>
+      'Supprimer ce souvenir ? L\'IA ne se souviendra plus du contexte de cette conversation.';
+
+  @override
+  String get aiMemoryDeleted => 'Souvenir supprimé';
+
+  @override
+  String aiMemoryUpdated(String date) {
+    return 'Mis à jour le $date';
+  }
+
+  @override
+  String get aiMemoryFacts => 'Faits clés :';
+
+  @override
+  String get viewAiMemory => 'Voir la mémoire';
+
+  @override
+  String get kbTitle => 'Base de connaissances';
+
+  @override
+  String get kbEmptyState =>
+      'Aucun document.\nAppuyez sur le bouton d\'importation pour ajouter un fichier PDF, DOCX ou TXT.';
+
+  @override
+  String get kbUploadButton => 'Importer un document';
+
+  @override
+  String get kbDeleteConfirm => 'Supprimer ce document ?';
+
+  @override
+  String get kbProcessing => 'En cours';
+
+  @override
+  String get kbReady => 'Prêt';
+
+  @override
+  String get kbError => 'Erreur';
+
+  @override
+  String get kbManage => 'Base de connaissances';
+
+  @override
+  String get kbSources => 'source(s)';
+
+  @override
+  String get kbChunks => 'segments';
 }

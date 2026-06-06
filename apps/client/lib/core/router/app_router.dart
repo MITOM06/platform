@@ -23,6 +23,8 @@ import '../../features/chat/ui/explore_screen.dart';
 import '../../features/chat/ui/explore_media_screen.dart';
 import '../../features/friends/ui/friends_screen.dart';
 import '../../features/settings/ui/settings_screen.dart';
+import '../../features/chat/ui/ai_memory_screen.dart';
+import '../../features/chat/ui/kb_screen.dart';
 import '../../../core/providers/theme_provider.dart';
 
 part 'app_router.g.dart';
@@ -212,6 +214,18 @@ GoRouter appRouter(AppRouterRef ref) {
         path: '/shared-media/:conversationId',
         name: 'shared-media',
         builder: (context, state) => ExploreMediaScreen(
+          conversationId: state.pathParameters['conversationId']!,
+        ),
+      ),
+      GoRoute(
+        path: '/ai-memories',
+        name: 'ai-memories',
+        builder: (context, state) => const AiMemoryScreen(),
+      ),
+      GoRoute(
+        path: '/kb/:conversationId',
+        name: 'kb',
+        builder: (context, state) => KbScreen(
           conversationId: state.pathParameters['conversationId']!,
         ),
       ),

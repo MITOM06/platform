@@ -2,9 +2,11 @@ import { Module } from '@nestjs/common';
 import { AiController } from './ai.controller';
 import { AiService } from './ai.service';
 import { RedisModule } from '../redis/redis.module';
+import { MemoryModule } from '../memory/memory.module';
+import { KbModule } from '../kb/kb.module';
 
 @Module({
-  imports: [RedisModule],
+  imports: [RedisModule, MemoryModule, KbModule],
   controllers: [AiController],
   providers: [AiService],
   exports: [AiService],

@@ -215,7 +215,11 @@ class MessageBubble extends ConsumerWidget {
                           ],
                         )
                       else if (message.isAiMessage && !message.isStreaming)
-                        FinalizedAiBubble(content: message.content)
+                        FinalizedAiBubble(
+                          content: message.content,
+                          sources: message.sources,
+                          conversationId: message.conversationId,
+                        )
                       else
                         TextContent(
                           content: message.content,

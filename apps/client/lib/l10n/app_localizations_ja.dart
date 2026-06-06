@@ -858,4 +858,58 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get aiMessageDeleted => 'メッセージが削除されました';
+
+  @override
+  String get aiMemoryTitle => 'AIメモリ';
+
+  @override
+  String get aiMemoryEmptyState => 'まだメモリがありません。PON AIとチャットしてメモリを作成しましょう。';
+
+  @override
+  String get aiMemoryDeleteConfirm => 'このメモリを削除しますか？AIはこの会話のコンテキストを記憶しなくなります。';
+
+  @override
+  String get aiMemoryDeleted => 'メモリが削除されました';
+
+  @override
+  String aiMemoryUpdated(String date) {
+    return '$date更新';
+  }
+
+  @override
+  String get aiMemoryFacts => '重要な情報：';
+
+  @override
+  String get viewAiMemory => 'メモリを表示';
+
+  @override
+  String get kbTitle => 'ナレッジベース';
+
+  @override
+  String get kbEmptyState =>
+      'ドキュメントがありません。\nアップロードボタンをタップして PDF、DOCX、TXT ファイルを追加してください。';
+
+  @override
+  String get kbUploadButton => 'ドキュメントをアップロード';
+
+  @override
+  String get kbDeleteConfirm => 'このドキュメントを削除しますか？';
+
+  @override
+  String get kbProcessing => '処理中';
+
+  @override
+  String get kbReady => '準備完了';
+
+  @override
+  String get kbError => 'エラー';
+
+  @override
+  String get kbManage => 'ナレッジベース';
+
+  @override
+  String get kbSources => 'ソース';
+
+  @override
+  String get kbChunks => 'チャンク';
 }

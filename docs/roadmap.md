@@ -1,7 +1,7 @@
 # Roadmap — Platform Project
 
 > **Status:** Phase 1 (Chat Core) ✅ DONE — Phase 2 (AI Layer) 🚧 IN PROGRESS
-> **Current Sprint:** Sprint AI-1 — Basic Bot Member (See `TODO.md`)
+> **Current Sprint:** Sprint AI-3 — Knowledge Base (RAG) (See `TODO.md`)
 
 ---
 
@@ -65,20 +65,20 @@
 
 > **Goal:** Embed an AI agent inside the chat app — AI appears as a real member, has memory, has tools, transparent reasoning.
 
-### Sprint AI-1 — Basic Bot Member 🚧 IN PROGRESS
+### Sprint AI-1 — Basic Bot Member ✅ DONE
 **Deliverable:** User types `@AI` in any conversation → AI replies with token-by-token streaming, renders markdown, fallback on Claude error.
-- [ ] Phase 1: Infrastructure — ai-service NestJS scaffold, bot user seed, Redis pub/sub wiring
-- [ ] Phase 2: Core AI logic — detect @AI, call Claude API streaming, forward chunks via STOMP
-- [ ] Phase 3: Flutter UI — streaming bubble, thinking indicator, AI identity & avatar
-- [ ] Phase 4: Error handling, fallback model (haiku), i18n, tests
+- [x] Phase 1: Infrastructure — ai-service NestJS scaffold, bot user seed, Redis pub/sub wiring
+- [x] Phase 2: Core AI logic — detect @AI, call Claude API streaming, forward chunks via STOMP
+- [x] Phase 3: Flutter UI — streaming bubble, thinking indicator, AI identity & avatar
+- [x] Phase 4: Error handling, fallback model (haiku), i18n, tests
 
-### Sprint AI-2 — Conversation Memory 📋 PENDING
+### Sprint AI-2 — Conversation Memory ✅ DONE
 **Deliverable:** AI remembers conversation context (short-term) and user profile (long-term summary).
-- Short-term: Redis sliding window of 20 messages injected into system prompt
-- Long-term: MongoDB stores conversation summary, injected when relevant
-- Flutter: "AI remembers you" screen — view and delete memories
+- [x] Short-term: Redis sliding window of 20 messages injected into system prompt
+- [x] Long-term: MongoDB stores conversation summary, injected when relevant
+- [x] Flutter: "AI remembers you" screen — view and delete memories
 
-### Sprint AI-3 — Knowledge Base (RAG) 📋 PENDING
+### Sprint AI-3 — Knowledge Base (RAG) 🚧 IN PROGRESS
 **Deliverable:** Upload documents → AI answers based on content, with source citation.
 - Upload PDF/DOCX → chunk → embed → vector store (MongoDB Atlas Vector or pgvector sidecar)
 - RAG pipeline: embed question → top-K chunks → inject → generate
