@@ -858,4 +858,57 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get aiMessageDeleted => '消息已删除';
+
+  @override
+  String get aiMemoryTitle => 'AI记忆';
+
+  @override
+  String get aiMemoryEmptyState => '暂无记忆。与PON AI聊天以开始建立记忆。';
+
+  @override
+  String get aiMemoryDeleteConfirm => '删除此记忆？AI将不再记住此对话的上下文。';
+
+  @override
+  String get aiMemoryDeleted => '记忆已删除';
+
+  @override
+  String aiMemoryUpdated(String date) {
+    return '更新于 $date';
+  }
+
+  @override
+  String get aiMemoryFacts => '关键事实：';
+
+  @override
+  String get viewAiMemory => '查看记忆';
+
+  @override
+  String get kbTitle => '知识库';
+
+  @override
+  String get kbEmptyState => '暂无文档。\n点击上传按钮添加 PDF、DOCX 或 TXT 文件。';
+
+  @override
+  String get kbUploadButton => '上传文档';
+
+  @override
+  String get kbDeleteConfirm => '删除此文档？';
+
+  @override
+  String get kbProcessing => '处理中';
+
+  @override
+  String get kbReady => '就绪';
+
+  @override
+  String get kbError => '错误';
+
+  @override
+  String get kbManage => '知识库';
+
+  @override
+  String get kbSources => '来源';
+
+  @override
+  String get kbChunks => '块';
 }

@@ -22,4 +22,9 @@ export class RedisPublisherService {
     await this.client.publish(channel, JSON.stringify(enriched));
     this.logger.debug(`Published to ${channel}`);
   }
+
+  async publishToChannel(channel: string, payload: object): Promise<void> {
+    await this.client.publish(channel, JSON.stringify(payload));
+    this.logger.debug(`Published to ${channel}`);
+  }
 }

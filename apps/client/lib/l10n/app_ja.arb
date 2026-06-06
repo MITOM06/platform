@@ -277,5 +277,29 @@
   "aiThinking": "AIが考え中...",
   "aiError": "AIは一時的に利用できません。もう一度お試しください。",
   "aiErrorRetry": "再試行",
-  "aiMessageDeleted": "メッセージが削除されました"
+  "aiMessageDeleted": "メッセージが削除されました",
+  "aiMemoryTitle": "AIメモリ",
+  "aiMemoryEmptyState": "まだメモリがありません。PON AIとチャットしてメモリを作成しましょう。",
+  "aiMemoryDeleteConfirm": "このメモリを削除しますか？AIはこの会話のコンテキストを記憶しなくなります。",
+  "aiMemoryDeleted": "メモリが削除されました",
+  "aiMemoryUpdated": "{date}更新",
+  "@aiMemoryUpdated": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "aiMemoryFacts": "重要な情報：",
+  "viewAiMemory": "メモリを表示",
+  "kbTitle": "ナレッジベース",
+  "kbEmptyState": "ドキュメントがありません。\nアップロードボタンをタップして PDF、DOCX、TXT ファイルを追加してください。",
+  "kbUploadButton": "ドキュメントをアップロード",
+  "kbDeleteConfirm": "このドキュメントを削除しますか？",
+  "kbProcessing": "処理中",
+  "kbReady": "準備完了",
+  "kbError": "エラー",
+  "kbManage": "ナレッジベース",
+  "kbSources": "ソース",
+  "kbChunks": "チャンク"
 }

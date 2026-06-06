@@ -277,5 +277,29 @@
   "aiThinking": "AI가 생각 중...",
   "aiError": "AI를 일시적으로 사용할 수 없습니다. 다시 시도해주세요.",
   "aiErrorRetry": "다시 시도",
-  "aiMessageDeleted": "메시지가 삭제되었습니다"
+  "aiMessageDeleted": "메시지가 삭제되었습니다",
+  "aiMemoryTitle": "AI 메모리",
+  "aiMemoryEmptyState": "아직 메모리가 없습니다. PON AI와 채팅하여 메모리를 만들어 보세요.",
+  "aiMemoryDeleteConfirm": "이 메모리를 삭제하시겠습니까? AI는 더 이상 이 대화의 컨텍스트를 기억하지 않습니다.",
+  "aiMemoryDeleted": "메모리가 삭제되었습니다",
+  "aiMemoryUpdated": "{date}에 업데이트됨",
+  "@aiMemoryUpdated": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "aiMemoryFacts": "주요 사실:",
+  "viewAiMemory": "메모리 보기",
+  "kbTitle": "지식 베이스",
+  "kbEmptyState": "문서가 없습니다.\n업로드 버튼을 눌러 PDF, DOCX 또는 TXT 파일을 추가하세요.",
+  "kbUploadButton": "문서 업로드",
+  "kbDeleteConfirm": "이 문서를 삭제하시겠습니까?",
+  "kbProcessing": "처리 중",
+  "kbReady": "준비됨",
+  "kbError": "오류",
+  "kbManage": "지식 베이스",
+  "kbSources": "출처",
+  "kbChunks": "청크"
 }

@@ -25,6 +25,7 @@ class StompService extends _$StompService {
   final _presenceCtrl = StreamController<PresenceEvent>.broadcast();
   final _pinCtrl = StreamController<PinnedMessageEvent>.broadcast();
   final _aiStreamCtrl = StreamController<Map<String, dynamic>>.broadcast();
+  final _kbStatusCtrl = StreamController<Map<String, dynamic>>.broadcast();
   // Emits whenever a STOMP reconnect completes (not on first connect).
   final _reconnectCtrl = StreamController<void>.broadcast();
   bool _presenceSubPending = false;
@@ -46,6 +47,7 @@ class StompService extends _$StompService {
   Stream<PresenceEvent> get presence => _presenceCtrl.stream;
   Stream<PinnedMessageEvent> get pinnedMessageUpdates => _pinCtrl.stream;
   Stream<Map<String, dynamic>> get aiStreamEvents => _aiStreamCtrl.stream;
+  Stream<Map<String, dynamic>> get kbStatusEvents => _kbStatusCtrl.stream;
   // Fires whenever the STOMP socket reconnects after a prior disconnect.
   Stream<void> get reconnects => _reconnectCtrl.stream;
 
@@ -157,6 +159,9 @@ class StompService extends _$StompService {
           case 'AI_STREAM_DONE':
           case 'AI_STREAM_ERROR':
             _aiStreamCtrl.add(data);
+            return;
+          case 'KB_STATUS_UPDATE':
+            _kbStatusCtrl.add(data);
             return;
         }
         _messageCtrl.add(MessageModel.fromJson(data));

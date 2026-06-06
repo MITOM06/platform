@@ -277,5 +277,29 @@
   "aiThinking": "L'IA réfléchit...",
   "aiError": "L'IA est temporairement indisponible. Veuillez réessayer.",
   "aiErrorRetry": "Réessayer",
-  "aiMessageDeleted": "Message supprimé"
+  "aiMessageDeleted": "Message supprimé",
+  "aiMemoryTitle": "Mémoire IA",
+  "aiMemoryEmptyState": "Aucun souvenir pour l'instant. Discutez avec PON AI pour commencer à créer des souvenirs.",
+  "aiMemoryDeleteConfirm": "Supprimer ce souvenir ? L'IA ne se souviendra plus du contexte de cette conversation.",
+  "aiMemoryDeleted": "Souvenir supprimé",
+  "aiMemoryUpdated": "Mis à jour le {date}",
+  "@aiMemoryUpdated": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "aiMemoryFacts": "Faits clés :",
+  "viewAiMemory": "Voir la mémoire",
+  "kbTitle": "Base de connaissances",
+  "kbEmptyState": "Aucun document.\nAppuyez sur le bouton d'importation pour ajouter un fichier PDF, DOCX ou TXT.",
+  "kbUploadButton": "Importer un document",
+  "kbDeleteConfirm": "Supprimer ce document ?",
+  "kbProcessing": "En cours",
+  "kbReady": "Prêt",
+  "kbError": "Erreur",
+  "kbManage": "Base de connaissances",
+  "kbSources": "source(s)",
+  "kbChunks": "segments"
 }

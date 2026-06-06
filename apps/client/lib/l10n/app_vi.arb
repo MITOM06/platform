@@ -277,5 +277,29 @@
   "aiThinking": "AI đang suy nghĩ...",
   "aiError": "AI tạm thời không khả dụng. Vui lòng thử lại.",
   "aiErrorRetry": "Thử lại",
-  "aiMessageDeleted": "Tin nhắn đã bị xóa"
+  "aiMessageDeleted": "Tin nhắn đã bị xóa",
+  "aiMemoryTitle": "Bộ nhớ AI",
+  "aiMemoryEmptyState": "Chưa có bộ nhớ nào. Hãy chat với PON AI để bắt đầu tạo bộ nhớ.",
+  "aiMemoryDeleteConfirm": "Xóa bộ nhớ này? AI sẽ không còn nhớ ngữ cảnh cuộc trò chuyện này nữa.",
+  "aiMemoryDeleted": "Đã xóa bộ nhớ",
+  "aiMemoryUpdated": "Cập nhật {date}",
+  "@aiMemoryUpdated": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "aiMemoryFacts": "Thông tin chính:",
+  "viewAiMemory": "Xem bộ nhớ",
+  "kbTitle": "Cơ sở tri thức",
+  "kbEmptyState": "Chưa có tài liệu nào.\nNhấn nút tải lên để thêm tệp PDF, DOCX hoặc TXT.",
+  "kbUploadButton": "Tải tài liệu lên",
+  "kbDeleteConfirm": "Xóa tài liệu này?",
+  "kbProcessing": "Đang xử lý",
+  "kbReady": "Sẵn sàng",
+  "kbError": "Lỗi",
+  "kbManage": "Cơ sở tri thức",
+  "kbSources": "nguồn",
+  "kbChunks": "đoạn"
 }

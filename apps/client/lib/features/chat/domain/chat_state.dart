@@ -220,6 +220,8 @@ class MessageModel {
   // AI streaming state — client-only, not persisted
   final bool isStreaming;
   final bool isThinking;
+  // RAG citation sources — documentIds cited by the AI, from AI_STREAM_DONE payload
+  final List<String>? sources;
 
   const MessageModel({
     required this.id,
@@ -238,6 +240,7 @@ class MessageModel {
     this.isPending = false,
     this.isStreaming = false,
     this.isThinking = false,
+    this.sources,
   });
 
   bool get isEdited => editedAt != null;
@@ -313,6 +316,7 @@ class MessageModel {
     bool? isPending,
     bool? isStreaming,
     bool? isThinking,
+    List<String>? sources,
   }) {
     return MessageModel(
       id: id ?? this.id,
@@ -331,6 +335,7 @@ class MessageModel {
       isPending: isPending ?? this.isPending,
       isStreaming: isStreaming ?? this.isStreaming,
       isThinking: isThinking ?? this.isThinking,
+      sources: sources ?? this.sources,
     );
   }
 }

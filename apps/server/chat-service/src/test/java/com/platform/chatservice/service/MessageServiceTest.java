@@ -25,6 +25,7 @@ import org.springframework.data.mongodb.core.query.Update;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -456,6 +457,44 @@ class MessageServiceTest {
             .isInstanceOf(ConversationNotFoundException.class);
 
         verifyNoInteractions(messageRepository);
+    }
+
+    // -------------------------------------------------------------------------
+    // Sprint AI-2.1 — getAiHistory filtering
+    // -------------------------------------------------------------------------
+
+    @Test
+    void getAiHistory_ExcludesNonTextTypes_AndMapsBotToAssistant() {
+        // Arrange: mix of types — only text and ai should survive
+        Message textMsg = Message.builder().id("m1").conversationId(CONV_ID)
+            .senderId(SENDER_ID).content("Hello").type("text")
+            .readBy(new java.util.ArrayList<>()).createdAt(Instant.now().minusSeconds(30)).build();
+        Message voiceMsg = Message.builder().id("m2").conversationId(CONV_ID)
+            .senderId(SENDER_ID).content("voice-url").type("voice")
+            .readBy(new java.util.ArrayList<>()).createdAt(Instant.now().minusSeconds(20)).build();
+        Message botMsg = Message.builder().id("m3").conversationId(CONV_ID)
+            .senderId(AiConstants.AI_BOT_USER_ID).content("AI reply").type("ai")
+            .readBy(new java.util.ArrayList<>()).createdAt(Instant.now().minusSeconds(10)).build();
+        Message stickerMsg = Message.builder().id("m4").conversationId(CONV_ID)
+            .senderId(SENDER_ID).content("😊").type("sticker")
+            .readBy(new java.util.ArrayList<>()).createdAt(Instant.now()).build();
+        Message atAiMsg = Message.builder().id("m5").conversationId(CONV_ID)
+            .senderId(SENDER_ID).content("@AI what is Flutter?").type("text")
+            .readBy(new java.util.ArrayList<>()).createdAt(Instant.now().minusSeconds(5)).build();
+
+        when(conversationRepository.findById(CONV_ID)).thenReturn(Optional.of(conversation));
+        when(messageRepository.findByConversationIdOrderByCreatedAtDesc(eq(CONV_ID), any(Pageable.class)))
+            .thenReturn(new PageImpl<>(List.of(atAiMsg, stickerMsg, botMsg, voiceMsg, textMsg)));
+
+        List<Map<String, String>> history = messageService.getAiHistory(SENDER_ID, CONV_ID);
+
+        // Should contain only text and ai messages (3), in chronological order
+        assertThat(history).hasSize(3);
+        assertThat(history.get(0)).containsEntry("role", "user").containsEntry("content", "Hello");
+        assertThat(history.get(1)).containsEntry("role", "assistant").containsEntry("content", "AI reply");
+        // @AI mention stripped from last text message
+        assertThat(history.get(2)).containsEntry("role", "user")
+            .satisfies(h -> assertThat(h.get("content")).doesNotContain("@AI").isNotBlank());
     }
 
     // -------------------------------------------------------------------------

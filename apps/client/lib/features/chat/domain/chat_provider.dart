@@ -659,9 +659,16 @@ class ChatNotifier extends _$ChatNotifier {
           isThinking: false,
         );
       case 'AI_STREAM_DONE':
+        final rawSources = event['sources'] as List?;
+        final sources = rawSources
+            ?.whereType<Map<String, dynamic>>()
+            .map((s) => s['documentId'] as String? ?? '')
+            .where((id) => id.isNotEmpty)
+            .toList();
         updated[idx] = current.messages[idx].copyWith(
           isStreaming: false,
           isThinking: false,
+          sources: sources,
         );
       case 'AI_STREAM_ERROR':
         updated[idx] = current.messages[idx].copyWith(

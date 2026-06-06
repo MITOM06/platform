@@ -858,4 +858,59 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get aiMessageDeleted => '메시지가 삭제되었습니다';
+
+  @override
+  String get aiMemoryTitle => 'AI 메모리';
+
+  @override
+  String get aiMemoryEmptyState => '아직 메모리가 없습니다. PON AI와 채팅하여 메모리를 만들어 보세요.';
+
+  @override
+  String get aiMemoryDeleteConfirm =>
+      '이 메모리를 삭제하시겠습니까? AI는 더 이상 이 대화의 컨텍스트를 기억하지 않습니다.';
+
+  @override
+  String get aiMemoryDeleted => '메모리가 삭제되었습니다';
+
+  @override
+  String aiMemoryUpdated(String date) {
+    return '$date에 업데이트됨';
+  }
+
+  @override
+  String get aiMemoryFacts => '주요 사실:';
+
+  @override
+  String get viewAiMemory => '메모리 보기';
+
+  @override
+  String get kbTitle => '지식 베이스';
+
+  @override
+  String get kbEmptyState =>
+      '문서가 없습니다.\n업로드 버튼을 눌러 PDF, DOCX 또는 TXT 파일을 추가하세요.';
+
+  @override
+  String get kbUploadButton => '문서 업로드';
+
+  @override
+  String get kbDeleteConfirm => '이 문서를 삭제하시겠습니까?';
+
+  @override
+  String get kbProcessing => '처리 중';
+
+  @override
+  String get kbReady => '준비됨';
+
+  @override
+  String get kbError => '오류';
+
+  @override
+  String get kbManage => '지식 베이스';
+
+  @override
+  String get kbSources => '출처';
+
+  @override
+  String get kbChunks => '청크';
 }
