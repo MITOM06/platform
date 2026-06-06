@@ -2,74 +2,91 @@
 
 # Platform
 
-**A production-grade realtime messaging platform · FPT Aptech PRJ4**
+**A production-grade realtime messaging platform with advanced AI capability · FPT Aptech PRJ4**
 
 [![NestJS](https://img.shields.io/badge/NestJS-E0234E?style=flat-square&logo=nestjs&logoColor=white)](https://nestjs.com)
 [![Spring Boot](https://img.shields.io/badge/Spring_Boot_3-6DB33F?style=flat-square&logo=springboot&logoColor=white)](https://spring.io/projects/spring-boot)
 [![Flutter](https://img.shields.io/badge/Flutter_3-02569B?style=flat-square&logo=flutter&logoColor=white)](https://flutter.dev)
+[![Qdrant](https://img.shields.io/badge/Qdrant-red?style=flat-square&logo=qdrant&logoColor=white)](https://qdrant.tech)
 [![MongoDB](https://img.shields.io/badge/MongoDB-47A248?style=flat-square&logo=mongodb&logoColor=white)](https://www.mongodb.com)
 [![Redis](https://img.shields.io/badge/Redis-DC382D?style=flat-square&logo=redis&logoColor=white)](https://redis.io)
+[![OpenAI](https://img.shields.io/badge/OpenAI-412991?style=flat-square&logo=openai&logoColor=white)](https://openai.com)
+[![Anthropic Claude](https://img.shields.io/badge/Anthropic_Claude-D97706?style=flat-square)](https://anthropic.com)
 [![Docker](https://img.shields.io/badge/Docker-2496ED?style=flat-square&logo=docker&logoColor=white)](https://www.docker.com)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=flat-square)](LICENSE)
 
-A monorepo with two backend microservices and a Flutter mobile client delivering secure, low-latency 1-on-1 realtime chat.
+A high-performance monorepo with three microservices and a Flutter mobile client delivering secure, low-latency 1-on-1 and group chatting, WebRTC calls, and a complete RAG-backed AI bot member with context memory.
 
 </div>
 
 ---
 
-## Overview
+## 🚀 Overview
 
-**Platform** is a full-stack messaging application composed of three independently deployable pieces:
+**Platform** is a modular, full-stack messaging application composed of four main components interacting asynchronously to provide a seamless chatting experience:
 
-| Layer | Tech | Responsibility |
-|-------|------|----------------|
-| `auth-service` | NestJS · TypeScript | Identity, JWT, OTP verification, OAuth social login |
-| `chat-service` | Spring Boot 3 · Java 21 | Realtime messaging (WebSocket/STOMP), conversations, presence |
-| `client` | Flutter 3 · Dart | Cross-platform mobile app (Android & iOS) |
+| Layer | Technology | Responsibility |
+|-------|------------|----------------|
+| `auth-service` | NestJS · TypeScript | Identity Management, JWT issuance & rotation, OTP email verification, OAuth social logins |
+| `chat-service` | Spring Boot 3 · Java 21 | Realtime Message delivery (WebSocket/STOMP), user presence, REST API for chat CRUD, attachments storage |
+| `ai-service` | NestJS · TypeScript | AI Assistant pipeline (Anthropic Claude), Redis message processing, text chunking, document parsing, memory synthesization |
+| `client` | Flutter 3 · Dart | Cross-platform mobile app (Android, iOS) & responsive web/desktop layout using Riverpod & GoRouter |
 
-Shared infrastructure: **MongoDB** (single `platform` database) + **Redis** (presence, pub/sub).
-
----
-
-## Architecture
-
-```
-┌──────────────────────────────────────────────────────────┐
-│                     Flutter Client                        │
-│               Riverpod · go_router · Dio                  │
-└──────────┬──────────────────────────────────┬────────────┘
-           │ REST/HTTP  :3001                  │ WebSocket/STOMP  :8080
-           ▼                                  ▼
-┌──────────────────────┐          ┌───────────────────────────┐
-│    auth-service       │          │       chat-service         │
-│      (NestJS)         │          │     (Spring Boot 3)        │
-│                       │          │                            │
-│  POST /auth/register  │          │  WS  /ws  (STOMP)          │
-│  POST /auth/login     │          │  /app/chat.send            │
-│  POST /auth/refresh   │          │  /app/chat.join            │
-│  POST /auth/verify-otp│          │                            │
-│  GET  /auth/google    │          │  REST /api/conversations   │
-│  JWT issuance         │          │  REST /api/messages        │
-│  bcrypt · Passport    │          │  GET  /api/users/:id/status│
-└──────────┬────────────┘          └──────────────┬────────────┘
-           │                                      │
-           └──────────────┬───────────────────────┘
-                          │  shared
-              ┌───────────┴──────────────┐
-              ▼                          ▼
-   ┌──────────────────┐       ┌──────────────────┐
-   │    MongoDB        │       │      Redis        │
-   │   port 27018      │       │    port 6379      │
-   │  db: platform     │       │  presence, events │
-   └──────────────────┘       └──────────────────┘
-```
-
-**JWT flow:** auth-service issues tokens signed with `JWT_SECRET`. chat-service validates the same secret on every WebSocket connection and REST request — no inter-service calls needed.
+### Shared Infrastructure:
+- **MongoDB** (single `platform` database): Holds canonical user profiles, conversations, messages, and knowledge base metadata.
+- **Redis**: Coordinates user presence (heartbeats), socket connections, and publishes event pipelines (`ai:request`, `kb:process`, `ai:response:*`, `kb:status:*`).
+- **Qdrant Vector DB**: Vector store mapping indexed text chunks for semantic RAG search.
 
 ---
 
-## Repository Structure
+## 📐 Architecture & Data Flow
+
+```
+                                 ┌─────────────────────────────────┐
+                                 │         Flutter Client          │
+                                 │    Riverpod · STOMP · WebRTC    │
+                                 └────────┬─────────────────┬──────┘
+                                          │ REST/HTTP       │ WS/STOMP (port 8080)
+                                          ▼                 ▼
+┌──────────────────┐             ┌─────────────────────────────────┐
+│   auth-service   │             │          chat-service           │
+│  NestJS (3001)   │             │       Spring Boot 3 (8080)      │
+└────────┬─────────┘             └────────┬─────────────────▲──────┘
+         │                                │ REST/GridFS     │ STOMP Broadcast
+         │ JWT                            │                 │
+         │ Sign                           ▼                 │
+         │                        ┌──────────────┐          │
+         │                        │   MongoDB    │          │
+         │                        │  (db: platform)         │
+         │                        └──────────────┘          │
+         │                                                  │
+         │                                                  │ Redis pub/sub
+         │                                 Redis (6379)     │ response channel
+         │                               ┌──────────────┐   │
+         └──────────────────────────────►│ pub/sub,     ├───┘
+                                         │ presence     │
+                                         └──────┬───────┘
+                                                │ Redis pub/sub
+                                                │ request channel
+                                                ▼
+                                 ┌─────────────────────────────────┐
+                                 │           ai-service            │
+                                 │     NestJS (Claude / OpenAI)    │
+                                 └──────┬───────────────────┬──────┘
+                                        │ Embedding         │ Vector Search
+                                        ▼                   ▼
+                                 ┌──────────────┐    ┌──────────────┐
+                                 │  OpenAI API  │    │  Qdrant DB   │
+                                 │  Embeddings  │    │ (port 6333)  │
+                                 └──────────────┘    └──────────────┘
+```
+
+1. **AI Message Flow**: User tags `@AI` in conversation $\rightarrow$ Client sends message to `chat-service` $\rightarrow$ `chat-service` persists message and publishes request containing last 20 messages context to Redis `ai:request` channel $\rightarrow$ `ai-service` picks up the job, retrieves memory summary from MongoDB & semantic context from Qdrant, calls Anthropic Claude Streaming API $\rightarrow$ Stream chunks are published to Redis `ai:response:*` $\rightarrow$ `chat-service` listens and relays chunks down STOMP socket to the client in real time.
+2. **Knowledge Base (RAG) Flow**: User uploads document $\rightarrow$ `chat-service` stores file in GridFS and publishes doc metadata to Redis `kb:process` $\rightarrow$ `ai-service` downloads file, extracts text, chunks it, requests OpenAI `text-embedding-3-small` embeddings, and upserts them to `Qdrant` $\rightarrow$ `ai-service` updates status to `done` and notifies the client over WebSocket.
+
+---
+
+## 📁 Repository Structure
 
 ```
 platform/
@@ -78,91 +95,44 @@ platform/
 │   │   ├── auth-service/          # NestJS — identity & tokens
 │   │   │   ├── src/modules/
 │   │   │   │   ├── auth/          # login, register, OTP, OAuth
-│   │   │   │   ├── users/         # user CRUD
-│   │   │   │   └── email/         # OTP mailer
+│   │   │   │   └── users/         # user profile data
 │   │   │   └── Dockerfile
-│   │   └── chat-service/          # Spring Boot 3 — messaging
-│   │       ├── src/main/java/.../
-│   │       │   ├── config/        # Security + WebSocket STOMP config
-│   │       │   ├── controller/    # ChatController (WS), REST controllers
-│   │       │   ├── service/       # ConversationService, MessageService
-│   │       │   ├── security/      # AuthChannelInterceptor, PresenceEventListener
-│   │       │   └── repository/    # Spring Data MongoDB repos
+│   │   ├── chat-service/          # Spring Boot 3 — messaging engine
+│   │   │   ├── src/main/java/.../
+│   │   │   │   ├── config/        # WebSocket STOMP & Security filters
+│   │   │   │   ├── controller/    # WS endpoints & REST controllers
+│   │   │   │   ├── service/       # MessageService, KbStatusListener
+│   │   │   │   ├── security/      # AuthChannelInterceptor
+│   │   │   │   └── repository/    # MongoDB repos (messages, kb_documents)
+│   │   │   └── Dockerfile
+│   │   └── ai-service/            # NestJS — AI pipeline
+│   │       ├── src/
+│   │       │   ├── ai/            # Claude streaming, prompt construction
+│   │       │   ├── memory/        # Long-term summary service (MongoDB)
+│   │       │   ├── kb/            # Text extraction (PDF/Docx), Qdrant indexing
+│   │       │   └── redis/         # Redis Pub/Sub events
 │   │       └── Dockerfile
-│   └── client/                    # Flutter 3 — mobile app
+│   └── client/                    # Flutter 3 — Cross-platform client
 │       └── lib/
-│           ├── core/              # api clients, router, theme
+│           ├── core/              # API clients, GoRouter, adaptive themes
 │           └── features/
-│               ├── auth/          # login, register, OTP screens
-│               └── chat/          # conversations, messages, presence
+│               ├── auth/          # Login, Register, Otp6BoxInput
+│               └── chat/          # Chat timeline, AiMemoryScreen, KbScreen
 ├── infra/
 │   └── docker-compose/
-│       └── compose.yml            # full-stack with one command
-├── packages/
-│   ├── database/                  # shared MongoDB schemas (TypeScript)
-│   └── types/                     # shared DTOs & event names
+│       └── compose.yml            # Orchestration with Qdrant, Mongo, Redis
 ├── docs/
-│   ├── api-spec.md
-│   ├── decisions.md
-│   └── roadmap.md
+│   ├── api-spec.md                # API endpoints and payloads specifications
+│   ├── decisions.md               # Architecture Decision Records (ADRs)
+│   └── roadmap.md                 # Project Sprints progress
 └── pnpm-workspace.yaml
 ```
 
 ---
 
-## Quick Start
+## ⚙️ Environment Configuration
 
-### Prerequisites
-
-- Docker & Docker Compose
-- Node.js ≥ 20 + pnpm (`corepack enable`)
-- Flutter SDK 3.x (`brew install --cask flutter`)
-- Java 21 + Maven (for chat-service local dev)
-
-### 1. Start infrastructure + backend services
-
-```bash
-# Clone and install JS dependencies
-git clone https://github.com/MITOM06/platform.git && cd platform
-pnpm install
-
-# Copy environment files
-cp apps/server/auth-service/.env.example apps/server/auth-service/.env
-
-# Spin up MongoDB, Redis, auth-service, and chat-service
-docker compose -f infra/docker-compose/compose.yml up -d
-```
-
-Services will be available at:
-
-| Service | URL |
-|---------|-----|
-| auth-service | `http://localhost:3001` |
-| chat-service | `http://localhost:8080` |
-| MongoDB | `localhost:27018` |
-| Redis | `localhost:6379` |
-
-### 2. Run the Flutter client
-
-```bash
-cd apps/client
-flutter pub get
-dart run build_runner build --delete-conflicting-outputs
-flutter run
-```
-
-### Stop everything
-
-```bash
-docker compose -f infra/docker-compose/compose.yml down
-```
-
----
-
-## Environment Variables
-
-### auth-service (`apps/server/auth-service/.env`)
-
+### 1. auth-service (`apps/server/auth-service/.env`)
 ```env
 PORT=3001
 MONGO_URI=mongodb://localhost:27018/platform
@@ -171,12 +141,12 @@ JWT_ACCESS_SECRET=your_shared_secret_here
 JWT_EXPIRES=15m
 REFRESH_EXPIRES=7d
 MAIL_HOST=smtp.example.com
+MAIL_PORT=587
 MAIL_USER=noreply@example.com
 MAIL_PASS=your_mail_password
 ```
 
-### chat-service (`apps/server/chat-service/src/main/resources/application.properties`)
-
+### 2. chat-service (`apps/server/chat-service/src/main/resources/application.properties`)
 ```properties
 spring.data.mongodb.uri=mongodb://localhost:27018/platform
 spring.data.redis.host=localhost
@@ -184,112 +154,98 @@ spring.data.redis.port=6379
 app.jwt.secret=${JWT_ACCESS_SECRET}
 ```
 
-> **Important:** `JWT_ACCESS_SECRET` must be identical across both services — the chat-service reads it via `${JWT_ACCESS_SECRET}` and will fail-fast on startup if the variable is missing.
+### 3. ai-service (`apps/server/ai-service/.env`)
+```env
+PORT=3002
+MONGO_URI=mongodb://localhost:27018/platform
+REDIS_HOST=localhost
+REDIS_PORT=6379
+ANTHROPIC_API_KEY=your_anthropic_api_key
+OPENAI_API_KEY=your_openai_api_key
+QDRANT_URL=http://localhost:6333
+AI_BOT_USER_ID=ai-bot-000000000000000000000001
+AI_BOT_DISPLAY_NAME=PON AI
+```
 
 ---
 
-## Features
+## 🚀 Quick Start
 
-### Core (Sprints 1–11)
+### Prerequisites
+- Docker & Docker Compose
+- Node.js ≥ 20 + pnpm
+- Flutter SDK 3.x
+- Java 21 + Maven
 
-- Email/password registration with OTP email verification
-- JWT access + refresh token rotation
-- OAuth 2.0 social login (Google, Facebook, Twitter)
-- 1-on-1 realtime messaging over WebSocket (STOMP protocol)
-- User presence — online/offline tracking via Redis
-- Conversation list with pagination
-- New conversation creation with user search
-- JWT auth over WebSocket via channel interceptor
-- Flutter Neon Dark UI — fully null-safe Dart 3, i18n (7 languages)
-- Group conversations & emoji reactions
-- Read receipts & typing indicators
-- Image/video media attachments (GridFS)
-- Push notifications (FCM)
-- Audio/Video calling (WebRTC 1-on-1)
-- User profiles (bio, avatar, cover photo, friend counts)
-- Friend request / contact system & block user
-- Active friends row with last-seen presence time
+### Step 1: Start Databases & Infrastructure
+```bash
+# Clone the repository
+git clone https://github.com/MITOM06/platform.git && cd platform
+pnpm install
 
-### Sprint 12 — Rich Messaging
+# Start MongoDB, Redis, and Qdrant Vector DB
+docker compose -f infra/docker-compose/compose.yml up -d
+```
 
-- **Edit message** — inline edit with revision history (BE + FE)
-- **Generic file upload** — PDF, ZIP, DOC attachments via GridFS
-- **Cursor-based pagination** — efficient infinite scroll for message history
-- **Link preview** — Open Graph unfurl for URLs shared in chat
+### Step 2: Set up Configuration
+Copy environment variables template and fill in API keys:
+```bash
+cp apps/server/auth-service/.env.example apps/server/auth-service/.env
+cp apps/server/ai-service/.env.example apps/server/ai-service/.env
+```
 
-### Sprint 13 — Discovery & Notifications
-
-- **Mention system** — `@username` tagging with in-chat highlights
-- **Message search** — full-text search within a conversation
-- **Unread badge counts** — accurate per-conversation unread indicators
-
-### Sprint 14 — Channels & Content
-
-- **Public channels** — discovery feed and one-tap join
-- **Pin messages** — pin important messages in group/channel info
-- **Forward messages** — forward any message to another conversation
-- **Markdown rendering** — bold, italic, code blocks, and lists in messages
-
-### Sprint 15 — Reliability & Safety
-
-- **Offline catch-up sync** — messages received while offline delivered on reconnect
-- **API rate limiting** — Redis-backed sliding-window throttle on the server; SnackBar notification on the client when the limit is hit
-
-### Sprint 16 — Media Gallery & Reactions
-
-- **Shared media/files/links gallery** — 3-tab bottom sheet under group/profile info (images, files, links)
-- **Reaction detail modal** — draggable bottom sheet listing who reacted with each emoji
-
-### Sprint 17 — Profile & UX Polish
-
-- **Date of Birth (DOB) selector** — calendar picker stored on the user profile
-- **Profile cover photo upload** — overlapping header with camera icon for in-place customization
-- **Change password** — dedicated security settings screen with current/new/confirm fields
-- **Double-tap quick reaction** — double-tap any message to instantly react with ❤️
-
-### Sprint 18 — Meta Messenger UX & Advanced Chat Operations
-
-- **Mute / unmute conversations** — per-user mute flag; muted chats suppress notifications
-- **Archive / unarchive conversations** — archived chats hidden from the main list; re-surface via dedicated view
-- **Mark conversation read / unread** — REST endpoints give the client full control over the unread badge
-- **Floating glassmorphic reaction sheet** — Messenger-style `FloatingReactionSheet`: emoji picker row + full action menu (reply, copy, edit, recall, pin, forward, delete) rendered with `BackdropFilter` blur and a frosted-glass container
-- **Conversation avatar improvements** — direct chats resolve the peer's avatar/name via `userProfileProvider`; group chats use group avatar or generated initials
-- **Conversation list UX polish** — mute-indicator icon, archive-swipe gesture, unread badge on list tiles
-
-### Roadmap
-
-- [ ] End-to-end encryption
-- [ ] Web client (Next.js)
-
----
-
-## Development
-
-### Running services individually
-
-**auth-service**
+### Step 3: Run Backend Microservices
+**Start auth-service (NestJS)**:
 ```bash
 cd apps/server/auth-service
-pnpm install
-pnpm start:dev        # http://localhost:3001
+pnpm start:dev
 ```
-
-**chat-service**
+**Start ai-service (NestJS)**:
+```bash
+cd apps/server/ai-service
+pnpm start:dev
+```
+**Start chat-service (Spring Boot)**:
 ```bash
 cd apps/server/chat-service
-./mvnw spring-boot:run  # http://localhost:8080
+mvn spring-boot:run
 ```
 
-### Code conventions
-
-- **Branches:** `feat/<scope>`, `fix/<scope>`, `chore/<scope>`
-- **Commits:** Conventional Commits (`feat:`, `fix:`, `refactor:`, `test:`)
-- **PRs** target `main`; CI must pass before merge
-
-See [CONTRIBUTING.md](CONTRIBUTING.md) for full guidelines and [SECURITY.md](SECURITY.md) for reporting vulnerabilities.
+### Step 4: Run the Flutter App
+```bash
+cd apps/client
+flutter pub get
+dart run build_runner build --delete-conflicting-outputs
+flutter run
+```
 
 ---
 
-## License
+## ✨ Features Checklist
+
+### 💬 Chat Core & UX Polish (Sprints 1–18)
+- 🔒 **Secure Connection:** Strict JWT validation on REST endpoints and STOMP connection channels.
+- ⚡ **Realtime Messaging:** WebSocket messaging supporting text, images, videos, and generic attachments.
+- 📞 **1-on-1 WebRTC Calls:** Audio and video streaming over WebRTC channels.
+- 👥 **Group Conversations:** Realtime membership handling, role updates, and system message logs.
+- 🎭 **Reactions:** Double-tap quick reaction, reaction sheets, and details modal.
+- ⚙️ **Chat Utilities:** Typing indicators, online/offline status heartbeats, mute/unmute notifications, message search, and conversation archiving.
+- 🌍 **Localization:** Ready with 7 default languages (EN, VI, FR, ES, KO, ZH, JA).
+
+### 🤖 AI Agent & RAG Pipeline (Sprints AI-1 – AI-3)
+- 🚀 **AI Bot Member:** Add `@AI` / `PON AI` to any direct or group conversation. Responses are streamed token-by-token directly to the UI.
+- 🧠 **Conversation Memory:**
+  - **Short-term:** Redis sliding window of the last 20 messages injected into Claude prompts.
+  - **Long-term:** Auto-summarizes conversations every 20 message turns, extracting key facts about the user and saving them into MongoDB to enrich subsequent prompts.
+  - **Memory Screen:** Integrated UI for users to view and delete facts that the AI has gathered.
+- 📚 **Knowledge Base & RAG:**
+  - **Document Parsing:** Upload PDF, DOCX, or TXT documents directly in conversations.
+  - **Vector Embedding Pipeline:** Automated sentence chunking, OpenAI vectorization, and Qdrant ingestion.
+  - **Semantic Context Injection:** Prompts query the vector store and inject relevant chunks into Claude with matching similarity scores > 0.3.
+  - **Source Citation:** Renders citation cards below AI messages, linking directly to referenced documents.
+
+---
+
+## 📄 License
 
 MIT © [Tran Phuc Khang](https://github.com/MITOM06) — see [LICENSE](LICENSE).
