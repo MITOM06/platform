@@ -25,6 +25,8 @@ import '../../features/friends/ui/friends_screen.dart';
 import '../../features/settings/ui/settings_screen.dart';
 import '../../features/chat/ui/ai_memory_screen.dart';
 import '../../features/chat/ui/kb_screen.dart';
+import '../../features/reminders/reminders_screen.dart';
+import '../../features/settings/ui/token_usage_screen.dart';
 import '../../../core/providers/theme_provider.dart';
 
 part 'app_router.g.dart';
@@ -228,6 +230,16 @@ GoRouter appRouter(AppRouterRef ref) {
         builder: (context, state) => KbScreen(
           conversationId: state.pathParameters['conversationId']!,
         ),
+      ),
+      GoRoute(
+        path: '/reminders',
+        name: 'reminders',
+        builder: (context, state) => const RemindersScreen(),
+      ),
+      GoRoute(
+        path: '/token-usage',
+        name: 'token-usage',
+        builder: (context, state) => const TokenUsageScreen(),
       ),
       GoRoute(
         path: '/call',

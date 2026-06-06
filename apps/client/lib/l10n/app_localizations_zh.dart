@@ -911,4 +911,66 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get kbChunks => '块';
+
+  @override
+  String aiToolCalling(String toolName) {
+    return '正在使用工具：$toolName';
+  }
+
+  @override
+  String get aiToolTrace => '工具日志';
+
+  @override
+  String get toolSearchMessages => '正在搜索消息...';
+
+  @override
+  String get toolGetUserInfo => '正在查询用户信息...';
+
+  @override
+  String get toolSearchKnowledgeBase => '正在搜索知识库...';
+
+  @override
+  String get toolSummarizeConversation => '正在总结对话...';
+
+  @override
+  String get toolCreateReminder => '正在创建提醒...';
+
+  @override
+  String get reminders => '提醒';
+
+  @override
+  String get remindersEmpty => '暂无待处理提醒。\n请让 PON AI 为您设置提醒。';
+
+  @override
+  String get reminderDone => '标记为完成';
+
+  @override
+  String get tokenUsage => 'Token 用量';
+
+  @override
+  String get tokenUsageTitle => 'Token 用量仪表板';
+
+  @override
+  String get tokenUsageThisMonth => '本月总 Token';
+
+  @override
+  String get tokenUsageRequests => 'AI 请求次数';
+
+  @override
+  String get tokenUsageEstCost => '预估费用 (USD)';
+
+  @override
+  String get tokenUsageDailyChart => '每日 Token 用量（最近 30 天）';
+
+  @override
+  String get aiTraceTitle => 'AI 追踪';
+
+  @override
+  String get aiTraceThinking => '思考过程';
+
+  @override
+  String get aiTraceTools => '工具调用';
+
+  @override
+  String get aiTraceStats => '统计';
 }

@@ -923,4 +923,67 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get kbChunks => 'đoạn';
+
+  @override
+  String aiToolCalling(String toolName) {
+    return 'Đang dùng công cụ: $toolName';
+  }
+
+  @override
+  String get aiToolTrace => 'Nhật ký công cụ';
+
+  @override
+  String get toolSearchMessages => 'Đang tìm kiếm tin nhắn...';
+
+  @override
+  String get toolGetUserInfo => 'Đang tra cứu thông tin người dùng...';
+
+  @override
+  String get toolSearchKnowledgeBase => 'Đang tìm kiếm cơ sở tri thức...';
+
+  @override
+  String get toolSummarizeConversation => 'Đang tóm tắt cuộc trò chuyện...';
+
+  @override
+  String get toolCreateReminder => 'Đang tạo nhắc nhở...';
+
+  @override
+  String get reminders => 'Nhắc nhở';
+
+  @override
+  String get remindersEmpty =>
+      'Không có nhắc nhở nào.\nHãy nhờ PON AI đặt nhắc nhở cho bạn.';
+
+  @override
+  String get reminderDone => 'Đánh dấu hoàn thành';
+
+  @override
+  String get tokenUsage => 'Sử dụng Token';
+
+  @override
+  String get tokenUsageTitle => 'Bảng thống kê Token';
+
+  @override
+  String get tokenUsageThisMonth => 'Tổng token tháng này';
+
+  @override
+  String get tokenUsageRequests => 'Số yêu cầu AI';
+
+  @override
+  String get tokenUsageEstCost => 'Chi phí ước tính (USD)';
+
+  @override
+  String get tokenUsageDailyChart => 'Sử dụng token hàng ngày (30 ngày qua)';
+
+  @override
+  String get aiTraceTitle => 'Nhật ký AI';
+
+  @override
+  String get aiTraceThinking => 'Suy nghĩ';
+
+  @override
+  String get aiTraceTools => 'Công cụ đã dùng';
+
+  @override
+  String get aiTraceStats => 'Thống kê';
 }

@@ -67,11 +67,11 @@ class AiResponseListenerTest {
         MessageResponse saved = new MessageResponse(
             "msg-ai-1", "conv-1", AiConstants.AI_BOT_USER_ID,
             "Full AI reply", "ai", List.of(), Instant.now());
-        when(messageService.saveAiMessage("conv-1", "Full AI reply")).thenReturn(saved);
+        when(messageService.saveAiMessage(eq("conv-1"), eq("Full AI reply"), isNull())).thenReturn(saved);
 
         listener.onMessage(redisMessage, null);
 
-        verify(messageService).saveAiMessage("conv-1", "Full AI reply");
+        verify(messageService).saveAiMessage(eq("conv-1"), eq("Full AI reply"), isNull());
         verify(messagingTemplate).convertAndSend(eq("/topic/conversation/conv-1"), (Object) eq(saved));
         verify(messagingTemplate).convertAndSend(
             eq("/topic/conversation/conv-1"),
@@ -89,12 +89,32 @@ class AiResponseListenerTest {
 
         listener.onMessage(redisMessage, null);
 
-        verify(messageService, never()).saveAiMessage(any(), any());
+        verify(messageService, never()).saveAiMessage(any(), any(), any());
         verify(messagingTemplate).convertAndSend(
             eq("/topic/conversation/conv-1"),
             (Object) argThat(arg -> arg instanceof Map
                 && "AI_STREAM_ERROR".equals(((Map<?, ?>) arg).get("type"))
                 && "AI unavailable".equals(((Map<?, ?>) arg).get("error"))));
+    }
+
+    @Test
+    void onMessage_AI_TOOL_CALL_broadcastsToolCallToTopic() throws Exception {
+        Map<String, Object> payload = Map.of(
+            "type", "AI_TOOL_CALL",
+            "toolName", "search_messages",
+            "inputSummary", "{\"query\":\"Flutter\"}",
+            "conversationId", "conv-1"
+        );
+        when(redisMessage.getBody()).thenReturn(objectMapper.writeValueAsBytes(payload));
+
+        listener.onMessage(redisMessage, null);
+
+        verify(messagingTemplate).convertAndSend(
+            eq("/topic/conversation/conv-1"),
+            (Object) argThat(arg -> arg instanceof Map
+                && "AI_TOOL_CALL".equals(((Map<?, ?>) arg).get("type"))
+                && "search_messages".equals(((Map<?, ?>) arg).get("toolName"))
+                && AiConstants.AI_BOT_USER_ID.equals(((Map<?, ?>) arg).get("senderId"))));
     }
 
     @Test

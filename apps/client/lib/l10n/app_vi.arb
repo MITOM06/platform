@@ -301,5 +301,32 @@
   "kbError": "Lỗi",
   "kbManage": "Cơ sở tri thức",
   "kbSources": "nguồn",
-  "kbChunks": "đoạn"
+  "kbChunks": "đoạn",
+  "aiToolCalling": "Đang dùng công cụ: {toolName}",
+  "@aiToolCalling": {
+    "placeholders": {
+      "toolName": {
+        "type": "String"
+      }
+    }
+  },
+  "aiToolTrace": "Nhật ký công cụ",
+  "toolSearchMessages": "Đang tìm kiếm tin nhắn...",
+  "toolGetUserInfo": "Đang tra cứu thông tin người dùng...",
+  "toolSearchKnowledgeBase": "Đang tìm kiếm cơ sở tri thức...",
+  "toolSummarizeConversation": "Đang tóm tắt cuộc trò chuyện...",
+  "toolCreateReminder": "Đang tạo nhắc nhở...",
+  "reminders": "Nhắc nhở",
+  "remindersEmpty": "Không có nhắc nhở nào.\nHãy nhờ PON AI đặt nhắc nhở cho bạn.",
+  "reminderDone": "Đánh dấu hoàn thành",
+  "tokenUsage": "Sử dụng Token",
+  "tokenUsageTitle": "Bảng thống kê Token",
+  "tokenUsageThisMonth": "Tổng token tháng này",
+  "tokenUsageRequests": "Số yêu cầu AI",
+  "tokenUsageEstCost": "Chi phí ước tính (USD)",
+  "tokenUsageDailyChart": "Sử dụng token hàng ngày (30 ngày qua)",
+  "aiTraceTitle": "Nhật ký AI",
+  "aiTraceThinking": "Suy nghĩ",
+  "aiTraceTools": "Công cụ đã dùng",
+  "aiTraceStats": "Thống kê"
 }

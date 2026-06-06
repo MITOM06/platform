@@ -135,6 +135,8 @@ services:
       REDIS_AI_RESPONSE_PREFIX: ai:response
       QDRANT_URL: http://qdrant:6333
       OPENAI_API_KEY: ${OPENAI_API_KEY}
+      AI_ENABLE_THINKING: ${AI_ENABLE_THINKING:-false}
+      AI_THINKING_BUDGET: ${AI_THINKING_BUDGET:-8000}
     networks:
       - app-net
     restart: unless-stopped

@@ -1835,6 +1835,126 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'chunks'**
   String get kbChunks;
+
+  /// No description provided for @aiToolCalling.
+  ///
+  /// In en, this message translates to:
+  /// **'Using tool: {toolName}'**
+  String aiToolCalling(String toolName);
+
+  /// No description provided for @aiToolTrace.
+  ///
+  /// In en, this message translates to:
+  /// **'Tool trace'**
+  String get aiToolTrace;
+
+  /// No description provided for @toolSearchMessages.
+  ///
+  /// In en, this message translates to:
+  /// **'Searching messages...'**
+  String get toolSearchMessages;
+
+  /// No description provided for @toolGetUserInfo.
+  ///
+  /// In en, this message translates to:
+  /// **'Looking up user info...'**
+  String get toolGetUserInfo;
+
+  /// No description provided for @toolSearchKnowledgeBase.
+  ///
+  /// In en, this message translates to:
+  /// **'Searching knowledge base...'**
+  String get toolSearchKnowledgeBase;
+
+  /// No description provided for @toolSummarizeConversation.
+  ///
+  /// In en, this message translates to:
+  /// **'Summarizing conversation...'**
+  String get toolSummarizeConversation;
+
+  /// No description provided for @toolCreateReminder.
+  ///
+  /// In en, this message translates to:
+  /// **'Creating reminder...'**
+  String get toolCreateReminder;
+
+  /// No description provided for @reminders.
+  ///
+  /// In en, this message translates to:
+  /// **'Reminders'**
+  String get reminders;
+
+  /// No description provided for @remindersEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No pending reminders.\nAsk PON AI to set a reminder for you.'**
+  String get remindersEmpty;
+
+  /// No description provided for @reminderDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Mark as done'**
+  String get reminderDone;
+
+  /// No description provided for @tokenUsage.
+  ///
+  /// In en, this message translates to:
+  /// **'Token Usage'**
+  String get tokenUsage;
+
+  /// No description provided for @tokenUsageTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Token Usage Dashboard'**
+  String get tokenUsageTitle;
+
+  /// No description provided for @tokenUsageThisMonth.
+  ///
+  /// In en, this message translates to:
+  /// **'Total tokens this month'**
+  String get tokenUsageThisMonth;
+
+  /// No description provided for @tokenUsageRequests.
+  ///
+  /// In en, this message translates to:
+  /// **'AI requests'**
+  String get tokenUsageRequests;
+
+  /// No description provided for @tokenUsageEstCost.
+  ///
+  /// In en, this message translates to:
+  /// **'Estimated cost (USD)'**
+  String get tokenUsageEstCost;
+
+  /// No description provided for @tokenUsageDailyChart.
+  ///
+  /// In en, this message translates to:
+  /// **'Daily token usage (last 30 days)'**
+  String get tokenUsageDailyChart;
+
+  /// No description provided for @aiTraceTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Agent trace'**
+  String get aiTraceTitle;
+
+  /// No description provided for @aiTraceThinking.
+  ///
+  /// In en, this message translates to:
+  /// **'Thinking'**
+  String get aiTraceThinking;
+
+  /// No description provided for @aiTraceTools.
+  ///
+  /// In en, this message translates to:
+  /// **'Tool calls'**
+  String get aiTraceTools;
+
+  /// No description provided for @aiTraceStats.
+  ///
+  /// In en, this message translates to:
+  /// **'Stats'**
+  String get aiTraceStats;
 }
 
 class _AppLocalizationsDelegate

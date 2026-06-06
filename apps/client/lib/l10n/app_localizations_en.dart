@@ -922,4 +922,67 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get kbChunks => 'chunks';
+
+  @override
+  String aiToolCalling(String toolName) {
+    return 'Using tool: $toolName';
+  }
+
+  @override
+  String get aiToolTrace => 'Tool trace';
+
+  @override
+  String get toolSearchMessages => 'Searching messages...';
+
+  @override
+  String get toolGetUserInfo => 'Looking up user info...';
+
+  @override
+  String get toolSearchKnowledgeBase => 'Searching knowledge base...';
+
+  @override
+  String get toolSummarizeConversation => 'Summarizing conversation...';
+
+  @override
+  String get toolCreateReminder => 'Creating reminder...';
+
+  @override
+  String get reminders => 'Reminders';
+
+  @override
+  String get remindersEmpty =>
+      'No pending reminders.\nAsk PON AI to set a reminder for you.';
+
+  @override
+  String get reminderDone => 'Mark as done';
+
+  @override
+  String get tokenUsage => 'Token Usage';
+
+  @override
+  String get tokenUsageTitle => 'Token Usage Dashboard';
+
+  @override
+  String get tokenUsageThisMonth => 'Total tokens this month';
+
+  @override
+  String get tokenUsageRequests => 'AI requests';
+
+  @override
+  String get tokenUsageEstCost => 'Estimated cost (USD)';
+
+  @override
+  String get tokenUsageDailyChart => 'Daily token usage (last 30 days)';
+
+  @override
+  String get aiTraceTitle => 'Agent trace';
+
+  @override
+  String get aiTraceThinking => 'Thinking';
+
+  @override
+  String get aiTraceTools => 'Tool calls';
+
+  @override
+  String get aiTraceStats => 'Stats';
 }

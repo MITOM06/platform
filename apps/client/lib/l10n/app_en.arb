@@ -436,5 +436,32 @@
   "kbError": "Error",
   "kbManage": "Knowledge Base",
   "kbSources": "source(s)",
-  "kbChunks": "chunks"
+  "kbChunks": "chunks",
+  "aiToolCalling": "Using tool: {toolName}",
+  "@aiToolCalling": {
+    "placeholders": {
+      "toolName": {
+        "type": "String"
+      }
+    }
+  },
+  "aiToolTrace": "Tool trace",
+  "toolSearchMessages": "Searching messages...",
+  "toolGetUserInfo": "Looking up user info...",
+  "toolSearchKnowledgeBase": "Searching knowledge base...",
+  "toolSummarizeConversation": "Summarizing conversation...",
+  "toolCreateReminder": "Creating reminder...",
+  "reminders": "Reminders",
+  "remindersEmpty": "No pending reminders.\nAsk PON AI to set a reminder for you.",
+  "reminderDone": "Mark as done",
+  "tokenUsage": "Token Usage",
+  "tokenUsageTitle": "Token Usage Dashboard",
+  "tokenUsageThisMonth": "Total tokens this month",
+  "tokenUsageRequests": "AI requests",
+  "tokenUsageEstCost": "Estimated cost (USD)",
+  "tokenUsageDailyChart": "Daily token usage (last 30 days)",
+  "aiTraceTitle": "Agent trace",
+  "aiTraceThinking": "Thinking",
+  "aiTraceTools": "Tool calls",
+  "aiTraceStats": "Stats"
 }

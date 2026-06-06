@@ -2,15 +2,18 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:go_router/go_router.dart';
+import '../../../../core/l10n/l10n_ext.dart';
 
 class StreamingAiBubble extends StatefulWidget {
   final String content;
   final bool isThinking;
+  final List<String> activeTools;
 
   const StreamingAiBubble({
     super.key,
     required this.content,
     required this.isThinking,
+    this.activeTools = const [],
   });
 
   @override
@@ -45,14 +48,33 @@ class _StreamingAiBubbleState extends State<StreamingAiBubble>
 
   @override
   Widget build(BuildContext context) {
-    if (widget.isThinking) {
-      return _ThinkingDots(controller: _dotsController);
-    }
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        if (widget.activeTools.isNotEmpty) _ToolIndicatorRow(activeTools: widget.activeTools),
+        if (widget.isThinking)
+          _ThinkingDots(controller: _dotsController)
+        else
+          _StreamingText(content: widget.content, showCursor: _showCursor),
+      ],
+    );
+  }
+}
+
+class _StreamingText extends StatelessWidget {
+  final String content;
+  final bool showCursor;
+
+  const _StreamingText({required this.content, required this.showCursor});
+
+  @override
+  Widget build(BuildContext context) {
     return RichText(
       text: TextSpan(
         children: [
           TextSpan(
-            text: widget.content,
+            text: content,
             style: const TextStyle(
               color: Colors.white,
               fontSize: 15,
@@ -60,11 +82,57 @@ class _StreamingAiBubbleState extends State<StreamingAiBubble>
             ),
           ),
           TextSpan(
-            text: _showCursor ? '|' : ' ',
+            text: showCursor ? '|' : ' ',
             style: const TextStyle(
               color: Color(0xFFB47FFF),
               fontSize: 15,
               fontWeight: FontWeight.w300,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ToolIndicatorRow extends StatelessWidget {
+  final List<String> activeTools;
+
+  const _ToolIndicatorRow({required this.activeTools});
+
+  String _toolLabel(BuildContext context, String toolName) {
+    switch (toolName) {
+      case 'search_messages':
+        return context.l10n.toolSearchMessages;
+      case 'get_user_info':
+        return context.l10n.toolGetUserInfo;
+      case 'search_knowledge_base':
+        return context.l10n.toolSearchKnowledgeBase;
+      case 'summarize_conversation':
+        return context.l10n.toolSummarizeConversation;
+      case 'create_reminder':
+        return context.l10n.toolCreateReminder;
+      default:
+        return context.l10n.aiToolCalling(toolName);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final toolName = activeTools.last;
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 6),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Icon(Icons.construction, size: 13, color: Color(0xFFFFB74D)),
+          const SizedBox(width: 5),
+          Text(
+            _toolLabel(context, toolName),
+            style: const TextStyle(
+              fontSize: 12,
+              color: Color(0xFFFFB74D),
+              fontStyle: FontStyle.italic,
             ),
           ),
         ],

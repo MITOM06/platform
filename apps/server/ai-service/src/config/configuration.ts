@@ -33,4 +33,8 @@ export default registerAs('config', () => ({
     embeddingModel: 'text-embedding-3-small',
     qdrantCollection: 'knowledge',
   },
+  ai: {
+    enableThinking: process.env.AI_ENABLE_THINKING === 'true',
+    thinkingBudgetTokens: parseInt(process.env.AI_THINKING_BUDGET ?? '8000', 10),
+  },
 }));

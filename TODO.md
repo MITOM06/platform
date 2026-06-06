@@ -1454,3 +1454,515 @@ Since MongoDB is shared, chat-service reads/deletes memories directly — no HTT
 
 ---
 
+
+---
+
+## 🟢 SPRINT AI-4 — Tool System (Agentic Loop) — DONE
+
+> **Goal:** AI can take actions inside the chat app — search messages, look up user info, query knowledge base, create reminders, summarize conversations. User sees inline "AI is searching..." indicators and a collapsible tool trace below each AI response.
+> **Pattern:** Non-streaming agentic loop (tool iterations) → streaming final response
+> **New Redis event:** `AI_TOOL_CALL` (ai-service → chat-service → STOMP → Flutter)
+> **New MongoDB collection:** `reminders`
+> **Reference:** `.claude/rules/ai-service.md`, `docs/decisions.md`, `docs/roadmap.md` (Sprint AI-4)
+
+---
+
+### PHASE 1 — Tool Framework (ai-service)
+
+### TASK AI-4.1 — Tool service: definitions + executor `DONE`
+#### SPEC
+- **New file:** `apps/server/ai-service/src/tools/tool.interface.ts`
+  ```typescript
+  export interface ToolDefinition {
+    name: string;
+    description: string;
+    input_schema: { type: 'object'; properties: Record<string, unknown>; required: string[] };
+  }
+  export interface ToolContext {
+    conversationId: string;
+    userId: string;
+    displayName: string;
+  }
+  ```
+- **New file:** `apps/server/ai-service/src/tools/tool-registry.service.ts`
+  - `getDefinitions(): ToolDefinition[]` — returns array of all registered tool schemas (5 tools)
+  - `execute(toolName: string, input: Record<string, unknown>, ctx: ToolContext): Promise<string>` — dispatches to the correct tool service, returns result as a plain string (JSON or prose). On unknown tool: return `"Tool not found: {toolName}"`. On error: return `"Tool error: {message}"` (never throw — tool errors should not crash the agentic loop)
+- **New file:** `apps/server/ai-service/src/tools/tools.module.ts` — exports `ToolRegistryService` and all tool services; imports `MongooseModule`, `KbModule`, `MemoryModule`
+- **Update:** `apps/server/ai-service/src/app.module.ts` — import `ToolsModule`
+
+### TASK AI-4.2 — Tools: `search_messages` + `get_user_info` `DONE`
+#### SPEC
+Both tools read MongoDB directly (shared `platform` DB — no HTTP to chat-service needed).
+
+- **New file:** `apps/server/ai-service/src/tools/search-messages.tool.ts`
+  - Tool definition:
+    ```json
+    {
+      "name": "search_messages",
+      "description": "Search for messages in the current conversation by keyword. Use when the user asks to find, recall, or look up something said earlier.",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "query": { "type": "string", "description": "Keyword or phrase to search for" },
+          "limit": { "type": "number", "description": "Max results to return (default 5, max 10)" }
+        },
+        "required": ["query"]
+      }
+    }
+    ```
+  - `execute(input, ctx)`: inject `@InjectConnection()` Mongoose connection; query `messages` collection: `{ conversationId: ctx.conversationId, content: { $regex: input.query, $options: 'i' }, type: { $in: ['text', 'ai'] }, recalled: { $ne: true } }`, sort by `createdAt: -1`, limit `Math.min(input.limit ?? 5, 10)`
+  - Return: JSON string `[{ content, senderDisplayName, createdAt }]` — resolve `senderDisplayName` from `users` collection by `senderId`; if no results return `"No messages found matching '${query}'"`
+
+- **New file:** `apps/server/ai-service/src/tools/get-user-info.tool.ts`
+  - Tool definition:
+    ```json
+    {
+      "name": "get_user_info",
+      "description": "Get profile information about the user you are chatting with.",
+      "input_schema": {
+        "type": "object",
+        "properties": {},
+        "required": []
+      }
+    }
+    ```
+  - `execute(input, ctx)`: query `users` collection by `_id: ctx.userId`; return JSON string `{ displayName, bio, gender, dateOfBirth, phone }` — omit null fields. If not found: `"User not found"`
+
+### TASK AI-4.3 — Tools: `search_knowledge_base` + `summarize_conversation` `DONE`
+#### SPEC
+- **New file:** `apps/server/ai-service/src/tools/search-knowledge-base.tool.ts`
+  - Inject `EmbeddingService`, `VectorStoreService`
+  - Tool definition: `name: "search_knowledge_base"`, description: `"Search uploaded documents in the knowledge base for relevant information"`, input: `{ query: string (required), topK: number (optional, default 3) }`
+  - `execute(input, ctx)`: `embedOne(input.query)` → `vectorStoreService.search('knowledge', vector, topK ?? 3)` filtered by `conversationId` documents; return formatted string `"Result 1: {text}\n\nResult 2: {text}..."`. If no results: `"No relevant documents found"`
+
+- **New file:** `apps/server/ai-service/src/tools/summarize-conversation.tool.ts`
+  - Inject `MemoryService`
+  - Tool definition: `name: "summarize_conversation"`, description: `"Get a summary of the conversation history and key facts remembered about the user"`, input: `{}` (no inputs required)
+  - `execute(input, ctx)`: `memoryService.getMemory(ctx.conversationId)`; if found return `"Summary: {summary}\n\nKey facts:\n{keyFacts.map(f => '- ' + f).join('\n')}"`; if null return `"No conversation summary available yet"`
+
+### TASK AI-4.4 — Tool: `create_reminder` + `reminders` collection `DONE`
+#### SPEC
+- **New file:** `apps/server/ai-service/src/tools/reminder.schema.ts`
+  - Mongoose schema `Reminder`: `userId (String, required, indexed)`, `conversationId (String, required)`, `text (String, required)`, `remindAt (Date, required)`, `done (Boolean, default false)`, `createdAt (Date, default now)`
+- **New file:** `apps/server/ai-service/src/tools/create-reminder.tool.ts`
+  - Inject `@InjectModel(Reminder.name)`
+  - Tool definition:
+    ```json
+    {
+      "name": "create_reminder",
+      "description": "Create a reminder for the user at a specific date and time.",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "text": { "type": "string", "description": "What to remind the user about" },
+          "remindAt": { "type": "string", "description": "ISO 8601 datetime string for when to send the reminder" }
+        },
+        "required": ["text", "remindAt"]
+      }
+    }
+    ```
+  - `execute(input, ctx)`: validate `remindAt` is a valid future date (throw if past → return error string); save `Reminder` to MongoDB; return `"Reminder set: '${text}' at ${formattedDate}"`
+- **Update:** `apps/server/ai-service/src/tools/tools.module.ts` — add `MongooseModule.forFeature([{ name: Reminder.name, schema: ReminderSchema }])`
+
+---
+
+### PHASE 2 — Agentic Loop
+
+### TASK AI-4.5 — Agentic loop in AiService `DONE`
+#### SPEC
+- **File:** `apps/server/ai-service/src/ai/ai.service.ts`
+  - Inject `ToolRegistryService`
+  - Replace `handleRequest()` body with agentic loop:
+    ```
+    const tools = this.toolRegistry.getDefinitions();
+    const ctx: ToolContext = { conversationId, userId, displayName };
+    let messages = [...history, { role: 'user', content }];
+    const MAX_ITER = 5;
+    let iteration = 0;
+    const toolTrace: { toolName, inputSummary, resultSummary }[] = [];
+
+    while (iteration < MAX_ITER) {
+      // Non-streaming call to detect tool_use
+      const response = await this.anthropic.messages.create({
+        model, max_tokens: 4096, system, messages, tools,
+        tool_choice: { type: 'auto' }
+      });
+
+      if (response.stop_reason === 'tool_use') {
+        const toolUseBlocks = response.content.filter(b => b.type === 'tool_use');
+        const toolResults = [];
+
+        for (const block of toolUseBlocks) {
+          // Publish AI_TOOL_CALL event so Flutter shows indicator
+          await publisher.publish(convId, {
+            type: 'AI_TOOL_CALL',
+            toolName: block.name,
+            inputSummary: JSON.stringify(block.input).slice(0, 100)
+          });
+          const result = await toolRegistry.execute(block.name, block.input, ctx);
+          toolTrace.push({ toolName: block.name, inputSummary: ..., resultSummary: result.slice(0, 200) });
+          toolResults.push({ type: 'tool_result', tool_use_id: block.id, content: result });
+        }
+
+        // Append assistant turn + tool results and loop
+        messages = [...messages,
+          { role: 'assistant', content: response.content },
+          { role: 'user', content: toolResults }
+        ];
+        iteration++;
+        continue;
+      }
+
+      // stop_reason === 'end_turn' — stream the final text response
+      break;
+    }
+
+    // Stream final answer (same streaming pattern as before)
+    const stream = await this.anthropic.messages.stream({ model, max_tokens: 2048, system, messages });
+    let fullText = '';
+    for await (const chunk of stream) {
+      if (chunk.type === 'content_block_delta' && chunk.delta.type === 'text_delta') {
+        fullText += chunk.delta.text;
+        await publisher.publish(convId, { type: 'AI_STREAM_CHUNK', chunk: chunk.delta.text });
+      }
+    }
+    await publisher.publish(convId, {
+      type: 'AI_STREAM_DONE', fullContent: fullText,
+      sources: lastRagSources,   // from RAG (AI-3.6)
+      toolTrace                  // new field
+    });
+    ```
+  - If MAX_ITER reached with no `end_turn`: publish `AI_STREAM_DONE` with whatever the last `end_turn` text content was (or fallback message `"I had trouble completing that action. Please try again."`)
+  - Wrap full loop in existing try/catch fallback logic (primary model → fallback model → AI_STREAM_ERROR)
+- **Test:** `ai.service.spec.ts` — test: (1) single tool call → final stream; (2) two consecutive tool calls → final stream; (3) MAX_ITER=1 exhausted → fallback message published; (4) tool executor throws → error string returned, loop continues.
+
+---
+
+### PHASE 3 — Flutter UI
+
+### TASK AI-4.6 — Forward `AI_TOOL_CALL` via STOMP (chat-service) `DONE`
+#### SPEC
+- **File:** `apps/server/chat-service/.../service/AiResponseListener.java`
+  - Add case `AI_TOOL_CALL`:
+    ```java
+    case "AI_TOOL_CALL" -> messagingTemplate.convertAndSend(
+        "/topic/conversation/" + convId,
+        Map.of("type","AI_TOOL_CALL","toolName",toolName,"inputSummary",inputSummary,"senderId",AI_BOT_USER_ID)
+    );
+    ```
+  - Add case `AI_STREAM_DONE` update: parse optional `toolTrace` array from payload, include it in the final STOMP broadcast
+- **Test:** `AiResponseListenerTest.java` — add test for `AI_TOOL_CALL` event forwards correctly.
+
+### TASK AI-4.7 — Flutter: tool call indicators + trace panel `DONE`
+#### SPEC
+- **File:** `apps/client/lib/features/chat/domain/chat_state.dart`
+  - Add to `MessageModel`:
+    - `final List<ToolTraceEntry>? toolTrace` (nullable)
+    - `final List<String> activeTools` (tools currently executing, default `[]`)
+  - New class `ToolTraceEntry { final String toolName; final String inputSummary; final String resultSummary; }`
+- **File:** `apps/client/lib/features/chat/domain/chat_provider.dart`
+  - In `_onAiStreamEvent`: add case `AI_TOOL_CALL` → find streaming placeholder, add `toolName` to `activeTools`
+  - On `AI_STREAM_DONE`: set `toolTrace` from payload, clear `activeTools`
+- **File:** `apps/client/lib/features/chat/ui/widgets/streaming_ai_bubble.dart`
+  - If `message.activeTools.isNotEmpty`: show tool indicator row above the thinking dots:
+    - `Icons.construction` (small, amber) + text `l10n.aiToolCalling(toolDisplayName)` (e.g. "Searching messages...")
+    - Map tool names to display strings: `search_messages → l10n.toolSearchMessages`, `create_reminder → l10n.toolCreateReminder`, etc.
+- **New file:** `apps/client/lib/features/chat/ui/widgets/tool_trace_panel.dart` (≤ 150 lines)
+  - `ToolTracePanel(List<ToolTraceEntry> trace)` — `ExpansionTile` with `Icons.account_tree` + `l10n.aiToolTrace`
+  - Each entry: tool icon (per name) + `toolName` bold + `inputSummary` grey small text
+  - Shown only when `message.toolTrace != null && message.toolTrace!.isNotEmpty`
+- **File:** `apps/client/lib/features/chat/ui/widgets/message_bubble.dart`
+  - For AI messages (non-streaming): if `toolTrace != null` → render `ToolTracePanel` below the markdown content
+
+### TASK AI-4.8 — Reminders REST API (chat-service) + Flutter reminder list `DONE`
+#### SPEC
+Since MongoDB is shared, chat-service reads reminders written by ai-service.
+- **New file:** `apps/server/chat-service/.../model/Reminder.java`
+  - `@Document(collection = "reminders")`, fields matching ai-service schema: `id, userId, conversationId, text, remindAt (Instant), done (boolean), createdAt (Instant)`
+- **New file:** `...repository/ReminderRepository.java`
+  - `List<Reminder> findByUserIdAndDoneFalseOrderByRemindAtAsc(String userId)`
+  - `Optional<Reminder> findByIdAndUserId(String id, String userId)` (ownership guard)
+- **New file:** `...controller/ReminderController.java`
+  - `GET /api/reminders` → `List<ReminderResponse>` for authenticated user, only `done=false`, sorted soonest-first
+  - `PATCH /api/reminders/{id}/done` → mark done, return 200
+  - `DELETE /api/reminders/{id}` → delete (ownership check), return 204
+- **New file:** `apps/client/lib/features/reminders/` — `reminder_model.dart`, `reminder_repository.dart`, `reminder_provider.dart`, `reminders_screen.dart` (≤ 400 lines)
+  - Screen: list of pending reminders, each showing text + `remindAt` formatted datetime + "Done" swipe action
+  - Empty state: `Icons.alarm_off` + `l10n.remindersEmpty`
+- **New route:** `/reminders` in `app_router.dart`
+- **Access point:** Settings screen → `l10n.reminders` list tile → `/reminders`
+- **i18n:** `"reminders"`, `"remindersEmpty"`, `"reminderDone"` to all 7 ARB files
+
+### TASK AI-4.9 — i18n + Tests + Verification `DONE`
+#### SPEC
+- All new i18n keys to all 7 ARB files: `"aiToolCalling"` (with `{toolName}` placeholder), `"aiToolTrace"`, `"toolSearchMessages"`, `"toolGetUserInfo"`, `"toolSearchKnowledgeBase"`, `"toolSummarizeConversation"`, `"toolCreateReminder"`, `"reminders"`, `"remindersEmpty"`, `"reminderDone"`
+- Run `flutter gen-l10n`
+- **ai-service tests** (`pnpm test`):
+  - `tool-registry.service.spec.ts` — unknown tool returns error string, known tool dispatches correctly
+  - `search-messages.tool.spec.ts` — mock Mongoose, test regex search + role mapping
+  - `create-reminder.tool.spec.ts` — past date returns error string, future date saves + returns confirmation
+  - `ai.service.spec.ts` — extend: agentic loop with 2 tool calls, MAX_ITER guard
+- **chat-service tests** (`mvn test`): `AiResponseListenerTest` updated + existing tests pass
+- **Flutter** (`flutter analyze && flutter test`): 0 new issues
+- **Manual smoke test checklist:**
+  - [ ] Ask `@AI what did I say about Flutter?` → sees "Searching messages..." → answer cites found message
+  - [ ] Ask `@AI remind me to review code at 5pm tomorrow` → reminder created → appears in `/reminders`
+  - [ ] Ask `@AI what do you know about me?` → `get_user_info` tool called → AI answers with profile data
+  - [ ] Ask `@AI what does the uploaded doc say about X?` → `search_knowledge_base` tool used → cited answer
+  - [ ] Tool trace panel visible below final AI message, collapsible
+- **Append to QA LOG** in TODO.md and mark each task DONE
+
+---
+
+## 🧪 QA LOG
+
+### [2026-06-06] SPRINT AI-4 (TASKS AI-4.1 – AI-4.9) → ✅ DONE
+
+- **AI-4.1 — Tool framework (ToolRegistryService + ToolsModule):**
+  - `src/tools/tool.interface.ts`: `ToolDefinition` and `ToolContext` interfaces.
+  - `src/tools/tool-registry.service.ts`: dispatcher pattern — `getDefinitions()` (5 tools), `execute()` catches all errors and returns plain strings (never throws).
+  - `src/tools/tools.module.ts`: imports `KbModule`, `MemoryModule`, `MongooseModule.forFeature([Reminder])`; exports `ToolRegistryService`.
+  - `src/app.module.ts` + `src/ai/ai.module.ts`: `ToolsModule` imported.
+
+- **AI-4.2 — `search_messages` + `get_user_info` tools:**
+  - `search-messages.tool.ts`: queries `messages` collection with case-insensitive regex; resolves `senderDisplayName` from `users` via `{ _id: { $in: senderIds } } as any` (ObjectId type workaround); limit capped at 10.
+  - `get-user-info.tool.ts`: queries `users` collection by `ctx.userId`; returns JSON of non-null fields.
+
+- **AI-4.3 — `search_knowledge_base` + `summarize_conversation` tools:**
+  - `search-knowledge-base.tool.ts`: injects `EmbeddingService` + `VectorStoreService`; searches Qdrant `'knowledge'` collection; returns formatted result strings.
+  - `summarize-conversation.tool.ts`: injects `MemoryService`; returns summary + key facts or "No conversation summary available yet".
+
+- **AI-4.4 — `create_reminder` tool + `reminders` collection:**
+  - `src/tools/reminder.schema.ts`: Mongoose schema `{ userId, conversationId, text, remindAt, done, createdAt }` with `@Schema({ collection: 'reminders' })`.
+  - `src/tools/create-reminder.tool.ts`: validates `remindAt` is a future ISO date (returns error string for past/invalid); saves `Reminder` to MongoDB; returns confirmation string.
+
+- **AI-4.5 — Agentic loop (AiService complete rewrite):**
+  - `_agenticLoop()` replaces `_streamWithModel()`.
+  - Non-streaming `messages.create()` detects `tool_use` stop reason; streaming `messages.stream()` only for final text output.
+  - `MAX_ITER = 5` hard limit — if exhausted, publishes `AI_STREAM_DONE` with fallback message.
+  - Each tool call publishes `AI_TOOL_CALL` Redis event; builds `toolTrace[{toolName, inputSummary, resultSummary}]`.
+  - `AI_STREAM_DONE` payload extended with `toolTrace` field.
+  - `ToolRegistryService` injected as 7th constructor parameter.
+
+- **AI-4.6 — `AI_TOOL_CALL` forwarding (chat-service):**
+  - `AiResponseListener.java`: new `AI_TOOL_CALL` case broadcasts `{type, toolName, inputSummary, senderId, conversationId}` via STOMP.
+  - `AI_STREAM_DONE` case: uses `HashMap` (not `Map.of`) to allow null `toolTrace`; parses and includes `toolTrace` in STOMP broadcast.
+
+- **AI-4.7 — Flutter tool call indicators + tool trace panel:**
+  - `chat_state.dart`: `ToolTraceEntry` class + `List<ToolTraceEntry>? toolTrace` + `List<String> activeTools` on `MessageModel`.
+  - `chat_provider.dart`: `AI_TOOL_CALL` appends to `activeTools`; `AI_STREAM_DONE` sets `toolTrace` and clears `activeTools`.
+  - `streaming_ai_bubble.dart`: `_ToolIndicatorRow` shows amber `Icons.construction` + localized tool name above thinking dots.
+  - New `tool_trace_panel.dart` (≤150 lines): `ExpansionTile` collapsed by default, shows `_TraceEntry` per tool call.
+  - `message_bubble.dart`: finalized AI bubble wrapped in `Column` with conditional `ToolTracePanel`.
+
+- **AI-4.8 — Reminders REST API (chat-service) + Flutter reminders screen:**
+  - `model/Reminder.java`, `repository/ReminderRepository.java`, `dto/ReminderResponse.java`, `controller/ReminderController.java`: `GET /api/reminders`, `PATCH /{id}/done`, `DELETE /{id}`.
+  - Flutter: `features/reminders/reminder_model.dart`, `reminder_repository.dart`, `reminder_provider.dart` (`RemindersNotifier` AsyncNotifier with optimistic state removal), `reminders_screen.dart`.
+  - Route `/reminders` added to `app_router.dart`; Reminders tile added to `settings_screen.dart`.
+
+- **AI-4.9 — i18n + Tests:**
+  - 10 i18n keys added to all 7 ARB files: `aiToolCalling` (with `{toolName}` placeholder), `aiToolTrace`, `toolSearchMessages`, `toolGetUserInfo`, `toolSearchKnowledgeBase`, `toolSummarizeConversation`, `toolCreateReminder`, `reminders`, `remindersEmpty`, `reminderDone`. `flutter gen-l10n` regenerated.
+  - New test files: `tool-registry.service.spec.ts` (5 tests), `create-reminder.tool.spec.ts` (3 tests), `search-messages.tool.spec.ts` (3 tests).
+  - `ai.service.spec.ts` fully rewritten: 37 tests — 4 new agentic loop tests (single tool, two consecutive tools, MAX_ITER exhausted, tool error → loop continues).
+  - `AiResponseListenerTest.java`: new `AI_TOOL_CALL` test added → 5 tests total.
+  - `chat_provider.dart:283` `use_build_context_synchronously` lint fixed (`if (!context.mounted) return`).
+
+- **Tests:**
+  - `mvn test` (chat-service) → **BUILD SUCCESS, 79/79** (7 suites; AiResponseListenerTest now 5 tests).
+  - `pnpm test` (ai-service) → **48/48 pass** (8 test suites: 5 existing + 3 new tool specs).
+  - `flutter analyze` → **No issues found** (0 warnings after mounted fix).
+  - `flutter test` → **All tests passed**.
+
+- **Files created (ai-service):** `src/tools/tool.interface.ts`, `src/tools/search-messages.tool.ts`, `src/tools/get-user-info.tool.ts`, `src/tools/search-knowledge-base.tool.ts`, `src/tools/summarize-conversation.tool.ts`, `src/tools/reminder.schema.ts`, `src/tools/create-reminder.tool.ts`, `src/tools/tool-registry.service.ts`, `src/tools/tools.module.ts`, `src/tools/tool-registry.service.spec.ts`, `src/tools/create-reminder.tool.spec.ts`, `src/tools/search-messages.tool.spec.ts`.
+- **Files modified (ai-service):** `src/ai/ai.service.ts` (complete rewrite), `src/ai/ai.service.spec.ts` (complete rewrite), `src/ai/ai.module.ts`, `src/app.module.ts`.
+- **Files created (chat-service):** `model/Reminder.java`, `repository/ReminderRepository.java`, `dto/ReminderResponse.java`, `controller/ReminderController.java`.
+- **Files modified (chat-service):** `service/AiResponseListener.java`.
+- **Files created (Flutter):** `features/reminders/reminder_model.dart`, `features/reminders/reminder_repository.dart`, `features/reminders/reminder_provider.dart`, `features/reminders/reminders_screen.dart`, `ui/widgets/tool_trace_panel.dart`.
+- **Files modified (Flutter):** `domain/chat_state.dart`, `domain/chat_provider.dart`, `ui/widgets/streaming_ai_bubble.dart`, `ui/widgets/message_bubble.dart`, `core/router/app_router.dart`, `features/settings/ui/settings_screen.dart`, all 7 `l10n/app_*.arb`.
+
+---
+
+
+---
+
+## 🟢 SPRINT AI-5 — Agent Trace & Transparency — DONE
+
+> **Goal:** User sees exactly what AI did — extended thinking blocks, tool calls sequence, token usage, processing time. Token usage dashboard per user. Fully transparent AI.
+> **New feature:** Claude extended thinking (`thinking: { type: 'enabled' }`) — captures internal reasoning blocks
+> **New MongoDB collection:** `token_usage` (aggregated per user per day)
+> **New Message field:** `trace` — persisted alongside AI message content
+> **Reference:** `.claude/rules/ai-service.md`, `docs/roadmap.md` (Sprint AI-5)
+
+---
+
+### PHASE 1 — Capture Trace Data (ai-service)
+
+### TASK AI-5.1 — Extended thinking + trace capture `DONE`
+#### SPEC
+- **File:** `apps/server/ai-service/src/config/configuration.ts`
+  - Add: `ai: { enableThinking: process.env.AI_ENABLE_THINKING === 'true', thinkingBudgetTokens: parseInt(process.env.AI_THINKING_BUDGET ?? '8000') }`
+- **File:** `infra/docker-compose/compose.yml` — add to ai-service environment:
+  - `AI_ENABLE_THINKING: ${AI_ENABLE_THINKING:-false}`
+  - `AI_THINKING_BUDGET: ${AI_THINKING_BUDGET:-8000}`
+- **File:** `apps/server/ai-service/.env.example` — add both vars
+- **File:** `apps/server/ai-service/src/ai/ai.service.ts`
+  - Track `const startMs = Date.now()` at the start of `handleRequest()`
+  - In the agentic loop's `messages.create()` calls AND the final `messages.stream()` call:
+    - If `config.ai.enableThinking`: add `thinking: { type: 'enabled', budget_tokens: config.ai.thinkingBudgetTokens }` to request params. Model must be `claude-sonnet-4-5` or later — thinking is not supported on haiku fallback, skip it silently.
+    - NOTE: extended thinking requires `max_tokens >= budget_tokens + 1000`. Increase `max_tokens` to `config.ai.thinkingBudgetTokens + 2048` when thinking is enabled.
+  - Collect thinking blocks from all agentic loop iterations and the final stream:
+    - In `messages.create()` responses: `response.content.filter(b => b.type === 'thinking').map(b => b.thinking)`
+    - In `messages.stream()`: listen for `thinking` content blocks via `stream.on('streamEvent', ...)` — accumulate `thinking_delta` text blocks
+  - Collect token usage: after the final stream, `(await stream.finalMessage()).usage` → `{ input_tokens, output_tokens, cache_read_input_tokens? }`
+  - Sum token usage across ALL iterations (tool call iterations + final stream)
+  - Build `trace` object:
+    ```typescript
+    interface AiTrace {
+      thinkingBlocks: string[];          // captured thinking text blocks
+      toolCalls: ToolTraceEntry[];       // from AI-4 toolTrace
+      inputTokens: number;
+      outputTokens: number;
+      thinkingTokens: number;            // from usage.cache_read_input_tokens or thinking block length estimate
+      processingMs: number;              // Date.now() - startMs
+      model: string;                     // which model was actually used
+      iterationCount: number;            // how many agentic loop iterations ran
+    }
+    ```
+  - Include `trace` in `AI_STREAM_DONE` payload: `{ type, fullContent, sources, trace }`
+  - Remove top-level `toolTrace` from `AI_STREAM_DONE` (it is now inside `trace.toolCalls`) — update chat-service and Flutter accordingly
+- **Test:** `ai.service.spec.ts` — mock `messages.create` returning thinking block; verify `trace.thinkingBlocks` populated; verify `trace.processingMs > 0`; verify `trace.inputTokens` is sum across iterations.
+
+### TASK AI-5.2 — Token usage aggregation `DONE`
+#### SPEC
+- **New file:** `apps/server/ai-service/src/usage/token-usage.schema.ts`
+  - Mongoose schema `TokenUsage`: `userId (String, required)`, `date (String, required, format YYYY-MM-DD)`, `inputTokens (Number, default 0)`, `outputTokens (Number, default 0)`, `requestCount (Number, default 0)`, `updatedAt (Date)`
+  - Compound unique index: `{ userId: 1, date: 1 }`
+- **New file:** `apps/server/ai-service/src/usage/usage.service.ts`
+  - `recordUsage(userId: string, inputTokens: number, outputTokens: number): Promise<void>`
+    - `const date = new Date().toISOString().slice(0, 10)` (YYYY-MM-DD)
+    - `findOneAndUpdate({ userId, date }, { $inc: { inputTokens, outputTokens, requestCount: 1 }, $set: { updatedAt: new Date() } }, { upsert: true })`
+- **New file:** `apps/server/ai-service/src/usage/usage.module.ts` — exports `UsageService`
+- **Update:** `apps/server/ai-service/src/ai/ai.service.ts` — inject `UsageService`; after building `trace`, call `await usageService.recordUsage(payload.userId, trace.inputTokens, trace.outputTokens)` (fire-and-forget with `.catch(err => this.logger.warn(...))`)
+- **Update:** `apps/server/ai-service/src/app.module.ts` — import `UsageModule`
+
+---
+
+### PHASE 2 — Persist Trace (chat-service)
+
+### TASK AI-5.3 — Persist trace to Message + REST endpoint `DONE`
+#### SPEC
+- **File:** `apps/server/chat-service/.../model/Message.java`
+  - Add field: `@Field("trace") private AiTraceData trace` (nullable, only present on `type="ai"` messages)
+- **New file:** `...model/AiTraceData.java` — `@Document` NOT needed (embedded subdocument):
+  ```java
+  public class AiTraceData {
+    private List<String> thinkingBlocks;
+    private List<ToolCallEntry> toolCalls;
+    private int inputTokens;
+    private int outputTokens;
+    private int processingMs;
+    private String model;
+    private int iterationCount;
+  }
+  public class ToolCallEntry {
+    private String toolName;
+    private String inputSummary;
+    private String resultSummary;
+  }
+  ```
+- **File:** `...service/MessageService.java`
+  - Update `saveAiMessage(String conversationId, String content)` signature to `saveAiMessage(String conversationId, String content, AiTraceData trace)` — persist `trace` on the `Message` document
+- **File:** `...service/AiResponseListener.java`
+  - On `AI_STREAM_DONE`: parse `trace` JSON from payload → deserialize to `AiTraceData` via `ObjectMapper` → pass to `messageService.saveAiMessage(convId, fullContent, trace)`
+  - Update STOMP broadcast to include `trace` in the final event map
+- **New file:** `...dto/AiTraceResponse.java` — mirrors `AiTraceData` fields for API response
+- **File:** `...controller/MessageController.java`
+  - Add `GET /api/messages/{id}/trace` — fetch `Message` by id (participant check), return `AiTraceResponse` (404 if `trace == null`)
+- **Test:** `MessageServiceTest.java` — update `saveAiMessage` tests to pass trace; `AiResponseListenerTest.java` — verify trace parsed and forwarded correctly.
+
+---
+
+### PHASE 3 — Flutter UI
+
+### TASK AI-5.4 — Flutter: receive + store trace in MessageModel `DONE`
+#### SPEC
+- **File:** `apps/client/lib/features/chat/domain/chat_state.dart`
+  - Add `AiTrace` class: `thinkingBlocks (List<String>)`, `toolCalls (List<ToolCallEntry>)`, `inputTokens (int)`, `outputTokens (int)`, `processingMs (int)`, `model (String)`, `iterationCount (int)`
+  - Add `ToolCallEntry` class: `toolName, inputSummary, resultSummary`
+  - Add to `MessageModel`: `final AiTrace? trace` (nullable); parse from `AI_STREAM_DONE` payload and from REST message JSON
+  - Remove `toolTrace` field (now inside `trace.toolCalls`) — update all references
+- **File:** `apps/client/lib/features/chat/domain/chat_provider.dart`
+  - On `AI_STREAM_DONE`: parse `trace` from payload → update streaming message with trace data
+
+### TASK AI-5.5 — Flutter: full trace panel widget `DONE`
+#### SPEC
+- **File:** `apps/client/lib/features/chat/ui/widgets/tool_trace_panel.dart` — **REPLACE** entirely (was minimal in AI-4):
+  - `TracePanel(AiTrace trace)` — `ExpansionTile`, collapsed by default, title: `Icons.account_tree` + `l10n.aiTraceTitle`
+  - **Section 1 — Thinking** (only if `trace.thinkingBlocks.isNotEmpty`):
+    - `ExpansionTile` with `Icons.psychology` + `l10n.aiTraceThinking`
+    - Each block: `Container` with monospace `Text`, light purple background, rounded corners, max-height 200 with scroll
+  - **Section 2 — Tool Calls** (only if `trace.toolCalls.isNotEmpty`):
+    - Vertical list: each entry shows tool icon (per name map) + bold `toolName` + grey `inputSummary` + italic `resultSummary` (truncated 100 chars)
+  - **Section 3 — Stats row** (always shown):
+    - Chips in a `Wrap`: `🪙 ${inputTokens}in / ${outputTokens}out`, `⚡ ${processingMs}ms`, `🔄 ${iterationCount} step(s)`, `🤖 ${model}`
+    - Stats chips: small `Chip` with grey background, 12sp font
+- **File:** `apps/client/lib/features/chat/ui/widgets/message_bubble.dart`
+  - Replace old `ToolTracePanel` call with new `TracePanel(message.trace!)` — show only when `message.trace != null`
+
+### TASK AI-5.6 — Flutter: token usage dashboard `DONE`
+#### SPEC
+Token usage is read from chat-service via a new passthrough endpoint (chat-service reads `token_usage` collection from shared MongoDB).
+- **New file:** `apps/server/chat-service/.../model/TokenUsage.java`
+  - `@Document(collection = "token_usage")`, fields: `id, userId, date (String), inputTokens (int), outputTokens (int), requestCount (int)`
+- **New file:** `...repository/TokenUsageRepository.java`
+  - `List<TokenUsage> findByUserIdAndDateBetweenOrderByDateAsc(String userId, String from, String to)`
+- **New file:** `...controller/UsageController.java`
+  - `GET /api/usage/tokens?days=30` (default 30) — returns `List<TokenUsageDayResponse>` for authenticated user, last N days
+  - `TokenUsageDayResponse { date, inputTokens, outputTokens, requestCount, totalTokens }`
+- **New file:** `apps/client/lib/features/settings/ui/token_usage_screen.dart` (≤ 400 lines)
+  - `TokenUsageScreen` — `ConsumerWidget`
+  - Top summary cards: total tokens this month, total requests, estimated cost (inputTokens × $0.000003 + outputTokens × $0.000015 — claude-sonnet-4-5 pricing)
+  - Bar chart: daily token usage for last 30 days using `fl_chart` package (add to pubspec if not present, else use simple `CustomPaint` bar chart)
+  - Each bar: stacked input (blue) + output (purple)
+  - Days with 0 usage shown as empty bars
+- **New route:** `/token-usage` in `app_router.dart`
+- **Access point:** Settings screen → new `l10n.tokenUsage` list tile (below Reminders) → `/token-usage`
+- **i18n:** `"tokenUsage"`, `"tokenUsageTitle"`, `"tokenUsageThisMonth"`, `"tokenUsageRequests"`, `"tokenUsageEstCost"`, `"tokenUsageDailyChart"`, `"aiTraceTitle"`, `"aiTraceThinking"`, `"aiTraceTools"`, `"aiTraceStats"` — add to all 7 ARB files
+- Run `flutter gen-l10n`
+
+### TASK AI-5.7 — i18n + Tests + Verification `DONE`
+#### SPEC
+- Verify all 10 i18n keys from AI-5.6 in all 7 ARB files
+- **ai-service tests** (`pnpm test`):
+  - `usage.service.spec.ts` — mock Mongoose, test `recordUsage` upserts correctly, date format YYYY-MM-DD
+  - `ai.service.spec.ts` — extend: thinking enabled → thinking blocks captured; token usage summed across iterations
+- **chat-service tests** (`mvn test`): `MessageServiceTest` updated `saveAiMessage` signature; `AiResponseListenerTest` trace deserialization; all existing tests pass
+- **Flutter** (`flutter analyze && flutter test`): 0 new issues
+- **Manual smoke test checklist:**
+  - [ ] Enable `AI_ENABLE_THINKING=true` in .env → ask AI complex question → trace panel shows thinking block
+  - [ ] Tool call made → trace panel shows tool call section with input/result
+  - [ ] Stats row shows correct token count and processing time
+  - [ ] `/token-usage` screen shows bar chart with today's usage after sending AI messages
+  - [ ] Disable thinking → trace panel shows only tool calls + stats (no thinking section)
+- **Append to QA LOG** in TODO.md and mark each task DONE
+
+---
+
+## 🧪 QA LOG — Sprint AI-5 [2026-06-06]
+
+| Suite | Result | Details |
+|-------|--------|---------|
+| `pnpm build` (ai-service) | ✅ PASS | Fixed `UsageModule` DynamicModule cast (`as unknown as DynamicModule`) |
+| `pnpm test` (ai-service) | ✅ PASS | 9 suites, 55 tests — includes new trace/thinking/token-usage tests |
+| `mvn test` (chat-service) | ✅ PASS | All existing tests pass; updated `saveAiMessage` callers to 3-arg |
+| `flutter analyze` | ✅ PASS | No issues found |
+| `flutter test` | ✅ PASS | 1 test passed |
+| `flutter gen-l10n` | ✅ PASS | 10 new keys in all 7 ARBs regenerated |
+
+**Key changes:**
+- `AI_STREAM_DONE` payload: `toolTrace` → `trace: { thinkingBlocks, toolCalls, inputTokens, outputTokens, thinkingTokens, processingMs, model, iterationCount }`
+- New `UsageService` + `TokenUsage` schema (ai-service) — fire-and-forget per request
+- New `AiTraceData` embedded in `Message` (chat-service) + `GET /api/messages/{id}/trace`
+- New `GET /api/usage/tokens?days=30` (chat-service) — 30-day token aggregation
+- Flutter `TracePanel` replaces `ToolTracePanel`; new `TokenUsageScreen` at `/token-usage`
+

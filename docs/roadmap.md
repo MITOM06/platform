@@ -1,7 +1,7 @@
 # Roadmap — Platform Project
 
 > **Status:** Phase 1 (Chat Core) ✅ DONE — Phase 2 (AI Layer) 🚧 IN PROGRESS
-> **Current Sprint:** Sprint AI-3 — Knowledge Base (RAG) (See `TODO.md`)
+> **Current Sprint:** Sprint AI-5 — Agent Trace & Transparency (See `TODO.md`)
 
 ---
 
@@ -78,19 +78,19 @@
 - [x] Long-term: MongoDB stores conversation summary, injected when relevant
 - [x] Flutter: "AI remembers you" screen — view and delete memories
 
-### Sprint AI-3 — Knowledge Base (RAG) 🚧 IN PROGRESS
+### Sprint AI-3 — Knowledge Base (RAG) ✅ DONE
 **Deliverable:** Upload documents → AI answers based on content, with source citation.
 - Upload PDF/DOCX → chunk → embed → vector store (MongoDB Atlas Vector or pgvector sidecar)
 - RAG pipeline: embed question → top-K chunks → inject → generate
 - Flutter: Knowledge Base management screen
 
-### Sprint AI-4 — Tool System 📋 PENDING
+### Sprint AI-4 — Tool System ✅ DONE
 **Deliverable:** AI can take actions — search messages, create reminders, summarize conversations.
 - Agentic loop: LLM → tool call → execute → LLM synthesizes → reply
 - Tools: `search_messages`, `summarize_conversation`, `create_reminder`, `get_user_info`, `search_knowledge_base`
 - Flutter: tool call indicators inline in chat bubble
 
-### Sprint AI-5 — Agent Trace & Transparency 📋 PENDING
+### Sprint AI-5 — Agent Trace & Transparency 🚧 IN PROGRESS
 **Deliverable:** User can see what AI is thinking — expandable trace panel below each AI message.
 - Reasoning steps, tool calls, token usage, confidence score, processing time
 - Token usage dashboard per workspace

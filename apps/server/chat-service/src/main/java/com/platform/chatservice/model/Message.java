@@ -59,6 +59,10 @@ public class Message {
     @Builder.Default
     private List<String> mentions = new ArrayList<>();
 
+    /** Agent trace for AI messages — null for non-AI messages. */
+    @org.springframework.data.mongodb.core.mapping.Field("trace")
+    private AiTraceData trace;
+
     @CreatedDate
     private Instant createdAt;
 

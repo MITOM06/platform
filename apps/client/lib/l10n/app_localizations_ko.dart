@@ -913,4 +913,66 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get kbChunks => '청크';
+
+  @override
+  String aiToolCalling(String toolName) {
+    return '도구 사용 중: $toolName';
+  }
+
+  @override
+  String get aiToolTrace => '도구 로그';
+
+  @override
+  String get toolSearchMessages => '메시지 검색 중...';
+
+  @override
+  String get toolGetUserInfo => '사용자 정보 조회 중...';
+
+  @override
+  String get toolSearchKnowledgeBase => '지식 베이스 검색 중...';
+
+  @override
+  String get toolSummarizeConversation => '대화 요약 중...';
+
+  @override
+  String get toolCreateReminder => '알림 생성 중...';
+
+  @override
+  String get reminders => '알림';
+
+  @override
+  String get remindersEmpty => '대기 중인 알림이 없습니다.\nPON AI에게 알림을 설정해 달라고 해보세요.';
+
+  @override
+  String get reminderDone => '완료로 표시';
+
+  @override
+  String get tokenUsage => '토큰 사용량';
+
+  @override
+  String get tokenUsageTitle => '토큰 사용량 대시보드';
+
+  @override
+  String get tokenUsageThisMonth => '이번 달 총 토큰';
+
+  @override
+  String get tokenUsageRequests => 'AI 요청 수';
+
+  @override
+  String get tokenUsageEstCost => '예상 비용 (USD)';
+
+  @override
+  String get tokenUsageDailyChart => '일별 토큰 사용량 (최근 30일)';
+
+  @override
+  String get aiTraceTitle => 'AI 추적';
+
+  @override
+  String get aiTraceThinking => '사고 과정';
+
+  @override
+  String get aiTraceTools => '도구 호출';
+
+  @override
+  String get aiTraceStats => '통계';
 }

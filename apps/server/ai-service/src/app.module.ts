@@ -6,6 +6,8 @@ import { AiModule } from './ai/ai.module';
 import { RedisModule } from './redis/redis.module';
 import { MemoryModule } from './memory/memory.module';
 import { KbModule } from './kb/kb.module';
+import { ToolsModule } from './tools/tools.module';
+import { UsageModule } from './usage/usage.module';
 import { BotSeedService } from './bot/bot-seed.service';
 import { RedisSubscriberService } from './redis/redis-subscriber.service';
 
@@ -27,6 +29,8 @@ const mongooseModule: DynamicModule = MongooseModule.forRootAsync({
     RedisModule,
     MemoryModule,
     KbModule,
+    ToolsModule,
+    UsageModule,
     AiModule,
   ],
   providers: [BotSeedService, RedisSubscriberService],
