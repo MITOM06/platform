@@ -113,6 +113,7 @@ jobs:
             NODE_ENV=production
             JWT_ACCESS_SECRET=${{ secrets.JWT_ACCESS_SECRET }}
             JWT_REFRESH_SECRET=${{ secrets.JWT_REFRESH_SECRET }}
+            MONGO_URI=${{ secrets.MONGODB_URI }}
             MONGODB_URI=${{ secrets.MONGODB_URI }}
             REDIS_URL=${{ secrets.REDIS_URL }}
             MAIL_HOST=${{ secrets.MAIL_HOST }}
