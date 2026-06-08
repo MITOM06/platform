@@ -109,8 +109,8 @@ jobs:
             --memory=512Mi
             --cpu=1
             --port=3001
-            --set-env-vars=NODE_ENV=production
           env_vars: |
+            NODE_ENV=production
             JWT_ACCESS_SECRET=${{ secrets.JWT_ACCESS_SECRET }}
             MONGODB_URI=${{ secrets.MONGODB_URI }}
             REDIS_URL=${{ secrets.REDIS_URL }}
@@ -133,8 +133,9 @@ jobs:
             --memory=1Gi
             --cpu=1
             --port=8080
-            --set-env-vars=NODE_ENV=production,SPRING_MAIN_ALLOW_BEAN_DEFINITION_OVERRIDING=true
           env_vars: |
+            NODE_ENV=production
+            SPRING_MAIN_ALLOW_BEAN_DEFINITION_OVERRIDING=true
             JWT_ACCESS_SECRET=${{ secrets.JWT_ACCESS_SECRET }}
             SPRING_DATA_MONGODB_URI=${{ secrets.MONGODB_URI }}
             REDIS_URL=${{ secrets.REDIS_URL }}
@@ -158,8 +159,8 @@ jobs:
             --memory=512Mi
             --cpu=1
             --port=3002
-            --set-env-vars=NODE_ENV=production
           env_vars: |
+            NODE_ENV=production
             JWT_ACCESS_SECRET=${{ secrets.JWT_ACCESS_SECRET }}
             MONGODB_URI=${{ secrets.MONGODB_URI }}
             REDIS_URL=${{ secrets.REDIS_URL }}
