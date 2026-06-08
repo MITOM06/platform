@@ -328,5 +328,17 @@
   "aiTraceTitle": "Nhật ký AI",
   "aiTraceThinking": "Suy nghĩ",
   "aiTraceTools": "Công cụ đã dùng",
-  "aiTraceStats": "Thống kê"
+  "aiTraceStats": "Thống kê",
+  "aiPersonaTitle": "Nhân vật AI",
+  "aiPersonaNameHint": "Tên bot (ví dụ: DevBot)",
+  "aiPersonaInstructionsHint": "Hướng dẫn tùy chỉnh (ví dụ: Luôn trả lời bằng gạch đầu dòng)",
+  "aiPersonaAdminOnly": "Chỉ quản trị viên nhóm mới có thể cấu hình nhân vật AI.",
+  "configureAiPersona": "Cấu hình nhân vật AI",
+  "aiPersonaToneFriendly": "Thân thiện",
+  "aiPersonaToneProfessional": "Chuyên nghiệp",
+  "aiPersonaToneConcise": "Ngắn gọn",
+  "aiPersonaToneCreative": "Sáng tạo",
+  "aiQuotaExceeded": "Đã vượt hạn mức sử dụng AI hàng tháng. Vui lòng liên hệ quản trị viên.",
+  "viewUsage": "Xem lượng dùng",
+  "tokenUsageQuota": "Hạn mức tháng"
 }

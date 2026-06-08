@@ -1966,3 +1966,189 @@ Token usage is read from chat-service via a new passthrough endpoint (chat-servi
 - New `GET /api/usage/tokens?days=30` (chat-service) — 30-day token aggregation
 - Flutter `TracePanel` replaces `ToolTracePanel`; new `TokenUsageScreen` at `/token-usage`
 
+
+---
+
+## ✅ SPRINT AI-6 — Multi-workspace & Persona — DONE
+
+> **Goal:** Each group conversation can have its own AI persona — custom name, avatar URL, tone, and system prompt prefix. Usage quota enforced per user (monthly token cap). This is the final sprint of Phase 2.
+> **Design decision:** "Workspace" = AI persona config scoped to a conversation (avoids full multi-tenancy rewrite). Groups get full persona config; DMs use global default.
+> **New MongoDB collection:** `ai_personas`
+> **Quota enforcement:** ai-service checks monthly token usage before processing each request
+> **Reference:** `.claude/rules/ai-service.md`, `docs/roadmap.md` (Sprint AI-6)
+
+---
+
+### PHASE 1 — AI Persona (Backend)
+
+### TASK AI-6.1 — `ai_personas` collection + PersonaService (ai-service) `DONE`
+#### SPEC
+- **New file:** `apps/server/ai-service/src/persona/ai-persona.schema.ts`
+  ```typescript
+  // One persona per conversation (optional — falls back to global default if absent)
+  conversationId: String (required, unique, indexed)
+  name: String (default 'PON AI')
+  avatarUrl: String (nullable)
+  // tone: one of 'friendly' | 'professional' | 'concise' | 'creative'
+  tone: String (default 'friendly')
+  // systemPromptPrefix: prepended before the default system prompt
+  systemPromptPrefix: String (nullable, max 500 chars)
+  createdBy: String  // userId of who configured this
+  updatedAt: Date
+  ```
+- **New file:** `apps/server/ai-service/src/persona/persona.service.ts`
+  - `getPersona(conversationId: string): Promise<AiPersona | null>`
+  - `upsertPersona(conversationId: string, dto: UpsertPersonaDto, userId: string): Promise<AiPersona>`
+  - `deletePersona(conversationId: string): Promise<void>`
+  - `buildSystemPrompt(persona: AiPersona | null, displayName: string): string`:
+    - Base prompt template:
+      ```
+      You are {name}, an intelligent AI assistant in the PON chat platform.
+      You are helping {displayName}.
+      {toneInstruction}
+      Respond in the same language the user writes in.
+      ```
+    - Tone instructions: `friendly` → "Be warm, empathetic, and approachable."; `professional` → "Be precise, formal, and thorough."; `concise` → "Be direct and brief. Avoid unnecessary words."; `creative` → "Be imaginative, use vivid language, and think outside the box."
+    - If `systemPromptPrefix` set: prepend it before the base prompt with a blank line separator
+    - If persona is null: use default (`name='PON AI'`, `tone='friendly'`)
+- **New file:** `apps/server/ai-service/src/persona/persona.module.ts` — exports `PersonaService`
+- **Update:** `apps/server/ai-service/src/app.module.ts` — import `PersonaModule`
+- **Update:** `apps/server/ai-service/src/ai/ai.service.ts` — inject `PersonaService`; replace hardcoded `system` string with `await personaService.buildSystemPrompt(await personaService.getPersona(conversationId), displayName)`
+- **Test:** `persona.service.spec.ts` — test `buildSystemPrompt` for all 4 tones; with/without prefix; null persona uses defaults.
+
+### TASK AI-6.2 — Usage quota enforcement `DONE`
+#### SPEC
+- **File:** `apps/server/ai-service/src/config/configuration.ts`
+  - Add: `quota: { monthlyTokenLimit: parseInt(process.env.AI_MONTHLY_TOKEN_LIMIT ?? '500000') }` (default 500k tokens/month per user, ~0 cost at dev scale)
+- **File:** `infra/docker-compose/compose.yml` — add `AI_MONTHLY_TOKEN_LIMIT: ${AI_MONTHLY_TOKEN_LIMIT:-500000}` to ai-service env
+- **File:** `apps/server/ai-service/src/usage/usage.service.ts` (from AI-5.2) — add:
+  - `getMonthlyUsage(userId: string): Promise<number>` — sum `inputTokens + outputTokens` for current month (`date` starts with `YYYY-MM`)
+  - `isQuotaExceeded(userId: string): Promise<boolean>` — `(await getMonthlyUsage(userId)) >= config.quota.monthlyTokenLimit`
+- **File:** `apps/server/ai-service/src/ai/ai.service.ts`
+  - At the very start of `handleRequest()`, before any Anthropic call: `if (await usageService.isQuotaExceeded(payload.userId))` → publish `{ type: 'AI_STREAM_ERROR', error: 'Monthly AI usage quota exceeded. Please contact your admin.' }` and return immediately (no API call made)
+- **Test:** `ai.service.spec.ts` — mock `usageService.isQuotaExceeded` returning true → verify `AI_STREAM_ERROR` published, `anthropic.messages` never called.
+
+### TASK AI-6.3 — Persona CRUD REST API (chat-service) `DONE`
+#### SPEC
+Since MongoDB is shared, chat-service reads/writes `ai_personas` directly.
+- **New file:** `apps/server/chat-service/.../model/AiPersona.java`
+  - `@Document(collection = "ai_personas")`, fields: `conversationId, name, avatarUrl, tone, systemPromptPrefix, createdBy, updatedAt (@LastModifiedDate)`
+- **New file:** `...repository/AiPersonaRepository.java`
+  - `Optional<AiPersona> findByConversationId(String conversationId)`
+- **New file:** `...dto/AiPersonaRequest.java` — `name (max 30), avatarUrl (nullable), tone (enum: friendly|professional|concise|creative), systemPromptPrefix (nullable, max 500)`
+- **New file:** `...dto/AiPersonaResponse.java` — mirrors model fields
+- **New file:** `...controller/AiPersonaController.java`
+  - `GET /api/conversations/{conversationId}/ai-persona` — returns current persona or 404 (no auth beyond participant check)
+  - `PUT /api/conversations/{conversationId}/ai-persona` — upsert persona; only group admins allowed (check `conversation.adminIds.contains(userId)` — for DMs: reject with 403); validate `tone` is one of 4 valid values
+  - `DELETE /api/conversations/{conversationId}/ai-persona` — reset to default; admin only; return 204
+- **Test:** `AiPersonaControllerTest.java` — test: GET returns 404 when none; PUT by non-admin returns 403; PUT by admin saves correctly; DELETE resets.
+
+---
+
+### PHASE 2 — Flutter UI
+
+### TASK AI-6.4 — Flutter: AI Persona configuration screen `DONE`
+#### SPEC
+- **New file:** `apps/client/lib/features/chat/data/ai_persona_repository.dart`
+  - `getPersona(String conversationId): Future<AiPersonaModel?>` → `GET /api/conversations/{id}/ai-persona` (returns null on 404)
+  - `upsertPersona(String conversationId, AiPersonaRequest req): Future<AiPersonaModel>` → `PUT`
+  - `deletePersona(String conversationId): Future<void>` → `DELETE`
+- **New file:** `apps/client/lib/features/chat/domain/ai_persona_model.dart`
+  - `AiPersonaModel { conversationId, name, avatarUrl, tone, systemPromptPrefix }`; `fromJson`
+- **New file:** `apps/client/lib/features/chat/domain/ai_persona_provider.dart`
+  - `aiPersonaProvider(String conversationId)`: `AsyncNotifierProviderFamily`
+  - `AiPersonaNotifier`: `build()` → fetch persona (null if none); `save(AiPersonaRequest)` → upsert; `reset()` → delete, set state null
+- **New file:** `apps/client/lib/features/chat/ui/ai_persona_screen.dart` (≤ 400 lines)
+  - `AiPersonaScreen(String conversationId)` — `ConsumerWidget`
+  - AppBar: `l10n.aiPersonaTitle`
+  - Form fields:
+    - **Name**: `PonTextField`, max 30 chars, placeholder `l10n.aiPersonaNameHint`
+    - **Avatar URL**: `PonTextField`, nullable, shows small preview `CircleAvatar` when valid URL
+    - **Tone**: `SegmentedButton<String>` with 4 options — friendly / professional / concise / creative (show brief description below selected)
+    - **Custom instructions**: multiline `PonTextField`, max 500 chars, counter, placeholder `l10n.aiPersonaInstructionsHint`
+  - Bottom: "Save" button → `notifier.save(...)` → `SnackBar` success; "Reset to Default" text button → confirm dialog → `notifier.reset()`
+  - Pre-fills form from current persona if one exists
+  - Shows `l10n.aiPersonaAdminOnly` info banner at top (non-editable reminder)
+- **New route:** `/ai-persona/:conversationId` in `app_router.dart`
+- **Access point:** In group `GroupInfoScreen` → new `l10n.configureAiPersona` list tile (show only if current user is group admin) → `/ai-persona/{conversationId}`
+
+### TASK AI-6.5 — Show persona name/avatar in chat UI `DONE`
+#### SPEC
+- **File:** `apps/client/lib/features/chat/domain/chat_provider.dart`
+  - On build, fetch persona via `aiPersonaProvider(conversationId)` — store `currentPersonaName` and `currentPersonaAvatarUrl` in `ChatState`
+- **File:** `apps/client/lib/features/chat/domain/chat_state.dart`
+  - Add to `ChatState`: `final String aiPersonaName` (default 'PON AI'), `final String? aiPersonaAvatarUrl`
+- **File:** `apps/client/lib/features/chat/ui/widgets/message_bubble.dart`
+  - For AI messages: replace hardcoded "PON AI" label with `chatState.aiPersonaName`
+  - For AI avatar: if `chatState.aiPersonaAvatarUrl != null` → show `CachedNetworkImage` circle avatar; else keep `Icons.smart_toy` fallback
+- **File:** `apps/client/lib/features/chat/ui/widgets/chat_app_bar.dart`
+  - In AI-bot DM: subtitle shows `aiPersonaName` instead of hardcoded "AI Assistant"
+
+### TASK AI-6.6 — Quota exceeded UI + usage display `DONE`
+#### SPEC
+- **File:** `apps/client/lib/features/chat/domain/chat_provider.dart`
+  - Handle new `AI_STREAM_ERROR` with message containing "quota exceeded" → set a distinct `quotaExceeded: true` flag in state (vs generic AI error)
+- **File:** `apps/client/lib/features/chat/ui/widgets/streaming_ai_bubble.dart` (or `message_bubble.dart`)
+  - If error content contains quota message → render amber bubble with `Icons.data_usage` icon + `l10n.aiQuotaExceeded` + link text `l10n.viewUsage` that navigates to `/token-usage`
+- **File:** `apps/client/lib/features/settings/ui/token_usage_screen.dart` (from AI-5.6)
+  - Add monthly quota info: show progress bar `used / limit` tokens with label `l10n.tokenUsageQuota`
+  - Fetch quota limit: hardcode `500000` for now (same default as env var) — can be made configurable later
+
+### TASK AI-6.7 — i18n + Tests + Verification + Phase 2 wrap-up `DONE`
+#### SPEC
+- **i18n** — add to all 7 ARB files: `"aiPersonaTitle"`, `"aiPersonaNameHint"`, `"aiPersonaInstructionsHint"`, `"aiPersonaAdminOnly"`, `"configureAiPersona"`, `"aiPersonaToneFriendly"`, `"aiPersonaToneProfessional"`, `"aiPersonaToneConcise"`, `"aiPersonaToneCreative"`, `"aiQuotaExceeded"`, `"viewUsage"`, `"tokenUsageQuota"`
+- Run `flutter gen-l10n`
+- **ai-service tests** (`pnpm test`):
+  - `persona.service.spec.ts` — all 4 tone instructions; prefix prepend; null persona uses defaults
+  - `ai.service.spec.ts` — quota exceeded → error published, no Anthropic call; persona system prompt injected
+- **chat-service tests** (`mvn test`): `AiPersonaControllerTest` passes; all existing tests pass
+- **Flutter** (`flutter analyze && flutter test`): 0 new issues
+- **Manual smoke test checklist:**
+  - [ ] Configure group AI persona with name "DevBot" + professional tone → send `@AI` → bubble shows "DevBot", response is professional tone
+  - [ ] Reset persona → AI reverts to "PON AI" + friendly tone
+  - [ ] Non-admin tries to configure persona → 403, no navigation option shown
+  - [ ] Set `AI_MONTHLY_TOKEN_LIMIT=1` in .env → send `@AI` → quota error bubble shown with link to usage screen
+  - [ ] Custom instructions: set "Always respond with bullet points" → AI follows instruction
+- **Phase 2 completion checklist:**
+  - [x] All 6 AI sprints marked DONE in TODO.md
+  - [x] `docs/roadmap.md` Phase 2 status → ✅ DONE
+  - [x] `CLAUDE.md` updated to reflect Phase 2 complete
+- **Append to QA LOG** in TODO.md and mark each task DONE
+
+## 🧪 QA LOG — Sprint AI-6 [2026-06-07]
+
+**Branch:** `feat/sprint18-messenger-ux`
+**Status:** ✅ ALL PASS — Phase 2 COMPLETE
+
+### ai-service (`pnpm test`)
+- **10/10 suites PASS | 71/71 tests PASS**
+- `persona.service.spec.ts` — 8 tests: all 4 tone buildSystemPrompt, prefix prepend, null defaults, getPersona, upsertPersona, truncation, deletePersona ✅
+- `usage.service.spec.ts` — 6 tests: recordUsage, date format, requestCount, getMonthlyUsage sum, isQuotaExceeded false/true ✅
+- `ai.service.spec.ts` — quota-exceeded early-return (no Anthropic call), persona system prompt injection ✅
+- Fix applied: added `spring-boot-starter-validation` to chat-service pom.xml for `jakarta.validation` imports
+
+### chat-service (`mvn test`)
+- **86/86 tests PASS** — BUILD SUCCESS
+- `AiPersonaControllerTest` — 7 tests: GET 404, GET with data, PUT non-admin 403, PUT DM 403, PUT admin saves, DELETE non-admin 403, DELETE admin 204 ✅
+- All existing tests unchanged ✅
+
+### Flutter (`flutter analyze && flutter test`)
+- `flutter analyze` — 3 info-only (prefer_const), **0 errors** ✅
+- `flutter test` — **1/1 pass** ✅
+- Fixes applied: `PonTextField` → `labelText` + `prefixIcon` (not `hintText`); instructions field uses `TextField` for multiline; `PonButton` → `child: Text(...)` (not `label:`); extracted `l10n`+`messenger` before awaits for `use_build_context_synchronously`
+
+### i18n
+- 12 new keys added to all 7 ARB files (en/vi/zh/ja/ko/es/fr) + `flutter gen-l10n` ✅
+
+### Key deliverables
+- NestJS `PersonaModule` with `buildSystemPrompt` (4 tones, prefix, null fallback)
+- Monthly quota check as first operation in `handleRequest()` — AI_STREAM_ERROR if exceeded
+- `ai_personas` shared MongoDB collection — chat-service writes, ai-service reads
+- `AiPersonaController` (chat-service): group-admin-only PUT/DELETE, DM → 403
+- Flutter `AiPersonaScreen` + `aiPersonaProvider` (family) + `AiPersonaRepository`
+- `ChatState.aiPersonaName/aiPersonaAvatarUrl` surfaced in message bubble + app bar
+- `kAiQuotaExceededSentinel` → amber quota bubble with "View usage" link
+- Monthly quota progress bar in `TokenUsageScreen`
+
+---
+

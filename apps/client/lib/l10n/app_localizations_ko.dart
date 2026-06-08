@@ -975,4 +975,40 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get aiTraceStats => '통계';
+
+  @override
+  String get aiPersonaTitle => 'AI 페르소나';
+
+  @override
+  String get aiPersonaNameHint => '봇 이름 (예: DevBot)';
+
+  @override
+  String get aiPersonaInstructionsHint => '맞춤 지시사항 (예: 항상 목록 형식으로 답변)';
+
+  @override
+  String get aiPersonaAdminOnly => '그룹 관리자만 AI 페르소나를 설정할 수 있습니다.';
+
+  @override
+  String get configureAiPersona => 'AI 페르소나 설정';
+
+  @override
+  String get aiPersonaToneFriendly => '친근함';
+
+  @override
+  String get aiPersonaToneProfessional => '전문적';
+
+  @override
+  String get aiPersonaToneConcise => '간결함';
+
+  @override
+  String get aiPersonaToneCreative => '창의적';
+
+  @override
+  String get aiQuotaExceeded => '월간 AI 사용 할당량을 초과했습니다. 관리자에게 문의하세요.';
+
+  @override
+  String get viewUsage => '사용량 보기';
+
+  @override
+  String get tokenUsageQuota => '월간 할당량';
 }

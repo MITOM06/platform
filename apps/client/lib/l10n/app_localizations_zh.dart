@@ -973,4 +973,40 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get aiTraceStats => '统计';
+
+  @override
+  String get aiPersonaTitle => 'AI 角色';
+
+  @override
+  String get aiPersonaNameHint => '机器人名称（例如：DevBot）';
+
+  @override
+  String get aiPersonaInstructionsHint => '自定义指令（例如：始终以列表形式回答）';
+
+  @override
+  String get aiPersonaAdminOnly => '只有群组管理员才能配置 AI 角色。';
+
+  @override
+  String get configureAiPersona => '配置 AI 角色';
+
+  @override
+  String get aiPersonaToneFriendly => '友好';
+
+  @override
+  String get aiPersonaToneProfessional => '专业';
+
+  @override
+  String get aiPersonaToneConcise => '简洁';
+
+  @override
+  String get aiPersonaToneCreative => '创意';
+
+  @override
+  String get aiQuotaExceeded => '已超出每月 AI 使用配额。请联系您的管理员。';
+
+  @override
+  String get viewUsage => '查看用量';
+
+  @override
+  String get tokenUsageQuota => '月度配额';
 }

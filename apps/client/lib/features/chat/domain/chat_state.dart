@@ -197,6 +197,7 @@ class ReplyPreview {
 
 const kAiBotUserId = 'ai-bot-000000000000000000000001';
 const kAiErrorSentinel = '__AI_ERROR__';
+const kAiQuotaExceededSentinel = '__AI_QUOTA__';
 
 @immutable
 class ToolCallEntry {
@@ -310,6 +311,7 @@ class MessageModel {
   bool get isAiMessage => type == 'ai';
   bool get isAiBot => senderId == kAiBotUserId;
   bool get isAiError => isAiMessage && content == kAiErrorSentinel;
+  bool get isAiQuotaExceeded => isAiMessage && content == kAiQuotaExceededSentinel;
   bool get isImage => type == 'image';
   bool get isVideo => type == 'video';
   bool get isMedia => isImage || isVideo;
@@ -578,6 +580,9 @@ class ChatState {
   final String? highlightMessageId;
   // Pinned messages for this conversation (Task 53). First = shown in header bar.
   final List<PinnedMessageModel> pinnedMessages;
+  // AI persona for this conversation (AI-6.5). Defaults to 'PON AI'.
+  final String aiPersonaName;
+  final String? aiPersonaAvatarUrl;
 
   const ChatState({
     required this.messages,
@@ -589,6 +594,8 @@ class ChatState {
     this.editingMessage,
     this.highlightMessageId,
     this.pinnedMessages = const [],
+    this.aiPersonaName = 'PON AI',
+    this.aiPersonaAvatarUrl,
   });
 
   ChatState copyWith({
@@ -604,6 +611,9 @@ class ChatState {
     String? highlightMessageId,
     bool clearHighlight = false,
     List<PinnedMessageModel>? pinnedMessages,
+    String? aiPersonaName,
+    String? aiPersonaAvatarUrl,
+    bool clearAiPersonaAvatarUrl = false,
   }) {
     return ChatState(
       messages: messages ?? this.messages,
@@ -618,6 +628,10 @@ class ChatState {
       highlightMessageId:
           clearHighlight ? null : (highlightMessageId ?? this.highlightMessageId),
       pinnedMessages: pinnedMessages ?? this.pinnedMessages,
+      aiPersonaName: aiPersonaName ?? this.aiPersonaName,
+      aiPersonaAvatarUrl: clearAiPersonaAvatarUrl
+          ? null
+          : (aiPersonaAvatarUrl ?? this.aiPersonaAvatarUrl),
     );
   }
 }

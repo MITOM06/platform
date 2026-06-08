@@ -10,6 +10,7 @@ import '../../auth/domain/auth_state.dart';
 import '../../../core/l10n/l10n_ext.dart';
 import '../../../core/router/app_router.dart';
 import '../../../core/utils/global_messenger.dart';
+import '../data/ai_persona_repository.dart';
 import '../data/chat_repository.dart';
 import '../data/stomp_service.dart';
 import 'chat_state.dart';
@@ -404,13 +405,16 @@ class ChatNotifier extends _$ChatNotifier {
     });
 
     final repo = ref.read(chatRepositoryProvider);
-    // Fetch messages and conversation in parallel for initial load.
+    final personaRepo = ref.read(aiPersonaRepositoryProvider);
+    // Fetch messages, conversation and persona in parallel for initial load.
     final results = await Future.wait([
       repo.getMessages(conversationId, size: 20),
       repo.getConversation(conversationId),
+      personaRepo.getPersona(conversationId).then<dynamic>((v) => v).catchError((_) => null),
     ]);
     final paged = results[0] as PagedResult<MessageModel>;
     final conv = results[1] as ConversationModel;
+    final persona = results[2];
     _markLoadedAsRead(paged.content);
 
     // Parse historical system messages for config (theme, nickname, quick reaction)
@@ -440,6 +444,8 @@ class ChatNotifier extends _$ChatNotifier {
       messages: paged.content,
       hasMore: paged.hasNext,
       pinnedMessages: conv.pinnedMessages,
+      aiPersonaName: (persona?.name as String?) ?? 'PON AI',
+      aiPersonaAvatarUrl: persona?.avatarUrl as String?,
     );
   }
 
@@ -682,8 +688,10 @@ class ChatNotifier extends _$ChatNotifier {
           activeTools: [],
         );
       case 'AI_STREAM_ERROR':
+        final errorMsg = event['error'] as String? ?? '';
+        final isQuota = errorMsg.toLowerCase().contains('quota');
         updated[idx] = current.messages[idx].copyWith(
-          content: kAiErrorSentinel,
+          content: isQuota ? kAiQuotaExceededSentinel : kAiErrorSentinel,
           isStreaming: false,
           isThinking: false,
           activeTools: [],

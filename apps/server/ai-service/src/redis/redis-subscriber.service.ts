@@ -1,7 +1,7 @@
 import { Inject, Injectable, Logger, OnApplicationBootstrap } from '@nestjs/common';
 import Redis from 'ioredis';
 import { ConfigService } from '@nestjs/config';
-import { REDIS_SUBSCRIBER } from './redis.module';
+import { REDIS_SUBSCRIBER } from './redis.constants';
 import { AiService } from '../ai/ai.service';
 import { KbProcessorService } from '../kb/kb-processor.service';
 import { VectorStoreService } from '../kb/vector-store.service';

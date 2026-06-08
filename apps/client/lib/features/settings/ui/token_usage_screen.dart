@@ -90,6 +90,10 @@ class _Body extends StatelessWidget {
     final totalRequests = days.fold<int>(0, (s, d) => s + d.requestCount);
     final estimatedCost = totalInput * 0.000003 + totalOutput * 0.000015;
 
+    const monthlyQuotaLimit = 500000;
+    final totalUsed = totalInput + totalOutput;
+    final quotaFraction = (totalUsed / monthlyQuotaLimit).clamp(0.0, 1.0);
+
     return SingleChildScrollView(
       padding: const EdgeInsets.all(20),
       child: Column(
@@ -102,7 +106,14 @@ class _Body extends StatelessWidget {
             estimatedCost: estimatedCost,
             isDark: isDark,
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: 16),
+          _QuotaProgressCard(
+            used: totalUsed,
+            limit: monthlyQuotaLimit,
+            fraction: quotaFraction,
+            isDark: isDark,
+          ),
+          const SizedBox(height: 8),
           Text(
             context.l10n.tokenUsageDailyChart,
             style: TextStyle(
@@ -113,6 +124,94 @@ class _Body extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           _BarChart(days: days),
+        ],
+      ),
+    );
+  }
+}
+
+class _QuotaProgressCard extends StatelessWidget {
+  final int used;
+  final int limit;
+  final double fraction;
+  final bool isDark;
+
+  const _QuotaProgressCard({
+    required this.used,
+    required this.limit,
+    required this.fraction,
+    required this.isDark,
+  });
+
+  String _fmt(int n) {
+    if (n >= 1000000) return '${(n / 1000000).toStringAsFixed(1)}M';
+    if (n >= 1000) return '${(n / 1000).toStringAsFixed(1)}K';
+    return n.toString();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final barColor = fraction >= 0.9
+        ? Colors.redAccent
+        : fraction >= 0.7
+            ? const Color(0xFFFFB74D)
+            : AppTheme.ponCyan;
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF1A1A2E) : Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: barColor.withValues(alpha: 0.3),
+          width: 1,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.data_usage, size: 16, color: barColor),
+              const SizedBox(width: 6),
+              Text(
+                context.l10n.tokenUsageQuota,
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: isDark ? Colors.white70 : Colors.black54,
+                ),
+              ),
+              const Spacer(),
+              Text(
+                '${_fmt(used)} / ${_fmt(limit)}',
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.bold,
+                  color: barColor,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(4),
+            child: LinearProgressIndicator(
+              value: fraction,
+              minHeight: 8,
+              backgroundColor:
+                  isDark ? Colors.white12 : Colors.black12,
+              valueColor: AlwaysStoppedAnimation<Color>(barColor),
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            '${(fraction * 100).toStringAsFixed(1)}% used this month',
+            style: TextStyle(
+              fontSize: 11,
+              color: isDark ? Colors.white38 : Colors.black38,
+            ),
+          ),
         ],
       ),
     );

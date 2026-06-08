@@ -995,4 +995,43 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get aiTraceStats => 'Estadísticas';
+
+  @override
+  String get aiPersonaTitle => 'Persona de IA';
+
+  @override
+  String get aiPersonaNameHint => 'Nombre del bot (ej. DevBot)';
+
+  @override
+  String get aiPersonaInstructionsHint =>
+      'Instrucciones personalizadas (ej. Responde siempre con viñetas)';
+
+  @override
+  String get aiPersonaAdminOnly =>
+      'Solo los administradores del grupo pueden configurar la persona de IA.';
+
+  @override
+  String get configureAiPersona => 'Configurar persona de IA';
+
+  @override
+  String get aiPersonaToneFriendly => 'Amigable';
+
+  @override
+  String get aiPersonaToneProfessional => 'Profesional';
+
+  @override
+  String get aiPersonaToneConcise => 'Conciso';
+
+  @override
+  String get aiPersonaToneCreative => 'Creativo';
+
+  @override
+  String get aiQuotaExceeded =>
+      'Se ha superado la cuota mensual de uso de IA. Contacta a tu administrador.';
+
+  @override
+  String get viewUsage => 'Ver uso';
+
+  @override
+  String get tokenUsageQuota => 'Cuota mensual';
 }

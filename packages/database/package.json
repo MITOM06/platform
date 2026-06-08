@@ -10,7 +10,10 @@
   "dependencies": {
     "@nestjs/common": "^10.0.0",
     "@nestjs/mongoose": "^10.0.0",
-    "mongoose": "^7.0.0",
-    "ioredis": "^5.0.0"
+    "ioredis": "^5.0.0",
+    "mongoose": "^7.0.0"
+  },
+  "devDependencies": {
+    "typescript": "^5"
   }
 }

@@ -8,13 +8,16 @@ export const REDIS_CLIENT = 'REDIS_CLIENT';
 @Module({
   providers: [
     {
-      provide: REDIS_CLIENT, 
+      provide: REDIS_CLIENT,
       useFactory: () => {
-        return new Redis({
-          host: process.env.REDIS_HOST || 'localhost',
-          port: Number(process.env.REDIS_PORT) || 6379,
-          password: process.env.REDIS_PASSWORD,
-        });
+        return process.env.REDIS_URL
+          ? new Redis(process.env.REDIS_URL, { lazyConnect: false, maxRetriesPerRequest: 3 })
+          : new Redis({
+              host: process.env.REDIS_HOST || 'localhost',
+              port: Number(process.env.REDIS_PORT) || 6379,
+              password: process.env.REDIS_PASSWORD,
+              maxRetriesPerRequest: 3,
+            });
       },
     },
   ],

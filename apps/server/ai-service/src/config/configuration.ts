@@ -4,6 +4,7 @@ export default registerAs('config', () => ({
   port: parseInt(process.env.PORT ?? '3002', 10),
   mongodbUri: process.env.MONGODB_URI,
   redis: {
+    url: process.env.REDIS_URL,
     host: process.env.REDIS_HOST ?? 'localhost',
     port: parseInt(process.env.REDIS_PORT ?? '6379', 10),
   },
@@ -36,5 +37,8 @@ export default registerAs('config', () => ({
   ai: {
     enableThinking: process.env.AI_ENABLE_THINKING === 'true',
     thinkingBudgetTokens: parseInt(process.env.AI_THINKING_BUDGET ?? '8000', 10),
+  },
+  quota: {
+    monthlyTokenLimit: parseInt(process.env.AI_MONTHLY_TOKEN_LIMIT ?? '500000', 10),
   },
 }));

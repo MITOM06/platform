@@ -328,5 +328,17 @@
   "aiTraceTitle": "AI 追踪",
   "aiTraceThinking": "思考过程",
   "aiTraceTools": "工具调用",
-  "aiTraceStats": "统计"
+  "aiTraceStats": "统计",
+  "aiPersonaTitle": "AI 角色",
+  "aiPersonaNameHint": "机器人名称（例如：DevBot）",
+  "aiPersonaInstructionsHint": "自定义指令（例如：始终以列表形式回答）",
+  "aiPersonaAdminOnly": "只有群组管理员才能配置 AI 角色。",
+  "configureAiPersona": "配置 AI 角色",
+  "aiPersonaToneFriendly": "友好",
+  "aiPersonaToneProfessional": "专业",
+  "aiPersonaToneConcise": "简洁",
+  "aiPersonaToneCreative": "创意",
+  "aiQuotaExceeded": "已超出每月 AI 使用配额。请联系您的管理员。",
+  "viewUsage": "查看用量",
+  "tokenUsageQuota": "月度配额"
 }

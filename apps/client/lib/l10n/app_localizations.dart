@@ -1955,6 +1955,78 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Stats'**
   String get aiTraceStats;
+
+  /// No description provided for @aiPersonaTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'AI Persona'**
+  String get aiPersonaTitle;
+
+  /// No description provided for @aiPersonaNameHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Bot name (e.g. DevBot)'**
+  String get aiPersonaNameHint;
+
+  /// No description provided for @aiPersonaInstructionsHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Custom instructions (e.g. Always respond with bullet points)'**
+  String get aiPersonaInstructionsHint;
+
+  /// No description provided for @aiPersonaAdminOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'Only group admins can configure the AI persona.'**
+  String get aiPersonaAdminOnly;
+
+  /// No description provided for @configureAiPersona.
+  ///
+  /// In en, this message translates to:
+  /// **'Configure AI Persona'**
+  String get configureAiPersona;
+
+  /// No description provided for @aiPersonaToneFriendly.
+  ///
+  /// In en, this message translates to:
+  /// **'Friendly'**
+  String get aiPersonaToneFriendly;
+
+  /// No description provided for @aiPersonaToneProfessional.
+  ///
+  /// In en, this message translates to:
+  /// **'Professional'**
+  String get aiPersonaToneProfessional;
+
+  /// No description provided for @aiPersonaToneConcise.
+  ///
+  /// In en, this message translates to:
+  /// **'Concise'**
+  String get aiPersonaToneConcise;
+
+  /// No description provided for @aiPersonaToneCreative.
+  ///
+  /// In en, this message translates to:
+  /// **'Creative'**
+  String get aiPersonaToneCreative;
+
+  /// No description provided for @aiQuotaExceeded.
+  ///
+  /// In en, this message translates to:
+  /// **'Monthly AI usage quota exceeded. Please contact your admin.'**
+  String get aiQuotaExceeded;
+
+  /// No description provided for @viewUsage.
+  ///
+  /// In en, this message translates to:
+  /// **'View usage'**
+  String get viewUsage;
+
+  /// No description provided for @tokenUsageQuota.
+  ///
+  /// In en, this message translates to:
+  /// **'Monthly quota'**
+  String get tokenUsageQuota;
 }
 
 class _AppLocalizationsDelegate

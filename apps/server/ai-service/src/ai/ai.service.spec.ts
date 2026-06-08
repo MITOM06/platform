@@ -7,6 +7,7 @@ import { EmbeddingService } from '../kb/embedding.service';
 import { VectorStoreService } from '../kb/vector-store.service';
 import { ToolRegistryService } from '../tools/tool-registry.service';
 import { UsageService } from '../usage/usage.service';
+import { PersonaService } from '../persona/persona.service';
 
 function makeAsyncIterator(chunks: unknown[]) {
   return {
@@ -85,6 +86,9 @@ describe('AiService', () => {
   let toolRegistryExecute: jest.Mock;
   let toolRegistryGetDefinitions: jest.Mock;
   let recordUsage: jest.Mock;
+  let isQuotaExceeded: jest.Mock;
+  let getPersona: jest.Mock;
+  let buildSystemPromptFn: jest.Mock;
 
   const basePayload: AiRequestPayload = {
     conversationId: 'conv-test',
@@ -108,6 +112,9 @@ describe('AiService', () => {
     toolRegistryExecute = jest.fn().mockResolvedValue('tool result');
     toolRegistryGetDefinitions = jest.fn().mockReturnValue([]);
     recordUsage = jest.fn().mockResolvedValue(undefined);
+    isQuotaExceeded = jest.fn().mockResolvedValue(false);
+    getPersona = jest.fn().mockResolvedValue(null);
+    buildSystemPromptFn = jest.fn().mockReturnValue('You are PON AI...');
 
     const fakeConfig = {
       get: jest.fn().mockImplementation((key: string) => {
@@ -119,6 +126,7 @@ describe('AiService', () => {
           'config.kb.topK': 4,
           'config.ai.enableThinking': false,
           'config.ai.thinkingBudgetTokens': 8000,
+          'config.quota.monthlyTokenLimit': 500000,
         };
         return map[key];
       }),
@@ -135,11 +143,15 @@ describe('AiService', () => {
       getDefinitions: toolRegistryGetDefinitions,
       execute: toolRegistryExecute,
     } as unknown as ToolRegistryService;
-    const fakeUsage = { recordUsage } as unknown as UsageService;
+    const fakeUsage = { recordUsage, isQuotaExceeded } as unknown as UsageService;
+    const fakePersona = {
+      getPersona,
+      buildSystemPrompt: buildSystemPromptFn,
+    } as unknown as PersonaService;
 
     service = new AiService(
       fakeConfig, fakePublisher, fakeMemory, fakeKbProcessor, fakeEmbedding,
-      fakeVectorStore, fakeToolRegistry, fakeUsage,
+      fakeVectorStore, fakeToolRegistry, fakeUsage, fakePersona,
     );
     (service as any)['anthropic'] = { messages: { stream: mockStream, create: mockCreate } };
   });
@@ -492,5 +504,32 @@ describe('AiService', () => {
     await new Promise((r) => setTimeout(r, 10));
 
     expect(recordUsage).toHaveBeenCalledWith('user-1', 15, 30);
+  });
+
+  // ─── Quota enforcement (AI-6.2) ───────────────────────────────────────────
+
+  it('publishes AI_STREAM_ERROR and skips Anthropic call when quota exceeded', async () => {
+    isQuotaExceeded.mockResolvedValue(true);
+
+    await service.handleRequest(basePayload);
+
+    expect(publish).toHaveBeenCalledWith('conv-test', {
+      type: 'AI_STREAM_ERROR',
+      error: 'Monthly AI usage quota exceeded. Please contact your admin.',
+    });
+    expect(mockCreate).not.toHaveBeenCalled();
+    expect(mockStream).not.toHaveBeenCalled();
+  });
+
+  // ─── Persona system prompt (AI-6.1) ───────────────────────────────────────
+
+  it('uses personaService.buildSystemPrompt for the system prompt', async () => {
+    buildSystemPromptFn.mockReturnValue('Custom persona prompt');
+    mockCreate.mockResolvedValue(makeEndTurnResponse());
+    mockStream.mockReturnValue(makeChunks(['OK']));
+
+    await service.handleRequest(basePayload);
+
+    expect(buildSystemPromptFn).toHaveBeenCalled();
   });
 });

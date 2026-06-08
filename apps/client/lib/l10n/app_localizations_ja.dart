@@ -974,4 +974,40 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get aiTraceStats => '統計';
+
+  @override
+  String get aiPersonaTitle => 'AIペルソナ';
+
+  @override
+  String get aiPersonaNameHint => 'ボット名（例：DevBot）';
+
+  @override
+  String get aiPersonaInstructionsHint => 'カスタム指示（例：常に箇条書きで回答する）';
+
+  @override
+  String get aiPersonaAdminOnly => 'グループ管理者のみがAIペルソナを設定できます。';
+
+  @override
+  String get configureAiPersona => 'AIペルソナを設定';
+
+  @override
+  String get aiPersonaToneFriendly => 'フレンドリー';
+
+  @override
+  String get aiPersonaToneProfessional => 'プロフェッショナル';
+
+  @override
+  String get aiPersonaToneConcise => '簡潔';
+
+  @override
+  String get aiPersonaToneCreative => 'クリエイティブ';
+
+  @override
+  String get aiQuotaExceeded => '月間AI使用量の上限を超えました。管理者にお問い合わせください。';
+
+  @override
+  String get viewUsage => '使用量を確認';
+
+  @override
+  String get tokenUsageQuota => '月間クォータ';
 }

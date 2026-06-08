@@ -19,5 +19,17 @@
   },
   "dependencies": {
     "@aws-sdk/client-bedrock-runtime": "^3.1057.0"
-  }
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "@nestjs/core",
+      "argon2",
+      "bcrypt",
+      "ngrok",
+      "unrs-resolver",
+      "@swc/core",
+      "esbuild"
+    ]
+  },
+  "packageManager": "pnpm@9.15.0"
 }

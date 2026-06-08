@@ -449,9 +449,10 @@ public class MessageService {
 
     public List<Map<String, String>> getAiHistory(String userId, String conversationId) {
         try {
-            PageResponse<MessageResponse> paged = getMessages(userId, conversationId, null, 20);
+            PageResponse<MessageResponse> paged = getMessages(userId, conversationId, null, 50);
             List<Map<String, String>> history = new ArrayList<>();
             for (MessageResponse msg : paged.content()) {
+                if (history.size() >= 20) break;
                 if (msg.recalled() || msg.content() == null || msg.content().isBlank()) continue;
                 if (AI_HISTORY_SKIP_TYPES.contains(msg.type())) continue;
                 String role = AiConstants.AI_BOT_USER_ID.equals(msg.senderId()) ? "assistant" : "user";
