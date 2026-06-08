@@ -20,5 +20,6 @@ RUN pnpm --filter @platform/auth-service deploy --prod /deploy
 FROM node:22-alpine
 WORKDIR /app
 COPY --from=builder /deploy ./
+COPY --from=builder /app/apps/server/auth-service/dist ./dist
 EXPOSE 3001
 CMD ["node", "dist/main.js"]
