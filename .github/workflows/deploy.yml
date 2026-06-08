@@ -126,10 +126,10 @@ jobs:
             FACEBOOK_APP_SECRET=${{ secrets.FACEBOOK_APP_SECRET }}
             X_CLIENT_ID=${{ secrets.X_CLIENT_ID }}
             X_CLIENT_SECRET=${{ secrets.X_CLIENT_SECRET }}
-            GOOGLE_CALLBACK_URL=https://auth-service-placeholder.run.app/auth/google/callback
-            FACEBOOK_CALLBACK_URL=https://auth-service-placeholder.run.app/auth/facebook/callback
-            X_CALLBACK_URL=https://auth-service-placeholder.run.app/auth/x/callback
-            BASE_URL=https://auth-service-placeholder.run.app
+            GOOGLE_CALLBACK_URL=https://auth-service-ec4ppoccna-as.a.run.app/auth/google/callback
+            FACEBOOK_CALLBACK_URL=https://auth-service-ec4ppoccna-as.a.run.app/auth/facebook/callback
+            X_CALLBACK_URL=https://auth-service-ec4ppoccna-as.a.run.app/auth/x/callback
+            BASE_URL=https://auth-service-ec4ppoccna-as.a.run.app
 
       # Deploy chat-service (min 1 instance — WebSocket needs persistent connection)
       - name: Deploy chat-service
