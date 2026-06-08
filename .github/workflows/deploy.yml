@@ -33,13 +33,13 @@ jobs:
         run: |
           cd apps/server/auth-service
           pnpm install --frozen-lockfile
-          pnpm test --passWithNoTests
+          pnpm exec jest --passWithNoTests
 
       - name: Test ai-service
         run: |
           cd apps/server/ai-service
           pnpm install --frozen-lockfile
-          pnpm test --passWithNoTests
+          pnpm exec jest --passWithNoTests
 
       - uses: actions/setup-java@v4
         with:
