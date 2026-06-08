@@ -112,12 +112,23 @@ jobs:
           env_vars: |
             NODE_ENV=production
             JWT_ACCESS_SECRET=${{ secrets.JWT_ACCESS_SECRET }}
+            JWT_REFRESH_SECRET=${{ secrets.JWT_REFRESH_SECRET }}
             MONGODB_URI=${{ secrets.MONGODB_URI }}
             REDIS_URL=${{ secrets.REDIS_URL }}
             MAIL_HOST=${{ secrets.MAIL_HOST }}
             MAIL_PORT=${{ secrets.MAIL_PORT }}
             MAIL_USER=${{ secrets.MAIL_USER }}
             MAIL_PASS=${{ secrets.MAIL_PASS }}
+            GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }}
+            GOOGLE_CLIENT_SECRET=${{ secrets.GOOGLE_CLIENT_SECRET }}
+            FACEBOOK_APP_ID=${{ secrets.FACEBOOK_APP_ID }}
+            FACEBOOK_APP_SECRET=${{ secrets.FACEBOOK_APP_SECRET }}
+            X_CLIENT_ID=${{ secrets.X_CLIENT_ID }}
+            X_CLIENT_SECRET=${{ secrets.X_CLIENT_SECRET }}
+            GOOGLE_CALLBACK_URL=https://auth-service-placeholder.run.app/auth/google/callback
+            FACEBOOK_CALLBACK_URL=https://auth-service-placeholder.run.app/auth/facebook/callback
+            X_CALLBACK_URL=https://auth-service-placeholder.run.app/auth/x/callback
+            BASE_URL=https://auth-service-placeholder.run.app
 
       # Deploy chat-service (min 1 instance — WebSocket needs persistent connection)
       - name: Deploy chat-service

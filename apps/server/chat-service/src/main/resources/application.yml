@@ -16,6 +16,12 @@ spring:
       max-file-size: 100MB
       max-request-size: 105MB
 
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+
 app:
   jwt:
     secret: ${JWT_ACCESS_SECRET}

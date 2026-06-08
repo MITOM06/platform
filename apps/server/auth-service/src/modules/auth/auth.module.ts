@@ -31,11 +31,14 @@ import { PassportModule } from '@nestjs/passport';
     DatabaseRedisModule,
   ],
   controllers: [AuthController],
-  providers: [AuthService, SessionService, GoogleStrategy,
-    FacebookStrategy,
+  providers: [
+    AuthService,
+    SessionService,
     JwtStrategy,
-    TwitterStrategy,
-    JwtStrategy],
+    ...(process.env.GOOGLE_CLIENT_ID ? [GoogleStrategy] : []),
+    ...(process.env.FACEBOOK_APP_ID ? [FacebookStrategy] : []),
+    ...(process.env.X_CLIENT_ID ? [TwitterStrategy] : []),
+  ],
   exports: [AuthService],
 })
 export class AuthModule { }

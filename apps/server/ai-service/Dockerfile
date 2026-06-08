@@ -1,26 +1,24 @@
-# Stage 1: Build (requires workspace root as build context)
-FROM node:20-alpine AS builder
+FROM node:22-alpine AS builder
 WORKDIR /app
+RUN corepack enable && corepack prepare pnpm@latest --activate
 
-RUN corepack enable
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+COPY .npmrc* ./
+COPY packages/database/package.json ./packages/database/
+COPY apps/server/ai-service/package.json ./apps/server/ai-service/
 
-COPY pnpm-workspace.yaml package.json pnpm-lock.yaml ./
-COPY .npmrc ./.npmrc
+RUN pnpm install --frozen-lockfile
+
 COPY packages ./packages
 COPY apps/server/ai-service ./apps/server/ai-service
 
-RUN pnpm config set store-dir /root/.local/share/pnpm/store
-RUN pnpm install --filter @platform/ai-service...
-RUN pnpm --filter @platform/ai-service... run build
+RUN pnpm --filter @platform/database build 2>/dev/null || true
+RUN pnpm --filter @platform/ai-service build
 
-# Stage 2: Runtime
-FROM node:20-alpine
+RUN pnpm --filter @platform/ai-service deploy --prod /deploy
+
+FROM node:22-alpine
 WORKDIR /app
-
-COPY --from=builder /app/apps/server/ai-service/dist ./dist
-COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/packages ./packages
-
+COPY --from=builder /deploy ./
 EXPOSE 3002
 CMD ["node", "dist/main.js"]
-
