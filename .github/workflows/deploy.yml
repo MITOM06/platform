@@ -50,7 +50,9 @@ jobs:
       - name: Test chat-service
         run: |
           cd apps/server/chat-service
-          ./mvnw test -q
+          mvn test -q
+        env:
+          JWT_ACCESS_SECRET: ci_test_secret_must_be_at_least_32_chars_long
 
   build-and-deploy:
     name: Build & Deploy
