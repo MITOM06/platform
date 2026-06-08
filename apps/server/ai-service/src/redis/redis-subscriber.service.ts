@@ -27,14 +27,19 @@ export class RedisSubscriberService implements OnApplicationBootstrap {
   }
 
   async onApplicationBootstrap(): Promise<void> {
-    await this.client.subscribe(
-      this.requestChannel,
-      KB_PROCESS_CHANNEL,
-      KB_DELETE_CHANNEL,
-    );
-    this.logger.log(
-      `Subscribed to Redis channels: ${this.requestChannel}, ${KB_PROCESS_CHANNEL}, ${KB_DELETE_CHANNEL}`,
-    );
+    try {
+      await this.client.subscribe(
+        this.requestChannel,
+        KB_PROCESS_CHANNEL,
+        KB_DELETE_CHANNEL,
+      );
+      this.logger.log(
+        `Subscribed to Redis channels: ${this.requestChannel}, ${KB_PROCESS_CHANNEL}, ${KB_DELETE_CHANNEL}`,
+      );
+    } catch (err) {
+      // Log but don't crash — service starts without pub/sub if Redis is unavailable
+      this.logger.error(`Failed to subscribe to Redis channels: ${(err as Error).message}`);
+    }
 
     this.client.on('message', async (_channel: string, message: string) => {
       if (_channel === this.requestChannel) {
