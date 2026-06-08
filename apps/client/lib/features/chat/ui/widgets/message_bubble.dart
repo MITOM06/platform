@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import '../../../../core/l10n/l10n_ext.dart';
 import '../../../../core/theme/app_theme.dart';
@@ -35,6 +36,12 @@ class MessageBubble extends ConsumerWidget {
     if (message.isSystem) {
       return SystemMessage(message: message);
     }
+
+    final chatState = ref
+        .watch(chatNotifierProvider(message.conversationId))
+        .valueOrNull;
+    final aiPersonaName = chatState?.aiPersonaName ?? 'PON AI';
+    final aiPersonaAvatarUrl = chatState?.aiPersonaAvatarUrl;
 
     final locale = Localizations.localeOf(context).languageCode;
     final timeStr = DateFormat.Hm(locale).format(message.createdAt.toLocal());
@@ -74,10 +81,10 @@ class MessageBubble extends ConsumerWidget {
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      _AiBotAvatar(),
+                      _AiBotAvatar(avatarUrl: aiPersonaAvatarUrl),
                       const SizedBox(width: 6),
                       Text(
-                        'PON AI',
+                        aiPersonaName,
                         style: TextStyle(
                           fontSize: 11,
                           color: const Color(0xFFB47FFF).withValues(alpha: 0.9),
@@ -133,8 +140,10 @@ class MessageBubble extends ConsumerWidget {
                               : null,
                           color: message.isAiError
                               ? const Color(0xFF3D1515)
-                              : message.isAiMessage && !message.recalled
-                                  ? const Color(0xFF2D1B69)
+                              : message.isAiQuotaExceeded
+                                  ? const Color(0xFF3D2800)
+                                  : message.isAiMessage && !message.recalled
+                                      ? const Color(0xFF2D1B69)
                                   : isSentByMe && !message.recalled
                                       ? null
                                       : AppTheme.darkSurface.withValues(alpha: 0.7),
@@ -200,6 +209,8 @@ class MessageBubble extends ConsumerWidget {
                           isThinking: message.isThinking,
                           activeTools: message.activeTools,
                         )
+                      else if (message.isAiQuotaExceeded)
+                        _QuotaExceededBubble()
                       else if (message.isAiError)
                         Row(
                           mainAxisSize: MainAxisSize.min,
@@ -300,6 +311,10 @@ class MessageBubble extends ConsumerWidget {
 }
 
 class _AiBotAvatar extends StatelessWidget {
+  final String? avatarUrl;
+
+  const _AiBotAvatar({this.avatarUrl});
+
   @override
   Widget build(BuildContext context) {
     return Stack(
@@ -310,16 +325,31 @@ class _AiBotAvatar extends StatelessWidget {
           height: 28,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            gradient: const LinearGradient(
-              colors: [Color(0xFF6B2FA0), Color(0xFF2D1B69)],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
+            gradient: avatarUrl == null
+                ? const LinearGradient(
+                    colors: [Color(0xFF6B2FA0), Color(0xFF2D1B69)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  )
+                : null,
             border: Border.all(
                 color: const Color(0xFFB47FFF).withValues(alpha: 0.6), width: 1),
           ),
-          child: const Icon(Icons.smart_toy_outlined,
-              color: Colors.white, size: 16),
+          child: avatarUrl != null
+              ? ClipOval(
+                  child: Image.network(
+                    avatarUrl!,
+                    width: 28,
+                    height: 28,
+                    fit: BoxFit.cover,
+                    errorBuilder: (_, __, ___) => const Icon(
+                        Icons.smart_toy_outlined,
+                        color: Colors.white,
+                        size: 16),
+                  ),
+                )
+              : const Icon(Icons.smart_toy_outlined,
+                  color: Colors.white, size: 16),
         ),
         Positioned(
           right: -2,
@@ -337,6 +367,44 @@ class _AiBotAvatar extends StatelessWidget {
               child: Text('AI',
                   style: TextStyle(fontSize: 4, color: Colors.white, height: 1)),
             ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _QuotaExceededBubble extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Icon(Icons.data_usage, color: Color(0xFFFFB74D), size: 16),
+        const SizedBox(width: 6),
+        Flexible(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                context.l10n.aiQuotaExceeded,
+                style: const TextStyle(color: Color(0xFFFFB74D), fontSize: 14),
+              ),
+              const SizedBox(height: 4),
+              GestureDetector(
+                onTap: () => context.push('/token-usage'),
+                child: Text(
+                  context.l10n.viewUsage,
+                  style: const TextStyle(
+                    color: Color(0xFFFFD54F),
+                    fontSize: 12,
+                    decoration: TextDecoration.underline,
+                  ),
+                ),
+              ),
+            ],
           ),
         ),
       ],

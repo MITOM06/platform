@@ -328,5 +328,17 @@
   "aiTraceTitle": "Rastreo de IA",
   "aiTraceThinking": "Pensamiento",
   "aiTraceTools": "Llamadas de herramientas",
-  "aiTraceStats": "Estadísticas"
+  "aiTraceStats": "Estadísticas",
+  "aiPersonaTitle": "Persona de IA",
+  "aiPersonaNameHint": "Nombre del bot (ej. DevBot)",
+  "aiPersonaInstructionsHint": "Instrucciones personalizadas (ej. Responde siempre con viñetas)",
+  "aiPersonaAdminOnly": "Solo los administradores del grupo pueden configurar la persona de IA.",
+  "configureAiPersona": "Configurar persona de IA",
+  "aiPersonaToneFriendly": "Amigable",
+  "aiPersonaToneProfessional": "Profesional",
+  "aiPersonaToneConcise": "Conciso",
+  "aiPersonaToneCreative": "Creativo",
+  "aiQuotaExceeded": "Se ha superado la cuota mensual de uso de IA. Contacta a tu administrador.",
+  "viewUsage": "Ver uso",
+  "tokenUsageQuota": "Cuota mensual"
 }

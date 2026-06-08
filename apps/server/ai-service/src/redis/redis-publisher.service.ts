@@ -1,7 +1,7 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import Redis from 'ioredis';
 import { ConfigService } from '@nestjs/config';
-import { REDIS_PUBLISHER } from './redis.module';
+import { REDIS_PUBLISHER } from './redis.constants';
 
 @Injectable()
 export class RedisPublisherService {

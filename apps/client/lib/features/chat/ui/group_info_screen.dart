@@ -130,6 +130,16 @@ class GroupInfoScreen extends ConsumerWidget {
                 trailing: const Icon(Icons.chevron_right, color: Colors.white38),
                 onTap: () => context.push('/shared-media/$conversationId'),
               ),
+              if (isAdmin) ...[
+                const Divider(color: Colors.white12),
+                ListTile(
+                  leading: const Icon(Icons.smart_toy_outlined, color: AppTheme.ponCyan),
+                  title: Text(context.l10n.configureAiPersona,
+                      style: const TextStyle(color: Colors.white)),
+                  trailing: const Icon(Icons.chevron_right, color: Colors.white38),
+                  onTap: () => context.push('/ai-persona/$conversationId'),
+                ),
+              ],
               const Divider(color: Colors.white12),
               ListTile(
                 leading: const Icon(Icons.logout_rounded, color: Colors.redAccent),

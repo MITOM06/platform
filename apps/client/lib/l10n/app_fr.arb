@@ -328,5 +328,17 @@
   "aiTraceTitle": "Trace de l'IA",
   "aiTraceThinking": "Réflexion",
   "aiTraceTools": "Appels d'outils",
-  "aiTraceStats": "Statistiques"
+  "aiTraceStats": "Statistiques",
+  "aiPersonaTitle": "Persona IA",
+  "aiPersonaNameHint": "Nom du bot (ex. DevBot)",
+  "aiPersonaInstructionsHint": "Instructions personnalisées (ex. Réponds toujours avec des puces)",
+  "aiPersonaAdminOnly": "Seuls les administrateurs du groupe peuvent configurer la persona IA.",
+  "configureAiPersona": "Configurer la persona IA",
+  "aiPersonaToneFriendly": "Amical",
+  "aiPersonaToneProfessional": "Professionnel",
+  "aiPersonaToneConcise": "Concis",
+  "aiPersonaToneCreative": "Créatif",
+  "aiQuotaExceeded": "Le quota mensuel d'utilisation de l'IA est dépassé. Contactez votre administrateur.",
+  "viewUsage": "Voir l'utilisation",
+  "tokenUsageQuota": "Quota mensuel"
 }

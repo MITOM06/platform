@@ -328,5 +328,17 @@
   "aiTraceTitle": "AI 추적",
   "aiTraceThinking": "사고 과정",
   "aiTraceTools": "도구 호출",
-  "aiTraceStats": "통계"
+  "aiTraceStats": "통계",
+  "aiPersonaTitle": "AI 페르소나",
+  "aiPersonaNameHint": "봇 이름 (예: DevBot)",
+  "aiPersonaInstructionsHint": "맞춤 지시사항 (예: 항상 목록 형식으로 답변)",
+  "aiPersonaAdminOnly": "그룹 관리자만 AI 페르소나를 설정할 수 있습니다.",
+  "configureAiPersona": "AI 페르소나 설정",
+  "aiPersonaToneFriendly": "친근함",
+  "aiPersonaToneProfessional": "전문적",
+  "aiPersonaToneConcise": "간결함",
+  "aiPersonaToneCreative": "창의적",
+  "aiQuotaExceeded": "월간 AI 사용 할당량을 초과했습니다. 관리자에게 문의하세요.",
+  "viewUsage": "사용량 보기",
+  "tokenUsageQuota": "월간 할당량"
 }

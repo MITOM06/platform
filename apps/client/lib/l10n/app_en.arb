@@ -463,5 +463,17 @@
   "aiTraceTitle": "Agent trace",
   "aiTraceThinking": "Thinking",
   "aiTraceTools": "Tool calls",
-  "aiTraceStats": "Stats"
+  "aiTraceStats": "Stats",
+  "aiPersonaTitle": "AI Persona",
+  "aiPersonaNameHint": "Bot name (e.g. DevBot)",
+  "aiPersonaInstructionsHint": "Custom instructions (e.g. Always respond with bullet points)",
+  "aiPersonaAdminOnly": "Only group admins can configure the AI persona.",
+  "configureAiPersona": "Configure AI Persona",
+  "aiPersonaToneFriendly": "Friendly",
+  "aiPersonaToneProfessional": "Professional",
+  "aiPersonaToneConcise": "Concise",
+  "aiPersonaToneCreative": "Creative",
+  "aiQuotaExceeded": "Monthly AI usage quota exceeded. Please contact your admin.",
+  "viewUsage": "View usage",
+  "tokenUsageQuota": "Monthly quota"
 }

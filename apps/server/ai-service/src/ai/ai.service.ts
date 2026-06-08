@@ -8,6 +8,7 @@ import { EmbeddingService } from '../kb/embedding.service';
 import { VectorStoreService } from '../kb/vector-store.service';
 import { ToolRegistryService } from '../tools/tool-registry.service';
 import { UsageService } from '../usage/usage.service';
+import { PersonaService } from '../persona/persona.service';
 import { ToolContext } from '../tools/tool.interface';
 
 export interface AiRequestPayload {
@@ -60,6 +61,7 @@ export class AiService {
     private readonly vectorStore: VectorStoreService,
     private readonly toolRegistry: ToolRegistryService,
     private readonly usageService: UsageService,
+    private readonly personaService: PersonaService,
   ) {
     this.anthropic = new Anthropic({
       apiKey: this.configService.get<string>('config.anthropic.apiKey'),
@@ -76,16 +78,25 @@ export class AiService {
 
   async handleRequest(payload: AiRequestPayload): Promise<void> {
     const { conversationId, userId, displayName, content, history } = payload;
+
+    if (await this.usageService.isQuotaExceeded(userId)) {
+      this.logger.warn(`Quota exceeded for user ${userId} in conversation ${conversationId}`);
+      await this.publisher.publish(conversationId, {
+        type: 'AI_STREAM_ERROR',
+        error: 'Monthly AI usage quota exceeded. Please contact your admin.',
+      });
+      return;
+    }
+
     const startMs = Date.now();
     this.logger.log(`AI request for conversation ${conversationId} from ${displayName}`);
 
-    const memory = await this.memoryService.getMemory(conversationId);
+    const [memory, persona] = await Promise.all([
+      this.memoryService.getMemory(conversationId),
+      this.personaService.getPersona(conversationId),
+    ]);
 
-    let systemPrompt =
-      `You are PON AI, an intelligent assistant embedded in the PON chat platform. ` +
-      `You are helping ${displayName} in a conversation. ` +
-      `Be helpful, concise, and friendly. Respond in the same language the user writes in. ` +
-      `If you don't know something, say so clearly.`;
+    let systemPrompt = this.personaService.buildSystemPrompt(persona, displayName);
 
     if (memory && memory.summary) {
       systemPrompt += `\n\n## Memory from previous conversations:\n${memory.summary}`;
@@ -135,6 +146,14 @@ export class AiService {
         `Primary model (${this.primaryModel}) failed for conversation ${conversationId}`,
         primaryError,
       );
+      if (primaryError instanceof Error && primaryError.message === 'STREAM_ALREADY_STARTED') {
+        this.logger.warn(`Primary model failed mid-stream. Aborting fallback for ${conversationId} to prevent UI glitch.`);
+        await this.publisher.publish(conversationId, {
+          type: 'AI_STREAM_ERROR',
+          error: 'AI stream was interrupted. Please try again.',
+        });
+        return;
+      }
       try {
         trace = await this._agenticLoop(
           this.fallbackModel, systemPrompt, content, history,
@@ -301,6 +320,7 @@ export class AiService {
 
     // Stream the final answer
     let fullText = '';
+    let streamStarted = false;
     const stream = this.anthropic.messages.stream({
       model,
       max_tokens: useThinking ? thinkingBudget + 2048 : 2048,
@@ -312,32 +332,40 @@ export class AiService {
     let isInThinkingBlock = false;
     let currentThinkingText = '';
 
-    for await (const event of stream) {
-      const e = event as any;
-      if (e.type === 'content_block_start') {
-        if (e.content_block?.type === 'thinking') {
-          isInThinkingBlock = true;
-          currentThinkingText = '';
-        } else {
+    try {
+      for await (const event of stream) {
+        const e = event as any;
+        if (e.type === 'content_block_start') {
+          if (e.content_block?.type === 'thinking') {
+            isInThinkingBlock = true;
+            currentThinkingText = '';
+          } else {
+            isInThinkingBlock = false;
+          }
+        } else if (e.type === 'content_block_stop') {
+          if (isInThinkingBlock && currentThinkingText) {
+            thinkingBlocks.push(currentThinkingText);
+          }
           isInThinkingBlock = false;
-        }
-      } else if (e.type === 'content_block_stop') {
-        if (isInThinkingBlock && currentThinkingText) {
-          thinkingBlocks.push(currentThinkingText);
-        }
-        isInThinkingBlock = false;
-        currentThinkingText = '';
-      } else if (e.type === 'content_block_delta') {
-        if (isInThinkingBlock && e.delta?.type === 'thinking_delta') {
-          currentThinkingText += (e.delta.thinking ?? '') as string;
-        } else if (!isInThinkingBlock && e.delta?.type === 'text_delta') {
-          fullText += e.delta.text;
-          await this.publisher.publish(conversationId, {
-            type: 'AI_STREAM_CHUNK',
-            chunk: e.delta.text,
-          });
+          currentThinkingText = '';
+        } else if (e.type === 'content_block_delta') {
+          if (isInThinkingBlock && e.delta?.type === 'thinking_delta') {
+            currentThinkingText += (e.delta.thinking ?? '') as string;
+          } else if (!isInThinkingBlock && e.delta?.type === 'text_delta') {
+            streamStarted = true;
+            fullText += e.delta.text;
+            await this.publisher.publish(conversationId, {
+              type: 'AI_STREAM_CHUNK',
+              chunk: e.delta.text,
+            });
+          }
         }
       }
+    } catch (err) {
+      if (streamStarted) {
+        throw new Error('STREAM_ALREADY_STARTED');
+      }
+      throw err;
     }
 
     try {

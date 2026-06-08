@@ -986,4 +986,43 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get aiTraceStats => 'Thống kê';
+
+  @override
+  String get aiPersonaTitle => 'Nhân vật AI';
+
+  @override
+  String get aiPersonaNameHint => 'Tên bot (ví dụ: DevBot)';
+
+  @override
+  String get aiPersonaInstructionsHint =>
+      'Hướng dẫn tùy chỉnh (ví dụ: Luôn trả lời bằng gạch đầu dòng)';
+
+  @override
+  String get aiPersonaAdminOnly =>
+      'Chỉ quản trị viên nhóm mới có thể cấu hình nhân vật AI.';
+
+  @override
+  String get configureAiPersona => 'Cấu hình nhân vật AI';
+
+  @override
+  String get aiPersonaToneFriendly => 'Thân thiện';
+
+  @override
+  String get aiPersonaToneProfessional => 'Chuyên nghiệp';
+
+  @override
+  String get aiPersonaToneConcise => 'Ngắn gọn';
+
+  @override
+  String get aiPersonaToneCreative => 'Sáng tạo';
+
+  @override
+  String get aiQuotaExceeded =>
+      'Đã vượt hạn mức sử dụng AI hàng tháng. Vui lòng liên hệ quản trị viên.';
+
+  @override
+  String get viewUsage => 'Xem lượng dùng';
+
+  @override
+  String get tokenUsageQuota => 'Hạn mức tháng';
 }

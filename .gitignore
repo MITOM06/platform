@@ -90,3 +90,4 @@ apps/client/.flutter-plugins-dependencies
 .idea/
 *.iml
 .vscode/settings.json
+scripts/set-github-secrets.sh

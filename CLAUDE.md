@@ -38,12 +38,12 @@ Start infra: `docker compose -f infra/docker-compose/compose.yml up -d`
 - Java: **Maven**
 - Flutter: **flutter pub**
 
-## Stack — Phase 2 AI (Sprint AI-1 starting)
+## Stack — Phase 2 AI ✅ COMPLETE (2026-06-07, Sprint AI-6 DONE)
 
 - **Spring Boot 3 chat-service**: WebSocket (STOMP) + REST API + MongoDB + Redis + JWT validation ✅
 - **Flutter client**: Neon UI + Auth flow + Chat UI + Riverpod + STOMP wire ✅
 - **NestJS auth-service**: JWT, OTP, refresh token, user search API ✅
-- **NestJS ai-service**: Anthropic Claude API + Redis pub/sub + Streaming STOMP 🚧
+- **NestJS ai-service**: Anthropic Claude API + Redis pub/sub + Streaming STOMP + Memory + RAG + Tools + Persona ✅
 
 ## Redis Pub/Sub Channels (AI layer)
 

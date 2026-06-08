@@ -1,26 +1,25 @@
-FROM node:20-alpine
+# Stage 1: Build (requires workspace root as build context)
+FROM node:22-alpine AS builder
 WORKDIR /app
 
 RUN corepack enable
 
-# Copy workspace root files
 COPY pnpm-workspace.yaml package.json pnpm-lock.yaml ./
-COPY tsconfig.base.json ./
 COPY .npmrc ./.npmrc
-
-# Copy workspace source
-COPY apps ./apps
 COPY packages ./packages
-COPY infra ./infra
+COPY apps/server/auth-service ./apps/server/auth-service
 
 RUN pnpm config set store-dir /root/.local/share/pnpm/store
-# Install dependencies
-RUN pnpm install --frozen-lockfile
+RUN pnpm install --filter @platform/auth-service...
+RUN pnpm --filter @platform/auth-service... run build
 
-# Build auth-service → sinh dist/main.js
-RUN pnpm -C apps/server/auth-service run build
+# Stage 2: Runtime
+FROM node:22-alpine
+WORKDIR /app
 
-WORKDIR /app/apps/server/auth-service
+COPY --from=builder /app/apps/server/auth-service/dist ./dist
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/packages ./packages
+
 EXPOSE 3001
-
 CMD ["node", "dist/main.js"]

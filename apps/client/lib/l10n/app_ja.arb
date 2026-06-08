@@ -328,5 +328,17 @@
   "aiTraceTitle": "AIトレース",
   "aiTraceThinking": "思考",
   "aiTraceTools": "ツール呼び出し",
-  "aiTraceStats": "統計"
+  "aiTraceStats": "統計",
+  "aiPersonaTitle": "AIペルソナ",
+  "aiPersonaNameHint": "ボット名（例：DevBot）",
+  "aiPersonaInstructionsHint": "カスタム指示（例：常に箇条書きで回答する）",
+  "aiPersonaAdminOnly": "グループ管理者のみがAIペルソナを設定できます。",
+  "configureAiPersona": "AIペルソナを設定",
+  "aiPersonaToneFriendly": "フレンドリー",
+  "aiPersonaToneProfessional": "プロフェッショナル",
+  "aiPersonaToneConcise": "簡潔",
+  "aiPersonaToneCreative": "クリエイティブ",
+  "aiQuotaExceeded": "月間AI使用量の上限を超えました。管理者にお問い合わせください。",
+  "viewUsage": "使用量を確認",
+  "tokenUsageQuota": "月間クォータ"
 }

@@ -1,7 +1,7 @@
 # Roadmap — Platform Project
 
-> **Status:** Phase 1 (Chat Core) ✅ DONE — Phase 2 (AI Layer) 🚧 IN PROGRESS
-> **Current Sprint:** Sprint AI-5 — Agent Trace & Transparency (See `TODO.md`)
+> **Status:** Phase 1 (Chat Core) ✅ DONE — Phase 2 (AI Layer) ✅ DONE
+> **Phase 2 completed:** 2026-06-07 — Planning Phase 3 (Production Ready)
 
 ---
 
@@ -61,7 +61,7 @@
 
 ---
 
-## Phase 2 — AI Layer 🚧
+## Phase 2 — AI Layer ✅ DONE
 
 > **Goal:** Embed an AI agent inside the chat app — AI appears as a real member, has memory, has tools, transparent reasoning.
 
@@ -90,13 +90,50 @@
 - Tools: `search_messages`, `summarize_conversation`, `create_reminder`, `get_user_info`, `search_knowledge_base`
 - Flutter: tool call indicators inline in chat bubble
 
-### Sprint AI-5 — Agent Trace & Transparency 🚧 IN PROGRESS
+### Sprint AI-5 — Agent Trace & Transparency ✅ DONE
 **Deliverable:** User can see what AI is thinking — expandable trace panel below each AI message.
 - Reasoning steps, tool calls, token usage, confidence score, processing time
 - Token usage dashboard per workspace
 
-### Sprint AI-6 — Multi-workspace & Persona 📋 PENDING
+### Sprint AI-6 — Multi-workspace & Persona ✅ DONE
 **Deliverable:** Each workspace has its own AI — custom name, avatar, tone, and knowledge base.
-- Full workspace isolation
-- Admin configures AI persona
-- Usage quota per workspace
+- [x] AI-6.1: PersonaModule (NestJS) — `ai_personas` schema, PersonaService with buildSystemPrompt
+- [x] AI-6.2: Quota enforcement — isQuotaExceeded() first check in handleRequest(), AI_STREAM_ERROR on breach
+- [x] AI-6.3: Persona-aware system prompt — parallel fetch with memory, tone + prefix injection
+- [x] AI-6.4: chat-service REST API — GET/PUT/DELETE `/api/conversations/{id}/ai-persona`, admin-only
+- [x] AI-6.5: Flutter AiPersonaScreen + provider — form with name/avatar/tone/instructions, admin-only
+- [x] AI-6.6: Flutter ChatState persona fields — aiPersonaName, aiPersonaAvatarUrl, quota sentinel bubble
+- [x] AI-6.7: i18n — 12 new keys across all 7 ARB files (en/vi/zh/ja/ko/es/fr)
+
+---
+
+## Phase 3 — Production Ready 📋 PENDING
+
+> **Goal:** Make the app deployable, observable, and resilient for real users.
+
+### Sprint P3-1 — CI/CD & Cloud Deployment 📋 PENDING
+- GitHub Actions pipeline: lint → test → build → push Docker image → deploy
+- Cloud deployment: Google Cloud Run or Railway (3 services: auth, chat, ai)
+- Environment management: staging vs production .env separation
+- Domain + SSL (nginx reverse proxy or cloud load balancer)
+
+### Sprint P3-2 — Push Notifications (Real FCM) 📋 PENDING
+- Firebase Cloud Messaging: replace current no-op stub with real FCM token registration
+- Background message handler in Flutter (flutter_firebase_messaging)
+- Notification tap → deep-link to correct conversation
+- Notification preferences per conversation (mute respected)
+
+### Sprint P3-3 — Performance & Observability 📋 PENDING
+- MongoDB indexes audit (compound indexes for hot query paths)
+- Redis caching for conversation list + user profiles
+- Structured logging (Winston in NestJS, Logback JSON in Spring Boot)
+- Health endpoints + uptime monitoring (UptimeRobot or Cloud Monitoring)
+- Error tracking (Sentry SDK in Flutter + NestJS)
+
+### Sprint P3-4 — Security Hardening 📋 PENDING
+- OWASP top-10 audit: SQL/NoSQL injection, XSS, CSRF
+- JWT rotation (short-lived access + refresh flow already exists — verify it's tight)
+- File upload validation: magic byte check, size cap, virus scan stub
+- API rate limiting audit (cover all endpoints, not just message send)
+- Penetration test checklist: run OWASP ZAP against staging
+

@@ -46,6 +46,10 @@ class ChatScreenAppBar extends ConsumerWidget implements PreferredSizeWidget {
     final String? otherUserId =
         (!isGroup && others.isNotEmpty) ? others.first : null;
     final isAiConversation = otherUserId == kAiBotUserId;
+    final chatState = isAiConversation
+        ? ref.watch(chatNotifierProvider(conversationId)).valueOrNull
+        : null;
+    final aiPersonaName = chatState?.aiPersonaName ?? 'PON AI';
 
     final profileAsync = (otherUserId != null)
         ? ref.watch(userProfileProvider(otherUserId))
@@ -138,7 +142,7 @@ class ChatScreenAppBar extends ConsumerWidget implements PreferredSizeWidget {
                     )
                   else if (isAiConversation)
                     Text(
-                      context.l10n.aiAssistant,
+                      aiPersonaName,
                       style: TextStyle(
                         fontSize: 11,
                         color: const Color(0xFFB47FFF).withValues(alpha: 0.9),
