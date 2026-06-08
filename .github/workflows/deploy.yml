@@ -73,10 +73,11 @@ jobs:
       - name: Configure Docker for Artifact Registry
         run: gcloud auth configure-docker asia-southeast1-docker.pkg.dev --quiet
 
-      # Build & push auth-service
+      # Build & push auth-service (context = repo root, Dockerfile inside service dir)
       - name: Build auth-service
         run: |
-          docker build -t $REGISTRY/auth-service:${{ github.sha }} apps/server/auth-service/
+          docker build -t $REGISTRY/auth-service:${{ github.sha }} \
+            -f apps/server/auth-service/Dockerfile .
           docker push $REGISTRY/auth-service:${{ github.sha }}
 
       # Build & push chat-service
