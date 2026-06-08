@@ -1,7 +1,7 @@
 // File: apps/server/auth-service/src/modules/Email/mail.module.ts
 
 import { MailerModule } from '@nestjs-modules/mailer';
-import { EjsAdapter } from '@nestjs-modules/mailer/dist/adapters/ejs.adapter';
+import { EjsAdapter } from '@nestjs-modules/mailer';
 import { Global, Module } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { MailService } from './mail.service';
