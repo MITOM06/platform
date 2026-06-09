@@ -6,7 +6,7 @@ spring:
     mongodb:
       uri: ${SPRING_DATA_MONGODB_URI:mongodb://localhost:27018/platform}
     redis:
-      url: ${REDIS_URL:}
+      url: ${REDIS_URL:redis://localhost:6379}
       host: localhost
       port: 6379
   jackson:
@@ -23,6 +23,9 @@ management:
         include: health
 
 app:
+  cors:
+    # Comma-separated allowed origins for REST + WebSocket. Default "*" for local dev.
+    allowed-origins: ${ALLOWED_ORIGINS:*}
   jwt:
     secret: ${JWT_ACCESS_SECRET}
   firebase:
