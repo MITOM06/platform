@@ -36,6 +36,11 @@ export interface Message {
   createdAt: string
   editedAt?: string
   replyToId?: string
+  replyPreview?: {
+    messageId: string
+    senderId: string
+    content: string
+  }
   recalled?: boolean
   reactions?: Reaction[]
   deletedFor?: string[]

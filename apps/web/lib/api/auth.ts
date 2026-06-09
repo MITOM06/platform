@@ -39,6 +39,22 @@ export const authService = {
   getMe: () =>
     authApi.get<AuthUser & { avatarUrl?: string }>('/api/users/me').then((r) => r.data),
 
+  getOnlineFriends: () =>
+    authApi.get<UserSearchResult[]>('/api/users/friends/online').then((r) => r.data),
+
+  getRelationship: (userId: string) =>
+    authApi.get<{
+      friendStatus: 'none' | 'outgoing' | 'incoming' | 'accepted'
+      iBlocked: boolean
+      blockedMe: boolean
+    }>(`/api/users/${userId}/relationship`).then((r) => r.data),
+
+  blockUser: (targetId: string) =>
+    authApi.post(`/api/users/block/${targetId}`).then((r) => r.data),
+
+  unblockUser: (targetId: string) =>
+    authApi.post(`/api/users/unblock/${targetId}`).then((r) => r.data),
+
   getUser: (id: string) =>
     authApi.get<AuthUser & { avatarUrl?: string }>(`/api/users/${id}`).then((r) => r.data),
 

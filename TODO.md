@@ -121,6 +121,26 @@
 - [x] **Task W-7.5: Shared Media & File Gallery**
   - SharedMediaGallery dialog with tabs (media/file/link) → `GET /api/conversations/{id}/attachments`. Accessible via image icon in chat header.
 
+### SPRINT W-8 — FLUTTER PARITY UI REDESIGN `DONE`
+- [x] **Task W-8.1: Sidebar Layout & Brand Navigation**
+  - Redesign sidebar header to include Pon Logo icon + Linear Gradient text `'PON'`.
+  - Add icons in header matching Flutter AppBar: Explore Channels, New DM, Create Group, Contacts, and Profile Settings Avatar.
+- [x] **Task W-8.2: Active Online Friends Row**
+  - Implement `ActiveFriendsRow` component at the top of the sidebar. Call `GET /api/users/friends/online` to render horizontal online friend avatars with green status dots, and compute last-seen times (e.g., "active now", "10m ago").
+- [x] **Task W-8.3: Chat Viewport Backgrounds & Wallpapers**
+  - Apply the signature Flutter radial background glows (low-opacity `ponCyan` and `ponPeach` blurred spheres) inside the chat panel.
+  - Implement chat wallpaper presets (Sunset, Midnight Glow, Sweet Pink, Neon Teal, Dark Shadow) and custom image background overlays inside the chat window.
+- [x] **Task W-8.4: Date Grouping & Separators**
+  - Group messages in the chat history by day and render rounded capsule separators ("Hôm nay", "Hôm qua", or formatted date) with subtle borders.
+- [x] **Task W-8.5: Stranger & Block Banners**
+  - Render a `StrangerRequestBanner` with "Accept" / "Reject" controls for pending conversations.
+  - Render a `BlockedComposerNotice` notice block if the relationship between the users indicates a block.
+- [x] **Task W-8.6: Pinned Messages Top Bar**
+  - Implement `PinnedMessageBar` below the conversation header. Enable click-to-scroll to jump to the pinned message bubble.
+- [x] **Task W-8.7: Message Bubble Redesign & Replies**
+  - Style message bubbles with custom rounded corners (`rounded-[24px]` on non-adjacent edges).
+  - Implement message replies: display reference previews inside message bubbles, and show a `ReplyComposerBar` above the message input when a reply is active.
+
 ---
 
 ## 🧪 QA LOG

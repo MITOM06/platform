@@ -45,7 +45,7 @@ export function MessageBubble({
   if (message.recalled) {
     return (
       <div className={cn('flex', isOwn ? 'justify-end' : 'justify-start')}>
-        <div className="max-w-[70%] rounded-2xl px-3 py-2 text-sm italic text-muted-foreground border border-dashed">
+        <div className="max-w-[70%] rounded-[24px] px-4 py-2 text-sm italic text-muted-foreground border border-dashed bg-muted/20">
           Tin nhắn đã bị thu hồi
         </div>
       </div>
@@ -54,8 +54,8 @@ export function MessageBubble({
 
   if (message.type === 'system') {
     return (
-      <div className="flex justify-center">
-        <span className="text-xs text-muted-foreground bg-muted rounded-full px-3 py-1">
+      <div className="flex justify-center my-1">
+        <span className="text-[11px] text-muted-foreground bg-muted/65 rounded-full px-3 py-1 border border-border/20">
           {message.content}
         </span>
       </div>
@@ -77,25 +77,52 @@ export function MessageBubble({
       <div className="flex flex-col gap-1 max-w-[70%]">
         <div
           className={cn(
-            'rounded-2xl px-3 py-2 text-sm break-words',
+            'rounded-[24px] px-4 py-2.5 text-sm break-words relative overflow-hidden shadow-xs border',
             isOwn
-              ? 'bg-primary text-primary-foreground rounded-br-sm'
-              : 'bg-muted text-foreground rounded-bl-sm',
-            isPinned && 'ring-1 ring-primary/40',
+              ? 'bg-primary text-primary-foreground border-primary/30 rounded-tr-none'
+              : 'bg-muted/70 text-foreground border-border/50 rounded-tl-none',
+            isPinned && 'ring-2 ring-primary/40',
           )}
         >
-          {!isOwn && message.senderName && (
-            <p className="text-xs font-medium mb-1 opacity-70">{message.senderName}</p>
+          {/* Reply preview */}
+          {message.replyPreview && (
+            <div
+              className={cn(
+                'mb-2 pl-2 border-l-2 text-xs opacity-80 cursor-pointer select-none transition-colors hover:opacity-100 rounded-xs py-0.5',
+                isOwn
+                  ? 'border-primary-foreground/40 bg-primary-foreground/10 hover:bg-primary-foreground/15'
+                  : 'border-primary/50 bg-primary/5 hover:bg-primary/10'
+              )}
+              onClick={() => {
+                const el = document.getElementById(`message-${message.replyPreview?.messageId}`)
+                if (el) {
+                  el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+                  el.classList.add('bg-primary/20', 'transition-all', 'duration-500', 'ring-2', 'ring-primary/40')
+                  setTimeout(() => {
+                    el.classList.remove('bg-primary/20', 'ring-2', 'ring-primary/40')
+                  }, 2000)
+                }
+              }}
+            >
+              <p className="font-semibold mb-0.5">
+                {message.replyPreview.senderId === message.senderId ? 'Bạn' : 'Người khác'}
+              </p>
+              <p className="truncate italic">{message.replyPreview.content}</p>
+            </div>
           )}
-          <p className="whitespace-pre-wrap">{message.content}</p>
+
+          {!isOwn && message.senderName && (
+            <p className="text-xs font-semibold mb-1 text-primary/80">{message.senderName}</p>
+          )}
+          <p className="whitespace-pre-wrap leading-relaxed">{message.content}</p>
           <p
             className={cn(
-              'text-xs mt-1 text-right',
-              isOwn ? 'text-primary-foreground/60' : 'text-muted-foreground',
+              'text-[10px] mt-1.5 text-right font-medium tracking-wide',
+              isOwn ? 'text-primary-foreground/70' : 'text-muted-foreground/80',
             )}
           >
             {formatTime(message.createdAt)}
-            {message.editedAt && <span className="ml-1 italic">đã sửa</span>}
+            {message.editedAt && <span className="ml-1 italic opacity-85">đã sửa</span>}
           </p>
         </div>
 

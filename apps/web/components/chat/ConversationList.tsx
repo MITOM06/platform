@@ -9,6 +9,8 @@ import { ConversationItem } from './ConversationItem'
 import { NewConversationModal } from './NewConversationModal'
 import { PublicChannelsModal } from './PublicChannelsModal'
 import { useConversations } from '@/lib/hooks/use-conversations'
+import { useUiStore } from '@/lib/store/ui.store'
+import { ActiveFriendsRow } from './ActiveFriendsRow'
 
 function ConversationSkeleton() {
   return (
@@ -24,9 +26,16 @@ function ConversationSkeleton() {
 
 export function ConversationList() {
   const [search, setSearch] = useState('')
-  const [showModal, setShowModal] = useState(false)
-  const [showChannels, setShowChannels] = useState(false)
   const { data: conversations, isLoading, isError } = useConversations()
+  const {
+    showNewChatModal,
+    showPublicChannelsModal,
+    defaultChatTab,
+    closeNewChat,
+    closePublicChannels,
+    openNewChat,
+    openPublicChannels,
+  } = useUiStore()
 
   const filtered = conversations?.filter((conv) => {
     if (!search) return true
@@ -36,8 +45,15 @@ export function ConversationList() {
 
   return (
     <>
-      <NewConversationModal open={showModal} onClose={() => setShowModal(false)} />
-      <PublicChannelsModal open={showChannels} onClose={() => setShowChannels(false)} />
+      <NewConversationModal
+        open={showNewChatModal}
+        onClose={closeNewChat}
+        defaultTab={defaultChatTab}
+      />
+      <PublicChannelsModal
+        open={showPublicChannelsModal}
+        onClose={closePublicChannels}
+      />
 
       <div className="flex flex-col h-full">
         <div className="px-3 py-2 shrink-0 flex items-center gap-2">
@@ -53,7 +69,7 @@ export function ConversationList() {
           <Button
             variant="ghost"
             size="icon"
-            onClick={() => setShowChannels(true)}
+            onClick={openPublicChannels}
             title="Kênh công khai"
             className="shrink-0 h-9 w-9"
           >
@@ -62,13 +78,15 @@ export function ConversationList() {
           <Button
             variant="ghost"
             size="icon"
-            onClick={() => setShowModal(true)}
+            onClick={() => openNewChat('direct')}
             title="Cuộc trò chuyện mới"
             className="shrink-0 h-9 w-9"
           >
             <Plus className="size-4" />
           </Button>
         </div>
+
+        <ActiveFriendsRow />
 
         <div className="flex-1 overflow-y-auto px-2 pb-2">
           {isLoading && (
@@ -92,7 +110,7 @@ export function ConversationList() {
                 {search ? 'Không tìm thấy kết quả' : 'Chưa có cuộc trò chuyện'}
               </p>
               {!search && (
-                <Button variant="outline" size="sm" onClick={() => setShowModal(true)}>
+                <Button variant="outline" size="sm" onClick={() => openNewChat('direct')}>
                   Bắt đầu trò chuyện
                 </Button>
               )}

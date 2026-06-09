@@ -62,6 +62,9 @@ export const chatService = {
   markConversationRead: (conversationId: string) =>
     chatApi.post(`/api/conversations/${conversationId}/read`),
 
+  acceptConversation: (id: string) =>
+    chatApi.post<Conversation>(`/api/conversations/${id}/accept`).then((r) => r.data),
+
   updateSettings: (id: string, autoDeleteSeconds: number | null) =>
     chatApi
       .put<Conversation>(`/api/conversations/${id}/settings`, { autoDeleteSeconds })

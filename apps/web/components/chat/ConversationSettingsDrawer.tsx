@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import { useQueryClient } from '@tanstack/react-query'
 import {
-  BellOff, Bell, Archive, ArchiveX, Trash2, Eraser, Timer,
+  BellOff, Bell, Archive, ArchiveX, Trash2, Eraser, Timer, ImageIcon,
 } from 'lucide-react'
 import {
   Sheet, SheetContent, SheetHeader, SheetTitle,
@@ -30,6 +30,15 @@ const AUTO_DELETE_OPTIONS = [
   { label: '1 tháng', value: 2592000 },
 ]
 
+const WALLPAPER_PRESETS = [
+  { id: 'default', label: 'Mặc định', bg: 'bg-background border border-muted' },
+  { id: 'sunset', label: 'Sunset', bg: 'bg-gradient-to-br from-orange-400 to-purple-600' },
+  { id: 'midnight', label: 'Midnight', bg: 'bg-gradient-to-br from-indigo-900 to-slate-900' },
+  { id: 'sweet_pink', label: 'Sweet Pink', bg: 'bg-gradient-to-br from-pink-300 to-red-400' },
+  { id: 'neon_teal', label: 'Neon Teal', bg: 'bg-gradient-to-br from-teal-900 to-cyan-800' },
+  { id: 'dark_shadow', label: 'Dark Shadow', bg: 'bg-gradient-to-br from-zinc-800 to-zinc-950' },
+]
+
 export function ConversationSettingsDrawer({
   conversation,
   currentUserId,
@@ -41,6 +50,18 @@ export function ConversationSettingsDrawer({
   const [saving, setSaving] = useState(false)
   const isMuted = conversation.mutedUsers.includes(currentUserId)
   const isArchived = conversation.archivedBy.includes(currentUserId)
+  const [selectedWallpaper, setSelectedWallpaper] = useState<string>(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem(`wallpaper-${conversation.id}`) || 'default'
+    }
+    return 'default'
+  })
+
+  const handleSelectWallpaper = (presetId: string) => {
+    setSelectedWallpaper(presetId)
+    localStorage.setItem(`wallpaper-${conversation.id}`, presetId)
+    window.dispatchEvent(new Event('wallpaper-changed'))
+  }
 
   const invalidate = () => {
     queryClient.invalidateQueries({ queryKey: ['conversations'] })
@@ -156,6 +177,32 @@ export function ConversationSettingsDrawer({
                 <span key={i} className={i === sliderValue ? 'text-primary font-medium' : ''}>
                   {o.label}
                 </span>
+              ))}
+            </div>
+          </div>
+
+          <Separator />
+
+          {/* Wallpaper Selection */}
+          <div className="space-y-3">
+            <div className="flex items-center gap-2 text-sm font-medium">
+              <ImageIcon className="size-4" />
+              Hình nền phòng trò chuyện
+            </div>
+            <div className="grid grid-cols-3 gap-2">
+              {WALLPAPER_PRESETS.map((preset) => (
+                <button
+                  key={preset.id}
+                  onClick={() => handleSelectWallpaper(preset.id)}
+                  className={`flex flex-col items-center gap-1.5 p-1.5 rounded-lg border-2 hover:opacity-95 transition-all text-[10px] font-medium ${
+                    selectedWallpaper === preset.id
+                      ? 'border-primary shadow-sm bg-primary/5'
+                      : 'border-transparent hover:border-muted-foreground/30'
+                  }`}
+                >
+                  <div className={`w-full aspect-square rounded-md ${preset.bg}`} />
+                  <span className="truncate max-w-full text-foreground/80">{preset.label}</span>
+                </button>
               ))}
             </div>
           </div>
