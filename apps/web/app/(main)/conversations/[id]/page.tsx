@@ -349,10 +349,16 @@ export default function ConversationPage({ params }: Props) {
       <div
         ref={scrollContainerRef}
         className={cn(
-          'flex-1 overflow-y-auto px-4 py-4 relative transition-all duration-300',
-          WALLPAPER_CLASSES[wallpaper] || WALLPAPER_CLASSES.default,
+          'flex-1 overflow-y-auto px-4 py-4 relative transition-all duration-300 bg-cover bg-center',
+          !wallpaper?.startsWith('http') && (WALLPAPER_CLASSES[wallpaper] || WALLPAPER_CLASSES.default),
         )}
+        style={wallpaper?.startsWith('http') ? { backgroundImage: `url(${wallpaper})` } : undefined}
       >
+        {/* Custom Wallpaper Darken Overlay */}
+        {wallpaper?.startsWith('http') && (
+          <div className="absolute inset-0 bg-background/80 dark:bg-background/90 z-0 pointer-events-none" />
+        )}
+
         {/* Glow Spheres */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none z-0 opacity-40 dark:opacity-20">
           <div className="absolute -top-40 -left-40 size-96 rounded-full bg-pon-cyan blur-[128px] animate-pulse duration-[6000ms]" />

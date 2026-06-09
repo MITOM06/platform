@@ -202,7 +202,7 @@ Mirror: `apps/client/lib/features/chat/ui/widgets/{image_content,file_content,vo
     infinite-scroll/STOMP realtime.
 
 ### SPRINT W-10 — Missing Web Screens (parity) `PENDING`
-- [ ] **Task W-10.1: Friends / Contacts** `L` — list, requests, search/add, accept/decline/remove/block (`friends_screen.dart`).
+- [x] **Task W-10.1: Friends / Contacts** `L` — list, requests, search/add, accept/decline/remove/block (`friends_screen.dart`). **DONE — `app/(main)/friends/page.tsx` and `useFriends` hook.**
 - [x] **Task W-10.2: Settings screen** `M` — theme, language, account, logout, sub-screen links (`settings_screen.dart`). **DONE — `app/(main)/settings/page.tsx`.**
 - [x] **Task W-10.3: Change password dialog** `S` (`change_password_dialog.dart`). **DONE — `components/chat/ChangePasswordDialog.tsx`.**
 - [x] **Task W-10.4: Token usage screen** `M` — AI quota progress + history (`token_usage_screen.dart`). **DONE — `app/(main)/token-usage/page.tsx`.**
@@ -224,6 +224,9 @@ Mirror: `apps/client/lib/features/chat/ui/widgets/{image_content,file_content,vo
 - [ ] **Task W-11.2: Visual parity pass** — PON neon theme, bubbles, avatars, glow spheres `M`.
 - [ ] **Task W-11.3: Responsive/mobile audit** `M`.
 - [ ] **Task W-11.4: Typing indicator + pinned-bar render parity** `S`.
+- [x] **Task W-11.5: Active Friends Row** `S` — horizontal list above conversations. **DONE — `ActiveFriendsRow.tsx`.**
+- [x] **Task W-11.6: Chat Wallpaper full parity** `S` — support custom HTTP image URLs in `ConversationPage`. **DONE — handled absolute URLs with background cover.**
+- [ ] **Task W-11.7: Quick Reaction & Stickers** `M` — add quick reaction to `MessageInput` and sticker tab to `EmojiStickerPanel`.
 
 ### SPRINT F-1 — Flutter Runtime Debug `PENDING`
 > `flutter analyze` is clean → errors are runtime. Needs a repro (which button throws).

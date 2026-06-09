@@ -10,6 +10,7 @@ import { useAuthStore } from '@/lib/store/auth.store'
 import { Button } from '@/components/ui/button'
 import { stompService } from '@/lib/stomp/client'
 import { ConversationList } from '@/components/chat/ConversationList'
+import { ActiveFriendsRow } from '@/components/chat/ActiveFriendsRow'
 import { cn } from '@/lib/utils'
 import { useUiStore } from '@/lib/store/ui.store'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
@@ -158,11 +159,13 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
             <Button
               variant="ghost"
               size="icon"
-              onClick={() => toast.info('Danh sách liên hệ đang được phát triển')}
+              asChild
               title="Danh bạ"
               className="h-8 w-8 rounded-full text-muted-foreground hover:text-foreground hover:bg-muted"
             >
-              <Contact className="size-4" />
+              <Link href="/friends">
+                <Contact className="size-4" />
+              </Link>
             </Button>
 
             {/* Profile Settings Dropdown */}
@@ -223,7 +226,8 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
             )}
           </div>
         </div>
-        <div className="flex-1 overflow-hidden">
+        <div className="flex-1 flex flex-col overflow-hidden">
+          <ActiveFriendsRow />
           <ConversationList />
         </div>
       </aside>
