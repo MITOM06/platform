@@ -11,35 +11,16 @@ export const chatApi = axios.create({
   headers: { 'Content-Type': 'application/json' },
 })
 
-// ─── helpers ──────────────────────────────────────────────────────────────────
+// ─── request interceptors — inject access token ──────────────────────────────
 
-const getCookie = (name: string): string | null => {
-  if (typeof document === 'undefined') return null
-  const value = `; ${document.cookie}`
-  const parts = value.split(`; ${name}=`)
-  if (parts.length === 2) return parts.pop()?.split(';').shift() ?? null
-  return null
-}
-
-const setCookie = (name: string, value: string, maxAge = 900) => {
-  if (typeof document === 'undefined') return
-  document.cookie = `${name}=${value}; path=/; max-age=${maxAge}; SameSite=Lax`
-}
-
-const deleteCookie = (name: string) => {
-  if (typeof document === 'undefined') return
-  document.cookie = `${name}=; path=/; max-age=0`
-}
-
-// ─── request interceptor — inject access token ────────────────────────────────
-
-chatApi.interceptors.request.use((config: InternalAxiosRequestConfig) => {
+const injectToken = (config: InternalAxiosRequestConfig) => {
   const token = useAuthStore.getState().accessToken
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`
-  }
+  if (token) config.headers.Authorization = `Bearer ${token}`
   return config
-})
+}
+
+authApi.interceptors.request.use(injectToken)
+chatApi.interceptors.request.use(injectToken)
 
 // ─── response interceptor — handle 401 / token refresh ────────────────────────
 
@@ -54,12 +35,16 @@ const processQueue = (error: unknown, token: string | null) => {
   failedQueue = []
 }
 
-chatApi.interceptors.response.use(
-  (res) => res,
-  async (error: AxiosError) => {
+const create401ResponseInterceptor = (apiInstance: typeof chatApi) => {
+  return async (error: AxiosError) => {
     const original = error.config as InternalAxiosRequestConfig & { _retry?: boolean }
 
-    if (error.response?.status !== 401 || original._retry) {
+    if (
+      error.response?.status !== 401 ||
+      original._retry ||
+      original.url?.includes('/auth/refresh') ||
+      original.url?.includes('/api/auth/refresh')
+    ) {
       return Promise.reject(error)
     }
 
@@ -68,7 +53,7 @@ chatApi.interceptors.response.use(
         failedQueue.push({ resolve, reject })
       }).then((token) => {
         original.headers.Authorization = `Bearer ${token}`
-        return chatApi(original)
+        return apiInstance(original)
       })
     }
 
@@ -76,33 +61,28 @@ chatApi.interceptors.response.use(
     isRefreshing = true
 
     try {
-      const sid = getCookie('sid')
-      const refreshToken = getCookie('refreshToken')
-      if (!sid || !refreshToken) throw new Error('no_refresh')
-
-      const { data } = await authApi.post<{ accessToken: string }>('/auth/refresh', {
-        sid,
-        refreshToken,
-      })
-
+      const { data } = await axios.post<{ accessToken: string }>('/api/auth/refresh')
       const { accessToken } = data
+
       const { user } = useAuthStore.getState()
       if (user) useAuthStore.getState().setAuth(user, accessToken)
-      setCookie('accessToken', accessToken)
 
       processQueue(null, accessToken)
       original.headers.Authorization = `Bearer ${accessToken}`
-      return chatApi(original)
+      return apiInstance(original)
     } catch (err) {
       processQueue(err, null)
       useAuthStore.getState().clearAuth()
-      deleteCookie('accessToken')
-      deleteCookie('refreshToken')
-      deleteCookie('sid')
-      if (typeof window !== 'undefined') window.location.href = '/login'
+      if (typeof window !== 'undefined') {
+        await axios.post('/api/auth/clear-cookie').catch(() => {})
+        window.location.href = '/login'
+      }
       return Promise.reject(err)
     } finally {
       isRefreshing = false
     }
-  },
-)
+  }
+}
+
+chatApi.interceptors.response.use((res) => res, create401ResponseInterceptor(chatApi))
+authApi.interceptors.response.use((res) => res, create401ResponseInterceptor(authApi))

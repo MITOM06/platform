@@ -1,13 +1,31 @@
 'use client'
 
 import { useState } from 'react'
-import { Search } from 'lucide-react'
+import { Search, Plus, MessageSquare, Hash } from 'lucide-react'
 import { Input } from '@/components/ui/input'
+import { Button } from '@/components/ui/button'
+import { Skeleton } from '@/components/ui/skeleton'
 import { ConversationItem } from './ConversationItem'
+import { NewConversationModal } from './NewConversationModal'
+import { PublicChannelsModal } from './PublicChannelsModal'
 import { useConversations } from '@/lib/hooks/use-conversations'
+
+function ConversationSkeleton() {
+  return (
+    <div className="flex items-center gap-3 px-2 py-3 rounded-lg">
+      <Skeleton className="size-10 rounded-full shrink-0" />
+      <div className="flex-1 space-y-1.5 min-w-0">
+        <Skeleton className="h-3.5 w-28 rounded" />
+        <Skeleton className="h-3 w-40 rounded" />
+      </div>
+    </div>
+  )
+}
 
 export function ConversationList() {
   const [search, setSearch] = useState('')
+  const [showModal, setShowModal] = useState(false)
+  const [showChannels, setShowChannels] = useState(false)
   const { data: conversations, isLoading, isError } = useConversations()
 
   const filtered = conversations?.filter((conv) => {
@@ -17,42 +35,75 @@ export function ConversationList() {
   })
 
   return (
-    <div className="flex flex-col h-full">
-      <div className="px-3 py-2 shrink-0">
-        <div className="relative">
-          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
-          <Input
-            placeholder="Tìm kiếm..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="pl-8 h-9"
-          />
+    <>
+      <NewConversationModal open={showModal} onClose={() => setShowModal(false)} />
+      <PublicChannelsModal open={showChannels} onClose={() => setShowChannels(false)} />
+
+      <div className="flex flex-col h-full">
+        <div className="px-3 py-2 shrink-0 flex items-center gap-2">
+          <div className="relative flex-1">
+            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
+            <Input
+              placeholder="Tìm kiếm..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="pl-8 h-9"
+            />
+          </div>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setShowChannels(true)}
+            title="Kênh công khai"
+            className="shrink-0 h-9 w-9"
+          >
+            <Hash className="size-4" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setShowModal(true)}
+            title="Cuộc trò chuyện mới"
+            className="shrink-0 h-9 w-9"
+          >
+            <Plus className="size-4" />
+          </Button>
+        </div>
+
+        <div className="flex-1 overflow-y-auto px-2 pb-2">
+          {isLoading && (
+            <div className="space-y-1 px-1">
+              {Array.from({ length: 5 }).map((_, i) => (
+                <ConversationSkeleton key={i} />
+              ))}
+            </div>
+          )}
+
+          {isError && (
+            <div className="flex items-center justify-center py-8 text-sm text-destructive">
+              Không thể tải danh sách
+            </div>
+          )}
+
+          {!isLoading && !isError && filtered?.length === 0 && (
+            <div className="flex flex-col items-center justify-center py-12 gap-3 text-muted-foreground">
+              <MessageSquare className="size-8 opacity-40" />
+              <p className="text-sm">
+                {search ? 'Không tìm thấy kết quả' : 'Chưa có cuộc trò chuyện'}
+              </p>
+              {!search && (
+                <Button variant="outline" size="sm" onClick={() => setShowModal(true)}>
+                  Bắt đầu trò chuyện
+                </Button>
+              )}
+            </div>
+          )}
+
+          {filtered?.map((conv) => (
+            <ConversationItem key={conv.id} conversation={conv} />
+          ))}
         </div>
       </div>
-
-      <div className="flex-1 overflow-y-auto px-2 pb-2">
-        {isLoading && (
-          <div className="flex items-center justify-center py-8 text-sm text-muted-foreground">
-            Đang tải...
-          </div>
-        )}
-
-        {isError && (
-          <div className="flex items-center justify-center py-8 text-sm text-destructive">
-            Không thể tải danh sách
-          </div>
-        )}
-
-        {!isLoading && !isError && filtered?.length === 0 && (
-          <div className="flex items-center justify-center py-8 text-sm text-muted-foreground">
-            {search ? 'Không tìm thấy' : 'Chưa có cuộc trò chuyện'}
-          </div>
-        )}
-
-        {filtered?.map((conv) => (
-          <ConversationItem key={conv.id} conversation={conv} />
-        ))}
-      </div>
-    </div>
+    </>
   )
 }

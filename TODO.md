@@ -51,49 +51,75 @@
 
 ## 🖥️ NEXT.JS WEB CLIENT
 
-### SPRINT W-2 — Auth UI `PENDING`
-- [ ] **Task W-2.1: Login Page**
+### SPRINT W-2 — Auth UI `COMPLETED`
+- [x] **Task W-2.1: Login Page**
   - Implement email/password form with shadcn UI and Zod validation.
-- [ ] **Task W-2.2: Registration Page**
+- [x] **Task W-2.2: Registration Page**
   - Form fields for email, password, and display name.
-- [ ] **Task W-2.3: Verify OTP Page**
+- [x] **Task W-2.3: Verify OTP Page**
   - 6-digit OTP input with resend timer.
-- [ ] **Task W-2.4: Cookie-based Auth Handlers**
+- [x] **Task W-2.4: Cookie-based Auth Handlers**
   - Next.js route handlers `set-cookie` and `clear-cookie` for httpOnly refresh tokens.
-- [ ] **Task W-2.5: Logout & Error UI**
+- [x] **Task W-2.5: Logout & Error UI**
   - Invalidate session, clear cookies, and show error notifications via shadcn `useToast`.
 
-### SPRINT W-3 — Chat Core `PENDING`
-- [ ] **Task W-3.1: Sidebar & Layout**
+### SPRINT W-3 — Chat Core `COMPLETED`
+- [x] **Task W-3.1: Sidebar & Layout**
   - Build responsive split layout (conversation list sidebar + message thread main area).
-- [ ] **Task W-3.2: Fetching Conversations & Messages**
+- [x] **Task W-3.2: Fetching Conversations & Messages**
   - Use TanStack Query to fetch conversations and paginated message history.
-- [ ] **Task W-3.3: STOMP Client Integration**
+- [x] **Task W-3.3: STOMP Client Integration**
   - Subscribe to `/topic/conversation/{id}` for real-time messages and `/topic/conversation/{id}/typing`.
-- [ ] **Task W-3.4: Message Send & Optimistic UI**
+- [x] **Task W-3.4: Message Send & Optimistic UI**
   - Publish to `/app/chat.send` and dynamically append to message cache.
-- [ ] **Task W-3.5: Read Receipts**
+- [x] **Task W-3.5: Read Receipts**
   - Mark messages as read via `PUT /api/messages/{id}/read` when conversation opens.
 
-### SPRINT W-4 — Features `PENDING`
-- [ ] **Task W-4.1: Search & New Conversation**
+### SPRINT W-4 — Features `COMPLETED`
+- [x] **Task W-4.1: Search & New Conversation**
   - Search users via `GET /api/users/search?q=` and initiate chats.
-- [ ] **Task W-4.2: Typing Indicators & Online Status**
+- [x] **Task W-4.2: Typing Indicators & Online Status**
   - Show real-time typing indicators and online dot.
-- [ ] **Task W-4.3: Global Notifications**
+- [x] **Task W-4.3: Global Notifications**
   - Subscribe to `/user/queue/notifications` and trigger browser notifications.
-- [ ] **Task W-4.4: AI Bot Integration**
+- [x] **Task W-4.4: AI Bot Integration**
   - Render AI badge and support streaming AI message bubbles.
-- [ ] **Task W-4.5: Profile Settings & Infinite Scroll**
+- [x] **Task W-4.5: Profile Settings & Infinite Scroll**
   - Infinite scroll for historical messages and profile display name/avatar updates.
 
-### SPRINT W-5 — Polish & Deploy `PENDING`
-- [ ] **Task W-5.1: Responsive Breakpoints**
+### SPRINT W-5 — Polish & Deploy `COMPLETED`
+- [x] **Task W-5.1: Responsive Breakpoints**
   - Support mobile sizes by hiding sidebar and showing back buttons.
-- [ ] **Task W-5.2: Theme Support**
+- [x] **Task W-5.2: Theme Support**
   - Toggle between dark/light theme (next-themes).
-- [ ] **Task W-5.3: Production Build & Vercel**
-  - Build and deploy to Vercel, configuring production environment variables.
+- [x] **Task W-5.3: Production Build & Vercel**
+  - `pnpm build` passes clean. Deploy to Vercel pending (env vars must be set in dashboard).
+
+### SPRINT W-6 — Advanced Message Features (Backend parity) `COMPLETED`
+- [x] **Task W-6.1: Message Actions Menu**
+  - Hover action menu on message bubbles: Edit, Recall, Forward, React (quick emoji + picker), Pin, Delete for me.
+- [x] **Task W-6.2: Edit & Recall Messages**
+  - `PUT /api/messages/{id}` (edit with banner in MessageInput) + `DELETE /api/messages/{id}`. Handles STOMP `MESSAGE_UPDATED` / `MESSAGE_RECALLED`.
+- [x] **Task W-6.3: Emoji Reactions**
+  - Popover emoji picker. `POST/DELETE /api/messages/{id}/reactions`. Handles `REACTION_UPDATED` WS events and renders grouped reaction badges.
+- [x] **Task W-6.4: Pin & Unpin Messages**
+  - `POST/DELETE /api/messages/{id}/pin`. PinnedMessagesBar in ConversationHeader. Handles `PINNED_MESSAGE` WS event.
+- [x] **Task W-6.5: AI RAG Trace Modal**
+  - `GET /api/messages/{id}/trace` via AiTraceModal with collapsible sections for thinking/tools/RAG sources.
+- [x] **Task W-6.6: Message Forwarding & Search**
+  - ForwardMessageModal + `POST /api/messages/{id}/forward`. MessageSearchPanel (`GET /api/messages/search`) accessible via header search button.
+
+### SPRINT W-7 — Group, Channel & Settings Management `COMPLETED`
+- [x] **Task W-7.1: Group Chat Creation & Management**
+  - NewConversationModal extended with group tab (multi-member select, name field). GroupSettingsDrawer for name edit + add/remove members (admin-only).
+- [x] **Task W-7.2: Public Channels**
+  - PublicChannelsModal: `GET /api/conversations/public` with search. Join via `POST /api/conversations/{id}/join`. Accessible via Hash icon in sidebar.
+- [x] **Task W-7.3: Conversation Settings Menu**
+  - ConversationSettingsDrawer: mute/unmute, archive/unarchive, clear history, delete conversation.
+- [x] **Task W-7.4: Disappearing Messages (Auto-Delete)**
+  - Slider in ConversationSettingsDrawer: Off / 1h / 1d / 1w / 1m → `PUT /api/conversations/{id}/settings`.
+- [x] **Task W-7.5: Shared Media & File Gallery**
+  - SharedMediaGallery dialog with tabs (media/file/link) → `GET /api/conversations/{id}/attachments`. Accessible via image icon in chat header.
 
 ---
 

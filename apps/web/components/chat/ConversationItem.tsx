@@ -5,15 +5,15 @@ import { usePathname } from 'next/navigation'
 import { cn } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import { Bot } from 'lucide-react'
+import { useAuthStore } from '@/lib/store/auth.store'
+import { useUser } from '@/lib/hooks/use-user'
 import type { Conversation } from '@/lib/api/types'
+
+const AI_BOT_ID = 'ai-bot-000000000000000000000001'
 
 interface Props {
   conversation: Conversation
-}
-
-function getDisplayName(conv: Conversation): string {
-  if (conv.name) return conv.name
-  return conv.type === 'group' ? 'Nhóm' : 'Cuộc trò chuyện'
 }
 
 function getInitials(name: string): string {
@@ -39,7 +39,20 @@ function formatTime(iso: string | null): string {
 export function ConversationItem({ conversation: conv }: Props) {
   const pathname = usePathname()
   const isActive = pathname === `/conversations/${conv.id}`
-  const displayName = getDisplayName(conv)
+  const currentUser = useAuthStore((s) => s.user)
+
+  const isAI = conv.participants.includes(AI_BOT_ID)
+  const otherUserId =
+    !isAI && conv.type === 'direct'
+      ? conv.participants.find((id) => id !== currentUser?.id)
+      : undefined
+
+  const { data: otherUser } = useUser(otherUserId)
+
+  const displayName =
+    conv.name ??
+    (isAI ? 'AI Assistant' : (otherUser?.displayName ?? 'Cuộc trò chuyện'))
+  const avatarUrl = conv.avatarUrl ?? otherUser?.avatarUrl
 
   return (
     <Link
@@ -50,15 +63,30 @@ export function ConversationItem({ conversation: conv }: Props) {
       )}
     >
       <Avatar className="size-10 shrink-0">
-        {conv.avatarUrl && <AvatarImage src={conv.avatarUrl} alt={displayName} />}
-        <AvatarFallback className="text-sm font-medium">
-          {getInitials(displayName)}
-        </AvatarFallback>
+        {isAI ? (
+          <AvatarFallback className="bg-primary/10 text-primary text-sm font-medium">
+            <Bot className="size-4" />
+          </AvatarFallback>
+        ) : (
+          <>
+            {avatarUrl && <AvatarImage src={avatarUrl} alt={displayName} />}
+            <AvatarFallback className="text-sm font-medium">
+              {getInitials(displayName)}
+            </AvatarFallback>
+          </>
+        )}
       </Avatar>
 
       <div className="flex-1 min-w-0">
         <div className="flex items-center justify-between gap-1">
-          <span className="font-medium text-sm truncate">{displayName}</span>
+          <div className="flex items-center gap-1.5 min-w-0">
+            <span className="font-medium text-sm truncate">{displayName}</span>
+            {isAI && (
+              <span className="text-[10px] bg-primary/10 text-primary px-1.5 py-0.5 rounded font-medium shrink-0">
+                AI
+              </span>
+            )}
+          </div>
           <span className="text-xs text-muted-foreground shrink-0">
             {formatTime(conv.lastMessageAt)}
           </span>

@@ -14,7 +14,7 @@ export function useMessages(conversationId: string) {
       pages: data.pages,
       pageParams: data.pageParams,
       // oldest pages first → flat list in chronological order
-      messages: [...data.pages].reverse().flatMap((page) => page.content),
+      messages: [...data.pages].reverse().flatMap((page) => [...page.content].reverse()),
     }),
   })
 }

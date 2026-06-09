@@ -5,12 +5,12 @@ const PUBLIC_PATHS = ['/login', '/register', '/verify-otp']
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl
   const isPublic = PUBLIC_PATHS.some((p) => pathname.startsWith(p))
-  const token = request.cookies.get('accessToken')?.value
+  const hasSession = request.cookies.has('accessToken') || request.cookies.has('refreshToken')
 
-  if (!token && !isPublic) {
+  if (!hasSession && !isPublic) {
     return NextResponse.redirect(new URL('/login', request.url))
   }
-  if (token && isPublic) {
+  if (hasSession && isPublic) {
     return NextResponse.redirect(new URL('/', request.url))
   }
   return NextResponse.next()

@@ -60,13 +60,13 @@
 
 **Goal:** user search, new conversation, typing indicator, online status, AI chat.
 
-- [ ] `components/chat/NewConversationModal.tsx` — search users (`GET /api/users/search?q=`), click → `POST /api/conversations`
-- [ ] Typing indicator: publish `/app/chat.typing` on input, subscribe `/topic/conversation/:id/typing` → show "đang nhập..."
-- [ ] Online status: `GET /api/users/:id/status` on conversation open → green dot
-- [ ] STOMP `/user/queue/notifications` → browser Notification API (ask permission on login)
-- [ ] AI conversation detection: if `participants` includes `ai-bot-000000000000000000000001` → render AI badge, no typing needed from user side
-- [ ] `app/(main)/profile/page.tsx` — view/edit display name, avatar
-- [ ] Infinite scroll for messages (TanStack Query `fetchNextPage`)
+- [x] `components/chat/NewConversationModal.tsx` — search users (`GET /api/users/search?q=`), click → `POST /api/conversations`
+- [x] Typing indicator: publish `/app/chat.typing` on input, subscribe `/topic/conversation/:id/typing` → show "đang nhập..."
+- [x] Online status: `GET /api/users/:id/status` on conversation open → green dot
+- [x] STOMP `/user/queue/notifications` → browser Notification API (ask permission on login)
+- [x] AI conversation detection: if `participants` includes `ai-bot-000000000000000000000001` → render AI badge, no typing needed from user side
+- [x] `app/(main)/profile/page.tsx` — view/edit display name, avatar
+- [x] Infinite scroll for messages (TanStack Query `fetchNextPage`)
 - [ ] Verify: full feature parity with Flutter client for core flows
 
 ---
@@ -75,12 +75,12 @@
 
 **Goal:** production-ready, deployed to Vercel.
 
-- [ ] Responsive layout — mobile breakpoint: hide sidebar, show back button on message view
-- [ ] Dark mode toggle (shadcn + `next-themes`)
-- [ ] Empty states: no conversations, no messages
-- [ ] Error boundaries, 404 page
-- [ ] Loading skeletons (shadcn Skeleton)
-- [ ] `pnpm build` — fix all TypeScript errors
+- [x] Responsive layout — mobile breakpoint: hide sidebar, show back button on message view
+- [x] Dark mode toggle (shadcn + `next-themes`)
+- [x] Empty states: no conversations, no messages
+- [x] Error boundaries, 404 page
+- [x] Loading skeletons (shadcn Skeleton)
+- [x] `pnpm build` — TypeScript clean ✅ (2026-06-09)
 - [ ] Deploy to Vercel: `apps/web/` as root, set env vars in Vercel dashboard
 - [ ] Update CORS in chat-service `application.yml` to allow Vercel domain
 - [ ] Add Vercel URL to Google OAuth allowed origins
