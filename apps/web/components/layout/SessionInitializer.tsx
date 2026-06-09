@@ -5,6 +5,7 @@ import { usePathname, useRouter } from 'next/navigation'
 import axios from 'axios'
 import { Loader2 } from 'lucide-react'
 import { useAuthStore } from '@/lib/store/auth.store'
+import type { AuthUser } from '@/lib/store/auth.store'
 
 const PUBLIC_PATHS = ['/login', '/register', '/verify-otp']
 
@@ -18,15 +19,14 @@ export function SessionInitializer({ children }: { children: React.ReactNode }) 
 
   useEffect(() => {
     if (isPublicPath) {
-      setLoading(false)
       return
     }
 
     const initSession = async () => {
       try {
-        const { data } = await axios.get<{ user: any; accessToken: string }>('/api/auth/session')
+        const { data } = await axios.get<{ user: AuthUser; accessToken: string }>('/api/auth/session')
         setAuth(data.user, data.accessToken)
-      } catch (err) {
+      } catch {
         clearAuth()
         router.push('/login')
       } finally {

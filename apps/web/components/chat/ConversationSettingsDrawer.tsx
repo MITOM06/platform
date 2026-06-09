@@ -10,7 +10,6 @@ import {
 import {
   Sheet, SheetContent, SheetHeader, SheetTitle,
 } from '@/components/ui/sheet'
-import { Button } from '@/components/ui/button'
 import { Slider } from '@/components/ui/slider'
 import { Separator } from '@/components/ui/separator'
 import { chatService } from '@/lib/api/chat'

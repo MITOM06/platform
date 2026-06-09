@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import axios from 'axios'
+import type { AuthUser } from '@/lib/store/auth.store'
 
 export async function GET(request: NextRequest) {
   let accessToken = request.cookies.get('accessToken')?.value
@@ -8,8 +9,8 @@ export async function GET(request: NextRequest) {
 
   const authUrl = process.env.NEXT_PUBLIC_AUTH_URL
 
-  const fetchUser = async (token: string) => {
-    const { data } = await axios.get(`${authUrl}/api/users/me`, {
+  const fetchUser = async (token: string): Promise<AuthUser & { avatarUrl?: string }> => {
+    const { data } = await axios.get<AuthUser & { avatarUrl?: string }>(`${authUrl}/api/users/me`, {
       headers: { Authorization: `Bearer ${token}` },
     })
     return data
@@ -50,8 +51,9 @@ export async function GET(request: NextRequest) {
       path: '/',
     })
     return res
-  } catch (error: any) {
-    if (error.response?.status === 401 && sid && refreshToken) {
+  } catch (error) {
+    const isUnauthorized = axios.isAxiosError(error) && error.response?.status === 401
+    if (isUnauthorized && sid && refreshToken) {
       try {
         const refreshResponse = await axios.post<{ accessToken: string }>(
           `${authUrl}/auth/refresh`,

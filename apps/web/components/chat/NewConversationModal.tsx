@@ -82,7 +82,7 @@ export function NewConversationModal({ open, onClose }: Props) {
 
   useEffect(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current)
-    if (!query.trim()) { setResults([]); return }
+    if (!query.trim()) return
     debounceRef.current = setTimeout(async () => {
       setIsSearching(true)
       try {
@@ -168,7 +168,13 @@ export function NewConversationModal({ open, onClose }: Props) {
         <Input
           placeholder="Tìm theo tên hoặc email..."
           value={query}
-          onChange={(e) => setQuery(e.target.value)}
+          onChange={(e) => {
+            const val = e.target.value
+            setQuery(val)
+            if (!val.trim()) {
+              setResults([])
+            }
+          }}
           className="pl-8"
           autoFocus
         />
