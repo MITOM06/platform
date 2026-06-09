@@ -30,6 +30,12 @@ export const authService = {
   resendOtp: (email: string) =>
     authApi.post('/auth/resend-otp', { email }),
 
+  forgotPassword: (email: string) =>
+    authApi.post('/auth/forgot-password', { email }).then((r) => r.data),
+
+  resetPassword: (email: string, otp: string, password: string) =>
+    authApi.post('/auth/reset-password', { email, otp, password }).then((r) => r.data),
+
   logout: () =>
     authApi.post('/auth/logout').catch(() => {}),
 

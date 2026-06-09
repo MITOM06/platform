@@ -215,9 +215,9 @@ Mirror: `apps/client/lib/features/chat/ui/widgets/{image_content,file_content,vo
 - [x] **Task W-10.11: Explore / public channels** `M` (`explore_screen.dart`). **DONE — `app/(main)/explore/page.tsx`.**
 - [x] **Task W-10.12: Shared media gallery** `S` (`explore_media_screen.dart`). **DONE — `app/(main)/shared-media/[conversationId]/page.tsx`.**
 - [x] **Task W-10.13: User profile + edit profile** `M` (`user_profile_screen.dart`, `edit_profile_screen.dart`). **DONE — redesigned `app/(main)/profile/page.tsx` with cover, avatar upload, bio.**
-- [ ] **Task W-10.14: Forgot / reset password** `M` (`forgot_password_screen.dart`, `new_password_screen.dart`).
+- [x] **Task W-10.14: Forgot / reset password** `M` (`forgot_password_screen.dart`, `new_password_screen.dart`). **DONE — `app/(auth)/forgot-password/page.tsx`.**
 - [ ] **Task W-10.15: Calls (WebRTC)** `L` — defer; largest item (`call_screen.dart`, `webrtc_service.dart`).
-- [ ] **Task W-10.16: Mentions (@) composer + bubble** `M` (`mention_list.dart`).
+- [x] **Task W-10.16: Mentions (@) composer + bubble** `M` (`mention_list.dart`). **DONE — integrated into `MessageInput.tsx` and `MessageBubble.tsx`.**
 
 ### SPRINT W-11 — Web Polish & Consistency `PENDING`
 - [ ] **Task W-11.1: i18n decision** — web is hardcoded Vietnamese; Flutter has 7 locales (`L` to adopt).

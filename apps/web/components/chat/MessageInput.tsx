@@ -12,7 +12,7 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { chatService } from '@/lib/api/chat'
-import type { Message, MessageType } from '@/lib/api/types'
+import type { Message, MessageType, Conversation } from '@/lib/api/types'
 
 const EMOJIS = [
   '😀', '😁', '😂', '🤣', '😊', '😍', '😘', '😎', '🤔', '😮',
@@ -29,6 +29,7 @@ interface Props {
   onCancelEdit?: () => void
   replyingTo?: Message | null
   onCancelReply?: () => void
+  conversation?: Conversation
 }
 
 export function MessageInput({
@@ -39,6 +40,7 @@ export function MessageInput({
   onCancelEdit,
   replyingTo,
   onCancelReply,
+  conversation,
 }: Props) {
   const [value, setValue] = useState('')
   const [sending, setSending] = useState(false)
@@ -53,6 +55,11 @@ export function MessageInput({
   const chunksRef = useRef<Blob[]>([])
   const recordTimerRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const cancelledRef = useRef(false)
+  
+  // Mentions state
+  const [mentionCandidates, setMentionCandidates] = useState<string[]>([])
+  const [mentionIndex, setMentionIndex] = useState(0)
+  const [mentionQuery, setMentionQuery] = useState<{ start: number, end: number, text: string } | null>(null)
 
   // Populate textarea when entering edit mode
   useEffect(() => {
@@ -73,7 +80,28 @@ export function MessageInput({
   }, [replyingTo])
 
   const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    setValue(e.target.value)
+    const val = e.target.value
+    setValue(val)
+    
+    // Check for mention
+    const cursor = e.target.selectionStart
+    const textBeforeCursor = val.slice(0, cursor)
+    const match = textBeforeCursor.match(/@([a-zA-Z0-9_]*)$/)
+    
+    if (match && conversation && conversation.type === 'group') {
+      const q = match[1].toLowerCase()
+      const candidates = conversation.participants.filter(p => p.toLowerCase().includes(q))
+      if (candidates.length > 0) {
+        setMentionCandidates(candidates)
+        setMentionQuery({ start: match.index!, end: cursor, text: q })
+        setMentionIndex(0)
+      } else {
+        setMentionQuery(null)
+      }
+    } else {
+      setMentionQuery(null)
+    }
+
     if (onTypingChange && !editingMessage) {
       onTypingChange(true)
       if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current)
@@ -97,6 +125,29 @@ export function MessageInput({
   }
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (mentionQuery) {
+      if (e.key === 'ArrowDown') {
+        e.preventDefault()
+        setMentionIndex((i) => (i + 1) % mentionCandidates.length)
+        return
+      }
+      if (e.key === 'ArrowUp') {
+        e.preventDefault()
+        setMentionIndex((i) => (i - 1 + mentionCandidates.length) % mentionCandidates.length)
+        return
+      }
+      if (e.key === 'Enter' || e.key === 'Tab') {
+        e.preventDefault()
+        insertMention(mentionCandidates[mentionIndex])
+        return
+      }
+      if (e.key === 'Escape') {
+        e.preventDefault()
+        setMentionQuery(null)
+        return
+      }
+    }
+
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault()
       handleSend()
@@ -121,6 +172,23 @@ export function MessageInput({
       el.focus()
       el.selectionStart = el.selectionEnd = start + emoji.length
     })
+  }
+
+  const insertMention = (uid: string) => {
+    if (!mentionQuery) return
+    const el = textareaRef.current
+    const before = value.slice(0, mentionQuery.start)
+    const after = value.slice(mentionQuery.end)
+    const inserted = `@${uid} `
+    setValue(before + inserted + after)
+    setMentionQuery(null)
+    
+    if (el) {
+      requestAnimationFrame(() => {
+        el.focus()
+        el.selectionStart = el.selectionEnd = before.length + inserted.length
+      })
+    }
   }
 
   // ── Attachments ─────────────────────────────────────────────────────────────
@@ -348,6 +416,26 @@ export function MessageInput({
             rows={1}
             disabled={disabled || sending}
           />
+
+          {/* Mention Popover */}
+          {mentionQuery && mentionCandidates.length > 0 && (
+            <div className="absolute bottom-full left-12 mb-2 w-48 max-h-48 overflow-y-auto bg-popover border rounded-xl shadow-lg z-50">
+              <div className="p-1 space-y-0.5">
+                {mentionCandidates.map((uid, idx) => (
+                  <button
+                    key={uid}
+                    onClick={() => insertMention(uid)}
+                    onMouseEnter={() => setMentionIndex(idx)}
+                    className={`w-full text-left px-3 py-2 text-sm rounded-lg truncate transition-colors ${
+                      idx === mentionIndex ? 'bg-primary/10 text-primary font-medium' : 'hover:bg-muted text-foreground'
+                    }`}
+                  >
+                    {uid}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
 
           {value.trim() || editingMessage ? (
             <Button

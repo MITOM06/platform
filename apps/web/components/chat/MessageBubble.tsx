@@ -145,7 +145,24 @@ export function MessageBubble({
     default:
       body = (
         <>
-          <p className="whitespace-pre-wrap leading-relaxed">{message.content}</p>
+          <p className="whitespace-pre-wrap leading-relaxed">
+            {message.content.split(/(@\w+)/g).map((part, i) => {
+              if (part.startsWith('@') && part.length > 1) {
+                return (
+                  <span
+                    key={i}
+                    className={cn(
+                      'font-semibold px-1 rounded-sm cursor-pointer mx-0.5',
+                      isOwn ? 'bg-primary-foreground/20' : 'bg-primary/20 text-primary hover:bg-primary/30'
+                    )}
+                  >
+                    {part}
+                  </span>
+                )
+              }
+              return <span key={i}>{part}</span>
+            })}
+          </p>
           {linkUrl && <LinkPreviewCard url={linkUrl} />}
         </>
       )

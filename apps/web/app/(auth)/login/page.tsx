@@ -99,6 +99,12 @@ export default function LoginPage() {
               <p className="text-sm text-destructive">{errors.password.message}</p>
             )}
           </div>
+          
+          <div className="flex justify-end">
+            <Link href="/forgot-password" className="text-sm font-medium text-primary hover:underline underline-offset-4">
+              Quên mật khẩu?
+            </Link>
+          </div>
 
           <Button
             type="submit"

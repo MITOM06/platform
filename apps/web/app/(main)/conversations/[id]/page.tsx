@@ -437,6 +437,7 @@ export default function ConversationPage({ params }: Props) {
           replyingTo={replyingTo}
           onCancelReply={() => setReplyingTo(null)}
           disabled={isPending && !isInitiator}
+          conversation={conversation}
         />
       )}
 
