@@ -1,13 +1,13 @@
 # CLAUDE.md
 
 > Read this file before doing anything.
-> Sub-service context auto-loads when needed: `apps/server/chat-service/CLAUDE.md`, `apps/client/CLAUDE.md`
+> Sub-service context auto-loads when needed: `apps/server/chat-service/CLAUDE.md`, `apps/client/CLAUDE.md`, `apps/web/CLAUDE.md`
 
 ---
 
 ## Project: Platform — Realtime Messaging App + AI Assistant
 
-**Owner:** Tran Phuc Khang | **Stack:** NestJS auth + Spring Boot chat + NestJS AI + Flutter mobile
+**Owner:** Tran Phuc Khang | **Stack:** NestJS auth + Spring Boot chat + NestJS AI + Flutter mobile + Next.js web
 
 ## CRITICAL RULES
 

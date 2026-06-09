@@ -20,8 +20,12 @@
 
 ## Implemented Screens ✅
 
-- `LoginScreen`, `RegisterScreen`, `VerifyOtpScreen`, `ForgotPasswordScreen`, `NewPasswordScreen`
-- `ConversationListScreen`, `ChatScreen`, `NewConversationScreen`, `SettingsScreen`
+- **Auth**: `LoginScreen`, `RegisterScreen`, `VerifyOtpScreen`, `ForgotPasswordScreen`, `NewPasswordScreen`, `ThemeOnboardingScreen`
+- **Chat & Media**: `ConversationListScreen`, `ChatScreen`, `NewConversationScreen`, `NewGroupScreen`, `GroupInfoScreen`, `ArchivedChatsScreen`, `ExploreScreen` (Public Channels), `ExploreMediaScreen` (Shared Gallery)
+- **Calling**: `CallScreen` (WebRTC)
+- **AI Integration**: `AiMemoryScreen` (Facts & memory), `AiPersonaScreen` (AI Settings), `KbScreen` (RAG Knowledge documents)
+- **Settings & Profile**: `SettingsScreen`, `TokenUsageScreen` (Token usage progress), `UserProfileScreen`, `EditProfileScreen`
+- **Other Features**: `FriendsScreen` (Contacts & Requests), `RemindersScreen` (User Reminders)
 
 ## Flutter Directory Structure
 

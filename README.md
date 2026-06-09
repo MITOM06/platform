@@ -30,7 +30,8 @@ A high-performance monorepo with three microservices and a Flutter mobile client
 | `auth-service` | NestJS · TypeScript | Identity Management, JWT issuance & rotation, OTP email verification, OAuth social logins |
 | `chat-service` | Spring Boot 3 · Java 21 | Realtime Message delivery (WebSocket/STOMP), user presence, REST API for chat CRUD, attachments storage |
 | `ai-service` | NestJS · TypeScript | AI Assistant pipeline (Anthropic Claude), Redis message processing, text chunking, document parsing, memory synthesization |
-| `client` | Flutter 3 · Dart | Cross-platform mobile app (Android, iOS) & responsive web/desktop layout using Riverpod & GoRouter |
+| `client` | Flutter 3 · Dart | Cross-platform mobile app (Android, iOS) using Riverpod & GoRouter |
+| `web` | Next.js 16 · TS · Tailwind | Responsive web client with shadcn/ui, Zustand state, and STOMP messaging |
 
 ### Shared Infrastructure:
 - **MongoDB** (single `platform` database): Holds canonical user profiles, conversations, messages, and knowledge base metadata.
@@ -112,12 +113,16 @@ platform/
 │   │       │   ├── kb/            # Text extraction (PDF/Docx), Qdrant indexing
 │   │       │   └── redis/         # Redis Pub/Sub events
 │   │       └── Dockerfile
-│   └── client/                    # Flutter 3 — Cross-platform client
-│       └── lib/
-│           ├── core/              # API clients, GoRouter, adaptive themes
-│           └── features/
-│               ├── auth/          # Login, Register, Otp6BoxInput
-│               └── chat/          # Chat timeline, AiMemoryScreen, KbScreen
+│   ├── client/                    # Flutter 3 — Cross-platform client
+│   │       └── lib/
+│   │           ├── core/              # API clients, GoRouter, adaptive themes
+│   │           └── features/
+│   │               ├── auth/          # Login, Register, Otp6BoxInput
+│   │               └── chat/          # Chat timeline, AiMemoryScreen, KbScreen
+│   └── web/                       # Next.js 16 — Web client
+│       ├── app/                   # App Router pages (auth, main, conversations)
+│       ├── components/            # UI components (shadcn/ui + custom chat)
+│       └── lib/                   # API utilities, stores (Zustand), and STOMP hooks
 ├── infra/
 │   └── docker-compose/
 │       └── compose.yml            # Orchestration with Qdrant, Mongo, Redis
@@ -211,12 +216,19 @@ cd apps/server/chat-service
 mvn spring-boot:run
 ```
 
-### Step 4: Run the Flutter App
+### Step 4 (Option A): Run the Flutter App (Mobile)
 ```bash
 cd apps/client
 flutter pub get
 dart run build_runner build --delete-conflicting-outputs
 flutter run
+```
+
+### Step 4 (Option B): Run the Next.js Web App
+```bash
+cd apps/web
+pnpm install
+pnpm dev
 ```
 
 ---

@@ -70,9 +70,10 @@ MONGO_URI=mongodb://localhost:27018/platform
 REDIS_URL=redis://localhost:6379
 
 # JWT — must match chat-service app.jwt.secret
-JWT_SECRET=your_shared_secret_here
-JWT_EXPIRES=15m
-REFRESH_EXPIRES=7d
+JWT_ACCESS_SECRET=your_shared_secret_here
+JWT_REFRESH_SECRET=your_refresh_secret_here
+JWT_ACCESS_EXPIRES=15m
+JWT_REFRESH_EXPIRES=7d
 
 # Email (OTP mailer)
 MAIL_HOST=smtp.example.com
@@ -137,7 +138,7 @@ src/
 
 ## JWT Token Contract
 
-Tokens are signed HS256 with `JWT_SECRET`. The payload structure:
+Tokens are signed HS256 with `JWT_ACCESS_SECRET`. The payload structure:
 
 ```json
 {
