@@ -19,12 +19,16 @@ subprojects {
     project.evaluationDependsOn(":app")
 }
 
-// Force all plugins to compile against SDK 36
+// Force Flutter plugin subprojects to compile against SDK 36.
+// Skip :app — it already has compileSdk=36 and is evaluated early by
+// evaluationDependsOn(":app"), which would make afterEvaluate crash.
 subprojects {
-    afterEvaluate {
-        if (extensions.findByName("android") != null) {
-            extensions.configure<com.android.build.gradle.BaseExtension>("android") {
-                compileSdkVersion(36)
+    if (project.name != "app") {
+        afterEvaluate {
+            if (extensions.findByName("android") != null) {
+                extensions.configure<com.android.build.gradle.BaseExtension>("android") {
+                    compileSdkVersion(36)
+                }
             }
         }
     }
