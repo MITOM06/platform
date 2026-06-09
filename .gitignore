@@ -91,3 +91,4 @@ apps/client/.flutter-plugins-dependencies
 *.iml
 .vscode/settings.json
 scripts/set-github-secrets.sh
+!apps/web/.env.production
