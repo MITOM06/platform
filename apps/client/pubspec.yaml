@@ -59,7 +59,7 @@ dependencies:
   flutter_markdown: ^0.7.7
 
   # Voice message recording (Task 89)
-  record: ^5.1.2
+  record: ^7.0.0
   path_provider: ^2.1.4
 
   # Audio playback for voice messages (Task 89)
