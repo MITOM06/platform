@@ -1,11 +1,13 @@
 'use client'
 
+import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import Link from 'next/link'
+import { Eye, EyeOff } from 'lucide-react'
 import { authService } from '@/lib/api/auth'
 import { useAuthStore } from '@/lib/store/auth.store'
 import { Button } from '@/components/ui/button'
@@ -23,6 +25,7 @@ type FormData = z.infer<typeof schema>
 export default function LoginPage() {
   const router = useRouter()
   const setAuth = useAuthStore((s) => s.setAuth)
+  const [showPassword, setShowPassword] = useState(false)
 
   const {
     register,
@@ -52,7 +55,7 @@ export default function LoginPage() {
   }
 
   return (
-    <Card className="w-full max-w-sm">
+    <Card className="w-full max-w-sm shadow-none border-border">
       <CardHeader>
         <CardTitle className="text-2xl">Đăng nhập</CardTitle>
         <CardDescription>Nhập email và mật khẩu để tiếp tục</CardDescription>
@@ -75,18 +78,33 @@ export default function LoginPage() {
 
           <div className="space-y-1">
             <Label htmlFor="password">Mật khẩu</Label>
-            <Input
-              id="password"
-              type="password"
-              autoComplete="current-password"
-              {...register('password')}
-            />
+            <div className="relative">
+              <Input
+                id="password"
+                type={showPassword ? 'text' : 'password'}
+                autoComplete="current-password"
+                className="pr-10"
+                {...register('password')}
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword((v) => !v)}
+                className="absolute inset-y-0 right-3 flex items-center text-muted-foreground hover:text-foreground"
+                tabIndex={-1}
+              >
+                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              </button>
+            </div>
             {errors.password && (
               <p className="text-sm text-destructive">{errors.password.message}</p>
             )}
           </div>
 
-          <Button type="submit" className="w-full" disabled={isSubmitting}>
+          <Button
+            type="submit"
+            className="w-full font-bold tracking-wide"
+            disabled={isSubmitting}
+          >
             {isSubmitting ? 'Đang đăng nhập...' : 'Đăng nhập'}
           </Button>
         </form>
