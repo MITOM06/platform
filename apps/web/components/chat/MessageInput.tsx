@@ -22,12 +22,15 @@ export function MessageInput({ onSend, onTypingChange, disabled, editingMessage,
 
   // Populate textarea when entering edit mode
   useEffect(() => {
-    if (editingMessage) {
-      setValue(editingMessage.content)
-      textareaRef.current?.focus()
-    } else {
-      setValue('')
-    }
+    const timer = setTimeout(() => {
+      if (editingMessage) {
+        setValue(editingMessage.content)
+        textareaRef.current?.focus()
+      } else {
+        setValue('')
+      }
+    }, 0)
+    return () => clearTimeout(timer)
   }, [editingMessage])
 
   const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {

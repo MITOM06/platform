@@ -25,7 +25,7 @@ export async function POST(request: NextRequest) {
       path: '/',
     })
     return res
-  } catch (error) {
+  } catch {
     return NextResponse.json({ error: 'refresh_failed' }, { status: 401 })
   }
 }

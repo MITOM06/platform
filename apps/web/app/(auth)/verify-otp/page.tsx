@@ -88,7 +88,7 @@ function VerifyOtpForm() {
   }
 
   return (
-    <Card className="w-full max-w-sm">
+    <Card className="w-full max-w-sm shadow-none border-border">
       <CardHeader>
         <CardTitle className="text-2xl">Xác thực OTP</CardTitle>
         <CardDescription>
@@ -109,12 +109,16 @@ function VerifyOtpForm() {
                 value={digit}
                 onChange={(e) => handleChange(i, e.target.value)}
                 onKeyDown={(e) => handleKeyDown(i, e)}
-                className="w-12 h-12 text-center text-lg font-semibold"
+                className="w-12 h-14 text-center text-xl font-bold rounded-2xl"
               />
             ))}
           </div>
 
-          <Button type="submit" className="w-full" disabled={loading}>
+          <Button
+            type="submit"
+            className="w-full font-bold tracking-wide"
+            disabled={loading}
+          >
             {loading ? 'Đang xác thực...' : 'Xác thực'}
           </Button>
         </form>

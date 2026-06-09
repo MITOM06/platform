@@ -8,14 +8,39 @@ import { useAuthStore } from '@/lib/store/auth.store'
 import { stompService } from '@/lib/stomp/client'
 import { chatService } from '@/lib/api/chat'
 import { useMessages } from '@/lib/hooks/use-messages'
+import { useConversation } from '@/lib/hooks/use-conversation'
+import { useUser } from '@/lib/hooks/use-user'
+import { useRelationship } from '@/lib/hooks/use-relationship'
 import { ConversationHeader } from '@/components/chat/ConversationHeader'
 import { MessageBubble } from '@/components/chat/MessageBubble'
 import { MessageInput } from '@/components/chat/MessageInput'
 import { MessageSearchPanel } from '@/components/chat/MessageSearchPanel'
+import { StrangerRequestBanner } from '@/components/chat/StrangerRequestBanner'
+import { BlockedComposerNotice } from '@/components/chat/BlockedComposerNotice'
 import { AiTraceModal } from '@/components/chat/AiTraceModal'
 import { ForwardMessageModal } from '@/components/chat/ForwardMessageModal'
 import { Skeleton } from '@/components/ui/skeleton'
+import { cn } from '@/lib/utils'
 import type { Message, MessagesResponse, StompEvent } from '@/lib/api/types'
+
+function formatSeparatorDate(dateStr: string): string {
+  const date = new Date(dateStr)
+  const today = new Date()
+  const yesterday = new Date(today)
+  yesterday.setDate(yesterday.getDate() - 1)
+
+  if (date.toDateString() === today.toDateString()) {
+    return 'Hôm nay'
+  }
+  if (date.toDateString() === yesterday.toDateString()) {
+    return 'Hôm qua'
+  }
+  return date.toLocaleDateString('vi-VN', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+  })
+}
 
 interface Props {
   params: Promise<{ id: string }>
@@ -64,6 +89,41 @@ export default function ConversationPage({ params }: Props) {
 
   // Pinned messages tracking (driven by STOMP + initial conversation load)
   const [pinnedMessages, setPinnedMessages] = useState<string[]>([])
+
+  const { data: conversation } = useConversation(id)
+  const isGroup = conversation?.type === 'group'
+  const isAI = conversation?.participants.includes('ai-bot-000000000000000000000001') ?? false
+  const otherUserId = !isGroup && !isAI && conversation?.type === 'direct'
+    ? conversation.participants.find((uid) => uid !== currentUser?.id)
+    : undefined
+
+  const { data: otherUser } = useUser(otherUserId)
+  const { relationship, refetch: refetchRelationship } = useRelationship(otherUserId)
+
+  const isPending = conversation?.type === 'direct' && conversation?.status === 'pending'
+  const isInitiator = conversation?.createdBy === currentUser?.id
+  const isBlocked = !!(relationship?.iBlocked || relationship?.blockedMe)
+
+  const [wallpaper, setWallpaper] = useState<string>('default')
+
+  useEffect(() => {
+    const loadWallpaper = () => {
+      const stored = localStorage.getItem(`wallpaper-${id}`)
+      setWallpaper(stored || 'default')
+    }
+    loadWallpaper()
+    window.addEventListener('wallpaper-changed', loadWallpaper)
+    return () => window.removeEventListener('wallpaper-changed', loadWallpaper)
+  }, [id])
+
+  const WALLPAPER_CLASSES: Record<string, string> = {
+    default: 'bg-background',
+    sunset: 'bg-gradient-to-br from-orange-400/10 via-pink-500/5 to-purple-600/10 dark:from-orange-950/20 dark:via-pink-950/10 dark:to-purple-950/20',
+    midnight: 'bg-gradient-to-br from-indigo-950/20 via-slate-900/40 to-purple-950/30 dark:from-indigo-950/40 dark:via-slate-950/60 dark:to-purple-950/50',
+    sweet_pink: 'bg-gradient-to-br from-pink-300/10 via-rose-400/5 to-red-400/10 dark:from-pink-950/20 dark:via-rose-950/10 dark:to-red-950/20',
+    neon_teal: 'bg-gradient-to-br from-teal-950/20 via-cyan-900/30 to-emerald-950/20 dark:from-teal-950/40 dark:via-cyan-950/50 dark:to-emerald-950/40',
+    dark_shadow: 'bg-gradient-to-br from-black/20 via-zinc-900/40 to-zinc-950/30 dark:from-black/65 dark:via-zinc-950/70 dark:to-zinc-950/80',
+  }
 
   const { data, isLoading, isError, fetchNextPage, hasNextPage, isFetchingNextPage } =
     useMessages(id)
@@ -260,7 +320,7 @@ export default function ConversationPage({ params }: Props) {
   )
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full relative">
       <ConversationHeader
         conversationId={id}
         typingUserIds={typingUserIds}
@@ -275,53 +335,105 @@ export default function ConversationPage({ params }: Props) {
         />
       )}
 
-      <div ref={scrollContainerRef} className="flex-1 overflow-y-auto px-4 py-4 space-y-2">
-        <div ref={topSentinelRef} className="h-1" />
+      {isPending && !isInitiator && (
+        <StrangerRequestBanner
+          conversationId={id}
+          otherUserId={otherUserId!}
+          otherUserName={conversation?.name || otherUser?.displayName || 'Người dùng'}
+          onAccepted={() => queryClient.invalidateQueries({ queryKey: ['conversation', id] })}
+        />
+      )}
 
-        {isFetchingNextPage && (
-          <div className="flex justify-center py-2">
-            <Loader2 className="size-4 animate-spin text-muted-foreground" />
-          </div>
+      <div
+        ref={scrollContainerRef}
+        className={cn(
+          'flex-1 overflow-y-auto px-4 py-4 relative transition-all duration-300',
+          WALLPAPER_CLASSES[wallpaper] || WALLPAPER_CLASSES.default,
         )}
+      >
+        {/* Glow Spheres */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none z-0 opacity-40 dark:opacity-20">
+          <div className="absolute -top-40 -left-40 size-96 rounded-full bg-pon-cyan blur-[128px] animate-pulse duration-[6000ms]" />
+          <div className="absolute -bottom-40 -right-40 size-96 rounded-full bg-pon-peach blur-[128px] animate-pulse duration-[8000ms]" />
+        </div>
 
-        {isLoading && <MessageSkeletons />}
+        <div className="relative z-10 space-y-2">
+          <div ref={topSentinelRef} className="h-1" />
 
-        {isError && (
-          <div className="flex justify-center py-8 text-sm text-destructive">
-            Không thể tải tin nhắn
-          </div>
-        )}
+          {isFetchingNextPage && (
+            <div className="flex justify-center py-2">
+              <Loader2 className="size-4 animate-spin text-muted-foreground" />
+            </div>
+          )}
 
-        {!isLoading && !isError && messages.length === 0 && (
-          <div className="flex flex-col items-center justify-center h-full gap-3 text-muted-foreground">
-            <MessageCircle className="size-10 opacity-30" />
-            <p className="text-sm">Chưa có tin nhắn. Hãy bắt đầu cuộc trò chuyện!</p>
-          </div>
-        )}
+          {isLoading && <MessageSkeletons />}
 
-        {!isLoading &&
-          messages.map((msg) => (
-            <MessageBubble
-              key={msg.id}
-              message={msg}
-              isOwn={msg.senderId === currentUser?.id}
-              isPinned={pinnedMessages.includes(msg.id)}
-              onEdit={setEditingMessage}
-              onForward={setForwardMessage}
-              onAiTrace={setTraceMessageId}
-              onOptimisticUpdate={handleOptimisticUpdate}
-            />
-          ))}
+          {isError && (
+            <div className="flex justify-center py-8 text-sm text-destructive">
+              Không thể tải tin nhắn
+            </div>
+          )}
 
-        <div ref={bottomRef} />
+          {!isLoading && !isError && messages.length === 0 && (
+            <div className="flex flex-col items-center justify-center h-full min-h-[300px] gap-3 text-muted-foreground">
+              <MessageCircle className="size-10 opacity-30" />
+              <p className="text-sm">Chưa có tin nhắn. Hãy bắt đầu cuộc trò chuyện!</p>
+            </div>
+          )}
+
+          {!isLoading &&
+            (() => {
+              let lastDateStr = ''
+              return messages.map((msg) => {
+                const msgDate = new Date(msg.createdAt)
+                const msgDateStr = msgDate.toDateString()
+                const showSeparator = msgDateStr !== lastDateStr
+                lastDateStr = msgDateStr
+
+                return (
+                  <div key={msg.id} className="space-y-2" id={`message-${msg.id}`}>
+                    {showSeparator && (
+                      <div className="flex justify-center my-4 select-none">
+                        <span className="text-[11px] bg-muted/80 backdrop-blur-xs text-muted-foreground font-semibold px-3 py-1 rounded-full border shadow-xs">
+                          {formatSeparatorDate(msg.createdAt)}
+                        </span>
+                      </div>
+                    )}
+                    <MessageBubble
+                      message={msg}
+                      isOwn={msg.senderId === currentUser?.id}
+                      isPinned={pinnedMessages.includes(msg.id)}
+                      onEdit={setEditingMessage}
+                      onForward={setForwardMessage}
+                      onAiTrace={setTraceMessageId}
+                      onOptimisticUpdate={handleOptimisticUpdate}
+                    />
+                  </div>
+                )
+              })
+            })()}
+
+          <div ref={bottomRef} />
+        </div>
       </div>
 
-      <MessageInput
-        onSend={editingMessage ? handleEditSend : handleSend}
-        onTypingChange={handleTypingChange}
-        editingMessage={editingMessage}
-        onCancelEdit={() => setEditingMessage(null)}
-      />
+      {isBlocked ? (
+        <BlockedComposerNotice
+          otherUserId={otherUserId!}
+          otherUserName={conversation?.name || otherUser?.displayName || 'Người dùng'}
+          iBlocked={relationship!.iBlocked}
+          blockedMe={relationship!.blockedMe}
+          onUnblocked={refetchRelationship}
+        />
+      ) : (
+        <MessageInput
+          onSend={editingMessage ? handleEditSend : handleSend}
+          onTypingChange={handleTypingChange}
+          editingMessage={editingMessage}
+          onCancelEdit={() => setEditingMessage(null)}
+          disabled={isPending && !isInitiator}
+        />
+      )}
 
       <AiTraceModal messageId={traceMessageId} onClose={() => setTraceMessageId(null)} />
       <ForwardMessageModal message={forwardMessage} onClose={() => setForwardMessage(null)} />

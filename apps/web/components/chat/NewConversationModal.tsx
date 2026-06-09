@@ -20,6 +20,7 @@ import type { UserSearchResult } from '@/lib/api/types'
 interface Props {
   open: boolean
   onClose: () => void
+  defaultTab?: 'direct' | 'group'
 }
 
 function getUserId(user: UserSearchResult): string {
@@ -65,7 +66,7 @@ function UserRow({
   )
 }
 
-export function NewConversationModal({ open, onClose }: Props) {
+export function NewConversationModal({ open, onClose, defaultTab }: Props) {
   const router = useRouter()
   const queryClient = useQueryClient()
   const [query, setQuery] = useState('')
@@ -77,12 +78,13 @@ export function NewConversationModal({ open, onClose }: Props) {
   const [groupName, setGroupName] = useState('')
   const [selectedMembers, setSelectedMembers] = useState<UserSearchResult[]>([])
   const [creatingGroup, setCreatingGroup] = useState(false)
+  const [activeTab, setActiveTab] = useState<'direct' | 'group'>(defaultTab || 'direct')
 
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   useEffect(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current)
-    if (!query.trim()) { setResults([]); return }
+    if (!query.trim()) return
     debounceRef.current = setTimeout(async () => {
       setIsSearching(true)
       try {
@@ -168,7 +170,13 @@ export function NewConversationModal({ open, onClose }: Props) {
         <Input
           placeholder="Tìm theo tên hoặc email..."
           value={query}
-          onChange={(e) => setQuery(e.target.value)}
+          onChange={(e) => {
+            const val = e.target.value
+            setQuery(val)
+            if (!val.trim()) {
+              setResults([])
+            }
+          }}
           className="pl-8"
           autoFocus
         />
@@ -187,13 +195,13 @@ export function NewConversationModal({ open, onClose }: Props) {
   )
 
   return (
-    <Dialog open={open} onOpenChange={(o) => !o && handleClose()}>
+    <Dialog key={`${open}-${defaultTab}`} open={open} onOpenChange={(o) => !o && handleClose()}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Cuộc trò chuyện mới</DialogTitle>
         </DialogHeader>
 
-        <Tabs defaultValue="direct">
+        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'direct' | 'group')}>
           <TabsList className="w-full">
             <TabsTrigger value="direct" className="flex-1">
               <MessageCircle className="size-4" />
