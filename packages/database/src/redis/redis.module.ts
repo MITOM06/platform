@@ -1,8 +1,9 @@
-import { Module, Global } from '@nestjs/common';
+import { Module, Global, Logger } from '@nestjs/common';
 import Redis from 'ioredis';
 
+export const REDIS_CLIENT = 'REDIS_CLIENT';
 
-export const REDIS_CLIENT = 'REDIS_CLIENT'; 
+const logger = new Logger('DatabaseRedisModule');
 
 @Global()
 @Module({
@@ -10,15 +11,20 @@ export const REDIS_CLIENT = 'REDIS_CLIENT';
     {
       provide: REDIS_CLIENT,
       useFactory: () => {
-        return process.env.REDIS_URL
-          ? new Redis(process.env.REDIS_URL, { lazyConnect: true, maxRetriesPerRequest: 3 })
+        const client = process.env.REDIS_URL
+          ? new Redis(process.env.REDIS_URL, { lazyConnect: true, maxRetriesPerRequest: null, enableOfflineQueue: true })
           : new Redis({
               host: process.env.REDIS_HOST || 'localhost',
               port: Number(process.env.REDIS_PORT) || 6379,
               password: process.env.REDIS_PASSWORD,
               lazyConnect: true,
-              maxRetriesPerRequest: 3,
+              maxRetriesPerRequest: null,
+              enableOfflineQueue: true,
             });
+
+        // Must attach error listener — unhandled error event crashes the process
+        client.on('error', (err) => logger.error(`Redis error: ${err.message}`));
+        return client;
       },
     },
   ],
