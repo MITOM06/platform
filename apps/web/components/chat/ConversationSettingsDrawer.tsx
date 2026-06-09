@@ -41,15 +41,14 @@ const WALLPAPER_PRESETS = [
 
 export function ConversationSettingsDrawer({
   conversation,
-  currentUserId,
   open,
   onClose,
 }: Props) {
   const router = useRouter()
   const queryClient = useQueryClient()
   const [saving, setSaving] = useState(false)
-  const isMuted = conversation.mutedUsers.includes(currentUserId)
-  const isArchived = conversation.archivedBy.includes(currentUserId)
+  const isMuted = conversation.isMuted
+  const isArchived = conversation.isArchived
   const [selectedWallpaper, setSelectedWallpaper] = useState<string>(() => {
     if (typeof window !== 'undefined') {
       return localStorage.getItem(`wallpaper-${conversation.id}`) || 'default'

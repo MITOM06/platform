@@ -3,6 +3,13 @@ export interface Reaction {
   emoji: string
 }
 
+export interface PinnedMessage {
+  id: string
+  senderId: string
+  content: string
+  createdAt: string
+}
+
 export interface Conversation {
   id: string
   participants: string[]
@@ -11,11 +18,11 @@ export interface Conversation {
   avatarUrl: string | null
   admins: string[]
   createdBy: string
-  publicChannel: boolean
+  isPublic: boolean
   status: 'pending' | 'accepted'
-  mutedUsers: string[]
-  archivedBy: string[]
-  pinnedMessages: string[]
+  isMuted: boolean
+  isArchived: boolean
+  pinnedMessages: PinnedMessage[]
   autoDeleteSeconds: number | null
   lastMessage: {
     content: string
@@ -26,13 +33,30 @@ export interface Conversation {
   unreadCount: number
 }
 
+export type MessageType =
+  | 'text' | 'image' | 'video' | 'file' | 'voice' | 'sticker' | 'system' | 'call_log' | 'ai'
+
+export interface UploadResult {
+  url: string
+  filename: string
+  size: number
+}
+
+export interface LinkPreview {
+  url: string
+  title?: string | null
+  description?: string | null
+  image?: string | null
+  siteName?: string | null
+}
+
 export interface Message {
   id: string
   conversationId: string
   senderId: string
   senderName?: string
   content: string
-  type: 'text' | 'image' | 'video' | 'file' | 'voice' | 'sticker' | 'system' | 'call_log' | 'ai'
+  type: MessageType
   createdAt: string
   editedAt?: string
   replyToId?: string

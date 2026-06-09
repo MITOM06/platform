@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import {
-  MoreHorizontal, Pencil, Trash2, Trash, Share2, Pin, PinOff, Smile, Brain,
+  MoreHorizontal, Pencil, Trash2, Trash, Share2, Pin, PinOff, Smile, Brain, Reply,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import {
@@ -22,6 +22,7 @@ interface Props {
   isPinned: boolean
   onEdit?: () => void
   onForward?: () => void
+  onReply?: () => void
   onAiTrace?: () => void
   onOptimisticUpdate: (updated: Partial<Message> & { id: string }) => void
 }
@@ -32,6 +33,7 @@ export function MessageActions({
   isPinned,
   onEdit,
   onForward,
+  onReply,
   onAiTrace,
   onOptimisticUpdate,
 }: Props) {
@@ -112,7 +114,11 @@ export function MessageActions({
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align={isOwn ? 'end' : 'start'} className="min-w-44">
-          {isOwn && !message.recalled && (
+          <DropdownMenuItem onClick={onReply}>
+            <Reply className="size-4" />
+            Trả lời
+          </DropdownMenuItem>
+          {isOwn && !message.recalled && message.type === 'text' && (
             <DropdownMenuItem onClick={onEdit}>
               <Pencil className="size-4" />
               Chỉnh sửa

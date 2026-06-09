@@ -54,7 +54,7 @@ export function ConversationHeader({
     (isAI ? 'AI Assistant' : (otherUser?.displayName ?? 'Cuộc trò chuyện'))
   const avatarUrl = conversation?.avatarUrl ?? otherUser?.avatarUrl
   const isTyping = typingUserIds.length > 0
-  const pinnedMessages = conversation?.pinnedMessages ?? []
+  const pinnedMessages = (conversation?.pinnedMessages ?? []).map((p) => p.id)
 
   const handleUnpin = (messageId: string) => {
     onPinnedUpdate?.(pinnedMessages.filter((id) => id !== messageId))

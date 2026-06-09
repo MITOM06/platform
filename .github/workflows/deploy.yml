@@ -160,7 +160,7 @@ jobs:
             MAIL_PASS=${{ secrets.MAIL_PASS }}
             FIREBASE_SERVICE_ACCOUNT_BASE64=${{ secrets.FIREBASE_SERVICE_ACCOUNT_BASE64 }}
 
-      # Deploy ai-service (scale to zero)
+      # Deploy ai-service (min 1 — Redis pub/sub requires persistent subscriber)
       - name: Deploy ai-service
         uses: google-github-actions/deploy-cloudrun@v2
         with:
@@ -169,7 +169,7 @@ jobs:
           image: ${{ env.REGISTRY }}/ai-service:${{ github.sha }}
           flags: >-
             --allow-unauthenticated
-            --min-instances=0
+            --min-instances=1
             --max-instances=2
             --memory=512Mi
             --cpu=1

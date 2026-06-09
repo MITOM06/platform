@@ -3,9 +3,12 @@ import type {
   AiTraceResponse,
   Conversation,
   ConversationsResponse,
+  LinkPreview,
   Message,
+  MessageType,
   MessagesResponse,
   PageResponse,
+  UploadResult,
   UserStatus,
 } from './types'
 
@@ -95,9 +98,38 @@ export const chatService = {
       .then((r) => r.data)
   },
 
-  sendMessage: (conversationId: string, content: string) =>
+  sendMessage: (
+    conversationId: string,
+    content: string,
+    type: MessageType = 'text',
+    replyToId?: string,
+  ) =>
     chatApi
-      .post<Message>('/api/messages', { conversationId, content, type: 'text' })
+      .post<Message>('/api/messages', {
+        conversationId,
+        content,
+        type,
+        ...(replyToId ? { replyToId } : {}),
+      })
+      .then((r) => r.data),
+
+  // ── Uploads & utils ──────────────────────────────────────────────────────────
+
+  /** Upload a file (image/video/document/voice) to GridFS. Returns stored url + meta. */
+  uploadFile: (file: File | Blob, filename?: string) => {
+    const form = new FormData()
+    form.append('file', file, filename ?? (file instanceof File ? file.name : 'file'))
+    return chatApi
+      .post<UploadResult>('/api/uploads', form, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      })
+      .then((r) => r.data)
+  },
+
+  /** Server-side Open Graph unfurl (bypasses browser CORS). */
+  fetchLinkPreview: (url: string) =>
+    chatApi
+      .get<LinkPreview>('/api/utils/link-preview', { params: { url } })
       .then((r) => r.data),
 
   editMessage: (id: string, content: string) =>

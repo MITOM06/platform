@@ -21,7 +21,7 @@ import { AiTraceModal } from '@/components/chat/AiTraceModal'
 import { ForwardMessageModal } from '@/components/chat/ForwardMessageModal'
 import { Skeleton } from '@/components/ui/skeleton'
 import { cn } from '@/lib/utils'
-import type { Message, MessagesResponse, StompEvent } from '@/lib/api/types'
+import type { Message, MessageType, MessagesResponse, StompEvent } from '@/lib/api/types'
 
 function formatSeparatorDate(dateStr: string): string {
   const date = new Date(dateStr)
@@ -84,6 +84,7 @@ export default function ConversationPage({ params }: Props) {
   const [typingUserIds, setTypingUserIds] = useState<string[]>([])
   const [searchVisible, setSearchVisible] = useState(false)
   const [editingMessage, setEditingMessage] = useState<Message | null>(null)
+  const [replyingTo, setReplyingTo] = useState<Message | null>(null)
   const [forwardMessage, setForwardMessage] = useState<Message | null>(null)
   const [traceMessageId, setTraceMessageId] = useState<string | null>(null)
 
@@ -292,10 +293,11 @@ export default function ConversationPage({ params }: Props) {
     [id],
   )
 
-  const handleSend = async (content: string) => {
+  const handleSend = async (content: string, type: MessageType = 'text') => {
     try {
-      const sent = await chatService.sendMessage(id, content)
+      const sent = await chatService.sendMessage(id, content, type, replyingTo?.id)
       appendMessage(sent)
+      setReplyingTo(null)
     } catch {
       toast.error('Không thể gửi tin nhắn')
     }
@@ -405,6 +407,7 @@ export default function ConversationPage({ params }: Props) {
                       isPinned={pinnedMessages.includes(msg.id)}
                       onEdit={setEditingMessage}
                       onForward={setForwardMessage}
+                      onReply={setReplyingTo}
                       onAiTrace={setTraceMessageId}
                       onOptimisticUpdate={handleOptimisticUpdate}
                     />
@@ -431,6 +434,8 @@ export default function ConversationPage({ params }: Props) {
           onTypingChange={handleTypingChange}
           editingMessage={editingMessage}
           onCancelEdit={() => setEditingMessage(null)}
+          replyingTo={replyingTo}
+          onCancelReply={() => setReplyingTo(null)}
           disabled={isPending && !isInitiator}
         />
       )}

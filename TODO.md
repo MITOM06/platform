@@ -143,5 +143,105 @@
 
 ---
 
+## 🔴 PHASE 4 — WEB ⇄ FLUTTER REAL PARITY & BUG FIXES
+> **Reality check (2026-06-09):** Sprints W-2 … W-8 are marked complete above, but an
+> audit against the Flutter client shows the web app still diverges significantly:
+> the composer is text-only (no image/file/voice/emoji send), several message types do
+> not render, and entire Flutter screens have no web equivalent. This phase tracks the
+> *actual* remaining work. Source of truth = `apps/client` (Flutter). Pick tasks by ID.
+>
+> Size: **S** <30m · **M** ~1h · **L** multi-hour. Status `[ ]` todo `[~]` wip `[x]` done.
+
+### Backend contract (chat-service :8080) — read before any chat task
+| Action | Endpoint | Payload / returns |
+|--------|----------|-------------------|
+| Send | `POST /api/messages` | `{conversationId, content, type, replyToId?}` |
+| Upload | `POST /api/uploads` (multipart `file`) | `{url, filename, size}` |
+| Link unfurl | `GET /api/utils/link-preview?url=` | `{url,title,description,image,siteName}` |
+
+**Content encoding by `type`:** `image` = URL string OR JSON array `["u1","u2"]` ·
+`video` = URL · `file` = JSON `{url,name,size}` · `voice` = URL (m4a) · `sticker` =
+emoji char · `text` = plain (detect URL → link preview). Media URLs may be relative →
+resolve with `NEXT_PUBLIC_CHAT_URL` (`apps/web/lib/media.ts` → `absoluteMediaUrl`).
+Mirror: `apps/client/lib/features/chat/ui/widgets/{image_content,file_content,voice_message_bubble,link_preview_card,message_bubble,chat_input_bar}.dart`.
+
+### SPRINT W-9 — Complete Web Chat (CURRENT PRIORITY) `IN PROGRESS`
+- [x] **Task W-9.1: Media helpers + chat API** `S`
+  - `lib/media.ts` (absoluteMediaUrl, parseImageUrls, parseFileMeta, formatBytes, firstUrl);
+    extend `lib/api/chat.ts` `sendMessage(type, replyToId)` + `uploadFile` + `fetchLinkPreview`;
+    add `MessageType` / `UploadResult` / `LinkPreview` types. **(DONE — in working tree.)**
+- [x] **Task W-9.2: Image & video render** `M`
+  - `components/chat/ImageContent.tsx`: single image, 2/3/4+ collage grid, fullscreen
+    lightbox (prev/next/download). Video → thumbnail card with play overlay. **DONE.**
+- [x] **Task W-9.3: File attachment render** `S`
+  - `components/chat/FileContent.tsx`: ext icon + name + `formatBytes` + download. **DONE.**
+- [x] **Task W-9.4: Voice message player** `M`
+  - `components/chat/VoiceMessage.tsx`: HTML5 audio play/pause + seek + duration. **DONE.**
+- [x] **Task W-9.5: Link preview card** `M`
+  - `components/chat/LinkPreviewCard.tsx`: `useQuery(fetchLinkPreview)`, hide if empty;
+    detect URL in text via `firstUrl()`. **DONE.**
+- [x] **Task W-9.6: MessageBubble render-by-type** `M`
+  - Switch on `message.type` → Image/Video/File/Voice/Sticker/text+LinkPreview, keeping
+    existing reply-preview, reactions, edit/recall states. **DONE.**
+- [x] **Task W-9.7: Reply end-to-end** `M`
+  - Reply in `MessageActions`; `replyingTo` state + banner; `replyToId` threaded into
+    `sendMessage`; edit restricted to text messages. **DONE.**
+    *(Follow-up W-9.B3: reply-preview sender label still "Bạn"/"Người khác" placeholder.)*
+- [x] **Task W-9.8: Composer attachments** `M`
+  - `MessageInput.tsx`: attach image/video/document → `uploadFile` → send with correct
+    type/content; uploading + error toasts; multi-image → JSON array. **DONE.**
+- [x] **Task W-9.9: Composer voice recording** `M`
+  - `MessageInput.tsx`: `MediaRecorder` mic UI (timer/cancel/send) → upload → `type:'voice'`;
+    disabled gracefully if `mediaDevices` unavailable. **DONE.**
+- [x] **Task W-9.10: Emoji picker panel** `S`
+  - Composer emoji popover (curated 40-emoji set, no new dep), insert at cursor. **DONE.**
+- [x] **Task W-9.11: Typecheck** `S`
+  - `npx tsc --noEmit` passes clean (exit 0). Full `next build` not yet run. **DONE.**
+- [ ] **Task W-9.12: Manual chat smoke test** `S` *(needs running local backend — pending)*
+  - Local backend: text/image/file/voice/reply/reaction/pin/edit/recall/forward/link/
+    infinite-scroll/STOMP realtime.
+
+### SPRINT W-10 — Missing Web Screens (parity) `PENDING`
+- [ ] **Task W-10.1: Friends / Contacts** `L` — list, requests, search/add, accept/decline/remove/block (`friends_screen.dart`).
+- [ ] **Task W-10.2: Settings screen** `M` — theme, language, account, logout, sub-screen links (`settings_screen.dart`).
+- [ ] **Task W-10.3: Change password dialog** `S` (`change_password_dialog.dart`).
+- [ ] **Task W-10.4: Token usage screen** `M` — AI quota progress + history (`token_usage_screen.dart`).
+- [ ] **Task W-10.5: AI Persona settings** `M` (`ai_persona_screen.dart`).
+- [ ] **Task W-10.6: AI Memory screen** `M` (`ai_memory_screen.dart`).
+- [ ] **Task W-10.7: Knowledge Base (RAG) screen** `M` (`kb_screen.dart`).
+- [ ] **Task W-10.8: Reminders screen** `M` (`reminders_screen.dart`).
+- [ ] **Task W-10.9: Group info screen** `M` — extend `GroupSettingsDrawer` (`group_info_screen.dart`).
+- [ ] **Task W-10.10: Archived chats** `S` (`archived_chats_screen.dart`).
+- [ ] **Task W-10.11: Explore / public channels** `M` — verify `PublicChannelsModal` parity (`explore_screen.dart`).
+- [ ] **Task W-10.12: Shared media gallery** `S` — verify `SharedMediaGallery` parity (`explore_media_screen.dart`).
+- [ ] **Task W-10.13: User profile + edit profile** `M` (`user_profile_screen.dart`, `edit_profile_screen.dart`).
+- [ ] **Task W-10.14: Forgot / reset password** `M` (`forgot_password_screen.dart`, `new_password_screen.dart`).
+- [ ] **Task W-10.15: Calls (WebRTC)** `L` — defer; largest item (`call_screen.dart`, `webrtc_service.dart`).
+- [ ] **Task W-10.16: Mentions (@) composer + bubble** `M` (`mention_list.dart`).
+
+### SPRINT W-11 — Web Polish & Consistency `PENDING`
+- [ ] **Task W-11.1: i18n decision** — web is hardcoded Vietnamese; Flutter has 7 locales (`L` to adopt).
+- [ ] **Task W-11.2: Visual parity pass** — PON neon theme, bubbles, avatars, glow spheres `M`.
+- [ ] **Task W-11.3: Responsive/mobile audit** `M`.
+- [ ] **Task W-11.4: Typing indicator + pinned-bar render parity** `S`.
+
+### SPRINT F-1 — Flutter Runtime Debug `PENDING`
+> `flutter analyze` is clean → errors are runtime. Needs a repro (which button throws).
+- [ ] **Task F-1.1: Reproduce & log** `M` — run app, click every screen/button, capture stack traces.
+- [ ] **Task F-1.2: Fix navigation errors** `M` — unregistered go_router routes / bad params.
+- [ ] **Task F-1.3: Fix null-safety / cast errors** `M` in tapped handlers.
+- [ ] **Task F-1.4: Fix API-driven error screens** `M` (4xx/5xx).
+- [ ] **Task F-1.5: Re-run `flutter analyze` + `flutter test`** `S`.
+
+### Suggested order
+1. W-9.2 → W-9.12 (finish web chat — in progress)
+2. W-10.13, W-10.2, W-10.1 (profile, settings, friends)
+3. W-10.5 → W-10.8 (AI persona/memory/KB/reminders)
+4. F-1.1 → F-1.5 (Flutter debug, once repro available)
+5. W-10.14, W-10.9 → W-10.12, W-10.16 (remaining parity)
+6. W-11.* polish; W-10.15 calls last
+
+---
+
 ## 🧪 QA LOG
 *(Will be appended after implementation)*
