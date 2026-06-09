@@ -1,4 +1,5 @@
 'use client'
+/* eslint-disable react-hooks/static-components */
 
 import {
   FileText, FileSpreadsheet, FileArchive, Presentation, File as FileIcon, Download,

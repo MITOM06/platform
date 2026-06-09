@@ -203,18 +203,18 @@ Mirror: `apps/client/lib/features/chat/ui/widgets/{image_content,file_content,vo
 
 ### SPRINT W-10 — Missing Web Screens (parity) `PENDING`
 - [ ] **Task W-10.1: Friends / Contacts** `L` — list, requests, search/add, accept/decline/remove/block (`friends_screen.dart`).
-- [ ] **Task W-10.2: Settings screen** `M` — theme, language, account, logout, sub-screen links (`settings_screen.dart`).
-- [ ] **Task W-10.3: Change password dialog** `S` (`change_password_dialog.dart`).
-- [ ] **Task W-10.4: Token usage screen** `M` — AI quota progress + history (`token_usage_screen.dart`).
-- [ ] **Task W-10.5: AI Persona settings** `M` (`ai_persona_screen.dart`).
-- [ ] **Task W-10.6: AI Memory screen** `M` (`ai_memory_screen.dart`).
-- [ ] **Task W-10.7: Knowledge Base (RAG) screen** `M` (`kb_screen.dart`).
-- [ ] **Task W-10.8: Reminders screen** `M` (`reminders_screen.dart`).
-- [ ] **Task W-10.9: Group info screen** `M` — extend `GroupSettingsDrawer` (`group_info_screen.dart`).
-- [ ] **Task W-10.10: Archived chats** `S` (`archived_chats_screen.dart`).
-- [ ] **Task W-10.11: Explore / public channels** `M` — verify `PublicChannelsModal` parity (`explore_screen.dart`).
-- [ ] **Task W-10.12: Shared media gallery** `S` — verify `SharedMediaGallery` parity (`explore_media_screen.dart`).
-- [ ] **Task W-10.13: User profile + edit profile** `M` (`user_profile_screen.dart`, `edit_profile_screen.dart`).
+- [x] **Task W-10.2: Settings screen** `M` — theme, language, account, logout, sub-screen links (`settings_screen.dart`). **DONE — `app/(main)/settings/page.tsx`.**
+- [x] **Task W-10.3: Change password dialog** `S` (`change_password_dialog.dart`). **DONE — `components/chat/ChangePasswordDialog.tsx`.**
+- [x] **Task W-10.4: Token usage screen** `M` — AI quota progress + history (`token_usage_screen.dart`). **DONE — `app/(main)/token-usage/page.tsx`.**
+- [x] **Task W-10.5: AI Persona settings** `M` (`ai_persona_screen.dart`). **DONE — `app/(main)/ai-persona/page.tsx`.**
+- [x] **Task W-10.6: AI Memory screen** `M` (`ai_memory_screen.dart`). **DONE — `app/(main)/ai-memory/page.tsx`.**
+- [x] **Task W-10.7: Knowledge Base (RAG) screen** `M` (`kb_screen.dart`). **DONE — `app/(main)/kb/[conversationId]/page.tsx`.**
+- [x] **Task W-10.8: Reminders screen** `M` (`reminders_screen.dart`). **DONE — `app/(main)/reminders/page.tsx`.**
+- [x] **Task W-10.9: Group info screen** `M` — extend `GroupSettingsDrawer` (`group_info_screen.dart`). **DONE — extended `GroupSettingsDrawer.tsx`.**
+- [x] **Task W-10.10: Archived chats** `S` (`archived_chats_screen.dart`). **DONE — `app/(main)/archived/page.tsx`.**
+- [x] **Task W-10.11: Explore / public channels** `M` (`explore_screen.dart`). **DONE — `app/(main)/explore/page.tsx`.**
+- [x] **Task W-10.12: Shared media gallery** `S` (`explore_media_screen.dart`). **DONE — `app/(main)/shared-media/[conversationId]/page.tsx`.**
+- [x] **Task W-10.13: User profile + edit profile** `M` (`user_profile_screen.dart`, `edit_profile_screen.dart`). **DONE — redesigned `app/(main)/profile/page.tsx` with cover, avatar upload, bio.**
 - [ ] **Task W-10.14: Forgot / reset password** `M` (`forgot_password_screen.dart`, `new_password_screen.dart`).
 - [ ] **Task W-10.15: Calls (WebRTC)** `L` — defer; largest item (`call_screen.dart`, `webrtc_service.dart`).
 - [ ] **Task W-10.16: Mentions (@) composer + bubble** `M` (`mention_list.dart`).

@@ -58,6 +58,9 @@ export const authService = {
   getUser: (id: string) =>
     authApi.get<AuthUser & { avatarUrl?: string }>(`/api/users/${id}`).then((r) => r.data),
 
-  updateProfile: (data: { displayName?: string; avatarUrl?: string }) =>
-    authApi.patch<AuthUser & { avatarUrl?: string }>('/api/users/me', data).then((r) => r.data),
+  updateProfile: (data: { displayName?: string; avatarUrl?: string; bio?: string }) =>
+    authApi.patch<AuthUser & { avatarUrl?: string; bio?: string }>('/api/users/me', data).then((r) => r.data),
+
+  changePassword: (currentPassword: string, newPassword: string) =>
+    authApi.post('/api/users/me/change-password', { currentPassword, newPassword }),
 }

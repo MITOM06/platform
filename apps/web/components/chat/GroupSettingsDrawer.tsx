@@ -1,9 +1,10 @@
 'use client'
+/* eslint-disable @next/next/no-img-element */
 
 import { useState } from 'react'
 import { toast } from 'sonner'
 import { useQueryClient } from '@tanstack/react-query'
-import { UserMinus, UserPlus, Pencil, Check, X, ImageIcon } from 'lucide-react'
+import { UserMinus, UserPlus, Pencil, Check, X, ImageIcon, LogOut, Camera, FolderOpen, Images, Bot } from 'lucide-react'
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -12,6 +13,7 @@ import { Separator } from '@/components/ui/separator'
 import { chatService } from '@/lib/api/chat'
 import { authService } from '@/lib/api/auth'
 import type { Conversation, UserSearchResult } from '@/lib/api/types'
+import { useRouter } from 'next/navigation'
 
 const WALLPAPER_PRESETS = [
   { id: 'default', label: 'Mặc định', bg: 'bg-background border border-muted' },
@@ -30,6 +32,7 @@ interface Props {
 }
 
 export function GroupSettingsDrawer({ conversation, currentUserId, open, onClose }: Props) {
+  const router = useRouter()
   const queryClient = useQueryClient()
   const [editingName, setEditingName] = useState(false)
   const [nameValue, setNameValue] = useState(conversation.name ?? '')
@@ -114,6 +117,38 @@ export function GroupSettingsDrawer({ conversation, currentUserId, open, onClose
     }
   }
 
+  const handleLeaveGroup = async () => {
+    if (!confirm('Bạn có chắc muốn rời nhóm không?')) return
+    setSaving(true)
+    try {
+      await chatService.removeMember(conversation.id, currentUserId)
+      invalidate()
+      onClose()
+      router.push('/')
+      toast.success('Đã rời nhóm')
+    } catch {
+      toast.error('Không thể rời nhóm')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setSaving(true)
+    try {
+      const uploaded = await chatService.uploadFile(file)
+      await chatService.updateGroup(conversation.id, undefined, uploaded.url)
+      invalidate()
+      toast.success('Đã cập nhật ảnh nhóm')
+    } catch {
+      toast.error('Không thể cập nhật ảnh')
+    } finally {
+      setSaving(false)
+    }
+  }
+
   return (
     <Sheet open={open} onOpenChange={(o) => !o && onClose()}>
       <SheetContent side="right" className="w-80 sm:w-80 overflow-y-auto">
@@ -124,13 +159,28 @@ export function GroupSettingsDrawer({ conversation, currentUserId, open, onClose
         <div className="flex flex-col gap-4 px-6 pb-6">
           <Separator />
 
-          {/* Group name */}
-          <div className="space-y-2">
-            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-              Tên nhóm
-            </p>
+          {/* Group header & avatar */}
+          <div className="flex flex-col items-center py-4 space-y-3">
+            <div className="relative group">
+              <Avatar className="size-20">
+                {conversation.avatarUrl ? (
+                  <img src={conversation.avatarUrl} alt="Group Avatar" className="w-full h-full object-cover" />
+                ) : (
+                  <AvatarFallback className="text-2xl bg-gradient-to-br from-pon-cyan to-pon-peach text-white">
+                    {(conversation.name ?? 'Group')[0]?.toUpperCase()}
+                  </AvatarFallback>
+                )}
+              </Avatar>
+              {isAdmin && (
+                <label className="absolute bottom-0 right-0 p-1.5 bg-pon-cyan text-black rounded-full cursor-pointer shadow-sm hover:scale-110 transition-transform">
+                  <Camera className="size-3.5" />
+                  <input type="file" className="hidden" accept="image/*" onChange={handleAvatarUpload} disabled={saving} />
+                </label>
+              )}
+            </div>
+
             {editingName ? (
-              <div className="flex gap-2">
+              <div className="flex gap-2 w-full max-w-[200px]">
                 <Input
                   value={nameValue}
                   onChange={(e) => setNameValue(e.target.value)}
@@ -146,18 +196,15 @@ export function GroupSettingsDrawer({ conversation, currentUserId, open, onClose
               </div>
             ) : (
               <div className="flex items-center gap-2">
-                <span className="text-sm flex-1">{conversation.name ?? 'Nhóm không tên'}</span>
+                <span className="font-semibold text-lg">{conversation.name ?? 'Nhóm không tên'}</span>
                 {isAdmin && (
-                  <Button
-                    size="icon-xs"
-                    variant="ghost"
-                    onClick={() => setEditingName(true)}
-                  >
-                    <Pencil className="size-3.5" />
+                  <Button size="icon-xs" variant="ghost" onClick={() => setEditingName(true)}>
+                    <Pencil className="size-3.5 text-muted-foreground" />
                   </Button>
                 )}
               </div>
             )}
+            <p className="text-xs text-muted-foreground">{conversation.participants.length} thành viên</p>
           </div>
 
           <Separator />
@@ -249,6 +296,53 @@ export function GroupSettingsDrawer({ conversation, currentUserId, open, onClose
               ))}
             </div>
           </div>
+
+          <Separator />
+
+          {/* Links */}
+          <div className="space-y-1">
+            <Button
+              variant="ghost"
+              className="w-full justify-start text-sm font-normal"
+              onClick={() => { onClose(); router.push(`/shared-media/${conversation.id}`) }}
+            >
+              <Images className="size-4 mr-3 text-pon-cyan" />
+              Ảnh & Media chia sẻ
+            </Button>
+            
+            <Button
+              variant="ghost"
+              className="w-full justify-start text-sm font-normal"
+              onClick={() => { onClose(); router.push(`/kb/${conversation.id}`) }}
+            >
+              <FolderOpen className="size-4 mr-3 text-pon-peach" />
+              Tài liệu Knowledge Base
+            </Button>
+
+            {isAdmin && (
+              <Button
+                variant="ghost"
+                className="w-full justify-start text-sm font-normal"
+                onClick={() => { onClose(); router.push(`/ai-persona?conversationId=${conversation.id}`) }}
+              >
+                <Bot className="size-4 mr-3 text-[#B47FFF]" />
+                Cài đặt AI Persona
+              </Button>
+            )}
+          </div>
+
+          <Separator />
+
+          {/* Leave Group */}
+          <Button
+            variant="ghost"
+            className="w-full justify-start text-destructive hover:text-destructive hover:bg-destructive/10"
+            onClick={handleLeaveGroup}
+            disabled={saving}
+          >
+            <LogOut className="size-4 mr-3" />
+            Rời nhóm
+          </Button>
         </div>
       </SheetContent>
     </Sheet>

@@ -3,7 +3,7 @@
 import { useEffect } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
 import { toast } from 'sonner'
-import { LogOut, Moon, Sun, User, Compass, MessageSquarePlus, Users, Contact } from 'lucide-react'
+import { LogOut, Moon, Sun, User, Compass, MessageSquarePlus, Users, Contact, Settings } from 'lucide-react'
 import Link from 'next/link'
 import { useTheme } from 'next-themes'
 import { useAuthStore } from '@/lib/store/auth.store'
@@ -189,6 +189,12 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
                     <Link href="/profile" className="flex w-full items-center cursor-pointer">
                       <User className="mr-2 h-4 w-4" />
                       <span>Hồ sơ cá nhân</span>
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link href="/settings" className="flex w-full items-center cursor-pointer">
+                      <Settings className="mr-2 h-4 w-4" />
+                      <span>Cài đặt</span>
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem

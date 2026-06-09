@@ -35,7 +35,7 @@ export const chatService = {
       })
       .then((r) => r.data),
 
-  updateGroup: (id: string, name: string, avatarUrl?: string) =>
+  updateGroup: (id: string, name?: string, avatarUrl?: string) =>
     chatApi.put<Conversation>(`/api/conversations/${id}`, { name, avatarUrl }).then((r) => r.data),
 
   addMembers: (id: string, userIds: string[]) =>

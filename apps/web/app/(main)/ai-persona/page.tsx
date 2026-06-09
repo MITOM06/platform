@@ -1,0 +1,301 @@
+'use client'
+/* eslint-disable react-hooks/set-state-in-effect */
+
+import { useState, useEffect } from 'react'
+import { useSearchParams } from 'next/navigation'
+import Link from 'next/link'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { toast } from 'sonner'
+import {
+  ArrowLeft,
+  Bot,
+  Loader2,
+  Info,
+  Save,
+  RotateCcw,
+  Sparkles,
+  Link as LinkIcon,
+  MessageCircle,
+} from 'lucide-react'
+import { aiService } from '@/lib/api/ai'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+
+// ── Tone chips ───────────────────────────────────────────────────────────────
+
+const TONES = [
+  { id: 'friendly', label: 'Thân thiện', icon: '😊' },
+  { id: 'professional', label: 'Chuyên nghiệp', icon: '💼' },
+  { id: 'concise', label: 'Ngắn gọn', icon: '⚡' },
+  { id: 'creative', label: 'Sáng tạo', icon: '🎨' },
+] as const
+
+function ToneSelector({
+  value,
+  onChange,
+  disabled,
+}: {
+  value: string
+  onChange: (v: string) => void
+  disabled?: boolean
+}) {
+  return (
+    <div className="flex flex-wrap gap-2">
+      {TONES.map((t) => {
+        const selected = value === t.id
+        return (
+          <button
+            key={t.id}
+            type="button"
+            disabled={disabled}
+            onClick={() => onChange(t.id)}
+            className={`px-3.5 py-2 rounded-lg text-sm font-medium border transition-all duration-200 flex items-center gap-1.5 ${
+              selected
+                ? 'border-primary bg-primary/10 text-primary shadow-sm'
+                : 'border-border bg-card text-muted-foreground hover:border-primary/40 hover:text-foreground'
+            } ${disabled ? 'opacity-50 pointer-events-none' : ''}`}
+          >
+            <span>{t.icon}</span>
+            {t.label}
+          </button>
+        )
+      })}
+    </div>
+  )
+}
+
+// ── Main Page ────────────────────────────────────────────────────────────────
+
+export default function AiPersonaPage() {
+  const searchParams = useSearchParams()
+  const conversationId = searchParams.get('conversationId') ?? ''
+  const queryClient = useQueryClient()
+
+  const [name, setName] = useState('PON AI')
+  const [avatarUrl, setAvatarUrl] = useState('')
+  const [tone, setTone] = useState('friendly')
+  const [instructions, setInstructions] = useState('')
+  const [initialized, setInitialized] = useState(false)
+
+  const { data: persona, isLoading } = useQuery({
+    queryKey: ['ai-persona', conversationId],
+    queryFn: () => aiService.getPersona(conversationId),
+    enabled: !!conversationId,
+  })
+
+  // Initialize form when data loads
+  useEffect(() => {
+    if (persona && !initialized) {
+      setName(persona.name || 'PON AI')
+      setAvatarUrl(persona.avatarUrl || '')
+      setTone(persona.tone || 'friendly')
+      setInstructions(persona.systemPromptPrefix || '')
+      setInitialized(true)
+    }
+  }, [persona, initialized])
+
+  const saveMutation = useMutation({
+    mutationFn: () =>
+      aiService.upsertPersona(conversationId, {
+        name: name.trim(),
+        ...(avatarUrl.trim() ? { avatarUrl: avatarUrl.trim() } : {}),
+        tone,
+        ...(instructions.trim() ? { systemPromptPrefix: instructions.trim() } : {}),
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['ai-persona', conversationId] })
+      toast.success('Đã lưu AI Persona')
+    },
+    onError: () => toast.error('Không thể lưu AI Persona'),
+  })
+
+  const resetMutation = useMutation({
+    mutationFn: () => aiService.deletePersona(conversationId),
+    onSuccess: () => {
+      setName('PON AI')
+      setAvatarUrl('')
+      setTone('friendly')
+      setInstructions('')
+      setInitialized(false)
+      queryClient.invalidateQueries({ queryKey: ['ai-persona', conversationId] })
+      toast.success('Đã đặt lại về mặc định')
+    },
+    onError: () => toast.error('Không thể đặt lại'),
+  })
+
+  const handleSave = () => {
+    if (!name.trim()) {
+      toast.error('Tên bot không được để trống')
+      return
+    }
+    saveMutation.mutate()
+  }
+
+  const isBusy = saveMutation.isPending || resetMutation.isPending
+
+  if (!conversationId) {
+    return (
+      <div className="flex flex-col h-full">
+        <header className="h-14 border-b px-4 flex items-center gap-3 shrink-0 bg-background/95 backdrop-blur-md">
+          <Link href="/conversations" className="text-muted-foreground hover:text-foreground transition-colors">
+            <ArrowLeft className="size-5" />
+          </Link>
+          <span className="font-semibold text-base">AI Persona</span>
+        </header>
+        <div className="flex-1 flex items-center justify-center">
+          <div className="text-center space-y-3">
+            <Bot className="size-16 text-muted-foreground/20 mx-auto" />
+            <p className="text-sm text-muted-foreground">
+              Mở cài đặt AI Persona từ trong cuộc trò chuyện
+            </p>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="flex flex-col h-full">
+      {/* Header */}
+      <header className="h-14 border-b px-4 flex items-center gap-3 shrink-0 bg-background/95 backdrop-blur-md">
+        <Link
+          href={`/conversations/${conversationId}`}
+          className="text-muted-foreground hover:text-foreground transition-colors"
+        >
+          <ArrowLeft className="size-5" />
+        </Link>
+        <span className="font-semibold text-base">AI Persona</span>
+      </header>
+
+      <div className="flex-1 overflow-y-auto">
+        {/* Background glows */}
+        <div className="relative">
+          <div className="absolute -top-24 -left-24 w-72 h-72 rounded-full bg-[#B47FFF]/5 blur-3xl pointer-events-none dark:bg-[#B47FFF]/8" />
+          <div className="absolute -bottom-24 -right-24 w-72 h-72 rounded-full bg-pon-cyan/5 blur-3xl pointer-events-none dark:bg-pon-cyan/8" />
+
+          <div className="relative max-w-md mx-auto px-6 py-8">
+            {isLoading ? (
+              <div className="flex flex-col items-center justify-center py-20 gap-3">
+                <Loader2 className="size-8 animate-spin text-primary" />
+                <p className="text-sm text-muted-foreground">Đang tải...</p>
+              </div>
+            ) : (
+              <div className="space-y-6">
+                {/* Info banner */}
+                <div className="rounded-xl border border-primary/30 bg-primary/5 p-3.5 flex items-start gap-3">
+                  <Info className="size-4 text-primary shrink-0 mt-0.5" />
+                  <p className="text-xs text-primary leading-relaxed">
+                    Chỉ admin của cuộc trò chuyện mới có thể thay đổi cài đặt AI Persona. Thay đổi sẽ áp dụng cho tất cả thành viên.
+                  </p>
+                </div>
+
+                {/* Avatar preview */}
+                <div className="flex justify-center">
+                  <div className="relative">
+                    <Avatar className="size-20 ring-2 ring-[#B47FFF]/30 ring-offset-2 ring-offset-background">
+                      {avatarUrl ? (
+                        <AvatarImage src={avatarUrl} alt={name} />
+                      ) : (
+                        <AvatarFallback className="text-2xl bg-gradient-to-br from-[#B47FFF] to-primary text-white">
+                          <Bot className="size-8" />
+                        </AvatarFallback>
+                      )}
+                    </Avatar>
+                    <div className="absolute -bottom-1 -right-1 size-6 rounded-full bg-[#B47FFF] border-2 border-background flex items-center justify-center">
+                      <Sparkles className="size-3 text-white" />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Bot name */}
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium flex items-center gap-2">
+                    <Bot className="size-4 text-[#B47FFF]" />
+                    Tên bot
+                  </Label>
+                  <Input
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    placeholder="Ví dụ: DevBot"
+                    maxLength={30}
+                    disabled={isBusy}
+                  />
+                </div>
+
+                {/* Avatar URL */}
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium flex items-center gap-2">
+                    <LinkIcon className="size-4 text-[#B47FFF]" />
+                    Avatar URL
+                  </Label>
+                  <Input
+                    value={avatarUrl}
+                    onChange={(e) => setAvatarUrl(e.target.value)}
+                    placeholder="https://..."
+                    disabled={isBusy}
+                  />
+                </div>
+
+                {/* Tone selector */}
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium flex items-center gap-2">
+                    <MessageCircle className="size-4 text-[#B47FFF]" />
+                    Giọng điệu
+                  </Label>
+                  <ToneSelector value={tone} onChange={setTone} disabled={isBusy} />
+                </div>
+
+                {/* System instructions */}
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium flex items-center gap-2">
+                    <Sparkles className="size-4 text-[#B47FFF]" />
+                    Hướng dẫn hệ thống
+                  </Label>
+                  <textarea
+                    value={instructions}
+                    onChange={(e) => setInstructions(e.target.value)}
+                    placeholder="Ví dụ: Luôn trả lời bằng tiếng Việt, sử dụng emoji..."
+                    maxLength={500}
+                    rows={4}
+                    disabled={isBusy}
+                    className="flex w-full rounded-lg border border-border bg-input px-3 py-2 text-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 resize-none"
+                  />
+                  <p className="text-xs text-muted-foreground/50 text-right">
+                    {instructions.length}/500
+                  </p>
+                </div>
+
+                {/* Actions */}
+                <Button
+                  onClick={handleSave}
+                  disabled={isBusy}
+                  className="w-full bg-gradient-to-r from-[#B47FFF] to-primary hover:opacity-90 text-white font-semibold h-11 shadow-lg shadow-[#B47FFF]/20"
+                >
+                  {saveMutation.isPending ? (
+                    <Loader2 className="size-4 mr-2 animate-spin" />
+                  ) : (
+                    <Save className="size-4 mr-2" />
+                  )}
+                  Lưu
+                </Button>
+
+                <div className="text-center">
+                  <button
+                    onClick={() => resetMutation.mutate()}
+                    disabled={isBusy}
+                    className="text-sm text-destructive hover:text-destructive/80 transition-colors inline-flex items-center gap-1.5 disabled:opacity-50"
+                  >
+                    <RotateCcw className="size-3.5" />
+                    Đặt lại về mặc định
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
