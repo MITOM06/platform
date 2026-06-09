@@ -113,6 +113,8 @@ jobs:
             NODE_ENV=production
             JWT_ACCESS_SECRET=${{ secrets.JWT_ACCESS_SECRET }}
             JWT_REFRESH_SECRET=${{ secrets.JWT_REFRESH_SECRET }}
+            JWT_ACCESS_EXPIRES=15m
+            JWT_REFRESH_EXPIRES=30d
             MONGO_URI=${{ secrets.MONGODB_URI }}
             MONGODB_URI=${{ secrets.MONGODB_URI }}
             REDIS_URL=${{ secrets.REDIS_URL }}

@@ -229,7 +229,8 @@ export class AuthService {
   // ===================== JWT / SESSION =====================
   signAccessToken(payload: { sub: string; sid: string }) {
     const secret = this.configService.get<string>('JWT_ACCESS_SECRET');
-    const expiresIn = this.configService.get<string>('JWT_ACCESS_EXPIRES');
+    // Fall back to 15m so a missing JWT_ACCESS_EXPIRES env never breaks token signing
+    const expiresIn = this.configService.get<string>('JWT_ACCESS_EXPIRES') || '15m';
     const options: JwtSignOptions = { secret, expiresIn: expiresIn as any };
     return this.jwt.sign(payload, options);
   }
