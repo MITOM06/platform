@@ -10,6 +10,7 @@
     "chat": "sh -c 'set -a; . apps/server/chat-service/.env; set +a; mvn -f apps/server/chat-service/pom.xml spring-boot:run'",
     "flutter": "cd apps/client && flutter run",
     "dev": "concurrently -n \"AUTH,CHAT\" -c \"blue,green\" \"pnpm:auth\" \"pnpm:chat\"",
+    "web": "pnpm --filter @platform/web dev",
     "tunnel": "pnpm exec ngrok http --url=donnie-readaptable-ai.ngrok-free.dev 4000"
   },
   "devDependencies": {

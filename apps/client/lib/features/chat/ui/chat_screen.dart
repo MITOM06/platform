@@ -1,6 +1,5 @@
 import 'dart:io';
 
-import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -281,16 +280,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
     messenger.showSnackBar(SnackBar(content: Text(l10n.uploading)));
     try {
       final List<int> bytes;
-      if (kIsWeb) {
-        // On web the recorder gives a blob URL — send as-is (no server upload).
-        await ref
-            .read(chatNotifierProvider(widget.conversationId).notifier)
-            .sendMessage(path, type: 'voice');
-        _scrollToBottom();
-        return;
-      } else {
-        bytes = await File(path).readAsBytes();
-      }
+      bytes = await File(path).readAsBytes();
       final filename =
           'voice_${DateTime.now().millisecondsSinceEpoch}.m4a';
       final uploaded = await ref

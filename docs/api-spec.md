@@ -1,213 +1,424 @@
 # API Specification — chat-service (Spring Boot)
 
 Base URL: `http://localhost:8080`  
-Auth: `Authorization: Bearer <jwt_token>` (required on all endpoints except /health)
+Auth Header: `Authorization: Bearer <jwt_token>` (required on all endpoints except `/health` and `/ws` pre-handshake)
 
 ---
 
-## Health
+## 🏥 Diagnostics & Utility
 
-```
+### Health check
+```http
 GET /health
-Response: { "status": "ok", "service": "chat-service" }
+Response 200: { "status": "ok", "service": "chat-service" }
+```
+
+### Link Preview
+```http
+GET /api/utils/link-preview?url={encodedUrl}
+Response 200: { "title": "string", "description": "string", "imageUrl": "string", "url": "string" }
 ```
 
 ---
 
-## Conversations
+## 📂 Conversations (`/api/conversations`)
 
-### List conversations
-```
+### List conversations (paginated)
+```http
 GET /api/conversations
-Auth: required
 Response 200:
 {
   "content": [
     {
       "id": "string",
       "participants": ["userId1", "userId2"],
+      "type": "direct | group",
+      "name": "string (nullable)",
+      "avatarUrl": "string (nullable)",
+      "admins": ["userId"],
+      "createdBy": "userId",
+      "publicChannel": false,
+      "status": "pending | accepted",
+      "mutedUsers": ["userId"],
+      "archivedBy": ["userId"],
       "lastMessage": { "content": "string", "senderId": "string", "createdAt": "ISO8601" },
       "lastMessageAt": "ISO8601",
-      "unreadCount": 0,
-      "createdAt": "ISO8601"
+      "unreadCount": 0
     }
   ],
   "page": 0,
   "size": 20,
-  "totalElements": 5
+  "totalElements": 1
 }
 ```
 
-### Create conversation (1-on-1)
-```
+### Create Direct Conversation
+```http
 POST /api/conversations
-Auth: required
 Body: { "participantId": "string" }
-Response 201: { "id": "string", "participants": [...], "createdAt": "ISO8601" }
+Response 201: Conversation object
 Response 409: { "error": "Conversation already exists", "conversationId": "string" }
 ```
 
-### Get single conversation
+### Create Group Chat
+```http
+POST /api/conversations/group
+Body: { "name": "string", "participantIds": ["string", "string"] }
+Response 201: Conversation object
 ```
+
+### Get Single Conversation
+```http
 GET /api/conversations/{id}
-Auth: required
 Response 200: Conversation object
 Response 404: { "error": "Not found" }
 ```
 
----
-
-## Messages
-
-### Get messages (paginated)
+### Update Group Metadata (Admins only)
+```http
+PUT /api/conversations/{id}
+Body: { "name": "string (optional)", "avatarUrl": "string (optional)" }
+Response 200: Conversation object
 ```
-GET /api/conversations/{conversationId}/messages?page=0&size=20
-Auth: required
+
+### Add Members to Group (Admins only)
+```http
+POST /api/conversations/{id}/members
+Body: { "userIds": ["string"] }
+Response 200: Conversation object
+```
+
+### Remove Member from Group (Admins only)
+```http
+DELETE /api/conversations/{id}/members/{userId}
+Response 200: Conversation object
+```
+
+### Delete/Leave Conversation
+```http
+DELETE /api/conversations/{id}
+Response 204: No Content
+```
+
+### Clear Chat History (For Me Only)
+```http
+POST /api/conversations/{id}/clear
+Response 204: No Content
+```
+
+### Accept Stranger Chat Request
+```http
+POST /api/conversations/{id}/accept
+Response 200: { "success": true }
+```
+
+### Mute/Unmute Notifications
+```http
+POST /api/conversations/{id}/mute
+POST /api/conversations/{id}/unmute
+Response 200: { "success": true }
+```
+
+### Archive/Unarchive Conversation
+```http
+POST /api/conversations/{id}/archive
+POST /api/conversations/{id}/unarchive
+Response 200: { "success": true }
+```
+
+### Mark Conversation as Read/Unread
+```http
+POST /api/conversations/{id}/read
+POST /api/conversations/{id}/unread
+Response 200: { "success": true }
+```
+
+### Update Conversation Custom Settings (Auto-delete window)
+```http
+PUT /api/conversations/{id}/settings
+Body: { "autoDeleteSeconds": 0 }
+Response 200: Conversation object
+```
+
+### List Public Group Channels
+```http
+GET /api/conversations/public
+Response 200: List of Conversation objects (publicChannel=true)
+```
+
+### Join Public Group Channel
+```http
+POST /api/conversations/{id}/join
+Response 200: Conversation object
+```
+
+### Get Messages (Cursor-based Pagination)
+```http
+GET /api/conversations/{conversationId}/messages?beforeId={msgId}&beforeTimestamp={ISO}&size=20
 Response 200:
 {
-  "content": [
-    {
-      "id": "string",
-      "conversationId": "string",
-      "senderId": "string",
-      "content": "string",
-      "type": "text | image",
-      "readBy": ["userId1"],
-      "createdAt": "ISO8601"
-    }
-  ],
-  "page": 0,
-  "size": 20,
-  "totalElements": 100
+  "content": [ Message objects ],
+  "nextCursorId": "string",
+  "hasMore": true
 }
-Note: sorted by createdAt DESC (newest first for pagination, reverse display)
 ```
 
-### Send message (REST fallback)
+### Get Conversation Attachments (Shared Gallery)
+```http
+GET /api/conversations/{id}/attachments?type=media | file | link
+Response 200: List of Message objects matching attachment category
 ```
+
+---
+
+## ✉️ Messages (`/api/messages`)
+
+### Send Message (REST fallback)
+```http
 POST /api/messages
-Auth: required
-Body: { "conversationId": "string", "content": "string", "type": "text" }
+Body:
+{
+  "conversationId": "string",
+  "content": "string",
+  "type": "text | image | video | file | voice | sticker",
+  "replyToId": "string (optional)"
+}
 Response 201: Message object
 ```
 
-### Mark as read
+### Edit Message Content
+```http
+PUT /api/messages/{id}
+Body: { "content": "string" }
+Response 200: Updated Message object (defines `editedAt`)
 ```
+
+### Search Messages
+```http
+GET /api/messages/search?q={query}&conversationId={id}
+Response 200: List of Message objects matching query
+```
+
+### Mark Single Message as Read
+```http
 PUT /api/messages/{id}/read
-Auth: required
+Response 200: { "success": true }
+```
+
+### Add Reaction Emoji
+```http
+POST /api/messages/{id}/reactions
+Body: { "emoji": "❤️" }
+Response 200: Updated Message object
+```
+
+### Remove Reaction Emoji
+```http
+DELETE /api/messages/{id}/reactions
+Body: { "emoji": "❤️" }
+Response 200: Updated Message object
+```
+
+### Delete/Recall Message (For Everyone)
+```http
+DELETE /api/messages/{id}
+Response 204: No Content
+```
+
+### Delete Message For Me Only
+```http
+POST /api/messages/{id}/delete-for-me
+Response 204: No Content
+```
+
+### Get AI Message Trace (Reasoning panel)
+```http
+GET /api/messages/{id}/trace
+Response 200: Trace object (thinkingBlocks, toolCalls, token usage details)
+```
+
+### Pin/Unpin Message
+```http
+POST /api/messages/{id}/pin
+DELETE /api/messages/{id}/pin
+Response 200: Conversation object (with updated pinnedMessages list)
+```
+
+### Forward Message
+```http
+POST /api/messages/{id}/forward
+Body: { "targetConversationIds": ["id1", "id2"] }
 Response 200: { "success": true }
 ```
 
 ---
 
-## Users (auth-service — port 3001)
+## 🤖 AI Customization (`/api/conversations/{id}/ai-persona`)
 
-### Search users
-```
-GET /api/users/search?q={query}
-Auth: required (Bearer token → auth-service)
-Response 200: [ { "_id": "string", "email": "string", "displayName": "string" }, ... ]
-Note: regex match email OR displayName, limit 10, password field excluded
+### Get Workspace AI Persona
+```http
+GET /api/conversations/{conversationId}/ai-persona
+Response 200: AiPersona object or 404
 ```
 
-### Get user profile
-```
-GET /api/users/{id}
-Auth: required
-Response 200: { "_id": "string", "email": "string", "displayName": "string", "avatarUrl": "string|null" }
+### Update/Upsert Workspace AI Persona (Admins only)
+```http
+PUT /api/conversations/{conversationId}/ai-persona
+Body:
+{
+  "name": "string (max 30)",
+  "avatarUrl": "string (optional)",
+  "tone": "friendly | professional | concise | creative",
+  "systemPromptPrefix": "string (max 500, optional)"
+}
+Response 200: AiPersona object
 ```
 
-### Get current user
-```
-GET /api/users/me
-Auth: required
-Response 200: same as above for authenticated user
+### Reset Workspace AI Persona (Admins only)
+```http
+DELETE /api/conversations/{conversationId}/ai-persona
+Response 204: No Content (Reverts to global default)
 ```
 
 ---
 
-## User Presence (chat-service — port 8080)
+## 🧠 AI Memory (`/api/ai/memories`)
 
-### Get user status
+### Get All AI Memories
+```http
+GET /api/ai/memories
+Response 200: List of AiMemory objects
 ```
+
+### Get AI Memory for Conversation
+```http
+GET /api/ai/memories/{conversationId}
+Response 200: AiMemory object or 404
+```
+
+### Delete AI Memory for Conversation
+```http
+DELETE /api/ai/memories/{conversationId}
+Response 204: No Content
+```
+
+---
+
+## 📊 AI Quotas & Token Usage (`/api/usage`)
+
+### Get Token Usage Metrics
+```http
+GET /api/usage/tokens?days=30
+Response 200:
+[
+  {
+    "date": "YYYY-MM-DD",
+    "inputTokens": 1200,
+    "outputTokens": 800,
+    "requestCount": 5,
+    "totalTokens": 2000
+  }
+]
+```
+
+---
+
+## 📚 Knowledge Base / RAG (`/api/kb`)
+
+### Upload Knowledge Document
+```http
+POST /api/kb
+Body: Multi-part file (PDF / DOCX / TXT)
+Response 201: KbDocument metadata object
+```
+
+### List Uploaded Knowledge Documents
+```http
+GET /api/kb
+Response 200: List of KbDocument objects
+```
+
+### Delete Knowledge Document
+```http
+DELETE /api/kb/{documentId}
+Response 204: No Content
+```
+
+---
+
+## ⏰ Reminders (`/api/reminders`)
+
+### List Reminders
+```http
+GET /api/reminders
+Response 200: List of active User Reminders
+```
+
+### Mark Reminder as Completed
+```http
+PATCH /api/reminders/{id}/done
+Response 200: Updated Reminder object
+```
+
+### Delete Reminder
+```http
+DELETE /api/reminders/{id}
+Response 204: No Content
+```
+
+---
+
+## 📁 File Upload Service (`/api/uploads`)
+
+### Upload Multipart File
+```http
+POST /api/uploads
+Body: Multi-part file (images, video, documents, audio)
+Response 201: { "id": "string", "url": "/api/uploads/string", "filename": "string" }
+```
+
+### Get File Inline or Download
+```http
+GET /api/uploads/{id}?download=true
+Response 200: Binary stream with Content-Disposition attachment if download=true
+```
+
+---
+
+## 👥 User presence (`/api/users`)
+
+### Get User Online Status & Last Seen
+```http
 GET /api/users/{userId}/status
-Auth: required
-Response 200: { "userId": "string", "online": true }
-Note: online=false when Redis key does not exist (TTL 5 minutes, refresh on each STOMP frame)
+Response 200: { "userId": "string", "online": true, "lastSeen": "ISO8601 (nullable)" }
+```
+
+### Block/Unblock User
+```http
+POST /api/users/block/{targetId}
+POST /api/users/unblock/{targetId}
+Response 200: { "success": true }
 ```
 
 ---
 
-## WebSocket (STOMP)
+## 🔌 WebSocket (STOMP Broker)
 
-### Connect
-```
-Endpoint: ws://localhost:8080/ws
-Protocol: STOMP over raw WebSocket (KHÔNG dùng SockJS — stomp_dart_client không support)
-Spring Boot config: registry.addEndpoint("/ws").setAllowedOrigins("*")  ← KHÔNG .withSockJS()
-Headers: { "Authorization": "Bearer <token>" }
-```
+**Connection URL:** `ws://localhost:8080/ws`  
+**Headers:** `{ "Authorization": "Bearer <accessToken>" }`  
 
-### Client → Server (send)
-```
-STOMP destination: /app/chat.send
-Body: { "conversationId": "string", "content": "string", "type": "text" }
-```
+### Client Publishes
+- **Send message:** `/app/chat.send`  
+  Payload: `{ "conversationId": "string", "content": "string", "type": "text | image | video | file | voice | sticker", "replyToId": "string (optional)" }`
+- **Typing indicator:** `/app/chat.typing`  
+  Payload: `{ "conversationId": "string", "typing": boolean }`
+- **Read indicator:** `/app/chat.read`  
+  Payload: `{ "conversationId": "string", "messageId": "string" }`
 
-### Client → Server (typing)
-```
-STOMP destination: /app/chat.typing
-Body: { "conversationId": "string", "typing": true }
-```
-
-### Server → Client (subscribe)
-```
-New messages:     /topic/conversation/{conversationId}
-  Payload: Message object
-
-Typing indicator: /topic/conversation/{conversationId}/typing
-  Payload: { "userId": "string", "typing": true }
-
-Personal notifs:  /user/queue/notifications
-  Payload: { "type": "NEW_MESSAGE", "conversationId": "string", "senderName": "string" }
-```
-
----
-
-## Error Response Format (chuẩn)
-```json
-{
-  "error": "string",
-  "message": "string",
-  "statusCode": 400
-}
-```
-
----
-
-## Data Models
-
-### Conversation (MongoDB `conversations` collection)
-```json
-{
-  "_id": "ObjectId",
-  "participants": ["userId1", "userId2"],
-  "lastMessage": { "content": "...", "senderId": "...", "createdAt": "..." },
-  "lastMessageAt": "ISODate",
-  "createdAt": "ISODate",
-  "updatedAt": "ISODate"
-}
-```
-
-### Message (MongoDB `messages` collection)
-```json
-{
-  "_id": "ObjectId",
-  "conversationId": "string",
-  "senderId": "string",
-  "content": "string",
-  "type": "text",
-  "readBy": ["userId1"],
-  "createdAt": "ISODate"
-}
-```
+### Client Subscriptions
+- **Conversation Stream:** `/topic/conversation/{conversationId}`  
+  Events: Message objects (new, edited, recalled, reactions, AI streaming chunks)
+- **Typing Indicator Stream:** `/topic/conversation/{conversationId}/typing`  
+  Payload: `{ "userId": "string", "typing": boolean }`
+- **User Notifications Queue:** `/user/queue/notifications`  
+  Payload: `{ "type": "NEW_MESSAGE", "conversationId": "string", "senderName": "string" }`

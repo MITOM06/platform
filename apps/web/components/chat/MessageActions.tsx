@@ -1,0 +1,150 @@
+'use client'
+
+import { useState } from 'react'
+import {
+  MoreHorizontal, Pencil, Trash2, Trash, Share2, Pin, PinOff, Smile, Brain,
+} from 'lucide-react'
+import { toast } from 'sonner'
+import {
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem,
+  DropdownMenuSeparator, DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
+import { Button } from '@/components/ui/button'
+import { chatService } from '@/lib/api/chat'
+import type { Message } from '@/lib/api/types'
+
+const QUICK_EMOJIS = ['👍', '❤️', '😂', '😮', '😢', '🔥']
+
+interface Props {
+  message: Message
+  isOwn: boolean
+  isPinned: boolean
+  onEdit?: () => void
+  onForward?: () => void
+  onAiTrace?: () => void
+  onOptimisticUpdate: (updated: Partial<Message> & { id: string }) => void
+}
+
+export function MessageActions({
+  message,
+  isOwn,
+  isPinned,
+  onEdit,
+  onForward,
+  onAiTrace,
+  onOptimisticUpdate,
+}: Props) {
+  const [emojiOpen, setEmojiOpen] = useState(false)
+
+  const handleReact = async (emoji: string) => {
+    setEmojiOpen(false)
+    try {
+      const existing = message.reactions?.find((r) => r.emoji === emoji)
+      if (existing) {
+        await chatService.removeReaction(message.id)
+      } else {
+        await chatService.addReaction(message.id, emoji)
+      }
+    } catch {
+      toast.error('Không thể thêm cảm xúc')
+    }
+  }
+
+  const handleRecall = async () => {
+    try {
+      await chatService.recallMessage(message.id)
+    } catch {
+      toast.error('Không thể thu hồi tin nhắn')
+    }
+  }
+
+  const handleDeleteForMe = async () => {
+    try {
+      await chatService.deleteForMe(message.id)
+      onOptimisticUpdate({ id: message.id, deletedFor: ['__me__'] })
+    } catch {
+      toast.error('Không thể xóa tin nhắn')
+    }
+  }
+
+  const handlePin = async () => {
+    try {
+      if (isPinned) {
+        await chatService.unpinMessage(message.id)
+      } else {
+        await chatService.pinMessage(message.id)
+      }
+    } catch {
+      toast.error('Không thể ghim tin nhắn')
+    }
+  }
+
+  return (
+    <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+      {/* Quick emoji reactions */}
+      <Popover open={emojiOpen} onOpenChange={setEmojiOpen}>
+        <PopoverTrigger asChild>
+          <Button variant="ghost" size="icon-xs" className="size-6 rounded-full">
+            <Smile className="size-3.5" />
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent className="w-auto p-2" side="top" align="center">
+          <div className="flex gap-1">
+            {QUICK_EMOJIS.map((emoji) => (
+              <button
+                key={emoji}
+                onClick={() => handleReact(emoji)}
+                className="text-lg hover:scale-125 transition-transform leading-none p-0.5"
+              >
+                {emoji}
+              </button>
+            ))}
+          </div>
+        </PopoverContent>
+      </Popover>
+
+      {/* More actions menu */}
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button variant="ghost" size="icon-xs" className="size-6 rounded-full">
+            <MoreHorizontal className="size-3.5" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align={isOwn ? 'end' : 'start'} className="min-w-44">
+          {isOwn && !message.recalled && (
+            <DropdownMenuItem onClick={onEdit}>
+              <Pencil className="size-4" />
+              Chỉnh sửa
+            </DropdownMenuItem>
+          )}
+          <DropdownMenuItem onClick={handlePin}>
+            {isPinned ? <PinOff className="size-4" /> : <Pin className="size-4" />}
+            {isPinned ? 'Bỏ ghim' : 'Ghim tin nhắn'}
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={onForward}>
+            <Share2 className="size-4" />
+            Chuyển tiếp
+          </DropdownMenuItem>
+          {message.type === 'ai' && (
+            <DropdownMenuItem onClick={onAiTrace}>
+              <Brain className="size-4" />
+              Xem AI trace
+            </DropdownMenuItem>
+          )}
+          <DropdownMenuSeparator />
+          {isOwn && !message.recalled && (
+            <DropdownMenuItem variant="destructive" onClick={handleRecall}>
+              <Trash2 className="size-4" />
+              Thu hồi
+            </DropdownMenuItem>
+          )}
+          <DropdownMenuItem variant="destructive" onClick={handleDeleteForMe}>
+            <Trash className="size-4" />
+            Xóa với tôi
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </div>
+  )
+}
