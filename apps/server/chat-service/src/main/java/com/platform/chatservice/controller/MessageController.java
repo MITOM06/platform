@@ -41,6 +41,8 @@ public class MessageController {
         final String uid = currentUserId();
         rateLimiterService.checkMessageRate(uid);
         MessageResponse response = messageService.sendMessage(uid, request);
+        messagingTemplate.convertAndSend(
+            "/topic/conversation/" + request.conversationId(), response);
 
         if (request.content() != null && AI_MENTION_PATTERN.matcher(request.content()).find()) {
             final String convId = request.conversationId();

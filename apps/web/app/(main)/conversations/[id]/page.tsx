@@ -51,6 +51,7 @@ interface Props {
 const STOMP_EVENT_TYPES = new Set([
   'MESSAGE_UPDATED', 'MESSAGE_RECALLED', 'REACTION_UPDATED',
   'PINNED_MESSAGE', 'CONVERSATION_UPDATED',
+  'AI_STREAM_CHUNK', 'AI_STREAM_DONE', 'AI_STREAM_ERROR', 'AI_TOOL_CALL',
 ])
 
 function isStompEvent(parsed: Record<string, unknown>): parsed is StompEvent {
@@ -88,6 +89,7 @@ export default function ConversationPage({ params }: Props) {
   const [replyingTo, setReplyingTo] = useState<Message | null>(null)
   const [forwardMessage, setForwardMessage] = useState<Message | null>(null)
   const [traceMessageId, setTraceMessageId] = useState<string | null>(null)
+  const [aiStreamContent, setAiStreamContent] = useState<string | null>(null)
 
   const { data: conversation } = useConversation(id)
 
@@ -250,9 +252,22 @@ export default function ConversationPage({ params }: Props) {
                 queryClient.setQueryData(['conversation', id], parsed.conversation)
                 queryClient.invalidateQueries({ queryKey: ['conversations'] })
                 break
+              case 'AI_STREAM_CHUNK':
+                setAiStreamContent((prev) => (prev ?? '') + String(parsed.chunk ?? ''))
+                break
+              case 'AI_STREAM_DONE':
+                setAiStreamContent(null)
+                break
+              case 'AI_STREAM_ERROR':
+                setAiStreamContent(null)
+                toast.error(String(parsed.error ?? 'AI gặp lỗi, vui lòng thử lại'))
+                break
+              case 'AI_TOOL_CALL':
+                // tool call indicator is transient — no persistent state needed
+                break
             }
           } else {
-            // Regular message or system message
+            // Regular message (includes AI final message after AI_STREAM_DONE)
             appendMessage(parsed as unknown as Message)
           }
         } catch {
@@ -297,7 +312,11 @@ export default function ConversationPage({ params }: Props) {
 
   const handleSend = async (content: string, type: MessageType = 'text') => {
     try {
-      const sent = await chatService.sendMessage(id, content, type, replyingTo?.id)
+      // In AI conversations, prepend @AI so the server triggers the AI pipeline
+      const finalContent = isAI && type === 'text' && !content.match(/^@(AI|ponai)\b/i)
+        ? `@AI ${content}`
+        : content
+      const sent = await chatService.sendMessage(id, finalContent, type, replyingTo?.id)
       appendMessage(sent)
       setReplyingTo(null)
     } catch {
@@ -375,7 +394,7 @@ export default function ConversationPage({ params }: Props) {
             </div>
           )}
 
-          {isLoading && <MessageSkeletons />}
+          {(isLoading || !currentUser) && <MessageSkeletons />}
 
           {isError && (
             <div className="flex justify-center py-8 text-sm text-destructive">
@@ -383,14 +402,14 @@ export default function ConversationPage({ params }: Props) {
             </div>
           )}
 
-          {!isLoading && !isError && messages.length === 0 && (
+          {!isLoading && currentUser && !isError && messages.length === 0 && (
             <div className="flex flex-col items-center justify-center h-full min-h-[300px] gap-3 text-muted-foreground">
               <MessageCircle className="size-10 opacity-30" />
               <p className="text-sm">Chưa có tin nhắn. Hãy bắt đầu cuộc trò chuyện!</p>
             </div>
           )}
 
-          {!isLoading &&
+          {!isLoading && currentUser &&
             (() => {
               let lastDateStr = ''
               return messages.map((msg) => {
@@ -410,7 +429,8 @@ export default function ConversationPage({ params }: Props) {
                     )}
                     <MessageBubble
                       message={msg}
-                      isOwn={msg.senderId === currentUser?.id}
+                      isOwn={msg.senderId === currentUser.id}
+                      currentUserId={currentUser.id}
                       isPinned={pinnedMessages.includes(msg.id)}
                       onEdit={setEditingMessage}
                       onForward={setForwardMessage}
@@ -425,6 +445,23 @@ export default function ConversationPage({ params }: Props) {
 
           {typingUserIds.length > 0 && currentUser && !typingUserIds.includes(currentUser.id) && (
             <ChatTypingIndicator />
+          )}
+
+          {aiStreamContent !== null && (
+            <div className="flex flex-row items-end gap-1">
+              <div className="max-w-[70%] rounded-[24px] rounded-tl-none px-4 py-2.5 text-sm bg-muted/70 border border-border/50 shadow-xs">
+                <p className="whitespace-pre-wrap leading-relaxed">{aiStreamContent || '…'}</p>
+                <div className="flex gap-1 mt-1.5">
+                  {[0, 1, 2].map((i) => (
+                    <span
+                      key={i}
+                      className="inline-block size-1.5 rounded-full bg-primary/60 animate-bounce"
+                      style={{ animationDelay: `${i * 0.15}s` }}
+                    />
+                  ))}
+                </div>
+              </div>
+            </div>
           )}
 
           <div ref={bottomRef} />

@@ -99,6 +99,7 @@ export function ConversationSettingsDrawer({
   const handleClearHistory = async () => {
     if (!confirm('Xóa toàn bộ lịch sử? Hành động không thể hoàn tác.')) return
     await run(() => chatService.clearHistory(conversation.id), 'Đã xóa lịch sử')
+    queryClient.removeQueries({ queryKey: ['messages', conversation.id], exact: true })
     queryClient.invalidateQueries({ queryKey: ['messages', conversation.id] })
   }
 

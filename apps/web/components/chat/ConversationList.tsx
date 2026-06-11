@@ -1,7 +1,9 @@
 'use client'
 
 import { useState } from 'react'
-import { Search, Plus, MessageSquare, Hash } from 'lucide-react'
+import { Search, Plus, MessageSquare, Hash, Bot } from 'lucide-react'
+import { useRouter } from 'next/navigation'
+import { toast } from 'sonner'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -11,6 +13,9 @@ import { PublicChannelsModal } from './PublicChannelsModal'
 import { useConversations } from '@/lib/hooks/use-conversations'
 import { useUiStore } from '@/lib/store/ui.store'
 import { ActiveFriendsRow } from './ActiveFriendsRow'
+import { chatService } from '@/lib/api/chat'
+
+const AI_BOT_ID = 'ai-bot-000000000000000000000001'
 
 function ConversationSkeleton() {
   return (
@@ -26,6 +31,8 @@ function ConversationSkeleton() {
 
 export function ConversationList() {
   const [search, setSearch] = useState('')
+  const [aiLoading, setAiLoading] = useState(false)
+  const router = useRouter()
   const { data: conversations, isLoading, isError } = useConversations()
   const {
     showNewChatModal,
@@ -36,6 +43,19 @@ export function ConversationList() {
     openNewChat,
     openPublicChannels,
   } = useUiStore()
+
+  const handleOpenAiChat = async () => {
+    if (aiLoading) return
+    setAiLoading(true)
+    try {
+      const conv = await chatService.createConversation(AI_BOT_ID)
+      router.push(`/conversations/${conv.id}`)
+    } catch {
+      toast.error('Không thể mở chat AI')
+    } finally {
+      setAiLoading(false)
+    }
+  }
 
   const filtered = conversations?.filter((conv) => {
     if (!search) return true
@@ -74,6 +94,16 @@ export function ConversationList() {
             className="shrink-0 h-9 w-9"
           >
             <Hash className="size-4" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={handleOpenAiChat}
+            title="Chat với AI Assistant"
+            disabled={aiLoading}
+            className="shrink-0 h-9 w-9"
+          >
+            <Bot className="size-4" />
           </Button>
           <Button
             variant="ghost"
