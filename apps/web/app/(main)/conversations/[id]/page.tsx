@@ -1,6 +1,6 @@
 'use client'
 
-import { use, useEffect, useRef, useState, useCallback } from 'react'
+import { use, useEffect, useMemo, useRef, useState, useCallback } from 'react'
 import { useQueryClient, type InfiniteData } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { Loader2, MessageCircle } from 'lucide-react'
@@ -89,17 +89,12 @@ export default function ConversationPage({ params }: Props) {
   const [forwardMessage, setForwardMessage] = useState<Message | null>(null)
   const [traceMessageId, setTraceMessageId] = useState<string | null>(null)
 
-  // Pinned messages tracking (driven by STOMP + initial conversation load)
-  const [pinnedMessages, setPinnedMessages] = useState<string[]>([])
-
   const { data: conversation } = useConversation(id)
 
-  // Sync pinned message IDs from conversation data on load
-  useEffect(() => {
-    if (conversation?.pinnedMessages) {
-      setPinnedMessages(conversation.pinnedMessages.map((m) => m.id))
-    }
-  }, [conversation?.id])
+  const pinnedMessages = useMemo(
+    () => conversation?.pinnedMessages?.map((m) => m.id) ?? [],
+    [conversation?.pinnedMessages],
+  )
   const isGroup = conversation?.type === 'group'
   const isAI = conversation?.participants.includes('ai-bot-000000000000000000000001') ?? false
   const otherUserId = !isGroup && !isAI && conversation?.type === 'direct'
@@ -249,7 +244,6 @@ export default function ConversationPage({ params }: Props) {
                 patchMessage(parsed.messageId, { reactions: parsed.reactions })
                 break
               case 'PINNED_MESSAGE':
-                setPinnedMessages(parsed.pinnedMessages)
                 queryClient.invalidateQueries({ queryKey: ['conversation', id] })
                 break
               case 'CONVERSATION_UPDATED':
@@ -335,7 +329,6 @@ export default function ConversationPage({ params }: Props) {
         conversationId={id}
         typingUserIds={typingUserIds}
         onSearchToggle={() => setSearchVisible((v) => !v)}
-        onPinnedUpdate={setPinnedMessages}
       />
 
       {searchVisible && (

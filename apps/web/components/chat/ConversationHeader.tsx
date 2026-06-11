@@ -3,10 +3,12 @@
 import { useState } from 'react'
 import { ArrowLeft, Bot, Settings, Search, ImageIcon } from 'lucide-react'
 import Link from 'next/link'
+import { useQueryClient } from '@tanstack/react-query'
 import { useConversation } from '@/lib/hooks/use-conversation'
 import { useUserStatus } from '@/lib/hooks/use-user-status'
 import { useAuthStore } from '@/lib/store/auth.store'
 import { useUser } from '@/lib/hooks/use-user'
+import type { Conversation } from '@/lib/api/types'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
 import { PinnedMessagesBar } from './PinnedMessagesBar'
@@ -20,7 +22,6 @@ interface Props {
   conversationId: string
   typingUserIds: string[]
   onSearchToggle: () => void
-  onPinnedUpdate?: (ids: string[]) => void
 }
 
 function getInitial(name: string): string {
@@ -31,9 +32,9 @@ export function ConversationHeader({
   conversationId,
   typingUserIds,
   onSearchToggle,
-  onPinnedUpdate,
 }: Props) {
   const { data: conversation } = useConversation(conversationId)
+  const queryClient = useQueryClient()
   const currentUser = useAuthStore((s) => s.user)
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [groupSettingsOpen, setGroupSettingsOpen] = useState(false)
@@ -57,7 +58,13 @@ export function ConversationHeader({
   const pinnedMessages = conversation?.pinnedMessages ?? []
 
   const handleUnpin = (messageId: string) => {
-    onPinnedUpdate?.(pinnedMessages.filter((m) => m.id !== messageId).map((m) => m.id))
+    queryClient.setQueryData(
+      ['conversation', conversationId],
+      (old: Conversation | undefined) =>
+        old
+          ? { ...old, pinnedMessages: old.pinnedMessages.filter((m) => m.id !== messageId) }
+          : old,
+    )
   }
 
   return (
