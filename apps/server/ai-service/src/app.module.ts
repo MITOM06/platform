@@ -11,6 +11,7 @@ import { UsageModule } from './usage/usage.module';
 import { PersonaModule } from './persona/persona.module';
 import { BotSeedService } from './bot/bot-seed.service';
 import { RedisSubscriberService } from './redis/redis-subscriber.service';
+import { HealthModule } from './health/health.module';
 
 const mongooseModule: DynamicModule = MongooseModule.forRootAsync({
   useFactory: (configService: ConfigService) => ({
@@ -27,6 +28,7 @@ const mongooseModule: DynamicModule = MongooseModule.forRootAsync({
       envFilePath: '.env',
     }),
     mongooseModule,
+    HealthModule,
     RedisModule,
     MemoryModule,
     KbModule,

@@ -3,6 +3,7 @@ package com.platform.chatservice.controller;
 import com.platform.chatservice.exception.BadRequestException;
 import com.platform.chatservice.exception.UnauthorizedException;
 import com.platform.chatservice.security.UserPrincipal;
+import com.platform.chatservice.service.RateLimiterService;
 import lombok.RequiredArgsConstructor;
 import org.bson.types.ObjectId;
 import org.springframework.core.io.InputStreamResource;
@@ -28,13 +29,15 @@ public class UploadController {
 
     private final GridFsTemplate gridFsTemplate;
     private final GridFsOperations gridFsOperations;
+    private final RateLimiterService rateLimiterService;
 
     @PostMapping
     public ResponseEntity<Map<String, String>> uploadFile(@RequestParam("file") MultipartFile file) throws IOException {
         var authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (!(authentication instanceof UserPrincipal)) {
+        if (!(authentication instanceof UserPrincipal principal)) {
             throw new UnauthorizedException("User is not authenticated");
         }
+        rateLimiterService.checkUploadRate(principal.getUserId());
 
         if (file == null || file.isEmpty()) {
             throw new BadRequestException("File is empty");

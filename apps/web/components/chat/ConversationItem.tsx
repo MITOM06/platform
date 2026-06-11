@@ -58,8 +58,10 @@ export function ConversationItem({ conversation: conv }: Props) {
     <Link
       href={`/conversations/${conv.id}`}
       className={cn(
-        'flex items-center gap-3 px-3 py-3 rounded-lg transition-colors hover:bg-accent',
-        isActive && 'bg-accent',
+        'flex items-center gap-3 px-3 py-3 rounded-lg transition-colors hover:bg-primary/5',
+        isActive
+          ? 'bg-primary/[0.08] shadow-[inset_2px_0_0_0_#6AC9FF]'
+          : 'hover:bg-muted',
       )}
     >
       <Avatar className="size-10 shrink-0">

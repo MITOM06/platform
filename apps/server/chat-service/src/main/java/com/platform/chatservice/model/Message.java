@@ -3,6 +3,8 @@ package com.platform.chatservice.model;
 import lombok.*;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.index.CompoundIndex;
+import org.springframework.data.mongodb.core.index.CompoundIndexes;
 import org.springframework.data.mongodb.core.index.TextIndexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 
@@ -11,6 +13,14 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Document(collection = "messages")
+@CompoundIndexes({
+    // Primary query: paginated history for a conversation (most critical hot path)
+    @CompoundIndex(name = "conv_created", def = "{'conversationId': 1, 'createdAt': -1}"),
+    // Attachment gallery: filter by type within a conversation
+    @CompoundIndex(name = "conv_type_created", def = "{'conversationId': 1, 'type': 1, 'createdAt': -1}"),
+    // Sender-scoped lookups: edit/recall own messages
+    @CompoundIndex(name = "conv_sender", def = "{'conversationId': 1, 'senderId': 1}"),
+})
 @Data
 @Builder
 @NoArgsConstructor

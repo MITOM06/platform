@@ -11,6 +11,7 @@ import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { chatService } from '@/lib/api/chat'
 import type { Message, MessageType, Conversation } from '@/lib/api/types'
 
@@ -19,6 +20,12 @@ const EMOJIS = [
   '😢', '😭', '😡', '👍', '👎', '👏', '🙏', '🔥', '❤️', '💔',
   '🎉', '✨', '⭐', '💯', '😴', '🤗', '🥳', '😅', '😇', '🤩',
   '😋', '😜', '🤪', '😬', '🙄', '😏', '🙂', '🥰', '😤', '👌',
+]
+
+const STICKERS = [
+  '😊', '😂', '🥰', '😎', '🤔', '😭',
+  '🎉', '❤️', '🔥', '👍', '🙏', '💯',
+  '🥲', '😴', '😡', '🤗',
 ]
 
 interface Props {
@@ -60,6 +67,9 @@ export function MessageInput({
   const [mentionCandidates, setMentionCandidates] = useState<string[]>([])
   const [mentionIndex, setMentionIndex] = useState(0)
   const [mentionQuery, setMentionQuery] = useState<{ start: number, end: number, text: string } | null>(null)
+
+  // Popover state
+  const [popoverOpen, setPopoverOpen] = useState(false)
 
   // Populate textarea when entering edit mode
   useEffect(() => {
@@ -297,7 +307,7 @@ export function MessageInput({
   const busy = disabled || sending || uploading
 
   return (
-    <div className="border-t bg-background">
+    <div className="border-t bg-background" style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
       {/* Reply banner */}
       {replyingTo && !editingMessage && (
         <div className="flex items-center gap-2 px-3 py-1.5 bg-primary/5 border-b text-sm">
@@ -359,26 +369,61 @@ export function MessageInput({
       ) : (
         <div className="flex items-end gap-1 p-3">
           {/* Emoji */}
-          <Popover>
+          <Popover open={popoverOpen} onOpenChange={setPopoverOpen}>
             <PopoverTrigger asChild>
               <Button variant="ghost" size="icon" className="shrink-0" disabled={busy}>
                 <Smile className="size-5 text-pon-cyan" />
               </Button>
             </PopoverTrigger>
-            <PopoverContent className="w-auto p-2" side="top" align="start">
-              <div className="grid grid-cols-8 gap-0.5">
-                {EMOJIS.map((emoji, i) => (
-                  <button
-                    key={i}
-                    type="button"
-                    onClick={() => insertEmoji(emoji)}
-                    className="rounded p-1 text-lg leading-none transition-transform hover:scale-125"
-                  >
-                    {emoji}
-                  </button>
-                ))}
-              </div>
-            </PopoverContent>
+              <PopoverContent className="w-[300px] max-w-[calc(100vw-1rem)] p-0" align="start" side="top">
+                <Tabs defaultValue="emoji" className="w-full">
+                  <TabsList className="w-full grid grid-cols-2 rounded-none border-b border-border bg-transparent h-10 p-0">
+                    <TabsTrigger
+                      value="emoji"
+                      className="rounded-none data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-pon-cyan text-xs"
+                    >
+                      Emoji
+                    </TabsTrigger>
+                    <TabsTrigger
+                      value="sticker"
+                      className="rounded-none data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-pon-cyan text-xs"
+                    >
+                      Nhãn dán
+                    </TabsTrigger>
+                  </TabsList>
+                  
+                  <TabsContent value="emoji" className="p-2 m-0 h-48 overflow-y-auto">
+                    <div className="grid grid-cols-8 gap-1">
+                      {EMOJIS.map((emoji) => (
+                        <button
+                          key={emoji}
+                          onClick={() => insertEmoji(emoji)}
+                          className="hover:bg-muted p-1.5 rounded text-lg flex items-center justify-center transition-colors"
+                        >
+                          {emoji}
+                        </button>
+                      ))}
+                    </div>
+                  </TabsContent>
+                  
+                  <TabsContent value="sticker" className="p-2 m-0 h-48 overflow-y-auto">
+                    <div className="grid grid-cols-4 gap-2">
+                      {STICKERS.map((sticker) => (
+                        <button
+                          key={sticker}
+                          onClick={() => {
+                            onSend(sticker, 'sticker')
+                            setPopoverOpen(false)
+                          }}
+                          className="hover:bg-pon-cyan/10 p-2 rounded-xl text-4xl flex items-center justify-center transition-colors hover:scale-105"
+                        >
+                          {sticker}
+                        </button>
+                      ))}
+                    </div>
+                  </TabsContent>
+                </Tabs>
+              </PopoverContent>
           </Popover>
 
           {/* Attach */}
@@ -448,16 +493,26 @@ export function MessageInput({
               {editingMessage ? <Pencil className="size-4" /> : <Send className="size-4" />}
             </Button>
           ) : (
-            <Button
-              size="icon"
-              variant="ghost"
-              onClick={startRecording}
-              disabled={busy}
-              className="shrink-0"
-              title="Ghi âm"
-            >
-              <Mic className="size-5 text-pon-cyan" />
-            </Button>
+            <>
+              <Button
+                size="icon"
+                variant="ghost"
+                onClick={startRecording}
+                disabled={busy}
+                className="shrink-0"
+                title="Ghi âm"
+              >
+                <Mic className="size-5 text-pon-cyan" />
+              </Button>
+              <button
+                onClick={() => onSend('👍', 'text')}
+                disabled={busy}
+                className="size-9 shrink-0 flex items-center justify-center text-xl transition-transform hover:scale-110 active:scale-95"
+                title="Gửi nhanh"
+              >
+                👍
+              </button>
+            </>
           )}
         </div>
       )}

@@ -65,6 +65,9 @@ dependencies:
   # Audio playback for voice messages (Task 89)
   audioplayers: ^6.1.0
 
+  # Error tracking
+  sentry_flutter: ^8.3.0
+
   # Icons
   cupertino_icons: ^1.0.8
 

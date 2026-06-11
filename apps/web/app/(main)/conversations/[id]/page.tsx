@@ -16,6 +16,7 @@ import { MessageBubble } from '@/components/chat/MessageBubble'
 import { MessageInput } from '@/components/chat/MessageInput'
 import { MessageSearchPanel } from '@/components/chat/MessageSearchPanel'
 import { StrangerRequestBanner } from '@/components/chat/StrangerRequestBanner'
+import { ChatTypingIndicator } from '@/components/chat/ChatTypingIndicator'
 import { BlockedComposerNotice } from '@/components/chat/BlockedComposerNotice'
 import { AiTraceModal } from '@/components/chat/AiTraceModal'
 import { ForwardMessageModal } from '@/components/chat/ForwardMessageModal'
@@ -92,6 +93,13 @@ export default function ConversationPage({ params }: Props) {
   const [pinnedMessages, setPinnedMessages] = useState<string[]>([])
 
   const { data: conversation } = useConversation(id)
+
+  // Sync pinned message IDs from conversation data on load
+  useEffect(() => {
+    if (conversation?.pinnedMessages) {
+      setPinnedMessages(conversation.pinnedMessages.map((m) => m.id))
+    }
+  }, [conversation?.id])
   const isGroup = conversation?.type === 'group'
   const isAI = conversation?.participants.includes('ai-bot-000000000000000000000001') ?? false
   const otherUserId = !isGroup && !isAI && conversation?.type === 'direct'
@@ -421,6 +429,10 @@ export default function ConversationPage({ params }: Props) {
                 )
               })
             })()}
+
+          {typingUserIds.length > 0 && currentUser && !typingUserIds.includes(currentUser.id) && (
+            <ChatTypingIndicator />
+          )}
 
           <div ref={bottomRef} />
         </div>

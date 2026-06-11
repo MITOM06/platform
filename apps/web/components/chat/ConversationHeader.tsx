@@ -54,10 +54,10 @@ export function ConversationHeader({
     (isAI ? 'AI Assistant' : (otherUser?.displayName ?? 'Cuộc trò chuyện'))
   const avatarUrl = conversation?.avatarUrl ?? otherUser?.avatarUrl
   const isTyping = typingUserIds.length > 0
-  const pinnedMessages = (conversation?.pinnedMessages ?? []).map((p) => p.id)
+  const pinnedMessages = conversation?.pinnedMessages ?? []
 
   const handleUnpin = (messageId: string) => {
-    onPinnedUpdate?.(pinnedMessages.filter((id) => id !== messageId))
+    onPinnedUpdate?.(pinnedMessages.filter((m) => m.id !== messageId).map((m) => m.id))
   }
 
   return (
@@ -86,7 +86,7 @@ export function ConversationHeader({
             )}
           </Avatar>
           {otherUserId && status?.online && (
-            <span className="absolute bottom-0 right-0 size-2.5 rounded-full bg-green-500 border-2 border-background" />
+            <span className="absolute bottom-0 right-0 size-2.5 rounded-full bg-[#00E676] border-2 border-background shadow-[0_0_6px_rgba(0,230,118,0.6)]" />
           )}
         </div>
 
@@ -99,8 +99,8 @@ export function ConversationHeader({
               </span>
             )}
           </div>
-          {isTyping && !isAI ? (
-            <p className="text-xs text-muted-foreground">Đang nhập...</p>
+          {isTyping ? (
+            <p className="text-xs text-pon-cyan font-medium animate-pulse">đang nhập...</p>
           ) : otherUserId && status ? (
             <p className="text-xs text-muted-foreground">
               {status.online ? 'Đang hoạt động' : 'Ngoại tuyến'}
@@ -117,7 +117,7 @@ export function ConversationHeader({
           <Button variant="ghost" size="icon" onClick={onSearchToggle} title="Tìm kiếm">
             <Search className="size-4" />
           </Button>
-          <Button variant="ghost" size="icon" onClick={() => setGalleryOpen(true)} title="Nội dung đã chia sẻ">
+          <Button variant="ghost" size="icon" onClick={() => setGalleryOpen(true)} title="Nội dung đã chia sẻ" className="hidden sm:flex">
             <ImageIcon className="size-4" />
           </Button>
           <Button

@@ -46,6 +46,52 @@ jobs:
         env:
           JWT_ACCESS_SECRET: ci_test_secret_must_be_at_least_32_chars_long
 
+  # ── NestJS AI Service ─────────────────────────────────────────────────────
+  ai-service:
+    name: AI Service (NestJS)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/server/ai-service
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: corepack enable
+      - name: Install dependencies
+        run: cd ../../../ && pnpm install --frozen-lockfile
+      - name: Build
+        run: pnpm run build
+      - name: Test
+        run: pnpm exec jest --passWithNoTests
+
+  # ── Next.js Web Client ────────────────────────────────────────────────────
+  web:
+    name: Web (Next.js)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/web
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: corepack enable
+      - name: Install dependencies
+        run: cd ../../ && pnpm install --frozen-lockfile
+      - name: Type check
+        run: pnpm exec tsc --noEmit
+      - name: Lint
+        run: pnpm run lint
+      - name: Build
+        run: pnpm run build
+        env:
+          NEXT_PUBLIC_AUTH_URL: http://localhost:3001
+          NEXT_PUBLIC_CHAT_URL: http://localhost:8080
+          NEXT_PUBLIC_WS_URL: ws://localhost:8080/ws
+
   # ── Flutter Client ─────────────────────────────────────────────────────────
   flutter-client:
     name: Flutter Client

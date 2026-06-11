@@ -9,28 +9,40 @@ import java.time.Duration;
 
 /**
  * Fixed-window rate limiter backed by Redis.
- * Allows at most MAX_MESSAGES per WINDOW_SECONDS per user.
  */
 @Service
 @RequiredArgsConstructor
 public class RateLimiterService {
 
     private static final int MAX_MESSAGES = 10;
-    private static final long WINDOW_SECONDS = 5;
+    private static final long MESSAGE_WINDOW_SECONDS = 5;
+
+    private static final int MAX_UPLOADS = 20;
+    private static final long UPLOAD_WINDOW_SECONDS = 60;
+
+    private static final int MAX_REACTIONS = 30;
+    private static final long REACTION_WINDOW_SECONDS = 60;
 
     private final StringRedisTemplate redisTemplate;
 
-    /**
-     * Increments the user's message counter and throws {@link RateLimitExceededException}
-     * if the limit is exceeded. The counter key expires automatically after WINDOW_SECONDS.
-     */
     public void checkMessageRate(String userId) {
-        String key = "rate:msg:" + userId;
+        check("rate:msg:" + userId, MESSAGE_WINDOW_SECONDS, MAX_MESSAGES);
+    }
+
+    public void checkUploadRate(String userId) {
+        check("rate:upload:" + userId, UPLOAD_WINDOW_SECONDS, MAX_UPLOADS);
+    }
+
+    public void checkReactionRate(String userId) {
+        check("rate:reaction:" + userId, REACTION_WINDOW_SECONDS, MAX_REACTIONS);
+    }
+
+    private void check(String key, long windowSeconds, int max) {
         Long count = redisTemplate.opsForValue().increment(key);
         if (count != null && count == 1) {
-            redisTemplate.expire(key, Duration.ofSeconds(WINDOW_SECONDS));
+            redisTemplate.expire(key, Duration.ofSeconds(windowSeconds));
         }
-        if (count != null && count > MAX_MESSAGES) {
+        if (count != null && count > max) {
             throw new RateLimitExceededException();
         }
     }

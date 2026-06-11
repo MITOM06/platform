@@ -20,6 +20,8 @@
     "@nestjs/mongoose": "^11.0.3",
     "@nestjs/platform-express": "^11.0.1",
     "@qdrant/js-client-rest": "^1.18.0",
+    "@sentry/node": "^10.57.0",
+    "helmet": "^8.2.0",
     "ioredis": "^5.8.2",
     "mammoth": "^1.12.0",
     "mongoose": "^8.19.2",

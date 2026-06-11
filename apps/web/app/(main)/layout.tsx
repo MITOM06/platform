@@ -110,14 +110,19 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
   const { openNewChat, openPublicChannels } = useUiStore()
 
   return (
-    <div className="h-screen flex overflow-hidden">
+    <div className="h-dvh flex overflow-hidden">
       {/* Sidebar: full-width on mobile, fixed 288px on md+; hidden on mobile when conversation is open */}
       <aside
         className={cn(
-          'w-full md:w-72 border-r flex-col shrink-0',
+          'w-full md:w-72 border-r flex-col shrink-0 relative overflow-hidden',
           isConversationOpen ? 'hidden md:flex' : 'flex',
         )}
       >
+        {/* Ambient neon glow spheres */}
+        <div className="absolute inset-0 pointer-events-none overflow-hidden">
+          <div className="absolute -top-16 -left-16 size-40 rounded-full bg-pon-cyan blur-[60px] opacity-[0.06] dark:opacity-[0.09]" />
+          <div className="absolute -bottom-16 -right-16 size-40 rounded-full bg-pon-peach blur-[60px] opacity-[0.06] dark:opacity-[0.09]" />
+        </div>
         <div className="h-16 border-b px-4 flex items-center justify-between shrink-0 bg-background/95 backdrop-blur-md">
           {/* Logo & PON Text */}
           <div className="flex items-center gap-2 select-none">

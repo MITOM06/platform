@@ -35,6 +35,7 @@ import java.util.stream.Collectors;
 public class ConversationService {
 
     private final ConversationRepository conversationRepository;
+    private final ConversationCacheService conversationCacheService;
     private final MessageRepository messageRepository;
     private final FriendshipRepository friendshipRepository;
     private final MongoTemplate mongoTemplate;
@@ -78,7 +79,7 @@ public class ConversationService {
         // request (PENDING) until the recipient accepts or replies.
         boolean friends = friendshipRepository
             .findAcceptedBetween(currentUserId, participantId).isPresent();
-        Conversation saved = conversationRepository.save(
+        Conversation saved = conversationCacheService.save(
             Conversation.builder()
                 .participants(participants)
                 .type(Conversation.TYPE_DIRECT)
@@ -102,7 +103,7 @@ public class ConversationService {
         if (members.size() < 2) {
             throw new IllegalArgumentException("A group needs at least 2 members");
         }
-        Conversation saved = conversationRepository.save(
+        Conversation saved = conversationCacheService.save(
             Conversation.builder()
                 .type(Conversation.TYPE_GROUP)
                 .name(request.name().trim())
@@ -124,7 +125,7 @@ public class ConversationService {
         if (avatarUrl != null) {
             conversation.setAvatarUrl(avatarUrl.isBlank() ? null : avatarUrl);
         }
-        Conversation saved = conversationRepository.save(conversation);
+        Conversation saved = conversationCacheService.save(conversation);
         return toResponse(saved, userId, messageRepository.countUnread(conversationId, userId));
     }
 
@@ -137,7 +138,7 @@ public class ConversationService {
             }
         }
         conversation.setParticipants(participants);
-        Conversation saved = conversationRepository.save(conversation);
+        Conversation saved = conversationCacheService.save(conversation);
         return toResponse(saved, userId, messageRepository.countUnread(conversationId, userId));
     }
 
@@ -164,7 +165,7 @@ public class ConversationService {
             }
             conversation.setAdmins(admins);
         }
-        Conversation saved = conversationRepository.save(conversation);
+        Conversation saved = conversationCacheService.save(conversation);
         return toResponse(saved, userId, 0L);
     }
 
@@ -178,14 +179,14 @@ public class ConversationService {
         }
         conversation.setHiddenFor(hidden);
         setClearedAt(conversation, userId, Instant.now());
-        conversationRepository.save(conversation);
+        conversationCacheService.save(conversation);
     }
 
     /** "Start over": hide all messages up to now for this user only. */
     public void clearHistory(String userId, String conversationId) {
         Conversation conversation = getRawConversation(userId, conversationId);
         setClearedAt(conversation, userId, Instant.now());
-        conversationRepository.save(conversation);
+        conversationCacheService.save(conversation);
     }
 
     public ConversationResponse muteConversation(String userId, String conversationId) {
@@ -195,7 +196,7 @@ public class ConversationService {
         if (!muted.contains(userId)) {
             muted.add(userId);
             conversation.setMutedUsers(muted);
-            conversationRepository.save(conversation);
+            conversationCacheService.save(conversation);
         }
         return toResponse(conversation, userId, messageRepository.countUnread(conversationId, userId));
     }
@@ -206,7 +207,7 @@ public class ConversationService {
             ? new ArrayList<>() : new ArrayList<>(conversation.getMutedUsers());
         if (muted.remove(userId)) {
             conversation.setMutedUsers(muted);
-            conversationRepository.save(conversation);
+            conversationCacheService.save(conversation);
         }
         return toResponse(conversation, userId, messageRepository.countUnread(conversationId, userId));
     }
@@ -218,7 +219,7 @@ public class ConversationService {
         if (!archived.contains(userId)) {
             archived.add(userId);
             conversation.setArchivedBy(archived);
-            conversationRepository.save(conversation);
+            conversationCacheService.save(conversation);
         }
         return toResponse(conversation, userId, messageRepository.countUnread(conversationId, userId));
     }
@@ -229,7 +230,7 @@ public class ConversationService {
             ? new ArrayList<>() : new ArrayList<>(conversation.getArchivedBy());
         if (archived.remove(userId)) {
             conversation.setArchivedBy(archived);
-            conversationRepository.save(conversation);
+            conversationCacheService.save(conversation);
         }
         return toResponse(conversation, userId, messageRepository.countUnread(conversationId, userId));
     }
@@ -271,7 +272,7 @@ public class ConversationService {
     public ConversationResponse setAutoDelete(String userId, String conversationId, Integer seconds) {
         Conversation conversation = getRawConversation(userId, conversationId);
         conversation.setAutoDeleteSeconds(seconds != null && seconds > 0 ? seconds : null);
-        Conversation saved = conversationRepository.save(conversation);
+        Conversation saved = conversationCacheService.save(conversation);
         return toResponse(saved, userId, messageRepository.countUnread(conversationId, userId));
     }
 
@@ -289,7 +290,7 @@ public class ConversationService {
             throw new ForbiddenException("The initiator cannot accept their own request");
         }
         conversation.setStatus(Conversation.STATUS_ACCEPTED);
-        Conversation saved = conversationRepository.save(conversation);
+        Conversation saved = conversationCacheService.save(conversation);
         return toResponse(saved, userId, messageRepository.countUnread(conversationId, userId));
     }
 
@@ -328,7 +329,7 @@ public class ConversationService {
 
     /** Join a public channel. Idempotent — no-op if the user is already a member. */
     public ConversationResponse joinChannel(String userId, String conversationId) {
-        Conversation conversation = conversationRepository.findById(conversationId)
+        Conversation conversation = conversationCacheService.findById(conversationId)
             .orElseThrow(() -> new ConversationNotFoundException(conversationId));
         if (!conversation.isPublicChannel() || !Conversation.TYPE_GROUP.equals(conversation.getType())) {
             throw new ForbiddenException("This channel is not publicly joinable");
@@ -337,19 +338,19 @@ public class ConversationService {
             List<String> participants = new ArrayList<>(conversation.getParticipants());
             participants.add(userId);
             conversation.setParticipants(participants);
-            conversationRepository.save(conversation);
+            conversationCacheService.save(conversation);
         }
         return toResponse(conversation, userId, messageRepository.countUnread(conversationId, userId));
     }
 
     public List<String> getParticipants(String conversationId) {
-        return conversationRepository.findById(conversationId)
+        return conversationCacheService.findById(conversationId)
             .map(Conversation::getParticipants)
             .orElse(List.of());
     }
 
     public boolean isMuted(String conversationId, String userId) {
-        return conversationRepository.findById(conversationId)
+        return conversationCacheService.findById(conversationId)
             .map(Conversation::getMutedUsers)
             .map(list -> list != null && list.contains(userId))
             .orElse(false);
@@ -357,7 +358,7 @@ public class ConversationService {
 
     /** Fetch a conversation, enforcing the caller is a participant. */
     private Conversation getRawConversation(String userId, String conversationId) {
-        Conversation conversation = conversationRepository.findById(conversationId)
+        Conversation conversation = conversationCacheService.findById(conversationId)
             .orElseThrow(() -> new ConversationNotFoundException(conversationId));
         if (conversation.getParticipants() == null || !conversation.getParticipants().contains(userId)) {
             throw new ConversationNotFoundException(conversationId);

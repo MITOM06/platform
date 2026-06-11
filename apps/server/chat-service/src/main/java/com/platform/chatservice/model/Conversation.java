@@ -4,6 +4,9 @@ import lombok.*;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.mongodb.core.index.CompoundIndex;
+import org.springframework.data.mongodb.core.index.CompoundIndexes;
+import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.Instant;
@@ -12,6 +15,12 @@ import java.util.List;
 import java.util.Map;
 
 @Document(collection = "conversations")
+@CompoundIndexes({
+    // Primary query: user's conversation list sorted by recency (most critical hot path)
+    @CompoundIndex(name = "participants_last_msg", def = "{'participants': 1, 'lastMessageAt': -1}"),
+    // Public channel discovery sorted by recency
+    @CompoundIndex(name = "public_channel_last_msg", def = "{'publicChannel': 1, 'lastMessageAt': -1}"),
+})
 @Data
 @Builder
 @NoArgsConstructor
@@ -29,6 +38,7 @@ public class Conversation {
     @Id
     private String id;
 
+    @Indexed
     private List<String> participants;
 
     /** "direct" (1-1) or "group". Null on legacy docs => treated as direct. */

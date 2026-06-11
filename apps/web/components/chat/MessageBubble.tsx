@@ -189,7 +189,7 @@ export function MessageBubble({
             className={cn(
               'rounded-[24px] px-4 py-2.5 text-sm break-words relative overflow-hidden shadow-xs border',
               isOwn
-                ? 'bg-primary text-primary-foreground border-primary/30 rounded-tr-none'
+                ? 'bg-primary text-primary-foreground border-primary/30 rounded-tr-none shadow-[0_2px_12px_rgba(106,201,255,0.25)] dark:shadow-[0_2px_16px_rgba(106,201,255,0.2)]'
                 : 'bg-muted/70 text-foreground border-border/50 rounded-tl-none',
               isPinned && 'ring-2 ring-primary/40',
             )}

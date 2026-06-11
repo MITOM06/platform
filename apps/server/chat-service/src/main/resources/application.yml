@@ -6,9 +6,8 @@ spring:
     mongodb:
       uri: ${SPRING_DATA_MONGODB_URI:mongodb://localhost:27018/platform}
     redis:
-      url: ${REDIS_URL:redis://localhost:6379}
-      host: localhost
-      port: 6379
+      host: ${SPRING_DATA_REDIS_HOST:localhost}
+      port: ${SPRING_DATA_REDIS_PORT:6379}
   jackson:
     default-property-inclusion: non_null
   servlet:
@@ -20,7 +19,21 @@ management:
   endpoints:
     web:
       exposure:
-        include: health
+        include: health,info
+      base-path: /actuator
+  endpoint:
+    health:
+      show-details: always
+      probes:
+        enabled: true
+  info:
+    env:
+      enabled: true
+
+sentry:
+  dsn: ${SENTRY_DSN:}
+  traces-sample-rate: 0.1
+  environment: ${SPRING_PROFILES_ACTIVE:development}
 
 app:
   cors:

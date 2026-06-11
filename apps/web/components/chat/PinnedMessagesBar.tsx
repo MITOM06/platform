@@ -5,13 +5,17 @@ import { Button } from '@/components/ui/button'
 import { chatService } from '@/lib/api/chat'
 import { toast } from 'sonner'
 
+import type { PinnedMessage } from '@/lib/api/types'
+
 interface Props {
-  pinnedMessages: string[]
+  pinnedMessages: PinnedMessage[]
   onUnpin: (messageId: string) => void
 }
 
 export function PinnedMessagesBar({ pinnedMessages, onUnpin }: Props) {
   if (pinnedMessages.length === 0) return null
+
+  const latest = pinnedMessages[0]!
 
   const handleUnpin = async (messageId: string) => {
     try {
@@ -23,9 +27,8 @@ export function PinnedMessagesBar({ pinnedMessages, onUnpin }: Props) {
   }
 
   const handleJumpToLatest = () => {
-    const latestId = pinnedMessages[pinnedMessages.length - 1]
-    if (!latestId) return
-    const el = document.getElementById(`message-${latestId}`)
+    if (!latest) return
+    const el = document.getElementById(`message-${latest.id}`)
     if (el) {
       el.scrollIntoView({ behavior: 'smooth', block: 'center' })
       el.classList.add('bg-primary/20', 'transition-all', 'duration-500', 'ring-2', 'ring-primary/40')
@@ -38,29 +41,29 @@ export function PinnedMessagesBar({ pinnedMessages, onUnpin }: Props) {
   }
 
   return (
-    <div className="border-b bg-muted/40 px-4 py-1.5 flex items-center gap-2 text-sm shrink-0 select-none">
-      <Pin className="size-3.5 text-primary shrink-0 animate-bounce" />
-      <button
-        onClick={handleJumpToLatest}
-        className="text-muted-foreground flex-1 truncate text-left hover:text-foreground font-medium transition-colors cursor-pointer"
-        title="Bấm để chuyển tới tin nhắn ghim mới nhất"
-      >
-        {pinnedMessages.length} tin nhắn đã ghim (Bấm để xem)
-      </button>
-      <div className="flex items-center gap-1">
-        {pinnedMessages.map((id, index) => (
-          <Button
-            key={id}
-            variant="ghost"
-            size="icon-xs"
-            onClick={() => handleUnpin(id)}
-            title={`Bỏ ghim tin nhắn ${index + 1}`}
-            className="size-5 shrink-0 hover:bg-destructive/10 hover:text-destructive rounded-full"
-          >
-            <X className="size-3" />
-          </Button>
-        ))}
+    <div
+      className="bg-pon-cyan/10 border-l-[3px] border-l-pon-cyan px-3 py-1.5 flex items-center gap-2 cursor-pointer transition-colors hover:bg-pon-cyan/15 shrink-0"
+      onClick={handleJumpToLatest}
+    >
+      <Pin className="size-3.5 text-pon-cyan shrink-0" />
+      <div className="flex-1 min-w-0">
+        <p className="text-[10px] text-pon-cyan font-semibold uppercase tracking-wider mb-0.5">
+          Tin nhắn đã ghim
+        </p>
+        <p className="text-xs text-foreground truncate">{latest.content}</p>
       </div>
+      <Button
+        variant="ghost"
+        size="icon-xs"
+        onClick={(e) => {
+          e.stopPropagation()
+          handleUnpin(latest.id)
+        }}
+        title="Bỏ ghim"
+        className="size-6 shrink-0 hover:bg-foreground/10 rounded-full"
+      >
+        <X className="size-4" />
+      </Button>
     </div>
   )
 }
