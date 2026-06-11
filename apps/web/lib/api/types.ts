@@ -121,3 +121,7 @@ export type StompEvent =
   | { type: 'REACTION_UPDATED'; messageId: string; reactions: Reaction[] }
   | { type: 'PINNED_MESSAGE'; conversationId: string; messageId: string; pinnedMessages: string[] }
   | { type: 'CONVERSATION_UPDATED'; conversation: Conversation }
+  | { type: 'AI_STREAM_CHUNK'; chunk: string; senderId: string; conversationId: string }
+  | { type: 'AI_STREAM_DONE'; senderId: string; conversationId: string }
+  | { type: 'AI_STREAM_ERROR'; error: string; senderId: string; conversationId: string }
+  | { type: 'AI_TOOL_CALL'; toolName: string; inputSummary: string; senderId: string; conversationId: string }

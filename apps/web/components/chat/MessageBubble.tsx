@@ -13,6 +13,7 @@ import type { Message } from '@/lib/api/types'
 interface Props {
   message: Message
   isOwn: boolean
+  currentUserId?: string
   isPinned?: boolean
   onEdit?: (message: Message) => void
   onForward?: (message: Message) => void
@@ -43,6 +44,7 @@ const BARE_TYPES = new Set(['image', 'video', 'sticker'])
 export function MessageBubble({
   message,
   isOwn,
+  currentUserId,
   isPinned = false,
   onEdit,
   onForward,
@@ -102,7 +104,7 @@ export function MessageBubble({
       }}
     >
       <p className="font-semibold mb-0.5">
-        {message.replyPreview.senderId === message.senderId ? 'Bạn' : 'Người khác'}
+        {message.replyPreview.senderId === currentUserId ? 'Bạn' : (message.senderName || 'Người khác')}
       </p>
       <p className="truncate italic">{message.replyPreview.content}</p>
     </button>

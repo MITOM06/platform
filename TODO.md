@@ -244,6 +244,34 @@ Mirror: `apps/client/lib/features/chat/ui/widgets/{image_content,file_content,vo
 5. W-10.14, W-10.9 → W-10.12, W-10.16 (remaining parity)
 6. W-11.* polish; W-10.15 calls last
 
+### SPRINT W-12 — Web Chat Logic Bug Fixes `IN PROGRESS`
+> **Audit (2026-06-11):** 3 bugs + 1 missing feature found in web chat after code review.
+
+- [x] **Task W-12.1: REST sendMessage missing STOMP broadcast** `S`
+  - `MessageController.sendMessage` (Spring Boot) saves to DB nhưng **không** broadcast qua STOMP. Kết quả: participant B không nhận tin realtime.
+  - Fix: thêm `messagingTemplate.convertAndSend("/topic/conversation/"+convId, response)` sau `messageService.sendMessage(...)`.
+  - File: `apps/server/chat-service/src/main/java/com/platform/chatservice/controller/MessageController.java`
+
+- [x] **Task W-12.2: isOwn alignment bug** `S`
+  - Khi `currentUser` chưa load (null — trước khi `SessionInitializer` xong), tất cả tin nhắn render `isOwn=false` (bên trái). Tin nhắn của A bị hiển thị như tin của B.
+  - Fix: guard render messages cho đến khi `currentUser !== null`.
+  - File: `apps/web/app/(main)/conversations/[id]/page.tsx`
+
+- [x] **Task W-12.3: AI STOMP events rơi vào appendMessage** `M`
+  - `AI_STREAM_CHUNK`, `AI_STREAM_DONE`, `AI_STREAM_ERROR`, `AI_TOOL_CALL` không nằm trong `STOMP_EVENT_TYPES` → rơi vào `appendMessage` → thêm vào cache như "tin nhắn" rác (không có `id`, không có `content` hợp lệ).
+  - Fix: thêm vào `STOMP_EVENT_TYPES`, xử lý streaming state — accumulate chunks → show streaming bubble → finalize khi DONE. `AI_STREAM_ERROR` → toast.
+  - File: `apps/web/app/(main)/conversations/[id]/page.tsx`
+
+- [x] **Task W-12.4: Chat với AI chưa có trên web** `M`
+  - Không có button tạo AI conversation. User không thể start chat với AI Assistant từ web.
+  - Fix: thêm "Chat với AI" button vào ConversationList sidebar. Click → `POST /api/conversations { participantId: AI_BOT_ID }` → navigate. Trong AI conversation, tự động prepend `@AI ` vào content trước khi send.
+  - Files: `apps/web/components/chat/ConversationList.tsx`, `apps/web/app/(main)/conversations/[id]/page.tsx`
+
+- [x] **Task W-12.5: Clear history không clear cache ngay** `S`
+  - `invalidateQueries` trigger stale-while-revalidate → user thấy tin nhắn cũ trong khi refetch đang chạy.
+  - Fix: dùng `queryClient.removeQueries({ queryKey: ['messages', id], exact: true })` TRƯỚC khi `invalidateQueries` để xoá cache ngay lập tức.
+  - File: `apps/web/components/chat/ConversationSettingsDrawer.tsx`
+
 ---
 
 ## 🧪 QA LOG
