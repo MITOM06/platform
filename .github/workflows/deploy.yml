@@ -9,9 +9,9 @@ permissions:
   id-token: write
 
 env:
-  PROJECT_ID: project-f338c3d2-64dd-47cd-873
+  PROJECT_ID: project-69d1bd8e-5952-47ea-81e
   REGION: asia-southeast1
-  REGISTRY: asia-southeast1-docker.pkg.dev/project-f338c3d2-64dd-47cd-873/platform-app
+  REGISTRY: asia-southeast1-docker.pkg.dev/project-69d1bd8e-5952-47ea-81e/platform-app
 
 jobs:
   test:
