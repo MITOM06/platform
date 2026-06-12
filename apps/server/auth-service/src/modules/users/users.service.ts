@@ -55,7 +55,10 @@ export class UsersService {
 
   // ✅ Query đúng với socialLinks pattern
   // provider = 'google' → query { 'socialLinks.google': socialId }
-  async findBySocialId(provider: string, socialId: string): Promise<UserDocument | null> {
+  async findBySocialId(
+    provider: string,
+    socialId: string,
+  ): Promise<UserDocument | null> {
     return this.userModel
       .findOne({ [`socialLinks.${provider}`]: socialId })
       .exec();
@@ -63,7 +66,11 @@ export class UsersService {
 
   // ✅ Link hoặc update socialId cho user đã tồn tại
   // Dùng khi: user đăng nhập bằng email thường, sau đó link Google/Facebook/Twitter
-  async updateSocialId(userId: string, provider: string, socialId: string): Promise<void> {
+  async updateSocialId(
+    userId: string,
+    provider: string,
+    socialId: string,
+  ): Promise<void> {
     await this.userModel.findByIdAndUpdate(userId, {
       $set: { [`socialLinks.${provider}`]: socialId },
     });
@@ -77,36 +84,49 @@ export class UsersService {
     // new RegExp() throw (500) hoặc match sai nếu không escape.
     const escaped = trimmed.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     const pattern = new RegExp(escaped, 'i');
-    return this.userModel.find({
-      $or: [
-        { email: pattern },
-        { displayName: pattern },
-      ],
-    }).limit(10).select('-password').exec();
+    return this.userModel
+      .find({
+        $or: [{ email: pattern }, { displayName: pattern }],
+      })
+      .limit(10)
+      .select('-password')
+      .exec();
   }
 
   async updateProfile(
     userId: string,
-    data: { displayName?: string; avatarUrl?: string; bio?: string; coverPhoto?: string; dateOfBirth?: string; phoneNumber?: string; gender?: string; hideInfo?: boolean },
+    data: {
+      displayName?: string;
+      avatarUrl?: string;
+      bio?: string;
+      coverPhoto?: string;
+      dateOfBirth?: string;
+      phoneNumber?: string;
+      gender?: string;
+      hideInfo?: boolean;
+    },
   ): Promise<UserDocument | null> {
     const updateData: any = {};
-    if (data.displayName !== undefined) updateData.displayName = data.displayName;
+    if (data.displayName !== undefined)
+      updateData.displayName = data.displayName;
     if (data.avatarUrl !== undefined) updateData.avatarUrl = data.avatarUrl;
     if (data.bio !== undefined) updateData.bio = data.bio;
     if (data.coverPhoto !== undefined) updateData.coverPhoto = data.coverPhoto;
     if (data.dateOfBirth !== undefined) {
-      updateData.dateOfBirth = data.dateOfBirth ? new Date(data.dateOfBirth) : null;
+      updateData.dateOfBirth = data.dateOfBirth
+        ? new Date(data.dateOfBirth)
+        : null;
     }
-    if (data.phoneNumber !== undefined) updateData.phoneNumber = data.phoneNumber;
+    if (data.phoneNumber !== undefined)
+      updateData.phoneNumber = data.phoneNumber;
     if (data.gender !== undefined) updateData.gender = data.gender;
     if (data.hideInfo !== undefined) updateData.hideInfo = data.hideInfo;
 
     if (Object.keys(updateData).length > 0) {
-      return this.userModel.findByIdAndUpdate(
-        userId,
-        { $set: updateData },
-        { new: true }
-      ).select('-password').exec();
+      return this.userModel
+        .findByIdAndUpdate(userId, { $set: updateData }, { new: true })
+        .select('-password')
+        .exec();
     }
     return this.findById(userId);
   }
@@ -120,7 +140,10 @@ export class UsersService {
       throw new ConflictException('New password must be at least 6 characters');
     }
 
-    const user = await this.userModel.findById(userId).select('+password').exec();
+    const user = await this.userModel
+      .findById(userId)
+      .select('+password')
+      .exec();
     if (!user) {
       throw new ConflictException('User not found');
     }
@@ -149,7 +172,10 @@ export class UsersService {
   }
 
   /** Add `targetId` to the current user's block list. */
-  async blockUser(userId: string, targetId: string): Promise<{ success: true }> {
+  async blockUser(
+    userId: string,
+    targetId: string,
+  ): Promise<{ success: true }> {
     if (userId === targetId) {
       throw new ConflictException('You cannot block yourself');
     }
@@ -160,7 +186,10 @@ export class UsersService {
   }
 
   /** Remove `targetId` from the current user's block list. */
-  async unblockUser(userId: string, targetId: string): Promise<{ success: true }> {
+  async unblockUser(
+    userId: string,
+    targetId: string,
+  ): Promise<{ success: true }> {
     await this.userModel.findByIdAndUpdate(userId, {
       $pull: { blockedUsers: targetId },
     });

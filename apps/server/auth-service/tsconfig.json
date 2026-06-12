@@ -32,14 +32,11 @@
     "noFallthroughCasesInSwitch": false
   },
   "include": [
-    "src/**/*.ts"
-    /* XÓA đường dẫn tuyệt đối đến user.schema.ts ở đây. 
-       TypeScript sẽ tự tìm thấy nó thông qua config 'paths' ở trên */
+    "src/**/*.ts",
+    "test/**/*.ts"
   ],
   "exclude": [
     "node_modules",
-    "dist",
-    "test",
-    "**/*spec.ts"
+    "dist"
   ]
 }

@@ -17,15 +17,11 @@
 - [ ] **Task P3-1.4: Domain & SSL Configuration**
   - Set up custom domains with SSL certificate management.
 
-### SPRINT P3-2 — Push Notifications (Real FCM) `PENDING`
-- [ ] **Task P3-2.1: FCM Token Registration**
-  - Replace current no-op stub with real FCM token registration in backend.
-- [ ] **Task P3-2.2: Flutter FCM Integration**
-  - Implement `flutter_firebase_messaging` and background message handlers.
-- [ ] **Task P3-2.3: Deep Linking**
-  - Configure notification tap to deep-link directly to the corresponding conversation screen.
-- [ ] **Task P3-2.4: Mute Support**
-  - Ensure background notifications respect muted conversations.
+### SPRINT P3-2 — Push Notifications (Real FCM) `DONE`
+- [x] **Task P3-2.1: FCM Token Registration** `M`. **DONE — Implemented in auth-service UsersController.addDeviceToken**.
+- [x] **Task P3-2.2: Flutter FCM Integration** `L`. **DONE — Implemented in flutter_firebase_messaging and auth_provider**.
+- [x] **Task P3-2.3: Deep Linking** `M`. **DONE — Implemented onMessageOpenedApp and getInitialMessage in main.dart**.
+- [x] **Task P3-2.4: Mute Support** `S`. **DONE — Implemented in FcmService.java**.
 
 ### SPRINT P3-3 — Performance & Observability `PENDING`
 - [x] **Task P3-3.1: MongoDB Indexes Audit**
@@ -216,7 +212,7 @@ Mirror: `apps/client/lib/features/chat/ui/widgets/{image_content,file_content,vo
 - [x] **Task W-10.12: Shared media gallery** `S` (`explore_media_screen.dart`). **DONE — `app/(main)/shared-media/[conversationId]/page.tsx`.**
 - [x] **Task W-10.13: User profile + edit profile** `M` (`user_profile_screen.dart`, `edit_profile_screen.dart`). **DONE — redesigned `app/(main)/profile/page.tsx` with cover, avatar upload, bio.**
 - [x] **Task W-10.14: Forgot / reset password** `M` (`forgot_password_screen.dart`, `new_password_screen.dart`). **DONE — `app/(auth)/forgot-password/page.tsx`.**
-- [ ] **Task W-10.15: Calls (WebRTC)** `L` — defer; largest item (`call_screen.dart`, `webrtc_service.dart`).
+- [x] **Task W-10.15: Calls (WebRTC)** `L` — defer; largest item (`call_screen.dart`, `webrtc_service.dart`). **DONE — Implemented WebRTC on Web (call-manager.ts, CallOverlay.tsx) and Flutter (webrtc_service.dart, call_screen.dart).**
 - [x] **Task W-10.16: Mentions (@) composer + bubble** `M` (`mention_list.dart`). **DONE — integrated into `MessageInput.tsx` and `MessageBubble.tsx`.**
 
 ### SPRINT W-11 — Web Polish & Consistency `PENDING`

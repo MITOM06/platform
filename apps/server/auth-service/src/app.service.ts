@@ -10,16 +10,16 @@ export class AppService {
   constructor(
     @InjectConnection() private readonly mongoConnection: Connection,
     @Inject(REDIS_CLIENT) private readonly redis: Redis,
-  ) { }
+  ) {}
 
   async getHealth() {
-    const mongoStatus = this.mongoConnection.readyState === 1 ? 'OK' : 'Disconnected';
+    const mongoStatus =
+      this.mongoConnection.readyState === 1 ? 'OK' : 'Disconnected';
 
     let redisStatus = 'Disconnected';
     try {
       const ping = await this.redis.ping();
       if (ping === 'PONG') redisStatus = 'OK';
-
     } catch (e) {
       redisStatus = 'Error';
     }

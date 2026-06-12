@@ -6,7 +6,9 @@ export class HealthController {
 
   @Get()
   ok() {
-    const uptimeSeconds = Math.floor((Date.now() - this.startedAt.getTime()) / 1000);
+    const uptimeSeconds = Math.floor(
+      (Date.now() - this.startedAt.getTime()) / 1000,
+    );
     return { ok: true, uptime: uptimeSeconds, ts: new Date().toISOString() };
   }
 }

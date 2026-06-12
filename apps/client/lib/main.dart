@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:go_router/go_router.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 import 'core/providers/locale_provider.dart';
 import 'core/providers/theme_provider.dart';
@@ -29,6 +30,25 @@ void main() async {
       badge: true,
       sound: true,
     );
+
+    FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
+      final conversationId = message.data['conversationId'];
+      if (conversationId != null) {
+        rootNavigatorKey.currentContext?.go('/chat/$conversationId');
+      }
+    });
+
+    FirebaseMessaging.instance.getInitialMessage().then((initialMessage) {
+      if (initialMessage != null) {
+        final conversationId = initialMessage.data['conversationId'];
+        if (conversationId != null) {
+          // Wait for router to be ready
+          Future.delayed(const Duration(milliseconds: 1000), () {
+            rootNavigatorKey.currentContext?.go('/chat/$conversationId');
+          });
+        }
+      }
+    });
   } catch (e) {
     debugPrint('Firebase init error: $e');
   }

@@ -19,13 +19,18 @@ export class FacebookStrategy extends PassportStrategy(Strategy, 'facebook') {
 
     // Facebook không guarantee trả email nếu user không cấp quyền
     const email = emails?.[0]?.value || null;
-    const fallbackName = email ? email.split('@')[0] : (name?.givenName || 'User');
+    const fallbackName = email
+      ? email.split('@')[0]
+      : name?.givenName || 'User';
 
     const user = {
-      id,                 // ✅ socialId — cần cho ensureUserIdFromSocial
-      email,              // ✅ có thể null — ensureUserIdFromSocial sẽ handle
-      displayName: displayName ||
-        (name?.givenName ? `${name.givenName} ${name.familyName || ''}`.trim() : null) ||
+      id, // ✅ socialId — cần cho ensureUserIdFromSocial
+      email, // ✅ có thể null — ensureUserIdFromSocial sẽ handle
+      displayName:
+        displayName ||
+        (name?.givenName
+          ? `${name.givenName} ${name.familyName || ''}`.trim()
+          : null) ||
         fallbackName,
       avatar: photos?.[0]?.value || '',
     };

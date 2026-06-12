@@ -30,8 +30,8 @@ export class TwitterStrategy extends PassportStrategy(Strategy, 'twitter') {
     const email = emails?.[0]?.value || null;
 
     const user = {
-      id,                   // ✅ đổi từ twitterId → id, đồng bộ với Google/Facebook
-      email,                // ✅ có thể null
+      id, // ✅ đổi từ twitterId → id, đồng bộ với Google/Facebook
+      email, // ✅ có thể null
       displayName: displayName || username || 'User',
       avatar: photos?.[0]?.value || '',
     };

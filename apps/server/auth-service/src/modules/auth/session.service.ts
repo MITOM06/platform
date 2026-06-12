@@ -6,7 +6,7 @@ import { Redis, REDIS_CLIENT } from '@platform/database';
 
 @Injectable()
 export class SessionService {
-  constructor(@Inject(REDIS_CLIENT) private readonly redis: Redis) { }
+  constructor(@Inject(REDIS_CLIENT) private readonly redis: Redis) {}
 
   private sessKey(sid: string) {
     return `sess:${sid}`;
@@ -19,7 +19,11 @@ export class SessionService {
     return randomBytes(48).toString('base64url');
   }
 
-  async createSession(params: { userId: string; deviceId?: string; platform?: string }) {
+  async createSession(params: {
+    userId: string;
+    deviceId?: string;
+    platform?: string;
+  }) {
     const sid = nanoid(24);
     const refreshToken = this.genRefreshToken();
     const refreshHash = await argon2.hash(refreshToken);
@@ -28,7 +32,8 @@ export class SessionService {
 
     const key = this.sessKey(sid);
 
-    await this.redis.multi()
+    await this.redis
+      .multi()
       .hset(key, {
         userId: params.userId,
         deviceId: params.deviceId ?? '',
@@ -50,9 +55,12 @@ export class SessionService {
     const data = await this.redis.hgetall(key);
 
     if (!data?.userId) throw new UnauthorizedException('Invalid session');
-    if (data.revoked === '1') throw new UnauthorizedException('Session revoked');
+    if (data.revoked === '1')
+      throw new UnauthorizedException('Session revoked');
 
-    const ok = await argon2.verify(data.refreshHash, params.refreshToken).catch(() => false);
+    const ok = await argon2
+      .verify(data.refreshHash, params.refreshToken)
+      .catch(() => false);
     if (!ok) throw new UnauthorizedException('Invalid refresh token');
 
     const newRefresh = this.genRefreshToken();
@@ -68,7 +76,8 @@ export class SessionService {
 
   async revokeSession(userId: string, sid: string) {
     const key = this.sessKey(sid);
-    await this.redis.multi()
+    await this.redis
+      .multi()
       .hset(key, { revoked: '1' })
       .srem(this.userSessSetKey(userId), sid)
       .exec();
@@ -91,7 +100,9 @@ export class SessionService {
   }
 
   async listSessions(userId: string) {
-    const sids: string[] = await this.redis.smembers(this.userSessSetKey(userId));
+    const sids: string[] = await this.redis.smembers(
+      this.userSessSetKey(userId),
+    );
     if (!sids || sids.length === 0) {
       return [];
     }
@@ -108,7 +119,10 @@ export class SessionService {
       for (let i = 0; i < sids.length; i++) {
         const result = results[i];
         if (result) {
-          const [err, data] = result as [Error | null, Record<string, any> | null];
+          const [err, data] = result as [
+            Error | null,
+            Record<string, any> | null,
+          ];
           if (!err && data && data.userId) {
             sessions.push({ sid: sids[i], ...data });
           }

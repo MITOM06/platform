@@ -1,4 +1,14 @@
-import { Body, Controller, Delete, Get, Param, Post, Put, Req, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Post,
+  Put,
+  Req,
+  UseGuards,
+} from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { FriendsService } from './friends.service';
 import { FriendRequestDto } from './dto/friend-request.dto';
@@ -33,7 +43,9 @@ export class FriendsController {
   // on this controller, so no ordering conflict.
   @Get('status/:userId')
   async status(@Req() req: any, @Param('userId') userId: string) {
-    return { status: await this.friendsService.getStatus(req.user.sub, userId) };
+    return {
+      status: await this.friendsService.getStatus(req.user.sub, userId),
+    };
   }
 
   /** Unfriend or cancel/decline a pending request (either direction). */

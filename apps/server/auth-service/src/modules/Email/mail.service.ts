@@ -10,9 +10,9 @@ export class MailService {
       to: email,
       subject: 'Mã xác thực OTP - Ứng dụng PON',
       template: './otp', // Đường dẫn tới file otp.ejs
-      context: { 
+      context: {
         otp,
-        email
+        email,
       },
     });
   }

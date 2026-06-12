@@ -26,7 +26,6 @@ import { PassportModule } from '@nestjs/passport';
         secret: configService.get('JWT_ACCESS_SECRET'),
         signOptions: { expiresIn: configService.get('JWT_ACCESS_EXPIRES') },
       }),
-
     }),
     DatabaseRedisModule,
   ],
@@ -41,4 +40,4 @@ import { PassportModule } from '@nestjs/passport';
   ],
   exports: [AuthService],
 })
-export class AuthModule { }
+export class AuthModule {}

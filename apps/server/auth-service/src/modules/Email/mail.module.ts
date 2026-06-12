@@ -12,13 +12,12 @@ import { join } from 'path';
   imports: [
     MailerModule.forRootAsync({
       useFactory: async (config: ConfigService) => {
-        
         // ✅ FIX: Trỏ thẳng vào thư mục dist thay vì __dirname
         // NestJS thường build từ 'src' ra thẳng 'dist' (bỏ qua đoạn apps/server...) đối với assets
         const templateDir = join(process.cwd(), 'dist/modules/Email/templates');
-        
+
         console.log('--------------------------------------------------');
-        console.log('📧 PWD:', process.cwd()); 
+        console.log('📧 PWD:', process.cwd());
         console.log('📧 Template Directory set to:', templateDir);
         console.log('--------------------------------------------------');
 
@@ -50,4 +49,4 @@ import { join } from 'path';
   providers: [MailService],
   exports: [MailService],
 })
-export class MailModule { }
+export class MailModule {}
