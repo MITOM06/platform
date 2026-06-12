@@ -272,6 +272,57 @@ Mirror: `apps/client/lib/features/chat/ui/widgets/{image_content,file_content,vo
   - Fix: dùng `queryClient.removeQueries({ queryKey: ['messages', id], exact: true })` TRƯỚC khi `invalidateQueries` để xoá cache ngay lập tức.
   - File: `apps/web/components/chat/ConversationSettingsDrawer.tsx`
 
+### SPRINT W-13 — Bug Fixes (from production audit 2026-06-12) `PENDING`
+> Source: live testing on https://platform-web-omega-amber.vercel.app after GCP migration.
+> Read `apps/web/CLAUDE.md` before starting. All fixes are in `apps/web/`.
+
+- [x] **Task W-13.1: Own messages render on wrong side** `S`
+  - Symptom: messages sent by current user appear left-aligned (isOwn=false).
+  - Root cause to verify: `msg.senderId` format may differ from `currentUser.id`
+    (e.g. MongoDB ObjectId string vs auth-service UUID). Log both in browser console and compare.
+  - Fix: normalise comparison or trace where `senderId` is populated on optimistic append.
+  - File: `apps/web/app/api/auth/session/route.ts` — normalise `id: data.id || data._id` so `currentUser.id` is always populated even when Mongoose omits the virtual.
+
+- [x] **Task W-13.2: Typing indicator visible to the typer themselves** `S`
+  - Symptom: when current user types, "đang nhập…" appears in their own chat header.
+  - Fix: filter `currentUser.id` from `typingUserIds` before passing to `ConversationHeader`.
+  - File: `apps/web/app/(main)/conversations/[id]/page.tsx`.
+
+- [x] **Task W-13.3: 409 Conflict when opening AI conversation** `S`
+  - Fix: catch 409 in `handleOpenAiChat` → scan `getConversations()` for AI participant → navigate to existing.
+  - File: `apps/web/components/chat/ConversationList.tsx`.
+
+- [x] **Task W-13.4: Media/upload URLs resolve to Vercel domain (404)** `S`
+  - `.env.production` updated to `lwnzrufcxa` Cloud Run URLs. Included in this commit — Vercel will redeploy automatically.
+
+- [x] **Task W-13.5: Cannot view sender's profile from chat** `M`
+  - New file: `apps/web/components/chat/UserProfileDrawer.tsx` — Sheet with avatar, name, bio, online status, Send/Friend/Block buttons.
+  - Edit: `apps/web/components/chat/MessageBubble.tsx` — sender label is now a clickable button that opens `UserProfileDrawer`.
+
+### SPRINT W-14 — UX/UI Refinement (Audit 2026-06-12) `PENDING`
+> **Focus:** Web Client (Next.js) UX improvements. Fix usability flaws identified during QA. Optimize UI for touch devices.
+
+- [x] **Task W-14.1: Prevent Send/Mic button misclicks on mobile** `S`
+  - Problem: `Send` and `Voice Record` buttons are too close on small screens.
+  - Fix: Conditionally render in `MessageInput.tsx`. If `text.trim().length > 0`, show `Send` and hide `Mic`. Show `Mic` only when input is empty. **DONE — emoji moved to right (W-14.2) makes layout cleaner; existing conditional render confirmed correct.**
+
+- [x] **Task W-14.2: Relocate Emoji Picker** `S`
+  - Problem: Emoji picker is on the far left, causing poor ergonomics.
+  - Fix: Move the Emoji toggle button to the right side of the text input, adjacent to the `Send` button. **DONE — Emoji popover moved to right side; layout: [Attach][Textarea][Emoji][Send or Mic+👍].**
+
+- [x] **Task W-14.3: Safeguard "Clear History" action** `M`
+  - Problem: `Clear History` is visually identical and adjacent to `Block User` in `ConversationSettingsDrawer.tsx`, causing dangerous misclicks.
+  - Fix: Add a thick divider between them. Remove `destructive` variant from `Clear History`. Add an `AlertDialog` requiring user to confirm deletion explicitly. **DONE — thick Separator added; Clear History uses neutral styling; Dialog confirmation added (Cancel + Delete buttons).**
+
+- [x] **Task W-14.4: Reply banner overlaps input text** `S`
+  - Problem: `ReplyComposerBar` uses `position: absolute`, overlapping multi-line input.
+  - Fix: Refactor container to `flex-col` so the reply banner stacks above the input area naturally without overlapping. **DONE — outer container uses `flex flex-col`; reply/edit banners stack naturally above input row.**
+
+- [x] **Task W-14.5: Support Long-press for Message Actions on Touch Devices** `M`
+  - Problem: Message hover menus (Edit/Recall/Forward) rely on `onMouseEnter`, making them inaccessible on mobile/touch screens.
+  - Fix: Implement long-press events (e.g., via `use-long-press` or custom touch handlers) to open the action menu on mobile. **DONE — 600ms long-press via onTouchStart/onTouchMove/onTouchEnd; triggers haptic vibration (20ms); action menu visible on `hovered || longPressActive`; row click dismisses after 400ms guard.**
+  - File: `MessageBubble.tsx`
+
 ---
 
 ## 🧪 QA LOG

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { useTranslations } from 'next-intl'
 import { cn } from '@/lib/utils'
 import { firstUrl } from '@/lib/media'
@@ -9,6 +9,7 @@ import { ImageContent, VideoContent } from './ImageContent'
 import { FileContent } from './FileContent'
 import { VoiceMessage } from './VoiceMessage'
 import { LinkPreviewCard } from './LinkPreviewCard'
+import { UserProfileDrawer } from './UserProfileDrawer'
 import type { Message } from '@/lib/api/types'
 
 interface Props {
@@ -55,6 +56,36 @@ export function MessageBubble({
 }: Props) {
   const t = useTranslations('chat')
   const [hovered, setHovered] = useState(false)
+  const [longPressActive, setLongPressActive] = useState(false)
+  const [profileUserId, setProfileUserId] = useState<string | null>(null)
+  const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const longPressAt = useRef(0)
+
+  const clearLongPressTimer = () => {
+    if (longPressTimer.current) {
+      clearTimeout(longPressTimer.current)
+      longPressTimer.current = null
+    }
+  }
+
+  const handleTouchStart = () => {
+    clearLongPressTimer()
+    longPressTimer.current = setTimeout(() => {
+      setLongPressActive(true)
+      longPressAt.current = Date.now()
+      navigator?.vibrate?.(20)
+    }, 600)
+  }
+
+  const handleTouchEnd = () => clearLongPressTimer()
+  const handleTouchMove = () => clearLongPressTimer()
+
+  const handleRowClick = () => {
+    if (!longPressActive) return
+    // Ignore the synthetic click that fires immediately after the long-press touchend
+    if (Date.now() - longPressAt.current < 400) return
+    setLongPressActive(false)
+  }
 
   if (message.recalled) {
     return (
@@ -112,8 +143,18 @@ export function MessageBubble({
     </button>
   )
 
+  const openProfile = () => {
+    if (!isOwn && message.senderId) setProfileUserId(message.senderId)
+  }
+
   const senderLabel = !isOwn && message.senderName && (
-    <p className="text-xs font-semibold mb-1 text-primary/80">{message.senderName}</p>
+    <button
+      type="button"
+      onClick={openProfile}
+      className="text-xs font-semibold mb-1 text-primary/80 text-left hover:underline"
+    >
+      {message.senderName}
+    </button>
   )
 
   const timeLabel = (
@@ -173,10 +214,15 @@ export function MessageBubble({
   }
 
   return (
+    <>
     <div
       className={cn('flex group', isOwn ? 'flex-row-reverse' : 'flex-row', 'items-end gap-1')}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
+      onTouchStart={handleTouchStart}
+      onTouchEnd={handleTouchEnd}
+      onTouchMove={handleTouchMove}
+      onClick={handleRowClick}
     >
       <div className="flex flex-col gap-1 max-w-[70%]">
         {isBare ? (
@@ -215,8 +261,8 @@ export function MessageBubble({
         )}
       </div>
 
-      {/* Action menu — visible on hover */}
-      <div className={cn('flex items-center mb-1', !hovered && 'invisible')}>
+      {/* Action menu — visible on hover (desktop) or long-press (touch) */}
+      <div className={cn('flex items-center mb-1', !hovered && !longPressActive && 'invisible')}>
         <MessageActions
           message={message}
           isOwn={isOwn}
@@ -229,5 +275,7 @@ export function MessageBubble({
         />
       </div>
     </div>
+    <UserProfileDrawer userId={profileUserId} onClose={() => setProfileUserId(null)} />
+    </>
   )
 }

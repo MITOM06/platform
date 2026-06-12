@@ -309,7 +309,7 @@ export function MessageInput({
   const busy = disabled || sending || uploading
 
   return (
-    <div className="border-t bg-background" style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
+    <div className="flex flex-col border-t bg-background" style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
       {/* Reply banner */}
       {replyingTo && !editingMessage && (
         <div className="flex items-center gap-2 px-3 py-1.5 bg-primary/5 border-b text-sm">
@@ -370,65 +370,7 @@ export function MessageInput({
         </div>
       ) : (
         <div className="flex items-end gap-1 p-3">
-          {/* Emoji */}
-          <Popover open={popoverOpen} onOpenChange={setPopoverOpen}>
-            <PopoverTrigger asChild>
-              <Button variant="ghost" size="icon" className="shrink-0" disabled={busy}>
-                <Smile className="size-5 text-pon-cyan" />
-              </Button>
-            </PopoverTrigger>
-              <PopoverContent className="w-[300px] max-w-[calc(100vw-1rem)] p-0" align="start" side="top">
-                <Tabs defaultValue="emoji" className="w-full">
-                  <TabsList className="w-full grid grid-cols-2 rounded-none border-b border-border bg-transparent h-10 p-0">
-                    <TabsTrigger
-                      value="emoji"
-                      className="rounded-none data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-pon-cyan text-xs"
-                    >
-                      {t('emojiTab')}
-                    </TabsTrigger>
-                    <TabsTrigger
-                      value="sticker"
-                      className="rounded-none data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-pon-cyan text-xs"
-                    >
-                      {t('stickerTab')}
-                    </TabsTrigger>
-                  </TabsList>
-
-                  <TabsContent value="emoji" className="p-2 m-0 h-48 overflow-y-auto">
-                    <div className="grid grid-cols-8 gap-1">
-                      {EMOJIS.map((emoji) => (
-                        <button
-                          key={emoji}
-                          onClick={() => insertEmoji(emoji)}
-                          className="hover:bg-muted p-1.5 rounded text-lg flex items-center justify-center transition-colors"
-                        >
-                          {emoji}
-                        </button>
-                      ))}
-                    </div>
-                  </TabsContent>
-
-                  <TabsContent value="sticker" className="p-2 m-0 h-48 overflow-y-auto">
-                    <div className="grid grid-cols-4 gap-2">
-                      {STICKERS.map((sticker) => (
-                        <button
-                          key={sticker}
-                          onClick={() => {
-                            onSend(sticker, 'sticker')
-                            setPopoverOpen(false)
-                          }}
-                          className="hover:bg-pon-cyan/10 p-2 rounded-xl text-4xl flex items-center justify-center transition-colors hover:scale-105"
-                        >
-                          {sticker}
-                        </button>
-                      ))}
-                    </div>
-                  </TabsContent>
-                </Tabs>
-              </PopoverContent>
-          </Popover>
-
-          {/* Attach */}
+          {/* Attach — left side */}
           {!editingMessage && (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -449,41 +391,102 @@ export function MessageInput({
             </DropdownMenu>
           )}
 
-          <Textarea
-            ref={textareaRef}
-            value={value}
-            onChange={handleChange}
-            onKeyDown={handleKeyDown}
-            placeholder={
-              editingMessage
-                ? t('editPlaceholder')
-                : t('inputPlaceholder')
-            }
-            className="min-h-10 max-h-32 resize-none"
-            rows={1}
-            disabled={disabled || sending}
-          />
+          <div className="relative flex-1 min-w-0">
+            <Textarea
+              ref={textareaRef}
+              value={value}
+              onChange={handleChange}
+              onKeyDown={handleKeyDown}
+              placeholder={
+                editingMessage
+                  ? t('editPlaceholder')
+                  : t('inputPlaceholder')
+              }
+              className="min-h-10 max-h-32 resize-none w-full"
+              rows={1}
+              disabled={disabled || sending}
+            />
 
-          {/* Mention Popover */}
-          {mentionQuery && mentionCandidates.length > 0 && (
-            <div className="absolute bottom-full left-12 mb-2 w-48 max-h-48 overflow-y-auto bg-popover border rounded-xl shadow-lg z-50">
-              <div className="p-1 space-y-0.5">
-                {mentionCandidates.map((uid, idx) => (
-                  <button
-                    key={uid}
-                    onClick={() => insertMention(uid)}
-                    onMouseEnter={() => setMentionIndex(idx)}
-                    className={`w-full text-left px-3 py-2 text-sm rounded-lg truncate transition-colors ${
-                      idx === mentionIndex ? 'bg-primary/10 text-primary font-medium' : 'hover:bg-muted text-foreground'
-                    }`}
-                  >
-                    {uid}
-                  </button>
-                ))}
+            {/* Mention Popover */}
+            {mentionQuery && mentionCandidates.length > 0 && (
+              <div className="absolute bottom-full left-0 mb-2 w-48 max-h-48 overflow-y-auto bg-popover border rounded-xl shadow-lg z-50">
+                <div className="p-1 space-y-0.5">
+                  {mentionCandidates.map((uid, idx) => (
+                    <button
+                      key={uid}
+                      onClick={() => insertMention(uid)}
+                      onMouseEnter={() => setMentionIndex(idx)}
+                      className={`w-full text-left px-3 py-2 text-sm rounded-lg truncate transition-colors ${
+                        idx === mentionIndex ? 'bg-primary/10 text-primary font-medium' : 'hover:bg-muted text-foreground'
+                      }`}
+                    >
+                      {uid}
+                    </button>
+                  ))}
+                </div>
               </div>
-            </div>
-          )}
+            )}
+          </div>
 
+          {/* Emoji — right side, adjacent to Send/Mic */}
+          <Popover open={popoverOpen} onOpenChange={setPopoverOpen}>
+            <PopoverTrigger asChild>
+              <Button variant="ghost" size="icon" className="shrink-0" disabled={busy}>
+                <Smile className="size-5 text-pon-cyan" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-[300px] max-w-[calc(100vw-1rem)] p-0" align="end" side="top">
+              <Tabs defaultValue="emoji" className="w-full">
+                <TabsList className="w-full grid grid-cols-2 rounded-none border-b border-border bg-transparent h-10 p-0">
+                  <TabsTrigger
+                    value="emoji"
+                    className="rounded-none data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-pon-cyan text-xs"
+                  >
+                    {t('emojiTab')}
+                  </TabsTrigger>
+                  <TabsTrigger
+                    value="sticker"
+                    className="rounded-none data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-pon-cyan text-xs"
+                  >
+                    {t('stickerTab')}
+                  </TabsTrigger>
+                </TabsList>
+
+                <TabsContent value="emoji" className="p-2 m-0 h-48 overflow-y-auto">
+                  <div className="grid grid-cols-8 gap-1">
+                    {EMOJIS.map((emoji) => (
+                      <button
+                        key={emoji}
+                        onClick={() => insertEmoji(emoji)}
+                        className="hover:bg-muted p-1.5 rounded text-lg flex items-center justify-center transition-colors"
+                      >
+                        {emoji}
+                      </button>
+                    ))}
+                  </div>
+                </TabsContent>
+
+                <TabsContent value="sticker" className="p-2 m-0 h-48 overflow-y-auto">
+                  <div className="grid grid-cols-4 gap-2">
+                    {STICKERS.map((sticker) => (
+                      <button
+                        key={sticker}
+                        onClick={() => {
+                          onSend(sticker, 'sticker')
+                          setPopoverOpen(false)
+                        }}
+                        className="hover:bg-pon-cyan/10 p-2 rounded-xl text-4xl flex items-center justify-center transition-colors hover:scale-105"
+                      >
+                        {sticker}
+                      </button>
+                    ))}
+                  </div>
+                </TabsContent>
+              </Tabs>
+            </PopoverContent>
+          </Popover>
+
+          {/* Send (when text present) OR Mic+👍 (when empty) */}
           {value.trim() || editingMessage ? (
             <Button
               size="icon"

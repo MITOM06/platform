@@ -10,10 +10,11 @@ export async function GET(request: NextRequest) {
   const authUrl = process.env.NEXT_PUBLIC_AUTH_URL
 
   const fetchUser = async (token: string): Promise<AuthUser & { avatarUrl?: string }> => {
-    const { data } = await axios.get<AuthUser & { avatarUrl?: string }>(`${authUrl}/api/users/me`, {
+    const { data } = await axios.get<AuthUser & { _id?: string; avatarUrl?: string }>(`${authUrl}/api/users/me`, {
       headers: { Authorization: `Bearer ${token}` },
     })
-    return data
+    // Mongoose may serialize _id but omit the id virtual — normalise here
+    return { ...data, id: data.id || data._id || '' }
   }
 
   const clearSession = () => {
