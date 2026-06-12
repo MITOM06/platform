@@ -54,26 +54,32 @@ class _ConversationListScreenState
             ),
           ),
           child: AppBar(
+            titleSpacing: 8,
             title: Row(
+              mainAxisSize: MainAxisSize.min,
               children: [
                 const PonLogo(size: 26, showText: false),
                 const SizedBox(width: 8),
-                ShaderMask(
-                  shaderCallback: (bounds) => LinearGradient(
-                    colors: isDark
-                        ? const [AppTheme.ponCyan, AppTheme.ponPink]
-                        : [
-                            Theme.of(context).colorScheme.primary,
-                            Theme.of(context).colorScheme.secondary
-                          ],
-                  ).createShader(bounds),
-                  child: const Text(
-                    'PON',
-                    style: TextStyle(
-                      fontWeight: FontWeight.w900,
-                      fontSize: 22,
-                      letterSpacing: 1.5,
-                      color: Colors.white,
+                Flexible(
+                  child: ShaderMask(
+                    shaderCallback: (bounds) => LinearGradient(
+                      colors: isDark
+                          ? const [AppTheme.ponCyan, AppTheme.ponPink]
+                          : [
+                              Theme.of(context).colorScheme.primary,
+                              Theme.of(context).colorScheme.secondary
+                            ],
+                    ).createShader(bounds),
+                    child: const Text(
+                      'PON',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontWeight: FontWeight.w900,
+                        fontSize: 22,
+                        letterSpacing: 1.5,
+                        color: Colors.white,
+                      ),
                     ),
                   ),
                 ),

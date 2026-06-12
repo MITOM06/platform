@@ -57,7 +57,7 @@ class StompService extends _$StompService {
     if (_client?.connected ?? false) return;
     _client = StompClient(
       config: StompConfig(
-        url: 'wss://chat-service-ec4ppoccna-as.a.run.app/ws',
+        url: 'wss://chat-service-942942821810.asia-southeast1.run.app/ws',
         onConnect: _onConnect,
         onDisconnect: _onDisconnect,
         onStompError: _onError,

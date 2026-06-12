@@ -76,9 +76,12 @@ public class ConversationService {
             throw new DuplicateConversationException(existing.getId());
         });
         // Friends chat freely; a message to a non-friend starts as a stranger
-        // request (PENDING) until the recipient accepts or replies.
-        boolean friends = friendshipRepository
-            .findAcceptedBetween(currentUserId, participantId).isPresent();
+        // request (PENDING) until the recipient accepts or replies. The AI bot
+        // is always treated as accepted — it never "accepts" a request itself,
+        // so a PENDING status would lock the AI chat behind a stranger banner.
+        boolean friends = AiConstants.AI_BOT_USER_ID.equals(participantId)
+            || friendshipRepository
+                .findAcceptedBetween(currentUserId, participantId).isPresent();
         Conversation saved = conversationCacheService.save(
             Conversation.builder()
                 .participants(participants)

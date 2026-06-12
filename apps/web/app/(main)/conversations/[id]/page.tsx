@@ -165,11 +165,12 @@ export default function ConversationPage({ params }: Props) {
     prevScrollHeightRef.current = 0
   }, [isFetchingNextPage, messages.length])
 
-  // Auto-scroll to bottom on new messages (not prepend)
+  // Auto-scroll to bottom on new messages (not prepend) and while the AI
+  // response streams in, so the growing AI bubble stays in view (D-1.2 fix).
   useEffect(() => {
     if (isPrependingRef.current) return
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }, [messages.length])
+  }, [messages.length, aiStreamContent])
 
   // Helper to patch a single message in the cache
   const patchMessage = useCallback(

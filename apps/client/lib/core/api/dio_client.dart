@@ -3,8 +3,8 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../utils/app_error.dart';
 import '../utils/global_messenger.dart';
 
-const _authBaseUrl = 'https://auth-service-ec4ppoccna-as.a.run.app';
-const _chatBaseUrl = 'https://chat-service-ec4ppoccna-as.a.run.app';
+const _authBaseUrl = 'https://auth-service-942942821810.asia-southeast1.run.app';
+const _chatBaseUrl = 'https://chat-service-942942821810.asia-southeast1.run.app';
 
 const _keyAccessToken = 'accessToken';
 const _keyRefreshToken = 'refreshToken';

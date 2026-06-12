@@ -1,6 +1,6 @@
 # TODO — PON PROJECT
 > **Workflow:** Gemini Code Assist (Planner/QC) ↔ Tech Lead (Bridge) ↔ Claude CLI (Coder/Tester)
-> **Updated:** 2026-06-08
+> **Updated:** 2026-06-12
 > **Note to Claude:** Sprints 1-24 and AI-1 to AI-6 are completed (see `TODO_ARCHIVE.md` for details). Sprints for Phase 3 (Production Ready) and Web Client (Next.js) are now active.
 
 ---
@@ -323,7 +323,24 @@ Mirror: `apps/client/lib/features/chat/ui/widgets/{image_content,file_content,vo
   - Fix: Implement long-press events (e.g., via `use-long-press` or custom touch handlers) to open the action menu on mobile. **DONE — 600ms long-press via onTouchStart/onTouchMove/onTouchEnd; triggers haptic vibration (20ms); action menu visible on `hovered || longPressActive`; row click dismisses after 400ms guard.**
   - File: `MessageBubble.tsx`
 
+### SPRINT D-1 — Deep Debugging & Parity Sync (Audit 2026-06-12) `DONE`
+> **Focus:** Full-stack deep debugging. Resolve Flutter UI overflow, broken Web AI integration, and Web ⇄ Flutter feature parity issues. Follow `PROMPT_DEBUG_FULLSTACK.md` methodology.
+
+- [x] **Task D-1.1: Fix Flutter UI Overflow (Yellow Stripes)** `M`
+  - Problem: Flutter mobile app displays "BOTTOM OVERFLOWED BY 131 PIXELS" in the modal bottom sheet (actions menu) and "OVERFLOWED BY 6 PIXELS" in the top navigation bar/AppBar next to the "PON" brand text.
+  - **DONE** — Bottom sheet (`floating_reaction_sheet.dart`): wrapped the up-to-8 action `ListTile`s in a `Flexible` + `SingleChildScrollView` (`mainAxisSize.min`) so the action list scrolls instead of overflowing on small screens / when the keyboard is up; pull-bar + reactions row stay fixed at top. AppBar (`conversation_list_screen.dart`): title `Row` set to `MainAxisSize.min`, PON `ShaderMask`/`Text` wrapped in `Flexible` with `maxLines:1` + `TextOverflow.ellipsis`, and `titleSpacing:8` to free room for the 5 action buttons. `flutter analyze` clean.
+  - Scope: `apps/client`
+
+- [x] **Task D-1.2: Deep Debug Web AI Integration** `L`
+  - Problem: AI assistant on the Next.js web client is broken and inaccessible.
+  - **DONE** — Full trace of the pipeline: web Bot button → `createConversation(AI_BOT_ID)` → REST `POST /api/messages` (prepends `@AI`) → `MessageController` broadcasts via STOMP **and** publishes `ai:request` (verified present, lines 47-54) → ai-service subscriber (try/catch hardened) → `AiResponseListener` relays `AI_STREAM_CHUNK/DONE/ERROR/TOOL_CALL` with field names (`chunk`/`error`) matching the web handler. CORS/WS: `deploy.yml` sets `ALLOWED_ORIGINS=<vercel>` for chat-service; `WebSocketConfig` reads it. **Bugs fixed:** (1) AI conversations were created with `STATUS_PENDING` (AI bot is not a "friend") → web rendered the AI chat behind a stranger-request banner / restricted composer. `ConversationService.createConversation` now treats `AI_BOT_USER_ID` as always-accepted. (2) Web auto-scroll only depended on `messages.length`, so the streaming AI bubble grew off-screen (felt "broken"); added `aiStreamContent` to the scroll effect deps. chat-service `mvn compile` BUILD SUCCESS; web `pnpm build` clean.
+  - Scope: `apps/web`, `apps/server/ai-service`, `apps/server/chat-service`
+
+- [x] **Task D-1.3: Enforce Web ⇄ Flutter UI Parity** `L`
+  - Problem: Web features and UI significantly diverge from the Flutter app.
+  - **DONE (audit)** — Route-level comparative audit complete. Every non-deferred Flutter route has a web equivalent: screens map 1:1 to pages, and Flutter sub-screens map to web modals/drawers (`/new-conversation`+`/new-group`→`NewConversationModal`, `/group-info`→`GroupSettingsDrawer`, `/user/:id`→`UserProfileDrawer`, `/edit-profile`→merged into `/profile`). Per-conversation screens (`ai-persona`, `kb`, `shared-media`) use `?conversationId=` / route params with graceful empty-state handling. Visual parity (PON cyan/peach/pink, rounded-3xl, glow spheres, neon bubbles) was landed in W-8/W-11. **Only gap = Calls/WebRTC (`/call`), explicitly deferred as W-10.15.** Minor: `/theme-onboarding` (Flutter-only first-run flow, N/A on web).
+  - Scope: `apps/web`
+
 ---
 
 ## 🧪 QA LOG
-*(Will be appended after implementation)*

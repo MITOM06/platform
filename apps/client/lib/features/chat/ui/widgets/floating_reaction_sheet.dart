@@ -111,79 +111,89 @@ class FloatingReactionSheet extends ConsumerWidget {
               ),
               const SizedBox(height: 16),
               const Divider(height: 1, color: Colors.white10),
-              
-              // Actions list
-              ListTile(
-                leading: const Icon(Icons.reply_rounded, color: Colors.white70),
-                title: Text(l10n.actionReply, style: const TextStyle(color: Colors.white)),
-                onTap: () {
-                  notifier.startReply(message);
-                  context.pop();
-                },
-              ),
-              ListTile(
-                leading: const Icon(Icons.copy_rounded, color: Colors.white70),
-                title: Text(l10n.actionCopy, style: const TextStyle(color: Colors.white)),
-                onTap: () {
-                  final text = message.isFile ? message.fileUrl : message.content;
-                  Clipboard.setData(ClipboardData(text: text));
-                  context.pop();
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text(context.l10n.copiedToClipboard)),
-                  );
-                },
-              ),
-              if (isSentByMe && !message.isMedia && !message.isFile)
-                ListTile(
-                  leading: const Icon(Icons.edit_rounded, color: AppTheme.ponCyan),
-                  title: Text(l10n.actionEdit, style: const TextStyle(color: AppTheme.ponCyan)),
-                  onTap: () {
-                    notifier.startEditing(message);
-                    context.pop();
-                  },
+
+              // Actions list — scrollable so it never overflows on small
+              // screens / when the keyboard is up (D-1.1 fix).
+              Flexible(
+                child: SingleChildScrollView(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      ListTile(
+                        leading: const Icon(Icons.reply_rounded, color: Colors.white70),
+                        title: Text(l10n.actionReply, style: const TextStyle(color: Colors.white)),
+                        onTap: () {
+                          notifier.startReply(message);
+                          context.pop();
+                        },
+                      ),
+                      ListTile(
+                        leading: const Icon(Icons.copy_rounded, color: Colors.white70),
+                        title: Text(l10n.actionCopy, style: const TextStyle(color: Colors.white)),
+                        onTap: () {
+                          final text = message.isFile ? message.fileUrl : message.content;
+                          Clipboard.setData(ClipboardData(text: text));
+                          context.pop();
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text(context.l10n.copiedToClipboard)),
+                          );
+                        },
+                      ),
+                      if (isSentByMe && !message.isMedia && !message.isFile)
+                        ListTile(
+                          leading: const Icon(Icons.edit_rounded, color: AppTheme.ponCyan),
+                          title: Text(l10n.actionEdit, style: const TextStyle(color: AppTheme.ponCyan)),
+                          onTap: () {
+                            notifier.startEditing(message);
+                            context.pop();
+                          },
+                        ),
+                      if (isSentByMe)
+                        ListTile(
+                          leading: const Icon(Icons.undo_rounded, color: Colors.orangeAccent),
+                          title: Text(l10n.actionRecall, style: const TextStyle(color: Colors.orangeAccent)),
+                          onTap: () {
+                            notifier.recallMessage(message.id);
+                            context.pop();
+                          },
+                        ),
+                      if (isSentByMe && isGroupChat)
+                        ListTile(
+                          leading: const Icon(Icons.done_all_rounded, color: AppTheme.ponCyan),
+                          title: Text(l10n.readDetails,
+                              style: const TextStyle(color: AppTheme.ponCyan)),
+                          onTap: () {
+                            context.pop();
+                            showGroupReadDetailsModal(context, message);
+                          },
+                        ),
+                      ListTile(
+                        leading: const Icon(Icons.push_pin_outlined, color: AppTheme.ponCyan),
+                        title: Text(l10n.pinMessage, style: const TextStyle(color: AppTheme.ponCyan)),
+                        onTap: () {
+                          notifier.pinMessage(message);
+                          context.pop();
+                        },
+                      ),
+                      ListTile(
+                        leading: const Icon(Icons.forward_to_inbox_outlined, color: Colors.white70),
+                        title: Text(l10n.forwardMessage, style: const TextStyle(color: Colors.white)),
+                        onTap: () {
+                          context.pop();
+                          showForwardDialog(context, ref, message, message.conversationId);
+                        },
+                      ),
+                      ListTile(
+                        leading: const Icon(Icons.delete_outline_rounded, color: Colors.redAccent),
+                        title: Text(l10n.actionDeleteForMe, style: const TextStyle(color: Colors.redAccent)),
+                        onTap: () {
+                          notifier.deleteForMe(message.id);
+                          context.pop();
+                        },
+                      ),
+                    ],
+                  ),
                 ),
-              if (isSentByMe)
-                ListTile(
-                  leading: const Icon(Icons.undo_rounded, color: Colors.orangeAccent),
-                  title: Text(l10n.actionRecall, style: const TextStyle(color: Colors.orangeAccent)),
-                  onTap: () {
-                    notifier.recallMessage(message.id);
-                    context.pop();
-                  },
-                ),
-              if (isSentByMe && isGroupChat)
-                ListTile(
-                  leading: const Icon(Icons.done_all_rounded, color: AppTheme.ponCyan),
-                  title: Text(l10n.readDetails,
-                      style: const TextStyle(color: AppTheme.ponCyan)),
-                  onTap: () {
-                    context.pop();
-                    showGroupReadDetailsModal(context, message);
-                  },
-                ),
-              ListTile(
-                leading: const Icon(Icons.push_pin_outlined, color: AppTheme.ponCyan),
-                title: Text(l10n.pinMessage, style: const TextStyle(color: AppTheme.ponCyan)),
-                onTap: () {
-                  notifier.pinMessage(message);
-                  context.pop();
-                },
-              ),
-              ListTile(
-                leading: const Icon(Icons.forward_to_inbox_outlined, color: Colors.white70),
-                title: Text(l10n.forwardMessage, style: const TextStyle(color: Colors.white)),
-                onTap: () {
-                  context.pop();
-                  showForwardDialog(context, ref, message, message.conversationId);
-                },
-              ),
-              ListTile(
-                leading: const Icon(Icons.delete_outline_rounded, color: Colors.redAccent),
-                title: Text(l10n.actionDeleteForMe, style: const TextStyle(color: Colors.redAccent)),
-                onTap: () {
-                  notifier.deleteForMe(message.id);
-                  context.pop();
-                },
               ),
             ],
           ),

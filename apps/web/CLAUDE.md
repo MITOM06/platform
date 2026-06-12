@@ -18,10 +18,10 @@
 ## Production URLs
 
 ```
-AUTH_SERVICE=https://auth-service-ec4ppoccna-as.a.run.app
-CHAT_SERVICE=https://chat-service-ec4ppoccna-as.a.run.app
-AI_SERVICE=https://ai-service-ec4ppoccna-as.a.run.app
-WS_URL=wss://chat-service-ec4ppoccna-as.a.run.app/ws
+AUTH_SERVICE=https://auth-service-942942821810.asia-southeast1.run.app
+CHAT_SERVICE=https://chat-service-942942821810.asia-southeast1.run.app
+AI_SERVICE=https://ai-service-942942821810.asia-southeast1.run.app
+WS_URL=wss://chat-service-942942821810.asia-southeast1.run.app/ws
 ```
 
 Local dev: auth=3001, chat=8080, ai=3002 (same as root CLAUDE.md ports).
@@ -130,9 +130,9 @@ NEXT_PUBLIC_CHAT_URL=http://localhost:8080
 NEXT_PUBLIC_WS_URL=ws://localhost:8080/ws
 
 # apps/web/.env.production (committed, no secrets)
-NEXT_PUBLIC_AUTH_URL=https://auth-service-ec4ppoccna-as.a.run.app
-NEXT_PUBLIC_CHAT_URL=https://chat-service-ec4ppoccna-as.a.run.app
-NEXT_PUBLIC_WS_URL=wss://chat-service-ec4ppoccna-as.a.run.app/ws
+NEXT_PUBLIC_AUTH_URL=https://auth-service-942942821810.asia-southeast1.run.app
+NEXT_PUBLIC_CHAT_URL=https://chat-service-942942821810.asia-southeast1.run.app
+NEXT_PUBLIC_WS_URL=wss://chat-service-942942821810.asia-southeast1.run.app/ws
 ```
 
 ## Rules
