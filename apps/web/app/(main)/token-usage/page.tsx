@@ -3,6 +3,7 @@
 import { useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { useQuery } from '@tanstack/react-query'
+import { useTranslations } from 'next-intl'
 import {
   ArrowLeft,
   Coins,
@@ -56,7 +57,7 @@ function StatCard({
 
 // ── Quota Progress ───────────────────────────────────────────────────────────
 
-function QuotaProgress({ used, limit }: { used: number; limit: number }) {
+function QuotaProgress({ used, limit, usedPercentLabel, monthlyLimitLabel }: { used: number; limit: number; usedPercentLabel: (percent: string) => string; monthlyLimitLabel: string }) {
   const fraction = Math.min(used / limit, 1)
   const percent = (fraction * 100).toFixed(1)
 
@@ -72,7 +73,7 @@ function QuotaProgress({ used, limit }: { used: number; limit: number }) {
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
           <Activity className="size-4" style={{ color: barColor }} />
-          <span className="text-sm font-semibold text-muted-foreground">Hạn mức tháng</span>
+          <span className="text-sm font-semibold text-muted-foreground">{monthlyLimitLabel}</span>
         </div>
         <span className="text-sm font-bold" style={{ color: barColor }}>
           {fmt(used)} / {fmt(limit)}
@@ -87,14 +88,14 @@ function QuotaProgress({ used, limit }: { used: number; limit: number }) {
         />
       </div>
 
-      <p className="text-xs text-muted-foreground/60 mt-2">{percent}% đã sử dụng tháng này</p>
+      <p className="text-xs text-muted-foreground/60 mt-2">{usedPercentLabel(percent)}</p>
     </div>
   )
 }
 
 // ── Bar Chart (Canvas) ───────────────────────────────────────────────────────
 
-function BarChart({ days }: { days: TokenUsageDay[] }) {
+function BarChart({ days, inputLabel, outputLabel, noDataLabel }: { days: TokenUsageDay[]; inputLabel: string; outputLabel: string; noDataLabel: string }) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
 
   useEffect(() => {
@@ -154,7 +155,7 @@ function BarChart({ days }: { days: TokenUsageDay[] }) {
   if (days.length === 0) {
     return (
       <div className="h-40 flex items-center justify-center text-sm text-muted-foreground/50">
-        Không có dữ liệu
+        {noDataLabel}
       </div>
     )
   }
@@ -166,11 +167,11 @@ function BarChart({ days }: { days: TokenUsageDay[] }) {
       <div className="flex items-center gap-6 justify-center">
         <div className="flex items-center gap-2">
           <div className="size-3 rounded-sm" style={{ background: '#00E5FF' }} />
-          <span className="text-xs text-muted-foreground">Input tokens</span>
+          <span className="text-xs text-muted-foreground">{inputLabel}</span>
         </div>
         <div className="flex items-center gap-2">
           <div className="size-3 rounded-sm" style={{ background: '#B47FFF' }} />
-          <span className="text-xs text-muted-foreground">Output tokens</span>
+          <span className="text-xs text-muted-foreground">{outputLabel}</span>
         </div>
       </div>
     </div>
@@ -180,6 +181,7 @@ function BarChart({ days }: { days: TokenUsageDay[] }) {
 // ── Main Page ────────────────────────────────────────────────────────────────
 
 export default function TokenUsagePage() {
+  const t = useTranslations('tokenUsage')
   const { data: days, isLoading, error } = useQuery({
     queryKey: ['token-usage', 30],
     queryFn: () => aiService.getTokenUsage(30),
@@ -202,7 +204,7 @@ export default function TokenUsagePage() {
         >
           <ArrowLeft className="size-5" />
         </Link>
-        <span className="font-semibold text-base">Lượng token sử dụng</span>
+        <span className="font-semibold text-base">{t('title')}</span>
       </header>
 
       <div className="flex-1 overflow-y-auto">
@@ -215,14 +217,14 @@ export default function TokenUsagePage() {
             {isLoading && (
               <div className="flex flex-col items-center justify-center py-20 gap-3">
                 <Loader2 className="size-8 animate-spin text-primary" />
-                <p className="text-sm text-muted-foreground">Đang tải dữ liệu...</p>
+                <p className="text-sm text-muted-foreground">{t('loading')}</p>
               </div>
             )}
 
             {error && (
               <div className="flex flex-col items-center justify-center py-20 gap-3">
                 <AlertCircle className="size-10 text-destructive/50" />
-                <p className="text-sm text-destructive">Không thể tải dữ liệu token</p>
+                <p className="text-sm text-destructive">{t('loadError')}</p>
               </div>
             )}
 
@@ -232,13 +234,13 @@ export default function TokenUsagePage() {
                 <div className="grid grid-cols-2 gap-3">
                   <StatCard
                     icon={<Coins className="size-5 text-primary" />}
-                    label="Token tháng này"
+                    label={t('thisMonth')}
                     value={fmt(totalUsed)}
                     glowColor="rgba(106,201,255,0.06)"
                   />
                   <StatCard
                     icon={<MessageSquare className="size-5 text-[#B47FFF]" />}
-                    label="Lượt hỏi"
+                    label={t('queries')}
                     value={totalRequests.toString()}
                     glowColor="rgba(180,127,255,0.06)"
                   />
@@ -246,21 +248,31 @@ export default function TokenUsagePage() {
 
                 <StatCard
                   icon={<DollarSign className="size-5 text-pon-peach" />}
-                  label="Chi phí ước tính"
+                  label={t('estimatedCost')}
                   value={`$${estimatedCost.toFixed(4)}`}
                   glowColor="rgba(251,182,139,0.06)"
                 />
 
                 {/* Quota progress bar */}
-                <QuotaProgress used={totalUsed} limit={MONTHLY_QUOTA} />
+                <QuotaProgress
+                  used={totalUsed}
+                  limit={MONTHLY_QUOTA}
+                  monthlyLimitLabel={t('monthlyLimit')}
+                  usedPercentLabel={(percent) => t('usedPercent', { percent })}
+                />
 
                 {/* Daily chart */}
                 <div>
                   <h3 className="text-sm font-semibold text-foreground mb-3">
-                    Biểu đồ hàng ngày (30 ngày)
+                    {t('dailyChart')}
                   </h3>
                   <div className="rounded-xl border bg-card p-4">
-                    <BarChart days={days} />
+                    <BarChart
+                      days={days}
+                      inputLabel={t('inputTokens')}
+                      outputLabel={t('outputTokens')}
+                      noDataLabel={t('noData')}
+                    />
                   </div>
                 </div>
               </div>

@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useTranslations } from 'next-intl'
 import { cn } from '@/lib/utils'
 import { firstUrl } from '@/lib/media'
 import { MessageActions } from './MessageActions'
@@ -52,13 +53,14 @@ export function MessageBubble({
   onAiTrace,
   onOptimisticUpdate,
 }: Props) {
+  const t = useTranslations('chat')
   const [hovered, setHovered] = useState(false)
 
   if (message.recalled) {
     return (
       <div className={cn('flex', isOwn ? 'justify-end' : 'justify-start')}>
         <div className="max-w-[70%] rounded-[24px] px-4 py-2 text-sm italic text-muted-foreground border border-dashed bg-muted/20">
-          Tin nhắn đã bị thu hồi
+          {t('recalled')}
         </div>
       </div>
     )
@@ -104,7 +106,7 @@ export function MessageBubble({
       }}
     >
       <p className="font-semibold mb-0.5">
-        {message.replyPreview.senderId === currentUserId ? 'Bạn' : (message.senderName || 'Người khác')}
+        {message.replyPreview.senderId === currentUserId ? t('you') : (message.senderName || '')}
       </p>
       <p className="truncate italic">{message.replyPreview.content}</p>
     </button>
@@ -122,7 +124,7 @@ export function MessageBubble({
       )}
     >
       {formatTime(message.createdAt)}
-      {message.editedAt && <span className="ml-1 italic opacity-85">đã sửa</span>}
+      {message.editedAt && <span className="ml-1 italic opacity-85">{t('edited')}</span>}
     </p>
   )
 

@@ -1,7 +1,12 @@
+'use client'
+
+import { useTranslations } from 'next-intl'
+
 export default function ConversationsPage() {
+  const t = useTranslations('conversations')
   return (
     <div className="flex-1 flex items-center justify-center text-muted-foreground">
-      <p>Chọn một cuộc trò chuyện để bắt đầu</p>
+      <p>{t('selectPrompt')}</p>
     </div>
   )
 }

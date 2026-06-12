@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { toast } from 'sonner'
 import Link from 'next/link'
+import { useTranslations } from 'next-intl'
 import { authService } from '@/lib/api/auth'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -14,6 +15,7 @@ const OTP_LENGTH = 6
 const RESEND_COOLDOWN = 60
 
 function VerifyOtpForm() {
+  const t = useTranslations('auth.verifyOtp')
   const router = useRouter()
   const searchParams = useSearchParams()
   const email = searchParams.get('email') ?? ''
@@ -25,7 +27,7 @@ function VerifyOtpForm() {
 
   useEffect(() => {
     if (resendTimer <= 0) return
-    const id = setInterval(() => setResendTimer((t) => t - 1), 1000)
+    const id = setInterval(() => setResendTimer((s) => s - 1), 1000)
     return () => clearInterval(id)
   }, [resendTimer])
 
@@ -58,18 +60,18 @@ function VerifyOtpForm() {
     e.preventDefault()
     const code = otp.join('')
     if (code.length < OTP_LENGTH) {
-      toast.error('Vui lòng nhập đủ 6 chữ số')
+      toast.error(t('incomplete'))
       return
     }
     setLoading(true)
     try {
       await authService.verifyOtp(email, code)
-      toast.success('Xác thực thành công! Vui lòng đăng nhập.')
+      toast.success(t('success'))
       router.push('/login')
     } catch (err: unknown) {
       const msg =
         (err as { response?: { data?: { message?: string } } })?.response?.data?.message ??
-        'Mã OTP không hợp lệ'
+        t('error')
       toast.error(msg)
     } finally {
       setLoading(false)
@@ -80,20 +82,20 @@ function VerifyOtpForm() {
     if (resendTimer > 0) return
     try {
       await authService.resendOtp(email)
-      toast.success('Đã gửi lại mã OTP')
+      toast.success(t('resendSuccess'))
       setResendTimer(RESEND_COOLDOWN)
     } catch {
-      toast.error('Không thể gửi lại mã OTP')
+      toast.error(t('resendError'))
     }
   }
 
   return (
     <Card className="w-full max-w-sm shadow-none border-border">
       <CardHeader>
-        <CardTitle className="text-2xl">Xác thực OTP</CardTitle>
+        <CardTitle className="text-2xl">{t('title')}</CardTitle>
         <CardDescription>
-          Nhập mã 6 chữ số đã được gửi đến{' '}
-          <span className="font-medium text-foreground">{email || 'email của bạn'}</span>
+          {t('subtitle')}{' '}
+          <span className="font-medium text-foreground">{email || t('emailFallback')}</span>
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -114,32 +116,28 @@ function VerifyOtpForm() {
             ))}
           </div>
 
-          <Button
-            type="submit"
-            className="w-full font-bold tracking-wide"
-            disabled={loading}
-          >
-            {loading ? 'Đang xác thực...' : 'Xác thực'}
+          <Button type="submit" className="w-full font-bold tracking-wide" disabled={loading}>
+            {loading ? t('submitting') : t('submit')}
           </Button>
         </form>
 
         <div className="mt-4 text-center text-sm text-muted-foreground">
           {resendTimer > 0 ? (
-            <span>Gửi lại mã sau {resendTimer}s</span>
+            <span>{t('resendCountdown', { seconds: resendTimer })}</span>
           ) : (
             <button
               type="button"
               onClick={handleResend}
               className="underline underline-offset-4 hover:text-primary cursor-pointer"
             >
-              Gửi lại mã OTP
+              {t('resend')}
             </button>
           )}
         </div>
 
         <p className="mt-2 text-center text-sm text-muted-foreground">
           <Link href="/login" className="underline underline-offset-4 hover:text-primary">
-            Quay lại đăng nhập
+            {t('backToLogin')}
           </Link>
         </p>
       </CardContent>

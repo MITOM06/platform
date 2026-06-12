@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { Search, UserPlus, UserMinus, Check, X, Users, UserCheck } from 'lucide-react'
+import { useTranslations } from 'next-intl'
 import { useFriends, useFriendRequests, useFriendActions } from '@/lib/hooks/use-friends'
 import { authService } from '@/lib/api/auth'
 import type { UserSearchResult } from '@/lib/api/types'
@@ -12,6 +13,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 
 export default function FriendsPage() {
+  const t = useTranslations('friends')
   const { data: friends = [], isLoading: loadingFriends } = useFriends()
   const { data: requests = [], isLoading: loadingRequests } = useFriendRequests()
   const { sendRequest, acceptRequest, removeFriend } = useFriendActions()
@@ -83,9 +85,9 @@ export default function FriendsPage() {
     <div className="flex-1 flex flex-col h-full bg-background/50">
       <div className="border-b px-6 py-4 bg-background/80 backdrop-blur-md sticky top-0 z-10">
         <h1 className="text-2xl font-bold flex items-center gap-2">
-          <Users className="text-primary size-6" /> Bạn bè
+          <Users className="text-primary size-6" /> {t('title')}
         </h1>
-        <p className="text-sm text-muted-foreground mt-1">Quản lý danh sách liên hệ của bạn</p>
+        <p className="text-sm text-muted-foreground mt-1">{t('subtitle')}</p>
       </div>
 
       <div className="p-6 overflow-y-auto flex-1">
@@ -93,29 +95,29 @@ export default function FriendsPage() {
           <TabsList className="bg-muted/50 p-1">
             <TabsTrigger value="friends" className="rounded-md">
               <UserCheck className="size-4 mr-2" />
-              Bạn bè ({friends.length})
+              {t('tabFriends', { count: friends.length })}
             </TabsTrigger>
             <TabsTrigger value="requests" className="rounded-md">
               <UserPlus className="size-4 mr-2" />
-              Lời mời ({requests.length})
+              {t('tabRequests', { count: requests.length })}
             </TabsTrigger>
             <TabsTrigger value="search" className="rounded-md">
               <Search className="size-4 mr-2" />
-              Tìm kiếm
+              {t('searchPlaceholder')}
             </TabsTrigger>
           </TabsList>
 
           <TabsContent value="friends" className="mt-0">
             {loadingFriends ? (
-              <div className="py-12 flex justify-center text-muted-foreground">Đang tải...</div>
+              <div className="py-12 flex justify-center text-muted-foreground">{t('searching')}</div>
             ) : (
-              renderUserList(friends, 'Bạn chưa có người bạn nào', (user) => (
+              renderUserList(friends, t('noFriends'), (user) => (
                 <Button
                   size="icon-sm"
                   variant="ghost"
                   className="text-destructive hover:text-destructive hover:bg-destructive/10"
                   onClick={() => removeFriend.mutate(user.id || user._id!)}
-                  title="Xóa bạn"
+                  title={t('removeFriend')}
                   disabled={removeFriend.isPending}
                 >
                   <UserMinus className="size-4" />
@@ -126,15 +128,15 @@ export default function FriendsPage() {
 
           <TabsContent value="requests" className="mt-0">
             {loadingRequests ? (
-              <div className="py-12 flex justify-center text-muted-foreground">Đang tải...</div>
+              <div className="py-12 flex justify-center text-muted-foreground">{t('searching')}</div>
             ) : (
-              renderUserList(requests, 'Không có lời mời kết bạn nào', (user) => (
+              renderUserList(requests, t('noRequests'), (user) => (
                 <>
                   <Button
                     size="icon-sm"
                     className="bg-pon-cyan hover:bg-pon-cyan/90 text-black"
                     onClick={() => acceptRequest.mutate(user.id || user._id!)}
-                    title="Chấp nhận"
+                    title={t('accept')}
                     disabled={acceptRequest.isPending}
                   >
                     <Check className="size-4" />
@@ -143,7 +145,7 @@ export default function FriendsPage() {
                     size="icon-sm"
                     variant="ghost"
                     onClick={() => removeFriend.mutate(user.id || user._id!)}
-                    title="Từ chối"
+                    title={t('decline')}
                     disabled={removeFriend.isPending}
                   >
                     <X className="size-4" />
@@ -157,7 +159,7 @@ export default function FriendsPage() {
             <div className="relative max-w-md">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
               <Input
-                placeholder="Tìm kiếm qua Email hoặc Tên..."
+                placeholder={t('searchPlaceholder')}
                 className="pl-9 bg-card/50"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
@@ -165,20 +167,20 @@ export default function FriendsPage() {
             </div>
 
             {searching ? (
-              <div className="py-12 flex justify-center text-muted-foreground">Đang tìm kiếm...</div>
+              <div className="py-12 flex justify-center text-muted-foreground">{t('searching')}</div>
             ) : searchQuery.trim() && currentSearchResults.length === 0 ? (
               <div className="py-12 flex justify-center text-muted-foreground">
-                Không tìm thấy kết quả nào
+                {t('noSearchResults')}
               </div>
             ) : (
-              renderUserList(currentSearchResults, 'Nhập từ khóa để tìm kiếm người dùng', (user) => (
+              renderUserList(currentSearchResults, t('searchPrompt'), (user) => (
                 <Button
                   size="sm"
                   className="bg-primary/10 hover:bg-primary/20 text-primary border-0"
                   onClick={() => sendRequest.mutate(user.id || user._id!)}
                   disabled={sendRequest.isPending}
                 >
-                  <UserPlus className="size-4 mr-1.5" /> Kết bạn
+                  <UserPlus className="size-4 mr-1.5" /> {t('addFriend')}
                 </Button>
               ))
             )}

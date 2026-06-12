@@ -1,9 +1,10 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import { useTheme } from 'next-themes'
+import { useTranslations, useLocale } from 'next-intl'
 import {
   ArrowLeft,
   User,
@@ -19,12 +20,15 @@ import {
   Coins,
   BrainCircuit,
   Hash,
+  Languages,
 } from 'lucide-react'
 import Link from 'next/link'
 import { useAuthStore } from '@/lib/store/auth.store'
 import { stompService } from '@/lib/stomp/client'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { ChangePasswordDialog } from '@/components/chat/ChangePasswordDialog'
+import { setLocaleAction } from '@/lib/actions/locale'
+import { LOCALE_NAMES, SUPPORTED_LOCALES, type Locale } from '@/i18n/config'
 
 function getInitials(name?: string): string {
   if (!name) return '?'
@@ -53,7 +57,6 @@ function SettingsCard({ icon, iconBg, title, subtitle, onClick, destructive }: S
         destructive ? 'hover:border-destructive/30' : 'hover:border-primary/30'
       }`}
     >
-      {/* Subtle glow on hover */}
       <div
         className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-xl pointer-events-none"
         style={{
@@ -93,12 +96,15 @@ function SettingsCard({ icon, iconBg, title, subtitle, onClick, destructive }: S
 }
 
 export default function SettingsPage() {
+  const t = useTranslations('settings')
   const router = useRouter()
   const user = useAuthStore((s) => s.user)
   const clearAuth = useAuthStore((s) => s.clearAuth)
   const { theme, setTheme } = useTheme()
+  const locale = useLocale()
   const [loggingOut, setLoggingOut] = useState(false)
   const [changePasswordOpen, setChangePasswordOpen] = useState(false)
+  const [isPending, startTransition] = useTransition()
 
   const handleLogout = async () => {
     setLoggingOut(true)
@@ -108,35 +114,47 @@ export default function SettingsPage() {
       clearAuth()
       router.push('/login')
     } catch {
-      toast.error('Đăng xuất thất bại')
+      toast.error(t('logoutError'))
       setLoggingOut(false)
     }
   }
 
   const cycleTheme = () => {
     const order: ('light' | 'dark' | 'system')[] = ['light', 'dark', 'system']
-    const current = theme as typeof order[number]
+    const current = theme as (typeof order)[number]
     const idx = order.indexOf(current)
     const next = order[(idx + 1) % order.length]
     setTheme(next)
-    toast.success(`Đã chuyển sang giao diện ${
-      next === 'light' ? 'sáng' : next === 'dark' ? 'tối' : 'hệ thống'
-    }`)
+    const label = next === 'light' ? t('themeLight') : next === 'dark' ? t('themeDark') : t('themeSystem')
+    toast.success(t('themeChanged', { theme: label }))
+  }
+
+  const cycleLocale = () => {
+    const idx = SUPPORTED_LOCALES.indexOf(locale as Locale)
+    const next = SUPPORTED_LOCALES[(idx + 1) % SUPPORTED_LOCALES.length]
+    startTransition(async () => {
+      await setLocaleAction(next)
+      toast.success(t('languageChanged'))
+      router.refresh()
+    })
   }
 
   const themeIcon = () => {
     switch (theme) {
-      case 'dark': return <Moon className="size-5 text-primary" />
-      case 'light': return <Sun className="size-5 text-amber-500" />
-      default: return <Monitor className="size-5 text-primary" />
+      case 'dark':
+        return <Moon className="size-5 text-primary" />
+      case 'light':
+        return <Sun className="size-5 text-amber-500" />
+      default:
+        return <Monitor className="size-5 text-primary" />
     }
   }
 
   const themeLabel = () => {
     switch (theme) {
-      case 'dark': return 'Giao diện tối'
-      case 'light': return 'Giao diện sáng'
-      default: return 'Theo hệ thống'
+      case 'dark': return t('themeDark')
+      case 'light': return t('themeLight')
+      default: return t('themeSystem')
     }
   }
 
@@ -144,7 +162,6 @@ export default function SettingsPage() {
 
   return (
     <div className="flex flex-col h-full">
-      {/* Header */}
       <header className="h-14 border-b px-4 flex items-center gap-3 shrink-0 bg-background/95 backdrop-blur-md">
         <Link
           href="/conversations"
@@ -152,17 +169,15 @@ export default function SettingsPage() {
         >
           <ArrowLeft className="size-5" />
         </Link>
-        <span className="font-semibold text-base">Cài đặt</span>
+        <span className="font-semibold text-base">{t('title')}</span>
       </header>
 
       <div className="flex-1 overflow-y-auto">
-        {/* Background glow effects */}
         <div className="relative">
           <div className="absolute -top-24 -left-24 w-72 h-72 rounded-full bg-pon-cyan/5 blur-3xl pointer-events-none dark:bg-pon-cyan/8" />
           <div className="absolute -bottom-24 -right-24 w-72 h-72 rounded-full bg-pon-peach/5 blur-3xl pointer-events-none dark:bg-pon-peach/8" />
 
           <div className="relative max-w-md mx-auto px-6 py-8">
-            {/* User info section */}
             <div className="flex flex-col items-center mb-10">
               <div className="relative">
                 <Avatar className="size-20 ring-2 ring-primary/20 ring-offset-2 ring-offset-background">
@@ -170,104 +185,99 @@ export default function SettingsPage() {
                     {getInitials(user.displayName)}
                   </AvatarFallback>
                 </Avatar>
-                {/* Online indicator */}
                 <div className="absolute -bottom-0.5 -right-0.5 size-5 rounded-full bg-online-green border-2 border-background" />
               </div>
               <h2 className="mt-4 text-lg font-bold text-foreground">{user.displayName}</h2>
               <p className="text-sm text-muted-foreground">{user.email}</p>
             </div>
 
-            {/* Settings cards */}
             <div className="space-y-3">
-              {/* Edit Profile */}
               <SettingsCard
                 icon={<User className="size-5 text-primary" />}
                 iconBg="rgba(106,201,255,0.12)"
-                title="Chỉnh sửa hồ sơ"
+                title={t('editProfile')}
                 onClick={() => router.push('/profile')}
               />
 
-              {/* Theme */}
               <SettingsCard
                 icon={themeIcon()}
                 iconBg="rgba(251,182,139,0.12)"
-                title="Giao diện"
+                title={t('theme')}
                 subtitle={themeLabel()}
                 onClick={cycleTheme}
               />
 
-              {/* Archived Chats */}
+              <SettingsCard
+                icon={<Languages className="size-5 text-primary" />}
+                iconBg="rgba(106,201,255,0.12)"
+                title={t('language')}
+                subtitle={`${LOCALE_NAMES[locale as Locale] ?? locale}${isPending ? '…' : ''}`}
+                onClick={cycleLocale}
+              />
+
               <SettingsCard
                 icon={<Archive className="size-5 text-primary" />}
                 iconBg="rgba(106,201,255,0.12)"
-                title="Tin nhắn đã lưu trữ"
-                subtitle="Xem các cuộc trò chuyện đã ẩn"
+                title={t('archived')}
+                subtitle={t('archivedSubtitle')}
                 onClick={() => router.push('/archived')}
               />
 
-              {/* Explore Channels */}
               <SettingsCard
                 icon={<Hash className="size-5 text-[#B47FFF]" />}
                 iconBg="rgba(180,127,255,0.12)"
-                title="Khám phá cộng đồng"
-                subtitle="Tìm và tham gia các kênh công khai"
+                title={t('explore')}
+                subtitle={t('exploreSubtitle')}
                 onClick={() => router.push('/explore')}
               />
 
-              {/* Notifications */}
               <SettingsCard
                 icon={<Bell className="size-5 text-pon-peach" />}
                 iconBg="rgba(251,182,139,0.12)"
-                title="Thông báo"
+                title={t('notifications')}
                 subtitle={
                   typeof Notification !== 'undefined'
                     ? Notification.permission === 'granted'
-                      ? 'Đã bật'
-                      : 'Chưa bật'
-                    : 'Không khả dụng'
+                      ? t('notificationsEnabled')
+                      : t('notificationsDisabled')
+                    : t('notificationsUnavailable')
                 }
                 onClick={() => {
                   if (typeof Notification !== 'undefined' && Notification.permission !== 'granted') {
                     Notification.requestPermission().then((perm) => {
                       toast.success(
-                        perm === 'granted'
-                          ? 'Đã bật thông báo'
-                          : 'Không thể bật thông báo. Kiểm tra cài đặt trình duyệt.',
+                        perm === 'granted' ? t('notificationsGranted') : t('notificationsDenied'),
                       )
                     })
                   } else {
-                    toast.info('Thông báo đã được bật')
+                    toast.info(t('notificationsAlready'))
                   }
                 }}
               />
 
-              {/* Token Usage */}
               <SettingsCard
                 icon={<Coins className="size-5 text-pon-peach" />}
                 iconBg="rgba(251,182,139,0.12)"
-                title="Lượng token AI"
-                subtitle="Xem thống kê sử dụng token"
+                title={t('tokenUsage')}
+                subtitle={t('tokenUsageSubtitle')}
                 onClick={() => router.push('/token-usage')}
               />
 
-              {/* AI Memory */}
               <SettingsCard
                 icon={<BrainCircuit className="size-5 text-[#B47FFF]" />}
                 iconBg="rgba(180,127,255,0.12)"
-                title="AI Memory"
-                subtitle="Quản lý bộ nhớ AI"
+                title={t('aiMemory')}
+                subtitle={t('aiMemorySubtitle')}
                 onClick={() => router.push('/ai-memory')}
               />
 
-              {/* Change Password */}
               <SettingsCard
                 icon={<Lock className="size-5 text-pon-pink" />}
                 iconBg="rgba(255,133,179,0.12)"
-                title="Đổi mật khẩu"
+                title={t('changePassword')}
                 onClick={() => setChangePasswordOpen(true)}
               />
 
-              {/* Logout */}
               <div className="pt-4">
                 <SettingsCard
                   icon={
@@ -278,22 +288,20 @@ export default function SettingsPage() {
                     )
                   }
                   iconBg="rgba(239,68,68,0.1)"
-                  title="Đăng xuất"
+                  title={t('logout')}
                   onClick={handleLogout}
                   destructive
                 />
               </div>
             </div>
 
-            {/* Version footer */}
             <div className="mt-12 text-center">
-              <p className="text-xs text-muted-foreground/50">PON Messenger v1.0</p>
+              <p className="text-xs text-muted-foreground/50">{t('version')}</p>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Change Password Dialog */}
       <ChangePasswordDialog open={changePasswordOpen} onOpenChange={setChangePasswordOpen} />
     </div>
   )

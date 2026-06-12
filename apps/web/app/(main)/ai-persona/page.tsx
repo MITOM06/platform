@@ -6,6 +6,7 @@ import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
+import { useTranslations } from 'next-intl'
 import {
   ArrowLeft,
   Bot,
@@ -25,22 +26,24 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 
 // ── Tone chips ───────────────────────────────────────────────────────────────
 
-const TONES = [
-  { id: 'friendly', label: 'Thân thiện', icon: '😊' },
-  { id: 'professional', label: 'Chuyên nghiệp', icon: '💼' },
-  { id: 'concise', label: 'Ngắn gọn', icon: '⚡' },
-  { id: 'creative', label: 'Sáng tạo', icon: '🎨' },
-] as const
-
 function ToneSelector({
   value,
   onChange,
   disabled,
+  toneLabels,
 }: {
   value: string
   onChange: (v: string) => void
   disabled?: boolean
+  toneLabels: Record<string, string>
 }) {
+  const TONES = [
+    { id: 'friendly', icon: '😊' },
+    { id: 'professional', icon: '💼' },
+    { id: 'concise', icon: '⚡' },
+    { id: 'creative', icon: '🎨' },
+  ] as const
+
   return (
     <div className="flex flex-wrap gap-2">
       {TONES.map((t) => {
@@ -58,7 +61,7 @@ function ToneSelector({
             } ${disabled ? 'opacity-50 pointer-events-none' : ''}`}
           >
             <span>{t.icon}</span>
-            {t.label}
+            {toneLabels[t.id]}
           </button>
         )
       })}
@@ -69,9 +72,18 @@ function ToneSelector({
 // ── Main Page ────────────────────────────────────────────────────────────────
 
 export default function AiPersonaPage() {
+  const t = useTranslations('aiPersona')
+  const tc = useTranslations('common')
   const searchParams = useSearchParams()
   const conversationId = searchParams.get('conversationId') ?? ''
   const queryClient = useQueryClient()
+
+  const toneLabels: Record<string, string> = {
+    friendly: t('toneAmicable'),
+    professional: t('toneProfessional'),
+    concise: t('toneConcise'),
+    creative: t('toneCreative'),
+  }
 
   const [name, setName] = useState('PON AI')
   const [avatarUrl, setAvatarUrl] = useState('')
@@ -106,9 +118,9 @@ export default function AiPersonaPage() {
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['ai-persona', conversationId] })
-      toast.success('Đã lưu AI Persona')
+      toast.success(t('saveSuccess'))
     },
-    onError: () => toast.error('Không thể lưu AI Persona'),
+    onError: () => toast.error(t('saveError')),
   })
 
   const resetMutation = useMutation({
@@ -120,14 +132,14 @@ export default function AiPersonaPage() {
       setInstructions('')
       setInitialized(false)
       queryClient.invalidateQueries({ queryKey: ['ai-persona', conversationId] })
-      toast.success('Đã đặt lại về mặc định')
+      toast.success(t('resetSuccess'))
     },
-    onError: () => toast.error('Không thể đặt lại'),
+    onError: () => toast.error(t('resetError')),
   })
 
   const handleSave = () => {
     if (!name.trim()) {
-      toast.error('Tên bot không được để trống')
+      toast.error(t('botNameRequired'))
       return
     }
     saveMutation.mutate()
@@ -142,13 +154,13 @@ export default function AiPersonaPage() {
           <Link href="/conversations" className="text-muted-foreground hover:text-foreground transition-colors">
             <ArrowLeft className="size-5" />
           </Link>
-          <span className="font-semibold text-base">AI Persona</span>
+          <span className="font-semibold text-base">{t('title')}</span>
         </header>
         <div className="flex-1 flex items-center justify-center">
           <div className="text-center space-y-3">
             <Bot className="size-16 text-muted-foreground/20 mx-auto" />
             <p className="text-sm text-muted-foreground">
-              Mở cài đặt AI Persona từ trong cuộc trò chuyện
+              {t('openFromConversation')}
             </p>
           </div>
         </div>
@@ -166,7 +178,7 @@ export default function AiPersonaPage() {
         >
           <ArrowLeft className="size-5" />
         </Link>
-        <span className="font-semibold text-base">AI Persona</span>
+        <span className="font-semibold text-base">{t('title')}</span>
       </header>
 
       <div className="flex-1 overflow-y-auto">
@@ -179,7 +191,7 @@ export default function AiPersonaPage() {
             {isLoading ? (
               <div className="flex flex-col items-center justify-center py-20 gap-3">
                 <Loader2 className="size-8 animate-spin text-primary" />
-                <p className="text-sm text-muted-foreground">Đang tải...</p>
+                <p className="text-sm text-muted-foreground">{tc('loading')}</p>
               </div>
             ) : (
               <div className="space-y-6">
@@ -187,7 +199,7 @@ export default function AiPersonaPage() {
                 <div className="rounded-xl border border-primary/30 bg-primary/5 p-3.5 flex items-start gap-3">
                   <Info className="size-4 text-primary shrink-0 mt-0.5" />
                   <p className="text-xs text-primary leading-relaxed">
-                    Chỉ admin của cuộc trò chuyện mới có thể thay đổi cài đặt AI Persona. Thay đổi sẽ áp dụng cho tất cả thành viên.
+                    {t('adminOnly')}
                   </p>
                 </div>
 
@@ -213,12 +225,12 @@ export default function AiPersonaPage() {
                 <div className="space-y-2">
                   <Label className="text-sm font-medium flex items-center gap-2">
                     <Bot className="size-4 text-[#B47FFF]" />
-                    Tên bot
+                    {t('botNameLabel')}
                   </Label>
                   <Input
                     value={name}
                     onChange={(e) => setName(e.target.value)}
-                    placeholder="Ví dụ: DevBot"
+                    placeholder={t('botNamePlaceholder')}
                     maxLength={30}
                     disabled={isBusy}
                   />
@@ -228,12 +240,12 @@ export default function AiPersonaPage() {
                 <div className="space-y-2">
                   <Label className="text-sm font-medium flex items-center gap-2">
                     <LinkIcon className="size-4 text-[#B47FFF]" />
-                    Avatar URL
+                    {t('avatarUrlLabel')}
                   </Label>
                   <Input
                     value={avatarUrl}
                     onChange={(e) => setAvatarUrl(e.target.value)}
-                    placeholder="https://..."
+                    placeholder={t('avatarUrlPlaceholder')}
                     disabled={isBusy}
                   />
                 </div>
@@ -242,21 +254,21 @@ export default function AiPersonaPage() {
                 <div className="space-y-2">
                   <Label className="text-sm font-medium flex items-center gap-2">
                     <MessageCircle className="size-4 text-[#B47FFF]" />
-                    Giọng điệu
+                    {t('toneLabel')}
                   </Label>
-                  <ToneSelector value={tone} onChange={setTone} disabled={isBusy} />
+                  <ToneSelector value={tone} onChange={setTone} disabled={isBusy} toneLabels={toneLabels} />
                 </div>
 
                 {/* System instructions */}
                 <div className="space-y-2">
                   <Label className="text-sm font-medium flex items-center gap-2">
                     <Sparkles className="size-4 text-[#B47FFF]" />
-                    Hướng dẫn hệ thống
+                    {t('systemPromptLabel')}
                   </Label>
                   <textarea
                     value={instructions}
                     onChange={(e) => setInstructions(e.target.value)}
-                    placeholder="Ví dụ: Luôn trả lời bằng tiếng Việt, sử dụng emoji..."
+                    placeholder={t('systemPromptPlaceholder')}
                     maxLength={500}
                     rows={4}
                     disabled={isBusy}
@@ -278,7 +290,7 @@ export default function AiPersonaPage() {
                   ) : (
                     <Save className="size-4 mr-2" />
                   )}
-                  Lưu
+                  {t('save')}
                 </Button>
 
                 <div className="text-center">
@@ -288,7 +300,7 @@ export default function AiPersonaPage() {
                     className="text-sm text-destructive hover:text-destructive/80 transition-colors inline-flex items-center gap-1.5 disabled:opacity-50"
                   >
                     <RotateCcw className="size-3.5" />
-                    Đặt lại về mặc định
+                    {t('reset')}
                   </button>
                 </div>
               </div>
@@ -299,3 +311,4 @@ export default function AiPersonaPage() {
     </div>
   )
 }
+

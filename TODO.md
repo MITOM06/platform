@@ -44,8 +44,8 @@
   - Audit against NoSQL injection, XSS, CSRF, and implement security headers. **DONE — Spring Boot `SecurityConfig`: added `X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff`, `HSTS` (1y + preload), `Referrer-Policy: strict-origin-when-cross-origin`. NoSQL injection: Spring Data MongoDB typed criteria are injection-safe; CSRF: correctly disabled (JWT stateless API). NestJS auth-service + ai-service: `helmet` middleware added (excluding CSP + COEP for API compatibility).**
 - [x] **Task P3-4.2: Rate Limiting Audit**
   - Audit and apply rate limiting to all REST endpoints and WebSockets inbound channel. **DONE — Spring Boot: `RateLimiterService` extended with `checkUploadRate()` (20/min) and `checkReactionRate()` (30/min); `UploadController` now calls upload rate limiter. NestJS auth-service: `@nestjs/throttler` added with global `ThrottlerGuard` (5 req/s burst + 100 req/min per IP). Existing STOMP message rate (10/5s) unchanged.**
-- [ ] **Task P3-4.3: Secure File Uploads**
-  - Validate uploads via magic bytes check, size caps, and virus scanning stubs.
+- [x] **Task P3-4.3: Secure File Uploads**
+  - Validate uploads via magic bytes check, size caps, and virus scanning stubs. **DONE — `FileValidationService` (magic-bytes check for images/video/audio/PDF/zip/Office/archive + per-type size caps: 10MB image, 100MB video, 20MB audio/doc) + `VirusScanService` interface + `NoOpVirusScanService` stub wired into `UploadController`. All 87 existing tests pass.**
 
 ---
 
@@ -220,7 +220,7 @@ Mirror: `apps/client/lib/features/chat/ui/widgets/{image_content,file_content,vo
 - [x] **Task W-10.16: Mentions (@) composer + bubble** `M` (`mention_list.dart`). **DONE — integrated into `MessageInput.tsx` and `MessageBubble.tsx`.**
 
 ### SPRINT W-11 — Web Polish & Consistency `PENDING`
-- [ ] **Task W-11.1: i18n decision** — web is hardcoded Vietnamese; Flutter has 7 locales (`L` to adopt).
+- [x] **Task W-11.1: i18n** — web is hardcoded Vietnamese; Flutter has 7 locales (`L` to adopt). **DONE — adopted `next-intl` 4.x (cookie-based locale, no URL prefix). `i18n/request.ts` + `i18n/config.ts` + `messages/{vi,en,zh,ja,ko,es,fr}.json` (vi=full, en=full, others=English stubs). All 21 pages/components updated to `useTranslations()`. Language switcher added to Settings page (cycles all 7 locales, persists via `locale` cookie + `router.refresh()`). `next build` passes clean.**
 - [x] **Task W-11.2: Visual parity pass** — PON neon theme, bubbles, avatars, glow spheres `M`. **DONE — own-bubble neon shadow, active conversation neon left-border, online dot #00E676, sidebar ambient glow spheres.**
 - [x] **Task W-11.3: Responsive/mobile audit** `M`. **DONE — h-screen→h-dvh, safe-area-inset-bottom on input, emoji picker max-w-[calc(100vw-1rem)], image button hidden on xs.**
 - [x] **Task W-11.4: Typing indicator + pinned-bar render parity** `S`. **DONE — header subtitle shows "đang nhập..." (pon-cyan, animate-pulse) when isTyping; PinnedMessage type mismatch fixed.**

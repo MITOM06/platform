@@ -1,11 +1,12 @@
 'use client'
 
-import { useState, useRef } from 'react'
+import { useState, useRef, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { toast } from 'sonner'
+import { useTranslations } from 'next-intl'
 import {
   ArrowLeft,
   Loader2,
@@ -26,15 +27,13 @@ import { Label } from '@/components/ui/label'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Separator } from '@/components/ui/separator'
 
-
-const schema = z.object({
-  displayName: z.string().min(1, 'Tên không được để trống').max(50, 'Tên quá dài'),
-  bio: z.string().max(160, 'Tiểu sử tối đa 160 ký tự').optional(),
-})
-
-type FormValues = z.infer<typeof schema>
+type FormValues = {
+  displayName: string
+  bio?: string
+}
 
 export default function ProfilePage() {
+  const t = useTranslations('profile')
   const router = useRouter()
   const user = useAuthStore((s) => s.user)
   const setAuth = useAuthStore((s) => s.setAuth)
@@ -43,6 +42,15 @@ export default function ProfilePage() {
   const [uploadingAvatar, setUploadingAvatar] = useState(false)
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null)
   const avatarInputRef = useRef<HTMLInputElement>(null)
+
+  const schema = useMemo(
+    () =>
+      z.object({
+        displayName: z.string().min(1, t('displayNameRequired')).max(50, t('displayNameTooLong')),
+        bio: z.string().max(160, t('bioTooLong')).optional(),
+      }),
+    [t],
+  )
 
   const {
     register,
@@ -72,9 +80,9 @@ export default function ProfilePage() {
       if (user && accessToken) {
         setAuth(user, accessToken)
       }
-      toast.success('Đã cập nhật ảnh đại diện')
+      toast.success(t('avatarSuccess'))
     } catch {
-      toast.error('Không thể tải lên ảnh đại diện')
+      toast.error(t('avatarError'))
       setAvatarPreview(null)
     } finally {
       setUploadingAvatar(false)
@@ -93,10 +101,10 @@ export default function ProfilePage() {
         { id: user.id, email: user.email, displayName: updated.displayName ?? values.displayName },
         accessToken,
       )
-      toast.success('Đã cập nhật hồ sơ')
+      toast.success(t('saveSuccess'))
       router.push('/conversations')
     } catch {
-      toast.error('Không thể cập nhật hồ sơ')
+      toast.error(t('saveError'))
     } finally {
       setSaving(false)
     }
@@ -121,7 +129,7 @@ export default function ProfilePage() {
         >
           <ArrowLeft className="size-5" />
         </Link>
-        <span className="font-semibold text-base">Chỉnh sửa hồ sơ</span>
+        <span className="font-semibold text-base">{t('title')}</span>
       </header>
 
       <div className="flex-1 overflow-y-auto">
@@ -196,13 +204,13 @@ export default function ProfilePage() {
             <div className="space-y-2">
               <Label htmlFor="displayName" className="text-sm font-medium flex items-center gap-2">
                 <User className="size-4 text-primary" />
-                Tên hiển thị
+                {t('displayNameLabel')}
               </Label>
               <div className="relative">
                 <Input
                   id="displayName"
                   {...register('displayName')}
-                  placeholder="Nhập tên hiển thị..."
+                  placeholder={t('displayNamePlaceholder')}
                   className="pr-8"
                 />
                 <Pencil className="absolute right-3 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground/40" />
@@ -216,13 +224,13 @@ export default function ProfilePage() {
             <div className="space-y-2">
               <Label htmlFor="bio" className="text-sm font-medium flex items-center gap-2">
                 <Info className="size-4 text-primary" />
-                Tiểu sử
+                {t('bioLabel')}
               </Label>
               <div className="relative">
                 <Input
                   id="bio"
                   {...register('bio')}
-                  placeholder="Giới thiệu ngắn về bạn..."
+                  placeholder={t('bioPlaceholder')}
                   maxLength={160}
                   className="pr-8"
                 />
@@ -237,7 +245,7 @@ export default function ProfilePage() {
             <div className="space-y-2">
               <Label className="text-sm font-medium flex items-center gap-2 text-muted-foreground">
                 <span className="text-base">@</span>
-                Email
+                {t('emailLabel')}
               </Label>
               <Input
                 value={user.email}
@@ -250,10 +258,10 @@ export default function ProfilePage() {
             <div className="space-y-2">
               <Label className="text-sm font-medium flex items-center gap-2 text-muted-foreground">
                 <Calendar className="size-4" />
-                Ngày sinh
+                {t('birthdateLabel')}
               </Label>
               <Input
-                value="Chưa cài đặt"
+                value={t('birthdateNotSet')}
                 disabled
                 className="text-muted-foreground bg-muted/50"
               />
@@ -272,7 +280,7 @@ export default function ProfilePage() {
               ) : (
                 <Save className="size-4 mr-2" />
               )}
-              Lưu thay đổi
+              {t('saveButton')}
             </Button>
           </form>
         </div>

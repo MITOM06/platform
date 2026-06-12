@@ -3,7 +3,9 @@ package com.platform.chatservice.controller;
 import com.platform.chatservice.exception.BadRequestException;
 import com.platform.chatservice.exception.UnauthorizedException;
 import com.platform.chatservice.security.UserPrincipal;
+import com.platform.chatservice.service.FileValidationService;
 import com.platform.chatservice.service.RateLimiterService;
+import com.platform.chatservice.service.VirusScanService;
 import lombok.RequiredArgsConstructor;
 import org.bson.types.ObjectId;
 import org.springframework.core.io.InputStreamResource;
@@ -30,6 +32,8 @@ public class UploadController {
     private final GridFsTemplate gridFsTemplate;
     private final GridFsOperations gridFsOperations;
     private final RateLimiterService rateLimiterService;
+    private final FileValidationService fileValidationService;
+    private final VirusScanService virusScanService;
 
     @PostMapping
     public ResponseEntity<Map<String, String>> uploadFile(@RequestParam("file") MultipartFile file) throws IOException {
@@ -43,13 +47,15 @@ public class UploadController {
             throw new BadRequestException("File is empty");
         }
 
-        // Chấp nhận ảnh, video LẪN tài liệu (PDF, DOC/DOCX, ZIP, …). Một số client
-        // gửi contentType chung chung → fallback dò theo đuôi file để GridFS lưu
-        // đúng content-type (cần cho việc tải/hiển thị lại sau này).
         String contentType = resolveContentType(file);
         if (!isAllowedContentType(contentType)) {
             throw new BadRequestException("File type is not allowed");
         }
+
+        // Magic-bytes check + per-type size cap
+        fileValidationService.validate(file, contentType);
+        // Virus/malware scan (no-op stub in dev; swap for ClamAV in prod)
+        virusScanService.scan(file);
 
         var objectId = gridFsTemplate.store(
             file.getInputStream(),
