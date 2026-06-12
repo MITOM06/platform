@@ -329,7 +329,7 @@ public class ConversationService {
 
     /** Join a public channel. Idempotent — no-op if the user is already a member. */
     public ConversationResponse joinChannel(String userId, String conversationId) {
-        Conversation conversation = conversationCacheService.findById(conversationId)
+        Conversation conversation = conversationCacheService.findByIdOptional(conversationId)
             .orElseThrow(() -> new ConversationNotFoundException(conversationId));
         if (!conversation.isPublicChannel() || !Conversation.TYPE_GROUP.equals(conversation.getType())) {
             throw new ForbiddenException("This channel is not publicly joinable");
@@ -344,13 +344,13 @@ public class ConversationService {
     }
 
     public List<String> getParticipants(String conversationId) {
-        return conversationCacheService.findById(conversationId)
+        return conversationCacheService.findByIdOptional(conversationId)
             .map(Conversation::getParticipants)
             .orElse(List.of());
     }
 
     public boolean isMuted(String conversationId, String userId) {
-        return conversationCacheService.findById(conversationId)
+        return conversationCacheService.findByIdOptional(conversationId)
             .map(Conversation::getMutedUsers)
             .map(list -> list != null && list.contains(userId))
             .orElse(false);
@@ -358,7 +358,7 @@ public class ConversationService {
 
     /** Fetch a conversation, enforcing the caller is a participant. */
     private Conversation getRawConversation(String userId, String conversationId) {
-        Conversation conversation = conversationCacheService.findById(conversationId)
+        Conversation conversation = conversationCacheService.findByIdOptional(conversationId)
             .orElseThrow(() -> new ConversationNotFoundException(conversationId));
         if (conversation.getParticipants() == null || !conversation.getParticipants().contains(userId)) {
             throw new ConversationNotFoundException(conversationId);

@@ -46,7 +46,9 @@ export const stompService = {
   },
 
   publish(destination: string, body: object): void {
-    client?.publish({ destination, body: JSON.stringify(body) })
+    if (client?.connected) {
+      client.publish({ destination, body: JSON.stringify(body) })
+    }
   },
 
   isConnected(): boolean {

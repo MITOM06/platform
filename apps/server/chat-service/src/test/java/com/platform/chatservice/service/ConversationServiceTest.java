@@ -117,7 +117,7 @@ class ConversationServiceTest {
             .status(Conversation.STATUS_PENDING)
             .createdAt(Instant.now())
             .build();
-        when(conversationCacheService.findById(CONV_ID)).thenReturn(Optional.of(pending));
+        when(conversationCacheService.findByIdOptional(CONV_ID)).thenReturn(Optional.of(pending));
         when(conversationCacheService.save(any(Conversation.class))).thenAnswer(inv -> inv.getArgument(0));
         when(messageRepository.countUnread(CONV_ID, OTHER_ID)).thenReturn(0L);
 
@@ -135,7 +135,7 @@ class ConversationServiceTest {
             .status(Conversation.STATUS_PENDING)
             .createdAt(Instant.now())
             .build();
-        when(conversationCacheService.findById(CONV_ID)).thenReturn(Optional.of(pending));
+        when(conversationCacheService.findByIdOptional(CONV_ID)).thenReturn(Optional.of(pending));
 
         assertThatThrownBy(() -> conversationService.acceptConversation(USER_ID, CONV_ID))
             .isInstanceOf(com.platform.chatservice.exception.ForbiddenException.class);
@@ -144,7 +144,7 @@ class ConversationServiceTest {
 
     @Test
     void getConversation_ShouldReturnConversation() {
-        when(conversationCacheService.findById(CONV_ID)).thenReturn(Optional.of(conversation));
+        when(conversationCacheService.findByIdOptional(CONV_ID)).thenReturn(Optional.of(conversation));
         when(messageRepository.countUnread(CONV_ID, USER_ID)).thenReturn(3L);
 
         ConversationResponse response = conversationService.getConversation(USER_ID, CONV_ID);
@@ -155,7 +155,7 @@ class ConversationServiceTest {
 
     @Test
     void getConversation_WhenUserNotParticipant_ShouldThrow() {
-        when(conversationCacheService.findById(CONV_ID)).thenReturn(Optional.of(conversation));
+        when(conversationCacheService.findByIdOptional(CONV_ID)).thenReturn(Optional.of(conversation));
 
         assertThatThrownBy(() -> conversationService.getConversation("intruder-999", CONV_ID))
             .isInstanceOf(ConversationNotFoundException.class);
@@ -163,7 +163,7 @@ class ConversationServiceTest {
 
     @Test
     void getConversation_WhenNotFound_ShouldThrow() {
-        when(conversationCacheService.findById(CONV_ID)).thenReturn(Optional.empty());
+        when(conversationCacheService.findByIdOptional(CONV_ID)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> conversationService.getConversation(USER_ID, CONV_ID))
             .isInstanceOf(ConversationNotFoundException.class);
@@ -206,7 +206,7 @@ class ConversationServiceTest {
 
     @Test
     void getParticipants_ShouldReturnParticipantList() {
-        when(conversationCacheService.findById(CONV_ID)).thenReturn(Optional.of(conversation));
+        when(conversationCacheService.findByIdOptional(CONV_ID)).thenReturn(Optional.of(conversation));
 
         List<String> participants = conversationService.getParticipants(CONV_ID);
 
@@ -215,7 +215,7 @@ class ConversationServiceTest {
 
     @Test
     void getParticipants_WhenNotFound_ShouldReturnEmptyList() {
-        when(conversationCacheService.findById(CONV_ID)).thenReturn(Optional.empty());
+        when(conversationCacheService.findByIdOptional(CONV_ID)).thenReturn(Optional.empty());
 
         List<String> participants = conversationService.getParticipants(CONV_ID);
 
@@ -224,7 +224,7 @@ class ConversationServiceTest {
 
     @Test
     void muteConversation_ShouldAddUserToMutedUsersList() {
-        when(conversationCacheService.findById(CONV_ID)).thenReturn(Optional.of(conversation));
+        when(conversationCacheService.findByIdOptional(CONV_ID)).thenReturn(Optional.of(conversation));
         when(conversationCacheService.save(any(Conversation.class))).thenAnswer(inv -> inv.getArgument(0));
         when(messageRepository.countUnread(CONV_ID, USER_ID)).thenReturn(0L);
 
@@ -236,7 +236,7 @@ class ConversationServiceTest {
     @Test
     void unmuteConversation_ShouldRemoveUserFromMutedUsersList() {
         conversation.setMutedUsers(new java.util.ArrayList<>(List.of(USER_ID)));
-        when(conversationCacheService.findById(CONV_ID)).thenReturn(Optional.of(conversation));
+        when(conversationCacheService.findByIdOptional(CONV_ID)).thenReturn(Optional.of(conversation));
         when(conversationCacheService.save(any(Conversation.class))).thenAnswer(inv -> inv.getArgument(0));
         when(messageRepository.countUnread(CONV_ID, USER_ID)).thenReturn(0L);
 
@@ -247,7 +247,7 @@ class ConversationServiceTest {
 
     @Test
     void archiveConversation_ShouldAddUserToArchivedList() {
-        when(conversationCacheService.findById(CONV_ID)).thenReturn(Optional.of(conversation));
+        when(conversationCacheService.findByIdOptional(CONV_ID)).thenReturn(Optional.of(conversation));
         when(conversationCacheService.save(any(Conversation.class))).thenAnswer(inv -> inv.getArgument(0));
         when(messageRepository.countUnread(CONV_ID, USER_ID)).thenReturn(0L);
 
@@ -259,7 +259,7 @@ class ConversationServiceTest {
     @Test
     void unarchiveConversation_ShouldRemoveUserFromArchivedList() {
         conversation.setArchivedBy(new java.util.ArrayList<>(List.of(USER_ID)));
-        when(conversationCacheService.findById(CONV_ID)).thenReturn(Optional.of(conversation));
+        when(conversationCacheService.findByIdOptional(CONV_ID)).thenReturn(Optional.of(conversation));
         when(conversationCacheService.save(any(Conversation.class))).thenAnswer(inv -> inv.getArgument(0));
         when(messageRepository.countUnread(CONV_ID, USER_ID)).thenReturn(0L);
 
@@ -270,7 +270,7 @@ class ConversationServiceTest {
 
     @Test
     void markConversationUnread_WhenMessageExists_ShouldRemoveUserFromReadBy() {
-        when(conversationCacheService.findById(CONV_ID)).thenReturn(Optional.of(conversation));
+        when(conversationCacheService.findByIdOptional(CONV_ID)).thenReturn(Optional.of(conversation));
         com.platform.chatservice.model.Message lastMsg = com.platform.chatservice.model.Message.builder()
             .id("msg-001")
             .conversationId(CONV_ID)
@@ -292,7 +292,7 @@ class ConversationServiceTest {
 
     @Test
     void markConversationRead_ShouldAddUserToReadByForAllUnreadMessages() {
-        when(conversationCacheService.findById(CONV_ID)).thenReturn(Optional.of(conversation));
+        when(conversationCacheService.findByIdOptional(CONV_ID)).thenReturn(Optional.of(conversation));
         com.platform.chatservice.model.Message unreadMsg = com.platform.chatservice.model.Message.builder()
             .id("msg-001")
             .conversationId(CONV_ID)
