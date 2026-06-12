@@ -9,6 +9,9 @@ import { useTheme } from 'next-themes'
 import { useAuthStore } from '@/lib/store/auth.store'
 import { Button } from '@/components/ui/button'
 import { stompService } from '@/lib/stomp/client'
+import { callManager, type WebRTCSignal } from '@/lib/webrtc/call-manager'
+import { useCallStore } from '@/lib/store/call.store'
+import { CallOverlay } from '@/components/call/CallOverlay'
 import { ConversationList } from '@/components/chat/ConversationList'
 import { ActiveFriendsRow } from '@/components/chat/ActiveFriendsRow'
 import { cn } from '@/lib/utils'
@@ -51,6 +54,9 @@ interface NotificationPayload {
   type: string
   conversationId: string
   senderName: string
+  senderId?: string
+  content?: string
+  messageType?: string
 }
 
 export default function MainLayout({ children }: { children: React.ReactNode }) {
@@ -74,14 +80,62 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
       stompService.subscribe('/user/queue/notifications', (frame) => {
         try {
           const payload: NotificationPayload = JSON.parse(frame.body)
+          if (payload.type !== 'NEW_MESSAGE' && payload.type !== 'MENTIONED_YOU') {
+            return
+          }
+          // Don't notify for the conversation already open on screen.
+          if (window.location.pathname === `/conversations/${payload.conversationId}`) {
+            return
+          }
+
+          const title = `Tin nhắn mới từ ${payload.senderName}`
+          const body =
+            payload.messageType && payload.messageType !== 'text'
+              ? '📎 Đã gửi một tệp đính kèm'
+              : payload.content || 'Bạn có tin nhắn mới'
+
           if (
             typeof Notification !== 'undefined' &&
             Notification.permission === 'granted' &&
             document.visibilityState === 'hidden'
           ) {
-            new Notification(`Tin nhắn mới từ ${payload.senderName}`, {
-              body: 'Bạn có tin nhắn mới',
+            // Tab in background → OS-level notification.
+            const n = new Notification(title, { body })
+            n.onclick = () => {
+              window.focus()
+              router.push(`/conversations/${payload.conversationId}`)
+            }
+          } else {
+            // Tab visible → in-app toast so the user still sees it.
+            toast(title, {
+              description: body,
+              action: {
+                label: 'Mở',
+                onClick: () => router.push(`/conversations/${payload.conversationId}`),
+              },
             })
+          }
+        } catch {
+          // ignore
+        }
+      })
+
+      // WebRTC call signaling — incoming offers open the call overlay; other
+      // signals (answer/ice/end) are routed into the active peer connection.
+      stompService.subscribe('/user/queue/webrtc', (frame) => {
+        try {
+          const signal: WebRTCSignal = JSON.parse(frame.body)
+          if (signal.type === 'offer') {
+            // Ignore a second offer while already in a call.
+            if (useCallStore.getState().status !== 'idle') return
+            useCallStore.getState().setIncoming({
+              peerId: signal.senderId ?? '',
+              peerName: '',
+              conversationId: signal.conversationId ?? '',
+              sdp: signal.sdp ?? '',
+            })
+          } else {
+            callManager.handleSignal(signal)
           }
         } catch {
           // ignore
@@ -94,6 +148,8 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
     return () => {
       stompService.disconnect()
     }
+    // `router` from next/navigation is stable; only re-run on auth change.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [accessToken])
 
   const handleLogout = async () => {
@@ -111,6 +167,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
 
   return (
     <div className="h-dvh flex overflow-hidden">
+      <CallOverlay />
       {/* Sidebar: full-width on mobile, fixed 288px on md+; hidden on mobile when conversation is open */}
       <aside
         className={cn(

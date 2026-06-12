@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../../core/l10n/l10n_ext.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/pon_widgets.dart';
@@ -54,6 +55,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       return context.l10n.errNetwork;
     }
     return context.l10n.errLoginFailed;
+  }
+
+  Future<void> _launchOAuth(String provider) async {
+    const authBase = String.fromEnvironment('AUTH_BASE_URL', defaultValue: 'http://localhost:3001');
+    final uri = Uri.parse('$authBase/auth/social/$provider/init?platform=mobile');
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    }
   }
 
   Future<void> _submit() async {
@@ -226,6 +235,42 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       ),
                     ),
                     const SizedBox(height: 24),
+
+                      // OAuth divider
+                      Row(
+                        children: [
+                          const Expanded(child: Divider(color: Colors.white24)),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 12),
+                            child: Text(
+                              context.l10n.orContinueWith,
+                              style: TextStyle(color: Colors.white.withValues(alpha: 0.5), fontSize: 12),
+                            ),
+                          ),
+                          const Expanded(child: Divider(color: Colors.white24)),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+                      OutlinedButton.icon(
+                        onPressed: () => _launchOAuth('google'),
+                        icon: const Text('G', style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF4285F4))),
+                        label: Text(context.l10n.loginWithGoogle),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: Colors.white,
+                          side: BorderSide(color: Colors.white.withValues(alpha: 0.3)),
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      OutlinedButton.icon(
+                        onPressed: () => _launchOAuth('facebook'),
+                        icon: const Icon(Icons.facebook, color: Color(0xFF1877F2)),
+                        label: Text(context.l10n.loginWithFacebook),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: Colors.white,
+                          side: BorderSide(color: Colors.white.withValues(alpha: 0.3)),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
 
                       // Navigation to register
                       Row(

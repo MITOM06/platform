@@ -91,14 +91,9 @@ class _ConversationListScreenState
                 tooltip: context.l10n.exploreChannels,
                 onPressed: () => context.push('/explore'),
               ),
-              IconButton(
-                icon: const Icon(Icons.person_add_alt_1_outlined),
-                tooltip: context.l10n.tooltipNewConversation,
-                onPressed: () async {
-                  await context.push('/new-conversation');
-                  ref.read(conversationsNotifierProvider.notifier).refresh();
-                },
-              ),
+              // Note: starting a new 1-1 conversation is handled by the FAB
+              // below — keep only "create group" here to avoid two buttons that
+              // both open the new-conversation flow.
               IconButton(
                 icon: const Icon(Icons.group_add_outlined),
                 tooltip: context.l10n.createGroup,

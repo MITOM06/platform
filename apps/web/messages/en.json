@@ -26,7 +26,13 @@
       "submit": "Sign In",
       "noAccount": "Don't have an account?",
       "registerLink": "Sign Up",
-      "error": "Sign in failed"
+      "error": "Sign in failed",
+      "invalidCredentials": "Incorrect email or password",
+      "emailNotFound": "Email is not registered",
+      "systemError": "System error, please try again",
+      "orContinueWith": "Or continue with",
+      "googleLogin": "Sign in with Google",
+      "facebookLogin": "Sign in with Facebook"
     },
     "register": {
       "title": "Create Account",
@@ -44,7 +50,20 @@
       "hasAccount": "Already have an account?",
       "loginLink": "Sign In",
       "success": "Registration successful! Please check your email for the OTP code.",
-      "error": "Registration failed"
+      "error": "Registration failed",
+      "emailDomainInvalid": "This email address does not exist",
+      "emailExists": "This email is already registered",
+      "reqUppercase": "Uppercase letter (A-Z)",
+      "reqLowercase": "Lowercase letter (a-z)",
+      "reqDigit": "Digit (0-9)",
+      "reqSpecial": "Special character (!@#$%^&*)",
+      "reqLength": "≥8 characters",
+      "pwStrengthWeak": "Weak",
+      "pwStrengthMedium": "Medium",
+      "pwStrengthStrong": "Strong",
+      "pwStrengthVeryStrong": "Very Strong",
+      "googleRegister": "Sign up with Google",
+      "facebookRegister": "Sign up with Facebook"
     },
     "verifyOtp": {
       "title": "Verify OTP",
@@ -222,7 +241,20 @@
     "groupNameSuccess": "Group name updated",
     "groupNameError": "Failed to update name",
     "groupAvatarSuccess": "Group avatar updated",
-    "groupAvatarError": "Failed to update avatar"
+    "groupAvatarError": "Failed to update avatar",
+    "markRead": "Mark as read",
+    "markUnread": "Mark as unread",
+    "markReadSuccess": "Marked as read",
+    "markUnreadSuccess": "Marked as unread",
+    "viewProfile": "View profile",
+    "groupInfo": "Group info",
+    "voiceCall": "Voice call",
+    "videoCall": "Video call",
+    "callComingSoon": "Coming soon",
+    "blockUser": "Block user",
+    "unblockUser": "Unblock user",
+    "blockSuccess": "User blocked",
+    "unblockSuccess": "User unblocked"
   },
   "aiPersona": {
     "title": "AI Persona",

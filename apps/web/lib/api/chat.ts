@@ -26,11 +26,11 @@ export const chatService = {
   createConversation: (participantId: string) =>
     chatApi.post<Conversation>('/api/conversations', { participantId }).then((r) => r.data),
 
-  createGroup: (name: string, memberIds: string[], isPublic = false) =>
+  createGroup: (name: string, participantIds: string[], isPublic = false) =>
     chatApi
       .post<Conversation>('/api/conversations/group', {
         name,
-        memberIds,
+        participantIds,
         publicChannel: isPublic,
       })
       .then((r) => r.data),
@@ -64,6 +64,15 @@ export const chatService = {
 
   markConversationRead: (conversationId: string) =>
     chatApi.post(`/api/conversations/${conversationId}/read`),
+
+  markConversationUnread: (conversationId: string) =>
+    chatApi.post(`/api/conversations/${conversationId}/unread`),
+
+  blockUser: (userId: string) =>
+    chatApi.post(`/api/users/block/${userId}`),
+
+  unblockUser: (userId: string) =>
+    chatApi.post(`/api/users/unblock/${userId}`),
 
   acceptConversation: (id: string) =>
     chatApi.post<Conversation>(`/api/conversations/${id}/accept`).then((r) => r.data),

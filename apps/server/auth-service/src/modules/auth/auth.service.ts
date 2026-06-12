@@ -1,4 +1,5 @@
 import { ConflictException, Inject, Injectable, UnauthorizedException, NotFoundException } from '@nestjs/common';
+import * as dns from 'node:dns';
 import { JwtService, JwtSignOptions } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { nanoid } from 'nanoid';
@@ -285,6 +286,17 @@ export class AuthService {
 
   // ===================== REGISTER =====================
   async register(dto: RegisterDto) {
+    const domain = dto.email.split('@')[1];
+    try {
+      const records = await dns.promises.resolveMx(domain);
+      if (!records || records.length === 0) {
+        throw new BadRequestException('Email domain does not exist');
+      }
+    } catch (e) {
+      if (e instanceof BadRequestException) throw e;
+      throw new BadRequestException('Email domain does not exist');
+    }
+
     const existingUser = await this.usersService.findByEmail(dto.email);
     if (existingUser) {
       if (existingUser.isVerified) {
