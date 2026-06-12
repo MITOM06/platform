@@ -1034,4 +1034,65 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get tokenUsageQuota => 'Cuota mensual';
+
+  @override
+  String get errEmailDomainInvalid => 'This email address does not exist';
+
+  @override
+  String get valPasswordMin8 => 'Password must be at least 8 characters';
+
+  @override
+  String get valPasswordUppercase => 'Must contain an uppercase letter (A-Z)';
+
+  @override
+  String get valPasswordLowercase => 'Must contain a lowercase letter (a-z)';
+
+  @override
+  String get valPasswordDigit => 'Must contain a digit (0-9)';
+
+  @override
+  String get valPasswordSpecial =>
+      'Must contain a special character (!@#\$%^&*)';
+
+  @override
+  String get pwStrengthWeak => 'Weak';
+
+  @override
+  String get pwStrengthMedium => 'Medium';
+
+  @override
+  String get pwStrengthStrong => 'Strong';
+
+  @override
+  String get pwStrengthVeryStrong => 'Very Strong';
+
+  @override
+  String get pwReqLength => '≥8 characters';
+
+  @override
+  String get pwReqUppercase => 'Uppercase (A-Z)';
+
+  @override
+  String get pwReqLowercase => 'Lowercase (a-z)';
+
+  @override
+  String get pwReqDigit => 'Digit (0-9)';
+
+  @override
+  String get pwReqSpecial => 'Special char (!@#\$...)';
+
+  @override
+  String get loginWithGoogle => 'Sign in with Google';
+
+  @override
+  String get loginWithFacebook => 'Sign in with Facebook';
+
+  @override
+  String get registerWithGoogle => 'Sign up with Google';
+
+  @override
+  String get registerWithFacebook => 'Sign up with Facebook';
+
+  @override
+  String get orContinueWith => 'Or continue with';
 }

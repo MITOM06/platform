@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { ArrowLeft, Bot, Settings, Search, ImageIcon } from 'lucide-react'
+import { ArrowLeft, Bot, Settings, Search, ImageIcon, Phone, Video } from 'lucide-react'
 import Link from 'next/link'
 import { useQueryClient } from '@tanstack/react-query'
 import { useConversation } from '@/lib/hooks/use-conversation'
@@ -15,6 +15,7 @@ import { PinnedMessagesBar } from './PinnedMessagesBar'
 import { ConversationSettingsDrawer } from './ConversationSettingsDrawer'
 import { GroupSettingsDrawer } from './GroupSettingsDrawer'
 import { SharedMediaGallery } from './SharedMediaGallery'
+import { callManager } from '@/lib/webrtc/call-manager'
 
 const AI_BOT_ID = 'ai-bot-000000000000000000000001'
 
@@ -121,6 +122,26 @@ export function ConversationHeader({
 
         {/* Header action buttons */}
         <div className="flex items-center gap-0.5 shrink-0">
+          {otherUserId && (
+            <>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => callManager.startCall(otherUserId, displayName, conversationId)}
+                title="Gọi thoại"
+              >
+                <Phone className="size-4" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => callManager.startCall(otherUserId, displayName, conversationId)}
+                title="Gọi video"
+              >
+                <Video className="size-4" />
+              </Button>
+            </>
+          )}
           <Button variant="ghost" size="icon" onClick={onSearchToggle} title="Tìm kiếm">
             <Search className="size-4" />
           </Button>
@@ -149,6 +170,8 @@ export function ConversationHeader({
             currentUserId={currentUser.id}
             open={settingsOpen}
             onClose={() => setSettingsOpen(false)}
+            onOpenProfile={() => { /* UserProfileDrawer opened from parent */ }}
+            onOpenGroupInfo={() => setGroupSettingsOpen(true)}
           />
           {isGroup && (
             <GroupSettingsDrawer

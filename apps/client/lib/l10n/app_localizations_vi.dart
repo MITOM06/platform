@@ -1025,4 +1025,64 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get tokenUsageQuota => 'Hạn mức tháng';
+
+  @override
+  String get errEmailDomainInvalid => 'Email này không tồn tại';
+
+  @override
+  String get valPasswordMin8 => 'Mật khẩu phải có ít nhất 8 ký tự';
+
+  @override
+  String get valPasswordUppercase => 'Phải có chữ hoa (A-Z)';
+
+  @override
+  String get valPasswordLowercase => 'Phải có chữ thường (a-z)';
+
+  @override
+  String get valPasswordDigit => 'Phải có chữ số (0-9)';
+
+  @override
+  String get valPasswordSpecial => 'Phải có ký tự đặc biệt (!@#\$%^&*)';
+
+  @override
+  String get pwStrengthWeak => 'Yếu';
+
+  @override
+  String get pwStrengthMedium => 'Trung bình';
+
+  @override
+  String get pwStrengthStrong => 'Mạnh';
+
+  @override
+  String get pwStrengthVeryStrong => 'Rất mạnh';
+
+  @override
+  String get pwReqLength => '≥8 ký tự';
+
+  @override
+  String get pwReqUppercase => 'Chữ hoa (A-Z)';
+
+  @override
+  String get pwReqLowercase => 'Chữ thường (a-z)';
+
+  @override
+  String get pwReqDigit => 'Số (0-9)';
+
+  @override
+  String get pwReqSpecial => 'Ký tự đặc biệt (!@#\$...)';
+
+  @override
+  String get loginWithGoogle => 'Đăng nhập bằng Google';
+
+  @override
+  String get loginWithFacebook => 'Đăng nhập bằng Facebook';
+
+  @override
+  String get registerWithGoogle => 'Đăng ký bằng Google';
+
+  @override
+  String get registerWithFacebook => 'Đăng ký bằng Facebook';
+
+  @override
+  String get orContinueWith => 'Hoặc tiếp tục với';
 }

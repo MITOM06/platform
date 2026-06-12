@@ -20,6 +20,7 @@ import 'widgets/blocked_composer_notice.dart';
 import 'widgets/chat_app_bar.dart';
 import 'widgets/chat_input_bar.dart';
 import 'widgets/chat_typing_indicator.dart';
+import 'widgets/chat_wallpaper_dialog.dart';
 import 'widgets/edit_composer_bar.dart';
 import 'widgets/emoji_sticker_panel.dart';
 import 'widgets/mention_list.dart';
@@ -428,12 +429,13 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
           );
         }
       } else if (wallpaper.startsWith('http')) {
+        final parsed = splitWallpaperFit(wallpaper);
         wallpaperImgWidget = Positioned.fill(
           child: Opacity(
             opacity: 0.25,
             child: Image.network(
-              wallpaper,
-              fit: BoxFit.cover,
+              parsed.value,
+              fit: wallpaperBoxFit(parsed.fit),
               errorBuilder: (context, error, stackTrace) => const SizedBox.shrink(),
             ),
           ),

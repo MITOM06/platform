@@ -7,6 +7,7 @@ import { useQueryClient } from '@tanstack/react-query'
 import { useTranslations } from 'next-intl'
 import {
   BellOff, Bell, Archive, ArchiveX, Trash2, Eraser, Timer, ImageIcon,
+  CheckCheck, BookMarked, User, Users, Phone, Video, ShieldOff, Shield,
 } from 'lucide-react'
 import {
   Sheet, SheetContent, SheetHeader, SheetTitle,
@@ -26,6 +27,8 @@ interface Props {
   currentUserId: string
   open: boolean
   onClose: () => void
+  onOpenProfile?: () => void
+  onOpenGroupInfo?: () => void
 }
 
 const WALLPAPER_PRESETS = [
@@ -39,8 +42,11 @@ const WALLPAPER_PRESETS = [
 
 export function ConversationSettingsDrawer({
   conversation,
+  currentUserId,
   open,
   onClose,
+  onOpenProfile,
+  onOpenGroupInfo,
 }: Props) {
   const t = useTranslations('chat')
   const tCommon = useTranslations('common')
@@ -48,8 +54,15 @@ export function ConversationSettingsDrawer({
   const queryClient = useQueryClient()
   const [saving, setSaving] = useState(false)
   const [confirmClearOpen, setConfirmClearOpen] = useState(false)
+  const [isBlocked, setIsBlocked] = useState(false)
+
   const isMuted = conversation.isMuted
   const isArchived = conversation.isArchived
+  const isDirect = conversation.type === 'direct'
+
+  const otherUserId = isDirect
+    ? conversation.participants.find((p) => p !== currentUserId)
+    : null
 
   const autoDeleteOptions = [
     { label: t('autoDeleteOff'), value: 0 },
@@ -103,6 +116,12 @@ export function ConversationSettingsDrawer({
       isMuted ? t('unmuteSuccess') : t('muteSuccess'),
     )
 
+  const handleMarkRead = () =>
+    run(() => chatService.markConversationRead(conversation.id), t('markReadSuccess'))
+
+  const handleMarkUnread = () =>
+    run(() => chatService.markConversationUnread(conversation.id), t('markUnreadSuccess'))
+
   const handleArchiveToggle = () =>
     run(
       () => isArchived
@@ -110,6 +129,26 @@ export function ConversationSettingsDrawer({
         : chatService.archiveConversation(conversation.id),
       isArchived ? t('unarchiveSuccess') : t('archiveSuccess'),
     )
+
+  const handleBlockToggle = async () => {
+    if (!otherUserId) return
+    setSaving(true)
+    try {
+      if (isBlocked) {
+        await chatService.unblockUser(otherUserId)
+        setIsBlocked(false)
+        toast.success(t('unblockSuccess'))
+      } else {
+        await chatService.blockUser(otherUserId)
+        setIsBlocked(true)
+        toast.success(t('blockSuccess'))
+      }
+    } catch {
+      toast.error(t('actionError'))
+    } finally {
+      setSaving(false)
+    }
+  }
 
   const handleClearHistory = async () => {
     await run(() => chatService.clearHistory(conversation.id), t('clearHistorySuccess'))
@@ -141,6 +180,35 @@ export function ConversationSettingsDrawer({
   )
   const sliderValue = currentAutoDeleteIdx >= 0 ? currentAutoDeleteIdx : 0
 
+  const RowButton = ({
+    onClick,
+    icon,
+    label,
+    danger = false,
+    disabled = false,
+  }: {
+    onClick?: () => void
+    icon: React.ReactNode
+    label: string
+    danger?: boolean
+    disabled?: boolean
+  }) => (
+    <button
+      onClick={onClick}
+      disabled={saving || disabled}
+      className={`flex items-center gap-3 text-sm rounded-lg px-2 py-2.5 transition-colors w-full text-left ${
+        danger
+          ? 'text-destructive hover:bg-destructive/10'
+          : disabled
+          ? 'text-muted-foreground cursor-not-allowed'
+          : 'hover:bg-muted/50'
+      }`}
+    >
+      {icon}
+      {label}
+    </button>
+  )
+
   return (
     <>
     <Sheet open={open} onOpenChange={(o) => !o && onClose()}>
@@ -149,33 +217,81 @@ export function ConversationSettingsDrawer({
           <SheetTitle>{t('settingsTitle')}</SheetTitle>
         </SheetHeader>
 
-        <div className="flex flex-col gap-4 px-6 pb-6">
-          <Separator />
+        <div className="flex flex-col gap-1 px-6 pb-6">
+          <Separator className="mb-2" />
+
+          {/* Mark read / unread */}
+          <RowButton
+            onClick={handleMarkRead}
+            icon={<CheckCheck className="size-4" />}
+            label={t('markRead')}
+          />
+          <RowButton
+            onClick={handleMarkUnread}
+            icon={<BookMarked className="size-4" />}
+            label={t('markUnread')}
+          />
+
+          <Separator className="my-1" />
 
           {/* Mute / unmute */}
-          <button
+          <RowButton
             onClick={handleMuteToggle}
-            disabled={saving}
-            className="flex items-center gap-3 text-sm hover:bg-muted/50 rounded-lg px-2 py-2.5 transition-colors"
-          >
-            {isMuted ? <Bell className="size-4" /> : <BellOff className="size-4" />}
-            {isMuted ? t('unmuteNotifications') : t('muteNotifications')}
-          </button>
+            icon={isMuted ? <Bell className="size-4" /> : <BellOff className="size-4" />}
+            label={isMuted ? t('unmuteNotifications') : t('muteNotifications')}
+          />
+
+          {/* View profile / group info */}
+          {isDirect && onOpenProfile && (
+            <RowButton
+              onClick={() => { onOpenProfile(); onClose() }}
+              icon={<User className="size-4" />}
+              label={t('viewProfile')}
+            />
+          )}
+          {!isDirect && onOpenGroupInfo && (
+            <RowButton
+              onClick={() => { onOpenGroupInfo(); onClose() }}
+              icon={<Users className="size-4" />}
+              label={t('groupInfo')}
+            />
+          )}
+
+          {/* Voice / video call (1:1 only, disabled with coming soon title) */}
+          {isDirect && (
+            <>
+              <span title={t('callComingSoon')}>
+                <RowButton icon={<Phone className="size-4" />} label={t('voiceCall')} disabled />
+              </span>
+              <span title={t('callComingSoon')}>
+                <RowButton icon={<Video className="size-4" />} label={t('videoCall')} disabled />
+              </span>
+            </>
+          )}
+
+          {/* Block / Unblock (1:1 only) */}
+          {isDirect && (
+            <RowButton
+              onClick={handleBlockToggle}
+              icon={isBlocked ? <Shield className="size-4" /> : <ShieldOff className="size-4" />}
+              label={isBlocked ? t('unblockUser') : t('blockUser')}
+              danger={!isBlocked}
+            />
+          )}
+
+          <Separator className="my-1" />
 
           {/* Archive */}
-          <button
+          <RowButton
             onClick={handleArchiveToggle}
-            disabled={saving}
-            className="flex items-center gap-3 text-sm hover:bg-muted/50 rounded-lg px-2 py-2.5 transition-colors"
-          >
-            {isArchived ? <ArchiveX className="size-4" /> : <Archive className="size-4" />}
-            {isArchived ? t('unarchive') : t('archive')}
-          </button>
+            icon={isArchived ? <ArchiveX className="size-4" /> : <Archive className="size-4" />}
+            label={isArchived ? t('unarchive') : t('archive')}
+          />
 
-          <Separator />
+          <Separator className="my-1" />
 
           {/* Auto-delete timer */}
-          <div className="space-y-3">
+          <div className="space-y-3 px-2 py-2">
             <div className="flex items-center gap-2 text-sm font-medium">
               <Timer className="size-4" />
               {t('autoDelete')}
@@ -197,10 +313,10 @@ export function ConversationSettingsDrawer({
             </div>
           </div>
 
-          <Separator />
+          <Separator className="my-1" />
 
           {/* Wallpaper Selection */}
-          <div className="space-y-3">
+          <div className="space-y-3 px-2 py-2">
             <div className="flex items-center gap-2 text-sm font-medium">
               <ImageIcon className="size-4" />
               {t('wallpaper')}
@@ -223,29 +339,24 @@ export function ConversationSettingsDrawer({
             </div>
           </div>
 
-          <Separator />
+          <Separator className="my-1" />
 
-          {/* Clear history — neutral styling to avoid misclick with Delete */}
-          <button
+          {/* Clear history */}
+          <RowButton
             onClick={() => setConfirmClearOpen(true)}
-            disabled={saving}
-            className="flex items-center gap-3 text-sm hover:bg-muted/50 rounded-lg px-2 py-2.5 transition-colors"
-          >
-            <Eraser className="size-4" />
-            {t('clearHistory')}
-          </button>
+            icon={<Eraser className="size-4" />}
+            label={t('clearHistory')}
+          />
 
           <Separator className="my-1 border-border/60 border-[2px]" />
 
           {/* Delete conversation */}
-          <button
+          <RowButton
             onClick={handleDelete}
-            disabled={saving}
-            className="flex items-center gap-3 text-sm text-destructive hover:bg-destructive/10 rounded-lg px-2 py-2.5 transition-colors"
-          >
-            <Trash2 className="size-4" />
-            {t('deleteConversation')}
-          </button>
+            icon={<Trash2 className="size-4" />}
+            label={t('deleteConversation')}
+            danger
+          />
         </div>
       </SheetContent>
     </Sheet>

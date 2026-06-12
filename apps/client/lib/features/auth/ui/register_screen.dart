@@ -2,10 +2,12 @@ import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../../core/l10n/l10n_ext.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/pon_widgets.dart';
 import '../data/auth_repository.dart';
+import 'widgets/password_strength_indicator.dart';
 
 class RegisterScreen extends ConsumerStatefulWidget {
   const RegisterScreen({super.key});
@@ -22,6 +24,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   final _confirmController = TextEditingController();
   bool _isLoading = false;
   bool _obscurePassword = true;
+  String _passwordValue = '';
 
   @override
   void dispose() {
@@ -37,10 +40,21 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     if (msg.contains('409') || msg.contains('exists')) {
       return context.l10n.errEmailExists;
     }
+    if (msg.contains('domain') || msg.contains('Domain')) {
+      return context.l10n.errEmailDomainInvalid;
+    }
     if (msg.contains('network') || msg.contains('connect')) {
       return context.l10n.errNetwork;
     }
     return context.l10n.errRegisterFailed;
+  }
+
+  Future<void> _launchOAuth(String provider) async {
+    const authBase = String.fromEnvironment('AUTH_BASE_URL', defaultValue: 'http://localhost:3001');
+    final uri = Uri.parse('$authBase/auth/social/$provider/init?platform=mobile');
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    }
   }
 
   Future<void> _submit() async {
@@ -179,6 +193,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                                 prefixIcon: Icons.lock_outlined,
                                 obscureText: _obscurePassword,
                                 focusColor: AppTheme.ponPink,
+                                onChanged: (v) => setState(() => _passwordValue = v),
                                 suffixIcon: IconButton(
                                   icon: Icon(
                                     _obscurePassword
@@ -191,10 +206,15 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                                 ),
                                 validator: (v) {
                                   if (v == null || v.isEmpty) return context.l10n.valPasswordRequired;
-                                  if (v.length < 6) return context.l10n.valPasswordMin6;
+                                  if (v.length < 8) return context.l10n.valPasswordMin8;
+                                  if (!v.contains(RegExp(r'[A-Z]'))) return context.l10n.valPasswordUppercase;
+                                  if (!v.contains(RegExp(r'[a-z]'))) return context.l10n.valPasswordLowercase;
+                                  if (!v.contains(RegExp(r'[0-9]'))) return context.l10n.valPasswordDigit;
+                                  if (!v.contains(RegExp(r'[!@#$%^&*]'))) return context.l10n.valPasswordSpecial;
                                   return null;
                                 },
                               ),
+                              PasswordStrengthIndicator(password: _passwordValue),
                               const SizedBox(height: 16),
 
                               // Confirm Password
@@ -229,6 +249,42 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                       ),
                     ),
                     const SizedBox(height: 24),
+
+                      // OAuth divider
+                      Row(
+                        children: [
+                          const Expanded(child: Divider(color: Colors.white24)),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 12),
+                            child: Text(
+                              context.l10n.orContinueWith,
+                              style: TextStyle(color: Colors.white.withValues(alpha: 0.5), fontSize: 12),
+                            ),
+                          ),
+                          const Expanded(child: Divider(color: Colors.white24)),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+                      OutlinedButton.icon(
+                        onPressed: () => _launchOAuth('google'),
+                        icon: const Text('G', style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF4285F4))),
+                        label: Text(context.l10n.registerWithGoogle),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: Colors.white,
+                          side: BorderSide(color: Colors.white.withValues(alpha: 0.3)),
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      OutlinedButton.icon(
+                        onPressed: () => _launchOAuth('facebook'),
+                        icon: const Icon(Icons.facebook, color: Color(0xFF1877F2)),
+                        label: Text(context.l10n.registerWithFacebook),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: Colors.white,
+                          side: BorderSide(color: Colors.white.withValues(alpha: 0.3)),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
 
                       // Back to login
                       Row(

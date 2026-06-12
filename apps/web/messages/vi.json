@@ -26,7 +26,13 @@
       "submit": "Đăng nhập",
       "noAccount": "Chưa có tài khoản?",
       "registerLink": "Đăng ký",
-      "error": "Đăng nhập thất bại"
+      "error": "Đăng nhập thất bại",
+      "invalidCredentials": "Email hoặc mật khẩu không đúng",
+      "emailNotFound": "Email chưa được đăng ký",
+      "systemError": "Lỗi hệ thống, vui lòng thử lại",
+      "orContinueWith": "Hoặc tiếp tục với",
+      "googleLogin": "Đăng nhập bằng Google",
+      "facebookLogin": "Đăng nhập bằng Facebook"
     },
     "register": {
       "title": "Tạo tài khoản",
@@ -44,7 +50,20 @@
       "hasAccount": "Đã có tài khoản?",
       "loginLink": "Đăng nhập",
       "success": "Đăng ký thành công! Vui lòng kiểm tra email để lấy mã OTP.",
-      "error": "Đăng ký thất bại"
+      "error": "Đăng ký thất bại",
+      "emailDomainInvalid": "Email này không tồn tại",
+      "emailExists": "Email này đã được đăng ký",
+      "reqUppercase": "Chữ hoa (A-Z)",
+      "reqLowercase": "Chữ thường (a-z)",
+      "reqDigit": "Số (0-9)",
+      "reqSpecial": "Ký tự đặc biệt (!@#$%^&*)",
+      "reqLength": "≥8 ký tự",
+      "pwStrengthWeak": "Yếu",
+      "pwStrengthMedium": "Trung bình",
+      "pwStrengthStrong": "Mạnh",
+      "pwStrengthVeryStrong": "Rất mạnh",
+      "googleRegister": "Đăng ký bằng Google",
+      "facebookRegister": "Đăng ký bằng Facebook"
     },
     "verifyOtp": {
       "title": "Xác thực OTP",
@@ -222,7 +241,20 @@
     "groupNameSuccess": "Đã cập nhật tên nhóm",
     "groupNameError": "Không thể cập nhật tên",
     "groupAvatarSuccess": "Đã cập nhật ảnh nhóm",
-    "groupAvatarError": "Không thể cập nhật ảnh"
+    "groupAvatarError": "Không thể cập nhật ảnh",
+    "markRead": "Đánh dấu đã đọc",
+    "markUnread": "Đánh dấu chưa đọc",
+    "markReadSuccess": "Đã đánh dấu đã đọc",
+    "markUnreadSuccess": "Đã đánh dấu chưa đọc",
+    "viewProfile": "Xem trang cá nhân",
+    "groupInfo": "Thông tin nhóm",
+    "voiceCall": "Gọi thoại",
+    "videoCall": "Gọi video",
+    "callComingSoon": "Sắp ra mắt",
+    "blockUser": "Chặn người dùng",
+    "unblockUser": "Bỏ chặn",
+    "blockSuccess": "Đã chặn người dùng",
+    "unblockSuccess": "Đã bỏ chặn"
   },
   "aiPersona": {
     "title": "AI Persona",

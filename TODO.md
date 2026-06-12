@@ -341,6 +341,23 @@ Mirror: `apps/client/lib/features/chat/ui/widgets/{image_content,file_content,vo
   - **DONE (audit)** — Route-level comparative audit complete. Every non-deferred Flutter route has a web equivalent: screens map 1:1 to pages, and Flutter sub-screens map to web modals/drawers (`/new-conversation`+`/new-group`→`NewConversationModal`, `/group-info`→`GroupSettingsDrawer`, `/user/:id`→`UserProfileDrawer`, `/edit-profile`→merged into `/profile`). Per-conversation screens (`ai-persona`, `kb`, `shared-media`) use `?conversationId=` / route params with graceful empty-state handling. Visual parity (PON cyan/peach/pink, rounded-3xl, glow spheres, neon bubbles) was landed in W-8/W-11. **Only gap = Calls/WebRTC (`/call`), explicitly deferred as W-10.15.** Minor: `/theme-onboarding` (Flutter-only first-run flow, N/A on web).
   - Scope: `apps/web`
 
+### SPRINT D-2 — Critical Fixes & Auth Enhancement (Audit 2026-06-12) `DONE`
+> **Focus:** Fix group creation 400 error, improve login/register error handling, sync conversation settings with Flutter, add password strength UI, add Google/Facebook OAuth. Read `CLAUDE.md`, `apps/web/CLAUDE.md`, `PROMPT_DEBUG_FULLSTACK.md` before starting.
+>
+> **CRITICAL:** After every task, run `pnpm build` (web) and/or `mvn compile` (chat-service) and/or `flutter analyze` (client). Fix all errors before moving on.
+
+- [x] **Task D-2.1: Fix group creation 400 (Bad Request)** `S` **DONE — changed `memberIds` → `participantIds` in `createGroup` payload; verified `CreateGroupRequest.java` uses `participantIds`. `pnpm build` clean.**
+
+- [x] **Task D-2.2: Login error — show "wrong password/email" instead of system error** `M` **DONE — catch block now distinguishes 401 (backendMsg ?? invalidCredentials), 404 (emailNotFound), other (systemError). i18n keys added to all 7 web JSON files. Flutter _friendlyError already handled 401. `pnpm build` + `flutter analyze` clean.**
+
+- [x] **Task D-2.3: Register — validate email exists as real Gmail user** `M` **DONE — auth-service `register()` now does `dns.promises.resolveMx(domain)` before creating user; throws 400 "Email domain does not exist". Web register page catches domain 400 → shows `emailDomainInvalid`. Flutter _friendlyError catches "domain" string. i18n keys added to all 7 ARB + web JSON files. `pnpm build` (auth) + `pnpm build` (web) + `flutter analyze` all clean.**
+
+- [x] **Task D-2.4: Register — password strength meter UI** `M` **DONE — Web: Zod schema now requires uppercase+lowercase+digit+special+min8; `PasswordStrengthMeter` component (4-bar + checklist) created at `components/auth/PasswordStrengthMeter.tsx`. Flutter: validator updated to min8+uppercase+lowercase+digit+special; `PasswordStrengthIndicator` widget created at `features/auth/ui/widgets/password_strength_indicator.dart`. i18n keys added to all 7 ARB + web JSON files. `pnpm build` + `flutter analyze` clean.**
+
+- [x] **Task D-2.5: Conversation Settings — sync Web with Flutter** `L` **DONE — ConversationSettingsDrawer rewritten with Flutter-parity order: Mark read/unread → Mute → View profile/Group info → Voice call (disabled) → Video call (disabled) → Block/Unblock → Archive → Auto-delete → Wallpaper → Clear history → Delete. Added `markConversationUnread`, `blockUser`, `unblockUser` to `chat.ts`. ConversationHeader passes `onOpenProfile`/`onOpenGroupInfo` callbacks. i18n keys added to all 7 web JSON files. `pnpm build` clean.**
+
+- [x] **Task D-2.6: Google & Facebook OAuth Login** `L` **DONE — Backend already had GoogleStrategy + FacebookStrategy + `handleSocialLogin` + `POST /auth/exchange`. Web: Google/Facebook buttons added to login/register pages; redirect to `AUTH_URL/auth/social/{provider}/init?platform=web`; new `/oauth-callback` page exchanges code + sets auth. `authService.exchangeCode()` added to auth.ts. Flutter: Google/Facebook buttons added to login/register screens using `url_launcher` (opens external browser for OAuth flow). i18n keys added to all 7 ARB + web JSON files. `pnpm build` (auth) + `pnpm build` (web) + `flutter analyze` all clean. Note: configure `WEB_REDIRECT_URL=https://your-domain/oauth-callback` in auth-service env for web callback to work.**
+
 ---
 
 ## 🧪 QA LOG

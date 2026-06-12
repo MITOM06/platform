@@ -9,6 +9,7 @@ import '../../../auth/domain/auth_state.dart';
 import '../../../home/domain/home_providers.dart';
 import '../../domain/chat_provider.dart';
 import '../../domain/chat_state.dart';
+import 'chat_wallpaper_dialog.dart';
 import 'conversation_avatar.dart';
 import 'conversation_customisation_dialogs.dart';
 

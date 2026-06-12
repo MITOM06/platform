@@ -36,6 +36,9 @@ export const authService = {
   resetPassword: (email: string, otp: string, password: string) =>
     authApi.post('/auth/reset-password', { email, otp, password }).then((r) => r.data),
 
+  exchangeCode: (code: string, deviceId?: string) =>
+    authApi.post<LoginResponse>('/auth/exchange', { code, deviceId: deviceId ?? 'web', platform: 'web' }),
+
   logout: () =>
     authApi.post('/auth/logout').catch(() => {}),
 

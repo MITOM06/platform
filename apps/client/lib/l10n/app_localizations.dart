@@ -2027,6 +2027,126 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Monthly quota'**
   String get tokenUsageQuota;
+
+  /// No description provided for @errEmailDomainInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'This email address does not exist'**
+  String get errEmailDomainInvalid;
+
+  /// No description provided for @valPasswordMin8.
+  ///
+  /// In en, this message translates to:
+  /// **'Password must be at least 8 characters'**
+  String get valPasswordMin8;
+
+  /// No description provided for @valPasswordUppercase.
+  ///
+  /// In en, this message translates to:
+  /// **'Must contain an uppercase letter (A-Z)'**
+  String get valPasswordUppercase;
+
+  /// No description provided for @valPasswordLowercase.
+  ///
+  /// In en, this message translates to:
+  /// **'Must contain a lowercase letter (a-z)'**
+  String get valPasswordLowercase;
+
+  /// No description provided for @valPasswordDigit.
+  ///
+  /// In en, this message translates to:
+  /// **'Must contain a digit (0-9)'**
+  String get valPasswordDigit;
+
+  /// No description provided for @valPasswordSpecial.
+  ///
+  /// In en, this message translates to:
+  /// **'Must contain a special character (!@#\$%^&*)'**
+  String get valPasswordSpecial;
+
+  /// No description provided for @pwStrengthWeak.
+  ///
+  /// In en, this message translates to:
+  /// **'Weak'**
+  String get pwStrengthWeak;
+
+  /// No description provided for @pwStrengthMedium.
+  ///
+  /// In en, this message translates to:
+  /// **'Medium'**
+  String get pwStrengthMedium;
+
+  /// No description provided for @pwStrengthStrong.
+  ///
+  /// In en, this message translates to:
+  /// **'Strong'**
+  String get pwStrengthStrong;
+
+  /// No description provided for @pwStrengthVeryStrong.
+  ///
+  /// In en, this message translates to:
+  /// **'Very Strong'**
+  String get pwStrengthVeryStrong;
+
+  /// No description provided for @pwReqLength.
+  ///
+  /// In en, this message translates to:
+  /// **'≥8 characters'**
+  String get pwReqLength;
+
+  /// No description provided for @pwReqUppercase.
+  ///
+  /// In en, this message translates to:
+  /// **'Uppercase (A-Z)'**
+  String get pwReqUppercase;
+
+  /// No description provided for @pwReqLowercase.
+  ///
+  /// In en, this message translates to:
+  /// **'Lowercase (a-z)'**
+  String get pwReqLowercase;
+
+  /// No description provided for @pwReqDigit.
+  ///
+  /// In en, this message translates to:
+  /// **'Digit (0-9)'**
+  String get pwReqDigit;
+
+  /// No description provided for @pwReqSpecial.
+  ///
+  /// In en, this message translates to:
+  /// **'Special char (!@#\$...)'**
+  String get pwReqSpecial;
+
+  /// No description provided for @loginWithGoogle.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in with Google'**
+  String get loginWithGoogle;
+
+  /// No description provided for @loginWithFacebook.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in with Facebook'**
+  String get loginWithFacebook;
+
+  /// No description provided for @registerWithGoogle.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign up with Google'**
+  String get registerWithGoogle;
+
+  /// No description provided for @registerWithFacebook.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign up with Facebook'**
+  String get registerWithFacebook;
+
+  /// No description provided for @orContinueWith.
+  ///
+  /// In en, this message translates to:
+  /// **'Or continue with'**
+  String get orContinueWith;
 }
 
 class _AppLocalizationsDelegate
