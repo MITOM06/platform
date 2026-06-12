@@ -153,7 +153,8 @@ jobs:
             JWT_ACCESS_SECRET=${{ secrets.JWT_ACCESS_SECRET }}
             SPRING_DATA_MONGODB_URI=${{ secrets.MONGODB_URI }}
             REDIS_URL=${{ secrets.REDIS_URL }}
-            ALLOWED_ORIGINS=https://platform-web-omega-amber.vercel.app,https://auth-service-ec4ppoccna-as.a.run.app
+            SPRING_DATA_REDIS_URL=${{ secrets.REDIS_URL }}
+            ALLOWED_ORIGINS=https://platform-web-omega-amber.vercel.app
             MAIL_HOST=${{ secrets.MAIL_HOST }}
             MAIL_PORT=${{ secrets.MAIL_PORT }}
             MAIL_USER=${{ secrets.MAIL_USER }}
