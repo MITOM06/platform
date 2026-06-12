@@ -272,6 +272,33 @@ Mirror: `apps/client/lib/features/chat/ui/widgets/{image_content,file_content,vo
   - Fix: dùng `queryClient.removeQueries({ queryKey: ['messages', id], exact: true })` TRƯỚC khi `invalidateQueries` để xoá cache ngay lập tức.
   - File: `apps/web/components/chat/ConversationSettingsDrawer.tsx`
 
+### SPRINT W-13 — Bug Fixes (from production audit 2026-06-12) `PENDING`
+> Source: live testing on https://platform-web-omega-amber.vercel.app after GCP migration.
+> Read `apps/web/CLAUDE.md` before starting. All fixes are in `apps/web/`.
+
+- [x] **Task W-13.1: Own messages render on wrong side** `S`
+  - Symptom: messages sent by current user appear left-aligned (isOwn=false).
+  - Root cause to verify: `msg.senderId` format may differ from `currentUser.id`
+    (e.g. MongoDB ObjectId string vs auth-service UUID). Log both in browser console and compare.
+  - Fix: normalise comparison or trace where `senderId` is populated on optimistic append.
+  - File: `apps/web/app/api/auth/session/route.ts` — normalise `id: data.id || data._id` so `currentUser.id` is always populated even when Mongoose omits the virtual.
+
+- [x] **Task W-13.2: Typing indicator visible to the typer themselves** `S`
+  - Symptom: when current user types, "đang nhập…" appears in their own chat header.
+  - Fix: filter `currentUser.id` from `typingUserIds` before passing to `ConversationHeader`.
+  - File: `apps/web/app/(main)/conversations/[id]/page.tsx`.
+
+- [x] **Task W-13.3: 409 Conflict when opening AI conversation** `S`
+  - Fix: catch 409 in `handleOpenAiChat` → scan `getConversations()` for AI participant → navigate to existing.
+  - File: `apps/web/components/chat/ConversationList.tsx`.
+
+- [x] **Task W-13.4: Media/upload URLs resolve to Vercel domain (404)** `S`
+  - `.env.production` updated to `lwnzrufcxa` Cloud Run URLs. Included in this commit — Vercel will redeploy automatically.
+
+- [x] **Task W-13.5: Cannot view sender's profile from chat** `M`
+  - New file: `apps/web/components/chat/UserProfileDrawer.tsx` — Sheet with avatar, name, bio, online status, Send/Friend/Block buttons.
+  - Edit: `apps/web/components/chat/MessageBubble.tsx` — sender label is now a clickable button that opens `UserProfileDrawer`.
+
 ---
 
 ## 🧪 QA LOG

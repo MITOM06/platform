@@ -346,7 +346,7 @@ export default function ConversationPage({ params }: Props) {
     <div className="flex flex-col h-full relative">
       <ConversationHeader
         conversationId={id}
-        typingUserIds={typingUserIds}
+        typingUserIds={typingUserIds.filter((uid) => uid !== currentUser?.id)}
         onSearchToggle={() => setSearchVisible((v) => !v)}
       />
 

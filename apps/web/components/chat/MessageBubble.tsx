@@ -9,6 +9,7 @@ import { ImageContent, VideoContent } from './ImageContent'
 import { FileContent } from './FileContent'
 import { VoiceMessage } from './VoiceMessage'
 import { LinkPreviewCard } from './LinkPreviewCard'
+import { UserProfileDrawer } from './UserProfileDrawer'
 import type { Message } from '@/lib/api/types'
 
 interface Props {
@@ -55,6 +56,7 @@ export function MessageBubble({
 }: Props) {
   const t = useTranslations('chat')
   const [hovered, setHovered] = useState(false)
+  const [profileUserId, setProfileUserId] = useState<string | null>(null)
 
   if (message.recalled) {
     return (
@@ -112,8 +114,18 @@ export function MessageBubble({
     </button>
   )
 
+  const openProfile = () => {
+    if (!isOwn && message.senderId) setProfileUserId(message.senderId)
+  }
+
   const senderLabel = !isOwn && message.senderName && (
-    <p className="text-xs font-semibold mb-1 text-primary/80">{message.senderName}</p>
+    <button
+      type="button"
+      onClick={openProfile}
+      className="text-xs font-semibold mb-1 text-primary/80 text-left hover:underline"
+    >
+      {message.senderName}
+    </button>
   )
 
   const timeLabel = (
@@ -173,6 +185,7 @@ export function MessageBubble({
   }
 
   return (
+    <>
     <div
       className={cn('flex group', isOwn ? 'flex-row-reverse' : 'flex-row', 'items-end gap-1')}
       onMouseEnter={() => setHovered(true)}
@@ -229,5 +242,7 @@ export function MessageBubble({
         />
       </div>
     </div>
+    <UserProfileDrawer userId={profileUserId} onClose={() => setProfileUserId(null)} />
+    </>
   )
 }
