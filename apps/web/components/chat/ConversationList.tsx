@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { Search, Plus, MessageSquare, Hash, Bot } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
+import { useTranslations } from 'next-intl'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -30,6 +31,7 @@ function ConversationSkeleton() {
 }
 
 export function ConversationList() {
+  const t = useTranslations('chat')
   const [search, setSearch] = useState('')
   const [aiLoading, setAiLoading] = useState(false)
   const router = useRouter()
@@ -51,7 +53,7 @@ export function ConversationList() {
       const conv = await chatService.createConversation(AI_BOT_ID)
       router.push(`/conversations/${conv.id}`)
     } catch {
-      toast.error('Không thể mở chat AI')
+      toast.error(t('aiOpenError'))
     } finally {
       setAiLoading(false)
     }
@@ -80,7 +82,7 @@ export function ConversationList() {
           <div className="relative flex-1">
             <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
             <Input
-              placeholder="Tìm kiếm..."
+              placeholder={t('searchPlaceholder')}
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="pl-8 h-9"
@@ -90,7 +92,7 @@ export function ConversationList() {
             variant="ghost"
             size="icon"
             onClick={openPublicChannels}
-            title="Kênh công khai"
+            title={t('exploreChannels')}
             className="shrink-0 h-9 w-9"
           >
             <Hash className="size-4" />
@@ -99,7 +101,7 @@ export function ConversationList() {
             variant="ghost"
             size="icon"
             onClick={handleOpenAiChat}
-            title="Chat với AI Assistant"
+            title={t('chatWithAI')}
             disabled={aiLoading}
             className="shrink-0 h-9 w-9"
           >
@@ -109,7 +111,7 @@ export function ConversationList() {
             variant="ghost"
             size="icon"
             onClick={() => openNewChat('direct')}
-            title="Cuộc trò chuyện mới"
+            title={t('newConversation')}
             className="shrink-0 h-9 w-9"
           >
             <Plus className="size-4" />
@@ -129,7 +131,7 @@ export function ConversationList() {
 
           {isError && (
             <div className="flex items-center justify-center py-8 text-sm text-destructive">
-              Không thể tải danh sách
+              {t('loadError')}
             </div>
           )}
 
@@ -137,11 +139,11 @@ export function ConversationList() {
             <div className="flex flex-col items-center justify-center py-12 gap-3 text-muted-foreground">
               <MessageSquare className="size-8 opacity-40" />
               <p className="text-sm">
-                {search ? 'Không tìm thấy kết quả' : 'Chưa có cuộc trò chuyện'}
+                {search ? t('noResults') : t('noConversations')}
               </p>
               {!search && (
                 <Button variant="outline" size="sm" onClick={() => openNewChat('direct')}>
-                  Bắt đầu trò chuyện
+                  {t('startConversation')}
                 </Button>
               )}
             </div>

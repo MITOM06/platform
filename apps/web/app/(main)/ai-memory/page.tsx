@@ -4,6 +4,7 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
+import { useTranslations } from 'next-intl'
 import {
   ArrowLeft,
   Brain,
@@ -30,9 +31,11 @@ import {
 function MemoryCard({
   memory,
   onDelete,
+  usageCountLabel,
 }: {
   memory: AiMemory
   onDelete: () => void
+  usageCountLabel: string
 }) {
   const date = new Date(memory.updatedAt)
   const dateStr = date.toLocaleDateString('vi-VN', {
@@ -62,7 +65,7 @@ function MemoryCard({
             <div className="mt-2.5">
               <p className="text-[11px] font-semibold text-[#B47FFF]/80 mb-1 flex items-center gap-1">
                 <Lightbulb className="size-3" />
-                Thông tin chính:
+                {usageCountLabel}
               </p>
               {memory.keyFacts.slice(0, 3).map((fact, i) => (
                 <p
@@ -79,7 +82,7 @@ function MemoryCard({
             {/* Turn count badge */}
             <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-medium border border-[#B47FFF]/20 bg-[#B47FFF]/10 text-[#B47FFF]/90">
               <MessageSquare className="size-2.5" />
-              {memory.messageCount} lượt
+              {memory.messageCount}
             </span>
 
             <span className="flex-1" />
@@ -96,7 +99,6 @@ function MemoryCard({
         <button
           onClick={onDelete}
           className="size-8 rounded-lg flex items-center justify-center shrink-0 text-muted-foreground/30 hover:text-destructive hover:bg-destructive/10 transition-colors"
-          title="Xóa memory"
         >
           <Trash2 className="size-4" />
         </button>
@@ -107,16 +109,16 @@ function MemoryCard({
 
 // ── Empty State ──────────────────────────────────────────────────────────────
 
-function EmptyState() {
+function EmptyState({ empty, emptyHint }: { empty: string; emptyHint: string }) {
   return (
     <div className="flex flex-col items-center justify-center py-24 gap-4">
       <Brain className="size-20 text-muted-foreground/15" />
       <div className="text-center space-y-1.5">
         <p className="text-sm text-muted-foreground/50">
-          Chưa có memory nào
+          {empty}
         </p>
         <p className="text-xs text-muted-foreground/30 max-w-[280px]">
-          AI sẽ tự động ghi nhớ thông tin quan trọng từ các cuộc trò chuyện của bạn.
+          {emptyHint}
         </p>
       </div>
     </div>
@@ -126,6 +128,8 @@ function EmptyState() {
 // ── Main Page ────────────────────────────────────────────────────────────────
 
 export default function AiMemoryPage() {
+  const t = useTranslations('aiMemory')
+  const tc = useTranslations('common')
   const queryClient = useQueryClient()
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null)
 
@@ -138,10 +142,10 @@ export default function AiMemoryPage() {
     mutationFn: (conversationId: string) => aiService.deleteMemory(conversationId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['ai-memories'] })
-      toast.success('Đã xóa memory')
+      toast.success(t('deleteSuccess'))
       setDeleteTarget(null)
     },
-    onError: () => toast.error('Không thể xóa memory'),
+    onError: () => toast.error(t('deleteError')),
   })
 
   return (
@@ -154,10 +158,10 @@ export default function AiMemoryPage() {
         >
           <ArrowLeft className="size-5" />
         </Link>
-        <span className="font-semibold text-base">AI Memory</span>
+        <span className="font-semibold text-base">{t('title')}</span>
         {memories && memories.length > 0 && (
           <span className="ml-auto text-xs text-muted-foreground/50 tabular-nums">
-            {memories.length} memory
+            {t('headerCount', { count: memories.length })}
           </span>
         )}
       </header>
@@ -172,18 +176,20 @@ export default function AiMemoryPage() {
             {isLoading && (
               <div className="flex flex-col items-center justify-center py-20 gap-3">
                 <Loader2 className="size-8 animate-spin text-[#B47FFF]" />
-                <p className="text-sm text-muted-foreground">Đang tải memory...</p>
+                <p className="text-sm text-muted-foreground">{t('loading')}</p>
               </div>
             )}
 
             {error && (
               <div className="flex flex-col items-center justify-center py-20 gap-3">
                 <AlertCircle className="size-10 text-destructive/50" />
-                <p className="text-sm text-destructive">Không thể tải danh sách memory</p>
+                <p className="text-sm text-destructive">{t('loadError')}</p>
               </div>
             )}
 
-            {memories && memories.length === 0 && <EmptyState />}
+            {memories && memories.length === 0 && (
+              <EmptyState empty={t('empty')} emptyHint={t('emptyHint')} />
+            )}
 
             {memories && memories.length > 0 && (
               <div className="space-y-3">
@@ -192,6 +198,7 @@ export default function AiMemoryPage() {
                     key={m.conversationId}
                     memory={m}
                     onDelete={() => setDeleteTarget(m.conversationId)}
+                    usageCountLabel={t('keyInfo')}
                   />
                 ))}
               </div>
@@ -204,9 +211,9 @@ export default function AiMemoryPage() {
       <Dialog open={!!deleteTarget} onOpenChange={(open) => !open && setDeleteTarget(null)}>
         <DialogContent className="sm:max-w-sm">
           <DialogHeader>
-            <DialogTitle>Xóa AI Memory</DialogTitle>
+            <DialogTitle>{t('deleteTitle')}</DialogTitle>
             <DialogDescription>
-              Bạn có chắc muốn xóa memory này? AI sẽ không còn nhớ thông tin từ cuộc trò chuyện này.
+              {t('deleteMessage')}
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
@@ -215,7 +222,7 @@ export default function AiMemoryPage() {
               onClick={() => setDeleteTarget(null)}
               disabled={deleteMutation.isPending}
             >
-              Hủy
+              {tc('cancel')}
             </Button>
             <Button
               variant="destructive"
@@ -223,7 +230,7 @@ export default function AiMemoryPage() {
               disabled={deleteMutation.isPending}
             >
               {deleteMutation.isPending && <Loader2 className="size-4 mr-2 animate-spin" />}
-              Xóa
+              {tc('delete')}
             </Button>
           </DialogFooter>
         </DialogContent>

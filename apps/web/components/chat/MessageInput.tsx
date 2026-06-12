@@ -5,6 +5,7 @@ import {
   Send, X, Pencil, Paperclip, ImagePlus, FileText, Smile, Mic, Trash2, Reply,
 } from 'lucide-react'
 import { toast } from 'sonner'
+import { useTranslations } from 'next-intl'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import {
@@ -49,6 +50,7 @@ export function MessageInput({
   onCancelReply,
   conversation,
 }: Props) {
+  const t = useTranslations('chat')
   const [value, setValue] = useState('')
   const [sending, setSending] = useState(false)
   const [uploading, setUploading] = useState(false)
@@ -62,7 +64,7 @@ export function MessageInput({
   const chunksRef = useRef<Blob[]>([])
   const recordTimerRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const cancelledRef = useRef(false)
-  
+
   // Mentions state
   const [mentionCandidates, setMentionCandidates] = useState<string[]>([])
   const [mentionIndex, setMentionIndex] = useState(0)
@@ -92,12 +94,12 @@ export function MessageInput({
   const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const val = e.target.value
     setValue(val)
-    
+
     // Check for mention
     const cursor = e.target.selectionStart
     const textBeforeCursor = val.slice(0, cursor)
     const match = textBeforeCursor.match(/@([a-zA-Z0-9_]*)$/)
-    
+
     if (match && conversation && conversation.type === 'group') {
       const q = match[1].toLowerCase()
       const candidates = conversation.participants.filter(p => p.toLowerCase().includes(q))
@@ -192,7 +194,7 @@ export function MessageInput({
     const inserted = `@${uid} `
     setValue(before + inserted + after)
     setMentionQuery(null)
-    
+
     if (el) {
       requestAnimationFrame(() => {
         el.focus()
@@ -221,7 +223,7 @@ export function MessageInput({
       if (images.length === 1) await onSend(images[0], 'image')
       else if (images.length > 1) await onSend(JSON.stringify(images), 'image')
     } catch {
-      toast.error('Tải lên thất bại')
+      toast.error(t('uploadError'))
     } finally {
       setUploading(false)
     }
@@ -236,7 +238,7 @@ export function MessageInput({
       const { url, filename, size } = await chatService.uploadFile(file)
       await onSend(JSON.stringify({ url, name: filename || file.name, size }), 'file')
     } catch {
-      toast.error('Tải lên thất bại')
+      toast.error(t('uploadError'))
     } finally {
       setUploading(false)
     }
@@ -251,7 +253,7 @@ export function MessageInput({
 
   const startRecording = async () => {
     if (typeof navigator === 'undefined' || !navigator.mediaDevices?.getUserMedia) {
-      toast.error('Trình duyệt không hỗ trợ ghi âm')
+      toast.error(t('recordingUnsupported'))
       return
     }
     try {
@@ -273,7 +275,7 @@ export function MessageInput({
           const { url } = await chatService.uploadFile(blob, `voice_${Date.now()}.${ext}`)
           await onSend(url, 'voice')
         } catch {
-          toast.error('Gửi ghi âm thất bại')
+          toast.error(t('voiceSendError'))
         } finally {
           setUploading(false)
         }
@@ -284,7 +286,7 @@ export function MessageInput({
       setRecordSeconds(0)
       recordTimerRef.current = setInterval(() => setRecordSeconds((s) => s + 1), 1000)
     } catch {
-      toast.error('Không thể truy cập micro')
+      toast.error(t('micError'))
     }
   }
 
@@ -314,7 +316,7 @@ export function MessageInput({
           <Reply className="size-3.5 text-primary shrink-0" />
           <div className="min-w-0 flex-1">
             <p className="text-[11px] font-semibold text-primary">
-              Trả lời {replyingTo.senderName || ''}
+              {t('replyTo', { name: replyingTo.senderName || '' })}
             </p>
             <p className="truncate text-xs text-muted-foreground">{replyingTo.content}</p>
           </div>
@@ -329,7 +331,7 @@ export function MessageInput({
         <div className="flex items-center gap-2 px-3 py-1.5 bg-primary/5 border-b text-sm">
           <Pencil className="size-3.5 text-primary shrink-0" />
           <span className="text-muted-foreground flex-1 truncate text-xs">
-            Đang chỉnh sửa: {editingMessage.content}
+            {t('editing', { content: editingMessage.content })}
           </span>
           <Button variant="ghost" size="icon-xs" onClick={onCancelEdit}>
             <X className="size-3.5" />
@@ -357,7 +359,7 @@ export function MessageInput({
         <div className="flex items-center gap-3 p-3">
           <Mic className="size-5 animate-pulse text-red-500" />
           <span className="flex-1 text-sm text-muted-foreground">
-            Đang ghi âm… {fmtSeconds(recordSeconds)}
+            {t('recording', { time: fmtSeconds(recordSeconds) })}
           </span>
           <Button variant="ghost" size="icon" onClick={cancelRecording}>
             <Trash2 className="size-4" />
@@ -382,16 +384,16 @@ export function MessageInput({
                       value="emoji"
                       className="rounded-none data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-pon-cyan text-xs"
                     >
-                      Emoji
+                      {t('emojiTab')}
                     </TabsTrigger>
                     <TabsTrigger
                       value="sticker"
                       className="rounded-none data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-pon-cyan text-xs"
                     >
-                      Nhãn dán
+                      {t('stickerTab')}
                     </TabsTrigger>
                   </TabsList>
-                  
+
                   <TabsContent value="emoji" className="p-2 m-0 h-48 overflow-y-auto">
                     <div className="grid grid-cols-8 gap-1">
                       {EMOJIS.map((emoji) => (
@@ -405,7 +407,7 @@ export function MessageInput({
                       ))}
                     </div>
                   </TabsContent>
-                  
+
                   <TabsContent value="sticker" className="p-2 m-0 h-48 overflow-y-auto">
                     <div className="grid grid-cols-4 gap-2">
                       {STICKERS.map((sticker) => (
@@ -437,11 +439,11 @@ export function MessageInput({
               <DropdownMenuContent align="start" side="top">
                 <DropdownMenuItem onClick={() => imageInputRef.current?.click()}>
                   <ImagePlus className="size-4" />
-                  Ảnh / Video
+                  {t('attachImageVideo')}
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => fileInputRef.current?.click()}>
                   <FileText className="size-4" />
-                  Tệp tin
+                  {t('attachFile')}
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -454,8 +456,8 @@ export function MessageInput({
             onKeyDown={handleKeyDown}
             placeholder={
               editingMessage
-                ? 'Chỉnh sửa tin nhắn... (Enter để lưu, Esc để hủy)'
-                : 'Nhập tin nhắn... (Enter để gửi, Shift+Enter xuống dòng)'
+                ? t('editPlaceholder')
+                : t('inputPlaceholder')
             }
             className="min-h-10 max-h-32 resize-none"
             rows={1}
@@ -500,7 +502,7 @@ export function MessageInput({
                 onClick={startRecording}
                 disabled={busy}
                 className="shrink-0"
-                title="Ghi âm"
+                title={t('attachVoice')}
               >
                 <Mic className="size-5 text-pon-cyan" />
               </Button>
@@ -508,7 +510,7 @@ export function MessageInput({
                 onClick={() => onSend('👍', 'text')}
                 disabled={busy}
                 className="size-9 shrink-0 flex items-center justify-center text-xl transition-transform hover:scale-110 active:scale-95"
-                title="Gửi nhanh"
+                title={t('quickSend')}
               >
                 👍
               </button>

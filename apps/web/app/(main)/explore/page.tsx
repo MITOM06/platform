@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { ArrowLeft, Loader2, Search, Users, Hash, UserPlus } from 'lucide-react'
 import { toast } from 'sonner'
+import { useTranslations } from 'next-intl'
 import { chatService } from '@/lib/api/chat'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -13,6 +14,8 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { useDebounce } from '@/lib/hooks/use-debounce'
 
 export default function ExplorePage() {
+  const t = useTranslations('explore')
+  const tc = useTranslations('common')
   const router = useRouter()
   const queryClient = useQueryClient()
   const [searchQuery, setSearchQuery] = useState('')
@@ -27,11 +30,11 @@ export default function ExplorePage() {
     mutationFn: (id: string) => chatService.joinChannel(id),
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['conversations'] })
-      toast.success('Đã tham gia kênh')
+      toast.success(t('joinSuccess'))
       router.push(`/conversations/${data.id}`)
     },
     onError: () => {
-      toast.error('Không thể tham gia kênh')
+      toast.error(t('joinError'))
     },
   })
 
@@ -43,14 +46,14 @@ export default function ExplorePage() {
         <Link href="/" className="text-muted-foreground hover:text-foreground">
           <ArrowLeft className="size-5" />
         </Link>
-        <span className="font-semibold text-base">Khám phá cộng đồng</span>
+        <span className="font-semibold text-base">{t('title')}</span>
       </header>
 
       <div className="p-4 shrink-0">
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
           <Input
-            placeholder="Tìm kiếm kênh công khai..."
+            placeholder={t('searchPlaceholder')}
             className="pl-9 bg-muted/50 border-none"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
@@ -69,7 +72,7 @@ export default function ExplorePage() {
               <Hash className="size-8 text-muted-foreground/50" />
             </div>
             <p className="text-sm text-muted-foreground">
-              {searchQuery ? 'Không tìm thấy kênh nào phù hợp' : 'Chưa có kênh công khai nào'}
+              {searchQuery ? t('noResults') : t('noChannels')}
             </p>
           </div>
         ) : (
@@ -90,7 +93,7 @@ export default function ExplorePage() {
                     </AvatarFallback>
                   )}
                 </Avatar>
-                
+
                 <div className="flex-1 min-w-0 space-y-1">
                   <h3 className="font-semibold text-base truncate flex items-center gap-1.5">
                     {channel.name}
@@ -98,7 +101,7 @@ export default function ExplorePage() {
                   <div className="flex items-center gap-3 text-xs text-muted-foreground">
                     <span className="flex items-center gap-1">
                       <Users className="size-3.5" />
-                      {channel.participants.length} thành viên
+                      {tc('members', { count: channel.participants.length })}
                     </span>
                   </div>
                 </div>
@@ -113,7 +116,7 @@ export default function ExplorePage() {
                   ) : (
                     <>
                       <UserPlus className="size-4 mr-2" />
-                      Tham gia
+                      {t('join')}
                     </>
                   )}
                 </Button>

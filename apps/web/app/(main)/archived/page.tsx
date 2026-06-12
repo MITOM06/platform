@@ -6,12 +6,14 @@ import { useRouter } from 'next/navigation'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { ArrowLeft, ArchiveRestore, Archive, Loader2, Search, MessageSquare } from 'lucide-react'
 import { toast } from 'sonner'
+import { useTranslations } from 'next-intl'
 import { chatService } from '@/lib/api/chat'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 
 export default function ArchivedChatsPage() {
+  const t = useTranslations('archived')
   const router = useRouter()
   const queryClient = useQueryClient()
   const [searchQuery, setSearchQuery] = useState('')
@@ -25,18 +27,18 @@ export default function ArchivedChatsPage() {
     mutationFn: (id: string) => chatService.unarchiveConversation(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['conversations'] })
-      toast.success('Đã khôi phục đoạn chat')
+      toast.success(t('unarchiveSuccess'))
     },
     onError: () => {
-      toast.error('Không thể khôi phục đoạn chat')
+      toast.error(t('unarchiveError'))
     },
   })
 
   const conversations = response?.content || []
-  
+
   const filteredConversations = conversations.filter((conv) => {
     if (!searchQuery) return true
-    const name = conv.name ?? 'Cuộc trò chuyện'
+    const name = conv.name ?? t('defaultName')
     return name.toLowerCase().includes(searchQuery.toLowerCase())
   })
 
@@ -46,14 +48,14 @@ export default function ArchivedChatsPage() {
         <Link href="/" className="text-muted-foreground hover:text-foreground">
           <ArrowLeft className="size-5" />
         </Link>
-        <span className="font-semibold text-base">Đoạn chat đã lưu trữ</span>
+        <span className="font-semibold text-base">{t('title')}</span>
       </header>
 
       <div className="p-4 shrink-0">
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
           <Input
-            placeholder="Tìm kiếm đoạn chat lưu trữ..."
+            placeholder={t('searchPlaceholder')}
             className="pl-9 bg-muted/50 border-none"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
@@ -70,12 +72,12 @@ export default function ArchivedChatsPage() {
           <div className="flex flex-col items-center justify-center h-full text-center p-8 gap-3">
             <Archive className="size-16 text-muted-foreground/20" />
             <p className="text-sm text-muted-foreground">
-              {searchQuery ? 'Không tìm thấy kết quả nào' : 'Chưa có đoạn chat nào được lưu trữ'}
+              {searchQuery ? t('noResults') : t('empty')}
             </p>
           </div>
         ) : (
           filteredConversations.map((conv) => {
-            const name = conv.name ?? 'Cuộc trò chuyện'
+            const name = conv.name ?? t('defaultName')
             const avatar = conv.avatarUrl
             const isUnarchiving = unarchiveMutation.isPending && unarchiveMutation.variables === conv.id
 
@@ -100,7 +102,7 @@ export default function ArchivedChatsPage() {
                     {conv.type === 'group' ? (
                       <MessageSquare className="size-3" />
                     ) : null}
-                    {conv.lastMessage?.content || 'Chưa có tin nhắn'}
+                    {conv.lastMessage?.content || t('noMessages')}
                   </p>
                 </div>
                 <Button
@@ -112,7 +114,7 @@ export default function ArchivedChatsPage() {
                     e.stopPropagation()
                     unarchiveMutation.mutate(conv.id)
                   }}
-                  title="Bỏ lưu trữ"
+                  title={t('unarchive')}
                 >
                   {isUnarchiving ? (
                     <Loader2 className="size-4 animate-spin" />

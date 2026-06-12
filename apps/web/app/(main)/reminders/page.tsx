@@ -4,6 +4,7 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
+import { useTranslations } from 'next-intl'
 import {
   ArrowLeft,
   AlarmClock,
@@ -30,10 +31,14 @@ function ReminderTile({
   reminder,
   onDone,
   onDelete,
+  markDoneTitle,
+  deleteTitle,
 }: {
   reminder: Reminder
   onDone: () => void
   onDelete: () => void
+  markDoneTitle: string
+  deleteTitle: string
 }) {
   const dateStr = new Date(reminder.remindAt).toLocaleString('vi-VN', {
     month: 'short',
@@ -67,14 +72,14 @@ function ReminderTile({
         <button
           onClick={onDone}
           className="size-8 rounded-lg flex items-center justify-center text-pon-cyan/70 hover:text-pon-cyan hover:bg-pon-cyan/10 transition-colors"
-          title="Đánh dấu hoàn thành"
+          title={markDoneTitle}
         >
           <CheckCircle className="size-4" />
         </button>
         <button
           onClick={onDelete}
           className="size-8 rounded-lg flex items-center justify-center text-muted-foreground/30 hover:text-destructive hover:bg-destructive/10 transition-colors"
-          title="Xóa nhắc nhở"
+          title={deleteTitle}
         >
           <Trash2 className="size-4" />
         </button>
@@ -85,16 +90,16 @@ function ReminderTile({
 
 // ── Empty State ──────────────────────────────────────────────────────────────
 
-function EmptyState() {
+function EmptyState({ empty, emptyHint }: { empty: string; emptyHint: string }) {
   return (
     <div className="flex flex-col items-center justify-center py-24 gap-4">
       <AlarmClockOff className="size-20 text-muted-foreground/15" />
       <div className="text-center space-y-1.5">
         <p className="text-sm text-muted-foreground/50">
-          Không có nhắc nhở nào
+          {empty}
         </p>
         <p className="text-xs text-muted-foreground/30 max-w-[280px]">
-          Bạn có thể tạo nhắc nhở bằng cách yêu cầu AI hoặc nhắn &quot;Nhắc tôi...&quot;.
+          {emptyHint}
         </p>
       </div>
     </div>
@@ -104,8 +109,10 @@ function EmptyState() {
 // ── Main Page ────────────────────────────────────────────────────────────────
 
 export default function RemindersPage() {
+  const t = useTranslations('reminders')
+  const tc = useTranslations('common')
   const queryClient = useQueryClient()
-  
+
   const [confirmDoneTarget, setConfirmDoneTarget] = useState<Reminder | null>(null)
   const [deleteTarget, setDeleteTarget] = useState<Reminder | null>(null)
 
@@ -118,20 +125,20 @@ export default function RemindersPage() {
     mutationFn: (id: string) => reminderService.markDone(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['reminders'] })
-      toast.success('Đã hoàn thành nhắc nhở')
+      toast.success(t('doneSuccess'))
       setConfirmDoneTarget(null)
     },
-    onError: () => toast.error('Lỗi khi cập nhật nhắc nhở'),
+    onError: () => toast.error(t('doneError')),
   })
 
   const deleteMutation = useMutation({
     mutationFn: (id: string) => reminderService.deleteReminder(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['reminders'] })
-      toast.success('Đã xóa nhắc nhở')
+      toast.success(t('deleteSuccess'))
       setDeleteTarget(null)
     },
-    onError: () => toast.error('Không thể xóa nhắc nhở'),
+    onError: () => toast.error(t('deleteError')),
   })
 
   return (
@@ -144,7 +151,7 @@ export default function RemindersPage() {
         >
           <ArrowLeft className="size-5" />
         </Link>
-        <span className="font-semibold text-base">Nhắc nhở</span>
+        <span className="font-semibold text-base">{t('title')}</span>
       </header>
 
       <div className="flex-1 overflow-y-auto relative">
@@ -157,18 +164,20 @@ export default function RemindersPage() {
           {isLoading && (
             <div className="flex flex-col items-center justify-center py-20 gap-3">
               <Loader2 className="size-8 animate-spin text-pon-cyan" />
-              <p className="text-sm text-muted-foreground">Đang tải...</p>
+              <p className="text-sm text-muted-foreground">{t('loading')}</p>
             </div>
           )}
 
           {error && (
             <div className="flex flex-col items-center justify-center py-20 gap-3">
               <AlertCircle className="size-10 text-destructive/50" />
-              <p className="text-sm text-destructive">Không thể tải danh sách nhắc nhở</p>
+              <p className="text-sm text-destructive">{t('loadError')}</p>
             </div>
           )}
 
-          {reminders && reminders.length === 0 && <EmptyState />}
+          {reminders && reminders.length === 0 && (
+            <EmptyState empty={t('empty')} emptyHint={t('emptyHint')} />
+          )}
 
           {reminders && reminders.length > 0 && (
             <div className="space-y-2">
@@ -178,6 +187,8 @@ export default function RemindersPage() {
                   reminder={r}
                   onDone={() => setConfirmDoneTarget(r)}
                   onDelete={() => setDeleteTarget(r)}
+                  markDoneTitle={t('markDone')}
+                  deleteTitle={t('deleteReminder')}
                 />
               ))}
             </div>
@@ -189,9 +200,9 @@ export default function RemindersPage() {
       <Dialog open={!!confirmDoneTarget} onOpenChange={(open) => !open && setConfirmDoneTarget(null)}>
         <DialogContent className="sm:max-w-sm">
           <DialogHeader>
-            <DialogTitle>Hoàn thành nhắc nhở</DialogTitle>
+            <DialogTitle>{t('doneTitle')}</DialogTitle>
             <DialogDescription>
-              Đánh dấu &quot;{confirmDoneTarget?.text}&quot; là đã hoàn thành?
+              {t('doneMessage', { text: confirmDoneTarget?.text ?? '' })}
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
@@ -200,7 +211,7 @@ export default function RemindersPage() {
               onClick={() => setConfirmDoneTarget(null)}
               disabled={doneMutation.isPending}
             >
-              Hủy
+              {tc('cancel')}
             </Button>
             <Button
               className="bg-pon-cyan text-black hover:bg-pon-cyan/90"
@@ -208,7 +219,7 @@ export default function RemindersPage() {
               disabled={doneMutation.isPending}
             >
               {doneMutation.isPending && <Loader2 className="size-4 mr-2 animate-spin" />}
-              Xác nhận
+              {tc('confirm')}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -218,9 +229,9 @@ export default function RemindersPage() {
       <Dialog open={!!deleteTarget} onOpenChange={(open) => !open && setDeleteTarget(null)}>
         <DialogContent className="sm:max-w-sm">
           <DialogHeader>
-            <DialogTitle>Xóa nhắc nhở</DialogTitle>
+            <DialogTitle>{t('deleteTitle')}</DialogTitle>
             <DialogDescription>
-              Bạn có chắc muốn xóa nhắc nhở &quot;{deleteTarget?.text}&quot;?
+              {t('deleteMessage', { text: deleteTarget?.text ?? '' })}
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
@@ -229,7 +240,7 @@ export default function RemindersPage() {
               onClick={() => setDeleteTarget(null)}
               disabled={deleteMutation.isPending}
             >
-              Hủy
+              {tc('cancel')}
             </Button>
             <Button
               variant="destructive"
@@ -237,7 +248,7 @@ export default function RemindersPage() {
               disabled={deleteMutation.isPending}
             >
               {deleteMutation.isPending && <Loader2 className="size-4 mr-2 animate-spin" />}
-              Xóa
+              {tc('delete')}
             </Button>
           </DialogFooter>
         </DialogContent>

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -8,52 +8,60 @@ import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import Link from 'next/link'
 import { Eye, EyeOff, ArrowLeft } from 'lucide-react'
+import { useTranslations } from 'next-intl'
 import { authService } from '@/lib/api/auth'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 
-const requestOtpSchema = z.object({
-  email: z.string().email('Email không hợp lệ'),
-})
-
-const resetPasswordSchema = z.object({
-  otp: z.string().min(6, 'Mã OTP phải có 6 ký tự'),
-  password: z.string().min(6, 'Mật khẩu phải có ít nhất 6 ký tự'),
-})
-
-type RequestOtpData = z.infer<typeof requestOtpSchema>
-type ResetPasswordData = z.infer<typeof resetPasswordSchema>
+type RequestOtpData = { email: string }
+type ResetPasswordData = { otp: string; password: string }
 
 export default function ForgotPasswordPage() {
+  const t = useTranslations('auth.forgotPassword')
+  const tAuth = useTranslations('auth')
   const router = useRouter()
   const [step, setStep] = useState<'request' | 'reset'>('request')
   const [email, setEmail] = useState('')
   const [showPassword, setShowPassword] = useState(false)
 
+  const requestSchema = useMemo(
+    () => z.object({ email: z.string().email(tAuth('emailInvalid')) }),
+    [tAuth],
+  )
+
+  const resetSchema = useMemo(
+    () =>
+      z.object({
+        otp: z.string().min(6, t('otpMinLength')),
+        password: z.string().min(6, t('newPasswordMin')),
+      }),
+    [t],
+  )
+
   const {
     register: registerRequest,
     handleSubmit: handleSubmitRequest,
     formState: { errors: errorsRequest, isSubmitting: isSubmittingRequest },
-  } = useForm<RequestOtpData>({ resolver: zodResolver(requestOtpSchema) })
+  } = useForm<RequestOtpData>({ resolver: zodResolver(requestSchema) })
 
   const {
     register: registerReset,
     handleSubmit: handleSubmitReset,
     formState: { errors: errorsReset, isSubmitting: isSubmittingReset },
-  } = useForm<ResetPasswordData>({ resolver: zodResolver(resetPasswordSchema) })
+  } = useForm<ResetPasswordData>({ resolver: zodResolver(resetSchema) })
 
   const onRequestOtp = async (data: RequestOtpData) => {
     try {
       await authService.forgotPassword(data.email)
       setEmail(data.email)
       setStep('reset')
-      toast.success('Mã xác nhận đã được gửi đến email của bạn')
+      toast.success(t('codeSent'))
     } catch (err: unknown) {
       const msg =
         (err as { response?: { data?: { message?: string } } })?.response?.data?.message ??
-        'Không thể yêu cầu đặt lại mật khẩu'
+        t('sendError')
       toast.error(msg)
     }
   }
@@ -61,12 +69,12 @@ export default function ForgotPasswordPage() {
   const onResetPassword = async (data: ResetPasswordData) => {
     try {
       await authService.resetPassword(email, data.otp, data.password)
-      toast.success('Mật khẩu đã được đặt lại thành công. Vui lòng đăng nhập.')
+      toast.success(t('resetSuccess'))
       router.push('/login')
     } catch (err: unknown) {
       const msg =
         (err as { response?: { data?: { message?: string } } })?.response?.data?.message ??
-        'Mã OTP không hợp lệ hoặc đã hết hạn'
+        t('resetError')
       toast.error(msg)
     }
   }
@@ -75,26 +83,27 @@ export default function ForgotPasswordPage() {
     <Card className="w-full max-w-sm shadow-none border-border">
       <CardHeader>
         <div className="mb-2">
-          <Link href="/login" className="text-sm text-muted-foreground hover:text-foreground inline-flex items-center">
-            <ArrowLeft className="mr-1 size-4" /> Quay lại đăng nhập
+          <Link
+            href="/login"
+            className="text-sm text-muted-foreground hover:text-foreground inline-flex items-center"
+          >
+            <ArrowLeft className="mr-1 size-4" /> {t('backToLogin')}
           </Link>
         </div>
-        <CardTitle className="text-2xl">Quên mật khẩu</CardTitle>
+        <CardTitle className="text-2xl">{t('title')}</CardTitle>
         <CardDescription>
-          {step === 'request'
-            ? 'Nhập email để nhận mã xác nhận đặt lại mật khẩu'
-            : 'Nhập mã xác nhận đã được gửi vào email của bạn'}
+          {step === 'request' ? t('stepEmail') : t('stepOtp')}
         </CardDescription>
       </CardHeader>
       <CardContent>
         {step === 'request' ? (
           <form onSubmit={handleSubmitRequest(onRequestOtp)} className="space-y-4">
             <div className="space-y-1">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email">{tAuth('emailLabel')}</Label>
               <Input
                 id="email"
                 type="email"
-                placeholder="ban@example.com"
+                placeholder={tAuth('emailPlaceholder')}
                 autoComplete="email"
                 {...registerRequest('email')}
               />
@@ -108,17 +117,17 @@ export default function ForgotPasswordPage() {
               className="w-full font-bold tracking-wide"
               disabled={isSubmittingRequest}
             >
-              {isSubmittingRequest ? 'Đang gửi mã...' : 'Gửi mã xác nhận'}
+              {isSubmittingRequest ? t('sendingCode') : t('sendCode')}
             </Button>
           </form>
         ) : (
           <form onSubmit={handleSubmitReset(onResetPassword)} className="space-y-4">
             <div className="space-y-1">
-              <Label htmlFor="otp">Mã xác nhận (OTP)</Label>
+              <Label htmlFor="otp">{t('otpLabel')}</Label>
               <Input
                 id="otp"
                 type="text"
-                placeholder="Nhập mã 6 số"
+                placeholder={t('otpPlaceholder')}
                 maxLength={6}
                 autoComplete="one-time-code"
                 {...registerReset('otp')}
@@ -129,7 +138,7 @@ export default function ForgotPasswordPage() {
             </div>
 
             <div className="space-y-1">
-              <Label htmlFor="password">Mật khẩu mới</Label>
+              <Label htmlFor="password">{t('newPasswordLabel')}</Label>
               <div className="relative">
                 <Input
                   id="password"
@@ -157,7 +166,7 @@ export default function ForgotPasswordPage() {
               className="w-full font-bold tracking-wide"
               disabled={isSubmittingReset}
             >
-              {isSubmittingReset ? 'Đang cập nhật...' : 'Cập nhật mật khẩu'}
+              {isSubmittingReset ? t('updating') : t('updatePassword')}
             </Button>
           </form>
         )}

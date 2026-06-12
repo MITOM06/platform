@@ -4,12 +4,14 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { useParams } from 'next/navigation'
 import { useQuery } from '@tanstack/react-query'
+import { useTranslations } from 'next-intl'
 import { ArrowLeft, Loader2, Image as ImageIcon, FileText, Link as LinkIcon, Download } from 'lucide-react'
 import { chatService } from '@/lib/api/chat'
 import { absoluteMediaUrl, downloadMediaUrl, parseImageUrls, parseFileMeta, formatBytes } from '@/lib/media'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 
 export default function SharedMediaPage() {
+  const t = useTranslations('sharedMedia')
   const params = useParams()
   const conversationId = params?.conversationId as string
   const [tab, setTab] = useState<'media' | 'file' | 'link'>('media')
@@ -28,13 +30,16 @@ export default function SharedMediaPage() {
     return []
   })
 
+  const emptyLabel =
+    tab === 'media' ? t('emptyMedia') : tab === 'file' ? t('emptyFiles') : t('emptyLinks')
+
   return (
     <div className="flex flex-col h-full bg-background">
       <header className="h-14 flex items-center px-4 border-b shrink-0 gap-3">
         <Link href={`/conversations/${conversationId}`} className="text-muted-foreground hover:text-foreground">
           <ArrowLeft className="size-5" />
         </Link>
-        <span className="font-semibold text-base">File & Phương tiện</span>
+        <span className="font-semibold text-base">{t('title')}</span>
       </header>
 
       <Tabs
@@ -46,15 +51,15 @@ export default function SharedMediaPage() {
           <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="media" className="text-xs">
               <ImageIcon className="size-3.5 mr-2" />
-              Media
+              {t('tabMedia')}
             </TabsTrigger>
             <TabsTrigger value="file" className="text-xs">
               <FileText className="size-3.5 mr-2" />
-              Tài liệu
+              {t('tabFiles')}
             </TabsTrigger>
             <TabsTrigger value="link" className="text-xs">
               <LinkIcon className="size-3.5 mr-2" />
-              Links
+              {t('tabLinks')}
             </TabsTrigger>
           </TabsList>
         </div>
@@ -72,7 +77,7 @@ export default function SharedMediaPage() {
                 {tab === 'link' && <LinkIcon className="size-8 text-muted-foreground/50" />}
               </div>
               <p className="text-sm text-muted-foreground">
-                Chưa có {tab === 'media' ? 'hình ảnh/video' : tab === 'file' ? 'tài liệu' : 'liên kết'} nào được chia sẻ
+                {emptyLabel}
               </p>
             </div>
           ) : (

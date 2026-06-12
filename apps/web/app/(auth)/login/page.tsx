@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -8,6 +8,7 @@ import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import Link from 'next/link'
 import { Eye, EyeOff } from 'lucide-react'
+import { useTranslations } from 'next-intl'
 import { authService } from '@/lib/api/auth'
 import { useAuthStore } from '@/lib/store/auth.store'
 import { Button } from '@/components/ui/button'
@@ -15,17 +16,22 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 
-const schema = z.object({
-  email: z.string().email('Email không hợp lệ'),
-  password: z.string().min(1, 'Vui lòng nhập mật khẩu'),
-})
-
-type FormData = z.infer<typeof schema>
+type FormData = { email: string; password: string }
 
 export default function LoginPage() {
+  const t = useTranslations('auth')
   const router = useRouter()
   const setAuth = useAuthStore((s) => s.setAuth)
   const [showPassword, setShowPassword] = useState(false)
+
+  const schema = useMemo(
+    () =>
+      z.object({
+        email: z.string().email(t('emailInvalid')),
+        password: z.string().min(1, t('login.passwordRequired')),
+      }),
+    [t],
+  )
 
   const {
     register,
@@ -49,7 +55,7 @@ export default function LoginPage() {
     } catch (err: unknown) {
       const msg =
         (err as { response?: { data?: { message?: string } } })?.response?.data?.message ??
-        'Đăng nhập thất bại'
+        t('login.error')
       toast.error(msg)
     }
   }
@@ -57,17 +63,17 @@ export default function LoginPage() {
   return (
     <Card className="w-full max-w-sm shadow-none border-border">
       <CardHeader>
-        <CardTitle className="text-2xl">Đăng nhập</CardTitle>
-        <CardDescription>Nhập email và mật khẩu để tiếp tục</CardDescription>
+        <CardTitle className="text-2xl">{t('login.title')}</CardTitle>
+        <CardDescription>{t('login.subtitle')}</CardDescription>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <div className="space-y-1">
-            <Label htmlFor="email">Email</Label>
+            <Label htmlFor="email">{t('emailLabel')}</Label>
             <Input
               id="email"
               type="email"
-              placeholder="ban@example.com"
+              placeholder={t('emailPlaceholder')}
               autoComplete="email"
               {...register('email')}
             />
@@ -77,7 +83,7 @@ export default function LoginPage() {
           </div>
 
           <div className="space-y-1">
-            <Label htmlFor="password">Mật khẩu</Label>
+            <Label htmlFor="password">{t('passwordLabel')}</Label>
             <div className="relative">
               <Input
                 id="password"
@@ -99,26 +105,25 @@ export default function LoginPage() {
               <p className="text-sm text-destructive">{errors.password.message}</p>
             )}
           </div>
-          
+
           <div className="flex justify-end">
-            <Link href="/forgot-password" className="text-sm font-medium text-primary hover:underline underline-offset-4">
-              Quên mật khẩu?
+            <Link
+              href="/forgot-password"
+              className="text-sm font-medium text-primary hover:underline underline-offset-4"
+            >
+              {t('login.forgotPassword')}
             </Link>
           </div>
 
-          <Button
-            type="submit"
-            className="w-full font-bold tracking-wide"
-            disabled={isSubmitting}
-          >
-            {isSubmitting ? 'Đang đăng nhập...' : 'Đăng nhập'}
+          <Button type="submit" className="w-full font-bold tracking-wide" disabled={isSubmitting}>
+            {isSubmitting ? t('login.submitting') : t('login.submit')}
           </Button>
         </form>
 
         <p className="mt-4 text-center text-sm text-muted-foreground">
-          Chưa có tài khoản?{' '}
+          {t('login.noAccount')}{' '}
           <Link href="/register" className="underline underline-offset-4 hover:text-primary">
-            Đăng ký
+            {t('login.registerLink')}
           </Link>
         </p>
       </CardContent>
