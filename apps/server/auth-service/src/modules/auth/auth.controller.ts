@@ -1,4 +1,15 @@
-import { Controller, Get, Post, Req, Body, Res, UseGuards, Query, HttpCode, HttpStatus } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Req,
+  Body,
+  Res,
+  UseGuards,
+  Query,
+  HttpCode,
+  HttpStatus,
+} from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { AuthService } from './auth.service';
 import type { Response } from 'express';
@@ -85,7 +96,9 @@ export class AuthController {
 
   // ===================== AUTH ENDPOINTS =====================
   @Post('exchange')
-  async exchange(@Body() body: { code: string; deviceId?: string; platform?: string }) {
+  async exchange(
+    @Body() body: { code: string; deviceId?: string; platform?: string },
+  ) {
     return this.auth.exchangeLoginCode(body.code, body.deviceId, body.platform);
   }
 

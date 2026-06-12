@@ -50,6 +50,20 @@ public class FcmService {
         List<String> tokens = userDoc.getList("fcmTokens", String.class);
         if (tokens == null || tokens.isEmpty()) return;
 
+        // Check if the conversation is muted by the target user
+        if (conversationId != null) {
+            Query convQuery = new Query(Criteria.where("_id").is(new org.bson.types.ObjectId(conversationId)));
+            convQuery.fields().include("mutedUsers");
+            Document convDoc = mongoTemplate.findOne(convQuery, Document.class, "conversations");
+            if (convDoc != null) {
+                List<String> mutedUsers = convDoc.getList("mutedUsers", String.class);
+                if (mutedUsers != null && mutedUsers.contains(targetUserId)) {
+                    // Conversation is muted by this user, do not send push notification
+                    return;
+                }
+            }
+        }
+
         // Fetch sender's name
         String finalSenderName = "New Message";
         try {

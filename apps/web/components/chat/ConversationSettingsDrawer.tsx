@@ -31,6 +31,34 @@ interface Props {
   onOpenGroupInfo?: () => void
 }
 
+interface RowButtonProps {
+  onClick?: () => void
+  icon: React.ReactNode
+  label: string
+  danger?: boolean
+  disabled?: boolean
+  saving?: boolean
+}
+
+function RowButton({ onClick, icon, label, danger = false, disabled = false, saving = false }: RowButtonProps) {
+  return (
+    <button
+      onClick={onClick}
+      disabled={saving || disabled}
+      className={`flex items-center gap-3 text-sm rounded-lg px-2 py-2.5 transition-colors w-full text-left ${
+        danger
+          ? 'text-destructive hover:bg-destructive/10'
+          : disabled
+          ? 'text-muted-foreground cursor-not-allowed'
+          : 'hover:bg-muted/50'
+      }`}
+    >
+      {icon}
+      {label}
+    </button>
+  )
+}
+
 const WALLPAPER_PRESETS = [
   { id: 'default', label: 'Default', bg: 'bg-background border border-muted' },
   { id: 'sunset', label: 'Sunset', bg: 'bg-gradient-to-br from-orange-400 to-purple-600' },
@@ -180,35 +208,6 @@ export function ConversationSettingsDrawer({
   )
   const sliderValue = currentAutoDeleteIdx >= 0 ? currentAutoDeleteIdx : 0
 
-  const RowButton = ({
-    onClick,
-    icon,
-    label,
-    danger = false,
-    disabled = false,
-  }: {
-    onClick?: () => void
-    icon: React.ReactNode
-    label: string
-    danger?: boolean
-    disabled?: boolean
-  }) => (
-    <button
-      onClick={onClick}
-      disabled={saving || disabled}
-      className={`flex items-center gap-3 text-sm rounded-lg px-2 py-2.5 transition-colors w-full text-left ${
-        danger
-          ? 'text-destructive hover:bg-destructive/10'
-          : disabled
-          ? 'text-muted-foreground cursor-not-allowed'
-          : 'hover:bg-muted/50'
-      }`}
-    >
-      {icon}
-      {label}
-    </button>
-  )
-
   return (
     <>
     <Sheet open={open} onOpenChange={(o) => !o && onClose()}>
@@ -221,12 +220,12 @@ export function ConversationSettingsDrawer({
           <Separator className="mb-2" />
 
           {/* Mark read / unread */}
-          <RowButton
+          <RowButton saving={saving}
             onClick={handleMarkRead}
             icon={<CheckCheck className="size-4" />}
             label={t('markRead')}
           />
-          <RowButton
+          <RowButton saving={saving}
             onClick={handleMarkUnread}
             icon={<BookMarked className="size-4" />}
             label={t('markUnread')}
@@ -235,7 +234,7 @@ export function ConversationSettingsDrawer({
           <Separator className="my-1" />
 
           {/* Mute / unmute */}
-          <RowButton
+          <RowButton saving={saving}
             onClick={handleMuteToggle}
             icon={isMuted ? <Bell className="size-4" /> : <BellOff className="size-4" />}
             label={isMuted ? t('unmuteNotifications') : t('muteNotifications')}
@@ -243,14 +242,14 @@ export function ConversationSettingsDrawer({
 
           {/* View profile / group info */}
           {isDirect && onOpenProfile && (
-            <RowButton
+            <RowButton saving={saving}
               onClick={() => { onOpenProfile(); onClose() }}
               icon={<User className="size-4" />}
               label={t('viewProfile')}
             />
           )}
           {!isDirect && onOpenGroupInfo && (
-            <RowButton
+            <RowButton saving={saving}
               onClick={() => { onOpenGroupInfo(); onClose() }}
               icon={<Users className="size-4" />}
               label={t('groupInfo')}
@@ -261,17 +260,17 @@ export function ConversationSettingsDrawer({
           {isDirect && (
             <>
               <span title={t('callComingSoon')}>
-                <RowButton icon={<Phone className="size-4" />} label={t('voiceCall')} disabled />
+                <RowButton saving={saving} icon={<Phone className="size-4" />} label={t('voiceCall')} disabled />
               </span>
               <span title={t('callComingSoon')}>
-                <RowButton icon={<Video className="size-4" />} label={t('videoCall')} disabled />
+                <RowButton saving={saving} icon={<Video className="size-4" />} label={t('videoCall')} disabled />
               </span>
             </>
           )}
 
           {/* Block / Unblock (1:1 only) */}
           {isDirect && (
-            <RowButton
+            <RowButton saving={saving}
               onClick={handleBlockToggle}
               icon={isBlocked ? <Shield className="size-4" /> : <ShieldOff className="size-4" />}
               label={isBlocked ? t('unblockUser') : t('blockUser')}
@@ -282,7 +281,7 @@ export function ConversationSettingsDrawer({
           <Separator className="my-1" />
 
           {/* Archive */}
-          <RowButton
+          <RowButton saving={saving}
             onClick={handleArchiveToggle}
             icon={isArchived ? <ArchiveX className="size-4" /> : <Archive className="size-4" />}
             label={isArchived ? t('unarchive') : t('archive')}
@@ -342,7 +341,7 @@ export function ConversationSettingsDrawer({
           <Separator className="my-1" />
 
           {/* Clear history */}
-          <RowButton
+          <RowButton saving={saving}
             onClick={() => setConfirmClearOpen(true)}
             icon={<Eraser className="size-4" />}
             label={t('clearHistory')}
@@ -351,7 +350,7 @@ export function ConversationSettingsDrawer({
           <Separator className="my-1 border-border/60 border-[2px]" />
 
           {/* Delete conversation */}
-          <RowButton
+          <RowButton saving={saving}
             onClick={handleDelete}
             icon={<Trash2 className="size-4" />}
             label={t('deleteConversation')}

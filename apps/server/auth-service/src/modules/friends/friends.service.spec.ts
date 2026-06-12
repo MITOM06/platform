@@ -33,18 +33,24 @@ describe('FriendsService', () => {
   });
 
   it('rejects a self friend request', async () => {
-    await expect(service.sendRequest('u1', 'u1')).rejects.toBeInstanceOf(ConflictException);
+    await expect(service.sendRequest('u1', 'u1')).rejects.toBeInstanceOf(
+      ConflictException,
+    );
   });
 
   it('rejects when a friendship already exists', async () => {
     friendshipModel.findOne.mockReturnValue({
       exec: jest.fn().mockResolvedValue({ status: 'pending' }),
     });
-    await expect(service.sendRequest('u1', 'u2')).rejects.toBeInstanceOf(ConflictException);
+    await expect(service.sendRequest('u1', 'u2')).rejects.toBeInstanceOf(
+      ConflictException,
+    );
   });
 
   it('creates a pending request when none exists', async () => {
-    friendshipModel.findOne.mockReturnValue({ exec: jest.fn().mockResolvedValue(null) });
+    friendshipModel.findOne.mockReturnValue({
+      exec: jest.fn().mockResolvedValue(null),
+    });
     friendshipModel.create.mockResolvedValue({ id: 'f1', status: 'pending' });
 
     const res = await service.sendRequest('u1', 'u2');
@@ -58,7 +64,9 @@ describe('FriendsService', () => {
   });
 
   it('counts accepted friendships', async () => {
-    friendshipModel.countDocuments.mockReturnValue({ exec: jest.fn().mockResolvedValue(3) });
+    friendshipModel.countDocuments.mockReturnValue({
+      exec: jest.fn().mockResolvedValue(3),
+    });
     await expect(service.countAccepted('u1')).resolves.toBe(3);
   });
 

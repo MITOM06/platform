@@ -17,10 +17,12 @@ Sentry.init({
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, { logger: new JsonLogger() });
 
-  app.use(helmet({
-    crossOriginEmbedderPolicy: false,
-    contentSecurityPolicy: false,
-  }));
+  app.use(
+    helmet({
+      crossOriginEmbedderPolicy: false,
+      contentSecurityPolicy: false,
+    }),
+  );
   app.use(cookieParser());
   app.use(
     session({
@@ -48,11 +50,13 @@ async function bootstrap() {
     ],
   });
 
-  app.useGlobalPipes(new ValidationPipe({
-    whitelist: true,
-    forbidNonWhitelisted: true,
-    transform: true,
-  }));
+  app.useGlobalPipes(
+    new ValidationPipe({
+      whitelist: true,
+      forbidNonWhitelisted: true,
+      transform: true,
+    }),
+  );
 
   const port = process.env.PORT || 3001;
   await app.listen(port, '0.0.0.0');

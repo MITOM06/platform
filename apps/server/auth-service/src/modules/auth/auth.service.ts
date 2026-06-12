@@ -1,4 +1,10 @@
-import { ConflictException, Inject, Injectable, UnauthorizedException, NotFoundException } from '@nestjs/common';
+import {
+  ConflictException,
+  Inject,
+  Injectable,
+  UnauthorizedException,
+  NotFoundException,
+} from '@nestjs/common';
 import * as dns from 'node:dns';
 import { JwtService, JwtSignOptions } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
@@ -25,20 +31,34 @@ export class AuthService {
   ) {}
 
   // ===================== SOCIAL LOGIN =====================
-  async handleSocialLogin(user: any, res: Response, provider: string, platform: string = 'mobile') {
+  async handleSocialLogin(
+    user: any,
+    res: Response,
+    provider: string,
+    platform: string = 'mobile',
+  ) {
     const userId = await this.ensureUserIdFromSocial(user, provider);
     const code = await this.createLoginCode(userId);
 
-    const mobileRedirect = this.configService.get<string>('MOBILE_DEEPLINK_URL') || 'platform://auth';
-    const webRedirect = this.configService.get<string>('WEB_REDIRECT_URL') || 'http://localhost:8081';
+    const mobileRedirect =
+      this.configService.get<string>('MOBILE_DEEPLINK_URL') ||
+      'platform://auth';
+    const webRedirect =
+      this.configService.get<string>('WEB_REDIRECT_URL') ||
+      'http://localhost:8081';
     const redirectUrl = platform === 'web' ? webRedirect : mobileRedirect;
 
     return res.redirect(`${redirectUrl}?code=${code}`);
   }
 
-  async ensureUserIdFromSocial(profile: any, provider: string): Promise<string> {
+  async ensureUserIdFromSocial(
+    profile: any,
+    provider: string,
+  ): Promise<string> {
     if (!profile?.email) {
-      throw new UnauthorizedException('Không thể lấy email từ tài khoản mạng xã hội.');
+      throw new UnauthorizedException(
+        'Không thể lấy email từ tài khoản mạng xã hội.',
+      );
     }
 
     // 1. Tìm theo socialId trước
@@ -55,13 +75,18 @@ export class AuthService {
       user = await this.usersService.create({
         displayName: profile.displayName || profile.name || fallbackName,
         email: profile.email,
-        avatarUrl: profile.avatar || profile.picture || profile.photos?.[0]?.value || '',
+        avatarUrl:
+          profile.avatar || profile.picture || profile.photos?.[0]?.value || '',
         isVerified: true,
         socialLinks: { [provider]: profile.id },
       });
     } else if (!user.socialLinks?.[provider]) {
       // 4. User đã có nhưng chưa link provider này
-      await this.usersService.updateSocialId(user._id.toString(), provider, profile.id);
+      await this.usersService.updateSocialId(
+        user._id.toString(),
+        provider,
+        profile.id,
+      );
     }
 
     return user._id.toString();
@@ -71,39 +96,45 @@ export class AuthService {
   async checkBruteForce(email: string) {
     const lockoutKey = `lockout:${email}`;
     const isLocked = await this.redis.get(lockoutKey);
-    
+
     if (isLocked) {
       const ttl = await this.redis.ttl(lockoutKey);
       const minutes = Math.ceil(ttl / 60);
       throw new UnauthorizedException(
-        `Tài khoản bị tạm khóa ${minutes} phút do nhập sai quá nhiều lần.`
+        `Tài khoản bị tạm khóa ${minutes} phút do nhập sai quá nhiều lần.`,
       );
     }
   }
 
   async handleFailedLogin(email: string): Promise<never> {
-    const maxAttempts = Number(this.configService.get('MAX_FAILED_ATTEMPTS', 5));
-    const attemptsTTL = Number(this.configService.get('FAILED_LOGIN_ATTEMPTS_TTL', 600));
-    const lockoutDuration = Number(this.configService.get('LOCKOUT_DURATION', 300));
+    const maxAttempts = Number(
+      this.configService.get('MAX_FAILED_ATTEMPTS', 5),
+    );
+    const attemptsTTL = Number(
+      this.configService.get('FAILED_LOGIN_ATTEMPTS_TTL', 600),
+    );
+    const lockoutDuration = Number(
+      this.configService.get('LOCKOUT_DURATION', 300),
+    );
 
     const attemptKey = `failed_attempts:${email}`;
     const attempts = await this.redis.incr(attemptKey);
-    
+
     if (attempts === 1) {
       await this.redis.expire(attemptKey, attemptsTTL);
     }
-    
+
     if (attempts >= maxAttempts) {
       await this.redis.set(`lockout:${email}`, '1', 'EX', lockoutDuration);
       await this.redis.del(attemptKey);
       throw new UnauthorizedException(
-        `Bạn đã nhập sai ${maxAttempts} lần. Vui lòng thử lại sau ${Math.ceil(lockoutDuration / 60)} phút.`
+        `Bạn đã nhập sai ${maxAttempts} lần. Vui lòng thử lại sau ${Math.ceil(lockoutDuration / 60)} phút.`,
       );
     }
 
     const remaining = maxAttempts - attempts;
     throw new UnauthorizedException(
-      `Email hoặc mật khẩu không chính xác. Còn ${remaining} lần thử.`
+      `Email hoặc mật khẩu không chính xác. Còn ${remaining} lần thử.`,
     );
   }
 
@@ -175,13 +206,15 @@ export class AuthService {
     // Rate limit OTP
     const attemptKey = `otp_attempts:${email}`;
     const attempts = await this.redis.incr(attemptKey);
-    
+
     if (attempts === 1) {
       await this.redis.expire(attemptKey, attemptsTTL);
     }
 
     if (attempts > maxAttempts) {
-      throw new BadRequestException('Nhập sai quá nhiều lần. Vui lòng yêu cầu gửi lại OTP.');
+      throw new BadRequestException(
+        'Nhập sai quá nhiều lần. Vui lòng yêu cầu gửi lại OTP.',
+      );
     }
 
     const user = await this.usersService.findByEmail(email);
@@ -196,7 +229,9 @@ export class AuthService {
 
     if (user.otpCode !== otp) {
       const remaining = maxAttempts - attempts;
-      throw new BadRequestException(`Mã xác thực không đúng. Còn ${remaining} lần thử`);
+      throw new BadRequestException(
+        `Mã xác thực không đúng. Còn ${remaining} lần thử`,
+      );
     }
 
     // ✅ OTP đúng → reset counter + mark verified
@@ -217,13 +252,13 @@ export class AuthService {
 
     // ✅ Update password và xóa OTP
     await this.usersService.updatePassword(user._id.toString(), hashedPass);
-    
+
     // ✅ IMPROVEMENT: Revoke tất cả sessions cũ khi đổi mật khẩu
     await this.session.revokeAllSessions(user._id.toString());
 
-    return { 
-      success: true, 
-      message: 'Mật khẩu đã được cập nhật thành công. Vui lòng đăng nhập lại.' 
+    return {
+      success: true,
+      message: 'Mật khẩu đã được cập nhật thành công. Vui lòng đăng nhập lại.',
     };
   }
 
@@ -231,7 +266,8 @@ export class AuthService {
   signAccessToken(payload: { sub: string; sid: string }) {
     const secret = this.configService.get<string>('JWT_ACCESS_SECRET');
     // Fall back to 15m so a missing JWT_ACCESS_EXPIRES env never breaks token signing
-    const expiresIn = this.configService.get<string>('JWT_ACCESS_EXPIRES') || '15m';
+    const expiresIn =
+      this.configService.get<string>('JWT_ACCESS_EXPIRES') || '15m';
     const options: JwtSignOptions = { secret, expiresIn: expiresIn as any };
     return this.jwt.sign(payload, options);
   }
@@ -247,7 +283,9 @@ export class AuthService {
     const userId = await this.redis.get(key);
 
     if (!userId) {
-      throw new UnauthorizedException('Mã xác nhận không hợp lệ hoặc đã hết hạn');
+      throw new UnauthorizedException(
+        'Mã xác nhận không hợp lệ hoặc đã hết hạn',
+      );
     }
 
     await this.redis.del(key);
@@ -259,27 +297,32 @@ export class AuthService {
     });
 
     const accessToken = this.signAccessToken({ sub: userId, sid });
-    
+
     // ✅ IMPROVEMENT: Trả về thông tin user
     const user = await this.usersService.findById(userId);
-    
-    return { 
-      userId, 
-      sid, 
-      accessToken, 
+
+    return {
+      userId,
+      sid,
+      accessToken,
       refreshToken,
-      user: user ? {
-        id: user._id,
-        email: user.email,
-        displayName: user.displayName,
-        avatarUrl: user.avatarUrl,
-        isVerified: user.isVerified,
-      } : null,
+      user: user
+        ? {
+            id: user._id,
+            email: user.email,
+            displayName: user.displayName,
+            avatarUrl: user.avatarUrl,
+            isVerified: user.isVerified,
+          }
+        : null,
     };
   }
 
   async refresh(sid: string, refreshToken: string) {
-    const { userId, newRefreshToken } = await this.session.rotateRefreshToken({ sid, refreshToken });
+    const { userId, newRefreshToken } = await this.session.rotateRefreshToken({
+      sid,
+      refreshToken,
+    });
     const accessToken = this.signAccessToken({ sub: userId, sid });
     return { accessToken, refreshToken: newRefreshToken };
   }
@@ -308,7 +351,8 @@ export class AuthService {
       await this.usersService.updateOtp(existingUser._id, otp, expires);
       await this.mailService.sendOtpEmail(dto.email, otp);
       return {
-        message: 'Tài khoản chưa xác thực. Mã OTP mới đã gửi tới email của bạn.',
+        message:
+          'Tài khoản chưa xác thực. Mã OTP mới đã gửi tới email của bạn.',
         userId: existingUser._id,
       };
     }
@@ -336,12 +380,16 @@ export class AuthService {
 
   async resendOtp(email: string) {
     const cooldownKey = `otp_resend_cooldown:${email}`;
-    const cooldownTTL = Number(this.configService.get('OTP_RESEND_COOLDOWN', 60));
+    const cooldownTTL = Number(
+      this.configService.get('OTP_RESEND_COOLDOWN', 60),
+    );
 
     const existing = await this.redis.get(cooldownKey);
     if (existing) {
       const ttl = await this.redis.ttl(cooldownKey);
-      throw new BadRequestException(`Vui lòng đợi ${ttl} giây trước khi gửi lại.`);
+      throw new BadRequestException(
+        `Vui lòng đợi ${ttl} giây trước khi gửi lại.`,
+      );
     }
 
     const user = await this.usersService.findByEmail(email);

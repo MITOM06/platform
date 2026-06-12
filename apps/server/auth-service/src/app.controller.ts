@@ -1,7 +1,7 @@
 import { Controller, Get } from '@nestjs/common';
 import { AppService } from './app.service';
 
-@Controller('health') 
+@Controller('health')
 export class AppController {
   getHealth(): any {
     throw new Error('Method not implemented.');

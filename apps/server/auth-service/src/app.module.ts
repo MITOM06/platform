@@ -13,7 +13,7 @@ import { HealthModule } from './health/health.module';
   imports: [
     ConfigModule.forRoot({ isGlobal: true, envFilePath: '.env' }),
     ThrottlerModule.forRoot([
-      { name: 'short', ttl: 1000, limit: 5 },    // 5 req/s burst protection
+      { name: 'short', ttl: 1000, limit: 5 }, // 5 req/s burst protection
       { name: 'medium', ttl: 60000, limit: 100 }, // 100 req/min per IP
     ]),
     DatabaseMongoModule,
@@ -24,8 +24,6 @@ import { HealthModule } from './health/health.module';
     FriendsModule,
     AuthModule,
   ],
-  providers: [
-    { provide: APP_GUARD, useClass: ThrottlerGuard },
-  ],
+  providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],
 })
 export class AppModule {}

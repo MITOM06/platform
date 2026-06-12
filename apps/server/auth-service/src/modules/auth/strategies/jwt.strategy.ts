@@ -24,7 +24,7 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
   // ✅ FIX: Validate JWT + check session có bị revoke không
   async validate(req: any, payload: any) {
     // payload = { sub: userId, sid: sessionId, iat, exp }
-    
+
     if (!payload?.sub || !payload?.sid) {
       throw new UnauthorizedException('Token không hợp lệ');
     }
@@ -34,8 +34,14 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
     const sessionData = await this.redis.hgetall(sessionKey);
 
     // ✅ FIX: Kiểm tra sessionData có tồn tại không
-    if (!sessionData || Object.keys(sessionData).length === 0 || !sessionData.userId) {
-      throw new UnauthorizedException('Phiên đăng nhập không tồn tại hoặc đã hết hạn');
+    if (
+      !sessionData ||
+      Object.keys(sessionData).length === 0 ||
+      !sessionData.userId
+    ) {
+      throw new UnauthorizedException(
+        'Phiên đăng nhập không tồn tại hoặc đã hết hạn',
+      );
     }
 
     if (sessionData.revoked === '1') {

@@ -1,4 +1,14 @@
-import { Controller, Get, Param, Query, Req, UseGuards, Patch, Body, Post } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Param,
+  Query,
+  Req,
+  UseGuards,
+  Patch,
+  Body,
+  Post,
+} from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { UsersService } from './users.service';
 import { FriendsService } from '../friends/friends.service';
@@ -19,7 +29,17 @@ export class UsersController {
   @Patch('me')
   updateMe(
     @Req() req: any,
-    @Body() body: { displayName?: string; avatarUrl?: string; bio?: string; coverPhoto?: string; dateOfBirth?: string; phoneNumber?: string; gender?: string; hideInfo?: boolean },
+    @Body()
+    body: {
+      displayName?: string;
+      avatarUrl?: string;
+      bio?: string;
+      coverPhoto?: string;
+      dateOfBirth?: string;
+      phoneNumber?: string;
+      gender?: string;
+      hideInfo?: boolean;
+    },
   ) {
     return this.usersService.updateProfile(req.user.sub, body);
   }
@@ -29,7 +49,11 @@ export class UsersController {
     @Req() req: any,
     @Body() body: { currentPassword?: string; newPassword?: string },
   ) {
-    return this.usersService.changePassword(req.user.sub, body.currentPassword, body.newPassword);
+    return this.usersService.changePassword(
+      req.user.sub,
+      body.currentPassword,
+      body.newPassword,
+    );
   }
 
   @Post('device-tokens')
