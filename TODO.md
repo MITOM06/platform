@@ -223,6 +223,7 @@ Mirror: `apps/client/lib/features/chat/ui/widgets/{image_content,file_content,vo
 - [x] **Task W-11.5: Active Friends Row** `S` — horizontal list above conversations. **DONE — `ActiveFriendsRow.tsx`.**
 - [x] **Task W-11.6: Chat Wallpaper full parity** `S` — support custom HTTP image URLs in `ConversationPage`. **DONE — handled absolute URLs with background cover.**
 - [x] **Task W-11.7: Quick Reaction & Stickers** `M` — add quick reaction to `MessageInput` and sticker tab to `EmojiStickerPanel`. **DONE — 👍 quick-send button when input is empty; emoji popover now has Emoji/Nhãn dán (sticker) tabs; stickers send as `type:'sticker'`.**
+- [x] **Task W-11.8: Sync Conversation Settings UI with Flutter** `M` — **DONE — Refactored `ConversationSettingsDrawer.tsx` to use Accordion layout, synced with `conversation_info_sidebar.dart` (Header + Actions + Accordions). Added missing translation keys to all `messages/*.json` files.**
 
 ### SPRINT F-1 — Flutter Runtime Debug `IN PROGRESS`
 > `flutter analyze` is clean → errors are runtime. Needs a repro (which button throws).

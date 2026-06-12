@@ -3,14 +3,16 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
-import { useQueryClient } from '@tanstack/react-query'
+import { useQueryClient, useQuery } from '@tanstack/react-query'
 import { useTranslations } from 'next-intl'
 import {
-  BellOff, Bell, Archive, ArchiveX, Trash2, Eraser, Timer, ImageIcon,
-  CheckCheck, BookMarked, User, Users, Phone, Video, ShieldOff, Shield,
+  BellOff, Bell, Archive, ArchiveX, Trash2, Eraser, Timer,
+  CheckCheck, BookMarked, User, Users, ShieldOff, Shield,
+  Search, Lock, Info, Palette, SmilePlus, Image as ImageIcon2, FileText, Link as LinkIcon, LogOut,
+  Cake, PenLine
 } from 'lucide-react'
 import {
-  Sheet, SheetContent, SheetHeader, SheetTitle,
+  Sheet, SheetContent,
 } from '@/components/ui/sheet'
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle,
@@ -18,8 +20,10 @@ import {
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Slider } from '@/components/ui/slider'
-import { Separator } from '@/components/ui/separator'
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion'
 import { chatService } from '@/lib/api/chat'
+import { authService } from '@/lib/api/auth'
 import type { Conversation } from '@/lib/api/types'
 
 interface Props {
@@ -31,34 +35,6 @@ interface Props {
   onOpenGroupInfo?: () => void
 }
 
-interface RowButtonProps {
-  onClick?: () => void
-  icon: React.ReactNode
-  label: string
-  danger?: boolean
-  disabled?: boolean
-  saving?: boolean
-}
-
-function RowButton({ onClick, icon, label, danger = false, disabled = false, saving = false }: RowButtonProps) {
-  return (
-    <button
-      onClick={onClick}
-      disabled={saving || disabled}
-      className={`flex items-center gap-3 text-sm rounded-lg px-2 py-2.5 transition-colors w-full text-left ${
-        danger
-          ? 'text-destructive hover:bg-destructive/10'
-          : disabled
-          ? 'text-muted-foreground cursor-not-allowed'
-          : 'hover:bg-muted/50'
-      }`}
-    >
-      {icon}
-      {label}
-    </button>
-  )
-}
-
 const WALLPAPER_PRESETS = [
   { id: 'default', label: 'Default', bg: 'bg-background border border-muted' },
   { id: 'sunset', label: 'Sunset', bg: 'bg-gradient-to-br from-orange-400 to-purple-600' },
@@ -67,6 +43,10 @@ const WALLPAPER_PRESETS = [
   { id: 'neon_teal', label: 'Neon Teal', bg: 'bg-gradient-to-br from-teal-900 to-cyan-800' },
   { id: 'dark_shadow', label: 'Dark Shadow', bg: 'bg-gradient-to-br from-zinc-800 to-zinc-950' },
 ]
+
+function getInitial(name?: string): string {
+  return name?.[0]?.toUpperCase() ?? '?'
+}
 
 export function ConversationSettingsDrawer({
   conversation,
@@ -87,10 +67,23 @@ export function ConversationSettingsDrawer({
   const isMuted = conversation.isMuted
   const isArchived = conversation.isArchived
   const isDirect = conversation.type === 'direct'
+  const isGroup = conversation.type === 'group'
 
   const otherUserId = isDirect
     ? conversation.participants.find((p) => p !== currentUserId)
     : null
+
+  const { data: otherUser } = useQuery({
+    queryKey: ['user', otherUserId],
+    queryFn: () => otherUserId ? authService.getUser(otherUserId) : null,
+    enabled: !!otherUserId,
+  })
+
+  const displayName = isGroup
+    ? (conversation.name || t('conversationDefault'))
+    : (otherUser?.displayName || t('chatDefaultTitle'))
+  const avatarUrl = isGroup ? conversation.avatarUrl : otherUser?.avatarUrl
+  const avatarLetter = getInitial(displayName)
 
   const autoDeleteOptions = [
     { label: t('autoDeleteOff'), value: 0 },
@@ -211,151 +204,260 @@ export function ConversationSettingsDrawer({
   return (
     <>
     <Sheet open={open} onOpenChange={(o) => !o && onClose()}>
-      <SheetContent side="right" className="w-80 sm:w-80 overflow-y-auto">
-        <SheetHeader>
-          <SheetTitle>{t('settingsTitle')}</SheetTitle>
-        </SheetHeader>
-
-        <div className="flex flex-col gap-1 px-6 pb-6">
-          <Separator className="mb-2" />
-
-          {/* Mark read / unread */}
-          <RowButton saving={saving}
-            onClick={handleMarkRead}
-            icon={<CheckCheck className="size-4" />}
-            label={t('markRead')}
-          />
-          <RowButton saving={saving}
-            onClick={handleMarkUnread}
-            icon={<BookMarked className="size-4" />}
-            label={t('markUnread')}
-          />
-
-          <Separator className="my-1" />
-
-          {/* Mute / unmute */}
-          <RowButton saving={saving}
-            onClick={handleMuteToggle}
-            icon={isMuted ? <Bell className="size-4" /> : <BellOff className="size-4" />}
-            label={isMuted ? t('unmuteNotifications') : t('muteNotifications')}
-          />
-
-          {/* View profile / group info */}
-          {isDirect && onOpenProfile && (
-            <RowButton saving={saving}
-              onClick={() => { onOpenProfile(); onClose() }}
-              icon={<User className="size-4" />}
-              label={t('viewProfile')}
-            />
-          )}
-          {!isDirect && onOpenGroupInfo && (
-            <RowButton saving={saving}
-              onClick={() => { onOpenGroupInfo(); onClose() }}
-              icon={<Users className="size-4" />}
-              label={t('groupInfo')}
-            />
-          )}
-
-          {/* Voice / video call (1:1 only, disabled with coming soon title) */}
-          {isDirect && (
-            <>
-              <span title={t('callComingSoon')}>
-                <RowButton saving={saving} icon={<Phone className="size-4" />} label={t('voiceCall')} disabled />
-              </span>
-              <span title={t('callComingSoon')}>
-                <RowButton saving={saving} icon={<Video className="size-4" />} label={t('videoCall')} disabled />
-              </span>
-            </>
-          )}
-
-          {/* Block / Unblock (1:1 only) */}
-          {isDirect && (
-            <RowButton saving={saving}
-              onClick={handleBlockToggle}
-              icon={isBlocked ? <Shield className="size-4" /> : <ShieldOff className="size-4" />}
-              label={isBlocked ? t('unblockUser') : t('blockUser')}
-              danger={!isBlocked}
-            />
-          )}
-
-          <Separator className="my-1" />
-
-          {/* Archive */}
-          <RowButton saving={saving}
-            onClick={handleArchiveToggle}
-            icon={isArchived ? <ArchiveX className="size-4" /> : <Archive className="size-4" />}
-            label={isArchived ? t('unarchive') : t('archive')}
-          />
-
-          <Separator className="my-1" />
-
-          {/* Auto-delete timer */}
-          <div className="space-y-3 px-2 py-2">
-            <div className="flex items-center gap-2 text-sm font-medium">
-              <Timer className="size-4" />
-              {t('autoDelete')}
-            </div>
-            <Slider
-              min={0}
-              max={autoDeleteOptions.length - 1}
-              step={1}
-              value={[sliderValue]}
-              onValueChange={([v]) => handleAutoDelete(v)}
-              className="w-full"
-            />
-            <div className="flex justify-between text-xs text-muted-foreground">
-              {autoDeleteOptions.map((o, i) => (
-                <span key={i} className={i === sliderValue ? 'text-primary font-medium' : ''}>
-                  {o.label}
-                </span>
-              ))}
-            </div>
+      <SheetContent side="right" className="w-80 sm:w-[360px] overflow-y-auto p-0">
+        <div className="flex flex-col h-full bg-background">
+          {/* Header */}
+          <div className="h-14 px-4 flex items-center border-b shrink-0">
+            <span className="font-bold text-base">{t('settingsTitle')}</span>
           </div>
 
-          <Separator className="my-1" />
-
-          {/* Wallpaper Selection */}
-          <div className="space-y-3 px-2 py-2">
-            <div className="flex items-center gap-2 text-sm font-medium">
-              <ImageIcon className="size-4" />
-              {t('wallpaper')}
+          <div className="flex-1 overflow-y-auto p-4 pt-6 space-y-6">
+            {/* Avatar & Name */}
+            <div className="flex flex-col items-center gap-3">
+              <Avatar className="size-24 border-2 border-border/50">
+                {avatarUrl && <AvatarImage src={avatarUrl} alt={displayName} />}
+                <AvatarFallback className="text-3xl font-medium bg-gradient-to-br from-pon-cyan/80 to-pon-peach/80 text-white">
+                  {avatarLetter}
+                </AvatarFallback>
+              </Avatar>
+              <div className="text-center">
+                <h2 className="text-xl font-bold line-clamp-2 px-4">{displayName}</h2>
+                <div className="flex items-center justify-center gap-1.5 mt-1 text-xs text-muted-foreground">
+                  <Lock className="size-3" />
+                  <span>{t('endToEndEncrypted')}</span>
+                </div>
+              </div>
             </div>
-            <div className="grid grid-cols-3 gap-2">
-              {wallpaperPresets.map((preset) => (
+
+            {/* Quick Action Buttons */}
+            <div className="flex justify-evenly px-2">
+              {isDirect && onOpenProfile && (
                 <button
-                  key={preset.id}
-                  onClick={() => handleSelectWallpaper(preset.id)}
-                  className={`flex flex-col items-center gap-1.5 p-1.5 rounded-lg border-2 hover:opacity-95 transition-all text-[10px] font-medium ${
-                    selectedWallpaper === preset.id
-                      ? 'border-primary shadow-sm bg-primary/5'
-                      : 'border-transparent hover:border-muted-foreground/30'
-                  }`}
+                  onClick={() => { onOpenProfile(); onClose() }}
+                  className="flex flex-col items-center gap-1.5 w-16"
                 >
-                  <div className={`w-full aspect-square rounded-md ${preset.bg}`} />
-                  <span className="truncate max-w-full text-foreground/80">{preset.label}</span>
+                  <div className="size-10 rounded-full bg-pon-cyan/10 text-pon-cyan flex items-center justify-center">
+                    <User className="size-5" />
+                  </div>
+                  <span className="text-[11px] text-muted-foreground truncate w-full text-center">{t('viewProfile')}</span>
                 </button>
-              ))}
+              )}
+              <button
+                onClick={handleMuteToggle}
+                disabled={saving}
+                className="flex flex-col items-center gap-1.5 w-16"
+              >
+                <div className="size-10 rounded-full bg-pon-cyan/10 text-pon-cyan flex items-center justify-center">
+                  {isMuted ? <BellOff className="size-5" /> : <Bell className="size-5" />}
+                </div>
+                <span className="text-[11px] text-muted-foreground truncate w-full text-center">
+                  {isMuted ? t('unmuteNotifications') : t('muteNotifications')}
+                </span>
+              </button>
+              <button
+                className="flex flex-col items-center gap-1.5 w-16"
+                onClick={() => {
+                  toast.success(t('searchMessages')) // TODO: Implement search
+                  onClose()
+                }}
+              >
+                <div className="size-10 rounded-full bg-pon-cyan/10 text-pon-cyan flex items-center justify-center">
+                  <Search className="size-5" />
+                </div>
+                <span className="text-[11px] text-muted-foreground truncate w-full text-center">{t('searchMessages')}</span>
+              </button>
             </div>
+
+            <hr className="border-border/60" />
+
+            {/* Accordions */}
+            <Accordion type="multiple" className="w-full px-1 space-y-2">
+              
+              {/* Chat Info */}
+              <AccordionItem value="info" className="border-none">
+                <AccordionTrigger className="hover:no-underline py-2 data-[state=open]:text-pon-cyan">
+                  <span className="font-semibold text-sm">{t('chatInfoCategory')}</span>
+                </AccordionTrigger>
+                <AccordionContent className="pb-4 pt-1 space-y-1">
+                  {isGroup ? (
+                    <div className="flex items-center gap-3 text-sm px-2 py-2">
+                      <Users className="size-4 text-muted-foreground" />
+                      <span>{t('membersCount', { count: conversation.participants.length })}</span>
+                    </div>
+                  ) : otherUser ? (
+                    <>
+                      {otherUser.bio && (
+                        <div className="flex gap-3 text-sm px-2 py-2">
+                          <Info className="size-4 shrink-0 mt-0.5 text-muted-foreground" />
+                          <div className="flex flex-col gap-0.5">
+                            <span className="font-medium">{t('bio')}</span>
+                            <span className="text-muted-foreground">{otherUser.bio}</span>
+                          </div>
+                        </div>
+                      )}
+                      {otherUser.dateOfBirth && (
+                        <div className="flex gap-3 text-sm px-2 py-2">
+                          <Cake className="size-4 shrink-0 mt-0.5 text-muted-foreground" />
+                          <div className="flex flex-col gap-0.5">
+                            <span className="font-medium">{t('dateOfBirth')}</span>
+                            <span className="text-muted-foreground">
+                              {new Date(otherUser.dateOfBirth).toLocaleDateString()}
+                            </span>
+                          </div>
+                        </div>
+                      )}
+                    </>
+                  ) : null}
+                </AccordionContent>
+              </AccordionItem>
+
+              {/* Action Options (React-specific: Mark read, Archive, Auto-Delete) */}
+              <AccordionItem value="options" className="border-none">
+                <AccordionTrigger className="hover:no-underline py-2 data-[state=open]:text-pon-cyan">
+                  <span className="font-semibold text-sm">{t('actionOptions')}</span>
+                </AccordionTrigger>
+                <AccordionContent className="pb-4 pt-1 space-y-1">
+                  <button onClick={handleMarkRead} disabled={saving} className="flex items-center gap-3 w-full text-left px-2 py-2.5 hover:bg-muted/50 rounded-lg text-sm transition-colors">
+                    <CheckCheck className="size-4 text-muted-foreground" />
+                    <span>{t('markRead')}</span>
+                  </button>
+                  <button onClick={handleMarkUnread} disabled={saving} className="flex items-center gap-3 w-full text-left px-2 py-2.5 hover:bg-muted/50 rounded-lg text-sm transition-colors">
+                    <BookMarked className="size-4 text-muted-foreground" />
+                    <span>{t('markUnread')}</span>
+                  </button>
+                  <button onClick={handleArchiveToggle} disabled={saving} className="flex items-center gap-3 w-full text-left px-2 py-2.5 hover:bg-muted/50 rounded-lg text-sm transition-colors">
+                    {isArchived ? <ArchiveX className="size-4 text-muted-foreground" /> : <Archive className="size-4 text-muted-foreground" />}
+                    <span>{isArchived ? t('unarchive') : t('archive')}</span>
+                  </button>
+
+                  {/* Auto-delete timer */}
+                  <div className="px-2 py-3 space-y-3">
+                    <div className="flex items-center gap-2 text-sm">
+                      <Timer className="size-4 text-muted-foreground" />
+                      <span>{t('autoDelete')}</span>
+                    </div>
+                    <Slider
+                      min={0}
+                      max={autoDeleteOptions.length - 1}
+                      step={1}
+                      value={[sliderValue]}
+                      onValueChange={([v]) => handleAutoDelete(v)}
+                      className="w-full"
+                    />
+                    <div className="flex justify-between text-[10px] text-muted-foreground font-medium">
+                      {autoDeleteOptions.map((o, i) => (
+                        <span key={i} className={i === sliderValue ? 'text-primary' : ''}>
+                          {o.label}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                </AccordionContent>
+              </AccordionItem>
+
+              {/* Customize Chat */}
+              <AccordionItem value="customize" className="border-none">
+                <AccordionTrigger className="hover:no-underline py-2 data-[state=open]:text-pon-cyan">
+                  <span className="font-semibold text-sm">{t('customizeChatCategory')}</span>
+                </AccordionTrigger>
+                <AccordionContent className="pb-4 pt-1 space-y-1">
+                  <div className="px-2 py-2 space-y-3">
+                    <div className="flex items-center gap-2 text-sm mb-2">
+                      <Palette className="size-4 text-muted-foreground" />
+                      <span>{t('wallpaper')}</span>
+                    </div>
+                    <div className="grid grid-cols-3 gap-2">
+                      {wallpaperPresets.map((preset) => (
+                        <button
+                          key={preset.id}
+                          onClick={() => handleSelectWallpaper(preset.id)}
+                          className={`flex flex-col items-center gap-1.5 p-1.5 rounded-lg border-2 hover:opacity-95 transition-all text-[10px] font-medium ${
+                            selectedWallpaper === preset.id
+                              ? 'border-primary shadow-sm bg-primary/5'
+                              : 'border-transparent hover:border-muted-foreground/30'
+                          }`}
+                        >
+                          <div className={`w-full aspect-square rounded-md ${preset.bg}`} />
+                          <span className="truncate w-full text-center text-foreground/80">{preset.label}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  <button className="flex items-center gap-3 w-full text-left px-2 py-2.5 hover:bg-muted/50 rounded-lg text-sm transition-colors" onClick={() => toast('Coming soon')}>
+                    <SmilePlus className="size-4 text-muted-foreground" />
+                    <span>{t('quickReaction')}</span>
+                  </button>
+                  <button className="flex items-center gap-3 w-full text-left px-2 py-2.5 hover:bg-muted/50 rounded-lg text-sm transition-colors" onClick={() => toast('Coming soon')}>
+                    <PenLine className="size-4 text-muted-foreground" />
+                    <span>{t('nicknames')}</span>
+                  </button>
+                  {isGroup && onOpenGroupInfo && (
+                    <>
+                      <button onClick={() => { onOpenGroupInfo(); onClose() }} className="flex items-center gap-3 w-full text-left px-2 py-2.5 hover:bg-muted/50 rounded-lg text-sm transition-colors">
+                        <PenLine className="size-4 text-muted-foreground" />
+                        <span>{t('renameGroup')}</span>
+                      </button>
+                      <button onClick={() => { onOpenGroupInfo(); onClose() }} className="flex items-center gap-3 w-full text-left px-2 py-2.5 hover:bg-muted/50 rounded-lg text-sm transition-colors">
+                        <ImageIcon2 className="size-4 text-muted-foreground" />
+                        <span>{t('changeAvatar')}</span>
+                      </button>
+                    </>
+                  )}
+                </AccordionContent>
+              </AccordionItem>
+
+              {/* Files & Media */}
+              <AccordionItem value="media" className="border-none">
+                <AccordionTrigger className="hover:no-underline py-2 data-[state=open]:text-pon-cyan">
+                  <span className="font-semibold text-sm">{t('filesAndMediaCategory')}</span>
+                </AccordionTrigger>
+                <AccordionContent className="pb-4 pt-1 space-y-1">
+                  <button className="flex items-center gap-3 w-full text-left px-2 py-2.5 hover:bg-muted/50 rounded-lg text-sm transition-colors" onClick={() => toast('Coming soon')}>
+                    <ImageIcon2 className="size-4 text-muted-foreground" />
+                    <span>{t('tabMedia')}</span>
+                  </button>
+                  <button className="flex items-center gap-3 w-full text-left px-2 py-2.5 hover:bg-muted/50 rounded-lg text-sm transition-colors" onClick={() => toast('Coming soon')}>
+                    <FileText className="size-4 text-muted-foreground" />
+                    <span>{t('tabFiles')}</span>
+                  </button>
+                  <button className="flex items-center gap-3 w-full text-left px-2 py-2.5 hover:bg-muted/50 rounded-lg text-sm transition-colors" onClick={() => toast('Coming soon')}>
+                    <LinkIcon className="size-4 text-muted-foreground" />
+                    <span>{t('tabLinks')}</span>
+                  </button>
+                </AccordionContent>
+              </AccordionItem>
+
+              {/* Privacy & Support */}
+              <AccordionItem value="privacy" className="border-none">
+                <AccordionTrigger className="hover:no-underline py-2 data-[state=open]:text-red-500">
+                  <span className="font-semibold text-sm">{t('privacyAndSupportCategory')}</span>
+                </AccordionTrigger>
+                <AccordionContent className="pb-4 pt-1 space-y-1">
+                  {isDirect && (
+                    <button onClick={handleBlockToggle} disabled={saving} className="flex items-center gap-3 w-full text-left px-2 py-2.5 hover:bg-destructive/10 text-destructive rounded-lg text-sm transition-colors">
+                      {isBlocked ? <Shield className="size-4" /> : <ShieldOff className="size-4" />}
+                      <span>{isBlocked ? t('unblockUser') : t('blockUser')}</span>
+                    </button>
+                  )}
+                  {isGroup && (
+                    <button onClick={() => toast('Coming soon')} disabled={saving} className="flex items-center gap-3 w-full text-left px-2 py-2.5 hover:bg-destructive/10 text-destructive rounded-lg text-sm transition-colors">
+                      <LogOut className="size-4" />
+                      <span>{t('leaveGroup')}</span>
+                    </button>
+                  )}
+                  <button onClick={() => setConfirmClearOpen(true)} disabled={saving} className="flex items-center gap-3 w-full text-left px-2 py-2.5 hover:bg-destructive/10 text-destructive rounded-lg text-sm transition-colors">
+                    <Eraser className="size-4" />
+                    <span>{t('clearHistory')}</span>
+                  </button>
+                  <button onClick={handleDelete} disabled={saving} className="flex items-center gap-3 w-full text-left px-2 py-2.5 hover:bg-destructive/10 text-destructive rounded-lg text-sm transition-colors">
+                    <Trash2 className="size-4" />
+                    <span>{t('deleteConversation')}</span>
+                  </button>
+                </AccordionContent>
+              </AccordionItem>
+
+            </Accordion>
           </div>
-
-          <Separator className="my-1" />
-
-          {/* Clear history */}
-          <RowButton saving={saving}
-            onClick={() => setConfirmClearOpen(true)}
-            icon={<Eraser className="size-4" />}
-            label={t('clearHistory')}
-          />
-
-          <Separator className="my-1 border-border/60 border-[2px]" />
-
-          {/* Delete conversation */}
-          <RowButton saving={saving}
-            onClick={handleDelete}
-            icon={<Trash2 className="size-4" />}
-            label={t('deleteConversation')}
-            danger
-          />
         </div>
       </SheetContent>
     </Sheet>

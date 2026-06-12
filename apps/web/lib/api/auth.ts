@@ -65,7 +65,7 @@ export const authService = {
     authApi.post(`/api/users/unblock/${targetId}`).then((r) => r.data),
 
   getUser: (id: string) =>
-    authApi.get<AuthUser & { avatarUrl?: string }>(`/api/users/${id}`).then((r) => r.data),
+    authApi.get<AuthUser & { avatarUrl?: string; bio?: string; dateOfBirth?: string }>(`/api/users/${id}`).then((r) => r.data),
 
   updateProfile: (data: { displayName?: string; avatarUrl?: string; bio?: string }) =>
     authApi.patch<AuthUser & { avatarUrl?: string; bio?: string }>('/api/users/me', data).then((r) => r.data),
