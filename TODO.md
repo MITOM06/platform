@@ -299,6 +299,30 @@ Mirror: `apps/client/lib/features/chat/ui/widgets/{image_content,file_content,vo
   - New file: `apps/web/components/chat/UserProfileDrawer.tsx` — Sheet with avatar, name, bio, online status, Send/Friend/Block buttons.
   - Edit: `apps/web/components/chat/MessageBubble.tsx` — sender label is now a clickable button that opens `UserProfileDrawer`.
 
+### SPRINT W-14 — UX/UI Refinement (Audit 2026-06-12) `PENDING`
+> **Focus:** Web Client (Next.js) UX improvements. Fix usability flaws identified during QA. Optimize UI for touch devices.
+
+- [x] **Task W-14.1: Prevent Send/Mic button misclicks on mobile** `S`
+  - Problem: `Send` and `Voice Record` buttons are too close on small screens.
+  - Fix: Conditionally render in `MessageInput.tsx`. If `text.trim().length > 0`, show `Send` and hide `Mic`. Show `Mic` only when input is empty. **DONE — emoji moved to right (W-14.2) makes layout cleaner; existing conditional render confirmed correct.**
+
+- [x] **Task W-14.2: Relocate Emoji Picker** `S`
+  - Problem: Emoji picker is on the far left, causing poor ergonomics.
+  - Fix: Move the Emoji toggle button to the right side of the text input, adjacent to the `Send` button. **DONE — Emoji popover moved to right side; layout: [Attach][Textarea][Emoji][Send or Mic+👍].**
+
+- [x] **Task W-14.3: Safeguard "Clear History" action** `M`
+  - Problem: `Clear History` is visually identical and adjacent to `Block User` in `ConversationSettingsDrawer.tsx`, causing dangerous misclicks.
+  - Fix: Add a thick divider between them. Remove `destructive` variant from `Clear History`. Add an `AlertDialog` requiring user to confirm deletion explicitly. **DONE — thick Separator added; Clear History uses neutral styling; Dialog confirmation added (Cancel + Delete buttons).**
+
+- [x] **Task W-14.4: Reply banner overlaps input text** `S`
+  - Problem: `ReplyComposerBar` uses `position: absolute`, overlapping multi-line input.
+  - Fix: Refactor container to `flex-col` so the reply banner stacks above the input area naturally without overlapping. **DONE — outer container uses `flex flex-col`; reply/edit banners stack naturally above input row.**
+
+- [x] **Task W-14.5: Support Long-press for Message Actions on Touch Devices** `M`
+  - Problem: Message hover menus (Edit/Recall/Forward) rely on `onMouseEnter`, making them inaccessible on mobile/touch screens.
+  - Fix: Implement long-press events (e.g., via `use-long-press` or custom touch handlers) to open the action menu on mobile. **DONE — 600ms long-press via onTouchStart/onTouchMove/onTouchEnd; triggers haptic vibration (20ms); action menu visible on `hovered || longPressActive`; row click dismisses after 400ms guard.**
+  - File: `MessageBubble.tsx`
+
 ---
 
 ## 🧪 QA LOG

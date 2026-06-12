@@ -11,6 +11,11 @@ import {
 import {
   Sheet, SheetContent, SheetHeader, SheetTitle,
 } from '@/components/ui/sheet'
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle,
+  DialogDescription, DialogFooter,
+} from '@/components/ui/dialog'
+import { Button } from '@/components/ui/button'
 import { Slider } from '@/components/ui/slider'
 import { Separator } from '@/components/ui/separator'
 import { chatService } from '@/lib/api/chat'
@@ -38,9 +43,11 @@ export function ConversationSettingsDrawer({
   onClose,
 }: Props) {
   const t = useTranslations('chat')
+  const tCommon = useTranslations('common')
   const router = useRouter()
   const queryClient = useQueryClient()
   const [saving, setSaving] = useState(false)
+  const [confirmClearOpen, setConfirmClearOpen] = useState(false)
   const isMuted = conversation.isMuted
   const isArchived = conversation.isArchived
 
@@ -105,10 +112,10 @@ export function ConversationSettingsDrawer({
     )
 
   const handleClearHistory = async () => {
-    if (!confirm(t('clearHistoryConfirm'))) return
     await run(() => chatService.clearHistory(conversation.id), t('clearHistorySuccess'))
     queryClient.removeQueries({ queryKey: ['messages', conversation.id], exact: true })
     queryClient.invalidateQueries({ queryKey: ['messages', conversation.id] })
+    setConfirmClearOpen(false)
   }
 
   const handleDelete = async () => {
@@ -135,6 +142,7 @@ export function ConversationSettingsDrawer({
   const sliderValue = currentAutoDeleteIdx >= 0 ? currentAutoDeleteIdx : 0
 
   return (
+    <>
     <Sheet open={open} onOpenChange={(o) => !o && onClose()}>
       <SheetContent side="right" className="w-80 sm:w-80 overflow-y-auto">
         <SheetHeader>
@@ -217,15 +225,17 @@ export function ConversationSettingsDrawer({
 
           <Separator />
 
-          {/* Clear history */}
+          {/* Clear history — neutral styling to avoid misclick with Delete */}
           <button
-            onClick={handleClearHistory}
+            onClick={() => setConfirmClearOpen(true)}
             disabled={saving}
-            className="flex items-center gap-3 text-sm text-destructive hover:bg-destructive/10 rounded-lg px-2 py-2.5 transition-colors"
+            className="flex items-center gap-3 text-sm hover:bg-muted/50 rounded-lg px-2 py-2.5 transition-colors"
           >
             <Eraser className="size-4" />
             {t('clearHistory')}
           </button>
+
+          <Separator className="my-1 border-border/60 border-[2px]" />
 
           {/* Delete conversation */}
           <button
@@ -239,5 +249,24 @@ export function ConversationSettingsDrawer({
         </div>
       </SheetContent>
     </Sheet>
+
+    {/* Confirmation dialog for Clear History */}
+    <Dialog open={confirmClearOpen} onOpenChange={setConfirmClearOpen}>
+      <DialogContent showCloseButton={false}>
+        <DialogHeader>
+          <DialogTitle>{t('clearHistory')}</DialogTitle>
+          <DialogDescription>{t('clearHistoryConfirm')}</DialogDescription>
+        </DialogHeader>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => setConfirmClearOpen(false)}>
+            {tCommon('cancel')}
+          </Button>
+          <Button variant="destructive" onClick={handleClearHistory} disabled={saving}>
+            {tCommon('delete')}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+    </>
   )
 }
