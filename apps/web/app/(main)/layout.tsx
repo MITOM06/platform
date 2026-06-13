@@ -133,6 +133,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
               peerName: '',
               conversationId: signal.conversationId ?? '',
               sdp: signal.sdp ?? '',
+              video: (signal.sdp ?? '').includes('m=video'),
             })
           } else {
             callManager.handleSignal(signal)
@@ -195,7 +196,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
               variant="ghost"
               size="icon"
               onClick={openPublicChannels}
-              title="Khám phá kênh"
+              title="Khám phá"
               className="h-8 w-8 rounded-full text-muted-foreground hover:text-foreground hover:bg-muted"
             >
               <Compass className="size-4" />

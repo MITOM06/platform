@@ -1,7 +1,7 @@
 'use client'
 /* eslint-disable react-hooks/set-state-in-effect */
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
@@ -15,10 +15,12 @@ import {
   Save,
   RotateCcw,
   Sparkles,
-  Link as LinkIcon,
+  Camera,
   MessageCircle,
 } from 'lucide-react'
 import { aiService } from '@/lib/api/ai'
+import { chatService } from '@/lib/api/chat'
+import { absoluteMediaUrl } from '@/lib/media'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -90,6 +92,23 @@ export default function AiPersonaPage() {
   const [tone, setTone] = useState('friendly')
   const [instructions, setInstructions] = useState('')
   const [initialized, setInitialized] = useState(false)
+  const [uploading, setUploading] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement>(null)
+
+  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setUploading(true)
+    try {
+      const res = await chatService.uploadFile(file)
+      setAvatarUrl(res.url)
+    } catch {
+      toast.error(t('avatarUploadError'))
+    } finally {
+      setUploading(false)
+      if (fileInputRef.current) fileInputRef.current.value = ''
+    }
+  }
 
   const { data: persona, isLoading } = useQuery({
     queryKey: ['ai-persona', conversationId],
@@ -203,12 +222,25 @@ export default function AiPersonaPage() {
                   </p>
                 </div>
 
-                {/* Avatar preview */}
-                <div className="flex justify-center">
-                  <div className="relative">
+                {/* Avatar preview + click-to-upload */}
+                <div className="flex flex-col items-center gap-2">
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={handleAvatarUpload}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={isBusy || uploading}
+                    className="relative group disabled:opacity-60"
+                    title={t('avatarUploadLabel')}
+                  >
                     <Avatar className="size-20 ring-2 ring-[#B47FFF]/30 ring-offset-2 ring-offset-background">
                       {avatarUrl ? (
-                        <AvatarImage src={avatarUrl} alt={name} />
+                        <AvatarImage src={absoluteMediaUrl(avatarUrl)} alt={name} />
                       ) : (
                         <AvatarFallback className="text-2xl bg-gradient-to-br from-[#B47FFF] to-primary text-white">
                           <Bot className="size-8" />
@@ -216,9 +248,14 @@ export default function AiPersonaPage() {
                       )}
                     </Avatar>
                     <div className="absolute -bottom-1 -right-1 size-6 rounded-full bg-[#B47FFF] border-2 border-background flex items-center justify-center">
-                      <Sparkles className="size-3 text-white" />
+                      {uploading ? (
+                        <Loader2 className="size-3 text-white animate-spin" />
+                      ) : (
+                        <Camera className="size-3 text-white" />
+                      )}
                     </div>
-                  </div>
+                  </button>
+                  <span className="text-xs text-muted-foreground">{t('avatarUploadLabel')}</span>
                 </div>
 
                 {/* Bot name */}
@@ -232,20 +269,6 @@ export default function AiPersonaPage() {
                     onChange={(e) => setName(e.target.value)}
                     placeholder={t('botNamePlaceholder')}
                     maxLength={30}
-                    disabled={isBusy}
-                  />
-                </div>
-
-                {/* Avatar URL */}
-                <div className="space-y-2">
-                  <Label className="text-sm font-medium flex items-center gap-2">
-                    <LinkIcon className="size-4 text-[#B47FFF]" />
-                    {t('avatarUrlLabel')}
-                  </Label>
-                  <Input
-                    value={avatarUrl}
-                    onChange={(e) => setAvatarUrl(e.target.value)}
-                    placeholder={t('avatarUrlPlaceholder')}
                     disabled={isBusy}
                   />
                 </div>

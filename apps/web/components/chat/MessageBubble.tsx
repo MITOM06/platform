@@ -98,10 +98,19 @@ export function MessageBubble({
   }
 
   if (message.type === 'system') {
+    // Humanise structured system events (parity with Flutter message_bubble_parts.dart).
+    let systemText = message.content
+    if (message.content.startsWith('system.theme.changed:')) {
+      systemText = t('systemThemeChanged')
+    } else if (message.content.startsWith('system.quick_reaction.changed:')) {
+      systemText = t('systemQuickReactionChanged', { emoji: message.content.split(':')[1] ?? '👍' })
+    } else if (message.content.startsWith('system.nickname.changed:')) {
+      systemText = t('systemNicknameChanged')
+    }
     return (
       <div className="flex justify-center my-1">
         <span className="text-[11px] text-muted-foreground bg-muted/65 rounded-full px-3 py-1 border border-border/20">
-          {message.content}
+          {systemText}
         </span>
       </div>
     )

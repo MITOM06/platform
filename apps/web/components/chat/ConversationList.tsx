@@ -56,15 +56,10 @@ export function ConversationList() {
       // 409 = conversation already exists — find and navigate to it
       const isConflict = (err as { response?: { status?: number } })?.response?.status === 409
       if (isConflict) {
-        try {
-          const existing = await chatService.getConversations()
-          const aiConv = existing.content.find((c) => c.participants.includes(AI_BOT_ID))
-          if (aiConv) {
-            router.push(`/conversations/${aiConv.id}`)
-            return
-          }
-        } catch {
-          // fall through to error toast
+        const body = (err as { response?: { data?: { conversationId?: string } } })?.response?.data
+        if (body?.conversationId) {
+          router.push(`/conversations/${body.conversationId}`)
+          return
         }
       }
       toast.error(t('aiOpenError'))

@@ -55,10 +55,12 @@ export default function LoginPage() {
       setAuth(user, accessToken)
       router.push('/')
     } catch (err: unknown) {
-      const e = err as { response?: { status?: number; data?: { message?: string } } }
+      const e = err as { response?: { status?: number; data?: { message?: string | string[] } } }
       const status = e?.response?.status
-      const backendMsg = e?.response?.data?.message
-      if (status === 401) {
+      const rawMsg = e?.response?.data?.message
+      const backendMsg = Array.isArray(rawMsg) ? rawMsg[0] : rawMsg
+
+      if (status === 401 || status === 400) {
         toast.error(backendMsg ?? t('login.invalidCredentials'))
       } else if (status === 404) {
         toast.error(t('login.emailNotFound'))

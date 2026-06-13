@@ -67,7 +67,7 @@ export default function FriendsPage() {
             <Avatar className="size-12">
               <AvatarImage src={user.avatarUrl || undefined} />
               <AvatarFallback className="bg-primary/10 text-primary font-medium text-lg">
-                {user.displayName[0]?.toUpperCase()}
+                {(user.displayName?.[0] ?? '?').toUpperCase()}
               </AvatarFallback>
             </Avatar>
             <div className="flex-1 min-w-0">

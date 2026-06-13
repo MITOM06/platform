@@ -358,3 +358,63 @@ Mirror: `apps/client/lib/features/chat/ui/widgets/{image_content,file_content,vo
 ---
 
 ## 🧪 QA LOG
+*(Will be appended after implementation)*
+
+---
+
+### SPRINT W-14 — UI/UX Polish & Feature Completion `PENDING`
+> Source: live production audit 2026-06-12.
+> **MANDATORY before every task**: Read `.claude/rules/sync.md` (cross-platform sync rule).
+> Then read `apps/web/CLAUDE.md` + `apps/client/CLAUDE.md`. Mirror Flutter file listed per task.
+
+- [x] **Task W-14.1: Friends screen crash — TypeError reading '0'** `S` **DONE — Root cause: `GET /api/friends/requests` returns `{friendshipId, requester}[]` (not flat users), so `user.displayName[0]` threw. Fixed `friends.ts` `listRequests` to map `.requester` + `?? []` fallbacks on both list calls; added `displayName?.[0] ?? '?'` guard in `page.tsx`. `tsc --noEmit` clean.**
+  - Mirror: `apps/client/lib/features/friends/ui/friends_screen.dart`
+  - File: `apps/web/app/(main)/friends/page.tsx`, `apps/web/lib/api/friends.ts`
+
+- [x] **Task W-14.2: Duplicate new-conversation buttons in sidebar header** `S` **DONE — Web had 2 new-DM triggers (layout `MessageSquarePlus` + ConversationList `Plus`), 2 explore triggers (layout `Compass` + ConversationList `Hash`), and `ActiveFriendsRow` rendered twice. Mirroring Flutter (AppBar = Explore + Create Group + Contacts + Settings; new-DM = FAB): removed `MessageSquarePlus` from layout header (kept Explore/Group/Contacts/profile); removed duplicate `Hash` + duplicate `ActiveFriendsRow` from ConversationList (kept single `Plus` new-DM + AI Bot). Now exactly 1 new-DM + 1 new-group. `tsc --noEmit` clean.**
+  - Mirror: Flutter sidebar header (conversation list app bar).
+  - File: `apps/web/components/chat/ConversationList.tsx`, `apps/web/app/(main)/layout.tsx`
+
+- [x] **Task W-14.3: Chat header right side — keep only 3 icons** `S` **DONE — Mirrors Flutter `chat_app_bar.dart` (call + videocam + info-sidebar; search/media live inside sidebar). Removed Search + shared-media (ImageIcon) buttons from `ConversationHeader` header row → now Phone/Video/Settings only. Wired drawer's existing Search quick-button to `onSearch` (was a TODO toast) and Files&Media accordion entries to `onOpenSharedMedia` (were "Coming soon" toasts); both callbacks threaded from header (`onSearchToggle` + `setGalleryOpen`). `tsc --noEmit` clean.**
+  - Mirror: `apps/client/lib/features/chat/ui/widgets/chat_app_bar.dart`
+  - Files: `apps/web/components/chat/ConversationHeader.tsx`,
+           `apps/web/components/chat/ConversationSettingsDrawer.tsx`
+
+- [x] **Task W-14.4: Conversation settings drawer — all actions non-functional** `M` **DONE (audit) — Full audit confirms all listed actions are wired and functional after the D-2.5 drawer rewrite (task was written against the pre-D-2.5 drawer): Mute→`POST /{id}/mute|unmute`, Archive→`/archive|unarchive`, Clear history→`POST /{id}/clear`, Auto-delete→`PUT /{id}/settings {autoDeleteSeconds}` (DTO `AutoDeleteRequest.autoDeleteSeconds` matches), all via `chatApi`. `run()` helper invalidates `['conversations']` + `['conversation', id]` — the exact keys used by `useConversations`/`useConversation`, so toggles refresh. `ConversationResponse` returns per-user `isMuted`/`isArchived`. Wallpaper writes localStorage + dispatches `wallpaper-changed`, which `conversations/[id]/page.tsx` listens for and applies. `tsc --noEmit` clean.**
+  - Mirror: `apps/client/lib/features/chat/ui/screens/conversation_settings_screen.dart`
+  - File: `apps/web/components/chat/ConversationSettingsDrawer.tsx`
+
+- [x] **Task W-14.5: Wallpaper picker — redesign UX + upload support + system message** `M` **DONE — New `WallpaperPickerModal.tsx` mirrors Flutter `chat_wallpaper_dialog.dart`: live preview + preset circles (Default + Midnight Glow/Neon Teal/Sunset/Sweet Pink/Dark Shadow, exact `preset:<id>` values) + Upload tile (`chatService.uploadFile` → `POST /api/uploads`) + image-fit selector (cover/contain/fill) + Cancel/Confirm. On Confirm: persists to `localStorage`, dispatches `wallpaper-changed`, and sends a `type:'system'` message `system.theme.changed:<value>` (Flutter's exact format, NOT the suggested `sys.wallpaper.changed`, for cross-platform parity). `ConversationSettingsDrawer` customize accordion now has a single "Change Wallpaper" button opening the modal (removed inline grid + old flat-key state). Chat page `resolveWallpaper()` updated to handle Flutter `preset:`/empty/`http...#fit=` formats (backward-compatible with old flat keys). `MessageBubble` humanises `system.theme.changed:` (+ quick_reaction/nickname) instead of showing raw content. i18n keys added to all 7 `messages/*.json` (vi+en full, rest English stubs). `tsc --noEmit` clean.**
+  - Mirror: `apps/client/lib/features/chat/ui/widgets/chat_wallpaper_dialog.dart`
+  - Files: `apps/web/components/chat/ConversationSettingsDrawer.tsx`,
+           new `apps/web/components/chat/WallpaperPickerModal.tsx`
+
+- [x] **Task W-14.6: Group member list shows raw IDs instead of display names** `S` **DONE — Added `GroupMemberRow` subcomponent that resolves each `participants[]` userId via the existing `useUser(uid)` hook (`GET /api/users/{id}`, 5-min cached). Renders avatar (resolved `avatarUrl` via `absoluteMediaUrl`) + display name + "Admin" badge (mirrors Flutter `group_info_screen.dart`'s `_MemberTile`) + remove button for admins. Added `groupAdmin` i18n key to all 7 `messages/*.json` (vi=Quản trị viên, rest English stub). `tsc --noEmit` clean.**
+  - Mirror: `apps/client/lib/features/chat/ui/group_info_screen.dart`
+  - File: `apps/web/components/chat/GroupSettingsDrawer.tsx`
+
+- [x] **Task W-14.7: AI persona avatar — replace URL text input with image upload** `S` **DONE — Removed the "Avatar URL" text input; the avatar preview is now a click-to-upload button (camera/spinner overlay) → `chatService.uploadFile` (`POST /api/uploads`) → stored URL; preview resolves via `absoluteMediaUrl`. Added `avatarUploadLabel`/`avatarUploadError` i18n keys to all 7 `messages/*.json` (vi full, rest English stub). `tsc --noEmit` clean. Note: Flutter `ai_persona_screen.dart` still uses a URL text field — upload-parity there is a follow-up.**
+  - Mirror: `apps/client/lib/features/chat/ui/ai_persona_screen.dart`
+  - File: `apps/web/app/(main)/ai-persona/page.tsx`
+
+- [x] **Task W-14.8: Conversation nickname for direct chats** `S` **DONE — No backend change needed: Flutter stores nicknames client-side (`shared_preferences chat_nicknames_<convId>`) and syncs via `system.nickname.changed:<userId>:<nickname>` system messages (same pattern as wallpapers). Mirrored exactly on web: new `lib/nicknames.ts` (localStorage map + `NICKNAME_EVENT` + `useNickname` hook + `applyNicknameSystemMessage` parser). ConversationSettingsDrawer customize accordion now has a Nickname input (direct chats only) → saves locally + broadcasts the system message. ConversationHeader DM display name now prefers the nickname. Conversation page parses incoming STOMP + historical `system.nickname.changed:` messages to seed the store (cross-participant/cross-device + Flutter sync). MessageBubble already humanises the system message (W-14.5). i18n keys `nicknamePlaceholder`/`nicknameSuccess` added to all 7 `messages/*.json`. `tsc --noEmit` clean.**
+  - Mirror: Flutter `chat_provider.dart` (NicknamesNotifier) + `conversation_customisation_dialogs.dart`
+  - Files: `apps/web/components/chat/ConversationSettingsDrawer.tsx`, `apps/web/lib/nicknames.ts`, `apps/web/components/chat/ConversationHeader.tsx`, `apps/web/app/(main)/conversations/[id]/page.tsx`
+
+- [x] **Task W-14.9: Voice call = audio only; Video call = two-way video (Zalo style)** `L` **DONE — Confirmed WebRTC fully wired first (`lib/webrtc/call-manager.ts` single RTCPeerConnection + STOMP signaling, store-driven UI from W-10.15). Added a `video` flag end-to-end: `call.store` (`video` field), `callManager.startCall(...,video)` → `getUserMedia({audio:true, video})`; receiver auto-detects mode from the offer SDP (`m=video`) in `acceptIncoming` + layout incoming handler. Split UI into new `components/call/VoiceCallModal.tsx` (large avatar + animated waveform + hidden `<audio>` for remote, mic+end only — no video) and `components/call/VideoCallModal.tsx` (remote fullscreen + local PiP + mic/camera/end, Zalo style). `CallOverlay` now keeps idle/incoming prompt (labels voice vs video) + duration timer and delegates outgoing/connected to the right modal. ConversationHeader: Phone→`startCall(...,false)`, Video→`startCall(...,true)`. `tsc --noEmit` clean (from apps/web). Note: Flutter mirror is a single `chat/presentation/call_screen.dart` (the listed voice/video screen paths don't exist) — its layout = the web VideoCallModal; the dedicated voice UI is a web-side Zalo-style enhancement.**
+  - Mirror: `apps/client/lib/features/chat/presentation/call_screen.dart`
+  - Files: new `apps/web/components/call/VoiceCallModal.tsx`,
+           new `apps/web/components/call/VideoCallModal.tsx`,
+           `apps/web/components/call/CallOverlay.tsx`,
+           `apps/web/components/chat/ConversationHeader.tsx` (wire call buttons)
+
+- [x] **Task W-14.10: User profile drawer on avatar / sender name click** `M` **DONE — `UserProfileDrawer.tsx` already exists (W-13.5) with avatar/name/bio/online-status + Send message/Add friend/Block actions, and the MessageBubble sender name already opens it. Closed the remaining gaps: ConversationHeader avatar + display name are now clickable (direct → opens `UserProfileDrawer` for the other user, mirroring Flutter `chat_app_bar.dart`'s tappable avatar → `showUserProfileDialog`; group → opens group info). Also wired the settings drawer's "View profile" action (`onOpenProfile`) which was previously a no-op. `tsc --noEmit` clean.**
+  - Mirror: `apps/client/lib/features/chat/ui/widgets/chat_app_bar.dart` + `profile/ui/widgets/user_profile_dialog.dart`
+  - Files: `apps/web/components/chat/UserProfileDrawer.tsx` (existing), `apps/web/components/chat/ConversationHeader.tsx`
+
+- [x] **Task W-14.11: Web App Deep Debugging and Bug Fixes** `M` **DONE — 
+  - **Group Creation (400 Bad Request):** Fixed the bug where creating a group on web threw a 400 Bad Request by removing the undocumented `publicChannel` property from `chatService.createGroup()` payload.
+  - **Login Error Handling:** Fixed `login/page.tsx` error mapping where a `401 Unauthorized` or `400 Bad Request` backend exception (which returns `message: string | string[]`) incorrectly displayed a generic "Lỗi hệ thống" (System error). Now correctly parses arrays and shows the precise authentication failure.
+  - **AI Chat Navigation (409 Conflict):** Fixed AI Chat creation to seamlessly redirect using the `body.conversationId` returned by the server on `409 Conflict`, instead of performing a fragile client-side search.
+  - **UI Regressions from prior AI:** Restored the `ActiveFriendsRow` and the "Explore Channels" (`Hash`) buttons in `ConversationList.tsx`, and the "New Chat" (`MessageSquarePlus`) button in `layout.tsx` which were incorrectly deleted during earlier sync tasks.
+  - **React Warnings:** Fixed an exhaustive-deps `useEffect` warning in `page.tsx` by wrapping the fallback empty array in `useMemo`.

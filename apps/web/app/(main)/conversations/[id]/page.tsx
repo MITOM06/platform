@@ -22,6 +22,8 @@ import { AiTraceModal } from '@/components/chat/AiTraceModal'
 import { ForwardMessageModal } from '@/components/chat/ForwardMessageModal'
 import { Skeleton } from '@/components/ui/skeleton'
 import { cn } from '@/lib/utils'
+import { absoluteMediaUrl } from '@/lib/media'
+import { applyNicknameSystemMessage } from '@/lib/nicknames'
 import type { Message, MessageType, MessagesResponse, StompEvent } from '@/lib/api/types'
 
 function formatSeparatorDate(dateStr: string): string {
@@ -131,9 +133,49 @@ export default function ConversationPage({ params }: Props) {
     dark_shadow: 'bg-gradient-to-br from-black/20 via-zinc-900/40 to-zinc-950/30 dark:from-black/65 dark:via-zinc-950/70 dark:to-zinc-950/80',
   }
 
+  // Resolve a stored wallpaper value into a class (presets) or an inline image
+  // style. Format mirrors Flutter (chat_wallpaper_dialog.dart): '' / 'default'
+  // = default; 'preset:<id>' = gradient preset; 'http...#fit=cover|contain|fill'
+  // = uploaded image. Old flat keys (e.g. 'midnight') stay supported.
+  const PRESET_TO_CLASS: Record<string, string> = {
+    midnight_glow: 'midnight',
+    neon_teal: 'neon_teal',
+    sunset: 'sunset',
+    sweet_pink: 'sweet_pink',
+    dark_shadow: 'dark_shadow',
+  }
+  const resolveWallpaper = (
+    raw: string,
+  ): { className?: string; style?: React.CSSProperties; isImage: boolean } => {
+    if (!raw || raw === 'default') {
+      return { className: WALLPAPER_CLASSES.default, isImage: false }
+    }
+    if (raw.startsWith('http')) {
+      const [url, fit] = raw.split('#fit=')
+      const bgSize = fit === 'fill' ? '100% 100%' : fit === 'contain' ? 'contain' : 'cover'
+      return {
+        style: { backgroundImage: `url(${absoluteMediaUrl(url)})`, backgroundSize: bgSize },
+        isImage: true,
+      }
+    }
+    const id = raw.startsWith('preset:') ? raw.slice('preset:'.length) : raw
+    const key = PRESET_TO_CLASS[id] ?? id
+    return { className: WALLPAPER_CLASSES[key] ?? WALLPAPER_CLASSES.default, isImage: false }
+  }
+  const wp = resolveWallpaper(wallpaper)
+
   const { data, isLoading, isError, fetchNextPage, hasNextPage, isFetchingNextPage } =
     useMessages(id)
-  const messages = data?.messages ?? []
+  const messages = useMemo(() => data?.messages ?? [], [data?.messages])
+
+  // Seed nicknames from historical system messages (parity with Flutter).
+  useEffect(() => {
+    for (const m of messages) {
+      if (m.type === 'system' && typeof m.content === 'string') {
+        applyNicknameSystemMessage(id, m.content)
+      }
+    }
+  }, [id, messages])
 
   // Infinite scroll: observe sentinel at top, preserve scroll position
   useEffect(() => {
@@ -269,7 +311,11 @@ export default function ConversationPage({ params }: Props) {
             }
           } else {
             // Regular message (includes AI final message after AI_STREAM_DONE)
-            appendMessage(parsed as unknown as Message)
+            const msg = parsed as unknown as Message
+            if (msg.type === 'system' && typeof msg.content === 'string') {
+              applyNicknameSystemMessage(id, msg.content)
+            }
+            appendMessage(msg)
           }
         } catch {
           // ignore malformed frames
@@ -370,13 +416,13 @@ export default function ConversationPage({ params }: Props) {
       <div
         ref={scrollContainerRef}
         className={cn(
-          'flex-1 overflow-y-auto px-4 py-4 relative transition-all duration-300 bg-cover bg-center',
-          !wallpaper?.startsWith('http') && (WALLPAPER_CLASSES[wallpaper] || WALLPAPER_CLASSES.default),
+          'flex-1 overflow-y-auto px-4 py-4 relative transition-all duration-300 bg-center bg-no-repeat',
+          !wp.isImage && wp.className,
         )}
-        style={wallpaper?.startsWith('http') ? { backgroundImage: `url(${wallpaper})` } : undefined}
+        style={wp.style}
       >
         {/* Custom Wallpaper Darken Overlay */}
-        {wallpaper?.startsWith('http') && (
+        {wp.isImage && (
           <div className="absolute inset-0 bg-background/80 dark:bg-background/90 z-0 pointer-events-none" />
         )}
 
