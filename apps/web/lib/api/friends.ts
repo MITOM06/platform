@@ -1,6 +1,17 @@
 import { authApi } from './axios'
 import type { UserSearchResult } from './types'
 
+/**
+ * Incoming friend requests come back from auth-service as
+ * `{ friendshipId, requester }[]` (see FriendsService.listIncomingRequests),
+ * NOT a flat user list. We normalise to the requester profile so the UI can
+ * treat friends and requests uniformly.
+ */
+interface IncomingRequestDto {
+  friendshipId: string
+  requester: UserSearchResult
+}
+
 export interface FriendRequestDto {
   recipientId: string
 }
@@ -15,10 +26,12 @@ export interface FriendStatusResponse {
 
 export const friendsService = {
   listFriends: () =>
-    authApi.get<UserSearchResult[]>('/api/friends').then((r) => r.data),
+    authApi.get<UserSearchResult[]>('/api/friends').then((r) => r.data ?? []),
 
   listRequests: () =>
-    authApi.get<UserSearchResult[]>('/api/friends/requests').then((r) => r.data),
+    authApi
+      .get<IncomingRequestDto[]>('/api/friends/requests')
+      .then((r) => (r.data ?? []).map((req) => req.requester).filter(Boolean)),
 
   sendRequest: (recipientId: string) =>
     authApi.post<{ success: boolean }>('/api/friends/request', { recipientId }).then((r) => r.data),

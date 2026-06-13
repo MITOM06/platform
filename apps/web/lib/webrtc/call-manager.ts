@@ -44,10 +44,15 @@ class CallManager {
     return this.remoteStream
   }
 
-  /** Start an outgoing call to `targetId`. */
-  async startCall(targetId: string, targetName: string, conversationId: string): Promise<void> {
-    useCallStore.getState().setOutgoing({ peerId: targetId, peerName: targetName, conversationId })
-    await this.setup(targetId, conversationId)
+  /** Start an outgoing call to `targetId`. `video=false` → audio-only voice call. */
+  async startCall(
+    targetId: string,
+    targetName: string,
+    conversationId: string,
+    video = true,
+  ): Promise<void> {
+    useCallStore.getState().setOutgoing({ peerId: targetId, peerName: targetName, conversationId, video })
+    await this.setup(targetId, conversationId, video)
     const offer = await this.pc!.createOffer()
     await this.pc!.setLocalDescription(offer)
     stompService.publish('/app/call.offer', {
@@ -62,7 +67,9 @@ class CallManager {
   async acceptIncoming(): Promise<void> {
     const { peerId, conversationId, pendingOfferSdp } = useCallStore.getState()
     if (!peerId || !conversationId || !pendingOfferSdp) return
-    await this.setup(peerId, conversationId)
+    // Match the caller's media: only enable local video if the offer has a video m-line.
+    const video = pendingOfferSdp.includes('m=video')
+    await this.setup(peerId, conversationId, video)
     await this.pc!.setRemoteDescription({ type: 'offer', sdp: pendingOfferSdp })
     await this.flushPending()
     const answer = await this.pc!.createAnswer()
@@ -118,7 +125,7 @@ class CallManager {
     useCallStore.getState().setCamera(on)
   }
 
-  private async setup(targetId: string, conversationId: string): Promise<void> {
+  private async setup(targetId: string, conversationId: string, video: boolean): Promise<void> {
     this.targetId = targetId
     this.conversationId = conversationId
     this.remoteDescriptionSet = false
@@ -150,7 +157,7 @@ class CallManager {
       }
     }
 
-    this.localStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: true })
+    this.localStream = await navigator.mediaDevices.getUserMedia({ audio: true, video })
     this.onLocalStream?.(this.localStream)
     for (const track of this.localStream.getTracks()) {
       pc.addTrack(track, this.localStream)

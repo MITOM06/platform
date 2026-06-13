@@ -24,6 +24,9 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion'
 import { chatService } from '@/lib/api/chat'
 import { authService } from '@/lib/api/auth'
+import { WallpaperPickerModal } from './WallpaperPickerModal'
+import { Input } from '@/components/ui/input'
+import { getNickname, setNickname, nicknameSystemMessage } from '@/lib/nicknames'
 import type { Conversation } from '@/lib/api/types'
 
 interface Props {
@@ -33,16 +36,9 @@ interface Props {
   onClose: () => void
   onOpenProfile?: () => void
   onOpenGroupInfo?: () => void
+  onSearch?: () => void
+  onOpenSharedMedia?: () => void
 }
-
-const WALLPAPER_PRESETS = [
-  { id: 'default', label: 'Default', bg: 'bg-background border border-muted' },
-  { id: 'sunset', label: 'Sunset', bg: 'bg-gradient-to-br from-orange-400 to-purple-600' },
-  { id: 'midnight', label: 'Midnight', bg: 'bg-gradient-to-br from-indigo-900 to-slate-900' },
-  { id: 'sweet_pink', label: 'Sweet Pink', bg: 'bg-gradient-to-br from-pink-300 to-red-400' },
-  { id: 'neon_teal', label: 'Neon Teal', bg: 'bg-gradient-to-br from-teal-900 to-cyan-800' },
-  { id: 'dark_shadow', label: 'Dark Shadow', bg: 'bg-gradient-to-br from-zinc-800 to-zinc-950' },
-]
 
 function getInitial(name?: string): string {
   return name?.[0]?.toUpperCase() ?? '?'
@@ -55,6 +51,8 @@ export function ConversationSettingsDrawer({
   onClose,
   onOpenProfile,
   onOpenGroupInfo,
+  onSearch,
+  onOpenSharedMedia,
 }: Props) {
   const t = useTranslations('chat')
   const tCommon = useTranslations('common')
@@ -62,6 +60,7 @@ export function ConversationSettingsDrawer({
   const queryClient = useQueryClient()
   const [saving, setSaving] = useState(false)
   const [confirmClearOpen, setConfirmClearOpen] = useState(false)
+  const [wallpaperOpen, setWallpaperOpen] = useState(false)
   const [isBlocked, setIsBlocked] = useState(false)
 
   const isMuted = conversation.isMuted
@@ -72,6 +71,25 @@ export function ConversationSettingsDrawer({
   const otherUserId = isDirect
     ? conversation.participants.find((p) => p !== currentUserId)
     : null
+
+  const [nicknameValue, setNicknameValue] = useState(
+    () => (otherUserId ? getNickname(conversation.id, otherUserId) ?? '' : ''),
+  )
+
+  const handleSaveNickname = async () => {
+    if (!otherUserId) return
+    setNickname(conversation.id, otherUserId, nicknameValue)
+    try {
+      await chatService.sendMessage(
+        conversation.id,
+        nicknameSystemMessage(otherUserId, nicknameValue.trim()),
+        'system',
+      )
+    } catch {
+      // local nickname still applied even if broadcast fails
+    }
+    toast.success(t('nicknameSuccess'))
+  }
 
   const { data: otherUser } = useQuery({
     queryKey: ['user', otherUserId],
@@ -92,24 +110,6 @@ export function ConversationSettingsDrawer({
     { label: t('autoDelete1w'), value: 604800 },
     { label: t('autoDelete1m'), value: 2592000 },
   ]
-
-  const wallpaperPresets = WALLPAPER_PRESETS.map((p) => ({
-    ...p,
-    label: p.id === 'default' ? t('wallpaperDefault') : p.label,
-  }))
-
-  const [selectedWallpaper, setSelectedWallpaper] = useState<string>(() => {
-    if (typeof window !== 'undefined') {
-      return localStorage.getItem(`wallpaper-${conversation.id}`) || 'default'
-    }
-    return 'default'
-  })
-
-  const handleSelectWallpaper = (presetId: string) => {
-    setSelectedWallpaper(presetId)
-    localStorage.setItem(`wallpaper-${conversation.id}`, presetId)
-    window.dispatchEvent(new Event('wallpaper-changed'))
-  }
 
   const invalidate = () => {
     queryClient.invalidateQueries({ queryKey: ['conversations'] })
@@ -257,7 +257,7 @@ export function ConversationSettingsDrawer({
               <button
                 className="flex flex-col items-center gap-1.5 w-16"
                 onClick={() => {
-                  toast.success(t('searchMessages')) // TODO: Implement search
+                  onSearch?.()
                   onClose()
                 }}
               >
@@ -361,36 +361,34 @@ export function ConversationSettingsDrawer({
                   <span className="font-semibold text-sm">{t('customizeChatCategory')}</span>
                 </AccordionTrigger>
                 <AccordionContent className="pb-4 pt-1 space-y-1">
-                  <div className="px-2 py-2 space-y-3">
-                    <div className="flex items-center gap-2 text-sm mb-2">
-                      <Palette className="size-4 text-muted-foreground" />
-                      <span>{t('wallpaper')}</span>
-                    </div>
-                    <div className="grid grid-cols-3 gap-2">
-                      {wallpaperPresets.map((preset) => (
-                        <button
-                          key={preset.id}
-                          onClick={() => handleSelectWallpaper(preset.id)}
-                          className={`flex flex-col items-center gap-1.5 p-1.5 rounded-lg border-2 hover:opacity-95 transition-all text-[10px] font-medium ${
-                            selectedWallpaper === preset.id
-                              ? 'border-primary shadow-sm bg-primary/5'
-                              : 'border-transparent hover:border-muted-foreground/30'
-                          }`}
-                        >
-                          <div className={`w-full aspect-square rounded-md ${preset.bg}`} />
-                          <span className="truncate w-full text-center text-foreground/80">{preset.label}</span>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
+                  <button onClick={() => setWallpaperOpen(true)} className="flex items-center gap-3 w-full text-left px-2 py-2.5 hover:bg-muted/50 rounded-lg text-sm transition-colors">
+                    <Palette className="size-4 text-muted-foreground" />
+                    <span>{t('wallpaper')}</span>
+                  </button>
                   <button className="flex items-center gap-3 w-full text-left px-2 py-2.5 hover:bg-muted/50 rounded-lg text-sm transition-colors" onClick={() => toast('Coming soon')}>
                     <SmilePlus className="size-4 text-muted-foreground" />
                     <span>{t('quickReaction')}</span>
                   </button>
-                  <button className="flex items-center gap-3 w-full text-left px-2 py-2.5 hover:bg-muted/50 rounded-lg text-sm transition-colors" onClick={() => toast('Coming soon')}>
-                    <PenLine className="size-4 text-muted-foreground" />
-                    <span>{t('nicknames')}</span>
-                  </button>
+                  {isDirect && otherUserId && (
+                    <div className="px-2 py-2 space-y-2">
+                      <div className="flex items-center gap-2 text-sm">
+                        <PenLine className="size-4 text-muted-foreground" />
+                        <span>{t('nicknames')}</span>
+                      </div>
+                      <div className="flex gap-2">
+                        <Input
+                          value={nicknameValue}
+                          onChange={(e) => setNicknameValue(e.target.value)}
+                          placeholder={t('nicknamePlaceholder')}
+                          maxLength={40}
+                          className="h-8 text-sm"
+                        />
+                        <Button size="sm" onClick={handleSaveNickname} disabled={saving}>
+                          {tCommon('save')}
+                        </Button>
+                      </div>
+                    </div>
+                  )}
                   {isGroup && onOpenGroupInfo && (
                     <>
                       <button onClick={() => { onOpenGroupInfo(); onClose() }} className="flex items-center gap-3 w-full text-left px-2 py-2.5 hover:bg-muted/50 rounded-lg text-sm transition-colors">
@@ -412,15 +410,15 @@ export function ConversationSettingsDrawer({
                   <span className="font-semibold text-sm">{t('filesAndMediaCategory')}</span>
                 </AccordionTrigger>
                 <AccordionContent className="pb-4 pt-1 space-y-1">
-                  <button className="flex items-center gap-3 w-full text-left px-2 py-2.5 hover:bg-muted/50 rounded-lg text-sm transition-colors" onClick={() => toast('Coming soon')}>
+                  <button className="flex items-center gap-3 w-full text-left px-2 py-2.5 hover:bg-muted/50 rounded-lg text-sm transition-colors" onClick={() => { onOpenSharedMedia?.(); onClose() }}>
                     <ImageIcon2 className="size-4 text-muted-foreground" />
                     <span>{t('tabMedia')}</span>
                   </button>
-                  <button className="flex items-center gap-3 w-full text-left px-2 py-2.5 hover:bg-muted/50 rounded-lg text-sm transition-colors" onClick={() => toast('Coming soon')}>
+                  <button className="flex items-center gap-3 w-full text-left px-2 py-2.5 hover:bg-muted/50 rounded-lg text-sm transition-colors" onClick={() => { onOpenSharedMedia?.(); onClose() }}>
                     <FileText className="size-4 text-muted-foreground" />
                     <span>{t('tabFiles')}</span>
                   </button>
-                  <button className="flex items-center gap-3 w-full text-left px-2 py-2.5 hover:bg-muted/50 rounded-lg text-sm transition-colors" onClick={() => toast('Coming soon')}>
+                  <button className="flex items-center gap-3 w-full text-left px-2 py-2.5 hover:bg-muted/50 rounded-lg text-sm transition-colors" onClick={() => { onOpenSharedMedia?.(); onClose() }}>
                     <LinkIcon className="size-4 text-muted-foreground" />
                     <span>{t('tabLinks')}</span>
                   </button>
@@ -461,6 +459,13 @@ export function ConversationSettingsDrawer({
         </div>
       </SheetContent>
     </Sheet>
+
+    {/* Wallpaper picker */}
+    <WallpaperPickerModal
+      conversationId={conversation.id}
+      open={wallpaperOpen}
+      onClose={() => setWallpaperOpen(false)}
+    />
 
     {/* Confirmation dialog for Clear History */}
     <Dialog open={confirmClearOpen} onOpenChange={setConfirmClearOpen}>

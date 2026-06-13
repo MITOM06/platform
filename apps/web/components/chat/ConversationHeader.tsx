@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { ArrowLeft, Bot, Settings, Search, ImageIcon, Phone, Video } from 'lucide-react'
+import { ArrowLeft, Bot, Settings, Phone, Video } from 'lucide-react'
 import Link from 'next/link'
 import { useQueryClient } from '@tanstack/react-query'
 import { useConversation } from '@/lib/hooks/use-conversation'
@@ -15,7 +15,10 @@ import { PinnedMessagesBar } from './PinnedMessagesBar'
 import { ConversationSettingsDrawer } from './ConversationSettingsDrawer'
 import { GroupSettingsDrawer } from './GroupSettingsDrawer'
 import { SharedMediaGallery } from './SharedMediaGallery'
+import { UserProfileDrawer } from './UserProfileDrawer'
 import { callManager } from '@/lib/webrtc/call-manager'
+import { useNickname } from '@/lib/nicknames'
+import { cn } from '@/lib/utils'
 
 const AI_BOT_ID = 'ai-bot-000000000000000000000001'
 
@@ -40,6 +43,7 @@ export function ConversationHeader({
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [groupSettingsOpen, setGroupSettingsOpen] = useState(false)
   const [galleryOpen, setGalleryOpen] = useState(false)
+  const [profileOpen, setProfileOpen] = useState(false)
 
   const isAI = conversation?.participants.includes(AI_BOT_ID) ?? false
   const isGroup = conversation?.type === 'group'
@@ -50,8 +54,10 @@ export function ConversationHeader({
 
   const { data: status } = useUserStatus(otherUserId)
   const { data: otherUser } = useUser(otherUserId)
+  const nickname = useNickname(conversationId, otherUserId)
 
   const displayName =
+    nickname ??
     conversation?.name ??
     (isAI ? 'AI Assistant' : (otherUser?.displayName ?? 'Cuộc trò chuyện'))
   const avatarUrl = conversation?.avatarUrl ?? otherUser?.avatarUrl
@@ -78,7 +84,15 @@ export function ConversationHeader({
           <ArrowLeft className="size-5" />
         </Link>
 
-        <div className="relative shrink-0">
+        <button
+          type="button"
+          className="relative shrink-0 rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/50"
+          onClick={() => {
+            if (isGroup) setGroupSettingsOpen(true)
+            else if (otherUserId) setProfileOpen(true)
+          }}
+          title={isGroup ? 'Thông tin nhóm' : 'Xem hồ sơ'}
+        >
           <Avatar className="size-9 shrink-0">
             {isAI ? (
               <AvatarFallback className="bg-primary/10 text-primary text-sm font-medium">
@@ -96,11 +110,22 @@ export function ConversationHeader({
           {otherUserId && status?.online && (
             <span className="absolute bottom-0 right-0 size-2.5 rounded-full bg-[#00E676] border-2 border-background shadow-[0_0_6px_rgba(0,230,118,0.6)]" />
           )}
-        </div>
+        </button>
 
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-1.5">
-            <span className="font-medium text-sm truncate">{displayName}</span>
+            <span
+              className={cn(
+                'font-medium text-sm truncate',
+                (isGroup || otherUserId) && 'cursor-pointer hover:underline',
+              )}
+              onClick={() => {
+                if (isGroup) setGroupSettingsOpen(true)
+                else if (otherUserId) setProfileOpen(true)
+              }}
+            >
+              {displayName}
+            </span>
             {isAI && (
               <span className="text-xs bg-primary/10 text-primary px-1.5 py-0.5 rounded font-medium shrink-0">
                 AI
@@ -127,7 +152,7 @@ export function ConversationHeader({
               <Button
                 variant="ghost"
                 size="icon"
-                onClick={() => callManager.startCall(otherUserId, displayName, conversationId)}
+                onClick={() => callManager.startCall(otherUserId, displayName, conversationId, false)}
                 title="Gọi thoại"
               >
                 <Phone className="size-4" />
@@ -135,19 +160,13 @@ export function ConversationHeader({
               <Button
                 variant="ghost"
                 size="icon"
-                onClick={() => callManager.startCall(otherUserId, displayName, conversationId)}
+                onClick={() => callManager.startCall(otherUserId, displayName, conversationId, true)}
                 title="Gọi video"
               >
                 <Video className="size-4" />
               </Button>
             </>
           )}
-          <Button variant="ghost" size="icon" onClick={onSearchToggle} title="Tìm kiếm">
-            <Search className="size-4" />
-          </Button>
-          <Button variant="ghost" size="icon" onClick={() => setGalleryOpen(true)} title="Nội dung đã chia sẻ" className="hidden sm:flex">
-            <ImageIcon className="size-4" />
-          </Button>
           <Button
             variant="ghost"
             size="icon"
@@ -170,8 +189,10 @@ export function ConversationHeader({
             currentUserId={currentUser.id}
             open={settingsOpen}
             onClose={() => setSettingsOpen(false)}
-            onOpenProfile={() => { /* UserProfileDrawer opened from parent */ }}
+            onOpenProfile={() => setProfileOpen(true)}
             onOpenGroupInfo={() => setGroupSettingsOpen(true)}
+            onSearch={onSearchToggle}
+            onOpenSharedMedia={() => setGalleryOpen(true)}
           />
           {isGroup && (
             <GroupSettingsDrawer
@@ -187,6 +208,10 @@ export function ConversationHeader({
         conversationId={conversationId}
         open={galleryOpen}
         onClose={() => setGalleryOpen(false)}
+      />
+      <UserProfileDrawer
+        userId={profileOpen ? (otherUserId ?? null) : null}
+        onClose={() => setProfileOpen(false)}
       />
     </div>
   )

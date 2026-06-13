@@ -9,12 +9,51 @@ import { UserMinus, UserPlus, Pencil, Check, X, ImageIcon, LogOut, Camera, Folde
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Avatar, AvatarFallback } from '@/components/ui/avatar'
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Separator } from '@/components/ui/separator'
 import { chatService } from '@/lib/api/chat'
 import { authService } from '@/lib/api/auth'
+import { useUser } from '@/lib/hooks/use-user'
+import { absoluteMediaUrl } from '@/lib/media'
 import type { Conversation, UserSearchResult } from '@/lib/api/types'
 import { useRouter } from 'next/navigation'
+
+/** Resolves a member's userId → display name + avatar (mirror Flutter group_info_screen). */
+function GroupMemberRow({
+  uid,
+  isMemberAdmin,
+  canRemove,
+  onRemove,
+  saving,
+  adminLabel,
+}: {
+  uid: string
+  isMemberAdmin: boolean
+  canRemove: boolean
+  onRemove: () => void
+  saving: boolean
+  adminLabel: string
+}) {
+  const { data: user } = useUser(uid)
+  const name = user?.displayName ?? '…'
+  return (
+    <div className="flex items-center gap-2 py-1">
+      <Avatar className="size-7 shrink-0">
+        {user?.avatarUrl && <AvatarImage src={absoluteMediaUrl(user.avatarUrl)} alt={name} />}
+        <AvatarFallback className="text-xs">{(user?.displayName?.[0] ?? '?').toUpperCase()}</AvatarFallback>
+      </Avatar>
+      <div className="flex-1 min-w-0">
+        <p className="text-sm truncate">{name}</p>
+        {isMemberAdmin && <p className="text-[11px] text-pon-cyan">{adminLabel}</p>}
+      </div>
+      {canRemove && (
+        <Button size="icon-xs" variant="ghost" onClick={onRemove} disabled={saving}>
+          <UserMinus className="size-3.5 text-destructive" />
+        </Button>
+      )}
+    </div>
+  )
+}
 
 const WALLPAPER_PRESETS = [
   { id: 'default', bg: 'bg-background border border-muted' },
@@ -223,22 +262,15 @@ export function GroupSettingsDrawer({ conversation, currentUserId, open, onClose
             </p>
             <div className="space-y-1 max-h-48 overflow-y-auto">
               {conversation.participants.map((uid) => (
-                <div key={uid} className="flex items-center gap-2 py-1">
-                  <Avatar className="size-7 shrink-0">
-                    <AvatarFallback className="text-xs">{uid[0]?.toUpperCase()}</AvatarFallback>
-                  </Avatar>
-                  <span className="text-sm flex-1 truncate">{uid}</span>
-                  {isAdmin && uid !== currentUserId && (
-                    <Button
-                      size="icon-xs"
-                      variant="ghost"
-                      onClick={() => handleRemoveMember(uid)}
-                      disabled={saving}
-                    >
-                      <UserMinus className="size-3.5 text-destructive" />
-                    </Button>
-                  )}
-                </div>
+                <GroupMemberRow
+                  key={uid}
+                  uid={uid}
+                  isMemberAdmin={conversation.admins.includes(uid)}
+                  canRemove={isAdmin && uid !== currentUserId}
+                  onRemove={() => handleRemoveMember(uid)}
+                  saving={saving}
+                  adminLabel={t('groupAdmin')}
+                />
               ))}
             </div>
           </div>

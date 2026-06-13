@@ -31,7 +31,7 @@ export const chatService = {
       .post<Conversation>('/api/conversations/group', {
         name,
         participantIds,
-        publicChannel: isPublic,
+        ...(isPublic ? { publicChannel: isPublic } : {}),
       })
       .then((r) => r.data),
 
