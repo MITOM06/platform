@@ -65,6 +65,23 @@ class AuthRepository {
     });
   }
 
+  /// Đổi OAuth code (từ deeplink platform://auth?code=xxx) lấy JWT tokens
+  Future<UserModel> exchangeCode(String code) async {
+    final response = await _dio.post('/auth/exchange', data: {
+      'code': code,
+      'platform': 'mobile',
+    });
+    final data = response.data as Map<String, dynamic>;
+    final user = UserModel.fromJson(data['user'] as Map<String, dynamic>);
+    await _saveCredentials(
+      accessToken: data['accessToken'] as String,
+      refreshToken: data['refreshToken'] as String,
+      sid: data['sid'] as String,
+      user: user,
+    );
+    return user;
+  }
+
   Future<void> logout() async {
     final sid = await _storage.read(key: _keySid);
     if (sid != null) {

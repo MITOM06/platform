@@ -2,7 +2,7 @@
 name: code-reviewer
 description: Reviews code for quality, security, and consistency with project patterns
 tools: Read, Grep, Glob
-model: sonnet
+model: opus
 ---
 
 You are a senior software engineer reviewing code for the Platform project (NestJS + Spring Boot + Flutter monorepo).

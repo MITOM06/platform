@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -5,11 +6,13 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:go_router/go_router.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
+import 'package:app_links/app_links.dart';
 import 'core/providers/locale_provider.dart';
 import 'core/providers/theme_provider.dart';
 import 'core/router/app_router.dart';
 import 'core/theme/app_theme.dart';
 import 'core/utils/global_messenger.dart';
+import 'features/auth/domain/auth_provider.dart';
 import 'firebase_options.dart';
 import 'l10n/app_localizations.dart';
 
@@ -74,11 +77,53 @@ void main() async {
   );
 }
 
-class PlatformApp extends ConsumerWidget {
+class PlatformApp extends ConsumerStatefulWidget {
   const PlatformApp({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<PlatformApp> createState() => _PlatformAppState();
+}
+
+class _PlatformAppState extends ConsumerState<PlatformApp> {
+  StreamSubscription<Uri>? _deepLinkSub;
+
+  @override
+  void initState() {
+    super.initState();
+    _initDeepLinks();
+  }
+
+  Future<void> _initDeepLinks() async {
+    final appLinks = AppLinks();
+
+    // Handle link when app is launched from a deeplink (cold start)
+    final initialUri = await appLinks.getInitialLink();
+    if (initialUri != null) {
+      _handleDeepLink(initialUri);
+    }
+
+    // Handle links while app is running
+    _deepLinkSub = appLinks.uriLinkStream.listen(_handleDeepLink);
+  }
+
+  void _handleDeepLink(Uri uri) {
+    // Expects: platform://auth?code=xxx
+    if (uri.scheme == 'platform' && uri.host == 'auth') {
+      final code = uri.queryParameters['code'];
+      if (code != null && code.isNotEmpty) {
+        ref.read(authNotifierProvider.notifier).loginWithCode(code);
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    _deepLinkSub?.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final router = ref.watch(appRouterProvider);
     final themeMode = ref.watch(themeModeNotifierProvider);
     final locale = resolveActiveLocale(ref.watch(localeNotifierProvider));
