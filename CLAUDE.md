@@ -68,6 +68,19 @@ Start infra: `docker compose -f infra/docker-compose/compose.yml up -d`
 - Chat service API spec: `docs/api-spec.md`
 - AI service rules: `.claude/rules/ai-service.md`
 
+## 하네스: Platform Feature Development
+
+**목표:** 신규 기능을 Backend + Flutter + Next.js 3개 플랫폼에 동시에 구현하고 QA 검증한다.
+
+**트리거:** 기능 구현/추가 요청 시 `orchestrate-feature` 스킬을 사용하라. 플랫폼 동기화 확인 시 `sync-check` 스킬을 사용하라. 단순 질문은 직접 응답 가능.
+
+**변경 이력:**
+| 날짜 | 변경 내용 | 대상 | 사유 |
+|------|----------|------|------|
+| 2026-06-13 | 초기 구성 | 전체 | - |
+
+---
+
 ## Compaction Instructions
 
 When compacting, always preserve: current task, list of modified files, any pending TODOs, and Spring Boot/Flutter patterns established so far.

@@ -42,6 +42,16 @@ class AuthNotifier extends _$AuthNotifier {
     }
   }
 
+  /// Xử lý OAuth callback deeplink: platform://auth?code=xxx
+  Future<void> loginWithCode(String code) async {
+    state = const AsyncLoading();
+    state = await AsyncValue.guard(() async {
+      final user = await ref.read(authRepositoryProvider).exchangeCode(code);
+      _registerFcmToken();
+      return AuthAuthenticated(user);
+    });
+  }
+
   Future<void> logout() async {
     await ref.read(authRepositoryProvider).logout();
     state = const AsyncData(AuthUnauthenticated());
