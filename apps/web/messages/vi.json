@@ -62,7 +62,7 @@
       "pwStrengthStrong": "Mạnh",
       "pwStrengthVeryStrong": "Rất mạnh",
       "googleRegister": "Đăng ký bằng Google",
-      "agreeToTerms": "Tôi đồng ý với {privacyPolicy} và {termsOfService}",
+      "agreeToTerms": "Tôi đồng ý với <privacyPolicy>Chính sách Quyền riêng tư</privacyPolicy> và <termsOfService>Điều khoản Dịch vụ</termsOfService>",
       "privacyPolicy": "Chính sách Quyền riêng tư",
       "termsOfService": "Điều khoản Dịch vụ",
       "mustAgree": "Bạn phải đồng ý với Điều khoản Dịch vụ để đăng ký"
