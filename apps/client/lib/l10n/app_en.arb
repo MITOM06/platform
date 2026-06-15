@@ -495,5 +495,15 @@
   "loginWithFacebook": "Sign in with Facebook",
   "registerWithGoogle": "Sign up with Google",
   "registerWithFacebook": "Sign up with Facebook",
-  "orContinueWith": "Or continue with"
+  "orContinueWith": "Or continue with",
+  "agreeToTerms": "I agree to the {privacyPolicy} and {termsOfService}",
+  "@agreeToTerms": {
+    "placeholders": {
+      "privacyPolicy": { "type": "String" },
+      "termsOfService": { "type": "String" }
+    }
+  },
+  "privacyPolicy": "Privacy Policy",
+  "termsOfService": "Terms of Service",
+  "valMustAgreeTerms": "You must agree to the Terms of Service to register"
 }

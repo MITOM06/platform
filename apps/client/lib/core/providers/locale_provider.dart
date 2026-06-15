@@ -62,10 +62,5 @@ class LocaleNotifier extends _$LocaleNotifier {
 /// Resolves the [Locale] that should actually be rendered, taking the saved
 /// preference (or the system language) and falling back to English.
 Locale resolveActiveLocale(Locale? preferred) {
-  if (preferred != null) return preferred;
-  final system = PlatformDispatcher.instance.locale;
-  final match = kSupportedLocales
-      .where((l) => l.languageCode == system.languageCode)
-      .toList();
-  return match.isNotEmpty ? match.first : const Locale('en');
+  return preferred ?? const Locale('en');
 }

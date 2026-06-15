@@ -2147,6 +2147,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Or continue with'**
   String get orContinueWith;
+
+  /// No description provided for @agreeToTerms.
+  ///
+  /// In en, this message translates to:
+  /// **'I agree to the {privacyPolicy} and {termsOfService}'**
+  String agreeToTerms(String privacyPolicy, String termsOfService);
+
+  /// No description provided for @privacyPolicy.
+  ///
+  /// In en, this message translates to:
+  /// **'Privacy Policy'**
+  String get privacyPolicy;
+
+  /// No description provided for @termsOfService.
+  ///
+  /// In en, this message translates to:
+  /// **'Terms of Service'**
+  String get termsOfService;
+
+  /// No description provided for @valMustAgreeTerms.
+  ///
+  /// In en, this message translates to:
+  /// **'You must agree to the Terms of Service to register'**
+  String get valMustAgreeTerms;
 }
 
 class _AppLocalizationsDelegate

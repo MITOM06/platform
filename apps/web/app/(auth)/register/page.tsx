@@ -16,8 +16,9 @@ import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Separator } from '@/components/ui/separator'
 import { PasswordStrengthMeter } from '@/components/auth/PasswordStrengthMeter'
+import { Checkbox } from '@/components/ui/checkbox'
 
-type FormData = { displayName: string; email: string; password: string; confirmPassword: string }
+type FormData = { displayName: string; email: string; password: string; confirmPassword: string; agreeToTerms: boolean }
 
 export default function RegisterPage() {
   const t = useTranslations('auth')
@@ -42,6 +43,9 @@ export default function RegisterPage() {
             .regex(/[0-9]/, t('register.reqDigit'))
             .regex(/[!@#$%^&*]/, t('register.reqSpecial')),
           confirmPassword: z.string(),
+          agreeToTerms: z.boolean().refine((val) => val === true, {
+            message: t('register.mustAgree'),
+          }),
         })
         .refine((d) => d.password === d.confirmPassword, {
           message: t('register.confirmPasswordMismatch'),
@@ -53,8 +57,13 @@ export default function RegisterPage() {
   const {
     register,
     handleSubmit,
+    setValue,
+    watch,
     formState: { errors, isSubmitting },
-  } = useForm<FormData>({ resolver: zodResolver(schema) })
+  } = useForm<FormData>({ 
+    resolver: zodResolver(schema),
+    defaultValues: { agreeToTerms: false }
+  })
 
   const onSubmit = async (data: FormData) => {
     try {
@@ -173,6 +182,25 @@ export default function RegisterPage() {
             {errors.confirmPassword && (
               <p className="text-sm text-destructive">{errors.confirmPassword.message}</p>
             )}
+          </div>
+
+          <div className="flex flex-row items-start space-x-3 space-y-0 rounded-md py-2">
+            <Checkbox
+              id="agreeToTerms"
+              checked={watch('agreeToTerms')}
+              onCheckedChange={(checked) => setValue('agreeToTerms', checked as boolean)}
+            />
+            <div className="space-y-1 leading-none">
+              <Label htmlFor="agreeToTerms" className="font-normal text-sm text-muted-foreground cursor-pointer">
+                {t.rich('register.agreeToTerms', {
+                  privacyPolicy: (chunks) => <Link href="/privacy" target="_blank" className="text-primary hover:underline">{chunks}</Link>,
+                  termsOfService: (chunks) => <Link href="/privacy" target="_blank" className="text-primary hover:underline">{chunks}</Link>
+                })}
+              </Label>
+              {errors.agreeToTerms && (
+                <p className="text-sm text-destructive">{errors.agreeToTerms.message}</p>
+              )}
+            </div>
           </div>
 
           <Button

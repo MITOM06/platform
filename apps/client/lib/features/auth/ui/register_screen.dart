@@ -24,6 +24,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   final _confirmController = TextEditingController();
   bool _isLoading = false;
   bool _obscurePassword = true;
+  bool _agreeToTerms = false;
   String _passwordValue = '';
 
   @override
@@ -58,6 +59,12 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   }
 
   Future<void> _submit() async {
+    if (!_agreeToTerms) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(context.l10n.valMustAgreeTerms)),
+      );
+      return;
+    }
     if (!_formKey.currentState!.validate()) return;
     setState(() => _isLoading = true);
     try {
@@ -233,6 +240,43 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                                   return null;
                                 },
                               ),
+                              const SizedBox(height: 16),
+
+                              // Terms Agreement
+                              Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  SizedBox(
+                                    height: 24,
+                                    width: 24,
+                                    child: Checkbox(
+                                      value: _agreeToTerms,
+                                      onChanged: (val) {
+                                        setState(() => _agreeToTerms = val ?? false);
+                                      },
+                                      activeColor: AppTheme.ponPink,
+                                      side: BorderSide(color: Colors.white.withValues(alpha: 0.5)),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Expanded(
+                                    child: GestureDetector(
+                                      onTap: () {
+                                        setState(() => _agreeToTerms = !_agreeToTerms);
+                                      },
+                                      child: RichText(
+                                        text: TextSpan(
+                                          style: TextStyle(
+                                            color: Colors.white.withValues(alpha: 0.7),
+                                            fontSize: 13,
+                                          ),
+                                          children: _buildTermsTextSpans(context),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
                               const SizedBox(height: 28),
 
                               // Register Button
@@ -309,5 +353,44 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
         ],
       ),
     );
+  }
+
+  List<InlineSpan> _buildTermsTextSpans(BuildContext context) {
+    final text = context.l10n.agreeToTerms('__PRIVACY__', '__TERMS__');
+    final parts = text.split(RegExp(r'(__PRIVACY__|__TERMS__)'));
+    final matches = RegExp(r'(__PRIVACY__|__TERMS__)').allMatches(text).toList();
+
+    final spans = <InlineSpan>[];
+    for (int i = 0; i < parts.length; i++) {
+      if (parts[i].isNotEmpty) {
+        spans.add(TextSpan(text: parts[i]));
+      }
+      if (i < matches.length) {
+        final match = matches[i].group(0);
+        final isPrivacy = match == '__PRIVACY__';
+        spans.add(WidgetSpan(
+          alignment: PlaceholderAlignment.baseline,
+          baseline: TextBaseline.alphabetic,
+          child: GestureDetector(
+            onTap: () async {
+              final uri = Uri.parse('https://platform-phi-gules.vercel.app/privacy');
+              if (await canLaunchUrl(uri)) {
+                await launchUrl(uri, mode: LaunchMode.externalApplication);
+              }
+            },
+            child: Text(
+              isPrivacy ? context.l10n.privacyPolicy : context.l10n.termsOfService,
+              style: const TextStyle(
+                color: AppTheme.ponPink,
+                fontWeight: FontWeight.bold,
+                decoration: TextDecoration.underline,
+                decorationColor: AppTheme.ponPink,
+              ),
+            ),
+          ),
+        ));
+      }
+    }
+    return spans;
   }
 }

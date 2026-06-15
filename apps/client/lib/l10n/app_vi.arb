@@ -360,5 +360,9 @@
   "loginWithFacebook": "Đăng nhập bằng Facebook",
   "registerWithGoogle": "Đăng ký bằng Google",
   "registerWithFacebook": "Đăng ký bằng Facebook",
-  "orContinueWith": "Hoặc tiếp tục với"
+  "orContinueWith": "Hoặc tiếp tục với",
+  "agreeToTerms": "Tôi đồng ý với {privacyPolicy} và {termsOfService}",
+  "privacyPolicy": "Chính sách Quyền riêng tư",
+  "termsOfService": "Điều khoản Dịch vụ",
+  "valMustAgreeTerms": "Bạn phải đồng ý với Điều khoản Dịch vụ để đăng ký"
 }

@@ -63,7 +63,11 @@
       "pwStrengthStrong": "Mạnh",
       "pwStrengthVeryStrong": "Rất mạnh",
       "googleRegister": "Đăng ký bằng Google",
-      "facebookRegister": "Đăng ký bằng Facebook"
+      "facebookRegister": "Đăng ký bằng Facebook",
+      "agreeToTerms": "Tôi đồng ý với {privacyPolicy} và {termsOfService}",
+      "privacyPolicy": "Chính sách Quyền riêng tư",
+      "termsOfService": "Điều khoản Dịch vụ",
+      "mustAgree": "Bạn phải đồng ý với Điều khoản Dịch vụ để đăng ký"
     },
     "verifyOtp": {
       "title": "Xác thực OTP",
@@ -408,5 +412,31 @@
     "emptyMedia": "Chưa có hình ảnh/video nào được chia sẻ",
     "emptyFiles": "Chưa có tài liệu nào được chia sẻ",
     "emptyLinks": "Chưa có liên kết nào được chia sẻ"
+  },
+  "legal": {
+    "title": "Chính sách Quyền riêng tư & Điều khoản Dịch vụ",
+    "lastUpdated": "Cập nhật lần cuối: 15/06/2026",
+    "sections": {
+      "dataCollection": {
+        "title": "1. Thu thập dữ liệu",
+        "content": "Chúng tôi thu thập thông tin bạn cung cấp trực tiếp cho chúng tôi, ví dụ như khi bạn tạo hoặc sửa đổi tài khoản, sử dụng dịch vụ của chúng tôi hoặc liên lạc với chúng tôi. Điều này bao gồm tên, địa chỉ email, ảnh đại diện và các tin nhắn bạn gửi."
+      },
+      "dataUsage": {
+        "title": "2. Cách chúng tôi sử dụng dữ liệu",
+        "content": "Dữ liệu của bạn được sử dụng để cung cấp, duy trì và cải thiện các dịch vụ của chúng tôi, bao gồm tạo điều kiện giao tiếp giữa những người dùng, đảm bảo bảo mật và cá nhân hóa trải nghiệm của bạn."
+      },
+      "security": {
+        "title": "3. Bảo mật",
+        "content": "Chúng tôi áp dụng các biện pháp bảo mật tiêu chuẩn ngành để bảo vệ thông tin cá nhân và tin nhắn của bạn. Quyền truy cập dữ liệu được kiểm soát chặt chẽ và chúng tôi sử dụng mã hóa để bảo mật thông tin nhạy cảm."
+      },
+      "userRights": {
+        "title": "4. Quyền của bạn",
+        "content": "Bạn có quyền truy cập, chỉnh sửa hoặc xóa dữ liệu cá nhân của mình. Bạn có thể xóa tài khoản của mình bất kỳ lúc nào thông qua cài đặt ứng dụng."
+      },
+      "terms": {
+        "title": "5. Điều khoản Dịch vụ",
+        "content": "Bằng cách sử dụng nền tảng của chúng tôi, bạn đồng ý không tham gia vào bất kỳ hoạt động lạm dụng, quấy rối hoặc bất hợp pháp nào. Chúng tôi có quyền đình chỉ hoặc chấm dứt các tài khoản vi phạm các điều khoản này."
+      }
+    }
   }
 }

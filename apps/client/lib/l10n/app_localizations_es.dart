@@ -1095,4 +1095,19 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get orContinueWith => 'Or continue with';
+
+  @override
+  String agreeToTerms(String privacyPolicy, String termsOfService) {
+    return 'I agree to the $privacyPolicy and $termsOfService';
+  }
+
+  @override
+  String get privacyPolicy => 'Privacy Policy';
+
+  @override
+  String get termsOfService => 'Terms of Service';
+
+  @override
+  String get valMustAgreeTerms =>
+      'You must agree to the Terms of Service to register';
 }
