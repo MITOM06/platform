@@ -63,7 +63,11 @@
       "pwStrengthStrong": "Strong",
       "pwStrengthVeryStrong": "Very Strong",
       "googleRegister": "Sign up with Google",
-      "facebookRegister": "Sign up with Facebook"
+      "facebookRegister": "Sign up with Facebook",
+      "agreeToTerms": "I agree to the {privacyPolicy} and {termsOfService}",
+      "privacyPolicy": "Privacy Policy",
+      "termsOfService": "Terms of Service",
+      "mustAgree": "You must agree to the Terms of Service to register"
     },
     "verifyOtp": {
       "title": "Verify OTP",
@@ -408,5 +412,31 @@
     "emptyMedia": "No photos or videos shared yet",
     "emptyFiles": "No files shared yet",
     "emptyLinks": "No links shared yet"
+  },
+  "legal": {
+    "title": "Privacy Policy & Terms of Service",
+    "lastUpdated": "Last updated: June 15, 2026",
+    "sections": {
+      "dataCollection": {
+        "title": "1. Data Collection",
+        "content": "We collect information you provide directly to us, such as when you create or modify your account, use our services, or communicate with us. This includes your name, email address, profile picture, and the messages you send."
+      },
+      "dataUsage": {
+        "title": "2. How We Use Your Data",
+        "content": "Your data is used to provide, maintain, and improve our services, including facilitating communication between users, ensuring security, and personalizing your experience."
+      },
+      "security": {
+        "title": "3. Security",
+        "content": "We implement industry-standard security measures to protect your personal information and messages. Access to data is strictly controlled and we use encryption to secure sensitive information."
+      },
+      "userRights": {
+        "title": "4. Your Rights",
+        "content": "You have the right to access, correct, or delete your personal data. You can delete your account at any time through the application settings."
+      },
+      "terms": {
+        "title": "5. Terms of Service",
+        "content": "By using our platform, you agree not to engage in any abusive, harassing, or illegal activities. We reserve the right to suspend or terminate accounts that violate these terms."
+      }
+    }
   }
 }

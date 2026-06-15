@@ -1,4 +1,5 @@
 import { Client, type IMessage, type StompSubscription } from '@stomp/stompjs'
+import { useAuthStore } from '@/lib/store/auth.store'
 
 // Singleton STOMP client — one connection per session
 let client: Client | null = null
@@ -12,10 +13,20 @@ function notifyStateChange(connected: boolean) {
 export const stompService = {
   connect(token: string): Promise<void> {
     return new Promise((resolve, reject) => {
+      // Disconnect any existing client before creating a new one to prevent leaks/loops
+      if (client) {
+        client.deactivate()
+        client = null
+      }
+      
       client = new Client({
         brokerURL: process.env.NEXT_PUBLIC_WS_URL,
-        connectHeaders: { Authorization: `Bearer ${token}` },
         reconnectDelay: 5000,
+        beforeConnect: () => {
+          // Dynamically set token before every connect/reconnect
+          const currentToken = useAuthStore.getState().accessToken
+          client!.connectHeaders = { Authorization: `Bearer ${currentToken || token}` }
+        },
         onConnect: () => {
           resolve()
           connectResolvers.forEach((r) => r())

@@ -1085,4 +1085,19 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get orContinueWith => 'Hoặc tiếp tục với';
+
+  @override
+  String agreeToTerms(String privacyPolicy, String termsOfService) {
+    return 'Tôi đồng ý với $privacyPolicy và $termsOfService';
+  }
+
+  @override
+  String get privacyPolicy => 'Chính sách Quyền riêng tư';
+
+  @override
+  String get termsOfService => 'Điều khoản Dịch vụ';
+
+  @override
+  String get valMustAgreeTerms =>
+      'Bạn phải đồng ý với Điều khoản Dịch vụ để đăng ký';
 }
