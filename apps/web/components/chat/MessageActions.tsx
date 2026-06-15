@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import {
-  MoreHorizontal, Pencil, Trash2, Trash, Share2, Pin, PinOff, Smile, Brain, Reply,
+  MoreHorizontal, Pencil, Trash2, Trash, Share2, Pin, PinOff, Smile, Brain, Reply, CheckCheck,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import {
@@ -24,6 +24,8 @@ interface Props {
   onForward?: () => void
   onReply?: () => void
   onAiTrace?: () => void
+  onGroupReadDetails?: () => void
+  onReactionsDetail?: () => void
   onOptimisticUpdate: (updated: Partial<Message> & { id: string }) => void
 }
 
@@ -35,6 +37,8 @@ export function MessageActions({
   onForward,
   onReply,
   onAiTrace,
+  onGroupReadDetails,
+  onReactionsDetail,
   onOptimisticUpdate,
 }: Props) {
   const [emojiOpen, setEmojiOpen] = useState(false)
@@ -136,6 +140,18 @@ export function MessageActions({
             <DropdownMenuItem onClick={onAiTrace}>
               <Brain className="size-4" />
               Xem AI trace
+            </DropdownMenuItem>
+          )}
+          {onGroupReadDetails && (
+            <DropdownMenuItem onClick={onGroupReadDetails}>
+              <CheckCheck className="size-4 text-pon-cyan" />
+              <span className="text-pon-cyan">Chi tiết người đã xem</span>
+            </DropdownMenuItem>
+          )}
+          {onReactionsDetail && message.reactions && message.reactions.length > 0 && (
+            <DropdownMenuItem onClick={onReactionsDetail}>
+              <Smile className="size-4" />
+              Chi tiết cảm xúc
             </DropdownMenuItem>
           )}
           <DropdownMenuSeparator />

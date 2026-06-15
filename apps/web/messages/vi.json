@@ -284,7 +284,12 @@
     "tabFiles": "Tài liệu",
     "tabLinks": "Liên kết",
     "leaveGroup": "Rời nhóm",
-    "actionOptions": "Tuỳ chọn"
+    "actionOptions": "Tuỳ chọn",
+    "offlineBanner": "Mất kết nối mạng",
+    "readDetails": "Chi tiết người đã xem",
+    "seenStatus": "Đã xem",
+    "noReadsYet": "Chưa có ai xem tin nhắn này",
+    "reactionsDetail": "Chi tiết cảm xúc"
   },
   "aiPersona": {
     "title": "AI Persona",

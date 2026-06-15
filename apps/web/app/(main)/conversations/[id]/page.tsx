@@ -474,17 +474,18 @@ export default function ConversationPage({ params }: Props) {
                         </span>
                       </div>
                     )}
-                    <MessageBubble
-                      message={msg}
-                      isOwn={msg.senderId === currentUser.id}
-                      currentUserId={currentUser.id}
-                      isPinned={pinnedMessages.includes(msg.id)}
-                      onEdit={setEditingMessage}
-                      onForward={setForwardMessage}
-                      onReply={setReplyingTo}
-                      onAiTrace={setTraceMessageId}
-                      onOptimisticUpdate={handleOptimisticUpdate}
-                    />
+                      <MessageBubble
+                        message={msg}
+                        isOwn={msg.senderId === currentUser.id}
+                        currentUserId={currentUser.id}
+                        isPinned={pinnedMessages.includes(msg.id)}
+                        isGroup={isGroup}
+                        onEdit={setEditingMessage}
+                        onForward={setForwardMessage}
+                        onReply={setReplyingTo}
+                        onAiTrace={setTraceMessageId}
+                        onOptimisticUpdate={handleOptimisticUpdate}
+                      />
                   </div>
                 )
               })
