@@ -31,8 +31,7 @@
       "emailNotFound": "Email is not registered",
       "systemError": "System error, please try again",
       "orContinueWith": "Or continue with",
-      "googleLogin": "Sign in with Google",
-      "facebookLogin": "Sign in with Facebook"
+      "googleLogin": "Sign in with Google"
     },
     "register": {
       "title": "Create Account",
@@ -63,7 +62,6 @@
       "pwStrengthStrong": "Strong",
       "pwStrengthVeryStrong": "Very Strong",
       "googleRegister": "Sign up with Google",
-      "facebookRegister": "Sign up with Facebook",
       "agreeToTerms": "I agree to the {privacyPolicy} and {termsOfService}",
       "privacyPolicy": "Privacy Policy",
       "termsOfService": "Terms of Service",

@@ -65,7 +65,7 @@ export class UsersService {
   }
 
   // ✅ Link hoặc update socialId cho user đã tồn tại
-  // Dùng khi: user đăng nhập bằng email thường, sau đó link Google/Facebook/Twitter
+  // Dùng khi: user đăng nhập bằng email thường, sau đó link Google/Twitter
   async updateSocialId(
     userId: string,
     provider: string,

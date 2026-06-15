@@ -1061,13 +1061,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get loginWithGoogle => 'Sign in with Google';
 
   @override
-  String get loginWithFacebook => 'Sign in with Facebook';
-
-  @override
   String get registerWithGoogle => 'Sign up with Google';
-
-  @override
-  String get registerWithFacebook => 'Sign up with Facebook';
 
   @override
   String get orContinueWith => 'Or continue with';

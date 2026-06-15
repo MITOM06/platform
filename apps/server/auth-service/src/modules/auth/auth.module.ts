@@ -7,7 +7,6 @@ import { JwtModule } from '@nestjs/jwt';
 import { UsersModule } from '../users/users.module';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { TwitterStrategy } from './strategies/x.strategy';
-import { FacebookStrategy } from './strategies/facebook.strategy';
 import { GoogleStrategy } from './strategies/google.strategy';
 import { MailModule } from '../Email/mail.module';
 import { ConfigModule, ConfigService } from '@nestjs/config';
@@ -35,7 +34,6 @@ import { PassportModule } from '@nestjs/passport';
     SessionService,
     JwtStrategy,
     ...(process.env.GOOGLE_CLIENT_ID ? [GoogleStrategy] : []),
-    ...(process.env.FACEBOOK_APP_ID ? [FacebookStrategy] : []),
     ...(process.env.X_CLIENT_ID ? [TwitterStrategy] : []),
   ],
   exports: [AuthService],

@@ -318,17 +318,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                           side: BorderSide(color: Colors.white.withValues(alpha: 0.3)),
                         ),
                       ),
-                      const SizedBox(height: 8),
-                      OutlinedButton.icon(
-                        onPressed: () => _launchOAuth('facebook'),
-                        icon: const Icon(Icons.facebook, color: Color(0xFF1877F2)),
-                        label: Text(context.l10n.registerWithFacebook),
-                        style: OutlinedButton.styleFrom(
-                          foregroundColor: Colors.white,
-                          side: BorderSide(color: Colors.white.withValues(alpha: 0.3)),
-                        ),
-                      ),
-                      const SizedBox(height: 16),
+
 
                       // Back to login
                       Row(
