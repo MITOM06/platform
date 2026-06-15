@@ -3,6 +3,11 @@ import { Client, type IMessage, type StompSubscription } from '@stomp/stompjs'
 // Singleton STOMP client — one connection per session
 let client: Client | null = null
 let connectResolvers: Array<() => void> = []
+const stateChangeListeners: Array<(connected: boolean) => void> = []
+
+function notifyStateChange(connected: boolean) {
+  stateChangeListeners.forEach((l) => l(connected))
+}
 
 export const stompService = {
   connect(token: string): Promise<void> {
@@ -15,10 +20,15 @@ export const stompService = {
           resolve()
           connectResolvers.forEach((r) => r())
           connectResolvers = []
+          notifyStateChange(true)
         },
         onStompError: (frame) => reject(new Error(frame.headers['message'])),
         onDisconnect: () => {
           client = null
+          notifyStateChange(false)
+        },
+        onWebSocketClose: () => {
+          notifyStateChange(false)
         },
       })
       client.activate()
@@ -29,6 +39,7 @@ export const stompService = {
     client?.deactivate()
     client = null
     connectResolvers = []
+    notifyStateChange(false)
   },
 
   waitForConnect(): Promise<void> {
@@ -53,5 +64,15 @@ export const stompService = {
 
   isConnected(): boolean {
     return client?.connected ?? false
+  },
+
+  onStateChange(listener: (connected: boolean) => void): () => void {
+    stateChangeListeners.push(listener)
+    // Initial state
+    listener(this.isConnected())
+    return () => {
+      const index = stateChangeListeners.indexOf(listener)
+      if (index > -1) stateChangeListeners.splice(index, 1)
+    }
   },
 }

@@ -14,6 +14,7 @@ import { PublicChannelsModal } from './PublicChannelsModal'
 import { useConversations } from '@/lib/hooks/use-conversations'
 import { useUiStore } from '@/lib/store/ui.store'
 import { ActiveFriendsRow } from './ActiveFriendsRow'
+import { OfflineBanner } from './OfflineBanner'
 import { chatService } from '@/lib/api/chat'
 
 const AI_BOT_ID = 'ai-bot-000000000000000000000001'
@@ -127,6 +128,7 @@ export function ConversationList() {
           </Button>
         </div>
 
+        <OfflineBanner />
         <ActiveFriendsRow />
 
         <div className="flex-1 overflow-y-auto px-2 pb-2">

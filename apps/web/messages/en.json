@@ -284,7 +284,12 @@
     "tabFiles": "Files",
     "tabLinks": "Links",
     "leaveGroup": "Leave Group",
-    "actionOptions": "Options"
+    "actionOptions": "Options",
+    "offlineBanner": "No internet connection",
+    "readDetails": "Read by",
+    "seenStatus": "Seen",
+    "noReadsYet": "No one has read this message yet",
+    "reactionsDetail": "Reactions"
   },
   "aiPersona": {
     "title": "AI Persona",

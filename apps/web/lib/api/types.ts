@@ -68,6 +68,7 @@ export interface Message {
   recalled?: boolean
   reactions?: Reaction[]
   deletedFor?: string[]
+  readBy?: string[]
 }
 
 export interface MessagesResponse {

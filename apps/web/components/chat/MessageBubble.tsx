@@ -10,6 +10,8 @@ import { FileContent } from './FileContent'
 import { VoiceMessage } from './VoiceMessage'
 import { LinkPreviewCard } from './LinkPreviewCard'
 import { UserProfileDrawer } from './UserProfileDrawer'
+import { GroupReadDetailsModal } from './GroupReadDetailsModal'
+import { ReactionsDetailModal } from './ReactionsDetailModal'
 import type { Message } from '@/lib/api/types'
 
 interface Props {
@@ -17,6 +19,7 @@ interface Props {
   isOwn: boolean
   currentUserId?: string
   isPinned?: boolean
+  isGroup?: boolean
   onEdit?: (message: Message) => void
   onForward?: (message: Message) => void
   onReply?: (message: Message) => void
@@ -31,12 +34,15 @@ function formatTime(iso: string): string {
   })
 }
 
-function ReactionBadge({ emoji, count }: { emoji: string; count: number }) {
+function ReactionBadge({ emoji, count, onClick }: { emoji: string; count: number; onClick?: () => void }) {
   return (
-    <span className="inline-flex items-center gap-0.5 bg-muted border rounded-full px-1.5 py-0.5 text-xs leading-none">
+    <button 
+      onClick={onClick}
+      className="inline-flex items-center gap-0.5 bg-muted border rounded-full px-1.5 py-0.5 text-xs leading-none hover:bg-muted/80 transition-colors"
+    >
       {emoji}
       {count > 1 && <span className="text-muted-foreground">{count}</span>}
-    </span>
+    </button>
   )
 }
 
@@ -48,6 +54,7 @@ export function MessageBubble({
   isOwn,
   currentUserId,
   isPinned = false,
+  isGroup = false,
   onEdit,
   onForward,
   onReply,
@@ -58,6 +65,8 @@ export function MessageBubble({
   const [hovered, setHovered] = useState(false)
   const [longPressActive, setLongPressActive] = useState(false)
   const [profileUserId, setProfileUserId] = useState<string | null>(null)
+  const [showReadDetails, setShowReadDetails] = useState(false)
+  const [showReactionsDetail, setShowReactionsDetail] = useState(false)
   const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const longPressAt = useRef(0)
 
@@ -264,7 +273,12 @@ export function MessageBubble({
         {reactionMap.size > 0 && (
           <div className={cn('flex flex-wrap gap-1', isOwn ? 'justify-end' : 'justify-start')}>
             {Array.from(reactionMap.entries()).map(([emoji, count]) => (
-              <ReactionBadge key={emoji} emoji={emoji} count={count} />
+              <ReactionBadge 
+                key={emoji} 
+                emoji={emoji} 
+                count={count} 
+                onClick={() => setShowReactionsDetail(true)}
+              />
             ))}
           </div>
         )}
@@ -281,10 +295,14 @@ export function MessageBubble({
           onReply={onReply ? () => onReply(message) : undefined}
           onAiTrace={onAiTrace ? () => onAiTrace(message.id) : undefined}
           onOptimisticUpdate={onOptimisticUpdate}
+          onGroupReadDetails={isOwn && isGroup ? () => setShowReadDetails(true) : undefined}
+          onReactionsDetail={message.reactions && message.reactions.length > 0 ? () => setShowReactionsDetail(true) : undefined}
         />
       </div>
     </div>
     <UserProfileDrawer userId={profileUserId} onClose={() => setProfileUserId(null)} />
+    {showReadDetails && <GroupReadDetailsModal message={message} open={showReadDetails} onClose={() => setShowReadDetails(false)} />}
+    {showReactionsDetail && <ReactionsDetailModal message={message} open={showReactionsDetail} onClose={() => setShowReactionsDetail(false)} />}
     </>
   )
 }
