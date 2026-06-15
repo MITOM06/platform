@@ -46,7 +46,7 @@ class __ChangePasswordDialogContentState
     final confirmPass = _confirmPasswordController.text;
 
     // NOTE: current password is intentionally NOT required here. Social-login
-    // (Google/Facebook) accounts have no password yet and must be able to set
+    // (Google) accounts have no password yet and must be able to set
     // one for the first time. The server enforces the current-password check
     // only for accounts that already have a password.
     if (newPass.length < 6) {
