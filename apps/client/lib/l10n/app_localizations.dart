@@ -2124,23 +2124,11 @@ abstract class AppLocalizations {
   /// **'Sign in with Google'**
   String get loginWithGoogle;
 
-  /// No description provided for @loginWithFacebook.
-  ///
-  /// In en, this message translates to:
-  /// **'Sign in with Facebook'**
-  String get loginWithFacebook;
-
   /// No description provided for @registerWithGoogle.
   ///
   /// In en, this message translates to:
   /// **'Sign up with Google'**
   String get registerWithGoogle;
-
-  /// No description provided for @registerWithFacebook.
-  ///
-  /// In en, this message translates to:
-  /// **'Sign up with Facebook'**
-  String get registerWithFacebook;
 
   /// No description provided for @orContinueWith.
   ///

@@ -1075,13 +1075,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get loginWithGoogle => 'Đăng nhập bằng Google';
 
   @override
-  String get loginWithFacebook => 'Đăng nhập bằng Facebook';
-
-  @override
   String get registerWithGoogle => 'Đăng ký bằng Google';
-
-  @override
-  String get registerWithFacebook => 'Đăng ký bằng Facebook';
 
   @override
   String get orContinueWith => 'Hoặc tiếp tục với';

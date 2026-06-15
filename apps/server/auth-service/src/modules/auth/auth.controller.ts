@@ -47,17 +47,7 @@ export class AuthController {
     return this.auth.handleSocialLogin(req.user, res, 'google', platform);
   }
 
-  @Get('facebook')
-  @UseGuards(AuthGuard('facebook'))
-  async facebook() {}
 
-  @Get('facebook/callback')
-  @UseGuards(AuthGuard('facebook'))
-  async facebookCallback(@Req() req: any, @Res() res: Response) {
-    const platform = req.cookies?.['oauth_platform'] || 'mobile';
-    res.clearCookie('oauth_platform');
-    return this.auth.handleSocialLogin(req.user, res, 'facebook', platform);
-  }
 
   @Get('twitter')
   @UseGuards(AuthGuard('twitter'))
@@ -81,7 +71,7 @@ export class AuthController {
     @Res() res: Response,
     @Query('platform') platform: string,
   ) {
-    const provider = req.params.provider; // google | facebook | twitter
+    const provider = req.params.provider; // google | twitter
 
     // Save platform vào cookie — httpOnly để client JS không đọc được
     res.cookie('oauth_platform', platform || 'mobile', {

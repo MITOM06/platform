@@ -31,8 +31,7 @@
       "emailNotFound": "Email chưa được đăng ký",
       "systemError": "Lỗi hệ thống, vui lòng thử lại",
       "orContinueWith": "Hoặc tiếp tục với",
-      "googleLogin": "Đăng nhập bằng Google",
-      "facebookLogin": "Đăng nhập bằng Facebook"
+      "googleLogin": "Đăng nhập bằng Google"
     },
     "register": {
       "title": "Tạo tài khoản",
@@ -63,7 +62,6 @@
       "pwStrengthStrong": "Mạnh",
       "pwStrengthVeryStrong": "Rất mạnh",
       "googleRegister": "Đăng ký bằng Google",
-      "facebookRegister": "Đăng ký bằng Facebook",
       "agreeToTerms": "Tôi đồng ý với {privacyPolicy} và {termsOfService}",
       "privacyPolicy": "Chính sách Quyền riêng tư",
       "termsOfService": "Điều khoản Dịch vụ",
