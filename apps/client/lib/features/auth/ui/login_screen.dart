@@ -58,7 +58,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   }
 
   Future<void> _launchOAuth(String provider) async {
-    const authBase = String.fromEnvironment('AUTH_BASE_URL', defaultValue: 'http://localhost:3001');
+    const authBase = String.fromEnvironment('AUTH_BASE_URL', defaultValue: 'https://auth-service-942942821810.asia-southeast1.run.app');
     final uri = Uri.parse('$authBase/auth/social/$provider/init?platform=mobile');
     if (await canLaunchUrl(uri)) {
       await launchUrl(uri, mode: LaunchMode.externalApplication);

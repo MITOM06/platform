@@ -62,7 +62,7 @@
       "pwStrengthStrong": "Strong",
       "pwStrengthVeryStrong": "Very Strong",
       "googleRegister": "Sign up with Google",
-      "agreeToTerms": "I agree to the {privacyPolicy} and {termsOfService}",
+      "agreeToTerms": "I agree to the <privacyPolicy>Privacy Policy</privacyPolicy> and <termsOfService>Terms of Service</termsOfService>",
       "privacyPolicy": "Privacy Policy",
       "termsOfService": "Terms of Service",
       "mustAgree": "You must agree to the Terms of Service to register"
