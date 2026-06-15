@@ -11,6 +11,7 @@ import {
   HttpStatus,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
+import { GoogleOAuthGuard } from './guards/google-oauth.guard';
 import { AuthService } from './auth.service';
 import type { Response } from 'express';
 import { RegisterDto } from './dto/register.dto';
@@ -32,17 +33,19 @@ export class AuthController {
   // Cách đơn giản hơn: save platform vào session/cookie trước khi redirect sang Google
 
   @Get('google')
-  @UseGuards(AuthGuard('google'))
-  async google(@Query('platform') platform: string, @Req() req: any) {
-    // ✅ Save platform vào req object — passport sẽ carry theo suốt flow
-    // Nhưng req không persist qua redirect — cần dùng cookie
+  @UseGuards(GoogleOAuthGuard)
+  async google() {
+    // GoogleOAuthGuard reads ?platform=… and forwards it through the OAuth
+    // `state` param, so the callback can recover it cookie-independently.
   }
 
   @Get('google/callback')
-  @UseGuards(AuthGuard('google'))
+  @UseGuards(GoogleOAuthGuard)
   async googleCallback(@Req() req: any, @Res() res: Response) {
-    // ✅ Lấy platform từ cookie do initiate endpoint set
-    const platform = req.cookies?.['oauth_platform'] || 'mobile';
+    // ✅ Platform travels in the OAuth `state` param (echoed back by Google).
+    // Fall back to the cookie for backwards compatibility / older links.
+    const platform =
+      req.query?.state || req.cookies?.['oauth_platform'] || 'mobile';
     res.clearCookie('oauth_platform');
     return this.auth.handleSocialLogin(req.user, res, 'google', platform);
   }
@@ -72,16 +75,25 @@ export class AuthController {
     @Query('platform') platform: string,
   ) {
     const provider = req.params.provider; // google | twitter
+    const resolvedPlatform = platform || 'mobile';
 
-    // Save platform vào cookie — httpOnly để client JS không đọc được
-    res.cookie('oauth_platform', platform || 'mobile', {
+    // Fallback cookie (primary mechanism is the OAuth `state` param via query).
+    // Twitter enables `state: true` for PKCE/CSRF, so it can't overload `state`
+    // and still relies on this cookie — give it room to outlive the consent
+    // screen and proper SameSite/Secure so it survives the cross-site redirect.
+    res.cookie('oauth_platform', resolvedPlatform, {
       httpOnly: true,
-      maxAge: 60 * 1000, // 1 phút — chỉ cần sống đủ thời gian OAuth flow
+      maxAge: 10 * 60 * 1000, // 10 phút — đủ cho cả màn hình consent của Google
+      sameSite: 'lax',
+      secure: process.env.NODE_ENV === 'production',
       path: '/',
     });
 
+    // Carry platform in the query so GoogleOAuthGuard can forward it as `state`.
     // Redirect về endpoint OAuth thật — AuthGuard sẽ kick off OAuth flow
-    return res.redirect(`/auth/${provider}`);
+    return res.redirect(
+      `/auth/${provider}?platform=${encodeURIComponent(resolvedPlatform)}`,
+    );
   }
 
   // ===================== AUTH ENDPOINTS =====================
