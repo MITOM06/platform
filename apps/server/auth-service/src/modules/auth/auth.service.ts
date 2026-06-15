@@ -40,9 +40,6 @@ export class AuthService {
     const userId = await this.ensureUserIdFromSocial(user, provider);
     const code = await this.createLoginCode(userId);
 
-    const mobileDeeplink =
-      this.configService.get<string>('MOBILE_DEEPLINK_URL') ||
-      'platform://auth';
     const webRedirect =
       this.configService.get<string>('WEB_REDIRECT_URL') ||
       'http://localhost:8081';
@@ -51,16 +48,47 @@ export class AuthService {
       return res.redirect(`${webRedirect}?code=${code}`);
     }
 
-    // Mobile: HTTP 302 redirect bị Chrome/Safari block với custom scheme.
-    // Trả HTML + window.location để browser tự navigate.
-    const deeplink = `${mobileDeeplink}?code=${encodeURIComponent(code)}`;
+    // Mobile deep-link:
+    // - iOS Safari: platform://auth?code=xxx  (CFBundleURLSchemes handles it fine)
+    // - Android Chrome: intent:// URI — Chrome converts to Android Intent directly,
+    //   bypassing the custom-scheme block that affects platform:// redirects.
+    const encodedCode = encodeURIComponent(code);
+    const iosDeeplink = `platform://auth?code=${encodedCode}`;
+    // intent://auth?code=xxx#Intent;scheme=platform;package=<id>;end
+    const androidIntent = `intent://auth?code=${encodedCode}#Intent;scheme=platform;package=com.platform.platform_client;S.browser_fallback_url=https%3A%2F%2Fplatform-web-omega-amber.vercel.app%2Flogin;end`;
+
     return res.send(`<!DOCTYPE html>
 <html>
-<head><meta charset="utf-8"><title>Redirecting...</title></head>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Đang chuyển về ứng dụng...</title>
+  <style>
+    body{font-family:sans-serif;display:flex;flex-direction:column;align-items:center;
+         justify-content:center;height:100vh;margin:0;background:#0f0f0f;color:#fff}
+    a{display:inline-block;margin-top:16px;padding:12px 24px;background:#00e5ff;
+      color:#000;border-radius:8px;text-decoration:none;font-weight:600}
+    p{color:#aaa;font-size:14px}
+  </style>
+</head>
 <body>
-<script>window.location.replace(${JSON.stringify(deeplink)});</script>
-<p>Đang chuyển về ứng dụng...<br>
-<a href="${deeplink}">Nhấn đây nếu không tự động chuyển</a></p>
+  <p>Đang chuyển về ứng dụng PON...</p>
+  <a id="btn" href="${iosDeeplink}">Mở ứng dụng</a>
+  <p id="msg" style="display:none">Không tự động mở? Nhấn nút bên trên.</p>
+  <script>
+    var ua = navigator.userAgent;
+    var isAndroid = /Android/.test(ua);
+    var deeplink = isAndroid ? ${JSON.stringify(androidIntent)} : ${JSON.stringify(iosDeeplink)};
+    document.getElementById('btn').href = deeplink;
+    // Auto-redirect after small delay (counts as page navigation)
+    setTimeout(function() {
+      window.location.replace(deeplink);
+      // Show fallback button if app didn't open within 2s
+      setTimeout(function() {
+        document.getElementById('msg').style.display = 'block';
+      }, 2000);
+    }, 300);
+  </script>
 </body>
 </html>`);
   }
