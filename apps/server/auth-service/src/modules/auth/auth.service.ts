@@ -40,15 +40,29 @@ export class AuthService {
     const userId = await this.ensureUserIdFromSocial(user, provider);
     const code = await this.createLoginCode(userId);
 
-    const mobileRedirect =
+    const mobileDeeplink =
       this.configService.get<string>('MOBILE_DEEPLINK_URL') ||
       'platform://auth';
     const webRedirect =
       this.configService.get<string>('WEB_REDIRECT_URL') ||
       'http://localhost:8081';
-    const redirectUrl = platform === 'web' ? webRedirect : mobileRedirect;
 
-    return res.redirect(`${redirectUrl}?code=${code}`);
+    if (platform === 'web') {
+      return res.redirect(`${webRedirect}?code=${code}`);
+    }
+
+    // Mobile: HTTP 302 redirect bị Chrome/Safari block với custom scheme.
+    // Trả HTML + window.location để browser tự navigate.
+    const deeplink = `${mobileDeeplink}?code=${encodeURIComponent(code)}`;
+    return res.send(`<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><title>Redirecting...</title></head>
+<body>
+<script>window.location.replace(${JSON.stringify(deeplink)});</script>
+<p>Đang chuyển về ứng dụng...<br>
+<a href="${deeplink}">Nhấn đây nếu không tự động chuyển</a></p>
+</body>
+</html>`);
   }
 
   async ensureUserIdFromSocial(

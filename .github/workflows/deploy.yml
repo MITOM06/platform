@@ -129,9 +129,10 @@ jobs:
             X_CLIENT_ID=${{ secrets.X_CLIENT_ID }}
             X_CLIENT_SECRET=${{ secrets.X_CLIENT_SECRET }}
             GOOGLE_CALLBACK_URL=https://auth-service-942942821810.asia-southeast1.run.app/auth/google/callback
-            FACEBOOK_CALLBACK_URL=https://auth-service-942942821810.asia-southeast1.run.app/auth/facebook/callback
             X_CALLBACK_URL=https://auth-service-942942821810.asia-southeast1.run.app/auth/x/callback
             BASE_URL=https://auth-service-942942821810.asia-southeast1.run.app
+            WEB_REDIRECT_URL=https://platform-web-omega-amber.vercel.app/oauth-callback
+            MOBILE_DEEPLINK_URL=platform://auth
 
       # Deploy chat-service (min 1 instance — WebSocket needs persistent connection)
       - name: Deploy chat-service
