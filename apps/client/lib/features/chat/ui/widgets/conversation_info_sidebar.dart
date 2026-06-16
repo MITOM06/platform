@@ -12,6 +12,7 @@ import '../../domain/chat_state.dart';
 import 'chat_wallpaper_dialog.dart';
 import 'conversation_avatar.dart';
 import 'conversation_customisation_dialogs.dart';
+import 'pinned_messages_section.dart';
 
 class ConversationInfoSidebar extends ConsumerWidget {
   final String conversationId;
@@ -206,6 +207,28 @@ class ConversationInfoSidebar extends ConsumerWidget {
               ),
             ],
           ),
+          // Pinned Messages (Task 53) — reflects live chat-state pinned list.
+          Builder(builder: (context) {
+            final pinned = ref
+                    .watch(chatNotifierProvider(conversationId))
+                    .valueOrNull
+                    ?.pinnedMessages ??
+                conv?.pinnedMessages ??
+                const [];
+            if (pinned.isEmpty) return const SizedBox.shrink();
+            return ExpansionTile(
+              title: Text(context.l10n.pinnedMessagesTitle,
+                  style: const TextStyle(
+                      fontWeight: FontWeight.w600, fontSize: 14)),
+              children: [
+                PinnedMessagesSection(
+                  conversationId: conversationId,
+                  pinnedMessages: pinned,
+                  showHeader: false,
+                ),
+              ],
+            );
+          }),
           // Privacy & Support
           ExpansionTile(
             title: Text(context.l10n.privacyAndSupportCategory,

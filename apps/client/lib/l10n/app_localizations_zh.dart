@@ -654,6 +654,18 @@ class AppLocalizationsZh extends AppLocalizations {
   String get pinMessage => '置顶';
 
   @override
+  String get unpinMessage => '取消置顶';
+
+  @override
+  String get pinnedMessagesTitle => '置顶消息';
+
+  @override
+  String get pinLimitReached => '最多只能置顶 2 条消息';
+
+  @override
+  String get cannotPinCall => '通话无法置顶';
+
+  @override
   String get forwardMessage => '转发';
 
   @override

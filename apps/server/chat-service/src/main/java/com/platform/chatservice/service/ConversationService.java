@@ -415,7 +415,12 @@ public class ConversationService {
         if (c.getPinnedMessages() == null || c.getPinnedMessages().isEmpty()) {
             return List.of();
         }
-        return c.getPinnedMessages().stream()
+        // Clamp to max 2 for visual consistency with legacy data that may hold up to 5 ids.
+        List<String> ids = c.getPinnedMessages();
+        if (ids.size() > 2) {
+            ids = ids.subList(0, 2);
+        }
+        return ids.stream()
             .map(messageId -> messageRepository.findById(messageId).orElse(null))
             .filter(m -> m != null && !m.isRecalled())
             .map(m -> new ConversationResponse.PinnedMessageDto(

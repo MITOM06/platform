@@ -210,6 +210,10 @@
     }
   },
   "pinMessage": "Épingler",
+  "unpinMessage": "Désépingler",
+  "pinnedMessagesTitle": "Messages épinglés",
+  "pinLimitReached": "Vous pouvez épingler jusqu'à 2 messages",
+  "cannotPinCall": "Les appels ne peuvent pas être épinglés",
   "forwardMessage": "Transférer",
   "messageForwarded": "Message transféré",
   "forwardFailed": "Échec du transfert",

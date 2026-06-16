@@ -210,6 +210,10 @@
     }
   },
   "pinMessage": "ピン留め",
+  "unpinMessage": "ピン留め解除",
+  "pinnedMessagesTitle": "ピン留めしたメッセージ",
+  "pinLimitReached": "ピン留めできるメッセージは2件までです",
+  "cannotPinCall": "通話はピン留めできません",
   "forwardMessage": "転送",
   "messageForwarded": "メッセージを転送しました",
   "forwardFailed": "転送に失敗しました",

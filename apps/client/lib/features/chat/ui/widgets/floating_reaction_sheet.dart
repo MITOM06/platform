@@ -44,6 +44,12 @@ class FloatingReactionSheet extends ConsumerWidget {
     final convs = ref.watch(conversationsNotifierProvider).valueOrNull;
     final isGroupChat =
         convs?.any((c) => c.id == message.conversationId && c.isGroup) ?? false;
+    // Read the *current* pinned set so the Pin/Unpin label stays in sync
+    // after a STOMP update (spec: unpin toggle freshness).
+    final chatState =
+        ref.watch(chatNotifierProvider(message.conversationId)).valueOrNull;
+    final isPinned =
+        chatState?.pinnedMessages.any((p) => p.id == message.id) ?? false;
 
     return BackdropFilter(
       filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
@@ -167,14 +173,26 @@ class FloatingReactionSheet extends ConsumerWidget {
                             showGroupReadDetailsModal(context, message);
                           },
                         ),
-                      ListTile(
-                        leading: const Icon(Icons.push_pin_outlined, color: AppTheme.ponCyan),
-                        title: Text(l10n.pinMessage, style: const TextStyle(color: AppTheme.ponCyan)),
-                        onTap: () {
-                          notifier.pinMessage(message);
-                          context.pop();
-                        },
-                      ),
+                      // Calls can't be pinned — hide the action entirely.
+                      if (!message.isCallLog)
+                        ListTile(
+                          leading: Icon(
+                            isPinned ? Icons.push_pin : Icons.push_pin_outlined,
+                            color: AppTheme.ponCyan,
+                          ),
+                          title: Text(
+                            isPinned ? l10n.unpinMessage : l10n.pinMessage,
+                            style: const TextStyle(color: AppTheme.ponCyan),
+                          ),
+                          onTap: () {
+                            if (isPinned) {
+                              notifier.unpinMessage(message.id);
+                            } else {
+                              notifier.pinMessage(message);
+                            }
+                            context.pop();
+                          },
+                        ),
                       ListTile(
                         leading: const Icon(Icons.forward_to_inbox_outlined, color: Colors.white70),
                         title: Text(l10n.forwardMessage, style: const TextStyle(color: Colors.white)),

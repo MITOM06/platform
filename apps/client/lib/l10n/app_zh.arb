@@ -210,6 +210,10 @@
     }
   },
   "pinMessage": "置顶",
+  "unpinMessage": "取消置顶",
+  "pinnedMessagesTitle": "置顶消息",
+  "pinLimitReached": "最多只能置顶 2 条消息",
+  "cannotPinCall": "通话无法置顶",
   "forwardMessage": "转发",
   "messageForwarded": "消息已转发",
   "forwardFailed": "转发失败",

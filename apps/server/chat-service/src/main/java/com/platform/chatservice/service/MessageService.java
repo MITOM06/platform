@@ -260,6 +260,9 @@ public class MessageService {
         if (message.isRecalled()) {
             throw new IllegalArgumentException("Cannot pin a recalled message");
         }
+        if ("call_log".equals(message.getType())) {
+            throw new IllegalArgumentException("Cannot pin a call message");
+        }
         if (conversation.isGroup()) {
             boolean isAdmin = conversation.getAdmins() != null
                 && conversation.getAdmins().contains(userId);
@@ -271,8 +274,8 @@ public class MessageService {
             ? new ArrayList<>() : new ArrayList<>(conversation.getPinnedMessages());
         pinned.remove(messageId);
         pinned.add(0, messageId);
-        if (pinned.size() > 5) {
-            pinned = pinned.subList(0, 5);
+        if (pinned.size() > 2) {
+            pinned = pinned.subList(0, 2);
         }
         conversation.setPinnedMessages(pinned);
         conversationRepository.save(conversation);

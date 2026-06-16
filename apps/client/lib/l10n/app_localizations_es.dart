@@ -669,6 +669,18 @@ class AppLocalizationsEs extends AppLocalizations {
   String get pinMessage => 'Fijar';
 
   @override
+  String get unpinMessage => 'Dejar de fijar';
+
+  @override
+  String get pinnedMessagesTitle => 'Mensajes fijados';
+
+  @override
+  String get pinLimitReached => 'Puedes fijar hasta 2 mensajes';
+
+  @override
+  String get cannotPinCall => 'Las llamadas no se pueden fijar';
+
+  @override
   String get forwardMessage => 'Reenviar';
 
   @override

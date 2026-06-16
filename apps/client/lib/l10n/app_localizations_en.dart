@@ -662,6 +662,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String get pinMessage => 'Pin';
 
   @override
+  String get unpinMessage => 'Unpin';
+
+  @override
+  String get pinnedMessagesTitle => 'Pinned Messages';
+
+  @override
+  String get pinLimitReached => 'You can pin up to 2 messages';
+
+  @override
+  String get cannotPinCall => 'Calls can\'t be pinned';
+
+  @override
   String get forwardMessage => 'Forward';
 
   @override

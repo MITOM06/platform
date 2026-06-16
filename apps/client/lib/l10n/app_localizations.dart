@@ -1326,6 +1326,30 @@ abstract class AppLocalizations {
   /// **'Pin'**
   String get pinMessage;
 
+  /// No description provided for @unpinMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Unpin'**
+  String get unpinMessage;
+
+  /// No description provided for @pinnedMessagesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Pinned Messages'**
+  String get pinnedMessagesTitle;
+
+  /// No description provided for @pinLimitReached.
+  ///
+  /// In en, this message translates to:
+  /// **'You can pin up to 2 messages'**
+  String get pinLimitReached;
+
+  /// No description provided for @cannotPinCall.
+  ///
+  /// In en, this message translates to:
+  /// **'Calls can\'t be pinned'**
+  String get cannotPinCall;
+
   /// No description provided for @forwardMessage.
   ///
   /// In en, this message translates to:

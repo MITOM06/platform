@@ -210,6 +210,10 @@
     }
   },
   "pinMessage": "Fijar",
+  "unpinMessage": "Dejar de fijar",
+  "pinnedMessagesTitle": "Mensajes fijados",
+  "pinLimitReached": "Puedes fijar hasta 2 mensajes",
+  "cannotPinCall": "Las llamadas no se pueden fijar",
   "forwardMessage": "Reenviar",
   "messageForwarded": "Mensaje reenviado",
   "forwardFailed": "Error al reenviar el mensaje",

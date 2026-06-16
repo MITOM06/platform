@@ -23,6 +23,7 @@ import { ActionOptionsSection } from './group/ActionOptionsSection'
 import { CustomizeChatSection } from './group/CustomizeChatSection'
 import { FilesMediaSection } from './group/FilesMediaSection'
 import { PrivacySupportSection } from './group/PrivacySupportSection'
+import { PinnedMessagesSection } from './PinnedMessagesSection'
 import { getNickname, setNickname, nicknameSystemMessage } from '@/lib/nicknames'
 import {
   useQuickReaction, setQuickReaction, quickReactionSystemMessage,
@@ -277,6 +278,22 @@ export function ConversationSettingsDrawer({
                   ) : null}
                 </AccordionContent>
               </AccordionItem>
+
+              {/* Pinned Messages */}
+              {conversation.pinnedMessages.length > 0 && (
+                <AccordionItem value="pinned" className="border-none">
+                  <AccordionTrigger className="hover:no-underline py-2 data-[state=open]:text-pon-cyan">
+                    <span className="font-semibold text-sm">{t('pinnedMessages')}</span>
+                  </AccordionTrigger>
+                  <AccordionContent className="pb-4 pt-1">
+                    <PinnedMessagesSection
+                      conversationId={conversation.id}
+                      pinnedMessages={conversation.pinnedMessages}
+                      onJump={onClose}
+                    />
+                  </AccordionContent>
+                </AccordionItem>
+              )}
 
               {/* Action Options (React-specific: Mark read, Archive, Auto-Delete) */}
               <ActionOptionsSection

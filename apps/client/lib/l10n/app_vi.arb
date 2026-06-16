@@ -210,6 +210,10 @@
     }
   },
   "pinMessage": "Ghim",
+  "unpinMessage": "Bỏ ghim",
+  "pinnedMessagesTitle": "Tin nhắn đã ghim",
+  "pinLimitReached": "Bạn chỉ có thể ghim tối đa 2 tin nhắn",
+  "cannotPinCall": "Không thể ghim cuộc gọi",
   "forwardMessage": "Chuyển tiếp",
   "messageForwarded": "Đã chuyển tiếp tin nhắn",
   "forwardFailed": "Chuyển tiếp thất bại",

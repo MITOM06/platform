@@ -663,6 +663,18 @@ class AppLocalizationsVi extends AppLocalizations {
   String get pinMessage => 'Ghim';
 
   @override
+  String get unpinMessage => 'Bỏ ghim';
+
+  @override
+  String get pinnedMessagesTitle => 'Tin nhắn đã ghim';
+
+  @override
+  String get pinLimitReached => 'Bạn chỉ có thể ghim tối đa 2 tin nhắn';
+
+  @override
+  String get cannotPinCall => 'Không thể ghim cuộc gọi';
+
+  @override
   String get forwardMessage => 'Chuyển tiếp';
 
   @override
