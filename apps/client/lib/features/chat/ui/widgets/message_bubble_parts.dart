@@ -151,7 +151,6 @@ class SystemMessage extends ConsumerWidget {
             : (actorProfile?.displayName ?? '...'));
 
     String text = message.content;
-    final isVi = context.l10n.localeName == 'vi';
 
     if (message.content.startsWith('system.nickname.changed:')) {
       final parts = message.content.split(':');
@@ -167,35 +166,26 @@ class SystemMessage extends ConsumerWidget {
                 : (targetProfile?.displayName ?? '...'));
 
         if (nickname.isEmpty) {
-          text = isVi
-              ? (targetId == actorId
-                  ? '$actorName đã gỡ bỏ biệt danh của mình'
-                  : '$actorName đã gỡ bỏ biệt danh của $targetName')
-              : (targetId == actorId
-                  ? '$actorName cleared their own nickname'
-                  : '$actorName cleared the nickname of $targetName');
+          text = targetId == actorId
+              ? context.l10n.sysNicknameClearedSelf(actorName)
+              : context.l10n.sysNicknameClearedOther(actorName, targetName);
         } else {
-          text = isVi
-              ? (targetId == actorId
-                  ? '$actorName đã đặt biệt danh cho mình là $nickname'
-                  : '$actorName đã đặt biệt danh cho $targetName là $nickname')
-              : (targetId == actorId
-                  ? '$actorName set their nickname to $nickname'
-                  : '$actorName set the nickname of $targetName to $nickname');
+          text = targetId == actorId
+              ? context.l10n.sysNicknameSetSelf(actorName, nickname)
+              : context.l10n
+                  .sysNicknameSetOther(actorName, targetName, nickname);
         }
       }
     } else if (message.content.startsWith('system.theme.changed:')) {
-      text = isVi
-          ? '$actorName đã thay đổi chủ đề đoạn chat'
-          : '$actorName changed the chat theme';
+      text = context.l10n.sysThemeChanged(actorName);
     } else if (message.content.startsWith('system.quick_reaction.changed:')) {
       final parts = message.content.split(':');
       final emoji = parts.length > 1 ? parts[1] : '👍';
-      text = isVi
-          ? '$actorName đã thay đổi biểu tượng cảm xúc nhanh thành $emoji'
-          : '$actorName changed the quick reaction to $emoji';
+      text = context.l10n.sysQuickReactionChanged(actorName, emoji);
+    } else if (message.content.startsWith('system.call.')) {
+      return _CallSystemMessage(content: message.content);
     } else {
-      text = _systemText(context, message.content);
+      text = _systemText(context, message.content, actorName);
     }
 
     return Center(
@@ -218,20 +208,86 @@ class SystemMessage extends ConsumerWidget {
     );
   }
 
-  String _systemText(BuildContext context, String key) {
+  String _systemText(BuildContext context, String key, String actorName) {
     switch (key) {
       case 'system.group.created':
-        return context.l10n.createGroup;
+        return context.l10n.sysGroupCreated(actorName);
       case 'system.members.added':
-        return context.l10n.addMembers;
+        return context.l10n.sysMembersAdded(actorName);
       case 'system.member.left':
-        return context.l10n.leaveGroup;
+        return context.l10n.sysMemberLeft(actorName);
       case 'system.member.removed':
-        return context.l10n.removeMember;
+        return context.l10n.sysMemberRemoved(actorName);
       case 'system.member.joined':
-        return context.l10n.joinChannel;
+        return context.l10n.sysMemberJoined(actorName);
       default:
-        return key;
+        // Unknown system code — render nothing rather than a raw key string.
+        return '';
     }
   }
 }
+
+/// Centered call-log system message with a phone/video icon. Renders
+/// `system.call.ended:{kind}:{secs}` and `system.call.missed:{kind}`
+/// (mirrors web MessageBubble / system-messages.ts).
+class _CallSystemMessage extends StatelessWidget {
+  final String content;
+  const _CallSystemMessage({required this.content});
+
+  @override
+  Widget build(BuildContext context) {
+    // `system.call.ended:{kind}:{secs}` -> parts = [system.call.ended, kind, secs]
+    // `system.call.missed:{kind}`       -> parts = [system.call.missed, kind]
+    final parts = content.split(':');
+    final isMissed = content.startsWith('system.call.missed:');
+    final callKind = parts.length > 1 ? parts[1] : 'voice';
+    final isVideo = callKind == 'video';
+
+    String text;
+    if (isMissed) {
+      text = isVideo
+          ? context.l10n.systemVideoCallMissed
+          : context.l10n.systemVoiceCallMissed;
+    } else {
+      final secs = int.tryParse(parts.length > 3 ? parts[3] : '0') ?? 0;
+      final mm = (secs ~/ 60).toString().padLeft(2, '0');
+      final ss = (secs % 60).toString().padLeft(2, '0');
+      final duration = '$mm:$ss';
+      text = isVideo
+          ? context.l10n.systemVideoCallEnded(duration)
+          : context.l10n.systemVoiceCallEnded(duration);
+    }
+
+    return Center(
+      child: Container(
+        margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 40),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+        decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: 0.06),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              isVideo ? Icons.videocam : Icons.call,
+              size: 14,
+              color: isMissed
+                  ? Colors.redAccent.withValues(alpha: 0.8)
+                  : Colors.white.withValues(alpha: 0.5),
+            ),
+            const SizedBox(width: 6),
+            Text(
+              text,
+              style: TextStyle(
+                fontSize: 11.5,
+                color: Colors.white.withValues(alpha: 0.5),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+

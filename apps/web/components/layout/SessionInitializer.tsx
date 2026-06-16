@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
 import axios from 'axios'
 import { Loader2 } from 'lucide-react'
+import { useTranslations } from 'next-intl'
 import { useAuthStore } from '@/lib/store/auth.store'
 import type { AuthUser } from '@/lib/store/auth.store'
 
@@ -12,6 +13,7 @@ const PUBLIC_PATHS = ['/login', '/register', '/verify-otp']
 export function SessionInitializer({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
   const router = useRouter()
+  const t = useTranslations('layout')
   const setAuth = useAuthStore((s) => s.setAuth)
   const clearAuth = useAuthStore((s) => s.clearAuth)
   const isPublicPath = PUBLIC_PATHS.some((p) => pathname.startsWith(p))
@@ -42,7 +44,7 @@ export function SessionInitializer({ children }: { children: React.ReactNode }) 
       <div className="h-screen w-screen flex flex-col items-center justify-center bg-background text-foreground gap-3">
         <Loader2 className="size-8 animate-spin text-primary" />
         <p className="text-sm font-medium text-muted-foreground animate-pulse">
-          Đang kết nối phiên làm việc...
+          {t('sessionConnecting')}
         </p>
       </div>
     )

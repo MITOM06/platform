@@ -6,7 +6,10 @@ spring:
     mongodb:
       uri: ${SPRING_DATA_MONGODB_URI:mongodb://localhost:27018/platform}
     redis:
-      url: ${SPRING_DATA_REDIS_URL:}
+      # Falls back to a host/port-derived URL when SPRING_DATA_REDIS_URL is unset
+      # (an empty url crashes Lettuce with "scheme 'null' is not supported").
+      # Production sets SPRING_DATA_REDIS_URL (Upstash TLS) which overrides this.
+      url: ${SPRING_DATA_REDIS_URL:redis://${SPRING_DATA_REDIS_HOST:localhost}:${SPRING_DATA_REDIS_PORT:6379}}
       host: ${SPRING_DATA_REDIS_HOST:localhost}
       port: ${SPRING_DATA_REDIS_PORT:6379}
   jackson:

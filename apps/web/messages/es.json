@@ -12,6 +12,25 @@
     "noResults": "No results found",
     "members": "{count} members"
   },
+  "layout": {
+    "navExplore": "Explorar",
+    "navCreate": "Crear",
+    "navContacts": "Contactos",
+    "menuNewChat": "Nueva conversación",
+    "menuNewGroup": "Crear grupo",
+    "menuProfile": "Perfil",
+    "menuSettings": "Configuración",
+    "menuLogout": "Cerrar sesión",
+    "menuLightMode": "Modo claro",
+    "menuDarkMode": "Modo oscuro",
+    "notificationTitle": "Nuevo mensaje de {name}",
+    "notificationAttachment": "📎 Envió un archivo adjunto",
+    "notificationFallback": "Tienes un mensaje nuevo",
+    "notificationOpen": "Abrir",
+    "realtimeError": "No se pudo conectar en tiempo real",
+    "logoutError": "Error al cerrar sesión",
+    "sessionConnecting": "Conectando tu sesión..."
+  },
   "auth": {
     "emailLabel": "Email",
     "emailPlaceholder": "you@example.com",
@@ -61,7 +80,11 @@
       "pwStrengthMedium": "Medium",
       "pwStrengthStrong": "Strong",
       "pwStrengthVeryStrong": "Very Strong",
-      "googleRegister": "Sign up with Google"
+      "googleRegister": "Sign up with Google",
+      "agreeToTerms": "Acepto la <privacyPolicy>Política de Privacidad</privacyPolicy> y los <termsOfService>Términos de Servicio</termsOfService>",
+      "privacyPolicy": "Política de Privacidad",
+      "termsOfService": "Términos de Servicio",
+      "mustAgree": "Debes aceptar los Términos de Servicio para registrarte"
     },
     "verifyOtp": {
       "title": "Verify OTP",
@@ -96,6 +119,10 @@
       "sendError": "Unable to request password reset",
       "resetSuccess": "Password reset successfully. Please sign in.",
       "resetError": "Invalid or expired OTP code"
+    },
+    "oauth": {
+      "verifying": "Verificando...",
+      "failed": "Error de autenticación, inténtalo de nuevo."
     }
   },
   "settings": {
@@ -127,7 +154,24 @@
     "languageChanged": "Language changed",
     "logout": "Sign Out",
     "logoutError": "Sign out failed",
-    "version": "PON Messenger v1.0"
+    "version": "PON Messenger v1.0",
+    "changePasswordDialog": {
+      "title": "Cambiar contraseña",
+      "description": "Ingresa tu contraseña actual y una nueva para actualizar.",
+      "currentLabel": "Contraseña actual",
+      "currentPlaceholder": "Ingresa la contraseña actual...",
+      "newLabel": "Nueva contraseña",
+      "newPlaceholder": "Ingresa la nueva contraseña...",
+      "confirmLabel": "Confirmar nueva contraseña",
+      "confirmPlaceholder": "Reingresa la nueva contraseña...",
+      "minLength": "La nueva contraseña debe tener al menos 6 caracteres",
+      "mismatch": "Las contraseñas no coinciden",
+      "success": "¡Contraseña cambiada con éxito!",
+      "genericError": "Algo salió mal",
+      "incorrectCurrent": "La contraseña actual es incorrecta",
+      "currentRequired": "Por favor ingresa tu contraseña actual",
+      "atLeast6": "La contraseña debe tener al menos 6 caracteres"
+    }
   },
   "profile": {
     "title": "Edit Profile",
@@ -153,7 +197,18 @@
     "changeCover": "Change Cover",
     "coverSuccess": "Cover photo updated",
     "coverError": "Failed to upload cover photo",
-    "viewOnly": "View only"
+    "viewOnly": "View only",
+    "phoneTooLong": "El número de teléfono es demasiado largo",
+    "dobLabel": "Fecha de nacimiento",
+    "phoneLabel": "Número de teléfono",
+    "phonePlaceholder": "Tu número de teléfono",
+    "genderLabel": "Género",
+    "genderPlaceholder": "Seleccionar género",
+    "genderMale": "Hombre",
+    "genderFemale": "Mujer",
+    "genderOther": "Otro",
+    "hideInfoLabel": "Ocultar información personal",
+    "hideInfoHint": "Otros usuarios no verán tu cumpleaños, teléfono, género ni biografía."
   },
   "friends": {
     "title": "Friends",
@@ -169,7 +224,13 @@
     "searching": "Searching...",
     "noSearchResults": "No results found",
     "searchPrompt": "Enter a keyword to search for users",
-    "addFriend": "Add Friend"
+    "addFriend": "Add Friend",
+    "sendRequestSuccess": "Solicitud de amistad enviada",
+    "sendRequestError": "No se pudo enviar la solicitud de amistad",
+    "acceptRequestSuccess": "Solicitud de amistad aceptada",
+    "acceptRequestError": "No se pudo aceptar la solicitud de amistad",
+    "removeFriendSuccess": "Amigo eliminado / solicitud cancelada",
+    "removeFriendError": "No se pudo completar la acción"
   },
   "conversations": {
     "selectPrompt": "Select a conversation to start"
@@ -331,7 +392,101 @@
     "deleteForMeAction": "Eliminar para mí",
     "reactError": "No se pudo añadir la reacción",
     "recallError": "No se pudo retirar el mensaje",
-    "deleteError": "No se pudo eliminar el mensaje"
+    "deleteError": "No se pudo eliminar el mensaje",
+    "offlineBanner": "Sin conexión a internet",
+    "readDetails": "Leído por",
+    "seenStatus": "Visto",
+    "noReadsYet": "Nadie ha leído este mensaje aún",
+    "reactionsDetail": "Reacciones",
+    "sent": "Enviado",
+    "seen": "Visto",
+    "aiAssistant": "Asistente IA",
+    "online": "Activo",
+    "offline": "Desconectado",
+    "profileTitle": "Perfil",
+    "userFallback": "Usuario",
+    "openConversationError": "No se pudo abrir la conversación",
+    "friendRemoved": "Amigo eliminado",
+    "friendRequestSent": "Solicitud de amistad enviada",
+    "friendRequestAccepted": "Solicitud de amistad aceptada",
+    "actionFailed": "La acción falló",
+    "userUnblocked": "Usuario desbloqueado",
+    "userBlocked": "Usuario bloqueado",
+    "friendRemove": "Eliminar amigo",
+    "friendAccept": "Aceptar solicitud",
+    "friendRequested": "Solicitud enviada",
+    "friendAdd": "Agregar amigo",
+    "sendMessageAction": "Mensaje",
+    "unblockAction": "Desbloquear",
+    "blockAction": "Bloquear usuario",
+    "markAsRead": "Marcar como leído",
+    "markAsUnread": "Marcar como no leído",
+    "archiveChat": "Archivar",
+    "unarchiveChat": "Desarchivar",
+    "copyAction": "Copiar",
+    "copySuccess": "Copiado al portapapeles",
+    "copyError": "No se pudo copiar",
+    "userUnblockedName": "Has desbloqueado a {name}",
+    "youBlockedNotice": "Bloqueaste a {name}. Desbloquéalo para enviar mensajes.",
+    "blockedByOtherNotice": "No puedes enviar mensajes a este usuario.",
+    "connectionLimitedNotice": "No se pueden enviar mensajes por límites de conexión.",
+    "unblockError": "No se pudo desbloquear al usuario",
+    "genderMale": "Hombre",
+    "genderFemale": "Mujer",
+    "genderOther": "Otro",
+    "typing": "escribiendo...",
+    "settingsTooltip": "Ajustes",
+    "groupInfoTooltip": "Información del grupo",
+    "viewProfileTooltip": "Ver perfil",
+    "today": "Hoy",
+    "yesterday": "Ayer",
+    "loadMessagesError": "No se pudieron cargar los mensajes",
+    "noMessagesStart": "Aún no hay mensajes. ¡Inicia la conversación!",
+    "sendMessageError": "No se pudo enviar el mensaje",
+    "editMessageError": "No se pudo editar el mensaje",
+    "aiError": "Error de IA, inténtalo de nuevo",
+    "typingIndicator": "Escribiendo",
+    "newConvTitle": "Nueva conversación",
+    "newConvTabDirect": "Directo",
+    "newConvTabGroup": "Grupo",
+    "newConvSearchPlaceholder": "Buscar por nombre o correo...",
+    "newConvNoUsers": "No se encontraron usuarios",
+    "newConvGroupNamePlaceholder": "Nombre del grupo...",
+    "newConvCreateGroup": "Crear grupo",
+    "newConvGroupValidation": "Ingresa un nombre de grupo y selecciona al menos 1 miembro",
+    "newConvGroupSuccess": "Grupo creado",
+    "newConvGroupError": "No se pudo crear el grupo",
+    "newConvDirectError": "No se pudo crear la conversación",
+    "forwardTitle": "Reenviar mensaje",
+    "forwardConversationFallback": "Conversación",
+    "forwardSuccess": "Mensaje reenviado",
+    "forwardError": "No se pudo reenviar el mensaje",
+    "publicChannelsTitle": "Canales públicos",
+    "publicChannelsSearchPlaceholder": "Buscar canales...",
+    "publicChannelsEmpty": "No se encontraron canales",
+    "publicChannelUnnamed": "Canal sin nombre",
+    "publicChannelMembers": "{count} miembros",
+    "publicChannelJoin": "Unirse",
+    "publicChannelJoinSuccess": "Te uniste al canal",
+    "publicChannelJoinError": "No se pudo unir al canal",
+    "strangerRequestTitle": "Solicitud de mensaje de un desconocido",
+    "strangerRequestBody": "Aún no eres amigo de {name}. Los nuevos mensajes quedarán pendientes hasta que aceptes la conexión.",
+    "strangerBlock": "Bloquear usuario",
+    "strangerAccept": "Aceptar",
+    "strangerAcceptSuccess": "Conversación con {name} aceptada",
+    "strangerAcceptError": "No se pudo aceptar la conversación",
+    "strangerBlockSuccess": "{name} bloqueado",
+    "strangerBlockError": "No se pudo bloquear al usuario",
+    "messageSearchPlaceholder": "Buscar en la conversación...",
+    "messageSearchNoResults": "No se encontraron resultados",
+    "aiTraceTitle": "Rastro de razonamiento de IA",
+    "aiTraceEmpty": "No hay rastro para este mensaje.",
+    "aiTraceInputTokens": "Tokens de entrada",
+    "aiTraceOutputTokens": "Tokens de salida",
+    "aiTraceThinkingBlocks": "Bloques de pensamiento ({count})",
+    "aiTraceToolCalls": "Llamadas a herramientas ({count})",
+    "aiTraceRagSources": "Fuentes RAG ({count})",
+    "aiTraceScore": "Puntuación: {score}"
   },
   "aiPersona": {
     "title": "AI Persona",
@@ -450,5 +605,31 @@
     "emptyMedia": "No photos or videos shared yet",
     "emptyFiles": "No files shared yet",
     "emptyLinks": "No links shared yet"
+  },
+  "legal": {
+    "title": "Política de Privacidad y Términos de Servicio",
+    "lastUpdated": "Última actualización: 15 de junio de 2026",
+    "sections": {
+      "dataCollection": {
+        "title": "1. Recopilación de Datos",
+        "content": "Recopilamos información que nos proporciona directamente, por ejemplo, al crear o modificar su cuenta, usar nuestros servicios o comunicarse con nosotros, incluyendo su nombre, dirección de correo electrónico, foto de perfil y los mensajes que envía."
+      },
+      "dataUsage": {
+        "title": "2. Cómo Usamos Sus Datos",
+        "content": "Sus datos se utilizan para proporcionar, mantener y mejorar nuestros servicios, incluida la facilitación de la comunicación entre usuarios, garantizar la seguridad y personalizar su experiencia."
+      },
+      "security": {
+        "title": "3. Seguridad",
+        "content": "Implementamos medidas de seguridad estándar de la industria para proteger su información personal y mensajes. El acceso a los datos está estrictamente controlado y utilizamos cifrado para proteger la información confidencial."
+      },
+      "userRights": {
+        "title": "4. Sus Derechos",
+        "content": "Tiene derecho a acceder, corregir o eliminar sus datos personales. Puede eliminar su cuenta en cualquier momento a través de la configuración de la aplicación."
+      },
+      "terms": {
+        "title": "5. Términos de Servicio",
+        "content": "Al usar nuestra plataforma, acepta no participar en actividades abusivas, de acoso o ilegales. Nos reservamos el derecho de suspender o cancelar cuentas que violen estos términos."
+      }
+    }
   }
 }

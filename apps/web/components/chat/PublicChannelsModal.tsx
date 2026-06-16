@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { useTranslations } from 'next-intl'
 import { Search, Loader2, Hash, Users } from 'lucide-react'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
@@ -18,6 +19,7 @@ interface Props {
 export function PublicChannelsModal({ open, onClose }: Props) {
   const router = useRouter()
   const queryClient = useQueryClient()
+  const t = useTranslations('chat')
   const [search, setSearch] = useState('')
   const [joiningId, setJoiningId] = useState<string | null>(null)
 
@@ -36,9 +38,9 @@ export function PublicChannelsModal({ open, onClose }: Props) {
       queryClient.invalidateQueries({ queryKey: ['conversations'] })
       router.push(`/conversations/${conv.id}`)
       onClose()
-      toast.success('Đã tham gia kênh')
+      toast.success(t('publicChannelJoinSuccess'))
     } catch {
-      toast.error('Không thể tham gia kênh')
+      toast.error(t('publicChannelJoinError'))
     } finally {
       setJoiningId(null)
     }
@@ -50,14 +52,14 @@ export function PublicChannelsModal({ open, onClose }: Props) {
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Hash className="size-5" />
-            Kênh công khai
+            {t('publicChannelsTitle')}
           </DialogTitle>
         </DialogHeader>
 
         <div className="relative">
           <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
           <Input
-            placeholder="Tìm kênh..."
+            placeholder={t('publicChannelsSearchPlaceholder')}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="pl-8"
@@ -72,7 +74,7 @@ export function PublicChannelsModal({ open, onClose }: Props) {
           )}
           {!isLoading && data?.content.length === 0 && (
             <p className="text-center text-sm text-muted-foreground py-8">
-              Không tìm thấy kênh nào
+              {t('publicChannelsEmpty')}
             </p>
           )}
           {data?.content.map((channel) => {
@@ -86,10 +88,10 @@ export function PublicChannelsModal({ open, onClose }: Props) {
                   <Hash className="size-4 text-primary" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium truncate">{channel.name ?? 'Kênh không tên'}</p>
+                  <p className="text-sm font-medium truncate">{channel.name ?? t('publicChannelUnnamed')}</p>
                   <p className="text-xs text-muted-foreground flex items-center gap-1">
                     <Users className="size-3" />
-                    {channel.participants.length} thành viên
+                    {t('publicChannelMembers', { count: channel.participants.length })}
                   </p>
                 </div>
                 <Button
@@ -98,7 +100,7 @@ export function PublicChannelsModal({ open, onClose }: Props) {
                   onClick={() => handleJoin(channel.id)}
                   disabled={!!joiningId}
                 >
-                  {isJoining ? <Loader2 className="size-4 animate-spin" /> : 'Tham gia'}
+                  {isJoining ? <Loader2 className="size-4 animate-spin" /> : t('publicChannelJoin')}
                 </Button>
               </div>
             )

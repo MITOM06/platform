@@ -20,6 +20,21 @@ class WebRTCService {
   String? _targetId;
   String? _conversationId;
 
+  /// Whether this call uses video. Set from [initialize]. For incoming calls
+  /// it is derived from whether the remote offer SDP contains an `m=video`
+  /// section, so we don't needlessly open the camera on a voice-only call.
+  bool _isVideo = true;
+
+  /// Whether the call ever reached the connected state (remote SDP applied).
+  /// Used to decide between an "ended" vs "missed" call system message.
+  bool _connected = false;
+
+  /// Send the chat system message that logs the call in history. Returns
+  /// `system.call.ended:{kind}:{secs}` or `system.call.missed:{kind}`.
+  /// Mirrors web `call-manager.ts` so both platforms render identically.
+  /// Only the hang-up initiator should invoke this (see [endCall]).
+  Function(String content)? onSendCallLog;
+
   /// ICE candidates that arrive before the remote description is set must be
   /// buffered, otherwise `addCandidate` throws. Flushed once remote SDP applied.
   final List<RTCIceCandidate> _pendingCandidates = [];
@@ -27,10 +42,21 @@ class WebRTCService {
 
   WebRTCService(this._stompService);
 
-  Future<void> initialize(String targetId, String conversationId) async {
+  /// True when the SDP advertises a video media section (`m=video`). Used to
+  /// decide whether an incoming call should open the camera.
+  static bool sdpHasVideo(String? sdp) =>
+      sdp != null && sdp.contains('m=video');
+
+  Future<void> initialize(
+    String targetId,
+    String conversationId, {
+    bool isVideo = true,
+  }) async {
     _targetId = targetId;
     _conversationId = conversationId;
+    _isVideo = isVideo;
     _remoteDescriptionSet = false;
+    _connected = false;
     _pendingCandidates.clear();
 
     _peerConnection = await createPeerConnection({
@@ -70,7 +96,7 @@ class WebRTCService {
 
     _localStream = await navigator.mediaDevices.getUserMedia({
       'audio': true,
-      'video': true,
+      'video': _isVideo,
     });
     onLocalStream?.call(_localStream!);
 
@@ -96,6 +122,7 @@ class WebRTCService {
   }
 
   Future<void> handleOffer(String sdp) async {
+    _connected = true;
     await _peerConnection!
         .setRemoteDescription(RTCSessionDescription(sdp, 'offer'));
     await _flushPendingCandidates();
@@ -116,6 +143,7 @@ class WebRTCService {
 
   Future<void> handleAnswer(String sdp) async {
     if (_peerConnection == null) return;
+    _connected = true;
     await _peerConnection!
         .setRemoteDescription(RTCSessionDescription(sdp, 'answer'));
     await _flushPendingCandidates();
@@ -154,6 +182,17 @@ class WebRTCService {
         'duration': duration,
       }),
     );
+
+    // Emit a system message so both sides see the call log in chat history.
+    // Only the hang-up initiator runs this (the peer tears down via dispose()),
+    // so the call is logged exactly once. Mirrors web call-manager.ts format
+    // `system.call.ended:{kind}:{secs}` / `system.call.missed:{kind}`.
+    final kind = _isVideo ? 'video' : 'voice';
+    final content = _connected
+        ? 'system.call.ended:$kind:$duration'
+        : 'system.call.missed:$kind';
+    onSendCallLog?.call(content);
+
     dispose();
   }
 

@@ -1,10 +1,7 @@
 import 'dart:async';
+import 'package:collection/collection.dart';
 import 'package:dio/dio.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
-import '../../../core/providers/theme_provider.dart';
-import '../../auth/data/auth_repository.dart';
 import '../../auth/domain/auth_provider.dart';
 import '../../auth/domain/auth_state.dart';
 import '../../../core/l10n/l10n_ext.dart';
@@ -13,317 +10,18 @@ import '../../../core/utils/global_messenger.dart';
 import '../data/ai_persona_repository.dart';
 import '../data/chat_repository.dart';
 import '../data/stomp_service.dart';
+import 'chat_misc_providers.dart';
 import 'chat_state.dart';
-import 'webrtc_service.dart';
+
+// Lightweight providers + per-conversation customization notifiers were split
+// into chat_misc_providers.dart. Re-exported so existing importers of
+// chat_provider.dart (userProfileProvider, nicknamesProvider, …) are unaffected.
+export 'chat_misc_providers.dart';
+// ConversationsNotifier was split into its own file; re-exported so importers
+// of chat_provider.dart keep seeing conversationsNotifierProvider.
+export 'conversations_notifier.dart';
 
 part 'chat_provider.g.dart';
-
-// ---------------------------------------------------------------------------
-// ConversationsNotifier — conversation list + realtime notification updates
-// ---------------------------------------------------------------------------
-
-@riverpod
-class ConversationsNotifier extends _$ConversationsNotifier {
-  StreamSubscription<Map<String, dynamic>>? _notifSub;
-  StreamSubscription<ConversationModel>? _convUpdateSub;
-  StreamSubscription<Map<String, dynamic>>? _webrtcSub;
-
-  @override
-  Future<List<ConversationModel>> build() async {
-    final repo = ref.read(chatRepositoryProvider);
-    final stomp = ref.read(stompServiceProvider.notifier);
-
-    // Always disconnect first to ensure fresh token on login
-    stomp.disconnect();
-    const storage = FlutterSecureStorage();
-    final token = await storage.read(key: 'accessToken');
-    if (token != null) {
-      await stomp.connect(token);
-    }
-
-    stomp.subscribeNotifications();
-
-    _notifSub = stomp.notifications.listen(_onNotification);
-    _convUpdateSub = stomp.conversationUpdates.listen(_onConversationUpdate);
-    _webrtcSub = stomp.webrtcSignals.listen(_onWebRTCSignal);
-    ref.onDispose(() {
-      _notifSub?.cancel();
-      _convUpdateSub?.cancel();
-      _webrtcSub?.cancel();
-    });
-
-    return repo.listConversations();
-  }
-
-  void _onConversationUpdate(ConversationModel updated) {
-    final current = state.valueOrNull;
-    if (current == null) return;
-    if (!current.any((c) => c.id == updated.id)) {
-      // A group the user was just added to — pull it in.
-      refresh();
-      return;
-    }
-    state = AsyncData(current.map((c) {
-      if (c.id != updated.id) return c;
-      // Preserve list-only fields (unread/lastMessage) the event doesn't carry.
-      return updated.copyWith(
-        unreadCount: c.unreadCount,
-        lastMessage: c.lastMessage,
-        lastMessageAt: c.lastMessageAt,
-      );
-    }).toList());
-  }
-
-  /// Hide a conversation locally + on the server.
-  Future<void> deleteConversation(String conversationId) async {
-    final current = state.valueOrNull;
-    if (current != null) {
-      state = AsyncData(
-          current.where((c) => c.id != conversationId).toList());
-    }
-    try {
-      await ref.read(chatRepositoryProvider).deleteConversation(conversationId);
-    } catch (_) {
-      refresh();
-    }
-  }
-
-  Future<void> toggleMuteConversation(String conversationId, bool isMuted) async {
-    final current = state.valueOrNull;
-    if (current != null) {
-      state = AsyncData(current.map((c) {
-        if (c.id == conversationId) {
-          return c.copyWith(isMuted: isMuted);
-        }
-        return c;
-      }).toList());
-    }
-    try {
-      final repo = ref.read(chatRepositoryProvider);
-      if (isMuted) {
-        await repo.muteConversation(conversationId);
-      } else {
-        await repo.unmuteConversation(conversationId);
-      }
-    } catch (_) {
-      refresh();
-    }
-  }
-
-  Future<void> archiveConversation(String conversationId) async {
-    final current = state.valueOrNull;
-    if (current != null) {
-      state = AsyncData(
-          current.where((c) => c.id != conversationId).toList());
-    }
-    try {
-      await ref.read(chatRepositoryProvider).archiveConversation(conversationId);
-    } catch (_) {
-      refresh();
-    }
-    ref.invalidate(archivedConversationsProvider);
-  }
-
-  /// Restores an archived conversation back into the main list.
-  Future<void> unarchiveConversation(String conversationId) async {
-    try {
-      await ref
-          .read(chatRepositoryProvider)
-          .unarchiveConversation(conversationId);
-    } catch (_) {
-      // Even on failure, refresh both lists to reflect the true server state.
-    }
-    ref.invalidate(archivedConversationsProvider);
-    await refresh();
-  }
-
-  Future<void> markConversationReadServer(String conversationId) async {
-    markConversationRead(conversationId);
-    try {
-      await ref.read(chatRepositoryProvider).markConversationRead(conversationId);
-    } catch (_) {
-      refresh();
-    }
-  }
-
-  Future<void> markConversationUnreadServer(String conversationId) async {
-    final current = state.valueOrNull;
-    if (current != null) {
-      state = AsyncData(current.map((c) {
-        if (c.id == conversationId) return c.copyWith(unreadCount: 1);
-        return c;
-      }).toList());
-    }
-    try {
-      await ref.read(chatRepositoryProvider).markConversationUnread(conversationId);
-    } catch (_) {
-      refresh();
-    }
-  }
-
-  void _onWebRTCSignal(Map<String, dynamic> signal) {
-    final type = signal['type'] as String?;
-    if (type == 'offer') {
-      final senderId = signal['senderId'] as String;
-      final convId = signal['conversationId'] as String;
-      final sdp = signal['sdp'] as String;
-
-      // Show incoming call dialog
-      final router = ref.read(appRouterProvider);
-      final context = router.routerDelegate.navigatorKey.currentContext;
-      if (context == null) return;
-      final l10n = context.l10n;
-
-      // Resolve caller display name from local conversation state if available.
-      final current = state.valueOrNull;
-      String callerName = l10n.callUnknownCaller;
-      if (current != null) {
-        final conv = current.firstWhere((c) => c.id == convId, orElse: () => current.first);
-        if (conv.name != null) {
-          callerName = conv.name!;
-        }
-      }
-
-      showInAppNotification(
-        l10n.callIncoming,
-        l10n.callIncomingBody(callerName),
-        onTap: () {
-          router.push('/call', extra: {
-            'targetId': senderId, // we reply back to sender
-            'targetName': callerName,
-            'conversationId': convId,
-            'isCaller': false,
-            'initialOfferSdp': sdp,
-          });
-        },
-      );
-    } else {
-      // For answer, ice, end, we need to pass them to WebRTCService if it's active.
-      final webrtc = ref.read(webRtcServiceProvider);
-      if (type == 'answer') {
-        webrtc.handleAnswer(signal['sdp'] as String);
-      } else if (type == 'ice') {
-        webrtc.handleIceCandidate(signal['candidate'] as Map<String, dynamic>);
-      } else if (type == 'end') {
-        webrtc.endCall(duration: 0);
-      }
-    }
-  }
-
-  void _onNotification(Map<String, dynamic> notif) {
-    final current = state.valueOrNull;
-    if (current == null) return;
-
-    // Chat-service gửi flat payload: {type, conversationId, senderName, senderId, content, messageType}
-    final type = notif['type'] as String?;
-    final bool isMention = type == 'MENTIONED_YOU';
-    if (type == 'NEW_MESSAGE' || isMention) {
-      final convId = notif['conversationId'] as String?;
-      final senderId =
-          (notif['senderId'] ?? notif['senderName'])?.toString() ?? '';
-      if (convId == null) return;
-
-      final currentRoute = ref.read(appRouterProvider).routeInformationProvider.value.uri.path;
-      if (currentRoute != '/chat/$convId') {
-        final content = notif['content'] as String?;
-        final messageType = notif['messageType'] as String?;
-        _showMessageBanner(
-          convId: convId,
-          senderId: senderId,
-          isMention: isMention,
-          content: content,
-          messageType: messageType,
-        );
-      }
-
-      if (!current.any((c) => c.id == convId)) {
-        refresh();
-        return;
-      }
-
-      final updated = current.map((c) {
-        if (c.id != convId) return c;
-        return c.copyWith(
-          lastMessageAt: DateTime.now(),
-          unreadCount: c.unreadCount + 1,
-        );
-      }).toList()
-        ..sort((a, b) => (b.lastMessageAt ?? DateTime(0))
-            .compareTo(a.lastMessageAt ?? DateTime(0)));
-      state = AsyncData(updated);
-    } else if (type == 'new_conversation') {
-      refresh();
-    } else if (type == 'RATE_LIMITED') {
-      final context =
-          ref.read(appRouterProvider).routerDelegate.navigatorKey.currentContext;
-      showErrorSnackBar(context != null
-          ? context.l10n.rateLimitError
-          : 'Too many messages. Please slow down.');
-    }
-  }
-
-  /// Resolves [senderId] to a display name then shows the top in-app banner.
-  Future<void> _showMessageBanner({
-    required String convId,
-    required String senderId,
-    required bool isMention,
-    String? content,
-    String? messageType,
-  }) async {
-    String senderName = '';
-    if (senderId.isNotEmpty) {
-      try {
-        final profile = await ref.read(userProfileProvider(senderId).future);
-        senderName = profile.displayName;
-      } catch (_) {}
-    }
-
-    final context =
-        ref.read(appRouterProvider).routerDelegate.navigatorKey.currentContext;
-    if (context == null || !context.mounted) return;
-    final l10n = context.l10n;
-    final name = senderName.isNotEmpty ? senderName : l10n.conversationDefault;
-
-    String bodyText;
-    if (isMention) {
-      bodyText = l10n.mentionNotificationBody(name);
-    } else {
-      if (messageType == 'image') {
-        bodyText = '$name: [${l10n.attachPhoto}]';
-      } else if (messageType == 'video') {
-        bodyText = '$name: [${l10n.attachVideo}]';
-      } else if (messageType == 'file') {
-        bodyText = '$name: [${l10n.attachFile}]';
-      } else if (content != null && content.isNotEmpty) {
-        bodyText = '$name: $content';
-      } else {
-        bodyText = l10n.newNotificationBody(name);
-      }
-    }
-
-    showInAppNotification(
-      isMention ? l10n.mentionNotificationTitle : l10n.newNotificationTitle,
-      bodyText,
-      onTap: () => ref.read(appRouterProvider).push('/chat/$convId'),
-    );
-  }
-
-  Future<void> refresh() async {
-    state = const AsyncLoading();
-    state = await AsyncValue.guard(
-      () => ref.read(chatRepositoryProvider).listConversations(),
-    );
-  }
-
-  void markConversationRead(String conversationId) {
-    final current = state.valueOrNull;
-    if (current == null) return;
-    state = AsyncData(current.map((c) {
-      if (c.id == conversationId) return c.copyWith(unreadCount: 0);
-      return c;
-    }).toList());
-  }
-}
 
 // ---------------------------------------------------------------------------
 // ChatNotifier — messages for a single conversation
@@ -347,6 +45,23 @@ class ChatNotifier extends _$ChatNotifier {
   /// repeated double-taps spamming the server with add/remove churn before the
   /// authoritative REACTION_UPDATED broadcast lands.
   final Set<String> _reactionInFlight = {};
+
+  /// The local id of the AI streaming placeholder currently awaiting a
+  /// response, or null when no AI request is pending. Tracked explicitly (as a
+  /// correlation id) so stream chunks and the final persisted message target
+  /// the exact placeholder rather than guessing via the fragile
+  /// `isStreaming`/senderId+content heuristics.
+  String? _aiPlaceholderId;
+
+  /// Fires if the AI sends no chunk within the window, so a stuck placeholder
+  /// can't spin forever (e.g. ai-service down / Redis hiccup).
+  Timer? _aiTimeoutTimer;
+  static const Duration _aiResponseTimeout = Duration(seconds: 30);
+
+  /// Id of the AI placeholder that has finished streaming (AI_STREAM_DONE) and
+  /// is awaiting its real persisted message via _onNewMessage. Lets us replace
+  /// the exact placeholder instead of guessing the wrong AI message.
+  String? _finalizedAiPlaceholderId;
 
   @override
   Future<ChatState> build(String conversationId) async {
@@ -396,6 +111,7 @@ class ChatNotifier extends _$ChatNotifier {
       _pinSub?.cancel();
       _reconnectSub?.cancel();
       _aiStreamSub?.cancel();
+      _aiTimeoutTimer?.cancel();
       _typingTimer?.cancel();
       for (final t in _typingTimers.values) {
         t.cancel();
@@ -542,17 +258,33 @@ class ChatNotifier extends _$ChatNotifier {
       }
     }
 
-    // Replace finalized AI streaming placeholder with the real persisted message
-    final aiStreamingIdx = message.isAiMessage
-        ? current.messages.indexWhere(
-            (m) => m.isAiMessage && !m.isStreaming && m.senderId == kAiBotUserId,
-          )
-        : -1;
+    // Replace the finalized AI streaming placeholder with the real persisted
+    // message. Prefer the exact tracked id (set on AI_STREAM_DONE); only fall
+    // back to a heuristic when no id is tracked.
+    int aiStreamingIdx = -1;
+    if (message.isAiMessage) {
+      if (_finalizedAiPlaceholderId != null) {
+        aiStreamingIdx = current.messages
+            .indexWhere((m) => m.id == _finalizedAiPlaceholderId);
+      }
+      if (aiStreamingIdx == -1) {
+        aiStreamingIdx = current.messages.indexWhere(
+          (m) =>
+              m.isAiMessage &&
+              !m.isStreaming &&
+              m.senderId == kAiBotUserId &&
+              m.id.startsWith('ai-pending-'),
+        );
+      }
+    }
 
-    // Replace optimistic message if one matches by senderId + content
+    // Replace the optimistic (locally-echoed) message if one matches by id-shape
+    // + sender + content. Restrict to pending placeholders we created so we
+    // never clobber a distinct real message that happens to share text.
     final pendingIdx = current.messages.indexWhere(
       (m) =>
           m.isPending &&
+          m.id.startsWith('pending_') &&
           m.senderId == message.senderId &&
           m.content == message.content,
     );
@@ -560,6 +292,7 @@ class ChatNotifier extends _$ChatNotifier {
     final List<MessageModel> updated;
     if (aiStreamingIdx != -1) {
       updated = List.from(current.messages)..[aiStreamingIdx] = message;
+      _finalizedAiPlaceholderId = null;
     } else if (pendingIdx != -1) {
       updated = List.from(current.messages)..[pendingIdx] = message;
     } else {
@@ -646,15 +379,71 @@ class ChatNotifier extends _$ChatNotifier {
     state = AsyncData(current.copyWith(pinnedMessages: pinned));
   }
 
+  /// (Re)arm the AI response watchdog. If no chunk/done/error arrives in time
+  /// the streaming placeholder is replaced with an error sentinel so it can't
+  /// spin indefinitely.
+  void _startAiTimeout() {
+    _aiTimeoutTimer?.cancel();
+    _aiTimeoutTimer = Timer(_aiResponseTimeout, _onAiTimeout);
+  }
+
+  void _clearAiTimeout() {
+    _aiTimeoutTimer?.cancel();
+    _aiTimeoutTimer = null;
+  }
+
+  void _onAiTimeout() {
+    final placeholderId = _aiPlaceholderId;
+    final current = state.valueOrNull;
+    if (placeholderId == null || current == null) {
+      _aiPlaceholderId = null;
+      return;
+    }
+    final idx = current.messages.indexWhere((m) => m.id == placeholderId);
+    if (idx != -1) {
+      final updated = List<MessageModel>.from(current.messages);
+      updated[idx] = current.messages[idx].copyWith(
+        content: kAiErrorSentinel,
+        isStreaming: false,
+        isThinking: false,
+        activeTools: [],
+      );
+      state = AsyncData(current.copyWith(messages: updated));
+    }
+    _aiPlaceholderId = null;
+  }
+
   void _onAiStreamEvent(Map<String, dynamic> event) {
     final type = event['type'] as String?;
     final current = state.valueOrNull;
     if (current == null || type == null) return;
 
-    final idx = current.messages.indexWhere(
-      (m) => m.isAiMessage && m.isStreaming && m.senderId == kAiBotUserId,
-    );
+    // Target the tracked placeholder by id (correlation), falling back to the
+    // legacy streaming-flag heuristic for placeholders created before tracking.
+    final placeholderId = _aiPlaceholderId;
+    int idx = placeholderId != null
+        ? current.messages.indexWhere((m) => m.id == placeholderId)
+        : -1;
+    if (idx == -1) {
+      idx = current.messages.indexWhere(
+        (m) => m.isAiMessage && m.isStreaming && m.senderId == kAiBotUserId,
+      );
+    }
     if (idx == -1) return;
+
+    // A live event means the AI is responding — push the watchdog out (chunks)
+    // or disarm it entirely (terminal events).
+    if (type == 'AI_STREAM_CHUNK' || type == 'AI_TOOL_CALL') {
+      _startAiTimeout();
+    } else if (type == 'AI_STREAM_DONE' || type == 'AI_STREAM_ERROR') {
+      _clearAiTimeout();
+      // Remember which placeholder finished so _onNewMessage swaps the exact
+      // one for the persisted message (DONE only — an errored bubble stays).
+      if (type == 'AI_STREAM_DONE') {
+        _finalizedAiPlaceholderId = current.messages[idx].id;
+      }
+      _aiPlaceholderId = null;
+    }
 
     final updated = List<MessageModel>.from(current.messages);
     switch (type) {
@@ -750,16 +539,32 @@ class ChatNotifier extends _$ChatNotifier {
         await repo.addReaction(messageId, emoji);
       }
     } catch (_) {
-      // Realtime REACTION_UPDATED broadcast keeps state authoritative.
+      // The REACTION_UPDATED broadcast keeps state authoritative, but surface
+      // the failure so the user knows the tap didn't take effect.
+      _showActionError();
     } finally {
       _reactionInFlight.remove(messageId);
     }
   }
 
   Future<void> recallMessage(String messageId) async {
+    final current = state.valueOrNull;
     try {
       await ref.read(chatRepositoryProvider).recallMessage(messageId);
-    } catch (_) {}
+    } catch (_) {
+      // Re-assert the pre-recall state (no local change was applied yet, but
+      // guard against any in-flight optimistic edit) and tell the user.
+      if (current != null && state.hasValue) state = AsyncData(current);
+      _showActionError();
+    }
+  }
+
+  /// Surface a generic "action failed" SnackBar via the app-wide messenger.
+  void _showActionError() {
+    final context =
+        ref.read(appRouterProvider).routerDelegate.navigatorKey.currentContext;
+    if (context == null) return;
+    showErrorSnackBar(context.l10n.errActionFailed);
   }
 
   /// Edit a sent message. Optimistically updates locally; the server's
@@ -781,7 +586,19 @@ class ChatNotifier extends _$ChatNotifier {
     try {
       await ref.read(chatRepositoryProvider).editMessage(messageId, trimmed);
     } catch (_) {
-      // Broadcast / next reload reconciles on failure.
+      // Roll back the optimistic edit and tell the user it didn't save.
+      if (current != null && state.hasValue) {
+        state = AsyncData(state.requireValue.copyWith(
+          messages: state.requireValue.messages
+              .map((m) {
+                if (m.id != messageId) return m;
+                final orig = current.messages.firstWhereOrNull((o) => o.id == messageId);
+                return orig ?? m;
+              })
+              .toList(),
+        ));
+      }
+      _showActionError();
     }
   }
 
@@ -873,7 +690,11 @@ class ChatNotifier extends _$ChatNotifier {
     ));
     try {
       await ref.read(chatRepositoryProvider).deleteMessageForMe(messageId);
-    } catch (_) {}
+    } catch (_) {
+      // Restore the message we optimistically removed and tell the user.
+      if (state.hasValue) state = AsyncData(current);
+      _showActionError();
+    }
   }
 
   void _onTypingEvent(TypingEvent event) {
@@ -972,9 +793,10 @@ class ChatNotifier extends _$ChatNotifier {
 
     // If the message mentions @AI, also insert a thinking placeholder
     final hasAiMention = type == 'text' && _aiMentionRe.hasMatch(content);
+    final aiPlaceholderId = 'ai-pending-${DateTime.now().millisecondsSinceEpoch}';
     final aiPlaceholder = hasAiMention
         ? MessageModel(
-            id: 'ai-pending-${DateTime.now().millisecondsSinceEpoch}',
+            id: aiPlaceholderId,
             conversationId: conversationId,
             senderId: kAiBotUserId,
             content: '',
@@ -985,6 +807,10 @@ class ChatNotifier extends _$ChatNotifier {
             isThinking: true,
           )
         : null;
+    if (hasAiMention) {
+      _aiPlaceholderId = aiPlaceholderId;
+      _startAiTimeout();
+    }
 
     // Adding the message also clears the reply composer.
     state = AsyncData(current.copyWith(
@@ -1044,110 +870,3 @@ class ChatNotifier extends _$ChatNotifier {
     return auth is AuthAuthenticated ? auth.user.id : null;
   }
 }
-
-final userStatusProvider =
-    FutureProvider.autoDispose.family<UserStatus, String>((ref, userId) {
-  return ref.read(chatRepositoryProvider).getUserStatus(userId);
-});
-
-final userProfileProvider =
-    FutureProvider.autoDispose.family<UserModel, String>((ref, userId) {
-  return ref.read(authRepositoryProvider).getUserProfile(userId);
-});
-
-/// Conversations the current user has archived (Task 71).
-final archivedConversationsProvider =
-    FutureProvider.autoDispose<List<ConversationModel>>((ref) {
-  return ref.read(chatRepositoryProvider).listArchivedConversations();
-});
-
-/// Fetches Open Graph metadata for a URL (cached per-url for the screen's life).
-final linkPreviewProvider =
-    FutureProvider.autoDispose.family<LinkPreviewData, String>((ref, url) {
-  return ref.read(chatRepositoryProvider).fetchLinkPreview(url);
-});
-
-// ── Collaborative Customization Sync Providers (Task 79) ────────────────────
-
-class ChatWallpaperNotifier extends StateNotifier<String?> {
-  final Ref ref;
-  final String conversationId;
-
-  ChatWallpaperNotifier(this.ref, this.conversationId) : super(null) {
-    final prefs = ref.watch(sharedPreferencesProvider);
-    state = prefs.getString('chat_wallpaper_$conversationId');
-  }
-
-  Future<void> setWallpaper(String? url) async {
-    final prefs = ref.read(sharedPreferencesProvider);
-    if (url == null || url.isEmpty) {
-      await prefs.remove('chat_wallpaper_$conversationId');
-      state = null;
-    } else {
-      await prefs.setString('chat_wallpaper_$conversationId', url);
-      state = url;
-    }
-  }
-}
-
-final chatWallpaperProvider = StateNotifierProvider.family<ChatWallpaperNotifier, String?, String>((ref, conversationId) {
-  return ChatWallpaperNotifier(ref, conversationId);
-});
-
-class NicknamesNotifier extends StateNotifier<Map<String, String>> {
-  final Ref ref;
-  final String conversationId;
-
-  NicknamesNotifier(this.ref, this.conversationId) : super(const {}) {
-    final prefs = ref.watch(sharedPreferencesProvider);
-    final List<String> list = prefs.getStringList('chat_nicknames_$conversationId') ?? [];
-    final map = <String, String>{};
-    for (final item in list) {
-      final idx = item.indexOf(':');
-      if (idx != -1) {
-        final key = item.substring(0, idx);
-        final val = item.substring(idx + 1);
-        map[key] = val;
-      }
-    }
-    state = map;
-  }
-
-  Future<void> setNickname(String userId, String nickname) async {
-    final prefs = ref.read(sharedPreferencesProvider);
-    final map = Map<String, String>.from(state);
-    if (nickname.isEmpty) {
-      map.remove(userId);
-    } else {
-      map[userId] = nickname;
-    }
-    state = map;
-
-    final list = map.entries.map((e) => '${e.key}:${e.value}').toList();
-    await prefs.setStringList('chat_nicknames_$conversationId', list);
-  }
-}
-
-final nicknamesProvider = StateNotifierProvider.family<NicknamesNotifier, Map<String, String>, String>((ref, conversationId) {
-  return NicknamesNotifier(ref, conversationId);
-});
-
-class QuickReactionNotifier extends StateNotifier<String> {
-  final Ref ref;
-  final String conversationId;
-
-  QuickReactionNotifier(this.ref, this.conversationId) : super('👍') {
-    final prefs = ref.watch(sharedPreferencesProvider);
-    state = prefs.getString('chat_quick_reaction_$conversationId') ?? '👍';
-  }
-
-  Future<void> setQuickReaction(String emoji) async {
-    final prefs = ref.read(sharedPreferencesProvider);
-    await prefs.setString('chat_quick_reaction_$conversationId', emoji);
-    state = emoji;
-  }
-}
-
-final quickReactionProvider = StateNotifierProvider.family<QuickReactionNotifier, String, String>((ref, conversationId) {
-  return QuickReactionNotifier(ref, conversationId);
-});

@@ -179,36 +179,49 @@ class GroupInfoScreen extends ConsumerWidget {
   Future<void> _renameGroup(
       BuildContext context, WidgetRef ref, ConversationModel conv) async {
     final controller = TextEditingController(text: conv.name ?? '');
-    final newName = await showDialog<String>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: AppTheme.darkSurface,
-        title: Text(ctx.l10n.renameGroup, style: const TextStyle(color: Colors.white)),
-        content: TextField(
-          controller: controller,
-          autofocus: true,
-          style: const TextStyle(color: Colors.white),
-          decoration: InputDecoration(hintText: ctx.l10n.groupName),
+    final String? newName;
+    try {
+      newName = await showDialog<String>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          backgroundColor: AppTheme.darkSurface,
+          title: Text(ctx.l10n.renameGroup, style: const TextStyle(color: Colors.white)),
+          content: TextField(
+            controller: controller,
+            autofocus: true,
+            style: const TextStyle(color: Colors.white),
+            decoration: InputDecoration(hintText: ctx.l10n.groupName),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: Text(ctx.l10n.actionCancel),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.pop(ctx, controller.text.trim()),
+              child: Text(ctx.l10n.actionSave),
+            ),
+          ],
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: Text(ctx.l10n.actionCancel),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(ctx, controller.text.trim()),
-            child: Text(ctx.l10n.actionSave),
-          ),
-        ],
-      ),
-    );
+      );
+    } finally {
+      controller.dispose();
+    }
     if (newName == null || newName.isEmpty) return;
     try {
       await ref
           .read(chatRepositoryProvider)
           .updateConversation(conversationId, name: newName);
       ref.invalidate(groupConversationProvider(conversationId));
-    } catch (_) {}
+      // Also refresh the conversation list + app-bar so the new name shows there.
+      ref.invalidate(conversationsNotifierProvider);
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(context.l10n.listGenericError)),
+        );
+      }
+    }
   }
 
   Future<void> _uploadGroupAvatar(BuildContext context, WidgetRef ref) async {
@@ -220,6 +233,7 @@ class GroupInfoScreen extends ConsumerWidget {
       final url = await ref.read(chatRepositoryProvider).uploadFile(pickedFile);
       await ref.read(chatRepositoryProvider).updateConversation(conversationId, avatarUrl: url);
       ref.invalidate(groupConversationProvider(conversationId));
+      ref.invalidate(conversationsNotifierProvider);
     } catch (e) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -231,34 +245,40 @@ class GroupInfoScreen extends ConsumerWidget {
 
   Future<void> _addMember(BuildContext context, WidgetRef ref) async {
     final controller = TextEditingController();
-    final email = await showDialog<String>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: AppTheme.darkSurface,
-        title: Text(ctx.l10n.addMembers, style: const TextStyle(color: Colors.white)),
-        content: TextField(
-          controller: controller,
-          autofocus: true,
-          style: const TextStyle(color: Colors.white),
-          decoration: InputDecoration(hintText: ctx.l10n.searchUsers),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: Text(ctx.l10n.actionCancel),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(ctx, controller.text.trim()),
-            child: Text(ctx.l10n.actionConfirm),
-          ),
-        ],
-      ),
-    );
-    if (email == null || email.isEmpty) return;
+    final String? email;
     try {
-      final users = await ref.read(authRepositoryProvider).searchUsers(email);
+      email = await showDialog<String>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          backgroundColor: AppTheme.darkSurface,
+          title: Text(ctx.l10n.addMembers, style: const TextStyle(color: Colors.white)),
+          content: TextField(
+            controller: controller,
+            autofocus: true,
+            style: const TextStyle(color: Colors.white),
+            decoration: InputDecoration(hintText: ctx.l10n.searchUsers),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: Text(ctx.l10n.actionCancel),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.pop(ctx, controller.text.trim()),
+              child: Text(ctx.l10n.actionConfirm),
+            ),
+          ],
+        ),
+      );
+    } finally {
+      controller.dispose();
+    }
+    if (email == null || email.isEmpty) return;
+    final query = email;
+    try {
+      final users = await ref.read(authRepositoryProvider).searchUsers(query);
       final matches =
-          users.where((u) => u.email.toLowerCase() == email.toLowerCase());
+          users.where((u) => u.email.toLowerCase() == query.toLowerCase());
       final user = matches.isNotEmpty ? matches.first : (users.isNotEmpty ? users.first : null);
       if (user == null) {
         if (context.mounted) {
@@ -270,7 +290,14 @@ class GroupInfoScreen extends ConsumerWidget {
       }
       await ref.read(chatRepositoryProvider).addMembers(conversationId, [user.id]);
       ref.invalidate(groupConversationProvider(conversationId));
-    } catch (_) {}
+      ref.invalidate(conversationsNotifierProvider);
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(context.l10n.listGenericError)),
+        );
+      }
+    }
   }
 
   Future<void> _removeMember(
@@ -278,7 +305,13 @@ class GroupInfoScreen extends ConsumerWidget {
     try {
       await ref.read(chatRepositoryProvider).removeMember(conversationId, userId);
       ref.invalidate(groupConversationProvider(conversationId));
-    } catch (_) {}
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(context.l10n.listGenericError)),
+        );
+      }
+    }
   }
 
   Future<void> _leaveGroup(
@@ -308,7 +341,13 @@ class GroupInfoScreen extends ConsumerWidget {
       await ref.read(chatRepositoryProvider).removeMember(conversationId, currentUserId);
       ref.read(conversationsNotifierProvider.notifier).refresh();
       if (context.mounted) context.go('/');
-    } catch (_) {}
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(context.l10n.listGenericError)),
+        );
+      }
+    }
   }
 }
 

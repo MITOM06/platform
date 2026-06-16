@@ -15,7 +15,10 @@ class DioClient {
   /// avatar/upload URLs returned by the server.
   static const String chatBaseUrl = _chatBaseUrl;
 
-  static Dio createAuthDio(FlutterSecureStorage storage) {
+  static Dio createAuthDio(
+    FlutterSecureStorage storage, {
+    void Function()? onForceLogout,
+  }) {
     final dio = Dio(BaseOptions(
       baseUrl: _authBaseUrl,
       connectTimeout: const Duration(seconds: 10),
@@ -24,6 +27,9 @@ class DioClient {
     ));
     dio.interceptors.add(_AuthHeaderInterceptor(storage));
     dio.interceptors.add(const _NetworkErrorInterceptor());
+    dio.interceptors.add(
+      _TokenRefreshInterceptor(storage, dio, onForceLogout: onForceLogout),
+    );
     return dio;
   }
 
@@ -135,5 +141,13 @@ class _TokenRefreshInterceptor extends Interceptor {
     }
   }
 
-  Future<void> _clearCredentials() => _storage.deleteAll();
+  /// Delete only the auth tokens — NOT the whole secure store. Using
+  /// deleteAll() would wipe unrelated secrets other features may persist.
+  Future<void> _clearCredentials() async {
+    await Future.wait([
+      _storage.delete(key: _keyAccessToken),
+      _storage.delete(key: _keyRefreshToken),
+      _storage.delete(key: _keySid),
+    ]);
+  }
 }

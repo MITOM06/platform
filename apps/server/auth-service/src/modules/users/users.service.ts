@@ -14,11 +14,19 @@ export class UsersService {
   ) {}
 
   async findByEmail(email: string): Promise<UserDocument | null> {
-    return this.userModel.findOne({ email }).select('+password').exec();
+    // otpCode/otpExpires are select:false (never leak via /me or /search); the
+    // OTP + login flows read them through this internal lookup only.
+    return this.userModel
+      .findOne({ email })
+      .select('+password +otpCode +otpExpires')
+      .exec();
   }
 
   async findByPhone(phoneNumber: string): Promise<UserDocument | null> {
-    return this.userModel.findOne({ phoneNumber }).select('+password').exec();
+    return this.userModel
+      .findOne({ phoneNumber })
+      .select('+password +otpCode +otpExpires')
+      .exec();
   }
 
   async create(userData: Partial<User>): Promise<UserDocument> {
@@ -27,7 +35,13 @@ export class UsersService {
   }
 
   async findById(id: string): Promise<UserDocument | null> {
-    return this.userModel.findById(id).select('-password').exec();
+    try {
+      return await this.userModel.findById(id).select('-password').exec();
+    } catch (err: any) {
+      // Mongoose throws CastError for non-ObjectId strings (e.g. 'ai-bot-…')
+      if (err?.name === 'CastError') return null;
+      throw err;
+    }
   }
 
   async updatePassword(userId: string, passwordHash: string): Promise<void> {

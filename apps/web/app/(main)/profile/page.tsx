@@ -17,8 +17,17 @@ import {
   Info,
   Save,
   Pencil,
+  Cake,
+  Phone,
+  Users,
+  Lock,
 } from 'lucide-react'
 import Link from 'next/link'
+import Image from 'next/image'
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from '@/components/ui/select'
+import { Switch } from '@/components/ui/switch'
 import { useAuthStore } from '@/lib/store/auth.store'
 import { authService } from '@/lib/api/auth'
 import { chatService } from '@/lib/api/chat'
@@ -33,6 +42,10 @@ import { ImageCropperModal } from '@/components/profile/ImageCropperModal'
 type FormValues = {
   displayName: string
   bio?: string
+  dateOfBirth?: string
+  phoneNumber?: string
+  gender?: string
+  hideInfo: boolean
 }
 
 type CropTarget = 'avatar' | 'cover' | null
@@ -68,6 +81,10 @@ export default function ProfilePage() {
       z.object({
         displayName: z.string().min(1, t('displayNameRequired')).max(50, t('displayNameTooLong')),
         bio: z.string().max(160, t('bioTooLong')).optional(),
+        dateOfBirth: z.string().optional(),
+        phoneNumber: z.string().max(20, t('phoneTooLong')).optional(),
+        gender: z.string().optional(),
+        hideInfo: z.boolean(),
       }),
     [t],
   )
@@ -76,20 +93,37 @@ export default function ProfilePage() {
     register,
     handleSubmit,
     reset,
+    watch,
+    setValue,
     formState: { errors, isDirty },
   } = useForm<FormValues>({
     resolver: zodResolver(schema),
     defaultValues: {
       displayName: user?.displayName ?? '',
       bio: '',
+      dateOfBirth: '',
+      phoneNumber: '',
+      gender: '',
+      hideInfo: false,
     },
   })
+
+  const gender = watch('gender')
+  const hideInfo = watch('hideInfo')
 
   // Seed the form once the persisted profile loads — this is what was missing
   // before, causing bio to appear empty on every reopen.
   useEffect(() => {
     if (me) {
-      reset({ displayName: me.displayName ?? '', bio: me.bio ?? '' })
+      reset({
+        displayName: me.displayName ?? '',
+        bio: me.bio ?? '',
+        // Backend stores DOB as a Date; <input type="date"> needs yyyy-MM-dd.
+        dateOfBirth: me.dateOfBirth ? me.dateOfBirth.slice(0, 10) : '',
+        phoneNumber: me.phoneNumber ?? '',
+        gender: me.gender ?? '',
+        hideInfo: me.hideInfo ?? false,
+      })
     }
   }, [me, reset])
 
@@ -150,6 +184,10 @@ export default function ProfilePage() {
       const updated = await authService.updateProfile({
         displayName: values.displayName,
         bio: values.bio ?? '',
+        dateOfBirth: values.dateOfBirth || undefined,
+        phoneNumber: values.phoneNumber ?? '',
+        gender: values.gender ?? '',
+        hideInfo: values.hideInfo,
         ...(avatarUrl ? { avatarUrl } : {}),
         ...(coverPhoto ? { coverPhoto } : {}),
       })
@@ -205,7 +243,7 @@ export default function ProfilePage() {
         {/* Cover Photo Section */}
         <div className="relative h-40 w-full overflow-hidden group">
           {resolvedCover ? (
-            <img src={resolvedCover} alt="" className="absolute inset-0 size-full object-cover" />
+            <Image src={resolvedCover} alt="" fill unoptimized className="object-cover" />
           ) : (
             <div className="absolute inset-0 bg-gradient-to-br from-pon-cyan via-pon-peach to-pon-pink" />
           )}
@@ -313,6 +351,65 @@ export default function ProfilePage() {
               {errors.bio && (
                 <p className="text-xs text-destructive">{errors.bio.message}</p>
               )}
+            </div>
+
+            {/* Date of birth */}
+            <div className="space-y-2">
+              <Label htmlFor="dateOfBirth" className="text-sm font-medium flex items-center gap-2">
+                <Cake className="size-4 text-primary" />
+                {t('dobLabel')}
+              </Label>
+              <Input id="dateOfBirth" type="date" {...register('dateOfBirth')} />
+            </div>
+
+            {/* Phone number */}
+            <div className="space-y-2">
+              <Label htmlFor="phoneNumber" className="text-sm font-medium flex items-center gap-2">
+                <Phone className="size-4 text-primary" />
+                {t('phoneLabel')}
+              </Label>
+              <Input
+                id="phoneNumber"
+                type="tel"
+                {...register('phoneNumber')}
+                placeholder={t('phonePlaceholder')}
+              />
+              {errors.phoneNumber && (
+                <p className="text-xs text-destructive">{errors.phoneNumber.message}</p>
+              )}
+            </div>
+
+            {/* Gender */}
+            <div className="space-y-2">
+              <Label className="text-sm font-medium flex items-center gap-2">
+                <Users className="size-4 text-primary" />
+                {t('genderLabel')}
+              </Label>
+              <Select value={gender || ''} onValueChange={(v) => setValue('gender', v, { shouldDirty: true })}>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder={t('genderPlaceholder')} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="male">{t('genderMale')}</SelectItem>
+                  <SelectItem value="female">{t('genderFemale')}</SelectItem>
+                  <SelectItem value="other">{t('genderOther')}</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Privacy toggle — hide sensitive info from other users */}
+            <div className="flex items-center justify-between gap-4 rounded-lg border p-3">
+              <div className="flex items-center gap-2 min-w-0">
+                <Lock className="size-4 text-primary shrink-0" />
+                <div className="min-w-0">
+                  <p className="text-sm font-medium">{t('hideInfoLabel')}</p>
+                  <p className="text-xs text-muted-foreground">{t('hideInfoHint')}</p>
+                </div>
+              </div>
+              <Switch
+                checked={hideInfo}
+                onCheckedChange={(v) => setValue('hideInfo', v, { shouldDirty: true })}
+              />
             </div>
 
             {/* Email (read-only) */}

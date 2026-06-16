@@ -53,6 +53,7 @@ class _NewConversationScreenState
     });
     try {
       final user = await _resolveUser(input);
+      if (!mounted) return;
       if (user == null) {
         setState(() => _error = context.l10n.errUserNotFoundEmail);
         return;
@@ -62,6 +63,7 @@ class _NewConversationScreenState
       }
       _controller.clear();
     } catch (_) {
+      if (!mounted) return;
       setState(() => _error = context.l10n.errUserNotFoundOrConn);
     } finally {
       if (mounted) setState(() => _loading = false);

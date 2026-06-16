@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { toast } from 'sonner'
+import { useTranslations } from 'next-intl'
 import { Loader2, Lock, LockOpen, KeyRound, Eye, EyeOff } from 'lucide-react'
 import { authService } from '@/lib/api/auth'
 import {
@@ -22,6 +23,8 @@ interface ChangePasswordDialogProps {
 }
 
 export function ChangePasswordDialog({ open, onOpenChange }: ChangePasswordDialogProps) {
+  const t = useTranslations('settings.changePasswordDialog')
+  const tCommon = useTranslations('common')
   const [currentPassword, setCurrentPassword] = useState('')
   const [newPassword, setNewPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
@@ -49,11 +52,11 @@ export function ChangePasswordDialog({ open, onOpenChange }: ChangePasswordDialo
 
   const handleSubmit = async () => {
     if (newPassword.length < 6) {
-      setError('Mật khẩu mới phải có ít nhất 6 ký tự')
+      setError(t('minLength'))
       return
     }
     if (newPassword !== confirmPassword) {
-      setError('Mật khẩu xác nhận không khớp')
+      setError(t('mismatch'))
       return
     }
 
@@ -62,21 +65,21 @@ export function ChangePasswordDialog({ open, onOpenChange }: ChangePasswordDialo
 
     try {
       await authService.changePassword(currentPassword, newPassword)
-      toast.success('Đổi mật khẩu thành công!')
+      toast.success(t('success'))
       handleClose(false)
     } catch (e: unknown) {
       // Map backend error messages
-      let message = 'Có lỗi xảy ra'
+      let message = t('genericError')
       if (e && typeof e === 'object' && 'response' in e) {
         const resp = (e as { response?: { data?: { message?: string } } }).response
         const serverMsg = resp?.data?.message
         if (serverMsg) {
           if (serverMsg.includes('Incorrect current password')) {
-            message = 'Mật khẩu hiện tại không đúng'
+            message = t('incorrectCurrent')
           } else if (serverMsg.includes('Current password is required')) {
-            message = 'Vui lòng nhập mật khẩu hiện tại'
+            message = t('currentRequired')
           } else if (serverMsg.includes('at least 6')) {
-            message = 'Mật khẩu phải có ít nhất 6 ký tự'
+            message = t('atLeast6')
           } else {
             message = serverMsg
           }
@@ -96,10 +99,10 @@ export function ChangePasswordDialog({ open, onOpenChange }: ChangePasswordDialo
             <div className="size-8 rounded-full bg-primary/10 flex items-center justify-center">
               <KeyRound className="size-4 text-primary" />
             </div>
-            Đổi mật khẩu
+            {t('title')}
           </DialogTitle>
           <DialogDescription>
-            Nhập mật khẩu hiện tại và mật khẩu mới để cập nhật.
+            {t('description')}
           </DialogDescription>
         </DialogHeader>
 
@@ -113,7 +116,7 @@ export function ChangePasswordDialog({ open, onOpenChange }: ChangePasswordDialo
           {/* Current Password */}
           <div className="space-y-2">
             <Label htmlFor="cp-current" className="text-sm font-medium">
-              Mật khẩu hiện tại
+              {t('currentLabel')}
             </Label>
             <div className="relative">
               <Lock className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
@@ -122,7 +125,7 @@ export function ChangePasswordDialog({ open, onOpenChange }: ChangePasswordDialo
                 type={showCurrent ? 'text' : 'password'}
                 value={currentPassword}
                 onChange={(e) => setCurrentPassword(e.target.value)}
-                placeholder="Nhập mật khẩu hiện tại..."
+                placeholder={t('currentPlaceholder')}
                 className="pl-9 pr-10"
                 disabled={saving}
               />
@@ -140,7 +143,7 @@ export function ChangePasswordDialog({ open, onOpenChange }: ChangePasswordDialo
           {/* New Password */}
           <div className="space-y-2">
             <Label htmlFor="cp-new" className="text-sm font-medium">
-              Mật khẩu mới
+              {t('newLabel')}
             </Label>
             <div className="relative">
               <LockOpen className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
@@ -149,7 +152,7 @@ export function ChangePasswordDialog({ open, onOpenChange }: ChangePasswordDialo
                 type={showNew ? 'text' : 'password'}
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
-                placeholder="Nhập mật khẩu mới..."
+                placeholder={t('newPlaceholder')}
                 className="pl-9 pr-10"
                 disabled={saving}
               />
@@ -167,7 +170,7 @@ export function ChangePasswordDialog({ open, onOpenChange }: ChangePasswordDialo
           {/* Confirm Password */}
           <div className="space-y-2">
             <Label htmlFor="cp-confirm" className="text-sm font-medium">
-              Xác nhận mật khẩu mới
+              {t('confirmLabel')}
             </Label>
             <div className="relative">
               <Lock className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
@@ -176,7 +179,7 @@ export function ChangePasswordDialog({ open, onOpenChange }: ChangePasswordDialo
                 type={showConfirm ? 'text' : 'password'}
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
-                placeholder="Nhập lại mật khẩu mới..."
+                placeholder={t('confirmPlaceholder')}
                 className="pl-9 pr-10"
                 disabled={saving}
                 onKeyDown={(e) => { if (e.key === 'Enter') handleSubmit() }}
@@ -199,7 +202,7 @@ export function ChangePasswordDialog({ open, onOpenChange }: ChangePasswordDialo
             onClick={() => handleClose(false)}
             disabled={saving}
           >
-            Hủy
+            {tCommon('cancel')}
           </Button>
           <Button
             onClick={handleSubmit}
@@ -207,7 +210,7 @@ export function ChangePasswordDialog({ open, onOpenChange }: ChangePasswordDialo
             className="bg-primary hover:bg-primary/90"
           >
             {saving && <Loader2 className="size-4 mr-2 animate-spin" />}
-            Lưu
+            {tCommon('save')}
           </Button>
         </DialogFooter>
       </DialogContent>

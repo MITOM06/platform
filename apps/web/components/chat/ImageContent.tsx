@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { Download, X, ChevronLeft, ChevronRight, Play, ImageOff } from 'lucide-react'
-import { Dialog, DialogContent } from '@/components/ui/dialog'
+import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog'
 import { absoluteMediaUrl, downloadMediaUrl, parseImageUrls } from '@/lib/media'
 import { cn } from '@/lib/utils'
 
@@ -134,6 +134,7 @@ function Lightbox({
         className="flex max-w-[95vw] items-center justify-center border-none bg-black/95 p-0 sm:max-w-[90vw]"
         showCloseButton={false}
       >
+        <DialogTitle className="sr-only">Image viewer</DialogTitle>
         <div className="relative flex h-[85vh] w-full items-center justify-center">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img

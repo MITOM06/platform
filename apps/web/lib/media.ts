@@ -6,8 +6,9 @@ export function absoluteMediaUrl(url: string): string {
   if (url.startsWith('http') || url.startsWith('blob:') || url.startsWith('data:')) {
     return url
   }
-  const base = process.env.NEXT_PUBLIC_CHAT_URL ?? ''
-  return `${base}${url}`
+  const base = (process.env.NEXT_PUBLIC_CHAT_URL ?? '').replace(/\/$/, '')
+  const sep = url.startsWith('/') ? '' : '/'
+  return `${base}${sep}${url}`
 }
 
 /** Build a download URL (adds `download=true` so the server serves as attachment). */

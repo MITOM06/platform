@@ -618,6 +618,18 @@ class AppLocalizationsEs extends AppLocalizations {
   String get friendRequestPending => 'Pendiente';
 
   @override
+  String get friendsTabSearch => 'Buscar';
+
+  @override
+  String get declineFriend => 'Rechazar';
+
+  @override
+  String get searchUsersPrompt => 'Busca personas para agregar como amigos';
+
+  @override
+  String get noSearchResults => 'No se encontraron usuarios';
+
+  @override
   String get unfriend => 'Eliminar amigo';
 
   @override
@@ -1113,18 +1125,18 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String agreeToTerms(String privacyPolicy, String termsOfService) {
-    return 'I agree to the $privacyPolicy and $termsOfService';
+    return 'Acepto la $privacyPolicy y los $termsOfService';
   }
 
   @override
-  String get privacyPolicy => 'Privacy Policy';
+  String get privacyPolicy => 'Política de Privacidad';
 
   @override
-  String get termsOfService => 'Terms of Service';
+  String get termsOfService => 'Términos del Servicio';
 
   @override
   String get valMustAgreeTerms =>
-      'You must agree to the Terms of Service to register';
+      'Debes aceptar los Términos del Servicio para registrarte';
 
   @override
   String get youColon => 'You:';
@@ -1152,4 +1164,144 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get wallpaperPreviewOutgoing => 'Looks great 🎉';
+
+  @override
+  String get errCannotOpenLink => 'No se pudo abrir el enlace';
+
+  @override
+  String sysNicknameClearedSelf(String actorName) {
+    return '$actorName eliminó su propio apodo';
+  }
+
+  @override
+  String sysNicknameClearedOther(String actorName, String targetName) {
+    return '$actorName eliminó el apodo de $targetName';
+  }
+
+  @override
+  String sysNicknameSetSelf(String actorName, String nickname) {
+    return '$actorName estableció su apodo como $nickname';
+  }
+
+  @override
+  String sysNicknameSetOther(
+      String actorName, String targetName, String nickname) {
+    return '$actorName estableció el apodo de $targetName como $nickname';
+  }
+
+  @override
+  String sysThemeChanged(String actorName) {
+    return '$actorName cambió el tema del chat';
+  }
+
+  @override
+  String sysQuickReactionChanged(String actorName, String emoji) {
+    return '$actorName cambió la reacción rápida a $emoji';
+  }
+
+  @override
+  String sysGroupCreated(String actorName) {
+    return '$actorName creó el grupo';
+  }
+
+  @override
+  String sysMembersAdded(String actorName) {
+    return '$actorName añadió nuevos miembros';
+  }
+
+  @override
+  String sysMemberLeft(String actorName) {
+    return '$actorName salió del grupo';
+  }
+
+  @override
+  String sysMemberRemoved(String actorName) {
+    return '$actorName eliminó a un miembro';
+  }
+
+  @override
+  String sysMemberJoined(String actorName) {
+    return '$actorName se unió al grupo';
+  }
+
+  @override
+  String systemVideoCallEnded(String duration) {
+    return 'Videollamada finalizada · $duration';
+  }
+
+  @override
+  String systemVoiceCallEnded(String duration) {
+    return 'Llamada de voz finalizada · $duration';
+  }
+
+  @override
+  String get systemVideoCallMissed => 'Videollamada perdida';
+
+  @override
+  String get systemVoiceCallMissed => 'Llamada de voz perdida';
+
+  @override
+  String get errActionFailed => 'Algo salió mal. Inténtalo de nuevo.';
+
+  @override
+  String get kbDeleteFailed => 'Error al eliminar, inténtalo de nuevo';
+
+  @override
+  String get exploreJoinFailed => 'No se pudo unir al canal';
+
+  @override
+  String get unnamedChannel => 'Sin nombre';
+
+  @override
+  String get actionOk => 'Aceptar';
+
+  @override
+  String get reminderDeleteConfirm => '¿Eliminar este recordatorio?';
+
+  @override
+  String get profileNameLabel => 'Nombre';
+
+  @override
+  String get genderMale => 'Masculino';
+
+  @override
+  String get genderFemale => 'Femenino';
+
+  @override
+  String get genderOther => 'Otro';
+
+  @override
+  String get aiPersonaSaved => 'Guardado';
+
+  @override
+  String get aiPersonaResetTitle => 'Restablecer la persona de IA';
+
+  @override
+  String get aiPersonaResetConfirm =>
+      '¿Restablecer la persona de IA a su configuración predeterminada?';
+
+  @override
+  String get aiPersonaToneLabel => 'Tono';
+
+  @override
+  String get aiPersonaResetToDefault => 'Restablecer valores predeterminados';
+
+  @override
+  String tokenUsagePercentUsed(String percent) {
+    return '$percent% usado este mes';
+  }
+
+  @override
+  String tokenUsageCostUsd(String amount) {
+    return '$amount USD';
+  }
+
+  @override
+  String get notifications => 'Notificaciones';
+
+  @override
+  String get notificationsEnabled => 'Las notificaciones están activadas';
+
+  @override
+  String get notificationsDisabled => 'Las notificaciones están desactivadas';
 }

@@ -15,6 +15,9 @@ dependencies:
     sdk: flutter
   intl: any
 
+  # Utilities
+  collection: any
+
   # State management
   flutter_riverpod: ^2.6.1
   riverpod_annotation: ^2.3.5

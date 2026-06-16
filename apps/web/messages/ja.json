@@ -12,6 +12,25 @@
     "noResults": "No results found",
     "members": "{count} members"
   },
+  "layout": {
+    "navExplore": "探索",
+    "navCreate": "新規作成",
+    "navContacts": "連絡先",
+    "menuNewChat": "新規チャット",
+    "menuNewGroup": "グループ作成",
+    "menuProfile": "プロフィール",
+    "menuSettings": "設定",
+    "menuLogout": "ログアウト",
+    "menuLightMode": "ライトモード",
+    "menuDarkMode": "ダークモード",
+    "notificationTitle": "{name} からの新着メッセージ",
+    "notificationAttachment": "📎 添付ファイルを送信しました",
+    "notificationFallback": "新しいメッセージがあります",
+    "notificationOpen": "開く",
+    "realtimeError": "リアルタイム接続に失敗しました",
+    "logoutError": "ログアウトに失敗しました",
+    "sessionConnecting": "セッションに接続しています..."
+  },
   "auth": {
     "emailLabel": "Email",
     "emailPlaceholder": "you@example.com",
@@ -61,7 +80,11 @@
       "pwStrengthMedium": "Medium",
       "pwStrengthStrong": "Strong",
       "pwStrengthVeryStrong": "Very Strong",
-      "googleRegister": "Sign up with Google"
+      "googleRegister": "Sign up with Google",
+      "agreeToTerms": "<privacyPolicy>プライバシーポリシー</privacyPolicy>と<termsOfService>利用規約</termsOfService>に同意します",
+      "privacyPolicy": "プライバシーポリシー",
+      "termsOfService": "利用規約",
+      "mustAgree": "登録するには利用規約に同意する必要があります"
     },
     "verifyOtp": {
       "title": "Verify OTP",
@@ -96,6 +119,10 @@
       "sendError": "Unable to request password reset",
       "resetSuccess": "Password reset successfully. Please sign in.",
       "resetError": "Invalid or expired OTP code"
+    },
+    "oauth": {
+      "verifying": "認証中...",
+      "failed": "認証に失敗しました。もう一度お試しください。"
     }
   },
   "settings": {
@@ -127,7 +154,24 @@
     "languageChanged": "Language changed",
     "logout": "Sign Out",
     "logoutError": "Sign out failed",
-    "version": "PON Messenger v1.0"
+    "version": "PON Messenger v1.0",
+    "changePasswordDialog": {
+      "title": "パスワード変更",
+      "description": "現在のパスワードと新しいパスワードを入力して更新してください。",
+      "currentLabel": "現在のパスワード",
+      "currentPlaceholder": "現在のパスワードを入力...",
+      "newLabel": "新しいパスワード",
+      "newPlaceholder": "新しいパスワードを入力...",
+      "confirmLabel": "新しいパスワードの確認",
+      "confirmPlaceholder": "新しいパスワードを再入力...",
+      "minLength": "新しいパスワードは6文字以上必要です",
+      "mismatch": "パスワードが一致しません",
+      "success": "パスワードを変更しました！",
+      "genericError": "エラーが発生しました",
+      "incorrectCurrent": "現在のパスワードが正しくありません",
+      "currentRequired": "現在のパスワードを入力してください",
+      "atLeast6": "パスワードは6文字以上必要です"
+    }
   },
   "profile": {
     "title": "Edit Profile",
@@ -153,7 +197,18 @@
     "changeCover": "Change Cover",
     "coverSuccess": "Cover photo updated",
     "coverError": "Failed to upload cover photo",
-    "viewOnly": "View only"
+    "viewOnly": "View only",
+    "phoneTooLong": "電話番号が長すぎます",
+    "dobLabel": "生年月日",
+    "phoneLabel": "電話番号",
+    "phonePlaceholder": "電話番号",
+    "genderLabel": "性別",
+    "genderPlaceholder": "性別を選択",
+    "genderMale": "男性",
+    "genderFemale": "女性",
+    "genderOther": "その他",
+    "hideInfoLabel": "個人情報を非表示",
+    "hideInfoHint": "他のユーザーには誕生日・電話番号・性別・自己紹介が表示されません。"
   },
   "friends": {
     "title": "Friends",
@@ -169,7 +224,13 @@
     "searching": "Searching...",
     "noSearchResults": "No results found",
     "searchPrompt": "Enter a keyword to search for users",
-    "addFriend": "Add Friend"
+    "addFriend": "Add Friend",
+    "sendRequestSuccess": "友達リクエストを送信しました",
+    "sendRequestError": "友達リクエストを送信できませんでした",
+    "acceptRequestSuccess": "友達リクエストを承認しました",
+    "acceptRequestError": "友達リクエストを承認できませんでした",
+    "removeFriendSuccess": "友達を削除/リクエストをキャンセルしました",
+    "removeFriendError": "操作を完了できませんでした"
   },
   "conversations": {
     "selectPrompt": "Select a conversation to start"
@@ -331,7 +392,101 @@
     "deleteForMeAction": "自分から削除",
     "reactError": "リアクションを追加できませんでした",
     "recallError": "メッセージを取り消せませんでした",
-    "deleteError": "メッセージを削除できませんでした"
+    "deleteError": "メッセージを削除できませんでした",
+    "offlineBanner": "インターネット接続がありません",
+    "readDetails": "既読",
+    "seenStatus": "既読",
+    "noReadsYet": "まだ誰もこのメッセージを読んでいません",
+    "reactionsDetail": "リアクション",
+    "sent": "送信済み",
+    "seen": "既読",
+    "aiAssistant": "AI アシスタント",
+    "online": "オンライン",
+    "offline": "オフライン",
+    "profileTitle": "プロフィール",
+    "userFallback": "ユーザー",
+    "openConversationError": "会話を開けませんでした",
+    "friendRemoved": "友達を削除しました",
+    "friendRequestSent": "友達リクエストを送信しました",
+    "friendRequestAccepted": "友達リクエストを承認しました",
+    "actionFailed": "操作に失敗しました",
+    "userUnblocked": "ブロックを解除しました",
+    "userBlocked": "ユーザーをブロックしました",
+    "friendRemove": "友達を削除",
+    "friendAccept": "リクエストを承認",
+    "friendRequested": "リクエスト送信済み",
+    "friendAdd": "友達追加",
+    "sendMessageAction": "メッセージ",
+    "unblockAction": "ブロック解除",
+    "blockAction": "ユーザーをブロック",
+    "markAsRead": "既読にする",
+    "markAsUnread": "未読にする",
+    "archiveChat": "アーカイブ",
+    "unarchiveChat": "アーカイブ解除",
+    "copyAction": "コピー",
+    "copySuccess": "クリップボードにコピーしました",
+    "copyError": "コピーできませんでした",
+    "userUnblockedName": "{name} のブロックを解除しました",
+    "youBlockedNotice": "{name} をブロックしました。メッセージを送るにはブロックを解除してください。",
+    "blockedByOtherNotice": "このユーザーにメッセージを送れません。",
+    "connectionLimitedNotice": "接続制限のためメッセージを送れません。",
+    "unblockError": "ブロックを解除できませんでした",
+    "genderMale": "男性",
+    "genderFemale": "女性",
+    "genderOther": "その他",
+    "typing": "入力中...",
+    "settingsTooltip": "設定",
+    "groupInfoTooltip": "グループ情報",
+    "viewProfileTooltip": "プロフィールを見る",
+    "today": "今日",
+    "yesterday": "昨日",
+    "loadMessagesError": "メッセージを読み込めませんでした",
+    "noMessagesStart": "まだメッセージがありません。会話を始めましょう！",
+    "sendMessageError": "メッセージを送信できませんでした",
+    "editMessageError": "メッセージを編集できませんでした",
+    "aiError": "AI でエラーが発生しました。もう一度お試しください",
+    "typingIndicator": "入力中",
+    "newConvTitle": "新規チャット",
+    "newConvTabDirect": "ダイレクト",
+    "newConvTabGroup": "グループ",
+    "newConvSearchPlaceholder": "名前またはメールで検索...",
+    "newConvNoUsers": "ユーザーが見つかりません",
+    "newConvGroupNamePlaceholder": "グループ名...",
+    "newConvCreateGroup": "グループ作成",
+    "newConvGroupValidation": "グループ名を入力し、少なくとも1人のメンバーを選択してください",
+    "newConvGroupSuccess": "グループを作成しました",
+    "newConvGroupError": "グループを作成できませんでした",
+    "newConvDirectError": "会話を作成できませんでした",
+    "forwardTitle": "メッセージを転送",
+    "forwardConversationFallback": "会話",
+    "forwardSuccess": "メッセージを転送しました",
+    "forwardError": "メッセージを転送できませんでした",
+    "publicChannelsTitle": "公開チャンネル",
+    "publicChannelsSearchPlaceholder": "チャンネルを検索...",
+    "publicChannelsEmpty": "チャンネルが見つかりません",
+    "publicChannelUnnamed": "名称未設定のチャンネル",
+    "publicChannelMembers": "{count} 人のメンバー",
+    "publicChannelJoin": "参加",
+    "publicChannelJoinSuccess": "チャンネルに参加しました",
+    "publicChannelJoinError": "チャンネルに参加できませんでした",
+    "strangerRequestTitle": "知らない人からのメッセージリクエスト",
+    "strangerRequestBody": "あなたはまだ {name} と友達ではありません。接続を承認するまで新しいメッセージは保留中になります。",
+    "strangerBlock": "ユーザーをブロック",
+    "strangerAccept": "承認",
+    "strangerAcceptSuccess": "{name} との会話を承認しました",
+    "strangerAcceptError": "会話を承認できませんでした",
+    "strangerBlockSuccess": "{name} をブロックしました",
+    "strangerBlockError": "ユーザーをブロックできませんでした",
+    "messageSearchPlaceholder": "会話内を検索...",
+    "messageSearchNoResults": "結果が見つかりません",
+    "aiTraceTitle": "AI 推論トレース",
+    "aiTraceEmpty": "このメッセージのトレースはありません。",
+    "aiTraceInputTokens": "入力トークン",
+    "aiTraceOutputTokens": "出力トークン",
+    "aiTraceThinkingBlocks": "思考ブロック ({count})",
+    "aiTraceToolCalls": "ツール呼び出し ({count})",
+    "aiTraceRagSources": "RAG ソース ({count})",
+    "aiTraceScore": "スコア: {score}"
   },
   "aiPersona": {
     "title": "AI Persona",
@@ -450,5 +605,31 @@
     "emptyMedia": "No photos or videos shared yet",
     "emptyFiles": "No files shared yet",
     "emptyLinks": "No links shared yet"
+  },
+  "legal": {
+    "title": "プライバシーポリシーと利用規約",
+    "lastUpdated": "最終更新：2026年6月15日",
+    "sections": {
+      "dataCollection": {
+        "title": "1. データ収集",
+        "content": "当社は、アカウントの作成・変更、サービスの利用、または当社との通信など、お客様が直接提供する情報（名前、メールアドレス、プロフィール写真、送信したメッセージなど）を収集します。"
+      },
+      "dataUsage": {
+        "title": "2. データの利用方法",
+        "content": "お客様のデータは、ユーザー間のコミュニケーション促進、セキュリティの確保、エクスペリエンスのパーソナライズを含む、サービスの提供・維持・改善のために使用されます。"
+      },
+      "security": {
+        "title": "3. セキュリティ",
+        "content": "当社は、お客様の個人情報とメッセージを保護するために業界標準のセキュリティ対策を実施しています。データへのアクセスは厳格に管理され、機密情報の保護には暗号化を使用しています。"
+      },
+      "userRights": {
+        "title": "4. お客様の権利",
+        "content": "お客様は、個人データへのアクセス、修正、または削除を行う権利があります。アプリケーション設定からいつでもアカウントを削除できます。"
+      },
+      "terms": {
+        "title": "5. 利用規約",
+        "content": "当社のプラットフォームを使用することで、虐待、嫌がらせ、または違法行為に関与しないことに同意したものとみなされます。当社は、これらの規約に違反するアカウントを停止または終了する権利を留保します。"
+      }
+    }
   }
 }

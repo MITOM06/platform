@@ -2,6 +2,36 @@ import { authApi } from './axios'
 import type { AuthUser } from '@/lib/store/auth.store'
 import type { UserSearchResult } from './types'
 
+/** Profile gender — kept as a loose string union to mirror the auth-service
+ *  schema (`gender: string`), with the values the UI selector offers. */
+export type Gender = 'male' | 'female' | 'other' | ''
+
+/** Public/own user profile shape returned by auth-service `/api/users/:id`
+ *  and `/api/users/me`. When viewing another user with `hideInfo=true`, the
+ *  server strips email/phoneNumber/dateOfBirth/gender/bio. */
+export interface UserProfile extends AuthUser {
+  avatarUrl?: string
+  bio?: string
+  coverPhoto?: string
+  dateOfBirth?: string
+  phoneNumber?: string
+  gender?: string
+  hideInfo?: boolean
+  friendsCount?: number
+}
+
+/** Fields accepted by `PATCH /api/users/me`. */
+export interface UpdateProfilePayload {
+  displayName?: string
+  avatarUrl?: string
+  bio?: string
+  coverPhoto?: string
+  dateOfBirth?: string
+  phoneNumber?: string
+  gender?: string
+  hideInfo?: boolean
+}
+
 export interface LoginResponse {
   accessToken: string
   refreshToken: string
@@ -46,7 +76,7 @@ export const authService = {
     authApi.get<UserSearchResult[]>('/api/users/search', { params: { q } }).then((r) => r.data),
 
   getMe: () =>
-    authApi.get<AuthUser & { avatarUrl?: string; bio?: string; coverPhoto?: string }>('/api/users/me').then((r) => r.data),
+    authApi.get<UserProfile>('/api/users/me').then((r) => r.data),
 
   getOnlineFriends: () =>
     authApi.get<UserSearchResult[]>('/api/users/friends/online').then((r) => r.data),
@@ -65,10 +95,10 @@ export const authService = {
     authApi.post(`/api/users/unblock/${targetId}`).then((r) => r.data),
 
   getUser: (id: string) =>
-    authApi.get<AuthUser & { avatarUrl?: string; bio?: string; coverPhoto?: string; dateOfBirth?: string }>(`/api/users/${id}`).then((r) => r.data),
+    authApi.get<UserProfile>(`/api/users/${id}`).then((r) => r.data),
 
-  updateProfile: (data: { displayName?: string; avatarUrl?: string; bio?: string; coverPhoto?: string }) =>
-    authApi.patch<AuthUser & { avatarUrl?: string; bio?: string; coverPhoto?: string }>('/api/users/me', data).then((r) => r.data),
+  updateProfile: (data: UpdateProfilePayload) =>
+    authApi.patch<UserProfile>('/api/users/me', data).then((r) => r.data),
 
   changePassword: (currentPassword: string, newPassword: string) =>
     authApi.post('/api/users/me/change-password', { currentPassword, newPassword }),

@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { useTranslations } from 'next-intl'
 import {
-  MoreHorizontal, Pencil, Trash2, Trash, Share2, Pin, PinOff, Smile, Brain, Reply, CheckCheck,
+  MoreHorizontal, Pencil, Trash2, Trash, Share2, Pin, PinOff, Smile, Brain, Reply, CheckCheck, Copy,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import {
@@ -20,6 +20,7 @@ const QUICK_EMOJIS = ['👍', '❤️', '😂', '😮', '😢', '🔥']
 interface Props {
   message: Message
   isOwn: boolean
+  currentUserId?: string
   isPinned: boolean
   onEdit?: () => void
   onForward?: () => void
@@ -33,6 +34,7 @@ interface Props {
 export function MessageActions({
   message,
   isOwn,
+  currentUserId,
   isPinned,
   onEdit,
   onForward,
@@ -50,7 +52,9 @@ export function MessageActions({
   const handleReact = async (emoji: string) => {
     setEmojiOpen(false)
     try {
-      const existing = message.reactions?.find((r) => r.emoji === emoji)
+      const existing = message.reactions?.find(
+        (r) => r.emoji === emoji && r.userId === currentUserId,
+      )
       if (existing) {
         await chatService.removeReaction(message.id)
       } else {
@@ -77,6 +81,17 @@ export function MessageActions({
       toast.error(t('deleteError'))
     }
   }
+
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(message.content)
+      toast.success(t('copySuccess'))
+    } catch {
+      toast.error(t('copyError'))
+    }
+  }
+
+  const canCopy = message.type === 'text' || message.type === 'ai'
 
   const handlePin = async () => {
     try {
@@ -126,6 +141,12 @@ export function MessageActions({
             <Reply className="size-4" />
             {t('replyAction')}
           </DropdownMenuItem>
+          {canCopy && !message.recalled && (
+            <DropdownMenuItem onClick={handleCopy}>
+              <Copy className="size-4" />
+              {t('copyAction')}
+            </DropdownMenuItem>
+          )}
           {isOwn && !message.recalled && message.type === 'text' && (
             <DropdownMenuItem onClick={onEdit}>
               <Pencil className="size-4" />

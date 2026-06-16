@@ -1,7 +1,6 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:go_router/go_router.dart';
@@ -24,8 +23,8 @@ import 'widgets/chat_wallpaper_dialog.dart';
 import 'widgets/edit_composer_bar.dart';
 import 'widgets/image_content.dart';
 import 'widgets/emoji_sticker_panel.dart';
+import 'widgets/chat_message_list.dart';
 import 'widgets/mention_list.dart';
-import 'widgets/message_bubble.dart';
 import 'widgets/pinned_message_bar.dart';
 import 'widgets/reply_composer_bar.dart';
 import 'widgets/search_overlay.dart';
@@ -538,8 +537,14 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
                                   chatState.pinnedMessages.first.id),
                         ),
                       Expanded(
-                        child: _buildMessageList(
-                            chatState, currentUserId, isGroup, otherUserId),
+                        child: ChatMessageList(
+                          chatState: chatState,
+                          currentUserId: currentUserId,
+                          isGroup: isGroup,
+                          otherUserId: otherUserId,
+                          scrollController: _scrollCtrl,
+                          keyFor: _keyFor,
+                        ),
                       ),
                       if (chatState.typingUserIds.isNotEmpty &&
                           !chatState.typingUserIds.contains(currentUserId))
@@ -615,112 +620,6 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
         ],
       ),
       ),
-    );
-  }
-
-  Widget _buildMessageList(
-    ChatState chatState,
-    String currentUserId,
-    bool isGroup,
-    String? otherUserId,
-  ) {
-    return ListView.builder(
-      controller: _scrollCtrl,
-      reverse: true,
-      physics: const BouncingScrollPhysics(),
-      itemCount:
-          chatState.messages.length + (chatState.isLoadingMore ? 1 : 0),
-      itemBuilder: (context, index) {
-        if (chatState.isLoadingMore && index == chatState.messages.length) {
-          return const Padding(
-            padding: EdgeInsets.all(16),
-            child: Center(
-              child: SizedBox(
-                width: 20,
-                height: 20,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  valueColor:
-                      AlwaysStoppedAnimation<Color>(AppTheme.ponCyan),
-                ),
-              ),
-            ),
-          );
-        }
-        final msg = chatState.messages[index];
-        bool showDate = index == chatState.messages.length - 1;
-        if (!showDate) {
-          final prevMsg = chatState.messages[index + 1];
-          final cur = msg.createdAt.toLocal();
-          final prev = prevMsg.createdAt.toLocal();
-          showDate = cur.day != prev.day ||
-              cur.month != prev.month ||
-              cur.year != prev.year;
-        }
-
-        Widget child = MessageBubble(
-          key: _keyFor(msg.id),
-          message: msg,
-          isSentByMe: msg.senderId == currentUserId,
-          otherUserId: otherUserId,
-          showSenderName: isGroup,
-          highlighted: chatState.highlightMessageId == msg.id,
-        );
-
-        if (showDate) {
-          final dt = msg.createdAt.toLocal();
-          final now = DateTime.now();
-          final String dateText;
-          if (dt.year == now.year &&
-              dt.month == now.month &&
-              dt.day == now.day) {
-            dateText = context.l10n.dateToday;
-          } else {
-            final yest = now.subtract(const Duration(days: 1));
-            if (dt.year == yest.year &&
-                dt.month == yest.month &&
-                dt.day == yest.day) {
-              dateText = context.l10n.dateYesterday;
-            } else {
-              dateText = DateFormat.yMMMMd(
-                      Localizations.localeOf(context).languageCode)
-                  .format(dt);
-            }
-          }
-          final theme = Theme.of(context);
-          final isDark = theme.brightness == Brightness.dark;
-          child = Column(
-            children: [
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 24),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 12, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: isDark
-                        ? AppTheme.darkSurface.withValues(alpha: 0.8)
-                        : Colors.black.withValues(alpha: 0.06),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                        color: isDark
-                            ? AppTheme.darkBorder.withValues(alpha: 0.5)
-                            : Colors.black.withValues(alpha: 0.08)),
-                  ),
-                  child: Text(
-                    dateText,
-                    style: TextStyle(
-                        color: isDark ? Colors.white70 : Colors.black54,
-                        fontSize: 11,
-                        fontWeight: FontWeight.bold),
-                  ),
-                ),
-              ),
-              child,
-            ],
-          );
-        }
-        return child;
-      },
     );
   }
 }

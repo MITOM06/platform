@@ -187,6 +187,10 @@
   "noFriends": "Chưa có bạn bè",
   "noFriendRequests": "Không có lời mời nào",
   "friendRequestPending": "Đang chờ",
+  "friendsTabSearch": "Tìm kiếm",
+  "declineFriend": "Từ chối",
+  "searchUsersPrompt": "Tìm người để kết bạn",
+  "noSearchResults": "Không tìm thấy người dùng",
   "unfriend": "Hủy kết bạn",
   "unfriendConfirm": "Hủy kết bạn với người này?",
   "blockUser": "Chặn người này",
@@ -378,5 +382,53 @@
   "wallpaperScale": "Tỉ lệ",
   "wallpaperPreviewHint": "Chụm hoặc kéo để điều chỉnh",
   "wallpaperPreviewIncoming": "Chào! Trông thế nào?",
-  "wallpaperPreviewOutgoing": "Tuyệt vời 🎉"
+  "wallpaperPreviewOutgoing": "Tuyệt vời 🎉",
+  "errCannotOpenLink": "Không thể mở liên kết",
+  "sysNicknameClearedSelf": "{actorName} đã gỡ bỏ biệt danh của mình",
+  "sysNicknameClearedOther": "{actorName} đã gỡ bỏ biệt danh của {targetName}",
+  "sysNicknameSetSelf": "{actorName} đã đặt biệt danh cho mình là {nickname}",
+  "sysNicknameSetOther": "{actorName} đã đặt biệt danh cho {targetName} là {nickname}",
+  "sysThemeChanged": "{actorName} đã thay đổi chủ đề đoạn chat",
+  "sysQuickReactionChanged": "{actorName} đã thay đổi biểu tượng cảm xúc nhanh thành {emoji}",
+  "sysGroupCreated": "{actorName} đã tạo nhóm",
+  "sysMembersAdded": "{actorName} đã thêm thành viên mới",
+  "sysMemberLeft": "{actorName} đã rời khỏi nhóm",
+  "sysMemberRemoved": "{actorName} đã xóa một thành viên",
+  "sysMemberJoined": "{actorName} đã tham gia nhóm",
+  "systemVideoCallEnded": "Cuộc gọi video đã kết thúc · {duration}",
+  "@systemVideoCallEnded": {
+    "placeholders": { "duration": { "type": "String" } }
+  },
+  "systemVoiceCallEnded": "Cuộc gọi thoại đã kết thúc · {duration}",
+  "@systemVoiceCallEnded": {
+    "placeholders": { "duration": { "type": "String" } }
+  },
+  "systemVideoCallMissed": "Cuộc gọi video nhỡ",
+  "systemVoiceCallMissed": "Cuộc gọi thoại nhỡ",
+  "errActionFailed": "Đã xảy ra lỗi. Vui lòng thử lại.",
+  "kbDeleteFailed": "Xóa thất bại, vui lòng thử lại",
+  "exploreJoinFailed": "Không thể tham gia kênh",
+  "unnamedChannel": "Chưa đặt tên",
+  "actionOk": "OK",
+  "reminderDeleteConfirm": "Xóa lời nhắc này?",
+  "profileNameLabel": "Tên",
+  "genderMale": "Nam",
+  "genderFemale": "Nữ",
+  "genderOther": "Khác",
+  "aiPersonaSaved": "Đã lưu",
+  "aiPersonaResetTitle": "Đặt lại AI persona",
+  "aiPersonaResetConfirm": "Đặt lại AI persona về cài đặt mặc định?",
+  "aiPersonaToneLabel": "Giọng điệu",
+  "aiPersonaResetToDefault": "Đặt lại mặc định",
+  "tokenUsagePercentUsed": "Đã dùng {percent}% trong tháng này",
+  "@tokenUsagePercentUsed": {
+    "placeholders": { "percent": { "type": "String" } }
+  },
+  "tokenUsageCostUsd": "{amount} USD",
+  "@tokenUsageCostUsd": {
+    "placeholders": { "amount": { "type": "String" } }
+  },
+  "notifications": "Thông báo",
+  "notificationsEnabled": "Thông báo đang bật",
+  "notificationsDisabled": "Thông báo đang tắt"
 }

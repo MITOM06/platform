@@ -56,10 +56,10 @@
 ## Configuration (`application.yml` / `application.properties`)
 ```yaml
 server.port: 8080
-spring.data.mongodb.uri: ${MONGODB_URI:mongodb://localhost:27018/platform}
-spring.data.redis.url: ${REDIS_URL:} # SSL / Upstash TLS if set, otherwise overrides host/port below
-spring.data.redis.host: ${REDIS_HOST:localhost}
-spring.data.redis.port: ${REDIS_PORT:6379}
+spring.data.mongodb.uri: ${SPRING_DATA_MONGODB_URI:mongodb://localhost:27018/platform}
+spring.data.redis.url: ${SPRING_DATA_REDIS_URL:redis://${SPRING_DATA_REDIS_HOST:localhost}:${SPRING_DATA_REDIS_PORT:6379}} # Upstash TLS in prod; falls back to host/port locally
+spring.data.redis.host: ${SPRING_DATA_REDIS_HOST:localhost}
+spring.data.redis.port: ${SPRING_DATA_REDIS_PORT:6379}
 app.jwt.secret: ${JWT_ACCESS_SECRET} # Must match auth-service secret exactly
 ```
 

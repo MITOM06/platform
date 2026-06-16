@@ -113,6 +113,7 @@ void showConversationTileMenu(
                   'targetName': name,
                   'conversationId': conv.id,
                   'isCaller': true,
+                  'isVideo': false,
                 });
               },
             ),
@@ -131,6 +132,7 @@ void showConversationTileMenu(
                   'targetName': name,
                   'conversationId': conv.id,
                   'isCaller': true,
+                  'isVideo': true,
                 });
               },
             ),

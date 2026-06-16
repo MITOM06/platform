@@ -68,7 +68,16 @@ class _VerifyOtpScreenState extends ConsumerState<VerifyOtpScreen> {
       }
     } on DioException catch (e) {
       if (mounted) {
-        final msg = e.response?.data?['message'] ?? context.l10n.errResendFailed;
+        String msg = context.l10n.errResendFailed;
+        final data = e.response?.data;
+        if (data is Map) {
+          final raw = data['message'];
+          if (raw is String && raw.isNotEmpty) {
+            msg = raw;
+          } else if (raw is List && raw.isNotEmpty) {
+            msg = raw.join(', ');
+          }
+        }
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
       }
     } catch (_) {

@@ -55,6 +55,10 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     final uri = Uri.parse('$authBase/auth/social/$provider/init?platform=mobile');
     if (await canLaunchUrl(uri)) {
       await launchUrl(uri, mode: LaunchMode.externalApplication);
+    } else if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(context.l10n.errCannotOpenLink)),
+      );
     }
   }
 
@@ -363,7 +367,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
           baseline: TextBaseline.alphabetic,
           child: GestureDetector(
             onTap: () async {
-              final uri = Uri.parse('https://platform-phi-gules.vercel.app/privacy');
+              final uri = Uri.parse(
+                  'https://platform-phi-gules.vercel.app/${isPrivacy ? "privacy" : "terms"}');
               if (await canLaunchUrl(uri)) {
                 await launchUrl(uri, mode: LaunchMode.externalApplication);
               }

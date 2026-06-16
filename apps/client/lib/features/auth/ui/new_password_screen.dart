@@ -212,8 +212,14 @@ class _NewPasswordScreenState extends ConsumerState<NewPasswordScreen> {
                                         setState(() => _obscurePassword = !_obscurePassword),
                                   ),
                                   validator: (v) {
+                                    // Match the registration password policy so a
+                                    // reset can't set a weaker password than signup.
                                     if (v == null || v.isEmpty) return context.l10n.valNewPasswordRequired;
-                                    if (v.length < 6) return context.l10n.valPasswordMin6;
+                                    if (v.length < 8) return context.l10n.valPasswordMin8;
+                                    if (!v.contains(RegExp(r'[A-Z]'))) return context.l10n.valPasswordUppercase;
+                                    if (!v.contains(RegExp(r'[a-z]'))) return context.l10n.valPasswordLowercase;
+                                    if (!v.contains(RegExp(r'[0-9]'))) return context.l10n.valPasswordDigit;
+                                    if (!v.contains(RegExp(r'[!@#$%^&*]'))) return context.l10n.valPasswordSpecial;
                                     return null;
                                   },
                                 ),

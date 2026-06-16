@@ -3,6 +3,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../../../core/api/dio_client.dart';
+import '../domain/auth_provider.dart';
 import '../domain/auth_state.dart';
 
 const _keyAccessToken = 'accessToken';
@@ -183,5 +184,12 @@ class AuthRepository {
 
 final authRepositoryProvider = Provider<AuthRepository>((ref) {
   const storage = FlutterSecureStorage();
-  return AuthRepository(storage, DioClient.createAuthDio(storage));
+  return AuthRepository(
+    storage,
+    DioClient.createAuthDio(
+      storage,
+      onForceLogout: () =>
+          ref.read(authNotifierProvider.notifier).forceLogout(),
+    ),
+  );
 });

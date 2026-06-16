@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import '../../../../core/l10n/l10n_ext.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../domain/chat_provider.dart';
 import '../../domain/chat_state.dart';
+import 'ai_message_parts.dart';
 import 'file_content.dart';
 import 'floating_reaction_sheet.dart';
 import 'image_content.dart';
@@ -21,6 +21,7 @@ class MessageBubble extends ConsumerWidget {
   final String? otherUserId;
   final bool showSenderName;
   final bool highlighted;
+  final bool isGroup;
 
   const MessageBubble({
     super.key,
@@ -29,6 +30,7 @@ class MessageBubble extends ConsumerWidget {
     this.otherUserId,
     this.showSenderName = false,
     this.highlighted = false,
+    this.isGroup = false,
   });
 
   @override
@@ -81,7 +83,7 @@ class MessageBubble extends ConsumerWidget {
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      _AiBotAvatar(avatarUrl: aiPersonaAvatarUrl),
+                      AiBotAvatar(avatarUrl: aiPersonaAvatarUrl),
                       const SizedBox(width: 6),
                       Text(
                         aiPersonaName,
@@ -210,7 +212,7 @@ class MessageBubble extends ConsumerWidget {
                           activeTools: message.activeTools,
                         )
                       else if (message.isAiQuotaExceeded)
-                        _QuotaExceededBubble()
+                        const QuotaExceededBubble()
                       else if (message.isAiError)
                         Row(
                           mainAxisSize: MainAxisSize.min,
@@ -277,7 +279,10 @@ class MessageBubble extends ConsumerWidget {
                               ),
                             ),
                           ],
-                          if (isSentByMe && !message.recalled) ...[
+                          // Per-user read tick only in DMs (parity with web:
+                          // groups use a tap-to-view read-by details modal, so
+                          // a single "other user" tick is meaningless there).
+                          if (isSentByMe && !message.recalled && !isGroup) ...[
                             const SizedBox(width: 4),
                             _buildReadTick(),
                           ],
@@ -306,108 +311,6 @@ class MessageBubble extends ConsumerWidget {
       color: isRead
           ? AppTheme.ponCyan
           : Colors.white.withValues(alpha: 0.4),
-    );
-  }
-}
-
-class _AiBotAvatar extends StatelessWidget {
-  final String? avatarUrl;
-
-  const _AiBotAvatar({this.avatarUrl});
-
-  @override
-  Widget build(BuildContext context) {
-    return Stack(
-      clipBehavior: Clip.none,
-      children: [
-        Container(
-          width: 28,
-          height: 28,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            gradient: avatarUrl == null
-                ? const LinearGradient(
-                    colors: [Color(0xFF6B2FA0), Color(0xFF2D1B69)],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  )
-                : null,
-            border: Border.all(
-                color: const Color(0xFFB47FFF).withValues(alpha: 0.6), width: 1),
-          ),
-          child: avatarUrl != null
-              ? ClipOval(
-                  child: Image.network(
-                    avatarUrl!,
-                    width: 28,
-                    height: 28,
-                    fit: BoxFit.cover,
-                    errorBuilder: (_, __, ___) => const Icon(
-                        Icons.smart_toy_outlined,
-                        color: Colors.white,
-                        size: 16),
-                  ),
-                )
-              : const Icon(Icons.smart_toy_outlined,
-                  color: Colors.white, size: 16),
-        ),
-        Positioned(
-          right: -2,
-          bottom: -2,
-          child: Container(
-            width: 10,
-            height: 10,
-            decoration: BoxDecoration(
-              color: const Color(0xFFB47FFF),
-              shape: BoxShape.circle,
-              border: Border.all(
-                  color: Theme.of(context).scaffoldBackgroundColor, width: 1.5),
-            ),
-            child: const Center(
-              child: Text('AI',
-                  style: TextStyle(fontSize: 4, color: Colors.white, height: 1)),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _QuotaExceededBubble extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Icon(Icons.data_usage, color: Color(0xFFFFB74D), size: 16),
-        const SizedBox(width: 6),
-        Flexible(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                context.l10n.aiQuotaExceeded,
-                style: const TextStyle(color: Color(0xFFFFB74D), fontSize: 14),
-              ),
-              const SizedBox(height: 4),
-              GestureDetector(
-                onTap: () => context.push('/token-usage'),
-                child: Text(
-                  context.l10n.viewUsage,
-                  style: const TextStyle(
-                    color: Color(0xFFFFD54F),
-                    fontSize: 12,
-                    decoration: TextDecoration.underline,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
     );
   }
 }

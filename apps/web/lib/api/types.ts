@@ -73,8 +73,10 @@ export interface Message {
 
 export interface MessagesResponse {
   content: Message[]
-  nextCursorId: string | null
-  hasMore: boolean
+  page: number
+  size: number
+  totalElements: number
+  hasNext: boolean
 }
 
 export interface ConversationsResponse {
@@ -119,6 +121,7 @@ export interface PageResponse<T> {
 export type StompEvent =
   | { type: 'MESSAGE_UPDATED'; messageId: string; conversationId: string; content: string; editedAt: string }
   | { type: 'MESSAGE_RECALLED'; messageId: string; conversationId: string }
+  | { type: 'MESSAGE_READ'; messageId: string; readerId: string }
   | { type: 'REACTION_UPDATED'; messageId: string; reactions: Reaction[] }
   | { type: 'PINNED_MESSAGE'; conversationId: string; messageId: string; pinnedMessages: string[] }
   | { type: 'CONVERSATION_UPDATED'; conversation: Conversation }

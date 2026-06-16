@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useTranslations } from 'next-intl'
 import { useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { Ban, ShieldCheck, Loader2 } from 'lucide-react'
@@ -10,7 +11,9 @@ import { authService } from '@/lib/api/auth'
 interface Props {
   otherUserId: string
   otherUserName: string
+  /** True when the current user has blocked the other user. */
   iBlocked: boolean
+  /** True when the other user has blocked the current user. */
   blockedMe: boolean
   onUnblocked?: () => void
 }
@@ -19,8 +22,10 @@ export function BlockedComposerNotice({
   otherUserId,
   otherUserName,
   iBlocked,
+  blockedMe,
   onUnblocked,
 }: Props) {
+  const t = useTranslations('chat')
   const queryClient = useQueryClient()
   const [unblocking, setUnblocking] = useState(false)
 
@@ -30,15 +35,22 @@ export function BlockedComposerNotice({
       await authService.unblockUser(otherUserId)
       queryClient.invalidateQueries({ queryKey: ['relationship', otherUserId] })
       queryClient.invalidateQueries({ queryKey: ['conversations'] })
-      queryClient.invalidateQueries({ queryKey: ['conversation'] })
       onUnblocked?.()
-      toast.success(`Đã bỏ chặn ${otherUserName}`)
+      toast.success(t('userUnblockedName', { name: otherUserName }))
     } catch {
-      toast.error('Không thể bỏ chặn người dùng')
+      toast.error(t('unblockError'))
     } finally {
       setUnblocking(false)
     }
   }
+
+  // Distinguish "I blocked them" (actionable — offer Unblock) from "they blocked
+  // me" (not actionable — only an explanatory notice).
+  const message = iBlocked
+    ? t('youBlockedNotice', { name: otherUserName })
+    : blockedMe
+      ? t('blockedByOtherNotice')
+      : t('connectionLimitedNotice')
 
   return (
     <div className="h-16 border-t px-4 flex items-center justify-between gap-4 bg-muted/40 select-none animate-in fade-in slide-in-from-bottom-2 duration-300">
@@ -47,9 +59,7 @@ export function BlockedComposerNotice({
           <Ban className="size-4 text-destructive" />
         </div>
         <p className="text-sm text-muted-foreground font-medium">
-          {iBlocked
-            ? `Bạn đã chặn ${otherUserName}. Hãy bỏ chặn để nhắn tin.`
-            : `Không thể gửi tin nhắn do giới hạn kết nối.`}
+          {message}
         </p>
       </div>
 
@@ -65,7 +75,7 @@ export function BlockedComposerNotice({
           ) : (
             <ShieldCheck className="size-3.5 mr-1.5" />
           )}
-          Bỏ chặn
+          {t('unblockAction')}
         </Button>
       )}
     </div>

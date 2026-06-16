@@ -1,4 +1,4 @@
-import 'dart:math' as math;
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -6,6 +6,14 @@ import '../../../core/api/dio_client.dart';
 import '../../../core/l10n/l10n_ext.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../auth/domain/auth_provider.dart';
+import 'widgets/token_usage_chart.dart';
+
+// ── Quota / pricing config ──────────────────────────────────────────────────
+// Anthropic Claude per-token prices (USD) and the monthly token allowance.
+// Kept in one place so the numbers aren't scattered across the UI.
+const int kMonthlyTokenQuota = 500000;
+const double kInputTokenPrice = 0.000003;
+const double kOutputTokenPrice = 0.000015;
 
 // ── Model ─────────────────────────────────────────────────────────────────────
 
@@ -35,13 +43,19 @@ class TokenUsageDay {
 
 // ── Provider ──────────────────────────────────────────────────────────────────
 
-final tokenUsageProvider = FutureProvider.autoDispose
-    .family<List<TokenUsageDay>, int>((ref, days) async {
+/// Shared chat-service Dio, built once and reused across token-usage fetches
+/// (was previously rebuilt on every request, leaking interceptors).
+final _chatDioProvider = Provider<Dio>((ref) {
   const storage = FlutterSecureStorage();
-  final dio = DioClient.createChatDio(
+  return DioClient.createChatDio(
     storage,
     onForceLogout: () => ref.read(authNotifierProvider.notifier).forceLogout(),
   );
+});
+
+final tokenUsageProvider = FutureProvider.autoDispose
+    .family<List<TokenUsageDay>, int>((ref, days) async {
+  final dio = ref.read(_chatDioProvider);
   final response = await dio.get<List<dynamic>>(
     '/api/usage/tokens',
     queryParameters: {'days': days},
@@ -88,9 +102,10 @@ class _Body extends StatelessWidget {
     final totalInput = days.fold<int>(0, (s, d) => s + d.inputTokens);
     final totalOutput = days.fold<int>(0, (s, d) => s + d.outputTokens);
     final totalRequests = days.fold<int>(0, (s, d) => s + d.requestCount);
-    final estimatedCost = totalInput * 0.000003 + totalOutput * 0.000015;
+    final estimatedCost =
+        totalInput * kInputTokenPrice + totalOutput * kOutputTokenPrice;
 
-    const monthlyQuotaLimit = 500000;
+    const monthlyQuotaLimit = kMonthlyTokenQuota;
     final totalUsed = totalInput + totalOutput;
     final quotaFraction = (totalUsed / monthlyQuotaLimit).clamp(0.0, 1.0);
 
@@ -123,7 +138,7 @@ class _Body extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 12),
-          _BarChart(days: days),
+          TokenUsageBarChart(days: days),
         ],
       ),
     );
@@ -206,7 +221,8 @@ class _QuotaProgressCard extends StatelessWidget {
           ),
           const SizedBox(height: 6),
           Text(
-            '${(fraction * 100).toStringAsFixed(1)}% used this month',
+            context.l10n
+                .tokenUsagePercentUsed((fraction * 100).toStringAsFixed(1)),
             style: TextStyle(
               fontSize: 11,
               color: isDark ? Colors.white38 : Colors.black38,
@@ -263,7 +279,7 @@ class _SummaryCards extends StatelessWidget {
         const SizedBox(height: 12),
         _StatCard(
           label: context.l10n.tokenUsageEstCost,
-          value: '\$${estimatedCost.toStringAsFixed(4)}',
+          value: context.l10n.tokenUsageCostUsd(estimatedCost.toStringAsFixed(4)),
           icon: Icons.attach_money_outlined,
           color: AppTheme.ponPeach,
           isDark: isDark,
@@ -329,66 +345,3 @@ class _StatCard extends StatelessWidget {
   }
 }
 
-// ── Bar chart using CustomPaint ───────────────────────────────────────────────
-
-class _BarChart extends StatelessWidget {
-  final List<TokenUsageDay> days;
-
-  const _BarChart({required this.days});
-
-  @override
-  Widget build(BuildContext context) {
-    if (days.isEmpty) return const SizedBox.shrink();
-    final maxVal = days.fold<int>(1, (m, d) => math.max(m, d.totalTokens));
-
-    return SizedBox(
-      height: 160,
-      child: CustomPaint(
-        painter: _BarChartPainter(days: days, maxVal: maxVal),
-        size: Size.infinite,
-      ),
-    );
-  }
-}
-
-class _BarChartPainter extends CustomPainter {
-  final List<TokenUsageDay> days;
-  final int maxVal;
-
-  const _BarChartPainter({required this.days, required this.maxVal});
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    if (days.isEmpty) return;
-    final barWidth = (size.width / days.length) * 0.6;
-    final gap = size.width / days.length;
-    final chartH = size.height - 16;
-
-    final inputPaint = Paint()..color = const Color(0xFF00E5FF);
-    final outputPaint = Paint()..color = const Color(0xFFB47FFF);
-
-    for (int i = 0; i < days.length; i++) {
-      final d = days[i];
-      final x = i * gap + (gap - barWidth) / 2;
-      final total = d.totalTokens;
-      if (total == 0) continue;
-      final totalH = (total / maxVal) * chartH;
-      final inputH = (d.inputTokens / maxVal) * chartH;
-      final outputH = totalH - inputH;
-
-      final outRect = Rect.fromLTWH(x, chartH - totalH, barWidth, outputH);
-      final inRect = Rect.fromLTWH(x, chartH - inputH, barWidth, inputH);
-
-      canvas.drawRRect(
-        RRect.fromRectAndCorners(outRect,
-            topLeft: const Radius.circular(2), topRight: const Radius.circular(2)),
-        outputPaint,
-      );
-      canvas.drawRect(inRect, inputPaint);
-    }
-  }
-
-  @override
-  bool shouldRepaint(_BarChartPainter old) =>
-      old.days != days || old.maxVal != maxVal;
-}

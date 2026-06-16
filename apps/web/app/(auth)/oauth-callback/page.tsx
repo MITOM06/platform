@@ -3,6 +3,7 @@
 import { useEffect } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import { toast } from 'sonner'
+import { useTranslations } from 'next-intl'
 import { authService } from '@/lib/api/auth'
 import { useAuthStore } from '@/lib/store/auth.store'
 
@@ -10,6 +11,7 @@ export default function OAuthCallbackPage() {
   const searchParams = useSearchParams()
   const router = useRouter()
   const setAuth = useAuthStore((s) => s.setAuth)
+  const t = useTranslations('auth.oauth')
 
   useEffect(() => {
     const code = searchParams.get('code')
@@ -31,16 +33,16 @@ export default function OAuthCallbackPage() {
         router.replace('/')
       })
       .catch(() => {
-        toast.error('Xác thực thất bại, vui lòng thử lại.')
+        toast.error(t('failed'))
         router.replace('/login')
       })
-  }, [searchParams, router, setAuth])
+  }, [searchParams, router, setAuth, t])
 
   return (
     <div className="flex h-screen items-center justify-center">
       <div className="text-center space-y-2">
         <div className="h-8 w-8 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto" />
-        <p className="text-sm text-muted-foreground">Đang xác thực...</p>
+        <p className="text-sm text-muted-foreground">{t('verifying')}</p>
       </div>
     </div>
   )

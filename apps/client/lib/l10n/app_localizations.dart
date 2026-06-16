@@ -1230,6 +1230,30 @@ abstract class AppLocalizations {
   /// **'Pending'**
   String get friendRequestPending;
 
+  /// No description provided for @friendsTabSearch.
+  ///
+  /// In en, this message translates to:
+  /// **'Search'**
+  String get friendsTabSearch;
+
+  /// No description provided for @declineFriend.
+  ///
+  /// In en, this message translates to:
+  /// **'Decline'**
+  String get declineFriend;
+
+  /// No description provided for @searchUsersPrompt.
+  ///
+  /// In en, this message translates to:
+  /// **'Search for people to add as friends'**
+  String get searchUsersPrompt;
+
+  /// No description provided for @noSearchResults.
+  ///
+  /// In en, this message translates to:
+  /// **'No users found'**
+  String get noSearchResults;
+
   /// No description provided for @unfriend.
   ///
   /// In en, this message translates to:
@@ -2255,6 +2279,223 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Looks great 🎉'**
   String get wallpaperPreviewOutgoing;
+
+  /// No description provided for @errCannotOpenLink.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t open the link'**
+  String get errCannotOpenLink;
+
+  /// No description provided for @sysNicknameClearedSelf.
+  ///
+  /// In en, this message translates to:
+  /// **'{actorName} cleared their own nickname'**
+  String sysNicknameClearedSelf(String actorName);
+
+  /// No description provided for @sysNicknameClearedOther.
+  ///
+  /// In en, this message translates to:
+  /// **'{actorName} cleared the nickname of {targetName}'**
+  String sysNicknameClearedOther(String actorName, String targetName);
+
+  /// No description provided for @sysNicknameSetSelf.
+  ///
+  /// In en, this message translates to:
+  /// **'{actorName} set their nickname to {nickname}'**
+  String sysNicknameSetSelf(String actorName, String nickname);
+
+  /// No description provided for @sysNicknameSetOther.
+  ///
+  /// In en, this message translates to:
+  /// **'{actorName} set the nickname of {targetName} to {nickname}'**
+  String sysNicknameSetOther(
+      String actorName, String targetName, String nickname);
+
+  /// No description provided for @sysThemeChanged.
+  ///
+  /// In en, this message translates to:
+  /// **'{actorName} changed the chat theme'**
+  String sysThemeChanged(String actorName);
+
+  /// No description provided for @sysQuickReactionChanged.
+  ///
+  /// In en, this message translates to:
+  /// **'{actorName} changed the quick reaction to {emoji}'**
+  String sysQuickReactionChanged(String actorName, String emoji);
+
+  /// No description provided for @sysGroupCreated.
+  ///
+  /// In en, this message translates to:
+  /// **'{actorName} created the group'**
+  String sysGroupCreated(String actorName);
+
+  /// No description provided for @sysMembersAdded.
+  ///
+  /// In en, this message translates to:
+  /// **'{actorName} added new members'**
+  String sysMembersAdded(String actorName);
+
+  /// No description provided for @sysMemberLeft.
+  ///
+  /// In en, this message translates to:
+  /// **'{actorName} left the group'**
+  String sysMemberLeft(String actorName);
+
+  /// No description provided for @sysMemberRemoved.
+  ///
+  /// In en, this message translates to:
+  /// **'{actorName} removed a member'**
+  String sysMemberRemoved(String actorName);
+
+  /// No description provided for @sysMemberJoined.
+  ///
+  /// In en, this message translates to:
+  /// **'{actorName} joined the group'**
+  String sysMemberJoined(String actorName);
+
+  /// No description provided for @systemVideoCallEnded.
+  ///
+  /// In en, this message translates to:
+  /// **'Video call ended · {duration}'**
+  String systemVideoCallEnded(String duration);
+
+  /// No description provided for @systemVoiceCallEnded.
+  ///
+  /// In en, this message translates to:
+  /// **'Voice call ended · {duration}'**
+  String systemVoiceCallEnded(String duration);
+
+  /// No description provided for @systemVideoCallMissed.
+  ///
+  /// In en, this message translates to:
+  /// **'Missed video call'**
+  String get systemVideoCallMissed;
+
+  /// No description provided for @systemVoiceCallMissed.
+  ///
+  /// In en, this message translates to:
+  /// **'Missed voice call'**
+  String get systemVoiceCallMissed;
+
+  /// No description provided for @errActionFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Something went wrong. Please try again.'**
+  String get errActionFailed;
+
+  /// No description provided for @kbDeleteFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete failed, please try again'**
+  String get kbDeleteFailed;
+
+  /// No description provided for @exploreJoinFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to join channel'**
+  String get exploreJoinFailed;
+
+  /// No description provided for @unnamedChannel.
+  ///
+  /// In en, this message translates to:
+  /// **'Unnamed'**
+  String get unnamedChannel;
+
+  /// No description provided for @actionOk.
+  ///
+  /// In en, this message translates to:
+  /// **'OK'**
+  String get actionOk;
+
+  /// No description provided for @reminderDeleteConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete this reminder?'**
+  String get reminderDeleteConfirm;
+
+  /// No description provided for @profileNameLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Name'**
+  String get profileNameLabel;
+
+  /// No description provided for @genderMale.
+  ///
+  /// In en, this message translates to:
+  /// **'Male'**
+  String get genderMale;
+
+  /// No description provided for @genderFemale.
+  ///
+  /// In en, this message translates to:
+  /// **'Female'**
+  String get genderFemale;
+
+  /// No description provided for @genderOther.
+  ///
+  /// In en, this message translates to:
+  /// **'Other'**
+  String get genderOther;
+
+  /// No description provided for @aiPersonaSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved'**
+  String get aiPersonaSaved;
+
+  /// No description provided for @aiPersonaResetTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset AI persona'**
+  String get aiPersonaResetTitle;
+
+  /// No description provided for @aiPersonaResetConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset the AI persona to its default settings?'**
+  String get aiPersonaResetConfirm;
+
+  /// No description provided for @aiPersonaToneLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Tone'**
+  String get aiPersonaToneLabel;
+
+  /// No description provided for @aiPersonaResetToDefault.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset to Default'**
+  String get aiPersonaResetToDefault;
+
+  /// No description provided for @tokenUsagePercentUsed.
+  ///
+  /// In en, this message translates to:
+  /// **'{percent}% used this month'**
+  String tokenUsagePercentUsed(String percent);
+
+  /// No description provided for @tokenUsageCostUsd.
+  ///
+  /// In en, this message translates to:
+  /// **'\${amount}'**
+  String tokenUsageCostUsd(String amount);
+
+  /// No description provided for @notifications.
+  ///
+  /// In en, this message translates to:
+  /// **'Notifications'**
+  String get notifications;
+
+  /// No description provided for @notificationsEnabled.
+  ///
+  /// In en, this message translates to:
+  /// **'Notifications are enabled'**
+  String get notificationsEnabled;
+
+  /// No description provided for @notificationsDisabled.
+  ///
+  /// In en, this message translates to:
+  /// **'Notifications are disabled'**
+  String get notificationsDisabled;
 }
 
 class _AppLocalizationsDelegate

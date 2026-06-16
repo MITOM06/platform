@@ -8,6 +8,7 @@ import '../../auth/domain/auth_state.dart';
 import '../../chat/ui/widgets/conversation_avatar.dart';
 import '../data/friends_repository.dart';
 import '../domain/friends_provider.dart';
+import 'widgets/friend_search_tab.dart';
 
 /// "Contacts" screen — accepted friends and pending incoming requests.
 class FriendsScreen extends ConsumerStatefulWidget {
@@ -42,7 +43,7 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return DefaultTabController(
-      length: 2,
+      length: 3,
       child: Scaffold(
         appBar: AppBar(
           title: Text(context.l10n.contacts),
@@ -64,6 +65,7 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
             tabs: [
               Tab(text: context.l10n.friends),
               Tab(text: context.l10n.friendRequests),
+              Tab(text: context.l10n.friendsTabSearch),
             ],
           ),
         ),
@@ -82,6 +84,7 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
                   searchQuery: _requestsSearchQuery,
                   onSearchChanged: (val) => setState(() => _requestsSearchQuery = val),
                 ),
+                const FriendSearchTab(),
               ],
             ),
           ),
@@ -101,6 +104,39 @@ class _FriendsTab extends ConsumerWidget {
     required this.searchQuery,
     required this.onSearchChanged,
   });
+
+  Future<void> _unfriend(
+      WidgetRef ref, BuildContext context, UserModel friend) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(context.l10n.unfriend),
+        content: Text(context.l10n.unfriendConfirm),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: Text(context.l10n.actionCancel),
+          ),
+          TextButton(
+            style: TextButton.styleFrom(foregroundColor: AppTheme.ponPink),
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: Text(context.l10n.unfriend),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+    try {
+      await ref.read(friendsRepositoryProvider).removeFriend(friend.id);
+      ref.invalidate(friendsListProvider);
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(context.l10n.errorWithMsg(e.toString()))),
+        );
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -162,10 +198,25 @@ class _FriendsTab extends ConsumerWidget {
                                   friend.email,
                                   style: const TextStyle(color: Colors.white54, fontSize: 13),
                                 ),
-                                trailing: Icon(
-                                  Icons.chat_bubble_outline_rounded,
-                                  color: isDark ? AppTheme.ponCyan : Theme.of(context).colorScheme.primary,
-                                  size: 20,
+                                trailing: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(
+                                      Icons.chat_bubble_outline_rounded,
+                                      color: isDark
+                                          ? AppTheme.ponCyan
+                                          : Theme.of(context).colorScheme.primary,
+                                      size: 20,
+                                    ),
+                                    IconButton(
+                                      icon: const Icon(Icons.person_remove_outlined,
+                                          size: 20),
+                                      color: AppTheme.ponPink,
+                                      tooltip: context.l10n.unfriend,
+                                      onPressed: () =>
+                                          _unfriend(ref, context, friend),
+                                    ),
+                                  ],
                                 ),
                                 onTap: () => context.push('/user/${friend.id}'),
                               ),
@@ -198,6 +249,20 @@ class _RequestsTab extends ConsumerWidget {
       await ref.read(friendsRepositoryProvider).acceptRequest(requester.id);
       ref.invalidate(friendRequestsProvider);
       ref.invalidate(friendsListProvider);
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(context.l10n.errorWithMsg(e.toString()))),
+        );
+      }
+    }
+  }
+
+  Future<void> _decline(WidgetRef ref, BuildContext context, UserModel requester) async {
+    try {
+      // removeFriend declines/cancels a pending request in either direction.
+      await ref.read(friendsRepositoryProvider).removeFriend(requester.id);
+      ref.invalidate(friendRequestsProvider);
     } catch (e) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -268,13 +333,29 @@ class _RequestsTab extends ConsumerWidget {
                                   requester.email,
                                   style: const TextStyle(color: Colors.white54, fontSize: 13),
                                 ),
-                                trailing: TextButton(
-                                  style: TextButton.styleFrom(
-                                    foregroundColor: isDark ? AppTheme.ponCyan : Theme.of(context).colorScheme.primary,
-                                    textStyle: const TextStyle(fontWeight: FontWeight.bold),
-                                  ),
-                                  onPressed: () => _accept(ref, context, requester),
-                                  child: Text(context.l10n.acceptFriend),
+                                trailing: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    TextButton(
+                                      style: TextButton.styleFrom(
+                                        foregroundColor: isDark
+                                            ? AppTheme.ponCyan
+                                            : Theme.of(context).colorScheme.primary,
+                                        textStyle: const TextStyle(
+                                            fontWeight: FontWeight.bold),
+                                      ),
+                                      onPressed: () =>
+                                          _accept(ref, context, requester),
+                                      child: Text(context.l10n.acceptFriend),
+                                    ),
+                                    IconButton(
+                                      icon: const Icon(Icons.close, size: 20),
+                                      color: AppTheme.ponPink,
+                                      tooltip: context.l10n.declineFriend,
+                                      onPressed: () =>
+                                          _decline(ref, context, requester),
+                                    ),
+                                  ],
                                 ),
                                 onTap: () => context.push('/user/${requester.id}'),
                               ),

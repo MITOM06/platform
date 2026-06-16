@@ -3,14 +3,13 @@ import 'dart:convert';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
-import '../../../../core/api/dio_client.dart';
 import '../../../../core/l10n/l10n_ext.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/utils/media_url.dart';
 
-String absoluteMediaUrl(String url) {
-  if (url.startsWith('http')) return url;
-  return '${DioClient.chatBaseUrl}$url';
-}
+// `absoluteMediaUrl` moved to core/utils/media_url.dart. Re-exported so the
+// many existing `image_content.dart` importers keep working unchanged.
+export '../../../../core/utils/media_url.dart' show absoluteMediaUrl;
 
 Future<void> openExternally(String rawUrl) async {
   final uri = Uri.parse(absoluteMediaUrl(rawUrl));
