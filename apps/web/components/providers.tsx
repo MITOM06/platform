@@ -18,7 +18,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
     <QueryClientProvider client={queryClient}>
       <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
         <SessionInitializer>{children}</SessionInitializer>
-        <Toaster richColors closeButton />
+        <Toaster position="top-center" richColors closeButton />
       </ThemeProvider>
     </QueryClientProvider>
   )

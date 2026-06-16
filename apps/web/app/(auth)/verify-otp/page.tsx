@@ -7,6 +7,7 @@ import { toast } from 'sonner'
 import Link from 'next/link'
 import { useTranslations } from 'next-intl'
 import { authService } from '@/lib/api/auth'
+import { maybeRequestNotificationPermission } from '@/lib/notifications'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -67,6 +68,8 @@ function VerifyOtpForm() {
     try {
       await authService.verifyOtp(email, code)
       toast.success(t('success'))
+      // Prompt for notification permission after successful account verification.
+      void maybeRequestNotificationPermission()
       router.push('/login')
     } catch (err: unknown) {
       const msg =

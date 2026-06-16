@@ -5,6 +5,7 @@ import { Search, Plus, MessageSquare, Hash, Bot } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import { useTranslations } from 'next-intl'
+import { useQueryClient } from '@tanstack/react-query'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -13,9 +14,12 @@ import { NewConversationModal } from './NewConversationModal'
 import { PublicChannelsModal } from './PublicChannelsModal'
 import { useConversations } from '@/lib/hooks/use-conversations'
 import { useUiStore } from '@/lib/store/ui.store'
+import { useAuthStore } from '@/lib/store/auth.store'
+import { getNickname } from '@/lib/nicknames'
 import { ActiveFriendsRow } from './ActiveFriendsRow'
 import { OfflineBanner } from './OfflineBanner'
 import { chatService } from '@/lib/api/chat'
+import type { Conversation } from '@/lib/api/types'
 
 const AI_BOT_ID = 'ai-bot-000000000000000000000001'
 
@@ -36,6 +40,8 @@ export function ConversationList() {
   const [search, setSearch] = useState('')
   const [aiLoading, setAiLoading] = useState(false)
   const router = useRouter()
+  const queryClient = useQueryClient()
+  const currentUserId = useAuthStore((s) => s.user?.id)
   const { data: conversations, isLoading, isError } = useConversations()
   const {
     showNewChatModal,
@@ -69,10 +75,28 @@ export function ConversationList() {
     }
   }
 
+  // Resolve the name shown for a conversation in the sidebar — mirrors
+  // ConversationItem so search matches exactly what the user sees: group name,
+  // or (for 1:1) the peer's nickname / cached displayName.
+  const resolveSearchTerms = (conv: Conversation): string[] => {
+    const terms: string[] = []
+    if (conv.name) terms.push(conv.name)
+    if (conv.type === 'direct' && !conv.participants.includes(AI_BOT_ID)) {
+      const peerId = conv.participants.find((id) => id !== currentUserId)
+      if (peerId) {
+        const nick = getNickname(conv.id, peerId)
+        if (nick) terms.push(nick)
+        const cached = queryClient.getQueryData<{ displayName?: string }>(['user', peerId])
+        if (cached?.displayName) terms.push(cached.displayName)
+      }
+    }
+    return terms
+  }
+
   const filtered = conversations?.filter((conv) => {
     if (!search) return true
-    const name = conv.name ?? ''
-    return name.toLowerCase().includes(search.toLowerCase())
+    const q = search.toLowerCase()
+    return resolveSearchTerms(conv).some((term) => term.toLowerCase().includes(q))
   })
 
   return (

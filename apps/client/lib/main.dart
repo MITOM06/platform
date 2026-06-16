@@ -28,11 +28,12 @@ void main() async {
   try {
     await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
     FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
-    await FirebaseMessaging.instance.requestPermission(
-      alert: true,
-      badge: true,
-      sound: true,
-    );
+    // NOTE: Notification permission is intentionally NOT requested here.
+    // Requesting it in main() prompts the user on the splash/landing screen
+    // before authentication, which violates the spec ("only after a
+    // successful login/register, never on public pages"). The permission
+    // request now lives in AuthNotifier._registerFcmToken(), tied to the
+    // authenticated state. See W-16.4.
 
     FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
       final conversationId = message.data['conversationId'];

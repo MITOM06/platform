@@ -3,7 +3,14 @@ import { NextRequest, NextResponse } from 'next/server'
 // /oauth-callback must be public: the user lands here from Google with no
 // session cookie yet — the page itself exchanges the code, sets cookies, then
 // redirects to '/'. Without this, middleware bounces it straight to /login.
-const PUBLIC_PATHS = ['/login', '/register', '/verify-otp', '/oauth-callback']
+const PUBLIC_PATHS = [
+  '/login',
+  '/register',
+  '/verify-otp',
+  '/oauth-callback',
+  '/forgot-password',
+  '/privacy',
+]
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl

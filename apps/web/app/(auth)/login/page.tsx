@@ -11,6 +11,7 @@ import { Eye, EyeOff } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { authService } from '@/lib/api/auth'
 import { useAuthStore } from '@/lib/store/auth.store'
+import { maybeRequestNotificationPermission } from '@/lib/notifications'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -53,6 +54,8 @@ export default function LoginPage() {
       })
 
       setAuth(user, accessToken)
+      // Prompt for notification permission only after a successful login.
+      void maybeRequestNotificationPermission()
       router.push('/')
     } catch (err: unknown) {
       const e = err as { response?: { status?: number; data?: { message?: string | string[] } } }
