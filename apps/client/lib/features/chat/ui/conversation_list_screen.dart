@@ -11,6 +11,7 @@ import '../../home/domain/home_providers.dart';
 import '../domain/chat_provider.dart';
 import 'widgets/active_friends_row.dart';
 import 'widgets/conversation_avatar.dart';
+import 'widgets/conversation_search_bar.dart';
 import 'widgets/conversation_tile.dart';
 import 'widgets/offline_banner.dart';
 import 'widgets/web_settings_button.dart';
@@ -25,6 +26,15 @@ class ConversationListScreen extends ConsumerStatefulWidget {
 
 class _ConversationListScreenState
     extends ConsumerState<ConversationListScreen> {
+  final _searchController = TextEditingController();
+  String _search = '';
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     final convsAsync = ref.watch(conversationsNotifierProvider);
@@ -179,6 +189,10 @@ class _ConversationListScreenState
             loading: () => const SizedBox.shrink(),
             error: (_, __) => const SizedBox.shrink(),
           ),
+          ConversationSearchBar(
+            controller: _searchController,
+            onChanged: (v) => setState(() => _search = v),
+          ),
           const ActiveFriendsRow(),
           Expanded(
             child: Stack(
@@ -281,7 +295,14 @@ class _ConversationListScreenState
                       ),
                     ),
                   ),
-                  data: (conversations) => RefreshIndicator(
+                  data: (allConversations) {
+                    final conversations = filterConversationsBySearch(
+                      ref,
+                      allConversations,
+                      user?.id ?? '',
+                      _search,
+                    );
+                    return RefreshIndicator(
                     color: isDark
                         ? AppTheme.ponCyan
                         : Theme.of(context).colorScheme.primary,
@@ -314,7 +335,9 @@ class _ConversationListScreenState
                                     ),
                                     const SizedBox(height: 16),
                                     Text(
-                                      context.l10n.emptyConversations,
+                                      _search.isEmpty
+                                          ? context.l10n.emptyConversations
+                                          : context.l10n.noConversationsFound,
                                       style: TextStyle(
                                         fontSize: 16,
                                         fontWeight: FontWeight.bold,
@@ -323,15 +346,17 @@ class _ConversationListScreenState
                                             : Colors.black87,
                                       ),
                                     ),
-                                    const SizedBox(height: 8),
-                                    Text(
-                                      context.l10n.emptyTapPlus,
-                                      style: TextStyle(
-                                        color: isDark
-                                            ? Colors.white38
-                                            : Colors.black38,
+                                    if (_search.isEmpty) ...[
+                                      const SizedBox(height: 8),
+                                      Text(
+                                        context.l10n.emptyTapPlus,
+                                        style: TextStyle(
+                                          color: isDark
+                                              ? Colors.white38
+                                              : Colors.black38,
+                                        ),
                                       ),
-                                    ),
+                                    ],
                                   ],
                                 ),
                               ),
@@ -346,7 +371,8 @@ class _ConversationListScreenState
                               return ConversationTile(conv: conv);
                             },
                           ),
-                  ),
+                  );
+                  },
                 ),
                 if (isWeb)
                   const Positioned(

@@ -291,6 +291,12 @@ class AppLocalizationsFr extends AppLocalizations {
       'Appuyez sur le bouton « + » ci-dessous pour commencer !';
 
   @override
+  String get searchConversationsHint => 'Search conversations...';
+
+  @override
+  String get noConversationsFound => 'No conversations found';
+
+  @override
   String get offlineBanner => 'Aucune connexion réseau';
 
   @override

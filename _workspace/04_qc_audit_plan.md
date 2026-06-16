@@ -36,7 +36,7 @@
   - Fix: replace text field with tap-to-upload avatar preview (image_picker → existing upload repository method used elsewhere in the app, e.g. for profile/cover photo) → store returned URL in the persona form state.
   - Verify: `flutter analyze` clean.
 
-- [ ] **Task 5 [Mobile/HIGH]: Conversation list has no search (parity gap, mirrors web W-17.6)**
+- [x] **Task 5 [Mobile/HIGH]: Conversation list has no search (parity gap, mirrors web W-17.6)** — DONE.
   - File: `apps/client/lib/features/chat/ui/conversation_list_screen.dart` (364 lines — close to the 400-line widget limit, extract to a new small widget file if needed)
   - Problem: no way to filter the conversation list by group name or contact nickname; web has this.
   - Fix: add a search field above the list (extract as `widgets/conversation_search_bar.dart` to stay within file-length rules) that filters the existing conversation list client-side by group name, cached nickname, and participant display name — mirroring `apps/web/components/chat/ConversationList.tsx`'s `resolveSearchTerms()`.

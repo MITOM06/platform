@@ -87,6 +87,8 @@
   "listCheckNetwork": "请检查网络连接后重试。",
   "listGenericError": "出错了，请稍后再试。",
   "emptyConversations": "暂无会话",
+  "searchConversationsHint": "Search conversations...",
+  "noConversationsFound": "No conversations found",
   "emptyTapPlus": "点击下方的“+”按钮开始吧！",
   "offlineBanner": "无网络连接",
   "conversationDefault": "会话",

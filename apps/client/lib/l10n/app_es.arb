@@ -87,6 +87,8 @@
   "listCheckNetwork": "Revisa tu conexión de red e inténtalo de nuevo.",
   "listGenericError": "Algo salió mal. Inténtalo más tarde.",
   "emptyConversations": "Aún no hay conversaciones",
+  "searchConversationsHint": "Search conversations...",
+  "noConversationsFound": "No conversations found",
   "emptyTapPlus": "¡Toca el botón \"+\" de abajo para empezar!",
   "offlineBanner": "Sin conexión de red",
   "conversationDefault": "Conversación",

@@ -281,6 +281,12 @@ class AppLocalizationsJa extends AppLocalizations {
   String get emptyTapPlus => '下の「+」ボタンをタップして始めましょう！';
 
   @override
+  String get searchConversationsHint => 'Search conversations...';
+
+  @override
+  String get noConversationsFound => 'No conversations found';
+
+  @override
   String get offlineBanner => 'ネットワーク接続がありません';
 
   @override

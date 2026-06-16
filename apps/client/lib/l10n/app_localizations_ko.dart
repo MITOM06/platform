@@ -281,6 +281,12 @@ class AppLocalizationsKo extends AppLocalizations {
   String get emptyTapPlus => '아래 \"+\" 버튼을 눌러 시작하세요!';
 
   @override
+  String get searchConversationsHint => 'Search conversations...';
+
+  @override
+  String get noConversationsFound => 'No conversations found';
+
+  @override
   String get offlineBanner => '네트워크 연결 없음';
 
   @override

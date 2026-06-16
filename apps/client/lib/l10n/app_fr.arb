@@ -87,6 +87,8 @@
   "listCheckNetwork": "Vérifiez votre connexion réseau et réessayez.",
   "listGenericError": "Une erreur s'est produite. Réessayez plus tard.",
   "emptyConversations": "Aucune conversation pour l'instant",
+  "searchConversationsHint": "Search conversations...",
+  "noConversationsFound": "No conversations found",
   "emptyTapPlus": "Appuyez sur le bouton « + » ci-dessous pour commencer !",
   "offlineBanner": "Aucune connexion réseau",
   "conversationDefault": "Conversation",

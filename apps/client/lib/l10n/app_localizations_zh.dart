@@ -281,6 +281,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get emptyTapPlus => '点击下方的“+”按钮开始吧！';
 
   @override
+  String get searchConversationsHint => 'Search conversations...';
+
+  @override
+  String get noConversationsFound => 'No conversations found';
+
+  @override
   String get offlineBanner => '无网络连接';
 
   @override

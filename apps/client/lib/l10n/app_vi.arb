@@ -88,6 +88,8 @@
   "listGenericError": "Có lỗi xảy ra. Vui lòng thử lại sau.",
   "emptyConversations": "Chưa có cuộc trò chuyện nào",
   "emptyTapPlus": "Nhấn nút \"+\" bên dưới để bắt đầu!",
+  "searchConversationsHint": "Tìm kiếm đoạn chat...",
+  "noConversationsFound": "Không tìm thấy đoạn chat nào",
   "offlineBanner": "Không có kết nối mạng",
   "conversationDefault": "Cuộc trò chuyện",
   "newConversationTitle": "Cuộc Trò Chuyện Mới",

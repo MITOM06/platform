@@ -116,6 +116,8 @@
   "listGenericError": "Something went wrong. Please try again later.",
   "emptyConversations": "No conversations yet",
   "emptyTapPlus": "Tap the \"+\" button below to start!",
+  "searchConversationsHint": "Search conversations...",
+  "noConversationsFound": "No conversations found",
   "offlineBanner": "No network connection",
   "conversationDefault": "Conversation",
   "newConversationTitle": "New Conversation",

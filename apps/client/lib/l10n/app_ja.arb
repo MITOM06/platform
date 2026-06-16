@@ -87,6 +87,8 @@
   "listCheckNetwork": "ネットワーク接続を確認して再試行してください。",
   "listGenericError": "問題が発生しました。後でもう一度お試しください。",
   "emptyConversations": "まだ会話がありません",
+  "searchConversationsHint": "Search conversations...",
+  "noConversationsFound": "No conversations found",
   "emptyTapPlus": "下の「+」ボタンをタップして始めましょう！",
   "offlineBanner": "ネットワーク接続がありません",
   "conversationDefault": "会話",
