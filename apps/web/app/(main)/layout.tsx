@@ -3,7 +3,7 @@
 import { useEffect } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
 import { toast } from 'sonner'
-import { LogOut, Moon, Sun, User, Compass, MessageSquarePlus, Users, Contact, Settings } from 'lucide-react'
+import { LogOut, Moon, Sun, User, Compass, Contact, Settings, Plus, MessageSquarePlus, Users } from 'lucide-react'
 import Link from 'next/link'
 import { useTheme } from 'next-themes'
 import { useAuthStore } from '@/lib/store/auth.store'
@@ -73,9 +73,9 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
     if (!accessToken || stompService.isConnected()) return
 
     stompService.connect(accessToken).then(() => {
-      if (typeof Notification !== 'undefined' && Notification.permission === 'default') {
-        Notification.requestPermission()
-      }
+      // NOTE: notification-permission prompting was moved to the post-login /
+      // post-register success path (see lib/notifications.ts). It must NOT be
+      // requested here — that fired on every authenticated session load.
 
       stompService.subscribe('/user/queue/notifications', (frame) => {
         try {
@@ -201,24 +201,34 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
             >
               <Compass className="size-4" />
             </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => openNewChat('direct')}
-              title="Trò chuyện mới"
-              className="h-8 w-8 rounded-full text-muted-foreground hover:text-foreground hover:bg-muted"
-            >
-              <MessageSquarePlus className="size-4" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => openNewChat('group')}
-              title="Tạo nhóm"
-              className="h-8 w-8 rounded-full text-muted-foreground hover:text-foreground hover:bg-muted"
-            >
-              <Users className="size-4" />
-            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  title="Tạo mới"
+                  className="h-8 w-8 rounded-full text-muted-foreground hover:text-foreground hover:bg-muted"
+                >
+                  <Plus className="size-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-48">
+                <DropdownMenuItem
+                  onSelect={() => openNewChat('direct')}
+                  className="cursor-pointer"
+                >
+                  <MessageSquarePlus className="mr-2 h-4 w-4" />
+                  <span>Trò chuyện mới</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onSelect={() => openNewChat('group')}
+                  className="cursor-pointer"
+                >
+                  <Users className="mr-2 h-4 w-4" />
+                  <span>Tạo nhóm</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
             <Button
               variant="ghost"
               size="icon"
@@ -251,17 +261,19 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
                     </div>
                   </DropdownMenuLabel>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem asChild>
-                    <Link href="/profile" className="flex w-full items-center cursor-pointer">
-                      <User className="mr-2 h-4 w-4" />
-                      <span>Hồ sơ cá nhân</span>
-                    </Link>
+                  <DropdownMenuItem
+                    onSelect={() => router.push('/profile')}
+                    className="flex w-full items-center cursor-pointer"
+                  >
+                    <User className="mr-2 h-4 w-4" />
+                    <span>Hồ sơ cá nhân</span>
                   </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                    <Link href="/settings" className="flex w-full items-center cursor-pointer">
-                      <Settings className="mr-2 h-4 w-4" />
-                      <span>Cài đặt</span>
-                    </Link>
+                  <DropdownMenuItem
+                    onSelect={() => router.push('/settings')}
+                    className="flex w-full items-center cursor-pointer"
+                  >
+                    <Settings className="mr-2 h-4 w-4" />
+                    <span>Cài đặt</span>
                   </DropdownMenuItem>
                   <DropdownMenuItem
                     onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}

@@ -456,3 +456,50 @@ Mirror: `apps/client/lib/features/chat/ui/widgets/{image_content,file_content,vo
   - **Platform:** Mobile (Flutter)
   - **Fix:** Fix any current issues preventing chat background images from uploading correctly via `chatService`.
   - **Feature:** Live Preview Modal. When uploading a new background image, do not apply it immediately. Open a Preview Modal with a mockup chat interface and dummy messages over the newly uploaded background. Allow the user to adjust, crop, or scale the image within this modal. Apply the exact cropped/adjusted image only on "Submit/Save".
+
+### SPRINT W-16 — Phase 2: Bug Fixes, UI/UX Refinement & Profile Overhaul
+> **Based on AI Codebase Planner & Execution Prompt - Part 2**
+
+- [x] **Task W-16.1: Shared Media & Links Gallery Bug (Web)**
+  - Debug the media parsing and rendering logic in the shared gallery component in chat settings. Ensure proper URLs are passed and the UI handles missing or loading assets gracefully without crashing.
+
+- [x] **Task W-16.2: Call Log Indicators in Chat (Web)**
+  - Update the system message for ended calls explicitly stating "Voice Call" or "Video Call" (e.g., "Video call ended - 01:03"). Add corresponding UI icons (phone/video camera) next to the call duration.
+
+- [x] **Task W-16.3: Toast Notification Repositioning (Web)**
+  - Modify the global toast/notification provider configuration. Move the anchor position to the Top-Center of the screen. Ensure proper z-index and smooth slide-in/out animations.
+
+- [x] **Task W-16.4: Notification Permission Logic Flow (Web & Mobile)**
+  - Refactor the permission request trigger. The prompt asking to enable notifications must only appear *after* the user has successfully registered or logged in for the first time. It should never trigger on public landing/login pages.
+
+- [ ] **Task W-16.5: Sidebar Header UI Consolidation (Web)**
+  - Consolidate multiple action icons in the top-left sidebar header. Replace them with a single primary action button (e.g., "+" or "New"). Clicking this opens a dropdown/modal presenting "Create New Chat" or "Create New Group". Refactor layout to be clean.
+
+- [x] **Task W-16.6: Profile Modal Overhaul & Bio State Bug (Web)**
+  - **Bug Fix:** Fix the issue where "Bio" saves the first time but disappears when reopening. Bind bio text input properly.
+  - **UI Redesign:** Mimic modern floating card layout (like Zalo's profile card) showing cover photo, avatar, name, and details.
+  - **Access Control:** Include "Edit" button for self profile; make other's profile view-only.
+  - **Field Removal:** Completely remove the "Date of Birth" field from viewing and editing.
+
+### SPRINT W-17 — Phase 3: Authentication, Media Persistence & Core UX Fixes
+> **Based on AI Codebase Planner & Execution Prompt - Part 3**
+
+- [x] **Task W-17.1: Reaction Notification in Chat Sidebar (Web)**
+  - Update the sidebar chat list preview subtitle. When another user reacts, display: "[User] reacted to your message" in real-time.
+
+- [x] **Task W-17.2: Critical Auth Fix: Sudden Logout (Token Expiry) (Web)**
+  - Implement silent authentication/seamless token refreshing. Configure HTTP interceptors (Axios) to catch 401 Unauthorized errors, use refresh token to get a new access token, and retry the failed request without logging the user out.
+
+- [ ] **Task W-17.3: Privacy Policy Link Routing (Web)**
+  - Fix the routing configuration or link path so users can successfully navigate to the "Privacy Policy" page from the Registration/Login screens.
+
+- [x] **Task W-17.4: Avatar & Cover Photo Persistence + Cropper (Web)**
+  - **Bug Fix:** Bind global state properly to DB update so Avatar changes persist.
+  - **Feature:** Implement logic to upload and change a cover photo.
+  - **UX Improvement:** Both Avatar and Cover Photo uploads must open a Preview/Cropper Modal. Adjust image -> "Confirm" inside modal -> explicitly click "Save Changes" on profile form.
+
+- [ ] **Task W-17.5: Mobile-Web Navigation Bug (Web)**
+  - On responsive web version, fix click/tap event handlers for "Personal Profile" and "Settings" so they successfully route the user to corresponding views.
+
+- [ ] **Task W-17.6: Global Chat Search Scope (Web)**
+  - Update the sidebar search bar filter logic to search through both Group names AND individual User names/nicknames in 1-on-1 chats, rendering them correctly in the results list.

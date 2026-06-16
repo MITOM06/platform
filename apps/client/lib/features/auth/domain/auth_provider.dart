@@ -30,6 +30,14 @@ class AuthNotifier extends _$AuthNotifier {
 
   Future<void> _registerFcmToken() async {
     try {
+      // Request notification permission only once the user is authenticated
+      // (login / loginWithCode / register success / restored session).
+      // This must NOT happen in main() on public pages. See W-16.4.
+      await FirebaseMessaging.instance.requestPermission(
+        alert: true,
+        badge: true,
+        sound: true,
+      );
       final token = await FirebaseMessaging.instance.getToken();
       if (token != null) {
         await ref.read(authRepositoryProvider).updateFcmToken(token);

@@ -43,7 +43,15 @@ const create401ResponseInterceptor = (apiInstance: typeof chatApi) => {
       error.response?.status !== 401 ||
       original._retry ||
       original.url?.includes('/auth/refresh') ||
-      original.url?.includes('/api/auth/refresh')
+      original.url?.includes('/api/auth/refresh') ||
+      // Skip auth endpoints (login/register/verify) — a 401 there is a real
+      // credential error, not an expired session. Refreshing would loop.
+      original.url?.includes('/auth/login') ||
+      original.url?.includes('/auth/register') ||
+      original.url?.includes('/auth/verify') ||
+      // Public/anonymous call that 401s before any session exists (initial
+      // load, logged-out browsing) → don't attempt a refresh that can't succeed.
+      !useAuthStore.getState().accessToken
     ) {
       return Promise.reject(error)
     }

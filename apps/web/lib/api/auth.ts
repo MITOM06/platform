@@ -46,7 +46,7 @@ export const authService = {
     authApi.get<UserSearchResult[]>('/api/users/search', { params: { q } }).then((r) => r.data),
 
   getMe: () =>
-    authApi.get<AuthUser & { avatarUrl?: string }>('/api/users/me').then((r) => r.data),
+    authApi.get<AuthUser & { avatarUrl?: string; bio?: string; coverPhoto?: string }>('/api/users/me').then((r) => r.data),
 
   getOnlineFriends: () =>
     authApi.get<UserSearchResult[]>('/api/users/friends/online').then((r) => r.data),
@@ -65,10 +65,10 @@ export const authService = {
     authApi.post(`/api/users/unblock/${targetId}`).then((r) => r.data),
 
   getUser: (id: string) =>
-    authApi.get<AuthUser & { avatarUrl?: string; bio?: string; dateOfBirth?: string }>(`/api/users/${id}`).then((r) => r.data),
+    authApi.get<AuthUser & { avatarUrl?: string; bio?: string; coverPhoto?: string; dateOfBirth?: string }>(`/api/users/${id}`).then((r) => r.data),
 
-  updateProfile: (data: { displayName?: string; avatarUrl?: string; bio?: string }) =>
-    authApi.patch<AuthUser & { avatarUrl?: string; bio?: string }>('/api/users/me', data).then((r) => r.data),
+  updateProfile: (data: { displayName?: string; avatarUrl?: string; bio?: string; coverPhoto?: string }) =>
+    authApi.patch<AuthUser & { avatarUrl?: string; bio?: string; coverPhoto?: string }>('/api/users/me', data).then((r) => r.data),
 
   changePassword: (currentPassword: string, newPassword: string) =>
     authApi.post('/api/users/me/change-password', { currentPassword, newPassword }),

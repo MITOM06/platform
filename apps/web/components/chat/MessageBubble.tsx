@@ -2,6 +2,7 @@
 
 import { useState, useRef } from 'react'
 import { useTranslations } from 'next-intl'
+import { Phone, Video } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { firstUrl } from '@/lib/media'
 import { MessageActions } from './MessageActions'
@@ -117,9 +118,15 @@ export function MessageBubble({
   if (message.type === 'system') {
     // Humanise structured system events (parity with Flutter message_bubble_parts.dart).
     const systemText = humanizeSystemMessage(message.content, t)
+    const isCallMsg = message.content.startsWith('system.call.')
+    const isVideoCall = isCallMsg && message.content.includes(':video')
     return (
       <div className="flex justify-center my-1">
-        <span className="text-[11px] text-muted-foreground bg-muted/65 rounded-full px-3 py-1 border border-border/20">
+        <span className="flex items-center gap-1.5 text-[11px] text-muted-foreground bg-muted/65 rounded-full px-3 py-1 border border-border/20">
+          {isCallMsg && (isVideoCall
+            ? <Video className="size-3 shrink-0" />
+            : <Phone className="size-3 shrink-0" />
+          )}
           {systemText}
         </span>
       </div>

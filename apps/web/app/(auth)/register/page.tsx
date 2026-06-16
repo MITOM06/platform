@@ -10,6 +10,7 @@ import Link from 'next/link'
 import { Eye, EyeOff } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { authService } from '@/lib/api/auth'
+import { maybeRequestNotificationPermission } from '@/lib/notifications'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -69,6 +70,8 @@ export default function RegisterPage() {
     try {
       await authService.register(data.email, data.password, data.displayName)
       toast.success(t('register.success'))
+      // Prompt for notification permission after successful registration.
+      void maybeRequestNotificationPermission()
       router.push(`/verify-otp?email=${encodeURIComponent(data.email)}`)
     } catch (err: unknown) {
       const e = err as { response?: { status?: number; data?: { message?: string } } }

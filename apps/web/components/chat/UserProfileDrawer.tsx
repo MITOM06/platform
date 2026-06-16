@@ -13,6 +13,7 @@ import { useUserStatus } from '@/lib/hooks/use-user-status'
 import { useRelationship } from '@/lib/hooks/use-relationship'
 import { friendsService } from '@/lib/api/friends'
 import { chatService } from '@/lib/api/chat'
+import { absoluteMediaUrl } from '@/lib/media'
 
 interface Props {
   userId: string | null
@@ -120,11 +121,24 @@ export function UserProfileDrawer({ userId, onClose }: Props) {
           </div>
         ) : (
           <div className="mt-4 space-y-4">
+            {/* Cover photo backdrop (view-only — no edit affordance for other users) */}
+            <div className="relative -mx-6 -mt-2 h-20 overflow-hidden">
+              {user?.coverPhoto ? (
+                <img
+                  src={absoluteMediaUrl(user.coverPhoto)}
+                  alt=""
+                  className="absolute inset-0 size-full object-cover"
+                />
+              ) : (
+                <div className="absolute inset-0 bg-gradient-to-br from-pon-cyan via-pon-peach to-pon-pink opacity-60" />
+              )}
+            </div>
+
             {/* Avatar + name + status */}
-            <div className="flex flex-col items-center gap-2 py-4">
+            <div className="flex flex-col items-center gap-2 -mt-10">
               <div className="relative">
-                <Avatar className="size-20">
-                  {user?.avatarUrl && <AvatarImage src={user.avatarUrl} alt={displayName} />}
+                <Avatar className="size-20 ring-4 ring-background">
+                  {user?.avatarUrl && <AvatarImage src={absoluteMediaUrl(user.avatarUrl)} alt={displayName} />}
                   <AvatarFallback className="text-2xl font-semibold">
                     {getInitial(displayName)}
                   </AvatarFallback>
@@ -137,9 +151,9 @@ export function UserProfileDrawer({ userId, onClose }: Props) {
               <p className="text-xs text-muted-foreground">
                 {status?.online ? 'Đang hoạt động' : 'Ngoại tuyến'}
               </p>
-              {(user as { bio?: string })?.bio && (
+              {user?.bio && (
                 <p className="text-sm text-center text-muted-foreground max-w-[200px] leading-snug">
-                  {(user as { bio?: string }).bio}
+                  {user.bio}
                 </p>
               )}
             </div>

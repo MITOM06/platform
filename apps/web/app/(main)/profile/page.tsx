@@ -1,19 +1,20 @@
 'use client'
 
-import { useState, useRef, useMemo } from 'react'
+import { useState, useRef, useMemo, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { toast } from 'sonner'
 import { useTranslations } from 'next-intl'
+import { useQuery } from '@tanstack/react-query'
 import {
   ArrowLeft,
   Loader2,
   Camera,
+  ImagePlus,
   User,
   Info,
-  Calendar,
   Save,
   Pencil,
 } from 'lucide-react'
@@ -21,16 +22,20 @@ import Link from 'next/link'
 import { useAuthStore } from '@/lib/store/auth.store'
 import { authService } from '@/lib/api/auth'
 import { chatService } from '@/lib/api/chat'
+import { absoluteMediaUrl } from '@/lib/media'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Separator } from '@/components/ui/separator'
+import { ImageCropperModal } from '@/components/profile/ImageCropperModal'
 
 type FormValues = {
   displayName: string
   bio?: string
 }
+
+type CropTarget = 'avatar' | 'cover' | null
 
 export default function ProfilePage() {
   const t = useTranslations('profile')
@@ -39,9 +44,24 @@ export default function ProfilePage() {
   const setAuth = useAuthStore((s) => s.setAuth)
   const accessToken = useAuthStore((s) => s.accessToken)
   const [saving, setSaving] = useState(false)
-  const [uploadingAvatar, setUploadingAvatar] = useState(false)
+
+  const { data: me } = useQuery({
+    queryKey: ['me'],
+    queryFn: authService.getMe,
+    enabled: !!accessToken,
+  })
+
+  // Staged (not-yet-uploaded) image edits — only persisted on explicit Save Changes.
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null)
+  const [avatarBlob, setAvatarBlob] = useState<Blob | null>(null)
+  const [coverPreview, setCoverPreview] = useState<string | null>(null)
+  const [coverBlob, setCoverBlob] = useState<Blob | null>(null)
   const avatarInputRef = useRef<HTMLInputElement>(null)
+  const coverInputRef = useRef<HTMLInputElement>(null)
+
+  // Cropper modal state
+  const [cropTarget, setCropTarget] = useState<CropTarget>(null)
+  const [cropSourceUrl, setCropSourceUrl] = useState<string | null>(null)
 
   const schema = useMemo(
     () =>
@@ -55,6 +75,7 @@ export default function ProfilePage() {
   const {
     register,
     handleSubmit,
+    reset,
     formState: { errors, isDirty },
   } = useForm<FormValues>({
     resolver: zodResolver(schema),
@@ -64,43 +85,87 @@ export default function ProfilePage() {
     },
   })
 
-  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file) return
-
-    // Preview immediately
-    const objectUrl = URL.createObjectURL(file)
-    setAvatarPreview(objectUrl)
-
-    setUploadingAvatar(true)
-    try {
-      const result = await chatService.uploadFile(file)
-      await authService.updateProfile({ avatarUrl: result.url })
-
-      if (user && accessToken) {
-        setAuth(user, accessToken)
-      }
-      toast.success(t('avatarSuccess'))
-    } catch {
-      toast.error(t('avatarError'))
-      setAvatarPreview(null)
-    } finally {
-      setUploadingAvatar(false)
+  // Seed the form once the persisted profile loads — this is what was missing
+  // before, causing bio to appear empty on every reopen.
+  useEffect(() => {
+    if (me) {
+      reset({ displayName: me.displayName ?? '', bio: me.bio ?? '' })
     }
+  }, [me, reset])
+
+  const openCropper = (target: CropTarget, file: File) => {
+    const objectUrl = URL.createObjectURL(file)
+    setCropSourceUrl(objectUrl)
+    setCropTarget(target)
+  }
+
+  const handleAvatarPick = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    e.target.value = ''
+    if (file) openCropper('avatar', file)
+  }
+
+  const handleCoverPick = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    e.target.value = ''
+    if (file) openCropper('cover', file)
+  }
+
+  const closeCropper = () => {
+    if (cropSourceUrl) URL.revokeObjectURL(cropSourceUrl)
+    setCropSourceUrl(null)
+    setCropTarget(null)
+  }
+
+  const handleCropConfirm = (blob: Blob) => {
+    const previewUrl = URL.createObjectURL(blob)
+    if (cropTarget === 'avatar') {
+      if (avatarPreview) URL.revokeObjectURL(avatarPreview)
+      setAvatarPreview(previewUrl)
+      setAvatarBlob(blob)
+    } else if (cropTarget === 'cover') {
+      if (coverPreview) URL.revokeObjectURL(coverPreview)
+      setCoverPreview(previewUrl)
+      setCoverBlob(blob)
+    }
+    closeCropper()
   }
 
   const onSubmit = async (values: FormValues) => {
     if (!user || !accessToken) return
     setSaving(true)
     try {
+      let avatarUrl: string | undefined
+      let coverPhoto: string | undefined
+
+      if (avatarBlob) {
+        const result = await chatService.uploadFile(avatarBlob, 'avatar.jpg')
+        avatarUrl = result.url
+      }
+      if (coverBlob) {
+        const result = await chatService.uploadFile(coverBlob, 'cover.jpg')
+        coverPhoto = result.url
+      }
+
       const updated = await authService.updateProfile({
         displayName: values.displayName,
-        ...(values.bio ? { bio: values.bio } : {}),
+        bio: values.bio ?? '',
+        ...(avatarUrl ? { avatarUrl } : {}),
+        ...(coverPhoto ? { coverPhoto } : {}),
       })
+
       setAuth(
-        { id: user.id, email: user.email, displayName: updated.displayName ?? values.displayName },
+        {
+          ...user,
+          displayName: updated.displayName ?? values.displayName,
+          bio: updated.bio ?? values.bio ?? '',
+          avatarUrl: updated.avatarUrl ?? user.avatarUrl,
+          coverPhoto: updated.coverPhoto ?? user.coverPhoto,
+        },
         accessToken,
       )
+      setAvatarBlob(null)
+      setCoverBlob(null)
       toast.success(t('saveSuccess'))
       router.push('/conversations')
     } catch {
@@ -119,6 +184,10 @@ export default function ProfilePage() {
     .join('')
     .toUpperCase()
 
+  const resolvedAvatar = avatarPreview ?? absoluteMediaUrl(me?.avatarUrl ?? user.avatarUrl ?? '')
+  const resolvedCover = coverPreview ?? absoluteMediaUrl(me?.coverPhoto ?? user.coverPhoto ?? '')
+  const hasPendingImageEdits = !!avatarBlob || !!coverBlob
+
   return (
     <div className="flex flex-col h-full">
       {/* Header */}
@@ -134,16 +203,28 @@ export default function ProfilePage() {
 
       <div className="flex-1 overflow-y-auto">
         {/* Cover Photo Section */}
-        <div className="relative h-40 w-full overflow-hidden">
-          {/* Gradient cover */}
-          <div className="absolute inset-0 bg-gradient-to-br from-pon-cyan via-pon-peach to-pon-pink" />
+        <div className="relative h-40 w-full overflow-hidden group">
+          {resolvedCover ? (
+            <img src={resolvedCover} alt="" className="absolute inset-0 size-full object-cover" />
+          ) : (
+            <div className="absolute inset-0 bg-gradient-to-br from-pon-cyan via-pon-peach to-pon-pink" />
+          )}
           <div className="absolute inset-0 bg-black/20" />
 
-          {/* Decorative pattern */}
-          <div className="absolute inset-0 opacity-10">
-            <div className="absolute top-4 left-8 w-32 h-32 rounded-full bg-white/20 blur-2xl" />
-            <div className="absolute bottom-2 right-12 w-24 h-24 rounded-full bg-white/15 blur-xl" />
-          </div>
+          <button
+            onClick={() => coverInputRef.current?.click()}
+            className="absolute bottom-3 right-3 flex items-center gap-1.5 rounded-full bg-black/50 hover:bg-black/70 transition-colors text-white text-xs font-medium px-3 py-1.5 backdrop-blur-sm"
+          >
+            <ImagePlus className="size-3.5" />
+            {t('changeCover')}
+          </button>
+          <input
+            ref={coverInputRef}
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={handleCoverPick}
+          />
         </div>
 
         {/* Avatar overlapping cover */}
@@ -151,8 +232,8 @@ export default function ProfilePage() {
           <div className="flex justify-center -mt-14">
             <div className="relative group">
               <Avatar className="size-28 ring-4 ring-background shadow-xl">
-                {avatarPreview ? (
-                  <AvatarImage src={avatarPreview} alt={user.displayName} />
+                {resolvedAvatar ? (
+                  <AvatarImage src={resolvedAvatar} alt={user.displayName} />
                 ) : (
                   <AvatarFallback className="text-3xl font-bold bg-gradient-to-br from-pon-cyan to-pon-pink text-white">
                     {initials}
@@ -160,22 +241,15 @@ export default function ProfilePage() {
                 )}
               </Avatar>
 
-              {/* Upload overlay */}
               <button
                 onClick={() => avatarInputRef.current?.click()}
-                disabled={uploadingAvatar}
                 className="absolute inset-0 rounded-full bg-black/0 group-hover:bg-black/40 transition-colors flex items-center justify-center cursor-pointer"
               >
                 <div className="opacity-0 group-hover:opacity-100 transition-opacity">
-                  {uploadingAvatar ? (
-                    <Loader2 className="size-6 text-white animate-spin" />
-                  ) : (
-                    <Camera className="size-6 text-white" />
-                  )}
+                  <Camera className="size-6 text-white" />
                 </div>
               </button>
 
-              {/* Camera badge */}
               <div className="absolute -bottom-1 -right-1 size-8 rounded-full bg-primary flex items-center justify-center shadow-md border-2 border-background">
                 <Camera className="size-3.5 text-white" />
               </div>
@@ -185,7 +259,7 @@ export default function ProfilePage() {
                 type="file"
                 accept="image/*"
                 className="hidden"
-                onChange={handleAvatarUpload}
+                onChange={handleAvatarPick}
               />
             </div>
           </div>
@@ -254,26 +328,13 @@ export default function ProfilePage() {
               />
             </div>
 
-            {/* Date of birth (display only) */}
-            <div className="space-y-2">
-              <Label className="text-sm font-medium flex items-center gap-2 text-muted-foreground">
-                <Calendar className="size-4" />
-                {t('birthdateLabel')}
-              </Label>
-              <Input
-                value={t('birthdateNotSet')}
-                disabled
-                className="text-muted-foreground bg-muted/50"
-              />
-            </div>
-
             <Separator />
 
             {/* Save button */}
             <Button
               type="submit"
               className="w-full bg-gradient-to-r from-pon-cyan via-pon-peach to-pon-pink hover:opacity-90 text-white font-semibold h-11 shadow-lg shadow-primary/20 transition-all"
-              disabled={saving || !isDirty}
+              disabled={saving || (!isDirty && !hasPendingImageEdits)}
             >
               {saving ? (
                 <Loader2 className="size-4 mr-2 animate-spin" />
@@ -285,6 +346,15 @@ export default function ProfilePage() {
           </form>
         </div>
       </div>
+
+      <ImageCropperModal
+        open={cropTarget !== null}
+        imageSrc={cropSourceUrl}
+        aspect={cropTarget === 'cover' ? 16 / 6 : 1}
+        shape={cropTarget === 'avatar' ? 'round' : 'rect'}
+        onCancel={closeCropper}
+        onConfirm={handleCropConfirm}
+      />
     </div>
   )
 }
