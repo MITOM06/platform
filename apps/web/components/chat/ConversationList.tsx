@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Search, Plus, MessageSquare, Hash, Bot } from 'lucide-react'
+import { Search, MessageSquare, Bot } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import { useTranslations } from 'next-intl'
@@ -16,7 +16,6 @@ import { useConversations } from '@/lib/hooks/use-conversations'
 import { useUiStore } from '@/lib/store/ui.store'
 import { useAuthStore } from '@/lib/store/auth.store'
 import { getNickname } from '@/lib/nicknames'
-import { ActiveFriendsRow } from './ActiveFriendsRow'
 import { OfflineBanner } from './OfflineBanner'
 import { chatService } from '@/lib/api/chat'
 import type { Conversation } from '@/lib/api/types'
@@ -50,7 +49,6 @@ export function ConversationList() {
     closeNewChat,
     closePublicChannels,
     openNewChat,
-    openPublicChannels,
   } = useUiStore()
 
   const handleOpenAiChat = async () => {
@@ -125,15 +123,6 @@ export function ConversationList() {
           <Button
             variant="ghost"
             size="icon"
-            onClick={openPublicChannels}
-            title={t('exploreChannels')}
-            className="shrink-0 h-9 w-9"
-          >
-            <Hash className="size-4" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
             onClick={handleOpenAiChat}
             title={t('chatWithAI')}
             disabled={aiLoading}
@@ -141,19 +130,9 @@ export function ConversationList() {
           >
             <Bot className="size-4" />
           </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => openNewChat('direct')}
-            title={t('newConversation')}
-            className="shrink-0 h-9 w-9"
-          >
-            <Plus className="size-4" />
-          </Button>
         </div>
 
         <OfflineBanner />
-        <ActiveFriendsRow />
 
         <div className="flex-1 overflow-y-auto px-2 pb-2">
           {isLoading && (

@@ -294,6 +294,8 @@
     "tabFiles": "Tài liệu",
     "tabLinks": "Liên kết",
     "leaveGroup": "Rời nhóm",
+    "leaveGroupConfirm": "Bạn có chắc muốn rời nhóm này?",
+    "leaveSuccess": "Bạn đã rời nhóm",
     "actionOptions": "Tuỳ chọn",
     "offlineBanner": "Mất kết nối mạng",
     "readDetails": "Chi tiết người đã xem",

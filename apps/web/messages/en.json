@@ -311,6 +311,8 @@
     "tabFiles": "Files",
     "tabLinks": "Links",
     "leaveGroup": "Leave Group",
+    "leaveGroupConfirm": "Are you sure you want to leave this group?",
+    "leaveSuccess": "You have left the group",
     "actionOptions": "Options",
     "offlineBanner": "No internet connection",
     "readDetails": "Read by",

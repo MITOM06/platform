@@ -200,6 +200,16 @@ export function ConversationSettingsDrawer({
     }, t('deleteSuccess'))
   }
 
+  const handleLeaveGroup = async () => {
+    if (!confirm(t('leaveGroupConfirm'))) return
+    await run(async () => {
+      await chatService.removeMember(conversation.id, currentUserId)
+      invalidate()
+      onClose()
+      router.push('/conversations')
+    }, t('leaveSuccess'))
+  }
+
   const handleAutoDelete = async (idx: number) => {
     const seconds = autoDeleteOptions[idx]?.value ?? 0
     await run(
@@ -334,7 +344,7 @@ export function ConversationSettingsDrawer({
                 isBlocked={isBlocked}
                 saving={saving}
                 onBlockToggle={handleBlockToggle}
-                onLeaveGroup={() => toast('Coming soon')}
+                onLeaveGroup={handleLeaveGroup}
                 onClearHistory={() => setConfirmClearOpen(true)}
                 onDelete={handleDelete}
               />
