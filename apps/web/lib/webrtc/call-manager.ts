@@ -1,5 +1,6 @@
 import { stompService } from '@/lib/stomp/client'
 import { useCallStore } from '@/lib/store/call.store'
+import { chatService } from '@/lib/api/chat'
 
 /**
  * Web counterpart of the Flutter `WebRTCService`. Owns a single
@@ -110,6 +111,19 @@ class CallManager {
         conversationId,
         type: 'end',
         duration: store.durationSeconds,
+      })
+    }
+    // Emit a system message so both sides see the call log in the chat history.
+    // Only the hang-up initiator sends this (the peer's teardown via 'end'
+    // signal does not call endCall, preventing duplicate messages).
+    if (conversationId) {
+      const kind = store.video ? 'video' : 'voice'
+      const wasConnected = store.status === 'connected'
+      const content = wasConnected
+        ? `system.call.ended:${kind}:${store.durationSeconds}`
+        : `system.call.missed:${kind}`
+      chatService.sendMessage(conversationId, content, 'system').catch(() => {
+        // best-effort — a failed system message must not block hangup
       })
     }
     this.teardown(true)

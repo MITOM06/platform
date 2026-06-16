@@ -143,13 +143,21 @@
     "bioPlaceholder": "Giới thiệu ngắn về bạn...",
     "bioTooLong": "Tiểu sử tối đa 160 ký tự",
     "emailLabel": "Email",
-    "birthdateLabel": "Ngày sinh",
-    "birthdateNotSet": "Chưa cài đặt",
     "saveButton": "Lưu thay đổi",
     "avatarSuccess": "Đã cập nhật ảnh đại diện",
     "avatarError": "Không thể tải lên ảnh đại diện",
     "saveSuccess": "Đã cập nhật hồ sơ",
-    "saveError": "Không thể cập nhật hồ sơ"
+    "saveError": "Không thể cập nhật hồ sơ",
+    "cropImage": "Cắt ảnh",
+    "zoomLabel": "Thu phóng",
+    "cancelButton": "Hủy",
+    "confirmButton": "Xác nhận",
+    "processing": "Đang xử lý...",
+    "coverPhoto": "Ảnh bìa",
+    "changeCover": "Đổi ảnh bìa",
+    "coverSuccess": "Đã cập nhật ảnh bìa",
+    "coverError": "Không thể tải lên ảnh bìa",
+    "viewOnly": "Chỉ xem"
   },
   "friends": {
     "title": "Bạn bè",
@@ -308,7 +316,11 @@
     "quickReactionSuccess": "Đã cập nhật biểu tượng cảm xúc nhanh",
     "quickReactionPickTitle": "Chọn biểu tượng cảm xúc nhanh",
     "nicknameYou": "Biệt danh của bạn",
-    "nicknameOther": "Biệt danh của họ"
+    "nicknameOther": "Biệt danh của họ",
+    "systemVideoCallEnded": "Cuộc gọi video đã kết thúc · {duration}",
+    "systemVoiceCallEnded": "Cuộc gọi thoại đã kết thúc · {duration}",
+    "systemVideoCallMissed": "Cuộc gọi video nhỡ",
+    "systemVoiceCallMissed": "Cuộc gọi thoại nhỡ"
   },
   "aiPersona": {
     "title": "AI Persona",

@@ -23,6 +23,20 @@ export function humanizeSystemMessage(
   // Attachment detection (mirror Flutter conversation_tile `/api/uploads/`).
   if (content.includes('/api/uploads/')) return t('attachmentLabel')
 
+  if (content.startsWith('system.call.ended:')) {
+    const [, kind, secondsRaw] = content.split(':')
+    const totalSec = parseInt(secondsRaw ?? '0', 10)
+    const mm = String(Math.floor(totalSec / 60)).padStart(2, '0')
+    const ss = String(totalSec % 60).padStart(2, '0')
+    const duration = `${mm}:${ss}`
+    return kind === 'video'
+      ? t('systemVideoCallEnded', { duration })
+      : t('systemVoiceCallEnded', { duration })
+  }
+  if (content.startsWith('system.call.missed:')) {
+    const kind = content.split(':')[1]
+    return kind === 'video' ? t('systemVideoCallMissed') : t('systemVoiceCallMissed')
+  }
   if (content.startsWith('system.theme.changed:')) {
     return t('systemThemeChanged')
   }
