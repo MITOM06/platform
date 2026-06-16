@@ -362,5 +362,14 @@
   "agreeToTerms": "Tôi đồng ý với {privacyPolicy} và {termsOfService}",
   "privacyPolicy": "Chính sách Quyền riêng tư",
   "termsOfService": "Điều khoản Dịch vụ",
-  "valMustAgreeTerms": "Bạn phải đồng ý với Điều khoản Dịch vụ để đăng ký"
+  "valMustAgreeTerms": "Bạn phải đồng ý với Điều khoản Dịch vụ để đăng ký",
+  "youColon": "Bạn:",
+  "systemNicknameChanged": "Biệt danh đã được thay đổi",
+  "systemThemeChanged": "Chủ đề đoạn chat đã thay đổi",
+  "systemQuickReactionChanged": "Biểu tượng cảm xúc nhanh đã thay đổi",
+  "wallpaperUploadError": "Tải ảnh lên thất bại",
+  "wallpaperScale": "Tỉ lệ",
+  "wallpaperPreviewHint": "Chụm hoặc kéo để điều chỉnh",
+  "wallpaperPreviewIncoming": "Chào! Trông thế nào?",
+  "wallpaperPreviewOutgoing": "Tuyệt vời 🎉"
 }

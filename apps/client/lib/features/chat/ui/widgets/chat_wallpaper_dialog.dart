@@ -1,18 +1,75 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
+import '../../../../core/l10n/l10n_ext.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../data/chat_repository.dart';
 import '../../domain/chat_provider.dart';
+import 'chat_wallpaper_fit_scale_selector.dart';
+import 'chat_wallpaper_preview.dart';
+
+/// Default wallpaper scale, expressed as an integer percentage to match the web
+/// client (`apps/web/.../WallpaperPickerModal.tsx`). 100 = original size.
+const int kWallpaperDefaultScale = 100;
+
+/// Minimum / maximum scale percentage for the wallpaper slider — kept in lockstep
+/// with the web client's `<Slider min={50} max={200} step={5} />`.
+const int kWallpaperMinScale = 50;
+const int kWallpaperMaxScale = 200;
+const int kWallpaperScaleStep = 5;
 
 /// Splits a stored wallpaper value into its base value and the optional
 /// `#fit=cover|contain|fill` suffix used to control how an uploaded image is
 /// laid out behind the chat. Presets/empty have no fit. Default fit = cover.
+///
+/// Kept for backward compatibility; new code should use
+/// [splitWallpaperLayout] which also parses the `&scale=` suffix.
 ({String value, String fit}) splitWallpaperFit(String? raw) {
-  if (raw == null || raw.isEmpty) return (value: '', fit: 'cover');
+  final parsed = splitWallpaperLayout(raw);
+  return (value: parsed.value, fit: parsed.fit);
+}
+
+/// Splits a stored wallpaper value into its base value, the optional
+/// `#fit=cover|contain|fill` suffix and the optional `&scale=<int>` suffix.
+///
+/// [scale] is an **integer percentage** (100 = original size) and is wire-compatible
+/// with the web client, which encodes/decodes `scale` the same way (CSS `${scale}%`).
+/// Convert to a [Transform.scale] multiplier with `scale / 100.0` only at render time.
+///
+/// Backward compatible: bare URLs/presets parse with fit=cover, scale=100;
+/// `<value>#fit=contain` parses scale=100; web-saved `<value>#fit=cover&scale=150`
+/// round-trips. Any legacy multiplier values (e.g. `scale=1.5`) are normalised to a
+/// sane percentage so old data never produces a runaway zoom.
+({String value, String fit, int scale}) splitWallpaperLayout(String? raw) {
+  if (raw == null || raw.isEmpty) {
+    return (value: '', fit: 'cover', scale: kWallpaperDefaultScale);
+  }
   final idx = raw.indexOf('#fit=');
-  if (idx == -1) return (value: raw, fit: 'cover');
-  return (value: raw.substring(0, idx), fit: raw.substring(idx + 5));
+  if (idx == -1) {
+    return (value: raw, fit: 'cover', scale: kWallpaperDefaultScale);
+  }
+  final value = raw.substring(0, idx);
+  var rest = raw.substring(idx + 5);
+  var fit = rest;
+  var scale = kWallpaperDefaultScale;
+  final scaleIdx = rest.indexOf('&scale=');
+  if (scaleIdx != -1) {
+    fit = rest.substring(0, scaleIdx);
+    scale = _parseScalePercent(rest.substring(scaleIdx + 7));
+  }
+  return (value: value, fit: fit, scale: scale);
+}
+
+/// Parses a stored `scale` token into a percentage. Accepts the canonical integer
+/// percentage form (`150`) and, defensively, any legacy multiplier form (`1.5`) by
+/// upscaling it to a percentage. Clamps to the supported slider range.
+int _parseScalePercent(String raw) {
+  final parsed = double.tryParse(raw);
+  if (parsed == null || parsed <= 0) return kWallpaperDefaultScale;
+  // Legacy multiplier values were < ~5 (slider was 1.0–3.0); treat those as
+  // multipliers and convert to a percentage. Everything else is a percentage.
+  final percent = parsed < 5 ? (parsed * 100).round() : parsed.round();
+  return percent.clamp(kWallpaperMinScale, kWallpaperMaxScale);
 }
 
 /// Maps a stored fit token to a [BoxFit] for rendering the wallpaper image.
@@ -69,26 +126,39 @@ class _WallpaperDialog extends StatefulWidget {
 
 class _WallpaperDialogState extends State<_WallpaperDialog> {
   bool _uploading = false;
-  // Currently *selected* (not yet applied) wallpaper base value + fit mode.
+  // Currently *selected* (not yet applied) wallpaper base value + fit + scale.
+  // [_scale] is an integer percentage (web-compatible); 100 = original size.
   late String _selected;
   late String _fit;
+  late int _scale;
 
   @override
   void initState() {
     super.initState();
     final current = widget.ref.read(chatWallpaperProvider(widget.conversationId));
-    final parsed = splitWallpaperFit(current);
+    final parsed = splitWallpaperLayout(current);
     _selected = parsed.value;
     _fit = parsed.fit;
+    _scale = parsed.scale;
   }
 
-  bool get _isImage => _selected.startsWith('http');
+  /// True when the selected value is an uploaded image. Covers both absolute
+  /// (`http...`) and relative (`/api/uploads/...`) URLs; only empty/default
+  /// and `preset:` values are non-images.
+  bool get _isImage =>
+      _selected.isNotEmpty && !_selected.startsWith('preset:');
 
   String _label(String vi, String en) => widget.isVi ? vi : en;
 
   void _confirm() {
-    // Encode fit only for uploaded images; presets/default stay as-is.
-    final value = _isImage && _fit != 'cover' ? '$_selected#fit=$_fit' : _selected;
+    // Encode fit/scale only for uploaded images and only when non-default — this
+    // matches the web client exactly (`fit !== 'cover' || scale !== 100`), so the
+    // stored value round-trips identically between platforms. [_scale] is encoded
+    // as an integer percentage (e.g. `&scale=150`).
+    var value = _selected;
+    if (_isImage && (_fit != 'cover' || _scale != kWallpaperDefaultScale)) {
+      value = '$_selected#fit=$_fit&scale=$_scale';
+    }
     widget.ref
         .read(chatWallpaperProvider(widget.conversationId).notifier)
         .setWallpaper(value);
@@ -109,10 +179,15 @@ class _WallpaperDialogState extends State<_WallpaperDialog> {
       setState(() {
         _selected = url;
         _fit = 'cover';
+        _scale = kWallpaperDefaultScale;
         _uploading = false;
       });
     } catch (_) {
-      if (mounted) setState(() => _uploading = false);
+      if (!mounted) return;
+      setState(() => _uploading = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(context.l10n.wallpaperUploadError)),
+      );
     }
   }
 
@@ -199,15 +274,14 @@ class _WallpaperDialogState extends State<_WallpaperDialog> {
                       label: Text(_label('Tải ảnh lên', 'Upload image')),
                       onPressed: _uploadImage,
                     ),
-              if (_isImage) ...[
-                const SizedBox(height: 16),
-                Text(
-                  _label('Căn chỉnh ảnh', 'Image fit'),
-                  style: const TextStyle(color: Colors.white70, fontSize: 13),
+              if (_isImage)
+                WallpaperFitScaleSelector(
+                  fit: _fit,
+                  scale: _scale,
+                  isVi: widget.isVi,
+                  onFitChanged: (v) => setState(() => _fit = v),
+                  onScaleChanged: (v) => setState(() => _scale = v),
                 ),
-                const SizedBox(height: 8),
-                _buildFitSelector(),
-              ],
             ],
           ),
         ),
@@ -228,8 +302,17 @@ class _WallpaperDialogState extends State<_WallpaperDialog> {
     );
   }
 
-  /// Live preview of the currently selected theme.
+  /// Live preview of the currently selected theme. For uploaded images this
+  /// renders a mock chat (dummy bubbles over the image) so the user can judge
+  /// the real look and adjust scale/fit before applying.
   Widget _buildPreview() {
+    if (_isImage) {
+      return WallpaperMockPreview(
+        imageUrl: _selected,
+        fit: wallpaperBoxFit(_fit),
+        scalePercent: _scale,
+      );
+    }
     final colors = _previewColors();
     return Container(
       height: 120,
@@ -243,25 +326,16 @@ class _WallpaperDialogState extends State<_WallpaperDialog> {
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter)
             : null,
-        color: colors == null && !_isImage ? const Color(0xFF101014) : null,
+        color: colors == null ? const Color(0xFF101014) : null,
       ),
-      child: _isImage
-          ? Image.network(
-              _selected,
-              fit: wallpaperBoxFit(_fit),
-              width: double.infinity,
-              errorBuilder: (_, __, ___) => const Center(
-                child: Icon(Icons.broken_image_outlined, color: Colors.white38),
+      child: colors == null
+          ? Center(
+              child: Text(
+                _label('Mặc định', 'Default'),
+                style: const TextStyle(color: Colors.white38),
               ),
             )
-          : (colors == null
-              ? Center(
-                  child: Text(
-                    _label('Mặc định', 'Default'),
-                    style: const TextStyle(color: Colors.white38),
-                  ),
-                )
-              : null),
+          : null,
     );
   }
 
@@ -272,46 +346,5 @@ class _WallpaperDialogState extends State<_WallpaperDialog> {
       orElse: () => const {},
     );
     return match['colors'] as List<Color>?;
-  }
-
-  Widget _buildFitSelector() {
-    final options = <(String, String, String)>[
-      ('cover', _label('Phủ kín', 'Cover'), 'cover'),
-      ('contain', _label('Vừa khung', 'Contain'), 'contain'),
-      ('fill', _label('Kéo giãn', 'Fill'), 'fill'),
-    ];
-    return Row(
-      children: [
-        for (final opt in options)
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 3),
-              child: GestureDetector(
-                onTap: () => setState(() => _fit = opt.$1),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(vertical: 8),
-                  alignment: Alignment.center,
-                  decoration: BoxDecoration(
-                    color: _fit == opt.$1
-                        ? AppTheme.ponCyan.withValues(alpha: 0.18)
-                        : Colors.white.withValues(alpha: 0.05),
-                    borderRadius: BorderRadius.circular(10),
-                    border: Border.all(
-                      color: _fit == opt.$1 ? AppTheme.ponCyan : Colors.white12,
-                    ),
-                  ),
-                  child: Text(
-                    opt.$2,
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: _fit == opt.$1 ? AppTheme.ponCyan : Colors.white60,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ),
-      ],
-    );
   }
 }

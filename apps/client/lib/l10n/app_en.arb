@@ -503,5 +503,14 @@
   },
   "privacyPolicy": "Privacy Policy",
   "termsOfService": "Terms of Service",
-  "valMustAgreeTerms": "You must agree to the Terms of Service to register"
+  "valMustAgreeTerms": "You must agree to the Terms of Service to register",
+  "youColon": "You:",
+  "systemNicknameChanged": "Nickname was changed",
+  "systemThemeChanged": "Chat theme changed",
+  "systemQuickReactionChanged": "Quick reaction changed",
+  "wallpaperUploadError": "Failed to upload image",
+  "wallpaperScale": "Scale",
+  "wallpaperPreviewHint": "Pinch or drag to adjust",
+  "wallpaperPreviewIncoming": "Hi! How does this look?",
+  "wallpaperPreviewOutgoing": "Looks great 🎉"
 }

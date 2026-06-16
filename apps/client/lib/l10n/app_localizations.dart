@@ -2159,6 +2159,60 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'You must agree to the Terms of Service to register'**
   String get valMustAgreeTerms;
+
+  /// No description provided for @youColon.
+  ///
+  /// In en, this message translates to:
+  /// **'You:'**
+  String get youColon;
+
+  /// No description provided for @systemNicknameChanged.
+  ///
+  /// In en, this message translates to:
+  /// **'Nickname was changed'**
+  String get systemNicknameChanged;
+
+  /// No description provided for @systemThemeChanged.
+  ///
+  /// In en, this message translates to:
+  /// **'Chat theme changed'**
+  String get systemThemeChanged;
+
+  /// No description provided for @systemQuickReactionChanged.
+  ///
+  /// In en, this message translates to:
+  /// **'Quick reaction changed'**
+  String get systemQuickReactionChanged;
+
+  /// No description provided for @wallpaperUploadError.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to upload image'**
+  String get wallpaperUploadError;
+
+  /// No description provided for @wallpaperScale.
+  ///
+  /// In en, this message translates to:
+  /// **'Scale'**
+  String get wallpaperScale;
+
+  /// No description provided for @wallpaperPreviewHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Pinch or drag to adjust'**
+  String get wallpaperPreviewHint;
+
+  /// No description provided for @wallpaperPreviewIncoming.
+  ///
+  /// In en, this message translates to:
+  /// **'Hi! How does this look?'**
+  String get wallpaperPreviewIncoming;
+
+  /// No description provided for @wallpaperPreviewOutgoing.
+  ///
+  /// In en, this message translates to:
+  /// **'Looks great 🎉'**
+  String get wallpaperPreviewOutgoing;
 }
 
 class _AppLocalizationsDelegate

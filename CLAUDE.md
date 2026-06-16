@@ -9,6 +9,19 @@
 
 **Owner:** Tran Phuc Khang | **Stack:** NestJS auth + Spring Boot chat + NestJS AI + Flutter mobile + Next.js web
 
+## AUTONOMOUS MODE — DEFAULT BEHAVIOR
+
+**Khi nhận task, Claude phải:**
+1. Tự phân tích, lên plan, và thực thi hoàn toàn — không hỏi xác nhận giữa chừng.
+2. Nếu có nhiều cách làm, tự chọn cách tốt nhất và ghi lại lý do trong báo cáo.
+3. Tự chạy build/test sau khi thay đổi để verify.
+4. Chỉ dừng lại và hỏi nếu gặp: missing secret/credential, hoặc quyết định phá vỡ backward compatibility.
+5. Khi xong, báo cáo ngắn gọn: những gì đã làm, file nào thay đổi, kết quả build/test.
+
+**Không được hỏi:** "Bạn có muốn tôi tiếp tục không?", "Tôi có thể sửa file này không?", "Bạn có đồng ý không?"
+
+---
+
 ## CRITICAL RULES
 
 - **DO NOT modify `apps/server/auth-service/`** unless explicitly requested — service is complete.

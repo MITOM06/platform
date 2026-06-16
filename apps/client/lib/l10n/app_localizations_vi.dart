@@ -1094,4 +1094,32 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get valMustAgreeTerms =>
       'Bạn phải đồng ý với Điều khoản Dịch vụ để đăng ký';
+
+  @override
+  String get youColon => 'Bạn:';
+
+  @override
+  String get systemNicknameChanged => 'Biệt danh đã được thay đổi';
+
+  @override
+  String get systemThemeChanged => 'Chủ đề đoạn chat đã thay đổi';
+
+  @override
+  String get systemQuickReactionChanged =>
+      'Biểu tượng cảm xúc nhanh đã thay đổi';
+
+  @override
+  String get wallpaperUploadError => 'Tải ảnh lên thất bại';
+
+  @override
+  String get wallpaperScale => 'Tỉ lệ';
+
+  @override
+  String get wallpaperPreviewHint => 'Chụm hoặc kéo để điều chỉnh';
+
+  @override
+  String get wallpaperPreviewIncoming => 'Chào! Trông thế nào?';
+
+  @override
+  String get wallpaperPreviewOutgoing => 'Tuyệt vời 🎉';
 }

@@ -443,3 +443,16 @@ Mirror: `apps/client/lib/features/chat/ui/widgets/{image_content,file_content,vo
 - [x] **Task W-15.5: Group Chat Settings UI Parity**
   - **Platform:** Web
   - **Feature:** Update Group Chat settings sidebar to match standard Messenger-like settings menu (collapsible sections for Chat Info, Customize Chat, Media/Files, Privacy & Support). Ensure all buttons and toggles are fully functional and wired.
+
+### SPRINT M-15 — Mobile Chat UI/UX Refinement
+> **Follow-up to SPRINT W-15 for Flutter Client Parity**
+
+- [x] **Task M-15.1: Conversation List Subtitle Logic & System Messages Formatting**
+  - **Platform:** Mobile (Flutter)
+  - **Message Preview:** In the conversation list tile, update the subtitle. For 1-on-1 chats: If the current user sent the last message, display "You: [message]". If the other user sent it, display only "[message]".
+  - **System Messages Formatting:** Map backend system events (e.g., `system.theme.changed`, `system.group.created`) to clean, professional human-readable text instead of raw system codes/JSON. Apply to both the conversation list subtitle and the main chat `MessageBubble`.
+
+- [x] **Task M-15.2: Chat Background Upload & Interactive Preview Modal**
+  - **Platform:** Mobile (Flutter)
+  - **Fix:** Fix any current issues preventing chat background images from uploading correctly via `chatService`.
+  - **Feature:** Live Preview Modal. When uploading a new background image, do not apply it immediately. Open a Preview Modal with a mockup chat interface and dummy messages over the newly uploaded background. Allow the user to adjust, crop, or scale the image within this modal. Apply the exact cropped/adjusted image only on "Submit/Save".

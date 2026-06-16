@@ -1079,4 +1079,31 @@ class AppLocalizationsZh extends AppLocalizations {
   @override
   String get valMustAgreeTerms =>
       'You must agree to the Terms of Service to register';
+
+  @override
+  String get youColon => 'You:';
+
+  @override
+  String get systemNicknameChanged => 'Nickname was changed';
+
+  @override
+  String get systemThemeChanged => 'Chat theme changed';
+
+  @override
+  String get systemQuickReactionChanged => 'Quick reaction changed';
+
+  @override
+  String get wallpaperUploadError => 'Failed to upload image';
+
+  @override
+  String get wallpaperScale => 'Scale';
+
+  @override
+  String get wallpaperPreviewHint => 'Pinch or drag to adjust';
+
+  @override
+  String get wallpaperPreviewIncoming => 'Hi! How does this look?';
+
+  @override
+  String get wallpaperPreviewOutgoing => 'Looks great 🎉';
 }

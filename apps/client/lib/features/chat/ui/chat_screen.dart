@@ -22,6 +22,7 @@ import 'widgets/chat_input_bar.dart';
 import 'widgets/chat_typing_indicator.dart';
 import 'widgets/chat_wallpaper_dialog.dart';
 import 'widgets/edit_composer_bar.dart';
+import 'widgets/image_content.dart';
 import 'widgets/emoji_sticker_panel.dart';
 import 'widgets/mention_list.dart';
 import 'widgets/message_bubble.dart';
@@ -428,15 +429,25 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
             color: Color(0xFF121214),
           );
         }
-      } else if (wallpaper.startsWith('http')) {
-        final parsed = splitWallpaperFit(wallpaper);
+      } else {
+        // Any non-preset, non-empty value is an uploaded image. The stored
+        // URL may be relative (e.g. /api/uploads/...) so always resolve it
+        // through absoluteMediaUrl(); a bare startsWith('http') gate dropped
+        // relative URLs and broke uploaded wallpapers.
+        final parsed = splitWallpaperLayout(wallpaper);
         wallpaperImgWidget = Positioned.fill(
           child: Opacity(
             opacity: 0.25,
-            child: Image.network(
-              parsed.value,
-              fit: wallpaperBoxFit(parsed.fit),
-              errorBuilder: (context, error, stackTrace) => const SizedBox.shrink(),
+            // parsed.scale is an integer percentage (web-compatible); convert to a
+            // Transform.scale multiplier only at render time.
+            child: Transform.scale(
+              scale: parsed.scale / 100.0,
+              child: Image.network(
+                absoluteMediaUrl(parsed.value),
+                fit: wallpaperBoxFit(parsed.fit),
+                errorBuilder: (context, error, stackTrace) =>
+                    const SizedBox.shrink(),
+              ),
             ),
           ),
         );

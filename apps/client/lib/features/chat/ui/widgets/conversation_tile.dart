@@ -163,7 +163,14 @@ class ConversationTile extends ConsumerWidget {
               ? Padding(
                   padding: const EdgeInsets.only(top: 4.0),
                   child: Text(
-                    _subtitleText(context, conv.lastMessage!.content),
+                    _subtitleWithPrefix(
+                      context,
+                      conv.lastMessage!.content,
+                      isGroup: isGroup,
+                      sentByMe: !isGroup &&
+                          currentUserId.isNotEmpty &&
+                          conv.lastMessage!.senderId == currentUserId,
+                    ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(
@@ -220,24 +227,52 @@ class ConversationTile extends ConsumerWidget {
     );
   }
 
+  /// Builds the subtitle, optionally prefixing the humanised body with
+  /// "You:" for direct chats where the current user sent the last message.
+  /// Groups never get the prefix (matches web behaviour).
+  String _subtitleWithPrefix(
+    BuildContext context,
+    String content, {
+    required bool isGroup,
+    required bool sentByMe,
+  }) {
+    final body = _subtitleText(context, content);
+    if (!isGroup && sentByMe) {
+      return '${context.l10n.youColon} $body';
+    }
+    return body;
+  }
+
   String _subtitleText(BuildContext context, String content) {
     if (content.contains('/api/uploads/')) return context.l10n.attachmentLabel;
     if (content.startsWith('system.nickname.changed:')) {
-      return context.l10n.localeName == 'vi'
-          ? 'Biệt danh đã được thay đổi'
-          : 'Nickname was changed';
+      return context.l10n.systemNicknameChanged;
     }
     if (content.startsWith('system.theme.changed:')) {
-      return context.l10n.localeName == 'vi'
-          ? 'Chủ đề đoạn chat đã thay đổi'
-          : 'Chat theme changed';
+      return context.l10n.systemThemeChanged;
     }
     if (content.startsWith('system.quick_reaction.changed:')) {
-      return context.l10n.localeName == 'vi'
-          ? 'Biểu tượng cảm xúc nhanh đã thay đổi'
-          : 'Quick reaction changed';
+      return context.l10n.systemQuickReactionChanged;
     }
-    if (content.startsWith('system.')) return '📢 ${content.split(':').first.replaceAll('system.', '').replaceAll('.', ' ')}';
+    if (content.startsWith('system.')) {
+      // Map group/member system codes to the same l10n strings used by the
+      // chat bubble humaniser (message_bubble_parts._systemText) to keep the
+      // tile and bubble in sync.
+      switch (content) {
+        case 'system.group.created':
+          return context.l10n.createGroup;
+        case 'system.members.added':
+          return context.l10n.addMembers;
+        case 'system.member.left':
+          return context.l10n.leaveGroup;
+        case 'system.member.removed':
+          return context.l10n.removeMember;
+        case 'system.member.joined':
+          return context.l10n.joinChannel;
+        default:
+          return content;
+      }
+    }
     return content;
   }
 
