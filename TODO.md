@@ -515,3 +515,49 @@ Mirror: `apps/client/lib/features/chat/ui/widgets/{image_content,file_content,vo
 - [x] **Task QC-1.5 [Mobile]: Conversation list had no search** — added `ConversationSearchBar` + `filterConversationsBySearch()`, mirrors web's `resolveSearchTerms()` (group name / nickname / cached display name).
 
 Verification: `npx tsc --noEmit` + `pnpm build` (web) clean; `flutter analyze` + `flutter test` (client) clean.
+
+### SPRINT QC-2 — Full-Project Hidden-Bug Sweep `DONE` (2026-06-16)
+> 4 parallel deep-audit agents (backend / mobile / web / cross-platform sync). Phase 1
+> static analysis clean on all 4 stacks. Clear bugs fixed autonomously; large
+> feature-parity gaps deferred to a decision list (see below).
+
+**Fixed (verified):**
+- [x] **[Web] Infinite scroll dead** — `use-messages.ts`/`types.ts` read `hasMore`/`nextCursorId` but backend `PageResponse` returns `hasNext` + content (DESC). Now uses `hasNext` + oldest-message-id cursor → older history loads again.
+- [x] **[Web] Sidebar not realtime** — `(main)/layout.tsx` notification handler now invalidates `['conversations']` so non-open chats refresh last-message/unread live.
+- [x] **[Web] Reaction toggle ignored userId** — `MessageActions.tsx` now matches `emoji && userId === currentUserId` (was removing others' reactions).
+- [x] **[Web] KB back-link 404** — `kb/[conversationId]/page.tsx` `/chat/` → `/conversations/`.
+- [x] **[Mobile] 7 P0 crash/auth** — WebRTC signal null-casts, `current.first` on empty list, `displayName` hard-cast, OTP error render (String/List), brittle message/date parse, authDio had NO token-refresh interceptor (now added).
+- [x] **[Mobile] P1** — friend-status checked never-true `'pending'` (→ outgoing/incoming, stops duplicate requests); Terms link opened `/privacy`; group rename/add/remove/**leave** silently swallowed errors; OAuth no-op feedback; missing `mounted` guard; system-message i18n + wrong button-label mapping; missing ARB keys backfilled in 5 locales.
+- [x] **[Backend] markConversationRead** made atomic (`$addToSet` updateMulti) — was read-modify-write race.
+
+**QA LOG — QC Full 2026-06-16**
+Phase 1: auth build ✓ | chat compile ✓ | flutter analyze ✓ (0) | web tsc ✓
+Phase 2: auth test 9/9 ✓ | chat test 87/87 ✓ | flutter test ✓ | web build ✓
+Phase 5 issues fixed: Web 4, Mobile 13, Backend 1. Status: clear bugs CLEAN; feature-parity gaps tracked for decision.
+
+**Feature-parity + P2 + refactor (DONE, 2026-06-16 — same sprint, all verified):**
+- [x] **[Web] Read receipts** — sent/seen ticks in MessageBubble + `MESSAGE_READ` STOMP handler (cache patch, no refetch) + `/app/chat.read` publishing. Parity with mobile.
+- [x] **[Web] Profile fields + privacy** — dateOfBirth/phoneNumber/gender/hideInfo in edit form + UserProfileDrawer gated by `hideInfo`.
+- [x] **[Web] Conversation-list ContextMenu** (read/unread, mute, archive, info, block, delete), Copy message action, @mention resolves to display names.
+- [x] **[Web] i18n sweep complete** — all 7 locales at full parity (575 keys each); reply-preview author fix; locale-aware date/number; scoped invalidations; `<img>`→`<Image>`.
+- [x] **[Web] Refactor** — conversations/[id]/page.tsx 569→380, MessageInput 528→397 (extracted hooks + MessageList/EmojiStickerPicker). `profile/page.tsx` 457 left (minor over-limit, follow-up).
+- [x] **[Mobile] Voice calls + call log** — isVideo flag through call stack, incoming video from SDP m=video, `system.call.*` written on hangup + rendered with phone/video icon.
+- [x] **[Mobile] Friends management** — global search/add, decline request, unfriend from list.
+- [x] **[Mobile] Correctness** — deleteForMe/recall/edit/reaction rollback + error SnackBar; silent refetch (no spinner flash); AI streaming 30s watchdog + correlation-id; missing invalidations; group read-tick hidden in groups (parity).
+- [x] **[Mobile] P2** — `_clearCredentials` only token keys; reset-password full policy; `absoluteMediaUrl`→core/utils + persona avatar; presence debounce; token-usage shared Dio.
+- [x] **[Mobile] Refactor** — 8 files split under limits; chat_screen.dart (625) & chat_provider.dart (872) left (further split needs behavior change).
+
+**QA LOG — Final verification (post feature-parity):** web tsc ✓ + build ✓ | flutter analyze ✓ (0) + test ✓ | chat compile ✓ + test 87/87 ✓ | auth test 9/9 ✓. 112 files changed. Status: ALL GREEN.
+
+### SPRINT QC-2 — LIVE RUNTIME TEST (Phase 3/4) `DONE` (2026-06-16)
+> Brought up Docker (mongo:27018 + redis:6379) + auth-service (3001) + a real chat-service (on 8081, since 8080 was occupied by an unrelated Payara server) and ran the full integration flow.
+
+**🔴 P0 FOUND + FIXED at runtime (static audit missed it):** auth-service leaked `otpCode`/`otpExpires` in `GET /api/users/me` AND `GET /api/users/search` → searching any user exposed their live OTP (account-takeover). Fix: `select:false` on otpCode/otpExpires in `packages/database/src/mongo/user.schema.ts`; `findByEmail`/`findByPhone` now `.select('+password +otpCode +otpExpires')` for the internal OTP/login flow. Verified: /me + /search no longer leak; verify-otp still succeeds; auth tests 9/9.
+
+**Live results:** register/login/verify-otp ✓ | /me + /search no leak ✓ | JWT alignment auth↔chat: valid→200, bad→401 ✓ | create conversation ✓ | send message ✓ | **GET messages returns `{content,page,size,totalElements,hasNext}`** (confirms the web pagination fix matches the real backend) ✓ | read receipt: readBy updates atomically ✓ | presence 200 ✓.
+
+**CONFIG fixes (DONE + verified):**
+1. [x] auth-service `MONGO_URI` → added `/platform` db path (`mongodb://localhost:27018/platform?directConnection=true`). Was writing to db `test`. Verified: a fresh register now lands in `platform.users`. ⚠️ Existing users in `test.users` are no longer visible — migrate if any real data: `db.test.users.find().forEach(d=>db.platform.users.insertOne(d))`. Production Cloud Run MONGO_URI must also include the db name.
+2. [x] chat-service `application.yml` redis url now defaults to `redis://${SPRING_DATA_REDIS_HOST:localhost}:${SPRING_DATA_REDIS_PORT:6379}` instead of empty → boots locally without `SPRING_DATA_REDIS_URL` (verified: HTTP 200, no "scheme null"). Prod url env still overrides.
+3. [x] Doc drift fixed in chat-service CLAUDE.md (now shows the real `SPRING_DATA_*` var names).
+4. Note: port 8080 is held by an unrelated "Payara Server 7" (404 for our routes) — our chat-service was tested on 8081. Not a code issue.

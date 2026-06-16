@@ -12,6 +12,25 @@
     "noResults": "No results found",
     "members": "{count} members"
   },
+  "layout": {
+    "navExplore": "Explorer",
+    "navCreate": "Créer",
+    "navContacts": "Contacts",
+    "menuNewChat": "Nouvelle conversation",
+    "menuNewGroup": "Créer un groupe",
+    "menuProfile": "Profil",
+    "menuSettings": "Paramètres",
+    "menuLogout": "Se déconnecter",
+    "menuLightMode": "Mode clair",
+    "menuDarkMode": "Mode sombre",
+    "notificationTitle": "Nouveau message de {name}",
+    "notificationAttachment": "📎 A envoyé une pièce jointe",
+    "notificationFallback": "Vous avez un nouveau message",
+    "notificationOpen": "Ouvrir",
+    "realtimeError": "Impossible de se connecter en temps réel",
+    "logoutError": "Échec de la déconnexion",
+    "sessionConnecting": "Connexion de votre session..."
+  },
   "auth": {
     "emailLabel": "Email",
     "emailPlaceholder": "you@example.com",
@@ -61,7 +80,11 @@
       "pwStrengthMedium": "Medium",
       "pwStrengthStrong": "Strong",
       "pwStrengthVeryStrong": "Very Strong",
-      "googleRegister": "Sign up with Google"
+      "googleRegister": "Sign up with Google",
+      "agreeToTerms": "J'accepte la <privacyPolicy>Politique de Confidentialité</privacyPolicy> et les <termsOfService>Conditions d'Utilisation</termsOfService>",
+      "privacyPolicy": "Politique de Confidentialité",
+      "termsOfService": "Conditions d'Utilisation",
+      "mustAgree": "Vous devez accepter les Conditions d'Utilisation pour vous inscrire"
     },
     "verifyOtp": {
       "title": "Verify OTP",
@@ -96,6 +119,10 @@
       "sendError": "Unable to request password reset",
       "resetSuccess": "Password reset successfully. Please sign in.",
       "resetError": "Invalid or expired OTP code"
+    },
+    "oauth": {
+      "verifying": "Vérification...",
+      "failed": "Échec de l'authentification, veuillez réessayer."
     }
   },
   "settings": {
@@ -127,7 +154,24 @@
     "languageChanged": "Language changed",
     "logout": "Sign Out",
     "logoutError": "Sign out failed",
-    "version": "PON Messenger v1.0"
+    "version": "PON Messenger v1.0",
+    "changePasswordDialog": {
+      "title": "Changer le mot de passe",
+      "description": "Saisissez votre mot de passe actuel et un nouveau pour mettre à jour.",
+      "currentLabel": "Mot de passe actuel",
+      "currentPlaceholder": "Saisissez le mot de passe actuel...",
+      "newLabel": "Nouveau mot de passe",
+      "newPlaceholder": "Saisissez le nouveau mot de passe...",
+      "confirmLabel": "Confirmer le nouveau mot de passe",
+      "confirmPlaceholder": "Ressaisissez le nouveau mot de passe...",
+      "minLength": "Le nouveau mot de passe doit comporter au moins 6 caractères",
+      "mismatch": "Les mots de passe ne correspondent pas",
+      "success": "Mot de passe modifié avec succès !",
+      "genericError": "Une erreur s'est produite",
+      "incorrectCurrent": "Le mot de passe actuel est incorrect",
+      "currentRequired": "Veuillez saisir votre mot de passe actuel",
+      "atLeast6": "Le mot de passe doit comporter au moins 6 caractères"
+    }
   },
   "profile": {
     "title": "Edit Profile",
@@ -153,7 +197,18 @@
     "changeCover": "Change Cover",
     "coverSuccess": "Cover photo updated",
     "coverError": "Failed to upload cover photo",
-    "viewOnly": "View only"
+    "viewOnly": "View only",
+    "phoneTooLong": "Le numéro de téléphone est trop long",
+    "dobLabel": "Date de naissance",
+    "phoneLabel": "Numéro de téléphone",
+    "phonePlaceholder": "Votre numéro de téléphone",
+    "genderLabel": "Genre",
+    "genderPlaceholder": "Sélectionner le genre",
+    "genderMale": "Homme",
+    "genderFemale": "Femme",
+    "genderOther": "Autre",
+    "hideInfoLabel": "Masquer les infos personnelles",
+    "hideInfoHint": "Les autres utilisateurs ne verront pas votre anniversaire, téléphone, genre ni bio."
   },
   "friends": {
     "title": "Friends",
@@ -169,7 +224,13 @@
     "searching": "Searching...",
     "noSearchResults": "No results found",
     "searchPrompt": "Enter a keyword to search for users",
-    "addFriend": "Add Friend"
+    "addFriend": "Add Friend",
+    "sendRequestSuccess": "Demande d'ami envoyée",
+    "sendRequestError": "Impossible d'envoyer la demande d'ami",
+    "acceptRequestSuccess": "Demande d'ami acceptée",
+    "acceptRequestError": "Impossible d'accepter la demande d'ami",
+    "removeFriendSuccess": "Ami supprimé / demande annulée",
+    "removeFriendError": "Impossible de terminer l'action"
   },
   "conversations": {
     "selectPrompt": "Select a conversation to start"
@@ -331,7 +392,101 @@
     "deleteForMeAction": "Supprimer pour moi",
     "reactError": "Impossible d’ajouter la réaction",
     "recallError": "Impossible d’annuler le message",
-    "deleteError": "Impossible de supprimer le message"
+    "deleteError": "Impossible de supprimer le message",
+    "offlineBanner": "Pas de connexion internet",
+    "readDetails": "Lu par",
+    "seenStatus": "Vu",
+    "noReadsYet": "Personne n'a encore lu ce message",
+    "reactionsDetail": "Réactions",
+    "sent": "Envoyé",
+    "seen": "Vu",
+    "aiAssistant": "Assistant IA",
+    "online": "Actif",
+    "offline": "Hors ligne",
+    "profileTitle": "Profil",
+    "userFallback": "Utilisateur",
+    "openConversationError": "Impossible d'ouvrir la conversation",
+    "friendRemoved": "Ami supprimé",
+    "friendRequestSent": "Demande d'ami envoyée",
+    "friendRequestAccepted": "Demande d'ami acceptée",
+    "actionFailed": "L'action a échoué",
+    "userUnblocked": "Utilisateur débloqué",
+    "userBlocked": "Utilisateur bloqué",
+    "friendRemove": "Supprimer l'ami",
+    "friendAccept": "Accepter la demande",
+    "friendRequested": "Demande envoyée",
+    "friendAdd": "Ajouter un ami",
+    "sendMessageAction": "Message",
+    "unblockAction": "Débloquer",
+    "blockAction": "Bloquer l'utilisateur",
+    "markAsRead": "Marquer comme lu",
+    "markAsUnread": "Marquer comme non lu",
+    "archiveChat": "Archiver",
+    "unarchiveChat": "Désarchiver",
+    "copyAction": "Copier",
+    "copySuccess": "Copié dans le presse-papiers",
+    "copyError": "Impossible de copier",
+    "userUnblockedName": "Vous avez débloqué {name}",
+    "youBlockedNotice": "Vous avez bloqué {name}. Débloquez pour envoyer des messages.",
+    "blockedByOtherNotice": "Vous ne pouvez pas envoyer de messages à cet utilisateur.",
+    "connectionLimitedNotice": "Impossible d'envoyer des messages en raison de limites de connexion.",
+    "unblockError": "Impossible de débloquer l'utilisateur",
+    "genderMale": "Homme",
+    "genderFemale": "Femme",
+    "genderOther": "Autre",
+    "typing": "en train d'écrire...",
+    "settingsTooltip": "Paramètres",
+    "groupInfoTooltip": "Infos du groupe",
+    "viewProfileTooltip": "Voir le profil",
+    "today": "Aujourd'hui",
+    "yesterday": "Hier",
+    "loadMessagesError": "Impossible de charger les messages",
+    "noMessagesStart": "Aucun message. Démarrez la conversation !",
+    "sendMessageError": "Impossible d'envoyer le message",
+    "editMessageError": "Impossible de modifier le message",
+    "aiError": "Erreur de l'IA, veuillez réessayer",
+    "typingIndicator": "En train d'écrire",
+    "newConvTitle": "Nouvelle conversation",
+    "newConvTabDirect": "Direct",
+    "newConvTabGroup": "Groupe",
+    "newConvSearchPlaceholder": "Rechercher par nom ou e-mail...",
+    "newConvNoUsers": "Aucun utilisateur trouvé",
+    "newConvGroupNamePlaceholder": "Nom du groupe...",
+    "newConvCreateGroup": "Créer un groupe",
+    "newConvGroupValidation": "Veuillez saisir un nom de groupe et sélectionner au moins 1 membre",
+    "newConvGroupSuccess": "Groupe créé",
+    "newConvGroupError": "Impossible de créer le groupe",
+    "newConvDirectError": "Impossible de créer la conversation",
+    "forwardTitle": "Transférer le message",
+    "forwardConversationFallback": "Conversation",
+    "forwardSuccess": "Message transféré",
+    "forwardError": "Impossible de transférer le message",
+    "publicChannelsTitle": "Canaux publics",
+    "publicChannelsSearchPlaceholder": "Rechercher des canaux...",
+    "publicChannelsEmpty": "Aucun canal trouvé",
+    "publicChannelUnnamed": "Canal sans nom",
+    "publicChannelMembers": "{count} membres",
+    "publicChannelJoin": "Rejoindre",
+    "publicChannelJoinSuccess": "Vous avez rejoint le canal",
+    "publicChannelJoinError": "Impossible de rejoindre le canal",
+    "strangerRequestTitle": "Demande de message d'un inconnu",
+    "strangerRequestBody": "Vous n'êtes pas encore ami avec {name}. Les nouveaux messages resteront en attente jusqu'à ce que vous acceptiez la connexion.",
+    "strangerBlock": "Bloquer l'utilisateur",
+    "strangerAccept": "Accepter",
+    "strangerAcceptSuccess": "Conversation avec {name} acceptée",
+    "strangerAcceptError": "Impossible d'accepter la conversation",
+    "strangerBlockSuccess": "{name} bloqué",
+    "strangerBlockError": "Impossible de bloquer l'utilisateur",
+    "messageSearchPlaceholder": "Rechercher dans la conversation...",
+    "messageSearchNoResults": "Aucun résultat trouvé",
+    "aiTraceTitle": "Trace de raisonnement de l'IA",
+    "aiTraceEmpty": "Aucune trace pour ce message.",
+    "aiTraceInputTokens": "Jetons d'entrée",
+    "aiTraceOutputTokens": "Jetons de sortie",
+    "aiTraceThinkingBlocks": "Blocs de réflexion ({count})",
+    "aiTraceToolCalls": "Appels d'outils ({count})",
+    "aiTraceRagSources": "Sources RAG ({count})",
+    "aiTraceScore": "Score : {score}"
   },
   "aiPersona": {
     "title": "AI Persona",
@@ -450,5 +605,31 @@
     "emptyMedia": "No photos or videos shared yet",
     "emptyFiles": "No files shared yet",
     "emptyLinks": "No links shared yet"
+  },
+  "legal": {
+    "title": "Politique de Confidentialité et Conditions d'Utilisation",
+    "lastUpdated": "Dernière mise à jour : 15 juin 2026",
+    "sections": {
+      "dataCollection": {
+        "title": "1. Collecte de Données",
+        "content": "Nous collectons les informations que vous nous fournissez directement, par exemple lors de la création ou modification de votre compte, de l'utilisation de nos services ou de vos communications avec nous, notamment votre nom, adresse e-mail, photo de profil et les messages que vous envoyez."
+      },
+      "dataUsage": {
+        "title": "2. Comment Nous Utilisons Vos Données",
+        "content": "Vos données sont utilisées pour fournir, maintenir et améliorer nos services, notamment en facilitant la communication entre utilisateurs, en assurant la sécurité et en personnalisant votre expérience."
+      },
+      "security": {
+        "title": "3. Sécurité",
+        "content": "Nous mettons en œuvre des mesures de sécurité conformes aux normes de l'industrie pour protéger vos informations personnelles et vos messages. L'accès aux données est strictement contrôlé et nous utilisons le chiffrement pour sécuriser les informations sensibles."
+      },
+      "userRights": {
+        "title": "4. Vos Droits",
+        "content": "Vous avez le droit d'accéder, de corriger ou de supprimer vos données personnelles. Vous pouvez supprimer votre compte à tout moment via les paramètres de l'application."
+      },
+      "terms": {
+        "title": "5. Conditions d'Utilisation",
+        "content": "En utilisant notre plateforme, vous acceptez de ne pas vous engager dans des activités abusives, harcelantes ou illégales. Nous nous réservons le droit de suspendre ou de résilier les comptes qui enfreignent ces conditions."
+      }
+    }
   }
 }

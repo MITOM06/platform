@@ -68,8 +68,9 @@ export function ConversationSettingsDrawer({
   const isArchived = conversation.isArchived
   const isDirect = conversation.type === 'direct'
   const isGroup = conversation.type === 'group'
+  const isAI = conversation.participants.includes('ai-bot-000000000000000000000001')
 
-  const otherUserId = isDirect
+  const otherUserId = isDirect && !isAI
     ? conversation.participants.find((p) => p !== currentUserId)
     : null
 
@@ -111,7 +112,7 @@ export function ConversationSettingsDrawer({
 
   const displayName = isGroup
     ? (conversation.name || t('conversationDefault'))
-    : (otherUser?.displayName || t('chatDefaultTitle'))
+    : (otherUser?.displayName || t('conversationDefault'))
   const avatarUrl = isGroup ? conversation.avatarUrl : otherUser?.avatarUrl
   const avatarLetter = getInitial(displayName)
 
@@ -185,8 +186,9 @@ export function ConversationSettingsDrawer({
 
   const handleClearHistory = async () => {
     await run(() => chatService.clearHistory(conversation.id), t('clearHistorySuccess'))
+    // removeQueries drops the cached pages so the thread refetches fresh on next
+    // mount — a following invalidate would be redundant.
     queryClient.removeQueries({ queryKey: ['messages', conversation.id], exact: true })
-    queryClient.invalidateQueries({ queryKey: ['messages', conversation.id] })
     setConfirmClearOpen(false)
   }
 

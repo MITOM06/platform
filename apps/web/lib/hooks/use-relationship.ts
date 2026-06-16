@@ -10,12 +10,16 @@ export function useRelationship(userId: string | undefined) {
     enabled: !!userId,
   })
 
+  // Block/unblock changes the relationship + may toggle conversation pending
+  // status, so we refresh the relationship query and the conversations list.
+  // We intentionally do NOT invalidate ['conversation'] without an id (that
+  // refetched every open conversation) — the relationship query drives the
+  // blocked-composer UI on its own.
   const blockMutation = useMutation({
     mutationFn: (id: string) => authService.blockUser(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['relationship', userId] })
       queryClient.invalidateQueries({ queryKey: ['conversations'] })
-      queryClient.invalidateQueries({ queryKey: ['conversation'] })
     },
   })
 
@@ -24,7 +28,6 @@ export function useRelationship(userId: string | undefined) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['relationship', userId] })
       queryClient.invalidateQueries({ queryKey: ['conversations'] })
-      queryClient.invalidateQueries({ queryKey: ['conversation'] })
     },
   })
 

@@ -75,7 +75,7 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
       ),
       body: channels.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text('Error: $e')),
+        error: (e, _) => Center(child: Text(l10n.errorWithMsg('$e'))),
         data: (list) {
           if (list.isEmpty) {
             return Center(child: Text(l10n.noPublicChannels));
@@ -118,7 +118,7 @@ class _ChannelTileState extends ConsumerState<_ChannelTile> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to join: $e')),
+          SnackBar(content: Text(context.l10n.exploreJoinFailed)),
         );
       }
     } finally {
@@ -139,7 +139,7 @@ class _ChannelTileState extends ConsumerState<_ChannelTile> {
             ? const Icon(Icons.tag, color: AppTheme.ponPink)
             : null,
       ),
-      title: Text(ch.name ?? 'Unnamed'),
+      title: Text(ch.name ?? l10n.unnamedChannel),
       subtitle: Text(
         context.l10n.membersCount(ch.participants.length),
         style: Theme.of(context)

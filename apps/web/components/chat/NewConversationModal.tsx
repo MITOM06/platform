@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import { Search, Loader2, X, Users, MessageCircle } from 'lucide-react'
 import { useQueryClient } from '@tanstack/react-query'
+import { useTranslations } from 'next-intl'
 import axios from 'axios'
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle,
@@ -69,6 +70,7 @@ function UserRow({
 export function NewConversationModal({ open, onClose, defaultTab }: Props) {
   const router = useRouter()
   const queryClient = useQueryClient()
+  const t = useTranslations('chat')
   const [query, setQuery] = useState('')
   const [results, setResults] = useState<UserSearchResult[]>([])
   const [isSearching, setIsSearching] = useState(false)
@@ -126,7 +128,7 @@ export function NewConversationModal({ open, onClose, defaultTab }: Props) {
           return
         }
       }
-      toast.error('Không thể tạo cuộc trò chuyện')
+      toast.error(t('newConvDirectError'))
     } finally {
       setCreatingId(null)
     }
@@ -145,7 +147,7 @@ export function NewConversationModal({ open, onClose, defaultTab }: Props) {
   // Create group
   const handleCreateGroup = async () => {
     if (selectedMembers.length < 1 || !groupName.trim()) {
-      toast.error('Vui lòng nhập tên nhóm và chọn ít nhất 1 thành viên')
+      toast.error(t('newConvGroupValidation'))
       return
     }
     setCreatingGroup(true)
@@ -155,9 +157,9 @@ export function NewConversationModal({ open, onClose, defaultTab }: Props) {
       queryClient.invalidateQueries({ queryKey: ['conversations'] })
       router.push(`/conversations/${conv.id}`)
       handleClose()
-      toast.success('Đã tạo nhóm')
+      toast.success(t('newConvGroupSuccess'))
     } catch {
-      toast.error('Không thể tạo nhóm')
+      toast.error(t('newConvGroupError'))
     } finally {
       setCreatingGroup(false)
     }
@@ -168,7 +170,7 @@ export function NewConversationModal({ open, onClose, defaultTab }: Props) {
       <div className="relative mt-1">
         <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
         <Input
-          placeholder="Tìm theo tên hoặc email..."
+          placeholder={t('newConvSearchPlaceholder')}
           value={query}
           onChange={(e) => {
             const val = e.target.value
@@ -188,7 +190,7 @@ export function NewConversationModal({ open, onClose, defaultTab }: Props) {
           </div>
         )}
         {!isSearching && query.trim() && results.length === 0 && (
-          <p className="text-center text-sm text-muted-foreground py-6">Không tìm thấy người dùng</p>
+          <p className="text-center text-sm text-muted-foreground py-6">{t('newConvNoUsers')}</p>
         )}
       </div>
     </>
@@ -198,18 +200,18 @@ export function NewConversationModal({ open, onClose, defaultTab }: Props) {
     <Dialog key={`${open}-${defaultTab}`} open={open} onOpenChange={(o) => !o && handleClose()}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Cuộc trò chuyện mới</DialogTitle>
+          <DialogTitle>{t('newConvTitle')}</DialogTitle>
         </DialogHeader>
 
         <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'direct' | 'group')}>
           <TabsList className="w-full">
             <TabsTrigger value="direct" className="flex-1">
               <MessageCircle className="size-4" />
-              Trực tiếp
+              {t('newConvTabDirect')}
             </TabsTrigger>
             <TabsTrigger value="group" className="flex-1">
               <Users className="size-4" />
-              Nhóm
+              {t('newConvTabGroup')}
             </TabsTrigger>
           </TabsList>
 
@@ -232,7 +234,7 @@ export function NewConversationModal({ open, onClose, defaultTab }: Props) {
           {/* ── Group tab ── */}
           <TabsContent value="group" className="space-y-3">
             <Input
-              placeholder="Tên nhóm..."
+              placeholder={t('newConvGroupNamePlaceholder')}
               value={groupName}
               onChange={(e) => setGroupName(e.target.value)}
             />
@@ -273,7 +275,7 @@ export function NewConversationModal({ open, onClose, defaultTab }: Props) {
               disabled={creatingGroup || selectedMembers.length < 1 || !groupName.trim()}
               className="w-full"
             >
-              {creatingGroup ? <Loader2 className="size-4 animate-spin" /> : 'Tạo nhóm'}
+              {creatingGroup ? <Loader2 className="size-4 animate-spin" /> : t('newConvCreateGroup')}
             </Button>
           </TabsContent>
         </Tabs>

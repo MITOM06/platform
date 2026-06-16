@@ -604,6 +604,18 @@ class AppLocalizationsKo extends AppLocalizations {
   String get friendRequestPending => '대기 중';
 
   @override
+  String get friendsTabSearch => '검색';
+
+  @override
+  String get declineFriend => '거절';
+
+  @override
+  String get searchUsersPrompt => '친구로 추가할 사람 검색';
+
+  @override
+  String get noSearchResults => '사용자를 찾을 수 없습니다';
+
+  @override
   String get unfriend => '친구 삭제';
 
   @override
@@ -1090,18 +1102,17 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String agreeToTerms(String privacyPolicy, String termsOfService) {
-    return 'I agree to the $privacyPolicy and $termsOfService';
+    return '$privacyPolicy 및 $termsOfService에 동의합니다';
   }
 
   @override
-  String get privacyPolicy => 'Privacy Policy';
+  String get privacyPolicy => '개인정보 처리방침';
 
   @override
-  String get termsOfService => 'Terms of Service';
+  String get termsOfService => '서비스 약관';
 
   @override
-  String get valMustAgreeTerms =>
-      'You must agree to the Terms of Service to register';
+  String get valMustAgreeTerms => '가입하려면 서비스 약관에 동의해야 합니다';
 
   @override
   String get youColon => 'You:';
@@ -1129,4 +1140,143 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get wallpaperPreviewOutgoing => 'Looks great 🎉';
+
+  @override
+  String get errCannotOpenLink => '링크를 열 수 없습니다';
+
+  @override
+  String sysNicknameClearedSelf(String actorName) {
+    return '$actorName님이 자신의 별명을 삭제했습니다';
+  }
+
+  @override
+  String sysNicknameClearedOther(String actorName, String targetName) {
+    return '$actorName님이 $targetName님의 별명을 삭제했습니다';
+  }
+
+  @override
+  String sysNicknameSetSelf(String actorName, String nickname) {
+    return '$actorName님이 자신의 별명을 $nickname(으)로 설정했습니다';
+  }
+
+  @override
+  String sysNicknameSetOther(
+      String actorName, String targetName, String nickname) {
+    return '$actorName님이 $targetName님의 별명을 $nickname(으)로 설정했습니다';
+  }
+
+  @override
+  String sysThemeChanged(String actorName) {
+    return '$actorName님이 채팅 테마를 변경했습니다';
+  }
+
+  @override
+  String sysQuickReactionChanged(String actorName, String emoji) {
+    return '$actorName님이 빠른 반응을 $emoji(으)로 변경했습니다';
+  }
+
+  @override
+  String sysGroupCreated(String actorName) {
+    return '$actorName님이 그룹을 만들었습니다';
+  }
+
+  @override
+  String sysMembersAdded(String actorName) {
+    return '$actorName님이 새 멤버를 추가했습니다';
+  }
+
+  @override
+  String sysMemberLeft(String actorName) {
+    return '$actorName님이 그룹을 나갔습니다';
+  }
+
+  @override
+  String sysMemberRemoved(String actorName) {
+    return '$actorName님이 멤버를 내보냈습니다';
+  }
+
+  @override
+  String sysMemberJoined(String actorName) {
+    return '$actorName님이 그룹에 참여했습니다';
+  }
+
+  @override
+  String systemVideoCallEnded(String duration) {
+    return '영상 통화 종료 · $duration';
+  }
+
+  @override
+  String systemVoiceCallEnded(String duration) {
+    return '음성 통화 종료 · $duration';
+  }
+
+  @override
+  String get systemVideoCallMissed => '부재중 영상 통화';
+
+  @override
+  String get systemVoiceCallMissed => '부재중 음성 통화';
+
+  @override
+  String get errActionFailed => '문제가 발생했습니다. 다시 시도해 주세요.';
+
+  @override
+  String get kbDeleteFailed => '삭제에 실패했습니다. 다시 시도해 주세요';
+
+  @override
+  String get exploreJoinFailed => '채널 참여에 실패했습니다';
+
+  @override
+  String get unnamedChannel => '이름 없음';
+
+  @override
+  String get actionOk => '확인';
+
+  @override
+  String get reminderDeleteConfirm => '이 알림을 삭제할까요?';
+
+  @override
+  String get profileNameLabel => '이름';
+
+  @override
+  String get genderMale => '남성';
+
+  @override
+  String get genderFemale => '여성';
+
+  @override
+  String get genderOther => '기타';
+
+  @override
+  String get aiPersonaSaved => '저장됨';
+
+  @override
+  String get aiPersonaResetTitle => 'AI 페르소나 초기화';
+
+  @override
+  String get aiPersonaResetConfirm => 'AI 페르소나를 기본 설정으로 초기화할까요?';
+
+  @override
+  String get aiPersonaToneLabel => '말투';
+
+  @override
+  String get aiPersonaResetToDefault => '기본값으로 초기화';
+
+  @override
+  String tokenUsagePercentUsed(String percent) {
+    return '이번 달 $percent% 사용';
+  }
+
+  @override
+  String tokenUsageCostUsd(String amount) {
+    return '$amount 달러';
+  }
+
+  @override
+  String get notifications => '알림';
+
+  @override
+  String get notificationsEnabled => '알림이 켜져 있습니다';
+
+  @override
+  String get notificationsDisabled => '알림이 꺼져 있습니다';
 }

@@ -611,6 +611,18 @@ class AppLocalizationsVi extends AppLocalizations {
   String get friendRequestPending => 'Đang chờ';
 
   @override
+  String get friendsTabSearch => 'Tìm kiếm';
+
+  @override
+  String get declineFriend => 'Từ chối';
+
+  @override
+  String get searchUsersPrompt => 'Tìm người để kết bạn';
+
+  @override
+  String get noSearchResults => 'Không tìm thấy người dùng';
+
+  @override
   String get unfriend => 'Hủy kết bạn';
 
   @override
@@ -1143,4 +1155,143 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get wallpaperPreviewOutgoing => 'Tuyệt vời 🎉';
+
+  @override
+  String get errCannotOpenLink => 'Không thể mở liên kết';
+
+  @override
+  String sysNicknameClearedSelf(String actorName) {
+    return '$actorName đã gỡ bỏ biệt danh của mình';
+  }
+
+  @override
+  String sysNicknameClearedOther(String actorName, String targetName) {
+    return '$actorName đã gỡ bỏ biệt danh của $targetName';
+  }
+
+  @override
+  String sysNicknameSetSelf(String actorName, String nickname) {
+    return '$actorName đã đặt biệt danh cho mình là $nickname';
+  }
+
+  @override
+  String sysNicknameSetOther(
+      String actorName, String targetName, String nickname) {
+    return '$actorName đã đặt biệt danh cho $targetName là $nickname';
+  }
+
+  @override
+  String sysThemeChanged(String actorName) {
+    return '$actorName đã thay đổi chủ đề đoạn chat';
+  }
+
+  @override
+  String sysQuickReactionChanged(String actorName, String emoji) {
+    return '$actorName đã thay đổi biểu tượng cảm xúc nhanh thành $emoji';
+  }
+
+  @override
+  String sysGroupCreated(String actorName) {
+    return '$actorName đã tạo nhóm';
+  }
+
+  @override
+  String sysMembersAdded(String actorName) {
+    return '$actorName đã thêm thành viên mới';
+  }
+
+  @override
+  String sysMemberLeft(String actorName) {
+    return '$actorName đã rời khỏi nhóm';
+  }
+
+  @override
+  String sysMemberRemoved(String actorName) {
+    return '$actorName đã xóa một thành viên';
+  }
+
+  @override
+  String sysMemberJoined(String actorName) {
+    return '$actorName đã tham gia nhóm';
+  }
+
+  @override
+  String systemVideoCallEnded(String duration) {
+    return 'Cuộc gọi video đã kết thúc · $duration';
+  }
+
+  @override
+  String systemVoiceCallEnded(String duration) {
+    return 'Cuộc gọi thoại đã kết thúc · $duration';
+  }
+
+  @override
+  String get systemVideoCallMissed => 'Cuộc gọi video nhỡ';
+
+  @override
+  String get systemVoiceCallMissed => 'Cuộc gọi thoại nhỡ';
+
+  @override
+  String get errActionFailed => 'Đã xảy ra lỗi. Vui lòng thử lại.';
+
+  @override
+  String get kbDeleteFailed => 'Xóa thất bại, vui lòng thử lại';
+
+  @override
+  String get exploreJoinFailed => 'Không thể tham gia kênh';
+
+  @override
+  String get unnamedChannel => 'Chưa đặt tên';
+
+  @override
+  String get actionOk => 'OK';
+
+  @override
+  String get reminderDeleteConfirm => 'Xóa lời nhắc này?';
+
+  @override
+  String get profileNameLabel => 'Tên';
+
+  @override
+  String get genderMale => 'Nam';
+
+  @override
+  String get genderFemale => 'Nữ';
+
+  @override
+  String get genderOther => 'Khác';
+
+  @override
+  String get aiPersonaSaved => 'Đã lưu';
+
+  @override
+  String get aiPersonaResetTitle => 'Đặt lại AI persona';
+
+  @override
+  String get aiPersonaResetConfirm => 'Đặt lại AI persona về cài đặt mặc định?';
+
+  @override
+  String get aiPersonaToneLabel => 'Giọng điệu';
+
+  @override
+  String get aiPersonaResetToDefault => 'Đặt lại mặc định';
+
+  @override
+  String tokenUsagePercentUsed(String percent) {
+    return 'Đã dùng $percent% trong tháng này';
+  }
+
+  @override
+  String tokenUsageCostUsd(String amount) {
+    return '$amount USD';
+  }
+
+  @override
+  String get notifications => 'Thông báo';
+
+  @override
+  String get notificationsEnabled => 'Thông báo đang bật';
+
+  @override
+  String get notificationsDisabled => 'Thông báo đang tắt';
 }

@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useRef } from 'react'
+import { useTranslations } from 'next-intl'
 import { Search, X, Loader2 } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
@@ -23,6 +24,7 @@ function formatTime(iso: string) {
 }
 
 export function MessageSearchPanel({ conversationId, onClose }: Props) {
+  const t = useTranslations('chat')
   const [query, setQuery] = useState('')
   const [results, setResults] = useState<Message[]>([])
   const [loading, setLoading] = useState(false)
@@ -57,7 +59,7 @@ export function MessageSearchPanel({ conversationId, onClose }: Props) {
             autoFocus
             value={query}
             onChange={(e) => handleChange(e.target.value)}
-            placeholder="Tìm trong cuộc trò chuyện..."
+            placeholder={t('messageSearchPlaceholder')}
             className="pl-8 h-8 text-sm"
           />
         </div>
@@ -83,7 +85,7 @@ export function MessageSearchPanel({ conversationId, onClose }: Props) {
             </div>
           ))}
           {!loading && query.trim() && results.length === 0 && (
-            <p className="text-sm text-muted-foreground text-center py-3">Không tìm thấy</p>
+            <p className="text-sm text-muted-foreground text-center py-3">{t('messageSearchNoResults')}</p>
           )}
         </div>
       )}

@@ -1,8 +1,8 @@
 'use client'
 
-import { useState, useRef, useEffect, useCallback } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import {
-  Send, X, Pencil, Paperclip, ImagePlus, FileText, Smile, Mic, Trash2, Reply,
+  Send, X, Pencil, Paperclip, ImagePlus, FileText, Mic, Trash2, Reply,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { useTranslations } from 'next-intl'
@@ -11,24 +11,14 @@ import { Textarea } from '@/components/ui/textarea'
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { chatService } from '@/lib/api/chat'
+import { useQueries } from '@tanstack/react-query'
+import { authService } from '@/lib/api/auth'
 import { useQuickReaction } from '@/lib/quick-reaction'
+import { useVoiceRecorder } from '@/lib/hooks/use-voice-recorder'
+import { useFileAttachments } from '@/lib/hooks/use-file-attachments'
+import { useAuthStore } from '@/lib/store/auth.store'
+import { EmojiStickerPicker } from '@/components/chat/EmojiStickerPicker'
 import type { Message, MessageType, Conversation } from '@/lib/api/types'
-
-const EMOJIS = [
-  '😀', '😁', '😂', '🤣', '😊', '😍', '😘', '😎', '🤔', '😮',
-  '😢', '😭', '😡', '👍', '👎', '👏', '🙏', '🔥', '❤️', '💔',
-  '🎉', '✨', '⭐', '💯', '😴', '🤗', '🥳', '😅', '😇', '🤩',
-  '😋', '😜', '🤪', '😬', '🙄', '😏', '🙂', '🥰', '😤', '👌',
-]
-
-const STICKERS = [
-  '😊', '😂', '🥰', '😎', '🤔', '😭',
-  '🎉', '❤️', '🔥', '👍', '🙏', '💯',
-  '🥲', '😴', '😡', '🤗',
-]
 
 interface Props {
   onSend: (content: string, type?: MessageType) => Promise<void>
@@ -53,27 +43,57 @@ export function MessageInput({
 }: Props) {
   const t = useTranslations('chat')
   const quickReaction = useQuickReaction(conversation?.id ?? '')
+  const currentUserId = useAuthStore((s) => s.user?.id)
+
+  // Resolve group participant userIds → display names for @mentions. Mirrors
+  // Flutter (mention_list.dart) which filters + inserts by display name. The
+  // AI bot and self are excluded from the candidate list.
+  const mentionableIds = (conversation?.type === 'group'
+    ? conversation.participants.filter(
+        (p) => p !== currentUserId && p !== 'ai-bot-000000000000000000000001',
+      )
+    : []
+  )
+  const participantQueries = useQueries({
+    queries: mentionableIds.map((uid) => ({
+      queryKey: ['user', uid],
+      queryFn: () => authService.getUser(uid),
+      staleTime: 5 * 60 * 1000,
+    })),
+  })
+  const participants = mentionableIds.map((uid, i) => ({
+    id: uid,
+    name: participantQueries[i].data?.displayName ?? uid,
+  }))
   const [value, setValue] = useState('')
   const [sending, setSending] = useState(false)
   const [uploading, setUploading] = useState(false)
-  const [recording, setRecording] = useState(false)
-  const [recordSeconds, setRecordSeconds] = useState(0)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const imageInputRef = useRef<HTMLInputElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
-  const recorderRef = useRef<MediaRecorder | null>(null)
-  const chunksRef = useRef<Blob[]>([])
-  const recordTimerRef = useRef<ReturnType<typeof setInterval> | null>(null)
-  const cancelledRef = useRef(false)
+
+  const { recording, recordSeconds, startRecording, stopAndSend, cancelRecording } =
+    useVoiceRecorder({
+      onSend,
+      onUploadingChange: setUploading,
+      labels: {
+        unsupported: t('recordingUnsupported'),
+        sendError: t('voiceSendError'),
+        micError: t('micError'),
+      },
+    })
+
+  const { handleImagePick, handleFilePick } = useFileAttachments({
+    onSend,
+    onUploadingChange: setUploading,
+    uploadErrorLabel: t('uploadError'),
+  })
 
   // Mentions state
-  const [mentionCandidates, setMentionCandidates] = useState<string[]>([])
+  const [mentionCandidates, setMentionCandidates] = useState<{ id: string; name: string }[]>([])
   const [mentionIndex, setMentionIndex] = useState(0)
   const [mentionQuery, setMentionQuery] = useState<{ start: number, end: number, text: string } | null>(null)
-
-  // Popover state
-  const [popoverOpen, setPopoverOpen] = useState(false)
 
   // Populate textarea when entering edit mode
   useEffect(() => {
@@ -104,7 +124,7 @@ export function MessageInput({
 
     if (match && conversation && conversation.type === 'group') {
       const q = match[1].toLowerCase()
-      const candidates = conversation.participants.filter(p => p.toLowerCase().includes(q))
+      const candidates = participants.filter((p) => p.name.toLowerCase().includes(q))
       if (candidates.length > 0) {
         setMentionCandidates(candidates)
         setMentionQuery({ start: match.index!, end: cursor, text: q })
@@ -188,12 +208,12 @@ export function MessageInput({
     })
   }
 
-  const insertMention = (uid: string) => {
+  const insertMention = (candidate: { id: string; name: string }) => {
     if (!mentionQuery) return
     const el = textareaRef.current
     const before = value.slice(0, mentionQuery.start)
     const after = value.slice(mentionQuery.end)
-    const inserted = `@${uid} `
+    const inserted = `@${candidate.name} `
     setValue(before + inserted + after)
     setMentionQuery(null)
 
@@ -203,106 +223,6 @@ export function MessageInput({
         el.selectionStart = el.selectionEnd = before.length + inserted.length
       })
     }
-  }
-
-  // ── Attachments ─────────────────────────────────────────────────────────────
-
-  const handleImagePick = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(e.target.files ?? [])
-    e.target.value = ''
-    if (files.length === 0) return
-    setUploading(true)
-    try {
-      const images: string[] = []
-      for (const file of files) {
-        const { url } = await chatService.uploadFile(file)
-        if (file.type.startsWith('video/')) {
-          await onSend(url, 'video')
-        } else {
-          images.push(url)
-        }
-      }
-      if (images.length === 1) await onSend(images[0], 'image')
-      else if (images.length > 1) await onSend(JSON.stringify(images), 'image')
-    } catch {
-      toast.error(t('uploadError'))
-    } finally {
-      setUploading(false)
-    }
-  }
-
-  const handleFilePick = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    e.target.value = ''
-    if (!file) return
-    setUploading(true)
-    try {
-      const { url, filename, size } = await chatService.uploadFile(file)
-      await onSend(JSON.stringify({ url, name: filename || file.name, size }), 'file')
-    } catch {
-      toast.error(t('uploadError'))
-    } finally {
-      setUploading(false)
-    }
-  }
-
-  // ── Voice recording ───────────────────────────────────────────────────────────
-
-  const stopTimer = useCallback(() => {
-    if (recordTimerRef.current) clearInterval(recordTimerRef.current)
-    recordTimerRef.current = null
-  }, [])
-
-  const startRecording = async () => {
-    if (typeof navigator === 'undefined' || !navigator.mediaDevices?.getUserMedia) {
-      toast.error(t('recordingUnsupported'))
-      return
-    }
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
-      const recorder = new MediaRecorder(stream)
-      chunksRef.current = []
-      cancelledRef.current = false
-      recorder.ondataavailable = (ev) => {
-        if (ev.data.size > 0) chunksRef.current.push(ev.data)
-      }
-      recorder.onstop = async () => {
-        stream.getTracks().forEach((t) => t.stop())
-        if (cancelledRef.current) return
-        const blob = new Blob(chunksRef.current, { type: recorder.mimeType || 'audio/webm' })
-        if (blob.size === 0) return
-        setUploading(true)
-        try {
-          const ext = (recorder.mimeType || 'audio/webm').includes('mp4') ? 'm4a' : 'webm'
-          const { url } = await chatService.uploadFile(blob, `voice_${Date.now()}.${ext}`)
-          await onSend(url, 'voice')
-        } catch {
-          toast.error(t('voiceSendError'))
-        } finally {
-          setUploading(false)
-        }
-      }
-      recorder.start()
-      recorderRef.current = recorder
-      setRecording(true)
-      setRecordSeconds(0)
-      recordTimerRef.current = setInterval(() => setRecordSeconds((s) => s + 1), 1000)
-    } catch {
-      toast.error(t('micError'))
-    }
-  }
-
-  const stopAndSend = () => {
-    stopTimer()
-    setRecording(false)
-    recorderRef.current?.stop()
-  }
-
-  const cancelRecording = () => {
-    cancelledRef.current = true
-    stopTimer()
-    setRecording(false)
-    recorderRef.current?.stop()
   }
 
   const fmtSeconds = (s: number) =>
@@ -413,16 +333,16 @@ export function MessageInput({
             {mentionQuery && mentionCandidates.length > 0 && (
               <div className="absolute bottom-full left-0 mb-2 w-48 max-h-48 overflow-y-auto bg-popover border rounded-xl shadow-lg z-50">
                 <div className="p-1 space-y-0.5">
-                  {mentionCandidates.map((uid, idx) => (
+                  {mentionCandidates.map((candidate, idx) => (
                     <button
-                      key={uid}
-                      onClick={() => insertMention(uid)}
+                      key={candidate.id}
+                      onClick={() => insertMention(candidate)}
                       onMouseEnter={() => setMentionIndex(idx)}
                       className={`w-full text-left px-3 py-2 text-sm rounded-lg truncate transition-colors ${
                         idx === mentionIndex ? 'bg-primary/10 text-primary font-medium' : 'hover:bg-muted text-foreground'
                       }`}
                     >
-                      {uid}
+                      {candidate.name}
                     </button>
                   ))}
                 </div>
@@ -431,62 +351,11 @@ export function MessageInput({
           </div>
 
           {/* Emoji — right side, adjacent to Send/Mic */}
-          <Popover open={popoverOpen} onOpenChange={setPopoverOpen}>
-            <PopoverTrigger asChild>
-              <Button variant="ghost" size="icon" className="shrink-0" disabled={busy}>
-                <Smile className="size-5 text-pon-cyan" />
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-[300px] max-w-[calc(100vw-1rem)] p-0" align="end" side="top">
-              <Tabs defaultValue="emoji" className="w-full">
-                <TabsList className="w-full grid grid-cols-2 rounded-none border-b border-border bg-transparent h-10 p-0">
-                  <TabsTrigger
-                    value="emoji"
-                    className="rounded-none data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-pon-cyan text-xs"
-                  >
-                    {t('emojiTab')}
-                  </TabsTrigger>
-                  <TabsTrigger
-                    value="sticker"
-                    className="rounded-none data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-pon-cyan text-xs"
-                  >
-                    {t('stickerTab')}
-                  </TabsTrigger>
-                </TabsList>
-
-                <TabsContent value="emoji" className="p-2 m-0 h-48 overflow-y-auto">
-                  <div className="grid grid-cols-8 gap-1">
-                    {EMOJIS.map((emoji) => (
-                      <button
-                        key={emoji}
-                        onClick={() => insertEmoji(emoji)}
-                        className="hover:bg-muted p-1.5 rounded text-lg flex items-center justify-center transition-colors"
-                      >
-                        {emoji}
-                      </button>
-                    ))}
-                  </div>
-                </TabsContent>
-
-                <TabsContent value="sticker" className="p-2 m-0 h-48 overflow-y-auto">
-                  <div className="grid grid-cols-4 gap-2">
-                    {STICKERS.map((sticker) => (
-                      <button
-                        key={sticker}
-                        onClick={() => {
-                          onSend(sticker, 'sticker')
-                          setPopoverOpen(false)
-                        }}
-                        className="hover:bg-pon-cyan/10 p-2 rounded-xl text-4xl flex items-center justify-center transition-colors hover:scale-105"
-                      >
-                        {sticker}
-                      </button>
-                    ))}
-                  </div>
-                </TabsContent>
-              </Tabs>
-            </PopoverContent>
-          </Popover>
+          <EmojiStickerPicker
+            disabled={busy}
+            onInsertEmoji={insertEmoji}
+            onSendSticker={(sticker) => onSend(sticker, 'sticker')}
+          />
 
           {/* Send (when text present) OR Mic+👍 (when empty) */}
           {value.trim() || editingMessage ? (

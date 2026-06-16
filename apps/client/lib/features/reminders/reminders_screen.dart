@@ -48,7 +48,7 @@ class RemindersScreen extends ConsumerWidget {
                 ),
                 onDelete: () => _confirm(
                   context,
-                  message: l10n.remindersEmpty,
+                  message: l10n.reminderDeleteConfirm,
                   onConfirm: () => ref
                       .read(remindersProvider.notifier)
                       .deleteReminder(r.id),
@@ -74,14 +74,15 @@ class RemindersScreen extends ConsumerWidget {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
+            child: Text(context.l10n.actionCancel),
           ),
           TextButton(
             onPressed: () {
               Navigator.pop(context);
               onConfirm();
             },
-            child: const Text('OK', style: TextStyle(color: Colors.red)),
+            child: Text(context.l10n.actionOk,
+                style: const TextStyle(color: Colors.red)),
           ),
         ],
       ),

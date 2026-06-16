@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useTranslations } from 'next-intl'
 import { ArrowLeft, Bot, Settings, Phone, Video } from 'lucide-react'
 import Link from 'next/link'
 import { useQueryClient } from '@tanstack/react-query'
@@ -37,6 +38,7 @@ export function ConversationHeader({
   typingUserIds,
   onSearchToggle,
 }: Props) {
+  const t = useTranslations('chat')
   const { data: conversation } = useConversation(conversationId)
   const queryClient = useQueryClient()
   const currentUser = useAuthStore((s) => s.user)
@@ -59,7 +61,7 @@ export function ConversationHeader({
   const displayName =
     nickname ??
     conversation?.name ??
-    (isAI ? 'AI Assistant' : (otherUser?.displayName ?? 'Cuộc trò chuyện'))
+    (isAI ? t('aiAssistant') : (otherUser?.displayName ?? t('conversationDefault')))
   const avatarUrl = conversation?.avatarUrl ?? otherUser?.avatarUrl
   const isTyping = typingUserIds.length > 0
   const pinnedMessages = conversation?.pinnedMessages ?? []
@@ -91,7 +93,7 @@ export function ConversationHeader({
             if (isGroup) setGroupSettingsOpen(true)
             else if (otherUserId) setProfileOpen(true)
           }}
-          title={isGroup ? 'Thông tin nhóm' : 'Xem hồ sơ'}
+          title={isGroup ? t('groupInfoTooltip') : t('viewProfileTooltip')}
         >
           <Avatar className="size-9 shrink-0">
             {isAI ? (
@@ -133,14 +135,14 @@ export function ConversationHeader({
             )}
           </div>
           {isTyping ? (
-            <p className="text-xs text-pon-cyan font-medium animate-pulse">đang nhập...</p>
+            <p className="text-xs text-pon-cyan font-medium animate-pulse">{t('typing')}</p>
           ) : otherUserId && status ? (
             <p className="text-xs text-muted-foreground">
-              {status.online ? 'Đang hoạt động' : 'Ngoại tuyến'}
+              {status.online ? t('online') : t('offline')}
             </p>
           ) : isGroup ? (
             <p className="text-xs text-muted-foreground">
-              {conversation?.participants.length} thành viên
+              {t('membersCount', { count: conversation?.participants.length ?? 0 })}
             </p>
           ) : null}
         </div>
@@ -153,7 +155,7 @@ export function ConversationHeader({
                 variant="ghost"
                 size="icon"
                 onClick={() => callManager.startCall(otherUserId, displayName, conversationId, false)}
-                title="Gọi thoại"
+                title={t('voiceCall')}
               >
                 <Phone className="size-4" />
               </Button>
@@ -161,7 +163,7 @@ export function ConversationHeader({
                 variant="ghost"
                 size="icon"
                 onClick={() => callManager.startCall(otherUserId, displayName, conversationId, true)}
-                title="Gọi video"
+                title={t('videoCall')}
               >
                 <Video className="size-4" />
               </Button>
@@ -171,7 +173,7 @@ export function ConversationHeader({
             variant="ghost"
             size="icon"
             onClick={() => isGroup ? setGroupSettingsOpen(true) : setSettingsOpen(true)}
-            title="Cài đặt"
+            title={t('settingsTooltip')}
           >
             <Settings className="size-4" />
           </Button>

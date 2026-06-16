@@ -9,7 +9,32 @@ import '../../../core/widgets/pon_widgets.dart';
 import '../../auth/domain/auth_provider.dart';
 import '../../auth/domain/auth_state.dart';
 import 'widgets/settings_dialogs.dart';
+import 'widgets/settings_avatar_section.dart';
 import 'widgets/change_password_dialog.dart';
+
+/// Persists whether the user wants push/in-app notifications. Mirrors web's
+/// notification control (web reads the browser permission; mobile keeps a
+/// locally-persisted preference since there is no Notification permission API
+/// shared here). Stored in [SharedPreferences].
+final notificationsEnabledProvider =
+    NotifierProvider<NotificationsEnabledNotifier, bool>(
+        NotificationsEnabledNotifier.new);
+
+class NotificationsEnabledNotifier extends Notifier<bool> {
+  static const _key = 'notifications_enabled';
+
+  @override
+  bool build() {
+    final prefs = ref.watch(sharedPreferencesProvider);
+    return prefs.getBool(_key) ?? true;
+  }
+
+  Future<void> toggle(bool value) async {
+    final prefs = ref.read(sharedPreferencesProvider);
+    state = value;
+    await prefs.setBool(_key, value);
+  }
+}
 
 class SettingsScreen extends ConsumerWidget {
   /// `true` when shown inside the web/tablet [Dialog] (master-detail layout)
@@ -92,6 +117,57 @@ class SettingsScreen extends ConsumerWidget {
             size: 16,
           ),
           onTap: onTap,
+        ),
+      ),
+    );
+  }
+
+  /// Toggle card for enabling/disabling notifications (parity with web's
+  /// notification control). Persists via [notificationsEnabledProvider].
+  Widget _notificationsCard({
+    required BuildContext context,
+    required WidgetRef ref,
+    required bool isDark,
+  }) {
+    final enabled = ref.watch(notificationsEnabledProvider);
+    final accent = isDark ? AppTheme.ponPeach : Theme.of(context).colorScheme.primary;
+    return PonCard(
+      glowColor: AppTheme.ponPeach,
+      glowStrength: isDark ? 4 : 0,
+      child: Material(
+        color: Colors.transparent,
+        child: SwitchListTile(
+          contentPadding:
+              const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
+          secondary: Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: accent.withValues(alpha: 0.1),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(Icons.notifications_outlined, color: accent, size: 20),
+          ),
+          title: Text(
+            context.l10n.notifications,
+            style: TextStyle(
+              color: isDark ? Colors.white : Colors.black87,
+              fontWeight: FontWeight.bold,
+              fontSize: 15,
+            ),
+          ),
+          subtitle: Text(
+            enabled
+                ? context.l10n.notificationsEnabled
+                : context.l10n.notificationsDisabled,
+            style: TextStyle(
+              color: isDark ? Colors.white54 : Colors.black54,
+              fontSize: 13,
+            ),
+          ),
+          value: enabled,
+          activeThumbColor: AppTheme.ponCyan,
+          onChanged: (v) =>
+              ref.read(notificationsEnabledProvider.notifier).toggle(v),
         ),
       ),
     );
@@ -215,6 +291,8 @@ class SettingsScreen extends ConsumerWidget {
                       'English',
                   onTap: () => showLanguageSelectionDialog(context, ref),
                 ),
+                const SizedBox(height: 24),
+                _notificationsCard(context: context, ref: ref, isDark: isDark),
                 const SizedBox(height: 24),
                 _settingsCard(
                   context: context,

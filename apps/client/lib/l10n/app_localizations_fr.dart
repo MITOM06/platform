@@ -620,6 +620,19 @@ class AppLocalizationsFr extends AppLocalizations {
   String get friendRequestPending => 'En attente';
 
   @override
+  String get friendsTabSearch => 'Rechercher';
+
+  @override
+  String get declineFriend => 'Refuser';
+
+  @override
+  String get searchUsersPrompt =>
+      'Recherchez des personnes à ajouter comme amis';
+
+  @override
+  String get noSearchResults => 'Aucun utilisateur trouvé';
+
+  @override
   String get unfriend => 'Retirer l\'ami';
 
   @override
@@ -1117,18 +1130,18 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String agreeToTerms(String privacyPolicy, String termsOfService) {
-    return 'I agree to the $privacyPolicy and $termsOfService';
+    return 'J\'accepte la $privacyPolicy et les $termsOfService';
   }
 
   @override
-  String get privacyPolicy => 'Privacy Policy';
+  String get privacyPolicy => 'Politique de Confidentialité';
 
   @override
-  String get termsOfService => 'Terms of Service';
+  String get termsOfService => 'Conditions d\'Utilisation';
 
   @override
   String get valMustAgreeTerms =>
-      'You must agree to the Terms of Service to register';
+      'Vous devez accepter les Conditions d\'Utilisation pour vous inscrire';
 
   @override
   String get youColon => 'You:';
@@ -1156,4 +1169,145 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get wallpaperPreviewOutgoing => 'Looks great 🎉';
+
+  @override
+  String get errCannotOpenLink => 'Impossible d\'ouvrir le lien';
+
+  @override
+  String sysNicknameClearedSelf(String actorName) {
+    return '$actorName a supprimé son propre surnom';
+  }
+
+  @override
+  String sysNicknameClearedOther(String actorName, String targetName) {
+    return '$actorName a supprimé le surnom de $targetName';
+  }
+
+  @override
+  String sysNicknameSetSelf(String actorName, String nickname) {
+    return '$actorName a défini son surnom sur $nickname';
+  }
+
+  @override
+  String sysNicknameSetOther(
+      String actorName, String targetName, String nickname) {
+    return '$actorName a défini le surnom de $targetName sur $nickname';
+  }
+
+  @override
+  String sysThemeChanged(String actorName) {
+    return '$actorName a changé le thème de la discussion';
+  }
+
+  @override
+  String sysQuickReactionChanged(String actorName, String emoji) {
+    return '$actorName a changé la réaction rapide en $emoji';
+  }
+
+  @override
+  String sysGroupCreated(String actorName) {
+    return '$actorName a créé le groupe';
+  }
+
+  @override
+  String sysMembersAdded(String actorName) {
+    return '$actorName a ajouté de nouveaux membres';
+  }
+
+  @override
+  String sysMemberLeft(String actorName) {
+    return '$actorName a quitté le groupe';
+  }
+
+  @override
+  String sysMemberRemoved(String actorName) {
+    return '$actorName a retiré un membre';
+  }
+
+  @override
+  String sysMemberJoined(String actorName) {
+    return '$actorName a rejoint le groupe';
+  }
+
+  @override
+  String systemVideoCallEnded(String duration) {
+    return 'Appel vidéo terminé · $duration';
+  }
+
+  @override
+  String systemVoiceCallEnded(String duration) {
+    return 'Appel vocal terminé · $duration';
+  }
+
+  @override
+  String get systemVideoCallMissed => 'Appel vidéo manqué';
+
+  @override
+  String get systemVoiceCallMissed => 'Appel vocal manqué';
+
+  @override
+  String get errActionFailed =>
+      'Une erreur s\'est produite. Veuillez réessayer.';
+
+  @override
+  String get kbDeleteFailed => 'Échec de la suppression, veuillez réessayer';
+
+  @override
+  String get exploreJoinFailed => 'Impossible de rejoindre le canal';
+
+  @override
+  String get unnamedChannel => 'Sans nom';
+
+  @override
+  String get actionOk => 'OK';
+
+  @override
+  String get reminderDeleteConfirm => 'Supprimer ce rappel ?';
+
+  @override
+  String get profileNameLabel => 'Nom';
+
+  @override
+  String get genderMale => 'Homme';
+
+  @override
+  String get genderFemale => 'Femme';
+
+  @override
+  String get genderOther => 'Autre';
+
+  @override
+  String get aiPersonaSaved => 'Enregistré';
+
+  @override
+  String get aiPersonaResetTitle => 'Réinitialiser la persona IA';
+
+  @override
+  String get aiPersonaResetConfirm =>
+      'Réinitialiser la persona IA à ses paramètres par défaut ?';
+
+  @override
+  String get aiPersonaToneLabel => 'Ton';
+
+  @override
+  String get aiPersonaResetToDefault => 'Rétablir les valeurs par défaut';
+
+  @override
+  String tokenUsagePercentUsed(String percent) {
+    return '$percent% utilisé ce mois-ci';
+  }
+
+  @override
+  String tokenUsageCostUsd(String amount) {
+    return '$amount USD';
+  }
+
+  @override
+  String get notifications => 'Notifications';
+
+  @override
+  String get notificationsEnabled => 'Les notifications sont activées';
+
+  @override
+  String get notificationsDisabled => 'Les notifications sont désactivées';
 }

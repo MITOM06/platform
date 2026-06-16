@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { Loader2, Send } from 'lucide-react'
 import { toast } from 'sonner'
 import { useQueryClient } from '@tanstack/react-query'
+import { useTranslations } from 'next-intl'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { chatService } from '@/lib/api/chat'
 import { useConversations } from '@/lib/hooks/use-conversations'
@@ -18,6 +19,8 @@ interface Props {
 
 export function ForwardMessageModal({ message, onClose }: Props) {
   const queryClient = useQueryClient()
+  const t = useTranslations('chat')
+  const tCommon = useTranslations('common')
   const { data: conversations } = useConversations()
   const [forwardingTo, setForwardingTo] = useState<string | null>(null)
 
@@ -26,11 +29,11 @@ export function ForwardMessageModal({ message, onClose }: Props) {
     setForwardingTo(targetId)
     try {
       await chatService.forwardMessage(message.id, targetId)
-      toast.success('Đã chuyển tiếp tin nhắn')
+      toast.success(t('forwardSuccess'))
       queryClient.invalidateQueries({ queryKey: ['conversations'] })
       onClose()
     } catch {
-      toast.error('Không thể chuyển tiếp tin nhắn')
+      toast.error(t('forwardError'))
     } finally {
       setForwardingTo(null)
     }
@@ -40,13 +43,13 @@ export function ForwardMessageModal({ message, onClose }: Props) {
     <Dialog open={!!message} onOpenChange={(o) => !o && onClose()}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Chuyển tiếp tin nhắn</DialogTitle>
+          <DialogTitle>{t('forwardTitle')}</DialogTitle>
         </DialogHeader>
 
         <div className="mt-2 space-y-1 max-h-80 overflow-y-auto">
           {conversations?.map((conv) => {
             if (conv.id === message?.conversationId) return null
-            const name = conv.name ?? 'Cuộc trò chuyện'
+            const name = conv.name ?? t('forwardConversationFallback')
             const initial = name[0]?.toUpperCase() ?? '?'
             const isForwarding = forwardingTo === conv.id
             return (
@@ -71,7 +74,7 @@ export function ForwardMessageModal({ message, onClose }: Props) {
         </div>
 
         <div className="flex justify-end pt-2">
-          <Button variant="outline" onClick={onClose}>Hủy</Button>
+          <Button variant="outline" onClick={onClose}>{tCommon('cancel')}</Button>
         </div>
       </DialogContent>
     </Dialog>

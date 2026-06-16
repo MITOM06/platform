@@ -291,22 +291,22 @@ class ConversationServiceTest {
     }
 
     @Test
-    void markConversationRead_ShouldAddUserToReadByForAllUnreadMessages() {
+    void markConversationRead_ShouldAtomicallyAddUserToReadByForAllUnreadMessages() {
         when(conversationCacheService.findByIdOptional(CONV_ID)).thenReturn(Optional.of(conversation));
-        com.platform.chatservice.model.Message unreadMsg = com.platform.chatservice.model.Message.builder()
-            .id("msg-001")
-            .conversationId(CONV_ID)
-            .senderId(OTHER_ID)
-            .readBy(new java.util.ArrayList<>(List.of(OTHER_ID)))
-            .createdAt(Instant.now())
-            .build();
-        when(mongoTemplate.find(any(org.springframework.data.mongodb.core.query.Query.class), eq(com.platform.chatservice.model.Message.class)))
-            .thenReturn(List.of(unreadMsg));
 
         ConversationResponse response = conversationService.markConversationRead(USER_ID, CONV_ID);
 
         assertThat(response.unreadCount()).isZero();
-        assertThat(unreadMsg.getReadBy()).containsExactlyInAnyOrder(OTHER_ID, USER_ID);
-        verify(messageRepository).saveAll(anyList());
+        // New implementation performs a single atomic $addToSet across all unread
+        // messages instead of read-modify-write + saveAll.
+        var updateCaptor = org.mockito.ArgumentCaptor.forClass(
+            org.springframework.data.mongodb.core.query.Update.class);
+        verify(mongoTemplate).updateMulti(
+            any(org.springframework.data.mongodb.core.query.Query.class),
+            updateCaptor.capture(),
+            eq(com.platform.chatservice.model.Message.class));
+        String updateDoc = updateCaptor.getValue().getUpdateObject().toString();
+        assertThat(updateDoc).contains("$addToSet").contains(USER_ID);
+        verify(messageRepository, never()).saveAll(anyList());
     }
 }

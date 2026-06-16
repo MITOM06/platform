@@ -21,6 +21,7 @@ import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
@@ -256,19 +257,14 @@ public class ConversationService {
 
     public ConversationResponse markConversationRead(String userId, String conversationId) {
         Conversation conversation = getRawConversation(userId, conversationId);
-        List<Message> unread = mongoTemplate.find(
+        // Atomic per-document $addToSet avoids the read-modify-write race where a
+        // message arriving mid-operation could be silently re-marked unread, and
+        // avoids loading the whole unread set into memory.
+        mongoTemplate.updateMulti(
             new Query(Criteria.where("conversationId").is(conversationId).and("readBy").nin(userId)),
+            new Update().addToSet("readBy", userId),
             Message.class
         );
-        for (Message message : unread) {
-            List<String> readBy = message.getReadBy() == null
-                ? new ArrayList<>() : new ArrayList<>(message.getReadBy());
-            readBy.add(userId);
-            message.setReadBy(readBy);
-        }
-        if (!unread.isEmpty()) {
-            messageRepository.saveAll(unread);
-        }
         return toResponse(conversation, userId, 0L);
     }
 

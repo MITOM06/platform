@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
 import '../../../core/l10n/l10n_ext.dart';
+import '../data/chat_repository.dart';
 import '../domain/webrtc_service.dart';
 
 class CallScreen extends ConsumerStatefulWidget {
@@ -10,6 +11,7 @@ class CallScreen extends ConsumerStatefulWidget {
   final String targetName;
   final String conversationId;
   final bool isCaller;
+  final bool isVideo;
   final String? initialOfferSdp;
 
   const CallScreen({
@@ -18,6 +20,7 @@ class CallScreen extends ConsumerStatefulWidget {
     required this.targetName,
     required this.conversationId,
     required this.isCaller,
+    this.isVideo = true,
     this.initialOfferSdp,
   });
 
@@ -31,6 +34,7 @@ class _CallScreenState extends ConsumerState<CallScreen> {
   Timer? _callTimer;
   int _durationSeconds = 0;
   bool _isConnected = false;
+  bool _isVideoCall = true;
 
   @override
   void initState() {
@@ -67,8 +71,27 @@ class _CallScreenState extends ConsumerState<CallScreen> {
       }
     };
 
+    // Persist a call-log system message on hang-up (initiator only).
+    webrtc.onSendCallLog = (content) {
+      ref
+          .read(chatRepositoryProvider)
+          .sendMessageRest(widget.conversationId, content, type: 'system')
+          // Best-effort: a failed call log must not block hang-up.
+          .ignore();
+    };
+
+    // For incoming calls, only open the camera when the offer advertises video.
+    final effectiveVideo = widget.isCaller
+        ? widget.isVideo
+        : WebRTCService.sdpHasVideo(widget.initialOfferSdp);
+    _isVideoCall = effectiveVideo;
+
     try {
-      await webrtc.initialize(widget.targetId, widget.conversationId);
+      await webrtc.initialize(
+        widget.targetId,
+        widget.conversationId,
+        isVideo: effectiveVideo,
+      );
 
       if (widget.isCaller) {
         await webrtc.makeCall();
@@ -124,7 +147,17 @@ class _CallScreenState extends ConsumerState<CallScreen> {
           // Remote Video
           Positioned.fill(
             child: _isConnected
-                ? RTCVideoView(_remoteRenderer, objectFit: RTCVideoViewObjectFit.RTCVideoViewObjectFitCover)
+                ? (_isVideoCall
+                    ? RTCVideoView(_remoteRenderer,
+                        objectFit:
+                            RTCVideoViewObjectFit.RTCVideoViewObjectFitCover)
+                    : Center(
+                        child: Icon(
+                          Icons.phone_in_talk,
+                          color: Colors.white.withValues(alpha: 0.4),
+                          size: 96,
+                        ),
+                      ))
                 : Center(
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
@@ -142,7 +175,8 @@ class _CallScreenState extends ConsumerState<CallScreen> {
                   ),
           ),
           
-          // Local Video (PIP)
+          // Local Video (PIP) — only for video calls.
+          if (_isVideoCall)
           Positioned(
             right: 16,
             bottom: 120,

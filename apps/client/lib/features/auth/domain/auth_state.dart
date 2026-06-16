@@ -32,7 +32,8 @@ class UserModel {
     return UserModel(
       id: json['_id'] as String? ?? json['id'] as String,
       email: json['email'] as String? ?? '',
-      displayName: json['displayName'] as String,
+      displayName:
+          json['displayName'] as String? ?? json['email'] as String? ?? '',
       avatarUrl: json['avatarUrl'] as String?,
       bio: json['bio'] as String?,
       coverPhoto: json['coverPhoto'] as String?,

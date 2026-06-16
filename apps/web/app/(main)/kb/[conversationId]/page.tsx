@@ -133,7 +133,6 @@ export default function KbPage({ params }: { params: Promise<{ conversationId: s
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const [deleteTarget, setDeleteTarget] = useState<KbDocument | null>(null)
-  const [isUploading, setIsUploading] = useState(false)
 
   const statusLabels = {
     processing: t('statusProcessing'),
@@ -149,21 +148,16 @@ export default function KbPage({ params }: { params: Promise<{ conversationId: s
 
   const uploadMutation = useMutation({
     mutationFn: async (file: File) => {
-      setIsUploading(true)
-      try {
-        // First upload file to get URL
-        const uploaded = await chatService.uploadFile(file)
+      // First upload file to get URL
+      const uploaded = await chatService.uploadFile(file)
 
-        // Then register it with KB
-        return await kbService.uploadDocument({
-          conversationId,
-          fileUrl: uploaded.url,
-          fileName: file.name,
-          mimeType: file.type || 'application/octet-stream',
-        })
-      } finally {
-        setIsUploading(false)
-      }
+      // Then register it with KB
+      return await kbService.uploadDocument({
+        conversationId,
+        fileUrl: uploaded.url,
+        fileName: file.name,
+        mimeType: file.type || 'application/octet-stream',
+      })
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['kb-documents', conversationId] })
@@ -209,7 +203,7 @@ export default function KbPage({ params }: { params: Promise<{ conversationId: s
       {/* Header */}
       <header className="h-14 border-b px-4 flex items-center gap-3 shrink-0 bg-background/95 backdrop-blur-md">
         <Link
-          href={`/chat/${conversationId}`}
+          href={`/conversations/${conversationId}`}
           className="text-muted-foreground hover:text-foreground transition-colors"
         >
           <ArrowLeft className="size-5" />
@@ -265,9 +259,9 @@ export default function KbPage({ params }: { params: Promise<{ conversationId: s
           size="icon"
           className="size-14 rounded-full shadow-lg bg-pon-cyan hover:bg-pon-cyan/90 text-black"
           onClick={() => fileInputRef.current?.click()}
-          disabled={isUploading}
+          disabled={uploadMutation.isPending}
         >
-          {isUploading ? (
+          {uploadMutation.isPending ? (
             <Loader2 className="size-6 animate-spin" />
           ) : (
             <Upload className="size-6" />

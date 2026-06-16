@@ -3,6 +3,7 @@
 import { useQuery } from '@tanstack/react-query'
 import { Brain, Loader2, ChevronDown, ChevronUp } from 'lucide-react'
 import { useState } from 'react'
+import { useTranslations } from 'next-intl'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { chatService } from '@/lib/api/chat'
 
@@ -34,6 +35,7 @@ function Section({
 }
 
 export function AiTraceModal({ messageId, onClose }: Props) {
+  const t = useTranslations('chat')
   const { data, isLoading, isError } = useQuery({
     queryKey: ['ai-trace', messageId],
     queryFn: () => chatService.getTrace(messageId!),
@@ -47,7 +49,7 @@ export function AiTraceModal({ messageId, onClose }: Props) {
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Brain className="size-5 text-primary" />
-            AI Reasoning Trace
+            {t('aiTraceTitle')}
           </DialogTitle>
         </DialogHeader>
 
@@ -59,7 +61,7 @@ export function AiTraceModal({ messageId, onClose }: Props) {
 
         {isError && (
           <p className="text-sm text-destructive py-4 text-center">
-            Không có trace cho tin nhắn này.
+            {t('aiTraceEmpty')}
           </p>
         )}
 
@@ -67,17 +69,17 @@ export function AiTraceModal({ messageId, onClose }: Props) {
           <div className="space-y-3 mt-2">
             <div className="flex gap-4 text-sm">
               <div className="flex flex-col items-center gap-0.5">
-                <span className="text-xs text-muted-foreground">Input tokens</span>
+                <span className="text-xs text-muted-foreground">{t('aiTraceInputTokens')}</span>
                 <span className="font-semibold">{data.inputTokens}</span>
               </div>
               <div className="flex flex-col items-center gap-0.5">
-                <span className="text-xs text-muted-foreground">Output tokens</span>
+                <span className="text-xs text-muted-foreground">{t('aiTraceOutputTokens')}</span>
                 <span className="font-semibold">{data.outputTokens}</span>
               </div>
             </div>
 
             {data.thinkingBlocks && data.thinkingBlocks.length > 0 && (
-              <Section title={`Thinking blocks (${data.thinkingBlocks.length})`}>
+              <Section title={t('aiTraceThinkingBlocks', { count: data.thinkingBlocks.length })}>
                 {data.thinkingBlocks.map((block, i) => (
                   <pre key={i} className="whitespace-pre-wrap font-mono text-xs bg-muted rounded p-2">
                     {block}
@@ -87,7 +89,7 @@ export function AiTraceModal({ messageId, onClose }: Props) {
             )}
 
             {data.toolCalls && data.toolCalls.length > 0 && (
-              <Section title={`Tool calls (${data.toolCalls.length})`}>
+              <Section title={t('aiTraceToolCalls', { count: data.toolCalls.length })}>
                 {data.toolCalls.map((tc, i) => (
                   <div key={i} className="space-y-1">
                     <p className="font-medium">{tc.name}</p>
@@ -100,10 +102,10 @@ export function AiTraceModal({ messageId, onClose }: Props) {
             )}
 
             {data.ragSources && data.ragSources.length > 0 && (
-              <Section title={`RAG sources (${data.ragSources.length})`}>
+              <Section title={t('aiTraceRagSources', { count: data.ragSources.length })}>
                 {data.ragSources.map((src, i) => (
                   <div key={i} className="border-l-2 pl-2 border-primary/40">
-                    <p className="text-xs font-medium">Score: {src.score.toFixed(3)}</p>
+                    <p className="text-xs font-medium">{t('aiTraceScore', { score: src.score.toFixed(3) })}</p>
                     <p className="italic">{src.excerpt}</p>
                   </div>
                 ))}

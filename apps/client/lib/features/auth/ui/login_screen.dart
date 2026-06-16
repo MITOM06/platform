@@ -62,6 +62,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     final uri = Uri.parse('$authBase/auth/social/$provider/init?platform=mobile');
     if (await canLaunchUrl(uri)) {
       await launchUrl(uri, mode: LaunchMode.externalApplication);
+    } else if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(context.l10n.errCannotOpenLink)),
+      );
     }
   }
 

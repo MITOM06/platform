@@ -62,7 +62,7 @@ class _AiPersonaScreenState extends ConsumerState<AiPersonaScreen> {
           .read(aiPersonaProvider(widget.conversationId).notifier)
           .save(body);
       if (mounted) {
-        messenger.showSnackBar(SnackBar(content: Text(l10n.actionSave)));
+        messenger.showSnackBar(SnackBar(content: Text(l10n.aiPersonaSaved)));
       }
     } catch (e) {
       if (mounted) {
@@ -97,8 +97,8 @@ class _AiPersonaScreenState extends ConsumerState<AiPersonaScreen> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: Text(l10n.actionConfirm),
-        content: Text(l10n.aiPersonaAdminOnly),
+        title: Text(l10n.aiPersonaResetTitle),
+        content: Text(l10n.aiPersonaResetConfirm),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
@@ -220,8 +220,9 @@ class _AiPersonaScreenState extends ConsumerState<AiPersonaScreen> {
               ),
             ),
             const SizedBox(height: 16),
-            const Text('Tone',
-                style: TextStyle(color: Colors.white70, fontWeight: FontWeight.w600)),
+            Text(context.l10n.aiPersonaToneLabel,
+                style: const TextStyle(
+                    color: Colors.white70, fontWeight: FontWeight.w600)),
             const SizedBox(height: 8),
             _ToneSelector(
               value: _tone,
@@ -267,9 +268,9 @@ class _AiPersonaScreenState extends ConsumerState<AiPersonaScreen> {
             Center(
               child: TextButton(
                 onPressed: () => _reset(context),
-                child: const Text(
-                  'Reset to Default',
-                  style: TextStyle(color: Colors.redAccent),
+                child: Text(
+                  context.l10n.aiPersonaResetToDefault,
+                  style: const TextStyle(color: Colors.redAccent),
                 ),
               ),
             ),

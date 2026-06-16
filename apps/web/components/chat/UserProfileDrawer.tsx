@@ -2,8 +2,13 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import Image from 'next/image'
+import { useTranslations, useLocale } from 'next-intl'
 import { toast } from 'sonner'
-import { MessageCircle, UserPlus, UserMinus, ShieldOff, ShieldAlert, Loader2 } from 'lucide-react'
+import {
+  MessageCircle, UserPlus, UserMinus, ShieldOff, ShieldAlert, Loader2,
+  Cake, Phone, Users,
+} from 'lucide-react'
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
@@ -11,6 +16,7 @@ import { Separator } from '@/components/ui/separator'
 import { useUser } from '@/lib/hooks/use-user'
 import { useUserStatus } from '@/lib/hooks/use-user-status'
 import { useRelationship } from '@/lib/hooks/use-relationship'
+import { useAuthStore } from '@/lib/store/auth.store'
 import { friendsService } from '@/lib/api/friends'
 import { chatService } from '@/lib/api/chat'
 import { absoluteMediaUrl } from '@/lib/media'
@@ -24,9 +30,30 @@ function getInitial(name: string): string {
   return name[0]?.toUpperCase() ?? '?'
 }
 
+function genderLabel(gender: string, t: (k: string) => string): string | null {
+  switch (gender) {
+    case 'male': return t('genderMale')
+    case 'female': return t('genderFemale')
+    case 'other': return t('genderOther')
+    default: return null
+  }
+}
+
+function InfoRow({ icon, value }: { icon: React.ReactNode; value: string }) {
+  return (
+    <div className="flex items-center gap-2.5 text-sm">
+      <span className="text-muted-foreground shrink-0">{icon}</span>
+      <span className="truncate">{value}</span>
+    </div>
+  )
+}
+
 export function UserProfileDrawer({ userId, onClose }: Props) {
   const router = useRouter()
+  const t = useTranslations('chat')
+  const locale = useLocale()
   const [actionLoading, setActionLoading] = useState(false)
+  const currentUserId = useAuthStore((s) => s.user?.id)
 
   const { data: user, isLoading } = useUser(userId ?? undefined)
   const { data: status } = useUserStatus(userId ?? undefined)
@@ -54,7 +81,7 @@ export function UserProfileDrawer({ userId, onClose }: Props) {
           }
         } catch { /* fall through */ }
       }
-      toast.error('Không thể mở cuộc trò chuyện')
+      toast.error(t('openConversationError'))
     } finally {
       setActionLoading(false)
     }
@@ -66,17 +93,17 @@ export function UserProfileDrawer({ userId, onClose }: Props) {
     try {
       if (relationship.friendStatus === 'accepted') {
         await friendsService.removeFriend(userId)
-        toast.success('Đã xoá bạn bè')
+        toast.success(t('friendRemoved'))
       } else if (relationship.friendStatus === 'none') {
         await friendsService.sendRequest(userId)
-        toast.success('Đã gửi lời mời kết bạn')
+        toast.success(t('friendRequestSent'))
       } else if (relationship.friendStatus === 'incoming') {
         await friendsService.acceptRequest(userId)
-        toast.success('Đã chấp nhận lời mời kết bạn')
+        toast.success(t('friendRequestAccepted'))
       }
       refetchRel()
     } catch {
-      toast.error('Thao tác thất bại')
+      toast.error(t('actionFailed'))
     } finally {
       setActionLoading(false)
     }
@@ -88,31 +115,41 @@ export function UserProfileDrawer({ userId, onClose }: Props) {
     try {
       if (relationship.iBlocked) {
         await unblock(userId)
-        toast.success('Đã bỏ chặn')
+        toast.success(t('userUnblocked'))
       } else {
         await block(userId)
-        toast.success('Đã chặn người dùng')
+        toast.success(t('userBlocked'))
       }
       refetchRel()
     } catch {
-      toast.error('Thao tác thất bại')
+      toast.error(t('actionFailed'))
     } finally {
       setActionLoading(false)
     }
   }
 
-  const displayName = user?.displayName ?? 'Người dùng'
+  const displayName = user?.displayName ?? t('userFallback')
   const friendLabel =
-    relationship?.friendStatus === 'accepted' ? 'Xoá bạn bè'
-    : relationship?.friendStatus === 'incoming' ? 'Chấp nhận kết bạn'
-    : relationship?.friendStatus === 'outgoing' ? 'Đã gửi lời mời'
-    : 'Kết bạn'
+    relationship?.friendStatus === 'accepted' ? t('friendRemove')
+    : relationship?.friendStatus === 'incoming' ? t('friendAccept')
+    : relationship?.friendStatus === 'outgoing' ? t('friendRequested')
+    : t('friendAdd')
+
+  // The auth-service already strips dob/phone/gender server-side when the other
+  // user has hideInfo enabled — but we also gate on the flag defensively so a
+  // viewer never sees private info even if the server returned it.
+  const isOwnProfile = !!userId && userId === currentUserId
+  const showInfo = isOwnProfile || !user?.hideInfo
+  const dobText = user?.dateOfBirth
+    ? new Date(user.dateOfBirth).toLocaleDateString(locale, { day: '2-digit', month: '2-digit', year: 'numeric' })
+    : null
+  const genderText = user?.gender ? genderLabel(user.gender, t) : null
 
   return (
     <Sheet open={!!userId} onOpenChange={(o) => !o && onClose()}>
       <SheetContent side="right" className="w-72 sm:w-80 overflow-y-auto">
         <SheetHeader>
-          <SheetTitle>Hồ sơ</SheetTitle>
+          <SheetTitle>{t('profileTitle')}</SheetTitle>
         </SheetHeader>
 
         {isLoading ? (
@@ -124,10 +161,12 @@ export function UserProfileDrawer({ userId, onClose }: Props) {
             {/* Cover photo backdrop (view-only — no edit affordance for other users) */}
             <div className="relative -mx-6 -mt-2 h-20 overflow-hidden">
               {user?.coverPhoto ? (
-                <img
+                <Image
                   src={absoluteMediaUrl(user.coverPhoto)}
                   alt=""
-                  className="absolute inset-0 size-full object-cover"
+                  fill
+                  unoptimized
+                  className="object-cover"
                 />
               ) : (
                 <div className="absolute inset-0 bg-gradient-to-br from-pon-cyan via-pon-peach to-pon-pink opacity-60" />
@@ -149,14 +188,26 @@ export function UserProfileDrawer({ userId, onClose }: Props) {
               </div>
               <p className="font-semibold text-base">{displayName}</p>
               <p className="text-xs text-muted-foreground">
-                {status?.online ? 'Đang hoạt động' : 'Ngoại tuyến'}
+                {status?.online ? t('online') : t('offline')}
               </p>
-              {user?.bio && (
+              {user?.bio && showInfo && (
                 <p className="text-sm text-center text-muted-foreground max-w-[200px] leading-snug">
                   {user.bio}
                 </p>
               )}
             </div>
+
+            {/* Profile info — gated behind the other user's privacy flag */}
+            {showInfo && (dobText || user?.phoneNumber || genderText) && (
+              <>
+                <Separator />
+                <div className="flex flex-col gap-2 px-1">
+                  {dobText && <InfoRow icon={<Cake className="size-4" />} value={dobText} />}
+                  {user?.phoneNumber && <InfoRow icon={<Phone className="size-4" />} value={user.phoneNumber} />}
+                  {genderText && <InfoRow icon={<Users className="size-4" />} value={genderText} />}
+                </div>
+              </>
+            )}
 
             <Separator />
 
@@ -168,7 +219,7 @@ export function UserProfileDrawer({ userId, onClose }: Props) {
                 disabled={actionLoading}
               >
                 <MessageCircle className="size-4" />
-                Nhắn tin
+                {t('sendMessageAction')}
               </Button>
 
               {relationship && !relationship.blockedMe && (
@@ -201,12 +252,12 @@ export function UserProfileDrawer({ userId, onClose }: Props) {
                 {relationship?.iBlocked ? (
                   <>
                     <ShieldOff className="size-4" />
-                    Bỏ chặn
+                    {t('unblockAction')}
                   </>
                 ) : (
                   <>
                     <ShieldAlert className="size-4" />
-                    Chặn người dùng
+                    {t('blockAction')}
                   </>
                 )}
               </Button>

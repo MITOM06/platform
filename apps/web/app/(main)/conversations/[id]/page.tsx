@@ -1,9 +1,9 @@
 'use client'
 
 import { use, useEffect, useMemo, useRef, useState, useCallback } from 'react'
-import { useQueryClient, type InfiniteData } from '@tanstack/react-query'
+import { useTranslations } from 'next-intl'
+import { useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
-import { Loader2, MessageCircle } from 'lucide-react'
 import { useAuthStore } from '@/lib/store/auth.store'
 import { stompService } from '@/lib/stomp/client'
 import { chatService } from '@/lib/api/chat'
@@ -12,39 +12,19 @@ import { useConversation } from '@/lib/hooks/use-conversation'
 import { useUser } from '@/lib/hooks/use-user'
 import { useRelationship } from '@/lib/hooks/use-relationship'
 import { ConversationHeader } from '@/components/chat/ConversationHeader'
-import { MessageBubble } from '@/components/chat/MessageBubble'
+import { MessageList } from '@/components/chat/MessageList'
 import { MessageInput } from '@/components/chat/MessageInput'
 import { MessageSearchPanel } from '@/components/chat/MessageSearchPanel'
 import { StrangerRequestBanner } from '@/components/chat/StrangerRequestBanner'
-import { ChatTypingIndicator } from '@/components/chat/ChatTypingIndicator'
 import { BlockedComposerNotice } from '@/components/chat/BlockedComposerNotice'
 import { AiTraceModal } from '@/components/chat/AiTraceModal'
 import { ForwardMessageModal } from '@/components/chat/ForwardMessageModal'
-import { Skeleton } from '@/components/ui/skeleton'
 import { cn } from '@/lib/utils'
-import { absoluteMediaUrl } from '@/lib/media'
+import { useWallpaper } from '@/lib/hooks/use-wallpaper'
+import { useMessageCache } from '@/lib/hooks/use-message-cache'
 import { applyNicknameSystemMessage } from '@/lib/nicknames'
 import { applyQuickReactionSystemMessage } from '@/lib/quick-reaction'
-import type { Message, MessageType, MessagesResponse, StompEvent } from '@/lib/api/types'
-
-function formatSeparatorDate(dateStr: string): string {
-  const date = new Date(dateStr)
-  const today = new Date()
-  const yesterday = new Date(today)
-  yesterday.setDate(yesterday.getDate() - 1)
-
-  if (date.toDateString() === today.toDateString()) {
-    return 'Hôm nay'
-  }
-  if (date.toDateString() === yesterday.toDateString()) {
-    return 'Hôm qua'
-  }
-  return date.toLocaleDateString('vi-VN', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-  })
-}
+import type { Message, MessageType, StompEvent } from '@/lib/api/types'
 
 interface Props {
   params: Promise<{ id: string }>
@@ -52,7 +32,7 @@ interface Props {
 
 // STOMP events use UPPER_CASE types; regular messages use lowercase types
 const STOMP_EVENT_TYPES = new Set([
-  'MESSAGE_UPDATED', 'MESSAGE_RECALLED', 'REACTION_UPDATED',
+  'MESSAGE_UPDATED', 'MESSAGE_RECALLED', 'MESSAGE_READ', 'REACTION_UPDATED',
   'PINNED_MESSAGE', 'CONVERSATION_UPDATED',
   'AI_STREAM_CHUNK', 'AI_STREAM_DONE', 'AI_STREAM_ERROR', 'AI_TOOL_CALL',
 ])
@@ -61,23 +41,9 @@ function isStompEvent(parsed: Record<string, unknown>): parsed is StompEvent {
   return typeof parsed.type === 'string' && STOMP_EVENT_TYPES.has(parsed.type)
 }
 
-function MessageSkeletons() {
-  return (
-    <div className="space-y-3 py-4 px-4">
-      {[60, 80, 50, 90, 65].map((w, i) => (
-        <div key={i} className={`flex ${i % 2 === 0 ? 'justify-start' : 'justify-end'}`}>
-          <Skeleton
-            className="h-9 rounded-2xl"
-            style={{ width: `${w}%`, maxWidth: '320px' }}
-          />
-        </div>
-      ))}
-    </div>
-  )
-}
-
 export default function ConversationPage({ params }: Props) {
   const { id } = use(params)
+  const t = useTranslations('chat')
   const queryClient = useQueryClient()
   const currentUser = useAuthStore((s) => s.user)
   const bottomRef = useRef<HTMLDivElement>(null)
@@ -113,75 +79,7 @@ export default function ConversationPage({ params }: Props) {
   const isInitiator = conversation?.createdBy === currentUser?.id
   const isBlocked = !!(relationship?.iBlocked || relationship?.blockedMe)
 
-  const [wallpaper, setWallpaper] = useState<string>('default')
-
-  useEffect(() => {
-    const loadWallpaper = () => {
-      const stored = localStorage.getItem(`wallpaper-${id}`)
-      setWallpaper(stored || 'default')
-    }
-    loadWallpaper()
-    window.addEventListener('wallpaper-changed', loadWallpaper)
-    return () => window.removeEventListener('wallpaper-changed', loadWallpaper)
-  }, [id])
-
-  const WALLPAPER_CLASSES: Record<string, string> = {
-    default: 'bg-background',
-    sunset: 'bg-gradient-to-br from-orange-400/10 via-pink-500/5 to-purple-600/10 dark:from-orange-950/20 dark:via-pink-950/10 dark:to-purple-950/20',
-    midnight: 'bg-gradient-to-br from-indigo-950/20 via-slate-900/40 to-purple-950/30 dark:from-indigo-950/40 dark:via-slate-950/60 dark:to-purple-950/50',
-    sweet_pink: 'bg-gradient-to-br from-pink-300/10 via-rose-400/5 to-red-400/10 dark:from-pink-950/20 dark:via-rose-950/10 dark:to-red-950/20',
-    neon_teal: 'bg-gradient-to-br from-teal-950/20 via-cyan-900/30 to-emerald-950/20 dark:from-teal-950/40 dark:via-cyan-950/50 dark:to-emerald-950/40',
-    dark_shadow: 'bg-gradient-to-br from-black/20 via-zinc-900/40 to-zinc-950/30 dark:from-black/65 dark:via-zinc-950/70 dark:to-zinc-950/80',
-  }
-
-  // Resolve a stored wallpaper value into a class (presets) or an inline image
-  // style. Format mirrors Flutter (chat_wallpaper_dialog.dart): '' / 'default'
-  // = default; 'preset:<id>' = gradient preset; 'http...#fit=cover|contain|fill'
-  // = uploaded image. Old flat keys (e.g. 'midnight') stay supported.
-  const PRESET_TO_CLASS: Record<string, string> = {
-    midnight_glow: 'midnight',
-    neon_teal: 'neon_teal',
-    sunset: 'sunset',
-    sweet_pink: 'sweet_pink',
-    dark_shadow: 'dark_shadow',
-  }
-  const resolveWallpaper = (
-    raw: string,
-  ): { className?: string; style?: React.CSSProperties; isImage: boolean } => {
-    if (!raw || raw === 'default') {
-      return { className: WALLPAPER_CLASSES.default, isImage: false }
-    }
-    if (!raw.startsWith('preset:')) {
-      // Parse `<url>#fit=<fit>&scale=<n>` (backward compatible with `#fit=` only).
-      const hashIdx = raw.indexOf('#')
-      const url = hashIdx === -1 ? raw : raw.slice(0, hashIdx)
-      const params = hashIdx === -1 ? new URLSearchParams() : new URLSearchParams(raw.slice(hashIdx + 1))
-      const fit = params.get('fit')
-      const scaleRaw = Number(params.get('scale'))
-      const scale = Number.isFinite(scaleRaw) && scaleRaw > 0 ? scaleRaw : 100
-      const bgSize = fit === 'fill'
-        ? '100% 100%'
-        : fit === 'contain'
-          ? 'contain'
-          // cover at default scale → use the `cover` keyword; a custom scale
-          // overrides it with an explicit percentage.
-          : scale === 100
-            ? 'cover'
-            : `${scale}%`
-      return {
-        style: {
-          backgroundImage: `url(${absoluteMediaUrl(url)})`,
-          backgroundSize: bgSize,
-          backgroundPosition: 'center',
-        },
-        isImage: true,
-      }
-    }
-    const id = raw.startsWith('preset:') ? raw.slice('preset:'.length) : raw
-    const key = PRESET_TO_CLASS[id] ?? id
-    return { className: WALLPAPER_CLASSES[key] ?? WALLPAPER_CLASSES.default, isImage: false }
-  }
-  const wp = resolveWallpaper(wallpaper)
+  const wp = useWallpaper(id)
 
   const { data, isLoading, isError, fetchNextPage, hasNextPage, isFetchingNextPage } =
     useMessages(id)
@@ -234,52 +132,7 @@ export default function ConversationPage({ params }: Props) {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages.length, aiStreamContent])
 
-  // Helper to patch a single message in the cache
-  const patchMessage = useCallback(
-    (messageId: string, patch: Partial<Message>) => {
-      queryClient.setQueryData<InfiniteData<MessagesResponse>>(
-        ['messages', id],
-        (old) => {
-          if (!old) return old
-          return {
-            ...old,
-            pages: old.pages.map((page) => ({
-              ...page,
-              content: page.content.map((m) => m.id === messageId ? { ...m, ...patch } : m),
-            })),
-          }
-        },
-      )
-    },
-    [id, queryClient],
-  )
-
-  // Helper to append a new message to page[0]
-  const appendMessage = useCallback(
-    (incoming: Message) => {
-      queryClient.setQueryData<InfiniteData<MessagesResponse>>(
-        ['messages', id],
-        (old) => {
-          if (!old) {
-            return {
-              pages: [{ content: [incoming], nextCursorId: null, hasMore: false }],
-              pageParams: [undefined],
-            }
-          }
-          const allIds = new Set(old.pages.flatMap((p) => p.content.map((m) => m.id)))
-          if (allIds.has(incoming.id)) return old
-          return {
-            ...old,
-            pages: old.pages.map((page, i) =>
-              i === 0 ? { ...page, content: [incoming, ...page.content] } : page,
-            ),
-          }
-        },
-      )
-      queryClient.invalidateQueries({ queryKey: ['conversations'] })
-    },
-    [id, queryClient],
-  )
+  const { patchMessage, markMessageRead, appendMessage } = useMessageCache(id)
 
   // Subscribe to STOMP for real-time messages + events + typing
   useEffect(() => {
@@ -305,6 +158,9 @@ export default function ConversationPage({ params }: Props) {
               case 'MESSAGE_RECALLED':
                 patchMessage(parsed.messageId, { recalled: true })
                 break
+              case 'MESSAGE_READ':
+                markMessageRead(parsed.messageId, parsed.readerId)
+                break
               case 'REACTION_UPDATED':
                 patchMessage(parsed.messageId, { reactions: parsed.reactions })
                 break
@@ -323,7 +179,7 @@ export default function ConversationPage({ params }: Props) {
                 break
               case 'AI_STREAM_ERROR':
                 setAiStreamContent(null)
-                toast.error(String(parsed.error ?? 'AI gặp lỗi, vui lòng thử lại'))
+                toast.error(String(parsed.error ?? t('aiError')))
                 break
               case 'AI_TOOL_CALL':
                 // tool call indicator is transient — no persistent state needed
@@ -364,12 +220,33 @@ export default function ConversationPage({ params }: Props) {
       messageSub?.unsubscribe()
       typingSub?.unsubscribe()
     }
-  }, [id, queryClient, currentUser?.id, patchMessage, appendMessage])
+  }, [id, queryClient, currentUser?.id, patchMessage, appendMessage, markMessageRead, t])
 
   // Mark conversation as read on open
   useEffect(() => {
     chatService.markConversationRead(id).catch(() => {})
   }, [id])
+
+  // Per-message read receipts (parity with mobile _markLoadedAsRead): publish
+  // /app/chat.read for messages from others so the sender's seen-tick flips on
+  // in realtime. The server persists readBy + broadcasts MESSAGE_READ.
+  const sentReadRef = useRef<Set<string>>(new Set())
+  useEffect(() => {
+    if (!currentUser) return
+    const sent = sentReadRef.current
+    stompService.waitForConnect().then(() => {
+      for (const m of messages) {
+        if (
+          m.senderId !== currentUser.id &&
+          !sent.has(m.id) &&
+          !(m.readBy ?? []).includes(currentUser.id)
+        ) {
+          sent.add(m.id)
+          stompService.publish('/app/chat.read', { conversationId: id, messageId: m.id })
+        }
+      }
+    })
+  }, [id, messages, currentUser])
 
   const handleTypingChange = useCallback(
     (isTyping: boolean) => {
@@ -388,7 +265,7 @@ export default function ConversationPage({ params }: Props) {
       appendMessage(sent)
       setReplyingTo(null)
     } catch {
-      toast.error('Không thể gửi tin nhắn')
+      toast.error(t('sendMessageError'))
     }
   }
 
@@ -399,7 +276,7 @@ export default function ConversationPage({ params }: Props) {
       // STOMP MESSAGE_UPDATED will update the cache
       setEditingMessage(null)
     } catch {
-      toast.error('Không thể chỉnh sửa tin nhắn')
+      toast.error(t('editMessageError'))
     }
   }
 
@@ -429,7 +306,7 @@ export default function ConversationPage({ params }: Props) {
         <StrangerRequestBanner
           conversationId={id}
           otherUserId={otherUserId!}
-          otherUserName={conversation?.name || otherUser?.displayName || 'Người dùng'}
+          otherUserName={conversation?.name || otherUser?.displayName || t('userFallback')}
           onAccepted={() => queryClient.invalidateQueries({ queryKey: ['conversation', id] })}
         />
       )}
@@ -453,95 +330,32 @@ export default function ConversationPage({ params }: Props) {
           <div className="absolute -bottom-40 -right-40 size-96 rounded-full bg-pon-peach blur-[128px] animate-pulse duration-[8000ms]" />
         </div>
 
-        <div className="relative z-10 space-y-2">
-          <div ref={topSentinelRef} className="h-1" />
-
-          {isFetchingNextPage && (
-            <div className="flex justify-center py-2">
-              <Loader2 className="size-4 animate-spin text-muted-foreground" />
-            </div>
-          )}
-
-          {(isLoading || !currentUser) && <MessageSkeletons />}
-
-          {isError && (
-            <div className="flex justify-center py-8 text-sm text-destructive">
-              Không thể tải tin nhắn
-            </div>
-          )}
-
-          {!isLoading && currentUser && !isError && messages.length === 0 && (
-            <div className="flex flex-col items-center justify-center h-full min-h-[300px] gap-3 text-muted-foreground">
-              <MessageCircle className="size-10 opacity-30" />
-              <p className="text-sm">Chưa có tin nhắn. Hãy bắt đầu cuộc trò chuyện!</p>
-            </div>
-          )}
-
-          {!isLoading && currentUser &&
-            (() => {
-              let lastDateStr = ''
-              return messages.map((msg) => {
-                const msgDate = new Date(msg.createdAt)
-                const msgDateStr = msgDate.toDateString()
-                const showSeparator = msgDateStr !== lastDateStr
-                lastDateStr = msgDateStr
-
-                return (
-                  <div key={msg.id} className="space-y-2" id={`message-${msg.id}`}>
-                    {showSeparator && (
-                      <div className="flex justify-center my-4 select-none">
-                        <span className="text-[11px] bg-muted/80 backdrop-blur-xs text-muted-foreground font-semibold px-3 py-1 rounded-full border shadow-xs">
-                          {formatSeparatorDate(msg.createdAt)}
-                        </span>
-                      </div>
-                    )}
-                      <MessageBubble
-                        message={msg}
-                        isOwn={msg.senderId === currentUser.id}
-                        currentUserId={currentUser.id}
-                        conversationId={id}
-                        isPinned={pinnedMessages.includes(msg.id)}
-                        isGroup={isGroup}
-                        onEdit={setEditingMessage}
-                        onForward={setForwardMessage}
-                        onReply={setReplyingTo}
-                        onAiTrace={setTraceMessageId}
-                        onOptimisticUpdate={handleOptimisticUpdate}
-                      />
-                  </div>
-                )
-              })
-            })()}
-
-          {typingUserIds.length > 0 && currentUser && !typingUserIds.includes(currentUser.id) && (
-            <ChatTypingIndicator />
-          )}
-
-          {aiStreamContent !== null && (
-            <div className="flex flex-row items-end gap-1">
-              <div className="max-w-[70%] rounded-[24px] rounded-tl-none px-4 py-2.5 text-sm bg-muted/70 border border-border/50 shadow-xs">
-                <p className="whitespace-pre-wrap leading-relaxed">{aiStreamContent || '…'}</p>
-                <div className="flex gap-1 mt-1.5">
-                  {[0, 1, 2].map((i) => (
-                    <span
-                      key={i}
-                      className="inline-block size-1.5 rounded-full bg-primary/60 animate-bounce"
-                      style={{ animationDelay: `${i * 0.15}s` }}
-                    />
-                  ))}
-                </div>
-              </div>
-            </div>
-          )}
-
-          <div ref={bottomRef} />
-        </div>
+        <MessageList
+          messages={messages}
+          currentUserId={currentUser?.id}
+          conversationId={id}
+          otherUserId={otherUserId}
+          pinnedMessages={pinnedMessages}
+          isGroup={isGroup}
+          isLoading={isLoading}
+          isError={isError}
+          isFetchingNextPage={isFetchingNextPage}
+          typingUserIds={typingUserIds}
+          aiStreamContent={aiStreamContent}
+          topSentinelRef={topSentinelRef}
+          bottomRef={bottomRef}
+          onEdit={setEditingMessage}
+          onForward={setForwardMessage}
+          onReply={setReplyingTo}
+          onAiTrace={setTraceMessageId}
+          onOptimisticUpdate={handleOptimisticUpdate}
+        />
       </div>
 
       {isBlocked ? (
         <BlockedComposerNotice
           otherUserId={otherUserId!}
-          otherUserName={conversation?.name || otherUser?.displayName || 'Người dùng'}
+          otherUserName={conversation?.name || otherUser?.displayName || t('userFallback')}
           iBlocked={relationship!.iBlocked}
           blockedMe={relationship!.blockedMe}
           onUnblocked={refetchRelationship}

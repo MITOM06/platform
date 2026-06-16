@@ -219,6 +219,7 @@ class ChatScreenAppBar extends ConsumerWidget implements PreferredSizeWidget {
                 'targetName': displayName,
                 'conversationId': conversationId,
                 'isCaller': true,
+                'isVideo': false,
               }),
             ),
             IconButton(
@@ -228,17 +229,22 @@ class ChatScreenAppBar extends ConsumerWidget implements PreferredSizeWidget {
                 'targetName': displayName,
                 'conversationId': conversationId,
                 'isCaller': true,
+                'isVideo': true,
               }),
             ),
           ],
           if (isGroup) ...[
             IconButton(
               icon: const Icon(Icons.call_outlined, color: Colors.white, size: 22),
-              onPressed: () => _showGroupCallPicker(context, ref, conv, currentUserId),
+              onPressed: () => _showGroupCallPicker(
+                  context, ref, conv, currentUserId,
+                  isVideo: false),
             ),
             IconButton(
               icon: const Icon(Icons.videocam_outlined, color: Colors.white, size: 24),
-              onPressed: () => _showGroupCallPicker(context, ref, conv, currentUserId),
+              onPressed: () => _showGroupCallPicker(
+                  context, ref, conv, currentUserId,
+                  isVideo: true),
             ),
           ],
           Builder(
@@ -294,8 +300,9 @@ class ChatScreenAppBar extends ConsumerWidget implements PreferredSizeWidget {
     BuildContext context,
     WidgetRef ref,
     ConversationModel? conv,
-    String currentUserId,
-  ) {
+    String currentUserId, {
+    bool isVideo = true,
+  }) {
     if (conv == null) return;
     final others = conv.participants.where((p) => p != currentUserId).toList();
     showDialog(
@@ -303,6 +310,7 @@ class ChatScreenAppBar extends ConsumerWidget implements PreferredSizeWidget {
       builder: (ctx) => _GroupCallPickerDialog(
         others: others,
         conversationId: conv.id,
+        isVideo: isVideo,
       ),
     );
   }
@@ -311,10 +319,12 @@ class ChatScreenAppBar extends ConsumerWidget implements PreferredSizeWidget {
 class _GroupCallPickerDialog extends ConsumerWidget {
   final List<String> others;
   final String conversationId;
+  final bool isVideo;
 
   const _GroupCallPickerDialog({
     required this.others,
     required this.conversationId,
+    this.isVideo = true,
   });
 
   @override
@@ -347,6 +357,7 @@ class _GroupCallPickerDialog extends ConsumerWidget {
                   'targetName': name,
                   'conversationId': conversationId,
                   'isCaller': true,
+                  'isVideo': isVideo,
                 });
               },
             );

@@ -604,6 +604,18 @@ class AppLocalizationsZh extends AppLocalizations {
   String get friendRequestPending => '待处理';
 
   @override
+  String get friendsTabSearch => '搜索';
+
+  @override
+  String get declineFriend => '拒绝';
+
+  @override
+  String get searchUsersPrompt => '搜索可添加为好友的用户';
+
+  @override
+  String get noSearchResults => '未找到用户';
+
+  @override
   String get unfriend => '删除好友';
 
   @override
@@ -1088,18 +1100,17 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String agreeToTerms(String privacyPolicy, String termsOfService) {
-    return 'I agree to the $privacyPolicy and $termsOfService';
+    return '我同意$privacyPolicy和$termsOfService';
   }
 
   @override
-  String get privacyPolicy => 'Privacy Policy';
+  String get privacyPolicy => '隐私政策';
 
   @override
-  String get termsOfService => 'Terms of Service';
+  String get termsOfService => '服务条款';
 
   @override
-  String get valMustAgreeTerms =>
-      'You must agree to the Terms of Service to register';
+  String get valMustAgreeTerms => '您必须同意服务条款才能注册';
 
   @override
   String get youColon => 'You:';
@@ -1127,4 +1138,143 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get wallpaperPreviewOutgoing => 'Looks great 🎉';
+
+  @override
+  String get errCannotOpenLink => '无法打开链接';
+
+  @override
+  String sysNicknameClearedSelf(String actorName) {
+    return '$actorName清除了自己的昵称';
+  }
+
+  @override
+  String sysNicknameClearedOther(String actorName, String targetName) {
+    return '$actorName清除了$targetName的昵称';
+  }
+
+  @override
+  String sysNicknameSetSelf(String actorName, String nickname) {
+    return '$actorName将自己的昵称设置为$nickname';
+  }
+
+  @override
+  String sysNicknameSetOther(
+      String actorName, String targetName, String nickname) {
+    return '$actorName将$targetName的昵称设置为$nickname';
+  }
+
+  @override
+  String sysThemeChanged(String actorName) {
+    return '$actorName更改了聊天主题';
+  }
+
+  @override
+  String sysQuickReactionChanged(String actorName, String emoji) {
+    return '$actorName将快捷表情更改为$emoji';
+  }
+
+  @override
+  String sysGroupCreated(String actorName) {
+    return '$actorName创建了群组';
+  }
+
+  @override
+  String sysMembersAdded(String actorName) {
+    return '$actorName添加了新成员';
+  }
+
+  @override
+  String sysMemberLeft(String actorName) {
+    return '$actorName离开了群组';
+  }
+
+  @override
+  String sysMemberRemoved(String actorName) {
+    return '$actorName移除了一位成员';
+  }
+
+  @override
+  String sysMemberJoined(String actorName) {
+    return '$actorName加入了群组';
+  }
+
+  @override
+  String systemVideoCallEnded(String duration) {
+    return '视频通话已结束 · $duration';
+  }
+
+  @override
+  String systemVoiceCallEnded(String duration) {
+    return '语音通话已结束 · $duration';
+  }
+
+  @override
+  String get systemVideoCallMissed => '未接视频通话';
+
+  @override
+  String get systemVoiceCallMissed => '未接语音通话';
+
+  @override
+  String get errActionFailed => '出现错误，请重试。';
+
+  @override
+  String get kbDeleteFailed => '删除失败，请重试';
+
+  @override
+  String get exploreJoinFailed => '加入频道失败';
+
+  @override
+  String get unnamedChannel => '未命名';
+
+  @override
+  String get actionOk => '确定';
+
+  @override
+  String get reminderDeleteConfirm => '删除此提醒？';
+
+  @override
+  String get profileNameLabel => '姓名';
+
+  @override
+  String get genderMale => '男';
+
+  @override
+  String get genderFemale => '女';
+
+  @override
+  String get genderOther => '其他';
+
+  @override
+  String get aiPersonaSaved => '已保存';
+
+  @override
+  String get aiPersonaResetTitle => '重置 AI 角色';
+
+  @override
+  String get aiPersonaResetConfirm => '将 AI 角色重置为默认设置？';
+
+  @override
+  String get aiPersonaToneLabel => '语气';
+
+  @override
+  String get aiPersonaResetToDefault => '重置为默认';
+
+  @override
+  String tokenUsagePercentUsed(String percent) {
+    return '本月已使用 $percent%';
+  }
+
+  @override
+  String tokenUsageCostUsd(String amount) {
+    return '$amount 美元';
+  }
+
+  @override
+  String get notifications => '通知';
+
+  @override
+  String get notificationsEnabled => '通知已开启';
+
+  @override
+  String get notificationsDisabled => '通知已关闭';
 }

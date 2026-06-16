@@ -611,6 +611,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String get friendRequestPending => 'Pending';
 
   @override
+  String get friendsTabSearch => 'Search';
+
+  @override
+  String get declineFriend => 'Decline';
+
+  @override
+  String get searchUsersPrompt => 'Search for people to add as friends';
+
+  @override
+  String get noSearchResults => 'No users found';
+
+  @override
   String get unfriend => 'Unfriend';
 
   @override
@@ -1142,4 +1154,144 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get wallpaperPreviewOutgoing => 'Looks great 🎉';
+
+  @override
+  String get errCannotOpenLink => 'Couldn\'t open the link';
+
+  @override
+  String sysNicknameClearedSelf(String actorName) {
+    return '$actorName cleared their own nickname';
+  }
+
+  @override
+  String sysNicknameClearedOther(String actorName, String targetName) {
+    return '$actorName cleared the nickname of $targetName';
+  }
+
+  @override
+  String sysNicknameSetSelf(String actorName, String nickname) {
+    return '$actorName set their nickname to $nickname';
+  }
+
+  @override
+  String sysNicknameSetOther(
+      String actorName, String targetName, String nickname) {
+    return '$actorName set the nickname of $targetName to $nickname';
+  }
+
+  @override
+  String sysThemeChanged(String actorName) {
+    return '$actorName changed the chat theme';
+  }
+
+  @override
+  String sysQuickReactionChanged(String actorName, String emoji) {
+    return '$actorName changed the quick reaction to $emoji';
+  }
+
+  @override
+  String sysGroupCreated(String actorName) {
+    return '$actorName created the group';
+  }
+
+  @override
+  String sysMembersAdded(String actorName) {
+    return '$actorName added new members';
+  }
+
+  @override
+  String sysMemberLeft(String actorName) {
+    return '$actorName left the group';
+  }
+
+  @override
+  String sysMemberRemoved(String actorName) {
+    return '$actorName removed a member';
+  }
+
+  @override
+  String sysMemberJoined(String actorName) {
+    return '$actorName joined the group';
+  }
+
+  @override
+  String systemVideoCallEnded(String duration) {
+    return 'Video call ended · $duration';
+  }
+
+  @override
+  String systemVoiceCallEnded(String duration) {
+    return 'Voice call ended · $duration';
+  }
+
+  @override
+  String get systemVideoCallMissed => 'Missed video call';
+
+  @override
+  String get systemVoiceCallMissed => 'Missed voice call';
+
+  @override
+  String get errActionFailed => 'Something went wrong. Please try again.';
+
+  @override
+  String get kbDeleteFailed => 'Delete failed, please try again';
+
+  @override
+  String get exploreJoinFailed => 'Failed to join channel';
+
+  @override
+  String get unnamedChannel => 'Unnamed';
+
+  @override
+  String get actionOk => 'OK';
+
+  @override
+  String get reminderDeleteConfirm => 'Delete this reminder?';
+
+  @override
+  String get profileNameLabel => 'Name';
+
+  @override
+  String get genderMale => 'Male';
+
+  @override
+  String get genderFemale => 'Female';
+
+  @override
+  String get genderOther => 'Other';
+
+  @override
+  String get aiPersonaSaved => 'Saved';
+
+  @override
+  String get aiPersonaResetTitle => 'Reset AI persona';
+
+  @override
+  String get aiPersonaResetConfirm =>
+      'Reset the AI persona to its default settings?';
+
+  @override
+  String get aiPersonaToneLabel => 'Tone';
+
+  @override
+  String get aiPersonaResetToDefault => 'Reset to Default';
+
+  @override
+  String tokenUsagePercentUsed(String percent) {
+    return '$percent% used this month';
+  }
+
+  @override
+  String tokenUsageCostUsd(String amount) {
+    return '\$$amount';
+  }
+
+  @override
+  String get notifications => 'Notifications';
+
+  @override
+  String get notificationsEnabled => 'Notifications are enabled';
+
+  @override
+  String get notificationsDisabled => 'Notifications are disabled';
 }

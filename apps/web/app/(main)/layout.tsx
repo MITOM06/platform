@@ -1,11 +1,13 @@
 'use client'
 
 import { useEffect } from 'react'
+import { useQueryClient } from '@tanstack/react-query'
 import { useRouter, usePathname } from 'next/navigation'
 import { toast } from 'sonner'
 import { LogOut, Moon, Sun, User, Compass, Contact, Settings, Plus, MessageSquarePlus, Users } from 'lucide-react'
 import Link from 'next/link'
 import { useTheme } from 'next-themes'
+import { useTranslations } from 'next-intl'
 import { useAuthStore } from '@/lib/store/auth.store'
 import { Button } from '@/components/ui/button'
 import { stompService } from '@/lib/stomp/client'
@@ -62,10 +64,12 @@ interface NotificationPayload {
 export default function MainLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter()
   const pathname = usePathname()
+  const queryClient = useQueryClient()
   const clearAuth = useAuthStore((s) => s.clearAuth)
   const user = useAuthStore((s) => s.user)
   const accessToken = useAuthStore((s) => s.accessToken)
   const { theme, setTheme } = useTheme()
+  const t = useTranslations('layout')
 
   const isConversationOpen = /^\/conversations\/.+/.test(pathname)
 
@@ -83,16 +87,20 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
           if (payload.type !== 'NEW_MESSAGE' && payload.type !== 'MENTIONED_YOU') {
             return
           }
+          // Refresh the sidebar (last-message preview, timestamp, unread badge)
+          // for conversations that aren't currently open — the open one is kept
+          // live by the thread's own STOMP subscription.
+          queryClient.invalidateQueries({ queryKey: ['conversations'] })
           // Don't notify for the conversation already open on screen.
           if (window.location.pathname === `/conversations/${payload.conversationId}`) {
             return
           }
 
-          const title = `Tin nhắn mới từ ${payload.senderName}`
+          const title = t('notificationTitle', { name: payload.senderName })
           const body =
             payload.messageType && payload.messageType !== 'text'
-              ? '📎 Đã gửi một tệp đính kèm'
-              : payload.content || 'Bạn có tin nhắn mới'
+              ? t('notificationAttachment')
+              : payload.content || t('notificationFallback')
 
           if (
             typeof Notification !== 'undefined' &&
@@ -110,7 +118,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
             toast(title, {
               description: body,
               action: {
-                label: 'Mở',
+                label: t('notificationOpen'),
                 onClick: () => router.push(`/conversations/${payload.conversationId}`),
               },
             })
@@ -143,7 +151,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
         }
       })
     }).catch(() => {
-      toast.error('Không thể kết nối realtime')
+      toast.error(t('realtimeError'))
     })
 
     return () => {
@@ -160,7 +168,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
       clearAuth()
       router.push('/login')
     } catch {
-      toast.error('Đăng xuất thất bại')
+      toast.error(t('logoutError'))
     }
   }
 
@@ -196,7 +204,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
               variant="ghost"
               size="icon"
               onClick={openPublicChannels}
-              title="Khám phá"
+              title={t('navExplore')}
               className="h-8 w-8 rounded-full text-muted-foreground hover:text-foreground hover:bg-muted"
             >
               <Compass className="size-4" />
@@ -206,7 +214,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
                 <Button
                   variant="ghost"
                   size="icon"
-                  title="Tạo mới"
+                  title={t('navCreate')}
                   className="h-8 w-8 rounded-full text-muted-foreground hover:text-foreground hover:bg-muted"
                 >
                   <Plus className="size-4" />
@@ -218,14 +226,14 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
                   className="cursor-pointer"
                 >
                   <MessageSquarePlus className="mr-2 h-4 w-4" />
-                  <span>Trò chuyện mới</span>
+                  <span>{t('menuNewChat')}</span>
                 </DropdownMenuItem>
                 <DropdownMenuItem
                   onSelect={() => openNewChat('group')}
                   className="cursor-pointer"
                 >
                   <Users className="mr-2 h-4 w-4" />
-                  <span>Tạo nhóm</span>
+                  <span>{t('menuNewGroup')}</span>
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -233,7 +241,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
               variant="ghost"
               size="icon"
               asChild
-              title="Danh bạ"
+              title={t('navContacts')}
               className="h-8 w-8 rounded-full text-muted-foreground hover:text-foreground hover:bg-muted"
             >
               <Link href="/friends">
@@ -266,14 +274,14 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
                     className="flex w-full items-center cursor-pointer"
                   >
                     <User className="mr-2 h-4 w-4" />
-                    <span>Hồ sơ cá nhân</span>
+                    <span>{t('menuProfile')}</span>
                   </DropdownMenuItem>
                   <DropdownMenuItem
                     onSelect={() => router.push('/settings')}
                     className="flex w-full items-center cursor-pointer"
                   >
                     <Settings className="mr-2 h-4 w-4" />
-                    <span>Cài đặt</span>
+                    <span>{t('menuSettings')}</span>
                   </DropdownMenuItem>
                   <DropdownMenuItem
                     onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
@@ -282,19 +290,19 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
                     {theme === 'dark' ? (
                       <>
                         <Sun className="mr-2 h-4 w-4" />
-                        <span>Giao diện sáng</span>
+                        <span>{t('menuLightMode')}</span>
                       </>
                     ) : (
                       <>
                         <Moon className="mr-2 h-4 w-4" />
-                        <span>Giao diện tối</span>
+                        <span>{t('menuDarkMode')}</span>
                       </>
                     )}
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={handleLogout} className="text-destructive focus:text-destructive cursor-pointer">
                     <LogOut className="mr-2 h-4 w-4" />
-                    <span>Đăng xuất</span>
+                    <span>{t('menuLogout')}</span>
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>

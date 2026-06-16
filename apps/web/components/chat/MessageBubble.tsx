@@ -1,8 +1,8 @@
 'use client'
 
 import { useState, useRef } from 'react'
-import { useTranslations } from 'next-intl'
-import { Phone, Video } from 'lucide-react'
+import { useTranslations, useLocale } from 'next-intl'
+import { Phone, Video, Check, CheckCheck } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { firstUrl } from '@/lib/media'
 import { MessageActions } from './MessageActions'
@@ -15,6 +15,7 @@ import { GroupReadDetailsModal } from './GroupReadDetailsModal'
 import { ReactionsDetailModal } from './ReactionsDetailModal'
 import { humanizeSystemMessage } from '@/lib/system-messages'
 import { useNickname } from '@/lib/nicknames'
+import { useUser } from '@/lib/hooks/use-user'
 import type { Message } from '@/lib/api/types'
 
 interface Props {
@@ -22,6 +23,7 @@ interface Props {
   isOwn: boolean
   currentUserId?: string
   conversationId?: string
+  otherUserId?: string
   isPinned?: boolean
   isGroup?: boolean
   onEdit?: (message: Message) => void
@@ -31,8 +33,8 @@ interface Props {
   onOptimisticUpdate: (updated: Partial<Message> & { id: string }) => void
 }
 
-function formatTime(iso: string): string {
-  return new Date(iso).toLocaleTimeString('vi-VN', {
+function formatTime(iso: string, locale: string): string {
+  return new Date(iso).toLocaleTimeString(locale, {
     hour: '2-digit',
     minute: '2-digit',
   })
@@ -58,6 +60,7 @@ export function MessageBubble({
   isOwn,
   currentUserId,
   conversationId,
+  otherUserId,
   isPinned = false,
   isGroup = false,
   onEdit,
@@ -67,10 +70,13 @@ export function MessageBubble({
   onOptimisticUpdate,
 }: Props) {
   const t = useTranslations('chat')
+  const locale = useLocale()
   // Resolve nicknames for sender + reply-preview sender (W-15.4 parity).
   const senderNickname = useNickname(conversationId ?? '', message.senderId)
   const replyNickname = useNickname(conversationId ?? '', message.replyPreview?.senderId)
   const senderDisplay = senderNickname || message.senderName || ''
+  // Resolve the replied-to message's author (not the current message's sender).
+  const { data: repliedSender } = useUser(message.replyPreview?.senderId)
   const [hovered, setHovered] = useState(false)
   const [longPressActive, setLongPressActive] = useState(false)
   const [profileUserId, setProfileUserId] = useState<string | null>(null)
@@ -165,7 +171,7 @@ export function MessageBubble({
       <p className="font-semibold mb-0.5">
         {message.replyPreview.senderId === currentUserId
           ? t('you')
-          : (replyNickname || message.senderName || '')}
+          : (replyNickname || repliedSender?.displayName || '')}
       </p>
       <p className="truncate italic">{message.replyPreview.content}</p>
     </button>
@@ -185,15 +191,26 @@ export function MessageBubble({
     </button>
   )
 
+  // Read receipt tick for OWN messages in direct chats (parity with mobile
+  // message_bubble.dart): single check = sent, double cyan check = seen by the
+  // other participant (their userId present in readBy).
+  const isRead = !!otherUserId && (message.readBy?.includes(otherUserId) ?? false)
+  const readTick = isOwn && !isGroup && otherUserId && (
+    isRead
+      ? <CheckCheck className="size-3 text-pon-cyan" aria-label={t('seen')} />
+      : <Check className="size-3 opacity-50" aria-label={t('sent')} />
+  )
+
   const timeLabel = (
     <p
       className={cn(
-        'text-[10px] mt-1.5 text-right font-medium tracking-wide',
+        'text-[10px] mt-1.5 text-right font-medium tracking-wide flex items-center justify-end gap-1',
         isOwn ? 'text-primary-foreground/70' : 'text-muted-foreground/80',
       )}
     >
-      {formatTime(message.createdAt)}
-      {message.editedAt && <span className="ml-1 italic opacity-85">{t('edited')}</span>}
+      {formatTime(message.createdAt, locale)}
+      {message.editedAt && <span className="italic opacity-85">{t('edited')}</span>}
+      {readTick}
     </p>
   )
 
@@ -258,8 +275,9 @@ export function MessageBubble({
             {senderLabel}
             {replyPreview}
             {body}
-            <span className="mt-0.5 text-[10px] font-medium text-muted-foreground/70">
-              {formatTime(message.createdAt)}
+            <span className="mt-0.5 text-[10px] font-medium text-muted-foreground/70 flex items-center gap-1">
+              {formatTime(message.createdAt, locale)}
+              {readTick}
             </span>
           </div>
         ) : (
@@ -299,6 +317,7 @@ export function MessageBubble({
         <MessageActions
           message={message}
           isOwn={isOwn}
+          currentUserId={currentUserId}
           isPinned={isPinned}
           onEdit={onEdit ? () => onEdit(message) : undefined}
           onForward={onForward ? () => onForward(message) : undefined}

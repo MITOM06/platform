@@ -12,6 +12,25 @@
     "noResults": "No results found",
     "members": "{count} members"
   },
+  "layout": {
+    "navExplore": "探索",
+    "navCreate": "新建",
+    "navContacts": "联系人",
+    "menuNewChat": "新建对话",
+    "menuNewGroup": "创建群组",
+    "menuProfile": "个人资料",
+    "menuSettings": "设置",
+    "menuLogout": "退出登录",
+    "menuLightMode": "浅色模式",
+    "menuDarkMode": "深色模式",
+    "notificationTitle": "来自 {name} 的新消息",
+    "notificationAttachment": "📎 发送了一个附件",
+    "notificationFallback": "您有一条新消息",
+    "notificationOpen": "打开",
+    "realtimeError": "无法连接到实时服务",
+    "logoutError": "退出登录失败",
+    "sessionConnecting": "正在连接您的会话..."
+  },
   "auth": {
     "emailLabel": "Email",
     "emailPlaceholder": "you@example.com",
@@ -61,7 +80,11 @@
       "pwStrengthMedium": "Medium",
       "pwStrengthStrong": "Strong",
       "pwStrengthVeryStrong": "Very Strong",
-      "googleRegister": "Sign up with Google"
+      "googleRegister": "Sign up with Google",
+      "agreeToTerms": "我同意 <privacyPolicy>隐私政策</privacyPolicy>和<termsOfService>服务条款</termsOfService>",
+      "privacyPolicy": "隐私政策",
+      "termsOfService": "服务条款",
+      "mustAgree": "注册前必须同意服务条款"
     },
     "verifyOtp": {
       "title": "Verify OTP",
@@ -96,6 +119,10 @@
       "sendError": "Unable to request password reset",
       "resetSuccess": "Password reset successfully. Please sign in.",
       "resetError": "Invalid or expired OTP code"
+    },
+    "oauth": {
+      "verifying": "正在验证...",
+      "failed": "验证失败，请重试。"
     }
   },
   "settings": {
@@ -127,7 +154,24 @@
     "languageChanged": "Language changed",
     "logout": "Sign Out",
     "logoutError": "Sign out failed",
-    "version": "PON Messenger v1.0"
+    "version": "PON Messenger v1.0",
+    "changePasswordDialog": {
+      "title": "修改密码",
+      "description": "请输入当前密码和新密码进行更新。",
+      "currentLabel": "当前密码",
+      "currentPlaceholder": "输入当前密码...",
+      "newLabel": "新密码",
+      "newPlaceholder": "输入新密码...",
+      "confirmLabel": "确认新密码",
+      "confirmPlaceholder": "再次输入新密码...",
+      "minLength": "新密码至少需要6个字符",
+      "mismatch": "两次输入的密码不一致",
+      "success": "密码修改成功！",
+      "genericError": "发生错误",
+      "incorrectCurrent": "当前密码不正确",
+      "currentRequired": "请输入当前密码",
+      "atLeast6": "密码至少需要6个字符"
+    }
   },
   "profile": {
     "title": "Edit Profile",
@@ -153,7 +197,18 @@
     "changeCover": "Change Cover",
     "coverSuccess": "Cover photo updated",
     "coverError": "Failed to upload cover photo",
-    "viewOnly": "View only"
+    "viewOnly": "View only",
+    "phoneTooLong": "电话号码过长",
+    "dobLabel": "出生日期",
+    "phoneLabel": "电话号码",
+    "phonePlaceholder": "你的电话号码",
+    "genderLabel": "性别",
+    "genderPlaceholder": "选择性别",
+    "genderMale": "男",
+    "genderFemale": "女",
+    "genderOther": "其他",
+    "hideInfoLabel": "隐藏个人信息",
+    "hideInfoHint": "其他用户将无法看到你的生日、电话、性别和简介。"
   },
   "friends": {
     "title": "Friends",
@@ -169,7 +224,13 @@
     "searching": "Searching...",
     "noSearchResults": "No results found",
     "searchPrompt": "Enter a keyword to search for users",
-    "addFriend": "Add Friend"
+    "addFriend": "Add Friend",
+    "sendRequestSuccess": "已发送好友请求",
+    "sendRequestError": "无法发送好友请求",
+    "acceptRequestSuccess": "已接受好友请求",
+    "acceptRequestError": "无法接受好友请求",
+    "removeFriendSuccess": "已删除好友/取消请求",
+    "removeFriendError": "无法完成此操作"
   },
   "conversations": {
     "selectPrompt": "Select a conversation to start"
@@ -331,7 +392,101 @@
     "deleteForMeAction": "仅删除我的",
     "reactError": "无法添加表情",
     "recallError": "无法撤回消息",
-    "deleteError": "无法删除消息"
+    "deleteError": "无法删除消息",
+    "offlineBanner": "无网络连接",
+    "readDetails": "已读",
+    "seenStatus": "已看",
+    "noReadsYet": "还没有人读过这条消息",
+    "reactionsDetail": "反应",
+    "sent": "已发送",
+    "seen": "已读",
+    "aiAssistant": "AI 助手",
+    "online": "在线",
+    "offline": "离线",
+    "profileTitle": "个人资料",
+    "userFallback": "用户",
+    "openConversationError": "无法打开对话",
+    "friendRemoved": "已删除好友",
+    "friendRequestSent": "已发送好友请求",
+    "friendRequestAccepted": "已接受好友请求",
+    "actionFailed": "操作失败",
+    "userUnblocked": "已解除拉黑",
+    "userBlocked": "已拉黑用户",
+    "friendRemove": "删除好友",
+    "friendAccept": "接受请求",
+    "friendRequested": "已发送请求",
+    "friendAdd": "添加好友",
+    "sendMessageAction": "发消息",
+    "unblockAction": "解除拉黑",
+    "blockAction": "拉黑用户",
+    "markAsRead": "标记为已读",
+    "markAsUnread": "标记为未读",
+    "archiveChat": "归档",
+    "unarchiveChat": "取消归档",
+    "copyAction": "复制",
+    "copySuccess": "已复制到剪贴板",
+    "copyError": "无法复制",
+    "userUnblockedName": "已解除拉黑 {name}",
+    "youBlockedNotice": "你已拉黑 {name}。解除拉黑后才能发送消息。",
+    "blockedByOtherNotice": "你无法向该用户发送消息。",
+    "connectionLimitedNotice": "由于连接限制，无法发送消息。",
+    "unblockError": "无法解除拉黑用户",
+    "genderMale": "男",
+    "genderFemale": "女",
+    "genderOther": "其他",
+    "typing": "正在输入...",
+    "settingsTooltip": "设置",
+    "groupInfoTooltip": "群组信息",
+    "viewProfileTooltip": "查看资料",
+    "today": "今天",
+    "yesterday": "昨天",
+    "loadMessagesError": "无法加载消息",
+    "noMessagesStart": "还没有消息。开始对话吧！",
+    "sendMessageError": "无法发送消息",
+    "editMessageError": "无法编辑消息",
+    "aiError": "AI 出错，请重试",
+    "typingIndicator": "正在输入",
+    "newConvTitle": "新建对话",
+    "newConvTabDirect": "私聊",
+    "newConvTabGroup": "群组",
+    "newConvSearchPlaceholder": "按姓名或邮箱搜索...",
+    "newConvNoUsers": "未找到用户",
+    "newConvGroupNamePlaceholder": "群组名称...",
+    "newConvCreateGroup": "创建群组",
+    "newConvGroupValidation": "请输入群组名称并至少选择1名成员",
+    "newConvGroupSuccess": "群组已创建",
+    "newConvGroupError": "无法创建群组",
+    "newConvDirectError": "无法创建对话",
+    "forwardTitle": "转发消息",
+    "forwardConversationFallback": "对话",
+    "forwardSuccess": "消息已转发",
+    "forwardError": "无法转发消息",
+    "publicChannelsTitle": "公共频道",
+    "publicChannelsSearchPlaceholder": "搜索频道...",
+    "publicChannelsEmpty": "未找到频道",
+    "publicChannelUnnamed": "未命名频道",
+    "publicChannelMembers": "{count} 名成员",
+    "publicChannelJoin": "加入",
+    "publicChannelJoinSuccess": "已加入频道",
+    "publicChannelJoinError": "无法加入频道",
+    "strangerRequestTitle": "陌生人的消息请求",
+    "strangerRequestBody": "您还不是 {name} 的好友。在您接受连接之前，新消息将保持待处理状态。",
+    "strangerBlock": "拉黑用户",
+    "strangerAccept": "接受",
+    "strangerAcceptSuccess": "已接受与 {name} 的对话",
+    "strangerAcceptError": "无法接受对话",
+    "strangerBlockSuccess": "已拉黑 {name}",
+    "strangerBlockError": "无法拉黑用户",
+    "messageSearchPlaceholder": "在对话中搜索...",
+    "messageSearchNoResults": "未找到结果",
+    "aiTraceTitle": "AI 推理轨迹",
+    "aiTraceEmpty": "此消息没有推理轨迹。",
+    "aiTraceInputTokens": "输入令牌",
+    "aiTraceOutputTokens": "输出令牌",
+    "aiTraceThinkingBlocks": "思考块 ({count})",
+    "aiTraceToolCalls": "工具调用 ({count})",
+    "aiTraceRagSources": "RAG 来源 ({count})",
+    "aiTraceScore": "得分：{score}"
   },
   "aiPersona": {
     "title": "AI Persona",
@@ -450,5 +605,31 @@
     "emptyMedia": "No photos or videos shared yet",
     "emptyFiles": "No files shared yet",
     "emptyLinks": "No links shared yet"
+  },
+  "legal": {
+    "title": "隐私政策和服务条款",
+    "lastUpdated": "最后更新：2026年6月15日",
+    "sections": {
+      "dataCollection": {
+        "title": "1. 数据收集",
+        "content": "我们收集您直接提供给我们的信息，例如您创建或修改账户、使用我们的服务或与我们通信时的信息，包括您的姓名、电子邮件地址、头像和您发送的消息。"
+      },
+      "dataUsage": {
+        "title": "2. 数据使用方式",
+        "content": "您的数据用于提供、维护和改善我们的服务，包括促进用户间的通信、确保安全性以及个性化您的体验。"
+      },
+      "security": {
+        "title": "3. 安全性",
+        "content": "我们实施行业标准的安全措施来保护您的个人信息和消息。对数据的访问受到严格控制，我们使用加密来保护敏感信息。"
+      },
+      "userRights": {
+        "title": "4. 您的权利",
+        "content": "您有权访问、更正或删除您的个人数据。您可以随时通过应用程序设置删除您的账户。"
+      },
+      "terms": {
+        "title": "5. 服务条款",
+        "content": "使用我们的平台即表示您同意不参与任何滥用、骚扰或违法活动。我们保留暂停或终止违反这些条款的账户的权利。"
+      }
+    }
   }
 }

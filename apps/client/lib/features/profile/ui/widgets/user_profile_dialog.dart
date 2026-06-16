@@ -1,9 +1,7 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:intl/intl.dart';
 import '../../../../core/api/dio_client.dart';
 import '../../../../core/l10n/l10n_ext.dart';
 import '../../../../core/theme/app_theme.dart';
@@ -11,8 +9,8 @@ import '../../../auth/domain/auth_provider.dart';
 import '../../../auth/domain/auth_state.dart';
 import '../../../chat/data/chat_repository.dart';
 import '../../../chat/domain/chat_provider.dart';
-import '../../../friends/data/friends_repository.dart';
-import '../../../friends/domain/friends_provider.dart';
+import 'user_profile_actions.dart';
+import 'user_profile_info_section.dart';
 
 /// Shows a compact profile dialog for any user.
 /// Tapping avatar/name elsewhere in the app should call [showUserProfileDialog].
@@ -81,7 +79,7 @@ class _UserProfileDialogState extends ConsumerState<UserProfileDialog> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(e.toString())),
+          SnackBar(content: Text(context.l10n.errorWithMsg(e.toString()))),
         );
       }
     } finally {
@@ -291,7 +289,8 @@ class _ProfileDialogContent extends ConsumerWidget {
             child: editMode
                 ? TextField(
                     controller: nameCtrl,
-                    decoration: const InputDecoration(labelText: 'Name'),
+                    decoration:
+                        InputDecoration(labelText: context.l10n.profileNameLabel),
                     style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                   )
                 : Text(
@@ -318,7 +317,7 @@ class _ProfileDialogContent extends ConsumerWidget {
               ),
             )
           else
-            _PersonalInfo(
+            ProfilePersonalInfo(
               u: u,
               isSelf: isSelf,
               editMode: editMode,
@@ -371,220 +370,12 @@ class _ProfileDialogContent extends ConsumerWidget {
                       ],
                     ],
                   )
-                : _OtherUserActions(
+                : OtherUserActions(
                     userId: userId,
                     currentUserId: currentUserId,
                     isDark: isDark,
                   ),
           ),
-        ],
-      ),
-    );
-  }
-}
-
-class _PersonalInfo extends StatelessWidget {
-  final UserModel u;
-  final bool isSelf;
-  final bool editMode;
-  final TextEditingController bioCtrl;
-  final TextEditingController phoneCtrl;
-  final String? gender;
-  final DateTime? dob;
-  final ValueChanged<String?> onGenderChange;
-  final VoidCallback? onPickDate;
-
-  const _PersonalInfo({
-    required this.u,
-    required this.isSelf,
-    required this.editMode,
-    required this.bioCtrl,
-    required this.phoneCtrl,
-    required this.gender,
-    required this.dob,
-    required this.onGenderChange,
-    required this.onPickDate,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = context.l10n;
-    if (!editMode) {
-      final items = <Widget>[];
-      if (u.bio != null && u.bio!.isNotEmpty) {
-        items.add(_InfoRow(icon: Icons.info_outline, label: l10n.profileBio, value: u.bio!));
-      }
-      if (u.gender != null && u.gender!.isNotEmpty) {
-        items.add(_InfoRow(icon: Icons.wc_outlined, label: l10n.profileGender, value: u.gender!));
-      }
-      if (u.dateOfBirth != null) {
-        items.add(_InfoRow(
-          icon: Icons.cake_outlined,
-          label: l10n.profileDateOfBirth,
-          value: DateFormat('dd/MM/yyyy').format(u.dateOfBirth!),
-        ));
-      }
-      if (isSelf && u.phoneNumber != null && u.phoneNumber!.isNotEmpty) {
-        items.add(_InfoRow(icon: Icons.phone_outlined, label: l10n.profilePhone, value: u.phoneNumber!));
-      }
-      if (items.isEmpty) return const SizedBox.shrink();
-      return Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 4),
-        child: Column(children: items),
-      );
-    }
-    // Edit mode
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          TextField(
-            controller: bioCtrl,
-            decoration: InputDecoration(labelText: l10n.profileBio),
-            maxLines: 2,
-          ),
-          const SizedBox(height: 8),
-          TextField(
-            controller: phoneCtrl,
-            decoration: InputDecoration(labelText: l10n.profilePhone),
-            keyboardType: TextInputType.phone,
-          ),
-          const SizedBox(height: 8),
-          DropdownButtonFormField<String>(
-            initialValue: gender,
-            decoration: InputDecoration(labelText: l10n.profileGender),
-            items: const [
-              DropdownMenuItem(value: 'male', child: Text('Male')),
-              DropdownMenuItem(value: 'female', child: Text('Female')),
-              DropdownMenuItem(value: 'other', child: Text('Other')),
-            ],
-            onChanged: onGenderChange,
-          ),
-          const SizedBox(height: 8),
-          ListTile(
-            contentPadding: EdgeInsets.zero,
-            leading: const Icon(Icons.cake_outlined),
-            title: Text(l10n.profileDateOfBirth),
-            subtitle: Text(dob != null
-                ? DateFormat('dd/MM/yyyy').format(dob!)
-                : '—'),
-            onTap: onPickDate,
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _InfoRow extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final String value;
-  const _InfoRow({required this.icon, required this.label, required this.value});
-
-  @override
-  Widget build(BuildContext context) {
-    return ListTile(
-      dense: true,
-      leading: Icon(icon, size: 18, color: Colors.white54),
-      title: Text(label, style: const TextStyle(fontSize: 11, color: Colors.white54)),
-      subtitle: Text(value, style: const TextStyle(fontSize: 13)),
-    );
-  }
-}
-
-class _OtherUserActions extends ConsumerWidget {
-  final String userId;
-  final String? currentUserId;
-  final bool isDark;
-
-  const _OtherUserActions({
-    required this.userId,
-    required this.currentUserId,
-    required this.isDark,
-  });
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final rel = ref.watch(relationshipProvider(userId)).valueOrNull;
-    final isFriend = rel?.friendStatus == 'accepted';
-    final pending = rel?.friendStatus == 'pending';
-    final iBlocked = rel?.iBlocked ?? false;
-
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-      children: [
-        _ActionChip(
-          icon: Icons.message_outlined,
-          label: context.l10n.actionMessage,
-          onTap: () async {
-            Navigator.of(context).pop();
-            final conv = await ref
-                .read(chatRepositoryProvider)
-                .getOrCreateConversation(userId);
-            if (context.mounted) context.go('/chat/${conv.id}');
-          },
-        ),
-        if (!isFriend && !pending)
-          _ActionChip(
-            icon: Icons.person_add_outlined,
-            label: context.l10n.actionAddFriend,
-            onTap: () async {
-              await ref.read(friendsRepositoryProvider).sendRequest(userId);
-              ref.invalidate(relationshipProvider(userId));
-            },
-          ),
-        _ActionChip(
-          icon: iBlocked ? Icons.lock_open_rounded : Icons.block_rounded,
-          label: context.l10n.actionBlock,
-          color: Colors.redAccent,
-          onTap: () async {
-            final repo = ref.read(friendsRepositoryProvider);
-            if (iBlocked) {
-              await repo.unblockUser(userId);
-            } else {
-              await repo.blockUser(userId);
-            }
-            ref.invalidate(relationshipProvider(userId));
-          },
-        ),
-      ],
-    );
-  }
-}
-
-class _ActionChip extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final Color? color;
-  final VoidCallback onTap;
-
-  const _ActionChip({
-    required this.icon,
-    required this.label,
-    required this.onTap,
-    this.color,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final c = color ?? AppTheme.ponCyan;
-    return GestureDetector(
-      onTap: onTap,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: c.withValues(alpha: 0.12),
-              shape: BoxShape.circle,
-            ),
-            child: Icon(icon, color: c, size: 20),
-          ),
-          const SizedBox(height: 4),
-          Text(label, style: TextStyle(fontSize: 11, color: c)),
         ],
       ),
     );

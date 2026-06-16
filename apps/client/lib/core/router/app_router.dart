@@ -262,6 +262,7 @@ GoRouter appRouter(AppRouterRef ref) {
             targetName: extra['targetName'] as String? ?? 'User',
             conversationId: extra['conversationId'] as String? ?? '',
             isCaller: extra['isCaller'] as bool? ?? false,
+            isVideo: extra['isVideo'] as bool? ?? true,
             initialOfferSdp: extra['initialOfferSdp'] as String?,
           );
         },

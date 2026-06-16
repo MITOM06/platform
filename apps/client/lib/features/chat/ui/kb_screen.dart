@@ -28,7 +28,7 @@ class KbScreen extends ConsumerWidget {
       ),
       body: docsAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text('Error: $e')),
+        error: (e, _) => Center(child: Text(context.l10n.errorWithMsg('$e'))),
         data: (docs) => docs.isEmpty
             ? _EmptyState()
             : ListView.separated(
@@ -66,7 +66,7 @@ class KbScreen extends ConsumerWidget {
     } catch (e) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Upload failed: $e')),
+          SnackBar(content: Text(context.l10n.uploadFailed)),
         );
       }
     }
@@ -100,7 +100,7 @@ class KbScreen extends ConsumerWidget {
       } catch (e) {
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Delete failed: $e')),
+            SnackBar(content: Text(context.l10n.kbDeleteFailed)),
           );
         }
       }

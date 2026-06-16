@@ -12,28 +12,43 @@ part 'friends_provider.g.dart';
 @riverpod
 class OnlineFriendsNotifier extends _$OnlineFriendsNotifier {
   StreamSubscription<PresenceEvent>? _sub;
+  Timer? _refetchDebounce;
+  static const _debounce = Duration(milliseconds: 400);
 
   @override
   Future<List<UserModel>> build() async {
     final stomp = ref.read(stompServiceProvider.notifier);
     stomp.subscribePresence();
     _sub = stomp.presence.listen(_onPresence);
-    ref.onDispose(() => _sub?.cancel());
+    ref.onDispose(() {
+      _sub?.cancel();
+      _refetchDebounce?.cancel();
+    });
     return ref.read(friendsRepositoryProvider).getOnlineFriends();
   }
 
-  Future<void> _onPresence(PresenceEvent event) async {
+  void _onPresence(PresenceEvent event) {
     final current = state.valueOrNull ?? const <UserModel>[];
     if (event.online) {
       if (current.any((u) => u.id == event.userId)) return;
-      // Re-fetch to resolve the newly-online friend's profile and confirm they
-      // are actually an accepted friend (the topic carries every user's status).
+      // A friend came online: coalesce bursts (e.g. many events on reconnect)
+      // into a single full re-fetch instead of one round-trip per event.
+      _scheduleRefetch();
+    } else {
+      // Removal is cheap and local — apply immediately.
+      state = AsyncData(current.where((u) => u.id != event.userId).toList());
+    }
+  }
+
+  void _scheduleRefetch() {
+    _refetchDebounce?.cancel();
+    _refetchDebounce = Timer(_debounce, () async {
+      // Re-fetch to resolve newly-online friends' profiles and confirm they are
+      // actually accepted friends (the topic carries every user's status).
       final refreshed =
           await ref.read(friendsRepositoryProvider).getOnlineFriends();
       state = AsyncData(refreshed);
-    } else {
-      state = AsyncData(current.where((u) => u.id != event.userId).toList());
-    }
+    });
   }
 }
 

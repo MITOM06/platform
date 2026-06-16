@@ -315,6 +315,10 @@
   "noFriends": "No friends yet",
   "noFriendRequests": "No pending requests",
   "friendRequestPending": "Pending",
+  "friendsTabSearch": "Search",
+  "declineFriend": "Decline",
+  "searchUsersPrompt": "Search for people to add as friends",
+  "noSearchResults": "No users found",
   "unfriend": "Unfriend",
   "unfriendConfirm": "Remove this friend?",
   "blockUser": "Block",
@@ -519,5 +523,86 @@
   "wallpaperScale": "Scale",
   "wallpaperPreviewHint": "Pinch or drag to adjust",
   "wallpaperPreviewIncoming": "Hi! How does this look?",
-  "wallpaperPreviewOutgoing": "Looks great 🎉"
+  "wallpaperPreviewOutgoing": "Looks great 🎉",
+  "errCannotOpenLink": "Couldn't open the link",
+  "sysNicknameClearedSelf": "{actorName} cleared their own nickname",
+  "@sysNicknameClearedSelf": {
+    "placeholders": { "actorName": { "type": "String" } }
+  },
+  "sysNicknameClearedOther": "{actorName} cleared the nickname of {targetName}",
+  "@sysNicknameClearedOther": {
+    "placeholders": { "actorName": { "type": "String" }, "targetName": { "type": "String" } }
+  },
+  "sysNicknameSetSelf": "{actorName} set their nickname to {nickname}",
+  "@sysNicknameSetSelf": {
+    "placeholders": { "actorName": { "type": "String" }, "nickname": { "type": "String" } }
+  },
+  "sysNicknameSetOther": "{actorName} set the nickname of {targetName} to {nickname}",
+  "@sysNicknameSetOther": {
+    "placeholders": { "actorName": { "type": "String" }, "targetName": { "type": "String" }, "nickname": { "type": "String" } }
+  },
+  "sysThemeChanged": "{actorName} changed the chat theme",
+  "@sysThemeChanged": {
+    "placeholders": { "actorName": { "type": "String" } }
+  },
+  "sysQuickReactionChanged": "{actorName} changed the quick reaction to {emoji}",
+  "@sysQuickReactionChanged": {
+    "placeholders": { "actorName": { "type": "String" }, "emoji": { "type": "String" } }
+  },
+  "sysGroupCreated": "{actorName} created the group",
+  "@sysGroupCreated": {
+    "placeholders": { "actorName": { "type": "String" } }
+  },
+  "sysMembersAdded": "{actorName} added new members",
+  "@sysMembersAdded": {
+    "placeholders": { "actorName": { "type": "String" } }
+  },
+  "sysMemberLeft": "{actorName} left the group",
+  "@sysMemberLeft": {
+    "placeholders": { "actorName": { "type": "String" } }
+  },
+  "sysMemberRemoved": "{actorName} removed a member",
+  "@sysMemberRemoved": {
+    "placeholders": { "actorName": { "type": "String" } }
+  },
+  "sysMemberJoined": "{actorName} joined the group",
+  "@sysMemberJoined": {
+    "placeholders": { "actorName": { "type": "String" } }
+  },
+  "systemVideoCallEnded": "Video call ended · {duration}",
+  "@systemVideoCallEnded": {
+    "placeholders": { "duration": { "type": "String" } }
+  },
+  "systemVoiceCallEnded": "Voice call ended · {duration}",
+  "@systemVoiceCallEnded": {
+    "placeholders": { "duration": { "type": "String" } }
+  },
+  "systemVideoCallMissed": "Missed video call",
+  "systemVoiceCallMissed": "Missed voice call",
+  "errActionFailed": "Something went wrong. Please try again.",
+  "kbDeleteFailed": "Delete failed, please try again",
+  "exploreJoinFailed": "Failed to join channel",
+  "unnamedChannel": "Unnamed",
+  "actionOk": "OK",
+  "reminderDeleteConfirm": "Delete this reminder?",
+  "profileNameLabel": "Name",
+  "genderMale": "Male",
+  "genderFemale": "Female",
+  "genderOther": "Other",
+  "aiPersonaSaved": "Saved",
+  "aiPersonaResetTitle": "Reset AI persona",
+  "aiPersonaResetConfirm": "Reset the AI persona to its default settings?",
+  "aiPersonaToneLabel": "Tone",
+  "aiPersonaResetToDefault": "Reset to Default",
+  "tokenUsagePercentUsed": "{percent}% used this month",
+  "@tokenUsagePercentUsed": {
+    "placeholders": { "percent": { "type": "String" } }
+  },
+  "tokenUsageCostUsd": "${amount}",
+  "@tokenUsageCostUsd": {
+    "placeholders": { "amount": { "type": "String" } }
+  },
+  "notifications": "Notifications",
+  "notificationsEnabled": "Notifications are enabled",
+  "notificationsDisabled": "Notifications are disabled"
 }

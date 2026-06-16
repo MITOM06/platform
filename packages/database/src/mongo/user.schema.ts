@@ -53,10 +53,10 @@ export class User {
   @Prop({ default: 'active' })
   status: 'active' | 'blocked' | 'pending';
 
-  @Prop()
+  @Prop({ select: false })
   otpCode: string;
 
-  @Prop()
+  @Prop({ select: false })
   otpExpires: Date;
 
   @Prop({ type: [String], default: [] })
