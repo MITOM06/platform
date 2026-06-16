@@ -151,7 +151,7 @@ export default function ConversationPage({ params }: Props) {
     if (!raw || raw === 'default') {
       return { className: WALLPAPER_CLASSES.default, isImage: false }
     }
-    if (raw.startsWith('http')) {
+    if (!raw.startsWith('preset:')) {
       // Parse `<url>#fit=<fit>&scale=<n>` (backward compatible with `#fit=` only).
       const hashIdx = raw.indexOf('#')
       const url = hashIdx === -1 ? raw : raw.slice(0, hashIdx)

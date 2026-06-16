@@ -36,5 +36,5 @@ This project applies the following controls:
 
 ## Known Limitations
 
-- All communication is currently over plain HTTP/WS (no TLS). In production, terminate TLS at a reverse proxy (nginx/Caddy) in front of both services.
+- Production traffic is served over TLS via Google Cloud Run (HTTPS/WSS). Local development uses plain HTTP/WS — terminate TLS at a reverse proxy (nginx/Caddy) if exposing locally.
 - End-to-end encryption is on the roadmap but not yet implemented.

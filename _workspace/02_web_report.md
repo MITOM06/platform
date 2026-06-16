@@ -1,58 +1,48 @@
-## Web Implementation Report — SPRINT W-16/W-17 (12 tasks)
+## Web Implementation Report — Pin Message (gap-closing)
 
-### Phase A: Completed by web-dev agent (tasks 1–8 of plan order)
-- `apps/web/middleware.ts` — W-17.3: Added `/privacy` (and `/forgot-password`) to PUBLIC_PATHS so unauthenticated users can reach them
-- `apps/web/components/providers.tsx` — W-16.3: Toast repositioned to `position="top-center"`
-- `apps/web/app/(main)/layout.tsx` — W-17.5 + W-16.5: Dropdown nav items for Profile/Settings use `onSelect+router.push` (fixes mobile tap swallowing); New Chat / New Group consolidated under single `+` DropdownMenu
-- `apps/web/lib/api/axios.ts` — W-17.2: Silent refresh interceptor verified/hardened (already existed; confirmed both authApi + chatApi share it, edge cases documented)
-- `apps/web/components/chat/SharedMediaGallery.tsx` — W-16.1: `absoluteMediaUrl()` applied to all image/file/link URLs; `onError` fallback to ImageIcon placeholder; link/file rows rendered as clickable `<a target="_blank">`; null-guard on `msg.content`
-- `apps/web/components/chat/ConversationList.tsx` — W-17.6: Search extended to match peer display name + nickname for direct chats (group chats still match `conv.name`)
-- `apps/web/app/(main)/layout.tsx` (same file) — W-16.5: header icon consolidation applied
-- `apps/web/app/(auth)/login/page.tsx` — W-16.4: `maybeRequestNotificationPermission()` called after successful login
-- `apps/web/app/(auth)/register/page.tsx` — W-16.4: same call after registration
-- `apps/web/app/(auth)/verify-otp/page.tsx` — W-16.4: same call after OTP verification
-- `apps/web/lib/notifications.ts` (new) — W-16.4: `maybeRequestNotificationPermission()` guards `typeof Notification`, respects `denied`, localStorage `notification_prompted` flag
+### 변경된 파일
+- `apps/web/components/chat/MessageActions.tsx` — Added `useTranslations('chat')`; gated the Pin/Unpin `DropdownMenuItem` behind `!isCallLog` (`message.type === 'call_log'` now hides pin); replaced all hardcoded Vietnamese labels and error toasts with `t(...)` keys (reply/edit/forward/recall/delete/AI trace/read details/reaction details + pin/unpin).
+- `apps/web/components/chat/PinnedMessagesBar.tsx` — Replaced hardcoded VN strings (`Tin nhắn đã ghim`, `Bỏ ghim`, scroll hint, error) with i18n keys (`pinnedMessages`, `unpinMessage`, `pinnedScrollHint`, `pinError`).
+- `apps/web/components/chat/PinnedMessageRow.tsx` — **NEW**. Shared pinned-message row UI (icon + optional sender label + truncated content + unpin X). Reused by the info-panel section. Documented as the mirror of `pinned_messages_section.dart`.
+- `apps/web/components/chat/PinnedMessagesSection.tsx` — **NEW**. "Pinned Messages" section for the info/settings drawer. Shows up to 2 pinned messages (`pinnedMessages.slice(0, 2)`), each row: sender (nickname → backend displayName fallback via `useUser` + `getNickname`) + truncated content + unpin (X) → `chatService.unpinMessage` + invalidate `['conversation', id]`. Clicking a row closes the drawer (`onJump`) and scrolls to `#message-{id}`.
+- `apps/web/components/chat/ConversationSettingsDrawer.tsx` — Imported and rendered `PinnedMessagesSection` as a new accordion item ("Pinned Messages"), shown only when `conversation.pinnedMessages.length > 0`, placed between Chat Info and Action Options.
+- `apps/web/components/chat/GroupSettingsDrawer.tsx` — Same: new "Pinned Messages" accordion item (conditional) placed before Customize Chat.
+- `apps/web/messages/{en,vi,zh,ja,ko,es,fr}.json` — Added 18 `chat.*` keys to all 7 locales (see below).
 
-### Phase B: Completed directly (tasks 9–12 + QA)
-- `apps/web/lib/store/auth.store.ts` — Extended `AuthUser` with `avatarUrl?`, `bio?`, `coverPhoto?` (shared prerequisite for W-16.6 + W-17.4)
-- `apps/web/lib/api/auth.ts` — `getMe()`/`getUser()`/`updateProfile()` return types extended with `bio`/`coverPhoto` fields
-- `apps/web/components/profile/ImageCropperModal.tsx` (new) — W-17.4: Cropper modal using `react-easy-crop`; avatar (1:1 round), cover (16:6 rect); canvas-based crop export as JPEG blob; zoom slider; confirm/cancel
-- `apps/web/app/(main)/profile/page.tsx` — W-17.4 + W-16.6: 
-  - Bio bug fixed: `getMe()` via TanStack Query seeds form via `reset()` on load; bio always sent (even empty string)
-  - Date of Birth field completely removed (Calendar import removed)
-  - Cover photo upload with cropper; avatar upload with cropper
-  - Both staged on crop confirm, only uploaded on explicit "Save Changes"
-  - `setAuth()` now passes full merged user object (fixes store persistence)
-  - Zalo-style floating card layout: cover photo banner + overlapping avatar + details
-  - Access control: `/profile` is always self-edit; no Edit affordance needed since UserProfileDrawer (other users) is structurally never opened for self
-- `apps/web/components/chat/UserProfileDrawer.tsx` — W-16.6: Added cover photo backdrop; removed `(user as {bio?})` cast; uses `absoluteMediaUrl()` on avatarUrl/coverPhoto
-- `apps/web/lib/webrtc/call-manager.ts` — W-16.2: `endCall()` emits `system.call.ended:<video|voice>:<seconds>` or `system.call.missed:<video|voice>` via `chatService.sendMessage(..., 'system')`; fire-and-forget (best-effort); only the hang-up initiator sends (no duplicate since peer teardown via 'end' signal doesn't call endCall)
-- `apps/web/lib/system-messages.ts` — W-16.2: Added parsing for `system.call.ended:` (formats `mm:ss` duration) and `system.call.missed:`; renders humanized text
-- `apps/web/components/chat/MessageBubble.tsx` — W-16.2: Call system messages rendered with inline `<Phone>`/`<Video>` lucide icon + humanized text inside the pill
-- `apps/web/messages/*.json` (all 7) — W-16.2: `systemVideoCallEnded`, `systemVoiceCallEnded`, `systemVideoCallMissed`, `systemVoiceCallMissed` keys added; W-16.6: `cropImage`, `zoomLabel`, `cancelButton`, `confirmButton`, `processing`, `coverPhoto`, `changeCover`, `coverSuccess`, `coverError` keys added; `birthdateLabel`/`birthdateNotSet` removed
-- `apps/web/package.json` — Added `react-easy-crop ^6.0.2`
+### TypeScript / 빌드 결과
+- `pnpm build`: ✓ Compiled successfully in ~2s, type check + lint clean, all 24 routes generated.
+- errors: 0
 
-### W-17.1 (reaction notification in sidebar)
-- Analysis: `REACTION_UPDATED` STOMP event is already subscribed in the open conversation thread. For sidebar preview, sidebar would need a global-level subscription or state derived from `/user/queue/notifications`. Backend emits `REACTION_UPDATED` on the topic but not specifically to the user's notification queue per current chat-service code. Implementing a clean sidebar override map without risking stale state is medium complexity. Per autonomous-mode decision: deferred to follow-up sprint as the backend notification queue doesn't emit REACTION events to `/user/queue/notifications`, and adding a global per-topic STOMP subscription for all conversations would be expensive. **Flagged for W-17.1 follow-up.**
+### i18n 추가 키 (chat namespace, all 7 locales)
+- `pinMessage`: "Pin message"
+- `unpinMessage`: "Unpin"
+- `pinnedMessages`: "Pinned Messages"
+- `cannotPinMessage`: "This message can't be pinned"
+- `pinLimitReached`: "You can pin up to 2 messages"
+- `pinError`: "Could not pin the message"
+- `pinnedScrollHint`: "Message is older, scroll up to find it"
+- `replyAction`: "Reply"
+- `editAction`: "Edit"
+- `forwardAction`: "Forward"
+- `viewAiTrace`: "View AI trace"
+- `readByDetails`: "Read by details"
+- `reactionsDetailAction`: "Reaction details"
+- `recallAction`: "Recall"
+- `deleteForMeAction`: "Delete for me"
+- `reactError`: "Could not add reaction"
+- `recallError`: "Could not recall the message"
+- `deleteError`: "Could not delete the message"
 
-### TypeScript type check result
-- `npx tsc --noEmit`: **0 errors** ✓
+Note: `cannotPinMessage` / `pinLimitReached` were added per spec for cross-platform key parity. The web UX hides the Pin action for `call_log` and relies on evict-oldest (LRU, backend) rather than surfacing an error toast, so these two keys are currently unused on web but present for sync-check parity and future use.
 
-### `pnpm build` result
-- **BUILD SUCCESSFUL** — all 22+ routes compiled, no errors ✓
+### Flutter 미러 파일 동기화 확인
+- `MessageActions.tsx` ↔ `floating_reaction_sheet.dart`: pin hidden for `call_log` on web ✓ (Flutter side handled by mobile-dev per plan).
+- `PinnedMessagesBar.tsx` ↔ `chat_screen.dart` header bar (`PinnedMessageBar`): i18n ✓.
+- `PinnedMessagesSection.tsx` (NEW) ↔ `pinned_messages_section.dart` (NEW, mobile): both surface pinned list in the info panel with unpin. Web side ✓; Flutter side owned by mobile-dev.
+- STOMP `PINNED_MESSAGE` → already invalidates `['conversation', id]` in `conversations/[id]/page.tsx` (no change needed) ✓.
 
-### i18n added keys
-- `chat.systemVideoCallEnded`: "Video call ended · {duration}" (vi: "Cuộc gọi video đã kết thúc · {duration}")
-- `chat.systemVoiceCallEnded`: "Voice call ended · {duration}"
-- `chat.systemVideoCallMissed`: "Missed video call"
-- `chat.systemVoiceCallMissed`: "Missed voice call"
-- `profile.cropImage`, `profile.zoomLabel`, `profile.cancelButton`, `profile.confirmButton`, `profile.processing`, `profile.coverPhoto`, `profile.changeCover`, `profile.coverSuccess`, `profile.coverError`
-- `profile.birthdateLabel`, `profile.birthdateNotSet`: **removed** (DOB field gone from UI)
-
-### Flutter mirror sync notes (per sync.md)
-- W-16.2 introduces `system.call.ended:` and `system.call.missed:` system message types. Web renders them. Flutter's `message_bubble.dart` `_systemText` does not handle these yet → **P1 follow-up for Flutter** (separate sprint).
-- All other tasks are Web-only bug fixes or state/UI changes with no STOMP-contract impact.
-
-### Known deferred items
-1. **W-17.1** (reaction notification in sidebar) — backend notification queue doesn't emit REACTION events; requires backend change or expensive global subscription.
-2. **Flutter W-16.2 mirror** — Flutter must handle `system.call.ended:` and `system.call.missed:` message types.
+### 주의사항
+- Backend cap 5→2 and the `call_log` pin block are owned by backend-dev (per plan); web only hides the pin affordance for `call_log` and displays whatever pinned set the server returns (renders up to 2 via `.slice(0, 2)` defensively in the info section).
+- Sender name resolution in the info section uses `useUser` (TanStack Query, 5-min cache) with nickname override; falls back to "…" while loading.
+- Jump-to-message from the info section closes the drawer then scrolls after a 150ms delay; if the message is outside loaded history it silently no-ops (header `PinnedMessagesBar` shows the older-history hint toast instead).
+- Did not touch `components/ui/` (shadcn) or `lib/api/*` (chat.ts pin/unpin already correct). All new files under 400 lines.

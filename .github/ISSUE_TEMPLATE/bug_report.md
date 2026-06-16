@@ -1,17 +1,18 @@
 ---
 name: Bug report
-about: Báo lỗi
+about: Report a bug or unexpected behavior
 ---
 
-**Mô tả lỗi**
-…
+**Describe the bug**
+A clear description of what the bug is.
 
-**Cách tái hiện**
+**Steps to reproduce**
 1. …
 2. …
 
-**Kỳ vọng**
-…
+**Expected behavior**
+What you expected to happen.
 
-**Môi trường**
-- OS / Node / pnpm:
+**Environment**
+- OS / Node / pnpm version:
+- Platform: Web / Flutter / Backend service:

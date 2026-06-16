@@ -71,10 +71,10 @@ This playbook outlines advanced diagnostics and verification steps for auditing 
 ## 4. User Profile & Direct Messages Resolution Audit
 
 ### Fallback Name Leakage
-*   **The Bug:** Direct message conversations do not have a hardcoded name in the database. If the client fails to fetch the details of the other participant by comparing the participant list with the current user ID, the sidebar and header will fall back to `"Cuộc trò chuyện"`, `"Nhóm"`, or generic text, losing personalization.
+*   **The Bug:** Direct message conversations do not have a hardcoded name in the database. If the client fails to fetch the other participant's details, the sidebar and header will fall back to `"Conversation"`, `"Group"`, or generic text, losing personalization.
 *   **Audit Steps:**
     1. Load the sidebar.
-    2. Ensure that every one-on-one chat shows the real display name and avatar of the recipient instead of `"Cuộc trò chuyện"`.
+    2. Ensure that every one-on-one chat shows the real display name and avatar of the recipient instead of a generic fallback.
     3. Ensure that when chatting with an AI Bot (`ai-bot-000000000000000000000001`), the UI renders the `'AI Assistant'` name and a dedicated `'AI'` badge.
 
 ---

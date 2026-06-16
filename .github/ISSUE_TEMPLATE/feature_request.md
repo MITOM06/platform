@@ -1,13 +1,13 @@
 ---
 name: Feature request
-about: Yêu cầu tính năng
+about: Suggest a new feature or improvement
 ---
 
-**Vấn đề cần giải quyết**
-…
+**Problem to solve**
+Describe the problem or limitation this feature addresses.
 
-**Giải pháp đề xuất**
-…
+**Proposed solution**
+Describe your suggested implementation or behavior.
 
-**Ảnh hưởng/hệ quả**
-…
+**Impact / trade-offs**
+Any risks, alternatives considered, or side effects.
