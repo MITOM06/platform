@@ -1,7 +1,6 @@
 # TODO — PON PROJECT
-> **Workflow:** Gemini Code Assist (Planner/QC) ↔ Tech Lead (Bridge) ↔ Claude CLI (Coder/Tester)
-> **Updated:** 2026-06-12
-> **Note to Claude:** Sprints 1-24 and AI-1 to AI-6 are completed (see `TODO_ARCHIVE.md` for details). Sprints for Phase 3 (Production Ready) and Web Client (Next.js) are now active.
+> **Updated:** 2026-06-16
+> **Note:** Sprints 1-24 (chat core) and AI-1 to AI-6 (AI layer) are complete. Active work: Phase 3 (Production Ready) and Web Client (Next.js) parity.
 
 ---
 
@@ -23,7 +22,7 @@
 - [x] **Task P3-2.3: Deep Linking** `M`. **DONE — Implemented onMessageOpenedApp and getInitialMessage in main.dart**.
 - [x] **Task P3-2.4: Mute Support** `S`. **DONE — Implemented in FcmService.java**.
 
-### SPRINT P3-3 — Performance & Observability `PENDING`
+### SPRINT P3-3 — Performance & Observability `DONE`
 - [x] **Task P3-3.1: MongoDB Indexes Audit**
   - Add compound indexes for hot query paths (e.g. `conversationId` + `createdAt`). **DONE — @CompoundIndex on Message (conv+createdAt, conv+type+createdAt, conv+sender) and Conversation (participants+lastMessageAt, publicChannel+lastMessageAt). @Indexed on participants field.**
 - [x] **Task P3-3.2: Redis Caching**
@@ -35,7 +34,7 @@
 - [x] **Task P3-3.5: Error Tracking (Sentry)**
   - Integrate Sentry SDK into Flutter, NestJS services, and Spring Boot. **DONE — Spring Boot: `sentry-spring-boot-starter-jakarta:7.6.0` + `SENTRY_DSN` env in application.yml. NestJS auth-service + ai-service: `@sentry/node` + `Sentry.init()` in main.ts, disabled when DSN empty. Flutter: `sentry_flutter:^8.3.0` added to pubspec; `main.dart` wrapped with `SentryFlutter.init()` using `SENTRY_DSN` compile-time env. All services: DSN optional (no-op when empty).**
 
-### SPRINT P3-4 — Security Hardening `PENDING`
+### SPRINT P3-4 — Security Hardening `DONE`
 - [x] **Task P3-4.1: OWASP Security Audit**
   - Audit against NoSQL injection, XSS, CSRF, and implement security headers. **DONE — Spring Boot `SecurityConfig`: added `X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff`, `HSTS` (1y + preload), `Referrer-Policy: strict-origin-when-cross-origin`. NoSQL injection: Spring Data MongoDB typed criteria are injection-safe; CSRF: correctly disabled (JWT stateless API). NestJS auth-service + ai-service: `helmet` middleware added (excluding CSP + COEP for API compatibility).**
 - [x] **Task P3-4.2: Rate Limiting Audit**
@@ -127,7 +126,7 @@
   - Apply the signature Flutter radial background glows (low-opacity `ponCyan` and `ponPeach` blurred spheres) inside the chat panel.
   - Implement chat wallpaper presets (Sunset, Midnight Glow, Sweet Pink, Neon Teal, Dark Shadow) and custom image background overlays inside the chat window.
 - [x] **Task W-8.4: Date Grouping & Separators**
-  - Group messages in the chat history by day and render rounded capsule separators ("Hôm nay", "Hôm qua", or formatted date) with subtle borders.
+  - Group messages in the chat history by day and render rounded capsule separators ("Today", "Yesterday", or formatted date) with subtle borders.
 - [x] **Task W-8.5: Stranger & Block Banners**
   - Render a `StrangerRequestBanner` with "Accept" / "Reject" controls for pending conversations.
   - Render a `BlockedComposerNotice` notice block if the relationship between the users indicates a block.
@@ -182,7 +181,7 @@ Mirror: `apps/client/lib/features/chat/ui/widgets/{image_content,file_content,vo
 - [x] **Task W-9.7: Reply end-to-end** `M`
   - Reply in `MessageActions`; `replyingTo` state + banner; `replyToId` threaded into
     `sendMessage`; edit restricted to text messages. **DONE.**
-    *(Follow-up W-9.B3: reply-preview sender label still "Bạn"/"Người khác" placeholder.)*
+    *(Follow-up W-9.B3: reply-preview sender label still "You"/"Other" placeholder.)*
 - [x] **Task W-9.8: Composer attachments** `M`
   - `MessageInput.tsx`: attach image/video/document → `uploadFile` → send with correct
     type/content; uploading + error toasts; multi-image → JSON array. **DONE.**
@@ -219,10 +218,10 @@ Mirror: `apps/client/lib/features/chat/ui/widgets/{image_content,file_content,vo
 - [x] **Task W-11.1: i18n** — web is hardcoded Vietnamese; Flutter has 7 locales (`L` to adopt). **DONE — adopted `next-intl` 4.x (cookie-based locale, no URL prefix). `i18n/request.ts` + `i18n/config.ts` + `messages/{vi,en,zh,ja,ko,es,fr}.json` (vi=full, en=full, others=English stubs). All 21 pages/components updated to `useTranslations()`. Language switcher added to Settings page (cycles all 7 locales, persists via `locale` cookie + `router.refresh()`). `next build` passes clean.**
 - [x] **Task W-11.2: Visual parity pass** — PON neon theme, bubbles, avatars, glow spheres `M`. **DONE — own-bubble neon shadow, active conversation neon left-border, online dot #00E676, sidebar ambient glow spheres.**
 - [x] **Task W-11.3: Responsive/mobile audit** `M`. **DONE — h-screen→h-dvh, safe-area-inset-bottom on input, emoji picker max-w-[calc(100vw-1rem)], image button hidden on xs.**
-- [x] **Task W-11.4: Typing indicator + pinned-bar render parity** `S`. **DONE — header subtitle shows "đang nhập..." (pon-cyan, animate-pulse) when isTyping; PinnedMessage type mismatch fixed.**
+- [x] **Task W-11.4: Typing indicator + pinned-bar render parity** `S`. **DONE — header subtitle shows "typing..." (pon-cyan, animate-pulse) when isTyping; PinnedMessage type mismatch fixed.**
 - [x] **Task W-11.5: Active Friends Row** `S` — horizontal list above conversations. **DONE — `ActiveFriendsRow.tsx`.**
 - [x] **Task W-11.6: Chat Wallpaper full parity** `S` — support custom HTTP image URLs in `ConversationPage`. **DONE — handled absolute URLs with background cover.**
-- [x] **Task W-11.7: Quick Reaction & Stickers** `M` — add quick reaction to `MessageInput` and sticker tab to `EmojiStickerPanel`. **DONE — 👍 quick-send button when input is empty; emoji popover now has Emoji/Nhãn dán (sticker) tabs; stickers send as `type:'sticker'`.**
+- [x] **Task W-11.7: Quick Reaction & Stickers** `M` — add quick reaction to `MessageInput` and sticker tab to `EmojiStickerPanel`. **DONE — 👍 quick-send button when input is empty; emoji popover now has Emoji/Stickers tabs; stickers send as `type:'sticker'`.**
 - [x] **Task W-11.8: Sync Conversation Settings UI with Flutter** `M` — **DONE — Refactored `ConversationSettingsDrawer.tsx` to use Accordion layout, synced with `conversation_info_sidebar.dart` (Header + Actions + Accordions). Added missing translation keys to all `messages/*.json` files.**
 
 ### SPRINT F-1 — Flutter Runtime Debug `IN PROGRESS`
@@ -245,28 +244,28 @@ Mirror: `apps/client/lib/features/chat/ui/widgets/{image_content,file_content,vo
 > **Audit (2026-06-11):** 3 bugs + 1 missing feature found in web chat after code review.
 
 - [x] **Task W-12.1: REST sendMessage missing STOMP broadcast** `S`
-  - `MessageController.sendMessage` (Spring Boot) saves to DB nhưng **không** broadcast qua STOMP. Kết quả: participant B không nhận tin realtime.
-  - Fix: thêm `messagingTemplate.convertAndSend("/topic/conversation/"+convId, response)` sau `messageService.sendMessage(...)`.
+  - `MessageController.sendMessage` (Spring Boot) saves to DB but does **not** broadcast via STOMP. Result: participant B does not receive messages in real time.
+  - Fix: add `messagingTemplate.convertAndSend("/topic/conversation/"+convId, response)` after `messageService.sendMessage(...)`.
   - File: `apps/server/chat-service/src/main/java/com/platform/chatservice/controller/MessageController.java`
 
 - [x] **Task W-12.2: isOwn alignment bug** `S`
-  - Khi `currentUser` chưa load (null — trước khi `SessionInitializer` xong), tất cả tin nhắn render `isOwn=false` (bên trái). Tin nhắn của A bị hiển thị như tin của B.
-  - Fix: guard render messages cho đến khi `currentUser !== null`.
+  - When `currentUser` is not yet loaded (null — before `SessionInitializer` completes), all messages render `isOwn=false` (left-aligned). User A's messages appear as user B's.
+  - Fix: guard message rendering until `currentUser !== null`.
   - File: `apps/web/app/(main)/conversations/[id]/page.tsx`
 
-- [x] **Task W-12.3: AI STOMP events rơi vào appendMessage** `M`
-  - `AI_STREAM_CHUNK`, `AI_STREAM_DONE`, `AI_STREAM_ERROR`, `AI_TOOL_CALL` không nằm trong `STOMP_EVENT_TYPES` → rơi vào `appendMessage` → thêm vào cache như "tin nhắn" rác (không có `id`, không có `content` hợp lệ).
-  - Fix: thêm vào `STOMP_EVENT_TYPES`, xử lý streaming state — accumulate chunks → show streaming bubble → finalize khi DONE. `AI_STREAM_ERROR` → toast.
+- [x] **Task W-12.3: AI STOMP events falling through to appendMessage** `M`
+  - `AI_STREAM_CHUNK`, `AI_STREAM_DONE`, `AI_STREAM_ERROR`, `AI_TOOL_CALL` are not in `STOMP_EVENT_TYPES` → fall through to `appendMessage` → added to cache as junk "messages" (no valid `id` or `content`).
+  - Fix: add to `STOMP_EVENT_TYPES`, handle streaming state — accumulate chunks → show streaming bubble → finalize on DONE. `AI_STREAM_ERROR` → toast.
   - File: `apps/web/app/(main)/conversations/[id]/page.tsx`
 
-- [x] **Task W-12.4: Chat với AI chưa có trên web** `M`
-  - Không có button tạo AI conversation. User không thể start chat với AI Assistant từ web.
-  - Fix: thêm "Chat với AI" button vào ConversationList sidebar. Click → `POST /api/conversations { participantId: AI_BOT_ID }` → navigate. Trong AI conversation, tự động prepend `@AI ` vào content trước khi send.
+- [x] **Task W-12.4: No AI chat entry point on web** `M`
+  - No button to create an AI conversation. Users cannot start a chat with AI Assistant from the web client.
+  - Fix: add "Chat with AI" button to ConversationList sidebar. Click → `POST /api/conversations { participantId: AI_BOT_ID }` → navigate. In AI conversation, auto-prepend `@AI ` to content before sending.
   - Files: `apps/web/components/chat/ConversationList.tsx`, `apps/web/app/(main)/conversations/[id]/page.tsx`
 
-- [x] **Task W-12.5: Clear history không clear cache ngay** `S`
-  - `invalidateQueries` trigger stale-while-revalidate → user thấy tin nhắn cũ trong khi refetch đang chạy.
-  - Fix: dùng `queryClient.removeQueries({ queryKey: ['messages', id], exact: true })` TRƯỚC khi `invalidateQueries` để xoá cache ngay lập tức.
+- [x] **Task W-12.5: Clear history does not clear cache immediately** `S`
+  - `invalidateQueries` triggers stale-while-revalidate → user sees old messages while refetch is in progress.
+  - Fix: call `queryClient.removeQueries({ queryKey: ['messages', id], exact: true })` **before** `invalidateQueries` to clear the cache immediately.
   - File: `apps/web/components/chat/ConversationSettingsDrawer.tsx`
 
 ### SPRINT W-13 — Bug Fixes (from production audit 2026-06-12) `PENDING`
@@ -281,7 +280,7 @@ Mirror: `apps/client/lib/features/chat/ui/widgets/{image_content,file_content,vo
   - File: `apps/web/app/api/auth/session/route.ts` — normalise `id: data.id || data._id` so `currentUser.id` is always populated even when Mongoose omits the virtual.
 
 - [x] **Task W-13.2: Typing indicator visible to the typer themselves** `S`
-  - Symptom: when current user types, "đang nhập…" appears in their own chat header.
+  - Symptom: when the current user types, "typing…" appears in their own chat header.
   - Fix: filter `currentUser.id` from `typingUserIds` before passing to `ConversationHeader`.
   - File: `apps/web/app/(main)/conversations/[id]/page.tsx`.
 
@@ -389,7 +388,7 @@ Mirror: `apps/client/lib/features/chat/ui/widgets/{image_content,file_content,vo
   - Files: `apps/web/components/chat/ConversationSettingsDrawer.tsx`,
            new `apps/web/components/chat/WallpaperPickerModal.tsx`
 
-- [x] **Task W-14.6: Group member list shows raw IDs instead of display names** `S` **DONE — Added `GroupMemberRow` subcomponent that resolves each `participants[]` userId via the existing `useUser(uid)` hook (`GET /api/users/{id}`, 5-min cached). Renders avatar (resolved `avatarUrl` via `absoluteMediaUrl`) + display name + "Admin" badge (mirrors Flutter `group_info_screen.dart`'s `_MemberTile`) + remove button for admins. Added `groupAdmin` i18n key to all 7 `messages/*.json` (vi=Quản trị viên, rest English stub). `tsc --noEmit` clean.**
+- [x] **Task W-14.6: Group member list shows raw IDs instead of display names** `S` **DONE — Added `GroupMemberRow` subcomponent that resolves each `participants[]` userId via the existing `useUser(uid)` hook (`GET /api/users/{id}`, 5-min cached). Renders avatar (resolved `avatarUrl` via `absoluteMediaUrl`) + display name + "Admin" badge (mirrors Flutter `group_info_screen.dart`'s `_MemberTile`) + remove button for admins. Added `groupAdmin` i18n key to all 7 `messages/*.json` (vi="Administrator", rest English stub). `tsc --noEmit` clean.**
   - Mirror: `apps/client/lib/features/chat/ui/group_info_screen.dart`
   - File: `apps/web/components/chat/GroupSettingsDrawer.tsx`
 
@@ -414,7 +413,7 @@ Mirror: `apps/client/lib/features/chat/ui/widgets/{image_content,file_content,vo
 
 - [x] **Task W-14.11: Web App Deep Debugging and Bug Fixes** `M` **DONE — 
   - **Group Creation (400 Bad Request):** Fixed the bug where creating a group on web threw a 400 Bad Request by removing the undocumented `publicChannel` property from `chatService.createGroup()` payload.
-  - **Login Error Handling:** Fixed `login/page.tsx` error mapping where a `401 Unauthorized` or `400 Bad Request` backend exception (which returns `message: string | string[]`) incorrectly displayed a generic "Lỗi hệ thống" (System error). Now correctly parses arrays and shows the precise authentication failure.
+  - **Login Error Handling:** Fixed `login/page.tsx` error mapping where a `401 Unauthorized` or `400 Bad Request` backend exception (which returns `message: string | string[]`) incorrectly displayed a generic "System error". Now correctly parses arrays and shows the precise authentication failure.
   - **AI Chat Navigation (409 Conflict):** Fixed AI Chat creation to seamlessly redirect using the `body.conversationId` returned by the server on `409 Conflict`, instead of performing a fragile client-side search.
   - **UI Regressions from prior AI:** Restored the `ActiveFriendsRow` and the "Explore Channels" (`Hash`) buttons in `ConversationList.tsx`, and the "New Chat" (`MessageSquarePlus`) button in `layout.tsx` which were incorrectly deleted during earlier sync tasks.
   - **React Warnings:** Fixed an exhaustive-deps `useEffect` warning in `page.tsx` by wrapping the fallback empty array in `useMemo`.

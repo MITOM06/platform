@@ -1,7 +1,8 @@
-## Tóm tắt
+## Summary
 - …
 
 ## Checklist
-- [ ] Đã chạy `pnpm -r build` / CI xanh
-- [ ] Không lộ secrets / cập nhật `.env.sample` nếu cần
-- [ ] Cập nhật README/docs (nếu cần)
+- [ ] `pnpm -r build` passes (or CI is green)
+- [ ] No secrets exposed; `.env.sample` updated if new env vars added
+- [ ] README / docs updated where relevant
+- [ ] Tests added or updated for changed logic

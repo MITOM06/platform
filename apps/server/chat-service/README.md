@@ -70,19 +70,31 @@ Authorization:Bearer <accessToken>
 
 All REST endpoints require `Authorization: Bearer <accessToken>`.
 
+> **This section lists a representative subset of endpoints. The full API reference
+> (conversations, messages, reactions, pins, AI persona, RAG, reminders, uploads, and more)
+> is in [`docs/api-spec.md`](../../../docs/api-spec.md).**
+
 ### Conversations
 
 | Method | Path | Description |
 |--------|------|-------------|
 | `GET` | `/api/conversations` | List conversations for the current user (paginated) |
 | `POST` | `/api/conversations` | Create or retrieve a 1-on-1 conversation |
+| `POST` | `/api/conversations/group` | Create a group conversation |
 | `GET` | `/api/conversations/{id}` | Get conversation details |
+| `GET` | `/api/conversations/{id}/messages` | Get message history (cursor-based pagination) |
+| `GET` | `/api/conversations/public` | Discover public channels |
 
 ### Messages
 
 | Method | Path | Description |
 |--------|------|-------------|
-| `GET` | `/api/conversations/{id}/messages` | Get message history (cursor-based pagination) |
+| `POST` | `/api/messages` | Send a message (REST fallback) |
+| `PUT` | `/api/messages/{id}` | Edit message content (sender only) |
+| `DELETE` | `/api/messages/{id}` | Recall message (sender only) |
+| `POST` | `/api/messages/{id}/reactions` | Add emoji reaction |
+| `DELETE` | `/api/messages/{id}/reactions` | Remove emoji reaction |
+| `POST` | `/api/messages/{id}/pin` | Pin message |
 
 ### User Status
 
@@ -95,7 +107,8 @@ All REST endpoints require `Authorization: Bearer <accessToken>`.
 ```json
 {
   "userId": "663b...",
-  "online": true
+  "online": true,
+  "lastSeen": "2026-06-16T10:00:00Z"
 }
 ```
 
@@ -112,8 +125,8 @@ spring.data.mongodb.uri=mongodb://localhost:27018/platform
 spring.data.redis.host=localhost
 spring.data.redis.port=6379
 
-# Must match auth-service JWT_SECRET
-app.jwt.secret=your_shared_secret_here
+# Must match auth-service JWT_ACCESS_SECRET exactly
+JWT_ACCESS_SECRET=your_shared_secret_here
 ```
 
 ---

@@ -69,7 +69,7 @@ export function WallpaperPickerModal({ conversationId, open, onClose }: Props) {
     setScale(parsed.scale)
   }
 
-  const isImage = selected.startsWith('http')
+  const isImage = selected !== '' && !selected.startsWith('preset:')
 
   const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
