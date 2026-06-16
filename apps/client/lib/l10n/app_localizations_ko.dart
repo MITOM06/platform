@@ -281,6 +281,12 @@ class AppLocalizationsKo extends AppLocalizations {
   String get emptyTapPlus => '아래 \"+\" 버튼을 눌러 시작하세요!';
 
   @override
+  String get searchConversationsHint => 'Search conversations...';
+
+  @override
+  String get noConversationsFound => 'No conversations found';
+
+  @override
   String get offlineBanner => '네트워크 연결 없음';
 
   @override
@@ -990,6 +996,9 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get aiPersonaTitle => 'AI 페르소나';
+
+  @override
+  String get avatarUploadLabel => 'Change avatar';
 
   @override
   String get aiPersonaNameHint => '봇 이름 (예: DevBot)';

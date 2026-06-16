@@ -283,6 +283,12 @@ class AppLocalizationsVi extends AppLocalizations {
   String get emptyTapPlus => 'Nhấn nút \"+\" bên dưới để bắt đầu!';
 
   @override
+  String get searchConversationsHint => 'Tìm kiếm đoạn chat...';
+
+  @override
+  String get noConversationsFound => 'Không tìm thấy đoạn chat nào';
+
+  @override
   String get offlineBanner => 'Không có kết nối mạng';
 
   @override
@@ -1001,6 +1007,9 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get aiPersonaTitle => 'Nhân vật AI';
+
+  @override
+  String get avatarUploadLabel => 'Đổi ảnh đại diện';
 
   @override
   String get aiPersonaNameHint => 'Tên bot (ví dụ: DevBot)';

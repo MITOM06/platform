@@ -290,6 +290,8 @@
     "tabFiles": "Files",
     "tabLinks": "Links",
     "leaveGroup": "Leave Group",
+    "leaveGroupConfirm": "Are you sure you want to leave this group?",
+    "leaveSuccess": "You have left the group",
     "actionOptions": "Options",
     "systemQuickReactionChangedShort": "Quick reaction changed",
     "systemGroupCreated": "Group created",

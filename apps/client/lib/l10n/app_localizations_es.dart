@@ -289,6 +289,12 @@ class AppLocalizationsEs extends AppLocalizations {
   String get emptyTapPlus => '¡Toca el botón \"+\" de abajo para empezar!';
 
   @override
+  String get searchConversationsHint => 'Search conversations...';
+
+  @override
+  String get noConversationsFound => 'No conversations found';
+
+  @override
   String get offlineBanner => 'Sin conexión de red';
 
   @override
@@ -1010,6 +1016,9 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get aiPersonaTitle => 'Persona de IA';
+
+  @override
+  String get avatarUploadLabel => 'Change avatar';
 
   @override
   String get aiPersonaNameHint => 'Nombre del bot (ej. DevBot)';

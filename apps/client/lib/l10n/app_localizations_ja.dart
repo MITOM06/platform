@@ -281,6 +281,12 @@ class AppLocalizationsJa extends AppLocalizations {
   String get emptyTapPlus => '下の「+」ボタンをタップして始めましょう！';
 
   @override
+  String get searchConversationsHint => 'Search conversations...';
+
+  @override
+  String get noConversationsFound => 'No conversations found';
+
+  @override
   String get offlineBanner => 'ネットワーク接続がありません';
 
   @override
@@ -989,6 +995,9 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get aiPersonaTitle => 'AIペルソナ';
+
+  @override
+  String get avatarUploadLabel => 'Change avatar';
 
   @override
   String get aiPersonaNameHint => 'ボット名（例：DevBot）';

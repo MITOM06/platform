@@ -636,6 +636,18 @@ abstract class AppLocalizations {
   /// **'Tap the \"+\" button below to start!'**
   String get emptyTapPlus;
 
+  /// No description provided for @searchConversationsHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Search conversations...'**
+  String get searchConversationsHint;
+
+  /// No description provided for @noConversationsFound.
+  ///
+  /// In en, this message translates to:
+  /// **'No conversations found'**
+  String get noConversationsFound;
+
   /// No description provided for @offlineBanner.
   ///
   /// In en, this message translates to:
@@ -1985,6 +1997,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'AI Persona'**
   String get aiPersonaTitle;
+
+  /// No description provided for @avatarUploadLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Change avatar'**
+  String get avatarUploadLabel;
 
   /// No description provided for @aiPersonaNameHint.
   ///
