@@ -12,12 +12,15 @@ import { LinkPreviewCard } from './LinkPreviewCard'
 import { UserProfileDrawer } from './UserProfileDrawer'
 import { GroupReadDetailsModal } from './GroupReadDetailsModal'
 import { ReactionsDetailModal } from './ReactionsDetailModal'
+import { humanizeSystemMessage } from '@/lib/system-messages'
+import { useNickname } from '@/lib/nicknames'
 import type { Message } from '@/lib/api/types'
 
 interface Props {
   message: Message
   isOwn: boolean
   currentUserId?: string
+  conversationId?: string
   isPinned?: boolean
   isGroup?: boolean
   onEdit?: (message: Message) => void
@@ -53,6 +56,7 @@ export function MessageBubble({
   message,
   isOwn,
   currentUserId,
+  conversationId,
   isPinned = false,
   isGroup = false,
   onEdit,
@@ -62,6 +66,10 @@ export function MessageBubble({
   onOptimisticUpdate,
 }: Props) {
   const t = useTranslations('chat')
+  // Resolve nicknames for sender + reply-preview sender (W-15.4 parity).
+  const senderNickname = useNickname(conversationId ?? '', message.senderId)
+  const replyNickname = useNickname(conversationId ?? '', message.replyPreview?.senderId)
+  const senderDisplay = senderNickname || message.senderName || ''
   const [hovered, setHovered] = useState(false)
   const [longPressActive, setLongPressActive] = useState(false)
   const [profileUserId, setProfileUserId] = useState<string | null>(null)
@@ -108,14 +116,7 @@ export function MessageBubble({
 
   if (message.type === 'system') {
     // Humanise structured system events (parity with Flutter message_bubble_parts.dart).
-    let systemText = message.content
-    if (message.content.startsWith('system.theme.changed:')) {
-      systemText = t('systemThemeChanged')
-    } else if (message.content.startsWith('system.quick_reaction.changed:')) {
-      systemText = t('systemQuickReactionChanged', { emoji: message.content.split(':')[1] ?? '👍' })
-    } else if (message.content.startsWith('system.nickname.changed:')) {
-      systemText = t('systemNicknameChanged')
-    }
+    const systemText = humanizeSystemMessage(message.content, t)
     return (
       <div className="flex justify-center my-1">
         <span className="text-[11px] text-muted-foreground bg-muted/65 rounded-full px-3 py-1 border border-border/20">
@@ -155,7 +156,9 @@ export function MessageBubble({
       }}
     >
       <p className="font-semibold mb-0.5">
-        {message.replyPreview.senderId === currentUserId ? t('you') : (message.senderName || '')}
+        {message.replyPreview.senderId === currentUserId
+          ? t('you')
+          : (replyNickname || message.senderName || '')}
       </p>
       <p className="truncate italic">{message.replyPreview.content}</p>
     </button>
@@ -165,13 +168,13 @@ export function MessageBubble({
     if (!isOwn && message.senderId) setProfileUserId(message.senderId)
   }
 
-  const senderLabel = !isOwn && message.senderName && (
+  const senderLabel = !isOwn && senderDisplay && (
     <button
       type="button"
       onClick={openProfile}
       className="text-xs font-semibold mb-1 text-primary/80 text-left hover:underline"
     >
-      {message.senderName}
+      {senderDisplay}
     </button>
   )
 

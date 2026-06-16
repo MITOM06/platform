@@ -418,3 +418,28 @@ Mirror: `apps/client/lib/features/chat/ui/widgets/{image_content,file_content,vo
   - **AI Chat Navigation (409 Conflict):** Fixed AI Chat creation to seamlessly redirect using the `body.conversationId` returned by the server on `409 Conflict`, instead of performing a fragile client-side search.
   - **UI Regressions from prior AI:** Restored the `ActiveFriendsRow` and the "Explore Channels" (`Hash`) buttons in `ConversationList.tsx`, and the "New Chat" (`MessageSquarePlus`) button in `layout.tsx` which were incorrectly deleted during earlier sync tasks.
   - **React Warnings:** Fixed an exhaustive-deps `useEffect` warning in `page.tsx` by wrapping the fallback empty array in `useMemo`.
+
+### SPRINT W-15 — Chat UI/UX Refinement & Parity
+> **Based on AI Codebase Planner & Execution Prompt**
+
+- [x] **Task W-15.1: Chat List Sidebar Preview Logic & System Messages Formatting**
+  - **Platform:** Web & Mobile
+  - **Message Preview:** In the left sidebar chat list, update the subtitle. For 1-on-1 chats: If the current user sent the last message, display "You: [message]". If the other user sent it, display only "[message]".
+  - **System Messages Formatting:** Map backend system events to clean, professional human-readable text (e.g., "User changed the theme", "Group was created") instead of raw system codes/JSON. Apply to sidebar preview and main chat area.
+
+- [x] **Task W-15.2: Chat Background Upload & Interactive Preview Modal**
+  - **Platform:** Web & Mobile
+  - **Fix:** Fix any current issues preventing chat background images from uploading correctly.
+  - **Feature:** Live Preview Modal. When uploading a new background, do not apply immediately. Open a Preview Modal with mockup chat interface and dummy messages over the newly uploaded background. Allow adjust/crop/scale. Apply exact coordinates only on "Submit/Save".
+
+- [x] **Task W-15.3: Quick Reaction (Emoji) Customization Bug**
+  - **Platform:** Web
+  - **Fix:** In chat settings, the "Quick Reaction" cannot currently be changed to other emojis. Fix state management and API calls so the emoji picker correctly updates the quick reaction icon for the conversation in both UI and DB.
+
+- [x] **Task W-15.4: Nickname Configuration (1-on-1 Chats)**
+  - **Platform:** Web
+  - **Feature:** Implement nickname editing mimicking Facebook Messenger. In 1-on-1 conversations, allow changing nickname for both participants. Ensure UI reflects updated nicknames immediately across chat header, message bubbles, and sidebar.
+
+- [x] **Task W-15.5: Group Chat Settings UI Parity**
+  - **Platform:** Web
+  - **Feature:** Update Group Chat settings sidebar to match standard Messenger-like settings menu (collapsible sections for Chat Info, Customize Chat, Media/Files, Privacy & Support). Ensure all buttons and toggles are fully functional and wired.

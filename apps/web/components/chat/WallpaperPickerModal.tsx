@@ -2,11 +2,13 @@
 
 import { useRef, useState } from 'react'
 import { useTranslations } from 'next-intl'
+import { toast } from 'sonner'
 import { Check, Ban, ImagePlus, Loader2 } from 'lucide-react'
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
+import { Slider } from '@/components/ui/slider'
 import { chatService } from '@/lib/api/chat'
 import { absoluteMediaUrl } from '@/lib/media'
 import { cn } from '@/lib/utils'
@@ -31,11 +33,19 @@ const PRESETS: { value: string; label: string; swatch: string }[] = [
 const FIT_OPTIONS = ['cover', 'contain', 'fill'] as const
 type Fit = (typeof FIT_OPTIONS)[number]
 
-function splitFit(raw: string): { value: string; fit: Fit } {
-  const idx = raw.indexOf('#fit=')
-  if (idx === -1) return { value: raw, fit: 'cover' }
-  const fit = raw.slice(idx + 5) as Fit
-  return { value: raw.slice(0, idx), fit: FIT_OPTIONS.includes(fit) ? fit : 'cover' }
+// Parse the stored value `<url>#fit=<fit>&scale=<n>` into its parts. Backward
+// compatible with `#fit=` only and bare preset/flat keys (Flutter ignores the
+// `&scale=` suffix — it reads the URL before `#`).
+function splitFit(raw: string): { value: string; fit: Fit; scale: number } {
+  const hashIdx = raw.indexOf('#')
+  if (hashIdx === -1) return { value: raw, fit: 'cover', scale: 100 }
+  const value = raw.slice(0, hashIdx)
+  const params = new URLSearchParams(raw.slice(hashIdx + 1))
+  const fitRaw = params.get('fit') as Fit | null
+  const fit = fitRaw && FIT_OPTIONS.includes(fitRaw) ? fitRaw : 'cover'
+  const scaleRaw = Number(params.get('scale'))
+  const scale = Number.isFinite(scaleRaw) && scaleRaw > 0 ? scaleRaw : 100
+  return { value, fit, scale }
 }
 
 export function WallpaperPickerModal({ conversationId, open, onClose }: Props) {
@@ -45,6 +55,7 @@ export function WallpaperPickerModal({ conversationId, open, onClose }: Props) {
 
   const [selected, setSelected] = useState('')
   const [fit, setFit] = useState<Fit>('cover')
+  const [scale, setScale] = useState(100)
   const [uploading, setUploading] = useState(false)
 
   // Re-sync from storage each time the modal opens.
@@ -55,6 +66,7 @@ export function WallpaperPickerModal({ conversationId, open, onClose }: Props) {
     const parsed = splitFit(stored === 'default' ? '' : stored)
     setSelected(parsed.value)
     setFit(parsed.fit)
+    setScale(parsed.scale)
   }
 
   const isImage = selected.startsWith('http')
@@ -67,8 +79,9 @@ export function WallpaperPickerModal({ conversationId, open, onClose }: Props) {
       const res = await chatService.uploadFile(file)
       setSelected(res.url)
       setFit('cover')
+      setScale(100)
     } catch {
-      // upload errors surface via the disabled state; nothing to apply
+      toast.error(t('wallpaperUploadError'))
     } finally {
       setUploading(false)
       if (fileInputRef.current) fileInputRef.current.value = ''
@@ -76,8 +89,11 @@ export function WallpaperPickerModal({ conversationId, open, onClose }: Props) {
   }
 
   const handleConfirm = () => {
-    // Encode fit only for uploaded images and only when non-default.
-    const value = isImage && fit !== 'cover' ? `${selected}#fit=${fit}` : selected
+    // Encode fit + scale only for uploaded images and only when non-default.
+    let value = selected
+    if (isImage && (fit !== 'cover' || scale !== 100)) {
+      value = `${selected}#fit=${fit}&scale=${scale}`
+    }
     localStorage.setItem(`wallpaper-${conversationId}`, value)
     window.dispatchEvent(new Event('wallpaper-changed'))
     // System message so all participants see the change in the thread.
@@ -87,6 +103,20 @@ export function WallpaperPickerModal({ conversationId, open, onClose }: Props) {
   }
 
   const previewPreset = PRESETS.find((p) => p.value === selected)
+
+  // Background style for the mock-chat preview — mirrors page.tsx resolveWallpaper.
+  const previewBgStyle: React.CSSProperties = isImage
+    ? {
+        backgroundImage: `url(${absoluteMediaUrl(selected)})`,
+        backgroundSize: fit === 'fill'
+          ? '100% 100%'
+          : fit === 'contain'
+            ? 'contain'
+            : scale === 100 ? 'cover' : `${scale}%`,
+        backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat',
+      }
+    : {}
 
   return (
     <Dialog
@@ -101,21 +131,35 @@ export function WallpaperPickerModal({ conversationId, open, onClose }: Props) {
           <DialogTitle>{t('wallpaperPickerTitle')}</DialogTitle>
         </DialogHeader>
 
-        {/* Live preview */}
-        <div className="h-28 rounded-xl overflow-hidden border border-border/50 flex items-center justify-center">
-          {isImage ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={absoluteMediaUrl(selected)}
-              alt="preview"
-              className={cn(
-                'w-full h-full',
-                fit === 'contain' ? 'object-contain' : fit === 'fill' ? 'object-fill' : 'object-cover',
-              )}
-            />
-          ) : (
-            <div className={cn('w-full h-full', previewPreset?.swatch ?? 'bg-muted')} />
-          )}
+        {/* Mock-chat live preview — dummy bubbles over the chosen background */}
+        <div className="space-y-1">
+          <p className="text-xs text-muted-foreground">{t('wallpaperPreview')}</p>
+          <div
+            className={cn(
+              'h-40 rounded-xl overflow-hidden border border-border/50 relative bg-center',
+              !isImage && (previewPreset?.swatch ?? 'bg-muted'),
+            )}
+            style={previewBgStyle}
+          >
+            <div className="absolute inset-0 bg-background/10 dark:bg-background/30" />
+            <div className="relative z-10 flex flex-col justify-end h-full gap-1.5 p-3">
+              <div className="flex justify-start">
+                <div className="max-w-[70%] rounded-2xl rounded-tl-none bg-muted/90 text-foreground border border-border/50 px-3 py-1.5 text-xs shadow-sm">
+                  {t('inputPlaceholder')}
+                </div>
+              </div>
+              <div className="flex justify-end">
+                <div className="max-w-[70%] rounded-2xl rounded-tr-none bg-primary text-primary-foreground px-3 py-1.5 text-xs shadow-sm">
+                  👍
+                </div>
+              </div>
+              <div className="flex justify-start">
+                <div className="max-w-[70%] rounded-2xl rounded-tl-none bg-muted/90 text-foreground border border-border/50 px-3 py-1.5 text-xs shadow-sm">
+                  ✨
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* Preset grid */}
@@ -167,26 +211,46 @@ export function WallpaperPickerModal({ conversationId, open, onClose }: Props) {
           {t('wallpaperUpload')}
         </Button>
 
-        {/* Image fit selector */}
+        {/* Image fit selector + scale slider */}
         {isImage && (
-          <div className="space-y-2">
-            <p className="text-xs text-muted-foreground">{t('wallpaperImageFit')}</p>
-            <div className="grid grid-cols-3 gap-2">
-              {FIT_OPTIONS.map((f) => (
-                <button
-                  key={f}
-                  onClick={() => setFit(f)}
-                  className={cn(
-                    'py-1.5 rounded-lg text-xs border transition-colors',
-                    fit === f
-                      ? 'border-pon-cyan text-pon-cyan bg-pon-cyan/10'
-                      : 'border-border text-muted-foreground hover:bg-muted/50',
-                  )}
-                >
-                  {t(f === 'cover' ? 'wallpaperFitCover' : f === 'contain' ? 'wallpaperFitContain' : 'wallpaperFitFill')}
-                </button>
-              ))}
+          <div className="space-y-3">
+            <div className="space-y-2">
+              <p className="text-xs text-muted-foreground">{t('wallpaperImageFit')}</p>
+              <div className="grid grid-cols-3 gap-2">
+                {FIT_OPTIONS.map((f) => (
+                  <button
+                    key={f}
+                    onClick={() => setFit(f)}
+                    className={cn(
+                      'py-1.5 rounded-lg text-xs border transition-colors',
+                      fit === f
+                        ? 'border-pon-cyan text-pon-cyan bg-pon-cyan/10'
+                        : 'border-border text-muted-foreground hover:bg-muted/50',
+                    )}
+                  >
+                    {t(f === 'cover' ? 'wallpaperFitCover' : f === 'contain' ? 'wallpaperFitContain' : 'wallpaperFitFill')}
+                  </button>
+                ))}
+              </div>
             </div>
+
+            {/* Scale slider (disabled for `fill`, which always stretches 100% 100%) */}
+            {fit !== 'fill' && (
+              <div className="space-y-2">
+                <div className="flex items-center justify-between text-xs text-muted-foreground">
+                  <span>{t('wallpaperScale')}</span>
+                  <span>{scale}%</span>
+                </div>
+                <Slider
+                  min={50}
+                  max={200}
+                  step={5}
+                  value={[scale]}
+                  onValueChange={([v]) => setScale(v)}
+                  className="w-full"
+                />
+              </div>
+            )}
           </div>
         )}
 

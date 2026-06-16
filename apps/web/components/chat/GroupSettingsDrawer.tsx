@@ -5,63 +5,28 @@ import { useState } from 'react'
 import { toast } from 'sonner'
 import { useQueryClient } from '@tanstack/react-query'
 import { useTranslations } from 'next-intl'
-import { UserMinus, UserPlus, Pencil, Check, X, ImageIcon, LogOut, Camera, FolderOpen, Images, Bot } from 'lucide-react'
+import {
+  UserPlus, Pencil, Check, X, LogOut, Camera, FolderOpen, Images, Bot,
+  Palette, SmilePlus, Users,
+} from 'lucide-react'
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import { Separator } from '@/components/ui/separator'
+import { Avatar, AvatarFallback } from '@/components/ui/avatar'
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion'
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { chatService } from '@/lib/api/chat'
 import { authService } from '@/lib/api/auth'
-import { useUser } from '@/lib/hooks/use-user'
-import { absoluteMediaUrl } from '@/lib/media'
+import {
+  useQuickReaction, setQuickReaction, quickReactionSystemMessage,
+} from '@/lib/quick-reaction'
+import { WallpaperPickerModal } from './WallpaperPickerModal'
+import { GroupMemberRow } from './group/GroupMemberRow'
 import type { Conversation, UserSearchResult } from '@/lib/api/types'
 import { useRouter } from 'next/navigation'
 
-/** Resolves a member's userId → display name + avatar (mirror Flutter group_info_screen). */
-function GroupMemberRow({
-  uid,
-  isMemberAdmin,
-  canRemove,
-  onRemove,
-  saving,
-  adminLabel,
-}: {
-  uid: string
-  isMemberAdmin: boolean
-  canRemove: boolean
-  onRemove: () => void
-  saving: boolean
-  adminLabel: string
-}) {
-  const { data: user } = useUser(uid)
-  const name = user?.displayName ?? '…'
-  return (
-    <div className="flex items-center gap-2 py-1">
-      <Avatar className="size-7 shrink-0">
-        {user?.avatarUrl && <AvatarImage src={absoluteMediaUrl(user.avatarUrl)} alt={name} />}
-        <AvatarFallback className="text-xs">{(user?.displayName?.[0] ?? '?').toUpperCase()}</AvatarFallback>
-      </Avatar>
-      <div className="flex-1 min-w-0">
-        <p className="text-sm truncate">{name}</p>
-        {isMemberAdmin && <p className="text-[11px] text-pon-cyan">{adminLabel}</p>}
-      </div>
-      {canRemove && (
-        <Button size="icon-xs" variant="ghost" onClick={onRemove} disabled={saving}>
-          <UserMinus className="size-3.5 text-destructive" />
-        </Button>
-      )}
-    </div>
-  )
-}
-
-const WALLPAPER_PRESETS = [
-  { id: 'default', bg: 'bg-background border border-muted' },
-  { id: 'sunset', label: 'Sunset', bg: 'bg-gradient-to-br from-orange-400 to-purple-600' },
-  { id: 'midnight', label: 'Midnight', bg: 'bg-gradient-to-br from-indigo-900 to-slate-900' },
-  { id: 'sweet_pink', label: 'Sweet Pink', bg: 'bg-gradient-to-br from-pink-300 to-red-400' },
-  { id: 'neon_teal', label: 'Neon Teal', bg: 'bg-gradient-to-br from-teal-900 to-cyan-800' },
-  { id: 'dark_shadow', label: 'Dark Shadow', bg: 'bg-gradient-to-br from-zinc-800 to-zinc-950' },
+const QUICK_REACTION_EMOJIS = [
+  '👍', '❤️', '😂', '😮', '😢', '🙏', '🔥', '🎉', '😍', '👏', '💯', '😎',
 ]
 
 interface Props {
@@ -80,19 +45,9 @@ export function GroupSettingsDrawer({ conversation, currentUserId, open, onClose
   const [searchQuery, setSearchQuery] = useState('')
   const [searchResults, setSearchResults] = useState<UserSearchResult[]>([])
   const [saving, setSaving] = useState(false)
+  const [wallpaperOpen, setWallpaperOpen] = useState(false)
   const isAdmin = conversation.admins.includes(currentUserId)
-  const [selectedWallpaper, setSelectedWallpaper] = useState<string>(() => {
-    if (typeof window !== 'undefined') {
-      return localStorage.getItem(`wallpaper-${conversation.id}`) || 'default'
-    }
-    return 'default'
-  })
-
-  const handleSelectWallpaper = (presetId: string) => {
-    setSelectedWallpaper(presetId)
-    localStorage.setItem(`wallpaper-${conversation.id}`, presetId)
-    window.dispatchEvent(new Event('wallpaper-changed'))
-  }
+  const quickReaction = useQuickReaction(conversation.id)
 
   const invalidate = () => {
     queryClient.invalidateQueries({ queryKey: ['conversations'] })
@@ -190,21 +145,28 @@ export function GroupSettingsDrawer({ conversation, currentUserId, open, onClose
     }
   }
 
-  const wallpaperPresets = WALLPAPER_PRESETS.map((p) => ({
-    ...p,
-    label: p.id === 'default' ? t('wallpaperDefault') : (p.label ?? p.id),
-  }))
+  const handlePickQuickReaction = async (emoji: string) => {
+    setQuickReaction(conversation.id, emoji)
+    try {
+      await chatService.sendMessage(conversation.id, quickReactionSystemMessage(emoji), 'system')
+    } catch {
+      // local emoji still applied even if broadcast fails
+    }
+    toast.success(t('quickReactionSuccess'))
+  }
+
+  const triggerCls = 'hover:no-underline py-2 data-[state=open]:text-pon-cyan'
+  const itemBtnCls = 'flex items-center gap-3 w-full text-left px-2 py-2.5 hover:bg-muted/50 rounded-lg text-sm transition-colors'
 
   return (
+    <>
     <Sheet open={open} onOpenChange={(o) => !o && onClose()}>
-      <SheetContent side="right" className="w-80 sm:w-80 overflow-y-auto">
+      <SheetContent side="right" className="w-80 sm:w-[360px] overflow-y-auto">
         <SheetHeader>
           <SheetTitle>{t('groupSettingsTitle')}</SheetTitle>
         </SheetHeader>
 
-        <div className="flex flex-col gap-4 px-6 pb-6">
-          <Separator />
-
+        <div className="flex flex-col px-5 pb-6">
           {/* Group header & avatar */}
           <div className="flex flex-col items-center py-4 space-y-3">
             <div className="relative group">
@@ -224,166 +186,184 @@ export function GroupSettingsDrawer({ conversation, currentUserId, open, onClose
                 </label>
               )}
             </div>
-
-            {editingName ? (
-              <div className="flex gap-2 w-full max-w-[200px]">
-                <Input
-                  value={nameValue}
-                  onChange={(e) => setNameValue(e.target.value)}
-                  className="h-8 text-sm"
-                  autoFocus
-                />
-                <Button size="icon-sm" onClick={handleSaveName} disabled={saving}>
-                  <Check className="size-4" />
-                </Button>
-                <Button size="icon-sm" variant="ghost" onClick={() => setEditingName(false)}>
-                  <X className="size-4" />
-                </Button>
-              </div>
-            ) : (
-              <div className="flex items-center gap-2">
-                <span className="font-semibold text-lg">{conversation.name ?? t('groupNoName')}</span>
-                {isAdmin && (
-                  <Button size="icon-xs" variant="ghost" onClick={() => setEditingName(true)}>
-                    <Pencil className="size-3.5 text-muted-foreground" />
-                  </Button>
-                )}
-              </div>
-            )}
-            <p className="text-xs text-muted-foreground">{t('groupMembers', { count: conversation.participants.length })}</p>
+            <span className="font-semibold text-lg">{conversation.name ?? t('groupNoName')}</span>
+            <p className="text-xs text-muted-foreground">{t('membersCount', { count: conversation.participants.length })}</p>
           </div>
 
-          <Separator />
+          <hr className="border-border/60" />
 
-          {/* Members */}
-          <div className="space-y-2">
-            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-              {t('groupMembers', { count: conversation.participants.length })}
-            </p>
-            <div className="space-y-1 max-h-48 overflow-y-auto">
-              {conversation.participants.map((uid) => (
-                <GroupMemberRow
-                  key={uid}
-                  uid={uid}
-                  isMemberAdmin={conversation.admins.includes(uid)}
-                  canRemove={isAdmin && uid !== currentUserId}
-                  onRemove={() => handleRemoveMember(uid)}
-                  saving={saving}
-                  adminLabel={t('groupAdmin')}
-                />
-              ))}
-            </div>
-          </div>
-
-          {/* Add members */}
-          {isAdmin && (
-            <div className="space-y-2">
-              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide flex items-center gap-1">
-                <UserPlus className="size-3.5" /> {t('groupAddMember')}
-              </p>
-              <Input
-                value={searchQuery}
-                onChange={(e) => handleSearchUsers(e.target.value)}
-                placeholder={t('groupSearchPlaceholder')}
-                className="h-8 text-sm"
-              />
-              <div className="space-y-1 max-h-32 overflow-y-auto">
-                {searchResults.map((user) => {
-                  const uid = user._id ?? user.id ?? ''
-                  return (
-                    <button
+          <Accordion type="multiple" className="w-full px-1 space-y-2 mt-2">
+            {/* Chat Info — members + add member */}
+            <AccordionItem value="info" className="border-none">
+              <AccordionTrigger className={triggerCls}>
+                <span className="font-semibold text-sm">{t('chatInfoCategory')}</span>
+              </AccordionTrigger>
+              <AccordionContent className="pb-4 pt-1 space-y-2">
+                <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground uppercase tracking-wide px-1">
+                  <Users className="size-3.5" />
+                  {t('groupMembers', { count: conversation.participants.length })}
+                </div>
+                <div className="space-y-1 max-h-48 overflow-y-auto px-1">
+                  {conversation.participants.map((uid) => (
+                    <GroupMemberRow
                       key={uid}
-                      onClick={() => handleAddMember(user)}
-                      disabled={saving}
-                      className="w-full flex items-center gap-2 px-2 py-1.5 rounded-md hover:bg-accent text-sm text-left"
-                    >
-                      <Avatar className="size-7 shrink-0">
-                        <AvatarFallback className="text-xs">
-                          {user.displayName[0]?.toUpperCase()}
-                        </AvatarFallback>
-                      </Avatar>
-                      <span className="truncate">{user.displayName}</span>
+                      uid={uid}
+                      isMemberAdmin={conversation.admins.includes(uid)}
+                      canRemove={isAdmin && uid !== currentUserId}
+                      onRemove={() => handleRemoveMember(uid)}
+                      saving={saving}
+                      adminLabel={t('groupAdmin')}
+                    />
+                  ))}
+                </div>
+
+                {isAdmin && (
+                  <div className="space-y-2 pt-1">
+                    <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide flex items-center gap-1 px-1">
+                      <UserPlus className="size-3.5" /> {t('groupAddMember')}
+                    </p>
+                    <Input
+                      value={searchQuery}
+                      onChange={(e) => handleSearchUsers(e.target.value)}
+                      placeholder={t('groupSearchPlaceholder')}
+                      className="h-8 text-sm"
+                    />
+                    <div className="space-y-1 max-h-32 overflow-y-auto">
+                      {searchResults.map((user) => {
+                        const uid = user._id ?? user.id ?? ''
+                        return (
+                          <button
+                            key={uid}
+                            onClick={() => handleAddMember(user)}
+                            disabled={saving}
+                            className="w-full flex items-center gap-2 px-2 py-1.5 rounded-md hover:bg-accent text-sm text-left"
+                          >
+                            <Avatar className="size-7 shrink-0">
+                              <AvatarFallback className="text-xs">
+                                {user.displayName[0]?.toUpperCase()}
+                              </AvatarFallback>
+                            </Avatar>
+                            <span className="truncate">{user.displayName}</span>
+                          </button>
+                        )
+                      })}
+                    </div>
+                  </div>
+                )}
+              </AccordionContent>
+            </AccordionItem>
+
+            {/* Customize Chat — rename, avatar, wallpaper, quick reaction */}
+            <AccordionItem value="customize" className="border-none">
+              <AccordionTrigger className={triggerCls}>
+                <span className="font-semibold text-sm">{t('customizeChatCategory')}</span>
+              </AccordionTrigger>
+              <AccordionContent className="pb-4 pt-1 space-y-1">
+                {isAdmin && (
+                  editingName ? (
+                    <div className="flex gap-2 px-2 py-1.5">
+                      <Input
+                        value={nameValue}
+                        onChange={(e) => setNameValue(e.target.value)}
+                        className="h-8 text-sm"
+                        autoFocus
+                      />
+                      <Button size="icon-sm" onClick={handleSaveName} disabled={saving}>
+                        <Check className="size-4" />
+                      </Button>
+                      <Button size="icon-sm" variant="ghost" onClick={() => setEditingName(false)}>
+                        <X className="size-4" />
+                      </Button>
+                    </div>
+                  ) : (
+                    <button onClick={() => setEditingName(true)} className={itemBtnCls}>
+                      <Pencil className="size-4 text-muted-foreground" />
+                      <span>{t('renameGroup')}</span>
                     </button>
                   )
-                })}
-              </div>
-            </div>
-          )}
-
-          <Separator />
-
-          {/* Wallpaper Selection */}
-          <div className="space-y-3">
-            <div className="flex items-center gap-2 text-sm font-medium">
-              <ImageIcon className="size-4" />
-              {t('groupWallpaper')}
-            </div>
-            <div className="grid grid-cols-3 gap-2">
-              {wallpaperPresets.map((preset) => (
-                <button
-                  key={preset.id}
-                  onClick={() => handleSelectWallpaper(preset.id)}
-                  className={`flex flex-col items-center gap-1.5 p-1.5 rounded-lg border-2 hover:opacity-95 transition-all text-[10px] font-medium ${
-                    selectedWallpaper === preset.id
-                      ? 'border-primary shadow-sm bg-primary/5'
-                      : 'border-transparent hover:border-muted-foreground/30'
-                  }`}
-                >
-                  <div className={`w-full aspect-square rounded-md ${preset.bg}`} />
-                  <span className="truncate max-w-full text-foreground/80">{preset.label}</span>
+                )}
+                <button onClick={() => setWallpaperOpen(true)} className={itemBtnCls}>
+                  <Palette className="size-4 text-muted-foreground" />
+                  <span>{t('wallpaper')}</span>
                 </button>
-              ))}
-            </div>
-          </div>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <button className={itemBtnCls}>
+                      <SmilePlus className="size-4 text-muted-foreground" />
+                      <span className="flex-1">{t('quickReaction')}</span>
+                      <span className="text-lg leading-none">{quickReaction}</span>
+                    </button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-56 p-2" align="end" side="top">
+                    <p className="text-xs text-muted-foreground px-1 pb-2">{t('quickReactionPickTitle')}</p>
+                    <div className="grid grid-cols-6 gap-1">
+                      {QUICK_REACTION_EMOJIS.map((emoji) => (
+                        <button
+                          key={emoji}
+                          onClick={() => handlePickQuickReaction(emoji)}
+                          className={`p-1.5 rounded-lg text-lg flex items-center justify-center transition-colors hover:bg-muted ${
+                            quickReaction === emoji ? 'bg-pon-cyan/15 ring-1 ring-pon-cyan' : ''
+                          }`}
+                        >
+                          {emoji}
+                        </button>
+                      ))}
+                    </div>
+                  </PopoverContent>
+                </Popover>
+              </AccordionContent>
+            </AccordionItem>
 
-          <Separator />
+            {/* Files & Media */}
+            <AccordionItem value="media" className="border-none">
+              <AccordionTrigger className={triggerCls}>
+                <span className="font-semibold text-sm">{t('filesAndMediaCategory')}</span>
+              </AccordionTrigger>
+              <AccordionContent className="pb-4 pt-1 space-y-1">
+                <button onClick={() => { onClose(); router.push(`/shared-media/${conversation.id}`) }} className={itemBtnCls}>
+                  <Images className="size-4 text-pon-cyan" />
+                  <span>{t('groupSharedMedia')}</span>
+                </button>
+                <button onClick={() => { onClose(); router.push(`/kb/${conversation.id}`) }} className={itemBtnCls}>
+                  <FolderOpen className="size-4 text-pon-peach" />
+                  <span>{t('groupKnowledgeBase')}</span>
+                </button>
+              </AccordionContent>
+            </AccordionItem>
 
-          {/* Links */}
-          <div className="space-y-1">
-            <Button
-              variant="ghost"
-              className="w-full justify-start text-sm font-normal"
-              onClick={() => { onClose(); router.push(`/shared-media/${conversation.id}`) }}
-            >
-              <Images className="size-4 mr-3 text-pon-cyan" />
-              {t('groupSharedMedia')}
-            </Button>
-
-            <Button
-              variant="ghost"
-              className="w-full justify-start text-sm font-normal"
-              onClick={() => { onClose(); router.push(`/kb/${conversation.id}`) }}
-            >
-              <FolderOpen className="size-4 mr-3 text-pon-peach" />
-              {t('groupKnowledgeBase')}
-            </Button>
-
-            {isAdmin && (
-              <Button
-                variant="ghost"
-                className="w-full justify-start text-sm font-normal"
-                onClick={() => { onClose(); router.push(`/ai-persona?conversationId=${conversation.id}`) }}
-              >
-                <Bot className="size-4 mr-3 text-[#B47FFF]" />
-                {t('groupAiPersona')}
-              </Button>
-            )}
-          </div>
-
-          <Separator />
-
-          {/* Leave Group */}
-          <Button
-            variant="ghost"
-            className="w-full justify-start text-destructive hover:text-destructive hover:bg-destructive/10"
-            onClick={handleLeaveGroup}
-            disabled={saving}
-          >
-            <LogOut className="size-4 mr-3" />
-            {t('groupLeave')}
-          </Button>
+            {/* Privacy & Support */}
+            <AccordionItem value="privacy" className="border-none">
+              <AccordionTrigger className="hover:no-underline py-2 data-[state=open]:text-red-500">
+                <span className="font-semibold text-sm">{t('privacyAndSupportCategory')}</span>
+              </AccordionTrigger>
+              <AccordionContent className="pb-4 pt-1 space-y-1">
+                {isAdmin && (
+                  <button onClick={() => { onClose(); router.push(`/ai-persona?conversationId=${conversation.id}`) }} className={itemBtnCls}>
+                    <Bot className="size-4 text-[#B47FFF]" />
+                    <span>{t('groupAiPersona')}</span>
+                  </button>
+                )}
+                <button
+                  onClick={handleLeaveGroup}
+                  disabled={saving}
+                  className="flex items-center gap-3 w-full text-left px-2 py-2.5 hover:bg-destructive/10 text-destructive rounded-lg text-sm transition-colors"
+                >
+                  <LogOut className="size-4" />
+                  <span>{t('groupLeave')}</span>
+                </button>
+              </AccordionContent>
+            </AccordionItem>
+          </Accordion>
         </div>
       </SheetContent>
     </Sheet>
+
+    {/* Wallpaper picker — same upload+preview flow as direct chats (W-15.2) */}
+    <WallpaperPickerModal
+      conversationId={conversation.id}
+      open={wallpaperOpen}
+      onClose={() => setWallpaperOpen(false)}
+    />
+    </>
   )
 }

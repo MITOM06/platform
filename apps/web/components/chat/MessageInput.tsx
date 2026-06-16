@@ -14,6 +14,7 @@ import {
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { chatService } from '@/lib/api/chat'
+import { useQuickReaction } from '@/lib/quick-reaction'
 import type { Message, MessageType, Conversation } from '@/lib/api/types'
 
 const EMOJIS = [
@@ -51,6 +52,7 @@ export function MessageInput({
   conversation,
 }: Props) {
   const t = useTranslations('chat')
+  const quickReaction = useQuickReaction(conversation?.id ?? '')
   const [value, setValue] = useState('')
   const [sending, setSending] = useState(false)
   const [uploading, setUploading] = useState(false)
@@ -510,12 +512,12 @@ export function MessageInput({
                 <Mic className="size-5 text-pon-cyan" />
               </Button>
               <button
-                onClick={() => onSend('👍', 'text')}
+                onClick={() => onSend(quickReaction, 'text')}
                 disabled={busy}
                 className="size-9 shrink-0 flex items-center justify-center text-xl transition-transform hover:scale-110 active:scale-95"
                 title={t('quickSend')}
               >
-                👍
+                {quickReaction}
               </button>
             </>
           )}

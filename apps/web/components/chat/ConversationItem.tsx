@@ -2,12 +2,15 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
+import { useTranslations } from 'next-intl'
 import { cn } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Bot } from 'lucide-react'
 import { useAuthStore } from '@/lib/store/auth.store'
 import { useUser } from '@/lib/hooks/use-user'
+import { useNickname } from '@/lib/nicknames'
+import { humanizeSystemMessage } from '@/lib/system-messages'
 import type { Conversation } from '@/lib/api/types'
 
 const AI_BOT_ID = 'ai-bot-000000000000000000000001'
@@ -38,6 +41,7 @@ function formatTime(iso: string | null): string {
 
 export function ConversationItem({ conversation: conv }: Props) {
   const pathname = usePathname()
+  const t = useTranslations('chat')
   const isActive = pathname === `/conversations/${conv.id}`
   const currentUser = useAuthStore((s) => s.user)
 
@@ -48,11 +52,26 @@ export function ConversationItem({ conversation: conv }: Props) {
       : undefined
 
   const { data: otherUser } = useUser(otherUserId)
+  const otherNickname = useNickname(conv.id, otherUserId)
 
   const displayName =
     conv.name ??
-    (isAI ? 'AI Assistant' : (otherUser?.displayName ?? 'Cuộc trò chuyện'))
+    (isAI
+      ? 'AI Assistant'
+      : (otherNickname || otherUser?.displayName || t('conversationDefault')))
   const avatarUrl = conv.avatarUrl ?? otherUser?.avatarUrl
+
+  // Sidebar preview: "You: <msg>" for own last message in direct chats, with
+  // system-codes/attachments humanised (mirror Flutter conversation_tile).
+  const lastMessage = conv.lastMessage
+  let previewText = t('noMessagesYet')
+  if (lastMessage?.content) {
+    const humanized = humanizeSystemMessage(lastMessage.content, t, { short: true })
+    const isOwn = lastMessage.senderId === currentUser?.id
+    const isPlainOwn =
+      isOwn && conv.type === 'direct' && !lastMessage.content.startsWith('system.')
+    previewText = isPlainOwn ? `${t('youColon')}${humanized}` : humanized
+  }
 
   return (
     <Link
@@ -95,7 +114,7 @@ export function ConversationItem({ conversation: conv }: Props) {
         </div>
         <div className="flex items-center justify-between gap-1 mt-0.5">
           <p className="text-xs text-muted-foreground truncate">
-            {conv.lastMessage?.content ?? 'Chưa có tin nhắn'}
+            {previewText}
           </p>
           {conv.unreadCount > 0 && (
             <Badge

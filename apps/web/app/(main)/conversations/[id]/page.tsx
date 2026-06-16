@@ -24,6 +24,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { cn } from '@/lib/utils'
 import { absoluteMediaUrl } from '@/lib/media'
 import { applyNicknameSystemMessage } from '@/lib/nicknames'
+import { applyQuickReactionSystemMessage } from '@/lib/quick-reaction'
 import type { Message, MessageType, MessagesResponse, StompEvent } from '@/lib/api/types'
 
 function formatSeparatorDate(dateStr: string): string {
@@ -151,10 +152,28 @@ export default function ConversationPage({ params }: Props) {
       return { className: WALLPAPER_CLASSES.default, isImage: false }
     }
     if (raw.startsWith('http')) {
-      const [url, fit] = raw.split('#fit=')
-      const bgSize = fit === 'fill' ? '100% 100%' : fit === 'contain' ? 'contain' : 'cover'
+      // Parse `<url>#fit=<fit>&scale=<n>` (backward compatible with `#fit=` only).
+      const hashIdx = raw.indexOf('#')
+      const url = hashIdx === -1 ? raw : raw.slice(0, hashIdx)
+      const params = hashIdx === -1 ? new URLSearchParams() : new URLSearchParams(raw.slice(hashIdx + 1))
+      const fit = params.get('fit')
+      const scaleRaw = Number(params.get('scale'))
+      const scale = Number.isFinite(scaleRaw) && scaleRaw > 0 ? scaleRaw : 100
+      const bgSize = fit === 'fill'
+        ? '100% 100%'
+        : fit === 'contain'
+          ? 'contain'
+          // cover at default scale → use the `cover` keyword; a custom scale
+          // overrides it with an explicit percentage.
+          : scale === 100
+            ? 'cover'
+            : `${scale}%`
       return {
-        style: { backgroundImage: `url(${absoluteMediaUrl(url)})`, backgroundSize: bgSize },
+        style: {
+          backgroundImage: `url(${absoluteMediaUrl(url)})`,
+          backgroundSize: bgSize,
+          backgroundPosition: 'center',
+        },
         isImage: true,
       }
     }
@@ -173,6 +192,7 @@ export default function ConversationPage({ params }: Props) {
     for (const m of messages) {
       if (m.type === 'system' && typeof m.content === 'string') {
         applyNicknameSystemMessage(id, m.content)
+        applyQuickReactionSystemMessage(id, m.content)
       }
     }
   }, [id, messages])
@@ -314,6 +334,7 @@ export default function ConversationPage({ params }: Props) {
             const msg = parsed as unknown as Message
             if (msg.type === 'system' && typeof msg.content === 'string') {
               applyNicknameSystemMessage(id, msg.content)
+              applyQuickReactionSystemMessage(id, msg.content)
             }
             appendMessage(msg)
           }
@@ -478,6 +499,7 @@ export default function ConversationPage({ params }: Props) {
                         message={msg}
                         isOwn={msg.senderId === currentUser.id}
                         currentUserId={currentUser.id}
+                        conversationId={id}
                         isPinned={pinnedMessages.includes(msg.id)}
                         isGroup={isGroup}
                         onEdit={setEditingMessage}

@@ -5,12 +5,7 @@ import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import { useQueryClient, useQuery } from '@tanstack/react-query'
 import { useTranslations } from 'next-intl'
-import {
-  BellOff, Bell, Archive, ArchiveX, Trash2, Eraser, Timer,
-  CheckCheck, BookMarked, User, Users, ShieldOff, Shield,
-  Search, Lock, Info, Palette, SmilePlus, Image as ImageIcon2, FileText, Link as LinkIcon, LogOut,
-  Cake, PenLine
-} from 'lucide-react'
+import { Users, Info, Cake } from 'lucide-react'
 import {
   Sheet, SheetContent,
 } from '@/components/ui/sheet'
@@ -19,14 +14,19 @@ import {
   DialogDescription, DialogFooter,
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
-import { Slider } from '@/components/ui/slider'
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion'
 import { chatService } from '@/lib/api/chat'
 import { authService } from '@/lib/api/auth'
 import { WallpaperPickerModal } from './WallpaperPickerModal'
-import { Input } from '@/components/ui/input'
+import { SettingsHeader } from './group/SettingsHeader'
+import { ActionOptionsSection } from './group/ActionOptionsSection'
+import { CustomizeChatSection } from './group/CustomizeChatSection'
+import { FilesMediaSection } from './group/FilesMediaSection'
+import { PrivacySupportSection } from './group/PrivacySupportSection'
 import { getNickname, setNickname, nicknameSystemMessage } from '@/lib/nicknames'
+import {
+  useQuickReaction, setQuickReaction, quickReactionSystemMessage,
+} from '@/lib/quick-reaction'
 import type { Conversation } from '@/lib/api/types'
 
 interface Props {
@@ -72,23 +72,34 @@ export function ConversationSettingsDrawer({
     ? conversation.participants.find((p) => p !== currentUserId)
     : null
 
-  const [nicknameValue, setNicknameValue] = useState(
-    () => (otherUserId ? getNickname(conversation.id, otherUserId) ?? '' : ''),
-  )
+  const quickReaction = useQuickReaction(conversation.id)
 
-  const handleSaveNickname = async () => {
-    if (!otherUserId) return
-    setNickname(conversation.id, otherUserId, nicknameValue)
+  const saveNickname = async (targetId: string, value: string) => {
+    setNickname(conversation.id, targetId, value)
     try {
       await chatService.sendMessage(
         conversation.id,
-        nicknameSystemMessage(otherUserId, nicknameValue.trim()),
+        nicknameSystemMessage(targetId, value.trim()),
         'system',
       )
     } catch {
       // local nickname still applied even if broadcast fails
     }
     toast.success(t('nicknameSuccess'))
+  }
+
+  const handlePickQuickReaction = async (emoji: string) => {
+    setQuickReaction(conversation.id, emoji)
+    try {
+      await chatService.sendMessage(
+        conversation.id,
+        quickReactionSystemMessage(emoji),
+        'system',
+      )
+    } catch {
+      // local emoji still applied even if broadcast fails
+    }
+    toast.success(t('quickReactionSuccess'))
   }
 
   const { data: otherUser } = useQuery({
@@ -212,61 +223,17 @@ export function ConversationSettingsDrawer({
           </div>
 
           <div className="flex-1 overflow-y-auto p-4 pt-6 space-y-6">
-            {/* Avatar & Name */}
-            <div className="flex flex-col items-center gap-3">
-              <Avatar className="size-24 border-2 border-border/50">
-                {avatarUrl && <AvatarImage src={avatarUrl} alt={displayName} />}
-                <AvatarFallback className="text-3xl font-medium bg-gradient-to-br from-pon-cyan/80 to-pon-peach/80 text-white">
-                  {avatarLetter}
-                </AvatarFallback>
-              </Avatar>
-              <div className="text-center">
-                <h2 className="text-xl font-bold line-clamp-2 px-4">{displayName}</h2>
-                <div className="flex items-center justify-center gap-1.5 mt-1 text-xs text-muted-foreground">
-                  <Lock className="size-3" />
-                  <span>{t('endToEndEncrypted')}</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Quick Action Buttons */}
-            <div className="flex justify-evenly px-2">
-              {isDirect && onOpenProfile && (
-                <button
-                  onClick={() => { onOpenProfile(); onClose() }}
-                  className="flex flex-col items-center gap-1.5 w-16"
-                >
-                  <div className="size-10 rounded-full bg-pon-cyan/10 text-pon-cyan flex items-center justify-center">
-                    <User className="size-5" />
-                  </div>
-                  <span className="text-[11px] text-muted-foreground truncate w-full text-center">{t('viewProfile')}</span>
-                </button>
-              )}
-              <button
-                onClick={handleMuteToggle}
-                disabled={saving}
-                className="flex flex-col items-center gap-1.5 w-16"
-              >
-                <div className="size-10 rounded-full bg-pon-cyan/10 text-pon-cyan flex items-center justify-center">
-                  {isMuted ? <BellOff className="size-5" /> : <Bell className="size-5" />}
-                </div>
-                <span className="text-[11px] text-muted-foreground truncate w-full text-center">
-                  {isMuted ? t('unmuteNotifications') : t('muteNotifications')}
-                </span>
-              </button>
-              <button
-                className="flex flex-col items-center gap-1.5 w-16"
-                onClick={() => {
-                  onSearch?.()
-                  onClose()
-                }}
-              >
-                <div className="size-10 rounded-full bg-pon-cyan/10 text-pon-cyan flex items-center justify-center">
-                  <Search className="size-5" />
-                </div>
-                <span className="text-[11px] text-muted-foreground truncate w-full text-center">{t('searchMessages')}</span>
-              </button>
-            </div>
+            <SettingsHeader
+              displayName={displayName}
+              avatarUrl={avatarUrl ?? undefined}
+              avatarLetter={avatarLetter}
+              isDirect={isDirect}
+              isMuted={isMuted}
+              saving={saving}
+              onOpenProfile={onOpenProfile ? () => { onOpenProfile(); onClose() } : undefined}
+              onMuteToggle={handleMuteToggle}
+              onSearch={onSearch ? () => { onSearch(); onClose() } : undefined}
+            />
 
             <hr className="border-border/60" />
 
@@ -312,147 +279,48 @@ export function ConversationSettingsDrawer({
               </AccordionItem>
 
               {/* Action Options (React-specific: Mark read, Archive, Auto-Delete) */}
-              <AccordionItem value="options" className="border-none">
-                <AccordionTrigger className="hover:no-underline py-2 data-[state=open]:text-pon-cyan">
-                  <span className="font-semibold text-sm">{t('actionOptions')}</span>
-                </AccordionTrigger>
-                <AccordionContent className="pb-4 pt-1 space-y-1">
-                  <button onClick={handleMarkRead} disabled={saving} className="flex items-center gap-3 w-full text-left px-2 py-2.5 hover:bg-muted/50 rounded-lg text-sm transition-colors">
-                    <CheckCheck className="size-4 text-muted-foreground" />
-                    <span>{t('markRead')}</span>
-                  </button>
-                  <button onClick={handleMarkUnread} disabled={saving} className="flex items-center gap-3 w-full text-left px-2 py-2.5 hover:bg-muted/50 rounded-lg text-sm transition-colors">
-                    <BookMarked className="size-4 text-muted-foreground" />
-                    <span>{t('markUnread')}</span>
-                  </button>
-                  <button onClick={handleArchiveToggle} disabled={saving} className="flex items-center gap-3 w-full text-left px-2 py-2.5 hover:bg-muted/50 rounded-lg text-sm transition-colors">
-                    {isArchived ? <ArchiveX className="size-4 text-muted-foreground" /> : <Archive className="size-4 text-muted-foreground" />}
-                    <span>{isArchived ? t('unarchive') : t('archive')}</span>
-                  </button>
-
-                  {/* Auto-delete timer */}
-                  <div className="px-2 py-3 space-y-3">
-                    <div className="flex items-center gap-2 text-sm">
-                      <Timer className="size-4 text-muted-foreground" />
-                      <span>{t('autoDelete')}</span>
-                    </div>
-                    <Slider
-                      min={0}
-                      max={autoDeleteOptions.length - 1}
-                      step={1}
-                      value={[sliderValue]}
-                      onValueChange={([v]) => handleAutoDelete(v)}
-                      className="w-full"
-                    />
-                    <div className="flex justify-between text-[10px] text-muted-foreground font-medium">
-                      {autoDeleteOptions.map((o, i) => (
-                        <span key={i} className={i === sliderValue ? 'text-primary' : ''}>
-                          {o.label}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                </AccordionContent>
-              </AccordionItem>
+              <ActionOptionsSection
+                saving={saving}
+                isArchived={isArchived}
+                autoDeleteOptions={autoDeleteOptions}
+                sliderValue={sliderValue}
+                onMarkRead={handleMarkRead}
+                onMarkUnread={handleMarkUnread}
+                onArchiveToggle={handleArchiveToggle}
+                onAutoDelete={handleAutoDelete}
+              />
 
               {/* Customize Chat */}
-              <AccordionItem value="customize" className="border-none">
-                <AccordionTrigger className="hover:no-underline py-2 data-[state=open]:text-pon-cyan">
-                  <span className="font-semibold text-sm">{t('customizeChatCategory')}</span>
-                </AccordionTrigger>
-                <AccordionContent className="pb-4 pt-1 space-y-1">
-                  <button onClick={() => setWallpaperOpen(true)} className="flex items-center gap-3 w-full text-left px-2 py-2.5 hover:bg-muted/50 rounded-lg text-sm transition-colors">
-                    <Palette className="size-4 text-muted-foreground" />
-                    <span>{t('wallpaper')}</span>
-                  </button>
-                  <button className="flex items-center gap-3 w-full text-left px-2 py-2.5 hover:bg-muted/50 rounded-lg text-sm transition-colors" onClick={() => toast('Coming soon')}>
-                    <SmilePlus className="size-4 text-muted-foreground" />
-                    <span>{t('quickReaction')}</span>
-                  </button>
-                  {isDirect && otherUserId && (
-                    <div className="px-2 py-2 space-y-2">
-                      <div className="flex items-center gap-2 text-sm">
-                        <PenLine className="size-4 text-muted-foreground" />
-                        <span>{t('nicknames')}</span>
-                      </div>
-                      <div className="flex gap-2">
-                        <Input
-                          value={nicknameValue}
-                          onChange={(e) => setNicknameValue(e.target.value)}
-                          placeholder={t('nicknamePlaceholder')}
-                          maxLength={40}
-                          className="h-8 text-sm"
-                        />
-                        <Button size="sm" onClick={handleSaveNickname} disabled={saving}>
-                          {tCommon('save')}
-                        </Button>
-                      </div>
-                    </div>
-                  )}
-                  {isGroup && onOpenGroupInfo && (
-                    <>
-                      <button onClick={() => { onOpenGroupInfo(); onClose() }} className="flex items-center gap-3 w-full text-left px-2 py-2.5 hover:bg-muted/50 rounded-lg text-sm transition-colors">
-                        <PenLine className="size-4 text-muted-foreground" />
-                        <span>{t('renameGroup')}</span>
-                      </button>
-                      <button onClick={() => { onOpenGroupInfo(); onClose() }} className="flex items-center gap-3 w-full text-left px-2 py-2.5 hover:bg-muted/50 rounded-lg text-sm transition-colors">
-                        <ImageIcon2 className="size-4 text-muted-foreground" />
-                        <span>{t('changeAvatar')}</span>
-                      </button>
-                    </>
-                  )}
-                </AccordionContent>
-              </AccordionItem>
+              <CustomizeChatSection
+                isDirect={isDirect}
+                isGroup={isGroup}
+                otherUserId={otherUserId}
+                currentUserId={currentUserId}
+                saving={saving}
+                quickReaction={quickReaction}
+                initialOtherNickname={otherUserId ? getNickname(conversation.id, otherUserId) ?? '' : ''}
+                initialSelfNickname={getNickname(conversation.id, currentUserId) ?? ''}
+                onOpenWallpaper={() => setWallpaperOpen(true)}
+                onPickQuickReaction={handlePickQuickReaction}
+                onSaveNickname={saveNickname}
+                onOpenGroupInfo={onOpenGroupInfo}
+                onCloseDrawer={onClose}
+              />
 
               {/* Files & Media */}
-              <AccordionItem value="media" className="border-none">
-                <AccordionTrigger className="hover:no-underline py-2 data-[state=open]:text-pon-cyan">
-                  <span className="font-semibold text-sm">{t('filesAndMediaCategory')}</span>
-                </AccordionTrigger>
-                <AccordionContent className="pb-4 pt-1 space-y-1">
-                  <button className="flex items-center gap-3 w-full text-left px-2 py-2.5 hover:bg-muted/50 rounded-lg text-sm transition-colors" onClick={() => { onOpenSharedMedia?.(); onClose() }}>
-                    <ImageIcon2 className="size-4 text-muted-foreground" />
-                    <span>{t('tabMedia')}</span>
-                  </button>
-                  <button className="flex items-center gap-3 w-full text-left px-2 py-2.5 hover:bg-muted/50 rounded-lg text-sm transition-colors" onClick={() => { onOpenSharedMedia?.(); onClose() }}>
-                    <FileText className="size-4 text-muted-foreground" />
-                    <span>{t('tabFiles')}</span>
-                  </button>
-                  <button className="flex items-center gap-3 w-full text-left px-2 py-2.5 hover:bg-muted/50 rounded-lg text-sm transition-colors" onClick={() => { onOpenSharedMedia?.(); onClose() }}>
-                    <LinkIcon className="size-4 text-muted-foreground" />
-                    <span>{t('tabLinks')}</span>
-                  </button>
-                </AccordionContent>
-              </AccordionItem>
+              <FilesMediaSection onOpenSharedMedia={() => { onOpenSharedMedia?.(); onClose() }} />
 
               {/* Privacy & Support */}
-              <AccordionItem value="privacy" className="border-none">
-                <AccordionTrigger className="hover:no-underline py-2 data-[state=open]:text-red-500">
-                  <span className="font-semibold text-sm">{t('privacyAndSupportCategory')}</span>
-                </AccordionTrigger>
-                <AccordionContent className="pb-4 pt-1 space-y-1">
-                  {isDirect && (
-                    <button onClick={handleBlockToggle} disabled={saving} className="flex items-center gap-3 w-full text-left px-2 py-2.5 hover:bg-destructive/10 text-destructive rounded-lg text-sm transition-colors">
-                      {isBlocked ? <Shield className="size-4" /> : <ShieldOff className="size-4" />}
-                      <span>{isBlocked ? t('unblockUser') : t('blockUser')}</span>
-                    </button>
-                  )}
-                  {isGroup && (
-                    <button onClick={() => toast('Coming soon')} disabled={saving} className="flex items-center gap-3 w-full text-left px-2 py-2.5 hover:bg-destructive/10 text-destructive rounded-lg text-sm transition-colors">
-                      <LogOut className="size-4" />
-                      <span>{t('leaveGroup')}</span>
-                    </button>
-                  )}
-                  <button onClick={() => setConfirmClearOpen(true)} disabled={saving} className="flex items-center gap-3 w-full text-left px-2 py-2.5 hover:bg-destructive/10 text-destructive rounded-lg text-sm transition-colors">
-                    <Eraser className="size-4" />
-                    <span>{t('clearHistory')}</span>
-                  </button>
-                  <button onClick={handleDelete} disabled={saving} className="flex items-center gap-3 w-full text-left px-2 py-2.5 hover:bg-destructive/10 text-destructive rounded-lg text-sm transition-colors">
-                    <Trash2 className="size-4" />
-                    <span>{t('deleteConversation')}</span>
-                  </button>
-                </AccordionContent>
-              </AccordionItem>
+              <PrivacySupportSection
+                isDirect={isDirect}
+                isGroup={isGroup}
+                isBlocked={isBlocked}
+                saving={saving}
+                onBlockToggle={handleBlockToggle}
+                onLeaveGroup={() => toast('Coming soon')}
+                onClearHistory={() => setConfirmClearOpen(true)}
+                onDelete={handleDelete}
+              />
 
             </Accordion>
           </div>

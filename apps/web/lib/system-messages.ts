@@ -1,0 +1,60 @@
+// Shared humanizer for `system.*` messages — single source of truth used by
+// both ConversationItem (sidebar preview) and MessageBubble (chat area).
+// Mirrors Flutter `message_bubble_parts.dart:_systemText` +
+// `conversation_tile.dart:_subtitleText` (cross-platform parity).
+
+type Translate = (key: string, values?: Record<string, string | number>) => string
+
+/**
+ * Map a `system.*` code (or any last-message content) to clean human-readable
+ * text. Returns the original content untouched if it is not a system code.
+ *
+ * `opts.short` collapses parameterised forms to the concise sidebar variant
+ * (e.g. "Nickname was changed" instead of the full actor/target sentence), so
+ * the sidebar preview stays compact like Flutter's `_subtitleText`.
+ */
+export function humanizeSystemMessage(
+  content: string,
+  t: Translate,
+  opts?: { short?: boolean },
+): string {
+  if (!content) return content
+
+  // Attachment detection (mirror Flutter conversation_tile `/api/uploads/`).
+  if (content.includes('/api/uploads/')) return t('attachmentLabel')
+
+  if (content.startsWith('system.theme.changed:')) {
+    return t('systemThemeChanged')
+  }
+  if (content.startsWith('system.quick_reaction.changed:')) {
+    const emoji = content.split(':')[1] || '👍'
+    return opts?.short
+      ? t('systemQuickReactionChangedShort')
+      : t('systemQuickReactionChanged', { emoji })
+  }
+  if (content.startsWith('system.nickname.changed:')) {
+    return t('systemNicknameChanged')
+  }
+
+  switch (content) {
+    case 'system.group.created':
+      return t('systemGroupCreated')
+    case 'system.members.added':
+      return t('systemMembersAdded')
+    case 'system.member.left':
+      return t('systemMemberLeft')
+    case 'system.member.removed':
+      return t('systemMemberRemoved')
+    case 'system.member.joined':
+      return t('systemMemberJoined')
+    default:
+      break
+  }
+
+  // Unknown `system.*` code → degrade gracefully (mirror Flutter fallback).
+  if (content.startsWith('system.')) {
+    return `📢 ${content.split(':')[0].replace('system.', '').replace(/\./g, ' ')}`
+  }
+
+  return content
+}

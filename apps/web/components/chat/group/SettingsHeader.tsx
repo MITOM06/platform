@@ -1,0 +1,76 @@
+'use client'
+
+import { useTranslations } from 'next-intl'
+import { Lock, User, BellOff, Bell, Search } from 'lucide-react'
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+
+const ACTION_CLS = 'flex flex-col items-center gap-1.5 w-16'
+const ICON_WRAP = 'size-10 rounded-full bg-pon-cyan/10 text-pon-cyan flex items-center justify-center'
+const LABEL_CLS = 'text-[11px] text-muted-foreground truncate w-full text-center'
+
+interface Props {
+  displayName: string
+  avatarUrl?: string
+  avatarLetter: string
+  isDirect: boolean
+  isMuted: boolean
+  saving: boolean
+  onOpenProfile?: () => void
+  onMuteToggle: () => void
+  onSearch?: () => void
+}
+
+/** Avatar + name + quick-action row at the top of the settings drawer. */
+export function SettingsHeader({
+  displayName,
+  avatarUrl,
+  avatarLetter,
+  isDirect,
+  isMuted,
+  saving,
+  onOpenProfile,
+  onMuteToggle,
+  onSearch,
+}: Props) {
+  const t = useTranslations('chat')
+  return (
+    <>
+      <div className="flex flex-col items-center gap-3">
+        <Avatar className="size-24 border-2 border-border/50">
+          {avatarUrl && <AvatarImage src={avatarUrl} alt={displayName} />}
+          <AvatarFallback className="text-3xl font-medium bg-gradient-to-br from-pon-cyan/80 to-pon-peach/80 text-white">
+            {avatarLetter}
+          </AvatarFallback>
+        </Avatar>
+        <div className="text-center">
+          <h2 className="text-xl font-bold line-clamp-2 px-4">{displayName}</h2>
+          <div className="flex items-center justify-center gap-1.5 mt-1 text-xs text-muted-foreground">
+            <Lock className="size-3" />
+            <span>{t('endToEndEncrypted')}</span>
+          </div>
+        </div>
+      </div>
+
+      <div className="flex justify-evenly px-2">
+        {isDirect && onOpenProfile && (
+          <button onClick={onOpenProfile} className={ACTION_CLS}>
+            <div className={ICON_WRAP}><User className="size-5" /></div>
+            <span className={LABEL_CLS}>{t('viewProfile')}</span>
+          </button>
+        )}
+        <button onClick={onMuteToggle} disabled={saving} className={ACTION_CLS}>
+          <div className={ICON_WRAP}>
+            {isMuted ? <BellOff className="size-5" /> : <Bell className="size-5" />}
+          </div>
+          <span className={LABEL_CLS}>
+            {isMuted ? t('unmuteNotifications') : t('muteNotifications')}
+          </span>
+        </button>
+        <button onClick={onSearch} className={ACTION_CLS}>
+          <div className={ICON_WRAP}><Search className="size-5" /></div>
+          <span className={LABEL_CLS}>{t('searchMessages')}</span>
+        </button>
+      </div>
+    </>
+  )
+}
