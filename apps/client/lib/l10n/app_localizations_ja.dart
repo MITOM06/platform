@@ -654,6 +654,18 @@ class AppLocalizationsJa extends AppLocalizations {
   String get pinMessage => 'ピン留め';
 
   @override
+  String get unpinMessage => 'ピン留め解除';
+
+  @override
+  String get pinnedMessagesTitle => 'ピン留めしたメッセージ';
+
+  @override
+  String get pinLimitReached => 'ピン留めできるメッセージは2件までです';
+
+  @override
+  String get cannotPinCall => '通話はピン留めできません';
+
+  @override
   String get forwardMessage => '転送';
 
   @override

@@ -210,6 +210,10 @@
     }
   },
   "pinMessage": "고정",
+  "unpinMessage": "고정 해제",
+  "pinnedMessagesTitle": "고정된 메시지",
+  "pinLimitReached": "메시지는 최대 2개까지 고정할 수 있습니다",
+  "cannotPinCall": "통화는 고정할 수 없습니다",
   "forwardMessage": "전달",
   "messageForwarded": "메시지가 전달되었습니다",
   "forwardFailed": "메시지 전달 실패",

@@ -11,6 +11,7 @@ import '../data/chat_repository.dart';
 import '../domain/chat_provider.dart';
 import '../domain/chat_state.dart';
 import 'widgets/conversation_avatar.dart';
+import 'widgets/pinned_messages_section.dart';
 
 /// Loads a single conversation (used for group info, refreshed on demand).
 final groupConversationProvider = FutureProvider.autoDispose
@@ -122,6 +123,27 @@ class GroupInfoScreen extends ConsumerWidget {
                   isSelf: memberId == currentUserId,
                   onRemove: () => _removeMember(context, ref, memberId),
                 ),
+              // Pinned messages (Task 53). Prefer the live chat-state list so
+              // unpins reflect immediately; fall back to the loaded snapshot.
+              Builder(builder: (context) {
+                final liveState = ref
+                    .watch(chatNotifierProvider(conversationId))
+                    .valueOrNull;
+                final pinned = liveState?.pinnedMessages.isNotEmpty == true
+                    ? liveState!.pinnedMessages
+                    : conv.pinnedMessages;
+                if (pinned.isEmpty) return const SizedBox.shrink();
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Divider(color: Colors.white12),
+                    PinnedMessagesSection(
+                      conversationId: conversationId,
+                      pinnedMessages: pinned,
+                    ),
+                  ],
+                );
+              }),
               const Divider(color: Colors.white12),
               ListTile(
                 leading: const Icon(Icons.perm_media_outlined, color: AppTheme.ponCyan),

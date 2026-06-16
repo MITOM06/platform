@@ -22,6 +22,7 @@ import {
 } from '@/lib/quick-reaction'
 import { WallpaperPickerModal } from './WallpaperPickerModal'
 import { GroupMemberRow } from './group/GroupMemberRow'
+import { PinnedMessagesSection } from './PinnedMessagesSection'
 import type { Conversation, UserSearchResult } from '@/lib/api/types'
 import { useRouter } from 'next/navigation'
 
@@ -252,6 +253,22 @@ export function GroupSettingsDrawer({ conversation, currentUserId, open, onClose
                 )}
               </AccordionContent>
             </AccordionItem>
+
+            {/* Pinned Messages */}
+            {conversation.pinnedMessages.length > 0 && (
+              <AccordionItem value="pinned" className="border-none">
+                <AccordionTrigger className={triggerCls}>
+                  <span className="font-semibold text-sm">{t('pinnedMessages')}</span>
+                </AccordionTrigger>
+                <AccordionContent className="pb-4 pt-1">
+                  <PinnedMessagesSection
+                    conversationId={conversation.id}
+                    pinnedMessages={conversation.pinnedMessages}
+                    onJump={onClose}
+                  />
+                </AccordionContent>
+              </AccordionItem>
+            )}
 
             {/* Customize Chat — rename, avatar, wallpaper, quick reaction */}
             <AccordionItem value="customize" className="border-none">

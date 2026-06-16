@@ -321,6 +321,8 @@ class MessageModel {
   bool get isVoice => type == 'voice';
   // Emoji sticker (emoji character stored in content).
   bool get isSticker => type == 'sticker';
+  // Voice/video call log entry — cannot be pinned.
+  bool get isCallLog => type == 'call_log';
 
   /// File messages encode `{url, name, size}` as JSON in [content]. These
   /// getters decode it defensively (falling back to the raw content as a URL).

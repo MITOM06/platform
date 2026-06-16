@@ -60,7 +60,7 @@ public class Conversation {
     @Builder.Default
     private boolean publicChannel = false;
 
-    /** Message ids pinned in this conversation (most recent first, max 5). */
+    /** Message ids pinned in this conversation (most recent first, max 2). */
     @Builder.Default
     private List<String> pinnedMessages = new ArrayList<>();
 

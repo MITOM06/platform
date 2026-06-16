@@ -672,6 +672,18 @@ class AppLocalizationsFr extends AppLocalizations {
   String get pinMessage => 'Épingler';
 
   @override
+  String get unpinMessage => 'Désépingler';
+
+  @override
+  String get pinnedMessagesTitle => 'Messages épinglés';
+
+  @override
+  String get pinLimitReached => 'Vous pouvez épingler jusqu\'à 2 messages';
+
+  @override
+  String get cannotPinCall => 'Les appels ne peuvent pas être épinglés';
+
+  @override
   String get forwardMessage => 'Transférer';
 
   @override

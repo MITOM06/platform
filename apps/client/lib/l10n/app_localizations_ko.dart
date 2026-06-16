@@ -654,6 +654,18 @@ class AppLocalizationsKo extends AppLocalizations {
   String get pinMessage => '고정';
 
   @override
+  String get unpinMessage => '고정 해제';
+
+  @override
+  String get pinnedMessagesTitle => '고정된 메시지';
+
+  @override
+  String get pinLimitReached => '메시지는 최대 2개까지 고정할 수 있습니다';
+
+  @override
+  String get cannotPinCall => '통화는 고정할 수 없습니다';
+
+  @override
   String get forwardMessage => '전달';
 
   @override

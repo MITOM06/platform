@@ -1,6 +1,7 @@
 'use client'
 
 import { Pin, X } from 'lucide-react'
+import { useTranslations } from 'next-intl'
 import { Button } from '@/components/ui/button'
 import { chatService } from '@/lib/api/chat'
 import { toast } from 'sonner'
@@ -13,6 +14,7 @@ interface Props {
 }
 
 export function PinnedMessagesBar({ pinnedMessages, onUnpin }: Props) {
+  const t = useTranslations('chat')
   if (pinnedMessages.length === 0) return null
 
   const latest = pinnedMessages[0]!
@@ -22,7 +24,7 @@ export function PinnedMessagesBar({ pinnedMessages, onUnpin }: Props) {
       await chatService.unpinMessage(messageId)
       onUnpin(messageId)
     } catch {
-      toast.error('Không thể bỏ ghim')
+      toast.error(t('pinError'))
     }
   }
 
@@ -36,7 +38,7 @@ export function PinnedMessagesBar({ pinnedMessages, onUnpin }: Props) {
         el.classList.remove('bg-primary/20', 'ring-2', 'ring-primary/40')
       }, 2000)
     } else {
-      toast.info('Tin nhắn ở vị trí cũ hơn, vui lòng cuộn lên để tìm')
+      toast.info(t('pinnedScrollHint'))
     }
   }
 
@@ -48,7 +50,7 @@ export function PinnedMessagesBar({ pinnedMessages, onUnpin }: Props) {
       <Pin className="size-3.5 text-pon-cyan shrink-0" />
       <div className="flex-1 min-w-0">
         <p className="text-[10px] text-pon-cyan font-semibold uppercase tracking-wider mb-0.5">
-          Tin nhắn đã ghim
+          {t('pinnedMessages')}
         </p>
         <p className="text-xs text-foreground truncate">{latest.content}</p>
       </div>
@@ -59,7 +61,7 @@ export function PinnedMessagesBar({ pinnedMessages, onUnpin }: Props) {
           e.stopPropagation()
           handleUnpin(latest.id)
         }}
-        title="Bỏ ghim"
+        title={t('unpinMessage')}
         className="size-6 shrink-0 hover:bg-foreground/10 rounded-full"
       >
         <X className="size-4" />

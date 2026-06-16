@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useTranslations } from 'next-intl'
 import {
   MoreHorizontal, Pencil, Trash2, Trash, Share2, Pin, PinOff, Smile, Brain, Reply, CheckCheck,
 } from 'lucide-react'
@@ -42,6 +43,9 @@ export function MessageActions({
   onOptimisticUpdate,
 }: Props) {
   const [emojiOpen, setEmojiOpen] = useState(false)
+  const t = useTranslations('chat')
+
+  const isCallLog = message.type === 'call_log'
 
   const handleReact = async (emoji: string) => {
     setEmojiOpen(false)
@@ -53,7 +57,7 @@ export function MessageActions({
         await chatService.addReaction(message.id, emoji)
       }
     } catch {
-      toast.error('Không thể thêm cảm xúc')
+      toast.error(t('reactError'))
     }
   }
 
@@ -61,7 +65,7 @@ export function MessageActions({
     try {
       await chatService.recallMessage(message.id)
     } catch {
-      toast.error('Không thể thu hồi tin nhắn')
+      toast.error(t('recallError'))
     }
   }
 
@@ -70,7 +74,7 @@ export function MessageActions({
       await chatService.deleteForMe(message.id)
       onOptimisticUpdate({ id: message.id, deletedFor: ['__me__'] })
     } catch {
-      toast.error('Không thể xóa tin nhắn')
+      toast.error(t('deleteError'))
     }
   }
 
@@ -82,7 +86,7 @@ export function MessageActions({
         await chatService.pinMessage(message.id)
       }
     } catch {
-      toast.error('Không thể ghim tin nhắn')
+      toast.error(t('pinError'))
     }
   }
 
@@ -120,50 +124,52 @@ export function MessageActions({
         <DropdownMenuContent align={isOwn ? 'end' : 'start'} className="min-w-44">
           <DropdownMenuItem onClick={onReply}>
             <Reply className="size-4" />
-            Trả lời
+            {t('replyAction')}
           </DropdownMenuItem>
           {isOwn && !message.recalled && message.type === 'text' && (
             <DropdownMenuItem onClick={onEdit}>
               <Pencil className="size-4" />
-              Chỉnh sửa
+              {t('editAction')}
             </DropdownMenuItem>
           )}
-          <DropdownMenuItem onClick={handlePin}>
-            {isPinned ? <PinOff className="size-4" /> : <Pin className="size-4" />}
-            {isPinned ? 'Bỏ ghim' : 'Ghim tin nhắn'}
-          </DropdownMenuItem>
+          {!isCallLog && (
+            <DropdownMenuItem onClick={handlePin}>
+              {isPinned ? <PinOff className="size-4" /> : <Pin className="size-4" />}
+              {isPinned ? t('unpinMessage') : t('pinMessage')}
+            </DropdownMenuItem>
+          )}
           <DropdownMenuItem onClick={onForward}>
             <Share2 className="size-4" />
-            Chuyển tiếp
+            {t('forwardAction')}
           </DropdownMenuItem>
           {message.type === 'ai' && (
             <DropdownMenuItem onClick={onAiTrace}>
               <Brain className="size-4" />
-              Xem AI trace
+              {t('viewAiTrace')}
             </DropdownMenuItem>
           )}
           {onGroupReadDetails && (
             <DropdownMenuItem onClick={onGroupReadDetails}>
               <CheckCheck className="size-4 text-pon-cyan" />
-              <span className="text-pon-cyan">Chi tiết người đã xem</span>
+              <span className="text-pon-cyan">{t('readByDetails')}</span>
             </DropdownMenuItem>
           )}
           {onReactionsDetail && message.reactions && message.reactions.length > 0 && (
             <DropdownMenuItem onClick={onReactionsDetail}>
               <Smile className="size-4" />
-              Chi tiết cảm xúc
+              {t('reactionsDetailAction')}
             </DropdownMenuItem>
           )}
           <DropdownMenuSeparator />
           {isOwn && !message.recalled && (
             <DropdownMenuItem variant="destructive" onClick={handleRecall}>
               <Trash2 className="size-4" />
-              Thu hồi
+              {t('recallAction')}
             </DropdownMenuItem>
           )}
           <DropdownMenuItem variant="destructive" onClick={handleDeleteForMe}>
             <Trash className="size-4" />
-            Xóa với tôi
+            {t('deleteForMeAction')}
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
