@@ -471,8 +471,7 @@ Mirror: `apps/client/lib/features/chat/ui/widgets/{image_content,file_content,vo
 - [x] **Task W-16.4: Notification Permission Logic Flow (Web & Mobile)**
   - Refactor the permission request trigger. The prompt asking to enable notifications must only appear *after* the user has successfully registered or logged in for the first time. It should never trigger on public landing/login pages.
 
-- [ ] **Task W-16.5: Sidebar Header UI Consolidation (Web)**
-  - Consolidate multiple action icons in the top-left sidebar header. Replace them with a single primary action button (e.g., "+" or "New"). Clicking this opens a dropdown/modal presenting "Create New Chat" or "Create New Group". Refactor layout to be clean.
+- [x] **Task W-16.5: Sidebar Header UI Consolidation (Web)** **DONE (2026-06-16, QC sprint) — the "+" dropdown (Create New Chat / Create New Group) already existed in `(main)/layout.tsx`, but `ConversationList.tsx` duplicated Explore (Hash) + New Conversation (Plus) + `ActiveFriendsRow` on top of it. Removed the duplicates from `ConversationList.tsx`; layout.tsx header is now the single source of truth.**
 
 - [x] **Task W-16.6: Profile Modal Overhaul & Bio State Bug (Web)**
   - **Bug Fix:** Fix the issue where "Bio" saves the first time but disappears when reopening. Bind bio text input properly.
@@ -489,7 +488,7 @@ Mirror: `apps/client/lib/features/chat/ui/widgets/{image_content,file_content,vo
 - [x] **Task W-17.2: Critical Auth Fix: Sudden Logout (Token Expiry) (Web)**
   - Implement silent authentication/seamless token refreshing. Configure HTTP interceptors (Axios) to catch 401 Unauthorized errors, use refresh token to get a new access token, and retry the failed request without logging the user out.
 
-- [ ] **Task W-17.3: Privacy Policy Link Routing (Web)**
+- [x] **Task W-17.3: Privacy Policy Link Routing (Web)** **VERIFIED FIXED (2026-06-16, QC sprint) — `/privacy` route exists (`app/(auth)/privacy/page.tsx`) and register page links to it correctly.**
   - Fix the routing configuration or link path so users can successfully navigate to the "Privacy Policy" page from the Registration/Login screens.
 
 - [x] **Task W-17.4: Avatar & Cover Photo Persistence + Cropper (Web)**
@@ -497,8 +496,22 @@ Mirror: `apps/client/lib/features/chat/ui/widgets/{image_content,file_content,vo
   - **Feature:** Implement logic to upload and change a cover photo.
   - **UX Improvement:** Both Avatar and Cover Photo uploads must open a Preview/Cropper Modal. Adjust image -> "Confirm" inside modal -> explicitly click "Save Changes" on profile form.
 
-- [ ] **Task W-17.5: Mobile-Web Navigation Bug (Web)**
+- [x] **Task W-17.5: Mobile-Web Navigation Bug (Web)** **VERIFIED FIXED (2026-06-16, QC sprint) — `layout.tsx` Profile/Settings menu items use `router.push()` correctly; both target pages exist.**
   - On responsive web version, fix click/tap event handlers for "Personal Profile" and "Settings" so they successfully route the user to corresponding views.
 
-- [ ] **Task W-17.6: Global Chat Search Scope (Web)**
+- [x] **Task W-17.6: Global Chat Search Scope (Web)** **VERIFIED FIXED on web (2026-06-16, QC sprint) — `ConversationList.tsx` already filters by group name + nickname + cached display name. Mobile (Flutter) was missing this feature entirely — added in the same QC sprint, see new `conversation_search_bar.dart`.**
   - Update the sidebar search bar filter logic to search through both Group names AND individual User names/nicknames in 1-on-1 chats, rendering them correctly in the results list.
+
+### SPRINT QC-1 — Full Web + Mobile UI Audit `DONE`
+> Plan & findings: `_workspace/04_qc_audit_plan.md`. Branch: `chore/full-qc-ui-audit`.
+> 2 parallel audit agents swept every screen for non-functional buttons / unfinished
+> features on both platforms, cross-checked against the still-open W-16.5/W-17.3/5/6
+> backlog above (3 of those turned out to already be fixed — verified and closed).
+
+- [x] **Task QC-1.1 [Web]: "Leave Group" button was a no-op** (`toast('Coming soon')`) — now calls `chatService.removeMember(id, currentUserId)`, mirrors Flutter's leave-group flow, with confirm dialog + i18n.
+- [x] **Task QC-1.2 [Web]: Duplicate sidebar nav buttons** — Explore/New-Conversation/ActiveFriendsRow were rendered in both `layout.tsx` and `ConversationList.tsx`; removed the duplicates (closes W-16.5 fully).
+- [x] **Task QC-1.3 [Mobile]: "Delete Conversation" button was a no-op** (`onTap: () {}`) — wired to confirm dialog → `conversationsNotifierProvider.deleteConversation()`.
+- [x] **Task QC-1.4 [Mobile]: AI persona avatar used a raw URL text field** — replaced with tap-to-upload (image_picker → `chatRepository.uploadFile`), matching web's W-14.7 upgrade.
+- [x] **Task QC-1.5 [Mobile]: Conversation list had no search** — added `ConversationSearchBar` + `filterConversationsBySearch()`, mirrors web's `resolveSearchTerms()` (group name / nickname / cached display name).
+
+Verification: `npx tsc --noEmit` + `pnpm build` (web) clean; `flutter analyze` + `flutter test` (client) clean.

@@ -43,7 +43,12 @@
   - Verify: `flutter analyze` clean.
 
 ## Final steps (after all tasks done)
-- [ ] Re-run `flutter analyze` + `flutter test` (apps/client)
-- [ ] Re-run `npx tsc --noEmit` + `pnpm build` (apps/web)
-- [ ] Update `TODO.md` — close W-16.5 fully, add new QC sprint entry referencing this file
-- [ ] Commit per task (or squash), push branch `chore/full-qc-ui-audit`, open for review
+- [x] Re-run `flutter analyze` + `flutter test` (apps/client) — clean.
+- [x] Re-run `npx tsc --noEmit` + `pnpm build` (apps/web) — clean.
+- [x] Update `TODO.md` — closed W-16.5/W-17.3/W-17.5/W-17.6, added SPRINT QC-1 entry referencing this file.
+- [x] Commit per task, push branch `chore/full-qc-ui-audit`.
+
+## Outcome
+5/5 tasks done, all verified by build/analyze/test. No backend changes were needed —
+Task 1 reused the existing `DELETE /api/conversations/{id}/members/{userId}` endpoint
+(self-removal = leave). Total: 3 commits on `chore/full-qc-ui-audit`.
