@@ -990,6 +990,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get aiPersonaTitle => 'AI 角色';
 
   @override
+  String get avatarUploadLabel => 'Change avatar';
+
+  @override
   String get aiPersonaNameHint => '机器人名称（例如：DevBot）';
 
   @override

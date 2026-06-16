@@ -1003,6 +1003,9 @@ class AppLocalizationsVi extends AppLocalizations {
   String get aiPersonaTitle => 'Nhân vật AI';
 
   @override
+  String get avatarUploadLabel => 'Đổi ảnh đại diện';
+
+  @override
   String get aiPersonaNameHint => 'Tên bot (ví dụ: DevBot)';
 
   @override

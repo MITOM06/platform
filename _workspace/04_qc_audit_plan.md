@@ -12,25 +12,25 @@
 
 ## Task List (execute in order, verify after each)
 
-- [ ] **Task 1 [Web/CRITICAL]: "Leave Group" button is a no-op**
+- [x] **Task 1 [Web/CRITICAL]: "Leave Group" button is a no-op** — DONE, commit `17ee14fb`.
   - File: `apps/web/components/chat/ConversationSettingsDrawer.tsx:337`
   - Problem: `onLeaveGroup={() => toast('Coming soon')}` — does not call any API.
   - Fix: add `leaveGroup(id)` to `apps/web/lib/api/chat.ts` (`POST /api/conversations/{id}/leave`, mirrors backend `removeMember`/leave endpoint), wire the drawer button to call it, invalidate conversations query + navigate away on success.
   - Verify: `npx tsc --noEmit` (apps/web) clean.
 
-- [ ] **Task 2 [Web/HIGH]: Duplicate sidebar nav buttons (W-16.5 incomplete)**
+- [x] **Task 2 [Web/HIGH]: Duplicate sidebar nav buttons (W-16.5 incomplete)** — DONE, commit `17ee14fb`.
   - Files: `apps/web/app/(main)/layout.tsx` (header: Explore + New-chat dropdown + Contacts + Avatar) vs `apps/web/components/chat/ConversationList.tsx:114-153` (also renders Explore/Hash + New/Plus buttons)
   - Problem: Explore and New-Conversation actions are duplicated in two different headers — visual clutter, violates W-16.5 consolidation intent.
   - Fix: keep the single source of truth in `layout.tsx` header; remove the duplicate Hash/Plus buttons from `ConversationList.tsx`, keep only the search bar + AI bot entry there.
   - Verify: `npx tsc --noEmit` clean; manually confirm only one Explore/New-chat affordance remains.
 
-- [ ] **Task 3 [Mobile/HIGH]: "Delete Conversation" button is a no-op**
+- [x] **Task 3 [Mobile/HIGH]: "Delete Conversation" button is a no-op** — DONE.
   - File: `apps/client/lib/features/chat/ui/widgets/conversation_info_sidebar.dart:262`
   - Problem: `onTap: () {}` — empty handler, button does nothing.
   - Fix: wire to a confirm dialog → `conversationsNotifierProvider` (or equivalent existing delete method already used elsewhere) → pop back to conversation list on success. Mirror web's `ConversationSettingsDrawer` delete-conversation flow (confirm dialog with destructive styling).
   - Verify: `flutter analyze` clean.
 
-- [ ] **Task 4 [Mobile/HIGH]: AI persona avatar — URL text field instead of upload (parity gap from W-14.7)**
+- [x] **Task 4 [Mobile/HIGH]: AI persona avatar — URL text field instead of upload (parity gap from W-14.7)** — DONE.
   - File: `apps/client/lib/features/chat/ui/ai_persona_screen.dart:157-164`
   - Problem: avatar is a plain "Avatar URL" text input; web already upgraded to click-to-upload (W-14.7).
   - Fix: replace text field with tap-to-upload avatar preview (image_picker → existing upload repository method used elsewhere in the app, e.g. for profile/cover photo) → store returned URL in the persona form state.

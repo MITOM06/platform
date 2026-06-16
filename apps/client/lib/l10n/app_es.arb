@@ -334,6 +334,7 @@
   "aiTraceTools": "Llamadas de herramientas",
   "aiTraceStats": "Estadísticas",
   "aiPersonaTitle": "Persona de IA",
+  "avatarUploadLabel": "Change avatar",
   "aiPersonaNameHint": "Nombre del bot (ej. DevBot)",
   "aiPersonaInstructionsHint": "Instrucciones personalizadas (ej. Responde siempre con viñetas)",
   "aiPersonaAdminOnly": "Solo los administradores del grupo pueden configurar la persona de IA.",

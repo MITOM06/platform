@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:image_picker/image_picker.dart';
 import '../../../core/l10n/l10n_ext.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/pon_widgets.dart';
+import '../data/chat_repository.dart';
 import '../domain/ai_persona_provider.dart';
 
 class AiPersonaScreen extends ConsumerStatefulWidget {
@@ -20,6 +22,7 @@ class _AiPersonaScreenState extends ConsumerState<AiPersonaScreen> {
   final _instructionsController = TextEditingController();
   String _tone = 'friendly';
   bool _initialized = false;
+  bool _uploadingAvatar = false;
 
   @override
   void dispose() {
@@ -66,6 +69,25 @@ class _AiPersonaScreenState extends ConsumerState<AiPersonaScreen> {
         messenger.showSnackBar(
             SnackBar(content: Text(l10n.errorWithMsg(e.toString()))));
       }
+    }
+  }
+
+  Future<void> _uploadAvatar(BuildContext context) async {
+    final picker = ImagePicker();
+    final pickedFile = await picker.pickImage(source: ImageSource.gallery);
+    if (pickedFile == null || !mounted) return;
+    setState(() => _uploadingAvatar = true);
+    try {
+      final url = await ref.read(chatRepositoryProvider).uploadFile(pickedFile);
+      if (mounted) setState(() => _avatarController.text = url);
+    } catch (_) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(context.l10n.uploadFailed)),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _uploadingAvatar = false);
     }
   }
 
@@ -154,24 +176,49 @@ class _AiPersonaScreenState extends ConsumerState<AiPersonaScreen> {
               maxLength: 30,
             ),
             const SizedBox(height: 16),
-            const Text('Avatar URL',
-                style: TextStyle(color: Colors.white70, fontWeight: FontWeight.w600)),
+            Text(context.l10n.avatarUploadLabel,
+                style: const TextStyle(color: Colors.white70, fontWeight: FontWeight.w600)),
             const SizedBox(height: 8),
-            PonTextField(
-              controller: _avatarController,
-              labelText: 'Avatar URL',
-              prefixIcon: Icons.link,
-            ),
-            if (_avatarController.text.isNotEmpty)
-              Padding(
-                padding: const EdgeInsets.only(top: 8),
-                child: CircleAvatar(
-                  radius: 24,
-                  backgroundImage: NetworkImage(_avatarController.text),
-                  onBackgroundImageError: (_, __) {},
-                  backgroundColor: AppTheme.darkSurface,
+            Center(
+              child: GestureDetector(
+                onTap: _uploadingAvatar ? null : () => _uploadAvatar(context),
+                child: Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    CircleAvatar(
+                      radius: 36,
+                      backgroundColor: AppTheme.darkSurface,
+                      backgroundImage: _avatarController.text.isNotEmpty
+                          ? NetworkImage(_avatarController.text)
+                          : null,
+                      onBackgroundImageError:
+                          _avatarController.text.isNotEmpty ? (_, __) {} : null,
+                      child: _avatarController.text.isEmpty
+                          ? const Icon(Icons.smart_toy_outlined,
+                              color: Colors.white38, size: 28)
+                          : null,
+                    ),
+                    if (_uploadingAvatar)
+                      const CircularProgressIndicator(
+                          color: AppTheme.ponCyan, strokeWidth: 2.5)
+                    else
+                      Positioned(
+                        right: 0,
+                        bottom: 0,
+                        child: Container(
+                          padding: const EdgeInsets.all(4),
+                          decoration: const BoxDecoration(
+                            color: AppTheme.ponCyan,
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(Icons.camera_alt,
+                              size: 14, color: Colors.black),
+                        ),
+                      ),
+                  ],
                 ),
               ),
+            ),
             const SizedBox(height: 16),
             const Text('Tone',
                 style: TextStyle(color: Colors.white70, fontWeight: FontWeight.w600)),

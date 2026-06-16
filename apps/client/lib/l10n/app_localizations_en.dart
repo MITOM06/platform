@@ -1002,6 +1002,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get aiPersonaTitle => 'AI Persona';
 
   @override
+  String get avatarUploadLabel => 'Change avatar';
+
+  @override
   String get aiPersonaNameHint => 'Bot name (e.g. DevBot)';
 
   @override

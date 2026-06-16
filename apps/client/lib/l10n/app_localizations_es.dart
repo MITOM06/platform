@@ -1012,6 +1012,9 @@ class AppLocalizationsEs extends AppLocalizations {
   String get aiPersonaTitle => 'Persona de IA';
 
   @override
+  String get avatarUploadLabel => 'Change avatar';
+
+  @override
   String get aiPersonaNameHint => 'Nombre del bot (ej. DevBot)';
 
   @override

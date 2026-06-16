@@ -334,6 +334,7 @@
   "aiTraceTools": "Công cụ đã dùng",
   "aiTraceStats": "Thống kê",
   "aiPersonaTitle": "Nhân vật AI",
+  "avatarUploadLabel": "Đổi ảnh đại diện",
   "aiPersonaNameHint": "Tên bot (ví dụ: DevBot)",
   "aiPersonaInstructionsHint": "Hướng dẫn tùy chỉnh (ví dụ: Luôn trả lời bằng gạch đầu dòng)",
   "aiPersonaAdminOnly": "Chỉ quản trị viên nhóm mới có thể cấu hình nhân vật AI.",

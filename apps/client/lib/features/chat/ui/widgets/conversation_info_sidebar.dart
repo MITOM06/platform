@@ -9,6 +9,7 @@ import '../../../auth/domain/auth_state.dart';
 import '../../../home/domain/home_providers.dart';
 import '../../domain/chat_provider.dart';
 import '../../domain/chat_state.dart';
+import '../chat_screen_helpers.dart';
 import 'chat_wallpaper_dialog.dart';
 import 'conversation_avatar.dart';
 import 'conversation_customisation_dialogs.dart';
@@ -259,13 +260,31 @@ class ConversationInfoSidebar extends ConsumerWidget {
                     color: Colors.redAccent),
                 title: Text(context.l10n.deleteConversation,
                     style: const TextStyle(color: Colors.redAccent)),
-                onTap: () {},
+                onTap: () => _deleteConversation(context, ref),
               ),
             ],
           ),
         ],
       ),
     );
+  }
+
+  Future<void> _deleteConversation(BuildContext context, WidgetRef ref) async {
+    final confirm = await showConfirmDialog(
+      context,
+      title: context.l10n.deleteConversation,
+      body: context.l10n.deleteConversationConfirm,
+    );
+    if (confirm != true) return;
+    await ref
+        .read(conversationsNotifierProvider.notifier)
+        .deleteConversation(conversationId);
+    if (!context.mounted) return;
+    if (MediaQuery.of(context).size.width >= kWebBreakpoint) {
+      ref.read(selectedConversationIdProvider.notifier).state = null;
+    } else {
+      context.go('/');
+    }
   }
 
   Widget _buildChatDetailsContent(

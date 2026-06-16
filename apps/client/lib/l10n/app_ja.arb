@@ -334,6 +334,7 @@
   "aiTraceTools": "ツール呼び出し",
   "aiTraceStats": "統計",
   "aiPersonaTitle": "AIペルソナ",
+  "avatarUploadLabel": "Change avatar",
   "aiPersonaNameHint": "ボット名（例：DevBot）",
   "aiPersonaInstructionsHint": "カスタム指示（例：常に箇条書きで回答する）",
   "aiPersonaAdminOnly": "グループ管理者のみがAIペルソナを設定できます。",

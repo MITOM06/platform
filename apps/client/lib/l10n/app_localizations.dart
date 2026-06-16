@@ -1986,6 +1986,12 @@ abstract class AppLocalizations {
   /// **'AI Persona'**
   String get aiPersonaTitle;
 
+  /// No description provided for @avatarUploadLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Change avatar'**
+  String get avatarUploadLabel;
+
   /// No description provided for @aiPersonaNameHint.
   ///
   /// In en, this message translates to:

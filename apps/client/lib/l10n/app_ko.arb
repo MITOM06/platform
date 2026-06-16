@@ -334,6 +334,7 @@
   "aiTraceTools": "도구 호출",
   "aiTraceStats": "통계",
   "aiPersonaTitle": "AI 페르소나",
+  "avatarUploadLabel": "Change avatar",
   "aiPersonaNameHint": "봇 이름 (예: DevBot)",
   "aiPersonaInstructionsHint": "맞춤 지시사항 (예: 항상 목록 형식으로 답변)",
   "aiPersonaAdminOnly": "그룹 관리자만 AI 페르소나를 설정할 수 있습니다.",

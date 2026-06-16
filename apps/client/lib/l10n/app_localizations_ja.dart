@@ -991,6 +991,9 @@ class AppLocalizationsJa extends AppLocalizations {
   String get aiPersonaTitle => 'AIペルソナ';
 
   @override
+  String get avatarUploadLabel => 'Change avatar';
+
+  @override
   String get aiPersonaNameHint => 'ボット名（例：DevBot）';
 
   @override

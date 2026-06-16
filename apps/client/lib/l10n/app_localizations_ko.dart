@@ -992,6 +992,9 @@ class AppLocalizationsKo extends AppLocalizations {
   String get aiPersonaTitle => 'AI 페르소나';
 
   @override
+  String get avatarUploadLabel => 'Change avatar';
+
+  @override
   String get aiPersonaNameHint => '봇 이름 (예: DevBot)';
 
   @override

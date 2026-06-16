@@ -334,6 +334,7 @@
   "aiTraceTools": "工具调用",
   "aiTraceStats": "统计",
   "aiPersonaTitle": "AI 角色",
+  "avatarUploadLabel": "Change avatar",
   "aiPersonaNameHint": "机器人名称（例如：DevBot）",
   "aiPersonaInstructionsHint": "自定义指令（例如：始终以列表形式回答）",
   "aiPersonaAdminOnly": "只有群组管理员才能配置 AI 角色。",
