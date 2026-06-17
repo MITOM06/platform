@@ -610,6 +610,10 @@
     "emptyLinks": "Chưa có liên kết nào được chia sẻ"
   },
   "legal": {
+    "privacyTitle": "Chính sách Quyền riêng tư",
+    "termsTitle": "Điều khoản Dịch vụ",
+    "viewTerms": "Xem thêm Điều khoản Dịch vụ của chúng tôi",
+    "viewPrivacy": "Xem Chính sách Quyền riêng tư",
     "title": "Chính sách Quyền riêng tư & Điều khoản Dịch vụ",
     "lastUpdated": "Cập nhật lần cuối: 15/06/2026",
     "sections": {

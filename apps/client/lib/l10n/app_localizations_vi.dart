@@ -1294,4 +1294,45 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get notificationsDisabled => 'Thông báo đang tắt';
+
+  @override
+  String get legalScreenTitle => 'Quyền riêng tư & Điều khoản';
+
+  @override
+  String get legalLastUpdated => 'Cập nhật lần cuối: 15/06/2026';
+
+  @override
+  String get legalDataCollectionTitle => '1. Thu thập dữ liệu';
+
+  @override
+  String get legalDataCollectionContent =>
+      'Chúng tôi thu thập thông tin bạn cung cấp trực tiếp cho chúng tôi, ví dụ như khi bạn tạo hoặc sửa đổi tài khoản, sử dụng dịch vụ của chúng tôi hoặc liên lạc với chúng tôi. Điều này bao gồm tên, địa chỉ email, ảnh đại diện và các tin nhắn bạn gửi.';
+
+  @override
+  String get legalDataUsageTitle => '2. Cách chúng tôi sử dụng dữ liệu';
+
+  @override
+  String get legalDataUsageContent =>
+      'Dữ liệu của bạn được sử dụng để cung cấp, duy trì và cải thiện các dịch vụ của chúng tôi, bao gồm tạo điều kiện giao tiếp giữa những người dùng, đảm bảo bảo mật và cá nhân hóa trải nghiệm của bạn.';
+
+  @override
+  String get legalSecurityTitle => '3. Bảo mật';
+
+  @override
+  String get legalSecurityContent =>
+      'Chúng tôi áp dụng các biện pháp bảo mật tiêu chuẩn ngành để bảo vệ thông tin cá nhân và tin nhắn của bạn. Quyền truy cập dữ liệu được kiểm soát chặt chẽ và chúng tôi sử dụng mã hóa để bảo mật thông tin nhạy cảm.';
+
+  @override
+  String get legalUserRightsTitle => '4. Quyền của bạn';
+
+  @override
+  String get legalUserRightsContent =>
+      'Bạn có quyền truy cập, chỉnh sửa hoặc xóa dữ liệu cá nhân của mình. Bạn có thể xóa tài khoản của mình bất kỳ lúc nào thông qua cài đặt ứng dụng.';
+
+  @override
+  String get legalTermsTitle => '5. Điều khoản Dịch vụ';
+
+  @override
+  String get legalTermsContent =>
+      'Bằng cách sử dụng nền tảng của chúng tôi, bạn đồng ý không tham gia vào bất kỳ hoạt động lạm dụng, quấy rối hoặc bất hợp pháp nào. Chúng tôi có quyền đình chỉ hoặc chấm dứt các tài khoản vi phạm các điều khoản này.';
 }

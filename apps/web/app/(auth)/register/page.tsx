@@ -197,7 +197,7 @@ export default function RegisterPage() {
               <Label htmlFor="agreeToTerms" className="font-normal text-sm text-muted-foreground cursor-pointer">
                 {t.rich('register.agreeToTerms', {
                   privacyPolicy: (chunks) => <Link href="/privacy" target="_blank" className="text-primary hover:underline">{chunks}</Link>,
-                  termsOfService: (chunks) => <Link href="/privacy" target="_blank" className="text-primary hover:underline">{chunks}</Link>
+                  termsOfService: (chunks) => <Link href="/terms" target="_blank" className="text-primary hover:underline">{chunks}</Link>
                 })}
               </Label>
               {errors.agreeToTerms && (

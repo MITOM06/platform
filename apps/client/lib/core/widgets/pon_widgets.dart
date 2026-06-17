@@ -22,26 +22,35 @@ class PonLogo extends StatelessWidget {
 
     if (!showText) return imageWidget;
 
-    return Row(
+    // Column layout matching web auth layout: icon → "PON" → "Connect & Chat"
+    return Column(
       mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         imageWidget,
-        const SizedBox(width: 10),
+        const SizedBox(height: 8),
         ShaderMask(
           shaderCallback: (bounds) => const LinearGradient(
-            colors: [AppTheme.ponCyan, AppTheme.ponPink],
+            colors: [AppTheme.ponCyan, AppTheme.ponPeach, AppTheme.ponPink],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ).createShader(bounds),
           child: Text(
             'PON',
             style: TextStyle(
-              fontSize: size * 0.45,
+              fontSize: size * 0.48,
               fontWeight: FontWeight.w900,
               color: Colors.white,
               letterSpacing: 2,
             ),
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          'Connect & Chat',
+          style: TextStyle(
+            fontSize: size * 0.15,
+            color: Colors.white54,
+            letterSpacing: 0.5,
           ),
         ),
       ],

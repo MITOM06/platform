@@ -610,6 +610,10 @@
     "emptyLinks": "No links shared yet"
   },
   "legal": {
+    "privacyTitle": "Política de Privacidad",
+    "termsTitle": "Términos de Servicio",
+    "viewTerms": "También lea nuestros Términos de Servicio",
+    "viewPrivacy": "Ver nuestra Política de Privacidad",
     "title": "Política de Privacidad y Términos de Servicio",
     "lastUpdated": "Última actualización: 15 de junio de 2026",
     "sections": {

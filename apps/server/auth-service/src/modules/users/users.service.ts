@@ -132,7 +132,7 @@ export class UsersService {
         : null;
     }
     if (data.phoneNumber !== undefined)
-      updateData.phoneNumber = data.phoneNumber;
+      updateData.phoneNumber = data.phoneNumber || null; // '' → null to satisfy sparse unique index
     if (data.gender !== undefined) updateData.gender = data.gender;
     if (data.hideInfo !== undefined) updateData.hideInfo = data.hideInfo;
 

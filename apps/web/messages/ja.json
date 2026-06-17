@@ -610,6 +610,10 @@
     "emptyLinks": "No links shared yet"
   },
   "legal": {
+    "privacyTitle": "プライバシーポリシー",
+    "termsTitle": "利用規約",
+    "viewTerms": "利用規約もご覧ください",
+    "viewPrivacy": "プライバシーポリシーを見る",
     "title": "プライバシーポリシーと利用規約",
     "lastUpdated": "最終更新：2026年6月15日",
     "sections": {

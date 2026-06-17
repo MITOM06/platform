@@ -1277,4 +1277,44 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get notificationsDisabled => '通知已关闭';
+
+  @override
+  String get legalScreenTitle => '隐私与条款';
+
+  @override
+  String get legalLastUpdated => '最后更新：2026年6月15日';
+
+  @override
+  String get legalDataCollectionTitle => '1. 数据收集';
+
+  @override
+  String get legalDataCollectionContent =>
+      '我们收集您直接提供给我们的信息，例如您创建或修改账户、使用我们的服务或与我们通信时的信息，包括您的姓名、电子邮件地址、头像和您发送的消息。';
+
+  @override
+  String get legalDataUsageTitle => '2. 数据使用方式';
+
+  @override
+  String get legalDataUsageContent =>
+      '您的数据用于提供、维护和改善我们的服务，包括促进用户间的通信、确保安全性以及个性化您的体验。';
+
+  @override
+  String get legalSecurityTitle => '3. 安全性';
+
+  @override
+  String get legalSecurityContent =>
+      '我们实施行业标准的安全措施来保护您的个人信息和消息。对数据的访问受到严格控制，我们使用加密来保护敏感信息。';
+
+  @override
+  String get legalUserRightsTitle => '4. 您的权利';
+
+  @override
+  String get legalUserRightsContent => '您有权访问、更正或删除您的个人数据。您可以随时通过应用程序设置删除您的账户。';
+
+  @override
+  String get legalTermsTitle => '5. 服务条款';
+
+  @override
+  String get legalTermsContent =>
+      '使用我们的平台即表示您同意不参与任何滥用、骚扰或违法活动。我们保留暂停或终止违反这些条款的账户的权利。';
 }

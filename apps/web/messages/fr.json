@@ -610,6 +610,10 @@
     "emptyLinks": "No links shared yet"
   },
   "legal": {
+    "privacyTitle": "Politique de Confidentialité",
+    "termsTitle": "Conditions d'Utilisation",
+    "viewTerms": "Consultez également nos Conditions d'Utilisation",
+    "viewPrivacy": "Voir notre Politique de Confidentialité",
     "title": "Politique de Confidentialité et Conditions d'Utilisation",
     "lastUpdated": "Dernière mise à jour : 15 juin 2026",
     "sections": {

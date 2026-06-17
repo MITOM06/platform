@@ -28,6 +28,7 @@ import '../../features/chat/ui/ai_persona_screen.dart';
 import '../../features/chat/ui/kb_screen.dart';
 import '../../features/reminders/reminders_screen.dart';
 import '../../features/settings/ui/token_usage_screen.dart';
+import '../../features/settings/ui/legal_screen.dart';
 import '../../../core/providers/theme_provider.dart';
 
 part 'app_router.g.dart';
@@ -248,6 +249,11 @@ GoRouter appRouter(AppRouterRef ref) {
         path: '/token-usage',
         name: 'token-usage',
         builder: (context, state) => const TokenUsageScreen(),
+      ),
+      GoRoute(
+        path: '/legal',
+        name: 'legal',
+        builder: (context, state) => const LegalScreen(),
       ),
       GoRoute(
         path: '/call',

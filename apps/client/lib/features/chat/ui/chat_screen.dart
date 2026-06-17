@@ -2,7 +2,6 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/l10n/l10n_ext.dart';
 import '../../../core/theme/app_theme.dart';
@@ -11,7 +10,6 @@ import '../../auth/domain/auth_state.dart';
 import '../../friends/domain/friends_provider.dart';
 import '../../home/domain/home_providers.dart';
 import '../data/chat_repository.dart';
-import '../data/stomp_service.dart';
 import '../domain/chat_provider.dart';
 import '../domain/chat_state.dart';
 import 'chat_screen_helpers.dart';
@@ -39,8 +37,7 @@ class ChatScreen extends ConsumerStatefulWidget {
   ConsumerState<ChatScreen> createState() => _ChatScreenState();
 }
 
-class _ChatScreenState extends ConsumerState<ChatScreen>
-    with WidgetsBindingObserver {
+class _ChatScreenState extends ConsumerState<ChatScreen> {
   late final ScrollController _scrollCtrl;
   late final TextEditingController _textCtrl;
   bool _showEmoji = false;
@@ -53,7 +50,6 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
     super.initState();
     _scrollCtrl = ScrollController()..addListener(_onScroll);
     _textCtrl = TextEditingController();
-    WidgetsBinding.instance.addObserver(this);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref
           .read(conversationsNotifierProvider.notifier)
@@ -68,29 +64,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
   void dispose() {
     _scrollCtrl.dispose();
     _textCtrl.dispose();
-    WidgetsBinding.instance.removeObserver(this);
     super.dispose();
-  }
-
-  @override
-  void didChangeAppLifecycleState(AppLifecycleState state) {
-    final stomp = ref.read(stompServiceProvider.notifier);
-    if (state == AppLifecycleState.paused) {
-      stomp.disconnect();
-    } else if (state == AppLifecycleState.resumed) {
-      _reconnectStomp();
-    }
-  }
-
-  Future<void> _reconnectStomp() async {
-    const storage = FlutterSecureStorage();
-    final token = await storage.read(key: 'accessToken');
-    if (token != null) {
-      final stomp = ref.read(stompServiceProvider.notifier);
-      await stomp.connect(token);
-      stomp.subscribeConversation(widget.conversationId);
-      stomp.subscribeNotifications();
-    }
   }
 
   void _onScroll() {

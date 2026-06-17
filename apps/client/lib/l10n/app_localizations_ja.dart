@@ -1278,4 +1278,45 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get notificationsDisabled => '通知は無効です';
+
+  @override
+  String get legalScreenTitle => 'プライバシーと規約';
+
+  @override
+  String get legalLastUpdated => '最終更新：2026年6月15日';
+
+  @override
+  String get legalDataCollectionTitle => '1. データ収集';
+
+  @override
+  String get legalDataCollectionContent =>
+      '当社は、アカウントの作成・変更、サービスの利用、または当社との通信など、お客様が直接提供する情報（名前、メールアドレス、プロフィール写真、送信したメッセージなど）を収集します。';
+
+  @override
+  String get legalDataUsageTitle => '2. データの利用方法';
+
+  @override
+  String get legalDataUsageContent =>
+      'お客様のデータは、ユーザー間のコミュニケーション促進、セキュリティの確保、エクスペリエンスのパーソナライズを含む、サービスの提供・維持・改善のために使用されます。';
+
+  @override
+  String get legalSecurityTitle => '3. セキュリティ';
+
+  @override
+  String get legalSecurityContent =>
+      '当社は、お客様の個人情報とメッセージを保護するために業界標準のセキュリティ対策を実施しています。データへのアクセスは厳格に管理され、機密情報の保護には暗号化を使用しています。';
+
+  @override
+  String get legalUserRightsTitle => '4. お客様の権利';
+
+  @override
+  String get legalUserRightsContent =>
+      'お客様は、個人データへのアクセス、修正、または削除を行う権利があります。アプリケーション設定からいつでもアカウントを削除できます。';
+
+  @override
+  String get legalTermsTitle => '5. 利用規約';
+
+  @override
+  String get legalTermsContent =>
+      '当社のプラットフォームを使用することで、虐待、嫌がらせ、または違法行為に関与しないことに同意したものとみなされます。当社は、これらの規約に違反するアカウントを停止または終了する権利を留保します。';
 }

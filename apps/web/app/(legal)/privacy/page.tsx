@@ -10,7 +10,7 @@ export default async function PrivacyPolicyPage() {
   const tc = await getTranslations('common')
 
   return (
-    <div className="container max-w-4xl py-10 px-4 md:px-8">
+    <div className="container max-w-4xl py-10 px-4 md:px-8 mx-auto">
       <div className="mb-6">
         <Button variant="ghost" asChild className="pl-0 hover:bg-transparent">
           <Link href="/login" className="flex items-center text-muted-foreground hover:text-foreground">
@@ -19,17 +19,17 @@ export default async function PrivacyPolicyPage() {
           </Link>
         </Button>
       </div>
-      
+
       <Card className="border-border shadow-md">
         <CardHeader className="pb-6">
-          <CardTitle className="text-3xl font-bold tracking-tight">{t('title')}</CardTitle>
+          <CardTitle className="text-3xl font-bold tracking-tight">{t('privacyTitle')}</CardTitle>
           <CardDescription className="text-sm mt-2">{t('lastUpdated')}</CardDescription>
         </CardHeader>
-        
+
         <Separator className="mb-6" />
-        
+
         <CardContent className="space-y-8 pb-10">
-          {['dataCollection', 'dataUsage', 'security', 'userRights', 'terms'].map((section) => (
+          {(['dataCollection', 'dataUsage', 'security', 'userRights'] as const).map((section) => (
             <div key={section} className="space-y-3">
               <h2 className="text-xl font-semibold tracking-tight text-foreground">
                 {t(`sections.${section}.title`)}
@@ -39,6 +39,14 @@ export default async function PrivacyPolicyPage() {
               </p>
             </div>
           ))}
+
+          <Separator />
+
+          <p className="text-sm text-muted-foreground">
+            <Link href="/terms" className="text-primary hover:underline">
+              {t('viewTerms')}
+            </Link>
+          </p>
         </CardContent>
       </Card>
     </div>

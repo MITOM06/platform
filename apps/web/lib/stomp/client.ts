@@ -1,4 +1,5 @@
 import { Client, type IMessage, type StompSubscription } from '@stomp/stompjs'
+import axios from 'axios'
 import { useAuthStore } from '@/lib/store/auth.store'
 
 // Singleton STOMP client — one connection per session
@@ -10,6 +11,26 @@ function notifyStateChange(connected: boolean) {
   stateChangeListeners.forEach((l) => l(connected))
 }
 
+function isTokenExpiredOrExpiringSoon(token: string): boolean {
+  try {
+    const payload = JSON.parse(atob(token.split('.')[1]))
+    return payload.exp * 1000 < Date.now() + 60_000
+  } catch {
+    return true
+  }
+}
+
+async function refreshAccessToken(): Promise<string | null> {
+  try {
+    const { data } = await axios.post<{ accessToken: string }>('/api/auth/refresh')
+    const { user } = useAuthStore.getState()
+    if (user) useAuthStore.getState().setAuth(user, data.accessToken)
+    return data.accessToken
+  } catch {
+    return null
+  }
+}
+
 export const stompService = {
   connect(token: string): Promise<void> {
     return new Promise((resolve, reject) => {
@@ -18,14 +39,34 @@ export const stompService = {
         client.deactivate()
         client = null
       }
-      
-      client = new Client({
+
+      // Capture instance locally — beforeConnect must reference this stable variable,
+      // never the module-level `client`, which can be nulled by disconnect().
+      const instance = new Client({
         brokerURL: process.env.NEXT_PUBLIC_WS_URL,
         reconnectDelay: 5000,
-        beforeConnect: () => {
-          // Dynamically set token before every connect/reconnect
-          const currentToken = useAuthStore.getState().accessToken
-          client!.connectHeaders = { Authorization: `Bearer ${currentToken || token}` }
+        beforeConnect: async () => {
+          let currentToken = useAuthStore.getState().accessToken ?? token
+
+          // Proactively refresh if token is expired or expiring within 60s so
+          // STOMP reconnects succeed even after long idle periods.
+          if (isTokenExpiredOrExpiringSoon(currentToken)) {
+            const refreshed = await refreshAccessToken()
+            if (!refreshed) {
+              // Refresh failed — stop reconnect loop and send user to login.
+              instance.deactivate()
+              client = null
+              useAuthStore.getState().clearAuth()
+              if (typeof window !== 'undefined') {
+                await axios.post('/api/auth/clear-cookie').catch(() => {})
+                window.location.href = '/login'
+              }
+              return
+            }
+            currentToken = refreshed
+          }
+
+          instance.connectHeaders = { Authorization: `Bearer ${currentToken}` }
         },
         onConnect: () => {
           resolve()
@@ -35,14 +76,16 @@ export const stompService = {
         },
         onStompError: (frame) => reject(new Error(frame.headers['message'])),
         onDisconnect: () => {
-          client = null
+          // Do NOT null client here — STOMP manages reconnection internally.
+          // Nulling here causes beforeConnect to crash on the next reconnect attempt.
           notifyStateChange(false)
         },
         onWebSocketClose: () => {
           notifyStateChange(false)
         },
       })
-      client.activate()
+      client = instance
+      instance.activate()
     })
   },
 
