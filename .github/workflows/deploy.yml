@@ -155,6 +155,10 @@ jobs:
             SPRING_DATA_MONGODB_URI=${{ secrets.MONGODB_URI }}
             REDIS_URL=${{ secrets.REDIS_URL }}
             SPRING_DATA_REDIS_URL=${{ secrets.REDIS_URL }}
+            SPRING_RABBITMQ_HOST=${{ secrets.RABBITMQ_HOST }}
+            SPRING_RABBITMQ_PORT=${{ secrets.RABBITMQ_PORT }}
+            SPRING_RABBITMQ_USERNAME=${{ secrets.RABBITMQ_USERNAME }}
+            SPRING_RABBITMQ_PASSWORD=${{ secrets.RABBITMQ_PASSWORD }}
             ALLOWED_ORIGINS=https://platform-web-omega-amber.vercel.app
             MAIL_HOST=${{ secrets.MAIL_HOST }}
             MAIL_PORT=${{ secrets.MAIL_PORT }}
@@ -162,7 +166,7 @@ jobs:
             MAIL_PASS=${{ secrets.MAIL_PASS }}
             FIREBASE_SERVICE_ACCOUNT_BASE64=${{ secrets.FIREBASE_SERVICE_ACCOUNT_BASE64 }}
 
-      # Deploy ai-service (min 1 — Redis pub/sub requires persistent subscriber)
+      # Deploy ai-service (min 1 — RabbitMQ consumer requires persistent process)
       - name: Deploy ai-service
         uses: google-github-actions/deploy-cloudrun@v2
         with:
@@ -181,6 +185,7 @@ jobs:
             JWT_ACCESS_SECRET=${{ secrets.JWT_ACCESS_SECRET }}
             MONGODB_URI=${{ secrets.MONGODB_URI }}
             REDIS_URL=${{ secrets.REDIS_URL }}
+            RABBITMQ_URL=${{ secrets.RABBITMQ_URL }}
             ANTHROPIC_API_KEY=${{ secrets.ANTHROPIC_API_KEY }}
             ANTHROPIC_MODEL=claude-sonnet-4-5
             ANTHROPIC_FALLBACK_MODEL=claude-haiku-4-5-20251001
@@ -188,7 +193,6 @@ jobs:
             QDRANT_URL=${{ secrets.QDRANT_URL }}
             AI_BOT_USER_ID=ai-bot-000000000000000000000001
             AI_BOT_DISPLAY_NAME=${{ secrets.AI_BOT_DISPLAY_NAME }}
-            REDIS_AI_REQUEST_CHANNEL=ai:request
             REDIS_AI_RESPONSE_PREFIX=ai:response
             AI_MONTHLY_TOKEN_LIMIT=500000
 
