@@ -9,7 +9,6 @@ import {
   SpanStatusCode,
   SpanKind,
   metrics,
-  type Span,
 } from '@opentelemetry/api';
 import type { AiTrace } from './ai.service';
 
@@ -28,12 +27,12 @@ const tokenCounter = meter.createCounter('ai.tokens', {
  *
  * @param model     The model selected by the router for this request.
  * @param conversationId  For span attribute logging.
- * @param fn        Factory that receives the span and returns the AiTrace.
+ * @param fn        Factory that returns the AiTrace promise.
  */
 export async function withAgenticLoopSpan(
   model: string,
   conversationId: string,
-  fn: (span: Span) => Promise<AiTrace>,
+  fn: () => Promise<AiTrace>,
 ): Promise<AiTrace> {
   const span = tracer.startSpan('ai.agentic_loop', {
     kind: SpanKind.INTERNAL,
@@ -45,7 +44,7 @@ export async function withAgenticLoopSpan(
 
   return context.with(trace.setSpan(context.active(), span), async () => {
     try {
-      const traceResult = await fn(span);
+      const traceResult = await fn();
 
       // Enrich span with post-loop metrics.
       span.setAttributes({

@@ -2,12 +2,12 @@ import { ConfigService } from '@nestjs/config';
 import { AiService, AiRequestPayload } from './ai.service';
 import { RedisPublisherService } from '../redis/redis-publisher.service';
 import { MemoryService } from '../memory/memory.service';
-import { KbProcessorService } from '../kb/kb-processor.service';
 import { EmbeddingService } from '../kb/embedding.service';
-import { VectorStoreService } from '../kb/vector-store.service';
 import { ToolRegistryService } from '../tools/tool-registry.service';
 import { UsageService } from '../usage/usage.service';
 import { PersonaService } from '../persona/persona.service';
+import { FactExtractorService } from './fact-extractor.service';
+import { ContextBuilderService } from './context-builder.service';
 
 function makeAsyncIterator(chunks: unknown[]) {
   return {
@@ -92,18 +92,16 @@ describe('AiService', () => {
   let publish: jest.Mock;
   let mockStream: jest.Mock;
   let mockCreate: jest.Mock;
-  let retrieveRelevantFacts: jest.Mock;
-  let addFacts: jest.Mock;
   let incrementMessageCount: jest.Mock;
-  let getReadyDocumentIds: jest.Mock;
   let embedOne: jest.Mock;
-  let vectorSearch: jest.Mock;
   let toolRegistryExecute: jest.Mock;
   let toolRegistryGetDefinitions: jest.Mock;
   let recordUsage: jest.Mock;
   let isQuotaExceeded: jest.Mock;
   let getPersona: jest.Mock;
   let buildSystemPromptFn: jest.Mock;
+  let extractFacts: jest.Mock;
+  let buildVolatileContext: jest.Mock;
 
   const basePayload: AiRequestPayload = {
     conversationId: 'conv-test',
@@ -122,18 +120,16 @@ describe('AiService', () => {
     publish = jest.fn().mockResolvedValue(undefined);
     mockStream = jest.fn().mockReturnValue(makeStream(['OK']));
     mockCreate = jest.fn().mockResolvedValue({ content: [] });
-    retrieveRelevantFacts = jest.fn().mockResolvedValue([]);
-    addFacts = jest.fn().mockResolvedValue(undefined);
     incrementMessageCount = jest.fn().mockResolvedValue(1);
-    getReadyDocumentIds = jest.fn().mockResolvedValue([]);
     embedOne = jest.fn().mockResolvedValue([0.1, 0.2]);
-    vectorSearch = jest.fn().mockResolvedValue([]);
     toolRegistryExecute = jest.fn().mockResolvedValue('tool result');
     toolRegistryGetDefinitions = jest.fn().mockReturnValue([]);
     recordUsage = jest.fn().mockResolvedValue(undefined);
     isQuotaExceeded = jest.fn().mockResolvedValue(false);
     getPersona = jest.fn().mockResolvedValue(null);
     buildSystemPromptFn = jest.fn().mockReturnValue('You are PON AI...');
+    extractFacts = jest.fn().mockResolvedValue(undefined);
+    buildVolatileContext = jest.fn().mockResolvedValue({ text: '', ragSources: [] });
 
     const fakeConfig = {
       get: jest.fn().mockImplementation((key: string) => {
@@ -142,10 +138,6 @@ describe('AiService', () => {
           'config.anthropic.model': 'test-primary',
           'config.anthropic.fallbackModel': 'test-fallback',
           'config.anthropic.effort': 'high',
-          'config.kb.qdrantCollection': 'knowledge',
-          'config.kb.topK': 4,
-          'config.kb.overFetch': 8,
-          'config.kb.scoreThreshold': 0.5,
           'config.memory.extractEveryTurns': 20,
           'config.ai.enableThinking': false,
           'config.quota.monthlyTokenLimit': 500000,
@@ -163,14 +155,8 @@ describe('AiService', () => {
     } as unknown as ConfigService;
 
     const fakePublisher = { publish } as unknown as RedisPublisherService;
-    const fakeMemory = {
-      retrieveRelevantFacts,
-      addFacts,
-      incrementMessageCount,
-    } as unknown as MemoryService;
-    const fakeKbProcessor = { getReadyDocumentIds } as unknown as KbProcessorService;
+    const fakeMemory = { incrementMessageCount } as unknown as MemoryService;
     const fakeEmbedding = { embedOne } as unknown as EmbeddingService;
-    const fakeVectorStore = { search: vectorSearch } as unknown as VectorStoreService;
     const fakeToolRegistry = {
       getDefinitions: toolRegistryGetDefinitions,
       execute: toolRegistryExecute,
@@ -180,10 +166,21 @@ describe('AiService', () => {
       getPersona,
       buildSystemPrompt: buildSystemPromptFn,
     } as unknown as PersonaService;
+    const fakeFactExtractor = { extractFacts } as unknown as FactExtractorService;
+    const fakeContextBuilder = {
+      buildVolatileContext,
+    } as unknown as ContextBuilderService;
 
     service = new AiService(
-      fakeConfig, fakePublisher, fakeMemory, fakeKbProcessor, fakeEmbedding,
-      fakeVectorStore, fakeToolRegistry, fakeUsage, fakePersona,
+      fakeConfig,
+      fakePublisher,
+      fakeMemory,
+      fakeEmbedding,
+      fakeToolRegistry,
+      fakeUsage,
+      fakePersona,
+      fakeFactExtractor,
+      fakeContextBuilder,
     );
     (service as any)['anthropic'] = { messages: { stream: mockStream, create: mockCreate } };
   });
@@ -263,13 +260,14 @@ describe('AiService', () => {
     });
   });
 
-  // ─── Memory injection ─────────────────────────────────────────────────────
+  // ─── Memory injection (delegated to ContextBuilderService) ────────────────
 
   it('injects retrieved memory facts as a volatile system block', async () => {
-    retrieveRelevantFacts.mockResolvedValue([
-      { text: 'Uses Flutter', score: 0.9, createdAt: Date.now() },
-      { text: 'Uses Redis', score: 0.8, createdAt: Date.now() },
-    ]);
+    buildVolatileContext.mockResolvedValue({
+      text:
+        '## Relevant memory about this user (stored facts — treat as remembered, not inferred):\n- Uses Flutter\n- Uses Redis',
+      ragSources: [],
+    });
     mockStream.mockReturnValue(makeStream(['OK']));
 
     await service.handleRequest(basePayload);
@@ -281,7 +279,7 @@ describe('AiService', () => {
   });
 
   it('does not inject memory block when no relevant facts', async () => {
-    retrieveRelevantFacts.mockResolvedValue([]);
+    buildVolatileContext.mockResolvedValue({ text: '', ragSources: [] });
     mockStream.mockReturnValue(makeStream(['OK']));
 
     await service.handleRequest(basePayload);
@@ -292,7 +290,7 @@ describe('AiService', () => {
 
   it('keeps the persona prompt in a cached block separate from volatile context', async () => {
     buildSystemPromptFn.mockReturnValue('PERSONA-STABLE');
-    retrieveRelevantFacts.mockResolvedValue([{ text: 'fact', score: 1, createdAt: Date.now() }]);
+    buildVolatileContext.mockResolvedValue({ text: 'fact block content', ragSources: [] });
     mockStream.mockReturnValue(makeStream(['OK']));
 
     await service.handleRequest(basePayload);
@@ -314,14 +312,16 @@ describe('AiService', () => {
     };
     incrementMessageCount.mockResolvedValue(20);
     mockStream.mockReturnValue(makeStream(['OK']));
-    mockCreate.mockResolvedValue({
-      content: [{ type: 'text', text: 'User discussed AI.\nFACTS: ["Uses AI"]' }],
-    });
 
     await service.handleRequest(payloadWithHistory);
     await new Promise((r) => setTimeout(r, 50));
 
-    expect(addFacts).toHaveBeenCalledWith('conv-test', 'user-1', ['Uses AI'], 'User discussed AI.', 20);
+    expect(extractFacts).toHaveBeenCalledWith(
+      'conv-test',
+      'user-1',
+      payloadWithHistory.history,
+      20,
+    );
   });
 
   it('does not extract facts when count is not divisible by 20', async () => {
@@ -331,17 +331,20 @@ describe('AiService', () => {
     await service.handleRequest(basePayload);
     await new Promise((r) => setTimeout(r, 50));
 
-    expect(addFacts).not.toHaveBeenCalled();
+    expect(extractFacts).not.toHaveBeenCalled();
   });
 
-  // ─── RAG context injection ────────────────────────────────────────────────
+  // ─── RAG context injection (delegated to ContextBuilderService) ───────────
 
   it('injects RAG context when docs exist with high score', async () => {
-    getReadyDocumentIds.mockResolvedValue(['doc1']);
-    vectorSearch.mockResolvedValue([
-      { text: 'Flutter is a UI toolkit.', documentId: 'doc1', score: 0.85 },
-      { text: 'Dart is the language.', documentId: 'doc1', score: 0.75 },
-    ]);
+    buildVolatileContext.mockResolvedValue({
+      text:
+        '## Knowledge Base Context:\n[Source 1] Flutter is a UI toolkit.\n\n[Source 2] Dart is the language.\n\nUse ONLY this context',
+      ragSources: [
+        { documentId: 'doc1', score: 0.85 },
+        { documentId: 'doc1', score: 0.75 },
+      ],
+    });
     mockStream.mockReturnValue(makeStream(['Based on [Source 1]...']));
 
     await service.handleRequest(basePayload);
@@ -353,8 +356,10 @@ describe('AiService', () => {
   });
 
   it('includes sources in AI_STREAM_DONE payload', async () => {
-    getReadyDocumentIds.mockResolvedValue(['doc1']);
-    vectorSearch.mockResolvedValue([{ text: 'Some content', documentId: 'doc1', score: 0.8 }]);
+    buildVolatileContext.mockResolvedValue({
+      text: 'kb context',
+      ragSources: [{ documentId: 'doc1', score: 0.8 }],
+    });
     mockStream.mockReturnValue(makeStream(['OK']));
 
     await service.handleRequest(basePayload);
@@ -366,8 +371,10 @@ describe('AiService', () => {
   });
 
   it('emits a "no relevant context" signal when all scores below 0.5 threshold', async () => {
-    getReadyDocumentIds.mockResolvedValue(['doc1']);
-    vectorSearch.mockResolvedValue([{ text: 'Irrelevant', documentId: 'doc1', score: 0.2 }]);
+    buildVolatileContext.mockResolvedValue({
+      text: '## Knowledge Base Context:\nNo relevant context: no uploaded-document chunk cleared the confidence threshold for this question.',
+      ragSources: [],
+    });
     mockStream.mockReturnValue(makeStream(['OK']));
 
     await service.handleRequest(basePayload);
@@ -378,19 +385,21 @@ describe('AiService', () => {
   });
 
   it('signals no docs uploaded when conversation has none', async () => {
-    getReadyDocumentIds.mockResolvedValue([]);
+    buildVolatileContext.mockResolvedValue({
+      text: '## Knowledge Base Context:\nNo documents have been uploaded to this conversation. Do not cite sources.',
+      ragSources: [],
+    });
     mockStream.mockReturnValue(makeStream(['OK']));
 
     await service.handleRequest(basePayload);
 
     const sys = systemText(mockStream.mock.calls[0][0]);
     expect(sys).toContain('No documents have been uploaded');
-    expect(vectorSearch).not.toHaveBeenCalled();
   });
 
   it('degrades gracefully when embedding throws (no vector search)', async () => {
-    getReadyDocumentIds.mockResolvedValue(['doc1']);
     embedOne.mockRejectedValue(new Error('embed unavailable'));
+    // ContextBuilderService is mocked — still returns empty ragSources
     mockStream.mockReturnValue(makeStream(['OK']));
 
     await service.handleRequest(basePayload);
