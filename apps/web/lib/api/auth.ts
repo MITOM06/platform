@@ -27,7 +27,7 @@ export interface UpdateProfilePayload {
   bio?: string
   coverPhoto?: string
   dateOfBirth?: string
-  phoneNumber?: string
+  phoneNumber?: string | null  // null = clear the field; '' would violate sparse unique index
   gender?: string
   hideInfo?: boolean
 }

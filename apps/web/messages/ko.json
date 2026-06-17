@@ -610,6 +610,10 @@
     "emptyLinks": "No links shared yet"
   },
   "legal": {
+    "privacyTitle": "개인정보 처리방침",
+    "termsTitle": "서비스 이용약관",
+    "viewTerms": "서비스 이용약관도 확인하세요",
+    "viewPrivacy": "개인정보 처리방침 보기",
     "title": "개인정보 처리방침 및 서비스 이용약관",
     "lastUpdated": "최종 업데이트: 2026년 6월 15일",
     "sections": {

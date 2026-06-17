@@ -430,5 +430,17 @@
   },
   "notifications": "Notifications",
   "notificationsEnabled": "Les notifications sont activées",
-  "notificationsDisabled": "Les notifications sont désactivées"
+  "notificationsDisabled": "Les notifications sont désactivées",
+  "legalScreenTitle": "Confidentialité & Conditions",
+  "legalLastUpdated": "Dernière mise à jour : 15 juin 2026",
+  "legalDataCollectionTitle": "1. Collecte de Données",
+  "legalDataCollectionContent": "Nous collectons les informations que vous nous fournissez directement, par exemple lors de la création ou modification de votre compte, de l'utilisation de nos services ou de vos communications avec nous, notamment votre nom, adresse e-mail, photo de profil et les messages que vous envoyez.",
+  "legalDataUsageTitle": "2. Comment Nous Utilisons Vos Données",
+  "legalDataUsageContent": "Vos données sont utilisées pour fournir, maintenir et améliorer nos services, notamment en facilitant la communication entre utilisateurs, en assurant la sécurité et en personnalisant votre expérience.",
+  "legalSecurityTitle": "3. Sécurité",
+  "legalSecurityContent": "Nous mettons en œuvre des mesures de sécurité conformes aux normes de l'industrie pour protéger vos informations personnelles et vos messages. L'accès aux données est strictement contrôlé et nous utilisons le chiffrement pour sécuriser les informations sensibles.",
+  "legalUserRightsTitle": "4. Vos Droits",
+  "legalUserRightsContent": "Vous avez le droit d'accéder, de corriger ou de supprimer vos données personnelles. Vous pouvez supprimer votre compte à tout moment via les paramètres de l'application.",
+  "legalTermsTitle": "5. Conditions d'Utilisation",
+  "legalTermsContent": "En utilisant notre plateforme, vous acceptez de ne pas vous engager dans des activités abusives, harcelantes ou illégales. Nous nous réservons le droit de suspendre ou de résilier les comptes qui enfreignent ces conditions."
 }

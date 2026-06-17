@@ -1310,4 +1310,45 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get notificationsDisabled => 'Les notifications sont désactivées';
+
+  @override
+  String get legalScreenTitle => 'Confidentialité & Conditions';
+
+  @override
+  String get legalLastUpdated => 'Dernière mise à jour : 15 juin 2026';
+
+  @override
+  String get legalDataCollectionTitle => '1. Collecte de Données';
+
+  @override
+  String get legalDataCollectionContent =>
+      'Nous collectons les informations que vous nous fournissez directement, par exemple lors de la création ou modification de votre compte, de l\'utilisation de nos services ou de vos communications avec nous, notamment votre nom, adresse e-mail, photo de profil et les messages que vous envoyez.';
+
+  @override
+  String get legalDataUsageTitle => '2. Comment Nous Utilisons Vos Données';
+
+  @override
+  String get legalDataUsageContent =>
+      'Vos données sont utilisées pour fournir, maintenir et améliorer nos services, notamment en facilitant la communication entre utilisateurs, en assurant la sécurité et en personnalisant votre expérience.';
+
+  @override
+  String get legalSecurityTitle => '3. Sécurité';
+
+  @override
+  String get legalSecurityContent =>
+      'Nous mettons en œuvre des mesures de sécurité conformes aux normes de l\'industrie pour protéger vos informations personnelles et vos messages. L\'accès aux données est strictement contrôlé et nous utilisons le chiffrement pour sécuriser les informations sensibles.';
+
+  @override
+  String get legalUserRightsTitle => '4. Vos Droits';
+
+  @override
+  String get legalUserRightsContent =>
+      'Vous avez le droit d\'accéder, de corriger ou de supprimer vos données personnelles. Vous pouvez supprimer votre compte à tout moment via les paramètres de l\'application.';
+
+  @override
+  String get legalTermsTitle => '5. Conditions d\'Utilisation';
+
+  @override
+  String get legalTermsContent =>
+      'En utilisant notre plateforme, vous acceptez de ne pas vous engager dans des activités abusives, harcelantes ou illégales. Nous nous réservons le droit de suspendre ou de résilier les comptes qui enfreignent ces conditions.';
 }

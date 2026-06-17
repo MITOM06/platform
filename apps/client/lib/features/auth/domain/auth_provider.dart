@@ -8,6 +8,8 @@ part 'auth_provider.g.dart';
 
 @riverpod
 class AuthNotifier extends _$AuthNotifier {
+  String? _lastProcessedOAuthCode;
+
   @override
   Future<AuthState> build() async {
     final user = await ref.read(authRepositoryProvider).getStoredUser();
@@ -52,6 +54,11 @@ class AuthNotifier extends _$AuthNotifier {
 
   /// Xử lý OAuth callback deeplink: platform://auth?code=xxx
   Future<void> loginWithCode(String code) async {
+    // Guard against duplicate deep link events (app_links may re-emit on cold start).
+    // Each OAuth code is single-use; a second call with the same code would
+    // consume an already-deleted Redis key and bounce the user back to login.
+    if (_lastProcessedOAuthCode == code) return;
+    _lastProcessedOAuthCode = code;
     state = const AsyncLoading();
     state = await AsyncValue.guard(() async {
       final user = await ref.read(authRepositoryProvider).exchangeCode(code);

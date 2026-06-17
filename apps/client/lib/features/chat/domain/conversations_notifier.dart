@@ -231,10 +231,10 @@ class ConversationsNotifier extends _$ConversationsNotifier {
           (notif['senderId'] ?? notif['senderName'])?.toString() ?? '';
       if (convId == null) return;
 
+      final content = notif['content'] as String?;
+      final messageType = notif['messageType'] as String?;
       final currentRoute = ref.read(appRouterProvider).routeInformationProvider.value.uri.path;
       if (currentRoute != '/chat/$convId') {
-        final content = notif['content'] as String?;
-        final messageType = notif['messageType'] as String?;
         _showMessageBanner(
           convId: convId,
           senderId: senderId,
@@ -254,6 +254,13 @@ class ConversationsNotifier extends _$ConversationsNotifier {
         return c.copyWith(
           lastMessageAt: DateTime.now(),
           unreadCount: c.unreadCount + 1,
+          lastMessage: content != null
+              ? LastMessageModel(
+                  content: content,
+                  senderId: senderId,
+                  createdAt: DateTime.now(),
+                )
+              : c.lastMessage,
         );
       }).toList()
         ..sort((a, b) => (b.lastMessageAt ?? DateTime(0))

@@ -430,5 +430,17 @@
   },
   "notifications": "알림",
   "notificationsEnabled": "알림이 켜져 있습니다",
-  "notificationsDisabled": "알림이 꺼져 있습니다"
+  "notificationsDisabled": "알림이 꺼져 있습니다",
+  "legalScreenTitle": "개인정보 및 약관",
+  "legalLastUpdated": "최종 업데이트: 2026년 6월 15일",
+  "legalDataCollectionTitle": "1. 데이터 수집",
+  "legalDataCollectionContent": "당사는 계정 생성 또는 수정, 서비스 이용, 당사와의 커뮤니케이션 시 귀하가 직접 제공하는 정보(이름, 이메일 주소, 프로필 사진, 전송한 메시지 등)를 수집합니다.",
+  "legalDataUsageTitle": "2. 데이터 사용 방법",
+  "legalDataUsageContent": "귀하의 데이터는 사용자 간 통신 촉진, 보안 확보, 맞춤형 경험 제공을 포함하여 서비스를 제공, 유지 및 개선하는 데 사용됩니다.",
+  "legalSecurityTitle": "3. 보안",
+  "legalSecurityContent": "당사는 귀하의 개인정보와 메시지를 보호하기 위해 업계 표준 보안 조치를 시행합니다. 데이터 접근은 엄격히 통제되며, 민감한 정보 보호를 위해 암호화를 사용합니다.",
+  "legalUserRightsTitle": "4. 귀하의 권리",
+  "legalUserRightsContent": "귀하는 개인 데이터에 대한 접근, 수정 또는 삭제 권리를 갖습니다. 언제든지 애플리케이션 설정을 통해 계정을 삭제할 수 있습니다.",
+  "legalTermsTitle": "5. 서비스 이용약관",
+  "legalTermsContent": "당사 플랫폼을 사용함으로써 귀하는 학대, 괴롭힘 또는 불법 활동에 참여하지 않을 것에 동의합니다. 당사는 이러한 약관을 위반하는 계정을 정지하거나 종료할 권리를 보유합니다."
 }

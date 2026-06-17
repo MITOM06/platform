@@ -604,5 +604,17 @@
   },
   "notifications": "Notifications",
   "notificationsEnabled": "Notifications are enabled",
-  "notificationsDisabled": "Notifications are disabled"
+  "notificationsDisabled": "Notifications are disabled",
+  "legalScreenTitle": "Privacy & Terms",
+  "legalLastUpdated": "Last updated: June 15, 2026",
+  "legalDataCollectionTitle": "1. Data Collection",
+  "legalDataCollectionContent": "We collect information you provide directly to us, such as when you create or modify your account, use our services, or communicate with us. This includes your name, email address, profile picture, and the messages you send.",
+  "legalDataUsageTitle": "2. How We Use Your Data",
+  "legalDataUsageContent": "Your data is used to provide, maintain, and improve our services, including facilitating communication between users, ensuring security, and personalizing your experience.",
+  "legalSecurityTitle": "3. Security",
+  "legalSecurityContent": "We implement industry-standard security measures to protect your personal information and messages. Access to data is strictly controlled and we use encryption to secure sensitive information.",
+  "legalUserRightsTitle": "4. Your Rights",
+  "legalUserRightsContent": "You have the right to access, correct, or delete your personal data. You can delete your account at any time through the application settings.",
+  "legalTermsTitle": "5. Terms of Service",
+  "legalTermsContent": "By using our platform, you agree not to engage in any abusive, harassing, or illegal activities. We reserve the right to suspend or terminate accounts that violate these terms."
 }

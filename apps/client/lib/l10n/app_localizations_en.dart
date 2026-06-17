@@ -1294,4 +1294,45 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get notificationsDisabled => 'Notifications are disabled';
+
+  @override
+  String get legalScreenTitle => 'Privacy & Terms';
+
+  @override
+  String get legalLastUpdated => 'Last updated: June 15, 2026';
+
+  @override
+  String get legalDataCollectionTitle => '1. Data Collection';
+
+  @override
+  String get legalDataCollectionContent =>
+      'We collect information you provide directly to us, such as when you create or modify your account, use our services, or communicate with us. This includes your name, email address, profile picture, and the messages you send.';
+
+  @override
+  String get legalDataUsageTitle => '2. How We Use Your Data';
+
+  @override
+  String get legalDataUsageContent =>
+      'Your data is used to provide, maintain, and improve our services, including facilitating communication between users, ensuring security, and personalizing your experience.';
+
+  @override
+  String get legalSecurityTitle => '3. Security';
+
+  @override
+  String get legalSecurityContent =>
+      'We implement industry-standard security measures to protect your personal information and messages. Access to data is strictly controlled and we use encryption to secure sensitive information.';
+
+  @override
+  String get legalUserRightsTitle => '4. Your Rights';
+
+  @override
+  String get legalUserRightsContent =>
+      'You have the right to access, correct, or delete your personal data. You can delete your account at any time through the application settings.';
+
+  @override
+  String get legalTermsTitle => '5. Terms of Service';
+
+  @override
+  String get legalTermsContent =>
+      'By using our platform, you agree not to engage in any abusive, harassing, or illegal activities. We reserve the right to suspend or terminate accounts that violate these terms.';
 }

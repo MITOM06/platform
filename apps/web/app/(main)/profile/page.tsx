@@ -7,7 +7,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { toast } from 'sonner'
 import { useTranslations } from 'next-intl'
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   ArrowLeft,
   Loader2,
@@ -56,6 +56,7 @@ export default function ProfilePage() {
   const user = useAuthStore((s) => s.user)
   const setAuth = useAuthStore((s) => s.setAuth)
   const accessToken = useAuthStore((s) => s.accessToken)
+  const queryClient = useQueryClient()
   const [saving, setSaving] = useState(false)
 
   const { data: me } = useQuery({
@@ -185,8 +186,8 @@ export default function ProfilePage() {
         displayName: values.displayName,
         bio: values.bio ?? '',
         dateOfBirth: values.dateOfBirth || undefined,
-        phoneNumber: values.phoneNumber ?? '',
-        gender: values.gender ?? '',
+        phoneNumber: values.phoneNumber || null,
+        gender: values.gender || undefined,
         hideInfo: values.hideInfo,
         ...(avatarUrl ? { avatarUrl } : {}),
         ...(coverPhoto ? { coverPhoto } : {}),
@@ -202,6 +203,8 @@ export default function ProfilePage() {
         },
         accessToken,
       )
+      queryClient.invalidateQueries({ queryKey: ['me'] })
+      queryClient.invalidateQueries({ queryKey: ['user', user.id] })
       setAvatarBlob(null)
       setCoverBlob(null)
       toast.success(t('saveSuccess'))

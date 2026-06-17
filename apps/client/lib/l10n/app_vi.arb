@@ -430,5 +430,17 @@
   },
   "notifications": "Thông báo",
   "notificationsEnabled": "Thông báo đang bật",
-  "notificationsDisabled": "Thông báo đang tắt"
+  "notificationsDisabled": "Thông báo đang tắt",
+  "legalScreenTitle": "Quyền riêng tư & Điều khoản",
+  "legalLastUpdated": "Cập nhật lần cuối: 15/06/2026",
+  "legalDataCollectionTitle": "1. Thu thập dữ liệu",
+  "legalDataCollectionContent": "Chúng tôi thu thập thông tin bạn cung cấp trực tiếp cho chúng tôi, ví dụ như khi bạn tạo hoặc sửa đổi tài khoản, sử dụng dịch vụ của chúng tôi hoặc liên lạc với chúng tôi. Điều này bao gồm tên, địa chỉ email, ảnh đại diện và các tin nhắn bạn gửi.",
+  "legalDataUsageTitle": "2. Cách chúng tôi sử dụng dữ liệu",
+  "legalDataUsageContent": "Dữ liệu của bạn được sử dụng để cung cấp, duy trì và cải thiện các dịch vụ của chúng tôi, bao gồm tạo điều kiện giao tiếp giữa những người dùng, đảm bảo bảo mật và cá nhân hóa trải nghiệm của bạn.",
+  "legalSecurityTitle": "3. Bảo mật",
+  "legalSecurityContent": "Chúng tôi áp dụng các biện pháp bảo mật tiêu chuẩn ngành để bảo vệ thông tin cá nhân và tin nhắn của bạn. Quyền truy cập dữ liệu được kiểm soát chặt chẽ và chúng tôi sử dụng mã hóa để bảo mật thông tin nhạy cảm.",
+  "legalUserRightsTitle": "4. Quyền của bạn",
+  "legalUserRightsContent": "Bạn có quyền truy cập, chỉnh sửa hoặc xóa dữ liệu cá nhân của mình. Bạn có thể xóa tài khoản của mình bất kỳ lúc nào thông qua cài đặt ứng dụng.",
+  "legalTermsTitle": "5. Điều khoản Dịch vụ",
+  "legalTermsContent": "Bằng cách sử dụng nền tảng của chúng tôi, bạn đồng ý không tham gia vào bất kỳ hoạt động lạm dụng, quấy rối hoặc bất hợp pháp nào. Chúng tôi có quyền đình chỉ hoặc chấm dứt các tài khoản vi phạm các điều khoản này."
 }

@@ -610,6 +610,10 @@
     "emptyLinks": "No links shared yet"
   },
   "legal": {
+    "privacyTitle": "隐私政策",
+    "termsTitle": "服务条款",
+    "viewTerms": "另请阅读我们的服务条款",
+    "viewPrivacy": "查看我们的隐私政策",
     "title": "隐私政策和服务条款",
     "lastUpdated": "最后更新：2026年6月15日",
     "sections": {

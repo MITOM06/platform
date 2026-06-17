@@ -2496,6 +2496,78 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Notifications are disabled'**
   String get notificationsDisabled;
+
+  /// No description provided for @legalScreenTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Privacy & Terms'**
+  String get legalScreenTitle;
+
+  /// No description provided for @legalLastUpdated.
+  ///
+  /// In en, this message translates to:
+  /// **'Last updated: June 15, 2026'**
+  String get legalLastUpdated;
+
+  /// No description provided for @legalDataCollectionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'1. Data Collection'**
+  String get legalDataCollectionTitle;
+
+  /// No description provided for @legalDataCollectionContent.
+  ///
+  /// In en, this message translates to:
+  /// **'We collect information you provide directly to us, such as when you create or modify your account, use our services, or communicate with us. This includes your name, email address, profile picture, and the messages you send.'**
+  String get legalDataCollectionContent;
+
+  /// No description provided for @legalDataUsageTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'2. How We Use Your Data'**
+  String get legalDataUsageTitle;
+
+  /// No description provided for @legalDataUsageContent.
+  ///
+  /// In en, this message translates to:
+  /// **'Your data is used to provide, maintain, and improve our services, including facilitating communication between users, ensuring security, and personalizing your experience.'**
+  String get legalDataUsageContent;
+
+  /// No description provided for @legalSecurityTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'3. Security'**
+  String get legalSecurityTitle;
+
+  /// No description provided for @legalSecurityContent.
+  ///
+  /// In en, this message translates to:
+  /// **'We implement industry-standard security measures to protect your personal information and messages. Access to data is strictly controlled and we use encryption to secure sensitive information.'**
+  String get legalSecurityContent;
+
+  /// No description provided for @legalUserRightsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'4. Your Rights'**
+  String get legalUserRightsTitle;
+
+  /// No description provided for @legalUserRightsContent.
+  ///
+  /// In en, this message translates to:
+  /// **'You have the right to access, correct, or delete your personal data. You can delete your account at any time through the application settings.'**
+  String get legalUserRightsContent;
+
+  /// No description provided for @legalTermsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'5. Terms of Service'**
+  String get legalTermsTitle;
+
+  /// No description provided for @legalTermsContent.
+  ///
+  /// In en, this message translates to:
+  /// **'By using our platform, you agree not to engage in any abusive, harassing, or illegal activities. We reserve the right to suspend or terminate accounts that violate these terms.'**
+  String get legalTermsContent;
 }
 
 class _AppLocalizationsDelegate

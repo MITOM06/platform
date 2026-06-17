@@ -1304,4 +1304,45 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get notificationsDisabled => 'Las notificaciones están desactivadas';
+
+  @override
+  String get legalScreenTitle => 'Privacidad y Términos';
+
+  @override
+  String get legalLastUpdated => 'Última actualización: 15 de junio de 2026';
+
+  @override
+  String get legalDataCollectionTitle => '1. Recopilación de Datos';
+
+  @override
+  String get legalDataCollectionContent =>
+      'Recopilamos información que nos proporciona directamente, por ejemplo, al crear o modificar su cuenta, usar nuestros servicios o comunicarse con nosotros, incluyendo su nombre, dirección de correo electrónico, foto de perfil y los mensajes que envía.';
+
+  @override
+  String get legalDataUsageTitle => '2. Cómo Usamos Sus Datos';
+
+  @override
+  String get legalDataUsageContent =>
+      'Sus datos se utilizan para proporcionar, mantener y mejorar nuestros servicios, incluida la facilitación de la comunicación entre usuarios, garantizar la seguridad y personalizar su experiencia.';
+
+  @override
+  String get legalSecurityTitle => '3. Seguridad';
+
+  @override
+  String get legalSecurityContent =>
+      'Implementamos medidas de seguridad estándar de la industria para proteger su información personal y mensajes. El acceso a los datos está estrictamente controlado y utilizamos cifrado para proteger la información confidencial.';
+
+  @override
+  String get legalUserRightsTitle => '4. Sus Derechos';
+
+  @override
+  String get legalUserRightsContent =>
+      'Tiene derecho a acceder, corregir o eliminar sus datos personales. Puede eliminar su cuenta en cualquier momento a través de la configuración de la aplicación.';
+
+  @override
+  String get legalTermsTitle => '5. Términos de Servicio';
+
+  @override
+  String get legalTermsContent =>
+      'Al usar nuestra plataforma, acepta no participar en actividades abusivas, de acoso o ilegales. Nos reservamos el derecho de suspender o cancelar cuentas que violen estos términos.';
 }
