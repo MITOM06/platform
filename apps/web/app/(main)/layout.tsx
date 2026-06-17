@@ -17,6 +17,7 @@ import { CallOverlay } from '@/components/call/CallOverlay'
 import { ConversationList } from '@/components/chat/ConversationList'
 import { ActiveFriendsRow } from '@/components/chat/ActiveFriendsRow'
 import { cn } from '@/lib/utils'
+import { MobileTabBar } from '@/components/layout/MobileTabBar'
 import { useUiStore } from '@/lib/store/ui.store'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import {
@@ -72,6 +73,9 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
   const t = useTranslations('layout')
 
   const isConversationOpen = /^\/conversations\/.+/.test(pathname)
+  const isInnerPage = /^\/(friends|settings|profile|explore|archived|token-usage|ai-memory|ai-persona|reminders|kb|shared-media)/.test(pathname)
+  const hideAside = isConversationOpen || isInnerPage
+  const showTabBar = !isConversationOpen
 
   useEffect(() => {
     if (!accessToken || stompService.isConnected()) return
@@ -150,6 +154,27 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
           // ignore
         }
       })
+
+      // Real-time friend presence — mirror Flutter friends_provider.dart.
+      // Offline → remove immediately; Online → debounce + re-fetch (burst protection).
+      let presenceDebounce: ReturnType<typeof setTimeout> | null = null
+      stompService.subscribe('/topic/presence', (frame) => {
+        try {
+          const { userId, online } = JSON.parse(frame.body) as { userId: string; online: boolean }
+          if (online) {
+            if (presenceDebounce) clearTimeout(presenceDebounce)
+            presenceDebounce = setTimeout(() => {
+              queryClient.invalidateQueries({ queryKey: ['onlineFriends'] })
+            }, 400)
+          } else {
+            queryClient.setQueryData<{ id?: string; _id?: string }[]>(['onlineFriends'], (prev) =>
+              prev ? prev.filter((u) => (u.id ?? u._id) !== userId) : prev,
+            )
+          }
+        } catch {
+          // ignore
+        }
+      })
     }).catch(() => {
       toast.error(t('realtimeError'))
     })
@@ -181,7 +206,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
       <aside
         className={cn(
           'w-full md:w-72 border-r flex-col shrink-0 relative overflow-hidden',
-          isConversationOpen ? 'hidden md:flex' : 'flex',
+          hideAside ? 'hidden md:flex' : 'flex',
         )}
       >
         {/* Ambient neon glow spheres */}
@@ -309,21 +334,22 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
             )}
           </div>
         </div>
-        <div className="flex-1 flex flex-col overflow-hidden">
+        <div className="flex-1 flex flex-col overflow-hidden pb-16 md:pb-0">
           <ActiveFriendsRow />
           <ConversationList />
         </div>
       </aside>
 
-      {/* Main area: hidden on mobile when no conversation is open */}
+      {/* Main area: hidden on mobile when sidebar is shown */}
       <main
         className={cn(
           'flex-1 overflow-hidden',
-          isConversationOpen ? 'flex flex-col' : 'hidden md:flex md:flex-col',
+          hideAside ? 'flex flex-col' : 'hidden md:flex md:flex-col',
         )}
       >
         {children}
       </main>
+      {showTabBar && <MobileTabBar />}
     </div>
   )
 }
