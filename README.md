@@ -20,6 +20,8 @@ A high-performance monorepo with three microservices and a Flutter mobile client
 
 </div>
 
+> **New here?** Start with [ONBOARDING.md](ONBOARDING.md) for a 5-minute quickstart and contributor conventions. Architecture diagrams live in [docs/architecture.md](docs/architecture.md).
+
 ---
 
 ## 🚀 Overview
@@ -202,9 +204,16 @@ AI_BOT_DISPLAY_NAME=PON AI
 git clone https://github.com/MITOM06/platform.git && cd platform
 pnpm install
 
-# Start MongoDB, Redis, RabbitMQ, and Qdrant
+# Start MongoDB, Redis, RabbitMQ, Qdrant, and Jaeger
 docker compose -f infra/docker-compose/compose.yml up -d
 ```
+
+Infrastructure services started:
+- **MongoDB** — `mongodb://localhost:27018` (port 27018, non-standard)
+- **Redis** — `redis://localhost:6379`
+- **RabbitMQ** — AMQP `localhost:5672`, Management UI http://localhost:15672 (platform/platform)
+- **Qdrant** — http://localhost:6333
+- **Jaeger** — UI http://localhost:16686, OTLP http://localhost:4318
 
 ### Step 2: Set up Configuration
 Copy environment variables template and fill in API keys:
@@ -244,6 +253,26 @@ cd apps/web
 pnpm install
 pnpm dev
 ```
+
+---
+
+## 🔭 Observability
+
+End-to-end distributed tracing is wired across all three backend services via OpenTelemetry. A single `@AI` request produces a unified trace spanning chat-service (publish) → RabbitMQ → ai-service (agentic loop) → Redis → chat-service (STOMP deliver), all visible in **Jaeger at http://localhost:16686**.
+
+See [docs/observability.md](docs/observability.md) for the full propagation protocol, span names, and environment toggles.
+
+---
+
+## ☁️ Self-host / Deploy Your Own
+
+The project is deployed via GitHub Actions (`.github/workflows/deploy.yml`) to:
+- **Backend services** — Google Cloud Run (one service per container)
+- **Web client** — Vercel (auto-deploy on push to `main`)
+
+Known limitations of the current self-host setup:
+- **Single-tenant** — designed for a single team/organization; no multi-tenancy isolation.
+- **Monthly AI token quota** — controlled by `AI_MONTHLY_TOKEN_LIMIT` (default 500,000 tokens). Adjust in `apps/server/ai-service/.env` to match your Anthropic plan.
 
 ---
 
