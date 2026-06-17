@@ -2,6 +2,9 @@ server:
   port: 8080
 
 spring:
+  application:
+    # Used by Micrometer/OTel as the service.name resource attribute (Jaeger service filter).
+    name: ${SPRING_APPLICATION_NAME:chat-service}
   rabbitmq:
     host: ${SPRING_RABBITMQ_HOST:localhost}
     port: ${SPRING_RABBITMQ_PORT:5672}

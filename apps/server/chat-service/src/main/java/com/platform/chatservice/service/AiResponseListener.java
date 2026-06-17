@@ -52,9 +52,12 @@ public class AiResponseListener implements MessageListener {
             // delivery spans become children of the same end-to-end trace.
             String traceparent = (String) payload.get("_traceparent");
             Span span = buildDeliverSpan(traceparent, type, convId);
-            try (Tracer.SpanInScope ws = tracer.withSpan(span)) {
+            // Close the scope BEFORE ending the span (correct OTel lifecycle ordering).
+            Tracer.SpanInScope scope = tracer.withSpan(span);
+            try {
                 deliverToStomp(payload, type, convId);
             } finally {
+                scope.close();
                 span.end();
             }
         } catch (Exception e) {
@@ -80,7 +83,7 @@ public class AiResponseListener implements MessageListener {
                     .tag("conversation.id", convId)
                     .start();
             } catch (Exception ex) {
-                log.debug("Could not extract trace context from _traceparent '{}': {}", traceparent, ex.getMessage());
+                log.warn("Could not extract trace context from _traceparent '{}': {}", traceparent, ex.getMessage());
             }
         }
         // No traceparent — start a fresh span so delivery is still observable.

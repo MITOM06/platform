@@ -179,5 +179,25 @@ class AiResponseListenerTest {
             (Object) argThat(arg -> arg instanceof Map
                 && "AI_STREAM_CHUNK".equals(((Map<?, ?>) arg).get("type"))
                 && "traced".equals(((Map<?, ?>) arg).get("chunk"))));
+        // Span lifecycle: scope must be closed and the span ended after delivery.
+        verify(spanInScope).close();
+        verify(span).end();
+    }
+
+    @Test
+    void onMessage_endsSpanAndClosesScope_evenWithoutTraceparent() throws Exception {
+        // Fresh-root path (no _traceparent) must still close the scope and end the span.
+        Map<String, Object> payload = Map.of(
+            "type", "AI_STREAM_CHUNK",
+            "chunk", "hi",
+            "conversationId", "conv-1"
+        );
+        when(redisMessage.getBody()).thenReturn(objectMapper.writeValueAsBytes(payload));
+
+        listener.onMessage(redisMessage, null);
+
+        verify(tracer).nextSpan();
+        verify(spanInScope).close();
+        verify(span).end();
     }
 }

@@ -33,9 +33,12 @@ public class AiRedisPublisher {
                                   String content, List<Map<String, String>> history) {
         AiRequestPayload payload = new AiRequestPayload(conversationId, userId, displayName, content, history);
 
-        // Create a child span for the RabbitMQ publish operation.
+        // Create a child span for the RabbitMQ publish operation. The scope is closed
+        // explicitly BEFORE the span is ended so the thread-local context is cleared
+        // first (correct OTel span lifecycle ordering).
         Span span = tracer.nextSpan().name("ai.request.publish").start();
-        try (Tracer.SpanInScope ws = tracer.withSpan(span)) {
+        Tracer.SpanInScope scope = tracer.withSpan(span);
+        try {
             rabbitTemplate.convertAndSend(
                 RabbitMqConfig.AI_EXCHANGE,
                 RabbitMqConfig.AI_ROUTING_KEY,
@@ -49,7 +52,11 @@ public class AiRedisPublisher {
                 });
             log.debug("Published AI request via RabbitMQ for conversation {} [traceId={}]",
                 conversationId, span.context().traceId());
+        } catch (RuntimeException e) {
+            span.error(e);
+            throw e;
         } finally {
+            scope.close();
             span.end();
         }
     }
