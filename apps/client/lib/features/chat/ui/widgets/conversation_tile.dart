@@ -18,29 +18,40 @@ class ConversationTile extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final authState = ref.watch(authNotifierProvider).valueOrNull;
-    final currentUserId =
-        authState is AuthAuthenticated ? authState.user.id : '';
+    // Narrow each watch to the specific field used — tile only rebuilds when
+    // that field changes, not on any unrelated provider emission.
+    final currentUserId = ref.watch(
+      authNotifierProvider.select((s) {
+        final v = s.valueOrNull;
+        return v is AuthAuthenticated ? v.user.id : '';
+      }),
+    );
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final isGroup = conv.isGroup;
 
     // On the web/tablet master-detail layout the tile drives the right pane
     // instead of pushing a route; it also paints a selected state.
     final isWeb = MediaQuery.of(context).size.width >= kWebBreakpoint;
-    final isSelected =
-        isWeb && ref.watch(selectedConversationIdProvider) == conv.id;
+    final isSelected = isWeb &&
+        ref.watch(
+          selectedConversationIdProvider.select((id) => id == conv.id),
+        );
 
     final others =
         conv.participants.where((p) => p != currentUserId).toList();
     final otherUserId = !isGroup && others.isNotEmpty ? others.first : '';
 
-    final statusAsync = otherUserId.isNotEmpty
-        ? ref.watch(userStatusProvider(otherUserId)).valueOrNull
-        : null;
-    final isOnline = !isGroup && (statusAsync?.online ?? false);
+    final isOnline = !isGroup &&
+        otherUserId.isNotEmpty &&
+        ref.watch(
+          userStatusProvider(otherUserId)
+              .select((s) => s.valueOrNull?.online ?? false),
+        );
 
-    final profileAsync = otherUserId.isNotEmpty
-        ? ref.watch(userProfileProvider(otherUserId))
+    final profileData = otherUserId.isNotEmpty
+        ? ref.watch(
+            userProfileProvider(otherUserId).select((s) => s.valueOrNull),
+          )
         : null;
     final nicknames = ref.watch(nicknamesProvider(conv.id));
     final dmNickname = (!isGroup && otherUserId.isNotEmpty)
@@ -50,15 +61,14 @@ class ConversationTile extends ConsumerWidget {
         ? (conv.name ?? context.l10n.conversationDefault)
         : ((dmNickname != null && dmNickname.isNotEmpty)
             ? dmNickname
-            : (profileAsync?.valueOrNull?.displayName ?? '...'));
+            : (profileData?.displayName ?? '...'));
     final isAiBot = !isGroup && otherUserId == kAiBotUserId;
     final tileLetter = isAiBot
         ? 'AI'
         : (displayName.isNotEmpty && displayName != '...'
             ? displayName[0].toUpperCase()
             : '?');
-    final avatarUrl =
-        isGroup ? conv.avatarUrl : profileAsync?.valueOrNull?.avatarUrl;
+    final avatarUrl = isGroup ? conv.avatarUrl : profileData?.avatarUrl;
 
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),

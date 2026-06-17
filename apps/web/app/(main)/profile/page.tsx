@@ -311,7 +311,7 @@ export default function ProfilePage() {
           <Separator className="mb-6" />
 
           {/* Edit form */}
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-5 pb-10">
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-5 pb-24 md:pb-10">
             {/* Display name */}
             <div className="space-y-2">
               <Label htmlFor="displayName" className="text-sm font-medium flex items-center gap-2">

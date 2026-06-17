@@ -2,7 +2,7 @@
 
 ## Tech Stack
 - Spring Boot **3.x**, Spring Framework **6.x**, Jakarta EE **10** (`jakarta.*` — NOT `javax.*`)
-- Spring Data MongoDB, Spring WebSocket + **STOMP**, Spring Security 6, Spring Data Redis
+- Spring Data MongoDB, Spring WebSocket + **STOMP**, Spring Security 6, Spring Data Redis, Spring AMQP (RabbitMQ)
 - **Lombok** for boilerplate reduction; **Maven** as build tool
 
 ---
@@ -53,15 +53,23 @@
 
 ---
 
-## Configuration (`application.yml` / `application.properties`)
+## Configuration (`application.yml`)
 ```yaml
 server.port: 8080
 spring.data.mongodb.uri: ${SPRING_DATA_MONGODB_URI:mongodb://localhost:27018/platform}
-spring.data.redis.url: ${SPRING_DATA_REDIS_URL:redis://${SPRING_DATA_REDIS_HOST:localhost}:${SPRING_DATA_REDIS_PORT:6379}} # Upstash TLS in prod; falls back to host/port locally
+spring.data.redis.url: ${SPRING_DATA_REDIS_URL:redis://${SPRING_DATA_REDIS_HOST:localhost}:${SPRING_DATA_REDIS_PORT:6379}}
 spring.data.redis.host: ${SPRING_DATA_REDIS_HOST:localhost}
 spring.data.redis.port: ${SPRING_DATA_REDIS_PORT:6379}
-app.jwt.secret: ${JWT_ACCESS_SECRET} # Must match auth-service secret exactly
+spring.rabbitmq.host: ${SPRING_RABBITMQ_HOST:localhost}
+spring.rabbitmq.port: ${SPRING_RABBITMQ_PORT:5672}
+spring.rabbitmq.username: ${SPRING_RABBITMQ_USERNAME:platform}
+spring.rabbitmq.password: ${SPRING_RABBITMQ_PASSWORD:platform}
+app.jwt.secret: ${JWT_ACCESS_SECRET}               # Must match auth-service secret exactly
 ```
+
+**RabbitMQ topology** (declared in `RabbitMqConfig.java`):
+- Exchange `ai.direct` (direct) + queue `ai.requests` with 30 s TTL → DLQ `ai.requests.dlq`
+- `AiRedisPublisher` publishes `@AI` mention jobs to `ai.requests` via `RabbitTemplate`
 
 ---
 

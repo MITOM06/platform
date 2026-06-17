@@ -15,10 +15,27 @@
 1. Tự phân tích, lên plan, và thực thi hoàn toàn — không hỏi xác nhận giữa chừng.
 2. Nếu có nhiều cách làm, tự chọn cách tốt nhất và ghi lại lý do trong báo cáo.
 3. Tự chạy build/test sau khi thay đổi để verify.
-4. Chỉ dừng lại và hỏi nếu gặp: missing secret/credential, hoặc quyết định phá vỡ backward compatibility.
+4. Chạy liên tục cho đến khi hoàn thành, rồi mới báo cáo một lần duy nhất.
 5. Khi xong, báo cáo ngắn gọn: những gì đã làm, file nào thay đổi, kết quả build/test.
 
 **Không được hỏi:** "Bạn có muốn tôi tiếp tục không?", "Tôi có thể sửa file này không?", "Bạn có đồng ý không?"
+
+## KHI NÀO PHẢI DỪNG VÀ HỎI
+
+Chỉ dừng và hỏi khi gặp đúng các tình huống dưới đây — không hỏi bất kỳ điều gì khác:
+
+**Bắt buộc hỏi (HARD STOP):**
+- Task mơ hồ đến mức có thể hiểu theo 2+ hướng hoàn toàn khác nhau (ví dụ: "cải thiện performance" mà không rõ service nào, metric nào).
+- Quyết định phá vỡ backward compatibility hoặc thay đổi API contract hiện tại.
+- Thiếu secret/credential/env var cần thiết để chạy.
+- Hành động không thể hoàn tác: xóa dữ liệu production, drop collection, force push lên `main`.
+- Task yêu cầu chọn giữa 2 hướng kiến trúc đều hợp lệ và có trade-off rõ ràng khác nhau.
+
+**Không được hỏi (tiếp tục tự chạy):**
+- Cách implement cụ thể (chọn pattern, đặt tên biến, cấu trúc file).
+- Quyết định nhỏ nằm trong phạm vi task đã giao.
+- Refactor hoặc cleanup rõ ràng cần làm để hoàn thành task.
+- Bất kỳ điều gì có thể tự suy luận từ codebase, CLAUDE.md, hoặc context hiện tại.
 
 ---
 
@@ -42,6 +59,8 @@
 | ai-service | 3002 | NestJS (TypeScript) |
 | MongoDB | **27018** (non-standard!) | Docker |
 | Redis | 6379 | Docker |
+| RabbitMQ AMQP | 5672 | Docker |
+| RabbitMQ Management UI | 15672 | Docker (user: platform / platform) |
 
 Start infra: `docker compose -f infra/docker-compose/compose.yml up -d`
 
@@ -53,17 +72,29 @@ Start infra: `docker compose -f infra/docker-compose/compose.yml up -d`
 
 ## Stack — Phase 2 AI ✅ COMPLETE (2026-06-07, Sprint AI-6 DONE)
 
-- **Spring Boot 3 chat-service**: WebSocket (STOMP) + REST API + MongoDB + Redis + JWT validation ✅
+- **Spring Boot 3 chat-service**: WebSocket (STOMP) + REST API + MongoDB + Redis + RabbitMQ + JWT validation ✅
 - **Flutter client**: Neon UI + Auth flow + Chat UI + Riverpod + STOMP wire ✅
 - **NestJS auth-service**: JWT, OTP, refresh token, user search API ✅
-- **NestJS ai-service**: Anthropic Claude API + Redis pub/sub + Streaming STOMP + Memory + RAG + Tools + Persona ✅
+- **NestJS ai-service**: Anthropic Claude API + RabbitMQ consumer + Redis streaming + Memory + RAG + Tools + Persona ✅
 
-## Redis Pub/Sub Channels (AI layer)
+## Message Bus Channels (AI layer)
+
+### RabbitMQ — durable AI request queue
+
+| Exchange | Queue | Publisher | Consumer | Payload |
+|----------|-------|-----------|----------|---------|
+| `ai.direct` (direct) | `ai.requests` | chat-service | ai-service | `{conversationId, userId, displayName, content, history[]}` |
+| `ai.direct` (direct) | `ai.requests.dlq` | RabbitMQ (TTL/nack) | — | dead-lettered messages |
+
+Queue settings: 30-second message TTL, dead-letter exchange `ai.direct.dlq`.
+
+### Redis Pub/Sub — low-latency AI response streaming
 
 | Channel | Publisher | Subscriber | Payload |
 |---------|-----------|------------|---------|
-| `ai:request` | chat-service | ai-service | `{conversationId, userId, displayName, content, history[]}` |
 | `ai:response:{conversationId}` | ai-service | chat-service | `{type: AI_STREAM_CHUNK\|AI_STREAM_DONE\|AI_STREAM_ERROR, chunk?, fullContent?}` |
+| `kb:process` | chat-service | ai-service | `{documentId, conversationId, filename, gridfsId, mimeType}` |
+| `kb:delete` | chat-service | ai-service | `{documentId}` |
 
 ## Key Paths
 

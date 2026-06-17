@@ -344,6 +344,7 @@ export default function ConversationPage({ params }: Props) {
           aiStreamContent={aiStreamContent}
           topSentinelRef={topSentinelRef}
           bottomRef={bottomRef}
+          scrollContainerRef={scrollContainerRef}
           onEdit={setEditingMessage}
           onForward={setForwardMessage}
           onReply={setReplyingTo}

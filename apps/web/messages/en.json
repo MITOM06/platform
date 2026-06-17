@@ -29,7 +29,9 @@
     "notificationOpen": "Open",
     "realtimeError": "Unable to connect to realtime",
     "logoutError": "Sign out failed",
-    "sessionConnecting": "Connecting your session..."
+    "sessionConnecting": "Connecting your session...",
+    "tabChat": "Chat",
+    "tabFriends": "Friends"
   },
   "auth": {
     "emailLabel": "Email",
@@ -445,6 +447,7 @@
     "sendMessageError": "Could not send message",
     "editMessageError": "Could not edit message",
     "aiError": "AI error, please try again",
+    "aiQuotaExceeded": "Monthly AI usage quota exceeded. Please contact your admin.",
     "typingIndicator": "Typing",
     "newConvTitle": "New Conversation",
     "newConvTabDirect": "Direct",

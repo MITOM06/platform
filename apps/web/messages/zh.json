@@ -29,7 +29,9 @@
     "notificationOpen": "打开",
     "realtimeError": "无法连接到实时服务",
     "logoutError": "退出登录失败",
-    "sessionConnecting": "正在连接您的会话..."
+    "sessionConnecting": "正在连接您的会话...",
+    "tabChat": "聊天",
+    "tabFriends": "好友"
   },
   "auth": {
     "emailLabel": "Email",
@@ -445,6 +447,7 @@
     "sendMessageError": "无法发送消息",
     "editMessageError": "无法编辑消息",
     "aiError": "AI 出错，请重试",
+    "aiQuotaExceeded": "已超过每月 AI 使用配额，请联系管理员。",
     "typingIndicator": "正在输入",
     "newConvTitle": "新建对话",
     "newConvTabDirect": "私聊",

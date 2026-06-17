@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import NextImage from 'next/image'
 import { Download, X, ChevronLeft, ChevronRight, Play, ImageOff } from 'lucide-react'
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog'
 import { absoluteMediaUrl, downloadMediaUrl, parseImageUrls } from '@/lib/media'
@@ -31,13 +32,13 @@ function Tile({
           <ImageOff className="size-6" />
         </div>
       ) : (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img
+        <NextImage
           src={absoluteMediaUrl(url)}
           alt=""
-          className="size-full object-cover"
+          fill
+          sizes="(max-width: 768px) 100vw, 320px"
+          className="object-cover"
           onError={() => setErrored(true)}
-          loading="lazy"
         />
       )}
       {overlay && (

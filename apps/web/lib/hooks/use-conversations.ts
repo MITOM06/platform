@@ -5,6 +5,7 @@ export function useConversations() {
   return useQuery({
     queryKey: ['conversations'],
     queryFn: () => chatService.getConversations(),
+    staleTime: 2 * 60 * 1000,
     select: (data) => data.content,
   })
 }

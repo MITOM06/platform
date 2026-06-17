@@ -29,7 +29,9 @@
     "notificationOpen": "열기",
     "realtimeError": "실시간 연결에 실패했습니다",
     "logoutError": "로그아웃에 실패했습니다",
-    "sessionConnecting": "세션에 연결하는 중..."
+    "sessionConnecting": "세션에 연결하는 중...",
+    "tabChat": "채팅",
+    "tabFriends": "친구"
   },
   "auth": {
     "emailLabel": "Email",
@@ -445,6 +447,7 @@
     "sendMessageError": "메시지를 보낼 수 없습니다",
     "editMessageError": "메시지를 수정할 수 없습니다",
     "aiError": "AI 오류가 발생했습니다. 다시 시도해 주세요",
+    "aiQuotaExceeded": "월별 AI 사용 한도를 초과했습니다. 관리자에게 문의하세요.",
     "typingIndicator": "입력 중",
     "newConvTitle": "새 대화",
     "newConvTabDirect": "1:1",

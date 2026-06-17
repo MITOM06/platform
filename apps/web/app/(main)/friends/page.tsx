@@ -90,7 +90,7 @@ export default function FriendsPage() {
         <p className="text-sm text-muted-foreground mt-1">{t('subtitle')}</p>
       </div>
 
-      <div className="p-6 overflow-y-auto flex-1">
+      <div className="p-6 overflow-y-auto flex-1 pb-20 md:pb-6">
         <Tabs defaultValue="friends" className="w-full max-w-5xl mx-auto space-y-6">
           <TabsList className="bg-muted/50 p-1">
             <TabsTrigger value="friends" className="rounded-md">
@@ -113,9 +113,9 @@ export default function FriendsPage() {
             ) : (
               renderUserList(friends, t('noFriends'), (user) => (
                 <Button
-                  size="icon-sm"
+                  size="sm"
                   variant="ghost"
-                  className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                  className="min-h-[44px] min-w-[44px] text-destructive hover:text-destructive hover:bg-destructive/10"
                   onClick={() => removeFriend.mutate(user.id || user._id!)}
                   title={t('removeFriend')}
                   disabled={removeFriend.isPending}
@@ -133,8 +133,8 @@ export default function FriendsPage() {
               renderUserList(requests, t('noRequests'), (user) => (
                 <>
                   <Button
-                    size="icon-sm"
-                    className="bg-pon-cyan hover:bg-pon-cyan/90 text-black"
+                    size="sm"
+                    className="min-h-[44px] min-w-[44px] bg-pon-cyan hover:bg-pon-cyan/90 text-black"
                     onClick={() => acceptRequest.mutate(user.id || user._id!)}
                     title={t('accept')}
                     disabled={acceptRequest.isPending}
@@ -142,8 +142,9 @@ export default function FriendsPage() {
                     <Check className="size-4" />
                   </Button>
                   <Button
-                    size="icon-sm"
+                    size="sm"
                     variant="ghost"
+                    className="min-h-[44px] min-w-[44px]"
                     onClick={() => removeFriend.mutate(user.id || user._id!)}
                     title={t('decline')}
                     disabled={removeFriend.isPending}

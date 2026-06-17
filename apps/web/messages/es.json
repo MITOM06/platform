@@ -29,7 +29,9 @@
     "notificationOpen": "Abrir",
     "realtimeError": "No se pudo conectar en tiempo real",
     "logoutError": "Error al cerrar sesión",
-    "sessionConnecting": "Conectando tu sesión..."
+    "sessionConnecting": "Conectando tu sesión...",
+    "tabChat": "Chat",
+    "tabFriends": "Amigos"
   },
   "auth": {
     "emailLabel": "Email",
@@ -445,6 +447,7 @@
     "sendMessageError": "No se pudo enviar el mensaje",
     "editMessageError": "No se pudo editar el mensaje",
     "aiError": "Error de IA, inténtalo de nuevo",
+    "aiQuotaExceeded": "Se ha superado la cuota mensual de uso de IA. Contacta a tu administrador.",
     "typingIndicator": "Escribiendo",
     "newConvTitle": "Nueva conversación",
     "newConvTabDirect": "Directo",
