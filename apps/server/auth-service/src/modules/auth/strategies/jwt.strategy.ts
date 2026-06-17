@@ -3,12 +3,21 @@ import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 import { ConfigService } from '@nestjs/config';
 import { REDIS_CLIENT } from '@platform/database';
+import { Request } from 'express';
+import Redis from 'ioredis';
+
+export interface JwtPayload {
+  sub: string;   // userId
+  sid: string;   // sessionId
+  iat?: number;
+  exp?: number;
+}
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
   constructor(
     private readonly configService: ConfigService,
-    @Inject(REDIS_CLIENT) private readonly redis: any,
+    @Inject(REDIS_CLIENT) private readonly redis: Redis,
   ) {
     const secret = process.env.JWT_ACCESS_SECRET;
     if (!secret) throw new Error('Missing JWT_ACCESS_SECRET');
@@ -22,7 +31,7 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
   }
 
   // ✅ FIX: Validate JWT + check session có bị revoke không
-  async validate(req: any, payload: any) {
+  async validate(req: Request, payload: JwtPayload) {
     // payload = { sub: userId, sid: sessionId, iat, exp }
 
     if (!payload?.sub || !payload?.sid) {
