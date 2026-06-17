@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:url_launcher/url_launcher.dart';
+import 'package:url_launcher/url_launcher.dart' show launchUrl, LaunchMode;
 import '../../../core/l10n/l10n_ext.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/pon_widgets.dart';
@@ -60,12 +60,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   Future<void> _launchOAuth(String provider) async {
     const authBase = String.fromEnvironment('AUTH_BASE_URL', defaultValue: 'https://auth-service-942942821810.asia-southeast1.run.app');
     final uri = Uri.parse('$authBase/auth/social/$provider/init?platform=mobile');
-    if (await canLaunchUrl(uri)) {
+    try {
       await launchUrl(uri, mode: LaunchMode.externalApplication);
-    } else if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(context.l10n.errCannotOpenLink)),
-      );
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(context.l10n.errCannotOpenLink)),
+        );
+      }
     }
   }
 
