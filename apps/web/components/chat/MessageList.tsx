@@ -1,11 +1,17 @@
 'use client'
 
+import { useMemo } from 'react'
+import { useVirtualizer } from '@tanstack/react-virtual'
 import { useTranslations, useLocale } from 'next-intl'
 import { Loader2, MessageCircle } from 'lucide-react'
 import { MessageBubble } from '@/components/chat/MessageBubble'
 import { ChatTypingIndicator } from '@/components/chat/ChatTypingIndicator'
 import { Skeleton } from '@/components/ui/skeleton'
 import type { Message } from '@/lib/api/types'
+
+type VirtualRow =
+  | { kind: 'separator'; isoDate: string }
+  | { kind: 'message'; msg: Message }
 
 function formatSeparatorDate(
   dateStr: string,
@@ -48,6 +54,7 @@ interface Props {
   aiStreamContent: string | null
   topSentinelRef: React.RefObject<HTMLDivElement | null>
   bottomRef: React.RefObject<HTMLDivElement | null>
+  scrollContainerRef: React.RefObject<HTMLDivElement | null>
   onEdit: (message: Message) => void
   onForward: (message: Message) => void
   onReply: (message: Message) => void
@@ -69,6 +76,7 @@ export function MessageList({
   aiStreamContent,
   topSentinelRef,
   bottomRef,
+  scrollContainerRef,
   onEdit,
   onForward,
   onReply,
@@ -78,7 +86,29 @@ export function MessageList({
   const t = useTranslations('chat')
   const locale = useLocale()
 
-  let lastDateStr = ''
+  // Flatten messages + date separators into virtual rows
+  const rows = useMemo<VirtualRow[]>(() => {
+    const result: VirtualRow[] = []
+    let lastDate = ''
+    for (const msg of messages) {
+      const dateStr = new Date(msg.createdAt).toDateString()
+      if (dateStr !== lastDate) {
+        result.push({ kind: 'separator', isoDate: msg.createdAt })
+        lastDate = dateStr
+      }
+      result.push({ kind: 'message', msg })
+    }
+    return result
+  }, [messages])
+
+  const virtualizer = useVirtualizer({
+    count: rows.length,
+    getScrollElement: () => scrollContainerRef.current,
+    estimateSize: (index) => (rows[index].kind === 'separator' ? 44 : 72),
+    overscan: 5,
+  })
+
+  const showContent = !isLoading && !!currentUserId && !isError
 
   return (
     <div className="relative z-10 space-y-2">
@@ -98,45 +128,60 @@ export function MessageList({
         </div>
       )}
 
-      {!isLoading && currentUserId && !isError && messages.length === 0 && (
+      {showContent && messages.length === 0 && (
         <div className="flex flex-col items-center justify-center h-full min-h-[300px] gap-3 text-muted-foreground">
           <MessageCircle className="size-10 opacity-30" />
           <p className="text-sm">{t('noMessagesStart')}</p>
         </div>
       )}
 
-      {!isLoading && currentUserId &&
-        messages.map((msg) => {
-          const msgDateStr = new Date(msg.createdAt).toDateString()
-          const showSeparator = msgDateStr !== lastDateStr
-          lastDateStr = msgDateStr
-
-          return (
-            <div key={msg.id} className="space-y-2" id={`message-${msg.id}`}>
-              {showSeparator && (
-                <div className="flex justify-center my-4 select-none">
-                  <span className="text-[11px] bg-muted/80 backdrop-blur-xs text-muted-foreground font-semibold px-3 py-1 rounded-full border shadow-xs">
-                    {formatSeparatorDate(msg.createdAt, locale, { today: t('today'), yesterday: t('yesterday') })}
-                  </span>
-                </div>
-              )}
-              <MessageBubble
-                message={msg}
-                isOwn={msg.senderId === currentUserId}
-                currentUserId={currentUserId}
-                conversationId={conversationId}
-                otherUserId={otherUserId}
-                isPinned={pinnedMessages.includes(msg.id)}
-                isGroup={isGroup}
-                onEdit={onEdit}
-                onForward={onForward}
-                onReply={onReply}
-                onAiTrace={onAiTrace}
-                onOptimisticUpdate={onOptimisticUpdate}
-              />
-            </div>
-          )
-        })}
+      {showContent && rows.length > 0 && (
+        <div style={{ height: virtualizer.getTotalSize(), position: 'relative' }}>
+          {virtualizer.getVirtualItems().map((virtualItem) => {
+            const row = rows[virtualItem.index]
+            return (
+              <div
+                key={virtualItem.key}
+                data-index={virtualItem.index}
+                ref={virtualizer.measureElement}
+                style={{
+                  position: 'absolute',
+                  top: virtualItem.start,
+                  width: '100%',
+                }}
+              >
+                {row.kind === 'separator' ? (
+                  <div className="flex justify-center my-4 select-none">
+                    <span className="text-[11px] bg-muted/80 backdrop-blur-xs text-muted-foreground font-semibold px-3 py-1 rounded-full border shadow-xs">
+                      {formatSeparatorDate(row.isoDate, locale, {
+                        today: t('today'),
+                        yesterday: t('yesterday'),
+                      })}
+                    </span>
+                  </div>
+                ) : (
+                  <div className="space-y-2" id={`message-${row.msg.id}`}>
+                    <MessageBubble
+                      message={row.msg}
+                      isOwn={row.msg.senderId === currentUserId}
+                      currentUserId={currentUserId}
+                      conversationId={conversationId}
+                      otherUserId={otherUserId}
+                      isPinned={pinnedMessages.includes(row.msg.id)}
+                      isGroup={isGroup}
+                      onEdit={onEdit}
+                      onForward={onForward}
+                      onReply={onReply}
+                      onAiTrace={onAiTrace}
+                      onOptimisticUpdate={onOptimisticUpdate}
+                    />
+                  </div>
+                )}
+              </div>
+            )
+          })}
+        </div>
+      )}
 
       {typingUserIds.length > 0 && currentUserId && !typingUserIds.includes(currentUserId) && (
         <ChatTypingIndicator />
