@@ -1,18 +1,128 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
+import { ConfigService } from '@nestjs/config';
 import { Model } from 'mongoose';
 import { AiMemory, AiMemoryDocument } from './ai-memory.schema';
+import { MemoryVectorService } from './memory-vector.service';
+import { EmbeddingService } from '../kb/embedding.service';
+
+export interface RelevantFact {
+  text: string;
+  score: number;
+  createdAt: number;
+}
 
 @Injectable()
 export class MemoryService {
+  private readonly logger = new Logger(MemoryService.name);
+  private readonly topFacts: number;
+  private readonly dedupThreshold: number;
+  private readonly halfLifeMs: number;
+
   constructor(
     @InjectModel(AiMemory.name) private readonly memoryModel: Model<AiMemoryDocument>,
-  ) {}
+    private readonly vectorStore: MemoryVectorService,
+    private readonly embeddingService: EmbeddingService,
+    private readonly configService: ConfigService,
+  ) {
+    this.topFacts = this.configService.get<number>('config.memory.topFacts') ?? 6;
+    this.dedupThreshold = this.configService.get<number>('config.memory.dedupThreshold') ?? 0.92;
+    const halfLifeDays = this.configService.get<number>('config.memory.halfLifeDays') ?? 30;
+    this.halfLifeMs = halfLifeDays * 24 * 60 * 60 * 1000;
+  }
 
   async getMemory(conversationId: string): Promise<AiMemory | null> {
     return this.memoryModel.findOne({ conversationId }).lean().exec() as Promise<AiMemory | null>;
   }
 
+  /**
+   * Retrieve only the MOST RELEVANT facts for the current message, applying a
+   * recency-decay re-rank so stale facts sink. Returns [] gracefully when the
+   * vector collection is empty (migration-safe).
+   */
+  async retrieveRelevantFacts(
+    userId: string,
+    conversationId: string,
+    queryVector: number[],
+  ): Promise<RelevantFact[]> {
+    // Over-fetch a bit, then decay-rerank and keep topFacts.
+    const candidates = await this.vectorStore.retrieve(
+      userId,
+      conversationId,
+      queryVector,
+      Math.max(this.topFacts * 2, this.topFacts),
+    );
+    const now = Date.now();
+    return candidates
+      .map((c) => ({
+        text: c.text,
+        createdAt: c.createdAt,
+        score: c.score * this.recencyWeight(c.createdAt, now),
+      }))
+      .sort((a, b) => b.score - a.score)
+      .slice(0, this.topFacts);
+  }
+
+  /** Exponential recency decay: weight halves every halfLife. */
+  private recencyWeight(createdAt: number, now: number): number {
+    if (!createdAt) return 0.5;
+    const ageMs = Math.max(0, now - createdAt);
+    return Math.pow(0.5, ageMs / this.halfLifeMs);
+  }
+
+  /**
+   * Add extracted facts with near-duplicate dedup. A fact whose nearest
+   * existing neighbour exceeds the cosine dedup threshold UPDATES that point
+   * (refreshing text + recency) instead of appending a duplicate.
+   * Then rebuilds the canonical Mongo list + a short summary for clients.
+   */
+  async addFacts(
+    conversationId: string,
+    userId: string,
+    facts: string[],
+    summary: string,
+    messageCount: number,
+    source = 'auto-extract',
+  ): Promise<void> {
+    for (const text of facts) {
+      const clean = text.trim();
+      if (!clean) continue;
+      let vector: number[];
+      try {
+        vector = await this.embeddingService.embedOne(clean);
+      } catch (err) {
+        this.logger.warn(`Embedding fact failed, skipping: ${(err as Error).message}`);
+        continue;
+      }
+      const nearest = await this.vectorStore.nearest(userId, conversationId, vector);
+      const isDup = nearest !== null && nearest.score >= this.dedupThreshold;
+      await this.vectorStore.upsertFact(userId, conversationId, {
+        id: isDup ? nearest!.id : undefined,
+        text: clean,
+        vector,
+        source,
+        createdAt: Date.now(),
+      });
+    }
+
+    // Rebuild canonical fact list from the vector store for client REST/STOMP.
+    const all = await this.vectorStore.listFacts(userId, conversationId);
+    const keyFacts = all
+      .sort((a, b) => b.createdAt - a.createdAt)
+      .map((f) => f.text)
+      .slice(0, 50);
+
+    await this.memoryModel.findOneAndUpdate(
+      { conversationId },
+      { $set: { userId, summary, keyFacts, messageCount, updatedAt: new Date() } },
+      { upsert: true, new: true },
+    );
+  }
+
+  /**
+   * Legacy wholesale upsert — retained for the existing client contract and
+   * tests. Prefer `addFacts` for the embedding-backed path.
+   */
   async upsertMemory(
     conversationId: string,
     userId: string,
@@ -29,6 +139,7 @@ export class MemoryService {
 
   async deleteMemory(conversationId: string): Promise<void> {
     await this.memoryModel.deleteOne({ conversationId });
+    await this.vectorStore.deleteConversation(conversationId);
   }
 
   async incrementMessageCount(conversationId: string): Promise<number> {

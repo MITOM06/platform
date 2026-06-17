@@ -1,12 +1,16 @@
 package com.platform.chatservice.service;
 
 import com.google.firebase.FirebaseApp;
+import com.google.firebase.messaging.AndroidConfig;
+import com.google.firebase.messaging.AndroidNotification;
 import com.google.firebase.messaging.FirebaseMessaging;
 import com.google.firebase.messaging.Message;
 import com.google.firebase.messaging.Notification;
 import com.platform.chatservice.model.Conversation;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.bson.Document;
+import org.bson.types.ObjectId;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
@@ -17,6 +21,7 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class FcmService {
 
     private final MongoTemplate mongoTemplate;
@@ -32,6 +37,11 @@ public class FcmService {
             return;
         }
 
+        if (targetUserId == null || !ObjectId.isValid(targetUserId)) {
+            log.warn("Skipping FCM push: invalid targetUserId '{}'", targetUserId);
+            return;
+        }
+
         try {
         // Check presence
         String status = redisTemplate.opsForValue().get(STATUS_KEY_PREFIX + targetUserId);
@@ -41,7 +51,7 @@ public class FcmService {
         }
 
         // Fetch target user's tokens
-        Query query = new Query(Criteria.where("_id").is(new org.bson.types.ObjectId(targetUserId)));
+        Query query = new Query(Criteria.where("_id").is(new ObjectId(targetUserId)));
         query.fields().include("fcmTokens");
         
         Document userDoc = mongoTemplate.findOne(query, Document.class, "users");
@@ -51,8 +61,8 @@ public class FcmService {
         if (tokens == null || tokens.isEmpty()) return;
 
         // Check if the conversation is muted by the target user
-        if (conversationId != null) {
-            Query convQuery = new Query(Criteria.where("_id").is(new org.bson.types.ObjectId(conversationId)));
+        if (conversationId != null && ObjectId.isValid(conversationId)) {
+            Query convQuery = new Query(Criteria.where("_id").is(new ObjectId(conversationId)));
             convQuery.fields().include("mutedUsers");
             Document convDoc = mongoTemplate.findOne(convQuery, Document.class, "conversations");
             if (convDoc != null) {
@@ -67,7 +77,7 @@ public class FcmService {
         // Fetch sender's name
         String finalSenderName = "New Message";
         try {
-            Query senderQuery = new Query(Criteria.where("_id").is(new org.bson.types.ObjectId(senderName))); // senderName is actually senderId here
+            Query senderQuery = new Query(Criteria.where("_id").is(new ObjectId(senderName))); // senderName is actually senderId here
             senderQuery.fields().include("displayName");
             Document senderDoc = mongoTemplate.findOne(senderQuery, Document.class, "users");
             if (senderDoc != null && senderDoc.getString("displayName") != null) {
@@ -85,19 +95,26 @@ public class FcmService {
                                 .setTitle(finalSenderName)
                                 .setBody(messageContent)
                                 .build())
+                        .setAndroidConfig(AndroidConfig.builder()
+                                .setPriority(AndroidConfig.Priority.HIGH)
+                                .setNotification(AndroidNotification.builder()
+                                        .setChannelId("pon_messages")
+                                        .build())
+                                .build())
                         .putData("conversationId", conversationId)
                         .putData("type", "chat_message")
                         .build();
 
                 FirebaseMessaging.getInstance().sendAsync(message);
             } catch (Exception e) {
-                System.err.println("Failed to send FCM to token: " + token + ", " + e.getMessage());
+                // Skip this recipient token only; never abort the whole loop.
+                log.warn("Failed to send FCM to token (skipping): {}", e.getMessage());
             }
         }
         } catch (Exception e) {
             // Any failure (Firebase not ready, DB, ObjectId parse, etc.) must never break
             // the message-send flow that calls this.
-            System.err.println("FCM push skipped: " + e.getMessage());
+            log.error("FCM push skipped due to error", e);
         }
     }
 }

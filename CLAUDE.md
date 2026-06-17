@@ -93,7 +93,7 @@ Queue settings: 30-second message TTL, dead-letter exchange `ai.direct.dlq`.
 | Channel | Publisher | Subscriber | Payload |
 |---------|-----------|------------|---------|
 | `ai:response:{conversationId}` | ai-service | chat-service | `{type: AI_STREAM_CHUNK\|AI_STREAM_DONE\|AI_STREAM_ERROR, chunk?, fullContent?}` |
-| `kb:process` | chat-service | ai-service | `{documentId, conversationId, filename, gridfsId, mimeType}` |
+| `kb:process` | chat-service | ai-service | `{documentId, conversationId, userId, fileUrl, mimeType, fileName}` |
 | `kb:delete` | chat-service | ai-service | `{documentId}` |
 
 ## Key Paths

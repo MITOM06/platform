@@ -2,7 +2,6 @@ package com.platform.chatservice.service;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.platform.chatservice.dto.MessageResponse;
 import com.platform.chatservice.model.AiTraceData;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -57,8 +56,9 @@ public class AiResponseListener implements MessageListener {
                         }
                     }
                     if (fullContent != null && !fullContent.isBlank()) {
-                        MessageResponse saved = messageService.saveAiMessage(convId, fullContent, trace);
-                        messagingTemplate.convertAndSend(topic, saved);
+                        // saveAiMessage already broadcasts the saved message to the topic,
+                        // so we must NOT broadcast it again here (would duplicate on clients).
+                        messageService.saveAiMessage(convId, fullContent, trace);
                     }
                     Map<String, Object> doneEvent = new HashMap<>();
                     doneEvent.put("type", "AI_STREAM_DONE");

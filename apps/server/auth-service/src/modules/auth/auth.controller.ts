@@ -18,6 +18,8 @@ import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 import { ConfigService } from '@nestjs/config';
 import { ForgotPasswordDto } from './dto/forgot-password.dto';
+import { RefreshDto } from './dto/refresh.dto';
+import { ExchangeDto } from './dto/exchange.dto';
 
 @Controller('auth')
 export class AuthController {
@@ -98,14 +100,12 @@ export class AuthController {
 
   // ===================== AUTH ENDPOINTS =====================
   @Post('exchange')
-  async exchange(
-    @Body() body: { code: string; deviceId?: string; platform?: string },
-  ) {
+  async exchange(@Body() body: ExchangeDto) {
     return this.auth.exchangeLoginCode(body.code, body.deviceId, body.platform);
   }
 
   @Post('refresh')
-  async refresh(@Body() body: { sid: string; refreshToken: string }) {
+  async refresh(@Body() body: RefreshDto) {
     return this.auth.refresh(body.sid, body.refreshToken);
   }
 

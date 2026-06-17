@@ -99,14 +99,33 @@ export class UsersController {
     const user = await this.usersService.findById(id);
     if (!user) return user;
     const friendsCount = await this.friendsService.countAccepted(id);
-    const obj: any = { ...user.toObject(), friendsCount };
-    if (req.user.sub !== id && obj.hideInfo) {
-      delete obj.email;
-      delete obj.phoneNumber;
-      delete obj.dateOfBirth;
-      delete obj.gender;
-      delete obj.bio;
+    const doc: any = user.toObject();
+    const isSelf = req.user.sub === id;
+
+    // Explicit public-profile whitelist. NEVER expose fcmTokens, blockedUsers,
+    // trustedDevices, socialLinks, status, password, otpCode, otpExpires.
+    const profile: any = {
+      _id: doc._id,
+      id: doc._id,
+      displayName: doc.displayName,
+      avatarUrl: doc.avatarUrl ?? '',
+      coverPhoto: doc.coverPhoto ?? '',
+      isVerified: doc.isVerified ?? false,
+      hideInfo: doc.hideInfo ?? false,
+      createdAt: doc.createdAt,
+      friendsCount,
+    };
+
+    // Privacy-sensitive fields only when viewing self, or when the owner has
+    // not enabled hideInfo.
+    if (isSelf || !doc.hideInfo) {
+      profile.email = doc.email;
+      profile.phoneNumber = doc.phoneNumber;
+      profile.dateOfBirth = doc.dateOfBirth;
+      profile.gender = doc.gender;
+      profile.bio = doc.bio;
     }
-    return obj;
+
+    return profile;
   }
 }

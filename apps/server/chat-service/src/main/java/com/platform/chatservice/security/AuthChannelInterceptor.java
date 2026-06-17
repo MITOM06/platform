@@ -55,7 +55,8 @@ public class AuthChannelInterceptor implements ChannelInterceptor {
 
             String userId = jwtUtil.extractUserId(token);
             accessor.setUser(new UsernamePasswordAuthenticationToken(userId, null, List.of()));
-            refreshPresence(userId);
+            // Presence key is set by PresenceEventListener.onConnect (fires after the
+            // Principal is registered). No need to refresh here — the key doesn't exist yet.
             return message;
         }
 
@@ -89,6 +90,8 @@ public class AuthChannelInterceptor implements ChannelInterceptor {
 
     @SuppressWarnings("null")
     private void refreshPresence(String userId) {
-        redisTemplate.expire(STATUS_KEY_PREFIX + userId, ONLINE_TTL);
+        // Use set() rather than expire() so a heartbeat from a still-alive socket whose
+        // key has already lapsed recreates the presence entry instead of being a no-op.
+        redisTemplate.opsForValue().set(STATUS_KEY_PREFIX + userId, "online", ONLINE_TTL);
     }
 }

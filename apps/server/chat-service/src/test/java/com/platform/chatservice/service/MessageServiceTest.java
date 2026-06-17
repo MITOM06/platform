@@ -14,7 +14,6 @@ import com.platform.chatservice.repository.MessageRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.PageImpl;
@@ -42,7 +41,8 @@ class MessageServiceTest {
     @Mock private org.springframework.messaging.simp.SimpMessagingTemplate messagingTemplate;
     @Mock private MessageServiceHelper messageServiceHelper;
 
-    @InjectMocks
+    // Collaborators extracted from MessageService are wired with real instances so
+    // these tests still exercise the same behavior through the same mocked deps.
     private MessageService messageService;
 
     private static final String SENDER_ID = "user-001";
@@ -55,6 +55,13 @@ class MessageServiceTest {
 
     @BeforeEach
     void setUp() {
+        MessageMapper messageMapper = new MessageMapper();
+        AiMessageService aiMessageService = new AiMessageService(
+            messageRepository, conversationRepository, messagingTemplate, messageMapper);
+        messageService = new MessageService(
+            messageRepository, conversationRepository, mongoTemplate,
+            messageServiceHelper, messageMapper, aiMessageService);
+
         conversation = Conversation.builder()
             .id(CONV_ID)
             .participants(List.of(SENDER_ID, OTHER_ID))

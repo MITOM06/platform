@@ -6,7 +6,6 @@ import com.platform.chatservice.dto.PageResponse;
 import com.platform.chatservice.dto.PinResult;
 import com.platform.chatservice.dto.SendMessageRequest;
 import com.platform.chatservice.model.AiTraceData;
-import org.springframework.messaging.simp.SimpMessagingTemplate;
 import com.platform.chatservice.exception.ConversationNotFoundException;
 import com.platform.chatservice.exception.MessageNotFoundException;
 import com.platform.chatservice.exception.ForbiddenException;
@@ -23,11 +22,9 @@ import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
-import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -40,12 +37,15 @@ import java.util.regex.Pattern;
 public class MessageService {
 
     private static final String SYSTEM_SENDER = "system";
+    /** Max pinned messages per conversation (matches Conversation model comment). */
+    static final int MAX_PINNED_MESSAGES = 5;
 
     private final MessageRepository messageRepository;
     private final ConversationRepository conversationRepository;
     private final MongoTemplate mongoTemplate;
-    private final SimpMessagingTemplate messagingTemplate;
     private final MessageServiceHelper helper;
+    private final MessageMapper messageMapper;
+    private final AiMessageService aiMessageService;
 
     /**
      * Cursor-based pagination (newest first). When {@code beforeId} is null/blank
@@ -274,8 +274,8 @@ public class MessageService {
             ? new ArrayList<>() : new ArrayList<>(conversation.getPinnedMessages());
         pinned.remove(messageId);
         pinned.add(0, messageId);
-        if (pinned.size() > 2) {
-            pinned = pinned.subList(0, 2);
+        if (pinned.size() > MAX_PINNED_MESSAGES) {
+            pinned = pinned.subList(0, MAX_PINNED_MESSAGES);
         }
         conversation.setPinnedMessages(pinned);
         conversationRepository.save(conversation);
@@ -326,39 +326,8 @@ public class MessageService {
             targetConversationId, original.getContent(), original.getType(), null));
     }
 
-    /** Background sweep removing messages past each conversation's
-     *  disappearing-messages window. */
-    @Scheduled(fixedDelayString = "${app.auto-delete.sweep-interval-ms:300000}")
-    public void sweepExpiredMessages() {
-        List<Conversation> conversations = mongoTemplate.find(
-            new Query(Criteria.where("autoDeleteSeconds").gt(0)), Conversation.class);
-        for (Conversation conversation : conversations) {
-            Integer seconds = conversation.getAutoDeleteSeconds();
-            if (seconds == null || seconds <= 0) continue;
-            Instant cutoff = Instant.now().minus(seconds, ChronoUnit.SECONDS);
-            mongoTemplate.remove(
-                new Query(Criteria.where("conversationId").is(conversation.getId())
-                    .and("createdAt").lt(cutoff)),
-                Message.class);
-        }
-    }
-
     MessageResponse toResponse(Message m) {
-        List<MessageResponse.ReactionDto> reactions = m.getReactions() == null ? List.of()
-            : m.getReactions().stream()
-                .map(r -> new MessageResponse.ReactionDto(r.getUserId(), r.getEmoji()))
-                .toList();
-        MessageResponse.ReplyPreviewDto replyPreview = m.getReplyPreview() == null ? null
-            : new MessageResponse.ReplyPreviewDto(
-                m.getReplyPreview().getMessageId(),
-                m.getReplyPreview().getSenderId(),
-                m.getReplyPreview().getContent());
-        return new MessageResponse(
-            m.getId(), m.getConversationId(), m.getSenderId(),
-            m.getContent(), m.getType(), m.getReadBy(), m.getCreatedAt(),
-            m.getReplyToId(), replyPreview, reactions, m.isRecalled(), m.getEditedAt(),
-            m.getMentions() == null ? List.of() : m.getMentions()
-        );
+        return messageMapper.toResponse(m);
     }
 
     /**
@@ -394,29 +363,7 @@ public class MessageService {
      * Called by AiResponseListener when AI_STREAM_DONE is received from Redis.
      */
     public MessageResponse saveAiMessage(String conversationId, String content, AiTraceData trace) {
-        Message message = messageRepository.save(Message.builder()
-            .conversationId(conversationId)
-            .senderId(AiConstants.AI_BOT_USER_ID)
-            .content(content)
-            .type("ai")
-            .readBy(new ArrayList<>())
-            .trace(trace)
-            .build());
-
-        Instant savedAt = message.getCreatedAt() != null ? message.getCreatedAt() : Instant.now();
-        conversationRepository.findById(conversationId).ifPresent(conv -> {
-            conv.setLastMessage(Conversation.LastMessage.builder()
-                .content(content)
-                .senderId(AiConstants.AI_BOT_USER_ID)
-                .createdAt(savedAt)
-                .build());
-            conv.setLastMessageAt(savedAt);
-            conversationRepository.save(conv);
-        });
-
-        MessageResponse response = toResponse(message);
-        messagingTemplate.convertAndSend("/topic/conversation/" + conversationId, response);
-        return response;
+        return aiMessageService.saveAiMessage(conversationId, content, trace);
     }
 
     /**
@@ -424,20 +371,7 @@ public class MessageService {
      * (regular non-AI messages have no trace).
      */
     public AiTraceResponse getMessageTrace(String userId, String messageId) {
-        Message message = messageRepository.findById(messageId)
-            .orElseThrow(() -> new com.platform.chatservice.exception.MessageNotFoundException(
-                "Message not found: " + messageId));
-        boolean isParticipant = conversationRepository.findById(message.getConversationId())
-            .map(c -> c.getParticipants() != null && c.getParticipants().contains(userId))
-            .orElse(false);
-        if (!isParticipant) {
-            throw new com.platform.chatservice.exception.ForbiddenException("Not a participant");
-        }
-        if (message.getTrace() == null) {
-            throw new com.platform.chatservice.exception.MessageNotFoundException(
-                "No trace for message: " + messageId);
-        }
-        return AiTraceResponse.from(message.getTrace());
+        return aiMessageService.getMessageTrace(userId, messageId);
     }
 
     /**

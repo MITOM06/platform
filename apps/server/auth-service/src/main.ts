@@ -24,9 +24,18 @@ async function bootstrap() {
     }),
   );
   app.use(cookieParser());
+
+  // SESSION_SECRET must be explicitly set in production — a hardcoded fallback
+  // would make session signing predictable.
+  const isProd = process.env.NODE_ENV === 'production';
+  const sessionSecret = process.env.SESSION_SECRET;
+  if (isProd && !sessionSecret) {
+    throw new Error('SESSION_SECRET must be set in production');
+  }
+
   app.use(
     session({
-      secret: process.env.SESSION_SECRET || 'pon_chat_app_default_secret',
+      secret: sessionSecret || 'pon_chat_app_default_secret',
       resave: false,
       saveUninitialized: false,
       cookie: {
@@ -37,8 +46,30 @@ async function bootstrap() {
     }),
   );
 
+  // Restrict CORS to an env-driven allowlist instead of reflecting any origin.
+  // CORS_ORIGINS is a comma-separated list; falls back to known web + dev origins.
+  const defaultOrigins = [
+    'https://platform-web-omega-amber.vercel.app',
+    'http://localhost:3000',
+    'http://localhost:8081',
+  ];
+  const allowedOrigins = (process.env.CORS_ORIGINS
+    ? process.env.CORS_ORIGINS.split(',').map((o) => o.trim()).filter(Boolean)
+    : defaultOrigins
+  );
+
   app.enableCors({
-    origin: true,
+    origin: (
+      origin: string | undefined,
+      cb: (err: Error | null, allow?: boolean) => void,
+    ) => {
+      // Allow non-browser clients (no Origin header) and whitelisted origins.
+      if (!origin || allowedOrigins.includes(origin)) {
+        cb(null, true);
+      } else {
+        cb(new Error(`Origin ${origin} not allowed by CORS`));
+      }
+    },
     credentials: true,
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
     allowedHeaders: [

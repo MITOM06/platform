@@ -1,4 +1,5 @@
 import { Inject, Injectable, Logger, OnApplicationBootstrap } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import Redis from 'ioredis';
 import { REDIS_SUBSCRIBER } from './redis.constants';
 import { KbProcessorService } from '../kb/kb-processor.service';
@@ -6,7 +7,6 @@ import { VectorStoreService } from '../kb/vector-store.service';
 
 const KB_PROCESS_CHANNEL = 'kb:process';
 const KB_DELETE_CHANNEL = 'kb:delete';
-const KB_COLLECTION = 'knowledge';
 
 // ai:request is now consumed via RabbitMQ (AiConsumer). This subscriber
 // handles only knowledge-base lifecycle events which use Redis pub/sub.
@@ -14,11 +14,17 @@ const KB_COLLECTION = 'knowledge';
 export class RedisSubscriberService implements OnApplicationBootstrap {
   private readonly logger = new Logger(RedisSubscriberService.name);
 
+  private readonly kbCollection: string;
+
   constructor(
     @Inject(REDIS_SUBSCRIBER) private readonly client: Redis,
     private readonly kbProcessor: KbProcessorService,
     private readonly vectorStore: VectorStoreService,
-  ) {}
+    private readonly configService: ConfigService,
+  ) {
+    this.kbCollection =
+      this.configService.get<string>('config.kb.qdrantCollection') ?? 'knowledge';
+  }
 
   async onApplicationBootstrap(): Promise<void> {
     try {
@@ -44,7 +50,7 @@ export class RedisSubscriberService implements OnApplicationBootstrap {
       if (_channel === KB_DELETE_CHANNEL) {
         try {
           const { documentId } = JSON.parse(message);
-          this.vectorStore.deleteDocument(KB_COLLECTION, documentId).catch((err) => {
+          this.vectorStore.deleteDocument(this.kbCollection, documentId).catch((err) => {
             this.logger.error(`Failed to delete vectors for document ${documentId}`, err);
           });
         } catch (err) {

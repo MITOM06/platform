@@ -57,6 +57,7 @@ dependencies:
   # Firebase Push Notifications
   firebase_core: ^3.1.1
   firebase_messaging: ^15.0.1
+  flutter_local_notifications: ^17.2.3
 
   # WebRTC for 1-1 Calling
   flutter_webrtc: ^0.12.11
@@ -90,5 +91,4 @@ flutter:
   uses-material-design: true
   generate: true
 
-  assets:
-    - assets/images/
+

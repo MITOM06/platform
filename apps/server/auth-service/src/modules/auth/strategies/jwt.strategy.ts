@@ -53,8 +53,14 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
       throw new UnauthorizedException('Token không khớp với phiên đăng nhập');
     }
 
-    // ✅ Update lastSeenAt (optional - để track user activity)
-    await this.redis.hset(sessionKey, 'lastSeenAt', Date.now().toString());
+    // ✅ Update lastSeenAt (optional - để track user activity).
+    // Throttle: only write if >60s since the last write, to cut Redis write
+    // amplification on every authenticated request.
+    const now = Date.now();
+    const lastSeenAt = Number(sessionData.lastSeenAt) || 0;
+    if (now - lastSeenAt > 60_000) {
+      await this.redis.hset(sessionKey, 'lastSeenAt', now.toString());
+    }
 
     return payload; // { sub, sid, iat, exp }
   }

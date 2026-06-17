@@ -46,6 +46,10 @@
                 <data android:scheme="platform" android:host="auth"/>
             </intent-filter>
         </activity>
+        <!-- FCM: use high-importance channel for all notification messages -->
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_channel_id"
+            android:value="pon_messages" />
         <!-- Don't delete the meta-data below.
              This is used by the Flutter tool to generate GeneratedPluginRegistrant.java -->
         <meta-data

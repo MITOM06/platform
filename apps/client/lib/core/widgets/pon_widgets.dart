@@ -4,7 +4,7 @@ import 'package:flutter/services.dart';
 import '../theme/app_theme.dart';
 
 // ---------------------------------------------------------------------------
-// PON Logo
+// PON Logo — mirrors the web SVG exactly (same paths, same gradient)
 // ---------------------------------------------------------------------------
 class PonLogo extends StatelessWidget {
   final double size;
@@ -13,27 +13,21 @@ class PonLogo extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final imageWidget = Image.asset(
-      'assets/images/logo.png',
-      width: size,
-      height: size,
-      fit: BoxFit.contain,
+    final iconWidget = CustomPaint(
+      size: Size(size, size),
+      painter: _PonLogoPainter(),
     );
 
-    if (!showText) return imageWidget;
+    if (!showText) return iconWidget;
 
-    // Column layout matching web auth layout: icon → "PON" → "Connect & Chat"
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        imageWidget,
+        iconWidget,
         const SizedBox(height: 8),
         ShaderMask(
-          shaderCallback: (bounds) => const LinearGradient(
-            colors: [AppTheme.ponCyan, AppTheme.ponPeach, AppTheme.ponPink],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ).createShader(bounds),
+          shaderCallback: (bounds) =>
+              AppTheme.ponGradient.createShader(bounds),
           child: Text(
             'PON',
             style: TextStyle(
@@ -56,6 +50,50 @@ class PonLogo extends StatelessWidget {
       ],
     );
   }
+}
+
+class _PonLogoPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final sx = size.width / 24;
+    final sy = size.height / 24;
+
+    final paint = Paint()
+      ..shader = AppTheme.ponGradient.createShader(
+        Rect.fromLTWH(0, 0, size.width, size.height),
+      )
+      ..style = PaintingStyle.fill;
+
+    // Outer speech-bubble + inner ring hole — evenOdd makes the inner area transparent
+    final path = Path()..fillType = PathFillType.evenOdd;
+
+    // Outer speech-bubble (web path 1, first sub-path)
+    path.moveTo(12 * sx, 2 * sy);
+    path.cubicTo(6.48 * sx, 2 * sy, 2 * sx, 6.48 * sy, 2 * sx, 12 * sy);
+    path.cubicTo(2 * sx, 14.52 * sy, 2.93 * sx, 16.82 * sy, 4.46 * sx, 18.6 * sy);
+    path.lineTo(3 * sx, 21 * sy);
+    path.lineTo(5.8 * sx, 20.3 * sy);
+    path.cubicTo(7.54 * sx, 21.37 * sy, 9.6 * sx, 22 * sy, 12 * sx, 22 * sy);
+    path.cubicTo(17.52 * sx, 22 * sy, 22 * sx, 17.52 * sy, 22 * sx, 12 * sy);
+    path.cubicTo(22 * sx, 6.48 * sy, 17.52 * sx, 2 * sy, 12 * sx, 2 * sy);
+    path.close();
+
+    // Inner ring boundary — second sub-path punches a transparent hole
+    path.moveTo(12 * sx, 18 * sy);
+    path.cubicTo(8.69 * sx, 18 * sy, 6 * sx, 15.31 * sy, 6 * sx, 12 * sy);
+    path.cubicTo(6 * sx, 8.69 * sy, 8.69 * sx, 6 * sy, 12 * sx, 6 * sy);
+    path.cubicTo(15.31 * sx, 6 * sy, 18 * sx, 8.69 * sy, 18 * sx, 12 * sy);
+    path.cubicTo(18 * sx, 15.31 * sy, 15.31 * sx, 18 * sy, 12 * sx, 18 * sy);
+    path.close();
+
+    canvas.drawPath(path, paint);
+
+    // Center dot (web <circle cx="12" cy="12" r="3">)
+    canvas.drawCircle(Offset(12 * sx, 12 * sy), 3 * sx, paint);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
 
 // ---------------------------------------------------------------------------

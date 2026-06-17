@@ -2,8 +2,7 @@ import { getTranslations } from 'next-intl/server'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Separator } from '@/components/ui/separator'
 import Link from 'next/link'
-import { ArrowLeft } from 'lucide-react'
-import { Button } from '@/components/ui/button'
+import { BackButton } from '../back-button'
 
 export default async function PrivacyPolicyPage() {
   const t = await getTranslations('legal')
@@ -12,12 +11,7 @@ export default async function PrivacyPolicyPage() {
   return (
     <div className="container max-w-4xl py-10 px-4 md:px-8 mx-auto">
       <div className="mb-6">
-        <Button variant="ghost" asChild className="pl-0 hover:bg-transparent">
-          <Link href="/login" className="flex items-center text-muted-foreground hover:text-foreground">
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            {tc('back')}
-          </Link>
-        </Button>
+        <BackButton label={tc('back')} />
       </div>
 
       <Card className="border-border shadow-md">
