@@ -81,7 +81,7 @@ export function ConversationHeader({
       <header className="h-14 border-b px-4 flex items-center gap-3 bg-background">
         <Link
           href="/conversations"
-          className="text-muted-foreground hover:text-foreground transition-colors"
+          className="text-muted-foreground hover:text-foreground transition-colors p-2 -m-2 rounded-full"
         >
           <ArrowLeft className="size-5" />
         </Link>
