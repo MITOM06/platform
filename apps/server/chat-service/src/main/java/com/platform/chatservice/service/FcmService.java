@@ -1,6 +1,8 @@
 package com.platform.chatservice.service;
 
 import com.google.firebase.FirebaseApp;
+import com.google.firebase.messaging.AndroidConfig;
+import com.google.firebase.messaging.AndroidNotification;
 import com.google.firebase.messaging.FirebaseMessaging;
 import com.google.firebase.messaging.Message;
 import com.google.firebase.messaging.Notification;
@@ -84,6 +86,12 @@ public class FcmService {
                         .setNotification(Notification.builder()
                                 .setTitle(finalSenderName)
                                 .setBody(messageContent)
+                                .build())
+                        .setAndroidConfig(AndroidConfig.builder()
+                                .setPriority(AndroidConfig.Priority.HIGH)
+                                .setNotification(AndroidNotification.builder()
+                                        .setChannelId("pon_messages")
+                                        .build())
                                 .build())
                         .putData("conversationId", conversationId)
                         .putData("type", "chat_message")
