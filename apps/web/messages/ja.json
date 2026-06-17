@@ -29,7 +29,9 @@
     "notificationOpen": "開く",
     "realtimeError": "リアルタイム接続に失敗しました",
     "logoutError": "ログアウトに失敗しました",
-    "sessionConnecting": "セッションに接続しています..."
+    "sessionConnecting": "セッションに接続しています...",
+    "tabChat": "チャット",
+    "tabFriends": "友達"
   },
   "auth": {
     "emailLabel": "Email",
@@ -445,6 +447,7 @@
     "sendMessageError": "メッセージを送信できませんでした",
     "editMessageError": "メッセージを編集できませんでした",
     "aiError": "AI でエラーが発生しました。もう一度お試しください",
+    "aiQuotaExceeded": "月間 AI 使用量の上限を超えました。管理者にお問い合わせください。",
     "typingIndicator": "入力中",
     "newConvTitle": "新規チャット",
     "newConvTabDirect": "ダイレクト",

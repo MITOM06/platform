@@ -29,7 +29,9 @@
     "notificationOpen": "Ouvrir",
     "realtimeError": "Impossible de se connecter en temps réel",
     "logoutError": "Échec de la déconnexion",
-    "sessionConnecting": "Connexion de votre session..."
+    "sessionConnecting": "Connexion de votre session...",
+    "tabChat": "Chat",
+    "tabFriends": "Amis"
   },
   "auth": {
     "emailLabel": "Email",
@@ -445,6 +447,7 @@
     "sendMessageError": "Impossible d'envoyer le message",
     "editMessageError": "Impossible de modifier le message",
     "aiError": "Erreur de l'IA, veuillez réessayer",
+    "aiQuotaExceeded": "Quota mensuel d'utilisation de l'IA dépassé. Contactez votre administrateur.",
     "typingIndicator": "En train d'écrire",
     "newConvTitle": "Nouvelle conversation",
     "newConvTabDirect": "Direct",

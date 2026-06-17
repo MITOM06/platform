@@ -29,7 +29,9 @@
     "notificationOpen": "Mở",
     "realtimeError": "Không thể kết nối realtime",
     "logoutError": "Đăng xuất thất bại",
-    "sessionConnecting": "Đang kết nối phiên làm việc..."
+    "sessionConnecting": "Đang kết nối phiên làm việc...",
+    "tabChat": "Trò chuyện",
+    "tabFriends": "Bạn bè"
   },
   "auth": {
     "emailLabel": "Email",
@@ -445,6 +447,7 @@
     "sendMessageError": "Không thể gửi tin nhắn",
     "editMessageError": "Không thể chỉnh sửa tin nhắn",
     "aiError": "AI gặp lỗi, vui lòng thử lại",
+    "aiQuotaExceeded": "Đã vượt quá hạn mức sử dụng AI hàng tháng. Vui lòng liên hệ quản trị viên.",
     "typingIndicator": "Đang nhập",
     "newConvTitle": "Cuộc trò chuyện mới",
     "newConvTabDirect": "Trực tiếp",
