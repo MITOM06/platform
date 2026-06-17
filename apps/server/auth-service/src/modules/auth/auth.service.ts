@@ -6,6 +6,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import * as dns from 'node:dns';
+import { randomInt } from 'node:crypto';
 import { JwtService, JwtSignOptions } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { nanoid } from 'nanoid';
@@ -29,6 +30,11 @@ export class AuthService {
     private readonly configService: ConfigService,
     @Inject(REDIS_CLIENT) private readonly redis: Redis,
   ) {}
+
+  // Cryptographically secure 6-digit OTP (100000–999999).
+  private generateOtp(): string {
+    return randomInt(100000, 1000000).toString();
+  }
 
   // ===================== SOCIAL LOGIN =====================
   async handleSocialLogin(
@@ -233,7 +239,7 @@ export class AuthService {
     const user = await this.usersService.findByEmail(email);
     if (!user) throw new NotFoundException('Email không tồn tại trên hệ thống');
 
-    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const otp = this.generateOtp();
     const expires = new Date(Date.now() + 5 * 60 * 1000);
 
     await this.usersService.updateOtp(user._id, otp, expires);
@@ -265,7 +271,7 @@ export class AuthService {
       throw new BadRequestException('Mã xác thực không hợp lệ');
     }
 
-    if (new Date() > user.otpExpires) {
+    if (!user.otpExpires || new Date() > user.otpExpires) {
       throw new BadRequestException('Mã xác thực đã hết hạn');
     }
 
@@ -388,7 +394,7 @@ export class AuthService {
         throw new ConflictException('Email này đã được sử dụng');
       }
       // Tài khoản tồn tại nhưng chưa verify → gửi lại OTP thay vì báo lỗi
-      const otp = Math.floor(100000 + Math.random() * 900000).toString();
+      const otp = this.generateOtp();
       const expires = new Date(Date.now() + 5 * 60 * 1000);
       await this.usersService.updateOtp(existingUser._id, otp, expires);
       await this.mailService.sendOtpEmail(dto.email, otp);
@@ -409,7 +415,7 @@ export class AuthService {
       isVerified: false,
     });
 
-    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const otp = this.generateOtp();
     const expires = new Date(Date.now() + 5 * 60 * 1000);
     await this.usersService.updateOtp(user._id, otp, expires);
     await this.mailService.sendOtpEmail(dto.email, otp);
@@ -437,7 +443,7 @@ export class AuthService {
     const user = await this.usersService.findByEmail(email);
     if (!user) throw new NotFoundException('Email không tồn tại trên hệ thống');
 
-    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const otp = this.generateOtp();
     const expires = new Date(Date.now() + 5 * 60 * 1000);
     await this.usersService.updateOtp(user._id, otp, expires);
     await this.mailService.sendOtpEmail(email, otp);
