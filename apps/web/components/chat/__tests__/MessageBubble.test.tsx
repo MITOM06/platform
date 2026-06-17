@@ -42,7 +42,7 @@ vi.mock('@/components/chat/ReactionsDetailModal', () => ({
 // ── Stub hooks ─────────────────────────────────────────────────────────────
 
 vi.mock('@/lib/nicknames', () => ({
-  useNickname: (_convId: string, userId?: string) => (userId ? undefined : undefined),
+  useNickname: () => undefined,
 }))
 
 vi.mock('@/lib/hooks/use-user', () => ({
@@ -170,5 +170,7 @@ describe('MessageBubble', () => {
     // Two distinct emoji badges should appear.
     expect(screen.getByText('👍')).toBeInTheDocument()
     expect(screen.getByText('❤️')).toBeInTheDocument()
+    // Count badge: 2× 👍 → ReactionBadge renders a <span> with count when count > 1.
+    expect(screen.getByText('2')).toBeInTheDocument()
   })
 })

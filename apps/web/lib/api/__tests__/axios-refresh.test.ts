@@ -165,7 +165,7 @@ describe('axios 401-refresh interceptor', () => {
     expect(result.data).toEqual({ id: 'msg-1' })
 
     const { setAuth } = getStoreState()
-    expect(setAuth).toHaveBeenCalledWith(expect.anything(), newToken)
+    expect(setAuth).toHaveBeenCalledWith(expect.objectContaining({ id: 'u1' }), newToken)
   })
 
   it('clears auth when the refresh endpoint returns an error', async () => {
@@ -238,5 +238,57 @@ describe('axios 401-refresh interceptor', () => {
 
     await expect(handler(err)).rejects.toThrow()
     expect(callCount).toBe(0)
+  })
+
+  it('queues a second concurrent 401 and issues only ONE refresh call', async () => {
+    const newToken = 'queued-refresh-token'
+    let refreshCallCount = 0
+
+    // We need fine-grained control: the refresh call resolves after both 401s
+    // have been triggered, so the second one hits the isRefreshing=true branch.
+    let resolveRefresh!: (value: AxiosResponse) => void
+    const refreshPromise = new Promise<AxiosResponse>((res) => { resolveRefresh = res })
+
+    const adapter: SimpleAdapter = (config) => {
+      if (config.url?.includes('/api/auth/refresh')) {
+        refreshCallCount++
+        return refreshPromise
+      }
+      // Retry calls from both queued requests succeed immediately.
+      return Promise.resolve({
+        data: { retried: true },
+        status: 200,
+        statusText: 'OK',
+        headers: {},
+        config,
+      } as AxiosResponse)
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    axios.defaults.adapter = adapter as any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    chatApi.defaults.adapter = adapter as any
+
+    const handler = getInterceptorHandler()
+
+    // Fire two 401s without awaiting — first sets isRefreshing=true, second
+    // enters the failedQueue branch.
+    const p1 = handler(make401('/api/conversations'))
+    const p2 = handler(make401('/api/messages'))
+
+    // Now resolve the single refresh call.
+    resolveRefresh({
+      data: { accessToken: newToken },
+      status: 200,
+      statusText: 'OK',
+      headers: {},
+      config: {} as InternalAxiosRequestConfig,
+    } as AxiosResponse)
+
+    const [r1, r2] = await Promise.all([p1, p2]) as [AxiosResponse, AxiosResponse]
+
+    expect(refreshCallCount).toBe(1)
+    expect((r1 as AxiosResponse).data).toEqual({ retried: true })
+    expect((r2 as AxiosResponse).data).toEqual({ retried: true })
   })
 })
