@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Search, MessageSquare, Bot } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
@@ -18,6 +18,7 @@ import { useAuthStore } from '@/lib/store/auth.store'
 import { getNickname } from '@/lib/nicknames'
 import { OfflineBanner } from './OfflineBanner'
 import { chatService } from '@/lib/api/chat'
+import { authService } from '@/lib/api/auth'
 import type { Conversation } from '@/lib/api/types'
 
 const AI_BOT_ID = 'ai-bot-000000000000000000000001'
@@ -96,6 +97,25 @@ export function ConversationList() {
     const q = search.toLowerCase()
     return resolveSearchTerms(conv).some((term) => term.toLowerCase().includes(q))
   })
+
+  // Batch-prefetch all participant profiles so ConversationItems read from cache.
+  useEffect(() => {
+    if (!conversations || !currentUserId) return
+    const ids = [
+      ...new Set(
+        conversations
+          .flatMap((c) => c.participants)
+          .filter((id) => id !== currentUserId && id !== AI_BOT_ID),
+      ),
+    ]
+    ids.forEach((userId) => {
+      queryClient.prefetchQuery({
+        queryKey: ['user', userId],
+        queryFn: () => authService.getUser(userId),
+        staleTime: 5 * 60 * 1000,
+      })
+    })
+  }, [conversations, currentUserId, queryClient])
 
   return (
     <>
