@@ -69,3 +69,38 @@ Remaining Vietnamese characters found in .ts files (non-comment lines):
 ## Commit Hash
 
 See git log — commit: `refactor(auth)!: replace hardcoded VI strings with stable error/message codes`
+
+---
+
+## Fix Round — 2026-06-17
+
+Code review found 7 raw English strings missed in two files. Fixed in commit `8488cf40`.
+
+### Files Changed
+
+| File | Change |
+|------|--------|
+| `apps/server/auth-service/src/common/auth-code.enum.ts` | Added 5 new codes: `SESSION_INVALID`, `REFRESH_TOKEN_REUSE`, `REFRESH_TOKEN_INVALID`, `REFRESH_TOKEN_ROTATED`, `EMAIL_DOMAIN_INVALID` |
+| `apps/server/auth-service/src/modules/auth/session.service.ts` | Added `AuthCode` import; replaced 5 raw string throws with `{ code: AuthCode.X }` |
+| `apps/server/auth-service/src/modules/auth/auth.service.ts` | Replaced 2 identical `'Email domain does not exist'` throws with `{ code: AuthCode.EMAIL_DOMAIN_INVALID }` |
+| `docs/auth-error-codes.md` | Added 5 new rows to the code table |
+
+### New Codes Added
+
+- `SESSION_INVALID` — 401, session does not exist or has expired
+- `REFRESH_TOKEN_REUSE` — 401, refresh token reuse detected
+- `REFRESH_TOKEN_INVALID` — 401, invalid/unknown refresh token
+- `REFRESH_TOKEN_ROTATED` — 401, refresh token already rotated (lost CAS race)
+- `EMAIL_DOMAIN_INVALID` — 400, email domain has no MX records
+
+### Build Result
+
+`webpack 5.104.1 compiled successfully` — tsc clean.
+
+### Test Result
+
+`Tests: 9 passed, 9 total` — all pass, no test updates needed.
+
+### Commit Hash
+
+`8488cf40`
