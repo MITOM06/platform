@@ -12,6 +12,14 @@ export class AiConsumer {
     exchange: 'ai.direct',
     routingKey: 'ai.request',
     queue: 'ai.requests',
+    queueOptions: {
+      durable: true,
+      arguments: {
+        'x-dead-letter-exchange': 'ai.dead-letter',
+        'x-dead-letter-routing-key': 'dlq',
+        'x-message-ttl': 30000,
+      },
+    },
   })
   async handleAiRequest(payload: AiRequestPayload): Promise<void> {
     try {
