@@ -11,6 +11,7 @@ import { UsageService } from '../usage/usage.service';
 import { PersonaService } from '../persona/persona.service';
 import { ToolContext } from '../tools/tool.interface';
 import { selectModel, RouteSignals, RouterConfig } from './model-router';
+import { withAgenticLoopSpan } from './tracing-helpers';
 
 export interface AiRequestPayload {
   conversationId: string;
@@ -174,7 +175,10 @@ export class AiService {
 
     let trace: AiTrace | null = null;
     try {
-      trace = await this._agenticLoop(selectedModel, ctx, content, history, startMs);
+      trace = await withAgenticLoopSpan(selectedModel, conversationId, (span) => {
+        void span; // span is available for additional attributes if needed
+        return this._agenticLoop(selectedModel, ctx, content, history, startMs);
+      });
     } catch (primaryError) {
       this.logger.error(
         `Model (${selectedModel}) failed for conversation ${conversationId}`,
@@ -191,7 +195,9 @@ export class AiService {
         throw primaryError;
       }
       try {
-        trace = await this._agenticLoop(this.fallbackModel, ctx, content, history, startMs);
+        trace = await withAgenticLoopSpan(this.fallbackModel, conversationId, () =>
+          this._agenticLoop(this.fallbackModel, ctx, content, history, startMs),
+        );
       } catch (fallbackError) {
         this.logger.error(
           `Fallback model (${this.fallbackModel}) also failed for conversation ${conversationId}`,

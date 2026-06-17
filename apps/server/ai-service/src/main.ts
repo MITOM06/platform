@@ -1,3 +1,4 @@
+import './tracing';
 import * as Sentry from '@sentry/node';
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
