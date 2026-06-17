@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef } from 'react'
+import { useState, useRef, memo } from 'react'
 import { useTranslations, useLocale } from 'next-intl'
 import { Phone, Video, Check, CheckCheck } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -55,7 +55,7 @@ function ReactionBadge({ emoji, count, onClick }: { emoji: string; count: number
 // Media types render without the colored chat bubble (mirror Flutter).
 const BARE_TYPES = new Set(['image', 'video', 'sticker'])
 
-export function MessageBubble({
+const MessageBubbleInner = function MessageBubble({
   message,
   isOwn,
   currentUserId,
@@ -335,3 +335,17 @@ export function MessageBubble({
     </>
   )
 }
+
+export const MessageBubble = memo(
+  MessageBubbleInner,
+  (prev, next) =>
+    prev.message.id === next.message.id &&
+    prev.message.content === next.message.content &&
+    prev.message.recalled === next.message.recalled &&
+    prev.message.editedAt === next.message.editedAt &&
+    prev.message.reactions === next.message.reactions &&
+    prev.message.readBy === next.message.readBy &&
+    prev.isPinned === next.isPinned &&
+    prev.isOwn === next.isOwn &&
+    prev.conversationId === next.conversationId,
+)

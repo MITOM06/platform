@@ -1,5 +1,6 @@
 'use client'
 
+import { memo } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
@@ -51,7 +52,7 @@ function formatTime(iso: string | null, locale: string): string {
   return d.toLocaleDateString(locale, { day: '2-digit', month: '2-digit' })
 }
 
-export function ConversationItem({ conversation: conv }: Props) {
+const ConversationItemInner = function ConversationItem({ conversation: conv }: Props) {
   const pathname = usePathname()
   const router = useRouter()
   const t = useTranslations('chat')
@@ -240,3 +241,14 @@ export function ConversationItem({ conversation: conv }: Props) {
     </ContextMenu>
   )
 }
+
+export const ConversationItem = memo(
+  ConversationItemInner,
+  (prev, next) =>
+    prev.conversation.id === next.conversation.id &&
+    prev.conversation.lastMessageAt === next.conversation.lastMessageAt &&
+    prev.conversation.unreadCount === next.conversation.unreadCount &&
+    prev.conversation.lastMessage?.content === next.conversation.lastMessage?.content &&
+    prev.conversation.isMuted === next.conversation.isMuted &&
+    prev.conversation.isArchived === next.conversation.isArchived,
+)
