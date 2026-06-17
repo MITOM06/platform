@@ -25,7 +25,7 @@ jobs:
       - name: Build
         run: pnpm run build
       - name: Test
-        run: pnpm exec jest --passWithNoTests
+        run: pnpm exec jest --ci
 
   # ── Spring Boot Chat Service ───────────────────────────────────────────────
   chat-service:
@@ -64,7 +64,7 @@ jobs:
       - name: Build
         run: pnpm run build
       - name: Test
-        run: pnpm exec jest --passWithNoTests
+        run: pnpm exec jest --ci
 
   # ── Next.js Web Client ────────────────────────────────────────────────────
   web:
