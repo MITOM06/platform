@@ -71,8 +71,10 @@ class AiResponseListenerTest {
 
         listener.onMessage(redisMessage, null);
 
+        // saveAiMessage persists AND broadcasts the saved message itself (single-broadcast fix),
+        // so the listener must NOT broadcast `saved` again — it only emits the AI_STREAM_DONE event.
         verify(messageService).saveAiMessage(eq("conv-1"), eq("Full AI reply"), isNull());
-        verify(messagingTemplate).convertAndSend(eq("/topic/conversation/conv-1"), (Object) eq(saved));
+        verify(messagingTemplate, never()).convertAndSend(anyString(), (Object) eq(saved));
         verify(messagingTemplate).convertAndSend(
             eq("/topic/conversation/conv-1"),
             (Object) argThat(arg -> arg instanceof Map && "AI_STREAM_DONE".equals(((Map<?, ?>) arg).get("type"))));

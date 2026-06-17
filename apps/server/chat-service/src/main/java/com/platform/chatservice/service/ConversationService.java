@@ -411,10 +411,10 @@ public class ConversationService {
         if (c.getPinnedMessages() == null || c.getPinnedMessages().isEmpty()) {
             return List.of();
         }
-        // Clamp to max 2 for visual consistency with legacy data that may hold up to 5 ids.
+        // Clamp to the same max as the pin write-path (MessageService.MAX_PINNED_MESSAGES).
         List<String> ids = c.getPinnedMessages();
-        if (ids.size() > 2) {
-            ids = ids.subList(0, 2);
+        if (ids.size() > MessageService.MAX_PINNED_MESSAGES) {
+            ids = ids.subList(0, MessageService.MAX_PINNED_MESSAGES);
         }
         return ids.stream()
             .map(messageId -> messageRepository.findById(messageId).orElse(null))
