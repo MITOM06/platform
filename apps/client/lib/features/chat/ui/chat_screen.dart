@@ -1,10 +1,7 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/l10n/l10n_ext.dart';
-import '../../../core/theme/app_theme.dart';
 import '../../auth/domain/auth_provider.dart';
 import '../../auth/domain/auth_state.dart';
 import '../../friends/domain/friends_provider.dart';
@@ -13,20 +10,10 @@ import '../data/chat_repository.dart';
 import '../domain/chat_provider.dart';
 import '../domain/chat_state.dart';
 import 'chat_screen_helpers.dart';
-import 'widgets/blocked_composer_notice.dart';
 import 'widgets/chat_app_bar.dart';
-import 'widgets/chat_input_bar.dart';
-import 'widgets/chat_typing_indicator.dart';
-import 'widgets/chat_wallpaper_dialog.dart';
-import 'widgets/edit_composer_bar.dart';
-import 'widgets/image_content.dart';
-import 'widgets/emoji_sticker_panel.dart';
-import 'widgets/chat_message_list.dart';
-import 'widgets/mention_list.dart';
-import 'widgets/pinned_message_bar.dart';
-import 'widgets/reply_composer_bar.dart';
+import 'widgets/chat_body.dart';
+import 'widgets/chat_wallpaper_background.dart';
 import 'widgets/search_overlay.dart';
-import 'widgets/stranger_request_banner.dart';
 
 class ChatScreen extends ConsumerStatefulWidget {
   final String conversationId;
@@ -248,30 +235,6 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     );
   }
 
-  /// Uploads a locally recorded audio file and sends it as a voice message.
-  Future<void> _onVoiceSend(String path) async {
-    final l10n = context.l10n;
-    final messenger = ScaffoldMessenger.of(context);
-    messenger.showSnackBar(SnackBar(content: Text(l10n.uploading)));
-    try {
-      final List<int> bytes;
-      bytes = await File(path).readAsBytes();
-      final filename =
-          'voice_${DateTime.now().millisecondsSinceEpoch}.m4a';
-      final uploaded = await ref
-          .read(chatRepositoryProvider)
-          .uploadDocument(bytes, filename);
-      await ref
-          .read(chatNotifierProvider(widget.conversationId).notifier)
-          .sendMessage(uploaded.url, type: 'voice');
-      _scrollToBottom();
-    } catch (_) {
-      if (mounted) {
-        messenger.showSnackBar(SnackBar(content: Text(l10n.uploadFailed)));
-      }
-    }
-  }
-
   void _onStickerSelected(String sticker) {
     setState(() => _showEmoji = false);
     ref
@@ -323,8 +286,6 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     );
 
     final chatAsync = ref.watch(chatNotifierProvider(widget.conversationId));
-    final replyingTo = chatAsync.valueOrNull?.replyingTo;
-    final editingMessage = chatAsync.valueOrNull?.editingMessage;
     final authState = ref.watch(authNotifierProvider).valueOrNull;
     final currentUserId =
         authState is AuthAuthenticated ? authState.user.id : '';
@@ -352,80 +313,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
         conv.createdBy != null &&
         conv.createdBy != currentUserId;
 
-    final theme = Theme.of(context);
-    final bool isDark = theme.brightness == Brightness.dark;
-    final Color emojiBg =
-        isDark ? AppTheme.darkBackground : theme.scaffoldBackgroundColor;
-    final Color emojiSurface = isDark ? AppTheme.darkSurface : theme.cardColor;
-
     final wallpaper = ref.watch(chatWallpaperProvider(widget.conversationId));
-    BoxDecoration? wallpaperBgDeco;
-    Widget? wallpaperImgWidget;
-
-    if (wallpaper != null && wallpaper.isNotEmpty) {
-      if (wallpaper.startsWith('preset:')) {
-        final preset = wallpaper.substring('preset:'.length);
-        if (preset == 'midnight_glow') {
-          wallpaperBgDeco = const BoxDecoration(
-            gradient: LinearGradient(
-              colors: [Color(0xFF0F0C20), Color(0xFF15102A), Color(0xFF050211)],
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-            ),
-          );
-        } else if (preset == 'neon_teal') {
-          wallpaperBgDeco = const BoxDecoration(
-            gradient: LinearGradient(
-              colors: [Color(0xFF0A1F1D), Color(0xFF081215), Color(0xFF02070A)],
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-            ),
-          );
-        } else if (preset == 'sunset') {
-          wallpaperBgDeco = const BoxDecoration(
-            gradient: LinearGradient(
-              colors: [Color(0xFF2C1619), Color(0xFF1C0D1A), Color(0xFF0F0611)],
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-            ),
-          );
-        } else if (preset == 'sweet_pink') {
-          wallpaperBgDeco = const BoxDecoration(
-            gradient: LinearGradient(
-              colors: [Color(0xFF2A1020), Color(0xFF160A18), Color(0xFF0C020A)],
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-            ),
-          );
-        } else if (preset == 'dark_shadow') {
-          wallpaperBgDeco = const BoxDecoration(
-            color: Color(0xFF121214),
-          );
-        }
-      } else {
-        // Any non-preset, non-empty value is an uploaded image. The stored
-        // URL may be relative (e.g. /api/uploads/...) so always resolve it
-        // through absoluteMediaUrl(); a bare startsWith('http') gate dropped
-        // relative URLs and broke uploaded wallpapers.
-        final parsed = splitWallpaperLayout(wallpaper);
-        wallpaperImgWidget = Positioned.fill(
-          child: Opacity(
-            opacity: 0.25,
-            // parsed.scale is an integer percentage (web-compatible); convert to a
-            // Transform.scale multiplier only at render time.
-            child: Transform.scale(
-              scale: parsed.scale / 100.0,
-              child: Image.network(
-                absoluteMediaUrl(parsed.value),
-                fit: wallpaperBoxFit(parsed.fit),
-                errorBuilder: (context, error, stackTrace) =>
-                    const SizedBox.shrink(),
-              ),
-            ),
-          ),
-        );
-      }
-    }
 
     return Scaffold(
       appBar: ChatScreenAppBar(
@@ -437,152 +325,52 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
             showAutoDeletePicker(context, ref, widget.conversationId),
         onDeleteConversation: _deleteConversation,
       ),
-      body: Container(
-        decoration: wallpaperBgDeco,
+      body: ChatWallpaperBackground(
+        wallpaper: wallpaper,
         child: Stack(
           children: [
-            if (wallpaperBgDeco == null && wallpaperImgWidget == null) ...[
-              Positioned(
-                top: 100,
-                right: -150,
-                child: Container(
-                  width: 350,
-                  height: 350,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    gradient: RadialGradient(colors: [
-                      AppTheme.ponCyan.withValues(alpha: 0.06),
-                      Colors.transparent,
-                    ]),
-                  ),
-                ),
-              ),
-              Positioned(
-                bottom: 100,
-                left: -150,
-                child: Container(
-                  width: 350,
-                  height: 350,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    gradient: RadialGradient(colors: [
-                      AppTheme.ponPeach.withValues(alpha: 0.06),
-                      Colors.transparent,
-                    ]),
-                  ),
-                ),
-              ),
-            ],
-            if (wallpaperImgWidget != null) wallpaperImgWidget,
-            Column(
-              children: [
-              Expanded(
-                child: chatAsync.when(
-                  loading: () => const Center(
-                    child: CircularProgressIndicator(
-                      valueColor:
-                          AlwaysStoppedAnimation<Color>(AppTheme.ponCyan),
-                    ),
-                  ),
-                  error: (e, _) => Center(
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const Icon(Icons.error_outline,
-                            size: 40, color: Colors.redAccent),
-                        const SizedBox(height: 12),
-                        Text(context.l10n.errorWithMsg(e.toString()),
-                            style:
-                                const TextStyle(color: Colors.white60)),
-                      ],
-                    ),
-                  ),
-                  data: (chatState) => Column(
-                    children: [
-                      if (chatState.pinnedMessages.isNotEmpty)
-                        PinnedMessageBar(
-                          pinned: chatState.pinnedMessages.first,
-                          onTap: () => _jumpToSearchResult(
-                              chatState.pinnedMessages.first.id),
-                          onDismiss: () => ref
-                              .read(chatNotifierProvider(widget.conversationId)
-                                  .notifier)
-                              .unpinMessage(
-                                  chatState.pinnedMessages.first.id),
-                        ),
-                      Expanded(
-                        child: ChatMessageList(
-                          chatState: chatState,
-                          currentUserId: currentUserId,
-                          isGroup: isGroup,
-                          otherUserId: otherUserId,
-                          scrollController: _scrollCtrl,
-                          keyFor: _keyFor,
-                        ),
-                      ),
-                      if (chatState.typingUserIds.isNotEmpty &&
-                          !chatState.typingUserIds.contains(currentUserId))
-                        const ChatTypingIndicator(),
-                    ],
-                  ),
-                ),
-              ),
-              if (isBlocked)
-                const BlockedComposerNotice()
-              else if (isStrangerRequest)
-                StrangerRequestBanner(
-                  onAccept: _acceptStranger,
-                  onReject: _rejectStranger,
-                )
-              else ...[
-                if (editingMessage != null)
-                  EditComposerBar(
-                      preview: editingMessage, onCancel: _cancelEditing)
-                else if (replyingTo != null)
-                  ReplyComposerBar(
-                    preview: replyingTo,
-                    onCancel: () => ref
-                        .read(chatNotifierProvider(widget.conversationId)
-                            .notifier)
-                        .cancelReply(),
-                  ),
-                if (isGroup && _mentionQuery != null)
-                  MentionList(
-                    participantIds: (conv?.participants ?? [])
-                        .where((p) => p != currentUserId)
-                        .toList(),
-                    query: _mentionQuery!,
-                    onSelected: _applyMention,
-                  ),
-                ChatInputBar(
-                  controller: _textCtrl,
-                  onSend: _onSend,
-                  onAttach: () =>
-                      pickAndSendMedia(context, ref, widget.conversationId),
-                  emojiActive: _showEmoji,
-                  onEmojiToggle: () {
-                    FocusScope.of(context).unfocus();
-                    setState(() => _showEmoji = !_showEmoji);
-                  },
-                  onChanged: _onComposerChanged,
-                  quickReactionEmoji: ref.watch(quickReactionProvider(widget.conversationId)),
-                  onQuickReaction: () {
-                    final emoji = ref.read(quickReactionProvider(widget.conversationId));
-                    ref.read(chatNotifierProvider(widget.conversationId).notifier).sendMessage(emoji);
-                    _scrollToBottom();
-                  },
-                  onVoiceSend: _onVoiceSend,
-                ),
-                if (_showEmoji)
-                  EmojiStickerPanel(
-                    onEmojiSelected: _insertEmoji,
-                    onStickerSelected: _onStickerSelected,
-                    bgColor: emojiBg,
-                    surfaceColor: emojiSurface,
-                  ),
-              ],
-            ],
-          ),
+            ChatBody(
+              conversationId: widget.conversationId,
+              chatAsync: chatAsync,
+              currentUserId: currentUserId,
+              isGroup: isGroup,
+              otherUserId: otherUserId,
+              participantIds: (conv?.participants ?? [])
+                  .where((p) => p != currentUserId)
+                  .toList(),
+              isBlocked: isBlocked,
+              isStrangerRequest: isStrangerRequest,
+              scrollController: _scrollCtrl,
+              keyFor: _keyFor,
+              textController: _textCtrl,
+              showEmoji: _showEmoji,
+              mentionQuery: _mentionQuery,
+              onJump: _jumpToSearchResult,
+              onSend: _onSend,
+              onAttach: () =>
+                  pickAndSendMedia(context, ref, widget.conversationId),
+              onEmojiToggle: () {
+                FocusScope.of(context).unfocus();
+                setState(() => _showEmoji = !_showEmoji);
+              },
+              onComposerChanged: _onComposerChanged,
+              onQuickReaction: () {
+                final emoji =
+                    ref.read(quickReactionProvider(widget.conversationId));
+                ref
+                    .read(chatNotifierProvider(widget.conversationId).notifier)
+                    .sendMessage(emoji);
+                _scrollToBottom();
+              },
+              onVoiceSend: (path) => sendVoiceMessage(
+                  context, ref, widget.conversationId, path, _scrollToBottom),
+              onEmojiSelected: _insertEmoji,
+              onStickerSelected: _onStickerSelected,
+              onMentionSelected: _applyMention,
+              onCancelEditing: _cancelEditing,
+              onAcceptStranger: _acceptStranger,
+              onRejectStranger: _rejectStranger,
+            ),
           if (_isSearching)
             Positioned.fill(
               child: SearchOverlay(

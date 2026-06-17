@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
@@ -8,6 +9,36 @@ import '../../../core/l10n/l10n_ext.dart';
 import '../../../core/theme/app_theme.dart';
 import '../data/chat_repository.dart';
 import '../domain/chat_provider.dart';
+
+/// Uploads a locally recorded audio file and sends it as a voice message,
+/// then runs [onSent] (e.g. to scroll to the bottom). Extracted from
+/// chat_screen.dart for the clean-code file limit; behaviour is unchanged.
+Future<void> sendVoiceMessage(
+  BuildContext context,
+  WidgetRef ref,
+  String conversationId,
+  String path,
+  VoidCallback onSent,
+) async {
+  final l10n = context.l10n;
+  final messenger = ScaffoldMessenger.of(context);
+  messenger.showSnackBar(SnackBar(content: Text(l10n.uploading)));
+  try {
+    final List<int> bytes;
+    bytes = await File(path).readAsBytes();
+    final filename = 'voice_${DateTime.now().millisecondsSinceEpoch}.m4a';
+    final uploaded =
+        await ref.read(chatRepositoryProvider).uploadDocument(bytes, filename);
+    await ref
+        .read(chatNotifierProvider(conversationId).notifier)
+        .sendMessage(uploaded.url, type: 'voice');
+    onSent();
+  } catch (_) {
+    if (context.mounted) {
+      messenger.showSnackBar(SnackBar(content: Text(l10n.uploadFailed)));
+    }
+  }
+}
 
 /// Pick an image or video, upload to GridFS, then send as a chat message.
 Future<void> pickAndSendMedia(

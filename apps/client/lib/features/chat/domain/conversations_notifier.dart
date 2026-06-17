@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math';
 import 'package:collection/collection.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -147,7 +148,9 @@ class ConversationsNotifier extends _$ConversationsNotifier {
     final current = state.valueOrNull;
     if (current != null) {
       state = AsyncData(current.map((c) {
-        if (c.id == conversationId) return c.copyWith(unreadCount: 1);
+        if (c.id == conversationId) {
+          return c.copyWith(unreadCount: max(c.unreadCount, 1));
+        }
         return c;
       }).toList());
     }

@@ -10,8 +10,10 @@ import '../../../core/utils/global_messenger.dart';
 import '../data/ai_persona_repository.dart';
 import '../data/chat_repository.dart';
 import '../data/stomp_service.dart';
-import 'chat_misc_providers.dart';
+import 'chat_ai_stream_handler.dart';
 import 'chat_state.dart';
+import 'chat_stomp_reducers.dart';
+import 'chat_system_message_parser.dart';
 
 // Lightweight providers + per-conversation customization notifiers were split
 // into chat_misc_providers.dart. Re-exported so existing importers of
@@ -22,13 +24,17 @@ export 'chat_misc_providers.dart';
 export 'conversations_notifier.dart';
 
 part 'chat_provider.g.dart';
+// Message action methods (reply/edit/reaction/recall/pin/unpin/forward/delete)
+// live in a mixin in a separate part file for the clean-code file limit. They
+// remain methods of ChatNotifier, so the public provider API is unchanged.
+part 'chat_provider_actions.dart';
 
 // ---------------------------------------------------------------------------
 // ChatNotifier — messages for a single conversation
 // ---------------------------------------------------------------------------
 
 @riverpod
-class ChatNotifier extends _$ChatNotifier {
+class ChatNotifier extends _$ChatNotifier with _ChatActionsMixin {
   Timer? _typingTimer;
   final Map<String, Timer> _typingTimers = {};
   StreamSubscription<MessageModel>? _messageSub;
@@ -41,27 +47,16 @@ class ChatNotifier extends _$ChatNotifier {
   StreamSubscription<void>? _reconnectSub;
   StreamSubscription<Map<String, dynamic>>? _aiStreamSub;
 
-  /// Message ids with a reaction request in flight. Guards against rapid
-  /// repeated double-taps spamming the server with add/remove churn before the
-  /// authoritative REACTION_UPDATED broadcast lands.
-  final Set<String> _reactionInFlight = {};
-
-  /// The local id of the AI streaming placeholder currently awaiting a
-  /// response, or null when no AI request is pending. Tracked explicitly (as a
-  /// correlation id) so stream chunks and the final persisted message target
-  /// the exact placeholder rather than guessing via the fragile
-  /// `isStreaming`/senderId+content heuristics.
-  String? _aiPlaceholderId;
-
-  /// Fires if the AI sends no chunk within the window, so a stuck placeholder
-  /// can't spin forever (e.g. ai-service down / Redis hiccup).
-  Timer? _aiTimeoutTimer;
-  static const Duration _aiResponseTimeout = Duration(seconds: 30);
-
-  /// Id of the AI placeholder that has finished streaming (AI_STREAM_DONE) and
-  /// is awaiting its real persisted message via _onNewMessage. Lets us replace
-  /// the exact placeholder instead of guessing the wrong AI message.
-  String? _finalizedAiPlaceholderId;
+  /// AI streaming placeholder correlation + chunk/done/error handling + the
+  /// response watchdog timer (extracted for the clean-code file limit).
+  late final ChatAiStreamHandler _ai = ChatAiStreamHandler(
+    readState: () => state.valueOrNull,
+    writeMessages: (messages) {
+      final current = state.valueOrNull;
+      if (current == null) return;
+      state = AsyncData(current.copyWith(messages: messages));
+    },
+  );
 
   @override
   Future<ChatState> build(String conversationId) async {
@@ -99,7 +94,7 @@ class ChatNotifier extends _$ChatNotifier {
 
     _reconnectSub = stomp.reconnects.listen((_) => _catchupMessages());
 
-    _aiStreamSub = stomp.aiStreamEvents.listen(_onAiStreamEvent);
+    _aiStreamSub = stomp.aiStreamEvents.listen(_ai.onStreamEvent);
 
     ref.onDispose(() {
       _messageSub?.cancel();
@@ -111,7 +106,7 @@ class ChatNotifier extends _$ChatNotifier {
       _pinSub?.cancel();
       _reconnectSub?.cancel();
       _aiStreamSub?.cancel();
-      _aiTimeoutTimer?.cancel();
+      _ai.dispose();
       _typingTimer?.cancel();
       for (final t in _typingTimers.values) {
         t.cancel();
@@ -135,25 +130,7 @@ class ChatNotifier extends _$ChatNotifier {
 
     // Parse historical system messages for config (theme, nickname, quick reaction)
     for (final m in paged.content.reversed) {
-      if (m.isSystem) {
-        final content = m.content;
-        if (content.startsWith('system.nickname.changed:')) {
-          final parts = content.split(':');
-          if (parts.length >= 2) {
-            final targetId = parts[1];
-            final nickname = parts.length > 2 ? parts.sublist(2).join(':') : '';
-            ref.read(nicknamesProvider(conversationId).notifier).setNickname(targetId, nickname);
-          }
-        } else if (content.startsWith('system.theme.changed:')) {
-          final parts = content.split(':');
-          final url = parts.length > 1 ? parts.sublist(1).join(':') : '';
-          ref.read(chatWallpaperProvider(conversationId).notifier).setWallpaper(url);
-        } else if (content.startsWith('system.quick_reaction.changed:')) {
-          final parts = content.split(':');
-          final emoji = parts.length > 1 ? parts[1] : '👍';
-          ref.read(quickReactionProvider(conversationId).notifier).setQuickReaction(emoji);
-        }
-      }
+      ChatSystemMessageParser.apply(ref, conversationId, m);
     }
 
     return ChatState(
@@ -203,25 +180,7 @@ class ChatNotifier extends _$ChatNotifier {
       if (newMessages.isEmpty) return;
 
       for (final m in newMessages) {
-        if (m.isSystem) {
-          final content = m.content;
-          if (content.startsWith('system.nickname.changed:')) {
-            final parts = content.split(':');
-            if (parts.length >= 2) {
-              final targetId = parts[1];
-              final nickname = parts.length > 2 ? parts.sublist(2).join(':') : '';
-              ref.read(nicknamesProvider(conversationId).notifier).setNickname(targetId, nickname);
-            }
-          } else if (content.startsWith('system.theme.changed:')) {
-            final parts = content.split(':');
-            final url = parts.length > 1 ? parts.sublist(1).join(':') : '';
-            ref.read(chatWallpaperProvider(conversationId).notifier).setWallpaper(url);
-          } else if (content.startsWith('system.quick_reaction.changed:')) {
-            final parts = content.split(':');
-            final emoji = parts.length > 1 ? parts[1] : '👍';
-            ref.read(quickReactionProvider(conversationId).notifier).setQuickReaction(emoji);
-          }
-        }
+        ChatSystemMessageParser.apply(ref, conversationId, m);
       }
 
       // fresh is oldest-first; reverse so newest is at index 0.
@@ -238,68 +197,18 @@ class ChatNotifier extends _$ChatNotifier {
     final current = state.valueOrNull;
     if (current == null) return;
 
-    if (message.isSystem) {
-      final content = message.content;
-      if (content.startsWith('system.nickname.changed:')) {
-        final parts = content.split(':');
-        if (parts.length >= 2) {
-          final targetId = parts[1];
-          final nickname = parts.length > 2 ? parts.sublist(2).join(':') : '';
-          ref.read(nicknamesProvider(conversationId).notifier).setNickname(targetId, nickname);
-        }
-      } else if (content.startsWith('system.theme.changed:')) {
-        final parts = content.split(':');
-        final url = parts.length > 1 ? parts.sublist(1).join(':') : '';
-        ref.read(chatWallpaperProvider(conversationId).notifier).setWallpaper(url);
-      } else if (content.startsWith('system.quick_reaction.changed:')) {
-        final parts = content.split(':');
-        final emoji = parts.length > 1 ? parts[1] : '👍';
-        ref.read(quickReactionProvider(conversationId).notifier).setQuickReaction(emoji);
-      }
-    }
+    ChatSystemMessageParser.apply(ref, conversationId, message);
 
-    // Replace the finalized AI streaming placeholder with the real persisted
-    // message. Prefer the exact tracked id (set on AI_STREAM_DONE); only fall
-    // back to a heuristic when no id is tracked.
-    int aiStreamingIdx = -1;
-    if (message.isAiMessage) {
-      if (_finalizedAiPlaceholderId != null) {
-        aiStreamingIdx = current.messages
-            .indexWhere((m) => m.id == _finalizedAiPlaceholderId);
-      }
-      if (aiStreamingIdx == -1) {
-        aiStreamingIdx = current.messages.indexWhere(
-          (m) =>
-              m.isAiMessage &&
-              !m.isStreaming &&
-              m.senderId == kAiBotUserId &&
-              m.id.startsWith('ai-pending-'),
-        );
-      }
-    }
-
-    // Replace the optimistic (locally-echoed) message if one matches by id-shape
-    // + sender + content. Restrict to pending placeholders we created so we
-    // never clobber a distinct real message that happens to share text.
-    final pendingIdx = current.messages.indexWhere(
-      (m) =>
-          m.isPending &&
-          m.id.startsWith('pending_') &&
-          m.senderId == message.senderId &&
-          m.content == message.content,
+    final reconciled = ChatStompReducers.reconcileNewMessage(
+      current.messages,
+      message,
+      finalizedAiPlaceholderId: _ai.finalizedAiPlaceholderId,
     );
-
-    final List<MessageModel> updated;
-    if (aiStreamingIdx != -1) {
-      updated = List.from(current.messages)..[aiStreamingIdx] = message;
-      _finalizedAiPlaceholderId = null;
-    } else if (pendingIdx != -1) {
-      updated = List.from(current.messages)..[pendingIdx] = message;
-    } else {
-      updated = [message, ...current.messages];
+    if (reconciled.consumedAiPlaceholder) {
+      _ai.finalizedAiPlaceholderId = null;
     }
 
-    state = AsyncData(current.copyWith(messages: updated));
+    state = AsyncData(current.copyWith(messages: reconciled.messages));
 
     // Mark messages from others as read. Prefer STOMP so the server broadcasts
     // a MESSAGE_READ event (sender sees the tick update live); fall back to REST
@@ -317,384 +226,38 @@ class ChatNotifier extends _$ChatNotifier {
   void _onReadReceipt(ReadReceiptEvent event) {
     final current = state.valueOrNull;
     if (current == null) return;
-
-    final updated = current.messages.map((m) {
-      if (m.id == event.messageId && !m.readBy.contains(event.readerId)) {
-        return m.copyWith(readBy: [...m.readBy, event.readerId]);
-      }
-      return m;
-    }).toList();
-
-    state = AsyncData(current.copyWith(messages: updated));
+    state = AsyncData(current.copyWith(
+        messages: ChatStompReducers.applyReadReceipt(current.messages, event)));
   }
 
   void _onReactionUpdate(ReactionUpdateEvent event) {
     final current = state.valueOrNull;
     if (current == null) return;
-    final updated = current.messages
-        .map((m) => m.id == event.messageId
-            ? m.copyWith(reactions: event.reactions)
-            : m)
-        .toList();
-    state = AsyncData(current.copyWith(messages: updated));
+    state = AsyncData(current.copyWith(
+        messages:
+            ChatStompReducers.applyReactionUpdate(current.messages, event)));
   }
 
   void _onRecall(RecallEvent event) {
     final current = state.valueOrNull;
     if (current == null) return;
-    final updated = current.messages
-        .map((m) => m.id == event.messageId
-            ? m.copyWith(recalled: true, content: '', reactions: const [])
-            : m)
-        .toList();
-    state = AsyncData(current.copyWith(messages: updated));
+    state = AsyncData(current.copyWith(
+        messages: ChatStompReducers.applyRecall(current.messages, event)));
   }
 
   void _onEdit(MessageUpdateEvent event) {
     final current = state.valueOrNull;
     if (current == null) return;
-    final updated = current.messages
-        .map((m) => m.id == event.messageId
-            ? m.copyWith(content: event.content, editedAt: event.editedAt)
-            : m)
-        .toList();
-    state = AsyncData(current.copyWith(messages: updated));
+    state = AsyncData(current.copyWith(
+        messages: ChatStompReducers.applyEdit(current.messages, event)));
   }
 
   void _onPinnedMessage(PinnedMessageEvent event) {
     final current = state.valueOrNull;
     if (current == null) return;
-    // Build PinnedMessageModel list from the pinned IDs using loaded messages.
-    final loadedById = {for (final m in current.messages) m.id: m};
-    final pinned = event.pinnedMessageIds
-        .map((id) => loadedById[id])
-        .whereType<MessageModel>()
-        .map((m) => PinnedMessageModel(
-              id: m.id,
-              senderId: m.senderId,
-              content: m.content,
-              createdAt: m.createdAt,
-            ))
-        .toList();
-    state = AsyncData(current.copyWith(pinnedMessages: pinned));
-  }
-
-  /// (Re)arm the AI response watchdog. If no chunk/done/error arrives in time
-  /// the streaming placeholder is replaced with an error sentinel so it can't
-  /// spin indefinitely.
-  void _startAiTimeout() {
-    _aiTimeoutTimer?.cancel();
-    _aiTimeoutTimer = Timer(_aiResponseTimeout, _onAiTimeout);
-  }
-
-  void _clearAiTimeout() {
-    _aiTimeoutTimer?.cancel();
-    _aiTimeoutTimer = null;
-  }
-
-  void _onAiTimeout() {
-    final placeholderId = _aiPlaceholderId;
-    final current = state.valueOrNull;
-    if (placeholderId == null || current == null) {
-      _aiPlaceholderId = null;
-      return;
-    }
-    final idx = current.messages.indexWhere((m) => m.id == placeholderId);
-    if (idx != -1) {
-      final updated = List<MessageModel>.from(current.messages);
-      updated[idx] = current.messages[idx].copyWith(
-        content: kAiErrorSentinel,
-        isStreaming: false,
-        isThinking: false,
-        activeTools: [],
-      );
-      state = AsyncData(current.copyWith(messages: updated));
-    }
-    _aiPlaceholderId = null;
-  }
-
-  void _onAiStreamEvent(Map<String, dynamic> event) {
-    final type = event['type'] as String?;
-    final current = state.valueOrNull;
-    if (current == null || type == null) return;
-
-    // Target the tracked placeholder by id (correlation), falling back to the
-    // legacy streaming-flag heuristic for placeholders created before tracking.
-    final placeholderId = _aiPlaceholderId;
-    int idx = placeholderId != null
-        ? current.messages.indexWhere((m) => m.id == placeholderId)
-        : -1;
-    if (idx == -1) {
-      idx = current.messages.indexWhere(
-        (m) => m.isAiMessage && m.isStreaming && m.senderId == kAiBotUserId,
-      );
-    }
-    if (idx == -1) return;
-
-    // A live event means the AI is responding — push the watchdog out (chunks)
-    // or disarm it entirely (terminal events).
-    if (type == 'AI_STREAM_CHUNK' || type == 'AI_TOOL_CALL') {
-      _startAiTimeout();
-    } else if (type == 'AI_STREAM_DONE' || type == 'AI_STREAM_ERROR') {
-      _clearAiTimeout();
-      // Remember which placeholder finished so _onNewMessage swaps the exact
-      // one for the persisted message (DONE only — an errored bubble stays).
-      if (type == 'AI_STREAM_DONE') {
-        _finalizedAiPlaceholderId = current.messages[idx].id;
-      }
-      _aiPlaceholderId = null;
-    }
-
-    final updated = List<MessageModel>.from(current.messages);
-    switch (type) {
-      case 'AI_TOOL_CALL':
-        final toolName = event['toolName'] as String? ?? '';
-        if (toolName.isNotEmpty) {
-          final current2 = current.messages[idx];
-          final tools = List<String>.from(current2.activeTools)..add(toolName);
-          updated[idx] = current2.copyWith(activeTools: tools);
-        }
-      case 'AI_STREAM_CHUNK':
-        final chunk = event['chunk'] as String? ?? '';
-        updated[idx] = current.messages[idx].copyWith(
-          content: current.messages[idx].content + chunk,
-          isThinking: false,
-        );
-      case 'AI_STREAM_DONE':
-        final rawSources = event['sources'] as List?;
-        final sources = rawSources
-            ?.whereType<Map<String, dynamic>>()
-            .map((s) => s['documentId'] as String? ?? '')
-            .where((id) => id.isNotEmpty)
-            .toList();
-        final rawTrace = event['trace'] as Map<String, dynamic>?;
-        final trace = rawTrace != null ? AiTrace.fromJson(rawTrace) : null;
-        updated[idx] = current.messages[idx].copyWith(
-          isStreaming: false,
-          isThinking: false,
-          sources: sources,
-          trace: trace,
-          activeTools: [],
-        );
-      case 'AI_STREAM_ERROR':
-        final errorMsg = event['error'] as String? ?? '';
-        final isQuota = errorMsg.toLowerCase().contains('quota');
-        updated[idx] = current.messages[idx].copyWith(
-          content: isQuota ? kAiQuotaExceededSentinel : kAiErrorSentinel,
-          isStreaming: false,
-          isThinking: false,
-          activeTools: [],
-        );
-    }
-    state = AsyncData(current.copyWith(messages: updated));
-  }
-
-  // ----- Reply / reactions / recall / delete actions --------------------
-
-  void startReply(MessageModel message) {
-    final current = state.valueOrNull;
-    if (current == null) return;
-    state = AsyncData(current.copyWith(replyingTo: message));
-  }
-
-  void cancelReply() {
-    final current = state.valueOrNull;
-    if (current == null) return;
-    state = AsyncData(current.copyWith(clearReplyingTo: true));
-  }
-
-  /// Begin editing a sent message — the composer pre-fills with its content.
-  /// Editing and replying are mutually exclusive.
-  void startEditing(MessageModel message) {
-    final current = state.valueOrNull;
-    if (current == null) return;
-    state = AsyncData(
-        current.copyWith(editingMessage: message, clearReplyingTo: true));
-  }
-
-  void cancelEditing() {
-    final current = state.valueOrNull;
-    if (current == null) return;
-    state = AsyncData(current.copyWith(clearEditingMessage: true));
-  }
-
-  /// Toggle a reaction: tapping the same emoji again removes it.
-  Future<void> toggleReaction(String messageId, String emoji) async {
-    final current = state.valueOrNull;
-    final uid = _currentUserId;
-    if (current == null || uid == null) return;
-    // Ignore taps while a toggle for this message is still in flight, so a
-    // burst of double-taps cannot fire overlapping add/remove requests.
-    if (_reactionInFlight.contains(messageId)) return;
-    final matches = current.messages.where((m) => m.id == messageId);
-    final msg = matches.isEmpty ? null : matches.first;
-    final alreadySame = msg != null &&
-        msg.reactions.any((r) => r.userId == uid && r.emoji == emoji);
-    final repo = ref.read(chatRepositoryProvider);
-    _reactionInFlight.add(messageId);
-    try {
-      if (alreadySame) {
-        await repo.removeReaction(messageId);
-      } else {
-        await repo.addReaction(messageId, emoji);
-      }
-    } catch (_) {
-      // The REACTION_UPDATED broadcast keeps state authoritative, but surface
-      // the failure so the user knows the tap didn't take effect.
-      _showActionError();
-    } finally {
-      _reactionInFlight.remove(messageId);
-    }
-  }
-
-  Future<void> recallMessage(String messageId) async {
-    final current = state.valueOrNull;
-    try {
-      await ref.read(chatRepositoryProvider).recallMessage(messageId);
-    } catch (_) {
-      // Re-assert the pre-recall state (no local change was applied yet, but
-      // guard against any in-flight optimistic edit) and tell the user.
-      if (current != null && state.hasValue) state = AsyncData(current);
-      _showActionError();
-    }
-  }
-
-  /// Surface a generic "action failed" SnackBar via the app-wide messenger.
-  void _showActionError() {
-    final context =
-        ref.read(appRouterProvider).routerDelegate.navigatorKey.currentContext;
-    if (context == null) return;
-    showErrorSnackBar(context.l10n.errActionFailed);
-  }
-
-  /// Edit a sent message. Optimistically updates locally; the server's
-  /// MESSAGE_UPDATED broadcast keeps both peers authoritative.
-  Future<void> editMessage(String messageId, String content) async {
-    final trimmed = content.trim();
-    if (trimmed.isEmpty) return;
-    final current = state.valueOrNull;
-    if (current != null) {
-      state = AsyncData(current.copyWith(
-        messages: current.messages
-            .map((m) => m.id == messageId
-                ? m.copyWith(content: trimmed, editedAt: DateTime.now())
-                : m)
-            .toList(),
-        clearEditingMessage: true,
-      ));
-    }
-    try {
-      await ref.read(chatRepositoryProvider).editMessage(messageId, trimmed);
-    } catch (_) {
-      // Roll back the optimistic edit and tell the user it didn't save.
-      if (current != null && state.hasValue) {
-        state = AsyncData(state.requireValue.copyWith(
-          messages: state.requireValue.messages
-              .map((m) {
-                if (m.id != messageId) return m;
-                final orig = current.messages.firstWhereOrNull((o) => o.id == messageId);
-                return orig ?? m;
-              })
-              .toList(),
-        ));
-      }
-      _showActionError();
-    }
-  }
-
-  /// Ensure [messageId] is loaded (paging older history if needed), then mark it
-  /// as the highlight target so the UI can scroll to it (Task 50 search jump).
-  Future<void> jumpToMessage(String messageId) async {
-    // Page back until the target is loaded, capped so we never loop forever.
-    for (int i = 0; i < 20; i++) {
-      final current = state.valueOrNull;
-      if (current == null) return;
-      if (current.messages.any((m) => m.id == messageId)) break;
-      if (!current.hasMore) break;
-      await loadMore();
-    }
-    final current = state.valueOrNull;
-    if (current == null) return;
-    state = AsyncData(current.copyWith(highlightMessageId: messageId));
-  }
-
-  void clearHighlight() {
-    final current = state.valueOrNull;
-    if (current == null || current.highlightMessageId == null) return;
-    state = AsyncData(current.copyWith(clearHighlight: true));
-  }
-
-  /// Pin a message in this conversation (Task 53).
-  Future<void> pinMessage(MessageModel message) async {
-    final current = state.valueOrNull;
-    if (current == null) return;
-    // Optimistic: prepend to pinned list
-    final pinned = [
-      PinnedMessageModel(
-        id: message.id,
-        senderId: message.senderId,
-        content: message.content,
-        createdAt: message.createdAt,
-      ),
-      ...current.pinnedMessages.where((p) => p.id != message.id),
-    ];
-    state = AsyncData(current.copyWith(pinnedMessages: pinned));
-    try {
-      await ref.read(chatRepositoryProvider).pinMessage(message.id);
-    } catch (_) {
-      // Revert on failure
-      final c = state.valueOrNull;
-      if (c != null) {
-        state = AsyncData(
-            c.copyWith(pinnedMessages: current.pinnedMessages));
-      }
-    }
-  }
-
-  /// Unpin a message (Task 53).
-  Future<void> unpinMessage(String messageId) async {
-    final current = state.valueOrNull;
-    if (current == null) return;
-    final reverted = current.pinnedMessages;
     state = AsyncData(current.copyWith(
-        pinnedMessages: current.pinnedMessages
-            .where((p) => p.id != messageId)
-            .toList()));
-    try {
-      await ref.read(chatRepositoryProvider).unpinMessage(messageId);
-    } catch (_) {
-      final c = state.valueOrNull;
-      if (c != null) state = AsyncData(c.copyWith(pinnedMessages: reverted));
-    }
-  }
-
-  /// Forward a message to another conversation (Task 53).
-  Future<bool> forwardMessage(
-      String messageId, String targetConversationId) async {
-    try {
-      await ref
-          .read(chatRepositoryProvider)
-          .forwardMessage(messageId, targetConversationId);
-      return true;
-    } catch (_) {
-      return false;
-    }
-  }
-
-  Future<void> deleteForMe(String messageId) async {
-    final current = state.valueOrNull;
-    if (current == null) return;
-    // Optimistically remove from this device.
-    state = AsyncData(current.copyWith(
-      messages: current.messages.where((m) => m.id != messageId).toList(),
-    ));
-    try {
-      await ref.read(chatRepositoryProvider).deleteMessageForMe(messageId);
-    } catch (_) {
-      // Restore the message we optimistically removed and tell the user.
-      if (state.hasValue) state = AsyncData(current);
-      _showActionError();
-    }
+        pinnedMessages:
+            ChatStompReducers.buildPinned(current.messages, event)));
   }
 
   void _onTypingEvent(TypingEvent event) {
@@ -723,41 +286,6 @@ class ChatNotifier extends _$ChatNotifier {
     final typingIds = Set<String>.from(current.typingUserIds)..remove(userId);
     _typingTimers.remove(userId);
     state = AsyncData(current.copyWith(typingUserIds: typingIds));
-  }
-
-  Future<void> loadMore() async {
-    final current = state.valueOrNull;
-    if (current == null || !current.hasMore || current.isLoadingMore) return;
-
-    state = AsyncData(current.copyWith(isLoadingMore: true));
-
-    // Cursor = oldest real (non-pending) message id. The list is newest-first,
-    // so iterating to the end leaves `before` pointing at the oldest message.
-    String? before;
-    for (final m in current.messages) {
-      if (!m.isPending) before = m.id;
-    }
-
-    try {
-      final paged = await ref.read(chatRepositoryProvider).getMessages(
-            conversationId,
-            before: before,
-            size: 20,
-          );
-      final fresh = state.valueOrNull ?? current;
-      // Guard against id overlap if a realtime message arrived mid-fetch.
-      final existingIds = fresh.messages.map((m) => m.id).toSet();
-      final older =
-          paged.content.where((m) => !existingIds.contains(m.id)).toList();
-      state = AsyncData(fresh.copyWith(
-        messages: [...fresh.messages, ...older],
-        hasMore: paged.hasNext,
-        isLoadingMore: false,
-      ));
-    } catch (_) {
-      final fresh = state.valueOrNull ?? current;
-      state = AsyncData(fresh.copyWith(isLoadingMore: false));
-    }
   }
 
   static final _aiMentionRe = RegExp(r'@(AI|ponai)\b', caseSensitive: false);
@@ -808,8 +336,7 @@ class ChatNotifier extends _$ChatNotifier {
           )
         : null;
     if (hasAiMention) {
-      _aiPlaceholderId = aiPlaceholderId;
-      _startAiTimeout();
+      _ai.beginPending(aiPlaceholderId);
     }
 
     // Adding the message also clears the reply composer.
@@ -863,10 +390,5 @@ class ChatNotifier extends _$ChatNotifier {
     _typingTimer = Timer(const Duration(seconds: 3), () {
       stomp.sendTyping(conversationId, isTyping: false);
     });
-  }
-
-  String? get _currentUserId {
-    final auth = ref.read(authNotifierProvider).valueOrNull;
-    return auth is AuthAuthenticated ? auth.user.id : null;
   }
 }

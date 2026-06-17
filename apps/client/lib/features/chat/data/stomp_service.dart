@@ -196,14 +196,17 @@ class StompService extends _$StompService {
   }
 
   void _doSubscribeNotifications() {
-    if (_subs.containsKey('notif')) return;
-    _subs['notif'] = _client!.subscribe(
-      destination: '/user/queue/notifications',
-      callback: (frame) {
-        if (frame.body == null) return;
-        _notifCtrl.add(jsonDecode(frame.body!) as Map<String, dynamic>);
-      },
-    );
+    // Guard each subscription independently so that an existing 'notif' sub
+    // never blocks (re)establishing the 'webrtc' sub for incoming calls.
+    if (!_subs.containsKey('notif')) {
+      _subs['notif'] = _client!.subscribe(
+        destination: '/user/queue/notifications',
+        callback: (frame) {
+          if (frame.body == null) return;
+          _notifCtrl.add(jsonDecode(frame.body!) as Map<String, dynamic>);
+        },
+      );
+    }
 
     if (_subs.containsKey('webrtc')) return;
     _subs['webrtc'] = _client!.subscribe(
