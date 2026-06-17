@@ -17,15 +17,41 @@ function makeAsyncIterator(chunks: unknown[]) {
   };
 }
 
-function makeChunks(texts: string[], usage = { input_tokens: 10, output_tokens: 20 }) {
+/**
+ * Build a streaming response that emits text deltas, then finalMessage()
+ * resolves with the given stop_reason / content / usage. This is the single
+ * code path now — the loop, tool turns, and the final answer all stream.
+ */
+function makeStream(
+  texts: string[],
+  finalMessage: {
+    stop_reason?: string;
+    content?: unknown[];
+    usage?: { input_tokens: number; output_tokens: number };
+  } = {},
+) {
+  const events = texts.map((t) => ({
+    type: 'content_block_delta',
+    delta: { type: 'text_delta', text: t },
+  }));
   return {
-    ...makeAsyncIterator(
-      texts.map((t) => ({
-        type: 'content_block_delta',
-        delta: { type: 'text_delta', text: t },
-      })),
-    ),
-    finalMessage: jest.fn().mockResolvedValue({ usage }),
+    ...makeAsyncIterator(events),
+    finalMessage: jest.fn().mockResolvedValue({
+      stop_reason: finalMessage.stop_reason ?? 'end_turn',
+      content: finalMessage.content ?? texts.map((t) => ({ type: 'text', text: t })),
+      usage: finalMessage.usage ?? { input_tokens: 10, output_tokens: 20 },
+    }),
+  };
+}
+
+function makeToolUseStream(toolName: string, toolId: string, input: Record<string, unknown>) {
+  return {
+    ...makeAsyncIterator([]),
+    finalMessage: jest.fn().mockResolvedValue({
+      stop_reason: 'tool_use',
+      content: [{ type: 'tool_use', id: toolId, name: toolName, input }],
+      usage: { input_tokens: 8, output_tokens: 12 },
+    }),
   };
 }
 
@@ -40,45 +66,34 @@ function makeThinkingStream(thinkingText: string, responseText: string) {
   ];
   return {
     ...makeAsyncIterator(events),
-    finalMessage: jest.fn().mockResolvedValue({ usage: { input_tokens: 50, output_tokens: 80 } }),
+    finalMessage: jest.fn().mockResolvedValue({
+      stop_reason: 'end_turn',
+      content: [{ type: 'text', text: responseText }],
+      usage: { input_tokens: 50, output_tokens: 80 },
+    }),
   };
 }
 
-function makeErrorStream() {
-  return {
-    [Symbol.asyncIterator]: async function* () {
-      throw new Error('model overloaded');
-      // eslint-disable-next-line no-unreachable
-      yield;
-    },
-    finalMessage: jest.fn().mockRejectedValue(new Error('stream failed')),
-  };
-}
-
-function makeEndTurnResponse(textContent = '', usage = { input_tokens: 5, output_tokens: 10 }) {
-  return {
-    stop_reason: 'end_turn',
-    content: textContent ? [{ type: 'text', text: textContent }] : [],
-    usage,
-  };
-}
-
-function makeToolUseResponse(toolName: string, toolId: string, input: Record<string, unknown>) {
-  return {
-    stop_reason: 'tool_use',
-    content: [{ type: 'tool_use', id: toolId, name: toolName, input }],
-    usage: { input_tokens: 8, output_tokens: 12 },
-  };
-}
+const SAMPLE_TOOLS = [
+  {
+    name: 'search_messages',
+    description: 'd',
+    input_schema: { type: 'object', properties: {}, required: [] },
+  },
+  {
+    name: 'get_user_info',
+    description: 'd',
+    input_schema: { type: 'object', properties: {}, required: [] },
+  },
+];
 
 describe('AiService', () => {
   let service: AiService;
   let publish: jest.Mock;
   let mockStream: jest.Mock;
   let mockCreate: jest.Mock;
-  let getMemory: jest.Mock;
-  let upsertMemory: jest.Mock;
-  let deleteMemory: jest.Mock;
+  let retrieveRelevantFacts: jest.Mock;
+  let addFacts: jest.Mock;
   let incrementMessageCount: jest.Mock;
   let getReadyDocumentIds: jest.Mock;
   let embedOne: jest.Mock;
@@ -98,13 +113,17 @@ describe('AiService', () => {
     history: [],
   };
 
+  function systemText(call: { system: Array<{ text: string }> | string }): string {
+    if (typeof call.system === 'string') return call.system;
+    return call.system.map((b) => b.text).join('\n');
+  }
+
   beforeEach(() => {
     publish = jest.fn().mockResolvedValue(undefined);
-    mockStream = jest.fn();
-    mockCreate = jest.fn().mockResolvedValue(makeEndTurnResponse());
-    getMemory = jest.fn().mockResolvedValue(null);
-    upsertMemory = jest.fn().mockResolvedValue(undefined);
-    deleteMemory = jest.fn().mockResolvedValue(undefined);
+    mockStream = jest.fn().mockReturnValue(makeStream(['OK']));
+    mockCreate = jest.fn().mockResolvedValue({ content: [] });
+    retrieveRelevantFacts = jest.fn().mockResolvedValue([]);
+    addFacts = jest.fn().mockResolvedValue(undefined);
     incrementMessageCount = jest.fn().mockResolvedValue(1);
     getReadyDocumentIds = jest.fn().mockResolvedValue([]);
     embedOne = jest.fn().mockResolvedValue([0.1, 0.2]);
@@ -122,10 +141,13 @@ describe('AiService', () => {
           'config.anthropic.apiKey': 'test-key',
           'config.anthropic.model': 'test-primary',
           'config.anthropic.fallbackModel': 'test-fallback',
+          'config.anthropic.effort': 'high',
           'config.kb.qdrantCollection': 'knowledge',
           'config.kb.topK': 4,
+          'config.kb.overFetch': 8,
+          'config.kb.scoreThreshold': 0.5,
+          'config.memory.extractEveryTurns': 20,
           'config.ai.enableThinking': false,
-          'config.ai.thinkingBudgetTokens': 8000,
           'config.quota.monthlyTokenLimit': 500000,
         };
         return map[key];
@@ -134,7 +156,9 @@ describe('AiService', () => {
 
     const fakePublisher = { publish } as unknown as RedisPublisherService;
     const fakeMemory = {
-      getMemory, upsertMemory, deleteMemory, incrementMessageCount,
+      retrieveRelevantFacts,
+      addFacts,
+      incrementMessageCount,
     } as unknown as MemoryService;
     const fakeKbProcessor = { getReadyDocumentIds } as unknown as KbProcessorService;
     const fakeEmbedding = { embedOne } as unknown as EmbeddingService;
@@ -161,19 +185,12 @@ describe('AiService', () => {
   // ─── Basic streaming ──────────────────────────────────────────────────────
 
   it('publishes AI_STREAM_CHUNK for each delta then AI_STREAM_DONE', async () => {
-    mockCreate.mockResolvedValue(makeEndTurnResponse());
-    mockStream.mockReturnValue(makeChunks(['Hello', ' World']));
+    mockStream.mockReturnValue(makeStream(['Hello', ' World']));
 
     await service.handleRequest(basePayload);
 
-    expect(publish).toHaveBeenCalledWith('conv-test', {
-      type: 'AI_STREAM_CHUNK',
-      chunk: 'Hello',
-    });
-    expect(publish).toHaveBeenCalledWith('conv-test', {
-      type: 'AI_STREAM_CHUNK',
-      chunk: ' World',
-    });
+    expect(publish).toHaveBeenCalledWith('conv-test', { type: 'AI_STREAM_CHUNK', chunk: 'Hello' });
+    expect(publish).toHaveBeenCalledWith('conv-test', { type: 'AI_STREAM_CHUNK', chunk: ' World' });
     expect(publish).toHaveBeenCalledWith('conv-test', expect.objectContaining({
       type: 'AI_STREAM_DONE',
       fullContent: 'Hello World',
@@ -182,15 +199,39 @@ describe('AiService', () => {
     }));
   });
 
-  it('retries fallback model when primary fails before any chunks', async () => {
-    mockCreate
-      .mockRejectedValueOnce(new Error('model overloaded'))
-      .mockResolvedValueOnce(makeEndTurnResponse());
-    mockStream.mockReturnValue(makeChunks(['Fallback reply']));
+  it('uses a single streaming call for a plain answer (no second blind call)', async () => {
+    mockStream.mockReturnValue(makeStream(['Answer']));
 
     await service.handleRequest(basePayload);
 
-    expect(mockCreate).toHaveBeenCalledTimes(2);
+    expect(mockStream).toHaveBeenCalledTimes(1);
+    expect(mockCreate).not.toHaveBeenCalled();
+  });
+
+  it('sends tools and effort/output_config and a cached system block', async () => {
+    toolRegistryGetDefinitions.mockReturnValue(SAMPLE_TOOLS);
+    mockStream.mockReturnValue(makeStream(['OK']));
+
+    await service.handleRequest(basePayload);
+
+    const params = mockStream.mock.calls[0][0];
+    expect(params.output_config).toEqual({ effort: 'high' });
+    expect(Array.isArray(params.system)).toBe(true);
+    expect(params.system[0].cache_control).toEqual({ type: 'ephemeral' });
+    // last tool carries a cache breakpoint
+    expect(params.tools[params.tools.length - 1].cache_control).toEqual({ type: 'ephemeral' });
+  });
+
+  it('retries fallback model when primary fails before any chunks', async () => {
+    mockStream
+      .mockImplementationOnce(() => {
+        throw new Error('model overloaded');
+      })
+      .mockReturnValueOnce(makeStream(['Fallback reply']));
+
+    await service.handleRequest(basePayload);
+
+    expect(mockStream).toHaveBeenCalledTimes(2);
     expect(publish).toHaveBeenCalledWith('conv-test', expect.objectContaining({
       type: 'AI_STREAM_DONE',
       fullContent: 'Fallback reply',
@@ -201,10 +242,12 @@ describe('AiService', () => {
     );
   });
 
-  it('publishes AI_STREAM_ERROR when both primary and fallback fail', async () => {
-    mockCreate.mockRejectedValue(new Error('model overloaded'));
+  it('publishes AI_STREAM_ERROR and rethrows when both models fail', async () => {
+    mockStream.mockImplementation(() => {
+      throw new Error('model overloaded');
+    });
 
-    await service.handleRequest(basePayload);
+    await expect(service.handleRequest(basePayload)).rejects.toThrow();
 
     expect(publish).toHaveBeenCalledWith('conv-test', {
       type: 'AI_STREAM_ERROR',
@@ -214,115 +257,97 @@ describe('AiService', () => {
 
   // ─── Memory injection ─────────────────────────────────────────────────────
 
-  it('injects memory into system prompt when memory exists', async () => {
-    getMemory.mockResolvedValue({
-      conversationId: 'conv-test',
-      summary: 'User discussed Flutter and Redis',
-      keyFacts: ['Uses Flutter', 'Uses Redis'],
-      messageCount: 20,
-    });
-    mockCreate.mockResolvedValue(makeEndTurnResponse());
-    mockStream.mockReturnValue(makeChunks(['OK']));
+  it('injects retrieved memory facts as a volatile system block', async () => {
+    retrieveRelevantFacts.mockResolvedValue([
+      { text: 'Uses Flutter', score: 0.9, createdAt: Date.now() },
+      { text: 'Uses Redis', score: 0.8, createdAt: Date.now() },
+    ]);
+    mockStream.mockReturnValue(makeStream(['OK']));
 
     await service.handleRequest(basePayload);
 
-    const createCall = mockCreate.mock.calls[0][0];
-    expect(createCall.system).toContain('Memory from previous conversations');
-    expect(createCall.system).toContain('User discussed Flutter and Redis');
-    expect(createCall.system).toContain('- Uses Flutter');
-    expect(createCall.system).toContain('- Uses Redis');
+    const sys = systemText(mockStream.mock.calls[0][0]);
+    expect(sys).toContain('Relevant memory about this user');
+    expect(sys).toContain('- Uses Flutter');
+    expect(sys).toContain('- Uses Redis');
   });
 
-  it('does not inject memory when none exists', async () => {
-    getMemory.mockResolvedValue(null);
-    mockCreate.mockResolvedValue(makeEndTurnResponse());
-    mockStream.mockReturnValue(makeChunks(['OK']));
+  it('does not inject memory block when no relevant facts', async () => {
+    retrieveRelevantFacts.mockResolvedValue([]);
+    mockStream.mockReturnValue(makeStream(['OK']));
 
     await service.handleRequest(basePayload);
 
-    const createCall = mockCreate.mock.calls[0][0];
-    expect(createCall.system).not.toContain('Memory from previous conversations');
+    const sys = systemText(mockStream.mock.calls[0][0]);
+    expect(sys).not.toContain('Relevant memory about this user');
   });
 
-  // ─── Auto-summarization ───────────────────────────────────────────────────
+  it('keeps the persona prompt in a cached block separate from volatile context', async () => {
+    buildSystemPromptFn.mockReturnValue('PERSONA-STABLE');
+    retrieveRelevantFacts.mockResolvedValue([{ text: 'fact', score: 1, createdAt: Date.now() }]);
+    mockStream.mockReturnValue(makeStream(['OK']));
 
-  it('triggers _generateSummary at messageCount divisible by 20', async () => {
+    await service.handleRequest(basePayload);
+
+    const params = mockStream.mock.calls[0][0];
+    expect(params.system[0].text).toBe('PERSONA-STABLE');
+    expect(params.system[0].cache_control).toEqual({ type: 'ephemeral' });
+    // volatile block has NO cache_control
+    expect(params.system[1].cache_control).toBeUndefined();
+    expect(params.system[1].text).toContain('fact');
+  });
+
+  // ─── Fact extraction ──────────────────────────────────────────────────────
+
+  it('triggers fact extraction at messageCount divisible by 20', async () => {
     const payloadWithHistory: AiRequestPayload = {
       ...basePayload,
       history: [{ role: 'user', content: 'What is Flutter?' }],
     };
     incrementMessageCount.mockResolvedValue(20);
-    mockCreate
-      .mockResolvedValueOnce(makeEndTurnResponse())
-      .mockResolvedValueOnce({
-        content: [{ type: 'text', text: 'User discussed AI.\nFACTS: ["Uses AI"]' }],
-      });
-    mockStream.mockReturnValue(makeChunks(['OK']));
+    mockStream.mockReturnValue(makeStream(['OK']));
+    mockCreate.mockResolvedValue({
+      content: [{ type: 'text', text: 'User discussed AI.\nFACTS: ["Uses AI"]' }],
+    });
 
     await service.handleRequest(payloadWithHistory);
     await new Promise((r) => setTimeout(r, 50));
 
-    expect(upsertMemory).toHaveBeenCalledWith(
-      'conv-test', 'user-1', 'User discussed AI.', ['Uses AI'], 20,
-    );
+    expect(addFacts).toHaveBeenCalledWith('conv-test', 'user-1', ['Uses AI'], 'User discussed AI.', 20);
   });
 
-  it('does not trigger _generateSummary when count is not divisible by 20', async () => {
+  it('does not extract facts when count is not divisible by 20', async () => {
     incrementMessageCount.mockResolvedValue(5);
-    mockCreate.mockResolvedValue(makeEndTurnResponse());
-    mockStream.mockReturnValue(makeChunks(['OK']));
+    mockStream.mockReturnValue(makeStream(['OK']));
 
     await service.handleRequest(basePayload);
     await new Promise((r) => setTimeout(r, 50));
 
-    expect(upsertMemory).not.toHaveBeenCalled();
-  });
-
-  it('triggers summarization at count 40 (multiple of 20)', async () => {
-    const payloadWithHistory: AiRequestPayload = {
-      ...basePayload,
-      history: [{ role: 'user', content: 'Hello' }],
-    };
-    incrementMessageCount.mockResolvedValue(40);
-    mockCreate
-      .mockResolvedValueOnce(makeEndTurnResponse())
-      .mockResolvedValueOnce({
-        content: [{ type: 'text', text: 'Summary at 40.\nFACTS: ["fact1"]' }],
-      });
-    mockStream.mockReturnValue(makeChunks(['OK']));
-
-    await service.handleRequest(payloadWithHistory);
-    await new Promise((r) => setTimeout(r, 50));
-
-    expect(upsertMemory).toHaveBeenCalledWith('conv-test', 'user-1', 'Summary at 40.', ['fact1'], 40);
+    expect(addFacts).not.toHaveBeenCalled();
   });
 
   // ─── RAG context injection ────────────────────────────────────────────────
 
-  it('injects RAG context into system prompt when docs exist with high score', async () => {
+  it('injects RAG context when docs exist with high score', async () => {
     getReadyDocumentIds.mockResolvedValue(['doc1']);
     vectorSearch.mockResolvedValue([
       { text: 'Flutter is a UI toolkit.', documentId: 'doc1', score: 0.85 },
       { text: 'Dart is the language.', documentId: 'doc1', score: 0.75 },
     ]);
-    mockCreate.mockResolvedValue(makeEndTurnResponse());
-    mockStream.mockReturnValue(makeChunks(['Based on [Source 1]...']));
+    mockStream.mockReturnValue(makeStream(['Based on [Source 1]...']));
 
     await service.handleRequest(basePayload);
 
-    const createCall = mockCreate.mock.calls[0][0];
-    expect(createCall.system).toContain('[Source 1] Flutter is a UI toolkit.');
-    expect(createCall.system).toContain('[Source 2] Dart is the language.');
-    expect(createCall.system).toContain('Relevant Knowledge Base Context');
+    const sys = systemText(mockStream.mock.calls[0][0]);
+    expect(sys).toContain('[Source 1] Flutter is a UI toolkit.');
+    expect(sys).toContain('[Source 2] Dart is the language.');
+    expect(sys).toContain('Knowledge Base Context');
   });
 
   it('includes sources in AI_STREAM_DONE payload', async () => {
     getReadyDocumentIds.mockResolvedValue(['doc1']);
-    vectorSearch.mockResolvedValue([
-      { text: 'Some content', documentId: 'doc1', score: 0.8 },
-    ]);
-    mockCreate.mockResolvedValue(makeEndTurnResponse());
-    mockStream.mockReturnValue(makeChunks(['OK']));
+    vectorSearch.mockResolvedValue([{ text: 'Some content', documentId: 'doc1', score: 0.8 }]);
+    mockStream.mockReturnValue(makeStream(['OK']));
 
     await service.handleRequest(basePayload);
 
@@ -332,42 +357,33 @@ describe('AiService', () => {
     }));
   });
 
-  it('does not inject RAG context when all scores below 0.3 threshold', async () => {
+  it('emits a "no relevant context" signal when all scores below 0.5 threshold', async () => {
     getReadyDocumentIds.mockResolvedValue(['doc1']);
-    vectorSearch.mockResolvedValue([
-      { text: 'Irrelevant content', documentId: 'doc1', score: 0.1 },
-    ]);
-    mockCreate.mockResolvedValue(makeEndTurnResponse());
-    mockStream.mockReturnValue(makeChunks(['OK']));
+    vectorSearch.mockResolvedValue([{ text: 'Irrelevant', documentId: 'doc1', score: 0.2 }]);
+    mockStream.mockReturnValue(makeStream(['OK']));
 
     await service.handleRequest(basePayload);
 
-    const createCall = mockCreate.mock.calls[0][0];
-    expect(createCall.system).not.toContain('Relevant Knowledge Base Context');
-    expect(publish).toHaveBeenCalledWith('conv-test', expect.objectContaining({
-      sources: [],
-    }));
+    const sys = systemText(mockStream.mock.calls[0][0]);
+    expect(sys).toContain('No relevant context');
+    expect(publish).toHaveBeenCalledWith('conv-test', expect.objectContaining({ sources: [] }));
   });
 
-  it('proceeds without RAG when no docs in conversation', async () => {
+  it('signals no docs uploaded when conversation has none', async () => {
     getReadyDocumentIds.mockResolvedValue([]);
-    mockCreate.mockResolvedValue(makeEndTurnResponse());
-    mockStream.mockReturnValue(makeChunks(['OK']));
+    mockStream.mockReturnValue(makeStream(['OK']));
 
     await service.handleRequest(basePayload);
 
-    expect(embedOne).not.toHaveBeenCalled();
+    const sys = systemText(mockStream.mock.calls[0][0]);
+    expect(sys).toContain('No documents have been uploaded');
     expect(vectorSearch).not.toHaveBeenCalled();
-    expect(publish).toHaveBeenCalledWith('conv-test', expect.objectContaining({
-      sources: [],
-    }));
   });
 
-  it('degrades gracefully when Qdrant throws error', async () => {
+  it('degrades gracefully when embedding throws (no vector search)', async () => {
     getReadyDocumentIds.mockResolvedValue(['doc1']);
-    embedOne.mockRejectedValue(new Error('Qdrant unavailable'));
-    mockCreate.mockResolvedValue(makeEndTurnResponse());
-    mockStream.mockReturnValue(makeChunks(['OK']));
+    embedOne.mockRejectedValue(new Error('embed unavailable'));
+    mockStream.mockReturnValue(makeStream(['OK']));
 
     await service.handleRequest(basePayload);
 
@@ -379,17 +395,18 @@ describe('AiService', () => {
 
   // ─── Agentic loop ─────────────────────────────────────────────────────────
 
-  it('executes single tool call then publishes final stream', async () => {
-    mockCreate
-      .mockResolvedValueOnce(makeToolUseResponse('search_messages', 'tool-1', { query: 'Flutter' }))
-      .mockResolvedValueOnce(makeEndTurnResponse());
+  it('executes single tool call then streams final answer', async () => {
+    toolRegistryGetDefinitions.mockReturnValue(SAMPLE_TOOLS);
+    mockStream
+      .mockReturnValueOnce(makeToolUseStream('search_messages', 'tool-1', { query: 'Flutter' }))
+      .mockReturnValueOnce(makeStream(['Based on search: Flutter is great']));
     toolRegistryExecute.mockResolvedValue('Found: Flutter is great');
-    mockStream.mockReturnValue(makeChunks(['Based on search: Flutter is great']));
 
     await service.handleRequest(basePayload);
 
     expect(toolRegistryExecute).toHaveBeenCalledWith(
-      'search_messages', { query: 'Flutter' }, expect.objectContaining({ conversationId: 'conv-test' }),
+      'search_messages', { query: 'Flutter' },
+      expect.objectContaining({ conversationId: 'conv-test' }),
     );
     expect(publish).toHaveBeenCalledWith('conv-test', expect.objectContaining({
       type: 'AI_TOOL_CALL',
@@ -397,6 +414,7 @@ describe('AiService', () => {
     }));
     expect(publish).toHaveBeenCalledWith('conv-test', expect.objectContaining({
       type: 'AI_STREAM_DONE',
+      fullContent: 'Based on search: Flutter is great',
       trace: expect.objectContaining({
         toolCalls: expect.arrayContaining([
           expect.objectContaining({ toolName: 'search_messages' }),
@@ -405,20 +423,21 @@ describe('AiService', () => {
     }));
   });
 
-  it('executes two consecutive tool calls then final stream', async () => {
-    mockCreate
-      .mockResolvedValueOnce(makeToolUseResponse('get_user_info', 'tool-1', {}))
-      .mockResolvedValueOnce(makeToolUseResponse('search_messages', 'tool-2', { query: 'test' }))
-      .mockResolvedValueOnce(makeEndTurnResponse());
+  it('executes two consecutive tool calls then streams final answer', async () => {
+    toolRegistryGetDefinitions.mockReturnValue(SAMPLE_TOOLS);
+    mockStream
+      .mockReturnValueOnce(makeToolUseStream('get_user_info', 'tool-1', {}))
+      .mockReturnValueOnce(makeToolUseStream('search_messages', 'tool-2', { query: 'test' }))
+      .mockReturnValueOnce(makeStream(['Final answer']));
     toolRegistryExecute.mockResolvedValue('result');
-    mockStream.mockReturnValue(makeChunks(['Final answer']));
 
     await service.handleRequest(basePayload);
 
-    expect(mockCreate).toHaveBeenCalledTimes(3);
+    expect(mockStream).toHaveBeenCalledTimes(3);
     expect(toolRegistryExecute).toHaveBeenCalledTimes(2);
     expect(publish).toHaveBeenCalledWith('conv-test', expect.objectContaining({
       type: 'AI_STREAM_DONE',
+      fullContent: 'Final answer',
       trace: expect.objectContaining({
         toolCalls: expect.arrayContaining([
           expect.objectContaining({ toolName: 'get_user_info' }),
@@ -429,64 +448,54 @@ describe('AiService', () => {
   });
 
   it('publishes fallback message when MAX_ITER exhausted', async () => {
-    mockCreate.mockResolvedValue(makeToolUseResponse('search_messages', 'tool-x', { query: 'x' }));
+    toolRegistryGetDefinitions.mockReturnValue(SAMPLE_TOOLS);
+    mockStream.mockReturnValue(makeToolUseStream('search_messages', 'tool-x', { query: 'x' }));
     toolRegistryExecute.mockResolvedValue('some result');
-    mockStream.mockReturnValue(makeChunks(['Should not be called']));
 
     await service.handleRequest(basePayload);
 
-    expect(mockCreate).toHaveBeenCalledTimes(5);
-    expect(publish).toHaveBeenCalledWith('conv-test', expect.objectContaining({
-      type: 'AI_STREAM_DONE',
-    }));
-    expect(mockStream).not.toHaveBeenCalled();
-  });
-
-  it('tool executor error returns error string and loop continues', async () => {
-    mockCreate
-      .mockResolvedValueOnce(makeToolUseResponse('search_messages', 'tool-1', { query: 'x' }))
-      .mockResolvedValueOnce(makeEndTurnResponse());
-    toolRegistryExecute.mockResolvedValue('Tool error: database unavailable');
-    mockStream.mockReturnValue(makeChunks(['I encountered an issue']));
-
-    await service.handleRequest(basePayload);
-
+    expect(mockStream).toHaveBeenCalledTimes(5);
     expect(publish).toHaveBeenCalledWith('conv-test', expect.objectContaining({
       type: 'AI_STREAM_DONE',
     }));
   });
 
-  // ─── Trace & token usage (AI-5) ───────────────────────────────────────────
+  // ─── Trace & token usage ──────────────────────────────────────────────────
 
-  it('trace.processingMs > 0 in AI_STREAM_DONE payload', async () => {
-    mockCreate.mockResolvedValue(makeEndTurnResponse());
-    mockStream.mockReturnValue(makeChunks(['OK']));
-
-    await service.handleRequest(basePayload);
-
-    expect(publish).toHaveBeenCalledWith('conv-test', expect.objectContaining({
-      trace: expect.objectContaining({ processingMs: expect.any(Number) }),
-    }));
-    const call = publish.mock.calls.find(
-      (c) => c[1]?.type === 'AI_STREAM_DONE',
-    );
-    expect(call?.[1].trace.processingMs).toBeGreaterThanOrEqual(0);
-  });
-
-  it('trace.inputTokens is sum across create and stream iterations', async () => {
-    // create call: 5 in + 10 out; stream: 10 in + 20 out
-    mockCreate.mockResolvedValue(makeEndTurnResponse('', { input_tokens: 5, output_tokens: 10 }));
-    mockStream.mockReturnValue(makeChunks(['OK'], { input_tokens: 10, output_tokens: 20 }));
+  it('trace.processingMs >= 0 in AI_STREAM_DONE payload', async () => {
+    mockStream.mockReturnValue(makeStream(['OK']));
 
     await service.handleRequest(basePayload);
 
     const call = publish.mock.calls.find((c) => c[1]?.type === 'AI_STREAM_DONE');
-    expect(call?.[1].trace.inputTokens).toBe(15);
-    expect(call?.[1].trace.outputTokens).toBe(30);
+    expect(call?.[1].trace.processingMs).toBeGreaterThanOrEqual(0);
   });
 
-  it('thinking blocks captured from stream when present', async () => {
-    mockCreate.mockResolvedValue(makeEndTurnResponse());
+  it('counts usage once per streaming call (no double counting)', async () => {
+    mockStream.mockReturnValue(makeStream(['OK'], { usage: { input_tokens: 10, output_tokens: 20 } }));
+
+    await service.handleRequest(basePayload);
+
+    const call = publish.mock.calls.find((c) => c[1]?.type === 'AI_STREAM_DONE');
+    expect(call?.[1].trace.inputTokens).toBe(10);
+    expect(call?.[1].trace.outputTokens).toBe(20);
+  });
+
+  it('accumulates usage across tool iterations', async () => {
+    toolRegistryGetDefinitions.mockReturnValue(SAMPLE_TOOLS);
+    mockStream
+      .mockReturnValueOnce(makeToolUseStream('search_messages', 't1', { query: 'x' })) // 8/12
+      .mockReturnValueOnce(makeStream(['done'], { usage: { input_tokens: 10, output_tokens: 20 } }));
+    toolRegistryExecute.mockResolvedValue('r');
+
+    await service.handleRequest(basePayload);
+
+    const call = publish.mock.calls.find((c) => c[1]?.type === 'AI_STREAM_DONE');
+    expect(call?.[1].trace.inputTokens).toBe(18);
+    expect(call?.[1].trace.outputTokens).toBe(32);
+  });
+
+  it('captures thinking blocks from the stream when present', async () => {
     mockStream.mockReturnValue(makeThinkingStream('Reasoning...', 'Final answer'));
 
     await service.handleRequest(basePayload);
@@ -496,17 +505,16 @@ describe('AiService', () => {
     expect(call?.[1].fullContent).toBe('Final answer');
   });
 
-  it('calls usageService.recordUsage after successful request', async () => {
-    mockCreate.mockResolvedValue(makeEndTurnResponse('', { input_tokens: 5, output_tokens: 10 }));
-    mockStream.mockReturnValue(makeChunks(['OK'], { input_tokens: 10, output_tokens: 20 }));
+  it('calls usageService.recordUsage after a successful request', async () => {
+    mockStream.mockReturnValue(makeStream(['OK'], { usage: { input_tokens: 10, output_tokens: 20 } }));
 
     await service.handleRequest(basePayload);
     await new Promise((r) => setTimeout(r, 10));
 
-    expect(recordUsage).toHaveBeenCalledWith('user-1', 15, 30);
+    expect(recordUsage).toHaveBeenCalledWith('user-1', 10, 20);
   });
 
-  // ─── Quota enforcement (AI-6.2) ───────────────────────────────────────────
+  // ─── Quota enforcement ────────────────────────────────────────────────────
 
   it('publishes AI_STREAM_ERROR and skips Anthropic call when quota exceeded', async () => {
     isQuotaExceeded.mockResolvedValue(true);
@@ -517,19 +525,19 @@ describe('AiService', () => {
       type: 'AI_STREAM_ERROR',
       error: 'Monthly AI usage quota exceeded. Please contact your admin.',
     });
-    expect(mockCreate).not.toHaveBeenCalled();
     expect(mockStream).not.toHaveBeenCalled();
   });
 
-  // ─── Persona system prompt (AI-6.1) ───────────────────────────────────────
+  // ─── Persona system prompt ────────────────────────────────────────────────
 
   it('uses personaService.buildSystemPrompt for the system prompt', async () => {
     buildSystemPromptFn.mockReturnValue('Custom persona prompt');
-    mockCreate.mockResolvedValue(makeEndTurnResponse());
-    mockStream.mockReturnValue(makeChunks(['OK']));
+    mockStream.mockReturnValue(makeStream(['OK']));
 
     await service.handleRequest(basePayload);
 
     expect(buildSystemPromptFn).toHaveBeenCalled();
+    const sys = systemText(mockStream.mock.calls[0][0]);
+    expect(sys).toContain('Custom persona prompt');
   });
 });

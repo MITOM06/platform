@@ -25,7 +25,14 @@ export class AiConsumer {
     try {
       await this.aiService.handleRequest(payload);
     } catch (err) {
-      this.logger.error(`Failed to process AI request for conversation ${payload.conversationId}`, err);
+      this.logger.error(
+        `Failed to process AI request for conversation ${payload.conversationId}`,
+        err,
+      );
+      // AiService already published AI_STREAM_ERROR to Redis for the client.
+      // Rethrow so RabbitMQ nacks and the message is dead-lettered per the
+      // configured DLX/TTL instead of being silently auto-acked.
+      throw err;
     }
   }
 }

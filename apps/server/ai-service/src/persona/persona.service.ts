@@ -52,6 +52,12 @@ export class PersonaService {
     await this.personaModel.deleteOne({ conversationId }).exec();
   }
 
+  /**
+   * Builds the STABLE, cacheable system prompt: persona + tone + grounding
+   * contract. Contains nothing volatile (no RAG chunks, no retrieved memory
+   * facts) so it can be marked `cache_control: ephemeral` and reused across
+   * turns of the same conversation.
+   */
   buildSystemPrompt(persona: AiPersona | null, displayName: string): string {
     const name = persona?.name ?? 'PON AI';
     const tone = persona?.tone ?? 'friendly';
@@ -62,13 +68,29 @@ export class PersonaService {
       `You are ${name}, an intelligent AI assistant in the PON chat platform.\n` +
       `You are helping ${displayName}.\n` +
       `${toneInstruction}\n` +
-      `Respond in the same language the user writes in.\n` +
-      `If you don't know something, say so clearly.`;
+      `Respond in the same language the user writes in.\n\n` +
+      this.groundingContract();
 
     if (prefix) {
       prompt = `${prefix}\n\n${prompt}`;
     }
 
     return prompt;
+  }
+
+  /**
+   * Anti-hallucination grounding contract. Kept here (stable text) so it stays
+   * inside the cached system block.
+   */
+  private groundingContract(): string {
+    return (
+      `## Grounding & Honesty Rules (follow strictly)\n` +
+      `- Answer ONLY from: (a) the conversation so far, (b) any "Knowledge Base Context" provided in this turn, and (c) facts listed under "Relevant memory about this user".\n` +
+      `- If the Knowledge Base Context is empty, marked "no relevant context", or does not cover the question, say so plainly (e.g. "I don't have anything on that in the uploaded documents") instead of inventing an answer.\n` +
+      `- NEVER fabricate dates, numbers, names, quotes, URLs, or citations. If you are unsure, say you are unsure.\n` +
+      `- Distinguish a stored memory fact (something the user previously told you) from your own inference. Do not present a guess as a remembered fact.\n` +
+      `- When you use a Knowledge Base chunk, cite it inline as [Source N] matching the provided source number.\n` +
+      `- Prefer "I don't know" over a confident-sounding but unverified claim.`
+    );
   }
 }

@@ -17,13 +17,23 @@ describe('MemoryService', () => {
   const CONV_ID = 'conv-test';
   const USER_ID = 'user-test';
 
+  const vectorStub = {
+    retrieve: jest.fn().mockResolvedValue([]),
+    nearest: jest.fn().mockResolvedValue(null),
+    upsertFact: jest.fn().mockResolvedValue(undefined),
+    listFacts: jest.fn().mockResolvedValue([]),
+    deleteConversation: jest.fn().mockResolvedValue(undefined),
+  };
+  const embedStub = { embedOne: jest.fn().mockResolvedValue([0.1, 0.2]) };
+  const configStub = { get: jest.fn().mockReturnValue(undefined) };
+
   it('getMemory — returns document when found', async () => {
     const doc = { conversationId: CONV_ID, userId: USER_ID, summary: 'hello', keyFacts: [], messageCount: 5 };
     const model = makeModel({
       findOne: jest.fn().mockReturnValue({ lean: () => ({ exec: () => Promise.resolve(doc) }) }),
     });
 
-    const service = new MemoryService(model as any);
+    const service = new MemoryService(model as any, vectorStub as any, embedStub as any, configStub as any);
     const result = await service.getMemory(CONV_ID);
 
     expect(model.findOne).toHaveBeenCalledWith({ conversationId: CONV_ID });
@@ -35,7 +45,7 @@ describe('MemoryService', () => {
       findOne: jest.fn().mockReturnValue({ lean: () => ({ exec: () => Promise.resolve(null) }) }),
     });
 
-    const service = new MemoryService(model as any);
+    const service = new MemoryService(model as any, vectorStub as any, embedStub as any, configStub as any);
     const result = await service.getMemory(CONV_ID);
 
     expect(result).toBeNull();
@@ -46,7 +56,7 @@ describe('MemoryService', () => {
       findOneAndUpdate: jest.fn().mockResolvedValue({}),
     });
 
-    const service = new MemoryService(model as any);
+    const service = new MemoryService(model as any, vectorStub as any, embedStub as any, configStub as any);
     await service.upsertMemory(CONV_ID, USER_ID, 'summary text', ['fact1'], 20);
 
     expect(model.findOneAndUpdate).toHaveBeenCalledWith(
@@ -61,7 +71,7 @@ describe('MemoryService', () => {
       deleteOne: jest.fn().mockResolvedValue({ deletedCount: 1 }),
     });
 
-    const service = new MemoryService(model as any);
+    const service = new MemoryService(model as any, vectorStub as any, embedStub as any, configStub as any);
     await service.deleteMemory(CONV_ID);
 
     expect(model.deleteOne).toHaveBeenCalledWith({ conversationId: CONV_ID });
@@ -73,7 +83,7 @@ describe('MemoryService', () => {
       findOneAndUpdate: jest.fn().mockResolvedValue(updated),
     });
 
-    const service = new MemoryService(model as any);
+    const service = new MemoryService(model as any, vectorStub as any, embedStub as any, configStub as any);
     const count = await service.incrementMessageCount(CONV_ID);
 
     expect(model.findOneAndUpdate).toHaveBeenCalledWith(
