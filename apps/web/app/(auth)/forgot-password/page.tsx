@@ -61,7 +61,7 @@ export default function ForgotPasswordPage() {
       toast.success(t('codeSent'))
     } catch (err: unknown) {
       const { code, params } = parseAuthError(err)
-      toast.error(tAuth(authCodeToI18nKey(code), params as Record<string, string | number>))
+      toast.error(tAuth(authCodeToI18nKey(code), params))
     }
   }
 
@@ -72,7 +72,7 @@ export default function ForgotPasswordPage() {
       router.push('/login')
     } catch (err: unknown) {
       const { code, params } = parseAuthError(err)
-      toast.error(tAuth(authCodeToI18nKey(code), params as Record<string, string | number>))
+      toast.error(tAuth(authCodeToI18nKey(code), params))
     }
   }
 

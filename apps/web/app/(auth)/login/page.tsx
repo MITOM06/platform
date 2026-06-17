@@ -60,7 +60,7 @@ export default function LoginPage() {
       router.push('/')
     } catch (err: unknown) {
       const { code, params } = parseAuthError(err)
-      toast.error(t(authCodeToI18nKey(code), params as Record<string, string | number>))
+      toast.error(t(authCodeToI18nKey(code), params))
     }
   }
 

@@ -75,7 +75,7 @@ function VerifyOtpForm() {
       router.push('/login')
     } catch (err: unknown) {
       const { code, params } = parseAuthError(err)
-      toast.error(tAuth(authCodeToI18nKey(code), params as Record<string, string | number>))
+      toast.error(tAuth(authCodeToI18nKey(code), params))
     } finally {
       setLoading(false)
     }

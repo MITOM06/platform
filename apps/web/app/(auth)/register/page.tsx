@@ -76,7 +76,7 @@ export default function RegisterPage() {
       router.push(`/verify-otp?email=${encodeURIComponent(data.email)}`)
     } catch (err: unknown) {
       const { code, params } = parseAuthError(err)
-      toast.error(t(authCodeToI18nKey(code), params as Record<string, string | number>))
+      toast.error(t(authCodeToI18nKey(code), params))
     }
   }
 

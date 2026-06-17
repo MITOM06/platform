@@ -2,11 +2,11 @@ import { AxiosError } from 'axios'
 
 interface AuthErrorBody {
   code: string
-  params?: Record<string, unknown>
+  params?: Record<string, string | number>
 }
 
 /** Extract { code, params } from an AxiosError thrown by auth-service. */
-export function parseAuthError(err: unknown): { code: string; params?: Record<string, unknown> } {
+export function parseAuthError(err: unknown): { code: string; params?: Record<string, string | number> } {
   const e = err as AxiosError<{ message?: unknown }>
   const msg = e?.response?.data?.message
   if (typeof msg === 'object' && msg !== null && !Array.isArray(msg)) {
@@ -23,45 +23,45 @@ export function parseAuthError(err: unknown): { code: string; params?: Record<st
 export function authCodeToI18nKey(code: string): string {
   const map: Record<string, string> = {
     // Success codes
-    LOGIN_SUCCESS: 'auth.msgLoginSuccess',
-    LOGOUT_SUCCESS: 'auth.msgLogoutSuccess',
-    OTP_SENT: 'auth.msgOtpSent',
-    OTP_VALID: 'auth.msgOtpValid',
-    OTP_RESENT: 'auth.msgOtpResent',
-    PASSWORD_UPDATED: 'auth.msgPasswordUpdated',
-    REGISTER_SUCCESS: 'auth.msgRegisterSuccess',
-    ACCOUNT_UNVERIFIED_OTP_SENT: 'auth.msgAccountUnverifiedOtpSent',
+    LOGIN_SUCCESS: 'msgLoginSuccess',
+    LOGOUT_SUCCESS: 'msgLogoutSuccess',
+    OTP_SENT: 'msgOtpSent',
+    OTP_VALID: 'msgOtpValid',
+    OTP_RESENT: 'msgOtpResent',
+    PASSWORD_UPDATED: 'msgPasswordUpdated',
+    REGISTER_SUCCESS: 'msgRegisterSuccess',
+    ACCOUNT_UNVERIFIED_OTP_SENT: 'msgAccountUnverifiedOtpSent',
     // Error codes
-    OTP_INVALID: 'auth.errOtpInvalid',
-    OTP_EXPIRED: 'auth.errOtpExpired',
-    OTP_ATTEMPTS_EXCEEDED: 'auth.errOtpAttemptsExceeded',
-    OTP_WRONG_WITH_REMAINING: 'auth.errOtpWrongWithRemaining',
-    OTP_RESEND_COOLDOWN: 'auth.errOtpResendCooldown',
-    EMAIL_DOMAIN_INVALID: 'auth.errEmailDomainInvalid',
-    ACCOUNT_LOCKED: 'auth.errAccountLocked',
-    LOGIN_FAILED_WITH_REMAINING: 'auth.errLoginFailedWithRemaining',
-    LOGIN_FAILED_LOCKED: 'auth.errLoginFailedLocked',
-    TOKEN_INVALID: 'auth.errTokenInvalid',
-    SESSION_NOT_FOUND: 'auth.errSessionNotFound',
-    SESSION_INVALID: 'auth.errSessionInvalid',
-    SESSION_REVOKED: 'auth.errSessionRevoked',
-    REFRESH_TOKEN_REUSE: 'auth.errRefreshTokenReuse',
-    REFRESH_TOKEN_INVALID: 'auth.errRefreshTokenInvalid',
-    REFRESH_TOKEN_ROTATED: 'auth.errRefreshTokenRotated',
-    TOKEN_SESSION_MISMATCH: 'auth.errTokenSessionMismatch',
-    SOCIAL_EMAIL_UNAVAILABLE: 'auth.errSocialEmailUnavailable',
-    LOGIN_CODE_INVALID: 'auth.errLoginCodeInvalid',
-    EMAIL_NOT_FOUND: 'auth.errEmailNotFound',
-    USER_NOT_FOUND: 'auth.errUserNotFound',
-    EMAIL_IN_USE: 'auth.errEmailInUse',
+    OTP_INVALID: 'errOtpInvalid',
+    OTP_EXPIRED: 'errOtpExpired',
+    OTP_ATTEMPTS_EXCEEDED: 'errOtpAttemptsExceeded',
+    OTP_WRONG_WITH_REMAINING: 'errOtpWrongWithRemaining',
+    OTP_RESEND_COOLDOWN: 'errOtpResendCooldown',
+    EMAIL_DOMAIN_INVALID: 'errEmailDomainInvalid',
+    ACCOUNT_LOCKED: 'errAccountLocked',
+    LOGIN_FAILED_WITH_REMAINING: 'errLoginFailedWithRemaining',
+    LOGIN_FAILED_LOCKED: 'errLoginFailedLocked',
+    TOKEN_INVALID: 'errTokenInvalid',
+    SESSION_NOT_FOUND: 'errSessionNotFound',
+    SESSION_INVALID: 'errSessionInvalid',
+    SESSION_REVOKED: 'errSessionRevoked',
+    REFRESH_TOKEN_REUSE: 'errRefreshTokenReuse',
+    REFRESH_TOKEN_INVALID: 'errRefreshTokenInvalid',
+    REFRESH_TOKEN_ROTATED: 'errRefreshTokenRotated',
+    TOKEN_SESSION_MISMATCH: 'errTokenSessionMismatch',
+    SOCIAL_EMAIL_UNAVAILABLE: 'errSocialEmailUnavailable',
+    LOGIN_CODE_INVALID: 'errLoginCodeInvalid',
+    EMAIL_NOT_FOUND: 'errEmailNotFound',
+    USER_NOT_FOUND: 'errUserNotFound',
+    EMAIL_IN_USE: 'errEmailInUse',
     // Validation codes
-    VAL_EMAIL_INVALID: 'auth.errValEmailInvalid',
-    VAL_EMAIL_REQUIRED: 'auth.errValEmailRequired',
-    VAL_DISPLAYNAME_REQUIRED: 'auth.errValDisplayNameRequired',
-    VAL_DISPLAYNAME_TOO_SHORT: 'auth.errValDisplayNameTooShort',
-    VAL_PASSWORD_TOO_SHORT: 'auth.errValPasswordTooShort',
+    VAL_EMAIL_INVALID: 'errValEmailInvalid',
+    VAL_EMAIL_REQUIRED: 'errValEmailRequired',
+    VAL_DISPLAYNAME_REQUIRED: 'errValDisplayNameRequired',
+    VAL_DISPLAYNAME_TOO_SHORT: 'errValDisplayNameTooShort',
+    VAL_PASSWORD_TOO_SHORT: 'errValPasswordTooShort',
     // Fallback
-    GENERIC_ERROR: 'auth.errGeneric',
+    GENERIC_ERROR: 'errGeneric',
   }
-  return map[code] ?? 'auth.errGeneric'
+  return map[code] ?? 'errGeneric'
 }
