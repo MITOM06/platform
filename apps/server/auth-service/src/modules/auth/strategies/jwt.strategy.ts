@@ -2,9 +2,8 @@ import { Injectable, UnauthorizedException, Inject } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 import { ConfigService } from '@nestjs/config';
-import { REDIS_CLIENT } from '@platform/database';
+import { REDIS_CLIENT, Redis } from '@platform/database';
 import { Request } from 'express';
-import Redis from 'ioredis';
 
 export interface JwtPayload {
   sub: string;   // userId
