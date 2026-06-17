@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef, use } from 'react'
+import { useState, useRef, use, useEffect } from 'react'
 import Link from 'next/link'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
@@ -17,6 +17,7 @@ import {
 } from 'lucide-react'
 import { kbService, type KbDocument } from '@/lib/api/kb'
 import { chatService } from '@/lib/api/chat'
+import { stompService } from '@/lib/stomp/client'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -143,8 +144,46 @@ export default function KbPage({ params }: { params: Promise<{ conversationId: s
   const { data: docs, isLoading, error } = useQuery({
     queryKey: ['kb-documents', conversationId],
     queryFn: () => kbService.getDocuments(conversationId),
-    refetchInterval: 5000, // Poll for status updates
   })
+
+  // Live KB status via STOMP (KB_STATUS_UPDATE on /topic/conversation/{id}) —
+  // patches the cache directly, no polling. Mirrors Flutter kb_provider.dart.
+  useEffect(() => {
+    let active = true
+    let sub: ReturnType<typeof stompService.subscribe>
+
+    stompService.waitForConnect().then(() => {
+      if (!active) return
+      sub = stompService.subscribe(`/topic/conversation/${conversationId}`, (frame) => {
+        try {
+          const parsed = JSON.parse(frame.body) as Record<string, unknown>
+          if (parsed.type !== 'KB_STATUS_UPDATE') return
+
+          const documentId = parsed.documentId as string | undefined
+          const status = parsed.status as KbDocument['status'] | undefined
+          if (!documentId || !status) return
+          const chunkCount = (parsed.chunkCount as number | undefined)
+
+          queryClient.setQueryData<KbDocument[]>(
+            ['kb-documents', conversationId],
+            (prev) =>
+              prev?.map((d) =>
+                d.documentId === documentId
+                  ? { ...d, status, chunkCount: chunkCount ?? d.chunkCount }
+                  : d,
+              ),
+          )
+        } catch {
+          // ignore malformed frames
+        }
+      })
+    })
+
+    return () => {
+      active = false
+      sub?.unsubscribe()
+    }
+  }, [conversationId, queryClient])
 
   const uploadMutation = useMutation({
     mutationFn: async (file: File) => {

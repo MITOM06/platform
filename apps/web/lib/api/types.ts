@@ -129,3 +129,4 @@ export type StompEvent =
   | { type: 'AI_STREAM_DONE'; senderId: string; conversationId: string }
   | { type: 'AI_STREAM_ERROR'; error: string; senderId: string; conversationId: string }
   | { type: 'AI_TOOL_CALL'; toolName: string; inputSummary: string; senderId: string; conversationId: string }
+  | { type: 'KB_STATUS_UPDATE'; documentId: string; status: 'pending' | 'processing' | 'done' | 'error'; chunkCount?: number }

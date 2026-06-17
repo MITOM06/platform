@@ -8,7 +8,15 @@ import { useTranslations } from 'next-intl'
 import { useAuthStore } from '@/lib/store/auth.store'
 import type { AuthUser } from '@/lib/store/auth.store'
 
-const PUBLIC_PATHS = ['/login', '/register', '/verify-otp']
+const PUBLIC_PATHS = [
+  '/login',
+  '/register',
+  '/verify-otp',
+  '/oauth-callback',
+  '/forgot-password',
+  '/privacy',
+  '/terms',
+]
 
 export function SessionInitializer({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
