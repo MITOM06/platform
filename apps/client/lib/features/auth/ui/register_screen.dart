@@ -7,6 +7,7 @@ import '../../../core/l10n/l10n_ext.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/pon_widgets.dart';
 import '../data/auth_repository.dart';
+import '../utils/auth_error.dart';
 import 'widgets/password_strength_indicator.dart';
 
 class RegisterScreen extends ConsumerStatefulWidget {
@@ -37,13 +38,10 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   }
 
   String _friendlyError(BuildContext context, Object error) {
+    if (error is DioException) {
+      return authErrorToString(context, error);
+    }
     final msg = error.toString();
-    if (msg.contains('409') || msg.contains('exists')) {
-      return context.l10n.errEmailExists;
-    }
-    if (msg.contains('domain') || msg.contains('Domain')) {
-      return context.l10n.errEmailDomainInvalid;
-    }
     if (msg.contains('network') || msg.contains('connect')) {
       return context.l10n.errNetwork;
     }

@@ -442,5 +442,67 @@
   "legalUserRightsTitle": "4. 您的权利",
   "legalUserRightsContent": "您有权访问、更正或删除您的个人数据。您可以随时通过应用程序设置删除您的账户。",
   "legalTermsTitle": "5. 服务条款",
-  "legalTermsContent": "使用我们的平台即表示您同意不参与任何滥用、骚扰或违法活动。我们保留暂停或终止违反这些条款的账户的权利。"
+  "legalTermsContent": "使用我们的平台即表示您同意不参与任何滥用、骚扰或违法活动。我们保留暂停或终止违反这些条款的账户的权利。",
+
+  "authMsgLoginSuccess": "登录成功。",
+  "authMsgLogoutSuccess": "退出成功。",
+  "authMsgOtpSent": "OTP已发送至您的邮箱。",
+  "authMsgOtpValid": "OTP验证成功。",
+  "authMsgOtpResent": "新OTP已发送。",
+  "authMsgPasswordUpdated": "密码已成功更新，请重新登录。",
+  "authMsgRegisterSuccess": "注册成功，OTP已发送至您的邮箱。",
+  "authMsgAccountUnverifiedOtpSent": "账户尚未验证，新OTP已发送至您的邮箱。",
+
+  "authErrOtpInvalid": "OTP验证码无效。",
+  "authErrOtpExpired": "OTP已过期。",
+  "authErrOtpAttemptsExceeded": "错误次数过多，请重新申请OTP。",
+  "authErrOtpWrongWithRemaining": "OTP不正确，剩余{remaining}次尝试。",
+  "@authErrOtpWrongWithRemaining": {
+    "placeholders": {
+      "remaining": { "type": "int" }
+    }
+  },
+  "authErrOtpResendCooldown": "请等待{ttl}秒后再申请新OTP。",
+  "@authErrOtpResendCooldown": {
+    "placeholders": {
+      "ttl": { "type": "int" }
+    }
+  },
+  "authErrEmailDomainInvalid": "邮箱域名不存在或无MX记录。",
+  "authErrEmailNotFound": "系统中不存在该邮箱。",
+  "authErrEmailInUse": "该邮箱已被使用。",
+  "authErrValEmailInvalid": "邮箱格式无效。",
+  "authErrValEmailRequired": "邮箱为必填项。",
+  "authErrValDisplaynameRequired": "显示名称为必填项。",
+  "authErrValDisplaynameTooShort": "显示名称过短（至少2个字符）。",
+  "authErrValPasswordTooShort": "密码至少需要8个字符。",
+  "authErrAccountLocked": "由于登录失败次数过多，账户已被暂时锁定{minutes}分钟。",
+  "@authErrAccountLocked": {
+    "placeholders": {
+      "minutes": { "type": "int" }
+    }
+  },
+  "authErrLoginFailedWithRemaining": "邮箱或密码不正确，剩余{remaining}次尝试。",
+  "@authErrLoginFailedWithRemaining": {
+    "placeholders": {
+      "remaining": { "type": "int" }
+    }
+  },
+  "authErrLoginFailedLocked": "登录失败次数过多，账户已锁定{minutes}分钟。",
+  "@authErrLoginFailedLocked": {
+    "placeholders": {
+      "minutes": { "type": "int" }
+    }
+  },
+  "authErrTokenInvalid": "Token无效。",
+  "authErrSessionNotFound": "会话不存在或已过期。",
+  "authErrSessionInvalid": "会话不存在或已过期。",
+  "authErrSessionRevoked": "会话已被撤销。",
+  "authErrRefreshTokenReuse": "安全警告：检测到refresh token重用，所有会话已被撤销。",
+  "authErrRefreshTokenInvalid": "Refresh token无效。",
+  "authErrRefreshTokenRotated": "Refresh token已轮换。",
+  "authErrTokenSessionMismatch": "Token与会话不匹配。",
+  "authErrSocialEmailUnavailable": "无法从社交账户获取邮箱。",
+  "authErrLoginCodeInvalid": "登录码无效或已过期。",
+  "authErrUserNotFound": "用户不存在。"
 }

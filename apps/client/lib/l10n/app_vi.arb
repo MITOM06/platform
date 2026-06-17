@@ -442,5 +442,67 @@
   "legalUserRightsTitle": "4. Quyền của bạn",
   "legalUserRightsContent": "Bạn có quyền truy cập, chỉnh sửa hoặc xóa dữ liệu cá nhân của mình. Bạn có thể xóa tài khoản của mình bất kỳ lúc nào thông qua cài đặt ứng dụng.",
   "legalTermsTitle": "5. Điều khoản Dịch vụ",
-  "legalTermsContent": "Bằng cách sử dụng nền tảng của chúng tôi, bạn đồng ý không tham gia vào bất kỳ hoạt động lạm dụng, quấy rối hoặc bất hợp pháp nào. Chúng tôi có quyền đình chỉ hoặc chấm dứt các tài khoản vi phạm các điều khoản này."
+  "legalTermsContent": "Bằng cách sử dụng nền tảng của chúng tôi, bạn đồng ý không tham gia vào bất kỳ hoạt động lạm dụng, quấy rối hoặc bất hợp pháp nào. Chúng tôi có quyền đình chỉ hoặc chấm dứt các tài khoản vi phạm các điều khoản này.",
+
+  "authMsgLoginSuccess": "Đăng nhập thành công.",
+  "authMsgLogoutSuccess": "Đăng xuất thành công.",
+  "authMsgOtpSent": "Mã OTP đã được gửi tới email của bạn.",
+  "authMsgOtpValid": "Xác thực OTP thành công.",
+  "authMsgOtpResent": "Mã OTP mới đã được gửi.",
+  "authMsgPasswordUpdated": "Cập nhật mật khẩu thành công. Vui lòng đăng nhập lại.",
+  "authMsgRegisterSuccess": "Đăng ký thành công. Mã OTP đã được gửi tới email của bạn.",
+  "authMsgAccountUnverifiedOtpSent": "Tài khoản chưa được xác thực. Mã OTP mới đã được gửi tới email của bạn.",
+
+  "authErrOtpInvalid": "Mã OTP không hợp lệ.",
+  "authErrOtpExpired": "Mã OTP đã hết hạn.",
+  "authErrOtpAttemptsExceeded": "Quá nhiều lần nhập sai. Vui lòng yêu cầu mã OTP mới.",
+  "authErrOtpWrongWithRemaining": "OTP không đúng. Còn {remaining} lần thử.",
+  "@authErrOtpWrongWithRemaining": {
+    "placeholders": {
+      "remaining": { "type": "int" }
+    }
+  },
+  "authErrOtpResendCooldown": "Vui lòng đợi {ttl} giây trước khi yêu cầu mã OTP mới.",
+  "@authErrOtpResendCooldown": {
+    "placeholders": {
+      "ttl": { "type": "int" }
+    }
+  },
+  "authErrEmailDomainInvalid": "Tên miền email không tồn tại hoặc không có bản ghi MX.",
+  "authErrEmailNotFound": "Email không tồn tại trong hệ thống.",
+  "authErrEmailInUse": "Email này đã được sử dụng.",
+  "authErrValEmailInvalid": "Định dạng email không hợp lệ.",
+  "authErrValEmailRequired": "Email là bắt buộc.",
+  "authErrValDisplaynameRequired": "Tên hiển thị là bắt buộc.",
+  "authErrValDisplaynameTooShort": "Tên hiển thị quá ngắn (tối thiểu 2 ký tự).",
+  "authErrValPasswordTooShort": "Mật khẩu phải có ít nhất 8 ký tự.",
+  "authErrAccountLocked": "Tài khoản tạm thời bị khoá trong {minutes} phút do đăng nhập sai quá nhiều lần.",
+  "@authErrAccountLocked": {
+    "placeholders": {
+      "minutes": { "type": "int" }
+    }
+  },
+  "authErrLoginFailedWithRemaining": "Email hoặc mật khẩu không đúng. Còn {remaining} lần thử.",
+  "@authErrLoginFailedWithRemaining": {
+    "placeholders": {
+      "remaining": { "type": "int" }
+    }
+  },
+  "authErrLoginFailedLocked": "Đăng nhập sai quá nhiều lần. Tài khoản bị khoá trong {minutes} phút.",
+  "@authErrLoginFailedLocked": {
+    "placeholders": {
+      "minutes": { "type": "int" }
+    }
+  },
+  "authErrTokenInvalid": "Token không hợp lệ.",
+  "authErrSessionNotFound": "Phiên không tìm thấy hoặc đã hết hạn.",
+  "authErrSessionInvalid": "Phiên không tồn tại hoặc đã hết hạn.",
+  "authErrSessionRevoked": "Phiên đã bị thu hồi.",
+  "authErrRefreshTokenReuse": "Cảnh báo bảo mật: phát hiện tái sử dụng refresh token. Tất cả phiên đã bị thu hồi.",
+  "authErrRefreshTokenInvalid": "Refresh token không hợp lệ.",
+  "authErrRefreshTokenRotated": "Refresh token đã được xoay vòng.",
+  "authErrTokenSessionMismatch": "Token không khớp với phiên.",
+  "authErrSocialEmailUnavailable": "Không thể lấy email từ tài khoản mạng xã hội.",
+  "authErrLoginCodeInvalid": "Mã đăng nhập không hợp lệ hoặc đã hết hạn.",
+  "authErrUserNotFound": "Không tìm thấy người dùng."
 }

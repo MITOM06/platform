@@ -7,6 +7,7 @@ import '../../../core/l10n/l10n_ext.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/pon_widgets.dart';
 import '../data/auth_repository.dart';
+import '../utils/auth_error.dart';
 
 class NewPasswordScreen extends ConsumerStatefulWidget {
   final String email;
@@ -60,11 +61,8 @@ class _NewPasswordScreenState extends ConsumerState<NewPasswordScreen> {
       }
     } on DioException catch (e) {
       if (mounted) {
-        final msg = e.response?.statusCode == 400
-            ? context.l10n.errOtpInvalidExpired
-            : context.l10n.errResetFailed;
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text(msg)));
+        final msg = authErrorToString(context, e);
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
       }
     } catch (_) {
       if (mounted) {

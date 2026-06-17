@@ -1317,4 +1317,119 @@ class AppLocalizationsZh extends AppLocalizations {
   @override
   String get legalTermsContent =>
       '使用我们的平台即表示您同意不参与任何滥用、骚扰或违法活动。我们保留暂停或终止违反这些条款的账户的权利。';
+
+  @override
+  String get authMsgLoginSuccess => '登录成功。';
+
+  @override
+  String get authMsgLogoutSuccess => '退出成功。';
+
+  @override
+  String get authMsgOtpSent => 'OTP已发送至您的邮箱。';
+
+  @override
+  String get authMsgOtpValid => 'OTP验证成功。';
+
+  @override
+  String get authMsgOtpResent => '新OTP已发送。';
+
+  @override
+  String get authMsgPasswordUpdated => '密码已成功更新，请重新登录。';
+
+  @override
+  String get authMsgRegisterSuccess => '注册成功，OTP已发送至您的邮箱。';
+
+  @override
+  String get authMsgAccountUnverifiedOtpSent => '账户尚未验证，新OTP已发送至您的邮箱。';
+
+  @override
+  String get authErrOtpInvalid => 'OTP验证码无效。';
+
+  @override
+  String get authErrOtpExpired => 'OTP已过期。';
+
+  @override
+  String get authErrOtpAttemptsExceeded => '错误次数过多，请重新申请OTP。';
+
+  @override
+  String authErrOtpWrongWithRemaining(int remaining) {
+    return 'OTP不正确，剩余$remaining次尝试。';
+  }
+
+  @override
+  String authErrOtpResendCooldown(int ttl) {
+    return '请等待$ttl秒后再申请新OTP。';
+  }
+
+  @override
+  String get authErrEmailDomainInvalid => '邮箱域名不存在或无MX记录。';
+
+  @override
+  String get authErrEmailNotFound => '系统中不存在该邮箱。';
+
+  @override
+  String get authErrEmailInUse => '该邮箱已被使用。';
+
+  @override
+  String get authErrValEmailInvalid => '邮箱格式无效。';
+
+  @override
+  String get authErrValEmailRequired => '邮箱为必填项。';
+
+  @override
+  String get authErrValDisplaynameRequired => '显示名称为必填项。';
+
+  @override
+  String get authErrValDisplaynameTooShort => '显示名称过短（至少2个字符）。';
+
+  @override
+  String get authErrValPasswordTooShort => '密码至少需要8个字符。';
+
+  @override
+  String authErrAccountLocked(int minutes) {
+    return '由于登录失败次数过多，账户已被暂时锁定$minutes分钟。';
+  }
+
+  @override
+  String authErrLoginFailedWithRemaining(int remaining) {
+    return '邮箱或密码不正确，剩余$remaining次尝试。';
+  }
+
+  @override
+  String authErrLoginFailedLocked(int minutes) {
+    return '登录失败次数过多，账户已锁定$minutes分钟。';
+  }
+
+  @override
+  String get authErrTokenInvalid => 'Token无效。';
+
+  @override
+  String get authErrSessionNotFound => '会话不存在或已过期。';
+
+  @override
+  String get authErrSessionInvalid => '会话不存在或已过期。';
+
+  @override
+  String get authErrSessionRevoked => '会话已被撤销。';
+
+  @override
+  String get authErrRefreshTokenReuse => '安全警告：检测到refresh token重用，所有会话已被撤销。';
+
+  @override
+  String get authErrRefreshTokenInvalid => 'Refresh token无效。';
+
+  @override
+  String get authErrRefreshTokenRotated => 'Refresh token已轮换。';
+
+  @override
+  String get authErrTokenSessionMismatch => 'Token与会话不匹配。';
+
+  @override
+  String get authErrSocialEmailUnavailable => '无法从社交账户获取邮箱。';
+
+  @override
+  String get authErrLoginCodeInvalid => '登录码无效或已过期。';
+
+  @override
+  String get authErrUserNotFound => '用户不存在。';
 }

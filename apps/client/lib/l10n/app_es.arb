@@ -442,5 +442,67 @@
   "legalUserRightsTitle": "4. Sus Derechos",
   "legalUserRightsContent": "Tiene derecho a acceder, corregir o eliminar sus datos personales. Puede eliminar su cuenta en cualquier momento a través de la configuración de la aplicación.",
   "legalTermsTitle": "5. Términos de Servicio",
-  "legalTermsContent": "Al usar nuestra plataforma, acepta no participar en actividades abusivas, de acoso o ilegales. Nos reservamos el derecho de suspender o cancelar cuentas que violen estos términos."
+  "legalTermsContent": "Al usar nuestra plataforma, acepta no participar en actividades abusivas, de acoso o ilegales. Nos reservamos el derecho de suspender o cancelar cuentas que violen estos términos.",
+
+  "authMsgLoginSuccess": "Inicio de sesión exitoso.",
+  "authMsgLogoutSuccess": "Cierre de sesión exitoso.",
+  "authMsgOtpSent": "Se ha enviado un OTP a su correo electrónico.",
+  "authMsgOtpValid": "OTP verificado correctamente.",
+  "authMsgOtpResent": "Se ha enviado un nuevo OTP.",
+  "authMsgPasswordUpdated": "Contraseña actualizada correctamente. Por favor, inicie sesión de nuevo.",
+  "authMsgRegisterSuccess": "Registro exitoso. Se ha enviado un OTP a su correo electrónico.",
+  "authMsgAccountUnverifiedOtpSent": "La cuenta aún no está verificada. Se ha enviado un nuevo OTP a su correo electrónico.",
+
+  "authErrOtpInvalid": "Código OTP inválido.",
+  "authErrOtpExpired": "El OTP ha expirado.",
+  "authErrOtpAttemptsExceeded": "Demasiados intentos incorrectos. Por favor, solicite un nuevo OTP.",
+  "authErrOtpWrongWithRemaining": "OTP incorrecto. Quedan {remaining} intento(s).",
+  "@authErrOtpWrongWithRemaining": {
+    "placeholders": {
+      "remaining": { "type": "int" }
+    }
+  },
+  "authErrOtpResendCooldown": "Por favor, espere {ttl} segundos antes de solicitar un nuevo OTP.",
+  "@authErrOtpResendCooldown": {
+    "placeholders": {
+      "ttl": { "type": "int" }
+    }
+  },
+  "authErrEmailDomainInvalid": "El dominio del correo no existe o no tiene registros MX.",
+  "authErrEmailNotFound": "El correo no existe en el sistema.",
+  "authErrEmailInUse": "Este correo ya está en uso.",
+  "authErrValEmailInvalid": "Formato de correo inválido.",
+  "authErrValEmailRequired": "El correo es obligatorio.",
+  "authErrValDisplaynameRequired": "El nombre de usuario es obligatorio.",
+  "authErrValDisplaynameTooShort": "El nombre de usuario es demasiado corto (mínimo 2 caracteres).",
+  "authErrValPasswordTooShort": "La contraseña debe tener al menos 8 caracteres.",
+  "authErrAccountLocked": "Cuenta bloqueada temporalmente durante {minutes} minuto(s) por demasiados intentos fallidos.",
+  "@authErrAccountLocked": {
+    "placeholders": {
+      "minutes": { "type": "int" }
+    }
+  },
+  "authErrLoginFailedWithRemaining": "Correo o contraseña incorrectos. Quedan {remaining} intento(s).",
+  "@authErrLoginFailedWithRemaining": {
+    "placeholders": {
+      "remaining": { "type": "int" }
+    }
+  },
+  "authErrLoginFailedLocked": "Demasiados intentos fallidos. Cuenta bloqueada durante {minutes} minuto(s).",
+  "@authErrLoginFailedLocked": {
+    "placeholders": {
+      "minutes": { "type": "int" }
+    }
+  },
+  "authErrTokenInvalid": "Token inválido.",
+  "authErrSessionNotFound": "Sesión no encontrada o expirada.",
+  "authErrSessionInvalid": "La sesión no existe o ha expirado.",
+  "authErrSessionRevoked": "La sesión ha sido revocada.",
+  "authErrRefreshTokenReuse": "Alerta de seguridad: se detectó reutilización del token de actualización. Todas las sesiones fueron revocadas.",
+  "authErrRefreshTokenInvalid": "Token de actualización inválido.",
+  "authErrRefreshTokenRotated": "El token de actualización ya ha sido rotado.",
+  "authErrTokenSessionMismatch": "El token no coincide con la sesión.",
+  "authErrSocialEmailUnavailable": "No se puede obtener el correo de la cuenta social.",
+  "authErrLoginCodeInvalid": "El código de inicio de sesión es inválido o ha expirado.",
+  "authErrUserNotFound": "Usuario no encontrado."
 }

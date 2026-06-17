@@ -442,5 +442,67 @@
   "legalUserRightsTitle": "4. 귀하의 권리",
   "legalUserRightsContent": "귀하는 개인 데이터에 대한 접근, 수정 또는 삭제 권리를 갖습니다. 언제든지 애플리케이션 설정을 통해 계정을 삭제할 수 있습니다.",
   "legalTermsTitle": "5. 서비스 이용약관",
-  "legalTermsContent": "당사 플랫폼을 사용함으로써 귀하는 학대, 괴롭힘 또는 불법 활동에 참여하지 않을 것에 동의합니다. 당사는 이러한 약관을 위반하는 계정을 정지하거나 종료할 권리를 보유합니다."
+  "legalTermsContent": "당사 플랫폼을 사용함으로써 귀하는 학대, 괴롭힘 또는 불법 활동에 참여하지 않을 것에 동의합니다. 당사는 이러한 약관을 위반하는 계정을 정지하거나 종료할 권리를 보유합니다.",
+
+  "authMsgLoginSuccess": "로그인에 성공했습니다.",
+  "authMsgLogoutSuccess": "로그아웃되었습니다.",
+  "authMsgOtpSent": "OTP가 이메일로 전송되었습니다.",
+  "authMsgOtpValid": "OTP 인증에 성공했습니다.",
+  "authMsgOtpResent": "새 OTP가 전송되었습니다.",
+  "authMsgPasswordUpdated": "비밀번호가 성공적으로 업데이트되었습니다. 다시 로그인하세요.",
+  "authMsgRegisterSuccess": "등록이 완료되었습니다. OTP가 이메일로 전송되었습니다.",
+  "authMsgAccountUnverifiedOtpSent": "계정이 아직 인증되지 않았습니다. 새 OTP가 이메일로 전송되었습니다.",
+
+  "authErrOtpInvalid": "OTP 코드가 유효하지 않습니다.",
+  "authErrOtpExpired": "OTP가 만료되었습니다.",
+  "authErrOtpAttemptsExceeded": "시도 횟수를 초과했습니다. 새 OTP를 요청하세요.",
+  "authErrOtpWrongWithRemaining": "OTP가 틀렸습니다. 남은 시도 횟수: {remaining}회.",
+  "@authErrOtpWrongWithRemaining": {
+    "placeholders": {
+      "remaining": { "type": "int" }
+    }
+  },
+  "authErrOtpResendCooldown": "새 OTP를 요청하기 전에 {ttl}초 기다려 주세요.",
+  "@authErrOtpResendCooldown": {
+    "placeholders": {
+      "ttl": { "type": "int" }
+    }
+  },
+  "authErrEmailDomainInvalid": "이메일 도메인이 존재하지 않거나 MX 레코드가 없습니다.",
+  "authErrEmailNotFound": "시스템에 해당 이메일이 존재하지 않습니다.",
+  "authErrEmailInUse": "이 이메일은 이미 사용 중입니다.",
+  "authErrValEmailInvalid": "이메일 형식이 올바르지 않습니다.",
+  "authErrValEmailRequired": "이메일은 필수 항목입니다.",
+  "authErrValDisplaynameRequired": "표시 이름은 필수 항목입니다.",
+  "authErrValDisplaynameTooShort": "표시 이름이 너무 짧습니다 (최소 2자).",
+  "authErrValPasswordTooShort": "비밀번호는 최소 8자 이상이어야 합니다.",
+  "authErrAccountLocked": "로그인 실패 횟수가 너무 많아 계정이 {minutes}분 동안 잠겼습니다.",
+  "@authErrAccountLocked": {
+    "placeholders": {
+      "minutes": { "type": "int" }
+    }
+  },
+  "authErrLoginFailedWithRemaining": "이메일 또는 비밀번호가 올바르지 않습니다. 남은 시도 횟수: {remaining}회.",
+  "@authErrLoginFailedWithRemaining": {
+    "placeholders": {
+      "remaining": { "type": "int" }
+    }
+  },
+  "authErrLoginFailedLocked": "로그인 실패 횟수가 너무 많습니다. 계정이 {minutes}분 동안 잠겼습니다.",
+  "@authErrLoginFailedLocked": {
+    "placeholders": {
+      "minutes": { "type": "int" }
+    }
+  },
+  "authErrTokenInvalid": "토큰이 유효하지 않습니다.",
+  "authErrSessionNotFound": "세션을 찾을 수 없거나 만료되었습니다.",
+  "authErrSessionInvalid": "세션이 존재하지 않거나 만료되었습니다.",
+  "authErrSessionRevoked": "세션이 취소되었습니다.",
+  "authErrRefreshTokenReuse": "보안 경고: 리프레시 토큰 재사용이 감지되었습니다. 모든 세션이 취소되었습니다.",
+  "authErrRefreshTokenInvalid": "리프레시 토큰이 유효하지 않습니다.",
+  "authErrRefreshTokenRotated": "리프레시 토큰이 이미 교체되었습니다.",
+  "authErrTokenSessionMismatch": "토큰이 세션과 일치하지 않습니다.",
+  "authErrSocialEmailUnavailable": "소셜 계정에서 이메일을 가져올 수 없습니다.",
+  "authErrLoginCodeInvalid": "로그인 코드가 유효하지 않거나 만료되었습니다.",
+  "authErrUserNotFound": "사용자를 찾을 수 없습니다."
 }

@@ -442,5 +442,67 @@
   "legalUserRightsTitle": "4. Vos Droits",
   "legalUserRightsContent": "Vous avez le droit d'accéder, de corriger ou de supprimer vos données personnelles. Vous pouvez supprimer votre compte à tout moment via les paramètres de l'application.",
   "legalTermsTitle": "5. Conditions d'Utilisation",
-  "legalTermsContent": "En utilisant notre plateforme, vous acceptez de ne pas vous engager dans des activités abusives, harcelantes ou illégales. Nous nous réservons le droit de suspendre ou de résilier les comptes qui enfreignent ces conditions."
+  "legalTermsContent": "En utilisant notre plateforme, vous acceptez de ne pas vous engager dans des activités abusives, harcelantes ou illégales. Nous nous réservons le droit de suspendre ou de résilier les comptes qui enfreignent ces conditions.",
+
+  "authMsgLoginSuccess": "Connexion réussie.",
+  "authMsgLogoutSuccess": "Déconnexion réussie.",
+  "authMsgOtpSent": "Un OTP a été envoyé à votre adresse e-mail.",
+  "authMsgOtpValid": "OTP vérifié avec succès.",
+  "authMsgOtpResent": "Un nouvel OTP a été envoyé.",
+  "authMsgPasswordUpdated": "Mot de passe mis à jour avec succès. Veuillez vous reconnecter.",
+  "authMsgRegisterSuccess": "Inscription réussie. Un OTP a été envoyé à votre adresse e-mail.",
+  "authMsgAccountUnverifiedOtpSent": "Compte non encore vérifié. Un nouvel OTP a été envoyé à votre adresse e-mail.",
+
+  "authErrOtpInvalid": "Code OTP invalide.",
+  "authErrOtpExpired": "L'OTP a expiré.",
+  "authErrOtpAttemptsExceeded": "Trop de tentatives incorrectes. Veuillez demander un nouvel OTP.",
+  "authErrOtpWrongWithRemaining": "OTP incorrect. {remaining} tentative(s) restante(s).",
+  "@authErrOtpWrongWithRemaining": {
+    "placeholders": {
+      "remaining": { "type": "int" }
+    }
+  },
+  "authErrOtpResendCooldown": "Veuillez attendre {ttl} secondes avant de demander un nouvel OTP.",
+  "@authErrOtpResendCooldown": {
+    "placeholders": {
+      "ttl": { "type": "int" }
+    }
+  },
+  "authErrEmailDomainInvalid": "Le domaine de l'e-mail n'existe pas ou n'a pas d'enregistrements MX.",
+  "authErrEmailNotFound": "Cet e-mail n'existe pas dans le système.",
+  "authErrEmailInUse": "Cet e-mail est déjà utilisé.",
+  "authErrValEmailInvalid": "Format d'e-mail invalide.",
+  "authErrValEmailRequired": "L'e-mail est obligatoire.",
+  "authErrValDisplaynameRequired": "Le nom d'affichage est obligatoire.",
+  "authErrValDisplaynameTooShort": "Le nom d'affichage est trop court (minimum 2 caractères).",
+  "authErrValPasswordTooShort": "Le mot de passe doit contenir au moins 8 caractères.",
+  "authErrAccountLocked": "Compte temporairement bloqué pendant {minutes} minute(s) en raison de trop nombreuses tentatives échouées.",
+  "@authErrAccountLocked": {
+    "placeholders": {
+      "minutes": { "type": "int" }
+    }
+  },
+  "authErrLoginFailedWithRemaining": "E-mail ou mot de passe incorrect. {remaining} tentative(s) restante(s).",
+  "@authErrLoginFailedWithRemaining": {
+    "placeholders": {
+      "remaining": { "type": "int" }
+    }
+  },
+  "authErrLoginFailedLocked": "Trop de tentatives échouées. Compte bloqué pendant {minutes} minute(s).",
+  "@authErrLoginFailedLocked": {
+    "placeholders": {
+      "minutes": { "type": "int" }
+    }
+  },
+  "authErrTokenInvalid": "Token invalide.",
+  "authErrSessionNotFound": "Session introuvable ou expirée.",
+  "authErrSessionInvalid": "La session n'existe pas ou a expiré.",
+  "authErrSessionRevoked": "La session a été révoquée.",
+  "authErrRefreshTokenReuse": "Alerte de sécurité : réutilisation du token de rafraîchissement détectée. Toutes les sessions ont été révoquées.",
+  "authErrRefreshTokenInvalid": "Token de rafraîchissement invalide.",
+  "authErrRefreshTokenRotated": "Le token de rafraîchissement a déjà été renouvelé.",
+  "authErrTokenSessionMismatch": "Le token ne correspond pas à la session.",
+  "authErrSocialEmailUnavailable": "Impossible de récupérer l'e-mail depuis le compte social.",
+  "authErrLoginCodeInvalid": "Le code de connexion est invalide ou a expiré.",
+  "authErrUserNotFound": "Utilisateur introuvable."
 }

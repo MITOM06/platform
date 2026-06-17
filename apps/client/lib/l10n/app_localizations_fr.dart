@@ -1351,4 +1351,134 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get legalTermsContent =>
       'En utilisant notre plateforme, vous acceptez de ne pas vous engager dans des activités abusives, harcelantes ou illégales. Nous nous réservons le droit de suspendre ou de résilier les comptes qui enfreignent ces conditions.';
+
+  @override
+  String get authMsgLoginSuccess => 'Connexion réussie.';
+
+  @override
+  String get authMsgLogoutSuccess => 'Déconnexion réussie.';
+
+  @override
+  String get authMsgOtpSent => 'Un OTP a été envoyé à votre adresse e-mail.';
+
+  @override
+  String get authMsgOtpValid => 'OTP vérifié avec succès.';
+
+  @override
+  String get authMsgOtpResent => 'Un nouvel OTP a été envoyé.';
+
+  @override
+  String get authMsgPasswordUpdated =>
+      'Mot de passe mis à jour avec succès. Veuillez vous reconnecter.';
+
+  @override
+  String get authMsgRegisterSuccess =>
+      'Inscription réussie. Un OTP a été envoyé à votre adresse e-mail.';
+
+  @override
+  String get authMsgAccountUnverifiedOtpSent =>
+      'Compte non encore vérifié. Un nouvel OTP a été envoyé à votre adresse e-mail.';
+
+  @override
+  String get authErrOtpInvalid => 'Code OTP invalide.';
+
+  @override
+  String get authErrOtpExpired => 'L\'OTP a expiré.';
+
+  @override
+  String get authErrOtpAttemptsExceeded =>
+      'Trop de tentatives incorrectes. Veuillez demander un nouvel OTP.';
+
+  @override
+  String authErrOtpWrongWithRemaining(int remaining) {
+    return 'OTP incorrect. $remaining tentative(s) restante(s).';
+  }
+
+  @override
+  String authErrOtpResendCooldown(int ttl) {
+    return 'Veuillez attendre $ttl secondes avant de demander un nouvel OTP.';
+  }
+
+  @override
+  String get authErrEmailDomainInvalid =>
+      'Le domaine de l\'e-mail n\'existe pas ou n\'a pas d\'enregistrements MX.';
+
+  @override
+  String get authErrEmailNotFound =>
+      'Cet e-mail n\'existe pas dans le système.';
+
+  @override
+  String get authErrEmailInUse => 'Cet e-mail est déjà utilisé.';
+
+  @override
+  String get authErrValEmailInvalid => 'Format d\'e-mail invalide.';
+
+  @override
+  String get authErrValEmailRequired => 'L\'e-mail est obligatoire.';
+
+  @override
+  String get authErrValDisplaynameRequired =>
+      'Le nom d\'affichage est obligatoire.';
+
+  @override
+  String get authErrValDisplaynameTooShort =>
+      'Le nom d\'affichage est trop court (minimum 2 caractères).';
+
+  @override
+  String get authErrValPasswordTooShort =>
+      'Le mot de passe doit contenir au moins 8 caractères.';
+
+  @override
+  String authErrAccountLocked(int minutes) {
+    return 'Compte temporairement bloqué pendant $minutes minute(s) en raison de trop nombreuses tentatives échouées.';
+  }
+
+  @override
+  String authErrLoginFailedWithRemaining(int remaining) {
+    return 'E-mail ou mot de passe incorrect. $remaining tentative(s) restante(s).';
+  }
+
+  @override
+  String authErrLoginFailedLocked(int minutes) {
+    return 'Trop de tentatives échouées. Compte bloqué pendant $minutes minute(s).';
+  }
+
+  @override
+  String get authErrTokenInvalid => 'Token invalide.';
+
+  @override
+  String get authErrSessionNotFound => 'Session introuvable ou expirée.';
+
+  @override
+  String get authErrSessionInvalid => 'La session n\'existe pas ou a expiré.';
+
+  @override
+  String get authErrSessionRevoked => 'La session a été révoquée.';
+
+  @override
+  String get authErrRefreshTokenReuse =>
+      'Alerte de sécurité : réutilisation du token de rafraîchissement détectée. Toutes les sessions ont été révoquées.';
+
+  @override
+  String get authErrRefreshTokenInvalid =>
+      'Token de rafraîchissement invalide.';
+
+  @override
+  String get authErrRefreshTokenRotated =>
+      'Le token de rafraîchissement a déjà été renouvelé.';
+
+  @override
+  String get authErrTokenSessionMismatch =>
+      'Le token ne correspond pas à la session.';
+
+  @override
+  String get authErrSocialEmailUnavailable =>
+      'Impossible de récupérer l\'e-mail depuis le compte social.';
+
+  @override
+  String get authErrLoginCodeInvalid =>
+      'Le code de connexion est invalide ou a expiré.';
+
+  @override
+  String get authErrUserNotFound => 'Utilisateur introuvable.';
 }

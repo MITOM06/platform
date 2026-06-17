@@ -1320,4 +1320,121 @@ class AppLocalizationsKo extends AppLocalizations {
   @override
   String get legalTermsContent =>
       '당사 플랫폼을 사용함으로써 귀하는 학대, 괴롭힘 또는 불법 활동에 참여하지 않을 것에 동의합니다. 당사는 이러한 약관을 위반하는 계정을 정지하거나 종료할 권리를 보유합니다.';
+
+  @override
+  String get authMsgLoginSuccess => '로그인에 성공했습니다.';
+
+  @override
+  String get authMsgLogoutSuccess => '로그아웃되었습니다.';
+
+  @override
+  String get authMsgOtpSent => 'OTP가 이메일로 전송되었습니다.';
+
+  @override
+  String get authMsgOtpValid => 'OTP 인증에 성공했습니다.';
+
+  @override
+  String get authMsgOtpResent => '새 OTP가 전송되었습니다.';
+
+  @override
+  String get authMsgPasswordUpdated => '비밀번호가 성공적으로 업데이트되었습니다. 다시 로그인하세요.';
+
+  @override
+  String get authMsgRegisterSuccess => '등록이 완료되었습니다. OTP가 이메일로 전송되었습니다.';
+
+  @override
+  String get authMsgAccountUnverifiedOtpSent =>
+      '계정이 아직 인증되지 않았습니다. 새 OTP가 이메일로 전송되었습니다.';
+
+  @override
+  String get authErrOtpInvalid => 'OTP 코드가 유효하지 않습니다.';
+
+  @override
+  String get authErrOtpExpired => 'OTP가 만료되었습니다.';
+
+  @override
+  String get authErrOtpAttemptsExceeded => '시도 횟수를 초과했습니다. 새 OTP를 요청하세요.';
+
+  @override
+  String authErrOtpWrongWithRemaining(int remaining) {
+    return 'OTP가 틀렸습니다. 남은 시도 횟수: $remaining회.';
+  }
+
+  @override
+  String authErrOtpResendCooldown(int ttl) {
+    return '새 OTP를 요청하기 전에 $ttl초 기다려 주세요.';
+  }
+
+  @override
+  String get authErrEmailDomainInvalid => '이메일 도메인이 존재하지 않거나 MX 레코드가 없습니다.';
+
+  @override
+  String get authErrEmailNotFound => '시스템에 해당 이메일이 존재하지 않습니다.';
+
+  @override
+  String get authErrEmailInUse => '이 이메일은 이미 사용 중입니다.';
+
+  @override
+  String get authErrValEmailInvalid => '이메일 형식이 올바르지 않습니다.';
+
+  @override
+  String get authErrValEmailRequired => '이메일은 필수 항목입니다.';
+
+  @override
+  String get authErrValDisplaynameRequired => '표시 이름은 필수 항목입니다.';
+
+  @override
+  String get authErrValDisplaynameTooShort => '표시 이름이 너무 짧습니다 (최소 2자).';
+
+  @override
+  String get authErrValPasswordTooShort => '비밀번호는 최소 8자 이상이어야 합니다.';
+
+  @override
+  String authErrAccountLocked(int minutes) {
+    return '로그인 실패 횟수가 너무 많아 계정이 $minutes분 동안 잠겼습니다.';
+  }
+
+  @override
+  String authErrLoginFailedWithRemaining(int remaining) {
+    return '이메일 또는 비밀번호가 올바르지 않습니다. 남은 시도 횟수: $remaining회.';
+  }
+
+  @override
+  String authErrLoginFailedLocked(int minutes) {
+    return '로그인 실패 횟수가 너무 많습니다. 계정이 $minutes분 동안 잠겼습니다.';
+  }
+
+  @override
+  String get authErrTokenInvalid => '토큰이 유효하지 않습니다.';
+
+  @override
+  String get authErrSessionNotFound => '세션을 찾을 수 없거나 만료되었습니다.';
+
+  @override
+  String get authErrSessionInvalid => '세션이 존재하지 않거나 만료되었습니다.';
+
+  @override
+  String get authErrSessionRevoked => '세션이 취소되었습니다.';
+
+  @override
+  String get authErrRefreshTokenReuse =>
+      '보안 경고: 리프레시 토큰 재사용이 감지되었습니다. 모든 세션이 취소되었습니다.';
+
+  @override
+  String get authErrRefreshTokenInvalid => '리프레시 토큰이 유효하지 않습니다.';
+
+  @override
+  String get authErrRefreshTokenRotated => '리프레시 토큰이 이미 교체되었습니다.';
+
+  @override
+  String get authErrTokenSessionMismatch => '토큰이 세션과 일치하지 않습니다.';
+
+  @override
+  String get authErrSocialEmailUnavailable => '소셜 계정에서 이메일을 가져올 수 없습니다.';
+
+  @override
+  String get authErrLoginCodeInvalid => '로그인 코드가 유효하지 않거나 만료되었습니다.';
+
+  @override
+  String get authErrUserNotFound => '사용자를 찾을 수 없습니다.';
 }
