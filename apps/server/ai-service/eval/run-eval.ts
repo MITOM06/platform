@@ -243,8 +243,26 @@ async function main(): Promise<void> {
 
   for (const evalCase of dataset) {
     let caseResult: CaseResult;
+
+    // Stage 1: Call SUT
+    let answer: string;
     try {
-      const answer = await callSut(client, evalCase);
+      answer = await callSut(client, evalCase);
+    } catch (err) {
+      const errorMsg = err instanceof Error ? err.message : String(err);
+      caseResult = {
+        status: 'error',
+        id: evalCase.id,
+        category: evalCase.category,
+        error: `SUT call failed: ${errorMsg}`,
+      };
+      results.push(caseResult);
+      printRow(caseResult);
+      continue;
+    }
+
+    // Stage 2: Call Judge
+    try {
       const judgment = await callJudge(client, evalCase, answer);
       caseResult = {
         status: judgment.pass ? 'pass' : 'fail',
@@ -259,7 +277,7 @@ async function main(): Promise<void> {
         status: 'error',
         id: evalCase.id,
         category: evalCase.category,
-        error: errorMsg,
+        error: `Judge call failed: ${errorMsg}`,
       };
     }
 

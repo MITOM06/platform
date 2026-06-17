@@ -11,7 +11,7 @@
     "test": "jest",
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage",
-    "eval": "ts-node eval/run-eval.ts"
+    "eval": "ts-node --transpile-only eval/run-eval.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.104.2",
