@@ -58,9 +58,6 @@ class _TestableConversationsNotifier extends ConversationsNotifier {
     // Skip STOMP connect + FlutterSecureStorage — just load conversations.
     return mockRepo.listConversations();
   }
-
-  /// Expose internal method for testing deleteConversation (optimistic update).
-  Future<void> testDelete(String id) => deleteConversation(id);
 }
 
 // ---------------------------------------------------------------------------
@@ -70,7 +67,7 @@ class _TestableConversationsNotifier extends ConversationsNotifier {
 ConversationModel _fakeConversation(String id) => ConversationModel(
       id: id,
       type: 'direct',
-      participants: ['user1', 'user2'],
+      participants: const ['user1', 'user2'],
       unreadCount: 0,
       createdAt: DateTime(2024),
     );
@@ -177,5 +174,14 @@ void main() {
 
     // _silentRefetch calls listConversations again — verify it was called twice.
     verify(() => mockRepo.listConversations()).called(greaterThanOrEqualTo(2));
+
+    // The rollback must actually restore the original list — not merely
+    // trigger a re-fetch. Assert both conversations are present again so a
+    // broken _silentRefetch (re-fetch without state update) would fail here.
+    final afterRollback =
+        container.read(conversationsNotifierProvider).valueOrNull;
+    expect(afterRollback, isNotNull);
+    expect(afterRollback!.map((c) => c.id), containsAll(['conv-X', 'conv-Y']));
+    expect(afterRollback, hasLength(2));
   });
 }
