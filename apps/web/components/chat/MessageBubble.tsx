@@ -2,7 +2,7 @@
 
 import { useState, useRef, memo } from 'react'
 import { useTranslations, useLocale } from 'next-intl'
-import { Phone, Video, Check, CheckCheck } from 'lucide-react'
+import { Phone, Video, Check, CheckCheck, AlertTriangle } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { firstUrl } from '@/lib/media'
 import { MessageActions } from './MessageActions'
@@ -231,6 +231,24 @@ const MessageBubbleInner = function MessageBubble({
       break
     case 'voice':
       body = <VoiceMessage content={message.content} isOwn={isOwn} />
+      break
+    case 'ai':
+      if (message.content === '__AI_ERROR__') {
+        body = (
+          <span className="flex items-center gap-1.5 text-sm text-destructive">
+            <AlertTriangle className="size-4 shrink-0" />
+            {t('aiError')}
+          </span>
+        )
+      } else if (message.content === '__AI_QUOTA__') {
+        body = (
+          <p className="text-sm italic text-muted-foreground">{t('aiQuotaExceeded')}</p>
+        )
+      } else {
+        body = (
+          <p className="whitespace-pre-wrap leading-relaxed">{message.content}</p>
+        )
+      }
       break
     default:
       body = (
