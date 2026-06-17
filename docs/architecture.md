@@ -169,8 +169,8 @@ Environment variables controlling routing (all in `apps/server/ai-service/.env`)
 | Variable | Default | Effect |
 |----------|---------|--------|
 | `ANTHROPIC_ROUTER_ENABLED` | `true` | `false` forces Opus for every request |
-| `ANTHROPIC_ROUTER_SIMPLE_MODEL` | `claude-haiku-4-5` | Model for simple tier |
-| `ANTHROPIC_ROUTER_MID_MODEL` | `claude-sonnet-4-6` | Model for mid tier |
+| `ANTHROPIC_SIMPLE_MODEL` | `claude-haiku-4-5` | Model for simple tier |
+| `ANTHROPIC_MID_MODEL` | `claude-sonnet-4-6` | Model for mid tier |
 | `ANTHROPIC_MODEL` | `claude-opus-4-8` | Model for complex tier (also used when router is off) |
 | `ANTHROPIC_ROUTER_SIMPLE_MAX_CHARS` | `280` | Char threshold for simple tier |
 | `ANTHROPIC_ROUTER_MID_MAX_CHARS` | `1200` | Char threshold for mid tier |
@@ -184,6 +184,7 @@ sequenceDiagram
     participant C as Client
     participant CS as chat-service
     participant GFS as GridFS<br/>(MongoDB)
+    participant MDB as MongoDB
     participant RD as Redis kb:process
     participant AI as ai-service
     participant OAI as OpenAI Embeddings
@@ -206,7 +207,7 @@ sequenceDiagram
 
 When the AI later answers a question:
 1. The user's query is embedded (same OpenAI model).
-2. Qdrant returns the top-k chunks with cosine similarity > 0.3.
+2. Qdrant returns the top-k chunks with cosine similarity > 0.5.
 3. Chunks are injected as grounding context into the Claude prompt.
 4. The AI response includes citation cards referencing the source document.
 
