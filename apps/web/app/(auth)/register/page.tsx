@@ -11,6 +11,7 @@ import { Eye, EyeOff } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { authService } from '@/lib/api/auth'
 import { maybeRequestNotificationPermission } from '@/lib/notifications'
+import { parseAuthError, authCodeToI18nKey } from '@/lib/auth/auth-error'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -74,16 +75,8 @@ export default function RegisterPage() {
       void maybeRequestNotificationPermission()
       router.push(`/verify-otp?email=${encodeURIComponent(data.email)}`)
     } catch (err: unknown) {
-      const e = err as { response?: { status?: number; data?: { message?: string } } }
-      const status = e?.response?.status
-      const backendMsg = e?.response?.data?.message ?? ''
-      if (status === 400 && backendMsg.toLowerCase().includes('domain')) {
-        toast.error(t('register.emailDomainInvalid'))
-      } else if (status === 409) {
-        toast.error(t('register.emailExists'))
-      } else {
-        toast.error(backendMsg || t('register.error'))
-      }
+      const { code, params } = parseAuthError(err)
+      toast.error(t(authCodeToI18nKey(code), params as Record<string, string | number>))
     }
   }
 
