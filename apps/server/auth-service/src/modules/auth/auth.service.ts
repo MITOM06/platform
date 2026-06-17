@@ -19,6 +19,7 @@ import { LoginDto } from './dto/login.dto';
 import { MailService } from '../Email/mail.service';
 import { BadRequestException } from '@nestjs/common/exceptions/bad-request.exception';
 import { Response } from 'express';
+import { AuthCode } from '../../common/auth-code.enum';
 
 @Injectable()
 export class AuthService {
@@ -104,9 +105,7 @@ export class AuthService {
     provider: string,
   ): Promise<string> {
     if (!profile?.email) {
-      throw new UnauthorizedException(
-        'Không thể lấy email từ tài khoản mạng xã hội.',
-      );
+      throw new UnauthorizedException({ code: AuthCode.SOCIAL_EMAIL_UNAVAILABLE });
     }
 
     // 1. Tìm theo socialId trước
@@ -148,9 +147,7 @@ export class AuthService {
     if (isLocked) {
       const ttl = await this.redis.ttl(lockoutKey);
       const minutes = Math.ceil(ttl / 60);
-      throw new UnauthorizedException(
-        `Tài khoản bị tạm khóa ${minutes} phút do nhập sai quá nhiều lần.`,
-      );
+      throw new UnauthorizedException({ code: AuthCode.ACCOUNT_LOCKED, params: { minutes } });
     }
   }
 
@@ -175,15 +172,17 @@ export class AuthService {
     if (attempts >= maxAttempts) {
       await this.redis.set(`lockout:${email}`, '1', 'EX', lockoutDuration);
       await this.redis.del(attemptKey);
-      throw new UnauthorizedException(
-        `Bạn đã nhập sai ${maxAttempts} lần. Vui lòng thử lại sau ${Math.ceil(lockoutDuration / 60)} phút.`,
-      );
+      throw new UnauthorizedException({
+        code: AuthCode.LOGIN_FAILED_LOCKED,
+        params: { maxAttempts, minutes: Math.ceil(lockoutDuration / 60) },
+      });
     }
 
     const remaining = maxAttempts - attempts;
-    throw new UnauthorizedException(
-      `Email hoặc mật khẩu không chính xác. Còn ${remaining} lần thử.`,
-    );
+    throw new UnauthorizedException({
+      code: AuthCode.LOGIN_FAILED_WITH_REMAINING,
+      params: { remaining },
+    });
   }
 
   // ===================== LOGIN / LOGOUT =====================
@@ -214,7 +213,7 @@ export class AuthService {
     await this.redis.del(`failed_attempts:${dto.email}`);
 
     return {
-      message: 'Đăng nhập thành công',
+      code: AuthCode.LOGIN_SUCCESS,
       accessToken,
       refreshToken,
       sid,
@@ -230,21 +229,21 @@ export class AuthService {
     await this.session.revokeSession(userId, sid);
     return {
       success: true,
-      message: 'Đăng xuất thành công',
+      code: AuthCode.LOGOUT_SUCCESS,
     };
   }
 
   // ===================== FORGOT / RESET PASSWORD =====================
   async forgotPassword(email: string) {
     const user = await this.usersService.findByEmail(email);
-    if (!user) throw new NotFoundException('Email không tồn tại trên hệ thống');
+    if (!user) throw new NotFoundException({ code: AuthCode.EMAIL_NOT_FOUND });
 
     const otp = this.generateOtp();
     const expires = new Date(Date.now() + 5 * 60 * 1000);
 
     await this.usersService.updateOtp(user._id, otp, expires);
     await this.mailService.sendOtpEmail(email, otp);
-    return { success: true, message: 'OTP đã được gửi' };
+    return { success: true, code: AuthCode.OTP_SENT };
   }
 
   async verifyOtp(email: string, otp: string) {
@@ -260,32 +259,31 @@ export class AuthService {
     }
 
     if (attempts > maxAttempts) {
-      throw new BadRequestException(
-        'Nhập sai quá nhiều lần. Vui lòng yêu cầu gửi lại OTP.',
-      );
+      throw new BadRequestException({ code: AuthCode.OTP_ATTEMPTS_EXCEEDED });
     }
 
     const user = await this.usersService.findByEmail(email);
 
     if (!user || !user.otpCode) {
-      throw new BadRequestException('Mã xác thực không hợp lệ');
+      throw new BadRequestException({ code: AuthCode.OTP_INVALID });
     }
 
     if (!user.otpExpires || new Date() > user.otpExpires) {
-      throw new BadRequestException('Mã xác thực đã hết hạn');
+      throw new BadRequestException({ code: AuthCode.OTP_EXPIRED });
     }
 
     if (user.otpCode !== otp) {
       const remaining = maxAttempts - attempts;
-      throw new BadRequestException(
-        `Mã xác thực không đúng. Còn ${remaining} lần thử`,
-      );
+      throw new BadRequestException({
+        code: AuthCode.OTP_WRONG_WITH_REMAINING,
+        params: { remaining },
+      });
     }
 
-    // ✅ OTP đúng → reset counter + mark verified
+    // OTP correct → reset counter + mark verified
     await this.redis.del(attemptKey);
     await this.usersService.setVerified(user._id.toString());
-    return { success: true, message: 'Mã xác thực hợp lệ' };
+    return { success: true, code: AuthCode.OTP_VALID };
   }
 
   async resetPassword(email: string, otp: string, newPass: string) {
@@ -293,7 +291,7 @@ export class AuthService {
     await this.verifyOtp(email, otp);
 
     const user = await this.usersService.findByEmail(email);
-    if (!user) throw new NotFoundException('User không tìm thấy');
+    if (!user) throw new NotFoundException({ code: AuthCode.USER_NOT_FOUND });
 
     const salt = await bcrypt.genSalt(10);
     const hashedPass = await bcrypt.hash(newPass, salt);
@@ -306,7 +304,7 @@ export class AuthService {
 
     return {
       success: true,
-      message: 'Mật khẩu đã được cập nhật thành công. Vui lòng đăng nhập lại.',
+      code: AuthCode.PASSWORD_UPDATED,
     };
   }
 
@@ -331,9 +329,7 @@ export class AuthService {
     const userId = await this.redis.get(key);
 
     if (!userId) {
-      throw new UnauthorizedException(
-        'Mã xác nhận không hợp lệ hoặc đã hết hạn',
-      );
+      throw new UnauthorizedException({ code: AuthCode.LOGIN_CODE_INVALID });
     }
 
     await this.redis.del(key);
@@ -391,16 +387,15 @@ export class AuthService {
     const existingUser = await this.usersService.findByEmail(dto.email);
     if (existingUser) {
       if (existingUser.isVerified) {
-        throw new ConflictException('Email này đã được sử dụng');
+        throw new ConflictException({ code: AuthCode.EMAIL_IN_USE });
       }
-      // Tài khoản tồn tại nhưng chưa verify → gửi lại OTP thay vì báo lỗi
+      // Account exists but unverified → resend OTP instead of erroring
       const otp = this.generateOtp();
       const expires = new Date(Date.now() + 5 * 60 * 1000);
       await this.usersService.updateOtp(existingUser._id, otp, expires);
       await this.mailService.sendOtpEmail(dto.email, otp);
       return {
-        message:
-          'Tài khoản chưa xác thực. Mã OTP mới đã gửi tới email của bạn.',
+        code: AuthCode.ACCOUNT_UNVERIFIED_OTP_SENT,
         userId: existingUser._id,
       };
     }
@@ -421,7 +416,7 @@ export class AuthService {
     await this.mailService.sendOtpEmail(dto.email, otp);
 
     return {
-      message: 'Đăng ký thành công. Mã OTP đã gửi tới email của bạn.',
+      code: AuthCode.REGISTER_SUCCESS,
       userId: user._id,
     };
   }
@@ -435,13 +430,11 @@ export class AuthService {
     const existing = await this.redis.get(cooldownKey);
     if (existing) {
       const ttl = await this.redis.ttl(cooldownKey);
-      throw new BadRequestException(
-        `Vui lòng đợi ${ttl} giây trước khi gửi lại.`,
-      );
+      throw new BadRequestException({ code: AuthCode.OTP_RESEND_COOLDOWN, params: { ttl } });
     }
 
     const user = await this.usersService.findByEmail(email);
-    if (!user) throw new NotFoundException('Email không tồn tại trên hệ thống');
+    if (!user) throw new NotFoundException({ code: AuthCode.EMAIL_NOT_FOUND });
 
     const otp = this.generateOtp();
     const expires = new Date(Date.now() + 5 * 60 * 1000);
@@ -452,6 +445,6 @@ export class AuthService {
     await this.redis.del(`otp_attempts:${email}`);
     await this.redis.set(cooldownKey, '1', 'EX', cooldownTTL);
 
-    return { success: true, message: 'Mã OTP mới đã được gửi.' };
+    return { success: true, code: AuthCode.OTP_RESENT };
   }
 }

@@ -1,15 +1,16 @@
 import { IsEmail, IsNotEmpty, IsString, MinLength } from 'class-validator';
+import { AuthCode } from '../../../common/auth-code.enum';
 
 export class RegisterDto {
   @IsString()
-  @IsNotEmpty({ message: 'Tên hiển thị không được để trống' })
-  @MinLength(2, { message: 'Tên hiển thị quá ngắn' })
+  @IsNotEmpty({ message: AuthCode.VAL_DISPLAYNAME_REQUIRED })
+  @MinLength(2, { message: AuthCode.VAL_DISPLAYNAME_TOO_SHORT })
   displayName: string;
 
-  @IsEmail({}, { message: 'Email không đúng định dạng' })
+  @IsEmail({}, { message: AuthCode.VAL_EMAIL_INVALID })
   email: string;
 
   @IsString()
-  @MinLength(8, { message: 'Mật khẩu phải từ 8 ký tự để đảm bảo bảo mật' }) // Nâng lên 8 ký tự cho pro
+  @MinLength(8, { message: AuthCode.VAL_PASSWORD_TOO_SHORT })
   password: string;
 }

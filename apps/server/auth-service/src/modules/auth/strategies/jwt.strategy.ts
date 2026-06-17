@@ -4,6 +4,7 @@ import { ExtractJwt, Strategy } from 'passport-jwt';
 import { ConfigService } from '@nestjs/config';
 import { REDIS_CLIENT, Redis } from '@platform/database';
 import { Request } from 'express';
+import { AuthCode } from '../../../common/auth-code.enum';
 
 export interface JwtPayload {
   sub: string;   // userId
@@ -34,31 +35,28 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
     // payload = { sub: userId, sid: sessionId, iat, exp }
 
     if (!payload?.sub || !payload?.sid) {
-      throw new UnauthorizedException('Token không hợp lệ');
+      throw new UnauthorizedException({ code: AuthCode.TOKEN_INVALID });
     }
 
-    // Check session có tồn tại và còn active không
+    // Check session exists and is still active
     const sessionKey = `sess:${payload.sid}`;
     const sessionData = await this.redis.hgetall(sessionKey);
 
-    // ✅ FIX: Kiểm tra sessionData có tồn tại không
     if (
       !sessionData ||
       Object.keys(sessionData).length === 0 ||
       !sessionData.userId
     ) {
-      throw new UnauthorizedException(
-        'Phiên đăng nhập không tồn tại hoặc đã hết hạn',
-      );
+      throw new UnauthorizedException({ code: AuthCode.SESSION_NOT_FOUND });
     }
 
     if (sessionData.revoked === '1') {
-      throw new UnauthorizedException('Phiên đăng nhập đã bị thu hồi');
+      throw new UnauthorizedException({ code: AuthCode.SESSION_REVOKED });
     }
 
-    // Verify userId trong token khớp với userId trong session
+    // Verify userId in token matches userId in session
     if (sessionData.userId !== payload.sub) {
-      throw new UnauthorizedException('Token không khớp với phiên đăng nhập');
+      throw new UnauthorizedException({ code: AuthCode.TOKEN_SESSION_MISMATCH });
     }
 
     // ✅ Update lastSeenAt (optional - để track user activity).
