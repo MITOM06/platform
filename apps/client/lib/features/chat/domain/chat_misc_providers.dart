@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/providers/theme_provider.dart';
@@ -10,12 +12,16 @@ import 'chat_state.dart';
 // out of chat_provider.dart (clean-code file limit). None use codegen.
 
 final userStatusProvider =
-    FutureProvider.autoDispose.family<UserStatus, String>((ref, userId) {
+    FutureProvider.autoDispose.family<UserStatus, String>((ref, userId) async {
+  final link = ref.keepAlive();
+  Timer(const Duration(minutes: 5), link.close);
   return ref.read(chatRepositoryProvider).getUserStatus(userId);
 });
 
 final userProfileProvider =
-    FutureProvider.autoDispose.family<UserModel, String>((ref, userId) {
+    FutureProvider.autoDispose.family<UserModel, String>((ref, userId) async {
+  final link = ref.keepAlive();
+  Timer(const Duration(minutes: 5), link.close);
   return ref.read(authRepositoryProvider).getUserProfile(userId);
 });
 
