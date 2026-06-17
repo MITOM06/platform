@@ -34,7 +34,7 @@
 | `EMAIL_DOMAIN_INVALID` | 400 | Email domain does not exist or has no MX records | — |
 | `ACCOUNT_LOCKED` | 401 | Account temporarily locked for {minutes} minute(s) due to too many failed attempts. | `minutes: number` |
 | `LOGIN_FAILED_WITH_REMAINING` | 401 | Incorrect email or password. {remaining} attempt(s) remaining. | `remaining: number` |
-| `LOGIN_FAILED_LOCKED` | 401 | Too many failed attempts. Account locked for {minutes} minute(s). | `maxAttempts: number`, `minutes: number` |
+| `LOGIN_FAILED_LOCKED` | 401 | Too many failed attempts. Account locked for {minutes} minute(s). | `minutes: number` (+ `maxAttempts: number` available, not shown) |
 | `TOKEN_INVALID` | 401 | Invalid token. | — |
 | `SESSION_NOT_FOUND` | 401 | Session not found or has expired. | — |
 | `SESSION_INVALID` | 401 | Session does not exist or has expired | — |

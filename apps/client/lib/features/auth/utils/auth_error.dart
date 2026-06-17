@@ -31,97 +31,97 @@ String _codeToString(
   String code,
   Map<String, dynamic>? params,
 ) {
-  final l = context.l10n;
+  final l10n = context.l10n;
   switch (code) {
     // ── Success codes (shown as info/toast) ─────────────────────────────────
     case 'LOGIN_SUCCESS':
-      return l.authMsgLoginSuccess;
+      return l10n.authMsgLoginSuccess;
     case 'LOGOUT_SUCCESS':
-      return l.authMsgLogoutSuccess;
+      return l10n.authMsgLogoutSuccess;
     case 'OTP_SENT':
-      return l.authMsgOtpSent;
+      return l10n.authMsgOtpSent;
     case 'OTP_VALID':
-      return l.authMsgOtpValid;
+      return l10n.authMsgOtpValid;
     case 'OTP_RESENT':
-      return l.authMsgOtpResent;
+      return l10n.authMsgOtpResent;
     case 'PASSWORD_UPDATED':
-      return l.authMsgPasswordUpdated;
+      return l10n.authMsgPasswordUpdated;
     case 'REGISTER_SUCCESS':
-      return l.authMsgRegisterSuccess;
+      return l10n.authMsgRegisterSuccess;
     case 'ACCOUNT_UNVERIFIED_OTP_SENT':
-      return l.authMsgAccountUnverifiedOtpSent;
+      return l10n.authMsgAccountUnverifiedOtpSent;
 
     // ── OTP errors ───────────────────────────────────────────────────────────
     case 'OTP_INVALID':
-      return l.authErrOtpInvalid;
+      return l10n.authErrOtpInvalid;
     case 'OTP_EXPIRED':
-      return l.authErrOtpExpired;
+      return l10n.authErrOtpExpired;
     case 'OTP_ATTEMPTS_EXCEEDED':
-      return l.authErrOtpAttemptsExceeded;
+      return l10n.authErrOtpAttemptsExceeded;
     case 'OTP_WRONG_WITH_REMAINING':
       final remaining = _intParam(params, 'remaining');
-      return l.authErrOtpWrongWithRemaining(remaining);
+      return l10n.authErrOtpWrongWithRemaining(remaining);
     case 'OTP_RESEND_COOLDOWN':
       final ttl = _intParam(params, 'ttl');
-      return l.authErrOtpResendCooldown(ttl);
+      return l10n.authErrOtpResendCooldown(ttl);
 
     // ── Email / validation errors ────────────────────────────────────────────
     case 'EMAIL_DOMAIN_INVALID':
-      return l.authErrEmailDomainInvalid;
+      return l10n.authErrEmailDomainInvalid;
     case 'EMAIL_NOT_FOUND':
-      return l.authErrEmailNotFound;
+      return l10n.authErrEmailNotFound;
     case 'EMAIL_IN_USE':
-      return l.authErrEmailInUse;
+      return l10n.authErrEmailInUse;
     case 'VAL_EMAIL_INVALID':
-      return l.authErrValEmailInvalid;
+      return l10n.authErrValEmailInvalid;
     case 'VAL_EMAIL_REQUIRED':
-      return l.authErrValEmailRequired;
+      return l10n.authErrValEmailRequired;
     case 'VAL_DISPLAYNAME_REQUIRED':
-      return l.authErrValDisplaynameRequired;
+      return l10n.authErrValDisplaynameRequired;
     case 'VAL_DISPLAYNAME_TOO_SHORT':
-      return l.authErrValDisplaynameTooShort;
+      return l10n.authErrValDisplaynameTooShort;
     case 'VAL_PASSWORD_TOO_SHORT':
-      return l.authErrValPasswordTooShort;
+      return l10n.authErrValPasswordTooShort;
 
     // ── Account / login errors ───────────────────────────────────────────────
     case 'ACCOUNT_LOCKED':
       final minutes = _intParam(params, 'minutes');
-      return l.authErrAccountLocked(minutes);
+      return l10n.authErrAccountLocked(minutes);
     case 'LOGIN_FAILED_WITH_REMAINING':
       final remaining = _intParam(params, 'remaining');
-      return l.authErrLoginFailedWithRemaining(remaining);
+      return l10n.authErrLoginFailedWithRemaining(remaining);
     case 'LOGIN_FAILED_LOCKED':
       final minutes = _intParam(params, 'minutes');
-      return l.authErrLoginFailedLocked(minutes);
+      return l10n.authErrLoginFailedLocked(minutes);
 
     // ── Token / session errors ───────────────────────────────────────────────
     case 'TOKEN_INVALID':
-      return l.authErrTokenInvalid;
+      return l10n.authErrTokenInvalid;
     case 'SESSION_NOT_FOUND':
-      return l.authErrSessionNotFound;
+      return l10n.authErrSessionNotFound;
     case 'SESSION_INVALID':
-      return l.authErrSessionInvalid;
+      return l10n.authErrSessionInvalid;
     case 'SESSION_REVOKED':
-      return l.authErrSessionRevoked;
+      return l10n.authErrSessionRevoked;
     case 'REFRESH_TOKEN_REUSE':
-      return l.authErrRefreshTokenReuse;
+      return l10n.authErrRefreshTokenReuse;
     case 'REFRESH_TOKEN_INVALID':
-      return l.authErrRefreshTokenInvalid;
+      return l10n.authErrRefreshTokenInvalid;
     case 'REFRESH_TOKEN_ROTATED':
-      return l.authErrRefreshTokenRotated;
+      return l10n.authErrRefreshTokenRotated;
     case 'TOKEN_SESSION_MISMATCH':
-      return l.authErrTokenSessionMismatch;
+      return l10n.authErrTokenSessionMismatch;
 
     // ── Social / misc errors ─────────────────────────────────────────────────
     case 'SOCIAL_EMAIL_UNAVAILABLE':
-      return l.authErrSocialEmailUnavailable;
+      return l10n.authErrSocialEmailUnavailable;
     case 'LOGIN_CODE_INVALID':
-      return l.authErrLoginCodeInvalid;
+      return l10n.authErrLoginCodeInvalid;
     case 'USER_NOT_FOUND':
-      return l.authErrUserNotFound;
+      return l10n.authErrUserNotFound;
 
     default:
-      return l.errActionFailed;
+      return l10n.errActionFailed;
   }
 }
 
