@@ -377,11 +377,11 @@ export class AuthService {
     try {
       const records = await dns.promises.resolveMx(domain);
       if (!records || records.length === 0) {
-        throw new BadRequestException('Email domain does not exist');
+        throw new BadRequestException({ code: AuthCode.EMAIL_DOMAIN_INVALID });
       }
     } catch (e) {
       if (e instanceof BadRequestException) throw e;
-      throw new BadRequestException('Email domain does not exist');
+      throw new BadRequestException({ code: AuthCode.EMAIL_DOMAIN_INVALID });
     }
 
     const existingUser = await this.usersService.findByEmail(dto.email);

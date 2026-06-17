@@ -8,6 +8,7 @@ import { randomBytes } from 'crypto';
 import * as argon2 from 'argon2';
 import { nanoid } from 'nanoid';
 import { Redis, REDIS_CLIENT } from '@platform/database';
+import { AuthCode } from '../../common/auth-code.enum';
 
 /**
  * Refresh-token reuse-detection (rotating refresh tokens).
@@ -136,9 +137,9 @@ export class SessionService {
     const key = this.sessKey(params.sid);
     const data = await this.redis.hgetall(key);
 
-    if (!data?.userId) throw new UnauthorizedException('Invalid session');
+    if (!data?.userId) throw new UnauthorizedException({ code: AuthCode.SESSION_INVALID });
     if (data.revoked === '1')
-      throw new UnauthorizedException('Session revoked');
+      throw new UnauthorizedException({ code: AuthCode.SESSION_REVOKED });
 
     const currentVersion = Number(data.tokenVersion ?? '0');
     const presentedVersion = this.parseTokenVersion(params.refreshToken);
@@ -172,11 +173,11 @@ export class SessionService {
         } else {
           await this.revokeSession(data.userId, params.sid);
         }
-        throw new UnauthorizedException('Refresh token reuse detected');
+        throw new UnauthorizedException({ code: AuthCode.REFRESH_TOKEN_REUSE });
       }
 
       // Unknown / malformed token that matches neither current nor prev.
-      throw new UnauthorizedException('Invalid refresh token');
+      throw new UnauthorizedException({ code: AuthCode.REFRESH_TOKEN_INVALID });
     }
 
     // 3) Token is the current one. Atomically bump the version (compare-and-set)
@@ -202,7 +203,7 @@ export class SessionService {
       // already advanced the version, or the session was revoked meanwhile.
       // This is a benign race (the token was genuinely current), NOT theft —
       // do not revoke, just reject so the client retries with its fresh token.
-      throw new UnauthorizedException('Refresh token already rotated');
+      throw new UnauthorizedException({ code: AuthCode.REFRESH_TOKEN_ROTATED });
     }
 
     return { userId: data.userId, newRefreshToken: newRefresh };
