@@ -149,6 +149,14 @@ describe('AiService', () => {
           'config.memory.extractEveryTurns': 20,
           'config.ai.enableThinking': false,
           'config.quota.monthlyTokenLimit': 500000,
+          'config.anthropic.router.enabled': false,
+          'config.anthropic.router.simpleModel': 'claude-haiku-4-5',
+          'config.anthropic.router.midModel': 'claude-sonnet-4-6',
+          'config.anthropic.router.complexModel': 'test-primary',
+          'config.anthropic.router.simpleMaxChars': 280,
+          'config.anthropic.router.simpleMaxHistory': 4,
+          'config.anthropic.router.midMaxChars': 1200,
+          'config.anthropic.router.midMaxHistory': 20,
         };
         return map[key];
       }),

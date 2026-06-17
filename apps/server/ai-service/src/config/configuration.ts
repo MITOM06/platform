@@ -14,6 +14,17 @@ export default registerAs('config', () => ({
     fallbackModel: process.env.ANTHROPIC_FALLBACK_MODEL ?? 'claude-haiku-4-5',
     // Effort for output_config on the agentic loop (low|medium|high)
     effort: process.env.ANTHROPIC_EFFORT ?? 'high',
+    router: {
+      // Set ANTHROPIC_ROUTER_ENABLED=false to disable routing and always use complexModel.
+      enabled: process.env.ANTHROPIC_ROUTER_ENABLED !== 'false',
+      simpleModel: process.env.ANTHROPIC_SIMPLE_MODEL ?? 'claude-haiku-4-5',
+      midModel: process.env.ANTHROPIC_MID_MODEL ?? 'claude-sonnet-4-6',
+      complexModel: process.env.ANTHROPIC_COMPLEX_MODEL ?? 'claude-opus-4-8',
+      simpleMaxChars: parseInt(process.env.ANTHROPIC_ROUTER_SIMPLE_MAX_CHARS ?? '280', 10),
+      simpleMaxHistory: parseInt(process.env.ANTHROPIC_ROUTER_SIMPLE_MAX_HISTORY ?? '4', 10),
+      midMaxChars: parseInt(process.env.ANTHROPIC_ROUTER_MID_MAX_CHARS ?? '1200', 10),
+      midMaxHistory: parseInt(process.env.ANTHROPIC_ROUTER_MID_MAX_HISTORY ?? '20', 10),
+    },
   },
   bot: {
     userId: process.env.AI_BOT_USER_ID ?? 'ai-bot-000000000000000000000001',

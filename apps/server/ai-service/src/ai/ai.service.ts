@@ -11,6 +11,50 @@ import { UsageService } from '../usage/usage.service';
 import { PersonaService } from '../persona/persona.service';
 import { ToolContext } from '../tools/tool.interface';
 
+export interface RouteSignals {
+  contentLength: number;
+  historyLength: number;
+  hasKbContext: boolean;
+}
+
+export interface RouterConfig {
+  enabled: boolean;
+  simpleModel: string;
+  midModel: string;
+  complexModel: string;
+  simpleMaxChars: number;
+  simpleMaxHistory: number;
+  midMaxChars: number;
+  midMaxHistory: number;
+}
+
+/**
+ * 3-tier model routing (pure function — no side effects, easily unit-tested).
+ *
+ * Tier selection:
+ *  - routing disabled → complexModel (preserves always-primary behavior)
+ *  - hasKbContext → complexModel (grounded answers need the strongest model)
+ *  - short content AND short history AND no KB → simpleModel (Haiku)
+ *  - medium content/history AND no KB → midModel (Sonnet)
+ *  - otherwise → complexModel (Opus)
+ */
+export function selectModel(signals: RouteSignals, config: RouterConfig): string {
+  if (!config.enabled) return config.complexModel;
+  if (signals.hasKbContext) return config.complexModel;
+
+  const isShort =
+    signals.contentLength <= config.simpleMaxChars &&
+    signals.historyLength <= config.simpleMaxHistory;
+  if (isShort) return config.simpleModel;
+
+  const isMid =
+    signals.contentLength <= config.midMaxChars &&
+    signals.historyLength <= config.midMaxHistory;
+  if (isMid) return config.midModel;
+
+  return config.complexModel;
+}
+
 export interface AiRequestPayload {
   conversationId: string;
   userId: string;
@@ -66,6 +110,7 @@ export class AiService {
   private readonly overFetch: number;
   private readonly scoreThreshold: number;
   private readonly extractEveryTurns: number;
+  private readonly routerConfig: RouterConfig;
 
   constructor(
     private readonly configService: ConfigService,
@@ -95,6 +140,23 @@ export class AiService {
     this.scoreThreshold = this.configService.get<number>('config.kb.scoreThreshold') ?? 0.5;
     this.extractEveryTurns =
       this.configService.get<number>('config.memory.extractEveryTurns') ?? 20;
+    this.routerConfig = {
+      enabled: this.configService.get<boolean>('config.anthropic.router.enabled') ?? true,
+      simpleModel:
+        this.configService.get<string>('config.anthropic.router.simpleModel') ?? 'claude-haiku-4-5',
+      midModel:
+        this.configService.get<string>('config.anthropic.router.midModel') ?? 'claude-sonnet-4-6',
+      complexModel:
+        this.configService.get<string>('config.anthropic.router.complexModel') ?? 'claude-opus-4-8',
+      simpleMaxChars:
+        this.configService.get<number>('config.anthropic.router.simpleMaxChars') ?? 280,
+      simpleMaxHistory:
+        this.configService.get<number>('config.anthropic.router.simpleMaxHistory') ?? 4,
+      midMaxChars:
+        this.configService.get<number>('config.anthropic.router.midMaxChars') ?? 1200,
+      midMaxHistory:
+        this.configService.get<number>('config.anthropic.router.midMaxHistory') ?? 20,
+    };
   }
 
   async handleRequest(payload: AiRequestPayload): Promise<void> {
@@ -139,9 +201,23 @@ export class AiService {
       ragSources: volatileSystem.ragSources,
     };
 
+    const routeSignals: RouteSignals = {
+      contentLength: content.length,
+      historyLength: history?.length ?? 0,
+      hasKbContext: ctx.ragSources.length > 0,
+    };
+    const selectedModel = selectModel(routeSignals, this.routerConfig);
+    this.logger.log(
+      `Model routing: selected=${selectedModel} ` +
+        `(contentLength=${routeSignals.contentLength}, ` +
+        `historyLength=${routeSignals.historyLength}, ` +
+        `hasKbContext=${routeSignals.hasKbContext}) ` +
+        `for conversation ${conversationId}`,
+    );
+
     let trace: AiTrace | null = null;
     try {
-      trace = await this._agenticLoop(this.primaryModel, ctx, content, history, startMs);
+      trace = await this._agenticLoop(selectedModel, ctx, content, history, startMs);
     } catch (primaryError) {
       this.logger.error(
         `Primary model (${this.primaryModel}) failed for conversation ${conversationId}`,
