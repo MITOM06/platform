@@ -9,7 +9,8 @@ paths:
 
 - **NestJS** (TypeScript) — same pattern as auth-service
 - **@anthropic-ai/sdk** — Anthropic Claude API, native streaming
-- **ioredis** — Redis pub/sub (use `ioredis`, NOT the `redis` package)
+- **@golevelup/nestjs-rabbitmq** — AMQP consumer for AI request jobs (`@RabbitSubscribe`)
+- **ioredis** — Redis pub/sub for response streaming (use `ioredis`, NOT the `redis` package)
 - **@nestjs/mongoose + mongoose** — persist AI messages to MongoDB
 - **pnpm** — package manager (NOT npm, NOT yarn)
 - Port: **3002**
@@ -26,9 +27,12 @@ apps/server/ai-service/src/
     ai.module.ts
     ai.service.ts                — Claude API call + streaming logic
     ai.controller.ts             — health endpoint GET /health
+    ai.consumer.ts               — @RabbitSubscribe handler for ai.requests queue
+  rabbitmq/
+    rabbitmq.module.ts           — RabbitMqModule (AmqpConnection, queue/exchange config)
   redis/
     redis.module.ts
-    redis-subscriber.service.ts  — SUBSCRIBE ai:request
+    redis-subscriber.service.ts  — SUBSCRIBE kb:process / kb:delete only
     redis-publisher.service.ts   — PUBLISH ai:response:{convId}
   bot/
     bot-seed.service.ts          — OnApplicationBootstrap: seed AI bot user
@@ -42,18 +46,22 @@ JWT_ACCESS_SECRET=...
 MONGODB_URI=mongodb://localhost:27018/platform
 REDIS_HOST=localhost
 REDIS_PORT=6379
+RABBITMQ_URL=amqp://platform:platform@localhost:5672
 ANTHROPIC_API_KEY=sk-ant-...
 ANTHROPIC_MODEL=claude-sonnet-4-5
 ANTHROPIC_FALLBACK_MODEL=claude-haiku-4-5-20251001
 AI_BOT_USER_ID=ai-bot-000000000000000000000001
 AI_BOT_DISPLAY_NAME=PON AI
-REDIS_AI_REQUEST_CHANNEL=ai:request
 REDIS_AI_RESPONSE_PREFIX=ai:response
+QDRANT_URL=http://localhost:6333
+OPENAI_API_KEY=sk-...
 ```
 
-## Redis Pub/Sub Protocol
+## Message Bus Protocol
 
-### SUBSCRIBE: `ai:request`
+### RabbitMQ CONSUME: `ai.requests` queue (replaces Redis `ai:request`)
+
+Consumed via `AiConsumer` decorated with `@RabbitSubscribe`:
 ```json
 {
   "conversationId": "string",
@@ -67,12 +75,16 @@ REDIS_AI_RESPONSE_PREFIX=ai:response
 }
 ```
 
-### PUBLISH: `ai:response:{conversationId}`
+### Redis PUBLISH: `ai:response:{conversationId}` (unchanged — low-latency streaming)
 ```json
 { "type": "AI_STREAM_CHUNK", "chunk": "string" }
 { "type": "AI_STREAM_DONE",  "fullContent": "string" }
 { "type": "AI_STREAM_ERROR", "error": "string" }
 ```
+
+### Redis SUBSCRIBE (remaining channels)
+- `kb:process` — Knowledge Base indexing jobs
+- `kb:delete` — Knowledge Base deletion jobs
 
 ## Code Conventions
 
@@ -123,4 +135,5 @@ await this.publisher.publish(convId, { type: 'AI_STREAM_DONE', fullContent: full
 - Run: `pnpm test` (Jest)
 - Mock `@anthropic-ai/sdk` in unit tests — NEVER call real API in tests
 - Mock `ioredis` with `ioredis-mock`
+- Mock `@golevelup/nestjs-rabbitmq` `AmqpConnection` with a jest mock object
 - After every change: `pnpm build && pnpm test`

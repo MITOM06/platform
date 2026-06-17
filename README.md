@@ -10,6 +10,7 @@
 [![Qdrant](https://img.shields.io/badge/Qdrant-red?style=flat-square&logo=qdrant&logoColor=white)](https://qdrant.tech)
 [![MongoDB](https://img.shields.io/badge/MongoDB-47A248?style=flat-square&logo=mongodb&logoColor=white)](https://www.mongodb.com)
 [![Redis](https://img.shields.io/badge/Redis-DC382D?style=flat-square&logo=redis&logoColor=white)](https://redis.io)
+[![RabbitMQ](https://img.shields.io/badge/RabbitMQ-FF6600?style=flat-square&logo=rabbitmq&logoColor=white)](https://www.rabbitmq.com)
 [![OpenAI](https://img.shields.io/badge/OpenAI-412991?style=flat-square&logo=openai&logoColor=white)](https://openai.com)
 [![Anthropic Claude](https://img.shields.io/badge/Anthropic_Claude-D97706?style=flat-square)](https://anthropic.com)
 [![Docker](https://img.shields.io/badge/Docker-2496ED?style=flat-square&logo=docker&logoColor=white)](https://www.docker.com)
@@ -35,7 +36,8 @@ A high-performance monorepo with three microservices and a Flutter mobile client
 
 ### Shared Infrastructure:
 - **MongoDB** (single `platform` database): Holds canonical user profiles, conversations, messages, and knowledge base metadata.
-- **Redis**: Coordinates user presence (heartbeats), socket connections, and publishes event pipelines (`ai:request`, `kb:process`, `ai:response:*`, `kb:status:*`).
+- **RabbitMQ**: Durable message queue for the `ai:request` channel — chat-service publishes AI jobs, ai-service consumes them. Uses a direct exchange with 30-second TTL and a dead-letter queue for unprocessable messages.
+- **Redis**: Coordinates user presence (heartbeats), socket connections, and streams AI response chunks (`ai:response:{conversationId}`). Also used for Knowledge Base job channels (`kb:process`, `kb:delete`).
 - **Qdrant Vector DB**: Vector store mapping indexed text chunks for semantic RAG search.
 
 ---
@@ -44,7 +46,7 @@ A high-performance monorepo with three microservices and a Flutter mobile client
 
 ```
                                  ┌─────────────────────────────────┐
-                                 │         Flutter Client          │
+                                 │         Flutter / Web Client    │
                                  │    Riverpod · STOMP · WebRTC    │
                                  └────────┬─────────────────┬──────┘
                                           │ REST/HTTP       │ WS/STOMP (port 8080)
@@ -52,38 +54,38 @@ A high-performance monorepo with three microservices and a Flutter mobile client
 ┌──────────────────┐             ┌─────────────────────────────────┐
 │   auth-service   │             │          chat-service           │
 │  NestJS (3001)   │             │       Spring Boot 3 (8080)      │
-└────────┬─────────┘             └────────┬─────────────────▲──────┘
-         │                                │ REST/GridFS     │ STOMP Broadcast
-         │ JWT                            │                 │
-         │ Sign                           ▼                 │
-         │                        ┌──────────────┐          │
-         │                        │   MongoDB    │          │
-         │                        │  (db: platform)         │
-         │                        └──────────────┘          │
-         │                                                  │
-         │                                                  │ Redis pub/sub
-         │                                 Redis (6379)     │ response channel
-         │                               ┌──────────────┐   │
-         └──────────────────────────────►│ pub/sub,     ├───┘
-                                         │ presence     │
-                                         └──────┬───────┘
-                                                │ Redis pub/sub
-                                                │ request channel
-                                                ▼
+└────────┬─────────┘             └────────┬───────────┬────▲───────┘
+         │                                │ REST/     │    │ STOMP
+         │ JWT                            │ GridFS    │    │ Broadcast
+         │ Sign                           ▼           │    │
+         │                        ┌──────────────┐   │    │
+         │                        │   MongoDB    │   │    │
+         │                        │ (db:platform)│   │    │
+         │                        └──────────────┘   │    │
+         │                                           │    │ Redis pub/sub
+         │                                           │    │ ai:response:{id}
+         │                         RabbitMQ (5672)   │  ┌─┴────────────┐
+         │                        ┌──────────────┐   │  │ Redis (6379) │
+         │                        │ ai.requests  │◄──┘  │ ai:response  │
+         │                        │ queue (AMQP) │      │ kb:process   │
+         │                        └──────┬───────┘      │ presence     │
+         │                               │              └──────────────┘
+         └──────────────────────────────►│ (JWT validate)       ▲
+                                         ▼                       │
                                  ┌─────────────────────────────────┐
                                  │           ai-service            │
                                  │     NestJS (Claude / OpenAI)    │
-                                 └──────┬───────────────────┬──────┘
-                                        │ Embedding         │ Vector Search
-                                        ▼                   ▼
+                                 └──────┬──────────────────┬───────┘
+                                        │ Embedding        │ Vector Search
+                                        ▼                  ▼
                                  ┌──────────────┐    ┌──────────────┐
                                  │  OpenAI API  │    │  Qdrant DB   │
                                  │  Embeddings  │    │ (port 6333)  │
                                  └──────────────┘    └──────────────┘
 ```
 
-1. **AI Message Flow**: User tags `@AI` in conversation $\rightarrow$ Client sends message to `chat-service` $\rightarrow$ `chat-service` persists message and publishes request containing last 20 messages context to Redis `ai:request` channel $\rightarrow$ `ai-service` picks up the job, retrieves memory summary from MongoDB & semantic context from Qdrant, calls Anthropic Claude Streaming API $\rightarrow$ Stream chunks are published to Redis `ai:response:*` $\rightarrow$ `chat-service` listens and relays chunks down STOMP socket to the client in real time.
-2. **Knowledge Base (RAG) Flow**: User uploads document $\rightarrow$ `chat-service` stores file in GridFS and publishes doc metadata to Redis `kb:process` $\rightarrow$ `ai-service` downloads file, extracts text, chunks it, requests OpenAI `text-embedding-3-small` embeddings, and upserts them to `Qdrant` $\rightarrow$ `ai-service` updates status to `done` and notifies the client over WebSocket.
+1. **AI Message Flow**: User tags `@AI` in conversation → Client sends message to `chat-service` → `chat-service` persists the message and publishes a job (with the last 20 messages of context) to the RabbitMQ `ai.requests` queue → `ai-service` consumes the job via AMQP, retrieves the memory summary from MongoDB and semantic context from Qdrant, calls the Anthropic Claude Streaming API → stream chunks are published to Redis `ai:response:{conversationId}` → `chat-service` listens on that Redis channel and forwards each chunk down the STOMP socket to the client in real time.
+2. **Knowledge Base (RAG) Flow**: User uploads a document → `chat-service` stores the file in GridFS and publishes metadata to Redis `kb:process` → `ai-service` downloads the file, extracts text, chunks it, requests OpenAI `text-embedding-3-small` embeddings, and upserts them to Qdrant → `ai-service` updates the status to `done` and notifies the client over WebSocket.
 
 ---
 
@@ -125,7 +127,7 @@ platform/
 │       └── lib/                   # API utilities, stores (Zustand), and STOMP hooks
 ├── infra/
 │   └── docker-compose/
-│       └── compose.yml            # Orchestration with Qdrant, Mongo, Redis
+│       └── compose.yml            # Orchestration: MongoDB, Redis, RabbitMQ, Qdrant
 ├── docs/
 │   ├── api-spec.md                # API endpoints and payloads specifications
 │   ├── decisions.md               # Architecture Decision Records (ADRs)
@@ -151,12 +153,23 @@ MAIL_USER=noreply@example.com
 MAIL_PASS=your_mail_password
 ```
 
-### 2. chat-service (`apps/server/chat-service/src/main/resources/application.properties`)
-```properties
-spring.data.mongodb.uri=mongodb://localhost:27018/platform
-spring.data.redis.host=localhost
-spring.data.redis.port=6379
-app.jwt.secret=${JWT_ACCESS_SECRET}
+### 2. chat-service (`apps/server/chat-service/src/main/resources/application.yml`)
+```yaml
+spring:
+  data:
+    mongodb:
+      uri: mongodb://localhost:27018/platform
+    redis:
+      host: localhost
+      port: 6379
+  rabbitmq:
+    host: localhost
+    port: 5672
+    username: platform
+    password: platform
+app:
+  jwt:
+    secret: ${JWT_ACCESS_SECRET}
 ```
 
 ### 3. ai-service (`apps/server/ai-service/.env`)
@@ -165,6 +178,7 @@ PORT=3002
 MONGO_URI=mongodb://localhost:27018/platform
 REDIS_HOST=localhost
 REDIS_PORT=6379
+RABBITMQ_URL=amqp://platform:platform@localhost:5672
 ANTHROPIC_API_KEY=your_anthropic_api_key
 OPENAI_API_KEY=your_openai_api_key
 QDRANT_URL=http://localhost:6333
@@ -188,7 +202,7 @@ AI_BOT_DISPLAY_NAME=PON AI
 git clone https://github.com/MITOM06/platform.git && cd platform
 pnpm install
 
-# Start MongoDB, Redis, and Qdrant Vector DB
+# Start MongoDB, Redis, RabbitMQ, and Qdrant
 docker compose -f infra/docker-compose/compose.yml up -d
 ```
 

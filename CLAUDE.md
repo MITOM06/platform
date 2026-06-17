@@ -42,6 +42,8 @@
 | ai-service | 3002 | NestJS (TypeScript) |
 | MongoDB | **27018** (non-standard!) | Docker |
 | Redis | 6379 | Docker |
+| RabbitMQ AMQP | 5672 | Docker |
+| RabbitMQ Management UI | 15672 | Docker (user: platform / platform) |
 
 Start infra: `docker compose -f infra/docker-compose/compose.yml up -d`
 
@@ -53,17 +55,29 @@ Start infra: `docker compose -f infra/docker-compose/compose.yml up -d`
 
 ## Stack — Phase 2 AI ✅ COMPLETE (2026-06-07, Sprint AI-6 DONE)
 
-- **Spring Boot 3 chat-service**: WebSocket (STOMP) + REST API + MongoDB + Redis + JWT validation ✅
+- **Spring Boot 3 chat-service**: WebSocket (STOMP) + REST API + MongoDB + Redis + RabbitMQ + JWT validation ✅
 - **Flutter client**: Neon UI + Auth flow + Chat UI + Riverpod + STOMP wire ✅
 - **NestJS auth-service**: JWT, OTP, refresh token, user search API ✅
-- **NestJS ai-service**: Anthropic Claude API + Redis pub/sub + Streaming STOMP + Memory + RAG + Tools + Persona ✅
+- **NestJS ai-service**: Anthropic Claude API + RabbitMQ consumer + Redis streaming + Memory + RAG + Tools + Persona ✅
 
-## Redis Pub/Sub Channels (AI layer)
+## Message Bus Channels (AI layer)
+
+### RabbitMQ — durable AI request queue
+
+| Exchange | Queue | Publisher | Consumer | Payload |
+|----------|-------|-----------|----------|---------|
+| `ai.direct` (direct) | `ai.requests` | chat-service | ai-service | `{conversationId, userId, displayName, content, history[]}` |
+| `ai.direct` (direct) | `ai.requests.dlq` | RabbitMQ (TTL/nack) | — | dead-lettered messages |
+
+Queue settings: 30-second message TTL, dead-letter exchange `ai.direct.dlq`.
+
+### Redis Pub/Sub — low-latency AI response streaming
 
 | Channel | Publisher | Subscriber | Payload |
 |---------|-----------|------------|---------|
-| `ai:request` | chat-service | ai-service | `{conversationId, userId, displayName, content, history[]}` |
 | `ai:response:{conversationId}` | ai-service | chat-service | `{type: AI_STREAM_CHUNK\|AI_STREAM_DONE\|AI_STREAM_ERROR, chunk?, fullContent?}` |
+| `kb:process` | chat-service | ai-service | `{documentId, conversationId, filename, gridfsId, mimeType}` |
+| `kb:delete` | chat-service | ai-service | `{documentId}` |
 
 ## Key Paths
 

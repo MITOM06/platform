@@ -148,51 +148,98 @@ This document captures discussions and locked choices.
 
 ## ADR-008: Redis Pub/Sub as transport between chat-service and ai-service
 
-**Date:** 2026-06-03
-**Status:** Accepted
+**Date:** 2026-06-03  
+**Status:** Superseded by ADR-010
 
 **Context:** chat-service (Spring Boot) needs to communicate with ai-service (NestJS) when an `@AI` mention is detected. Need to choose a transport mechanism.
 
-**Options considered:**
-- Direct HTTP (REST call from chat-service to ai-service) — simple but tight coupling; blocks thread while AI is slow
-- Kafka/RabbitMQ — production-grade message queue, but over-engineering at this stage; adds infra complexity
-- Redis Pub/Sub — Redis already in the stack, lightweight, sufficient for current throughput
+**Original Decision:** Redis Pub/Sub for `ai:request`.
 
-**Decision:** Redis Pub/Sub.
+**Why it was superseded:** Redis Pub/Sub is fire-and-forget — if ai-service is restarting when a request arrives, the message is silently dropped. As AI processing became more complex (tool calls, thinking, RAG), lost requests became observable in production use. RabbitMQ was already a common infra dependency and adds durability with zero extra infrastructure cost at this scale. See ADR-010.
+
+**What remains on Redis:**
+- `ai:response:{conversationId}` — low-latency streaming chunks back to chat-service (durability not required; STOMP client retries on reconnect)
+- `kb:process` / `kb:delete` — Knowledge Base job channels (acceptable to drop if ai-service is down; user can retry upload)
+
+---
+
+## ADR-009: Qdrant Vector Database and OpenAI Embeddings for Knowledge Base (RAG)
+
+**Date:** 2026-06-06  
+**Status:** Accepted
+
+**Context:** Starting Phase 2 — Sprint AI-3: Knowledge Base / RAG pipeline. Need to store and retrieve document chunk embeddings for context injection.
+
+**Options considered for Vector DB:**
+- PGVector (PostgreSQL) — Good if already using SQL DB, but stack uses MongoDB. PGVector would require setting up Postgres from scratch.
+- MongoDB Atlas Vector Search — Native to MongoDB, but local Docker setup lacks full Atlas features or requires complex setups.
+- Qdrant — High performance, extremely developer-friendly Node.js client, natively supports payload filtering, low memory footprint.
+
+**Options considered for Embedding Model:**
+- Local transformers (e.g., SentenceTransformers in Node.js) — Free, but resource intensive for CPU-bound Docker microservices.
+- OpenAI Embeddings (`text-embedding-3-small`) — Industry-standard, cheap ($0.02 / 1M tokens), high dimension accuracy (1536).
+- Anthropic API — Anthropic does not provide an embedding API (requires using Claude directly which is not built/cost-effective for embeddings).
+
+**Decision:**
+- Use **Qdrant v1.9.0** as the Vector DB.
+- Use **OpenAI `text-embedding-3-small`** for producing 1536-dimensional embeddings.
 
 **Rationale:**
-- Redis already exists in Docker Compose — no new dependency
-- chat-service PUBLISHes, ai-service SUBSCRIBEs — loose coupling, chat-service never blocks waiting for AI
-- ai-service PUBLISHes response chunks, chat-service SUBSCRIBEs and forwards via STOMP to Flutter
-- Easy to scale: multiple ai-service instances can subscribe to `ai:request` simultaneously
-- Sufficient throughput for Phase 1 (no need for Kafka persistence or replay)
+- Qdrant is lightweight, easy to integrate in Docker Compose, and supports precise logical filters (e.g. matching `documentId`).
+- OpenAI's embeddings are highly cost-efficient and provide the quality needed for conversational QA context.
+- Keep a clean separation: `ai-service` processes text and interacts with OpenAI/Qdrant, while `chat-service` manages MongoDB document status metadata and REST CRUD endpoints.
 
-**Redis channels:**
-- `ai:request` — published by chat-service when an `@AI` mention is detected
-- `ai:response:{conversationId}` — published by ai-service per streaming chunk
+**Consequences:**
+- Qdrant collection named `knowledge` is created on boot.
+- Redis channels `kb:process` and `kb:delete` are used to communicate jobs from `chat-service` to `ai-service`.
+- Custom text chunker uses 512-character chunks with 80-character overlap aligned to sentence boundaries.
+- Context is retrieved using cosine similarity with a score threshold >= `0.3` for prompt injection.
 
-**Payload `ai:request`:**
-```json
-{
-  "conversationId": "string",
-  "userId": "string",
-  "displayName": "string",
-  "content": "string (message with @AI stripped out)",
-  "history": [{ "role": "user|assistant", "content": "string" }]
-}
+---
+
+## ADR-010: Replace Redis Pub/Sub with RabbitMQ for `ai:request` channel
+
+**Date:** 2026-06-17  
+**Status:** Accepted
+
+**Context:** The `ai:request` Redis channel (ADR-008) is fire-and-forget — a request sent while ai-service is restarting is silently lost. With AI responses becoming more complex (extended thinking, tool calls, RAG), silent message drops started to surface as user-visible failures. A durable queue is needed for the request path.
+
+**Options considered:**
+- Keep Redis Pub/Sub + client-side retry — requires chat-service to hold state and re-publish, complicates the publisher significantly.
+- Apache Kafka — durable, replayable, horizontally scalable; but heavy for a single-node local setup and requires ZooKeeper or KRaft.
+- RabbitMQ — AMQP message broker with durability, dead-letter queues, and management UI; lightweight Alpine image; well-supported in both Spring Boot (`spring-boot-starter-amqp`) and NestJS (`@golevelup/nestjs-rabbitmq`).
+
+**Decision:** RabbitMQ 3.13 for the `ai:request` path.
+
+**Architecture:**
+- Exchange: `ai.direct` (direct type)
+- Queue: `ai.requests` — durable, 30-second message TTL, dead-letter exchange `ai.direct.dlq`
+- Dead-letter queue: `ai.requests.dlq` — catches messages that expire or are nack'd after processing failure
+- chat-service publishes via `RabbitTemplate` (Spring AMQP)
+- ai-service consumes via `@RabbitSubscribe` (`@golevelup/nestjs-rabbitmq` — handles channel lifecycle automatically)
+
+**What did NOT change:**
+- `ai:response:{conversationId}` stays on Redis Pub/Sub — streaming chunks require the lowest possible latency and durability is not needed (STOMP reconnect handles gaps).
+- `kb:process` / `kb:delete` stay on Redis Pub/Sub — acceptable to drop; users can retry file uploads.
+
+**Connection strings (local dev):**
+```
+AMQP:    amqp://platform:platform@localhost:5672
+Web UI:  http://localhost:15672  (user: platform / platform)
 ```
 
-**Payload `ai:response:{conversationId}`:**
-```json
-{
-  "type": "AI_STREAM_CHUNK | AI_STREAM_DONE | AI_STREAM_ERROR",
-  "chunk": "string (only present when type=AI_STREAM_CHUNK)",
-  "fullContent": "string (only present when type=AI_STREAM_DONE)",
-  "error": "string (only present when type=AI_STREAM_ERROR)"
-}
-```
+**Rationale:**
+- RabbitMQ is already a common Spring Boot companion — `spring-boot-starter-amqp` is battle-tested.
+- `@golevelup/nestjs-rabbitmq` provides NestJS-native decorator-based consumers with automatic reconnect and channel management.
+- Dead-letter queue gives visibility into failed AI jobs without losing messages.
+- Adds one Docker service; total infra overhead is small (Alpine image, ~80 MB).
 
-**Caveat:** Redis Pub/Sub is not persistent — if ai-service is down when a request arrives, the message is lost. Acceptable at Sprint AI-1; will re-evaluate at Sprint AI-3+ if durability is required.
+**Consequences:**
+- `chat-service/pom.xml` adds `spring-boot-starter-amqp`.
+- `chat-service` gains `RabbitMqConfig.java` and rewrites `AiRedisPublisher` → uses `RabbitTemplate`.
+- `ai-service` adds `@golevelup/nestjs-rabbitmq`, `RabbitmqModule`, and `AiConsumer`.
+- `ai-service` `RedisSubscriberService` is trimmed to `kb:process` / `kb:delete` only.
+- Docker Compose adds a `rabbitmq` service with a healthcheck; both `chat-service` and `ai-service` depend on it.
 
 ---
 

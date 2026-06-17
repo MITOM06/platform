@@ -8,6 +8,7 @@
 [![Java](https://img.shields.io/badge/Java_21-ED8B00?style=flat-square&logo=openjdk&logoColor=white)](https://openjdk.org)
 [![MongoDB](https://img.shields.io/badge/MongoDB-47A248?style=flat-square&logo=mongodb&logoColor=white)](https://www.mongodb.com)
 [![Redis](https://img.shields.io/badge/Redis-DC382D?style=flat-square&logo=redis&logoColor=white)](https://redis.io)
+[![RabbitMQ](https://img.shields.io/badge/RabbitMQ-FF6600?style=flat-square&logo=rabbitmq&logoColor=white)](https://www.rabbitmq.com)
 
 </div>
 
@@ -116,18 +117,31 @@ All REST endpoints require `Authorization: Bearer <accessToken>`.
 
 ## Environment Variables
 
-Configure via `src/main/resources/application.properties` (or override with env vars in Docker):
+Configure via `src/main/resources/application.yml` (or override with env vars in Docker):
 
-```properties
-server.port=8080
+```yaml
+server:
+  port: 8080
 
-spring.data.mongodb.uri=mongodb://localhost:27018/platform
-spring.data.redis.host=localhost
-spring.data.redis.port=6379
+spring:
+  data:
+    mongodb:
+      uri: mongodb://localhost:27018/platform   # SPRING_DATA_MONGODB_URI
+    redis:
+      host: localhost                           # SPRING_DATA_REDIS_HOST
+      port: 6379                               # SPRING_DATA_REDIS_PORT
+  rabbitmq:
+    host: localhost                             # SPRING_RABBITMQ_HOST
+    port: 5672                                 # SPRING_RABBITMQ_PORT
+    username: platform                          # SPRING_RABBITMQ_USERNAME
+    password: platform                          # SPRING_RABBITMQ_PASSWORD
 
-# Must match auth-service JWT_ACCESS_SECRET exactly
-JWT_ACCESS_SECRET=your_shared_secret_here
+app:
+  jwt:
+    secret: ${JWT_ACCESS_SECRET}               # Must match auth-service exactly
 ```
+
+All values can be overridden via environment variables (the Docker Compose service sets them automatically).
 
 ---
 
@@ -162,14 +176,16 @@ cd apps/server/chat-service
 src/main/java/com/platform/chatservice/
 ├── config/
 │   ├── SecurityConfig.java          # Spring Security — JWT filter chain
-│   └── WebSocketConfig.java         # STOMP broker, endpoint, JWT handshake
+│   ├── WebSocketConfig.java         # STOMP broker, endpoint, JWT handshake
+│   └── RabbitMqConfig.java          # Exchange, queue, DLQ declarations for AI jobs
 ├── controller/
 │   ├── ChatController.java          # @MessageMapping — STOMP handlers
 │   ├── ConversationController.java  # REST /api/conversations
 │   └── UserStatusController.java   # REST /api/users/:id/status
 ├── service/
 │   ├── ConversationService.java
-│   └── MessageService.java
+│   ├── MessageService.java
+│   └── AiRedisPublisher.java        # Publishes @AI mention jobs → RabbitMQ ai.requests
 ├── security/
 │   ├── AuthChannelInterceptor.java  # JWT validation on WS CONNECT frame
 │   └── PresenceEventListener.java  # connect/disconnect → Redis presence
