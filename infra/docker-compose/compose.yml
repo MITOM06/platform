@@ -41,6 +41,25 @@ services:
     networks:
       - app-net
 
+  rabbitmq:
+    image: rabbitmq:3.13-management-alpine
+    container_name: chat-rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: platform
+      RABBITMQ_DEFAULT_PASS: platform
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 15s
+      timeout: 10s
+      retries: 10
+    networks:
+      - app-net
+
   qdrant:
     image: qdrant/qdrant:v1.9.0
     container_name: chat-qdrant
@@ -84,8 +103,14 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
     environment:
       JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET}
+      SPRING_RABBITMQ_HOST: rabbitmq
+      SPRING_RABBITMQ_PORT: 5672
+      SPRING_RABBITMQ_USERNAME: platform
+      SPRING_RABBITMQ_PASSWORD: platform
       SPRING_DATA_MONGODB_URI: mongodb://mongo:27017/platform
       SPRING_DATA_REDIS_HOST: redis
       # Firebase Admin SDK (base64 của service-account JSON). Rỗng = FCM tắt (no-op an toàn).
@@ -117,6 +142,8 @@ services:
         condition: service_healthy
       qdrant:
         condition: service_started
+      rabbitmq:
+        condition: service_healthy
     environment:
       NODE_ENV: production
       PORT: 3002
@@ -136,6 +163,7 @@ services:
       AI_ENABLE_THINKING: ${AI_ENABLE_THINKING:-false}
       AI_THINKING_BUDGET: ${AI_THINKING_BUDGET:-8000}
       AI_MONTHLY_TOKEN_LIMIT: ${AI_MONTHLY_TOKEN_LIMIT:-500000}
+      RABBITMQ_URL: amqp://platform:platform@rabbitmq:5672
     networks:
       - app-net
     restart: unless-stopped
@@ -147,3 +175,4 @@ networks:
 volumes:
   mongo_data:
   qdrant_data:
+  rabbitmq_data:

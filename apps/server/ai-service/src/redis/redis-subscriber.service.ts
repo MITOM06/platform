@@ -1,8 +1,6 @@
 import { Inject, Injectable, Logger, OnApplicationBootstrap } from '@nestjs/common';
 import Redis from 'ioredis';
-import { ConfigService } from '@nestjs/config';
 import { REDIS_SUBSCRIBER } from './redis.constants';
-import { AiService } from '../ai/ai.service';
 import { KbProcessorService } from '../kb/kb-processor.service';
 import { VectorStoreService } from '../kb/vector-store.service';
 
@@ -10,48 +8,27 @@ const KB_PROCESS_CHANNEL = 'kb:process';
 const KB_DELETE_CHANNEL = 'kb:delete';
 const KB_COLLECTION = 'knowledge';
 
+// ai:request is now consumed via RabbitMQ (AiConsumer). This subscriber
+// handles only knowledge-base lifecycle events which use Redis pub/sub.
 @Injectable()
 export class RedisSubscriberService implements OnApplicationBootstrap {
   private readonly logger = new Logger(RedisSubscriberService.name);
-  private readonly requestChannel: string;
 
   constructor(
     @Inject(REDIS_SUBSCRIBER) private readonly client: Redis,
-    private readonly aiService: AiService,
     private readonly kbProcessor: KbProcessorService,
     private readonly vectorStore: VectorStoreService,
-    private readonly configService: ConfigService,
-  ) {
-    this.requestChannel =
-      this.configService.get<string>('config.redisChannels.requestChannel') ?? 'ai:request';
-  }
+  ) {}
 
   async onApplicationBootstrap(): Promise<void> {
     try {
-      await this.client.subscribe(
-        this.requestChannel,
-        KB_PROCESS_CHANNEL,
-        KB_DELETE_CHANNEL,
-      );
-      this.logger.log(
-        `Subscribed to Redis channels: ${this.requestChannel}, ${KB_PROCESS_CHANNEL}, ${KB_DELETE_CHANNEL}`,
-      );
+      await this.client.subscribe(KB_PROCESS_CHANNEL, KB_DELETE_CHANNEL);
+      this.logger.log(`Subscribed to Redis channels: ${KB_PROCESS_CHANNEL}, ${KB_DELETE_CHANNEL}`);
     } catch (err) {
-      // Log but don't crash — service starts without pub/sub if Redis is unavailable
       this.logger.error(`Failed to subscribe to Redis channels: ${(err as Error).message}`);
     }
 
     this.client.on('message', async (_channel: string, message: string) => {
-      if (_channel === this.requestChannel) {
-        try {
-          const payload = JSON.parse(message);
-          await this.aiService.handleRequest(payload);
-        } catch (err) {
-          this.logger.error('Failed to process ai:request message', err);
-        }
-        return;
-      }
-
       if (_channel === KB_PROCESS_CHANNEL) {
         try {
           const payload = JSON.parse(message);

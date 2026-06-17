@@ -17,6 +17,7 @@ export default registerAs('config', () => ({
     userId: process.env.AI_BOT_USER_ID ?? 'ai-bot-000000000000000000000001',
     displayName: process.env.AI_BOT_DISPLAY_NAME ?? 'PON AI',
   },
+  rabbitmqUrl: process.env.RABBITMQ_URL ?? 'amqp://platform:platform@localhost:5672',
   redisChannels: {
     requestChannel: process.env.REDIS_AI_REQUEST_CHANNEL ?? 'ai:request',
     responsePrefix: process.env.REDIS_AI_RESPONSE_PREFIX ?? 'ai:response',

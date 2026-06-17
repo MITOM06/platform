@@ -9,6 +9,7 @@ import { KbModule } from './kb/kb.module';
 import { ToolsModule } from './tools/tools.module';
 import { UsageModule } from './usage/usage.module';
 import { PersonaModule } from './persona/persona.module';
+import { RabbitmqModule } from './rabbitmq/rabbitmq.module';
 import { BotSeedService } from './bot/bot-seed.service';
 import { RedisSubscriberService } from './redis/redis-subscriber.service';
 import { HealthModule } from './health/health.module';
@@ -36,6 +37,7 @@ const mongooseModule: DynamicModule = MongooseModule.forRootAsync({
     UsageModule,
     PersonaModule,
     AiModule,
+    RabbitmqModule,
   ],
   providers: [BotSeedService, RedisSubscriberService],
 })
