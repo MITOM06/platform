@@ -23,7 +23,7 @@ export default registerAs('config', () => ({
     responsePrefix: process.env.REDIS_AI_RESPONSE_PREFIX ?? 'ai:response',
   },
   qdrant: {
-    url: process.env.QDRANT_URL ?? 'http://localhost:6333',
+    url: process.env.QDRANT_URL || 'http://localhost:6333',
   },
   openai: {
     apiKey: process.env.OPENAI_API_KEY,
