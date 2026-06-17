@@ -19,6 +19,10 @@
     <properties>
         <java.version>21</java.version>
         <jjwt.version>0.11.5</jjwt.version>
+        <!-- Override Testcontainers to 1.20.4 (docker-java 3.4.x) which supports
+             Docker Desktop 29.x (minimum API 1.40 requirement). Spring Boot 3.3.5
+             pins to 1.19.8/docker-java 3.3.6 which sends API 1.32 and is rejected. -->
+        <testcontainers.version>1.20.4</testcontainers.version>
     </properties>
 
     <dependencies>
@@ -134,6 +138,23 @@
             <artifactId>spring-security-test</artifactId>
             <scope>test</scope>
         </dependency>
+
+        <!-- Testcontainers — MongoDB integration tests -->
+        <dependency>
+            <groupId>org.testcontainers</groupId>
+            <artifactId>testcontainers</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.testcontainers</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.testcontainers</groupId>
+            <artifactId>mongodb</artifactId>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
     <build>
@@ -148,6 +169,22 @@
                             <artifactId>lombok</artifactId>
                         </exclude>
                     </excludes>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <configuration>
+                    <!-- Pass docker-java API version override to the forked JVM so that
+                         Testcontainers works with Docker Desktop 29.x (min API 1.40).
+                         docker-java 3.x defaults to sending v1.32 which Docker Desktop
+                         29.x rejects with 400. This system property overrides that.
+                         TESTCONTAINERS_RYUK_DISABLED=true avoids Ryuk container launch
+                         issues on Docker Desktop with non-standard socket paths. -->
+                    <argLine>-Dapi.version=1.47 -DTESTCONTAINERS_RYUK_DISABLED=true</argLine>
+                    <environmentVariables>
+                        <TESTCONTAINERS_RYUK_DISABLED>true</TESTCONTAINERS_RYUK_DISABLED>
+                    </environmentVariables>
                 </configuration>
             </plugin>
         </plugins>
