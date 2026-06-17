@@ -175,13 +175,22 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <configuration>
-                    <!-- Pass docker-java API version override to the forked JVM so that
-                         Testcontainers works with Docker Desktop 29.x (min API 1.40).
-                         docker-java 3.x defaults to sending v1.32 which Docker Desktop
-                         29.x rejects with 400. This system property overrides that.
-                         TESTCONTAINERS_RYUK_DISABLED=true avoids Ryuk container launch
-                         issues on Docker Desktop with non-standard socket paths. -->
-                    <argLine>-Dapi.version=1.47 -DTESTCONTAINERS_RYUK_DISABLED=true</argLine>
+                    <!-- Disable the Testcontainers Ryuk resource reaper. CI runners are
+                         ephemeral (the whole VM is discarded after the job) so no
+                         containers leak, and Ryuk fails to start on Docker Desktop with
+                         non-standard socket paths. Set via env var (Testcontainers reads
+                         TESTCONTAINERS_RYUK_DISABLED from the environment).
+
+                         CI (ubuntu-latest, standard /var/run/docker.sock) needs NO Docker
+                         API version override — Testcontainers 1.20.4 / docker-java 3.4
+                         negotiate correctly against the runner's Docker daemon. The local
+                         Docker Desktop 29.x API-version quirk is handled by the
+                         "local-docker-desktop" profile below, which activates ONLY when
+                         the Docker Desktop raw socket exists (never on CI).
+
+                         NOTE on argLine: if JaCoCo is ever added, any <argLine> here or in
+                         the profile must use "${argLine} ..." so the JaCoCo -javaagent
+                         injected by prepare-agent is not silently dropped. -->
                     <environmentVariables>
                         <TESTCONTAINERS_RYUK_DISABLED>true</TESTCONTAINERS_RYUK_DISABLED>
                     </environmentVariables>
@@ -189,4 +198,38 @@
             </plugin>
         </plugins>
     </build>
+
+    <profiles>
+        <!-- Local-only workaround for Docker Desktop 29.x on macOS. docker-java 3.x
+             defaults to Docker Remote API v1.32, which Docker Desktop 29.x rejects
+             (min API 1.40). The fix is the JVM system property -Dapi.version, but it
+             must reach the Surefire-FORKED test JVM (MAVEN_OPTS / ~/.testcontainers.
+             properties do NOT propagate api.version to docker-java's forked client).
+             So it goes in <argLine> — but ONLY in this profile, which auto-activates
+             when the Docker Desktop raw socket is present. On CI (ubuntu-latest) that
+             file does not exist, the profile stays off, and <argLine> stays clean.
+
+             Developers on this setup also need ~/.testcontainers.properties:
+               docker.host=unix:///Users/<you>/Library/Containers/com.docker.docker/Data/docker.raw.sock -->
+        <profile>
+            <id>local-docker-desktop</id>
+            <activation>
+                <file>
+                    <exists>${user.home}/Library/Containers/com.docker.docker/Data/docker.raw.sock</exists>
+                </file>
+            </activation>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-surefire-plugin</artifactId>
+                        <configuration>
+                            <!-- If JaCoCo is added later, change to "${argLine} -Dapi.version=1.47". -->
+                            <argLine>-Dapi.version=1.47</argLine>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 </project>
