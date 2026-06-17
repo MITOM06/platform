@@ -105,6 +105,8 @@ services:
         condition: service_healthy
       rabbitmq:
         condition: service_healthy
+      jaeger:
+        condition: service_healthy
     environment:
       JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET}
       SPRING_RABBITMQ_HOST: rabbitmq
@@ -125,6 +127,9 @@ services:
       SPRING_MAIL_PASSWORD: ${MAIL_PASS}
       SPRING_MAIL_PROPERTIES_MAIL_SMTP_AUTH: "true"
       SPRING_MAIL_PROPERTIES_MAIL_SMTP_STARTTLS_ENABLE: "true"
+      # OpenTelemetry — export traces to Jaeger via OTLP HTTP
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://jaeger:4318
+      MANAGEMENT_TRACING_SAMPLING_PROBABILITY: "1.0"
     networks:
       - app-net
 

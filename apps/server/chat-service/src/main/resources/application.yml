@@ -38,6 +38,12 @@ management:
   info:
     env:
       enabled: true
+  tracing:
+    sampling:
+      probability: ${OTEL_SAMPLING_PROBABILITY:1.0}
+  otlp:
+    tracing:
+      endpoint: ${OTEL_EXPORTER_OTLP_ENDPOINT:http://localhost:4318}/v1/traces
 
 sentry:
   dsn: ${SENTRY_DSN:}
