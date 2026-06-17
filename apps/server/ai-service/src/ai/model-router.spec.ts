@@ -1,4 +1,4 @@
-import { selectModel, RouteSignals, RouterConfig } from './ai.service';
+import { selectModel, RouteSignals, RouterConfig } from './model-router';
 
 const BASE_CONFIG: RouterConfig = {
   enabled: true,
