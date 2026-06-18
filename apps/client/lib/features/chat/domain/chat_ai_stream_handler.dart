@@ -152,11 +152,14 @@ class ChatAiStreamHandler {
         final isQuota = errorCode == kAiErrCodeQuotaExceeded ||
             (errorCode == null && errorMsg.toLowerCase().contains('quota'));
         final isInterrupted = errorCode == kAiErrCodeStreamInterrupted;
+        final isUnavailable = errorCode == kAiErrCodeUnavailable;
         String errorContent;
         if (isQuota) {
           errorContent = kAiQuotaExceededSentinel;
         } else if (isInterrupted) {
           errorContent = kAiStreamInterruptedSentinel;
+        } else if (isUnavailable) {
+          errorContent = kAiUnavailableSentinel;
         } else {
           errorContent = kAiErrorSentinel;
         }
