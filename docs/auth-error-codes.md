@@ -9,8 +9,8 @@
 
 | Context | Where the code appears |
 |---------|------------------------|
-| HTTP exception (4xx) | `response.body.code` (string) |
-| HTTP exception with dynamic values | `response.body.code` + `response.body.params` (object) |
+| HTTP exception (4xx) | `response.body.message.code` (string) |
+| HTTP exception with dynamic values | `response.body.message.code` + `response.body.message.params` (object) |
 | Success body | `response.body.code` (replaces former `message` field) |
 | class-validator DTO violation | each entry in `response.body.message[]` array is a code string |
 

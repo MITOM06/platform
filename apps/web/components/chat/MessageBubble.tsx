@@ -244,6 +244,20 @@ const MessageBubbleInner = function MessageBubble({
         body = (
           <p className="text-sm italic text-muted-foreground">{t('aiQuotaExceeded')}</p>
         )
+      } else if (message.content === '__AI_INTERRUPTED__') {
+        body = (
+          <span className="flex items-center gap-1.5 text-sm text-destructive">
+            <AlertTriangle className="size-4 shrink-0" />
+            {t('aiStreamInterrupted')}
+          </span>
+        )
+      } else if (message.content === '__AI_UNAVAILABLE__') {
+        body = (
+          <span className="flex items-center gap-1.5 text-sm text-destructive">
+            <AlertTriangle className="size-4 shrink-0" />
+            {t('aiUnavailable')}
+          </span>
+        )
       } else {
         body = (
           <p className="whitespace-pre-wrap leading-relaxed">{message.content}</p>
