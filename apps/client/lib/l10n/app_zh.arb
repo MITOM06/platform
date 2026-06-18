@@ -286,6 +286,8 @@
   "startChatWithAI": "与PON AI聊天",
   "aiThinking": "AI正在思考...",
   "aiError": "AI暂时不可用。请重试。",
+  "aiErrStreamInterrupted": "AI流已中断，请重试。",
+  "aiErrUnavailable": "AI暂时不可用。",
   "aiErrorRetry": "重试",
   "aiMessageDeleted": "消息已删除",
   "aiMemoryTitle": "AI记忆",

@@ -484,6 +484,8 @@
     "editMessageError": "Could not edit message",
     "aiError": "AI error, please try again",
     "aiQuotaExceeded": "Monthly AI usage quota exceeded. Please contact your admin.",
+    "aiStreamInterrupted": "AI stream was interrupted. Please try again.",
+    "aiUnavailable": "AI is temporarily unavailable.",
     "typingIndicator": "Typing",
     "newConvTitle": "New Conversation",
     "newConvTabDirect": "Direct",

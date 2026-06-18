@@ -884,6 +884,12 @@ class AppLocalizationsJa extends AppLocalizations {
   String get aiError => 'AIは一時的に利用できません。もう一度お試しください。';
 
   @override
+  String get aiErrStreamInterrupted => 'AIストリームが中断されました。もう一度お試しください。';
+
+  @override
+  String get aiErrUnavailable => 'AIは一時的に利用できません。';
+
+  @override
   String get aiErrorRetry => '再試行';
 
   @override

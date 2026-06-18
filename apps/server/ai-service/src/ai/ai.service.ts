@@ -8,6 +8,7 @@ import { UsageService } from '../usage/usage.service';
 import { PersonaService } from '../persona/persona.service';
 import { ToolContext } from '../tools/tool.interface';
 import { selectModel, RouteSignals, RouterConfig } from './model-router';
+import { AiStreamErrorCode } from './ai-stream-error';
 import { withAgenticLoopSpan } from './tracing-helpers';
 import { FactExtractorService } from './fact-extractor.service';
 import { ContextBuilderService } from './context-builder.service';
@@ -116,6 +117,7 @@ export class AiService {
       this.logger.warn(`Quota exceeded for user ${userId} in conversation ${conversationId}`);
       await this.publisher.publish(conversationId, {
         type: 'AI_STREAM_ERROR',
+        code: AiStreamErrorCode.QUOTA_EXCEEDED,
         error: 'Monthly AI usage quota exceeded. Please contact your admin.',
       });
       return; // quota is an expected condition — do NOT dead-letter.
@@ -180,6 +182,7 @@ export class AiService {
         );
         await this.publisher.publish(conversationId, {
           type: 'AI_STREAM_ERROR',
+          code: AiStreamErrorCode.STREAM_INTERRUPTED,
           error: 'AI stream was interrupted. Please try again.',
         });
         throw primaryError;
@@ -195,6 +198,7 @@ export class AiService {
         );
         await this.publisher.publish(conversationId, {
           type: 'AI_STREAM_ERROR',
+          code: AiStreamErrorCode.UNAVAILABLE,
           error: 'AI is temporarily unavailable.',
         });
         // Rethrow so the RabbitMQ message is dead-lettered (consumer nacks).

@@ -421,6 +421,8 @@
   "startChatWithAI": "Chat with PON AI",
   "aiThinking": "AI is thinking...",
   "aiError": "AI is temporarily unavailable. Please try again.",
+  "aiErrStreamInterrupted": "AI stream was interrupted. Please try again.",
+  "aiErrUnavailable": "AI is temporarily unavailable.",
   "aiErrorRetry": "Retry",
   "aiMessageDeleted": "Message deleted",
   "aiMemoryTitle": "AI Memory",

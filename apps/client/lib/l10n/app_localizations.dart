@@ -1782,6 +1782,18 @@ abstract class AppLocalizations {
   /// **'AI is temporarily unavailable. Please try again.'**
   String get aiError;
 
+  /// No description provided for @aiErrStreamInterrupted.
+  ///
+  /// In en, this message translates to:
+  /// **'AI stream was interrupted. Please try again.'**
+  String get aiErrStreamInterrupted;
+
+  /// No description provided for @aiErrUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'AI is temporarily unavailable.'**
+  String get aiErrUnavailable;
+
   /// No description provided for @aiErrorRetry.
   ///
   /// In en, this message translates to:

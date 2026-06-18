@@ -146,10 +146,22 @@ class ChatAiStreamHandler {
           activeTools: [],
         );
       case 'AI_STREAM_ERROR':
+        final errorCode = event['code'] as String?;
         final errorMsg = event['error'] as String? ?? '';
-        final isQuota = errorMsg.toLowerCase().contains('quota');
+        // Prefer stable code; fall back to heuristic for pre-code payloads.
+        final isQuota = errorCode == kAiErrCodeQuotaExceeded ||
+            (errorCode == null && errorMsg.toLowerCase().contains('quota'));
+        final isInterrupted = errorCode == kAiErrCodeStreamInterrupted;
+        String errorContent;
+        if (isQuota) {
+          errorContent = kAiQuotaExceededSentinel;
+        } else if (isInterrupted) {
+          errorContent = kAiStreamInterruptedSentinel;
+        } else {
+          errorContent = kAiErrorSentinel;
+        }
         updated[idx] = current.messages[idx].copyWith(
-          content: isQuota ? kAiQuotaExceededSentinel : kAiErrorSentinel,
+          content: errorContent,
           isStreaming: false,
           isThinking: false,
           activeTools: [],

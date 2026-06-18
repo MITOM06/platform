@@ -484,6 +484,8 @@
     "editMessageError": "Impossible de modifier le message",
     "aiError": "Erreur de l'IA, veuillez réessayer",
     "aiQuotaExceeded": "Quota mensuel d'utilisation de l'IA dépassé. Contactez votre administrateur.",
+    "aiStreamInterrupted": "Le flux IA a été interrompu. Veuillez réessayer.",
+    "aiUnavailable": "L'IA est temporairement indisponible.",
     "typingIndicator": "En train d'écrire",
     "newConvTitle": "Nouvelle conversation",
     "newConvTabDirect": "Direct",

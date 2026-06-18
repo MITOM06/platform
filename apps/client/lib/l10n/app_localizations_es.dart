@@ -901,6 +901,13 @@ class AppLocalizationsEs extends AppLocalizations {
       'La IA no está disponible temporalmente. Por favor, inténtelo de nuevo.';
 
   @override
+  String get aiErrStreamInterrupted =>
+      'El flujo de IA fue interrumpido. Por favor, inténtelo de nuevo.';
+
+  @override
+  String get aiErrUnavailable => 'La IA no está disponible temporalmente.';
+
+  @override
   String get aiErrorRetry => 'Reintentar';
 
   @override

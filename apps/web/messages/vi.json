@@ -484,6 +484,8 @@
     "editMessageError": "Không thể chỉnh sửa tin nhắn",
     "aiError": "AI gặp lỗi, vui lòng thử lại",
     "aiQuotaExceeded": "Đã vượt quá hạn mức sử dụng AI hàng tháng. Vui lòng liên hệ quản trị viên.",
+    "aiStreamInterrupted": "Luồng AI bị gián đoạn. Vui lòng thử lại.",
+    "aiUnavailable": "AI tạm thời không khả dụng.",
     "typingIndicator": "Đang nhập",
     "newConvTitle": "Cuộc trò chuyện mới",
     "newConvTabDirect": "Trực tiếp",

@@ -286,6 +286,8 @@
   "startChatWithAI": "PON AIとチャット",
   "aiThinking": "AIが考え中...",
   "aiError": "AIは一時的に利用できません。もう一度お試しください。",
+  "aiErrStreamInterrupted": "AIストリームが中断されました。もう一度お試しください。",
+  "aiErrUnavailable": "AIは一時的に利用できません。",
   "aiErrorRetry": "再試行",
   "aiMessageDeleted": "メッセージが削除されました",
   "aiMemoryTitle": "AIメモリ",

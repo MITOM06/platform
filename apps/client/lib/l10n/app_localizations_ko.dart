@@ -884,6 +884,12 @@ class AppLocalizationsKo extends AppLocalizations {
   String get aiError => 'AI를 일시적으로 사용할 수 없습니다. 다시 시도해주세요.';
 
   @override
+  String get aiErrStreamInterrupted => 'AI 스트림이 중단되었습니다. 다시 시도해 주세요.';
+
+  @override
+  String get aiErrUnavailable => 'AI를 일시적으로 사용할 수 없습니다.';
+
+  @override
   String get aiErrorRetry => '다시 시도';
 
   @override

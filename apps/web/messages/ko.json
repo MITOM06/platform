@@ -484,6 +484,8 @@
     "editMessageError": "메시지를 수정할 수 없습니다",
     "aiError": "AI 오류가 발생했습니다. 다시 시도해 주세요",
     "aiQuotaExceeded": "월별 AI 사용 한도를 초과했습니다. 관리자에게 문의하세요.",
+    "aiStreamInterrupted": "AI 스트림이 중단되었습니다. 다시 시도해 주세요.",
+    "aiUnavailable": "AI를 일시적으로 사용할 수 없습니다.",
     "typingIndicator": "입력 중",
     "newConvTitle": "새 대화",
     "newConvTabDirect": "1:1",

@@ -905,6 +905,13 @@ class AppLocalizationsFr extends AppLocalizations {
       'L\'IA est temporairement indisponible. Veuillez réessayer.';
 
   @override
+  String get aiErrStreamInterrupted =>
+      'Le flux IA a été interrompu. Veuillez réessayer.';
+
+  @override
+  String get aiErrUnavailable => 'L\'IA est temporairement indisponible.';
+
+  @override
   String get aiErrorRetry => 'Réessayer';
 
   @override

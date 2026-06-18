@@ -484,6 +484,8 @@
     "editMessageError": "メッセージを編集できませんでした",
     "aiError": "AI でエラーが発生しました。もう一度お試しください",
     "aiQuotaExceeded": "月間 AI 使用量の上限を超えました。管理者にお問い合わせください。",
+    "aiStreamInterrupted": "AI ストリームが中断されました。もう一度お試しください。",
+    "aiUnavailable": "AI は一時的に利用できません。",
     "typingIndicator": "入力中",
     "newConvTitle": "新規チャット",
     "newConvTabDirect": "ダイレクト",

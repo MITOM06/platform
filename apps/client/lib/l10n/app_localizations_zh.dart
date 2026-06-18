@@ -884,6 +884,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get aiError => 'AI暂时不可用。请重试。';
 
   @override
+  String get aiErrStreamInterrupted => 'AI流已中断，请重试。';
+
+  @override
+  String get aiErrUnavailable => 'AI暂时不可用。';
+
+  @override
   String get aiErrorRetry => '重试';
 
   @override

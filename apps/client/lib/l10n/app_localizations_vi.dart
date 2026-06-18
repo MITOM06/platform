@@ -893,6 +893,13 @@ class AppLocalizationsVi extends AppLocalizations {
   String get aiError => 'AI tạm thời không khả dụng. Vui lòng thử lại.';
 
   @override
+  String get aiErrStreamInterrupted =>
+      'Luồng AI bị gián đoạn. Vui lòng thử lại.';
+
+  @override
+  String get aiErrUnavailable => 'AI tạm thời không khả dụng.';
+
+  @override
   String get aiErrorRetry => 'Thử lại';
 
   @override

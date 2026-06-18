@@ -131,11 +131,14 @@ public class AiResponseListener implements MessageListener {
             }
             case "AI_STREAM_ERROR" -> {
                 String error = (String) payload.getOrDefault("error", "AI is temporarily unavailable.");
-                messagingTemplate.convertAndSend(topic, Map.of(
-                    "type", "AI_STREAM_ERROR",
-                    "error", error,
-                    "senderId", AiConstants.AI_BOT_USER_ID,
-                    "conversationId", convId));
+                String code = (String) payload.get("code");
+                Map<String, Object> errorEvent = new HashMap<>();
+                errorEvent.put("type", "AI_STREAM_ERROR");
+                errorEvent.put("error", error);
+                errorEvent.put("senderId", AiConstants.AI_BOT_USER_ID);
+                errorEvent.put("conversationId", convId);
+                if (code != null) errorEvent.put("code", code);
+                messagingTemplate.convertAndSend(topic, errorEvent);
             }
             case "AI_TOOL_CALL" -> {
                 String toolName = (String) payload.getOrDefault("toolName", "");

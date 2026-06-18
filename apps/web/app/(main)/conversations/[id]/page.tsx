@@ -177,10 +177,19 @@ export default function ConversationPage({ params }: Props) {
               case 'AI_STREAM_DONE':
                 setAiStreamContent(null)
                 break
-              case 'AI_STREAM_ERROR':
+              case 'AI_STREAM_ERROR': {
                 setAiStreamContent(null)
-                toast.error(String(parsed.error ?? t('aiError')))
+                const aiErrCodeMap: Record<string, string> = {
+                  AI_QUOTA_EXCEEDED: t('aiQuotaExceeded'),
+                  AI_STREAM_INTERRUPTED: t('aiStreamInterrupted'),
+                  AI_UNAVAILABLE: t('aiUnavailable'),
+                }
+                const aiErrMsg = parsed.code && aiErrCodeMap[parsed.code]
+                  ? aiErrCodeMap[parsed.code]
+                  : (parsed.error ?? t('aiError'))
+                toast.error(String(aiErrMsg))
                 break
+              }
               case 'AI_TOOL_CALL':
                 // tool call indicator is transient — no persistent state needed
                 break

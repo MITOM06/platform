@@ -286,6 +286,8 @@
   "startChatWithAI": "Trò chuyện với PON AI",
   "aiThinking": "AI đang suy nghĩ...",
   "aiError": "AI tạm thời không khả dụng. Vui lòng thử lại.",
+  "aiErrStreamInterrupted": "Luồng AI bị gián đoạn. Vui lòng thử lại.",
+  "aiErrUnavailable": "AI tạm thời không khả dụng.",
   "aiErrorRetry": "Thử lại",
   "aiMessageDeleted": "Tin nhắn đã bị xóa",
   "aiMemoryTitle": "Bộ nhớ AI",

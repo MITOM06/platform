@@ -484,6 +484,8 @@
     "editMessageError": "无法编辑消息",
     "aiError": "AI 出错，请重试",
     "aiQuotaExceeded": "已超过每月 AI 使用配额，请联系管理员。",
+    "aiStreamInterrupted": "AI 流已中断，请重试。",
+    "aiUnavailable": "AI 暂时不可用。",
     "typingIndicator": "正在输入",
     "newConvTitle": "新建对话",
     "newConvTabDirect": "私聊",

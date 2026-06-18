@@ -256,6 +256,7 @@ describe('AiService', () => {
 
     expect(publish).toHaveBeenCalledWith('conv-test', {
       type: 'AI_STREAM_ERROR',
+      code: 'AI_UNAVAILABLE',
       error: 'AI is temporarily unavailable.',
     });
   });
@@ -540,6 +541,7 @@ describe('AiService', () => {
 
     expect(publish).toHaveBeenCalledWith('conv-test', {
       type: 'AI_STREAM_ERROR',
+      code: 'AI_QUOTA_EXCEEDED',
       error: 'Monthly AI usage quota exceeded. Please contact your admin.',
     });
     expect(mockStream).not.toHaveBeenCalled();

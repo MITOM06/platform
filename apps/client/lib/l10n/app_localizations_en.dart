@@ -892,6 +892,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get aiError => 'AI is temporarily unavailable. Please try again.';
 
   @override
+  String get aiErrStreamInterrupted =>
+      'AI stream was interrupted. Please try again.';
+
+  @override
+  String get aiErrUnavailable => 'AI is temporarily unavailable.';
+
+  @override
   String get aiErrorRetry => 'Retry';
 
   @override

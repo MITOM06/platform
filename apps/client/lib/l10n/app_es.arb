@@ -286,6 +286,8 @@
   "startChatWithAI": "Chatear con PON AI",
   "aiThinking": "La IA está pensando...",
   "aiError": "La IA no está disponible temporalmente. Por favor, inténtelo de nuevo.",
+  "aiErrStreamInterrupted": "El flujo de IA fue interrumpido. Por favor, inténtelo de nuevo.",
+  "aiErrUnavailable": "La IA no está disponible temporalmente.",
   "aiErrorRetry": "Reintentar",
   "aiMessageDeleted": "Mensaje eliminado",
   "aiMemoryTitle": "Memoria de IA",
