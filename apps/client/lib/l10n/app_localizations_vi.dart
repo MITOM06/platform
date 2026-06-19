@@ -1466,4 +1466,125 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get authErrUserNotFound => 'Không tìm thấy người dùng.';
+
+  @override
+  String get integrationsTitle => 'Tích hợp';
+
+  @override
+  String get integrationsSubtitle =>
+      'Kết nối tài khoản một lần. Từ đó, chỉ cần nhắn cho trợ lý — nó hành động thay bạn, trong giới hạn quyền bạn cấp và không hơn.';
+
+  @override
+  String get integrationsSettingsSubtitle =>
+      'Kết nối các công cụ trợ lý có thể dùng';
+
+  @override
+  String get connectorStatusConnected => 'Đã kết nối';
+
+  @override
+  String get connectorStatusAvailable => 'Có sẵn';
+
+  @override
+  String get connectorStatusComingSoon => 'Sắp ra mắt';
+
+  @override
+  String get connectorConnect => 'Kết nối';
+
+  @override
+  String get connectorManage => 'Quản lý';
+
+  @override
+  String get connectorDisconnect => 'Ngắt kết nối';
+
+  @override
+  String get connectorDisconnectConfirm =>
+      'Ngắt kết nối tài khoản này? Trợ lý sẽ mất quyền sử dụng các công cụ của nó.';
+
+  @override
+  String get connectorOpenFailed => 'Không thể mở trang ủy quyền.';
+
+  @override
+  String get customMcpTitle => 'Thêm máy chủ MCP tùy chỉnh';
+
+  @override
+  String get customMcpSubtitle =>
+      'Trỏ trợ lý đến bất kỳ máy chủ MCP nào. Chúng tôi sẽ khám phá công cụ và trợ lý có thể sử dụng chúng.';
+
+  @override
+  String get customMcpName => 'Tên';
+
+  @override
+  String get customMcpUrl => 'URL máy chủ';
+
+  @override
+  String get customMcpAuth => 'XÁC THỰC';
+
+  @override
+  String get customMcpAuthNone => 'Không';
+
+  @override
+  String get customMcpAuthApiKey => 'Khóa API';
+
+  @override
+  String get customMcpAuthOauth => 'OAuth';
+
+  @override
+  String get customMcpCredential => 'Thông tin xác thực';
+
+  @override
+  String get customMcpDiscover => 'Khám phá công cụ';
+
+  @override
+  String get customMcpSave => 'Lưu';
+
+  @override
+  String get customMcpSaved => 'Đã thêm máy chủ MCP tùy chỉnh.';
+
+  @override
+  String customMcpToolsFound(int count) {
+    return 'Đã tìm thấy $count công cụ';
+  }
+
+  @override
+  String get skillsTitle => 'Kỹ năng';
+
+  @override
+  String get skillsSubtitle =>
+      'Kỹ năng gói gọn một bộ công cụ và cách làm việc. Chỉ bật những gì bạn cần — mỗi kỹ năng cho biết nó yêu cầu gì.';
+
+  @override
+  String get skillsSettingsSubtitle => 'Chọn thế mạnh cho trợ lý của bạn';
+
+  @override
+  String skillNeeds(String requirements) {
+    return 'Cần $requirements';
+  }
+
+  @override
+  String get skillSchedulerName => 'Trợ lý lịch';
+
+  @override
+  String get skillSchedulerDesc =>
+      'Đặt lịch họp, tìm khung giờ, gửi lời mời và nhắc nhở.';
+
+  @override
+  String get skillMailWriterName => 'Soạn thư';
+
+  @override
+  String get skillMailWriterDesc =>
+      'Soạn thư trả lời theo giọng văn của bạn, tóm tắt chuỗi thư dài.';
+
+  @override
+  String get skillResearcherName => 'Nghiên cứu';
+
+  @override
+  String get skillResearcherDesc =>
+      'Tìm trên web và Drive của bạn, trả lời kèm trích dẫn.';
+
+  @override
+  String get skillProjectKeeperName => 'Quản lý dự án';
+
+  @override
+  String get skillProjectKeeperDesc =>
+      'Lưu ghi chú và việc cần làm vào Notion, giữ cơ sở dữ liệu gọn gàng.';
 }

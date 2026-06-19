@@ -1438,4 +1438,116 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get authErrUserNotFound => '用户不存在。';
+
+  @override
+  String get integrationsTitle => '集成';
+
+  @override
+  String get integrationsSubtitle => '只需连接一次账户。之后只要给助手发消息——它便会代你行事，权限内行事，绝不越界。';
+
+  @override
+  String get integrationsSettingsSubtitle => '连接助手可使用的工具';
+
+  @override
+  String get connectorStatusConnected => '已连接';
+
+  @override
+  String get connectorStatusAvailable => '可用';
+
+  @override
+  String get connectorStatusComingSoon => '即将推出';
+
+  @override
+  String get connectorConnect => '连接';
+
+  @override
+  String get connectorManage => '管理';
+
+  @override
+  String get connectorDisconnect => '断开连接';
+
+  @override
+  String get connectorDisconnectConfirm => '断开此账户？助手将无法再使用其工具。';
+
+  @override
+  String get connectorOpenFailed => '无法打开授权页面。';
+
+  @override
+  String get customMcpTitle => '添加自定义 MCP 服务器';
+
+  @override
+  String get customMcpSubtitle => '将助手指向任意 MCP 服务器。我们会发现其工具，助手即可使用它们。';
+
+  @override
+  String get customMcpName => '名称';
+
+  @override
+  String get customMcpUrl => '服务器 URL';
+
+  @override
+  String get customMcpAuth => '认证';
+
+  @override
+  String get customMcpAuthNone => '无';
+
+  @override
+  String get customMcpAuthApiKey => 'API 密钥';
+
+  @override
+  String get customMcpAuthOauth => 'OAuth';
+
+  @override
+  String get customMcpCredential => '凭据';
+
+  @override
+  String get customMcpDiscover => '发现工具';
+
+  @override
+  String get customMcpSave => '保存';
+
+  @override
+  String get customMcpSaved => '已添加自定义 MCP 服务器。';
+
+  @override
+  String customMcpToolsFound(int count) {
+    return '发现 $count 个工具';
+  }
+
+  @override
+  String get skillsTitle => '技能';
+
+  @override
+  String get skillsSubtitle => '技能将一组工具和工作方式打包。只开启你需要的——每个技能都会告诉你它的要求。';
+
+  @override
+  String get skillsSettingsSubtitle => '选择助手擅长的事';
+
+  @override
+  String skillNeeds(String requirements) {
+    return '需要 $requirements';
+  }
+
+  @override
+  String get skillSchedulerName => '日程助手';
+
+  @override
+  String get skillSchedulerDesc => '预订会议、查找空档、发送邀请和提醒。';
+
+  @override
+  String get skillMailWriterName => '邮件撰写';
+
+  @override
+  String get skillMailWriterDesc => '用你的语气起草回复，总结长邮件。';
+
+  @override
+  String get skillResearcherName => '研究员';
+
+  @override
+  String get skillResearcherDesc => '搜索网络和你的云端硬盘，返回带引用的答案。';
+
+  @override
+  String get skillProjectKeeperName => '项目管家';
+
+  @override
+  String get skillProjectKeeperDesc => '将笔记和任务归档到 Notion，保持数据库整洁。';
 }

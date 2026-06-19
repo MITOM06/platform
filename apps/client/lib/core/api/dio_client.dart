@@ -5,6 +5,8 @@ import '../utils/global_messenger.dart';
 
 const _authBaseUrl = 'https://auth-service-942942821810.asia-southeast1.run.app';
 const _chatBaseUrl = 'https://chat-service-942942821810.asia-southeast1.run.app';
+const _connectorBaseUrl =
+    'https://connector-service-942942821810.asia-southeast1.run.app';
 
 const _keyAccessToken = 'accessToken';
 const _keyRefreshToken = 'refreshToken';
@@ -14,6 +16,9 @@ class DioClient {
   /// Public base URL of the chat-service, used e.g. to resolve relative
   /// avatar/upload URLs returned by the server.
   static const String chatBaseUrl = _chatBaseUrl;
+
+  /// Public base URL of the connector-service (MCP connectors / integrations).
+  static const String connectorBaseUrl = _connectorBaseUrl;
 
   static Dio createAuthDio(
     FlutterSecureStorage storage, {
@@ -41,6 +46,28 @@ class DioClient {
       baseUrl: _chatBaseUrl,
       connectTimeout: const Duration(seconds: 10),
       receiveTimeout: const Duration(seconds: 10),
+      headers: {'Content-Type': 'application/json'},
+    ));
+    dio.interceptors.add(_AuthHeaderInterceptor(storage));
+    dio.interceptors.add(const _NetworkErrorInterceptor());
+    dio.interceptors.add(
+      _TokenRefreshInterceptor(storage, dio, onForceLogout: onForceLogout),
+    );
+    return dio;
+  }
+
+  /// Dio for the connector-service (:3003). Carries the same JWT/refresh/error
+  /// interceptors as the other services so per-user OAuth + MCP calls are
+  /// authenticated identically. NEVER reuse the chat/auth Dio for this — base
+  /// URLs differ and mixing them is a known footgun.
+  static Dio createConnectorDio(
+    FlutterSecureStorage storage, {
+    void Function()? onForceLogout,
+  }) {
+    final dio = Dio(BaseOptions(
+      baseUrl: _connectorBaseUrl,
+      connectTimeout: const Duration(seconds: 10),
+      receiveTimeout: const Duration(seconds: 15),
       headers: {'Content-Type': 'application/json'},
     ));
     dio.interceptors.add(_AuthHeaderInterceptor(storage));

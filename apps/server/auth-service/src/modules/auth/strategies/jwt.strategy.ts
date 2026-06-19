@@ -9,6 +9,11 @@ import { AuthCode } from '../../../common/auth-code.enum';
 export interface JwtPayload {
   sub: string;   // userId
   sid: string;   // sessionId
+  // RBAC claims — optional for backward-compat with in-flight tokens issued
+  // before the enterprise foundation. Services read these to enforce statelessly.
+  role?: string;          // role name (e.g. 'Owner' | 'Admin' | ...)
+  perms?: string[];       // enabled capability keys (see Capability)
+  depts?: string[];       // department ids the user belongs to
   iat?: number;
   exp?: number;
 }

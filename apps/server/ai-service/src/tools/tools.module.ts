@@ -6,6 +6,7 @@ import { GetUserInfoTool } from './get-user-info.tool';
 import { SearchKnowledgeBaseTool } from './search-knowledge-base.tool';
 import { SummarizeConversationTool } from './summarize-conversation.tool';
 import { CreateReminderTool } from './create-reminder.tool';
+import { McpConnectorClient } from './mcp-connector.client';
 import { ToolRegistryService } from './tool-registry.service';
 import { KbModule } from '../kb/kb.module';
 import { MemoryModule } from '../memory/memory.module';
@@ -22,6 +23,7 @@ const reminderFeature = MongooseModule.forFeature([
     SearchKnowledgeBaseTool,
     SummarizeConversationTool,
     CreateReminderTool,
+    McpConnectorClient,
     ToolRegistryService,
   ],
   exports: [ToolRegistryService],

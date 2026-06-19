@@ -510,8 +510,12 @@
   "agreeToTerms": "I agree to the {privacyPolicy} and {termsOfService}",
   "@agreeToTerms": {
     "placeholders": {
-      "privacyPolicy": { "type": "String" },
-      "termsOfService": { "type": "String" }
+      "privacyPolicy": {
+        "type": "String"
+      },
+      "termsOfService": {
+        "type": "String"
+      }
     }
   },
   "privacyPolicy": "Privacy Policy",
@@ -529,55 +533,122 @@
   "errCannotOpenLink": "Couldn't open the link",
   "sysNicknameClearedSelf": "{actorName} cleared their own nickname",
   "@sysNicknameClearedSelf": {
-    "placeholders": { "actorName": { "type": "String" } }
+    "placeholders": {
+      "actorName": {
+        "type": "String"
+      }
+    }
   },
   "sysNicknameClearedOther": "{actorName} cleared the nickname of {targetName}",
   "@sysNicknameClearedOther": {
-    "placeholders": { "actorName": { "type": "String" }, "targetName": { "type": "String" } }
+    "placeholders": {
+      "actorName": {
+        "type": "String"
+      },
+      "targetName": {
+        "type": "String"
+      }
+    }
   },
   "sysNicknameSetSelf": "{actorName} set their nickname to {nickname}",
   "@sysNicknameSetSelf": {
-    "placeholders": { "actorName": { "type": "String" }, "nickname": { "type": "String" } }
+    "placeholders": {
+      "actorName": {
+        "type": "String"
+      },
+      "nickname": {
+        "type": "String"
+      }
+    }
   },
   "sysNicknameSetOther": "{actorName} set the nickname of {targetName} to {nickname}",
   "@sysNicknameSetOther": {
-    "placeholders": { "actorName": { "type": "String" }, "targetName": { "type": "String" }, "nickname": { "type": "String" } }
+    "placeholders": {
+      "actorName": {
+        "type": "String"
+      },
+      "targetName": {
+        "type": "String"
+      },
+      "nickname": {
+        "type": "String"
+      }
+    }
   },
   "sysThemeChanged": "{actorName} changed the chat theme",
   "@sysThemeChanged": {
-    "placeholders": { "actorName": { "type": "String" } }
+    "placeholders": {
+      "actorName": {
+        "type": "String"
+      }
+    }
   },
   "sysQuickReactionChanged": "{actorName} changed the quick reaction to {emoji}",
   "@sysQuickReactionChanged": {
-    "placeholders": { "actorName": { "type": "String" }, "emoji": { "type": "String" } }
+    "placeholders": {
+      "actorName": {
+        "type": "String"
+      },
+      "emoji": {
+        "type": "String"
+      }
+    }
   },
   "sysGroupCreated": "{actorName} created the group",
   "@sysGroupCreated": {
-    "placeholders": { "actorName": { "type": "String" } }
+    "placeholders": {
+      "actorName": {
+        "type": "String"
+      }
+    }
   },
   "sysMembersAdded": "{actorName} added new members",
   "@sysMembersAdded": {
-    "placeholders": { "actorName": { "type": "String" } }
+    "placeholders": {
+      "actorName": {
+        "type": "String"
+      }
+    }
   },
   "sysMemberLeft": "{actorName} left the group",
   "@sysMemberLeft": {
-    "placeholders": { "actorName": { "type": "String" } }
+    "placeholders": {
+      "actorName": {
+        "type": "String"
+      }
+    }
   },
   "sysMemberRemoved": "{actorName} removed a member",
   "@sysMemberRemoved": {
-    "placeholders": { "actorName": { "type": "String" } }
+    "placeholders": {
+      "actorName": {
+        "type": "String"
+      }
+    }
   },
   "sysMemberJoined": "{actorName} joined the group",
   "@sysMemberJoined": {
-    "placeholders": { "actorName": { "type": "String" } }
+    "placeholders": {
+      "actorName": {
+        "type": "String"
+      }
+    }
   },
   "systemVideoCallEnded": "Video call ended · {duration}",
   "@systemVideoCallEnded": {
-    "placeholders": { "duration": { "type": "String" } }
+    "placeholders": {
+      "duration": {
+        "type": "String"
+      }
+    }
   },
   "systemVoiceCallEnded": "Voice call ended · {duration}",
   "@systemVoiceCallEnded": {
-    "placeholders": { "duration": { "type": "String" } }
+    "placeholders": {
+      "duration": {
+        "type": "String"
+      }
+    }
   },
   "systemVideoCallMissed": "Missed video call",
   "systemVoiceCallMissed": "Missed voice call",
@@ -598,11 +669,19 @@
   "aiPersonaResetToDefault": "Reset to Default",
   "tokenUsagePercentUsed": "{percent}% used this month",
   "@tokenUsagePercentUsed": {
-    "placeholders": { "percent": { "type": "String" } }
+    "placeholders": {
+      "percent": {
+        "type": "String"
+      }
+    }
   },
   "tokenUsageCostUsd": "${amount}",
   "@tokenUsageCostUsd": {
-    "placeholders": { "amount": { "type": "String" } }
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
   },
   "notifications": "Notifications",
   "notificationsEnabled": "Notifications are enabled",
@@ -619,7 +698,6 @@
   "legalUserRightsContent": "You have the right to access, correct, or delete your personal data. You can delete your account at any time through the application settings.",
   "legalTermsTitle": "5. Terms of Service",
   "legalTermsContent": "By using our platform, you agree not to engage in any abusive, harassing, or illegal activities. We reserve the right to suspend or terminate accounts that violate these terms.",
-
   "authMsgLoginSuccess": "Login successful.",
   "authMsgLogoutSuccess": "Logout successful.",
   "authMsgOtpSent": "OTP has been sent to your email.",
@@ -628,20 +706,23 @@
   "authMsgPasswordUpdated": "Password updated successfully. Please log in again.",
   "authMsgRegisterSuccess": "Registration successful. OTP has been sent to your email.",
   "authMsgAccountUnverifiedOtpSent": "Account not yet verified. A new OTP has been sent to your email.",
-
   "authErrOtpInvalid": "Invalid OTP code.",
   "authErrOtpExpired": "OTP has expired.",
   "authErrOtpAttemptsExceeded": "Too many incorrect attempts. Please request a new OTP.",
   "authErrOtpWrongWithRemaining": "Incorrect OTP. {remaining} attempt(s) remaining.",
   "@authErrOtpWrongWithRemaining": {
     "placeholders": {
-      "remaining": { "type": "int" }
+      "remaining": {
+        "type": "int"
+      }
     }
   },
   "authErrOtpResendCooldown": "Please wait {ttl} seconds before requesting a new OTP.",
   "@authErrOtpResendCooldown": {
     "placeholders": {
-      "ttl": { "type": "int" }
+      "ttl": {
+        "type": "int"
+      }
     }
   },
   "authErrEmailDomainInvalid": "Email domain does not exist or has no MX records.",
@@ -655,19 +736,25 @@
   "authErrAccountLocked": "Account temporarily locked for {minutes} minute(s) due to too many failed attempts.",
   "@authErrAccountLocked": {
     "placeholders": {
-      "minutes": { "type": "int" }
+      "minutes": {
+        "type": "int"
+      }
     }
   },
   "authErrLoginFailedWithRemaining": "Incorrect email or password. {remaining} attempt(s) remaining.",
   "@authErrLoginFailedWithRemaining": {
     "placeholders": {
-      "remaining": { "type": "int" }
+      "remaining": {
+        "type": "int"
+      }
     }
   },
   "authErrLoginFailedLocked": "Too many failed attempts. Account locked for {minutes} minute(s).",
   "@authErrLoginFailedLocked": {
     "placeholders": {
-      "minutes": { "type": "int" }
+      "minutes": {
+        "type": "int"
+      }
     }
   },
   "authErrTokenInvalid": "Invalid token.",
@@ -680,5 +767,55 @@
   "authErrTokenSessionMismatch": "Token does not match the session.",
   "authErrSocialEmailUnavailable": "Unable to retrieve email from social account.",
   "authErrLoginCodeInvalid": "Login code is invalid or has expired.",
-  "authErrUserNotFound": "User not found."
+  "authErrUserNotFound": "User not found.",
+  "integrationsTitle": "Integrations",
+  "integrationsSubtitle": "Connect an account once. From then on, just message your assistant — it acts on your behalf, with your permissions and nothing more.",
+  "integrationsSettingsSubtitle": "Connect tools your assistant can use",
+  "connectorStatusConnected": "Connected",
+  "connectorStatusAvailable": "Available",
+  "connectorStatusComingSoon": "Coming soon",
+  "connectorConnect": "Connect",
+  "connectorManage": "Manage",
+  "connectorDisconnect": "Disconnect",
+  "connectorDisconnectConfirm": "Disconnect this account? Your assistant will lose access to its tools.",
+  "connectorOpenFailed": "Couldn't open the authorization page.",
+  "customMcpTitle": "Add a custom MCP server",
+  "customMcpSubtitle": "Point your assistant at any MCP server. We'll discover its tools and your assistant can use them.",
+  "customMcpName": "Name",
+  "customMcpUrl": "Server URL",
+  "customMcpAuth": "AUTH",
+  "customMcpAuthNone": "None",
+  "customMcpAuthApiKey": "API key",
+  "customMcpAuthOauth": "OAuth",
+  "customMcpCredential": "Credential",
+  "customMcpDiscover": "Discover tools",
+  "customMcpSave": "Save",
+  "customMcpSaved": "Custom MCP server added.",
+  "customMcpToolsFound": "{count} tools discovered",
+  "@customMcpToolsFound": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "skillsTitle": "Skills",
+  "skillsSubtitle": "Skills bundle a set of tools and a way of working. Turn on only what you need — each one tells you what it requires.",
+  "skillsSettingsSubtitle": "Choose what your assistant is good at",
+  "skillNeeds": "Needs {requirements}",
+  "@skillNeeds": {
+    "placeholders": {
+      "requirements": {
+        "type": "String"
+      }
+    }
+  },
+  "skillSchedulerName": "Scheduler",
+  "skillSchedulerDesc": "Books meetings, finds slots, sends invites and reminders.",
+  "skillMailWriterName": "Mail writer",
+  "skillMailWriterDesc": "Drafts replies in your voice, summarizes long threads.",
+  "skillResearcherName": "Researcher",
+  "skillResearcherDesc": "Searches the web and your Drive, returns cited answers.",
+  "skillProjectKeeperName": "Project keeper",
+  "skillProjectKeeperDesc": "Files notes and tasks into Notion, keeps databases tidy."
 }

@@ -329,6 +329,32 @@ class SettingsScreen extends ConsumerWidget {
                   context: context,
                   isDark: isDark,
                   glowColor: AppTheme.ponCyan,
+                  icon: Icons.hub_outlined,
+                  title: context.l10n.integrationsTitle,
+                  subtitle: context.l10n.integrationsSettingsSubtitle,
+                  onTap: () {
+                    if (isDialog) Navigator.of(context).pop();
+                    context.push('/integrations');
+                  },
+                ),
+                const SizedBox(height: 24),
+                _settingsCard(
+                  context: context,
+                  isDark: isDark,
+                  glowColor: AppTheme.ponPeach,
+                  icon: Icons.auto_awesome_outlined,
+                  title: context.l10n.skillsTitle,
+                  subtitle: context.l10n.skillsSettingsSubtitle,
+                  onTap: () {
+                    if (isDialog) Navigator.of(context).pop();
+                    context.push('/skills');
+                  },
+                ),
+                const SizedBox(height: 24),
+                _settingsCard(
+                  context: context,
+                  isDark: isDark,
+                  glowColor: AppTheme.ponCyan,
                   icon: Icons.toll_outlined,
                   title: context.l10n.tokenUsage,
                   onTap: () => context.push('/token-usage'),

@@ -8,4 +8,8 @@ export default registerAs('app', () => ({
   jwtRefreshSecret: process.env.JWT_REFRESH_SECRET,
   jwtAccessExpires: process.env.JWT_ACCESS_EXPIRES,
   jwtRefreshExpires: process.env.JWT_REFRESH_EXPIRES,
+
+  // Enterprise bootstrap (single-workspace-per-deployment).
+  workspaceName: process.env.WORKSPACE_NAME || 'PON Workspace',
+  bootstrapOwnerEmail: process.env.BOOTSTRAP_OWNER_EMAIL,
 }));

@@ -7,6 +7,7 @@
     "infra:down": "docker compose -f infra/docker-compose/compose.yml down",
     "down": "docker compose -f infra/docker-compose/compose.yml down",
     "auth": "pnpm --filter @platform/auth-service start:dev",
+    "connector": "pnpm --filter connector-service start:dev",
     "chat": "sh -c 'set -a; . apps/server/chat-service/.env; set +a; mvn -f apps/server/chat-service/pom.xml spring-boot:run'",
     "flutter": "cd apps/client && flutter run",
     "dev": "concurrently -n \"AUTH,CHAT\" -c \"blue,green\" \"pnpm:auth\" \"pnpm:chat\"",

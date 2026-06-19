@@ -399,11 +399,19 @@
   "sysMemberJoined": "{actorName}がグループに参加しました",
   "systemVideoCallEnded": "ビデオ通話が終了しました · {duration}",
   "@systemVideoCallEnded": {
-    "placeholders": { "duration": { "type": "String" } }
+    "placeholders": {
+      "duration": {
+        "type": "String"
+      }
+    }
   },
   "systemVoiceCallEnded": "音声通話が終了しました · {duration}",
   "@systemVoiceCallEnded": {
-    "placeholders": { "duration": { "type": "String" } }
+    "placeholders": {
+      "duration": {
+        "type": "String"
+      }
+    }
   },
   "systemVideoCallMissed": "不在着信（ビデオ通話）",
   "systemVoiceCallMissed": "不在着信（音声通話）",
@@ -424,11 +432,19 @@
   "aiPersonaResetToDefault": "既定値に戻す",
   "tokenUsagePercentUsed": "今月 {percent}% 使用",
   "@tokenUsagePercentUsed": {
-    "placeholders": { "percent": { "type": "String" } }
+    "placeholders": {
+      "percent": {
+        "type": "String"
+      }
+    }
   },
   "tokenUsageCostUsd": "{amount} ドル",
   "@tokenUsageCostUsd": {
-    "placeholders": { "amount": { "type": "String" } }
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
   },
   "notifications": "通知",
   "notificationsEnabled": "通知は有効です",
@@ -445,7 +461,6 @@
   "legalUserRightsContent": "お客様は、個人データへのアクセス、修正、または削除を行う権利があります。アプリケーション設定からいつでもアカウントを削除できます。",
   "legalTermsTitle": "5. 利用規約",
   "legalTermsContent": "当社のプラットフォームを使用することで、虐待、嫌がらせ、または違法行為に関与しないことに同意したものとみなされます。当社は、これらの規約に違反するアカウントを停止または終了する権利を留保します。",
-
   "authMsgLoginSuccess": "ログインに成功しました。",
   "authMsgLogoutSuccess": "ログアウトしました。",
   "authMsgOtpSent": "OTPがメールに送信されました。",
@@ -454,20 +469,23 @@
   "authMsgPasswordUpdated": "パスワードが更新されました。再度ログインしてください。",
   "authMsgRegisterSuccess": "登録が完了しました。OTPがメールに送信されました。",
   "authMsgAccountUnverifiedOtpSent": "アカウントはまだ確認されていません。新しいOTPがメールに送信されました。",
-
   "authErrOtpInvalid": "OTPコードが無効です。",
   "authErrOtpExpired": "OTPの有効期限が切れました。",
   "authErrOtpAttemptsExceeded": "試行回数が超過しました。新しいOTPを申請してください。",
   "authErrOtpWrongWithRemaining": "OTPが正しくありません。残り{remaining}回の試行があります。",
   "@authErrOtpWrongWithRemaining": {
     "placeholders": {
-      "remaining": { "type": "int" }
+      "remaining": {
+        "type": "int"
+      }
     }
   },
   "authErrOtpResendCooldown": "新しいOTPを申請する前に{ttl}秒お待ちください。",
   "@authErrOtpResendCooldown": {
     "placeholders": {
-      "ttl": { "type": "int" }
+      "ttl": {
+        "type": "int"
+      }
     }
   },
   "authErrEmailDomainInvalid": "メールのドメインが存在しないか、MXレコードがありません。",
@@ -481,19 +499,25 @@
   "authErrAccountLocked": "ログイン失敗が多すぎるため、アカウントが{minutes}分間ロックされました。",
   "@authErrAccountLocked": {
     "placeholders": {
-      "minutes": { "type": "int" }
+      "minutes": {
+        "type": "int"
+      }
     }
   },
   "authErrLoginFailedWithRemaining": "メールアドレスまたはパスワードが正しくありません。残り{remaining}回の試行があります。",
   "@authErrLoginFailedWithRemaining": {
     "placeholders": {
-      "remaining": { "type": "int" }
+      "remaining": {
+        "type": "int"
+      }
     }
   },
   "authErrLoginFailedLocked": "ログイン試行回数が超過しました。アカウントが{minutes}分間ロックされました。",
   "@authErrLoginFailedLocked": {
     "placeholders": {
-      "minutes": { "type": "int" }
+      "minutes": {
+        "type": "int"
+      }
     }
   },
   "authErrTokenInvalid": "トークンが無効です。",
@@ -506,5 +530,41 @@
   "authErrTokenSessionMismatch": "トークンがセッションと一致しません。",
   "authErrSocialEmailUnavailable": "ソーシャルアカウントからメールを取得できません。",
   "authErrLoginCodeInvalid": "ログインコードが無効または有効期限が切れています。",
-  "authErrUserNotFound": "ユーザーが見つかりません。"
+  "authErrUserNotFound": "ユーザーが見つかりません。",
+  "integrationsTitle": "連携",
+  "integrationsSubtitle": "一度アカウントを接続するだけ。あとはアシスタントにメッセージを送るだけで、あなたの権限の範囲内で代わりに動きます。",
+  "integrationsSettingsSubtitle": "アシスタントが使えるツールを接続",
+  "connectorStatusConnected": "接続済み",
+  "connectorStatusAvailable": "利用可能",
+  "connectorStatusComingSoon": "近日公開",
+  "connectorConnect": "接続",
+  "connectorManage": "管理",
+  "connectorDisconnect": "切断",
+  "connectorDisconnectConfirm": "このアカウントを切断しますか？アシスタントはツールを使えなくなります。",
+  "connectorOpenFailed": "認証ページを開けませんでした。",
+  "customMcpTitle": "カスタム MCP サーバーを追加",
+  "customMcpSubtitle": "任意の MCP サーバーをアシスタントに指定します。ツールを検出し、アシスタントが使えるようになります。",
+  "customMcpName": "名前",
+  "customMcpUrl": "サーバー URL",
+  "customMcpAuth": "認証",
+  "customMcpAuthNone": "なし",
+  "customMcpAuthApiKey": "API キー",
+  "customMcpAuthOauth": "OAuth",
+  "customMcpCredential": "認証情報",
+  "customMcpDiscover": "ツールを検出",
+  "customMcpSave": "保存",
+  "customMcpSaved": "カスタム MCP サーバーを追加しました。",
+  "customMcpToolsFound": "{count} 個のツールを検出",
+  "skillsTitle": "スキル",
+  "skillsSubtitle": "スキルはツール群と働き方をまとめたものです。必要なものだけオンにしてください。各スキルが必要条件を示します。",
+  "skillsSettingsSubtitle": "アシスタントの得意分野を選ぶ",
+  "skillNeeds": "{requirements} が必要",
+  "skillSchedulerName": "スケジューラー",
+  "skillSchedulerDesc": "会議を予約し、空き時間を探し、招待とリマインダーを送ります。",
+  "skillMailWriterName": "メール作成",
+  "skillMailWriterDesc": "あなたの口調で返信を下書きし、長いスレッドを要約します。",
+  "skillResearcherName": "リサーチャー",
+  "skillResearcherDesc": "ウェブと Drive を検索し、出典付きの回答を返します。",
+  "skillProjectKeeperName": "プロジェクト管理",
+  "skillProjectKeeperDesc": "メモやタスクを Notion に保存し、データベースを整理します。"
 }

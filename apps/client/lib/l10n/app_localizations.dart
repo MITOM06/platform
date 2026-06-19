@@ -2790,6 +2790,222 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'User not found.'**
   String get authErrUserNotFound;
+
+  /// No description provided for @integrationsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Integrations'**
+  String get integrationsTitle;
+
+  /// No description provided for @integrationsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect an account once. From then on, just message your assistant — it acts on your behalf, with your permissions and nothing more.'**
+  String get integrationsSubtitle;
+
+  /// No description provided for @integrationsSettingsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect tools your assistant can use'**
+  String get integrationsSettingsSubtitle;
+
+  /// No description provided for @connectorStatusConnected.
+  ///
+  /// In en, this message translates to:
+  /// **'Connected'**
+  String get connectorStatusConnected;
+
+  /// No description provided for @connectorStatusAvailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Available'**
+  String get connectorStatusAvailable;
+
+  /// No description provided for @connectorStatusComingSoon.
+  ///
+  /// In en, this message translates to:
+  /// **'Coming soon'**
+  String get connectorStatusComingSoon;
+
+  /// No description provided for @connectorConnect.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect'**
+  String get connectorConnect;
+
+  /// No description provided for @connectorManage.
+  ///
+  /// In en, this message translates to:
+  /// **'Manage'**
+  String get connectorManage;
+
+  /// No description provided for @connectorDisconnect.
+  ///
+  /// In en, this message translates to:
+  /// **'Disconnect'**
+  String get connectorDisconnect;
+
+  /// No description provided for @connectorDisconnectConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Disconnect this account? Your assistant will lose access to its tools.'**
+  String get connectorDisconnectConfirm;
+
+  /// No description provided for @connectorOpenFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t open the authorization page.'**
+  String get connectorOpenFailed;
+
+  /// No description provided for @customMcpTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a custom MCP server'**
+  String get customMcpTitle;
+
+  /// No description provided for @customMcpSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Point your assistant at any MCP server. We\'ll discover its tools and your assistant can use them.'**
+  String get customMcpSubtitle;
+
+  /// No description provided for @customMcpName.
+  ///
+  /// In en, this message translates to:
+  /// **'Name'**
+  String get customMcpName;
+
+  /// No description provided for @customMcpUrl.
+  ///
+  /// In en, this message translates to:
+  /// **'Server URL'**
+  String get customMcpUrl;
+
+  /// No description provided for @customMcpAuth.
+  ///
+  /// In en, this message translates to:
+  /// **'AUTH'**
+  String get customMcpAuth;
+
+  /// No description provided for @customMcpAuthNone.
+  ///
+  /// In en, this message translates to:
+  /// **'None'**
+  String get customMcpAuthNone;
+
+  /// No description provided for @customMcpAuthApiKey.
+  ///
+  /// In en, this message translates to:
+  /// **'API key'**
+  String get customMcpAuthApiKey;
+
+  /// No description provided for @customMcpAuthOauth.
+  ///
+  /// In en, this message translates to:
+  /// **'OAuth'**
+  String get customMcpAuthOauth;
+
+  /// No description provided for @customMcpCredential.
+  ///
+  /// In en, this message translates to:
+  /// **'Credential'**
+  String get customMcpCredential;
+
+  /// No description provided for @customMcpDiscover.
+  ///
+  /// In en, this message translates to:
+  /// **'Discover tools'**
+  String get customMcpDiscover;
+
+  /// No description provided for @customMcpSave.
+  ///
+  /// In en, this message translates to:
+  /// **'Save'**
+  String get customMcpSave;
+
+  /// No description provided for @customMcpSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Custom MCP server added.'**
+  String get customMcpSaved;
+
+  /// No description provided for @customMcpToolsFound.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} tools discovered'**
+  String customMcpToolsFound(int count);
+
+  /// No description provided for @skillsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Skills'**
+  String get skillsTitle;
+
+  /// No description provided for @skillsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Skills bundle a set of tools and a way of working. Turn on only what you need — each one tells you what it requires.'**
+  String get skillsSubtitle;
+
+  /// No description provided for @skillsSettingsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose what your assistant is good at'**
+  String get skillsSettingsSubtitle;
+
+  /// No description provided for @skillNeeds.
+  ///
+  /// In en, this message translates to:
+  /// **'Needs {requirements}'**
+  String skillNeeds(String requirements);
+
+  /// No description provided for @skillSchedulerName.
+  ///
+  /// In en, this message translates to:
+  /// **'Scheduler'**
+  String get skillSchedulerName;
+
+  /// No description provided for @skillSchedulerDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Books meetings, finds slots, sends invites and reminders.'**
+  String get skillSchedulerDesc;
+
+  /// No description provided for @skillMailWriterName.
+  ///
+  /// In en, this message translates to:
+  /// **'Mail writer'**
+  String get skillMailWriterName;
+
+  /// No description provided for @skillMailWriterDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Drafts replies in your voice, summarizes long threads.'**
+  String get skillMailWriterDesc;
+
+  /// No description provided for @skillResearcherName.
+  ///
+  /// In en, this message translates to:
+  /// **'Researcher'**
+  String get skillResearcherName;
+
+  /// No description provided for @skillResearcherDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Searches the web and your Drive, returns cited answers.'**
+  String get skillResearcherDesc;
+
+  /// No description provided for @skillProjectKeeperName.
+  ///
+  /// In en, this message translates to:
+  /// **'Project keeper'**
+  String get skillProjectKeeperName;
+
+  /// No description provided for @skillProjectKeeperDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Files notes and tasks into Notion, keeps databases tidy.'**
+  String get skillProjectKeeperDesc;
 }
 
 class _AppLocalizationsDelegate

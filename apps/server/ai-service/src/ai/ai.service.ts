@@ -241,8 +241,8 @@ export class AiService {
   }
 
   /** Tool definitions with a cache breakpoint on the last tool. */
-  private buildTools(): Anthropic.Tool[] {
-    const defs = this.toolRegistry.getDefinitions();
+  private async buildTools(ctx: ToolContext): Promise<Anthropic.Tool[]> {
+    const defs = await this.toolRegistry.getDefinitions(ctx);
     const tools = defs.map((d) => ({
       name: d.name,
       description: d.description,
@@ -278,12 +278,12 @@ export class AiService {
       : {};
 
     const system = this.buildSystemBlocks(ctx);
-    const tools = this.buildTools();
     const toolCtx: ToolContext = {
       conversationId: ctx.conversationId,
       userId: ctx.userId,
       displayName: ctx.displayName,
     };
+    const tools = await this.buildTools(toolCtx);
 
     const toolCalls: ToolTraceEntry[] = [];
     const thinkingBlocks: string[] = [];

@@ -1,5 +1,5 @@
 import { Prop, Schema as NestSchema, SchemaFactory } from '@nestjs/mongoose';
-import { Document, Schema } from 'mongoose';
+import { Document, Schema, Types } from 'mongoose';
 
 export type UserDocument = User & Document;
 
@@ -67,6 +67,18 @@ export class User {
 
   @Prop({ default: false })
   hideInfo: boolean;
+
+  // ===================== ENTERPRISE RBAC MEMBERSHIP =====================
+  // Single-workspace-per-deployment: membership is embedded on the user (no
+  // separate Membership collection, no cross-company orgId).
+
+  /** The user's assigned role (ref to a Role doc). Unassigned => treated as Member. */
+  @Prop({ type: Schema.Types.ObjectId })
+  roleId?: Types.ObjectId;
+
+  /** Departments this user belongs to (refs to Department docs). */
+  @Prop({ type: [Schema.Types.ObjectId], default: [] })
+  departmentIds: Types.ObjectId[];
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);

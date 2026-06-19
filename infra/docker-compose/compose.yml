@@ -172,6 +172,34 @@ services:
       OTEL_ENABLED: ${OTEL_ENABLED:-true}
       OTEL_EXPORTER_OTLP_ENDPOINT: http://jaeger:4318
       OTEL_SERVICE_NAME: ai-service
+      CONNECTOR_INTERNAL_URL: http://connector-service:3003
+      INTERNAL_API_KEY: ${INTERNAL_API_KEY}
+    networks:
+      - app-net
+    restart: unless-stopped
+
+  connector-service:
+    build:
+      context: ../..
+      dockerfile: apps/server/connector-service/Dockerfile
+    container_name: connector-service
+    ports:
+      - "3003:3003"
+    depends_on:
+      mongo:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      PORT: 3003
+      JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET}
+      MONGO_URI: mongodb://mongo:27017/platform
+      CONNECTOR_VAULT_KEY: ${CONNECTOR_VAULT_KEY}
+      INTERNAL_API_KEY: ${INTERNAL_API_KEY}
+      OAUTH_REDIRECT_BASE: ${OAUTH_REDIRECT_BASE:-http://localhost:3003}
+      CLIENT_REDIRECT_URL: ${CLIENT_REDIRECT_URL:-http://localhost:3000/integrations}
+      NOTION_CLIENT_ID: ${NOTION_CLIENT_ID:-}
+      NOTION_CLIENT_SECRET: ${NOTION_CLIENT_SECRET:-}
+      NOTION_MCP_URL: ${NOTION_MCP_URL:-https://mcp.notion.com/sse}
     networks:
       - app-net
     restart: unless-stopped
