@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "eslint",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "gen:api-types": "openapi-typescript ../server/auth-service/openapi.json -o lib/api/generated/auth-api.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.4.0",
@@ -45,6 +46,7 @@
     "eslint": "^9",
     "eslint-config-next": "16.2.7",
     "jsdom": "^29.1.1",
+    "openapi-typescript": "^7.6.1",
     "tailwindcss": "^4",
     "typescript": "^5",
     "vitest": "^4.1.9"

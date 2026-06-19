@@ -141,6 +141,34 @@ describe('MessageBubble', () => {
     expect(screen.getByText('aiError')).toBeInTheDocument()
   })
 
+  // ── AI sentinel / error-code states (web↔mobile sync parity) ───────────────
+  // The chat-service emits localizable AI error codes; the bubble maps each
+  // sentinel to its own i18n key. These MUST mirror message_bubble.dart.
+
+  it('renders AI quota-exceeded sentinel via aiQuotaExceeded key', async () => {
+    await renderBubble({ type: 'ai', content: '__AI_QUOTA__' })
+    expect(screen.getByText('aiQuotaExceeded')).toBeInTheDocument()
+    // The generic error key must NOT be used for this sentinel.
+    expect(screen.queryByText('aiError')).not.toBeInTheDocument()
+  })
+
+  it('renders AI stream-interrupted sentinel via aiStreamInterrupted key', async () => {
+    await renderBubble({ type: 'ai', content: '__AI_INTERRUPTED__' })
+    expect(screen.getByText('aiStreamInterrupted')).toBeInTheDocument()
+  })
+
+  it('renders AI unavailable sentinel via aiUnavailable key', async () => {
+    await renderBubble({ type: 'ai', content: '__AI_UNAVAILABLE__' })
+    expect(screen.getByText('aiUnavailable')).toBeInTheDocument()
+  })
+
+  it('renders a normal AI message as plain text (not an error state)', async () => {
+    await renderBubble({ type: 'ai', content: 'Here is your answer.' })
+    expect(screen.getByText('Here is your answer.')).toBeInTheDocument()
+    expect(screen.queryByText('aiError')).not.toBeInTheDocument()
+    expect(screen.queryByText('aiUnavailable')).not.toBeInTheDocument()
+  })
+
   it('renders image content using ImageContent stub', async () => {
     await renderBubble({ type: 'image', content: '/api/uploads/img.jpg' })
     expect(screen.getByTestId('image-content')).toBeInTheDocument()

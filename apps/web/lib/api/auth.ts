@@ -1,6 +1,11 @@
 import { authApi } from './axios'
 import type { AuthUser } from '@/lib/store/auth.store'
-import type { UserSearchResult } from './types'
+import type {
+  UserSearchResult,
+  LoginRequest,
+  RegisterRequest,
+  VerifyOtpRequest,
+} from './types'
 
 /** Profile gender — kept as a loose string union to mirror the auth-service
  *  schema (`gender: string`), with the values the UI selector offers. */
@@ -48,14 +53,19 @@ export interface VerifyOtpResponse {
 }
 
 export const authService = {
+  // Request bodies are typed from the OpenAPI-derived DTOs (see lib/api/types.ts)
+  // so the client payloads stay in lockstep with the auth-service contract.
   login: (email: string, password: string) =>
-    authApi.post<LoginResponse>('/auth/login', { email, password }),
+    authApi.post<LoginResponse>('/auth/login', { email, password } satisfies LoginRequest),
 
   register: (email: string, password: string, displayName: string) =>
-    authApi.post<RegisterResponse>('/auth/register', { email, password, displayName }),
+    authApi.post<RegisterResponse>(
+      '/auth/register',
+      { email, password, displayName } satisfies RegisterRequest,
+    ),
 
   verifyOtp: (email: string, otp: string) =>
-    authApi.post<VerifyOtpResponse>('/auth/verify-otp', { email, otp }),
+    authApi.post<VerifyOtpResponse>('/auth/verify-otp', { email, otp } satisfies VerifyOtpRequest),
 
   resendOtp: (email: string) =>
     authApi.post('/auth/resend-otp', { email }),
