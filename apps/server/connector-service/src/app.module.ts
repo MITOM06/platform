@@ -3,6 +3,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
 import configuration from './config/configuration';
 import { HealthModule } from './health/health.module';
+import { ConnectionsModule } from './connections/connections.module';
 
 const mongooseModule: DynamicModule = MongooseModule.forRootAsync({
   useFactory: (configService: ConfigService) => ({
@@ -20,6 +21,7 @@ const mongooseModule: DynamicModule = MongooseModule.forRootAsync({
     }),
     mongooseModule,
     HealthModule,
+    ConnectionsModule,
   ],
 })
 export class AppModule {}
