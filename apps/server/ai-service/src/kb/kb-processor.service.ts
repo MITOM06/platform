@@ -32,14 +32,14 @@ export class KbProcessorService {
     const { documentId, conversationId, userId, fileUrl, mimeType, fileName } = payload;
 
     try {
-      // Upsert local status record as "processing"
+      // Mark the shared kb_documents record (created by chat-service on upload) as "processing".
+      // Use $setOnInsert for identity/uploadedAt so we never clobber chat-service's original values
+      // on the normal path; $set only the fields ai-service actually owns during processing.
       await this.kbDocumentModel.findOneAndUpdate(
         { documentId },
         {
-          $set: {
-            documentId, conversationId, userId,
-            fileName, mimeType, status: 'processing', uploadedAt: new Date(),
-          },
+          $set: { conversationId, userId, fileName, mimeType, status: 'processing' },
+          $setOnInsert: { documentId, uploadedAt: new Date() },
         },
         { upsert: true, new: true },
       );

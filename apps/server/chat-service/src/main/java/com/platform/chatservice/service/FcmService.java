@@ -121,4 +121,59 @@ public class FcmService {
       log.error("FCM push skipped due to error", e);
     }
   }
+
+  /**
+   * Push a due reminder to all of the owner's devices. Unlike chat pushes, reminders are delivered
+   * regardless of online/mute state (the user explicitly asked to be reminded). Failures are
+   * swallowed so the sweep loop never aborts.
+   *
+   * @return true if at least one push was dispatched (or FCM is disabled / user has no tokens —
+   *     i.e. the reminder should still be marked notified so it is not retried forever).
+   */
+  public boolean sendReminderPush(String targetUserId, String text, String conversationId) {
+    // FCM disabled → treat as delivered so the sweep doesn't spin on it every tick.
+    if (FirebaseApp.getApps().isEmpty()) {
+      return true;
+    }
+    if (targetUserId == null || !ObjectId.isValid(targetUserId)) {
+      log.warn("Skipping reminder push: invalid targetUserId '{}'", targetUserId);
+      return true;
+    }
+
+    try {
+      Query query = new Query(Criteria.where("_id").is(new ObjectId(targetUserId)));
+      query.fields().include("fcmTokens");
+      Document userDoc = mongoTemplate.findOne(query, Document.class, "users");
+      if (userDoc == null) return true;
+
+      List<String> tokens = userDoc.getList("fcmTokens", String.class);
+      if (tokens == null || tokens.isEmpty()) return true;
+
+      for (String token : tokens) {
+        try {
+          Message message =
+              Message.builder()
+                  .setToken(token)
+                  .setNotification(
+                      Notification.builder().setTitle("Reminder").setBody(text).build())
+                  .setAndroidConfig(
+                      AndroidConfig.builder()
+                          .setPriority(AndroidConfig.Priority.HIGH)
+                          .setNotification(
+                              AndroidNotification.builder().setChannelId("pon_reminders").build())
+                          .build())
+                  .putData("conversationId", conversationId == null ? "" : conversationId)
+                  .putData("type", "reminder")
+                  .build();
+          FirebaseMessaging.getInstance().sendAsync(message);
+        } catch (Exception e) {
+          log.warn("Failed to send reminder push to token (skipping): {}", e.getMessage());
+        }
+      }
+      return true;
+    } catch (Exception e) {
+      log.error("Reminder push skipped due to error", e);
+      return false;
+    }
+  }
 }

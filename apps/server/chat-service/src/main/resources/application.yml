@@ -62,3 +62,6 @@ app:
   firebase:
     # Base64 của file service-account JSON (Firebase Console). Rỗng = FCM tắt (no-op an toàn).
     service-account-base64: ${FIREBASE_SERVICE_ACCOUNT_BASE64:}
+  reminder:
+    # Interval (ms) for the due-reminder delivery sweep. Default 60s.
+    sweep-interval-ms: ${REMINDER_SWEEP_INTERVAL_MS:60000}
