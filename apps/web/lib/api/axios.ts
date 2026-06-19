@@ -11,6 +11,11 @@ export const chatApi = axios.create({
   headers: { 'Content-Type': 'application/json' },
 })
 
+export const connectorApi = axios.create({
+  baseURL: process.env.NEXT_PUBLIC_CONNECTOR_URL,
+  headers: { 'Content-Type': 'application/json' },
+})
+
 // ─── request interceptors — inject access token ──────────────────────────────
 
 const injectToken = (config: InternalAxiosRequestConfig) => {
@@ -21,6 +26,7 @@ const injectToken = (config: InternalAxiosRequestConfig) => {
 
 authApi.interceptors.request.use(injectToken)
 chatApi.interceptors.request.use(injectToken)
+connectorApi.interceptors.request.use(injectToken)
 
 // ─── response interceptor — handle 401 / token refresh ────────────────────────
 
@@ -94,3 +100,4 @@ const create401ResponseInterceptor = (apiInstance: typeof chatApi) => {
 
 chatApi.interceptors.response.use((res) => res, create401ResponseInterceptor(chatApi))
 authApi.interceptors.response.use((res) => res, create401ResponseInterceptor(authApi))
+connectorApi.interceptors.response.use((res) => res, create401ResponseInterceptor(connectorApi))
