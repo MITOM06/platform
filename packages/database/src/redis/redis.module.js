@@ -21,15 +21,21 @@ exports.DatabaseRedisModule = DatabaseRedisModule = __decorate([
             {
                 provide: exports.REDIS_CLIENT,
                 useFactory: () => {
+                    const failFastOptions = {
+                        lazyConnect: true,
+                        connectTimeout: 5000,
+                        commandTimeout: 5000,
+                        maxRetriesPerRequest: 1,
+                        enableOfflineQueue: true,
+                        retryStrategy: (times) => Math.min(times * 200, 2000),
+                    };
                     const client = process.env.REDIS_URL
-                        ? new ioredis_1.default(process.env.REDIS_URL, { lazyConnect: true, maxRetriesPerRequest: 0, enableOfflineQueue: true })
+                        ? new ioredis_1.default(process.env.REDIS_URL, failFastOptions)
                         : new ioredis_1.default({
                             host: process.env.REDIS_HOST || 'localhost',
                             port: Number(process.env.REDIS_PORT) || 6379,
                             password: process.env.REDIS_PASSWORD,
-                            lazyConnect: true,
-                            maxRetriesPerRequest: 0,
-                            enableOfflineQueue: true,
+                            ...failFastOptions,
                         });
                     client.on('error', (err) => logger.error(`Redis error: ${err.message}`));
                     return client;
