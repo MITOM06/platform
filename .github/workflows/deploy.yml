@@ -95,7 +95,8 @@ jobs:
             .
           docker push $REGISTRY/ai-service:${{ github.sha }}
 
-      # Deploy auth-service (scale to zero)
+      # Deploy auth-service (min 1 instance — eliminates login cold-start; --cpu-boost
+      # speeds the remaining cold scale-ups; 1Gi memory gives argon2 (~64MB/hash) headroom)
       - name: Deploy auth-service
         uses: google-github-actions/deploy-cloudrun@v2
         with:
@@ -104,10 +105,11 @@ jobs:
           image: ${{ env.REGISTRY }}/auth-service:${{ github.sha }}
           flags: >-
             --allow-unauthenticated
-            --min-instances=0
+            --min-instances=1
             --max-instances=3
-            --memory=512Mi
+            --memory=1Gi
             --cpu=1
+            --cpu-boost
             --port=3001
           env_vars: |
             NODE_ENV=production
@@ -148,6 +150,7 @@ jobs:
             --max-instances=3
             --memory=1Gi
             --cpu=1
+            --cpu-boost
             --port=8080
           env_vars: |
             NODE_ENV=production

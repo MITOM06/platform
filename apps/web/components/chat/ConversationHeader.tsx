@@ -17,11 +17,23 @@ import { ConversationSettingsDrawer } from './ConversationSettingsDrawer'
 import { GroupSettingsDrawer } from './GroupSettingsDrawer'
 import { SharedMediaGallery } from './SharedMediaGallery'
 import { UserProfileDrawer } from './UserProfileDrawer'
-import { callManager } from '@/lib/webrtc/call-manager'
 import { useNickname } from '@/lib/nicknames'
 import { cn } from '@/lib/utils'
 
 const AI_BOT_ID = 'ai-bot-000000000000000000000001'
+
+// Lazy-load the WebRTC stack only when the user actually starts a call, so the
+// RTCPeerConnection code stays out of the conversation route's initial bundle.
+function startCall(
+  otherUserId: string,
+  displayName: string,
+  conversationId: string,
+  video: boolean,
+) {
+  void import('@/lib/webrtc/call-manager').then((m) =>
+    m.callManager.startCall(otherUserId, displayName, conversationId, video),
+  )
+}
 
 interface Props {
   conversationId: string
@@ -154,7 +166,7 @@ export function ConversationHeader({
               <Button
                 variant="ghost"
                 size="icon"
-                onClick={() => callManager.startCall(otherUserId, displayName, conversationId, false)}
+                onClick={() => startCall(otherUserId, displayName, conversationId, false)}
                 title={t('voiceCall')}
               >
                 <Phone className="size-4" />
@@ -162,7 +174,7 @@ export function ConversationHeader({
               <Button
                 variant="ghost"
                 size="icon"
-                onClick={() => callManager.startCall(otherUserId, displayName, conversationId, true)}
+                onClick={() => startCall(otherUserId, displayName, conversationId, true)}
                 title={t('videoCall')}
               >
                 <Video className="size-4" />

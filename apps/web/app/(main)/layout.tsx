@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect } from 'react'
+import dynamic from 'next/dynamic'
 import { useQueryClient } from '@tanstack/react-query'
 import { useRouter, usePathname } from 'next/navigation'
 import { toast } from 'sonner'
@@ -11,9 +12,8 @@ import { useTranslations } from 'next-intl'
 import { useAuthStore } from '@/lib/store/auth.store'
 import { Button } from '@/components/ui/button'
 import { stompService } from '@/lib/stomp/client'
-import { callManager, type WebRTCSignal } from '@/lib/webrtc/call-manager'
+import type { WebRTCSignal } from '@/lib/webrtc/call-manager'
 import { useCallStore } from '@/lib/store/call.store'
-import { CallOverlay } from '@/components/call/CallOverlay'
 import { ConversationList } from '@/components/chat/ConversationList'
 import { ActiveFriendsRow } from '@/components/chat/ActiveFriendsRow'
 import { cn } from '@/lib/utils'
@@ -28,6 +28,15 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
+
+// Code-split the WebRTC call UI (CallOverlay → Voice/VideoCallModal →
+// call-manager → RTCPeerConnection). It renders nothing until a call starts,
+// so it must NOT ship in the initial authenticated bundle. ssr:false because
+// it relies on browser-only WebRTC/media APIs.
+const CallOverlay = dynamic(
+  () => import('@/components/call/CallOverlay').then((m) => m.CallOverlay),
+  { ssr: false },
+)
 
 function getInitials(name?: string): string {
   if (!name) return '?'
@@ -148,7 +157,11 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
               video: (signal.sdp ?? '').includes('m=video'),
             })
           } else {
-            callManager.handleSignal(signal)
+            // Lazy-load the WebRTC module only when an active call needs it —
+            // keeps RTCPeerConnection code out of the initial layout bundle.
+            void import('@/lib/webrtc/call-manager').then((m) =>
+              m.callManager.handleSignal(signal),
+            )
           }
         } catch {
           // ignore

@@ -8,6 +8,10 @@ export function useRelationship(userId: string | undefined) {
     queryKey: ['relationship', userId],
     queryFn: () => authService.getRelationship(userId!),
     enabled: !!userId,
+    // Match useUser's caching so the sidebar doesn't refire a relationship XHR
+    // per conversation row on every mount / navigation / window-focus.
+    staleTime: 5 * 60 * 1000, // 5 minutes — relationships rarely change mid-session
+    gcTime: 10 * 60 * 1000, // keep cached 10 min after last observer unmounts
   })
 
   // Block/unblock changes the relationship + may toggle conversation pending

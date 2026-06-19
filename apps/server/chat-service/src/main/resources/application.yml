@@ -13,6 +13,11 @@ spring:
   data:
     mongodb:
       uri: ${SPRING_DATA_MONGODB_URI:mongodb://localhost:27018/platform}
+      # Spring Boot 3 disables auto-index-creation by default, so @Indexed/@CompoundIndex/
+      # @TextIndexed definitions on @Document models were never built in prod (every
+      # message/conversation query fell back to a full COLLSCAN). Re-enable it so the declared
+      # indexes are created at startup. Builds run in the background on existing collections.
+      auto-index-creation: true
     redis:
       # Falls back to a host/port-derived URL when SPRING_DATA_REDIS_URL is unset
       # (an empty url crashes Lettuce with "scheme 'null' is not supported").
