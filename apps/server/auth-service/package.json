@@ -18,7 +18,8 @@
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "jest --config ./test/jest-e2e.json",
-    "test:dev": "node dist/apps/server/auth-service/src/main"
+    "test:dev": "node dist/apps/server/auth-service/src/main",
+    "gen:openapi": "ts-node --transpile-only -r tsconfig-paths/register src/generate-openapi.ts"
   },
   "dependencies": {
     "@nestjs-modules/mailer": "^2.0.2",
@@ -30,6 +31,7 @@
     "@nestjs/passport": "^11.0.5",
     "@nestjs/platform-express": "^11.0.1",
     "@nestjs/platform-socket.io": "^11.1.7",
+    "@nestjs/swagger": "^11.2.0",
     "@nestjs/throttler": "^6.5.0",
     "@nestjs/websockets": "^11.1.7",
     "@platform/database": "workspace:*",

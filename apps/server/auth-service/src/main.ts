@@ -3,6 +3,7 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
 import { JsonLogger } from './logger';
+import { setupSwagger } from './swagger';
 import session from 'express-session';
 import cookieParser from 'cookie-parser';
 import helmet from 'helmet';
@@ -88,6 +89,9 @@ async function bootstrap() {
       transform: true,
     }),
   );
+
+  // Swagger UI at /docs (non-production, or when ENABLE_SWAGGER=true).
+  setupSwagger(app);
 
   const port = process.env.PORT || 3001;
   await app.listen(port, '0.0.0.0');
