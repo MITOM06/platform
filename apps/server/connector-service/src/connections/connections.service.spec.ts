@@ -47,6 +47,15 @@ describe('ConnectionsService', () => {
     expect(JSON.stringify(views)).not.toContain('encryptedTokens');
   });
 
+  it('listConnections returns the caller personal connections PLUS workspace-scoped ones', async () => {
+    await svc.listConnections('u1');
+    // The Mongo filter must include workspace-scoped connections owned by anyone.
+    const filter = connModel.find.mock.calls[0][0];
+    expect(filter).toEqual({
+      $or: [{ userId: 'u1' }, { scope: 'workspace' }],
+    });
+  });
+
   it('discover delegates to McpClientService.listTools and returns tool names', async () => {
     const res = await svc.discoverCustom({
       url: 'https://mcp.example/sse',

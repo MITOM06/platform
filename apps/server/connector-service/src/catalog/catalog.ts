@@ -1,5 +1,13 @@
 export type CatalogAuthType = 'oauth2' | 'apikey' | 'none';
 
+/**
+ * Governance tier of a connector:
+ *  - 'workspace': shared org connector; connecting requires CONNECT_WORKSPACE_CONNECTOR.
+ *  - 'personal':  per-member connector; requires CONNECT_PERSONAL_CONNECTOR + allow-list.
+ *  - 'both':      may be connected either way (defaults to personal flow here).
+ */
+export type CatalogTier = 'workspace' | 'personal' | 'both';
+
 export interface CatalogOAuthConfig {
   authorizeUrl: string;
   tokenUrl: string;
@@ -14,6 +22,8 @@ export interface CatalogEntry {
   description: string;
   scopes: string[];
   authType: CatalogAuthType;
+  /** Governance tier (defaults to 'personal' when omitted). */
+  tier: CatalogTier;
   mcpUrl: string;
   available: boolean;
   // Internal OAuth config — NEVER serialized to clients. The controller maps
@@ -32,6 +42,7 @@ export interface CatalogEntryView {
   description: string;
   scopes: string[];
   authType: CatalogAuthType;
+  tier: CatalogTier;
   available: boolean;
 }
 
@@ -51,6 +62,7 @@ export const CATALOG: CatalogEntry[] = [
     description: 'Create and update Notion pages and databases from chat.',
     scopes: ['read_content', 'update_content', 'insert_content'],
     authType: 'oauth2',
+    tier: 'both',
     mcpUrl: process.env.NOTION_MCP_URL ?? 'https://mcp.notion.com/sse',
     available: true,
     oauth: {
@@ -68,6 +80,7 @@ export const CATALOG: CatalogEntry[] = [
     description: 'Draft and send email on your behalf.',
     scopes: [],
     authType: 'oauth2',
+    tier: 'personal',
     mcpUrl: '',
     available: false,
     // oauth: { authorizeUrl: '...', tokenUrl: '...', clientIdEnv: 'GMAIL_CLIENT_ID', clientSecretEnv: 'GMAIL_CLIENT_SECRET' },
@@ -79,6 +92,7 @@ export const CATALOG: CatalogEntry[] = [
     description: 'Schedule and manage events.',
     scopes: [],
     authType: 'oauth2',
+    tier: 'personal',
     mcpUrl: '',
     available: false,
     // oauth: { authorizeUrl: '...', tokenUrl: '...', clientIdEnv: 'GCAL_CLIENT_ID', clientSecretEnv: 'GCAL_CLIENT_SECRET' },
@@ -90,6 +104,7 @@ export const CATALOG: CatalogEntry[] = [
     description: 'Search and read files in Drive.',
     scopes: [],
     authType: 'oauth2',
+    tier: 'personal',
     mcpUrl: '',
     available: false,
     // oauth: { authorizeUrl: '...', tokenUrl: '...', clientIdEnv: 'GDRIVE_CLIENT_ID', clientSecretEnv: 'GDRIVE_CLIENT_SECRET' },
@@ -108,6 +123,7 @@ export function toCatalogView(entry: CatalogEntry): CatalogEntryView {
     description: entry.description,
     scopes: entry.scopes,
     authType: entry.authType,
+    tier: entry.tier,
     available: entry.available,
   };
 }

@@ -1,6 +1,7 @@
 import { createHmac, randomBytes, timingSafeEqual } from 'crypto';
 import {
   BadRequestException,
+  ForbiddenException,
   Injectable,
   Logger,
   NotFoundException,
@@ -8,9 +9,16 @@ import {
 import { ConfigService } from '@nestjs/config';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
+import {
+  Capability,
+  JwtUser,
+  Workspace,
+  WorkspaceDocument,
+} from '@platform/database';
 import { CatalogEntry, findCatalogEntry } from '../catalog/catalog';
 import { TokenVaultService } from '../vault/token-vault.service';
 import {
+  ConnectionScope,
   UserConnection,
   UserConnectionDocument,
 } from '../connections/schemas/user-connection.schema';
@@ -18,6 +26,7 @@ import {
 export interface OAuthStatePayload {
   userId: string;
   provider: string;
+  scope?: ConnectionScope;
   nonce?: string;
 }
 
@@ -40,6 +49,8 @@ export class OAuthService {
     private readonly vault: TokenVaultService,
     @InjectModel(UserConnection.name)
     private readonly connModel: Model<UserConnectionDocument>,
+    @InjectModel(Workspace.name)
+    private readonly workspaceModel: Model<WorkspaceDocument>,
   ) {}
 
   // ── State signing (HMAC-sha256 with INTERNAL_API_KEY) ─────────────────────
@@ -78,10 +89,58 @@ export class OAuthService {
 
   // ── Authorize URL ─────────────────────────────────────────────────────────
 
-  startAuthorization(provider: string, userId: string): { authorizeUrl: string } {
+  async startAuthorization(
+    provider: string,
+    user: JwtUser,
+  ): Promise<{ authorizeUrl: string }> {
     const entry = this.requireOAuthEntry(provider);
-    const state = this.signState({ userId, provider });
+    const scope = await this.authorizeConnect(entry, user);
+    const state = this.signState({ userId: user.sub, provider, scope });
     return { authorizeUrl: this.buildAuthorizeUrl(entry, state) };
+  }
+
+  /**
+   * Decide whether `user` may connect `entry` and which scope the resulting
+   * connection takes. Workspace-tier connectors need CONNECT_WORKSPACE_CONNECTOR;
+   * personal-tier (or 'both') need CONNECT_PERSONAL_CONNECTOR AND the provider
+   * being present in the workspace allow-list. Throws ForbiddenException on deny.
+   */
+  private async authorizeConnect(
+    entry: CatalogEntry,
+    user: JwtUser,
+  ): Promise<ConnectionScope> {
+    const perms = new Set(user.perms ?? []);
+
+    if (entry.tier === 'workspace') {
+      if (!perms.has(Capability.CONNECT_WORKSPACE_CONNECTOR)) {
+        throw new ForbiddenException({
+          code: 'INSUFFICIENT_PERMISSION',
+          required: Capability.CONNECT_WORKSPACE_CONNECTOR,
+        });
+      }
+      return 'workspace';
+    }
+
+    // personal | both -> personal connect flow
+    if (!perms.has(Capability.CONNECT_PERSONAL_CONNECTOR)) {
+      throw new ForbiddenException({
+        code: 'INSUFFICIENT_PERMISSION',
+        required: Capability.CONNECT_PERSONAL_CONNECTOR,
+      });
+    }
+    const allowList = await this.connectorAllowList();
+    if (!allowList.includes(entry.id)) {
+      throw new ForbiddenException({
+        code: 'CONNECTOR_NOT_ALLOWED',
+        provider: entry.id,
+      });
+    }
+    return 'personal';
+  }
+
+  private async connectorAllowList(): Promise<string[]> {
+    const ws = await this.workspaceModel.findOne().lean();
+    return ws?.connectorAllowList ?? [];
   }
 
   buildAuthorizeUrl(entry: CatalogEntry, state: string): string {
@@ -136,6 +195,7 @@ export class OAuthService {
     provider: string,
     tokens: TokenResponse,
     entry: CatalogEntry,
+    scope: ConnectionScope = 'personal',
   ): Promise<void> {
     const blob = this.vault.encrypt(JSON.stringify(tokens));
     const accountLabel =
@@ -147,6 +207,7 @@ export class OAuthService {
       {
         $set: {
           status: 'active',
+          scope,
           scopes,
           mcpUrl: entry.mcpUrl,
           encryptedTokens: blob,
@@ -166,7 +227,13 @@ export class OAuthService {
     }
     const entry = this.requireOAuthEntry(provider);
     const tokens = await this.exchangeCode(entry, code);
-    await this.persist(payload.userId, provider, tokens, entry);
+    await this.persist(
+      payload.userId,
+      provider,
+      tokens,
+      entry,
+      payload.scope ?? 'personal',
+    );
     const clientUrl = this.cfg.get<string>('clientRedirectUrl');
     const sep = clientUrl.includes('?') ? '&' : '?';
     return `${clientUrl}${sep}connected=${encodeURIComponent(provider)}`;

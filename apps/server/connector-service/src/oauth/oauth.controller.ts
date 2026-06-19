@@ -23,8 +23,8 @@ export class OAuthController {
   start(
     @Param('provider') provider: string,
     @CurrentUser() user: JwtUser,
-  ): { authorizeUrl: string } {
-    return this.oauth.startAuthorization(provider, user.sub);
+  ): Promise<{ authorizeUrl: string }> {
+    return this.oauth.startAuthorization(provider, user);
   }
 
   @Get(':provider/callback')

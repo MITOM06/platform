@@ -24,9 +24,10 @@ describe('OAuthController (JWT-derived identity)', () => {
     expect(guards).toContain(JwtAuthGuard);
   });
 
-  it('start passes req.user.sub as the userId', async () => {
-    await controller.start('notion', { sub: 'jwt-user', sid: 's', perms: [] } as any);
-    expect(oauth.startAuthorization).toHaveBeenCalledWith('notion', 'jwt-user');
+  it('start passes the JWT user (identity from token) to the service', async () => {
+    const user = { sub: 'jwt-user', sid: 's', perms: [] } as any;
+    await controller.start('notion', user);
+    expect(oauth.startAuthorization).toHaveBeenCalledWith('notion', user);
   });
 
   it('callback is NOT protected by JwtAuthGuard (public redirect)', () => {

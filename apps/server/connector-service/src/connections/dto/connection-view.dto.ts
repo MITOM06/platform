@@ -6,6 +6,8 @@ export interface ConnectionView {
   id: string;
   provider: string;
   status: string;
+  /** 'personal' | 'workspace' — workspace connections are shared org-wide. */
+  scope: string;
   scopes: string[];
   accountLabel?: string;
   lastUsedAt?: Date;

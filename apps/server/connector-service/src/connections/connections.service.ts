@@ -34,12 +34,17 @@ export class ConnectionsService {
   // ── Connections ───────────────────────────────────────────────────────────
 
   async listConnections(userId: string): Promise<ConnectionView[]> {
-    const docs = await this.connModel.find({ userId }).lean();
+    // The caller's own (personal) connections PLUS every workspace-scoped
+    // connection (shared across all members).
+    const docs = await this.connModel
+      .find({ $or: [{ userId }, { scope: 'workspace' }] })
+      .lean();
     // Map to a secret-free view — encryptedTokens is deliberately dropped.
     return docs.map((d) => ({
       id: String(d._id),
       provider: d.provider,
       status: d.status,
+      scope: d.scope ?? 'personal',
       scopes: d.scopes ?? [],
       accountLabel: d.accountLabel,
       lastUsedAt: d.lastUsedAt,
