@@ -10,6 +10,7 @@ exports.DatabaseRedisModule = exports.REDIS_CLIENT = void 0;
 const common_1 = require("@nestjs/common");
 const ioredis_1 = require("ioredis");
 exports.REDIS_CLIENT = 'REDIS_CLIENT';
+const logger = new common_1.Logger('DatabaseRedisModule');
 let DatabaseRedisModule = class DatabaseRedisModule {
 };
 exports.DatabaseRedisModule = DatabaseRedisModule;
@@ -20,11 +21,18 @@ exports.DatabaseRedisModule = DatabaseRedisModule = __decorate([
             {
                 provide: exports.REDIS_CLIENT,
                 useFactory: () => {
-                    return new ioredis_1.default({
-                        host: process.env.REDIS_HOST || 'localhost',
-                        port: Number(process.env.REDIS_PORT) || 6379,
-                        password: process.env.REDIS_PASSWORD,
-                    });
+                    const client = process.env.REDIS_URL
+                        ? new ioredis_1.default(process.env.REDIS_URL, { lazyConnect: true, maxRetriesPerRequest: 0, enableOfflineQueue: true })
+                        : new ioredis_1.default({
+                            host: process.env.REDIS_HOST || 'localhost',
+                            port: Number(process.env.REDIS_PORT) || 6379,
+                            password: process.env.REDIS_PASSWORD,
+                            lazyConnect: true,
+                            maxRetriesPerRequest: 0,
+                            enableOfflineQueue: true,
+                        });
+                    client.on('error', (err) => logger.error(`Redis error: ${err.message}`));
+                    return client;
                 },
             },
         ],

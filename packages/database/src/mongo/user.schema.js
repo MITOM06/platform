@@ -49,6 +49,10 @@ __decorate([
     __metadata("design:type", String)
 ], User.prototype, "coverPhoto", void 0);
 __decorate([
+    (0, mongoose_1.Prop)(),
+    __metadata("design:type", Date)
+], User.prototype, "dateOfBirth", void 0);
+__decorate([
     (0, mongoose_1.Prop)({ unique: true, sparse: true }),
     __metadata("design:type", String)
 ], User.prototype, "email", void 0);
@@ -77,11 +81,11 @@ __decorate([
     __metadata("design:type", String)
 ], User.prototype, "status", void 0);
 __decorate([
-    (0, mongoose_1.Prop)(),
+    (0, mongoose_1.Prop)({ select: false }),
     __metadata("design:type", String)
 ], User.prototype, "otpCode", void 0);
 __decorate([
-    (0, mongoose_1.Prop)(),
+    (0, mongoose_1.Prop)({ select: false }),
     __metadata("design:type", Date)
 ], User.prototype, "otpExpires", void 0);
 __decorate([
@@ -89,9 +93,13 @@ __decorate([
     __metadata("design:type", Array)
 ], User.prototype, "fcmTokens", void 0);
 __decorate([
-    (0, mongoose_1.Prop)({ type: [String], default: [] }),
-    __metadata("design:type", Array)
-], User.prototype, "blockedUsers", void 0);
+    (0, mongoose_1.Prop)(),
+    __metadata("design:type", String)
+], User.prototype, "gender", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ default: false }),
+    __metadata("design:type", Boolean)
+], User.prototype, "hideInfo", void 0);
 exports.User = User = __decorate([
     (0, mongoose_1.Schema)({ timestamps: true })
 ], User);

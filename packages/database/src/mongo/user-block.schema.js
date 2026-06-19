@@ -9,27 +9,23 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.FriendshipSchema = exports.Friendship = void 0;
+exports.UserBlockSchema = exports.UserBlock = void 0;
 const mongoose_1 = require("@nestjs/mongoose");
-let Friendship = class Friendship {
+let UserBlock = class UserBlock {
 };
-exports.Friendship = Friendship;
+exports.UserBlock = UserBlock;
 __decorate([
-    (0, mongoose_1.Prop)({ required: true, index: true }),
+    (0, mongoose_1.Prop)({ required: true }),
     __metadata("design:type", String)
-], Friendship.prototype, "requesterId", void 0);
+], UserBlock.prototype, "blockerId", void 0);
 __decorate([
-    (0, mongoose_1.Prop)({ required: true, index: true }),
+    (0, mongoose_1.Prop)({ required: true }),
     __metadata("design:type", String)
-], Friendship.prototype, "recipientId", void 0);
-__decorate([
-    (0, mongoose_1.Prop)({ default: 'pending' }),
-    __metadata("design:type", String)
-], Friendship.prototype, "status", void 0);
-exports.Friendship = Friendship = __decorate([
-    (0, mongoose_1.Schema)({ timestamps: true })
-], Friendship);
-exports.FriendshipSchema = mongoose_1.SchemaFactory.createForClass(Friendship);
-exports.FriendshipSchema.index({ requesterId: 1, recipientId: 1 }, { unique: true });
-exports.FriendshipSchema.index({ recipientId: 1, status: 1 });
-//# sourceMappingURL=friendship.schema.js.map
+], UserBlock.prototype, "blockedId", void 0);
+exports.UserBlock = UserBlock = __decorate([
+    (0, mongoose_1.Schema)({ timestamps: { createdAt: true, updatedAt: false } })
+], UserBlock);
+exports.UserBlockSchema = mongoose_1.SchemaFactory.createForClass(UserBlock);
+exports.UserBlockSchema.index({ blockerId: 1, blockedId: 1 }, { unique: true });
+exports.UserBlockSchema.index({ blockedId: 1 });
+//# sourceMappingURL=user-block.schema.js.map

@@ -5,7 +5,6 @@ import com.platform.chatservice.exception.ForbiddenException;
 import com.platform.chatservice.exception.MessageNotFoundException;
 import com.platform.chatservice.model.Conversation;
 import com.platform.chatservice.model.Message;
-import com.platform.chatservice.model.UserBlock;
 import com.platform.chatservice.repository.ConversationRepository;
 import com.platform.chatservice.repository.MessageRepository;
 import com.platform.chatservice.repository.UserBlockRepository;
@@ -33,11 +32,7 @@ class MessageServiceHelper {
   }
 
   private boolean blocks(String ownerId, String targetId) {
-    return userBlockRepository
-        .findById(ownerId)
-        .map(UserBlock::getBlockedUsers)
-        .map(list -> list != null && list.contains(targetId))
-        .orElse(false);
+    return userBlockRepository.existsByBlockerIdAndBlockedId(ownerId, targetId);
   }
 
   Message requireParticipantMessage(String userId, String messageId) {
