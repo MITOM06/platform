@@ -6,6 +6,7 @@ import { HealthModule } from './health/health.module';
 import { ConnectionsModule } from './connections/connections.module';
 import { CatalogModule } from './catalog/catalog.module';
 import { OAuthModule } from './oauth/oauth.module';
+import { InternalModule } from './internal/internal.module';
 
 const mongooseModule: DynamicModule = MongooseModule.forRootAsync({
   useFactory: (configService: ConfigService) => ({
@@ -26,6 +27,7 @@ const mongooseModule: DynamicModule = MongooseModule.forRootAsync({
     ConnectionsModule,
     CatalogModule,
     OAuthModule,
+    InternalModule,
   ],
 })
 export class AppModule {}
