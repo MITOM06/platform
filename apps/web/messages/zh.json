@@ -740,6 +740,7 @@
     "researcherName": "研究员",
     "researcherDesc": "搜索网络和你的 Drive，返回带引用的答案。",
     "projectKeeperName": "项目管家",
-    "projectKeeperDesc": "把笔记和任务归档到 Notion，保持数据库整洁。"
+    "projectKeeperDesc": "把笔记和任务归档到 Notion，保持数据库整洁。",
+    "sectionNum": "03 / 技能"
   }
 }

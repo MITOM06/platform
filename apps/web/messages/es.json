@@ -740,6 +740,7 @@
     "researcherName": "Investigador",
     "researcherDesc": "Busca en la web y tu Drive, devuelve respuestas con citas.",
     "projectKeeperName": "Gestor de proyectos",
-    "projectKeeperDesc": "Archiva notas y tareas en Notion, mantiene las bases de datos ordenadas."
+    "projectKeeperDesc": "Archiva notas y tareas en Notion, mantiene las bases de datos ordenadas.",
+    "sectionNum": "03 / HABILIDADES"
   }
 }

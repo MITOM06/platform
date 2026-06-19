@@ -740,6 +740,7 @@
     "researcherName": "리서처",
     "researcherDesc": "웹과 Drive를 검색하고 출처가 있는 답변을 제공합니다.",
     "projectKeeperName": "프로젝트 키퍼",
-    "projectKeeperDesc": "메모와 작업을 Notion에 정리하고 데이터베이스를 깔끔하게 유지합니다."
+    "projectKeeperDesc": "메모와 작업을 Notion에 정리하고 데이터베이스를 깔끔하게 유지합니다.",
+    "sectionNum": "03 / 스킬"
   }
 }

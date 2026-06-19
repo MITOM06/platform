@@ -740,6 +740,7 @@
     "researcherName": "Chercheur",
     "researcherDesc": "Cherche sur le web et votre Drive, renvoie des réponses sourcées.",
     "projectKeeperName": "Gardien de projet",
-    "projectKeeperDesc": "Classe notes et tâches dans Notion, garde les bases de données propres."
+    "projectKeeperDesc": "Classe notes et tâches dans Notion, garde les bases de données propres.",
+    "sectionNum": "03 / COMPÉTENCES"
   }
 }

@@ -740,6 +740,7 @@
     "researcherName": "リサーチャー",
     "researcherDesc": "ウェブと Drive を検索し、引用付きで回答します。",
     "projectKeeperName": "プロジェクト管理",
-    "projectKeeperDesc": "メモやタスクを Notion に整理し、データベースを整えます。"
+    "projectKeeperDesc": "メモやタスクを Notion に整理し、データベースを整えます。",
+    "sectionNum": "03 / スキル"
   }
 }

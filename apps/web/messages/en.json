@@ -740,6 +740,7 @@
     "researcherName": "Researcher",
     "researcherDesc": "Searches the web and your Drive, returns cited answers.",
     "projectKeeperName": "Project keeper",
-    "projectKeeperDesc": "Files notes and tasks into Notion, keeps databases tidy."
+    "projectKeeperDesc": "Files notes and tasks into Notion, keeps databases tidy.",
+    "sectionNum": "03 / SKILLS"
   }
 }
