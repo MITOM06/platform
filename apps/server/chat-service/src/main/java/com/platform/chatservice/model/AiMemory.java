@@ -1,5 +1,7 @@
 package com.platform.chatservice.model;
 
+import java.time.Instant;
+import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -8,9 +10,6 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 
-import java.time.Instant;
-import java.util.List;
-
 @Document(collection = "ai_memories")
 @Data
 @Builder
@@ -18,20 +17,17 @@ import java.util.List;
 @AllArgsConstructor
 public class AiMemory {
 
-    @Id
-    private String id;
+  @Id private String id;
 
-    @Indexed
-    private String conversationId;
+  @Indexed private String conversationId;
 
-    @Indexed
-    private String userId;
+  @Indexed private String userId;
 
-    private String summary;
+  private String summary;
 
-    private List<String> keyFacts;
+  private List<String> keyFacts;
 
-    private Integer messageCount;
+  private Integer messageCount;
 
-    private Instant updatedAt;
+  private Instant updatedAt;
 }

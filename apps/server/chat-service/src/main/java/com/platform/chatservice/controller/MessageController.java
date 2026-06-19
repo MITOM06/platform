@@ -12,161 +12,184 @@ import com.platform.chatservice.security.UserPrincipal;
 import com.platform.chatservice.service.AiRedisPublisher;
 import com.platform.chatservice.service.MessageService;
 import com.platform.chatservice.service.RateLimiterService;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.CompletableFuture;
+import java.util.regex.Pattern;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.CompletableFuture;
-import java.util.regex.Pattern;
-
 @RestController
 @RequestMapping("/api/messages")
 @RequiredArgsConstructor
 public class MessageController {
 
-    private static final Pattern AI_MENTION_PATTERN = Pattern.compile("(?i)@(AI|ponai)\\b");
+  private static final Pattern AI_MENTION_PATTERN = Pattern.compile("(?i)@(AI|ponai)\\b");
 
-    private final MessageService messageService;
-    private final SimpMessagingTemplate messagingTemplate;
-    private final RateLimiterService rateLimiterService;
-    private final AiRedisPublisher aiRedisPublisher;
+  private final MessageService messageService;
+  private final SimpMessagingTemplate messagingTemplate;
+  private final RateLimiterService rateLimiterService;
+  private final AiRedisPublisher aiRedisPublisher;
 
-    @PostMapping
-    @ResponseStatus(HttpStatus.CREATED)
-    public MessageResponse sendMessage(@RequestBody SendMessageRequest request) {
-        final String uid = currentUserId();
-        rateLimiterService.checkMessageRate(uid);
-        MessageResponse response = messageService.sendMessage(uid, request);
-        messagingTemplate.convertAndSend(
-            "/topic/conversation/" + request.conversationId(), response);
+  @PostMapping
+  @ResponseStatus(HttpStatus.CREATED)
+  public MessageResponse sendMessage(@RequestBody SendMessageRequest request) {
+    final String uid = currentUserId();
+    rateLimiterService.checkMessageRate(uid);
+    MessageResponse response = messageService.sendMessage(uid, request);
+    messagingTemplate.convertAndSend("/topic/conversation/" + request.conversationId(), response);
 
-        if (request.content() != null && AI_MENTION_PATTERN.matcher(request.content()).find()) {
-            final String convId = request.conversationId();
-            final String raw = request.content();
-            CompletableFuture.runAsync(() -> {
-                try {
-                    List<Map<String, String>> history = messageService.getAiHistory(uid, convId);
-                    String stripped = raw.replaceAll("(?i)@(AI|ponai)\\b", "").trim();
-                    aiRedisPublisher.publishAiRequest(convId, uid, uid, stripped, history);
-                } catch (Exception ignored) {}
-            });
-        }
-        return response;
+    if (request.content() != null && AI_MENTION_PATTERN.matcher(request.content()).find()) {
+      final String convId = request.conversationId();
+      final String raw = request.content();
+      CompletableFuture.runAsync(
+          () -> {
+            try {
+              List<Map<String, String>> history = messageService.getAiHistory(uid, convId);
+              String stripped = raw.replaceAll("(?i)@(AI|ponai)\\b", "").trim();
+              aiRedisPublisher.publishAiRequest(convId, uid, uid, stripped, history);
+            } catch (Exception ignored) {
+            }
+          });
     }
+    return response;
+  }
 
-    @PutMapping("/{id}")
-    public MessageResponse editMessage(@PathVariable String id, @RequestBody EditMessageRequest request) {
-        MessageResponse updated = messageService.editMessage(currentUserId(), id, request.content());
-        messagingTemplate.convertAndSend(
-            "/topic/conversation/" + updated.conversationId(),
-            Map.of("type", "MESSAGE_UPDATED",
-                   "messageId", updated.id(),
-                   "conversationId", updated.conversationId(),
-                   "content", updated.content(),
-                   "editedAt", updated.editedAt().toString()));
-        return updated;
-    }
+  @PutMapping("/{id}")
+  public MessageResponse editMessage(
+      @PathVariable String id, @RequestBody EditMessageRequest request) {
+    MessageResponse updated = messageService.editMessage(currentUserId(), id, request.content());
+    messagingTemplate.convertAndSend(
+        "/topic/conversation/" + updated.conversationId(),
+        Map.of(
+            "type", "MESSAGE_UPDATED",
+            "messageId", updated.id(),
+            "conversationId", updated.conversationId(),
+            "content", updated.content(),
+            "editedAt", updated.editedAt().toString()));
+    return updated;
+  }
 
-    /** Search messages within a conversation (Task 50). */
-    @GetMapping("/search")
-    public List<MessageResponse> search(@RequestParam("q") String query,
-                                        @RequestParam("conversationId") String conversationId) {
-        return messageService.searchMessages(currentUserId(), conversationId, query);
-    }
+  /** Search messages within a conversation (Task 50). */
+  @GetMapping("/search")
+  public List<MessageResponse> search(
+      @RequestParam("q") String query, @RequestParam("conversationId") String conversationId) {
+    return messageService.searchMessages(currentUserId(), conversationId, query);
+  }
 
-    @PutMapping("/{id}/read")
-    public Map<String, Boolean> markAsRead(@PathVariable String id) {
-        messageService.markAsRead(currentUserId(), id);
-        return Map.of("success", true);
-    }
+  @PutMapping("/{id}/read")
+  public Map<String, Boolean> markAsRead(@PathVariable String id) {
+    messageService.markAsRead(currentUserId(), id);
+    return Map.of("success", true);
+  }
 
-    @PostMapping("/{id}/reactions")
-    public MessageResponse addReaction(@PathVariable String id, @RequestBody ReactionRequest request) {
-        MessageResponse updated = messageService.addReaction(currentUserId(), id, request.emoji());
-        broadcastReaction(updated);
-        return updated;
-    }
+  @PostMapping("/{id}/reactions")
+  public MessageResponse addReaction(
+      @PathVariable String id, @RequestBody ReactionRequest request) {
+    MessageResponse updated = messageService.addReaction(currentUserId(), id, request.emoji());
+    broadcastReaction(updated);
+    return updated;
+  }
 
-    @DeleteMapping("/{id}/reactions")
-    public MessageResponse removeReaction(@PathVariable String id) {
-        MessageResponse updated = messageService.removeReaction(currentUserId(), id);
-        broadcastReaction(updated);
-        return updated;
-    }
+  @DeleteMapping("/{id}/reactions")
+  public MessageResponse removeReaction(@PathVariable String id) {
+    MessageResponse updated = messageService.removeReaction(currentUserId(), id);
+    broadcastReaction(updated);
+    return updated;
+  }
 
-    @DeleteMapping("/{id}")
-    public MessageResponse recall(@PathVariable String id) {
-        MessageResponse updated = messageService.recallMessage(currentUserId(), id);
-        messagingTemplate.convertAndSend(
-            "/topic/conversation/" + updated.conversationId(),
-            Map.of("type", "MESSAGE_RECALLED", "messageId", updated.id(),
-                   "conversationId", updated.conversationId()));
-        return updated;
-    }
+  @DeleteMapping("/{id}")
+  public MessageResponse recall(@PathVariable String id) {
+    MessageResponse updated = messageService.recallMessage(currentUserId(), id);
+    messagingTemplate.convertAndSend(
+        "/topic/conversation/" + updated.conversationId(),
+        Map.of(
+            "type",
+            "MESSAGE_RECALLED",
+            "messageId",
+            updated.id(),
+            "conversationId",
+            updated.conversationId()));
+    return updated;
+  }
 
-    @PostMapping("/{id}/delete-for-me")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void deleteForMe(@PathVariable String id) {
-        messageService.deleteForMe(currentUserId(), id);
-    }
+  @PostMapping("/{id}/delete-for-me")
+  @ResponseStatus(HttpStatus.NO_CONTENT)
+  public void deleteForMe(@PathVariable String id) {
+    messageService.deleteForMe(currentUserId(), id);
+  }
 
-    /** Returns the AI trace for a message. 404 if the message has no trace (non-AI messages). */
-    @GetMapping("/{id}/trace")
-    public AiTraceResponse getTrace(@PathVariable String id) {
-        return messageService.getMessageTrace(currentUserId(), id);
-    }
+  /** Returns the AI trace for a message. 404 if the message has no trace (non-AI messages). */
+  @GetMapping("/{id}/trace")
+  public AiTraceResponse getTrace(@PathVariable String id) {
+    return messageService.getMessageTrace(currentUserId(), id);
+  }
 
-    /** Pin a message in its conversation (Task 53). Broadcasts a PINNED_MESSAGE event. */
-    @PostMapping("/{id}/pin")
-    public Map<String, Object> pinMessage(@PathVariable String id) {
-        PinResult result = messageService.pinMessage(currentUserId(), id);
-        messagingTemplate.convertAndSend(
-            "/topic/conversation/" + result.conversationId(),
-            Map.of("type", "PINNED_MESSAGE", "conversationId", result.conversationId(),
-                   "messageId", id, "pinnedMessages", result.pinnedMessages()));
-        return Map.of("pinnedMessages", result.pinnedMessages());
-    }
+  /** Pin a message in its conversation (Task 53). Broadcasts a PINNED_MESSAGE event. */
+  @PostMapping("/{id}/pin")
+  public Map<String, Object> pinMessage(@PathVariable String id) {
+    PinResult result = messageService.pinMessage(currentUserId(), id);
+    messagingTemplate.convertAndSend(
+        "/topic/conversation/" + result.conversationId(),
+        Map.of(
+            "type",
+            "PINNED_MESSAGE",
+            "conversationId",
+            result.conversationId(),
+            "messageId",
+            id,
+            "pinnedMessages",
+            result.pinnedMessages()));
+    return Map.of("pinnedMessages", result.pinnedMessages());
+  }
 
-    /** Unpin a message (Task 53). Broadcasts a PINNED_MESSAGE event. */
-    @DeleteMapping("/{id}/pin")
-    public Map<String, Object> unpinMessage(@PathVariable String id) {
-        PinResult result = messageService.unpinMessage(currentUserId(), id);
-        messagingTemplate.convertAndSend(
-            "/topic/conversation/" + result.conversationId(),
-            Map.of("type", "PINNED_MESSAGE", "conversationId", result.conversationId(),
-                   "messageId", id, "pinnedMessages", result.pinnedMessages()));
-        return Map.of("pinnedMessages", result.pinnedMessages());
-    }
+  /** Unpin a message (Task 53). Broadcasts a PINNED_MESSAGE event. */
+  @DeleteMapping("/{id}/pin")
+  public Map<String, Object> unpinMessage(@PathVariable String id) {
+    PinResult result = messageService.unpinMessage(currentUserId(), id);
+    messagingTemplate.convertAndSend(
+        "/topic/conversation/" + result.conversationId(),
+        Map.of(
+            "type",
+            "PINNED_MESSAGE",
+            "conversationId",
+            result.conversationId(),
+            "messageId",
+            id,
+            "pinnedMessages",
+            result.pinnedMessages()));
+    return Map.of("pinnedMessages", result.pinnedMessages());
+  }
 
-    /** Forward a message to another conversation (Task 53). */
-    @PostMapping("/{id}/forward")
-    @ResponseStatus(HttpStatus.CREATED)
-    public MessageResponse forwardMessage(@PathVariable String id,
-                                          @RequestBody ForwardMessageRequest request) {
-        MessageResponse forwarded = messageService.forwardMessage(
-            currentUserId(), id, request.targetConversationId());
-        messagingTemplate.convertAndSend(
-            "/topic/conversation/" + forwarded.conversationId(), forwarded);
-        return forwarded;
-    }
+  /** Forward a message to another conversation (Task 53). */
+  @PostMapping("/{id}/forward")
+  @ResponseStatus(HttpStatus.CREATED)
+  public MessageResponse forwardMessage(
+      @PathVariable String id, @RequestBody ForwardMessageRequest request) {
+    MessageResponse forwarded =
+        messageService.forwardMessage(currentUserId(), id, request.targetConversationId());
+    messagingTemplate.convertAndSend(
+        "/topic/conversation/" + forwarded.conversationId(), forwarded);
+    return forwarded;
+  }
 
-    private void broadcastReaction(MessageResponse message) {
-        messagingTemplate.convertAndSend(
-            "/topic/conversation/" + message.conversationId(),
-            Map.of("type", "REACTION_UPDATED",
-                   "messageId", message.id(),
-                   "reactions", message.reactions()));
-    }
+  private void broadcastReaction(MessageResponse message) {
+    messagingTemplate.convertAndSend(
+        "/topic/conversation/" + message.conversationId(),
+        Map.of(
+            "type", "REACTION_UPDATED",
+            "messageId", message.id(),
+            "reactions", message.reactions()));
+  }
 
-    private String currentUserId() {
-        var authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication instanceof UserPrincipal principal) {
-            return principal.getUserId();
-        }
-        throw new UnauthorizedException("User is not authenticated");
+  private String currentUserId() {
+    var authentication = SecurityContextHolder.getContext().getAuthentication();
+    if (authentication instanceof UserPrincipal principal) {
+      return principal.getUserId();
     }
+    throw new UnauthorizedException("User is not authenticated");
+  }
 }

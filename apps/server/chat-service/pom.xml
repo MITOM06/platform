@@ -19,6 +19,8 @@
     <properties>
         <java.version>21</java.version>
         <jjwt.version>0.11.5</jjwt.version>
+        <spotless.version>2.43.0</spotless.version>
+        <google-java-format.version>1.22.0</google-java-format.version>
         <!-- Override Testcontainers to 1.20.4 (docker-java 3.4.x) which supports
              Docker Desktop 29.x (minimum API 1.40 requirement). Spring Boot 3.3.5
              pins to 1.19.8/docker-java 3.3.6 which sends API 1.32 and is rejected. -->
@@ -169,6 +171,37 @@
 
     <build>
         <plugins>
+            <!-- Spotless: Java code-style gate. Uses google-java-format (default GOOGLE
+                 style), removes unused imports, and trims trailing whitespace. The
+                 `check` goal is bound to the `test-compile` phase so it runs during the
+                 standard `mvn test` / `mvn verify` lifecycle — the existing CI step
+                 `mvn clean test -q` enforces it with NO CI yaml change. Run
+                 `mvn spotless:apply` to auto-fix violations. -->
+            <plugin>
+                <groupId>com.diffplug.spotless</groupId>
+                <artifactId>spotless-maven-plugin</artifactId>
+                <version>${spotless.version}</version>
+                <configuration>
+                    <java>
+                        <googleJavaFormat>
+                            <version>${google-java-format.version}</version>
+                            <style>GOOGLE</style>
+                        </googleJavaFormat>
+                        <removeUnusedImports/>
+                        <trimTrailingWhitespace/>
+                        <endWithNewline/>
+                    </java>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>spotless-check</id>
+                        <phase>test-compile</phase>
+                        <goals>
+                            <goal>check</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>

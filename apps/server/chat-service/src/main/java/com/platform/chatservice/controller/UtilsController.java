@@ -13,11 +13,11 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 public class UtilsController {
 
-    private final LinkPreviewService linkPreviewService;
+  private final LinkPreviewService linkPreviewService;
 
-    /** Open Graph unfurl for a URL — used to render rich link-preview cards. */
-    @GetMapping("/link-preview")
-    public LinkPreviewResponse linkPreview(@RequestParam("url") String url) {
-        return linkPreviewService.fetch(url);
-    }
+  /** Open Graph unfurl for a URL — used to render rich link-preview cards. */
+  @GetMapping("/link-preview")
+  public LinkPreviewResponse linkPreview(@RequestParam("url") String url) {
+    return linkPreviewService.fetch(url);
+  }
 }

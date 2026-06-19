@@ -9,5 +9,4 @@ public record AiPersonaResponse(
     String tone,
     String systemPromptPrefix,
     String createdBy,
-    Instant updatedAt
-) {}
+    Instant updatedAt) {}

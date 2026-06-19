@@ -9,5 +9,4 @@ public record ReminderResponse(
     String text,
     Instant remindAt,
     boolean done,
-    Instant createdAt
-) {}
+    Instant createdAt) {}

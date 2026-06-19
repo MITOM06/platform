@@ -8,5 +8,4 @@ public record AiMemoryResponse(
     String summary,
     List<String> keyFacts,
     Integer messageCount,
-    Instant updatedAt
-) {}
+    Instant updatedAt) {}

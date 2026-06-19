@@ -8,5 +8,4 @@ public record KbDocumentResponse(
     String mimeType,
     String status,
     int chunkCount,
-    Instant uploadedAt
-) {}
+    Instant uploadedAt) {}
