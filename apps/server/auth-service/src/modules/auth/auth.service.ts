@@ -12,6 +12,7 @@ import { ConfigService } from '@nestjs/config';
 import { nanoid } from 'nanoid';
 import { REDIS_CLIENT, Redis } from '@platform/database';
 import { SessionService } from './session.service';
+import { ClaimsService } from './claims.service';
 import { UsersService } from '../users/users.service';
 import * as bcrypt from 'bcrypt';
 import { RegisterDto } from './dto/register.dto';
@@ -27,6 +28,7 @@ export class AuthService {
     private readonly mailService: MailService,
     private readonly jwt: JwtService,
     private readonly session: SessionService,
+    private readonly claims: ClaimsService,
     private readonly usersService: UsersService,
     private readonly configService: ConfigService,
     @Inject(REDIS_CLIENT) private readonly redis: Redis,
@@ -209,7 +211,10 @@ export class AuthService {
       platform: 'web',
     });
 
-    const accessToken = this.signAccessToken({ sub: user._id.toString(), sid });
+    const accessToken = await this.signAccessTokenWithClaims(
+      user._id.toString(),
+      sid,
+    );
     await this.redis.del(`failed_attempts:${dto.email}`);
 
     return {
@@ -309,13 +314,33 @@ export class AuthService {
   }
 
   // ===================== JWT / SESSION =====================
-  signAccessToken(payload: { sub: string; sid: string }) {
+  signAccessToken(payload: {
+    sub: string;
+    sid: string;
+    role?: string;
+    perms?: string[];
+    depts?: string[];
+  }) {
     const secret = this.configService.get<string>('JWT_ACCESS_SECRET');
     // Fall back to 15m so a missing JWT_ACCESS_EXPIRES env never breaks token signing
     const expiresIn =
       this.configService.get<string>('JWT_ACCESS_EXPIRES') || '15m';
     const options: JwtSignOptions = { secret, expiresIn: expiresIn as any };
-    return this.jwt.sign(payload, options);
+
+    // Only embed RBAC claims when present, keeping minimal tokens minimal and
+    // backward-compatible with in-flight tokens that lack these fields.
+    const claims: Record<string, unknown> = { sub: payload.sub, sid: payload.sid };
+    if (payload.role !== undefined) claims.role = payload.role;
+    if (payload.perms !== undefined) claims.perms = payload.perms;
+    if (payload.depts !== undefined) claims.depts = payload.depts;
+
+    return this.jwt.sign(claims, options);
+  }
+
+  // Resolve the user's RBAC claims and sign a token that carries them.
+  private async signAccessTokenWithClaims(sub: string, sid: string) {
+    const { role, perms, depts } = await this.claims.resolve(sub);
+    return this.signAccessToken({ sub, sid, role, perms, depts });
   }
 
   async createLoginCode(userId: string) {
@@ -340,7 +365,7 @@ export class AuthService {
       platform: platform || 'web',
     });
 
-    const accessToken = this.signAccessToken({ sub: userId, sid });
+    const accessToken = await this.signAccessTokenWithClaims(userId, sid);
 
     // ✅ IMPROVEMENT: Trả về thông tin user
     const user = await this.usersService.findById(userId);
@@ -367,7 +392,7 @@ export class AuthService {
       sid,
       refreshToken,
     });
-    const accessToken = this.signAccessToken({ sub: userId, sid });
+    const accessToken = await this.signAccessTokenWithClaims(userId, sid);
     return { accessToken, refreshToken: newRefreshToken };
   }
 
