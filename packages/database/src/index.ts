@@ -4,4 +4,6 @@ export { Redis } from 'ioredis';
 export * from './mongo/user.schema';
 export * from './mongo/friendship.schema';
 export * from './mongo/user-block.schema';
+export * from './rbac/capabilities';
+export * from './rbac/preset-roles';
 export { REDIS_CLIENT } from './redis/redis.module';
