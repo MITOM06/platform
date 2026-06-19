@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useRef, useMemo, useEffect } from 'react'
+import dynamic from 'next/dynamic'
 import { useRouter } from 'next/navigation'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -15,9 +16,15 @@ import { authService } from '@/lib/api/auth'
 import { chatService } from '@/lib/api/chat'
 import { absoluteMediaUrl } from '@/lib/media'
 import { Separator } from '@/components/ui/separator'
-import { ImageCropperModal } from '@/components/profile/ImageCropperModal'
 import { ProfileImageHeader } from '@/components/profile/ProfileImageHeader'
 import { ProfileForm, type ProfileFormValues } from '@/components/profile/ProfileForm'
+
+// Code-split the cropper (pulls in react-easy-crop) — only needed once the user
+// picks an image to crop, so it must not ship in the profile page's first load.
+const ImageCropperModal = dynamic(
+  () => import('@/components/profile/ImageCropperModal').then((m) => m.ImageCropperModal),
+  { ssr: false },
+)
 
 type CropTarget = 'avatar' | 'cover' | null
 
@@ -263,14 +270,16 @@ export default function ProfilePage() {
         </div>
       </div>
 
-      <ImageCropperModal
-        open={cropTarget !== null}
-        imageSrc={cropSourceUrl}
-        aspect={cropTarget === 'cover' ? 16 / 6 : 1}
-        shape={cropTarget === 'avatar' ? 'round' : 'rect'}
-        onCancel={closeCropper}
-        onConfirm={handleCropConfirm}
-      />
+      {cropTarget !== null && (
+        <ImageCropperModal
+          open
+          imageSrc={cropSourceUrl}
+          aspect={cropTarget === 'cover' ? 16 / 6 : 1}
+          shape={cropTarget === 'avatar' ? 'round' : 'rect'}
+          onCancel={closeCropper}
+          onConfirm={handleCropConfirm}
+        />
+      )}
     </div>
   )
 }
