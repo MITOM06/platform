@@ -71,4 +71,9 @@ export default registerAs('config', () => ({
   quota: {
     monthlyTokenLimit: parseInt(process.env.AI_MONTHLY_TOKEN_LIMIT ?? '500000', 10),
   },
+  connector: {
+    // connector-service internal API base for per-user MCP tools.
+    internalUrl: process.env.CONNECTOR_INTERNAL_URL ?? 'http://localhost:3003',
+    internalApiKey: process.env.INTERNAL_API_KEY,
+  },
 }));
