@@ -21,7 +21,18 @@ manually when a collection is shared across the Java and Node services.
 - `DatabaseMongoModule` / `mongo.module` — `MongooseModule` configuration
 - `DatabaseRedisModule` + `REDIS_CLIENT` token — Redis provider (ioredis)
 - `Redis` — re-export of the `ioredis` client type
-- `user.schema`, `friendship.schema` — shared Mongo schemas
+- `user.schema`, `friendship.schema`, `user-block.schema` — shared Mongo schemas
+
+> **`user-block.schema`** (`user_blocks` collection): one row per blocker→blocked
+> pair, replacing the former embedded `users.blockedUsers[]` array (see ADR-011).
+> Written by auth-service (block/unblock); also read by chat-service to reject
+> messages between blocked users. One-time data migration lives in
+> `apps/server/auth-service/scripts/` (`pnpm migrate:blocks`).
+
+> **Build gotcha:** this package commits compiled `.js`/`.d.ts` **inside `src/`**,
+> and auth-service's Jest resolves `src/*.js` before `*.ts`. After editing a schema,
+> refresh the in-src artifacts with `npx tsc -p . --outDir src` (this is separate
+> from `pnpm build`, which emits to `dist/`) — otherwise tests load the stale `.js`.
 
 ## Usage
 

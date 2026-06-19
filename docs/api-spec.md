@@ -348,6 +348,11 @@ Response 204: No Content
 
 ## ⏰ Reminders (`/api/reminders`)
 
+> Reminders are created by ai-service's `create_reminder` tool and stored in the shared
+> `reminders` collection. chat-service's `ReminderSweepService` delivers each due reminder once
+> via FCM push (a `notified` flag guards against re-sending), then these endpoints let the client
+> list / complete / delete them. See ADR-011.
+
 ### List Reminders
 ```http
 GET /api/reminders
@@ -399,6 +404,8 @@ POST /api/users/block/{targetId}
 POST /api/users/unblock/{targetId}
 Response 200: { "success": true }
 ```
+> Blocks are persisted in the `user_blocks` collection (one row per blocker→blocked pair),
+> not on the user document. chat-service reads it to reject messages between blocked users. See ADR-011.
 
 ---
 

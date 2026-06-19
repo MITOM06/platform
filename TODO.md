@@ -1,6 +1,19 @@
 # TODO — PON PROJECT
-> **Updated:** 2026-06-16
+> **Updated:** 2026-06-19
 > **Note:** Sprints 1-24 (chat core) and AI-1 to AI-6 (AI layer) are complete. Active work: Phase 3 (Production Ready) and Web Client (Next.js) parity.
+
+---
+
+## 🗄️ SPRINT DB-ARCH — Data-layer hardening `DONE` (2026-06-19, PR #54, branch `feat/db-arch-p0`)
+> Correctness-first DB/architecture fixes for a small-group app — no premature scaling infra. Full rationale in `docs/decisions.md` ADR-011.
+
+- [x] **Indexes (anti-collection-scan):** `reminders {userId,done,remindAt}` + `{done,notified,remindAt}`; `friendships {recipientId,status}`; `token_usage {date}`.
+- [x] **Reminder delivery (was broken — `remindAt` stored but never fired):** `notified` flag + `ReminderSweepService` (@Scheduled 60s) + `FcmService.sendReminderPush`; config `app.reminder.sweep-interval-ms`.
+- [x] **KB collection dedup:** ai-service writes shared `kb_documents` (dropped duplicate `kb_documents_ai_cache`); `$setOnInsert` preserves chat-service's `uploadedAt`.
+- [x] **`user_blocks` collection:** replaced unbounded `users.blockedUsers[]` with indexed rows; auth block/unblock/getBlockState + chat `isBlockedBetween` migrated; idempotent migration `pnpm migrate:blocks` (ran clean — no legacy data).
+- [x] **Docs:** ADR-011 + this entry + chat-service/CLAUDE.md, packages/database/README.md, api-spec.md.
+- **Deliberately deferred (premature for small-group):** `readBy→message_reads`, RabbitMQ STOMP relay, media-service (GridFS→object storage), notification-service, message TTL index. Analysis preserved in ADR-011.
+- **Verify:** chat 90/90 (1 Testcontainers test needs Docker), ai 89/89, auth 9/9, `@platform/database` tsc clean.
 
 ---
 
