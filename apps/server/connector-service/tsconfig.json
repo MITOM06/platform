@@ -12,6 +12,10 @@
     "sourceMap": true,
     "outDir": "./dist",
     "baseUrl": "./",
+    "paths": {
+      "@platform/database": ["../../../packages/database/src"],
+      "@platform/database/*": ["../../../packages/database/src/*"]
+    },
     "incremental": true,
     "skipLibCheck": true,
     "strictNullChecks": false,

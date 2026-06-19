@@ -1,10 +1,7 @@
 import { IsBoolean, IsNotEmpty, IsString } from 'class-validator';
 
+/** userId is derived from the JWT (`req.user.sub`), never accepted from the client. */
 export class SetSkillDto {
-  @IsString()
-  @IsNotEmpty()
-  userId: string;
-
   @IsString()
   @IsNotEmpty()
   skillId: string;

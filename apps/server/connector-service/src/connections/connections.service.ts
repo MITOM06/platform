@@ -46,8 +46,18 @@ export class ConnectionsService {
     }));
   }
 
-  async deleteConnection(id: string): Promise<{ deleted: boolean }> {
-    const res = await this.connModel.deleteOne({ _id: id });
+  async deleteConnection(
+    userId: string,
+    id: string,
+  ): Promise<{ deleted: boolean }> {
+    // Scope the delete to the caller so a user can only remove their OWN
+    // (personal) connection — never another member's. Workspace-scoped
+    // connections are not deletable via this personal endpoint.
+    const res = await this.connModel.deleteOne({
+      _id: id,
+      userId,
+      scope: { $ne: 'workspace' },
+    });
     if (!res.deletedCount) {
       throw new NotFoundException('Connection not found');
     }

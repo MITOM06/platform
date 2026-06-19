@@ -1,6 +1,8 @@
 import { DynamicModule, Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
+import { PassportModule } from '@nestjs/passport';
+import { SharedJwtStrategy } from '@platform/database';
 import configuration from './config/configuration';
 import { HealthModule } from './health/health.module';
 import { ConnectionsModule } from './connections/connections.module';
@@ -22,6 +24,7 @@ const mongooseModule: DynamicModule = MongooseModule.forRootAsync({
       load: [configuration],
       envFilePath: '.env',
     }),
+    PassportModule.register({ defaultStrategy: 'jwt' }),
     mongooseModule,
     HealthModule,
     ConnectionsModule,
@@ -29,5 +32,6 @@ const mongooseModule: DynamicModule = MongooseModule.forRootAsync({
     OAuthModule,
     InternalModule,
   ],
+  providers: [SharedJwtStrategy],
 })
 export class AppModule {}
