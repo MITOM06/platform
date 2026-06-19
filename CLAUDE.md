@@ -5,9 +5,11 @@
 
 ---
 
-## Project: Platform — Realtime Messaging App + AI Assistant
+## Project: PON — Self-hosted Enterprise AI-Assistant Platform
 
-**Owner:** Tran Phuc Khang | **Stack:** NestJS auth + Spring Boot chat + NestJS AI + Flutter mobile + Next.js web
+**Owner:** Tran Phuc Khang | **Stack:** NestJS auth + Spring Boot chat + NestJS AI + NestJS connector + Flutter mobile + Next.js web
+
+> **Direction (2026-06-19):** PON is pivoting from a chat app to a **self-hosted, single-tenant-per-deployment B2B AI-assistant platform** (one deployment = one company; Workspace → Departments → Members → Role). AI is central; users connect third-party tools via **governed MCP connectors** (`connector-service`, :3003) and the assistant acts for them from chat. Full state + roadmap: `docs/superpowers/PON-ENTERPRISE-HANDOFF.md`. Enterprise RBAC lives in auth-service + `packages/database/rbac` + `packages/database/auth`.
 
 ## AUTONOMOUS MODE — DEFAULT BEHAVIOR
 
@@ -57,6 +59,7 @@ Chỉ dừng và hỏi khi gặp đúng các tình huống dưới đây — kh�
 | auth-service | 3001 | NestJS |
 | chat-service | 8080 | Spring Boot 3 |
 | ai-service | 3002 | NestJS (TypeScript) |
+| connector-service | 3003 | NestJS (MCP connectors, OAuth, token vault) |
 | MongoDB | **27018** (non-standard!) | Docker |
 | Redis | 6379 | Docker |
 | RabbitMQ AMQP | 5672 | Docker |
