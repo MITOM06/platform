@@ -8,6 +8,7 @@ import { FriendsModule } from './modules/friends/friends.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { MailModule } from './modules/Email/mail.module';
 import { HealthModule } from './health/health.module';
+import { WorkspaceModule } from './modules/workspace/workspace.module';
 
 @Module({
   imports: [
@@ -23,6 +24,7 @@ import { HealthModule } from './health/health.module';
     UsersModule,
     FriendsModule,
     AuthModule,
+    WorkspaceModule,
   ],
   providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],
 })
