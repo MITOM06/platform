@@ -399,11 +399,19 @@
   "sysMemberJoined": "{actorName} se unió al grupo",
   "systemVideoCallEnded": "Videollamada finalizada · {duration}",
   "@systemVideoCallEnded": {
-    "placeholders": { "duration": { "type": "String" } }
+    "placeholders": {
+      "duration": {
+        "type": "String"
+      }
+    }
   },
   "systemVoiceCallEnded": "Llamada de voz finalizada · {duration}",
   "@systemVoiceCallEnded": {
-    "placeholders": { "duration": { "type": "String" } }
+    "placeholders": {
+      "duration": {
+        "type": "String"
+      }
+    }
   },
   "systemVideoCallMissed": "Videollamada perdida",
   "systemVoiceCallMissed": "Llamada de voz perdida",
@@ -424,11 +432,19 @@
   "aiPersonaResetToDefault": "Restablecer valores predeterminados",
   "tokenUsagePercentUsed": "{percent}% usado este mes",
   "@tokenUsagePercentUsed": {
-    "placeholders": { "percent": { "type": "String" } }
+    "placeholders": {
+      "percent": {
+        "type": "String"
+      }
+    }
   },
   "tokenUsageCostUsd": "{amount} USD",
   "@tokenUsageCostUsd": {
-    "placeholders": { "amount": { "type": "String" } }
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
   },
   "notifications": "Notificaciones",
   "notificationsEnabled": "Las notificaciones están activadas",
@@ -445,7 +461,6 @@
   "legalUserRightsContent": "Tiene derecho a acceder, corregir o eliminar sus datos personales. Puede eliminar su cuenta en cualquier momento a través de la configuración de la aplicación.",
   "legalTermsTitle": "5. Términos de Servicio",
   "legalTermsContent": "Al usar nuestra plataforma, acepta no participar en actividades abusivas, de acoso o ilegales. Nos reservamos el derecho de suspender o cancelar cuentas que violen estos términos.",
-
   "authMsgLoginSuccess": "Inicio de sesión exitoso.",
   "authMsgLogoutSuccess": "Cierre de sesión exitoso.",
   "authMsgOtpSent": "Se ha enviado un OTP a su correo electrónico.",
@@ -454,20 +469,23 @@
   "authMsgPasswordUpdated": "Contraseña actualizada correctamente. Por favor, inicie sesión de nuevo.",
   "authMsgRegisterSuccess": "Registro exitoso. Se ha enviado un OTP a su correo electrónico.",
   "authMsgAccountUnverifiedOtpSent": "La cuenta aún no está verificada. Se ha enviado un nuevo OTP a su correo electrónico.",
-
   "authErrOtpInvalid": "Código OTP inválido.",
   "authErrOtpExpired": "El OTP ha expirado.",
   "authErrOtpAttemptsExceeded": "Demasiados intentos incorrectos. Por favor, solicite un nuevo OTP.",
   "authErrOtpWrongWithRemaining": "OTP incorrecto. Quedan {remaining} intento(s).",
   "@authErrOtpWrongWithRemaining": {
     "placeholders": {
-      "remaining": { "type": "int" }
+      "remaining": {
+        "type": "int"
+      }
     }
   },
   "authErrOtpResendCooldown": "Por favor, espere {ttl} segundos antes de solicitar un nuevo OTP.",
   "@authErrOtpResendCooldown": {
     "placeholders": {
-      "ttl": { "type": "int" }
+      "ttl": {
+        "type": "int"
+      }
     }
   },
   "authErrEmailDomainInvalid": "El dominio del correo no existe o no tiene registros MX.",
@@ -481,19 +499,25 @@
   "authErrAccountLocked": "Cuenta bloqueada temporalmente durante {minutes} minuto(s) por demasiados intentos fallidos.",
   "@authErrAccountLocked": {
     "placeholders": {
-      "minutes": { "type": "int" }
+      "minutes": {
+        "type": "int"
+      }
     }
   },
   "authErrLoginFailedWithRemaining": "Correo o contraseña incorrectos. Quedan {remaining} intento(s).",
   "@authErrLoginFailedWithRemaining": {
     "placeholders": {
-      "remaining": { "type": "int" }
+      "remaining": {
+        "type": "int"
+      }
     }
   },
   "authErrLoginFailedLocked": "Demasiados intentos fallidos. Cuenta bloqueada durante {minutes} minuto(s).",
   "@authErrLoginFailedLocked": {
     "placeholders": {
-      "minutes": { "type": "int" }
+      "minutes": {
+        "type": "int"
+      }
     }
   },
   "authErrTokenInvalid": "Token inválido.",
@@ -506,5 +530,41 @@
   "authErrTokenSessionMismatch": "El token no coincide con la sesión.",
   "authErrSocialEmailUnavailable": "No se puede obtener el correo de la cuenta social.",
   "authErrLoginCodeInvalid": "El código de inicio de sesión es inválido o ha expirado.",
-  "authErrUserNotFound": "Usuario no encontrado."
+  "authErrUserNotFound": "Usuario no encontrado.",
+  "integrationsTitle": "Integraciones",
+  "integrationsSubtitle": "Conecta una cuenta una vez. A partir de ahí, solo escribe a tu asistente — actúa en tu nombre, con tus permisos y nada más.",
+  "integrationsSettingsSubtitle": "Conecta herramientas que tu asistente puede usar",
+  "connectorStatusConnected": "Conectado",
+  "connectorStatusAvailable": "Disponible",
+  "connectorStatusComingSoon": "Próximamente",
+  "connectorConnect": "Conectar",
+  "connectorManage": "Gestionar",
+  "connectorDisconnect": "Desconectar",
+  "connectorDisconnectConfirm": "¿Desconectar esta cuenta? Tu asistente perderá acceso a sus herramientas.",
+  "connectorOpenFailed": "No se pudo abrir la página de autorización.",
+  "customMcpTitle": "Añadir un servidor MCP personalizado",
+  "customMcpSubtitle": "Apunta tu asistente a cualquier servidor MCP. Descubriremos sus herramientas y tu asistente podrá usarlas.",
+  "customMcpName": "Nombre",
+  "customMcpUrl": "URL del servidor",
+  "customMcpAuth": "AUTENTICACIÓN",
+  "customMcpAuthNone": "Ninguna",
+  "customMcpAuthApiKey": "Clave API",
+  "customMcpAuthOauth": "OAuth",
+  "customMcpCredential": "Credencial",
+  "customMcpDiscover": "Descubrir herramientas",
+  "customMcpSave": "Guardar",
+  "customMcpSaved": "Servidor MCP personalizado añadido.",
+  "customMcpToolsFound": "{count} herramientas descubiertas",
+  "skillsTitle": "Habilidades",
+  "skillsSubtitle": "Las habilidades agrupan un conjunto de herramientas y una forma de trabajar. Activa solo lo que necesites — cada una indica lo que requiere.",
+  "skillsSettingsSubtitle": "Elige en qué es bueno tu asistente",
+  "skillNeeds": "Necesita {requirements}",
+  "skillSchedulerName": "Planificador",
+  "skillSchedulerDesc": "Agenda reuniones, encuentra huecos, envía invitaciones y recordatorios.",
+  "skillMailWriterName": "Redactor de correos",
+  "skillMailWriterDesc": "Redacta respuestas con tu estilo, resume hilos largos.",
+  "skillResearcherName": "Investigador",
+  "skillResearcherDesc": "Busca en la web y en tu Drive, devuelve respuestas con citas.",
+  "skillProjectKeeperName": "Gestor de proyectos",
+  "skillProjectKeeperDesc": "Archiva notas y tareas en Notion, mantiene las bases de datos ordenadas."
 }

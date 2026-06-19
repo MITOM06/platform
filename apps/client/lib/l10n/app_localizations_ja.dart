@@ -1442,4 +1442,120 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get authErrUserNotFound => 'ユーザーが見つかりません。';
+
+  @override
+  String get integrationsTitle => '連携';
+
+  @override
+  String get integrationsSubtitle =>
+      '一度アカウントを接続するだけ。あとはアシスタントにメッセージを送るだけで、あなたの権限の範囲内で代わりに動きます。';
+
+  @override
+  String get integrationsSettingsSubtitle => 'アシスタントが使えるツールを接続';
+
+  @override
+  String get connectorStatusConnected => '接続済み';
+
+  @override
+  String get connectorStatusAvailable => '利用可能';
+
+  @override
+  String get connectorStatusComingSoon => '近日公開';
+
+  @override
+  String get connectorConnect => '接続';
+
+  @override
+  String get connectorManage => '管理';
+
+  @override
+  String get connectorDisconnect => '切断';
+
+  @override
+  String get connectorDisconnectConfirm =>
+      'このアカウントを切断しますか？アシスタントはツールを使えなくなります。';
+
+  @override
+  String get connectorOpenFailed => '認証ページを開けませんでした。';
+
+  @override
+  String get customMcpTitle => 'カスタム MCP サーバーを追加';
+
+  @override
+  String get customMcpSubtitle =>
+      '任意の MCP サーバーをアシスタントに指定します。ツールを検出し、アシスタントが使えるようになります。';
+
+  @override
+  String get customMcpName => '名前';
+
+  @override
+  String get customMcpUrl => 'サーバー URL';
+
+  @override
+  String get customMcpAuth => '認証';
+
+  @override
+  String get customMcpAuthNone => 'なし';
+
+  @override
+  String get customMcpAuthApiKey => 'API キー';
+
+  @override
+  String get customMcpAuthOauth => 'OAuth';
+
+  @override
+  String get customMcpCredential => '認証情報';
+
+  @override
+  String get customMcpDiscover => 'ツールを検出';
+
+  @override
+  String get customMcpSave => '保存';
+
+  @override
+  String get customMcpSaved => 'カスタム MCP サーバーを追加しました。';
+
+  @override
+  String customMcpToolsFound(int count) {
+    return '$count 個のツールを検出';
+  }
+
+  @override
+  String get skillsTitle => 'スキル';
+
+  @override
+  String get skillsSubtitle =>
+      'スキルはツール群と働き方をまとめたものです。必要なものだけオンにしてください。各スキルが必要条件を示します。';
+
+  @override
+  String get skillsSettingsSubtitle => 'アシスタントの得意分野を選ぶ';
+
+  @override
+  String skillNeeds(String requirements) {
+    return '$requirements が必要';
+  }
+
+  @override
+  String get skillSchedulerName => 'スケジューラー';
+
+  @override
+  String get skillSchedulerDesc => '会議を予約し、空き時間を探し、招待とリマインダーを送ります。';
+
+  @override
+  String get skillMailWriterName => 'メール作成';
+
+  @override
+  String get skillMailWriterDesc => 'あなたの口調で返信を下書きし、長いスレッドを要約します。';
+
+  @override
+  String get skillResearcherName => 'リサーチャー';
+
+  @override
+  String get skillResearcherDesc => 'ウェブと Drive を検索し、出典付きの回答を返します。';
+
+  @override
+  String get skillProjectKeeperName => 'プロジェクト管理';
+
+  @override
+  String get skillProjectKeeperDesc => 'メモやタスクを Notion に保存し、データベースを整理します。';
 }

@@ -1480,4 +1480,126 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get authErrUserNotFound => 'Usuario no encontrado.';
+
+  @override
+  String get integrationsTitle => 'Integraciones';
+
+  @override
+  String get integrationsSubtitle =>
+      'Conecta una cuenta una vez. A partir de ahí, solo escribe a tu asistente — actúa en tu nombre, con tus permisos y nada más.';
+
+  @override
+  String get integrationsSettingsSubtitle =>
+      'Conecta herramientas que tu asistente puede usar';
+
+  @override
+  String get connectorStatusConnected => 'Conectado';
+
+  @override
+  String get connectorStatusAvailable => 'Disponible';
+
+  @override
+  String get connectorStatusComingSoon => 'Próximamente';
+
+  @override
+  String get connectorConnect => 'Conectar';
+
+  @override
+  String get connectorManage => 'Gestionar';
+
+  @override
+  String get connectorDisconnect => 'Desconectar';
+
+  @override
+  String get connectorDisconnectConfirm =>
+      '¿Desconectar esta cuenta? Tu asistente perderá acceso a sus herramientas.';
+
+  @override
+  String get connectorOpenFailed =>
+      'No se pudo abrir la página de autorización.';
+
+  @override
+  String get customMcpTitle => 'Añadir un servidor MCP personalizado';
+
+  @override
+  String get customMcpSubtitle =>
+      'Apunta tu asistente a cualquier servidor MCP. Descubriremos sus herramientas y tu asistente podrá usarlas.';
+
+  @override
+  String get customMcpName => 'Nombre';
+
+  @override
+  String get customMcpUrl => 'URL del servidor';
+
+  @override
+  String get customMcpAuth => 'AUTENTICACIÓN';
+
+  @override
+  String get customMcpAuthNone => 'Ninguna';
+
+  @override
+  String get customMcpAuthApiKey => 'Clave API';
+
+  @override
+  String get customMcpAuthOauth => 'OAuth';
+
+  @override
+  String get customMcpCredential => 'Credencial';
+
+  @override
+  String get customMcpDiscover => 'Descubrir herramientas';
+
+  @override
+  String get customMcpSave => 'Guardar';
+
+  @override
+  String get customMcpSaved => 'Servidor MCP personalizado añadido.';
+
+  @override
+  String customMcpToolsFound(int count) {
+    return '$count herramientas descubiertas';
+  }
+
+  @override
+  String get skillsTitle => 'Habilidades';
+
+  @override
+  String get skillsSubtitle =>
+      'Las habilidades agrupan un conjunto de herramientas y una forma de trabajar. Activa solo lo que necesites — cada una indica lo que requiere.';
+
+  @override
+  String get skillsSettingsSubtitle => 'Elige en qué es bueno tu asistente';
+
+  @override
+  String skillNeeds(String requirements) {
+    return 'Necesita $requirements';
+  }
+
+  @override
+  String get skillSchedulerName => 'Planificador';
+
+  @override
+  String get skillSchedulerDesc =>
+      'Agenda reuniones, encuentra huecos, envía invitaciones y recordatorios.';
+
+  @override
+  String get skillMailWriterName => 'Redactor de correos';
+
+  @override
+  String get skillMailWriterDesc =>
+      'Redacta respuestas con tu estilo, resume hilos largos.';
+
+  @override
+  String get skillResearcherName => 'Investigador';
+
+  @override
+  String get skillResearcherDesc =>
+      'Busca en la web y en tu Drive, devuelve respuestas con citas.';
+
+  @override
+  String get skillProjectKeeperName => 'Gestor de proyectos';
+
+  @override
+  String get skillProjectKeeperDesc =>
+      'Archiva notas y tareas en Notion, mantiene las bases de datos ordenadas.';
 }

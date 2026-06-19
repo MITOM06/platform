@@ -399,11 +399,19 @@
   "sysMemberJoined": "{actorName}加入了群组",
   "systemVideoCallEnded": "视频通话已结束 · {duration}",
   "@systemVideoCallEnded": {
-    "placeholders": { "duration": { "type": "String" } }
+    "placeholders": {
+      "duration": {
+        "type": "String"
+      }
+    }
   },
   "systemVoiceCallEnded": "语音通话已结束 · {duration}",
   "@systemVoiceCallEnded": {
-    "placeholders": { "duration": { "type": "String" } }
+    "placeholders": {
+      "duration": {
+        "type": "String"
+      }
+    }
   },
   "systemVideoCallMissed": "未接视频通话",
   "systemVoiceCallMissed": "未接语音通话",
@@ -424,11 +432,19 @@
   "aiPersonaResetToDefault": "重置为默认",
   "tokenUsagePercentUsed": "本月已使用 {percent}%",
   "@tokenUsagePercentUsed": {
-    "placeholders": { "percent": { "type": "String" } }
+    "placeholders": {
+      "percent": {
+        "type": "String"
+      }
+    }
   },
   "tokenUsageCostUsd": "{amount} 美元",
   "@tokenUsageCostUsd": {
-    "placeholders": { "amount": { "type": "String" } }
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
   },
   "notifications": "通知",
   "notificationsEnabled": "通知已开启",
@@ -445,7 +461,6 @@
   "legalUserRightsContent": "您有权访问、更正或删除您的个人数据。您可以随时通过应用程序设置删除您的账户。",
   "legalTermsTitle": "5. 服务条款",
   "legalTermsContent": "使用我们的平台即表示您同意不参与任何滥用、骚扰或违法活动。我们保留暂停或终止违反这些条款的账户的权利。",
-
   "authMsgLoginSuccess": "登录成功。",
   "authMsgLogoutSuccess": "退出成功。",
   "authMsgOtpSent": "OTP已发送至您的邮箱。",
@@ -454,20 +469,23 @@
   "authMsgPasswordUpdated": "密码已成功更新，请重新登录。",
   "authMsgRegisterSuccess": "注册成功，OTP已发送至您的邮箱。",
   "authMsgAccountUnverifiedOtpSent": "账户尚未验证，新OTP已发送至您的邮箱。",
-
   "authErrOtpInvalid": "OTP验证码无效。",
   "authErrOtpExpired": "OTP已过期。",
   "authErrOtpAttemptsExceeded": "错误次数过多，请重新申请OTP。",
   "authErrOtpWrongWithRemaining": "OTP不正确，剩余{remaining}次尝试。",
   "@authErrOtpWrongWithRemaining": {
     "placeholders": {
-      "remaining": { "type": "int" }
+      "remaining": {
+        "type": "int"
+      }
     }
   },
   "authErrOtpResendCooldown": "请等待{ttl}秒后再申请新OTP。",
   "@authErrOtpResendCooldown": {
     "placeholders": {
-      "ttl": { "type": "int" }
+      "ttl": {
+        "type": "int"
+      }
     }
   },
   "authErrEmailDomainInvalid": "邮箱域名不存在或无MX记录。",
@@ -481,19 +499,25 @@
   "authErrAccountLocked": "由于登录失败次数过多，账户已被暂时锁定{minutes}分钟。",
   "@authErrAccountLocked": {
     "placeholders": {
-      "minutes": { "type": "int" }
+      "minutes": {
+        "type": "int"
+      }
     }
   },
   "authErrLoginFailedWithRemaining": "邮箱或密码不正确，剩余{remaining}次尝试。",
   "@authErrLoginFailedWithRemaining": {
     "placeholders": {
-      "remaining": { "type": "int" }
+      "remaining": {
+        "type": "int"
+      }
     }
   },
   "authErrLoginFailedLocked": "登录失败次数过多，账户已锁定{minutes}分钟。",
   "@authErrLoginFailedLocked": {
     "placeholders": {
-      "minutes": { "type": "int" }
+      "minutes": {
+        "type": "int"
+      }
     }
   },
   "authErrTokenInvalid": "Token无效。",
@@ -506,5 +530,41 @@
   "authErrTokenSessionMismatch": "Token与会话不匹配。",
   "authErrSocialEmailUnavailable": "无法从社交账户获取邮箱。",
   "authErrLoginCodeInvalid": "登录码无效或已过期。",
-  "authErrUserNotFound": "用户不存在。"
+  "authErrUserNotFound": "用户不存在。",
+  "integrationsTitle": "集成",
+  "integrationsSubtitle": "只需连接一次账户。之后只要给助手发消息——它便会代你行事，权限内行事，绝不越界。",
+  "integrationsSettingsSubtitle": "连接助手可使用的工具",
+  "connectorStatusConnected": "已连接",
+  "connectorStatusAvailable": "可用",
+  "connectorStatusComingSoon": "即将推出",
+  "connectorConnect": "连接",
+  "connectorManage": "管理",
+  "connectorDisconnect": "断开连接",
+  "connectorDisconnectConfirm": "断开此账户？助手将无法再使用其工具。",
+  "connectorOpenFailed": "无法打开授权页面。",
+  "customMcpTitle": "添加自定义 MCP 服务器",
+  "customMcpSubtitle": "将助手指向任意 MCP 服务器。我们会发现其工具，助手即可使用它们。",
+  "customMcpName": "名称",
+  "customMcpUrl": "服务器 URL",
+  "customMcpAuth": "认证",
+  "customMcpAuthNone": "无",
+  "customMcpAuthApiKey": "API 密钥",
+  "customMcpAuthOauth": "OAuth",
+  "customMcpCredential": "凭据",
+  "customMcpDiscover": "发现工具",
+  "customMcpSave": "保存",
+  "customMcpSaved": "已添加自定义 MCP 服务器。",
+  "customMcpToolsFound": "发现 {count} 个工具",
+  "skillsTitle": "技能",
+  "skillsSubtitle": "技能将一组工具和工作方式打包。只开启你需要的——每个技能都会告诉你它的要求。",
+  "skillsSettingsSubtitle": "选择助手擅长的事",
+  "skillNeeds": "需要 {requirements}",
+  "skillSchedulerName": "日程助手",
+  "skillSchedulerDesc": "预订会议、查找空档、发送邀请和提醒。",
+  "skillMailWriterName": "邮件撰写",
+  "skillMailWriterDesc": "用你的语气起草回复，总结长邮件。",
+  "skillResearcherName": "研究员",
+  "skillResearcherDesc": "搜索网络和你的云端硬盘，返回带引用的答案。",
+  "skillProjectKeeperName": "项目管家",
+  "skillProjectKeeperDesc": "将笔记和任务归档到 Notion，保持数据库整洁。"
 }

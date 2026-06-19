@@ -1467,4 +1467,125 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get authErrUserNotFound => 'User not found.';
+
+  @override
+  String get integrationsTitle => 'Integrations';
+
+  @override
+  String get integrationsSubtitle =>
+      'Connect an account once. From then on, just message your assistant — it acts on your behalf, with your permissions and nothing more.';
+
+  @override
+  String get integrationsSettingsSubtitle =>
+      'Connect tools your assistant can use';
+
+  @override
+  String get connectorStatusConnected => 'Connected';
+
+  @override
+  String get connectorStatusAvailable => 'Available';
+
+  @override
+  String get connectorStatusComingSoon => 'Coming soon';
+
+  @override
+  String get connectorConnect => 'Connect';
+
+  @override
+  String get connectorManage => 'Manage';
+
+  @override
+  String get connectorDisconnect => 'Disconnect';
+
+  @override
+  String get connectorDisconnectConfirm =>
+      'Disconnect this account? Your assistant will lose access to its tools.';
+
+  @override
+  String get connectorOpenFailed => 'Couldn\'t open the authorization page.';
+
+  @override
+  String get customMcpTitle => 'Add a custom MCP server';
+
+  @override
+  String get customMcpSubtitle =>
+      'Point your assistant at any MCP server. We\'ll discover its tools and your assistant can use them.';
+
+  @override
+  String get customMcpName => 'Name';
+
+  @override
+  String get customMcpUrl => 'Server URL';
+
+  @override
+  String get customMcpAuth => 'AUTH';
+
+  @override
+  String get customMcpAuthNone => 'None';
+
+  @override
+  String get customMcpAuthApiKey => 'API key';
+
+  @override
+  String get customMcpAuthOauth => 'OAuth';
+
+  @override
+  String get customMcpCredential => 'Credential';
+
+  @override
+  String get customMcpDiscover => 'Discover tools';
+
+  @override
+  String get customMcpSave => 'Save';
+
+  @override
+  String get customMcpSaved => 'Custom MCP server added.';
+
+  @override
+  String customMcpToolsFound(int count) {
+    return '$count tools discovered';
+  }
+
+  @override
+  String get skillsTitle => 'Skills';
+
+  @override
+  String get skillsSubtitle =>
+      'Skills bundle a set of tools and a way of working. Turn on only what you need — each one tells you what it requires.';
+
+  @override
+  String get skillsSettingsSubtitle => 'Choose what your assistant is good at';
+
+  @override
+  String skillNeeds(String requirements) {
+    return 'Needs $requirements';
+  }
+
+  @override
+  String get skillSchedulerName => 'Scheduler';
+
+  @override
+  String get skillSchedulerDesc =>
+      'Books meetings, finds slots, sends invites and reminders.';
+
+  @override
+  String get skillMailWriterName => 'Mail writer';
+
+  @override
+  String get skillMailWriterDesc =>
+      'Drafts replies in your voice, summarizes long threads.';
+
+  @override
+  String get skillResearcherName => 'Researcher';
+
+  @override
+  String get skillResearcherDesc =>
+      'Searches the web and your Drive, returns cited answers.';
+
+  @override
+  String get skillProjectKeeperName => 'Project keeper';
+
+  @override
+  String get skillProjectKeeperDesc =>
+      'Files notes and tasks into Notion, keeps databases tidy.';
 }

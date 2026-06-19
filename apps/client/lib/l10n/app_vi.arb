@@ -399,11 +399,19 @@
   "sysMemberJoined": "{actorName} đã tham gia nhóm",
   "systemVideoCallEnded": "Cuộc gọi video đã kết thúc · {duration}",
   "@systemVideoCallEnded": {
-    "placeholders": { "duration": { "type": "String" } }
+    "placeholders": {
+      "duration": {
+        "type": "String"
+      }
+    }
   },
   "systemVoiceCallEnded": "Cuộc gọi thoại đã kết thúc · {duration}",
   "@systemVoiceCallEnded": {
-    "placeholders": { "duration": { "type": "String" } }
+    "placeholders": {
+      "duration": {
+        "type": "String"
+      }
+    }
   },
   "systemVideoCallMissed": "Cuộc gọi video nhỡ",
   "systemVoiceCallMissed": "Cuộc gọi thoại nhỡ",
@@ -424,11 +432,19 @@
   "aiPersonaResetToDefault": "Đặt lại mặc định",
   "tokenUsagePercentUsed": "Đã dùng {percent}% trong tháng này",
   "@tokenUsagePercentUsed": {
-    "placeholders": { "percent": { "type": "String" } }
+    "placeholders": {
+      "percent": {
+        "type": "String"
+      }
+    }
   },
   "tokenUsageCostUsd": "{amount} USD",
   "@tokenUsageCostUsd": {
-    "placeholders": { "amount": { "type": "String" } }
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
   },
   "notifications": "Thông báo",
   "notificationsEnabled": "Thông báo đang bật",
@@ -445,7 +461,6 @@
   "legalUserRightsContent": "Bạn có quyền truy cập, chỉnh sửa hoặc xóa dữ liệu cá nhân của mình. Bạn có thể xóa tài khoản của mình bất kỳ lúc nào thông qua cài đặt ứng dụng.",
   "legalTermsTitle": "5. Điều khoản Dịch vụ",
   "legalTermsContent": "Bằng cách sử dụng nền tảng của chúng tôi, bạn đồng ý không tham gia vào bất kỳ hoạt động lạm dụng, quấy rối hoặc bất hợp pháp nào. Chúng tôi có quyền đình chỉ hoặc chấm dứt các tài khoản vi phạm các điều khoản này.",
-
   "authMsgLoginSuccess": "Đăng nhập thành công.",
   "authMsgLogoutSuccess": "Đăng xuất thành công.",
   "authMsgOtpSent": "Mã OTP đã được gửi tới email của bạn.",
@@ -454,20 +469,23 @@
   "authMsgPasswordUpdated": "Cập nhật mật khẩu thành công. Vui lòng đăng nhập lại.",
   "authMsgRegisterSuccess": "Đăng ký thành công. Mã OTP đã được gửi tới email của bạn.",
   "authMsgAccountUnverifiedOtpSent": "Tài khoản chưa được xác thực. Mã OTP mới đã được gửi tới email của bạn.",
-
   "authErrOtpInvalid": "Mã OTP không hợp lệ.",
   "authErrOtpExpired": "Mã OTP đã hết hạn.",
   "authErrOtpAttemptsExceeded": "Quá nhiều lần nhập sai. Vui lòng yêu cầu mã OTP mới.",
   "authErrOtpWrongWithRemaining": "OTP không đúng. Còn {remaining} lần thử.",
   "@authErrOtpWrongWithRemaining": {
     "placeholders": {
-      "remaining": { "type": "int" }
+      "remaining": {
+        "type": "int"
+      }
     }
   },
   "authErrOtpResendCooldown": "Vui lòng đợi {ttl} giây trước khi yêu cầu mã OTP mới.",
   "@authErrOtpResendCooldown": {
     "placeholders": {
-      "ttl": { "type": "int" }
+      "ttl": {
+        "type": "int"
+      }
     }
   },
   "authErrEmailDomainInvalid": "Tên miền email không tồn tại hoặc không có bản ghi MX.",
@@ -481,19 +499,25 @@
   "authErrAccountLocked": "Tài khoản tạm thời bị khoá trong {minutes} phút do đăng nhập sai quá nhiều lần.",
   "@authErrAccountLocked": {
     "placeholders": {
-      "minutes": { "type": "int" }
+      "minutes": {
+        "type": "int"
+      }
     }
   },
   "authErrLoginFailedWithRemaining": "Email hoặc mật khẩu không đúng. Còn {remaining} lần thử.",
   "@authErrLoginFailedWithRemaining": {
     "placeholders": {
-      "remaining": { "type": "int" }
+      "remaining": {
+        "type": "int"
+      }
     }
   },
   "authErrLoginFailedLocked": "Đăng nhập sai quá nhiều lần. Tài khoản bị khoá trong {minutes} phút.",
   "@authErrLoginFailedLocked": {
     "placeholders": {
-      "minutes": { "type": "int" }
+      "minutes": {
+        "type": "int"
+      }
     }
   },
   "authErrTokenInvalid": "Token không hợp lệ.",
@@ -506,5 +530,41 @@
   "authErrTokenSessionMismatch": "Token không khớp với phiên.",
   "authErrSocialEmailUnavailable": "Không thể lấy email từ tài khoản mạng xã hội.",
   "authErrLoginCodeInvalid": "Mã đăng nhập không hợp lệ hoặc đã hết hạn.",
-  "authErrUserNotFound": "Không tìm thấy người dùng."
+  "authErrUserNotFound": "Không tìm thấy người dùng.",
+  "integrationsTitle": "Tích hợp",
+  "integrationsSubtitle": "Kết nối tài khoản một lần. Từ đó, chỉ cần nhắn cho trợ lý — nó hành động thay bạn, trong giới hạn quyền bạn cấp và không hơn.",
+  "integrationsSettingsSubtitle": "Kết nối các công cụ trợ lý có thể dùng",
+  "connectorStatusConnected": "Đã kết nối",
+  "connectorStatusAvailable": "Có sẵn",
+  "connectorStatusComingSoon": "Sắp ra mắt",
+  "connectorConnect": "Kết nối",
+  "connectorManage": "Quản lý",
+  "connectorDisconnect": "Ngắt kết nối",
+  "connectorDisconnectConfirm": "Ngắt kết nối tài khoản này? Trợ lý sẽ mất quyền sử dụng các công cụ của nó.",
+  "connectorOpenFailed": "Không thể mở trang ủy quyền.",
+  "customMcpTitle": "Thêm máy chủ MCP tùy chỉnh",
+  "customMcpSubtitle": "Trỏ trợ lý đến bất kỳ máy chủ MCP nào. Chúng tôi sẽ khám phá công cụ và trợ lý có thể sử dụng chúng.",
+  "customMcpName": "Tên",
+  "customMcpUrl": "URL máy chủ",
+  "customMcpAuth": "XÁC THỰC",
+  "customMcpAuthNone": "Không",
+  "customMcpAuthApiKey": "Khóa API",
+  "customMcpAuthOauth": "OAuth",
+  "customMcpCredential": "Thông tin xác thực",
+  "customMcpDiscover": "Khám phá công cụ",
+  "customMcpSave": "Lưu",
+  "customMcpSaved": "Đã thêm máy chủ MCP tùy chỉnh.",
+  "customMcpToolsFound": "Đã tìm thấy {count} công cụ",
+  "skillsTitle": "Kỹ năng",
+  "skillsSubtitle": "Kỹ năng gói gọn một bộ công cụ và cách làm việc. Chỉ bật những gì bạn cần — mỗi kỹ năng cho biết nó yêu cầu gì.",
+  "skillsSettingsSubtitle": "Chọn thế mạnh cho trợ lý của bạn",
+  "skillNeeds": "Cần {requirements}",
+  "skillSchedulerName": "Trợ lý lịch",
+  "skillSchedulerDesc": "Đặt lịch họp, tìm khung giờ, gửi lời mời và nhắc nhở.",
+  "skillMailWriterName": "Soạn thư",
+  "skillMailWriterDesc": "Soạn thư trả lời theo giọng văn của bạn, tóm tắt chuỗi thư dài.",
+  "skillResearcherName": "Nghiên cứu",
+  "skillResearcherDesc": "Tìm trên web và Drive của bạn, trả lời kèm trích dẫn.",
+  "skillProjectKeeperName": "Quản lý dự án",
+  "skillProjectKeeperDesc": "Lưu ghi chú và việc cần làm vào Notion, giữ cơ sở dữ liệu gọn gàng."
 }
