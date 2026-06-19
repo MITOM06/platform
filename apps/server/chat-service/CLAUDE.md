@@ -65,11 +65,22 @@ spring.rabbitmq.port: ${SPRING_RABBITMQ_PORT:5672}
 spring.rabbitmq.username: ${SPRING_RABBITMQ_USERNAME:platform}
 spring.rabbitmq.password: ${SPRING_RABBITMQ_PASSWORD:platform}
 app.jwt.secret: ${JWT_ACCESS_SECRET}               # Must match auth-service secret exactly
+app.reminder.sweep-interval-ms: ${REMINDER_SWEEP_INTERVAL_MS:60000}  # due-reminder delivery sweep
 ```
 
 **RabbitMQ topology** (declared in `RabbitMqConfig.java`):
 - Exchange `ai.direct` (direct) + queue `ai.requests` with 30 s TTL → DLQ `ai.requests.dlq`
 - `AiRedisPublisher` publishes `@AI` mention jobs to `ai.requests` via `RabbitTemplate`
+
+**Scheduled jobs** (`@EnableScheduling`):
+- `MessageSweepService` — deletes disappearing-messages past each conversation's window
+- `ReminderSweepService` — every `app.reminder.sweep-interval-ms` (60 s default), pushes due
+  reminders via FCM and flags them `notified` so each fires exactly once (see ADR-011)
+
+**Cross-service collections read by chat-service** (owned by NestJS services):
+- `user_blocks` — block relationships (replaces former `users.blockedUsers[]`); read via the
+  `UserBlock` model to reject messages between blocked users
+- `kb_documents` — KB document status; created here on upload, status updated by ai-service
 
 ---
 
@@ -138,7 +149,7 @@ app.jwt.secret: ${JWT_ACCESS_SECRET}               # Must match auth-service sec
 - `GET /api/ai/memories` / `GET /api/ai/memories/{conversationId}` / `DELETE`
 - `GET /api/usage/tokens?days=N` — Get token quotas usage stats
 - `POST /api/kb` / `GET /api/kb` / `DELETE /api/kb/{documentId}` — RAG documents
-- `GET /api/reminders` / `PATCH /api/reminders/{id}/done` / `DELETE`
+- `GET /api/reminders` / `PATCH /api/reminders/{id}/done` / `DELETE` — created by ai-service's `create_reminder` tool; delivered via FCM by `ReminderSweepService` when due
 - `POST /api/uploads` / `GET /api/uploads/{id}?download=true` — GridFS uploads
 - `GET /api/utils/link-preview?url={url}` — Link metadata unfurler
 
