@@ -1782,6 +1782,18 @@ abstract class AppLocalizations {
   /// **'AI is temporarily unavailable. Please try again.'**
   String get aiError;
 
+  /// No description provided for @aiErrStreamInterrupted.
+  ///
+  /// In en, this message translates to:
+  /// **'AI stream was interrupted. Please try again.'**
+  String get aiErrStreamInterrupted;
+
+  /// No description provided for @aiErrUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'AI is temporarily unavailable.'**
+  String get aiErrUnavailable;
+
   /// No description provided for @aiErrorRetry.
   ///
   /// In en, this message translates to:
@@ -2568,6 +2580,216 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'By using our platform, you agree not to engage in any abusive, harassing, or illegal activities. We reserve the right to suspend or terminate accounts that violate these terms.'**
   String get legalTermsContent;
+
+  /// No description provided for @authMsgLoginSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Login successful.'**
+  String get authMsgLoginSuccess;
+
+  /// No description provided for @authMsgLogoutSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Logout successful.'**
+  String get authMsgLogoutSuccess;
+
+  /// No description provided for @authMsgOtpSent.
+  ///
+  /// In en, this message translates to:
+  /// **'OTP has been sent to your email.'**
+  String get authMsgOtpSent;
+
+  /// No description provided for @authMsgOtpValid.
+  ///
+  /// In en, this message translates to:
+  /// **'OTP verified successfully.'**
+  String get authMsgOtpValid;
+
+  /// No description provided for @authMsgOtpResent.
+  ///
+  /// In en, this message translates to:
+  /// **'A new OTP has been sent.'**
+  String get authMsgOtpResent;
+
+  /// No description provided for @authMsgPasswordUpdated.
+  ///
+  /// In en, this message translates to:
+  /// **'Password updated successfully. Please log in again.'**
+  String get authMsgPasswordUpdated;
+
+  /// No description provided for @authMsgRegisterSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Registration successful. OTP has been sent to your email.'**
+  String get authMsgRegisterSuccess;
+
+  /// No description provided for @authMsgAccountUnverifiedOtpSent.
+  ///
+  /// In en, this message translates to:
+  /// **'Account not yet verified. A new OTP has been sent to your email.'**
+  String get authMsgAccountUnverifiedOtpSent;
+
+  /// No description provided for @authErrOtpInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid OTP code.'**
+  String get authErrOtpInvalid;
+
+  /// No description provided for @authErrOtpExpired.
+  ///
+  /// In en, this message translates to:
+  /// **'OTP has expired.'**
+  String get authErrOtpExpired;
+
+  /// No description provided for @authErrOtpAttemptsExceeded.
+  ///
+  /// In en, this message translates to:
+  /// **'Too many incorrect attempts. Please request a new OTP.'**
+  String get authErrOtpAttemptsExceeded;
+
+  /// No description provided for @authErrOtpWrongWithRemaining.
+  ///
+  /// In en, this message translates to:
+  /// **'Incorrect OTP. {remaining} attempt(s) remaining.'**
+  String authErrOtpWrongWithRemaining(int remaining);
+
+  /// No description provided for @authErrOtpResendCooldown.
+  ///
+  /// In en, this message translates to:
+  /// **'Please wait {ttl} seconds before requesting a new OTP.'**
+  String authErrOtpResendCooldown(int ttl);
+
+  /// No description provided for @authErrEmailDomainInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'Email domain does not exist or has no MX records.'**
+  String get authErrEmailDomainInvalid;
+
+  /// No description provided for @authErrEmailNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'Email does not exist in the system.'**
+  String get authErrEmailNotFound;
+
+  /// No description provided for @authErrEmailInUse.
+  ///
+  /// In en, this message translates to:
+  /// **'This email is already in use.'**
+  String get authErrEmailInUse;
+
+  /// No description provided for @authErrValEmailInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid email format.'**
+  String get authErrValEmailInvalid;
+
+  /// No description provided for @authErrValEmailRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Email is required.'**
+  String get authErrValEmailRequired;
+
+  /// No description provided for @authErrValDisplaynameRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Display name is required.'**
+  String get authErrValDisplaynameRequired;
+
+  /// No description provided for @authErrValDisplaynameTooShort.
+  ///
+  /// In en, this message translates to:
+  /// **'Display name is too short (minimum 2 characters).'**
+  String get authErrValDisplaynameTooShort;
+
+  /// No description provided for @authErrValPasswordTooShort.
+  ///
+  /// In en, this message translates to:
+  /// **'Password must be at least 8 characters.'**
+  String get authErrValPasswordTooShort;
+
+  /// No description provided for @authErrAccountLocked.
+  ///
+  /// In en, this message translates to:
+  /// **'Account temporarily locked for {minutes} minute(s) due to too many failed attempts.'**
+  String authErrAccountLocked(int minutes);
+
+  /// No description provided for @authErrLoginFailedWithRemaining.
+  ///
+  /// In en, this message translates to:
+  /// **'Incorrect email or password. {remaining} attempt(s) remaining.'**
+  String authErrLoginFailedWithRemaining(int remaining);
+
+  /// No description provided for @authErrLoginFailedLocked.
+  ///
+  /// In en, this message translates to:
+  /// **'Too many failed attempts. Account locked for {minutes} minute(s).'**
+  String authErrLoginFailedLocked(int minutes);
+
+  /// No description provided for @authErrTokenInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid token.'**
+  String get authErrTokenInvalid;
+
+  /// No description provided for @authErrSessionNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'Session not found or has expired.'**
+  String get authErrSessionNotFound;
+
+  /// No description provided for @authErrSessionInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'Session does not exist or has expired.'**
+  String get authErrSessionInvalid;
+
+  /// No description provided for @authErrSessionRevoked.
+  ///
+  /// In en, this message translates to:
+  /// **'Session has been revoked.'**
+  String get authErrSessionRevoked;
+
+  /// No description provided for @authErrRefreshTokenReuse.
+  ///
+  /// In en, this message translates to:
+  /// **'Security alert: refresh token reuse detected. All sessions revoked.'**
+  String get authErrRefreshTokenReuse;
+
+  /// No description provided for @authErrRefreshTokenInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid refresh token.'**
+  String get authErrRefreshTokenInvalid;
+
+  /// No description provided for @authErrRefreshTokenRotated.
+  ///
+  /// In en, this message translates to:
+  /// **'Refresh token has already been rotated.'**
+  String get authErrRefreshTokenRotated;
+
+  /// No description provided for @authErrTokenSessionMismatch.
+  ///
+  /// In en, this message translates to:
+  /// **'Token does not match the session.'**
+  String get authErrTokenSessionMismatch;
+
+  /// No description provided for @authErrSocialEmailUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Unable to retrieve email from social account.'**
+  String get authErrSocialEmailUnavailable;
+
+  /// No description provided for @authErrLoginCodeInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'Login code is invalid or has expired.'**
+  String get authErrLoginCodeInvalid;
+
+  /// No description provided for @authErrUserNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'User not found.'**
+  String get authErrUserNotFound;
 }
 
 class _AppLocalizationsDelegate

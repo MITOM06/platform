@@ -15,35 +15,35 @@ import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerCo
 @RequiredArgsConstructor
 public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
-    private final AuthChannelInterceptor authChannelInterceptor;
+  private final AuthChannelInterceptor authChannelInterceptor;
 
-    @Value("${app.cors.allowed-origins:*}")
-    private String allowedOrigins;
+  @Value("${app.cors.allowed-origins:*}")
+  private String allowedOrigins;
 
-    @Override
-    public void registerStompEndpoints(StompEndpointRegistry registry) {
-        String[] origins = java.util.Arrays.stream(allowedOrigins.split(","))
-                .map(String::trim)
-                .filter(s -> !s.isEmpty())
-                .toArray(String[]::new);
-        registry.addEndpoint("/ws")
-                .setAllowedOriginPatterns(origins);
-    }
+  @Override
+  public void registerStompEndpoints(StompEndpointRegistry registry) {
+    String[] origins =
+        java.util.Arrays.stream(allowedOrigins.split(","))
+            .map(String::trim)
+            .filter(s -> !s.isEmpty())
+            .toArray(String[]::new);
+    registry.addEndpoint("/ws").setAllowedOriginPatterns(origins);
+  }
 
-    @Override
-    public void configureMessageBroker(MessageBrokerRegistry registry) {
-        registry.setApplicationDestinationPrefixes("/app");
-        // Broker phải handle các destination ĐÃ RESOLVE: /topic (broadcast) và
-        // /queue (user destination resolve thành /queue/...-user{session}).
-        // KHÔNG để "/user" ở đây — "/user" là userDestinationPrefix, do
-        // UserDestinationMessageHandler xử lý, không phải broker. Thiếu "/queue"
-        // khiến convertAndSendToUser(.../queue/notifications) bị broker drop.
-        registry.enableSimpleBroker("/topic", "/queue");
-        registry.setUserDestinationPrefix("/user");
-    }
+  @Override
+  public void configureMessageBroker(MessageBrokerRegistry registry) {
+    registry.setApplicationDestinationPrefixes("/app");
+    // Broker phải handle các destination ĐÃ RESOLVE: /topic (broadcast) và
+    // /queue (user destination resolve thành /queue/...-user{session}).
+    // KHÔNG để "/user" ở đây — "/user" là userDestinationPrefix, do
+    // UserDestinationMessageHandler xử lý, không phải broker. Thiếu "/queue"
+    // khiến convertAndSendToUser(.../queue/notifications) bị broker drop.
+    registry.enableSimpleBroker("/topic", "/queue");
+    registry.setUserDestinationPrefix("/user");
+  }
 
-    @Override
-    public void configureClientInboundChannel(ChannelRegistration registration) {
-        registration.interceptors(authChannelInterceptor);
-    }
+  @Override
+  public void configureClientInboundChannel(ChannelRegistration registration) {
+    registration.interceptors(authChannelInterceptor);
+  }
 }

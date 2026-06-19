@@ -274,3 +274,33 @@ Web UI:  http://localhost:15672  (user: platform / platform)
 - Redis channels `kb:process` and `kb:delete` are used to communicate jobs from `chat-service` to `ai-service`.
 - Custom text chunker uses 512-character chunks with 80-character overlap aligned to sentence boundaries.
 - Context is retrieved using cosine similarity with a score threshold >= `0.3` for prompt injection.
+
+---
+
+## ADR-011: Data-layer hardening — indexes, reminder delivery, KB collection dedup, and `user_blocks`
+
+**Date:** 2026-06-19  
+**Status:** Accepted
+
+**Context:** A full data/architecture review surfaced several latent issues: common queries running collection scans, a reminder feature that stored `remindAt` but never fired a notification, the same KB document modelled in two separate collections by two services, and an unbounded `blockedUsers` array embedded on every user document. This is a small-group personal app (not a thousands-of-user product), so the goal was to fix real correctness/cleanliness issues **without** introducing premature scaling infrastructure.
+
+**Decision:** Ship the low-risk, correctness-first fixes; explicitly defer the scale-only refactors.
+
+**What changed:**
+- **Indexes** (eliminate scans on real query paths): `reminders {userId,done,remindAt}` + `{done,notified,remindAt}`; `friendships {recipientId,status}`; `token_usage {date}`.
+- **Reminder delivery** (was a broken feature): added a `notified` flag to the `Reminder` model + ai-service schema, a `ReminderSweepService` (`@Scheduled`, 60s) that finds due/undone/un-notified reminders and pushes them via a new `FcmService.sendReminderPush`, marking each delivered-once.
+- **KB collection dedup:** ai-service now writes the shared `kb_documents` collection (owned by chat-service) instead of a duplicate `kb_documents_ai_cache`; `$setOnInsert` guards chat-service's original `uploadedAt`. Single source of truth for KB state.
+- **`user_blocks` collection:** replaced the embedded `users.blockedUsers[]` array with one indexed row per (blocker→blocked) pair (`{blockerId,blockedId}` unique + `{blockedId}` reverse). Block checks are now indexed existence lookups instead of loading the whole user document. Backend-internal — `blockedUsers` was never in any client response, so web/mobile are untouched. One-time migration: `apps/server/auth-service/scripts/migrate-blocked-users.mongo.js` (idempotent).
+
+**What we deliberately did NOT do (premature for a small-group app):**
+- `messages.readBy[]` → `message_reads` collection — only matters for very large group channels; it is breaking across the read hot path + ~13 web/mobile files. Deferred until real scale.
+- RabbitMQ STOMP relay for horizontal WebSocket scaling — only matters with >1 chat-service instance (currently `min-instances=1`).
+- A dedicated `media-service` / GridFS→object-storage migration and a `notification-service` split — extra moving parts not justified at this size.
+- Per-document message TTL index — would be *more* code than the current sweep once `lastMessage` refresh and `autoDeleteSeconds` changes are handled.
+
+**Rationale:** Every shipped item is correct-at-any-scale (a bug fix, a dead-code/duplication removal, or an index that only helps). The deferred items trade real complexity for headroom this app does not need yet; the analysis is recorded here so they can be picked up quickly if usage ever grows.
+
+**Consequences:**
+- `packages/database` gains `user-block.schema.ts` and drops `blockedUsers` from `User`. Note: this package commits compiled `.js`/`.d.ts` inside `src/`, and auth-service's Jest resolves `src/*.js` before `*.ts` — after editing the package run `cd packages/database && npx tsc -p . --outDir src` to refresh in-src artifacts (separate from `pnpm build`, which emits to `dist/`).
+- chat-service adds `ReminderSweepService` and repoints its `UserBlock` model at `user_blocks`; `app.reminder.sweep-interval-ms` (default 60s) is configurable.
+- ai-service writes the shared `kb_documents` collection and carries the `notified` field on its reminder schema for parity.

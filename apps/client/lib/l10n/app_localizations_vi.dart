@@ -893,6 +893,13 @@ class AppLocalizationsVi extends AppLocalizations {
   String get aiError => 'AI tạm thời không khả dụng. Vui lòng thử lại.';
 
   @override
+  String get aiErrStreamInterrupted =>
+      'Luồng AI bị gián đoạn. Vui lòng thử lại.';
+
+  @override
+  String get aiErrUnavailable => 'AI tạm thời không khả dụng.';
+
+  @override
   String get aiErrorRetry => 'Thử lại';
 
   @override
@@ -1335,4 +1342,128 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get legalTermsContent =>
       'Bằng cách sử dụng nền tảng của chúng tôi, bạn đồng ý không tham gia vào bất kỳ hoạt động lạm dụng, quấy rối hoặc bất hợp pháp nào. Chúng tôi có quyền đình chỉ hoặc chấm dứt các tài khoản vi phạm các điều khoản này.';
+
+  @override
+  String get authMsgLoginSuccess => 'Đăng nhập thành công.';
+
+  @override
+  String get authMsgLogoutSuccess => 'Đăng xuất thành công.';
+
+  @override
+  String get authMsgOtpSent => 'Mã OTP đã được gửi tới email của bạn.';
+
+  @override
+  String get authMsgOtpValid => 'Xác thực OTP thành công.';
+
+  @override
+  String get authMsgOtpResent => 'Mã OTP mới đã được gửi.';
+
+  @override
+  String get authMsgPasswordUpdated =>
+      'Cập nhật mật khẩu thành công. Vui lòng đăng nhập lại.';
+
+  @override
+  String get authMsgRegisterSuccess =>
+      'Đăng ký thành công. Mã OTP đã được gửi tới email của bạn.';
+
+  @override
+  String get authMsgAccountUnverifiedOtpSent =>
+      'Tài khoản chưa được xác thực. Mã OTP mới đã được gửi tới email của bạn.';
+
+  @override
+  String get authErrOtpInvalid => 'Mã OTP không hợp lệ.';
+
+  @override
+  String get authErrOtpExpired => 'Mã OTP đã hết hạn.';
+
+  @override
+  String get authErrOtpAttemptsExceeded =>
+      'Quá nhiều lần nhập sai. Vui lòng yêu cầu mã OTP mới.';
+
+  @override
+  String authErrOtpWrongWithRemaining(int remaining) {
+    return 'OTP không đúng. Còn $remaining lần thử.';
+  }
+
+  @override
+  String authErrOtpResendCooldown(int ttl) {
+    return 'Vui lòng đợi $ttl giây trước khi yêu cầu mã OTP mới.';
+  }
+
+  @override
+  String get authErrEmailDomainInvalid =>
+      'Tên miền email không tồn tại hoặc không có bản ghi MX.';
+
+  @override
+  String get authErrEmailNotFound => 'Email không tồn tại trong hệ thống.';
+
+  @override
+  String get authErrEmailInUse => 'Email này đã được sử dụng.';
+
+  @override
+  String get authErrValEmailInvalid => 'Định dạng email không hợp lệ.';
+
+  @override
+  String get authErrValEmailRequired => 'Email là bắt buộc.';
+
+  @override
+  String get authErrValDisplaynameRequired => 'Tên hiển thị là bắt buộc.';
+
+  @override
+  String get authErrValDisplaynameTooShort =>
+      'Tên hiển thị quá ngắn (tối thiểu 2 ký tự).';
+
+  @override
+  String get authErrValPasswordTooShort => 'Mật khẩu phải có ít nhất 8 ký tự.';
+
+  @override
+  String authErrAccountLocked(int minutes) {
+    return 'Tài khoản tạm thời bị khoá trong $minutes phút do đăng nhập sai quá nhiều lần.';
+  }
+
+  @override
+  String authErrLoginFailedWithRemaining(int remaining) {
+    return 'Email hoặc mật khẩu không đúng. Còn $remaining lần thử.';
+  }
+
+  @override
+  String authErrLoginFailedLocked(int minutes) {
+    return 'Đăng nhập sai quá nhiều lần. Tài khoản bị khoá trong $minutes phút.';
+  }
+
+  @override
+  String get authErrTokenInvalid => 'Token không hợp lệ.';
+
+  @override
+  String get authErrSessionNotFound => 'Phiên không tìm thấy hoặc đã hết hạn.';
+
+  @override
+  String get authErrSessionInvalid => 'Phiên không tồn tại hoặc đã hết hạn.';
+
+  @override
+  String get authErrSessionRevoked => 'Phiên đã bị thu hồi.';
+
+  @override
+  String get authErrRefreshTokenReuse =>
+      'Cảnh báo bảo mật: phát hiện tái sử dụng refresh token. Tất cả phiên đã bị thu hồi.';
+
+  @override
+  String get authErrRefreshTokenInvalid => 'Refresh token không hợp lệ.';
+
+  @override
+  String get authErrRefreshTokenRotated => 'Refresh token đã được xoay vòng.';
+
+  @override
+  String get authErrTokenSessionMismatch => 'Token không khớp với phiên.';
+
+  @override
+  String get authErrSocialEmailUnavailable =>
+      'Không thể lấy email từ tài khoản mạng xã hội.';
+
+  @override
+  String get authErrLoginCodeInvalid =>
+      'Mã đăng nhập không hợp lệ hoặc đã hết hạn.';
+
+  @override
+  String get authErrUserNotFound => 'Không tìm thấy người dùng.';
 }

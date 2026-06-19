@@ -8,6 +8,7 @@ import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/otp_6box_input.dart';
 import '../../../core/widgets/pon_widgets.dart';
 import '../data/auth_repository.dart';
+import '../utils/auth_error.dart';
 
 class VerifyOtpScreen extends ConsumerStatefulWidget {
   final String email;
@@ -68,16 +69,7 @@ class _VerifyOtpScreenState extends ConsumerState<VerifyOtpScreen> {
       }
     } on DioException catch (e) {
       if (mounted) {
-        String msg = context.l10n.errResendFailed;
-        final data = e.response?.data;
-        if (data is Map) {
-          final raw = data['message'];
-          if (raw is String && raw.isNotEmpty) {
-            msg = raw;
-          } else if (raw is List && raw.isNotEmpty) {
-            msg = raw.join(', ');
-          }
-        }
+        final msg = authErrorToString(context, e);
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
       }
     } catch (_) {
@@ -116,11 +108,8 @@ class _VerifyOtpScreenState extends ConsumerState<VerifyOtpScreen> {
       }
     } on DioException catch (e) {
       if (mounted) {
-        final msg = (e.response?.data is Map)
-            ? (e.response!.data['message'] as String? ?? context.l10n.errVerifyFailed)
-            : context.l10n.errVerifyFailed;
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text(msg)));
+        final msg = authErrorToString(context, e);
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
       }
     } catch (_) {
       if (mounted) {

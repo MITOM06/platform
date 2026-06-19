@@ -1,0 +1,57 @@
+{
+  "openapi": "3.0.0",
+  "paths": {
+    "/health": {
+      "get": {
+        "operationId": "AiController_health",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Service is up",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "example": "ok"
+                    },
+                    "service": {
+                      "type": "string",
+                      "example": "ai-service"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "summary": "AI service liveness probe",
+        "tags": [
+          "ai"
+        ]
+      }
+    }
+  },
+  "info": {
+    "title": "Platform AI Service",
+    "description": "HTTP surface for the AI service (health/liveness). Core AI request handling is driven over RabbitMQ (ai.requests) and Redis pub/sub (ai:response:{conversationId}).",
+    "version": "1.0",
+    "contact": {}
+  },
+  "tags": [
+    {
+      "name": "health",
+      "description": "Liveness and health probes"
+    },
+    {
+      "name": "ai",
+      "description": "AI service status"
+    }
+  ],
+  "servers": [],
+  "components": {
+    "schemas": {}
+  }
+}

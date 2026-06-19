@@ -31,4 +31,5 @@ exports.Friendship = Friendship = __decorate([
 ], Friendship);
 exports.FriendshipSchema = mongoose_1.SchemaFactory.createForClass(Friendship);
 exports.FriendshipSchema.index({ requesterId: 1, recipientId: 1 }, { unique: true });
+exports.FriendshipSchema.index({ recipientId: 1, status: 1 });
 //# sourceMappingURL=friendship.schema.js.map

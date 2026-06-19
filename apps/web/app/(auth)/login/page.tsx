@@ -11,6 +11,7 @@ import { Eye, EyeOff } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { authService } from '@/lib/api/auth'
 import { useAuthStore } from '@/lib/store/auth.store'
+import { parseAuthError, authCodeToI18nKey } from '@/lib/auth/auth-error'
 import { maybeRequestNotificationPermission } from '@/lib/notifications'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -58,18 +59,8 @@ export default function LoginPage() {
       void maybeRequestNotificationPermission()
       router.push('/')
     } catch (err: unknown) {
-      const e = err as { response?: { status?: number; data?: { message?: string | string[] } } }
-      const status = e?.response?.status
-      const rawMsg = e?.response?.data?.message
-      const backendMsg = Array.isArray(rawMsg) ? rawMsg[0] : rawMsg
-
-      if (status === 401 || status === 400) {
-        toast.error(backendMsg ?? t('login.invalidCredentials'))
-      } else if (status === 404) {
-        toast.error(t('login.emailNotFound'))
-      } else {
-        toast.error(t('login.systemError'))
-      }
+      const { code, params } = parseAuthError(err)
+      toast.error(t(authCodeToI18nKey(code), params))
     }
   }
 

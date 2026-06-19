@@ -16,16 +16,33 @@ public record MessageResponse(
     List<ReactionDto> reactions,
     boolean recalled,
     Instant editedAt,
-    List<String> mentions
-) {
-    /** Backward-compatible constructor (pre reply/reactions/recall fields). */
-    public MessageResponse(String id, String conversationId, String senderId, String content,
-                           String type, List<String> readBy, Instant createdAt) {
-        this(id, conversationId, senderId, content, type, readBy, createdAt,
-             null, null, List.of(), false, null, List.of());
-    }
+    List<String> mentions) {
+  /** Backward-compatible constructor (pre reply/reactions/recall fields). */
+  public MessageResponse(
+      String id,
+      String conversationId,
+      String senderId,
+      String content,
+      String type,
+      List<String> readBy,
+      Instant createdAt) {
+    this(
+        id,
+        conversationId,
+        senderId,
+        content,
+        type,
+        readBy,
+        createdAt,
+        null,
+        null,
+        List.of(),
+        false,
+        null,
+        List.of());
+  }
 
-    public record ReplyPreviewDto(String messageId, String senderId, String content) {}
+  public record ReplyPreviewDto(String messageId, String senderId, String content) {}
 
-    public record ReactionDto(String userId, String emoji) {}
+  public record ReactionDto(String userId, String emoji) {}
 }

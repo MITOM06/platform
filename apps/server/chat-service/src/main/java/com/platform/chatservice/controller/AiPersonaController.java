@@ -7,115 +7,111 @@ import com.platform.chatservice.model.Conversation;
 import com.platform.chatservice.repository.AiPersonaRepository;
 import com.platform.chatservice.repository.ConversationRepository;
 import jakarta.validation.Valid;
+import java.security.Principal;
+import java.time.Instant;
+import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.security.Principal;
-import java.time.Instant;
-import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/conversations/{conversationId}/ai-persona")
 @RequiredArgsConstructor
 public class AiPersonaController {
 
-    private final AiPersonaRepository aiPersonaRepository;
-    private final ConversationRepository conversationRepository;
+  private final AiPersonaRepository aiPersonaRepository;
+  private final ConversationRepository conversationRepository;
 
-    @GetMapping
-    public ResponseEntity<AiPersonaResponse> getPersona(
-            @PathVariable String conversationId,
-            Principal principal) {
+  @GetMapping
+  public ResponseEntity<AiPersonaResponse> getPersona(
+      @PathVariable String conversationId, Principal principal) {
 
-        String userId = principal.getName();
-        Optional<Conversation> convOpt = conversationRepository.findById(conversationId);
-        if (convOpt.isEmpty()) {
-            return ResponseEntity.notFound().build();
-        }
-        Conversation conv = convOpt.get();
-        if (conv.getParticipants() == null || !conv.getParticipants().contains(userId)) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
-        }
-
-        return aiPersonaRepository.findByConversationId(conversationId)
-            .map(p -> ResponseEntity.ok(toResponse(p)))
-            .orElse(ResponseEntity.notFound().build());
+    String userId = principal.getName();
+    Optional<Conversation> convOpt = conversationRepository.findById(conversationId);
+    if (convOpt.isEmpty()) {
+      return ResponseEntity.notFound().build();
+    }
+    Conversation conv = convOpt.get();
+    if (conv.getParticipants() == null || !conv.getParticipants().contains(userId)) {
+      return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
     }
 
-    @PutMapping
-    public ResponseEntity<AiPersonaResponse> upsertPersona(
-            @PathVariable String conversationId,
-            @Valid @RequestBody AiPersonaRequest request,
-            Principal principal) {
+    return aiPersonaRepository
+        .findByConversationId(conversationId)
+        .map(p -> ResponseEntity.ok(toResponse(p)))
+        .orElse(ResponseEntity.notFound().build());
+  }
 
-        String userId = principal.getName();
-        Optional<Conversation> convOpt = conversationRepository.findById(conversationId);
-        if (convOpt.isEmpty()) {
-            return ResponseEntity.notFound().build();
-        }
-        Conversation conv = convOpt.get();
+  @PutMapping
+  public ResponseEntity<AiPersonaResponse> upsertPersona(
+      @PathVariable String conversationId,
+      @Valid @RequestBody AiPersonaRequest request,
+      Principal principal) {
 
-        if (!conv.isGroup()) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
-        }
-        if (conv.getAdmins() == null || !conv.getAdmins().contains(userId)) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
-        }
+    String userId = principal.getName();
+    Optional<Conversation> convOpt = conversationRepository.findById(conversationId);
+    if (convOpt.isEmpty()) {
+      return ResponseEntity.notFound().build();
+    }
+    Conversation conv = convOpt.get();
 
-        Optional<AiPersona> existing = aiPersonaRepository.findByConversationId(conversationId);
-        AiPersona persona = existing.orElseGet(() -> AiPersona.builder()
-            .conversationId(conversationId)
-            .createdBy(userId)
-            .build());
-
-        if (request.name() != null) persona.setName(request.name());
-        if (request.avatarUrl() != null) persona.setAvatarUrl(request.avatarUrl());
-        if (request.tone() != null) persona.setTone(request.tone());
-        if (request.systemPromptPrefix() != null) {
-            String prefix = request.systemPromptPrefix();
-            persona.setSystemPromptPrefix(prefix.isEmpty() ? null
-                : prefix.substring(0, Math.min(prefix.length(), 500)));
-        }
-        persona.setUpdatedAt(Instant.now());
-
-        AiPersona saved = aiPersonaRepository.save(persona);
-        return ResponseEntity.ok(toResponse(saved));
+    if (!conv.isGroup()) {
+      return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+    }
+    if (conv.getAdmins() == null || !conv.getAdmins().contains(userId)) {
+      return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
     }
 
-    @DeleteMapping
-    public ResponseEntity<Void> deletePersona(
-            @PathVariable String conversationId,
-            Principal principal) {
+    Optional<AiPersona> existing = aiPersonaRepository.findByConversationId(conversationId);
+    AiPersona persona =
+        existing.orElseGet(
+            () -> AiPersona.builder().conversationId(conversationId).createdBy(userId).build());
 
-        String userId = principal.getName();
-        Optional<Conversation> convOpt = conversationRepository.findById(conversationId);
-        if (convOpt.isEmpty()) {
-            return ResponseEntity.notFound().build();
-        }
-        Conversation conv = convOpt.get();
+    if (request.name() != null) persona.setName(request.name());
+    if (request.avatarUrl() != null) persona.setAvatarUrl(request.avatarUrl());
+    if (request.tone() != null) persona.setTone(request.tone());
+    if (request.systemPromptPrefix() != null) {
+      String prefix = request.systemPromptPrefix();
+      persona.setSystemPromptPrefix(
+          prefix.isEmpty() ? null : prefix.substring(0, Math.min(prefix.length(), 500)));
+    }
+    persona.setUpdatedAt(Instant.now());
 
-        if (!conv.isGroup()) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
-        }
-        if (conv.getAdmins() == null || !conv.getAdmins().contains(userId)) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
-        }
+    AiPersona saved = aiPersonaRepository.save(persona);
+    return ResponseEntity.ok(toResponse(saved));
+  }
 
-        aiPersonaRepository.deleteByConversationId(conversationId);
-        return ResponseEntity.noContent().build();
+  @DeleteMapping
+  public ResponseEntity<Void> deletePersona(
+      @PathVariable String conversationId, Principal principal) {
+
+    String userId = principal.getName();
+    Optional<Conversation> convOpt = conversationRepository.findById(conversationId);
+    if (convOpt.isEmpty()) {
+      return ResponseEntity.notFound().build();
+    }
+    Conversation conv = convOpt.get();
+
+    if (!conv.isGroup()) {
+      return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+    }
+    if (conv.getAdmins() == null || !conv.getAdmins().contains(userId)) {
+      return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
     }
 
-    private AiPersonaResponse toResponse(AiPersona p) {
-        return new AiPersonaResponse(
-            p.getConversationId(),
-            p.getName(),
-            p.getAvatarUrl(),
-            p.getTone(),
-            p.getSystemPromptPrefix(),
-            p.getCreatedBy(),
-            p.getUpdatedAt()
-        );
-    }
+    aiPersonaRepository.deleteByConversationId(conversationId);
+    return ResponseEntity.noContent().build();
+  }
+
+  private AiPersonaResponse toResponse(AiPersona p) {
+    return new AiPersonaResponse(
+        p.getConversationId(),
+        p.getName(),
+        p.getAvatarUrl(),
+        p.getTone(),
+        p.getSystemPromptPrefix(),
+        p.getCreatedBy(),
+        p.getUpdatedAt());
+  }
 }

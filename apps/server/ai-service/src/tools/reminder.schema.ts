@@ -20,6 +20,11 @@ export class Reminder {
   @Prop({ default: false })
   done: boolean;
 
+  // Set true by chat-service's ReminderSweepService once the push has been delivered,
+  // so a reminder is never sent twice. Kept in sync with chat-service's Reminder model.
+  @Prop({ default: false })
+  notified: boolean;
+
   @Prop({ default: () => new Date() })
   createdAt: Date;
 }

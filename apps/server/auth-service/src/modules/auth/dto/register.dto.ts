@@ -1,15 +1,20 @@
 import { IsEmail, IsNotEmpty, IsString, MinLength } from 'class-validator';
+import { ApiProperty } from '@nestjs/swagger';
+import { AuthCode } from '../../../common/auth-code.enum';
 
 export class RegisterDto {
+  @ApiProperty({ example: 'Jane Doe', description: 'Public display name', minLength: 2 })
   @IsString()
-  @IsNotEmpty({ message: 'Tên hiển thị không được để trống' })
-  @MinLength(2, { message: 'Tên hiển thị quá ngắn' })
+  @IsNotEmpty({ message: AuthCode.VAL_DISPLAYNAME_REQUIRED })
+  @MinLength(2, { message: AuthCode.VAL_DISPLAYNAME_TOO_SHORT })
   displayName: string;
 
-  @IsEmail({}, { message: 'Email không đúng định dạng' })
+  @ApiProperty({ example: 'user@example.com', description: 'Email address (must be unique)' })
+  @IsEmail({}, { message: AuthCode.VAL_EMAIL_INVALID })
   email: string;
 
+  @ApiProperty({ example: 'P@ssw0rd123', description: 'Account password', minLength: 8 })
   @IsString()
-  @MinLength(8, { message: 'Mật khẩu phải từ 8 ký tự để đảm bảo bảo mật' }) // Nâng lên 8 ký tự cho pro
+  @MinLength(8, { message: AuthCode.VAL_PASSWORD_TOO_SHORT })
   password: string;
 }

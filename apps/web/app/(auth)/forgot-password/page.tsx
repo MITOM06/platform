@@ -10,6 +10,7 @@ import Link from 'next/link'
 import { Eye, EyeOff, ArrowLeft } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { authService } from '@/lib/api/auth'
+import { parseAuthError, authCodeToI18nKey } from '@/lib/auth/auth-error'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -59,10 +60,8 @@ export default function ForgotPasswordPage() {
       setStep('reset')
       toast.success(t('codeSent'))
     } catch (err: unknown) {
-      const msg =
-        (err as { response?: { data?: { message?: string } } })?.response?.data?.message ??
-        t('sendError')
-      toast.error(msg)
+      const { code, params } = parseAuthError(err)
+      toast.error(tAuth(authCodeToI18nKey(code), params))
     }
   }
 
@@ -72,10 +71,8 @@ export default function ForgotPasswordPage() {
       toast.success(t('resetSuccess'))
       router.push('/login')
     } catch (err: unknown) {
-      const msg =
-        (err as { response?: { data?: { message?: string } } })?.response?.data?.message ??
-        t('resetError')
-      toast.error(msg)
+      const { code, params } = parseAuthError(err)
+      toast.error(tAuth(authCodeToI18nKey(code), params))
     }
   }
 

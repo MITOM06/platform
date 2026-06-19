@@ -10,9 +10,12 @@ import {
   Post,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
+import { ApiBearerAuth, ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { UsersService } from './users.service';
 import { FriendsService } from '../friends/friends.service';
 
+@ApiTags('users')
+@ApiBearerAuth()
 @UseGuards(AuthGuard('jwt'))
 @Controller('api/users')
 export class UsersController {
@@ -22,6 +25,7 @@ export class UsersController {
   ) {}
 
   @Get('me')
+  @ApiOperation({ summary: 'Get the authenticated user profile' })
   getMe(@Req() req: any) {
     return this.usersService.findById(req.user.sub);
   }
@@ -62,6 +66,8 @@ export class UsersController {
   }
 
   @Get('search')
+  @ApiOperation({ summary: 'Search users by display name or email' })
+  @ApiQuery({ name: 'q', required: false, description: 'Search query' })
   search(@Query('q') query: string) {
     return this.usersService.findBySearchQuery(query ?? '');
   }

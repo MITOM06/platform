@@ -1,7 +1,9 @@
+import './tracing';
 import * as Sentry from '@sentry/node';
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { JsonLogger } from './logger';
+import { setupSwagger } from './swagger';
 import helmet from 'helmet';
 
 Sentry.init({
@@ -19,6 +21,9 @@ async function bootstrap() {
     crossOriginEmbedderPolicy: false,
     contentSecurityPolicy: false,
   }));
+
+  // Swagger UI at /docs (non-production, or when ENABLE_SWAGGER=true).
+  setupSwagger(app);
 
   const port = process.env.PORT ?? 3002;
   await app.listen(port, '0.0.0.0');

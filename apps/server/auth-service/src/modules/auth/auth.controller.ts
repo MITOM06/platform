@@ -10,6 +10,14 @@ import {
   HttpCode,
   HttpStatus,
 } from '@nestjs/common';
+import {
+  ApiBearerAuth,
+  ApiBody,
+  ApiOperation,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
+import { Throttle } from '@nestjs/throttler';
 import { AuthGuard } from '@nestjs/passport';
 import { GoogleOAuthGuard } from './guards/google-oauth.guard';
 import { AuthService } from './auth.service';
@@ -20,7 +28,15 @@ import { ConfigService } from '@nestjs/config';
 import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { RefreshDto } from './dto/refresh.dto';
 import { ExchangeDto } from './dto/exchange.dto';
+import { VerifyOtpDto } from './dto/verify-otp.dto';
+import { ResendOtpDto } from './dto/resend-otp.dto';
+import { ResetPasswordDto } from './dto/reset-password.dto';
 
+// Stricter per-IP limits for credential / OTP endpoints (5 requests / minute).
+// Names must match a ThrottlerModule.forRoot() definition; we override 'medium'.
+const SENSITIVE_THROTTLE = { medium: { limit: 5, ttl: 60000 } };
+
+@ApiTags('auth')
 @Controller('auth')
 export class AuthController {
   constructor(
@@ -36,6 +52,7 @@ export class AuthController {
 
   @Get('google')
   @UseGuards(GoogleOAuthGuard)
+  @ApiOperation({ summary: 'Start Google OAuth flow' })
   async google() {
     // GoogleOAuthGuard reads ?platform=… and forwards it through the OAuth
     // `state` param, so the callback can recover it cookie-independently.
@@ -43,6 +60,7 @@ export class AuthController {
 
   @Get('google/callback')
   @UseGuards(GoogleOAuthGuard)
+  @ApiOperation({ summary: 'Google OAuth callback (redirects back to client)' })
   async googleCallback(@Req() req: any, @Res() res: Response) {
     // ✅ Platform travels in the OAuth `state` param (echoed back by Google).
     // Fall back to the cookie for backwards compatibility / older links.
@@ -56,10 +74,12 @@ export class AuthController {
 
   @Get('twitter')
   @UseGuards(AuthGuard('twitter'))
+  @ApiOperation({ summary: 'Start Twitter/X OAuth flow' })
   async twitter() {}
 
   @Get('twitter/callback')
   @UseGuards(AuthGuard('twitter'))
+  @ApiOperation({ summary: 'Twitter/X OAuth callback (redirects back to client)' })
   async twitterCallback(@Req() req: any, @Res() res: Response) {
     const platform = req.cookies?.['oauth_platform'] || 'mobile';
     res.clearCookie('oauth_platform');
@@ -71,6 +91,9 @@ export class AuthController {
   // Endpoint này save platform vào cookie rồi redirect về /auth/{provider}
   // Cách này giải quyết vấn đề platform bị mất sau OAuth redirect
   @Get('social/:provider/init')
+  @ApiOperation({
+    summary: 'Persist platform then redirect into the provider OAuth flow',
+  })
   async initSocialLogin(
     @Req() req: any,
     @Res() res: Response,
@@ -100,21 +123,36 @@ export class AuthController {
 
   // ===================== AUTH ENDPOINTS =====================
   @Post('exchange')
+  @Throttle(SENSITIVE_THROTTLE)
+  @ApiOperation({ summary: 'Exchange a one-time login code for tokens' })
+  @ApiResponse({ status: 201, description: 'Access + refresh tokens issued' })
   async exchange(@Body() body: ExchangeDto) {
     return this.auth.exchangeLoginCode(body.code, body.deviceId, body.platform);
   }
 
   @Post('refresh')
+  @Throttle(SENSITIVE_THROTTLE)
+  @ApiOperation({ summary: 'Rotate the access token using a refresh token' })
+  @ApiResponse({ status: 201, description: 'New access token issued' })
+  @ApiResponse({ status: 401, description: 'Invalid or expired refresh token' })
   async refresh(@Body() body: RefreshDto) {
     return this.auth.refresh(body.sid, body.refreshToken);
   }
 
   @Post('register')
+  @Throttle(SENSITIVE_THROTTLE)
+  @ApiOperation({ summary: 'Register a new account' })
+  @ApiResponse({ status: 201, description: 'Account created' })
+  @ApiResponse({ status: 409, description: 'Email already in use' })
   async register(@Body() dto: RegisterDto) {
     return this.auth.register(dto);
   }
 
   @Post('login')
+  @Throttle(SENSITIVE_THROTTLE)
+  @ApiOperation({ summary: 'Authenticate with email + password' })
+  @ApiResponse({ status: 201, description: 'Login succeeded; tokens issued' })
+  @ApiResponse({ status: 401, description: 'Invalid credentials' })
   async login(@Body() dto: LoginDto) {
     return this.auth.login(dto);
   }
@@ -123,32 +161,41 @@ export class AuthController {
   @Post('logout')
   @HttpCode(HttpStatus.OK)
   @UseGuards(AuthGuard('jwt'))
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Revoke the current session' })
   async logout(@Req() req: any, @Body() body: { sid: string }) {
     return this.auth.logout(req.user.sub, body.sid);
   }
 
   // ===================== FORGOT PASSWORD =====================
   @Post('forgot-password')
+  @Throttle(SENSITIVE_THROTTLE)
+  @ApiOperation({ summary: 'Send a password-reset OTP to the email' })
   async forgot(@Body() dto: ForgotPasswordDto) {
     return this.auth.forgotPassword(dto.email);
   }
 
   @Post('verify-otp')
-  async verify(@Body('email') email: string, @Body('otp') otp: string) {
-    return this.auth.verifyOtp(email, otp);
+  @Throttle(SENSITIVE_THROTTLE)
+  @ApiOperation({ summary: 'Verify a password-reset OTP' })
+  @ApiBody({ type: VerifyOtpDto })
+  async verify(@Body() dto: VerifyOtpDto) {
+    return this.auth.verifyOtp(dto.email, dto.otp);
   }
 
   @Post('resend-otp')
-  async resend(@Body('email') email: string) {
-    return this.auth.resendOtp(email);
+  @Throttle(SENSITIVE_THROTTLE)
+  @ApiOperation({ summary: 'Resend a password-reset OTP' })
+  @ApiBody({ type: ResendOtpDto })
+  async resend(@Body() dto: ResendOtpDto) {
+    return this.auth.resendOtp(dto.email);
   }
 
   @Post('reset-password')
-  async reset(
-    @Body('email') email: string,
-    @Body('otp') otp: string,
-    @Body('password') password: string,
-  ) {
-    return this.auth.resetPassword(email, otp, password);
+  @Throttle(SENSITIVE_THROTTLE)
+  @ApiOperation({ summary: 'Reset password using a verified OTP' })
+  @ApiBody({ type: ResetPasswordDto })
+  async reset(@Body() dto: ResetPasswordDto) {
+    return this.auth.resetPassword(dto.email, dto.otp, dto.password);
   }
 }

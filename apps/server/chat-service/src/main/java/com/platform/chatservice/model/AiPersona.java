@@ -1,5 +1,6 @@
 package com.platform.chatservice.model;
 
+import java.time.Instant;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -9,8 +10,6 @@ import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 
-import java.time.Instant;
-
 @Document(collection = "ai_personas")
 @Data
 @Builder
@@ -18,24 +17,20 @@ import java.time.Instant;
 @AllArgsConstructor
 public class AiPersona {
 
-    @Id
-    private String id;
+  @Id private String id;
 
-    @Indexed(unique = true)
-    private String conversationId;
+  @Indexed(unique = true)
+  private String conversationId;
 
-    @Builder.Default
-    private String name = "PON AI";
+  @Builder.Default private String name = "PON AI";
 
-    private String avatarUrl;
+  private String avatarUrl;
 
-    @Builder.Default
-    private String tone = "friendly";
+  @Builder.Default private String tone = "friendly";
 
-    private String systemPromptPrefix;
+  private String systemPromptPrefix;
 
-    private String createdBy;
+  private String createdBy;
 
-    @LastModifiedDate
-    private Instant updatedAt;
+  @LastModifiedDate private Instant updatedAt;
 }

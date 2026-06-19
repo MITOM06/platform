@@ -105,6 +105,8 @@ services:
         condition: service_healthy
       rabbitmq:
         condition: service_healthy
+      jaeger:
+        condition: service_healthy
     environment:
       JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET}
       SPRING_RABBITMQ_HOST: rabbitmq
@@ -125,6 +127,9 @@ services:
       SPRING_MAIL_PASSWORD: ${MAIL_PASS}
       SPRING_MAIL_PROPERTIES_MAIL_SMTP_AUTH: "true"
       SPRING_MAIL_PROPERTIES_MAIL_SMTP_STARTTLS_ENABLE: "true"
+      # OpenTelemetry — export traces to Jaeger via OTLP HTTP
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://jaeger:4318
+      MANAGEMENT_TRACING_SAMPLING_PROBABILITY: "1.0"
     networks:
       - app-net
 
@@ -164,9 +169,29 @@ services:
       AI_THINKING_BUDGET: ${AI_THINKING_BUDGET:-8000}
       AI_MONTHLY_TOKEN_LIMIT: ${AI_MONTHLY_TOKEN_LIMIT:-500000}
       RABBITMQ_URL: amqp://platform:platform@rabbitmq:5672
+      OTEL_ENABLED: ${OTEL_ENABLED:-true}
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://jaeger:4318
+      OTEL_SERVICE_NAME: ai-service
     networks:
       - app-net
     restart: unless-stopped
+
+  jaeger:
+    image: jaegertracing/all-in-one:1.62
+    container_name: chat-jaeger
+    ports:
+      - "16686:16686"   # Jaeger UI
+      - "4318:4318"     # OTLP HTTP
+      - "4317:4317"     # OTLP gRPC
+    environment:
+      COLLECTOR_OTLP_ENABLED: "true"
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:16686"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+    networks:
+      - app-net
 
 networks:
   app-net:

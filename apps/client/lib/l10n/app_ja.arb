@@ -286,6 +286,8 @@
   "startChatWithAI": "PON AIとチャット",
   "aiThinking": "AIが考え中...",
   "aiError": "AIは一時的に利用できません。もう一度お試しください。",
+  "aiErrStreamInterrupted": "AIストリームが中断されました。もう一度お試しください。",
+  "aiErrUnavailable": "AIは一時的に利用できません。",
   "aiErrorRetry": "再試行",
   "aiMessageDeleted": "メッセージが削除されました",
   "aiMemoryTitle": "AIメモリ",
@@ -442,5 +444,67 @@
   "legalUserRightsTitle": "4. お客様の権利",
   "legalUserRightsContent": "お客様は、個人データへのアクセス、修正、または削除を行う権利があります。アプリケーション設定からいつでもアカウントを削除できます。",
   "legalTermsTitle": "5. 利用規約",
-  "legalTermsContent": "当社のプラットフォームを使用することで、虐待、嫌がらせ、または違法行為に関与しないことに同意したものとみなされます。当社は、これらの規約に違反するアカウントを停止または終了する権利を留保します。"
+  "legalTermsContent": "当社のプラットフォームを使用することで、虐待、嫌がらせ、または違法行為に関与しないことに同意したものとみなされます。当社は、これらの規約に違反するアカウントを停止または終了する権利を留保します。",
+
+  "authMsgLoginSuccess": "ログインに成功しました。",
+  "authMsgLogoutSuccess": "ログアウトしました。",
+  "authMsgOtpSent": "OTPがメールに送信されました。",
+  "authMsgOtpValid": "OTPの認証に成功しました。",
+  "authMsgOtpResent": "新しいOTPが送信されました。",
+  "authMsgPasswordUpdated": "パスワードが更新されました。再度ログインしてください。",
+  "authMsgRegisterSuccess": "登録が完了しました。OTPがメールに送信されました。",
+  "authMsgAccountUnverifiedOtpSent": "アカウントはまだ確認されていません。新しいOTPがメールに送信されました。",
+
+  "authErrOtpInvalid": "OTPコードが無効です。",
+  "authErrOtpExpired": "OTPの有効期限が切れました。",
+  "authErrOtpAttemptsExceeded": "試行回数が超過しました。新しいOTPを申請してください。",
+  "authErrOtpWrongWithRemaining": "OTPが正しくありません。残り{remaining}回の試行があります。",
+  "@authErrOtpWrongWithRemaining": {
+    "placeholders": {
+      "remaining": { "type": "int" }
+    }
+  },
+  "authErrOtpResendCooldown": "新しいOTPを申請する前に{ttl}秒お待ちください。",
+  "@authErrOtpResendCooldown": {
+    "placeholders": {
+      "ttl": { "type": "int" }
+    }
+  },
+  "authErrEmailDomainInvalid": "メールのドメインが存在しないか、MXレコードがありません。",
+  "authErrEmailNotFound": "このメールアドレスはシステムに存在しません。",
+  "authErrEmailInUse": "このメールアドレスはすでに使用されています。",
+  "authErrValEmailInvalid": "メールの形式が無効です。",
+  "authErrValEmailRequired": "メールは必須です。",
+  "authErrValDisplaynameRequired": "表示名は必須です。",
+  "authErrValDisplaynameTooShort": "表示名が短すぎます（最低2文字）。",
+  "authErrValPasswordTooShort": "パスワードは8文字以上である必要があります。",
+  "authErrAccountLocked": "ログイン失敗が多すぎるため、アカウントが{minutes}分間ロックされました。",
+  "@authErrAccountLocked": {
+    "placeholders": {
+      "minutes": { "type": "int" }
+    }
+  },
+  "authErrLoginFailedWithRemaining": "メールアドレスまたはパスワードが正しくありません。残り{remaining}回の試行があります。",
+  "@authErrLoginFailedWithRemaining": {
+    "placeholders": {
+      "remaining": { "type": "int" }
+    }
+  },
+  "authErrLoginFailedLocked": "ログイン試行回数が超過しました。アカウントが{minutes}分間ロックされました。",
+  "@authErrLoginFailedLocked": {
+    "placeholders": {
+      "minutes": { "type": "int" }
+    }
+  },
+  "authErrTokenInvalid": "トークンが無効です。",
+  "authErrSessionNotFound": "セッションが見つからないか、有効期限が切れました。",
+  "authErrSessionInvalid": "セッションが存在しないか、有効期限が切れました。",
+  "authErrSessionRevoked": "セッションが取り消されました。",
+  "authErrRefreshTokenReuse": "セキュリティ警告：リフレッシュトークンの再利用が検出されました。すべてのセッションが取り消されました。",
+  "authErrRefreshTokenInvalid": "リフレッシュトークンが無効です。",
+  "authErrRefreshTokenRotated": "リフレッシュトークンはすでにローテーションされています。",
+  "authErrTokenSessionMismatch": "トークンがセッションと一致しません。",
+  "authErrSocialEmailUnavailable": "ソーシャルアカウントからメールを取得できません。",
+  "authErrLoginCodeInvalid": "ログインコードが無効または有効期限が切れています。",
+  "authErrUserNotFound": "ユーザーが見つかりません。"
 }

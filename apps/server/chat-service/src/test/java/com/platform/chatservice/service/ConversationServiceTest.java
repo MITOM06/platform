@@ -1,5 +1,10 @@
 package com.platform.chatservice.service;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.*;
+
 import com.platform.chatservice.dto.ConversationResponse;
 import com.platform.chatservice.dto.PageResponse;
 import com.platform.chatservice.exception.ConversationNotFoundException;
@@ -7,6 +12,9 @@ import com.platform.chatservice.exception.DuplicateConversationException;
 import com.platform.chatservice.model.Conversation;
 import com.platform.chatservice.repository.ConversationRepository;
 import com.platform.chatservice.repository.MessageRepository;
+import java.time.Instant;
+import java.util.List;
+import java.util.Optional;
 import org.bson.Document;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -20,293 +28,297 @@ import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
 import org.springframework.data.mongodb.core.aggregation.AggregationResults;
 
-import java.time.Instant;
-import java.util.List;
-import java.util.Optional;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.*;
-
 @ExtendWith(MockitoExtension.class)
 class ConversationServiceTest {
 
-    @Mock private ConversationRepository conversationRepository;
-    @Mock private ConversationCacheService conversationCacheService;
-    @Mock private MessageRepository messageRepository;
-    @Mock private com.platform.chatservice.repository.FriendshipRepository friendshipRepository;
-    @Mock private MongoTemplate mongoTemplate;
+  @Mock private ConversationRepository conversationRepository;
+  @Mock private ConversationCacheService conversationCacheService;
+  @Mock private MessageRepository messageRepository;
+  @Mock private com.platform.chatservice.repository.FriendshipRepository friendshipRepository;
+  @Mock private MongoTemplate mongoTemplate;
 
-    @InjectMocks
-    private ConversationService conversationService;
+  @InjectMocks private ConversationService conversationService;
 
-    private static final String USER_ID = "user-001";
-    private static final String OTHER_ID = "user-002";
-    private static final String CONV_ID = "conv-001";
+  private static final String USER_ID = "user-001";
+  private static final String OTHER_ID = "user-002";
+  private static final String CONV_ID = "conv-001";
 
-    private Conversation conversation;
+  private Conversation conversation;
 
-    @BeforeEach
-    void setUp() {
-        conversation = Conversation.builder()
+  @BeforeEach
+  void setUp() {
+    conversation =
+        Conversation.builder()
             .id(CONV_ID)
             .participants(List.of(USER_ID, OTHER_ID))
             .createdAt(Instant.now())
             .build();
-    }
+  }
 
-    @Test
-    void createConversation_ShouldSaveAndReturnResponse() {
-        when(conversationRepository.findOneOnOneConversation(any())).thenReturn(Optional.empty());
-        when(conversationCacheService.save(any(Conversation.class))).thenReturn(conversation);
+  @Test
+  void createConversation_ShouldSaveAndReturnResponse() {
+    when(conversationRepository.findOneOnOneConversation(any())).thenReturn(Optional.empty());
+    when(conversationCacheService.save(any(Conversation.class))).thenReturn(conversation);
 
-        ConversationResponse response = conversationService.createConversation(USER_ID, OTHER_ID);
+    ConversationResponse response = conversationService.createConversation(USER_ID, OTHER_ID);
 
-        assertThat(response.id()).isEqualTo(CONV_ID);
-        assertThat(response.participants()).containsExactlyInAnyOrder(USER_ID, OTHER_ID);
-        assertThat(response.unreadCount()).isZero();
-        verify(conversationCacheService).save(any(Conversation.class));
-    }
+    assertThat(response.id()).isEqualTo(CONV_ID);
+    assertThat(response.participants()).containsExactlyInAnyOrder(USER_ID, OTHER_ID);
+    assertThat(response.unreadCount()).isZero();
+    verify(conversationCacheService).save(any(Conversation.class));
+  }
 
-    @Test
-    void createConversation_WhenDuplicate_ShouldThrowAndNotSave() {
-        when(conversationRepository.findOneOnOneConversation(any()))
-            .thenReturn(Optional.of(conversation));
+  @Test
+  void createConversation_WhenDuplicate_ShouldThrowAndNotSave() {
+    when(conversationRepository.findOneOnOneConversation(any()))
+        .thenReturn(Optional.of(conversation));
 
-        assertThatThrownBy(() -> conversationService.createConversation(USER_ID, OTHER_ID))
-            .isInstanceOf(DuplicateConversationException.class)
-            .extracting("conversationId")
-            .isEqualTo(CONV_ID);
+    assertThatThrownBy(() -> conversationService.createConversation(USER_ID, OTHER_ID))
+        .isInstanceOf(DuplicateConversationException.class)
+        .extracting("conversationId")
+        .isEqualTo(CONV_ID);
 
-        verify(conversationCacheService, never()).save(any());
-    }
+    verify(conversationCacheService, never()).save(any());
+  }
 
-    @Test
-    void createConversation_WhenNotFriends_ShouldBePending() {
-        when(conversationRepository.findOneOnOneConversation(any())).thenReturn(Optional.empty());
-        when(conversationCacheService.save(any(Conversation.class))).thenReturn(conversation);
+  @Test
+  void createConversation_WhenNotFriends_ShouldBePending() {
+    when(conversationRepository.findOneOnOneConversation(any())).thenReturn(Optional.empty());
+    when(conversationCacheService.save(any(Conversation.class))).thenReturn(conversation);
 
-        conversationService.createConversation(USER_ID, OTHER_ID);
+    conversationService.createConversation(USER_ID, OTHER_ID);
 
-        var captor = org.mockito.ArgumentCaptor.forClass(Conversation.class);
-        verify(conversationCacheService).save(captor.capture());
-        assertThat(captor.getValue().getStatus()).isEqualTo(Conversation.STATUS_PENDING);
-    }
+    var captor = org.mockito.ArgumentCaptor.forClass(Conversation.class);
+    verify(conversationCacheService).save(captor.capture());
+    assertThat(captor.getValue().getStatus()).isEqualTo(Conversation.STATUS_PENDING);
+  }
 
-    @Test
-    void createConversation_WhenFriends_ShouldBeAccepted() {
-        when(conversationRepository.findOneOnOneConversation(any())).thenReturn(Optional.empty());
-        when(friendshipRepository.findAcceptedBetween(USER_ID, OTHER_ID))
-            .thenReturn(Optional.of(new com.platform.chatservice.model.Friendship()));
-        when(conversationCacheService.save(any(Conversation.class))).thenReturn(conversation);
+  @Test
+  void createConversation_WhenFriends_ShouldBeAccepted() {
+    when(conversationRepository.findOneOnOneConversation(any())).thenReturn(Optional.empty());
+    when(friendshipRepository.findAcceptedBetween(USER_ID, OTHER_ID))
+        .thenReturn(Optional.of(new com.platform.chatservice.model.Friendship()));
+    when(conversationCacheService.save(any(Conversation.class))).thenReturn(conversation);
 
-        conversationService.createConversation(USER_ID, OTHER_ID);
+    conversationService.createConversation(USER_ID, OTHER_ID);
 
-        var captor = org.mockito.ArgumentCaptor.forClass(Conversation.class);
-        verify(conversationCacheService).save(captor.capture());
-        assertThat(captor.getValue().getStatus()).isEqualTo(Conversation.STATUS_ACCEPTED);
-    }
+    var captor = org.mockito.ArgumentCaptor.forClass(Conversation.class);
+    verify(conversationCacheService).save(captor.capture());
+    assertThat(captor.getValue().getStatus()).isEqualTo(Conversation.STATUS_ACCEPTED);
+  }
 
-    @Test
-    void acceptConversation_ByRecipient_ShouldSetAccepted() {
-        Conversation pending = Conversation.builder()
-            .id(CONV_ID)
-            .participants(List.of(USER_ID, OTHER_ID))
-            .createdBy(USER_ID)
-            .status(Conversation.STATUS_PENDING)
-            .createdAt(Instant.now())
-            .build();
-        when(conversationCacheService.findByIdOptional(CONV_ID)).thenReturn(Optional.of(pending));
-        when(conversationCacheService.save(any(Conversation.class))).thenAnswer(inv -> inv.getArgument(0));
-        when(messageRepository.countUnread(CONV_ID, OTHER_ID)).thenReturn(0L);
-
-        ConversationResponse response = conversationService.acceptConversation(OTHER_ID, CONV_ID);
-
-        assertThat(response.status()).isEqualTo(Conversation.STATUS_ACCEPTED);
-    }
-
-    @Test
-    void acceptConversation_ByInitiator_ShouldThrow() {
-        Conversation pending = Conversation.builder()
+  @Test
+  void acceptConversation_ByRecipient_ShouldSetAccepted() {
+    Conversation pending =
+        Conversation.builder()
             .id(CONV_ID)
             .participants(List.of(USER_ID, OTHER_ID))
             .createdBy(USER_ID)
             .status(Conversation.STATUS_PENDING)
             .createdAt(Instant.now())
             .build();
-        when(conversationCacheService.findByIdOptional(CONV_ID)).thenReturn(Optional.of(pending));
+    when(conversationCacheService.findByIdOptional(CONV_ID)).thenReturn(Optional.of(pending));
+    when(conversationCacheService.save(any(Conversation.class)))
+        .thenAnswer(inv -> inv.getArgument(0));
+    when(messageRepository.countUnread(CONV_ID, OTHER_ID)).thenReturn(0L);
 
-        assertThatThrownBy(() -> conversationService.acceptConversation(USER_ID, CONV_ID))
-            .isInstanceOf(com.platform.chatservice.exception.ForbiddenException.class);
-        verify(conversationCacheService, never()).save(any());
-    }
+    ConversationResponse response = conversationService.acceptConversation(OTHER_ID, CONV_ID);
 
-    @Test
-    void getConversation_ShouldReturnConversation() {
-        when(conversationCacheService.findByIdOptional(CONV_ID)).thenReturn(Optional.of(conversation));
-        when(messageRepository.countUnread(CONV_ID, USER_ID)).thenReturn(3L);
+    assertThat(response.status()).isEqualTo(Conversation.STATUS_ACCEPTED);
+  }
 
-        ConversationResponse response = conversationService.getConversation(USER_ID, CONV_ID);
+  @Test
+  void acceptConversation_ByInitiator_ShouldThrow() {
+    Conversation pending =
+        Conversation.builder()
+            .id(CONV_ID)
+            .participants(List.of(USER_ID, OTHER_ID))
+            .createdBy(USER_ID)
+            .status(Conversation.STATUS_PENDING)
+            .createdAt(Instant.now())
+            .build();
+    when(conversationCacheService.findByIdOptional(CONV_ID)).thenReturn(Optional.of(pending));
 
-        assertThat(response.id()).isEqualTo(CONV_ID);
-        assertThat(response.unreadCount()).isEqualTo(3L);
-    }
+    assertThatThrownBy(() -> conversationService.acceptConversation(USER_ID, CONV_ID))
+        .isInstanceOf(com.platform.chatservice.exception.ForbiddenException.class);
+    verify(conversationCacheService, never()).save(any());
+  }
 
-    @Test
-    void getConversation_WhenUserNotParticipant_ShouldThrow() {
-        when(conversationCacheService.findByIdOptional(CONV_ID)).thenReturn(Optional.of(conversation));
+  @Test
+  void getConversation_ShouldReturnConversation() {
+    when(conversationCacheService.findByIdOptional(CONV_ID)).thenReturn(Optional.of(conversation));
+    when(messageRepository.countUnread(CONV_ID, USER_ID)).thenReturn(3L);
 
-        assertThatThrownBy(() -> conversationService.getConversation("intruder-999", CONV_ID))
-            .isInstanceOf(ConversationNotFoundException.class);
-    }
+    ConversationResponse response = conversationService.getConversation(USER_ID, CONV_ID);
 
-    @Test
-    void getConversation_WhenNotFound_ShouldThrow() {
-        when(conversationCacheService.findByIdOptional(CONV_ID)).thenReturn(Optional.empty());
+    assertThat(response.id()).isEqualTo(CONV_ID);
+    assertThat(response.unreadCount()).isEqualTo(3L);
+  }
 
-        assertThatThrownBy(() -> conversationService.getConversation(USER_ID, CONV_ID))
-            .isInstanceOf(ConversationNotFoundException.class);
-    }
+  @Test
+  void getConversation_WhenUserNotParticipant_ShouldThrow() {
+    when(conversationCacheService.findByIdOptional(CONV_ID)).thenReturn(Optional.of(conversation));
 
-    @Test
-    @SuppressWarnings("unchecked")
-    void listConversations_ShouldReturnPagedResult() {
-        var pageable = PageRequest.of(0, 20);
-        when(conversationRepository.findByParticipantsContainingOrderByLastMessageAtDesc(USER_ID, pageable))
-            .thenReturn(new PageImpl<>(List.of(conversation)));
+    assertThatThrownBy(() -> conversationService.getConversation("intruder-999", CONV_ID))
+        .isInstanceOf(ConversationNotFoundException.class);
+  }
 
-        AggregationResults<Document> aggResults = mock(AggregationResults.class);
-        when(aggResults.getMappedResults()).thenReturn(List.of());
-        when(mongoTemplate.aggregate(any(Aggregation.class), eq("messages"), eq(Document.class)))
-            .thenReturn(aggResults);
+  @Test
+  void getConversation_WhenNotFound_ShouldThrow() {
+    when(conversationCacheService.findByIdOptional(CONV_ID)).thenReturn(Optional.empty());
 
-        PageResponse<ConversationResponse> result =
-            conversationService.listConversations(USER_ID, pageable);
+    assertThatThrownBy(() -> conversationService.getConversation(USER_ID, CONV_ID))
+        .isInstanceOf(ConversationNotFoundException.class);
+  }
 
-        assertThat(result.content()).hasSize(1);
-        assertThat(result.content().get(0).id()).isEqualTo(CONV_ID);
-        assertThat(result.page()).isZero();
-        assertThat(result.totalElements()).isEqualTo(1L);
-    }
+  @Test
+  @SuppressWarnings("unchecked")
+  void listConversations_ShouldReturnPagedResult() {
+    var pageable = PageRequest.of(0, 20);
+    when(conversationRepository.findByParticipantsContainingOrderByLastMessageAtDesc(
+            USER_ID, pageable))
+        .thenReturn(new PageImpl<>(List.of(conversation)));
 
-    @Test
-    @SuppressWarnings("unchecked")
-    void listConversations_WhenEmpty_ShouldReturnEmptyPage() {
-        var pageable = PageRequest.of(0, 20);
-        when(conversationRepository.findByParticipantsContainingOrderByLastMessageAtDesc(USER_ID, pageable))
-            .thenReturn(new PageImpl<>(List.of()));
+    AggregationResults<Document> aggResults = mock(AggregationResults.class);
+    when(aggResults.getMappedResults()).thenReturn(List.of());
+    when(mongoTemplate.aggregate(any(Aggregation.class), eq("messages"), eq(Document.class)))
+        .thenReturn(aggResults);
 
-        PageResponse<ConversationResponse> result =
-            conversationService.listConversations(USER_ID, pageable);
+    PageResponse<ConversationResponse> result =
+        conversationService.listConversations(USER_ID, pageable);
 
-        assertThat(result.content()).isEmpty();
-        verifyNoInteractions(mongoTemplate);
-    }
+    assertThat(result.content()).hasSize(1);
+    assertThat(result.content().get(0).id()).isEqualTo(CONV_ID);
+    assertThat(result.page()).isZero();
+    assertThat(result.totalElements()).isEqualTo(1L);
+  }
 
-    @Test
-    void getParticipants_ShouldReturnParticipantList() {
-        when(conversationCacheService.findByIdOptional(CONV_ID)).thenReturn(Optional.of(conversation));
+  @Test
+  @SuppressWarnings("unchecked")
+  void listConversations_WhenEmpty_ShouldReturnEmptyPage() {
+    var pageable = PageRequest.of(0, 20);
+    when(conversationRepository.findByParticipantsContainingOrderByLastMessageAtDesc(
+            USER_ID, pageable))
+        .thenReturn(new PageImpl<>(List.of()));
 
-        List<String> participants = conversationService.getParticipants(CONV_ID);
+    PageResponse<ConversationResponse> result =
+        conversationService.listConversations(USER_ID, pageable);
 
-        assertThat(participants).containsExactlyInAnyOrder(USER_ID, OTHER_ID);
-    }
+    assertThat(result.content()).isEmpty();
+    verifyNoInteractions(mongoTemplate);
+  }
 
-    @Test
-    void getParticipants_WhenNotFound_ShouldReturnEmptyList() {
-        when(conversationCacheService.findByIdOptional(CONV_ID)).thenReturn(Optional.empty());
+  @Test
+  void getParticipants_ShouldReturnParticipantList() {
+    when(conversationCacheService.findByIdOptional(CONV_ID)).thenReturn(Optional.of(conversation));
 
-        List<String> participants = conversationService.getParticipants(CONV_ID);
+    List<String> participants = conversationService.getParticipants(CONV_ID);
 
-        assertThat(participants).isEmpty();
-    }
+    assertThat(participants).containsExactlyInAnyOrder(USER_ID, OTHER_ID);
+  }
 
-    @Test
-    void muteConversation_ShouldAddUserToMutedUsersList() {
-        when(conversationCacheService.findByIdOptional(CONV_ID)).thenReturn(Optional.of(conversation));
-        when(conversationCacheService.save(any(Conversation.class))).thenAnswer(inv -> inv.getArgument(0));
-        when(messageRepository.countUnread(CONV_ID, USER_ID)).thenReturn(0L);
+  @Test
+  void getParticipants_WhenNotFound_ShouldReturnEmptyList() {
+    when(conversationCacheService.findByIdOptional(CONV_ID)).thenReturn(Optional.empty());
 
-        ConversationResponse response = conversationService.muteConversation(USER_ID, CONV_ID);
+    List<String> participants = conversationService.getParticipants(CONV_ID);
 
-        assertThat(response.isMuted()).isTrue();
-    }
+    assertThat(participants).isEmpty();
+  }
 
-    @Test
-    void unmuteConversation_ShouldRemoveUserFromMutedUsersList() {
-        conversation.setMutedUsers(new java.util.ArrayList<>(List.of(USER_ID)));
-        when(conversationCacheService.findByIdOptional(CONV_ID)).thenReturn(Optional.of(conversation));
-        when(conversationCacheService.save(any(Conversation.class))).thenAnswer(inv -> inv.getArgument(0));
-        when(messageRepository.countUnread(CONV_ID, USER_ID)).thenReturn(0L);
+  @Test
+  void muteConversation_ShouldAddUserToMutedUsersList() {
+    when(conversationCacheService.findByIdOptional(CONV_ID)).thenReturn(Optional.of(conversation));
+    when(conversationCacheService.save(any(Conversation.class)))
+        .thenAnswer(inv -> inv.getArgument(0));
+    when(messageRepository.countUnread(CONV_ID, USER_ID)).thenReturn(0L);
 
-        ConversationResponse response = conversationService.unmuteConversation(USER_ID, CONV_ID);
+    ConversationResponse response = conversationService.muteConversation(USER_ID, CONV_ID);
 
-        assertThat(response.isMuted()).isFalse();
-    }
+    assertThat(response.isMuted()).isTrue();
+  }
 
-    @Test
-    void archiveConversation_ShouldAddUserToArchivedList() {
-        when(conversationCacheService.findByIdOptional(CONV_ID)).thenReturn(Optional.of(conversation));
-        when(conversationCacheService.save(any(Conversation.class))).thenAnswer(inv -> inv.getArgument(0));
-        when(messageRepository.countUnread(CONV_ID, USER_ID)).thenReturn(0L);
+  @Test
+  void unmuteConversation_ShouldRemoveUserFromMutedUsersList() {
+    conversation.setMutedUsers(new java.util.ArrayList<>(List.of(USER_ID)));
+    when(conversationCacheService.findByIdOptional(CONV_ID)).thenReturn(Optional.of(conversation));
+    when(conversationCacheService.save(any(Conversation.class)))
+        .thenAnswer(inv -> inv.getArgument(0));
+    when(messageRepository.countUnread(CONV_ID, USER_ID)).thenReturn(0L);
 
-        ConversationResponse response = conversationService.archiveConversation(USER_ID, CONV_ID);
+    ConversationResponse response = conversationService.unmuteConversation(USER_ID, CONV_ID);
 
-        assertThat(response.isArchived()).isTrue();
-    }
+    assertThat(response.isMuted()).isFalse();
+  }
 
-    @Test
-    void unarchiveConversation_ShouldRemoveUserFromArchivedList() {
-        conversation.setArchivedBy(new java.util.ArrayList<>(List.of(USER_ID)));
-        when(conversationCacheService.findByIdOptional(CONV_ID)).thenReturn(Optional.of(conversation));
-        when(conversationCacheService.save(any(Conversation.class))).thenAnswer(inv -> inv.getArgument(0));
-        when(messageRepository.countUnread(CONV_ID, USER_ID)).thenReturn(0L);
+  @Test
+  void archiveConversation_ShouldAddUserToArchivedList() {
+    when(conversationCacheService.findByIdOptional(CONV_ID)).thenReturn(Optional.of(conversation));
+    when(conversationCacheService.save(any(Conversation.class)))
+        .thenAnswer(inv -> inv.getArgument(0));
+    when(messageRepository.countUnread(CONV_ID, USER_ID)).thenReturn(0L);
 
-        ConversationResponse response = conversationService.unarchiveConversation(USER_ID, CONV_ID);
+    ConversationResponse response = conversationService.archiveConversation(USER_ID, CONV_ID);
 
-        assertThat(response.isArchived()).isFalse();
-    }
+    assertThat(response.isArchived()).isTrue();
+  }
 
-    @Test
-    void markConversationUnread_WhenMessageExists_ShouldRemoveUserFromReadBy() {
-        when(conversationCacheService.findByIdOptional(CONV_ID)).thenReturn(Optional.of(conversation));
-        com.platform.chatservice.model.Message lastMsg = com.platform.chatservice.model.Message.builder()
+  @Test
+  void unarchiveConversation_ShouldRemoveUserFromArchivedList() {
+    conversation.setArchivedBy(new java.util.ArrayList<>(List.of(USER_ID)));
+    when(conversationCacheService.findByIdOptional(CONV_ID)).thenReturn(Optional.of(conversation));
+    when(conversationCacheService.save(any(Conversation.class)))
+        .thenAnswer(inv -> inv.getArgument(0));
+    when(messageRepository.countUnread(CONV_ID, USER_ID)).thenReturn(0L);
+
+    ConversationResponse response = conversationService.unarchiveConversation(USER_ID, CONV_ID);
+
+    assertThat(response.isArchived()).isFalse();
+  }
+
+  @Test
+  void markConversationUnread_WhenMessageExists_ShouldRemoveUserFromReadBy() {
+    when(conversationCacheService.findByIdOptional(CONV_ID)).thenReturn(Optional.of(conversation));
+    com.platform.chatservice.model.Message lastMsg =
+        com.platform.chatservice.model.Message.builder()
             .id("msg-001")
             .conversationId(CONV_ID)
             .senderId(OTHER_ID)
             .readBy(new java.util.ArrayList<>(List.of(USER_ID, OTHER_ID)))
             .createdAt(Instant.now())
             .build();
-        when(messageRepository.findByConversationIdOrderByCreatedAtDesc(eq(CONV_ID), any()))
-            .thenReturn(new org.springframework.data.domain.PageImpl<>(List.of(lastMsg)));
-        when(messageRepository.save(any(com.platform.chatservice.model.Message.class))).thenReturn(lastMsg);
-        when(messageRepository.countUnread(CONV_ID, USER_ID)).thenReturn(1L);
+    when(messageRepository.findByConversationIdOrderByCreatedAtDesc(eq(CONV_ID), any()))
+        .thenReturn(new org.springframework.data.domain.PageImpl<>(List.of(lastMsg)));
+    when(messageRepository.save(any(com.platform.chatservice.model.Message.class)))
+        .thenReturn(lastMsg);
+    when(messageRepository.countUnread(CONV_ID, USER_ID)).thenReturn(1L);
 
-        ConversationResponse response = conversationService.markConversationUnread(USER_ID, CONV_ID);
+    ConversationResponse response = conversationService.markConversationUnread(USER_ID, CONV_ID);
 
-        assertThat(response.unreadCount()).isEqualTo(1L);
-        assertThat(lastMsg.getReadBy()).containsExactly(OTHER_ID);
-        verify(messageRepository).save(lastMsg);
-    }
+    assertThat(response.unreadCount()).isEqualTo(1L);
+    assertThat(lastMsg.getReadBy()).containsExactly(OTHER_ID);
+    verify(messageRepository).save(lastMsg);
+  }
 
-    @Test
-    void markConversationRead_ShouldAtomicallyAddUserToReadByForAllUnreadMessages() {
-        when(conversationCacheService.findByIdOptional(CONV_ID)).thenReturn(Optional.of(conversation));
+  @Test
+  void markConversationRead_ShouldAtomicallyAddUserToReadByForAllUnreadMessages() {
+    when(conversationCacheService.findByIdOptional(CONV_ID)).thenReturn(Optional.of(conversation));
 
-        ConversationResponse response = conversationService.markConversationRead(USER_ID, CONV_ID);
+    ConversationResponse response = conversationService.markConversationRead(USER_ID, CONV_ID);
 
-        assertThat(response.unreadCount()).isZero();
-        // New implementation performs a single atomic $addToSet across all unread
-        // messages instead of read-modify-write + saveAll.
-        var updateCaptor = org.mockito.ArgumentCaptor.forClass(
+    assertThat(response.unreadCount()).isZero();
+    // New implementation performs a single atomic $addToSet across all unread
+    // messages instead of read-modify-write + saveAll.
+    var updateCaptor =
+        org.mockito.ArgumentCaptor.forClass(
             org.springframework.data.mongodb.core.query.Update.class);
-        verify(mongoTemplate).updateMulti(
+    verify(mongoTemplate)
+        .updateMulti(
             any(org.springframework.data.mongodb.core.query.Query.class),
             updateCaptor.capture(),
             eq(com.platform.chatservice.model.Message.class));
-        String updateDoc = updateCaptor.getValue().getUpdateObject().toString();
-        assertThat(updateDoc).contains("$addToSet").contains(USER_ID);
-        verify(messageRepository, never()).saveAll(anyList());
-    }
+    String updateDoc = updateCaptor.getValue().getUpdateObject().toString();
+    assertThat(updateDoc).contains("$addToSet").contains(USER_ID);
+    verify(messageRepository, never()).saveAll(anyList());
+  }
 }

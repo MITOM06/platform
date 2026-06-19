@@ -3,13 +3,16 @@ import { ConfigService } from '@nestjs/config';
 import Anthropic from '@anthropic-ai/sdk';
 import { RedisPublisherService } from '../redis/redis-publisher.service';
 import { MemoryService } from '../memory/memory.service';
-import { KbProcessorService } from '../kb/kb-processor.service';
-import { EmbeddingService } from '../kb/embedding.service';
-import { VectorStoreService } from '../kb/vector-store.service';
 import { ToolRegistryService } from '../tools/tool-registry.service';
 import { UsageService } from '../usage/usage.service';
 import { PersonaService } from '../persona/persona.service';
 import { ToolContext } from '../tools/tool.interface';
+import { selectModel, RouteSignals, RouterConfig } from './model-router';
+import { AiStreamErrorCode } from './ai-stream-error';
+import { withAgenticLoopSpan } from './tracing-helpers';
+import { FactExtractorService } from './fact-extractor.service';
+import { ContextBuilderService } from './context-builder.service';
+import { EmbeddingService } from '../kb/embedding.service';
 
 export interface AiRequestPayload {
   conversationId: string;
@@ -61,22 +64,19 @@ export class AiService {
   private readonly primaryModel: string;
   private readonly fallbackModel: string;
   private readonly effort: 'low' | 'medium' | 'high';
-  private readonly qdrantCollection: string;
-  private readonly topK: number;
-  private readonly overFetch: number;
-  private readonly scoreThreshold: number;
   private readonly extractEveryTurns: number;
+  private readonly routerConfig: RouterConfig;
 
   constructor(
     private readonly configService: ConfigService,
     private readonly publisher: RedisPublisherService,
     private readonly memoryService: MemoryService,
-    private readonly kbProcessor: KbProcessorService,
     private readonly embeddingService: EmbeddingService,
-    private readonly vectorStore: VectorStoreService,
     private readonly toolRegistry: ToolRegistryService,
     private readonly usageService: UsageService,
     private readonly personaService: PersonaService,
+    private readonly factExtractor: FactExtractorService,
+    private readonly contextBuilder: ContextBuilderService,
   ) {
     this.anthropic = new Anthropic({
       apiKey: this.configService.get<string>('config.anthropic.apiKey'),
@@ -88,13 +88,26 @@ export class AiService {
     this.effort =
       (this.configService.get<string>('config.anthropic.effort') as 'low' | 'medium' | 'high') ??
       'high';
-    this.qdrantCollection =
-      this.configService.get<string>('config.kb.qdrantCollection') ?? 'knowledge';
-    this.topK = this.configService.get<number>('config.kb.topK') ?? 4;
-    this.overFetch = this.configService.get<number>('config.kb.overFetch') ?? 8;
-    this.scoreThreshold = this.configService.get<number>('config.kb.scoreThreshold') ?? 0.5;
     this.extractEveryTurns =
       this.configService.get<number>('config.memory.extractEveryTurns') ?? 20;
+    this.routerConfig = {
+      enabled: this.configService.get<boolean>('config.anthropic.router.enabled') ?? true,
+      simpleModel:
+        this.configService.get<string>('config.anthropic.router.simpleModel') ?? 'claude-haiku-4-5',
+      midModel:
+        this.configService.get<string>('config.anthropic.router.midModel') ?? 'claude-sonnet-4-6',
+      complexModel:
+        this.configService.get<string>('config.anthropic.router.complexModel') ??
+        'claude-opus-4-8',
+      simpleMaxChars:
+        this.configService.get<number>('config.anthropic.router.simpleMaxChars') ?? 280,
+      simpleMaxHistory:
+        this.configService.get<number>('config.anthropic.router.simpleMaxHistory') ?? 4,
+      midMaxChars:
+        this.configService.get<number>('config.anthropic.router.midMaxChars') ?? 1200,
+      midMaxHistory:
+        this.configService.get<number>('config.anthropic.router.midMaxHistory') ?? 20,
+    };
   }
 
   async handleRequest(payload: AiRequestPayload): Promise<void> {
@@ -104,6 +117,7 @@ export class AiService {
       this.logger.warn(`Quota exceeded for user ${userId} in conversation ${conversationId}`);
       await this.publisher.publish(conversationId, {
         type: 'AI_STREAM_ERROR',
+        code: AiStreamErrorCode.QUOTA_EXCEEDED,
         error: 'Monthly AI usage quota exceeded. Please contact your admin.',
       });
       return; // quota is an expected condition — do NOT dead-letter.
@@ -123,10 +137,9 @@ export class AiService {
     const persona = await this.personaService.getPersona(conversationId);
     const baseSystem = this.personaService.buildSystemPrompt(persona, displayName);
 
-    const volatileSystem = await this.buildVolatileContext(
+    const volatileContext = await this.contextBuilder.buildVolatileContext(
       conversationId,
       userId,
-      content,
       queryVector,
     );
 
@@ -135,16 +148,32 @@ export class AiService {
       userId,
       displayName,
       baseSystem,
-      volatileSystem: volatileSystem.text,
-      ragSources: volatileSystem.ragSources,
+      volatileSystem: volatileContext.text,
+      ragSources: volatileContext.ragSources,
     };
+
+    const routeSignals: RouteSignals = {
+      contentLength: content.length,
+      historyLength: history.length,
+      hasKbContext: ctx.ragSources.length > 0,
+    };
+    const selectedModel = selectModel(routeSignals, this.routerConfig);
+    this.logger.log(
+      `Model routing: selected=${selectedModel} ` +
+        `(contentLength=${routeSignals.contentLength}, ` +
+        `historyLength=${routeSignals.historyLength}, ` +
+        `hasKbContext=${routeSignals.hasKbContext}) ` +
+        `for conversation ${conversationId}`,
+    );
 
     let trace: AiTrace | null = null;
     try {
-      trace = await this._agenticLoop(this.primaryModel, ctx, content, history, startMs);
+      trace = await withAgenticLoopSpan(selectedModel, conversationId, () =>
+        this._agenticLoop(selectedModel, ctx, content, history, startMs),
+      );
     } catch (primaryError) {
       this.logger.error(
-        `Primary model (${this.primaryModel}) failed for conversation ${conversationId}`,
+        `Model (${selectedModel}) failed for conversation ${conversationId}`,
         primaryError,
       );
       if (primaryError instanceof Error && primaryError.message === 'STREAM_ALREADY_STARTED') {
@@ -153,12 +182,15 @@ export class AiService {
         );
         await this.publisher.publish(conversationId, {
           type: 'AI_STREAM_ERROR',
+          code: AiStreamErrorCode.STREAM_INTERRUPTED,
           error: 'AI stream was interrupted. Please try again.',
         });
         throw primaryError;
       }
       try {
-        trace = await this._agenticLoop(this.fallbackModel, ctx, content, history, startMs);
+        trace = await withAgenticLoopSpan(this.fallbackModel, conversationId, () =>
+          this._agenticLoop(this.fallbackModel, ctx, content, history, startMs),
+        );
       } catch (fallbackError) {
         this.logger.error(
           `Fallback model (${this.fallbackModel}) also failed for conversation ${conversationId}`,
@@ -166,6 +198,7 @@ export class AiService {
         );
         await this.publisher.publish(conversationId, {
           type: 'AI_STREAM_ERROR',
+          code: AiStreamErrorCode.UNAVAILABLE,
           error: 'AI is temporarily unavailable.',
         });
         // Rethrow so the RabbitMQ message is dead-lettered (consumer nacks).
@@ -182,91 +215,13 @@ export class AiService {
     try {
       const count = await this.memoryService.incrementMessageCount(conversationId);
       if (this.extractEveryTurns > 0 && count % this.extractEveryTurns === 0) {
-        this._extractFacts(conversationId, userId, history, count).catch((err) => {
+        this.factExtractor.extractFacts(conversationId, userId, history, count).catch((err) => {
           this.logger.error(`Fact extraction failed for ${conversationId}`, err);
         });
       }
     } catch (err) {
       this.logger.error(`Failed to increment message count for ${conversationId}`, err);
     }
-  }
-
-  /**
-   * Builds the VOLATILE system block (RAG context + retrieved memory facts).
-   * Returned separately from the stable persona so it is appended AFTER the
-   * cached prefix and never busts the prompt cache.
-   */
-  private async buildVolatileContext(
-    conversationId: string,
-    userId: string,
-    content: string,
-    queryVector: number[] | null,
-  ): Promise<{ text: string; ragSources: RagSource[] }> {
-    const parts: string[] = [];
-    const ragSources: RagSource[] = [];
-
-    // --- Retrieved memory facts (most relevant only) ---
-    if (queryVector) {
-      try {
-        const facts = await this.memoryService.retrieveRelevantFacts(
-          userId,
-          conversationId,
-          queryVector,
-        );
-        if (facts.length > 0) {
-          parts.push(
-            `## Relevant memory about this user (stored facts — treat as remembered, not inferred):\n` +
-              facts.map((f) => `- ${f.text}`).join('\n'),
-          );
-        }
-      } catch (err) {
-        this.logger.warn(`Memory retrieval failed for ${conversationId}`, err);
-      }
-    }
-
-    // --- RAG / knowledge-base context with confidence gating ---
-    try {
-      const docIds = await this.kbProcessor.getReadyDocumentIds(conversationId);
-      if (docIds.length === 0) {
-        parts.push(
-          `## Knowledge Base Context:\nNo documents have been uploaded to this conversation. Do not cite sources.`,
-        );
-      } else if (queryVector) {
-        const raw = await this.vectorStore.search(
-          this.qdrantCollection,
-          queryVector,
-          Math.max(this.overFetch, this.topK),
-          docIds,
-        );
-        // Confidence gate + rerank: keep best `topK` above threshold.
-        const relevant = raw
-          .filter((r) => r.score >= this.scoreThreshold)
-          .sort((a, b) => b.score - a.score)
-          .slice(0, this.topK);
-
-        if (relevant.length > 0) {
-          relevant.forEach((r) => ragSources.push({ documentId: r.documentId, score: r.score }));
-          parts.push(
-            `## Knowledge Base Context:\n` +
-              relevant.map((r, i) => `[Source ${i + 1}] ${r.text}`).join('\n\n') +
-              `\n\nUse ONLY this context for document-grounded claims and cite as [Source N]. ` +
-              `If it does not answer the question, say you don't have that information.`,
-          );
-        } else {
-          parts.push(
-            `## Knowledge Base Context:\nNo relevant context: no uploaded-document chunk cleared the confidence threshold for this question. ` +
-              `Do not fabricate document content; say you couldn't find it in the uploaded files.`,
-          );
-        }
-      }
-    } catch (err) {
-      this.logger.warn(
-        `RAG context fetch failed for ${conversationId}, proceeding without context`,
-        err,
-      );
-    }
-
-    return { text: parts.join('\n\n'), ragSources };
   }
 
   /** System blocks: stable (cached) persona/contract + volatile grounding after it. */
@@ -461,61 +416,5 @@ export class AiService {
     });
 
     return trace;
-  }
-
-  /**
-   * Periodic semantic fact extraction. Produces a short summary + discrete
-   * facts, which MemoryService dedupes (cosine) and embeds into the vector
-   * store, then rebuilds the canonical Mongo list for client consumption.
-   */
-  private async _extractFacts(
-    conversationId: string,
-    userId: string,
-    history: AiRequestPayload['history'],
-    count: number,
-  ): Promise<void> {
-    const systemPrompt =
-      `You are a memory assistant. Summarize the following conversation in 2-3 sentences ` +
-      `focusing on what the user talked about and any important information they shared.\n` +
-      `Then on a new line write: FACTS: followed by a JSON array of up to 5 short, ` +
-      `self-contained fact strings about the user (each independently meaningful).\n` +
-      `Only include facts the user actually stated; do not invent.\n` +
-      `Example:\n` +
-      `The user discussed their Flutter project and asked about Redis pub/sub.\n` +
-      `FACTS: ["Works on a Flutter + Spring Boot project called PON", "Uses Redis for message queue"]`;
-
-    const messages: Anthropic.MessageParam[] = history.slice(-20).map((h) => ({
-      role: h.role,
-      content: h.content,
-    }));
-    if (messages.length === 0) return;
-
-    const response = await this.anthropic.messages.create({
-      model: this.fallbackModel,
-      max_tokens: 512,
-      system: systemPrompt,
-      messages,
-    });
-
-    const text = response.content
-      .filter((b): b is Anthropic.TextBlock => b.type === 'text')
-      .map((b) => b.text)
-      .join('');
-
-    const factsMatch = text.match(/FACTS:\s*(\[[\s\S]*?\])/);
-    let keyFacts: string[] = [];
-    if (factsMatch) {
-      try {
-        const parsed: unknown = JSON.parse(factsMatch[1]);
-        if (Array.isArray(parsed)) keyFacts = parsed.filter((f): f is string => typeof f === 'string');
-      } catch {
-        keyFacts = [];
-      }
-    }
-
-    const summary = text.replace(/FACTS:\s*\[[\s\S]*?\]/, '').trim();
-
-    await this.memoryService.addFacts(conversationId, userId, keyFacts, summary, count);
-    this.logger.log(`Memory facts updated for conversation ${conversationId} at ${count} turns`);
   }
 }

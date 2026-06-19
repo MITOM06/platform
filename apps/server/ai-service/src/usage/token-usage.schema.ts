@@ -24,3 +24,5 @@ export class TokenUsage extends Document {
 
 export const TokenUsageSchema = SchemaFactory.createForClass(TokenUsage);
 TokenUsageSchema.index({ userId: 1, date: 1 }, { unique: true });
+// Cross-user daily rollups (e.g. admin "total tokens used today") would otherwise scan all rows.
+TokenUsageSchema.index({ date: 1 });

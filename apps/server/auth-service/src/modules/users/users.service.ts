@@ -1,7 +1,7 @@
 import { ConflictException, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { User, UserDocument } from '@platform/database';
+import { User, UserDocument, UserBlock, UserBlockDocument } from '@platform/database';
 import * as bcrypt from 'bcrypt';
 
 @Injectable()
@@ -10,6 +10,8 @@ export class UsersService {
 
   constructor(
     @InjectModel(User.name) private userModel: Model<UserDocument>,
+    @InjectModel(UserBlock.name)
+    private userBlockModel: Model<UserBlockDocument>,
     // ❌ Xóa: SessionService — UsersService không cần biết về session
   ) {}
 
@@ -185,7 +187,7 @@ export class UsersService {
     });
   }
 
-  /** Add `targetId` to the current user's block list. */
+  /** Record that `userId` blocks `targetId` (idempotent). */
   async blockUser(
     userId: string,
     targetId: string,
@@ -193,20 +195,22 @@ export class UsersService {
     if (userId === targetId) {
       throw new ConflictException('You cannot block yourself');
     }
-    await this.userModel.findByIdAndUpdate(userId, {
-      $addToSet: { blockedUsers: targetId },
-    });
+    await this.userBlockModel.updateOne(
+      { blockerId: userId, blockedId: targetId },
+      { $setOnInsert: { blockerId: userId, blockedId: targetId } },
+      { upsert: true },
+    );
     return { success: true };
   }
 
-  /** Remove `targetId` from the current user's block list. */
+  /** Remove the block from `userId` to `targetId`. */
   async unblockUser(
     userId: string,
     targetId: string,
   ): Promise<{ success: true }> {
-    await this.userModel.findByIdAndUpdate(userId, {
-      $pull: { blockedUsers: targetId },
-    });
+    await this.userBlockModel
+      .deleteOne({ blockerId: userId, blockedId: targetId })
+      .exec();
     return { success: true };
   }
 
@@ -219,15 +223,13 @@ export class UsersService {
     userId: string,
     otherId: string,
   ): Promise<{ iBlocked: boolean; blockedMe: boolean }> {
-    const [me, other] = await Promise.all([
-      this.userModel.findById(userId).select('blockedUsers').lean().exec(),
-      this.userModel.findById(otherId).select('blockedUsers').lean().exec(),
+    const [iBlocked, blockedMe] = await Promise.all([
+      this.userBlockModel.exists({ blockerId: userId, blockedId: otherId }),
+      this.userBlockModel.exists({ blockerId: otherId, blockedId: userId }),
     ]);
-    const myList = ((me as any)?.blockedUsers ?? []).map(String);
-    const otherList = ((other as any)?.blockedUsers ?? []).map(String);
     return {
-      iBlocked: myList.includes(otherId),
-      blockedMe: otherList.includes(userId),
+      iBlocked: Boolean(iBlocked),
+      blockedMe: Boolean(blockedMe),
     };
   }
 }

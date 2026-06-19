@@ -11,15 +11,15 @@ import org.springframework.data.redis.listener.RedisMessageListenerContainer;
 @Configuration
 public class RedisListenerConfig {
 
-    @Bean
-    public RedisMessageListenerContainer redisMessageListenerContainer(
-            RedisConnectionFactory connectionFactory,
-            AiResponseListener aiResponseListener,
-            KbStatusListener kbStatusListener) {
-        RedisMessageListenerContainer container = new RedisMessageListenerContainer();
-        container.setConnectionFactory(connectionFactory);
-        container.addMessageListener(aiResponseListener, new PatternTopic("ai:response:*"));
-        container.addMessageListener(kbStatusListener, new PatternTopic("kb:status:*"));
-        return container;
-    }
+  @Bean
+  public RedisMessageListenerContainer redisMessageListenerContainer(
+      RedisConnectionFactory connectionFactory,
+      AiResponseListener aiResponseListener,
+      KbStatusListener kbStatusListener) {
+    RedisMessageListenerContainer container = new RedisMessageListenerContainer();
+    container.setConnectionFactory(connectionFactory);
+    container.addMessageListener(aiResponseListener, new PatternTopic("ai:response:*"));
+    container.addMessageListener(kbStatusListener, new PatternTopic("kb:status:*"));
+    return container;
+  }
 }

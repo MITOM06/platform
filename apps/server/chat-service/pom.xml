@@ -19,6 +19,12 @@
     <properties>
         <java.version>21</java.version>
         <jjwt.version>0.11.5</jjwt.version>
+        <spotless.version>2.43.0</spotless.version>
+        <google-java-format.version>1.22.0</google-java-format.version>
+        <!-- Override Testcontainers to 1.20.4 (docker-java 3.4.x) which supports
+             Docker Desktop 29.x (minimum API 1.40 requirement). Spring Boot 3.3.5
+             pins to 1.19.8/docker-java 3.3.6 which sends API 1.32 and is rejected. -->
+        <testcontainers.version>1.20.4</testcontainers.version>
     </properties>
 
     <dependencies>
@@ -123,6 +129,16 @@
             <artifactId>jackson-datatype-jsr310</artifactId>
         </dependency>
 
+        <!-- Micrometer Tracing + OpenTelemetry bridge (W3C traceparent, Jaeger OTLP export) -->
+        <dependency>
+            <groupId>io.micrometer</groupId>
+            <artifactId>micrometer-tracing-bridge-otel</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.opentelemetry</groupId>
+            <artifactId>opentelemetry-exporter-otlp</artifactId>
+        </dependency>
+
         <!-- Test -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -134,10 +150,58 @@
             <artifactId>spring-security-test</artifactId>
             <scope>test</scope>
         </dependency>
+
+        <!-- Testcontainers — MongoDB integration tests -->
+        <dependency>
+            <groupId>org.testcontainers</groupId>
+            <artifactId>testcontainers</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.testcontainers</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.testcontainers</groupId>
+            <artifactId>mongodb</artifactId>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
     <build>
         <plugins>
+            <!-- Spotless: Java code-style gate. Uses google-java-format (default GOOGLE
+                 style), removes unused imports, and trims trailing whitespace. The
+                 `check` goal is bound to the `test-compile` phase so it runs during the
+                 standard `mvn test` / `mvn verify` lifecycle — the existing CI step
+                 `mvn clean test -q` enforces it with NO CI yaml change. Run
+                 `mvn spotless:apply` to auto-fix violations. -->
+            <plugin>
+                <groupId>com.diffplug.spotless</groupId>
+                <artifactId>spotless-maven-plugin</artifactId>
+                <version>${spotless.version}</version>
+                <configuration>
+                    <java>
+                        <googleJavaFormat>
+                            <version>${google-java-format.version}</version>
+                            <style>GOOGLE</style>
+                        </googleJavaFormat>
+                        <removeUnusedImports/>
+                        <trimTrailingWhitespace/>
+                        <endWithNewline/>
+                    </java>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>spotless-check</id>
+                        <phase>test-compile</phase>
+                        <goals>
+                            <goal>check</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
@@ -150,6 +214,65 @@
                     </excludes>
                 </configuration>
             </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <configuration>
+                    <!-- Disable the Testcontainers Ryuk resource reaper. CI runners are
+                         ephemeral (the whole VM is discarded after the job) so no
+                         containers leak, and Ryuk fails to start on Docker Desktop with
+                         non-standard socket paths. Set via env var (Testcontainers reads
+                         TESTCONTAINERS_RYUK_DISABLED from the environment).
+
+                         CI (ubuntu-latest, standard /var/run/docker.sock) needs NO Docker
+                         API version override — Testcontainers 1.20.4 / docker-java 3.4
+                         negotiate correctly against the runner's Docker daemon. The local
+                         Docker Desktop 29.x API-version quirk is handled by the
+                         "local-docker-desktop" profile below, which activates ONLY when
+                         the Docker Desktop raw socket exists (never on CI).
+
+                         NOTE on argLine: if JaCoCo is ever added, any <argLine> here or in
+                         the profile must use "${argLine} ..." so the JaCoCo -javaagent
+                         injected by prepare-agent is not silently dropped. -->
+                    <environmentVariables>
+                        <TESTCONTAINERS_RYUK_DISABLED>true</TESTCONTAINERS_RYUK_DISABLED>
+                    </environmentVariables>
+                </configuration>
+            </plugin>
         </plugins>
     </build>
+
+    <profiles>
+        <!-- Local-only workaround for Docker Desktop 29.x on macOS. docker-java 3.x
+             defaults to Docker Remote API v1.32, which Docker Desktop 29.x rejects
+             (min API 1.40). The fix is the JVM system property -Dapi.version, but it
+             must reach the Surefire-FORKED test JVM (MAVEN_OPTS / ~/.testcontainers.
+             properties do NOT propagate api.version to docker-java's forked client).
+             So it goes in <argLine> — but ONLY in this profile, which auto-activates
+             when the Docker Desktop raw socket is present. On CI (ubuntu-latest) that
+             file does not exist, the profile stays off, and <argLine> stays clean.
+
+             Developers on this setup also need ~/.testcontainers.properties:
+               docker.host=unix:///Users/<you>/Library/Containers/com.docker.docker/Data/docker.raw.sock -->
+        <profile>
+            <id>local-docker-desktop</id>
+            <activation>
+                <file>
+                    <exists>${user.home}/Library/Containers/com.docker.docker/Data/docker.raw.sock</exists>
+                </file>
+            </activation>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-surefire-plugin</artifactId>
+                        <configuration>
+                            <!-- If JaCoCo is added later, change to "${argLine} -Dapi.version=1.47". -->
+                            <argLine>-Dapi.version=1.47</argLine>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 </project>

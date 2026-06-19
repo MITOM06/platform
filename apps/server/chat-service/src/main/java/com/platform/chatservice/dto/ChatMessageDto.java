@@ -9,15 +9,15 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class ChatMessageDto {
 
-    private String conversationId;
-    
-    private String content;
-    
-    private String type; // "text" | "image"
+  private String conversationId;
 
-    private Boolean typing;
+  private String content;
 
-    private String messageId;
+  private String type; // "text" | "image"
 
-    private String replyToId;
+  private Boolean typing;
+
+  private String messageId;
+
+  private String replyToId;
 }

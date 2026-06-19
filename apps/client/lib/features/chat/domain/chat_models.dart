@@ -200,6 +200,13 @@ class ReplyPreview {
 const kAiBotUserId = 'ai-bot-000000000000000000000001';
 const kAiErrorSentinel = '__AI_ERROR__';
 const kAiQuotaExceededSentinel = '__AI_QUOTA__';
+const kAiStreamInterruptedSentinel = '__AI_INTERRUPTED__';
+const kAiUnavailableSentinel = '__AI_UNAVAILABLE__';
+
+// Stable error codes emitted by ai-service (additive — keep in sync with AiStreamErrorCode).
+const kAiErrCodeQuotaExceeded = 'AI_QUOTA_EXCEEDED';
+const kAiErrCodeStreamInterrupted = 'AI_STREAM_INTERRUPTED';
+const kAiErrCodeUnavailable = 'AI_UNAVAILABLE';
 
 @immutable
 class ToolCallEntry {
@@ -314,6 +321,8 @@ class MessageModel {
   bool get isAiBot => senderId == kAiBotUserId;
   bool get isAiError => isAiMessage && content == kAiErrorSentinel;
   bool get isAiQuotaExceeded => isAiMessage && content == kAiQuotaExceededSentinel;
+  bool get isAiStreamInterrupted => isAiMessage && content == kAiStreamInterruptedSentinel;
+  bool get isAiUnavailable => isAiMessage && content == kAiUnavailableSentinel;
   bool get isImage => type == 'image';
   bool get isVideo => type == 'video';
   bool get isMedia => isImage || isVideo;

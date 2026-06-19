@@ -884,6 +884,12 @@ class AppLocalizationsJa extends AppLocalizations {
   String get aiError => 'AIは一時的に利用できません。もう一度お試しください。';
 
   @override
+  String get aiErrStreamInterrupted => 'AIストリームが中断されました。もう一度お試しください。';
+
+  @override
+  String get aiErrUnavailable => 'AIは一時的に利用できません。';
+
+  @override
   String get aiErrorRetry => '再試行';
 
   @override
@@ -1319,4 +1325,121 @@ class AppLocalizationsJa extends AppLocalizations {
   @override
   String get legalTermsContent =>
       '当社のプラットフォームを使用することで、虐待、嫌がらせ、または違法行為に関与しないことに同意したものとみなされます。当社は、これらの規約に違反するアカウントを停止または終了する権利を留保します。';
+
+  @override
+  String get authMsgLoginSuccess => 'ログインに成功しました。';
+
+  @override
+  String get authMsgLogoutSuccess => 'ログアウトしました。';
+
+  @override
+  String get authMsgOtpSent => 'OTPがメールに送信されました。';
+
+  @override
+  String get authMsgOtpValid => 'OTPの認証に成功しました。';
+
+  @override
+  String get authMsgOtpResent => '新しいOTPが送信されました。';
+
+  @override
+  String get authMsgPasswordUpdated => 'パスワードが更新されました。再度ログインしてください。';
+
+  @override
+  String get authMsgRegisterSuccess => '登録が完了しました。OTPがメールに送信されました。';
+
+  @override
+  String get authMsgAccountUnverifiedOtpSent =>
+      'アカウントはまだ確認されていません。新しいOTPがメールに送信されました。';
+
+  @override
+  String get authErrOtpInvalid => 'OTPコードが無効です。';
+
+  @override
+  String get authErrOtpExpired => 'OTPの有効期限が切れました。';
+
+  @override
+  String get authErrOtpAttemptsExceeded => '試行回数が超過しました。新しいOTPを申請してください。';
+
+  @override
+  String authErrOtpWrongWithRemaining(int remaining) {
+    return 'OTPが正しくありません。残り$remaining回の試行があります。';
+  }
+
+  @override
+  String authErrOtpResendCooldown(int ttl) {
+    return '新しいOTPを申請する前に$ttl秒お待ちください。';
+  }
+
+  @override
+  String get authErrEmailDomainInvalid => 'メールのドメインが存在しないか、MXレコードがありません。';
+
+  @override
+  String get authErrEmailNotFound => 'このメールアドレスはシステムに存在しません。';
+
+  @override
+  String get authErrEmailInUse => 'このメールアドレスはすでに使用されています。';
+
+  @override
+  String get authErrValEmailInvalid => 'メールの形式が無効です。';
+
+  @override
+  String get authErrValEmailRequired => 'メールは必須です。';
+
+  @override
+  String get authErrValDisplaynameRequired => '表示名は必須です。';
+
+  @override
+  String get authErrValDisplaynameTooShort => '表示名が短すぎます（最低2文字）。';
+
+  @override
+  String get authErrValPasswordTooShort => 'パスワードは8文字以上である必要があります。';
+
+  @override
+  String authErrAccountLocked(int minutes) {
+    return 'ログイン失敗が多すぎるため、アカウントが$minutes分間ロックされました。';
+  }
+
+  @override
+  String authErrLoginFailedWithRemaining(int remaining) {
+    return 'メールアドレスまたはパスワードが正しくありません。残り$remaining回の試行があります。';
+  }
+
+  @override
+  String authErrLoginFailedLocked(int minutes) {
+    return 'ログイン試行回数が超過しました。アカウントが$minutes分間ロックされました。';
+  }
+
+  @override
+  String get authErrTokenInvalid => 'トークンが無効です。';
+
+  @override
+  String get authErrSessionNotFound => 'セッションが見つからないか、有効期限が切れました。';
+
+  @override
+  String get authErrSessionInvalid => 'セッションが存在しないか、有効期限が切れました。';
+
+  @override
+  String get authErrSessionRevoked => 'セッションが取り消されました。';
+
+  @override
+  String get authErrRefreshTokenReuse =>
+      'セキュリティ警告：リフレッシュトークンの再利用が検出されました。すべてのセッションが取り消されました。';
+
+  @override
+  String get authErrRefreshTokenInvalid => 'リフレッシュトークンが無効です。';
+
+  @override
+  String get authErrRefreshTokenRotated => 'リフレッシュトークンはすでにローテーションされています。';
+
+  @override
+  String get authErrTokenSessionMismatch => 'トークンがセッションと一致しません。';
+
+  @override
+  String get authErrSocialEmailUnavailable => 'ソーシャルアカウントからメールを取得できません。';
+
+  @override
+  String get authErrLoginCodeInvalid => 'ログインコードが無効または有効期限が切れています。';
+
+  @override
+  String get authErrUserNotFound => 'ユーザーが見つかりません。';
 }

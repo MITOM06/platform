@@ -8,5 +8,4 @@ public record AiRequestPayload(
     String userId,
     String displayName,
     String content,
-    List<Map<String, String>> history
-) {}
+    List<Map<String, String>> history) {}

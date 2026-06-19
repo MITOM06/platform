@@ -901,6 +901,13 @@ class AppLocalizationsEs extends AppLocalizations {
       'La IA no está disponible temporalmente. Por favor, inténtelo de nuevo.';
 
   @override
+  String get aiErrStreamInterrupted =>
+      'El flujo de IA fue interrumpido. Por favor, inténtelo de nuevo.';
+
+  @override
+  String get aiErrUnavailable => 'La IA no está disponible temporalmente.';
+
+  @override
   String get aiErrorRetry => 'Reintentar';
 
   @override
@@ -1345,4 +1352,132 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get legalTermsContent =>
       'Al usar nuestra plataforma, acepta no participar en actividades abusivas, de acoso o ilegales. Nos reservamos el derecho de suspender o cancelar cuentas que violen estos términos.';
+
+  @override
+  String get authMsgLoginSuccess => 'Inicio de sesión exitoso.';
+
+  @override
+  String get authMsgLogoutSuccess => 'Cierre de sesión exitoso.';
+
+  @override
+  String get authMsgOtpSent => 'Se ha enviado un OTP a su correo electrónico.';
+
+  @override
+  String get authMsgOtpValid => 'OTP verificado correctamente.';
+
+  @override
+  String get authMsgOtpResent => 'Se ha enviado un nuevo OTP.';
+
+  @override
+  String get authMsgPasswordUpdated =>
+      'Contraseña actualizada correctamente. Por favor, inicie sesión de nuevo.';
+
+  @override
+  String get authMsgRegisterSuccess =>
+      'Registro exitoso. Se ha enviado un OTP a su correo electrónico.';
+
+  @override
+  String get authMsgAccountUnverifiedOtpSent =>
+      'La cuenta aún no está verificada. Se ha enviado un nuevo OTP a su correo electrónico.';
+
+  @override
+  String get authErrOtpInvalid => 'Código OTP inválido.';
+
+  @override
+  String get authErrOtpExpired => 'El OTP ha expirado.';
+
+  @override
+  String get authErrOtpAttemptsExceeded =>
+      'Demasiados intentos incorrectos. Por favor, solicite un nuevo OTP.';
+
+  @override
+  String authErrOtpWrongWithRemaining(int remaining) {
+    return 'OTP incorrecto. Quedan $remaining intento(s).';
+  }
+
+  @override
+  String authErrOtpResendCooldown(int ttl) {
+    return 'Por favor, espere $ttl segundos antes de solicitar un nuevo OTP.';
+  }
+
+  @override
+  String get authErrEmailDomainInvalid =>
+      'El dominio del correo no existe o no tiene registros MX.';
+
+  @override
+  String get authErrEmailNotFound => 'El correo no existe en el sistema.';
+
+  @override
+  String get authErrEmailInUse => 'Este correo ya está en uso.';
+
+  @override
+  String get authErrValEmailInvalid => 'Formato de correo inválido.';
+
+  @override
+  String get authErrValEmailRequired => 'El correo es obligatorio.';
+
+  @override
+  String get authErrValDisplaynameRequired =>
+      'El nombre de usuario es obligatorio.';
+
+  @override
+  String get authErrValDisplaynameTooShort =>
+      'El nombre de usuario es demasiado corto (mínimo 2 caracteres).';
+
+  @override
+  String get authErrValPasswordTooShort =>
+      'La contraseña debe tener al menos 8 caracteres.';
+
+  @override
+  String authErrAccountLocked(int minutes) {
+    return 'Cuenta bloqueada temporalmente durante $minutes minuto(s) por demasiados intentos fallidos.';
+  }
+
+  @override
+  String authErrLoginFailedWithRemaining(int remaining) {
+    return 'Correo o contraseña incorrectos. Quedan $remaining intento(s).';
+  }
+
+  @override
+  String authErrLoginFailedLocked(int minutes) {
+    return 'Demasiados intentos fallidos. Cuenta bloqueada durante $minutes minuto(s).';
+  }
+
+  @override
+  String get authErrTokenInvalid => 'Token inválido.';
+
+  @override
+  String get authErrSessionNotFound => 'Sesión no encontrada o expirada.';
+
+  @override
+  String get authErrSessionInvalid => 'La sesión no existe o ha expirado.';
+
+  @override
+  String get authErrSessionRevoked => 'La sesión ha sido revocada.';
+
+  @override
+  String get authErrRefreshTokenReuse =>
+      'Alerta de seguridad: se detectó reutilización del token de actualización. Todas las sesiones fueron revocadas.';
+
+  @override
+  String get authErrRefreshTokenInvalid => 'Token de actualización inválido.';
+
+  @override
+  String get authErrRefreshTokenRotated =>
+      'El token de actualización ya ha sido rotado.';
+
+  @override
+  String get authErrTokenSessionMismatch =>
+      'El token no coincide con la sesión.';
+
+  @override
+  String get authErrSocialEmailUnavailable =>
+      'No se puede obtener el correo de la cuenta social.';
+
+  @override
+  String get authErrLoginCodeInvalid =>
+      'El código de inicio de sesión es inválido o ha expirado.';
+
+  @override
+  String get authErrUserNotFound => 'Usuario no encontrado.';
 }

@@ -3,7 +3,10 @@ import { HydratedDocument } from 'mongoose';
 
 export type KbDocumentDocument = HydratedDocument<KbDocument>;
 
-@Schema({ collection: 'kb_documents_ai_cache', timestamps: false })
+// Shared collection owned by chat-service (it creates the record on upload). ai-service only
+// updates processing status/chunkCount on the same document — no separate cache copy. This keeps
+// a single source of truth for KB document state across both services.
+@Schema({ collection: 'kb_documents', timestamps: false })
 export class KbDocument {
   @Prop({ required: true, unique: true, index: true })
   documentId: string;

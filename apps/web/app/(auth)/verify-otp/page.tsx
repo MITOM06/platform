@@ -8,6 +8,7 @@ import Link from 'next/link'
 import { useTranslations } from 'next-intl'
 import { authService } from '@/lib/api/auth'
 import { maybeRequestNotificationPermission } from '@/lib/notifications'
+import { parseAuthError, authCodeToI18nKey } from '@/lib/auth/auth-error'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -17,6 +18,7 @@ const RESEND_COOLDOWN = 60
 
 function VerifyOtpForm() {
   const t = useTranslations('auth.verifyOtp')
+  const tAuth = useTranslations('auth')
   const router = useRouter()
   const searchParams = useSearchParams()
   const email = searchParams.get('email') ?? ''
@@ -72,10 +74,8 @@ function VerifyOtpForm() {
       void maybeRequestNotificationPermission()
       router.push('/login')
     } catch (err: unknown) {
-      const msg =
-        (err as { response?: { data?: { message?: string } } })?.response?.data?.message ??
-        t('error')
-      toast.error(msg)
+      const { code, params } = parseAuthError(err)
+      toast.error(tAuth(authCodeToI18nKey(code), params))
     } finally {
       setLoading(false)
     }

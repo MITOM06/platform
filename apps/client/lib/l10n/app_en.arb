@@ -421,6 +421,8 @@
   "startChatWithAI": "Chat with PON AI",
   "aiThinking": "AI is thinking...",
   "aiError": "AI is temporarily unavailable. Please try again.",
+  "aiErrStreamInterrupted": "AI stream was interrupted. Please try again.",
+  "aiErrUnavailable": "AI is temporarily unavailable.",
   "aiErrorRetry": "Retry",
   "aiMessageDeleted": "Message deleted",
   "aiMemoryTitle": "AI Memory",
@@ -616,5 +618,67 @@
   "legalUserRightsTitle": "4. Your Rights",
   "legalUserRightsContent": "You have the right to access, correct, or delete your personal data. You can delete your account at any time through the application settings.",
   "legalTermsTitle": "5. Terms of Service",
-  "legalTermsContent": "By using our platform, you agree not to engage in any abusive, harassing, or illegal activities. We reserve the right to suspend or terminate accounts that violate these terms."
+  "legalTermsContent": "By using our platform, you agree not to engage in any abusive, harassing, or illegal activities. We reserve the right to suspend or terminate accounts that violate these terms.",
+
+  "authMsgLoginSuccess": "Login successful.",
+  "authMsgLogoutSuccess": "Logout successful.",
+  "authMsgOtpSent": "OTP has been sent to your email.",
+  "authMsgOtpValid": "OTP verified successfully.",
+  "authMsgOtpResent": "A new OTP has been sent.",
+  "authMsgPasswordUpdated": "Password updated successfully. Please log in again.",
+  "authMsgRegisterSuccess": "Registration successful. OTP has been sent to your email.",
+  "authMsgAccountUnverifiedOtpSent": "Account not yet verified. A new OTP has been sent to your email.",
+
+  "authErrOtpInvalid": "Invalid OTP code.",
+  "authErrOtpExpired": "OTP has expired.",
+  "authErrOtpAttemptsExceeded": "Too many incorrect attempts. Please request a new OTP.",
+  "authErrOtpWrongWithRemaining": "Incorrect OTP. {remaining} attempt(s) remaining.",
+  "@authErrOtpWrongWithRemaining": {
+    "placeholders": {
+      "remaining": { "type": "int" }
+    }
+  },
+  "authErrOtpResendCooldown": "Please wait {ttl} seconds before requesting a new OTP.",
+  "@authErrOtpResendCooldown": {
+    "placeholders": {
+      "ttl": { "type": "int" }
+    }
+  },
+  "authErrEmailDomainInvalid": "Email domain does not exist or has no MX records.",
+  "authErrEmailNotFound": "Email does not exist in the system.",
+  "authErrEmailInUse": "This email is already in use.",
+  "authErrValEmailInvalid": "Invalid email format.",
+  "authErrValEmailRequired": "Email is required.",
+  "authErrValDisplaynameRequired": "Display name is required.",
+  "authErrValDisplaynameTooShort": "Display name is too short (minimum 2 characters).",
+  "authErrValPasswordTooShort": "Password must be at least 8 characters.",
+  "authErrAccountLocked": "Account temporarily locked for {minutes} minute(s) due to too many failed attempts.",
+  "@authErrAccountLocked": {
+    "placeholders": {
+      "minutes": { "type": "int" }
+    }
+  },
+  "authErrLoginFailedWithRemaining": "Incorrect email or password. {remaining} attempt(s) remaining.",
+  "@authErrLoginFailedWithRemaining": {
+    "placeholders": {
+      "remaining": { "type": "int" }
+    }
+  },
+  "authErrLoginFailedLocked": "Too many failed attempts. Account locked for {minutes} minute(s).",
+  "@authErrLoginFailedLocked": {
+    "placeholders": {
+      "minutes": { "type": "int" }
+    }
+  },
+  "authErrTokenInvalid": "Invalid token.",
+  "authErrSessionNotFound": "Session not found or has expired.",
+  "authErrSessionInvalid": "Session does not exist or has expired.",
+  "authErrSessionRevoked": "Session has been revoked.",
+  "authErrRefreshTokenReuse": "Security alert: refresh token reuse detected. All sessions revoked.",
+  "authErrRefreshTokenInvalid": "Invalid refresh token.",
+  "authErrRefreshTokenRotated": "Refresh token has already been rotated.",
+  "authErrTokenSessionMismatch": "Token does not match the session.",
+  "authErrSocialEmailUnavailable": "Unable to retrieve email from social account.",
+  "authErrLoginCodeInvalid": "Login code is invalid or has expired.",
+  "authErrUserNotFound": "User not found."
 }

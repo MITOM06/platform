@@ -11,15 +11,14 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @AllArgsConstructor
 public class TokenUsage {
 
-    @Id
-    private String id;
+  @Id private String id;
 
-    private String userId;
+  private String userId;
 
-    /** Date in YYYY-MM-DD format. */
-    private String date;
+  /** Date in YYYY-MM-DD format. */
+  private String date;
 
-    private int inputTokens;
-    private int outputTokens;
-    private int requestCount;
+  private int inputTokens;
+  private int outputTokens;
+  private int requestCount;
 }

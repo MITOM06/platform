@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -7,6 +8,7 @@ import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/pon_widgets.dart';
 import '../domain/auth_provider.dart';
 import '../domain/auth_state.dart';
+import '../utils/auth_error.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
@@ -47,10 +49,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   }
 
   String _friendlyError(BuildContext context, Object error) {
-    final msg = error.toString();
-    if (msg.contains('401') || msg.contains('Invalid')) {
-      return context.l10n.errInvalidCredentials;
+    if (error is DioException) {
+      return authErrorToString(context, error);
     }
+    final msg = error.toString();
     if (msg.contains('network') || msg.contains('connect')) {
       return context.l10n.errNetwork;
     }

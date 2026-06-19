@@ -10,16 +10,20 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
+import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { FriendsService } from './friends.service';
 import { FriendRequestDto } from './dto/friend-request.dto';
 import { AcceptFriendDto } from './dto/accept-friend.dto';
 
+@ApiTags('friends')
+@ApiBearerAuth()
 @UseGuards(AuthGuard('jwt'))
 @Controller('api/friends')
 export class FriendsController {
   constructor(private readonly friendsService: FriendsService) {}
 
   @Post('request')
+  @ApiOperation({ summary: 'Send a friend request' })
   request(@Req() req: any, @Body() body: FriendRequestDto) {
     return this.friendsService.sendRequest(req.user.sub, body.recipientId);
   }
