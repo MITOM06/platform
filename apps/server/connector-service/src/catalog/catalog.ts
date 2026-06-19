@@ -111,6 +111,38 @@ export const CATALOG: CatalogEntry[] = [
   },
 ];
 
+/**
+ * Bare MCP tool names considered "sensitive" — they send mail or perform
+ * external writes/creates. These are filtered out of a user's tool set (and
+ * blocked at call time) unless the user holds RUN_SENSITIVE_SKILL. Matched on
+ * the bare tool name (the `<tool>` part of `mcp__<provider>__<tool>`), case-
+ * insensitively, so naming variants across MCP servers are covered.
+ */
+export const SENSITIVE_TOOLS: ReadonlySet<string> = new Set([
+  // Email
+  'send_email',
+  'send_message',
+  // Notion page/database writes
+  'create_page',
+  'update_page',
+  'create_database',
+  'update_database',
+  'create-pages',
+  'update-page',
+  // Generic external writes
+  'create_event',
+  'update_event',
+  'delete_event',
+  'create_file',
+  'update_file',
+  'delete_file',
+]);
+
+/** True if a bare MCP tool name is tagged sensitive (case-insensitive). */
+export function isSensitiveTool(toolName: string): boolean {
+  return SENSITIVE_TOOLS.has(toolName.toLowerCase());
+}
+
 export function findCatalogEntry(id: string): CatalogEntry | undefined {
   return CATALOG.find((e) => e.id === id);
 }

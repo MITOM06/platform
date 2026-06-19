@@ -1,8 +1,11 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
+import { Capability } from '@platform/database';
 import { McpAuth, McpClientService } from '../mcp/mcp-client.service';
 import { TokenVaultService } from '../vault/token-vault.service';
+import { isSensitiveTool } from '../catalog/catalog';
+import { PermResolverService } from './perm-resolver.service';
 import {
   UserConnection,
   UserConnectionDocument,
@@ -32,7 +35,14 @@ export class InternalService {
     private readonly customModel: Model<CustomMcpServerDocument>,
     private readonly vault: TokenVaultService,
     private readonly mcp: McpClientService,
+    private readonly perms: PermResolverService,
   ) {}
+
+  /** Bare tool name from a namespaced `mcp__<provider>__<tool>` def. */
+  private bareToolName(namespaced: string): string {
+    const parsed = this.parseName(namespaced);
+    return parsed ? parsed.tool : namespaced;
+  }
 
   /**
    * Aggregate dynamic tools across the user's active connections and custom
@@ -42,8 +52,15 @@ export class InternalService {
   async getTools(userId: string): Promise<{ tools: InternalToolDef[] }> {
     const tools: InternalToolDef[] = [];
 
+    // Resolve the member's capability set ONCE; used to filter sensitive tools.
+    const userPerms = await this.perms.resolvePerms(userId);
+    const mayRunSensitive = userPerms.has(Capability.RUN_SENSITIVE_SKILL);
+
     const conns = await this.connModel
-      .find({ userId, status: 'active' })
+      .find({
+        $or: [{ userId }, { scope: 'workspace' }],
+        status: 'active',
+      })
       .lean();
     for (const conn of conns) {
       try {
@@ -64,7 +81,14 @@ export class InternalService {
     }
 
     await this.appendCustomTools(userId, tools);
-    return { tools };
+
+    // Permission-aware exposure: drop sensitive-tagged tools unless the member
+    // holds RUN_SENSITIVE_SKILL. Done after aggregation so it covers built-in
+    // AND custom MCP tools uniformly.
+    const filtered = mayRunSensitive
+      ? tools
+      : tools.filter((t) => !isSensitiveTool(this.bareToolName(t.name)));
+    return { tools: filtered };
   }
 
   private async appendCustomTools(
@@ -115,6 +139,15 @@ export class InternalService {
       return { result: `Tool error: malformed tool name ${name}` };
     }
     const { provider, tool } = parsed;
+
+    // Defense in depth: never rely on the list filter alone. Re-check the
+    // sensitive gate at execution time.
+    if (isSensitiveTool(tool)) {
+      const userPerms = await this.perms.resolvePerms(userId);
+      if (!userPerms.has(Capability.RUN_SENSITIVE_SKILL)) {
+        return { result: `Tool error: not permitted (sensitive skill)` };
+      }
+    }
 
     try {
       if (provider.startsWith('custom:')) {

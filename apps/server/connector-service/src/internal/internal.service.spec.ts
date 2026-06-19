@@ -31,6 +31,8 @@ describe('InternalService', () => {
   let connModel: any;
   let vault: any;
   let mcp: any;
+  let perms: any;
+  let permSet: Set<string>;
 
   const connDoc = {
     _id: 'c1',
@@ -59,15 +61,27 @@ describe('InternalService', () => {
     };
     mcp = {
       listTools: jest.fn().mockResolvedValue([
+        // create_page is tagged sensitive (page write); search is not.
         { name: 'create_page', description: 'Create', inputSchema: { type: 'object', properties: {} } },
         { name: 'search', description: 'Find', inputSchema: { type: 'object', properties: {} } },
       ]),
       callTool: jest.fn().mockResolvedValue('page created'),
     };
-    svc = new InternalService(connModel, {} as any, vault, mcp);
+    permSet = new Set<string>();
+    perms = { resolvePerms: jest.fn().mockImplementation(() => Promise.resolve(permSet)) };
+    svc = new InternalService(connModel, {} as any, vault, mcp, perms);
   });
 
-  it('namespaces each MCP tool as mcp__<provider>__<tool>', async () => {
+  it('namespaces non-sensitive tools and OMITS sensitive ones without RUN_SENSITIVE_SKILL', async () => {
+    permSet = new Set<string>(); // no caps
+    perms.resolvePerms.mockResolvedValue(permSet);
+    const { tools } = await svc.getTools('u1');
+    expect(tools.map((t) => t.name)).toEqual(['mcp__notion__search']);
+  });
+
+  it('includes sensitive tools when the user HAS RUN_SENSITIVE_SKILL', async () => {
+    permSet = new Set<string>(['RUN_SENSITIVE_SKILL']);
+    perms.resolvePerms.mockResolvedValue(permSet);
     const { tools } = await svc.getTools('u1');
     expect(tools.map((t) => t.name)).toEqual([
       'mcp__notion__create_page',
@@ -76,7 +90,23 @@ describe('InternalService', () => {
     expect(tools[0].input_schema).toEqual({ type: 'object', properties: {} });
   });
 
-  it('callTool parses the name and dispatches to the right connection', async () => {
+  it('callTool dispatches a non-sensitive tool regardless of perms', async () => {
+    mcp.callTool.mockResolvedValue('results');
+    const out = await svc.callTool('u1', 'mcp__notion__search', { q: 'X' });
+    expect(out.result).toBe('results');
+  });
+
+  it('callTool BLOCKS a sensitive tool without RUN_SENSITIVE_SKILL (defense in depth)', async () => {
+    permSet = new Set<string>();
+    perms.resolvePerms.mockResolvedValue(permSet);
+    const out = await svc.callTool('u1', 'mcp__notion__create_page', { title: 'X' });
+    expect(out.result).toMatch(/not permitted/i);
+    expect(mcp.callTool).not.toHaveBeenCalled();
+  });
+
+  it('callTool runs a sensitive tool WITH RUN_SENSITIVE_SKILL', async () => {
+    permSet = new Set<string>(['RUN_SENSITIVE_SKILL']);
+    perms.resolvePerms.mockResolvedValue(permSet);
     const out = await svc.callTool('u1', 'mcp__notion__create_page', { title: 'X' });
     expect(out.result).toBe('page created');
     expect(vault.decrypt).toHaveBeenCalledWith(connDoc.encryptedTokens);
