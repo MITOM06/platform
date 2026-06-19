@@ -1,5 +1,7 @@
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
+import { VaultModule } from '../vault/vault.module';
+import { McpModule } from '../mcp/mcp.module';
 import {
   UserConnection,
   UserConnectionSchema,
@@ -9,6 +11,8 @@ import {
   CustomMcpServerSchema,
 } from './schemas/custom-mcp-server.schema';
 import { UserSkill, UserSkillSchema } from './schemas/user-skill.schema';
+import { ConnectionsService } from './connections.service';
+import { ConnectionsController } from './connections.controller';
 
 const mongoFeature = MongooseModule.forFeature([
   { name: UserConnection.name, schema: UserConnectionSchema },
@@ -17,7 +21,9 @@ const mongoFeature = MongooseModule.forFeature([
 ]);
 
 @Module({
-  imports: [mongoFeature],
-  exports: [mongoFeature],
+  imports: [mongoFeature, VaultModule, McpModule],
+  controllers: [ConnectionsController],
+  providers: [ConnectionsService],
+  exports: [mongoFeature, ConnectionsService],
 })
 export class ConnectionsModule {}
