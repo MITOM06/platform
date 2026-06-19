@@ -21,6 +21,8 @@ import {
   BrainCircuit,
   Hash,
   Languages,
+  Plug,
+  Sparkles,
 } from 'lucide-react'
 import Link from 'next/link'
 import { useAuthStore } from '@/lib/store/auth.store'
@@ -269,6 +271,22 @@ export default function SettingsPage() {
                 title={t('aiMemory')}
                 subtitle={t('aiMemorySubtitle')}
                 onClick={() => router.push('/ai-memory')}
+              />
+
+              <SettingsCard
+                icon={<Plug className="size-5 text-pon-cyan" />}
+                iconBg="rgba(106,201,255,0.12)"
+                title={t('integrations')}
+                subtitle={t('integrationsSubtitle')}
+                onClick={() => router.push('/integrations')}
+              />
+
+              <SettingsCard
+                icon={<Sparkles className="size-5 text-[#B47FFF]" />}
+                iconBg="rgba(180,127,255,0.12)"
+                title={t('skills')}
+                subtitle={t('skillsSubtitle')}
+                onClick={() => router.push('/skills')}
               />
 
               <SettingsCard
