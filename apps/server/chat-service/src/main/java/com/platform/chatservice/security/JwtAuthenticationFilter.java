@@ -25,7 +25,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     if (StringUtils.hasText(token) && jwtUtil.isValid(token)) {
       String userId = jwtUtil.extractUserId(token);
-      SecurityContextHolder.getContext().setAuthentication(new UserPrincipal(userId));
+      UserPrincipal principal =
+          new UserPrincipal(
+              userId,
+              jwtUtil.extractRole(token),
+              jwtUtil.extractPerms(token),
+              jwtUtil.extractDepts(token));
+      SecurityContextHolder.getContext().setAuthentication(principal);
     }
 
     filterChain.doFilter(request, response);

@@ -532,7 +532,9 @@
     "aiTraceThinkingBlocks": "Blocs de réflexion ({count})",
     "aiTraceToolCalls": "Appels d'outils ({count})",
     "aiTraceRagSources": "Sources RAG ({count})",
-    "aiTraceScore": "Score : {score}"
+    "aiTraceScore": "Score : {score}",
+    "newConvDepartment": "Département (facultatif)",
+    "newConvNoDepartment": "Aucun département"
   },
   "aiPersona": {
     "title": "AI Persona",

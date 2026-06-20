@@ -5,6 +5,9 @@ import '../../../core/l10n/l10n_ext.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/pon_widgets.dart';
 import '../../friends/domain/friends_provider.dart';
+import '../../admin/data/models/admin_models.dart';
+import '../../admin/state/admin_providers.dart';
+import '../../admin/state/capabilities_provider.dart';
 import '../data/chat_repository.dart';
 import '../domain/chat_provider.dart';
 import 'widgets/conversation_avatar.dart';
@@ -22,6 +25,7 @@ class _NewGroupScreenState extends ConsumerState<NewGroupScreen> {
   final _nameCtrl = TextEditingController();
   final Set<String> _selected = {};
   bool _busy = false;
+  String? _departmentId; // P6: optional owning department (admins only)
 
   @override
   void dispose() {
@@ -51,7 +55,7 @@ class _NewGroupScreenState extends ConsumerState<NewGroupScreen> {
     try {
       final conv = await ref
           .read(chatRepositoryProvider)
-          .createGroup(name, _selected.toList());
+          .createGroup(name, _selected.toList(), departmentId: _departmentId);
       ref.read(conversationsNotifierProvider.notifier).refresh();
       if (mounted) context.go('/chat/${conv.id}');
     } catch (e) {
@@ -66,6 +70,10 @@ class _NewGroupScreenState extends ConsumerState<NewGroupScreen> {
   @override
   Widget build(BuildContext context) {
     final friendsAsync = ref.watch(friendsListProvider);
+    final canDepts = ref.watch(hasCapabilityProvider(Cap.manageDepartments));
+    final List<Department> departments = canDepts
+        ? (ref.watch(departmentsProvider).valueOrNull ?? const <Department>[])
+        : const <Department>[];
 
     return Scaffold(
       appBar: AppBar(
@@ -87,6 +95,31 @@ class _NewGroupScreenState extends ConsumerState<NewGroupScreen> {
               prefixIcon: Icons.groups_rounded,
             ),
           ),
+          if (departments.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+              child: DropdownButtonFormField<String?>(
+                initialValue: _departmentId,
+                isExpanded: true,
+                decoration: InputDecoration(
+                  labelText: context.l10n.newConvDepartment,
+                  prefixIcon: const Icon(Icons.apartment_outlined),
+                ),
+                items: [
+                  DropdownMenuItem(
+                    value: null,
+                    child: Text(context.l10n.newConvNoDepartment),
+                  ),
+                  ...departments.map(
+                    (d) => DropdownMenuItem(
+                      value: d.id,
+                      child: Text(d.name, overflow: TextOverflow.ellipsis),
+                    ),
+                  ),
+                ],
+                onChanged: (v) => setState(() => _departmentId = v),
+              ),
+            ),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
             child: Align(

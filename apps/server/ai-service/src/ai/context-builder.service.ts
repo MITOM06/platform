@@ -46,6 +46,7 @@ export class ContextBuilderService {
     conversationId: string,
     userId: string,
     queryVector: number[] | null,
+    departmentId?: string,
   ): Promise<VolatileContext> {
     const parts: string[] = [];
     const ragSources: RagSource[] = [];
@@ -71,7 +72,10 @@ export class ContextBuilderService {
 
     // --- RAG / knowledge-base context with confidence gating ---
     try {
-      const docIds = await this.kbProcessor.getReadyDocumentIds(conversationId);
+      const docIds = await this.kbProcessor.getReadyDocumentIds(
+        conversationId,
+        departmentId,
+      );
       if (docIds.length === 0) {
         parts.push(
           `## Knowledge Base Context:\nNo documents have been uploaded to this conversation. Do not cite sources.`,

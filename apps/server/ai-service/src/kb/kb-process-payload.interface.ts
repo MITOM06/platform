@@ -16,4 +16,6 @@ export interface KbProcessPayload {
   fileUrl: string;
   mimeType: string;
   fileName: string;
+  /** Owning department id (P6 dept-scoped RAG); absent for personal chats. */
+  departmentId?: string;
 }

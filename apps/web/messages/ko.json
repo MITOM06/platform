@@ -532,7 +532,9 @@
     "aiTraceThinkingBlocks": "사고 블록 ({count})",
     "aiTraceToolCalls": "도구 호출 ({count})",
     "aiTraceRagSources": "RAG 소스 ({count})",
-    "aiTraceScore": "점수: {score}"
+    "aiTraceScore": "점수: {score}",
+    "newConvDepartment": "부서 (선택)",
+    "newConvNoDepartment": "부서 없음"
   },
   "aiPersona": {
     "title": "AI Persona",

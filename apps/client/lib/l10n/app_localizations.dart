@@ -3390,6 +3390,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Next'**
   String get adminAuditNext;
+
+  /// No description provided for @newConvDepartment.
+  ///
+  /// In en, this message translates to:
+  /// **'Department (optional)'**
+  String get newConvDepartment;
+
+  /// No description provided for @newConvNoDepartment.
+  ///
+  /// In en, this message translates to:
+  /// **'No department'**
+  String get newConvNoDepartment;
 }
 
 class _AppLocalizationsDelegate

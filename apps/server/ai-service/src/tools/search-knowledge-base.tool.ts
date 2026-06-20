@@ -45,8 +45,11 @@ export class SearchKnowledgeBaseTool {
     const query = input['query'] as string;
     const topK = (input['topK'] as number | undefined) ?? this.defaultTopK;
 
-    // Privacy: scope strictly to the current conversation's processed docs.
-    const docIds = await this.kbProcessor.getReadyDocumentIds(ctx.conversationId);
+    // Scope to the department's KB in a group chat, else the conversation's docs.
+    const docIds = await this.kbProcessor.getReadyDocumentIds(
+      ctx.conversationId,
+      ctx.departmentId,
+    );
     if (docIds.length === 0) {
       return 'No relevant context: this conversation has no processed knowledge-base documents.';
     }

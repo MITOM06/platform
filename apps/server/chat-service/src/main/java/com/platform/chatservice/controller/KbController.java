@@ -11,6 +11,7 @@ import com.platform.chatservice.repository.ConversationRepository;
 import com.platform.chatservice.repository.KbDocumentRepository;
 import java.security.Principal;
 import java.time.Instant;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -38,13 +39,14 @@ public class KbController {
   public ResponseEntity<KbDocumentResponse> uploadDocument(
       @RequestBody KbUploadRequest request, Principal principal) throws JsonProcessingException {
 
-    requireParticipant(request.getConversationId(), principal.getName());
+    Conversation conv = requireParticipant(request.getConversationId(), principal.getName());
 
     String documentId = UUID.randomUUID().toString();
     KbDocument doc =
         KbDocument.builder()
             .documentId(documentId)
             .conversationId(request.getConversationId())
+            .departmentId(conv.getDepartmentId())
             .userId(principal.getName())
             .fileName(request.getFileName())
             .mimeType(request.getMimeType())
@@ -56,14 +58,15 @@ public class KbController {
 
     kbDocumentRepository.save(doc);
 
-    Map<String, String> payload =
-        Map.of(
-            "documentId", documentId,
-            "conversationId", request.getConversationId(),
-            "userId", principal.getName(),
-            "fileUrl", request.getFileUrl(),
-            "mimeType", request.getMimeType(),
-            "fileName", request.getFileName());
+    // departmentId may be null (personal chats) — build with a null-tolerant map.
+    Map<String, String> payload = new HashMap<>();
+    payload.put("documentId", documentId);
+    payload.put("conversationId", request.getConversationId());
+    payload.put("userId", principal.getName());
+    payload.put("fileUrl", request.getFileUrl());
+    payload.put("mimeType", request.getMimeType());
+    payload.put("fileName", request.getFileName());
+    payload.put("departmentId", conv.getDepartmentId());
     redisTemplate.convertAndSend(KB_PROCESS_CHANNEL, objectMapper.writeValueAsString(payload));
 
     return ResponseEntity.status(HttpStatus.CREATED).body(toResponse(doc));
@@ -102,7 +105,7 @@ public class KbController {
     return ResponseEntity.noContent().build();
   }
 
-  private void requireParticipant(String conversationId, String userId) {
+  private Conversation requireParticipant(String conversationId, String userId) {
     Conversation conv =
         conversationRepository
             .findById(conversationId)
@@ -110,6 +113,7 @@ public class KbController {
     if (conv.getParticipants() == null || !conv.getParticipants().contains(userId)) {
       throw new ForbiddenException("Not a participant of this conversation");
     }
+    return conv;
   }
 
   private KbDocumentResponse toResponse(KbDocument doc) {

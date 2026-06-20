@@ -8,4 +8,6 @@ public record AiRequestPayload(
     String userId,
     String displayName,
     String content,
-    List<Map<String, String>> history) {}
+    List<Map<String, String>> history,
+    /** Owning department id of the conversation, or null for personal chats (P6). */
+    String departmentId) {}

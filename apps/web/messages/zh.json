@@ -532,7 +532,9 @@
     "aiTraceThinkingBlocks": "思考块 ({count})",
     "aiTraceToolCalls": "工具调用 ({count})",
     "aiTraceRagSources": "RAG 来源 ({count})",
-    "aiTraceScore": "得分：{score}"
+    "aiTraceScore": "得分：{score}",
+    "newConvDepartment": "部门（可选）",
+    "newConvNoDepartment": "无部门"
   },
   "aiPersona": {
     "title": "AI Persona",

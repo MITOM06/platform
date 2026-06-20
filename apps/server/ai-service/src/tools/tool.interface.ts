@@ -8,4 +8,6 @@ export interface ToolContext {
   conversationId: string;
   userId: string;
   displayName: string;
+  /** Owning department id (P6 group bot); scopes KB retrieval when present. */
+  departmentId?: string;
 }

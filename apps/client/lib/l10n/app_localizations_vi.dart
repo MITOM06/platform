@@ -1790,4 +1790,10 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get adminAuditNext => 'Sau';
+
+  @override
+  String get newConvDepartment => 'Phòng ban (tùy chọn)';
+
+  @override
+  String get newConvNoDepartment => 'Không có phòng ban';
 }

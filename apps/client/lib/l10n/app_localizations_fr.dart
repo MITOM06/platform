@@ -1817,4 +1817,10 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get adminAuditNext => 'Suivant';
+
+  @override
+  String get newConvDepartment => 'Département (facultatif)';
+
+  @override
+  String get newConvNoDepartment => 'Aucun département';
 }

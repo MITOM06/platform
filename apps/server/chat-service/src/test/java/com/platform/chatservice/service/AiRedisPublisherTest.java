@@ -5,6 +5,7 @@ import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 import com.platform.chatservice.config.RabbitMqConfig;
+import com.platform.chatservice.repository.ConversationRepository;
 import io.micrometer.tracing.Span;
 import io.micrometer.tracing.TraceContext;
 import io.micrometer.tracing.Tracer;
@@ -38,6 +39,7 @@ class AiRedisPublisherTest {
   @Mock private Span span;
   @Mock private Tracer.SpanInScope spanInScope;
   @Mock private TraceContext traceContext;
+  @Mock private ConversationRepository conversationRepository;
 
   private AiRedisPublisher publisher;
 
@@ -50,7 +52,7 @@ class AiRedisPublisherTest {
     when(traceContext.traceId()).thenReturn("4bf92f3577b34da6a3ce929d0e0e4736");
     when(tracer.withSpan(any(Span.class))).thenReturn(spanInScope);
 
-    publisher = new AiRedisPublisher(rabbitTemplate, tracer, propagator);
+    publisher = new AiRedisPublisher(rabbitTemplate, tracer, propagator, conversationRepository);
   }
 
   @Test

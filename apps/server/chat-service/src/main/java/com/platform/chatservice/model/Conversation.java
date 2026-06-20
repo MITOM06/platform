@@ -57,6 +57,12 @@ public class Conversation {
   /** User id who created the conversation/group. */
   private String createdBy;
 
+  /**
+   * Owning department id (enterprise group bot). Null for personal/direct chats; set when a group
+   * is created for a department so KB + the group bot can be department-scoped (P6).
+   */
+  @Indexed private String departmentId;
+
   /** Public group channels are discoverable and joinable by any authenticated user. */
   @Builder.Default private boolean publicChannel = false;
 

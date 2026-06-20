@@ -24,6 +24,9 @@ public class KbDocument {
 
   @Indexed private String conversationId;
 
+  /** Owning department id, inherited from the conversation (P6 dept-scoped RAG). */
+  @Indexed private String departmentId;
+
   private String userId;
   private String fileName;
   private String mimeType;

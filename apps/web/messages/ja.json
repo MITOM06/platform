@@ -532,7 +532,9 @@
     "aiTraceThinkingBlocks": "思考ブロック ({count})",
     "aiTraceToolCalls": "ツール呼び出し ({count})",
     "aiTraceRagSources": "RAG ソース ({count})",
-    "aiTraceScore": "スコア: {score}"
+    "aiTraceScore": "スコア: {score}",
+    "newConvDepartment": "部門（任意）",
+    "newConvNoDepartment": "部門なし"
   },
   "aiPersona": {
     "title": "AI Persona",

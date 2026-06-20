@@ -1791,4 +1791,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get adminAuditNext => 'Next';
+
+  @override
+  String get newConvDepartment => 'Department (optional)';
+
+  @override
+  String get newConvNoDepartment => 'No department';
 }

@@ -532,7 +532,9 @@
     "aiTraceThinkingBlocks": "Khối suy luận ({count})",
     "aiTraceToolCalls": "Lượt gọi công cụ ({count})",
     "aiTraceRagSources": "Nguồn RAG ({count})",
-    "aiTraceScore": "Điểm: {score}"
+    "aiTraceScore": "Điểm: {score}",
+    "newConvDepartment": "Phòng ban (tùy chọn)",
+    "newConvNoDepartment": "Không có phòng ban"
   },
   "aiPersona": {
     "title": "AI Persona",
