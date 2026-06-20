@@ -641,5 +641,8 @@
         "type": "String"
       }
     }
-  }
+  },
+  "adminAuditEmpty": "Aún no hay registros de auditoría.",
+  "adminAuditPrev": "Anterior",
+  "adminAuditNext": "Siguiente"
 }

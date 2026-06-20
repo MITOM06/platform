@@ -641,5 +641,8 @@
         "type": "String"
       }
     }
-  }
+  },
+  "adminAuditEmpty": "감사 기록이 아직 없습니다.",
+  "adminAuditPrev": "이전",
+  "adminAuditNext": "다음"
 }

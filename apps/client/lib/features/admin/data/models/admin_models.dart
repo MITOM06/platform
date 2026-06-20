@@ -201,6 +201,65 @@ class Role {
       );
 }
 
+/// `GET /admin/audit` item.
+@immutable
+class AuditLogEntry {
+  final String id;
+  final String actorId;
+  final String? actorName;
+  final String action;
+  final String targetType;
+  final String? targetId;
+  final DateTime? createdAt;
+
+  const AuditLogEntry({
+    required this.id,
+    required this.actorId,
+    this.actorName,
+    required this.action,
+    required this.targetType,
+    this.targetId,
+    this.createdAt,
+  });
+
+  factory AuditLogEntry.fromJson(Map<String, dynamic> json) => AuditLogEntry(
+        id: json['id'] as String? ?? json['_id'] as String? ?? '',
+        actorId: json['actorId'] as String? ?? '',
+        actorName: json['actorName'] as String?,
+        action: json['action'] as String? ?? '',
+        targetType: json['targetType'] as String? ?? '',
+        targetId: json['targetId']?.toString(),
+        createdAt: json['createdAt'] == null
+            ? null
+            : DateTime.tryParse(json['createdAt'].toString()),
+      );
+}
+
+/// `GET /admin/audit` paginated response.
+@immutable
+class AuditListResult {
+  final List<AuditLogEntry> items;
+  final int total;
+  final int page;
+  final int limit;
+
+  const AuditListResult({
+    required this.items,
+    required this.total,
+    required this.page,
+    required this.limit,
+  });
+
+  factory AuditListResult.fromJson(Map<String, dynamic> json) => AuditListResult(
+        items: (json['items'] as List<dynamic>? ?? const [])
+            .map((e) => AuditLogEntry.fromJson(e as Map<String, dynamic>))
+            .toList(),
+        total: json['total'] as int? ?? 0,
+        page: json['page'] as int? ?? 0,
+        limit: json['limit'] as int? ?? 20,
+      );
+}
+
 // ── parsing helpers ──────────────────────────────────────────────────────────
 List<String> _stringList(dynamic raw) =>
     (raw as List<dynamic>? ?? const []).map((e) => e.toString()).toList();

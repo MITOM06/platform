@@ -641,5 +641,8 @@
         "type": "String"
       }
     }
-  }
+  },
+  "adminAuditEmpty": "Chưa có bản ghi kiểm toán nào.",
+  "adminAuditPrev": "Trước",
+  "adminAuditNext": "Sau"
 }

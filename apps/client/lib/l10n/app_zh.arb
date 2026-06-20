@@ -641,5 +641,8 @@
         "type": "String"
       }
     }
-  }
+  },
+  "adminAuditEmpty": "暂无审计记录。",
+  "adminAuditPrev": "上一页",
+  "adminAuditNext": "下一页"
 }

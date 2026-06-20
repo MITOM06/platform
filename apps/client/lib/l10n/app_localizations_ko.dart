@@ -1747,4 +1747,13 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get adminCapViewAuditLog => '감사 로그 보기';
+
+  @override
+  String get adminAuditEmpty => '감사 기록이 아직 없습니다.';
+
+  @override
+  String get adminAuditPrev => '이전';
+
+  @override
+  String get adminAuditNext => '다음';
 }

@@ -102,3 +102,11 @@ class RolesNotifier extends AsyncNotifier<List<Role>> {
 
 final rolesProvider =
     AsyncNotifierProvider<RolesNotifier, List<Role>>(RolesNotifier.new);
+
+// ── audit ─────────────────────────────────────────────────────────────────────
+/// Paginated audit trail, keyed by page (20 per page). Mirrors the web
+/// `useAuditLog` hook.
+final auditLogProvider =
+    FutureProvider.family<AuditListResult, int>((ref, page) {
+  return ref.read(adminRepositoryProvider).listAudit(page: page, limit: 20);
+});

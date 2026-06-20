@@ -106,3 +106,23 @@ export interface UpdateRoleInput {
   name?: string
   permissions?: PermissionMatrix
 }
+
+/** `GET /admin/audit` item. */
+export interface AuditLogEntry {
+  id: string
+  actorId: string
+  actorName: string | null
+  action: string
+  targetType: string
+  targetId: string | null
+  meta: Record<string, unknown>
+  createdAt: string
+}
+
+/** `GET /admin/audit` paginated response. */
+export interface AuditListResult {
+  items: AuditLogEntry[]
+  total: number
+  page: number
+  limit: number
+}

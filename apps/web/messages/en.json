@@ -805,6 +805,9 @@
       "USE_GROUP_BOT": "Use group bot",
       "RUN_SENSITIVE_SKILL": "Run sensitive skills",
       "VIEW_AUDIT_LOG": "View audit log"
-    }
+    },
+    "auditEmpty": "No audit entries yet.",
+    "auditPrev": "Previous",
+    "auditNext": "Next"
   }
 }

@@ -805,6 +805,9 @@
       "USE_GROUP_BOT": "Usar bot de grupo",
       "RUN_SENSITIVE_SKILL": "Ejecutar habilidades sensibles",
       "VIEW_AUDIT_LOG": "Ver registro de auditoría"
-    }
+    },
+    "auditEmpty": "Aún no hay registros de auditoría.",
+    "auditPrev": "Anterior",
+    "auditNext": "Siguiente"
   }
 }

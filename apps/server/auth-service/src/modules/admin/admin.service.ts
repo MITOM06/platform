@@ -16,6 +16,7 @@ import {
   UserDocument,
 } from '@platform/database';
 import { SessionService } from '../auth/session.service';
+import { AuditService } from '../audit/audit.service';
 import {
   CreateDepartmentDto,
   UpdateDepartmentDto,
@@ -40,6 +41,7 @@ export class AdminService {
     @InjectModel(Role.name) private readonly roleModel: Model<RoleDocument>,
     @InjectModel(User.name) private readonly userModel: Model<UserDocument>,
     private readonly session: SessionService,
+    private readonly audit: AuditService,
   ) {}
 
   // ===================== DEPARTMENTS =====================
@@ -47,21 +49,47 @@ export class AdminService {
     return this.departmentModel.find().exec();
   }
 
-  createDepartment(dto: CreateDepartmentDto) {
-    return this.departmentModel.create(dto);
+  async createDepartment(actorId: string, dto: CreateDepartmentDto) {
+    const dept = await this.departmentModel.create(dto);
+    await this.audit.record({
+      actorId,
+      action: 'department.create',
+      targetType: 'department',
+      targetId: dept._id.toString(),
+      meta: { name: dept.name },
+    });
+    return dept;
   }
 
-  async updateDepartment(id: string, dto: UpdateDepartmentDto) {
+  async updateDepartment(
+    actorId: string,
+    id: string,
+    dto: UpdateDepartmentDto,
+  ) {
     const dept = await this.departmentModel
       .findByIdAndUpdate(id, { $set: dto }, { new: true })
       .exec();
     if (!dept) throw new NotFoundException({ code: 'DEPARTMENT_NOT_FOUND' });
+    await this.audit.record({
+      actorId,
+      action: 'department.update',
+      targetType: 'department',
+      targetId: id,
+      meta: { changes: dto },
+    });
     return dept;
   }
 
-  async deleteDepartment(id: string) {
+  async deleteDepartment(actorId: string, id: string) {
     const dept = await this.departmentModel.findByIdAndDelete(id).exec();
     if (!dept) throw new NotFoundException({ code: 'DEPARTMENT_NOT_FOUND' });
+    await this.audit.record({
+      actorId,
+      action: 'department.delete',
+      targetType: 'department',
+      targetId: id,
+      meta: { name: dept.name },
+    });
     return { success: true };
   }
 
@@ -77,7 +105,7 @@ export class AdminService {
    * Assign a member's role and/or departments, then revoke all of their
    * sessions so stale permissions can't outlive a single access-token lifetime.
    */
-  async updateMember(id: string, dto: UpdateMemberDto) {
+  async updateMember(actorId: string, id: string, dto: UpdateMemberDto) {
     const set: Record<string, unknown> = {};
     if (dto.roleId !== undefined) set.roleId = dto.roleId;
     if (dto.departmentIds !== undefined) set.departmentIds = dto.departmentIds;
@@ -88,6 +116,13 @@ export class AdminService {
     if (!member) throw new NotFoundException({ code: 'MEMBER_NOT_FOUND' });
 
     await this.session.revokeAllSessions(id);
+    await this.audit.record({
+      actorId,
+      action: 'member.update',
+      targetType: 'member',
+      targetId: id,
+      meta: { changes: set },
+    });
     return member;
   }
 
@@ -96,16 +131,24 @@ export class AdminService {
     return this.roleModel.find().exec();
   }
 
-  createRole(dto: CreateRoleDto) {
-    return this.roleModel.create({
+  async createRole(actorId: string, dto: CreateRoleDto) {
+    const role = await this.roleModel.create({
       name: dto.name,
       isPreset: false,
       permissions: dto.permissions ?? {},
     });
+    await this.audit.record({
+      actorId,
+      action: 'role.create',
+      targetType: 'role',
+      targetId: role._id.toString(),
+      meta: { name: role.name },
+    });
+    return role;
   }
 
   /** Edit a role's name/permissions. The Owner role is immutable. */
-  async updateRole(id: string, dto: UpdateRoleDto) {
+  async updateRole(actorId: string, id: string, dto: UpdateRoleDto) {
     const role = await this.roleModel.findById(id).exec();
     if (!role) throw new NotFoundException({ code: 'ROLE_NOT_FOUND' });
     if (role.name === 'Owner') {
@@ -116,9 +159,17 @@ export class AdminService {
     if (dto.name !== undefined) set.name = dto.name;
     if (dto.permissions !== undefined) set.permissions = dto.permissions;
 
-    return this.roleModel
+    const updated = await this.roleModel
       .findByIdAndUpdate(id, { $set: set }, { new: true })
       .exec();
+    await this.audit.record({
+      actorId,
+      action: 'role.update',
+      targetType: 'role',
+      targetId: id,
+      meta: { changes: set },
+    });
+    return updated;
   }
 
   // ===================== WORKSPACE =====================
@@ -127,9 +178,22 @@ export class AdminService {
   }
 
   /** Upsert the singleton workspace (one doc per deployment). */
-  async updateWorkspace(dto: UpdateWorkspaceDto) {
-    return this.workspaceModel
+  async updateWorkspace(actorId: string, dto: UpdateWorkspaceDto) {
+    const ws = await this.workspaceModel
       .findOneAndUpdate({}, { $set: dto }, { new: true, upsert: true })
       .exec();
+    await this.audit.record({
+      actorId,
+      action: 'workspace.update',
+      targetType: 'workspace',
+      targetId: ws?._id?.toString(),
+      meta: { changes: dto },
+    });
+    return ws;
+  }
+
+  // ===================== AUDIT =====================
+  listAudit(page: number, limit: number) {
+    return this.audit.list(page, limit);
   }
 }

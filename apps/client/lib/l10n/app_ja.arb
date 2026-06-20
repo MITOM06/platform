@@ -641,5 +641,8 @@
         "type": "String"
       }
     }
-  }
+  },
+  "adminAuditEmpty": "監査記録はまだありません。",
+  "adminAuditPrev": "前へ",
+  "adminAuditNext": "次へ"
 }

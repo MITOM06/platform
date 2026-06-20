@@ -1799,4 +1799,13 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get adminCapViewAuditLog => 'Ver registro de auditoría';
+
+  @override
+  String get adminAuditEmpty => 'Aún no hay registros de auditoría.';
+
+  @override
+  String get adminAuditPrev => 'Anterior';
+
+  @override
+  String get adminAuditNext => 'Siguiente';
 }

@@ -4,6 +4,7 @@ import { Model } from 'mongoose';
 import { Capability } from '@platform/database';
 import { McpAuth, McpClientService } from '../mcp/mcp-client.service';
 import { TokenVaultService } from '../vault/token-vault.service';
+import { AuditService } from '../audit/audit.service';
 import { isSensitiveTool } from '../catalog/catalog';
 import { PermResolverService } from './perm-resolver.service';
 import {
@@ -36,6 +37,7 @@ export class InternalService {
     private readonly vault: TokenVaultService,
     private readonly mcp: McpClientService,
     private readonly perms: PermResolverService,
+    private readonly audit: AuditService,
   ) {}
 
   /** Bare tool name from a namespaced `mcp__<provider>__<tool>` def. */
@@ -142,7 +144,8 @@ export class InternalService {
 
     // Defense in depth: never rely on the list filter alone. Re-check the
     // sensitive gate at execution time.
-    if (isSensitiveTool(tool)) {
+    const sensitive = isSensitiveTool(tool);
+    if (sensitive) {
       const userPerms = await this.perms.resolvePerms(userId);
       if (!userPerms.has(Capability.RUN_SENSITIVE_SKILL)) {
         return { result: `Tool error: not permitted (sensitive skill)` };
@@ -150,10 +153,20 @@ export class InternalService {
     }
 
     try {
-      if (provider.startsWith('custom:')) {
-        return { result: await this.callCustom(userId, provider, tool, input) };
+      const result = provider.startsWith('custom:')
+        ? await this.callCustom(userId, provider, tool, input)
+        : await this.callBuiltin(userId, provider, tool, input);
+      // Audit successful sensitive-skill runs (external writes / mail etc.).
+      if (sensitive) {
+        await this.audit.record({
+          actorId: userId,
+          action: 'sensitive_skill.run',
+          targetType: 'tool',
+          targetId: name,
+          meta: { provider, tool },
+        });
       }
-      return { result: await this.callBuiltin(userId, provider, tool, input) };
+      return { result };
     } catch (err) {
       this.logger.error(`callTool failed for ${name}`, err as Error);
       return { result: `Tool error: ${(err as Error).message}` };

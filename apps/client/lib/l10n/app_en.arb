@@ -892,5 +892,8 @@
         "type": "String"
       }
     }
-  }
+  },
+  "adminAuditEmpty": "No audit entries yet.",
+  "adminAuditPrev": "Previous",
+  "adminAuditNext": "Next"
 }

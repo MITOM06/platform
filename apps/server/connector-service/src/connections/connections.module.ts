@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { VaultModule } from '../vault/vault.module';
 import { McpModule } from '../mcp/mcp.module';
+import { AuditModule } from '../audit/audit.module';
 import {
   UserConnection,
   UserConnectionSchema,
@@ -21,7 +22,7 @@ const mongoFeature = MongooseModule.forFeature([
 ]);
 
 @Module({
-  imports: [mongoFeature, VaultModule, McpModule],
+  imports: [mongoFeature, VaultModule, McpModule, AuditModule],
   controllers: [ConnectionsController],
   providers: [ConnectionsService],
   exports: [mongoFeature, ConnectionsService],

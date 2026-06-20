@@ -1781,4 +1781,13 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get adminCapViewAuditLog => 'Xem nhật ký kiểm toán';
+
+  @override
+  String get adminAuditEmpty => 'Chưa có bản ghi kiểm toán nào.';
+
+  @override
+  String get adminAuditPrev => 'Trước';
+
+  @override
+  String get adminAuditNext => 'Sau';
 }

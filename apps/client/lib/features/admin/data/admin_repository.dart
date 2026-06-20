@@ -77,6 +77,15 @@ class AdminRepository {
   Future<void> updateRole(String id, Map<String, dynamic> body) async {
     await _dio.patch('/admin/roles/$id', data: body);
   }
+
+  // ── audit ─────────────────────────────────────────────────────────────────
+  Future<AuditListResult> listAudit({int page = 0, int limit = 20}) async {
+    final res = await _dio.get(
+      '/admin/audit',
+      queryParameters: {'page': page, 'limit': limit},
+    );
+    return AuditListResult.fromJson(res.data as Map<String, dynamic>);
+  }
 }
 
 final adminRepositoryProvider = Provider<AdminRepository>((ref) {

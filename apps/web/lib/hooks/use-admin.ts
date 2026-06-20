@@ -1,4 +1,9 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import {
+  keepPreviousData,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from '@tanstack/react-query'
 import { useTranslations } from 'next-intl'
 import { toast } from 'sonner'
 import { adminService } from '@/lib/api/admin'
@@ -116,6 +121,15 @@ export function useRoles(enabled = true) {
     queryKey: ['admin-roles'],
     queryFn: () => adminService.listRoles(),
     enabled,
+  })
+}
+
+// ── audit ─────────────────────────────────────────────────────────────────────
+export function useAuditLog(page: number, limit = 20) {
+  return useQuery({
+    queryKey: ['admin-audit', page, limit],
+    queryFn: () => adminService.getAudit(page, limit),
+    placeholderData: keepPreviousData,
   })
 }
 

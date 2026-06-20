@@ -10,4 +10,5 @@ export * from './auth/auth.index';
 export * from './mongo/workspace.schema';
 export * from './mongo/department.schema';
 export * from './mongo/role.schema';
+export * from './mongo/audit-log.schema';
 export { REDIS_CLIENT } from './redis/redis.module';

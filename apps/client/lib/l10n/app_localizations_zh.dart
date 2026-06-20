@@ -1737,4 +1737,13 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get adminCapViewAuditLog => '查看审计日志';
+
+  @override
+  String get adminAuditEmpty => '暂无审计记录。';
+
+  @override
+  String get adminAuditPrev => '上一页';
+
+  @override
+  String get adminAuditNext => '下一页';
 }

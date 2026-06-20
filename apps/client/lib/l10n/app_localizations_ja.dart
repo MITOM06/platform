@@ -1745,4 +1745,13 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get adminCapViewAuditLog => '監査ログを表示';
+
+  @override
+  String get adminAuditEmpty => '監査記録はまだありません。';
+
+  @override
+  String get adminAuditPrev => '前へ';
+
+  @override
+  String get adminAuditNext => '次へ';
 }

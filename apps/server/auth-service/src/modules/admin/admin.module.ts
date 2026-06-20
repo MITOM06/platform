@@ -16,10 +16,12 @@ import { AdminController } from './admin.controller';
 import { AdminService } from './admin.service';
 import { SessionService } from '../auth/session.service';
 import { RequirePermissionGuard } from '../auth/guards/require-permission.guard';
+import { AuditModule } from '../audit/audit.module';
 
 @Module({
   imports: [
     DatabaseRedisModule,
+    AuditModule,
     PassportModule.register({ defaultStrategy: 'jwt' }),
     MongooseModule.forFeature([
       { name: Workspace.name, schema: WorkspaceSchema },

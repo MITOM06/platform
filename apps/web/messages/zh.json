@@ -805,6 +805,9 @@
       "USE_GROUP_BOT": "使用群组机器人",
       "RUN_SENSITIVE_SKILL": "运行敏感技能",
       "VIEW_AUDIT_LOG": "查看审计日志"
-    }
+    },
+    "auditEmpty": "暂无审计记录。",
+    "auditPrev": "上一页",
+    "auditNext": "下一页"
   }
 }

@@ -3372,6 +3372,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'View audit log'**
   String get adminCapViewAuditLog;
+
+  /// No description provided for @adminAuditEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No audit entries yet.'**
+  String get adminAuditEmpty;
+
+  /// No description provided for @adminAuditPrev.
+  ///
+  /// In en, this message translates to:
+  /// **'Previous'**
+  String get adminAuditPrev;
+
+  /// No description provided for @adminAuditNext.
+  ///
+  /// In en, this message translates to:
+  /// **'Next'**
+  String get adminAuditNext;
 }
 
 class _AppLocalizationsDelegate

@@ -3,6 +3,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { McpAuth, McpClientService } from '../mcp/mcp-client.service';
 import { TokenVaultService } from '../vault/token-vault.service';
+import { AuditService } from '../audit/audit.service';
 import {
   UserConnection,
   UserConnectionDocument,
@@ -29,6 +30,7 @@ export class ConnectionsService {
     private readonly skillModel: Model<UserSkillDocument>,
     private readonly vault: TokenVaultService,
     private readonly mcp: McpClientService,
+    private readonly audit: AuditService,
   ) {}
 
   // ── Connections ───────────────────────────────────────────────────────────
@@ -108,7 +110,7 @@ export class ConnectionsService {
       );
     }
 
-    return this.customModel.create({
+    const created = await this.customModel.create({
       userId,
       name: dto.name,
       url: dto.url,
@@ -116,6 +118,14 @@ export class ConnectionsService {
       encryptedCredential,
       toolsPreview,
     });
+    await this.audit.record({
+      actorId: userId,
+      action: 'custom_mcp.add',
+      targetType: 'connector',
+      targetId: String(created._id),
+      meta: { name: dto.name, url: dto.url },
+    });
+    return created;
   }
 
   // ── Skills (thin upsert; wired by web C3 / Flutter D3) ───────────────────

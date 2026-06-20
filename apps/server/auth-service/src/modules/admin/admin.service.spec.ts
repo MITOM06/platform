@@ -11,6 +11,7 @@ import {
 } from '@platform/database';
 import { AdminService } from './admin.service';
 import { SessionService } from '../auth/session.service';
+import { AuditService } from '../audit/audit.service';
 
 function execable(value: any) {
   return { exec: jest.fn().mockResolvedValue(value) };
@@ -23,6 +24,7 @@ describe('AdminService', () => {
   let roleModel: any;
   let userModel: any;
   let session: { revokeAllSessions: jest.Mock };
+  let audit: { record: jest.Mock; list: jest.Mock };
 
   beforeEach(async () => {
     workspaceModel = { findOne: jest.fn(), findOneAndUpdate: jest.fn() };
@@ -40,6 +42,10 @@ describe('AdminService', () => {
     };
     userModel = { find: jest.fn(), findByIdAndUpdate: jest.fn() };
     session = { revokeAllSessions: jest.fn().mockResolvedValue(undefined) };
+    audit = {
+      record: jest.fn().mockResolvedValue(undefined),
+      list: jest.fn().mockResolvedValue({ items: [], total: 0 }),
+    };
 
     const moduleRef = await Test.createTestingModule({
       providers: [
@@ -49,6 +55,7 @@ describe('AdminService', () => {
         { provide: getModelToken(Role.name), useValue: roleModel },
         { provide: getModelToken(User.name), useValue: userModel },
         { provide: SessionService, useValue: session },
+        { provide: AuditService, useValue: audit },
       ],
     }).compile();
 
@@ -61,7 +68,7 @@ describe('AdminService', () => {
         execable({ _id: 'u1', roleId: 'r1', departmentIds: ['d1'] }),
       );
 
-      const res = await service.updateMember('u1', {
+      const res = await service.updateMember('actor1', 'u1', {
         roleId: 'r1',
         departmentIds: ['d1'],
       });
@@ -72,13 +79,16 @@ describe('AdminService', () => {
         { new: true },
       );
       expect(session.revokeAllSessions).toHaveBeenCalledWith('u1');
+      expect(audit.record).toHaveBeenCalledWith(
+        expect.objectContaining({ action: 'member.update', targetId: 'u1' }),
+      );
       expect(res).toMatchObject({ _id: 'u1' });
     });
 
     it('throws when the member does not exist', async () => {
       userModel.findByIdAndUpdate.mockReturnValue(execable(null));
       await expect(
-        service.updateMember('missing', { roleId: 'r1' }),
+        service.updateMember('actor1', 'missing', { roleId: 'r1' }),
       ).rejects.toBeInstanceOf(NotFoundException);
       expect(session.revokeAllSessions).not.toHaveBeenCalled();
     });
@@ -90,7 +100,7 @@ describe('AdminService', () => {
         execable({ _id: 'r1', name: 'Owner', isPreset: true }),
       );
       await expect(
-        service.updateRole('r1', { permissions: {} }),
+        service.updateRole('actor1', 'r1', { permissions: {} }),
       ).rejects.toBeInstanceOf(BadRequestException);
       expect(roleModel.findByIdAndUpdate).not.toHaveBeenCalled();
     });
@@ -102,7 +112,9 @@ describe('AdminService', () => {
       roleModel.findByIdAndUpdate.mockReturnValue(
         execable({ _id: 'r2', name: 'Member' }),
       );
-      const res = await service.updateRole('r2', { name: 'Member v2' });
+      const res = await service.updateRole('actor1', 'r2', {
+        name: 'Member v2',
+      });
       expect(roleModel.findByIdAndUpdate).toHaveBeenCalled();
       expect(res).toMatchObject({ _id: 'r2' });
     });
@@ -110,7 +122,7 @@ describe('AdminService', () => {
     it('throws when the role does not exist', async () => {
       roleModel.findById.mockReturnValue(execable(null));
       await expect(
-        service.updateRole('nope', { name: 'x' }),
+        service.updateRole('actor1', 'nope', { name: 'x' }),
       ).rejects.toBeInstanceOf(NotFoundException);
     });
   });
@@ -118,9 +130,9 @@ describe('AdminService', () => {
   describe('deleteDepartment', () => {
     it('throws when the department is missing', async () => {
       departmentModel.findByIdAndDelete.mockReturnValue(execable(null));
-      await expect(service.deleteDepartment('nope')).rejects.toBeInstanceOf(
-        NotFoundException,
-      );
+      await expect(
+        service.deleteDepartment('actor1', 'nope'),
+      ).rejects.toBeInstanceOf(NotFoundException);
     });
   });
 
@@ -129,11 +141,14 @@ describe('AdminService', () => {
       workspaceModel.findOneAndUpdate.mockReturnValue(
         execable({ name: 'Acme', features: {} }),
       );
-      const res = await service.updateWorkspace({ name: 'Acme' });
+      const res = await service.updateWorkspace('actor1', { name: 'Acme' });
       expect(workspaceModel.findOneAndUpdate).toHaveBeenCalledWith(
         {},
         { $set: { name: 'Acme' } },
         { new: true, upsert: true },
+      );
+      expect(audit.record).toHaveBeenCalledWith(
+        expect.objectContaining({ action: 'workspace.update' }),
       );
       expect(res).toMatchObject({ name: 'Acme' });
     });

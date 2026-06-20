@@ -1808,4 +1808,13 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get adminCapViewAuditLog => 'Voir le journal d\'audit';
+
+  @override
+  String get adminAuditEmpty => 'Aucune entrée d\'audit pour le moment.';
+
+  @override
+  String get adminAuditPrev => 'Précédent';
+
+  @override
+  String get adminAuditNext => 'Suivant';
 }

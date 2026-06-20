@@ -6,11 +6,12 @@ import {
   Param,
   Patch,
   Post,
+  Query,
   UseGuards,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
-import { Capability } from '@platform/database';
+import { Capability, CurrentUser, JwtUser } from '@platform/database';
 import {
   RequirePermission,
   RequirePermissionGuard,
@@ -45,20 +46,27 @@ export class AdminController {
 
   @Post('departments')
   @RequirePermission(Capability.MANAGE_DEPARTMENTS)
-  createDepartment(@Body() dto: CreateDepartmentDto) {
-    return this.adminService.createDepartment(dto);
+  createDepartment(
+    @CurrentUser() user: JwtUser,
+    @Body() dto: CreateDepartmentDto,
+  ) {
+    return this.adminService.createDepartment(user.sub, dto);
   }
 
   @Patch('departments/:id')
   @RequirePermission(Capability.MANAGE_DEPARTMENTS)
-  updateDepartment(@Param('id') id: string, @Body() dto: UpdateDepartmentDto) {
-    return this.adminService.updateDepartment(id, dto);
+  updateDepartment(
+    @CurrentUser() user: JwtUser,
+    @Param('id') id: string,
+    @Body() dto: UpdateDepartmentDto,
+  ) {
+    return this.adminService.updateDepartment(user.sub, id, dto);
   }
 
   @Delete('departments/:id')
   @RequirePermission(Capability.MANAGE_DEPARTMENTS)
-  deleteDepartment(@Param('id') id: string) {
-    return this.adminService.deleteDepartment(id);
+  deleteDepartment(@CurrentUser() user: JwtUser, @Param('id') id: string) {
+    return this.adminService.deleteDepartment(user.sub, id);
   }
 
   // ===================== MEMBERS =====================
@@ -72,8 +80,12 @@ export class AdminController {
   @Patch('members/:id')
   @RequirePermission(Capability.MANAGE_MEMBERS)
   @ApiOperation({ summary: 'Assign role/departments; revokes user sessions' })
-  updateMember(@Param('id') id: string, @Body() dto: UpdateMemberDto) {
-    return this.adminService.updateMember(id, dto);
+  updateMember(
+    @CurrentUser() user: JwtUser,
+    @Param('id') id: string,
+    @Body() dto: UpdateMemberDto,
+  ) {
+    return this.adminService.updateMember(user.sub, id, dto);
   }
 
   // ===================== ROLES =====================
@@ -86,15 +98,19 @@ export class AdminController {
   @Post('roles')
   @RequirePermission(Capability.MANAGE_ROLES)
   @ApiOperation({ summary: 'Create / clone a role' })
-  createRole(@Body() dto: CreateRoleDto) {
-    return this.adminService.createRole(dto);
+  createRole(@CurrentUser() user: JwtUser, @Body() dto: CreateRoleDto) {
+    return this.adminService.createRole(user.sub, dto);
   }
 
   @Patch('roles/:id')
   @RequirePermission(Capability.MANAGE_ROLES)
   @ApiOperation({ summary: 'Edit a role (Owner is immutable)' })
-  updateRole(@Param('id') id: string, @Body() dto: UpdateRoleDto) {
-    return this.adminService.updateRole(id, dto);
+  updateRole(
+    @CurrentUser() user: JwtUser,
+    @Param('id') id: string,
+    @Body() dto: UpdateRoleDto,
+  ) {
+    return this.adminService.updateRole(user.sub, id, dto);
   }
 
   // ===================== WORKSPACE =====================
@@ -107,7 +123,24 @@ export class AdminController {
   @Patch('workspace')
   @RequirePermission(Capability.MANAGE_WORKSPACE)
   @ApiOperation({ summary: 'Update workspace name/branding/features/allow-list' })
-  updateWorkspace(@Body() dto: UpdateWorkspaceDto) {
-    return this.adminService.updateWorkspace(dto);
+  updateWorkspace(
+    @CurrentUser() user: JwtUser,
+    @Body() dto: UpdateWorkspaceDto,
+  ) {
+    return this.adminService.updateWorkspace(user.sub, dto);
+  }
+
+  // ===================== AUDIT =====================
+  @Get('audit')
+  @RequirePermission(Capability.VIEW_AUDIT_LOG)
+  @ApiOperation({ summary: 'Paginated audit trail (latest first)' })
+  listAudit(
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+  ) {
+    return this.adminService.listAudit(
+      page ? parseInt(page, 10) : 0,
+      limit ? parseInt(limit, 10) : 20,
+    );
   }
 }

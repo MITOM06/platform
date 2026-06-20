@@ -23,7 +23,8 @@ function makeService(workspace?: any): OAuthService {
     }),
   };
   // vault + connModel not needed for state/gating tests
-  return new OAuthService(cfg, {} as any, {} as any, wsModel as any);
+  const audit = { record: jest.fn().mockResolvedValue(undefined) };
+  return new OAuthService(cfg, {} as any, {} as any, wsModel as any, audit as any);
 }
 
 const jwtUser = (perms: string[]) =>

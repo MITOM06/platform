@@ -4,6 +4,7 @@ import { Role, RoleSchema, User, UserSchema } from '@platform/database';
 import { ConnectionsModule } from '../connections/connections.module';
 import { VaultModule } from '../vault/vault.module';
 import { McpModule } from '../mcp/mcp.module';
+import { AuditModule } from '../audit/audit.module';
 import { InternalService } from './internal.service';
 import { InternalController } from './internal.controller';
 import { PermResolverService } from './perm-resolver.service';
@@ -13,6 +14,7 @@ import { PermResolverService } from './perm-resolver.service';
     ConnectionsModule,
     VaultModule,
     McpModule,
+    AuditModule,
     MongooseModule.forFeature([
       { name: User.name, schema: UserSchema },
       { name: Role.name, schema: RoleSchema },

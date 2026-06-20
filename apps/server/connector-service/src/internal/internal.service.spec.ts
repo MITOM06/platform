@@ -69,7 +69,15 @@ describe('InternalService', () => {
     };
     permSet = new Set<string>();
     perms = { resolvePerms: jest.fn().mockImplementation(() => Promise.resolve(permSet)) };
-    svc = new InternalService(connModel, {} as any, vault, mcp, perms);
+    const audit = { record: jest.fn().mockResolvedValue(undefined) };
+    svc = new InternalService(
+      connModel,
+      {} as any,
+      vault,
+      mcp,
+      perms,
+      audit as any,
+    );
   });
 
   it('namespaces non-sensitive tools and OMITS sensitive ones without RUN_SENSITIVE_SKILL', async () => {

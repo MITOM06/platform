@@ -1782,4 +1782,13 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get adminCapViewAuditLog => 'View audit log';
+
+  @override
+  String get adminAuditEmpty => 'No audit entries yet.';
+
+  @override
+  String get adminAuditPrev => 'Previous';
+
+  @override
+  String get adminAuditNext => 'Next';
 }

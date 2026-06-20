@@ -3,6 +3,7 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { Workspace, WorkspaceSchema } from '@platform/database';
 import { ConnectionsModule } from '../connections/connections.module';
 import { VaultModule } from '../vault/vault.module';
+import { AuditModule } from '../audit/audit.module';
 import { OAuthService } from './oauth.service';
 import { OAuthController } from './oauth.controller';
 
@@ -10,6 +11,7 @@ import { OAuthController } from './oauth.controller';
   imports: [
     ConnectionsModule,
     VaultModule,
+    AuditModule,
     MongooseModule.forFeature([
       { name: Workspace.name, schema: WorkspaceSchema },
     ]),

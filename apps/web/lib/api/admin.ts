@@ -1,5 +1,6 @@
 import { authApi } from './axios'
 import type {
+  AuditListResult,
   CreateDepartmentInput,
   CreateRoleInput,
   Department,
@@ -62,4 +63,10 @@ export const adminService = {
 
   updateRole: (id: string, input: UpdateRoleInput) =>
     authApi.patch<Role>(`/admin/roles/${id}`, input).then((r) => r.data),
+
+  // ── audit ─────────────────────────────────────────────────────────────────
+  getAudit: (page = 0, limit = 20) =>
+    authApi
+      .get<AuditListResult>('/admin/audit', { params: { page, limit } })
+      .then((r) => r.data),
 }

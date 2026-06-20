@@ -17,6 +17,7 @@ import {
 } from '@platform/database';
 import { CatalogEntry, findCatalogEntry } from '../catalog/catalog';
 import { TokenVaultService } from '../vault/token-vault.service';
+import { AuditService } from '../audit/audit.service';
 import {
   ConnectionScope,
   UserConnection,
@@ -51,6 +52,7 @@ export class OAuthService {
     private readonly connModel: Model<UserConnectionDocument>,
     @InjectModel(Workspace.name)
     private readonly workspaceModel: Model<WorkspaceDocument>,
+    private readonly audit: AuditService,
   ) {}
 
   // ── State signing (HMAC-sha256 with INTERNAL_API_KEY) ─────────────────────
@@ -227,13 +229,19 @@ export class OAuthService {
     }
     const entry = this.requireOAuthEntry(provider);
     const tokens = await this.exchangeCode(entry, code);
-    await this.persist(
-      payload.userId,
-      provider,
-      tokens,
-      entry,
-      payload.scope ?? 'personal',
-    );
+    const scope = payload.scope ?? 'personal';
+    await this.persist(payload.userId, provider, tokens, entry, scope);
+    // Audit workspace-scoped connects (shared resource affecting every member).
+    // Personal connects are the user's own and are not audit-logged.
+    if (scope === 'workspace') {
+      await this.audit.record({
+        actorId: payload.userId,
+        action: 'connector.connect',
+        targetType: 'connector',
+        targetId: provider,
+        meta: { scope },
+      });
+    }
     const clientUrl = this.cfg.get<string>('clientRedirectUrl');
     const sep = clientUrl.includes('?') ? '&' : '?';
     return `${clientUrl}${sep}connected=${encodeURIComponent(provider)}`;
