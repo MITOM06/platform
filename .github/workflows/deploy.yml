@@ -148,16 +148,16 @@ jobs:
             --allow-unauthenticated
             --min-instances=1
             --max-instances=3
-            --memory=1Gi
+            --memory=2Gi
             --cpu=1
             --cpu-boost
             --port=8080
+            --session-affinity
           env_vars: |
-            NODE_ENV=production
+            JAVA_TOOL_OPTIONS=-XX:MaxRAMPercentage=75.0 -XX:+UseG1GC -XX:+UseContainerSupport
             SPRING_MAIN_ALLOW_BEAN_DEFINITION_OVERRIDING=true
             JWT_ACCESS_SECRET=${{ secrets.JWT_ACCESS_SECRET }}
             SPRING_DATA_MONGODB_URI=${{ secrets.MONGODB_URI }}
-            REDIS_URL=${{ secrets.REDIS_URL }}
             SPRING_DATA_REDIS_URL=${{ secrets.REDIS_URL }}
             SPRING_RABBITMQ_HOST=${{ secrets.RABBITMQ_HOST }}
             SPRING_RABBITMQ_PORT=${{ secrets.RABBITMQ_PORT }}
