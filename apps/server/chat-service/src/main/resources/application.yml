@@ -10,6 +10,11 @@ spring:
     port: ${SPRING_RABBITMQ_PORT:5672}
     username: ${SPRING_RABBITMQ_USERNAME:platform}
     password: ${SPRING_RABBITMQ_PASSWORD:platform}
+    virtual-host: ${SPRING_RABBITMQ_VIRTUAL_HOST:/}
+    # Fail fast if the broker is unreachable — prevents RabbitAdmin.start() from
+    # blocking indefinitely and holding up the Spring context (which would prevent
+    # Tomcat from binding to port 8080 before Cloud Run's startup probe times out).
+    connection-timeout: 5000
   data:
     mongodb:
       uri: ${SPRING_DATA_MONGODB_URI:mongodb://localhost:27018/platform}
@@ -48,7 +53,10 @@ management:
       enabled: true
   tracing:
     sampling:
-      probability: ${OTEL_SAMPLING_PROBABILITY:1.0}
+      # Default 0.0 (off) so startup health-check spans are not exported to the
+      # missing localhost:4318 endpoint on Cloud Run. Set OTEL_SAMPLING_PROBABILITY=1.0
+      # when a real OTLP collector (Jaeger/Grafana) is available.
+      probability: ${OTEL_SAMPLING_PROBABILITY:0.0}
   otlp:
     tracing:
       endpoint: ${OTEL_EXPORTER_OTLP_ENDPOINT:http://localhost:4318}/v1/traces
