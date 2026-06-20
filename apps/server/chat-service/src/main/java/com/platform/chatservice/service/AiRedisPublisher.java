@@ -2,6 +2,7 @@ package com.platform.chatservice.service;
 
 import com.platform.chatservice.config.RabbitMqConfig;
 import com.platform.chatservice.dto.AiRequestPayload;
+import com.platform.chatservice.repository.ConversationRepository;
 import io.micrometer.tracing.Span;
 import io.micrometer.tracing.Tracer;
 import io.micrometer.tracing.propagation.Propagator;
@@ -27,6 +28,7 @@ public class AiRedisPublisher {
   private final RabbitTemplate rabbitTemplate;
   private final Tracer tracer;
   private final Propagator propagator;
+  private final ConversationRepository conversationRepository;
 
   public void publishAiRequest(
       String conversationId,
@@ -34,8 +36,12 @@ public class AiRedisPublisher {
       String displayName,
       String content,
       List<Map<String, String>> history) {
+    // Enrich the AI job with the conversation's department so ai-service can
+    // department-scope RAG/tools for the group bot (P6). Null for personal chats.
+    String departmentId =
+        conversationRepository.findById(conversationId).map(c -> c.getDepartmentId()).orElse(null);
     AiRequestPayload payload =
-        new AiRequestPayload(conversationId, userId, displayName, content, history);
+        new AiRequestPayload(conversationId, userId, displayName, content, history, departmentId);
 
     // Create a child span for the RabbitMQ publish operation. The scope is closed
     // explicitly BEFORE the span is ended so the thread-local context is cleared

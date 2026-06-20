@@ -123,6 +123,7 @@ public class ConversationService {
                 .participants(new ArrayList<>(members))
                 .admins(new ArrayList<>(List.of(creatorId)))
                 .createdBy(creatorId)
+                .departmentId(request.departmentId())
                 .lastMessageAt(Instant.now())
                 .build());
     return toResponse(saved, creatorId, 0L);
