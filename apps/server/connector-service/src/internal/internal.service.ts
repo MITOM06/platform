@@ -2,10 +2,12 @@ import { Injectable, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Capability } from '@platform/database';
-import { McpAuth, McpClientService } from '../mcp/mcp-client.service';
-import { TokenVaultService } from '../vault/token-vault.service';
 import { AuditService } from '../audit/audit.service';
 import { isSensitiveTool } from '../catalog/catalog';
+import {
+  AdapterRegistryService,
+} from '../adapters/adapter-registry.service';
+import { ConnectionLike } from '../adapters/provider-adapter.interface';
 import { PermResolverService } from './perm-resolver.service';
 import {
   UserConnection,
@@ -25,6 +27,13 @@ export interface InternalToolDef {
 const PREFIX = 'mcp__';
 const SEP = '__';
 
+/**
+ * Aggregates and executes a user's connector tools, namespaced
+ * `mcp__<provider>__<tool>`. Tool I/O is delegated to a {@link ProviderAdapter}
+ * resolved per provider (remote MCP for Notion/custom, Google REST for
+ * Gmail/Calendar) — this service owns aggregation, namespacing, the sensitive
+ * gate, audit, and `lastUsedAt`.
+ */
 @Injectable()
 export class InternalService {
   private readonly logger = new Logger(InternalService.name);
@@ -34,10 +43,9 @@ export class InternalService {
     private readonly connModel: Model<UserConnectionDocument>,
     @InjectModel(CustomMcpServer.name)
     private readonly customModel: Model<CustomMcpServerDocument>,
-    private readonly vault: TokenVaultService,
-    private readonly mcp: McpClientService,
     private readonly perms: PermResolverService,
     private readonly audit: AuditService,
+    private readonly adapters: AdapterRegistryService,
   ) {}
 
   /** Bare tool name from a namespaced `mcp__<provider>__<tool>` def. */
@@ -66,8 +74,8 @@ export class InternalService {
       .lean();
     for (const conn of conns) {
       try {
-        const auth = this.authForConnection(conn);
-        const list = await this.mcp.listTools(conn.mcpUrl, auth);
+        const adapter = this.adapters.forProvider(conn.provider);
+        const list = await adapter.listTools(this.builtinConn(conn));
         for (const t of list) {
           tools.push({
             name: `${PREFIX}${conn.provider}${SEP}${t.name}`,
@@ -105,13 +113,10 @@ export class InternalService {
       return;
     }
     for (const srv of customs) {
+      const provider = `custom:${String(srv._id)}`;
       try {
-        const credential = srv.encryptedCredential
-          ? this.vault.decrypt(srv.encryptedCredential)
-          : undefined;
-        const auth = this.authForType(srv.authType, credential);
-        const list = await this.mcp.listTools(srv.url, auth);
-        const provider = `custom:${String((srv as any)._id)}`;
+        const adapter = this.adapters.forProvider(provider);
+        const list = await adapter.listTools(this.customConn(srv));
         for (const t of list) {
           tools.push({
             name: `${PREFIX}${provider}${SEP}${t.name}`,
@@ -129,7 +134,8 @@ export class InternalService {
 
   /**
    * Parse `mcp__<provider>__<tool>`, resolve the connection (built-in or
-   * custom:<id>), decrypt the token, and dispatch to the MCP server.
+   * custom:<id>), and dispatch via the provider adapter. Re-checks the sensitive
+   * gate at execution time and audits successful sensitive runs.
    */
   async callTool(
     userId: string,
@@ -156,7 +162,6 @@ export class InternalService {
       const result = provider.startsWith('custom:')
         ? await this.callCustom(userId, provider, tool, input)
         : await this.callBuiltin(userId, provider, tool, input);
-      // Audit successful sensitive-skill runs (external writes / mail etc.).
       if (sensitive) {
         await this.audit.record({
           actorId: userId,
@@ -183,8 +188,8 @@ export class InternalService {
       .findOne({ userId, provider, status: 'active' })
       .lean();
     if (!conn) return `Tool error: no active ${provider} connection`;
-    const auth = this.authForConnection(conn);
-    const out = await this.mcp.callTool(conn.mcpUrl, auth, tool, input);
+    const adapter = this.adapters.forProvider(provider);
+    const out = await adapter.callTool(this.builtinConn(conn), tool, input);
     await this.connModel.updateOne(
       { _id: conn._id },
       { $set: { lastUsedAt: new Date() } },
@@ -203,14 +208,30 @@ export class InternalService {
     if (!srv || String(srv.userId) !== userId) {
       return `Tool error: custom MCP not found`;
     }
-    const credential = srv.encryptedCredential
-      ? this.vault.decrypt(srv.encryptedCredential)
-      : undefined;
-    const auth = this.authForType(srv.authType, credential);
-    return this.mcp.callTool(srv.url, auth, tool, input);
+    const adapter = this.adapters.forProvider(provider);
+    return adapter.callTool(this.customConn(srv), tool, input);
   }
 
   // ── Helpers ───────────────────────────────────────────────────────────────
+
+  private builtinConn(conn: any): ConnectionLike {
+    return {
+      provider: conn.provider,
+      mcpUrl: conn.mcpUrl,
+      encryptedTokens: conn.encryptedTokens,
+      _id: conn._id,
+    };
+  }
+
+  private customConn(srv: any): ConnectionLike {
+    return {
+      provider: `custom:${String(srv._id)}`,
+      url: srv.url,
+      authType: srv.authType,
+      encryptedCredential: srv.encryptedCredential,
+      _id: srv._id,
+    };
+  }
 
   private parseName(name: string): { provider: string; tool: string } | null {
     if (!name.startsWith(PREFIX)) return null;
@@ -218,16 +239,5 @@ export class InternalService {
     const idx = rest.indexOf(SEP);
     if (idx <= 0) return null;
     return { provider: rest.slice(0, idx), tool: rest.slice(idx + SEP.length) };
-  }
-
-  private authForConnection(conn: UserConnection): McpAuth {
-    const tokens = JSON.parse(this.vault.decrypt(conn.encryptedTokens));
-    return { type: 'bearer', token: tokens.access_token };
-  }
-
-  private authForType(authType: string, credential?: string): McpAuth {
-    if (authType === 'oauth2') return { type: 'bearer', token: credential };
-    if (authType === 'apikey') return { type: 'apikey', token: credential };
-    return { type: 'none' };
   }
 }
