@@ -1,7 +1,7 @@
 # PON Enterprise — Master Handoff & Continuation Guide
 
 **Last updated:** 2026-06-20
-**Active branch:** `feature/mcp-connector-core` (pushed to origin; Task 0 + P0 Parts 3–4 done)
+**Active branch:** `feature/mcp-connector-core` (pushed to origin; ✅ P0 COMPLETE — Parts 1–5 + Task 0)
 **Read order for a fresh session:**
 1. This file (state + remaining work).
 2. `docs/superpowers/specs/2026-06-19-pon-enterprise-reframe.md` (the vision).
@@ -94,23 +94,28 @@ For now: keep hosting as-is, assume **one test company**, get it working end-to-
   + gen-l10n. Parity with web (same 5 sections/caps/endpoints/gating).
   Verify: `flutter analyze` — No issues found. Commit `1ce08f77`.
 
+### P0 Part 5 — Audit log ✅ (backend + web & mobile)
+- **`packages/database`**: `AuditLog` schema `{actorId, actorName?, action, targetType, targetId?,
+  meta, createdAt}` (+ `createdAt` index), exported.
+- **auth-service**: `modules/audit/` (`AuditService.record` + paginated `list` with batch actor-name
+  resolution); `AdminService` records workspace/department/member/role mutations (actorId from JWT);
+  `GET /admin/audit` (`VIEW_AUDIT_LOG`, paginated).
+- **connector-service**: `audit/` (`AuditService` writing the shared `auditlogs` collection) records
+  `connector.connect` (workspace scope), `custom_mcp.add`, `sensitive_skill.run`.
+- **web**: `AuditLogPanel` paginated list (`useAuditLog` + `keepPreviousData`).
+- **Flutter**: `AuditPanel` paginated list (`auditLogProvider` family). audit i18n in all 7+7 locales.
+- Verify: `@platform/database` 10, auth-service 32, connector-service 37, web build OK,
+  `flutter analyze` clean. Commit `0353253d`.
+
+**→ ✅ P0 COMPLETE. Enterprise foundation (RBAC + admin console both platforms + governed connectors +
+audit) is built and green. This is the milestone to demo to the first test company** (needs the live
+secrets/infra in §4 to run end-to-end).
+
 ---
 
 ## 3. What REMAINS — detailed, in build order
 
-> Task 0, P0 Part 3 (web admin console) and P0 Part 4 (Flutter admin mirror) are **DONE** — see §2.
-> Next up is Part 5.
-
-### P0 Part 5 — Audit log
-**Plan:** outline §"PART 5". **Where:** auth-service (or a shared schema in `packages/database`).
-- `AuditLog` schema `{actorId, action, targetType, targetId, meta, createdAt}`.
-- `AuditService.record(...)`; call it at privileged mutations in auth-service `admin.service.ts`
-  (member/role/department/workspace changes) and in connector-service (workspace connect, custom-MCP
-  add, sensitive tool run — emit via the internal API or a small audit client).
-- `GET /admin/audit` (paginated, `VIEW_AUDIT_LOG`); wire the Part 3/4 audit screens to it.
-**Verify:** auth + connector tests green. **Dispatch:** `backend-dev`, then `web-dev`/`mobile-dev`.
-
-**→ P0 COMPLETE after Part 5. This is the milestone to demo to the first test company.**
+> Task 0 and all of P0 (Parts 1–5) are **DONE** — see §2. Next milestones below.
 
 ### P5 — Gmail + Google Calendar connectors
 **Plan:** `docs/superpowers/plans/2026-06-19-p5-google-connectors.md` (fully detailed, 4 tasks).
@@ -169,8 +174,8 @@ Open a new session in this repo. Memory auto-loads `MEMORY.md` (it points to the
 enterprise model facts). Then paste one of these:
 
 - To continue building: **"Continue PON enterprise from `docs/superpowers/PON-ENTERPRISE-HANDOFF.md`.
-  Build P0 Part 5 (audit log: backend schema/service/endpoint + wire web & Flutter audit screens).
-  Work part-by-part, run tests/builds, show me each part for review."**
+  P0 is complete — build P5 (Gmail + Google Calendar connectors) next. Work part-by-part, run
+  tests/builds, show me each part for review."**
 - To do the live Notion E2E instead: **"I've added Notion creds + run docker compose. Run the P1
   Notion E2E from the handoff doc §4."**
 - To jump to Google connectors: **"Build P5 from `docs/superpowers/plans/2026-06-19-p5-google-connectors.md`."**
