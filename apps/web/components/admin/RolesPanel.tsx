@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { Copy, Save } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
@@ -28,15 +28,18 @@ export function RolesPanel() {
   const { create, update } = useRoleActions()
 
   // Per-role pending permission matrices, seeded from the server roles.
-  const [edited, setEdited] = useState<Record<string, PermissionMatrix>>({})
+  const [prevRoles, setPrevRoles] = useState(roles)
+  const [edited, setEdited] = useState<Record<string, PermissionMatrix>>(() =>
+    Object.fromEntries(roles.map((r) => [r._id, { ...r.permissions }])),
+  )
   const [cloneFrom, setCloneFrom] = useState<Role | null>(null)
   const [cloneName, setCloneName] = useState('')
 
-  useEffect(() => {
-    setEdited(
-      Object.fromEntries(roles.map((r) => [r._id, { ...r.permissions }])),
-    )
-  }, [roles])
+  // Reseed when server roles change (avoids synchronous setState-in-effect lint error).
+  if (prevRoles !== roles) {
+    setPrevRoles(roles)
+    setEdited(Object.fromEntries(roles.map((r) => [r._id, { ...r.permissions }])))
+  }
 
   const toggle = (roleId: string, cap: string) =>
     setEdited((prev) => ({

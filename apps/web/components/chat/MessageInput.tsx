@@ -4,7 +4,6 @@ import { useState, useRef, useEffect } from 'react'
 import {
   Send, X, Pencil, Paperclip, ImagePlus, FileText, Mic, Trash2, Reply,
 } from 'lucide-react'
-import { toast } from 'sonner'
 import { useTranslations } from 'next-intl'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
