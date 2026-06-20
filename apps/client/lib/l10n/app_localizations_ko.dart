@@ -1756,4 +1756,10 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get adminAuditNext => '다음';
+
+  @override
+  String get newConvDepartment => '부서 (선택)';
+
+  @override
+  String get newConvNoDepartment => '부서 없음';
 }

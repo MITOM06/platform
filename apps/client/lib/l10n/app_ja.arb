@@ -644,5 +644,7 @@
   },
   "adminAuditEmpty": "監査記録はまだありません。",
   "adminAuditPrev": "前へ",
-  "adminAuditNext": "次へ"
+  "adminAuditNext": "次へ",
+  "newConvDepartment": "部門（任意）",
+  "newConvNoDepartment": "部門なし"
 }

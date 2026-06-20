@@ -1754,4 +1754,10 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get adminAuditNext => '次へ';
+
+  @override
+  String get newConvDepartment => '部門（任意）';
+
+  @override
+  String get newConvNoDepartment => '部門なし';
 }

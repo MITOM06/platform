@@ -1746,4 +1746,10 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get adminAuditNext => '下一页';
+
+  @override
+  String get newConvDepartment => '部门（可选）';
+
+  @override
+  String get newConvNoDepartment => '无部门';
 }

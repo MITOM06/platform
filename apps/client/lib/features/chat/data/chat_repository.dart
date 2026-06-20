@@ -127,11 +127,13 @@ class ChatRepository {
     String name,
     List<String> participantIds, {
     String? avatarUrl,
+    String? departmentId,
   }) async {
     final response = await _dio.post('/api/conversations/group', data: {
       'name': name,
       'avatarUrl': avatarUrl,
       'participantIds': participantIds,
+      if (departmentId != null) 'departmentId': departmentId,
     });
     return ConversationModel.fromJson(response.data as Map<String, dynamic>);
   }

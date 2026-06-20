@@ -644,5 +644,7 @@
   },
   "adminAuditEmpty": "Chưa có bản ghi kiểm toán nào.",
   "adminAuditPrev": "Trước",
-  "adminAuditNext": "Sau"
+  "adminAuditNext": "Sau",
+  "newConvDepartment": "Phòng ban (tùy chọn)",
+  "newConvNoDepartment": "Không có phòng ban"
 }

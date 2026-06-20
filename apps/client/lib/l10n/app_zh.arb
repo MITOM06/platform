@@ -644,5 +644,7 @@
   },
   "adminAuditEmpty": "暂无审计记录。",
   "adminAuditPrev": "上一页",
-  "adminAuditNext": "下一页"
+  "adminAuditNext": "下一页",
+  "newConvDepartment": "部门（可选）",
+  "newConvNoDepartment": "无部门"
 }

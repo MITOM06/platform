@@ -644,5 +644,7 @@
   },
   "adminAuditEmpty": "감사 기록이 아직 없습니다.",
   "adminAuditPrev": "이전",
-  "adminAuditNext": "다음"
+  "adminAuditNext": "다음",
+  "newConvDepartment": "부서 (선택)",
+  "newConvNoDepartment": "부서 없음"
 }

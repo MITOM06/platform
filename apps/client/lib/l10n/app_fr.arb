@@ -644,5 +644,7 @@
   },
   "adminAuditEmpty": "Aucune entrée d'audit pour le moment.",
   "adminAuditPrev": "Précédent",
-  "adminAuditNext": "Suivant"
+  "adminAuditNext": "Suivant",
+  "newConvDepartment": "Département (facultatif)",
+  "newConvNoDepartment": "Aucun département"
 }

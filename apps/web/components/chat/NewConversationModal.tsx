@@ -14,9 +14,16 @@ import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from '@/components/ui/select'
 import { authService } from '@/lib/api/auth'
 import { chatService } from '@/lib/api/chat'
+import { useHasCapability } from '@/lib/hooks/use-capabilities'
+import { useDepartments } from '@/lib/hooks/use-admin'
 import type { UserSearchResult } from '@/lib/api/types'
+
+const NO_DEPT = '__none__'
 
 interface Props {
   open: boolean
@@ -82,6 +89,11 @@ export function NewConversationModal({ open, onClose, defaultTab }: Props) {
   const [creatingGroup, setCreatingGroup] = useState(false)
   const [activeTab, setActiveTab] = useState<'direct' | 'group'>(defaultTab || 'direct')
 
+  // Department group (P6) — only members who can manage departments may create one.
+  const canDepts = useHasCapability('MANAGE_DEPARTMENTS')
+  const { data: departments = [] } = useDepartments(canDepts)
+  const [departmentId, setDepartmentId] = useState<string>(NO_DEPT)
+
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   useEffect(() => {
@@ -106,6 +118,7 @@ export function NewConversationModal({ open, onClose, defaultTab }: Props) {
     setResults([])
     setGroupName('')
     setSelectedMembers([])
+    setDepartmentId(NO_DEPT)
     onClose()
   }
 
@@ -153,7 +166,12 @@ export function NewConversationModal({ open, onClose, defaultTab }: Props) {
     setCreatingGroup(true)
     try {
       const memberIds = selectedMembers.map(getUserId).filter(Boolean)
-      const conv = await chatService.createGroup(groupName.trim(), memberIds)
+      const conv = await chatService.createGroup(
+        groupName.trim(),
+        memberIds,
+        false,
+        departmentId === NO_DEPT ? undefined : departmentId,
+      )
       queryClient.invalidateQueries({ queryKey: ['conversations'] })
       router.push(`/conversations/${conv.id}`)
       handleClose()
@@ -238,6 +256,23 @@ export function NewConversationModal({ open, onClose, defaultTab }: Props) {
               value={groupName}
               onChange={(e) => setGroupName(e.target.value)}
             />
+
+            {/* Department group (P6) — admins can scope the group + bot to a department */}
+            {canDepts && departments.length > 0 && (
+              <Select value={departmentId} onValueChange={setDepartmentId}>
+                <SelectTrigger>
+                  <SelectValue placeholder={t('newConvDepartment')} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={NO_DEPT}>{t('newConvNoDepartment')}</SelectItem>
+                  {departments.map((d) => (
+                    <SelectItem key={d._id} value={d._id}>
+                      {d.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
 
             {/* Selected members chips */}
             {selectedMembers.length > 0 && (

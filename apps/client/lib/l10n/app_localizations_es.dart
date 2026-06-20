@@ -1808,4 +1808,10 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get adminAuditNext => 'Siguiente';
+
+  @override
+  String get newConvDepartment => 'Departamento (opcional)';
+
+  @override
+  String get newConvNoDepartment => 'Sin departamento';
 }

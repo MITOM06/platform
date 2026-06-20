@@ -26,12 +26,18 @@ export const chatService = {
   createConversation: (participantId: string) =>
     chatApi.post<Conversation>('/api/conversations', { participantId }).then((r) => r.data),
 
-  createGroup: (name: string, participantIds: string[], isPublic = false) =>
+  createGroup: (
+    name: string,
+    participantIds: string[],
+    isPublic = false,
+    departmentId?: string,
+  ) =>
     chatApi
       .post<Conversation>('/api/conversations/group', {
         name,
         participantIds,
         ...(isPublic ? { publicChannel: isPublic } : {}),
+        ...(departmentId ? { departmentId } : {}),
       })
       .then((r) => r.data),
 
