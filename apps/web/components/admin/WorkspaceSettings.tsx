@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { Building2, Save } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -19,20 +19,22 @@ export function WorkspaceSettings() {
   const { data: catalog = [] } = useCatalog()
   const save = useUpdateWorkspace()
 
-  const [name, setName] = useState('')
-  const [logoUrl, setLogoUrl] = useState('')
-  const [primaryColor, setPrimaryColor] = useState('#00e5ff')
-  const [features, setFeatures] = useState<Record<string, boolean>>({})
-  const [allowList, setAllowList] = useState<string[]>([])
+  const [prevWs, setPrevWs] = useState(ws)
+  const [name, setName] = useState(ws?.name ?? '')
+  const [logoUrl, setLogoUrl] = useState(ws?.logoUrl ?? '')
+  const [primaryColor, setPrimaryColor] = useState(ws?.primaryColor ?? '#00e5ff')
+  const [features, setFeatures] = useState<Record<string, boolean>>(ws?.features ?? {})
+  const [allowList, setAllowList] = useState<string[]>(ws?.connectorAllowList ?? [])
 
-  useEffect(() => {
-    if (!ws) return
+  // Reseed when server workspace data loads/changes (avoids synchronous setState-in-effect lint error).
+  if (prevWs !== ws && ws) {
+    setPrevWs(ws)
     setName(ws.name ?? '')
     setLogoUrl(ws.logoUrl ?? '')
     setPrimaryColor(ws.primaryColor ?? '#00e5ff')
     setFeatures(ws.features ?? {})
     setAllowList(ws.connectorAllowList ?? [])
-  }, [ws])
+  }
 
   const toggleAllow = (id: string) =>
     setAllowList((prev) =>
