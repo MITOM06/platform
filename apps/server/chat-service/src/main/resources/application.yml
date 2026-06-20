@@ -15,6 +15,10 @@ spring:
     # blocking indefinitely and holding up the Spring context (which would prevent
     # Tomcat from binding to port 8080 before Cloud Run's startup probe times out).
     connection-timeout: 5000
+    ssl:
+      # Production (CloudAMQP / managed RabbitMQ) requires TLS. Deploy workflow sets
+      # SPRING_RABBITMQ_SSL_ENABLED=true. Local dev stays false (plain AMQP).
+      enabled: ${SPRING_RABBITMQ_SSL_ENABLED:false}
   data:
     mongodb:
       uri: ${SPRING_DATA_MONGODB_URI:mongodb://localhost:27018/platform}
@@ -45,9 +49,17 @@ management:
       base-path: /actuator
   endpoint:
     health:
-      show-details: always
+      show-details: when-authorized
       probes:
         enabled: true
+      group:
+        # Liveness = "is the JVM alive?" — never include external deps, otherwise a
+        # transient RabbitMQ / Redis blip causes Cloud Run to restart the container.
+        liveness:
+          include: ping
+        # Readiness = "can it serve traffic?" — includes external backing services.
+        readiness:
+          include: mongo,redis,rabbit
   info:
     env:
       enabled: true

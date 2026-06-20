@@ -72,6 +72,11 @@ public class RabbitMqConfig {
   RabbitAdmin rabbitAdmin(ConnectionFactory connectionFactory) {
     RabbitAdmin admin = new RabbitAdmin(connectionFactory);
     admin.setIgnoreDeclarationExceptions(true);
+    // Don't eagerly open a connection during context refresh. Topology will be
+    // declared lazily on the first successful connection, which is fine because
+    // chat-service only publishes (no @RabbitListener). This prevents a slow or
+    // unreachable broker from blocking Tomcat's port bind on Cloud Run.
+    admin.setAutoStartup(false);
     return admin;
   }
 }
