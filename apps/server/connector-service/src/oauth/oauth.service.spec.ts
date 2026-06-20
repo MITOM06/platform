@@ -1,6 +1,7 @@
 import { ForbiddenException } from '@nestjs/common';
 import { Capability } from '@platform/database';
 import { OAuthService } from './oauth.service';
+import { findCatalogEntry } from '../catalog/catalog';
 
 function makeService(workspace?: any): OAuthService {
   const cfg = {
@@ -50,6 +51,25 @@ describe('OAuthService state signing', () => {
     const state = svc.signState({ userId: 'u1', provider: 'notion' });
     const [body] = state.split('.');
     expect(() => svc.verifyState(`${body}.deadbeef`)).toThrow();
+  });
+});
+
+describe('OAuthService buildAuthorizeUrl (Task P5-1)', () => {
+  const svc = makeService();
+
+  it('gmail URL includes scope + access_type + prompt and NO owner', () => {
+    const url = svc.buildAuthorizeUrl(findCatalogEntry('gmail')!, 'st');
+    expect(url).toContain('accounts.google.com');
+    expect(url).toContain('scope=');
+    expect(url).toContain('access_type=offline');
+    expect(url).toContain('prompt=consent');
+    expect(url).not.toContain('owner=user');
+  });
+
+  it('notion URL still includes owner=user', () => {
+    const url = svc.buildAuthorizeUrl(findCatalogEntry('notion')!, 'st');
+    expect(url).toContain('owner=user');
+    expect(url).not.toContain('access_type=offline');
   });
 });
 

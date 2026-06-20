@@ -29,5 +29,9 @@ export default function configuration() {
       clientSecret: process.env.NOTION_CLIENT_SECRET ?? '',
       mcpUrl: process.env.NOTION_MCP_URL ?? 'https://mcp.notion.com/sse',
     },
+    google: {
+      clientId: process.env.GOOGLE_CLIENT_ID ?? '',
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET ?? '',
+    },
   };
 }
