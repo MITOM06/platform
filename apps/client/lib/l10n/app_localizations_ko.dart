@@ -1560,4 +1560,200 @@ class AppLocalizationsKo extends AppLocalizations {
   @override
   String get skillProjectKeeperDesc =>
       '메모와 작업을 Notion에 정리하고 데이터베이스를 깔끔하게 유지합니다.';
+
+  @override
+  String get adminTitle => '관리자 콘솔';
+
+  @override
+  String get adminSubtitle => '워크스페이스, 부서, 멤버, 역할을 관리';
+
+  @override
+  String get adminBack => '뒤로';
+
+  @override
+  String get adminLoading => '불러오는 중…';
+
+  @override
+  String get adminSave => '저장';
+
+  @override
+  String get adminSaving => '저장 중…';
+
+  @override
+  String get adminCancel => '취소';
+
+  @override
+  String get adminToastSaved => '저장됨';
+
+  @override
+  String get adminToastDeleted => '삭제됨';
+
+  @override
+  String get adminToastError => '문제가 발생했습니다';
+
+  @override
+  String get adminMenu => '관리자';
+
+  @override
+  String get adminSettingsSubtitle => '워크스페이스, 부서, 멤버 및 역할';
+
+  @override
+  String get adminNavWorkspace => '워크스페이스';
+
+  @override
+  String get adminNavDepartments => '부서';
+
+  @override
+  String get adminNavMembers => '멤버';
+
+  @override
+  String get adminNavRoles => '역할';
+
+  @override
+  String get adminNavAudit => '감사 로그';
+
+  @override
+  String get adminWsIdentity => '아이덴티티 및 브랜딩';
+
+  @override
+  String get adminWsName => '워크스페이스 이름';
+
+  @override
+  String get adminWsNamePlaceholder => 'Acme 주식회사';
+
+  @override
+  String get adminWsLogoUrl => '로고 URL';
+
+  @override
+  String get adminWsPrimaryColor => '기본 색상';
+
+  @override
+  String get adminWsFeatures => '기능 플래그';
+
+  @override
+  String get adminWsNoFeatures => '구성된 기능 플래그가 없습니다.';
+
+  @override
+  String get adminWsAllowList => '커넥터 허용 목록';
+
+  @override
+  String get adminWsAllowListDesc => '멤버가 개인적으로 연결할 수 있는 커넥터.';
+
+  @override
+  String get adminWsNoCatalog => '사용 가능한 커넥터가 없습니다.';
+
+  @override
+  String get adminDeptNew => '새 부서';
+
+  @override
+  String get adminDeptEdit => '부서 편집';
+
+  @override
+  String get adminDeptEmpty => '아직 부서가 없습니다.';
+
+  @override
+  String get adminDeptLead => '리더';
+
+  @override
+  String get adminDeptLeadNone => '없음';
+
+  @override
+  String get adminDeptName => '이름';
+
+  @override
+  String get adminDeptDescription => '설명';
+
+  @override
+  String get adminDeptDialogDesc => '부서는 멤버를 그룹화하고 부서 채팅을 소유합니다.';
+
+  @override
+  String adminDeptDeleteConfirm(String name) {
+    return '부서 \"$name\"을(를) 삭제하시겠습니까?';
+  }
+
+  @override
+  String get adminMemberHint => '각 멤버에게 역할과 부서를 할당합니다.';
+
+  @override
+  String get adminMemberEdit => '멤버 편집';
+
+  @override
+  String get adminMemberRevokeNote => '저장하면 멤버의 활성 세션이 취소됩니다.';
+
+  @override
+  String get adminMemberRole => '역할';
+
+  @override
+  String get adminMemberRoleNone => '없음';
+
+  @override
+  String get adminMemberDepartments => '부서';
+
+  @override
+  String get adminRoleHint => '각 역할의 권한을 전환합니다. Owner 역할은 읽기 전용입니다.';
+
+  @override
+  String get adminRoleCapability => '권한';
+
+  @override
+  String get adminRolePreset => '프리셋';
+
+  @override
+  String get adminRoleClone => '복제';
+
+  @override
+  String adminRoleCloneTitle(String name) {
+    return '$name 복제';
+  }
+
+  @override
+  String get adminRoleName => '역할 이름';
+
+  @override
+  String get adminAuditTitle => '감사 로그';
+
+  @override
+  String get adminAuditComingSoon => '감사 로그는 향후 업데이트에서 제공됩니다.';
+
+  @override
+  String get adminCapManageWorkspace => '워크스페이스 관리';
+
+  @override
+  String get adminCapManageDepartments => '부서 관리';
+
+  @override
+  String get adminCapManageMembers => '멤버 관리';
+
+  @override
+  String get adminCapManageRoles => '역할 관리';
+
+  @override
+  String get adminCapConnectWorkspaceConnector => '워크스페이스 커넥터 연결';
+
+  @override
+  String get adminCapAddCustomMcp => '커스텀 MCP 추가';
+
+  @override
+  String get adminCapConnectPersonalConnector => '개인 커넥터 연결';
+
+  @override
+  String get adminCapUsePersonalAssistant => '개인 비서 사용';
+
+  @override
+  String get adminCapUseGroupBot => '그룹 봇 사용';
+
+  @override
+  String get adminCapRunSensitiveSkill => '민감한 스킬 실행';
+
+  @override
+  String get adminCapViewAuditLog => '감사 로그 보기';
+
+  @override
+  String get adminAuditEmpty => '감사 기록이 아직 없습니다.';
+
+  @override
+  String get adminAuditPrev => '이전';
+
+  @override
+  String get adminAuditNext => '다음';
 }

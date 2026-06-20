@@ -35,7 +35,15 @@ describe('ConnectionsService', () => {
         { name: 'search', description: 'Find', inputSchema: {} },
       ]),
     };
-    svc = new ConnectionsService(connModel, customModel, skillModel, vault, mcp);
+    const audit = { record: jest.fn().mockResolvedValue(undefined) };
+    svc = new ConnectionsService(
+      connModel,
+      customModel,
+      skillModel,
+      vault,
+      mcp,
+      audit as any,
+    );
   });
 
   it('listConnections never returns encryptedTokens', async () => {

@@ -5,7 +5,7 @@ import dynamic from 'next/dynamic'
 import { useQueryClient } from '@tanstack/react-query'
 import { useRouter, usePathname } from 'next/navigation'
 import { toast } from 'sonner'
-import { LogOut, Moon, Sun, User, Compass, Contact, Settings, Plus, MessageSquarePlus, Users } from 'lucide-react'
+import { LogOut, Moon, Sun, User, Compass, Contact, Settings, Plus, MessageSquarePlus, Users, ShieldCheck } from 'lucide-react'
 import Link from 'next/link'
 import { useTheme } from 'next-themes'
 import { useTranslations } from 'next-intl'
@@ -19,6 +19,7 @@ import { ActiveFriendsRow } from '@/components/chat/ActiveFriendsRow'
 import { cn } from '@/lib/utils'
 import { MobileTabBar } from '@/components/layout/MobileTabBar'
 import { useUiStore } from '@/lib/store/ui.store'
+import { useCanAccessAdmin } from '@/lib/hooks/use-capabilities'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import {
   DropdownMenu,
@@ -80,9 +81,10 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
   const accessToken = useAuthStore((s) => s.accessToken)
   const { theme, setTheme } = useTheme()
   const t = useTranslations('layout')
+  const canAccessAdmin = useCanAccessAdmin()
 
   const isConversationOpen = /^\/conversations\/.+/.test(pathname)
-  const isInnerPage = /^\/(friends|settings|profile|explore|archived|token-usage|ai-memory|ai-persona|reminders|kb|shared-media)/.test(pathname)
+  const isInnerPage = /^\/(friends|settings|profile|explore|archived|token-usage|ai-memory|ai-persona|reminders|kb|shared-media|admin)/.test(pathname)
   const hideAside = isConversationOpen || isInnerPage
   const showTabBar = !isConversationOpen
 
@@ -314,6 +316,15 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
                     <User className="mr-2 h-4 w-4" />
                     <span>{t('menuProfile')}</span>
                   </DropdownMenuItem>
+                  {canAccessAdmin && (
+                    <DropdownMenuItem
+                      onSelect={() => router.push('/admin')}
+                      className="flex w-full items-center cursor-pointer"
+                    >
+                      <ShieldCheck className="mr-2 h-4 w-4" />
+                      <span>{t('menuAdmin')}</span>
+                    </DropdownMenuItem>
+                  )}
                   <DropdownMenuItem
                     onSelect={() => router.push('/settings')}
                     className="flex w-full items-center cursor-pointer"

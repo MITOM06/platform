@@ -1602,4 +1602,210 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get skillProjectKeeperDesc =>
       'Archiva notas y tareas en Notion, mantiene las bases de datos ordenadas.';
+
+  @override
+  String get adminTitle => 'Consola de administración';
+
+  @override
+  String get adminSubtitle =>
+      'Gestiona tu espacio, departamentos, miembros y roles';
+
+  @override
+  String get adminBack => 'Volver';
+
+  @override
+  String get adminLoading => 'Cargando…';
+
+  @override
+  String get adminSave => 'Guardar';
+
+  @override
+  String get adminSaving => 'Guardando…';
+
+  @override
+  String get adminCancel => 'Cancelar';
+
+  @override
+  String get adminToastSaved => 'Guardado';
+
+  @override
+  String get adminToastDeleted => 'Eliminado';
+
+  @override
+  String get adminToastError => 'Algo salió mal';
+
+  @override
+  String get adminMenu => 'Administración';
+
+  @override
+  String get adminSettingsSubtitle =>
+      'Espacio, departamentos, miembros y roles';
+
+  @override
+  String get adminNavWorkspace => 'Espacio';
+
+  @override
+  String get adminNavDepartments => 'Departamentos';
+
+  @override
+  String get adminNavMembers => 'Miembros';
+
+  @override
+  String get adminNavRoles => 'Roles';
+
+  @override
+  String get adminNavAudit => 'Registro de auditoría';
+
+  @override
+  String get adminWsIdentity => 'Identidad y marca';
+
+  @override
+  String get adminWsName => 'Nombre del espacio';
+
+  @override
+  String get adminWsNamePlaceholder => 'Acme S.A.';
+
+  @override
+  String get adminWsLogoUrl => 'URL del logo';
+
+  @override
+  String get adminWsPrimaryColor => 'Color principal';
+
+  @override
+  String get adminWsFeatures => 'Indicadores de funciones';
+
+  @override
+  String get adminWsNoFeatures =>
+      'No hay indicadores de funciones configurados.';
+
+  @override
+  String get adminWsAllowList => 'Lista de conectores permitidos';
+
+  @override
+  String get adminWsAllowListDesc =>
+      'Conectores que los miembros pueden conectar personalmente.';
+
+  @override
+  String get adminWsNoCatalog => 'No hay conectores disponibles.';
+
+  @override
+  String get adminDeptNew => 'Nuevo departamento';
+
+  @override
+  String get adminDeptEdit => 'Editar departamento';
+
+  @override
+  String get adminDeptEmpty => 'Aún no hay departamentos.';
+
+  @override
+  String get adminDeptLead => 'Responsable';
+
+  @override
+  String get adminDeptLeadNone => 'Sin responsable';
+
+  @override
+  String get adminDeptName => 'Nombre';
+
+  @override
+  String get adminDeptDescription => 'Descripción';
+
+  @override
+  String get adminDeptDialogDesc =>
+      'Los departamentos agrupan miembros y tienen sus propios chats.';
+
+  @override
+  String adminDeptDeleteConfirm(String name) {
+    return '¿Eliminar el departamento \"$name\"?';
+  }
+
+  @override
+  String get adminMemberHint => 'Asigna un rol y departamentos a cada miembro.';
+
+  @override
+  String get adminMemberEdit => 'Editar miembro';
+
+  @override
+  String get adminMemberRevokeNote =>
+      'Al guardar se revocan las sesiones activas del miembro.';
+
+  @override
+  String get adminMemberRole => 'Rol';
+
+  @override
+  String get adminMemberRoleNone => 'Sin rol';
+
+  @override
+  String get adminMemberDepartments => 'Departamentos';
+
+  @override
+  String get adminRoleHint =>
+      'Activa los permisos de cada rol. El rol Owner es de solo lectura.';
+
+  @override
+  String get adminRoleCapability => 'Permiso';
+
+  @override
+  String get adminRolePreset => 'Predefinido';
+
+  @override
+  String get adminRoleClone => 'Clonar';
+
+  @override
+  String adminRoleCloneTitle(String name) {
+    return 'Clonar $name';
+  }
+
+  @override
+  String get adminRoleName => 'Nombre del rol';
+
+  @override
+  String get adminAuditTitle => 'Registro de auditoría';
+
+  @override
+  String get adminAuditComingSoon =>
+      'El registro de auditoría estará disponible en una próxima actualización.';
+
+  @override
+  String get adminCapManageWorkspace => 'Gestionar espacio';
+
+  @override
+  String get adminCapManageDepartments => 'Gestionar departamentos';
+
+  @override
+  String get adminCapManageMembers => 'Gestionar miembros';
+
+  @override
+  String get adminCapManageRoles => 'Gestionar roles';
+
+  @override
+  String get adminCapConnectWorkspaceConnector =>
+      'Conectar conectores del espacio';
+
+  @override
+  String get adminCapAddCustomMcp => 'Añadir MCP personalizado';
+
+  @override
+  String get adminCapConnectPersonalConnector =>
+      'Conectar conectores personales';
+
+  @override
+  String get adminCapUsePersonalAssistant => 'Usar asistente personal';
+
+  @override
+  String get adminCapUseGroupBot => 'Usar bot de grupo';
+
+  @override
+  String get adminCapRunSensitiveSkill => 'Ejecutar habilidades sensibles';
+
+  @override
+  String get adminCapViewAuditLog => 'Ver registro de auditoría';
+
+  @override
+  String get adminAuditEmpty => 'Aún no hay registros de auditoría.';
+
+  @override
+  String get adminAuditPrev => 'Anterior';
+
+  @override
+  String get adminAuditNext => 'Siguiente';
 }

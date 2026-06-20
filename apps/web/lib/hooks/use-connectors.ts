@@ -19,7 +19,7 @@ export function useConnections() {
   const userId = useAuthStore((s) => s.user?.id)
   return useQuery({
     queryKey: ['connections', userId],
-    queryFn: () => connectorService.getConnections(userId!),
+    queryFn: () => connectorService.getConnections(),
     enabled: !!userId,
   })
 }
@@ -63,7 +63,7 @@ export function useSkills() {
   const userId = useAuthStore((s) => s.user?.id)
   return useQuery({
     queryKey: ['skills', userId],
-    queryFn: () => connectorService.getSkills(userId!),
+    queryFn: () => connectorService.getSkills(),
     enabled: !!userId,
   })
 }
@@ -75,7 +75,7 @@ export function useSkillToggle() {
 
   return useMutation({
     mutationFn: ({ skillId, enabled }: { skillId: string; enabled: boolean }) =>
-      connectorService.setSkill(userId!, skillId, enabled),
+      connectorService.setSkill(skillId, enabled),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['skills', userId] })
     },

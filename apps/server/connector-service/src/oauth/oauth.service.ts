@@ -17,6 +17,7 @@ import {
 } from '@platform/database';
 import { CatalogEntry, findCatalogEntry } from '../catalog/catalog';
 import { TokenVaultService } from '../vault/token-vault.service';
+import { AuditService } from '../audit/audit.service';
 import {
   ConnectionScope,
   UserConnection,
@@ -33,6 +34,10 @@ export interface OAuthStatePayload {
 interface TokenResponse {
   access_token: string;
   refresh_token?: string;
+  /** Seconds until the access token expires (Google). */
+  expires_in?: number;
+  /** Absolute expiry epoch-ms, computed at persist time (Google refresh). */
+  expiry_date?: number;
   // Notion returns the workspace/bot account info on the token response.
   workspace_name?: string;
   owner?: { user?: { name?: string } };
@@ -51,6 +56,7 @@ export class OAuthService {
     private readonly connModel: Model<UserConnectionDocument>,
     @InjectModel(Workspace.name)
     private readonly workspaceModel: Model<WorkspaceDocument>,
+    private readonly audit: AuditService,
   ) {}
 
   // ── State signing (HMAC-sha256 with INTERNAL_API_KEY) ─────────────────────
@@ -144,12 +150,19 @@ export class OAuthService {
   }
 
   buildAuthorizeUrl(entry: CatalogEntry, state: string): string {
-    const url = new URL(entry.oauth!.authorizeUrl);
-    url.searchParams.set('client_id', process.env[entry.oauth!.clientIdEnv] ?? '');
+    const cfg = entry.oauth!;
+    const url = new URL(cfg.authorizeUrl);
+    url.searchParams.set('client_id', process.env[cfg.clientIdEnv] ?? '');
     url.searchParams.set('response_type', 'code');
-    url.searchParams.set('owner', 'user');
     url.searchParams.set('redirect_uri', this.redirectUri(entry.id));
     url.searchParams.set('state', state);
+    if (cfg.ownerParam) url.searchParams.set('owner', 'user');
+    if (cfg.includeScope && entry.scopes.length) {
+      url.searchParams.set('scope', entry.scopes.join(' '));
+    }
+    for (const [k, v] of Object.entries(cfg.extraAuthorizeParams ?? {})) {
+      url.searchParams.set(k, v);
+    }
     return url.toString();
   }
 
@@ -161,23 +174,40 @@ export class OAuthService {
   // ── Code exchange ─────────────────────────────────────────────────────────
 
   async exchangeCode(entry: CatalogEntry, code: string): Promise<TokenResponse> {
-    const clientId = process.env[entry.oauth!.clientIdEnv] ?? '';
-    const clientSecret = process.env[entry.oauth!.clientSecretEnv] ?? '';
-    const basic = Buffer.from(`${clientId}:${clientSecret}`).toString('base64');
+    const cfg = entry.oauth!;
+    const clientId = process.env[cfg.clientIdEnv] ?? '';
+    const clientSecret = process.env[cfg.clientSecretEnv] ?? '';
+    const redirectUri = this.redirectUri(entry.id);
+    const authStyle = cfg.authStyle ?? 'basic';
+    const bodyFormat = cfg.bodyFormat ?? 'json';
 
-    const res = await fetch(entry.oauth!.tokenUrl, {
-      method: 'POST',
-      headers: {
-        Authorization: `Basic ${basic}`,
-        'Content-Type': 'application/json',
-        Accept: 'application/json',
-      },
-      body: JSON.stringify({
-        grant_type: 'authorization_code',
-        code,
-        redirect_uri: this.redirectUri(entry.id),
-      }),
-    });
+    const headers: Record<string, string> = { Accept: 'application/json' };
+    const params: Record<string, string> = {
+      grant_type: 'authorization_code',
+      code,
+      redirect_uri: redirectUri,
+    };
+    // 'body' auth style carries the client credentials in the request body
+    // (Google); 'basic' uses the Authorization header (Notion).
+    if (authStyle === 'body') {
+      params.client_id = clientId;
+      params.client_secret = clientSecret;
+    } else {
+      headers.Authorization = `Basic ${Buffer.from(
+        `${clientId}:${clientSecret}`,
+      ).toString('base64')}`;
+    }
+
+    let body: string;
+    if (bodyFormat === 'form') {
+      headers['Content-Type'] = 'application/x-www-form-urlencoded';
+      body = new URLSearchParams(params).toString();
+    } else {
+      headers['Content-Type'] = 'application/json';
+      body = JSON.stringify(params);
+    }
+
+    const res = await fetch(cfg.tokenUrl, { method: 'POST', headers, body });
 
     if (!res.ok) {
       const text = await res.text().catch(() => '');
@@ -197,6 +227,11 @@ export class OAuthService {
     entry: CatalogEntry,
     scope: ConnectionScope = 'personal',
   ): Promise<void> {
+    // Compute an absolute expiry so adapters can pre-emptively refresh Google
+    // access tokens (harmless for providers without `expires_in`, e.g. Notion).
+    if (typeof tokens.expires_in === 'number' && !tokens.expiry_date) {
+      tokens.expiry_date = Date.now() + tokens.expires_in * 1000;
+    }
     const blob = this.vault.encrypt(JSON.stringify(tokens));
     const accountLabel =
       tokens.workspace_name ?? tokens.owner?.user?.name ?? undefined;
@@ -227,13 +262,19 @@ export class OAuthService {
     }
     const entry = this.requireOAuthEntry(provider);
     const tokens = await this.exchangeCode(entry, code);
-    await this.persist(
-      payload.userId,
-      provider,
-      tokens,
-      entry,
-      payload.scope ?? 'personal',
-    );
+    const scope = payload.scope ?? 'personal';
+    await this.persist(payload.userId, provider, tokens, entry, scope);
+    // Audit workspace-scoped connects (shared resource affecting every member).
+    // Personal connects are the user's own and are not audit-logged.
+    if (scope === 'workspace') {
+      await this.audit.record({
+        actorId: payload.userId,
+        action: 'connector.connect',
+        targetType: 'connector',
+        targetId: provider,
+        meta: { scope },
+      });
+    }
     const clientUrl = this.cfg.get<string>('clientRedirectUrl');
     const sep = clientUrl.includes('?') ? '&' : '?';
     return `${clientUrl}${sep}connected=${encodeURIComponent(provider)}`;

@@ -29,8 +29,9 @@ describe('InternalKeyGuard', () => {
 describe('InternalService', () => {
   let svc: InternalService;
   let connModel: any;
-  let vault: any;
-  let mcp: any;
+  let customModel: any;
+  let adapter: { listTools: jest.Mock; callTool: jest.Mock };
+  let adapters: { forProvider: jest.Mock };
   let perms: any;
   let permSet: Set<string>;
 
@@ -56,20 +57,30 @@ describe('InternalService', () => {
       }),
       updateOne: jest.fn().mockResolvedValue({}),
     };
-    vault = {
-      decrypt: jest.fn().mockReturnValue(JSON.stringify({ access_token: 'tok-abc' })),
+    customModel = {
+      find: jest.fn().mockReturnValue({
+        lean: jest.fn().mockResolvedValue([]),
+      }),
     };
-    mcp = {
+    adapter = {
+      // create_page is tagged sensitive (page write); search is not.
       listTools: jest.fn().mockResolvedValue([
-        // create_page is tagged sensitive (page write); search is not.
         { name: 'create_page', description: 'Create', inputSchema: { type: 'object', properties: {} } },
         { name: 'search', description: 'Find', inputSchema: { type: 'object', properties: {} } },
       ]),
       callTool: jest.fn().mockResolvedValue('page created'),
     };
+    adapters = { forProvider: jest.fn().mockReturnValue(adapter) };
     permSet = new Set<string>();
     perms = { resolvePerms: jest.fn().mockImplementation(() => Promise.resolve(permSet)) };
-    svc = new InternalService(connModel, {} as any, vault, mcp, perms);
+    const audit = { record: jest.fn().mockResolvedValue(undefined) };
+    svc = new InternalService(
+      connModel,
+      customModel,
+      perms,
+      audit as any,
+      adapters as any,
+    );
   });
 
   it('namespaces non-sensitive tools and OMITS sensitive ones without RUN_SENSITIVE_SKILL', async () => {
@@ -91,7 +102,7 @@ describe('InternalService', () => {
   });
 
   it('callTool dispatches a non-sensitive tool regardless of perms', async () => {
-    mcp.callTool.mockResolvedValue('results');
+    adapter.callTool.mockResolvedValue('results');
     const out = await svc.callTool('u1', 'mcp__notion__search', { q: 'X' });
     expect(out.result).toBe('results');
   });
@@ -101,18 +112,21 @@ describe('InternalService', () => {
     perms.resolvePerms.mockResolvedValue(permSet);
     const out = await svc.callTool('u1', 'mcp__notion__create_page', { title: 'X' });
     expect(out.result).toMatch(/not permitted/i);
-    expect(mcp.callTool).not.toHaveBeenCalled();
+    expect(adapter.callTool).not.toHaveBeenCalled();
   });
 
-  it('callTool runs a sensitive tool WITH RUN_SENSITIVE_SKILL', async () => {
+  it('callTool runs a sensitive tool WITH RUN_SENSITIVE_SKILL via the adapter', async () => {
     permSet = new Set<string>(['RUN_SENSITIVE_SKILL']);
     perms.resolvePerms.mockResolvedValue(permSet);
     const out = await svc.callTool('u1', 'mcp__notion__create_page', { title: 'X' });
     expect(out.result).toBe('page created');
-    expect(vault.decrypt).toHaveBeenCalledWith(connDoc.encryptedTokens);
-    expect(mcp.callTool).toHaveBeenCalledWith(
-      connDoc.mcpUrl,
-      { type: 'bearer', token: 'tok-abc' },
+    expect(adapters.forProvider).toHaveBeenCalledWith('notion');
+    expect(adapter.callTool).toHaveBeenCalledWith(
+      expect.objectContaining({
+        provider: 'notion',
+        mcpUrl: connDoc.mcpUrl,
+        encryptedTokens: connDoc.encryptedTokens,
+      }),
       'create_page',
       { title: 'X' },
     );

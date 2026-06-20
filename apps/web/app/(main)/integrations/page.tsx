@@ -57,7 +57,7 @@ export default function IntegrationsPage() {
     if (!userId) return
     setConnectingId(entry.id)
     try {
-      const { authorizeUrl } = await connectorService.startOAuth(entry.id, userId)
+      const { authorizeUrl } = await connectorService.startOAuth(entry.id)
       const popup = window.open(authorizeUrl, 'pon-oauth', POPUP_FEATURES)
       if (!popup) {
         // Popup blocked — fall back to same-tab redirect.

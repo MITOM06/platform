@@ -21,25 +21,21 @@ class ConnectorRepository {
         .toList();
   }
 
-  /// `GET /connections?userId=` — this user's current connections.
-  Future<List<ConnectionView>> connections(String userId) async {
-    final response = await _dio.get(
-      '/connections',
-      queryParameters: {'userId': userId},
-    );
+  /// `GET /connections` — this user's current connections. The backend derives
+  /// identity from the JWT (attached by [connectorDio]); no userId is sent.
+  Future<List<ConnectionView>> connections() async {
+    final response = await _dio.get('/connections');
     final data = response.data as List<dynamic>;
     return data
         .map((e) => ConnectionView.fromJson(e as Map<String, dynamic>))
         .toList();
   }
 
-  /// `GET /oauth/:provider/start?userId=` — returns the authorize URL to open
-  /// in the system browser. The backend redirects back on success.
-  Future<String> startOAuth(String provider, String userId) async {
-    final response = await _dio.get(
-      '/oauth/$provider/start',
-      queryParameters: {'userId': userId},
-    );
+  /// `GET /oauth/:provider/start` — returns the authorize URL to open in the
+  /// system browser. Identity comes from the JWT; the backend redirects back
+  /// on success.
+  Future<String> startOAuth(String provider) async {
+    final response = await _dio.get('/oauth/$provider/start');
     final data = response.data as Map<String, dynamic>;
     return data['authorizeUrl'] as String;
   }
@@ -83,26 +79,21 @@ class ConnectorRepository {
     });
   }
 
-  /// `GET /skills?userId=` — persisted skill toggles for this user.
-  Future<List<UserSkillState>> getSkills(String userId) async {
-    final response = await _dio.get(
-      '/skills',
-      queryParameters: {'userId': userId},
-    );
+  /// `GET /skills` — persisted skill toggles for this user (identity from JWT).
+  Future<List<UserSkillState>> getSkills() async {
+    final response = await _dio.get('/skills');
     final data = response.data as List<dynamic>;
     return data
         .map((e) => UserSkillState.fromJson(e as Map<String, dynamic>))
         .toList();
   }
 
-  /// `PUT /skills` — toggle a skill on/off.
+  /// `PUT /skills` — toggle a skill on/off (identity from JWT).
   Future<void> setSkill({
-    required String userId,
     required String skillId,
     required bool enabled,
   }) async {
     await _dio.put('/skills', data: {
-      'userId': userId,
       'skillId': skillId,
       'enabled': enabled,
     });

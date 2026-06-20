@@ -67,3 +67,42 @@ All code paths feeding that flow are unit-tested; the gap is integration with th
 `NOTION_MCP_URL` defaults to `https://mcp.notion.com/sse`. If Notion's remote MCP contract/auth
 differs from the OAuth-bearer assumption, the fallback (per spec §9) is to wrap the Notion REST API
 behind the same `McpClientService` interface — no change to ai-service or the clients.
+
+---
+
+# P5 — Gmail + Google Calendar Connectors — QA Addendum
+
+**Date:** 2026-06-20
+**Plan:** `docs/superpowers/plans/2026-06-19-p5-google-connectors.md`
+
+## Scope delivered
+- **P5-1** Generalized OAuth: `CatalogEntry.adapter` ('remote-mcp' | 'google-rest'); `CatalogOAuthConfig`
+  gains authStyle/bodyFormat/extraAuthorizeParams/includeScope/ownerParam. Gmail + Calendar flipped to
+  `available:true` with real Google scopes + OAuth config. `buildAuthorizeUrl`/`exchangeCode` honor the
+  new config (Google: body+form, offline+consent, scope in URL; Notion: Basic+JSON+owner=user unchanged).
+  `persist` computes `expiry_date` from `expires_in`.
+- **P5-2** `ProviderAdapter` abstraction: `RemoteMcpAdapter` (Notion/custom, unchanged behavior) +
+  `AdapterRegistryService`. `internal.service` delegates listTools/callTool to the resolved adapter;
+  namespacing + sensitive gate + audit + lastUsedAt unchanged.
+- **P5-3** `GoogleRestAdapter`: gmail `send_email`/`create_draft`/`search_threads`,
+  calendar `list_events`/`create_event`/`suggest_time`. Base64url RFC-822 for Gmail; Calendar events POST;
+  token refresh pre-emptive (stored expiry) + reactive (401 → refresh → retry once), persisted to the vault.
+- **P5-4** Infra: `GOOGLE_CLIENT_ID`/`GOOGLE_CLIENT_SECRET` added to connector-service compose env +
+  `.env.example` + gitignored env files.
+
+## Automated verification (passing)
+- `pnpm --filter connector-service test` → **49 passed** (was 37; +2 authorize-URL, +5 adapter registry,
+  +5 Google adapter incl. 401-refresh-retry).
+- `pnpm --filter connector-service build` → exit 0.
+- `docker compose -f infra/docker-compose/compose.yml config` → clean.
+- Catalog now serves `gmail` + `calendar` as `available:true` (drive stays disabled).
+- ai-service + web + Flutter **unchanged** — tool naming stays `mcp__gmail__*` / `mcp__calendar__*`;
+  clients are catalog-driven so the cards appear automatically.
+
+## Needs owner action for live E2E (HARD STOP — not run here)
+- Google Cloud project: enable **Gmail API** + **Calendar API**, create an **OAuth 2.0 client**, set
+  redirect URIs `${OAUTH_REDIRECT_BASE}/oauth/gmail/callback` and `.../oauth/calendar/callback`.
+- Set `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` in `infra/docker-compose/.env` (+ service `.env`).
+- Run infra in the compose network (Mongo replica set advertises `mongo:27017`).
+- Live test: connect Gmail on web `/integrations` → in chat "Email a@b.com subject Hi body Yo" →
+  confirm the agent calls `mcp__gmail__send_email` and the mail is sent. Same for Calendar create_event.

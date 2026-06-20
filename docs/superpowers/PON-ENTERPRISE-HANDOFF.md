@@ -1,7 +1,7 @@
 # PON Enterprise — Master Handoff & Continuation Guide
 
-**Last updated:** 2026-06-19
-**Active branch:** `feature/mcp-connector-core`
+**Last updated:** 2026-06-20
+**Active branch:** `feature/mcp-connector-core` (✅ P0 COMPLETE — Parts 1–5 + Task 0; ✅ P5 Google connectors)
 **Read order for a fresh session:**
 1. This file (state + remaining work).
 2. `docs/superpowers/specs/2026-06-19-pon-enterprise-reframe.md` (the vision).
@@ -66,71 +66,71 @@ For now: keep hosting as-is, assume **one test company**, get it working end-to-
   blocked at execution unless `RUN_SENSITIVE_SKILL`.
 - Tests: `@platform/database` 10, connector 37, ai-service 97 (unchanged).
 
+### Task 0 — Client connector-contract cleanup ✅
+- web (`lib/api/connector.ts`, `lib/hooks/use-connectors.ts`, integrations page) + Flutter
+  (`connector_repository.dart`, integrations/skills providers) no longer send the dead `userId`
+  param — identity comes from the JWT. Guards kept as fail-fast auth checks.
+- Verify: web build OK; `flutter analyze` clean. Commit `24e40581`.
+
+### P0 Part 3 — Admin console (web) ✅
+- **`apps/web/lib/api/admin{,-types}.ts`**: typed client over the reused `authApi` instance
+  (auth-service hosts `/admin/*` + `/me/capabilities`); `CAPABILITIES` union mirrors
+  `@platform/database` (no server schema in the bundle).
+- **hooks**: `use-capabilities.ts` (`useCapabilities`/`useHasCapability`/`useCanAccessAdmin`),
+  `use-admin.ts` (query+mutation hooks per resource).
+- **`components/admin/`**: `RequireCap`, `AdminShell` (cap-filtered section nav), `WorkspaceSettings`,
+  `DepartmentsPanel`, `MembersPanel`, `RolesPanel` (Capability×role matrix, Owner read-only, clone),
+  `AuditLogPanel` (placeholder).
+- **`app/(main)/admin/`**: layout + index redirect + 5 RequireCap-wrapped pages. Nav "Admin" entry
+  (gated) in `(main)/layout.tsx`; `/admin` hides the chat aside. i18n `admin.*` + `layout.menuAdmin`
+  across all 7 locales. Verify: web build OK, 6 `/admin` routes. Commit `1039f190`.
+
+### P0 Part 4 — Flutter admin mirror ✅ (web↔mobile sync)
+- **`apps/client/lib/features/admin/`**: `data/` (admin_models.dart `Cap`/MeCapabilities/Workspace/
+  Department/Member/Role + `AdminRepository` on authDio), `state/` (capabilitiesProvider +
+  hasCapability/canAccessAdmin family + AsyncNotifiers per resource), `ui/` (AdminScreen shell with
+  cap-filtered tabs + home redirect; workspace/departments/members/roles/audit panels; cap_label).
+- router `/admin`; settings capability-gated "Admin" tile; `admin*` keys across all 7 `app_*.arb`
+  + gen-l10n. Parity with web (same 5 sections/caps/endpoints/gating).
+  Verify: `flutter analyze` — No issues found. Commit `1ce08f77`.
+
+### P0 Part 5 — Audit log ✅ (backend + web & mobile)
+- **`packages/database`**: `AuditLog` schema `{actorId, actorName?, action, targetType, targetId?,
+  meta, createdAt}` (+ `createdAt` index), exported.
+- **auth-service**: `modules/audit/` (`AuditService.record` + paginated `list` with batch actor-name
+  resolution); `AdminService` records workspace/department/member/role mutations (actorId from JWT);
+  `GET /admin/audit` (`VIEW_AUDIT_LOG`, paginated).
+- **connector-service**: `audit/` (`AuditService` writing the shared `auditlogs` collection) records
+  `connector.connect` (workspace scope), `custom_mcp.add`, `sensitive_skill.run`.
+- **web**: `AuditLogPanel` paginated list (`useAuditLog` + `keepPreviousData`).
+- **Flutter**: `AuditPanel` paginated list (`auditLogProvider` family). audit i18n in all 7+7 locales.
+- Verify: `@platform/database` 10, auth-service 32, connector-service 37, web build OK,
+  `flutter analyze` clean. Commit `0353253d`.
+
+**→ ✅ P0 COMPLETE. Enterprise foundation (RBAC + admin console both platforms + governed connectors +
+audit) is built and green. This is the milestone to demo to the first test company** (needs the live
+secrets/infra in §4 to run end-to-end).
+
+### P5 — Gmail + Google Calendar connectors ✅ (backend only; clients catalog-driven, unchanged)
+- **connector-service** `src/catalog/catalog.ts`: `adapter` field on entries; gmail/calendar flipped to
+  `available:true` with real Google scopes + OAuth config. `oauth.service.ts`: `buildAuthorizeUrl`/
+  `exchangeCode` generalized (Google body+form, offline+consent, scope; Notion Basic+JSON+owner kept);
+  `persist` computes `expiry_date`.
+- **`src/adapters/`**: `ProviderAdapter` interface, `RemoteMcpAdapter` (Notion/custom, unchanged),
+  `GoogleRestAdapter` (Gmail send/draft/search + Calendar list/create/suggest, base64url RFC-822, token
+  refresh pre-emptive + reactive-on-401), `AdapterRegistryService`, `AdapterModule`. `internal.service`
+  delegates to the resolved adapter (naming/sensitive-gate/audit/lastUsedAt unchanged).
+- **infra**: `GOOGLE_CLIENT_ID/SECRET` in compose + `.env.example`. ai-service + web + Flutter untouched
+  (`mcp__gmail__*`/`mcp__calendar__*` naming preserved; cards appear via catalog).
+- Verify: connector-service **49** tests, ai-service **97** (unchanged), build OK, compose config clean.
+  Commits `c6608f20`, `7e948666`, `e0bb6257`, `e04346e3`. **Live E2E needs Google creds (see §4).**
+
 ---
 
 ## 3. What REMAINS — detailed, in build order
 
-### ⚠️ Task 0 (do FIRST, small but required) — Client↔server contract fix from Part 2
-**Why:** Part 2 removed the `userId` query param from connector-service user-facing endpoints and
-now requires a JWT + derives identity from it. The P1 web/Flutter connector clients still send
-`?userId=` (now ignored) and assume those endpoints are open. They DO already attach the JWT via
-interceptors, so they likely still work, but the dead `userId` params and any capability-driven UI
-should be cleaned up.
-**Where:**
-- Web: `apps/web/lib/api/connector.ts`, `lib/hooks/use-connectors.ts` — drop `userId` args; rely on JWT.
-- Flutter: `apps/client/lib/features/integrations/data/connector_repository.dart` — drop `userId`.
-**Verify:** `pnpm --filter @platform/web build`; `cd apps/client && flutter analyze`.
-**Commit:** `fix(client): drop dead userId param; rely on JWT for connector calls`.
-
-### P0 Part 3 — Admin console (web, Next.js)
-**Plan:** outline in `docs/superpowers/plans/2026-06-19-p0-enterprise-foundation.md` §"PART 3".
-**Goal:** the enterprise admin UI. Route group `apps/web/app/(main)/admin/`, gated by capabilities
-from `GET /me/capabilities` (call auth-service via a new `adminApi` axios instance →
-`NEXT_PUBLIC_AUTH_URL`; auth-service is the host of `/admin/*` + `/me/capabilities`).
-**Screens (each ≤400 lines, components under `components/admin/`):**
-1. **Workspace settings** — name, branding (logo/primaryColor), feature flags, connector allow-list
-   (multi-select of catalog ids). Calls `GET/PATCH /admin/workspace`. Gate: `MANAGE_WORKSPACE`.
-2. **Departments** — list/create/edit/delete; assign a lead. `GET/POST/PATCH/DELETE /admin/departments`.
-   Gate: `MANAGE_DEPARTMENTS`.
-3. **Members** — list users; edit a member's role + departments. `GET /admin/members`,
-   `PATCH /admin/members/:id`. (Backend already revokes that user's sessions on change.)
-   Gate: `MANAGE_MEMBERS`.
-4. **Roles & permissions** — list roles; clone a preset; toggle the permission matrix
-   (checkbox grid of `Capability` × role). `GET/POST/PATCH /admin/roles`. Owner role read-only.
-   Gate: `MANAGE_ROLES`.
-5. **Audit log** view — placeholder until Part 5 ships the backend; render "coming soon" or hide if
-   `VIEW_AUDIT_LOG` absent.
-**Cross-cutting:** add `useCapabilities()` hook (TanStack Query on `/me/capabilities`); a
-`<RequireCap cap=...>` wrapper to hide/disable UI; nav entry "Admin" visible only to capable roles.
-**i18n:** add `admin.*` keys to ALL 7 `apps/web/messages/*.json`.
-**Verify:** `pnpm --filter @platform/web build`.
-**Dispatch:** `web-dev` subagent.
-
-### P0 Part 4 — Flutter admin mirror + capability UI gating
-**Plan:** outline §"PART 4". **Goal:** mirror Part 3 on mobile (sync rule).
-**Where:** `apps/client/lib/features/admin/` (data repo on `authDio`, Riverpod providers, screens),
-a `capabilitiesProvider` from `/me/capabilities`, capability-gated widgets, router + nav entries.
-**i18n:** `admin*` keys in ALL 7 `lib/l10n/app_*.arb`, then `flutter gen-l10n`.
-**Verify:** `cd apps/client && flutter analyze`. **Dispatch:** `mobile-dev`.
-
-### P0 Part 5 — Audit log
-**Plan:** outline §"PART 5". **Where:** auth-service (or a shared schema in `packages/database`).
-- `AuditLog` schema `{actorId, action, targetType, targetId, meta, createdAt}`.
-- `AuditService.record(...)`; call it at privileged mutations in auth-service `admin.service.ts`
-  (member/role/department/workspace changes) and in connector-service (workspace connect, custom-MCP
-  add, sensitive tool run — emit via the internal API or a small audit client).
-- `GET /admin/audit` (paginated, `VIEW_AUDIT_LOG`); wire the Part 3/4 audit screens to it.
-**Verify:** auth + connector tests green. **Dispatch:** `backend-dev`, then `web-dev`/`mobile-dev`.
-
-**→ P0 COMPLETE after Part 5. This is the milestone to demo to the first test company.**
-
-### P5 — Gmail + Google Calendar connectors
-**Plan:** `docs/superpowers/plans/2026-06-19-p5-google-connectors.md` (fully detailed, 4 tasks).
-**Summary:** Google has no public remote MCP, so add a `ProviderAdapter` abstraction in
-connector-service (`RemoteMcpAdapter` for Notion/custom, `GoogleRestAdapter` for Gmail/Calendar via
-Google REST + OAuth). Tool names stay `mcp__gmail__*`/`mcp__calendar__*` → ai-service + clients
-unchanged. Flip the `gmail`/`calendar` catalog entries to `available:true`.
-**Dispatch:** `backend-dev`. **Needs Google creds for live E2E (see §4).**
+> Task 0, all of P0 (Parts 1–5), and **P5 (Gmail + Calendar connectors)** are **DONE** — see §2.
+> Next milestones below (each needs a fresh spec + plan).
 
 ### P6 — Department-aware group bot
 **Goal:** the group bot in department chats answers using only files/context the department + the
@@ -181,8 +181,8 @@ Open a new session in this repo. Memory auto-loads `MEMORY.md` (it points to the
 enterprise model facts). Then paste one of these:
 
 - To continue building: **"Continue PON enterprise from `docs/superpowers/PON-ENTERPRISE-HANDOFF.md`.
-  Start with Task 0 (client contract fix) then P0 Part 3 (admin console web). Work part-by-part, run
-  tests/builds, show me each part for review."**
+  P0 + P5 are done — brainstorm + plan P6 (department-aware group bot) next, then build it. Work
+  part-by-part, run tests/builds, show me each part for review."**
 - To do the live Notion E2E instead: **"I've added Notion creds + run docker compose. Run the P1
   Notion E2E from the handoff doc §4."**
 - To jump to Google connectors: **"Build P5 from `docs/superpowers/plans/2026-06-19-p5-google-connectors.md`."**

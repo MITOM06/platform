@@ -13,7 +13,24 @@ export interface CatalogOAuthConfig {
   tokenUrl: string;
   clientIdEnv: string;
   clientSecretEnv: string;
+  /** Token-exchange auth: 'basic' (Notion) or 'body' (Google). Default 'basic'. */
+  authStyle?: 'basic' | 'body';
+  /** Token-exchange body encoding. Default 'json' (Notion); Google uses 'form'. */
+  bodyFormat?: 'json' | 'form';
+  /** Extra params appended to the authorize URL (e.g. Google offline+consent). */
+  extraAuthorizeParams?: Record<string, string>;
+  /** Append `scope=<space-joined entry.scopes>` to the authorize URL (Google). */
+  includeScope?: boolean;
+  /** Append `owner=user` to the authorize URL (Notion). */
+  ownerParam?: boolean;
 }
+
+/**
+ * How a connector's tools are fetched/executed:
+ *  - 'remote-mcp': talk to a remote MCP server (Notion + custom servers).
+ *  - 'google-rest': static tool defs backed by Google REST APIs (Gmail/Calendar).
+ */
+export type CatalogAdapter = 'remote-mcp' | 'google-rest';
 
 export interface CatalogEntry {
   id: string;
@@ -24,6 +41,8 @@ export interface CatalogEntry {
   authType: CatalogAuthType;
   /** Governance tier (defaults to 'personal' when omitted). */
   tier: CatalogTier;
+  /** Tool-execution adapter (defaults to 'remote-mcp'). */
+  adapter: CatalogAdapter;
   mcpUrl: string;
   available: boolean;
   // Internal OAuth config — NEVER serialized to clients. The controller maps
@@ -63,6 +82,7 @@ export const CATALOG: CatalogEntry[] = [
     scopes: ['read_content', 'update_content', 'insert_content'],
     authType: 'oauth2',
     tier: 'both',
+    adapter: 'remote-mcp',
     mcpUrl: process.env.NOTION_MCP_URL ?? 'https://mcp.notion.com/sse',
     available: true,
     oauth: {
@@ -70,33 +90,63 @@ export const CATALOG: CatalogEntry[] = [
       tokenUrl: 'https://api.notion.com/v1/oauth/token',
       clientIdEnv: 'NOTION_CLIENT_ID',
       clientSecretEnv: 'NOTION_CLIENT_SECRET',
+      authStyle: 'basic',
+      bodyFormat: 'json',
+      ownerParam: true,
     },
   },
-  // ── Coming soon (P5) — disabled placeholders, no real OAuth config yet ──
   {
     id: 'gmail',
     name: 'Gmail',
     icon: 'gmail',
     description: 'Draft and send email on your behalf.',
-    scopes: [],
+    scopes: [
+      'https://www.googleapis.com/auth/gmail.send',
+      'https://www.googleapis.com/auth/gmail.compose',
+      'https://www.googleapis.com/auth/gmail.readonly',
+    ],
     authType: 'oauth2',
     tier: 'personal',
+    adapter: 'google-rest',
     mcpUrl: '',
-    available: false,
-    // oauth: { authorizeUrl: '...', tokenUrl: '...', clientIdEnv: 'GMAIL_CLIENT_ID', clientSecretEnv: 'GMAIL_CLIENT_SECRET' },
+    available: true,
+    oauth: {
+      authorizeUrl: 'https://accounts.google.com/o/oauth2/v2/auth',
+      tokenUrl: 'https://oauth2.googleapis.com/token',
+      clientIdEnv: 'GOOGLE_CLIENT_ID',
+      clientSecretEnv: 'GOOGLE_CLIENT_SECRET',
+      authStyle: 'body',
+      bodyFormat: 'form',
+      includeScope: true,
+      extraAuthorizeParams: { access_type: 'offline', prompt: 'consent' },
+    },
   },
   {
     id: 'calendar',
     name: 'Google Calendar',
     icon: 'calendar',
     description: 'Schedule and manage events.',
-    scopes: [],
+    scopes: [
+      'https://www.googleapis.com/auth/calendar.events',
+      'https://www.googleapis.com/auth/calendar.readonly',
+    ],
     authType: 'oauth2',
     tier: 'personal',
+    adapter: 'google-rest',
     mcpUrl: '',
-    available: false,
-    // oauth: { authorizeUrl: '...', tokenUrl: '...', clientIdEnv: 'GCAL_CLIENT_ID', clientSecretEnv: 'GCAL_CLIENT_SECRET' },
+    available: true,
+    oauth: {
+      authorizeUrl: 'https://accounts.google.com/o/oauth2/v2/auth',
+      tokenUrl: 'https://oauth2.googleapis.com/token',
+      clientIdEnv: 'GOOGLE_CLIENT_ID',
+      clientSecretEnv: 'GOOGLE_CLIENT_SECRET',
+      authStyle: 'body',
+      bodyFormat: 'form',
+      includeScope: true,
+      extraAuthorizeParams: { access_type: 'offline', prompt: 'consent' },
+    },
   },
+  // ── Coming soon — disabled placeholder, no real OAuth config yet ──
   {
     id: 'drive',
     name: 'Google Drive',
@@ -105,9 +155,9 @@ export const CATALOG: CatalogEntry[] = [
     scopes: [],
     authType: 'oauth2',
     tier: 'personal',
+    adapter: 'google-rest',
     mcpUrl: '',
     available: false,
-    // oauth: { authorizeUrl: '...', tokenUrl: '...', clientIdEnv: 'GDRIVE_CLIENT_ID', clientSecretEnv: 'GDRIVE_CLIENT_SECRET' },
   },
 ];
 

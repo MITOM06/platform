@@ -3006,6 +3006,390 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Files notes and tasks into Notion, keeps databases tidy.'**
   String get skillProjectKeeperDesc;
+
+  /// No description provided for @adminTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Admin Console'**
+  String get adminTitle;
+
+  /// No description provided for @adminSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Manage your workspace, departments, members and roles'**
+  String get adminSubtitle;
+
+  /// No description provided for @adminBack.
+  ///
+  /// In en, this message translates to:
+  /// **'Back'**
+  String get adminBack;
+
+  /// No description provided for @adminLoading.
+  ///
+  /// In en, this message translates to:
+  /// **'Loading…'**
+  String get adminLoading;
+
+  /// No description provided for @adminSave.
+  ///
+  /// In en, this message translates to:
+  /// **'Save'**
+  String get adminSave;
+
+  /// No description provided for @adminSaving.
+  ///
+  /// In en, this message translates to:
+  /// **'Saving…'**
+  String get adminSaving;
+
+  /// No description provided for @adminCancel.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get adminCancel;
+
+  /// No description provided for @adminToastSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved'**
+  String get adminToastSaved;
+
+  /// No description provided for @adminToastDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Deleted'**
+  String get adminToastDeleted;
+
+  /// No description provided for @adminToastError.
+  ///
+  /// In en, this message translates to:
+  /// **'Something went wrong'**
+  String get adminToastError;
+
+  /// No description provided for @adminMenu.
+  ///
+  /// In en, this message translates to:
+  /// **'Admin'**
+  String get adminMenu;
+
+  /// No description provided for @adminSettingsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Workspace, departments, members & roles'**
+  String get adminSettingsSubtitle;
+
+  /// No description provided for @adminNavWorkspace.
+  ///
+  /// In en, this message translates to:
+  /// **'Workspace'**
+  String get adminNavWorkspace;
+
+  /// No description provided for @adminNavDepartments.
+  ///
+  /// In en, this message translates to:
+  /// **'Departments'**
+  String get adminNavDepartments;
+
+  /// No description provided for @adminNavMembers.
+  ///
+  /// In en, this message translates to:
+  /// **'Members'**
+  String get adminNavMembers;
+
+  /// No description provided for @adminNavRoles.
+  ///
+  /// In en, this message translates to:
+  /// **'Roles'**
+  String get adminNavRoles;
+
+  /// No description provided for @adminNavAudit.
+  ///
+  /// In en, this message translates to:
+  /// **'Audit log'**
+  String get adminNavAudit;
+
+  /// No description provided for @adminWsIdentity.
+  ///
+  /// In en, this message translates to:
+  /// **'Identity & branding'**
+  String get adminWsIdentity;
+
+  /// No description provided for @adminWsName.
+  ///
+  /// In en, this message translates to:
+  /// **'Workspace name'**
+  String get adminWsName;
+
+  /// No description provided for @adminWsNamePlaceholder.
+  ///
+  /// In en, this message translates to:
+  /// **'Acme Inc.'**
+  String get adminWsNamePlaceholder;
+
+  /// No description provided for @adminWsLogoUrl.
+  ///
+  /// In en, this message translates to:
+  /// **'Logo URL'**
+  String get adminWsLogoUrl;
+
+  /// No description provided for @adminWsPrimaryColor.
+  ///
+  /// In en, this message translates to:
+  /// **'Primary color'**
+  String get adminWsPrimaryColor;
+
+  /// No description provided for @adminWsFeatures.
+  ///
+  /// In en, this message translates to:
+  /// **'Feature flags'**
+  String get adminWsFeatures;
+
+  /// No description provided for @adminWsNoFeatures.
+  ///
+  /// In en, this message translates to:
+  /// **'No feature flags configured.'**
+  String get adminWsNoFeatures;
+
+  /// No description provided for @adminWsAllowList.
+  ///
+  /// In en, this message translates to:
+  /// **'Connector allow-list'**
+  String get adminWsAllowList;
+
+  /// No description provided for @adminWsAllowListDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Connectors members may personally connect.'**
+  String get adminWsAllowListDesc;
+
+  /// No description provided for @adminWsNoCatalog.
+  ///
+  /// In en, this message translates to:
+  /// **'No connectors available.'**
+  String get adminWsNoCatalog;
+
+  /// No description provided for @adminDeptNew.
+  ///
+  /// In en, this message translates to:
+  /// **'New department'**
+  String get adminDeptNew;
+
+  /// No description provided for @adminDeptEdit.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit department'**
+  String get adminDeptEdit;
+
+  /// No description provided for @adminDeptEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No departments yet.'**
+  String get adminDeptEmpty;
+
+  /// No description provided for @adminDeptLead.
+  ///
+  /// In en, this message translates to:
+  /// **'Lead'**
+  String get adminDeptLead;
+
+  /// No description provided for @adminDeptLeadNone.
+  ///
+  /// In en, this message translates to:
+  /// **'No lead'**
+  String get adminDeptLeadNone;
+
+  /// No description provided for @adminDeptName.
+  ///
+  /// In en, this message translates to:
+  /// **'Name'**
+  String get adminDeptName;
+
+  /// No description provided for @adminDeptDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Description'**
+  String get adminDeptDescription;
+
+  /// No description provided for @adminDeptDialogDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Departments group members and own department chats.'**
+  String get adminDeptDialogDesc;
+
+  /// No description provided for @adminDeptDeleteConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete department \"{name}\"?'**
+  String adminDeptDeleteConfirm(String name);
+
+  /// No description provided for @adminMemberHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Assign a role and departments to each member.'**
+  String get adminMemberHint;
+
+  /// No description provided for @adminMemberEdit.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit member'**
+  String get adminMemberEdit;
+
+  /// No description provided for @adminMemberRevokeNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Saving revokes the member\'s active sessions.'**
+  String get adminMemberRevokeNote;
+
+  /// No description provided for @adminMemberRole.
+  ///
+  /// In en, this message translates to:
+  /// **'Role'**
+  String get adminMemberRole;
+
+  /// No description provided for @adminMemberRoleNone.
+  ///
+  /// In en, this message translates to:
+  /// **'No role'**
+  String get adminMemberRoleNone;
+
+  /// No description provided for @adminMemberDepartments.
+  ///
+  /// In en, this message translates to:
+  /// **'Departments'**
+  String get adminMemberDepartments;
+
+  /// No description provided for @adminRoleHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Toggle each role\'s permissions. The Owner role is read-only.'**
+  String get adminRoleHint;
+
+  /// No description provided for @adminRoleCapability.
+  ///
+  /// In en, this message translates to:
+  /// **'Capability'**
+  String get adminRoleCapability;
+
+  /// No description provided for @adminRolePreset.
+  ///
+  /// In en, this message translates to:
+  /// **'Preset'**
+  String get adminRolePreset;
+
+  /// No description provided for @adminRoleClone.
+  ///
+  /// In en, this message translates to:
+  /// **'Clone'**
+  String get adminRoleClone;
+
+  /// No description provided for @adminRoleCloneTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Clone {name}'**
+  String adminRoleCloneTitle(String name);
+
+  /// No description provided for @adminRoleName.
+  ///
+  /// In en, this message translates to:
+  /// **'Role name'**
+  String get adminRoleName;
+
+  /// No description provided for @adminAuditTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Audit log'**
+  String get adminAuditTitle;
+
+  /// No description provided for @adminAuditComingSoon.
+  ///
+  /// In en, this message translates to:
+  /// **'The audit log will be available in a future update.'**
+  String get adminAuditComingSoon;
+
+  /// No description provided for @adminCapManageWorkspace.
+  ///
+  /// In en, this message translates to:
+  /// **'Manage workspace'**
+  String get adminCapManageWorkspace;
+
+  /// No description provided for @adminCapManageDepartments.
+  ///
+  /// In en, this message translates to:
+  /// **'Manage departments'**
+  String get adminCapManageDepartments;
+
+  /// No description provided for @adminCapManageMembers.
+  ///
+  /// In en, this message translates to:
+  /// **'Manage members'**
+  String get adminCapManageMembers;
+
+  /// No description provided for @adminCapManageRoles.
+  ///
+  /// In en, this message translates to:
+  /// **'Manage roles'**
+  String get adminCapManageRoles;
+
+  /// No description provided for @adminCapConnectWorkspaceConnector.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect workspace connectors'**
+  String get adminCapConnectWorkspaceConnector;
+
+  /// No description provided for @adminCapAddCustomMcp.
+  ///
+  /// In en, this message translates to:
+  /// **'Add custom MCP'**
+  String get adminCapAddCustomMcp;
+
+  /// No description provided for @adminCapConnectPersonalConnector.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect personal connectors'**
+  String get adminCapConnectPersonalConnector;
+
+  /// No description provided for @adminCapUsePersonalAssistant.
+  ///
+  /// In en, this message translates to:
+  /// **'Use personal assistant'**
+  String get adminCapUsePersonalAssistant;
+
+  /// No description provided for @adminCapUseGroupBot.
+  ///
+  /// In en, this message translates to:
+  /// **'Use group bot'**
+  String get adminCapUseGroupBot;
+
+  /// No description provided for @adminCapRunSensitiveSkill.
+  ///
+  /// In en, this message translates to:
+  /// **'Run sensitive skills'**
+  String get adminCapRunSensitiveSkill;
+
+  /// No description provided for @adminCapViewAuditLog.
+  ///
+  /// In en, this message translates to:
+  /// **'View audit log'**
+  String get adminCapViewAuditLog;
+
+  /// No description provided for @adminAuditEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No audit entries yet.'**
+  String get adminAuditEmpty;
+
+  /// No description provided for @adminAuditPrev.
+  ///
+  /// In en, this message translates to:
+  /// **'Previous'**
+  String get adminAuditPrev;
+
+  /// No description provided for @adminAuditNext.
+  ///
+  /// In en, this message translates to:
+  /// **'Next'**
+  String get adminAuditNext;
 }
 
 class _AppLocalizationsDelegate

@@ -1550,4 +1550,200 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get skillProjectKeeperDesc => '将笔记和任务归档到 Notion，保持数据库整洁。';
+
+  @override
+  String get adminTitle => '管理控制台';
+
+  @override
+  String get adminSubtitle => '管理工作区、部门、成员和角色';
+
+  @override
+  String get adminBack => '返回';
+
+  @override
+  String get adminLoading => '加载中…';
+
+  @override
+  String get adminSave => '保存';
+
+  @override
+  String get adminSaving => '保存中…';
+
+  @override
+  String get adminCancel => '取消';
+
+  @override
+  String get adminToastSaved => '已保存';
+
+  @override
+  String get adminToastDeleted => '已删除';
+
+  @override
+  String get adminToastError => '发生错误';
+
+  @override
+  String get adminMenu => '管理';
+
+  @override
+  String get adminSettingsSubtitle => '工作区、部门、成员和角色';
+
+  @override
+  String get adminNavWorkspace => '工作区';
+
+  @override
+  String get adminNavDepartments => '部门';
+
+  @override
+  String get adminNavMembers => '成员';
+
+  @override
+  String get adminNavRoles => '角色';
+
+  @override
+  String get adminNavAudit => '审计日志';
+
+  @override
+  String get adminWsIdentity => '标识与品牌';
+
+  @override
+  String get adminWsName => '工作区名称';
+
+  @override
+  String get adminWsNamePlaceholder => 'Acme 公司';
+
+  @override
+  String get adminWsLogoUrl => 'Logo 链接';
+
+  @override
+  String get adminWsPrimaryColor => '主色';
+
+  @override
+  String get adminWsFeatures => '功能开关';
+
+  @override
+  String get adminWsNoFeatures => '尚未配置功能开关。';
+
+  @override
+  String get adminWsAllowList => '连接器白名单';
+
+  @override
+  String get adminWsAllowListDesc => '成员可个人连接的连接器。';
+
+  @override
+  String get adminWsNoCatalog => '没有可用的连接器。';
+
+  @override
+  String get adminDeptNew => '新建部门';
+
+  @override
+  String get adminDeptEdit => '编辑部门';
+
+  @override
+  String get adminDeptEmpty => '暂无部门。';
+
+  @override
+  String get adminDeptLead => '负责人';
+
+  @override
+  String get adminDeptLeadNone => '无';
+
+  @override
+  String get adminDeptName => '名称';
+
+  @override
+  String get adminDeptDescription => '描述';
+
+  @override
+  String get adminDeptDialogDesc => '部门用于分组成员并拥有部门聊天。';
+
+  @override
+  String adminDeptDeleteConfirm(String name) {
+    return '删除部门\"$name\"？';
+  }
+
+  @override
+  String get adminMemberHint => '为每位成员分配角色和部门。';
+
+  @override
+  String get adminMemberEdit => '编辑成员';
+
+  @override
+  String get adminMemberRevokeNote => '保存将吊销该成员的活动会话。';
+
+  @override
+  String get adminMemberRole => '角色';
+
+  @override
+  String get adminMemberRoleNone => '无';
+
+  @override
+  String get adminMemberDepartments => '部门';
+
+  @override
+  String get adminRoleHint => '切换每个角色的权限。Owner 角色为只读。';
+
+  @override
+  String get adminRoleCapability => '权限';
+
+  @override
+  String get adminRolePreset => '预设';
+
+  @override
+  String get adminRoleClone => '克隆';
+
+  @override
+  String adminRoleCloneTitle(String name) {
+    return '克隆 $name';
+  }
+
+  @override
+  String get adminRoleName => '角色名称';
+
+  @override
+  String get adminAuditTitle => '审计日志';
+
+  @override
+  String get adminAuditComingSoon => '审计日志将在未来更新中提供。';
+
+  @override
+  String get adminCapManageWorkspace => '管理工作区';
+
+  @override
+  String get adminCapManageDepartments => '管理部门';
+
+  @override
+  String get adminCapManageMembers => '管理成员';
+
+  @override
+  String get adminCapManageRoles => '管理角色';
+
+  @override
+  String get adminCapConnectWorkspaceConnector => '连接工作区连接器';
+
+  @override
+  String get adminCapAddCustomMcp => '添加自定义 MCP';
+
+  @override
+  String get adminCapConnectPersonalConnector => '连接个人连接器';
+
+  @override
+  String get adminCapUsePersonalAssistant => '使用个人助手';
+
+  @override
+  String get adminCapUseGroupBot => '使用群组机器人';
+
+  @override
+  String get adminCapRunSensitiveSkill => '运行敏感技能';
+
+  @override
+  String get adminCapViewAuditLog => '查看审计日志';
+
+  @override
+  String get adminAuditEmpty => '暂无审计记录。';
+
+  @override
+  String get adminAuditPrev => '上一页';
+
+  @override
+  String get adminAuditNext => '下一页';
 }

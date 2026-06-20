@@ -1587,4 +1587,207 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get skillProjectKeeperDesc =>
       'Lưu ghi chú và việc cần làm vào Notion, giữ cơ sở dữ liệu gọn gàng.';
+
+  @override
+  String get adminTitle => 'Bảng quản trị';
+
+  @override
+  String get adminSubtitle =>
+      'Quản lý workspace, phòng ban, thành viên và vai trò';
+
+  @override
+  String get adminBack => 'Quay lại';
+
+  @override
+  String get adminLoading => 'Đang tải…';
+
+  @override
+  String get adminSave => 'Lưu';
+
+  @override
+  String get adminSaving => 'Đang lưu…';
+
+  @override
+  String get adminCancel => 'Hủy';
+
+  @override
+  String get adminToastSaved => 'Đã lưu';
+
+  @override
+  String get adminToastDeleted => 'Đã xóa';
+
+  @override
+  String get adminToastError => 'Đã xảy ra lỗi';
+
+  @override
+  String get adminMenu => 'Quản trị';
+
+  @override
+  String get adminSettingsSubtitle =>
+      'Workspace, phòng ban, thành viên & vai trò';
+
+  @override
+  String get adminNavWorkspace => 'Workspace';
+
+  @override
+  String get adminNavDepartments => 'Phòng ban';
+
+  @override
+  String get adminNavMembers => 'Thành viên';
+
+  @override
+  String get adminNavRoles => 'Vai trò';
+
+  @override
+  String get adminNavAudit => 'Nhật ký';
+
+  @override
+  String get adminWsIdentity => 'Nhận diện & thương hiệu';
+
+  @override
+  String get adminWsName => 'Tên workspace';
+
+  @override
+  String get adminWsNamePlaceholder => 'Công ty ABC';
+
+  @override
+  String get adminWsLogoUrl => 'URL logo';
+
+  @override
+  String get adminWsPrimaryColor => 'Màu chủ đạo';
+
+  @override
+  String get adminWsFeatures => 'Cờ tính năng';
+
+  @override
+  String get adminWsNoFeatures => 'Chưa cấu hình cờ tính năng nào.';
+
+  @override
+  String get adminWsAllowList => 'Danh sách connector cho phép';
+
+  @override
+  String get adminWsAllowListDesc =>
+      'Các connector mà thành viên được tự kết nối.';
+
+  @override
+  String get adminWsNoCatalog => 'Không có connector nào.';
+
+  @override
+  String get adminDeptNew => 'Phòng ban mới';
+
+  @override
+  String get adminDeptEdit => 'Sửa phòng ban';
+
+  @override
+  String get adminDeptEmpty => 'Chưa có phòng ban nào.';
+
+  @override
+  String get adminDeptLead => 'Trưởng phòng';
+
+  @override
+  String get adminDeptLeadNone => 'Không có';
+
+  @override
+  String get adminDeptName => 'Tên';
+
+  @override
+  String get adminDeptDescription => 'Mô tả';
+
+  @override
+  String get adminDeptDialogDesc =>
+      'Phòng ban nhóm thành viên và sở hữu chat phòng ban.';
+
+  @override
+  String adminDeptDeleteConfirm(String name) {
+    return 'Xóa phòng ban \"$name\"?';
+  }
+
+  @override
+  String get adminMemberHint => 'Gán vai trò và phòng ban cho từng thành viên.';
+
+  @override
+  String get adminMemberEdit => 'Sửa thành viên';
+
+  @override
+  String get adminMemberRevokeNote =>
+      'Lưu sẽ thu hồi các phiên đang hoạt động của thành viên.';
+
+  @override
+  String get adminMemberRole => 'Vai trò';
+
+  @override
+  String get adminMemberRoleNone => 'Không có';
+
+  @override
+  String get adminMemberDepartments => 'Phòng ban';
+
+  @override
+  String get adminRoleHint =>
+      'Bật/tắt quyền cho từng vai trò. Vai trò Owner chỉ đọc.';
+
+  @override
+  String get adminRoleCapability => 'Quyền';
+
+  @override
+  String get adminRolePreset => 'Mặc định';
+
+  @override
+  String get adminRoleClone => 'Nhân bản';
+
+  @override
+  String adminRoleCloneTitle(String name) {
+    return 'Nhân bản $name';
+  }
+
+  @override
+  String get adminRoleName => 'Tên vai trò';
+
+  @override
+  String get adminAuditTitle => 'Nhật ký kiểm toán';
+
+  @override
+  String get adminAuditComingSoon =>
+      'Nhật ký kiểm toán sẽ có trong bản cập nhật sắp tới.';
+
+  @override
+  String get adminCapManageWorkspace => 'Quản lý workspace';
+
+  @override
+  String get adminCapManageDepartments => 'Quản lý phòng ban';
+
+  @override
+  String get adminCapManageMembers => 'Quản lý thành viên';
+
+  @override
+  String get adminCapManageRoles => 'Quản lý vai trò';
+
+  @override
+  String get adminCapConnectWorkspaceConnector => 'Kết nối connector workspace';
+
+  @override
+  String get adminCapAddCustomMcp => 'Thêm MCP tùy chỉnh';
+
+  @override
+  String get adminCapConnectPersonalConnector => 'Kết nối connector cá nhân';
+
+  @override
+  String get adminCapUsePersonalAssistant => 'Dùng trợ lý cá nhân';
+
+  @override
+  String get adminCapUseGroupBot => 'Dùng bot nhóm';
+
+  @override
+  String get adminCapRunSensitiveSkill => 'Chạy kỹ năng nhạy cảm';
+
+  @override
+  String get adminCapViewAuditLog => 'Xem nhật ký kiểm toán';
+
+  @override
+  String get adminAuditEmpty => 'Chưa có bản ghi kiểm toán nào.';
+
+  @override
+  String get adminAuditPrev => 'Trước';
+
+  @override
+  String get adminAuditNext => 'Sau';
 }
