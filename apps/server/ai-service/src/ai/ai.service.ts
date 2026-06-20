@@ -20,6 +20,8 @@ export interface AiRequestPayload {
   displayName: string;
   content: string;
   history: Array<{ role: 'user' | 'assistant'; content: string }>;
+  /** Owning department id of the conversation (P6 group bot); null for personal. */
+  departmentId?: string;
 }
 
 interface RagSource {
@@ -48,6 +50,8 @@ interface RequestContext {
   conversationId: string;
   userId: string;
   displayName: string;
+  /** Owning department id (P6 group bot); scopes KB retrieval when present. */
+  departmentId?: string;
   /** Stable, cacheable persona + grounding contract. */
   baseSystem: string;
   /** Volatile per-request grounding block (RAG + memory). Placed AFTER cache. */
@@ -111,7 +115,8 @@ export class AiService {
   }
 
   async handleRequest(payload: AiRequestPayload): Promise<void> {
-    const { conversationId, userId, displayName, content, history } = payload;
+    const { conversationId, userId, displayName, content, history, departmentId } =
+      payload;
 
     if (await this.usageService.isQuotaExceeded(userId)) {
       this.logger.warn(`Quota exceeded for user ${userId} in conversation ${conversationId}`);
@@ -141,12 +146,14 @@ export class AiService {
       conversationId,
       userId,
       queryVector,
+      departmentId,
     );
 
     const ctx: RequestContext = {
       conversationId,
       userId,
       displayName,
+      departmentId,
       baseSystem,
       volatileSystem: volatileContext.text,
       ragSources: volatileContext.ragSources,
@@ -282,6 +289,7 @@ export class AiService {
       conversationId: ctx.conversationId,
       userId: ctx.userId,
       displayName: ctx.displayName,
+      departmentId: ctx.departmentId,
     };
     const tools = await this.buildTools(toolCtx);
 

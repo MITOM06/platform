@@ -29,16 +29,25 @@ export class KbProcessorService {
   }
 
   async processDocument(payload: KbProcessPayload): Promise<void> {
-    const { documentId, conversationId, userId, fileUrl, mimeType, fileName } = payload;
+    const { documentId, conversationId, userId, fileUrl, mimeType, fileName, departmentId } =
+      payload;
 
     try {
       // Mark the shared kb_documents record (created by chat-service on upload) as "processing".
       // Use $setOnInsert for identity/uploadedAt so we never clobber chat-service's original values
       // on the normal path; $set only the fields ai-service actually owns during processing.
+      // departmentId is propagated so dept-scoped RAG works even if ai-service upserts first.
       await this.kbDocumentModel.findOneAndUpdate(
         { documentId },
         {
-          $set: { conversationId, userId, fileName, mimeType, status: 'processing' },
+          $set: {
+            conversationId,
+            userId,
+            fileName,
+            mimeType,
+            status: 'processing',
+            ...(departmentId ? { departmentId } : {}),
+          },
           $setOnInsert: { documentId, uploadedAt: new Date() },
         },
         { upsert: true, new: true },
@@ -103,9 +112,20 @@ export class KbProcessorService {
     }
   }
 
-  async getReadyDocumentIds(conversationId: string): Promise<string[]> {
+  /**
+   * Processed document ids visible to a request. In a department group chat
+   * ([departmentId] set) the bot sees the whole department's KB (shared across
+   * its conversations); otherwise scoped to the single conversation (P6).
+   */
+  async getReadyDocumentIds(
+    conversationId: string,
+    departmentId?: string,
+  ): Promise<string[]> {
+    const filter = departmentId
+      ? { departmentId, status: 'done' }
+      : { conversationId, status: 'done' };
     const docs = await this.kbDocumentModel
-      .find({ conversationId, status: 'done' })
+      .find(filter)
       .select('documentId')
       .lean()
       .exec();

@@ -14,6 +14,10 @@ export class KbDocument {
   @Prop({ required: true, index: true })
   conversationId: string;
 
+  /** Owning department id (P6 dept-scoped RAG); null for personal chats. */
+  @Prop({ index: true })
+  departmentId?: string;
+
   @Prop()
   userId: string;
 
