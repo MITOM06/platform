@@ -5,8 +5,9 @@ department + the asking member may access. This lands **chat-service (Spring
 Boot/Java) RBAC enforcement** (deferred from P0 Part 2) and department-scoped
 RAG/tools in ai-service.
 
-**Status:** Part 1 in progress. Parts 2–3 have open architecture decisions (see
-§"Open decisions") — do NOT build them until the owner picks an option.
+**Status:** ✅ DONE — Parts 1–3 built. Owner picked **A1 + B1** (explicit
+department ownership + dept-tagged KB). Live verification needs a deployed stack
++ a department group chat with KB; code builds/tests green.
 
 ---
 
@@ -25,16 +26,24 @@ claims); chat-service only extracts `sub` today.
 **Verify:** `mvn -q -pl . compile` (+ existing tests). No behavior change for
 existing endpoints (claims are additive).
 
-## Part 2 — Department ↔ conversation link + scoped reads  ⛔ NEEDS DECISION
-Associate a group conversation with a department, then scope message/KB reads so
-a member only sees department data they're entitled to. Requires a schema/route
-decision — see §"Open decisions" A.
+## Part 2 — Department ↔ conversation link + KB tagging ✅ (A1 + B1)
+- `Conversation.departmentId` (indexed) + `CreateGroupRequest`/`createGroup` set it.
+- `KbDocument.departmentId` (indexed), inherited from the conversation on upload;
+  `kb:process` Redis payload carries it.
+- `AiRequestPayload.departmentId`; `AiRedisPublisher` resolves it from the
+  conversation. Null-tolerant for personal chats. (chat-service, mvn green.)
 
-## Part 3 — ai-service department context  ⛔ NEEDS DECISION (depends on Part 2)
-Pass department id + member perms into the agent so RAG retrieval + tool exposure
-are department-scoped (only KB docs of that department; sensitive tools still
-gated by `RUN_SENSITIVE_SKILL`). Requires KB-tagging decision — see §"Open
-decisions" B.
+## Part 3 — ai-service department-scoped RAG ✅
+- `AiRequestPayload`/`KbProcessPayload`/`ToolContext`/`RequestContext` +
+  `departmentId`; `kb-document.schema` + departmentId.
+- `getReadyDocumentIds(conversationId, departmentId?)`: department group chat →
+  whole-department KB; else conversation-scoped. `context-builder` +
+  `search_knowledge_base` tool thread it through. Sensitive tools still gated by
+  `RUN_SENSITIVE_SKILL` in connector-service (unchanged). (ai-service, 97 tests green.)
+
+> Note: the bot's tool exposure is already member-scoped — connector-service
+> resolves the caller's perms from Mongo independently of chat context — so no
+> extra perms plumbing was needed for department scoping.
 
 ---
 

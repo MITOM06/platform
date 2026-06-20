@@ -1,7 +1,7 @@
 # PON Enterprise — Master Handoff & Continuation Guide
 
 **Last updated:** 2026-06-20
-**Active branch:** `feature/mcp-connector-core` (✅ P0 COMPLETE — Parts 1–5 + Task 0; ✅ P5 Google connectors)
+**Active branch:** `feature/pon-enterprise-p0-p5` (✅ P0 + ✅ P5 Google connectors + ✅ P6 department group bot)
 **Read order for a fresh session:**
 1. This file (state + remaining work).
 2. `docs/superpowers/specs/2026-06-19-pon-enterprise-reframe.md` (the vision).
@@ -125,12 +125,24 @@ secrets/infra in §4 to run end-to-end).
 - Verify: connector-service **49** tests, ai-service **97** (unchanged), build OK, compose config clean.
   Commits `c6608f20`, `7e948666`, `e0bb6257`, `e04346e3`. **Live E2E needs Google creds (see §4).**
 
+### P6 — Department-aware group bot ✅ (decision A1 + B1)
+Plan: `docs/superpowers/plans/2026-06-20-p6-department-group-bot.md`.
+- **chat-service (Java) RBAC** (deferred from P0 Part 2): `JwtUtil` reads role/perms/depts;
+  `UserPrincipal` carries them + maps perms → `PERM_<CAP>` authorities + `hasPermission`/`inDepartment`.
+- **Department↔conversation**: `Conversation.departmentId` (+ create-group wiring); `KbDocument.departmentId`
+  inherited on upload; `AiRequestPayload` + `kb:process` payload carry departmentId.
+- **ai-service dept-scoped RAG**: `getReadyDocumentIds(conversationId, departmentId?)` → department group chat
+  retrieves whole-department KB, else conversation-scoped; threaded through context-builder + KB tool.
+  Tool exposure stays member-scoped (connector-service resolves perms independently).
+- Backward compatible (personal chats unchanged). Verify: chat-service mvn compile + security/AI tests green;
+  ai-service 97 tests. Commits `5396a9f5`, `bf5e…` (Part 2), `…` (Part 3).
+
 ---
 
 ## 3. What REMAINS — detailed, in build order
 
-> Task 0, all of P0 (Parts 1–5), and **P5 (Gmail + Calendar connectors)** are **DONE** — see §2.
-> Next milestones below (each needs a fresh spec + plan).
+> Task 0, all of P0 (Parts 1–5), **P5 (Gmail + Calendar)**, and **P6 (department group bot)** are **DONE**
+> — see §2. Next milestones below (each needs a fresh spec + plan).
 
 ### P6 — Department-aware group bot
 **Goal:** the group bot in department chats answers using only files/context the department + the
@@ -181,8 +193,8 @@ Open a new session in this repo. Memory auto-loads `MEMORY.md` (it points to the
 enterprise model facts). Then paste one of these:
 
 - To continue building: **"Continue PON enterprise from `docs/superpowers/PON-ENTERPRISE-HANDOFF.md`.
-  P0 + P5 are done — brainstorm + plan P6 (department-aware group bot) next, then build it. Work
-  part-by-part, run tests/builds, show me each part for review."**
+  P0 + P5 + P6 are done — plan + build P7 (self-host deployment kit) next. Work part-by-part, run
+  tests/builds, show me each part for review."**
 - To do the live Notion E2E instead: **"I've added Notion creds + run docker compose. Run the P1
   Notion E2E from the handoff doc §4."**
 - To jump to Google connectors: **"Build P5 from `docs/superpowers/plans/2026-06-19-p5-google-connectors.md`."**
