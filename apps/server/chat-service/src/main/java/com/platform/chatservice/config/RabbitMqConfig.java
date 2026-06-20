@@ -2,6 +2,7 @@ package com.platform.chatservice.config;
 
 import org.springframework.amqp.core.*;
 import org.springframework.amqp.rabbit.connection.ConnectionFactory;
+import org.springframework.amqp.rabbit.core.RabbitAdmin;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter;
 import org.springframework.context.annotation.Bean;
@@ -61,5 +62,16 @@ public class RabbitMqConfig {
     RabbitTemplate template = new RabbitTemplate(connectionFactory);
     template.setMessageConverter(messageConverter);
     return template;
+  }
+
+  // Override Spring Boot's auto-configured RabbitAdmin so that a transient RabbitMQ
+  // connection failure at startup does not crash the Spring context before Tomcat binds
+  // to port 8080. Spring AMQP retries declarations automatically once the connection
+  // recovers, so topology is still declared — just not blocking the health-check path.
+  @Bean
+  RabbitAdmin rabbitAdmin(ConnectionFactory connectionFactory) {
+    RabbitAdmin admin = new RabbitAdmin(connectionFactory);
+    admin.setIgnoreDeclarationExceptions(true);
+    return admin;
   }
 }
