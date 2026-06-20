@@ -8,6 +8,7 @@ import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/pon_widgets.dart';
 import '../../auth/domain/auth_provider.dart';
 import '../../auth/domain/auth_state.dart';
+import '../../admin/state/capabilities_provider.dart';
 import 'widgets/settings_dialogs.dart';
 import 'widgets/settings_avatar_section.dart';
 import 'widgets/change_password_dialog.dart';
@@ -324,6 +325,21 @@ class SettingsScreen extends ConsumerWidget {
                   title: context.l10n.reminders,
                   onTap: () => context.push('/reminders'),
                 ),
+                if (ref.watch(canAccessAdminProvider)) ...[
+                  const SizedBox(height: 24),
+                  _settingsCard(
+                    context: context,
+                    isDark: isDark,
+                    glowColor: AppTheme.ponPink,
+                    icon: Icons.admin_panel_settings_outlined,
+                    title: context.l10n.adminMenu,
+                    subtitle: context.l10n.adminSettingsSubtitle,
+                    onTap: () {
+                      if (isDialog) Navigator.of(context).pop();
+                      context.push('/admin');
+                    },
+                  ),
+                ],
                 const SizedBox(height: 24),
                 _settingsCard(
                   context: context,

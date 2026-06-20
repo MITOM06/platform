@@ -1558,4 +1558,191 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get skillProjectKeeperDesc => 'メモやタスクを Notion に保存し、データベースを整理します。';
+
+  @override
+  String get adminTitle => '管理コンソール';
+
+  @override
+  String get adminSubtitle => 'ワークスペース、部門、メンバー、ロールを管理';
+
+  @override
+  String get adminBack => '戻る';
+
+  @override
+  String get adminLoading => '読み込み中…';
+
+  @override
+  String get adminSave => '保存';
+
+  @override
+  String get adminSaving => '保存中…';
+
+  @override
+  String get adminCancel => 'キャンセル';
+
+  @override
+  String get adminToastSaved => '保存しました';
+
+  @override
+  String get adminToastDeleted => '削除しました';
+
+  @override
+  String get adminToastError => 'エラーが発生しました';
+
+  @override
+  String get adminMenu => '管理';
+
+  @override
+  String get adminSettingsSubtitle => 'ワークスペース、部門、メンバー、ロール';
+
+  @override
+  String get adminNavWorkspace => 'ワークスペース';
+
+  @override
+  String get adminNavDepartments => '部門';
+
+  @override
+  String get adminNavMembers => 'メンバー';
+
+  @override
+  String get adminNavRoles => 'ロール';
+
+  @override
+  String get adminNavAudit => '監査ログ';
+
+  @override
+  String get adminWsIdentity => 'アイデンティティとブランディング';
+
+  @override
+  String get adminWsName => 'ワークスペース名';
+
+  @override
+  String get adminWsNamePlaceholder => 'Acme 株式会社';
+
+  @override
+  String get adminWsLogoUrl => 'ロゴ URL';
+
+  @override
+  String get adminWsPrimaryColor => 'プライマリカラー';
+
+  @override
+  String get adminWsFeatures => '機能フラグ';
+
+  @override
+  String get adminWsNoFeatures => '機能フラグは設定されていません。';
+
+  @override
+  String get adminWsAllowList => 'コネクタ許可リスト';
+
+  @override
+  String get adminWsAllowListDesc => 'メンバーが個人で接続できるコネクタ。';
+
+  @override
+  String get adminWsNoCatalog => '利用可能なコネクタがありません。';
+
+  @override
+  String get adminDeptNew => '新しい部門';
+
+  @override
+  String get adminDeptEdit => '部門を編集';
+
+  @override
+  String get adminDeptEmpty => '部門がまだありません。';
+
+  @override
+  String get adminDeptLead => 'リーダー';
+
+  @override
+  String get adminDeptLeadNone => 'なし';
+
+  @override
+  String get adminDeptName => '名前';
+
+  @override
+  String get adminDeptDescription => '説明';
+
+  @override
+  String get adminDeptDialogDesc => '部門はメンバーをまとめ、部門チャットを持ちます。';
+
+  @override
+  String adminDeptDeleteConfirm(String name) {
+    return '部門「$name」を削除しますか？';
+  }
+
+  @override
+  String get adminMemberHint => '各メンバーにロールと部門を割り当てます。';
+
+  @override
+  String get adminMemberEdit => 'メンバーを編集';
+
+  @override
+  String get adminMemberRevokeNote => '保存するとメンバーのアクティブなセッションが取り消されます。';
+
+  @override
+  String get adminMemberRole => 'ロール';
+
+  @override
+  String get adminMemberRoleNone => 'なし';
+
+  @override
+  String get adminMemberDepartments => '部門';
+
+  @override
+  String get adminRoleHint => '各ロールの権限を切り替えます。Owner ロールは読み取り専用です。';
+
+  @override
+  String get adminRoleCapability => '権限';
+
+  @override
+  String get adminRolePreset => 'プリセット';
+
+  @override
+  String get adminRoleClone => '複製';
+
+  @override
+  String adminRoleCloneTitle(String name) {
+    return '$name を複製';
+  }
+
+  @override
+  String get adminRoleName => 'ロール名';
+
+  @override
+  String get adminAuditTitle => '監査ログ';
+
+  @override
+  String get adminAuditComingSoon => '監査ログは今後のアップデートで利用可能になります。';
+
+  @override
+  String get adminCapManageWorkspace => 'ワークスペースを管理';
+
+  @override
+  String get adminCapManageDepartments => '部門を管理';
+
+  @override
+  String get adminCapManageMembers => 'メンバーを管理';
+
+  @override
+  String get adminCapManageRoles => 'ロールを管理';
+
+  @override
+  String get adminCapConnectWorkspaceConnector => 'ワークスペースコネクタを接続';
+
+  @override
+  String get adminCapAddCustomMcp => 'カスタム MCP を追加';
+
+  @override
+  String get adminCapConnectPersonalConnector => '個人コネクタを接続';
+
+  @override
+  String get adminCapUsePersonalAssistant => '個人アシスタントを使用';
+
+  @override
+  String get adminCapUseGroupBot => 'グループボットを使用';
+
+  @override
+  String get adminCapRunSensitiveSkill => '機密スキルを実行';
+
+  @override
+  String get adminCapViewAuditLog => '監査ログを表示';
 }

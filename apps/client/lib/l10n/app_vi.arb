@@ -566,5 +566,80 @@
   "skillResearcherName": "Nghiên cứu",
   "skillResearcherDesc": "Tìm trên web và Drive của bạn, trả lời kèm trích dẫn.",
   "skillProjectKeeperName": "Quản lý dự án",
-  "skillProjectKeeperDesc": "Lưu ghi chú và việc cần làm vào Notion, giữ cơ sở dữ liệu gọn gàng."
+  "skillProjectKeeperDesc": "Lưu ghi chú và việc cần làm vào Notion, giữ cơ sở dữ liệu gọn gàng.",
+  "adminTitle": "Bảng quản trị",
+  "adminSubtitle": "Quản lý workspace, phòng ban, thành viên và vai trò",
+  "adminBack": "Quay lại",
+  "adminLoading": "Đang tải…",
+  "adminSave": "Lưu",
+  "adminSaving": "Đang lưu…",
+  "adminCancel": "Hủy",
+  "adminToastSaved": "Đã lưu",
+  "adminToastDeleted": "Đã xóa",
+  "adminToastError": "Đã xảy ra lỗi",
+  "adminMenu": "Quản trị",
+  "adminSettingsSubtitle": "Workspace, phòng ban, thành viên & vai trò",
+  "adminNavWorkspace": "Workspace",
+  "adminNavDepartments": "Phòng ban",
+  "adminNavMembers": "Thành viên",
+  "adminNavRoles": "Vai trò",
+  "adminNavAudit": "Nhật ký",
+  "adminWsIdentity": "Nhận diện & thương hiệu",
+  "adminWsName": "Tên workspace",
+  "adminWsNamePlaceholder": "Công ty ABC",
+  "adminWsLogoUrl": "URL logo",
+  "adminWsPrimaryColor": "Màu chủ đạo",
+  "adminWsFeatures": "Cờ tính năng",
+  "adminWsNoFeatures": "Chưa cấu hình cờ tính năng nào.",
+  "adminWsAllowList": "Danh sách connector cho phép",
+  "adminWsAllowListDesc": "Các connector mà thành viên được tự kết nối.",
+  "adminWsNoCatalog": "Không có connector nào.",
+  "adminDeptNew": "Phòng ban mới",
+  "adminDeptEdit": "Sửa phòng ban",
+  "adminDeptEmpty": "Chưa có phòng ban nào.",
+  "adminDeptLead": "Trưởng phòng",
+  "adminDeptLeadNone": "Không có",
+  "adminDeptName": "Tên",
+  "adminDeptDescription": "Mô tả",
+  "adminDeptDialogDesc": "Phòng ban nhóm thành viên và sở hữu chat phòng ban.",
+  "adminDeptDeleteConfirm": "Xóa phòng ban \"{name}\"?",
+  "adminMemberHint": "Gán vai trò và phòng ban cho từng thành viên.",
+  "adminMemberEdit": "Sửa thành viên",
+  "adminMemberRevokeNote": "Lưu sẽ thu hồi các phiên đang hoạt động của thành viên.",
+  "adminMemberRole": "Vai trò",
+  "adminMemberRoleNone": "Không có",
+  "adminMemberDepartments": "Phòng ban",
+  "adminRoleHint": "Bật/tắt quyền cho từng vai trò. Vai trò Owner chỉ đọc.",
+  "adminRoleCapability": "Quyền",
+  "adminRolePreset": "Mặc định",
+  "adminRoleClone": "Nhân bản",
+  "adminRoleCloneTitle": "Nhân bản {name}",
+  "adminRoleName": "Tên vai trò",
+  "adminAuditTitle": "Nhật ký kiểm toán",
+  "adminAuditComingSoon": "Nhật ký kiểm toán sẽ có trong bản cập nhật sắp tới.",
+  "adminCapManageWorkspace": "Quản lý workspace",
+  "adminCapManageDepartments": "Quản lý phòng ban",
+  "adminCapManageMembers": "Quản lý thành viên",
+  "adminCapManageRoles": "Quản lý vai trò",
+  "adminCapConnectWorkspaceConnector": "Kết nối connector workspace",
+  "adminCapAddCustomMcp": "Thêm MCP tùy chỉnh",
+  "adminCapConnectPersonalConnector": "Kết nối connector cá nhân",
+  "adminCapUsePersonalAssistant": "Dùng trợ lý cá nhân",
+  "adminCapUseGroupBot": "Dùng bot nhóm",
+  "adminCapRunSensitiveSkill": "Chạy kỹ năng nhạy cảm",
+  "adminCapViewAuditLog": "Xem nhật ký kiểm toán",
+  "@adminDeptDeleteConfirm": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "@adminRoleCloneTitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  }
 }

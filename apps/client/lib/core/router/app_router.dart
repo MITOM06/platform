@@ -29,6 +29,7 @@ import '../../features/chat/ui/kb_screen.dart';
 import '../../features/reminders/reminders_screen.dart';
 import '../../features/integrations/ui/integrations_screen.dart';
 import '../../features/skills/ui/skills_screen.dart';
+import '../../features/admin/ui/admin_screen.dart';
 import '../../features/settings/ui/token_usage_screen.dart';
 import '../../features/settings/ui/legal_screen.dart';
 import '../../../core/providers/theme_provider.dart';
@@ -256,6 +257,11 @@ GoRouter appRouter(AppRouterRef ref) {
         path: '/skills',
         name: 'skills',
         builder: (context, state) => const SkillsScreen(),
+      ),
+      GoRoute(
+        path: '/admin',
+        name: 'admin',
+        builder: (context, state) => const AdminScreen(),
       ),
       GoRoute(
         path: '/token-usage',

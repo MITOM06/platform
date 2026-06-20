@@ -1588,4 +1588,198 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get skillProjectKeeperDesc =>
       'Files notes and tasks into Notion, keeps databases tidy.';
+
+  @override
+  String get adminTitle => 'Admin Console';
+
+  @override
+  String get adminSubtitle =>
+      'Manage your workspace, departments, members and roles';
+
+  @override
+  String get adminBack => 'Back';
+
+  @override
+  String get adminLoading => 'Loading…';
+
+  @override
+  String get adminSave => 'Save';
+
+  @override
+  String get adminSaving => 'Saving…';
+
+  @override
+  String get adminCancel => 'Cancel';
+
+  @override
+  String get adminToastSaved => 'Saved';
+
+  @override
+  String get adminToastDeleted => 'Deleted';
+
+  @override
+  String get adminToastError => 'Something went wrong';
+
+  @override
+  String get adminMenu => 'Admin';
+
+  @override
+  String get adminSettingsSubtitle => 'Workspace, departments, members & roles';
+
+  @override
+  String get adminNavWorkspace => 'Workspace';
+
+  @override
+  String get adminNavDepartments => 'Departments';
+
+  @override
+  String get adminNavMembers => 'Members';
+
+  @override
+  String get adminNavRoles => 'Roles';
+
+  @override
+  String get adminNavAudit => 'Audit log';
+
+  @override
+  String get adminWsIdentity => 'Identity & branding';
+
+  @override
+  String get adminWsName => 'Workspace name';
+
+  @override
+  String get adminWsNamePlaceholder => 'Acme Inc.';
+
+  @override
+  String get adminWsLogoUrl => 'Logo URL';
+
+  @override
+  String get adminWsPrimaryColor => 'Primary color';
+
+  @override
+  String get adminWsFeatures => 'Feature flags';
+
+  @override
+  String get adminWsNoFeatures => 'No feature flags configured.';
+
+  @override
+  String get adminWsAllowList => 'Connector allow-list';
+
+  @override
+  String get adminWsAllowListDesc =>
+      'Connectors members may personally connect.';
+
+  @override
+  String get adminWsNoCatalog => 'No connectors available.';
+
+  @override
+  String get adminDeptNew => 'New department';
+
+  @override
+  String get adminDeptEdit => 'Edit department';
+
+  @override
+  String get adminDeptEmpty => 'No departments yet.';
+
+  @override
+  String get adminDeptLead => 'Lead';
+
+  @override
+  String get adminDeptLeadNone => 'No lead';
+
+  @override
+  String get adminDeptName => 'Name';
+
+  @override
+  String get adminDeptDescription => 'Description';
+
+  @override
+  String get adminDeptDialogDesc =>
+      'Departments group members and own department chats.';
+
+  @override
+  String adminDeptDeleteConfirm(String name) {
+    return 'Delete department \"$name\"?';
+  }
+
+  @override
+  String get adminMemberHint => 'Assign a role and departments to each member.';
+
+  @override
+  String get adminMemberEdit => 'Edit member';
+
+  @override
+  String get adminMemberRevokeNote =>
+      'Saving revokes the member\'s active sessions.';
+
+  @override
+  String get adminMemberRole => 'Role';
+
+  @override
+  String get adminMemberRoleNone => 'No role';
+
+  @override
+  String get adminMemberDepartments => 'Departments';
+
+  @override
+  String get adminRoleHint =>
+      'Toggle each role\'s permissions. The Owner role is read-only.';
+
+  @override
+  String get adminRoleCapability => 'Capability';
+
+  @override
+  String get adminRolePreset => 'Preset';
+
+  @override
+  String get adminRoleClone => 'Clone';
+
+  @override
+  String adminRoleCloneTitle(String name) {
+    return 'Clone $name';
+  }
+
+  @override
+  String get adminRoleName => 'Role name';
+
+  @override
+  String get adminAuditTitle => 'Audit log';
+
+  @override
+  String get adminAuditComingSoon =>
+      'The audit log will be available in a future update.';
+
+  @override
+  String get adminCapManageWorkspace => 'Manage workspace';
+
+  @override
+  String get adminCapManageDepartments => 'Manage departments';
+
+  @override
+  String get adminCapManageMembers => 'Manage members';
+
+  @override
+  String get adminCapManageRoles => 'Manage roles';
+
+  @override
+  String get adminCapConnectWorkspaceConnector =>
+      'Connect workspace connectors';
+
+  @override
+  String get adminCapAddCustomMcp => 'Add custom MCP';
+
+  @override
+  String get adminCapConnectPersonalConnector => 'Connect personal connectors';
+
+  @override
+  String get adminCapUsePersonalAssistant => 'Use personal assistant';
+
+  @override
+  String get adminCapUseGroupBot => 'Use group bot';
+
+  @override
+  String get adminCapRunSensitiveSkill => 'Run sensitive skills';
+
+  @override
+  String get adminCapViewAuditLog => 'View audit log';
 }

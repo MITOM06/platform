@@ -817,5 +817,80 @@
   "skillResearcherName": "Researcher",
   "skillResearcherDesc": "Searches the web and your Drive, returns cited answers.",
   "skillProjectKeeperName": "Project keeper",
-  "skillProjectKeeperDesc": "Files notes and tasks into Notion, keeps databases tidy."
+  "skillProjectKeeperDesc": "Files notes and tasks into Notion, keeps databases tidy.",
+  "adminTitle": "Admin Console",
+  "adminSubtitle": "Manage your workspace, departments, members and roles",
+  "adminBack": "Back",
+  "adminLoading": "Loading…",
+  "adminSave": "Save",
+  "adminSaving": "Saving…",
+  "adminCancel": "Cancel",
+  "adminToastSaved": "Saved",
+  "adminToastDeleted": "Deleted",
+  "adminToastError": "Something went wrong",
+  "adminMenu": "Admin",
+  "adminSettingsSubtitle": "Workspace, departments, members & roles",
+  "adminNavWorkspace": "Workspace",
+  "adminNavDepartments": "Departments",
+  "adminNavMembers": "Members",
+  "adminNavRoles": "Roles",
+  "adminNavAudit": "Audit log",
+  "adminWsIdentity": "Identity & branding",
+  "adminWsName": "Workspace name",
+  "adminWsNamePlaceholder": "Acme Inc.",
+  "adminWsLogoUrl": "Logo URL",
+  "adminWsPrimaryColor": "Primary color",
+  "adminWsFeatures": "Feature flags",
+  "adminWsNoFeatures": "No feature flags configured.",
+  "adminWsAllowList": "Connector allow-list",
+  "adminWsAllowListDesc": "Connectors members may personally connect.",
+  "adminWsNoCatalog": "No connectors available.",
+  "adminDeptNew": "New department",
+  "adminDeptEdit": "Edit department",
+  "adminDeptEmpty": "No departments yet.",
+  "adminDeptLead": "Lead",
+  "adminDeptLeadNone": "No lead",
+  "adminDeptName": "Name",
+  "adminDeptDescription": "Description",
+  "adminDeptDialogDesc": "Departments group members and own department chats.",
+  "adminDeptDeleteConfirm": "Delete department \"{name}\"?",
+  "adminMemberHint": "Assign a role and departments to each member.",
+  "adminMemberEdit": "Edit member",
+  "adminMemberRevokeNote": "Saving revokes the member's active sessions.",
+  "adminMemberRole": "Role",
+  "adminMemberRoleNone": "No role",
+  "adminMemberDepartments": "Departments",
+  "adminRoleHint": "Toggle each role's permissions. The Owner role is read-only.",
+  "adminRoleCapability": "Capability",
+  "adminRolePreset": "Preset",
+  "adminRoleClone": "Clone",
+  "adminRoleCloneTitle": "Clone {name}",
+  "adminRoleName": "Role name",
+  "adminAuditTitle": "Audit log",
+  "adminAuditComingSoon": "The audit log will be available in a future update.",
+  "adminCapManageWorkspace": "Manage workspace",
+  "adminCapManageDepartments": "Manage departments",
+  "adminCapManageMembers": "Manage members",
+  "adminCapManageRoles": "Manage roles",
+  "adminCapConnectWorkspaceConnector": "Connect workspace connectors",
+  "adminCapAddCustomMcp": "Add custom MCP",
+  "adminCapConnectPersonalConnector": "Connect personal connectors",
+  "adminCapUsePersonalAssistant": "Use personal assistant",
+  "adminCapUseGroupBot": "Use group bot",
+  "adminCapRunSensitiveSkill": "Run sensitive skills",
+  "adminCapViewAuditLog": "View audit log",
+  "@adminDeptDeleteConfirm": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "@adminRoleCloneTitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  }
 }
