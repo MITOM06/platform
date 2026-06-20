@@ -11,21 +11,22 @@ import type {
 
 /**
  * connector-service (:3003) client. The JWT is injected by the shared
- * `connectorApi` axios interceptor; `userId` is still passed as a query param
- * because the backend keys connections/skills by it (matches the REST contract).
+ * `connectorApi` axios interceptor, and the backend derives the caller's
+ * identity from the token (`req.user.sub`) — never from a client-supplied
+ * `userId`. So no endpoint here passes a userId param.
  */
 export const connectorService = {
   getCatalog: () =>
     connectorApi.get<CatalogEntry[]>('/catalog').then((r) => r.data ?? []),
 
-  getConnections: (userId: string) =>
+  getConnections: () =>
     connectorApi
-      .get<ConnectionView[]>('/connections', { params: { userId } })
+      .get<ConnectionView[]>('/connections')
       .then((r) => r.data ?? []),
 
-  startOAuth: (provider: string, userId: string) =>
+  startOAuth: (provider: string) =>
     connectorApi
-      .get<OAuthStartResponse>(`/oauth/${provider}/start`, { params: { userId } })
+      .get<OAuthStartResponse>(`/oauth/${provider}/start`)
       .then((r) => r.data),
 
   disconnect: (id: string) =>
@@ -39,13 +40,13 @@ export const connectorService = {
   saveCustomMcp: (input: CustomMcpInput) =>
     connectorApi.post<void>('/custom-mcp', input).then((r) => r.data),
 
-  getSkills: (userId: string) =>
+  getSkills: () =>
     connectorApi
-      .get<UserSkillState[]>('/skills', { params: { userId } })
+      .get<UserSkillState[]>('/skills')
       .then((r) => r.data ?? []),
 
-  setSkill: (userId: string, skillId: string, enabled: boolean) =>
+  setSkill: (skillId: string, enabled: boolean) =>
     connectorApi
-      .put<UserSkillState>('/skills', { userId, skillId, enabled })
+      .put<UserSkillState>('/skills', { skillId, enabled })
       .then((r) => r.data),
 }

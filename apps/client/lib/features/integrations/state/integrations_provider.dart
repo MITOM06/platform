@@ -20,10 +20,10 @@ class IntegrationsNotifier extends AsyncNotifier<List<ConnectorItem>> {
 
   Future<List<ConnectorItem>> _load() async {
     final repo = ref.read(connectorRepositoryProvider);
-    final userId = _requireUserId(ref);
+    _requireUserId(ref); // fail fast if unauthenticated; identity comes from JWT
     final results = await Future.wait([
       repo.catalog(),
-      repo.connections(userId),
+      repo.connections(),
     ]);
     final catalog = results[0] as List<CatalogEntry>;
     final connections = results[1] as List<ConnectionView>;
@@ -47,7 +47,8 @@ class IntegrationsNotifier extends AsyncNotifier<List<ConnectorItem>> {
   /// Returns the authorize URL to open in the browser for [provider].
   Future<String> startOAuth(String provider) {
     final repo = ref.read(connectorRepositoryProvider);
-    return repo.startOAuth(provider, _requireUserId(ref));
+    _requireUserId(ref); // fail fast if unauthenticated; identity comes from JWT
+    return repo.startOAuth(provider);
   }
 
   Future<void> disconnect(String connectionId) async {
