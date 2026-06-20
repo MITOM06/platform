@@ -1,7 +1,7 @@
 # PON Enterprise — Master Handoff & Continuation Guide
 
 **Last updated:** 2026-06-20
-**Active branch:** `feature/mcp-connector-core` (pushed to origin; ✅ P0 COMPLETE — Parts 1–5 + Task 0)
+**Active branch:** `feature/mcp-connector-core` (✅ P0 COMPLETE — Parts 1–5 + Task 0; ✅ P5 Google connectors)
 **Read order for a fresh session:**
 1. This file (state + remaining work).
 2. `docs/superpowers/specs/2026-06-19-pon-enterprise-reframe.md` (the vision).
@@ -111,19 +111,26 @@ For now: keep hosting as-is, assume **one test company**, get it working end-to-
 audit) is built and green. This is the milestone to demo to the first test company** (needs the live
 secrets/infra in §4 to run end-to-end).
 
+### P5 — Gmail + Google Calendar connectors ✅ (backend only; clients catalog-driven, unchanged)
+- **connector-service** `src/catalog/catalog.ts`: `adapter` field on entries; gmail/calendar flipped to
+  `available:true` with real Google scopes + OAuth config. `oauth.service.ts`: `buildAuthorizeUrl`/
+  `exchangeCode` generalized (Google body+form, offline+consent, scope; Notion Basic+JSON+owner kept);
+  `persist` computes `expiry_date`.
+- **`src/adapters/`**: `ProviderAdapter` interface, `RemoteMcpAdapter` (Notion/custom, unchanged),
+  `GoogleRestAdapter` (Gmail send/draft/search + Calendar list/create/suggest, base64url RFC-822, token
+  refresh pre-emptive + reactive-on-401), `AdapterRegistryService`, `AdapterModule`. `internal.service`
+  delegates to the resolved adapter (naming/sensitive-gate/audit/lastUsedAt unchanged).
+- **infra**: `GOOGLE_CLIENT_ID/SECRET` in compose + `.env.example`. ai-service + web + Flutter untouched
+  (`mcp__gmail__*`/`mcp__calendar__*` naming preserved; cards appear via catalog).
+- Verify: connector-service **49** tests, ai-service **97** (unchanged), build OK, compose config clean.
+  Commits `c6608f20`, `7e948666`, `e0bb6257`, `e04346e3`. **Live E2E needs Google creds (see §4).**
+
 ---
 
 ## 3. What REMAINS — detailed, in build order
 
-> Task 0 and all of P0 (Parts 1–5) are **DONE** — see §2. Next milestones below.
-
-### P5 — Gmail + Google Calendar connectors
-**Plan:** `docs/superpowers/plans/2026-06-19-p5-google-connectors.md` (fully detailed, 4 tasks).
-**Summary:** Google has no public remote MCP, so add a `ProviderAdapter` abstraction in
-connector-service (`RemoteMcpAdapter` for Notion/custom, `GoogleRestAdapter` for Gmail/Calendar via
-Google REST + OAuth). Tool names stay `mcp__gmail__*`/`mcp__calendar__*` → ai-service + clients
-unchanged. Flip the `gmail`/`calendar` catalog entries to `available:true`.
-**Dispatch:** `backend-dev`. **Needs Google creds for live E2E (see §4).**
+> Task 0, all of P0 (Parts 1–5), and **P5 (Gmail + Calendar connectors)** are **DONE** — see §2.
+> Next milestones below (each needs a fresh spec + plan).
 
 ### P6 — Department-aware group bot
 **Goal:** the group bot in department chats answers using only files/context the department + the
@@ -174,8 +181,8 @@ Open a new session in this repo. Memory auto-loads `MEMORY.md` (it points to the
 enterprise model facts). Then paste one of these:
 
 - To continue building: **"Continue PON enterprise from `docs/superpowers/PON-ENTERPRISE-HANDOFF.md`.
-  P0 is complete — build P5 (Gmail + Google Calendar connectors) next. Work part-by-part, run
-  tests/builds, show me each part for review."**
+  P0 + P5 are done — brainstorm + plan P6 (department-aware group bot) next, then build it. Work
+  part-by-part, run tests/builds, show me each part for review."**
 - To do the live Notion E2E instead: **"I've added Notion creds + run docker compose. Run the P1
   Notion E2E from the handoff doc §4."**
 - To jump to Google connectors: **"Build P5 from `docs/superpowers/plans/2026-06-19-p5-google-connectors.md`."**
