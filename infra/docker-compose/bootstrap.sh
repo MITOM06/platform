@@ -15,17 +15,22 @@ if [ ! -f "$ENV_FILE" ]; then
   echo "Created $ENV_FILE from .env.example"
 fi
 
-# Fill KEY= only when it is currently blank. $2 is the generator command.
+# Fill KEY= only when it is currently blank/absent. $2 is the generator command.
 fill_secret() {
   local key="$1" gen="$2" cur
-  cur="$(grep -E "^$key=" "$ENV_FILE" | head -1 | cut -d= -f2-)"
+  cur="$(grep -E "^$key=" "$ENV_FILE" 2>/dev/null | head -1 | cut -d= -f2- || true)"
   if [ -z "$cur" ]; then
     local val; val="$(eval "$gen")"
-    # portable in-place edit (BSD + GNU sed)
-    if sed --version >/dev/null 2>&1; then
-      sed -i "s|^$key=.*|$key=$val|" "$ENV_FILE"
+    if grep -qE "^$key=" "$ENV_FILE" 2>/dev/null; then
+      # Key exists but is blank — replace in place (portable BSD + GNU sed)
+      if sed --version >/dev/null 2>&1; then
+        sed -i "s|^$key=.*|$key=$val|" "$ENV_FILE"
+      else
+        sed -i '' "s|^$key=.*|$key=$val|" "$ENV_FILE"
+      fi
     else
-      sed -i '' "s|^$key=.*|$key=$val|" "$ENV_FILE"
+      # Key is entirely absent — append it
+      printf '\n%s=%s\n' "$key" "$val" >> "$ENV_FILE"
     fi
     echo "Generated $key"
   fi

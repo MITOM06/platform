@@ -21,4 +21,16 @@ LEN="$(printf '%s' "$V1" | base64 -d 2>/dev/null | wc -c | tr -d ' ')"
 ENV_DIR="$TMP" ./bootstrap.sh --no-validate >/dev/null 2>&1 || true
 [ "$(get JWT_ACCESS_SECRET)" = "$J1" ] || { echo "FAIL: JWT secret changed on re-run"; exit 1; }
 [ "$(get CONNECTOR_VAULT_KEY)" = "$V1" ] || { echo "FAIL: vault key changed on re-run"; exit 1; }
+
+# Absent-key case: delete INTERNAL_API_KEY line entirely, re-run, assert it is restored.
+if command -v gsed >/dev/null 2>&1; then
+  gsed -i "/^INTERNAL_API_KEY=/d" "$TMP/.env"
+else
+  sed -i '' "/^INTERNAL_API_KEY=/d" "$TMP/.env" 2>/dev/null || sed -i "/^INTERNAL_API_KEY=/d" "$TMP/.env"
+fi
+grep -qE "^INTERNAL_API_KEY=" "$TMP/.env" && { echo "FAIL: INTERNAL_API_KEY not deleted (test setup)"; exit 1; }
+ENV_DIR="$TMP" ./bootstrap.sh --no-validate >/dev/null 2>&1 || true
+I2="$(get INTERNAL_API_KEY)"
+[ -n "$I2" ] || { echo "FAIL: INTERNAL_API_KEY not appended when key was absent"; exit 1; }
+
 echo "PASS"
