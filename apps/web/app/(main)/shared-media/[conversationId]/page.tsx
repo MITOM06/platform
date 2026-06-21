@@ -95,7 +95,7 @@ export default function SharedMediaPage() {
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
                         src={absoluteMediaUrl(url)}
-                        alt="Shared media"
+                        alt={t('imageAlt')}
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform"
                       />
                     </a>

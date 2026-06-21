@@ -1,3 +1,5 @@
+import { getTranslations } from 'next-intl/server'
+
 function PonLogo({ className = 'size-20' }: { className?: string }) {
   return (
     <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className={className}>
@@ -17,7 +19,8 @@ function PonLogo({ className = 'size-20' }: { className?: string }) {
   )
 }
 
-export default function AuthLayout({ children }: { children: React.ReactNode }) {
+export default async function AuthLayout({ children }: { children: React.ReactNode }) {
+  const t = await getTranslations('auth')
   return (
     <div className="relative min-h-screen flex flex-col items-center justify-center overflow-hidden bg-background p-4">
       {/* Ambient neon glow background — mirrors the Flutter login screen */}
@@ -41,7 +44,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
       <div className="relative z-10 mb-8 flex flex-col items-center gap-2">
         <PonLogo className="size-20 drop-shadow-[0_0_18px_rgba(106,201,255,0.45)]" />
         <span className="text-4xl font-black tracking-tight pon-gradient-text">PON</span>
-        <span className="text-sm text-muted-foreground">Connect &amp; Chat</span>
+        <span className="text-sm text-muted-foreground">{t('tagline')}</span>
       </div>
 
       <div className="relative z-10 w-full max-w-sm">{children}</div>

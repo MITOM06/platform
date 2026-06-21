@@ -10,7 +10,10 @@
     "search": "Search",
     "back": "Back",
     "noResults": "No results found",
-    "members": "{count} members"
+    "members": "{count} members",
+    "somethingWrong": "오류가 발생했습니다",
+    "unknownError": "알 수 없는 오류",
+    "retry": "다시 시도"
   },
   "layout": {
     "navExplore": "탐색",
@@ -162,7 +165,8 @@
     "errValDisplayNameRequired": "표시 이름은 필수입니다.",
     "errValDisplayNameTooShort": "표시 이름이 너무 짧습니다 (최소 2자).",
     "errValPasswordTooShort": "비밀번호는 최소 8자 이상이어야 합니다.",
-    "errGeneric": "오류가 발생했습니다. 다시 시도해 주세요."
+    "errGeneric": "오류가 발생했습니다. 다시 시도해 주세요.",
+    "tagline": "연결하고 채팅하기"
   },
   "settings": {
     "title": "Settings",
@@ -214,7 +218,9 @@
     "integrations": "연동",
     "integrationsSubtitle": "도구 및 MCP 서버 연결",
     "skills": "스킬",
-    "skillsSubtitle": "어시스턴트가 할 수 있는 일 선택"
+    "skillsSubtitle": "어시스턴트가 할 수 있는 일 선택",
+    "chooseThemeTitle": "테마 선택",
+    "chooseLanguageTitle": "언어 선택"
   },
   "profile": {
     "title": "Edit Profile",
@@ -251,7 +257,10 @@
     "genderFemale": "여성",
     "genderOther": "기타",
     "hideInfoLabel": "개인정보 숨기기",
-    "hideInfoHint": "다른 사용자는 생일, 전화번호, 성별, 소개를 볼 수 없습니다."
+    "hideInfoHint": "다른 사용자는 생일, 전화번호, 성별, 소개를 볼 수 없습니다.",
+    "viewTitle": "프로필",
+    "editButton": "프로필 편집",
+    "notSet": "설정 안 됨"
   },
   "friends": {
     "title": "Friends",
@@ -534,7 +543,9 @@
     "aiTraceRagSources": "RAG 소스 ({count})",
     "aiTraceScore": "점수: {score}",
     "newConvDepartment": "부서 (선택)",
-    "newConvNoDepartment": "부서 없음"
+    "newConvNoDepartment": "부서 없음",
+    "groupAvatarAlt": "그룹 아바타",
+    "imageViewer": "이미지 뷰어"
   },
   "aiPersona": {
     "title": "AI Persona",
@@ -652,7 +663,8 @@
     "tabLinks": "Links",
     "emptyMedia": "No photos or videos shared yet",
     "emptyFiles": "No files shared yet",
-    "emptyLinks": "No links shared yet"
+    "emptyLinks": "No links shared yet",
+    "imageAlt": "공유 미디어"
   },
   "legal": {
     "privacyTitle": "개인정보 처리방침",
@@ -811,5 +823,22 @@
     "auditEmpty": "감사 기록이 아직 없습니다.",
     "auditPrev": "이전",
     "auditNext": "다음"
+  },
+  "call": {
+    "peerFallback": "사용자",
+    "calling": "전화 거는 중…",
+    "muteMic": "마이크 끄기",
+    "unmuteMic": "마이크 켜기",
+    "endCall": "통화 종료",
+    "enableCamera": "카메라 켜기",
+    "disableCamera": "카메라 끄기",
+    "incomingVideo": "영상 통화 수신",
+    "incomingVoice": "음성 통화 수신",
+    "decline": "거절",
+    "answer": "받기"
+  },
+  "notFound": {
+    "title": "페이지를 찾을 수 없습니다",
+    "backHome": "홈으로 돌아가기"
   }
 }

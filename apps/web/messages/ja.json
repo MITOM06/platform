@@ -10,7 +10,10 @@
     "search": "Search",
     "back": "Back",
     "noResults": "No results found",
-    "members": "{count} members"
+    "members": "{count} members",
+    "somethingWrong": "エラーが発生しました",
+    "unknownError": "不明なエラー",
+    "retry": "再試行"
   },
   "layout": {
     "navExplore": "探索",
@@ -162,7 +165,8 @@
     "errValDisplayNameRequired": "表示名は必須です。",
     "errValDisplayNameTooShort": "表示名が短すぎます（最小2文字）。",
     "errValPasswordTooShort": "パスワードは8文字以上必要です。",
-    "errGeneric": "エラーが発生しました。もう一度お試しください。"
+    "errGeneric": "エラーが発生しました。もう一度お試しください。",
+    "tagline": "つながって、チャット"
   },
   "settings": {
     "title": "Settings",
@@ -214,7 +218,9 @@
     "integrations": "連携",
     "integrationsSubtitle": "ツールと MCP サーバーを接続",
     "skills": "スキル",
-    "skillsSubtitle": "アシスタントができることを選ぶ"
+    "skillsSubtitle": "アシスタントができることを選ぶ",
+    "chooseThemeTitle": "テーマを選択",
+    "chooseLanguageTitle": "言語を選択"
   },
   "profile": {
     "title": "Edit Profile",
@@ -251,7 +257,10 @@
     "genderFemale": "女性",
     "genderOther": "その他",
     "hideInfoLabel": "個人情報を非表示",
-    "hideInfoHint": "他のユーザーには誕生日・電話番号・性別・自己紹介が表示されません。"
+    "hideInfoHint": "他のユーザーには誕生日・電話番号・性別・自己紹介が表示されません。",
+    "viewTitle": "プロフィール",
+    "editButton": "プロフィールを編集",
+    "notSet": "未設定"
   },
   "friends": {
     "title": "Friends",
@@ -534,7 +543,9 @@
     "aiTraceRagSources": "RAG ソース ({count})",
     "aiTraceScore": "スコア: {score}",
     "newConvDepartment": "部門（任意）",
-    "newConvNoDepartment": "部門なし"
+    "newConvNoDepartment": "部門なし",
+    "groupAvatarAlt": "グループのアバター",
+    "imageViewer": "画像ビューア"
   },
   "aiPersona": {
     "title": "AI Persona",
@@ -652,7 +663,8 @@
     "tabLinks": "Links",
     "emptyMedia": "No photos or videos shared yet",
     "emptyFiles": "No files shared yet",
-    "emptyLinks": "No links shared yet"
+    "emptyLinks": "No links shared yet",
+    "imageAlt": "共有メディア"
   },
   "legal": {
     "privacyTitle": "プライバシーポリシー",
@@ -811,5 +823,22 @@
     "auditEmpty": "監査記録はまだありません。",
     "auditPrev": "前へ",
     "auditNext": "次へ"
+  },
+  "call": {
+    "peerFallback": "ユーザー",
+    "calling": "発信中…",
+    "muteMic": "マイクをオフ",
+    "unmuteMic": "マイクをオン",
+    "endCall": "通話終了",
+    "enableCamera": "カメラをオン",
+    "disableCamera": "カメラをオフ",
+    "incomingVideo": "ビデオ通話の着信",
+    "incomingVoice": "音声通話の着信",
+    "decline": "拒否",
+    "answer": "応答"
+  },
+  "notFound": {
+    "title": "ページが見つかりません",
+    "backHome": "ホームに戻る"
   }
 }

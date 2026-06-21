@@ -5,9 +5,8 @@ import dynamic from 'next/dynamic'
 import { useQueryClient } from '@tanstack/react-query'
 import { useRouter, usePathname } from 'next/navigation'
 import { toast } from 'sonner'
-import { LogOut, Moon, Sun, User, Compass, Contact, Settings, Plus, MessageSquarePlus, Users, ShieldCheck } from 'lucide-react'
+import { LogOut, User, Compass, Contact, Settings, Plus, MessageSquarePlus, Users, ShieldCheck } from 'lucide-react'
 import Link from 'next/link'
-import { useTheme } from 'next-themes'
 import { useTranslations } from 'next-intl'
 import { useAuthStore } from '@/lib/store/auth.store'
 import { Button } from '@/components/ui/button'
@@ -79,7 +78,6 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
   const clearAuth = useAuthStore((s) => s.clearAuth)
   const user = useAuthStore((s) => s.user)
   const accessToken = useAuthStore((s) => s.accessToken)
-  const { theme, setTheme } = useTheme()
   const t = useTranslations('layout')
   const canAccessAdmin = useCanAccessAdmin()
 
@@ -331,22 +329,6 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
                   >
                     <Settings className="mr-2 h-4 w-4" />
                     <span>{t('menuSettings')}</span>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-                    className="cursor-pointer"
-                  >
-                    {theme === 'dark' ? (
-                      <>
-                        <Sun className="mr-2 h-4 w-4" />
-                        <span>{t('menuLightMode')}</span>
-                      </>
-                    ) : (
-                      <>
-                        <Moon className="mr-2 h-4 w-4" />
-                        <span>{t('menuDarkMode')}</span>
-                      </>
-                    )}
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={handleLogout} className="text-destructive focus:text-destructive cursor-pointer">

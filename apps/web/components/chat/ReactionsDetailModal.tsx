@@ -56,7 +56,7 @@ export function ReactionsDetailModal({ message, open, onClose }: Props) {
     <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
       <DialogContent className="sm:max-w-[400px]">
         <DialogHeader>
-          <DialogTitle>{t('reactionsDetail') || 'Chi tiết cảm xúc'}</DialogTitle>
+          <DialogTitle>{t('reactionsDetail')}</DialogTitle>
         </DialogHeader>
         <div className="mt-2">
           <Tabs defaultValue={emojis[0]} className="w-full">

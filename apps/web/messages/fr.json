@@ -10,7 +10,10 @@
     "search": "Search",
     "back": "Back",
     "noResults": "No results found",
-    "members": "{count} members"
+    "members": "{count} members",
+    "somethingWrong": "Une erreur s'est produite",
+    "unknownError": "Erreur inconnue",
+    "retry": "Réessayer"
   },
   "layout": {
     "navExplore": "Explorer",
@@ -162,7 +165,8 @@
     "errValDisplayNameRequired": "Le nom d'affichage est obligatoire.",
     "errValDisplayNameTooShort": "Le nom d'affichage est trop court (minimum 2 caractères).",
     "errValPasswordTooShort": "Le mot de passe doit comporter au moins 8 caractères.",
-    "errGeneric": "Une erreur s'est produite. Veuillez réessayer."
+    "errGeneric": "Une erreur s'est produite. Veuillez réessayer.",
+    "tagline": "Connecter & Discuter"
   },
   "settings": {
     "title": "Settings",
@@ -214,7 +218,9 @@
     "integrations": "Intégrations",
     "integrationsSubtitle": "Connecter outils et serveurs MCP",
     "skills": "Compétences",
-    "skillsSubtitle": "Choisissez ce que votre assistant peut faire"
+    "skillsSubtitle": "Choisissez ce que votre assistant peut faire",
+    "chooseThemeTitle": "Choisir le thème",
+    "chooseLanguageTitle": "Choisir la langue"
   },
   "profile": {
     "title": "Edit Profile",
@@ -251,7 +257,10 @@
     "genderFemale": "Femme",
     "genderOther": "Autre",
     "hideInfoLabel": "Masquer les infos personnelles",
-    "hideInfoHint": "Les autres utilisateurs ne verront pas votre anniversaire, téléphone, genre ni bio."
+    "hideInfoHint": "Les autres utilisateurs ne verront pas votre anniversaire, téléphone, genre ni bio.",
+    "viewTitle": "Profil",
+    "editButton": "Modifier le profil",
+    "notSet": "Non défini"
   },
   "friends": {
     "title": "Friends",
@@ -534,7 +543,9 @@
     "aiTraceRagSources": "Sources RAG ({count})",
     "aiTraceScore": "Score : {score}",
     "newConvDepartment": "Département (facultatif)",
-    "newConvNoDepartment": "Aucun département"
+    "newConvNoDepartment": "Aucun département",
+    "groupAvatarAlt": "Avatar du groupe",
+    "imageViewer": "Visionneuse d'images"
   },
   "aiPersona": {
     "title": "AI Persona",
@@ -652,7 +663,8 @@
     "tabLinks": "Links",
     "emptyMedia": "No photos or videos shared yet",
     "emptyFiles": "No files shared yet",
-    "emptyLinks": "No links shared yet"
+    "emptyLinks": "No links shared yet",
+    "imageAlt": "Médias partagés"
   },
   "legal": {
     "privacyTitle": "Politique de Confidentialité",
@@ -811,5 +823,22 @@
     "auditEmpty": "Aucune entrée d'audit pour le moment.",
     "auditPrev": "Précédent",
     "auditNext": "Suivant"
+  },
+  "call": {
+    "peerFallback": "Utilisateur",
+    "calling": "Appel en cours…",
+    "muteMic": "Couper le micro",
+    "unmuteMic": "Activer le micro",
+    "endCall": "Terminer l'appel",
+    "enableCamera": "Activer la caméra",
+    "disableCamera": "Désactiver la caméra",
+    "incomingVideo": "Appel vidéo entrant",
+    "incomingVoice": "Appel vocal entrant",
+    "decline": "Refuser",
+    "answer": "Répondre"
+  },
+  "notFound": {
+    "title": "Page introuvable",
+    "backHome": "Retour à l'accueil"
   }
 }

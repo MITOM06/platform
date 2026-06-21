@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useTransition } from 'react'
+import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import { useTheme } from 'next-themes'
@@ -29,8 +29,8 @@ import { useAuthStore } from '@/lib/store/auth.store'
 import { stompService } from '@/lib/stomp/client'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { ChangePasswordDialog } from '@/components/chat/ChangePasswordDialog'
-import { setLocaleAction } from '@/lib/actions/locale'
-import { LOCALE_NAMES, SUPPORTED_LOCALES, type Locale } from '@/i18n/config'
+import { ThemePickerDialog, LanguagePickerDialog } from '@/components/settings/AppearanceDialogs'
+import { LOCALE_NAMES, type Locale } from '@/i18n/config'
 
 function getInitials(name?: string): string {
   if (!name) return '?'
@@ -102,11 +102,12 @@ export default function SettingsPage() {
   const router = useRouter()
   const user = useAuthStore((s) => s.user)
   const clearAuth = useAuthStore((s) => s.clearAuth)
-  const { theme, setTheme } = useTheme()
+  const { theme } = useTheme()
   const locale = useLocale()
   const [loggingOut, setLoggingOut] = useState(false)
   const [changePasswordOpen, setChangePasswordOpen] = useState(false)
-  const [isPending, startTransition] = useTransition()
+  const [themePickerOpen, setThemePickerOpen] = useState(false)
+  const [languagePickerOpen, setLanguagePickerOpen] = useState(false)
 
   const handleLogout = async () => {
     setLoggingOut(true)
@@ -119,26 +120,6 @@ export default function SettingsPage() {
       toast.error(t('logoutError'))
       setLoggingOut(false)
     }
-  }
-
-  const cycleTheme = () => {
-    const order: ('light' | 'dark' | 'system')[] = ['light', 'dark', 'system']
-    const current = theme as (typeof order)[number]
-    const idx = order.indexOf(current)
-    const next = order[(idx + 1) % order.length]
-    setTheme(next)
-    const label = next === 'light' ? t('themeLight') : next === 'dark' ? t('themeDark') : t('themeSystem')
-    toast.success(t('themeChanged', { theme: label }))
-  }
-
-  const cycleLocale = () => {
-    const idx = SUPPORTED_LOCALES.indexOf(locale as Locale)
-    const next = SUPPORTED_LOCALES[(idx + 1) % SUPPORTED_LOCALES.length]
-    startTransition(async () => {
-      await setLocaleAction(next)
-      toast.success(t('languageChanged'))
-      router.refresh()
-    })
   }
 
   const themeIcon = () => {
@@ -206,15 +187,15 @@ export default function SettingsPage() {
                 iconBg="rgba(251,182,139,0.12)"
                 title={t('theme')}
                 subtitle={themeLabel()}
-                onClick={cycleTheme}
+                onClick={() => setThemePickerOpen(true)}
               />
 
               <SettingsCard
                 icon={<Languages className="size-5 text-primary" />}
                 iconBg="rgba(106,201,255,0.12)"
                 title={t('language')}
-                subtitle={`${LOCALE_NAMES[locale as Locale] ?? locale}${isPending ? '…' : ''}`}
-                onClick={cycleLocale}
+                subtitle={LOCALE_NAMES[locale as Locale] ?? locale}
+                onClick={() => setLanguagePickerOpen(true)}
               />
 
               <SettingsCard
@@ -321,6 +302,8 @@ export default function SettingsPage() {
       </div>
 
       <ChangePasswordDialog open={changePasswordOpen} onOpenChange={setChangePasswordOpen} />
+      <ThemePickerDialog open={themePickerOpen} onOpenChange={setThemePickerOpen} />
+      <LanguagePickerDialog open={languagePickerOpen} onOpenChange={setLanguagePickerOpen} />
     </div>
   )
 }

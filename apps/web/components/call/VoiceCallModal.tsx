@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useRef } from 'react'
+import { useTranslations } from 'next-intl'
 import { PhoneOff, Mic, MicOff } from 'lucide-react'
 import { useCallStore } from '@/lib/store/call.store'
 import { callManager } from '@/lib/webrtc/call-manager'
@@ -18,6 +19,7 @@ function formatDuration(total: number): string {
  * <audio> element (there is no <video> element to carry it).
  */
 export function VoiceCallModal() {
+  const t = useTranslations('call')
   const peerName = useCallStore((s) => s.peerName)
   const status = useCallStore((s) => s.status)
   const duration = useCallStore((s) => s.durationSeconds)
@@ -46,9 +48,9 @@ export function VoiceCallModal() {
         <div className="size-32 rounded-full bg-gradient-to-br from-pon-cyan/40 to-pon-peach/40 flex items-center justify-center text-5xl font-semibold text-white ring-4 ring-white/10">
           {(peerName || '?')[0]?.toUpperCase()}
         </div>
-        <p className="text-2xl font-semibold text-white">{peerName || 'Người dùng'}</p>
+        <p className="text-2xl font-semibold text-white">{peerName || t('peerFallback')}</p>
         <p className="text-sm text-white/60">
-          {connected ? formatDuration(duration) : 'Đang gọi…'}
+          {connected ? formatDuration(duration) : t('calling')}
         </p>
 
         {/* Animated audio waveform (purely visual) */}
@@ -76,14 +78,14 @@ export function VoiceCallModal() {
             'flex size-14 items-center justify-center rounded-full text-white transition-colors',
             micEnabled ? 'bg-white/15 hover:bg-white/25' : 'bg-white/80 text-black',
           )}
-          title={micEnabled ? 'Tắt mic' : 'Bật mic'}
+          title={micEnabled ? t('muteMic') : t('unmuteMic')}
         >
           {micEnabled ? <Mic className="size-6" /> : <MicOff className="size-6" />}
         </button>
         <button
           onClick={() => callManager.endCall()}
           className="flex size-16 items-center justify-center rounded-full bg-red-600 text-white hover:bg-red-700"
-          title="Kết thúc"
+          title={t('endCall')}
         >
           <PhoneOff className="size-7" />
         </button>
