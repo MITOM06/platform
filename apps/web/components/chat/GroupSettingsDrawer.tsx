@@ -173,7 +173,7 @@ export function GroupSettingsDrawer({ conversation, currentUserId, open, onClose
             <div className="relative group">
               <Avatar className="size-20">
                 {conversation.avatarUrl ? (
-                  <img src={conversation.avatarUrl} alt="Group Avatar" className="w-full h-full object-cover" />
+                  <img src={conversation.avatarUrl} alt={t('groupAvatarAlt')} className="w-full h-full object-cover" />
                 ) : (
                   <AvatarFallback className="text-2xl bg-gradient-to-br from-pon-cyan to-pon-peach text-white">
                     {(conversation.name ?? 'Group')[0]?.toUpperCase()}

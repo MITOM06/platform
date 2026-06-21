@@ -10,7 +10,10 @@
     "search": "Tìm kiếm",
     "back": "Quay lại",
     "noResults": "Không tìm thấy kết quả nào",
-    "members": "{count} thành viên"
+    "members": "{count} thành viên",
+    "somethingWrong": "Đã xảy ra lỗi",
+    "unknownError": "Lỗi không xác định",
+    "retry": "Thử lại"
   },
   "layout": {
     "navExplore": "Khám phá",
@@ -162,7 +165,8 @@
     "errValDisplayNameRequired": "Tên hiển thị là bắt buộc.",
     "errValDisplayNameTooShort": "Tên hiển thị quá ngắn (tối thiểu 2 ký tự).",
     "errValPasswordTooShort": "Mật khẩu phải có ít nhất 8 ký tự.",
-    "errGeneric": "Đã xảy ra lỗi. Vui lòng thử lại."
+    "errGeneric": "Đã xảy ra lỗi. Vui lòng thử lại.",
+    "tagline": "Kết nối & Trò chuyện"
   },
   "settings": {
     "title": "Cài đặt",
@@ -214,7 +218,9 @@
     "integrations": "Tích hợp",
     "integrationsSubtitle": "Kết nối công cụ & máy chủ MCP",
     "skills": "Kỹ năng",
-    "skillsSubtitle": "Chọn điều trợ lý có thể làm"
+    "skillsSubtitle": "Chọn điều trợ lý có thể làm",
+    "chooseThemeTitle": "Chọn giao diện",
+    "chooseLanguageTitle": "Chọn ngôn ngữ"
   },
   "profile": {
     "title": "Chỉnh sửa hồ sơ",
@@ -251,7 +257,10 @@
     "genderFemale": "Nữ",
     "genderOther": "Khác",
     "hideInfoLabel": "Ẩn thông tin cá nhân",
-    "hideInfoHint": "Người khác sẽ không thấy ngày sinh, số điện thoại, giới tính và tiểu sử của bạn."
+    "hideInfoHint": "Người khác sẽ không thấy ngày sinh, số điện thoại, giới tính và tiểu sử của bạn.",
+    "viewTitle": "Hồ sơ",
+    "editButton": "Chỉnh sửa hồ sơ",
+    "notSet": "Chưa cập nhật"
   },
   "friends": {
     "title": "Bạn bè",
@@ -534,7 +543,9 @@
     "aiTraceRagSources": "Nguồn RAG ({count})",
     "aiTraceScore": "Điểm: {score}",
     "newConvDepartment": "Phòng ban (tùy chọn)",
-    "newConvNoDepartment": "Không có phòng ban"
+    "newConvNoDepartment": "Không có phòng ban",
+    "groupAvatarAlt": "Ảnh nhóm",
+    "imageViewer": "Trình xem ảnh"
   },
   "aiPersona": {
     "title": "AI Persona",
@@ -652,7 +663,8 @@
     "tabLinks": "Links",
     "emptyMedia": "Chưa có hình ảnh/video nào được chia sẻ",
     "emptyFiles": "Chưa có tài liệu nào được chia sẻ",
-    "emptyLinks": "Chưa có liên kết nào được chia sẻ"
+    "emptyLinks": "Chưa có liên kết nào được chia sẻ",
+    "imageAlt": "Phương tiện đã chia sẻ"
   },
   "legal": {
     "privacyTitle": "Chính sách Quyền riêng tư",
@@ -811,5 +823,22 @@
     "auditEmpty": "Chưa có bản ghi kiểm toán nào.",
     "auditPrev": "Trước",
     "auditNext": "Sau"
+  },
+  "call": {
+    "peerFallback": "Người dùng",
+    "calling": "Đang gọi…",
+    "muteMic": "Tắt mic",
+    "unmuteMic": "Bật mic",
+    "endCall": "Kết thúc",
+    "enableCamera": "Bật camera",
+    "disableCamera": "Tắt camera",
+    "incomingVideo": "Cuộc gọi video đến",
+    "incomingVoice": "Cuộc gọi thoại đến",
+    "decline": "Từ chối",
+    "answer": "Trả lời"
+  },
+  "notFound": {
+    "title": "Trang không tồn tại",
+    "backHome": "Quay về trang chủ"
   }
 }

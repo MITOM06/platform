@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useRef } from 'react'
+import { useTranslations } from 'next-intl'
 import { PhoneOff, Mic, MicOff, Video, VideoOff } from 'lucide-react'
 import { useCallStore } from '@/lib/store/call.store'
 import { callManager } from '@/lib/webrtc/call-manager'
@@ -17,6 +18,7 @@ function formatDuration(total: number): string {
  * Shown for `video === true` calls. Audio is carried by the video elements.
  */
 export function VideoCallModal() {
+  const t = useTranslations('call')
   const peerName = useCallStore((s) => s.peerName)
   const status = useCallStore((s) => s.status)
   const duration = useCallStore((s) => s.durationSeconds)
@@ -58,14 +60,14 @@ export function VideoCallModal() {
             <div className="size-20 rounded-full bg-white/10 flex items-center justify-center text-3xl font-semibold">
               {(peerName || '?')[0]?.toUpperCase()}
             </div>
-            <p className="text-xl font-medium">{peerName || 'Người dùng'}</p>
-            <p className="text-sm text-white/70">Đang gọi…</p>
+            <p className="text-xl font-medium">{peerName || t('peerFallback')}</p>
+            <p className="text-sm text-white/70">{t('calling')}</p>
           </div>
         )}
 
         {connected && (
           <div className="absolute top-6 left-0 right-0 text-center text-white">
-            <p className="text-xl font-semibold">{peerName || 'Người dùng'}</p>
+            <p className="text-xl font-semibold">{peerName || t('peerFallback')}</p>
             <p className="text-sm text-white/70">{formatDuration(duration)}</p>
           </div>
         )}
@@ -87,14 +89,14 @@ export function VideoCallModal() {
             'flex size-14 items-center justify-center rounded-full text-white transition-colors',
             micEnabled ? 'bg-white/15 hover:bg-white/25' : 'bg-white/80 text-black',
           )}
-          title={micEnabled ? 'Tắt mic' : 'Bật mic'}
+          title={micEnabled ? t('muteMic') : t('unmuteMic')}
         >
           {micEnabled ? <Mic className="size-6" /> : <MicOff className="size-6" />}
         </button>
         <button
           onClick={() => callManager.endCall()}
           className="flex size-16 items-center justify-center rounded-full bg-red-600 text-white hover:bg-red-700"
-          title="Kết thúc"
+          title={t('endCall')}
         >
           <PhoneOff className="size-7" />
         </button>
@@ -104,7 +106,7 @@ export function VideoCallModal() {
             'flex size-14 items-center justify-center rounded-full text-white transition-colors',
             cameraEnabled ? 'bg-white/15 hover:bg-white/25' : 'bg-white/80 text-black',
           )}
-          title={cameraEnabled ? 'Tắt camera' : 'Bật camera'}
+          title={cameraEnabled ? t('disableCamera') : t('enableCamera')}
         >
           {cameraEnabled ? <Video className="size-6" /> : <VideoOff className="size-6" />}
         </button>

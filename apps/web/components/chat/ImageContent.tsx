@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useTranslations } from 'next-intl'
 import NextImage from 'next/image'
 import { Download, X, ChevronLeft, ChevronRight, Play, ImageOff } from 'lucide-react'
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog'
@@ -124,6 +125,7 @@ function Lightbox({
   onClose: () => void
   onIndexChange: (i: number) => void
 }) {
+  const t = useTranslations('chat')
   if (index === null) return null
   const hasMany = urls.length > 1
   const prev = () => onIndexChange((index - 1 + urls.length) % urls.length)
@@ -135,7 +137,7 @@ function Lightbox({
         className="flex max-w-[95vw] items-center justify-center border-none bg-black/95 p-0 sm:max-w-[90vw]"
         showCloseButton={false}
       >
-        <DialogTitle className="sr-only">Image viewer</DialogTitle>
+        <DialogTitle className="sr-only">{t('imageViewer')}</DialogTitle>
         <div className="relative flex h-[85vh] w-full items-center justify-center">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img

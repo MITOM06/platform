@@ -20,7 +20,7 @@ export function OfflineBanner() {
     <div className="bg-red-500/10 border-b border-red-500/20 px-4 py-2 flex items-center gap-2">
       <WifiOff className="size-4 text-red-500 shrink-0" />
       <span className="text-sm font-medium text-red-600 dark:text-red-400">
-        {t('offlineBanner') || 'Mất kết nối mạng'}
+        {t('offlineBanner')}
       </span>
     </div>
   )

@@ -31,7 +31,7 @@ function ReadUserTile({ userId }: { userId: string }) {
       </div>
       <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
         <CheckCheck className="size-4 text-pon-cyan" />
-        <span>{t('seenStatus') || 'Đã xem'}</span>
+        <span>{t('seenStatus')}</span>
       </div>
     </div>
   )
@@ -51,12 +51,12 @@ export function GroupReadDetailsModal({ message, open, onClose }: Props) {
     <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
       <DialogContent className="sm:max-w-[400px]">
         <DialogHeader>
-          <DialogTitle>{t('readDetails') || 'Chi tiết người đã xem'}</DialogTitle>
+          <DialogTitle>{t('readDetails')}</DialogTitle>
         </DialogHeader>
         <div className="max-h-[60vh] overflow-y-auto mt-2">
           {readBy.length === 0 ? (
             <div className="py-8 text-center text-sm text-muted-foreground">
-              {t('noReadsYet') || 'Chưa có ai xem tin nhắn này'}
+              {t('noReadsYet')}
             </div>
           ) : (
             <div className="flex flex-col gap-1">

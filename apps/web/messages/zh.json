@@ -10,7 +10,10 @@
     "search": "Search",
     "back": "Back",
     "noResults": "No results found",
-    "members": "{count} members"
+    "members": "{count} members",
+    "somethingWrong": "出现错误",
+    "unknownError": "未知错误",
+    "retry": "重试"
   },
   "layout": {
     "navExplore": "探索",
@@ -162,7 +165,8 @@
     "errValDisplayNameRequired": "显示名称为必填项。",
     "errValDisplayNameTooShort": "显示名称太短（至少 2 个字符）。",
     "errValPasswordTooShort": "密码至少需要 8 个字符。",
-    "errGeneric": "发生错误，请重试。"
+    "errGeneric": "发生错误，请重试。",
+    "tagline": "连接与聊天"
   },
   "settings": {
     "title": "Settings",
@@ -214,7 +218,9 @@
     "integrations": "集成",
     "integrationsSubtitle": "连接工具和 MCP 服务器",
     "skills": "技能",
-    "skillsSubtitle": "选择助手能做什么"
+    "skillsSubtitle": "选择助手能做什么",
+    "chooseThemeTitle": "选择主题",
+    "chooseLanguageTitle": "选择语言"
   },
   "profile": {
     "title": "Edit Profile",
@@ -251,7 +257,10 @@
     "genderFemale": "女",
     "genderOther": "其他",
     "hideInfoLabel": "隐藏个人信息",
-    "hideInfoHint": "其他用户将无法看到你的生日、电话、性别和简介。"
+    "hideInfoHint": "其他用户将无法看到你的生日、电话、性别和简介。",
+    "viewTitle": "个人资料",
+    "editButton": "编辑资料",
+    "notSet": "未设置"
   },
   "friends": {
     "title": "Friends",
@@ -534,7 +543,9 @@
     "aiTraceRagSources": "RAG 来源 ({count})",
     "aiTraceScore": "得分：{score}",
     "newConvDepartment": "部门（可选）",
-    "newConvNoDepartment": "无部门"
+    "newConvNoDepartment": "无部门",
+    "groupAvatarAlt": "群组头像",
+    "imageViewer": "图片查看器"
   },
   "aiPersona": {
     "title": "AI Persona",
@@ -652,7 +663,8 @@
     "tabLinks": "Links",
     "emptyMedia": "No photos or videos shared yet",
     "emptyFiles": "No files shared yet",
-    "emptyLinks": "No links shared yet"
+    "emptyLinks": "No links shared yet",
+    "imageAlt": "共享媒体"
   },
   "legal": {
     "privacyTitle": "隐私政策",
@@ -811,5 +823,22 @@
     "auditEmpty": "暂无审计记录。",
     "auditPrev": "上一页",
     "auditNext": "下一页"
+  },
+  "call": {
+    "peerFallback": "用户",
+    "calling": "正在呼叫…",
+    "muteMic": "关闭麦克风",
+    "unmuteMic": "打开麦克风",
+    "endCall": "结束通话",
+    "enableCamera": "打开摄像头",
+    "disableCamera": "关闭摄像头",
+    "incomingVideo": "视频通话来电",
+    "incomingVoice": "语音通话来电",
+    "decline": "拒绝",
+    "answer": "接听"
+  },
+  "notFound": {
+    "title": "页面不存在",
+    "backHome": "返回首页"
   }
 }

@@ -10,7 +10,10 @@
     "search": "Search",
     "back": "Back",
     "noResults": "No results found",
-    "members": "{count} members"
+    "members": "{count} members",
+    "somethingWrong": "Something went wrong",
+    "unknownError": "Unknown error",
+    "retry": "Try again"
   },
   "layout": {
     "navExplore": "Explore",
@@ -162,7 +165,8 @@
     "errValDisplayNameRequired": "Display name is required.",
     "errValDisplayNameTooShort": "Display name is too short (minimum 2 characters).",
     "errValPasswordTooShort": "Password must be at least 8 characters.",
-    "errGeneric": "An error occurred. Please try again."
+    "errGeneric": "An error occurred. Please try again.",
+    "tagline": "Connect & Chat"
   },
   "settings": {
     "title": "Settings",
@@ -214,7 +218,9 @@
     "integrations": "Integrations",
     "integrationsSubtitle": "Connect tools & MCP servers",
     "skills": "Skills",
-    "skillsSubtitle": "Choose what your assistant can do"
+    "skillsSubtitle": "Choose what your assistant can do",
+    "chooseThemeTitle": "Choose theme",
+    "chooseLanguageTitle": "Choose language"
   },
   "profile": {
     "title": "Edit Profile",
@@ -251,7 +257,10 @@
     "genderFemale": "Female",
     "genderOther": "Other",
     "hideInfoLabel": "Hide personal info",
-    "hideInfoHint": "Other users won't see your birthday, phone, gender or bio."
+    "hideInfoHint": "Other users won't see your birthday, phone, gender or bio.",
+    "viewTitle": "Profile",
+    "editButton": "Edit profile",
+    "notSet": "Not set"
   },
   "friends": {
     "title": "Friends",
@@ -534,7 +543,9 @@
     "aiTraceRagSources": "RAG sources ({count})",
     "aiTraceScore": "Score: {score}",
     "newConvDepartment": "Department (optional)",
-    "newConvNoDepartment": "No department"
+    "newConvNoDepartment": "No department",
+    "groupAvatarAlt": "Group avatar",
+    "imageViewer": "Image viewer"
   },
   "aiPersona": {
     "title": "AI Persona",
@@ -652,7 +663,8 @@
     "tabLinks": "Links",
     "emptyMedia": "No photos or videos shared yet",
     "emptyFiles": "No files shared yet",
-    "emptyLinks": "No links shared yet"
+    "emptyLinks": "No links shared yet",
+    "imageAlt": "Shared media"
   },
   "legal": {
     "privacyTitle": "Privacy Policy",
@@ -811,5 +823,22 @@
     "auditEmpty": "No audit entries yet.",
     "auditPrev": "Previous",
     "auditNext": "Next"
+  },
+  "call": {
+    "peerFallback": "User",
+    "calling": "Calling…",
+    "muteMic": "Mute mic",
+    "unmuteMic": "Unmute mic",
+    "endCall": "End call",
+    "enableCamera": "Turn on camera",
+    "disableCamera": "Turn off camera",
+    "incomingVideo": "Incoming video call",
+    "incomingVoice": "Incoming voice call",
+    "decline": "Decline",
+    "answer": "Answer"
+  },
+  "notFound": {
+    "title": "Page not found",
+    "backHome": "Back to home"
   }
 }

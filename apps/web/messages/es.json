@@ -10,7 +10,10 @@
     "search": "Search",
     "back": "Back",
     "noResults": "No results found",
-    "members": "{count} members"
+    "members": "{count} members",
+    "somethingWrong": "Algo salió mal",
+    "unknownError": "Error desconocido",
+    "retry": "Reintentar"
   },
   "layout": {
     "navExplore": "Explorar",
@@ -162,7 +165,8 @@
     "errValDisplayNameRequired": "El nombre de visualización es obligatorio.",
     "errValDisplayNameTooShort": "El nombre de visualización es demasiado corto (mínimo 2 caracteres).",
     "errValPasswordTooShort": "La contraseña debe tener al menos 8 caracteres.",
-    "errGeneric": "Ocurrió un error. Por favor, inténtalo de nuevo."
+    "errGeneric": "Ocurrió un error. Por favor, inténtalo de nuevo.",
+    "tagline": "Conecta y chatea"
   },
   "settings": {
     "title": "Settings",
@@ -214,7 +218,9 @@
     "integrations": "Integraciones",
     "integrationsSubtitle": "Conecta herramientas y servidores MCP",
     "skills": "Habilidades",
-    "skillsSubtitle": "Elige lo que tu asistente puede hacer"
+    "skillsSubtitle": "Elige lo que tu asistente puede hacer",
+    "chooseThemeTitle": "Elegir tema",
+    "chooseLanguageTitle": "Elegir idioma"
   },
   "profile": {
     "title": "Edit Profile",
@@ -251,7 +257,10 @@
     "genderFemale": "Mujer",
     "genderOther": "Otro",
     "hideInfoLabel": "Ocultar información personal",
-    "hideInfoHint": "Otros usuarios no verán tu cumpleaños, teléfono, género ni biografía."
+    "hideInfoHint": "Otros usuarios no verán tu cumpleaños, teléfono, género ni biografía.",
+    "viewTitle": "Perfil",
+    "editButton": "Editar perfil",
+    "notSet": "Sin definir"
   },
   "friends": {
     "title": "Friends",
@@ -534,7 +543,9 @@
     "aiTraceRagSources": "Fuentes RAG ({count})",
     "aiTraceScore": "Puntuación: {score}",
     "newConvDepartment": "Departamento (opcional)",
-    "newConvNoDepartment": "Sin departamento"
+    "newConvNoDepartment": "Sin departamento",
+    "groupAvatarAlt": "Avatar del grupo",
+    "imageViewer": "Visor de imágenes"
   },
   "aiPersona": {
     "title": "AI Persona",
@@ -652,7 +663,8 @@
     "tabLinks": "Links",
     "emptyMedia": "No photos or videos shared yet",
     "emptyFiles": "No files shared yet",
-    "emptyLinks": "No links shared yet"
+    "emptyLinks": "No links shared yet",
+    "imageAlt": "Medios compartidos"
   },
   "legal": {
     "privacyTitle": "Política de Privacidad",
@@ -811,5 +823,22 @@
     "auditEmpty": "Aún no hay registros de auditoría.",
     "auditPrev": "Anterior",
     "auditNext": "Siguiente"
+  },
+  "call": {
+    "peerFallback": "Usuario",
+    "calling": "Llamando…",
+    "muteMic": "Silenciar micrófono",
+    "unmuteMic": "Activar micrófono",
+    "endCall": "Finalizar llamada",
+    "enableCamera": "Activar cámara",
+    "disableCamera": "Desactivar cámara",
+    "incomingVideo": "Videollamada entrante",
+    "incomingVoice": "Llamada de voz entrante",
+    "decline": "Rechazar",
+    "answer": "Responder"
+  },
+  "notFound": {
+    "title": "Página no encontrada",
+    "backHome": "Volver al inicio"
   }
 }
