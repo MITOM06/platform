@@ -836,6 +836,18 @@ class AppLocalizationsKo extends AppLocalizations {
   String get profileDateOfBirth => '생년월일';
 
   @override
+  String get profileShowDateOfBirth => '다른 사람에게 생년월일 표시';
+
+  @override
+  String get profileShowPhone => '다른 사람에게 전화번호 표시';
+
+  @override
+  String get profileShowGender => '다른 사람에게 성별 표시';
+
+  @override
+  String get profilePrivacySection => '개인정보 보호';
+
+  @override
   String get profileEditMode => '프로필 편집';
 
   @override

@@ -43,6 +43,9 @@ export class UsersController {
       phoneNumber?: string;
       gender?: string;
       hideInfo?: boolean;
+      showDateOfBirth?: boolean;
+      showPhoneNumber?: boolean;
+      showGender?: boolean;
     },
   ) {
     return this.usersService.updateProfile(req.user.sub, body);
@@ -117,20 +120,31 @@ export class UsersController {
       avatarUrl: doc.avatarUrl ?? '',
       coverPhoto: doc.coverPhoto ?? '',
       isVerified: doc.isVerified ?? false,
-      hideInfo: doc.hideInfo ?? false,
+      hideInfo: doc.hideInfo ?? false, // legacy fallback safety-net
       createdAt: doc.createdAt,
       friendsCount,
     };
 
-    // Privacy-sensitive fields only when viewing self, or when the owner has
-    // not enabled hideInfo.
-    if (isSelf || !doc.hideInfo) {
+    // Per-field visibility. New per-field flags win; when absent on legacy
+    // docs, fall back to the legacy `!hideInfo` behaviour.
+    const showDob = doc.showDateOfBirth ?? !doc.hideInfo;
+    const showPhone = doc.showPhoneNumber ?? !doc.hideInfo;
+    const showGen = doc.showGender ?? !doc.hideInfo;
+
+    // bio is never gated — always public.
+    profile.bio = doc.bio;
+
+    if (isSelf) {
+      // Self gets everything + the toggle flags to seed the edit form.
       profile.email = doc.email;
-      profile.phoneNumber = doc.phoneNumber;
-      profile.dateOfBirth = doc.dateOfBirth;
-      profile.gender = doc.gender;
-      profile.bio = doc.bio;
+      profile.showDateOfBirth = showDob;
+      profile.showPhoneNumber = showPhone;
+      profile.showGender = showGen;
     }
+
+    if (isSelf || showDob) profile.dateOfBirth = doc.dateOfBirth;
+    if (isSelf || showPhone) profile.phoneNumber = doc.phoneNumber;
+    if (isSelf || showGen) profile.gender = doc.gender;
 
     return profile;
   }

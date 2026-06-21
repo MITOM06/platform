@@ -38,6 +38,10 @@ class _UserProfileDialogState extends ConsumerState<UserProfileDialog> {
   late final TextEditingController _phoneCtrl;
   String? _gender;
   DateTime? _dob;
+  // Per-field "show to others" toggle state, seeded from the profile on enter.
+  bool _showDob = true;
+  bool _showPhone = true;
+  bool _showGender = true;
 
   @override
   void initState() {
@@ -62,6 +66,9 @@ class _UserProfileDialogState extends ConsumerState<UserProfileDialog> {
     _phoneCtrl.text = user.phoneNumber ?? '';
     _gender = user.gender;
     _dob = user.dateOfBirth;
+    _showDob = user.effectiveShowDateOfBirth;
+    _showPhone = user.effectiveShowPhoneNumber;
+    _showGender = user.effectiveShowGender;
     _fieldsInitialized = true;
   }
 
@@ -74,6 +81,9 @@ class _UserProfileDialogState extends ConsumerState<UserProfileDialog> {
             phoneNumber: _phoneCtrl.text.trim(),
             gender: _gender,
             dateOfBirth: _dob,
+            showDateOfBirth: _showDob,
+            showPhoneNumber: _showPhone,
+            showGender: _showGender,
           );
       if (mounted) setState(() { _editMode = false; _fieldsInitialized = false; });
     } catch (e) {
@@ -138,6 +148,12 @@ class _UserProfileDialogState extends ConsumerState<UserProfileDialog> {
           phoneCtrl: _phoneCtrl,
           gender: _gender,
           dob: _dob,
+          showDateOfBirth: _showDob,
+          showPhoneNumber: _showPhone,
+          showGender: _showGender,
+          onToggleShowDateOfBirth: (v) => setState(() => _showDob = v),
+          onToggleShowPhoneNumber: (v) => setState(() => _showPhone = v),
+          onToggleShowGender: (v) => setState(() => _showGender = v),
           onToggleEdit: () {
             setState(() {
               _editMode = !_editMode;
@@ -148,11 +164,6 @@ class _UserProfileDialogState extends ConsumerState<UserProfileDialog> {
           onUploadAvatar: _uploadAvatar,
           onGenderChange: (v) => setState(() => _gender = v),
           onPickDate: profile != null ? () => _pickDate(profile) : null,
-          onToggleHideInfo: profile != null && isSelf
-              ? (v) => ref
-                    .read(authNotifierProvider.notifier)
-                    .updateProfile(hideInfo: v)
-              : null,
           userId: widget.userId,
           currentUserId: currentUser?.id,
         ),
@@ -171,12 +182,17 @@ class _ProfileDialogContent extends ConsumerWidget {
   final TextEditingController phoneCtrl;
   final String? gender;
   final DateTime? dob;
+  final bool showDateOfBirth;
+  final bool showPhoneNumber;
+  final bool showGender;
+  final ValueChanged<bool> onToggleShowDateOfBirth;
+  final ValueChanged<bool> onToggleShowPhoneNumber;
+  final ValueChanged<bool> onToggleShowGender;
   final VoidCallback onToggleEdit;
   final VoidCallback? onSave;
   final VoidCallback onUploadAvatar;
   final ValueChanged<String?> onGenderChange;
   final VoidCallback? onPickDate;
-  final ValueChanged<bool>? onToggleHideInfo;
   final String userId;
   final String? currentUserId;
 
@@ -190,12 +206,17 @@ class _ProfileDialogContent extends ConsumerWidget {
     required this.phoneCtrl,
     required this.gender,
     required this.dob,
+    required this.showDateOfBirth,
+    required this.showPhoneNumber,
+    required this.showGender,
+    required this.onToggleShowDateOfBirth,
+    required this.onToggleShowPhoneNumber,
+    required this.onToggleShowGender,
     required this.onToggleEdit,
     required this.onSave,
     required this.onUploadAvatar,
     required this.onGenderChange,
     required this.onPickDate,
-    required this.onToggleHideInfo,
     required this.userId,
     required this.currentUserId,
   });
@@ -216,7 +237,6 @@ class _ProfileDialogContent extends ConsumerWidget {
     final avatarUrl = u.avatarUrl != null
         ? (u.avatarUrl!.startsWith('http') ? u.avatarUrl! : '${DioClient.chatBaseUrl}${u.avatarUrl}')
         : null;
-    final hidePersonal = !isSelf && u.hideInfo;
 
     return SingleChildScrollView(
       child: Column(
@@ -300,47 +320,40 @@ class _ProfileDialogContent extends ConsumerWidget {
                   ),
           ),
           const SizedBox(height: 12),
-          // Personal info section
-          if (hidePersonal)
+          // Privacy section header (self edit mode only).
+          if (isSelf && editMode)
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Icon(Icons.lock_outline, size: 14, color: Colors.white54),
-                  const SizedBox(width: 6),
-                  Text(
-                    context.l10n.profileInfoHidden,
-                    style: const TextStyle(color: Colors.white54, fontSize: 13),
+              padding: const EdgeInsets.fromLTRB(20, 4, 20, 0),
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  context.l10n.profilePrivacySection,
+                  style: const TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white60,
                   ),
-                ],
+                ),
               ),
-            )
-          else
-            ProfilePersonalInfo(
-              u: u,
-              isSelf: isSelf,
-              editMode: editMode,
-              bioCtrl: bioCtrl,
-              phoneCtrl: phoneCtrl,
-              gender: gender,
-              dob: dob,
-              onGenderChange: onGenderChange,
-              onPickDate: onPickDate,
             ),
-          // Privacy toggle (self only)
-          if (isSelf) ...[
-            const Divider(height: 24),
-            SwitchListTile(
-              value: u.hideInfo,
-              onChanged: onToggleHideInfo,
-              title: Text(context.l10n.profileHideInfo,
-                  style: const TextStyle(fontSize: 14)),
-              activeThumbColor: AppTheme.ponCyan,
-              dense: true,
-              contentPadding: const EdgeInsets.symmetric(horizontal: 20),
-            ),
-          ],
+          // Personal info section with per-field privacy gating + edit toggles.
+          ProfilePersonalInfo(
+            u: u,
+            isSelf: isSelf,
+            editMode: editMode,
+            bioCtrl: bioCtrl,
+            phoneCtrl: phoneCtrl,
+            gender: gender,
+            dob: dob,
+            onGenderChange: onGenderChange,
+            onPickDate: onPickDate,
+            showDateOfBirth: showDateOfBirth,
+            showPhoneNumber: showPhoneNumber,
+            showGender: showGender,
+            onToggleShowDateOfBirth: onToggleShowDateOfBirth,
+            onToggleShowPhoneNumber: onToggleShowPhoneNumber,
+            onToggleShowGender: onToggleShowGender,
+          ),
           const Divider(height: 8),
           // Actions
           Padding(

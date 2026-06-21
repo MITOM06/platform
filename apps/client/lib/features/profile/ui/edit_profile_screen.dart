@@ -24,8 +24,14 @@ class EditProfileScreen extends ConsumerStatefulWidget {
 class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
   late final TextEditingController _nameController;
   late final TextEditingController _bioController;
+  late final TextEditingController _phoneController;
   bool _isLoading = false;
   DateTime? _selectedDateOfBirth;
+  String? _gender;
+  // Per-field "show to others" privacy toggles, seeded from the current user.
+  bool _showDob = true;
+  bool _showPhone = true;
+  bool _showGender = true;
 
   @override
   void initState() {
@@ -34,13 +40,19 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
     final current = user is AuthAuthenticated ? user.user : null;
     _nameController = TextEditingController(text: current?.displayName ?? '');
     _bioController = TextEditingController(text: current?.bio ?? '');
+    _phoneController = TextEditingController(text: current?.phoneNumber ?? '');
     _selectedDateOfBirth = current?.dateOfBirth;
+    _gender = current?.gender;
+    _showDob = current?.effectiveShowDateOfBirth ?? true;
+    _showPhone = current?.effectiveShowPhoneNumber ?? true;
+    _showGender = current?.effectiveShowGender ?? true;
   }
 
   @override
   void dispose() {
     _nameController.dispose();
     _bioController.dispose();
+    _phoneController.dispose();
     super.dispose();
   }
 
@@ -97,7 +109,12 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
       await ref.read(authNotifierProvider.notifier).updateProfile(
             displayName: name,
             bio: _bioController.text.trim(),
+            phoneNumber: _phoneController.text.trim(),
+            gender: _gender,
             dateOfBirth: _selectedDateOfBirth,
+            showDateOfBirth: _showDob,
+            showPhoneNumber: _showPhone,
+            showGender: _showGender,
           );
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -243,6 +260,38 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
               maxLength: 160,
             ),
             const SizedBox(height: 16),
+            PonTextField(
+              controller: _phoneController,
+              labelText: context.l10n.profilePhone,
+              prefixIcon: Icons.phone_outlined,
+              keyboardType: TextInputType.phone,
+              textInputAction: TextInputAction.next,
+            ),
+            _PrivacyToggle(
+              label: context.l10n.profileShowPhone,
+              value: _showPhone,
+              onChanged: _isLoading ? null : (v) => setState(() => _showPhone = v),
+            ),
+            const SizedBox(height: 8),
+            DropdownButtonFormField<String>(
+              initialValue: _gender,
+              decoration: InputDecoration(
+                labelText: context.l10n.profileGender,
+                prefixIcon: const Icon(Icons.wc_outlined, color: AppTheme.ponCyan),
+              ),
+              items: [
+                DropdownMenuItem(value: 'male', child: Text(context.l10n.genderMale)),
+                DropdownMenuItem(value: 'female', child: Text(context.l10n.genderFemale)),
+                DropdownMenuItem(value: 'other', child: Text(context.l10n.genderOther)),
+              ],
+              onChanged: _isLoading ? null : (v) => setState(() => _gender = v),
+            ),
+            _PrivacyToggle(
+              label: context.l10n.profileShowGender,
+              value: _showGender,
+              onChanged: _isLoading ? null : (v) => setState(() => _showGender = v),
+            ),
+            const SizedBox(height: 8),
             ListTile(
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
               tileColor: Theme.of(context).colorScheme.surface,
@@ -270,6 +319,11 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                       }
                     },
             ),
+            _PrivacyToggle(
+              label: context.l10n.profileShowDateOfBirth,
+              value: _showDob,
+              onChanged: _isLoading ? null : (v) => setState(() => _showDob = v),
+            ),
             const SizedBox(height: 24),
             PonButton(
               onPressed: _isLoading ? null : _save,
@@ -279,6 +333,34 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
           ],
         ),
       ),
+    );
+  }
+}
+
+/// Compact "show to others" privacy switch shown under each gated field.
+class _PrivacyToggle extends StatelessWidget {
+  final String label;
+  final bool value;
+  final ValueChanged<bool>? onChanged;
+  const _PrivacyToggle({
+    required this.label,
+    required this.value,
+    required this.onChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return SwitchListTile(
+      value: value,
+      onChanged: onChanged,
+      title: Text(
+        label,
+        style: const TextStyle(fontSize: 13, color: Colors.white70),
+      ),
+      activeThumbColor: AppTheme.ponCyan,
+      dense: true,
+      contentPadding: EdgeInsets.zero,
+      visualDensity: VisualDensity.compact,
     );
   }
 }

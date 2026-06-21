@@ -76,7 +76,8 @@ export default function ProfilePage() {
         <span className="font-semibold text-base">{t('viewTitle')}</span>
       </header>
 
-      <div className="flex-1 overflow-y-auto">
+      <div className="flex-1 overflow-y-auto flex justify-center px-4 py-6 md:py-10">
+        <div className="w-full max-w-md rounded-2xl border bg-card shadow-sm overflow-hidden self-start">
         {/* Cover Photo */}
         <div className="relative h-40 w-full overflow-hidden">
           {resolvedCover ? (
@@ -87,7 +88,7 @@ export default function ProfilePage() {
           <div className="absolute inset-0 bg-black/20" />
         </div>
 
-        <div className="relative max-w-md mx-auto px-6">
+        <div className="relative px-6">
           {/* Avatar overlapping cover */}
           <div className="flex justify-center -mt-14">
             <Avatar className="size-28 ring-4 ring-background shadow-xl">
@@ -125,6 +126,7 @@ export default function ProfilePage() {
               {t('editButton')}
             </Button>
           </div>
+        </div>
         </div>
       </div>
     </div>

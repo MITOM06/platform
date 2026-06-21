@@ -120,6 +120,9 @@ export class UsersService {
       phoneNumber?: string;
       gender?: string;
       hideInfo?: boolean;
+      showDateOfBirth?: boolean;
+      showPhoneNumber?: boolean;
+      showGender?: boolean;
     },
   ): Promise<UserDocument | null> {
     const updateData: any = {};
@@ -137,6 +140,12 @@ export class UsersService {
       updateData.phoneNumber = data.phoneNumber || null; // '' → null to satisfy sparse unique index
     if (data.gender !== undefined) updateData.gender = data.gender;
     if (data.hideInfo !== undefined) updateData.hideInfo = data.hideInfo;
+    if (data.showDateOfBirth !== undefined)
+      updateData.showDateOfBirth = data.showDateOfBirth;
+    if (data.showPhoneNumber !== undefined)
+      updateData.showPhoneNumber = data.showPhoneNumber;
+    if (data.showGender !== undefined)
+      updateData.showGender = data.showGender;
 
     if (Object.keys(updateData).length > 0) {
       return this.userModel

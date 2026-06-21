@@ -68,6 +68,17 @@ export class User {
   @Prop({ default: false })
   hideInfo: boolean;
 
+  // Per-field privacy toggles ("show to others"). default true = public.
+  // When absent on legacy docs, code falls back to `!hideInfo`.
+  @Prop({ default: true })
+  showDateOfBirth: boolean;
+
+  @Prop({ default: true })
+  showPhoneNumber: boolean;
+
+  @Prop({ default: true })
+  showGender: boolean;
+
   // ===================== ENTERPRISE RBAC MEMBERSHIP =====================
   // Single-workspace-per-deployment: membership is embedded on the user (no
   // separate Membership collection, no cross-company orgId).

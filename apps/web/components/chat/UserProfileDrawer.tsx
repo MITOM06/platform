@@ -9,7 +9,7 @@ import {
   MessageCircle, UserPlus, UserMinus, ShieldOff, ShieldAlert, Loader2,
   Cake, Phone, Users,
 } from 'lucide-react'
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet'
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
@@ -135,31 +135,36 @@ export function UserProfileDrawer({ userId, onClose }: Props) {
     : relationship?.friendStatus === 'outgoing' ? t('friendRequested')
     : t('friendAdd')
 
-  // The auth-service already strips dob/phone/gender server-side when the other
-  // user has hideInfo enabled — but we also gate on the flag defensively so a
-  // viewer never sees private info even if the server returned it.
+  // The auth-service already strips dob/phone/gender server-side based on the
+  // other user's per-field visibility flags — but we also gate per field
+  // defensively so a viewer never sees private info even if the server returned
+  // it. Each flag falls back to `!hideInfo` for legacy users without per-field
+  // flags. bio is always shown.
   const isOwnProfile = !!userId && userId === currentUserId
-  const showInfo = isOwnProfile || !user?.hideInfo
-  const dobText = user?.dateOfBirth
+  const showDob = isOwnProfile || (user?.showDateOfBirth ?? !user?.hideInfo)
+  const showPhone = isOwnProfile || (user?.showPhoneNumber ?? !user?.hideInfo)
+  const showGender = isOwnProfile || (user?.showGender ?? !user?.hideInfo)
+  const dobText = showDob && user?.dateOfBirth
     ? new Date(user.dateOfBirth).toLocaleDateString(locale, { day: '2-digit', month: '2-digit', year: 'numeric' })
     : null
-  const genderText = user?.gender ? genderLabel(user.gender, t) : null
+  const phoneText = showPhone && user?.phoneNumber ? user.phoneNumber : null
+  const genderText = showGender && user?.gender ? genderLabel(user.gender, t) : null
 
   return (
-    <Sheet open={!!userId} onOpenChange={(o) => !o && onClose()}>
-      <SheetContent side="right" className="w-72 sm:w-80 overflow-y-auto">
-        <SheetHeader>
-          <SheetTitle>{t('profileTitle')}</SheetTitle>
-        </SheetHeader>
+    <Dialog open={!!userId} onOpenChange={(o) => !o && onClose()}>
+      <DialogContent className="max-w-sm overflow-hidden p-0 gap-0">
+        <DialogHeader className="px-6 pt-6">
+          <DialogTitle>{t('profileTitle')}</DialogTitle>
+        </DialogHeader>
 
         {isLoading ? (
           <div className="flex justify-center py-12">
             <Loader2 className="size-6 animate-spin text-muted-foreground" />
           </div>
         ) : (
-          <div className="mt-4 space-y-4">
+          <div className="mt-4 space-y-4 px-6 pb-6">
             {/* Cover photo backdrop (view-only — no edit affordance for other users) */}
-            <div className="relative -mx-6 -mt-2 h-20 overflow-hidden">
+            <div className="relative -mx-6 -mt-4 h-24 overflow-hidden">
               {user?.coverPhoto ? (
                 <Image
                   src={absoluteMediaUrl(user.coverPhoto)}
@@ -190,20 +195,20 @@ export function UserProfileDrawer({ userId, onClose }: Props) {
               <p className="text-xs text-muted-foreground">
                 {status?.online ? t('online') : t('offline')}
               </p>
-              {user?.bio && showInfo && (
-                <p className="text-sm text-center text-muted-foreground max-w-[200px] leading-snug">
+              {user?.bio && (
+                <p className="text-sm text-center text-muted-foreground max-w-[220px] leading-snug">
                   {user.bio}
                 </p>
               )}
             </div>
 
-            {/* Profile info — gated behind the other user's privacy flag */}
-            {showInfo && (dobText || user?.phoneNumber || genderText) && (
+            {/* Profile info — each field gated independently by its show flag */}
+            {(dobText || phoneText || genderText) && (
               <>
                 <Separator />
                 <div className="flex flex-col gap-2 px-1">
                   {dobText && <InfoRow icon={<Cake className="size-4" />} value={dobText} />}
-                  {user?.phoneNumber && <InfoRow icon={<Phone className="size-4" />} value={user.phoneNumber} />}
+                  {phoneText && <InfoRow icon={<Phone className="size-4" />} value={phoneText} />}
                   {genderText && <InfoRow icon={<Users className="size-4" />} value={genderText} />}
                 </div>
               </>
@@ -264,7 +269,7 @@ export function UserProfileDrawer({ userId, onClose }: Props) {
             </div>
           </div>
         )}
-      </SheetContent>
-    </Sheet>
+      </DialogContent>
+    </Dialog>
   )
 }

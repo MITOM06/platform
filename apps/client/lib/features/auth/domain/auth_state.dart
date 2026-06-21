@@ -14,6 +14,12 @@ class UserModel {
   final String? gender;
   final bool hideInfo;
 
+  /// Per-field visibility flags. `null` = not set by the server (legacy doc) →
+  /// callers fall back to `!hideInfo`. Only present on the self response.
+  final bool? showDateOfBirth;
+  final bool? showPhoneNumber;
+  final bool? showGender;
+
   const UserModel({
     required this.id,
     required this.email,
@@ -26,6 +32,9 @@ class UserModel {
     this.phoneNumber,
     this.gender,
     this.hideInfo = false,
+    this.showDateOfBirth,
+    this.showPhoneNumber,
+    this.showGender,
   });
 
   factory UserModel.fromJson(Map<String, dynamic> json) {
@@ -44,6 +53,9 @@ class UserModel {
       phoneNumber: json['phoneNumber'] as String?,
       gender: json['gender'] as String?,
       hideInfo: json['hideInfo'] as bool? ?? false,
+      showDateOfBirth: json['showDateOfBirth'] as bool?,
+      showPhoneNumber: json['showPhoneNumber'] as bool?,
+      showGender: json['showGender'] as bool?,
     );
   }
 
@@ -59,7 +71,16 @@ class UserModel {
         if (phoneNumber != null) 'phoneNumber': phoneNumber,
         if (gender != null) 'gender': gender,
         'hideInfo': hideInfo,
+        if (showDateOfBirth != null) 'showDateOfBirth': showDateOfBirth,
+        if (showPhoneNumber != null) 'showPhoneNumber': showPhoneNumber,
+        if (showGender != null) 'showGender': showGender,
       };
+
+  /// Effective per-field visibility for "view as another user" gating.
+  /// Falls back to `!hideInfo` when the flag is absent (legacy docs).
+  bool get effectiveShowDateOfBirth => showDateOfBirth ?? !hideInfo;
+  bool get effectiveShowPhoneNumber => showPhoneNumber ?? !hideInfo;
+  bool get effectiveShowGender => showGender ?? !hideInfo;
 }
 
 sealed class AuthState {

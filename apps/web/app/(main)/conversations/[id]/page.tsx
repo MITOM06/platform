@@ -24,7 +24,7 @@ import { useWallpaper } from '@/lib/hooks/use-wallpaper'
 import { useMessageCache } from '@/lib/hooks/use-message-cache'
 import { applyNicknameSystemMessage } from '@/lib/nicknames'
 import { applyQuickReactionSystemMessage } from '@/lib/quick-reaction'
-import type { Message, MessageType, StompEvent } from '@/lib/api/types'
+import type { AiStreamState, Message, MessageType, StompEvent } from '@/lib/api/types'
 
 interface Props {
   params: Promise<{ id: string }>
@@ -58,7 +58,10 @@ export default function ConversationPage({ params }: Props) {
   const [replyingTo, setReplyingTo] = useState<Message | null>(null)
   const [forwardMessage, setForwardMessage] = useState<Message | null>(null)
   const [traceMessageId, setTraceMessageId] = useState<string | null>(null)
-  const [aiStreamContent, setAiStreamContent] = useState<string | null>(null)
+  const [aiStream, setAiStream] = useState<AiStreamState | null>(null)
+  // Watchdog so a "thinking" bubble never sticks forever if the AI never
+  // responds (parity with Flutter's 30s watchdog). Re-armed on every AI event.
+  const aiWatchdogRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const { data: conversation } = useConversation(id)
 
@@ -130,9 +133,27 @@ export default function ConversationPage({ params }: Props) {
   useEffect(() => {
     if (isPrependingRef.current) return
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }, [messages.length, aiStreamContent])
+  }, [messages.length, aiStream])
 
   const { patchMessage, markMessageRead, appendMessage } = useMessageCache(id)
+
+  const armAiWatchdog = useCallback(() => {
+    if (aiWatchdogRef.current) clearTimeout(aiWatchdogRef.current)
+    aiWatchdogRef.current = setTimeout(() => setAiStream(null), 30000)
+  }, [])
+
+  const clearAiStream = useCallback(() => {
+    if (aiWatchdogRef.current) {
+      clearTimeout(aiWatchdogRef.current)
+      aiWatchdogRef.current = null
+    }
+    setAiStream(null)
+  }, [])
+
+  // Clear the watchdog timer on unmount.
+  useEffect(() => () => {
+    if (aiWatchdogRef.current) clearTimeout(aiWatchdogRef.current)
+  }, [])
 
   // Subscribe to STOMP for real-time messages + events + typing
   useEffect(() => {
@@ -172,13 +193,32 @@ export default function ConversationPage({ params }: Props) {
                 queryClient.invalidateQueries({ queryKey: ['conversations'] })
                 break
               case 'AI_STREAM_CHUNK':
-                setAiStreamContent((prev) => (prev ?? '') + String(parsed.chunk ?? ''))
+                setAiStream((prev) => ({
+                  content: (prev?.content ?? '') + String(parsed.chunk ?? ''),
+                  thinking: false,
+                  activeTools: prev?.activeTools ?? [],
+                }))
+                armAiWatchdog()
                 break
+              case 'AI_TOOL_CALL': {
+                const toolName = String(parsed.toolName ?? '')
+                setAiStream((prev) => {
+                  const base = prev ?? { content: '', thinking: true, activeTools: [] }
+                  return {
+                    ...base,
+                    activeTools: base.activeTools.includes(toolName)
+                      ? base.activeTools
+                      : [...base.activeTools, toolName],
+                  }
+                })
+                armAiWatchdog()
+                break
+              }
               case 'AI_STREAM_DONE':
-                setAiStreamContent(null)
+                clearAiStream()
                 break
               case 'AI_STREAM_ERROR': {
-                setAiStreamContent(null)
+                clearAiStream()
                 const aiErrCodeMap: Record<string, string> = {
                   AI_QUOTA_EXCEEDED: t('aiQuotaExceeded'),
                   AI_STREAM_INTERRUPTED: t('aiStreamInterrupted'),
@@ -190,9 +230,6 @@ export default function ConversationPage({ params }: Props) {
                 toast.error(String(aiErrMsg))
                 break
               }
-              case 'AI_TOOL_CALL':
-                // tool call indicator is transient — no persistent state needed
-                break
             }
           } else {
             // Regular message (includes AI final message after AI_STREAM_DONE)
@@ -229,7 +266,7 @@ export default function ConversationPage({ params }: Props) {
       messageSub?.unsubscribe()
       typingSub?.unsubscribe()
     }
-  }, [id, queryClient, currentUser?.id, patchMessage, appendMessage, markMessageRead, t])
+  }, [id, queryClient, currentUser?.id, patchMessage, appendMessage, markMessageRead, t, armAiWatchdog, clearAiStream])
 
   // Mark conversation as read on open
   useEffect(() => {
@@ -270,10 +307,20 @@ export default function ConversationPage({ params }: Props) {
       const finalContent = isAI && type === 'text' && !content.match(/^@(AI|ponai)\b/i)
         ? `@AI ${content}`
         : content
+      // Show the "thinking" bubble immediately when a reply from the AI is
+      // expected — either a dedicated AI conversation or an @AI mention in a
+      // group — so the indicator appears before the first stream chunk (parity
+      // with Flutter, which creates the placeholder on send).
+      const triggersAi = type === 'text' && (isAI || /@(?:AI|ponai)\b/i.test(content))
+      if (triggersAi) {
+        setAiStream({ content: '', thinking: true, activeTools: [] })
+        armAiWatchdog()
+      }
       const sent = await chatService.sendMessage(id, finalContent, type, replyingTo?.id)
       appendMessage(sent)
       setReplyingTo(null)
     } catch {
+      clearAiStream()
       toast.error(t('sendMessageError'))
     }
   }
@@ -350,7 +397,7 @@ export default function ConversationPage({ params }: Props) {
           isError={isError}
           isFetchingNextPage={isFetchingNextPage}
           typingUserIds={typingUserIds}
-          aiStreamContent={aiStreamContent}
+          aiStream={aiStream}
           topSentinelRef={topSentinelRef}
           bottomRef={bottomRef}
           scrollContainerRef={scrollContainerRef}

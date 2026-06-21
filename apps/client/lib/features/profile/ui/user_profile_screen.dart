@@ -194,7 +194,8 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
                       ),
                     ),
                   ],
-                  if (user.dateOfBirth != null) ...[
+                  if (user.dateOfBirth != null &&
+                      (isSelf || user.effectiveShowDateOfBirth)) ...[
                     const SizedBox(height: 12),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
