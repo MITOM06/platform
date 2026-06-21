@@ -2,17 +2,17 @@ import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios'
 import { useAuthStore } from '@/lib/store/auth.store'
 
 export const authApi = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_AUTH_URL,
+  baseURL: process.env.NEXT_PUBLIC_AUTH_URL || '/api/auth',
   headers: { 'Content-Type': 'application/json' },
 })
 
 export const chatApi = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_CHAT_URL,
+  baseURL: process.env.NEXT_PUBLIC_CHAT_URL || '/api/chat',
   headers: { 'Content-Type': 'application/json' },
 })
 
 export const connectorApi = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_CONNECTOR_URL,
+  baseURL: process.env.NEXT_PUBLIC_CONNECTOR_URL || '/api/connector',
   headers: { 'Content-Type': 'application/json' },
 })
 
@@ -27,6 +27,17 @@ const injectToken = (config: InternalAxiosRequestConfig) => {
 authApi.interceptors.request.use(injectToken)
 chatApi.interceptors.request.use(injectToken)
 connectorApi.interceptors.request.use(injectToken)
+
+// A refresh failed for a *real* auth reason only when the server actually
+// rejected it (401/403). A network error (no response) — e.g. wifi sleep,
+// ERR_NETWORK_CHANGED, ERR_NAME_NOT_RESOLVED on idle resume — is transient and
+// must NOT log the user out. Keep the session so the call/reconnect can retry.
+export function isAuthFailure(err: unknown): boolean {
+  return (
+    axios.isAxiosError(err) &&
+    (err.response?.status === 401 || err.response?.status === 403)
+  )
+}
 
 // ─── response interceptor — handle 401 / token refresh ────────────────────────
 
@@ -86,10 +97,15 @@ const create401ResponseInterceptor = (apiInstance: typeof chatApi) => {
       return apiInstance(original)
     } catch (err) {
       processQueue(err, null)
-      useAuthStore.getState().clearAuth()
-      if (typeof window !== 'undefined') {
-        await axios.post('/api/auth/clear-cookie').catch(() => {})
-        window.location.href = '/login'
+      // Only force logout when the refresh was genuinely rejected. On a transient
+      // network error keep the session — the original request will fail this time
+      // but the user stays logged in and can retry once the network recovers.
+      if (isAuthFailure(err)) {
+        useAuthStore.getState().clearAuth()
+        if (typeof window !== 'undefined') {
+          await axios.post('/api/auth/clear-cookie').catch(() => {})
+          window.location.href = '/login'
+        }
       }
       return Promise.reject(err)
     } finally {
