@@ -845,6 +845,18 @@ class AppLocalizationsVi extends AppLocalizations {
   String get profileDateOfBirth => 'Ngày sinh';
 
   @override
+  String get profileShowDateOfBirth => 'Hiển thị ngày sinh cho người khác';
+
+  @override
+  String get profileShowPhone => 'Hiển thị số điện thoại cho người khác';
+
+  @override
+  String get profileShowGender => 'Hiển thị giới tính cho người khác';
+
+  @override
+  String get profilePrivacySection => 'Quyền riêng tư';
+
+  @override
   String get profileEditMode => 'Chỉnh sửa hồ sơ';
 
   @override

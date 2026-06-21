@@ -1686,6 +1686,30 @@ abstract class AppLocalizations {
   /// **'Date of birth'**
   String get profileDateOfBirth;
 
+  /// No description provided for @profileShowDateOfBirth.
+  ///
+  /// In en, this message translates to:
+  /// **'Show date of birth to others'**
+  String get profileShowDateOfBirth;
+
+  /// No description provided for @profileShowPhone.
+  ///
+  /// In en, this message translates to:
+  /// **'Show phone number to others'**
+  String get profileShowPhone;
+
+  /// No description provided for @profileShowGender.
+  ///
+  /// In en, this message translates to:
+  /// **'Show gender to others'**
+  String get profileShowGender;
+
+  /// No description provided for @profilePrivacySection.
+  ///
+  /// In en, this message translates to:
+  /// **'Privacy'**
+  String get profilePrivacySection;
+
   /// No description provided for @profileEditMode.
   ///
   /// In en, this message translates to:

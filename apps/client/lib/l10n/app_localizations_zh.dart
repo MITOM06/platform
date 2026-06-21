@@ -836,6 +836,18 @@ class AppLocalizationsZh extends AppLocalizations {
   String get profileDateOfBirth => '出生日期';
 
   @override
+  String get profileShowDateOfBirth => '向他人显示出生日期';
+
+  @override
+  String get profileShowPhone => '向他人显示电话号码';
+
+  @override
+  String get profileShowGender => '向他人显示性别';
+
+  @override
+  String get profilePrivacySection => '隐私';
+
+  @override
   String get profileEditMode => '编辑资料';
 
   @override

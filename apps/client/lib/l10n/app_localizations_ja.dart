@@ -836,6 +836,18 @@ class AppLocalizationsJa extends AppLocalizations {
   String get profileDateOfBirth => '生年月日';
 
   @override
+  String get profileShowDateOfBirth => '誕生日を他のユーザーに表示';
+
+  @override
+  String get profileShowPhone => '電話番号を他のユーザーに表示';
+
+  @override
+  String get profileShowGender => '性別を他のユーザーに表示';
+
+  @override
+  String get profilePrivacySection => 'プライバシー';
+
+  @override
   String get profileEditMode => 'プロフィール編集';
 
   @override

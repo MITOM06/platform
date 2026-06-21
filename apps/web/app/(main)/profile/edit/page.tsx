@@ -63,7 +63,9 @@ export default function EditProfilePage() {
         dateOfBirth: z.string().optional(),
         phoneNumber: z.string().max(20, t('phoneTooLong')).optional(),
         gender: z.string().optional(),
-        hideInfo: z.boolean(),
+        showDateOfBirth: z.boolean(),
+        showPhoneNumber: z.boolean(),
+        showGender: z.boolean(),
       }),
     [t],
   )
@@ -83,12 +85,16 @@ export default function EditProfilePage() {
       dateOfBirth: '',
       phoneNumber: '',
       gender: '',
-      hideInfo: false,
+      showDateOfBirth: true,
+      showPhoneNumber: true,
+      showGender: true,
     },
   })
 
   const gender = watch('gender')
-  const hideInfo = watch('hideInfo')
+  const showDateOfBirth = watch('showDateOfBirth')
+  const showPhoneNumber = watch('showPhoneNumber')
+  const showGender = watch('showGender')
 
   // Seed the form once the persisted profile loads — this is what was missing
   // before, causing bio to appear empty on every reopen.
@@ -101,7 +107,10 @@ export default function EditProfilePage() {
         dateOfBirth: me.dateOfBirth ? me.dateOfBirth.slice(0, 10) : '',
         phoneNumber: me.phoneNumber ?? '',
         gender: me.gender ?? '',
-        hideInfo: me.hideInfo ?? false,
+        // Per-field flags fall back to !hideInfo for legacy users who never had them.
+        showDateOfBirth: me.showDateOfBirth ?? !me.hideInfo,
+        showPhoneNumber: me.showPhoneNumber ?? !me.hideInfo,
+        showGender: me.showGender ?? !me.hideInfo,
       })
     }
   }, [me, reset])
@@ -166,7 +175,9 @@ export default function EditProfilePage() {
         dateOfBirth: values.dateOfBirth || undefined,
         phoneNumber: values.phoneNumber || null,
         gender: values.gender || undefined,
-        hideInfo: values.hideInfo,
+        showDateOfBirth: values.showDateOfBirth,
+        showPhoneNumber: values.showPhoneNumber,
+        showGender: values.showGender,
         ...(avatarUrl ? { avatarUrl } : {}),
         ...(coverPhoto ? { coverPhoto } : {}),
       })
@@ -241,7 +252,9 @@ export default function EditProfilePage() {
             register={register}
             errors={errors}
             gender={gender}
-            hideInfo={hideInfo}
+            showDateOfBirth={showDateOfBirth}
+            showPhoneNumber={showPhoneNumber}
+            showGender={showGender}
             email={user.email}
             saving={saving}
             canSave={isDirty || hasPendingImageEdits}
@@ -258,14 +271,17 @@ export default function EditProfilePage() {
               genderMale: t('genderMale'),
               genderFemale: t('genderFemale'),
               genderOther: t('genderOther'),
-              hideInfoLabel: t('hideInfoLabel'),
-              hideInfoHint: t('hideInfoHint'),
+              privacySectionLabel: t('privacySectionLabel'),
+              privacySectionHint: t('privacySectionHint'),
+              showDobLabel: t('showDobLabel'),
+              showPhoneLabel: t('showPhoneLabel'),
+              showGenderLabel: t('showGenderLabel'),
               emailLabel: t('emailLabel'),
               saveButton: t('saveButton'),
             }}
             onSubmit={handleSubmit(onSubmit)}
             onGenderChange={(v) => setValue('gender', v, { shouldDirty: true })}
-            onHideInfoChange={(v) => setValue('hideInfo', v, { shouldDirty: true })}
+            onShowFieldChange={(field, v) => setValue(field, v, { shouldDirty: true })}
           />
         </div>
       </div>

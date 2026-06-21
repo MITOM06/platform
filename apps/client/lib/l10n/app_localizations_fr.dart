@@ -856,6 +856,19 @@ class AppLocalizationsFr extends AppLocalizations {
   String get profileDateOfBirth => 'Date de naissance';
 
   @override
+  String get profileShowDateOfBirth =>
+      'Afficher la date de naissance aux autres';
+
+  @override
+  String get profileShowPhone => 'Afficher le numéro de téléphone aux autres';
+
+  @override
+  String get profileShowGender => 'Afficher le genre aux autres';
+
+  @override
+  String get profilePrivacySection => 'Confidentialité';
+
+  @override
   String get profileEditMode => 'Modifier le profil';
 
   @override

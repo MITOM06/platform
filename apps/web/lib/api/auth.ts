@@ -21,7 +21,13 @@ export interface UserProfile extends AuthUser {
   dateOfBirth?: string
   phoneNumber?: string
   gender?: string
+  /** Legacy single privacy flag — kept for backward-compat fallback. */
   hideInfo?: boolean
+  /** Per-field visibility flags (default true = visible to others). When
+   *  undefined, fall back to `!hideInfo`. Only present on self responses. */
+  showDateOfBirth?: boolean
+  showPhoneNumber?: boolean
+  showGender?: boolean
   friendsCount?: number
 }
 
@@ -35,6 +41,9 @@ export interface UpdateProfilePayload {
   phoneNumber?: string | null  // null = clear the field; '' would violate sparse unique index
   gender?: string
   hideInfo?: boolean
+  showDateOfBirth?: boolean
+  showPhoneNumber?: boolean
+  showGender?: boolean
 }
 
 export interface LoginResponse {

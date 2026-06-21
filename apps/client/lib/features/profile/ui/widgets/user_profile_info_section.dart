@@ -2,11 +2,20 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
 import '../../../../core/l10n/l10n_ext.dart';
+import '../../../../core/theme/app_theme.dart';
 import '../../../auth/domain/auth_state.dart';
 
 /// Profile personal-info block (bio / gender / DOB / phone) rendered either
 /// read-only or as editable fields. Extracted from user_profile_dialog.dart
 /// (clean-code file limit).
+///
+/// Read-only mode (viewing another user) applies per-field visibility gating:
+/// each of dob/phone/gender is shown only when its effective `show*` flag is
+/// true. `bio` is always shown. When [isSelf] is true every field is shown.
+///
+/// Edit mode (self only) renders an inline "show to others" toggle next to the
+/// phone / gender / date-of-birth fields, driven by [showPhoneNumber] /
+/// [showGender] / [showDateOfBirth] and the matching `onToggle*` callbacks.
 class ProfilePersonalInfo extends StatelessWidget {
   final UserModel u;
   final bool isSelf;
@@ -17,6 +26,14 @@ class ProfilePersonalInfo extends StatelessWidget {
   final DateTime? dob;
   final ValueChanged<String?> onGenderChange;
   final VoidCallback? onPickDate;
+
+  // Per-field visibility toggle state (edit mode, self only).
+  final bool showDateOfBirth;
+  final bool showPhoneNumber;
+  final bool showGender;
+  final ValueChanged<bool>? onToggleShowDateOfBirth;
+  final ValueChanged<bool>? onToggleShowPhoneNumber;
+  final ValueChanged<bool>? onToggleShowGender;
 
   const ProfilePersonalInfo({
     super.key,
@@ -29,6 +46,12 @@ class ProfilePersonalInfo extends StatelessWidget {
     required this.dob,
     required this.onGenderChange,
     required this.onPickDate,
+    this.showDateOfBirth = true,
+    this.showPhoneNumber = true,
+    this.showGender = true,
+    this.onToggleShowDateOfBirth,
+    this.onToggleShowPhoneNumber,
+    this.onToggleShowGender,
   });
 
   @override
@@ -36,20 +59,28 @@ class ProfilePersonalInfo extends StatelessWidget {
     final l10n = context.l10n;
     if (!editMode) {
       final items = <Widget>[];
+      // bio is always visible.
       if (u.bio != null && u.bio!.isNotEmpty) {
         items.add(ProfileInfoRow(icon: Icons.info_outline, label: l10n.profileBio, value: u.bio!));
       }
-      if (u.gender != null && u.gender!.isNotEmpty) {
+      // Per-field gating: self sees everything; otherwise honour the effective
+      // visibility flag (server already strips hidden fields, this is a
+      // defensive client-side gate).
+      if ((isSelf || u.effectiveShowGender) &&
+          u.gender != null &&
+          u.gender!.isNotEmpty) {
         items.add(ProfileInfoRow(icon: Icons.wc_outlined, label: l10n.profileGender, value: u.gender!));
       }
-      if (u.dateOfBirth != null) {
+      if ((isSelf || u.effectiveShowDateOfBirth) && u.dateOfBirth != null) {
         items.add(ProfileInfoRow(
           icon: Icons.cake_outlined,
           label: l10n.profileDateOfBirth,
           value: DateFormat('dd/MM/yyyy').format(u.dateOfBirth!),
         ));
       }
-      if (isSelf && u.phoneNumber != null && u.phoneNumber!.isNotEmpty) {
+      if ((isSelf || u.effectiveShowPhoneNumber) &&
+          u.phoneNumber != null &&
+          u.phoneNumber!.isNotEmpty) {
         items.add(ProfileInfoRow(icon: Icons.phone_outlined, label: l10n.profilePhone, value: u.phoneNumber!));
       }
       if (items.isEmpty) return const SizedBox.shrink();
@@ -75,6 +106,11 @@ class ProfilePersonalInfo extends StatelessWidget {
             decoration: InputDecoration(labelText: l10n.profilePhone),
             keyboardType: TextInputType.phone,
           ),
+          _ShowToggle(
+            label: l10n.profileShowPhone,
+            value: showPhoneNumber,
+            onChanged: onToggleShowPhoneNumber,
+          ),
           const SizedBox(height: 8),
           DropdownButtonFormField<String>(
             initialValue: gender,
@@ -86,6 +122,11 @@ class ProfilePersonalInfo extends StatelessWidget {
             ],
             onChanged: onGenderChange,
           ),
+          _ShowToggle(
+            label: l10n.profileShowGender,
+            value: showGender,
+            onChanged: onToggleShowGender,
+          ),
           const SizedBox(height: 8),
           ListTile(
             contentPadding: EdgeInsets.zero,
@@ -96,8 +137,41 @@ class ProfilePersonalInfo extends StatelessWidget {
                 : '—'),
             onTap: onPickDate,
           ),
+          _ShowToggle(
+            label: l10n.profileShowDateOfBirth,
+            value: showDateOfBirth,
+            onChanged: onToggleShowDateOfBirth,
+          ),
         ],
       ),
+    );
+  }
+}
+
+/// Compact "show to others" switch row used under each privacy-gated field.
+class _ShowToggle extends StatelessWidget {
+  final String label;
+  final bool value;
+  final ValueChanged<bool>? onChanged;
+  const _ShowToggle({
+    required this.label,
+    required this.value,
+    required this.onChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return SwitchListTile(
+      value: value,
+      onChanged: onChanged,
+      title: Text(
+        label,
+        style: const TextStyle(fontSize: 12, color: Colors.white60),
+      ),
+      activeThumbColor: AppTheme.ponCyan,
+      dense: true,
+      contentPadding: EdgeInsets.zero,
+      visualDensity: VisualDensity.compact,
     );
   }
 }

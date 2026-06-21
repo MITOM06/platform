@@ -30,8 +30,13 @@ export type ProfileFormValues = {
   dateOfBirth?: string
   phoneNumber?: string
   gender?: string
-  hideInfo: boolean
+  showDateOfBirth: boolean
+  showPhoneNumber: boolean
+  showGender: boolean
 }
+
+/** Per-field privacy toggle keys (the fields users can choose to hide). */
+export type PrivacyField = 'showDateOfBirth' | 'showPhoneNumber' | 'showGender'
 
 type ProfileFormTexts = {
   displayNameLabel: string
@@ -46,8 +51,11 @@ type ProfileFormTexts = {
   genderMale: string
   genderFemale: string
   genderOther: string
-  hideInfoLabel: string
-  hideInfoHint: string
+  privacySectionLabel: string
+  privacySectionHint: string
+  showDobLabel: string
+  showPhoneLabel: string
+  showGenderLabel: string
   emailLabel: string
   saveButton: string
 }
@@ -56,28 +64,32 @@ type ProfileFormProps = {
   register: UseFormRegister<ProfileFormValues>
   errors: FieldErrors<ProfileFormValues>
   gender?: string
-  hideInfo: boolean
+  showDateOfBirth: boolean
+  showPhoneNumber: boolean
+  showGender: boolean
   email: string
   saving: boolean
   canSave: boolean
   texts: ProfileFormTexts
   onSubmit: (e: React.FormEvent<HTMLFormElement>) => void
   onGenderChange: (value: string) => void
-  onHideInfoChange: (value: boolean) => void
+  onShowFieldChange: (field: PrivacyField, value: boolean) => void
 }
 
 export function ProfileForm({
   register,
   errors,
   gender,
-  hideInfo,
+  showDateOfBirth,
+  showPhoneNumber,
+  showGender,
   email,
   saving,
   canSave,
   texts,
   onSubmit,
   onGenderChange,
-  onHideInfoChange,
+  onShowFieldChange,
 }: ProfileFormProps) {
   return (
     <form onSubmit={onSubmit} className="space-y-5 pb-24 md:pb-10">
@@ -166,19 +178,48 @@ export function ProfileForm({
         </Select>
       </div>
 
-      {/* Privacy toggle — hide sensitive info from other users */}
-      <div className="flex items-center justify-between gap-4 rounded-lg border p-3">
+      {/* Privacy section — per-field visibility toggles */}
+      <div className="rounded-lg border p-3 space-y-3">
         <div className="flex items-center gap-2 min-w-0">
           <Lock className="size-4 text-primary shrink-0" />
           <div className="min-w-0">
-            <p className="text-sm font-medium">{texts.hideInfoLabel}</p>
-            <p className="text-xs text-muted-foreground">{texts.hideInfoHint}</p>
+            <p className="text-sm font-medium">{texts.privacySectionLabel}</p>
+            <p className="text-xs text-muted-foreground">{texts.privacySectionHint}</p>
           </div>
         </div>
-        <Switch
-          checked={hideInfo}
-          onCheckedChange={onHideInfoChange}
-        />
+
+        <div className="flex items-center justify-between gap-4">
+          <Label htmlFor="showDateOfBirth" className="text-sm font-normal">
+            {texts.showDobLabel}
+          </Label>
+          <Switch
+            id="showDateOfBirth"
+            checked={showDateOfBirth}
+            onCheckedChange={(v) => onShowFieldChange('showDateOfBirth', v)}
+          />
+        </div>
+
+        <div className="flex items-center justify-between gap-4">
+          <Label htmlFor="showPhoneNumber" className="text-sm font-normal">
+            {texts.showPhoneLabel}
+          </Label>
+          <Switch
+            id="showPhoneNumber"
+            checked={showPhoneNumber}
+            onCheckedChange={(v) => onShowFieldChange('showPhoneNumber', v)}
+          />
+        </div>
+
+        <div className="flex items-center justify-between gap-4">
+          <Label htmlFor="showGender" className="text-sm font-normal">
+            {texts.showGenderLabel}
+          </Label>
+          <Switch
+            id="showGender"
+            checked={showGender}
+            onCheckedChange={(v) => onShowFieldChange('showGender', v)}
+          />
+        </div>
       </div>
 
       {/* Email (read-only) */}
