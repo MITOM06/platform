@@ -152,3 +152,12 @@ export type StompEvent =
   | { type: 'AI_STREAM_ERROR'; error: string; code?: string; senderId: string; conversationId: string }
   | { type: 'AI_TOOL_CALL'; toolName: string; inputSummary: string; senderId: string; conversationId: string }
   | { type: 'KB_STATUS_UPDATE'; documentId: string; status: 'pending' | 'processing' | 'done' | 'error'; chunkCount?: number }
+
+// Live state of the AI assistant's in-progress reply, shown as a streaming
+// bubble (parity with Flutter StreamingAiBubble): "thinking" dots before the
+// first chunk, active tool indicator, then streamed text with a blinking cursor.
+export interface AiStreamState {
+  content: string
+  thinking: boolean
+  activeTools: string[]
+}

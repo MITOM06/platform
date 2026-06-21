@@ -3,11 +3,21 @@
 import { useMemo } from 'react'
 import { useVirtualizer } from '@tanstack/react-virtual'
 import { useTranslations, useLocale } from 'next-intl'
-import { Loader2, MessageCircle } from 'lucide-react'
+import { Loader2, MessageCircle, Wrench } from 'lucide-react'
 import { MessageBubble } from '@/components/chat/MessageBubble'
 import { ChatTypingIndicator } from '@/components/chat/ChatTypingIndicator'
 import { Skeleton } from '@/components/ui/skeleton'
-import type { Message } from '@/lib/api/types'
+import type { AiStreamState, Message } from '@/lib/api/types'
+
+// Maps backend tool names to localized "in progress" labels (parity with the
+// Flutter StreamingAiBubble); unknown tools fall back to a generic label.
+const TOOL_LABEL_KEYS: Record<string, string> = {
+  search_messages: 'toolSearchMessages',
+  get_user_info: 'toolGetUserInfo',
+  search_knowledge_base: 'toolSearchKnowledgeBase',
+  summarize_conversation: 'toolSummarizeConversation',
+  create_reminder: 'toolCreateReminder',
+}
 
 type VirtualRow =
   | { kind: 'separator'; isoDate: string }
@@ -51,7 +61,7 @@ interface Props {
   isError: boolean
   isFetchingNextPage: boolean
   typingUserIds: string[]
-  aiStreamContent: string | null
+  aiStream: AiStreamState | null
   topSentinelRef: React.RefObject<HTMLDivElement | null>
   bottomRef: React.RefObject<HTMLDivElement | null>
   scrollContainerRef: React.RefObject<HTMLDivElement | null>
@@ -73,7 +83,7 @@ export function MessageList({
   isError,
   isFetchingNextPage,
   typingUserIds,
-  aiStreamContent,
+  aiStream,
   topSentinelRef,
   bottomRef,
   scrollContainerRef,
@@ -187,19 +197,40 @@ export function MessageList({
         <ChatTypingIndicator />
       )}
 
-      {aiStreamContent !== null && (
+      {aiStream !== null && (
         <div className="flex flex-row items-end gap-1">
           <div className="max-w-[70%] rounded-[24px] rounded-tl-none px-4 py-2.5 text-sm bg-muted/70 border border-border/50 shadow-xs">
-            <p className="whitespace-pre-wrap leading-relaxed">{aiStreamContent || '…'}</p>
-            <div className="flex gap-1 mt-1.5">
-              {[0, 1, 2].map((i) => (
-                <span
-                  key={i}
-                  className="inline-block size-1.5 rounded-full bg-primary/60 animate-bounce"
-                  style={{ animationDelay: `${i * 0.15}s` }}
-                />
-              ))}
-            </div>
+            {aiStream.activeTools.length > 0 && (
+              <div className="flex items-center gap-1.5 mb-1.5 text-[12px] italic text-amber-500">
+                <Wrench className="size-3 shrink-0" />
+                <span>
+                  {(() => {
+                    const tool = aiStream.activeTools[aiStream.activeTools.length - 1]
+                    const key = TOOL_LABEL_KEYS[tool]
+                    return key ? t(key) : t('aiToolCalling', { toolName: tool })
+                  })()}
+                </span>
+              </div>
+            )}
+            {aiStream.content ? (
+              <p className="whitespace-pre-wrap leading-relaxed">
+                {aiStream.content}
+                <span className="ml-0.5 inline-block w-[2px] h-[1.05em] translate-y-0.5 bg-primary/70 animate-pulse" />
+              </p>
+            ) : (
+              <div className="flex items-center gap-2">
+                <span className="text-muted-foreground">{t('aiThinking')}</span>
+                <div className="flex gap-1">
+                  {[0, 1, 2].map((i) => (
+                    <span
+                      key={i}
+                      className="inline-block size-1.5 rounded-full bg-primary/60 animate-bounce"
+                      style={{ animationDelay: `${i * 0.15}s` }}
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         </div>
       )}
