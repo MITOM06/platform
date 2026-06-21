@@ -26,12 +26,16 @@ export interface FriendStatusResponse {
 
 export const friendsService = {
   listFriends: () =>
-    authApi.get<UserSearchResult[]>('/api/friends').then((r) => r.data ?? []),
+    authApi
+      .get<UserSearchResult[]>('/api/friends')
+      .then((r) => (Array.isArray(r.data) ? r.data : [])),
 
   listRequests: () =>
     authApi
       .get<IncomingRequestDto[]>('/api/friends/requests')
-      .then((r) => (r.data ?? []).map((req) => req.requester).filter(Boolean)),
+      .then((r) =>
+        (Array.isArray(r.data) ? r.data : []).map((req) => req.requester).filter(Boolean),
+      ),
 
   sendRequest: (recipientId: string) =>
     authApi.post<{ success: boolean }>('/api/friends/request', { recipientId }).then((r) => r.data),

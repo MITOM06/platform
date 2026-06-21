@@ -17,12 +17,17 @@ import type {
  */
 export const connectorService = {
   getCatalog: () =>
-    connectorApi.get<CatalogEntry[]>('/catalog').then((r) => r.data ?? []),
+    connectorApi
+      .get<CatalogEntry[]>('/catalog')
+      // Coerce ANY non-array body to [] — when NEXT_PUBLIC_CONNECTOR_URL is
+      // unset the request hits the web origin and returns HTML (a string),
+      // which would otherwise crash `catalog.map(...)` in the admin UI.
+      .then((r) => (Array.isArray(r.data) ? r.data : [])),
 
   getConnections: () =>
     connectorApi
       .get<ConnectionView[]>('/connections')
-      .then((r) => r.data ?? []),
+      .then((r) => (Array.isArray(r.data) ? r.data : [])),
 
   startOAuth: (provider: string) =>
     connectorApi
@@ -43,7 +48,7 @@ export const connectorService = {
   getSkills: () =>
     connectorApi
       .get<UserSkillState[]>('/skills')
-      .then((r) => r.data ?? []),
+      .then((r) => (Array.isArray(r.data) ? r.data : [])),
 
   setSkill: (skillId: string, enabled: boolean) =>
     connectorApi

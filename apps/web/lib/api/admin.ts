@@ -34,7 +34,9 @@ export const adminService = {
 
   // ── departments ───────────────────────────────────────────────────────────
   listDepartments: () =>
-    authApi.get<Department[]>('/admin/departments').then((r) => r.data ?? []),
+    authApi
+      .get<Department[]>('/admin/departments')
+      .then((r) => (Array.isArray(r.data) ? r.data : [])),
 
   createDepartment: (input: CreateDepartmentInput) =>
     authApi.post<Department>('/admin/departments', input).then((r) => r.data),
@@ -49,14 +51,18 @@ export const adminService = {
 
   // ── members ───────────────────────────────────────────────────────────────
   listMembers: () =>
-    authApi.get<Member[]>('/admin/members').then((r) => r.data ?? []),
+    authApi
+      .get<Member[]>('/admin/members')
+      .then((r) => (Array.isArray(r.data) ? r.data : [])),
 
   updateMember: (id: string, input: UpdateMemberInput) =>
     authApi.patch<Member>(`/admin/members/${id}`, input).then((r) => r.data),
 
   // ── roles ─────────────────────────────────────────────────────────────────
   listRoles: () =>
-    authApi.get<Role[]>('/admin/roles').then((r) => r.data ?? []),
+    authApi
+      .get<Role[]>('/admin/roles')
+      .then((r) => (Array.isArray(r.data) ? r.data : [])),
 
   createRole: (input: CreateRoleInput) =>
     authApi.post<Role>('/admin/roles', input).then((r) => r.data),
