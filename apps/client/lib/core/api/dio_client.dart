@@ -1,12 +1,8 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import '../config/app_config.dart';
 import '../utils/app_error.dart';
 import '../utils/global_messenger.dart';
-
-const _authBaseUrl = 'https://auth-service-942942821810.asia-southeast1.run.app';
-const _chatBaseUrl = 'https://chat-service-942942821810.asia-southeast1.run.app';
-const _connectorBaseUrl =
-    'https://connector-service-942942821810.asia-southeast1.run.app';
 
 const _keyAccessToken = 'accessToken';
 const _keyRefreshToken = 'refreshToken';
@@ -15,17 +11,17 @@ const _keySid = 'sid';
 class DioClient {
   /// Public base URL of the chat-service, used e.g. to resolve relative
   /// avatar/upload URLs returned by the server.
-  static const String chatBaseUrl = _chatBaseUrl;
+  static String get chatBaseUrl => AppConfig.chatBaseUrl;
 
   /// Public base URL of the connector-service (MCP connectors / integrations).
-  static const String connectorBaseUrl = _connectorBaseUrl;
+  static String get connectorBaseUrl => AppConfig.connectorBaseUrl;
 
   static Dio createAuthDio(
     FlutterSecureStorage storage, {
     void Function()? onForceLogout,
   }) {
     final dio = Dio(BaseOptions(
-      baseUrl: _authBaseUrl,
+      baseUrl: AppConfig.authBaseUrl,
       connectTimeout: const Duration(seconds: 10),
       receiveTimeout: const Duration(seconds: 10),
       headers: {'Content-Type': 'application/json'},
@@ -43,7 +39,7 @@ class DioClient {
     void Function()? onForceLogout,
   }) {
     final dio = Dio(BaseOptions(
-      baseUrl: _chatBaseUrl,
+      baseUrl: AppConfig.chatBaseUrl,
       connectTimeout: const Duration(seconds: 10),
       receiveTimeout: const Duration(seconds: 10),
       headers: {'Content-Type': 'application/json'},
@@ -65,7 +61,7 @@ class DioClient {
     void Function()? onForceLogout,
   }) {
     final dio = Dio(BaseOptions(
-      baseUrl: _connectorBaseUrl,
+      baseUrl: AppConfig.connectorBaseUrl,
       connectTimeout: const Duration(seconds: 10),
       receiveTimeout: const Duration(seconds: 15),
       headers: {'Content-Type': 'application/json'},
@@ -143,7 +139,7 @@ class _TokenRefreshInterceptor extends Interceptor {
       }
 
       // Use a fresh Dio to avoid interceptor loops
-      final refreshDio = Dio(BaseOptions(baseUrl: _authBaseUrl));
+      final refreshDio = Dio(BaseOptions(baseUrl: AppConfig.authBaseUrl));
       final response = await refreshDio.post('/auth/refresh', data: {
         'sid': sid,
         'refreshToken': refreshToken,

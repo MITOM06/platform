@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:stomp_dart_client/stomp_dart_client.dart';
+import '../../../core/config/app_config.dart';
 import '../domain/chat_state.dart';
 
 part 'stomp_service.g.dart';
@@ -57,7 +58,7 @@ class StompService extends _$StompService {
     if (_client?.connected ?? false) return;
     _client = StompClient(
       config: StompConfig(
-        url: 'wss://chat-service-942942821810.asia-southeast1.run.app/ws',
+        url: AppConfig.wsUrl,
         onConnect: _onConnect,
         onDisconnect: _onDisconnect,
         onStompError: _onError,
