@@ -1,20 +1,226 @@
+# PON self-host — one deployment = one company. Bring up:
+#   cd infra/docker-compose && ./bootstrap.sh && docker compose -f compose.prod.yml up -d --build
+# Only Caddy is published to the host; everything else stays on app-net.
 services:
+  mongo:
+    image: mongo:7
+    command: ["--replSet", "rsMyWebApp", "--bind_ip_all"]
+    volumes:
+      - mongo_data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    networks: [app-net]
+    restart: unless-stopped
+
+  mongo-setup:
+    image: mongo:7
+    depends_on:
+      mongo:
+        condition: service_healthy
+    entrypoint: >
+      sh -c "mongosh --host mongo:27017 --eval 'rs.initiate({_id:\"rsMyWebApp\",members:[{_id:0,host:\"mongo:27017\"}]})' || true"
+    networks: [app-net]
+
+  redis:
+    image: redis:7
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+    networks: [app-net]
+    restart: unless-stopped
+
+  rabbitmq:
+    image: rabbitmq:3.13-management-alpine
+    environment:
+      RABBITMQ_DEFAULT_USER: platform
+      RABBITMQ_DEFAULT_PASS: platform
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 15s
+      timeout: 10s
+      retries: 10
+    networks: [app-net]
+    restart: unless-stopped
+
+  qdrant:
+    image: qdrant/qdrant:v1.9.0
+    volumes:
+      - qdrant_data:/qdrant/storage
+    networks: [app-net]
+    restart: unless-stopped
+
   auth-service:
     build:
       context: ../..
       dockerfile: apps/server/auth-service/Dockerfile
-    env_file:
-      - ../../apps/server/auth-service/.env
     environment:
-      - CI=true
-      - NODE_ENV=production
-    command: node dist/main.js
-    ports:
-      - "3001:3001"
-    restart: always
+      NODE_ENV: production
+      PORT: 3001
+      MONGO_URI: mongodb://mongo:27017/platform
+      MONGODB_URI: mongodb://mongo:27017/platform
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET}
+      WORKSPACE_NAME: ${WORKSPACE_NAME}
+      BOOTSTRAP_OWNER_EMAIL: ${BOOTSTRAP_OWNER_EMAIL}
+      MAIL_HOST: ${MAIL_HOST:-}
+      MAIL_PORT: ${MAIL_PORT:-587}
+      MAIL_USER: ${MAIL_USER:-}
+      MAIL_PASS: ${MAIL_PASS:-}
     depends_on:
       mongo:
         condition: service_healthy
       redis:
         condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:3001/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
     networks: [app-net]
+    restart: unless-stopped
+
+  chat-service:
+    build:
+      context: ../../apps/server/chat-service
+      dockerfile: Dockerfile
+    environment:
+      JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET}
+      SPRING_DATA_MONGODB_URI: mongodb://mongo:27017/platform
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_RABBITMQ_HOST: rabbitmq
+      SPRING_RABBITMQ_PORT: 5672
+      SPRING_RABBITMQ_USERNAME: platform
+      SPRING_RABBITMQ_PASSWORD: platform
+      SPRING_MAIN_ALLOW_BEAN_DEFINITION_OVERRIDING: "true"
+      SPRING_MAIL_HOST: ${MAIL_HOST:-}
+      SPRING_MAIL_PORT: ${MAIL_PORT:-587}
+      SPRING_MAIL_USERNAME: ${MAIL_USER:-}
+      SPRING_MAIL_PASSWORD: ${MAIL_PASS:-}
+    depends_on:
+      mongo:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks: [app-net]
+    restart: unless-stopped
+
+  ai-service:
+    build:
+      context: ../..
+      dockerfile: apps/server/ai-service/Dockerfile
+    environment:
+      NODE_ENV: production
+      PORT: 3002
+      JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET}
+      MONGODB_URI: mongodb://mongo:27017/platform
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
+      ANTHROPIC_MODEL: claude-sonnet-4-5
+      ANTHROPIC_FALLBACK_MODEL: claude-haiku-4-5-20251001
+      AI_BOT_USER_ID: ai-bot-000000000000000000000001
+      AI_BOT_DISPLAY_NAME: ${AI_BOT_DISPLAY_NAME:-PON AI}
+      REDIS_AI_REQUEST_CHANNEL: ai:request
+      REDIS_AI_RESPONSE_PREFIX: ai:response
+      QDRANT_URL: http://qdrant:6333
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      RABBITMQ_URL: amqp://platform:platform@rabbitmq:5672
+      OTEL_ENABLED: "false"
+      CONNECTOR_INTERNAL_URL: http://connector-service:3003
+      INTERNAL_API_KEY: ${INTERNAL_API_KEY}
+    depends_on:
+      mongo:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      qdrant:
+        condition: service_started
+      rabbitmq:
+        condition: service_healthy
+    networks: [app-net]
+    restart: unless-stopped
+
+  connector-service:
+    build:
+      context: ../..
+      dockerfile: apps/server/connector-service/Dockerfile
+    environment:
+      NODE_ENV: production
+      PORT: 3003
+      JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET}
+      MONGO_URI: mongodb://mongo:27017/platform
+      CONNECTOR_VAULT_KEY: ${CONNECTOR_VAULT_KEY}
+      INTERNAL_API_KEY: ${INTERNAL_API_KEY}
+      OAUTH_REDIRECT_BASE: https://${DOMAIN}/api/connector
+      CLIENT_REDIRECT_URL: https://${DOMAIN}/integrations
+      NOTION_CLIENT_ID: ${NOTION_CLIENT_ID:-}
+      NOTION_CLIENT_SECRET: ${NOTION_CLIENT_SECRET:-}
+      NOTION_MCP_URL: ${NOTION_MCP_URL:-https://mcp.notion.com/sse}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
+    depends_on:
+      mongo:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:3003/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+    networks: [app-net]
+    restart: unless-stopped
+
+  web:
+    build:
+      context: ../..
+      dockerfile: apps/web/Dockerfile
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+    depends_on:
+      - auth-service
+      - chat-service
+      - connector-service
+    networks: [app-net]
+    restart: unless-stopped
+
+  caddy:
+    image: caddy:2
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      DOMAIN: ${DOMAIN}
+      ACME_EMAIL: ${ACME_EMAIL:-admin@example.com}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - web
+      - auth-service
+      - chat-service
+      - connector-service
+    networks: [app-net]
+    restart: unless-stopped
+
+networks:
+  app-net:
+    driver: bridge
+
+volumes:
+  mongo_data:
+  qdrant_data:
+  rabbitmq_data:
+  caddy_data:
+  caddy_config:
