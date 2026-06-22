@@ -833,7 +833,20 @@
     },
     "auditEmpty": "Aún no hay registros de auditoría.",
     "auditPrev": "Anterior",
-    "auditNext": "Siguiente"
+    "auditNext": "Siguiente",
+    "navSso": "SSO",
+    "ssoTitle": "Inicio de sesión único (SSO)",
+    "ssoHint": "Configura el inicio de sesión OIDC. Las credenciales del proveedor se definen en el .env; aquí asignas grupos del IdP a roles y departamentos.",
+    "ssoEnabled": "Activar SSO",
+    "ssoAllowedDomains": "Dominios de correo permitidos",
+    "ssoAllowedDomainsHint": "Separados por comas. Déjalo vacío para permitir cualquier correo verificado.",
+    "ssoDefaultRole": "Rol predeterminado",
+    "ssoNone": "Ninguno",
+    "ssoGroupRoleMap": "Grupo → Rol",
+    "ssoGroupDeptMap": "Grupo → Departamento",
+    "ssoGroupPlaceholder": "Nombre del grupo IdP",
+    "ssoAddMapping": "Añadir asignación",
+    "ssoRemoveRow": "Eliminar"
   },
   "call": {
     "peerFallback": "Usuario",

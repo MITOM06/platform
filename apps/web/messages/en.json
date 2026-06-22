@@ -833,7 +833,20 @@
     },
     "auditEmpty": "No audit entries yet.",
     "auditPrev": "Previous",
-    "auditNext": "Next"
+    "auditNext": "Next",
+    "navSso": "SSO",
+    "ssoTitle": "Single Sign-On (SSO)",
+    "ssoHint": "Configure OIDC login. Provider credentials are set in the deployment .env; here you map IdP groups to roles and departments.",
+    "ssoEnabled": "Enable SSO",
+    "ssoAllowedDomains": "Allowed email domains",
+    "ssoAllowedDomainsHint": "Comma-separated. Leave empty to allow any verified email.",
+    "ssoDefaultRole": "Default role",
+    "ssoNone": "None",
+    "ssoGroupRoleMap": "Group → Role",
+    "ssoGroupDeptMap": "Group → Department",
+    "ssoGroupPlaceholder": "IdP group name",
+    "ssoAddMapping": "Add mapping",
+    "ssoRemoveRow": "Remove"
   },
   "call": {
     "peerFallback": "User",

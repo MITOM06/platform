@@ -7,6 +7,7 @@ import {
   ArrowLeft,
   Building2,
   ClipboardList,
+  KeyRound,
   ShieldCheck,
   Users,
   UsersRound,
@@ -30,6 +31,7 @@ interface AdminSection {
 /** Admin console sections, in nav order. Each is gated by one capability. */
 export const ADMIN_SECTIONS: AdminSection[] = [
   { href: '/admin/workspace', cap: 'MANAGE_WORKSPACE', labelKey: 'navWorkspace', icon: Building2 },
+  { href: '/admin/sso', cap: 'MANAGE_WORKSPACE', labelKey: 'navSso', icon: KeyRound },
   { href: '/admin/departments', cap: 'MANAGE_DEPARTMENTS', labelKey: 'navDepartments', icon: UsersRound },
   { href: '/admin/members', cap: 'MANAGE_MEMBERS', labelKey: 'navMembers', icon: Users },
   { href: '/admin/roles', cap: 'MANAGE_ROLES', labelKey: 'navRoles', icon: ShieldCheck },

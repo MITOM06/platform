@@ -833,7 +833,20 @@
     },
     "auditEmpty": "Aucune entrée d'audit pour le moment.",
     "auditPrev": "Précédent",
-    "auditNext": "Suivant"
+    "auditNext": "Suivant",
+    "navSso": "SSO",
+    "ssoTitle": "Authentification unique (SSO)",
+    "ssoHint": "Configurez la connexion OIDC. Les identifiants du fournisseur sont dans le .env ; ici, vous associez les groupes IdP aux rôles et départements.",
+    "ssoEnabled": "Activer le SSO",
+    "ssoAllowedDomains": "Domaines d’e-mail autorisés",
+    "ssoAllowedDomainsHint": "Séparés par des virgules. Laissez vide pour autoriser tout e-mail vérifié.",
+    "ssoDefaultRole": "Rôle par défaut",
+    "ssoNone": "Aucun",
+    "ssoGroupRoleMap": "Groupe → Rôle",
+    "ssoGroupDeptMap": "Groupe → Département",
+    "ssoGroupPlaceholder": "Nom du groupe IdP",
+    "ssoAddMapping": "Ajouter un mappage",
+    "ssoRemoveRow": "Supprimer"
   },
   "call": {
     "peerFallback": "Utilisateur",

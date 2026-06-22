@@ -833,7 +833,20 @@
     },
     "auditEmpty": "監査記録はまだありません。",
     "auditPrev": "前へ",
-    "auditNext": "次へ"
+    "auditNext": "次へ",
+    "navSso": "SSO",
+    "ssoTitle": "シングルサインオン (SSO)",
+    "ssoHint": "OIDC ログインを設定します。プロバイダーの認証情報は .env で設定し、ここで IdP グループをロールと部門にマッピングします。",
+    "ssoEnabled": "SSO を有効化",
+    "ssoAllowedDomains": "許可するメールドメイン",
+    "ssoAllowedDomainsHint": "カンマ区切り。空欄の場合、確認済みのすべてのメールを許可します。",
+    "ssoDefaultRole": "デフォルトのロール",
+    "ssoNone": "なし",
+    "ssoGroupRoleMap": "グループ → ロール",
+    "ssoGroupDeptMap": "グループ → 部門",
+    "ssoGroupPlaceholder": "IdP グループ名",
+    "ssoAddMapping": "マッピングを追加",
+    "ssoRemoveRow": "削除"
   },
   "call": {
     "peerFallback": "ユーザー",

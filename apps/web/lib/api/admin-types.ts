@@ -39,6 +39,15 @@ export interface MeCapabilities {
 }
 
 /** `GET /admin/workspace` — the singleton workspace document (admin view). */
+/** Admin-editable SSO mapping config (provider creds live in .env, not here). */
+export interface WorkspaceSso {
+  enabled: boolean
+  allowedDomains: string[]
+  groupRoleMap: Record<string, string>
+  groupDeptMap: Record<string, string>
+  defaultRole?: string
+}
+
 export interface Workspace {
   _id: string
   name: string
@@ -46,6 +55,7 @@ export interface Workspace {
   primaryColor?: string
   features: Record<string, boolean>
   connectorAllowList: string[]
+  sso?: WorkspaceSso
 }
 
 /** `PATCH /admin/workspace` body — all fields optional. */
@@ -55,6 +65,7 @@ export interface UpdateWorkspaceInput {
   primaryColor?: string
   features?: Record<string, boolean>
   connectorAllowList?: string[]
+  sso?: WorkspaceSso
 }
 
 /** `GET /admin/departments` item. */
