@@ -11,6 +11,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { absoluteMediaUrl } from '@/lib/media'
 
 export default function FriendsPage() {
   const t = useTranslations('friends')
@@ -65,7 +66,7 @@ export default function FriendsPage() {
             className="flex items-center gap-4 p-4 rounded-xl border bg-card/50 backdrop-blur-sm transition-all hover:bg-card hover:shadow-sm"
           >
             <Avatar className="size-12">
-              <AvatarImage src={user.avatarUrl || undefined} />
+              <AvatarImage src={user.avatarUrl ? absoluteMediaUrl(user.avatarUrl) : undefined} />
               <AvatarFallback className="bg-primary/10 text-primary font-medium text-lg">
                 {(user.displayName?.[0] ?? '?').toUpperCase()}
               </AvatarFallback>

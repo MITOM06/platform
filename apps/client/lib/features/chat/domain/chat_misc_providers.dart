@@ -7,6 +7,7 @@ import '../../auth/data/auth_repository.dart';
 import '../../auth/domain/auth_state.dart';
 import '../data/chat_repository.dart';
 import 'chat_state.dart';
+import 'conversations_notifier.dart';
 
 // Lightweight providers + per-conversation customization StateNotifiers split
 // out of chat_provider.dart (clean-code file limit). None use codegen.
@@ -18,10 +19,16 @@ final userStatusProvider =
   return ref.read(chatRepositoryProvider).getUserStatus(userId);
 });
 
+// Issue 1: peers must pick up a user's new avatar/display name reasonably
+// quickly. Avatar URLs are unique-per-upload (auth-service stores a fresh
+// `/api/uploads/<objectId>` path each time), so CachedNetworkImage fetches new
+// bytes as soon as the resolved profile reports the new URL. The only thing
+// gating that is this cache — shortened from 5 min to 60 s so a peer's avatar
+// refreshes within a minute (mirrors the web client lowering its staleTime).
 final userProfileProvider =
     FutureProvider.autoDispose.family<UserModel, String>((ref, userId) async {
   final link = ref.keepAlive();
-  Timer(const Duration(minutes: 5), link.close);
+  Timer(const Duration(seconds: 60), link.close);
   return ref.read(authRepositoryProvider).getUserProfile(userId);
 });
 
@@ -39,26 +46,80 @@ final linkPreviewProvider =
 
 // ── Collaborative Customization Sync Providers (Task 79) ────────────────────
 
+/// Per-conversation wallpaper, now SERVER-shared (Issue 6).
+///
+/// The authoritative value lives on the Conversation document and arrives via
+/// `CONVERSATION_UPDATED` (handled by [ConversationsNotifier]). This notifier
+/// mirrors that value and supports an optimistic local override the moment the
+/// user picks a wallpaper, so the UI updates before the server round-trips. The
+/// optimistic value is reconciled away once the conversation list reports the
+/// persisted wallpaper. Legacy `system.theme.changed:` messages still feed
+/// [applyRemote] for backward compatibility with old history.
 class ChatWallpaperNotifier extends StateNotifier<String?> {
   final Ref ref;
   final String conversationId;
+  // While non-null, an optimistic value the user just selected that hasn't yet
+  // been confirmed by the server-shared conversation model.
+  String? _optimistic;
 
-  ChatWallpaperNotifier(this.ref, this.conversationId) : super(null) {
-    final prefs = ref.watch(sharedPreferencesProvider);
-    state = prefs.getString('chat_wallpaper_$conversationId');
+  ChatWallpaperNotifier(this.ref, this.conversationId)
+      : super(_serverWallpaper(ref, conversationId)) {
+    // Track the server-shared conversation: when its wallpaper changes (e.g. via
+    // CONVERSATION_UPDATED), reflect it unless we hold a newer optimistic value.
+    ref.listen<String?>(
+      _conversationWallpaperProvider(conversationId),
+      (_, next) {
+        if (_optimistic != null && _optimistic == _normalize(next)) {
+          _optimistic = null; // server caught up with our optimistic value
+        }
+        if (_optimistic == null) state = next;
+      },
+    );
   }
 
+  static String? _serverWallpaper(Ref ref, String conversationId) {
+    return ref.read(_conversationWallpaperProvider(conversationId));
+  }
+
+  static String? _normalize(String? v) => (v == null || v.isEmpty) ? null : v;
+
+  /// Optimistically applies [url] locally and persists it on the server so all
+  /// members share it. Empty / null resets to the default for everyone.
   Future<void> setWallpaper(String? url) async {
-    final prefs = ref.read(sharedPreferencesProvider);
-    if (url == null || url.isEmpty) {
-      await prefs.remove('chat_wallpaper_$conversationId');
-      state = null;
-    } else {
-      await prefs.setString('chat_wallpaper_$conversationId', url);
-      state = url;
+    final value = _normalize(url);
+    _optimistic = value;
+    state = value;
+    try {
+      await ref
+          .read(chatRepositoryProvider)
+          .setWallpaper(conversationId, value ?? '');
+      // CONVERSATION_UPDATED (or the returned model via the list) reconciles.
+    } catch (_) {
+      // On failure, fall back to the server-shared value.
+      _optimistic = null;
+      state = _serverWallpaper(ref, conversationId);
     }
   }
+
+  /// Applies a wallpaper value received out-of-band (legacy
+  /// `system.theme.changed:` message). Server value remains authoritative.
+  void applyRemote(String? url) {
+    _optimistic = null;
+    state = _normalize(url);
+  }
 }
+
+/// Derives the wallpaper of a single conversation from the shared conversation
+/// list, which [ConversationsNotifier] keeps fresh on CONVERSATION_UPDATED.
+final _conversationWallpaperProvider =
+    Provider.autoDispose.family<String?, String>((ref, conversationId) {
+  final convs = ref.watch(conversationsNotifierProvider).valueOrNull;
+  if (convs == null) return null;
+  for (final c in convs) {
+    if (c.id == conversationId) return c.wallpaper;
+  }
+  return null;
+});
 
 final chatWallpaperProvider = StateNotifierProvider.family<ChatWallpaperNotifier, String?, String>((ref, conversationId) {
   return ChatWallpaperNotifier(ref, conversationId);

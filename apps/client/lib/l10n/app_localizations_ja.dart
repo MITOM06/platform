@@ -1945,4 +1945,16 @@ class AppLocalizationsJa extends AppLocalizations {
   String directoryConnected(String provider) {
     return '$provider に接続しました。';
   }
+
+  @override
+  String get editNicknames => 'ニックネームを編集';
+
+  @override
+  String get nicknameModalTitle => 'ニックネーム';
+
+  @override
+  String get nicknameNonePlaceholder => 'ニックネームなし';
+
+  @override
+  String get nicknameYouSuffix => '（あなた）';
 }

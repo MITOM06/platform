@@ -3,6 +3,7 @@
 import { useTranslations } from 'next-intl'
 import { Lock, User, BellOff, Bell, Search } from 'lucide-react'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import { absoluteMediaUrl } from '@/lib/media'
 
 const ACTION_CLS = 'flex flex-col items-center gap-1.5 w-16'
 const ICON_WRAP = 'size-10 rounded-full bg-pon-cyan/10 text-pon-cyan flex items-center justify-center'
@@ -37,7 +38,7 @@ export function SettingsHeader({
     <>
       <div className="flex flex-col items-center gap-3">
         <Avatar className="size-24 border-2 border-border/50">
-          {avatarUrl && <AvatarImage src={avatarUrl} alt={displayName} />}
+          {avatarUrl && <AvatarImage src={absoluteMediaUrl(avatarUrl)} alt={displayName} />}
           <AvatarFallback className="text-3xl font-medium bg-gradient-to-br from-pon-cyan/80 to-pon-peach/80 text-white">
             {avatarLetter}
           </AvatarFallback>

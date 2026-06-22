@@ -12,6 +12,8 @@ import { Slider } from '@/components/ui/slider'
 import { chatService } from '@/lib/api/chat'
 import { absoluteMediaUrl } from '@/lib/media'
 import { cn } from '@/lib/utils'
+import { useConversation } from '@/lib/hooks/use-conversation'
+import { WALLPAPER_EVENT, type WallpaperEventDetail } from '@/lib/hooks/use-wallpaper'
 
 interface Props {
   conversationId: string
@@ -52,17 +54,17 @@ export function WallpaperPickerModal({ conversationId, open, onClose }: Props) {
   const t = useTranslations('chat')
   const tCommon = useTranslations('common')
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const { data: conversation } = useConversation(conversationId)
 
   const [selected, setSelected] = useState('')
   const [fit, setFit] = useState<Fit>('cover')
   const [scale, setScale] = useState(100)
   const [uploading, setUploading] = useState(false)
+  const [saving, setSaving] = useState(false)
 
-  // Re-sync from storage each time the modal opens.
+  // Re-sync from the server-stored conversation wallpaper each time the modal opens.
   const initFromStorage = () => {
-    const stored = typeof window !== 'undefined'
-      ? localStorage.getItem(`wallpaper-${conversationId}`) ?? ''
-      : ''
+    const stored = conversation?.wallpaper ?? ''
     const parsed = splitFit(stored === 'default' ? '' : stored)
     setSelected(parsed.value)
     setFit(parsed.fit)
@@ -88,18 +90,29 @@ export function WallpaperPickerModal({ conversationId, open, onClose }: Props) {
     }
   }
 
-  const handleConfirm = () => {
+  const handleConfirm = async () => {
     // Encode fit + scale only for uploaded images and only when non-default.
     let value = selected
     if (isImage && (fit !== 'cover' || scale !== 100)) {
       value = `${selected}#fit=${fit}&scale=${scale}`
     }
-    localStorage.setItem(`wallpaper-${conversationId}`, value)
-    window.dispatchEvent(new Event('wallpaper-changed'))
-    // System message so all participants see the change in the thread.
-    // Format matches Flutter (system.theme.changed:<value>) for cross-platform parity.
-    chatService.sendMessage(conversationId, `system.theme.changed:${value}`, 'system').catch(() => {})
-    onClose()
+    // Optimistically apply locally so the open thread updates instantly, then
+    // persist server-side (shared across ALL members) via the conversation doc.
+    window.dispatchEvent(
+      new CustomEvent<WallpaperEventDetail>(WALLPAPER_EVENT, {
+        detail: { conversationId, value },
+      }),
+    )
+    setSaving(true)
+    try {
+      // Backend broadcasts CONVERSATION_UPDATED → every member re-resolves it.
+      await chatService.setWallpaper(conversationId, value)
+      onClose()
+    } catch {
+      toast.error(t('wallpaperSaveError'))
+    } finally {
+      setSaving(false)
+    }
   }
 
   const previewPreset = PRESETS.find((p) => p.value === selected)
@@ -255,8 +268,11 @@ export function WallpaperPickerModal({ conversationId, open, onClose }: Props) {
         )}
 
         <DialogFooter>
-          <Button variant="ghost" onClick={onClose}>{tCommon('cancel')}</Button>
-          <Button onClick={handleConfirm}>{tCommon('confirm')}</Button>
+          <Button variant="ghost" onClick={onClose} disabled={saving}>{tCommon('cancel')}</Button>
+          <Button onClick={handleConfirm} disabled={saving || uploading}>
+            {saving && <Loader2 className="size-4 animate-spin" />}
+            {tCommon('confirm')}
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

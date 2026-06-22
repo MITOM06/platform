@@ -100,7 +100,7 @@ class ConversationInfoSidebar extends ConsumerWidget {
             ),
             const Divider(height: 32),
             _buildAccordions(context, ref, conv, isGroup, otherUserId,
-                currentUserId, profileAsync),
+                currentUserId),
           ],
         ),
       ),
@@ -117,7 +117,6 @@ class ConversationInfoSidebar extends ConsumerWidget {
     bool isGroup,
     String? otherUserId,
     String currentUserId,
-    AsyncValue<dynamic>? profileAsync,
   ) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final textColor = isDark ? Colors.white70 : Colors.black87;
@@ -134,12 +133,9 @@ class ConversationInfoSidebar extends ConsumerWidget {
       data: expansionTheme,
       child: Column(
         children: [
-          // Chat Details
-          ExpansionTile(
-            title: Text(context.l10n.chatInfoCategory,
-                style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
-            children: [_buildChatDetailsContent(context, isGroup, conv, profileAsync)],
-          ),
+          // Issue 2: "Chat Details" (bio/DOB/member count) removed — the info
+          // panel now shows only Customization, Shared Media, Pinned Messages
+          // and Privacy. Mirrors web ConversationSettingsDrawer.
           // Customization
           ExpansionTile(
             title: Text(context.l10n.customizeChatCategory,
@@ -284,31 +280,5 @@ class ConversationInfoSidebar extends ConsumerWidget {
     } else {
       context.go('/');
     }
-  }
-
-  Widget _buildChatDetailsContent(
-    BuildContext context,
-    bool isGroup,
-    ConversationModel? conv,
-    AsyncValue<dynamic>? profileAsync,
-  ) {
-    if (isGroup) {
-      return ListTile(
-        dense: true,
-        leading: const Icon(Icons.group_outlined, size: 18),
-        title: Text(context.l10n.membersCount(conv?.participants.length ?? 0)),
-      );
-    }
-    final profile = profileAsync?.valueOrNull;
-    if (profile == null) return const SizedBox.shrink();
-    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      if (profile.bio?.isNotEmpty ?? false)
-        ListTile(dense: true, leading: const Icon(Icons.info_outline, size: 18),
-            title: Text(context.l10n.bio), subtitle: Text(profile.bio!)),
-      if (profile.dateOfBirth != null)
-        ListTile(dense: true, leading: const Icon(Icons.cake_outlined, size: 18),
-            title: Text(context.l10n.dateOfBirth),
-            subtitle: Text('${profile.dateOfBirth!.day}/${profile.dateOfBirth!.month}/${profile.dateOfBirth!.year}')),
-    ]);
   }
 }

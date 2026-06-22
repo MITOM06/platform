@@ -704,5 +704,9 @@
   "directorySave": "Guardar",
   "directoryKeyTitle": "Conectar {provider}",
   "directoryKeyLabel": "Clave API",
-  "directoryConnected": "{provider} conectado."
+  "directoryConnected": "{provider} conectado.",
+  "editNicknames": "Editar apodos",
+  "nicknameModalTitle": "Apodos",
+  "nicknameNonePlaceholder": "Sin apodo",
+  "nicknameYouSuffix": "(tú)"
 }

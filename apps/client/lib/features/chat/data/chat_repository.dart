@@ -155,6 +155,20 @@ class ChatRepository {
     return ConversationModel.fromJson(response.data as Map<String, dynamic>);
   }
 
+  /// Persists a shared per-conversation wallpaper (Issue 6). Allowed for any
+  /// participant; the server broadcasts CONVERSATION_UPDATED so all members
+  /// receive the new wallpaper in realtime. Pass an empty string to reset.
+  Future<ConversationModel> setWallpaper(
+    String conversationId,
+    String wallpaper,
+  ) async {
+    final response = await _dio.put(
+      '/api/conversations/$conversationId/wallpaper',
+      data: {'wallpaper': wallpaper},
+    );
+    return ConversationModel.fromJson(response.data as Map<String, dynamic>);
+  }
+
   Future<ConversationModel> addMembers(
     String conversationId,
     List<String> userIds,

@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../core/l10n/l10n_ext.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../auth/domain/auth_provider.dart';
+import '../../../auth/domain/auth_state.dart';
 import '../../domain/chat_provider.dart';
 import '../../domain/chat_state.dart';
+import 'conversation_avatar.dart';
 
 void showQuickReactionDialog(BuildContext context, WidgetRef ref, String conversationId) {
   final isVi = Localizations.localeOf(context).languageCode == 'vi';
@@ -47,96 +51,207 @@ void showQuickReactionDialog(BuildContext context, WidgetRef ref, String convers
   );
 }
 
-void showNicknamesDialog(BuildContext context, WidgetRef ref, String conversationId, ConversationModel? conv) {
+/// Issue 3: single centered modal listing each participant (self + others for
+/// 1:1, self + all members for groups). Each row shows the real account avatar
+/// + display name, with the nickname (or a "no nickname" placeholder) and a
+/// pencil that toggles an inline editor. Mirrors the web NicknamesModal.
+/// Transport is unchanged: nicknames stay client-local, broadcast via
+/// `system.nickname.changed:<userId>:<nickname>`.
+void showNicknamesDialog(
+  BuildContext context,
+  WidgetRef ref,
+  String conversationId,
+  ConversationModel? conv,
+) {
   if (conv == null) return;
-  final isVi = Localizations.localeOf(context).languageCode == 'vi';
-
   showDialog(
     context: context,
-    builder: (context) => AlertDialog(
-      backgroundColor: AppTheme.darkSurface,
-      title: Text(isVi ? 'Biệt danh thành viên' : 'Member Nicknames', style: const TextStyle(color: Colors.white)),
-      content: SizedBox(
-        width: 300,
-        child: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: conv.participants.map((userId) {
-              return Consumer(
-                builder: (context, ref, child) {
-                  final profile = ref.watch(userProfileProvider(userId)).valueOrNull;
-                  final name = profile?.displayName ?? '...';
-                  final nicknames = ref.watch(nicknamesProvider(conversationId));
-                  final nickname = nicknames[userId] ?? '';
-
-                  return ListTile(
-                    contentPadding: EdgeInsets.zero,
-                    title: Text(name, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-                    subtitle: Text(
-                      nickname.isNotEmpty ? nickname : (isVi ? 'Chưa thiết lập biệt danh' : 'No nickname set'),
-                      style: TextStyle(color: nickname.isNotEmpty ? AppTheme.ponCyan : Colors.white38, fontSize: 13),
-                    ),
-                    trailing: const Icon(Icons.edit_outlined, color: Colors.white54, size: 18),
-                    onTap: () {
-                      Navigator.pop(context); // close nicknames list
-                      _showEditNicknameField(context, ref, conversationId, userId, name, nickname);
-                    },
-                  );
-                },
-              );
-            }).toList(),
-          ),
-        ),
-      ),
+    builder: (_) => _NicknamesModal(
+      conversationId: conversationId,
+      participants: conv.participants,
     ),
   );
 }
 
-void _showEditNicknameField(
-  BuildContext context,
-  WidgetRef ref,
-  String conversationId,
-  String userId,
-  String originalName,
-  String currentNickname,
-) {
-  final isVi = Localizations.localeOf(context).languageCode == 'vi';
-  final controller = TextEditingController(text: currentNickname);
+class _NicknamesModal extends ConsumerWidget {
+  final String conversationId;
+  final List<String> participants;
 
-  showDialog(
-    context: context,
-    builder: (context) => AlertDialog(
+  const _NicknamesModal({
+    required this.conversationId,
+    required this.participants,
+  });
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final authState = ref.watch(authNotifierProvider).valueOrNull;
+    final currentUserId =
+        authState is AuthAuthenticated ? authState.user.id : '';
+    // Self first, then the rest — matches the web ordering.
+    final ordered = [
+      ...participants.where((p) => p == currentUserId),
+      ...participants.where((p) => p != currentUserId),
+    ];
+
+    return AlertDialog(
       backgroundColor: AppTheme.darkSurface,
-      title: Text(
-        isVi ? 'Biệt danh của $originalName' : 'Nickname for $originalName',
-        style: const TextStyle(color: Colors.white, fontSize: 16),
-      ),
-      content: TextField(
-        controller: controller,
-        style: const TextStyle(color: Colors.white),
-        decoration: InputDecoration(
-          hintText: isVi ? 'Nhập biệt danh...' : 'Enter nickname...',
-          hintStyle: const TextStyle(color: Colors.white30),
-          enabledBorder: const UnderlineInputBorder(borderSide: BorderSide(color: Colors.white24)),
-          focusedBorder: const UnderlineInputBorder(borderSide: BorderSide(color: AppTheme.ponCyan)),
+      title: Text(context.l10n.nicknameModalTitle,
+          style: const TextStyle(color: Colors.white)),
+      content: SizedBox(
+        width: 340,
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              for (final userId in ordered)
+                _NicknameRow(
+                  conversationId: conversationId,
+                  userId: userId,
+                  isSelf: userId == currentUserId,
+                ),
+            ],
+          ),
         ),
-        autofocus: true,
       ),
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
-          child: Text(isVi ? 'Hủy' : 'Cancel', style: const TextStyle(color: Colors.white54)),
-        ),
-        TextButton(
-          onPressed: () {
-            final val = controller.text.trim();
-            ref.read(nicknamesProvider(conversationId).notifier).setNickname(userId, val);
-            ref.read(chatNotifierProvider(conversationId).notifier).sendMessage('system.nickname.changed:$userId:$val', type: 'system');
-            Navigator.pop(context);
-          },
-          child: Text(isVi ? 'Lưu' : 'Save', style: const TextStyle(color: AppTheme.ponCyan)),
+          child: Text(context.l10n.actionOk,
+              style: const TextStyle(color: Colors.white70)),
         ),
       ],
-    ),
-  );
+    );
+  }
+}
+
+class _NicknameRow extends ConsumerStatefulWidget {
+  final String conversationId;
+  final String userId;
+  final bool isSelf;
+
+  const _NicknameRow({
+    required this.conversationId,
+    required this.userId,
+    required this.isSelf,
+  });
+
+  @override
+  ConsumerState<_NicknameRow> createState() => _NicknameRowState();
+}
+
+class _NicknameRowState extends ConsumerState<_NicknameRow> {
+  bool _editing = false;
+  late final TextEditingController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    final nickname =
+        ref.read(nicknamesProvider(widget.conversationId))[widget.userId] ?? '';
+    _controller = TextEditingController(text: nickname);
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _save() {
+    final val = _controller.text.trim();
+    ref
+        .read(nicknamesProvider(widget.conversationId).notifier)
+        .setNickname(widget.userId, val);
+    ref
+        .read(chatNotifierProvider(widget.conversationId).notifier)
+        .sendMessage('system.nickname.changed:${widget.userId}:$val',
+            type: 'system');
+    setState(() => _editing = false);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final profile = ref.watch(userProfileProvider(widget.userId)).valueOrNull;
+    final name = profile?.displayName ?? '...';
+    final nicknames = ref.watch(nicknamesProvider(widget.conversationId));
+    final nickname = nicknames[widget.userId] ?? '';
+    final letter = name.isNotEmpty ? name[0].toUpperCase() : '?';
+
+    final nameLabel =
+        widget.isSelf ? '$name ${context.l10n.nicknameYouSuffix}' : name;
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 6),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          ConversationAvatar(
+            avatarUrl: profile?.avatarUrl,
+            fallbackLetter: letter,
+            size: 44,
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  nameLabel,
+                  style: const TextStyle(
+                      color: Colors.white, fontWeight: FontWeight.bold),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 2),
+                if (_editing)
+                  TextField(
+                    controller: _controller,
+                    autofocus: true,
+                    style: const TextStyle(color: Colors.white, fontSize: 14),
+                    decoration: const InputDecoration(
+                      isDense: true,
+                      contentPadding: EdgeInsets.symmetric(vertical: 4),
+                      enabledBorder: UnderlineInputBorder(
+                          borderSide: BorderSide(color: Colors.white24)),
+                      focusedBorder: UnderlineInputBorder(
+                          borderSide: BorderSide(color: AppTheme.ponCyan)),
+                    ),
+                    onSubmitted: (_) => _save(),
+                  )
+                else
+                  Text(
+                    nickname.isNotEmpty
+                        ? nickname
+                        : context.l10n.nicknameNonePlaceholder,
+                    style: TextStyle(
+                      color: nickname.isNotEmpty
+                          ? AppTheme.ponCyan
+                          : Colors.white38,
+                      fontSize: 13,
+                      fontStyle: nickname.isNotEmpty
+                          ? FontStyle.normal
+                          : FontStyle.italic,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 8),
+          _editing
+              ? IconButton(
+                  icon: const Icon(Icons.check, color: AppTheme.ponCyan, size: 20),
+                  onPressed: _save,
+                )
+              : IconButton(
+                  icon: const Icon(Icons.edit_outlined,
+                      color: Colors.white54, size: 18),
+                  onPressed: () => setState(() => _editing = true),
+                ),
+        ],
+      ),
+    );
+  }
 }

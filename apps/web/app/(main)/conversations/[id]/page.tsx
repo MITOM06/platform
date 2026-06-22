@@ -191,6 +191,12 @@ export default function ConversationPage({ params }: Props) {
               case 'CONVERSATION_UPDATED':
                 queryClient.setQueryData(['conversation', id], parsed.conversation)
                 queryClient.invalidateQueries({ queryKey: ['conversations'] })
+                // A participant may have changed their avatar/displayName — refresh
+                // their cached profile so peers see the new avatar (issue 1). The
+                // refetched URL is unique-per-upload so it dodges the HTTP cache.
+                parsed.conversation.participants.forEach((uid) =>
+                  queryClient.invalidateQueries({ queryKey: ['user', uid] }),
+                )
                 break
               case 'AI_STREAM_CHUNK':
                 setAiStream((prev) => ({

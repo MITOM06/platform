@@ -704,5 +704,9 @@
   "directorySave": "保存",
   "directoryKeyTitle": "连接 {provider}",
   "directoryKeyLabel": "API 密钥",
-  "directoryConnected": "已连接 {provider}。"
+  "directoryConnected": "已连接 {provider}。",
+  "editNicknames": "编辑昵称",
+  "nicknameModalTitle": "昵称",
+  "nicknameNonePlaceholder": "暂无昵称",
+  "nicknameYouSuffix": "(你)"
 }

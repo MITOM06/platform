@@ -704,5 +704,9 @@
   "directorySave": "저장",
   "directoryKeyTitle": "{provider} 연결",
   "directoryKeyLabel": "API 키",
-  "directoryConnected": "{provider}에 연결되었습니다."
+  "directoryConnected": "{provider}에 연결되었습니다.",
+  "editNicknames": "별명 편집",
+  "nicknameModalTitle": "별명",
+  "nicknameNonePlaceholder": "별명 없음",
+  "nicknameYouSuffix": "(나)"
 }

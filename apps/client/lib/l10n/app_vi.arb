@@ -704,5 +704,9 @@
   "directorySave": "Lưu",
   "directoryKeyTitle": "Kết nối {provider}",
   "directoryKeyLabel": "API key",
-  "directoryConnected": "Đã kết nối {provider}."
+  "directoryConnected": "Đã kết nối {provider}.",
+  "editNicknames": "Sửa biệt danh",
+  "nicknameModalTitle": "Biệt danh",
+  "nicknameNonePlaceholder": "Chưa có biệt danh",
+  "nicknameYouSuffix": "(bạn)"
 }

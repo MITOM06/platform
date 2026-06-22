@@ -2011,4 +2011,16 @@ class AppLocalizationsFr extends AppLocalizations {
   String directoryConnected(String provider) {
     return '$provider connecté.';
   }
+
+  @override
+  String get editNicknames => 'Modifier les surnoms';
+
+  @override
+  String get nicknameModalTitle => 'Surnoms';
+
+  @override
+  String get nicknameNonePlaceholder => 'Aucun surnom';
+
+  @override
+  String get nicknameYouSuffix => '(vous)';
 }

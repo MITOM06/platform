@@ -983,5 +983,9 @@
         "type": "String"
       }
     }
-  }
+  },
+  "editNicknames": "Edit nicknames",
+  "nicknameModalTitle": "Nicknames",
+  "nicknameNonePlaceholder": "No nickname",
+  "nicknameYouSuffix": "(you)"
 }

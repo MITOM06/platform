@@ -2,6 +2,16 @@
 
 import { useEffect, useState } from 'react'
 import { absoluteMediaUrl } from '@/lib/media'
+import { useConversation } from '@/lib/hooks/use-conversation'
+
+// Optimistic-apply event: the picker fires it with `{ conversationId, value }`
+// so the open thread reflects the new wallpaper instantly, before the
+// CONVERSATION_UPDATED broadcast round-trips. Server value stays authoritative.
+export const WALLPAPER_EVENT = 'wallpaper-changed'
+export interface WallpaperEventDetail {
+  conversationId: string
+  value: string
+}
 
 const WALLPAPER_CLASSES: Record<string, string> = {
   default: 'bg-background',
@@ -69,22 +79,32 @@ function resolveWallpaper(raw: string): ResolvedWallpaper {
 }
 
 /**
- * Reads the per-conversation wallpaper from localStorage and resolves it into a
- * className / inline style. Listens for the `wallpaper-changed` event so a live
- * change in the settings dialog reflects immediately.
+ * Resolves the shared per-conversation wallpaper into a className / inline style.
+ * The wallpaper now lives on the Conversation document (server-authoritative,
+ * shared across all members) and arrives via the `['conversation', id]` query —
+ * refreshed by CONVERSATION_UPDATED. An optimistic `wallpaper-changed` event lets
+ * the picker apply the new value instantly before the broadcast round-trips.
  */
 export function useWallpaper(conversationId: string): ResolvedWallpaper {
-  const [wallpaper, setWallpaper] = useState<string>('default')
+  const { data: conversation } = useConversation(conversationId)
+  const serverWallpaper = conversation?.wallpaper ?? 'default'
+  const [optimistic, setOptimistic] = useState<string | null>(null)
+
+  // Clear the optimistic override once the server value catches up.
+  useEffect(() => {
+    setOptimistic(null)
+  }, [serverWallpaper])
 
   useEffect(() => {
-    const loadWallpaper = () => {
-      const stored = localStorage.getItem(`wallpaper-${conversationId}`)
-      setWallpaper(stored || 'default')
+    const onChange = (e: Event) => {
+      const detail = (e as CustomEvent<WallpaperEventDetail>).detail
+      if (detail && detail.conversationId === conversationId) {
+        setOptimistic(detail.value || 'default')
+      }
     }
-    loadWallpaper()
-    window.addEventListener('wallpaper-changed', loadWallpaper)
-    return () => window.removeEventListener('wallpaper-changed', loadWallpaper)
+    window.addEventListener(WALLPAPER_EVENT, onChange)
+    return () => window.removeEventListener(WALLPAPER_EVENT, onChange)
   }, [conversationId])
 
-  return resolveWallpaper(wallpaper)
+  return resolveWallpaper(optimistic ?? serverWallpaper)
 }

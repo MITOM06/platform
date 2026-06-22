@@ -1984,4 +1984,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String directoryConnected(String provider) {
     return 'Connected $provider.';
   }
+
+  @override
+  String get editNicknames => 'Edit nicknames';
+
+  @override
+  String get nicknameModalTitle => 'Nicknames';
+
+  @override
+  String get nicknameNonePlaceholder => 'No nickname';
+
+  @override
+  String get nicknameYouSuffix => '(you)';
 }

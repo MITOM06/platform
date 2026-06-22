@@ -1947,4 +1947,16 @@ class AppLocalizationsKo extends AppLocalizations {
   String directoryConnected(String provider) {
     return '$provider에 연결되었습니다.';
   }
+
+  @override
+  String get editNicknames => '별명 편집';
+
+  @override
+  String get nicknameModalTitle => '별명';
+
+  @override
+  String get nicknameNonePlaceholder => '별명 없음';
+
+  @override
+  String get nicknameYouSuffix => '(나)';
 }

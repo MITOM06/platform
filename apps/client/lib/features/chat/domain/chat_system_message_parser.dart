@@ -28,11 +28,15 @@ class ChatSystemMessageParser {
             .setNickname(targetId, nickname);
       }
     } else if (content.startsWith('system.theme.changed:')) {
+      // Legacy transport (Issue 6): wallpaper is now server-shared via
+      // CONVERSATION_UPDATED. Old `system.theme.changed:` messages still apply
+      // locally for backward compatibility, but must NOT re-persist to the
+      // server, so we use applyRemote (no PUT) instead of setWallpaper.
       final parts = content.split(':');
       final url = parts.length > 1 ? parts.sublist(1).join(':') : '';
       ref
           .read(chatWallpaperProvider(conversationId).notifier)
-          .setWallpaper(url);
+          .applyRemote(url);
     } else if (content.startsWith('system.quick_reaction.changed:')) {
       final parts = content.split(':');
       final emoji = parts.length > 1 ? parts[1] : '👍';

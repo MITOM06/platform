@@ -18,6 +18,7 @@ import { GroupSettingsDrawer } from './GroupSettingsDrawer'
 import { SharedMediaGallery } from './SharedMediaGallery'
 import { UserProfileDrawer } from './UserProfileDrawer'
 import { useNickname } from '@/lib/nicknames'
+import { absoluteMediaUrl } from '@/lib/media'
 import { cn } from '@/lib/utils'
 
 const AI_BOT_ID = 'ai-bot-000000000000000000000001'
@@ -114,7 +115,7 @@ export function ConversationHeader({
               </AvatarFallback>
             ) : (
               <>
-                {avatarUrl && <AvatarImage src={avatarUrl} alt={displayName} />}
+                {avatarUrl && <AvatarImage src={absoluteMediaUrl(avatarUrl)} alt={displayName} />}
                 <AvatarFallback className="text-sm font-medium">
                   {getInitial(displayName)}
                 </AvatarFallback>

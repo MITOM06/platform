@@ -142,6 +142,17 @@ public class ConversationService {
     return toResponse(saved, userId, messageRepository.countUnread(conversationId, userId));
   }
 
+  /**
+   * Set the shared conversation wallpaper. Allowed for ANY participant (direct + group) — it is a
+   * shared cosmetic, not an admin-gated setting. Blank/null resets to the default for everyone.
+   */
+  public ConversationResponse setWallpaper(String userId, String conversationId, String wallpaper) {
+    Conversation conversation = getRawConversation(userId, conversationId);
+    conversation.setWallpaper(wallpaper == null || wallpaper.isBlank() ? null : wallpaper);
+    Conversation saved = conversationCacheService.save(conversation);
+    return toResponse(saved, userId, messageRepository.countUnread(conversationId, userId));
+  }
+
   public ConversationResponse addMembers(
       String userId, String conversationId, List<String> userIds) {
     Conversation conversation = requireGroupAdmin(userId, conversationId);
@@ -454,7 +465,8 @@ public class ConversationService {
         c.isPublicChannel(),
         pinned,
         isMuted,
-        isArchived);
+        isArchived,
+        c.getWallpaper());
   }
 
   private List<ConversationResponse.PinnedMessageDto> resolvePinnedMessages(Conversation c) {

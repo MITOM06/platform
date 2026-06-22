@@ -704,5 +704,9 @@
   "directorySave": "保存",
   "directoryKeyTitle": "{provider} に接続",
   "directoryKeyLabel": "API キー",
-  "directoryConnected": "{provider} に接続しました。"
+  "directoryConnected": "{provider} に接続しました。",
+  "editNicknames": "ニックネームを編集",
+  "nicknameModalTitle": "ニックネーム",
+  "nicknameNonePlaceholder": "ニックネームなし",
+  "nicknameYouSuffix": "（あなた）"
 }

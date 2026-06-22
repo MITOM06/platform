@@ -38,6 +38,7 @@ export interface Conversation {
   type: 'direct' | 'group'
   name: string | null
   avatarUrl: string | null
+  wallpaper: string | null
   admins: string[]
   createdBy: string
   isPublic: boolean
