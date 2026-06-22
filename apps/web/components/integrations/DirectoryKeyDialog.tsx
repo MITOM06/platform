@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { useMutation } from '@tanstack/react-query'
 import { useTranslations } from 'next-intl'
 import { Loader2 } from 'lucide-react'
@@ -35,9 +35,13 @@ export function DirectoryKeyDialog({
   const t = useTranslations('integrations')
   const [credential, setCredential] = useState('')
 
-  useEffect(() => {
+  // Reset the field when a new entry opens the dialog. Done during render
+  // (React-recommended) instead of in an effect to avoid a cascading render.
+  const [prevEntry, setPrevEntry] = useState(entry)
+  if (entry !== prevEntry) {
+    setPrevEntry(entry)
     if (entry) setCredential('')
-  }, [entry])
+  }
 
   const connect = useMutation({
     mutationFn: () =>

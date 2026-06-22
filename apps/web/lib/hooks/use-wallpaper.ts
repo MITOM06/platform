@@ -90,10 +90,13 @@ export function useWallpaper(conversationId: string): ResolvedWallpaper {
   const serverWallpaper = conversation?.wallpaper ?? 'default'
   const [optimistic, setOptimistic] = useState<string | null>(null)
 
-  // Clear the optimistic override once the server value catches up.
-  useEffect(() => {
+  // Clear the optimistic override once the server value catches up. Reset during
+  // render (React-recommended) instead of in an effect — avoids a cascading render.
+  const [prevServer, setPrevServer] = useState(serverWallpaper)
+  if (serverWallpaper !== prevServer) {
+    setPrevServer(serverWallpaper)
     setOptimistic(null)
-  }, [serverWallpaper])
+  }
 
   useEffect(() => {
     const onChange = (e: Event) => {
