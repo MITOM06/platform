@@ -9,6 +9,8 @@ import { SessionService } from './session.service';
 import { ClaimsService } from './claims.service';
 import { UsersService } from '../users/users.service';
 import { MailService } from '../Email/mail.service';
+import { OidcService } from './oidc/oidc.service';
+import { SsoMappingService } from './oidc/sso-mapping.service';
 
 describe('AuthService.signAccessToken — RBAC claims', () => {
   let service: AuthService;
@@ -25,6 +27,8 @@ describe('AuthService.signAccessToken — RBAC claims', () => {
         { provide: ClaimsService, useValue: {} },
         { provide: UsersService, useValue: {} },
         { provide: MailService, useValue: {} },
+        { provide: OidcService, useValue: {} },
+        { provide: SsoMappingService, useValue: {} },
         {
           provide: ConfigService,
           useValue: { get: (k: string) => (k === 'JWT_ACCESS_SECRET' ? 'secret' : undefined) },

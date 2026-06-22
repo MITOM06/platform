@@ -46,6 +46,19 @@ export class UsersService {
     }
   }
 
+  async setRoleAndDepartments(
+    userId: string,
+    roleId: string | null,
+    departmentIds: string[],
+  ): Promise<void> {
+    await this.userModel
+      .updateOne(
+        { _id: userId },
+        { $set: { roleId: roleId ?? null, departmentIds } },
+      )
+      .exec();
+  }
+
   async updatePassword(userId: string, passwordHash: string): Promise<void> {
     await this.userModel.findByIdAndUpdate(userId, {
       $set: { password: passwordHash },

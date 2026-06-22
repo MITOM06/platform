@@ -21,6 +21,8 @@ import { Throttle } from '@nestjs/throttler';
 import { AuthGuard } from '@nestjs/passport';
 import { GoogleOAuthGuard } from './guards/google-oauth.guard';
 import { AuthService } from './auth.service';
+import { OidcService } from './oidc/oidc.service';
+import { SsoMappingService } from './oidc/sso-mapping.service';
 import type { Response } from 'express';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
@@ -42,6 +44,8 @@ export class AuthController {
   constructor(
     private readonly auth: AuthService,
     private readonly configService: ConfigService,
+    private readonly oidc: OidcService,
+    private readonly ssoMapping: SsoMappingService,
   ) {}
 
   // ===================== SOCIAL LOGIN =====================
@@ -119,6 +123,37 @@ export class AuthController {
     return res.redirect(
       `/auth/${provider}?platform=${encodeURIComponent(resolvedPlatform)}`,
     );
+  }
+
+  // ===================== OIDC SSO =====================
+  @Get('oidc/login')
+  @ApiOperation({ summary: 'Begin OIDC SSO (redirects to the IdP)' })
+  async oidcLogin(@Query('platform') platform: string, @Res() res: Response) {
+    if (!this.oidc.isEnabledByEnv()) {
+      return res.status(404).send('SSO not configured');
+    }
+    const url = await this.oidc.buildAuthorizeUrl(platform || 'web');
+    return res.redirect(url);
+  }
+
+  @Get('oidc/callback')
+  @ApiOperation({ summary: 'OIDC callback (redirects back to client)' })
+  async oidcCallback(@Req() req: any, @Res() res: Response) {
+    // handleCallback returns the chosen platform (stored in the Redis flow at /oidc/login).
+    const { platform, ...profile } = await this.oidc.handleCallback(req.query);
+    return this.auth.handleOidcLogin(profile, res, platform || 'web');
+  }
+
+  @Get('sso/info')
+  @ApiOperation({ summary: 'Public: whether the SSO button should show' })
+  async ssoInfo() {
+    const gate = await this.ssoMapping.getGate();
+    const enabled = this.oidc.isEnabledByEnv() && gate.enabled;
+    return {
+      enabled,
+      loginUrl: enabled ? '/auth/oidc/login' : null,
+      buttonLabel: 'Sign in with SSO',
+    };
   }
 
   // ===================== AUTH ENDPOINTS =====================

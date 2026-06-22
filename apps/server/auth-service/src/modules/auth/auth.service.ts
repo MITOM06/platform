@@ -21,6 +21,8 @@ import { MailService } from '../Email/mail.service';
 import { BadRequestException } from '@nestjs/common/exceptions/bad-request.exception';
 import { Response } from 'express';
 import { AuthCode } from '../../common/auth-code.enum';
+import { OidcService } from './oidc/oidc.service';
+import { SsoMappingService } from './oidc/sso-mapping.service';
 
 @Injectable()
 export class AuthService {
@@ -31,6 +33,8 @@ export class AuthService {
     private readonly claims: ClaimsService,
     private readonly usersService: UsersService,
     private readonly configService: ConfigService,
+    private readonly oidc: OidcService,
+    private readonly ssoMapping: SsoMappingService,
     @Inject(REDIS_CLIENT) private readonly redis: Redis,
   ) {}
 
@@ -47,6 +51,12 @@ export class AuthService {
     platform: string = 'mobile',
   ) {
     const userId = await this.ensureUserIdFromSocial(user, provider);
+    return this.redirectWithLoginCode(userId, res, platform);
+  }
+
+  // Mints a one-time login code for a resolved user and redirects (web) or
+  // serves the mobile deep-link bridge. Shared by social + OIDC SSO login.
+  async redirectWithLoginCode(userId: string, res: Response, platform: string) {
     const code = await this.createLoginCode(userId);
 
     const webRedirect =
@@ -100,6 +110,35 @@ export class AuthService {
   </script>
 </body>
 </html>`);
+  }
+
+  // ===================== OIDC SSO =====================
+  async handleOidcLogin(
+    profile: { email: string; displayName: string; id: string; groups: string[] },
+    res: Response,
+    platform: string,
+  ) {
+    const gate = await this.ssoMapping.getGate();
+    if (!gate.enabled) throw new UnauthorizedException({ code: 'SSO_DISABLED' });
+
+    // Enforce allowed email domains if configured (empty list = any domain).
+    if (gate.allowedDomains.length > 0) {
+      const domain = profile.email.split('@')[1]?.toLowerCase();
+      const ok = gate.allowedDomains.some((d) => d.toLowerCase() === domain);
+      if (!ok) throw new UnauthorizedException({ code: 'SSO_DOMAIN_NOT_ALLOWED' });
+    }
+
+    const userId = await this.ensureUserIdFromSocial(profile, 'oidc');
+    const { changed } = await this.ssoMapping.apply(
+      userId,
+      profile.email,
+      profile.groups,
+    );
+    if (changed) {
+      // role/dept changed → invalidate existing sessions so new claims take effect.
+      await this.session.revokeAllSessions(userId);
+    }
+    return this.redirectWithLoginCode(userId, res, platform);
   }
 
   async ensureUserIdFromSocial(

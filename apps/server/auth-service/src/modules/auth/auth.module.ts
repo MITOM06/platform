@@ -10,7 +10,13 @@ import {
   UserSchema,
   Role,
   RoleSchema,
+  Department,
+  DepartmentSchema,
+  Workspace,
+  WorkspaceSchema,
 } from '@platform/database';
+import { OidcService } from './oidc/oidc.service';
+import { SsoMappingService } from './oidc/sso-mapping.service';
 import { JwtModule } from '@nestjs/jwt';
 import { UsersModule } from '../users/users.module';
 import { JwtStrategy } from './strategies/jwt.strategy';
@@ -26,6 +32,8 @@ import { PassportModule } from '@nestjs/passport';
     MongooseModule.forFeature([
       { name: User.name, schema: UserSchema },
       { name: Role.name, schema: RoleSchema },
+      { name: Department.name, schema: DepartmentSchema },
+      { name: Workspace.name, schema: WorkspaceSchema },
     ]),
     PassportModule.register({ defaultStrategy: 'jwt' }),
     UsersModule,
@@ -45,6 +53,8 @@ import { PassportModule } from '@nestjs/passport';
     AuthService,
     SessionService,
     ClaimsService,
+    OidcService,
+    SsoMappingService,
     JwtStrategy,
     ...(process.env.GOOGLE_CLIENT_ID ? [GoogleStrategy] : []),
     ...(process.env.X_CLIENT_ID ? [TwitterStrategy] : []),

@@ -4,6 +4,8 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { ConfigService } from '@nestjs/config';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
+import { OidcService } from './oidc/oidc.service';
+import { SsoMappingService } from './oidc/sso-mapping.service';
 import type { Response } from 'express';
 
 describe('AuthController — social login platform resolution', () => {
@@ -18,6 +20,8 @@ describe('AuthController — social login platform resolution', () => {
       providers: [
         { provide: AuthService, useValue: { handleSocialLogin } },
         { provide: ConfigService, useValue: { get: jest.fn() } },
+        { provide: OidcService, useValue: {} },
+        { provide: SsoMappingService, useValue: {} },
       ],
     }).compile();
 
