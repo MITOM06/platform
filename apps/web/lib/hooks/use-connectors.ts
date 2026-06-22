@@ -3,7 +3,11 @@ import { useTranslations } from 'next-intl'
 import { toast } from 'sonner'
 import { connectorService } from '@/lib/api/connector'
 import { useAuthStore } from '@/lib/store/auth.store'
-import type { CustomMcpInput } from '@/lib/api/connector-types'
+import type {
+  CreateDirectoryEntryInput,
+  CustomMcpInput,
+  UpdateDirectoryEntryInput,
+} from '@/lib/api/connector-types'
 
 /** The connector catalog is global (not per-user), so it can be cached longer. */
 export function useCatalog() {
@@ -56,6 +60,58 @@ export function useConnectorActions() {
   })
 
   return { disconnect, saveCustomMcp, invalidateConnections }
+}
+
+/** The dynamic MCP directory (global, DB-driven). Cached like the catalog. */
+export function useDirectory() {
+  return useQuery({
+    queryKey: ['connector-directory'],
+    queryFn: () => connectorService.getDirectory(),
+    staleTime: 10 * 60 * 1000,
+  })
+}
+
+/**
+ * Admin (MANAGE_WORKSPACE) mutations for the directory. On success we
+ * invalidate the directory query so every member's grid reflects the change.
+ */
+export function useDirectoryAdmin() {
+  const queryClient = useQueryClient()
+  const t = useTranslations('integrations')
+
+  const invalidate = () =>
+    queryClient.invalidateQueries({ queryKey: ['connector-directory'] })
+
+  const create = useMutation({
+    mutationFn: (input: CreateDirectoryEntryInput) =>
+      connectorService.createDirectoryEntry(input),
+    onSuccess: () => {
+      toast.success(t('directorySaveSuccess'))
+      invalidate()
+    },
+    onError: () => toast.error(t('directorySaveError')),
+  })
+
+  const update = useMutation({
+    mutationFn: ({ id, input }: { id: string; input: UpdateDirectoryEntryInput }) =>
+      connectorService.updateDirectoryEntry(id, input),
+    onSuccess: () => {
+      toast.success(t('directorySaveSuccess'))
+      invalidate()
+    },
+    onError: () => toast.error(t('directorySaveError')),
+  })
+
+  const remove = useMutation({
+    mutationFn: (id: string) => connectorService.deleteDirectoryEntry(id),
+    onSuccess: () => {
+      toast.success(t('directoryDeleteSuccess'))
+      invalidate()
+    },
+    onError: () => toast.error(t('directoryDeleteError')),
+  })
+
+  return { create, update, remove }
 }
 
 /** User skill toggles, persisted via connector-service `user_skills`. */

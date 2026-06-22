@@ -29,6 +29,13 @@ export interface OAuthStatePayload {
   provider: string;
   scope?: ConnectionScope;
   nonce?: string;
+  /**
+   * Directory (MCP-native) flows only: vault-encrypted JSON blob carrying the
+   * PKCE code_verifier + DCR client creds + token endpoint. Encrypted (not just
+   * HMAC-signed) so the code_verifier is never exposed to the browser. See
+   * DirectoryConnectService.
+   */
+  enc?: string;
 }
 
 interface TokenResponse {
@@ -115,9 +122,24 @@ export class OAuthService {
     entry: CatalogEntry,
     user: JwtUser,
   ): Promise<ConnectionScope> {
+    return this.authorizeTier(entry.tier, entry.id, user);
+  }
+
+  /**
+   * Decide scope + permission for connecting a connector of a given tier.
+   * Shared by the static catalog flow and the dynamic directory flow.
+   * Workspace-tier needs CONNECT_WORKSPACE_CONNECTOR; personal/both need
+   * CONNECT_PERSONAL_CONNECTOR AND the provider being in the workspace
+   * allow-list. Throws ForbiddenException on deny.
+   */
+  async authorizeTier(
+    tier: 'workspace' | 'personal' | 'both',
+    providerId: string,
+    user: JwtUser,
+  ): Promise<ConnectionScope> {
     const perms = new Set(user.perms ?? []);
 
-    if (entry.tier === 'workspace') {
+    if (tier === 'workspace') {
       if (!perms.has(Capability.CONNECT_WORKSPACE_CONNECTOR)) {
         throw new ForbiddenException({
           code: 'INSUFFICIENT_PERMISSION',
@@ -135,10 +157,10 @@ export class OAuthService {
       });
     }
     const allowList = await this.connectorAllowList();
-    if (!allowList.includes(entry.id)) {
+    if (!allowList.includes(providerId)) {
       throw new ForbiddenException({
         code: 'CONNECTOR_NOT_ALLOWED',
-        provider: entry.id,
+        provider: providerId,
       });
     }
     return 'personal';

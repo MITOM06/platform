@@ -56,6 +56,22 @@ export class UserConnection {
   @Prop({ type: EncryptedTokensSchema, required: true })
   encryptedTokens: EncryptedTokens;
 
+  /**
+   * Directory connections only: encrypted DCR client credentials
+   * ({ client_id, client_secret? }) obtained via Dynamic Client Registration.
+   * Needed to refresh the access token without re-registering.
+   */
+  @Prop({ type: EncryptedTokensSchema })
+  encryptedClientCreds?: EncryptedTokens;
+
+  /** Directory connections only: token endpoint for refresh (from discovery). */
+  @Prop()
+  tokenEndpoint?: string;
+
+  /** Directory connections only: originating directory entry slug. */
+  @Prop()
+  directorySlug?: string;
+
   @Prop()
   accountLabel: string;
 

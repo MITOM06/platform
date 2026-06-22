@@ -1868,4 +1868,104 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get adminSsoAddMapping => 'Añadir asignación';
+
+  @override
+  String get sectionDirectoryTitle => 'Directorio MCP';
+
+  @override
+  String get sectionDirectoryDesc =>
+      'Explora servidores MCP y conéctate con un clic — OAuth se ejecuta automáticamente.';
+
+  @override
+  String get directoryAdd => 'Añadir entrada';
+
+  @override
+  String get directorySearch => 'Buscar en el directorio…';
+
+  @override
+  String get directoryEmpty => 'Ninguna entrada coincide con tu búsqueda.';
+
+  @override
+  String get directoryEdit => 'Editar entrada';
+
+  @override
+  String get directoryDelete => 'Eliminar entrada';
+
+  @override
+  String get tierWorkspace => 'Espacio de trabajo';
+
+  @override
+  String get tierPersonal => 'Personal';
+
+  @override
+  String get tierBoth => 'Personal / Espacio de trabajo';
+
+  @override
+  String get directorySaveSuccess => 'Entrada del directorio guardada.';
+
+  @override
+  String get directoryDeleteSuccess => 'Entrada del directorio eliminada.';
+
+  @override
+  String get directoryAddTitle => 'Añadir entrada al directorio';
+
+  @override
+  String get directoryEditTitle => 'Editar entrada del directorio';
+
+  @override
+  String get directoryDialogDesc =>
+      'Añade un servidor MCP público que los miembros puedan conectar con un clic.';
+
+  @override
+  String get directorySlug => 'Slug';
+
+  @override
+  String get directoryName => 'Nombre';
+
+  @override
+  String get directoryDescription => 'Descripción';
+
+  @override
+  String get directoryMcpUrl => 'URL de MCP';
+
+  @override
+  String get directoryAuthMode => 'Modo de autenticación';
+
+  @override
+  String get directoryTier => 'Nivel';
+
+  @override
+  String get directoryEnvHint =>
+      'Para env-oauth: indica las variables de entorno con las credenciales del cliente OAuth.';
+
+  @override
+  String get directoryEnvClientId => 'Variable Client ID';
+
+  @override
+  String get directoryEnvClientSecret => 'Variable Client secret';
+
+  @override
+  String get directoryAuthorizeUrl => 'URL de autorización';
+
+  @override
+  String get directoryTokenUrl => 'URL de token';
+
+  @override
+  String get directoryCancel => 'Cancelar';
+
+  @override
+  String get directorySave => 'Guardar';
+
+  @override
+  String directoryKeyTitle(String provider) {
+    return 'Conectar $provider';
+  }
+
+  @override
+  String get directoryKeyLabel => 'Clave API';
+
+  @override
+  String directoryConnected(String provider) {
+    return '$provider conectado.';
+  }
 }

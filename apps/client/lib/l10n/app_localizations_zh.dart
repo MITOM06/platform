@@ -1803,4 +1803,101 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get adminSsoAddMapping => '添加映射';
+
+  @override
+  String get sectionDirectoryTitle => 'MCP 目录';
+
+  @override
+  String get sectionDirectoryDesc => '浏览 MCP 服务器并一键连接——OAuth 自动完成。';
+
+  @override
+  String get directoryAdd => '添加条目';
+
+  @override
+  String get directorySearch => '搜索目录…';
+
+  @override
+  String get directoryEmpty => '没有匹配的目录条目。';
+
+  @override
+  String get directoryEdit => '编辑条目';
+
+  @override
+  String get directoryDelete => '删除条目';
+
+  @override
+  String get tierWorkspace => '工作区';
+
+  @override
+  String get tierPersonal => '个人';
+
+  @override
+  String get tierBoth => '个人 / 工作区';
+
+  @override
+  String get directorySaveSuccess => '已保存目录条目。';
+
+  @override
+  String get directoryDeleteSuccess => '已删除目录条目。';
+
+  @override
+  String get directoryAddTitle => '添加目录条目';
+
+  @override
+  String get directoryEditTitle => '编辑目录条目';
+
+  @override
+  String get directoryDialogDesc => '添加公开的 MCP 服务器，成员可一键连接。';
+
+  @override
+  String get directorySlug => '标识 (slug)';
+
+  @override
+  String get directoryName => '名称';
+
+  @override
+  String get directoryDescription => '描述';
+
+  @override
+  String get directoryMcpUrl => 'MCP 网址';
+
+  @override
+  String get directoryAuthMode => '认证方式';
+
+  @override
+  String get directoryTier => '层级';
+
+  @override
+  String get directoryEnvHint => '对于 env-oauth：引用保存 OAuth 客户端凭据的环境变量。';
+
+  @override
+  String get directoryEnvClientId => 'Client ID 环境变量';
+
+  @override
+  String get directoryEnvClientSecret => 'Client secret 环境变量';
+
+  @override
+  String get directoryAuthorizeUrl => '授权网址';
+
+  @override
+  String get directoryTokenUrl => '令牌网址';
+
+  @override
+  String get directoryCancel => '取消';
+
+  @override
+  String get directorySave => '保存';
+
+  @override
+  String directoryKeyTitle(String provider) {
+    return '连接 $provider';
+  }
+
+  @override
+  String get directoryKeyLabel => 'API 密钥';
+
+  @override
+  String directoryConnected(String provider) {
+    return '已连接 $provider。';
+  }
 }

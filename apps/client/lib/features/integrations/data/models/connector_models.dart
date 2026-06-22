@@ -139,6 +139,139 @@ class ConnectorItem {
   bool get isConnected => connection?.isActive ?? false;
 }
 
+// ── MCP Directory (dynamic connector directory) ─────────────────────────────
+
+/// How a directory entry authenticates a connection.
+enum DirectoryAuthMode { mcpOauth, envOauth, apikey, none }
+
+DirectoryAuthMode directoryAuthModeFromString(String? raw) {
+  switch (raw) {
+    case 'mcp-oauth':
+      return DirectoryAuthMode.mcpOauth;
+    case 'env-oauth':
+      return DirectoryAuthMode.envOauth;
+    case 'apikey':
+      return DirectoryAuthMode.apikey;
+    case 'none':
+    default:
+      return DirectoryAuthMode.none;
+  }
+}
+
+String directoryAuthModeToString(DirectoryAuthMode mode) {
+  switch (mode) {
+    case DirectoryAuthMode.mcpOauth:
+      return 'mcp-oauth';
+    case DirectoryAuthMode.envOauth:
+      return 'env-oauth';
+    case DirectoryAuthMode.apikey:
+      return 'apikey';
+    case DirectoryAuthMode.none:
+      return 'none';
+  }
+}
+
+/// Governance tier of a directory entry.
+enum DirectoryTier { workspace, personal, both }
+
+DirectoryTier directoryTierFromString(String? raw) {
+  switch (raw) {
+    case 'workspace':
+      return DirectoryTier.workspace;
+    case 'personal':
+      return DirectoryTier.personal;
+    case 'both':
+    default:
+      return DirectoryTier.both;
+  }
+}
+
+String directoryTierToString(DirectoryTier tier) {
+  switch (tier) {
+    case DirectoryTier.workspace:
+      return 'workspace';
+    case DirectoryTier.personal:
+      return 'personal';
+    case DirectoryTier.both:
+      return 'both';
+  }
+}
+
+/// One entry from `GET /directory` — a discoverable MCP server.
+@immutable
+class DirectoryEntry {
+  final String id;
+  final String slug;
+  final String name;
+  final String icon;
+  final String description;
+  final String mcpUrl;
+  final DirectoryAuthMode authMode;
+  final DirectoryTier tier;
+  final List<String> scopes;
+  final bool available;
+  final bool builtin;
+
+  const DirectoryEntry({
+    required this.id,
+    required this.slug,
+    required this.name,
+    required this.icon,
+    required this.description,
+    required this.mcpUrl,
+    required this.authMode,
+    required this.tier,
+    required this.scopes,
+    required this.available,
+    required this.builtin,
+  });
+
+  factory DirectoryEntry.fromJson(Map<String, dynamic> json) => DirectoryEntry(
+        id: json['id'] as String? ?? json['_id'] as String,
+        slug: json['slug'] as String,
+        name: json['name'] as String? ?? '',
+        icon: json['icon'] as String? ?? '',
+        description: json['description'] as String? ?? '',
+        mcpUrl: json['mcpUrl'] as String? ?? '',
+        authMode: directoryAuthModeFromString(json['authMode'] as String?),
+        tier: directoryTierFromString(json['tier'] as String?),
+        scopes: (json['scopes'] as List<dynamic>? ?? const [])
+            .map((e) => e as String)
+            .toList(),
+        available: json['available'] as bool? ?? true,
+        builtin: json['builtin'] as bool? ?? false,
+      );
+}
+
+/// A directory entry paired with its current connection (if any).
+@immutable
+class DirectoryItem {
+  final DirectoryEntry entry;
+  final ConnectionView? connection;
+
+  const DirectoryItem({required this.entry, this.connection});
+
+  bool get isConnected => connection?.isActive ?? false;
+}
+
+/// Result of `GET /oauth/directory/:slug/start` — varies by auth mode.
+@immutable
+class DirectoryStartResult {
+  /// 'oauth' | 'apikey' | 'none'.
+  final String mode;
+
+  /// Set only when [mode] is 'oauth'.
+  final String? authorizeUrl;
+
+  const DirectoryStartResult({required this.mode, this.authorizeUrl});
+
+  factory DirectoryStartResult.fromJson(Map<String, dynamic> json) =>
+      DirectoryStartResult(
+        mode: json['mode'] as String? ?? 'oauth',
+        authorizeUrl: json['authorizeUrl'] as String?,
+      );
+}
+
 /// One persisted skill toggle from `GET /skills`.
 @immutable
 class UserSkillState {

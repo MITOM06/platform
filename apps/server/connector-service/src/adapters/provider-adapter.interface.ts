@@ -11,6 +11,10 @@ export interface ConnectionLike {
   provider: string;
   mcpUrl?: string;
   encryptedTokens?: EncBlob;
+  /** Directory connections: encrypted DCR client creds for token refresh. */
+  encryptedClientCreds?: EncBlob;
+  /** Directory connections: token endpoint for refresh (from discovery). */
+  tokenEndpoint?: string;
   url?: string;
   authType?: string;
   encryptedCredential?: EncBlob;

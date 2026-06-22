@@ -67,3 +67,54 @@ export interface UserSkillState {
   skillId: string
   enabled: boolean
 }
+
+// ── MCP Directory (dynamic connector directory) ─────────────────────────────
+
+/** How a directory entry authenticates a connection. */
+export type DirectoryAuthMode = 'mcp-oauth' | 'env-oauth' | 'apikey' | 'none'
+
+/** Governance tier of a directory entry. */
+export type DirectoryTier = 'workspace' | 'personal' | 'both'
+
+/** `GET /directory` entry — public projection (no env secret names). */
+export interface DirectoryEntry {
+  id: string
+  slug: string
+  name: string
+  icon: string
+  description: string
+  mcpUrl: string
+  authMode: DirectoryAuthMode
+  tier: DirectoryTier
+  scopes: string[]
+  available: boolean
+  builtin: boolean
+}
+
+/** `GET /oauth/directory/:slug/start` response — varies by authMode. */
+export type DirectoryStartResponse =
+  | { mode: 'oauth'; authorizeUrl: string }
+  | { mode: 'apikey' }
+  | { mode: 'none'; connected: true }
+
+/** `POST /directory` request body (admin). */
+export interface CreateDirectoryEntryInput {
+  slug: string
+  name: string
+  icon?: string
+  description?: string
+  mcpUrl: string
+  authMode: DirectoryAuthMode
+  tier?: DirectoryTier
+  scopes?: string[]
+  envClientIdName?: string
+  envClientSecretName?: string
+  authorizeUrl?: string
+  tokenUrl?: string
+  available?: boolean
+}
+
+/** `PATCH /directory/:id` request body (admin) — all fields optional. */
+export type UpdateDirectoryEntryInput = Partial<
+  Omit<CreateDirectoryEntryInput, 'slug'>
+>

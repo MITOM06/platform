@@ -1814,4 +1814,103 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get adminSsoAddMapping => '매핑 추가';
+
+  @override
+  String get sectionDirectoryTitle => 'MCP 디렉터리';
+
+  @override
+  String get sectionDirectoryDesc =>
+      'MCP 서버를 둘러보고 한 번의 클릭으로 연결하세요 — OAuth가 자동으로 실행됩니다.';
+
+  @override
+  String get directoryAdd => '항목 추가';
+
+  @override
+  String get directorySearch => '디렉터리 검색…';
+
+  @override
+  String get directoryEmpty => '검색과 일치하는 항목이 없습니다.';
+
+  @override
+  String get directoryEdit => '항목 편집';
+
+  @override
+  String get directoryDelete => '항목 삭제';
+
+  @override
+  String get tierWorkspace => '워크스페이스';
+
+  @override
+  String get tierPersonal => '개인';
+
+  @override
+  String get tierBoth => '개인 / 워크스페이스';
+
+  @override
+  String get directorySaveSuccess => '디렉터리 항목을 저장했습니다.';
+
+  @override
+  String get directoryDeleteSuccess => '디렉터리 항목을 삭제했습니다.';
+
+  @override
+  String get directoryAddTitle => '디렉터리 항목 추가';
+
+  @override
+  String get directoryEditTitle => '디렉터리 항목 편집';
+
+  @override
+  String get directoryDialogDesc => '구성원이 한 번의 클릭으로 연결할 수 있는 공개 MCP 서버를 추가합니다.';
+
+  @override
+  String get directorySlug => '슬러그';
+
+  @override
+  String get directoryName => '이름';
+
+  @override
+  String get directoryDescription => '설명';
+
+  @override
+  String get directoryMcpUrl => 'MCP URL';
+
+  @override
+  String get directoryAuthMode => '인증 모드';
+
+  @override
+  String get directoryTier => '범위';
+
+  @override
+  String get directoryEnvHint =>
+      'env-oauth의 경우: OAuth 클라이언트 자격 증명을 담은 환경 변수를 참조하세요.';
+
+  @override
+  String get directoryEnvClientId => 'Client ID 환경 변수';
+
+  @override
+  String get directoryEnvClientSecret => 'Client secret 환경 변수';
+
+  @override
+  String get directoryAuthorizeUrl => '인증 URL';
+
+  @override
+  String get directoryTokenUrl => '토큰 URL';
+
+  @override
+  String get directoryCancel => '취소';
+
+  @override
+  String get directorySave => '저장';
+
+  @override
+  String directoryKeyTitle(String provider) {
+    return '$provider 연결';
+  }
+
+  @override
+  String get directoryKeyLabel => 'API 키';
+
+  @override
+  String directoryConnected(String provider) {
+    return '$provider에 연결되었습니다.';
+  }
 }

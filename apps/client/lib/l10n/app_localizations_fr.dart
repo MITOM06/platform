@@ -1877,4 +1877,104 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get adminSsoAddMapping => 'Ajouter un mappage';
+
+  @override
+  String get sectionDirectoryTitle => 'Annuaire MCP';
+
+  @override
+  String get sectionDirectoryDesc =>
+      'Parcourez les serveurs MCP et connectez-vous en un clic — OAuth s’exécute automatiquement.';
+
+  @override
+  String get directoryAdd => 'Ajouter une entrée';
+
+  @override
+  String get directorySearch => 'Rechercher dans l’annuaire…';
+
+  @override
+  String get directoryEmpty => 'Aucune entrée ne correspond à votre recherche.';
+
+  @override
+  String get directoryEdit => 'Modifier l’entrée';
+
+  @override
+  String get directoryDelete => 'Supprimer l’entrée';
+
+  @override
+  String get tierWorkspace => 'Espace de travail';
+
+  @override
+  String get tierPersonal => 'Personnel';
+
+  @override
+  String get tierBoth => 'Personnel / Espace de travail';
+
+  @override
+  String get directorySaveSuccess => 'Entrée d’annuaire enregistrée.';
+
+  @override
+  String get directoryDeleteSuccess => 'Entrée d’annuaire supprimée.';
+
+  @override
+  String get directoryAddTitle => 'Ajouter une entrée d’annuaire';
+
+  @override
+  String get directoryEditTitle => 'Modifier l’entrée d’annuaire';
+
+  @override
+  String get directoryDialogDesc =>
+      'Ajoutez un serveur MCP public que les membres peuvent connecter en un clic.';
+
+  @override
+  String get directorySlug => 'Slug';
+
+  @override
+  String get directoryName => 'Nom';
+
+  @override
+  String get directoryDescription => 'Description';
+
+  @override
+  String get directoryMcpUrl => 'URL MCP';
+
+  @override
+  String get directoryAuthMode => 'Mode d’authentification';
+
+  @override
+  String get directoryTier => 'Niveau';
+
+  @override
+  String get directoryEnvHint =>
+      'Pour env-oauth : référencez les variables d’environnement contenant les identifiants du client OAuth.';
+
+  @override
+  String get directoryEnvClientId => 'Variable Client ID';
+
+  @override
+  String get directoryEnvClientSecret => 'Variable Client secret';
+
+  @override
+  String get directoryAuthorizeUrl => 'URL d’autorisation';
+
+  @override
+  String get directoryTokenUrl => 'URL du jeton';
+
+  @override
+  String get directoryCancel => 'Annuler';
+
+  @override
+  String get directorySave => 'Enregistrer';
+
+  @override
+  String directoryKeyTitle(String provider) {
+    return 'Connecter $provider';
+  }
+
+  @override
+  String get directoryKeyLabel => 'Clé API';
+
+  @override
+  String directoryConnected(String provider) {
+    return '$provider connecté.';
+  }
 }

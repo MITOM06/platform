@@ -2,10 +2,14 @@ import { connectorApi } from './axios'
 import type {
   CatalogEntry,
   ConnectionView,
+  CreateDirectoryEntryInput,
   CustomMcpDiscoverInput,
   CustomMcpDiscoverResponse,
   CustomMcpInput,
+  DirectoryEntry,
+  DirectoryStartResponse,
   OAuthStartResponse,
+  UpdateDirectoryEntryInput,
   UserSkillState,
 } from './connector-types'
 
@@ -53,5 +57,37 @@ export const connectorService = {
   setSkill: (skillId: string, enabled: boolean) =>
     connectorApi
       .put<UserSkillState>('/skills', { skillId, enabled })
+      .then((r) => r.data),
+
+  // ── MCP Directory ─────────────────────────────────────────────────────────
+
+  getDirectory: () =>
+    connectorApi
+      .get<DirectoryEntry[]>('/directory')
+      .then((r) => (Array.isArray(r.data) ? r.data : [])),
+
+  startDirectoryOAuth: (slug: string) =>
+    connectorApi
+      .get<DirectoryStartResponse>(`/oauth/directory/${slug}/start`)
+      .then((r) => r.data),
+
+  connectDirectoryKey: (slug: string, credential: string) =>
+    connectorApi
+      .post<{ connected: true }>(`/oauth/directory/${slug}/connect-key`, {
+        credential,
+      })
+      .then((r) => r.data),
+
+  createDirectoryEntry: (input: CreateDirectoryEntryInput) =>
+    connectorApi.post<DirectoryEntry>('/directory', input).then((r) => r.data),
+
+  updateDirectoryEntry: (id: string, input: UpdateDirectoryEntryInput) =>
+    connectorApi
+      .patch<DirectoryEntry>(`/directory/${id}`, input)
+      .then((r) => r.data),
+
+  deleteDirectoryEntry: (id: string) =>
+    connectorApi
+      .delete<{ deleted: boolean }>(`/directory/${id}`)
       .then((r) => r.data),
 }

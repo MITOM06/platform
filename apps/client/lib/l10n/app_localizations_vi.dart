@@ -1849,4 +1849,104 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get adminSsoAddMapping => 'Thêm ánh xạ';
+
+  @override
+  String get sectionDirectoryTitle => 'Danh bạ MCP';
+
+  @override
+  String get sectionDirectoryDesc =>
+      'Duyệt các máy chủ MCP và kết nối chỉ với một nhấp — OAuth chạy tự động.';
+
+  @override
+  String get directoryAdd => 'Thêm mục';
+
+  @override
+  String get directorySearch => 'Tìm trong danh bạ…';
+
+  @override
+  String get directoryEmpty => 'Không có mục nào khớp với tìm kiếm.';
+
+  @override
+  String get directoryEdit => 'Sửa mục';
+
+  @override
+  String get directoryDelete => 'Xoá mục';
+
+  @override
+  String get tierWorkspace => 'Không gian làm việc';
+
+  @override
+  String get tierPersonal => 'Cá nhân';
+
+  @override
+  String get tierBoth => 'Cá nhân / Không gian làm việc';
+
+  @override
+  String get directorySaveSuccess => 'Đã lưu mục danh bạ.';
+
+  @override
+  String get directoryDeleteSuccess => 'Đã xoá mục danh bạ.';
+
+  @override
+  String get directoryAddTitle => 'Thêm mục danh bạ';
+
+  @override
+  String get directoryEditTitle => 'Sửa mục danh bạ';
+
+  @override
+  String get directoryDialogDesc =>
+      'Thêm máy chủ MCP công khai để thành viên kết nối chỉ với một nhấp.';
+
+  @override
+  String get directorySlug => 'Slug';
+
+  @override
+  String get directoryName => 'Tên';
+
+  @override
+  String get directoryDescription => 'Mô tả';
+
+  @override
+  String get directoryMcpUrl => 'URL MCP';
+
+  @override
+  String get directoryAuthMode => 'Chế độ xác thực';
+
+  @override
+  String get directoryTier => 'Phạm vi';
+
+  @override
+  String get directoryEnvHint =>
+      'Với env-oauth: tham chiếu các biến môi trường chứa thông tin client OAuth.';
+
+  @override
+  String get directoryEnvClientId => 'Biến Client ID';
+
+  @override
+  String get directoryEnvClientSecret => 'Biến Client secret';
+
+  @override
+  String get directoryAuthorizeUrl => 'URL Authorize';
+
+  @override
+  String get directoryTokenUrl => 'URL Token';
+
+  @override
+  String get directoryCancel => 'Huỷ';
+
+  @override
+  String get directorySave => 'Lưu';
+
+  @override
+  String directoryKeyTitle(String provider) {
+    return 'Kết nối $provider';
+  }
+
+  @override
+  String get directoryKeyLabel => 'API key';
+
+  @override
+  String directoryConnected(String provider) {
+    return 'Đã kết nối $provider.';
+  }
 }

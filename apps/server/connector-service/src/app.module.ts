@@ -7,6 +7,7 @@ import configuration from './config/configuration';
 import { HealthModule } from './health/health.module';
 import { ConnectionsModule } from './connections/connections.module';
 import { CatalogModule } from './catalog/catalog.module';
+import { DirectoryModule } from './directory/directory.module';
 import { OAuthModule } from './oauth/oauth.module';
 import { InternalModule } from './internal/internal.module';
 
@@ -29,6 +30,7 @@ const mongooseModule: DynamicModule = MongooseModule.forRootAsync({
     HealthModule,
     ConnectionsModule,
     CatalogModule,
+    DirectoryModule,
     OAuthModule,
     InternalModule,
   ],

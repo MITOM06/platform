@@ -61,4 +61,57 @@ describe('connectorService list methods coerce non-array responses to []', () =>
     await expect(connectorService.getConnections()).resolves.toEqual([])
     await expect(connectorService.getSkills()).resolves.toEqual([])
   })
+
+  it('getDirectory coerces a non-array body to []', async () => {
+    body = '<html>'
+    await expect(connectorService.getDirectory()).resolves.toEqual([])
+  })
+
+  it('getDirectory passes a valid array through unchanged', async () => {
+    body = [{ id: 'd1', slug: 'notion', name: 'Notion' }]
+    await expect(connectorService.getDirectory()).resolves.toEqual([
+      { id: 'd1', slug: 'notion', name: 'Notion' },
+    ])
+  })
+})
+
+describe('directory connect endpoints hit the expected URLs', () => {
+  const originalAdapter = connectorApi.defaults.adapter
+  let lastUrl: string | undefined
+  let lastMethod: string | undefined
+
+  beforeEach(() => {
+    connectorApi.defaults.adapter = async (config) => {
+      lastUrl = config.url
+      lastMethod = config.method
+      return stubResponse(
+        config.url?.includes('/start')
+          ? { mode: 'oauth', authorizeUrl: 'https://auth/x' }
+          : { connected: true },
+      )
+    }
+  })
+  afterEach(() => {
+    connectorApi.defaults.adapter = originalAdapter
+  })
+
+  it('startDirectoryOAuth GETs /oauth/directory/:slug/start', async () => {
+    const res = await connectorService.startDirectoryOAuth('notion')
+    expect(lastMethod).toBe('get')
+    expect(lastUrl).toBe('/oauth/directory/notion/start')
+    expect(res).toEqual({ mode: 'oauth', authorizeUrl: 'https://auth/x' })
+  })
+
+  it('connectDirectoryKey POSTs to /oauth/directory/:slug/connect-key', async () => {
+    const res = await connectorService.connectDirectoryKey('acme', 'sk-1')
+    expect(lastMethod).toBe('post')
+    expect(lastUrl).toBe('/oauth/directory/acme/connect-key')
+    expect(res).toEqual({ connected: true })
+  })
+
+  it('deleteDirectoryEntry DELETEs /directory/:id', async () => {
+    await connectorService.deleteDirectoryEntry('d1')
+    expect(lastMethod).toBe('delete')
+    expect(lastUrl).toBe('/directory/d1')
+  })
 })

@@ -914,5 +914,50 @@
   "adminSsoGroupRoleMap": "Group → Role",
   "adminSsoGroupDeptMap": "Group → Department",
   "adminSsoGroupPlaceholder": "IdP group name",
-  "adminSsoAddMapping": "Add mapping"
+  "adminSsoAddMapping": "Add mapping",
+  "sectionDirectoryTitle": "MCP directory",
+  "sectionDirectoryDesc": "Browse MCP servers and connect with one click — OAuth runs automatically.",
+  "directoryAdd": "Add entry",
+  "directorySearch": "Search the directory…",
+  "directoryEmpty": "No directory entries match your search.",
+  "directoryEdit": "Edit entry",
+  "directoryDelete": "Delete entry",
+  "tierWorkspace": "Workspace",
+  "tierPersonal": "Personal",
+  "tierBoth": "Personal / Workspace",
+  "directorySaveSuccess": "Directory entry saved.",
+  "directoryDeleteSuccess": "Directory entry deleted.",
+  "directoryAddTitle": "Add directory entry",
+  "directoryEditTitle": "Edit directory entry",
+  "directoryDialogDesc": "Add a public MCP server members can connect with one click.",
+  "directorySlug": "Slug",
+  "directoryName": "Name",
+  "directoryDescription": "Description",
+  "directoryMcpUrl": "MCP URL",
+  "directoryAuthMode": "Auth mode",
+  "directoryTier": "Tier",
+  "directoryEnvHint": "For env-oauth: reference the env vars holding the OAuth client credentials.",
+  "directoryEnvClientId": "Client ID env",
+  "directoryEnvClientSecret": "Client secret env",
+  "directoryAuthorizeUrl": "Authorize URL",
+  "directoryTokenUrl": "Token URL",
+  "directoryCancel": "Cancel",
+  "directorySave": "Save",
+  "directoryKeyTitle": "Connect {provider}",
+  "@directoryKeyTitle": {
+    "placeholders": {
+      "provider": {
+        "type": "String"
+      }
+    }
+  },
+  "directoryKeyLabel": "API key",
+  "directoryConnected": "Connected {provider}.",
+  "@directoryConnected": {
+    "placeholders": {
+      "provider": {
+        "type": "String"
+      }
+    }
+  }
 }

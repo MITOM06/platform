@@ -79,6 +79,50 @@ class ConnectorRepository {
     });
   }
 
+  // ── MCP Directory ───────────────────────────────────────────────────────
+
+  /// `GET /directory` — available directory entries (DB-driven, no secrets).
+  Future<List<DirectoryEntry>> directory() async {
+    final response = await _dio.get('/directory');
+    final data = response.data as List<dynamic>;
+    return data
+        .map((e) => DirectoryEntry.fromJson(e as Map<String, dynamic>))
+        .toList();
+  }
+
+  /// `GET /oauth/directory/:slug/start` — begins a directory connect. Returns a
+  /// result whose mode is 'oauth' (open [authorizeUrl] in the browser),
+  /// 'apikey' (prompt for a key), or 'none' (already connected).
+  Future<DirectoryStartResult> startDirectoryOAuth(String slug) async {
+    final response = await _dio.get('/oauth/directory/$slug/start');
+    return DirectoryStartResult.fromJson(response.data as Map<String, dynamic>);
+  }
+
+  /// `POST /oauth/directory/:slug/connect-key` — connect an apikey entry.
+  Future<void> connectDirectoryKey(String slug, String credential) async {
+    await _dio.post('/oauth/directory/$slug/connect-key', data: {
+      'credential': credential,
+    });
+  }
+
+  /// `POST /directory` — create a custom directory entry (admin only).
+  Future<void> createDirectoryEntry(Map<String, dynamic> body) async {
+    await _dio.post('/directory', data: body);
+  }
+
+  /// `PATCH /directory/:id` — update a directory entry (admin only).
+  Future<void> updateDirectoryEntry(
+    String id,
+    Map<String, dynamic> body,
+  ) async {
+    await _dio.patch('/directory/$id', data: body);
+  }
+
+  /// `DELETE /directory/:id` — delete a custom directory entry (admin only).
+  Future<void> deleteDirectoryEntry(String id) async {
+    await _dio.delete('/directory/$id');
+  }
+
   /// `GET /skills` — persisted skill toggles for this user (identity from JWT).
   Future<List<UserSkillState>> getSkills() async {
     final response = await _dio.get('/skills');
