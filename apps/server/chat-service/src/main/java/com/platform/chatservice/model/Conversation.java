@@ -51,6 +51,13 @@ public class Conversation {
   /** Group avatar URL (null for direct conversations). */
   private String avatarUrl;
 
+  /**
+   * Shared chat wallpaper for the whole conversation (direct + group). Null/blank = default. Value
+   * may be a preset token (e.g. "preset:midnight_glow") or an uploaded-image url (e.g.
+   * "/api/uploads/&lt;id&gt;#fit=cover&amp;scale=120"). Any participant may set it.
+   */
+  private String wallpaper;
+
   /** User ids with admin rights (group only). */
   private List<String> admins;
 

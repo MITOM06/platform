@@ -128,6 +128,7 @@ export function ChangePasswordDialog({ open, onOpenChange }: ChangePasswordDialo
                 placeholder={t('currentPlaceholder')}
                 className="pl-9 pr-10"
                 disabled={saving}
+                autoComplete="new-password"
               />
               <button
                 type="button"
@@ -155,6 +156,7 @@ export function ChangePasswordDialog({ open, onOpenChange }: ChangePasswordDialo
                 placeholder={t('newPlaceholder')}
                 className="pl-9 pr-10"
                 disabled={saving}
+                autoComplete="new-password"
               />
               <button
                 type="button"
@@ -182,6 +184,7 @@ export function ChangePasswordDialog({ open, onOpenChange }: ChangePasswordDialo
                 placeholder={t('confirmPlaceholder')}
                 className="pl-9 pr-10"
                 disabled={saving}
+                autoComplete="new-password"
                 onKeyDown={(e) => { if (e.key === 'Enter') handleSubmit() }}
               />
               <button

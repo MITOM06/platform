@@ -8,6 +8,7 @@ import { ArrowLeft, ArchiveRestore, Archive, Loader2, Search, MessageSquare } fr
 import { toast } from 'sonner'
 import { useTranslations } from 'next-intl'
 import { chatService } from '@/lib/api/chat'
+import { absoluteMediaUrl } from '@/lib/media'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
@@ -78,7 +79,7 @@ export default function ArchivedChatsPage() {
         ) : (
           filteredConversations.map((conv) => {
             const name = conv.name ?? t('defaultName')
-            const avatar = conv.avatarUrl
+            const avatar = conv.avatarUrl ? absoluteMediaUrl(conv.avatarUrl) : null
             const isUnarchiving = unarchiveMutation.isPending && unarchiveMutation.variables === conv.id
 
             return (

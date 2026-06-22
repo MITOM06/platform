@@ -7,7 +7,7 @@ import { useQueryClient } from '@tanstack/react-query'
 import { useTranslations } from 'next-intl'
 import {
   UserPlus, Pencil, Check, X, LogOut, Camera, FolderOpen, Images, Bot,
-  Palette, SmilePlus, Users,
+  Palette, SmilePlus, Users, PenLine,
 } from 'lucide-react'
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet'
 import { Button } from '@/components/ui/button'
@@ -20,8 +20,11 @@ import { authService } from '@/lib/api/auth'
 import {
   useQuickReaction, setQuickReaction, quickReactionSystemMessage,
 } from '@/lib/quick-reaction'
+import { absoluteMediaUrl } from '@/lib/media'
 import { WallpaperPickerModal } from './WallpaperPickerModal'
 import { GroupMemberRow } from './group/GroupMemberRow'
+import { NicknamesModal } from './group/NicknamesModal'
+import { setNickname, nicknameSystemMessage, useNicknames } from '@/lib/nicknames'
 import { PinnedMessagesSection } from './PinnedMessagesSection'
 import type { Conversation, UserSearchResult } from '@/lib/api/types'
 import { useRouter } from 'next/navigation'
@@ -47,8 +50,29 @@ export function GroupSettingsDrawer({ conversation, currentUserId, open, onClose
   const [searchResults, setSearchResults] = useState<UserSearchResult[]>([])
   const [saving, setSaving] = useState(false)
   const [wallpaperOpen, setWallpaperOpen] = useState(false)
+  const [nicknamesOpen, setNicknamesOpen] = useState(false)
   const isAdmin = conversation.admins.includes(currentUserId)
   const quickReaction = useQuickReaction(conversation.id)
+
+  // Nickname editing covers every human group member (AI bot excluded). Stored
+  // client-local + broadcast via `system.nickname.changed:` (same as direct chats).
+  const AI_BOT_ID = 'ai-bot-000000000000000000000001'
+  const nicknameParticipantIds = conversation.participants.filter((p) => p !== AI_BOT_ID)
+  const nicknameMap = useNicknames(conversation.id)
+
+  const saveNickname = async (targetId: string, value: string) => {
+    setNickname(conversation.id, targetId, value)
+    try {
+      await chatService.sendMessage(
+        conversation.id,
+        nicknameSystemMessage(targetId, value.trim()),
+        'system',
+      )
+    } catch {
+      // local nickname still applied even if broadcast fails
+    }
+    toast.success(t('nicknameSuccess'))
+  }
 
   const invalidate = () => {
     queryClient.invalidateQueries({ queryKey: ['conversations'] })
@@ -173,7 +197,7 @@ export function GroupSettingsDrawer({ conversation, currentUserId, open, onClose
             <div className="relative group">
               <Avatar className="size-20">
                 {conversation.avatarUrl ? (
-                  <img src={conversation.avatarUrl} alt={t('groupAvatarAlt')} className="w-full h-full object-cover" />
+                  <img src={absoluteMediaUrl(conversation.avatarUrl)} alt={t('groupAvatarAlt')} className="w-full h-full object-cover" />
                 ) : (
                   <AvatarFallback className="text-2xl bg-gradient-to-br from-pon-cyan to-pon-peach text-white">
                     {(conversation.name ?? 'Group')[0]?.toUpperCase()}
@@ -299,6 +323,10 @@ export function GroupSettingsDrawer({ conversation, currentUserId, open, onClose
                     </button>
                   )
                 )}
+                <button onClick={() => setNicknamesOpen(true)} className={itemBtnCls}>
+                  <PenLine className="size-4 text-muted-foreground" />
+                  <span>{t('editNicknames')}</span>
+                </button>
                 <button onClick={() => setWallpaperOpen(true)} className={itemBtnCls}>
                   <Palette className="size-4 text-muted-foreground" />
                   <span>{t('wallpaper')}</span>
@@ -380,6 +408,17 @@ export function GroupSettingsDrawer({ conversation, currentUserId, open, onClose
       conversationId={conversation.id}
       open={wallpaperOpen}
       onClose={() => setWallpaperOpen(false)}
+    />
+
+    {/* Nicknames modal — self + all members (same transport as direct chats) */}
+    <NicknamesModal
+      open={nicknamesOpen}
+      onClose={() => setNicknamesOpen(false)}
+      participantIds={nicknameParticipantIds}
+      currentUserId={currentUserId}
+      nicknames={nicknameMap}
+      onSave={saveNickname}
+      saving={saving}
     />
     </>
   )

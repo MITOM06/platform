@@ -1983,4 +1983,16 @@ class AppLocalizationsVi extends AppLocalizations {
   String directoryConnected(String provider) {
     return 'Đã kết nối $provider.';
   }
+
+  @override
+  String get editNicknames => 'Sửa biệt danh';
+
+  @override
+  String get nicknameModalTitle => 'Biệt danh';
+
+  @override
+  String get nicknameNonePlaceholder => 'Chưa có biệt danh';
+
+  @override
+  String get nicknameYouSuffix => '(bạn)';
 }

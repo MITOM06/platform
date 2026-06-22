@@ -159,12 +159,13 @@ class _WallpaperDialogState extends State<_WallpaperDialog> {
     if (_isImage && (_fit != 'cover' || _scale != kWallpaperDefaultScale)) {
       value = '$_selected#fit=$_fit&scale=$_scale';
     }
+    // Issue 6: wallpaper is now server-shared. setWallpaper applies the value
+    // optimistically AND persists it via PUT /conversations/{id}/wallpaper,
+    // which broadcasts CONVERSATION_UPDATED to every member. The legacy
+    // `system.theme.changed:` send is dropped — the server is authoritative.
     widget.ref
         .read(chatWallpaperProvider(widget.conversationId).notifier)
         .setWallpaper(value);
-    widget.ref
-        .read(chatNotifierProvider(widget.conversationId).notifier)
-        .sendMessage('system.theme.changed:$value', type: 'system');
     Navigator.pop(context);
   }
 

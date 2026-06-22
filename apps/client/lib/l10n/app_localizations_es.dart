@@ -2002,4 +2002,16 @@ class AppLocalizationsEs extends AppLocalizations {
   String directoryConnected(String provider) {
     return '$provider conectado.';
   }
+
+  @override
+  String get editNicknames => 'Editar apodos';
+
+  @override
+  String get nicknameModalTitle => 'Apodos';
+
+  @override
+  String get nicknameNonePlaceholder => 'Sin apodo';
+
+  @override
+  String get nicknameYouSuffix => '(tú)';
 }

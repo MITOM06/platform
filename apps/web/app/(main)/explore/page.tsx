@@ -12,6 +12,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { useDebounce } from '@/lib/hooks/use-debounce'
+import { absoluteMediaUrl } from '@/lib/media'
 
 export default function ExplorePage() {
   const t = useTranslations('explore')
@@ -86,7 +87,7 @@ export default function ExplorePage() {
               >
                 <Avatar className="size-14 shrink-0">
                   {channel.avatarUrl ? (
-                    <AvatarImage src={channel.avatarUrl} alt={channel.name ?? ''} className="object-cover" />
+                    <AvatarImage src={absoluteMediaUrl(channel.avatarUrl)} alt={channel.name ?? ''} className="object-cover" />
                   ) : (
                     <AvatarFallback className="bg-pon-cyan/10 text-pon-cyan text-lg">
                       <Hash className="size-6" />

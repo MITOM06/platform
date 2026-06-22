@@ -8,6 +8,7 @@ import com.platform.chatservice.dto.MembersRequest;
 import com.platform.chatservice.dto.MessageResponse;
 import com.platform.chatservice.dto.PageResponse;
 import com.platform.chatservice.dto.UpdateConversationRequest;
+import com.platform.chatservice.dto.WallpaperRequest;
 import com.platform.chatservice.exception.UnauthorizedException;
 import com.platform.chatservice.security.UserPrincipal;
 import com.platform.chatservice.service.AttachmentService;
@@ -66,6 +67,19 @@ public class ConversationController {
       @PathVariable String id, @RequestBody UpdateConversationRequest request) {
     ConversationResponse updated =
         conversationService.updateGroup(currentUserId(), id, request.name(), request.avatarUrl());
+    broadcastConversationUpdated(updated);
+    return updated;
+  }
+
+  /**
+   * Set the shared conversation wallpaper (direct + group). Any participant may set it — NOT
+   * admin-gated. Broadcasts CONVERSATION_UPDATED so every member re-resolves the wallpaper.
+   */
+  @PutMapping("/{id}/wallpaper")
+  public ConversationResponse setWallpaper(
+      @PathVariable String id, @RequestBody WallpaperRequest request) {
+    ConversationResponse updated =
+        conversationService.setWallpaper(currentUserId(), id, request.wallpaper());
     broadcastConversationUpdated(updated);
     return updated;
   }

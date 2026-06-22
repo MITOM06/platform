@@ -3750,6 +3750,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Connected {provider}.'**
   String directoryConnected(String provider);
+
+  /// No description provided for @editNicknames.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit nicknames'**
+  String get editNicknames;
+
+  /// No description provided for @nicknameModalTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Nicknames'**
+  String get nicknameModalTitle;
+
+  /// No description provided for @nicknameNonePlaceholder.
+  ///
+  /// In en, this message translates to:
+  /// **'No nickname'**
+  String get nicknameNonePlaceholder;
+
+  /// No description provided for @nicknameYouSuffix.
+  ///
+  /// In en, this message translates to:
+  /// **'(you)'**
+  String get nicknameYouSuffix;
 }
 
 class _AppLocalizationsDelegate

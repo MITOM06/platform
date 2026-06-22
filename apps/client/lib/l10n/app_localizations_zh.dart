@@ -1934,4 +1934,16 @@ class AppLocalizationsZh extends AppLocalizations {
   String directoryConnected(String provider) {
     return '已连接 $provider。';
   }
+
+  @override
+  String get editNicknames => '编辑昵称';
+
+  @override
+  String get nicknameModalTitle => '昵称';
+
+  @override
+  String get nicknameNonePlaceholder => '暂无昵称';
+
+  @override
+  String get nicknameYouSuffix => '(你)';
 }

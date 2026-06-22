@@ -6,6 +6,10 @@ export function useUser(userId: string | undefined) {
     queryKey: ['user', userId],
     queryFn: () => authService.getUser(userId!),
     enabled: !!userId,
-    staleTime: 5 * 60 * 1000, // cache for 5 minutes
+    // Short staleTime so a peer's avatar/displayName change is picked up quickly.
+    // Avatar uploads produce a NEW unique URL per change (POST /api/uploads →
+    // /api/uploads/<objectId>), so a refetched profile carries a fresh image path
+    // that bypasses the HTTP cache without any volatile cache-busting query param.
+    staleTime: 30 * 1000, // 30s
   })
 }

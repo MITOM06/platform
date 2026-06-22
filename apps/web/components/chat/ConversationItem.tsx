@@ -12,6 +12,7 @@ import {
   Ban, ShieldOff, Trash2,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { absoluteMediaUrl } from '@/lib/media'
 import { Badge } from '@/components/ui/badge'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import {
@@ -157,7 +158,7 @@ const ConversationItemInner = function ConversationItem({ conversation: conv }: 
               </AvatarFallback>
             ) : (
               <>
-                {avatarUrl && <AvatarImage src={avatarUrl} alt={displayName} />}
+                {avatarUrl && <AvatarImage src={absoluteMediaUrl(avatarUrl)} alt={displayName} />}
                 <AvatarFallback className="text-sm font-medium">
                   {getInitials(displayName)}
                 </AvatarFallback>

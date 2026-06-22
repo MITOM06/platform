@@ -7,8 +7,7 @@ import {
   AccordionContent, AccordionItem, AccordionTrigger,
 } from '@/components/ui/accordion'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
+import { NicknamesModal } from './NicknamesModal'
 
 const QUICK_REACTION_EMOJIS = [
   '👍', '❤️', '😂', '😮', '😢', '🙏', '🔥', '🎉', '😍', '👏', '💯', '😎',
@@ -21,10 +20,12 @@ interface Props {
   isGroup: boolean
   otherUserId?: string | null
   currentUserId: string
+  /** All participants whose nicknames can be edited (self + others). */
+  participantIds: string[]
+  /** Current nickname per userId. */
+  nicknames: Record<string, string>
   saving: boolean
   quickReaction: string
-  initialOtherNickname: string
-  initialSelfNickname: string
   onOpenWallpaper: () => void
   onPickQuickReaction: (emoji: string) => void
   onSaveNickname: (targetId: string, value: string) => void
@@ -37,10 +38,10 @@ export function CustomizeChatSection({
   isGroup,
   otherUserId,
   currentUserId,
+  participantIds,
+  nicknames,
   saving,
   quickReaction,
-  initialOtherNickname,
-  initialSelfNickname,
   onOpenWallpaper,
   onPickQuickReaction,
   onSaveNickname,
@@ -48,11 +49,13 @@ export function CustomizeChatSection({
   onCloseDrawer,
 }: Props) {
   const t = useTranslations('chat')
-  const tCommon = useTranslations('common')
-  const [nicknameOtherValue, setNicknameOtherValue] = useState(initialOtherNickname)
-  const [nicknameSelfValue, setNicknameSelfValue] = useState(initialSelfNickname)
+  const [nicknamesOpen, setNicknamesOpen] = useState(false)
+
+  // Edit nicknames is offered for both direct and group chats.
+  const canEditNicknames = (isDirect && !!otherUserId) || isGroup
 
   return (
+    <>
     <AccordionItem value="customize" className="border-none">
       <AccordionTrigger className="hover:no-underline py-2 data-[state=open]:text-pon-cyan">
         <span className="font-semibold text-sm">{t('customizeChatCategory')}</span>
@@ -89,31 +92,11 @@ export function CustomizeChatSection({
           </PopoverContent>
         </Popover>
 
-        {isDirect && otherUserId && (
-          <div className="px-2 py-2 space-y-3">
-            <div className="flex items-center gap-2 text-sm">
-              <PenLine className="size-4 text-muted-foreground" />
-              <span>{t('nicknames')}</span>
-            </div>
-            <NicknameRow
-              label={t('nicknameOther')}
-              placeholder={t('nicknamePlaceholder')}
-              saveLabel={tCommon('save')}
-              value={nicknameOtherValue}
-              onChange={setNicknameOtherValue}
-              onSave={() => onSaveNickname(otherUserId, nicknameOtherValue)}
-              saving={saving}
-            />
-            <NicknameRow
-              label={t('nicknameYou')}
-              placeholder={t('nicknamePlaceholder')}
-              saveLabel={tCommon('save')}
-              value={nicknameSelfValue}
-              onChange={setNicknameSelfValue}
-              onSave={() => onSaveNickname(currentUserId, nicknameSelfValue)}
-              saving={saving}
-            />
-          </div>
+        {canEditNicknames && (
+          <button onClick={() => setNicknamesOpen(true)} className={ROW_CLS}>
+            <PenLine className="size-4 text-muted-foreground" />
+            <span>{t('editNicknames')}</span>
+          </button>
         )}
 
         {isGroup && onOpenGroupInfo && (
@@ -130,35 +113,18 @@ export function CustomizeChatSection({
         )}
       </AccordionContent>
     </AccordionItem>
-  )
-}
 
-function NicknameRow({
-  label, placeholder, saveLabel, value, onChange, onSave, saving,
-}: {
-  label: string
-  placeholder: string
-  saveLabel: string
-  value: string
-  onChange: (v: string) => void
-  onSave: () => void
-  saving: boolean
-}) {
-  return (
-    <div className="space-y-1.5">
-      <p className="text-[11px] text-muted-foreground">{label}</p>
-      <div className="flex gap-2">
-        <Input
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
-          placeholder={placeholder}
-          maxLength={40}
-          className="h-8 text-sm"
-        />
-        <Button size="sm" onClick={onSave} disabled={saving}>
-          {saveLabel}
-        </Button>
-      </div>
-    </div>
+    {canEditNicknames && (
+      <NicknamesModal
+        open={nicknamesOpen}
+        onClose={() => setNicknamesOpen(false)}
+        participantIds={participantIds}
+        currentUserId={currentUserId}
+        nicknames={nicknames}
+        onSave={onSaveNickname}
+        saving={saving}
+      />
+    )}
+    </>
   )
 }

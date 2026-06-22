@@ -44,6 +44,16 @@ export const chatService = {
   updateGroup: (id: string, name?: string, avatarUrl?: string) =>
     chatApi.put<Conversation>(`/api/conversations/${id}`, { name, avatarUrl }).then((r) => r.data),
 
+  /**
+   * Set the shared conversation wallpaper (direct + group). Any participant may
+   * set it — the backend broadcasts CONVERSATION_UPDATED so every member
+   * re-resolves the wallpaper. Empty string resets to the default for everyone.
+   */
+  setWallpaper: (id: string, wallpaper: string) =>
+    chatApi
+      .put<Conversation>(`/api/conversations/${id}/wallpaper`, { wallpaper })
+      .then((r) => r.data),
+
   addMembers: (id: string, userIds: string[]) =>
     chatApi.post<Conversation>(`/api/conversations/${id}/members`, { userIds }).then((r) => r.data),
 

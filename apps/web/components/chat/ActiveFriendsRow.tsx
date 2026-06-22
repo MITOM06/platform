@@ -4,6 +4,7 @@ import { useQuery } from '@tanstack/react-query'
 import { authService } from '@/lib/api/auth'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area'
+import { absoluteMediaUrl } from '@/lib/media'
 
 export function ActiveFriendsRow() {
   const { data: activeFriends = [] } = useQuery({
@@ -22,7 +23,7 @@ export function ActiveFriendsRow() {
             <div key={friend.id || friend._id} className="flex flex-col items-center gap-1.5 cursor-pointer group">
               <div className="relative">
                 <Avatar className="size-12 ring-2 ring-transparent transition-all group-hover:ring-pon-cyan/50">
-                  <AvatarImage src={friend.avatarUrl || undefined} />
+                  <AvatarImage src={friend.avatarUrl ? absoluteMediaUrl(friend.avatarUrl) : undefined} />
                   <AvatarFallback className="bg-gradient-to-br from-pon-cyan/80 to-pon-peach/80 text-white font-medium">
                     {friend.displayName[0]?.toUpperCase()}
                   </AvatarFallback>

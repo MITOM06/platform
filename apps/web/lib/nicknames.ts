@@ -52,6 +52,18 @@ export function applyNicknameSystemMessage(convId: string, content: string): voi
   writeNickname(convId, rest.slice(0, idx), rest.slice(idx + 1))
 }
 
+/** Reactive read of ALL nicknames within a conversation (re-reads on change). */
+export function useNicknames(convId: string): Record<string, string> {
+  const [map, setMap] = useState<Record<string, string>>({})
+  useEffect(() => {
+    const update = () => setMap(getNicknames(convId))
+    update()
+    window.addEventListener(NICKNAME_EVENT, update)
+    return () => window.removeEventListener(NICKNAME_EVENT, update)
+  }, [convId])
+  return map
+}
+
 /** Reactive read of a single user's nickname within a conversation. */
 export function useNickname(convId: string, userId?: string): string | undefined {
   const [nick, setNick] = useState<string | undefined>(undefined)

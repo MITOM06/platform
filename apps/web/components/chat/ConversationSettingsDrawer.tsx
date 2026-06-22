@@ -5,7 +5,6 @@ import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import { useQueryClient, useQuery } from '@tanstack/react-query'
 import { useTranslations } from 'next-intl'
-import { Users, Info, Cake } from 'lucide-react'
 import {
   Sheet, SheetContent,
 } from '@/components/ui/sheet'
@@ -24,7 +23,7 @@ import { CustomizeChatSection } from './group/CustomizeChatSection'
 import { FilesMediaSection } from './group/FilesMediaSection'
 import { PrivacySupportSection } from './group/PrivacySupportSection'
 import { PinnedMessagesSection } from './PinnedMessagesSection'
-import { getNickname, setNickname, nicknameSystemMessage } from '@/lib/nicknames'
+import { setNickname, nicknameSystemMessage, useNicknames } from '@/lib/nicknames'
 import {
   useQuickReaction, setQuickReaction, quickReactionSystemMessage,
 } from '@/lib/quick-reaction'
@@ -73,6 +72,11 @@ export function ConversationSettingsDrawer({
   const otherUserId = isDirect && !isAI
     ? conversation.participants.find((p) => p !== currentUserId)
     : null
+
+  // Nickname editing covers every human participant (self + others), AI bot excluded.
+  const AI_BOT_ID = 'ai-bot-000000000000000000000001'
+  const nicknameParticipantIds = conversation.participants.filter((p) => p !== AI_BOT_ID)
+  const nicknameMap = useNicknames(conversation.id)
 
   const quickReaction = useQuickReaction(conversation.id)
 
@@ -252,44 +256,6 @@ export function ConversationSettingsDrawer({
 
             {/* Accordions */}
             <Accordion type="multiple" className="w-full px-1 space-y-2">
-              
-              {/* Chat Info */}
-              <AccordionItem value="info" className="border-none">
-                <AccordionTrigger className="hover:no-underline py-2 data-[state=open]:text-pon-cyan">
-                  <span className="font-semibold text-sm">{t('chatInfoCategory')}</span>
-                </AccordionTrigger>
-                <AccordionContent className="pb-4 pt-1 space-y-1">
-                  {isGroup ? (
-                    <div className="flex items-center gap-3 text-sm px-2 py-2">
-                      <Users className="size-4 text-muted-foreground" />
-                      <span>{t('membersCount', { count: conversation.participants.length })}</span>
-                    </div>
-                  ) : otherUser ? (
-                    <>
-                      {otherUser.bio && (
-                        <div className="flex gap-3 text-sm px-2 py-2">
-                          <Info className="size-4 shrink-0 mt-0.5 text-muted-foreground" />
-                          <div className="flex flex-col gap-0.5">
-                            <span className="font-medium">{t('bio')}</span>
-                            <span className="text-muted-foreground">{otherUser.bio}</span>
-                          </div>
-                        </div>
-                      )}
-                      {otherUser.dateOfBirth && (
-                        <div className="flex gap-3 text-sm px-2 py-2">
-                          <Cake className="size-4 shrink-0 mt-0.5 text-muted-foreground" />
-                          <div className="flex flex-col gap-0.5">
-                            <span className="font-medium">{t('dateOfBirth')}</span>
-                            <span className="text-muted-foreground">
-                              {new Date(otherUser.dateOfBirth).toLocaleDateString()}
-                            </span>
-                          </div>
-                        </div>
-                      )}
-                    </>
-                  ) : null}
-                </AccordionContent>
-              </AccordionItem>
 
               {/* Pinned Messages */}
               {conversation.pinnedMessages.length > 0 && (
@@ -325,10 +291,10 @@ export function ConversationSettingsDrawer({
                 isGroup={isGroup}
                 otherUserId={otherUserId}
                 currentUserId={currentUserId}
+                participantIds={nicknameParticipantIds}
+                nicknames={nicknameMap}
                 saving={saving}
                 quickReaction={quickReaction}
-                initialOtherNickname={otherUserId ? getNickname(conversation.id, otherUserId) ?? '' : ''}
-                initialSelfNickname={getNickname(conversation.id, currentUserId) ?? ''}
                 onOpenWallpaper={() => setWallpaperOpen(true)}
                 onPickQuickReaction={handlePickQuickReaction}
                 onSaveNickname={saveNickname}

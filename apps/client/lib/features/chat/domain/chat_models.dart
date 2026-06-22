@@ -68,6 +68,9 @@ class ConversationModel {
   final List<PinnedMessageModel> pinnedMessages; // pinned messages (Task 53)
   final bool isMuted;
   final bool isArchived;
+  // Shared per-conversation wallpaper (Issue 6). Null = default. Stored on the
+  // Conversation document server-side and distributed via CONVERSATION_UPDATED.
+  final String? wallpaper;
 
   const ConversationModel({
     required this.id,
@@ -87,6 +90,7 @@ class ConversationModel {
     this.pinnedMessages = const [],
     this.isMuted = false,
     this.isArchived = false,
+    this.wallpaper,
   });
 
   bool get isGroup => type == 'group';
@@ -121,6 +125,7 @@ class ConversationModel {
           .toList(),
       isMuted: json['isMuted'] as bool? ?? false,
       isArchived: json['isArchived'] as bool? ?? false,
+      wallpaper: json['wallpaper'] as String?,
     );
   }
 
@@ -142,6 +147,8 @@ class ConversationModel {
     List<PinnedMessageModel>? pinnedMessages,
     bool? isMuted,
     bool? isArchived,
+    String? wallpaper,
+    bool clearWallpaper = false,
   }) {
     return ConversationModel(
       id: id ?? this.id,
@@ -161,6 +168,7 @@ class ConversationModel {
       pinnedMessages: pinnedMessages ?? this.pinnedMessages,
       isMuted: isMuted ?? this.isMuted,
       isArchived: isArchived ?? this.isArchived,
+      wallpaper: clearWallpaper ? null : (wallpaper ?? this.wallpaper),
     );
   }
 }

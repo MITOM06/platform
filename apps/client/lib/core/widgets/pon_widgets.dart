@@ -273,6 +273,11 @@ class PonTextField extends StatefulWidget {
   final ValueChanged<String>? onChanged;
   final bool? enabled;
 
+  /// Autofill hints for the platform autofill service. Pass `const []` to
+  /// explicitly opt OUT of OS/browser autofill (e.g. a current-password field
+  /// that must start empty — Issue 4). Null = framework default behaviour.
+  final Iterable<String>? autofillHints;
+
   const PonTextField({
     super.key,
     required this.controller,
@@ -293,6 +298,7 @@ class PonTextField extends StatefulWidget {
     this.inputFormatters,
     this.onChanged,
     this.enabled,
+    this.autofillHints,
   });
 
   @override
@@ -361,6 +367,7 @@ class _PonTextFieldState extends State<PonTextField> {
         style: widget.style,
         onChanged: widget.onChanged,
         enabled: widget.enabled,
+        autofillHints: widget.autofillHints,
         inputFormatters: widget.inputFormatters != null
             ? List<TextInputFormatter>.from(widget.inputFormatters!)
             : null,

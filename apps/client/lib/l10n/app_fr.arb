@@ -704,5 +704,9 @@
   "directorySave": "Enregistrer",
   "directoryKeyTitle": "Connecter {provider}",
   "directoryKeyLabel": "Clé API",
-  "directoryConnected": "{provider} connecté."
+  "directoryConnected": "{provider} connecté.",
+  "editNicknames": "Modifier les surnoms",
+  "nicknameModalTitle": "Surnoms",
+  "nicknameNonePlaceholder": "Aucun surnom",
+  "nicknameYouSuffix": "(vous)"
 }

@@ -152,6 +152,10 @@ class __ChangePasswordDialogContentState
               focusColor: activeColor,
               textInputAction: TextInputAction.next,
               enabled: !_isLoading,
+              // Issue 4: never let OS/browser autofill prefill the current
+              // password — the field must start empty (mirrors web's
+              // autoComplete suppression).
+              autofillHints: const [],
             ),
             const SizedBox(height: 12),
             PonTextField(

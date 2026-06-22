@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { Loader2 } from 'lucide-react'
 import { useDirectoryAdmin } from '@/lib/hooks/use-connectors'
@@ -64,19 +64,27 @@ export function DirectoryAdminDialog({
   const [authorizeUrl, setAuthorizeUrl] = useState('')
   const [tokenUrl, setTokenUrl] = useState('')
 
-  useEffect(() => {
-    if (!open) return
-    setSlug(entry?.slug ?? '')
-    setName(entry?.name ?? '')
-    setDescription(entry?.description ?? '')
-    setMcpUrl(entry?.mcpUrl ?? '')
-    setAuthMode(entry?.authMode ?? 'mcp-oauth')
-    setTier(entry?.tier ?? 'both')
-    setEnvClientIdName('')
-    setEnvClientSecretName('')
-    setAuthorizeUrl('')
-    setTokenUrl('')
-  }, [open, entry])
+  // Seed the form when the dialog opens (and re-seed if it opens for a different
+  // entry). Done during render (React-recommended) instead of in an effect to
+  // avoid cascading renders. Keyed on open + entry id so closing then reopening
+  // re-seeds cleanly.
+  const formKey = open ? (entry?.id ?? 'new') : 'closed'
+  const [prevFormKey, setPrevFormKey] = useState(formKey)
+  if (formKey !== prevFormKey) {
+    setPrevFormKey(formKey)
+    if (open) {
+      setSlug(entry?.slug ?? '')
+      setName(entry?.name ?? '')
+      setDescription(entry?.description ?? '')
+      setMcpUrl(entry?.mcpUrl ?? '')
+      setAuthMode(entry?.authMode ?? 'mcp-oauth')
+      setTier(entry?.tier ?? 'both')
+      setEnvClientIdName('')
+      setEnvClientSecretName('')
+      setAuthorizeUrl('')
+      setTokenUrl('')
+    }
+  }
 
   const pending = create.isPending || update.isPending
 
