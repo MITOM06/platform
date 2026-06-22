@@ -61,6 +61,12 @@ export interface VerifyOtpResponse {
   message: string
 }
 
+export interface SsoInfo {
+  enabled: boolean
+  loginUrl: string | null
+  buttonLabel: string
+}
+
 export const authService = {
   // Request bodies are typed from the OpenAPI-derived DTOs (see lib/api/types.ts)
   // so the client payloads stay in lockstep with the auth-service contract.
@@ -87,6 +93,9 @@ export const authService = {
 
   exchangeCode: (code: string, deviceId?: string) =>
     authApi.post<LoginResponse>('/auth/exchange', { code, deviceId: deviceId ?? 'web', platform: 'web' }),
+
+  // Public: tells the login page whether to render the "Sign in with SSO" button.
+  getSsoInfo: () => authApi.get<SsoInfo>('/auth/sso/info').then((r) => r.data),
 
   logout: () =>
     authApi.post('/auth/logout').catch(() => {}),

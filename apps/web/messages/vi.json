@@ -56,7 +56,8 @@
       "emailNotFound": "Email chưa được đăng ký",
       "systemError": "Lỗi hệ thống, vui lòng thử lại",
       "orContinueWith": "Hoặc tiếp tục với",
-      "googleLogin": "Đăng nhập bằng Google"
+      "googleLogin": "Đăng nhập bằng Google",
+      "ssoButton": "Đăng nhập bằng SSO"
     },
     "register": {
       "title": "Tạo tài khoản",

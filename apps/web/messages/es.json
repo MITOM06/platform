@@ -56,7 +56,8 @@
       "emailNotFound": "Email is not registered",
       "systemError": "System error, please try again",
       "orContinueWith": "Or continue with",
-      "googleLogin": "Sign in with Google"
+      "googleLogin": "Sign in with Google",
+      "ssoButton": "Iniciar sesión con SSO"
     },
     "register": {
       "title": "Create Account",
