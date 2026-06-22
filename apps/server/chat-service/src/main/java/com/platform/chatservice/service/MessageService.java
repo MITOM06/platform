@@ -450,7 +450,7 @@ public class MessageService {
    * the main send flow.
    */
   private static final Set<String> AI_HISTORY_SKIP_TYPES =
-      Set.of("voice", "file", "sticker", "system", "call_log");
+      Set.of("voice", "file", "sticker", "system", "call_log", "meeting_summary");
 
   private static final Pattern AI_MENTION_STRIP = Pattern.compile("(?i)@(AI|ponai)\\b");
 
