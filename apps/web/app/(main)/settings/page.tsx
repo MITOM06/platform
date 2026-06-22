@@ -160,7 +160,7 @@ export default function SettingsPage() {
           <div className="absolute -top-24 -left-24 w-72 h-72 rounded-full bg-pon-cyan/5 blur-3xl pointer-events-none dark:bg-pon-cyan/8" />
           <div className="absolute -bottom-24 -right-24 w-72 h-72 rounded-full bg-pon-peach/5 blur-3xl pointer-events-none dark:bg-pon-peach/8" />
 
-          <div className="relative max-w-md mx-auto px-6 py-8 pb-24 md:pb-8">
+          <div className="relative max-w-3xl mx-auto px-6 md:px-10 py-8 pb-24 md:pb-12">
             <div className="flex flex-col items-center mb-10">
               <div className="relative">
                 <Avatar className="size-20 ring-2 ring-primary/20 ring-offset-2 ring-offset-background">
@@ -174,7 +174,7 @@ export default function SettingsPage() {
               <p className="text-sm text-muted-foreground">{user.email}</p>
             </div>
 
-            <div className="space-y-3">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <SettingsCard
                 icon={<User className="size-5 text-primary" />}
                 iconBg="rgba(106,201,255,0.12)"
@@ -276,22 +276,22 @@ export default function SettingsPage() {
                 title={t('changePassword')}
                 onClick={() => setChangePasswordOpen(true)}
               />
+            </div>
 
-              <div className="pt-4">
-                <SettingsCard
-                  icon={
-                    loggingOut ? (
-                      <Loader2 className="size-5 text-destructive animate-spin" />
-                    ) : (
-                      <LogOut className="size-5 text-destructive" />
-                    )
-                  }
-                  iconBg="rgba(239,68,68,0.1)"
-                  title={t('logout')}
-                  onClick={handleLogout}
-                  destructive
-                />
-              </div>
+            <div className="pt-4">
+              <SettingsCard
+                icon={
+                  loggingOut ? (
+                    <Loader2 className="size-5 text-destructive animate-spin" />
+                  ) : (
+                    <LogOut className="size-5 text-destructive" />
+                  )
+                }
+                iconBg="rgba(239,68,68,0.1)"
+                title={t('logout')}
+                onClick={handleLogout}
+                destructive
+              />
             </div>
 
             <div className="mt-12 text-center">

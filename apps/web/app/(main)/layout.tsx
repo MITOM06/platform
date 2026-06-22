@@ -97,6 +97,13 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
       stompService.subscribe('/user/queue/notifications', (frame) => {
         try {
           const payload: NotificationPayload = JSON.parse(frame.body)
+          // Backend sends RATE_LIMITED to /user/queue/notifications when the
+          // message send-rate is exceeded (mirror of Flutter conversations_notifier).
+          // Surface it as an error toast so the user knows their message was dropped.
+          if (payload.type === 'RATE_LIMITED') {
+            toast.error(t('rateLimitError'))
+            return
+          }
           if (payload.type !== 'NEW_MESSAGE' && payload.type !== 'MENTIONED_YOU') {
             return
           }
