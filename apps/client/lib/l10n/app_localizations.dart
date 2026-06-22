@@ -3426,6 +3426,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No department'**
   String get newConvNoDepartment;
+
+  /// No description provided for @loginWithSso.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in with SSO'**
+  String get loginWithSso;
 }
 
 class _AppLocalizationsDelegate

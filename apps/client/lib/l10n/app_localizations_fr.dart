@@ -1836,4 +1836,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get newConvNoDepartment => 'Aucun département';
+
+  @override
+  String get loginWithSso => 'Se connecter avec SSO';
 }

@@ -1809,4 +1809,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get newConvNoDepartment => 'No department';
+
+  @override
+  String get loginWithSso => 'Sign in with SSO';
 }

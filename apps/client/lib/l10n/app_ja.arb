@@ -650,5 +650,6 @@
   "adminAuditPrev": "前へ",
   "adminAuditNext": "次へ",
   "newConvDepartment": "部門（任意）",
-  "newConvNoDepartment": "部門なし"
+  "newConvNoDepartment": "部門なし",
+  "loginWithSso": "SSO でログイン"
 }

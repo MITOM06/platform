@@ -1772,4 +1772,7 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get newConvNoDepartment => '部門なし';
+
+  @override
+  String get loginWithSso => 'SSO でログイン';
 }

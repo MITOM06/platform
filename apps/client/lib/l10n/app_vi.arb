@@ -650,5 +650,6 @@
   "adminAuditPrev": "Trước",
   "adminAuditNext": "Sau",
   "newConvDepartment": "Phòng ban (tùy chọn)",
-  "newConvNoDepartment": "Không có phòng ban"
+  "newConvNoDepartment": "Không có phòng ban",
+  "loginWithSso": "Đăng nhập bằng SSO"
 }

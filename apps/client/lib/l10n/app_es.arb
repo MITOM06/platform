@@ -650,5 +650,6 @@
   "adminAuditPrev": "Anterior",
   "adminAuditNext": "Siguiente",
   "newConvDepartment": "Departamento (opcional)",
-  "newConvNoDepartment": "Sin departamento"
+  "newConvNoDepartment": "Sin departamento",
+  "loginWithSso": "Iniciar sesión con SSO"
 }

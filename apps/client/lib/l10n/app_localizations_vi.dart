@@ -1808,4 +1808,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get newConvNoDepartment => 'Không có phòng ban';
+
+  @override
+  String get loginWithSso => 'Đăng nhập bằng SSO';
 }

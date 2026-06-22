@@ -1774,4 +1774,7 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get newConvNoDepartment => '부서 없음';
+
+  @override
+  String get loginWithSso => 'SSO로 로그인';
 }

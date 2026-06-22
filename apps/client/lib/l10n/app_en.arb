@@ -901,5 +901,6 @@
   "adminAuditPrev": "Previous",
   "adminAuditNext": "Next",
   "newConvDepartment": "Department (optional)",
-  "newConvNoDepartment": "No department"
+  "newConvNoDepartment": "No department",
+  "loginWithSso": "Sign in with SSO"
 }

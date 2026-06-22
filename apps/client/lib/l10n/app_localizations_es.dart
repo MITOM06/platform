@@ -1827,4 +1827,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get newConvNoDepartment => 'Sin departamento';
+
+  @override
+  String get loginWithSso => 'Iniciar sesión con SSO';
 }

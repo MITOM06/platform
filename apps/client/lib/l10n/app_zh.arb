@@ -650,5 +650,6 @@
   "adminAuditPrev": "上一页",
   "adminAuditNext": "下一页",
   "newConvDepartment": "部门（可选）",
-  "newConvNoDepartment": "无部门"
+  "newConvNoDepartment": "无部门",
+  "loginWithSso": "使用 SSO 登录"
 }

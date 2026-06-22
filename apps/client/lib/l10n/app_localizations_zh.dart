@@ -1764,4 +1764,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get newConvNoDepartment => '无部门';
+
+  @override
+  String get loginWithSso => '使用 SSO 登录';
 }
