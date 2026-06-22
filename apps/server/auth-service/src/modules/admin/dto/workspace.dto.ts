@@ -1,11 +1,37 @@
+import { Type } from 'class-transformer';
 import {
   IsArray,
+  IsBoolean,
   IsHexColor,
   IsObject,
   IsOptional,
   IsString,
+  ValidateNested,
 } from 'class-validator';
 import { ApiPropertyOptional } from '@nestjs/swagger';
+
+export class WorkspaceSsoDto {
+  @IsOptional()
+  @IsBoolean()
+  enabled?: boolean;
+
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  allowedDomains?: string[];
+
+  @IsOptional()
+  @IsObject()
+  groupRoleMap?: Record<string, string>;
+
+  @IsOptional()
+  @IsObject()
+  groupDeptMap?: Record<string, string>;
+
+  @IsOptional()
+  @IsString()
+  defaultRole?: string;
+}
 
 export class UpdateWorkspaceDto {
   @ApiPropertyOptional()
@@ -36,4 +62,10 @@ export class UpdateWorkspaceDto {
   @IsArray()
   @IsString({ each: true })
   connectorAllowList?: string[];
+
+  @ApiPropertyOptional({ description: 'SSO (OIDC) mapping config' })
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => WorkspaceSsoDto)
+  sso?: WorkspaceSsoDto;
 }
