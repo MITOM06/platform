@@ -3,9 +3,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart' show launchUrl, LaunchMode;
+import '../../../core/config/app_config.dart';
 import '../../../core/l10n/l10n_ext.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/pon_widgets.dart';
+import '../data/auth_repository.dart';
 import '../domain/auth_provider.dart';
 import '../domain/auth_state.dart';
 import '../utils/auth_error.dart';
@@ -23,10 +25,16 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _passwordController = TextEditingController();
   bool _isLoading = false;
   bool _obscurePassword = true;
+  bool _ssoEnabled = false;
 
   @override
   void initState() {
     super.initState();
+    // Discover whether this deployment offers OIDC SSO (shows the SSO button).
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      final info = await ref.read(authRepositoryProvider).getSsoInfo();
+      if (mounted) setState(() => _ssoEnabled = info.enabled);
+    });
     // Listen for login errors
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.listenManual<AsyncValue<AuthState>>(authNotifierProvider,
@@ -62,6 +70,21 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   Future<void> _launchOAuth(String provider) async {
     const authBase = String.fromEnvironment('AUTH_BASE_URL', defaultValue: 'https://auth-service-942942821810.asia-southeast1.run.app');
     final uri = Uri.parse('$authBase/auth/social/$provider/init?platform=mobile');
+    try {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(context.l10n.errCannotOpenLink)),
+        );
+      }
+    }
+  }
+
+  // OIDC SSO uses the PON_DOMAIN-aware base; the IdP redirect deep-links back
+  // via the existing platform://auth?code=… handler (provider-agnostic).
+  Future<void> _launchSso() async {
+    final uri = Uri.parse('${AppConfig.authBaseUrl}/auth/oidc/login?platform=mobile');
     try {
       await launchUrl(uri, mode: LaunchMode.externalApplication);
     } catch (_) {
@@ -268,6 +291,19 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           side: BorderSide(color: Colors.white.withValues(alpha: 0.3)),
                         ),
                       ),
+
+                      if (_ssoEnabled) ...[
+                        const SizedBox(height: 12),
+                        OutlinedButton.icon(
+                          onPressed: _launchSso,
+                          icon: const Icon(Icons.vpn_key_outlined, size: 18),
+                          label: Text(context.l10n.loginWithSso),
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: AppTheme.ponCyan,
+                            side: BorderSide(color: AppTheme.ponCyan.withValues(alpha: 0.5)),
+                          ),
+                        ),
+                      ],
 
 
                       // Navigation to register

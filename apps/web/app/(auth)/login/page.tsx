@@ -4,6 +4,7 @@ import { useState, useMemo } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
+import { useQuery } from '@tanstack/react-query'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import Link from 'next/link'
@@ -27,6 +28,13 @@ export default function LoginPage() {
   const setAuth = useAuthStore((s) => s.setAuth)
   const [showPassword, setShowPassword] = useState(false)
   const authUrl = process.env.NEXT_PUBLIC_AUTH_URL ?? ''
+  // Same-origin fallback so SSO works in the self-host (relative-URL) build too.
+  const authBase = process.env.NEXT_PUBLIC_AUTH_URL || '/api/auth'
+  const { data: sso } = useQuery({
+    queryKey: ['sso-info'],
+    queryFn: () => authService.getSsoInfo(),
+    staleTime: 5 * 60 * 1000,
+  })
 
   const schema = useMemo(
     () =>
@@ -123,6 +131,15 @@ export default function LoginPage() {
             {isSubmitting ? t('login.submitting') : t('login.submit')}
           </Button>
         </form>
+
+        {sso?.enabled && (
+          <a
+            href={`${authBase}/auth/oidc/login?platform=web`}
+            className="mt-3 flex items-center justify-center gap-2 w-full rounded-md border border-primary/40 px-4 py-2 text-sm font-medium text-primary hover:bg-primary/10 transition-colors"
+          >
+            {t('login.ssoButton')}
+          </a>
+        )}
 
         {authUrl && (
           <>

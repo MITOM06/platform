@@ -650,5 +650,18 @@
   "adminAuditPrev": "Trước",
   "adminAuditNext": "Sau",
   "newConvDepartment": "Phòng ban (tùy chọn)",
-  "newConvNoDepartment": "Không có phòng ban"
+  "newConvNoDepartment": "Không có phòng ban",
+  "loginWithSso": "Đăng nhập bằng SSO",
+  "adminNavSso": "SSO",
+  "adminSsoTitle": "Đăng nhập một lần (SSO)",
+  "adminSsoHint": "Cấu hình đăng nhập OIDC. Thông tin nhà cung cấp đặt trong .env; tại đây bạn ánh xạ nhóm IdP sang vai trò và phòng ban.",
+  "adminSsoEnabled": "Bật SSO",
+  "adminSsoAllowedDomains": "Tên miền email được phép",
+  "adminSsoAllowedDomainsHint": "Phân tách bằng dấu phẩy. Để trống để cho phép mọi email đã xác minh.",
+  "adminSsoDefaultRole": "Vai trò mặc định",
+  "adminSsoNone": "Không",
+  "adminSsoGroupRoleMap": "Nhóm → Vai trò",
+  "adminSsoGroupDeptMap": "Nhóm → Phòng ban",
+  "adminSsoGroupPlaceholder": "Tên nhóm IdP",
+  "adminSsoAddMapping": "Thêm ánh xạ"
 }

@@ -1,7 +1,7 @@
 # PON Enterprise — Master Handoff & Continuation Guide
 
-**Last updated:** 2026-06-20
-**Active branch:** `feature/pon-enterprise-p0-p5` (✅ P0 + ✅ P5 Google connectors + ✅ P6 department group bot)
+**Last updated:** 2026-06-22
+**Active branch:** `fix/chat-service-cloudrun-startup` (✅ P0 + ✅ P5 + ✅ P6 + ✅ P7 self-host kit + ✅ P8 SSO OIDC)
 **Read order for a fresh session:**
 1. This file (state + remaining work).
 2. `docs/superpowers/specs/2026-06-19-pon-enterprise-reframe.md` (the vision).
@@ -137,29 +137,51 @@ Plan: `docs/superpowers/plans/2026-06-20-p6-department-group-bot.md`.
 - Backward compatible (personal chats unchanged). Verify: chat-service mvn compile + security/AI tests green;
   ai-service 97 tests. Commits `5396a9f5`, `bf5e…` (Part 2), `…` (Part 3).
 
+### P7 — Self-host deployment kit ✅ (turnkey single-host, single-domain)
+Spec: `docs/superpowers/specs/2026-06-21-p7-self-host-deployment-kit-design.md`; plan:
+`docs/superpowers/plans/2026-06-21-p7-self-host-deployment-kit.md`; runbook: `docs/superpowers/runbooks/self-host.md`.
+- **web**: same-origin **relative** API URLs (`/api/{auth,chat,connector}`) + runtime `resolveBrokerURL()`
+  (`wss://<host>/ws`) when `NEXT_PUBLIC_*` unset — one domain-agnostic image; Cloud Run/local env still override.
+  `output:'standalone'` + multi-stage `apps/web/Dockerfile` (monorepo-aware, `node server.js`).
+- **infra**: `Caddyfile` (only host-published service; `handle_path` prefix-strip per service, `/ws` preserved,
+  `/*`→web, auto-HTTPS); consolidated single `.env.example` (human / auto-gen / derived groups); idempotent
+  `bootstrap.sh` (+`bootstrap.test.sh`) generating JWT/refresh/vault(32-byte base64)/internal secrets, never
+  clobbering; turnkey `compose.prod.yml` (full stack + web + caddy, all config from one `.env`).
+- **mobile**: `AppConfig` (`--dart-define=PON_DOMAIN`) derives `https://<domain>/api/*` + `wss://.../ws`,
+  Cloud Run fallback when unset; `dio_client` + `stomp_service` rewired.
+- Backward compatible (Cloud Run defaults preserved everywhere). Verify: bootstrap.test PASS, web tests 11
+  (incl. base-urls 4 + axios-refresh), web build OK, `flutter analyze` clean. Commits `70834918`→`2056ca1d`
+  (+ docs `aa7dd332`/`b42c30d5`). **Live E2E blocked on owner secrets (real DOMAIN + ANTHROPIC_API_KEY + OAuth) — §4.**
+
+### P8 — Enterprise SSO (OIDC) ✅ (config-driven, JIT, group→role/dept mapping)
+Spec: `docs/superpowers/specs/2026-06-22-p8-sso-oidc-design.md`; plan: `docs/superpowers/plans/2026-06-22-p8-sso-oidc.md`.
+Scope: **OIDC only** (SAML deferred); **hybrid config** (provider creds in `.env`, mappings on Workspace, admin-editable);
+**SSO + password coexist**, JIT provisioning by verified email; **web + mobile** both.
+- **auth-service**: `openid-client@5` `OidcService` (discovery + PKCE + state/nonce in Redis + ID-token/JWKS/
+  `email_verified` validation); `resolveSsoMapping` (pure: group→role precedence + dept union) + `SsoMappingService`
+  (Owner break-glass, dept-id filtering, session revoke on change); routes `/auth/oidc/login|callback` (reuses the
+  social login-code → web redirect / mobile deep-link path) + public `/auth/sso/info`; `Workspace.sso` schema +
+  admin DTO. JWT/claims/refresh unchanged.
+- **web**: `getSsoInfo` + login "Sign in with SSO" button (same-origin `/api/auth` fallback); admin `/admin/sso`
+  panel (enable, allowed domains, group→role/dept maps, default role) + nav entry; `login.ssoButton` + `admin.sso*`
+  i18n ×7.
+- **mobile**: `SsoInfo` + repo `getSsoInfo`; login SSO button (`AppConfig.authBaseUrl`, browser→deep-link); admin
+  SSO panel (parity) + tab; `loginWithSso` + `adminSso*` i18n ×7.
+- Backward compatible (`OIDC_ENABLED` unset → `/auth/sso/info` `{enabled:false}`, no button, nothing changes; Google/
+  Twitter login untouched). Verify: database 12, auth-service 46, web 54 tests, web build OK (`/admin/sso` route),
+  `flutter analyze` clean. Commits `507e8dcc`→ (this branch). **Live E2E blocked on owner IdP creds (issuer + client
+  id/secret + a real group) — §4.**
+
+**→ ✅ P0–P8 COMPLETE. The enterprise platform (RBAC + admin + audit + governed connectors + Google connectors +
+department group bot + self-host kit + SSO) is built and green across backend, web, and mobile.**
+
 ---
 
-## 3. What REMAINS — detailed, in build order
+## 3. What REMAINS
 
-> Task 0, all of P0 (Parts 1–5), **P5 (Gmail + Calendar)**, and **P6 (department group bot)** are **DONE**
-> — see §2. Next milestones below (each needs a fresh spec + plan).
-
-### P6 — Department-aware group bot
-**Goal:** the group bot in department chats answers using only files/context the department + the
-asking member may access. This is where **chat-service (Spring Boot/Java) RBAC enforcement** lands
-(deferred from Part 2): validate the JWT in Java, read `role`/`perms`/`depts`, scope message/KB
-queries by department. ai-service: pass department context + member perms into the agent so RAG +
-tools are department-scoped. **Needs a fresh spec + plan (brainstorm first).**
-
-### P7 — Self-host deployment kit
-Turnkey `docker compose` (already most of the way) + a bootstrap runbook: set `WORKSPACE_NAME`,
-`BOOTSTRAP_OWNER_EMAIL`, generate `CONNECTOR_VAULT_KEY`, `JWT_ACCESS_SECRET`, provider creds; first
-boot seeds workspace + roles + owner. Optional Helm chart. Config-driven per-company customization
-(branding, feature flags) — no code forks. **Fresh spec + plan.**
-
-### P8 — SSO (OIDC/SAML)
-Config-driven enterprise login in auth-service; map IdP groups → PON roles/departments.
-**Fresh spec + plan.**
+> Task 0, all of P0 (Parts 1–5), **P5**, **P6**, **P7**, and **P8 (SSO OIDC)** are **DONE** — see §2.
+> No further roadmap milestones are pending. Remaining work is **live E2E validation** (needs owner-provided
+> secrets/IdP — see §4) and any future scale-out (SAML, Helm, multi-company), each of which needs a fresh spec + plan.
 
 ---
 
@@ -180,6 +202,11 @@ These are HARD STOPs — code is done/ready, but live execution needs secrets/in
    client → set `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET`.
 5. **Anthropic key** for ai-service (`ANTHROPIC_API_KEY`) if not already set — needed for the AI to
    actually run tools.
+6. **OIDC app** (for P8 SSO): create an app in your IdP (Google Workspace / Entra / Okta / Keycloak),
+   register redirect URI `https://<DOMAIN>/api/auth/oidc/callback`, set `OIDC_ENABLED=true` +
+   `OIDC_ISSUER` / `OIDC_CLIENT_ID` / `OIDC_CLIENT_SECRET` in `.env` (adjust `OIDC_GROUPS_CLAIM` per IdP),
+   then enable SSO + map a group → role in `/admin` → SSO. E2E: log in via SSO on web + mobile →
+   user JIT-provisioned with the mapped role.
 
 Live E2E to validate the whole vision once secrets are in: connect Notion on web `/integrations`
 → in chat say "Create a Notion page titled 'PON test'" → confirm the agent calls
@@ -193,7 +220,7 @@ Open a new session in this repo. Memory auto-loads `MEMORY.md` (it points to the
 enterprise model facts). Then paste one of these:
 
 - To continue building: **"Continue PON enterprise from `docs/superpowers/PON-ENTERPRISE-HANDOFF.md`.
-  P0 + P5 + P6 are done — plan + build P7 (self-host deployment kit) next. Work part-by-part, run
+  P0 + P5 + P6 + P7 are done — plan + build P8 (SSO OIDC/SAML) next. Work part-by-part, run
   tests/builds, show me each part for review."**
 - To do the live Notion E2E instead: **"I've added Notion creds + run docker compose. Run the P1
   Notion E2E from the handoff doc §4."**

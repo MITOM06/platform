@@ -1764,4 +1764,43 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get newConvNoDepartment => '无部门';
+
+  @override
+  String get loginWithSso => '使用 SSO 登录';
+
+  @override
+  String get adminNavSso => 'SSO';
+
+  @override
+  String get adminSsoTitle => '单点登录 (SSO)';
+
+  @override
+  String get adminSsoHint => '配置 OIDC 登录。提供商凭据在部署 .env 中设置；在此将 IdP 组映射到角色和部门。';
+
+  @override
+  String get adminSsoEnabled => '启用 SSO';
+
+  @override
+  String get adminSsoAllowedDomains => '允许的邮箱域名';
+
+  @override
+  String get adminSsoAllowedDomainsHint => '用逗号分隔。留空则允许任何已验证的邮箱。';
+
+  @override
+  String get adminSsoDefaultRole => '默认角色';
+
+  @override
+  String get adminSsoNone => '无';
+
+  @override
+  String get adminSsoGroupRoleMap => '组 → 角色';
+
+  @override
+  String get adminSsoGroupDeptMap => '组 → 部门';
+
+  @override
+  String get adminSsoGroupPlaceholder => 'IdP 组名称';
+
+  @override
+  String get adminSsoAddMapping => '添加映射';
 }

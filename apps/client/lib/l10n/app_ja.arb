@@ -650,5 +650,18 @@
   "adminAuditPrev": "前へ",
   "adminAuditNext": "次へ",
   "newConvDepartment": "部門（任意）",
-  "newConvNoDepartment": "部門なし"
+  "newConvNoDepartment": "部門なし",
+  "loginWithSso": "SSO でログイン",
+  "adminNavSso": "SSO",
+  "adminSsoTitle": "シングルサインオン (SSO)",
+  "adminSsoHint": "OIDC ログインを設定します。プロバイダーの認証情報は .env で設定し、ここで IdP グループをロールと部門にマッピングします。",
+  "adminSsoEnabled": "SSO を有効化",
+  "adminSsoAllowedDomains": "許可するメールドメイン",
+  "adminSsoAllowedDomainsHint": "カンマ区切り。空欄の場合、確認済みのすべてのメールを許可します。",
+  "adminSsoDefaultRole": "デフォルトのロール",
+  "adminSsoNone": "なし",
+  "adminSsoGroupRoleMap": "グループ → ロール",
+  "adminSsoGroupDeptMap": "グループ → 部門",
+  "adminSsoGroupPlaceholder": "IdP グループ名",
+  "adminSsoAddMapping": "マッピングを追加"
 }

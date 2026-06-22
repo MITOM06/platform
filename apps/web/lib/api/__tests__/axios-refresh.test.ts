@@ -168,10 +168,17 @@ describe('axios 401-refresh interceptor', () => {
     expect(setAuth).toHaveBeenCalledWith(expect.objectContaining({ id: 'u1' }), newToken)
   })
 
-  it('clears auth when the refresh endpoint returns an error', async () => {
+  it('clears auth when the refresh token is genuinely rejected (401)', async () => {
+    const refreshRejected = new axios.AxiosError(
+      'refresh rejected',
+      'ERR_BAD_REQUEST',
+      undefined,
+      null,
+      { status: 401, statusText: 'Unauthorized', headers: {}, config: {}, data: {} } as AxiosResponse,
+    )
     const adapter = buildSequentialAdapter([
-      // Call 1 → refresh fails
-      { type: 'reject', error: new axios.AxiosError('refresh failed', '500') },
+      // Call 1 → refresh rejected with a 401 (refresh token invalid)
+      { type: 'reject', error: refreshRejected },
       // Call 2 → clear-cookie call (fire-and-forget, caught internally)
       { type: 'resolve', data: {} },
     ])
@@ -185,6 +192,25 @@ describe('axios 401-refresh interceptor', () => {
 
     const { clearAuth } = getStoreState()
     expect(clearAuth).toHaveBeenCalledTimes(1)
+  })
+
+  it('does NOT clear auth on a transient network error during refresh', async () => {
+    // No `response` → network error (wifi sleep / ERR_NETWORK_CHANGED). The
+    // user must stay logged in so STOMP / the next request can retry.
+    const networkError = new axios.AxiosError('Network Error', 'ERR_NETWORK')
+    const adapter = buildSequentialAdapter([
+      { type: 'reject', error: networkError },
+    ])
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    axios.defaults.adapter = adapter as any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    chatApi.defaults.adapter = adapter as any
+
+    const handler = getInterceptorHandler()
+    await expect(handler(make401('/api/conversations'))).rejects.toThrow()
+
+    const { clearAuth } = getStoreState()
+    expect(clearAuth).not.toHaveBeenCalled()
   })
 
   it('does NOT attempt a refresh for 401 on the /auth/login endpoint', async () => {

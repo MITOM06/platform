@@ -1772,4 +1772,44 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get newConvNoDepartment => '部門なし';
+
+  @override
+  String get loginWithSso => 'SSO でログイン';
+
+  @override
+  String get adminNavSso => 'SSO';
+
+  @override
+  String get adminSsoTitle => 'シングルサインオン (SSO)';
+
+  @override
+  String get adminSsoHint =>
+      'OIDC ログインを設定します。プロバイダーの認証情報は .env で設定し、ここで IdP グループをロールと部門にマッピングします。';
+
+  @override
+  String get adminSsoEnabled => 'SSO を有効化';
+
+  @override
+  String get adminSsoAllowedDomains => '許可するメールドメイン';
+
+  @override
+  String get adminSsoAllowedDomainsHint => 'カンマ区切り。空欄の場合、確認済みのすべてのメールを許可します。';
+
+  @override
+  String get adminSsoDefaultRole => 'デフォルトのロール';
+
+  @override
+  String get adminSsoNone => 'なし';
+
+  @override
+  String get adminSsoGroupRoleMap => 'グループ → ロール';
+
+  @override
+  String get adminSsoGroupDeptMap => 'グループ → 部門';
+
+  @override
+  String get adminSsoGroupPlaceholder => 'IdP グループ名';
+
+  @override
+  String get adminSsoAddMapping => 'マッピングを追加';
 }

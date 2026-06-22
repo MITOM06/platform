@@ -5,6 +5,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../../../core/api/dio_client.dart';
 import '../domain/auth_provider.dart';
 import '../domain/auth_state.dart';
+import '../domain/sso_info.dart';
 
 const _keyAccessToken = 'accessToken';
 const _keyRefreshToken = 'refreshToken';
@@ -47,6 +48,16 @@ class AuthRepository {
       'email': email,
       'otp': otpCode,
     });
+  }
+
+  /// Whether the deployment exposes OIDC SSO (drives the login SSO button).
+  Future<SsoInfo> getSsoInfo() async {
+    try {
+      final res = await _dio.get('/auth/sso/info');
+      return SsoInfo.fromJson(Map<String, dynamic>.from(res.data as Map));
+    } catch (_) {
+      return SsoInfo.disabled;
+    }
   }
 
   Future<void> resendOtp(String email) async {

@@ -56,7 +56,8 @@
       "emailNotFound": "Email chưa được đăng ký",
       "systemError": "Lỗi hệ thống, vui lòng thử lại",
       "orContinueWith": "Hoặc tiếp tục với",
-      "googleLogin": "Đăng nhập bằng Google"
+      "googleLogin": "Đăng nhập bằng Google",
+      "ssoButton": "Đăng nhập bằng SSO"
     },
     "register": {
       "title": "Tạo tài khoản",
@@ -832,7 +833,20 @@
     },
     "auditEmpty": "Chưa có bản ghi kiểm toán nào.",
     "auditPrev": "Trước",
-    "auditNext": "Sau"
+    "auditNext": "Sau",
+    "navSso": "SSO",
+    "ssoTitle": "Đăng nhập một lần (SSO)",
+    "ssoHint": "Cấu hình đăng nhập OIDC. Thông tin nhà cung cấp đặt trong .env; tại đây bạn ánh xạ nhóm IdP sang vai trò và phòng ban.",
+    "ssoEnabled": "Bật SSO",
+    "ssoAllowedDomains": "Tên miền email được phép",
+    "ssoAllowedDomainsHint": "Phân tách bằng dấu phẩy. Để trống để cho phép mọi email đã xác minh.",
+    "ssoDefaultRole": "Vai trò mặc định",
+    "ssoNone": "Không",
+    "ssoGroupRoleMap": "Nhóm → Vai trò",
+    "ssoGroupDeptMap": "Nhóm → Phòng ban",
+    "ssoGroupPlaceholder": "Tên nhóm IdP",
+    "ssoAddMapping": "Thêm ánh xạ",
+    "ssoRemoveRow": "Xóa"
   },
   "call": {
     "peerFallback": "Người dùng",

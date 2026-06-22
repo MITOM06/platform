@@ -1827,4 +1827,45 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get newConvNoDepartment => 'Sin departamento';
+
+  @override
+  String get loginWithSso => 'Iniciar sesión con SSO';
+
+  @override
+  String get adminNavSso => 'SSO';
+
+  @override
+  String get adminSsoTitle => 'Inicio de sesión único (SSO)';
+
+  @override
+  String get adminSsoHint =>
+      'Configura el inicio de sesión OIDC. Las credenciales del proveedor se definen en el .env; aquí asignas grupos del IdP a roles y departamentos.';
+
+  @override
+  String get adminSsoEnabled => 'Activar SSO';
+
+  @override
+  String get adminSsoAllowedDomains => 'Dominios de correo permitidos';
+
+  @override
+  String get adminSsoAllowedDomainsHint =>
+      'Separados por comas. Déjalo vacío para permitir cualquier correo verificado.';
+
+  @override
+  String get adminSsoDefaultRole => 'Rol predeterminado';
+
+  @override
+  String get adminSsoNone => 'Ninguno';
+
+  @override
+  String get adminSsoGroupRoleMap => 'Grupo → Rol';
+
+  @override
+  String get adminSsoGroupDeptMap => 'Grupo → Departamento';
+
+  @override
+  String get adminSsoGroupPlaceholder => 'Nombre del grupo IdP';
+
+  @override
+  String get adminSsoAddMapping => 'Añadir asignación';
 }

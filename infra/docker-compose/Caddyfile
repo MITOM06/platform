@@ -1,0 +1,29 @@
+{
+	# email for Let's Encrypt; auto-HTTPS when DOMAIN is a real hostname.
+	email {$ACME_EMAIL:admin@example.com}
+}
+
+{$DOMAIN:localhost} {
+	# Backend services — handle_path strips the matched prefix before proxying,
+	# so each service keeps its existing routes (auth: /auth /me /admin; chat:
+	# /api/...; connector: /oauth /connections /catalog).
+	handle_path /api/auth/* {
+		reverse_proxy auth-service:3001
+	}
+	handle_path /api/connector/* {
+		reverse_proxy connector-service:3003
+	}
+	handle_path /api/chat/* {
+		reverse_proxy chat-service:8080
+	}
+
+	# STOMP WebSocket — keep the /ws path; Caddy proxies the upgrade transparently.
+	handle /ws {
+		reverse_proxy chat-service:8080
+	}
+
+	# Everything else → Next.js web app.
+	handle {
+		reverse_proxy web:3000
+	}
+}

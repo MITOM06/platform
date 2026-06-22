@@ -1774,4 +1774,44 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get newConvNoDepartment => '부서 없음';
+
+  @override
+  String get loginWithSso => 'SSO로 로그인';
+
+  @override
+  String get adminNavSso => 'SSO';
+
+  @override
+  String get adminSsoTitle => '싱글 사인온 (SSO)';
+
+  @override
+  String get adminSsoHint =>
+      'OIDC 로그인을 구성합니다. 공급자 자격 증명은 .env에 설정하고, 여기에서 IdP 그룹을 역할 및 부서에 매핑합니다.';
+
+  @override
+  String get adminSsoEnabled => 'SSO 활성화';
+
+  @override
+  String get adminSsoAllowedDomains => '허용된 이메일 도메인';
+
+  @override
+  String get adminSsoAllowedDomainsHint => '쉼표로 구분. 비워두면 확인된 모든 이메일을 허용합니다.';
+
+  @override
+  String get adminSsoDefaultRole => '기본 역할';
+
+  @override
+  String get adminSsoNone => '없음';
+
+  @override
+  String get adminSsoGroupRoleMap => '그룹 → 역할';
+
+  @override
+  String get adminSsoGroupDeptMap => '그룹 → 부서';
+
+  @override
+  String get adminSsoGroupPlaceholder => 'IdP 그룹 이름';
+
+  @override
+  String get adminSsoAddMapping => '매핑 추가';
 }

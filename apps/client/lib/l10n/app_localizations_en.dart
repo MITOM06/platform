@@ -1809,4 +1809,45 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get newConvNoDepartment => 'No department';
+
+  @override
+  String get loginWithSso => 'Sign in with SSO';
+
+  @override
+  String get adminNavSso => 'SSO';
+
+  @override
+  String get adminSsoTitle => 'Single Sign-On (SSO)';
+
+  @override
+  String get adminSsoHint =>
+      'Configure OIDC login. Provider credentials are set in the deployment .env; here you map IdP groups to roles and departments.';
+
+  @override
+  String get adminSsoEnabled => 'Enable SSO';
+
+  @override
+  String get adminSsoAllowedDomains => 'Allowed email domains';
+
+  @override
+  String get adminSsoAllowedDomainsHint =>
+      'Comma-separated. Leave empty to allow any verified email.';
+
+  @override
+  String get adminSsoDefaultRole => 'Default role';
+
+  @override
+  String get adminSsoNone => 'None';
+
+  @override
+  String get adminSsoGroupRoleMap => 'Group → Role';
+
+  @override
+  String get adminSsoGroupDeptMap => 'Group → Department';
+
+  @override
+  String get adminSsoGroupPlaceholder => 'IdP group name';
+
+  @override
+  String get adminSsoAddMapping => 'Add mapping';
 }

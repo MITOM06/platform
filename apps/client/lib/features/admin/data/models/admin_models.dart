@@ -97,6 +97,43 @@ class MeCapabilities {
 
 /// `GET /admin/workspace` — the singleton workspace document (admin view).
 @immutable
+/// Admin-editable SSO mapping config (provider creds live in .env, not here).
+class WorkspaceSso {
+  final bool enabled;
+  final List<String> allowedDomains;
+  final Map<String, String> groupRoleMap;
+  final Map<String, String> groupDeptMap;
+  final String? defaultRole;
+
+  const WorkspaceSso({
+    this.enabled = false,
+    this.allowedDomains = const [],
+    this.groupRoleMap = const {},
+    this.groupDeptMap = const {},
+    this.defaultRole,
+  });
+
+  factory WorkspaceSso.fromJson(Map<String, dynamic>? json) {
+    final j = json ?? const {};
+    return WorkspaceSso(
+      enabled: j['enabled'] == true,
+      allowedDomains: _stringList(j['allowedDomains']),
+      groupRoleMap: _stringMap(j['groupRoleMap']),
+      groupDeptMap: _stringMap(j['groupDeptMap']),
+      defaultRole: j['defaultRole'] as String?,
+    );
+  }
+
+  Map<String, dynamic> toJson() => {
+        'enabled': enabled,
+        'allowedDomains': allowedDomains,
+        'groupRoleMap': groupRoleMap,
+        'groupDeptMap': groupDeptMap,
+        if (defaultRole != null && defaultRole!.isNotEmpty)
+          'defaultRole': defaultRole,
+      };
+}
+
 class Workspace {
   final String id;
   final String name;
@@ -104,6 +141,7 @@ class Workspace {
   final String? primaryColor;
   final Map<String, bool> features;
   final List<String> connectorAllowList;
+  final WorkspaceSso sso;
 
   const Workspace({
     required this.id,
@@ -112,6 +150,7 @@ class Workspace {
     this.primaryColor,
     required this.features,
     required this.connectorAllowList,
+    this.sso = const WorkspaceSso(),
   });
 
   factory Workspace.fromJson(Map<String, dynamic> json) => Workspace(
@@ -121,6 +160,7 @@ class Workspace {
         primaryColor: json['primaryColor'] as String?,
         features: _boolMap(json['features']),
         connectorAllowList: _stringList(json['connectorAllowList']),
+        sso: WorkspaceSso.fromJson(json['sso'] as Map<String, dynamic>?),
       );
 }
 
@@ -267,4 +307,9 @@ List<String> _stringList(dynamic raw) =>
 Map<String, bool> _boolMap(dynamic raw) {
   final map = raw as Map<String, dynamic>? ?? const {};
   return map.map((k, v) => MapEntry(k, v == true));
+}
+
+Map<String, String> _stringMap(dynamic raw) {
+  final map = raw as Map<String, dynamic>? ?? const {};
+  return map.map((k, v) => MapEntry(k, v?.toString() ?? ''));
 }

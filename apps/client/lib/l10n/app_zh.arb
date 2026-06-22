@@ -650,5 +650,18 @@
   "adminAuditPrev": "上一页",
   "adminAuditNext": "下一页",
   "newConvDepartment": "部门（可选）",
-  "newConvNoDepartment": "无部门"
+  "newConvNoDepartment": "无部门",
+  "loginWithSso": "使用 SSO 登录",
+  "adminNavSso": "SSO",
+  "adminSsoTitle": "单点登录 (SSO)",
+  "adminSsoHint": "配置 OIDC 登录。提供商凭据在部署 .env 中设置；在此将 IdP 组映射到角色和部门。",
+  "adminSsoEnabled": "启用 SSO",
+  "adminSsoAllowedDomains": "允许的邮箱域名",
+  "adminSsoAllowedDomainsHint": "用逗号分隔。留空则允许任何已验证的邮箱。",
+  "adminSsoDefaultRole": "默认角色",
+  "adminSsoNone": "无",
+  "adminSsoGroupRoleMap": "组 → 角色",
+  "adminSsoGroupDeptMap": "组 → 部门",
+  "adminSsoGroupPlaceholder": "IdP 组名称",
+  "adminSsoAddMapping": "添加映射"
 }

@@ -4,6 +4,7 @@ import type { NextConfig } from 'next'
 const withNextIntl = createNextIntlPlugin('./i18n/request.ts')
 
 const nextConfig: NextConfig = {
+  output: 'standalone',
   images: {
     remotePatterns: [
       { protocol: 'http', hostname: 'localhost', port: '8080', pathname: '/api/uploads/**' },

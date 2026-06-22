@@ -650,5 +650,18 @@
   "adminAuditPrev": "이전",
   "adminAuditNext": "다음",
   "newConvDepartment": "부서 (선택)",
-  "newConvNoDepartment": "부서 없음"
+  "newConvNoDepartment": "부서 없음",
+  "loginWithSso": "SSO로 로그인",
+  "adminNavSso": "SSO",
+  "adminSsoTitle": "싱글 사인온 (SSO)",
+  "adminSsoHint": "OIDC 로그인을 구성합니다. 공급자 자격 증명은 .env에 설정하고, 여기에서 IdP 그룹을 역할 및 부서에 매핑합니다.",
+  "adminSsoEnabled": "SSO 활성화",
+  "adminSsoAllowedDomains": "허용된 이메일 도메인",
+  "adminSsoAllowedDomainsHint": "쉼표로 구분. 비워두면 확인된 모든 이메일을 허용합니다.",
+  "adminSsoDefaultRole": "기본 역할",
+  "adminSsoNone": "없음",
+  "adminSsoGroupRoleMap": "그룹 → 역할",
+  "adminSsoGroupDeptMap": "그룹 → 부서",
+  "adminSsoGroupPlaceholder": "IdP 그룹 이름",
+  "adminSsoAddMapping": "매핑 추가"
 }

@@ -1808,4 +1808,45 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get newConvNoDepartment => 'Không có phòng ban';
+
+  @override
+  String get loginWithSso => 'Đăng nhập bằng SSO';
+
+  @override
+  String get adminNavSso => 'SSO';
+
+  @override
+  String get adminSsoTitle => 'Đăng nhập một lần (SSO)';
+
+  @override
+  String get adminSsoHint =>
+      'Cấu hình đăng nhập OIDC. Thông tin nhà cung cấp đặt trong .env; tại đây bạn ánh xạ nhóm IdP sang vai trò và phòng ban.';
+
+  @override
+  String get adminSsoEnabled => 'Bật SSO';
+
+  @override
+  String get adminSsoAllowedDomains => 'Tên miền email được phép';
+
+  @override
+  String get adminSsoAllowedDomainsHint =>
+      'Phân tách bằng dấu phẩy. Để trống để cho phép mọi email đã xác minh.';
+
+  @override
+  String get adminSsoDefaultRole => 'Vai trò mặc định';
+
+  @override
+  String get adminSsoNone => 'Không';
+
+  @override
+  String get adminSsoGroupRoleMap => 'Nhóm → Vai trò';
+
+  @override
+  String get adminSsoGroupDeptMap => 'Nhóm → Phòng ban';
+
+  @override
+  String get adminSsoGroupPlaceholder => 'Tên nhóm IdP';
+
+  @override
+  String get adminSsoAddMapping => 'Thêm ánh xạ';
 }

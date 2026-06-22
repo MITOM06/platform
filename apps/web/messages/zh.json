@@ -56,7 +56,8 @@
       "emailNotFound": "Email is not registered",
       "systemError": "System error, please try again",
       "orContinueWith": "Or continue with",
-      "googleLogin": "Sign in with Google"
+      "googleLogin": "Sign in with Google",
+      "ssoButton": "使用 SSO 登录"
     },
     "register": {
       "title": "Create Account",
@@ -832,7 +833,20 @@
     },
     "auditEmpty": "暂无审计记录。",
     "auditPrev": "上一页",
-    "auditNext": "下一页"
+    "auditNext": "下一页",
+    "navSso": "SSO",
+    "ssoTitle": "单点登录 (SSO)",
+    "ssoHint": "配置 OIDC 登录。提供商凭据在部署 .env 中设置；在此将 IdP 组映射到角色和部门。",
+    "ssoEnabled": "启用 SSO",
+    "ssoAllowedDomains": "允许的邮箱域名",
+    "ssoAllowedDomainsHint": "用逗号分隔。留空则允许任何已验证的邮箱。",
+    "ssoDefaultRole": "默认角色",
+    "ssoNone": "无",
+    "ssoGroupRoleMap": "组 → 角色",
+    "ssoGroupDeptMap": "组 → 部门",
+    "ssoGroupPlaceholder": "IdP 组名称",
+    "ssoAddMapping": "添加映射",
+    "ssoRemoveRow": "移除"
   },
   "call": {
     "peerFallback": "用户",
