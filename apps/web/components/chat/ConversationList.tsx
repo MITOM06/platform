@@ -73,7 +73,9 @@ export function ConversationList() {
     return resolveSearchTerms(conv).some((term) => term.toLowerCase().includes(q))
   })
 
-  // Batch-prefetch all participant profiles so ConversationItems read from cache.
+  // Batch-prefetch all participant profiles in ONE request, then seed the
+  // per-id (`['user', id]`) cache so ConversationItem's useUser reads from
+  // cache instead of firing a query per participant (was an N+1 → 429s).
   useEffect(() => {
     if (!conversations || !currentUserId) return
     const ids = [
@@ -83,13 +85,19 @@ export function ConversationList() {
           .filter((id) => id !== currentUserId && id !== AI_BOT_ID),
       ),
     ]
-    ids.forEach((userId) => {
-      queryClient.prefetchQuery({
-        queryKey: ['user', userId],
-        queryFn: () => authService.getUser(userId),
-        staleTime: 5 * 60 * 1000,
+    const missing = ids.filter((id) => !queryClient.getQueryData(['user', id]))
+    if (missing.length === 0) return
+    let cancelled = false
+    authService
+      .getUsers(missing)
+      .then((users) => {
+        if (cancelled) return
+        users.forEach((u) => queryClient.setQueryData(['user', u.id], u))
       })
-    })
+      .catch(() => {})
+    return () => {
+      cancelled = true
+    }
   }, [conversations, currentUserId, queryClient])
 
   return (

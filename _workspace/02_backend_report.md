@@ -1,89 +1,69 @@
 ## Backend Implementation Report
 
-Feature: Per-Field Privacy Toggles (showDateOfBirth / showPhoneNumber / showGender)
+> Scope: Issue 6 (shared per-conversation wallpaper) — the only issue requiring backend changes.
+> Issue 1 (avatar sync) and Issue 5 (group avatar) were verified to need NO backend change (see Notes).
+> auth-service was NOT modified.
 
 ### 변경된 파일
-- `packages/database/src/mongo/user.schema.ts` — `User` 클래스에 per-field privacy boolean 3개 추가: `showDateOfBirth`, `showPhoneNumber`, `showGender`, 각각 `@Prop({ default: true })`. `hideInfo`는 그대로 유지(폴백/하위호환).
-- `apps/server/auth-service/src/modules/users/users.controller.ts` — (1) `PATCH /api/users/me` body 타입에 `showDateOfBirth?`, `showPhoneNumber?`, `showGender?: boolean` 추가. (2) `GET /api/users/:id` 응답을 필드별 게이팅으로 변경(아래 diff 요약).
-- `apps/server/auth-service/src/modules/users/users.service.ts` — `updateProfile` data 타입 + `updateData` 매핑에 3개 필드 추가 (`!== undefined` 가드). `phoneNumber '' → null` 기존 로직 유지.
 
-### 핵심 diff 요약
-
-**user.schema.ts** (hideInfo 바로 아래에 추가):
-```ts
-@Prop({ default: true }) showDateOfBirth: boolean;
-@Prop({ default: true }) showPhoneNumber: boolean;
-@Prop({ default: true }) showGender: boolean;
-```
-
-**users.controller.ts GET :id — 새 필드별 게이팅 로직:**
-```ts
-hideInfo: doc.hideInfo ?? false,   // 폴백 안전망 (계속 포함)
-...
-const showDob   = doc.showDateOfBirth ?? !doc.hideInfo;
-const showPhone = doc.showPhoneNumber ?? !doc.hideInfo;
-const showGen   = doc.showGender      ?? !doc.hideInfo;
-
-profile.bio = doc.bio;            // 항상 공개 (게이팅 없음)
-
-if (isSelf) {                     // self 응답에만 플래그 + email 포함
-  profile.email = doc.email;
-  profile.showDateOfBirth = showDob;
-  profile.showPhoneNumber = showPhone;
-  profile.showGender      = showGen;
-}
-
-if (isSelf || showDob)   profile.dateOfBirth = doc.dateOfBirth;
-if (isSelf || showPhone) profile.phoneNumber = doc.phoneNumber;
-if (isSelf || showGen)   profile.gender      = doc.gender;
-```
-- 이전 동작 대비 변화: bio가 더 이상 hideInfo에 묶이지 않고 항상 공개. email은 self에만 노출(이전엔 `!hideInfo`인 타 유저에게도 노출되던 것을 self 전용으로 강화). dob/phone/gender는 각각 독립 게이팅.
-- 타 유저 응답에는 show 플래그 미포함(불필요).
-
-**users.service.ts updateProfile 매핑 추가:**
-```ts
-if (data.showDateOfBirth !== undefined) updateData.showDateOfBirth = data.showDateOfBirth;
-if (data.showPhoneNumber !== undefined) updateData.showPhoneNumber = data.showPhoneNumber;
-if (data.showGender      !== undefined) updateData.showGender      = data.showGender;
-```
+| 파일 | 변경 | 설명 |
+|------|------|------|
+| `apps/server/chat-service/src/main/java/com/platform/chatservice/model/Conversation.java` | 수정 | `private String wallpaper;` 필드 추가 (nullable, direct + group 공용). null/blank = default. |
+| `apps/server/chat-service/src/main/java/com/platform/chatservice/dto/ConversationResponse.java` | 수정 | record에 `String wallpaper` 추가 + `toResponse` 호출부 호환을 위해 기존 두 생성자 모두 유지 (wallpaper=null 채움). |
+| `apps/server/chat-service/src/main/java/com/platform/chatservice/dto/WallpaperRequest.java` | 신규 | `record WallpaperRequest(String wallpaper) {}` — PUT 바디. |
+| `apps/server/chat-service/src/main/java/com/platform/chatservice/service/ConversationService.java` | 신규 메서드 + 수정 | `setWallpaper(userId, convId, wallpaper)` 추가 (참가자면 누구나, admin 아님 — `getRawConversation`으로 멤버십 체크). `toResponse`가 `c.getWallpaper()` 채우도록 수정. |
+| `apps/server/chat-service/src/main/java/com/platform/chatservice/controller/ConversationController.java` | 신규 엔드포인트 | `PUT /api/conversations/{id}/wallpaper` 추가 → `setWallpaper` → 기존 `broadcastConversationUpdated` 재사용. |
 
 ### 빌드 결과
-- `pnpm --filter @platform/database build`: ✓ (tsc 통과)
-- auth-service (`cd apps/server/auth-service && pnpm build`): ✓ (nest build / webpack compiled successfully)
-- chat-service: 변경 없음 (이번 기능은 auth-service 전용)
-- 테스트: users 관련 `*.spec.ts` 파일 없음 → 실행 대상 없음
+- chat-service `mvn compile`: ✓ 성공
+- chat-service `mvn test`: ✓ 95/95 단위 테스트 통과. 단, `MessageServicePaginationTest`는 Testcontainers(Docker 데몬 필요) 기반 통합 테스트로, 이 환경에 Docker가 없어 1건 ERROR. **wallpaper 변경과 무관** (인프라 의존). spotless `mvn spotless:apply` 적용 완료.
+- auth-service: 변경 없음 (✗ 해당 없음)
 
-### API 엔드포인트 구현 확인
-- `PATCH /api/users/me` — ✓ body에 `showDateOfBirth?`, `showPhoneNumber?`, `showGender?: boolean` 수락. 응답은 self이므로 모든 필드 + 3 show 플래그 포함.
-- `GET /api/users/:id` — ✓ 필드별 게이팅 적용.
+### API 엔드포인트 구현 확인 (web/mobile가 의존하는 최종 contract)
 
-### 확정된 API 응답 shape
+**`PUT /api/conversations/{id}/wallpaper`** — ✓ 구현됨
+- 인증: JWT 필수 (`JwtAuthenticationFilter`), userId는 SecurityContext에서 추출
+- 권한: **참가자면 누구나** (direct + group 모두; admin 아님). 비참가자는 `ConversationNotFoundException` (404).
+- Request body:
+  ```json
+  { "wallpaper": "preset:midnight_glow" }
+  ```
+  - `wallpaper`: string. preset 토큰(예: `"preset:midnight_glow"`), 업로드 이미지 상대경로(예: `"/api/uploads/<id>#fit=cover&scale=120"`), 또는 `""`/null(전체 멤버 default로 리셋).
+- Response: `200 OK` + `ConversationResponse` (아래 wallpaper 포함된 전체 shape)
+- Broadcast: STOMP `/topic/conversation/{id}` → `{ "type": "CONVERSATION_UPDATED", "conversation": ConversationResponse }` (기존 경로 재사용 → 모든 멤버가 실시간 재해석)
 
-**GET /api/users/:id (self):**
+**`ConversationResponse` 최종 shape (wallpaper 필드 추가됨)** — 모든 conversation 응답에 포함:
+```json
+{
+  "id": "...",
+  "type": "direct|group",
+  "name": "...",
+  "avatarUrl": "/api/uploads/<id> 또는 null (상대경로 — 클라가 absoluteMediaUrl/_absoluteUrl로 해석)",
+  "participants": ["..."],
+  "admins": ["..."],
+  "createdBy": "...",
+  "autoDeleteSeconds": null,
+  "lastMessage": { "content": "...", "senderId": "...", "createdAt": "..." },
+  "lastMessageAt": "...",
+  "unreadCount": 0,
+  "createdAt": "...",
+  "status": "accepted|pending",
+  "isPublic": false,
+  "pinnedMessages": [ { "id":"", "senderId":"", "content":"", "createdAt":"" } ],
+  "isMuted": false,
+  "isArchived": false,
+  "wallpaper": "preset:midnight_glow | /api/uploads/<id>#... | null"   // ← NEW
+}
 ```
-{ _id, id, displayName, avatarUrl, coverPhoto, isVerified, createdAt, friendsCount,
-  bio, email, dateOfBirth, phoneNumber, gender,
-  hideInfo, showDateOfBirth, showPhoneNumber, showGender }
-```
+- `wallpaper`가 새 마지막 필드. 기존 클라이언트는 무시 가능(추가 필드). 신규 web/mobile은 `Conversation.wallpaper`로 읽어 default fallback 처리.
 
-**GET /api/users/:id (타 유저):**
-```
-{ _id, id, displayName, avatarUrl, coverPhoto, isVerified, createdAt, friendsCount,
-  bio,                                   // 항상
-  hideInfo,                              // 폴백 안전망
-  dateOfBirth?,   // (showDateOfBirth ?? !hideInfo) == true 일 때만
-  phoneNumber?,   // (showPhoneNumber ?? !hideInfo) == true 일 때만
-  gender?         // (showGender      ?? !hideInfo) == true 일 때만 }
-```
-(show 플래그 / email 은 타 유저 응답에 미포함)
+### Issue 1 / Issue 5 백엔드 검증 결과 (변경 없음)
 
-**PATCH /api/users/me 요청 (추가 필드):**
-```
-{ showDateOfBirth?: boolean, showPhoneNumber?: boolean, showGender?: boolean,
-  // 기존: displayName?, avatarUrl?, bio?, coverPhoto?, dateOfBirth?, phoneNumber?, gender?, hideInfo? }
-```
+- **Issue 5 (그룹 아바타)**: `UploadController.java:63`이 상대경로 `/api/uploads/<objectId>` 반환 — 계획서 권고대로 **상대경로 유지가 정답**. 업로드마다 새 ObjectId라 경로 자체가 매번 달라짐(자연 cache-busting). `ConversationCacheService.save()`는 `@CachePut`이라 저장 시 캐시가 즉시 갱신됨 → `getConversation`이 새 avatar 반환. 백엔드 정상. 실제 버그는 web 렌더(raw src) — 클라 스코프.
+- **Issue 1 (아바타 동기화)**: 계획서가 `USER_UPDATED` 푸시를 "선택/생략 가능"으로 명시하고 "URL versioning + 클라 캐시 무효화에 의존" 권고. auth-service 아바타 업로드는 업로드마다 새 URL을 만드는 구조라 소스 레벨 버전 스탬프가 이미 충족됨 → 백엔드 변경 불필요, 침습적 cross-service 훅 생략. (Web/Mobile에서 `absoluteMediaUrl`/`_absoluteUrl` 적용 + 캐시 무효화로 해결)
 
 ### 주의사항
-- 마이그레이션 스크립트 작성하지 않음(요구사항대로). 레거시 문서는 새 필드가 없으며 `?? !hideInfo` 코드 폴백으로 기존 동작 유지.
-- `bio`가 이전에는 `!hideInfo` 게이팅에 묶여 있었으나, plan에 따라 이제 항상 공개로 변경됨. 클라이언트가 bio를 항상 표시해도 안전.
-- `email`은 이전 동작(`!hideInfo`인 타 유저에게도 노출)에서 self 전용으로 좁혀짐 — plan(line 11, 32) 의도와 일치.
+- `ConversationResponse`에 wallpaper를 **마지막 필드**로 추가하고 기존 16-arg 생성자와 13-arg 생성자를 모두 보존했으므로 다른 호출부/테스트는 영향 없음. `toResponse`(유일한 17-arg 호출부)만 wallpaper를 채움.
+- wallpaper 권한은 **참가자 누구나** (계획서 권장안). admin-only가 필요해지면 `setWallpaper`에서 group일 때만 `requireGroupAdmin`로 게이팅하면 됨.
+- 마이그레이션 불필요: 기존 conversation 문서는 `wallpaper` 없음 → null → 클라가 default로 처리.
+- `MessageServicePaginationTest`(Testcontainers) 1건은 Docker 미가동으로 ERROR이며 본 변경과 무관. Docker 가동 환경에서 재실행 시 통과 예상.

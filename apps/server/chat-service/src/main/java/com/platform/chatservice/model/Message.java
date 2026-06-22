@@ -41,7 +41,7 @@ public class Message {
   private String type =
       "text"; // "text" | "image" | "video" | "file" | "voice" | "sticker" | "system" | "call_log" |
 
-  // "ai"
+  // "ai" | "meeting_summary"
 
   @Builder.Default private List<String> readBy = new ArrayList<>();
 

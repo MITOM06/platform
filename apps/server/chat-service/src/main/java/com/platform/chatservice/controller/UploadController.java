@@ -9,6 +9,7 @@ import com.platform.chatservice.service.VirusScanService;
 import java.io.IOException;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.bson.types.ObjectId;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.core.io.Resource;
@@ -26,6 +27,7 @@ import org.springframework.web.multipart.MultipartFile;
 @RestController
 @RequestMapping("/api/uploads")
 @RequiredArgsConstructor
+@Slf4j
 public class UploadController {
 
   private final GridFsTemplate gridFsTemplate;
@@ -44,11 +46,22 @@ public class UploadController {
     rateLimiterService.checkUploadRate(principal.getUserId());
 
     if (file == null || file.isEmpty()) {
+      log.warn(
+          "Upload rejected [empty]: filename='{}', size={}",
+          file == null ? null : file.getOriginalFilename(),
+          file == null ? 0 : file.getSize());
       throw new BadRequestException("File is empty");
     }
 
     String contentType = resolveContentType(file);
     if (!isAllowedContentType(contentType)) {
+      log.warn(
+          "Upload rejected [content-type]: resolvedContentType='{}' (declared='{}') not allowed,"
+              + " filename='{}', size={}",
+          contentType,
+          file.getContentType(),
+          file.getOriginalFilename(),
+          file.getSize());
       throw new BadRequestException("File type is not allowed");
     }
 

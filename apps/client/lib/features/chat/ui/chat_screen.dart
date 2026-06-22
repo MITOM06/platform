@@ -10,6 +10,7 @@ import '../data/chat_repository.dart';
 import '../domain/chat_provider.dart';
 import '../domain/chat_state.dart';
 import 'chat_screen_helpers.dart';
+import 'widgets/active_call_banner.dart';
 import 'widgets/chat_app_bar.dart';
 import 'widgets/chat_body.dart';
 import 'widgets/chat_wallpaper_background.dart';
@@ -370,6 +371,13 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
               onCancelEditing: _cancelEditing,
               onAcceptStranger: _acceptStranger,
               onRejectStranger: _rejectStranger,
+            ),
+          if (!_isSearching)
+            Positioned(
+              top: 0,
+              left: 0,
+              right: 0,
+              child: ActiveCallBanner(conversationId: widget.conversationId),
             ),
           if (_isSearching)
             Positioned.fill(

@@ -58,6 +58,16 @@ export interface Conversation {
 
 export type MessageType =
   | 'text' | 'image' | 'video' | 'file' | 'voice' | 'sticker' | 'system' | 'call_log' | 'ai'
+  | 'meeting_summary'
+
+/** Parsed `content` of a `meeting_summary` message (Track A contract §6). */
+export interface MeetingSummaryPayload {
+  attendees: string[]
+  durationSec: number
+  overview: string
+  keyPoints: string[]
+  actionItems: string[]
+}
 
 export interface UploadResult {
   url: string
@@ -151,8 +161,38 @@ export type StompEvent =
   | { type: 'AI_STREAM_CHUNK'; chunk: string; senderId: string; conversationId: string }
   | { type: 'AI_STREAM_DONE'; senderId: string; conversationId: string }
   | { type: 'AI_STREAM_ERROR'; error: string; code?: string; senderId: string; conversationId: string }
-  | { type: 'AI_TOOL_CALL'; toolName: string; inputSummary: string; senderId: string; conversationId: string }
+  | { type: 'AI_TOOL_CALL'; toolName: string; inputSummary: string; sensitive?: boolean; senderId: string; conversationId: string }
   | { type: 'KB_STATUS_UPDATE'; documentId: string; status: 'pending' | 'processing' | 'done' | 'error'; chunkCount?: number }
+
+// ── Group call (Track A contract §3) ────────────────────────────────────────
+
+export type CallMedia = 'audio' | 'video'
+
+/** A participant in a CallSession roster. */
+export interface CallParticipant {
+  userId: string
+  displayName: string
+  joinedAt?: string
+  leftAt?: string | null
+}
+
+/**
+ * Per-conversation call lifecycle events broadcast on
+ * `/topic/conversation/{id}` (distinct from per-message StompEvents).
+ */
+export type CallEvent =
+  | {
+      event: 'call.started'
+      callId: string
+      conversationId: string
+      media: CallMedia
+      aiNotetaker: boolean
+      startedBy: string
+      startedByName: string
+      participants: CallParticipant[]
+    }
+  | { event: 'call.roster'; callId: string; participants: CallParticipant[] }
+  | { event: 'call.ended'; callId: string }
 
 // Live state of the AI assistant's in-progress reply, shown as a streaming
 // bubble (parity with Flutter StreamingAiBubble): "thinking" dots before the
@@ -161,4 +201,6 @@ export interface AiStreamState {
   content: string
   thinking: boolean
   activeTools: string[]
+  /** Names of active tools flagged sensitive (state-changing / outbound). */
+  sensitiveTools: string[]
 }

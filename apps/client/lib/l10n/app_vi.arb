@@ -175,6 +175,55 @@
   "callConnecting": "Đang kết nối…",
   "callMediaError": "Không thể truy cập camera/micro (cần HTTPS hoặc localhost)",
   "callUnknownCaller": "Ai đó",
+  "callToggleMic": "Bật/tắt micro",
+  "callToggleCam": "Bật/tắt camera",
+  "callLeave": "Rời",
+  "callJoin": "Tham gia",
+  "callAccept": "Chấp nhận",
+  "callDecline": "Từ chối",
+  "groupCallTitle": "Cuộc gọi nhóm",
+  "groupCallParticipants": "{count, plural, =1{1 người tham gia} other{{count} người tham gia}}",
+  "@groupCallParticipants": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "groupCallNotetakerActive": "AI đang ghi chú",
+  "groupCallStartTitle": "Bắt đầu cuộc gọi nhóm",
+  "groupCallAudio": "Âm thanh",
+  "groupCallVideo": "Video",
+  "groupCallNotetakerToggle": "AI ghi chú",
+  "groupCallNotetakerHint": "AI sẽ lắng nghe và đăng bản tóm tắt cuộc họp sau đó.",
+  "groupCallStartAction": "Bắt đầu gọi",
+  "activeCallBanner": "Cuộc gọi nhóm · {count} đã tham gia",
+  "@activeCallBanner": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "incomingGroupCallTitle": "Cuộc gọi nhóm đến",
+  "incomingGroupCallBody": "{name} đã bắt đầu một cuộc gọi nhóm",
+  "@incomingGroupCallBody": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+  "meetingSummaryTitle": "Tóm tắt cuộc họp",
+  "meetingSummaryDuration": "Thời lượng {duration}",
+  "@meetingSummaryDuration": {
+    "placeholders": {
+      "duration": { "type": "String" }
+    }
+  },
+  "meetingSummaryAttendees": "Người tham dự: {names}",
+  "@meetingSummaryAttendees": {
+    "placeholders": {
+      "names": { "type": "String" }
+    }
+  },
+  "meetingSummaryOverview": "Tổng quan",
+  "meetingSummaryKeyPoints": "Điểm chính",
+  "meetingSummaryActionItems": "Việc cần làm",
   "profileTitle": "Trang cá nhân",
   "editProfile": "Chỉnh sửa trang cá nhân",
   "bio": "Tiểu sử",
@@ -300,6 +349,8 @@
   "aiError": "AI tạm thời không khả dụng. Vui lòng thử lại.",
   "aiErrStreamInterrupted": "Luồng AI bị gián đoạn. Vui lòng thử lại.",
   "aiErrUnavailable": "AI tạm thời không khả dụng.",
+  "aiErrRateLimited": "Quá nhiều yêu cầu AI. Vui lòng chậm lại và thử lại sau giây lát.",
+  "aiSensitiveAction": "hành động nhạy cảm",
   "aiErrorRetry": "Thử lại",
   "aiMessageDeleted": "Tin nhắn đã bị xóa",
   "aiMemoryTitle": "Bộ nhớ AI",

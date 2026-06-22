@@ -10,7 +10,7 @@ import { Textarea } from '@/components/ui/textarea'
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { useQueries } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { authService } from '@/lib/api/auth'
 import { useQuickReaction } from '@/lib/quick-reaction'
 import { useVoiceRecorder } from '@/lib/hooks/use-voice-recorder'
@@ -47,23 +47,30 @@ export function MessageInput({
   // Resolve group participant userIds → display names for @mentions. Mirrors
   // Flutter (mention_list.dart) which filters + inserts by display name. The
   // AI bot and self are excluded from the candidate list.
+  const queryClient = useQueryClient()
   const mentionableIds = (conversation?.type === 'group'
     ? conversation.participants.filter(
         (p) => p !== currentUserId && p !== 'ai-bot-000000000000000000000001',
       )
     : []
   )
-  const participantQueries = useQueries({
-    queries: mentionableIds.map((uid) => ({
-      queryKey: ['user', uid],
-      queryFn: () => authService.getUser(uid),
-      staleTime: 5 * 60 * 1000,
-    })),
+  // Resolve all mentionable participants in ONE batched request (was an N+1
+  // useQueries fanning out one request per participant → 429s), then seed the
+  // per-id `['user', id]` cache so other consumers (useUser) hit cache too.
+  const mentionKey = [...mentionableIds].sort().join(',')
+  const { data: batchedUsers } = useQuery({
+    queryKey: ['users-batch', mentionKey],
+    queryFn: () => authService.getUsers(mentionableIds),
+    enabled: mentionableIds.length > 0,
+    staleTime: 5 * 60 * 1000,
   })
-  const participants = mentionableIds.map((uid, i) => ({
-    id: uid,
-    name: participantQueries[i].data?.displayName ?? uid,
-  }))
+  useEffect(() => {
+    batchedUsers?.forEach((u) => queryClient.setQueryData(['user', u.id], u))
+  }, [batchedUsers, queryClient])
+  const participants = mentionableIds.map((uid) => {
+    const cached = queryClient.getQueryData<{ displayName?: string }>(['user', uid])
+    return { id: uid, name: cached?.displayName ?? uid }
+  })
   const [value, setValue] = useState('')
   const [sending, setSending] = useState(false)
   const [uploading, setUploading] = useState(false)

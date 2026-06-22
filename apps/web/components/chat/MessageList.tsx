@@ -3,7 +3,7 @@
 import { useMemo } from 'react'
 import { useVirtualizer } from '@tanstack/react-virtual'
 import { useTranslations, useLocale } from 'next-intl'
-import { Loader2, MessageCircle, Wrench } from 'lucide-react'
+import { Loader2, MessageCircle, Wrench, ShieldAlert } from 'lucide-react'
 import { MessageBubble } from '@/components/chat/MessageBubble'
 import { ChatTypingIndicator } from '@/components/chat/ChatTypingIndicator'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -200,18 +200,26 @@ export function MessageList({
       {aiStream !== null && (
         <div className="flex flex-row items-end gap-1">
           <div className="max-w-[70%] rounded-[24px] rounded-tl-none px-4 py-2.5 text-sm bg-muted/70 border border-border/50 shadow-xs">
-            {aiStream.activeTools.length > 0 && (
-              <div className="flex items-center gap-1.5 mb-1.5 text-[12px] italic text-amber-500">
-                <Wrench className="size-3 shrink-0" />
-                <span>
-                  {(() => {
-                    const tool = aiStream.activeTools[aiStream.activeTools.length - 1]
-                    const key = TOOL_LABEL_KEYS[tool]
-                    return key ? t(key) : t('aiToolCalling', { toolName: tool })
-                  })()}
-                </span>
-              </div>
-            )}
+            {aiStream.activeTools.length > 0 && (() => {
+              const tool = aiStream.activeTools[aiStream.activeTools.length - 1]
+              const key = TOOL_LABEL_KEYS[tool]
+              const label = key ? t(key) : t('aiToolCalling', { toolName: tool })
+              const isSensitive = aiStream.sensitiveTools.includes(tool)
+              return (
+                <div
+                  className={`flex items-center gap-1.5 mb-1.5 text-[12px] italic ${
+                    isSensitive ? 'text-red-400' : 'text-amber-500'
+                  }`}
+                >
+                  {isSensitive ? (
+                    <ShieldAlert className="size-3 shrink-0" />
+                  ) : (
+                    <Wrench className="size-3 shrink-0" />
+                  )}
+                  <span>{isSensitive ? `${label} · ${t('aiSensitiveAction')}` : label}</span>
+                </div>
+              )
+            })()}
             {aiStream.content ? (
               <p className="whitespace-pre-wrap leading-relaxed">
                 {aiStream.content}

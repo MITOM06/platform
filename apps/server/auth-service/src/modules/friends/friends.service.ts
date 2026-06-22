@@ -37,6 +37,42 @@ export class FriendsService {
       .exec();
   }
 
+  /**
+   * Accepted-friendship counts for many users in a single aggregation.
+   * Returns a Map keyed by userId → count (missing ids default to 0 at the
+   * call site). Each accepted friendship is counted once for each of its two
+   * participants that appear in `userIds`.
+   */
+  async countAcceptedForMany(userIds: string[]): Promise<Map<string, number>> {
+    const result = new Map<string, number>();
+    if (userIds.length === 0) return result;
+    const idSet = new Set(userIds);
+
+    const rows = await this.friendshipModel.aggregate<{
+      _id: string;
+      count: number;
+    }>([
+      {
+        $match: {
+          status: 'accepted',
+          $or: [
+            { requesterId: { $in: userIds } },
+            { recipientId: { $in: userIds } },
+          ],
+        },
+      },
+      // Emit one row per participant, then keep only the requested ids.
+      { $project: { participants: ['$requesterId', '$recipientId'] } },
+      { $unwind: '$participants' },
+      { $group: { _id: '$participants', count: { $sum: 1 } } },
+    ]);
+
+    for (const row of rows) {
+      if (idSet.has(row._id)) result.set(row._id, row.count);
+    }
+    return result;
+  }
+
   /** Ids of every user who is an accepted friend of `userId`. */
   async listAcceptedFriendIds(userId: string): Promise<string[]> {
     const docs = await this.friendshipModel

@@ -5,6 +5,7 @@ import { MemoryService } from '../memory/memory.service';
 import { EmbeddingService } from '../kb/embedding.service';
 import { ToolRegistryService } from '../tools/tool-registry.service';
 import { UsageService } from '../usage/usage.service';
+import { RateLimiterService } from '../usage/rate-limiter.service';
 import { PersonaService } from '../persona/persona.service';
 import { FactExtractorService } from './fact-extractor.service';
 import { ContextBuilderService } from './context-builder.service';
@@ -98,6 +99,8 @@ describe('AiService', () => {
   let toolRegistryGetDefinitions: jest.Mock;
   let recordUsage: jest.Mock;
   let isQuotaExceeded: jest.Mock;
+  let acquire: jest.Mock;
+  let release: jest.Mock;
   let getPersona: jest.Mock;
   let buildSystemPromptFn: jest.Mock;
   let extractFacts: jest.Mock;
@@ -126,6 +129,8 @@ describe('AiService', () => {
     toolRegistryGetDefinitions = jest.fn().mockReturnValue([]);
     recordUsage = jest.fn().mockResolvedValue(undefined);
     isQuotaExceeded = jest.fn().mockResolvedValue(false);
+    release = jest.fn().mockResolvedValue(undefined);
+    acquire = jest.fn().mockResolvedValue({ allowed: true, release });
     getPersona = jest.fn().mockResolvedValue(null);
     buildSystemPromptFn = jest.fn().mockReturnValue('You are PON AI...');
     extractFacts = jest.fn().mockResolvedValue(undefined);
@@ -162,6 +167,7 @@ describe('AiService', () => {
       execute: toolRegistryExecute,
     } as unknown as ToolRegistryService;
     const fakeUsage = { recordUsage, isQuotaExceeded } as unknown as UsageService;
+    const fakeRateLimiter = { acquire } as unknown as RateLimiterService;
     const fakePersona = {
       getPersona,
       buildSystemPrompt: buildSystemPromptFn,
@@ -178,6 +184,7 @@ describe('AiService', () => {
       fakeEmbedding,
       fakeToolRegistry,
       fakeUsage,
+      fakeRateLimiter,
       fakePersona,
       fakeFactExtractor,
       fakeContextBuilder,
@@ -545,6 +552,39 @@ describe('AiService', () => {
       error: 'Monthly AI usage quota exceeded. Please contact your admin.',
     });
     expect(mockStream).not.toHaveBeenCalled();
+  });
+
+  // ─── Rate limiting ────────────────────────────────────────────────────────
+
+  it('publishes AI_STREAM_ERROR (RATE_LIMITED) and skips Anthropic when throttled', async () => {
+    acquire.mockResolvedValue({ allowed: false, reason: 'rate', release });
+
+    await service.handleRequest(basePayload);
+
+    expect(publish).toHaveBeenCalledWith(
+      'conv-test',
+      expect.objectContaining({ type: 'AI_STREAM_ERROR', code: 'AI_RATE_LIMITED' }),
+    );
+    expect(mockStream).not.toHaveBeenCalled();
+  });
+
+  it('releases the concurrency slot after a successful request', async () => {
+    mockStream.mockReturnValue(makeStream(['OK']));
+
+    await service.handleRequest(basePayload);
+
+    expect(acquire).toHaveBeenCalledWith('user-1');
+    expect(release).toHaveBeenCalledTimes(1);
+  });
+
+  it('releases the concurrency slot even when both models fail', async () => {
+    mockStream.mockImplementation(() => {
+      throw new Error('model overloaded');
+    });
+
+    await expect(service.handleRequest(basePayload)).rejects.toThrow();
+
+    expect(release).toHaveBeenCalledTimes(1);
   });
 
   // ─── Persona system prompt ────────────────────────────────────────────────

@@ -13,7 +13,8 @@
     "members": "{count} members",
     "somethingWrong": "Algo salió mal",
     "unknownError": "Error desconocido",
-    "retry": "Reintentar"
+    "retry": "Reintentar",
+    "dialogDescription": "Contenido del diálogo"
   },
   "layout": {
     "navExplore": "Explorar",
@@ -513,6 +514,8 @@
     "aiQuotaExceeded": "Se ha superado la cuota mensual de uso de IA. Contacta a tu administrador.",
     "aiStreamInterrupted": "El flujo de IA fue interrumpido. Por favor, inténtalo de nuevo.",
     "aiUnavailable": "La IA no está disponible temporalmente.",
+    "aiRateLimited": "Demasiadas solicitudes de IA. Reduce la velocidad e inténtalo de nuevo en breve.",
+    "aiSensitiveAction": "acción sensible",
     "aiThinking": "Pensando…",
     "aiToolCalling": "Usando herramienta: {toolName}",
     "toolSearchMessages": "Buscando mensajes...",
@@ -898,7 +901,8 @@
     "ssoGroupDeptMap": "Grupo → Departamento",
     "ssoGroupPlaceholder": "Nombre del grupo IdP",
     "ssoAddMapping": "Añadir asignación",
-    "ssoRemoveRow": "Eliminar"
+    "ssoRemoveRow": "Eliminar",
+    "roleCloneDesc": "Crea un nuevo rol copiando los permisos de uno existente."
   },
   "call": {
     "peerFallback": "Usuario",
@@ -911,7 +915,30 @@
     "incomingVideo": "Videollamada entrante",
     "incomingVoice": "Llamada de voz entrante",
     "decline": "Rechazar",
-    "answer": "Responder"
+    "answer": "Responder",
+    "groupCall": "Llamada grupal",
+    "startGroupCall": "Iniciar llamada grupal",
+    "startGroupCallDesc": "Se invitará a todos en este grupo.",
+    "audioCall": "Audio",
+    "videoCall": "Vídeo",
+    "aiNotetaker": "Tomador de notas IA",
+    "aiNotetakerDesc": "PON AI escucha y publica un resumen al finalizar.",
+    "startCall": "Iniciar llamada",
+    "aiTakingNotes": "La IA está tomando notas",
+    "connecting": "Conectando…",
+    "groupParticipants": "{count, plural, one {# participante} other {# participantes}}",
+    "leaveCall": "Salir de la llamada",
+    "you": "Tú",
+    "join": "Unirse",
+    "incomingGroupVideo": "Videollamada grupal entrante",
+    "incomingGroupVoice": "Llamada grupal entrante",
+    "activeCallBanner": "Llamada grupal · {count} conectados",
+    "meetingSummaryTitle": "Resumen de la reunión",
+    "noAttendees": "Sin asistentes",
+    "summaryOverview": "Resumen",
+    "summaryKeyPoints": "Puntos clave",
+    "summaryActionItems": "Tareas",
+    "summaryUnavailable": "Resumen no disponible"
   },
   "notFound": {
     "title": "Página no encontrada",

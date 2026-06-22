@@ -33,6 +33,13 @@ public class FileValidationService {
     long max = maxBytesFor(contentType);
     if (file.getSize() > max) {
       long mb = max / (1024 * 1024);
+      log.warn(
+          "Upload rejected [size]: size={} exceeds max={} bytes ({} MB) for contentType='{}', filename='{}'",
+          file.getSize(),
+          max,
+          mb,
+          contentType,
+          file.getOriginalFilename());
       throw new BadRequestException("File too large — max allowed for this type is " + mb + " MB.");
     }
   }
@@ -62,41 +69,65 @@ public class FileValidationService {
 
     if (lower.startsWith("image/")) {
       if (!isAllowedImage(header)) {
-        throw new BadRequestException("File content does not match declared image type.");
+        rejectMagicBytes(file, contentType, "image", header);
       }
     } else if (lower.startsWith("video/")) {
       if (!isAllowedVideo(header)) {
-        throw new BadRequestException("File content does not match declared video type.");
+        rejectMagicBytes(file, contentType, "video", header);
       }
     } else if (lower.startsWith("audio/")) {
       if (!isAllowedAudio(header)) {
-        throw new BadRequestException("File content does not match declared audio type.");
+        rejectMagicBytes(file, contentType, "audio", header);
       }
     } else if ("application/pdf".equals(lower)) {
       if (!startsWith(header, 0x25, 0x50, 0x44, 0x46)) { // %PDF
-        throw new BadRequestException("File content does not match declared PDF type.");
+        rejectMagicBytes(file, contentType, "PDF", header);
       }
     } else if (isZipBasedDocType(lower)) {
       // DOCX / XLSX / PPTX / ZIP all share the PK\x03\x04 header
       if (!startsWith(header, 0x50, 0x4B, 0x03, 0x04)) {
-        throw new BadRequestException("File content does not match declared document type.");
+        rejectMagicBytes(file, contentType, "document", header);
       }
     } else if (isLegacyOfficeType(lower)) {
       // Old binary Office format: DOC / XLS / PPT (Compound File Binary Format)
       if (!startsWith(header, 0xD0, 0xCF, 0x11, 0xE0)) {
-        throw new BadRequestException("File content does not match declared document type.");
+        rejectMagicBytes(file, contentType, "document", header);
       }
     } else if ("application/x-rar-compressed".equals(lower)
         || "application/vnd.rar".equals(lower)) {
       if (!startsWith(header, 0x52, 0x61, 0x72, 0x21)) { // Rar!
-        throw new BadRequestException("File content does not match declared archive type.");
+        rejectMagicBytes(file, contentType, "archive", header);
       }
     } else if ("application/x-7z-compressed".equals(lower)) {
       if (!startsWith(header, 0x37, 0x7A, 0xBC, 0xAF)) { // 7z
-        throw new BadRequestException("File content does not match declared archive type.");
+        rejectMagicBytes(file, contentType, "archive", header);
       }
     }
     // text/*, application/json, text/csv, text/plain — no strict binary signature enforced
+  }
+
+  /** Logs the magic-bytes mismatch (at WARN) then rejects with a 400. */
+  private void rejectMagicBytes(
+      MultipartFile file, String contentType, String declaredKind, byte[] header) {
+    log.warn(
+        "Upload rejected [magic-bytes]: declared {} type contentType='{}', filename='{}', size={},"
+            + " header={}",
+        declaredKind,
+        contentType,
+        file.getOriginalFilename(),
+        file.getSize(),
+        headerHex(header));
+    throw new BadRequestException(
+        "File content does not match declared " + declaredKind + " type.");
+  }
+
+  /** Hex dump of the inspected header bytes — aids diagnosing signature mismatches. */
+  private String headerHex(byte[] header) {
+    StringBuilder sb = new StringBuilder(header.length * 3);
+    for (byte b : header) {
+      sb.append(String.format("%02X ", b & 0xFF));
+    }
+    return sb.toString().trim();
   }
 
   // --- image signatures ---------------------------------------------------

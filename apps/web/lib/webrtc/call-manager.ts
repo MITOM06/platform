@@ -14,9 +14,18 @@ export interface WebRTCSignal {
   senderId?: string
   targetId?: string
   conversationId?: string
-  type: 'offer' | 'answer' | 'ice' | 'end'
+  type: 'offer' | 'answer' | 'ice' | 'end' | 'call-ring'
   sdp?: string
   candidate?: RTCIceCandidateInit
+  // ── Group-call fields (Track A §3). Absent on legacy 1-on-1 signals. ───────
+  /** Present on every mesh signal; routes the signal into the group manager. */
+  callId?: string
+  /** Mesh peer id the signal was relayed from (server-filled). */
+  fromId?: string
+  /** Ring metadata (`type:'call-ring'`). */
+  startedByName?: string
+  media?: 'audio' | 'video'
+  aiNotetaker?: boolean
 }
 
 const ICE_SERVERS: RTCConfiguration = {

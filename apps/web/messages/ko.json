@@ -13,7 +13,8 @@
     "members": "{count} members",
     "somethingWrong": "오류가 발생했습니다",
     "unknownError": "알 수 없는 오류",
-    "retry": "다시 시도"
+    "retry": "다시 시도",
+    "dialogDescription": "대화 상자 내용"
   },
   "layout": {
     "navExplore": "탐색",
@@ -513,6 +514,8 @@
     "aiQuotaExceeded": "월별 AI 사용 한도를 초과했습니다. 관리자에게 문의하세요.",
     "aiStreamInterrupted": "AI 스트림이 중단되었습니다. 다시 시도해 주세요.",
     "aiUnavailable": "AI를 일시적으로 사용할 수 없습니다.",
+    "aiRateLimited": "AI 요청이 너무 많습니다. 잠시 후 다시 시도해 주세요.",
+    "aiSensitiveAction": "민감한 작업",
     "aiThinking": "생각 중…",
     "aiToolCalling": "도구 사용 중: {toolName}",
     "toolSearchMessages": "메시지 검색 중...",
@@ -898,7 +901,8 @@
     "ssoGroupDeptMap": "그룹 → 부서",
     "ssoGroupPlaceholder": "IdP 그룹 이름",
     "ssoAddMapping": "매핑 추가",
-    "ssoRemoveRow": "제거"
+    "ssoRemoveRow": "제거",
+    "roleCloneDesc": "기존 역할의 권한을 복사하여 새 역할을 만듭니다."
   },
   "call": {
     "peerFallback": "사용자",
@@ -911,7 +915,30 @@
     "incomingVideo": "영상 통화 수신",
     "incomingVoice": "음성 통화 수신",
     "decline": "거절",
-    "answer": "받기"
+    "answer": "받기",
+    "groupCall": "그룹 통화",
+    "startGroupCall": "그룹 통화 시작",
+    "startGroupCallDesc": "이 그룹의 모든 사람이 초대됩니다.",
+    "audioCall": "음성",
+    "videoCall": "영상",
+    "aiNotetaker": "AI 회의록",
+    "aiNotetakerDesc": "PON AI가 듣고 종료 후 요약을 게시합니다.",
+    "startCall": "통화 시작",
+    "aiTakingNotes": "AI가 기록 중입니다",
+    "connecting": "연결 중…",
+    "groupParticipants": "참가자 {count}명",
+    "leaveCall": "통화 나가기",
+    "you": "나",
+    "join": "참여",
+    "incomingGroupVideo": "그룹 영상 통화 수신",
+    "incomingGroupVoice": "그룹 통화 수신",
+    "activeCallBanner": "그룹 통화 · {count}명 참여",
+    "meetingSummaryTitle": "회의 요약",
+    "noAttendees": "참석자 없음",
+    "summaryOverview": "개요",
+    "summaryKeyPoints": "핵심 사항",
+    "summaryActionItems": "실행 항목",
+    "summaryUnavailable": "요약을 사용할 수 없습니다"
   },
   "notFound": {
     "title": "페이지를 찾을 수 없습니다",

@@ -5,6 +5,7 @@ import com.platform.chatservice.dto.MessageResponse;
 import com.platform.chatservice.dto.SendMessageRequest;
 import com.platform.chatservice.exception.RateLimitExceededException;
 import com.platform.chatservice.service.AiRedisPublisher;
+import com.platform.chatservice.service.CallService;
 import com.platform.chatservice.service.ConversationService;
 import com.platform.chatservice.service.MessageService;
 import com.platform.chatservice.service.RateLimiterService;
@@ -32,6 +33,7 @@ public class ChatController {
   private final com.platform.chatservice.service.FcmService fcmService;
   private final RateLimiterService rateLimiterService;
   private final AiRedisPublisher aiRedisPublisher;
+  private final CallService callService;
 
   @MessageMapping("/chat.send")
   public void send(@Payload ChatMessageDto dto, Principal principal) {
@@ -125,24 +127,36 @@ public class ChatController {
     messagingTemplate.convertAndSend("/topic/conversation/" + dto.getConversationId(), event);
   }
 
-  // WebRTC Signaling Endpoints
+  // WebRTC Signaling Endpoints.
+  // Shared by the legacy 1-on-1 flow and the group mesh: when the payload carries a callId the
+  // signal is a group-mesh relay (delegated to CallService, which stamps fromId), otherwise it
+  // keeps the original 1-on-1 relay behavior.
   @MessageMapping("/call.offer")
   public void callOffer(
       @Payload com.platform.chatservice.dto.WebRTCSignalDto dto, Principal principal) {
-    dto.setSenderId(principal.getName());
-    messagingTemplate.convertAndSendToUser(dto.getTargetId(), "/queue/webrtc", dto);
+    relayCallSignal("offer", dto, principal);
   }
 
   @MessageMapping("/call.answer")
   public void callAnswer(
       @Payload com.platform.chatservice.dto.WebRTCSignalDto dto, Principal principal) {
-    dto.setSenderId(principal.getName());
-    messagingTemplate.convertAndSendToUser(dto.getTargetId(), "/queue/webrtc", dto);
+    relayCallSignal("answer", dto, principal);
   }
 
   @MessageMapping("/call.ice")
   public void callIceCandidate(
       @Payload com.platform.chatservice.dto.WebRTCSignalDto dto, Principal principal) {
+    relayCallSignal("ice", dto, principal);
+  }
+
+  private void relayCallSignal(
+      String type, com.platform.chatservice.dto.WebRTCSignalDto dto, Principal principal) {
+    if (dto.getCallId() != null && !dto.getCallId().isBlank()) {
+      // Group mesh signaling.
+      callService.relaySignal(principal.getName(), type, dto);
+      return;
+    }
+    // Legacy 1-on-1 relay (unchanged).
     dto.setSenderId(principal.getName());
     messagingTemplate.convertAndSendToUser(dto.getTargetId(), "/queue/webrtc", dto);
   }

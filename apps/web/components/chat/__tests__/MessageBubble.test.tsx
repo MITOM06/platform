@@ -194,6 +194,35 @@ describe('MessageBubble', () => {
     expect(screen.queryByText('secret content')).not.toBeInTheDocument()
   })
 
+  // ── meeting_summary card (Track A §6, web↔mobile parity) ───────────────────
+
+  it('renders a meeting_summary message as a summary card with sections', async () => {
+    const payload = {
+      attendees: ['Alice', 'Bob'],
+      durationSec: 125,
+      overview: 'We discussed the roadmap.',
+      keyPoints: ['Ship Track A', 'Hire QA'],
+      actionItems: ['Alice writes the spec'],
+    }
+    await renderBubble({ type: 'meeting_summary', content: JSON.stringify(payload) })
+    // Header title key + section header keys (stub translator returns the key).
+    expect(screen.getByText('meetingSummaryTitle')).toBeInTheDocument()
+    expect(screen.getByText('summaryOverview')).toBeInTheDocument()
+    expect(screen.getByText('summaryKeyPoints')).toBeInTheDocument()
+    expect(screen.getByText('summaryActionItems')).toBeInTheDocument()
+    // Parsed content rendered.
+    expect(screen.getByText('We discussed the roadmap.')).toBeInTheDocument()
+    expect(screen.getByText('Ship Track A')).toBeInTheDocument()
+    expect(screen.getByText('Alice writes the spec')).toBeInTheDocument()
+    // Attendees joined into the header.
+    expect(screen.getByText('Alice, Bob')).toBeInTheDocument()
+  })
+
+  it('renders a fallback for an unparseable meeting_summary payload', async () => {
+    await renderBubble({ type: 'meeting_summary', content: 'not-json{' })
+    expect(screen.getByText('summaryUnavailable')).toBeInTheDocument()
+  })
+
   it('renders reactions badges when message has reactions', async () => {
     await renderBubble({
       type: 'text',

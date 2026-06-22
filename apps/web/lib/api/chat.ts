@@ -12,6 +12,35 @@ import type {
   UserStatus,
 } from './types'
 
+// Filename-extension → MIME map covering the upload types chat-service allows.
+// Used as a fallback when a Blob/File has no `.type` (e.g. some MediaRecorder
+// outputs) so the per-file content-type passes server-side validation.
+const EXT_CONTENT_TYPE: Record<string, string> = {
+  png: 'image/png',
+  jpg: 'image/jpeg',
+  jpeg: 'image/jpeg',
+  gif: 'image/gif',
+  webp: 'image/webp',
+  mp4: 'video/mp4',
+  mov: 'video/quicktime',
+  webm: 'video/webm',
+  mp3: 'audio/mpeg',
+  ogg: 'audio/ogg',
+  wav: 'audio/wav',
+  pdf: 'application/pdf',
+  doc: 'application/msword',
+  docx: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  xls: 'application/vnd.ms-excel',
+  xlsx: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  ppt: 'application/vnd.ms-powerpoint',
+  pptx: 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+}
+
+function inferContentType(filename: string): string {
+  const ext = filename.split('.').pop()?.toLowerCase() ?? ''
+  return EXT_CONTENT_TYPE[ext] ?? 'application/octet-stream'
+}
+
 export const chatService = {
   // ── Conversations ──────────────────────────────────────────────────────────
 
@@ -142,12 +171,17 @@ export const chatService = {
 
   /** Upload a file (image/video/document/voice) to GridFS. Returns stored url + meta. */
   uploadFile: (file: File | Blob, filename?: string) => {
+    const name = filename ?? (file instanceof File ? file.name : 'file')
+    // chat-service validates the per-file content-type via magic bytes; a blob
+    // with an empty `.type` (or a generic octet-stream) gets rejected with 400.
+    // Set an explicit type on the FormData entry: prefer the file's own type,
+    // else infer from the extension. Do NOT hand-set the multipart request
+    // Content-Type header — the browser must add the boundary itself.
+    const type = file.type || inferContentType(name)
     const form = new FormData()
-    form.append('file', file, filename ?? (file instanceof File ? file.name : 'file'))
+    form.append('file', new File([file], name, { type }))
     return chatApi
-      .post<UploadResult>('/api/uploads', form, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      })
+      .post<UploadResult>('/api/uploads', form)
       .then((r) => r.data)
   },
 

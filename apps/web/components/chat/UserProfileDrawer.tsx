@@ -10,6 +10,7 @@ import {
   Cake, Phone, Users,
 } from 'lucide-react'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { DialogA11yDescription } from '@/components/common/dialog-a11y-description'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
@@ -156,6 +157,7 @@ export function UserProfileDrawer({ userId, onClose }: Props) {
         <DialogHeader className="px-6 pt-6">
           <DialogTitle>{t('profileTitle')}</DialogTitle>
         </DialogHeader>
+          <DialogA11yDescription />
 
         {isLoading ? (
           <div className="flex justify-center py-12">

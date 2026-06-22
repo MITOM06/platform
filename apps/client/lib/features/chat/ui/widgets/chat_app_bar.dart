@@ -9,6 +9,7 @@ import '../../domain/chat_provider.dart';
 import '../../domain/chat_state.dart';
 import 'conversation_avatar.dart';
 import 'conversation_info_sidebar.dart';
+import 'group_call_start_sheet.dart';
 
 class ChatScreenAppBar extends ConsumerWidget implements PreferredSizeWidget {
   final String conversationId;
@@ -236,15 +237,21 @@ class ChatScreenAppBar extends ConsumerWidget implements PreferredSizeWidget {
           if (isGroup) ...[
             IconButton(
               icon: const Icon(Icons.call_outlined, color: Colors.white, size: 22),
-              onPressed: () => _showGroupCallPicker(
-                  context, ref, conv, currentUserId,
-                  isVideo: false),
+              tooltip: context.l10n.groupCallStartAction,
+              onPressed: () => GroupCallStartSheet.show(
+                context,
+                conversationId: conversationId,
+                initialVideo: false,
+              ),
             ),
             IconButton(
               icon: const Icon(Icons.videocam_outlined, color: Colors.white, size: 24),
-              onPressed: () => _showGroupCallPicker(
-                  context, ref, conv, currentUserId,
-                  isVideo: true),
+              tooltip: context.l10n.groupCallStartAction,
+              onPressed: () => GroupCallStartSheet.show(
+                context,
+                conversationId: conversationId,
+                initialVideo: true,
+              ),
             ),
           ],
           Builder(
@@ -296,80 +303,4 @@ class ChatScreenAppBar extends ConsumerWidget implements PreferredSizeWidget {
     }
   }
 
-  void _showGroupCallPicker(
-    BuildContext context,
-    WidgetRef ref,
-    ConversationModel? conv,
-    String currentUserId, {
-    bool isVideo = true,
-  }) {
-    if (conv == null) return;
-    final others = conv.participants.where((p) => p != currentUserId).toList();
-    showDialog(
-      context: context,
-      builder: (ctx) => _GroupCallPickerDialog(
-        others: others,
-        conversationId: conv.id,
-        isVideo: isVideo,
-      ),
-    );
-  }
-}
-
-class _GroupCallPickerDialog extends ConsumerWidget {
-  final List<String> others;
-  final String conversationId;
-  final bool isVideo;
-
-  const _GroupCallPickerDialog({
-    required this.others,
-    required this.conversationId,
-    this.isVideo = true,
-  });
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    return AlertDialog(
-      title: Text(context.l10n.callSelectMember),
-      content: SizedBox(
-        width: double.maxFinite,
-        child: ListView.builder(
-          shrinkWrap: true,
-          itemCount: others.length,
-          itemBuilder: (ctx, i) {
-            final userId = others[i];
-            final profileAsync = ref.watch(userProfileProvider(userId));
-            final name = profileAsync.valueOrNull?.displayName ?? userId;
-            final avatarUrl = profileAsync.valueOrNull?.avatarUrl;
-            return ListTile(
-              leading: CircleAvatar(
-                backgroundImage:
-                    avatarUrl != null ? NetworkImage(avatarUrl) : null,
-                child: avatarUrl == null
-                    ? Text(name.isNotEmpty ? name[0].toUpperCase() : '?')
-                    : null,
-              ),
-              title: Text(name),
-              onTap: () {
-                Navigator.of(ctx).pop();
-                GoRouter.of(context).push('/call', extra: {
-                  'targetId': userId,
-                  'targetName': name,
-                  'conversationId': conversationId,
-                  'isCaller': true,
-                  'isVideo': isVideo,
-                });
-              },
-            );
-          },
-        ),
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.of(context).pop(),
-          child: Text(context.l10n.actionCancel),
-        ),
-      ],
-    );
-  }
 }

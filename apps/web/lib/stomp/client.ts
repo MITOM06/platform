@@ -130,12 +130,37 @@ export const stompService = {
     destination: string,
     callback: (message: IMessage) => void,
   ): StompSubscription | undefined {
-    return client?.subscribe(destination, callback)
+    // Only subscribe when the socket is actually connected — subscribing on a
+    // CONNECTING/CLOSED client transmits a SUBSCRIBE frame on a dead socket
+    // ("WebSocket is already in CLOSING or CLOSED state"). The reconnect path
+    // (onConnect) lets callers re-run their subscribe effect, so a skipped
+    // subscribe here is re-established on the next successful connect.
+    if (!client?.connected) return undefined
+    const sub = client.subscribe(destination, callback)
+    // Wrap unsubscribe so cleanup after the socket has closed is a no-op
+    // instead of throwing while transmitting an UNSUBSCRIBE frame.
+    return {
+      ...sub,
+      unsubscribe: (headers?: Record<string, string>) => {
+        if (!client?.connected) return
+        try {
+          sub.unsubscribe(headers)
+        } catch {
+          /* socket already closed — nothing to clean up */
+        }
+      },
+    }
   },
 
   publish(destination: string, body: object): void {
-    if (client?.connected) {
+    // Guard every transmit: writing to a CLOSING/CLOSED socket throws
+    // "WebSocket is already in CLOSING or CLOSED state". When disconnected this
+    // is a no-op; STOMP reconnects and callers re-issue on the next action.
+    if (!client?.connected) return
+    try {
       client.publish({ destination, body: JSON.stringify(body) })
+    } catch {
+      /* socket transitioned to closing mid-publish — drop the frame */
     }
   },
 

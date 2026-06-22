@@ -186,4 +186,20 @@ export class MemoryVectorService {
       this.logger.warn(`Memory delete failed for ${conversationId}: ${(err as Error).message}`);
     }
   }
+
+  /**
+   * Retention purge: delete all fact points created before `cutoffMs`.
+   * No-op-safe when the collection is empty/missing.
+   */
+  async deleteOlderThan(cutoffMs: number): Promise<void> {
+    try {
+      await this.ensureCollection();
+      await this.client.delete(this.collection, {
+        wait: true,
+        filter: { must: [{ key: 'createdAt', range: { lt: cutoffMs } }] },
+      });
+    } catch (err) {
+      this.logger.warn(`Memory TTL purge failed: ${(err as Error).message}`);
+    }
+  }
 }

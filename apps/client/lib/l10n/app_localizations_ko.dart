@@ -566,6 +566,94 @@ class AppLocalizationsKo extends AppLocalizations {
   String get callUnknownCaller => '누군가';
 
   @override
+  String get callToggleMic => '마이크 전환';
+
+  @override
+  String get callToggleCam => '카메라 전환';
+
+  @override
+  String get callLeave => '나가기';
+
+  @override
+  String get callJoin => '참여';
+
+  @override
+  String get callAccept => '수락';
+
+  @override
+  String get callDecline => '거절';
+
+  @override
+  String get groupCallTitle => '그룹 통화';
+
+  @override
+  String groupCallParticipants(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '참여자 $count명',
+      one: '참여자 1명',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get groupCallNotetakerActive => 'AI가 메모하고 있습니다';
+
+  @override
+  String get groupCallStartTitle => '그룹 통화 시작';
+
+  @override
+  String get groupCallAudio => '음성';
+
+  @override
+  String get groupCallVideo => '영상';
+
+  @override
+  String get groupCallNotetakerToggle => 'AI 노트테이커';
+
+  @override
+  String get groupCallNotetakerHint => 'AI가 대화를 듣고 통화 후 회의 요약을 게시합니다.';
+
+  @override
+  String get groupCallStartAction => '통화 시작';
+
+  @override
+  String activeCallBanner(int count) {
+    return '그룹 통화 · $count명 참여';
+  }
+
+  @override
+  String get incomingGroupCallTitle => '수신 그룹 통화';
+
+  @override
+  String incomingGroupCallBody(String name) {
+    return '$name님이 그룹 통화를 시작했습니다';
+  }
+
+  @override
+  String get meetingSummaryTitle => '회의 요약';
+
+  @override
+  String meetingSummaryDuration(String duration) {
+    return '통화 시간 $duration';
+  }
+
+  @override
+  String meetingSummaryAttendees(String names) {
+    return '참석자: $names';
+  }
+
+  @override
+  String get meetingSummaryOverview => '개요';
+
+  @override
+  String get meetingSummaryKeyPoints => '핵심 내용';
+
+  @override
+  String get meetingSummaryActionItems => '할 일';
+
+  @override
   String get profileTitle => '프로필';
 
   @override
@@ -924,6 +1012,12 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get aiErrUnavailable => 'AI를 일시적으로 사용할 수 없습니다.';
+
+  @override
+  String get aiErrRateLimited => 'AI 요청이 너무 많습니다. 잠시 후 다시 시도해 주세요.';
+
+  @override
+  String get aiSensitiveAction => '민감한 작업';
 
   @override
   String get aiErrorRetry => '다시 시도';

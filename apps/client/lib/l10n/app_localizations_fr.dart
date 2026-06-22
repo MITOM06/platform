@@ -581,6 +581,95 @@ class AppLocalizationsFr extends AppLocalizations {
   String get callUnknownCaller => 'Quelqu\'un';
 
   @override
+  String get callToggleMic => 'Activer/désactiver le micro';
+
+  @override
+  String get callToggleCam => 'Activer/désactiver la caméra';
+
+  @override
+  String get callLeave => 'Quitter';
+
+  @override
+  String get callJoin => 'Rejoindre';
+
+  @override
+  String get callAccept => 'Accepter';
+
+  @override
+  String get callDecline => 'Refuser';
+
+  @override
+  String get groupCallTitle => 'Appel de groupe';
+
+  @override
+  String groupCallParticipants(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count participants',
+      one: '1 participant',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get groupCallNotetakerActive => 'L\'IA prend des notes';
+
+  @override
+  String get groupCallStartTitle => 'Démarrer un appel de groupe';
+
+  @override
+  String get groupCallAudio => 'Audio';
+
+  @override
+  String get groupCallVideo => 'Vidéo';
+
+  @override
+  String get groupCallNotetakerToggle => 'Preneur de notes IA';
+
+  @override
+  String get groupCallNotetakerHint =>
+      'L\'IA écoute et publie un résumé de la réunion ensuite.';
+
+  @override
+  String get groupCallStartAction => 'Démarrer l\'appel';
+
+  @override
+  String activeCallBanner(int count) {
+    return 'Appel de groupe · $count ont rejoint';
+  }
+
+  @override
+  String get incomingGroupCallTitle => 'Appel de groupe entrant';
+
+  @override
+  String incomingGroupCallBody(String name) {
+    return '$name a démarré un appel de groupe';
+  }
+
+  @override
+  String get meetingSummaryTitle => 'Résumé de la réunion';
+
+  @override
+  String meetingSummaryDuration(String duration) {
+    return 'Durée $duration';
+  }
+
+  @override
+  String meetingSummaryAttendees(String names) {
+    return 'Participants : $names';
+  }
+
+  @override
+  String get meetingSummaryOverview => 'Aperçu';
+
+  @override
+  String get meetingSummaryKeyPoints => 'Points clés';
+
+  @override
+  String get meetingSummaryActionItems => 'Actions à mener';
+
+  @override
   String get profileTitle => 'Profil';
 
   @override
@@ -947,6 +1036,13 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get aiErrUnavailable => 'L\'IA est temporairement indisponible.';
+
+  @override
+  String get aiErrRateLimited =>
+      'Trop de requêtes IA. Veuillez ralentir et réessayer dans un instant.';
+
+  @override
+  String get aiSensitiveAction => 'action sensible';
 
   @override
   String get aiErrorRetry => 'Réessayer';

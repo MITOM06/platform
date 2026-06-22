@@ -6,6 +6,7 @@ import { useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { useAuthStore } from '@/lib/store/auth.store'
 import { stompService } from '@/lib/stomp/client'
+import { useStompConnected } from '@/lib/stomp/use-stomp-connected'
 import { chatService } from '@/lib/api/chat'
 import { useMessages } from '@/lib/hooks/use-messages'
 import { useConversation } from '@/lib/hooks/use-conversation'
@@ -19,12 +20,14 @@ import { StrangerRequestBanner } from '@/components/chat/StrangerRequestBanner'
 import { BlockedComposerNotice } from '@/components/chat/BlockedComposerNotice'
 import { AiTraceModal } from '@/components/chat/AiTraceModal'
 import { ForwardMessageModal } from '@/components/chat/ForwardMessageModal'
+import { ActiveCallBanner } from '@/components/call/ActiveCallBanner'
+import { useCallStore } from '@/lib/store/call.store'
 import { cn } from '@/lib/utils'
 import { useWallpaper } from '@/lib/hooks/use-wallpaper'
 import { useMessageCache } from '@/lib/hooks/use-message-cache'
 import { applyNicknameSystemMessage } from '@/lib/nicknames'
 import { applyQuickReactionSystemMessage } from '@/lib/quick-reaction'
-import type { AiStreamState, Message, MessageType, StompEvent } from '@/lib/api/types'
+import type { AiStreamState, CallEvent, CallMedia, Message, MessageType, StompEvent } from '@/lib/api/types'
 
 interface Props {
   params: Promise<{ id: string }>
@@ -41,11 +44,27 @@ function isStompEvent(parsed: Record<string, unknown>): parsed is StompEvent {
   return typeof parsed.type === 'string' && STOMP_EVENT_TYPES.has(parsed.type)
 }
 
+// Group-call lifecycle events (Track A §3) are keyed by `event`, not `type`.
+const CALL_EVENT_TYPES = new Set(['call.started', 'call.roster', 'call.ended'])
+function isCallEvent(parsed: Record<string, unknown>): parsed is CallEvent {
+  return typeof parsed.event === 'string' && CALL_EVENT_TYPES.has(parsed.event)
+}
+
+interface ActiveCall {
+  callId: string
+  media: CallMedia
+  aiNotetaker: boolean
+  joinedCount: number
+}
+
 export default function ConversationPage({ params }: Props) {
   const { id } = use(params)
   const t = useTranslations('chat')
   const queryClient = useQueryClient()
   const currentUser = useAuthStore((s) => s.user)
+  // Re-run the STOMP subscribe effect on every (re)connect so a dropped socket
+  // is re-subscribed instead of leaving a subscription bound to a dead socket.
+  const stompConnected = useStompConnected()
   const bottomRef = useRef<HTMLDivElement>(null)
   const topSentinelRef = useRef<HTMLDivElement>(null)
   const scrollContainerRef = useRef<HTMLDivElement>(null)
@@ -59,6 +78,8 @@ export default function ConversationPage({ params }: Props) {
   const [forwardMessage, setForwardMessage] = useState<Message | null>(null)
   const [traceMessageId, setTraceMessageId] = useState<string | null>(null)
   const [aiStream, setAiStream] = useState<AiStreamState | null>(null)
+  const [activeCall, setActiveCall] = useState<ActiveCall | null>(null)
+  const groupCallId = useCallStore((s) => s.groupCallId)
   // Watchdog so a "thinking" bubble never sticks forever if the AI never
   // responds (parity with Flutter's 30s watchdog). Re-armed on every AI event.
   const aiWatchdogRef = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -157,6 +178,7 @@ export default function ConversationPage({ params }: Props) {
 
   // Subscribe to STOMP for real-time messages + events + typing
   useEffect(() => {
+    if (!stompConnected) return
     let active = true
     let typingSub: ReturnType<typeof stompService.subscribe>
     let messageSub: ReturnType<typeof stompService.subscribe>
@@ -203,18 +225,24 @@ export default function ConversationPage({ params }: Props) {
                   content: (prev?.content ?? '') + String(parsed.chunk ?? ''),
                   thinking: false,
                   activeTools: prev?.activeTools ?? [],
+                  sensitiveTools: prev?.sensitiveTools ?? [],
                 }))
                 armAiWatchdog()
                 break
               case 'AI_TOOL_CALL': {
                 const toolName = String(parsed.toolName ?? '')
+                const isSensitive = parsed.sensitive === true
                 setAiStream((prev) => {
-                  const base = prev ?? { content: '', thinking: true, activeTools: [] }
+                  const base = prev ?? { content: '', thinking: true, activeTools: [], sensitiveTools: [] }
                   return {
                     ...base,
                     activeTools: base.activeTools.includes(toolName)
                       ? base.activeTools
                       : [...base.activeTools, toolName],
+                    sensitiveTools:
+                      isSensitive && !base.sensitiveTools.includes(toolName)
+                        ? [...base.sensitiveTools, toolName]
+                        : base.sensitiveTools,
                   }
                 })
                 armAiWatchdog()
@@ -227,6 +255,7 @@ export default function ConversationPage({ params }: Props) {
                 clearAiStream()
                 const aiErrCodeMap: Record<string, string> = {
                   AI_QUOTA_EXCEEDED: t('aiQuotaExceeded'),
+                  AI_RATE_LIMITED: t('aiRateLimited'),
                   AI_STREAM_INTERRUPTED: t('aiStreamInterrupted'),
                   AI_UNAVAILABLE: t('aiUnavailable'),
                 }
@@ -236,6 +265,51 @@ export default function ConversationPage({ params }: Props) {
                 toast.error(String(aiErrMsg))
                 break
               }
+            }
+          } else if (isCallEvent(parsed)) {
+            // Group-call lifecycle (Track A §3): drive the active-call banner and,
+            // if this client is in the call, feed the roster into the mesh manager.
+            switch (parsed.event) {
+              case 'call.started': {
+                setActiveCall({
+                  callId: parsed.callId,
+                  media: parsed.media,
+                  aiNotetaker: parsed.aiNotetaker,
+                  joinedCount: parsed.participants.length,
+                })
+                // If WE started it, the server already added us as a participant —
+                // activate our group-call state without re-joining.
+                if (parsed.startedBy === currentUser?.id) {
+                  void import('@/lib/webrtc/group-call-manager').then((m) =>
+                    m.groupCallManager.confirmStarted(
+                      parsed.callId,
+                      parsed.conversationId,
+                      currentUser!.id,
+                      parsed.media,
+                      parsed.aiNotetaker,
+                    ),
+                  )
+                }
+                break
+              }
+              case 'call.roster': {
+                const joined = parsed.participants.filter((p) => !p.leftAt).length
+                setActiveCall((prev) =>
+                  prev && prev.callId === parsed.callId ? { ...prev, joinedCount: joined } : prev,
+                )
+                if (useCallStore.getState().groupCallId === parsed.callId) {
+                  void import('@/lib/webrtc/group-call-manager').then((m) =>
+                    m.groupCallManager.applyRoster(parsed.participants),
+                  )
+                }
+                break
+              }
+              case 'call.ended':
+                setActiveCall((prev) => (prev?.callId === parsed.callId ? null : prev))
+                void import('@/lib/webrtc/group-call-manager').then((m) =>
+                  m.groupCallManager.handleEnded(parsed.callId),
+                )
+                break
             }
           } else {
             // Regular message (includes AI final message after AI_STREAM_DONE)
@@ -272,7 +346,7 @@ export default function ConversationPage({ params }: Props) {
       messageSub?.unsubscribe()
       typingSub?.unsubscribe()
     }
-  }, [id, queryClient, currentUser?.id, patchMessage, appendMessage, markMessageRead, t, armAiWatchdog, clearAiStream])
+  }, [id, stompConnected, queryClient, currentUser?.id, patchMessage, appendMessage, markMessageRead, t, armAiWatchdog, clearAiStream])
 
   // Mark conversation as read on open
   useEffect(() => {
@@ -319,7 +393,7 @@ export default function ConversationPage({ params }: Props) {
       // with Flutter, which creates the placeholder on send).
       const triggersAi = type === 'text' && (isAI || /@(?:AI|ponai)\b/i.test(content))
       if (triggersAi) {
-        setAiStream({ content: '', thinking: true, activeTools: [] })
+        setAiStream({ content: '', thinking: true, activeTools: [], sensitiveTools: [] })
         armAiWatchdog()
       }
       const sent = await chatService.sendMessage(id, finalContent, type, replyingTo?.id)
@@ -361,6 +435,16 @@ export default function ConversationPage({ params }: Props) {
         <MessageSearchPanel
           conversationId={id}
           onClose={() => setSearchVisible(false)}
+        />
+      )}
+
+      {activeCall && groupCallId !== activeCall.callId && (
+        <ActiveCallBanner
+          callId={activeCall.callId}
+          conversationId={id}
+          media={activeCall.media}
+          aiNotetaker={activeCall.aiNotetaker}
+          joinedCount={activeCall.joinedCount}
         />
       )}
 

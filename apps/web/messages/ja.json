@@ -13,7 +13,8 @@
     "members": "{count} members",
     "somethingWrong": "エラーが発生しました",
     "unknownError": "不明なエラー",
-    "retry": "再試行"
+    "retry": "再試行",
+    "dialogDescription": "ダイアログの内容"
   },
   "layout": {
     "navExplore": "探索",
@@ -513,6 +514,8 @@
     "aiQuotaExceeded": "月間 AI 使用量の上限を超えました。管理者にお問い合わせください。",
     "aiStreamInterrupted": "AI ストリームが中断されました。もう一度お試しください。",
     "aiUnavailable": "AI は一時的に利用できません。",
+    "aiRateLimited": "AI へのリクエストが多すぎます。少し時間をおいて再試行してください。",
+    "aiSensitiveAction": "重要な操作",
     "aiThinking": "考え中…",
     "aiToolCalling": "ツールを使用中：{toolName}",
     "toolSearchMessages": "メッセージを検索中...",
@@ -898,7 +901,8 @@
     "ssoGroupDeptMap": "グループ → 部門",
     "ssoGroupPlaceholder": "IdP グループ名",
     "ssoAddMapping": "マッピングを追加",
-    "ssoRemoveRow": "削除"
+    "ssoRemoveRow": "削除",
+    "roleCloneDesc": "既存のロールの権限をコピーして新しいロールを作成します。"
   },
   "call": {
     "peerFallback": "ユーザー",
@@ -911,7 +915,30 @@
     "incomingVideo": "ビデオ通話の着信",
     "incomingVoice": "音声通話の着信",
     "decline": "拒否",
-    "answer": "応答"
+    "answer": "応答",
+    "groupCall": "グループ通話",
+    "startGroupCall": "グループ通話を開始",
+    "startGroupCallDesc": "このグループの全員が招待されます。",
+    "audioCall": "音声",
+    "videoCall": "ビデオ",
+    "aiNotetaker": "AI 議事録",
+    "aiNotetakerDesc": "PON AI が聞き取り、終了後に要約を投稿します。",
+    "startCall": "通話を開始",
+    "aiTakingNotes": "AI が記録中",
+    "connecting": "接続中…",
+    "groupParticipants": "{count} 人が参加",
+    "leaveCall": "通話を退出",
+    "you": "あなた",
+    "join": "参加",
+    "incomingGroupVideo": "グループビデオ通話の着信",
+    "incomingGroupVoice": "グループ通話の着信",
+    "activeCallBanner": "グループ通話 · {count} 人参加中",
+    "meetingSummaryTitle": "会議の要約",
+    "noAttendees": "参加者なし",
+    "summaryOverview": "概要",
+    "summaryKeyPoints": "要点",
+    "summaryActionItems": "アクション項目",
+    "summaryUnavailable": "要約は利用できません"
   },
   "notFound": {
     "title": "ページが見つかりません",

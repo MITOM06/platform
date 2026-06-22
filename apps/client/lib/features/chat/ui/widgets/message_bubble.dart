@@ -9,6 +9,7 @@ import 'ai_message_parts.dart';
 import 'file_content.dart';
 import 'floating_reaction_sheet.dart';
 import 'image_content.dart';
+import 'meeting_summary_card.dart';
 import 'message_bubble_parts.dart';
 import 'streaming_ai_bubble.dart';
 import 'text_content.dart';
@@ -37,6 +38,9 @@ class MessageBubble extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     if (message.isSystem) {
       return SystemMessage(message: message);
+    }
+    if (message.isMeetingSummary) {
+      return MeetingSummaryBubble(message: message);
     }
 
     final chatState = ref
@@ -144,7 +148,8 @@ class MessageBubble extends ConsumerWidget {
                                   message.isAiStreamInterrupted ||
                                   message.isAiUnavailable
                               ? const Color(0xFF3D1515)
-                              : message.isAiQuotaExceeded
+                              : message.isAiQuotaExceeded ||
+                                      message.isAiRateLimited
                                   ? const Color(0xFF3D2800)
                                   : message.isAiMessage && !message.recalled
                                       ? const Color(0xFF2D1B69)
@@ -212,9 +217,26 @@ class MessageBubble extends ConsumerWidget {
                           content: message.content,
                           isThinking: message.isThinking,
                           activeTools: message.activeTools,
+                          sensitiveTools: message.sensitiveTools,
                         )
                       else if (message.isAiQuotaExceeded)
                         const QuotaExceededBubble()
+                      else if (message.isAiRateLimited)
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(Icons.hourglass_top_rounded,
+                                color: Color(0xFFFFB74D), size: 16),
+                            const SizedBox(width: 6),
+                            Flexible(
+                              child: Text(
+                                context.l10n.aiErrRateLimited,
+                                style: const TextStyle(
+                                    color: Color(0xFFFFB74D), fontSize: 14),
+                              ),
+                            ),
+                          ],
+                        )
                       else if (message.isAiStreamInterrupted)
                         Row(
                           mainAxisSize: MainAxisSize.min,

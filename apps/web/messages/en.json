@@ -13,7 +13,8 @@
     "members": "{count} members",
     "somethingWrong": "Something went wrong",
     "unknownError": "Unknown error",
-    "retry": "Try again"
+    "retry": "Try again",
+    "dialogDescription": "Dialog content"
   },
   "layout": {
     "navExplore": "Explore",
@@ -513,6 +514,8 @@
     "aiQuotaExceeded": "Monthly AI usage quota exceeded. Please contact your admin.",
     "aiStreamInterrupted": "AI stream was interrupted. Please try again.",
     "aiUnavailable": "AI is temporarily unavailable.",
+    "aiRateLimited": "Too many AI requests. Please slow down and try again shortly.",
+    "aiSensitiveAction": "sensitive action",
     "aiThinking": "Thinking…",
     "aiToolCalling": "Using tool: {toolName}",
     "toolSearchMessages": "Searching messages...",
@@ -898,7 +901,8 @@
     "ssoGroupDeptMap": "Group → Department",
     "ssoGroupPlaceholder": "IdP group name",
     "ssoAddMapping": "Add mapping",
-    "ssoRemoveRow": "Remove"
+    "ssoRemoveRow": "Remove",
+    "roleCloneDesc": "Create a new role by copying the permissions of an existing one."
   },
   "call": {
     "peerFallback": "User",
@@ -911,7 +915,30 @@
     "incomingVideo": "Incoming video call",
     "incomingVoice": "Incoming voice call",
     "decline": "Decline",
-    "answer": "Answer"
+    "answer": "Answer",
+    "groupCall": "Group call",
+    "startGroupCall": "Start group call",
+    "startGroupCallDesc": "Everyone in this group will be invited.",
+    "audioCall": "Audio",
+    "videoCall": "Video",
+    "aiNotetaker": "AI notetaker",
+    "aiNotetakerDesc": "PON AI listens and posts a summary afterward.",
+    "startCall": "Start call",
+    "aiTakingNotes": "AI is taking notes",
+    "connecting": "Connecting…",
+    "groupParticipants": "{count, plural, one {# participant} other {# participants}}",
+    "leaveCall": "Leave call",
+    "you": "You",
+    "join": "Join",
+    "incomingGroupVideo": "Incoming group video call",
+    "incomingGroupVoice": "Incoming group call",
+    "activeCallBanner": "Group call · {count} joined",
+    "meetingSummaryTitle": "Meeting summary",
+    "noAttendees": "No attendees",
+    "summaryOverview": "Overview",
+    "summaryKeyPoints": "Key points",
+    "summaryActionItems": "Action items",
+    "summaryUnavailable": "Summary unavailable"
   },
   "notFound": {
     "title": "Page not found",

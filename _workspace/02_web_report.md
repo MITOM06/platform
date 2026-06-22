@@ -1,38 +1,63 @@
 ## Web Implementation Report
 
-### 변경된 파일
-- `apps/web/lib/api/auth.ts` — `UserProfile`와 `UpdateProfilePayload`에 `showDateOfBirth?`, `showPhoneNumber?`, `showGender?: boolean` 추가. `hideInfo`는 폴백용으로 유지.
-- `apps/web/components/profile/ProfileForm.tsx` — `ProfileFormValues`의 `hideInfo` → 3개 boolean(`showDateOfBirth/showPhoneNumber/showGender`)으로 교체. 단일 privacy Switch 제거하고 별도 "Privacy" 섹션에 3개 토글 배치. props `onHideInfoChange` → `onShowFieldChange(field, value)`로 변경. `PrivacyField` 타입 export 추가.
-- `apps/web/app/(main)/profile/edit/page.tsx` — zod schema의 `hideInfo` → 3 booleans. defaultValues(기본 true) 및 reset 시드(`me.showDateOfBirth ?? !me.hideInfo` 등 폴백). `onSubmit`에서 3개 플래그 전달, `hideInfo` 제거. texts에 신규 라벨 매핑, `onShowFieldChange` 핸들러 연결.
-- `apps/web/components/chat/UserProfileDrawer.tsx` — 우측 `Sheet`(side="right") → 화면 중앙 `Dialog`(@/components/ui/dialog)로 교체. 컴포넌트명/props(`{userId, onClose}`) 유지 → 호출부 무변경. 필드별 게이팅: `showDob = isSelf || (user.showDateOfBirth ?? !user.hideInfo)`, phone/gender 동일. bio는 항상 표시.
-- `apps/web/app/(main)/profile/page.tsx` (자기 프로필 보기) — 콘텐츠를 화면 중앙 카드(`max-w-md mx-auto`, rounded border/card/shadow, `flex justify-center`)로 정리. self이므로 모든 필드 표시 유지, edit 진입 버튼 유지.
-- `apps/web/messages/{en,vi,zh,ja,ko,es,fr}.json` — profile 네임스페이스에 `showDobLabel`, `showPhoneLabel`, `showGenderLabel`, `privacySectionLabel`, `privacySectionHint` 추가(7개 언어). 미사용이 된 `hideInfoLabel`/`hideInfoHint`는 7개 언어 모두에서 제거.
+Scope: Web sections of `_workspace/01_plan.md` — issues 1-6 (avatar sync, conversation-info panel trim, nickname modal redesign, password autocomplete, group/user avatar 404 fix, shared per-conversation wallpaper).
 
-> 참고: `apps/web/components/ui/dialog.tsx`는 이미 존재하여 `npx shadcn add dialog` 불필요. 직접 편집하지 않음.
+### 변경된 파일
+
+**Issue 1 — Avatar stale for other viewers**
+- `lib/hooks/use-user.ts` — `staleTime` 5min → 30s. Avatar uploads produce a NEW unique URL per change (`POST /api/uploads` → `/api/uploads/<objectId>`), so a refetched profile carries a fresh image path that bypasses the HTTP cache without volatile cache-busting. No `?v=` needed.
+- `app/(main)/conversations/[id]/page.tsx` — on `CONVERSATION_UPDATED`, also invalidate `['user', uid]` for every participant so peers pick up new avatars/displayNames. (No backend `USER_UPDATED` push added — plan marked it optional; cache invalidation + short staleTime cover it.)
+
+**Issue 2 — Conversation Info panel: pinned-only**
+- `components/chat/ConversationSettingsDrawer.tsx` — removed the entire "Chat Info" `AccordionItem` (bio/DOB for direct, member count for group). Pinned Messages accordion + `PinnedMessagesSection` retained. Dropped now-unused `Users, Info, Cake` icon imports.
+
+**Issue 3 — Nickname editing redesign (centered modal, 1:1 + group)**
+- `components/chat/group/NicknamesModal.tsx` — NEW. Centered `Dialog` listing each participant as a row: avatar (via `absoluteMediaUrl`) + real account displayName, with editable nickname below (pencil → inline `Input`, "No nickname" placeholder when empty). Self row labelled "(you)". Self nickname editable.
+- `components/chat/group/CustomizeChatSection.tsx` — replaced the two inline `NicknameRow`s with a single "Edit nicknames" button opening the modal; works for BOTH direct and group. Removed obsolete `NicknameRow` helper + `Button`/`Input` imports.
+- `components/chat/GroupSettingsDrawer.tsx` — added "Edit nicknames" button + `NicknamesModal` to the group Customize section (self + all members), reusing the same `system.nickname.changed:` broadcast transport.
+- `components/chat/ConversationSettingsDrawer.tsx` — passes `participantIds` (AI bot excluded) + reactive `nicknameMap` into `CustomizeChatSection`.
+- `lib/nicknames.ts` — added reactive `useNicknames(convId)` hook (whole map, re-reads on `NICKNAME_EVENT`). Storage/broadcast helpers unchanged.
+
+**Issue 4 — Change Password: old field starts empty**
+- `components/chat/ChangePasswordDialog.tsx` — added `autoComplete="new-password"` to current, new, and confirm password inputs to suppress browser autofill.
+
+**Issue 5 — Group/user avatar raw src 404 → absoluteMediaUrl**
+- `components/chat/ConversationItem.tsx` — `AvatarImage src` wrapped in `absoluteMediaUrl`.
+- `components/chat/ConversationHeader.tsx` — same.
+- `components/chat/GroupSettingsDrawer.tsx` — raw `<img src={conversation.avatarUrl}>` wrapped in `absoluteMediaUrl`.
+- `components/chat/group/SettingsHeader.tsx` — wrapped.
+- `components/chat/ActiveFriendsRow.tsx` — wrapped.
+- `app/(main)/friends/page.tsx` — wrapped.
+- `app/(main)/explore/page.tsx` — channel avatar wrapped.
+  (ReactionsDetailModal, UserProfileDrawer, GroupReadDetailsModal, GroupMemberRow, ai-persona already used `absoluteMediaUrl` — no change.)
+
+**Issue 6 — Shared per-conversation wallpaper (server-side)**
+- `lib/api/types.ts` — `Conversation.wallpaper: string | null` added.
+- `lib/api/chat.ts` — `setWallpaper(id, wallpaper)` → `PUT /api/conversations/{id}/wallpaper`.
+- `lib/hooks/use-wallpaper.ts` — reads wallpaper from the `['conversation', id]` query (server-authoritative, shared) instead of `localStorage`; re-resolves on `CONVERSATION_UPDATED`. Optimistic `wallpaper-changed` CustomEvent (carries `{conversationId, value}`) applies instantly before the broadcast round-trips. Exported `WALLPAPER_EVENT` + `WallpaperEventDetail`.
+- `components/chat/WallpaperPickerModal.tsx` — initial value read from `conversation.wallpaper`; confirm persists via `chatService.setWallpaper` (replacing `localStorage.setItem` + `system.theme.changed` send) with optimistic event + saving spinner + error toast.
 
 ### TypeScript 타입 체크 결과
-- `pnpm build` (TS strict): ✓ Compiled successfully — errors: 0
-- 전체 라우트 빌드 성공.
+- `pnpm build` (apps/web): **Compiled successfully, errors: 0**. (Only pre-existing pnpm/node deprecation warnings, unrelated.)
 
-### i18n 추가 키 (profile 네임스페이스)
-- `showDobLabel`: "Show date of birth to others"
-- `showPhoneLabel`: "Show phone number to others"
-- `showGenderLabel`: "Show gender to others"
-- `privacySectionLabel`: "Privacy"
-- `privacySectionHint`: "Choose which details other users can see."
-- (제거) `hideInfoLabel`, `hideInfoHint` — 7개 언어 모두
+### i18n 추가 키 (chat namespace, all 7 locales)
+- `editNicknames`: "Edit nicknames"
+- `nicknameModalTitle`: "Nicknames"
+- `nicknameNonePlaceholder`: "No nickname"
+- `wallpaperSaveError`: "Failed to save wallpaper"
+  (Translated into vi/zh/ja/ko/es/fr.)
 
 ### Flutter 미러 파일 동기화 확인
-- `UserProfileDrawer.tsx` ↔ `user_profile_dialog.dart`: ✓ (양쪽 모두 중앙 다이얼로그. Web은 Sheet→Dialog로 통일하여 미러 일치)
-- `ProfileForm.tsx` (edit) ↔ `edit_profile_screen.dart`/`user_profile_info_section.dart`: 게이팅 규칙 동일(`show* ?? !hideInfo`). Flutter 측 구현은 mobile-dev 담당 — 본 작업 범위는 Web만.
-- 게이팅 폴백 규칙(`showDateOfBirth ?? !hideInfo` 등)이 plan의 백엔드/모바일과 동일하게 적용됨.
-
-### 테스트
-- `pnpm --filter @platform/web test`: ✓ Test Files 5 passed (5), Tests 48 passed (48)
-- 기존 `MessageBubble.test.tsx`, `connector.test.ts` 영향 없음(컴포넌트명/시그니처 유지).
+- `NicknamesModal.tsx` ↔ `conversation_customisation_dialogs.dart` (`showNicknamesDialog`): ✓ both redesigned to a single centered modal (self + members, pencil edit, placeholder); same `system.nickname.changed:` transport.
+- `CustomizeChatSection.tsx`/`GroupSettingsDrawer.tsx` "Edit nicknames" ↔ `conversation_info_sidebar.dart` nicknames entry: ✓ both open the modal for direct AND group.
+- `ChangePasswordDialog.tsx` (autoComplete) ↔ `change_password_dialog.dart`: ✓ both start empty / suppress autofill.
+- Avatar `absoluteMediaUrl` ↔ `conversation_avatar.dart` `_absoluteUrl`: ✓ both resolve relative `/api/uploads/...` against the chat base.
+- Wallpaper `setWallpaper` / `Conversation.wallpaper` ↔ `chat_repository.dart` `setWallpaper` + `chat_misc_providers.dart`: ✓ both consume `wallpaper` from the conversation model, re-resolve on `CONVERSATION_UPDATED`, share across members. (Verified mobile-dev added these — repository + provider present.)
+- i18n keys `editNicknames` present in all 7 `app_*.arb`: ✓ (7/7).
+- Conversation-info trim (issue 2) ↔ `conversation_info_sidebar.dart` "Chat Details" removal: mirror handled by mobile-dev per plan.
 
 ### 주의사항
-- `hideInfo`는 타입과 폴백 로직에서 의도적으로 유지(레거시 유저 + 백엔드 하위호환). 제거 대상은 UI 라벨 키와 단일 토글뿐.
-- self 응답에만 per-field 플래그가 내려온다는 API 계약 전제. edit 폼은 self(getMe) 응답을 시드로 사용하므로 정상 동작.
-- 타 유저 보기 시 서버가 이미 필드를 strip하지만, 클라이언트도 동일 게이팅을 방어적으로 적용함.
-- 자기 프로필 "보기"는 기존 풀스크린 라우트(`/profile`)를 유지하되 중앙 카드 레이아웃으로 정리. 멤버/유저 "보기"는 중앙 Dialog. (plan 권장안과 일치)
+- **No backend `USER_UPDATED` push** was added (plan marked optional/invasive). Issue 1 relies on: (a) unique-per-upload avatar URL paths, (b) 30s `useUser` staleTime, (c) `['user', uid]` invalidation on `CONVERSATION_UPDATED`. A peer who changes ONLY their avatar (no conversation event) will refresh within 30s on next access, or immediately if any `CONVERSATION_UPDATED` fires. If instant cross-peer refresh is required later, add the `USER_UPDATED` broadcast hook described in the plan + a `case 'USER_UPDATED'` in the STOMP switch.
+- Backend wallpaper endpoint `PUT /api/conversations/{id}/wallpaper` + `Conversation.wallpaper` + `ConversationResponse.wallpaper` already implemented (verified) — any participant may set it (not admin-gated).
+- Old `system.theme.changed:` messages still humanize in `lib/system-messages.ts` for history; web never applied them as a wallpaper setter, so the server value is now the single source of truth (strictly better than the prior per-device localStorage).
+- `NicknamesModal` fetches each participant profile via `useUser` (letter fallback while loading) — group rows render progressively.

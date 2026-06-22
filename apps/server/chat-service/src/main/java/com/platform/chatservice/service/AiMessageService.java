@@ -66,6 +66,43 @@ public class AiMessageService {
   }
 
   /**
+   * Save a meeting-summary message produced by the AI notetaker and broadcast it to the
+   * conversation topic. Uses the same AI sender identity as {@link #saveAiMessage}; {@code content}
+   * is the JSON-encoded summary payload (rendered as a card on the clients). Returns the saved
+   * message id so the caller can backfill {@code CallSession.summaryMessageId}.
+   */
+  public String saveMeetingSummary(String conversationId, String contentJson) {
+    Message message =
+        messageRepository.save(
+            Message.builder()
+                .conversationId(conversationId)
+                .senderId(AiConstants.AI_BOT_USER_ID)
+                .content(contentJson)
+                .type("meeting_summary")
+                .readBy(new ArrayList<>())
+                .build());
+
+    Instant savedAt = message.getCreatedAt() != null ? message.getCreatedAt() : Instant.now();
+    conversationRepository
+        .findById(conversationId)
+        .ifPresent(
+            conv -> {
+              conv.setLastMessage(
+                  Conversation.LastMessage.builder()
+                      .content(contentJson)
+                      .senderId(AiConstants.AI_BOT_USER_ID)
+                      .createdAt(savedAt)
+                      .build());
+              conv.setLastMessageAt(savedAt);
+              conversationRepository.save(conv);
+            });
+
+    MessageResponse response = messageMapper.toResponse(message);
+    messagingTemplate.convertAndSend("/topic/conversation/" + conversationId, response);
+    return message.getId();
+  }
+
+  /**
    * Returns the AI trace for a message. Throws 404 if message not found or trace is null (regular
    * non-AI messages have no trace).
    */

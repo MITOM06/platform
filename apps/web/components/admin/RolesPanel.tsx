@@ -12,6 +12,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
@@ -149,6 +150,7 @@ export function RolesPanel() {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>{t('roleCloneTitle', { name: cloneFrom?.name ?? '' })}</DialogTitle>
+            <DialogDescription>{t('roleCloneDesc')}</DialogDescription>
           </DialogHeader>
           <div className="space-y-1.5 py-2">
             <Label htmlFor="clone-name">{t('roleName')}</Label>

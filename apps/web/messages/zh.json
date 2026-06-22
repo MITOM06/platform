@@ -13,7 +13,8 @@
     "members": "{count} members",
     "somethingWrong": "出现错误",
     "unknownError": "未知错误",
-    "retry": "重试"
+    "retry": "重试",
+    "dialogDescription": "对话框内容"
   },
   "layout": {
     "navExplore": "探索",
@@ -513,6 +514,8 @@
     "aiQuotaExceeded": "已超过每月 AI 使用配额，请联系管理员。",
     "aiStreamInterrupted": "AI 流已中断，请重试。",
     "aiUnavailable": "AI 暂时不可用。",
+    "aiRateLimited": "AI 请求过于频繁。请稍后再试。",
+    "aiSensitiveAction": "敏感操作",
     "aiThinking": "正在思考…",
     "aiToolCalling": "正在使用工具：{toolName}",
     "toolSearchMessages": "正在搜索消息...",
@@ -898,7 +901,8 @@
     "ssoGroupDeptMap": "组 → 部门",
     "ssoGroupPlaceholder": "IdP 组名称",
     "ssoAddMapping": "添加映射",
-    "ssoRemoveRow": "移除"
+    "ssoRemoveRow": "移除",
+    "roleCloneDesc": "通过复制现有角色的权限来创建新角色。"
   },
   "call": {
     "peerFallback": "用户",
@@ -911,7 +915,30 @@
     "incomingVideo": "视频通话来电",
     "incomingVoice": "语音通话来电",
     "decline": "拒绝",
-    "answer": "接听"
+    "answer": "接听",
+    "groupCall": "群组通话",
+    "startGroupCall": "发起群组通话",
+    "startGroupCallDesc": "该群组的所有成员都会被邀请。",
+    "audioCall": "语音",
+    "videoCall": "视频",
+    "aiNotetaker": "AI 记录员",
+    "aiNotetakerDesc": "PON AI 全程聆听并在结束后发布摘要。",
+    "startCall": "开始通话",
+    "aiTakingNotes": "AI 正在记录",
+    "connecting": "连接中…",
+    "groupParticipants": "{count} 位参与者",
+    "leaveCall": "离开通话",
+    "you": "你",
+    "join": "加入",
+    "incomingGroupVideo": "群组视频通话邀请",
+    "incomingGroupVoice": "群组通话邀请",
+    "activeCallBanner": "群组通话 · 已加入 {count} 人",
+    "meetingSummaryTitle": "会议摘要",
+    "noAttendees": "无参与者",
+    "summaryOverview": "概览",
+    "summaryKeyPoints": "要点",
+    "summaryActionItems": "行动项",
+    "summaryUnavailable": "摘要不可用"
   },
   "notFound": {
     "title": "页面不存在",

@@ -3,6 +3,7 @@
 import { useQuery } from '@tanstack/react-query'
 import { Loader2, ImageIcon, FileText, Link as LinkIcon } from 'lucide-react'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { DialogA11yDescription } from '@/components/common/dialog-a11y-description'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { chatService } from '@/lib/api/chat'
 import { absoluteMediaUrl, parseFileMeta, firstUrl } from '@/lib/media'
@@ -115,6 +116,7 @@ export function SharedMediaGallery({ conversationId, open, onClose }: Props) {
         <DialogHeader>
           <DialogTitle>Nội dung đã chia sẻ</DialogTitle>
         </DialogHeader>
+          <DialogA11yDescription />
 
         <Tabs defaultValue="media">
           <TabsList className="w-full">

@@ -12,6 +12,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
+import { DialogA11yDescription } from '@/components/common/dialog-a11y-description'
 import { setLocaleAction } from '@/lib/actions/locale'
 import { LOCALE_NAMES, SUPPORTED_LOCALES, type Locale } from '@/i18n/config'
 import { cn } from '@/lib/utils'
@@ -50,6 +51,7 @@ export function ThemePickerDialog({ open, onOpenChange }: DialogProps) {
         <DialogHeader>
           <DialogTitle>{t('chooseThemeTitle')}</DialogTitle>
         </DialogHeader>
+          <DialogA11yDescription />
         <div className="flex flex-col gap-1.5">
           {THEME_OPTIONS.map(({ value, icon: Icon, activeColor }) => {
             const active = current === value
@@ -102,6 +104,7 @@ export function LanguagePickerDialog({ open, onOpenChange }: DialogProps) {
         <DialogHeader>
           <DialogTitle>{t('chooseLanguageTitle')}</DialogTitle>
         </DialogHeader>
+        <DialogA11yDescription />
         <div className="flex max-h-[60vh] flex-col gap-1.5 overflow-y-auto">
           {SUPPORTED_LOCALES.map((lng) => {
             const active = lng === locale

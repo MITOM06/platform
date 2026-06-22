@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useTranslations } from 'next-intl'
-import { ArrowLeft, Bot, Settings, Phone, Video } from 'lucide-react'
+import { ArrowLeft, Bot, Settings, Phone, Video, Users } from 'lucide-react'
 import Link from 'next/link'
 import { useQueryClient } from '@tanstack/react-query'
 import { useConversation } from '@/lib/hooks/use-conversation'
@@ -17,6 +17,7 @@ import { ConversationSettingsDrawer } from './ConversationSettingsDrawer'
 import { GroupSettingsDrawer } from './GroupSettingsDrawer'
 import { SharedMediaGallery } from './SharedMediaGallery'
 import { UserProfileDrawer } from './UserProfileDrawer'
+import { StartCallSheet } from '@/components/call/StartCallSheet'
 import { useNickname } from '@/lib/nicknames'
 import { absoluteMediaUrl } from '@/lib/media'
 import { cn } from '@/lib/utils'
@@ -59,6 +60,7 @@ export function ConversationHeader({
   const [groupSettingsOpen, setGroupSettingsOpen] = useState(false)
   const [galleryOpen, setGalleryOpen] = useState(false)
   const [profileOpen, setProfileOpen] = useState(false)
+  const [startCallOpen, setStartCallOpen] = useState(false)
 
   const isAI = conversation?.participants.includes(AI_BOT_ID) ?? false
   const isGroup = conversation?.type === 'group'
@@ -162,6 +164,16 @@ export function ConversationHeader({
 
         {/* Header action buttons */}
         <div className="flex items-center gap-0.5 shrink-0">
+          {isGroup && !isAI && (
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setStartCallOpen(true)}
+              title={t('groupCall')}
+            >
+              <Users className="size-4" />
+            </Button>
+          )}
           {otherUserId && (
             <>
               <Button
@@ -228,6 +240,13 @@ export function ConversationHeader({
         userId={profileOpen ? (otherUserId ?? null) : null}
         onClose={() => setProfileOpen(false)}
       />
+      {isGroup && (
+        <StartCallSheet
+          open={startCallOpen}
+          conversationId={conversationId}
+          onClose={() => setStartCallOpen(false)}
+        />
+      )}
     </div>
   )
 }

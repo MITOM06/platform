@@ -10,6 +10,7 @@ import axios from 'axios'
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle,
 } from '@/components/ui/dialog'
+import { DialogA11yDescription } from '@/components/common/dialog-a11y-description'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
@@ -220,6 +221,7 @@ export function NewConversationModal({ open, onClose, defaultTab }: Props) {
         <DialogHeader>
           <DialogTitle>{t('newConvTitle')}</DialogTitle>
         </DialogHeader>
+          <DialogA11yDescription />
 
         <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'direct' | 'group')}>
           <TabsList className="w-full">

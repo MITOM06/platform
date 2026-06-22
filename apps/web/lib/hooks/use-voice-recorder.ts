@@ -34,7 +34,16 @@ export function useVoiceRecorder({ onSend, onUploadingChange, labels }: Options)
     }
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
-      const recorder = new MediaRecorder(stream)
+      // Pick a mimeType chat-service accepts (audio/webm or audio/ogg). Letting
+      // MediaRecorder default can yield audio/mp4 (Safari), which the server's
+      // content-type validation rejects → silent voice-message upload failures.
+      const preferred = ['audio/webm', 'audio/ogg']
+      const supported = preferred.find(
+        (m) => typeof MediaRecorder !== 'undefined' && MediaRecorder.isTypeSupported(m),
+      )
+      const recorder = supported
+        ? new MediaRecorder(stream, { mimeType: supported })
+        : new MediaRecorder(stream)
       chunksRef.current = []
       cancelledRef.current = false
       recorder.ondataavailable = (ev) => {
@@ -43,11 +52,15 @@ export function useVoiceRecorder({ onSend, onUploadingChange, labels }: Options)
       recorder.onstop = async () => {
         stream.getTracks().forEach((tr) => tr.stop())
         if (cancelledRef.current) return
-        const blob = new Blob(chunksRef.current, { type: recorder.mimeType || 'audio/webm' })
+        const mimeType = recorder.mimeType || 'audio/webm'
+        const blob = new Blob(chunksRef.current, { type: mimeType })
         if (blob.size === 0) return
         onUploadingChange(true)
         try {
-          const ext = (recorder.mimeType || 'audio/webm').includes('mp4') ? 'm4a' : 'webm'
+          // Match the extension to the recorded mimeType so the upload's
+          // content-type (derived from blob.type / extension) passes the
+          // server's audio validation.
+          const ext = mimeType.includes('ogg') ? 'ogg' : 'webm'
           const { url } = await chatService.uploadFile(blob, `voice_${Date.now()}.${ext}`)
           await onSend(url, 'voice')
         } catch {

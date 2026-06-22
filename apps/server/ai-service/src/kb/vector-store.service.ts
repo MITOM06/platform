@@ -81,4 +81,35 @@ export class VectorStoreService {
       },
     });
   }
+
+  /**
+   * List the distinct documentIds that currently have chunks in the collection.
+   * Pages through the whole collection via scroll; used by retention to detect
+   * orphaned chunks. Returns [] if the collection is missing/empty.
+   */
+  async listDocumentIds(collectionName: string): Promise<string[]> {
+    const ids = new Set<string>();
+    try {
+      let offset: string | number | undefined | null = undefined;
+      // Bounded scan: stop after a generous page budget to avoid runaway loops.
+      for (let page = 0; page < 1000; page++) {
+        const res = await this.client.scroll(collectionName, {
+          with_payload: ['documentId'],
+          with_vector: false,
+          limit: 256,
+          offset: offset ?? undefined,
+        });
+        for (const p of res.points ?? []) {
+          const docId = p.payload?.['documentId'] as string | undefined;
+          if (docId) ids.add(docId);
+        }
+        offset = res.next_page_offset as string | number | null | undefined;
+        if (offset === null || offset === undefined) break;
+      }
+    } catch {
+      // Missing/empty collection — nothing to reconcile.
+      return [];
+    }
+    return [...ids];
+  }
 }

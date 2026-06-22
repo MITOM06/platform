@@ -1,5 +1,6 @@
 import { useTranslations } from 'next-intl'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { DialogA11yDescription } from '@/components/common/dialog-a11y-description'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { useUser } from '@/lib/hooks/use-user'
@@ -58,6 +59,7 @@ export function ReactionsDetailModal({ message, open, onClose }: Props) {
         <DialogHeader>
           <DialogTitle>{t('reactionsDetail')}</DialogTitle>
         </DialogHeader>
+          <DialogA11yDescription />
         <div className="mt-2">
           <Tabs defaultValue={emojis[0]} className="w-full">
             <TabsList className="w-full justify-start overflow-x-auto rounded-none border-b bg-transparent h-auto p-0 pb-1">

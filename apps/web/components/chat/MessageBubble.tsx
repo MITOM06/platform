@@ -13,6 +13,7 @@ import { LinkPreviewCard } from './LinkPreviewCard'
 import { UserProfileDrawer } from './UserProfileDrawer'
 import { GroupReadDetailsModal } from './GroupReadDetailsModal'
 import { ReactionsDetailModal } from './ReactionsDetailModal'
+import { MeetingSummaryCard } from './MeetingSummaryCard'
 import { humanizeSystemMessage } from '@/lib/system-messages'
 import { useNickname, getNickname } from '@/lib/nicknames'
 import { useUser } from '@/lib/hooks/use-user'
@@ -53,8 +54,8 @@ function ReactionBadge({ emoji, count, onClick }: { emoji: string; count: number
   )
 }
 
-// Media types render without the colored chat bubble (mirror Flutter).
-const BARE_TYPES = new Set(['image', 'video', 'sticker'])
+// Media + summary-card types render without the colored chat bubble (mirror Flutter).
+const BARE_TYPES = new Set(['image', 'video', 'sticker', 'meeting_summary'])
 
 const MessageBubbleInner = function MessageBubble({
   message,
@@ -243,6 +244,9 @@ const MessageBubbleInner = function MessageBubble({
       break
     case 'voice':
       body = <VoiceMessage content={message.content} isOwn={isOwn} />
+      break
+    case 'meeting_summary':
+      body = <MeetingSummaryCard content={message.content} isPinned={isPinned} />
       break
     case 'ai':
       if (message.content === '__AI_ERROR__') {

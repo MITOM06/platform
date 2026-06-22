@@ -5,6 +5,7 @@ import { Model } from 'mongoose';
 import { AiMemory, AiMemoryDocument } from './ai-memory.schema';
 import { MemoryVectorService } from './memory-vector.service';
 import { EmbeddingService } from '../kb/embedding.service';
+import { redactPii, REDACT_SECRETS_ONLY } from '../common/pii-redactor';
 
 export interface RelevantFact {
   text: string;
@@ -84,8 +85,11 @@ export class MemoryService {
     messageCount: number,
     source = 'auto-extract',
   ): Promise<void> {
-    for (const text of facts) {
-      const clean = text.trim();
+    // Scrub credentials / card numbers before anything is persisted at rest.
+    // Emails & phones are kept — they are legitimate, useful user facts.
+    const safeSummary = redactPii(summary, REDACT_SECRETS_ONLY);
+    for (const rawText of facts) {
+      const clean = redactPii(rawText, REDACT_SECRETS_ONLY).trim();
       if (!clean) continue;
       let vector: number[];
       try {
@@ -114,7 +118,7 @@ export class MemoryService {
 
     await this.memoryModel.findOneAndUpdate(
       { conversationId },
-      { $set: { userId, summary, keyFacts, messageCount, updatedAt: new Date() } },
+      { $set: { userId, summary: safeSummary, keyFacts, messageCount, updatedAt: new Date() } },
       { upsert: true, new: true },
     );
   }
@@ -140,6 +144,15 @@ export class MemoryService {
   async deleteMemory(conversationId: string): Promise<void> {
     await this.memoryModel.deleteOne({ conversationId });
     await this.vectorStore.deleteConversation(conversationId);
+  }
+
+  /**
+   * Retention: purge embedded facts older than `cutoffMs` from the vector store.
+   * The canonical Mongo `keyFacts` list self-heals on the next extraction; we
+   * leave it untouched here to avoid a full re-scan on every purge.
+   */
+  async purgeFactsOlderThan(cutoffMs: number): Promise<void> {
+    await this.vectorStore.deleteOlderThan(cutoffMs);
   }
 
   async incrementMessageCount(conversationId: string): Promise<number> {

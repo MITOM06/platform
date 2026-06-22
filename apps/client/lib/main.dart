@@ -16,6 +16,7 @@ import 'core/theme/app_theme.dart';
 import 'core/utils/global_messenger.dart';
 import 'features/auth/domain/auth_provider.dart';
 import 'features/chat/data/stomp_service.dart';
+import 'features/chat/ui/widgets/incoming_group_call_prompt.dart';
 import 'firebase_options.dart';
 import 'l10n/app_localizations.dart';
 
@@ -221,6 +222,9 @@ class _PlatformAppState extends ConsumerState<PlatformApp>
       locale: locale,
       supportedLocales: AppLocalizations.supportedLocales,
       localizationsDelegates: AppLocalizations.localizationsDelegates,
+      // Float the incoming group-call (call-ring) prompt above every route.
+      builder: (context, child) =>
+          IncomingGroupCallPrompt(child: child ?? const SizedBox.shrink()),
     );
   }
 }

@@ -59,8 +59,11 @@ dependencies:
   firebase_messaging: ^15.0.1
   flutter_local_notifications: ^17.2.3
 
-  # WebRTC for 1-1 Calling
+  # WebRTC for 1-1 + group (mesh) Calling
   flutter_webrtc: ^0.12.11
+
+  # Client-side speech-to-text for the AI notetaker (group calls)
+  speech_to_text: ^7.0.0
 
   # Rich text / markdown rendering in message bubbles (Task 54)
   flutter_markdown: ^0.7.7

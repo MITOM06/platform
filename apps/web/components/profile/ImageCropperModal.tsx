@@ -4,6 +4,7 @@ import { useCallback, useState } from 'react'
 import Cropper, { type Area, type Point } from 'react-easy-crop'
 import { useTranslations } from 'next-intl'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
+import { DialogA11yDescription } from '@/components/common/dialog-a11y-description'
 import { Button } from '@/components/ui/button'
 import { Slider } from '@/components/ui/slider'
 
@@ -80,6 +81,7 @@ export function ImageCropperModal({ open, imageSrc, aspect, shape = 'rect', onCa
         <DialogHeader>
           <DialogTitle>{t('cropImage')}</DialogTitle>
         </DialogHeader>
+          <DialogA11yDescription />
 
         <div className="relative h-72 w-full bg-muted rounded-md overflow-hidden">
           {imageSrc && (

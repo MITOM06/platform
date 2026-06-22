@@ -6,6 +6,7 @@ import { TextChunkerService } from './text-chunker.service';
 import { EmbeddingService } from './embedding.service';
 import { VectorStoreService } from './vector-store.service';
 import { KbProcessorService } from './kb-processor.service';
+import { RerankerService } from './reranker.service';
 import { RedisModule } from '../redis/redis.module';
 
 const kbFeature = MongooseModule.forFeature([
@@ -20,7 +21,8 @@ const kbFeature = MongooseModule.forFeature([
     EmbeddingService,
     VectorStoreService,
     KbProcessorService,
+    RerankerService,
   ],
-  exports: [KbProcessorService, VectorStoreService, EmbeddingService],
+  exports: [KbProcessorService, VectorStoreService, EmbeddingService, RerankerService],
 })
 export class KbModule {}

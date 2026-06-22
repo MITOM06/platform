@@ -125,6 +125,29 @@ export const authService = {
   getUser: (id: string) =>
     authApi.get<UserProfile>(`/api/users/${id}`).then((r) => r.data),
 
+  /**
+   * Batch-fetch user profiles by id. Backed by `GET /api/users?ids=a,b,c`
+   * (auth-guarded, max 100 ids per call). Chunks the input into batches of
+   * <=100 and merges the results — kills the per-id N+1 that triggered 429s.
+   */
+  getUsers: async (ids: string[]): Promise<UserProfile[]> => {
+    const unique = [...new Set(ids.filter(Boolean))]
+    if (unique.length === 0) return []
+    const CHUNK = 100
+    const chunks: string[][] = []
+    for (let i = 0; i < unique.length; i += CHUNK) {
+      chunks.push(unique.slice(i, i + CHUNK))
+    }
+    const results = await Promise.all(
+      chunks.map((chunk) =>
+        authApi
+          .get<UserProfile[]>('/api/users', { params: { ids: chunk.join(',') } })
+          .then((r) => r.data),
+      ),
+    )
+    return results.flat()
+  },
+
   updateProfile: (data: UpdateProfilePayload) =>
     authApi.patch<UserProfile>('/api/users/me', data).then((r) => r.data),
 
