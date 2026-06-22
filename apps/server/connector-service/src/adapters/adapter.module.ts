@@ -6,6 +6,7 @@ import {
   UserConnection,
   UserConnectionSchema,
 } from '../connections/schemas/user-connection.schema';
+import { McpOAuthService } from '../oauth/mcp-oauth.service';
 import { RemoteMcpAdapter } from './remote-mcp.adapter';
 import { GoogleRestAdapter } from './google-rest.adapter';
 import { AdapterRegistryService } from './adapter-registry.service';
@@ -22,7 +23,12 @@ import { AdapterRegistryService } from './adapter-registry.service';
       { name: UserConnection.name, schema: UserConnectionSchema },
     ]),
   ],
-  providers: [RemoteMcpAdapter, GoogleRestAdapter, AdapterRegistryService],
+  providers: [
+    McpOAuthService,
+    RemoteMcpAdapter,
+    GoogleRestAdapter,
+    AdapterRegistryService,
+  ],
   exports: [AdapterRegistryService],
 })
 export class AdapterModule {}

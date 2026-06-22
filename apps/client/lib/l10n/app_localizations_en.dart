@@ -1850,4 +1850,104 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get adminSsoAddMapping => 'Add mapping';
+
+  @override
+  String get sectionDirectoryTitle => 'MCP directory';
+
+  @override
+  String get sectionDirectoryDesc =>
+      'Browse MCP servers and connect with one click — OAuth runs automatically.';
+
+  @override
+  String get directoryAdd => 'Add entry';
+
+  @override
+  String get directorySearch => 'Search the directory…';
+
+  @override
+  String get directoryEmpty => 'No directory entries match your search.';
+
+  @override
+  String get directoryEdit => 'Edit entry';
+
+  @override
+  String get directoryDelete => 'Delete entry';
+
+  @override
+  String get tierWorkspace => 'Workspace';
+
+  @override
+  String get tierPersonal => 'Personal';
+
+  @override
+  String get tierBoth => 'Personal / Workspace';
+
+  @override
+  String get directorySaveSuccess => 'Directory entry saved.';
+
+  @override
+  String get directoryDeleteSuccess => 'Directory entry deleted.';
+
+  @override
+  String get directoryAddTitle => 'Add directory entry';
+
+  @override
+  String get directoryEditTitle => 'Edit directory entry';
+
+  @override
+  String get directoryDialogDesc =>
+      'Add a public MCP server members can connect with one click.';
+
+  @override
+  String get directorySlug => 'Slug';
+
+  @override
+  String get directoryName => 'Name';
+
+  @override
+  String get directoryDescription => 'Description';
+
+  @override
+  String get directoryMcpUrl => 'MCP URL';
+
+  @override
+  String get directoryAuthMode => 'Auth mode';
+
+  @override
+  String get directoryTier => 'Tier';
+
+  @override
+  String get directoryEnvHint =>
+      'For env-oauth: reference the env vars holding the OAuth client credentials.';
+
+  @override
+  String get directoryEnvClientId => 'Client ID env';
+
+  @override
+  String get directoryEnvClientSecret => 'Client secret env';
+
+  @override
+  String get directoryAuthorizeUrl => 'Authorize URL';
+
+  @override
+  String get directoryTokenUrl => 'Token URL';
+
+  @override
+  String get directoryCancel => 'Cancel';
+
+  @override
+  String get directorySave => 'Save';
+
+  @override
+  String directoryKeyTitle(String provider) {
+    return 'Connect $provider';
+  }
+
+  @override
+  String get directoryKeyLabel => 'API key';
+
+  @override
+  String directoryConnected(String provider) {
+    return 'Connected $provider.';
+  }
 }

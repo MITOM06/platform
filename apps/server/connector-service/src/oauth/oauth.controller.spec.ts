@@ -8,6 +8,7 @@ import { OAuthController } from './oauth.controller';
 describe('OAuthController (JWT-derived identity)', () => {
   let controller: OAuthController;
   let oauth: any;
+  let directoryConnect: any;
 
   beforeEach(() => {
     oauth = {
@@ -16,7 +17,12 @@ describe('OAuthController (JWT-derived identity)', () => {
         .mockResolvedValue({ authorizeUrl: 'https://x/authorize' }),
       handleCallback: jest.fn().mockResolvedValue('https://client?connected=notion'),
     };
-    controller = new OAuthController(oauth);
+    directoryConnect = {
+      start: jest.fn().mockResolvedValue({ mode: 'oauth', authorizeUrl: 'https://d/authorize' }),
+      connectWithKey: jest.fn().mockResolvedValue({ connected: true }),
+      handleCallback: jest.fn().mockResolvedValue('https://client?connected=acme'),
+    };
+    controller = new OAuthController(oauth, directoryConnect);
   });
 
   it('start is protected by JwtAuthGuard', () => {
@@ -33,6 +39,24 @@ describe('OAuthController (JWT-derived identity)', () => {
   it('callback is NOT protected by JwtAuthGuard (public redirect)', () => {
     const guards =
       Reflect.getMetadata('__guards__', controller.callback) ?? [];
+    expect(guards).not.toContain(JwtAuthGuard);
+  });
+
+  it('startDirectory delegates to DirectoryConnectService with the JWT user', async () => {
+    const user = { sub: 'jwt-user', perms: [] } as any;
+    const res = await controller.startDirectory('acme', user);
+    expect(directoryConnect.start).toHaveBeenCalledWith('acme', user);
+    expect(res).toEqual({ mode: 'oauth', authorizeUrl: 'https://d/authorize' });
+  });
+
+  it('directory start is protected by JwtAuthGuard', () => {
+    const guards = Reflect.getMetadata('__guards__', controller.startDirectory);
+    expect(guards).toContain(JwtAuthGuard);
+  });
+
+  it('directory callback is NOT protected by JwtAuthGuard (public redirect)', () => {
+    const guards =
+      Reflect.getMetadata('__guards__', controller.directoryCallback) ?? [];
     expect(guards).not.toContain(JwtAuthGuard);
   });
 });

@@ -3504,6 +3504,192 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Add mapping'**
   String get adminSsoAddMapping;
+
+  /// No description provided for @sectionDirectoryTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'MCP directory'**
+  String get sectionDirectoryTitle;
+
+  /// No description provided for @sectionDirectoryDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Browse MCP servers and connect with one click — OAuth runs automatically.'**
+  String get sectionDirectoryDesc;
+
+  /// No description provided for @directoryAdd.
+  ///
+  /// In en, this message translates to:
+  /// **'Add entry'**
+  String get directoryAdd;
+
+  /// No description provided for @directorySearch.
+  ///
+  /// In en, this message translates to:
+  /// **'Search the directory…'**
+  String get directorySearch;
+
+  /// No description provided for @directoryEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No directory entries match your search.'**
+  String get directoryEmpty;
+
+  /// No description provided for @directoryEdit.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit entry'**
+  String get directoryEdit;
+
+  /// No description provided for @directoryDelete.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete entry'**
+  String get directoryDelete;
+
+  /// No description provided for @tierWorkspace.
+  ///
+  /// In en, this message translates to:
+  /// **'Workspace'**
+  String get tierWorkspace;
+
+  /// No description provided for @tierPersonal.
+  ///
+  /// In en, this message translates to:
+  /// **'Personal'**
+  String get tierPersonal;
+
+  /// No description provided for @tierBoth.
+  ///
+  /// In en, this message translates to:
+  /// **'Personal / Workspace'**
+  String get tierBoth;
+
+  /// No description provided for @directorySaveSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Directory entry saved.'**
+  String get directorySaveSuccess;
+
+  /// No description provided for @directoryDeleteSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Directory entry deleted.'**
+  String get directoryDeleteSuccess;
+
+  /// No description provided for @directoryAddTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Add directory entry'**
+  String get directoryAddTitle;
+
+  /// No description provided for @directoryEditTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit directory entry'**
+  String get directoryEditTitle;
+
+  /// No description provided for @directoryDialogDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a public MCP server members can connect with one click.'**
+  String get directoryDialogDesc;
+
+  /// No description provided for @directorySlug.
+  ///
+  /// In en, this message translates to:
+  /// **'Slug'**
+  String get directorySlug;
+
+  /// No description provided for @directoryName.
+  ///
+  /// In en, this message translates to:
+  /// **'Name'**
+  String get directoryName;
+
+  /// No description provided for @directoryDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Description'**
+  String get directoryDescription;
+
+  /// No description provided for @directoryMcpUrl.
+  ///
+  /// In en, this message translates to:
+  /// **'MCP URL'**
+  String get directoryMcpUrl;
+
+  /// No description provided for @directoryAuthMode.
+  ///
+  /// In en, this message translates to:
+  /// **'Auth mode'**
+  String get directoryAuthMode;
+
+  /// No description provided for @directoryTier.
+  ///
+  /// In en, this message translates to:
+  /// **'Tier'**
+  String get directoryTier;
+
+  /// No description provided for @directoryEnvHint.
+  ///
+  /// In en, this message translates to:
+  /// **'For env-oauth: reference the env vars holding the OAuth client credentials.'**
+  String get directoryEnvHint;
+
+  /// No description provided for @directoryEnvClientId.
+  ///
+  /// In en, this message translates to:
+  /// **'Client ID env'**
+  String get directoryEnvClientId;
+
+  /// No description provided for @directoryEnvClientSecret.
+  ///
+  /// In en, this message translates to:
+  /// **'Client secret env'**
+  String get directoryEnvClientSecret;
+
+  /// No description provided for @directoryAuthorizeUrl.
+  ///
+  /// In en, this message translates to:
+  /// **'Authorize URL'**
+  String get directoryAuthorizeUrl;
+
+  /// No description provided for @directoryTokenUrl.
+  ///
+  /// In en, this message translates to:
+  /// **'Token URL'**
+  String get directoryTokenUrl;
+
+  /// No description provided for @directoryCancel.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get directoryCancel;
+
+  /// No description provided for @directorySave.
+  ///
+  /// In en, this message translates to:
+  /// **'Save'**
+  String get directorySave;
+
+  /// No description provided for @directoryKeyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect {provider}'**
+  String directoryKeyTitle(String provider);
+
+  /// No description provided for @directoryKeyLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'API key'**
+  String get directoryKeyLabel;
+
+  /// No description provided for @directoryConnected.
+  ///
+  /// In en, this message translates to:
+  /// **'Connected {provider}.'**
+  String directoryConnected(String provider);
 }
 
 class _AppLocalizationsDelegate

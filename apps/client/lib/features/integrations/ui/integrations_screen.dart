@@ -9,6 +9,7 @@ import '../data/models/connector_models.dart';
 import '../state/integrations_provider.dart';
 import 'widgets/connector_card.dart';
 import 'widgets/custom_mcp_sheet.dart';
+import 'widgets/directory_section.dart';
 
 /// Integrations gallery — mirrors web `/integrations`. Lists catalog connectors
 /// with live status, opens OAuth in the system browser, disconnects, and lets
@@ -146,6 +147,8 @@ class _IntegrationsScreenState extends ConsumerState<IntegrationsScreen>
                 ),
               ),
               const SizedBox(height: 20),
+              const DirectorySection(),
+              const SizedBox(height: 24),
               ...items.map(
                 (item) => Padding(
                   padding: const EdgeInsets.only(bottom: 14),

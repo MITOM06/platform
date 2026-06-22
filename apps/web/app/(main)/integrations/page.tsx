@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { ArrowLeft, Plug, Sparkles } from 'lucide-react'
@@ -11,15 +11,15 @@ import {
   useConnections,
   useConnectorActions,
 } from '@/lib/hooks/use-connectors'
+import { useOAuthPopup } from '@/lib/hooks/use-oauth-popup'
 import { connectorService } from '@/lib/api/connector'
 import { useAuthStore } from '@/lib/store/auth.store'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { ConnectorCard } from '@/components/integrations/ConnectorCard'
 import { CustomMcpPanel } from '@/components/integrations/CustomMcpPanel'
+import { DirectorySection } from '@/components/integrations/DirectorySection'
 import type { CatalogEntry, ConnectionView } from '@/lib/api/connector-types'
-
-const POPUP_FEATURES = 'width=520,height=720,menubar=no,toolbar=no'
 
 export default function IntegrationsPage() {
   const t = useTranslations('integrations')
@@ -30,9 +30,7 @@ export default function IntegrationsPage() {
   const { data: catalog = [], isLoading: loadingCatalog } = useCatalog()
   const { data: connections = [], isLoading: loadingConnections } = useConnections()
   const { disconnect, invalidateConnections } = useConnectorActions()
-
-  const [connectingId, setConnectingId] = useState<string | null>(null)
-  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const { connectingId, open, reset } = useOAuthPopup(invalidateConnections)
 
   // Backend redirects the OAuth popup to `?connected=<provider>`. If we land
   // back here with that param (popup blocked → same-tab fallback), refresh.
@@ -47,48 +45,14 @@ export default function IntegrationsPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams])
 
-  useEffect(() => {
-    return () => {
-      if (pollRef.current) clearInterval(pollRef.current)
-    }
-  }, [])
-
   const handleConnect = async (entry: CatalogEntry) => {
     if (!userId) return
-    setConnectingId(entry.id)
     try {
       const { authorizeUrl } = await connectorService.startOAuth(entry.id)
-      const popup = window.open(authorizeUrl, 'pon-oauth', POPUP_FEATURES)
-      if (!popup) {
-        // Popup blocked — fall back to same-tab redirect.
-        window.location.href = authorizeUrl
-        return
-      }
-      if (pollRef.current) clearInterval(pollRef.current)
-      pollRef.current = setInterval(() => {
-        try {
-          // Same-origin once the backend redirects back to CLIENT_REDIRECT_URL.
-          if (popup.closed) {
-            clearInterval(pollRef.current!)
-            setConnectingId(null)
-            invalidateConnections()
-            return
-          }
-          const search = popup.location.search
-          if (search.includes('connected=')) {
-            popup.close()
-            clearInterval(pollRef.current!)
-            setConnectingId(null)
-            invalidateConnections()
-            toast.success(t('connectSuccess', { provider: entry.name }))
-          }
-        } catch {
-          // Cross-origin while on the provider's domain — ignore until redirect.
-        }
-      }, 600)
+      open(authorizeUrl, entry.id)
     } catch {
       toast.error(t('connectError'))
-      setConnectingId(null)
+      reset()
     }
   }
 
@@ -127,6 +91,8 @@ export default function IntegrationsPage() {
       </div>
 
       <div className="p-6 pb-24 md:pb-6 max-w-5xl w-full mx-auto space-y-8">
+        <DirectorySection />
+
         <section>
           <div className="mb-4">
             <div className="font-mono text-pon-pink text-xs tracking-[2px]">

@@ -219,6 +219,8 @@ export class InternalService {
       provider: conn.provider,
       mcpUrl: conn.mcpUrl,
       encryptedTokens: conn.encryptedTokens,
+      encryptedClientCreds: conn.encryptedClientCreds,
+      tokenEndpoint: conn.tokenEndpoint,
       _id: conn._id,
     };
   }
