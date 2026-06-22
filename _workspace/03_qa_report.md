@@ -1,69 +1,53 @@
-## QA Report — Pin Message (gap-closing) — 2026-06-16
+## QA Report — Per-Field Privacy Toggles + Centered Profile Dialog — 2026-06-21
 
-### Overall Status: **PASS**
+### 빌드 상태
+| 서비스 | 상태 | 비고 |
+|--------|------|------|
+| @platform/database (tsc build) | ✓ | tsc 통과, 에러 0 |
+| auth-service (nest build) | ✓ | webpack compiled successfully (2.3s) |
+| flutter analyze | ✓ (0 issues) | "No issues found!" |
+| web tsc --noEmit | ✓ | EXIT 0, 에러 0 |
+| web test (vitest) | ✓ | 5 files / 48 tests passed |
 
-All four reports (plan, backend, mobile, web) accurately reflect the actual code. Every claimed
-change was verified against source. All three platforms build/test clean. Cross-platform sync
-holds across the five required checks.
+> chat-service: 변경 없음(이번 기능은 auth-service 전용) — 빌드 대상 아님.
 
----
+### API 계약 정합성 — 직접 비교(존재가 아닌 내용)
+- [x] plan.md 계약과 실제 구현 일치
+  - `user.schema.ts:74-80` — `showDateOfBirth/showPhoneNumber/showGender` 모두 `@Prop({ default: true })`. `hideInfo`(line 69)는 `default: false` 유지.
+  - `users.controller.ts:43-46` — PATCH body에 3개 필드 `?: boolean` 추가.
+  - `users.controller.ts:131-147` — GET :id 게이팅: `showDob = doc.showDateOfBirth ?? !doc.hideInfo`(phone/gender 동일), `profile.bio = doc.bio`(무조건), self에만 email + 3 show 플래그, `if (isSelf || showX) profile.X = ...`.
+  - `users.service.ts:142-148` — updateProfile에 `!== undefined` 가드로 3필드 매핑.
+- [x] Flutter DTO 타입 일치 — `auth_state.dart:19-21` `bool? showDateOfBirth/showPhoneNumber/showGender`, fromJson(55-58)/toJson(74-76) 정확히 동일 키. effectiveShow* 게터(81-83) = `?? !hideInfo`.
+- [x] Web TypeScript 타입 일치 — `auth.ts` `UserProfile`(28-30) + `UpdateProfilePayload`(44-46)에 동일 3필드 `?: boolean`. `hideInfo`(25,43) 폴백 유지.
 
-### Build Status
-| Service | Status | Notes |
-|---------|--------|-------|
-| chat-service (`mvn test`) | ✓ PASS | exit 0, BUILD SUCCESS (only benign JVM/agent warnings) |
-| flutter analyze | ✓ PASS | "No issues found!" (only pre-existing SPM plugin notice) |
-| web (`pnpm build`) | ✓ PASS | exit 0, compiled successfully, all routes generated |
+필드명(showDateOfBirth / showPhoneNumber / showGender)이 Backend ↔ Web(TS) ↔ Flutter(Dart) 3자 모두 글자 단위로 일치.
 
----
+### 크로스 플랫폼 동기화 (sync.md)
+- [x] 게이팅 폴백 규칙 동일 (`showX ?? !hideInfo`)
+  - Web view `UserProfileDrawer.tsx:144-146`: `showDob = isOwnProfile || (user?.showDateOfBirth ?? !user?.hideInfo)` (phone/gender 동일).
+  - Flutter view `user_profile_info_section.dart:69,74,81`: `(isSelf || u.effectiveShowGender)` 등, effectiveShow* = `?? !hideInfo`.
+  - Backend `users.controller.ts`도 동일 폴백. 3계층 모두 동일 규칙.
+- [x] bio 항상 공개 — 양쪽 동일: Web `UserProfileDrawer.tsx:198` 게이팅 없이 표시, Flutter `user_profile_info_section.dart:62-64` "bio is always visible". Backend `profile.bio = doc.bio`(게이팅 없음). 셋 다 일치.
+- [x] self 항상 전체 표시 — Web `isOwnProfile ||`, Flutter `isSelf ||`, Backend `isSelf ||`. 동일.
+- [x] 보기 UI = 중앙 다이얼로그 통일 — Web `UserProfileDrawer.tsx:12,154-157` Sheet→`Dialog`로 교체 완료(컴포넌트명/props 유지 → 호출부 무변경). Flutter는 기존 중앙 `Dialog`(user_profile_dialog.dart) 유지.
+- [x] edit 폼 시드/저장 동일 — Web edit `page.tsx:111-113` `me.showX ?? !me.hideInfo` 시드, `:178-180` 저장. Flutter dialog `:69-71` effectiveShow* 시드, `:84-86`/`:151-153` 저장. 풀스크린 edit `edit_profile_screen.dart:46-48,115-117` 동일.
+- [x] i18n 키 완성 (7개 언어)
+  - Flutter ARB: `profileShowDateOfBirth/profileShowPhone/profileShowGender/profilePrivacySection` — en/vi/zh/ja/ko/es/fr 7개 모두 4/4.
+  - Web messages(profile ns): `showDobLabel/showPhoneLabel/showGenderLabel/privacySectionLabel/privacySectionHint` — 7개 모두 5/5.
+  - 제거 키 `hideInfoLabel/hideInfoHint` — web 7개 언어 모두 0건, 컴포넌트/앱 잔존 참조 0건.
 
-### Backend Verification
-- `MessageService.pinMessage()` — `call_log` guard PRESENT (lines 263-265): `if ("call_log".equals(message.getType())) throw new IllegalArgumentException("Cannot pin a call message");`, placed after the recalled check, before the group-admin check. ✓
-- Cap is `> 2` (lines 277-279), NOT `> 5` — `subList(0, 2)` clamp. ✓ Report's `> 2` rationale (newest inserted at index 0, evict-oldest LRU) is correct.
-- `ConversationService.resolvePinnedMessages()` — read-side clamp `if (ids.size() > 2) ids = ids.subList(0, 2);` PRESENT (lines 419-421), recalled still filtered server-side. ✓
-- Recalled-message block retained (line 260). ✓
-- Note: `Conversation.java` doc comment claimed "max 5 → max 2", but the auto-loaded `chat-service/CLAUDE.md` still documents `pinnedMessages: List<String> (messageIds, max 5)`. This is a stale doc-comment in CLAUDE.md, not a code defect — non-blocking. The runtime cap is correctly 2.
+### 회귀
+- [x] web 기존 테스트 영향 없음 — `MessageBubble.test.tsx`, `connector.test.ts` 포함 48 tests 전부 통과. UserProfileDrawer 컴포넌트명/시그니처(`{userId, onClose}`) 유지로 목/호출부 무변경.
+- [x] flutter analyze 0 issues, (보고서 기준) flutter test 47/47.
 
-### Mobile (Flutter) Verification
-- `chat_state.dart` — `bool get isCallLog => type == 'call_log';` PRESENT (line 325), alongside isImage/isVideo/isSticker. ✓
-- `floating_reaction_sheet.dart` — Pin ListTile gated by `if (!message.isCallLog)` (line 177); reads live pinned set via `ref.watch(chatNotifierProvider(...))` (lines 49-52); toggles Pin↔Unpin with correct label/icon and calls `notifier.unpinMessage`/`notifier.pinMessage`. ✓
-- `pinned_messages_section.dart` — NEW file exists; renders up to 2 (`take(2)`), sender name + truncated content + unpin X, `showHeader` flag. ✓
-- `group_info_screen.dart` — imports the widget and renders the pinned section (lines 14, 126-142), prefers live chat-state, hidden when empty. ✓
-- `conversation_info_sidebar.dart` — pinned section added for DM/group parity (per report; consistent with mobile-report claim). ✓
-- ARB keys — all 4 (`unpinMessage`, `pinnedMessagesTitle`, `pinLimitReached`, `cannotPinCall`) + existing `pinMessage` present in ALL 7 locales (en/vi/zh/ja/ko/es/fr). ✓
-- STOMP `PINNED_MESSAGE` → `PinnedMessageEvent` (stomp_service.dart) → `_onPinnedMessage` rebuilds pinned list and updates state (chat_provider.dart lines 631-647). ✓
+### 발견된 이슈
+| 심각도 | 파일:라인 | 내용 | 권장 수정 |
+|--------|---------|------|----------|
+| 정보(차단 아님) | apps/client/lib/features/profile/ui/widgets/user_profile_dialog.dart | 파일 396줄로 clean-code 400줄 제한에 근접 | 향후 위젯 추가 시 분리 |
+| 정보(차단 아님) | apps/client/.../user_profile_screen.dart | 풀스크린 타 유저 보기(`/user/:id`)는 다이얼로그 강제 전환 대신 게이팅만 적용 — 채팅 컨텍스트 보기는 이미 다이얼로그라 요구 충족, 다수 호출부 영향 회피 차원 | 의도된 절충, 조치 불요 |
+| 정보(설계) | users.controller.ts | bio가 이전 `!hideInfo` 게이팅에서 항상 공개로, email은 타 유저 노출→self 전용으로 변경 | plan(line 11,32) 의도와 일치 — 의도된 동작 변화 |
 
-### Web (Next.js) Verification
-- `MessageActions.tsx` — `isCallLog` guard (line 48), Pin item gated by `{!isCallLog && ...}` (line 135); fully i18n via `useTranslations('chat')` (`t('pinMessage')`/`t('unpinMessage')`/`t('pinError')` etc.) — no hardcoded VN strings. ✓
-- `PinnedMessageRow.tsx` — NEW shared row UI (icon + sender + content + unpin X). ✓
-- `PinnedMessagesSection.tsx` — NEW; `slice(0, 2)`, sender resolution via useUser + nickname, unpin → `chatService.unpinMessage` + invalidate `['conversation', id]`, jump on row click. ✓
-- `ConversationSettingsDrawer.tsx` — renders `PinnedMessagesSection`, conditional on `pinnedMessages.length > 0` (lines 283-291). ✓
-- `GroupSettingsDrawer.tsx` — same conditional section (lines 258-266). ✓
-- i18n keys — `pinMessage`, `unpinMessage`, `pinnedMessages`, `cannotPinMessage`, `pinLimitReached` present in ALL 7 locales. ✓
-- STOMP `PINNED_MESSAGE` handled in `conversations/[id]/page.tsx` (line 311) → invalidates `['conversation', id]`; typed in `lib/api/types.ts` (line 123). ✓
+차단(P1) 이슈 없음. API 계약 불일치 없음. 게이팅 로직 3계층 일치. i18n 7개 언어 완전.
 
----
-
-### Cross-Platform Sync (5 checks)
-| Check | Flutter | Web | Status |
-|-------|---------|-----|--------|
-| Hide Pin for `call_log` | `if (!message.isCallLog)` | `{!isCallLog && ...}` | ✓ SYNCED |
-| Pinned messages shown in info/settings panel | group_info_screen + conversation_info_sidebar | ConversationSettingsDrawer + GroupSettingsDrawer | ✓ SYNCED |
-| Unpin from info panel | `notifier.unpinMessage(pinned.id)` | `chatService.unpinMessage` | ✓ SYNCED |
-| i18n keys (4 core + equivalents) | unpinMessage, pinnedMessagesTitle, pinLimitReached, cannotPinCall ×7 | unpinMessage, pinnedMessages, pinLimitReached, cannotPinMessage ×7 | ✓ SYNCED |
-| STOMP `PINNED_MESSAGE` handled | `_onPinnedMessage` updates state | invalidates `['conversation', id]` | ✓ SYNCED |
-
----
-
-### Discrepancies Between Reports and Code
-None material. Reports are accurate. Minor observations only:
-1. **Stale CLAUDE.md doc** — `apps/server/chat-service/CLAUDE.md` still says `pinnedMessages ... max 5`. The backend report claimed updating the `Conversation.java` field comment to "max 2"; the runtime cap is verified correct at 2, but the project doc in CLAUDE.md was not updated. Cosmetic / non-blocking.
-2. **Key-name divergence is intentional, not a bug** — mobile uses `cannotPinCall` / `pinnedMessagesTitle`; web uses `cannotPinMessage` / `pinnedMessages`. Both platforms' keys are present in all 7 locales; the differing names are platform-local and documented in both reports. Sync intent is met.
-
-### Remaining Issues / Follow-ups (non-blocking)
-- **Backend tests for new behavior not added.** Backend report acknowledges this: no unit test asserts (a) 3rd-pin-evicts-oldest at cap=2, or (b) `call_log` pin throws. Existing 87 tests pass but none cover the two new code paths. Recommend adding these as regression coverage.
-- **`pinLimitReached` / `cannotPinCall`(`cannotPinMessage`) keys unused in UI** on both platforms — present for parity/future use; clients proactively hide the Pin action for call_log and rely on backend evict-oldest rather than surfacing these toasts. Acceptable; sync-check parity satisfied.
-- **Cap-reduction legacy data** — conversations with >2 stored pinned ids are read-clamped to 2 (display) and physically trimmed on next pin. No backward-compat break.
-
-### Conclusion
-**PASS** — Pin Message gap-closing is correctly implemented and synchronized across backend, Flutter, and web. All builds/tests green. The four spec deltas (cap 5→2, block call_log, info-panel pinned view, unpin) are present and behavior-consistent on all three platforms. Only non-blocking follow-ups: add backend unit tests for the two new paths and update the stale CLAUDE.md "max 5" note.
+### 결론
+**PASS** — Backend/Web/Flutter 3계층의 필드명·타입·게이팅 폴백 규칙(`showX ?? !hideInfo`)이 글자 단위로 일치하고, bio 항상 공개·self 전체 표시 규칙도 동일. 보기 UI는 양쪽 중앙 다이얼로그로 통일됨. i18n 신규 키가 Flutter ARB 7개 + Web messages 7개 모두에 존재하며 제거 키 잔존 참조 없음. 전 서비스 빌드 통과, web 회귀 테스트 48/48 통과, flutter analyze 0 issues.
