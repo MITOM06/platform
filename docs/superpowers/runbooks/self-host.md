@@ -54,7 +54,21 @@ flutter build apk --dart-define=PON_DOMAIN=<DOMAIN>     # or build ios / appbund
 ```
 Without `PON_DOMAIN` the app targets the default Cloud Run hosting.
 
-## 7. Notes
+## 7. Enterprise SSO (optional, OIDC)
+1. Create an OIDC app in your IdP (Google Workspace / Entra / Okta / Keycloak).
+   Register the redirect URI: `https://<DOMAIN>/api/auth/oidc/callback`.
+2. In `.env` set `OIDC_ENABLED=true`, `OIDC_ISSUER` (the IdP discovery/issuer URL),
+   `OIDC_CLIENT_ID`, `OIDC_CLIENT_SECRET`. Adjust `OIDC_GROUPS_CLAIM` if your IdP
+   names the groups claim differently (Azure may require a manifest/Graph mapping;
+   Google Workspace needs a custom claim — it does not emit `groups` by default).
+3. Restart: `docker compose -f compose.prod.yml up -d auth-service`.
+4. As Owner, open `/admin` → SSO: toggle **Enabled**, optionally set allowed email
+   domains, and map IdP group names → roles / departments.
+5. Log out → the login page now shows **Sign in with SSO**. First SSO login creates
+   the user (linked by verified email) and applies the group mapping. Password login
+   keeps working; the bootstrap Owner is never demoted by group mapping (break-glass).
+
+## 8. Notes
 - ai-service is an internal worker (RabbitMQ/Redis) — not exposed; no public port.
 - `localhost` TLS uses Caddy's internal CA (browser warning) — fine for testing.
 - Logs: `docker compose -f compose.prod.yml logs -f <service>`.
