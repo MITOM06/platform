@@ -13,7 +13,8 @@
     "members": "{count} members",
     "somethingWrong": "Algo salió mal",
     "unknownError": "Error desconocido",
-    "retry": "Reintentar"
+    "retry": "Reintentar",
+    "dialogDescription": "Contenido del diálogo"
   },
   "layout": {
     "navExplore": "Explorar",
@@ -513,6 +514,8 @@
     "aiQuotaExceeded": "Se ha superado la cuota mensual de uso de IA. Contacta a tu administrador.",
     "aiStreamInterrupted": "El flujo de IA fue interrumpido. Por favor, inténtalo de nuevo.",
     "aiUnavailable": "La IA no está disponible temporalmente.",
+    "aiRateLimited": "Demasiadas solicitudes de IA. Reduce la velocidad e inténtalo de nuevo en breve.",
+    "aiSensitiveAction": "acción sensible",
     "aiThinking": "Pensando…",
     "aiToolCalling": "Usando herramienta: {toolName}",
     "toolSearchMessages": "Buscando mensajes...",
@@ -898,7 +901,8 @@
     "ssoGroupDeptMap": "Grupo → Departamento",
     "ssoGroupPlaceholder": "Nombre del grupo IdP",
     "ssoAddMapping": "Añadir asignación",
-    "ssoRemoveRow": "Eliminar"
+    "ssoRemoveRow": "Eliminar",
+    "roleCloneDesc": "Crea un nuevo rol copiando los permisos de uno existente."
   },
   "call": {
     "peerFallback": "Usuario",

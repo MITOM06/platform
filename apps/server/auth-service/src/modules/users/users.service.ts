@@ -46,6 +46,25 @@ export class UsersService {
     }
   }
 
+  /**
+   * Batch lookup: resolve many ids in a SINGLE Mongo query. Mirrors
+   * `findById`'s `-password` projection. Order of results is NOT guaranteed
+   * to match the input order. Invalid (non-ObjectId) ids are silently skipped
+   * — Mongoose casts the `$in` array and drops uncastable entries.
+   */
+  async findManyByIds(ids: string[]): Promise<UserDocument[]> {
+    if (!ids || ids.length === 0) return [];
+    try {
+      return await this.userModel
+        .find({ _id: { $in: ids } })
+        .select('-password')
+        .exec();
+    } catch (err: any) {
+      if (err?.name === 'CastError') return [];
+      throw err;
+    }
+  }
+
   async setRoleAndDepartments(
     userId: string,
     roleId: string | null,

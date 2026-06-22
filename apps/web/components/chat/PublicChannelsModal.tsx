@@ -7,6 +7,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useTranslations } from 'next-intl'
 import { Search, Loader2, Hash, Users } from 'lucide-react'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { DialogA11yDescription } from '@/components/common/dialog-a11y-description'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { chatService } from '@/lib/api/chat'
@@ -55,6 +56,7 @@ export function PublicChannelsModal({ open, onClose }: Props) {
             {t('publicChannelsTitle')}
           </DialogTitle>
         </DialogHeader>
+          <DialogA11yDescription />
 
         <div className="relative">
           <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />

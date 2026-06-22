@@ -5,6 +5,7 @@ import { Brain, Loader2, ChevronDown, ChevronUp } from 'lucide-react'
 import { useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { DialogA11yDescription } from '@/components/common/dialog-a11y-description'
 import { chatService } from '@/lib/api/chat'
 
 interface Props {
@@ -52,6 +53,7 @@ export function AiTraceModal({ messageId, onClose }: Props) {
             {t('aiTraceTitle')}
           </DialogTitle>
         </DialogHeader>
+          <DialogA11yDescription />
 
         {isLoading && (
           <div className="flex justify-center py-8">

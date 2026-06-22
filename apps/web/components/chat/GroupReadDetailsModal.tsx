@@ -1,6 +1,7 @@
 import { CheckCheck } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { DialogA11yDescription } from '@/components/common/dialog-a11y-description'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { useUser } from '@/lib/hooks/use-user'
 import { absoluteMediaUrl } from '@/lib/media'
@@ -53,6 +54,7 @@ export function GroupReadDetailsModal({ message, open, onClose }: Props) {
         <DialogHeader>
           <DialogTitle>{t('readDetails')}</DialogTitle>
         </DialogHeader>
+          <DialogA11yDescription />
         <div className="max-h-[60vh] overflow-y-auto mt-2">
           {readBy.length === 0 ? (
             <div className="py-8 text-center text-sm text-muted-foreground">

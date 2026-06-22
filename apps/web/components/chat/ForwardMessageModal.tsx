@@ -6,6 +6,7 @@ import { toast } from 'sonner'
 import { useQueryClient } from '@tanstack/react-query'
 import { useTranslations } from 'next-intl'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { DialogA11yDescription } from '@/components/common/dialog-a11y-description'
 import { chatService } from '@/lib/api/chat'
 import { useConversations } from '@/lib/hooks/use-conversations'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
@@ -45,6 +46,7 @@ export function ForwardMessageModal({ message, onClose }: Props) {
         <DialogHeader>
           <DialogTitle>{t('forwardTitle')}</DialogTitle>
         </DialogHeader>
+          <DialogA11yDescription />
 
         <div className="mt-2 space-y-1 max-h-80 overflow-y-auto">
           {conversations?.map((conv) => {

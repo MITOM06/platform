@@ -11,6 +11,7 @@ import {
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { ApiBearerAuth, ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger';
+import { BadRequestException } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { FriendsService } from '../friends/friends.service';
 
@@ -103,13 +104,48 @@ export class UsersController {
     return this.friendsService.listOnlineFriends(req.user.sub);
   }
 
+  // Batch profile lookup: `GET /api/users?ids=id1,id2,...` → UserProfile[].
+  // Collapses the web client's N+1 `GET /api/users/:id` fan-out (which was
+  // tripping the 100 req/min throttler → 429) into one Mongo query.
+  // NOTE: declared as the bare '@Get()' so it never collides with '@Get(":id")'
+  // (a request with a query string still has an empty path segment).
+  @Get()
+  @ApiOperation({ summary: 'Batch-fetch user profiles by id' })
+  @ApiQuery({ name: 'ids', required: true, description: 'Comma-separated user ids (max 100)' })
+  async findManyByIds(@Req() req: any, @Query('ids') ids?: string) {
+    const parsed = (ids ?? '')
+      .split(',')
+      .map((s) => s.trim())
+      .filter((s) => s.length > 0);
+    // Dedupe while preserving the conventions used elsewhere in the controller.
+    const unique = Array.from(new Set(parsed));
+    if (unique.length === 0) return [];
+    if (unique.length > 100) {
+      throw new BadRequestException('Too many ids — max 100 per request');
+    }
+
+    const [users, counts] = await Promise.all([
+      this.usersService.findManyByIds(unique),
+      this.friendsService.countAcceptedForMany(unique),
+    ]);
+
+    return users.map((user) =>
+      this.toProfile(user.toObject(), req.user.sub, counts.get(String(user._id)) ?? 0),
+    );
+  }
+
   @Get(':id')
   async findById(@Req() req: any, @Param('id') id: string) {
     const user = await this.usersService.findById(id);
     if (!user) return user;
     const friendsCount = await this.friendsService.countAccepted(id);
-    const doc: any = user.toObject();
-    const isSelf = req.user.sub === id;
+    return this.toProfile(user.toObject(), req.user.sub, friendsCount);
+  }
+
+  // Shared public-profile mapping used by both the single (`:id`) and batch
+  // endpoints so they return the identical UserProfile DTO shape.
+  private toProfile(doc: any, callerId: string, friendsCount: number): any {
+    const isSelf = callerId === String(doc._id);
 
     // Explicit public-profile whitelist. NEVER expose fcmTokens, blockedUsers,
     // trustedDevices, socialLinks, status, password, otpCode, otpExpires.

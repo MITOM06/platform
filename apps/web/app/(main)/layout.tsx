@@ -82,9 +82,12 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
   const t = useTranslations('layout')
   const canAccessAdmin = useCanAccessAdmin()
 
+  // The conversation-list sidebar belongs ONLY to the messaging area
+  // (/conversations and /conversations/:id). Every other page (AI hub,
+  // settings, admin, friends, profile…) renders full-width with no sidebar.
   const isConversationOpen = /^\/conversations\/.+/.test(pathname)
-  const isInnerPage = /^\/(friends|settings|profile|explore|archived|token-usage|ai-hub|ai-memory|ai-persona|reminders|kb|shared-media|admin)/.test(pathname)
-  const hideAside = isConversationOpen || isInnerPage
+  const isMessagingArea = /^\/conversations(\/|$)/.test(pathname)
+  const showSidebar = isMessagingArea
   const showTabBar = !isConversationOpen
 
   useEffect(() => {
@@ -230,11 +233,13 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
   return (
     <div className="h-dvh flex overflow-hidden">
       <CallOverlay />
-      {/* Sidebar: full-width on mobile, fixed 288px on md+; hidden on mobile when conversation is open */}
+      {/* Sidebar: only on the messaging area. Full-width on mobile, fixed 288px
+          on md+; hidden on mobile when a conversation thread is open. */}
+      {showSidebar && (
       <aside
         className={cn(
           'w-full md:w-72 border-r flex-col shrink-0 relative overflow-hidden',
-          hideAside ? 'hidden md:flex' : 'flex',
+          isConversationOpen ? 'hidden md:flex' : 'flex',
         )}
       >
         {/* Ambient neon glow spheres */}
@@ -360,12 +365,15 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
           <ConversationList />
         </div>
       </aside>
+      )}
 
-      {/* Main area: hidden on mobile when sidebar is shown */}
+      {/* Main area. Full-width on every non-messaging page. On the conversation
+          LIST (sidebar visible, no thread open) it's hidden on mobile so the
+          list owns the screen; everywhere else it's always visible. */}
       <main
         className={cn(
-          'flex-1 overflow-hidden',
-          hideAside ? 'flex flex-col' : 'hidden md:flex md:flex-col',
+          'flex-1 overflow-hidden flex-col',
+          showSidebar && !isConversationOpen ? 'hidden md:flex' : 'flex',
         )}
       >
         {children}

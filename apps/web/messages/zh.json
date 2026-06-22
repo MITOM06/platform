@@ -13,7 +13,8 @@
     "members": "{count} members",
     "somethingWrong": "出现错误",
     "unknownError": "未知错误",
-    "retry": "重试"
+    "retry": "重试",
+    "dialogDescription": "对话框内容"
   },
   "layout": {
     "navExplore": "探索",
@@ -513,6 +514,8 @@
     "aiQuotaExceeded": "已超过每月 AI 使用配额，请联系管理员。",
     "aiStreamInterrupted": "AI 流已中断，请重试。",
     "aiUnavailable": "AI 暂时不可用。",
+    "aiRateLimited": "AI 请求过于频繁。请稍后再试。",
+    "aiSensitiveAction": "敏感操作",
     "aiThinking": "正在思考…",
     "aiToolCalling": "正在使用工具：{toolName}",
     "toolSearchMessages": "正在搜索消息...",
@@ -898,7 +901,8 @@
     "ssoGroupDeptMap": "组 → 部门",
     "ssoGroupPlaceholder": "IdP 组名称",
     "ssoAddMapping": "添加映射",
-    "ssoRemoveRow": "移除"
+    "ssoRemoveRow": "移除",
+    "roleCloneDesc": "通过复制现有角色的权限来创建新角色。"
   },
   "call": {
     "peerFallback": "用户",

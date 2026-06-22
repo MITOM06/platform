@@ -7,6 +7,7 @@ import { Check, Ban, ImagePlus, Loader2 } from 'lucide-react'
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from '@/components/ui/dialog'
+import { DialogA11yDescription } from '@/components/common/dialog-a11y-description'
 import { Button } from '@/components/ui/button'
 import { Slider } from '@/components/ui/slider'
 import { chatService } from '@/lib/api/chat'
@@ -143,6 +144,7 @@ export function WallpaperPickerModal({ conversationId, open, onClose }: Props) {
         <DialogHeader>
           <DialogTitle>{t('wallpaperPickerTitle')}</DialogTitle>
         </DialogHeader>
+          <DialogA11yDescription />
 
         {/* Mock-chat live preview — dummy bubbles over the chosen background */}
         <div className="space-y-1">

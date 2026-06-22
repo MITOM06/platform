@@ -13,7 +13,8 @@
     "members": "{count} thành viên",
     "somethingWrong": "Đã xảy ra lỗi",
     "unknownError": "Lỗi không xác định",
-    "retry": "Thử lại"
+    "retry": "Thử lại",
+    "dialogDescription": "Nội dung hộp thoại"
   },
   "layout": {
     "navExplore": "Khám phá",
@@ -513,6 +514,8 @@
     "aiQuotaExceeded": "Đã vượt quá hạn mức sử dụng AI hàng tháng. Vui lòng liên hệ quản trị viên.",
     "aiStreamInterrupted": "Luồng AI bị gián đoạn. Vui lòng thử lại.",
     "aiUnavailable": "AI tạm thời không khả dụng.",
+    "aiRateLimited": "Quá nhiều yêu cầu AI. Vui lòng chậm lại và thử lại sau giây lát.",
+    "aiSensitiveAction": "hành động nhạy cảm",
     "aiThinking": "Đang suy nghĩ…",
     "aiToolCalling": "Đang dùng công cụ: {toolName}",
     "toolSearchMessages": "Đang tìm kiếm tin nhắn...",
@@ -898,7 +901,8 @@
     "ssoGroupDeptMap": "Nhóm → Phòng ban",
     "ssoGroupPlaceholder": "Tên nhóm IdP",
     "ssoAddMapping": "Thêm ánh xạ",
-    "ssoRemoveRow": "Xóa"
+    "ssoRemoveRow": "Xóa",
+    "roleCloneDesc": "Tạo vai trò mới bằng cách sao chép quyền của một vai trò hiện có."
   },
   "call": {
     "peerFallback": "Người dùng",

@@ -5,6 +5,7 @@ import { useTranslations } from 'next-intl'
 import NextImage from 'next/image'
 import { Download, X, ChevronLeft, ChevronRight, Play, ImageOff } from 'lucide-react'
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog'
+import { DialogA11yDescription } from '@/components/common/dialog-a11y-description'
 import { absoluteMediaUrl, downloadMediaUrl, parseImageUrls } from '@/lib/media'
 import { cn } from '@/lib/utils'
 
@@ -138,6 +139,7 @@ function Lightbox({
         showCloseButton={false}
       >
         <DialogTitle className="sr-only">{t('imageViewer')}</DialogTitle>
+        <DialogA11yDescription />
         <div className="relative flex h-[85vh] w-full items-center justify-center">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
