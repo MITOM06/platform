@@ -1,7 +1,7 @@
 # PON Enterprise — Master Handoff & Continuation Guide
 
-**Last updated:** 2026-06-20
-**Active branch:** `feature/pon-enterprise-p0-p5` (✅ P0 + ✅ P5 Google connectors + ✅ P6 department group bot)
+**Last updated:** 2026-06-22
+**Active branch:** `fix/chat-service-cloudrun-startup` (✅ P0 + ✅ P5 Google connectors + ✅ P6 department group bot + ✅ P7 self-host kit)
 **Read order for a fresh session:**
 1. This file (state + remaining work).
 2. `docs/superpowers/specs/2026-06-19-pon-enterprise-reframe.md` (the vision).
@@ -137,25 +137,28 @@ Plan: `docs/superpowers/plans/2026-06-20-p6-department-group-bot.md`.
 - Backward compatible (personal chats unchanged). Verify: chat-service mvn compile + security/AI tests green;
   ai-service 97 tests. Commits `5396a9f5`, `bf5e…` (Part 2), `…` (Part 3).
 
+### P7 — Self-host deployment kit ✅ (turnkey single-host, single-domain)
+Spec: `docs/superpowers/specs/2026-06-21-p7-self-host-deployment-kit-design.md`; plan:
+`docs/superpowers/plans/2026-06-21-p7-self-host-deployment-kit.md`; runbook: `docs/superpowers/runbooks/self-host.md`.
+- **web**: same-origin **relative** API URLs (`/api/{auth,chat,connector}`) + runtime `resolveBrokerURL()`
+  (`wss://<host>/ws`) when `NEXT_PUBLIC_*` unset — one domain-agnostic image; Cloud Run/local env still override.
+  `output:'standalone'` + multi-stage `apps/web/Dockerfile` (monorepo-aware, `node server.js`).
+- **infra**: `Caddyfile` (only host-published service; `handle_path` prefix-strip per service, `/ws` preserved,
+  `/*`→web, auto-HTTPS); consolidated single `.env.example` (human / auto-gen / derived groups); idempotent
+  `bootstrap.sh` (+`bootstrap.test.sh`) generating JWT/refresh/vault(32-byte base64)/internal secrets, never
+  clobbering; turnkey `compose.prod.yml` (full stack + web + caddy, all config from one `.env`).
+- **mobile**: `AppConfig` (`--dart-define=PON_DOMAIN`) derives `https://<domain>/api/*` + `wss://.../ws`,
+  Cloud Run fallback when unset; `dio_client` + `stomp_service` rewired.
+- Backward compatible (Cloud Run defaults preserved everywhere). Verify: bootstrap.test PASS, web tests 11
+  (incl. base-urls 4 + axios-refresh), web build OK, `flutter analyze` clean. Commits `70834918`→`2056ca1d`
+  (+ docs `aa7dd332`/`b42c30d5`). **Live E2E blocked on owner secrets (real DOMAIN + ANTHROPIC_API_KEY + OAuth) — §4.**
+
 ---
 
 ## 3. What REMAINS — detailed, in build order
 
-> Task 0, all of P0 (Parts 1–5), **P5 (Gmail + Calendar)**, and **P6 (department group bot)** are **DONE**
-> — see §2. Next milestones below (each needs a fresh spec + plan).
-
-### P6 — Department-aware group bot
-**Goal:** the group bot in department chats answers using only files/context the department + the
-asking member may access. This is where **chat-service (Spring Boot/Java) RBAC enforcement** lands
-(deferred from Part 2): validate the JWT in Java, read `role`/`perms`/`depts`, scope message/KB
-queries by department. ai-service: pass department context + member perms into the agent so RAG +
-tools are department-scoped. **Needs a fresh spec + plan (brainstorm first).**
-
-### P7 — Self-host deployment kit
-Turnkey `docker compose` (already most of the way) + a bootstrap runbook: set `WORKSPACE_NAME`,
-`BOOTSTRAP_OWNER_EMAIL`, generate `CONNECTOR_VAULT_KEY`, `JWT_ACCESS_SECRET`, provider creds; first
-boot seeds workspace + roles + owner. Optional Helm chart. Config-driven per-company customization
-(branding, feature flags) — no code forks. **Fresh spec + plan.**
+> Task 0, all of P0 (Parts 1–5), **P5 (Gmail + Calendar)**, **P6 (department group bot)**, and
+> **P7 (self-host deployment kit)** are **DONE** — see §2. Next milestone below (needs a fresh spec + plan).
 
 ### P8 — SSO (OIDC/SAML)
 Config-driven enterprise login in auth-service; map IdP groups → PON roles/departments.
@@ -193,7 +196,7 @@ Open a new session in this repo. Memory auto-loads `MEMORY.md` (it points to the
 enterprise model facts). Then paste one of these:
 
 - To continue building: **"Continue PON enterprise from `docs/superpowers/PON-ENTERPRISE-HANDOFF.md`.
-  P0 + P5 + P6 are done — plan + build P7 (self-host deployment kit) next. Work part-by-part, run
+  P0 + P5 + P6 + P7 are done — plan + build P8 (SSO OIDC/SAML) next. Work part-by-part, run
   tests/builds, show me each part for review."**
 - To do the live Notion E2E instead: **"I've added Notion creds + run docker compose. Run the P1
   Notion E2E from the handoff doc §4."**
