@@ -8,12 +8,14 @@ class StreamingAiBubble extends StatefulWidget {
   final String content;
   final bool isThinking;
   final List<String> activeTools;
+  final List<String> sensitiveTools;
 
   const StreamingAiBubble({
     super.key,
     required this.content,
     required this.isThinking,
     this.activeTools = const [],
+    this.sensitiveTools = const [],
   });
 
   @override
@@ -52,7 +54,11 @@ class _StreamingAiBubbleState extends State<StreamingAiBubble>
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       children: [
-        if (widget.activeTools.isNotEmpty) _ToolIndicatorRow(activeTools: widget.activeTools),
+        if (widget.activeTools.isNotEmpty)
+          _ToolIndicatorRow(
+            activeTools: widget.activeTools,
+            sensitiveTools: widget.sensitiveTools,
+          ),
         if (widget.isThinking)
           _ThinkingDots(controller: _dotsController)
         else
@@ -97,8 +103,12 @@ class _StreamingText extends StatelessWidget {
 
 class _ToolIndicatorRow extends StatelessWidget {
   final List<String> activeTools;
+  final List<String> sensitiveTools;
 
-  const _ToolIndicatorRow({required this.activeTools});
+  const _ToolIndicatorRow({
+    required this.activeTools,
+    this.sensitiveTools = const [],
+  });
 
   String _toolLabel(BuildContext context, String toolName) {
     switch (toolName) {
@@ -120,19 +130,29 @@ class _ToolIndicatorRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final toolName = activeTools.last;
+    final isSensitive = sensitiveTools.contains(toolName);
+    // Sensitive (state-changing / outbound) tools get a shield icon + red tint
+    // so the user notices the assistant is about to act on their behalf.
+    final color = isSensitive ? const Color(0xFFFF6B6B) : const Color(0xFFFFB74D);
+    final label = isSensitive
+        ? '${_toolLabel(context, toolName)} · ${context.l10n.aiSensitiveAction}'
+        : _toolLabel(context, toolName);
     return Padding(
       padding: const EdgeInsets.only(bottom: 6),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Icon(Icons.construction, size: 13, color: Color(0xFFFFB74D)),
+          Icon(isSensitive ? Icons.gpp_maybe_rounded : Icons.construction,
+              size: 13, color: color),
           const SizedBox(width: 5),
-          Text(
-            _toolLabel(context, toolName),
-            style: const TextStyle(
-              fontSize: 12,
-              color: Color(0xFFFFB74D),
-              fontStyle: FontStyle.italic,
+          Flexible(
+            child: Text(
+              label,
+              style: TextStyle(
+                fontSize: 12,
+                color: color,
+                fontStyle: FontStyle.italic,
+              ),
             ),
           ),
         ],

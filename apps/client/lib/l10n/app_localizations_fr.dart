@@ -949,6 +949,13 @@ class AppLocalizationsFr extends AppLocalizations {
   String get aiErrUnavailable => 'L\'IA est temporairement indisponible.';
 
   @override
+  String get aiErrRateLimited =>
+      'Trop de requêtes IA. Veuillez ralentir et réessayer dans un instant.';
+
+  @override
+  String get aiSensitiveAction => 'action sensible';
+
+  @override
   String get aiErrorRetry => 'Réessayer';
 
   @override

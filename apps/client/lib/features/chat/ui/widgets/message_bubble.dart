@@ -144,7 +144,8 @@ class MessageBubble extends ConsumerWidget {
                                   message.isAiStreamInterrupted ||
                                   message.isAiUnavailable
                               ? const Color(0xFF3D1515)
-                              : message.isAiQuotaExceeded
+                              : message.isAiQuotaExceeded ||
+                                      message.isAiRateLimited
                                   ? const Color(0xFF3D2800)
                                   : message.isAiMessage && !message.recalled
                                       ? const Color(0xFF2D1B69)
@@ -212,9 +213,26 @@ class MessageBubble extends ConsumerWidget {
                           content: message.content,
                           isThinking: message.isThinking,
                           activeTools: message.activeTools,
+                          sensitiveTools: message.sensitiveTools,
                         )
                       else if (message.isAiQuotaExceeded)
                         const QuotaExceededBubble()
+                      else if (message.isAiRateLimited)
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(Icons.hourglass_top_rounded,
+                                color: Color(0xFFFFB74D), size: 16),
+                            const SizedBox(width: 6),
+                            Flexible(
+                              child: Text(
+                                context.l10n.aiErrRateLimited,
+                                style: const TextStyle(
+                                    color: Color(0xFFFFB74D), fontSize: 14),
+                              ),
+                            ),
+                          ],
+                        )
                       else if (message.isAiStreamInterrupted)
                         Row(
                           mainAxisSize: MainAxisSize.min,

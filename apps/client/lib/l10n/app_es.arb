@@ -300,6 +300,8 @@
   "aiError": "La IA no está disponible temporalmente. Por favor, inténtelo de nuevo.",
   "aiErrStreamInterrupted": "El flujo de IA fue interrumpido. Por favor, inténtelo de nuevo.",
   "aiErrUnavailable": "La IA no está disponible temporalmente.",
+  "aiErrRateLimited": "Demasiadas solicitudes de IA. Reduce la velocidad e inténtalo de nuevo en breve.",
+  "aiSensitiveAction": "acción sensible",
   "aiErrorRetry": "Reintentar",
   "aiMessageDeleted": "Mensaje eliminado",
   "aiMemoryTitle": "Memoria de IA",

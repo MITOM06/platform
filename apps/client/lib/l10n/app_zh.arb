@@ -300,6 +300,8 @@
   "aiError": "AI暂时不可用。请重试。",
   "aiErrStreamInterrupted": "AI流已中断，请重试。",
   "aiErrUnavailable": "AI暂时不可用。",
+  "aiErrRateLimited": "AI 请求过于频繁。请稍后再试。",
+  "aiSensitiveAction": "敏感操作",
   "aiErrorRetry": "重试",
   "aiMessageDeleted": "消息已删除",
   "aiMemoryTitle": "AI记忆",

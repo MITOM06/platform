@@ -926,6 +926,12 @@ class AppLocalizationsJa extends AppLocalizations {
   String get aiErrUnavailable => 'AIは一時的に利用できません。';
 
   @override
+  String get aiErrRateLimited => 'AI へのリクエストが多すぎます。少し時間をおいて再試行してください。';
+
+  @override
+  String get aiSensitiveAction => '重要な操作';
+
+  @override
   String get aiErrorRetry => '再試行';
 
   @override

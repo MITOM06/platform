@@ -121,7 +121,12 @@ class ChatAiStreamHandler {
         if (toolName.isNotEmpty) {
           final current2 = current.messages[idx];
           final tools = List<String>.from(current2.activeTools)..add(toolName);
-          updated[idx] = current2.copyWith(activeTools: tools);
+          final sensitive = List<String>.from(current2.sensitiveTools);
+          if (event['sensitive'] == true && !sensitive.contains(toolName)) {
+            sensitive.add(toolName);
+          }
+          updated[idx] =
+              current2.copyWith(activeTools: tools, sensitiveTools: sensitive);
         }
       case 'AI_STREAM_CHUNK':
         final chunk = event['chunk'] as String? ?? '';
@@ -144,6 +149,7 @@ class ChatAiStreamHandler {
           sources: sources,
           trace: trace,
           activeTools: [],
+          sensitiveTools: [],
         );
       case 'AI_STREAM_ERROR':
         final errorCode = event['code'] as String?;
@@ -151,11 +157,14 @@ class ChatAiStreamHandler {
         // Prefer stable code; fall back to heuristic for pre-code payloads.
         final isQuota = errorCode == kAiErrCodeQuotaExceeded ||
             (errorCode == null && errorMsg.toLowerCase().contains('quota'));
+        final isRateLimited = errorCode == kAiErrCodeRateLimited;
         final isInterrupted = errorCode == kAiErrCodeStreamInterrupted;
         final isUnavailable = errorCode == kAiErrCodeUnavailable;
         String errorContent;
         if (isQuota) {
           errorContent = kAiQuotaExceededSentinel;
+        } else if (isRateLimited) {
+          errorContent = kAiRateLimitedSentinel;
         } else if (isInterrupted) {
           errorContent = kAiStreamInterruptedSentinel;
         } else if (isUnavailable) {
@@ -168,6 +177,7 @@ class ChatAiStreamHandler {
           isStreaming: false,
           isThinking: false,
           activeTools: [],
+          sensitiveTools: [],
         );
     }
     _writeMessages(updated);

@@ -300,6 +300,8 @@
   "aiError": "L'IA est temporairement indisponible. Veuillez réessayer.",
   "aiErrStreamInterrupted": "Le flux IA a été interrompu. Veuillez réessayer.",
   "aiErrUnavailable": "L'IA est temporairement indisponible.",
+  "aiErrRateLimited": "Trop de requêtes IA. Veuillez ralentir et réessayer dans un instant.",
+  "aiSensitiveAction": "action sensible",
   "aiErrorRetry": "Réessayer",
   "aiMessageDeleted": "Message supprimé",
   "aiMemoryTitle": "Mémoire IA",

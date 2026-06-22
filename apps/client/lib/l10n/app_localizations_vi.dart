@@ -936,6 +936,13 @@ class AppLocalizationsVi extends AppLocalizations {
   String get aiErrUnavailable => 'AI tạm thời không khả dụng.';
 
   @override
+  String get aiErrRateLimited =>
+      'Quá nhiều yêu cầu AI. Vui lòng chậm lại và thử lại sau giây lát.';
+
+  @override
+  String get aiSensitiveAction => 'hành động nhạy cảm';
+
+  @override
   String get aiErrorRetry => 'Thử lại';
 
   @override

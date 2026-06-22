@@ -153,14 +153,15 @@ public class AiResponseListener implements MessageListener {
       case "AI_TOOL_CALL" -> {
         String toolName = (String) payload.getOrDefault("toolName", "");
         String inputSummary = (String) payload.getOrDefault("inputSummary", "");
-        messagingTemplate.convertAndSend(
-            topic,
-            Map.of(
-                "type", "AI_TOOL_CALL",
-                "toolName", toolName,
-                "inputSummary", inputSummary,
-                "senderId", AiConstants.AI_BOT_USER_ID,
-                "conversationId", convId));
+        Boolean sensitive = (Boolean) payload.get("sensitive");
+        Map<String, Object> toolCallEvent = new HashMap<>();
+        toolCallEvent.put("type", "AI_TOOL_CALL");
+        toolCallEvent.put("toolName", toolName);
+        toolCallEvent.put("inputSummary", inputSummary);
+        toolCallEvent.put("senderId", AiConstants.AI_BOT_USER_ID);
+        toolCallEvent.put("conversationId", convId);
+        if (sensitive != null) toolCallEvent.put("sensitive", sensitive);
+        messagingTemplate.convertAndSend(topic, toolCallEvent);
       }
       default -> log.warn("Unknown AI response type: {}", type);
     }

@@ -1866,6 +1866,18 @@ abstract class AppLocalizations {
   /// **'AI is temporarily unavailable.'**
   String get aiErrUnavailable;
 
+  /// No description provided for @aiErrRateLimited.
+  ///
+  /// In en, this message translates to:
+  /// **'Too many AI requests. Please slow down and try again shortly.'**
+  String get aiErrRateLimited;
+
+  /// No description provided for @aiSensitiveAction.
+  ///
+  /// In en, this message translates to:
+  /// **'sensitive action'**
+  String get aiSensitiveAction;
+
   /// No description provided for @aiErrorRetry.
   ///
   /// In en, this message translates to:

@@ -435,6 +435,8 @@
   "aiError": "AI is temporarily unavailable. Please try again.",
   "aiErrStreamInterrupted": "AI stream was interrupted. Please try again.",
   "aiErrUnavailable": "AI is temporarily unavailable.",
+  "aiErrRateLimited": "Too many AI requests. Please slow down and try again shortly.",
+  "aiSensitiveAction": "sensitive action",
   "aiErrorRetry": "Retry",
   "aiMessageDeleted": "Message deleted",
   "aiMemoryTitle": "AI Memory",

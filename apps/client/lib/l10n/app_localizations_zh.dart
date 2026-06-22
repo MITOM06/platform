@@ -926,6 +926,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get aiErrUnavailable => 'AI暂时不可用。';
 
   @override
+  String get aiErrRateLimited => 'AI 请求过于频繁。请稍后再试。';
+
+  @override
+  String get aiSensitiveAction => '敏感操作';
+
+  @override
   String get aiErrorRetry => '重试';
 
   @override

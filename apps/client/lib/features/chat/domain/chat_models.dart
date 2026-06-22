@@ -210,11 +210,13 @@ const kAiErrorSentinel = '__AI_ERROR__';
 const kAiQuotaExceededSentinel = '__AI_QUOTA__';
 const kAiStreamInterruptedSentinel = '__AI_INTERRUPTED__';
 const kAiUnavailableSentinel = '__AI_UNAVAILABLE__';
+const kAiRateLimitedSentinel = '__AI_RATE_LIMITED__';
 
 // Stable error codes emitted by ai-service (additive — keep in sync with AiStreamErrorCode).
 const kAiErrCodeQuotaExceeded = 'AI_QUOTA_EXCEEDED';
 const kAiErrCodeStreamInterrupted = 'AI_STREAM_INTERRUPTED';
 const kAiErrCodeUnavailable = 'AI_UNAVAILABLE';
+const kAiErrCodeRateLimited = 'AI_RATE_LIMITED';
 
 @immutable
 class ToolCallEntry {
@@ -299,6 +301,8 @@ class MessageModel {
   final AiTrace? trace;
   // Tools actively executing during streaming (client-only)
   final List<String> activeTools;
+  // Subset of activeTools flagged sensitive (state-changing / outbound) by ai-service
+  final List<String> sensitiveTools;
 
   const MessageModel({
     required this.id,
@@ -320,6 +324,7 @@ class MessageModel {
     this.sources,
     this.trace,
     this.activeTools = const [],
+    this.sensitiveTools = const [],
   });
 
   bool get isEdited => editedAt != null;
@@ -331,6 +336,7 @@ class MessageModel {
   bool get isAiQuotaExceeded => isAiMessage && content == kAiQuotaExceededSentinel;
   bool get isAiStreamInterrupted => isAiMessage && content == kAiStreamInterruptedSentinel;
   bool get isAiUnavailable => isAiMessage && content == kAiUnavailableSentinel;
+  bool get isAiRateLimited => isAiMessage && content == kAiRateLimitedSentinel;
   bool get isImage => type == 'image';
   bool get isVideo => type == 'video';
   bool get isMedia => isImage || isVideo;
@@ -405,6 +411,7 @@ class MessageModel {
     List<String>? sources,
     AiTrace? trace,
     List<String>? activeTools,
+    List<String>? sensitiveTools,
   }) {
     return MessageModel(
       id: id ?? this.id,
@@ -426,6 +433,7 @@ class MessageModel {
       sources: sources ?? this.sources,
       trace: trace ?? this.trace,
       activeTools: activeTools ?? this.activeTools,
+      sensitiveTools: sensitiveTools ?? this.sensitiveTools,
     );
   }
 }

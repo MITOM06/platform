@@ -51,6 +51,18 @@ export default registerAs('config', () => ({
     scoreThreshold: parseFloat(process.env.KB_SCORE_THRESHOLD ?? '0.5'),
     embeddingModel: 'text-embedding-3-small',
     qdrantCollection: process.env.QDRANT_KB_COLLECTION ?? 'knowledge',
+    // Hybrid retrieval: fuse vector + in-process BM25 (keyword) via RRF over an
+    // enlarged candidate pool before keeping topK. Set false to use vector-only.
+    hybridEnabled: process.env.KB_HYBRID_ENABLED !== 'false',
+    candidatePool: parseInt(process.env.KB_CANDIDATE_POOL ?? '25', 10),
+  },
+  cohere: {
+    // Optional neural reranker. When the key is absent the pipeline gracefully
+    // falls back to hybrid (BM25+vector) ordering — no hard dependency.
+    apiKey: process.env.COHERE_API_KEY,
+    rerankModel: process.env.COHERE_RERANK_MODEL ?? 'rerank-v3.5',
+    // Minimum Cohere relevance for a chunk to survive when reranking is active.
+    rerankThreshold: parseFloat(process.env.COHERE_RERANK_THRESHOLD ?? '0.3'),
   },
   memory: {
     // Dedicated Qdrant collection holding embedded semantic facts.
@@ -70,6 +82,19 @@ export default registerAs('config', () => ({
   },
   quota: {
     monthlyTokenLimit: parseInt(process.env.AI_MONTHLY_TOKEN_LIMIT ?? '500000', 10),
+  },
+  rateLimit: {
+    // Per-request rate limiting (fixed 60s window + in-flight concurrency cap),
+    // separate from the monthly token quota. Guards against cost spikes / abuse.
+    enabled: process.env.AI_RATE_LIMIT_ENABLED !== 'false',
+    maxRequestsPerMin: parseInt(process.env.AI_RATE_MAX_REQUESTS_PER_MIN ?? '20', 10),
+    maxConcurrent: parseInt(process.env.AI_RATE_MAX_CONCURRENT ?? '3', 10),
+  },
+  retention: {
+    // Daily purge of stale memory facts + orphaned KB chunks. 0 days = never purge.
+    enabled: process.env.AI_RETENTION_ENABLED !== 'false',
+    memoryTtlDays: parseInt(process.env.AI_MEMORY_TTL_DAYS ?? '180', 10),
+    intervalHours: parseInt(process.env.AI_RETENTION_INTERVAL_HOURS ?? '24', 10),
   },
   connector: {
     // connector-service internal API base for per-user MCP tools.

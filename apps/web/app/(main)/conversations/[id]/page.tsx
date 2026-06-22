@@ -6,6 +6,7 @@ import { useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { useAuthStore } from '@/lib/store/auth.store'
 import { stompService } from '@/lib/stomp/client'
+import { useStompConnected } from '@/lib/stomp/use-stomp-connected'
 import { chatService } from '@/lib/api/chat'
 import { useMessages } from '@/lib/hooks/use-messages'
 import { useConversation } from '@/lib/hooks/use-conversation'
@@ -46,6 +47,9 @@ export default function ConversationPage({ params }: Props) {
   const t = useTranslations('chat')
   const queryClient = useQueryClient()
   const currentUser = useAuthStore((s) => s.user)
+  // Re-run the STOMP subscribe effect on every (re)connect so a dropped socket
+  // is re-subscribed instead of leaving a subscription bound to a dead socket.
+  const stompConnected = useStompConnected()
   const bottomRef = useRef<HTMLDivElement>(null)
   const topSentinelRef = useRef<HTMLDivElement>(null)
   const scrollContainerRef = useRef<HTMLDivElement>(null)
@@ -157,6 +161,7 @@ export default function ConversationPage({ params }: Props) {
 
   // Subscribe to STOMP for real-time messages + events + typing
   useEffect(() => {
+    if (!stompConnected) return
     let active = true
     let typingSub: ReturnType<typeof stompService.subscribe>
     let messageSub: ReturnType<typeof stompService.subscribe>
@@ -203,18 +208,24 @@ export default function ConversationPage({ params }: Props) {
                   content: (prev?.content ?? '') + String(parsed.chunk ?? ''),
                   thinking: false,
                   activeTools: prev?.activeTools ?? [],
+                  sensitiveTools: prev?.sensitiveTools ?? [],
                 }))
                 armAiWatchdog()
                 break
               case 'AI_TOOL_CALL': {
                 const toolName = String(parsed.toolName ?? '')
+                const isSensitive = parsed.sensitive === true
                 setAiStream((prev) => {
-                  const base = prev ?? { content: '', thinking: true, activeTools: [] }
+                  const base = prev ?? { content: '', thinking: true, activeTools: [], sensitiveTools: [] }
                   return {
                     ...base,
                     activeTools: base.activeTools.includes(toolName)
                       ? base.activeTools
                       : [...base.activeTools, toolName],
+                    sensitiveTools:
+                      isSensitive && !base.sensitiveTools.includes(toolName)
+                        ? [...base.sensitiveTools, toolName]
+                        : base.sensitiveTools,
                   }
                 })
                 armAiWatchdog()
@@ -227,6 +238,7 @@ export default function ConversationPage({ params }: Props) {
                 clearAiStream()
                 const aiErrCodeMap: Record<string, string> = {
                   AI_QUOTA_EXCEEDED: t('aiQuotaExceeded'),
+                  AI_RATE_LIMITED: t('aiRateLimited'),
                   AI_STREAM_INTERRUPTED: t('aiStreamInterrupted'),
                   AI_UNAVAILABLE: t('aiUnavailable'),
                 }
@@ -272,7 +284,7 @@ export default function ConversationPage({ params }: Props) {
       messageSub?.unsubscribe()
       typingSub?.unsubscribe()
     }
-  }, [id, queryClient, currentUser?.id, patchMessage, appendMessage, markMessageRead, t, armAiWatchdog, clearAiStream])
+  }, [id, stompConnected, queryClient, currentUser?.id, patchMessage, appendMessage, markMessageRead, t, armAiWatchdog, clearAiStream])
 
   // Mark conversation as read on open
   useEffect(() => {
@@ -319,7 +331,7 @@ export default function ConversationPage({ params }: Props) {
       // with Flutter, which creates the placeholder on send).
       const triggersAi = type === 'text' && (isAI || /@(?:AI|ponai)\b/i.test(content))
       if (triggersAi) {
-        setAiStream({ content: '', thinking: true, activeTools: [] })
+        setAiStream({ content: '', thinking: true, activeTools: [], sensitiveTools: [] })
         armAiWatchdog()
       }
       const sent = await chatService.sendMessage(id, finalContent, type, replyingTo?.id)

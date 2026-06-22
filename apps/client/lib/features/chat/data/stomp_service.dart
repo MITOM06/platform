@@ -159,6 +159,7 @@ class StompService extends _$StompService {
           case 'AI_STREAM_CHUNK':
           case 'AI_STREAM_DONE':
           case 'AI_STREAM_ERROR':
+          case 'AI_TOOL_CALL':
             _aiStreamCtrl.add(data);
             return;
           case 'KB_STATUS_UPDATE':

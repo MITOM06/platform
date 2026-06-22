@@ -5,11 +5,13 @@ import { RedisPublisherService } from '../redis/redis-publisher.service';
 import { MemoryService } from '../memory/memory.service';
 import { ToolRegistryService } from '../tools/tool-registry.service';
 import { UsageService } from '../usage/usage.service';
+import { RateLimiterService } from '../usage/rate-limiter.service';
 import { PersonaService } from '../persona/persona.service';
 import { ToolContext } from '../tools/tool.interface';
 import { selectModel, RouteSignals, RouterConfig } from './model-router';
 import { AiStreamErrorCode } from './ai-stream-error';
 import { withAgenticLoopSpan } from './tracing-helpers';
+import { isSensitiveTool } from './injection-guard';
 import { FactExtractorService } from './fact-extractor.service';
 import { ContextBuilderService } from './context-builder.service';
 import { EmbeddingService } from '../kb/embedding.service';
@@ -78,6 +80,7 @@ export class AiService {
     private readonly embeddingService: EmbeddingService,
     private readonly toolRegistry: ToolRegistryService,
     private readonly usageService: UsageService,
+    private readonly rateLimiter: RateLimiterService,
     private readonly personaService: PersonaService,
     private readonly factExtractor: FactExtractorService,
     private readonly contextBuilder: ContextBuilderService,
@@ -115,8 +118,7 @@ export class AiService {
   }
 
   async handleRequest(payload: AiRequestPayload): Promise<void> {
-    const { conversationId, userId, displayName, content, history, departmentId } =
-      payload;
+    const { conversationId, userId } = payload;
 
     if (await this.usageService.isQuotaExceeded(userId)) {
       this.logger.warn(`Quota exceeded for user ${userId} in conversation ${conversationId}`);
@@ -128,6 +130,33 @@ export class AiService {
       return; // quota is an expected condition — do NOT dead-letter.
     }
 
+    const decision = await this.rateLimiter.acquire(userId);
+    if (!decision.allowed) {
+      this.logger.warn(
+        `Rate limit (${decision.reason}) hit for user ${userId} in conversation ${conversationId}`,
+      );
+      await this.publisher.publish(conversationId, {
+        type: 'AI_STREAM_ERROR',
+        code: AiStreamErrorCode.RATE_LIMITED,
+        error:
+          decision.reason === 'concurrency'
+            ? 'Too many AI requests in progress. Please wait for the current one to finish.'
+            : 'You are sending requests too quickly. Please slow down and try again shortly.',
+      });
+      return; // expected condition — do NOT dead-letter.
+    }
+
+    // Release the concurrency slot no matter how processing ends (incl. rethrow).
+    try {
+      await this.processRequest(payload);
+    } finally {
+      await decision.release();
+    }
+  }
+
+  /** Core pipeline: embed → persona → context → route → agentic loop → memory. */
+  private async processRequest(payload: AiRequestPayload): Promise<void> {
+    const { conversationId, userId, displayName, content, history, departmentId } = payload;
     const startMs = Date.now();
     this.logger.log(`AI request for conversation ${conversationId} from ${displayName}`);
 
@@ -146,6 +175,7 @@ export class AiService {
       conversationId,
       userId,
       queryVector,
+      content,
       departmentId,
     );
 
@@ -366,10 +396,13 @@ export class AiService {
 
         for (const block of toolUseBlocks) {
           const inputSummary = JSON.stringify(block.input).slice(0, 100);
+          // Flag state-changing / outbound tools so the client can surface a
+          // confirmation affordance before the action is shown as done.
           await this.publisher.publish(ctx.conversationId, {
             type: 'AI_TOOL_CALL',
             toolName: block.name,
             inputSummary,
+            sensitive: isSensitiveTool(block.name),
           });
           const result = await this.toolRegistry.execute(
             block.name,

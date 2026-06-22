@@ -131,4 +131,32 @@ export class KbProcessorService {
       .exec();
     return docs.map((d) => d.documentId);
   }
+
+  /**
+   * Retention: delete vector chunks whose owning kb_documents record no longer
+   * exists (uploads that were removed but whose `kb:delete` cleanup failed, or
+   * legacy leftovers). Returns the number of orphaned documents purged.
+   */
+  async purgeOrphanedChunks(): Promise<number> {
+    const chunkDocIds = await this.vectorStore.listDocumentIds(this.collection);
+    if (chunkDocIds.length === 0) return 0;
+
+    const known = await this.kbDocumentModel
+      .find({ documentId: { $in: chunkDocIds } })
+      .select('documentId')
+      .lean()
+      .exec();
+    const knownSet = new Set(known.map((d) => d.documentId));
+
+    const orphans = chunkDocIds.filter((id) => !knownSet.has(id));
+    for (const documentId of orphans) {
+      await this.vectorStore.deleteDocument(this.collection, documentId).catch((err) => {
+        this.logger.warn(`Failed to purge orphan chunks for ${documentId}: ${(err as Error).message}`);
+      });
+    }
+    if (orphans.length > 0) {
+      this.logger.log(`Purged ${orphans.length} orphaned KB document(s) from vector store`);
+    }
+    return orphans.length;
+  }
 }

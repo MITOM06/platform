@@ -926,6 +926,12 @@ class AppLocalizationsKo extends AppLocalizations {
   String get aiErrUnavailable => 'AI를 일시적으로 사용할 수 없습니다.';
 
   @override
+  String get aiErrRateLimited => 'AI 요청이 너무 많습니다. 잠시 후 다시 시도해 주세요.';
+
+  @override
+  String get aiSensitiveAction => '민감한 작업';
+
+  @override
   String get aiErrorRetry => '다시 시도';
 
   @override
