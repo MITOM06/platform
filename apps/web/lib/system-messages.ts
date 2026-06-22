@@ -12,16 +12,30 @@ type Translate = (key: string, values?: Record<string, string | number>) => stri
  * `opts.short` collapses parameterised forms to the concise sidebar variant
  * (e.g. "Nickname was changed" instead of the full actor/target sentence), so
  * the sidebar preview stays compact like Flutter's `_subtitleText`.
+ *
+ * `opts.resolveName(actorId)` resolves an actor's display name for codes that
+ * carry one (`system.message.pinned:<actorId>`). When omitted (e.g. sidebar
+ * preview without participant context) the rendered name falls back to a
+ * generic label. Mirrors Flutter `message_bubble_parts.dart` actor resolution.
  */
 export function humanizeSystemMessage(
   content: string,
   t: Translate,
-  opts?: { short?: boolean },
+  opts?: { short?: boolean; resolveName?: (actorId: string) => string | undefined },
 ): string {
   if (!content) return content
 
   // Attachment detection (mirror Flutter conversation_tile `/api/uploads/`).
   if (content.includes('/api/uploads/')) return t('attachmentLabel')
+
+  if (content.startsWith('system.message.pinned:') || content.startsWith('system.message.unpinned:')) {
+    const pinned = content.startsWith('system.message.pinned:')
+    const actorId = content.slice(content.indexOf(':') + 1)
+    const name = opts?.resolveName?.(actorId) || t('someone')
+    return pinned
+      ? t('systemPinnedMessage', { name })
+      : t('systemUnpinnedMessage', { name })
+  }
 
   if (content.startsWith('system.call.ended:')) {
     const [, kind, secondsRaw] = content.split(':')

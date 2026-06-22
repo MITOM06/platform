@@ -189,6 +189,7 @@
     "notificationsGranted": "Notifications enabled",
     "notificationsDenied": "Unable to enable notifications. Check browser settings.",
     "notificationsAlready": "Notifications already enabled",
+    "notificationsTurnedOff": "Notifications désactivées",
     "tokenUsage": "AI Token Usage",
     "tokenUsageSubtitle": "View token usage statistics",
     "aiMemory": "AI Memory",
@@ -417,6 +418,9 @@
     "systemMemberLeft": "A member left the group",
     "systemMemberRemoved": "A member was removed",
     "systemMemberJoined": "A member joined",
+    "someone": "Quelqu'un",
+    "systemPinnedMessage": "{name} a épinglé un message",
+    "systemUnpinnedMessage": "{name} a désépinglé un message",
     "youColon": "You: ",
     "noMessagesYet": "No messages yet",
     "conversationDefault": "Conversation",
@@ -558,6 +562,15 @@
     "newConvNoDepartment": "Aucun département",
     "groupAvatarAlt": "Avatar du groupe",
     "imageViewer": "Visionneuse d'images"
+  },
+  "aiHub": {
+    "title": "Hub IA",
+    "subtitle": "Tout sur votre assistant IA",
+    "startChat": "Démarrer une discussion avec PON AI",
+    "memory": "Mémoire",
+    "integrations": "Connecteurs",
+    "skills": "Compétences",
+    "tokenUsage": "Utilisation"
   },
   "aiPersona": {
     "title": "AI Persona",

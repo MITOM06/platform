@@ -388,6 +388,30 @@ class AppLocalizationsJa extends AppLocalizations {
   String get you => 'あなた';
 
   @override
+  String get someone => '誰か';
+
+  @override
+  String get aiHubTitle => 'AI ハブ';
+
+  @override
+  String get aiHubSubtitle => 'AI アシスタントに関するすべて';
+
+  @override
+  String get aiHubStartChat => 'PON AI とチャットを開始';
+
+  @override
+  String get aiHubMemory => 'メモリ';
+
+  @override
+  String get aiHubIntegrations => 'コネクタ';
+
+  @override
+  String get aiHubSkills => 'スキル';
+
+  @override
+  String get aiHubTokenUsage => '使用量';
+
+  @override
   String systemAddedMember(String actor, String target) {
     return '$actor が $target を追加しました';
   }
@@ -1215,6 +1239,16 @@ class AppLocalizationsJa extends AppLocalizations {
   @override
   String sysMemberJoined(String actorName) {
     return '$actorNameがグループに参加しました';
+  }
+
+  @override
+  String sysPinnedMessage(String actorName) {
+    return '$actorName さんがメッセージをピン留めしました';
+  }
+
+  @override
+  String sysUnpinnedMessage(String actorName) {
+    return '$actorName さんがメッセージのピン留めを解除しました';
   }
 
   @override

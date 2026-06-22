@@ -8,7 +8,6 @@ import '../../../l10n/app_localizations.dart';
 import '../../auth/data/auth_repository.dart';
 import '../../auth/domain/auth_state.dart';
 import '../data/chat_repository.dart';
-import '../domain/chat_state.dart' show kAiBotUserId;
 
 class NewConversationScreen extends ConsumerStatefulWidget {
   const NewConversationScreen({super.key});
@@ -133,18 +132,6 @@ class _NewConversationScreenState
     }
   }
 
-  Future<void> _startAiChat() async {
-    setState(() => _loading = true);
-    try {
-      final repo = ref.read(chatRepositoryProvider);
-      final conv = await repo.getOrCreateConversation(kAiBotUserId);
-      if (!mounted) return;
-      context.go('/chat/${conv.id}');
-    } catch (_) {
-      if (mounted) setState(() => _loading = false);
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
@@ -163,8 +150,11 @@ class _NewConversationScreenState
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // AI Bot quick-start
-              _AiBotTile(loading: _loading, onTap: _startAiChat),
+              // AI Bot quick-start → AI Hub landing screen
+              _AiBotTile(
+                loading: _loading,
+                onTap: () => context.push('/ai-hub'),
+              ),
               const SizedBox(height: 16),
               // Mode toggle
               SegmentedButton<bool>(

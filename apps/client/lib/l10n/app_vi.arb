@@ -123,6 +123,14 @@
   "renameGroup": "Đổi tên nhóm",
   "admin": "Quản trị",
   "you": "Bạn",
+  "someone": "Ai đó",
+  "aiHubTitle": "Trung tâm AI",
+  "aiHubSubtitle": "Mọi thứ về trợ lý AI của bạn",
+  "aiHubStartChat": "Bắt đầu trò chuyện với PON AI",
+  "aiHubMemory": "Bộ nhớ",
+  "aiHubIntegrations": "Kết nối",
+  "aiHubSkills": "Kỹ năng",
+  "aiHubTokenUsage": "Sử dụng",
   "systemAddedMember": "{actor} đã thêm {target}",
   "systemRemovedMember": "{actor} đã xoá {target}",
   "systemLeftGroup": "{actor} đã rời nhóm",
@@ -401,6 +409,8 @@
   "sysMemberLeft": "{actorName} đã rời khỏi nhóm",
   "sysMemberRemoved": "{actorName} đã xóa một thành viên",
   "sysMemberJoined": "{actorName} đã tham gia nhóm",
+  "sysPinnedMessage": "{actorName} đã ghim một tin nhắn",
+  "sysUnpinnedMessage": "{actorName} đã bỏ ghim một tin nhắn",
   "systemVideoCallEnded": "Cuộc gọi video đã kết thúc · {duration}",
   "@systemVideoCallEnded": {
     "placeholders": {

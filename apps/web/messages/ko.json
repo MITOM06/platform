@@ -189,6 +189,7 @@
     "notificationsGranted": "Notifications enabled",
     "notificationsDenied": "Unable to enable notifications. Check browser settings.",
     "notificationsAlready": "Notifications already enabled",
+    "notificationsTurnedOff": "알림을 껐습니다",
     "tokenUsage": "AI Token Usage",
     "tokenUsageSubtitle": "View token usage statistics",
     "aiMemory": "AI Memory",
@@ -417,6 +418,9 @@
     "systemMemberLeft": "A member left the group",
     "systemMemberRemoved": "A member was removed",
     "systemMemberJoined": "A member joined",
+    "someone": "누군가",
+    "systemPinnedMessage": "{name} 님이 메시지를 고정했습니다",
+    "systemUnpinnedMessage": "{name} 님이 메시지 고정을 해제했습니다",
     "youColon": "You: ",
     "noMessagesYet": "No messages yet",
     "conversationDefault": "Conversation",
@@ -558,6 +562,15 @@
     "newConvNoDepartment": "부서 없음",
     "groupAvatarAlt": "그룹 아바타",
     "imageViewer": "이미지 뷰어"
+  },
+  "aiHub": {
+    "title": "AI 허브",
+    "subtitle": "AI 어시스턴트에 관한 모든 것",
+    "startChat": "PON AI와 채팅 시작",
+    "memory": "메모리",
+    "integrations": "커넥터",
+    "skills": "스킬",
+    "tokenUsage": "사용량"
   },
   "aiPersona": {
     "title": "AI Persona",

@@ -182,6 +182,26 @@ class SystemMessage extends ConsumerWidget {
       final parts = message.content.split(':');
       final emoji = parts.length > 1 ? parts[1] : '👍';
       text = context.l10n.sysQuickReactionChanged(actorName, emoji);
+    } else if (message.content.startsWith('system.message.pinned:') ||
+        message.content.startsWith('system.message.unpinned:')) {
+      // Format: `system.message.(un)pinned:<actorUserId>`. The actor id is
+      // carried in the content (senderId is the generic "system" sender).
+      final isUnpinned = message.content.startsWith('system.message.unpinned:');
+      final parts = message.content.split(':');
+      final pinActorId = parts.length > 1 ? parts[1] : '';
+      final pinActorProfile =
+          ref.watch(userProfileProvider(pinActorId)).valueOrNull;
+      final pinActorNickname = nicknames[pinActorId];
+      final pinActorName = pinActorId.isEmpty
+          ? context.l10n.someone
+          : (pinActorId == currentUserId
+              ? context.l10n.you
+              : ((pinActorNickname != null && pinActorNickname.isNotEmpty)
+                  ? pinActorNickname
+                  : (pinActorProfile?.displayName ?? context.l10n.someone)));
+      text = isUnpinned
+          ? context.l10n.sysUnpinnedMessage(pinActorName)
+          : context.l10n.sysPinnedMessage(pinActorName);
     } else if (message.content.startsWith('system.call.')) {
       return _CallSystemMessage(content: message.content);
     } else {

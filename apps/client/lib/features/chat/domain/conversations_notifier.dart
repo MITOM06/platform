@@ -9,6 +9,7 @@ import '../../../core/router/app_router.dart';
 import '../../../core/utils/global_messenger.dart';
 import '../data/chat_repository.dart';
 import '../data/stomp_service.dart';
+import '../../settings/ui/settings_screen.dart' show notificationsEnabledProvider;
 import 'chat_misc_providers.dart';
 import 'chat_state.dart';
 import 'webrtc_service.dart';
@@ -236,8 +237,12 @@ class ConversationsNotifier extends _$ConversationsNotifier {
 
       final content = notif['content'] as String?;
       final messageType = notif['messageType'] as String?;
+      // Gate ONLY the visible banner on the user's notification preference.
+      // Unread badge + conversation-list refresh below stay unaffected so
+      // unread counts remain correct even when notifications are disabled.
+      final notificationsEnabled = ref.read(notificationsEnabledProvider);
       final currentRoute = ref.read(appRouterProvider).routeInformationProvider.value.uri.path;
-      if (currentRoute != '/chat/$convId') {
+      if (notificationsEnabled && currentRoute != '/chat/$convId') {
         _showMessageBanner(
           convId: convId,
           senderId: senderId,

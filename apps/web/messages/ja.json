@@ -189,6 +189,7 @@
     "notificationsGranted": "Notifications enabled",
     "notificationsDenied": "Unable to enable notifications. Check browser settings.",
     "notificationsAlready": "Notifications already enabled",
+    "notificationsTurnedOff": "通知をオフにしました",
     "tokenUsage": "AI Token Usage",
     "tokenUsageSubtitle": "View token usage statistics",
     "aiMemory": "AI Memory",
@@ -417,6 +418,9 @@
     "systemMemberLeft": "A member left the group",
     "systemMemberRemoved": "A member was removed",
     "systemMemberJoined": "A member joined",
+    "someone": "誰か",
+    "systemPinnedMessage": "{name} がメッセージをピン留めしました",
+    "systemUnpinnedMessage": "{name} がメッセージのピン留めを解除しました",
     "youColon": "You: ",
     "noMessagesYet": "No messages yet",
     "conversationDefault": "Conversation",
@@ -558,6 +562,15 @@
     "newConvNoDepartment": "部門なし",
     "groupAvatarAlt": "グループのアバター",
     "imageViewer": "画像ビューア"
+  },
+  "aiHub": {
+    "title": "AI ハブ",
+    "subtitle": "AI アシスタントのすべて",
+    "startChat": "PON AI とチャットを開始",
+    "memory": "メモリ",
+    "integrations": "コネクタ",
+    "skills": "スキル",
+    "tokenUsage": "使用量"
   },
   "aiPersona": {
     "title": "AI Persona",

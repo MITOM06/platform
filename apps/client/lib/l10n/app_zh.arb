@@ -123,6 +123,14 @@
   "renameGroup": "重命名群组",
   "admin": "管理员",
   "you": "你",
+  "someone": "某人",
+  "aiHubTitle": "AI 中心",
+  "aiHubSubtitle": "关于你的 AI 助手的一切",
+  "aiHubStartChat": "开始与 PON AI 聊天",
+  "aiHubMemory": "记忆",
+  "aiHubIntegrations": "连接器",
+  "aiHubSkills": "技能",
+  "aiHubTokenUsage": "用量",
   "systemAddedMember": "{actor} 添加了 {target}",
   "systemRemovedMember": "{actor} 移除了 {target}",
   "systemLeftGroup": "{actor} 退出了群组",
@@ -401,6 +409,8 @@
   "sysMemberLeft": "{actorName}离开了群组",
   "sysMemberRemoved": "{actorName}移除了一位成员",
   "sysMemberJoined": "{actorName}加入了群组",
+  "sysPinnedMessage": "{actorName} 置顶了一条消息",
+  "sysUnpinnedMessage": "{actorName} 取消置顶了一条消息",
   "systemVideoCallEnded": "视频通话已结束 · {duration}",
   "@systemVideoCallEnded": {
     "placeholders": {

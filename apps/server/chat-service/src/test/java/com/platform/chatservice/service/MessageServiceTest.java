@@ -376,6 +376,8 @@ class MessageServiceTest {
     when(conversationRepository.findById(CONV_ID)).thenReturn(Optional.of(conversation));
     when(conversationRepository.save(any(Conversation.class)))
         .thenAnswer(inv -> inv.getArgument(0));
+    // createSystemMessage persists the "X pinned a message" notice.
+    when(messageRepository.save(any(Message.class))).thenReturn(savedMessage);
 
     var result = messageService.pinMessage(SENDER_ID, MSG_ID);
 
@@ -411,6 +413,8 @@ class MessageServiceTest {
     when(conversationRepository.findById(CONV_ID)).thenReturn(Optional.of(conversation));
     when(conversationRepository.save(any(Conversation.class)))
         .thenAnswer(inv -> inv.getArgument(0));
+    // createSystemMessage persists the "X unpinned a message" notice.
+    when(messageRepository.save(any(Message.class))).thenReturn(savedMessage);
 
     var result = messageService.unpinMessage(SENDER_ID, MSG_ID);
 
