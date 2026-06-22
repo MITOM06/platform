@@ -92,3 +92,6 @@ apps/client/.flutter-plugins-dependencies
 .vscode/settings.json
 scripts/set-github-secrets.sh
 !apps/web/.env.production
+
+# Local-only backup of old _workspace reports (recoverable from git history)
+_workspace_prev/
