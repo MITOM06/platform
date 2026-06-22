@@ -14,6 +14,7 @@ import '../../features/chat/ui/archived_chats_screen.dart';
 import '../../features/home/ui/responsive_home_layout.dart';
 import '../utils/global_messenger.dart';
 import '../../features/chat/presentation/call_screen.dart';
+import '../../features/chat/presentation/group_call_screen.dart';
 import '../../features/chat/ui/group_info_screen.dart';
 import '../../features/chat/ui/new_conversation_screen.dart';
 import '../../features/chat/ui/new_group_screen.dart';
@@ -296,6 +297,13 @@ GoRouter appRouter(AppRouterRef ref) {
             initialOfferSdp: extra['initialOfferSdp'] as String?,
           );
         },
+      ),
+      GoRoute(
+        path: '/group-call',
+        name: 'group-call',
+        // Fullscreen over everything (incl. web split layout) on the root nav.
+        parentNavigatorKey: rootNavigatorKey,
+        builder: (context, state) => const GroupCallScreen(),
       ),
     ],
   );

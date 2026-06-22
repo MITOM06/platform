@@ -10,6 +10,7 @@ import { ToolsModule } from './tools/tools.module';
 import { UsageModule } from './usage/usage.module';
 import { PersonaModule } from './persona/persona.module';
 import { RetentionModule } from './retention/retention.module';
+import { CallModule } from './call/call.module';
 import { RabbitmqModule } from './rabbitmq/rabbitmq.module';
 import { BotSeedService } from './bot/bot-seed.service';
 import { RedisSubscriberService } from './redis/redis-subscriber.service';
@@ -38,6 +39,7 @@ const mongooseModule: DynamicModule = MongooseModule.forRootAsync({
     UsageModule,
     PersonaModule,
     RetentionModule,
+    CallModule,
     AiModule,
     RabbitmqModule,
   ],

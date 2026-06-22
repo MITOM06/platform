@@ -572,6 +572,95 @@ class AppLocalizationsVi extends AppLocalizations {
   String get callUnknownCaller => 'Ai đó';
 
   @override
+  String get callToggleMic => 'Bật/tắt micro';
+
+  @override
+  String get callToggleCam => 'Bật/tắt camera';
+
+  @override
+  String get callLeave => 'Rời';
+
+  @override
+  String get callJoin => 'Tham gia';
+
+  @override
+  String get callAccept => 'Chấp nhận';
+
+  @override
+  String get callDecline => 'Từ chối';
+
+  @override
+  String get groupCallTitle => 'Cuộc gọi nhóm';
+
+  @override
+  String groupCallParticipants(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count người tham gia',
+      one: '1 người tham gia',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get groupCallNotetakerActive => 'AI đang ghi chú';
+
+  @override
+  String get groupCallStartTitle => 'Bắt đầu cuộc gọi nhóm';
+
+  @override
+  String get groupCallAudio => 'Âm thanh';
+
+  @override
+  String get groupCallVideo => 'Video';
+
+  @override
+  String get groupCallNotetakerToggle => 'AI ghi chú';
+
+  @override
+  String get groupCallNotetakerHint =>
+      'AI sẽ lắng nghe và đăng bản tóm tắt cuộc họp sau đó.';
+
+  @override
+  String get groupCallStartAction => 'Bắt đầu gọi';
+
+  @override
+  String activeCallBanner(int count) {
+    return 'Cuộc gọi nhóm · $count đã tham gia';
+  }
+
+  @override
+  String get incomingGroupCallTitle => 'Cuộc gọi nhóm đến';
+
+  @override
+  String incomingGroupCallBody(String name) {
+    return '$name đã bắt đầu một cuộc gọi nhóm';
+  }
+
+  @override
+  String get meetingSummaryTitle => 'Tóm tắt cuộc họp';
+
+  @override
+  String meetingSummaryDuration(String duration) {
+    return 'Thời lượng $duration';
+  }
+
+  @override
+  String meetingSummaryAttendees(String names) {
+    return 'Người tham dự: $names';
+  }
+
+  @override
+  String get meetingSummaryOverview => 'Tổng quan';
+
+  @override
+  String get meetingSummaryKeyPoints => 'Điểm chính';
+
+  @override
+  String get meetingSummaryActionItems => 'Việc cần làm';
+
+  @override
   String get profileTitle => 'Trang cá nhân';
 
   @override

@@ -20,12 +20,14 @@ import { StrangerRequestBanner } from '@/components/chat/StrangerRequestBanner'
 import { BlockedComposerNotice } from '@/components/chat/BlockedComposerNotice'
 import { AiTraceModal } from '@/components/chat/AiTraceModal'
 import { ForwardMessageModal } from '@/components/chat/ForwardMessageModal'
+import { ActiveCallBanner } from '@/components/call/ActiveCallBanner'
+import { useCallStore } from '@/lib/store/call.store'
 import { cn } from '@/lib/utils'
 import { useWallpaper } from '@/lib/hooks/use-wallpaper'
 import { useMessageCache } from '@/lib/hooks/use-message-cache'
 import { applyNicknameSystemMessage } from '@/lib/nicknames'
 import { applyQuickReactionSystemMessage } from '@/lib/quick-reaction'
-import type { AiStreamState, Message, MessageType, StompEvent } from '@/lib/api/types'
+import type { AiStreamState, CallEvent, CallMedia, Message, MessageType, StompEvent } from '@/lib/api/types'
 
 interface Props {
   params: Promise<{ id: string }>
@@ -40,6 +42,19 @@ const STOMP_EVENT_TYPES = new Set([
 
 function isStompEvent(parsed: Record<string, unknown>): parsed is StompEvent {
   return typeof parsed.type === 'string' && STOMP_EVENT_TYPES.has(parsed.type)
+}
+
+// Group-call lifecycle events (Track A §3) are keyed by `event`, not `type`.
+const CALL_EVENT_TYPES = new Set(['call.started', 'call.roster', 'call.ended'])
+function isCallEvent(parsed: Record<string, unknown>): parsed is CallEvent {
+  return typeof parsed.event === 'string' && CALL_EVENT_TYPES.has(parsed.event)
+}
+
+interface ActiveCall {
+  callId: string
+  media: CallMedia
+  aiNotetaker: boolean
+  joinedCount: number
 }
 
 export default function ConversationPage({ params }: Props) {
@@ -63,6 +78,8 @@ export default function ConversationPage({ params }: Props) {
   const [forwardMessage, setForwardMessage] = useState<Message | null>(null)
   const [traceMessageId, setTraceMessageId] = useState<string | null>(null)
   const [aiStream, setAiStream] = useState<AiStreamState | null>(null)
+  const [activeCall, setActiveCall] = useState<ActiveCall | null>(null)
+  const groupCallId = useCallStore((s) => s.groupCallId)
   // Watchdog so a "thinking" bubble never sticks forever if the AI never
   // responds (parity with Flutter's 30s watchdog). Re-armed on every AI event.
   const aiWatchdogRef = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -249,6 +266,51 @@ export default function ConversationPage({ params }: Props) {
                 break
               }
             }
+          } else if (isCallEvent(parsed)) {
+            // Group-call lifecycle (Track A §3): drive the active-call banner and,
+            // if this client is in the call, feed the roster into the mesh manager.
+            switch (parsed.event) {
+              case 'call.started': {
+                setActiveCall({
+                  callId: parsed.callId,
+                  media: parsed.media,
+                  aiNotetaker: parsed.aiNotetaker,
+                  joinedCount: parsed.participants.length,
+                })
+                // If WE started it, the server already added us as a participant —
+                // activate our group-call state without re-joining.
+                if (parsed.startedBy === currentUser?.id) {
+                  void import('@/lib/webrtc/group-call-manager').then((m) =>
+                    m.groupCallManager.confirmStarted(
+                      parsed.callId,
+                      parsed.conversationId,
+                      currentUser!.id,
+                      parsed.media,
+                      parsed.aiNotetaker,
+                    ),
+                  )
+                }
+                break
+              }
+              case 'call.roster': {
+                const joined = parsed.participants.filter((p) => !p.leftAt).length
+                setActiveCall((prev) =>
+                  prev && prev.callId === parsed.callId ? { ...prev, joinedCount: joined } : prev,
+                )
+                if (useCallStore.getState().groupCallId === parsed.callId) {
+                  void import('@/lib/webrtc/group-call-manager').then((m) =>
+                    m.groupCallManager.applyRoster(parsed.participants),
+                  )
+                }
+                break
+              }
+              case 'call.ended':
+                setActiveCall((prev) => (prev?.callId === parsed.callId ? null : prev))
+                void import('@/lib/webrtc/group-call-manager').then((m) =>
+                  m.groupCallManager.handleEnded(parsed.callId),
+                )
+                break
+            }
           } else {
             // Regular message (includes AI final message after AI_STREAM_DONE)
             const msg = parsed as unknown as Message
@@ -373,6 +435,16 @@ export default function ConversationPage({ params }: Props) {
         <MessageSearchPanel
           conversationId={id}
           onClose={() => setSearchVisible(false)}
+        />
+      )}
+
+      {activeCall && groupCallId !== activeCall.callId && (
+        <ActiveCallBanner
+          callId={activeCall.callId}
+          conversationId={id}
+          media={activeCall.media}
+          aiNotetaker={activeCall.aiNotetaker}
+          joinedCount={activeCall.joinedCount}
         />
       )}
 

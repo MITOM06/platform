@@ -175,6 +175,55 @@
   "callConnecting": "연결 중…",
   "callMediaError": "카메라/마이크에 접근할 수 없습니다 (HTTPS 또는 localhost 필요)",
   "callUnknownCaller": "누군가",
+  "callToggleMic": "마이크 전환",
+  "callToggleCam": "카메라 전환",
+  "callLeave": "나가기",
+  "callJoin": "참여",
+  "callAccept": "수락",
+  "callDecline": "거절",
+  "groupCallTitle": "그룹 통화",
+  "groupCallParticipants": "{count, plural, =1{참여자 1명} other{참여자 {count}명}}",
+  "@groupCallParticipants": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "groupCallNotetakerActive": "AI가 메모하고 있습니다",
+  "groupCallStartTitle": "그룹 통화 시작",
+  "groupCallAudio": "음성",
+  "groupCallVideo": "영상",
+  "groupCallNotetakerToggle": "AI 노트테이커",
+  "groupCallNotetakerHint": "AI가 대화를 듣고 통화 후 회의 요약을 게시합니다.",
+  "groupCallStartAction": "통화 시작",
+  "activeCallBanner": "그룹 통화 · {count}명 참여",
+  "@activeCallBanner": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "incomingGroupCallTitle": "수신 그룹 통화",
+  "incomingGroupCallBody": "{name}님이 그룹 통화를 시작했습니다",
+  "@incomingGroupCallBody": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+  "meetingSummaryTitle": "회의 요약",
+  "meetingSummaryDuration": "통화 시간 {duration}",
+  "@meetingSummaryDuration": {
+    "placeholders": {
+      "duration": { "type": "String" }
+    }
+  },
+  "meetingSummaryAttendees": "참석자: {names}",
+  "@meetingSummaryAttendees": {
+    "placeholders": {
+      "names": { "type": "String" }
+    }
+  },
+  "meetingSummaryOverview": "개요",
+  "meetingSummaryKeyPoints": "핵심 내용",
+  "meetingSummaryActionItems": "할 일",
   "profileTitle": "프로필",
   "editProfile": "프로필 편집",
   "bio": "소개",

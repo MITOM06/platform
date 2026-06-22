@@ -296,6 +296,55 @@
   "callConnecting": "Connecting…",
   "callMediaError": "Cannot access camera/microphone (HTTPS or localhost required)",
   "callUnknownCaller": "Someone",
+  "callToggleMic": "Toggle microphone",
+  "callToggleCam": "Toggle camera",
+  "callLeave": "Leave",
+  "callJoin": "Join",
+  "callAccept": "Accept",
+  "callDecline": "Decline",
+  "groupCallTitle": "Group call",
+  "groupCallParticipants": "{count, plural, =1{1 participant} other{{count} participants}}",
+  "@groupCallParticipants": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "groupCallNotetakerActive": "AI is taking notes",
+  "groupCallStartTitle": "Start a group call",
+  "groupCallAudio": "Audio",
+  "groupCallVideo": "Video",
+  "groupCallNotetakerToggle": "AI notetaker",
+  "groupCallNotetakerHint": "The AI listens and posts a meeting summary afterward.",
+  "groupCallStartAction": "Start call",
+  "activeCallBanner": "Group call · {count} joined",
+  "@activeCallBanner": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "incomingGroupCallTitle": "Incoming group call",
+  "incomingGroupCallBody": "{name} started a group call",
+  "@incomingGroupCallBody": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+  "meetingSummaryTitle": "Meeting summary",
+  "meetingSummaryDuration": "Duration {duration}",
+  "@meetingSummaryDuration": {
+    "placeholders": {
+      "duration": { "type": "String" }
+    }
+  },
+  "meetingSummaryAttendees": "Attendees: {names}",
+  "@meetingSummaryAttendees": {
+    "placeholders": {
+      "names": { "type": "String" }
+    }
+  },
+  "meetingSummaryOverview": "Overview",
+  "meetingSummaryKeyPoints": "Key points",
+  "meetingSummaryActionItems": "Action items",
   "profileTitle": "Profile",
   "editProfile": "Edit profile",
   "bio": "Bio",

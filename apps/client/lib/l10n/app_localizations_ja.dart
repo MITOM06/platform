@@ -566,6 +566,94 @@ class AppLocalizationsJa extends AppLocalizations {
   String get callUnknownCaller => '誰か';
 
   @override
+  String get callToggleMic => 'マイクの切り替え';
+
+  @override
+  String get callToggleCam => 'カメラの切り替え';
+
+  @override
+  String get callLeave => '退出';
+
+  @override
+  String get callJoin => '参加';
+
+  @override
+  String get callAccept => '応答';
+
+  @override
+  String get callDecline => '拒否';
+
+  @override
+  String get groupCallTitle => 'グループ通話';
+
+  @override
+  String groupCallParticipants(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count人の参加者',
+      one: '1人の参加者',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get groupCallNotetakerActive => 'AIがメモを取っています';
+
+  @override
+  String get groupCallStartTitle => 'グループ通話を開始';
+
+  @override
+  String get groupCallAudio => '音声';
+
+  @override
+  String get groupCallVideo => 'ビデオ';
+
+  @override
+  String get groupCallNotetakerToggle => 'AIノートテイカー';
+
+  @override
+  String get groupCallNotetakerHint => 'AIが会話を聞き取り、終了後に議事録を投稿します。';
+
+  @override
+  String get groupCallStartAction => '通話を開始';
+
+  @override
+  String activeCallBanner(int count) {
+    return 'グループ通話 · $count人が参加中';
+  }
+
+  @override
+  String get incomingGroupCallTitle => 'グループ通話の着信';
+
+  @override
+  String incomingGroupCallBody(String name) {
+    return '$nameさんがグループ通話を開始しました';
+  }
+
+  @override
+  String get meetingSummaryTitle => '議事録';
+
+  @override
+  String meetingSummaryDuration(String duration) {
+    return '通話時間 $duration';
+  }
+
+  @override
+  String meetingSummaryAttendees(String names) {
+    return '参加者: $names';
+  }
+
+  @override
+  String get meetingSummaryOverview => '概要';
+
+  @override
+  String get meetingSummaryKeyPoints => '要点';
+
+  @override
+  String get meetingSummaryActionItems => 'アクションアイテム';
+
+  @override
   String get profileTitle => 'プロフィール';
 
   @override

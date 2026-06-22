@@ -175,6 +175,55 @@
   "callConnecting": "接続中…",
   "callMediaError": "カメラ/マイクにアクセスできません（HTTPS または localhost が必要）",
   "callUnknownCaller": "誰か",
+  "callToggleMic": "マイクの切り替え",
+  "callToggleCam": "カメラの切り替え",
+  "callLeave": "退出",
+  "callJoin": "参加",
+  "callAccept": "応答",
+  "callDecline": "拒否",
+  "groupCallTitle": "グループ通話",
+  "groupCallParticipants": "{count, plural, =1{1人の参加者} other{{count}人の参加者}}",
+  "@groupCallParticipants": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "groupCallNotetakerActive": "AIがメモを取っています",
+  "groupCallStartTitle": "グループ通話を開始",
+  "groupCallAudio": "音声",
+  "groupCallVideo": "ビデオ",
+  "groupCallNotetakerToggle": "AIノートテイカー",
+  "groupCallNotetakerHint": "AIが会話を聞き取り、終了後に議事録を投稿します。",
+  "groupCallStartAction": "通話を開始",
+  "activeCallBanner": "グループ通話 · {count}人が参加中",
+  "@activeCallBanner": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "incomingGroupCallTitle": "グループ通話の着信",
+  "incomingGroupCallBody": "{name}さんがグループ通話を開始しました",
+  "@incomingGroupCallBody": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+  "meetingSummaryTitle": "議事録",
+  "meetingSummaryDuration": "通話時間 {duration}",
+  "@meetingSummaryDuration": {
+    "placeholders": {
+      "duration": { "type": "String" }
+    }
+  },
+  "meetingSummaryAttendees": "参加者: {names}",
+  "@meetingSummaryAttendees": {
+    "placeholders": {
+      "names": { "type": "String" }
+    }
+  },
+  "meetingSummaryOverview": "概要",
+  "meetingSummaryKeyPoints": "要点",
+  "meetingSummaryActionItems": "アクションアイテム",
   "profileTitle": "プロフィール",
   "editProfile": "プロフィール編集",
   "bio": "自己紹介",

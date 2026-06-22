@@ -175,6 +175,55 @@
   "callConnecting": "Connexion…",
   "callMediaError": "Impossible d'accéder à la caméra/au micro (HTTPS ou localhost requis)",
   "callUnknownCaller": "Quelqu'un",
+  "callToggleMic": "Activer/désactiver le micro",
+  "callToggleCam": "Activer/désactiver la caméra",
+  "callLeave": "Quitter",
+  "callJoin": "Rejoindre",
+  "callAccept": "Accepter",
+  "callDecline": "Refuser",
+  "groupCallTitle": "Appel de groupe",
+  "groupCallParticipants": "{count, plural, =1{1 participant} other{{count} participants}}",
+  "@groupCallParticipants": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "groupCallNotetakerActive": "L'IA prend des notes",
+  "groupCallStartTitle": "Démarrer un appel de groupe",
+  "groupCallAudio": "Audio",
+  "groupCallVideo": "Vidéo",
+  "groupCallNotetakerToggle": "Preneur de notes IA",
+  "groupCallNotetakerHint": "L'IA écoute et publie un résumé de la réunion ensuite.",
+  "groupCallStartAction": "Démarrer l'appel",
+  "activeCallBanner": "Appel de groupe · {count} ont rejoint",
+  "@activeCallBanner": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "incomingGroupCallTitle": "Appel de groupe entrant",
+  "incomingGroupCallBody": "{name} a démarré un appel de groupe",
+  "@incomingGroupCallBody": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+  "meetingSummaryTitle": "Résumé de la réunion",
+  "meetingSummaryDuration": "Durée {duration}",
+  "@meetingSummaryDuration": {
+    "placeholders": {
+      "duration": { "type": "String" }
+    }
+  },
+  "meetingSummaryAttendees": "Participants : {names}",
+  "@meetingSummaryAttendees": {
+    "placeholders": {
+      "names": { "type": "String" }
+    }
+  },
+  "meetingSummaryOverview": "Aperçu",
+  "meetingSummaryKeyPoints": "Points clés",
+  "meetingSummaryActionItems": "Actions à mener",
   "profileTitle": "Profil",
   "editProfile": "Modifier le profil",
   "bio": "Bio",

@@ -175,6 +175,55 @@
   "callConnecting": "连接中…",
   "callMediaError": "无法访问摄像头/麦克风（需要 HTTPS 或 localhost）",
   "callUnknownCaller": "某人",
+  "callToggleMic": "切换麦克风",
+  "callToggleCam": "切换摄像头",
+  "callLeave": "离开",
+  "callJoin": "加入",
+  "callAccept": "接听",
+  "callDecline": "拒绝",
+  "groupCallTitle": "群组通话",
+  "groupCallParticipants": "{count, plural, =1{1 名参与者} other{{count} 名参与者}}",
+  "@groupCallParticipants": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "groupCallNotetakerActive": "AI 正在记录",
+  "groupCallStartTitle": "发起群组通话",
+  "groupCallAudio": "语音",
+  "groupCallVideo": "视频",
+  "groupCallNotetakerToggle": "AI 记录员",
+  "groupCallNotetakerHint": "AI 会聆听并在结束后发布会议摘要。",
+  "groupCallStartAction": "开始通话",
+  "activeCallBanner": "群组通话 · {count} 人已加入",
+  "@activeCallBanner": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "incomingGroupCallTitle": "来电：群组通话",
+  "incomingGroupCallBody": "{name} 发起了群组通话",
+  "@incomingGroupCallBody": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+  "meetingSummaryTitle": "会议摘要",
+  "meetingSummaryDuration": "时长 {duration}",
+  "@meetingSummaryDuration": {
+    "placeholders": {
+      "duration": { "type": "String" }
+    }
+  },
+  "meetingSummaryAttendees": "参与者：{names}",
+  "@meetingSummaryAttendees": {
+    "placeholders": {
+      "names": { "type": "String" }
+    }
+  },
+  "meetingSummaryOverview": "概述",
+  "meetingSummaryKeyPoints": "要点",
+  "meetingSummaryActionItems": "待办事项",
   "profileTitle": "个人资料",
   "editProfile": "编辑资料",
   "bio": "简介",

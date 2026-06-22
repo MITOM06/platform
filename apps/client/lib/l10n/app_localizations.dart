@@ -1158,6 +1158,150 @@ abstract class AppLocalizations {
   /// **'Someone'**
   String get callUnknownCaller;
 
+  /// No description provided for @callToggleMic.
+  ///
+  /// In en, this message translates to:
+  /// **'Toggle microphone'**
+  String get callToggleMic;
+
+  /// No description provided for @callToggleCam.
+  ///
+  /// In en, this message translates to:
+  /// **'Toggle camera'**
+  String get callToggleCam;
+
+  /// No description provided for @callLeave.
+  ///
+  /// In en, this message translates to:
+  /// **'Leave'**
+  String get callLeave;
+
+  /// No description provided for @callJoin.
+  ///
+  /// In en, this message translates to:
+  /// **'Join'**
+  String get callJoin;
+
+  /// No description provided for @callAccept.
+  ///
+  /// In en, this message translates to:
+  /// **'Accept'**
+  String get callAccept;
+
+  /// No description provided for @callDecline.
+  ///
+  /// In en, this message translates to:
+  /// **'Decline'**
+  String get callDecline;
+
+  /// No description provided for @groupCallTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Group call'**
+  String get groupCallTitle;
+
+  /// No description provided for @groupCallParticipants.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 participant} other{{count} participants}}'**
+  String groupCallParticipants(int count);
+
+  /// No description provided for @groupCallNotetakerActive.
+  ///
+  /// In en, this message translates to:
+  /// **'AI is taking notes'**
+  String get groupCallNotetakerActive;
+
+  /// No description provided for @groupCallStartTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Start a group call'**
+  String get groupCallStartTitle;
+
+  /// No description provided for @groupCallAudio.
+  ///
+  /// In en, this message translates to:
+  /// **'Audio'**
+  String get groupCallAudio;
+
+  /// No description provided for @groupCallVideo.
+  ///
+  /// In en, this message translates to:
+  /// **'Video'**
+  String get groupCallVideo;
+
+  /// No description provided for @groupCallNotetakerToggle.
+  ///
+  /// In en, this message translates to:
+  /// **'AI notetaker'**
+  String get groupCallNotetakerToggle;
+
+  /// No description provided for @groupCallNotetakerHint.
+  ///
+  /// In en, this message translates to:
+  /// **'The AI listens and posts a meeting summary afterward.'**
+  String get groupCallNotetakerHint;
+
+  /// No description provided for @groupCallStartAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Start call'**
+  String get groupCallStartAction;
+
+  /// No description provided for @activeCallBanner.
+  ///
+  /// In en, this message translates to:
+  /// **'Group call · {count} joined'**
+  String activeCallBanner(int count);
+
+  /// No description provided for @incomingGroupCallTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Incoming group call'**
+  String get incomingGroupCallTitle;
+
+  /// No description provided for @incomingGroupCallBody.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} started a group call'**
+  String incomingGroupCallBody(String name);
+
+  /// No description provided for @meetingSummaryTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Meeting summary'**
+  String get meetingSummaryTitle;
+
+  /// No description provided for @meetingSummaryDuration.
+  ///
+  /// In en, this message translates to:
+  /// **'Duration {duration}'**
+  String meetingSummaryDuration(String duration);
+
+  /// No description provided for @meetingSummaryAttendees.
+  ///
+  /// In en, this message translates to:
+  /// **'Attendees: {names}'**
+  String meetingSummaryAttendees(String names);
+
+  /// No description provided for @meetingSummaryOverview.
+  ///
+  /// In en, this message translates to:
+  /// **'Overview'**
+  String get meetingSummaryOverview;
+
+  /// No description provided for @meetingSummaryKeyPoints.
+  ///
+  /// In en, this message translates to:
+  /// **'Key points'**
+  String get meetingSummaryKeyPoints;
+
+  /// No description provided for @meetingSummaryActionItems.
+  ///
+  /// In en, this message translates to:
+  /// **'Action items'**
+  String get meetingSummaryActionItems;
+
   /// No description provided for @profileTitle.
   ///
   /// In en, this message translates to:

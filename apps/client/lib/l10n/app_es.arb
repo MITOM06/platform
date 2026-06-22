@@ -175,6 +175,55 @@
   "callConnecting": "Conectando…",
   "callMediaError": "No se puede acceder a la cámara/micrófono (se requiere HTTPS o localhost)",
   "callUnknownCaller": "Alguien",
+  "callToggleMic": "Activar/desactivar micrófono",
+  "callToggleCam": "Activar/desactivar cámara",
+  "callLeave": "Salir",
+  "callJoin": "Unirse",
+  "callAccept": "Aceptar",
+  "callDecline": "Rechazar",
+  "groupCallTitle": "Llamada grupal",
+  "groupCallParticipants": "{count, plural, =1{1 participante} other{{count} participantes}}",
+  "@groupCallParticipants": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "groupCallNotetakerActive": "La IA está tomando notas",
+  "groupCallStartTitle": "Iniciar una llamada grupal",
+  "groupCallAudio": "Audio",
+  "groupCallVideo": "Vídeo",
+  "groupCallNotetakerToggle": "Tomador de notas IA",
+  "groupCallNotetakerHint": "La IA escucha y publica un resumen de la reunión después.",
+  "groupCallStartAction": "Iniciar llamada",
+  "activeCallBanner": "Llamada grupal · {count} unidos",
+  "@activeCallBanner": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "incomingGroupCallTitle": "Llamada grupal entrante",
+  "incomingGroupCallBody": "{name} inició una llamada grupal",
+  "@incomingGroupCallBody": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+  "meetingSummaryTitle": "Resumen de la reunión",
+  "meetingSummaryDuration": "Duración {duration}",
+  "@meetingSummaryDuration": {
+    "placeholders": {
+      "duration": { "type": "String" }
+    }
+  },
+  "meetingSummaryAttendees": "Asistentes: {names}",
+  "@meetingSummaryAttendees": {
+    "placeholders": {
+      "names": { "type": "String" }
+    }
+  },
+  "meetingSummaryOverview": "Resumen",
+  "meetingSummaryKeyPoints": "Puntos clave",
+  "meetingSummaryActionItems": "Tareas pendientes",
   "profileTitle": "Perfil",
   "editProfile": "Editar perfil",
   "bio": "Biografía",

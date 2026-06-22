@@ -10,8 +10,10 @@ import '../../../core/utils/global_messenger.dart';
 import '../data/chat_repository.dart';
 import '../data/stomp_service.dart';
 import '../../settings/ui/settings_screen.dart' show notificationsEnabledProvider;
+import 'active_call_provider.dart';
 import 'chat_misc_providers.dart';
 import 'chat_state.dart';
+import 'group_call_signaling.dart';
 import 'webrtc_service.dart';
 
 part 'conversations_notifier.g.dart';
@@ -44,6 +46,10 @@ class ConversationsNotifier extends _$ConversationsNotifier {
     _notifSub = stomp.notifications.listen(_onNotification);
     _convUpdateSub = stomp.conversationUpdates.listen(_onConversationUpdate);
     _webrtcSub = stomp.webrtcSignals.listen(_onWebRTCSignal);
+    // Ensure group-call signaling + active-call tracking are live for the
+    // whole session (call-ring + mesh signals + roster/started/ended events).
+    ref.read(groupCallSignalingProvider);
+    ref.read(activeCallsProvider);
     ref.onDispose(() {
       _notifSub?.cancel();
       _convUpdateSub?.cancel();
@@ -165,6 +171,10 @@ class ConversationsNotifier extends _$ConversationsNotifier {
   void _onWebRTCSignal(Map<String, dynamic> signal) {
     try {
       final type = signal['type'] as String?;
+      // Group-call signals (call-ring + mesh offer/answer/ice carrying a
+      // callId) are handled by GroupCallSignaling. Ignore them here so the
+      // legacy 1-on-1 flow stays untouched.
+      if (type == 'call-ring' || signal['callId'] != null) return;
       if (type == 'offer') {
         final senderId = signal['senderId'] as String?;
         final convId = signal['conversationId'] as String?;

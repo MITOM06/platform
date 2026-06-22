@@ -566,6 +566,94 @@ class AppLocalizationsZh extends AppLocalizations {
   String get callUnknownCaller => '某人';
 
   @override
+  String get callToggleMic => '切换麦克风';
+
+  @override
+  String get callToggleCam => '切换摄像头';
+
+  @override
+  String get callLeave => '离开';
+
+  @override
+  String get callJoin => '加入';
+
+  @override
+  String get callAccept => '接听';
+
+  @override
+  String get callDecline => '拒绝';
+
+  @override
+  String get groupCallTitle => '群组通话';
+
+  @override
+  String groupCallParticipants(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count 名参与者',
+      one: '1 名参与者',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get groupCallNotetakerActive => 'AI 正在记录';
+
+  @override
+  String get groupCallStartTitle => '发起群组通话';
+
+  @override
+  String get groupCallAudio => '语音';
+
+  @override
+  String get groupCallVideo => '视频';
+
+  @override
+  String get groupCallNotetakerToggle => 'AI 记录员';
+
+  @override
+  String get groupCallNotetakerHint => 'AI 会聆听并在结束后发布会议摘要。';
+
+  @override
+  String get groupCallStartAction => '开始通话';
+
+  @override
+  String activeCallBanner(int count) {
+    return '群组通话 · $count 人已加入';
+  }
+
+  @override
+  String get incomingGroupCallTitle => '来电：群组通话';
+
+  @override
+  String incomingGroupCallBody(String name) {
+    return '$name 发起了群组通话';
+  }
+
+  @override
+  String get meetingSummaryTitle => '会议摘要';
+
+  @override
+  String meetingSummaryDuration(String duration) {
+    return '时长 $duration';
+  }
+
+  @override
+  String meetingSummaryAttendees(String names) {
+    return '参与者：$names';
+  }
+
+  @override
+  String get meetingSummaryOverview => '概述';
+
+  @override
+  String get meetingSummaryKeyPoints => '要点';
+
+  @override
+  String get meetingSummaryActionItems => '待办事项';
+
+  @override
   String get profileTitle => '个人资料';
 
   @override

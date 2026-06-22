@@ -572,6 +572,95 @@ class AppLocalizationsEn extends AppLocalizations {
   String get callUnknownCaller => 'Someone';
 
   @override
+  String get callToggleMic => 'Toggle microphone';
+
+  @override
+  String get callToggleCam => 'Toggle camera';
+
+  @override
+  String get callLeave => 'Leave';
+
+  @override
+  String get callJoin => 'Join';
+
+  @override
+  String get callAccept => 'Accept';
+
+  @override
+  String get callDecline => 'Decline';
+
+  @override
+  String get groupCallTitle => 'Group call';
+
+  @override
+  String groupCallParticipants(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count participants',
+      one: '1 participant',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get groupCallNotetakerActive => 'AI is taking notes';
+
+  @override
+  String get groupCallStartTitle => 'Start a group call';
+
+  @override
+  String get groupCallAudio => 'Audio';
+
+  @override
+  String get groupCallVideo => 'Video';
+
+  @override
+  String get groupCallNotetakerToggle => 'AI notetaker';
+
+  @override
+  String get groupCallNotetakerHint =>
+      'The AI listens and posts a meeting summary afterward.';
+
+  @override
+  String get groupCallStartAction => 'Start call';
+
+  @override
+  String activeCallBanner(int count) {
+    return 'Group call · $count joined';
+  }
+
+  @override
+  String get incomingGroupCallTitle => 'Incoming group call';
+
+  @override
+  String incomingGroupCallBody(String name) {
+    return '$name started a group call';
+  }
+
+  @override
+  String get meetingSummaryTitle => 'Meeting summary';
+
+  @override
+  String meetingSummaryDuration(String duration) {
+    return 'Duration $duration';
+  }
+
+  @override
+  String meetingSummaryAttendees(String names) {
+    return 'Attendees: $names';
+  }
+
+  @override
+  String get meetingSummaryOverview => 'Overview';
+
+  @override
+  String get meetingSummaryKeyPoints => 'Key points';
+
+  @override
+  String get meetingSummaryActionItems => 'Action items';
+
+  @override
   String get profileTitle => 'Profile';
 
   @override

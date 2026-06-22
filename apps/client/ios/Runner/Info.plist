@@ -19,6 +19,8 @@
 	<string>PON needs camera access for video calls.</string>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>PON needs microphone access for voice and video calls.</string>
+	<key>NSSpeechRecognitionUsageDescription</key>
+	<string>PON transcribes your speech during calls so the AI notetaker can summarize the meeting.</string>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>

@@ -348,6 +348,8 @@ class MessageModel {
   bool get isSticker => type == 'sticker';
   // Voice/video call log entry — cannot be pinned.
   bool get isCallLog => type == 'call_log';
+  // AI meeting-summary card posted after a group call (content = JSON payload).
+  bool get isMeetingSummary => type == 'meeting_summary';
 
   /// File messages encode `{url, name, size}` as JSON in [content]. These
   /// getters decode it defensively (falling back to the raw content as a URL).

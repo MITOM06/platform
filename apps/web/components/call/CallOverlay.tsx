@@ -8,6 +8,8 @@ import { callManager } from '@/lib/webrtc/call-manager'
 import { Button } from '@/components/ui/button'
 import { VoiceCallModal } from './VoiceCallModal'
 import { VideoCallModal } from './VideoCallModal'
+import { GroupCallModal } from './GroupCallModal'
+import { IncomingGroupCall } from './IncomingGroupCall'
 
 /**
  * Global call UI. Mounted once in the (main) layout. Renders nothing while
@@ -22,8 +24,10 @@ export function CallOverlay() {
   const peerName = useCallStore((s) => s.peerName)
   const video = useCallStore((s) => s.video)
   const setDuration = useCallStore((s) => s.setDuration)
+  const groupCallId = useCallStore((s) => s.groupCallId)
+  const incomingGroupCall = useCallStore((s) => s.incomingGroupCall)
 
-  // Drive the in-call duration timer.
+  // Drive the in-call duration timer (1-on-1 only; GroupCallModal owns its own).
   useEffect(() => {
     if (status !== 'connected') return
     let secs = 0
@@ -33,6 +37,12 @@ export function CallOverlay() {
     }, 1000)
     return () => clearInterval(id)
   }, [status, setDuration])
+
+  // ── Group call takes over the screen when active ──────────────────────────
+  if (groupCallId) return <GroupCallModal />
+
+  // ── Incoming group-call ring (can co-exist with idle 1-on-1) ──────────────
+  if (incomingGroupCall) return <IncomingGroupCall />
 
   if (status === 'idle') return null
 

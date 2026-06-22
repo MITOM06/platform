@@ -27,6 +27,9 @@ class StompService extends _$StompService {
   final _pinCtrl = StreamController<PinnedMessageEvent>.broadcast();
   final _aiStreamCtrl = StreamController<Map<String, dynamic>>.broadcast();
   final _kbStatusCtrl = StreamController<Map<String, dynamic>>.broadcast();
+  // Group-call lifecycle events from the conversation topic (CallEventDto):
+  // call.started / call.roster / call.ended.
+  final _callEventCtrl = StreamController<Map<String, dynamic>>.broadcast();
   // Emits whenever a STOMP reconnect completes (not on first connect).
   final _reconnectCtrl = StreamController<void>.broadcast();
   bool _presenceSubPending = false;
@@ -49,6 +52,8 @@ class StompService extends _$StompService {
   Stream<PinnedMessageEvent> get pinnedMessageUpdates => _pinCtrl.stream;
   Stream<Map<String, dynamic>> get aiStreamEvents => _aiStreamCtrl.stream;
   Stream<Map<String, dynamic>> get kbStatusEvents => _kbStatusCtrl.stream;
+  // Group-call events: {event: call.started|call.roster|call.ended, ...}.
+  Stream<Map<String, dynamic>> get callEvents => _callEventCtrl.stream;
   // Fires whenever the STOMP socket reconnects after a prior disconnect.
   Stream<void> get reconnects => _reconnectCtrl.stream;
 
@@ -110,6 +115,13 @@ class StompService extends _$StompService {
       callback: (frame) {
         if (frame.body == null) return;
         final data = jsonDecode(frame.body!) as Map<String, dynamic>;
+        // Group-call lifecycle events use the `event` discriminator
+        // (CallEventDto §3): call.started / call.roster / call.ended.
+        final callEvent = data['event'];
+        if (callEvent is String && callEvent.startsWith('call.')) {
+          _callEventCtrl.add(data);
+          return;
+        }
         // The conversation topic carries both new messages AND read-receipt
         // events ({type: MESSAGE_READ, messageId, readerId}). Discriminate by
         // `type` so a read receipt isn't parsed as a MessageModel (would throw

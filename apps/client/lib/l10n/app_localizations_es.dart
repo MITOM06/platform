@@ -579,6 +579,95 @@ class AppLocalizationsEs extends AppLocalizations {
   String get callUnknownCaller => 'Alguien';
 
   @override
+  String get callToggleMic => 'Activar/desactivar micrófono';
+
+  @override
+  String get callToggleCam => 'Activar/desactivar cámara';
+
+  @override
+  String get callLeave => 'Salir';
+
+  @override
+  String get callJoin => 'Unirse';
+
+  @override
+  String get callAccept => 'Aceptar';
+
+  @override
+  String get callDecline => 'Rechazar';
+
+  @override
+  String get groupCallTitle => 'Llamada grupal';
+
+  @override
+  String groupCallParticipants(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count participantes',
+      one: '1 participante',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get groupCallNotetakerActive => 'La IA está tomando notas';
+
+  @override
+  String get groupCallStartTitle => 'Iniciar una llamada grupal';
+
+  @override
+  String get groupCallAudio => 'Audio';
+
+  @override
+  String get groupCallVideo => 'Vídeo';
+
+  @override
+  String get groupCallNotetakerToggle => 'Tomador de notas IA';
+
+  @override
+  String get groupCallNotetakerHint =>
+      'La IA escucha y publica un resumen de la reunión después.';
+
+  @override
+  String get groupCallStartAction => 'Iniciar llamada';
+
+  @override
+  String activeCallBanner(int count) {
+    return 'Llamada grupal · $count unidos';
+  }
+
+  @override
+  String get incomingGroupCallTitle => 'Llamada grupal entrante';
+
+  @override
+  String incomingGroupCallBody(String name) {
+    return '$name inició una llamada grupal';
+  }
+
+  @override
+  String get meetingSummaryTitle => 'Resumen de la reunión';
+
+  @override
+  String meetingSummaryDuration(String duration) {
+    return 'Duración $duration';
+  }
+
+  @override
+  String meetingSummaryAttendees(String names) {
+    return 'Asistentes: $names';
+  }
+
+  @override
+  String get meetingSummaryOverview => 'Resumen';
+
+  @override
+  String get meetingSummaryKeyPoints => 'Puntos clave';
+
+  @override
+  String get meetingSummaryActionItems => 'Tareas pendientes';
+
+  @override
   String get profileTitle => 'Perfil';
 
   @override

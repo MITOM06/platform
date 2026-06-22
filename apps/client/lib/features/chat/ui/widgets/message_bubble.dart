@@ -9,6 +9,7 @@ import 'ai_message_parts.dart';
 import 'file_content.dart';
 import 'floating_reaction_sheet.dart';
 import 'image_content.dart';
+import 'meeting_summary_card.dart';
 import 'message_bubble_parts.dart';
 import 'streaming_ai_bubble.dart';
 import 'text_content.dart';
@@ -37,6 +38,9 @@ class MessageBubble extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     if (message.isSystem) {
       return SystemMessage(message: message);
+    }
+    if (message.isMeetingSummary) {
+      return MeetingSummaryBubble(message: message);
     }
 
     final chatState = ref

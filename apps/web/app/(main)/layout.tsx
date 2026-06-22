@@ -159,11 +159,37 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
         }
       })
 
-      // WebRTC call signaling — incoming offers open the call overlay; other
-      // signals (answer/ice/end) are routed into the active peer connection.
+      // WebRTC call signaling. Group signals carry a `callId` and route into the
+      // mesh manager; legacy 1-on-1 signals (no callId) keep their old path.
       stompService.subscribe('/user/queue/webrtc', (frame) => {
         try {
           const signal: WebRTCSignal = JSON.parse(frame.body)
+
+          // ── Group call ring → open the incoming-group-call prompt ───────────
+          if (signal.type === 'call-ring') {
+            // Ignore a ring while already in any call.
+            const st = useCallStore.getState()
+            if (st.groupCallId || st.status !== 'idle') return
+            st.setIncomingGroupCall({
+              callId: signal.callId ?? '',
+              conversationId: signal.conversationId ?? '',
+              startedBy: signal.senderId ?? '',
+              startedByName: signal.startedByName ?? '',
+              media: signal.media ?? 'video',
+              aiNotetaker: signal.aiNotetaker ?? false,
+            })
+            return
+          }
+
+          // ── Mesh signaling (offer/answer/ice with a callId) ─────────────────
+          if (signal.callId) {
+            void import('@/lib/webrtc/group-call-manager').then((m) =>
+              m.groupCallManager.handleSignal(signal),
+            )
+            return
+          }
+
+          // ── Legacy 1-on-1 ───────────────────────────────────────────────────
           if (signal.type === 'offer') {
             // Ignore a second offer while already in a call.
             if (useCallStore.getState().status !== 'idle') return
