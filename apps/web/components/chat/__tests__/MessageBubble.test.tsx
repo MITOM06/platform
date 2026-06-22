@@ -8,6 +8,7 @@
 
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen } from '@testing-library/react'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import React from 'react'
 import type { Message } from '@/lib/api/types'
 
@@ -43,6 +44,7 @@ vi.mock('@/components/chat/ReactionsDetailModal', () => ({
 
 vi.mock('@/lib/nicknames', () => ({
   useNickname: () => undefined,
+  getNickname: () => undefined,
 }))
 
 vi.mock('@/lib/hooks/use-user', () => ({
@@ -91,7 +93,14 @@ const defaultProps = {
 async function renderBubble(msgOverrides: Partial<Message> = {}, propOverrides: Record<string, unknown> = {}) {
   const { MessageBubble } = await import('@/components/chat/MessageBubble')
   const msg = baseMessage(msgOverrides)
-  render(<MessageBubble message={msg} {...defaultProps} {...propOverrides} />)
+  // MessageBubble reads the query cache (useQueryClient) to resolve cached
+  // display names for system-message actors, so it must render under a provider.
+  const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
+  render(
+    <QueryClientProvider client={queryClient}>
+      <MessageBubble message={msg} {...defaultProps} {...propOverrides} />
+    </QueryClientProvider>,
+  )
   return msg
 }
 
