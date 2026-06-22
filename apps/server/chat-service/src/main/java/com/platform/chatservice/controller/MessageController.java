@@ -128,40 +128,48 @@ public class MessageController {
     return messageService.getMessageTrace(currentUserId(), id);
   }
 
-  /** Pin a message in its conversation (Task 53). Broadcasts a PINNED_MESSAGE event. */
+  /**
+   * Pin a message in its conversation (Task 53). Broadcasts the PINNED_MESSAGE event plus a
+   * persisted {@code type:"system"} "X pinned a message" notice.
+   */
   @PostMapping("/{id}/pin")
   public Map<String, Object> pinMessage(@PathVariable String id) {
     PinResult result = messageService.pinMessage(currentUserId(), id);
-    messagingTemplate.convertAndSend(
-        "/topic/conversation/" + result.conversationId(),
-        Map.of(
-            "type",
-            "PINNED_MESSAGE",
-            "conversationId",
-            result.conversationId(),
-            "messageId",
-            id,
-            "pinnedMessages",
-            result.pinnedMessages()));
+    broadcastPinResult(id, result);
     return Map.of("pinnedMessages", result.pinnedMessages());
   }
 
-  /** Unpin a message (Task 53). Broadcasts a PINNED_MESSAGE event. */
+  /**
+   * Unpin a message (Task 53). Broadcasts the PINNED_MESSAGE event plus a persisted {@code
+   * type:"system"} "X unpinned a message" notice.
+   */
   @DeleteMapping("/{id}/pin")
   public Map<String, Object> unpinMessage(@PathVariable String id) {
     PinResult result = messageService.unpinMessage(currentUserId(), id);
+    broadcastPinResult(id, result);
+    return Map.of("pinnedMessages", result.pinnedMessages());
+  }
+
+  /**
+   * Broadcast pin/unpin side-effects to the conversation topic: (1) the unchanged PINNED_MESSAGE
+   * event so clients refresh the pinned bar/section, and (2) the persisted system MessageResponse
+   * so clients append a centered "X pinned/unpinned a message" notice. No per-participant
+   * /queue/notifications is sent (so the actor is never self-notified for the pin event).
+   */
+  private void broadcastPinResult(String messageId, PinResult result) {
+    String destination = "/topic/conversation/" + result.conversationId();
     messagingTemplate.convertAndSend(
-        "/topic/conversation/" + result.conversationId(),
+        destination,
         Map.of(
             "type",
             "PINNED_MESSAGE",
             "conversationId",
             result.conversationId(),
             "messageId",
-            id,
+            messageId,
             "pinnedMessages",
             result.pinnedMessages()));
-    return Map.of("pinnedMessages", result.pinnedMessages());
+    messagingTemplate.convertAndSend(destination, result.systemMessage());
   }
 
   /** Forward a message to another conversation (Task 53). */

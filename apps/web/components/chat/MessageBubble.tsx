@@ -14,8 +14,9 @@ import { UserProfileDrawer } from './UserProfileDrawer'
 import { GroupReadDetailsModal } from './GroupReadDetailsModal'
 import { ReactionsDetailModal } from './ReactionsDetailModal'
 import { humanizeSystemMessage } from '@/lib/system-messages'
-import { useNickname } from '@/lib/nicknames'
+import { useNickname, getNickname } from '@/lib/nicknames'
 import { useUser } from '@/lib/hooks/use-user'
+import { useQueryClient } from '@tanstack/react-query'
 import type { Message } from '@/lib/api/types'
 
 interface Props {
@@ -71,6 +72,7 @@ const MessageBubbleInner = function MessageBubble({
 }: Props) {
   const t = useTranslations('chat')
   const locale = useLocale()
+  const queryClient = useQueryClient()
   // Resolve nicknames for sender + reply-preview sender (W-15.4 parity).
   const senderNickname = useNickname(conversationId ?? '', message.senderId)
   const replyNickname = useNickname(conversationId ?? '', message.replyPreview?.senderId)
@@ -122,8 +124,18 @@ const MessageBubbleInner = function MessageBubble({
   }
 
   if (message.type === 'system') {
+    // Resolve an actor's display name for system codes that carry an actor id
+    // (e.g. `system.message.pinned:<actorId>`). Order mirrors the chat bubble:
+    // current user → "You", then conversation nickname, then cached profile.
+    const resolveName = (actorId: string): string | undefined => {
+      if (actorId === currentUserId) return t('you')
+      const nick = conversationId ? getNickname(conversationId, actorId) : undefined
+      if (nick) return nick
+      const cached = queryClient.getQueryData<{ displayName?: string }>(['user', actorId])
+      return cached?.displayName
+    }
     // Humanise structured system events (parity with Flutter message_bubble_parts.dart).
-    const systemText = humanizeSystemMessage(message.content, t)
+    const systemText = humanizeSystemMessage(message.content, t, { resolveName })
     const isCallMsg = message.content.startsWith('system.call.')
     const isVideoCall = isCallMsg && message.content.includes(':video')
     return (

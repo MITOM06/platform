@@ -9,6 +9,7 @@ import { LogOut, User, Compass, Contact, Settings, Plus, MessageSquarePlus, User
 import Link from 'next/link'
 import { useTranslations } from 'next-intl'
 import { useAuthStore } from '@/lib/store/auth.store'
+import { useNotificationPrefs } from '@/lib/store/notification-prefs'
 import { Button } from '@/components/ui/button'
 import { stompService } from '@/lib/stomp/client'
 import type { WebRTCSignal } from '@/lib/webrtc/call-manager'
@@ -82,7 +83,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
   const canAccessAdmin = useCanAccessAdmin()
 
   const isConversationOpen = /^\/conversations\/.+/.test(pathname)
-  const isInnerPage = /^\/(friends|settings|profile|explore|archived|token-usage|ai-memory|ai-persona|reminders|kb|shared-media|admin)/.test(pathname)
+  const isInnerPage = /^\/(friends|settings|profile|explore|archived|token-usage|ai-hub|ai-memory|ai-persona|reminders|kb|shared-media|admin)/.test(pathname)
   const hideAside = isConversationOpen || isInnerPage
   const showTabBar = !isConversationOpen
 
@@ -109,8 +110,15 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
           }
           // Refresh the sidebar (last-message preview, timestamp, unread badge)
           // for conversations that aren't currently open — the open one is kept
-          // live by the thread's own STOMP subscription.
+          // live by the thread's own STOMP subscription. This runs regardless of
+          // the notification preference so unread counts stay correct when OFF.
           queryClient.invalidateQueries({ queryKey: ['conversations'] })
+          // App-level notification toggle (mirror Flutter notificationsEnabledProvider).
+          // When OFF, keep unread counts live (above) but suppress the visible
+          // OS notification and in-app toast.
+          if (!useNotificationPrefs.getState().enabled) {
+            return
+          }
           // Don't notify for the conversation already open on screen.
           if (window.location.pathname === `/conversations/${payload.conversationId}`) {
             return

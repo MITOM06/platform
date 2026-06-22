@@ -388,6 +388,30 @@ class AppLocalizationsZh extends AppLocalizations {
   String get you => '你';
 
   @override
+  String get someone => '某人';
+
+  @override
+  String get aiHubTitle => 'AI 中心';
+
+  @override
+  String get aiHubSubtitle => '关于你的 AI 助手的一切';
+
+  @override
+  String get aiHubStartChat => '开始与 PON AI 聊天';
+
+  @override
+  String get aiHubMemory => '记忆';
+
+  @override
+  String get aiHubIntegrations => '连接器';
+
+  @override
+  String get aiHubSkills => '技能';
+
+  @override
+  String get aiHubTokenUsage => '用量';
+
+  @override
   String systemAddedMember(String actor, String target) {
     return '$actor 添加了 $target';
   }
@@ -1214,6 +1238,16 @@ class AppLocalizationsZh extends AppLocalizations {
   @override
   String sysMemberJoined(String actorName) {
     return '$actorName加入了群组';
+  }
+
+  @override
+  String sysPinnedMessage(String actorName) {
+    return '$actorName 置顶了一条消息';
+  }
+
+  @override
+  String sysUnpinnedMessage(String actorName) {
+    return '$actorName 取消置顶了一条消息';
   }
 
   @override

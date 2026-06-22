@@ -38,7 +38,12 @@ public class MessageService {
   private static final String SYSTEM_SENDER = "system";
 
   /** Max pinned messages per conversation (matches Conversation model comment). */
-  static final int MAX_PINNED_MESSAGES = 5;
+  static final int MAX_PINNED_MESSAGES = 2;
+
+  /** System-message content codes for pin/unpin notices (see THE PIN SYSTEM-MESSAGE CONTRACT). */
+  private static final String SYS_PINNED_PREFIX = "system.message.pinned:";
+
+  private static final String SYS_UNPINNED_PREFIX = "system.message.unpinned:";
 
   private final MessageRepository messageRepository;
   private final ConversationRepository conversationRepository;
@@ -322,7 +327,10 @@ public class MessageService {
     }
     conversation.setPinnedMessages(pinned);
     conversationRepository.save(conversation);
-    return new PinResult(conversation.getId(), pinned);
+    // Persisted centered notice; eviction of an older pin emits NO extra "unpinned" message.
+    MessageResponse systemMessage =
+        createSystemMessage(conversation.getId(), SYS_PINNED_PREFIX + userId);
+    return new PinResult(conversation.getId(), pinned, systemMessage);
   }
 
   /** Unpin a message. Same permission rules as pinMessage. */
@@ -352,7 +360,9 @@ public class MessageService {
     pinned.remove(messageId);
     conversation.setPinnedMessages(pinned);
     conversationRepository.save(conversation);
-    return new PinResult(conversation.getId(), pinned);
+    MessageResponse systemMessage =
+        createSystemMessage(conversation.getId(), SYS_UNPINNED_PREFIX + userId);
+    return new PinResult(conversation.getId(), pinned, systemMessage);
   }
 
   /**

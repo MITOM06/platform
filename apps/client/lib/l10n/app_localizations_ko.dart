@@ -388,6 +388,30 @@ class AppLocalizationsKo extends AppLocalizations {
   String get you => '나';
 
   @override
+  String get someone => '누군가';
+
+  @override
+  String get aiHubTitle => 'AI 허브';
+
+  @override
+  String get aiHubSubtitle => 'AI 어시스턴트에 관한 모든 것';
+
+  @override
+  String get aiHubStartChat => 'PON AI와 채팅 시작';
+
+  @override
+  String get aiHubMemory => '메모리';
+
+  @override
+  String get aiHubIntegrations => '커넥터';
+
+  @override
+  String get aiHubSkills => '스킬';
+
+  @override
+  String get aiHubTokenUsage => '사용량';
+
+  @override
   String systemAddedMember(String actor, String target) {
     return '$actor님이 $target님을 추가했습니다';
   }
@@ -1216,6 +1240,16 @@ class AppLocalizationsKo extends AppLocalizations {
   @override
   String sysMemberJoined(String actorName) {
     return '$actorName님이 그룹에 참여했습니다';
+  }
+
+  @override
+  String sysPinnedMessage(String actorName) {
+    return '$actorName님이 메시지를 고정했습니다';
+  }
+
+  @override
+  String sysUnpinnedMessage(String actorName) {
+    return '$actorName님이 메시지 고정을 해제했습니다';
   }
 
   @override

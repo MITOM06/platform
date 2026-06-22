@@ -158,6 +158,14 @@
   "renameGroup": "Rename group",
   "admin": "Admin",
   "you": "You",
+  "someone": "Someone",
+  "aiHubTitle": "AI Hub",
+  "aiHubSubtitle": "Everything about your AI assistant",
+  "aiHubStartChat": "Start chat with PON AI",
+  "aiHubMemory": "Memory",
+  "aiHubIntegrations": "Connectors",
+  "aiHubSkills": "Skills",
+  "aiHubTokenUsage": "Usage",
   "systemAddedMember": "{actor} added {target}",
   "@systemAddedMember": {
     "placeholders": {
@@ -632,6 +640,22 @@
   },
   "sysMemberJoined": "{actorName} joined the group",
   "@sysMemberJoined": {
+    "placeholders": {
+      "actorName": {
+        "type": "String"
+      }
+    }
+  },
+  "sysPinnedMessage": "{actorName} pinned a message",
+  "@sysPinnedMessage": {
+    "placeholders": {
+      "actorName": {
+        "type": "String"
+      }
+    }
+  },
+  "sysUnpinnedMessage": "{actorName} unpinned a message",
+  "@sysUnpinnedMessage": {
     "placeholders": {
       "actorName": {
         "type": "String"

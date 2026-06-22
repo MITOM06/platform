@@ -264,6 +264,15 @@ class ConversationTile extends ConsumerWidget {
     if (content.startsWith('system.quick_reaction.changed:')) {
       return context.l10n.systemQuickReactionChanged;
     }
+    // Pin/unpin notices carry an actor id (system.message.pinned:<id>). The
+    // list preview has no participant name-resolution context, so use the
+    // generic actor name — mirrors web's ConversationItem behaviour.
+    if (content.startsWith('system.message.pinned:')) {
+      return context.l10n.sysPinnedMessage(context.l10n.someone);
+    }
+    if (content.startsWith('system.message.unpinned:')) {
+      return context.l10n.sysUnpinnedMessage(context.l10n.someone);
+    }
     if (content.startsWith('system.')) {
       // Map group/member system codes to the same l10n strings used by the
       // chat bubble humaniser (message_bubble_parts._systemText) to keep the

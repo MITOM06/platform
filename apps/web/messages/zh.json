@@ -189,6 +189,7 @@
     "notificationsGranted": "Notifications enabled",
     "notificationsDenied": "Unable to enable notifications. Check browser settings.",
     "notificationsAlready": "Notifications already enabled",
+    "notificationsTurnedOff": "已关闭通知",
     "tokenUsage": "AI Token Usage",
     "tokenUsageSubtitle": "View token usage statistics",
     "aiMemory": "AI Memory",
@@ -417,6 +418,9 @@
     "systemMemberLeft": "A member left the group",
     "systemMemberRemoved": "A member was removed",
     "systemMemberJoined": "A member joined",
+    "someone": "某人",
+    "systemPinnedMessage": "{name} 置顶了一条消息",
+    "systemUnpinnedMessage": "{name} 取消置顶了一条消息",
     "youColon": "You: ",
     "noMessagesYet": "No messages yet",
     "conversationDefault": "Conversation",
@@ -558,6 +562,15 @@
     "newConvNoDepartment": "无部门",
     "groupAvatarAlt": "群组头像",
     "imageViewer": "图片查看器"
+  },
+  "aiHub": {
+    "title": "AI 中心",
+    "subtitle": "关于您的 AI 助手的一切",
+    "startChat": "开始与 PON AI 聊天",
+    "memory": "记忆",
+    "integrations": "连接器",
+    "skills": "技能",
+    "tokenUsage": "用量"
   },
   "aiPersona": {
     "title": "AI Persona",

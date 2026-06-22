@@ -26,8 +26,10 @@ import {
 } from 'lucide-react'
 import Link from 'next/link'
 import { useAuthStore } from '@/lib/store/auth.store'
+import { useNotificationPrefs } from '@/lib/store/notification-prefs'
 import { stompService } from '@/lib/stomp/client'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
+import { Switch } from '@/components/ui/switch'
 import { ChangePasswordDialog } from '@/components/chat/ChangePasswordDialog'
 import { ThemePickerDialog, LanguagePickerDialog } from '@/components/settings/AppearanceDialogs'
 import { LOCALE_NAMES, type Locale } from '@/i18n/config'
@@ -104,6 +106,8 @@ export default function SettingsPage() {
   const clearAuth = useAuthStore((s) => s.clearAuth)
   const { theme } = useTheme()
   const locale = useLocale()
+  const notificationsEnabled = useNotificationPrefs((s) => s.enabled)
+  const setNotificationsEnabled = useNotificationPrefs((s) => s.setEnabled)
   const [loggingOut, setLoggingOut] = useState(false)
   const [changePasswordOpen, setChangePasswordOpen] = useState(false)
   const [themePickerOpen, setThemePickerOpen] = useState(false)
@@ -121,6 +125,30 @@ export default function SettingsPage() {
       setLoggingOut(false)
     }
   }
+
+  const notificationApiAvailable = typeof Notification !== 'undefined'
+
+  const handleToggleNotifications = (next: boolean) => {
+    setNotificationsEnabled(next)
+    if (next) {
+      // Best-effort OS permission so notifications work when the tab is hidden.
+      if (notificationApiAvailable && Notification.permission === 'default') {
+        Notification.requestPermission().then((perm) => {
+          toast.success(perm === 'granted' ? t('notificationsGranted') : t('notificationsDenied'))
+        })
+      } else {
+        toast.success(t('notificationsGranted'))
+      }
+    } else {
+      toast.info(t('notificationsTurnedOff'))
+    }
+  }
+
+  const notificationSubtitle = !notificationApiAvailable
+    ? t('notificationsUnavailable')
+    : notificationsEnabled
+      ? t('notificationsEnabled')
+      : t('notificationsDisabled')
 
   const themeIcon = () => {
     switch (theme) {
@@ -214,29 +242,28 @@ export default function SettingsPage() {
                 onClick={() => router.push('/explore')}
               />
 
-              <SettingsCard
-                icon={<Bell className="size-5 text-pon-peach" />}
-                iconBg="rgba(251,182,139,0.12)"
-                title={t('notifications')}
-                subtitle={
-                  typeof Notification !== 'undefined'
-                    ? Notification.permission === 'granted'
-                      ? t('notificationsEnabled')
-                      : t('notificationsDisabled')
-                    : t('notificationsUnavailable')
-                }
-                onClick={() => {
-                  if (typeof Notification !== 'undefined' && Notification.permission !== 'granted') {
-                    Notification.requestPermission().then((perm) => {
-                      toast.success(
-                        perm === 'granted' ? t('notificationsGranted') : t('notificationsDenied'),
-                      )
-                    })
-                  } else {
-                    toast.info(t('notificationsAlready'))
-                  }
-                }}
-              />
+              <div className="relative rounded-xl border bg-card overflow-hidden">
+                <div className="relative flex items-center gap-4 px-5 py-4">
+                  <div
+                    className="size-10 rounded-full flex items-center justify-center shrink-0"
+                    style={{ background: 'rgba(251,182,139,0.12)' }}
+                  >
+                    <Bell className="size-5 text-pon-peach" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-semibold text-foreground">{t('notifications')}</p>
+                    <p className="text-xs text-muted-foreground mt-0.5 truncate">
+                      {notificationSubtitle}
+                    </p>
+                  </div>
+                  <Switch
+                    checked={notificationsEnabled}
+                    onCheckedChange={handleToggleNotifications}
+                    disabled={!notificationApiAvailable}
+                    aria-label={t('notifications')}
+                  />
+                </div>
+              </div>
 
               <SettingsCard
                 icon={<Coins className="size-5 text-pon-peach" />}

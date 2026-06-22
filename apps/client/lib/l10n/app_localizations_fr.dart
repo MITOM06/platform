@@ -400,6 +400,30 @@ class AppLocalizationsFr extends AppLocalizations {
   String get you => 'Vous';
 
   @override
+  String get someone => 'Quelqu\'un';
+
+  @override
+  String get aiHubTitle => 'Hub IA';
+
+  @override
+  String get aiHubSubtitle => 'Tout sur votre assistant IA';
+
+  @override
+  String get aiHubStartChat => 'Démarrer une discussion avec PON AI';
+
+  @override
+  String get aiHubMemory => 'Mémoire';
+
+  @override
+  String get aiHubIntegrations => 'Connecteurs';
+
+  @override
+  String get aiHubSkills => 'Compétences';
+
+  @override
+  String get aiHubTokenUsage => 'Utilisation';
+
+  @override
   String systemAddedMember(String actor, String target) {
     return '$actor a ajouté $target';
   }
@@ -1247,6 +1271,16 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String sysMemberJoined(String actorName) {
     return '$actorName a rejoint le groupe';
+  }
+
+  @override
+  String sysPinnedMessage(String actorName) {
+    return '$actorName a épinglé un message';
+  }
+
+  @override
+  String sysUnpinnedMessage(String actorName) {
+    return '$actorName a désépinglé un message';
   }
 
   @override

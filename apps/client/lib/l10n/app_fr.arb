@@ -123,6 +123,14 @@
   "renameGroup": "Renommer le groupe",
   "admin": "Administrateur",
   "you": "Vous",
+  "someone": "Quelqu'un",
+  "aiHubTitle": "Hub IA",
+  "aiHubSubtitle": "Tout sur votre assistant IA",
+  "aiHubStartChat": "Démarrer une discussion avec PON AI",
+  "aiHubMemory": "Mémoire",
+  "aiHubIntegrations": "Connecteurs",
+  "aiHubSkills": "Compétences",
+  "aiHubTokenUsage": "Utilisation",
   "systemAddedMember": "{actor} a ajouté {target}",
   "systemRemovedMember": "{actor} a retiré {target}",
   "systemLeftGroup": "{actor} a quitté le groupe",
@@ -401,6 +409,8 @@
   "sysMemberLeft": "{actorName} a quitté le groupe",
   "sysMemberRemoved": "{actorName} a retiré un membre",
   "sysMemberJoined": "{actorName} a rejoint le groupe",
+  "sysPinnedMessage": "{actorName} a épinglé un message",
+  "sysUnpinnedMessage": "{actorName} a désépinglé un message",
   "systemVideoCallEnded": "Appel vidéo terminé · {duration}",
   "@systemVideoCallEnded": {
     "placeholders": {

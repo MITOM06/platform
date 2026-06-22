@@ -189,6 +189,7 @@
     "notificationsGranted": "Đã bật thông báo",
     "notificationsDenied": "Không thể bật thông báo. Kiểm tra cài đặt trình duyệt.",
     "notificationsAlready": "Thông báo đã được bật",
+    "notificationsTurnedOff": "Đã tắt thông báo",
     "tokenUsage": "Lượng token AI",
     "tokenUsageSubtitle": "Xem thống kê sử dụng token",
     "aiMemory": "AI Memory",
@@ -422,6 +423,9 @@
     "systemMemberLeft": "Một thành viên đã rời nhóm",
     "systemMemberRemoved": "Một thành viên đã bị xóa",
     "systemMemberJoined": "Một thành viên đã tham gia",
+    "someone": "Ai đó",
+    "systemPinnedMessage": "{name} đã ghim một tin nhắn",
+    "systemUnpinnedMessage": "{name} đã bỏ ghim một tin nhắn",
     "youColon": "Bạn: ",
     "noMessagesYet": "Chưa có tin nhắn",
     "conversationDefault": "Cuộc trò chuyện",
@@ -558,6 +562,15 @@
     "newConvNoDepartment": "Không có phòng ban",
     "groupAvatarAlt": "Ảnh nhóm",
     "imageViewer": "Trình xem ảnh"
+  },
+  "aiHub": {
+    "title": "Trung tâm AI",
+    "subtitle": "Mọi thứ về trợ lý AI của bạn",
+    "startChat": "Bắt đầu trò chuyện với PON AI",
+    "memory": "Bộ nhớ",
+    "integrations": "Kết nối",
+    "skills": "Kỹ năng",
+    "tokenUsage": "Sử dụng"
   },
   "aiPersona": {
     "title": "AI Persona",

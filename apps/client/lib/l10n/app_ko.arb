@@ -123,6 +123,14 @@
   "renameGroup": "그룹 이름 변경",
   "admin": "관리자",
   "you": "나",
+  "someone": "누군가",
+  "aiHubTitle": "AI 허브",
+  "aiHubSubtitle": "AI 어시스턴트에 관한 모든 것",
+  "aiHubStartChat": "PON AI와 채팅 시작",
+  "aiHubMemory": "메모리",
+  "aiHubIntegrations": "커넥터",
+  "aiHubSkills": "스킬",
+  "aiHubTokenUsage": "사용량",
   "systemAddedMember": "{actor}님이 {target}님을 추가했습니다",
   "systemRemovedMember": "{actor}님이 {target}님을 제거했습니다",
   "systemLeftGroup": "{actor}님이 그룹을 나갔습니다",
@@ -401,6 +409,8 @@
   "sysMemberLeft": "{actorName}님이 그룹을 나갔습니다",
   "sysMemberRemoved": "{actorName}님이 멤버를 내보냈습니다",
   "sysMemberJoined": "{actorName}님이 그룹에 참여했습니다",
+  "sysPinnedMessage": "{actorName}님이 메시지를 고정했습니다",
+  "sysUnpinnedMessage": "{actorName}님이 메시지 고정을 해제했습니다",
   "systemVideoCallEnded": "영상 통화 종료 · {duration}",
   "@systemVideoCallEnded": {
     "placeholders": {

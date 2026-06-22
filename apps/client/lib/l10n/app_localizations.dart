@@ -846,6 +846,54 @@ abstract class AppLocalizations {
   /// **'You'**
   String get you;
 
+  /// No description provided for @someone.
+  ///
+  /// In en, this message translates to:
+  /// **'Someone'**
+  String get someone;
+
+  /// No description provided for @aiHubTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'AI Hub'**
+  String get aiHubTitle;
+
+  /// No description provided for @aiHubSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Everything about your AI assistant'**
+  String get aiHubSubtitle;
+
+  /// No description provided for @aiHubStartChat.
+  ///
+  /// In en, this message translates to:
+  /// **'Start chat with PON AI'**
+  String get aiHubStartChat;
+
+  /// No description provided for @aiHubMemory.
+  ///
+  /// In en, this message translates to:
+  /// **'Memory'**
+  String get aiHubMemory;
+
+  /// No description provided for @aiHubIntegrations.
+  ///
+  /// In en, this message translates to:
+  /// **'Connectors'**
+  String get aiHubIntegrations;
+
+  /// No description provided for @aiHubSkills.
+  ///
+  /// In en, this message translates to:
+  /// **'Skills'**
+  String get aiHubSkills;
+
+  /// No description provided for @aiHubTokenUsage.
+  ///
+  /// In en, this message translates to:
+  /// **'Usage'**
+  String get aiHubTokenUsage;
+
   /// No description provided for @systemAddedMember.
   ///
   /// In en, this message translates to:
@@ -2388,6 +2436,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{actorName} joined the group'**
   String sysMemberJoined(String actorName);
+
+  /// No description provided for @sysPinnedMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'{actorName} pinned a message'**
+  String sysPinnedMessage(String actorName);
+
+  /// No description provided for @sysUnpinnedMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'{actorName} unpinned a message'**
+  String sysUnpinnedMessage(String actorName);
 
   /// No description provided for @systemVideoCallEnded.
   ///

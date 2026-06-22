@@ -3,7 +3,6 @@
 import { useEffect, useState } from 'react'
 import { Search, MessageSquare, Bot } from 'lucide-react'
 import { useRouter } from 'next/navigation'
-import { toast } from 'sonner'
 import { useTranslations } from 'next-intl'
 import { useQueryClient } from '@tanstack/react-query'
 import { Input } from '@/components/ui/input'
@@ -17,7 +16,6 @@ import { useUiStore } from '@/lib/store/ui.store'
 import { useAuthStore } from '@/lib/store/auth.store'
 import { getNickname } from '@/lib/nicknames'
 import { OfflineBanner } from './OfflineBanner'
-import { chatService } from '@/lib/api/chat'
 import { authService } from '@/lib/api/auth'
 import type { Conversation } from '@/lib/api/types'
 
@@ -38,7 +36,6 @@ function ConversationSkeleton() {
 export function ConversationList() {
   const t = useTranslations('chat')
   const [search, setSearch] = useState('')
-  const [aiLoading, setAiLoading] = useState(false)
   const router = useRouter()
   const queryClient = useQueryClient()
   const currentUserId = useAuthStore((s) => s.user?.id)
@@ -51,28 +48,6 @@ export function ConversationList() {
     closePublicChannels,
     openNewChat,
   } = useUiStore()
-
-  const handleOpenAiChat = async () => {
-    if (aiLoading) return
-    setAiLoading(true)
-    try {
-      const conv = await chatService.createConversation(AI_BOT_ID)
-      router.push(`/conversations/${conv.id}`)
-    } catch (err) {
-      // 409 = conversation already exists — find and navigate to it
-      const isConflict = (err as { response?: { status?: number } })?.response?.status === 409
-      if (isConflict) {
-        const body = (err as { response?: { data?: { conversationId?: string } } })?.response?.data
-        if (body?.conversationId) {
-          router.push(`/conversations/${body.conversationId}`)
-          return
-        }
-      }
-      toast.error(t('aiOpenError'))
-    } finally {
-      setAiLoading(false)
-    }
-  }
 
   // Resolve the name shown for a conversation in the sidebar — mirrors
   // ConversationItem so search matches exactly what the user sees: group name,
@@ -143,9 +118,8 @@ export function ConversationList() {
           <Button
             variant="ghost"
             size="icon"
-            onClick={handleOpenAiChat}
+            onClick={() => router.push('/ai-hub')}
             title={t('chatWithAI')}
-            disabled={aiLoading}
             className="shrink-0 h-9 w-9"
           >
             <Bot className="size-4" />

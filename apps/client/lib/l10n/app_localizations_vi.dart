@@ -391,6 +391,30 @@ class AppLocalizationsVi extends AppLocalizations {
   String get you => 'Bạn';
 
   @override
+  String get someone => 'Ai đó';
+
+  @override
+  String get aiHubTitle => 'Trung tâm AI';
+
+  @override
+  String get aiHubSubtitle => 'Mọi thứ về trợ lý AI của bạn';
+
+  @override
+  String get aiHubStartChat => 'Bắt đầu trò chuyện với PON AI';
+
+  @override
+  String get aiHubMemory => 'Bộ nhớ';
+
+  @override
+  String get aiHubIntegrations => 'Kết nối';
+
+  @override
+  String get aiHubSkills => 'Kỹ năng';
+
+  @override
+  String get aiHubTokenUsage => 'Sử dụng';
+
+  @override
   String systemAddedMember(String actor, String target) {
     return '$actor đã thêm $target';
   }
@@ -1232,6 +1256,16 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String sysMemberJoined(String actorName) {
     return '$actorName đã tham gia nhóm';
+  }
+
+  @override
+  String sysPinnedMessage(String actorName) {
+    return '$actorName đã ghim một tin nhắn';
+  }
+
+  @override
+  String sysUnpinnedMessage(String actorName) {
+    return '$actorName đã bỏ ghim một tin nhắn';
   }
 
   @override
