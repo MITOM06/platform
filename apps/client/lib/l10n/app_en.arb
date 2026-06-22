@@ -902,5 +902,17 @@
   "adminAuditNext": "Next",
   "newConvDepartment": "Department (optional)",
   "newConvNoDepartment": "No department",
-  "loginWithSso": "Sign in with SSO"
+  "loginWithSso": "Sign in with SSO",
+  "adminNavSso": "SSO",
+  "adminSsoTitle": "Single Sign-On (SSO)",
+  "adminSsoHint": "Configure OIDC login. Provider credentials are set in the deployment .env; here you map IdP groups to roles and departments.",
+  "adminSsoEnabled": "Enable SSO",
+  "adminSsoAllowedDomains": "Allowed email domains",
+  "adminSsoAllowedDomainsHint": "Comma-separated. Leave empty to allow any verified email.",
+  "adminSsoDefaultRole": "Default role",
+  "adminSsoNone": "None",
+  "adminSsoGroupRoleMap": "Group → Role",
+  "adminSsoGroupDeptMap": "Group → Department",
+  "adminSsoGroupPlaceholder": "IdP group name",
+  "adminSsoAddMapping": "Add mapping"
 }

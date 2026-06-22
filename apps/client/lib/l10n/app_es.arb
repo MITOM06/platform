@@ -651,5 +651,17 @@
   "adminAuditNext": "Siguiente",
   "newConvDepartment": "Departamento (opcional)",
   "newConvNoDepartment": "Sin departamento",
-  "loginWithSso": "Iniciar sesión con SSO"
+  "loginWithSso": "Iniciar sesión con SSO",
+  "adminNavSso": "SSO",
+  "adminSsoTitle": "Inicio de sesión único (SSO)",
+  "adminSsoHint": "Configura el inicio de sesión OIDC. Las credenciales del proveedor se definen en el .env; aquí asignas grupos del IdP a roles y departamentos.",
+  "adminSsoEnabled": "Activar SSO",
+  "adminSsoAllowedDomains": "Dominios de correo permitidos",
+  "adminSsoAllowedDomainsHint": "Separados por comas. Déjalo vacío para permitir cualquier correo verificado.",
+  "adminSsoDefaultRole": "Rol predeterminado",
+  "adminSsoNone": "Ninguno",
+  "adminSsoGroupRoleMap": "Grupo → Rol",
+  "adminSsoGroupDeptMap": "Grupo → Departamento",
+  "adminSsoGroupPlaceholder": "Nombre del grupo IdP",
+  "adminSsoAddMapping": "Añadir asignación"
 }

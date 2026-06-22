@@ -3432,6 +3432,78 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Sign in with SSO'**
   String get loginWithSso;
+
+  /// No description provided for @adminNavSso.
+  ///
+  /// In en, this message translates to:
+  /// **'SSO'**
+  String get adminNavSso;
+
+  /// No description provided for @adminSsoTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Single Sign-On (SSO)'**
+  String get adminSsoTitle;
+
+  /// No description provided for @adminSsoHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Configure OIDC login. Provider credentials are set in the deployment .env; here you map IdP groups to roles and departments.'**
+  String get adminSsoHint;
+
+  /// No description provided for @adminSsoEnabled.
+  ///
+  /// In en, this message translates to:
+  /// **'Enable SSO'**
+  String get adminSsoEnabled;
+
+  /// No description provided for @adminSsoAllowedDomains.
+  ///
+  /// In en, this message translates to:
+  /// **'Allowed email domains'**
+  String get adminSsoAllowedDomains;
+
+  /// No description provided for @adminSsoAllowedDomainsHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Comma-separated. Leave empty to allow any verified email.'**
+  String get adminSsoAllowedDomainsHint;
+
+  /// No description provided for @adminSsoDefaultRole.
+  ///
+  /// In en, this message translates to:
+  /// **'Default role'**
+  String get adminSsoDefaultRole;
+
+  /// No description provided for @adminSsoNone.
+  ///
+  /// In en, this message translates to:
+  /// **'None'**
+  String get adminSsoNone;
+
+  /// No description provided for @adminSsoGroupRoleMap.
+  ///
+  /// In en, this message translates to:
+  /// **'Group → Role'**
+  String get adminSsoGroupRoleMap;
+
+  /// No description provided for @adminSsoGroupDeptMap.
+  ///
+  /// In en, this message translates to:
+  /// **'Group → Department'**
+  String get adminSsoGroupDeptMap;
+
+  /// No description provided for @adminSsoGroupPlaceholder.
+  ///
+  /// In en, this message translates to:
+  /// **'IdP group name'**
+  String get adminSsoGroupPlaceholder;
+
+  /// No description provided for @adminSsoAddMapping.
+  ///
+  /// In en, this message translates to:
+  /// **'Add mapping'**
+  String get adminSsoAddMapping;
 }
 
 class _AppLocalizationsDelegate

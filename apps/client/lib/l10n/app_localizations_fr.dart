@@ -1839,4 +1839,42 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get loginWithSso => 'Se connecter avec SSO';
+
+  @override
+  String get adminNavSso => 'SSO';
+
+  @override
+  String get adminSsoTitle => 'Authentification unique (SSO)';
+
+  @override
+  String get adminSsoHint =>
+      'Configurez la connexion OIDC. Les identifiants du fournisseur sont dans le .env ; ici, vous associez les groupes IdP aux rôles et départements.';
+
+  @override
+  String get adminSsoEnabled => 'Activer le SSO';
+
+  @override
+  String get adminSsoAllowedDomains => 'Domaines d’e-mail autorisés';
+
+  @override
+  String get adminSsoAllowedDomainsHint =>
+      'Séparés par des virgules. Laissez vide pour autoriser tout e-mail vérifié.';
+
+  @override
+  String get adminSsoDefaultRole => 'Rôle par défaut';
+
+  @override
+  String get adminSsoNone => 'Aucun';
+
+  @override
+  String get adminSsoGroupRoleMap => 'Groupe → Rôle';
+
+  @override
+  String get adminSsoGroupDeptMap => 'Groupe → Département';
+
+  @override
+  String get adminSsoGroupPlaceholder => 'Nom du groupe IdP';
+
+  @override
+  String get adminSsoAddMapping => 'Ajouter un mappage';
 }

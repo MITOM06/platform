@@ -651,5 +651,17 @@
   "adminAuditNext": "Suivant",
   "newConvDepartment": "Département (facultatif)",
   "newConvNoDepartment": "Aucun département",
-  "loginWithSso": "Se connecter avec SSO"
+  "loginWithSso": "Se connecter avec SSO",
+  "adminNavSso": "SSO",
+  "adminSsoTitle": "Authentification unique (SSO)",
+  "adminSsoHint": "Configurez la connexion OIDC. Les identifiants du fournisseur sont dans le .env ; ici, vous associez les groupes IdP aux rôles et départements.",
+  "adminSsoEnabled": "Activer le SSO",
+  "adminSsoAllowedDomains": "Domaines d’e-mail autorisés",
+  "adminSsoAllowedDomainsHint": "Séparés par des virgules. Laissez vide pour autoriser tout e-mail vérifié.",
+  "adminSsoDefaultRole": "Rôle par défaut",
+  "adminSsoNone": "Aucun",
+  "adminSsoGroupRoleMap": "Groupe → Rôle",
+  "adminSsoGroupDeptMap": "Groupe → Département",
+  "adminSsoGroupPlaceholder": "Nom du groupe IdP",
+  "adminSsoAddMapping": "Ajouter un mappage"
 }
