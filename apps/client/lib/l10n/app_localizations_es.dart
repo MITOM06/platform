@@ -929,7 +929,19 @@ class AppLocalizationsEs extends AppLocalizations {
       'Selecciona una conversación para empezar a chatear';
 
   @override
-  String get endToEndEncrypted => 'Cifrado de extremo a extremo';
+  String get aiPersonality => 'Personalidad';
+
+  @override
+  String get aiMemory => 'Memoria';
+
+  @override
+  String get aiSkills => 'Habilidades';
+
+  @override
+  String get aiConnectedApps => 'Apps conectadas';
+
+  @override
+  String get aiUsage => 'Uso';
 
   @override
   String get chatInfoCategory => 'Detalles del chat';

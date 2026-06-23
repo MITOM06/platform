@@ -490,14 +490,21 @@ export default function ConversationPage({ params }: Props) {
         />
       )}
 
-      <div
-        ref={scrollContainerRef}
-        className={cn(
-          'flex-1 overflow-y-auto px-4 py-4 relative transition-all duration-300 bg-center bg-no-repeat',
-          !wp.isImage && wp.className,
-        )}
-        style={wp.style}
-      >
+      {/* Chat viewport. The wallpaper + decorations live on a NON-scrolling
+          backdrop layer that fills this box; only the message list (the
+          absolutely-positioned scroll container on top) scrolls. This keeps the
+          wallpaper pinned behind the messages — like WhatsApp/Telegram — instead
+          of scrolling away with the content. */}
+      <div className="flex-1 relative overflow-hidden">
+        {/* Wallpaper backdrop (image or gradient preset). */}
+        <div
+          className={cn(
+            'absolute inset-0 z-0 bg-center bg-no-repeat transition-all duration-300 pointer-events-none',
+            !wp.isImage && wp.className,
+          )}
+          style={wp.style}
+        />
+
         {/* Custom Wallpaper Darken Overlay */}
         {wp.isImage && (
           <div className="absolute inset-0 bg-background/80 dark:bg-background/90 z-0 pointer-events-none" />
@@ -509,27 +516,33 @@ export default function ConversationPage({ params }: Props) {
           <div className="absolute -bottom-40 -right-40 size-96 rounded-full bg-pon-peach blur-[128px] animate-pulse duration-[8000ms]" />
         </div>
 
-        <MessageList
-          messages={messages}
-          currentUserId={currentUser?.id}
-          conversationId={id}
-          otherUserId={otherUserId}
-          pinnedMessages={pinnedMessages}
-          isGroup={isGroup}
-          isLoading={isLoading}
-          isError={isError}
-          isFetchingNextPage={isFetchingNextPage}
-          typingUserIds={typingUserIds}
-          aiStream={aiStream}
-          topSentinelRef={topSentinelRef}
-          bottomRef={bottomRef}
-          scrollContainerRef={scrollContainerRef}
-          onEdit={setEditingMessage}
-          onForward={setForwardMessage}
-          onReply={setReplyingTo}
-          onAiTrace={setTraceMessageId}
-          onOptimisticUpdate={handleOptimisticUpdate}
-        />
+        {/* Scrolling message list — transparent, rides on top of the backdrop. */}
+        <div
+          ref={scrollContainerRef}
+          className="absolute inset-0 overflow-y-auto px-4 py-4 z-10"
+        >
+          <MessageList
+            messages={messages}
+            currentUserId={currentUser?.id}
+            conversationId={id}
+            otherUserId={otherUserId}
+            pinnedMessages={pinnedMessages}
+            isGroup={isGroup}
+            isLoading={isLoading}
+            isError={isError}
+            isFetchingNextPage={isFetchingNextPage}
+            typingUserIds={typingUserIds}
+            aiStream={aiStream}
+            topSentinelRef={topSentinelRef}
+            bottomRef={bottomRef}
+            scrollContainerRef={scrollContainerRef}
+            onEdit={setEditingMessage}
+            onForward={setForwardMessage}
+            onReply={setReplyingTo}
+            onAiTrace={setTraceMessageId}
+            onOptimisticUpdate={handleOptimisticUpdate}
+          />
+        </div>
       </div>
 
       {isBlocked ? (

@@ -11,6 +11,7 @@ const ROW_CLS = 'flex items-center gap-3 w-full text-left px-2 py-2.5 hover:bg-d
 interface Props {
   isDirect: boolean
   isGroup: boolean
+  isAI: boolean
   isBlocked: boolean
   saving: boolean
   onBlockToggle: () => void
@@ -23,6 +24,7 @@ interface Props {
 export function PrivacySupportSection({
   isDirect,
   isGroup,
+  isAI,
   isBlocked,
   saving,
   onBlockToggle,
@@ -37,7 +39,7 @@ export function PrivacySupportSection({
         <span className="font-semibold text-sm">{t('privacyAndSupportCategory')}</span>
       </AccordionTrigger>
       <AccordionContent className="pb-4 pt-1 space-y-1">
-        {isDirect && (
+        {isDirect && !isAI && (
           <button onClick={onBlockToggle} disabled={saving} className={ROW_CLS}>
             {isBlocked ? <Shield className="size-4" /> : <ShieldOff className="size-4" />}
             <span>{isBlocked ? t('unblockUser') : t('blockUser')}</span>

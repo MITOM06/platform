@@ -922,7 +922,19 @@ class AppLocalizationsVi extends AppLocalizations {
   String get webNoChatSelected => 'Chọn một cuộc trò chuyện để bắt đầu';
 
   @override
-  String get endToEndEncrypted => 'Được mã hóa đầu cuối';
+  String get aiPersonality => 'Tính cách';
+
+  @override
+  String get aiMemory => 'Bộ nhớ';
+
+  @override
+  String get aiSkills => 'Kỹ năng';
+
+  @override
+  String get aiConnectedApps => 'Ứng dụng đã kết nối';
+
+  @override
+  String get aiUsage => 'Sử dụng';
 
   @override
   String get chatInfoCategory => 'Thông tin về đoạn chat';

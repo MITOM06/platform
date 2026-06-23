@@ -29,7 +29,6 @@ export default function SkillsPage() {
           variant="ghost"
           size="icon"
           asChild
-          className="md:hidden"
           aria-label={t('back')}
         >
           <Link href="/settings">

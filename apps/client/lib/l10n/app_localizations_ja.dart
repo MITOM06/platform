@@ -912,7 +912,19 @@ class AppLocalizationsJa extends AppLocalizations {
   String get webNoChatSelected => '会話を選択してチャットを始めましょう';
 
   @override
-  String get endToEndEncrypted => 'エンドツーエンド暗号化';
+  String get aiPersonality => 'パーソナリティ';
+
+  @override
+  String get aiMemory => 'メモリ';
+
+  @override
+  String get aiSkills => 'スキル';
+
+  @override
+  String get aiConnectedApps => '連携アプリ';
+
+  @override
+  String get aiUsage => '使用量';
 
   @override
   String get chatInfoCategory => 'チャット詳細';

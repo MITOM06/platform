@@ -1806,11 +1806,35 @@ abstract class AppLocalizations {
   /// **'Select a conversation to start chatting'**
   String get webNoChatSelected;
 
-  /// No description provided for @endToEndEncrypted.
+  /// No description provided for @aiPersonality.
   ///
   /// In en, this message translates to:
-  /// **'End-to-end encrypted'**
-  String get endToEndEncrypted;
+  /// **'Personality'**
+  String get aiPersonality;
+
+  /// No description provided for @aiMemory.
+  ///
+  /// In en, this message translates to:
+  /// **'Memory'**
+  String get aiMemory;
+
+  /// No description provided for @aiSkills.
+  ///
+  /// In en, this message translates to:
+  /// **'Skills'**
+  String get aiSkills;
+
+  /// No description provided for @aiConnectedApps.
+  ///
+  /// In en, this message translates to:
+  /// **'Connected apps'**
+  String get aiConnectedApps;
+
+  /// No description provided for @aiUsage.
+  ///
+  /// In en, this message translates to:
+  /// **'Usage'**
+  String get aiUsage;
 
   /// No description provided for @chatInfoCategory.
   ///
