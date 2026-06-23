@@ -1921,6 +1921,22 @@ class AppLocalizationsKo extends AppLocalizations {
   String get adminAiThinkingDesc => '어시스턴트가 단계별로 추론하도록 허용합니다.';
 
   @override
+  String get adminAiDigestSection => '일일 요약';
+
+  @override
+  String get adminAiDailyDigest => '일일 요약';
+
+  @override
+  String get adminAiDailyDigestDesc => '각 AI 대화의 활동을 하루 한 번 요약하여 게시합니다.';
+
+  @override
+  String get adminAiDailyDigestHour => '전송 시각';
+
+  @override
+  String get adminAiDailyDigestHourDesc =>
+      '요약을 전송하는 현지 시각입니다. 요약이 켜져 있을 때 설정할 수 있습니다.';
+
+  @override
   String get adminAiQuotaSection => '사용 한도';
 
   @override

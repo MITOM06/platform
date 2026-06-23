@@ -53,6 +53,9 @@ export function WorkspaceAiSettings() {
   const [tier, setTier] = useState<AiModelTier | ''>('')
   const [webSearch, setWebSearch] = useState<TriState>('inherit')
   const [thinking, setThinking] = useState<TriState>('inherit')
+  const [dailyDigest, setDailyDigest] = useState<TriState>('inherit')
+  // '' = inherit env default; otherwise '0'..'23'.
+  const [digestHour, setDigestHour] = useState('')
   const [tokenLimit, setTokenLimit] = useState('')
   // null = inherit connectorAllowList; otherwise an explicit (possibly empty) list.
   const [restrictConnectors, setRestrictConnectors] = useState(false)
@@ -67,6 +70,12 @@ export function WorkspaceAiSettings() {
     setTier(ai?.modelTier ?? '')
     setWebSearch(boolToTri(ai?.webSearchEnabled ?? null))
     setThinking(boolToTri(ai?.thinkingEnabled ?? null))
+    setDailyDigest(boolToTri(ai?.dailyDigestEnabled ?? null))
+    setDigestHour(
+      ai?.dailyDigestHour === null || ai?.dailyDigestHour === undefined
+        ? ''
+        : String(ai.dailyDigestHour),
+    )
     setTokenLimit(
       ai?.monthlyTokenLimit === null || ai?.monthlyTokenLimit === undefined
         ? ''
@@ -93,6 +102,14 @@ export function WorkspaceAiSettings() {
     return Number.isFinite(n) && n >= 0 ? Math.floor(n) : null
   }
 
+  // '' (inherit) → null; otherwise the clamped 0..23 hour.
+  const parseDigestHour = (): number | null => {
+    if (digestHour === '') return null
+    const n = Number(digestHour)
+    if (!Number.isFinite(n)) return null
+    return Math.min(23, Math.max(0, Math.floor(n)))
+  }
+
   const onSave = () => {
     const aiSettings: AiSettings = {
       personaName: personaName.trim() || null,
@@ -100,6 +117,8 @@ export function WorkspaceAiSettings() {
       modelTier: tier || null,
       webSearchEnabled: triToBool(webSearch),
       thinkingEnabled: triToBool(thinking),
+      dailyDigestEnabled: triToBool(dailyDigest),
+      dailyDigestHour: parseDigestHour(),
       monthlyTokenLimit: parseLimit(),
       // Restrict OFF ⇒ null (inherit). Restrict ON ⇒ explicit list (may be []).
       allowedConnectors: restrictConnectors
@@ -198,6 +217,42 @@ export function WorkspaceAiSettings() {
             <option value="off">{t('aiDisabled')}</option>
           </select>
           <p className="text-xs text-muted-foreground">{t('aiThinkingHint')}</p>
+        </div>
+
+        <div className="space-y-1.5">
+          <Label htmlFor="ai-daily-digest">{t('aiDailyDigest')}</Label>
+          <select
+            id="ai-daily-digest"
+            className={SELECT_CLASS}
+            value={dailyDigest}
+            onChange={(e) => setDailyDigest(e.target.value as TriState)}
+          >
+            <option value="inherit">{t('aiDefaultOption')}</option>
+            <option value="on">{t('aiEnabled')}</option>
+            <option value="off">{t('aiDisabled')}</option>
+          </select>
+          <p className="text-xs text-muted-foreground">{t('aiDailyDigestHint')}</p>
+        </div>
+
+        <div className="space-y-1.5">
+          <Label htmlFor="ai-digest-hour">{t('aiDailyDigestHour')}</Label>
+          <select
+            id="ai-digest-hour"
+            className={SELECT_CLASS}
+            value={digestHour}
+            disabled={dailyDigest === 'off'}
+            onChange={(e) => setDigestHour(e.target.value)}
+          >
+            <option value="">{t('aiDefaultOption')}</option>
+            {Array.from({ length: 24 }, (_, h) => (
+              <option key={h} value={String(h)}>
+                {String(h).padStart(2, '0')}:00
+              </option>
+            ))}
+          </select>
+          <p className="text-xs text-muted-foreground">
+            {t('aiDailyDigestHourHint')}
+          </p>
         </div>
 
         <div className="space-y-1.5">

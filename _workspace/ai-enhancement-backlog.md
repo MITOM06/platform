@@ -151,7 +151,27 @@ For a small team, "the AI gives accurate, sourced answers" is the difference bet
 - **Acceptance:** Uploading an invoice screenshot and asking "what's the total?" returns the correct figure.
 - **Effort:** L (cross-platform)
 
-### TASK-11 — Proactive reminders & daily digest (assistant, not just chatbot)
+### TASK-11 — Proactive reminders & daily digest (assistant, not just chatbot)  ✅ DONE (2026-06-23)
+> **Status:** Shipped. **Key finding:** chat-service already had a `@Scheduled` `ReminderSweepService` (60s)
+> but it only FCM-pushed due reminders — web never saw them and there was no chat history. That was the gap.
+> - **chat-service** (acceptance-critical): `ReminderSweepService` now also calls the existing
+>   `AiMessageService.saveAiMessage` to persist each fired reminder as a real `type:"ai"` STOMP-broadcast
+>   message (`"🔔 <text>"`), so web+mobile both receive it and history records it. FCM kept best-effort;
+>   `notified=true` only after the in-chat persist (at-least-once, no double-send). No new HTTP endpoint.
+>   Both clients already render `type:"ai"` ⇒ zero new client message-type code.
+> - **ai-service**: added `@nestjs/schedule` (first scheduler) + `DailyDigestCron` (`@Cron('0 * * * *')`) +
+>   `DigestGeneratorService`. Idempotent `ai_digest_log` insert-before-generate (unique `{conversationId,
+>   digestDate}` index; dup-key→skip; rollback on no-activity/failure). Reads yesterday's messages like
+>   SearchMessagesTool, summarizes via fast-tier non-streaming Anthropic (mirrors CallSummaryService),
+>   delivers via synthetic `AI_STREAM_DONE` on Redis `ai:response:{id}` (reuses AiResponseListener).
+> - **digest opt-in = workspace-level** (extends TASK-12 `aiSettings`): `dailyDigestEnabled` (bool, null=inherit
+>   env `AI_DIGEST_ENABLED` default false) + `dailyDigestHour` (0-23, null=inherit env `AI_DIGEST_HOUR`
+>   default 8), `@Min(0)@Max(23)`. web + Flutter admin AI-settings panels got a tri-state toggle + hour picker,
+>   gated by `MANAGE_WORKSPACE`, riding existing `PATCH /admin/workspace`. i18n ×7 both platforms.
+> Verify: database 20, auth-service 53, ai-service build clean + 266 tests, web build ok, flutter analyze clean
+> + **flutter test 47 PASS**, chat-service compiles + `ReminderSweepService` test 4/4. QA PASS.
+> **Owner action:** digest is OFF by default — set `AI_DIGEST_ENABLED=true` (+ `AI_DIGEST_HOUR`) to default-on.
+> Follow-up: per-user opt-in + timezone (currently server/workspace-local, single-tenant).
 - **Why:** `create_reminder` already exists but the assistant is purely reactive. A small differentiator: scheduled, proactive help (morning summary, deadline nudges). Big perceived value for small teams.
 - **Scope:**
   - A scheduler that fires due reminders into the conversation via the normal STOMP pipeline.

@@ -153,6 +153,17 @@ export default registerAs('config', () => ({
     memoryTtlDays: parseInt(process.env.AI_MEMORY_TTL_DAYS ?? '180', 10),
     intervalHours: parseInt(process.env.AI_RETENTION_INTERVAL_HOURS ?? '24', 10),
   },
+  digest: {
+    // Daily-digest cron (TASK-11). These are the env FALLBACKS used when the
+    // workspace `aiSettings.dailyDigest*` fields are null (no admin override).
+    // OFF by default — a workspace admin must opt in (or set AI_DIGEST_ENABLED).
+    enabled: process.env.AI_DIGEST_ENABLED === 'true',
+    // Local hour (0–23) to deliver the digest summarizing the prior day.
+    hour: parseInt(process.env.AI_DIGEST_HOUR ?? '8', 10),
+    // Optional explicit model for the digest summary; null ⇒ resolved via the
+    // workspace modelTier → router (fast tier by default).
+    model: process.env.AI_DIGEST_MODEL,
+  },
   connector: {
     // connector-service internal API base for per-user MCP tools.
     internalUrl: process.env.CONNECTOR_INTERNAL_URL ?? 'http://localhost:3003',

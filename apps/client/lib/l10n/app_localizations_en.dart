@@ -1961,6 +1961,23 @@ class AppLocalizationsEn extends AppLocalizations {
       'Allow the assistant to reason step by step.';
 
   @override
+  String get adminAiDigestSection => 'Daily digest';
+
+  @override
+  String get adminAiDailyDigest => 'Daily digest';
+
+  @override
+  String get adminAiDailyDigestDesc =>
+      'Post a once-a-day summary of each AI conversation\'s activity.';
+
+  @override
+  String get adminAiDailyDigestHour => 'Delivery time';
+
+  @override
+  String get adminAiDailyDigestHourDesc =>
+      'Local hour the digest is delivered. Available when the digest is on.';
+
+  @override
   String get adminAiQuotaSection => 'Usage limit';
 
   @override

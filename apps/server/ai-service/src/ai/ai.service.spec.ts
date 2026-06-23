@@ -205,6 +205,8 @@ describe('AiService', () => {
       thinkingEnabled: false,
       monthlyTokenLimit: 500000,
       allowedConnectors: null,
+      dailyDigestEnabled: false,
+      dailyDigestHour: 8,
     };
     getSettings = jest.fn().mockResolvedValue(defaultSettings);
     const fakeSettings = { getSettings } as unknown as SettingsService;

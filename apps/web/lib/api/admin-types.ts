@@ -80,6 +80,10 @@ export interface WorkspaceAiSettings {
   thinkingEnabled: boolean | null
   monthlyTokenLimit: number | null
   allowedConnectors: string[] | null
+  /** `null` = inherit ai-service env default; `true`/`false` = explicit opt-in/out. */
+  dailyDigestEnabled: boolean | null
+  /** Local hour (0–23) to deliver the daily digest; `null` = inherit env default. */
+  dailyDigestHour: number | null
 }
 
 export interface Workspace {

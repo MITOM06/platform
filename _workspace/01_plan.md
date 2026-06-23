@@ -1,183 +1,138 @@
-## Feature: TASK-13 — Usage & Quality Dashboard (single admin view)
+## Feature: TASK-11 — Proactive reminders & daily digest
 
 ### Summary
-Add an admin-only aggregate endpoint in **ai-service** that rolls up, for a chosen month (or last-N-days window): total + per-day tokens & request count, top users by tokens, estimated cost broken down per model (env-configurable price map), and the 👎 feedback rate plus the worst-rated answers. Surface it as **one web page under `/admin/usage`** (gated by `MANAGE_WORKSPACE`), reusing the visual language of the existing `/token-usage` page. This is a web-primary admin/ops surface — mobile gets a minimal read-only mirror panel (see Mobile + sync rationale).
+The `create_reminder` tool + `reminders` collection already exist, and chat-service already runs a `@Scheduled` `ReminderSweepService` that fires due reminders — **but only as an FCM push**, never as a persisted, in-conversation message (so web, which has no FCM, never sees them, and there is no chat-history record). TASK-11 closes the real gap: a fired reminder must become a **real, persisted assistant message broadcast over STOMP** so both web + mobile render it via the existing message pipeline with zero new client message-type handling. We achieve this by enhancing the existing chat-service sweep to also inject the reminder as a `type:"ai"` message (reusing `AiMessageService`), and we add a **new ai-service daily-digest cron** (the first `@nestjs/schedule` usage in the service) that summarizes the prior day per active AI conversation and delivers it the same way — gated by a new **workspace-level** `aiSettings.dailyDigest*` opt-in (reusing the fully-built TASK-12 settings infra).
 
 ---
 
-### Key Decisions (resolved — not open)
+### KEY DECISIONS (resolved)
 
-**D1 — Endpoint home = ai-service (port 3002), NEW module surface in `src/usage/`.**
-Justification: ai-service already *owns the write path* for `token_usage` (`ai.service.ts:309 → UsageService.recordUsage`), already reads the shared `conversations` collection (`conversation.schema.ts`), and already reads `ai_feedback` in its eval tooling (`eval/import-feedback.ts`). It also holds the model-routing knowledge (`model-router.ts`) and is the natural owner of the per-model price map. The task spec also explicitly scopes files to `apps/server/ai-service/src/usage/*`. chat-service merely *reads* `token_usage` for the existing personal page — we leave that untouched.
+**Decision 1 — Delivery mechanism: how a fired reminder/digest becomes a persisted message on both clients.**
+- **Resolved:** Deliver as a normal **`type:"ai"`** message persisted + broadcast by chat-service's existing `AiMessageService.saveAiMessage(conversationId, content, trace=null)`. This is the SAME method that persists every AI answer and the meeting-summary card; it writes the `messages` doc (`senderId = AI_BOT_USER_ID`, `type:"ai"`) and does the single STOMP broadcast to `/topic/conversation/{id}`. Web (`MessageBubble.tsx` `case 'ai'`) and Flutter (`message_bubble.dart`) already render `type:"ai"` with AI avatar/styling. **Zero client message-type work** for delivery.
+- **Rejected (a) — synthetic `AI_STREAM_DONE` over Redis `ai:response:{id}` for reminders:** technically works (chat-service's `AiResponseListener` would persist it), but it fakes a streaming lifecycle for a fixed string and **races the channel** if a real AI stream is in flight on the same conversation. So reminders use the in-process call instead.
+- **Rejected (b) — a brand-new internal `POST /internal/messages/ai` endpoint:** an earlier investigation that claimed this endpoint already exists was **wrong** — verified there is NO `InternalAiController` and NO `X-Internal-Token` in chat-service today. Building one is unnecessary: the sweep is already inside chat-service and can call `AiMessageService` directly in-process.
+- **Net:** **reminders →** in-process `AiMessageService.saveAiMessage()` call inside the existing chat-service sweep (no Redis, no HTTP). **Digest →** ai-service publishes a synthetic `AI_STREAM_DONE` to Redis `ai:response:{id}` (chat-service `AiResponseListener` already persists+broadcasts `AI_STREAM_DONE` via `saveAiMessage`), which is safe because a scheduled digest never coincides with a live user-triggered stream on that conversation. **No new chat-service HTTP endpoint is added anywhere.**
 
-**D2 — Per-model price config lives in ai-service `configuration.ts` as an env-driven map** (NOT `Workspace.aiSettings`).
-Justification: prices are deployment/billing constants that change rarely and are operationally owned (not behavioral toggles an admin tunes per workspace). TASK-12's `Workspace.aiSettings` is for *behavior* (persona/tone/model tier/quota). Putting a price table there would split ops config and add request-path DB reads for a constant. Env map keeps it simple, overridable per deployment, and out of the hot path. Graceful default applies when a model isn't in the map.
+**Decision 2 — Idempotent firing across restarts.**
+- **Reminders:** reuse the existing `Reminder.notified` boolean + the `due_sweep` compound index `{done:1, notified:1, remindAt:1}`. The sweep query `findByDoneFalseAndNotifiedFalseAndRemindAtLessThanEqual(now)` returns only un-fired due reminders; `notified=true` is set **after** successful in-chat persist, so a crash mid-sweep re-delivers at most the in-flight item next tick (at-least-once; acceptable). Cadence stays `@Scheduled(fixedDelayString="${app.reminder.sweep-interval-ms:60000}")` (60s).
+- **Daily digest:** new `ai_digest_log` collection with a **unique index** on `{conversationId, digestDate}` (`digestDate` = `YYYY-MM-DD` of the summarized day). The cron inserts the log row **first** (`insertOne`; duplicate-key = already done → skip) before generating, so a restart/redeploy mid-run never double-posts. Cadence: `@Cron('0 * * * *')` (hourly); each tick processes only conversations whose configured `dailyDigestHour` matches the current local hour AND lack a log row for "yesterday".
 
-**D3 — Gate with the EXISTING `MANAGE_WORKSPACE` capability. Do NOT invent a new capability.**
-Justification: TASK-12 already placed every AI-admin surface (AI settings, SSO, workspace) behind `MANAGE_WORKSPACE` on all 3 platforms; the admin console section list (web `ADMIN_SECTIONS`, Flutter `adminSections`) uses it. `VIEW_AUDIT_LOG` is for the audit log specifically; a fresh `VIEW_USAGE_ANALYTICS` cap would require touching `packages/database/rbac`, role seeds, and the JWT `perms` claim across services for zero SMB benefit. `MANAGE_WORKSPACE` is the right-sized single-admin gate. **This is the first ai-service controller to use `@RequirePermission` — see B-note.**
+**Decision 3 — Where the daily-digest opt-in lives + client toggle.**
+- **Resolved: workspace-level**, as new nullable fields on the existing `WorkspaceAiSettings` sub-doc: `dailyDigestEnabled: boolean|null` and `dailyDigestHour: number|null` (0–23 local hour to deliver). **Justification:** (1) there is **no per-user preferences store** anywhere (verified: no `user_preferences` collection, no `User.settings` field) — per-user opt-in would require net-new storage + a net-new non-admin settings surface on both clients; (2) PON is single-tenant-per-deployment, so a workspace toggle = "this company wants morning digests" is a coherent unit; (3) the TASK-12 `aiSettings` path is **fully built end-to-end** (schema nullable-inherit, auth `PATCH /admin/workspace` DTO + `MANAGE_WORKSPACE` guard + `ai:settings:invalidate` Redis bust, ai-service cached `SettingsService`, web `WorkspaceAiSettings.tsx`, Flutter `workspace_ai_settings_panel.dart`) — we extend it with two fields and reuse everything.
+- **Client toggle (the real client work):** add a "Daily digest" switch + hour picker to the existing admin AI settings panels (`WorkspaceAiSettings.tsx` + `workspace_ai_settings_panel.dart`), gated by `MANAGE_WORKSPACE` like the other 7 fields. Per `sync.md` + `i18n.md`: add keys to all 7 web locales and all 7 Flutter ARBs.
+- **Follow-up (out of scope, noted):** true per-user opt-in + per-user digest hour requires a new `ai_user_prefs` collection + a user-facing toggle in the normal settings screen on both clients.
 
-**D4 — Dashboard home = web `/admin/usage` (new admin-console section), NOT an extension of `/token-usage`.**
-Justification: `/token-usage` is a *personal, self-scoped, ungated* page (any user sees their own tokens, served by chat-service). TASK-13 is a *cross-user, admin-gated* view. Bolting cross-user aggregates onto the personal page would either leak data or require conditional rendering. Consistent with where TASK-12 put AI admin (`/admin/ai`), the dashboard belongs in the admin console at `/admin/usage`, gated by `RequireCap cap="MANAGE_WORKSPACE"`. We *reuse the visual components* (stat cards, CSS/canvas bars, progress styling) from `/token-usage` as the base — satisfying the backlog's "reuse existing /token-usage page as the base" intent without merging concerns.
-
-**D5 — Cost-by-model source = the `messages` collection's `trace` subdocument, NOT `token_usage`.**
-Critical data-shape finding: `token_usage` daily rows (`userId, date, inputTokens, outputTokens, requestCount`) have **no model field**. The only place token counts are correlated with a model is `messages.trace` (`AiTraceData`: `model`, `inputTokens`, `outputTokens`, per AI message). So: tokens/requests over-time + top-users come from the efficient pre-aggregated `token_usage`; **per-model cost** is computed by aggregating `messages` where `senderId == AI_BOT_USER_ID` and `trace` exists, grouped by `trace.model`, within the window. ai-service adds a lightweight read-only `Message` schema (collection `messages`) — it already does this pattern for `conversations`.
-
-**D6 — Mobile = minimal read-only mirror panel; web-primary deviation accepted.**
-Justification (explicit sync-rule deviation per `.claude/rules/sync.md`): TASK-13 is an **admin/ops dashboard, not a chat/messaging surface**. The sync rule's hard P1 cases are message types and STOMP chat events — this is neither. Full chart parity on mobile is low-value for a single admin who will operate from web. We keep mobile honest with a **minimal `UsageDashboardPanel`** in the existing Flutter admin section (`MANAGE_WORKSPACE`) showing the headline numbers (this-month tokens, estimated cost, 👎 rate, top-5 users, worst-5 answers as a list) reusing the same endpoint — no charts. This preserves "feature exists on both platforms" while not over-investing. State the deviation in the QA report.
+**Decision 4 — Digest generation (which summary/LLM path to reuse).**
+- **Resolved:** mirror `CallSummaryService.generateSummary()` (ai-service) — a non-streaming `anthropic.messages.create({ model, max_tokens, system, messages })` call returning structured text. Use the **fast/cheap model tier** (resolved via `SettingsService` `modelTier` → model router, defaulting to the configured fast model) to control cost. Source messages: ai-service does **not** own a `messages` Mongoose model, but `SearchMessagesTool` already reads the shared collection via `connection.collection('messages')`; the digest service reads the same way: `{ conversationId, createdAt: {$gte: startOfYesterday, $lt: startOfToday}, type: {$in:['text','ai']}, recalled:{$ne:true} }`, renders a transcript, summarizes, and delivers via Decision 1's Redis `AI_STREAM_DONE` path.
 
 ---
 
-### Backend (ai-service — NestJS, port 3002)
+### Backend (Spring Boot chat-service + NestJS ai-service + NestJS auth-service + shared DB)
 
+#### chat-service (reminder delivery — the acceptance-critical path)
 | 파일 | 변경 유형 | 설명 |
 |------|---------|------|
-| `apps/server/ai-service/src/config/configuration.ts` | 수정 | Add `pricing` block: env-driven per-model USD/1M-token map + defaults (see Data Model / API). |
-| `apps/server/ai-service/src/usage/message.schema.ts` | 신규 | Read-only Mongoose model for shared `messages` collection (fields used: `senderId`, `conversationId`, `content`, `createdAt`, `trace.{model,inputTokens,outputTokens}`). Mirror the existing read-only `conversation.schema.ts` pattern. |
-| `apps/server/ai-service/src/usage/feedback.schema.ts` | 신규 | Read-only Mongoose model for shared `ai_feedback` collection (`messageId, conversationId, userId, rating('up'\|'down'), comment, createdAt`). ai-service NEVER writes it (chat-service owns writes). |
-| `apps/server/ai-service/src/usage/dashboard.service.ts` | 신규 | Aggregation service. Method `getDashboard(params: { month?: string; days?: number })` → assembles the full payload (see API Contract). Uses 3 aggregations: (a) `token_usage` group-by-date + group-by-user(top N); (b) `messages` group-by `trace.model` for token sums → cost via price map; (c) `ai_feedback` up/down counts + worst answers (down-rated, join answer text from `messages`). Keep < 300 lines; if it grows, split cost calc into `cost-estimator.ts`. |
-| `apps/server/ai-service/src/usage/cost-estimator.ts` | 신규 | Pure function `estimateCost(perModelTokens, priceMap)` → `{ perModel: [...], totalUsd }`. Unit-tested (no DB). |
-| `apps/server/ai-service/src/usage/usage.controller.ts` | 신규 | First controller in the usage module. `@Controller('usage')`. `GET /usage/dashboard` gated by `@UseGuards(JwtAuthGuard, RequirePermissionGuard)` + `@RequirePermission(Capability.MANAGE_WORKSPACE)`. Query params `month` (YYYY-MM, optional) and `days` (optional, default 30). Returns `DashboardResponse`. Controller only parses + delegates (clean-code rule). |
-| `apps/server/ai-service/src/usage/usage.module.ts` | 수정 | Register `Message` + `Feedback` schemas via `MongooseModule.forFeature`; add `controllers: [UsageController]`; provide `DashboardService`. Ensure `PassportModule`/`SharedJwtStrategy` wiring so `JwtAuthGuard`+`RequirePermissionGuard` resolve (see B-note). |
-| `apps/server/ai-service/src/usage/dashboard.service.spec.ts` | 신규 | Unit tests: cost math (cost-estimator), 👎-rate calc, top-users sort, empty-data, model-not-in-pricemap fallback. Mock Mongoose models. |
-| `apps/server/ai-service/src/app.module.ts` | 수정 (확인) | Ensure `PassportModule` + `SharedJwtStrategy` are registered app-wide so the JWT guard works (TASK-14 likely already wired JWT for conversation-access — reuse it; verify before adding). |
+| `apps/server/chat-service/src/main/java/com/platform/chatservice/service/ReminderSweepService.java` | 수정 | In the sweep loop, also call `aiMessageService.saveAiMessage(reminder.getConversationId(), formatReminderText(reminder.getText()), null)` to persist+broadcast the reminder as an in-chat `type:"ai"` message. Inject `AiMessageService`. Keep FCM push (mobile out-of-app) AND in-chat message (web + history). Only set `notified=true` after the in-chat persist succeeds (persist is load-bearing; push is best-effort). Prefix text e.g. `"🔔 " + reminder.getText()`. |
+| `apps/server/chat-service/src/main/java/com/platform/chatservice/service/AiMessageService.java` | 참조(무변경) | Reuse existing `saveAiMessage(...)` — already persists `type:"ai"` + single STOMP broadcast. No change. |
+| `apps/server/chat-service/src/main/resources/application.yml` | 참조(무변경) | `app.reminder.sweep-interval-ms` already configured (60000 default). |
 
-**B-note (the one integration risk — resolve during impl):** ai-service has NOT used `@RequirePermission`/`RequirePermissionGuard` before. The shared `RequirePermissionGuard` (`packages/database/src/auth/require-permission.guard.ts`) reads `req.user.perms` from the JWT claim, which auth-service already issues (`JwtUser.perms`), and `JwtAuthGuard` (`jwt.guard.ts`, the `SharedJwtStrategy`) populates `req.user`. Action: (1) confirm `SharedJwtStrategy` is a registered provider + `PassportModule` imported in the module serving this controller — required for `JwtAuthGuard` to populate `req.user`; (2) import `{ JwtAuthGuard, RequirePermissionGuard, RequirePermission }` from the shared auth barrel and `{ Capability }` from the rbac barrel — verify the exact tsconfig path alias ai-service uses for `packages/database` (check an existing ai-service import of the shared package; `settings/workspace.schema.ts` references `@platform/database`). No new capability, no auth-service change.
-
----
-
-### Web (Next.js — apps/web/)
-
+#### ai-service (daily digest scheduler — new) — files ≤300 lines each per ai-service rules
 | 파일 | 변경 유형 | 설명 |
 |------|---------|------|
-| `apps/web/lib/api/axios.ts` | 수정 | Add a 4th instance `aiApi` (baseURL `process.env.NEXT_PUBLIC_AI_URL \|\| '/api/ai'`, port 3002) + attach the same `injectToken` request interceptor. (No `aiApi` exists today — the personal token-usage page currently calls chat-service `/api/usage/tokens` via `chatApi`; the new admin endpoint lives on ai-service so it needs its own instance.) |
-| `apps/web/.env` / deploy env | 수정 | Add `NEXT_PUBLIC_AI_URL` pointing at ai-service. |
-| `apps/web/lib/api/usage.ts` | 신규 | `usageService.getDashboard({ month?, days? })` → `aiApi.get<DashboardResponse>('/usage/dashboard', { params })`. |
-| `apps/web/lib/api/types.ts` | 수정 | Add `DashboardResponse` + sub-types (exact shape from API Contract). Single source of truth. |
-| `apps/web/app/(main)/admin/usage/page.tsx` | 신규 | `<RequireCap cap="MANAGE_WORKSPACE"><UsageDashboard /></RequireCap>`. |
-| `apps/web/components/admin/usage-dashboard.tsx` | 신규 | TanStack Query (`useQuery(['admin-usage', month])` via `usageService.getDashboard`). Renders: 3 headline stat cards (this-month tokens, estimated cost, 👎 rate), the daily tokens bar chart (reuse the canvas/CSS-bar approach from `token-usage/page.tsx` — NO new charting dep), per-model cost table, top-users table, worst-rated-answers list. Month selector. Keep < 400 lines; extract `<TopUsersTable/>`, `<WorstAnswers/>`, `<PerModelCostTable/>` if it grows. |
-| `apps/web/components/layout/AdminShell.tsx` | 수정 | Add `{ href: '/admin/usage', cap: 'MANAGE_WORKSPACE', labelKey: 'navUsage', icon: ... }` to `ADMIN_SECTIONS`. |
-| `apps/web/messages/{en,vi,zh,ja,ko,es,fr}.json` | 수정 (×7) | New keys under `admin.*` (`navUsage`) and a new `usageDashboard.*` group (title, headline labels, perModelCost, topUsers, worstAnswers, thumbsDownRate, month, noData, loadError). Reuse existing `tokenUsage.*` strings where identical (inputTokens/outputTokens/estimatedCost). |
+| `apps/server/ai-service/package.json` | 수정 | Add `@nestjs/schedule` (`pnpm --filter ai-service add @nestjs/schedule`). First scheduler in the service. |
+| `apps/server/ai-service/src/app.module.ts` | 수정 | `ScheduleModule.forRoot()` to imports; import new `SchedulerModule`. |
+| `apps/server/ai-service/src/scheduler/scheduler.module.ts` | 신규 | Wiring: imports `SettingsModule`, `RedisModule`, `MongooseModule.forFeature([{name: DigestLog.name, schema: DigestLogSchema}])`; provides `DailyDigestCron`, `DigestGeneratorService`. |
+| `apps/server/ai-service/src/scheduler/daily-digest.cron.ts` | 신규 | `@Cron('0 * * * *')` hourly. Read `SettingsService.getSettings()`; if `dailyDigestEnabled !== true` → return. For conversations whose `dailyDigestHour` == current local hour, attempt idempotent `DigestLog` insert ({conversationId, digestDate=yesterday}); on success call `DigestGeneratorService.generateAndDeliver(conversationId)`. try/catch per conversation; never throw. |
+| `apps/server/ai-service/src/scheduler/digest-generator.service.ts` | 신규 | Read yesterday's messages from shared `messages` collection (`connection.collection('messages')`, mirroring `SearchMessagesTool`), build transcript, call Anthropic `messages.create` (fast tier via `SettingsService.modelTier`), then deliver by publishing `{type:'AI_STREAM_DONE', fullContent: digestText, sources: [], trace: null, conversationId}` via `RedisPublisherService.publish(conversationId, payload)`. |
+| `apps/server/ai-service/src/scheduler/digest-log.schema.ts` | 신규 | `@Schema({collection:'ai_digest_log'})` — `{conversationId: string, digestDate: string (YYYY-MM-DD), createdAt: Date}` with **unique compound index** `{conversationId:1, digestDate:1}`. |
+| `apps/server/ai-service/src/config/configuration.ts` | 수정 | Add digest env defaults: `AI_DIGEST_ENABLED` (default false), `AI_DIGEST_HOUR` (default 8), optional `AI_DIGEST_MODEL`. These are the env fallbacks when `aiSettings.dailyDigest*` is null. |
+| `apps/server/ai-service/src/settings/settings.service.ts` | 수정 | Extend `ResolvedAiSettings` + `resolve()` to surface `dailyDigestEnabled` / `dailyDigestHour` (null → env `AI_DIGEST_ENABLED`/`AI_DIGEST_HOUR`). |
 
-**Charting decision:** No charting library is installed (`recharts`/`chart.js`/`visx` all ABSENT in `package.json`). The existing `/token-usage` page draws bars on a raw `<canvas>`. Reuse that approach (or simple CSS flex bars) — do **NOT** add a heavy dependency for one admin page.
-
----
-
-### Mobile (Flutter — apps/client/)
-
+#### shared DB + auth-service (workspace opt-in field)
 | 파일 | 변경 유형 | 설명 |
 |------|---------|------|
-| `apps/client/lib/core/api/dio_client.dart` | 수정 | Add `createAiDio(...)` (ai-service base URL) — no AI Dio exists today (only auth/chat/connector). |
-| `apps/client/lib/core/config/app_config.dart` | 수정 | Add `aiBaseUrl` (port 3002). |
-| `apps/client/lib/features/admin/data/models/usage_dashboard_models.dart` | 신규 | Dart models mirroring `DashboardResponse` (headline totals, top-users, per-model cost, worst answers). |
-| `apps/client/lib/features/admin/data/admin_repository.dart` (or new `usage_repository.dart`) | 수정/신규 | `getUsageDashboard({String? month})` via `aiDio.get('/usage/dashboard')`. |
-| `apps/client/lib/features/admin/state/usage_dashboard_provider.dart` | 신규 | `AsyncNotifierProvider` loading the dashboard. |
-| `apps/client/lib/features/admin/ui/widgets/usage_dashboard_panel.dart` | 신규 | **Minimal** read-only panel: headline numbers (this-month tokens, estimated cost, 👎 rate), top-5 users list, worst-5 answers list. **No charts** (web-primary; see D6). Neon theme, < 400 lines. |
-| `apps/client/lib/features/admin/ui/admin_screen.dart` | 수정 | Add a Usage section gated by `MANAGE_WORKSPACE` (mirror how AI Settings was added; `Cap.manageWorkspace`). |
-| `apps/client/lib/l10n/app_*.arb` (×7) | 수정 | Add the same keys as web (usageDashboard group). Run `flutter gen-l10n` (do NOT hand-edit generated files). |
+| `packages/database/src/mongo/workspace.schema.ts` | 수정 | Add to `WorkspaceAiSettings`: `@Prop({type:Boolean, default:null}) dailyDigestEnabled: boolean|null;` and `@Prop({type:Number, default:null}) dailyDigestHour: number|null;` (null = inherit env). |
+| `apps/server/auth-service/src/modules/admin/dto/workspace.dto.ts` | 수정 | Add to `WorkspaceAiSettingsDto`: `@IsOptional() @IsBoolean() dailyDigestEnabled?: boolean|null;` and `@IsOptional() @IsInt() @Min(0) @Max(23) dailyDigestHour?: number|null;`. Existing dot-path `$set` deep-merge + `ai:settings:invalidate` publish already cover them. |
+
+> auth-service change is to the `admin` module DTO (allowed — `admin` is not the locked `auth` module; auth-guard.md also grants full access).
 
 ---
 
-### API Contract
+### Mobile (Flutter)
+| 파일 | 변경 유형 | 설명 |
+|------|---------|------|
+| `apps/client/lib/features/admin/ui/widgets/workspace_ai_settings_panel.dart` (and/or `ai_settings_controls.dart`) | 수정 | Add a "Daily digest" `Switch` + hour picker (0–23) bound to `aiSettings.dailyDigestEnabled` / `dailyDigestHour`, gated by `MANAGE_WORKSPACE`. Rides existing `GET/PATCH /admin/workspace`. |
+| `apps/client/lib/features/admin/data/models/admin_models.dart` | 수정 | Add `dailyDigestEnabled` (bool?) + `dailyDigestHour` (int?) to the workspace aiSettings model + JSON (de)serialization. |
+| `apps/client/lib/features/chat/ui/widgets/message_bubble.dart` | 검증만 | Reminder/digest arrives as `type:"ai"` → already rendered. **Verification only**. |
+| `apps/client/lib/l10n/app_en.arb` + 6 others (`vi, zh, ja, ko, es, fr`) | 수정 | Add keys: `aiDailyDigest`, `aiDailyDigestDesc`, `aiDailyDigestHour`. Run `flutter gen-l10n`. |
 
-**Endpoint:** `GET /usage/dashboard` (ai-service, port 3002)
-**Auth:** `Authorization: Bearer <jwt>` → `JwtAuthGuard` + `RequirePermissionGuard` with `@RequirePermission(MANAGE_WORKSPACE)`. 401 if unauth; 403 `{ code: 'INSUFFICIENT_PERMISSION', required: 'MANAGE_WORKSPACE' }` if lacking cap.
+### Web (Next.js)
+| 파일 | 변경 유형 | 설명 |
+|------|---------|------|
+| `apps/web/components/admin/WorkspaceAiSettings.tsx` | 수정 | Add "Daily digest" switch + hour `Select`/number input bound to `aiSettings.dailyDigestEnabled` / `dailyDigestHour`, gated by `MANAGE_WORKSPACE`. Same `PATCH /admin/workspace` mutation. |
+| `apps/web/lib/api/types.ts` | 수정 | Add `dailyDigestEnabled?: boolean | null` + `dailyDigestHour?: number | null` to the workspace `aiSettings` type. |
+| `apps/web/components/chat/MessageBubble.tsx` | 검증만 | `case 'ai'` already renders reminder/digest. **Verification only.** |
+| `apps/web/messages/{en,vi,zh,ja,ko,es,fr}.json` | 수정 | Add the 3 digest i18n keys (mirror Flutter keys). |
 
-**Query params:**
-- `month` (string, optional) — `"YYYY-MM"`. If present, the window is that calendar month and `daily[]` covers its days. Defaults to current month.
-- `days` (number, optional) — alternative rolling window (e.g. `30`); if both given, `month` wins. Default 30 when `month` absent.
+---
 
-**Response (`DashboardResponse`):**
-```jsonc
+### API Contract (fixed)
+
+**1. Reminder delivery (in-process, chat-service) — no HTTP.**
+Sweep persists+broadcasts via `AiMessageService.saveAiMessage`. STOMP frame on `/topic/conversation/{id}` is the standard `MessageResponse`:
+```
 {
-  "range": { "from": "2026-06-01", "to": "2026-06-30", "label": "2026-06" },
-  "totals": {
-    "inputTokens": 1840000,
-    "outputTokens": 642000,
-    "totalTokens": 2482000,
-    "requestCount": 1213,
-    "estimatedCostUsd": 12.47          // sum of perModelCost[].costUsd
-  },
-  "daily": [                            // for the over-time chart (token_usage rollup)
-    { "date": "2026-06-01", "inputTokens": 52000, "outputTokens": 18000, "totalTokens": 70000, "requestCount": 41 }
-    // ... one entry per day in range (zero-filled gaps, like the existing /api/usage/tokens)
-  ],
-  "perModelCost": [                     // from messages.trace grouped by model (D5)
-    {
-      "model": "claude-opus-4-8",
-      "inputTokens": 900000,
-      "outputTokens": 380000,
-      "requestCount": 210,
-      "inputPricePerMTok": 15.0,        // resolved from price map (echoed for transparency)
-      "outputPricePerMTok": 75.0,
-      "costUsd": 42.0                   // round(2)
-    }
-    // ... one per distinct model seen in window; unknown models use default prices
-  ],
-  "topUsers": [                         // token_usage grouped by userId, desc, top N (default 10)
-    { "userId": "665...", "displayName": "Alice", "totalTokens": 410000, "requestCount": 88, "estimatedCostUsd": 3.10 }
-    // displayName resolved via users collection join (best-effort; falls back to userId)
-  ],
-  "feedback": {
-    "up": 142,
-    "down": 17,
-    "total": 159,                       // rated messages with a non-cleared vote in window
-    "thumbsDownRate": 0.1069,           // down / total (0..1); 0 when total==0
-    "worstAnswers": [                   // most recent down-rated answers in window, limit 10
-      {
-        "messageId": "667...",
-        "conversationId": "661...",
-        "comment": "Wrong total, hallucinated the figure",  // may be null
-        "answerPreview": "The total is $4,210 ...",          // first ~200 chars of messages.content
-        "createdAt": "2026-06-21T08:14:00.000Z"
-      }
-    ]
-  }
+  id: string,
+  conversationId: string,
+  senderId: "ai-bot-000000000000000000000001",  // AI_BOT_USER_ID
+  type: "ai",
+  content: string,        // "🔔 <reminder text>"
+  trace: null,
+  createdAt: ISO-8601,
+  readBy: [], reactions: [], ...
 }
 ```
 
-**Notes for implementers:**
-- `daily[]` reuses the exact same per-day shape the existing `/api/usage/tokens` returns, so the web chart code is reusable as-is.
-- `perModelCost[].costUsd = inputTokens/1e6 * inputPricePerMTok + outputTokens/1e6 * outputPricePerMTok`.
-- `feedback` window filters `ai_feedback.createdAt` within range; `worstAnswers` joins `messages` by `messageId` (string `_id` → ObjectId) for `answerPreview`.
-- `topUsers` and `totals.totalTokens`/`requestCount` come from `token_usage`; `perModelCost` (and `totals.estimatedCostUsd`) come from `messages.trace`. The two token totals can differ slightly (trace tokens are per-message; token_usage is a daily upsert that also counts non-trace usage) — so `totals.estimatedCostUsd` is defined as the sum of `perModelCost` (model-aware), while `totals.totalTokens` stays the authoritative volume figure. Document this in the response JSDoc.
+**2. Digest delivery (ai-service → Redis → chat-service).**
+ai-service publishes to channel `ai:response:{conversationId}`:
+```
+{ type: "AI_STREAM_DONE", fullContent: "<digest text>", sources: [], trace: null, conversationId: "<id>" }
+```
+chat-service `AiResponseListener` (existing) → `AiMessageService.saveAiMessage` → identical `type:"ai"` `MessageResponse` broadcast as in (1).
+
+**3. Workspace settings (existing endpoint, extended payload).**
+`PATCH /api/admin/workspace` (auth-service, `MANAGE_WORKSPACE`):
+- Request (partial): `{ aiSettings: { dailyDigestEnabled?: boolean|null, dailyDigestHour?: number|null /* 0..23 */ } }`
+- Response: updated `Workspace` doc including `aiSettings` with the two new fields.
+- Side effect: publishes Redis `ai:settings:invalidate` → ai-service `SettingsService` cache bust (≤60s TTL safety net).
 
 ---
 
 ### Data Model Changes
-
-**No new collections. No schema writes.** All three sources already exist in shared Mongo `platform`:
-- `token_usage` — written by ai-service today (`UsageService.recordUsage`). Read-only here.
-- `messages` (+ `messages.trace.{model,inputTokens,outputTokens}`) — written by chat-service. ai-service adds a **read-only** `message.schema.ts`.
-- `ai_feedback` — written by chat-service (`AiFeedbackService`, `POST /api/messages/{id}/feedback`). ai-service adds a **read-only** `feedback.schema.ts`. (Shape confirmed from `AiFeedback.java`: `messageId, conversationId, userId, rating('up'|'down'), comment, createdAt, updatedAt`; "none" deletes the doc so only up/down persist.)
-
-**New config (env vars, `configuration.ts` `pricing` block):**
-```
-AI_PRICE_<MODEL>_IN   / AI_PRICE_<MODEL>_OUT    // USD per 1M tokens, per model
-AI_PRICE_DEFAULT_IN   (default 3)
-AI_PRICE_DEFAULT_OUT  (default 15)
-```
-Seed sensible defaults for the three router models (`claude-haiku-4-5`, `claude-sonnet-4-6`, `claude-opus-4-8`). Parser builds `{ [model]: { inputPerMTok, outputPerMTok } }`; unknown models fall back to the defaults. (Model id ↔ tier mapping confirmed from `configuration.ts` router block: simple=haiku-4-5, mid=sonnet-4-6, complex=opus-4-8.)
-
-Index check (read perf): if the model-cost aggregation over `messages` is slow at scale, add an **explicit** secondary index on `{ senderId: 1, createdAt: 1 }` — but defer unless QA shows latency, and create it explicitly (project memory flags the auto-index-creation trap in prod).
+- `WorkspaceAiSettings` sub-doc (`packages/database` `workspace.schema.ts`): **+2 nullable fields** `dailyDigestEnabled`, `dailyDigestHour`. Backward compatible (null = inherit env). No migration (existing docs read as null → env default).
+- New collection **`ai_digest_log`** (ai-service): `{conversationId, digestDate, createdAt}` with unique `{conversationId:1, digestDate:1}` index for idempotency.
+- `reminders` collection + `Reminder` doc: **no change** (reuse `notified`/`done`/`remindAt` + `due_sweep` index).
+- `messages` collection: **no schema change** — reminder/digest reuse the existing `type:"ai"` shape.
 
 ---
 
 ### Implementation Order
-1. **Backend (ai-service) first — blocks both clients.** Add `pricing` config → read-only `message`/`feedback` schemas → `cost-estimator.ts` (+unit test) → `dashboard.service.ts` → `usage.controller.ts` with the `MANAGE_WORKSPACE` gate → wire module + JWT/Permission guard (resolve B-note) → `pnpm build && pnpm test`. **Freeze the API Contract above before clients start.**
-2. **Web + Mobile in parallel** (both depend only on the frozen contract):
-   - Web: `aiApi` instance + `NEXT_PUBLIC_AI_URL` → `usage.ts` + types → `/admin/usage` page + dashboard component (reuse token-usage chart) → AdminShell section → i18n ×7. `pnpm build`.
-   - Mobile: `aiDio` + `aiBaseUrl` → models + repo + provider → minimal `usage_dashboard_panel.dart` + admin section entry → ARB ×7 + `flutter gen-l10n`. `flutter analyze`.
-3. **QA / sync-check:** verify both clients call the same `GET /usage/dashboard`, identical headline numbers, both gated by `MANAGE_WORKSPACE`, i18n keys present in all 7 locales on both platforms. Record the D6 web-primary deviation rationale in the QA report.
+1. **Backend — shared DB + auth-service first (contract anchor):** add the two `aiSettings` fields to `workspace.schema.ts` + `workspace.dto.ts`. (`@platform/database` build, auth-service build/test.) Unblocks both clients in parallel.
+2. **Backend — chat-service reminder injection (acceptance-critical):** enhance `ReminderSweepService` to call `AiMessageService.saveAiMessage`. `mvn compile && mvn test`. This alone satisfies the acceptance criterion.
+3. **Backend — ai-service digest scheduler:** add `@nestjs/schedule`, `ScheduleModule.forRoot()`, the `scheduler` module (cron + generator + digest-log schema), extend `SettingsService` + `configuration.ts`. `pnpm build && pnpm test`.
+4. **Mobile + Web (parallel, after step 1):** add the digest toggle + hour picker to the admin AI settings panel; extend the workspace aiSettings type/model; add the 3 i18n keys ×7 each. Verify reminder/digest renders as `type:"ai"` (no message-type code change).
+
+Steps 2, 3, and the step-4 client pair are independent once step 1 lands → can run as parallel agents.
 
 ---
 
 ### Edge Cases
-- **No data in window** → all zeros, empty arrays, `thumbsDownRate: 0` (never NaN/division-by-zero). Both clients render an empty state.
-- **Model in `messages.trace` not in the price map** → use `AI_PRICE_DEFAULT_*`; still appears in `perModelCost` (cost never silently dropped).
-- **`messages.trace` absent on older AI messages** → excluded from `perModelCost` (filter `trace` exists) but their tokens still count in `token_usage` totals; handled by defining `totals.estimatedCostUsd` as the per-model sum.
-- **`ai_feedback` with `rating` cleared** → chat-service deletes the doc on "none", so only up/down rows exist; no special handling.
-- **`displayName` lookup miss** in `topUsers` (deleted user / bot) → fall back to `userId`; exclude `AI_BOT_USER_ID` from topUsers.
-- **Non-admin hits endpoint** → 403 `INSUFFICIENT_PERMISSION` (server gate is the real boundary; clients also hide the section via capability check).
-- **Large `messages` scan** for a busy month → bound by date range; add the `{senderId,createdAt}` index only if QA flags latency.
-- **`month` param malformed** → validate `^\d{4}-\d{2}$`; 400 on bad input, else fall back to `days`/current month.
-- **JWT lacks `perms` claim** (pre-enterprise token) → `RequirePermissionGuard` denies (403) — correct, matches existing admin endpoints.
+- **Reminder for a conversation the user left / deleted:** `saveAiMessage` still persists+broadcasts; `conversationRepository.findById` no-ops the lastMessage bump if the conv is gone. Acceptable; optionally skip if conversation missing (low priority).
+- **Crash mid-sweep (reminder):** `notified=true` only after successful in-chat persist → at-least-once; a rare duplicate reminder message on restart is tolerable.
+- **Digest double-post on redeploy:** prevented by inserting the unique `ai_digest_log` row BEFORE generating; duplicate-key → skip.
+- **Digest with no activity yesterday:** generator finds 0 messages → skip generation (don't post an empty digest), don't write a log row.
+- **Timezone for `dailyDigestHour`:** single-tenant deployment → use server/workspace local hour (document the assumption; per-user tz is the follow-up). Hourly cron = 1-hour granularity, intentional.
+- **Settings cache staleness:** toggling digest off in admin publishes `ai:settings:invalidate`; worst case the next hourly tick within 60s TTL still honors it. Fine for a daily job.
+- **Reminder fires while a live AI stream is running on the same conversation:** reminders use the in-process `saveAiMessage` path (NOT the Redis stream), so no collision with an in-flight `AI_STREAM_*` sequence.
+- **FCM disabled / web-only user:** in-chat message is now the primary delivery (FCM best-effort), so web users finally receive reminders — the core gap this task closes.
+- **i18n:** reminder/digest message bodies are model/text content (not UI chrome) → no UI i18n for the message itself; only the admin toggle labels need the 3 keys ×7 ×2 platforms.

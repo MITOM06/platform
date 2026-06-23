@@ -8,6 +8,7 @@ import {
   IsObject,
   IsOptional,
   IsString,
+  Max,
   Min,
   ValidateNested,
 } from 'class-validator';
@@ -88,6 +89,26 @@ export class WorkspaceAiSettingsDto {
   @IsArray()
   @IsString({ each: true })
   allowedConnectors?: string[] | null;
+
+  /**
+   * Daily-digest opt-in (TASK-11). `null` ⇒ inherit ai-service env
+   * AI_DIGEST_ENABLED (default false).
+   */
+  @ApiPropertyOptional({ nullable: true })
+  @IsOptional()
+  @IsBoolean()
+  dailyDigestEnabled?: boolean | null;
+
+  /**
+   * Local hour 0–23 to deliver the daily digest (TASK-11). `null` ⇒ inherit
+   * ai-service env AI_DIGEST_HOUR (default 8).
+   */
+  @ApiPropertyOptional({ nullable: true, minimum: 0, maximum: 23 })
+  @IsOptional()
+  @IsInt()
+  @Min(0)
+  @Max(23)
+  dailyDigestHour?: number | null;
 }
 
 export class UpdateWorkspaceDto {

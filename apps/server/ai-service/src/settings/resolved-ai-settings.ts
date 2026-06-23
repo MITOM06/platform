@@ -27,6 +27,10 @@ export interface ResolvedAiSettings {
    * may use NO connectors.
    */
   allowedConnectors: string[] | null;
+  /** Daily-digest opt-in (TASK-11), resolved against env AI_DIGEST_ENABLED. */
+  dailyDigestEnabled: boolean;
+  /** Local hour 0–23 to deliver the digest, resolved against env AI_DIGEST_HOUR. */
+  dailyDigestHour: number;
 }
 
 const VALID_TIERS = ['auto', 'simple', 'mid', 'complex'] as const;

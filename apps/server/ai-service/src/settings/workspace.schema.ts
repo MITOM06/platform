@@ -21,6 +21,8 @@ export class Workspace {
     thinkingEnabled?: boolean | null;
     monthlyTokenLimit?: number | null;
     allowedConnectors?: string[] | null;
+    dailyDigestEnabled?: boolean | null;
+    dailyDigestHour?: number | null;
   } | null;
 }
 

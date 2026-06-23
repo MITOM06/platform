@@ -175,6 +175,23 @@ describe('AdminService', () => {
       );
     });
 
+    it('deep-merges the TASK-11 daily-digest fields via dot-path $set', async () => {
+      workspaceModel.findOneAndUpdate.mockReturnValue(execable({ name: 'Acme' }));
+      await service.updateWorkspace('actor1', {
+        aiSettings: { dailyDigestEnabled: true, dailyDigestHour: 8 },
+      });
+      expect(workspaceModel.findOneAndUpdate).toHaveBeenCalledWith(
+        {},
+        {
+          $set: {
+            'aiSettings.dailyDigestEnabled': true,
+            'aiSettings.dailyDigestHour': 8,
+          },
+        },
+        { new: true, upsert: true },
+      );
+    });
+
     it('publishes ai:settings:invalidate after a successful aiSettings save', async () => {
       workspaceModel.findOneAndUpdate.mockReturnValue(execable({ name: 'Acme' }));
       await service.updateWorkspace('actor1', {

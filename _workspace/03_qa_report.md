@@ -1,131 +1,74 @@
-## QA Report — TASK-13 Usage & Quality Dashboard — 2026-06-23
+## QA Report — TASK-11 (Proactive Reminders & Daily Digest) — 2026-06-23
 
-Verdict: **PASS** (with one P3 type-drift to fix opportunistically + one owner-action for real cost numbers).
-
-All four reports cross-checked against the code actually on disk. Note: the web and mobile
-reports both claim `_workspace/02_backend_report.md` was a stale TASK-12 file at the time they
-ran; the file on disk now is the correct TASK-13 backend report, and the implemented
-`dashboard.types.ts` matches the plan's frozen contract — so the parallel client work landed on
-the right shape regardless. Verified by reading the real files, not the reports.
+**Verdict: PASS.** All builds and test suites pass (re-run independently, not trusted from reports). The chat-service Java suite was attempted directly: it compiles clean and the targeted `ReminderSweepServiceTest` passes (4/4). The 4 critical checks (digest-field parity, reminder delivery, digest idempotency, client gating + i18n) all hold field-for-field. No P1 drift found. One cosmetic divergence and the env-default ownership item are noted below.
 
 ---
 
-### Build & Test status (exact, run by QA — not trusted from reports)
+### Build / Test status (exact captured output)
 
-| Check | Command | Result |
-|-------|---------|--------|
-| ai-service build | `pnpm --filter ai-service build` | **PASS** — `nest build`, exit 0, no errors |
-| ai-service test | `pnpm --filter ai-service test` | **PASS** — `Test Suites: 29 passed, 29 total` / `Tests: 255 passed, 255 total` (6.871 s) |
-| web build | `pnpm --filter @platform/web build` | **PASS** — exit 0; `/admin/usage` confirmed compiled at `.next/server/app/(main)/admin/usage` |
-| flutter analyze | `cd apps/client && flutter analyze` | **PASS** — `No issues found! (ran in 3.7s)` |
-| flutter test | `cd apps/client && flutter test` | **PASS** — `All tests passed!` (47 tests) — **ran explicitly, not just analyze** |
+| Service / Command | Result |
+|---|---|
+| `pnpm --filter @platform/database test` | **PASS** — `Test Suites: 5 passed, 5 total` / `Tests: 20 passed, 20 total` (includes `ai-digest-log.spec.ts`, `workspace-ai-settings.spec.ts`) |
+| `pnpm --filter @platform/auth-service test` | **PASS** — `Test Suites: 12 passed, 12 total` / `Tests: 53 passed, 53 total` |
+| `pnpm --filter ai-service build` | **PASS** — `nest build` completed (only unrelated pnpm/engine warnings) |
+| `pnpm --filter ai-service test` | **PASS** — `Test Suites: 31 passed, 31 total` / `Tests: 266 passed, 266 total` |
+| `pnpm --filter @platform/web build` | **PASS** — `✓ Compiled successfully in 2.1s`; no TS/ESLint errors |
+| `cd apps/client && flutter analyze` | **PASS** — `No issues found! (ran in 2.9s)` |
+| `cd apps/client && flutter test` | **PASS (ran, not just analyze)** — `All tests passed!` (+47) |
+| chat-service `mvn -q -DskipTests compile` | **PASS** — exit 0 (system Maven 3.9.16 / Java 21; **no `mvnw` wrapper exists in the module**) |
+| chat-service `mvn -Dtest='ReminderSweepService*' test` | **PASS** — `Tests run: 4, Failures: 0, Errors: 0, Skipped: 0` / `BUILD SUCCESS` (exit 0) |
 
-Both Flutter `analyze` AND `test` were run (the prior stale-test footgun was avoided). No new
-test was added for the read-only mobile mirror; logic lives in defensively-parsed models.
+> chat-service note: there is **no Maven wrapper** (`apps/server/chat-service/mvnw` absent) — used system `mvn` (Maven 3.9.16, Java 21). The **targeted** reminder test was run and passes; the WARN/ERROR lines in its log are the *expected* negative-path assertions (FCM-push-fails-but-in-chat-delivered, and persist-fails-so-not-marked-notified). The **full** Java suite was not run end-to-end (needs Mongo/infra and is slow) — but the new code compiles clean and the acceptance-critical test passes, so the prior backend deferral is now closed for the load-bearing path.
 
 ---
 
-### Contract parity — `GET /usage/dashboard` (highest-risk check)
+### CRITICAL CHECK 1 — Digest-field contract parity (4-way, field-for-field)
 
-Source of truth: ai-service `src/usage/dashboard.types.ts` (frozen). Compared field-for-field
-against web `lib/api/types.ts` `DashboardResponse` and Flutter
-`features/admin/data/models/usage_dashboard_models.dart` `UsageDashboard`.
-
-| Top-level field | Backend type | Web (`DashboardResponse`) | Flutter (`UsageDashboard`) | Match |
+| Field | DB schema (`workspace.schema.ts`) | auth DTO (`workspace.dto.ts`) | Web (`admin-types.ts`) | Flutter (`admin_models.dart`) |
 |---|---|---|---|---|
-| `range {from,to,label}` | `string,string,string` | `UsageRange` same | `UsageRange` (`String?` x3) | ✓ |
-| `totals.inputTokens` | number | number | int | ✓ |
-| `totals.outputTokens` | number | number | int | ✓ |
-| `totals.totalTokens` | number | number | int | ✓ |
-| `totals.requestCount` | number | number | int | ✓ |
-| `totals.estimatedCostUsd` | number | number | double | ✓ |
-| `daily[] {date,inputTokens,outputTokens,totalTokens,requestCount}` | `DailyUsage[]` | `UsageDailyPoint[]` (drives chart) | **absent (intentional)** | ✓* |
-| `perModelCost[].model` | string | string | `String` | ✓ |
-| `perModelCost[].inputTokens/outputTokens/requestCount` | number x3 | number x3 | int x3 | ✓ |
-| `perModelCost[].inputPricePerMTok/outputPricePerMTok` | number x2 | number x2 | double x2 | ✓ |
-| `perModelCost[].costUsd` | number | number | double | ✓ |
-| `topUsers[].userId` | string | string | `String` | ✓ |
-| `topUsers[].displayName` | string | string | `String?` | ✓ (see note) |
-| `topUsers[].totalTokens/requestCount` | number x2 | number x2 | int x2 | ✓ |
-| **`topUsers[].estimatedCostUsd` (pro-rated)** | number | number | double | ✓ — present in all three; pro-rated semantics handled backend-side |
-| `feedback.up/down/total` | number x3 | number x3 | int x3 | ✓ |
-| `feedback.thumbsDownRate` | number (0..1) | number | double | ✓ |
-| `feedback.worstAnswers[].messageId/conversationId` | string x2 | string x2 | `String` / `String?` | ✓ |
-| `feedback.worstAnswers[].comment` | `string \| null` | `string \| null` | `String?` | ✓ |
-| `feedback.worstAnswers[].answerPreview` | string | string | `String?` | ✓ |
-| `feedback.worstAnswers[].createdAt` | **`string \| null`** | **`string` (non-null)** | `String?` | ⚠ P3 drift |
+| `dailyDigestEnabled` | `@Prop({type:Boolean, default:null})` → `boolean \| null` | `@IsOptional @IsBoolean` → `boolean \| null` | `dailyDigestEnabled: boolean \| null` | `bool? dailyDigestEnabled` (json key `dailyDigestEnabled`) |
+| `dailyDigestHour` | `@Prop({type:Number, default:null})` → `number \| null` | `@IsOptional @IsInt @Min(0) @Max(23)` → `number \| null` | `dailyDigestHour: number \| null` | `int? dailyDigestHour` (json key `dailyDigestHour`) |
 
-`*` **`daily` absent in Flutter is intentional, NOT drift.** Per plan D6 the mobile mirror omits
-charts; it simply doesn't parse a field it never renders, and the Dart parser ignores extra
-JSON keys. The pro-rated `topUsers[].estimatedCostUsd` (the field flagged as highest-risk) is
-present and correctly typed in all three layers; the backend documents it as a token-volume
-pro-rated share (not exact), which both clients render verbatim — acceptable.
+- **null = inherit semantics consistent on all four layers.** DB defaults `null`; auth DTO `@IsOptional` permits null/absent; web/Flutter document `null = inherit ai-service env default`.
+- **0–23 range** enforced server-side (`@Min(0) @Max(23)`); web clamps 0–23, Flutter hour picker 0–23. `dailyDigestHour:0` round-trips (asserted in the DB spec).
+- ai-service `SettingsService.resolve()` surfaces both as non-null resolved values with `?? env` fallback (`dailyDigestEnabled ?? AI_DIGEST_ENABLED(false)`, `dailyDigestHour ?? AI_DIGEST_HOUR(8)`).
+- **Result: no drift. Parity confirmed.** (No P1.)
 
----
+### CRITICAL CHECK 2 — Reminder delivery (acceptance criterion) ✓
 
-### Gating (auth boundary)
+`ReminderSweepService.sweepDueReminders()` now calls `aiMessageService.saveAiMessage(reminder.getConversationId(), "🔔 " + text, null)` for each due reminder → persists a `type:"ai"` message (senderId = AI_BOT_USER_ID) + single STOMP broadcast to `/topic/conversation/{id}`, the same path web + mobile already render. Confirmed:
+- **In-chat persist is load-bearing; FCM push is best-effort** (wrapped in inner try/catch; push failure does NOT block delivery — proven by test `stillMarksNotifiedWhenOnlyFcmPushFails`).
+- **`notified=true` set only after persist succeeds** → at-least-once, no double-send on the happy path (proven by `doesNotMarkNotifiedWhenInChatPersistFails`).
+- **NO new HTTP endpoint** — `AiMessageService` is called in-process; no `InternalAiController` / `X-Internal-Token` added.
 
-| Layer | Mechanism | Verified |
-|-------|-----------|----------|
-| Backend | `@UseGuards(JwtAuthGuard, RequirePermissionGuard)` on `@Controller('usage')` + `@RequirePermission(Capability.MANAGE_WORKSPACE)` on `GET /dashboard` | ✓ `usage.controller.ts` L19/L24-25; imports from `@platform/database` |
-| Backend wiring | `PassportModule` + `SharedJwtStrategy` registered app-wide (first ai-service controller to use these guards) | ✓ per backend report; build+tests pass |
-| → 401 unauth / 403 without cap | `RequirePermissionGuard` reads JWT `perms` claim | ✓ standard shared guard, same as connector-service |
-| Web | `<RequireCap cap="MANAGE_WORKSPACE">` wraps page; `ADMIN_SECTIONS` entry gated `cap: 'MANAGE_WORKSPACE'` | ✓ `admin/usage/page.tsx` L8, `AdminShell.tsx` L38 |
-| Web base URL | `aiApi` instance (`NEXT_PUBLIC_AI_URL \|\| '/api/ai'`), own `injectToken` + 401 interceptor; `usage.ts` calls `aiApi.get('/usage/dashboard')` — NOT chatApi/authApi | ✓ `axios.ts` L22-38, `usage.ts` |
-| Flutter | Admin section gated `Cap.manageWorkspace` (`admin_screen.dart` L43-44); repo uses `DioClient.createAiDio` → `aiBaseUrl` (:3002) — NOT chatDio/authDio | ✓ `usage_repository.dart`, `dio_client.dart` L62-67, `app_config.dart` L33 |
+### CRITICAL CHECK 3 — Digest idempotency + delivery ✓
 
-Both clients gate by `MANAGE_WORKSPACE` and hit the ai-service base directly. No bypass.
+`DailyDigestCron` (`@Cron('0 * * * *')`, hourly): gated by `settings.dailyDigestEnabled === true` AND `now.getHours() === dailyDigestHour`. Per conversation it **inserts the `DigestLog {conversationId, digestDate}` row BEFORE generation** (`digestLogModel.create`), and on Mongo dup-key (11000) **skips silently** — the `ai_digest_log` collection has the unique compound index `{conversationId:1, digestDate:1}` (asserted in `ai-digest-log.spec.ts`). The claim row is rolled back (`deleteOne`) on no-activity or generation failure so a later run can retry. Delivery is a synthetic `{type:'AI_STREAM_DONE', fullContent, ...}` published to Redis `ai:response:{conversationId}` via `RedisPublisherService`, reusing chat-service's existing `AiResponseListener` (no new endpoint). `ScheduleModule.forRoot()` + `SchedulerModule` are wired in `app.module.ts`; `@nestjs/schedule ^6.1.3` added to `package.json`.
+
+### CRITICAL CHECK 4 — Client gating (MANAGE_WORKSPACE) + i18n ✓
+
+- **Web:** `/admin/ai/page.tsx` wraps `<WorkspaceAiSettings/>` in `<RequireCap cap="MANAGE_WORKSPACE">`; digest controls mutate via existing `useUpdateWorkspace()` → `PATCH /admin/workspace` (no new endpoint/hook).
+- **Flutter:** `workspace_ai_settings_panel.dart` is mounted under the `Cap.manageWorkspace` admin section in `admin_screen.dart`; rides `workspaceProvider.notifier.save({'aiSettings': …})` → same PATCH.
+- **i18n complete on BOTH platforms, all 7 locales:**
+  - Web (`messages/*.json`, `admin` namespace): `aiDailyDigest*` keys = **4 each** for en, vi, zh, ja, ko, es, fr.
+  - Flutter (`l10n/app_*.arb`): digest keys = **5 each** for en, vi, zh, ja, ko, es, fr. (`flutter gen-l10n` output present; `flutter analyze` clean.)
+
+> Note (per task): reminder/digest delivery intentionally reuses the existing `type:"ai"` message path — **no new client message-type code is expected, and none was added.** This is correct, not a gap.
 
 ---
 
-### Cross-platform sync (per .claude/rules/sync.md)
+### Findings
 
-- Both clients render the shared core metrics from the identical endpoint: total/period tokens,
-  request count, estimated cost (incl. per-model breakdown), 👎 rate, top users, worst-rated
-  answers. ✓
-- **D6 web-primary deviation is INTENTIONAL (accepted plan decision), not a failure:** web adds the
-  daily bar chart + month selector + up-to-10 lists; mobile is a minimal read-only panel (no chart,
-  no month selector, top-5/worst-5 caps). This is an admin/ops dashboard, not a chat/STOMP/message
-  surface, so the sync rule's hard P1 cases (message types, STOMP events) do not apply. Recorded as
-  designed.
-- i18n: **complete on both platforms across all 7 locales.**
-  - Web: `navUsage` + `usageDashboard` group (incl. `feedbackSummary`) present in en/vi/zh/ja/ko/es/fr — 7/7.
-  - Mobile: 17 usage ARB keys present in all 7 `app_*.arb` — 17/17 each; `flutter gen-l10n` ran, generated files not hand-edited.
+| Severity | File:line | Issue | Recommendation |
+|---|---|---|---|
+| INFO (cosmetic, not a contract break) | `apps/web/components/admin/WorkspaceAiSettings.tsx:120-121` vs Flutter `workspace_ai_settings_panel.dart` | Payload divergence: web keeps the previously-set `dailyDigestHour` value when the toggle is `off` (selector disabled, not cleared); Flutter sends `dailyDigestHour: null` when not enabled. Both backend-valid (cron ignores hour when disabled). | Leave as-is, or force `dailyDigestHour: null` when `dailyDigest !== 'on'` on web for exact payload parity. Not blocking. |
+| INFO (owner action) | `apps/server/ai-service/src/config/configuration.ts:156-165` | `AI_DIGEST_ENABLED` (default `false`), `AI_DIGEST_HOUR` (default `8`), optional `AI_DIGEST_MODEL` are the env fallbacks when `aiSettings.dailyDigest*` are null. Digest is **OFF by default** — a workspace admin must opt in (or set `AI_DIGEST_ENABLED=true`). | If a default-on morning digest is desired in any deployment, set `AI_DIGEST_ENABLED`/`AI_DIGEST_HOUR` in that env. No code change needed. |
+| INFO (process) | chat-service module | No `mvnw` wrapper present; full Java suite needs Mongo/infra and was not run end-to-end. | Targeted `ReminderSweepServiceTest` (the acceptance path) passes + module compiles clean — acceptable. Run full `mvn test` against infra before release if broader regression coverage is wanted. |
 
----
-
-### Issues found
-
-| Severity | File:line | Issue | Recommended fix |
-|----------|-----------|-------|-----------------|
-| P3 | `apps/web/lib/api/types.ts:301` + `usage-dashboard-parts.tsx:231` | `UsageWorstAnswer.createdAt` typed `string` (non-null) but backend `dashboard.types.ts:65` returns `string \| null`. Web renders `new Date(a.createdAt).toLocaleString()`; on a `null` value this yields the 1970 epoch instead of a clean blank. No crash. Flutter (`String?`) handles it correctly. | Type web field as `string \| null` and guard the render (`a.createdAt ? new Date(a.createdAt).toLocaleString() : ''`). Cosmetic; low likelihood (backend only nulls when a feedback row lacks `createdAt`). |
-
-No P1/P2 issues. No backend-only feature missing from clients; no one-client-only feature.
-
----
-
-### Owner action items (operational, not code defects)
-
-1. **Set the per-model price-map env vars in each deployment for real cost numbers.** ai-service
-   `configuration.ts` seeds defaults (`AI_PRICE_DEFAULT_IN=3`, `_OUT=15`, plus haiku/sonnet/opus
-   seeds) and falls back gracefully, but `estimatedCostUsd` / `perModelCost[].costUsd` will be
-   estimates off the seeded constants until `AI_PRICE_<MODELKEY>_IN/_OUT` are set to the real
-   billing prices. Format: model id upper-cased, non-alphanumerics → `_` (e.g. `claude-opus-4-8`
-   → `AI_PRICE_CLAUDE_OPUS_4_8_IN` / `_OUT`).
-2. **Set `NEXT_PUBLIC_AI_URL` in the web deploy env** (added to `.env.local`/`.env.production`/
-   `.env.example`; must also be set in the actual deploy env or the admin page falls back to
-   `/api/ai` and can't reach ai-service in prod).
-3. **Watch `messages` per-model aggregation latency at scale.** No `{senderId, createdAt}` index
-   was added (deliberately, per plan + the prod auto-index trap). Add it explicitly only if the
-   dashboard shows latency on a busy month.
-
----
+### Owner action items
+1. **Decide default-on vs default-off digest per deployment** — currently OFF (`AI_DIGEST_ENABLED` unset/`false`). Set `AI_DIGEST_ENABLED=true` + `AI_DIGEST_HOUR=<0-23>` in the target env if a workspace should get digests without an admin toggling it.
+2. **Timezone is server/workspace-local** (single-tenant assumption); per-user timezone + per-user opt-in (`ai_user_prefs`) is the documented out-of-scope follow-up.
+3. *(Optional)* Align the web `dailyDigestHour`-on-off payload with Flutter for exact parity.
 
 ### Conclusion
-
-**PASS** — Backend endpoint, web full dashboard, and mobile minimal mirror all build and test
-clean. Contract parity holds field-for-field across all three layers (including the high-risk
-pro-rated `topUsers[].estimatedCostUsd`). Gating is correct and routed to the ai-service base on
-both clients. i18n is complete in all 7 locales on both platforms. The D6 web-primary deviation is
-the intended design. One P3 cosmetic type-drift on `worstAnswers[].createdAt` nullability in the
-web types, and the price-map env vars must be set per deployment for accurate cost figures.
+**PASS** — TASK-11 is correctly and completely implemented across all four layers. Reminder delivery now persists+broadcasts a `type:"ai"` message (web + mobile + history) with no new endpoint and `notified`-flag dedup; the daily-digest cron is idempotent via the unique `ai_digest_log` index and delivers over the existing Redis `AI_STREAM_DONE` path; the two new digest fields match field-for-field across DB / auth-DTO / web-TS / Flutter with null=inherit semantics; both clients gate the toggle by `MANAGE_WORKSPACE`, reuse `PATCH /admin/workspace`, and ship full 7-locale i18n. All re-run builds/tests green, including the chat-service compile and the targeted `ReminderSweepServiceTest`.

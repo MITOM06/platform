@@ -1919,6 +1919,22 @@ class AppLocalizationsJa extends AppLocalizations {
   String get adminAiThinkingDesc => 'アシスタントの段階的な推論を許可します。';
 
   @override
+  String get adminAiDigestSection => 'デイリーダイジェスト';
+
+  @override
+  String get adminAiDailyDigest => 'デイリーダイジェスト';
+
+  @override
+  String get adminAiDailyDigestDesc => '各 AI 会話のアクティビティを 1 日 1 回まとめて投稿します。';
+
+  @override
+  String get adminAiDailyDigestHour => '配信時刻';
+
+  @override
+  String get adminAiDailyDigestHourDesc =>
+      'ダイジェストを配信する現地時刻。ダイジェストが有効な場合に設定できます。';
+
+  @override
   String get adminAiQuotaSection => '使用上限';
 
   @override

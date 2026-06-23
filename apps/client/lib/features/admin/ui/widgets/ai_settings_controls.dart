@@ -110,6 +110,69 @@ class AiTriStateTile extends StatelessWidget {
   }
 }
 
+/// Hour-of-day picker (0–23) for the daily-digest delivery time (TASK-11).
+/// Disabled (greyed out) when the digest is off so the hour is only editable
+/// when delivery is enabled. The value is the local hour to deliver the digest.
+class AiHourPicker extends StatelessWidget {
+  final String label;
+  final int value; // 0..23
+  final bool enabled;
+  final ValueChanged<int> onChanged;
+  const AiHourPicker({
+    super.key,
+    required this.label,
+    required this.value,
+    required this.enabled,
+    required this.onChanged,
+  });
+
+  String _fmt(int h) => '${h.toString().padLeft(2, '0')}:00';
+
+  @override
+  Widget build(BuildContext context) {
+    final disabledColor = Colors.white.withValues(alpha: 0.35);
+    return Opacity(
+      opacity: enabled ? 1 : 0.5,
+      child: InputDecorator(
+        decoration: InputDecoration(
+          labelText: label,
+          labelStyle: TextStyle(
+              color: Colors.white.withValues(alpha: enabled ? 0.7 : 0.35)),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: const BorderSide(color: AppTheme.darkBorder),
+          ),
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+          contentPadding:
+              const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+        ),
+        child: DropdownButtonHideUnderline(
+          child: DropdownButton<int>(
+            isExpanded: true,
+            dropdownColor: AppTheme.darkSurface,
+            value: value,
+            style:
+                TextStyle(color: enabled ? Colors.white : disabledColor),
+            items: List.generate(
+              24,
+              (h) => DropdownMenuItem(
+                value: h,
+                child: Text(_fmt(h),
+                    style: const TextStyle(color: Colors.white)),
+              ),
+            ),
+            onChanged: enabled
+                ? (v) {
+                    if (v != null) onChanged(v);
+                  }
+                : null,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 class AiDropItem {
   final String value;
   final String label;
