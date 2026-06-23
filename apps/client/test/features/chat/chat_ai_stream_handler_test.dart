@@ -109,7 +109,9 @@ void main() {
       final msg = host.read()!.messages.single;
       expect(msg.isStreaming, isFalse);
       expect(msg.isThinking, isFalse);
-      expect(msg.sources, ['doc-1', 'doc-2']);
+      // sources is List<AiSource> (TASK-06 clickable citations); the empty-id
+      // entry is dropped and order is preserved.
+      expect(msg.sources?.map((s) => s.documentId).toList(), ['doc-1', 'doc-2']);
       expect(msg.trace, isNotNull);
       expect(msg.trace!.model, 'claude');
       // DONE remembers the finalized placeholder id for later swap.
