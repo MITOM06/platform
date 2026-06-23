@@ -12,18 +12,20 @@ export interface VectorSearchResult {
 @Injectable()
 export class VectorStoreService {
   private readonly client: QdrantClient;
+  private readonly defaultDim: number;
 
   constructor(private readonly configService: ConfigService) {
     const url = this.configService.get<string>('config.qdrant.url') ?? 'http://localhost:6333';
     this.client = new QdrantClient({ url });
+    this.defaultDim = this.configService.get<number>('config.kb.embeddingDimensions') ?? 1024;
   }
 
-  async ensureCollection(collectionName: string, vectorSize = 1536): Promise<void> {
+  async ensureCollection(collectionName: string, vectorSize?: number): Promise<void> {
     try {
       await this.client.getCollection(collectionName);
     } catch {
       await this.client.createCollection(collectionName, {
-        vectors: { size: vectorSize, distance: 'Cosine' },
+        vectors: { size: vectorSize ?? this.defaultDim, distance: 'Cosine' },
       });
     }
   }

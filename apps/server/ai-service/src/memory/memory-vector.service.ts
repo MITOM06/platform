@@ -29,6 +29,7 @@ export class MemoryVectorService {
   private readonly logger = new Logger(MemoryVectorService.name);
   private readonly client: QdrantClient;
   private readonly collection: string;
+  private readonly defaultDim: number;
   private ensured = false;
 
   constructor(private readonly configService: ConfigService) {
@@ -36,16 +37,17 @@ export class MemoryVectorService {
     this.client = new QdrantClient({ url });
     this.collection =
       this.configService.get<string>('config.memory.qdrantCollection') ?? 'ai_memory';
+    this.defaultDim = this.configService.get<number>('config.kb.embeddingDimensions') ?? 1024;
   }
 
-  private async ensureCollection(vectorSize = 1536): Promise<void> {
+  private async ensureCollection(vectorSize?: number): Promise<void> {
     if (this.ensured) return;
     try {
       await this.client.getCollection(this.collection);
     } catch {
       try {
         await this.client.createCollection(this.collection, {
-          vectors: { size: vectorSize, distance: 'Cosine' },
+          vectors: { size: vectorSize ?? this.defaultDim, distance: 'Cosine' },
         });
       } catch (err) {
         this.logger.warn(`Could not ensure memory collection: ${(err as Error).message}`);

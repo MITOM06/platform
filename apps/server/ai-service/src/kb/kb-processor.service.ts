@@ -72,8 +72,8 @@ export class KbProcessorService {
       // Embed
       const vectors = await this.embeddingService.embed(chunks);
 
-      // Ensure Qdrant collection exists
-      await this.vectorStore.ensureCollection(this.collection);
+      // Ensure Qdrant collection exists, sized to the actual embedding dimension.
+      await this.vectorStore.ensureCollection(this.collection, vectors[0]?.length);
 
       // Upsert vectors
       await this.vectorStore.upsertChunks(this.collection, documentId, chunks, vectors);
