@@ -5,10 +5,12 @@ import { usePathname, useRouter } from 'next/navigation'
 import { useEffect } from 'react'
 import {
   ArrowLeft,
+  BarChart3,
   Building2,
   ClipboardList,
   KeyRound,
   ShieldCheck,
+  Sparkles,
   Users,
   UsersRound,
 } from 'lucide-react'
@@ -32,6 +34,8 @@ interface AdminSection {
 export const ADMIN_SECTIONS: AdminSection[] = [
   { href: '/admin/workspace', cap: 'MANAGE_WORKSPACE', labelKey: 'navWorkspace', icon: Building2 },
   { href: '/admin/sso', cap: 'MANAGE_WORKSPACE', labelKey: 'navSso', icon: KeyRound },
+  { href: '/admin/ai', cap: 'MANAGE_WORKSPACE', labelKey: 'navAi', icon: Sparkles },
+  { href: '/admin/usage', cap: 'MANAGE_WORKSPACE', labelKey: 'navUsage', icon: BarChart3 },
   { href: '/admin/departments', cap: 'MANAGE_DEPARTMENTS', labelKey: 'navDepartments', icon: UsersRound },
   { href: '/admin/members', cap: 'MANAGE_MEMBERS', labelKey: 'navMembers', icon: Users },
   { href: '/admin/roles', cap: 'MANAGE_ROLES', labelKey: 'navRoles', icon: ShieldCheck },

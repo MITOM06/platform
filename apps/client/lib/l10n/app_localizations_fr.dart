@@ -1917,6 +1917,103 @@ class AppLocalizationsFr extends AppLocalizations {
   String get adminNavAudit => 'Journal d\'audit';
 
   @override
+  String get adminNavAi => 'Assistant IA';
+
+  @override
+  String get adminAiInheritHint =>
+      'Laissez un champ vide ou choisissez « Hériter » pour utiliser la valeur par défaut du serveur.';
+
+  @override
+  String get adminAiInheritOption => 'Hériter (par défaut)';
+
+  @override
+  String get adminAiOn => 'Activé';
+
+  @override
+  String get adminAiOff => 'Désactivé';
+
+  @override
+  String get adminAiPersonaSection => 'Personnalité';
+
+  @override
+  String get adminAiPersonaName => 'Nom par défaut de l\'assistant';
+
+  @override
+  String get adminAiTone => 'Ton par défaut';
+
+  @override
+  String get adminAiToneFriendly => 'Amical';
+
+  @override
+  String get adminAiToneProfessional => 'Professionnel';
+
+  @override
+  String get adminAiToneConcise => 'Concis';
+
+  @override
+  String get adminAiToneCreative => 'Créatif';
+
+  @override
+  String get adminAiModelSection => 'Modèle';
+
+  @override
+  String get adminAiModelTier => 'Niveau de modèle par défaut';
+
+  @override
+  String get adminAiTierAuto => 'Auto (routeur)';
+
+  @override
+  String get adminAiTierSimple => 'Simple';
+
+  @override
+  String get adminAiTierMid => 'Équilibré';
+
+  @override
+  String get adminAiTierComplex => 'Avancé';
+
+  @override
+  String get adminAiCapabilitiesSection => 'Capacités';
+
+  @override
+  String get adminAiWebSearch => 'Recherche web';
+
+  @override
+  String get adminAiWebSearchDesc =>
+      'Autoriser l\'assistant à effectuer des recherches sur le web.';
+
+  @override
+  String get adminAiThinking => 'Réflexion approfondie';
+
+  @override
+  String get adminAiThinkingDesc =>
+      'Autoriser l\'assistant à raisonner étape par étape.';
+
+  @override
+  String get adminAiQuotaSection => 'Limite d\'utilisation';
+
+  @override
+  String get adminAiTokenLimit => 'Limite mensuelle de jetons';
+
+  @override
+  String get adminAiTokenLimitDesc =>
+      'Laissez vide pour hériter ; 0 bloque toute utilisation.';
+
+  @override
+  String get adminAiConnectorsSection => 'Connecteurs autorisés';
+
+  @override
+  String get adminAiRestrictConnectors =>
+      'Restreindre les connecteurs pour l\'IA';
+
+  @override
+  String get adminAiConnectorsInherit =>
+      'Hérite de la liste autorisée de l\'espace de travail.';
+
+  @override
+  String get adminAiConnectorsExplicit =>
+      'L\'IA ne peut utiliser que les connecteurs sélectionnés ci-dessous.';
+
+  @override
   String get adminWsIdentity => 'Identité et image de marque';
 
   @override
@@ -2228,4 +2325,64 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get nicknameYouSuffix => '(vous)';
+
+  @override
+  String get adminNavUsage => 'Utilisation';
+
+  @override
+  String get usageThisMonth => 'Ce mois-ci';
+
+  @override
+  String get usageTotalTokens => 'Jetons totaux';
+
+  @override
+  String get usageRequests => 'Requêtes';
+
+  @override
+  String get usageEstCost => 'Coût estimé';
+
+  @override
+  String get usageThumbsDownRate => 'Taux de pouce vers le bas';
+
+  @override
+  String usageFeedbackBreakdown(int down, int total) {
+    return '$down sur $total évaluées';
+  }
+
+  @override
+  String get usagePerModelTitle => 'Coût par modèle';
+
+  @override
+  String usageModelTokens(String input, String output, String requests) {
+    return '$input ent. / $output sort. · $requests req.';
+  }
+
+  @override
+  String get usageTopUsersTitle => 'Principaux utilisateurs';
+
+  @override
+  String usageUserRequests(int count) {
+    return '$count requêtes';
+  }
+
+  @override
+  String get usageWorstAnswersTitle => 'Réponses les moins bien notées';
+
+  @override
+  String get usageNoPreview => '(aucun aperçu de réponse)';
+
+  @override
+  String usageUserComment(String comment) {
+    return '« $comment »';
+  }
+
+  @override
+  String get usageNoData => 'Aucune donnée pour cette période.';
+
+  @override
+  String get usageLoadError =>
+      'Impossible de charger le tableau de bord d’utilisation.';
+
+  @override
+  String get usageRetry => 'Réessayer';
 }

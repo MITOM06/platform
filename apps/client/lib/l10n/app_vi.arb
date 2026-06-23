@@ -185,7 +185,9 @@
   "groupCallParticipants": "{count, plural, =1{1 người tham gia} other{{count} người tham gia}}",
   "@groupCallParticipants": {
     "placeholders": {
-      "count": { "type": "int" }
+      "count": {
+        "type": "int"
+      }
     }
   },
   "groupCallNotetakerActive": "AI đang ghi chú",
@@ -198,27 +200,35 @@
   "activeCallBanner": "Cuộc gọi nhóm · {count} đã tham gia",
   "@activeCallBanner": {
     "placeholders": {
-      "count": { "type": "int" }
+      "count": {
+        "type": "int"
+      }
     }
   },
   "incomingGroupCallTitle": "Cuộc gọi nhóm đến",
   "incomingGroupCallBody": "{name} đã bắt đầu một cuộc gọi nhóm",
   "@incomingGroupCallBody": {
     "placeholders": {
-      "name": { "type": "String" }
+      "name": {
+        "type": "String"
+      }
     }
   },
   "meetingSummaryTitle": "Tóm tắt cuộc họp",
   "meetingSummaryDuration": "Thời lượng {duration}",
   "@meetingSummaryDuration": {
     "placeholders": {
-      "duration": { "type": "String" }
+      "duration": {
+        "type": "String"
+      }
     }
   },
   "meetingSummaryAttendees": "Người tham dự: {names}",
   "@meetingSummaryAttendees": {
     "placeholders": {
-      "names": { "type": "String" }
+      "names": {
+        "type": "String"
+      }
     }
   },
   "meetingSummaryOverview": "Tổng quan",
@@ -682,6 +692,36 @@
   "adminNavMembers": "Thành viên",
   "adminNavRoles": "Vai trò",
   "adminNavAudit": "Nhật ký",
+  "adminNavAi": "Trợ lý AI",
+  "adminAiInheritHint": "Để trống hoặc chọn \"Kế thừa\" để dùng mặc định của máy chủ.",
+  "adminAiInheritOption": "Kế thừa (mặc định)",
+  "adminAiOn": "Bật",
+  "adminAiOff": "Tắt",
+  "adminAiPersonaSection": "Tính cách",
+  "adminAiPersonaName": "Tên trợ lý mặc định",
+  "adminAiTone": "Giọng điệu mặc định",
+  "adminAiToneFriendly": "Thân thiện",
+  "adminAiToneProfessional": "Chuyên nghiệp",
+  "adminAiToneConcise": "Ngắn gọn",
+  "adminAiToneCreative": "Sáng tạo",
+  "adminAiModelSection": "Mô hình",
+  "adminAiModelTier": "Cấp mô hình mặc định",
+  "adminAiTierAuto": "Tự động (bộ định tuyến)",
+  "adminAiTierSimple": "Đơn giản",
+  "adminAiTierMid": "Cân bằng",
+  "adminAiTierComplex": "Nâng cao",
+  "adminAiCapabilitiesSection": "Khả năng",
+  "adminAiWebSearch": "Tìm kiếm web",
+  "adminAiWebSearchDesc": "Cho phép trợ lý tìm kiếm trên web.",
+  "adminAiThinking": "Suy luận mở rộng",
+  "adminAiThinkingDesc": "Cho phép trợ lý suy luận từng bước.",
+  "adminAiQuotaSection": "Giới hạn sử dụng",
+  "adminAiTokenLimit": "Giới hạn token hằng tháng",
+  "adminAiTokenLimitDesc": "Để trống để kế thừa; 0 chặn mọi sử dụng.",
+  "adminAiConnectorsSection": "Trình kết nối được phép",
+  "adminAiRestrictConnectors": "Hạn chế trình kết nối cho AI",
+  "adminAiConnectorsInherit": "Kế thừa danh sách cho phép của không gian làm việc.",
+  "adminAiConnectorsExplicit": "AI chỉ dùng các trình kết nối được chọn bên dưới.",
   "adminWsIdentity": "Nhận diện & thương hiệu",
   "adminWsName": "Tên workspace",
   "adminWsNamePlaceholder": "Công ty ABC",
@@ -792,5 +832,22 @@
   "editNicknames": "Sửa biệt danh",
   "nicknameModalTitle": "Biệt danh",
   "nicknameNonePlaceholder": "Chưa có biệt danh",
-  "nicknameYouSuffix": "(bạn)"
+  "nicknameYouSuffix": "(bạn)",
+  "adminNavUsage": "Sử dụng",
+  "usageThisMonth": "Tháng này",
+  "usageTotalTokens": "Tổng token",
+  "usageRequests": "Yêu cầu",
+  "usageEstCost": "Chi phí ước tính",
+  "usageThumbsDownRate": "Tỉ lệ không hài lòng",
+  "usageFeedbackBreakdown": "{down} trên {total} đã đánh giá",
+  "usagePerModelTitle": "Chi phí theo mô hình",
+  "usageModelTokens": "{input} vào / {output} ra · {requests} yêu cầu",
+  "usageTopUsersTitle": "Người dùng hàng đầu",
+  "usageUserRequests": "{count} yêu cầu",
+  "usageWorstAnswersTitle": "Câu trả lời bị đánh giá thấp",
+  "usageNoPreview": "(không có bản xem trước)",
+  "usageUserComment": "“{comment}”",
+  "usageNoData": "Không có dữ liệu cho giai đoạn này.",
+  "usageLoadError": "Không thể tải bảng điều khiển sử dụng.",
+  "usageRetry": "Thử lại"
 }

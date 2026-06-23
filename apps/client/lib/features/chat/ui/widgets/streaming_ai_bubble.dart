@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:go_router/go_router.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../../../core/l10n/l10n_ext.dart';
 import '../../domain/chat_models.dart';
 
@@ -247,7 +248,9 @@ class FinalizedAiBubble extends StatelessWidget {
 }
 
 /// Clickable per-source citation chips shown under a finalized AI answer.
-/// De-duplicated by documentId; tapping a chip opens the conversation KB.
+/// De-duplicated by documentId. KB sources open the conversation KB view;
+/// web-search sources (TASK-09, `type:'web'` with a `url`) open the result URL
+/// externally — mirroring the web client (`MessageSources.tsx`) per sync rule.
 class _SourceChipsRow extends StatelessWidget {
   final List<AiSource> sources;
   final String? conversationId;
@@ -259,6 +262,12 @@ class _SourceChipsRow extends StatelessWidget {
   String _fallbackLabel(String documentId) {
     if (documentId.length <= 8) return documentId;
     return documentId.substring(0, 8);
+  }
+
+  Future<void> _openExternal(String url) async {
+    final uri = Uri.tryParse(url);
+    if (uri == null) return;
+    await launchUrl(uri, mode: LaunchMode.externalApplication);
   }
 
   @override
@@ -300,9 +309,12 @@ class _SourceChipsRow extends StatelessWidget {
                   label: s.fileName.isNotEmpty
                       ? s.fileName
                       : _fallbackLabel(s.documentId),
-                  onTap: conversationId != null
-                      ? () => context.push('/kb/$conversationId')
-                      : null,
+                  isWeb: s.isWeb,
+                  onTap: s.isWeb
+                      ? () => _openExternal(s.url!)
+                      : (conversationId != null
+                          ? () => context.push('/kb/$conversationId')
+                          : null),
                 ),
             ],
           ),
@@ -316,7 +328,10 @@ class _SourceChip extends StatelessWidget {
   final String label;
   final VoidCallback? onTap;
 
-  const _SourceChip({required this.label, this.onTap});
+  /// Web-search source — renders a globe icon and opens the URL externally.
+  final bool isWeb;
+
+  const _SourceChip({required this.label, this.onTap, this.isWeb = false});
 
   @override
   Widget build(BuildContext context) {
@@ -337,7 +352,7 @@ class _SourceChip extends StatelessWidget {
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(Icons.description_outlined,
+              Icon(isWeb ? Icons.public : Icons.description_outlined,
                   size: 12, color: neonCyan),
               const SizedBox(width: 4),
               Flexible(

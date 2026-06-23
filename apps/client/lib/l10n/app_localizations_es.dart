@@ -1907,6 +1907,102 @@ class AppLocalizationsEs extends AppLocalizations {
   String get adminNavAudit => 'Registro de auditoría';
 
   @override
+  String get adminNavAi => 'Asistente de IA';
+
+  @override
+  String get adminAiInheritHint =>
+      'Deja un campo vacío o elige \"Heredar\" para usar el valor predeterminado del servidor.';
+
+  @override
+  String get adminAiInheritOption => 'Heredar (predeterminado)';
+
+  @override
+  String get adminAiOn => 'Activado';
+
+  @override
+  String get adminAiOff => 'Desactivado';
+
+  @override
+  String get adminAiPersonaSection => 'Personalidad';
+
+  @override
+  String get adminAiPersonaName => 'Nombre predeterminado del asistente';
+
+  @override
+  String get adminAiTone => 'Tono predeterminado';
+
+  @override
+  String get adminAiToneFriendly => 'Amigable';
+
+  @override
+  String get adminAiToneProfessional => 'Profesional';
+
+  @override
+  String get adminAiToneConcise => 'Conciso';
+
+  @override
+  String get adminAiToneCreative => 'Creativo';
+
+  @override
+  String get adminAiModelSection => 'Modelo';
+
+  @override
+  String get adminAiModelTier => 'Nivel de modelo predeterminado';
+
+  @override
+  String get adminAiTierAuto => 'Automático (enrutador)';
+
+  @override
+  String get adminAiTierSimple => 'Simple';
+
+  @override
+  String get adminAiTierMid => 'Equilibrado';
+
+  @override
+  String get adminAiTierComplex => 'Avanzado';
+
+  @override
+  String get adminAiCapabilitiesSection => 'Capacidades';
+
+  @override
+  String get adminAiWebSearch => 'Búsqueda web';
+
+  @override
+  String get adminAiWebSearchDesc =>
+      'Permitir que el asistente busque en la web.';
+
+  @override
+  String get adminAiThinking => 'Pensamiento extendido';
+
+  @override
+  String get adminAiThinkingDesc =>
+      'Permitir que el asistente razone paso a paso.';
+
+  @override
+  String get adminAiQuotaSection => 'Límite de uso';
+
+  @override
+  String get adminAiTokenLimit => 'Límite mensual de tokens';
+
+  @override
+  String get adminAiTokenLimitDesc =>
+      'Déjalo vacío para heredar; 0 bloquea todo el uso.';
+
+  @override
+  String get adminAiConnectorsSection => 'Conectores permitidos';
+
+  @override
+  String get adminAiRestrictConnectors => 'Restringir conectores para la IA';
+
+  @override
+  String get adminAiConnectorsInherit =>
+      'Heredando la lista permitida del espacio de trabajo.';
+
+  @override
+  String get adminAiConnectorsExplicit =>
+      'La IA solo puede usar los conectores seleccionados abajo.';
+
+  @override
   String get adminWsIdentity => 'Identidad y marca';
 
   @override
@@ -2217,4 +2313,63 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get nicknameYouSuffix => '(tú)';
+
+  @override
+  String get adminNavUsage => 'Uso';
+
+  @override
+  String get usageThisMonth => 'Este mes';
+
+  @override
+  String get usageTotalTokens => 'Tokens totales';
+
+  @override
+  String get usageRequests => 'Solicitudes';
+
+  @override
+  String get usageEstCost => 'Coste estimado';
+
+  @override
+  String get usageThumbsDownRate => 'Tasa de pulgares abajo';
+
+  @override
+  String usageFeedbackBreakdown(int down, int total) {
+    return '$down de $total valoradas';
+  }
+
+  @override
+  String get usagePerModelTitle => 'Coste por modelo';
+
+  @override
+  String usageModelTokens(String input, String output, String requests) {
+    return '$input ent. / $output sal. · $requests sol.';
+  }
+
+  @override
+  String get usageTopUsersTitle => 'Usuarios principales';
+
+  @override
+  String usageUserRequests(int count) {
+    return '$count solicitudes';
+  }
+
+  @override
+  String get usageWorstAnswersTitle => 'Respuestas peor valoradas';
+
+  @override
+  String get usageNoPreview => '(sin vista previa de la respuesta)';
+
+  @override
+  String usageUserComment(String comment) {
+    return '«$comment»';
+  }
+
+  @override
+  String get usageNoData => 'No hay datos para este periodo.';
+
+  @override
+  String get usageLoadError => 'No se pudo cargar el panel de uso.';
+
+  @override
+  String get usageRetry => 'Reintentar';
 }

@@ -1842,6 +1842,96 @@ class AppLocalizationsZh extends AppLocalizations {
   String get adminNavAudit => '审计日志';
 
   @override
+  String get adminNavAi => 'AI 助手';
+
+  @override
+  String get adminAiInheritHint => '留空或选择“继承”以使用服务器默认值。';
+
+  @override
+  String get adminAiInheritOption => '继承（默认）';
+
+  @override
+  String get adminAiOn => '开';
+
+  @override
+  String get adminAiOff => '关';
+
+  @override
+  String get adminAiPersonaSection => '人设';
+
+  @override
+  String get adminAiPersonaName => '默认助手名称';
+
+  @override
+  String get adminAiTone => '默认语气';
+
+  @override
+  String get adminAiToneFriendly => '友好';
+
+  @override
+  String get adminAiToneProfessional => '专业';
+
+  @override
+  String get adminAiToneConcise => '简洁';
+
+  @override
+  String get adminAiToneCreative => '创意';
+
+  @override
+  String get adminAiModelSection => '模型';
+
+  @override
+  String get adminAiModelTier => '默认模型级别';
+
+  @override
+  String get adminAiTierAuto => '自动（路由）';
+
+  @override
+  String get adminAiTierSimple => '简单';
+
+  @override
+  String get adminAiTierMid => '均衡';
+
+  @override
+  String get adminAiTierComplex => '高级';
+
+  @override
+  String get adminAiCapabilitiesSection => '功能';
+
+  @override
+  String get adminAiWebSearch => '网络搜索';
+
+  @override
+  String get adminAiWebSearchDesc => '允许助手搜索网络。';
+
+  @override
+  String get adminAiThinking => '扩展思考';
+
+  @override
+  String get adminAiThinkingDesc => '允许助手逐步推理。';
+
+  @override
+  String get adminAiQuotaSection => '使用上限';
+
+  @override
+  String get adminAiTokenLimit => '每月令牌上限';
+
+  @override
+  String get adminAiTokenLimitDesc => '留空表示继承；0 表示禁止所有使用。';
+
+  @override
+  String get adminAiConnectorsSection => '允许的连接器';
+
+  @override
+  String get adminAiRestrictConnectors => '为 AI 限制连接器';
+
+  @override
+  String get adminAiConnectorsInherit => '继承工作区允许列表。';
+
+  @override
+  String get adminAiConnectorsExplicit => 'AI 只能使用下面选中的连接器。';
+
+  @override
   String get adminWsIdentity => '标识与品牌';
 
   @override
@@ -2139,4 +2229,63 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get nicknameYouSuffix => '(你)';
+
+  @override
+  String get adminNavUsage => '用量';
+
+  @override
+  String get usageThisMonth => '本月';
+
+  @override
+  String get usageTotalTokens => '总令牌数';
+
+  @override
+  String get usageRequests => '请求数';
+
+  @override
+  String get usageEstCost => '预计费用';
+
+  @override
+  String get usageThumbsDownRate => '差评率';
+
+  @override
+  String usageFeedbackBreakdown(int down, int total) {
+    return '$total 条评价中 $down 条';
+  }
+
+  @override
+  String get usagePerModelTitle => '按模型计费';
+
+  @override
+  String usageModelTokens(String input, String output, String requests) {
+    return '输入 $input / 输出 $output · $requests 次请求';
+  }
+
+  @override
+  String get usageTopUsersTitle => '主要用户';
+
+  @override
+  String usageUserRequests(int count) {
+    return '$count 次请求';
+  }
+
+  @override
+  String get usageWorstAnswersTitle => '评价最差的回答';
+
+  @override
+  String get usageNoPreview => '（无回答预览）';
+
+  @override
+  String usageUserComment(String comment) {
+    return '“$comment”';
+  }
+
+  @override
+  String get usageNoData => '此期间暂无数据。';
+
+  @override
+  String get usageLoadError => '无法加载用量面板。';
+
+  @override
+  String get usageRetry => '重试';
 }

@@ -185,7 +185,9 @@
   "groupCallParticipants": "{count, plural, =1{1人の参加者} other{{count}人の参加者}}",
   "@groupCallParticipants": {
     "placeholders": {
-      "count": { "type": "int" }
+      "count": {
+        "type": "int"
+      }
     }
   },
   "groupCallNotetakerActive": "AIがメモを取っています",
@@ -198,27 +200,35 @@
   "activeCallBanner": "グループ通話 · {count}人が参加中",
   "@activeCallBanner": {
     "placeholders": {
-      "count": { "type": "int" }
+      "count": {
+        "type": "int"
+      }
     }
   },
   "incomingGroupCallTitle": "グループ通話の着信",
   "incomingGroupCallBody": "{name}さんがグループ通話を開始しました",
   "@incomingGroupCallBody": {
     "placeholders": {
-      "name": { "type": "String" }
+      "name": {
+        "type": "String"
+      }
     }
   },
   "meetingSummaryTitle": "議事録",
   "meetingSummaryDuration": "通話時間 {duration}",
   "@meetingSummaryDuration": {
     "placeholders": {
-      "duration": { "type": "String" }
+      "duration": {
+        "type": "String"
+      }
     }
   },
   "meetingSummaryAttendees": "参加者: {names}",
   "@meetingSummaryAttendees": {
     "placeholders": {
-      "names": { "type": "String" }
+      "names": {
+        "type": "String"
+      }
     }
   },
   "meetingSummaryOverview": "概要",
@@ -682,6 +692,36 @@
   "adminNavMembers": "メンバー",
   "adminNavRoles": "ロール",
   "adminNavAudit": "監査ログ",
+  "adminNavAi": "AI アシスタント",
+  "adminAiInheritHint": "空欄または「継承」でサーバー既定値を使用します。",
+  "adminAiInheritOption": "継承（既定）",
+  "adminAiOn": "オン",
+  "adminAiOff": "オフ",
+  "adminAiPersonaSection": "ペルソナ",
+  "adminAiPersonaName": "既定のアシスタント名",
+  "adminAiTone": "既定のトーン",
+  "adminAiToneFriendly": "フレンドリー",
+  "adminAiToneProfessional": "プロフェッショナル",
+  "adminAiToneConcise": "簡潔",
+  "adminAiToneCreative": "創造的",
+  "adminAiModelSection": "モデル",
+  "adminAiModelTier": "既定のモデルティア",
+  "adminAiTierAuto": "自動（ルーター）",
+  "adminAiTierSimple": "シンプル",
+  "adminAiTierMid": "バランス",
+  "adminAiTierComplex": "高度",
+  "adminAiCapabilitiesSection": "機能",
+  "adminAiWebSearch": "ウェブ検索",
+  "adminAiWebSearchDesc": "アシスタントによるウェブ検索を許可します。",
+  "adminAiThinking": "拡張思考",
+  "adminAiThinkingDesc": "アシスタントの段階的な推論を許可します。",
+  "adminAiQuotaSection": "使用上限",
+  "adminAiTokenLimit": "月間トークン上限",
+  "adminAiTokenLimitDesc": "空欄で継承。0 ですべての使用を遮断します。",
+  "adminAiConnectorsSection": "許可するコネクタ",
+  "adminAiRestrictConnectors": "AI のコネクタを制限",
+  "adminAiConnectorsInherit": "ワークスペースの許可リストを継承します。",
+  "adminAiConnectorsExplicit": "AI は下で選択したコネクタのみ使用できます。",
   "adminWsIdentity": "アイデンティティとブランディング",
   "adminWsName": "ワークスペース名",
   "adminWsNamePlaceholder": "Acme 株式会社",
@@ -792,5 +832,22 @@
   "editNicknames": "ニックネームを編集",
   "nicknameModalTitle": "ニックネーム",
   "nicknameNonePlaceholder": "ニックネームなし",
-  "nicknameYouSuffix": "（あなた）"
+  "nicknameYouSuffix": "（あなた）",
+  "adminNavUsage": "使用状況",
+  "usageThisMonth": "今月",
+  "usageTotalTokens": "合計トークン",
+  "usageRequests": "リクエスト数",
+  "usageEstCost": "推定コスト",
+  "usageThumbsDownRate": "低評価率",
+  "usageFeedbackBreakdown": "{total} 件中 {down} 件",
+  "usagePerModelTitle": "モデル別コスト",
+  "usageModelTokens": "入力 {input} / 出力 {output} · {requests} 件",
+  "usageTopUsersTitle": "上位ユーザー",
+  "usageUserRequests": "{count} 件のリクエスト",
+  "usageWorstAnswersTitle": "低評価の回答",
+  "usageNoPreview": "（回答プレビューなし）",
+  "usageUserComment": "「{comment}」",
+  "usageNoData": "この期間のデータはありません。",
+  "usageLoadError": "使用状況ダッシュボードを読み込めませんでした。",
+  "usageRetry": "再試行"
 }

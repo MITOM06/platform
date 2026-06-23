@@ -16,6 +16,8 @@ class AppConfig {
       'https://chat-service-942942821810.asia-southeast1.run.app';
   static const String _cloudConnector =
       'https://connector-service-942942821810.asia-southeast1.run.app';
+  static const String _cloudAi =
+      'https://ai-service-942942821810.asia-southeast1.run.app';
   static const String _cloudWs =
       'wss://chat-service-942942821810.asia-southeast1.run.app/ws';
 
@@ -25,5 +27,10 @@ class AppConfig {
       usesProxy ? 'https://$_domain/api/chat' : _cloudChat;
   static String get connectorBaseUrl =>
       usesProxy ? 'https://$_domain/api/connector' : _cloudConnector;
+
+  /// Base URL of the ai-service (:3002). Admin usage/quality dashboard
+  /// (`GET /usage/dashboard`) lives here. Self-host routes via `/api/ai`.
+  static String get aiBaseUrl =>
+      usesProxy ? 'https://$_domain/api/ai' : _cloudAi;
   static String get wsUrl => usesProxy ? 'wss://$_domain/ws' : _cloudWs;
 }

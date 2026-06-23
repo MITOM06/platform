@@ -1,242 +1,183 @@
-# Implementation Plan — Avatar/Conversation UX Bug Cluster (6 issues)
+## Feature: TASK-13 — Usage & Quality Dashboard (single admin view)
 
-> Multi-platform bug-fix + UX redesign. User tests primarily on **Web**; Web (Next.js) and Mobile (Flutter) MUST stay in sync (`.claude/rules/sync.md`).
-> All findings below were verified against actual files (line numbers cited). Backend = chat-service (Spring Boot 3, :8080) + auth-service (NestJS, :3001).
-
-## Shared infrastructure already in place (reused by several issues)
-
-- `PUT /api/conversations/{id}` → `ConversationService.updateGroup(...)` → `broadcastConversationUpdated(...)` → STOMP `/topic/conversation/{id}` with `{type:"CONVERSATION_UPDATED", conversation: ConversationResponse}` (`ConversationController.java:64-71,219-223`). **Real-time conversation sync path — reuse for wallpaper + group avatar.**
-- Pin feature complete: `POST/DELETE /api/messages/{id}/pin` → `{pinnedMessages:[...]}` + STOMP `PINNED_MESSAGE` + system message (`MessageController.java:135-173`). `ConversationResponse.pinnedMessages: List<PinnedMessageDto{id,senderId,content,createdAt}>`. **No backend change needed for issue 2.**
-- Web media resolver `absoluteMediaUrl()` (`apps/web/lib/media.ts:3-12`) — **no cache-busting**. Flutter `media_url.dart` `_absoluteUrl` (`apps/client/lib/core/utils/media_url.dart:8-11`) — **no cache-busting**.
-- Upload endpoint `POST /api/uploads` returns **relative** url `/api/uploads/<objectId>` (`UploadController.java:63`). Consumers MUST resolve via `absoluteMediaUrl` (web) / `_absoluteUrl` (flutter).
-- Nicknames + wallpaper are currently **client-local only** (web `localStorage`, flutter `shared_preferences`), synced via `system.nickname.changed:` / `system.theme.changed:` system messages (`apps/web/lib/nicknames.ts`, `chat_misc_providers.dart:42-103`).
+### Summary
+Add an admin-only aggregate endpoint in **ai-service** that rolls up, for a chosen month (or last-N-days window): total + per-day tokens & request count, top users by tokens, estimated cost broken down per model (env-configurable price map), and the 👎 feedback rate plus the worst-rated answers. Surface it as **one web page under `/admin/usage`** (gated by `MANAGE_WORKSPACE`), reusing the visual language of the existing `/token-usage` page. This is a web-primary admin/ops surface — mobile gets a minimal read-only mirror panel (see Mobile + sync rationale).
 
 ---
 
-## Issue 1 — Avatar change not reflected for OTHER viewers (stale avatar everywhere)
+### Key Decisions (resolved — not open)
 
-### Summary
-When user A changes their avatar (auth-service `updateProfile`), other users keep seeing A's old avatar in every avatar circle. Three compounding causes: (a) avatar URL string is unchanged after re-upload → HTTP cache + Flutter `CachedNetworkImage` serve stale bytes; (b) no `USER_UPDATED` push so peers never invalidate; (c) web `useUser` has 5-min `staleTime`. Fix = make avatar URLs version-stamped at the source + invalidate user caches.
+**D1 — Endpoint home = ai-service (port 3002), NEW module surface in `src/usage/`.**
+Justification: ai-service already *owns the write path* for `token_usage` (`ai.service.ts:309 → UsageService.recordUsage`), already reads the shared `conversations` collection (`conversation.schema.ts`), and already reads `ai_feedback` in its eval tooling (`eval/import-feedback.ts`). It also holds the model-routing knowledge (`model-router.ts`) and is the natural owner of the per-model price map. The task spec also explicitly scopes files to `apps/server/ai-service/src/usage/*`. chat-service merely *reads* `token_usage` for the existing personal page — we leave that untouched.
 
-### Decision (architecture)
-**Version the avatar URL at upload time** rather than appending volatile `?t=now` on every render (volatile cache-buster defeats all caching and re-downloads constantly). On avatar change, auth-service stores `avatarUrl` already including a stable version token (e.g. the new GridFS object id is already unique per upload — so the *path itself changes* per upload). **Verify**: profile avatar upload must go through `POST /api/uploads` (new object id each time) so the stored `avatarUrl` is a NEW path per change. If avatar upload reuses a fixed path, append `?v=<updatedAt-epoch>` once in the resolver based on the user's `updatedAt`.
+**D2 — Per-model price config lives in ai-service `configuration.ts` as an env-driven map** (NOT `Workspace.aiSettings`).
+Justification: prices are deployment/billing constants that change rarely and are operationally owned (not behavioral toggles an admin tunes per workspace). TASK-12's `Workspace.aiSettings` is for *behavior* (persona/tone/model tier/quota). Putting a price table there would split ops config and add request-path DB reads for a constant. Env map keeps it simple, overridable per deployment, and out of the hot path. Graceful default applies when a model isn't in the map.
 
-### Backend
-| 파일 | 변경 유형 | 설명 |
-|------|---------|------|
-| `apps/server/auth-service/src/modules/users/users.service.ts` (`updateProfile` ~125-170) | 확인/수정 | Confirm avatar upload produces a NEW unique URL per change. If not, ensure `avatarUrl` carries a version suffix derived from `updatedAt`. |
-| `apps/server/auth-service` users module | 신규(선택) | (Optional, recommended) Emit a lightweight `USER_UPDATED` signal so peers refresh. auth-service has no STOMP; simplest cross-service path = on profile update, POST an internal hook to chat-service which broadcasts `USER_UPDATED` to that user's conversations. **If too invasive, skip and rely on URL versioning + cache invalidation below.** |
-| `apps/server/chat-service/.../controller/UserStatusController.java` (verify path) | 신규(선택) | If doing the push: endpoint `POST /internal/users/{id}/changed` (service-to-service) → broadcast `{type:"USER_UPDATED", userId, avatarUrl, displayName}` to each `/topic/conversation/{cid}` the user participates in. |
+**D3 — Gate with the EXISTING `MANAGE_WORKSPACE` capability. Do NOT invent a new capability.**
+Justification: TASK-12 already placed every AI-admin surface (AI settings, SSO, workspace) behind `MANAGE_WORKSPACE` on all 3 platforms; the admin console section list (web `ADMIN_SECTIONS`, Flutter `adminSections`) uses it. `VIEW_AUDIT_LOG` is for the audit log specifically; a fresh `VIEW_USAGE_ANALYTICS` cap would require touching `packages/database/rbac`, role seeds, and the JWT `perms` claim across services for zero SMB benefit. `MANAGE_WORKSPACE` is the right-sized single-admin gate. **This is the first ai-service controller to use `@RequirePermission` — see B-note.**
 
-### Web
-| 파일 | 변경 유형 | 설명 |
-|------|---------|------|
-| `apps/web/components/chat/ConversationItem.tsx:160` | 수정 | `<AvatarImage src={avatarUrl}>` → `src={absoluteMediaUrl(avatarUrl)}` (currently RAW relative path — also feeds issue 5). |
-| `apps/web/components/chat/ConversationHeader.tsx:117` | 수정 | Same: wrap `avatarUrl` in `absoluteMediaUrl`. |
-| `apps/web/components/chat/MessageBubble.tsx` | 확인/수정 | Sender avatar in group bubbles — ensure `absoluteMediaUrl` + invalidation on `USER_UPDATED`. |
-| `apps/web/lib/hooks/use-user.ts:9` | 수정 | Lower `staleTime` (e.g. 30s) OR invalidate `['user', userId]` on `USER_UPDATED`/`CONVERSATION_UPDATED`. |
-| `apps/web/app/(main)/conversations/[id]/page.tsx` (STOMP switch ~291) | 수정 | Add `case 'USER_UPDATED'`: `queryClient.invalidateQueries(['user', userId])`. If no backend push, at minimum invalidate `['user', otherUserId]` after any avatar-related change. |
-| `apps/web/lib/media.ts:3-12` | 수정(조건부) | If avatar path is NOT unique-per-upload, append `?v=<version>` for avatar URLs only. |
+**D4 — Dashboard home = web `/admin/usage` (new admin-console section), NOT an extension of `/token-usage`.**
+Justification: `/token-usage` is a *personal, self-scoped, ungated* page (any user sees their own tokens, served by chat-service). TASK-13 is a *cross-user, admin-gated* view. Bolting cross-user aggregates onto the personal page would either leak data or require conditional rendering. Consistent with where TASK-12 put AI admin (`/admin/ai`), the dashboard belongs in the admin console at `/admin/usage`, gated by `RequireCap cap="MANAGE_WORKSPACE"`. We *reuse the visual components* (stat cards, CSS/canvas bars, progress styling) from `/token-usage` as the base — satisfying the backlog's "reuse existing /token-usage page as the base" intent without merging concerns.
 
-### Mobile
-| 파일 | 변경 유형 | 설명 |
-|------|---------|------|
-| `apps/client/lib/features/chat/ui/widgets/conversation_avatar.dart:35-44` | 수정 | `CachedNetworkImage` caches by URL → add `cacheKey: avatarUrl` derived to include version, OR if URL is unique-per-upload no change needed (just confirm). For the `?v=` approach, the version param naturally changes the cacheKey. |
-| `apps/client/lib/core/utils/media_url.dart:8-11` | 수정(조건부) | Mirror web `?v=` logic if used. |
-| `apps/client/lib/features/chat/data/stomp_service.dart` + chat notifier | 수정 | Handle `USER_UPDATED` (if backend push added): invalidate `userProfileProvider(userId)` (`chat_misc_providers.dart:21-26`, currently 5-min keepAlive). |
-| `apps/client/lib/features/chat/ui/widgets/message_bubble_parts.dart` | 확인 | Sender avatar render — confirm uses `ConversationAvatar`/`_absoluteUrl`. |
+**D5 — Cost-by-model source = the `messages` collection's `trace` subdocument, NOT `token_usage`.**
+Critical data-shape finding: `token_usage` daily rows (`userId, date, inputTokens, outputTokens, requestCount`) have **no model field**. The only place token counts are correlated with a model is `messages.trace` (`AiTraceData`: `model`, `inputTokens`, `outputTokens`, per AI message). So: tokens/requests over-time + top-users come from the efficient pre-aggregated `token_usage`; **per-model cost** is computed by aggregating `messages` where `senderId == AI_BOT_USER_ID` and `trace` exists, grouped by `trace.model`, within the window. ai-service adds a lightweight read-only `Message` schema (collection `messages`) — it already does this pattern for `conversations`.
 
-### Edge cases
-- Self view must update immediately after own change (invalidate own profile + `['conversations']`).
-- Group avatar (issue 5) shares the `absoluteMediaUrl` fix — do both together.
-- Letter-fallback must still show when avatar 404s (already handled via `errorWidget`).
+**D6 — Mobile = minimal read-only mirror panel; web-primary deviation accepted.**
+Justification (explicit sync-rule deviation per `.claude/rules/sync.md`): TASK-13 is an **admin/ops dashboard, not a chat/messaging surface**. The sync rule's hard P1 cases are message types and STOMP chat events — this is neither. Full chart parity on mobile is low-value for a single admin who will operate from web. We keep mobile honest with a **minimal `UsageDashboardPanel`** in the existing Flutter admin section (`MANAGE_WORKSPACE`) showing the headline numbers (this-month tokens, estimated cost, 👎 rate, top-5 users, worst-5 answers as a list) reusing the same endpoint — no charts. This preserves "feature exists on both platforms" while not over-investing. State the deviation in the QA report.
 
 ---
 
-## Issue 2 — Conversation Info panel: remove user-info section, keep ONLY pinned messages
+### Backend (ai-service — NestJS, port 3002)
 
-### Summary
-Pure client-side UI removal. Drop the "Chat Info"/"Chat Details" accordion (bio/DOB/member-count for the other user) and keep the existing Pinned Messages section. **No backend change.**
-
-### Web
 | 파일 | 변경 유형 | 설명 |
 |------|---------|------|
-| `apps/web/components/chat/ConversationSettingsDrawer.tsx:256-292` | 수정 | Remove the entire "Chat Info" `AccordionItem` (user bio/DOB for direct, member count for group). Keep Pinned Messages accordion (`:294-308`) and `PinnedMessagesSection`. |
+| `apps/server/ai-service/src/config/configuration.ts` | 수정 | Add `pricing` block: env-driven per-model USD/1M-token map + defaults (see Data Model / API). |
+| `apps/server/ai-service/src/usage/message.schema.ts` | 신규 | Read-only Mongoose model for shared `messages` collection (fields used: `senderId`, `conversationId`, `content`, `createdAt`, `trace.{model,inputTokens,outputTokens}`). Mirror the existing read-only `conversation.schema.ts` pattern. |
+| `apps/server/ai-service/src/usage/feedback.schema.ts` | 신규 | Read-only Mongoose model for shared `ai_feedback` collection (`messageId, conversationId, userId, rating('up'\|'down'), comment, createdAt`). ai-service NEVER writes it (chat-service owns writes). |
+| `apps/server/ai-service/src/usage/dashboard.service.ts` | 신규 | Aggregation service. Method `getDashboard(params: { month?: string; days?: number })` → assembles the full payload (see API Contract). Uses 3 aggregations: (a) `token_usage` group-by-date + group-by-user(top N); (b) `messages` group-by `trace.model` for token sums → cost via price map; (c) `ai_feedback` up/down counts + worst answers (down-rated, join answer text from `messages`). Keep < 300 lines; if it grows, split cost calc into `cost-estimator.ts`. |
+| `apps/server/ai-service/src/usage/cost-estimator.ts` | 신규 | Pure function `estimateCost(perModelTokens, priceMap)` → `{ perModel: [...], totalUsd }`. Unit-tested (no DB). |
+| `apps/server/ai-service/src/usage/usage.controller.ts` | 신규 | First controller in the usage module. `@Controller('usage')`. `GET /usage/dashboard` gated by `@UseGuards(JwtAuthGuard, RequirePermissionGuard)` + `@RequirePermission(Capability.MANAGE_WORKSPACE)`. Query params `month` (YYYY-MM, optional) and `days` (optional, default 30). Returns `DashboardResponse`. Controller only parses + delegates (clean-code rule). |
+| `apps/server/ai-service/src/usage/usage.module.ts` | 수정 | Register `Message` + `Feedback` schemas via `MongooseModule.forFeature`; add `controllers: [UsageController]`; provide `DashboardService`. Ensure `PassportModule`/`SharedJwtStrategy` wiring so `JwtAuthGuard`+`RequirePermissionGuard` resolve (see B-note). |
+| `apps/server/ai-service/src/usage/dashboard.service.spec.ts` | 신규 | Unit tests: cost math (cost-estimator), 👎-rate calc, top-users sort, empty-data, model-not-in-pricemap fallback. Mock Mongoose models. |
+| `apps/server/ai-service/src/app.module.ts` | 수정 (확인) | Ensure `PassportModule` + `SharedJwtStrategy` are registered app-wide so the JWT guard works (TASK-14 likely already wired JWT for conversation-access — reuse it; verify before adding). |
 
-### Mobile
-| 파일 | 변경 유형 | 설명 |
-|------|---------|------|
-| `apps/client/lib/features/chat/ui/widgets/conversation_info_sidebar.dart:138-142` | 수정 | Remove "Chat Details" `ExpansionTile`. |
-| `apps/client/lib/features/chat/ui/widgets/conversation_info_sidebar.dart` (`_buildChatDetailsContent` ~289-313) | 삭제 | Remove the now-unused helper (bio/DOB/member count). |
-| `apps/client/lib/features/chat/ui/widgets/conversation_info_sidebar_parts.dart` | 확인 | Drop any helpers orphaned by the removal. |
-
-### Sync checkpoint
-- Both platforms must keep the Pinned Messages section identical; both must drop user-info. Member count (group) is also removed per spec ("only pinned messages").
+**B-note (the one integration risk — resolve during impl):** ai-service has NOT used `@RequirePermission`/`RequirePermissionGuard` before. The shared `RequirePermissionGuard` (`packages/database/src/auth/require-permission.guard.ts`) reads `req.user.perms` from the JWT claim, which auth-service already issues (`JwtUser.perms`), and `JwtAuthGuard` (`jwt.guard.ts`, the `SharedJwtStrategy`) populates `req.user`. Action: (1) confirm `SharedJwtStrategy` is a registered provider + `PassportModule` imported in the module serving this controller — required for `JwtAuthGuard` to populate `req.user`; (2) import `{ JwtAuthGuard, RequirePermissionGuard, RequirePermission }` from the shared auth barrel and `{ Capability }` from the rbac barrel — verify the exact tsconfig path alias ai-service uses for `packages/database` (check an existing ai-service import of the shared package; `settings/workspace.schema.ts` references `@platform/database`). No new capability, no auth-service change.
 
 ---
 
-## Issue 3 — Nickname editing redesign (1:1 AND group): single button → centered modal
+### Web (Next.js — apps/web/)
 
-### Summary
-Replace the current inline two-field nickname UI (web `CustomizeChatSection`, flutter nickname dialog) with **one "Edit nicknames" button** opening a **centered modal** listing each relevant participant (self + the other person for 1:1; self + all members for group) as a row: **avatar + real account displayName**, below it the **nickname with a pencil edit icon**, placeholder "no nickname" when empty. Self nickname editable. Storage/transport unchanged (client-local + `system.nickname.changed:` system message) — **no new backend endpoint**.
-
-### Decision (data model / transport)
-Keep the existing transport: nicknames are NOT server-persisted. Save path stays `system.nickname.changed:<userId>:<nickname>` broadcast via STOMP, applied by both clients (`apps/web/lib/nicknames.ts:42-53`, flutter `NicknamesNotifier` + `chat_system_message_parser.dart`). This avoids a backend migration and matches the wallpaper pattern. (Rationale: spec only asks for UI redesign + self-nickname, both already supported by the local model.)
-
-### Web
 | 파일 | 변경 유형 | 설명 |
 |------|---------|------|
-| `apps/web/components/chat/group/CustomizeChatSection.tsx:92-117` | 수정 | Replace the two inline `NicknameRow`s with a single button that opens the new modal. Make it work for BOTH `isDirect` and `isGroup` (currently nickname rows are gated to `isDirect` only). |
-| `apps/web/components/chat/group/NicknamesModal.tsx` | 신규 | Centered `Dialog` (shadcn). Props: participants `[{userId, displayName, avatarUrl}]`, current nicknames map, `onSave(userId, value)`. Each row: `<Avatar src={absoluteMediaUrl(avatarUrl)}>` + real displayName + nickname line with pencil → inline `Input`; placeholder = `t('nicknameNonePlaceholder')`. |
-| `apps/web/components/chat/ConversationSettingsDrawer.tsx:79-91` | 확인 | Reuse existing `saveNickname(targetId,value)` (already broadcasts system message). Pass participant profile list (fetch via `useUser`/conversation participants) into the modal. |
-| `apps/web/lib/nicknames.ts` | 변경없음 | Storage/broadcast helpers reused as-is. |
+| `apps/web/lib/api/axios.ts` | 수정 | Add a 4th instance `aiApi` (baseURL `process.env.NEXT_PUBLIC_AI_URL \|\| '/api/ai'`, port 3002) + attach the same `injectToken` request interceptor. (No `aiApi` exists today — the personal token-usage page currently calls chat-service `/api/usage/tokens` via `chatApi`; the new admin endpoint lives on ai-service so it needs its own instance.) |
+| `apps/web/.env` / deploy env | 수정 | Add `NEXT_PUBLIC_AI_URL` pointing at ai-service. |
+| `apps/web/lib/api/usage.ts` | 신규 | `usageService.getDashboard({ month?, days? })` → `aiApi.get<DashboardResponse>('/usage/dashboard', { params })`. |
+| `apps/web/lib/api/types.ts` | 수정 | Add `DashboardResponse` + sub-types (exact shape from API Contract). Single source of truth. |
+| `apps/web/app/(main)/admin/usage/page.tsx` | 신규 | `<RequireCap cap="MANAGE_WORKSPACE"><UsageDashboard /></RequireCap>`. |
+| `apps/web/components/admin/usage-dashboard.tsx` | 신규 | TanStack Query (`useQuery(['admin-usage', month])` via `usageService.getDashboard`). Renders: 3 headline stat cards (this-month tokens, estimated cost, 👎 rate), the daily tokens bar chart (reuse the canvas/CSS-bar approach from `token-usage/page.tsx` — NO new charting dep), per-model cost table, top-users table, worst-rated-answers list. Month selector. Keep < 400 lines; extract `<TopUsersTable/>`, `<WorstAnswers/>`, `<PerModelCostTable/>` if it grows. |
+| `apps/web/components/layout/AdminShell.tsx` | 수정 | Add `{ href: '/admin/usage', cap: 'MANAGE_WORKSPACE', labelKey: 'navUsage', icon: ... }` to `ADMIN_SECTIONS`. |
+| `apps/web/messages/{en,vi,zh,ja,ko,es,fr}.json` | 수정 (×7) | New keys under `admin.*` (`navUsage`) and a new `usageDashboard.*` group (title, headline labels, perModelCost, topUsers, worstAnswers, thumbsDownRate, month, noData, loadError). Reuse existing `tokenUsage.*` strings where identical (inputTokens/outputTokens/estimatedCost). |
 
-### Mobile
-| 파일 | 변경 유형 | 설명 |
-|------|---------|------|
-| `apps/client/lib/features/chat/ui/widgets/conversation_customisation_dialogs.dart:50-93` | 수정 | Redesign `showNicknamesDialog()` into one centered `Dialog`: a column of participant rows (self + others), each = `ConversationAvatar` + real displayName + nickname text/placeholder + pencil `IconButton` toggling an inline `TextField`. Single dialog; single dismiss. |
-| `apps/client/lib/features/chat/ui/widgets/conversation_info_sidebar.dart:144-181` | 수정 | "Nicknames" entry now opens the redesigned modal (works for group too, not just direct). |
-| `apps/client/lib/features/chat/domain/chat_misc_providers.dart:67-103` | 변경없음 | `NicknamesNotifier.setNickname` reused; broadcast unchanged. |
-
-### i18n keys (add to all locales)
-- Web `apps/web/messages/*.json` (`chat` namespace): `editNicknames`, `nicknameNonePlaceholder`, `nicknameModalTitle`. Reuse existing `nicknameYou` / `nicknameOther` if helpful.
-- Flutter `apps/client/lib/l10n/app_*.arb` (all 7): `editNicknames`, `nicknameNonePlaceholder`, `nicknameModalTitle` → run `flutter gen-l10n`.
-
-### Edge cases
-- Group: list all members; fetching each member's profile (avatar+displayName) may need per-user `useUser` / `userProfileProvider` calls — render fallback letter while loading.
-- Empty nickname clears it (existing `writeNickname` deletes on blank).
-- Self row label should make clear it is "you".
+**Charting decision:** No charting library is installed (`recharts`/`chart.js`/`visx` all ABSENT in `package.json`). The existing `/token-usage` page draws bars on a raw `<canvas>`. Reuse that approach (or simple CSS flex bars) — do **NOT** add a heavy dependency for one admin page.
 
 ---
 
-## Issue 4 — Change Password: old-password field must start EMPTY
+### Mobile (Flutter — apps/client/)
 
-### Summary
-Web change-password "current password" field is being auto-filled by the browser password manager (no `autoComplete` attribute set → browser fills saved creds). Mobile code already starts empty (OS-level autofill only). Backend correct. **No backend change.**
-
-### Web
 | 파일 | 변경 유형 | 설명 |
 |------|---------|------|
-| `apps/web/components/chat/ChangePasswordDialog.tsx:123` (current-password `<Input>`) | 수정 | Add `autoComplete="new-password"` (most reliable to suppress autofill) or `autoComplete="off"` + `name`/`readOnly`-on-focus trick. New-password fields get `autoComplete="new-password"` too. |
-
-### Mobile
-| 파일 | 변경 유형 | 설명 |
-|------|---------|------|
-| `apps/client/lib/features/settings/ui/widgets/change_password_dialog.dart:146` | 확인/수정 | Controller already empty. If OS autofill prefills, set `autofillHints: const []` / `enableSuggestions:false` / `autocorrect:false` on the current-password field (verify `PonTextField` exposes these; extend if needed in `apps/client/lib/core/widgets/pon_widgets.dart`). |
-
-### Reference (no change)
-- `apps/server/auth-service/src/modules/users/users.controller.ts:54-64` — `POST /api/users/me/change-password` `{currentPassword, newPassword}`.
-
-### Sync checkpoint
-- Both platforms: old-password field starts empty, no autofill.
+| `apps/client/lib/core/api/dio_client.dart` | 수정 | Add `createAiDio(...)` (ai-service base URL) — no AI Dio exists today (only auth/chat/connector). |
+| `apps/client/lib/core/config/app_config.dart` | 수정 | Add `aiBaseUrl` (port 3002). |
+| `apps/client/lib/features/admin/data/models/usage_dashboard_models.dart` | 신규 | Dart models mirroring `DashboardResponse` (headline totals, top-users, per-model cost, worst answers). |
+| `apps/client/lib/features/admin/data/admin_repository.dart` (or new `usage_repository.dart`) | 수정/신규 | `getUsageDashboard({String? month})` via `aiDio.get('/usage/dashboard')`. |
+| `apps/client/lib/features/admin/state/usage_dashboard_provider.dart` | 신규 | `AsyncNotifierProvider` loading the dashboard. |
+| `apps/client/lib/features/admin/ui/widgets/usage_dashboard_panel.dart` | 신규 | **Minimal** read-only panel: headline numbers (this-month tokens, estimated cost, 👎 rate), top-5 users list, worst-5 answers list. **No charts** (web-primary; see D6). Neon theme, < 400 lines. |
+| `apps/client/lib/features/admin/ui/admin_screen.dart` | 수정 | Add a Usage section gated by `MANAGE_WORKSPACE` (mirror how AI Settings was added; `Cap.manageWorkspace`). |
+| `apps/client/lib/l10n/app_*.arb` (×7) | 수정 | Add the same keys as web (usageDashboard group). Run `flutter gen-l10n` (do NOT hand-edit generated files). |
 
 ---
-
-## Issue 5 — Group avatar change "does not work"
-
-### Summary
-Backend persists the group avatar correctly (`ConversationService.updateGroup` saves `avatarUrl`, admin-gated, broadcasts `CONVERSATION_UPDATED`). **The real bug is on Web display**: `POST /api/uploads` returns a **relative** URL `/api/uploads/<id>`, but web renders group avatars with a RAW `src` (no `absoluteMediaUrl`), so the image resolves against the web origin (404) and appears unchanged. Flutter resolves via `_absoluteUrl` so it works there. Secondary: only admins may change (UI already gates with `isAdmin`); a non-admin attempt 403s silently.
-
-### Root cause (verified)
-- `UploadController.java:63` → `url = "/api/uploads/" + objectId` (relative).
-- `GroupSettingsDrawer.tsx:176` → `<img src={conversation.avatarUrl}>` (raw relative).
-- `ConversationItem.tsx:160`, `ConversationHeader.tsx:117` → `<AvatarImage src={avatarUrl}>` (raw relative).
-- Flutter `conversation_avatar.dart:38` correctly wraps in `_absoluteUrl` → works on mobile.
-
-### Backend
-| 파일 | 변경 유형 | 설명 |
-|------|---------|------|
-| `apps/server/.../service/ConversationService.java:132-143` | 변경없음(확인) | Logic correct. Optionally also broadcast a `system.group.avatar.changed` system message for history. |
-| `apps/server/.../service/ConversationCacheService.java` | 확인 | Verify Redis cache is overwritten on `save()` so `getConversation` returns fresh avatar (agent flagged as unverified). |
-
-### Web
-| 파일 | 변경 유형 | 설명 |
-|------|---------|------|
-| `apps/web/components/chat/GroupSettingsDrawer.tsx:176` | 수정 | `<img src={conversation.avatarUrl}>` → `src={absoluteMediaUrl(conversation.avatarUrl)}`. |
-| `apps/web/components/chat/ConversationItem.tsx:160` | 수정 | Wrap in `absoluteMediaUrl` (shared with issue 1). |
-| `apps/web/components/chat/ConversationHeader.tsx:117` | 수정 | Wrap in `absoluteMediaUrl` (shared with issue 1). |
-| `apps/web/components/chat/GroupSettingsDrawer.tsx:133-147` | 확인 | Upload→update happy path correct; ensure error toast surfaces 403 (non-admin) distinctly. |
-
-### Mobile
-| 파일 | 변경 유형 | 설명 |
-|------|---------|------|
-| `apps/client/lib/features/chat/ui/group_info_screen.dart:227-244` | 확인 | Upload+update+invalidate correct. Confirm it listens to `CONVERSATION_UPDATED` so the new avatar appears without manual refresh. |
-
-### Edge cases
-- Non-admin change → backend 403; show a clear "admins only" message instead of generic error.
-- After change, `CONVERSATION_UPDATED` must refresh the conversation list tile + header on both platforms.
-
----
-
-## Issue 6 — Chat wallpaper must be SHARED per-conversation (incl. groups), not per-device
-
-### Summary
-Wallpaper is stored only in `localStorage` (web) / `shared_preferences` (flutter) and "synced" via a transient `system.theme.changed:` message. Other members don't persist it; on app restart it's lost. Fix = **persist wallpaper on the Conversation document** and distribute via the existing `PUT /api/conversations/{id}` + `CONVERSATION_UPDATED` path so all members share it.
-
-### Decision (data model)
-Add a `wallpaper` String field to the `Conversation` model. Reuse `UpdateConversationRequest` (add `wallpaper`) and the existing `updateGroup`/`PUT /{id}` endpoint — but allow ANY participant (not just admins) to set wallpaper for direct chats; for groups, decide admin-only vs any-member. **Recommendation: any participant may set conversation wallpaper** (it's a shared cosmetic; matches "shared across the whole conversation"). This needs a separate service method from `updateGroup` (which is admin-gated).
-
-### Backend
-| 파일 | 변경 유형 | 설명 |
-|------|---------|------|
-| `apps/server/.../model/Conversation.java` | 수정 | Add `private String wallpaper;` (null = default). |
-| `apps/server/.../dto/UpdateConversationRequest.java` | 수정 | `record UpdateConversationRequest(String name, String avatarUrl, String wallpaper)` OR add a dedicated `WallpaperRequest(String wallpaper)`. |
-| `apps/server/.../dto/ConversationResponse.java` | 수정 | Add `String wallpaper` to the record + backward-compat constructor. Populate in `toResponse(...)`. |
-| `apps/server/.../service/ConversationService.java` | 신규 | `setWallpaper(userId, convId, wallpaper)` — require participant membership (NOT admin), persist via `conversationCacheService.save`, return `toResponse`. |
-| `apps/server/.../controller/ConversationController.java` | 신규 | `PUT /api/conversations/{id}/wallpaper` body `{wallpaper}` → `setWallpaper` → `broadcastConversationUpdated(updated)`. |
 
 ### API Contract
-**Endpoint:** `PUT /api/conversations/{id}/wallpaper`
-- Request: `{ "wallpaper": string }`  (e.g. `"preset:midnight_glow"`, `"/api/uploads/<id>#fit=cover&scale=120"`, or `""` to reset)
-- Response: `ConversationResponse` (now including `wallpaper`)
-- Broadcast: STOMP `/topic/conversation/{id}` `{type:"CONVERSATION_UPDATED", conversation}` (existing).
 
-### Web
-| 파일 | 변경 유형 | 설명 |
-|------|---------|------|
-| `apps/web/lib/api/chat.ts` | 신규 | `setWallpaper(id, wallpaper) => chatApi.put('/api/conversations/'+id+'/wallpaper', {wallpaper})`. |
-| `apps/web/lib/api/types.ts` (`Conversation` ~line 116) | 수정 | Add `wallpaper: string | null`. |
-| `apps/web/components/chat/WallpaperPickerModal.tsx:91-102` | 수정 | Replace `localStorage.setItem` + `system.theme.changed` send with `chatService.setWallpaper(conversationId, value)`. Keep optimistic local apply via `wallpaper-changed` event. |
-| `apps/web/lib/hooks/use-wallpaper.ts:76-90` | 수정 | Read wallpaper from the conversation query (`conversation.wallpaper`) instead of `localStorage`. Re-resolve on `CONVERSATION_UPDATED`. Keep `resolveWallpaper` logic. |
-| `apps/web/app/(main)/conversations/[id]/page.tsx` (STOMP ~291) | 확인 | `CONVERSATION_UPDATED` already updates `['conversation', id]` cache → wallpaper refreshes for all members. |
+**Endpoint:** `GET /usage/dashboard` (ai-service, port 3002)
+**Auth:** `Authorization: Bearer <jwt>` → `JwtAuthGuard` + `RequirePermissionGuard` with `@RequirePermission(MANAGE_WORKSPACE)`. 401 if unauth; 403 `{ code: 'INSUFFICIENT_PERMISSION', required: 'MANAGE_WORKSPACE' }` if lacking cap.
 
-### Mobile
-| 파일 | 변경 유형 | 설명 |
-|------|---------|------|
-| `apps/client/lib/features/chat/data/chat_repository.dart` | 신규 | `setWallpaper(convId, wallpaper)` → `chatDio.put('/api/conversations/$convId/wallpaper', {wallpaper})`. |
-| `apps/client/lib/features/chat/domain/chat_models.dart` (`ConversationModel`) | 수정 | Add `wallpaper` field + JSON parse. |
-| `apps/client/lib/features/chat/domain/chat_misc_providers.dart:42-65` | 수정 | `ChatWallpaperNotifier` reads from the conversation model (server) rather than `shared_preferences`; updates on `CONVERSATION_UPDATED`. Keep optimistic local set. |
-| `apps/client/lib/features/chat/ui/widgets/chat_wallpaper_dialog.dart:153-169` | 수정 | Call `chatRepository.setWallpaper(...)` instead of (or in addition to) `setWallpaper` local + `system.theme.changed` send. |
-| `apps/client/lib/features/chat/domain/chat_system_message_parser.dart:30-35` | 수정 | Keep parsing `system.theme.changed:` for backward compat with old messages, but server value is now authoritative. |
+**Query params:**
+- `month` (string, optional) — `"YYYY-MM"`. If present, the window is that calendar month and `daily[]` covers its days. Defaults to current month.
+- `days` (number, optional) — alternative rolling window (e.g. `30`); if both given, `month` wins. Default 30 when `month` absent.
 
-### Data Model Changes
-- `Conversation.wallpaper: String` (new MongoDB field, nullable). Existing docs default null → resolves to default wallpaper. No migration required.
+**Response (`DashboardResponse`):**
+```jsonc
+{
+  "range": { "from": "2026-06-01", "to": "2026-06-30", "label": "2026-06" },
+  "totals": {
+    "inputTokens": 1840000,
+    "outputTokens": 642000,
+    "totalTokens": 2482000,
+    "requestCount": 1213,
+    "estimatedCostUsd": 12.47          // sum of perModelCost[].costUsd
+  },
+  "daily": [                            // for the over-time chart (token_usage rollup)
+    { "date": "2026-06-01", "inputTokens": 52000, "outputTokens": 18000, "totalTokens": 70000, "requestCount": 41 }
+    // ... one entry per day in range (zero-filled gaps, like the existing /api/usage/tokens)
+  ],
+  "perModelCost": [                     // from messages.trace grouped by model (D5)
+    {
+      "model": "claude-opus-4-8",
+      "inputTokens": 900000,
+      "outputTokens": 380000,
+      "requestCount": 210,
+      "inputPricePerMTok": 15.0,        // resolved from price map (echoed for transparency)
+      "outputPricePerMTok": 75.0,
+      "costUsd": 42.0                   // round(2)
+    }
+    // ... one per distinct model seen in window; unknown models use default prices
+  ],
+  "topUsers": [                         // token_usage grouped by userId, desc, top N (default 10)
+    { "userId": "665...", "displayName": "Alice", "totalTokens": 410000, "requestCount": 88, "estimatedCostUsd": 3.10 }
+    // displayName resolved via users collection join (best-effort; falls back to userId)
+  ],
+  "feedback": {
+    "up": 142,
+    "down": 17,
+    "total": 159,                       // rated messages with a non-cleared vote in window
+    "thumbsDownRate": 0.1069,           // down / total (0..1); 0 when total==0
+    "worstAnswers": [                   // most recent down-rated answers in window, limit 10
+      {
+        "messageId": "667...",
+        "conversationId": "661...",
+        "comment": "Wrong total, hallucinated the figure",  // may be null
+        "answerPreview": "The total is $4,210 ...",          // first ~200 chars of messages.content
+        "createdAt": "2026-06-21T08:14:00.000Z"
+      }
+    ]
+  }
+}
+```
 
-### Edge cases
-- Empty string / "default" resets to default for everyone.
-- Uploaded-image wallpapers: value stores relative `/api/uploads/...#fit=&scale=` — resolver already wraps via `absoluteMediaUrl` (web) / `_absoluteUrl` (flutter).
-- Backward compat: old `system.theme.changed:` messages still parse; new path is server-authoritative.
-- Decide group permission: recommended any-member can set (shared cosmetic). If product wants admin-only, gate `setWallpaper` like `requireGroupAdmin` for groups only.
+**Notes for implementers:**
+- `daily[]` reuses the exact same per-day shape the existing `/api/usage/tokens` returns, so the web chart code is reusable as-is.
+- `perModelCost[].costUsd = inputTokens/1e6 * inputPricePerMTok + outputTokens/1e6 * outputPricePerMTok`.
+- `feedback` window filters `ai_feedback.createdAt` within range; `worstAnswers` joins `messages` by `messageId` (string `_id` → ObjectId) for `answerPreview`.
+- `topUsers` and `totals.totalTokens`/`requestCount` come from `token_usage`; `perModelCost` (and `totals.estimatedCostUsd`) come from `messages.trace`. The two token totals can differ slightly (trace tokens are per-message; token_usage is a daily upsert that also counts non-trace usage) — so `totals.estimatedCostUsd` is defined as the sum of `perModelCost` (model-aware), while `totals.totalTokens` stays the authoritative volume figure. Document this in the response JSDoc.
 
 ---
 
-## Implementation Order
+### Data Model Changes
 
-1. **Backend first**
-   - Issue 6: `Conversation.wallpaper` field + `PUT /{id}/wallpaper` + `ConversationResponse.wallpaper` + service method.
-   - Issue 1 (optional push): `USER_UPDATED` broadcast hook (only if pursuing real-time peer refresh).
-   - Issue 5: verify `ConversationCacheService` invalidation (likely no change).
-2. **Web + Mobile in parallel** (mirror each change per `sync.md`)
-   - Issues 1 & 5 together (shared `absoluteMediaUrl`/`_absoluteUrl` avatar fix + cache invalidation).
-   - Issue 2 (remove user-info section).
-   - Issue 3 (nickname modal redesign) — keep client-local transport.
-   - Issue 4 (autocomplete off on current-password).
-   - Issue 6 client wiring (read wallpaper from conversation, save via new endpoint).
-3. **Verify**: `mvn test` (chat-service), `pnpm build` (web), `flutter analyze` + `flutter gen-l10n` (mobile). Cross-platform sync check on each issue.
+**No new collections. No schema writes.** All three sources already exist in shared Mongo `platform`:
+- `token_usage` — written by ai-service today (`UsageService.recordUsage`). Read-only here.
+- `messages` (+ `messages.trace.{model,inputTokens,outputTokens}`) — written by chat-service. ai-service adds a **read-only** `message.schema.ts`.
+- `ai_feedback` — written by chat-service (`AiFeedbackService`, `POST /api/messages/{id}/feedback`). ai-service adds a **read-only** `feedback.schema.ts`. (Shape confirmed from `AiFeedback.java`: `messageId, conversationId, userId, rating('up'|'down'), comment, createdAt, updatedAt`; "none" deletes the doc so only up/down persist.)
 
-## Cross-Platform Sync Checklist (per `sync.md`)
-- [ ] Avatar (issue 1/5): same `absoluteMediaUrl`/`_absoluteUrl` resolution + same invalidation on update; group + user avatars render on BOTH.
-- [ ] Conversation Info (issue 2): user-info removed on BOTH; pinned-only on BOTH.
-- [ ] Nickname modal (issue 3): same modal layout/behavior, self-nickname on BOTH, same `system.nickname.changed:` transport; i18n keys present in `messages/*.json` AND `app_*.arb`.
-- [ ] Password (issue 4): old field empty on BOTH.
-- [ ] Wallpaper (issue 6): `wallpaper` field consumed identically; `CONVERSATION_UPDATED` re-resolves wallpaper on BOTH; shared across all group members.
+**New config (env vars, `configuration.ts` `pricing` block):**
+```
+AI_PRICE_<MODEL>_IN   / AI_PRICE_<MODEL>_OUT    // USD per 1M tokens, per model
+AI_PRICE_DEFAULT_IN   (default 3)
+AI_PRICE_DEFAULT_OUT  (default 15)
+```
+Seed sensible defaults for the three router models (`claude-haiku-4-5`, `claude-sonnet-4-6`, `claude-opus-4-8`). Parser builds `{ [model]: { inputPerMTok, outputPerMTok } }`; unknown models fall back to the defaults. (Model id ↔ tier mapping confirmed from `configuration.ts` router block: simple=haiku-4-5, mid=sonnet-4-6, complex=opus-4-8.)
+
+Index check (read perf): if the model-cost aggregation over `messages` is slow at scale, add an **explicit** secondary index on `{ senderId: 1, createdAt: 1 }` — but defer unless QA shows latency, and create it explicitly (project memory flags the auto-index-creation trap in prod).
+
+---
+
+### Implementation Order
+1. **Backend (ai-service) first — blocks both clients.** Add `pricing` config → read-only `message`/`feedback` schemas → `cost-estimator.ts` (+unit test) → `dashboard.service.ts` → `usage.controller.ts` with the `MANAGE_WORKSPACE` gate → wire module + JWT/Permission guard (resolve B-note) → `pnpm build && pnpm test`. **Freeze the API Contract above before clients start.**
+2. **Web + Mobile in parallel** (both depend only on the frozen contract):
+   - Web: `aiApi` instance + `NEXT_PUBLIC_AI_URL` → `usage.ts` + types → `/admin/usage` page + dashboard component (reuse token-usage chart) → AdminShell section → i18n ×7. `pnpm build`.
+   - Mobile: `aiDio` + `aiBaseUrl` → models + repo + provider → minimal `usage_dashboard_panel.dart` + admin section entry → ARB ×7 + `flutter gen-l10n`. `flutter analyze`.
+3. **QA / sync-check:** verify both clients call the same `GET /usage/dashboard`, identical headline numbers, both gated by `MANAGE_WORKSPACE`, i18n keys present in all 7 locales on both platforms. Record the D6 web-primary deviation rationale in the QA report.
+
+---
+
+### Edge Cases
+- **No data in window** → all zeros, empty arrays, `thumbsDownRate: 0` (never NaN/division-by-zero). Both clients render an empty state.
+- **Model in `messages.trace` not in the price map** → use `AI_PRICE_DEFAULT_*`; still appears in `perModelCost` (cost never silently dropped).
+- **`messages.trace` absent on older AI messages** → excluded from `perModelCost` (filter `trace` exists) but their tokens still count in `token_usage` totals; handled by defining `totals.estimatedCostUsd` as the per-model sum.
+- **`ai_feedback` with `rating` cleared** → chat-service deletes the doc on "none", so only up/down rows exist; no special handling.
+- **`displayName` lookup miss** in `topUsers` (deleted user / bot) → fall back to `userId`; exclude `AI_BOT_USER_ID` from topUsers.
+- **Non-admin hits endpoint** → 403 `INSUFFICIENT_PERMISSION` (server gate is the real boundary; clients also hide the section via capability check).
+- **Large `messages` scan** for a busy month → bound by date range; add the `{senderId,createdAt}` index only if QA flags latency.
+- **`month` param malformed** → validate `^\d{4}-\d{2}$`; 400 on bad input, else fall back to `days`/current month.
+- **JWT lacks `perms` claim** (pre-enterprise token) → `RequirePermissionGuard` denies (403) — correct, matches existing admin endpoints.

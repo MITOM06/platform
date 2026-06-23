@@ -306,7 +306,9 @@
   "groupCallParticipants": "{count, plural, =1{1 participant} other{{count} participants}}",
   "@groupCallParticipants": {
     "placeholders": {
-      "count": { "type": "int" }
+      "count": {
+        "type": "int"
+      }
     }
   },
   "groupCallNotetakerActive": "AI is taking notes",
@@ -319,27 +321,35 @@
   "activeCallBanner": "Group call · {count} joined",
   "@activeCallBanner": {
     "placeholders": {
-      "count": { "type": "int" }
+      "count": {
+        "type": "int"
+      }
     }
   },
   "incomingGroupCallTitle": "Incoming group call",
   "incomingGroupCallBody": "{name} started a group call",
   "@incomingGroupCallBody": {
     "placeholders": {
-      "name": { "type": "String" }
+      "name": {
+        "type": "String"
+      }
     }
   },
   "meetingSummaryTitle": "Meeting summary",
   "meetingSummaryDuration": "Duration {duration}",
   "@meetingSummaryDuration": {
     "placeholders": {
-      "duration": { "type": "String" }
+      "duration": {
+        "type": "String"
+      }
     }
   },
   "meetingSummaryAttendees": "Attendees: {names}",
   "@meetingSummaryAttendees": {
     "placeholders": {
-      "names": { "type": "String" }
+      "names": {
+        "type": "String"
+      }
     }
   },
   "meetingSummaryOverview": "Overview",
@@ -950,6 +960,36 @@
   "adminNavMembers": "Members",
   "adminNavRoles": "Roles",
   "adminNavAudit": "Audit log",
+  "adminNavAi": "AI assistant",
+  "adminAiInheritHint": "Leave a field empty or set \"Inherit\" to use the server default.",
+  "adminAiInheritOption": "Inherit (default)",
+  "adminAiOn": "On",
+  "adminAiOff": "Off",
+  "adminAiPersonaSection": "Persona",
+  "adminAiPersonaName": "Default assistant name",
+  "adminAiTone": "Default tone",
+  "adminAiToneFriendly": "Friendly",
+  "adminAiToneProfessional": "Professional",
+  "adminAiToneConcise": "Concise",
+  "adminAiToneCreative": "Creative",
+  "adminAiModelSection": "Model",
+  "adminAiModelTier": "Default model tier",
+  "adminAiTierAuto": "Auto (router)",
+  "adminAiTierSimple": "Simple",
+  "adminAiTierMid": "Balanced",
+  "adminAiTierComplex": "Advanced",
+  "adminAiCapabilitiesSection": "Capabilities",
+  "adminAiWebSearch": "Web search",
+  "adminAiWebSearchDesc": "Allow the assistant to search the web.",
+  "adminAiThinking": "Extended thinking",
+  "adminAiThinkingDesc": "Allow the assistant to reason step by step.",
+  "adminAiQuotaSection": "Usage limit",
+  "adminAiTokenLimit": "Monthly token limit",
+  "adminAiTokenLimitDesc": "Leave empty to inherit; 0 blocks all usage.",
+  "adminAiConnectorsSection": "Allowed connectors",
+  "adminAiRestrictConnectors": "Restrict connectors for AI",
+  "adminAiConnectorsInherit": "Inheriting the workspace allow-list.",
+  "adminAiConnectorsExplicit": "AI may only use the connectors selected below.",
   "adminWsIdentity": "Identity & branding",
   "adminWsName": "Workspace name",
   "adminWsNamePlaceholder": "Acme Inc.",
@@ -1074,5 +1114,59 @@
   "editNicknames": "Edit nicknames",
   "nicknameModalTitle": "Nicknames",
   "nicknameNonePlaceholder": "No nickname",
-  "nicknameYouSuffix": "(you)"
+  "nicknameYouSuffix": "(you)",
+  "adminNavUsage": "Usage",
+  "usageThisMonth": "This month",
+  "usageTotalTokens": "Total tokens",
+  "usageRequests": "Requests",
+  "usageEstCost": "Estimated cost",
+  "usageThumbsDownRate": "Thumbs-down rate",
+  "usageFeedbackBreakdown": "{down} of {total} rated",
+  "@usageFeedbackBreakdown": {
+    "placeholders": {
+      "down": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "usagePerModelTitle": "Cost by model",
+  "usageModelTokens": "{input} in / {output} out · {requests} req",
+  "@usageModelTokens": {
+    "placeholders": {
+      "input": {
+        "type": "String"
+      },
+      "output": {
+        "type": "String"
+      },
+      "requests": {
+        "type": "String"
+      }
+    }
+  },
+  "usageTopUsersTitle": "Top users",
+  "usageUserRequests": "{count} requests",
+  "@usageUserRequests": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "usageWorstAnswersTitle": "Worst-rated answers",
+  "usageNoPreview": "(no answer preview)",
+  "usageUserComment": "“{comment}”",
+  "@usageUserComment": {
+    "placeholders": {
+      "comment": {
+        "type": "String"
+      }
+    }
+  },
+  "usageNoData": "No data for this period.",
+  "usageLoadError": "Could not load the usage dashboard.",
+  "usageRetry": "Retry"
 }

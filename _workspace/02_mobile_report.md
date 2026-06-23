@@ -1,51 +1,130 @@
-## Mobile Implementation Report — Avatar/Conversation UX Bug Cluster (6 issues)
+## Mobile Implementation Report — TASK-13 (Usage & Quality Dashboard, minimal read-only mirror)
 
-### 변경된 파일
+### What was built
+A minimal, read-only **Usage** panel in the existing Flutter admin console
+(`AdminScreen`), gated by the **existing** `MANAGE_WORKSPACE` capability via the
+existing `hasCapability` / section-filter pattern — placed right after the
+TASK-12 "AI Settings" panel (`Cap.manageWorkspace`). It fetches the SAME
+`GET /usage/dashboard` (ai-service, :3002) endpoint the web `/admin/usage` page
+uses and shows the same core metrics: this period's tokens & requests, estimated
+cost (total + per-model), top users, 👎 rate, and worst-rated answers. No charts
+(web-primary deviation D6) — simple Neon-themed cards/lists. Pull-to-refresh +
+retry on error.
 
-- `apps/client/lib/features/chat/domain/chat_models.dart` — `ConversationModel`에 `wallpaper` 필드 추가 (생성자/`fromJson`/`copyWith` + `clearWallpaper` 플래그). (이슈 6)
-- `apps/client/lib/features/chat/data/chat_repository.dart` — `setWallpaper(convId, wallpaper)` → `PUT /api/conversations/{id}/wallpaper`. (이슈 6)
-- `apps/client/lib/features/chat/domain/chat_misc_providers.dart`
-  - `ChatWallpaperNotifier` 재설계: shared_preferences → 서버 공유(Conversation 모델). 대화 목록의 `wallpaper`를 추적하는 파생 provider(`_conversationWallpaperProvider`)를 `ref.listen`으로 구독, 낙관적 적용 후 서버 값으로 reconcile. 레거시용 `applyRemote()` 추가. (이슈 6)
-  - `userProfileProvider` keepAlive 5분 → 60초로 단축(peer 아바타 갱신). (이슈 1)
-- `apps/client/lib/features/chat/ui/widgets/chat_wallpaper_dialog.dart` — `_confirm()`에서 `system.theme.changed:` 전송 제거, `setWallpaper`(서버 PUT)만 호출. (이슈 6)
-- `apps/client/lib/features/chat/domain/chat_system_message_parser.dart` — 레거시 `system.theme.changed:` 파싱은 유지하되 `setWallpaper`(PUT 발생) 대신 `applyRemote()`(로컬만) 호출. (이슈 6)
-- `apps/client/lib/features/chat/ui/widgets/conversation_info_sidebar.dart` — "Chat Details" ExpansionTile + `_buildChatDetailsContent` 헬퍼 제거, 미사용 `profileAsync` 파라미터 제거. Pinned/Customization/Media/Privacy만 유지. (이슈 2)
-- `apps/client/lib/features/chat/ui/widgets/conversation_customisation_dialogs.dart` — 닉네임 인라인 UI를 단일 중앙 모달(`_NicknamesModal` + `_NicknameRow`)로 교체. 본인 우선 정렬, 아바타 + 실제 이름(+"(you)"), 닉네임/placeholder + 연필 토글 인라인 편집. 본인 닉네임 설정 가능, 그룹/1:1 모두 동작. 전송은 기존 `system.nickname.changed:` 유지. (이슈 3)
-- `apps/client/lib/core/widgets/pon_widgets.dart` — `PonTextField`에 `autofillHints` 파라미터 추가. (이슈 4)
-- `apps/client/lib/features/settings/ui/widgets/change_password_dialog.dart` — 현재 비밀번호 필드에 `autofillHints: const []`로 OS 자동완성 차단. (이슈 4)
-- `apps/client/lib/l10n/app_{en,vi,zh,ja,ko,es,fr}.arb` — 신규 키 4개 추가 후 `flutter gen-l10n` 재생성.
+### 변경된 파일 (Files touched)
+- `apps/client/lib/core/config/app_config.dart` — **수정**. Added `aiBaseUrl`
+  (ai-service :3002; self-host routes via `/api/ai`, cloud uses the ai-service
+  Cloud Run URL), mirroring the existing auth/chat/connector pattern.
+- `apps/client/lib/core/api/dio_client.dart` — **수정**. Added `createAiDio(...)`
+  (dedicated ai-service Dio with the same JWT/refresh/network interceptors) +
+  `aiBaseUrl` getter. Never reuses chat/auth Dio (per the project footgun rule).
+- `apps/client/lib/features/admin/data/models/usage_dashboard_models.dart` —
+  **신규** (204 lines). Dart models for `DashboardResponse`: `UsageDashboard`,
+  `UsageRange`, `UsageTotals`, `PerModelCost`, `TopUser`, `WorstAnswer`,
+  `UsageFeedback`. Defensive parsing — every number defaults to 0, every list to
+  empty, nullable strings stay nullable; a sparse/empty payload never throws.
+- `apps/client/lib/features/admin/data/usage_repository.dart` — **신규**.
+  `UsageRepository.getDashboard({String? month})` → `aiDio.get('/usage/dashboard')`
+  with optional `month` query param. `usageRepositoryProvider` wires `createAiDio`
+  with `forceLogout`.
+- `apps/client/lib/features/admin/state/usage_dashboard_provider.dart` — **신규**.
+  `UsageDashboardNotifier extends AsyncNotifier<UsageDashboard>` (current month)
+  with `refresh()`.
+- `apps/client/lib/features/admin/ui/widgets/usage_dashboard_panel.dart` — **신규**
+  (155 lines). `ConsumerWidget` with `AsyncValue.when` loading/error/data; range
+  label, 4 headline stat cards, and the three sections.
+- `apps/client/lib/features/admin/ui/widgets/usage_dashboard_widgets.dart` — **신규**
+  (265 lines). Extracted sub-widgets (per-model cost list, top-users list,
+  worst-answers cards, stat card, empty row, formatters) — split out to keep
+  every file under the 400-line limit (panel was 424 before the split).
+- `apps/client/lib/features/admin/ui/admin_screen.dart` — **수정**. Added the
+  Usage section (`Cap.manageWorkspace`, `Icons.insights_outlined`,
+  `c.l10n.adminNavUsage`, `UsageDashboardPanel`) after AI Settings.
+- `apps/client/lib/l10n/app_{en,vi,zh,ja,ko,es,fr}.arb` — **수정 (×7)**. +17 keys
+  each (en is the template, with placeholder metadata). Ran `flutter gen-l10n` →
+  regenerated `app_localizations*.dart` (not hand-edited).
 
-### 이슈별 처리 요약
+### Metrics shown (parity with web)
+| Metric | Source field | Mobile render |
+|--------|-------------|---------------|
+| This period label | `range.label` | Header chip (falls back to "This month") |
+| Total tokens | `totals.totalTokens` | Headline stat card |
+| Requests | `totals.requestCount` | Headline stat card |
+| Estimated cost | `totals.estimatedCostUsd` | Headline stat card (`$x.xx`) |
+| 👎 rate | `feedback.thumbsDownRate` + `down`/`total` | Headline stat card (`%`, red ≥20%, breakdown subtitle) |
+| Cost by model | `perModelCost[]` | List: model · cost · in/out/req tokens |
+| Top users | `topUsers[]` (top 5) | Ranked list: name/userId · tokens · requests |
+| Worst answers | `feedback.worstAnswers[]` (top 5) | Cards: answer preview + optional comment |
 
-- **이슈 1 (아바타 동기화):** 백엔드 조사 결과 아바타 업로드는 매번 고유 GridFS objectId(`/api/uploads/<id>`)를 반환 → URL 자체가 변경되어 `CachedNetworkImage`/resolver 레벨 cache-busting이 자동. 별도의 volatile `?t=` 부착은 캐싱을 무력화하므로 미적용(계획서 권고와 일치). peer 갱신 지연 원인이던 `userProfileProvider` 5분 캐시를 60초로 단축. 본인 변경은 기존 `auth_provider.updateProfile`의 `userProfileProvider` invalidate + auth state 갱신으로 즉시 반영(확인). `USER_UPDATED` 백엔드 push는 미존재 → 계획서대로 선택 항목이라 미구현.
-- **이슈 2 (사이드바):** 상대방 사용자 정보(bio/DOB/멤버수) 아코디언 제거 완료. Pinned Messages 섹션 유지.
-- **이슈 3 (닉네임):** 중앙 모달 재설계 완료. Web `NicknamesModal.tsx`와 동일 UX(본인+상대, 아바타+실명, 닉네임/placeholder, 연필 편집). 공유 i18n 키(`nicknameModalTitle`, `nicknameNonePlaceholder`) 이름 일치.
-- **이슈 4 (비밀번호):** 모바일 컨트롤러는 이미 빈 칸 시작. 추가로 현재 비밀번호 필드 OS 자동완성 차단(`autofillHints: const []`).
-- **이슈 5 (그룹 아바타):** Flutter `ConversationAvatar`가 `_absoluteUrl`로 이미 처리, CONVERSATION_UPDATED가 목록/헤더 갱신 → 고유 URL 덕분에 변경 즉시 반영. 코드 변경 불필요(확인).
-- **이슈 6 (wallpaper):** shared_preferences 전용 → 서버 공유로 전환. `PUT /api/conversations/{id}/wallpaper` + `Conversation.wallpaper` + CONVERSATION_UPDATED. 백엔드/웹과 엔드포인트·바디(`{wallpaper}`)·필드명 완전 일치 확인.
+Web is primary (it additionally has the daily bar chart and month selector). Per
+plan **D6**, mobile intentionally omits charts and the month selector and caps
+top-users / worst-answers at 5 (web shows up to 10) — this is the explicitly
+accepted sync-rule deviation for an admin/ops dashboard (not a chat/STOMP
+surface). The headline numbers come from the identical endpoint, so they match.
 
-### flutter analyze 결과
+### Contract conformance
+- Calls `GET /usage/dashboard` on ai-service exactly as the frozen contract in
+  `01_plan.md` (Auth: `Bearer <jwt>`; optional `month=YYYY-MM`; defaults to
+  current month). Same endpoint the web dashboard uses.
+- Parses every contract field: `range.{from,to,label}`,
+  `totals.{inputTokens,outputTokens,totalTokens,requestCount,estimatedCostUsd}`,
+  `perModelCost[].{model,inputTokens,outputTokens,requestCount,inputPricePerMTok,outputPricePerMTok,costUsd}`,
+  `topUsers[].{userId,displayName,totalTokens,requestCount,estimatedCostUsd}`,
+  `feedback.{up,down,total,thumbsDownRate,worstAnswers[]}`,
+  `worstAnswers[].{messageId,conversationId,comment,answerPreview,createdAt}`.
+- `topUsers` displayName falls back to `userId` (contract note). Empty window →
+  zeros + empty lists + `0%` 👎 rate (no NaN), rendered as a clean empty state.
+- Gated by `MANAGE_WORKSPACE` (client section filter + server gate).
 
-- issues: **0** (`No issues found!`)
-- `flutter gen-l10n` 정상 (l10n.yaml 사용)
+### i18n 추가 키 (17 keys × 7 locales)
+- `adminNavUsage`: "Usage"
+- `usageThisMonth`: "This month"
+- `usageTotalTokens`: "Total tokens"
+- `usageRequests`: "Requests"
+- `usageEstCost`: "Estimated cost"
+- `usageThumbsDownRate`: "Thumbs-down rate"
+- `usageFeedbackBreakdown(down, total)`: "{down} of {total} rated"
+- `usagePerModelTitle`: "Cost by model"
+- `usageModelTokens(input, output, requests)`: "{input} in / {output} out · {requests} req"
+- `usageTopUsersTitle`: "Top users"
+- `usageUserRequests(count)`: "{count} requests"
+- `usageWorstAnswersTitle`: "Worst-rated answers"
+- `usageNoPreview`: "(no answer preview)"
+- `usageUserComment(comment)`: "“{comment}”"
+- `usageNoData`: "No data for this period."
+- `usageLoadError`: "Could not load the usage dashboard."
+- `usageRetry`: "Retry"
 
-### i18n 추가 키 (7개 로케일 전부)
+All 17 added to **all 7 locales** (en/vi/zh/ja/ko/es/fr) with native translations
+— no English fallthrough. `flutter gen-l10n` succeeded; generated
+`app_localizations*.dart` not hand-edited.
 
-- `editNicknames`: "Edit nicknames"
-- `nicknameModalTitle`: "Nicknames"
-- `nicknameNonePlaceholder`: "No nickname"
-- `nicknameYouSuffix`: "(you)"
+### analyze + test results (exact)
+- `cd apps/client && flutter analyze` → **No issues found!** (0 issues)
+- `flutter test` → **All tests passed!** — 47 tests (+47). Full suite run (not just
+  analyze, per the instruction). No new test added for this read-only UI-only
+  mirror; logic lives in the defensively-parsed models and existing widgets.
 
-### Web과의 동기화 포인트
+### File-length compliance
+- `usage_dashboard_panel.dart`: 155 · `usage_dashboard_widgets.dart`: 265 ·
+  `usage_dashboard_models.dart`: 204 — all < 400.
 
-- **이슈 6 wallpaper:** 모바일/웹/백엔드 모두 `PUT /api/conversations/{id}/wallpaper`, body `{wallpaper}`, 응답 `Conversation.wallpaper`, CONVERSATION_UPDATED 브로드캐스트로 일치. 빈 문자열 = 기본값 리셋(전원 공유). 업로드 이미지 값(`...#fit=&scale=`)은 양 플랫폼 resolver(`absoluteMediaUrl`/`_absoluteUrl`)가 동일 처리.
-- **이슈 3 nickname:** 웹 `NicknamesModal.tsx`와 동일 레이아웃/동작. 공유 키 `nicknameModalTitle`, `nicknameNonePlaceholder` 이름 일치. 전송은 양쪽 동일하게 `system.nickname.changed:<userId>:<nickname>` 유지(서버 미저장 client-local).
-- **이슈 2:** 사용자 정보 섹션을 양 플랫폼에서 제거, Pinned Messages만 유지.
-- **이슈 1/5 avatar:** 양 플랫폼 동일한 상대경로 resolver 사용. 업로드 고유 URL로 cache-busting 자동, peer 캐시 단축으로 갱신.
-
-### 주의사항
-
-- `chatWallpaperProvider`(family, non-autoDispose)가 `_conversationWallpaperProvider`(autoDispose)를 `ref.listen`으로 유지. 대화 목록(`conversationsNotifierProvider`)이 CONVERSATION_UPDATED로 갱신되면 wallpaper가 자동 reconcile됨.
-- 레거시 `system.theme.changed:` 메시지는 backward-compat로 계속 파싱하되 서버 재기록 없이 로컬에만 적용(`applyRemote`). 신규 경로(서버)가 authoritative.
-- `chat_misc_providers.dart` ↔ `conversations_notifier.dart` 상호 import 발생(Dart 허용). analyze 통과.
-- `chatInfoCategory`/`membersCount` ARB 키는 모바일에서 미사용이 되었으나 다른 화면 영향 가능성으로 ARB에서 삭제하지 않음(무해).
+### 주의사항 (Notes)
+- **Stale workspace reports**: `_workspace/02_backend_report.md` and
+  `02_web_report.md` are both TASK-12 reports; the TASK-13 `/usage/dashboard`
+  endpoint does NOT yet exist in `apps/server/ai-service/src/usage/`. I therefore
+  implemented strictly against the **frozen contract in `01_plan.md`** (as the
+  task instructs when no TASK-13 backend report is present). When the backend
+  lands, no mobile change should be needed if it honors the frozen shape.
+- **Base URL**: added a dedicated `aiBaseUrl` + `createAiDio` per the plan. (The
+  existing `ai_memory_repository.dart` reaches `/api/ai/...` via chatDio :8080;
+  TASK-13 deliberately uses the ai-service base directly per the plan, matching
+  the web `aiApi` instance decision.) Self-host (`PON_DOMAIN`) routes via
+  `/api/ai`; cloud uses the ai-service Cloud Run URL.
+- **Sync (D6)**: documented above — mobile is a minimal read-only mirror; the
+  intentional deltas (no chart, no month selector, top-5 caps) are the accepted
+  web-primary deviation, not P1 sync gaps (admin/ops view, not a chat/STOMP
+  message surface).
+- **ARB reformat**: the JSON writer pretty-printed two pre-existing placeholder
+  blocks from one-line to multi-line (semantically identical JSON, valid ARB) —
+  no key values changed.

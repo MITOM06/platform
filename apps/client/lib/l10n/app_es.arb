@@ -185,7 +185,9 @@
   "groupCallParticipants": "{count, plural, =1{1 participante} other{{count} participantes}}",
   "@groupCallParticipants": {
     "placeholders": {
-      "count": { "type": "int" }
+      "count": {
+        "type": "int"
+      }
     }
   },
   "groupCallNotetakerActive": "La IA está tomando notas",
@@ -198,27 +200,35 @@
   "activeCallBanner": "Llamada grupal · {count} unidos",
   "@activeCallBanner": {
     "placeholders": {
-      "count": { "type": "int" }
+      "count": {
+        "type": "int"
+      }
     }
   },
   "incomingGroupCallTitle": "Llamada grupal entrante",
   "incomingGroupCallBody": "{name} inició una llamada grupal",
   "@incomingGroupCallBody": {
     "placeholders": {
-      "name": { "type": "String" }
+      "name": {
+        "type": "String"
+      }
     }
   },
   "meetingSummaryTitle": "Resumen de la reunión",
   "meetingSummaryDuration": "Duración {duration}",
   "@meetingSummaryDuration": {
     "placeholders": {
-      "duration": { "type": "String" }
+      "duration": {
+        "type": "String"
+      }
     }
   },
   "meetingSummaryAttendees": "Asistentes: {names}",
   "@meetingSummaryAttendees": {
     "placeholders": {
-      "names": { "type": "String" }
+      "names": {
+        "type": "String"
+      }
     }
   },
   "meetingSummaryOverview": "Resumen",
@@ -682,6 +692,36 @@
   "adminNavMembers": "Miembros",
   "adminNavRoles": "Roles",
   "adminNavAudit": "Registro de auditoría",
+  "adminNavAi": "Asistente de IA",
+  "adminAiInheritHint": "Deja un campo vacío o elige \"Heredar\" para usar el valor predeterminado del servidor.",
+  "adminAiInheritOption": "Heredar (predeterminado)",
+  "adminAiOn": "Activado",
+  "adminAiOff": "Desactivado",
+  "adminAiPersonaSection": "Personalidad",
+  "adminAiPersonaName": "Nombre predeterminado del asistente",
+  "adminAiTone": "Tono predeterminado",
+  "adminAiToneFriendly": "Amigable",
+  "adminAiToneProfessional": "Profesional",
+  "adminAiToneConcise": "Conciso",
+  "adminAiToneCreative": "Creativo",
+  "adminAiModelSection": "Modelo",
+  "adminAiModelTier": "Nivel de modelo predeterminado",
+  "adminAiTierAuto": "Automático (enrutador)",
+  "adminAiTierSimple": "Simple",
+  "adminAiTierMid": "Equilibrado",
+  "adminAiTierComplex": "Avanzado",
+  "adminAiCapabilitiesSection": "Capacidades",
+  "adminAiWebSearch": "Búsqueda web",
+  "adminAiWebSearchDesc": "Permitir que el asistente busque en la web.",
+  "adminAiThinking": "Pensamiento extendido",
+  "adminAiThinkingDesc": "Permitir que el asistente razone paso a paso.",
+  "adminAiQuotaSection": "Límite de uso",
+  "adminAiTokenLimit": "Límite mensual de tokens",
+  "adminAiTokenLimitDesc": "Déjalo vacío para heredar; 0 bloquea todo el uso.",
+  "adminAiConnectorsSection": "Conectores permitidos",
+  "adminAiRestrictConnectors": "Restringir conectores para la IA",
+  "adminAiConnectorsInherit": "Heredando la lista permitida del espacio de trabajo.",
+  "adminAiConnectorsExplicit": "La IA solo puede usar los conectores seleccionados abajo.",
   "adminWsIdentity": "Identidad y marca",
   "adminWsName": "Nombre del espacio",
   "adminWsNamePlaceholder": "Acme S.A.",
@@ -792,5 +832,22 @@
   "editNicknames": "Editar apodos",
   "nicknameModalTitle": "Apodos",
   "nicknameNonePlaceholder": "Sin apodo",
-  "nicknameYouSuffix": "(tú)"
+  "nicknameYouSuffix": "(tú)",
+  "adminNavUsage": "Uso",
+  "usageThisMonth": "Este mes",
+  "usageTotalTokens": "Tokens totales",
+  "usageRequests": "Solicitudes",
+  "usageEstCost": "Coste estimado",
+  "usageThumbsDownRate": "Tasa de pulgares abajo",
+  "usageFeedbackBreakdown": "{down} de {total} valoradas",
+  "usagePerModelTitle": "Coste por modelo",
+  "usageModelTokens": "{input} ent. / {output} sal. · {requests} sol.",
+  "usageTopUsersTitle": "Usuarios principales",
+  "usageUserRequests": "{count} solicitudes",
+  "usageWorstAnswersTitle": "Respuestas peor valoradas",
+  "usageNoPreview": "(sin vista previa de la respuesta)",
+  "usageUserComment": "«{comment}»",
+  "usageNoData": "No hay datos para este periodo.",
+  "usageLoadError": "No se pudo cargar el panel de uso.",
+  "usageRetry": "Reintentar"
 }

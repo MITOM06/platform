@@ -1850,6 +1850,96 @@ class AppLocalizationsJa extends AppLocalizations {
   String get adminNavAudit => '監査ログ';
 
   @override
+  String get adminNavAi => 'AI アシスタント';
+
+  @override
+  String get adminAiInheritHint => '空欄または「継承」でサーバー既定値を使用します。';
+
+  @override
+  String get adminAiInheritOption => '継承（既定）';
+
+  @override
+  String get adminAiOn => 'オン';
+
+  @override
+  String get adminAiOff => 'オフ';
+
+  @override
+  String get adminAiPersonaSection => 'ペルソナ';
+
+  @override
+  String get adminAiPersonaName => '既定のアシスタント名';
+
+  @override
+  String get adminAiTone => '既定のトーン';
+
+  @override
+  String get adminAiToneFriendly => 'フレンドリー';
+
+  @override
+  String get adminAiToneProfessional => 'プロフェッショナル';
+
+  @override
+  String get adminAiToneConcise => '簡潔';
+
+  @override
+  String get adminAiToneCreative => '創造的';
+
+  @override
+  String get adminAiModelSection => 'モデル';
+
+  @override
+  String get adminAiModelTier => '既定のモデルティア';
+
+  @override
+  String get adminAiTierAuto => '自動（ルーター）';
+
+  @override
+  String get adminAiTierSimple => 'シンプル';
+
+  @override
+  String get adminAiTierMid => 'バランス';
+
+  @override
+  String get adminAiTierComplex => '高度';
+
+  @override
+  String get adminAiCapabilitiesSection => '機能';
+
+  @override
+  String get adminAiWebSearch => 'ウェブ検索';
+
+  @override
+  String get adminAiWebSearchDesc => 'アシスタントによるウェブ検索を許可します。';
+
+  @override
+  String get adminAiThinking => '拡張思考';
+
+  @override
+  String get adminAiThinkingDesc => 'アシスタントの段階的な推論を許可します。';
+
+  @override
+  String get adminAiQuotaSection => '使用上限';
+
+  @override
+  String get adminAiTokenLimit => '月間トークン上限';
+
+  @override
+  String get adminAiTokenLimitDesc => '空欄で継承。0 ですべての使用を遮断します。';
+
+  @override
+  String get adminAiConnectorsSection => '許可するコネクタ';
+
+  @override
+  String get adminAiRestrictConnectors => 'AI のコネクタを制限';
+
+  @override
+  String get adminAiConnectorsInherit => 'ワークスペースの許可リストを継承します。';
+
+  @override
+  String get adminAiConnectorsExplicit => 'AI は下で選択したコネクタのみ使用できます。';
+
+  @override
   String get adminWsIdentity => 'アイデンティティとブランディング';
 
   @override
@@ -2150,4 +2240,63 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get nicknameYouSuffix => '（あなた）';
+
+  @override
+  String get adminNavUsage => '使用状況';
+
+  @override
+  String get usageThisMonth => '今月';
+
+  @override
+  String get usageTotalTokens => '合計トークン';
+
+  @override
+  String get usageRequests => 'リクエスト数';
+
+  @override
+  String get usageEstCost => '推定コスト';
+
+  @override
+  String get usageThumbsDownRate => '低評価率';
+
+  @override
+  String usageFeedbackBreakdown(int down, int total) {
+    return '$total 件中 $down 件';
+  }
+
+  @override
+  String get usagePerModelTitle => 'モデル別コスト';
+
+  @override
+  String usageModelTokens(String input, String output, String requests) {
+    return '入力 $input / 出力 $output · $requests 件';
+  }
+
+  @override
+  String get usageTopUsersTitle => '上位ユーザー';
+
+  @override
+  String usageUserRequests(int count) {
+    return '$count 件のリクエスト';
+  }
+
+  @override
+  String get usageWorstAnswersTitle => '低評価の回答';
+
+  @override
+  String get usageNoPreview => '（回答プレビューなし）';
+
+  @override
+  String usageUserComment(String comment) {
+    return '「$comment」';
+  }
+
+  @override
+  String get usageNoData => 'この期間のデータはありません。';
+
+  @override
+  String get usageLoadError => '使用状況ダッシュボードを読み込めませんでした。';
+
+  @override
+  String get usageRetry => '再試行';
 }

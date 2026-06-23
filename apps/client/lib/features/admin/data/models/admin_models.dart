@@ -134,6 +134,54 @@ class WorkspaceSso {
       };
 }
 
+/// Admin-editable workspace-level AI defaults (TASK-12). Every field is nullable
+/// and `null` means "inherit env/default" — an unset field never overrides the
+/// ai-service env fallback. `allowedConnectors`: `null` = inherit
+/// `connectorAllowList`; `[]` = allow no connectors; `[...]` = explicit subset.
+/// Mirrors the web `WorkspaceAiSettings` and the shared `Workspace.aiSettings`
+/// sub-document. Rides on the existing `GET/PATCH /admin/workspace` contract.
+@immutable
+class WorkspaceAiSettings {
+  /// Allowed model tiers (`null`/'auto' ⇒ env router).
+  static const tones = <String>['friendly', 'professional', 'concise', 'creative'];
+  static const modelTiers = <String>['auto', 'simple', 'mid', 'complex'];
+
+  final String? personaName;
+  final String? defaultTone;
+  final String? modelTier;
+  final bool? webSearchEnabled;
+  final bool? thinkingEnabled;
+  final int? monthlyTokenLimit;
+  final List<String>? allowedConnectors;
+
+  const WorkspaceAiSettings({
+    this.personaName,
+    this.defaultTone,
+    this.modelTier,
+    this.webSearchEnabled,
+    this.thinkingEnabled,
+    this.monthlyTokenLimit,
+    this.allowedConnectors,
+  });
+
+  factory WorkspaceAiSettings.fromJson(Map<String, dynamic>? json) {
+    final j = json ?? const {};
+    return WorkspaceAiSettings(
+      personaName: j['personaName'] as String?,
+      defaultTone: j['defaultTone'] as String?,
+      modelTier: j['modelTier'] as String?,
+      webSearchEnabled: j['webSearchEnabled'] as bool?,
+      thinkingEnabled: j['thinkingEnabled'] as bool?,
+      monthlyTokenLimit: (j['monthlyTokenLimit'] as num?)?.toInt(),
+      // Distinguish absent (null = inherit) from explicit [] (allow none).
+      allowedConnectors: j.containsKey('allowedConnectors') &&
+              j['allowedConnectors'] != null
+          ? _stringList(j['allowedConnectors'])
+          : null,
+    );
+  }
+}
+
 class Workspace {
   final String id;
   final String name;
@@ -142,6 +190,7 @@ class Workspace {
   final Map<String, bool> features;
   final List<String> connectorAllowList;
   final WorkspaceSso sso;
+  final WorkspaceAiSettings aiSettings;
 
   const Workspace({
     required this.id,
@@ -151,6 +200,7 @@ class Workspace {
     required this.features,
     required this.connectorAllowList,
     this.sso = const WorkspaceSso(),
+    this.aiSettings = const WorkspaceAiSettings(),
   });
 
   factory Workspace.fromJson(Map<String, dynamic> json) => Workspace(
@@ -161,6 +211,9 @@ class Workspace {
         features: _boolMap(json['features']),
         connectorAllowList: _stringList(json['connectorAllowList']),
         sso: WorkspaceSso.fromJson(json['sso'] as Map<String, dynamic>?),
+        aiSettings: WorkspaceAiSettings.fromJson(
+          json['aiSettings'] as Map<String, dynamic>?,
+        ),
       );
 }
 

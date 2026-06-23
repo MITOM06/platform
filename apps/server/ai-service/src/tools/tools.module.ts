@@ -6,6 +6,10 @@ import { GetUserInfoTool } from './get-user-info.tool';
 import { SearchKnowledgeBaseTool } from './search-knowledge-base.tool';
 import { SummarizeConversationTool } from './summarize-conversation.tool';
 import { CreateReminderTool } from './create-reminder.tool';
+import { WebSearchTool } from './web-search.tool';
+import { WebSearchService } from './web-search/web-search.service';
+import { GenericSearchProvider } from './web-search/generic-search.provider';
+import { AnthropicWebSearchProvider } from './web-search/anthropic-web-search.provider';
 import { McpConnectorClient } from './mcp-connector.client';
 import { ToolRegistryService } from './tool-registry.service';
 import { ToolResultCacheService } from './tool-result-cache.service';
@@ -25,6 +29,10 @@ const reminderFeature = MongooseModule.forFeature([
     SearchKnowledgeBaseTool,
     SummarizeConversationTool,
     CreateReminderTool,
+    WebSearchTool,
+    WebSearchService,
+    GenericSearchProvider,
+    AnthropicWebSearchProvider,
     McpConnectorClient,
     ToolResultCacheService,
     ToolRegistryService,

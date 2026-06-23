@@ -1,6 +1,8 @@
 import {
   BadRequestException,
+  Inject,
   Injectable,
+  Logger,
   NotFoundException,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
@@ -14,6 +16,8 @@ import {
   RoleDocument,
   User,
   UserDocument,
+  Redis,
+  REDIS_CLIENT,
 } from '@platform/database';
 import { SessionService } from '../auth/session.service';
 import { AuditService } from '../audit/audit.service';
@@ -31,8 +35,13 @@ import { UpdateWorkspaceDto } from './dto/workspace.dto';
  * controller via @RequirePermission; this service enforces invariants (Owner
  * role immutable, revoke sessions on membership change).
  */
+/** Redis channel ai-service subscribes to so it drops its cached AI settings. */
+export const AI_SETTINGS_INVALIDATE_CHANNEL = 'ai:settings:invalidate';
+
 @Injectable()
 export class AdminService {
+  private readonly logger = new Logger(AdminService.name);
+
   constructor(
     @InjectModel(Workspace.name)
     private readonly workspaceModel: Model<WorkspaceDocument>,
@@ -42,6 +51,7 @@ export class AdminService {
     @InjectModel(User.name) private readonly userModel: Model<UserDocument>,
     private readonly session: SessionService,
     private readonly audit: AuditService,
+    @Inject(REDIS_CLIENT) private readonly redis: Redis,
   ) {}
 
   // ===================== DEPARTMENTS =====================
@@ -177,11 +187,35 @@ export class AdminService {
     return this.workspaceModel.findOne().exec();
   }
 
-  /** Upsert the singleton workspace (one doc per deployment). */
+  /**
+   * Upsert the singleton workspace (one doc per deployment).
+   *
+   * `aiSettings` (TASK-12) is DEEP-MERGED via dot-path `$set` so a partial patch
+   * never wipes sibling fields — a naive `$set: { aiSettings: {...partial} }`
+   * would replace the whole sub-doc. On a successful save that touched
+   * `aiSettings`, an invalidation message is published on
+   * `ai:settings:invalidate` so ai-service drops its cache (next AI request
+   * reloads). A 60s TTL on the ai-service side is the safety net if the publish
+   * is ever missed.
+   */
   async updateWorkspace(actorId: string, dto: UpdateWorkspaceDto) {
+    const { aiSettings, ...rest } = dto;
+
+    // Build a flat $set: top-level fields as-is, aiSettings keys as dot-paths so
+    // unspecified aiSettings fields are preserved (deep-merge semantics).
+    const set: Record<string, unknown> = { ...rest };
+    if (aiSettings !== undefined) {
+      await this.validateAiSettings(aiSettings);
+      for (const [key, value] of Object.entries(aiSettings)) {
+        if (value === undefined) continue; // skip absent keys; null is meaningful
+        set[`aiSettings.${key}`] = value;
+      }
+    }
+
     const ws = await this.workspaceModel
-      .findOneAndUpdate({}, { $set: dto }, { new: true, upsert: true })
+      .findOneAndUpdate({}, { $set: set }, { new: true, upsert: true })
       .exec();
+
     await this.audit.record({
       actorId,
       action: 'workspace.update',
@@ -189,7 +223,49 @@ export class AdminService {
       targetId: ws?._id?.toString(),
       meta: { changes: dto },
     });
+
+    if (aiSettings !== undefined) {
+      try {
+        await this.redis.publish(
+          AI_SETTINGS_INVALIDATE_CHANNEL,
+          JSON.stringify({ reason: 'workspace.update' }),
+        );
+      } catch (err) {
+        // Non-fatal: the ai-service TTL safety net still converges within 60s.
+        this.logger.warn(
+          `Failed to publish ${AI_SETTINGS_INVALIDATE_CHANNEL}: ${(err as Error).message}`,
+        );
+      }
+    }
+
     return ws;
+  }
+
+  /**
+   * Validate AI connector allow-list against the OUTER workspace boundary: the
+   * AI list can only NARROW `connectorAllowList`, never widen it. `null` (inherit)
+   * and `[]` (allow none) are always valid.
+   */
+  private async validateAiSettings(
+    aiSettings: UpdateWorkspaceDto['aiSettings'],
+  ): Promise<void> {
+    const allowed = aiSettings?.allowedConnectors;
+    if (!Array.isArray(allowed) || allowed.length === 0) return;
+
+    const ws = await this.workspaceModel
+      .findOne({}, { connectorAllowList: 1 })
+      .lean()
+      .exec();
+    const outer = new Set(ws?.connectorAllowList ?? []);
+    const offenders = allowed.filter((c) => !outer.has(c));
+    if (offenders.length > 0) {
+      throw new BadRequestException({
+        code: 'AI_CONNECTORS_NOT_IN_ALLOW_LIST',
+        message:
+          `allowedConnectors must be a subset of connectorAllowList. ` +
+          `Not allowed: ${offenders.join(', ')}`,
+      });
+    }
   }
 
   // ===================== AUDIT =====================

@@ -185,7 +185,9 @@
   "groupCallParticipants": "{count, plural, =1{1 名参与者} other{{count} 名参与者}}",
   "@groupCallParticipants": {
     "placeholders": {
-      "count": { "type": "int" }
+      "count": {
+        "type": "int"
+      }
     }
   },
   "groupCallNotetakerActive": "AI 正在记录",
@@ -198,27 +200,35 @@
   "activeCallBanner": "群组通话 · {count} 人已加入",
   "@activeCallBanner": {
     "placeholders": {
-      "count": { "type": "int" }
+      "count": {
+        "type": "int"
+      }
     }
   },
   "incomingGroupCallTitle": "来电：群组通话",
   "incomingGroupCallBody": "{name} 发起了群组通话",
   "@incomingGroupCallBody": {
     "placeholders": {
-      "name": { "type": "String" }
+      "name": {
+        "type": "String"
+      }
     }
   },
   "meetingSummaryTitle": "会议摘要",
   "meetingSummaryDuration": "时长 {duration}",
   "@meetingSummaryDuration": {
     "placeholders": {
-      "duration": { "type": "String" }
+      "duration": {
+        "type": "String"
+      }
     }
   },
   "meetingSummaryAttendees": "参与者：{names}",
   "@meetingSummaryAttendees": {
     "placeholders": {
-      "names": { "type": "String" }
+      "names": {
+        "type": "String"
+      }
     }
   },
   "meetingSummaryOverview": "概述",
@@ -682,6 +692,36 @@
   "adminNavMembers": "成员",
   "adminNavRoles": "角色",
   "adminNavAudit": "审计日志",
+  "adminNavAi": "AI 助手",
+  "adminAiInheritHint": "留空或选择“继承”以使用服务器默认值。",
+  "adminAiInheritOption": "继承（默认）",
+  "adminAiOn": "开",
+  "adminAiOff": "关",
+  "adminAiPersonaSection": "人设",
+  "adminAiPersonaName": "默认助手名称",
+  "adminAiTone": "默认语气",
+  "adminAiToneFriendly": "友好",
+  "adminAiToneProfessional": "专业",
+  "adminAiToneConcise": "简洁",
+  "adminAiToneCreative": "创意",
+  "adminAiModelSection": "模型",
+  "adminAiModelTier": "默认模型级别",
+  "adminAiTierAuto": "自动（路由）",
+  "adminAiTierSimple": "简单",
+  "adminAiTierMid": "均衡",
+  "adminAiTierComplex": "高级",
+  "adminAiCapabilitiesSection": "功能",
+  "adminAiWebSearch": "网络搜索",
+  "adminAiWebSearchDesc": "允许助手搜索网络。",
+  "adminAiThinking": "扩展思考",
+  "adminAiThinkingDesc": "允许助手逐步推理。",
+  "adminAiQuotaSection": "使用上限",
+  "adminAiTokenLimit": "每月令牌上限",
+  "adminAiTokenLimitDesc": "留空表示继承；0 表示禁止所有使用。",
+  "adminAiConnectorsSection": "允许的连接器",
+  "adminAiRestrictConnectors": "为 AI 限制连接器",
+  "adminAiConnectorsInherit": "继承工作区允许列表。",
+  "adminAiConnectorsExplicit": "AI 只能使用下面选中的连接器。",
   "adminWsIdentity": "标识与品牌",
   "adminWsName": "工作区名称",
   "adminWsNamePlaceholder": "Acme 公司",
@@ -792,5 +832,22 @@
   "editNicknames": "编辑昵称",
   "nicknameModalTitle": "昵称",
   "nicknameNonePlaceholder": "暂无昵称",
-  "nicknameYouSuffix": "(你)"
+  "nicknameYouSuffix": "(你)",
+  "adminNavUsage": "用量",
+  "usageThisMonth": "本月",
+  "usageTotalTokens": "总令牌数",
+  "usageRequests": "请求数",
+  "usageEstCost": "预计费用",
+  "usageThumbsDownRate": "差评率",
+  "usageFeedbackBreakdown": "{total} 条评价中 {down} 条",
+  "usagePerModelTitle": "按模型计费",
+  "usageModelTokens": "输入 {input} / 输出 {output} · {requests} 次请求",
+  "usageTopUsersTitle": "主要用户",
+  "usageUserRequests": "{count} 次请求",
+  "usageWorstAnswersTitle": "评价最差的回答",
+  "usageNoPreview": "（无回答预览）",
+  "usageUserComment": "“{comment}”",
+  "usageNoData": "此期间暂无数据。",
+  "usageLoadError": "无法加载用量面板。",
+  "usageRetry": "重试"
 }

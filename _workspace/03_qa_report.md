@@ -1,66 +1,131 @@
-## QA Report — Avatar/Conversation UX Bug Cluster (6 issues) — 2026-06-22
+## QA Report — TASK-13 Usage & Quality Dashboard — 2026-06-23
 
-검증자: qa-agent. 입력: `01_plan.md`, `02_backend_report.md`, `02_web_report.md`, `02_mobile_report.md`.
-모든 빌드 명령을 실제 실행했으며, API contract·동기화·i18n·이슈별 회귀를 grep으로 교차 검증했다.
+Verdict: **PASS** (with one P3 type-drift to fix opportunistically + one owner-action for real cost numbers).
 
-### 빌드 상태 (실제 실행 결과)
+All four reports cross-checked against the code actually on disk. Note: the web and mobile
+reports both claim `_workspace/02_backend_report.md` was a stale TASK-12 file at the time they
+ran; the file on disk now is the correct TASK-13 backend report, and the implemented
+`dashboard.types.ts` matches the plan's frozen contract — so the parallel client work landed on
+the right shape regardless. Verified by reading the real files, not the reports.
 
-| 서비스 | 명령 | 상태 | 비고 |
-|--------|------|------|------|
-| chat-service | `mvn -q compile` | ✓ PASS | 출력 없음 = 성공 (BUILD SUCCESS) |
-| web | `pnpm build` | ✓ PASS | `✓ Compiled successfully in 3.0s`, 36/36 static pages, TS 에러 0 |
-| flutter | `flutter analyze` | ✓ PASS | `No issues found! (ran in 3.4s)` |
+---
 
-(flutter의 SPM 미지원 plugin 경고는 본 변경과 무관한 기존 경고. web의 pnpm/node deprecation 경고도 무관.)
+### Build & Test status (exact, run by QA — not trusted from reports)
 
-### API 계약 정합성 — wallpaper (이슈 6) ✓ 3-플랫폼 완전 일치
+| Check | Command | Result |
+|-------|---------|--------|
+| ai-service build | `pnpm --filter ai-service build` | **PASS** — `nest build`, exit 0, no errors |
+| ai-service test | `pnpm --filter ai-service test` | **PASS** — `Test Suites: 29 passed, 29 total` / `Tests: 255 passed, 255 total` (6.871 s) |
+| web build | `pnpm --filter @platform/web build` | **PASS** — exit 0; `/admin/usage` confirmed compiled at `.next/server/app/(main)/admin/usage` |
+| flutter analyze | `cd apps/client && flutter analyze` | **PASS** — `No issues found! (ran in 3.7s)` |
+| flutter test | `cd apps/client && flutter test` | **PASS** — `All tests passed!` (47 tests) — **ran explicitly, not just analyze** |
 
-| 항목 | Backend | Web | Mobile |
-|------|---------|-----|--------|
-| 경로 | `PUT /api/conversations/{id}/wallpaper` (`ConversationController.java:78`) | `chatApi.put('/api/conversations/${id}/wallpaper')` (`chat.ts:54`) | `chatDio.put('/api/conversations/$id/wallpaper')` (`chat_repository.dart:166`) |
-| 요청 body | `WallpaperRequest(String wallpaper)` | `{ wallpaper }` | `{'wallpaper': wallpaper}` |
-| 응답 필드 | `ConversationResponse.wallpaper` (`:24`) | `Conversation.wallpaper: string \| null` (`types.ts:41`) | `ConversationModel.wallpaper: String?` (`chat_models.dart:73,128`) |
-| 권한 | 참가자 누구나 (admin 아님) `setWallpaper` (`ConversationService.java:149`) | — | — |
-| 브로드캐스트 | STOMP `CONVERSATION_UPDATED` (기존 경로 재사용) | `CONVERSATION_UPDATED` 핸들 (`page.tsx:191`) | `CONVERSATION_UPDATED` 핸들 (`stomp_service.dart:148`) |
+Both Flutter `analyze` AND `test` were run (the prior stale-test footgun was avoided). No new
+test was added for the read-only mobile mirror; logic lives in defensively-parsed models.
 
-- [x] plan.md 계약(`PUT .../wallpaper`, body `{wallpaper}`, `ConversationResponse.wallpaper`)과 실제 구현 일치
-- [x] Web TypeScript 타입 일치 (`string | null`)
-- [x] Flutter DTO 타입 일치 (`String?`, `fromJson` 파싱 + `copyWith`/`clearWallpaper`)
-- [x] 빈 문자열/null → 전체 멤버 default 리셋 (backend: `isBlank() ? null`)
+---
 
-### 크로스 플랫폼 동기화
+### Contract parity — `GET /usage/dashboard` (highest-risk check)
 
-- [x] **STOMP `CONVERSATION_UPDATED`** 양쪽 처리 (web `page.tsx:191`, mobile `stomp_service.dart:148`) → wallpaper/group avatar 실시간 재해석
-- [x] **닉네임 transport** 양쪽 동일: `system.nickname.changed:<userId>:<nickname>` (web `nicknames.ts:10`, mobile `conversation_customisation_dialogs.dart:167`). 서버 미저장 client-local 모델 유지 (계획 일치)
-- [x] **닉네임 모달 UX**: 양쪽 중앙 모달 재설계 (web `NicknamesModal.tsx`, mobile `_NicknamesModal`/`_NicknameRow`), self+members, 아바타+실명+연필 인라인 편집, direct/group 모두 동작
-- [x] **아바타 캐시 무효화** (이슈 1): web `CONVERSATION_UPDATED`에서 `['user', uid]` invalidate + `useUser` staleTime 30s; mobile `userProfileProvider` keepAlive 60s. `USER_UPDATED` push는 계획상 선택 항목 → 양쪽 미구현 (일관됨)
-- [x] **wallpaper 공유 메커니즘**: 양쪽 conversation 모델에서 wallpaper 읽고 `CONVERSATION_UPDATED`로 reconcile, 낙관적 적용. 레거시 `system.theme.changed:` 파싱 유지하되 서버 authoritative (web `system-messages.ts`, mobile `chat_system_message_parser.dart:32`)
-- [x] **i18n 7개 언어 완성**:
-  - Web `messages/*.json`: `editNicknames`, `nicknameModalTitle`, `nicknameNonePlaceholder`, `wallpaperSaveError` — **7/7 로케일 전부 4/4**
-  - Flutter `app_*.arb`: `editNicknames`, `nicknameModalTitle`, `nicknameNonePlaceholder`, `nicknameYouSuffix` — **7/7 로케일 전부 4/4**
+Source of truth: ai-service `src/usage/dashboard.types.ts` (frozen). Compared field-for-field
+against web `lib/api/types.ts` `DashboardResponse` and Flutter
+`features/admin/data/models/usage_dashboard_models.dart` `UsageDashboard`.
 
-### 이슈별 회귀 검증
+| Top-level field | Backend type | Web (`DashboardResponse`) | Flutter (`UsageDashboard`) | Match |
+|---|---|---|---|---|
+| `range {from,to,label}` | `string,string,string` | `UsageRange` same | `UsageRange` (`String?` x3) | ✓ |
+| `totals.inputTokens` | number | number | int | ✓ |
+| `totals.outputTokens` | number | number | int | ✓ |
+| `totals.totalTokens` | number | number | int | ✓ |
+| `totals.requestCount` | number | number | int | ✓ |
+| `totals.estimatedCostUsd` | number | number | double | ✓ |
+| `daily[] {date,inputTokens,outputTokens,totalTokens,requestCount}` | `DailyUsage[]` | `UsageDailyPoint[]` (drives chart) | **absent (intentional)** | ✓* |
+| `perModelCost[].model` | string | string | `String` | ✓ |
+| `perModelCost[].inputTokens/outputTokens/requestCount` | number x3 | number x3 | int x3 | ✓ |
+| `perModelCost[].inputPricePerMTok/outputPricePerMTok` | number x2 | number x2 | double x2 | ✓ |
+| `perModelCost[].costUsd` | number | number | double | ✓ |
+| `topUsers[].userId` | string | string | `String` | ✓ |
+| `topUsers[].displayName` | string | string | `String?` | ✓ (see note) |
+| `topUsers[].totalTokens/requestCount` | number x2 | number x2 | int x2 | ✓ |
+| **`topUsers[].estimatedCostUsd` (pro-rated)** | number | number | double | ✓ — present in all three; pro-rated semantics handled backend-side |
+| `feedback.up/down/total` | number x3 | number x3 | int x3 | ✓ |
+| `feedback.thumbsDownRate` | number (0..1) | number | double | ✓ |
+| `feedback.worstAnswers[].messageId/conversationId` | string x2 | string x2 | `String` / `String?` | ✓ |
+| `feedback.worstAnswers[].comment` | `string \| null` | `string \| null` | `String?` | ✓ |
+| `feedback.worstAnswers[].answerPreview` | string | string | `String?` | ✓ |
+| `feedback.worstAnswers[].createdAt` | **`string \| null`** | **`string` (non-null)** | `String?` | ⚠ P3 drift |
 
-| 이슈 | 내용 | 결과 | 근거 |
-|------|------|------|------|
-| 1 | 아바타 동기화 (peer stale) | ✓ PASS | web staleTime 30s + `CONVERSATION_UPDATED`→`['user',uid]` invalidate; mobile keepAlive 60s. 업로드마다 고유 URL로 자연 cache-busting |
-| 2 | 대화정보 패널 = pinned만 | ✓ PASS | web `ConversationSettingsDrawer.tsx`: `pinned` AccordionItem만 잔존, Chat Info/bio/DOB/Cake 제거. mobile: `_buildChatDetailsContent`+"Chat Details" ExpansionTile 제거 |
-| 3 | 닉네임 중앙 모달 재설계 | ✓ PASS | 양쪽 모달 구현, direct/group 모두, self-nickname 가능, 동일 transport, i18n 키 일치 |
-| 4 | 비밀번호 자동완성 제거 | ✓ PASS | web: current/new/confirm 3개 필드 모두 `autoComplete="new-password"` (`ChangePasswordDialog.tsx:131,159,187`). mobile: `autofillHints: const []` (`change_password_dialog.dart:158`) + `PonTextField`에 파라미터 추가 |
-| 5 | 그룹 아바타 404 수정 | ⚠ PASS (잔여 1건) | 주요 표시 경로(ConversationItem/Header/GroupSettingsDrawer/SettingsHeader/ActiveFriendsRow/friends/explore) 모두 `absoluteMediaUrl` 적용. mobile `_absoluteUrl` 정상. **단 `app/(main)/archived/page.tsx`에 raw src 누락 — 아래 이슈 참조** |
-| 6 | wallpaper 대화단위 서버 공유 | ✓ PASS | 3-플랫폼 contract 완전 일치 (위 표). mobile `chat_wallpaper_dialog.dart:168`에서 `system.theme.changed:` 전송 제거, `setWallpaper`(서버 PUT)만 호출 |
+`*` **`daily` absent in Flutter is intentional, NOT drift.** Per plan D6 the mobile mirror omits
+charts; it simply doesn't parse a field it never renders, and the Dart parser ignores extra
+JSON keys. The pro-rated `topUsers[].estimatedCostUsd` (the field flagged as highest-risk) is
+present and correctly typed in all three layers; the backend documents it as a token-volume
+pro-rated share (not exact), which both clients render verbatim — acceptable.
 
-### 발견된 이슈
+---
 
-| 심각도 | 파일:라인 | 내용 | 권장 수정 |
-|--------|---------|------|----------|
-| Low | `apps/web/app/(main)/archived/page.tsx:81-92` | 보관함(Archived) 대화 목록이 group/conversation 아바타를 raw `conv.avatarUrl`(상대경로 `/api/uploads/<id>`)로 렌더 — `absoluteMediaUrl` 미적용·미import. 이슈 5와 동일한 404 버그가 보조 화면에 잔존 | `import { absoluteMediaUrl } from '@/lib/media'` 후 `const avatar = absoluteMediaUrl(conv.avatarUrl ?? '')` |
+### Gating (auth boundary)
 
-- 위 archived 화면은 이번 작업 범위(이슈 5 "raw avatar src 잔존 없음")에 해당하나 web-dev가 누락. 기능 회귀가 아닌 보조 화면 표시 결함이라 Low. flutter 측 동일 화면에는 raw 잔존 없음(검증 완료).
-- chat-service `MessageServicePaginationTest`(Testcontainers, Docker 필요)는 본 환경에 Docker 미가동으로 별도 실행 시 ERROR 가능 — wallpaper 변경과 무관(backend report 기재). `mvn compile`은 통과하므로 빌드 차단 아님.
+| Layer | Mechanism | Verified |
+|-------|-----------|----------|
+| Backend | `@UseGuards(JwtAuthGuard, RequirePermissionGuard)` on `@Controller('usage')` + `@RequirePermission(Capability.MANAGE_WORKSPACE)` on `GET /dashboard` | ✓ `usage.controller.ts` L19/L24-25; imports from `@platform/database` |
+| Backend wiring | `PassportModule` + `SharedJwtStrategy` registered app-wide (first ai-service controller to use these guards) | ✓ per backend report; build+tests pass |
+| → 401 unauth / 403 without cap | `RequirePermissionGuard` reads JWT `perms` claim | ✓ standard shared guard, same as connector-service |
+| Web | `<RequireCap cap="MANAGE_WORKSPACE">` wraps page; `ADMIN_SECTIONS` entry gated `cap: 'MANAGE_WORKSPACE'` | ✓ `admin/usage/page.tsx` L8, `AdminShell.tsx` L38 |
+| Web base URL | `aiApi` instance (`NEXT_PUBLIC_AI_URL \|\| '/api/ai'`), own `injectToken` + 401 interceptor; `usage.ts` calls `aiApi.get('/usage/dashboard')` — NOT chatApi/authApi | ✓ `axios.ts` L22-38, `usage.ts` |
+| Flutter | Admin section gated `Cap.manageWorkspace` (`admin_screen.dart` L43-44); repo uses `DioClient.createAiDio` → `aiBaseUrl` (:3002) — NOT chatDio/authDio | ✓ `usage_repository.dart`, `dio_client.dart` L62-67, `app_config.dart` L33 |
 
-### 결론
+Both clients gate by `MANAGE_WORKSPACE` and hit the ai-service base directly. No bypass.
 
-**PASS** — 3개 플랫폼 빌드/정적분석 전부 통과(mvn compile, pnpm build TS 0 에러, flutter analyze 0 issues). wallpaper API contract가 backend/web/mobile에서 경로·body·필드명·타입까지 완전 일치하고, STOMP `CONVERSATION_UPDATED`·닉네임 transport·아바타 캐시 정책·i18n(7×4 web + 7×4 flutter)이 양 플랫폼 동기화됨. 6개 이슈 모두 의도된 동작 구현 확인.
+---
 
-차단 이슈 없음. 단 **Low 1건**: `apps/web/app/(main)/archived/page.tsx`의 raw 아바타 src (이슈 5 누락분) — 머지 후 후속 수정 권장.
+### Cross-platform sync (per .claude/rules/sync.md)
+
+- Both clients render the shared core metrics from the identical endpoint: total/period tokens,
+  request count, estimated cost (incl. per-model breakdown), 👎 rate, top users, worst-rated
+  answers. ✓
+- **D6 web-primary deviation is INTENTIONAL (accepted plan decision), not a failure:** web adds the
+  daily bar chart + month selector + up-to-10 lists; mobile is a minimal read-only panel (no chart,
+  no month selector, top-5/worst-5 caps). This is an admin/ops dashboard, not a chat/STOMP/message
+  surface, so the sync rule's hard P1 cases (message types, STOMP events) do not apply. Recorded as
+  designed.
+- i18n: **complete on both platforms across all 7 locales.**
+  - Web: `navUsage` + `usageDashboard` group (incl. `feedbackSummary`) present in en/vi/zh/ja/ko/es/fr — 7/7.
+  - Mobile: 17 usage ARB keys present in all 7 `app_*.arb` — 17/17 each; `flutter gen-l10n` ran, generated files not hand-edited.
+
+---
+
+### Issues found
+
+| Severity | File:line | Issue | Recommended fix |
+|----------|-----------|-------|-----------------|
+| P3 | `apps/web/lib/api/types.ts:301` + `usage-dashboard-parts.tsx:231` | `UsageWorstAnswer.createdAt` typed `string` (non-null) but backend `dashboard.types.ts:65` returns `string \| null`. Web renders `new Date(a.createdAt).toLocaleString()`; on a `null` value this yields the 1970 epoch instead of a clean blank. No crash. Flutter (`String?`) handles it correctly. | Type web field as `string \| null` and guard the render (`a.createdAt ? new Date(a.createdAt).toLocaleString() : ''`). Cosmetic; low likelihood (backend only nulls when a feedback row lacks `createdAt`). |
+
+No P1/P2 issues. No backend-only feature missing from clients; no one-client-only feature.
+
+---
+
+### Owner action items (operational, not code defects)
+
+1. **Set the per-model price-map env vars in each deployment for real cost numbers.** ai-service
+   `configuration.ts` seeds defaults (`AI_PRICE_DEFAULT_IN=3`, `_OUT=15`, plus haiku/sonnet/opus
+   seeds) and falls back gracefully, but `estimatedCostUsd` / `perModelCost[].costUsd` will be
+   estimates off the seeded constants until `AI_PRICE_<MODELKEY>_IN/_OUT` are set to the real
+   billing prices. Format: model id upper-cased, non-alphanumerics → `_` (e.g. `claude-opus-4-8`
+   → `AI_PRICE_CLAUDE_OPUS_4_8_IN` / `_OUT`).
+2. **Set `NEXT_PUBLIC_AI_URL` in the web deploy env** (added to `.env.local`/`.env.production`/
+   `.env.example`; must also be set in the actual deploy env or the admin page falls back to
+   `/api/ai` and can't reach ai-service in prod).
+3. **Watch `messages` per-model aggregation latency at scale.** No `{senderId, createdAt}` index
+   was added (deliberately, per plan + the prod auto-index trap). Add it explicitly only if the
+   dashboard shows latency on a busy month.
+
+---
+
+### Conclusion
+
+**PASS** — Backend endpoint, web full dashboard, and mobile minimal mirror all build and test
+clean. Contract parity holds field-for-field across all three layers (including the high-risk
+pro-rated `topUsers[].estimatedCostUsd`). Gating is correct and routed to the ai-service base on
+both clients. i18n is complete in all 7 locales on both platforms. The D6 web-primary deviation is
+the intended design. One P3 cosmetic type-drift on `worstAnswers[].createdAt` nullability in the
+web types, and the price-map env vars must be set per deployment for accurate cost figures.

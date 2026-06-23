@@ -1,5 +1,43 @@
 import { registerAs } from '@nestjs/config';
 
+export interface ModelPrice {
+  inputPerMTok: number;
+  outputPerMTok: number;
+}
+
+/** model id → env-var key segment, e.g. `claude-opus-4-8` → `CLAUDE_OPUS_4_8`. */
+export function priceEnvKey(model: string): string {
+  return model
+    .toUpperCase()
+    .replace(/[^A-Z0-9]+/g, '_')
+    .replace(/^_+|_+$/g, '');
+}
+
+/**
+ * Builds the seeded per-model price map for TASK-13. Defaults reflect public
+ * list prices (USD / 1M tokens) for the three router models; each entry is
+ * overridable via `AI_PRICE_<MODELKEY>_IN` / `_OUT`. Unknown models (not in this
+ * map) fall back to `defaultInputPerMTok` / `defaultOutputPerMTok` at cost time.
+ */
+function buildPriceMap(): Record<string, ModelPrice> {
+  const seeds: Record<string, ModelPrice> = {
+    'claude-haiku-4-5': { inputPerMTok: 1, outputPerMTok: 5 },
+    'claude-sonnet-4-6': { inputPerMTok: 3, outputPerMTok: 15 },
+    'claude-opus-4-8': { inputPerMTok: 15, outputPerMTok: 75 },
+  };
+  const map: Record<string, ModelPrice> = {};
+  for (const [model, seed] of Object.entries(seeds)) {
+    const key = priceEnvKey(model);
+    const inEnv = process.env[`AI_PRICE_${key}_IN`];
+    const outEnv = process.env[`AI_PRICE_${key}_OUT`];
+    map[model] = {
+      inputPerMTok: inEnv !== undefined ? parseFloat(inEnv) : seed.inputPerMTok,
+      outputPerMTok: outEnv !== undefined ? parseFloat(outEnv) : seed.outputPerMTok,
+    };
+  }
+  return map;
+}
+
 export default registerAs('config', () => ({
   port: parseInt(process.env.PORT ?? '3002', 10),
   mongodbUri: process.env.MONGODB_URI,
@@ -119,5 +157,35 @@ export default registerAs('config', () => ({
     // connector-service internal API base for per-user MCP tools.
     internalUrl: process.env.CONNECTOR_INTERNAL_URL ?? 'http://localhost:3003',
     internalApiKey: process.env.INTERNAL_API_KEY,
+  },
+  pricing: {
+    // Per-model token price map for the usage/cost dashboard (TASK-13). Values
+    // are USD per 1M tokens. Ops/billing constants (NOT Workspace.aiSettings) —
+    // they change rarely and are deployment-owned. Override per model via env:
+    //   AI_PRICE_<MODELKEY>_IN / AI_PRICE_<MODELKEY>_OUT  (USD / 1M tokens)
+    // where <MODELKEY> is the model id upper-cased with non-alphanumerics → '_'
+    //   e.g. claude-opus-4-8 → AI_PRICE_CLAUDE_OPUS_4_8_IN / _OUT
+    // A model seen in messages.trace but absent from the map falls back to the
+    // default prices below (cost is never silently dropped).
+    defaultInputPerMTok: parseFloat(process.env.AI_PRICE_DEFAULT_IN ?? '3'),
+    defaultOutputPerMTok: parseFloat(process.env.AI_PRICE_DEFAULT_OUT ?? '15'),
+    // Seeded defaults for the three router models (configuration.ts router block:
+    // simple=haiku-4-5, mid=sonnet-4-6, complex=opus-4-8). Each is still
+    // overridable by its AI_PRICE_<MODELKEY>_IN/_OUT env var.
+    models: buildPriceMap(),
+  },
+  webSearch: {
+    // Built-in `web_search` tool. ON by default (per-workspace toggle); set
+    // WEB_SEARCH_ENABLED=false to never register the tool. Even when enabled, the
+    // tool only registers if the SELECTED provider reports itself configured
+    // (graceful degradation — no provider/key ⇒ tool simply not offered).
+    enabled: process.env.WEB_SEARCH_ENABLED !== 'false',
+    // 'generic' = generic search API (Brave/Tavily-style) via WEB_SEARCH_API_URL
+    //             + WEB_SEARCH_API_KEY. 'anthropic' = Anthropic server-side web
+    //             search (currently a documented no-op stub — see provider file).
+    provider: process.env.WEB_SEARCH_PROVIDER ?? 'generic',
+    apiKey: process.env.WEB_SEARCH_API_KEY,
+    apiUrl: process.env.WEB_SEARCH_API_URL,
+    maxResults: parseInt(process.env.WEB_SEARCH_MAX_RESULTS ?? '5', 10),
   },
 }));

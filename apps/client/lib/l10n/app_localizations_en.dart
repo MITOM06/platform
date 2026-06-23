@@ -1890,6 +1890,100 @@ class AppLocalizationsEn extends AppLocalizations {
   String get adminNavAudit => 'Audit log';
 
   @override
+  String get adminNavAi => 'AI assistant';
+
+  @override
+  String get adminAiInheritHint =>
+      'Leave a field empty or set \"Inherit\" to use the server default.';
+
+  @override
+  String get adminAiInheritOption => 'Inherit (default)';
+
+  @override
+  String get adminAiOn => 'On';
+
+  @override
+  String get adminAiOff => 'Off';
+
+  @override
+  String get adminAiPersonaSection => 'Persona';
+
+  @override
+  String get adminAiPersonaName => 'Default assistant name';
+
+  @override
+  String get adminAiTone => 'Default tone';
+
+  @override
+  String get adminAiToneFriendly => 'Friendly';
+
+  @override
+  String get adminAiToneProfessional => 'Professional';
+
+  @override
+  String get adminAiToneConcise => 'Concise';
+
+  @override
+  String get adminAiToneCreative => 'Creative';
+
+  @override
+  String get adminAiModelSection => 'Model';
+
+  @override
+  String get adminAiModelTier => 'Default model tier';
+
+  @override
+  String get adminAiTierAuto => 'Auto (router)';
+
+  @override
+  String get adminAiTierSimple => 'Simple';
+
+  @override
+  String get adminAiTierMid => 'Balanced';
+
+  @override
+  String get adminAiTierComplex => 'Advanced';
+
+  @override
+  String get adminAiCapabilitiesSection => 'Capabilities';
+
+  @override
+  String get adminAiWebSearch => 'Web search';
+
+  @override
+  String get adminAiWebSearchDesc => 'Allow the assistant to search the web.';
+
+  @override
+  String get adminAiThinking => 'Extended thinking';
+
+  @override
+  String get adminAiThinkingDesc =>
+      'Allow the assistant to reason step by step.';
+
+  @override
+  String get adminAiQuotaSection => 'Usage limit';
+
+  @override
+  String get adminAiTokenLimit => 'Monthly token limit';
+
+  @override
+  String get adminAiTokenLimitDesc =>
+      'Leave empty to inherit; 0 blocks all usage.';
+
+  @override
+  String get adminAiConnectorsSection => 'Allowed connectors';
+
+  @override
+  String get adminAiRestrictConnectors => 'Restrict connectors for AI';
+
+  @override
+  String get adminAiConnectorsInherit => 'Inheriting the workspace allow-list.';
+
+  @override
+  String get adminAiConnectorsExplicit =>
+      'AI may only use the connectors selected below.';
+
+  @override
   String get adminWsIdentity => 'Identity & branding';
 
   @override
@@ -2198,4 +2292,63 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get nicknameYouSuffix => '(you)';
+
+  @override
+  String get adminNavUsage => 'Usage';
+
+  @override
+  String get usageThisMonth => 'This month';
+
+  @override
+  String get usageTotalTokens => 'Total tokens';
+
+  @override
+  String get usageRequests => 'Requests';
+
+  @override
+  String get usageEstCost => 'Estimated cost';
+
+  @override
+  String get usageThumbsDownRate => 'Thumbs-down rate';
+
+  @override
+  String usageFeedbackBreakdown(int down, int total) {
+    return '$down of $total rated';
+  }
+
+  @override
+  String get usagePerModelTitle => 'Cost by model';
+
+  @override
+  String usageModelTokens(String input, String output, String requests) {
+    return '$input in / $output out · $requests req';
+  }
+
+  @override
+  String get usageTopUsersTitle => 'Top users';
+
+  @override
+  String usageUserRequests(int count) {
+    return '$count requests';
+  }
+
+  @override
+  String get usageWorstAnswersTitle => 'Worst-rated answers';
+
+  @override
+  String get usageNoPreview => '(no answer preview)';
+
+  @override
+  String usageUserComment(String comment) {
+    return '“$comment”';
+  }
+
+  @override
+  String get usageNoData => 'No data for this period.';
+
+  @override
+  String get usageLoadError => 'Could not load the usage dashboard.';
+
+  @override
+  String get usageRetry => 'Retry';
 }

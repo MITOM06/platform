@@ -1,69 +1,131 @@
-## Backend Implementation Report
+## Backend Implementation Report — TASK-13 Usage & Quality Dashboard
 
-> Scope: Issue 6 (shared per-conversation wallpaper) — the only issue requiring backend changes.
-> Issue 1 (avatar sync) and Issue 5 (group avatar) were verified to need NO backend change (see Notes).
-> auth-service was NOT modified.
+### Summary
+Implemented the admin-only aggregate endpoint `GET /usage/dashboard` in **ai-service** (port 3002). It rolls up token volume + per-day series + top users (from `token_usage`), per-model estimated cost (from `messages.trace`, env-driven price map), and the 👎 feedback rate + worst-rated answers (from `ai_feedback`). Gated by the existing `MANAGE_WORKSPACE` capability via the shared `JwtAuthGuard` + `RequirePermissionGuard`. **This is the first ai-service controller to use the shared auth guards** — wiring detailed below.
 
-### 변경된 파일
+---
 
-| 파일 | 변경 | 설명 |
-|------|------|------|
-| `apps/server/chat-service/src/main/java/com/platform/chatservice/model/Conversation.java` | 수정 | `private String wallpaper;` 필드 추가 (nullable, direct + group 공용). null/blank = default. |
-| `apps/server/chat-service/src/main/java/com/platform/chatservice/dto/ConversationResponse.java` | 수정 | record에 `String wallpaper` 추가 + `toResponse` 호출부 호환을 위해 기존 두 생성자 모두 유지 (wallpaper=null 채움). |
-| `apps/server/chat-service/src/main/java/com/platform/chatservice/dto/WallpaperRequest.java` | 신규 | `record WallpaperRequest(String wallpaper) {}` — PUT 바디. |
-| `apps/server/chat-service/src/main/java/com/platform/chatservice/service/ConversationService.java` | 신규 메서드 + 수정 | `setWallpaper(userId, convId, wallpaper)` 추가 (참가자면 누구나, admin 아님 — `getRawConversation`으로 멤버십 체크). `toResponse`가 `c.getWallpaper()` 채우도록 수정. |
-| `apps/server/chat-service/src/main/java/com/platform/chatservice/controller/ConversationController.java` | 신규 엔드포인트 | `PUT /api/conversations/{id}/wallpaper` 추가 → `setWallpaper` → 기존 `broadcastConversationUpdated` 재사용. |
+### 변경된 파일 (changed files)
 
-### 빌드 결과
-- chat-service `mvn compile`: ✓ 성공
-- chat-service `mvn test`: ✓ 95/95 단위 테스트 통과. 단, `MessageServicePaginationTest`는 Testcontainers(Docker 데몬 필요) 기반 통합 테스트로, 이 환경에 Docker가 없어 1건 ERROR. **wallpaper 변경과 무관** (인프라 의존). spotless `mvn spotless:apply` 적용 완료.
-- auth-service: 변경 없음 (✗ 해당 없음)
+**New:**
+- `apps/server/ai-service/src/usage/message.schema.ts` — read-only Mongoose model over shared `messages` (fields: `senderId`, `conversationId`, `content`, `createdAt`, embedded `trace.{model,inputTokens,outputTokens}`). ai-service never writes it.
+- `apps/server/ai-service/src/usage/feedback.schema.ts` — read-only model over shared `ai_feedback` (`messageId, conversationId, userId, rating, comment, createdAt`). Written by chat-service only.
+- `apps/server/ai-service/src/usage/dashboard.types.ts` — frozen `DashboardResponse` contract + sub-types (single source of truth for clients).
+- `apps/server/ai-service/src/usage/cost-estimator.ts` — pure `estimateCost(perModelTokens, prices)` (no DB/DI), unit-tested.
+- `apps/server/ai-service/src/usage/dashboard.service.ts` — aggregation service (`getDashboard({month?, days?})`); 3 sources, parallel queries. ~290 lines (under the 500 limit; pure cost math already split out).
+- `apps/server/ai-service/src/usage/usage.controller.ts` — `@Controller('usage')`, `GET /dashboard` gated; controller only parses query + delegates.
+- `apps/server/ai-service/src/usage/dashboard.service.spec.ts` — 12 unit tests (cost math, fallback price, sort, empty-data, 👎 rate, top-users + pro-rated cost + displayName fallback, date-range zero-fill, worst-answer join + 200-char preview, default 30d window, month-wins-over-days, malformed-month 400).
 
-### API 엔드포인트 구현 확인 (web/mobile가 의존하는 최종 contract)
+**Modified:**
+- `apps/server/ai-service/src/config/configuration.ts` — added `pricing` block + `buildPriceMap()` + `priceEnvKey()` + exported `ModelPrice` interface.
+- `apps/server/ai-service/src/usage/usage.module.ts` — registered `Message`/`Feedback` schemas, `controllers: [UsageController]`, provided `DashboardService`.
+- `apps/server/ai-service/src/app.module.ts` — added `PassportModule.register({ defaultStrategy: 'jwt' })` + `SharedJwtStrategy` provider (so `JwtAuthGuard` can populate `req.user`).
+- `apps/server/ai-service/package.json` — added deps `@platform/database` (workspace:*), `@nestjs/passport`, `passport`, `passport-jwt`, devDep `@types/passport-jwt`; added jest `moduleNameMapper` for `@platform/database`.
+- `apps/server/ai-service/tsconfig.json` — added `paths` alias for `@platform/database` (mirrors connector-service).
+- `apps/server/ai-service/.env.example` — documented the pricing env vars.
 
-**`PUT /api/conversations/{id}/wallpaper`** — ✓ 구현됨
-- 인증: JWT 필수 (`JwtAuthenticationFilter`), userId는 SecurityContext에서 추출
-- 권한: **참가자면 누구나** (direct + group 모두; admin 아님). 비참가자는 `ConversationNotFoundException` (404).
-- Request body:
-  ```json
-  { "wallpaper": "preset:midnight_glow" }
-  ```
-  - `wallpaper`: string. preset 토큰(예: `"preset:midnight_glow"`), 업로드 이미지 상대경로(예: `"/api/uploads/<id>#fit=cover&scale=120"`), 또는 `""`/null(전체 멤버 default로 리셋).
-- Response: `200 OK` + `ConversationResponse` (아래 wallpaper 포함된 전체 shape)
-- Broadcast: STOMP `/topic/conversation/{id}` → `{ "type": "CONVERSATION_UPDATED", "conversation": ConversationResponse }` (기존 경로 재사용 → 모든 멤버가 실시간 재해석)
+---
 
-**`ConversationResponse` 최종 shape (wallpaper 필드 추가됨)** — 모든 conversation 응답에 포함:
-```json
+### Frozen `GET /usage/dashboard` response shape (clients MUST match)
+
+```jsonc
 {
-  "id": "...",
-  "type": "direct|group",
-  "name": "...",
-  "avatarUrl": "/api/uploads/<id> 또는 null (상대경로 — 클라가 absoluteMediaUrl/_absoluteUrl로 해석)",
-  "participants": ["..."],
-  "admins": ["..."],
-  "createdBy": "...",
-  "autoDeleteSeconds": null,
-  "lastMessage": { "content": "...", "senderId": "...", "createdAt": "..." },
-  "lastMessageAt": "...",
-  "unreadCount": 0,
-  "createdAt": "...",
-  "status": "accepted|pending",
-  "isPublic": false,
-  "pinnedMessages": [ { "id":"", "senderId":"", "content":"", "createdAt":"" } ],
-  "isMuted": false,
-  "isArchived": false,
-  "wallpaper": "preset:midnight_glow | /api/uploads/<id>#... | null"   // ← NEW
+  "range": { "from": "2026-06-01", "to": "2026-06-30", "label": "2026-06" },  // label = "YYYY-MM" or "last Nd"
+  "totals": {
+    "inputTokens": 1840000,
+    "outputTokens": 642000,
+    "totalTokens": 2482000,        // authoritative volume (token_usage)
+    "requestCount": 1213,
+    "estimatedCostUsd": 12.47      // == sum(perModelCost[].costUsd), model-aware (messages.trace)
+  },
+  "daily": [                        // one entry PER DAY in range, zero-filled gaps
+    { "date": "2026-06-01", "inputTokens": 52000, "outputTokens": 18000, "totalTokens": 70000, "requestCount": 41 }
+  ],
+  "perModelCost": [                 // one per distinct model in window, sorted by costUsd desc
+    {
+      "model": "claude-opus-4-8",
+      "inputTokens": 900000,
+      "outputTokens": 380000,
+      "requestCount": 210,
+      "inputPricePerMTok": 15.0,    // resolved from price map (echoed)
+      "outputPricePerMTok": 75.0,
+      "costUsd": 42.0               // round(2)
+    }
+  ],
+  "topUsers": [                     // token_usage grouped by userId, desc, top 10; bot excluded
+    { "userId": "665...", "displayName": "Alice", "totalTokens": 410000, "requestCount": 88, "estimatedCostUsd": 3.10 }
+    // displayName best-effort from users collection, falls back to userId
+    // estimatedCostUsd = pro-rated share of totals.estimatedCostUsd by token proportion, round(2)
+  ],
+  "feedback": {
+    "up": 142,
+    "down": 17,
+    "total": 159,                   // up+down in window
+    "thumbsDownRate": 0.1069,       // down/total in 0..1; 0 when total==0 (never NaN)
+    "worstAnswers": [               // most-recent down-rated, limit 10
+      {
+        "messageId": "667...",
+        "conversationId": "661...",
+        "comment": "Wrong total ...",            // string | null
+        "answerPreview": "The total is $4,210 ...", // first 200 chars of messages.content; "" if message gone
+        "createdAt": "2026-06-21T08:14:00.000Z"  // ISO string | null
+      }
+    ]
+  }
 }
 ```
-- `wallpaper`가 새 마지막 필드. 기존 클라이언트는 무시 가능(추가 필드). 신규 web/mobile은 `Conversation.wallpaper`로 읽어 default fallback 처리.
 
-### Issue 1 / Issue 5 백엔드 검증 결과 (변경 없음)
+**Query params:** `month` (`YYYY-MM`, optional, validated `^\d{4}-\d{2}$` → **400** on malformed) and `days` (number, optional, default 30). `month` wins when both given.
 
-- **Issue 5 (그룹 아바타)**: `UploadController.java:63`이 상대경로 `/api/uploads/<objectId>` 반환 — 계획서 권고대로 **상대경로 유지가 정답**. 업로드마다 새 ObjectId라 경로 자체가 매번 달라짐(자연 cache-busting). `ConversationCacheService.save()`는 `@CachePut`이라 저장 시 캐시가 즉시 갱신됨 → `getConversation`이 새 avatar 반환. 백엔드 정상. 실제 버그는 web 렌더(raw src) — 클라 스코프.
-- **Issue 1 (아바타 동기화)**: 계획서가 `USER_UPDATED` 푸시를 "선택/생략 가능"으로 명시하고 "URL versioning + 클라 캐시 무효화에 의존" 권고. auth-service 아바타 업로드는 업로드마다 새 URL을 만드는 구조라 소스 레벨 버전 스탬프가 이미 충족됨 → 백엔드 변경 불필요, 침습적 cross-service 훅 생략. (Web/Mobile에서 `absoluteMediaUrl`/`_absoluteUrl` 적용 + 캐시 무효화로 해결)
+**Contract note carried from plan:** `totals.totalTokens`/`requestCount` come from `token_usage` (authoritative volume, includes non-trace usage); `totals.estimatedCostUsd` is the model-aware sum of `perModelCost` from `messages.trace`. The two token sources can differ slightly by design — documented in `dashboard.service.ts` JSDoc.
 
-### 주의사항
-- `ConversationResponse`에 wallpaper를 **마지막 필드**로 추가하고 기존 16-arg 생성자와 13-arg 생성자를 모두 보존했으므로 다른 호출부/테스트는 영향 없음. `toResponse`(유일한 17-arg 호출부)만 wallpaper를 채움.
-- wallpaper 권한은 **참가자 누구나** (계획서 권장안). admin-only가 필요해지면 `setWallpaper`에서 group일 때만 `requireGroupAdmin`로 게이팅하면 됨.
-- 마이그레이션 불필요: 기존 conversation 문서는 `wallpaper` 없음 → null → 클라가 default로 처리.
-- `MessageServicePaginationTest`(Testcontainers) 1건은 Docker 미가동으로 ERROR이며 본 변경과 무관. Docker 가동 환경에서 재실행 시 통과 예상.
+---
+
+### Env vars added (per-model price map)
+
+Format: `AI_PRICE_<MODELKEY>_IN` / `AI_PRICE_<MODELKEY>_OUT` (USD per 1M tokens), where `<MODELKEY>` = model id upper-cased with non-alphanumerics → `_` (e.g. `claude-opus-4-8` → `AI_PRICE_CLAUDE_OPUS_4_8_IN`).
+
+| Var | Default | Purpose |
+|-----|---------|---------|
+| `AI_PRICE_DEFAULT_IN` | `3` | input price for any model not in the seeded map |
+| `AI_PRICE_DEFAULT_OUT` | `15` | output price for any model not in the seeded map |
+| `AI_PRICE_CLAUDE_HAIKU_4_5_IN/_OUT` | `1` / `5` | seeded default (router simple tier) |
+| `AI_PRICE_CLAUDE_SONNET_4_6_IN/_OUT` | `3` / `15` | seeded default (router mid tier) |
+| `AI_PRICE_CLAUDE_OPUS_4_8_IN/_OUT` | `15` / `75` | seeded default (router complex tier) |
+
+Seeded defaults are baked in (`configuration.ts buildPriceMap()`); env vars override per deployment. Unknown models fall back to `AI_PRICE_DEFAULT_*` — cost is never silently dropped. Documented in `.env.example`.
+
+---
+
+### Gating confirmation (B-note resolved)
+
+- **Capability:** existing `Capability.MANAGE_WORKSPACE` — no new capability invented, no auth-service change.
+- **Guards:** `@UseGuards(JwtAuthGuard, RequirePermissionGuard)` on the controller + `@RequirePermission(Capability.MANAGE_WORKSPACE)` on the route. Both imported from `@platform/database` (same barrel connector-service uses).
+- **JWT wiring (the integration risk):** ai-service had NOT used these guards before and was missing the deps + path alias. Resolved by mirroring connector-service exactly:
+  1. Added `@platform/database` (workspace:*), `@nestjs/passport`, `passport`, `passport-jwt` to `package.json`; ran `pnpm install` (workspace link created).
+  2. Added `@platform/database` `paths` alias to `tsconfig.json` (build) + jest `moduleNameMapper` (tests).
+  3. Registered `PassportModule.register({ defaultStrategy: 'jwt' })` and `SharedJwtStrategy` provider in `app.module.ts` so `JwtAuthGuard` populates `req.user` from the Bearer token (HS256, same `JWT_ACCESS_SECRET`).
+  4. `RequirePermissionGuard` reads `req.user.perms` (the JWT `perms` claim auth-service issues) the same way connector-service does → **403 `{ code: 'INSUFFICIENT_PERMISSION', required: 'MANAGE_WORKSPACE' }`** when lacking the cap; **401** when unauthenticated; missing `perms` (pre-enterprise token) → denied.
+- **No bypass.** The endpoint is gated correctly; nothing deferred on the auth path.
+
+---
+
+### 빌드/테스트 결과 (exact)
+
+- `pnpm --filter ai-service build` → **PASS** (`nest build`, no errors).
+- `pnpm --filter ai-service test` → **PASS** — `Test Suites: 29 passed, 29 total` / `Tests: 255 passed, 255 total` (0 failures; the 12 new dashboard tests included). The new spec in isolation: `npx jest dashboard.service` → `Test Suites: 1 passed` / `Tests: 12 passed`.
+- `pnpm install` → success; `@platform/database` workspace link + passport deps added (+32 packages).
+
+---
+
+### API 엔드포인트 구현 확인
+- `GET /usage/dashboard?month=YYYY-MM&days=N` — implemented, gated by `MANAGE_WORKSPACE`.
+
+---
+
+### Deferrals / risks / notes for clients
+- **`topUsers[].estimatedCostUsd` is pro-rated, not exact.** `token_usage` has no model field, so a per-user model-aware cost is impossible from that source. Each user's cost = `(userTotalTokens / allTokens) * totals.estimatedCostUsd`, round(2). Documented in service JSDoc. (Plan didn't pin the per-user cost formula; this is the only honest option without a schema change. Flag for the contract if a different split is wanted.)
+- **displayName resolution** queries the shared `users` collection directly via the Mongoose connection (raw collection query), only for valid 24-char ObjectId userIds — avoids coupling to the full `@platform/database` User schema (which has `_id:false` on subdocs). Misses fall back to `userId`. The AI bot user is excluded from `topUsers`.
+- **Index:** per the plan, the `messages` per-model aggregation is bounded by date range; existing compound indexes on `messages` cover `conversationId`-led queries but NOT `{senderId, createdAt}`. Did **NOT** add a new index (plan says defer unless QA flags latency, and avoid the prod auto-index trap). If QA shows latency, add `{ senderId: 1, createdAt: 1 }` explicitly.
+- **No new collections, no writes** to any shared collection — all three sources read-only.
+- **Mobile (D6):** plan accepts a minimal read-only mobile mirror; that is a client task, not backend.

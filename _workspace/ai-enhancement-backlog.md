@@ -118,7 +118,21 @@ For a small team, "the AI gives accurate, sourced answers" is the difference bet
 
 ## Milestone 3 — Capability Upgrades (makes it feel "professional")
 
-### TASK-09 — Web search tool
+### TASK-09 — Web search tool  ✅ DONE (2026-06-23)
+> **Status:** Built in `ai-service`. New built-in `web_search` tool (`src/tools/web-search.tool.ts` +
+> `src/tools/web-search/`) with a pluggable provider abstraction (generic search-API provider as the
+> default path; Anthropic server-tool provider is a documented no-op stub). Tool-produced sources are
+> plumbed into the existing TASK-06 citation contract via a per-request **source sink** on `ToolContext`;
+> `mergeSources()` merges RAG-first then web (deduped by `documentId`, contiguous so `[Source N]` lines up).
+> `RagSource`/`AiSource` gained optional `url`/`type` (backward compatible); web results carry
+> `documentId="web:N"`, `fileName=<title>`, `url`, `type:'web'`. Response cache skips requests with web
+> sources (time-sensitive). **Graceful degrade:** tool only registered when enabled AND a provider key is
+> configured. chat-service unchanged (transparent `sources` pass-through). Clients (web `MessageSources.tsx`
+> + `types.ts`; Flutter `streaming_ai_bubble.dart` + `chat_models.dart`) parse `url`/`type` and open
+> `type:'web'` chips externally (globe icon) — web↔mobile parity verified.
+> New env: `WEB_SEARCH_ENABLED` (default on), `WEB_SEARCH_PROVIDER` (default `generic`), `WEB_SEARCH_API_KEY`,
+> `WEB_SEARCH_API_URL`. **To activate in prod:** set `WEB_SEARCH_API_KEY` + `WEB_SEARCH_API_URL` on ai-service.
+> Verify: ai-service build clean, **207 tests** (+13); web `pnpm build` ok; `flutter analyze` clean. QA PASS.
 - **Why:** The assistant currently only knows the KB + conversation. For a real working assistant, "look it up online" (docs, prices, current events, library versions) is table stakes.
 - **Scope:**
   - Add a built-in `web_search` tool to the static registry (pluggable provider: Anthropic web search tool if enabled, or a search API key).
@@ -152,7 +166,26 @@ For a small team, "the AI gives accurate, sourced answers" is the difference bet
 
 > Deliberately **light** — no per-department RBAC, no budget chargeback. Just enough for one admin to run it.
 
-### TASK-12 — Simple AI settings page (workspace-level)
+### TASK-12 — Simple AI settings page (workspace-level)  ✅ DONE (2026-06-23)
+> **Status:** Workspace-level AI settings shipped on all three platforms. **Design deviation (justified):**
+> settings live as a typed `Workspace.aiSettings` sub-document (NOT a separate `ai_settings` collection) —
+> the singleton `Workspace` doc already aggregates workspace admin config (branding/features/connectorAllowList/
+> sso), so a parallel collection would split connector-governance into two sources of truth.
+> - **packages/database**: `WorkspaceAiSettings` sub-doc, every field null-able = "inherit env default"
+>   (`allowedConnectors` uses `default: () => null` to preserve null-vs-`[]` = inherit-vs-allow-none).
+> - **auth-service**: `PATCH /admin/workspace` accepts `aiSettings` (gated by existing `MANAGE_WORKSPACE`),
+>   deep-merges via dot-path `$set`, validates `allowedConnectors ⊆ connectorAllowList` (400 otherwise),
+>   audit-logged, and publishes Redis `ai:settings:invalidate` on save.
+> - **ai-service**: read-only `SettingsModule` (60s TTL + Redis-pubsub invalidation) wired into 5 read paths:
+>   persona default tone/name, model-router forced tier, `enableThinking`, quota limit override, and the
+>   web-search/connector-allow-list tool gate (composes with the TASK-09 provider gate). Null/absent ⇒ env fallback.
+> - **web + Flutter admin console**: AI settings panel (7 fields: persona name, tone, model tier, web-search,
+>   thinking, monthly token limit, connector allow-list) gated by `MANAGE_WORKSPACE`, riding the existing
+>   `GET/PATCH /admin/workspace` (no new endpoint). i18n ×7 both platforms. Contract parity verified 4 layers.
+> - Known limit: custom MCP (`custom:<id>`) connectors are deny-by-default when a non-null AI allow-list is set
+>   (allow-listing them is a follow-up).
+> Verify: database 16, auth-service 52, ai-service build clean + 243 tests, web `pnpm build` ok (`/admin/ai`),
+> `flutter analyze` clean. QA PASS.
 - **Why:** Config is scattered across env vars + per-conversation persona. A small team wants one screen to tune the assistant without redeploying.
 - **Scope:**
   - Workspace-level settings (single tenant): default persona/tone, default model tier, enable/disable web search & thinking, monthly token limit, which connectors are allowed.
@@ -161,7 +194,25 @@ For a small team, "the AI gives accurate, sourced answers" is the difference bet
 - **Acceptance:** Changing default tone or toggling web search in the UI takes effect on the next AI request without restart.
 - **Effort:** M (cross-platform)
 
-### TASK-13 — Usage & quality dashboard (single view)
+### TASK-13 — Usage & quality dashboard (single view)  ✅ DONE (2026-06-23)
+> **Status:** Admin usage & quality dashboard shipped. New ai-service endpoint `GET /usage/dashboard`
+> (gated by `JwtAuthGuard + RequirePermissionGuard + MANAGE_WORKSPACE` — first ai-service route to use the
+> shared `@platform/database` guards; Passport + SharedJwtStrategy wired in app.module mirroring connector-service).
+> **Data sources (corrected from the task's assumptions):** `token_usage` (no `model` field) → volume totals,
+> zero-filled daily series, top-users; `messages.trace` (read-only) → per-model cost via an env price map;
+> `ai_feedback` (read-only, written by chat-service from TASK-07) → 👎 rate + worst-rated answers (joined to
+> `messages` for the preview). `topUsers[].estimatedCostUsd` is a pro-rated token share (no model field on
+> token_usage). Per-model price config = env-driven map in `configuration.ts` (`AI_PRICE_<MODELKEY>_IN/_OUT`),
+> NOT Workspace.aiSettings (billing constants).
+> - **web**: new `/admin/usage` page (gated, cross-user), 4 stat cards (tokens/requests/cost/👎 rate),
+>   daily-tokens canvas chart (reused from `/token-usage`, no new charting dep), cost-by-model + top-users
+>   tables, worst-answers list, month selector. New `aiApi` axios instance (`NEXT_PUBLIC_AI_URL`). i18n ×7.
+> - **mobile**: minimal read-only mirror panel in the admin section (same metrics, no charts/month selector —
+>   accepted web-primary deviation D6 from sync.md, since this is an admin/ops view not a chat surface).
+>   New `aiBaseUrl` + `createAiDio`. i18n ×7.
+> Verify: ai-service build clean + 255 tests (+12); web `pnpm build` ok (`/admin/usage`); flutter analyze clean
+> + **flutter test 47 PASS**. QA PASS (1 P3 createdAt-nullability drift fixed post-QA).
+> **Owner action:** set `AI_PRICE_*` env on ai-service + `NEXT_PUBLIC_AI_URL` on web for accurate cost figures.
 - **Why:** `token_usages` is captured but only as a per-user number. One admin view of cost + volume + 👎 rate makes the system operable.
 - **Scope:**
   - Aggregate endpoint: tokens & request count over time, top users, estimated cost (configurable per-model price), 👎 rate (from TASK-07).
