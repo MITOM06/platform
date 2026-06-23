@@ -1,7 +1,7 @@
 'use client'
 
 import { useTranslations } from 'next-intl'
-import { Lock, User, BellOff, Bell, Search } from 'lucide-react'
+import { Sparkles, User, BellOff, Bell, Search } from 'lucide-react'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { absoluteMediaUrl } from '@/lib/media'
 
@@ -14,6 +14,7 @@ interface Props {
   avatarUrl?: string
   avatarLetter: string
   isDirect: boolean
+  isAI: boolean
   isMuted: boolean
   saving: boolean
   onOpenProfile?: () => void
@@ -27,6 +28,7 @@ export function SettingsHeader({
   avatarUrl,
   avatarLetter,
   isDirect,
+  isAI,
   isMuted,
   saving,
   onOpenProfile,
@@ -45,15 +47,17 @@ export function SettingsHeader({
         </Avatar>
         <div className="text-center">
           <h2 className="text-xl font-bold line-clamp-2 px-4">{displayName}</h2>
-          <div className="flex items-center justify-center gap-1.5 mt-1 text-xs text-muted-foreground">
-            <Lock className="size-3" />
-            <span>{t('endToEndEncrypted')}</span>
-          </div>
+          {isAI && (
+            <div className="flex items-center justify-center gap-1.5 mt-1 text-xs text-pon-cyan">
+              <Sparkles className="size-3" />
+              <span>{t('aiAssistant')}</span>
+            </div>
+          )}
         </div>
       </div>
 
       <div className="flex justify-evenly px-2">
-        {isDirect && onOpenProfile && (
+        {isDirect && !isAI && onOpenProfile && (
           <button onClick={onOpenProfile} className={ACTION_CLS}>
             <div className={ICON_WRAP}><User className="size-5" /></div>
             <span className={LABEL_CLS}>{t('viewProfile')}</span>

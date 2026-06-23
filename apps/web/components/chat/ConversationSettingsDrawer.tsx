@@ -18,6 +18,7 @@ import { chatService } from '@/lib/api/chat'
 import { authService } from '@/lib/api/auth'
 import { WallpaperPickerModal } from './WallpaperPickerModal'
 import { SettingsHeader } from './group/SettingsHeader'
+import { AiAssistantSection } from './group/AiAssistantSection'
 import { ActionOptionsSection } from './group/ActionOptionsSection'
 import { CustomizeChatSection } from './group/CustomizeChatSection'
 import { FilesMediaSection } from './group/FilesMediaSection'
@@ -116,7 +117,9 @@ export function ConversationSettingsDrawer({
 
   const displayName = isGroup
     ? (conversation.name || t('conversationDefault'))
-    : (otherUser?.displayName || t('conversationDefault'))
+    : isAI
+      ? t('aiAssistant')
+      : (otherUser?.displayName || t('conversationDefault'))
   const avatarUrl = isGroup ? conversation.avatarUrl : otherUser?.avatarUrl
   const avatarLetter = getInitial(displayName)
 
@@ -245,6 +248,7 @@ export function ConversationSettingsDrawer({
               avatarUrl={avatarUrl ?? undefined}
               avatarLetter={avatarLetter}
               isDirect={isDirect}
+              isAI={isAI}
               isMuted={isMuted}
               saving={saving}
               onOpenProfile={onOpenProfile ? () => { onOpenProfile(); onClose() } : undefined}
@@ -256,6 +260,11 @@ export function ConversationSettingsDrawer({
 
             {/* Accordions */}
             <Accordion type="multiple" className="w-full px-1 space-y-2">
+
+              {/* AI Assistant — bot-specific controls (replaces person-only items) */}
+              {isAI && (
+                <AiAssistantSection conversationId={conversation.id} onClose={onClose} />
+              )}
 
               {/* Pinned Messages */}
               {conversation.pinnedMessages.length > 0 && (
@@ -309,6 +318,7 @@ export function ConversationSettingsDrawer({
               <PrivacySupportSection
                 isDirect={isDirect}
                 isGroup={isGroup}
+                isAI={isAI}
                 isBlocked={isBlocked}
                 saving={saving}
                 onBlockToggle={handleBlockToggle}

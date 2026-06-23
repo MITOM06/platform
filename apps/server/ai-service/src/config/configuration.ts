@@ -38,8 +38,10 @@ export default registerAs('config', () => ({
   qdrant: {
     url: process.env.QDRANT_URL || 'http://localhost:6333',
   },
-  openai: {
-    apiKey: process.env.OPENAI_API_KEY,
+  voyage: {
+    // Embeddings provider (Anthropic's recommended partner). LLM stays Claude;
+    // Voyage is ONLY used to vectorize text for RAG + memory + semantic cache.
+    apiKey: process.env.VOYAGE_API_KEY,
   },
   kb: {
     chunkSize: 512,
@@ -49,7 +51,10 @@ export default registerAs('config', () => ({
     overFetch: parseInt(process.env.KB_OVERFETCH ?? '8', 10),
     // Minimum cosine score for a chunk to be considered grounded context.
     scoreThreshold: parseFloat(process.env.KB_SCORE_THRESHOLD ?? '0.5'),
-    embeddingModel: 'text-embedding-3-small',
+    embeddingModel: process.env.KB_EMBEDDING_MODEL ?? 'voyage-3.5',
+    // Vector size of the embedding model (voyage-3.5 = 1024). Used as the Qdrant
+    // collection dimension default. MUST match the model's output.
+    embeddingDimensions: parseInt(process.env.KB_EMBEDDING_DIMENSIONS ?? '1024', 10),
     qdrantCollection: process.env.QDRANT_KB_COLLECTION ?? 'knowledge',
     // Hybrid retrieval: fuse vector + in-process BM25 (keyword) via RRF over an
     // enlarged candidate pool before keeping topK. Set false to use vector-only.

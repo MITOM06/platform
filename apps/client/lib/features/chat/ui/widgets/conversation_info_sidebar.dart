@@ -32,6 +32,7 @@ class ConversationInfoSidebar extends ConsumerWidget {
         authState is AuthAuthenticated ? authState.user.id : '';
 
     final isGroup = conv?.isGroup ?? false;
+    final isAi = conv?.participants.contains(kAiBotUserId) ?? false;
     final others =
         conv?.participants.where((p) => p != currentUserId).toList() ?? [];
     final otherUserId = (!isGroup && others.isNotEmpty) ? others.first : null;
@@ -41,7 +42,9 @@ class ConversationInfoSidebar extends ConsumerWidget {
 
     final displayName = isGroup
         ? (conv?.name ?? context.l10n.conversationDefault)
-        : (profileAsync?.valueOrNull?.displayName ?? context.l10n.chatDefaultTitle);
+        : isAi
+            ? context.l10n.aiAssistant
+            : (profileAsync?.valueOrNull?.displayName ?? context.l10n.chatDefaultTitle);
     final avatarLetter =
         displayName.isNotEmpty ? displayName[0].toUpperCase() : '?';
 
@@ -86,6 +89,7 @@ class ConversationInfoSidebar extends ConsumerWidget {
               avatarLetter: avatarLetter,
               conv: conv,
               isGroup: isGroup,
+              isAi: isAi,
               profileAsync: profileAsync,
               context: context,
             ),
@@ -99,7 +103,7 @@ class ConversationInfoSidebar extends ConsumerWidget {
               context: context,
             ),
             const Divider(height: 32),
-            _buildAccordions(context, ref, conv, isGroup, otherUserId,
+            _buildAccordions(context, ref, conv, isGroup, isAi, otherUserId,
                 currentUserId),
           ],
         ),
@@ -115,6 +119,7 @@ class ConversationInfoSidebar extends ConsumerWidget {
     WidgetRef ref,
     ConversationModel? conv,
     bool isGroup,
+    bool isAi,
     String? otherUserId,
     String currentUserId,
   ) {
@@ -133,6 +138,47 @@ class ConversationInfoSidebar extends ConsumerWidget {
       data: expansionTheme,
       child: Column(
         children: [
+          // AI Assistant — bot-specific controls. Replaces person-only items
+          // (block, profile) that don't apply to a bot. Mirrors web
+          // AiAssistantSection.
+          if (isAi)
+            ExpansionTile(
+              title: Text(context.l10n.aiAssistant,
+                  style: const TextStyle(
+                      fontWeight: FontWeight.w600, fontSize: 14)),
+              children: [
+                ListTile(
+                  dense: true,
+                  leading: const Icon(Icons.auto_awesome, size: 18),
+                  title: Text(context.l10n.aiPersonality),
+                  onTap: () => context.push('/ai-persona/$conversationId'),
+                ),
+                ListTile(
+                  dense: true,
+                  leading: const Icon(Icons.psychology_outlined, size: 18),
+                  title: Text(context.l10n.aiMemory),
+                  onTap: () => context.push('/ai-memories'),
+                ),
+                ListTile(
+                  dense: true,
+                  leading: const Icon(Icons.extension_outlined, size: 18),
+                  title: Text(context.l10n.aiSkills),
+                  onTap: () => context.push('/skills'),
+                ),
+                ListTile(
+                  dense: true,
+                  leading: const Icon(Icons.power_outlined, size: 18),
+                  title: Text(context.l10n.aiConnectedApps),
+                  onTap: () => context.push('/integrations'),
+                ),
+                ListTile(
+                  dense: true,
+                  leading: const Icon(Icons.bar_chart_outlined, size: 18),
+                  title: Text(context.l10n.aiUsage),
+                  onTap: () => context.push('/token-usage'),
+                ),
+              ],
+            ),
           // Issue 2: "Chat Details" (bio/DOB/member count) removed — the info
           // panel now shows only Customization, Shared Media, Pinned Messages
           // and Privacy. Mirrors web ConversationSettingsDrawer.
@@ -153,12 +199,14 @@ class ConversationInfoSidebar extends ConsumerWidget {
                 title: Text(context.l10n.localeName == 'vi' ? 'Biểu tượng cảm xúc nhanh' : 'Quick Reaction'),
                 onTap: () => showQuickReactionDialog(context, ref, conversationId),
               ),
-              ListTile(
-                dense: true,
-                leading: const Icon(Icons.label_outline_rounded, size: 18),
-                title: Text(context.l10n.localeName == 'vi' ? 'Biệt danh' : 'Nicknames'),
-                onTap: () => showNicknamesDialog(context, ref, conversationId, conv),
-              ),
+              // Nicknames apply to people, not the bot — hidden for AI chats.
+              if (!isAi)
+                ListTile(
+                  dense: true,
+                  leading: const Icon(Icons.label_outline_rounded, size: 18),
+                  title: Text(context.l10n.localeName == 'vi' ? 'Biệt danh' : 'Nicknames'),
+                  onTap: () => showNicknamesDialog(context, ref, conversationId, conv),
+                ),
               if (isGroup && (conv?.admins.contains(currentUserId) ?? false)) ...[
                 ListTile(
                   dense: true,
@@ -230,7 +278,8 @@ class ConversationInfoSidebar extends ConsumerWidget {
             title: Text(context.l10n.privacyAndSupportCategory,
                 style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
             children: [
-              if (!isGroup && otherUserId != null)
+              // Block applies to people, not the bot — hidden for AI chats.
+              if (!isGroup && !isAi && otherUserId != null)
                 ListTile(
                   dense: true,
                   leading: const Icon(Icons.block_outlined, size: 18,

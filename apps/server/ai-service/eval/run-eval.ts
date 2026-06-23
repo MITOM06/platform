@@ -13,6 +13,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import Anthropic from '@anthropic-ai/sdk';
+import { evaluateGate } from '../src/eval/eval-gate';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -42,6 +43,12 @@ type CaseResult =
 const SUT_MODEL = process.env.EVAL_SUT_MODEL ?? 'claude-opus-4-8';
 const JUDGE_MODEL = process.env.EVAL_JUDGE_MODEL ?? 'claude-haiku-4-5';
 const DATASET_PATH = path.join(__dirname, 'dataset.jsonl');
+
+// CI gate: when EVAL_MIN_PASS_RATE is set (0..1), exit non-zero if the pass rate
+// falls below it. Unset = report-only (always exit 0), preserving local usage.
+const RAW_MIN_PASS_RATE = process.env.EVAL_MIN_PASS_RATE;
+const GATE_ENABLED = RAW_MIN_PASS_RATE !== undefined && RAW_MIN_PASS_RATE !== '';
+const MIN_PASS_RATE = GATE_ENABLED ? Number(RAW_MIN_PASS_RATE) : 0;
 
 const SYSTEM_PERSONA = `You are PON AI, an intelligent assistant embedded in the PON chat platform.
 Be helpful, concise, and friendly. Respond in the same language the user writes in.
@@ -94,6 +101,7 @@ async function callSut(client: Anthropic, evalCase: EvalCase): Promise<string> {
   const response = await client.messages.create({
     model: SUT_MODEL,
     max_tokens: 1024,
+    temperature: 0, // deterministic SUT output for a stable CI gate
     system: systemPrompt,
     messages: [{ role: 'user', content: evalCase.prompt }],
   });
@@ -129,6 +137,7 @@ async function callJudge(
   const response = await client.messages.create({
     model: JUDGE_MODEL,
     max_tokens: 256,
+    temperature: 0, // deterministic judgments
     system: JUDGE_SYSTEM,
     messages: [{ role: 'user', content: userMessage }],
   });
@@ -217,7 +226,17 @@ function printRow(r: CaseResult): void {
 async function main(): Promise<void> {
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) {
+    if (GATE_ENABLED) {
+      // CI gate without a key (e.g. fork PRs that can't read secrets): skip
+      // rather than hard-fail the pipeline.
+      console.warn('SKIP: ANTHROPIC_API_KEY not set — eval gate skipped (exit 0).');
+      process.exit(0);
+    }
     console.error('ERROR: ANTHROPIC_API_KEY environment variable is not set.');
+    process.exit(1);
+  }
+  if (GATE_ENABLED && (Number.isNaN(MIN_PASS_RATE) || MIN_PASS_RATE < 0 || MIN_PASS_RATE > 1)) {
+    console.error(`ERROR: EVAL_MIN_PASS_RATE must be between 0 and 1 (got "${RAW_MIN_PASS_RATE}").`);
     process.exit(1);
   }
 
@@ -294,13 +313,20 @@ async function main(): Promise<void> {
 
   console.log('\n' + '═'.repeat(COL_ID + COL_CAT + COL_STATUS + COL_REASON));
   console.log(`RESULT: ${passed}/${total} passed (${passRate}%)  |  ${failed} failed  |  ${errored} errors`);
-  console.log('');
 
-  // Exit 0 — this is a report tool, not a CI gate.
-  process.exit(0);
+  if (!GATE_ENABLED) {
+    console.log('(report-only — set EVAL_MIN_PASS_RATE to enable the CI gate)\n');
+    process.exit(0);
+  }
+
+  const decision = evaluateGate({ passed, errored, total, minPassRate: MIN_PASS_RATE });
+  console.log(`GATE: ${decision.ok ? 'PASS' : 'FAIL'} — ${decision.reason}\n`);
+  process.exit(decision.ok ? 0 : 1);
 }
 
-main().catch((err) => {
-  console.error('Unexpected fatal error:', err);
-  process.exit(1);
-});
+if (require.main === module) {
+  main().catch((err) => {
+    console.error('Unexpected fatal error:', err);
+    process.exit(1);
+  });
+}

@@ -16,6 +16,7 @@ class SidebarHeader extends StatelessWidget {
   final String avatarLetter;
   final ConversationModel? conv;
   final bool isGroup;
+  final bool isAi;
   final AsyncValue<dynamic>? profileAsync;
   final BuildContext context;
 
@@ -25,6 +26,7 @@ class SidebarHeader extends StatelessWidget {
     required this.avatarLetter,
     required this.conv,
     required this.isGroup,
+    required this.isAi,
     required this.profileAsync,
     required this.context,
   });
@@ -53,18 +55,22 @@ class SidebarHeader extends StatelessWidget {
           maxLines: 2,
           overflow: TextOverflow.ellipsis,
         ),
-        const SizedBox(height: 8),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Icon(Icons.lock_outline, size: 13, color: Colors.white54),
-            const SizedBox(width: 4),
-            Text(
-              context.l10n.endToEndEncrypted,
-              style: const TextStyle(fontSize: 12, color: Colors.white54),
-            ),
-          ],
-        ),
+        // AI assistant subtitle. The old "end-to-end encrypted" label was
+        // removed — there is no real E2E mechanism, so the claim was misleading.
+        if (isAi) ...[
+          const SizedBox(height: 8),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(Icons.auto_awesome, size: 13, color: AppTheme.ponCyan),
+              const SizedBox(width: 4),
+              Text(
+                context.l10n.aiAssistant,
+                style: const TextStyle(fontSize: 12, color: AppTheme.ponCyan),
+              ),
+            ],
+          ),
+        ],
       ],
     );
   }

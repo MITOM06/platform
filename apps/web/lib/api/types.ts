@@ -83,6 +83,18 @@ export interface LinkPreview {
   siteName?: string | null
 }
 
+/**
+ * A single RAG citation source cited by an AI answer. Delivered on the
+ * `AI_STREAM_DONE` STOMP event as `{ documentId, fileName, score }` and then
+ * attached to the persisted AI `Message` in the cache so the bubble can render
+ * clickable source chips. `fileName` may be empty for older payloads.
+ */
+export interface AiSource {
+  documentId: string
+  fileName: string
+  score: number
+}
+
 export interface Message {
   id: string
   conversationId: string
@@ -102,6 +114,8 @@ export interface Message {
   reactions?: Reaction[]
   deletedFor?: string[]
   readBy?: string[]
+  /** RAG citation sources, attached from the AI_STREAM_DONE event (AI messages only). */
+  sources?: AiSource[]
 }
 
 export interface MessagesResponse {
@@ -168,7 +182,7 @@ export type StompEvent =
   | { type: 'PINNED_MESSAGE'; conversationId: string; messageId: string; pinnedMessages: string[] }
   | { type: 'CONVERSATION_UPDATED'; conversation: Conversation }
   | { type: 'AI_STREAM_CHUNK'; chunk: string; senderId: string; conversationId: string }
-  | { type: 'AI_STREAM_DONE'; senderId: string; conversationId: string }
+  | { type: 'AI_STREAM_DONE'; senderId: string; conversationId: string; sources?: AiSource[] }
   | { type: 'AI_STREAM_ERROR'; error: string; code?: string; senderId: string; conversationId: string }
   | { type: 'AI_TOOL_CALL'; toolName: string; inputSummary: string; sensitive?: boolean; senderId: string; conversationId: string }
   | { type: 'KB_STATUS_UPDATE'; documentId: string; status: 'pending' | 'processing' | 'done' | 'error'; chunkCount?: number }

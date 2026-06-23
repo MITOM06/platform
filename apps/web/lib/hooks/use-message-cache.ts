@@ -2,7 +2,7 @@
 
 import { useCallback } from 'react'
 import { useQueryClient, type InfiniteData } from '@tanstack/react-query'
-import type { Message, MessagesResponse } from '@/lib/api/types'
+import type { AiSource, Message, MessagesResponse } from '@/lib/api/types'
 
 /**
  * Direct TanStack Query cache mutations for a conversation's message thread.
@@ -78,5 +78,39 @@ export function useMessageCache(conversationId: string) {
     [conversationId, queryClient],
   )
 
-  return { patchMessage, markMessageRead, appendMessage }
+  // Attach RAG citation sources to the most recent AI message that doesn't yet
+  // have them. The `AI_STREAM_DONE` event carries sources but the persisted AI
+  // message arrives as a separate frame (saved first, DONE second — same topic,
+  // FIFO), so on DONE we patch the latest sources-less AI bubble. Returns true
+  // when a message was patched; the caller can stash sources for a late message.
+  const attachAiSources = useCallback(
+    (sources: AiSource[]): boolean => {
+      if (sources.length === 0) return false
+      let attached = false
+      queryClient.setQueryData<InfiniteData<MessagesResponse>>(key, (old) => {
+        if (!old) return old
+        // Scan newest-first (page[0] is freshest; content[0] is newest).
+        for (const page of old.pages) {
+          for (const m of page.content) {
+            if (m.type === 'ai' && (m.sources?.length ?? 0) === 0) {
+              attached = true
+              return {
+                ...old,
+                pages: old.pages.map((p) => ({
+                  ...p,
+                  content: p.content.map((x) => (x.id === m.id ? { ...x, sources } : x)),
+                })),
+              }
+            }
+          }
+        }
+        return old
+      })
+      return attached
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [conversationId, queryClient],
+  )
+
+  return { patchMessage, markMessageRead, appendMessage, attachAiSources }
 }

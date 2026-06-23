@@ -137,9 +137,8 @@ class ChatAiStreamHandler {
       case 'AI_STREAM_DONE':
         final rawSources = event['sources'] as List?;
         final sources = rawSources
-            ?.whereType<Map<String, dynamic>>()
-            .map((s) => s['documentId'] as String? ?? '')
-            .where((id) => id.isNotEmpty)
+            ?.map(AiSource.tryParse)
+            .whereType<AiSource>()
             .toList();
         final rawTrace = event['trace'] as Map<String, dynamic>?;
         final trace = rawTrace != null ? AiTrace.fromJson(rawTrace) : null;

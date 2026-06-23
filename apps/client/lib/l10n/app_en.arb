@@ -450,7 +450,11 @@
   "archivedChatsSubtitle": "View archived conversations",
   "emptyArchivedChats": "No archived chats",
   "webNoChatSelected": "Select a conversation to start chatting",
-  "endToEndEncrypted": "End-to-end encrypted",
+  "aiPersonality": "Personality",
+  "aiMemory": "Memory",
+  "aiSkills": "Skills",
+  "aiConnectedApps": "Connected apps",
+  "aiUsage": "Usage",
   "chatInfoCategory": "Chat Details",
   "customizeChatCategory": "Customize Chat",
   "filesAndMediaCategory": "Media, files and links",
@@ -492,6 +496,10 @@
   "feedbackSend": "Send",
   "feedbackError": "Couldn't submit feedback. Please try again.",
   "aiSensitiveAction": "sensitive action",
+  "sourcesLabel": "Sources",
+  "@sourcesLabel": {
+    "description": "Label above the list of RAG citation source chips under an AI answer"
+  },
   "aiErrorRetry": "Retry",
   "aiMessageDeleted": "Message deleted",
   "aiMemoryTitle": "AI Memory",

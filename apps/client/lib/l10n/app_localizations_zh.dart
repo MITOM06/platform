@@ -912,7 +912,19 @@ class AppLocalizationsZh extends AppLocalizations {
   String get webNoChatSelected => '选择一个会话开始聊天';
 
   @override
-  String get endToEndEncrypted => '端对端加密';
+  String get aiPersonality => '个性';
+
+  @override
+  String get aiMemory => '记忆';
+
+  @override
+  String get aiSkills => '技能';
+
+  @override
+  String get aiConnectedApps => '已连接的应用';
+
+  @override
+  String get aiUsage => '用量';
 
   @override
   String get chatInfoCategory => '聊天详情';
@@ -1036,6 +1048,9 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get aiSensitiveAction => '敏感操作';
+
+  @override
+  String get sourcesLabel => '来源';
 
   @override
   String get aiErrorRetry => '重试';

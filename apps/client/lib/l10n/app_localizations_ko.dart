@@ -912,7 +912,19 @@ class AppLocalizationsKo extends AppLocalizations {
   String get webNoChatSelected => '대화를 선택하여 채팅을 시작하세요';
 
   @override
-  String get endToEndEncrypted => '종단 간 암호화';
+  String get aiPersonality => '성격';
+
+  @override
+  String get aiMemory => '메모리';
+
+  @override
+  String get aiSkills => '스킬';
+
+  @override
+  String get aiConnectedApps => '연결된 앱';
+
+  @override
+  String get aiUsage => '사용량';
 
   @override
   String get chatInfoCategory => '채팅 세부 정보';
@@ -1036,6 +1048,9 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get aiSensitiveAction => '민감한 작업';
+
+  @override
+  String get sourcesLabel => '출처';
 
   @override
   String get aiErrorRetry => '다시 시도';

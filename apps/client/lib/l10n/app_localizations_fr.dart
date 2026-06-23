@@ -933,7 +933,19 @@ class AppLocalizationsFr extends AppLocalizations {
       'Sélectionnez une conversation pour commencer à discuter';
 
   @override
-  String get endToEndEncrypted => 'Chiffrement de bout en bout';
+  String get aiPersonality => 'Personnalité';
+
+  @override
+  String get aiMemory => 'Mémoire';
+
+  @override
+  String get aiSkills => 'Compétences';
+
+  @override
+  String get aiConnectedApps => 'Apps connectées';
+
+  @override
+  String get aiUsage => 'Utilisation';
 
   @override
   String get chatInfoCategory => 'Détails de la discussion';
@@ -1063,6 +1075,9 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get aiSensitiveAction => 'action sensible';
+
+  @override
+  String get sourcesLabel => 'Sources';
 
   @override
   String get aiErrorRetry => 'Réessayer';

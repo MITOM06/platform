@@ -71,7 +71,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
     <div className="flex-1 flex flex-col h-full bg-background/50 overflow-y-auto">
       <div className="border-b px-6 py-4 bg-background/80 backdrop-blur-md sticky top-0 z-10">
         <div className="flex items-center gap-3">
-          <Button variant="ghost" size="icon" asChild className="md:hidden" aria-label={t('back')}>
+          <Button variant="ghost" size="icon" asChild aria-label={t('back')}>
             <Link href="/settings">
               <ArrowLeft className="size-5" />
             </Link>

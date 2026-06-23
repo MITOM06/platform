@@ -921,7 +921,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get webNoChatSelected => 'Select a conversation to start chatting';
 
   @override
-  String get endToEndEncrypted => 'End-to-end encrypted';
+  String get aiPersonality => 'Personality';
+
+  @override
+  String get aiMemory => 'Memory';
+
+  @override
+  String get aiSkills => 'Skills';
+
+  @override
+  String get aiConnectedApps => 'Connected apps';
+
+  @override
+  String get aiUsage => 'Usage';
 
   @override
   String get chatInfoCategory => 'Chat Details';
@@ -1047,6 +1059,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get aiSensitiveAction => 'sensitive action';
+
+  @override
+  String get sourcesLabel => 'Sources';
 
   @override
   String get aiErrorRetry => 'Retry';
