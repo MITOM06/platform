@@ -1,0 +1,38 @@
+name: AI Eval Gate
+
+# Quality gate for the AI assistant: runs the LLM-as-judge eval harness on a
+# frozen dataset and fails if the pass rate drops below the threshold. Only runs
+# when ai-service changes (the eval makes real Anthropic calls — costs tokens).
+# Without the ANTHROPIC_API_KEY secret (e.g. fork PRs) the harness self-skips.
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'apps/server/ai-service/**'
+  push:
+    branches: [main]
+    paths:
+      - 'apps/server/ai-service/**'
+
+jobs:
+  eval-gate:
+    name: AI quality eval gate
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/server/ai-service
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: corepack enable
+      - name: Install dependencies
+        run: cd ../../../ && pnpm install --frozen-lockfile
+      - name: Run eval gate
+        run: pnpm run eval:gate
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          EVAL_MIN_PASS_RATE: '0.8'
+          # Use the prod primary model so the gate reflects what ships.
+          EVAL_SUT_MODEL: claude-sonnet-4-5

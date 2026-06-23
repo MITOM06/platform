@@ -12,6 +12,7 @@
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage",
     "eval": "ts-node --transpile-only eval/run-eval.ts",
+    "eval:gate": "EVAL_MIN_PASS_RATE=${EVAL_MIN_PASS_RATE:-0.8} ts-node --transpile-only eval/run-eval.ts",
     "gen:openapi": "ts-node --transpile-only src/generate-openapi.ts"
   },
   "dependencies": {
