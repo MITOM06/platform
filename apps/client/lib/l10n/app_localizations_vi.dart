@@ -1051,6 +1051,9 @@ class AppLocalizationsVi extends AppLocalizations {
   String get aiSensitiveAction => 'hành động nhạy cảm';
 
   @override
+  String get sourcesLabel => 'Nguồn';
+
+  @override
   String get aiErrorRetry => 'Thử lại';
 
   @override

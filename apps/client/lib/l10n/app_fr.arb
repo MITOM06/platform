@@ -357,6 +357,7 @@
   "feedbackSend": "Envoyer",
   "feedbackError": "Impossible d'envoyer le retour. Veuillez réessayer.",
   "aiSensitiveAction": "action sensible",
+  "sourcesLabel": "Sources",
   "aiErrorRetry": "Réessayer",
   "aiMessageDeleted": "Message supprimé",
   "aiMemoryTitle": "Mémoire IA",

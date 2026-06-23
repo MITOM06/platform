@@ -357,6 +357,7 @@
   "feedbackSend": "Gửi",
   "feedbackError": "Không thể gửi phản hồi. Vui lòng thử lại.",
   "aiSensitiveAction": "hành động nhạy cảm",
+  "sourcesLabel": "Nguồn",
   "aiErrorRetry": "Thử lại",
   "aiMessageDeleted": "Tin nhắn đã bị xóa",
   "aiMemoryTitle": "Bộ nhớ AI",

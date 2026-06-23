@@ -1038,6 +1038,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get aiSensitiveAction => '敏感操作';
 
   @override
+  String get sourcesLabel => '来源';
+
+  @override
   String get aiErrorRetry => '重试';
 
   @override

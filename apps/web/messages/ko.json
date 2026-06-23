@@ -514,6 +514,7 @@
     "aiQuotaExceeded": "월별 AI 사용 한도를 초과했습니다. 관리자에게 문의하세요.",
     "aiStreamInterrupted": "AI 스트림이 중단되었습니다. 다시 시도해 주세요.",
     "aiUnavailable": "AI를 일시적으로 사용할 수 없습니다.",
+    "sourcesLabel": "출처",
     "feedbackHelpful": "도움이 됨",
     "feedbackNotHelpful": "도움이 안 됨",
     "feedbackCommentPlaceholder": "무엇이 잘못되었는지 알려주세요 (선택)",

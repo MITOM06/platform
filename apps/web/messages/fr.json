@@ -514,6 +514,7 @@
     "aiQuotaExceeded": "Quota mensuel d'utilisation de l'IA dépassé. Contactez votre administrateur.",
     "aiStreamInterrupted": "Le flux IA a été interrompu. Veuillez réessayer.",
     "aiUnavailable": "L'IA est temporairement indisponible.",
+    "sourcesLabel": "Sources",
     "feedbackHelpful": "Utile",
     "feedbackNotHelpful": "Pas utile",
     "feedbackCommentPlaceholder": "Dites-nous ce qui n'a pas fonctionné (facultatif)",

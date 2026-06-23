@@ -357,6 +357,7 @@
   "feedbackSend": "보내기",
   "feedbackError": "피드백을 제출할 수 없습니다. 다시 시도해 주세요.",
   "aiSensitiveAction": "민감한 작업",
+  "sourcesLabel": "출처",
   "aiErrorRetry": "다시 시도",
   "aiMessageDeleted": "메시지가 삭제되었습니다",
   "aiMemoryTitle": "AI 메모리",

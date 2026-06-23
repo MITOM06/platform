@@ -1038,6 +1038,9 @@ class AppLocalizationsJa extends AppLocalizations {
   String get aiSensitiveAction => '重要な操作';
 
   @override
+  String get sourcesLabel => '出典';
+
+  @override
   String get aiErrorRetry => '再試行';
 
   @override

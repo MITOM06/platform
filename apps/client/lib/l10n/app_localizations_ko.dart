@@ -1038,6 +1038,9 @@ class AppLocalizationsKo extends AppLocalizations {
   String get aiSensitiveAction => '민감한 작업';
 
   @override
+  String get sourcesLabel => '출처';
+
+  @override
   String get aiErrorRetry => '다시 시도';
 
   @override

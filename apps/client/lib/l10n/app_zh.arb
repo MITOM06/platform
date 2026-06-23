@@ -357,6 +357,7 @@
   "feedbackSend": "发送",
   "feedbackError": "无法提交反馈。请重试。",
   "aiSensitiveAction": "敏感操作",
+  "sourcesLabel": "来源",
   "aiErrorRetry": "重试",
   "aiMessageDeleted": "消息已删除",
   "aiMemoryTitle": "AI记忆",

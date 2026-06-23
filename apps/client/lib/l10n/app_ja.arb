@@ -357,6 +357,7 @@
   "feedbackSend": "送信",
   "feedbackError": "フィードバックを送信できませんでした。もう一度お試しください。",
   "aiSensitiveAction": "重要な操作",
+  "sourcesLabel": "出典",
   "aiErrorRetry": "再試行",
   "aiMessageDeleted": "メッセージが削除されました",
   "aiMemoryTitle": "AIメモリ",

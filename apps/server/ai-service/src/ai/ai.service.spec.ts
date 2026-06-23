@@ -361,8 +361,8 @@ describe('AiService', () => {
       text:
         '## Knowledge Base Context:\n[Source 1] Flutter is a UI toolkit.\n\n[Source 2] Dart is the language.\n\nUse ONLY this context',
       ragSources: [
-        { documentId: 'doc1', score: 0.85 },
-        { documentId: 'doc1', score: 0.75 },
+        { documentId: 'doc1', fileName: 'flutter.pdf', score: 0.85 },
+        { documentId: 'doc1', fileName: 'flutter.pdf', score: 0.75 },
       ],
     });
     mockStream.mockReturnValue(makeStream(['Based on [Source 1]...']));
@@ -378,7 +378,7 @@ describe('AiService', () => {
   it('includes sources in AI_STREAM_DONE payload', async () => {
     buildVolatileContext.mockResolvedValue({
       text: 'kb context',
-      ragSources: [{ documentId: 'doc1', score: 0.8 }],
+      ragSources: [{ documentId: 'doc1', fileName: 'spec.pdf', score: 0.8 }],
     });
     mockStream.mockReturnValue(makeStream(['OK']));
 
@@ -386,7 +386,7 @@ describe('AiService', () => {
 
     expect(publish).toHaveBeenCalledWith('conv-test', expect.objectContaining({
       type: 'AI_STREAM_DONE',
-      sources: [{ documentId: 'doc1', score: 0.8 }],
+      sources: [{ documentId: 'doc1', fileName: 'spec.pdf', score: 0.8 }],
     }));
   });
 

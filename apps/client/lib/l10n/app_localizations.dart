@@ -2058,6 +2058,12 @@ abstract class AppLocalizations {
   /// **'sensitive action'**
   String get aiSensitiveAction;
 
+  /// Label above the list of RAG citation source chips under an AI answer
+  ///
+  /// In en, this message translates to:
+  /// **'Sources'**
+  String get sourcesLabel;
+
   /// No description provided for @aiErrorRetry.
   ///
   /// In en, this message translates to:

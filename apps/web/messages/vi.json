@@ -514,6 +514,7 @@
     "aiQuotaExceeded": "Đã vượt quá hạn mức sử dụng AI hàng tháng. Vui lòng liên hệ quản trị viên.",
     "aiStreamInterrupted": "Luồng AI bị gián đoạn. Vui lòng thử lại.",
     "aiUnavailable": "AI tạm thời không khả dụng.",
+    "sourcesLabel": "Nguồn",
     "feedbackHelpful": "Hữu ích",
     "feedbackNotHelpful": "Không hữu ích",
     "feedbackCommentPlaceholder": "Cho chúng tôi biết điều gì chưa ổn (tùy chọn)",

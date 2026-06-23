@@ -1065,6 +1065,9 @@ class AppLocalizationsFr extends AppLocalizations {
   String get aiSensitiveAction => 'action sensible';
 
   @override
+  String get sourcesLabel => 'Sources';
+
+  @override
   String get aiErrorRetry => 'Réessayer';
 
   @override

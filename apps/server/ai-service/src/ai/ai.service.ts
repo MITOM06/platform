@@ -13,7 +13,7 @@ import { AiStreamErrorCode } from './ai-stream-error';
 import { withAgenticLoopSpan } from './tracing-helpers';
 import { isSensitiveTool } from './injection-guard';
 import { FactExtractorService } from './fact-extractor.service';
-import { ContextBuilderService } from './context-builder.service';
+import { ContextBuilderService, RagSource } from './context-builder.service';
 import { ResponseCacheService } from './response-cache.service';
 import { SkillsService } from '../skills/skills.service';
 import { EmbeddingService } from '../kb/embedding.service';
@@ -26,11 +26,6 @@ export interface AiRequestPayload {
   history: Array<{ role: 'user' | 'assistant'; content: string }>;
   /** Owning department id of the conversation (P6 group bot); null for personal. */
   departmentId?: string;
-}
-
-interface RagSource {
-  documentId: string;
-  score: number;
 }
 
 interface ToolTraceEntry {

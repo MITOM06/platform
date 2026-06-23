@@ -514,6 +514,7 @@
     "aiQuotaExceeded": "Monthly AI usage quota exceeded. Please contact your admin.",
     "aiStreamInterrupted": "AI stream was interrupted. Please try again.",
     "aiUnavailable": "AI is temporarily unavailable.",
+    "sourcesLabel": "Sources",
     "feedbackHelpful": "Helpful",
     "feedbackNotHelpful": "Not helpful",
     "feedbackCommentPlaceholder": "Tell us what went wrong (optional)",

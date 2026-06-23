@@ -27,7 +27,7 @@ import { useWallpaper } from '@/lib/hooks/use-wallpaper'
 import { useMessageCache } from '@/lib/hooks/use-message-cache'
 import { applyNicknameSystemMessage } from '@/lib/nicknames'
 import { applyQuickReactionSystemMessage } from '@/lib/quick-reaction'
-import type { AiStreamState, CallEvent, CallMedia, Message, MessageType, StompEvent } from '@/lib/api/types'
+import type { AiSource, AiStreamState, CallEvent, CallMedia, Message, MessageType, StompEvent } from '@/lib/api/types'
 
 interface Props {
   params: Promise<{ id: string }>
@@ -170,7 +170,10 @@ export default function ConversationPage({ params }: Props) {
     bottomRef.current?.scrollIntoView({ behavior: 'auto' })
   }, [id])
 
-  const { patchMessage, markMessageRead, appendMessage } = useMessageCache(id)
+  const { patchMessage, markMessageRead, appendMessage, attachAiSources } = useMessageCache(id)
+  // RAG sources from an AI_STREAM_DONE that arrived before the persisted AI
+  // message was in the cache — applied to that message on append (rare race).
+  const pendingAiSourcesRef = useRef<AiSource[] | null>(null)
 
   const armAiWatchdog = useCallback(() => {
     if (aiWatchdogRef.current) clearTimeout(aiWatchdogRef.current)
@@ -262,9 +265,19 @@ export default function ConversationPage({ params }: Props) {
                 armAiWatchdog()
                 break
               }
-              case 'AI_STREAM_DONE':
+              case 'AI_STREAM_DONE': {
                 clearAiStream()
+                // Attach RAG citation sources to the persisted AI message so the
+                // bubble can render clickable chips. The saved message frame is
+                // sent before this DONE frame (same topic, FIFO), so it is
+                // normally already in the cache; if not (rare reorder), stash the
+                // sources for the next AI message append.
+                const doneSources = parsed.sources ?? []
+                if (doneSources.length > 0 && !attachAiSources(doneSources)) {
+                  pendingAiSourcesRef.current = doneSources
+                }
                 break
+              }
               case 'AI_STREAM_ERROR': {
                 clearAiStream()
                 const aiErrCodeMap: Record<string, string> = {
@@ -332,6 +345,12 @@ export default function ConversationPage({ params }: Props) {
               applyNicknameSystemMessage(id, msg.content)
               applyQuickReactionSystemMessage(id, msg.content)
             }
+            // If a DONE frame delivered sources before this AI message arrived
+            // (rare reorder), graft them on so the chips render.
+            if (msg.type === 'ai' && pendingAiSourcesRef.current) {
+              msg.sources = pendingAiSourcesRef.current
+              pendingAiSourcesRef.current = null
+            }
             appendMessage(msg)
           }
         } catch {
@@ -360,7 +379,7 @@ export default function ConversationPage({ params }: Props) {
       messageSub?.unsubscribe()
       typingSub?.unsubscribe()
     }
-  }, [id, stompConnected, queryClient, currentUser?.id, patchMessage, appendMessage, markMessageRead, t, armAiWatchdog, clearAiStream])
+  }, [id, stompConnected, queryClient, currentUser?.id, patchMessage, appendMessage, attachAiSources, markMessageRead, t, armAiWatchdog, clearAiStream])
 
   // Mark conversation as read on open
   useEffect(() => {

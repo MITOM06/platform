@@ -492,6 +492,10 @@
   "feedbackSend": "Send",
   "feedbackError": "Couldn't submit feedback. Please try again.",
   "aiSensitiveAction": "sensitive action",
+  "sourcesLabel": "Sources",
+  "@sourcesLabel": {
+    "description": "Label above the list of RAG citation source chips under an AI answer"
+  },
   "aiErrorRetry": "Retry",
   "aiMessageDeleted": "Message deleted",
   "aiMemoryTitle": "AI Memory",

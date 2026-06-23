@@ -273,6 +273,42 @@ class AiTrace {
       );
 }
 
+/// A single RAG citation source returned in the AI_STREAM_DONE payload.
+/// Backend now sends `{documentId, fileName, score}` objects; older payloads
+/// (and persisted history) may carry a bare documentId string — both parse here.
+@immutable
+class AiSource {
+  final String documentId;
+  final String fileName;
+  final double? score;
+
+  const AiSource({
+    required this.documentId,
+    this.fileName = '',
+    this.score,
+  });
+
+  /// Parses an entry that may be either a `{documentId, fileName, score}` map
+  /// or a bare documentId string (backward compatible). Returns null when no
+  /// usable documentId can be extracted.
+  static AiSource? tryParse(dynamic raw) {
+    if (raw is String) {
+      if (raw.isEmpty) return null;
+      return AiSource(documentId: raw);
+    }
+    if (raw is Map) {
+      final id = raw['documentId'] as String? ?? '';
+      if (id.isEmpty) return null;
+      return AiSource(
+        documentId: id,
+        fileName: raw['fileName'] as String? ?? '',
+        score: (raw['score'] as num?)?.toDouble(),
+      );
+    }
+    return null;
+  }
+}
+
 @immutable
 class MessageModel {
   final String id;
@@ -295,8 +331,8 @@ class MessageModel {
   // AI streaming state — client-only, not persisted
   final bool isStreaming;
   final bool isThinking;
-  // RAG citation sources — documentIds cited by the AI, from AI_STREAM_DONE payload
-  final List<String>? sources;
+  // RAG citation sources cited by the AI, from AI_STREAM_DONE payload
+  final List<AiSource>? sources;
   // Agent trace — thinking blocks, tool calls, token usage; shown in trace panel below AI messages
   final AiTrace? trace;
   // Tools actively executing during streaming (client-only)
@@ -410,7 +446,7 @@ class MessageModel {
     bool? isPending,
     bool? isStreaming,
     bool? isThinking,
-    List<String>? sources,
+    List<AiSource>? sources,
     AiTrace? trace,
     List<String>? activeTools,
     List<String>? sensitiveTools,

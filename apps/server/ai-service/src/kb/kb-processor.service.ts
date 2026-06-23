@@ -133,6 +133,35 @@ export class KbProcessorService {
   }
 
   /**
+   * Resolve display filenames for a set of document ids from the shared
+   * kb_documents collection. Used to enrich RAG citation sources so clients can
+   * render clickable references. Lookups are deduplicated; ids without a record
+   * (or with an empty fileName) are simply absent from the returned map. Fully
+   * fail-soft — on any error an empty map is returned so the answer still streams.
+   */
+  async getFileNames(documentIds: string[]): Promise<Map<string, string>> {
+    const result = new Map<string, string>();
+    const uniqueIds = [...new Set(documentIds.filter((id) => !!id))];
+    if (uniqueIds.length === 0) return result;
+
+    try {
+      const docs = await this.kbDocumentModel
+        .find({ documentId: { $in: uniqueIds } })
+        .select('documentId fileName')
+        .lean()
+        .exec();
+      for (const d of docs) {
+        if (d.fileName) result.set(d.documentId, d.fileName);
+      }
+    } catch (err) {
+      this.logger.warn(
+        `Failed to resolve KB filenames for ${uniqueIds.length} document(s): ${(err as Error).message}`,
+      );
+    }
+    return result;
+  }
+
+  /**
    * Retention: delete vector chunks whose owning kb_documents record no longer
    * exists (uploads that were removed but whose `kb:delete` cleanup failed, or
    * legacy leftovers). Returns the number of orphaned documents purged.

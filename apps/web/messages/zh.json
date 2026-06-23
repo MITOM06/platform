@@ -514,6 +514,7 @@
     "aiQuotaExceeded": "已超过每月 AI 使用配额，请联系管理员。",
     "aiStreamInterrupted": "AI 流已中断，请重试。",
     "aiUnavailable": "AI 暂时不可用。",
+    "sourcesLabel": "来源",
     "feedbackHelpful": "有帮助",
     "feedbackNotHelpful": "没帮助",
     "feedbackCommentPlaceholder": "告诉我们哪里有问题（可选）",

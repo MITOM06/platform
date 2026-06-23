@@ -357,6 +357,7 @@
   "feedbackSend": "Enviar",
   "feedbackError": "No se pudo enviar el comentario. Inténtalo de nuevo.",
   "aiSensitiveAction": "acción sensible",
+  "sourcesLabel": "Fuentes",
   "aiErrorRetry": "Reintentar",
   "aiMessageDeleted": "Mensaje eliminado",
   "aiMemoryTitle": "Memoria de IA",

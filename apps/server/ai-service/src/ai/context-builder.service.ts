@@ -7,8 +7,10 @@ import { VectorStoreService } from '../kb/vector-store.service';
 import { RerankerService } from '../kb/reranker.service';
 import { wrapUntrusted, sanitizeUntrusted } from './injection-guard';
 
-interface RagSource {
+export interface RagSource {
   documentId: string;
+  /** Display filename from kb_documents; '' when unknown (fail-soft). */
+  fileName: string;
   score: number;
 }
 
@@ -102,7 +104,17 @@ export class ContextBuilderService {
         const relevant = await this.reranker.refine(queryText, gated, this.topK);
 
         if (relevant.length > 0) {
-          relevant.forEach((r) => ragSources.push({ documentId: r.documentId, score: r.score }));
+          relevant.forEach((r) =>
+            ragSources.push({ documentId: r.documentId, fileName: '', score: r.score }),
+          );
+          // Enrich each source with its display filename so clients can render
+          // clickable citations. Fail-soft: on lookup failure fileName stays ''.
+          const fileNames = await this.kbProcessor.getFileNames(
+            ragSources.map((s) => s.documentId),
+          );
+          ragSources.forEach((s) => {
+            s.fileName = fileNames.get(s.documentId) ?? '';
+          });
           // Fence the document chunks as untrusted data (spotlighting); keep the
           // citation/grounding directive OUTSIDE the fence as trusted guidance.
           const fenced = wrapUntrusted(

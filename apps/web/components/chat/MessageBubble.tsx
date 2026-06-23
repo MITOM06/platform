@@ -15,6 +15,7 @@ import { GroupReadDetailsModal } from './GroupReadDetailsModal'
 import { ReactionsDetailModal } from './ReactionsDetailModal'
 import { MeetingSummaryCard } from './MeetingSummaryCard'
 import { MessageFeedback } from './MessageFeedback'
+import { MessageSources } from './MessageSources'
 import { humanizeSystemMessage } from '@/lib/system-messages'
 import { useNickname, getNickname } from '@/lib/nicknames'
 import { useUser } from '@/lib/hooks/use-user'
@@ -348,6 +349,9 @@ const MessageBubbleInner = function MessageBubble({
             {senderLabel}
             {replyPreview}
             {body}
+            {showFeedback && message.sources && message.sources.length > 0 && (
+              <MessageSources sources={message.sources} conversationId={conversationId} />
+            )}
             {timeLabel}
           </div>
         )}
@@ -407,6 +411,7 @@ export const MessageBubble = memo(
     prev.message.editedAt === next.message.editedAt &&
     prev.message.reactions === next.message.reactions &&
     prev.message.readBy === next.message.readBy &&
+    prev.message.sources === next.message.sources &&
     prev.isPinned === next.isPinned &&
     prev.isOwn === next.isOwn &&
     prev.conversationId === next.conversationId,

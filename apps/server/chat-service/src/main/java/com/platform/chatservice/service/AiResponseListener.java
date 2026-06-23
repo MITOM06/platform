@@ -137,6 +137,11 @@ public class AiResponseListener implements MessageListener {
         doneEvent.put("senderId", AiConstants.AI_BOT_USER_ID);
         doneEvent.put("conversationId", convId);
         if (traceMap != null) doneEvent.put("trace", traceMap);
+        // Forward RAG citation sources untouched so clients can render clickable
+        // references. Each element is {documentId, fileName, score}; passed through
+        // as-is (no field reconstruction/stripping). Default to an empty list.
+        Object sources = payload.get("sources");
+        doneEvent.put("sources", sources != null ? sources : java.util.List.of());
         messagingTemplate.convertAndSend(topic, doneEvent);
       }
       case "AI_STREAM_ERROR" -> {
