@@ -73,4 +73,24 @@ describe('UsageService', () => {
     const exceeded = await service.isQuotaExceeded('user-1');
     expect(exceeded).toBe(true);
   });
+
+  // ── Workspace limit override (TASK-12) ──────────────────────────────────────
+
+  it('isQuotaExceeded uses limitOverride over the env default', async () => {
+    mockFind.mockReturnValue({ exec: jest.fn().mockResolvedValue([{ inputTokens: 60, outputTokens: 60 }]) });
+    // 120 used; env default 500000 would NOT be exceeded, but override 100 is.
+    expect(await service.isQuotaExceeded('user-1', 100)).toBe(true);
+  });
+
+  it('isQuotaExceeded treats limitOverride=0 as "block all"', async () => {
+    mockFind.mockReturnValue({ exec: jest.fn().mockResolvedValue([{ inputTokens: 0, outputTokens: 0 }]) });
+    // 0 used >= 0 limit ⇒ exceeded. (0 must NOT be coerced to the env fallback.)
+    expect(await service.isQuotaExceeded('user-1', 0)).toBe(true);
+  });
+
+  it('isQuotaExceeded falls back to env default when limitOverride is null/undefined', async () => {
+    mockFind.mockReturnValue({ exec: jest.fn().mockResolvedValue([{ inputTokens: 100, outputTokens: 100 }]) });
+    expect(await service.isQuotaExceeded('user-1', null)).toBe(false);
+    expect(await service.isQuotaExceeded('user-1', undefined)).toBe(false);
+  });
 });

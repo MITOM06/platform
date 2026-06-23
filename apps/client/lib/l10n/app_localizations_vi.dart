@@ -1890,6 +1890,100 @@ class AppLocalizationsVi extends AppLocalizations {
   String get adminNavAudit => 'Nhật ký';
 
   @override
+  String get adminNavAi => 'Trợ lý AI';
+
+  @override
+  String get adminAiInheritHint =>
+      'Để trống hoặc chọn \"Kế thừa\" để dùng mặc định của máy chủ.';
+
+  @override
+  String get adminAiInheritOption => 'Kế thừa (mặc định)';
+
+  @override
+  String get adminAiOn => 'Bật';
+
+  @override
+  String get adminAiOff => 'Tắt';
+
+  @override
+  String get adminAiPersonaSection => 'Tính cách';
+
+  @override
+  String get adminAiPersonaName => 'Tên trợ lý mặc định';
+
+  @override
+  String get adminAiTone => 'Giọng điệu mặc định';
+
+  @override
+  String get adminAiToneFriendly => 'Thân thiện';
+
+  @override
+  String get adminAiToneProfessional => 'Chuyên nghiệp';
+
+  @override
+  String get adminAiToneConcise => 'Ngắn gọn';
+
+  @override
+  String get adminAiToneCreative => 'Sáng tạo';
+
+  @override
+  String get adminAiModelSection => 'Mô hình';
+
+  @override
+  String get adminAiModelTier => 'Cấp mô hình mặc định';
+
+  @override
+  String get adminAiTierAuto => 'Tự động (bộ định tuyến)';
+
+  @override
+  String get adminAiTierSimple => 'Đơn giản';
+
+  @override
+  String get adminAiTierMid => 'Cân bằng';
+
+  @override
+  String get adminAiTierComplex => 'Nâng cao';
+
+  @override
+  String get adminAiCapabilitiesSection => 'Khả năng';
+
+  @override
+  String get adminAiWebSearch => 'Tìm kiếm web';
+
+  @override
+  String get adminAiWebSearchDesc => 'Cho phép trợ lý tìm kiếm trên web.';
+
+  @override
+  String get adminAiThinking => 'Suy luận mở rộng';
+
+  @override
+  String get adminAiThinkingDesc => 'Cho phép trợ lý suy luận từng bước.';
+
+  @override
+  String get adminAiQuotaSection => 'Giới hạn sử dụng';
+
+  @override
+  String get adminAiTokenLimit => 'Giới hạn token hằng tháng';
+
+  @override
+  String get adminAiTokenLimitDesc =>
+      'Để trống để kế thừa; 0 chặn mọi sử dụng.';
+
+  @override
+  String get adminAiConnectorsSection => 'Trình kết nối được phép';
+
+  @override
+  String get adminAiRestrictConnectors => 'Hạn chế trình kết nối cho AI';
+
+  @override
+  String get adminAiConnectorsInherit =>
+      'Kế thừa danh sách cho phép của không gian làm việc.';
+
+  @override
+  String get adminAiConnectorsExplicit =>
+      'AI chỉ dùng các trình kết nối được chọn bên dưới.';
+
+  @override
   String get adminWsIdentity => 'Nhận diện & thương hiệu';
 
   @override

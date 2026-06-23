@@ -31,8 +31,16 @@ export class UsageService {
     return records.reduce((sum, r) => sum + (r.inputTokens ?? 0) + (r.outputTokens ?? 0), 0);
   }
 
-  async isQuotaExceeded(userId: string): Promise<boolean> {
-    const limit = this.configService.get<number>('config.quota.monthlyTokenLimit') ?? 500000;
+  /**
+   * @param limitOverride workspace-resolved monthly token limit (TASK-12). When
+   * provided (incl. `0` = block all), it takes precedence over the env default.
+   * `undefined`/`null` ⇒ fall back to env `AI_MONTHLY_TOKEN_LIMIT`.
+   */
+  async isQuotaExceeded(userId: string, limitOverride?: number | null): Promise<boolean> {
+    const limit =
+      limitOverride ??
+      this.configService.get<number>('config.quota.monthlyTokenLimit') ??
+      500000;
     const used = await this.getMonthlyUsage(userId);
     return used >= limit;
   }

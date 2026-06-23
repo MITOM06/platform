@@ -9,6 +9,7 @@ import { WebSearchService } from './web-search/web-search.service';
 import { McpConnectorClient } from './mcp-connector.client';
 import { ToolResultCacheService } from './tool-result-cache.service';
 import { ToolContext, ToolDefinition } from './tool.interface';
+import { filterByAllowedConnectors } from './tool-registry.service';
 
 /** In-memory fake of ToolResultCacheService for tests. Disabled by default. */
 function makeCache(enabled = false): ToolResultCacheService {
@@ -218,5 +219,86 @@ describe('ToolRegistryService', () => {
     expect(r1).toMatch('Tool error: boom');
     expect(r2).toBe('ok now'); // retried, not served from cache
     expect(crashFn).toHaveBeenCalledTimes(2);
+  });
+
+  // ─── Workspace web-search toggle (TASK-12) ─────────────────────────────────
+
+  it('does NOT register web_search when ctx.webSearchEnabled=false (even if provider available)', async () => {
+    const registry = makeRegistry({ webSearchAvailable: true });
+    const defs = await registry.getDefinitions({ ...ctx, webSearchEnabled: false });
+    expect(defs.map((d) => d.name)).not.toContain('web_search');
+  });
+
+  it('still registers web_search when ctx.webSearchEnabled=true AND provider available', async () => {
+    const registry = makeRegistry({ webSearchAvailable: true });
+    const defs = await registry.getDefinitions({ ...ctx, webSearchEnabled: true });
+    expect(defs.map((d) => d.name)).toContain('web_search');
+  });
+
+  it('does NOT register web_search when enabled in ctx but provider unavailable (provider gate composes)', async () => {
+    const registry = makeRegistry({ webSearchAvailable: false });
+    const defs = await registry.getDefinitions({ ...ctx, webSearchEnabled: true });
+    expect(defs.map((d) => d.name)).not.toContain('web_search');
+  });
+
+  // ─── Workspace AI connector allow-list filter (TASK-12) ────────────────────
+
+  it('filters MCP tools to allowedConnectors providers', async () => {
+    const getTools = jest.fn().mockResolvedValue([
+      { name: 'mcp__notion__create_page', description: '', input_schema: { type: 'object', properties: {}, required: [] } },
+      { name: 'mcp__gmail__send_email', description: '', input_schema: { type: 'object', properties: {}, required: [] } },
+    ]);
+    const registry = makeRegistry({ mcpGetTools: getTools });
+    const defs = await registry.getDefinitions({ ...ctx, allowedConnectors: ['notion'] });
+    const names = defs.map((d) => d.name);
+    expect(names).toContain('mcp__notion__create_page');
+    expect(names).not.toContain('mcp__gmail__send_email');
+  });
+
+  it('allowedConnectors=[] drops ALL MCP tools (static tools remain)', async () => {
+    const getTools = jest.fn().mockResolvedValue([dynamicTool]);
+    const registry = makeRegistry({ mcpGetTools: getTools });
+    const defs = await registry.getDefinitions({ ...ctx, allowedConnectors: [] });
+    expect(defs.map((d) => d.name)).not.toContain('mcp__notion__create_page');
+    expect(defs).toHaveLength(5); // 5 static tools, no MCP
+  });
+
+  it('allowedConnectors=null/undefined does NOT filter MCP tools (inherit)', async () => {
+    const getTools = jest.fn().mockResolvedValue([dynamicTool]);
+    const registry = makeRegistry({ mcpGetTools: getTools });
+    const defs = await registry.getDefinitions({ ...ctx, allowedConnectors: null });
+    expect(defs.map((d) => d.name)).toContain('mcp__notion__create_page');
+  });
+});
+
+describe('filterByAllowedConnectors (pure)', () => {
+  const tools: ToolDefinition[] = [
+    { name: 'mcp__notion__create_page', description: '', input_schema: { type: 'object', properties: {}, required: [] } },
+    { name: 'mcp__gmail__send_email', description: '', input_schema: { type: 'object', properties: {}, required: [] } },
+    { name: 'mcp__custom:abc123__run', description: '', input_schema: { type: 'object', properties: {}, required: [] } },
+  ];
+
+  it('null ⇒ inherit (returns all unchanged)', () => {
+    expect(filterByAllowedConnectors(tools, null)).toHaveLength(3);
+  });
+
+  it('[] ⇒ allow none', () => {
+    expect(filterByAllowedConnectors(tools, [])).toHaveLength(0);
+  });
+
+  it('matches built-in connectors by provider segment', () => {
+    const out = filterByAllowedConnectors(tools, ['notion', 'gmail']);
+    expect(out.map((t) => t.name)).toEqual([
+      'mcp__notion__create_page',
+      'mcp__gmail__send_email',
+    ]);
+  });
+
+  it('drops custom MCP when the allow-list holds only catalog ids — documented limitation', () => {
+    // allowedConnectors holds CATALOG ids (e.g. 'notion'); a custom server's
+    // provider segment is 'custom:<id>' which is not a catalog id, so it can never
+    // be selected by the admin UI and is dropped whenever a non-null list is set.
+    const out = filterByAllowedConnectors(tools, ['notion', 'gmail']);
+    expect(out.map((t) => t.name)).not.toContain('mcp__custom:abc123__run');
   });
 });

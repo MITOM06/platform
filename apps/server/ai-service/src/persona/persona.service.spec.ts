@@ -67,6 +67,37 @@ describe('PersonaService', () => {
       const prompt = service.buildSystemPrompt(persona, 'Alice');
       expect(prompt).toContain('warm, empathetic');
     });
+
+    // ── Workspace defaults (TASK-12) ─────────────────────────────────────────
+
+    it('uses workspace default name/tone when persona is null', () => {
+      const prompt = service.buildSystemPrompt(null, 'Alice', {
+        personaName: 'Acme Bot',
+        defaultTone: 'professional',
+      });
+      expect(prompt).toContain('Acme Bot');
+      expect(prompt).toContain('precise, formal');
+    });
+
+    it('per-conversation persona overrides the workspace default (highest precedence)', () => {
+      const persona = { name: 'DevBot', tone: 'creative', systemPromptPrefix: null } as AiPersona;
+      const prompt = service.buildSystemPrompt(persona, 'Bob', {
+        personaName: 'Acme Bot',
+        defaultTone: 'professional',
+      });
+      expect(prompt).toContain('DevBot');
+      expect(prompt).toContain('imaginative');
+      expect(prompt).not.toContain('Acme Bot');
+    });
+
+    it('falls back to hardcoded PON AI/friendly when both persona and workspace default are null', () => {
+      const prompt = service.buildSystemPrompt(null, 'Alice', {
+        personaName: null,
+        defaultTone: null,
+      });
+      expect(prompt).toContain('PON AI');
+      expect(prompt).toContain('warm, empathetic');
+    });
   });
 
   describe('getPersona', () => {

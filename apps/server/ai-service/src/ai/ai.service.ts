@@ -18,6 +18,8 @@ import { ResponseCacheService } from './response-cache.service';
 import { SkillsService } from '../skills/skills.service';
 import { ConversationAccessService } from '../conversation/conversation-access.service';
 import { EmbeddingService } from '../kb/embedding.service';
+import { SettingsService } from '../settings/settings.service';
+import { ResolvedAiSettings } from '../settings/resolved-ai-settings';
 
 export interface AiRequestPayload {
   conversationId: string;
@@ -61,6 +63,8 @@ interface RequestContext {
   ragSources: RagSource[];
   /** Embedded user query — used to populate the semantic response cache. */
   queryVector?: number[] | null;
+  /** Resolved workspace AI settings (TASK-12) threaded into the loop. */
+  settings: ResolvedAiSettings;
 }
 
 const MAX_ITER = 5;
@@ -90,6 +94,7 @@ export class AiService {
     private readonly skillsService: SkillsService,
     private readonly responseCache: ResponseCacheService,
     private readonly conversationAccess: ConversationAccessService,
+    private readonly settingsService: SettingsService,
   ) {
     this.anthropic = new Anthropic({
       apiKey: this.configService.get<string>('config.anthropic.apiKey'),
@@ -141,7 +146,10 @@ export class AiService {
       return; // expected condition — do NOT dead-letter.
     }
 
-    if (await this.usageService.isQuotaExceeded(userId)) {
+    // Resolve workspace AI settings once (cached) and thread through the request.
+    const settings = await this.settingsService.getSettings();
+
+    if (await this.usageService.isQuotaExceeded(userId, settings.monthlyTokenLimit)) {
       this.logger.warn(`Quota exceeded for user ${userId} in conversation ${conversationId}`);
       await this.publisher.publish(conversationId, {
         type: 'AI_STREAM_ERROR',
@@ -169,14 +177,17 @@ export class AiService {
 
     // Release the concurrency slot no matter how processing ends (incl. rethrow).
     try {
-      await this.processRequest(payload);
+      await this.processRequest(payload, settings);
     } finally {
       await decision.release();
     }
   }
 
   /** Core pipeline: embed → persona → context → route → agentic loop → memory. */
-  private async processRequest(payload: AiRequestPayload): Promise<void> {
+  private async processRequest(
+    payload: AiRequestPayload,
+    settings: ResolvedAiSettings,
+  ): Promise<void> {
     const { conversationId, userId, displayName, content, history, departmentId } = payload;
     const startMs = Date.now();
     this.logger.log(`AI request for conversation ${conversationId} from ${displayName}`);
@@ -203,7 +214,12 @@ export class AiService {
     }
 
     const persona = await this.personaService.getPersona(conversationId);
-    const baseSystem = this.personaService.buildSystemPrompt(persona, displayName);
+    // Per-conversation persona stays highest precedence; workspace defaults
+    // (TASK-12) fill missing name/tone before the hardcoded fallback.
+    const baseSystem = this.personaService.buildSystemPrompt(persona, displayName, {
+      personaName: settings.personaName,
+      defaultTone: settings.defaultTone,
+    });
 
     const [volatileContext, skillInstructions] = await Promise.all([
       this.contextBuilder.buildVolatileContext(
@@ -229,12 +245,15 @@ export class AiService {
         .join('\n\n'),
       ragSources: volatileContext.ragSources,
       queryVector,
+      settings,
     };
 
     const routeSignals: RouteSignals = {
       contentLength: content.length,
       historyLength: history.length,
       hasKbContext: ctx.ragSources.length > 0,
+      // Workspace tier override (TASK-12); 'auto' ⇒ env router heuristics.
+      forcedTier: settings.modelTier,
     };
     const selectedModel = selectModel(routeSignals, this.routerConfig);
     this.logger.log(
@@ -374,7 +393,9 @@ export class AiService {
     history: AiRequestPayload['history'],
     startMs: number,
   ): Promise<AiTrace> {
-    const enableThinking = this.configService.get<boolean>('config.ai.enableThinking') ?? false;
+    // Workspace thinking toggle (TASK-12) — already resolved against the env
+    // default (AI_ENABLE_THINKING) by SettingsService.
+    const enableThinking = ctx.settings.thinkingEnabled;
     // Adaptive thinking only on the primary model (Opus 4.8 / Sonnet 4.6).
     const useThinking = enableThinking && model === this.primaryModel;
     const thinkingParam: { thinking?: Anthropic.ThinkingConfigParam } = useThinking
@@ -391,6 +412,11 @@ export class AiService {
       displayName: ctx.displayName,
       departmentId: ctx.departmentId,
       sourceSink,
+      // Workspace tool governance (TASK-12): web-search toggle + AI connector
+      // allow-list. The registry composes these with the provider gate / the
+      // workspace-wide allow-list already enforced by connector-service.
+      webSearchEnabled: ctx.settings.webSearchEnabled,
+      allowedConnectors: ctx.settings.allowedConnectors,
     };
     const tools = await this.buildTools(toolCtx);
 

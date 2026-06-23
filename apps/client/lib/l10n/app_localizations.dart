@@ -3547,6 +3547,186 @@ abstract class AppLocalizations {
   /// **'Audit log'**
   String get adminNavAudit;
 
+  /// No description provided for @adminNavAi.
+  ///
+  /// In en, this message translates to:
+  /// **'AI assistant'**
+  String get adminNavAi;
+
+  /// No description provided for @adminAiInheritHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Leave a field empty or set \"Inherit\" to use the server default.'**
+  String get adminAiInheritHint;
+
+  /// No description provided for @adminAiInheritOption.
+  ///
+  /// In en, this message translates to:
+  /// **'Inherit (default)'**
+  String get adminAiInheritOption;
+
+  /// No description provided for @adminAiOn.
+  ///
+  /// In en, this message translates to:
+  /// **'On'**
+  String get adminAiOn;
+
+  /// No description provided for @adminAiOff.
+  ///
+  /// In en, this message translates to:
+  /// **'Off'**
+  String get adminAiOff;
+
+  /// No description provided for @adminAiPersonaSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Persona'**
+  String get adminAiPersonaSection;
+
+  /// No description provided for @adminAiPersonaName.
+  ///
+  /// In en, this message translates to:
+  /// **'Default assistant name'**
+  String get adminAiPersonaName;
+
+  /// No description provided for @adminAiTone.
+  ///
+  /// In en, this message translates to:
+  /// **'Default tone'**
+  String get adminAiTone;
+
+  /// No description provided for @adminAiToneFriendly.
+  ///
+  /// In en, this message translates to:
+  /// **'Friendly'**
+  String get adminAiToneFriendly;
+
+  /// No description provided for @adminAiToneProfessional.
+  ///
+  /// In en, this message translates to:
+  /// **'Professional'**
+  String get adminAiToneProfessional;
+
+  /// No description provided for @adminAiToneConcise.
+  ///
+  /// In en, this message translates to:
+  /// **'Concise'**
+  String get adminAiToneConcise;
+
+  /// No description provided for @adminAiToneCreative.
+  ///
+  /// In en, this message translates to:
+  /// **'Creative'**
+  String get adminAiToneCreative;
+
+  /// No description provided for @adminAiModelSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Model'**
+  String get adminAiModelSection;
+
+  /// No description provided for @adminAiModelTier.
+  ///
+  /// In en, this message translates to:
+  /// **'Default model tier'**
+  String get adminAiModelTier;
+
+  /// No description provided for @adminAiTierAuto.
+  ///
+  /// In en, this message translates to:
+  /// **'Auto (router)'**
+  String get adminAiTierAuto;
+
+  /// No description provided for @adminAiTierSimple.
+  ///
+  /// In en, this message translates to:
+  /// **'Simple'**
+  String get adminAiTierSimple;
+
+  /// No description provided for @adminAiTierMid.
+  ///
+  /// In en, this message translates to:
+  /// **'Balanced'**
+  String get adminAiTierMid;
+
+  /// No description provided for @adminAiTierComplex.
+  ///
+  /// In en, this message translates to:
+  /// **'Advanced'**
+  String get adminAiTierComplex;
+
+  /// No description provided for @adminAiCapabilitiesSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Capabilities'**
+  String get adminAiCapabilitiesSection;
+
+  /// No description provided for @adminAiWebSearch.
+  ///
+  /// In en, this message translates to:
+  /// **'Web search'**
+  String get adminAiWebSearch;
+
+  /// No description provided for @adminAiWebSearchDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Allow the assistant to search the web.'**
+  String get adminAiWebSearchDesc;
+
+  /// No description provided for @adminAiThinking.
+  ///
+  /// In en, this message translates to:
+  /// **'Extended thinking'**
+  String get adminAiThinking;
+
+  /// No description provided for @adminAiThinkingDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Allow the assistant to reason step by step.'**
+  String get adminAiThinkingDesc;
+
+  /// No description provided for @adminAiQuotaSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Usage limit'**
+  String get adminAiQuotaSection;
+
+  /// No description provided for @adminAiTokenLimit.
+  ///
+  /// In en, this message translates to:
+  /// **'Monthly token limit'**
+  String get adminAiTokenLimit;
+
+  /// No description provided for @adminAiTokenLimitDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Leave empty to inherit; 0 blocks all usage.'**
+  String get adminAiTokenLimitDesc;
+
+  /// No description provided for @adminAiConnectorsSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Allowed connectors'**
+  String get adminAiConnectorsSection;
+
+  /// No description provided for @adminAiRestrictConnectors.
+  ///
+  /// In en, this message translates to:
+  /// **'Restrict connectors for AI'**
+  String get adminAiRestrictConnectors;
+
+  /// No description provided for @adminAiConnectorsInherit.
+  ///
+  /// In en, this message translates to:
+  /// **'Inheriting the workspace allow-list.'**
+  String get adminAiConnectorsInherit;
+
+  /// No description provided for @adminAiConnectorsExplicit.
+  ///
+  /// In en, this message translates to:
+  /// **'AI may only use the connectors selected below.'**
+  String get adminAiConnectorsExplicit;
+
   /// No description provided for @adminWsIdentity.
   ///
   /// In en, this message translates to:

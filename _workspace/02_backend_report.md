@@ -1,94 +1,116 @@
-## Backend Implementation Report — TASK-09 Web Search Tool (ai-service)
+# Backend Implementation Report — TASK-12 (Workspace-level AI Settings)
 
-### What was built
-A built-in `web_search` tool for ai-service's static tool registry, with a pluggable provider
-abstraction and graceful degradation. Tool-produced web results now flow into the existing
-TASK-06 citation path (`sources` on `AI_STREAM_DONE`) via a new per-request **source sink**
-plumbed through `ToolContext`. KB + web sources share one `RagSource` shape and one render path.
+## What was built
 
-Integration choice: **option (a)** from the plan — `web_search` is a normal custom tool backed by a
-generic search-API provider (one citation path). The Anthropic server-side provider is a
-**documented no-op stub** (`isConfigured()=false`) because it is a server-tool with a different
-execution model than this service's custom in-loop dispatch; wiring it (option b) would require
-changing the stream parser in `_agenticLoop`. Decision is documented in the provider file header.
+Workspace-level AI settings now ride on the existing `Workspace` singleton document and the existing `/admin/workspace` admin API (gated by the existing `MANAGE_WORKSPACE` capability — no new capability). auth-service owns/writes them and publishes a Redis invalidation message on save; ai-service reads them (cached, with Redis pub/sub + 60s TTL invalidation) and threads the resolved values into five read paths. Every field is null-able and falls back to the existing env-var behavior, so the change is fully backward compatible.
 
-One deviation from the plan worth noting: the config default `WEB_SEARCH_PROVIDER` is **`generic`**
-(plan suggested `anthropic`). Rationale: the recommended default path is the generic custom tool;
-defaulting to the no-op anthropic stub would make `isAvailable()` false out of the box, contradicting
-"default ON". With `generic` default it is still graceful — no key ⇒ not configured ⇒ not registered.
+### 1. packages/database (shared schema)
+- Added `WorkspaceAiSettings` class + `WorkspaceAiSettingsSchema` (mirrors the `WorkspaceSso` pattern) and an `aiSettings` prop on `Workspace`, defaulting to `() => ({})` (all-null ⇒ pure env behavior, no migration needed).
+- Auto-exported via the existing `export * from './mongo/workspace.schema'` barrel.
+- Important fix: `allowedConnectors` uses `default: () => null` (function default) — a bare `default: null` on an array prop is coerced by Mongoose to `[]`, which would erase the critical **null (inherit) vs [] (allow none)** distinction.
 
-### Files changed / created
-**New:**
-- `apps/server/ai-service/src/tools/web-search.tool.ts` — the tool. Static `web_search` definition,
-  `execute()` formats `[Source N] <title> — <url>\n<snippet>` (fenced via `wrapUntrusted`) AND pushes
-  one `RagSource` per result into `ctx.sourceSink` (`web:<i>` id, title as fileName, url, type:'web').
-  Never throws; clear strings on empty/error.
-- `apps/server/ai-service/src/tools/web-search/web-search-provider.interface.ts` — `WebSearchProvider`
-  (`name`, `isConfigured()`, `search()`) + `WebSearchResult` ({title,url,snippet}).
-- `apps/server/ai-service/src/tools/web-search/generic-search.provider.ts` — Brave/Tavily-style provider
-  via native `fetch` (project convention from `mcp-connector.client.ts`), 8s timeout, normalizes common
-  response shapes, try/catch → `[]` + `Logger.warn` (never throws).
-- `apps/server/ai-service/src/tools/web-search/anthropic-web-search.provider.ts` — documented no-op stub.
-- `apps/server/ai-service/src/tools/web-search/web-search.service.ts` — selector. `isAvailable()` =
-  enabled AND selected provider configured; `search()`; `defaultMaxResults`.
-- `apps/server/ai-service/src/ai/rag-source.type.ts` — shared `RagSource` (with new optional `url`,
-  `type`) extracted so tools layer + context-builder share it without a circular import.
-- `apps/server/ai-service/src/tools/web-search.tool.spec.ts` — 7 unit tests (format, sink entries,
-  no-results, empty query, error swallowed, maxResults cap/default). Provider mocked, no real API.
-- `apps/server/ai-service/src/tools/web-search/web-search.service.spec.ts` — 6 tests (availability gating).
-- `apps/server/ai-service/src/ai/merge-sources.spec.ts` — 5 tests (RAG-first/web-after ordering, dedup,
-  distinct web ids, `isSensitiveTool('web_search') === false`).
+### 2. auth-service (owner / writer)
+- DTO: added `WorkspaceAiSettingsDto` (all fields `@IsOptional` + nullable; `@IsIn` for tone/tier, `@IsInt @Min(0)` for limit, `@IsArray @IsString({each:true})` for connectors) + `aiSettings?` (`@ValidateNested`) on `UpdateWorkspaceDto`.
+- `AdminService.updateWorkspace()`:
+  - **Deep-merge** `aiSettings` via dot-path `$set` (`aiSettings.<key>`) so a partial PATCH never wipes sibling fields (`undefined` keys skipped; `null` preserved as a meaningful "inherit").
+  - **Validation**: rejects (400 `AI_CONNECTORS_NOT_IN_ALLOW_LIST`) when `allowedConnectors` is a non-empty array not a subset of `connectorAllowList`. `null` and `[]` always pass.
+  - **Side effect**: on a successful save whose patch touched `aiSettings`, publishes `ai:settings:invalidate` `{"reason":"workspace.update"}` on the injected `REDIS_CLIENT` (failure logged, non-fatal — TTL safety net covers it).
+  - Audit: unchanged `workspace.update` entry with `meta.changes` (now includes `aiSettings`).
+- `REDIS_CLIENT` was already injectable (`DatabaseRedisModule` is `@Global` and already imported in `AdminModule`) — no module change needed.
 
-**Modified:**
-- `tools/tool.interface.ts` — `ToolContext.sourceSink?: RagSource[]` (imports shared RagSource).
-- `ai/context-builder.service.ts` — `RagSource` now imported + re-exported from the shared module
-  (back-compat); no RAG behavior change.
-- `tools/tool-registry.service.ts` — inject `WebSearchTool` + `WebSearchService`; conditionally append
-  `web_search` to static defs only when `webSearchService.isAvailable()`; `case 'web_search'` in dispatch.
-- `tools/tools.module.ts` — registered `WebSearchTool`, `WebSearchService`, both providers (no HttpModule
-  needed — native fetch).
-- `ai/ai.service.ts` — create `sourceSink` per request, put on `toolCtx`; `AI_STREAM_DONE` now sends
-  `mergeSources(ctx.ragSources, sourceSink)`; response-cache guard extended to require `sourceSink.length === 0`.
-  Added exported `mergeSources()` helper (RAG first, web after, dedup by documentId).
-- `config/configuration.ts` — new `webSearch` block (enabled / provider / apiKey / apiUrl / maxResults).
-- `tools/tool-registry.service.spec.ts` — updated `makeRegistry` for the 2 new ctor args; +3 tests for the gate + dispatch.
-- `.env` + `.env.example` — documented `WEB_SEARCH_*` vars (no real key committed).
+### 3. ai-service (reader)
+New read-only `SettingsModule`:
+- `settings/workspace.schema.ts` — slim local read-only Mongoose model on collection `workspaces` (`strict:false`, only `aiSettings` projected). ai-service has no `@platform/database` dependency and defines local schemas by convention, so a local slim model avoids adding a cross-package dep. ai-service NEVER writes this collection.
+- `settings/resolved-ai-settings.ts` — `ResolvedAiSettings` type + `normalizeModelTier()`.
+- `settings/settings.service.ts` — `getSettings()` loads the singleton doc, `resolve()`s each field against env defaults, caches in-memory (singleton + 60s TTL, concurrent reloads collapsed, failures fall back to env-only and are NOT cached). `invalidate()` drops the cache.
+- `settings/settings-invalidator.service.ts` — `OnApplicationBootstrap` subscribes to `ai:settings:invalidate` on the shared `REDIS_SUBSCRIBER`; on a message for that channel → `settingsService.invalidate()` (channel-filtered so it coexists with the kb:* subscriber).
+- `app.module.ts` — registered `SettingsModule`.
 
-### Env vars added
-| Var | Default | Meaning |
-|-----|---------|---------|
-| `WEB_SEARCH_ENABLED` | `true` (on unless `=false`) | Per-workspace toggle |
-| `WEB_SEARCH_PROVIDER` | `generic` | `generic` \| `anthropic` (anthropic = no-op stub) |
-| `WEB_SEARCH_API_URL` | (unset) | Generic search API endpoint |
-| `WEB_SEARCH_API_KEY` | (unset) | Generic search API key — **no provider/key ⇒ tool not registered** |
-| `WEB_SEARCH_MAX_RESULTS` | `5` | Default results per search (tool caps requests at 10) |
+Wired into the read paths (each null/absent ⇒ existing env behavior):
+- `persona.service.ts buildSystemPrompt(persona, displayName, defaults?)` — workspace `personaName`/`defaultTone` fill missing fields; per-conversation persona stays highest precedence; hardcoded `PON AI`/`friendly` is the last fallback.
+- `ai/model-router.ts selectModel` — new `forcedTier` on `RouteSignals`; `simple|mid|complex` overrides ALL heuristics (incl. the "KB ⇒ complex" rule); `auto`/undefined runs the env router.
+- `ai/ai.service.ts` — loads settings once in `handleRequest` (cached); threads into persona build, quota check, `forcedTier`, `enableThinking` (now `ctx.settings.thinkingEnabled`, already resolved vs env), and `ToolContext`.
+- `usage/usage.service.ts isQuotaExceeded(userId, limitOverride?)` — uses the resolved limit; `?? env`; `0` correctly preserved as "block all".
+- `tools/tool-registry.service.ts getDefinitions(ctx)` — `web_search` gated on `ctx.webSearchEnabled !== false && webSearchService.isAvailable()` (composes with the TASK-09 provider gate); MCP tools filtered by `ctx.allowedConnectors` via the new exported pure `filterByAllowedConnectors()`.
+- `tools/tool.interface.ts` — added `webSearchEnabled?` and `allowedConnectors?` to `ToolContext`.
 
-### Build / test results
-- `pnpm --filter ai-service build` — PASS (nest build, no errors)
-- `pnpm --filter ai-service test` — PASS — **Test Suites: 26 passed, 26 total; Tests: 207 passed, 207 total**
-  (was ~194; +13 new web-search/merge/registry tests)
-- chat-service — **no change** (verify-only). `AiResponseListener.java:143-144` reads `sources` as a plain
-  `Object` and forwards untouched, so new optional `url`/`type` fields pass through transparently.
+## Files changed
 
-### API contract (for QA + clients)
-`AI_STREAM_DONE` `sources: AiSource[]` is extended additively/backward-compatibly:
+### packages/database
+- `src/mongo/workspace.schema.ts` — `WorkspaceAiSettings` + `aiSettings` prop (modified)
+- `src/mongo/__tests__/workspace-ai-settings.spec.ts` — new tests
+
+### auth-service
+- `src/modules/admin/dto/workspace.dto.ts` — `WorkspaceAiSettingsDto` + `aiSettings?` (modified)
+- `src/modules/admin/admin.service.ts` — deep-merge / validate / publish; `REDIS_CLIENT` injection; exported `AI_SETTINGS_INVALIDATE_CHANNEL` (modified)
+- `src/modules/admin/admin.service.spec.ts` — Redis provider + 6 new updateWorkspace tests
+
+### ai-service
+- `src/settings/workspace.schema.ts` (new)
+- `src/settings/resolved-ai-settings.ts` (new)
+- `src/settings/settings.service.ts` (new)
+- `src/settings/settings-invalidator.service.ts` (new)
+- `src/settings/settings.module.ts` (new)
+- `src/settings/settings.service.spec.ts` (new)
+- `src/settings/settings-invalidator.service.spec.ts` (new)
+- `src/app.module.ts` — register `SettingsModule` (modified)
+- `src/ai/ai.service.ts` — thread settings into read path (modified)
+- `src/ai/ai.service.spec.ts` — fake `SettingsService` dependency (modified)
+- `src/ai/model-router.ts` — `forcedTier` (modified)
+- `src/ai/model-router.spec.ts` — 5 new forcedTier tests
+- `src/persona/persona.service.ts` — `PersonaDefaults` + `buildSystemPrompt` defaults arg (modified)
+- `src/persona/persona.service.spec.ts` — 3 new workspace-default tests
+- `src/usage/usage.service.ts` — `isQuotaExceeded(userId, limitOverride?)` (modified)
+- `src/usage/usage.service.spec.ts` — 3 new override tests
+- `src/tools/tool.interface.ts` — `ToolContext` fields (modified)
+- `src/tools/tool-registry.service.ts` — web-search gate + `filterByAllowedConnectors` (modified)
+- `src/tools/tool-registry.service.spec.ts` — 7 new toggle/filter tests
+
+## aiSettings JSON contract (so clients match exactly)
+
+```jsonc
+"aiSettings": {
+  "personaName":       "string | null",   // null => env AI_BOT_DISPLAY_NAME / "PON AI"
+  "defaultTone":       "string | null",   // 'friendly'|'professional'|'concise'|'creative'; null => 'friendly'
+  "modelTier":         "string | null",   // 'auto'|'simple'|'mid'|'complex'; null/'auto' => env router
+  "webSearchEnabled":  "boolean | null",  // null => env WEB_SEARCH_ENABLED (default on)
+  "thinkingEnabled":   "boolean | null",  // null => env AI_ENABLE_THINKING (default off)
+  "monthlyTokenLimit": "number | null",   // >= 0; null => env AI_MONTHLY_TOKEN_LIMIT (default 500000); 0 = block all
+  "allowedConnectors": "string[] | null"  // null = inherit connectorAllowList; [] = allow none; [...] = subset of connectorAllowList
+}
 ```
-{ documentId: string, fileName: string, score: number, url?: string, type?: 'kb' | 'web' }
-```
-- Web entries: `documentId = "web:<index>"`, `fileName = <page title>`, `url = <result url>`, `type = "web"`.
-- KB entries unchanged (no `url`, no `type` ⇒ treated as `'kb'`).
-- Merge order in DONE: **RAG/KB sources first, then web sources**, contiguous, de-duped by `documentId`
-  — so the `[Source N]` markers the model emits line up with the rendered chip order.
 
-### Things QA / clients must know
-- **Web search is OFF in practice until a generic key+URL is configured** (`isAvailable()` gates
-  registration). With no key, behavior is byte-identical to today — verify graceful degradation.
-- To exercise it end-to-end QA must set `WEB_SEARCH_PROVIDER=generic` + a real `WEB_SEARCH_API_URL`/`KEY`,
-  or mock the provider. The unit tests do NOT hit any real API.
-- `web_search` is **NOT sensitive** (read-only) — no confirmation prompt; tool-result cache may briefly
-  cache it. The **semantic response cache will NOT store** answers that used web search (sink-length guard),
-  since web results are time-sensitive.
-- **Client work remaining** (per plan, both platforms or it's broken): make a `type:'web'` chip open `url`
-  externally instead of `/kb/{conversationId}`, and add `url`/`type` to the client `AiSource` types.
-  Flutter: `chat_models.dart` + `streaming_ai_bubble.dart`. Web: `lib/api/types.ts` + `MessageSources.tsx`.
-- Web snippets are fenced with `wrapUntrusted` (prompt-injection spotlighting) before reaching the model.
+- `GET /admin/workspace` returns the full `Workspace` shape with `aiSettings` (additive).
+- `PATCH /admin/workspace` accepts `aiSettings?` (all fields optional + nullable); partial patches deep-merge.
+- Both gated by `MANAGE_WORKSPACE` (the route already was — `admin.controller.ts:124`).
+
+### API endpoints (verified)
+- `GET /admin/workspace` — implemented (returns aiSettings additively via the Workspace doc)
+- `PATCH /admin/workspace` — implemented (accepts aiSettings; deep-merge + validate + publish)
+
+### Env-var fallback behavior (backward compatibility)
+Every field is `null` by default. `null`/absent => the field never overrides the env var: `SettingsService.resolve()` maps `null` to the existing env/config value (`config.webSearch.enabled`, `config.ai.enableThinking`, `config.quota.monthlyTokenLimit`); `modelTier` 'auto' => the env model router; `personaName`/`defaultTone` null => persona-layer defaults; `allowedConnectors` null => no AI-specific connector filtering. A fresh deploy with no Workspace doc (`findOne` => null) resolves to pure env defaults. `0` and `false` are correctly preserved as real overrides (not coerced to fallback).
+
+## Build / test results (exact)
+
+| Command | Result |
+|---------|--------|
+| `pnpm --filter @platform/database test` | PASS — Test Suites: 4 passed, 4 total; Tests: 16 passed, 16 total |
+| `pnpm --filter ai-service build` | PASS — `nest build`, exit 0 |
+| `pnpm --filter ai-service test` | PASS — Test Suites: 28 passed, 28 total; Tests: 243 passed, 243 total |
+| `pnpm --filter @platform/auth-service test` | PASS — Test Suites: 12 passed, 12 total; Tests: 52 passed, 52 total |
+| `pnpm --filter @platform/auth-service build` (also run) | PASS — webpack compiled successfully |
+
+## Connector allow-list mapping — risk resolved (per the plan's flag)
+
+Confirmed against `connector-service/src/internal/internal.service.ts`: `/internal/tools` returns `{ tools: [{ name: "mcp__<provider>__<tool>", description, input_schema }] }` with **no separate catalog/connector-id field**. The only mapping signal is the `<provider>` segment in the namespaced name.
+
+- **Built-in connectors**: `provider` IS the catalog connector id (e.g. `gmail`, `notion`). The filter matches exactly and safely against `allowedConnectors` (catalog ids).
+- Implemented `filterByAllowedConnectors()` to extract the `<provider>` segment and keep only tools whose provider is in the allow-list. `null` => no filtering (inherit); `[]` => allow none.
+
+### Deferral / documented limitation (NOT guessed — simpler safe subset implemented)
+Custom MCP servers are namespaced `mcp__custom:<id>__<tool>`, so their provider segment is `custom:<id>` — **not a catalog id**. Since `allowedConnectors` holds catalog ids (and the admin UI can only pick catalog connectors), a custom MCP server can never appear in the allow-list and is therefore **dropped whenever a non-null AI allow-list is set**. This is the conservative/safe default (deny-by-default for the AI list). Allow-listing custom MCP servers (e.g. by exposing `custom:<id>` ids in the admin UI, or having connector-service return an explicit per-tool connector id) is deferred as a follow-up if required.
+
+## Notes
+- `apps/server/ai-service/src/ai/ai.service.ts` is 604 lines (over the ai-service 300-line soft limit). This was already the case before TASK-12; my edits added ~15 net lines threading settings. Left as-is to avoid an out-of-scope refactor of the core agentic loop.
+- Web + Mobile clients (admin panel UI + i18n) are not part of this backend task — they consume the now-fixed `/admin/workspace` contract above.

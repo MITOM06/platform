@@ -166,7 +166,26 @@ For a small team, "the AI gives accurate, sourced answers" is the difference bet
 
 > Deliberately **light** — no per-department RBAC, no budget chargeback. Just enough for one admin to run it.
 
-### TASK-12 — Simple AI settings page (workspace-level)
+### TASK-12 — Simple AI settings page (workspace-level)  ✅ DONE (2026-06-23)
+> **Status:** Workspace-level AI settings shipped on all three platforms. **Design deviation (justified):**
+> settings live as a typed `Workspace.aiSettings` sub-document (NOT a separate `ai_settings` collection) —
+> the singleton `Workspace` doc already aggregates workspace admin config (branding/features/connectorAllowList/
+> sso), so a parallel collection would split connector-governance into two sources of truth.
+> - **packages/database**: `WorkspaceAiSettings` sub-doc, every field null-able = "inherit env default"
+>   (`allowedConnectors` uses `default: () => null` to preserve null-vs-`[]` = inherit-vs-allow-none).
+> - **auth-service**: `PATCH /admin/workspace` accepts `aiSettings` (gated by existing `MANAGE_WORKSPACE`),
+>   deep-merges via dot-path `$set`, validates `allowedConnectors ⊆ connectorAllowList` (400 otherwise),
+>   audit-logged, and publishes Redis `ai:settings:invalidate` on save.
+> - **ai-service**: read-only `SettingsModule` (60s TTL + Redis-pubsub invalidation) wired into 5 read paths:
+>   persona default tone/name, model-router forced tier, `enableThinking`, quota limit override, and the
+>   web-search/connector-allow-list tool gate (composes with the TASK-09 provider gate). Null/absent ⇒ env fallback.
+> - **web + Flutter admin console**: AI settings panel (7 fields: persona name, tone, model tier, web-search,
+>   thinking, monthly token limit, connector allow-list) gated by `MANAGE_WORKSPACE`, riding the existing
+>   `GET/PATCH /admin/workspace` (no new endpoint). i18n ×7 both platforms. Contract parity verified 4 layers.
+> - Known limit: custom MCP (`custom:<id>`) connectors are deny-by-default when a non-null AI allow-list is set
+>   (allow-listing them is a follow-up).
+> Verify: database 16, auth-service 52, ai-service build clean + 243 tests, web `pnpm build` ok (`/admin/ai`),
+> `flutter analyze` clean. QA PASS.
 - **Why:** Config is scattered across env vars + per-conversation persona. A small team wants one screen to tune the assistant without redeploying.
 - **Scope:**
   - Workspace-level settings (single tenant): default persona/tone, default model tier, enable/disable web search & thinking, monthly token limit, which connectors are allowed.

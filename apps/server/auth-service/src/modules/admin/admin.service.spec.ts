@@ -8,8 +8,9 @@ import {
   Department,
   Role,
   User,
+  REDIS_CLIENT,
 } from '@platform/database';
-import { AdminService } from './admin.service';
+import { AdminService, AI_SETTINGS_INVALIDATE_CHANNEL } from './admin.service';
 import { SessionService } from '../auth/session.service';
 import { AuditService } from '../audit/audit.service';
 
@@ -25,6 +26,7 @@ describe('AdminService', () => {
   let userModel: any;
   let session: { revokeAllSessions: jest.Mock };
   let audit: { record: jest.Mock; list: jest.Mock };
+  let redis: { publish: jest.Mock };
 
   beforeEach(async () => {
     workspaceModel = { findOne: jest.fn(), findOneAndUpdate: jest.fn() };
@@ -46,6 +48,7 @@ describe('AdminService', () => {
       record: jest.fn().mockResolvedValue(undefined),
       list: jest.fn().mockResolvedValue({ items: [], total: 0 }),
     };
+    redis = { publish: jest.fn().mockResolvedValue(1) };
 
     const moduleRef = await Test.createTestingModule({
       providers: [
@@ -56,6 +59,7 @@ describe('AdminService', () => {
         { provide: getModelToken(User.name), useValue: userModel },
         { provide: SessionService, useValue: session },
         { provide: AuditService, useValue: audit },
+        { provide: REDIS_CLIENT, useValue: redis },
       ],
     }).compile();
 
@@ -151,6 +155,68 @@ describe('AdminService', () => {
         expect.objectContaining({ action: 'workspace.update' }),
       );
       expect(res).toMatchObject({ name: 'Acme' });
+    });
+
+    it('does NOT publish invalidation when the patch has no aiSettings', async () => {
+      workspaceModel.findOneAndUpdate.mockReturnValue(execable({ name: 'Acme' }));
+      await service.updateWorkspace('actor1', { name: 'Acme' });
+      expect(redis.publish).not.toHaveBeenCalled();
+    });
+
+    it('deep-merges aiSettings via dot-path $set (does not wipe siblings)', async () => {
+      workspaceModel.findOneAndUpdate.mockReturnValue(execable({ name: 'Acme' }));
+      await service.updateWorkspace('actor1', {
+        aiSettings: { defaultTone: 'concise', personaName: null },
+      });
+      expect(workspaceModel.findOneAndUpdate).toHaveBeenCalledWith(
+        {},
+        { $set: { 'aiSettings.defaultTone': 'concise', 'aiSettings.personaName': null } },
+        { new: true, upsert: true },
+      );
+    });
+
+    it('publishes ai:settings:invalidate after a successful aiSettings save', async () => {
+      workspaceModel.findOneAndUpdate.mockReturnValue(execable({ name: 'Acme' }));
+      await service.updateWorkspace('actor1', {
+        aiSettings: { thinkingEnabled: true },
+      });
+      expect(redis.publish).toHaveBeenCalledWith(
+        AI_SETTINGS_INVALIDATE_CHANNEL,
+        expect.stringContaining('workspace.update'),
+      );
+    });
+
+    it('allows allowedConnectors that are a subset of connectorAllowList', async () => {
+      workspaceModel.findOne.mockReturnValue({
+        lean: () => execable({ connectorAllowList: ['gmail', 'notion'] }),
+      });
+      workspaceModel.findOneAndUpdate.mockReturnValue(execable({ name: 'Acme' }));
+      await expect(
+        service.updateWorkspace('actor1', {
+          aiSettings: { allowedConnectors: ['gmail'] },
+        }),
+      ).resolves.toBeDefined();
+    });
+
+    it('rejects allowedConnectors not in connectorAllowList (400)', async () => {
+      workspaceModel.findOne.mockReturnValue({
+        lean: () => execable({ connectorAllowList: ['gmail'] }),
+      });
+      await expect(
+        service.updateWorkspace('actor1', {
+          aiSettings: { allowedConnectors: ['gmail', 'slack'] },
+        }),
+      ).rejects.toBeInstanceOf(BadRequestException);
+      expect(workspaceModel.findOneAndUpdate).not.toHaveBeenCalled();
+    });
+
+    it('allows allowedConnectors=[] (allow none) without subset check', async () => {
+      workspaceModel.findOneAndUpdate.mockReturnValue(execable({ name: 'Acme' }));
+      await expect(
+        service.updateWorkspace('actor1', { aiSettings: { allowedConnectors: [] } }),
+      ).resolves.toBeDefined();
+      // No connectorAllowList lookup needed for the empty (allow-none) case.
+      expect(workspaceModel.findOne).not.toHaveBeenCalled();
     });
   });
 });

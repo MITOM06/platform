@@ -11,6 +11,47 @@ import { ToolContext, ToolDefinition } from './tool.interface';
 import { ToolResultCacheService } from './tool-result-cache.service';
 import { isSensitiveTool } from '../ai/injection-guard';
 
+/**
+ * Filter dynamic MCP tools by the workspace AI connector allow-list (TASK-12).
+ *
+ * MCP tools are namespaced `mcp__<provider>__<tool>`; the connector-service
+ * `/internal/tools` response carries NO separate catalog/connector-id field, so
+ * the only mapping signal is the `<provider>` segment. For built-in connectors
+ * the provider IS the catalog id (e.g. `gmail`, `notion`) — exact, safe match.
+ *
+ * Known limitation (documented, not guessed): custom MCP servers are namespaced
+ * `custom:<id>` (NOT a catalog id), so they can never appear in `allowedConnectors`
+ * (which holds catalog ids) and are therefore dropped whenever a non-null AI
+ * allow-list is set. This is the safe/conservative behavior (deny-by-default for
+ * the AI list) and is called out in the report for a follow-up if custom-MCP
+ * allow-listing is required.
+ *
+ * Semantics: `allowedConnectors == null`/undefined ⇒ no filtering (inherit the
+ * workspace-wide list, already enforced upstream by connector-service). `[]` ⇒
+ * AI may use NO MCP tools. `[...]` ⇒ keep only tools whose provider is in the set.
+ */
+export function filterByAllowedConnectors(
+  tools: ToolDefinition[],
+  allowedConnectors: string[] | null | undefined,
+): ToolDefinition[] {
+  if (allowedConnectors == null) return tools; // inherit — no AI-specific filter
+  const allow = new Set(allowedConnectors);
+  return tools.filter((t) => {
+    const provider = providerOf(t.name);
+    return provider !== null && allow.has(provider);
+  });
+}
+
+/** Extract the `<provider>` segment from `mcp__<provider>__<tool>`; else null. */
+function providerOf(name: string): string | null {
+  const PREFIX = 'mcp__';
+  const SEP = '__';
+  if (!name.startsWith(PREFIX)) return null;
+  const rest = name.slice(PREFIX.length);
+  const idx = rest.indexOf(SEP);
+  return idx > 0 ? rest.slice(0, idx) : null;
+}
+
 @Injectable()
 export class ToolRegistryService {
   private readonly logger = new Logger(ToolRegistryService.name);
@@ -35,13 +76,15 @@ export class ToolRegistryService {
       SummarizeConversationTool.definition,
       CreateReminderTool.definition,
     ];
-    // Only offer web search when enabled in config AND a provider is configured
-    // (graceful degradation — otherwise the tool is simply not registered).
-    if (this.webSearchService.isAvailable()) {
+    // Offer web search when: the workspace toggle is not explicitly OFF
+    // (TASK-12) AND a provider is configured (TASK-09 graceful-degradation gate).
+    // `ctx.webSearchEnabled === false` ⇒ never register; undefined/true defers to
+    // the provider gate (preserves env behavior).
+    if (ctx.webSearchEnabled !== false && this.webSearchService.isAvailable()) {
       staticDefs.push(WebSearchTool.definition);
     }
     const dynamicDefs = await this.mcpConnector.getTools(ctx.userId);
-    return [...staticDefs, ...dynamicDefs];
+    return [...staticDefs, ...filterByAllowedConnectors(dynamicDefs, ctx.allowedConnectors)];
   }
 
   async execute(

@@ -10,6 +10,7 @@ import 'widgets/departments_panel.dart';
 import 'widgets/members_panel.dart';
 import 'widgets/roles_panel.dart';
 import 'widgets/sso_panel.dart';
+import 'widgets/workspace_ai_settings_panel.dart';
 import 'widgets/workspace_panel.dart';
 
 class _Section {
@@ -36,6 +37,8 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
   List<_Section> _sections() => [
         _Section(Cap.manageWorkspace, Icons.business_outlined,
             (c) => c.l10n.adminNavWorkspace, const WorkspacePanel()),
+        _Section(Cap.manageWorkspace, Icons.auto_awesome,
+            (c) => c.l10n.adminNavAi, const WorkspaceAiSettingsPanel()),
         _Section(Cap.manageWorkspace, Icons.vpn_key_outlined,
             (c) => c.l10n.adminNavSso, const SsoPanel()),
         _Section(Cap.manageDepartments, Icons.groups_outlined,

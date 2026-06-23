@@ -19,6 +19,12 @@ const TONE_INSTRUCTIONS: Record<string, string> = {
 
 export const VALID_TONES = ['friendly', 'professional', 'concise', 'creative'] as const;
 
+/** Workspace-level persona defaults (TASK-12). Each null ⇒ no workspace override. */
+export interface PersonaDefaults {
+  personaName?: string | null;
+  defaultTone?: string | null;
+}
+
 @Injectable()
 export class PersonaService {
   constructor(
@@ -58,9 +64,14 @@ export class PersonaService {
    * facts) so it can be marked `cache_control: ephemeral` and reused across
    * turns of the same conversation.
    */
-  buildSystemPrompt(persona: AiPersona | null, displayName: string): string {
-    const name = persona?.name ?? 'PON AI';
-    const tone = persona?.tone ?? 'friendly';
+  buildSystemPrompt(
+    persona: AiPersona | null,
+    displayName: string,
+    defaults?: PersonaDefaults,
+  ): string {
+    // Precedence: per-conversation persona (highest) → workspace default → hardcoded.
+    const name = persona?.name ?? defaults?.personaName ?? 'PON AI';
+    const tone = persona?.tone ?? defaults?.defaultTone ?? 'friendly';
     const prefix = persona?.systemPromptPrefix ?? null;
     const toneInstruction = TONE_INSTRUCTIONS[tone] ?? TONE_INSTRUCTIONS.friendly;
 

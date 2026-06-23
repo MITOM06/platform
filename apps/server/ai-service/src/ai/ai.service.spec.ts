@@ -12,6 +12,8 @@ import { ContextBuilderService } from './context-builder.service';
 import { ResponseCacheService } from './response-cache.service';
 import { SkillsService } from '../skills/skills.service';
 import { ConversationAccessService } from '../conversation/conversation-access.service';
+import { SettingsService } from '../settings/settings.service';
+import { ResolvedAiSettings } from '../settings/resolved-ai-settings';
 
 function makeAsyncIterator(chunks: unknown[]) {
   return {
@@ -109,6 +111,7 @@ describe('AiService', () => {
   let buildSystemPromptFn: jest.Mock;
   let extractFacts: jest.Mock;
   let buildVolatileContext: jest.Mock;
+  let getSettings: jest.Mock;
 
   const basePayload: AiRequestPayload = {
     conversationId: 'conv-test',
@@ -192,6 +195,19 @@ describe('AiService', () => {
     const fakeConversationAccess = {
       checkAccess,
     } as unknown as ConversationAccessService;
+    // Default resolved settings = pure env behavior (all defaults), so existing
+    // assertions are unaffected. Individual tests can override getSettings.
+    const defaultSettings: ResolvedAiSettings = {
+      personaName: null,
+      defaultTone: null,
+      modelTier: 'auto',
+      webSearchEnabled: true,
+      thinkingEnabled: false,
+      monthlyTokenLimit: 500000,
+      allowedConnectors: null,
+    };
+    getSettings = jest.fn().mockResolvedValue(defaultSettings);
+    const fakeSettings = { getSettings } as unknown as SettingsService;
 
     service = new AiService(
       fakeConfig,
@@ -207,6 +223,7 @@ describe('AiService', () => {
       fakeSkills,
       fakeResponseCache,
       fakeConversationAccess,
+      fakeSettings,
     );
     (service as any)['anthropic'] = { messages: { stream: mockStream, create: mockCreate } };
   });

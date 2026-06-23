@@ -1850,6 +1850,96 @@ class AppLocalizationsJa extends AppLocalizations {
   String get adminNavAudit => '監査ログ';
 
   @override
+  String get adminNavAi => 'AI アシスタント';
+
+  @override
+  String get adminAiInheritHint => '空欄または「継承」でサーバー既定値を使用します。';
+
+  @override
+  String get adminAiInheritOption => '継承（既定）';
+
+  @override
+  String get adminAiOn => 'オン';
+
+  @override
+  String get adminAiOff => 'オフ';
+
+  @override
+  String get adminAiPersonaSection => 'ペルソナ';
+
+  @override
+  String get adminAiPersonaName => '既定のアシスタント名';
+
+  @override
+  String get adminAiTone => '既定のトーン';
+
+  @override
+  String get adminAiToneFriendly => 'フレンドリー';
+
+  @override
+  String get adminAiToneProfessional => 'プロフェッショナル';
+
+  @override
+  String get adminAiToneConcise => '簡潔';
+
+  @override
+  String get adminAiToneCreative => '創造的';
+
+  @override
+  String get adminAiModelSection => 'モデル';
+
+  @override
+  String get adminAiModelTier => '既定のモデルティア';
+
+  @override
+  String get adminAiTierAuto => '自動（ルーター）';
+
+  @override
+  String get adminAiTierSimple => 'シンプル';
+
+  @override
+  String get adminAiTierMid => 'バランス';
+
+  @override
+  String get adminAiTierComplex => '高度';
+
+  @override
+  String get adminAiCapabilitiesSection => '機能';
+
+  @override
+  String get adminAiWebSearch => 'ウェブ検索';
+
+  @override
+  String get adminAiWebSearchDesc => 'アシスタントによるウェブ検索を許可します。';
+
+  @override
+  String get adminAiThinking => '拡張思考';
+
+  @override
+  String get adminAiThinkingDesc => 'アシスタントの段階的な推論を許可します。';
+
+  @override
+  String get adminAiQuotaSection => '使用上限';
+
+  @override
+  String get adminAiTokenLimit => '月間トークン上限';
+
+  @override
+  String get adminAiTokenLimitDesc => '空欄で継承。0 ですべての使用を遮断します。';
+
+  @override
+  String get adminAiConnectorsSection => '許可するコネクタ';
+
+  @override
+  String get adminAiRestrictConnectors => 'AI のコネクタを制限';
+
+  @override
+  String get adminAiConnectorsInherit => 'ワークスペースの許可リストを継承します。';
+
+  @override
+  String get adminAiConnectorsExplicit => 'AI は下で選択したコネクタのみ使用できます。';
+
+  @override
   String get adminWsIdentity => 'アイデンティティとブランディング';
 
   @override

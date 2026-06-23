@@ -1852,6 +1852,96 @@ class AppLocalizationsKo extends AppLocalizations {
   String get adminNavAudit => '감사 로그';
 
   @override
+  String get adminNavAi => 'AI 어시스턴트';
+
+  @override
+  String get adminAiInheritHint => '비워 두거나 \"상속\"을 선택하면 서버 기본값을 사용합니다.';
+
+  @override
+  String get adminAiInheritOption => '상속 (기본값)';
+
+  @override
+  String get adminAiOn => '켜기';
+
+  @override
+  String get adminAiOff => '끄기';
+
+  @override
+  String get adminAiPersonaSection => '페르소나';
+
+  @override
+  String get adminAiPersonaName => '기본 어시스턴트 이름';
+
+  @override
+  String get adminAiTone => '기본 톤';
+
+  @override
+  String get adminAiToneFriendly => '친근함';
+
+  @override
+  String get adminAiToneProfessional => '전문적';
+
+  @override
+  String get adminAiToneConcise => '간결함';
+
+  @override
+  String get adminAiToneCreative => '창의적';
+
+  @override
+  String get adminAiModelSection => '모델';
+
+  @override
+  String get adminAiModelTier => '기본 모델 등급';
+
+  @override
+  String get adminAiTierAuto => '자동 (라우터)';
+
+  @override
+  String get adminAiTierSimple => '단순';
+
+  @override
+  String get adminAiTierMid => '균형';
+
+  @override
+  String get adminAiTierComplex => '고급';
+
+  @override
+  String get adminAiCapabilitiesSection => '기능';
+
+  @override
+  String get adminAiWebSearch => '웹 검색';
+
+  @override
+  String get adminAiWebSearchDesc => '어시스턴트가 웹을 검색하도록 허용합니다.';
+
+  @override
+  String get adminAiThinking => '확장 사고';
+
+  @override
+  String get adminAiThinkingDesc => '어시스턴트가 단계별로 추론하도록 허용합니다.';
+
+  @override
+  String get adminAiQuotaSection => '사용 한도';
+
+  @override
+  String get adminAiTokenLimit => '월간 토큰 한도';
+
+  @override
+  String get adminAiTokenLimitDesc => '비우면 상속하며 0은 모든 사용을 차단합니다.';
+
+  @override
+  String get adminAiConnectorsSection => '허용된 커넥터';
+
+  @override
+  String get adminAiRestrictConnectors => 'AI 커넥터 제한';
+
+  @override
+  String get adminAiConnectorsInherit => '워크스페이스 허용 목록을 상속합니다.';
+
+  @override
+  String get adminAiConnectorsExplicit => 'AI는 아래에서 선택한 커넥터만 사용할 수 있습니다.';
+
+  @override
   String get adminWsIdentity => '아이덴티티 및 브랜딩';
 
   @override

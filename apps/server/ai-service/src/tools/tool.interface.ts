@@ -20,4 +20,16 @@ export interface ToolContext {
    * absent for code paths that don't run the loop (e.g. cached answers).
    */
   sourceSink?: RagSource[];
+  /**
+   * Workspace web-search toggle (TASK-12). `false` ⇒ never offer `web_search`,
+   * composing with the provider-configured gate. `undefined`/`true` ⇒ env
+   * behavior (offered iff a provider is configured).
+   */
+  webSearchEnabled?: boolean;
+  /**
+   * Workspace AI connector allow-list (TASK-12), catalog connector ids. When
+   * non-null, `mcp__<provider>__*` tools are filtered to providers in this list
+   * (`[]` ⇒ no MCP tools). `undefined`/`null` ⇒ no AI-specific filtering.
+   */
+  allowedConnectors?: string[] | null;
 }

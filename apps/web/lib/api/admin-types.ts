@@ -48,6 +48,40 @@ export interface WorkspaceSso {
   defaultRole?: string
 }
 
+/** Assistant default tone (workspace-level). */
+export type AiTone = 'friendly' | 'professional' | 'concise' | 'creative'
+export const AI_TONES: readonly AiTone[] = [
+  'friendly',
+  'professional',
+  'concise',
+  'creative',
+] as const
+
+/** Default model routing tier. `'auto'` ⇒ ai-service router decides. */
+export type AiModelTier = 'auto' | 'simple' | 'mid' | 'complex'
+export const AI_MODEL_TIERS: readonly AiModelTier[] = [
+  'auto',
+  'simple',
+  'mid',
+  'complex',
+] as const
+
+/**
+ * Workspace-level AI assistant defaults (rides on the `Workspace` doc).
+ * `null` on any field = "inherit env/default" (the assistant falls back to the
+ * ai-service env var). `allowedConnectors`: `null` = inherit
+ * `connectorAllowList`; `[]` = allow NO connectors; `[...]` = explicit subset.
+ */
+export interface WorkspaceAiSettings {
+  personaName: string | null
+  defaultTone: AiTone | null
+  modelTier: AiModelTier | null
+  webSearchEnabled: boolean | null
+  thinkingEnabled: boolean | null
+  monthlyTokenLimit: number | null
+  allowedConnectors: string[] | null
+}
+
 export interface Workspace {
   _id: string
   name: string
@@ -56,6 +90,7 @@ export interface Workspace {
   features: Record<string, boolean>
   connectorAllowList: string[]
   sso?: WorkspaceSso
+  aiSettings?: WorkspaceAiSettings
 }
 
 /** `PATCH /admin/workspace` body — all fields optional. */
@@ -66,6 +101,8 @@ export interface UpdateWorkspaceInput {
   features?: Record<string, boolean>
   connectorAllowList?: string[]
   sso?: WorkspaceSso
+  /** Partial patch — each field optional & nullable (deep-merged server-side). */
+  aiSettings?: Partial<WorkspaceAiSettings>
 }
 
 /** `GET /admin/departments` item. */

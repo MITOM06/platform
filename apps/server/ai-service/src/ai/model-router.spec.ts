@@ -115,6 +115,56 @@ describe('selectModel — 3-tier routing', () => {
     );
   });
 
+  // ── Workspace forcedTier override (TASK-12) ───────────────────────────────
+
+  it('forcedTier=simple overrides everything, incl. the KB rule', () => {
+    const signals: RouteSignals = {
+      contentLength: 5000,
+      historyLength: 50,
+      hasKbContext: true,
+      forcedTier: 'simple',
+    };
+    expect(selectModel(signals, BASE_CONFIG)).toBe('claude-haiku-4-5');
+  });
+
+  it('forcedTier=mid maps to midModel regardless of signals', () => {
+    expect(
+      selectModel(
+        { contentLength: 5, historyLength: 0, hasKbContext: false, forcedTier: 'mid' },
+        BASE_CONFIG,
+      ),
+    ).toBe('claude-sonnet-4-6');
+  });
+
+  it('forcedTier=complex maps to complexModel', () => {
+    expect(
+      selectModel(
+        { contentLength: 5, historyLength: 0, hasKbContext: false, forcedTier: 'complex' },
+        BASE_CONFIG,
+      ),
+    ).toBe('claude-opus-4-8');
+  });
+
+  it('forcedTier=auto falls through to the env router heuristics', () => {
+    const signals: RouteSignals = {
+      contentLength: 50,
+      historyLength: 0,
+      hasKbContext: false,
+      forcedTier: 'auto',
+    };
+    expect(selectModel(signals, BASE_CONFIG)).toBe('claude-haiku-4-5');
+  });
+
+  it('forcedTier=simple still applies even when routing is disabled', () => {
+    const config: RouterConfig = { ...BASE_CONFIG, enabled: false };
+    expect(
+      selectModel(
+        { contentLength: 5, historyLength: 0, hasKbContext: false, forcedTier: 'simple' },
+        config,
+      ),
+    ).toBe('claude-haiku-4-5');
+  });
+
   // ── Exact model ID strings ────────────────────────────────────────────────
 
   it('returns exact model ID strings — no date suffixes', () => {

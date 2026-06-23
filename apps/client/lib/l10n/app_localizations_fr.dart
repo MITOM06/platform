@@ -1917,6 +1917,103 @@ class AppLocalizationsFr extends AppLocalizations {
   String get adminNavAudit => 'Journal d\'audit';
 
   @override
+  String get adminNavAi => 'Assistant IA';
+
+  @override
+  String get adminAiInheritHint =>
+      'Laissez un champ vide ou choisissez « Hériter » pour utiliser la valeur par défaut du serveur.';
+
+  @override
+  String get adminAiInheritOption => 'Hériter (par défaut)';
+
+  @override
+  String get adminAiOn => 'Activé';
+
+  @override
+  String get adminAiOff => 'Désactivé';
+
+  @override
+  String get adminAiPersonaSection => 'Personnalité';
+
+  @override
+  String get adminAiPersonaName => 'Nom par défaut de l\'assistant';
+
+  @override
+  String get adminAiTone => 'Ton par défaut';
+
+  @override
+  String get adminAiToneFriendly => 'Amical';
+
+  @override
+  String get adminAiToneProfessional => 'Professionnel';
+
+  @override
+  String get adminAiToneConcise => 'Concis';
+
+  @override
+  String get adminAiToneCreative => 'Créatif';
+
+  @override
+  String get adminAiModelSection => 'Modèle';
+
+  @override
+  String get adminAiModelTier => 'Niveau de modèle par défaut';
+
+  @override
+  String get adminAiTierAuto => 'Auto (routeur)';
+
+  @override
+  String get adminAiTierSimple => 'Simple';
+
+  @override
+  String get adminAiTierMid => 'Équilibré';
+
+  @override
+  String get adminAiTierComplex => 'Avancé';
+
+  @override
+  String get adminAiCapabilitiesSection => 'Capacités';
+
+  @override
+  String get adminAiWebSearch => 'Recherche web';
+
+  @override
+  String get adminAiWebSearchDesc =>
+      'Autoriser l\'assistant à effectuer des recherches sur le web.';
+
+  @override
+  String get adminAiThinking => 'Réflexion approfondie';
+
+  @override
+  String get adminAiThinkingDesc =>
+      'Autoriser l\'assistant à raisonner étape par étape.';
+
+  @override
+  String get adminAiQuotaSection => 'Limite d\'utilisation';
+
+  @override
+  String get adminAiTokenLimit => 'Limite mensuelle de jetons';
+
+  @override
+  String get adminAiTokenLimitDesc =>
+      'Laissez vide pour hériter ; 0 bloque toute utilisation.';
+
+  @override
+  String get adminAiConnectorsSection => 'Connecteurs autorisés';
+
+  @override
+  String get adminAiRestrictConnectors =>
+      'Restreindre les connecteurs pour l\'IA';
+
+  @override
+  String get adminAiConnectorsInherit =>
+      'Hérite de la liste autorisée de l\'espace de travail.';
+
+  @override
+  String get adminAiConnectorsExplicit =>
+      'L\'IA ne peut utiliser que les connecteurs sélectionnés ci-dessous.';
+
+  @override
   String get adminWsIdentity => 'Identité et image de marque';
 
   @override

@@ -1,99 +1,95 @@
-## QA Report — TASK-09 Web Search Tool (ai-service) — 2026-06-23
+## QA Report — TASK-12 (Workspace-level AI Settings) — 2026-06-23
 
 ### Verdict: **PASS**
 
-Web search tool implemented backend-heavy with graceful degradation; both clients (web + Flutter) parse `url`/`type` and open `type:'web'` chips externally. All four build/test gates green. chat-service required no Java change. Cross-platform parity (sync.md) has landed on BOTH platforms — the concern mobile-dev raised (web side not yet done at the time) is now resolved.
+All three platforms build/test green. The highest-risk item — the `aiSettings` contract
+built in parallel by web-dev and mobile-dev against the plan BEFORE the backend report existed —
+matches **exactly** across backend schema/DTO, web TypeScript, and Flutter Dart: same 7 field
+names, same types, same enum value sets, same `null`-vs-`[]` semantics. ai-service is fully
+backward compatible (env fallback on null/absent) and the Redis invalidation channel name is
+identical on publisher and subscriber. No P1 found.
 
 ---
 
-### Build / Test Status (commands run by QA, exact results)
+### Build / Test status (exact captured output, run by QA — not trusted from reports)
 
-| Gate | Command | Result |
-|------|---------|--------|
-| ai-service build | `pnpm --filter ai-service build` | ✓ PASS — exit 0, `nest build`, no errors |
-| ai-service test | `pnpm --filter ai-service test` | ✓ PASS — **Test Suites: 26 passed, 26 total; Tests: 207 passed, 207 total** |
-| web build | `pnpm --filter @platform/web build` | ✓ PASS — exit 0, all routes compiled, no TS errors (strict type-check runs in build) |
-| flutter analyze | `cd apps/client && flutter analyze` | ✓ PASS — exit 0, `No issues found! (ran in 3.5s)` |
+| Service | Command | Result |
+|--------|---------|--------|
+| @platform/database | `pnpm --filter @platform/database test` | ✓ PASS — Test Suites: 4 passed, 4 total; Tests: 16 passed, 16 total |
+| auth-service | `pnpm --filter @platform/auth-service build` | ✓ PASS — webpack 5.104.1 compiled successfully in 2124 ms |
+| auth-service | `pnpm --filter @platform/auth-service test` | ✓ PASS — Test Suites: 12 passed, 12 total; Tests: 52 passed, 52 total |
+| ai-service | `pnpm --filter ai-service build` | ✓ PASS — nest build, exit 0 |
+| ai-service | `pnpm --filter ai-service test` | ✓ PASS — Test Suites: 28 passed, 28 total; Tests: 243 passed, 243 total |
+| web | `pnpm --filter @platform/web build` | ✓ PASS — "✓ Compiled successfully in 2.9s"; route `├ ƒ /admin/ai` emitted (dynamic) |
+| client (Flutter) | `cd apps/client && flutter analyze` | ✓ PASS — "No issues found! (ran in 6.4s)" (only unrelated emoji_picker_flutter SPM notice) |
 
-New tests confirmed present and green: `src/tools/web-search.tool.spec.ts`, `src/tools/web-search/web-search.service.spec.ts`, `src/ai/merge-sources.spec.ts`.
-
-Only environment warnings on builds (pnpm config field deprecation, node engine, `module.register`) — none attributable to this change.
-
----
-
-### API Contract Integrity
-
-`AI_STREAM_DONE` `sources: AiSource[]` extended additively (backward-compatible):
-```
-{ documentId: string, fileName: string, score: number, url?: string, type?: 'kb' | 'web' }
-```
-Web entries: `documentId="web:<index>"`, `fileName=<page title>`, `url=<result url>`, `type="web"`.
-
-- [x] plan.md contract == backend emit — `mergeSources(ctx.ragSources, sourceSink)` at `ai.service.ts:538`; web sources pushed as `{documentId:'web:N', fileName:title, url, type:'web'}` (per backend report + tool spec).
-- [x] Web TS type matches — `apps/web/lib/api/types.ts:92-101` adds `url?: string` + `type?: 'kb' | 'web'`, no `any`, strict preserved.
-- [x] Flutter Dart type matches — `chat_models.dart:280-324`: `AiSource` adds `final String? url`, `final String type` (default `'kb'`), `bool get isWeb`, and `tryParse` reads `raw['url']`/`raw['type']` (map entries) while staying back-compat with bare-string + legacy KB payloads.
+All seven commands exit 0. Reports' claimed numbers reproduce exactly.
 
 ---
 
-### Cross-Platform Sync (.claude/rules/sync.md) — the critical check
+### CRITICAL CHECK — Contract parity (aiSettings) across all 3 platforms
 
-Mirror files `MessageSources.tsx` ↔ `streaming_ai_bubble.dart` `_SourceChipsRow` — affordance verified on BOTH, by reading the actual code:
+Sources read and field-by-field compared (not existence-checked):
+- Backend schema: `packages/database/src/mongo/workspace.schema.ts` (`WorkspaceAiSettings`)
+- Backend DTO: `apps/server/auth-service/src/modules/admin/dto/workspace.dto.ts` (`WorkspaceAiSettingsDto`)
+- Web: `apps/web/lib/api/admin-types.ts` (`WorkspaceAiSettings`)
+- Flutter: `apps/client/lib/features/admin/data/models/admin_models.dart` (`WorkspaceAiSettings`)
 
-| Behavior | Web (`MessageSources.tsx`) | Flutter (`streaming_ai_bubble.dart`) | Match |
-|----------|----------------------------|--------------------------------------|-------|
-| Detect web source | `isWeb = (s.type==='web' \|\| !!s.url) && !!s.url?.trim()` (L46) | `s.isWeb` = `type=='web' \|\| (url!=null && url.isNotEmpty)` | ✓ identical rule |
-| Open web chip externally | `<a href={s.url} target="_blank" rel="noopener noreferrer">` (L60-72) | `launchUrl(uri, mode: LaunchMode.externalApplication)` via `_openExternal(s.url!)` (L313-314) | ✓ external, NOT /kb |
-| KB chip behavior | keeps `next/link` → `/kb/{conversationId}` (L74-77) | keeps `context.push('/kb/$conversationId')` (L315-316) | ✓ unchanged |
-| Web-source icon | `Globe` (lucide) | `Icons.public` (globe) | ✓ |
-| Dedup by documentId | `Map` keyed by documentId (L29) | `deduped` by documentId | ✓ distinct `web:N` survive |
+| Field | Backend schema | Backend DTO validator | Web type | Flutter type | Match |
+|-------|----------------|----------------------|----------|--------------|-------|
+| `personaName` | `String, default null` | `@IsString` opt+nullable | `string \| null` | `String?` | ✓ |
+| `defaultTone` | `String, default null` | `@IsIn(friendly,professional,concise,creative)` | `AiTone \| null` (same 4) | `String?` (tones list: same 4) | ✓ |
+| `modelTier` | `String, default null` | `@IsIn(auto,simple,mid,complex)` | `AiModelTier \| null` (same 4) | `String?` (modelTiers: same 4) | ✓ |
+| `webSearchEnabled` | `Boolean, default null` | `@IsBoolean` opt+nullable | `boolean \| null` | `bool?` | ✓ |
+| `thinkingEnabled` | `Boolean, default null` | `@IsBoolean` opt+nullable | `boolean \| null` | `bool?` | ✓ |
+| `monthlyTokenLimit` | `Number, default null` | `@IsInt @Min(0)` opt+nullable | `number \| null` | `int?` | ✓ |
+| `allowedConnectors` | `[String], default () => null` | `@IsArray @IsString({each})` opt+nullable | `string[] \| null` | `List<String>?` | ✓ |
 
-- [x] Parity actually landed on both. Mobile-dev's earlier note ("web side not yet done") is resolved — web `types.ts` + `MessageSources.tsx` now carry the fields and the external-open affordance.
-- [x] i18n: no new user-facing string introduced (`sourcesLabel` reused; globe is non-textual) → no ARB / messages.json change required, consistent across both platforms. Correct per i18n.md.
+**Exactly 7 fields on every platform — no extra, none missing. Names, types, and enum value sets all match.**
 
----
+**`null`-vs-`[]` semantics for `allowedConnectors` (the most fragile point) — verified on all layers:**
+- Backend schema uses `default: () => null` (function default) specifically because a bare
+  `default: null` on a Mongoose array prop is coerced to `[]` — this preserves the null (inherit)
+  vs [] (allow none) distinction. ✓
+- Backend resolve (`ai-service settings.service.ts:99`): `allowedConnectors: s.allowedConnectors ?? null`
+  — null/absent ⇒ null (inherit); [] preserved. ✓
+- Backend filter (`tool-registry.service.ts:37`): `if (allowedConnectors == null) return tools` (inherit, no filter); a `[]` produces an empty allow-set ⇒ all MCP tools dropped. ✓
+- Web parse/save (`WorkspaceAiSettings.tsx`): "Restrict" Switch OFF ⇒ `null`; ON ⇒ explicit list (may be `[]`). ✓
+- Flutter parse (`admin_models.dart:177`): `j.containsKey('allowedConnectors') && j[...] != null ? list : null`
+  — distinguishes absent (null=inherit) from explicit []. Save (`_buildAiSettings`): `_restrictConnectors ? _allowed : null`. ✓
 
-### Graceful Degradation (verified in source)
-
-- [x] Tool NOT registered unless available: `tool-registry.service.ts:40` — `if (this.webSearchService.isAvailable()) staticDefs.push(WebSearchTool.definition)`.
-- [x] `isAvailable() = enabled && provider.isConfigured()` (`web-search.service.ts:48-50`). No key/URL ⇒ generic provider `isConfigured()` false ⇒ tool not offered ⇒ loop behaves byte-identically to today.
-- [x] Default-on out of the box behaves sanely: `WEB_SEARCH_ENABLED !== 'false'` (default true) BUT `WEB_SEARCH_PROVIDER` default is **`generic`** (configuration.ts:128-135). Default generic + no key ⇒ not configured ⇒ not registered. So "default ON" never registers a broken tool. (Note the plan suggested default `anthropic`; backend deliberately changed it to `generic` because the anthropic provider is a documented no-op stub — this is the correct call, otherwise `isAvailable()` would always be false and the feature dead even when a key is set.)
-- [x] `web_search` not in sensitive set (read-only) — verified by `merge-sources.spec.ts` assertion `isSensitiveTool('web_search') === false` (passing).
-- [x] Response-cache guard extended: `ai.service.ts:547` requires `sourceSink.length === 0` so time-sensitive web answers are never cached.
-
-### chat-service Pass-Through (verified — NO Java change)
-
-- [x] `git diff --stat HEAD -- apps/server/chat-service/` → **empty** (zero changes).
-- [x] `AiResponseListener.java:143-144` reads `Object sources = payload.get("sources")` and forwards via `doneEvent.put("sources", sources != null ? sources : List.of())` — untyped `Object`, so new optional `url`/`type` fields pass through transparently. No typed DTO drops unknown fields.
-
-### Acceptance Criterion
-
-A question needing current info → model calls `web_search` (when available) → tool returns `[Source N] <title> — <url>` text (mirroring KB tool format, snippets fenced via `wrapUntrusted` for prompt-injection safety) AND pushes RagSource entries into the sink → merged into `AI_STREAM_DONE.sources` → existing `[Source N]` chip mechanism renders clickable cited sources on both clients. Mechanism is structurally complete and unit-tested with mocked provider. **Met (pending a live provider key — see owner action).**
-
----
-
-### Issues Found
-
-| Severity | File:Line | Issue | Recommendation |
-|----------|-----------|-------|----------------|
-| Info (non-blocking) | configuration.ts:132 | Default `WEB_SEARCH_PROVIDER=generic` deviates from plan's `anthropic` | Intentional + correct; documented in backend report. No action. |
-| Info (non-blocking) | web/Flutter chip | A source with `type:'web'` but empty `url` falls back to KB-link behavior on both platforms | Safe degradation (cannot open empty URL); identical on both — acceptable. |
-
-No P1/P2 issues. No cross-platform mismatch.
+No drift. **Contract parity: PASS (no P1).**
 
 ---
 
-### OWNER ACTION REQUIRED to activate web search in production
+### Cross-platform sync (.claude/rules/sync.md)
 
-Web search ships **OFF in practice** until a generic provider is configured (graceful gate). To turn it on, set on **ai-service** (the only service that needs it — chat-service unaffected):
+- [x] **Both clients gate by MANAGE_WORKSPACE.** Web: `<RequireCap cap="MANAGE_WORKSPACE">` in `admin/ai/page.tsx` + nav entry `{ href:'/admin/ai', cap:'MANAGE_WORKSPACE' }` in `AdminShell.tsx`. Flutter: `_Section(Cap.manageWorkspace, Icons.auto_awesome, …)` in `admin_screen.dart`. Same capability, no new capability.
+- [x] **Both mutate via the existing GET/PATCH /admin/workspace** — no new endpoint/client/hook. Web: `useWorkspace()` + `useUpdateWorkspace()` → `save.mutate({ aiSettings })`. Flutter: `workspaceProvider.notifier.save({'aiSettings': …})` (reused `AdminRepository.updateWorkspace` on authDio :3001).
+- [x] **Same field set + matching controls.** Both emit the identical 7-field partial `{ aiSettings: {...} }`:
+  persona text, tone dropdown, model-tier dropdown, **tri-state** web-search & thinking (Default/Inherit · On · Off — neither uses a plain Switch, both can express `null`), token-limit number (empty⇒null, 0 preserved), and a **connector allow-list restrict switch** (off⇒null inherit, on⇒explicit list possibly []) constrained to `connectorAllowList ∩ catalog`.
+- [x] **i18n keys present in all 7 locales on BOTH platforms.** Web `messages/{en,vi,zh,ja,ko,es,fr}.json`: AI key count uniform across all 7 (identical per locale). Flutter `app_*.arb`: exactly **30** `adminNavAi`/`adminAi*` keys in each of the 7 locales (uniform). No locale missing keys; `flutter gen-l10n` regenerated (analyze clean).
 
-| Env var | Value to set | Notes |
-|---------|--------------|-------|
-| `WEB_SEARCH_PROVIDER` | `generic` | Already the default; keep as-is. |
-| `WEB_SEARCH_API_URL` | Brave/Tavily-style search API endpoint | Required — no URL ⇒ not configured. |
-| `WEB_SEARCH_API_KEY` | the search-API key (secret) | **Required** — this is the switch that flips `isAvailable()` true and registers the tool. Store as a secret, do NOT commit. |
-| `WEB_SEARCH_MAX_RESULTS` | optional, default `5` (tool caps at 10) | |
-| `WEB_SEARCH_ENABLED` | leave unset/`true`; set `false` to hard-disable | per-workspace toggle |
+---
 
-Until `WEB_SEARCH_API_KEY` + `WEB_SEARCH_API_URL` are set on ai-service, behavior is identical to pre-TASK-09 (tool simply absent). The `anthropic` provider value remains a no-op stub and will NOT activate web search.
+### Backend behavior confirmations
 
-Reminder per CLAUDE.md prod notes: ai-service must run with `--no-cpu-throttling` (+min-instances=1) for its RabbitMQ consumer to stay alive — unrelated to this task but required for any AI feature to work in prod.
+- [x] **ai-service env fallback when aiSettings null/absent (backward compatible).** `settings.service.ts resolve()` maps each null field to its env/config value: `webSearchEnabled ?? config.webSearch.enabled (true)`, `thinkingEnabled ?? config.ai.enableThinking (false)`, `monthlyTokenLimit ?? config.quota.monthlyTokenLimit ?? 500000`, `modelTier 'auto' ⇒ env router`, persona null ⇒ persona-layer default. Fresh deploy (`findOne` ⇒ null) ⇒ pure env defaults. `0`/`false` correctly preserved as real overrides (uses `??`, not `||`). Load failures fall back to env-only and are NOT cached. Threaded into all 5 read paths in `ai.service.ts` (quota :152, persona :220-221, forcedTier :256, thinking :398, web-search/connectors :418-419).
+- [x] **Redis `ai:settings:invalidate` channel name matches publisher ↔ subscriber.** Publisher: auth-service `admin.service.ts:39` `AI_SETTINGS_INVALIDATE_CHANNEL = 'ai:settings:invalidate'`, published only when `dto.aiSettings !== undefined` (failure non-fatal, logged). Subscriber: ai-service `settings-invalidator.service.ts:7` same literal, channel-filtered so it coexists with the kb:* subscriber → `settingsService.invalidate()`. 60s TTL is the safety net.
+- [x] **Deep-merge, not replace.** `updateWorkspace()` builds per-key dot-path `$set` (`aiSettings.<key>`), skips `undefined`, preserves `null` as meaningful "inherit" — a partial PATCH never wipes sibling fields.
+- [x] **Subset validation.** `validateAiSettings()` rejects (400 `AI_CONNECTORS_NOT_IN_ALLOW_LIST`) a non-empty `allowedConnectors` not ⊆ `connectorAllowList`; `null` and `[]` always pass.
+
+---
+
+### Findings
+
+| Severity | File:line | Finding | Recommendation |
+|----------|-----------|---------|----------------|
+| Info (known limitation, NOT a blocker) | `ai-service/tools/tool-registry.service.ts:23` | Custom MCP servers are namespaced `mcp__custom:<id>__<tool>`; their provider segment `custom:<id>` is not a catalog id, so a custom MCP server can never appear in `allowedConnectors` and is **dropped whenever a non-null AI allow-list is set**. This is the conservative deny-by-default, documented in the plan and backend report. | Accept as documented deferral. Follow-up if needed: expose `custom:<id>` ids in the admin UI or have connector-service return a per-tool connector id. |
+| Info (no functional impact) | web `WorkspaceAiSettings.tsx` vs Flutter `_buildAiSettings()` | `modelTier`: Flutter maps explicit `'auto'` ⇒ `null` before sending; web sends `'auto'` literally. Backend `normalizeModelTier('auto')`/`null` both resolve to the env router, so behavior is identical. Cosmetic only — not drift. | No action. |
+| Info | `ai-service/src/ai/ai.service.ts` (604 lines) | Over the ai-service 300-line soft limit; pre-existing, TASK-12 added ~15 net lines. | Out of scope; leave as-is. |
+
+No Blocker, P1, or P2 issues.
+
+### Conclusion
+**PASS** — Builds and tests green on all 3 platforms (DB 16, auth 52, ai 243 tests; web compiled; flutter analyze clean). The parallel-built `aiSettings` contract matches exactly across backend schema/DTO, web, and Flutter (7 fields, types, enums, and the null-vs-[] connector semantics). Both clients gate by MANAGE_WORKSPACE and ride the existing GET/PATCH /admin/workspace with matching controls and full 7-locale i18n. ai-service is backward compatible (env fallback) and the Redis invalidation channel matches end-to-end. The custom-MCP allow-list gap is an accepted documented limitation, not a blocker. No owner action required to ship.

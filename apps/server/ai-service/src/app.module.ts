@@ -12,6 +12,7 @@ import { PersonaModule } from './persona/persona.module';
 import { RetentionModule } from './retention/retention.module';
 import { CallModule } from './call/call.module';
 import { RabbitmqModule } from './rabbitmq/rabbitmq.module';
+import { SettingsModule } from './settings/settings.module';
 import { BotSeedService } from './bot/bot-seed.service';
 import { RedisSubscriberService } from './redis/redis-subscriber.service';
 import { HealthModule } from './health/health.module';
@@ -33,6 +34,7 @@ const mongooseModule: DynamicModule = MongooseModule.forRootAsync({
     mongooseModule,
     HealthModule,
     RedisModule,
+    SettingsModule,
     MemoryModule,
     KbModule,
     ToolsModule,
