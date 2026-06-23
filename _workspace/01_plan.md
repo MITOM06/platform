@@ -1,138 +1,119 @@
-## Feature: TASK-11 — Proactive reminders & daily digest
+## Feature: TASK-10 — Vision / image understanding in KB + chat
 
 ### Summary
-The `create_reminder` tool + `reminders` collection already exist, and chat-service already runs a `@Scheduled` `ReminderSweepService` that fires due reminders — **but only as an FCM push**, never as a persisted, in-conversation message (so web, which has no FCM, never sees them, and there is no chat-history record). TASK-11 closes the real gap: a fired reminder must become a **real, persisted assistant message broadcast over STOMP** so both web + mobile render it via the existing message pipeline with zero new client message-type handling. We achieve this by enhancing the existing chat-service sweep to also inject the reminder as a `type:"ai"` message (reusing `AiMessageService`), and we add a **new ai-service daily-digest cron** (the first `@nestjs/schedule` usage in the service) that summarizes the prior day per active AI conversation and delivers it the same way — gated by a new **workspace-level** `aiSettings.dailyDigest*` opt-in (reusing the fully-built TASK-12 settings infra).
+Give the assistant eyes. Two halves: (KB) when a KB upload IS an image (or a PDF page yields little/no extractable text), send the bytes to Claude vision to produce a text description and index that description as a normal chunk; (Chat) when a user attaches an image to an AI question, pass the image to the model as an image content block so it can answer "what's the total?" about an invoice screenshot. Both halves are gated by config (default on) and degrade gracefully. The model already configured in ai-service (`claude-opus-4-8`) is vision-capable.
+
+> **MANDATORY for the backend implementation agent — load the `claude-api` skill BEFORE wiring any vision call.** Confirmed constraints from that skill (do not deviate):
+> - Image content block shape: `{ type: 'image', source: { type: 'base64', media_type: 'image/jpeg'|'image/png'|'image/gif'|'image/webp', data: <base64, NO newlines> } }`, or `{ type: 'image', source: { type: 'url', url } }`. Place image block(s) BEFORE the accompanying text block in the same user-turn `content` array.
+> - Supported media types: **image/jpeg, image/png, image/gif, image/webp ONLY**. Reject/skip anything else (heic/heif/bmp/svg etc.) — degrade to text; sending an unsupported media_type returns a 400.
+> - Size: cap base64 images at ~5MB each; per-image fidelity costs tokens (full-res ~1.6k–4.7k+ image tokens each). Skip/resize oversized images.
+> - Vision-capable model: `claude-opus-4-8` (the configured `primaryModel`) supports `image_input`. The router's haiku/sonnet tiers — confirm vision support via the skill / Models API before routing a vision turn to them; if a turn carries images, **force the primary (Opus) model** rather than letting the router downgrade.
+> - Use the standard `client.messages.create`/`.stream(...)` — image blocks are ordinary content, no beta header.
 
 ---
 
-### KEY DECISIONS (resolved)
+### KEY DECISIONS (resolved — not open)
 
-**Decision 1 — Delivery mechanism: how a fired reminder/digest becomes a persisted message on both clients.**
-- **Resolved:** Deliver as a normal **`type:"ai"`** message persisted + broadcast by chat-service's existing `AiMessageService.saveAiMessage(conversationId, content, trace=null)`. This is the SAME method that persists every AI answer and the meeting-summary card; it writes the `messages` doc (`senderId = AI_BOT_USER_ID`, `type:"ai"`) and does the single STOMP broadcast to `/topic/conversation/{id}`. Web (`MessageBubble.tsx` `case 'ai'`) and Flutter (`message_bubble.dart`) already render `type:"ai"` with AI avatar/styling. **Zero client message-type work** for delivery.
-- **Rejected (a) — synthetic `AI_STREAM_DONE` over Redis `ai:response:{id}` for reminders:** technically works (chat-service's `AiResponseListener` would persist it), but it fakes a streaming lifecycle for a fixed string and **races the channel** if a real AI stream is in flight on the same conversation. So reminders use the in-process call instead.
-- **Rejected (b) — a brand-new internal `POST /internal/messages/ai` endpoint:** an earlier investigation that claimed this endpoint already exists was **wrong** — verified there is NO `InternalAiController` and NO `X-Internal-Token` in chat-service today. Building one is unnecessary: the sweep is already inside chat-service and can call `AiMessageService` directly in-process.
-- **Net:** **reminders →** in-process `AiMessageService.saveAiMessage()` call inside the existing chat-service sweep (no Redis, no HTTP). **Digest →** ai-service publishes a synthetic `AI_STREAM_DONE` to Redis `ai:response:{id}` (chat-service `AiResponseListener` already persists+broadcasts `AI_STREAM_DONE` via `saveAiMessage`), which is safe because a scheduled digest never coincides with a live user-triggered stream on that conversation. **No new chat-service HTTP endpoint is added anywhere.**
+**(1) KB — when to invoke vision + how page-images are obtained**
+- **IN SCOPE:** direct **image uploads** (mime `image/*`). Today `DocumentExtractorService.extractText` throws `UnsupportedFileTypeException` for images → an uploaded screenshot/scan produces zero chunks and the doc errors. New: when the upload mime is a vision-supported image, fetch bytes → Claude vision → text description → index that description via the existing chunker + embedding + vector-store path.
+- **IN SCOPE (sparse-text PDF, pragmatic):** after `pdfParse`, if extracted text is empty/sparse (< `KB_VISION_MIN_TEXT_CHARS`, default 64), the PDF is scanned/image-heavy. ai-service does NOT rasterize PDF pages today (only `pdf-parse` text + `mammoth`; no pdf→image lib). Rather than add a native rasterizer this pass, send the **whole PDF document block** via the SDK's native PDF support (`{ type:'document', source:{ type:'base64', media_type:'application/pdf', data } }`) asking Claude to transcribe/describe; index the transcription. Gate `KB_VISION_PDF_ENABLED` (default on) + page/size cap. **DEFERRED:** true per-page rasterize + per-page describe (page-number chunk metadata) when a rasterizer is added.
+- **Cost gate:** vision only when (a) upload IS an image, or (b) PDF text is empty/sparse. Normal text PDFs/docx/txt untouched → zero extra cost. Master switch `KB_VISION_ENABLED` (default true); when false, behavior is exactly as today.
+- **Graceful degradation:** any vision/API failure → log + fall back to current behavior (image: mark doc `error`; sparse PDF: index sparse text if any, else error). Never crash the processor.
 
-**Decision 2 — Idempotent firing across restarts.**
-- **Reminders:** reuse the existing `Reminder.notified` boolean + the `due_sweep` compound index `{done:1, notified:1, remindAt:1}`. The sweep query `findByDoneFalseAndNotifiedFalseAndRemindAtLessThanEqual(now)` returns only un-fired due reminders; `notified=true` is set **after** successful in-chat persist, so a crash mid-sweep re-delivers at most the in-flight item next tick (at-least-once; acceptable). Cadence stays `@Scheduled(fixedDelayString="${app.reminder.sweep-interval-ms:60000}")` (60s).
-- **Daily digest:** new `ai_digest_log` collection with a **unique index** on `{conversationId, digestDate}` (`digestDate` = `YYYY-MM-DD` of the summarized day). The cron inserts the log row **first** (`insertOne`; duplicate-key = already done → skip) before generating, so a restart/redeploy mid-run never double-posts. Cadence: `@Cron('0 * * * *')` (hourly); each tick processes only conversations whose configured `dailyDigestHour` matches the current local hour AND lack a log row for "yesterday".
+**(2) Chat — image source format + how the attachment reaches ai-service**
+- **Source format:** **base64 fetched server-side by ai-service.** ai-service fetches the GridFS media URL (`/api/uploads/{id}` resolved against chat-service base) → buffer → base64 → image block. Rationale: media is served behind `/api/uploads` on an internal host, so a public `url` source is unreliable; ai-service already does authless `fetch(fileUrl)` for KB (`kb-processor.service.ts:57`) against the same host — reuse that pattern (KB already proves these URLs are fetchable from ai-service).
+- **How it reaches ai-service:** **carry image refs in `history` entries.** The `@AI` mention lives in the TEXT message; the image is a SEPARATE prior `image` message (clients send image and text as two messages — there is NO caption field on `SendMessageRequest`). chat-service `getAiHistory` already INCLUDES `image` messages (they are NOT in `AI_HISTORY_SKIP_TYPES`) but currently flattens them to the raw URL string. **Change:** history entries gain optional `type` + `imageUrls` so ai-service renders an `image` turn as image content block(s) instead of a useless URL string. ZERO client protocol change.
 
-**Decision 3 — Where the daily-digest opt-in lives + client toggle.**
-- **Resolved: workspace-level**, as new nullable fields on the existing `WorkspaceAiSettings` sub-doc: `dailyDigestEnabled: boolean|null` and `dailyDigestHour: number|null` (0–23 local hour to deliver). **Justification:** (1) there is **no per-user preferences store** anywhere (verified: no `user_preferences` collection, no `User.settings` field) — per-user opt-in would require net-new storage + a net-new non-admin settings surface on both clients; (2) PON is single-tenant-per-deployment, so a workspace toggle = "this company wants morning digests" is a coherent unit; (3) the TASK-12 `aiSettings` path is **fully built end-to-end** (schema nullable-inherit, auth `PATCH /admin/workspace` DTO + `MANAGE_WORKSPACE` guard + `ai:settings:invalidate` Redis bust, ai-service cached `SettingsService`, web `WorkspaceAiSettings.tsx`, Flutter `workspace_ai_settings_panel.dart`) — we extend it with two fields and reuse everything.
-- **Client toggle (the real client work):** add a "Daily digest" switch + hour picker to the existing admin AI settings panels (`WorkspaceAiSettings.tsx` + `workspace_ai_settings_panel.dart`), gated by `MANAGE_WORKSPACE` like the other 7 fields. Per `sync.md` + `i18n.md`: add keys to all 7 web locales and all 7 Flutter ARBs.
-- **Follow-up (out of scope, noted):** true per-user opt-in + per-user digest hour requires a new `ai_user_prefs` collection + a user-facing toggle in the normal settings screen on both clients.
-
-**Decision 4 — Digest generation (which summary/LLM path to reuse).**
-- **Resolved:** mirror `CallSummaryService.generateSummary()` (ai-service) — a non-streaming `anthropic.messages.create({ model, max_tokens, system, messages })` call returning structured text. Use the **fast/cheap model tier** (resolved via `SettingsService` `modelTier` → model router, defaulting to the configured fast model) to control cost. Source messages: ai-service does **not** own a `messages` Mongoose model, but `SearchMessagesTool` already reads the shared collection via `connection.collection('messages')`; the digest service reads the same way: `{ conversationId, createdAt: {$gte: startOfYesterday, $lt: startOfToday}, type: {$in:['text','ai']}, recalled:{$ne:true} }`, renders a transcript, summarizes, and delivers via Decision 1's Redis `AI_STREAM_DONE` path.
+**(3) Config / cost gating / model**
+- Env (add to `configuration.ts`): `KB_VISION_ENABLED` (true), `KB_VISION_PDF_ENABLED` (true), `KB_VISION_MIN_TEXT_CHARS` (64), `KB_VISION_MAX_IMAGE_BYTES` (5_000_000), `CHAT_VISION_ENABLED` (true), `CHAT_VISION_MAX_IMAGES` (4), `CHAT_VISION_MAX_IMAGE_BYTES` (5_000_000). Vision model = existing `config.anthropic.model` (`claude-opus-4-8`).
+- When a chat turn carries >=1 image, **force the primary model** (override router downgrade) so the image block is accepted.
 
 ---
 
-### Backend (Spring Boot chat-service + NestJS ai-service + NestJS auth-service + shared DB)
+### Backend (NestJS ai-service — PRIMARY) + chat-service
 
-#### chat-service (reminder delivery — the acceptance-critical path)
 | 파일 | 변경 유형 | 설명 |
 |------|---------|------|
-| `apps/server/chat-service/src/main/java/com/platform/chatservice/service/ReminderSweepService.java` | 수정 | In the sweep loop, also call `aiMessageService.saveAiMessage(reminder.getConversationId(), formatReminderText(reminder.getText()), null)` to persist+broadcast the reminder as an in-chat `type:"ai"` message. Inject `AiMessageService`. Keep FCM push (mobile out-of-app) AND in-chat message (web + history). Only set `notified=true` after the in-chat persist succeeds (persist is load-bearing; push is best-effort). Prefix text e.g. `"🔔 " + reminder.getText()`. |
-| `apps/server/chat-service/src/main/java/com/platform/chatservice/service/AiMessageService.java` | 참조(무변경) | Reuse existing `saveAiMessage(...)` — already persists `type:"ai"` + single STOMP broadcast. No change. |
-| `apps/server/chat-service/src/main/resources/application.yml` | 참조(무변경) | `app.reminder.sweep-interval-ms` already configured (60000 default). |
+| `apps/server/ai-service/src/kb/document-extractor.service.ts` | 수정 | Expose `isVisionSupportedImage(mime)` helper; route image mimes to vision instead of throwing (when vision enabled). Keep throwing for genuinely unsupported types when vision disabled. |
+| `apps/server/ai-service/src/kb/vision-describe.service.ts` | 신규 | `describeImage(buffer, mime): Promise<string>` + `describePdf(buffer): Promise<string>`. **Loads claude-api skill constraints.** Non-streaming `anthropic.messages.create` with an image/document block + "transcribe & describe all text, numbers, tables, totals, visual content; plain text" prompt. Validate media_type ∈ {jpeg,png,gif,webp} + size cap; throw on unsupported/oversized so caller degrades. Inject `ConfigService`; reuse/construct `Anthropic` from `config.anthropic.apiKey`. Keep < 300 lines. |
+| `apps/server/ai-service/src/kb/kb-processor.service.ts` | 수정 | After fetch: if `KB_VISION_ENABLED` and mime is image → `text = describeImage(...)`. Else extract as today; if PDF and `text.trim().length < KB_VISION_MIN_TEXT_CHARS` and `KB_VISION_PDF_ENABLED` → `text = describePdf(...)` (fallback to sparse text on failure). Then existing chunk→embed→upsert path unchanged. Wrap vision so failure degrades. |
+| `apps/server/ai-service/src/kb/kb.module.ts` | 수정 | Provide `VisionDescribeService` (+ spec). |
+| `apps/server/ai-service/src/config/configuration.ts` | 수정 | Add the `kb.vision*` and `chat.vision*` config from env above. |
+| `apps/server/ai-service/src/ai/ai.service.ts` | 수정 | (a) Extend `AiRequestPayload.history` item to `{ role; content; type?: string; imageUrls?: string[] }`. (b) In `_agenticLoop` build messages: an image history entry maps to a user `MessageParam` with `content = [...imageBlocks, { type:'text', text }]`; non-image entries stay strings. (c) Resolve image refs via new `ChatImageService` (fetch→base64→validate, skip oversized/unsupported, cap count). (d) If any image block present, force `selectedModel = primaryModel`. (e) Also gate the deterministic response-cache store to skip when images were present. Keep <=300 lines — extract block-building to `chat-image.service.ts`. |
+| `apps/server/ai-service/src/ai/chat-image.service.ts` | 신규 | `resolveImageBlocks(imageUrls: string[]): Promise<Anthropic.ImageBlockParam[]>` — resolve chat base, fetch each `/api/uploads/{id}`, infer media_type from `Content-Type`/ext, validate {jpeg,png,gif,webp} + size cap + `CHAT_VISION_MAX_IMAGES`, base64 (no newlines). Fail-soft (skip bad). Needs a chat-service base env to resolve relative URLs. |
+| `apps/server/chat-service/.../service/MessageService.java` | 수정 | `getAiHistory`: stop flattening `image` messages to URL text. For `image` rows populate new fields `type` + `imageUrls` (single URL or JSON-array, mirroring web `parseImageUrls`); `content` = caption (usually empty). Keep the 20-entry cap. |
+| `apps/server/chat-service/.../dto/AiRequestPayload.java` | 수정 (계약) | Introduce `AiHistoryEntry(String role, String content, String type, List<String> imageUrls)` record; `history` type becomes `List<AiHistoryEntry>`. JSON keys `role`,`content`,`type?`,`imageUrls?`. Backward compatible. |
+| `apps/server/chat-service/.../service/AiRedisPublisher.java` | 수정 | `publishAiRequest` history param → `List<AiHistoryEntry>`. No topology change. |
+| `apps/server/chat-service/.../controller/MessageController.java` & `ChatController.java` | 수정 | Update `getAiHistory`→`publishAiRequest` plumbing to the new history type (call sites ~line 57 / ~67). Stripped `@AI` text content unchanged. |
 
-#### ai-service (daily digest scheduler — new) — files ≤300 lines each per ai-service rules
+> **chat-service note:** the `@AI` trigger stays text-based. Acceptance flow: upload invoice screenshot (image message) → send `@AI what's the total?` → image is in history → ai-service renders it as an image block → model answers. No new STOMP event, no new message type, no client protocol change.
+
+### Web (apps/web/) — minimal/none
+
 | 파일 | 변경 유형 | 설명 |
 |------|---------|------|
-| `apps/server/ai-service/package.json` | 수정 | Add `@nestjs/schedule` (`pnpm --filter ai-service add @nestjs/schedule`). First scheduler in the service. |
-| `apps/server/ai-service/src/app.module.ts` | 수정 | `ScheduleModule.forRoot()` to imports; import new `SchedulerModule`. |
-| `apps/server/ai-service/src/scheduler/scheduler.module.ts` | 신규 | Wiring: imports `SettingsModule`, `RedisModule`, `MongooseModule.forFeature([{name: DigestLog.name, schema: DigestLogSchema}])`; provides `DailyDigestCron`, `DigestGeneratorService`. |
-| `apps/server/ai-service/src/scheduler/daily-digest.cron.ts` | 신규 | `@Cron('0 * * * *')` hourly. Read `SettingsService.getSettings()`; if `dailyDigestEnabled !== true` → return. For conversations whose `dailyDigestHour` == current local hour, attempt idempotent `DigestLog` insert ({conversationId, digestDate=yesterday}); on success call `DigestGeneratorService.generateAndDeliver(conversationId)`. try/catch per conversation; never throw. |
-| `apps/server/ai-service/src/scheduler/digest-generator.service.ts` | 신규 | Read yesterday's messages from shared `messages` collection (`connection.collection('messages')`, mirroring `SearchMessagesTool`), build transcript, call Anthropic `messages.create` (fast tier via `SettingsService.modelTier`), then deliver by publishing `{type:'AI_STREAM_DONE', fullContent: digestText, sources: [], trace: null, conversationId}` via `RedisPublisherService.publish(conversationId, payload)`. |
-| `apps/server/ai-service/src/scheduler/digest-log.schema.ts` | 신규 | `@Schema({collection:'ai_digest_log'})` — `{conversationId: string, digestDate: string (YYYY-MM-DD), createdAt: Date}` with **unique compound index** `{conversationId:1, digestDate:1}`. |
-| `apps/server/ai-service/src/config/configuration.ts` | 수정 | Add digest env defaults: `AI_DIGEST_ENABLED` (default false), `AI_DIGEST_HOUR` (default 8), optional `AI_DIGEST_MODEL`. These are the env fallbacks when `aiSettings.dailyDigest*` is null. |
-| `apps/server/ai-service/src/settings/settings.service.ts` | 수정 | Extend `ResolvedAiSettings` + `resolve()` to surface `dailyDigestEnabled` / `dailyDigestHour` (null → env `AI_DIGEST_ENABLED`/`AI_DIGEST_HOUR`). |
+| (none required for acceptance) | — | Web already uploads images (`use-file-attachments.ts`: single URL or `JSON.stringify(images)`, type `image`) and sends `@AI` text. Image→AI flow works with zero web change. |
+| `apps/web/components/chat/MessageInput.tsx` (optional) | 수정 | OPTIONAL hint "you can ask @AI about an image you sent". If added, i18n keys in `apps/web/messages/*.json` (all 7 locales). |
 
-#### shared DB + auth-service (workspace opt-in field)
+### Mobile (apps/client/) — minimal/none
+
 | 파일 | 변경 유형 | 설명 |
 |------|---------|------|
-| `packages/database/src/mongo/workspace.schema.ts` | 수정 | Add to `WorkspaceAiSettings`: `@Prop({type:Boolean, default:null}) dailyDigestEnabled: boolean|null;` and `@Prop({type:Number, default:null}) dailyDigestHour: number|null;` (null = inherit env). |
-| `apps/server/auth-service/src/modules/admin/dto/workspace.dto.ts` | 수정 | Add to `WorkspaceAiSettingsDto`: `@IsOptional() @IsBoolean() dailyDigestEnabled?: boolean|null;` and `@IsOptional() @IsInt() @Min(0) @Max(23) dailyDigestHour?: number|null;`. Existing dot-path `$set` deep-merge + `ai:settings:invalidate` publish already cover them. |
+| (none required for acceptance) | — | Flutter already uploads images (URL(s) in `content`, type `image`) and sends `@AI` text. Same backend-driven flow → AI answer renders as a normal `type:"ai"` streamed message both clients already handle. KB image-understanding is fully server-side. |
+| `apps/client/lib/features/chat/ui/widgets/chat_input_bar.dart` (optional) | 수정 | OPTIONAL hint mirroring web. If added, keys in all 7 `lib/l10n/app_*.arb` + `flutter gen-l10n`. |
 
-> auth-service change is to the `admin` module DTO (allowed — `admin` is not the locked `auth` module; auth-guard.md also grants full access).
+> **Sync (.claude/rules/sync.md):** core change is backend-only, riding existing image-upload + `@AI`-text + `type:"ai"` rendering — web/mobile stay in sync with NO new message-type handling. If the optional input hint is added on one platform it MUST be added on both with i18n ×7 each.
 
 ---
 
-### Mobile (Flutter)
-| 파일 | 변경 유형 | 설명 |
-|------|---------|------|
-| `apps/client/lib/features/admin/ui/widgets/workspace_ai_settings_panel.dart` (and/or `ai_settings_controls.dart`) | 수정 | Add a "Daily digest" `Switch` + hour picker (0–23) bound to `aiSettings.dailyDigestEnabled` / `dailyDigestHour`, gated by `MANAGE_WORKSPACE`. Rides existing `GET/PATCH /admin/workspace`. |
-| `apps/client/lib/features/admin/data/models/admin_models.dart` | 수정 | Add `dailyDigestEnabled` (bool?) + `dailyDigestHour` (int?) to the workspace aiSettings model + JSON (de)serialization. |
-| `apps/client/lib/features/chat/ui/widgets/message_bubble.dart` | 검증만 | Reminder/digest arrives as `type:"ai"` → already rendered. **Verification only**. |
-| `apps/client/lib/l10n/app_en.arb` + 6 others (`vi, zh, ja, ko, es, fr`) | 수정 | Add keys: `aiDailyDigest`, `aiDailyDigestDesc`, `aiDailyDigestHour`. Run `flutter gen-l10n`. |
+### API Contract (FIXED — implement to this)
 
-### Web (Next.js)
-| 파일 | 변경 유형 | 설명 |
-|------|---------|------|
-| `apps/web/components/admin/WorkspaceAiSettings.tsx` | 수정 | Add "Daily digest" switch + hour `Select`/number input bound to `aiSettings.dailyDigestEnabled` / `dailyDigestHour`, gated by `MANAGE_WORKSPACE`. Same `PATCH /admin/workspace` mutation. |
-| `apps/web/lib/api/types.ts` | 수정 | Add `dailyDigestEnabled?: boolean | null` + `dailyDigestHour?: number | null` to the workspace `aiSettings` type. |
-| `apps/web/components/chat/MessageBubble.tsx` | 검증만 | `case 'ai'` already renders reminder/digest. **Verification only.** |
-| `apps/web/messages/{en,vi,zh,ja,ko,es,fr}.json` | 수정 | Add the 3 digest i18n keys (mirror Flutter keys). |
-
----
-
-### API Contract (fixed)
-
-**1. Reminder delivery (in-process, chat-service) — no HTTP.**
-Sweep persists+broadcasts via `AiMessageService.saveAiMessage`. STOMP frame on `/topic/conversation/{id}` is the standard `MessageResponse`:
-```
+**Internal `ai.requests` RabbitMQ payload (chat-service → ai-service).** History entry gains optional image fields:
+```jsonc
 {
-  id: string,
-  conversationId: string,
-  senderId: "ai-bot-000000000000000000000001",  // AI_BOT_USER_ID
-  type: "ai",
-  content: string,        // "🔔 <reminder text>"
-  trace: null,
-  createdAt: ISO-8601,
-  readBy: [], reactions: [], ...
+  "conversationId": "string",
+  "userId": "string",
+  "displayName": "string",
+  "content": "string",                 // triggering text (@AI stripped)
+  "departmentId": "string|null",
+  "history": [
+    { "role": "user", "content": "what's the total?" },
+    { "role": "user", "content": "", "type": "image",
+      "imageUrls": ["/api/uploads/665f...a1"] }   // NEW optional fields
+  ]
 }
 ```
+- `type` (optional): present for `image` history turns. Absent ⇒ legacy text turn.
+- `imageUrls` (optional): relative `/api/uploads/{id}` paths (JSON-array decoded). ai-service resolves against chat base, fetches, base64-encodes.
+- Backward compatible: text entries omit `type`/`imageUrls`; ai-service treats them as plain text.
 
-**2. Digest delivery (ai-service → Redis → chat-service).**
-ai-service publishes to channel `ai:response:{conversationId}`:
-```
-{ type: "AI_STREAM_DONE", fullContent: "<digest text>", sources: [], trace: null, conversationId: "<id>" }
-```
-chat-service `AiResponseListener` (existing) → `AiMessageService.saveAiMessage` → identical `type:"ai"` `MessageResponse` broadcast as in (1).
+**Internal `kb:process` Redis payload — UNCHANGED.** Already carries `fileUrl` + `mimeType` + `fileName` — sufficient for KB vision. No new field.
 
-**3. Workspace settings (existing endpoint, extended payload).**
-`PATCH /api/admin/workspace` (auth-service, `MANAGE_WORKSPACE`):
-- Request (partial): `{ aiSettings: { dailyDigestEnabled?: boolean|null, dailyDigestHour?: number|null /* 0..23 */ } }`
-- Response: updated `Workspace` doc including `aiSettings` with the two new fields.
-- Side effect: publishes Redis `ai:settings:invalidate` → ai-service `SettingsService` cache bust (≤60s TTL safety net).
-
----
+**Claude vision call (both halves):** exact block shapes per the MANDATORY block at top.
 
 ### Data Model Changes
-- `WorkspaceAiSettings` sub-doc (`packages/database` `workspace.schema.ts`): **+2 nullable fields** `dailyDigestEnabled`, `dailyDigestHour`. Backward compatible (null = inherit env). No migration (existing docs read as null → env default).
-- New collection **`ai_digest_log`** (ai-service): `{conversationId, digestDate, createdAt}` with unique `{conversationId:1, digestDate:1}` index for idempotency.
-- `reminders` collection + `Reminder` doc: **no change** (reuse `notified`/`done`/`remindAt` + `due_sweep` index).
-- `messages` collection: **no schema change** — reminder/digest reuse the existing `type:"ai"` shape.
-
----
+- `kb_documents` schema: **no required change.** (Optional follow-up: `extractionMode: 'text'|'vision-image'|'vision-pdf'` for observability.)
+- `messages`: **no change** — image messages already store URL(s) in `content` with `type:"image"`.
 
 ### Implementation Order
-1. **Backend — shared DB + auth-service first (contract anchor):** add the two `aiSettings` fields to `workspace.schema.ts` + `workspace.dto.ts`. (`@platform/database` build, auth-service build/test.) Unblocks both clients in parallel.
-2. **Backend — chat-service reminder injection (acceptance-critical):** enhance `ReminderSweepService` to call `AiMessageService.saveAiMessage`. `mvn compile && mvn test`. This alone satisfies the acceptance criterion.
-3. **Backend — ai-service digest scheduler:** add `@nestjs/schedule`, `ScheduleModule.forRoot()`, the `scheduler` module (cron + generator + digest-log schema), extend `SettingsService` + `configuration.ts`. `pnpm build && pnpm test`.
-4. **Mobile + Web (parallel, after step 1):** add the digest toggle + hour picker to the admin AI settings panel; extend the workspace aiSettings type/model; add the 3 i18n keys ×7 each. Verify reminder/digest renders as `type:"ai"` (no message-type code change).
-
-Steps 2, 3, and the step-4 client pair are independent once step 1 lands → can run as parallel agents.
-
----
+1. **chat-service** (contract first): `AiHistoryEntry` record → `AiRequestPayload` → `getAiHistory` populates `type`/`imageUrls` → `AiRedisPublisher` + both controllers. `mvn -q -DskipTests compile`.
+2. **ai-service KB half** (parallelizable): `configuration.ts` → `VisionDescribeService` (load claude-api skill) → wire `kb-processor` → `kb.module`. `pnpm build && pnpm test`.
+3. **ai-service Chat half** (parallelizable with #2): extend history type → `ChatImageService` → `_agenticLoop` renders image turns + forces primary on images + cache-gate. `pnpm build && pnpm test`.
+4. **Web + Mobile:** only if optional input hint added — then BOTH, i18n ×7 each. Otherwise no-op; verify flow.
+5. **QA / acceptance:** upload invoice screenshot, send `@AI what's the total?`, confirm correct figure; upload scanned-invoice PDF to KB, confirm vision description indexed + retrievable.
 
 ### Edge Cases
-- **Reminder for a conversation the user left / deleted:** `saveAiMessage` still persists+broadcasts; `conversationRepository.findById` no-ops the lastMessage bump if the conv is gone. Acceptable; optionally skip if conversation missing (low priority).
-- **Crash mid-sweep (reminder):** `notified=true` only after successful in-chat persist → at-least-once; a rare duplicate reminder message on restart is tolerable.
-- **Digest double-post on redeploy:** prevented by inserting the unique `ai_digest_log` row BEFORE generating; duplicate-key → skip.
-- **Digest with no activity yesterday:** generator finds 0 messages → skip generation (don't post an empty digest), don't write a log row.
-- **Timezone for `dailyDigestHour`:** single-tenant deployment → use server/workspace local hour (document the assumption; per-user tz is the follow-up). Hourly cron = 1-hour granularity, intentional.
-- **Settings cache staleness:** toggling digest off in admin publishes `ai:settings:invalidate`; worst case the next hourly tick within 60s TTL still honors it. Fine for a daily job.
-- **Reminder fires while a live AI stream is running on the same conversation:** reminders use the in-process `saveAiMessage` path (NOT the Redis stream), so no collision with an in-flight `AI_STREAM_*` sequence.
-- **FCM disabled / web-only user:** in-chat message is now the primary delivery (FCM best-effort), so web users finally receive reminders — the core gap this task closes.
-- **i18n:** reminder/digest message bodies are model/text content (not UI chrome) → no UI i18n for the message itself; only the admin toggle labels need the 3 keys ×7 ×2 platforms.
+- **Unsupported image type** (heic/heif/bmp/svg): media_type not in {jpeg,png,gif,webp} → skip image block (chat) / fall back to error or sparse text (KB). Clients DO allow heic/webp/bmp/svg uploads (`UploadController.resolveContentType`) — webp ok, the rest must be filtered.
+- **Oversized image** (> ~5MB base64): skip with logged warning (no guaranteed image lib in ai-service; resize is a deferred follow-up).
+- **Multiple images** in one turn (JSON array): cap at `CHAT_VISION_MAX_IMAGES` (4); extras dropped.
+- **Image fetch fails** (GridFS 404 / network): skip that image, continue text-only — fail-soft.
+- **Vision routed to haiku/sonnet:** force primary (Opus) for any turn with image blocks; never route to a model with unconfirmed vision support.
+- **KB sparse-PDF false positive** (legit short text PDF): `KB_VISION_MIN_TEXT_CHARS=64` is conservative; on vision failure the sparse text still indexes — no regression.
+- **Cost runaway:** vision only fires on image uploads / sparse PDFs (KB) and image-bearing turns (chat); normal text traffic untouched. All config-gated, default on, env-disablable.
+- **Prompt cache:** image blocks live in `messages` (after cached system/tools prefix) → don't bust persona/tool cache.
+- **Response cache:** add "no images this turn" to the deterministic-cache gate in `_agenticLoop` (alongside no tool calls / no RAG / no web sources).
+- **i18n:** if optional hints added, every new string in all 7 locales on BOTH platforms.
+
+### Explicitly IN scope this pass vs DEFERRED
+- **IN:** direct image-upload KB describe+index; sparse/scanned PDF whole-document vision transcription; chat image attachments → image content blocks (base64, server-fetched); config gating + graceful degradation; force-primary-model-on-images.
+- **DEFERRED (documented follow-up):** per-page PDF rasterization with page-number chunk metadata (rasterizer dep); server-side image downscale/resize for oversized images; inline image caption in the SAME message as `@AI` (needs a caption field on `SendMessageRequest`); `extractionMode` observability field; optional client input hints (do both-or-neither if attempted).
