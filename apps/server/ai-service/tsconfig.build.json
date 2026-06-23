@@ -1,4 +1,11 @@
 {
   "extends": "./tsconfig.json",
-  "exclude": ["node_modules", "dist", "**/*spec.ts", "eval"]
+  "exclude": ["node_modules", "dist", "**/*spec.ts", "eval"],
+  "compilerOptions": {
+    "rootDir": "./src",
+    "paths": {
+      "@platform/database": ["../../../packages/database/dist"],
+      "@platform/database/*": ["../../../packages/database/dist/*"]
+    }
+  }
 }
