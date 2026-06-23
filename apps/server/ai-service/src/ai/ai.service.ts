@@ -14,6 +14,7 @@ import { withAgenticLoopSpan } from './tracing-helpers';
 import { isSensitiveTool } from './injection-guard';
 import { FactExtractorService } from './fact-extractor.service';
 import { ContextBuilderService } from './context-builder.service';
+import { ResponseCacheService } from './response-cache.service';
 import { SkillsService } from '../skills/skills.service';
 import { EmbeddingService } from '../kb/embedding.service';
 
@@ -62,6 +63,8 @@ interface RequestContext {
   /** Volatile per-request grounding block (RAG + memory). Placed AFTER cache. */
   volatileSystem: string;
   ragSources: RagSource[];
+  /** Embedded user query — used to populate the semantic response cache. */
+  queryVector?: number[] | null;
 }
 
 const MAX_ITER = 5;
@@ -89,6 +92,7 @@ export class AiService {
     private readonly factExtractor: FactExtractorService,
     private readonly contextBuilder: ContextBuilderService,
     private readonly skillsService: SkillsService,
+    private readonly responseCache: ResponseCacheService,
   ) {
     this.anthropic = new Anthropic({
       apiKey: this.configService.get<string>('config.anthropic.apiKey'),
@@ -175,6 +179,19 @@ export class AiService {
       this.logger.warn(`Embedding user message failed for ${conversationId}`, err);
     }
 
+    // Semantic response cache (opt-in): a near-identical question in this same
+    // conversation reuses a recent deterministic answer, skipping the model call.
+    if (queryVector) {
+      const cached = await this.responseCache.lookup(conversationId, queryVector);
+      if (cached) {
+        await this.streamCachedAnswer(conversationId, cached);
+        await this.memoryService
+          .incrementMessageCount(conversationId)
+          .catch((err) => this.logger.warn(`message count failed for ${conversationId}`, err));
+        return;
+      }
+    }
+
     const persona = await this.personaService.getPersona(conversationId);
     const baseSystem = this.personaService.buildSystemPrompt(persona, displayName);
 
@@ -201,6 +218,7 @@ export class AiService {
         .filter((s) => s && s.trim())
         .join('\n\n'),
       ragSources: volatileContext.ragSources,
+      queryVector,
     };
 
     const routeSignals: RouteSignals = {
@@ -273,6 +291,29 @@ export class AiService {
     } catch (err) {
       this.logger.error(`Failed to increment message count for ${conversationId}`, err);
     }
+  }
+
+  /** Stream a cached answer to the client as if freshly generated (model skipped). */
+  private async streamCachedAnswer(conversationId: string, answer: string): Promise<void> {
+    this.logger.log(`Serving cached answer for ${conversationId} (model skipped)`);
+    await this.publisher.publish(conversationId, { type: 'AI_STREAM_CHUNK', chunk: answer });
+    await this.publisher.publish(conversationId, {
+      type: 'AI_STREAM_DONE',
+      fullContent: answer,
+      sources: [],
+      fromCache: true,
+      trace: {
+        thinkingBlocks: [],
+        toolCalls: [],
+        inputTokens: 0,
+        outputTokens: 0,
+        cachedInputTokens: 0,
+        thinkingTokens: 0,
+        processingMs: 0,
+        model: 'cache',
+        iterationCount: 0,
+      },
+    });
   }
 
   /** System blocks: stable (cached) persona/contract + volatile grounding after it. */
@@ -481,6 +522,17 @@ export class AiService {
       sources: ctx.ragSources,
       trace,
     });
+
+    // Cache only DETERMINISTIC answers: no tool calls (external/non-deterministic)
+    // and no RAG sources (context-dependent). Keeps reuse safe.
+    if (
+      toolCalls.length === 0 &&
+      ctx.ragSources.length === 0 &&
+      ctx.queryVector &&
+      fullText.trim()
+    ) {
+      await this.responseCache.store(ctx.conversationId, ctx.queryVector, fullText);
+    }
 
     return trace;
   }

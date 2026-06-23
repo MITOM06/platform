@@ -87,6 +87,12 @@ export default registerAs('config', () => ({
     // Short-TTL cache of read-only tool results (Redis), keyed per user+tool+input.
     toolCacheEnabled: process.env.AI_TOOL_CACHE_ENABLED !== 'false',
     toolCacheTtlSec: parseInt(process.env.AI_TOOL_CACHE_TTL ?? '60', 10),
+    // Semantic response cache: reuse a recent answer for a near-identical question
+    // in the SAME conversation. OFF by default (staleness risk); needs embeddings.
+    responseCacheEnabled: process.env.AI_RESPONSE_CACHE_ENABLED === 'true',
+    responseCacheThreshold: parseFloat(process.env.AI_RESPONSE_CACHE_THRESHOLD ?? '0.97'),
+    responseCacheTtlSec: parseInt(process.env.AI_RESPONSE_CACHE_TTL ?? '600', 10),
+    responseCacheMax: parseInt(process.env.AI_RESPONSE_CACHE_MAX ?? '20', 10),
   },
   quota: {
     monthlyTokenLimit: parseInt(process.env.AI_MONTHLY_TOKEN_LIMIT ?? '500000', 10),
