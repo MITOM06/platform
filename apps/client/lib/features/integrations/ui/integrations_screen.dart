@@ -8,6 +8,7 @@ import '../../../core/widgets/pon_widgets.dart';
 import '../data/models/connector_models.dart';
 import '../state/integrations_provider.dart';
 import 'widgets/connector_card.dart';
+import 'widgets/connector_permissions_sheet.dart';
 import 'widgets/custom_mcp_sheet.dart';
 import 'widgets/directory_section.dart';
 
@@ -157,6 +158,8 @@ class _IntegrationsScreenState extends ConsumerState<IntegrationsScreen>
                     busy: _busyProvider == item.entry.id,
                     onConnect: () => _connect(item.entry),
                     onManage: () => _manage(item),
+                    onPermissions: () =>
+                        ConnectorPermissionsSheet.show(context, item),
                   ),
                 ),
               ),

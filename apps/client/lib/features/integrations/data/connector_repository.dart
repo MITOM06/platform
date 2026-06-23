@@ -45,6 +45,32 @@ class ConnectorRepository {
     await _dio.delete('/connections/$connectionId');
   }
 
+  /// `GET /connections/:id/permissions` — the AI action groups granted to this
+  /// connection (subset of `['view','create','edit','delete']`).
+  Future<List<String>> getConnectionPermissions(String connectionId) async {
+    final response = await _dio.get('/connections/$connectionId/permissions');
+    final data = response.data as Map<String, dynamic>;
+    return (data['actionGroups'] as List<dynamic>? ?? const [])
+        .map((e) => e as String)
+        .toList();
+  }
+
+  /// `PUT /connections/:id/permissions` — update the AI action groups. Returns
+  /// the persisted set echoed back by the server.
+  Future<List<String>> updateConnectionPermissions(
+    String connectionId,
+    List<String> actionGroups,
+  ) async {
+    final response = await _dio.put(
+      '/connections/$connectionId/permissions',
+      data: {'actionGroups': actionGroups},
+    );
+    final data = response.data as Map<String, dynamic>;
+    return (data['actionGroups'] as List<dynamic>? ?? const [])
+        .map((e) => e as String)
+        .toList();
+  }
+
   /// `POST /custom-mcp/discover` — preview a custom server's tools WITHOUT
   /// saving it.
   Future<List<McpToolPreview>> discoverCustom({

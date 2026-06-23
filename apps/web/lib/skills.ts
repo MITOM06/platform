@@ -18,4 +18,9 @@ export const SKILLS: SkillDef[] = [
   { id: 'mailWriter', icon: '✍️', requires: ['gmail'] },
   { id: 'researcher', icon: '📚', requires: ['gdrive'] },
   { id: 'projectKeeper', icon: '🧩', requires: ['notion'] },
+  { id: 'meetingNotes', icon: '🎙️', requires: [] },
+  { id: 'inboxTriage', icon: '📥', requires: ['gmail'] },
+  { id: 'dataAnalyst', icon: '📊', requires: [] },
+  { id: 'docDrafter', icon: '📝', requires: [] },
+  { id: 'translator', icon: '🌐', requires: [] },
 ]

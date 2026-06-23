@@ -323,6 +323,27 @@ class ChatRepository {
     await _dio.delete('/api/messages/$messageId/reactions');
   }
 
+  /// Submits 👍/👎 feedback for an AI answer. [rating] is "up", "down" or
+  /// "none" (toggle off). Returns the persisted rating + optional comment.
+  Future<({String rating, String? comment})> submitFeedback(
+    String messageId,
+    String rating, {
+    String? comment,
+  }) async {
+    final response = await _dio.post(
+      '/api/messages/$messageId/feedback',
+      data: {
+        'rating': rating,
+        if (comment != null && comment.isNotEmpty) 'comment': comment,
+      },
+    );
+    final data = response.data as Map<String, dynamic>;
+    return (
+      rating: data['rating'] as String? ?? rating,
+      comment: data['comment'] as String?,
+    );
+  }
+
   Future<void> recallMessage(String messageId) async {
     await _dio.delete('/api/messages/$messageId');
   }

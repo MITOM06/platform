@@ -11,6 +11,7 @@ import 'floating_reaction_sheet.dart';
 import 'image_content.dart';
 import 'meeting_summary_card.dart';
 import 'message_bubble_parts.dart';
+import 'message_feedback.dart';
 import 'streaming_ai_bubble.dart';
 import 'text_content.dart';
 import 'tool_trace_panel.dart';
@@ -349,6 +350,19 @@ class MessageBubble extends ConsumerWidget {
                   ),
                 ),
               ),
+              // 👍/👎 feedback only on finalized, successful AI answers.
+              if (message.isAiMessage &&
+                  !message.isStreaming &&
+                  !message.recalled &&
+                  !message.isAiError &&
+                  !message.isAiQuotaExceeded &&
+                  !message.isAiRateLimited &&
+                  !message.isAiStreamInterrupted &&
+                  !message.isAiUnavailable)
+                Padding(
+                  padding: const EdgeInsets.only(left: 16, right: 40),
+                  child: MessageFeedback(messageId: message.id),
+                ),
               if (message.reactions.isNotEmpty && !message.recalled)
                 ReactionChips(message: message),
             ],

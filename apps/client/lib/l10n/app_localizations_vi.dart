@@ -1029,6 +1029,25 @@ class AppLocalizationsVi extends AppLocalizations {
       'Quá nhiều yêu cầu AI. Vui lòng chậm lại và thử lại sau giây lát.';
 
   @override
+  String get feedbackHelpful => 'Hữu ích';
+
+  @override
+  String get feedbackNotHelpful => 'Không hữu ích';
+
+  @override
+  String get feedbackCommentHint =>
+      'Cho chúng tôi biết điều gì chưa ổn (không bắt buộc)';
+
+  @override
+  String get feedbackThanks => 'Cảm ơn phản hồi của bạn';
+
+  @override
+  String get feedbackSend => 'Gửi';
+
+  @override
+  String get feedbackError => 'Không thể gửi phản hồi. Vui lòng thử lại.';
+
+  @override
   String get aiSensitiveAction => 'hành động nhạy cảm';
 
   @override
@@ -1688,6 +1707,43 @@ class AppLocalizationsVi extends AppLocalizations {
   }
 
   @override
+  String get permissionsTitle => 'Quyền AI';
+
+  @override
+  String get permissionsSubtitle =>
+      'Chọn những hành động trợ lý có thể thực hiện qua trình kết nối này.';
+
+  @override
+  String get permView => 'Xem';
+
+  @override
+  String get permCreate => 'Tạo';
+
+  @override
+  String get permEdit => 'Sửa';
+
+  @override
+  String get permDelete => 'Xóa';
+
+  @override
+  String get permViewDesc => 'Đọc dữ liệu, tìm kiếm và tóm tắt (chỉ đọc).';
+
+  @override
+  String get permCreateDesc => 'Thêm mục mới như tệp, sự kiện hoặc bản ghi.';
+
+  @override
+  String get permEditDesc => 'Chỉnh sửa các mục hiện có và nội dung của chúng.';
+
+  @override
+  String get permDeleteDesc => 'Xóa vĩnh viễn các mục.';
+
+  @override
+  String get permManage => 'Quyền';
+
+  @override
+  String get permSaved => 'Đã cập nhật quyền.';
+
+  @override
   String get skillsTitle => 'Kỹ năng';
 
   @override
@@ -1729,6 +1785,41 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get skillProjectKeeperDesc =>
       'Lưu ghi chú và việc cần làm vào Notion, giữ cơ sở dữ liệu gọn gàng.';
+
+  @override
+  String get skillMeetingNotesName => 'Ghi chú cuộc họp';
+
+  @override
+  String get skillMeetingNotesDesc =>
+      'Tóm tắt cuộc họp và rút ra quyết định cùng việc cần làm.';
+
+  @override
+  String get skillInboxTriageName => 'Phân loại hộp thư';
+
+  @override
+  String get skillInboxTriageDesc =>
+      'Sắp xếp ưu tiên tin nhắn và gợi ý trả lời nhanh.';
+
+  @override
+  String get skillDataAnalystName => 'Phân tích dữ liệu';
+
+  @override
+  String get skillDataAnalystDesc =>
+      'Phân tích bảng và số liệu; làm nổi bật xu hướng và giá trị bất thường.';
+
+  @override
+  String get skillDocDrafterName => 'Soạn tài liệu';
+
+  @override
+  String get skillDocDrafterDesc =>
+      'Soạn đề xuất, đặc tả và báo cáo có cấu trúc.';
+
+  @override
+  String get skillTranslatorName => 'Phiên dịch';
+
+  @override
+  String get skillTranslatorDesc =>
+      'Dịch và bản địa hóa văn bản tự nhiên giữa các ngôn ngữ.';
 
   @override
   String get adminTitle => 'Bảng quản trị';

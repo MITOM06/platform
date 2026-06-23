@@ -2016,6 +2016,42 @@ abstract class AppLocalizations {
   /// **'Too many AI requests. Please slow down and try again shortly.'**
   String get aiErrRateLimited;
 
+  /// No description provided for @feedbackHelpful.
+  ///
+  /// In en, this message translates to:
+  /// **'Helpful'**
+  String get feedbackHelpful;
+
+  /// No description provided for @feedbackNotHelpful.
+  ///
+  /// In en, this message translates to:
+  /// **'Not helpful'**
+  String get feedbackNotHelpful;
+
+  /// No description provided for @feedbackCommentHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Tell us what went wrong (optional)'**
+  String get feedbackCommentHint;
+
+  /// No description provided for @feedbackThanks.
+  ///
+  /// In en, this message translates to:
+  /// **'Thanks for your feedback'**
+  String get feedbackThanks;
+
+  /// No description provided for @feedbackSend.
+  ///
+  /// In en, this message translates to:
+  /// **'Send'**
+  String get feedbackSend;
+
+  /// No description provided for @feedbackError.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t submit feedback. Please try again.'**
+  String get feedbackError;
+
   /// No description provided for @aiSensitiveAction.
   ///
   /// In en, this message translates to:
@@ -3175,6 +3211,78 @@ abstract class AppLocalizations {
   /// **'{count} tools discovered'**
   String customMcpToolsFound(int count);
 
+  /// No description provided for @permissionsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'AI permissions'**
+  String get permissionsTitle;
+
+  /// No description provided for @permissionsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose which actions your assistant may take through this connector.'**
+  String get permissionsSubtitle;
+
+  /// No description provided for @permView.
+  ///
+  /// In en, this message translates to:
+  /// **'View'**
+  String get permView;
+
+  /// No description provided for @permCreate.
+  ///
+  /// In en, this message translates to:
+  /// **'Create'**
+  String get permCreate;
+
+  /// No description provided for @permEdit.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit'**
+  String get permEdit;
+
+  /// No description provided for @permDelete.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete'**
+  String get permDelete;
+
+  /// No description provided for @permViewDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Read data, search, and summarize (read-only).'**
+  String get permViewDesc;
+
+  /// No description provided for @permCreateDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Add new items such as files, events, or records.'**
+  String get permCreateDesc;
+
+  /// No description provided for @permEditDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Modify existing items and their content.'**
+  String get permEditDesc;
+
+  /// No description provided for @permDeleteDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove items permanently.'**
+  String get permDeleteDesc;
+
+  /// No description provided for @permManage.
+  ///
+  /// In en, this message translates to:
+  /// **'Permissions'**
+  String get permManage;
+
+  /// No description provided for @permSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Permissions updated.'**
+  String get permSaved;
+
   /// No description provided for @skillsTitle.
   ///
   /// In en, this message translates to:
@@ -3246,6 +3354,66 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Files notes and tasks into Notion, keeps databases tidy.'**
   String get skillProjectKeeperDesc;
+
+  /// No description provided for @skillMeetingNotesName.
+  ///
+  /// In en, this message translates to:
+  /// **'Meeting notes'**
+  String get skillMeetingNotesName;
+
+  /// No description provided for @skillMeetingNotesDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Summarize meetings and pull out decisions and action items.'**
+  String get skillMeetingNotesDesc;
+
+  /// No description provided for @skillInboxTriageName.
+  ///
+  /// In en, this message translates to:
+  /// **'Inbox triage'**
+  String get skillInboxTriageName;
+
+  /// No description provided for @skillInboxTriageDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Prioritize messages and suggest quick replies.'**
+  String get skillInboxTriageDesc;
+
+  /// No description provided for @skillDataAnalystName.
+  ///
+  /// In en, this message translates to:
+  /// **'Data analyst'**
+  String get skillDataAnalystName;
+
+  /// No description provided for @skillDataAnalystDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Analyze tables and numbers; surface trends and outliers.'**
+  String get skillDataAnalystDesc;
+
+  /// No description provided for @skillDocDrafterName.
+  ///
+  /// In en, this message translates to:
+  /// **'Document drafter'**
+  String get skillDocDrafterName;
+
+  /// No description provided for @skillDocDrafterDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Draft structured proposals, specs and reports.'**
+  String get skillDocDrafterDesc;
+
+  /// No description provided for @skillTranslatorName.
+  ///
+  /// In en, this message translates to:
+  /// **'Translator'**
+  String get skillTranslatorName;
+
+  /// No description provided for @skillTranslatorDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Translate and localize text naturally across languages.'**
+  String get skillTranslatorDesc;
 
   /// No description provided for @adminTitle.
   ///

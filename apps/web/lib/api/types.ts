@@ -143,6 +143,15 @@ export interface AiTraceResponse {
   promptVariables?: Record<string, string>
 }
 
+/** Thumbs feedback rating on an AI answer (`none` clears a prior vote). */
+export type FeedbackRating = 'up' | 'down' | 'none'
+
+/** `POST /api/messages/{id}/feedback` response. */
+export interface MessageFeedbackResult {
+  rating: FeedbackRating
+  comment?: string
+}
+
 export interface PageResponse<T> {
   content: T[]
   page: number

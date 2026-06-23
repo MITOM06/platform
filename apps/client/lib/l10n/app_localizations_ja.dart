@@ -1017,6 +1017,24 @@ class AppLocalizationsJa extends AppLocalizations {
   String get aiErrRateLimited => 'AI へのリクエストが多すぎます。少し時間をおいて再試行してください。';
 
   @override
+  String get feedbackHelpful => '役に立った';
+
+  @override
+  String get feedbackNotHelpful => '役に立たない';
+
+  @override
+  String get feedbackCommentHint => '問題点を教えてください（任意）';
+
+  @override
+  String get feedbackThanks => 'フィードバックありがとうございます';
+
+  @override
+  String get feedbackSend => '送信';
+
+  @override
+  String get feedbackError => 'フィードバックを送信できませんでした。もう一度お試しください。';
+
+  @override
   String get aiSensitiveAction => '重要な操作';
 
   @override
@@ -1661,6 +1679,42 @@ class AppLocalizationsJa extends AppLocalizations {
   }
 
   @override
+  String get permissionsTitle => 'AI の権限';
+
+  @override
+  String get permissionsSubtitle => 'このコネクターを通じてアシスタントが実行できる操作を選択します。';
+
+  @override
+  String get permView => '閲覧';
+
+  @override
+  String get permCreate => '作成';
+
+  @override
+  String get permEdit => '編集';
+
+  @override
+  String get permDelete => '削除';
+
+  @override
+  String get permViewDesc => 'データの読み取り、検索、要約（読み取り専用）。';
+
+  @override
+  String get permCreateDesc => 'ファイル、イベント、レコードなどの新規項目を追加します。';
+
+  @override
+  String get permEditDesc => '既存の項目とその内容を変更します。';
+
+  @override
+  String get permDeleteDesc => '項目を完全に削除します。';
+
+  @override
+  String get permManage => '権限';
+
+  @override
+  String get permSaved => '権限を更新しました。';
+
+  @override
   String get skillsTitle => 'スキル';
 
   @override
@@ -1698,6 +1752,36 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get skillProjectKeeperDesc => 'メモやタスクを Notion に保存し、データベースを整理します。';
+
+  @override
+  String get skillMeetingNotesName => '議事録';
+
+  @override
+  String get skillMeetingNotesDesc => '会議を要約し、決定事項とアクションアイテムを抽出します。';
+
+  @override
+  String get skillInboxTriageName => '受信トレイ整理';
+
+  @override
+  String get skillInboxTriageDesc => 'メッセージに優先順位を付け、すばやい返信を提案します。';
+
+  @override
+  String get skillDataAnalystName => 'データアナリスト';
+
+  @override
+  String get skillDataAnalystDesc => '表や数値を分析し、傾向や外れ値を浮き彫りにします。';
+
+  @override
+  String get skillDocDrafterName => 'ドキュメント作成';
+
+  @override
+  String get skillDocDrafterDesc => '構造化された提案書、仕様書、レポートを作成します。';
+
+  @override
+  String get skillTranslatorName => '翻訳';
+
+  @override
+  String get skillTranslatorDesc => '言語をまたいで自然にテキストを翻訳・ローカライズします。';
 
   @override
   String get adminTitle => '管理コンソール';

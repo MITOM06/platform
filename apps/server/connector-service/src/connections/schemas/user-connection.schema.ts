@@ -50,6 +50,15 @@ export class UserConnection {
   @Prop({ type: [String], default: [] })
   scopes: string[];
 
+  /**
+   * Action groups the AI is permitted on this connection: any of
+   * 'view' | 'create' | 'edit' | 'delete'. A tool is usable only when its
+   * classified action group is in this set. Defaults to all (backward
+   * compatible: pre-existing connections behave as before until narrowed).
+   */
+  @Prop({ type: [String], default: ['view', 'create', 'edit', 'delete'] })
+  actionGroups: string[];
+
   @Prop()
   mcpUrl: string;
 

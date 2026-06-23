@@ -14,6 +14,7 @@ import { UserProfileDrawer } from './UserProfileDrawer'
 import { GroupReadDetailsModal } from './GroupReadDetailsModal'
 import { ReactionsDetailModal } from './ReactionsDetailModal'
 import { MeetingSummaryCard } from './MeetingSummaryCard'
+import { MessageFeedback } from './MessageFeedback'
 import { humanizeSystemMessage } from '@/lib/system-messages'
 import { useNickname, getNickname } from '@/lib/nicknames'
 import { useUser } from '@/lib/hooks/use-user'
@@ -160,6 +161,12 @@ const MessageBubbleInner = function MessageBubble({
 
   const isBare = BARE_TYPES.has(message.type)
   const linkUrl = message.type === 'text' ? firstUrl(message.content) : null
+  // Feedback only on real AI answers — not the error/quota/interrupted sentinels.
+  const showFeedback =
+    message.type === 'ai' &&
+    !['__AI_ERROR__', '__AI_QUOTA__', '__AI_INTERRUPTED__', '__AI_UNAVAILABLE__'].includes(
+      message.content,
+    )
 
   const replyPreview = message.replyPreview && (
     <button
@@ -342,6 +349,13 @@ const MessageBubbleInner = function MessageBubble({
             {replyPreview}
             {body}
             {timeLabel}
+          </div>
+        )}
+
+        {/* AI answer feedback (👍/👎) — under the bubble, AI messages only */}
+        {showFeedback && (
+          <div className={cn('flex', isOwn ? 'justify-end' : 'justify-start')}>
+            <MessageFeedback messageId={message.id} />
           </div>
         )}
 

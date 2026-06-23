@@ -3,8 +3,10 @@ import type {
   AiTraceResponse,
   Conversation,
   ConversationsResponse,
+  FeedbackRating,
   LinkPreview,
   Message,
+  MessageFeedbackResult,
   MessageType,
   MessagesResponse,
   PageResponse,
@@ -228,6 +230,15 @@ export const chatService = {
 
   getTrace: (id: string) =>
     chatApi.get<AiTraceResponse>(`/api/messages/${id}/trace`).then((r) => r.data),
+
+  /** Submit thumbs feedback on an AI answer. `none` clears a prior vote. */
+  submitFeedback: (messageId: string, rating: FeedbackRating, comment?: string) =>
+    chatApi
+      .post<MessageFeedbackResult>(`/api/messages/${messageId}/feedback`, {
+        rating,
+        ...(comment ? { comment } : {}),
+      })
+      .then((r) => r.data),
 
   getUserStatus: (userId: string) =>
     chatApi.get<UserStatus>(`/api/users/${userId}/status`).then((r) => r.data),

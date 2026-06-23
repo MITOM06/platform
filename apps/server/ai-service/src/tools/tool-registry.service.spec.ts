@@ -5,7 +5,23 @@ import { SearchKnowledgeBaseTool } from './search-knowledge-base.tool';
 import { SummarizeConversationTool } from './summarize-conversation.tool';
 import { CreateReminderTool } from './create-reminder.tool';
 import { McpConnectorClient } from './mcp-connector.client';
+import { ToolResultCacheService } from './tool-result-cache.service';
 import { ToolContext, ToolDefinition } from './tool.interface';
+
+/** In-memory fake of ToolResultCacheService for tests. Disabled by default. */
+function makeCache(enabled = false): ToolResultCacheService {
+  const store = new Map<string, string>();
+  const key = (u: string, t: string, i: unknown) => `${u}:${t}:${JSON.stringify(i)}`;
+  return {
+    isEnabled: enabled,
+    get: jest.fn(async (u: string, t: string, i: Record<string, unknown>) =>
+      enabled ? store.get(key(u, t, i)) ?? null : null,
+    ),
+    set: jest.fn(async (u: string, t: string, i: Record<string, unknown>, r: string) => {
+      if (enabled) store.set(key(u, t, i), r);
+    }),
+  } as unknown as ToolResultCacheService;
+}
 
 const ctx: ToolContext = {
   conversationId: 'conv-1',
@@ -27,6 +43,7 @@ function makeRegistry(overrides: Partial<{
   reminder: jest.Mock;
   mcpGetTools: jest.Mock;
   mcpCallTool: jest.Mock;
+  cache: ToolResultCacheService;
 }> = {}): ToolRegistryService {
   const searchMessages = {
     execute: overrides.search ?? jest.fn().mockResolvedValue('search result'),
@@ -54,6 +71,7 @@ function makeRegistry(overrides: Partial<{
     summarize,
     createReminder,
     mcpConnector,
+    overrides.cache ?? makeCache(false),
   );
 }
 
@@ -119,5 +137,50 @@ describe('ToolRegistryService', () => {
     const registry = makeRegistry({ search: crashFn });
     const result = await registry.execute('search_messages', { query: 'x' }, ctx);
     expect(result).toMatch('Tool error: db error');
+  });
+
+  // ─── Read-only result cache (3b) ──────────────────────────────────────────
+
+  it('caches a read-only tool result and serves the cache on a repeat call', async () => {
+    const searchFn = jest.fn().mockResolvedValue('cached answer');
+    const registry = makeRegistry({ search: searchFn, cache: makeCache(true) });
+
+    const r1 = await registry.execute('search_messages', { query: 'x' }, ctx);
+    const r2 = await registry.execute('search_messages', { query: 'x' }, ctx);
+
+    expect(r1).toBe('cached answer');
+    expect(r2).toBe('cached answer');
+    // Underlying tool ran only once; second call was served from cache.
+    expect(searchFn).toHaveBeenCalledTimes(1);
+  });
+
+  it('never caches a sensitive (write) tool — runs every time', async () => {
+    const callTool = jest
+      .fn()
+      .mockResolvedValueOnce('sent 1')
+      .mockResolvedValueOnce('sent 2');
+    const registry = makeRegistry({ mcpCallTool: callTool, cache: makeCache(true) });
+
+    const r1 = await registry.execute('mcp__gmail__send_email', { to: 'a@b.com' }, ctx);
+    const r2 = await registry.execute('mcp__gmail__send_email', { to: 'a@b.com' }, ctx);
+
+    expect(r1).toBe('sent 1');
+    expect(r2).toBe('sent 2');
+    expect(callTool).toHaveBeenCalledTimes(2);
+  });
+
+  it('does not cache a failed tool result', async () => {
+    const crashFn = jest
+      .fn()
+      .mockRejectedValueOnce(new Error('boom'))
+      .mockResolvedValueOnce('ok now');
+    const registry = makeRegistry({ kb: crashFn, cache: makeCache(true) });
+
+    const r1 = await registry.execute('search_knowledge_base', { q: 'x' }, ctx);
+    const r2 = await registry.execute('search_knowledge_base', { q: 'x' }, ctx);
+
+    expect(r1).toMatch('Tool error: boom');
+    expect(r2).toBe('ok now'); // retried, not served from cache
+    expect(crashFn).toHaveBeenCalledTimes(2);
   });
 });

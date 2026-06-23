@@ -1,7 +1,8 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Search, UserPlus, UserMinus, Check, X, Users, UserCheck } from 'lucide-react'
+import Link from 'next/link'
+import { ArrowLeft, Search, UserPlus, UserMinus, Check, X, Users, UserCheck } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { useFriends, useFriendRequests, useFriendActions } from '@/lib/hooks/use-friends'
 import { authService } from '@/lib/api/auth'
@@ -85,10 +86,21 @@ export default function FriendsPage() {
   return (
     <div className="flex-1 flex flex-col h-full bg-background/50">
       <div className="border-b px-6 py-4 bg-background/80 backdrop-blur-md sticky top-0 z-10">
-        <h1 className="text-2xl font-bold flex items-center gap-2">
-          <Users className="text-primary size-6" /> {t('title')}
-        </h1>
-        <p className="text-sm text-muted-foreground mt-1">{t('subtitle')}</p>
+        <div className="flex items-center gap-3">
+          <Link
+            href="/conversations"
+            className="text-muted-foreground hover:text-foreground transition-colors shrink-0"
+            aria-label={t('title')}
+          >
+            <ArrowLeft className="size-5" />
+          </Link>
+          <div>
+            <h1 className="text-2xl font-bold flex items-center gap-2">
+              <Users className="text-primary size-6" /> {t('title')}
+            </h1>
+            <p className="text-sm text-muted-foreground mt-1">{t('subtitle')}</p>
+          </div>
+        </div>
       </div>
 
       <div className="p-6 overflow-y-auto flex-1 pb-20 md:pb-6">

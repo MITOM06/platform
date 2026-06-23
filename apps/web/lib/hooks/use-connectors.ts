@@ -4,6 +4,7 @@ import { toast } from 'sonner'
 import { connectorService } from '@/lib/api/connector'
 import { useAuthStore } from '@/lib/store/auth.store'
 import type {
+  ActionGroup,
   CreateDirectoryEntryInput,
   CustomMcpInput,
   UpdateDirectoryEntryInput,
@@ -59,7 +60,22 @@ export function useConnectorActions() {
     onError: () => toast.error(t('customSaveError')),
   })
 
-  return { disconnect, saveCustomMcp, invalidateConnections }
+  const updatePermissions = useMutation({
+    mutationFn: ({
+      id,
+      actionGroups,
+    }: {
+      id: string
+      actionGroups: ActionGroup[]
+    }) => connectorService.updateConnectionPermissions(id, actionGroups),
+    onSuccess: () => {
+      toast.success(t('permSaved'))
+      invalidateConnections()
+    },
+    onError: () => toast.error(t('disconnectError')),
+  })
+
+  return { disconnect, saveCustomMcp, updatePermissions, invalidateConnections }
 }
 
 /** The dynamic MCP directory (global, DB-driven). Cached like the catalog. */

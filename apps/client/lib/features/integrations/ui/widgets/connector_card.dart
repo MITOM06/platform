@@ -12,6 +12,7 @@ class ConnectorCard extends StatelessWidget {
   final bool busy;
   final VoidCallback onConnect;
   final VoidCallback onManage;
+  final VoidCallback onPermissions;
 
   const ConnectorCard({
     super.key,
@@ -19,6 +20,7 @@ class ConnectorCard extends StatelessWidget {
     required this.busy,
     required this.onConnect,
     required this.onManage,
+    required this.onPermissions,
   });
 
   @override
@@ -81,6 +83,7 @@ class ConnectorCard extends StatelessWidget {
               available: available,
               onConnect: onConnect,
               onManage: onManage,
+              onPermissions: onPermissions,
             ),
           ],
         ),
@@ -180,6 +183,7 @@ class _ActionRow extends StatelessWidget {
   final bool available;
   final VoidCallback onConnect;
   final VoidCallback onManage;
+  final VoidCallback onPermissions;
 
   const _ActionRow({
     required this.item,
@@ -188,6 +192,7 @@ class _ActionRow extends StatelessWidget {
     required this.available,
     required this.onConnect,
     required this.onManage,
+    required this.onPermissions,
   });
 
   @override
@@ -213,12 +218,19 @@ class _ActionRow extends StatelessWidget {
             height: 18,
             child: CircularProgressIndicator(strokeWidth: 2),
           )
-        else if (connected)
+        else if (connected) ...[
+          IconButton(
+            onPressed: onPermissions,
+            visualDensity: VisualDensity.compact,
+            tooltip: context.l10n.permManage,
+            icon: const Icon(Icons.tune, color: AppTheme.ponCyan, size: 20),
+          ),
           TextButton(
             onPressed: onManage,
             child: Text(context.l10n.connectorManage,
                 style: const TextStyle(color: AppTheme.ponCyan)),
-          )
+          ),
+        ]
         else if (available)
           SizedBox(
             width: 120,

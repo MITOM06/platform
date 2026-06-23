@@ -1038,6 +1038,25 @@ class AppLocalizationsEs extends AppLocalizations {
       'Demasiadas solicitudes de IA. Reduce la velocidad e inténtalo de nuevo en breve.';
 
   @override
+  String get feedbackHelpful => 'Útil';
+
+  @override
+  String get feedbackNotHelpful => 'No útil';
+
+  @override
+  String get feedbackCommentHint => 'Cuéntanos qué salió mal (opcional)';
+
+  @override
+  String get feedbackThanks => 'Gracias por tus comentarios';
+
+  @override
+  String get feedbackSend => 'Enviar';
+
+  @override
+  String get feedbackError =>
+      'No se pudo enviar el comentario. Inténtalo de nuevo.';
+
+  @override
   String get aiSensitiveAction => 'acción sensible';
 
   @override
@@ -1704,6 +1723,44 @@ class AppLocalizationsEs extends AppLocalizations {
   }
 
   @override
+  String get permissionsTitle => 'Permisos de la IA';
+
+  @override
+  String get permissionsSubtitle =>
+      'Elige qué acciones puede realizar tu asistente a través de este conector.';
+
+  @override
+  String get permView => 'Ver';
+
+  @override
+  String get permCreate => 'Crear';
+
+  @override
+  String get permEdit => 'Editar';
+
+  @override
+  String get permDelete => 'Eliminar';
+
+  @override
+  String get permViewDesc => 'Leer datos, buscar y resumir (solo lectura).';
+
+  @override
+  String get permCreateDesc =>
+      'Agregar nuevos elementos como archivos, eventos o registros.';
+
+  @override
+  String get permEditDesc => 'Modificar elementos existentes y su contenido.';
+
+  @override
+  String get permDeleteDesc => 'Eliminar elementos de forma permanente.';
+
+  @override
+  String get permManage => 'Permisos';
+
+  @override
+  String get permSaved => 'Permisos actualizados.';
+
+  @override
   String get skillsTitle => 'Habilidades';
 
   @override
@@ -1745,6 +1802,41 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get skillProjectKeeperDesc =>
       'Archiva notas y tareas en Notion, mantiene las bases de datos ordenadas.';
+
+  @override
+  String get skillMeetingNotesName => 'Notas de reunión';
+
+  @override
+  String get skillMeetingNotesDesc =>
+      'Resume reuniones y extrae decisiones y tareas a realizar.';
+
+  @override
+  String get skillInboxTriageName => 'Clasificación de bandeja';
+
+  @override
+  String get skillInboxTriageDesc =>
+      'Prioriza mensajes y sugiere respuestas rápidas.';
+
+  @override
+  String get skillDataAnalystName => 'Analista de datos';
+
+  @override
+  String get skillDataAnalystDesc =>
+      'Analiza tablas y cifras; revela tendencias y valores atípicos.';
+
+  @override
+  String get skillDocDrafterName => 'Redactor de documentos';
+
+  @override
+  String get skillDocDrafterDesc =>
+      'Redacta propuestas, especificaciones e informes estructurados.';
+
+  @override
+  String get skillTranslatorName => 'Traductor';
+
+  @override
+  String get skillTranslatorDesc =>
+      'Traduce y localiza textos de forma natural entre idiomas.';
 
   @override
   String get adminTitle => 'Consola de administración';
