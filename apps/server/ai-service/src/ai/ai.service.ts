@@ -382,11 +382,15 @@ export class AiService {
       : {};
 
     const system = this.buildSystemBlocks(ctx);
+    // Per-request sink for tool-produced citable sources (e.g. web_search). Tools
+    // push RagSource entries here inside the loop; merged into AI_STREAM_DONE below.
+    const sourceSink: RagSource[] = [];
     const toolCtx: ToolContext = {
       conversationId: ctx.conversationId,
       userId: ctx.userId,
       displayName: ctx.displayName,
       departmentId: ctx.departmentId,
+      sourceSink,
     };
     const tools = await this.buildTools(toolCtx);
 
@@ -529,15 +533,18 @@ export class AiService {
     await this.publisher.publish(ctx.conversationId, {
       type: 'AI_STREAM_DONE',
       fullContent: fullText,
-      sources: ctx.ragSources,
+      // RAG sources first, then tool-produced (web) sources — contiguous order so
+      // the [Source N] markers the model emitted line up with the merged array.
+      sources: mergeSources(ctx.ragSources, sourceSink),
       trace,
     });
 
-    // Cache only DETERMINISTIC answers: no tool calls (external/non-deterministic)
-    // and no RAG sources (context-dependent). Keeps reuse safe.
+    // Cache only DETERMINISTIC answers: no tool calls (external/non-deterministic),
+    // no RAG sources (context-dependent), and no web sources (time-sensitive).
     if (
       toolCalls.length === 0 &&
       ctx.ragSources.length === 0 &&
+      sourceSink.length === 0 &&
       ctx.queryVector &&
       fullText.trim()
     ) {
@@ -546,4 +553,26 @@ export class AiService {
 
     return trace;
   }
+}
+
+/**
+ * Merge pre-retrieved RAG sources with tool-produced (web) sources into a single
+ * contiguous array that matches the `[Source N]` numbering the model emits.
+ *
+ * Ordering assumption: RAG/KB context is injected into the system prompt BEFORE
+ * the loop (numbered [Source 1..k]); the web-search tool then numbers its own
+ * results [Source 1..m] in its tool_result text. The model, seeing both, emits
+ * markers against whichever it cites — so we keep RAG first, web after, and let
+ * the array index be the chip order. De-duped by documentId (KB ids are document
+ * ids; web ids are distinct `web:N`, so they never collapse together).
+ */
+export function mergeSources(rag: RagSource[], web: RagSource[]): RagSource[] {
+  const seen = new Set<string>();
+  const out: RagSource[] = [];
+  for (const s of [...rag, ...web]) {
+    if (seen.has(s.documentId)) continue;
+    seen.add(s.documentId);
+    out.push(s);
+  }
+  return out;
 }

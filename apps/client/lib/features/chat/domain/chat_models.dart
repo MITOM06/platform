@@ -282,15 +282,30 @@ class AiSource {
   final String fileName;
   final double? score;
 
+  /// Present only for web-search sources (TASK-09): the result URL the chip
+  /// opens externally. Null/empty for KB sources.
+  final String? url;
+
+  /// Source kind — `'kb'` (knowledge-base doc, default) or `'web'`
+  /// (web-search result). Defaults to `'kb'` when the backend omits it
+  /// (backward compatible with pre-TASK-09 payloads).
+  final String type;
+
   const AiSource({
     required this.documentId,
     this.fileName = '',
     this.score,
+    this.url,
+    this.type = 'kb',
   });
 
-  /// Parses an entry that may be either a `{documentId, fileName, score}` map
-  /// or a bare documentId string (backward compatible). Returns null when no
-  /// usable documentId can be extracted.
+  /// Whether this source is a web-search result that should open externally.
+  bool get isWeb => type == 'web' || (url != null && url!.isNotEmpty);
+
+  /// Parses an entry that may be either a
+  /// `{documentId, fileName, score, url?, type?}` map or a bare documentId
+  /// string (backward compatible). Returns null when no usable documentId can
+  /// be extracted.
   static AiSource? tryParse(dynamic raw) {
     if (raw is String) {
       if (raw.isEmpty) return null;
@@ -299,10 +314,13 @@ class AiSource {
     if (raw is Map) {
       final id = raw['documentId'] as String? ?? '';
       if (id.isEmpty) return null;
+      final url = raw['url'] as String?;
       return AiSource(
         documentId: id,
         fileName: raw['fileName'] as String? ?? '',
         score: (raw['score'] as num?)?.toDouble(),
+        url: (url != null && url.isNotEmpty) ? url : null,
+        type: raw['type'] as String? ?? 'kb',
       );
     }
     return null;

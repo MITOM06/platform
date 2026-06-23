@@ -6,13 +6,12 @@ import { EmbeddingService } from '../kb/embedding.service';
 import { VectorStoreService } from '../kb/vector-store.service';
 import { RerankerService } from '../kb/reranker.service';
 import { wrapUntrusted, sanitizeUntrusted } from './injection-guard';
+import { RagSource } from './rag-source.type';
 
-export interface RagSource {
-  documentId: string;
-  /** Display filename from kb_documents; '' when unknown (fail-soft). */
-  fileName: string;
-  score: number;
-}
+// Re-exported for backward compatibility — `RagSource` now lives in a shared
+// type module (so the tools layer can depend on it without a circular import).
+// KB sources set neither `url` nor `type`; absent `type` is treated as 'kb'.
+export { RagSource };
 
 export interface VolatileContext {
   text: string;

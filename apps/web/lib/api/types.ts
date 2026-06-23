@@ -93,6 +93,11 @@ export interface AiSource {
   documentId: string
   fileName: string
   score: number
+  /** Present only for web-search sources — the external page URL. When set,
+   * the chip opens this URL in a new tab instead of the conversation KB view. */
+  url?: string
+  /** Source origin. Defaults to 'kb' when absent (backward compatible). */
+  type?: 'kb' | 'web'
 }
 
 export interface Message {

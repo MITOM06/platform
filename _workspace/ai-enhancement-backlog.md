@@ -118,7 +118,21 @@ For a small team, "the AI gives accurate, sourced answers" is the difference bet
 
 ## Milestone 3 — Capability Upgrades (makes it feel "professional")
 
-### TASK-09 — Web search tool
+### TASK-09 — Web search tool  ✅ DONE (2026-06-23)
+> **Status:** Built in `ai-service`. New built-in `web_search` tool (`src/tools/web-search.tool.ts` +
+> `src/tools/web-search/`) with a pluggable provider abstraction (generic search-API provider as the
+> default path; Anthropic server-tool provider is a documented no-op stub). Tool-produced sources are
+> plumbed into the existing TASK-06 citation contract via a per-request **source sink** on `ToolContext`;
+> `mergeSources()` merges RAG-first then web (deduped by `documentId`, contiguous so `[Source N]` lines up).
+> `RagSource`/`AiSource` gained optional `url`/`type` (backward compatible); web results carry
+> `documentId="web:N"`, `fileName=<title>`, `url`, `type:'web'`. Response cache skips requests with web
+> sources (time-sensitive). **Graceful degrade:** tool only registered when enabled AND a provider key is
+> configured. chat-service unchanged (transparent `sources` pass-through). Clients (web `MessageSources.tsx`
+> + `types.ts`; Flutter `streaming_ai_bubble.dart` + `chat_models.dart`) parse `url`/`type` and open
+> `type:'web'` chips externally (globe icon) — web↔mobile parity verified.
+> New env: `WEB_SEARCH_ENABLED` (default on), `WEB_SEARCH_PROVIDER` (default `generic`), `WEB_SEARCH_API_KEY`,
+> `WEB_SEARCH_API_URL`. **To activate in prod:** set `WEB_SEARCH_API_KEY` + `WEB_SEARCH_API_URL` on ai-service.
+> Verify: ai-service build clean, **207 tests** (+13); web `pnpm build` ok; `flutter analyze` clean. QA PASS.
 - **Why:** The assistant currently only knows the KB + conversation. For a real working assistant, "look it up online" (docs, prices, current events, library versions) is table stakes.
 - **Scope:**
   - Add a built-in `web_search` tool to the static registry (pluggable provider: Anthropic web search tool if enabled, or a search API key).

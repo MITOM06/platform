@@ -4,6 +4,8 @@ import { GetUserInfoTool } from './get-user-info.tool';
 import { SearchKnowledgeBaseTool } from './search-knowledge-base.tool';
 import { SummarizeConversationTool } from './summarize-conversation.tool';
 import { CreateReminderTool } from './create-reminder.tool';
+import { WebSearchTool } from './web-search.tool';
+import { WebSearchService } from './web-search/web-search.service';
 import { McpConnectorClient } from './mcp-connector.client';
 import { ToolResultCacheService } from './tool-result-cache.service';
 import { ToolContext, ToolDefinition } from './tool.interface';
@@ -41,6 +43,8 @@ function makeRegistry(overrides: Partial<{
   kb: jest.Mock;
   summarize: jest.Mock;
   reminder: jest.Mock;
+  webSearch: jest.Mock;
+  webSearchAvailable: boolean;
   mcpGetTools: jest.Mock;
   mcpCallTool: jest.Mock;
   cache: ToolResultCacheService;
@@ -60,6 +64,14 @@ function makeRegistry(overrides: Partial<{
   const createReminder = {
     execute: overrides.reminder ?? jest.fn().mockResolvedValue('reminder set'),
   } as unknown as CreateReminderTool;
+  const webSearch = {
+    execute: overrides.webSearch ?? jest.fn().mockResolvedValue('web result'),
+  } as unknown as WebSearchTool;
+  // Default OFF so existing static-count assertions are unchanged; tests that
+  // need it on pass `webSearchAvailable: true`.
+  const webSearchService = {
+    isAvailable: jest.fn().mockReturnValue(overrides.webSearchAvailable ?? false),
+  } as unknown as WebSearchService;
   const mcpConnector = {
     getTools: overrides.mcpGetTools ?? jest.fn().mockResolvedValue([]),
     callTool: overrides.mcpCallTool ?? jest.fn().mockResolvedValue('mcp result'),
@@ -70,6 +82,8 @@ function makeRegistry(overrides: Partial<{
     searchKb,
     summarize,
     createReminder,
+    webSearch,
+    webSearchService,
     mcpConnector,
     overrides.cache ?? makeCache(false),
   );
@@ -86,6 +100,28 @@ describe('ToolRegistryService', () => {
     expect(names).toContain('search_knowledge_base');
     expect(names).toContain('summarize_conversation');
     expect(names).toContain('create_reminder');
+  });
+
+  it('does NOT register web_search when the service is unavailable (default)', async () => {
+    const registry = makeRegistry();
+    const defs = await registry.getDefinitions(ctx);
+    expect(defs.map((d) => d.name)).not.toContain('web_search');
+    expect(defs).toHaveLength(5);
+  });
+
+  it('registers web_search when the service reports available', async () => {
+    const registry = makeRegistry({ webSearchAvailable: true });
+    const defs = await registry.getDefinitions(ctx);
+    expect(defs.map((d) => d.name)).toContain('web_search');
+    expect(defs).toHaveLength(6);
+  });
+
+  it('dispatches to web_search tool', async () => {
+    const webFn = jest.fn().mockResolvedValue('[Source 1] hit — https://x');
+    const registry = makeRegistry({ webSearch: webFn, webSearchAvailable: true });
+    const result = await registry.execute('web_search', { query: 'news' }, ctx);
+    expect(webFn).toHaveBeenCalledWith({ query: 'news' }, ctx);
+    expect(result).toBe('[Source 1] hit — https://x');
   });
 
   it('merges dynamic MCP tools from the connector', async () => {

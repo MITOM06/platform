@@ -4,6 +4,8 @@ import { GetUserInfoTool } from './get-user-info.tool';
 import { SearchKnowledgeBaseTool } from './search-knowledge-base.tool';
 import { SummarizeConversationTool } from './summarize-conversation.tool';
 import { CreateReminderTool } from './create-reminder.tool';
+import { WebSearchTool } from './web-search.tool';
+import { WebSearchService } from './web-search/web-search.service';
 import { McpConnectorClient } from './mcp-connector.client';
 import { ToolContext, ToolDefinition } from './tool.interface';
 import { ToolResultCacheService } from './tool-result-cache.service';
@@ -19,6 +21,8 @@ export class ToolRegistryService {
     private readonly searchKnowledgeBase: SearchKnowledgeBaseTool,
     private readonly summarizeConversation: SummarizeConversationTool,
     private readonly createReminder: CreateReminderTool,
+    private readonly webSearch: WebSearchTool,
+    private readonly webSearchService: WebSearchService,
     private readonly mcpConnector: McpConnectorClient,
     private readonly resultCache: ToolResultCacheService,
   ) {}
@@ -31,6 +35,11 @@ export class ToolRegistryService {
       SummarizeConversationTool.definition,
       CreateReminderTool.definition,
     ];
+    // Only offer web search when enabled in config AND a provider is configured
+    // (graceful degradation — otherwise the tool is simply not registered).
+    if (this.webSearchService.isAvailable()) {
+      staticDefs.push(WebSearchTool.definition);
+    }
     const dynamicDefs = await this.mcpConnector.getTools(ctx.userId);
     return [...staticDefs, ...dynamicDefs];
   }
@@ -80,6 +89,8 @@ export class ToolRegistryService {
           return await this.summarizeConversation.execute(input, ctx);
         case 'create_reminder':
           return await this.createReminder.execute(input, ctx);
+        case 'web_search':
+          return await this.webSearch.execute(input, ctx);
         default:
           return `Tool not found: ${toolName}`;
       }

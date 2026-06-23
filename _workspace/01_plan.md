@@ -1,242 +1,142 @@
-# Implementation Plan — Avatar/Conversation UX Bug Cluster (6 issues)
+## Feature: TASK-09 — Web search tool (ai-service)
 
-> Multi-platform bug-fix + UX redesign. User tests primarily on **Web**; Web (Next.js) and Mobile (Flutter) MUST stay in sync (`.claude/rules/sync.md`).
-> All findings below were verified against actual files (line numbers cited). Backend = chat-service (Spring Boot 3, :8080) + auth-service (NestJS, :3001).
+### Summary
+Add a built-in `web_search` tool to ai-service's STATIC tool registry with a pluggable provider abstraction (Anthropic server-side web-search tool when enabled, else a generic search-API key à la Brave/Tavily). The tool returns titles + URLs + snippets and its results flow into the EXISTING citation path (TASK-06 `sources` field on `AI_STREAM_DONE`) so `[Source N]` chips render and are clickable on both clients. It is toggleable per workspace via config (default ON) and degrades gracefully — when no provider/key is configured the tool is simply not registered.
 
-## Shared infrastructure already in place (reused by several issues)
-
-- `PUT /api/conversations/{id}` → `ConversationService.updateGroup(...)` → `broadcastConversationUpdated(...)` → STOMP `/topic/conversation/{id}` with `{type:"CONVERSATION_UPDATED", conversation: ConversationResponse}` (`ConversationController.java:64-71,219-223`). **Real-time conversation sync path — reuse for wallpaper + group avatar.**
-- Pin feature complete: `POST/DELETE /api/messages/{id}/pin` → `{pinnedMessages:[...]}` + STOMP `PINNED_MESSAGE` + system message (`MessageController.java:135-173`). `ConversationResponse.pinnedMessages: List<PinnedMessageDto{id,senderId,content,createdAt}>`. **No backend change needed for issue 2.**
-- Web media resolver `absoluteMediaUrl()` (`apps/web/lib/media.ts:3-12`) — **no cache-busting**. Flutter `media_url.dart` `_absoluteUrl` (`apps/client/lib/core/utils/media_url.dart:8-11`) — **no cache-busting**.
-- Upload endpoint `POST /api/uploads` returns **relative** url `/api/uploads/<objectId>` (`UploadController.java:63`). Consumers MUST resolve via `absoluteMediaUrl` (web) / `_absoluteUrl` (flutter).
-- Nicknames + wallpaper are currently **client-local only** (web `localStorage`, flutter `shared_preferences`), synced via `system.nickname.changed:` / `system.theme.changed:` system messages (`apps/web/lib/nicknames.ts`, `chat_misc_providers.dart:42-103`).
+This is a **backend-heavy** task. chat-service relays `sources` untouched (verified — no change needed). Mobile + Web already render `sources` from TASK-06; their work here is **verification-only** plus one small affordance so a `url`-type source opens the external link instead of the KB view.
 
 ---
 
-## Issue 1 — Avatar change not reflected for OTHER viewers (stale avatar everywhere)
+### Key architectural finding (read before implementing)
 
-### Summary
-When user A changes their avatar (auth-service `updateProfile`), other users keep seeing A's old avatar in every avatar circle. Three compounding causes: (a) avatar URL string is unchanged after re-upload → HTTP cache + Flutter `CachedNetworkImage` serve stale bytes; (b) no `USER_UPDATED` push so peers never invalidate; (c) web `useUser` has 5-min `staleTime`. Fix = make avatar URLs version-stamped at the source + invalidate user caches.
+The `sources` array on `AI_STREAM_DONE` is built from `ctx.ragSources`, which is populated by `context-builder.service.ts` **BEFORE** the agentic loop runs (it is pre-retrieved RAG/KB context, not tool output). A `web_search` tool runs **INSIDE** the agentic loop (`_agenticLoop` in `ai.service.ts`), so its results are NOT in `ctx.ragSources`.
 
-### Decision (architecture)
-**Version the avatar URL at upload time** rather than appending volatile `?t=now` on every render (volatile cache-buster defeats all caching and re-downloads constantly). On avatar change, auth-service stores `avatarUrl` already including a stable version token (e.g. the new GridFS object id is already unique per upload — so the *path itself changes* per upload). **Verify**: profile avatar upload must go through `POST /api/uploads` (new object id each time) so the stored `avatarUrl` is a NEW path per change. If avatar upload reuses a fixed path, append `?v=<updatedAt-epoch>` once in the resolver based on the user's `updatedAt`.
+**Therefore the core of this task is plumbing tool-produced sources into the DONE payload.** The chosen mechanism (see Backend): a mutable per-request "source sink" passed via `ToolContext`; the web-search tool pushes `RagSource`-shaped entries into it; `_agenticLoop` merges the sink with `ctx.ragSources` (RAG sources first, web sources after, re-numbered contiguously) when publishing `AI_STREAM_DONE`. This keeps the EXISTING `[Source N]` citation contract intact — the model already emits `[Source N]` markers, and both clients already render the `sources` array.
 
-### Backend
-| 파일 | 변경 유형 | 설명 |
-|------|---------|------|
-| `apps/server/auth-service/src/modules/users/users.service.ts` (`updateProfile` ~125-170) | 확인/수정 | Confirm avatar upload produces a NEW unique URL per change. If not, ensure `avatarUrl` carries a version suffix derived from `updatedAt`. |
-| `apps/server/auth-service` users module | 신규(선택) | (Optional, recommended) Emit a lightweight `USER_UPDATED` signal so peers refresh. auth-service has no STOMP; simplest cross-service path = on profile update, POST an internal hook to chat-service which broadcasts `USER_UPDATED` to that user's conversations. **If too invasive, skip and rely on URL versioning + cache invalidation below.** |
-| `apps/server/chat-service/.../controller/UserStatusController.java` (verify path) | 신규(선택) | If doing the push: endpoint `POST /internal/users/{id}/changed` (service-to-service) → broadcast `{type:"USER_UPDATED", userId, avatarUrl, displayName}` to each `/topic/conversation/{cid}` the user participates in. |
-
-### Web
-| 파일 | 변경 유형 | 설명 |
-|------|---------|------|
-| `apps/web/components/chat/ConversationItem.tsx:160` | 수정 | `<AvatarImage src={avatarUrl}>` → `src={absoluteMediaUrl(avatarUrl)}` (currently RAW relative path — also feeds issue 5). |
-| `apps/web/components/chat/ConversationHeader.tsx:117` | 수정 | Same: wrap `avatarUrl` in `absoluteMediaUrl`. |
-| `apps/web/components/chat/MessageBubble.tsx` | 확인/수정 | Sender avatar in group bubbles — ensure `absoluteMediaUrl` + invalidation on `USER_UPDATED`. |
-| `apps/web/lib/hooks/use-user.ts:9` | 수정 | Lower `staleTime` (e.g. 30s) OR invalidate `['user', userId]` on `USER_UPDATED`/`CONVERSATION_UPDATED`. |
-| `apps/web/app/(main)/conversations/[id]/page.tsx` (STOMP switch ~291) | 수정 | Add `case 'USER_UPDATED'`: `queryClient.invalidateQueries(['user', userId])`. If no backend push, at minimum invalidate `['user', otherUserId]` after any avatar-related change. |
-| `apps/web/lib/media.ts:3-12` | 수정(조건부) | If avatar path is NOT unique-per-upload, append `?v=<version>` for avatar URLs only. |
-
-### Mobile
-| 파일 | 변경 유형 | 설명 |
-|------|---------|------|
-| `apps/client/lib/features/chat/ui/widgets/conversation_avatar.dart:35-44` | 수정 | `CachedNetworkImage` caches by URL → add `cacheKey: avatarUrl` derived to include version, OR if URL is unique-per-upload no change needed (just confirm). For the `?v=` approach, the version param naturally changes the cacheKey. |
-| `apps/client/lib/core/utils/media_url.dart:8-11` | 수정(조건부) | Mirror web `?v=` logic if used. |
-| `apps/client/lib/features/chat/data/stomp_service.dart` + chat notifier | 수정 | Handle `USER_UPDATED` (if backend push added): invalidate `userProfileProvider(userId)` (`chat_misc_providers.dart:21-26`, currently 5-min keepAlive). |
-| `apps/client/lib/features/chat/ui/widgets/message_bubble_parts.dart` | 확인 | Sender avatar render — confirm uses `ConversationAvatar`/`_absoluteUrl`. |
-
-### Edge cases
-- Self view must update immediately after own change (invalidate own profile + `['conversations']`).
-- Group avatar (issue 5) shares the `absoluteMediaUrl` fix — do both together.
-- Letter-fallback must still show when avatar 404s (already handled via `errorWidget`).
+`RagSource` is extended with two OPTIONAL fields so KB and web sources share one shape and one render path:
+```ts
+export interface RagSource {
+  documentId: string;   // for web: a synthetic stable id, e.g. `web:<n>` (survives client dedup-by-documentId)
+  fileName: string;     // for web: the page title (clients already fall back to this as the chip label)
+  score: number;
+  url?: string;         // NEW — present only for web sources; clients open this externally
+  type?: 'kb' | 'web';  // NEW — defaults to 'kb' when absent (backward compatible)
+}
+```
+Rationale: clients dedupe by `documentId` and label by `fileName`, so giving each web result a distinct synthetic `documentId` and the page title as `fileName` means it renders TODAY with zero client change. The only client work is making the chip open `url` (web type) instead of `/kb/{conversationId}`.
 
 ---
 
-## Issue 2 — Conversation Info panel: remove user-info section, keep ONLY pinned messages
+### Backend (ai-service — NestJS, PRIMARY)
 
-### Summary
-Pure client-side UI removal. Drop the "Chat Info"/"Chat Details" accordion (bio/DOB/member-count for the other user) and keep the existing Pinned Messages section. **No backend change.**
-
-### Web
 | 파일 | 변경 유형 | 설명 |
 |------|---------|------|
-| `apps/web/components/chat/ConversationSettingsDrawer.tsx:256-292` | 수정 | Remove the entire "Chat Info" `AccordionItem` (user bio/DOB for direct, member count for group). Keep Pinned Messages accordion (`:294-308`) and `PinnedMessagesSection`. |
+| `apps/server/ai-service/src/tools/web-search.tool.ts` | 신규 | The tool. Static `definition` (`name: 'web_search'`, `input_schema`: `{ query: string (required), maxResults?: number }`). `execute(input, ctx)` calls the configured provider, formats results as `[Source N] <title> — <url>\n<snippet>` text (mirroring `search-knowledge-base.tool.ts`'s `[Source N]` text format so the model cites consistently), AND pushes one `RagSource` per result into `ctx.sourceSink` (`{ documentId: 'web:'+i, fileName: title, score, url, type: 'web' }`). Returns a clear "no results" string on empty/failure. Keep ≤300 lines. |
+| `apps/server/ai-service/src/tools/web-search/web-search-provider.interface.ts` | 신규 | `WebSearchProvider` interface: `isConfigured(): boolean` + `search(query, maxResults): Promise<WebSearchResult[]>` where `WebSearchResult = { title, url, snippet }`. Clean abstraction so providers are swappable and the tool degrades gracefully. |
+| `apps/server/ai-service/src/tools/web-search/anthropic-web-search.provider.ts` | 신규 | Provider that uses the Anthropic server-side `web_search` tool. NOTE: this is a server-tool executed by Anthropic, not a normal client tool — see "Anthropic provider note" below; if integrating it cleanly into the existing custom agentic loop is non-trivial, implement the generic-API provider first and have this provider report `isConfigured()=false` (graceful no-op) until wired. Document the decision inline. |
+| `apps/server/ai-service/src/tools/web-search/generic-search.provider.ts` | 신규 | Provider hitting a generic search API (Brave/Tavily-style) via the configured `WEB_SEARCH_API_KEY` + `WEB_SEARCH_API_URL`. `isConfigured()` returns true only when a key is present. Use the project's HTTP approach (check `mcp-connector.client.ts` for the axios/HttpService convention). try/catch all network calls; on error return `[]` and log via Nest `Logger` (never throw out of the tool). |
+| `apps/server/ai-service/src/tools/web-search/web-search.service.ts` | 신규 | Thin selector: picks the active provider (Anthropic if enabled+configured, else generic if key present, else none). Exposes `isAvailable()` (true iff web search is enabled in config AND some provider `isConfigured()`) and `search()`. The tool + registry depend on this, not on providers directly. |
+| `apps/server/ai-service/src/tools/tool-registry.service.ts` | 수정 | Inject `WebSearchTool` + `WebSearchService`. In `getDefinitions`, conditionally append `WebSearchTool.definition` to `staticDefs` ONLY when `webSearchService.isAvailable()` (graceful: not registered when off/unconfigured). Add `case 'web_search': return this.webSearch.execute(input, ctx);` to `dispatch`. `web_search` is read-only → leave it OUT of the sensitive set so result caching still applies (verify `isSensitiveTool('web_search')` is false). |
+| `apps/server/ai-service/src/tools/tool.interface.ts` | 수정 | Extend `ToolContext` with `sourceSink?: RagSource[]` (optional, mutable array the loop creates per request and tools push into). Import the `RagSource` type — if importing from `context-builder.service.ts` creates a circular import, move `RagSource` to a small shared type file (e.g. `ai/rag-source.type.ts`) and re-export; check before deciding. |
+| `apps/server/ai-service/src/ai/context-builder.service.ts` | 수정 | Add optional `url?: string` and `type?: 'kb' \| 'web'` to the `RagSource` interface. KB sources set neither (default `type` treated as `'kb'`). No behavior change to RAG. |
+| `apps/server/ai-service/src/ai/ai.service.ts` | 수정 | (1) In `_agenticLoop`, create `const sourceSink: RagSource[] = []` and put it on `toolCtx.sourceSink`. (2) When publishing `AI_STREAM_DONE`, send `sources: mergeSources(ctx.ragSources, sourceSink)` — RAG first, then web, de-duped, contiguous order matching the `[Source N]` the model emitted. (3) IMPORTANT: the cache-eligibility guard must also exclude answers that produced web sources (web results are non-deterministic/time-sensitive) — extend the existing `toolCalls.length === 0 && ctx.ragSources.length === 0` condition to also require `sourceSink.length === 0`. |
+| `apps/server/ai-service/src/tools/tools.module.ts` | 수정 | Register `WebSearchTool`, `WebSearchService`, both providers as providers. Ensure `HttpModule` (if used) is imported. |
+| `apps/server/ai-service/src/config/configuration.ts` | 수정 | Add a `webSearch` block following the existing env-var convention (mirror `KB_HYBRID_ENABLED` / `AI_RATE_LIMIT_ENABLED` default-on style): `enabled: process.env.WEB_SEARCH_ENABLED !== 'false'` (default ON), `provider: process.env.WEB_SEARCH_PROVIDER ?? 'anthropic'` (`'anthropic' \| 'generic'`), `apiKey: process.env.WEB_SEARCH_API_KEY`, `apiUrl: process.env.WEB_SEARCH_API_URL`, `maxResults: parseInt(process.env.WEB_SEARCH_MAX_RESULTS ?? '5', 10)`. |
+| `apps/server/ai-service/src/tools/web-search.tool.spec.ts` | 신규 | Unit tests: tool formats `[Source N]` text + pushes correct `RagSource` entries into the sink; empty/failed provider → "no results" string and empty sink; provider network error is swallowed (no throw). Mock the provider — NEVER hit a real API. Follow the existing tool/service test pattern (check `reranker.service.spec.ts` or another `*.spec.ts` for the harness). |
+| `apps/server/ai-service/.env` + `.env.example` (if present) | 수정 | Document the new `WEB_SEARCH_*` env vars. Do NOT commit a real key. |
 
-### Mobile
-| 파일 | 변경 유형 | 설명 |
-|------|---------|------|
-| `apps/client/lib/features/chat/ui/widgets/conversation_info_sidebar.dart:138-142` | 수정 | Remove "Chat Details" `ExpansionTile`. |
-| `apps/client/lib/features/chat/ui/widgets/conversation_info_sidebar.dart` (`_buildChatDetailsContent` ~289-313) | 삭제 | Remove the now-unused helper (bio/DOB/member count). |
-| `apps/client/lib/features/chat/ui/widgets/conversation_info_sidebar_parts.dart` | 확인 | Drop any helpers orphaned by the removal. |
+**Anthropic provider note:** Anthropic exposes web search as a *server-side tool* (the model calls it and Anthropic executes it within the same `messages` request), which is a different execution model from this service's custom in-loop tool dispatch. Two valid integration shapes — pick the simpler that fits the existing loop and record the choice in the file header:
+  (a) Treat `web_search` uniformly as a custom tool backed by the generic search API provider (works for both `provider=generic` and as the Anthropic-fallback). Simplest; keeps one citation path. **Recommended default.**
+  (b) Pass Anthropic's server `web_search` tool spec through `buildTools` when `provider=anthropic`, and harvest `web_search_tool_result` / citation blocks from the stream into the source sink. More faithful to "Anthropic web search" but touches the stream-parsing in `_agenticLoop`. Only do this if (a) is insufficient.
+If unsure which Anthropic server-tool type id/shape is current, the implementer should consult the `claude-api` skill before wiring (b) rather than guessing.
 
-### Sync checkpoint
-- Both platforms must keep the Pinned Messages section identical; both must drop user-info. Member count (group) is also removed per spec ("only pinned messages").
+**Build/test gate (ai-service):** `pnpm build && pnpm test` must be green (existing ~138 tests + new web-search tests). Verify the tool is NOT registered when `WEB_SEARCH_ENABLED=false` or no key, and IS registered when configured.
 
 ---
 
-## Issue 3 — Nickname editing redesign (1:1 AND group): single button → centered modal
+### Mobile (Flutter) — VERIFICATION-ONLY + one small affordance
 
-### Summary
-Replace the current inline two-field nickname UI (web `CustomizeChatSection`, flutter nickname dialog) with **one "Edit nicknames" button** opening a **centered modal** listing each relevant participant (self + the other person for 1:1; self + all members for group) as a row: **avatar + real account displayName**, below it the **nickname with a pencil edit icon**, placeholder "no nickname" when empty. Self nickname editable. Storage/transport unchanged (client-local + `system.nickname.changed:` system message) — **no new backend endpoint**.
+Citation rendering already exists (TASK-06). Do NOT build a feature. Concrete checks:
 
-### Decision (data model / transport)
-Keep the existing transport: nicknames are NOT server-persisted. Save path stays `system.nickname.changed:<userId>:<nickname>` broadcast via STOMP, applied by both clients (`apps/web/lib/nicknames.ts:42-53`, flutter `NicknamesNotifier` + `chat_system_message_parser.dart`). This avoids a backend migration and matches the wallpaper pattern. (Rationale: spec only asks for UI redesign + self-nickname, both already supported by the local model.)
-
-### Web
 | 파일 | 변경 유형 | 설명 |
 |------|---------|------|
-| `apps/web/components/chat/group/CustomizeChatSection.tsx:92-117` | 수정 | Replace the two inline `NicknameRow`s with a single button that opens the new modal. Make it work for BOTH `isDirect` and `isGroup` (currently nickname rows are gated to `isDirect` only). |
-| `apps/web/components/chat/group/NicknamesModal.tsx` | 신규 | Centered `Dialog` (shadcn). Props: participants `[{userId, displayName, avatarUrl}]`, current nicknames map, `onSave(userId, value)`. Each row: `<Avatar src={absoluteMediaUrl(avatarUrl)}>` + real displayName + nickname line with pencil → inline `Input`; placeholder = `t('nicknameNonePlaceholder')`. |
-| `apps/web/components/chat/ConversationSettingsDrawer.tsx:79-91` | 확인 | Reuse existing `saveNickname(targetId,value)` (already broadcasts system message). Pass participant profile list (fetch via `useUser`/conversation participants) into the modal. |
-| `apps/web/lib/nicknames.ts` | 변경없음 | Storage/broadcast helpers reused as-is. |
+| `apps/client/lib/features/chat/domain/chat_models.dart` | 수정 (small) | `AiSource` parser (around line 280–305): add optional `final String? url;` and `final String type;` (default `'kb'`); parse `raw['url']` and `raw['type']` when the entry is a map. Backward compatible — bare-string and KB payloads unaffected. |
+| `apps/client/lib/features/chat/ui/widgets/streaming_ai_bubble.dart` | 수정 (small) | In `_SourceChipsRow` (line ~298–306): when `s.url != null && s.url!.isNotEmpty` (web source), set `onTap` to open the URL externally (`url_launcher` `launchUrl` — confirm the package is already a dependency; if not, reuse any existing link-open helper rather than adding a dep) instead of `context.push('/kb/$conversationId')`. KB sources keep the existing `/kb/...` behavior. Optionally show a small globe/link icon on web chips. |
+| `apps/client/lib/l10n/app_*.arb` (×7) | 수정 (only if a new string is added) | `sourcesLabel` already exists and is reused. Only add a key if a distinct web-source label/tooltip is introduced; otherwise NO i18n change. Follow `.claude/rules/i18n.md`: add to all 7 + `flutter gen-l10n`. |
 
-### Mobile
-| 파일 | 변경 유형 | 설명 |
-|------|---------|------|
-| `apps/client/lib/features/chat/ui/widgets/conversation_customisation_dialogs.dart:50-93` | 수정 | Redesign `showNicknamesDialog()` into one centered `Dialog`: a column of participant rows (self + others), each = `ConversationAvatar` + real displayName + nickname text/placeholder + pencil `IconButton` toggling an inline `TextField`. Single dialog; single dismiss. |
-| `apps/client/lib/features/chat/ui/widgets/conversation_info_sidebar.dart:144-181` | 수정 | "Nicknames" entry now opens the redesigned modal (works for group too, not just direct). |
-| `apps/client/lib/features/chat/domain/chat_misc_providers.dart:67-103` | 변경없음 | `NicknamesNotifier.setNickname` reused; broadcast unchanged. |
-
-### i18n keys (add to all locales)
-- Web `apps/web/messages/*.json` (`chat` namespace): `editNicknames`, `nicknameNonePlaceholder`, `nicknameModalTitle`. Reuse existing `nicknameYou` / `nicknameOther` if helpful.
-- Flutter `apps/client/lib/l10n/app_*.arb` (all 7): `editNicknames`, `nicknameNonePlaceholder`, `nicknameModalTitle` → run `flutter gen-l10n`.
-
-### Edge cases
-- Group: list all members; fetching each member's profile (avatar+displayName) may need per-user `useUser` / `userProfileProvider` calls — render fallback letter while loading.
-- Empty nickname clears it (existing `writeNickname` deletes on blank).
-- Self row label should make clear it is "you".
+**Verification checklist (mobile):**
+- [ ] An `AI_STREAM_DONE` payload containing a `type:'web'` source with a `url` renders a clickable chip whose label is the page title (`fileName`).
+- [ ] Tapping a web chip opens the URL; tapping a KB chip still opens `/kb/{conversationId}`.
+- [ ] Mixed answers (KB + web sources) render all chips, de-duped, no crash; legacy KB-only payloads unchanged.
+- [ ] `flutter analyze` clean.
 
 ---
 
-## Issue 4 — Change Password: old-password field must start EMPTY
+### Web (Next.js) — VERIFICATION-ONLY + one small affordance
 
-### Summary
-Web change-password "current password" field is being auto-filled by the browser password manager (no `autoComplete` attribute set → browser fills saved creds). Mobile code already starts empty (OS-level autofill only). Backend correct. **No backend change.**
+Citation rendering already exists (TASK-06). Do NOT build a feature. Concrete checks:
 
-### Web
 | 파일 | 변경 유형 | 설명 |
 |------|---------|------|
-| `apps/web/components/chat/ChangePasswordDialog.tsx:123` (current-password `<Input>`) | 수정 | Add `autoComplete="new-password"` (most reliable to suppress autofill) or `autoComplete="off"` + `name`/`readOnly`-on-focus trick. New-password fields get `autoComplete="new-password"` too. |
+| `apps/web/lib/api/types.ts` | 수정 (small) | Extend `AiSource` (line ~92): add `url?: string` and `type?: 'kb' \| 'web'`. Keep existing fields. `strict` TS — no `any`. |
+| `apps/web/components/chat/MessageSources.tsx` | 수정 (small) | In the chip render (line ~50–58): when `s.url` is present (web source), render an external `<a href={s.url} target="_blank" rel="noopener noreferrer">` (or `<Link>`) instead of the `/kb/{conversationId}` link; label stays `s.fileName \|\| fallbackLabel`. Optionally swap the `BookOpen` icon for a `Globe`/`ExternalLink` lucide icon on web chips. KB chips unchanged. |
+| `apps/web/messages/*.json` | 수정 (only if a new string is added) | `sourcesLabel` already exists and is reused. Add a key only if a distinct web-source label/tooltip is introduced; otherwise NO i18n change. If added, add to all locale files. |
 
-### Mobile
-| 파일 | 변경 유형 | 설명 |
-|------|---------|------|
-| `apps/client/lib/features/settings/ui/widgets/change_password_dialog.dart:146` | 확인/수정 | Controller already empty. If OS autofill prefills, set `autofillHints: const []` / `enableSuggestions:false` / `autocorrect:false` on the current-password field (verify `PonTextField` exposes these; extend if needed in `apps/client/lib/core/widgets/pon_widgets.dart`). |
-
-### Reference (no change)
-- `apps/server/auth-service/src/modules/users/users.controller.ts:54-64` — `POST /api/users/me/change-password` `{currentPassword, newPassword}`.
-
-### Sync checkpoint
-- Both platforms: old-password field starts empty, no autofill.
+**Verification checklist (web):**
+- [ ] An `AI_STREAM_DONE` source with `type:'web'` + `url` renders a chip that opens the URL in a new tab; KB chips still navigate to `/kb/{conversationId}`.
+- [ ] Mixed KB + web sources render correctly, de-duped by `documentId` (web ids are distinct `web:N`), no console errors.
+- [ ] Legacy KB-only payloads unchanged.
+- [ ] `pnpm build` (web) passes (TS strict).
 
 ---
 
-## Issue 5 — Group avatar change "does not work"
+### chat-service (Spring Boot) — NO CHANGE, verify only
 
-### Summary
-Backend persists the group avatar correctly (`ConversationService.updateGroup` saves `avatarUrl`, admin-gated, broadcasts `CONVERSATION_UPDATED`). **The real bug is on Web display**: `POST /api/uploads` returns a **relative** URL `/api/uploads/<id>`, but web renders group avatars with a RAW `src` (no `absoluteMediaUrl`), so the image resolves against the web origin (404) and appears unchanged. Flutter resolves via `_absoluteUrl` so it works there. Secondary: only admins may change (UI already gates with `isAdmin`); a non-admin attempt 403s silently.
-
-### Root cause (verified)
-- `UploadController.java:63` → `url = "/api/uploads/" + objectId` (relative).
-- `GroupSettingsDrawer.tsx:176` → `<img src={conversation.avatarUrl}>` (raw relative).
-- `ConversationItem.tsx:160`, `ConversationHeader.tsx:117` → `<AvatarImage src={avatarUrl}>` (raw relative).
-- Flutter `conversation_avatar.dart:38` correctly wraps in `_absoluteUrl` → works on mobile.
-
-### Backend
-| 파일 | 변경 유형 | 설명 |
-|------|---------|------|
-| `apps/server/.../service/ConversationService.java:132-143` | 변경없음(확인) | Logic correct. Optionally also broadcast a `system.group.avatar.changed` system message for history. |
-| `apps/server/.../service/ConversationCacheService.java` | 확인 | Verify Redis cache is overwritten on `save()` so `getConversation` returns fresh avatar (agent flagged as unverified). |
-
-### Web
-| 파일 | 변경 유형 | 설명 |
-|------|---------|------|
-| `apps/web/components/chat/GroupSettingsDrawer.tsx:176` | 수정 | `<img src={conversation.avatarUrl}>` → `src={absoluteMediaUrl(conversation.avatarUrl)}`. |
-| `apps/web/components/chat/ConversationItem.tsx:160` | 수정 | Wrap in `absoluteMediaUrl` (shared with issue 1). |
-| `apps/web/components/chat/ConversationHeader.tsx:117` | 수정 | Wrap in `absoluteMediaUrl` (shared with issue 1). |
-| `apps/web/components/chat/GroupSettingsDrawer.tsx:133-147` | 확인 | Upload→update happy path correct; ensure error toast surfaces 403 (non-admin) distinctly. |
-
-### Mobile
-| 파일 | 변경 유형 | 설명 |
-|------|---------|------|
-| `apps/client/lib/features/chat/ui/group_info_screen.dart:227-244` | 확인 | Upload+update+invalidate correct. Confirm it listens to `CONVERSATION_UPDATED` so the new avatar appears without manual refresh. |
-
-### Edge cases
-- Non-admin change → backend 403; show a clear "admins only" message instead of generic error.
-- After change, `CONVERSATION_UPDATED` must refresh the conversation list tile + header on both platforms.
+`AiResponseListener.java` (`deliverToStomp`, `AI_STREAM_DONE` branch, lines ~140–144) forwards `sources` **untouched** via `objectMapper` pass-through: `doneEvent.put("sources", sources != null ? sources : List.of())`. The `sources` value is handled as a plain `Object`, so the new optional `url`/`type` fields on each source object pass through transparently — **no Java change required.** Verification: `mvn compile` (or existing `mvn test`) stays green; confirm by inspecting the DONE branch that `sources` is not deserialized into a typed DTO that would drop unknown fields (it is not — it is forwarded as `Object`).
 
 ---
-
-## Issue 6 — Chat wallpaper must be SHARED per-conversation (incl. groups), not per-device
-
-### Summary
-Wallpaper is stored only in `localStorage` (web) / `shared_preferences` (flutter) and "synced" via a transient `system.theme.changed:` message. Other members don't persist it; on app restart it's lost. Fix = **persist wallpaper on the Conversation document** and distribute via the existing `PUT /api/conversations/{id}` + `CONVERSATION_UPDATED` path so all members share it.
-
-### Decision (data model)
-Add a `wallpaper` String field to the `Conversation` model. Reuse `UpdateConversationRequest` (add `wallpaper`) and the existing `updateGroup`/`PUT /{id}` endpoint — but allow ANY participant (not just admins) to set wallpaper for direct chats; for groups, decide admin-only vs any-member. **Recommendation: any participant may set conversation wallpaper** (it's a shared cosmetic; matches "shared across the whole conversation"). This needs a separate service method from `updateGroup` (which is admin-gated).
-
-### Backend
-| 파일 | 변경 유형 | 설명 |
-|------|---------|------|
-| `apps/server/.../model/Conversation.java` | 수정 | Add `private String wallpaper;` (null = default). |
-| `apps/server/.../dto/UpdateConversationRequest.java` | 수정 | `record UpdateConversationRequest(String name, String avatarUrl, String wallpaper)` OR add a dedicated `WallpaperRequest(String wallpaper)`. |
-| `apps/server/.../dto/ConversationResponse.java` | 수정 | Add `String wallpaper` to the record + backward-compat constructor. Populate in `toResponse(...)`. |
-| `apps/server/.../service/ConversationService.java` | 신규 | `setWallpaper(userId, convId, wallpaper)` — require participant membership (NOT admin), persist via `conversationCacheService.save`, return `toResponse`. |
-| `apps/server/.../controller/ConversationController.java` | 신규 | `PUT /api/conversations/{id}/wallpaper` body `{wallpaper}` → `setWallpaper` → `broadcastConversationUpdated(updated)`. |
 
 ### API Contract
-**Endpoint:** `PUT /api/conversations/{id}/wallpaper`
-- Request: `{ "wallpaper": string }`  (e.g. `"preset:midnight_glow"`, `"/api/uploads/<id>#fit=cover&scale=120"`, or `""` to reset)
-- Response: `ConversationResponse` (now including `wallpaper`)
-- Broadcast: STOMP `/topic/conversation/{id}` `{type:"CONVERSATION_UPDATED", conversation}` (existing).
 
-### Web
-| 파일 | 변경 유형 | 설명 |
-|------|---------|------|
-| `apps/web/lib/api/chat.ts` | 신규 | `setWallpaper(id, wallpaper) => chatApi.put('/api/conversations/'+id+'/wallpaper', {wallpaper})`. |
-| `apps/web/lib/api/types.ts` (`Conversation` ~line 116) | 수정 | Add `wallpaper: string | null`. |
-| `apps/web/components/chat/WallpaperPickerModal.tsx:91-102` | 수정 | Replace `localStorage.setItem` + `system.theme.changed` send with `chatService.setWallpaper(conversationId, value)`. Keep optimistic local apply via `wallpaper-changed` event. |
-| `apps/web/lib/hooks/use-wallpaper.ts:76-90` | 수정 | Read wallpaper from the conversation query (`conversation.wallpaper`) instead of `localStorage`. Re-resolve on `CONVERSATION_UPDATED`. Keep `resolveWallpaper` logic. |
-| `apps/web/app/(main)/conversations/[id]/page.tsx` (STOMP ~291) | 확인 | `CONVERSATION_UPDATED` already updates `['conversation', id]` cache → wallpaper refreshes for all members. |
+No new REST endpoint. The contract change is on the existing STOMP relay event.
 
-### Mobile
-| 파일 | 변경 유형 | 설명 |
-|------|---------|------|
-| `apps/client/lib/features/chat/data/chat_repository.dart` | 신규 | `setWallpaper(convId, wallpaper)` → `chatDio.put('/api/conversations/$convId/wallpaper', {wallpaper})`. |
-| `apps/client/lib/features/chat/domain/chat_models.dart` (`ConversationModel`) | 수정 | Add `wallpaper` field + JSON parse. |
-| `apps/client/lib/features/chat/domain/chat_misc_providers.dart:42-65` | 수정 | `ChatWallpaperNotifier` reads from the conversation model (server) rather than `shared_preferences`; updates on `CONVERSATION_UPDATED`. Keep optimistic local set. |
-| `apps/client/lib/features/chat/ui/widgets/chat_wallpaper_dialog.dart:153-169` | 수정 | Call `chatRepository.setWallpaper(...)` instead of (or in addition to) `setWallpaper` local + `system.theme.changed` send. |
-| `apps/client/lib/features/chat/domain/chat_system_message_parser.dart:30-35` | 수정 | Keep parsing `system.theme.changed:` for backward compat with old messages, but server value is now authoritative. |
+**Event:** `AI_STREAM_DONE` on `/topic/conversation/{id}` (published by ai-service → Redis → chat-service → STOMP)
+- Existing: `{ type, conversationId, senderId, fullContent, trace, sources: AiSource[] }`
+- `AiSource` (extended, additive/backward-compatible):
+  ```
+  { documentId: string, fileName: string, score: number, url?: string, type?: 'kb' | 'web' }
+  ```
+- Web-source entries: `documentId = "web:<index>"`, `fileName = <page title>`, `url = <result url>`, `type = "web"`.
 
-### Data Model Changes
-- `Conversation.wallpaper: String` (new MongoDB field, nullable). Existing docs default null → resolves to default wallpaper. No migration required.
-
-### Edge cases
-- Empty string / "default" resets to default for everyone.
-- Uploaded-image wallpapers: value stores relative `/api/uploads/...#fit=&scale=` — resolver already wraps via `absoluteMediaUrl` (web) / `_absoluteUrl` (flutter).
-- Backward compat: old `system.theme.changed:` messages still parse; new path is server-authoritative.
-- Decide group permission: recommended any-member can set (shared cosmetic). If product wants admin-only, gate `setWallpaper` like `requireGroupAdmin` for groups only.
+**Tool I/O (internal to ai-service agentic loop):**
+- `web_search` input: `{ query: string (required), maxResults?: number }`
+- `web_search` tool-result text (consumed by the model): `"[Source N] <title> — <url>\n<snippet>"` blocks, mirroring the KB tool's `[Source N]` format so the model cites web results identically.
 
 ---
 
-## Implementation Order
+### Data Model Changes
+없음. No new MongoDB collection or schema. Web search is stateless (no persistence; results are not stored). `RagSource`/`AiSource` gains two OPTIONAL fields only.
 
-1. **Backend first**
-   - Issue 6: `Conversation.wallpaper` field + `PUT /{id}/wallpaper` + `ConversationResponse.wallpaper` + service method.
-   - Issue 1 (optional push): `USER_UPDATED` broadcast hook (only if pursuing real-time peer refresh).
-   - Issue 5: verify `ConversationCacheService` invalidation (likely no change).
-2. **Web + Mobile in parallel** (mirror each change per `sync.md`)
-   - Issues 1 & 5 together (shared `absoluteMediaUrl`/`_absoluteUrl` avatar fix + cache invalidation).
-   - Issue 2 (remove user-info section).
-   - Issue 3 (nickname modal redesign) — keep client-local transport.
-   - Issue 4 (autocomplete off on current-password).
-   - Issue 6 client wiring (read wallpaper from conversation, save via new endpoint).
-3. **Verify**: `mvn test` (chat-service), `pnpm build` (web), `flutter analyze` + `flutter gen-l10n` (mobile). Cross-platform sync check on each issue.
+---
 
-## Cross-Platform Sync Checklist (per `sync.md`)
-- [ ] Avatar (issue 1/5): same `absoluteMediaUrl`/`_absoluteUrl` resolution + same invalidation on update; group + user avatars render on BOTH.
-- [ ] Conversation Info (issue 2): user-info removed on BOTH; pinned-only on BOTH.
-- [ ] Nickname modal (issue 3): same modal layout/behavior, self-nickname on BOTH, same `system.nickname.changed:` transport; i18n keys present in `messages/*.json` AND `app_*.arb`.
-- [ ] Password (issue 4): old field empty on BOTH.
-- [ ] Wallpaper (issue 6): `wallpaper` field consumed identically; `CONVERSATION_UPDATED` re-resolves wallpaper on BOTH; shared across all group members.
+### Implementation Order
+1. **Backend (ai-service)** — primary, do first and complete fully:
+   - configuration.ts (`webSearch` block) → provider interface + generic provider + (anthropic provider stub) → web-search.service.ts → web-search.tool.ts → extend `RagSource`/`ToolContext` with `url`/`type`/`sourceSink` → wire `tool-registry.service.ts` + `tools.module.ts` → merge sink in `ai.service.ts` `_agenticLoop` DONE payload + cache guard → tests. Gate: `pnpm build && pnpm test` green.
+2. **Mobile + Web** — can run in PARALLEL after the API contract above is fixed (it is fixed in this plan, so they may start immediately, in parallel with backend). Each is small: extend the source type with `url`/`type`, make the chip open the URL for web sources. Gates: `flutter analyze` / web `pnpm build`.
+3. chat-service: verify-only (`mvn compile`), no code change.
+
+Per `.claude/rules/sync.md`: the web-source chip affordance MUST land on BOTH web and Flutter, or it is considered broken.
+
+---
+
+### Edge Cases
+- **No provider/key configured** → `WebSearchService.isAvailable()` is false → tool not registered → loop behaves exactly as today. (Acceptance: graceful degradation.)
+- **`WEB_SEARCH_ENABLED=false`** → tool not registered even if a key exists (per-workspace toggle; default ON).
+- **Provider network error / timeout / non-200** → tool returns a clear "couldn't search the web right now" string and pushes nothing into the sink; never throws out of the loop (would otherwise dead-letter the request). Wrap with try/catch + Nest `Logger`.
+- **Empty results** → return a "no results found" string; empty sink; model answers from its own knowledge or says it couldn't find current info.
+- **`[Source N]` numbering collision between KB and web** → `_agenticLoop` must merge sources in a single contiguous order (RAG first, then web) so the numbers the model emitted line up with the merged `sources` array. Document the ordering assumption next to `mergeSources`.
+- **Client dedup-by-documentId** → web sources use distinct synthetic ids (`web:0`, `web:1`, …) so multiple web results don't collapse into one chip.
+- **Result caching** — `web_search` is read-only so the tool-result cache (`ToolResultCacheService`) may cache it briefly (per the existing short-TTL, per-user policy); acceptable. BUT the semantic *response* cache must NOT store an answer that used web search → extend the cache-eligibility guard in `_agenticLoop` to require `sourceSink.length === 0` (alongside `toolCalls.length === 0`).
+- **Sensitive-tool set** — `web_search` must NOT be flagged sensitive (it is read-only, no confirmation prompt); verify `isSensitiveTool('web_search') === false`.
+- **Prompt-injection (TASK-02)** — web results are untrusted external content; fence the snippet text with the existing `wrapUntrusted` spotlighting helper used for KB chunks so a malicious page cannot inject instructions. (Recommended; low cost — reuse `injection-guard`'s `wrapUntrusted`/`sanitizeUntrusted`.)
+- **i18n** — only add new keys if a distinct web-source string is introduced; `sourcesLabel` is reused. If added, all 7 Flutter ARBs + all web locale JSONs.
