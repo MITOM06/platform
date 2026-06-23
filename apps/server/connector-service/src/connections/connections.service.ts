@@ -15,7 +15,9 @@ import {
 import { UserSkill, UserSkillDocument } from './schemas/user-skill.schema';
 import { CreateCustomMcpDto, DiscoverCustomMcpDto } from './dto/custom-mcp.dto';
 import { ConnectionView, DiscoverResult } from './dto/connection-view.dto';
+import { ConnectionPermissionsView } from './dto/connection-permissions.dto';
 import { SkillView } from './dto/skill.dto';
+import { ALL_ACTION_GROUPS } from '../catalog/catalog';
 
 @Injectable()
 export class ConnectionsService {
@@ -48,9 +50,49 @@ export class ConnectionsService {
       status: d.status,
       scope: d.scope ?? 'personal',
       scopes: d.scopes ?? [],
+      actionGroups: d.actionGroups ?? [...ALL_ACTION_GROUPS],
       accountLabel: d.accountLabel,
       lastUsedAt: d.lastUsedAt,
     }));
+  }
+
+  /**
+   * Read the action groups granted on one of the caller's connections (or any
+   * workspace connection). Used to render the permission toggles.
+   */
+  async getConnectionPermissions(
+    userId: string,
+    id: string,
+  ): Promise<ConnectionPermissionsView> {
+    const conn = await this.connModel
+      .findOne({ _id: id, $or: [{ userId }, { scope: 'workspace' }] })
+      .lean();
+    if (!conn) throw new NotFoundException('Connection not found');
+    return { actionGroups: conn.actionGroups ?? [...ALL_ACTION_GROUPS] };
+  }
+
+  /**
+   * Narrow/restore the action groups the AI may use on the caller's own
+   * connection. Only the owner can change a personal connection's permissions.
+   */
+  async updateConnectionPermissions(
+    userId: string,
+    id: string,
+    actionGroups: string[],
+  ): Promise<ConnectionPermissionsView> {
+    const res = await this.connModel.updateOne(
+      { _id: id, userId },
+      { $set: { actionGroups } },
+    );
+    if (!res.matchedCount) throw new NotFoundException('Connection not found');
+    await this.audit.record({
+      actorId: userId,
+      action: 'connection.permissions.update',
+      targetType: 'connector',
+      targetId: id,
+      meta: { actionGroups },
+    });
+    return { actionGroups };
   }
 
   async deleteConnection(

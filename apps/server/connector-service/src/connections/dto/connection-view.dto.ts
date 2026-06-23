@@ -9,6 +9,8 @@ export interface ConnectionView {
   /** 'personal' | 'workspace' — workspace connections are shared org-wide. */
   scope: string;
   scopes: string[];
+  /** Action groups the AI may use on this connection: view/create/edit/delete. */
+  actionGroups: string[];
   accountLabel?: string;
   lastUsedAt?: Date;
 }

@@ -15,7 +15,7 @@ import {
   Workspace,
   WorkspaceDocument,
 } from '@platform/database';
-import { CatalogEntry, findCatalogEntry } from '../catalog/catalog';
+import { CATALOG, CatalogEntry, findCatalogEntry } from '../catalog/catalog';
 import { TokenVaultService } from '../vault/token-vault.service';
 import { AuditService } from '../audit/audit.service';
 import {
@@ -168,7 +168,13 @@ export class OAuthService {
 
   private async connectorAllowList(): Promise<string[]> {
     const ws = await this.workspaceModel.findOne().lean();
-    return ws?.connectorAllowList ?? [];
+    const configured = ws?.connectorAllowList ?? [];
+    if (configured.length > 0) return configured;
+    // Single-tenant default: when the workspace hasn't explicitly restricted
+    // connectors, allow every available built-in connector so members can link
+    // Gmail/Calendar/Notion out of the box. An admin can still narrow access by
+    // populating Workspace.connectorAllowList.
+    return CATALOG.filter((e) => e.available).map((e) => e.id);
   }
 
   buildAuthorizeUrl(entry: CatalogEntry, state: string): string {

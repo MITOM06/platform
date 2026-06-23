@@ -193,6 +193,42 @@ export function isSensitiveTool(toolName: string): boolean {
   return SENSITIVE_TOOLS.has(toolName.toLowerCase());
 }
 
+/**
+ * Action groups a connection can grant the AI on a third-party app. Each tool
+ * maps to exactly ONE group (the action it performs); a tool is usable only
+ * when its group is granted on the connection.
+ */
+export type ActionGroup = 'view' | 'create' | 'edit' | 'delete';
+
+export const ALL_ACTION_GROUPS: readonly ActionGroup[] = ['view', 'create', 'edit', 'delete'];
+
+// Explicit overrides for known catalog tools whose name doesn't pattern-match cleanly.
+const TOOL_ACTION_GROUP: ReadonlyMap<string, ActionGroup> = new Map([
+  ['send_email', 'create'],
+  ['send_message', 'create'],
+  ['create_draft', 'create'],
+  ['suggest_time', 'view'],
+  ['search_threads', 'view'],
+  ['list_events', 'view'],
+]);
+
+/**
+ * Classify a bare MCP tool name into a single action group. Explicit overrides
+ * win; otherwise verb patterns are matched in order of severity
+ * (delete > edit > create > view) so e.g. `update_and_notify` reads as `edit`.
+ * Unknown/read-like tools default to the least-privileged `view`.
+ */
+export function classifyToolActionGroup(toolName: string): ActionGroup {
+  const name = toolName.toLowerCase();
+  const override = TOOL_ACTION_GROUP.get(name);
+  if (override) return override;
+  if (/(^|[_\-])(delete|remove|trash|archive|revoke|cancel)/.test(name)) return 'delete';
+  if (/(^|[_\-])(update|edit|modify|patch|move|rename|replace|set)/.test(name)) return 'edit';
+  if (/(^|[_\-])(create|insert|add|send|compose|write|post|publish|new|upload|draft)/.test(name))
+    return 'create';
+  return 'view';
+}
+
 export function findCatalogEntry(id: string): CatalogEntry | undefined {
   return CATALOG.find((e) => e.id === id);
 }

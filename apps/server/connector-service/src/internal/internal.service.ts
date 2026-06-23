@@ -3,7 +3,11 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Capability } from '@platform/database';
 import { AuditService } from '../audit/audit.service';
-import { isSensitiveTool } from '../catalog/catalog';
+import {
+  ALL_ACTION_GROUPS,
+  classifyToolActionGroup,
+  isSensitiveTool,
+} from '../catalog/catalog';
 import {
   AdapterRegistryService,
 } from '../adapters/adapter-registry.service';
@@ -76,7 +80,11 @@ export class InternalService {
       try {
         const adapter = this.adapters.forProvider(conn.provider);
         const list = await adapter.listTools(this.builtinConn(conn));
+        // Per-connection action-group gate: only expose tools whose action
+        // (view/create/edit/delete) is granted on this connection.
+        const granted = conn.actionGroups ?? ALL_ACTION_GROUPS;
         for (const t of list) {
+          if (!granted.includes(classifyToolActionGroup(t.name))) continue;
           tools.push({
             name: `${PREFIX}${conn.provider}${SEP}${t.name}`,
             description: t.description,
@@ -188,6 +196,13 @@ export class InternalService {
       .findOne({ userId, provider, status: 'active' })
       .lean();
     if (!conn) return `Tool error: no active ${provider} connection`;
+    // Defense in depth: re-check the action-group grant at execution time so a
+    // stale/forged tool list can't bypass the permission the user set.
+    const granted = conn.actionGroups ?? ALL_ACTION_GROUPS;
+    const group = classifyToolActionGroup(tool);
+    if (!granted.includes(group)) {
+      return `Tool error: not permitted (${group} access not granted for ${provider})`;
+    }
     const adapter = this.adapters.forProvider(provider);
     const out = await adapter.callTool(this.builtinConn(conn), tool, input);
     await this.connModel.updateOne(

@@ -19,6 +19,7 @@ import {
 } from '@platform/database';
 import { ConnectionsService } from './connections.service';
 import { CreateCustomMcpDto, DiscoverCustomMcpDto } from './dto/custom-mcp.dto';
+import { UpdateConnectionPermissionsDto } from './dto/connection-permissions.dto';
 import { SetSkillDto } from './dto/skill.dto';
 
 @ApiTags('connections')
@@ -40,6 +41,22 @@ export class ConnectionsController {
   @ApiOperation({ summary: 'Delete one of the caller connections' })
   deleteConnection(@CurrentUser() user: JwtUser, @Param('id') id: string) {
     return this.service.deleteConnection(user.sub, id);
+  }
+
+  @Get('connections/:id/permissions')
+  @ApiOperation({ summary: 'Get the action groups the AI may use on a connection' })
+  getConnectionPermissions(@CurrentUser() user: JwtUser, @Param('id') id: string) {
+    return this.service.getConnectionPermissions(user.sub, id);
+  }
+
+  @Put('connections/:id/permissions')
+  @ApiOperation({ summary: 'Set the action groups the AI may use on a connection' })
+  updateConnectionPermissions(
+    @CurrentUser() user: JwtUser,
+    @Param('id') id: string,
+    @Body() dto: UpdateConnectionPermissionsDto,
+  ) {
+    return this.service.updateConnectionPermissions(user.sub, id, dto.actionGroups);
   }
 
   @Post('custom-mcp')
