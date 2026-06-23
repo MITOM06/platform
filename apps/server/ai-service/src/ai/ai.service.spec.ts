@@ -9,6 +9,7 @@ import { RateLimiterService } from '../usage/rate-limiter.service';
 import { PersonaService } from '../persona/persona.service';
 import { FactExtractorService } from './fact-extractor.service';
 import { ContextBuilderService } from './context-builder.service';
+import { SkillsService } from '../skills/skills.service';
 
 function makeAsyncIterator(chunks: unknown[]) {
   return {
@@ -176,6 +177,9 @@ describe('AiService', () => {
     const fakeContextBuilder = {
       buildVolatileContext,
     } as unknown as ContextBuilderService;
+    const fakeSkills = {
+      getEnabledSkillInstructions: jest.fn().mockResolvedValue(''),
+    } as unknown as SkillsService;
 
     service = new AiService(
       fakeConfig,
@@ -188,6 +192,7 @@ describe('AiService', () => {
       fakePersona,
       fakeFactExtractor,
       fakeContextBuilder,
+      fakeSkills,
     );
     (service as any)['anthropic'] = { messages: { stream: mockStream, create: mockCreate } };
   });

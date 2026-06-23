@@ -6,6 +6,8 @@ import { SummarizeConversationTool } from './summarize-conversation.tool';
 import { CreateReminderTool } from './create-reminder.tool';
 import { McpConnectorClient } from './mcp-connector.client';
 import { ToolContext, ToolDefinition } from './tool.interface';
+import { ToolResultCacheService } from './tool-result-cache.service';
+import { isSensitiveTool } from '../ai/injection-guard';
 
 @Injectable()
 export class ToolRegistryService {
@@ -18,6 +20,7 @@ export class ToolRegistryService {
     private readonly summarizeConversation: SummarizeConversationTool,
     private readonly createReminder: CreateReminderTool,
     private readonly mcpConnector: McpConnectorClient,
+    private readonly resultCache: ToolResultCacheService,
   ) {}
 
   async getDefinitions(ctx: ToolContext): Promise<ToolDefinition[]> {
@@ -33,6 +36,31 @@ export class ToolRegistryService {
   }
 
   async execute(
+    toolName: string,
+    input: Record<string, unknown>,
+    ctx: ToolContext,
+  ): Promise<string> {
+    // Cache only read-only (non-sensitive) tools — never cache a send/create/
+    // delete result. Short TTL; per-user so results are never shared across users.
+    const cacheable = this.resultCache.isEnabled && !isSensitiveTool(toolName);
+    if (cacheable) {
+      const hit = await this.resultCache.get(ctx.userId, toolName, input);
+      if (hit !== null) {
+        this.logger.debug(`Tool cache hit [${toolName}]`);
+        return hit;
+      }
+    }
+
+    const result = await this.dispatch(toolName, input, ctx);
+
+    // Don't cache failures (let the next call retry).
+    if (cacheable && !result.startsWith('Tool error') && !result.startsWith('Tool not found')) {
+      await this.resultCache.set(ctx.userId, toolName, input, result);
+    }
+    return result;
+  }
+
+  private async dispatch(
     toolName: string,
     input: Record<string, unknown>,
     ctx: ToolContext,

@@ -9,9 +9,10 @@ import { KbModule } from '../kb/kb.module';
 import { ToolsModule } from '../tools/tools.module';
 import { UsageModule } from '../usage/usage.module';
 import { PersonaModule } from '../persona/persona.module';
+import { SkillsModule } from '../skills/skills.module';
 
 @Module({
-  imports: [RedisModule, MemoryModule, KbModule, ToolsModule, UsageModule, PersonaModule],
+  imports: [RedisModule, MemoryModule, KbModule, ToolsModule, UsageModule, PersonaModule, SkillsModule],
   controllers: [AiController],
   providers: [AiService, FactExtractorService, ContextBuilderService],
   exports: [AiService],

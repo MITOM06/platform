@@ -14,6 +14,7 @@ import { withAgenticLoopSpan } from './tracing-helpers';
 import { isSensitiveTool } from './injection-guard';
 import { FactExtractorService } from './fact-extractor.service';
 import { ContextBuilderService } from './context-builder.service';
+import { SkillsService } from '../skills/skills.service';
 import { EmbeddingService } from '../kb/embedding.service';
 
 export interface AiRequestPayload {
@@ -42,6 +43,8 @@ export interface AiTrace {
   toolCalls: ToolTraceEntry[];
   inputTokens: number;
   outputTokens: number;
+  /** Input tokens served from the Anthropic prompt cache (savings indicator). */
+  cachedInputTokens: number;
   thinkingTokens: number;
   processingMs: number;
   model: string;
@@ -71,6 +74,7 @@ export class AiService {
   private readonly fallbackModel: string;
   private readonly effort: 'low' | 'medium' | 'high';
   private readonly extractEveryTurns: number;
+  private readonly promptCacheEnabled: boolean;
   private readonly routerConfig: RouterConfig;
 
   constructor(
@@ -84,6 +88,7 @@ export class AiService {
     private readonly personaService: PersonaService,
     private readonly factExtractor: FactExtractorService,
     private readonly contextBuilder: ContextBuilderService,
+    private readonly skillsService: SkillsService,
   ) {
     this.anthropic = new Anthropic({
       apiKey: this.configService.get<string>('config.anthropic.apiKey'),
@@ -97,6 +102,8 @@ export class AiService {
       'high';
     this.extractEveryTurns =
       this.configService.get<number>('config.memory.extractEveryTurns') ?? 20;
+    this.promptCacheEnabled =
+      this.configService.get<boolean>('config.cache.promptCacheEnabled') ?? true;
     this.routerConfig = {
       enabled: this.configService.get<boolean>('config.anthropic.router.enabled') ?? true,
       simpleModel:
@@ -171,13 +178,18 @@ export class AiService {
     const persona = await this.personaService.getPersona(conversationId);
     const baseSystem = this.personaService.buildSystemPrompt(persona, displayName);
 
-    const volatileContext = await this.contextBuilder.buildVolatileContext(
-      conversationId,
-      userId,
-      queryVector,
-      content,
-      departmentId,
-    );
+    const [volatileContext, skillInstructions] = await Promise.all([
+      this.contextBuilder.buildVolatileContext(
+        conversationId,
+        userId,
+        queryVector,
+        content,
+        departmentId,
+      ),
+      // Enabled skills change how the assistant behaves; injected per-user after
+      // the cached persona block so they never bust the prompt cache.
+      this.skillsService.getEnabledSkillInstructions(userId),
+    ]);
 
     const ctx: RequestContext = {
       conversationId,
@@ -185,7 +197,9 @@ export class AiService {
       displayName,
       departmentId,
       baseSystem,
-      volatileSystem: volatileContext.text,
+      volatileSystem: [skillInstructions, volatileContext.text]
+        .filter((s) => s && s.trim())
+        .join('\n\n'),
       ragSources: volatileContext.ragSources,
     };
 
@@ -267,7 +281,9 @@ export class AiService {
       {
         type: 'text',
         text: ctx.baseSystem,
-        cache_control: { type: 'ephemeral' },
+        ...(this.promptCacheEnabled
+          ? { cache_control: { type: 'ephemeral' as const } }
+          : {}),
       },
     ];
     if (ctx.volatileSystem.trim()) {
@@ -285,7 +301,7 @@ export class AiService {
       description: d.description,
       input_schema: d.input_schema,
     })) as Anthropic.Tool[];
-    if (tools.length > 0) {
+    if (tools.length > 0 && this.promptCacheEnabled) {
       tools[tools.length - 1] = {
         ...tools[tools.length - 1],
         cache_control: { type: 'ephemeral' },
@@ -327,6 +343,7 @@ export class AiService {
     const thinkingBlocks: string[] = [];
     let totalInputTokens = 0;
     let totalOutputTokens = 0;
+    let totalCachedTokens = 0;
 
     const messages: Anthropic.MessageParam[] = [
       ...history.map((h) => ({ role: h.role, content: h.content })),
@@ -387,6 +404,8 @@ export class AiService {
       // Count usage ONCE per API call.
       totalInputTokens += finalMsg.usage.input_tokens;
       totalOutputTokens += finalMsg.usage.output_tokens;
+      // Tokens served from the prompt cache (read) — the savings indicator.
+      totalCachedTokens += finalMsg.usage.cache_read_input_tokens ?? 0;
 
       if (finalMsg.stop_reason === 'tool_use') {
         const toolUseBlocks = finalMsg.content.filter(
@@ -443,11 +462,18 @@ export class AiService {
       toolCalls,
       inputTokens: totalInputTokens,
       outputTokens: totalOutputTokens,
+      cachedInputTokens: totalCachedTokens,
       thinkingTokens: Math.round(thinkingBlocks.join('').length / 4),
       processingMs: Date.now() - startMs,
       model,
       iterationCount: iteration,
     };
+
+    if (totalCachedTokens > 0) {
+      this.logger.log(
+        `Prompt cache hit for ${ctx.conversationId}: ${totalCachedTokens} input tokens served from cache`,
+      );
+    }
 
     await this.publisher.publish(ctx.conversationId, {
       type: 'AI_STREAM_DONE',

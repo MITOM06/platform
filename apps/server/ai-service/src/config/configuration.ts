@@ -80,6 +80,14 @@ export default registerAs('config', () => ({
     // When true, enable adaptive thinking on the primary model.
     enableThinking: process.env.AI_ENABLE_THINKING === 'true',
   },
+  cache: {
+    // Anthropic prompt caching of the stable persona/tools prefix. On by default
+    // (big token savings on multi-turn chats); set false to disable cache_control.
+    promptCacheEnabled: process.env.AI_PROMPT_CACHE_ENABLED !== 'false',
+    // Short-TTL cache of read-only tool results (Redis), keyed per user+tool+input.
+    toolCacheEnabled: process.env.AI_TOOL_CACHE_ENABLED !== 'false',
+    toolCacheTtlSec: parseInt(process.env.AI_TOOL_CACHE_TTL ?? '60', 10),
+  },
   quota: {
     monthlyTokenLimit: parseInt(process.env.AI_MONTHLY_TOKEN_LIMIT ?? '500000', 10),
   },
