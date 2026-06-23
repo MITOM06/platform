@@ -41,6 +41,14 @@ jobs:
           pnpm install --frozen-lockfile
           pnpm exec jest --ci
 
+      - name: Test connector-service
+        run: |
+          cd apps/server/connector-service
+          pnpm install --frozen-lockfile
+          pnpm exec jest --ci
+        env:
+          CONNECTOR_VAULT_KEY: AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=
+
       - uses: actions/setup-java@v4
         with:
           java-version: '21'
@@ -94,6 +102,15 @@ jobs:
             -f apps/server/ai-service/Dockerfile \
             .
           docker push $REGISTRY/ai-service:${{ github.sha }}
+
+      # Build & push connector-service (MCP connectors / OAuth / token vault)
+      - name: Build connector-service
+        run: |
+          docker build \
+            -t $REGISTRY/connector-service:${{ github.sha }} \
+            -f apps/server/connector-service/Dockerfile \
+            .
+          docker push $REGISTRY/connector-service:${{ github.sha }}
 
       # Deploy auth-service (min 1 instance — eliminates login cold-start; --cpu-boost
       # speeds the remaining cold scale-ups; 1Gi memory gives argon2 (~64MB/hash) headroom)
@@ -172,7 +189,10 @@ jobs:
             MAIL_PASS=${{ secrets.MAIL_PASS }}
             FIREBASE_SERVICE_ACCOUNT_BASE64=${{ secrets.FIREBASE_SERVICE_ACCOUNT_BASE64 }}
 
-      # Deploy ai-service (min 1 — RabbitMQ consumer requires persistent process)
+      # Deploy ai-service (min 1 + CPU always allocated — the RabbitMQ consumer is a
+      # background connection; with default CPU throttling it loses CPU between HTTP
+      # requests, drops the AMQP heartbeat (ECONNRESET) and stops consuming ai.requests,
+      # making the assistant silent. --no-cpu-throttling keeps the consumer alive.)
       - name: Deploy ai-service
         uses: google-github-actions/deploy-cloudrun@v2
         with:
@@ -185,6 +205,7 @@ jobs:
             --max-instances=2
             --memory=512Mi
             --cpu=1
+            --no-cpu-throttling
             --port=3002
           env_vars: |
             NODE_ENV=production
@@ -201,9 +222,42 @@ jobs:
             AI_BOT_DISPLAY_NAME=${{ secrets.AI_BOT_DISPLAY_NAME }}
             REDIS_AI_RESPONSE_PREFIX=ai:response
             AI_MONTHLY_TOKEN_LIMIT=500000
+            CONNECTOR_INTERNAL_URL=https://connector-service-lwnzrufcxa-as.a.run.app
+            INTERNAL_API_KEY=${{ secrets.INTERNAL_API_KEY }}
+
+      # Deploy connector-service (MCP connectors / OAuth / token vault). min 1 +
+      # CPU always allocated: it holds remote MCP connections and serves the
+      # ai-service internal tools API; throttled CPU would stall those.
+      - name: Deploy connector-service
+        uses: google-github-actions/deploy-cloudrun@v2
+        with:
+          service: connector-service
+          region: ${{ env.REGION }}
+          image: ${{ env.REGISTRY }}/connector-service:${{ github.sha }}
+          flags: >-
+            --allow-unauthenticated
+            --min-instances=1
+            --max-instances=2
+            --memory=512Mi
+            --cpu=1
+            --no-cpu-throttling
+            --port=3003
+          env_vars: |
+            NODE_ENV=production
+            MONGO_URI=${{ secrets.MONGODB_URI }}
+            CONNECTOR_VAULT_KEY=${{ secrets.CONNECTOR_VAULT_KEY }}
+            INTERNAL_API_KEY=${{ secrets.INTERNAL_API_KEY }}
+            JWT_ACCESS_SECRET=${{ secrets.JWT_ACCESS_SECRET }}
+            OAUTH_REDIRECT_BASE=https://connector-service-lwnzrufcxa-as.a.run.app
+            CLIENT_REDIRECT_URL=https://platform-web-omega-amber.vercel.app/integrations
+            NOTION_CLIENT_ID=${{ secrets.NOTION_CLIENT_ID }}
+            NOTION_CLIENT_SECRET=${{ secrets.NOTION_CLIENT_SECRET }}
+            GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }}
+            GOOGLE_CLIENT_SECRET=${{ secrets.GOOGLE_CLIENT_SECRET }}
 
       - name: Print deployed URLs
         run: |
           echo "auth-service: $(gcloud run services describe auth-service --region=$REGION --format='value(status.url)')"
           echo "chat-service: $(gcloud run services describe chat-service --region=$REGION --format='value(status.url)')"
           echo "ai-service: $(gcloud run services describe ai-service --region=$REGION --format='value(status.url)')"
+          echo "connector-service: $(gcloud run services describe connector-service --region=$REGION --format='value(status.url)')"
