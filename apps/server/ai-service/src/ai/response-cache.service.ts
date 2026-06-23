@@ -55,7 +55,10 @@ export class ResponseCacheService {
       const cutoff = Date.now() - this.ttlSec * 1000;
       let best: { score: number; answer: string } | null = null;
       for (const e of entries) {
-        if (e.t < cutoff) continue;
+        // <= so an entry exactly at the cutoff (incl. TTL=0, where store time
+        // can equal lookup time in the same ms) is treated as expired — avoids a
+        // timing-flaky boundary.
+        if (e.t <= cutoff) continue;
         const score = cosine(queryVector, e.v);
         if (score >= this.threshold && (!best || score > best.score)) {
           best = { score, answer: e.a };
