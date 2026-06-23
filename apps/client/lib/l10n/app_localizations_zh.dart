@@ -1654,6 +1654,42 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
+  String get permissionsTitle => 'AI 权限';
+
+  @override
+  String get permissionsSubtitle => '选择助手可以通过此连接器执行的操作。';
+
+  @override
+  String get permView => '查看';
+
+  @override
+  String get permCreate => '创建';
+
+  @override
+  String get permEdit => '编辑';
+
+  @override
+  String get permDelete => '删除';
+
+  @override
+  String get permViewDesc => '读取数据、搜索和总结（只读）。';
+
+  @override
+  String get permCreateDesc => '添加新项目，如文件、事件或记录。';
+
+  @override
+  String get permEditDesc => '修改现有项目及其内容。';
+
+  @override
+  String get permDeleteDesc => '永久删除项目。';
+
+  @override
+  String get permManage => '权限';
+
+  @override
+  String get permSaved => '权限已更新。';
+
+  @override
   String get skillsTitle => '技能';
 
   @override
@@ -1690,6 +1726,36 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get skillProjectKeeperDesc => '将笔记和任务归档到 Notion，保持数据库整洁。';
+
+  @override
+  String get skillMeetingNotesName => '会议纪要';
+
+  @override
+  String get skillMeetingNotesDesc => '总结会议内容，提取决议与待办事项。';
+
+  @override
+  String get skillInboxTriageName => '收件箱整理';
+
+  @override
+  String get skillInboxTriageDesc => '为消息排序优先级并建议快速回复。';
+
+  @override
+  String get skillDataAnalystName => '数据分析师';
+
+  @override
+  String get skillDataAnalystDesc => '分析表格与数字，揭示趋势与异常值。';
+
+  @override
+  String get skillDocDrafterName => '文档起草';
+
+  @override
+  String get skillDocDrafterDesc => '撰写结构化的提案、规格说明与报告。';
+
+  @override
+  String get skillTranslatorName => '翻译';
+
+  @override
+  String get skillTranslatorDesc => '在多种语言之间自然地翻译和本地化文本。';
 
   @override
   String get adminTitle => '管理控制台';

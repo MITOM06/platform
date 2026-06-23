@@ -1662,6 +1662,42 @@ class AppLocalizationsKo extends AppLocalizations {
   }
 
   @override
+  String get permissionsTitle => 'AI 권한';
+
+  @override
+  String get permissionsSubtitle => '이 커넥터를 통해 어시스턴트가 수행할 수 있는 작업을 선택하세요.';
+
+  @override
+  String get permView => '보기';
+
+  @override
+  String get permCreate => '생성';
+
+  @override
+  String get permEdit => '편집';
+
+  @override
+  String get permDelete => '삭제';
+
+  @override
+  String get permViewDesc => '데이터 읽기, 검색, 요약 (읽기 전용).';
+
+  @override
+  String get permCreateDesc => '파일, 일정, 레코드 등 새 항목을 추가합니다.';
+
+  @override
+  String get permEditDesc => '기존 항목과 내용을 수정합니다.';
+
+  @override
+  String get permDeleteDesc => '항목을 영구적으로 삭제합니다.';
+
+  @override
+  String get permManage => '권한';
+
+  @override
+  String get permSaved => '권한이 업데이트되었습니다.';
+
+  @override
   String get skillsTitle => '스킬';
 
   @override
@@ -1700,6 +1736,36 @@ class AppLocalizationsKo extends AppLocalizations {
   @override
   String get skillProjectKeeperDesc =>
       '메모와 작업을 Notion에 정리하고 데이터베이스를 깔끔하게 유지합니다.';
+
+  @override
+  String get skillMeetingNotesName => '회의록';
+
+  @override
+  String get skillMeetingNotesDesc => '회의를 요약하고 결정 사항과 실행 항목을 정리합니다.';
+
+  @override
+  String get skillInboxTriageName => '받은 편지함 정리';
+
+  @override
+  String get skillInboxTriageDesc => '메시지 우선순위를 정하고 빠른 답장을 제안합니다.';
+
+  @override
+  String get skillDataAnalystName => '데이터 분석가';
+
+  @override
+  String get skillDataAnalystDesc => '표와 수치를 분석하여 추세와 이상치를 드러냅니다.';
+
+  @override
+  String get skillDocDrafterName => '문서 작성';
+
+  @override
+  String get skillDocDrafterDesc => '구조화된 제안서, 사양서, 보고서를 작성합니다.';
+
+  @override
+  String get skillTranslatorName => '번역';
+
+  @override
+  String get skillTranslatorDesc => '여러 언어로 텍스트를 자연스럽게 번역하고 현지화합니다.';
 
   @override
   String get adminTitle => '관리자 콘솔';

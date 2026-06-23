@@ -1689,6 +1689,44 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get permissionsTitle => 'AI permissions';
+
+  @override
+  String get permissionsSubtitle =>
+      'Choose which actions your assistant may take through this connector.';
+
+  @override
+  String get permView => 'View';
+
+  @override
+  String get permCreate => 'Create';
+
+  @override
+  String get permEdit => 'Edit';
+
+  @override
+  String get permDelete => 'Delete';
+
+  @override
+  String get permViewDesc => 'Read data, search, and summarize (read-only).';
+
+  @override
+  String get permCreateDesc =>
+      'Add new items such as files, events, or records.';
+
+  @override
+  String get permEditDesc => 'Modify existing items and their content.';
+
+  @override
+  String get permDeleteDesc => 'Remove items permanently.';
+
+  @override
+  String get permManage => 'Permissions';
+
+  @override
+  String get permSaved => 'Permissions updated.';
+
+  @override
   String get skillsTitle => 'Skills';
 
   @override
@@ -1730,6 +1768,41 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get skillProjectKeeperDesc =>
       'Files notes and tasks into Notion, keeps databases tidy.';
+
+  @override
+  String get skillMeetingNotesName => 'Meeting notes';
+
+  @override
+  String get skillMeetingNotesDesc =>
+      'Summarize meetings and pull out decisions and action items.';
+
+  @override
+  String get skillInboxTriageName => 'Inbox triage';
+
+  @override
+  String get skillInboxTriageDesc =>
+      'Prioritize messages and suggest quick replies.';
+
+  @override
+  String get skillDataAnalystName => 'Data analyst';
+
+  @override
+  String get skillDataAnalystDesc =>
+      'Analyze tables and numbers; surface trends and outliers.';
+
+  @override
+  String get skillDocDrafterName => 'Document drafter';
+
+  @override
+  String get skillDocDrafterDesc =>
+      'Draft structured proposals, specs and reports.';
+
+  @override
+  String get skillTranslatorName => 'Translator';
+
+  @override
+  String get skillTranslatorDesc =>
+      'Translate and localize text naturally across languages.';
 
   @override
   String get adminTitle => 'Admin Console';

@@ -31,7 +31,7 @@ const List<SkillDef> kSkillDefs = [
     requires: ['google-calendar', 'gmail'],
   ),
   SkillDef(
-    id: 'mail-writer',
+    id: 'mailWriter',
     icon: '✍️',
     requires: ['gmail'],
   ),
@@ -42,8 +42,29 @@ const List<SkillDef> kSkillDefs = [
     extras: ['web'],
   ),
   SkillDef(
-    id: 'project-keeper',
+    id: 'projectKeeper',
     icon: '🧩',
     requires: ['notion'],
+  ),
+  SkillDef(
+    id: 'meetingNotes',
+    icon: '🎙️',
+  ),
+  SkillDef(
+    id: 'inboxTriage',
+    icon: '📥',
+    requires: ['gmail'],
+  ),
+  SkillDef(
+    id: 'dataAnalyst',
+    icon: '📊',
+  ),
+  SkillDef(
+    id: 'docDrafter',
+    icon: '📝',
+  ),
+  SkillDef(
+    id: 'translator',
+    icon: '🌐',
   ),
 ];

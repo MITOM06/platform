@@ -79,6 +79,10 @@ class CatalogEntry {
       );
 }
 
+/// The full set of AI action groups a connector can grant. Used as the default
+/// when the backend omits `actionGroups` (backward compat).
+const List<String> kAllActionGroups = ['view', 'create', 'edit', 'delete'];
+
 /// One active/expired/revoked connection from `GET /connections`.
 @immutable
 class ConnectionView {
@@ -89,6 +93,10 @@ class ConnectionView {
   final String? accountLabel;
   final DateTime? lastUsedAt;
 
+  /// Which actions the AI may perform through this connector — a subset of
+  /// `['view','create','edit','delete']`. Defaults to all four when absent.
+  final List<String> actionGroups;
+
   const ConnectionView({
     required this.id,
     required this.provider,
@@ -96,6 +104,7 @@ class ConnectionView {
     required this.scopes,
     required this.accountLabel,
     required this.lastUsedAt,
+    required this.actionGroups,
   });
 
   factory ConnectionView.fromJson(Map<String, dynamic> json) => ConnectionView(
@@ -109,6 +118,11 @@ class ConnectionView {
         lastUsedAt: json['lastUsedAt'] == null
             ? null
             : DateTime.tryParse(json['lastUsedAt'].toString()),
+        actionGroups: json['actionGroups'] == null
+            ? List<String>.from(kAllActionGroups)
+            : (json['actionGroups'] as List<dynamic>)
+                .map((e) => e as String)
+                .toList(),
       );
 
   bool get isActive => status == ConnectionStatus.active;
@@ -137,6 +151,11 @@ class ConnectorItem {
   const ConnectorItem({required this.entry, this.connection});
 
   bool get isConnected => connection?.isActive ?? false;
+
+  /// The connected connection's granted AI action groups, or all four when not
+  /// connected.
+  List<String> get actionGroups =>
+      connection?.actionGroups ?? List<String>.from(kAllActionGroups);
 }
 
 // ── MCP Directory (dynamic connector directory) ─────────────────────────────

@@ -82,14 +82,39 @@ class SkillsScreen extends ConsumerWidget {
   switch (id) {
     case 'scheduler':
       return (name: l10n.skillSchedulerName, desc: l10n.skillSchedulerDesc);
-    case 'mail-writer':
+    case 'mailWriter':
       return (name: l10n.skillMailWriterName, desc: l10n.skillMailWriterDesc);
     case 'researcher':
       return (name: l10n.skillResearcherName, desc: l10n.skillResearcherDesc);
-    case 'project-keeper':
+    case 'projectKeeper':
       return (
         name: l10n.skillProjectKeeperName,
         desc: l10n.skillProjectKeeperDesc
+      );
+    case 'meetingNotes':
+      return (
+        name: l10n.skillMeetingNotesName,
+        desc: l10n.skillMeetingNotesDesc
+      );
+    case 'inboxTriage':
+      return (
+        name: l10n.skillInboxTriageName,
+        desc: l10n.skillInboxTriageDesc
+      );
+    case 'dataAnalyst':
+      return (
+        name: l10n.skillDataAnalystName,
+        desc: l10n.skillDataAnalystDesc
+      );
+    case 'docDrafter':
+      return (
+        name: l10n.skillDocDrafterName,
+        desc: l10n.skillDocDrafterDesc
+      );
+    case 'translator':
+      return (
+        name: l10n.skillTranslatorName,
+        desc: l10n.skillTranslatorDesc
       );
     default:
       return (name: id, desc: '');

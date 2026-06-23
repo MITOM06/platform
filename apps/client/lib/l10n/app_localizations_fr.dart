@@ -1712,6 +1712,45 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
+  String get permissionsTitle => 'Autorisations de l\'IA';
+
+  @override
+  String get permissionsSubtitle =>
+      'Choisissez les actions que votre assistant peut effectuer via ce connecteur.';
+
+  @override
+  String get permView => 'Consulter';
+
+  @override
+  String get permCreate => 'Créer';
+
+  @override
+  String get permEdit => 'Modifier';
+
+  @override
+  String get permDelete => 'Supprimer';
+
+  @override
+  String get permViewDesc =>
+      'Lire les données, rechercher et résumer (lecture seule).';
+
+  @override
+  String get permCreateDesc =>
+      'Ajouter de nouveaux éléments tels que fichiers, événements ou enregistrements.';
+
+  @override
+  String get permEditDesc => 'Modifier les éléments existants et leur contenu.';
+
+  @override
+  String get permDeleteDesc => 'Supprimer définitivement les éléments.';
+
+  @override
+  String get permManage => 'Autorisations';
+
+  @override
+  String get permSaved => 'Autorisations mises à jour.';
+
+  @override
   String get skillsTitle => 'Compétences';
 
   @override
@@ -1754,6 +1793,41 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get skillProjectKeeperDesc =>
       'Classe notes et tâches dans Notion, garde les bases de données en ordre.';
+
+  @override
+  String get skillMeetingNotesName => 'Notes de réunion';
+
+  @override
+  String get skillMeetingNotesDesc =>
+      'Résume les réunions et dégage décisions et actions à mener.';
+
+  @override
+  String get skillInboxTriageName => 'Tri de la boîte de réception';
+
+  @override
+  String get skillInboxTriageDesc =>
+      'Priorise les messages et suggère des réponses rapides.';
+
+  @override
+  String get skillDataAnalystName => 'Analyste de données';
+
+  @override
+  String get skillDataAnalystDesc =>
+      'Analyse tableaux et chiffres ; révèle tendances et valeurs aberrantes.';
+
+  @override
+  String get skillDocDrafterName => 'Rédacteur de documents';
+
+  @override
+  String get skillDocDrafterDesc =>
+      'Rédige propositions, spécifications et rapports structurés.';
+
+  @override
+  String get skillTranslatorName => 'Traducteur';
+
+  @override
+  String get skillTranslatorDesc =>
+      'Traduit et localise les textes naturellement entre les langues.';
 
   @override
   String get adminTitle => 'Console d\'administration';

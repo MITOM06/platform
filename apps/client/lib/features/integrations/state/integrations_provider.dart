@@ -56,6 +56,18 @@ class IntegrationsNotifier extends AsyncNotifier<List<ConnectorItem>> {
     await refresh();
   }
 
+  /// Update which AI action groups a connection grants, then refresh the merged
+  /// list so cards reflect the new permissions.
+  Future<void> updatePermissions(
+    String connectionId,
+    List<String> actionGroups,
+  ) async {
+    await ref
+        .read(connectorRepositoryProvider)
+        .updateConnectionPermissions(connectionId, actionGroups);
+    await refresh();
+  }
+
   Future<List<McpToolPreview>> discoverCustom({
     required String url,
     required ConnectorAuthType authType,
