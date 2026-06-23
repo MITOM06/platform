@@ -16,6 +16,7 @@ import { FactExtractorService } from './fact-extractor.service';
 import { ContextBuilderService, RagSource } from './context-builder.service';
 import { ResponseCacheService } from './response-cache.service';
 import { SkillsService } from '../skills/skills.service';
+import { ConversationAccessService } from '../conversation/conversation-access.service';
 import { EmbeddingService } from '../kb/embedding.service';
 
 export interface AiRequestPayload {
@@ -88,6 +89,7 @@ export class AiService {
     private readonly contextBuilder: ContextBuilderService,
     private readonly skillsService: SkillsService,
     private readonly responseCache: ResponseCacheService,
+    private readonly conversationAccess: ConversationAccessService,
   ) {
     this.anthropic = new Anthropic({
       apiKey: this.configService.get<string>('config.anthropic.apiKey'),
@@ -125,6 +127,19 @@ export class AiService {
 
   async handleRequest(payload: AiRequestPayload): Promise<void> {
     const { conversationId, userId } = payload;
+
+    // Defense-in-depth: reject if the requester is definitively not a member of
+    // the conversation (forged/replayed queue message). Fails open on unknown.
+    const access = await this.conversationAccess.checkAccess(conversationId, userId);
+    if (access === 'denied') {
+      this.logger.warn(`Access denied: user ${userId} not a participant of ${conversationId}`);
+      await this.publisher.publish(conversationId, {
+        type: 'AI_STREAM_ERROR',
+        code: AiStreamErrorCode.FORBIDDEN,
+        error: 'You do not have access to this conversation.',
+      });
+      return; // expected condition — do NOT dead-letter.
+    }
 
     if (await this.usageService.isQuotaExceeded(userId)) {
       this.logger.warn(`Quota exceeded for user ${userId} in conversation ${conversationId}`);

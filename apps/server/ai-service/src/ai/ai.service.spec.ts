@@ -11,6 +11,7 @@ import { FactExtractorService } from './fact-extractor.service';
 import { ContextBuilderService } from './context-builder.service';
 import { ResponseCacheService } from './response-cache.service';
 import { SkillsService } from '../skills/skills.service';
+import { ConversationAccessService } from '../conversation/conversation-access.service';
 
 function makeAsyncIterator(chunks: unknown[]) {
   return {
@@ -103,6 +104,7 @@ describe('AiService', () => {
   let isQuotaExceeded: jest.Mock;
   let acquire: jest.Mock;
   let release: jest.Mock;
+  let checkAccess: jest.Mock;
   let getPersona: jest.Mock;
   let buildSystemPromptFn: jest.Mock;
   let extractFacts: jest.Mock;
@@ -133,6 +135,7 @@ describe('AiService', () => {
     isQuotaExceeded = jest.fn().mockResolvedValue(false);
     release = jest.fn().mockResolvedValue(undefined);
     acquire = jest.fn().mockResolvedValue({ allowed: true, release });
+    checkAccess = jest.fn().mockResolvedValue('allowed');
     getPersona = jest.fn().mockResolvedValue(null);
     buildSystemPromptFn = jest.fn().mockReturnValue('You are PON AI...');
     extractFacts = jest.fn().mockResolvedValue(undefined);
@@ -186,6 +189,9 @@ describe('AiService', () => {
       lookup: jest.fn().mockResolvedValue(null),
       store: jest.fn().mockResolvedValue(undefined),
     } as unknown as ResponseCacheService;
+    const fakeConversationAccess = {
+      checkAccess,
+    } as unknown as ConversationAccessService;
 
     service = new AiService(
       fakeConfig,
@@ -200,6 +206,7 @@ describe('AiService', () => {
       fakeContextBuilder,
       fakeSkills,
       fakeResponseCache,
+      fakeConversationAccess,
     );
     (service as any)['anthropic'] = { messages: { stream: mockStream, create: mockCreate } };
   });
@@ -564,6 +571,29 @@ describe('AiService', () => {
       error: 'Monthly AI usage quota exceeded. Please contact your admin.',
     });
     expect(mockStream).not.toHaveBeenCalled();
+  });
+
+  // ─── Conversation access (defense-in-depth) ──────────────────────────────
+
+  it('publishes AI_STREAM_ERROR (FORBIDDEN) and skips Anthropic when access denied', async () => {
+    checkAccess.mockResolvedValue('denied');
+
+    await service.handleRequest(basePayload);
+
+    expect(publish).toHaveBeenCalledWith(
+      'conv-test',
+      expect.objectContaining({ type: 'AI_STREAM_ERROR', code: 'AI_FORBIDDEN' }),
+    );
+    expect(mockStream).not.toHaveBeenCalled();
+  });
+
+  it('proceeds when access is unknown (fail-open)', async () => {
+    checkAccess.mockResolvedValue('unknown');
+    mockStream.mockReturnValue(makeStream(['OK']));
+
+    await service.handleRequest(basePayload);
+
+    expect(mockStream).toHaveBeenCalled();
   });
 
   // ─── Rate limiting ────────────────────────────────────────────────────────

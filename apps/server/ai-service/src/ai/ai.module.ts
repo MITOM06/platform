@@ -11,9 +11,19 @@ import { ToolsModule } from '../tools/tools.module';
 import { UsageModule } from '../usage/usage.module';
 import { PersonaModule } from '../persona/persona.module';
 import { SkillsModule } from '../skills/skills.module';
+import { ConversationModule } from '../conversation/conversation.module';
 
 @Module({
-  imports: [RedisModule, MemoryModule, KbModule, ToolsModule, UsageModule, PersonaModule, SkillsModule],
+  imports: [
+    RedisModule,
+    MemoryModule,
+    KbModule,
+    ToolsModule,
+    UsageModule,
+    PersonaModule,
+    SkillsModule,
+    ConversationModule,
+  ],
   controllers: [AiController],
   providers: [AiService, FactExtractorService, ContextBuilderService, ResponseCacheService],
   exports: [AiService],
