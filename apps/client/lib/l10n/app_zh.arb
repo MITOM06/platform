@@ -185,7 +185,9 @@
   "groupCallParticipants": "{count, plural, =1{1 名参与者} other{{count} 名参与者}}",
   "@groupCallParticipants": {
     "placeholders": {
-      "count": { "type": "int" }
+      "count": {
+        "type": "int"
+      }
     }
   },
   "groupCallNotetakerActive": "AI 正在记录",
@@ -198,27 +200,35 @@
   "activeCallBanner": "群组通话 · {count} 人已加入",
   "@activeCallBanner": {
     "placeholders": {
-      "count": { "type": "int" }
+      "count": {
+        "type": "int"
+      }
     }
   },
   "incomingGroupCallTitle": "来电：群组通话",
   "incomingGroupCallBody": "{name} 发起了群组通话",
   "@incomingGroupCallBody": {
     "placeholders": {
-      "name": { "type": "String" }
+      "name": {
+        "type": "String"
+      }
     }
   },
   "meetingSummaryTitle": "会议摘要",
   "meetingSummaryDuration": "时长 {duration}",
   "@meetingSummaryDuration": {
     "placeholders": {
-      "duration": { "type": "String" }
+      "duration": {
+        "type": "String"
+      }
     }
   },
   "meetingSummaryAttendees": "参与者：{names}",
   "@meetingSummaryAttendees": {
     "placeholders": {
-      "names": { "type": "String" }
+      "names": {
+        "type": "String"
+      }
     }
   },
   "meetingSummaryOverview": "概述",
@@ -822,5 +832,22 @@
   "editNicknames": "编辑昵称",
   "nicknameModalTitle": "昵称",
   "nicknameNonePlaceholder": "暂无昵称",
-  "nicknameYouSuffix": "(你)"
+  "nicknameYouSuffix": "(你)",
+  "adminNavUsage": "用量",
+  "usageThisMonth": "本月",
+  "usageTotalTokens": "总令牌数",
+  "usageRequests": "请求数",
+  "usageEstCost": "预计费用",
+  "usageThumbsDownRate": "差评率",
+  "usageFeedbackBreakdown": "{total} 条评价中 {down} 条",
+  "usagePerModelTitle": "按模型计费",
+  "usageModelTokens": "输入 {input} / 输出 {output} · {requests} 次请求",
+  "usageTopUsersTitle": "主要用户",
+  "usageUserRequests": "{count} 次请求",
+  "usageWorstAnswersTitle": "评价最差的回答",
+  "usageNoPreview": "（无回答预览）",
+  "usageUserComment": "“{comment}”",
+  "usageNoData": "此期间暂无数据。",
+  "usageLoadError": "无法加载用量面板。",
+  "usageRetry": "重试"
 }

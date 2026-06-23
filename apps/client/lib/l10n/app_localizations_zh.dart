@@ -2229,4 +2229,63 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get nicknameYouSuffix => '(你)';
+
+  @override
+  String get adminNavUsage => '用量';
+
+  @override
+  String get usageThisMonth => '本月';
+
+  @override
+  String get usageTotalTokens => '总令牌数';
+
+  @override
+  String get usageRequests => '请求数';
+
+  @override
+  String get usageEstCost => '预计费用';
+
+  @override
+  String get usageThumbsDownRate => '差评率';
+
+  @override
+  String usageFeedbackBreakdown(int down, int total) {
+    return '$total 条评价中 $down 条';
+  }
+
+  @override
+  String get usagePerModelTitle => '按模型计费';
+
+  @override
+  String usageModelTokens(String input, String output, String requests) {
+    return '输入 $input / 输出 $output · $requests 次请求';
+  }
+
+  @override
+  String get usageTopUsersTitle => '主要用户';
+
+  @override
+  String usageUserRequests(int count) {
+    return '$count 次请求';
+  }
+
+  @override
+  String get usageWorstAnswersTitle => '评价最差的回答';
+
+  @override
+  String get usageNoPreview => '（无回答预览）';
+
+  @override
+  String usageUserComment(String comment) {
+    return '“$comment”';
+  }
+
+  @override
+  String get usageNoData => '此期间暂无数据。';
+
+  @override
+  String get usageLoadError => '无法加载用量面板。';
+
+  @override
+  String get usageRetry => '重试';
 }

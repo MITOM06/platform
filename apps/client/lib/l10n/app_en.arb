@@ -306,7 +306,9 @@
   "groupCallParticipants": "{count, plural, =1{1 participant} other{{count} participants}}",
   "@groupCallParticipants": {
     "placeholders": {
-      "count": { "type": "int" }
+      "count": {
+        "type": "int"
+      }
     }
   },
   "groupCallNotetakerActive": "AI is taking notes",
@@ -319,27 +321,35 @@
   "activeCallBanner": "Group call · {count} joined",
   "@activeCallBanner": {
     "placeholders": {
-      "count": { "type": "int" }
+      "count": {
+        "type": "int"
+      }
     }
   },
   "incomingGroupCallTitle": "Incoming group call",
   "incomingGroupCallBody": "{name} started a group call",
   "@incomingGroupCallBody": {
     "placeholders": {
-      "name": { "type": "String" }
+      "name": {
+        "type": "String"
+      }
     }
   },
   "meetingSummaryTitle": "Meeting summary",
   "meetingSummaryDuration": "Duration {duration}",
   "@meetingSummaryDuration": {
     "placeholders": {
-      "duration": { "type": "String" }
+      "duration": {
+        "type": "String"
+      }
     }
   },
   "meetingSummaryAttendees": "Attendees: {names}",
   "@meetingSummaryAttendees": {
     "placeholders": {
-      "names": { "type": "String" }
+      "names": {
+        "type": "String"
+      }
     }
   },
   "meetingSummaryOverview": "Overview",
@@ -1104,5 +1114,59 @@
   "editNicknames": "Edit nicknames",
   "nicknameModalTitle": "Nicknames",
   "nicknameNonePlaceholder": "No nickname",
-  "nicknameYouSuffix": "(you)"
+  "nicknameYouSuffix": "(you)",
+  "adminNavUsage": "Usage",
+  "usageThisMonth": "This month",
+  "usageTotalTokens": "Total tokens",
+  "usageRequests": "Requests",
+  "usageEstCost": "Estimated cost",
+  "usageThumbsDownRate": "Thumbs-down rate",
+  "usageFeedbackBreakdown": "{down} of {total} rated",
+  "@usageFeedbackBreakdown": {
+    "placeholders": {
+      "down": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "usagePerModelTitle": "Cost by model",
+  "usageModelTokens": "{input} in / {output} out · {requests} req",
+  "@usageModelTokens": {
+    "placeholders": {
+      "input": {
+        "type": "String"
+      },
+      "output": {
+        "type": "String"
+      },
+      "requests": {
+        "type": "String"
+      }
+    }
+  },
+  "usageTopUsersTitle": "Top users",
+  "usageUserRequests": "{count} requests",
+  "@usageUserRequests": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "usageWorstAnswersTitle": "Worst-rated answers",
+  "usageNoPreview": "(no answer preview)",
+  "usageUserComment": "“{comment}”",
+  "@usageUserComment": {
+    "placeholders": {
+      "comment": {
+        "type": "String"
+      }
+    }
+  },
+  "usageNoData": "No data for this period.",
+  "usageLoadError": "Could not load the usage dashboard.",
+  "usageRetry": "Retry"
 }

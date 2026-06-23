@@ -16,6 +16,14 @@ export const connectorApi = axios.create({
   headers: { 'Content-Type': 'application/json' },
 })
 
+// ai-service (port 3002) — admin usage/quality dashboard lives here. The personal
+// token-usage page still goes through chatApi; this instance targets ai-service's
+// own admin endpoints (e.g. GET /usage/dashboard).
+export const aiApi = axios.create({
+  baseURL: process.env.NEXT_PUBLIC_AI_URL || '/api/ai',
+  headers: { 'Content-Type': 'application/json' },
+})
+
 // ─── request interceptors — inject access token ──────────────────────────────
 
 const injectToken = (config: InternalAxiosRequestConfig) => {
@@ -27,6 +35,7 @@ const injectToken = (config: InternalAxiosRequestConfig) => {
 authApi.interceptors.request.use(injectToken)
 chatApi.interceptors.request.use(injectToken)
 connectorApi.interceptors.request.use(injectToken)
+aiApi.interceptors.request.use(injectToken)
 
 // A refresh failed for a *real* auth reason only when the server actually
 // rejected it (401/403). A network error (no response) — e.g. wifi sleep,
@@ -117,3 +126,4 @@ const create401ResponseInterceptor = (apiInstance: typeof chatApi) => {
 chatApi.interceptors.response.use((res) => res, create401ResponseInterceptor(chatApi))
 authApi.interceptors.response.use((res) => res, create401ResponseInterceptor(authApi))
 connectorApi.interceptors.response.use((res) => res, create401ResponseInterceptor(connectorApi))
+aiApi.interceptors.response.use((res) => res, create401ResponseInterceptor(aiApi))

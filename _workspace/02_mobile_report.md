@@ -1,102 +1,130 @@
-## Mobile Implementation Report — TASK-12 (Workspace-level AI settings)
+## Mobile Implementation Report — TASK-13 (Usage & Quality Dashboard, minimal read-only mirror)
 
-### What I built
-A new **AI assistant** tab in the Flutter admin console (`apps/client/lib/features/admin/`),
-mirroring the existing Workspace/SSO panels. It is gated by the **existing** `MANAGE_WORKSPACE`
-capability (`Cap.manageWorkspace`) via the established `_Section(cap, …)` + `caps.has(s.cap)` /
-`canAccessAdmin` gating in `admin_screen.dart` — **no new capability** and **no new endpoint**.
+### What was built
+A minimal, read-only **Usage** panel in the existing Flutter admin console
+(`AdminScreen`), gated by the **existing** `MANAGE_WORKSPACE` capability via the
+existing `hasCapability` / section-filter pattern — placed right after the
+TASK-12 "AI Settings" panel (`Cap.manageWorkspace`). It fetches the SAME
+`GET /usage/dashboard` (ai-service, :3002) endpoint the web `/admin/usage` page
+uses and shows the same core metrics: this period's tokens & requests, estimated
+cost (total + per-model), top users, 👎 rate, and worst-rated answers. No charts
+(web-primary deviation D6) — simple Neon-themed cards/lists. Pull-to-refresh +
+retry on error.
 
-AI settings ride on the **existing** `GET/PATCH /admin/workspace` contract through the existing
-`AdminRepository.getWorkspace()`/`updateWorkspace(patch)` (authDio :3001) and the existing
-`WorkspaceNotifier.save()` AsyncNotifier (which already invalidates `capabilitiesProvider`).
-Save sends `{ "aiSettings": { …only the AI fields… } }` — a partial PATCH the backend deep-merges.
+### 변경된 파일 (Files touched)
+- `apps/client/lib/core/config/app_config.dart` — **수정**. Added `aiBaseUrl`
+  (ai-service :3002; self-host routes via `/api/ai`, cloud uses the ai-service
+  Cloud Run URL), mirroring the existing auth/chat/connector pattern.
+- `apps/client/lib/core/api/dio_client.dart` — **수정**. Added `createAiDio(...)`
+  (dedicated ai-service Dio with the same JWT/refresh/network interceptors) +
+  `aiBaseUrl` getter. Never reuses chat/auth Dio (per the project footgun rule).
+- `apps/client/lib/features/admin/data/models/usage_dashboard_models.dart` —
+  **신규** (204 lines). Dart models for `DashboardResponse`: `UsageDashboard`,
+  `UsageRange`, `UsageTotals`, `PerModelCost`, `TopUser`, `WorstAnswer`,
+  `UsageFeedback`. Defensive parsing — every number defaults to 0, every list to
+  empty, nullable strings stay nullable; a sparse/empty payload never throws.
+- `apps/client/lib/features/admin/data/usage_repository.dart` — **신규**.
+  `UsageRepository.getDashboard({String? month})` → `aiDio.get('/usage/dashboard')`
+  with optional `month` query param. `usageRepositoryProvider` wires `createAiDio`
+  with `forceLogout`.
+- `apps/client/lib/features/admin/state/usage_dashboard_provider.dart` — **신규**.
+  `UsageDashboardNotifier extends AsyncNotifier<UsageDashboard>` (current month)
+  with `refresh()`.
+- `apps/client/lib/features/admin/ui/widgets/usage_dashboard_panel.dart` — **신규**
+  (155 lines). `ConsumerWidget` with `AsyncValue.when` loading/error/data; range
+  label, 4 headline stat cards, and the three sections.
+- `apps/client/lib/features/admin/ui/widgets/usage_dashboard_widgets.dart` — **신규**
+  (265 lines). Extracted sub-widgets (per-model cost list, top-users list,
+  worst-answers cards, stat card, empty row, formatters) — split out to keep
+  every file under the 400-line limit (panel was 424 before the split).
+- `apps/client/lib/features/admin/ui/admin_screen.dart` — **수정**. Added the
+  Usage section (`Cap.manageWorkspace`, `Icons.insights_outlined`,
+  `c.l10n.adminNavUsage`, `UsageDashboardPanel`) after AI Settings.
+- `apps/client/lib/l10n/app_{en,vi,zh,ja,ko,es,fr}.arb` — **수정 (×7)**. +17 keys
+  each (en is the template, with placeholder metadata). Ran `flutter gen-l10n` →
+  regenerated `app_localizations*.dart` (not hand-edited).
 
-All seven `aiSettings` fields are parsed/serialized exactly per the FIXED plan contract, with
-`null` = "inherit env/default" semantics preserved end-to-end (empty field ⇒ `null` ⇒ never
-overrides the ai-service env fallback). `allowedConnectors` distinguishes `null` (inherit
-`connectorAllowList`) from `[]` (explicit "allow none") via a "Restrict connectors for AI" switch.
+### Metrics shown (parity with web)
+| Metric | Source field | Mobile render |
+|--------|-------------|---------------|
+| This period label | `range.label` | Header chip (falls back to "This month") |
+| Total tokens | `totals.totalTokens` | Headline stat card |
+| Requests | `totals.requestCount` | Headline stat card |
+| Estimated cost | `totals.estimatedCostUsd` | Headline stat card (`$x.xx`) |
+| 👎 rate | `feedback.thumbsDownRate` + `down`/`total` | Headline stat card (`%`, red ≥20%, breakdown subtitle) |
+| Cost by model | `perModelCost[]` | List: model · cost · in/out/req tokens |
+| Top users | `topUsers[]` (top 5) | Ranked list: name/userId · tokens · requests |
+| Worst answers | `feedback.worstAnswers[]` (top 5) | Cards: answer preview + optional comment |
 
-### Files touched
-- `apps/client/lib/features/admin/data/models/admin_models.dart` — **modified**. Added immutable
-  `WorkspaceAiSettings` model (all 7 fields nullable; `tones`/`modelTiers` const lists) with
-  `fromJson` that parses `null`-as-inherit and treats absent `allowedConnectors` as `null` vs
-  explicit `[]`. Added `aiSettings` field to `Workspace` (defaults to `const WorkspaceAiSettings()`,
-  backward compatible) + parsed it in `Workspace.fromJson`.
-- `apps/client/lib/features/admin/ui/widgets/workspace_ai_settings_panel.dart` — **new** (219 lines).
-  `WorkspaceAiSettingsPanel` ConsumerStatefulWidget. Reads `workspaceProvider` + `adminCatalogProvider`
-  (reused from `workspace_panel.dart`), `AsyncValue.when(loading/error/data)`, seeds controllers once,
-  builds the partial `aiSettings` patch and saves via `workspaceProvider.notifier.save(...)`.
-- `apps/client/lib/features/admin/ui/widgets/ai_settings_controls.dart` — **new** (211 lines).
-  Extracted reusable presentation widgets to keep the panel < 400 lines (clean-code rule):
-  `AiConnectorChecklist`, `AiTriStateTile`, `AiLabeledDropdown` (+`AiDropItem`), `AiSectionTitle`,
-  `AiMutedText`, `AiErrorView`.
-- `apps/client/lib/features/admin/ui/admin_screen.dart` — **modified**. Added
-  `_Section(Cap.manageWorkspace, Icons.auto_awesome, (c)=>c.l10n.adminNavAi, const WorkspaceAiSettingsPanel())`
-  to `_sections()` (placed right after Workspace, before SSO) + import.
-- `apps/client/lib/l10n/app_{en,vi,zh,ja,ko,es,fr}.arb` — **modified**. +30 keys each (all 7 locales).
-- `apps/client/lib/l10n/app_localizations*.dart` — regenerated via `flutter gen-l10n` (not hand-edited).
+Web is primary (it additionally has the daily bar chart and month selector). Per
+plan **D6**, mobile intentionally omits charts and the month selector and caps
+top-users / worst-answers at 5 (web shows up to 10) — this is the explicitly
+accepted sync-rule deviation for an admin/ops dashboard (not a chat/STOMP
+surface). The headline numbers come from the identical endpoint, so they match.
 
-`apps/client/lib/features/admin/data/admin_repository.dart` — **unchanged** (reused
-`updateWorkspace(Map patch)` / `getWorkspace()`). `admin_providers.dart` — **unchanged** (reused
-`workspaceProvider` / `WorkspaceNotifier.save`).
+### Contract conformance
+- Calls `GET /usage/dashboard` on ai-service exactly as the frozen contract in
+  `01_plan.md` (Auth: `Bearer <jwt>`; optional `month=YYYY-MM`; defaults to
+  current month). Same endpoint the web dashboard uses.
+- Parses every contract field: `range.{from,to,label}`,
+  `totals.{inputTokens,outputTokens,totalTokens,requestCount,estimatedCostUsd}`,
+  `perModelCost[].{model,inputTokens,outputTokens,requestCount,inputPricePerMTok,outputPricePerMTok,costUsd}`,
+  `topUsers[].{userId,displayName,totalTokens,requestCount,estimatedCostUsd}`,
+  `feedback.{up,down,total,thumbsDownRate,worstAnswers[]}`,
+  `worstAnswers[].{messageId,conversationId,comment,answerPreview,createdAt}`.
+- `topUsers` displayName falls back to `userId` (contract note). Empty window →
+  zeros + empty lists + `0%` 👎 rate (no NaN), rendered as a clean empty state.
+- Gated by `MANAGE_WORKSPACE` (client section filter + server gate).
 
-### Fields / controls (per plan contract; PATCH key → control)
-- `personaName: string|null` — text field (empty ⇒ null).
-- `defaultTone: 'friendly'|'professional'|'concise'|'creative'|null` — dropdown with "Inherit" sentinel ⇒ null.
-- `modelTier: 'auto'|'simple'|'mid'|'complex'|null` — dropdown; `'auto'` ⇒ null (env router).
-- `webSearchEnabled: boolean|null` — tri-state segmented control (Inherit / On / Off).
-- `thinkingEnabled: boolean|null` — tri-state segmented control (Inherit / On / Off).
-- `monthlyTokenLimit: number|null` — digits-only number field; empty ⇒ null; `0` is a valid explicit value.
-- `allowedConnectors: string[]|null` — "Restrict connectors for AI" switch (off ⇒ null = inherit;
-  on ⇒ explicit list, possibly `[]`). The checklist is constrained to `workspace.connectorAllowList`
-  (the AI list can only narrow the outer boundary), built from the connector catalog.
+### i18n 추가 키 (17 keys × 7 locales)
+- `adminNavUsage`: "Usage"
+- `usageThisMonth`: "This month"
+- `usageTotalTokens`: "Total tokens"
+- `usageRequests`: "Requests"
+- `usageEstCost`: "Estimated cost"
+- `usageThumbsDownRate`: "Thumbs-down rate"
+- `usageFeedbackBreakdown(down, total)`: "{down} of {total} rated"
+- `usagePerModelTitle`: "Cost by model"
+- `usageModelTokens(input, output, requests)`: "{input} in / {output} out · {requests} req"
+- `usageTopUsersTitle`: "Top users"
+- `usageUserRequests(count)`: "{count} requests"
+- `usageWorstAnswersTitle`: "Worst-rated answers"
+- `usageNoPreview`: "(no answer preview)"
+- `usageUserComment(comment)`: "“{comment}”"
+- `usageNoData`: "No data for this period."
+- `usageLoadError`: "Could not load the usage dashboard."
+- `usageRetry`: "Retry"
 
-### i18n added keys (30 keys × 7 locales = 210 entries; English template values)
-- `adminNavAi`: "AI assistant"
-- `adminAiInheritHint`: "Leave a field empty or set \"Inherit\" to use the server default."
-- `adminAiInheritOption`: "Inherit (default)"
-- `adminAiOn`: "On" / `adminAiOff`: "Off"
-- `adminAiPersonaSection`: "Persona" / `adminAiPersonaName`: "Default assistant name"
-- `adminAiTone`: "Default tone" + `adminAiToneFriendly/Professional/Concise/Creative`
-- `adminAiModelSection`: "Model" / `adminAiModelTier`: "Default model tier"
-- `adminAiTierAuto`: "Auto (router)" / `adminAiTierSimple`: "Simple" / `adminAiTierMid`: "Balanced" / `adminAiTierComplex`: "Advanced"
-- `adminAiCapabilitiesSection`: "Capabilities"
-- `adminAiWebSearch`: "Web search" / `adminAiWebSearchDesc`: "Allow the assistant to search the web."
-- `adminAiThinking`: "Extended thinking" / `adminAiThinkingDesc`: "Allow the assistant to reason step by step."
-- `adminAiQuotaSection`: "Usage limit" / `adminAiTokenLimit`: "Monthly token limit" / `adminAiTokenLimitDesc`: "Leave empty to inherit; 0 blocks all usage."
-- `adminAiConnectorsSection`: "Allowed connectors" / `adminAiRestrictConnectors`: "Restrict connectors for AI"
-- `adminAiConnectorsInherit`: "Inheriting the workspace allow-list." / `adminAiConnectorsExplicit`: "AI may only use the connectors selected below."
+All 17 added to **all 7 locales** (en/vi/zh/ja/ko/es/fr) with native translations
+— no English fallthrough. `flutter gen-l10n` succeeded; generated
+`app_localizations*.dart` not hand-edited.
 
-All 7 ARB files validated as JSON; `flutter gen-l10n` regenerated localizations (no manual edits).
+### analyze + test results (exact)
+- `cd apps/client && flutter analyze` → **No issues found!** (0 issues)
+- `flutter test` → **All tests passed!** — 47 tests (+47). Full suite run (not just
+  analyze, per the instruction). No new test added for this read-only UI-only
+  mirror; logic lives in the defensively-parsed models and existing widgets.
 
-### flutter analyze result
-`cd apps/client && flutter analyze` → **No issues found!** (issues: **0**). Scoped run on
-`lib/features/admin lib/l10n` also clean. (Only the unrelated standing iOS "Swift Package Manager"
-plugin notice prints — not from this change.)
+### File-length compliance
+- `usage_dashboard_panel.dart`: 155 · `usage_dashboard_widgets.dart`: 265 ·
+  `usage_dashboard_models.dart`: 204 — all < 400.
 
-### Web ↔ Mobile parity (sync.md)
-- **Field set parity:** Flutter writes the identical `aiSettings` shape the plan fixes for both
-  clients: `personaName, defaultTone, modelTier, webSearchEnabled, thinkingEnabled, monthlyTokenLimit,
-  allowedConnectors` — same names, same types, same nullable/inherit semantics, same enum value sets
-  (`friendly|professional|concise|creative`, `auto|simple|mid|complex`).
-- **Gating parity:** both panels are gated by `MANAGE_WORKSPACE` (web `<RequireCap cap="MANAGE_WORKSPACE">`
-  per plan; Flutter `Cap.manageWorkspace`).
-- **Mutation parity:** both PATCH the same `/admin/workspace` with a partial `{ aiSettings: {...} }`
-  via the shared admin service/repository (no new endpoint).
-- **Caveat (parity to confirm at QA):** the web AI panel files
-  (`apps/web/components/admin/WorkspaceAiSettings.tsx`, `apps/web/lib/api/admin-types.ts` `aiSettings`)
-  were **not present** when I implemented (web-dev runs in parallel per the plan's step 4). Flutter is
-  built strictly to the FIXED plan contract, so it will match once web lands. The existing
-  `02_web_report.md` in `_workspace/` is the TASK-09 report, not TASK-12 — so no web TASK-12 field list
-  existed to diff against; verify web↔mobile field parity in QA.
-
-### Notes / decisions
-- Reused `adminCatalogProvider` (already defined in `workspace_panel.dart`) rather than redefining it,
-  keeping a single source for the catalog fetch.
-- Tri-state booleans use a 3-segment `SegmentedButton` (Inherit / On / Off) so the UI can express
-  `null` (inherit) distinctly from explicit `false` — a plain `Switch` cannot represent "inherit".
-- `monthlyTokenLimit` field is digits-only (`FilteringTextInputFormatter.digitsOnly`); empty ⇒ `null`
-  (inherit), explicit `0` ⇒ block-all (sent as `0`, per the plan's edge case).
-- Client does **not** re-validate `allowedConnectors ⊆ connectorAllowList` beyond constraining the
-  checklist to the allow-list; the backend is the authority and rejects violations with 400 (surfaced
-  via the existing error snackbar path).
+### 주의사항 (Notes)
+- **Stale workspace reports**: `_workspace/02_backend_report.md` and
+  `02_web_report.md` are both TASK-12 reports; the TASK-13 `/usage/dashboard`
+  endpoint does NOT yet exist in `apps/server/ai-service/src/usage/`. I therefore
+  implemented strictly against the **frozen contract in `01_plan.md`** (as the
+  task instructs when no TASK-13 backend report is present). When the backend
+  lands, no mobile change should be needed if it honors the frozen shape.
+- **Base URL**: added a dedicated `aiBaseUrl` + `createAiDio` per the plan. (The
+  existing `ai_memory_repository.dart` reaches `/api/ai/...` via chatDio :8080;
+  TASK-13 deliberately uses the ai-service base directly per the plan, matching
+  the web `aiApi` instance decision.) Self-host (`PON_DOMAIN`) routes via
+  `/api/ai`; cloud uses the ai-service Cloud Run URL.
+- **Sync (D6)**: documented above — mobile is a minimal read-only mirror; the
+  intentional deltas (no chart, no month selector, top-5 caps) are the accepted
+  web-primary deviation, not P1 sync gaps (admin/ops view, not a chat/STOMP
+  message surface).
+- **ARB reformat**: the JSON writer pretty-printed two pre-existing placeholder
+  blocks from one-line to multi-line (semantically identical JSON, valid ARB) —
+  no key values changed.

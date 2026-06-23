@@ -2292,4 +2292,63 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get nicknameYouSuffix => '(you)';
+
+  @override
+  String get adminNavUsage => 'Usage';
+
+  @override
+  String get usageThisMonth => 'This month';
+
+  @override
+  String get usageTotalTokens => 'Total tokens';
+
+  @override
+  String get usageRequests => 'Requests';
+
+  @override
+  String get usageEstCost => 'Estimated cost';
+
+  @override
+  String get usageThumbsDownRate => 'Thumbs-down rate';
+
+  @override
+  String usageFeedbackBreakdown(int down, int total) {
+    return '$down of $total rated';
+  }
+
+  @override
+  String get usagePerModelTitle => 'Cost by model';
+
+  @override
+  String usageModelTokens(String input, String output, String requests) {
+    return '$input in / $output out · $requests req';
+  }
+
+  @override
+  String get usageTopUsersTitle => 'Top users';
+
+  @override
+  String usageUserRequests(int count) {
+    return '$count requests';
+  }
+
+  @override
+  String get usageWorstAnswersTitle => 'Worst-rated answers';
+
+  @override
+  String get usageNoPreview => '(no answer preview)';
+
+  @override
+  String usageUserComment(String comment) {
+    return '“$comment”';
+  }
+
+  @override
+  String get usageNoData => 'No data for this period.';
+
+  @override
+  String get usageLoadError => 'Could not load the usage dashboard.';
+
+  @override
+  String get usageRetry => 'Retry';
 }

@@ -2242,4 +2242,63 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get nicknameYouSuffix => '(나)';
+
+  @override
+  String get adminNavUsage => '사용량';
+
+  @override
+  String get usageThisMonth => '이번 달';
+
+  @override
+  String get usageTotalTokens => '총 토큰';
+
+  @override
+  String get usageRequests => '요청 수';
+
+  @override
+  String get usageEstCost => '예상 비용';
+
+  @override
+  String get usageThumbsDownRate => '비추천 비율';
+
+  @override
+  String usageFeedbackBreakdown(int down, int total) {
+    return '$total건 중 $down건';
+  }
+
+  @override
+  String get usagePerModelTitle => '모델별 비용';
+
+  @override
+  String usageModelTokens(String input, String output, String requests) {
+    return '입력 $input / 출력 $output · $requests건';
+  }
+
+  @override
+  String get usageTopUsersTitle => '상위 사용자';
+
+  @override
+  String usageUserRequests(int count) {
+    return '$count건의 요청';
+  }
+
+  @override
+  String get usageWorstAnswersTitle => '평가가 가장 낮은 답변';
+
+  @override
+  String get usageNoPreview => '(답변 미리보기 없음)';
+
+  @override
+  String usageUserComment(String comment) {
+    return '“$comment”';
+  }
+
+  @override
+  String get usageNoData => '이 기간의 데이터가 없습니다.';
+
+  @override
+  String get usageLoadError => '사용량 대시보드를 불러오지 못했습니다.';
+
+  @override
+  String get usageRetry => '다시 시도';
 }

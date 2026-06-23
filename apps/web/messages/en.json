@@ -965,7 +965,8 @@
     "aiConnectorsHint": "Restrict which connectors the assistant may use. Can only narrow the workspace allow-list.",
     "aiRestrictConnectors": "Restrict assistant connectors",
     "aiRestrictConnectorsHint": "Off = inherit the workspace allow-list. On = only the selected connectors (none if empty).",
-    "aiNoConnectors": "No connectors in the workspace allow-list."
+    "aiNoConnectors": "No connectors in the workspace allow-list.",
+    "navUsage": "Usage"
   },
   "call": {
     "peerFallback": "User",
@@ -1006,5 +1007,29 @@
   "notFound": {
     "title": "Page not found",
     "backHome": "Back to home"
+  },
+  "usageDashboard": {
+    "title": "Usage & Quality",
+    "subtitle": "Token usage, cost and answer quality across the workspace",
+    "month": "Month",
+    "loading": "Loading dashboard…",
+    "loadError": "Failed to load the usage dashboard",
+    "noData": "No data",
+    "totalTokens": "Total tokens",
+    "requests": "Requests",
+    "estimatedCost": "Estimated cost",
+    "thumbsDownRate": "👎 rate",
+    "dailyChart": "Daily tokens",
+    "inputTokens": "Input tokens",
+    "outputTokens": "Output tokens",
+    "perModelCost": "Cost by model",
+    "model": "Model",
+    "cost": "Cost",
+    "topUsers": "Top users",
+    "user": "User",
+    "tokens": "Tokens",
+    "worstAnswers": "Worst-rated answers",
+    "noWorstAnswers": "No 👎-rated answers in this period",
+    "feedbackSummary": "{up} 👍 · {down} 👎 · {total} rated"
   }
 }

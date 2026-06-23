@@ -2313,4 +2313,63 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get nicknameYouSuffix => '(tú)';
+
+  @override
+  String get adminNavUsage => 'Uso';
+
+  @override
+  String get usageThisMonth => 'Este mes';
+
+  @override
+  String get usageTotalTokens => 'Tokens totales';
+
+  @override
+  String get usageRequests => 'Solicitudes';
+
+  @override
+  String get usageEstCost => 'Coste estimado';
+
+  @override
+  String get usageThumbsDownRate => 'Tasa de pulgares abajo';
+
+  @override
+  String usageFeedbackBreakdown(int down, int total) {
+    return '$down de $total valoradas';
+  }
+
+  @override
+  String get usagePerModelTitle => 'Coste por modelo';
+
+  @override
+  String usageModelTokens(String input, String output, String requests) {
+    return '$input ent. / $output sal. · $requests sol.';
+  }
+
+  @override
+  String get usageTopUsersTitle => 'Usuarios principales';
+
+  @override
+  String usageUserRequests(int count) {
+    return '$count solicitudes';
+  }
+
+  @override
+  String get usageWorstAnswersTitle => 'Respuestas peor valoradas';
+
+  @override
+  String get usageNoPreview => '(sin vista previa de la respuesta)';
+
+  @override
+  String usageUserComment(String comment) {
+    return '«$comment»';
+  }
+
+  @override
+  String get usageNoData => 'No hay datos para este periodo.';
+
+  @override
+  String get usageLoadError => 'No se pudo cargar el panel de uso.';
+
+  @override
+  String get usageRetry => 'Reintentar';
 }

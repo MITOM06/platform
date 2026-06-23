@@ -185,7 +185,9 @@
   "groupCallParticipants": "{count, plural, =1{1 participant} other{{count} participants}}",
   "@groupCallParticipants": {
     "placeholders": {
-      "count": { "type": "int" }
+      "count": {
+        "type": "int"
+      }
     }
   },
   "groupCallNotetakerActive": "L'IA prend des notes",
@@ -198,27 +200,35 @@
   "activeCallBanner": "Appel de groupe · {count} ont rejoint",
   "@activeCallBanner": {
     "placeholders": {
-      "count": { "type": "int" }
+      "count": {
+        "type": "int"
+      }
     }
   },
   "incomingGroupCallTitle": "Appel de groupe entrant",
   "incomingGroupCallBody": "{name} a démarré un appel de groupe",
   "@incomingGroupCallBody": {
     "placeholders": {
-      "name": { "type": "String" }
+      "name": {
+        "type": "String"
+      }
     }
   },
   "meetingSummaryTitle": "Résumé de la réunion",
   "meetingSummaryDuration": "Durée {duration}",
   "@meetingSummaryDuration": {
     "placeholders": {
-      "duration": { "type": "String" }
+      "duration": {
+        "type": "String"
+      }
     }
   },
   "meetingSummaryAttendees": "Participants : {names}",
   "@meetingSummaryAttendees": {
     "placeholders": {
-      "names": { "type": "String" }
+      "names": {
+        "type": "String"
+      }
     }
   },
   "meetingSummaryOverview": "Aperçu",
@@ -822,5 +832,22 @@
   "editNicknames": "Modifier les surnoms",
   "nicknameModalTitle": "Surnoms",
   "nicknameNonePlaceholder": "Aucun surnom",
-  "nicknameYouSuffix": "(vous)"
+  "nicknameYouSuffix": "(vous)",
+  "adminNavUsage": "Utilisation",
+  "usageThisMonth": "Ce mois-ci",
+  "usageTotalTokens": "Jetons totaux",
+  "usageRequests": "Requêtes",
+  "usageEstCost": "Coût estimé",
+  "usageThumbsDownRate": "Taux de pouce vers le bas",
+  "usageFeedbackBreakdown": "{down} sur {total} évaluées",
+  "usagePerModelTitle": "Coût par modèle",
+  "usageModelTokens": "{input} ent. / {output} sort. · {requests} req.",
+  "usageTopUsersTitle": "Principaux utilisateurs",
+  "usageUserRequests": "{count} requêtes",
+  "usageWorstAnswersTitle": "Réponses les moins bien notées",
+  "usageNoPreview": "(aucun aperçu de réponse)",
+  "usageUserComment": "« {comment} »",
+  "usageNoData": "Aucune donnée pour cette période.",
+  "usageLoadError": "Impossible de charger le tableau de bord d’utilisation.",
+  "usageRetry": "Réessayer"
 }

@@ -2240,4 +2240,63 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get nicknameYouSuffix => '（あなた）';
+
+  @override
+  String get adminNavUsage => '使用状況';
+
+  @override
+  String get usageThisMonth => '今月';
+
+  @override
+  String get usageTotalTokens => '合計トークン';
+
+  @override
+  String get usageRequests => 'リクエスト数';
+
+  @override
+  String get usageEstCost => '推定コスト';
+
+  @override
+  String get usageThumbsDownRate => '低評価率';
+
+  @override
+  String usageFeedbackBreakdown(int down, int total) {
+    return '$total 件中 $down 件';
+  }
+
+  @override
+  String get usagePerModelTitle => 'モデル別コスト';
+
+  @override
+  String usageModelTokens(String input, String output, String requests) {
+    return '入力 $input / 出力 $output · $requests 件';
+  }
+
+  @override
+  String get usageTopUsersTitle => '上位ユーザー';
+
+  @override
+  String usageUserRequests(int count) {
+    return '$count 件のリクエスト';
+  }
+
+  @override
+  String get usageWorstAnswersTitle => '低評価の回答';
+
+  @override
+  String get usageNoPreview => '（回答プレビューなし）';
+
+  @override
+  String usageUserComment(String comment) {
+    return '「$comment」';
+  }
+
+  @override
+  String get usageNoData => 'この期間のデータはありません。';
+
+  @override
+  String get usageLoadError => '使用状況ダッシュボードを読み込めませんでした。';
+
+  @override
+  String get usageRetry => '再試行';
 }

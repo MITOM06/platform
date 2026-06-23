@@ -1,6 +1,8 @@
 import { DynamicModule, Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
+import { PassportModule } from '@nestjs/passport';
+import { SharedJwtStrategy } from '@platform/database';
 import configuration from './config/configuration';
 import { AiModule } from './ai/ai.module';
 import { RedisModule } from './redis/redis.module';
@@ -31,6 +33,9 @@ const mongooseModule: DynamicModule = MongooseModule.forRootAsync({
       load: [configuration],
       envFilePath: '.env',
     }),
+    // Shared passport-jwt strategy so JwtAuthGuard can populate req.user for the
+    // usage dashboard controller (TASK-13 — first ai-service guarded route).
+    PassportModule.register({ defaultStrategy: 'jwt' }),
     mongooseModule,
     HealthModule,
     RedisModule,
@@ -45,6 +50,6 @@ const mongooseModule: DynamicModule = MongooseModule.forRootAsync({
     AiModule,
     RabbitmqModule,
   ],
-  providers: [BotSeedService, RedisSubscriberService],
+  providers: [BotSeedService, RedisSubscriberService, SharedJwtStrategy],
 })
 export class AppModule {}

@@ -194,7 +194,25 @@ For a small team, "the AI gives accurate, sourced answers" is the difference bet
 - **Acceptance:** Changing default tone or toggling web search in the UI takes effect on the next AI request without restart.
 - **Effort:** M (cross-platform)
 
-### TASK-13 — Usage & quality dashboard (single view)
+### TASK-13 — Usage & quality dashboard (single view)  ✅ DONE (2026-06-23)
+> **Status:** Admin usage & quality dashboard shipped. New ai-service endpoint `GET /usage/dashboard`
+> (gated by `JwtAuthGuard + RequirePermissionGuard + MANAGE_WORKSPACE` — first ai-service route to use the
+> shared `@platform/database` guards; Passport + SharedJwtStrategy wired in app.module mirroring connector-service).
+> **Data sources (corrected from the task's assumptions):** `token_usage` (no `model` field) → volume totals,
+> zero-filled daily series, top-users; `messages.trace` (read-only) → per-model cost via an env price map;
+> `ai_feedback` (read-only, written by chat-service from TASK-07) → 👎 rate + worst-rated answers (joined to
+> `messages` for the preview). `topUsers[].estimatedCostUsd` is a pro-rated token share (no model field on
+> token_usage). Per-model price config = env-driven map in `configuration.ts` (`AI_PRICE_<MODELKEY>_IN/_OUT`),
+> NOT Workspace.aiSettings (billing constants).
+> - **web**: new `/admin/usage` page (gated, cross-user), 4 stat cards (tokens/requests/cost/👎 rate),
+>   daily-tokens canvas chart (reused from `/token-usage`, no new charting dep), cost-by-model + top-users
+>   tables, worst-answers list, month selector. New `aiApi` axios instance (`NEXT_PUBLIC_AI_URL`). i18n ×7.
+> - **mobile**: minimal read-only mirror panel in the admin section (same metrics, no charts/month selector —
+>   accepted web-primary deviation D6 from sync.md, since this is an admin/ops view not a chat surface).
+>   New `aiBaseUrl` + `createAiDio`. i18n ×7.
+> Verify: ai-service build clean + 255 tests (+12); web `pnpm build` ok (`/admin/usage`); flutter analyze clean
+> + **flutter test 47 PASS**. QA PASS (1 P3 createdAt-nullability drift fixed post-QA).
+> **Owner action:** set `AI_PRICE_*` env on ai-service + `NEXT_PUBLIC_AI_URL` on web for accurate cost figures.
 - **Why:** `token_usages` is captured but only as a per-user number. One admin view of cost + volume + 👎 rate makes the system operable.
 - **Scope:**
   - Aggregate endpoint: tokens & request count over time, top users, estimated cost (configurable per-model price), 👎 rate (from TASK-07).

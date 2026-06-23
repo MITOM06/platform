@@ -965,7 +965,8 @@
     "aiConnectorsHint": "Limite les connecteurs que l’assistant peut utiliser. Ne peut que restreindre la liste de l’espace de travail.",
     "aiRestrictConnectors": "Restreindre les connecteurs de l’assistant",
     "aiRestrictConnectorsHint": "Désactivé = hérite de la liste de l’espace de travail. Activé = uniquement les connecteurs sélectionnés (aucun si vide).",
-    "aiNoConnectors": "Aucun connecteur dans la liste de l’espace de travail."
+    "aiNoConnectors": "Aucun connecteur dans la liste de l’espace de travail.",
+    "navUsage": "Utilisation"
   },
   "call": {
     "peerFallback": "Utilisateur",
@@ -1006,5 +1007,29 @@
   "notFound": {
     "title": "Page introuvable",
     "backHome": "Retour à l'accueil"
+  },
+  "usageDashboard": {
+    "title": "Usage et qualité",
+    "subtitle": "Consommation de jetons, coût et qualité des réponses de l'espace de travail",
+    "month": "Mois",
+    "loading": "Chargement du tableau de bord…",
+    "loadError": "Échec du chargement du tableau de bord d’usage",
+    "noData": "Aucune donnée",
+    "totalTokens": "Jetons totaux",
+    "requests": "Requêtes",
+    "estimatedCost": "Coût estimé",
+    "thumbsDownRate": "Taux de 👎",
+    "dailyChart": "Jetons par jour",
+    "inputTokens": "Jetons d'entrée",
+    "outputTokens": "Jetons de sortie",
+    "perModelCost": "Coût par modèle",
+    "model": "Modèle",
+    "cost": "Coût",
+    "topUsers": "Principaux utilisateurs",
+    "user": "Utilisateur",
+    "tokens": "Jetons",
+    "worstAnswers": "Réponses les moins bien notées",
+    "noWorstAnswers": "Aucune réponse 👎 sur cette période",
+    "feedbackSummary": "{up} 👍 · {down} 👎 · {total} notées"
   }
 }

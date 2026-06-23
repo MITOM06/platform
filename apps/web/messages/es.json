@@ -965,7 +965,8 @@
     "aiConnectorsHint": "Restringe qué conectores puede usar el asistente. Solo puede reducir la lista del espacio de trabajo.",
     "aiRestrictConnectors": "Restringir conectores del asistente",
     "aiRestrictConnectorsHint": "Desactivado = hereda la lista del espacio de trabajo. Activado = solo los conectores seleccionados (ninguno si está vacío).",
-    "aiNoConnectors": "No hay conectores en la lista del espacio de trabajo."
+    "aiNoConnectors": "No hay conectores en la lista del espacio de trabajo.",
+    "navUsage": "Uso"
   },
   "call": {
     "peerFallback": "Usuario",
@@ -1006,5 +1007,29 @@
   "notFound": {
     "title": "Página no encontrada",
     "backHome": "Volver al inicio"
+  },
+  "usageDashboard": {
+    "title": "Uso y calidad",
+    "subtitle": "Uso de tokens, coste y calidad de respuestas en el espacio de trabajo",
+    "month": "Mes",
+    "loading": "Cargando panel…",
+    "loadError": "No se pudo cargar el panel de uso",
+    "noData": "Sin datos",
+    "totalTokens": "Tokens totales",
+    "requests": "Solicitudes",
+    "estimatedCost": "Coste estimado",
+    "thumbsDownRate": "Tasa de 👎",
+    "dailyChart": "Tokens diarios",
+    "inputTokens": "Tokens de entrada",
+    "outputTokens": "Tokens de salida",
+    "perModelCost": "Coste por modelo",
+    "model": "Modelo",
+    "cost": "Coste",
+    "topUsers": "Usuarios principales",
+    "user": "Usuario",
+    "tokens": "Tokens",
+    "worstAnswers": "Respuestas peor valoradas",
+    "noWorstAnswers": "No hay respuestas con 👎 en este periodo",
+    "feedbackSummary": "{up} 👍 · {down} 👎 · {total} valoradas"
   }
 }

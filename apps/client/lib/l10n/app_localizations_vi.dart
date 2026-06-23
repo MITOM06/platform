@@ -2291,4 +2291,63 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get nicknameYouSuffix => '(bạn)';
+
+  @override
+  String get adminNavUsage => 'Sử dụng';
+
+  @override
+  String get usageThisMonth => 'Tháng này';
+
+  @override
+  String get usageTotalTokens => 'Tổng token';
+
+  @override
+  String get usageRequests => 'Yêu cầu';
+
+  @override
+  String get usageEstCost => 'Chi phí ước tính';
+
+  @override
+  String get usageThumbsDownRate => 'Tỉ lệ không hài lòng';
+
+  @override
+  String usageFeedbackBreakdown(int down, int total) {
+    return '$down trên $total đã đánh giá';
+  }
+
+  @override
+  String get usagePerModelTitle => 'Chi phí theo mô hình';
+
+  @override
+  String usageModelTokens(String input, String output, String requests) {
+    return '$input vào / $output ra · $requests yêu cầu';
+  }
+
+  @override
+  String get usageTopUsersTitle => 'Người dùng hàng đầu';
+
+  @override
+  String usageUserRequests(int count) {
+    return '$count yêu cầu';
+  }
+
+  @override
+  String get usageWorstAnswersTitle => 'Câu trả lời bị đánh giá thấp';
+
+  @override
+  String get usageNoPreview => '(không có bản xem trước)';
+
+  @override
+  String usageUserComment(String comment) {
+    return '“$comment”';
+  }
+
+  @override
+  String get usageNoData => 'Không có dữ liệu cho giai đoạn này.';
+
+  @override
+  String get usageLoadError => 'Không thể tải bảng điều khiển sử dụng.';
+
+  @override
+  String get usageRetry => 'Thử lại';
 }

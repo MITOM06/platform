@@ -1,95 +1,131 @@
-## QA Report — TASK-12 (Workspace-level AI Settings) — 2026-06-23
+## QA Report — TASK-13 Usage & Quality Dashboard — 2026-06-23
 
-### Verdict: **PASS**
+Verdict: **PASS** (with one P3 type-drift to fix opportunistically + one owner-action for real cost numbers).
 
-All three platforms build/test green. The highest-risk item — the `aiSettings` contract
-built in parallel by web-dev and mobile-dev against the plan BEFORE the backend report existed —
-matches **exactly** across backend schema/DTO, web TypeScript, and Flutter Dart: same 7 field
-names, same types, same enum value sets, same `null`-vs-`[]` semantics. ai-service is fully
-backward compatible (env fallback on null/absent) and the Redis invalidation channel name is
-identical on publisher and subscriber. No P1 found.
-
----
-
-### Build / Test status (exact captured output, run by QA — not trusted from reports)
-
-| Service | Command | Result |
-|--------|---------|--------|
-| @platform/database | `pnpm --filter @platform/database test` | ✓ PASS — Test Suites: 4 passed, 4 total; Tests: 16 passed, 16 total |
-| auth-service | `pnpm --filter @platform/auth-service build` | ✓ PASS — webpack 5.104.1 compiled successfully in 2124 ms |
-| auth-service | `pnpm --filter @platform/auth-service test` | ✓ PASS — Test Suites: 12 passed, 12 total; Tests: 52 passed, 52 total |
-| ai-service | `pnpm --filter ai-service build` | ✓ PASS — nest build, exit 0 |
-| ai-service | `pnpm --filter ai-service test` | ✓ PASS — Test Suites: 28 passed, 28 total; Tests: 243 passed, 243 total |
-| web | `pnpm --filter @platform/web build` | ✓ PASS — "✓ Compiled successfully in 2.9s"; route `├ ƒ /admin/ai` emitted (dynamic) |
-| client (Flutter) | `cd apps/client && flutter analyze` | ✓ PASS — "No issues found! (ran in 6.4s)" (only unrelated emoji_picker_flutter SPM notice) |
-
-All seven commands exit 0. Reports' claimed numbers reproduce exactly.
+All four reports cross-checked against the code actually on disk. Note: the web and mobile
+reports both claim `_workspace/02_backend_report.md` was a stale TASK-12 file at the time they
+ran; the file on disk now is the correct TASK-13 backend report, and the implemented
+`dashboard.types.ts` matches the plan's frozen contract — so the parallel client work landed on
+the right shape regardless. Verified by reading the real files, not the reports.
 
 ---
 
-### CRITICAL CHECK — Contract parity (aiSettings) across all 3 platforms
+### Build & Test status (exact, run by QA — not trusted from reports)
 
-Sources read and field-by-field compared (not existence-checked):
-- Backend schema: `packages/database/src/mongo/workspace.schema.ts` (`WorkspaceAiSettings`)
-- Backend DTO: `apps/server/auth-service/src/modules/admin/dto/workspace.dto.ts` (`WorkspaceAiSettingsDto`)
-- Web: `apps/web/lib/api/admin-types.ts` (`WorkspaceAiSettings`)
-- Flutter: `apps/client/lib/features/admin/data/models/admin_models.dart` (`WorkspaceAiSettings`)
+| Check | Command | Result |
+|-------|---------|--------|
+| ai-service build | `pnpm --filter ai-service build` | **PASS** — `nest build`, exit 0, no errors |
+| ai-service test | `pnpm --filter ai-service test` | **PASS** — `Test Suites: 29 passed, 29 total` / `Tests: 255 passed, 255 total` (6.871 s) |
+| web build | `pnpm --filter @platform/web build` | **PASS** — exit 0; `/admin/usage` confirmed compiled at `.next/server/app/(main)/admin/usage` |
+| flutter analyze | `cd apps/client && flutter analyze` | **PASS** — `No issues found! (ran in 3.7s)` |
+| flutter test | `cd apps/client && flutter test` | **PASS** — `All tests passed!` (47 tests) — **ran explicitly, not just analyze** |
 
-| Field | Backend schema | Backend DTO validator | Web type | Flutter type | Match |
-|-------|----------------|----------------------|----------|--------------|-------|
-| `personaName` | `String, default null` | `@IsString` opt+nullable | `string \| null` | `String?` | ✓ |
-| `defaultTone` | `String, default null` | `@IsIn(friendly,professional,concise,creative)` | `AiTone \| null` (same 4) | `String?` (tones list: same 4) | ✓ |
-| `modelTier` | `String, default null` | `@IsIn(auto,simple,mid,complex)` | `AiModelTier \| null` (same 4) | `String?` (modelTiers: same 4) | ✓ |
-| `webSearchEnabled` | `Boolean, default null` | `@IsBoolean` opt+nullable | `boolean \| null` | `bool?` | ✓ |
-| `thinkingEnabled` | `Boolean, default null` | `@IsBoolean` opt+nullable | `boolean \| null` | `bool?` | ✓ |
-| `monthlyTokenLimit` | `Number, default null` | `@IsInt @Min(0)` opt+nullable | `number \| null` | `int?` | ✓ |
-| `allowedConnectors` | `[String], default () => null` | `@IsArray @IsString({each})` opt+nullable | `string[] \| null` | `List<String>?` | ✓ |
-
-**Exactly 7 fields on every platform — no extra, none missing. Names, types, and enum value sets all match.**
-
-**`null`-vs-`[]` semantics for `allowedConnectors` (the most fragile point) — verified on all layers:**
-- Backend schema uses `default: () => null` (function default) specifically because a bare
-  `default: null` on a Mongoose array prop is coerced to `[]` — this preserves the null (inherit)
-  vs [] (allow none) distinction. ✓
-- Backend resolve (`ai-service settings.service.ts:99`): `allowedConnectors: s.allowedConnectors ?? null`
-  — null/absent ⇒ null (inherit); [] preserved. ✓
-- Backend filter (`tool-registry.service.ts:37`): `if (allowedConnectors == null) return tools` (inherit, no filter); a `[]` produces an empty allow-set ⇒ all MCP tools dropped. ✓
-- Web parse/save (`WorkspaceAiSettings.tsx`): "Restrict" Switch OFF ⇒ `null`; ON ⇒ explicit list (may be `[]`). ✓
-- Flutter parse (`admin_models.dart:177`): `j.containsKey('allowedConnectors') && j[...] != null ? list : null`
-  — distinguishes absent (null=inherit) from explicit []. Save (`_buildAiSettings`): `_restrictConnectors ? _allowed : null`. ✓
-
-No drift. **Contract parity: PASS (no P1).**
+Both Flutter `analyze` AND `test` were run (the prior stale-test footgun was avoided). No new
+test was added for the read-only mobile mirror; logic lives in defensively-parsed models.
 
 ---
 
-### Cross-platform sync (.claude/rules/sync.md)
+### Contract parity — `GET /usage/dashboard` (highest-risk check)
 
-- [x] **Both clients gate by MANAGE_WORKSPACE.** Web: `<RequireCap cap="MANAGE_WORKSPACE">` in `admin/ai/page.tsx` + nav entry `{ href:'/admin/ai', cap:'MANAGE_WORKSPACE' }` in `AdminShell.tsx`. Flutter: `_Section(Cap.manageWorkspace, Icons.auto_awesome, …)` in `admin_screen.dart`. Same capability, no new capability.
-- [x] **Both mutate via the existing GET/PATCH /admin/workspace** — no new endpoint/client/hook. Web: `useWorkspace()` + `useUpdateWorkspace()` → `save.mutate({ aiSettings })`. Flutter: `workspaceProvider.notifier.save({'aiSettings': …})` (reused `AdminRepository.updateWorkspace` on authDio :3001).
-- [x] **Same field set + matching controls.** Both emit the identical 7-field partial `{ aiSettings: {...} }`:
-  persona text, tone dropdown, model-tier dropdown, **tri-state** web-search & thinking (Default/Inherit · On · Off — neither uses a plain Switch, both can express `null`), token-limit number (empty⇒null, 0 preserved), and a **connector allow-list restrict switch** (off⇒null inherit, on⇒explicit list possibly []) constrained to `connectorAllowList ∩ catalog`.
-- [x] **i18n keys present in all 7 locales on BOTH platforms.** Web `messages/{en,vi,zh,ja,ko,es,fr}.json`: AI key count uniform across all 7 (identical per locale). Flutter `app_*.arb`: exactly **30** `adminNavAi`/`adminAi*` keys in each of the 7 locales (uniform). No locale missing keys; `flutter gen-l10n` regenerated (analyze clean).
+Source of truth: ai-service `src/usage/dashboard.types.ts` (frozen). Compared field-for-field
+against web `lib/api/types.ts` `DashboardResponse` and Flutter
+`features/admin/data/models/usage_dashboard_models.dart` `UsageDashboard`.
+
+| Top-level field | Backend type | Web (`DashboardResponse`) | Flutter (`UsageDashboard`) | Match |
+|---|---|---|---|---|
+| `range {from,to,label}` | `string,string,string` | `UsageRange` same | `UsageRange` (`String?` x3) | ✓ |
+| `totals.inputTokens` | number | number | int | ✓ |
+| `totals.outputTokens` | number | number | int | ✓ |
+| `totals.totalTokens` | number | number | int | ✓ |
+| `totals.requestCount` | number | number | int | ✓ |
+| `totals.estimatedCostUsd` | number | number | double | ✓ |
+| `daily[] {date,inputTokens,outputTokens,totalTokens,requestCount}` | `DailyUsage[]` | `UsageDailyPoint[]` (drives chart) | **absent (intentional)** | ✓* |
+| `perModelCost[].model` | string | string | `String` | ✓ |
+| `perModelCost[].inputTokens/outputTokens/requestCount` | number x3 | number x3 | int x3 | ✓ |
+| `perModelCost[].inputPricePerMTok/outputPricePerMTok` | number x2 | number x2 | double x2 | ✓ |
+| `perModelCost[].costUsd` | number | number | double | ✓ |
+| `topUsers[].userId` | string | string | `String` | ✓ |
+| `topUsers[].displayName` | string | string | `String?` | ✓ (see note) |
+| `topUsers[].totalTokens/requestCount` | number x2 | number x2 | int x2 | ✓ |
+| **`topUsers[].estimatedCostUsd` (pro-rated)** | number | number | double | ✓ — present in all three; pro-rated semantics handled backend-side |
+| `feedback.up/down/total` | number x3 | number x3 | int x3 | ✓ |
+| `feedback.thumbsDownRate` | number (0..1) | number | double | ✓ |
+| `feedback.worstAnswers[].messageId/conversationId` | string x2 | string x2 | `String` / `String?` | ✓ |
+| `feedback.worstAnswers[].comment` | `string \| null` | `string \| null` | `String?` | ✓ |
+| `feedback.worstAnswers[].answerPreview` | string | string | `String?` | ✓ |
+| `feedback.worstAnswers[].createdAt` | **`string \| null`** | **`string` (non-null)** | `String?` | ⚠ P3 drift |
+
+`*` **`daily` absent in Flutter is intentional, NOT drift.** Per plan D6 the mobile mirror omits
+charts; it simply doesn't parse a field it never renders, and the Dart parser ignores extra
+JSON keys. The pro-rated `topUsers[].estimatedCostUsd` (the field flagged as highest-risk) is
+present and correctly typed in all three layers; the backend documents it as a token-volume
+pro-rated share (not exact), which both clients render verbatim — acceptable.
 
 ---
 
-### Backend behavior confirmations
+### Gating (auth boundary)
 
-- [x] **ai-service env fallback when aiSettings null/absent (backward compatible).** `settings.service.ts resolve()` maps each null field to its env/config value: `webSearchEnabled ?? config.webSearch.enabled (true)`, `thinkingEnabled ?? config.ai.enableThinking (false)`, `monthlyTokenLimit ?? config.quota.monthlyTokenLimit ?? 500000`, `modelTier 'auto' ⇒ env router`, persona null ⇒ persona-layer default. Fresh deploy (`findOne` ⇒ null) ⇒ pure env defaults. `0`/`false` correctly preserved as real overrides (uses `??`, not `||`). Load failures fall back to env-only and are NOT cached. Threaded into all 5 read paths in `ai.service.ts` (quota :152, persona :220-221, forcedTier :256, thinking :398, web-search/connectors :418-419).
-- [x] **Redis `ai:settings:invalidate` channel name matches publisher ↔ subscriber.** Publisher: auth-service `admin.service.ts:39` `AI_SETTINGS_INVALIDATE_CHANNEL = 'ai:settings:invalidate'`, published only when `dto.aiSettings !== undefined` (failure non-fatal, logged). Subscriber: ai-service `settings-invalidator.service.ts:7` same literal, channel-filtered so it coexists with the kb:* subscriber → `settingsService.invalidate()`. 60s TTL is the safety net.
-- [x] **Deep-merge, not replace.** `updateWorkspace()` builds per-key dot-path `$set` (`aiSettings.<key>`), skips `undefined`, preserves `null` as meaningful "inherit" — a partial PATCH never wipes sibling fields.
-- [x] **Subset validation.** `validateAiSettings()` rejects (400 `AI_CONNECTORS_NOT_IN_ALLOW_LIST`) a non-empty `allowedConnectors` not ⊆ `connectorAllowList`; `null` and `[]` always pass.
+| Layer | Mechanism | Verified |
+|-------|-----------|----------|
+| Backend | `@UseGuards(JwtAuthGuard, RequirePermissionGuard)` on `@Controller('usage')` + `@RequirePermission(Capability.MANAGE_WORKSPACE)` on `GET /dashboard` | ✓ `usage.controller.ts` L19/L24-25; imports from `@platform/database` |
+| Backend wiring | `PassportModule` + `SharedJwtStrategy` registered app-wide (first ai-service controller to use these guards) | ✓ per backend report; build+tests pass |
+| → 401 unauth / 403 without cap | `RequirePermissionGuard` reads JWT `perms` claim | ✓ standard shared guard, same as connector-service |
+| Web | `<RequireCap cap="MANAGE_WORKSPACE">` wraps page; `ADMIN_SECTIONS` entry gated `cap: 'MANAGE_WORKSPACE'` | ✓ `admin/usage/page.tsx` L8, `AdminShell.tsx` L38 |
+| Web base URL | `aiApi` instance (`NEXT_PUBLIC_AI_URL \|\| '/api/ai'`), own `injectToken` + 401 interceptor; `usage.ts` calls `aiApi.get('/usage/dashboard')` — NOT chatApi/authApi | ✓ `axios.ts` L22-38, `usage.ts` |
+| Flutter | Admin section gated `Cap.manageWorkspace` (`admin_screen.dart` L43-44); repo uses `DioClient.createAiDio` → `aiBaseUrl` (:3002) — NOT chatDio/authDio | ✓ `usage_repository.dart`, `dio_client.dart` L62-67, `app_config.dart` L33 |
+
+Both clients gate by `MANAGE_WORKSPACE` and hit the ai-service base directly. No bypass.
 
 ---
 
-### Findings
+### Cross-platform sync (per .claude/rules/sync.md)
 
-| Severity | File:line | Finding | Recommendation |
-|----------|-----------|---------|----------------|
-| Info (known limitation, NOT a blocker) | `ai-service/tools/tool-registry.service.ts:23` | Custom MCP servers are namespaced `mcp__custom:<id>__<tool>`; their provider segment `custom:<id>` is not a catalog id, so a custom MCP server can never appear in `allowedConnectors` and is **dropped whenever a non-null AI allow-list is set**. This is the conservative deny-by-default, documented in the plan and backend report. | Accept as documented deferral. Follow-up if needed: expose `custom:<id>` ids in the admin UI or have connector-service return a per-tool connector id. |
-| Info (no functional impact) | web `WorkspaceAiSettings.tsx` vs Flutter `_buildAiSettings()` | `modelTier`: Flutter maps explicit `'auto'` ⇒ `null` before sending; web sends `'auto'` literally. Backend `normalizeModelTier('auto')`/`null` both resolve to the env router, so behavior is identical. Cosmetic only — not drift. | No action. |
-| Info | `ai-service/src/ai/ai.service.ts` (604 lines) | Over the ai-service 300-line soft limit; pre-existing, TASK-12 added ~15 net lines. | Out of scope; leave as-is. |
+- Both clients render the shared core metrics from the identical endpoint: total/period tokens,
+  request count, estimated cost (incl. per-model breakdown), 👎 rate, top users, worst-rated
+  answers. ✓
+- **D6 web-primary deviation is INTENTIONAL (accepted plan decision), not a failure:** web adds the
+  daily bar chart + month selector + up-to-10 lists; mobile is a minimal read-only panel (no chart,
+  no month selector, top-5/worst-5 caps). This is an admin/ops dashboard, not a chat/STOMP/message
+  surface, so the sync rule's hard P1 cases (message types, STOMP events) do not apply. Recorded as
+  designed.
+- i18n: **complete on both platforms across all 7 locales.**
+  - Web: `navUsage` + `usageDashboard` group (incl. `feedbackSummary`) present in en/vi/zh/ja/ko/es/fr — 7/7.
+  - Mobile: 17 usage ARB keys present in all 7 `app_*.arb` — 17/17 each; `flutter gen-l10n` ran, generated files not hand-edited.
 
-No Blocker, P1, or P2 issues.
+---
+
+### Issues found
+
+| Severity | File:line | Issue | Recommended fix |
+|----------|-----------|-------|-----------------|
+| P3 | `apps/web/lib/api/types.ts:301` + `usage-dashboard-parts.tsx:231` | `UsageWorstAnswer.createdAt` typed `string` (non-null) but backend `dashboard.types.ts:65` returns `string \| null`. Web renders `new Date(a.createdAt).toLocaleString()`; on a `null` value this yields the 1970 epoch instead of a clean blank. No crash. Flutter (`String?`) handles it correctly. | Type web field as `string \| null` and guard the render (`a.createdAt ? new Date(a.createdAt).toLocaleString() : ''`). Cosmetic; low likelihood (backend only nulls when a feedback row lacks `createdAt`). |
+
+No P1/P2 issues. No backend-only feature missing from clients; no one-client-only feature.
+
+---
+
+### Owner action items (operational, not code defects)
+
+1. **Set the per-model price-map env vars in each deployment for real cost numbers.** ai-service
+   `configuration.ts` seeds defaults (`AI_PRICE_DEFAULT_IN=3`, `_OUT=15`, plus haiku/sonnet/opus
+   seeds) and falls back gracefully, but `estimatedCostUsd` / `perModelCost[].costUsd` will be
+   estimates off the seeded constants until `AI_PRICE_<MODELKEY>_IN/_OUT` are set to the real
+   billing prices. Format: model id upper-cased, non-alphanumerics → `_` (e.g. `claude-opus-4-8`
+   → `AI_PRICE_CLAUDE_OPUS_4_8_IN` / `_OUT`).
+2. **Set `NEXT_PUBLIC_AI_URL` in the web deploy env** (added to `.env.local`/`.env.production`/
+   `.env.example`; must also be set in the actual deploy env or the admin page falls back to
+   `/api/ai` and can't reach ai-service in prod).
+3. **Watch `messages` per-model aggregation latency at scale.** No `{senderId, createdAt}` index
+   was added (deliberately, per plan + the prod auto-index trap). Add it explicitly only if the
+   dashboard shows latency on a busy month.
+
+---
 
 ### Conclusion
-**PASS** — Builds and tests green on all 3 platforms (DB 16, auth 52, ai 243 tests; web compiled; flutter analyze clean). The parallel-built `aiSettings` contract matches exactly across backend schema/DTO, web, and Flutter (7 fields, types, enums, and the null-vs-[] connector semantics). Both clients gate by MANAGE_WORKSPACE and ride the existing GET/PATCH /admin/workspace with matching controls and full 7-locale i18n. ai-service is backward compatible (env fallback) and the Redis invalidation channel matches end-to-end. The custom-MCP allow-list gap is an accepted documented limitation, not a blocker. No owner action required to ship.
+
+**PASS** — Backend endpoint, web full dashboard, and mobile minimal mirror all build and test
+clean. Contract parity holds field-for-field across all three layers (including the high-risk
+pro-rated `topUsers[].estimatedCostUsd`). Gating is correct and routed to the ai-service base on
+both clients. i18n is complete in all 7 locales on both platforms. The D6 web-primary deviation is
+the intended design. One P3 cosmetic type-drift on `worstAnswers[].createdAt` nullability in the
+web types, and the price-map env vars must be set per deployment for accurate cost figures.

@@ -185,7 +185,9 @@
   "groupCallParticipants": "{count, plural, =1{참여자 1명} other{참여자 {count}명}}",
   "@groupCallParticipants": {
     "placeholders": {
-      "count": { "type": "int" }
+      "count": {
+        "type": "int"
+      }
     }
   },
   "groupCallNotetakerActive": "AI가 메모하고 있습니다",
@@ -198,27 +200,35 @@
   "activeCallBanner": "그룹 통화 · {count}명 참여",
   "@activeCallBanner": {
     "placeholders": {
-      "count": { "type": "int" }
+      "count": {
+        "type": "int"
+      }
     }
   },
   "incomingGroupCallTitle": "수신 그룹 통화",
   "incomingGroupCallBody": "{name}님이 그룹 통화를 시작했습니다",
   "@incomingGroupCallBody": {
     "placeholders": {
-      "name": { "type": "String" }
+      "name": {
+        "type": "String"
+      }
     }
   },
   "meetingSummaryTitle": "회의 요약",
   "meetingSummaryDuration": "통화 시간 {duration}",
   "@meetingSummaryDuration": {
     "placeholders": {
-      "duration": { "type": "String" }
+      "duration": {
+        "type": "String"
+      }
     }
   },
   "meetingSummaryAttendees": "참석자: {names}",
   "@meetingSummaryAttendees": {
     "placeholders": {
-      "names": { "type": "String" }
+      "names": {
+        "type": "String"
+      }
     }
   },
   "meetingSummaryOverview": "개요",
@@ -822,5 +832,22 @@
   "editNicknames": "별명 편집",
   "nicknameModalTitle": "별명",
   "nicknameNonePlaceholder": "별명 없음",
-  "nicknameYouSuffix": "(나)"
+  "nicknameYouSuffix": "(나)",
+  "adminNavUsage": "사용량",
+  "usageThisMonth": "이번 달",
+  "usageTotalTokens": "총 토큰",
+  "usageRequests": "요청 수",
+  "usageEstCost": "예상 비용",
+  "usageThumbsDownRate": "비추천 비율",
+  "usageFeedbackBreakdown": "{total}건 중 {down}건",
+  "usagePerModelTitle": "모델별 비용",
+  "usageModelTokens": "입력 {input} / 출력 {output} · {requests}건",
+  "usageTopUsersTitle": "상위 사용자",
+  "usageUserRequests": "{count}건의 요청",
+  "usageWorstAnswersTitle": "평가가 가장 낮은 답변",
+  "usageNoPreview": "(답변 미리보기 없음)",
+  "usageUserComment": "“{comment}”",
+  "usageNoData": "이 기간의 데이터가 없습니다.",
+  "usageLoadError": "사용량 대시보드를 불러오지 못했습니다.",
+  "usageRetry": "다시 시도"
 }

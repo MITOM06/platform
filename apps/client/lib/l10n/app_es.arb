@@ -185,7 +185,9 @@
   "groupCallParticipants": "{count, plural, =1{1 participante} other{{count} participantes}}",
   "@groupCallParticipants": {
     "placeholders": {
-      "count": { "type": "int" }
+      "count": {
+        "type": "int"
+      }
     }
   },
   "groupCallNotetakerActive": "La IA está tomando notas",
@@ -198,27 +200,35 @@
   "activeCallBanner": "Llamada grupal · {count} unidos",
   "@activeCallBanner": {
     "placeholders": {
-      "count": { "type": "int" }
+      "count": {
+        "type": "int"
+      }
     }
   },
   "incomingGroupCallTitle": "Llamada grupal entrante",
   "incomingGroupCallBody": "{name} inició una llamada grupal",
   "@incomingGroupCallBody": {
     "placeholders": {
-      "name": { "type": "String" }
+      "name": {
+        "type": "String"
+      }
     }
   },
   "meetingSummaryTitle": "Resumen de la reunión",
   "meetingSummaryDuration": "Duración {duration}",
   "@meetingSummaryDuration": {
     "placeholders": {
-      "duration": { "type": "String" }
+      "duration": {
+        "type": "String"
+      }
     }
   },
   "meetingSummaryAttendees": "Asistentes: {names}",
   "@meetingSummaryAttendees": {
     "placeholders": {
-      "names": { "type": "String" }
+      "names": {
+        "type": "String"
+      }
     }
   },
   "meetingSummaryOverview": "Resumen",
@@ -822,5 +832,22 @@
   "editNicknames": "Editar apodos",
   "nicknameModalTitle": "Apodos",
   "nicknameNonePlaceholder": "Sin apodo",
-  "nicknameYouSuffix": "(tú)"
+  "nicknameYouSuffix": "(tú)",
+  "adminNavUsage": "Uso",
+  "usageThisMonth": "Este mes",
+  "usageTotalTokens": "Tokens totales",
+  "usageRequests": "Solicitudes",
+  "usageEstCost": "Coste estimado",
+  "usageThumbsDownRate": "Tasa de pulgares abajo",
+  "usageFeedbackBreakdown": "{down} de {total} valoradas",
+  "usagePerModelTitle": "Coste por modelo",
+  "usageModelTokens": "{input} ent. / {output} sal. · {requests} sol.",
+  "usageTopUsersTitle": "Usuarios principales",
+  "usageUserRequests": "{count} solicitudes",
+  "usageWorstAnswersTitle": "Respuestas peor valoradas",
+  "usageNoPreview": "(sin vista previa de la respuesta)",
+  "usageUserComment": "«{comment}»",
+  "usageNoData": "No hay datos para este periodo.",
+  "usageLoadError": "No se pudo cargar el panel de uso.",
+  "usageRetry": "Reintentar"
 }

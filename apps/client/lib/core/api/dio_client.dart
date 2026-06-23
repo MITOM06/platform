@@ -16,6 +16,9 @@ class DioClient {
   /// Public base URL of the connector-service (MCP connectors / integrations).
   static String get connectorBaseUrl => AppConfig.connectorBaseUrl;
 
+  /// Public base URL of the ai-service (:3002).
+  static String get aiBaseUrl => AppConfig.aiBaseUrl;
+
   static Dio createAuthDio(
     FlutterSecureStorage storage, {
     void Function()? onForceLogout,
@@ -42,6 +45,28 @@ class DioClient {
       baseUrl: AppConfig.chatBaseUrl,
       connectTimeout: const Duration(seconds: 10),
       receiveTimeout: const Duration(seconds: 10),
+      headers: {'Content-Type': 'application/json'},
+    ));
+    dio.interceptors.add(_AuthHeaderInterceptor(storage));
+    dio.interceptors.add(const _NetworkErrorInterceptor());
+    dio.interceptors.add(
+      _TokenRefreshInterceptor(storage, dio, onForceLogout: onForceLogout),
+    );
+    return dio;
+  }
+
+  /// Dio for the ai-service (:3002). Carries the same JWT/refresh/error
+  /// interceptors as the other services. Used by the admin usage/quality
+  /// dashboard (`GET /usage/dashboard`). NEVER reuse the chat/auth Dio for this
+  /// — base URLs differ and mixing them is a known footgun.
+  static Dio createAiDio(
+    FlutterSecureStorage storage, {
+    void Function()? onForceLogout,
+  }) {
+    final dio = Dio(BaseOptions(
+      baseUrl: AppConfig.aiBaseUrl,
+      connectTimeout: const Duration(seconds: 10),
+      receiveTimeout: const Duration(seconds: 15),
       headers: {'Content-Type': 'application/json'},
     ));
     dio.interceptors.add(_AuthHeaderInterceptor(storage));

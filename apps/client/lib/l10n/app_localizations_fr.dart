@@ -2325,4 +2325,64 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get nicknameYouSuffix => '(vous)';
+
+  @override
+  String get adminNavUsage => 'Utilisation';
+
+  @override
+  String get usageThisMonth => 'Ce mois-ci';
+
+  @override
+  String get usageTotalTokens => 'Jetons totaux';
+
+  @override
+  String get usageRequests => 'Requêtes';
+
+  @override
+  String get usageEstCost => 'Coût estimé';
+
+  @override
+  String get usageThumbsDownRate => 'Taux de pouce vers le bas';
+
+  @override
+  String usageFeedbackBreakdown(int down, int total) {
+    return '$down sur $total évaluées';
+  }
+
+  @override
+  String get usagePerModelTitle => 'Coût par modèle';
+
+  @override
+  String usageModelTokens(String input, String output, String requests) {
+    return '$input ent. / $output sort. · $requests req.';
+  }
+
+  @override
+  String get usageTopUsersTitle => 'Principaux utilisateurs';
+
+  @override
+  String usageUserRequests(int count) {
+    return '$count requêtes';
+  }
+
+  @override
+  String get usageWorstAnswersTitle => 'Réponses les moins bien notées';
+
+  @override
+  String get usageNoPreview => '(aucun aperçu de réponse)';
+
+  @override
+  String usageUserComment(String comment) {
+    return '« $comment »';
+  }
+
+  @override
+  String get usageNoData => 'Aucune donnée pour cette période.';
+
+  @override
+  String get usageLoadError =>
+      'Impossible de charger le tableau de bord d’utilisation.';
+
+  @override
+  String get usageRetry => 'Réessayer';
 }

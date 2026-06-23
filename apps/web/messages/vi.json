@@ -965,7 +965,8 @@
     "aiConnectorsHint": "Giới hạn trình kết nối mà trợ lý có thể dùng. Chỉ có thể thu hẹp danh sách của không gian làm việc.",
     "aiRestrictConnectors": "Giới hạn trình kết nối của trợ lý",
     "aiRestrictConnectorsHint": "Tắt = kế thừa danh sách của không gian làm việc. Bật = chỉ các trình kết nối đã chọn (không có nếu để trống).",
-    "aiNoConnectors": "Không có trình kết nối nào trong danh sách của không gian làm việc."
+    "aiNoConnectors": "Không có trình kết nối nào trong danh sách của không gian làm việc.",
+    "navUsage": "Sử dụng"
   },
   "call": {
     "peerFallback": "Người dùng",
@@ -1006,5 +1007,29 @@
   "notFound": {
     "title": "Trang không tồn tại",
     "backHome": "Quay về trang chủ"
+  },
+  "usageDashboard": {
+    "title": "Sử dụng & Chất lượng",
+    "subtitle": "Token, chi phí và chất lượng câu trả lời trong không gian làm việc",
+    "month": "Tháng",
+    "loading": "Đang tải bảng điều khiển…",
+    "loadError": "Không tải được bảng sử dụng",
+    "noData": "Không có dữ liệu",
+    "totalTokens": "Tổng token",
+    "requests": "Yêu cầu",
+    "estimatedCost": "Chi phí ước tính",
+    "thumbsDownRate": "Tỷ lệ 👎",
+    "dailyChart": "Token theo ngày",
+    "inputTokens": "Token đầu vào",
+    "outputTokens": "Token đầu ra",
+    "perModelCost": "Chi phí theo mô hình",
+    "model": "Mô hình",
+    "cost": "Chi phí",
+    "topUsers": "Người dùng hàng đầu",
+    "user": "Người dùng",
+    "tokens": "Token",
+    "worstAnswers": "Câu trả lời bị đánh giá thấp nhất",
+    "noWorstAnswers": "Không có câu trả lời bị 👎 trong kỳ này",
+    "feedbackSummary": "{up} 👍 · {down} 👎 · {total} lượt đánh giá"
   }
 }

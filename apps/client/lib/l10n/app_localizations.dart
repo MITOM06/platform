@@ -4308,6 +4308,108 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'(you)'**
   String get nicknameYouSuffix;
+
+  /// No description provided for @adminNavUsage.
+  ///
+  /// In en, this message translates to:
+  /// **'Usage'**
+  String get adminNavUsage;
+
+  /// No description provided for @usageThisMonth.
+  ///
+  /// In en, this message translates to:
+  /// **'This month'**
+  String get usageThisMonth;
+
+  /// No description provided for @usageTotalTokens.
+  ///
+  /// In en, this message translates to:
+  /// **'Total tokens'**
+  String get usageTotalTokens;
+
+  /// No description provided for @usageRequests.
+  ///
+  /// In en, this message translates to:
+  /// **'Requests'**
+  String get usageRequests;
+
+  /// No description provided for @usageEstCost.
+  ///
+  /// In en, this message translates to:
+  /// **'Estimated cost'**
+  String get usageEstCost;
+
+  /// No description provided for @usageThumbsDownRate.
+  ///
+  /// In en, this message translates to:
+  /// **'Thumbs-down rate'**
+  String get usageThumbsDownRate;
+
+  /// No description provided for @usageFeedbackBreakdown.
+  ///
+  /// In en, this message translates to:
+  /// **'{down} of {total} rated'**
+  String usageFeedbackBreakdown(int down, int total);
+
+  /// No description provided for @usagePerModelTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Cost by model'**
+  String get usagePerModelTitle;
+
+  /// No description provided for @usageModelTokens.
+  ///
+  /// In en, this message translates to:
+  /// **'{input} in / {output} out · {requests} req'**
+  String usageModelTokens(String input, String output, String requests);
+
+  /// No description provided for @usageTopUsersTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Top users'**
+  String get usageTopUsersTitle;
+
+  /// No description provided for @usageUserRequests.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} requests'**
+  String usageUserRequests(int count);
+
+  /// No description provided for @usageWorstAnswersTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Worst-rated answers'**
+  String get usageWorstAnswersTitle;
+
+  /// No description provided for @usageNoPreview.
+  ///
+  /// In en, this message translates to:
+  /// **'(no answer preview)'**
+  String get usageNoPreview;
+
+  /// No description provided for @usageUserComment.
+  ///
+  /// In en, this message translates to:
+  /// **'“{comment}”'**
+  String usageUserComment(String comment);
+
+  /// No description provided for @usageNoData.
+  ///
+  /// In en, this message translates to:
+  /// **'No data for this period.'**
+  String get usageNoData;
+
+  /// No description provided for @usageLoadError.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load the usage dashboard.'**
+  String get usageLoadError;
+
+  /// No description provided for @usageRetry.
+  ///
+  /// In en, this message translates to:
+  /// **'Retry'**
+  String get usageRetry;
 }
 
 class _AppLocalizationsDelegate
