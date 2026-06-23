@@ -3,6 +3,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { ConfigService } from '@nestjs/config';
 import { DocumentExtractorService } from './document-extractor.service';
+import { VisionDescribeService } from './vision-describe.service';
 import { TextChunkerService } from './text-chunker.service';
 import { EmbeddingService } from './embedding.service';
 import { VectorStoreService } from './vector-store.service';
@@ -14,10 +15,14 @@ import { KbProcessPayload } from './kb-process-payload.interface';
 export class KbProcessorService {
   private readonly logger = new Logger(KbProcessorService.name);
   private readonly collection: string;
+  private readonly visionEnabled: boolean;
+  private readonly visionPdfEnabled: boolean;
+  private readonly visionMinTextChars: number;
 
   constructor(
     @InjectModel(KbDocument.name) private readonly kbDocumentModel: Model<KbDocumentDocument>,
     private readonly documentExtractor: DocumentExtractorService,
+    private readonly visionDescribe: VisionDescribeService,
     private readonly textChunker: TextChunkerService,
     private readonly embeddingService: EmbeddingService,
     private readonly vectorStore: VectorStoreService,
@@ -26,6 +31,10 @@ export class KbProcessorService {
   ) {
     this.collection =
       this.configService.get<string>('config.kb.qdrantCollection') ?? 'knowledge';
+    this.visionEnabled = this.configService.get<boolean>('config.kb.visionEnabled') ?? true;
+    this.visionPdfEnabled = this.configService.get<boolean>('config.kb.visionPdfEnabled') ?? true;
+    this.visionMinTextChars =
+      this.configService.get<number>('config.kb.visionMinTextChars') ?? 64;
   }
 
   async processDocument(payload: KbProcessPayload): Promise<void> {
@@ -59,8 +68,8 @@ export class KbProcessorService {
       const arrayBuffer = await response.arrayBuffer();
       const buffer = Buffer.from(arrayBuffer);
 
-      // Extract text
-      const text = await this.documentExtractor.extractText(buffer, mimeType);
+      // Extract text (image uploads & sparse/scanned PDFs route through vision).
+      const text = await this.resolveText(buffer, mimeType);
 
       // Chunk
       const chunkSize = this.configService.get<number>('config.kb.chunkSize') ?? 512;
@@ -110,6 +119,61 @@ export class KbProcessorService {
         })
         .catch(() => {});
     }
+  }
+
+  /**
+   * Resolve the indexable text for a document (TASK-10 vision). Routing:
+   *  - image/* (vision-supported): describe via Claude vision → use as text.
+   *  - PDF whose pdf-parse text is sparse (< KB_VISION_MIN_TEXT_CHARS): describe
+   *    the whole PDF via the native document block; fall back to sparse text.
+   *  - everything else: extract as before.
+   * Vision is fully gated (KB_VISION_ENABLED / KB_VISION_PDF_ENABLED + API key)
+   * and degrades gracefully — a vision failure NEVER crashes the pipeline; it
+   * falls back to today's behavior (image → throw so the doc errors; sparse PDF
+   * → index the sparse text it has).
+   */
+  private async resolveText(buffer: Buffer, mimeType: string): Promise<string> {
+    const visionUsable = this.visionEnabled && this.visionDescribe.isAvailable();
+
+    // (a) Direct image upload.
+    if (this.documentExtractor.isImage(mimeType)) {
+      if (visionUsable && this.documentExtractor.isVisionSupportedImage(mimeType)) {
+        try {
+          const description = await this.visionDescribe.describeImage(buffer, mimeType);
+          if (description.trim()) return description;
+          this.logger.warn(`Vision returned empty description for image (${mimeType})`);
+        } catch (err) {
+          this.logger.warn(
+            `Image vision failed (${mimeType}), degrading: ${(err as Error).message}`,
+          );
+        }
+      }
+      // Vision off / unsupported image (heic/bmp/svg) / vision failed →
+      // preserve prior behavior: extractText throws → doc marked error.
+      return this.documentExtractor.extractText(buffer, mimeType);
+    }
+
+    // Non-image: extract as before.
+    const text = await this.documentExtractor.extractText(buffer, mimeType);
+
+    // (b) Scanned/image-heavy PDF whose extracted text is sparse → whole-doc vision.
+    const isPdf = mimeType.toLowerCase().split(';')[0].trim() === 'application/pdf';
+    if (
+      isPdf &&
+      visionUsable &&
+      this.visionPdfEnabled &&
+      text.trim().length < this.visionMinTextChars
+    ) {
+      try {
+        const description = await this.visionDescribe.describePdf(buffer);
+        if (description.trim()) return description;
+        this.logger.warn('PDF vision returned empty description, falling back to sparse text');
+      } catch (err) {
+        this.logger.warn(`PDF vision failed, falling back to sparse text: ${(err as Error).message}`);
+      }
+    }
+
+    return text;
   }
 
   /**

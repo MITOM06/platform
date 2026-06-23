@@ -1,5 +1,6 @@
 package com.platform.chatservice.controller;
 
+import com.platform.chatservice.dto.AiHistoryEntry;
 import com.platform.chatservice.dto.ChatMessageDto;
 import com.platform.chatservice.dto.MessageResponse;
 import com.platform.chatservice.dto.SendMessageRequest;
@@ -62,7 +63,7 @@ public class ChatController {
       CompletableFuture.runAsync(
           () -> {
             try {
-              List<Map<String, String>> history = messageService.getAiHistory(uid, convId);
+              List<AiHistoryEntry> history = messageService.getAiHistory(uid, convId);
               String stripped = raw.replaceAll("(?i)@(AI|ponai)\\b", "").trim();
               aiRedisPublisher.publishAiRequest(convId, uid, uid, stripped, history);
             } catch (Exception ignored) {

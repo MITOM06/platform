@@ -41,4 +41,28 @@ describe('DocumentExtractorService', () => {
       service.extractText(Buffer.from('data'), 'application/octet-stream'),
     ).rejects.toThrow(UnsupportedFileTypeException);
   });
+
+  it('still throws UnsupportedFileTypeException for image mimes (vision is routed by the processor)', async () => {
+    await expect(service.extractText(Buffer.from('img'), 'image/png')).rejects.toThrow(
+      UnsupportedFileTypeException,
+    );
+  });
+
+  describe('vision helpers', () => {
+    it('isVisionSupportedImage true only for jpeg/png/gif/webp', () => {
+      expect(service.isVisionSupportedImage('image/png')).toBe(true);
+      expect(service.isVisionSupportedImage('image/jpeg')).toBe(true);
+      expect(service.isVisionSupportedImage('IMAGE/WEBP')).toBe(true);
+      expect(service.isVisionSupportedImage('image/gif')).toBe(true);
+      expect(service.isVisionSupportedImage('image/heic')).toBe(false);
+      expect(service.isVisionSupportedImage('image/svg+xml')).toBe(false);
+      expect(service.isVisionSupportedImage('application/pdf')).toBe(false);
+    });
+
+    it('isImage true for any image/* mime', () => {
+      expect(service.isImage('image/heic')).toBe(true);
+      expect(service.isImage('image/png')).toBe(true);
+      expect(service.isImage('application/pdf')).toBe(false);
+    });
+  });
 });

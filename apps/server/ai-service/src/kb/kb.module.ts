@@ -2,6 +2,7 @@ import { DynamicModule, Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { KbDocument, KbDocumentSchema } from './kb-document.schema';
 import { DocumentExtractorService } from './document-extractor.service';
+import { VisionDescribeService } from './vision-describe.service';
 import { TextChunkerService } from './text-chunker.service';
 import { EmbeddingService } from './embedding.service';
 import { VectorStoreService } from './vector-store.service';
@@ -17,6 +18,7 @@ const kbFeature = MongooseModule.forFeature([
   imports: [kbFeature, RedisModule],
   providers: [
     DocumentExtractorService,
+    VisionDescribeService,
     TextChunkerService,
     EmbeddingService,
     VectorStoreService,

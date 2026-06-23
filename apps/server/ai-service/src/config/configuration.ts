@@ -98,6 +98,18 @@ export default registerAs('config', () => ({
     // enlarged candidate pool before keeping topK. Set false to use vector-only.
     hybridEnabled: process.env.KB_HYBRID_ENABLED !== 'false',
     candidatePool: parseInt(process.env.KB_CANDIDATE_POOL ?? '25', 10),
+    // ── TASK-10 Vision / image understanding (KB half) ──────────────────────
+    // Master switch for KB vision. OFF ⇒ behavior is exactly as before (image
+    // uploads error, sparse/scanned PDFs index whatever sparse text they have).
+    visionEnabled: process.env.KB_VISION_ENABLED !== 'false',
+    // Whole-document vision transcription for scanned/image-heavy PDFs whose
+    // pdf-parse text is sparse. Independent toggle under the master switch.
+    visionPdfEnabled: process.env.KB_VISION_PDF_ENABLED !== 'false',
+    // Below this many extracted chars a PDF is treated as scanned/image-heavy and
+    // routed to vision (when enabled). Conservative so short text PDFs don't trip.
+    visionMinTextChars: parseInt(process.env.KB_VISION_MIN_TEXT_CHARS ?? '64', 10),
+    // Per-image base64 size cap (~5MB) per the Anthropic vision constraint.
+    visionMaxImageBytes: parseInt(process.env.KB_VISION_MAX_IMAGE_BYTES ?? '5000000', 10),
   },
   cohere: {
     // Optional neural reranker. When the key is absent the pipeline gracefully
@@ -168,6 +180,22 @@ export default registerAs('config', () => ({
     // connector-service internal API base for per-user MCP tools.
     internalUrl: process.env.CONNECTOR_INTERNAL_URL ?? 'http://localhost:3003',
     internalApiKey: process.env.INTERNAL_API_KEY,
+  },
+  chat: {
+    // chat-service base used to resolve RELATIVE `/api/uploads/{id}` media refs
+    // carried in AI history image turns (TASK-10 chat vision). KB receives
+    // absolute fileUrls already; chat history URLs are relative, so ai-service
+    // fetches them against this host (authless GridFS read, same as KB does).
+    internalUrl: process.env.CHAT_INTERNAL_URL ?? 'http://localhost:8080',
+    // ── TASK-10 Vision / image understanding (chat half) ────────────────────
+    // Master switch for chat image attachments → image content blocks. OFF ⇒
+    // image history turns are dropped from the model context (text-only, as
+    // before this feature) — text turns are byte-identical regardless.
+    visionEnabled: process.env.CHAT_VISION_ENABLED !== 'false',
+    // Hard cap on how many images one turn contributes (extras dropped).
+    visionMaxImages: parseInt(process.env.CHAT_VISION_MAX_IMAGES ?? '4', 10),
+    // Per-image base64 size cap (~5MB) per the Anthropic vision constraint.
+    visionMaxImageBytes: parseInt(process.env.CHAT_VISION_MAX_IMAGE_BYTES ?? '5000000', 10),
   },
   pricing: {
     // Per-model token price map for the usage/cost dashboard (TASK-13). Values

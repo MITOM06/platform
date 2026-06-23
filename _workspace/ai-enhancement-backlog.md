@@ -142,7 +142,27 @@ For a small team, "the AI gives accurate, sourced answers" is the difference bet
 - **Acceptance:** Asking a question that needs current info triggers `web_search` and returns a cited, accurate answer.
 - **Effort:** M
 
-### TASK-10 — Vision / image understanding in KB + chat
+### TASK-10 — Vision / image understanding in KB + chat  ✅ DONE (2026-06-23)
+> **Status:** Shipped. The assistant now has eyes in both KB and chat.
+> - **KB half (ai-service):** new `VisionDescribeService` calls Claude vision (`claude-opus-4-8`) with a
+>   base64 image block (direct image uploads) or the SDK native PDF document block (scanned/sparse PDFs,
+>   text `< KB_VISION_MIN_TEXT_CHARS`) to produce a text description that flows through the existing
+>   chunk→embed→vector-store path. `document-extractor` no longer throws on images. Gated by
+>   `KB_VISION_ENABLED` (default on); fully graceful (disabled / no key / vision error / unsupported mime
+>   ⇒ prior behavior, never crashes the pipeline). Per-page PDF rasterization DEFERRED (uses native PDF block).
+> - **Chat half (ai-service):** new `ChatImageService` fetches `/api/uploads/{id}` server-side → base64 →
+>   image content blocks (enforces media-type jpeg|png|gif|webp + ~5MB + 4-image cap, fail-soft); `_agenticLoop`
+>   renders image turns (`[...imageBlocks, text]`), forces the vision-capable primary model when images are
+>   present, and suppresses the response cache for image turns.
+> - **Contract change (the one fixed):** `AiRequestPayload.history` element → structured `AiHistoryEntry`
+>   (`role, content, type?, imageUrls?`), mirrored as a Java record in chat-service. `getAiHistory` now emits
+>   `type:"image"` + parsed `imageUrls` (single URL or JSON array, like web parseImageUrls) instead of
+>   flattening image messages to a raw URL string. Text turns backward compatible (`@JsonInclude(NON_NULL)`).
+> - **Clients:** NO change required — web + Flutter already upload images, send `@AI` as a separate text turn,
+>   and render `type:"ai"`/`type:"image"`. Verified in sync (.claude/rules/sync.md).
+> Verify: ai-service build clean + 299 tests (+33); web build ok; flutter analyze clean + **flutter test 47 PASS**;
+> chat-service compiles + MessageServiceTest 32 PASS. QA PASS.
+> **Owner action:** vision defaults ON, requires `ANTHROPIC_API_KEY`; image chat turns force Opus (cost note).
 - **Why:** SMB documents are full of screenshots, scanned invoices, diagrams, and charts that text extraction silently drops today. Claude supports vision natively.
 - **Scope:**
   - KB pipeline: when a PDF page or upload is image-heavy, send the page image to Claude vision to produce a text description, index that alongside extracted text.

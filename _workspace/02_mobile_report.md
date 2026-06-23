@@ -1,66 +1,86 @@
-## Mobile Implementation Report — TASK-11 Daily Digest Opt-in Toggle
+## Mobile Implementation Report — TASK-10 Vision / image understanding
 
-### What was added
-Extended the EXISTING TASK-12 admin AI settings panel with the daily-digest opt-in.
-No new screen, no new endpoint, no message-type code. Delivery (reminders/digests)
-arrives as normal `type:"ai"` messages already rendered by `message_bubble.dart`.
+### Outcome
+**VERIFICATION ONLY — no Flutter code change needed.** The plan's conclusion holds: TASK-10
+is a backend-only change riding the existing image-upload + `@AI`-text + `type:"ai"` rendering
+pipeline. The mobile client already supports every leg of the end-to-end UX path, so a mobile
+user can already ask the AI about an uploaded image once the backend half ships. Zero client
+protocol change required; web/mobile stay in sync.
 
-Two new controls in the workspace AI settings panel:
-1. **Daily digest** — tri-state toggle (`inherit / On / Off`) reusing the existing
-   `AiTriStateTile` pattern (same as web-search & extended-thinking). `null` = inherit env.
-2. **Delivery time** — hour picker (0–23, rendered `HH:00`) via a new `AiHourPicker`
-   widget. Disabled/greyed out when the digest is not On. Shows the env default hour
-   (08:00) until an explicit hour is chosen.
+### What I verified (file:line evidence)
 
-Mutation rides the existing `PATCH /admin/workspace` via
-`workspaceProvider.notifier.save({'aiSettings': …})` — no new endpoint.
-`dailyDigestHour` is only sent when the digest is On; otherwise `null` (inherit).
+**1. A user can attach/upload an image AND reach the AI via @AI text.**
+- Attach button wired to the upload flow: `chat_screen.dart:351-352` →
+  `onAttach: () => pickAndSendMedia(context, ref, widget.conversationId)`.
+- Image pick + upload + send: `chat_screen_helpers.dart:113-128`. Multi-image pick
+  (`picker.pickMultiImage()`), uploads each via `repo.uploadFile(f)`, then:
+  - `chat_screen_helpers.dart:122` — `final content = urls.length == 1 ? urls.first : jsonEncode(urls);`
+    (single image → plain URL; multiple → JSON array — **exact parity with web's
+    `JSON.stringify(images)`**).
+  - `chat_screen_helpers.dart:123-125` — `sendMessage(content, type: 'image')`.
+- Upload endpoint returns the `/api/uploads/{id}` URL stored in `content`:
+  `chat_repository.dart:388-403` (`uploadFile` → POST `/api/uploads` on `chatDio` →
+  returns `data['url']`). This is precisely the relative URL the backend `ChatImageService`
+  will fetch + base64-encode.
+- The `@AI` mention is sent as an ordinary TEXT message, separately from the image:
+  - `chat_screen.dart:67-82` (`_onSend` → `notifier.sendMessage(content)` with default
+    `type: 'text'`).
+  - AI trigger is text-based: `chat_provider.dart:291` —
+    `_aiMentionRe = RegExp(r'@(AI|ponai)\b', caseSensitive: false)`; on match the notifier
+    inserts an optimistic `type:'ai'` streaming placeholder (`chat_provider.dart:322-340`)
+    and sends the text over STOMP `/app/chat.send` (`chat_provider.dart:354-355`,
+    `stomp_service.dart:255-270`). Mention insertion is pure composer text manipulation
+    (`chat_screen.dart:113-141`).
+- **No caption field** combining image + text into one message:
+  `chat_provider.dart:293` — `Future<void> sendMessage(String content, {String type = 'text'})`;
+  REST payload `chat_repository.dart:111-116` and STOMP payload `stomp_service.dart:260-268`
+  are both `{conversationId, content, type, replyToId?}`. This matches the plan exactly
+  (image+caption-in-one-message is explicitly DEFERRED). Acceptance flow: send image message →
+  send `@AI what's the total?` text → both land in chat-service `getAiHistory` → ai-service
+  renders the image turn as an image block.
 
-### 변경된 파일 (files touched)
-- `apps/client/lib/features/admin/data/models/admin_models.dart` — added `dailyDigestEnabled` (bool?) + `dailyDigestHour` (int?) to `WorkspaceAiSettings` model + constructor + `fromJson` (null-as-inherit, backward compatible; absent/null → null).
-- `apps/client/lib/features/admin/ui/widgets/ai_settings_controls.dart` — new `AiHourPicker` widget (0–23, disabled when digest off).
-- `apps/client/lib/features/admin/ui/widgets/workspace_ai_settings_panel.dart` — state fields `_dailyDigestEnabled`/`_dailyDigestHour`, seeding, `_buildAiSettings()` payload, new "Daily digest" section (tri-state tile + hour picker) inserted before the Quota section.
-- `apps/client/lib/l10n/app_en.arb` + 6 others (`vi, zh, ja, ko, es, fr`) — 5 new keys each.
-- `apps/client/lib/l10n/app_localizations*.dart` — regenerated via `flutter gen-l10n` (generated; not hand-edited).
+**2. AI answer (`type:"ai"`) renders normally.**
+- `chat_models.dart:387` — `bool get isAiMessage => type == 'ai'`.
+- Rendered streaming + final: `message_bubble.dart:216-220` (StreamingAiBubble while
+  streaming) and `message_bubble.dart:289-302` (FinalizedAiBubble + optional TracePanel),
+  plus error/quota/rate-limit/interrupted/unavailable sentinels (`message_bubble.dart:223-288`).
+  Fully handled.
 
-### Controls
-| Control | Field | Behavior |
-|---------|-------|----------|
-| Tri-state SegmentedButton | `dailyDigestEnabled` | inherit (null) / On (true) / Off (false) — matches existing pattern |
-| Hour dropdown (HH:00, 0–23) | `dailyDigestHour` | enabled only when digest On; null = inherit env hour |
+**3. Uploaded image messages render correctly in the thread.**
+- `message_bubble.dart:204-205` — `else if (message.isImage) ImageContent(url: message.content)`.
+- `chat_models.dart:394` — `bool get isImage => type == 'image'`.
+- `image_content.dart:26-34` — `_parseUrls(content)` decodes a JSON array of URLs OR a single
+  URL string (mirrors web `parseImageUrls` in `apps/web/lib/media.ts`); single tile + multi-image
+  grid both render (`image_content.dart:45-52`, `138-207`).
 
-### i18n 추가 키 (×7 locales)
-- `adminAiDigestSection`: "Daily digest" (section title)
-- `adminAiDailyDigest`: "Daily digest"
-- `adminAiDailyDigestDesc`: "Post a once-a-day summary of each AI conversation's activity."
-- `adminAiDailyDigestHour`: "Delivery time"
-- `adminAiDailyDigestHourDesc`: "Local hour the digest is delivered. Available when the digest is on."
+### Was any change needed?
+No. The optional input hint ("you can ask @AI about an image") is marked OPTIONAL in the plan
+(lines 56, 63) and "do both-or-neither" per sync.md (line 65). The Web section requires nothing
+for acceptance and did not add the hint, so adding it on mobile alone would BREAK web↔mobile
+parity. I therefore did NOT add it (no speculative features).
 
-All 5 keys added to en, vi, zh, ja, ko, es, fr (no English fallbacks).
+### flutter analyze result
+- `cd apps/client && flutter analyze` → **No issues found! (ran in 2.9s)** — issues: 0.
 
-### flutter analyze 결과
-- `cd apps/client && flutter analyze` → **No issues found!** (0 issues, ran in 12.1s)
+### flutter test result
+- `flutter test` → **All tests passed! (+47)** — 47 passing, 0 failing.
+  Both commands were run this session (analyze AND test) per instruction; no stale test shipped.
 
-### flutter test 결과
-- `cd apps/client && flutter test` → **All tests passed!** (47 passed, 0 failed)
-- Both commands were run (not just analyze) per the instruction.
+### i18n added keys
+- None. No new UI strings were added (verification-only).
 
-### File line limits (.claude/rules/clean-code.md)
-- workspace_ai_settings_panel.dart: 245 / 400
-- ai_settings_controls.dart: 274 / 400
-- admin_models.dart: 379 (model file; UI limit applies to widgets/screens — kept lean)
+### Confirmation
+A mobile user CAN ask the AI about an uploaded image today: they attach the image (sent as a
+`type:"image"` message carrying the `/api/uploads/{id}` URL in `content`), then send an
+`@AI ...` text message. chat-service includes the image message in AI history; the (backend)
+TASK-10 change renders that history entry as a Claude image content block. The AI's `type:"ai"`
+answer streams back and renders via the existing `message_bubble.dart` path.
 
-### Parity with web panel (.claude/rules/sync.md)
-Mobile now exposes the SAME two fields the web `WorkspaceAiSettings.tsx` panel is slated
-to add: `dailyDigestEnabled` (boolean|null) + `dailyDigestHour` (number 0–23|null), both
-gated behind the admin AI settings surface (`MANAGE_WORKSPACE`), both riding the same
-`PATCH /admin/workspace` mutation. Matches `01_plan.md` §API Contract item 3. At report
-time `grep dailyDigest apps/web/` returned no matches → web has not yet landed; the field
-names/types here are the canonical contract for web to mirror.
-
-### Notes
-- Reminder/digest DELIVERY needed zero client message-type work — they arrive as
-  `type:"ai"` messages already rendered by `message_bubble.dart` (verification-only).
-- Backward compatible: existing workspace docs with no `dailyDigest*` parse as null
-  (= inherit env); the panel shows the tri-state "inherit" segment and the env default
-  hour (08:00) placeholder.
+### Notes / caveats
+- Acceptance depends on the backend half (chat-service `getAiHistory` populating
+  `type`/`imageUrls`; ai-service `ChatImageService` fetching + base64). Mobile is ready for it.
+- Mobile uses the SAME single-URL-vs-JSON-array content encoding as web, so chat-service's
+  `parseImageUrls`-style decode on the history side covers both clients identically.
+- Mobile permits heic/webp/bmp uploads; per the plan the backend filters media types to
+  {jpeg,png,gif,webp} and degrades gracefully on unsupported types — no mobile-side filtering
+  required for acceptance.
