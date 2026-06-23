@@ -803,7 +803,19 @@
     "directorySave": "Save",
     "directoryKeyTitle": "Connect {provider}",
     "directoryKeyDesc": "Paste an API key or token. It is stored encrypted and never leaves the vault.",
-    "directoryKeyLabel": "API key"
+    "directoryKeyLabel": "API key",
+    "permManage": "Permissions",
+    "permissionsTitle": "AI permissions",
+    "permissionsSubtitle": "Control what PON AI can do with this app.",
+    "permView": "View",
+    "permCreate": "Create",
+    "permEdit": "Edit",
+    "permDelete": "Delete",
+    "permViewDesc": "Read-only access to your data.",
+    "permCreateDesc": "Let the AI create new items.",
+    "permEditDesc": "Let the AI modify existing items.",
+    "permDeleteDesc": "Let the AI delete items.",
+    "permSaved": "Permissions updated."
   },
   "skills": {
     "title": "Skills",
@@ -822,6 +834,16 @@
     "researcherDesc": "Searches the web and your Drive, returns cited answers.",
     "projectKeeperName": "Project keeper",
     "projectKeeperDesc": "Files notes and tasks into Notion, keeps databases tidy.",
+    "meetingNotesName": "Meeting notes",
+    "meetingNotesDesc": "Summarize meetings and pull out decisions and action items.",
+    "inboxTriageName": "Inbox triage",
+    "inboxTriageDesc": "Prioritize messages and suggest quick replies.",
+    "dataAnalystName": "Data analyst",
+    "dataAnalystDesc": "Analyze tables and numbers; surface trends and outliers.",
+    "docDrafterName": "Document drafter",
+    "docDrafterDesc": "Draft structured proposals, specs and reports.",
+    "translatorName": "Translator",
+    "translatorDesc": "Translate and localize text naturally across languages.",
     "sectionNum": "03 / SKILLS"
   },
   "admin": {

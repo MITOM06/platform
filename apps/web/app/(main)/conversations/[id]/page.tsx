@@ -156,6 +156,20 @@ export default function ConversationPage({ params }: Props) {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages.length, aiStream])
 
+  // Jump to the latest message instantly whenever the conversation changes.
+  // The App Router reuses this [id] page instance across conversation switches
+  // (the STOMP effect is keyed on `id` precisely because the component is NOT
+  // remounted), so the scroll container + react-virtual virtualizer otherwise
+  // keep the PREVIOUS thread's scroll offset. When the new thread renders with
+  // the same message count (cached revisit), the length-based effect above does
+  // not fire, the virtualizer positions rows at the stale offset, and the
+  // viewport shows blank until a manual scroll or full page reload. Resetting
+  // here forces a clean recompute — matching the browser-refresh behaviour.
+  useEffect(() => {
+    isPrependingRef.current = false
+    bottomRef.current?.scrollIntoView({ behavior: 'auto' })
+  }, [id])
+
   const { patchMessage, markMessageRead, appendMessage } = useMessageCache(id)
 
   const armAiWatchdog = useCallback(() => {

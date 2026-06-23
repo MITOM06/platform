@@ -803,7 +803,19 @@
     "directorySave": "Guardar",
     "directoryKeyTitle": "Conectar {provider}",
     "directoryKeyDesc": "Pega una clave API o token. Se almacena cifrado y nunca sale de la bóveda.",
-    "directoryKeyLabel": "Clave API"
+    "directoryKeyLabel": "Clave API",
+    "permManage": "Permisos",
+    "permissionsTitle": "Permisos de la IA",
+    "permissionsSubtitle": "Controla lo que PON AI puede hacer con esta app.",
+    "permView": "Ver",
+    "permCreate": "Crear",
+    "permEdit": "Editar",
+    "permDelete": "Eliminar",
+    "permViewDesc": "Acceso de solo lectura a tus datos.",
+    "permCreateDesc": "Permite que la IA cree elementos nuevos.",
+    "permEditDesc": "Permite que la IA modifique elementos existentes.",
+    "permDeleteDesc": "Permite que la IA elimine elementos.",
+    "permSaved": "Permisos actualizados."
   },
   "skills": {
     "title": "Habilidades",
@@ -822,6 +834,16 @@
     "researcherDesc": "Busca en la web y tu Drive, devuelve respuestas con citas.",
     "projectKeeperName": "Gestor de proyectos",
     "projectKeeperDesc": "Archiva notas y tareas en Notion, mantiene las bases de datos ordenadas.",
+    "meetingNotesName": "Notas de reunión",
+    "meetingNotesDesc": "Resume reuniones y extrae decisiones y tareas a realizar.",
+    "inboxTriageName": "Triaje de bandeja",
+    "inboxTriageDesc": "Prioriza mensajes y sugiere respuestas rápidas.",
+    "dataAnalystName": "Analista de datos",
+    "dataAnalystDesc": "Analiza tablas y cifras; revela tendencias y valores atípicos.",
+    "docDrafterName": "Redactor de documentos",
+    "docDrafterDesc": "Redacta propuestas, especificaciones e informes estructurados.",
+    "translatorName": "Traductor",
+    "translatorDesc": "Traduce y localiza texto con naturalidad entre idiomas.",
     "sectionNum": "03 / HABILIDADES"
   },
   "admin": {

@@ -9,6 +9,9 @@ export type ConnectorAuthType = 'oauth2' | 'apikey' | 'none'
 /** Lifecycle status of an established user connection. */
 export type ConnectionStatus = 'active' | 'expired' | 'revoked'
 
+/** A class of actions the AI may perform through a connector. */
+export type ActionGroup = 'view' | 'create' | 'edit' | 'delete'
+
 /** `GET /catalog` entry — public projection (no secret env values). */
 export interface CatalogEntry {
   id: string
@@ -29,6 +32,13 @@ export interface ConnectionView {
   scopes: string[]
   accountLabel: string | null
   lastUsedAt: string | null
+  /** Which action classes the AI may perform through this connector. */
+  actionGroups: ActionGroup[]
+}
+
+/** `GET /connections/:id/permissions` + `PUT` response shape. */
+export interface ConnectionPermissions {
+  actionGroups: ActionGroup[]
 }
 
 /** `GET /oauth/:provider/start?userId=` response. */

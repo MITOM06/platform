@@ -803,7 +803,19 @@
     "directorySave": "保存",
     "directoryKeyTitle": "连接 {provider}",
     "directoryKeyDesc": "粘贴 API 密钥或令牌。加密存储，绝不离开保险库。",
-    "directoryKeyLabel": "API 密钥"
+    "directoryKeyLabel": "API 密钥",
+    "permManage": "权限",
+    "permissionsTitle": "AI 权限",
+    "permissionsSubtitle": "控制 PON AI 在此应用中可执行的操作。",
+    "permView": "查看",
+    "permCreate": "创建",
+    "permEdit": "编辑",
+    "permDelete": "删除",
+    "permViewDesc": "只读访问您的数据。",
+    "permCreateDesc": "允许 AI 创建新项目。",
+    "permEditDesc": "允许 AI 修改现有项目。",
+    "permDeleteDesc": "允许 AI 删除项目。",
+    "permSaved": "权限已更新。"
   },
   "skills": {
     "title": "技能",
@@ -822,6 +834,16 @@
     "researcherDesc": "搜索网络和你的 Drive，返回带引用的答案。",
     "projectKeeperName": "项目管家",
     "projectKeeperDesc": "把笔记和任务归档到 Notion，保持数据库整洁。",
+    "meetingNotesName": "会议记录",
+    "meetingNotesDesc": "总结会议并提取决策与待办事项。",
+    "inboxTriageName": "收件箱整理",
+    "inboxTriageDesc": "为消息排序优先级并建议快速回复。",
+    "dataAnalystName": "数据分析",
+    "dataAnalystDesc": "分析表格与数字，发现趋势与异常值。",
+    "docDrafterName": "文档撰写",
+    "docDrafterDesc": "起草结构化的提案、规格和报告。",
+    "translatorName": "翻译",
+    "translatorDesc": "在不同语言间自然地翻译和本地化文本。",
     "sectionNum": "03 / 技能"
   },
   "admin": {

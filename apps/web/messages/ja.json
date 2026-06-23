@@ -803,7 +803,19 @@
     "directorySave": "保存",
     "directoryKeyTitle": "{provider} に接続",
     "directoryKeyDesc": "API キーまたはトークンを貼り付けます。暗号化して保存され、保管庫から出ることはありません。",
-    "directoryKeyLabel": "API キー"
+    "directoryKeyLabel": "API キー",
+    "permManage": "権限",
+    "permissionsTitle": "AI の権限",
+    "permissionsSubtitle": "PON AI がこのアプリで実行できる操作を制御します。",
+    "permView": "閲覧",
+    "permCreate": "作成",
+    "permEdit": "編集",
+    "permDelete": "削除",
+    "permViewDesc": "データへの読み取り専用アクセス。",
+    "permCreateDesc": "AI が新しい項目を作成できるようにします。",
+    "permEditDesc": "AI が既存の項目を変更できるようにします。",
+    "permDeleteDesc": "AI が項目を削除できるようにします。",
+    "permSaved": "権限を更新しました。"
   },
   "skills": {
     "title": "スキル",
@@ -822,6 +834,16 @@
     "researcherDesc": "ウェブと Drive を検索し、引用付きで回答します。",
     "projectKeeperName": "プロジェクト管理",
     "projectKeeperDesc": "メモやタスクを Notion に整理し、データベースを整えます。",
+    "meetingNotesName": "会議メモ",
+    "meetingNotesDesc": "会議を要約し、決定事項とアクション項目を抽出します。",
+    "inboxTriageName": "受信トレイ整理",
+    "inboxTriageDesc": "メッセージに優先順位を付け、すばやい返信を提案します。",
+    "dataAnalystName": "データ分析",
+    "dataAnalystDesc": "表や数値を分析し、傾向と外れ値を浮き彫りにします。",
+    "docDrafterName": "ドキュメント作成",
+    "docDrafterDesc": "構造化された提案書、仕様書、レポートを作成します。",
+    "translatorName": "翻訳",
+    "translatorDesc": "言語をまたいで自然に翻訳・ローカライズします。",
     "sectionNum": "03 / スキル"
   },
   "admin": {

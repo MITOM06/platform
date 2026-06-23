@@ -1,6 +1,8 @@
 import { connectorApi } from './axios'
 import type {
+  ActionGroup,
   CatalogEntry,
+  ConnectionPermissions,
   ConnectionView,
   CreateDirectoryEntryInput,
   CustomMcpDiscoverInput,
@@ -40,6 +42,18 @@ export const connectorService = {
 
   disconnect: (id: string) =>
     connectorApi.delete<void>(`/connections/${id}`).then((r) => r.data),
+
+  getConnectionPermissions: (id: string) =>
+    connectorApi
+      .get<ConnectionPermissions>(`/connections/${id}/permissions`)
+      .then((r) => r.data),
+
+  updateConnectionPermissions: (id: string, actionGroups: ActionGroup[]) =>
+    connectorApi
+      .put<ConnectionPermissions>(`/connections/${id}/permissions`, {
+        actionGroups,
+      })
+      .then((r) => r.data),
 
   discoverCustomMcp: (input: CustomMcpDiscoverInput) =>
     connectorApi

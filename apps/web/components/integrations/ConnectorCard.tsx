@@ -1,9 +1,11 @@
 'use client'
 
+import { useState } from 'react'
 import { useTranslations } from 'next-intl'
-import { Loader2 } from 'lucide-react'
+import { Loader2, ShieldCheck } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
+import { ConnectorPermissionsDialog } from './ConnectorPermissionsDialog'
 import type { CatalogEntry, ConnectionView } from '@/lib/api/connector-types'
 
 interface ConnectorCardProps {
@@ -46,6 +48,7 @@ export function ConnectorCard({
   onDisconnect,
 }: ConnectorCardProps) {
   const t = useTranslations('integrations')
+  const [permsOpen, setPermsOpen] = useState(false)
   const isConnected = connection?.status === 'active'
 
   const metaLabel = isConnected
@@ -102,19 +105,30 @@ export function ConnectorCard({
           {metaLabel}
         </span>
         {isConnected ? (
-          <Button
-            size="sm"
-            variant="ghost"
-            className="text-muted-foreground"
-            disabled={disconnecting}
-            onClick={() => connection && onDisconnect(connection)}
-          >
-            {disconnecting ? (
-              <Loader2 className="size-4 animate-spin" />
-            ) : (
-              t('manage')
-            )}
-          </Button>
+          <div className="flex items-center gap-0.5">
+            <Button
+              size="sm"
+              variant="ghost"
+              className="text-muted-foreground"
+              onClick={() => setPermsOpen(true)}
+            >
+              <ShieldCheck className="size-4 mr-1" />
+              {t('permManage')}
+            </Button>
+            <Button
+              size="sm"
+              variant="ghost"
+              className="text-muted-foreground"
+              disabled={disconnecting}
+              onClick={() => connection && onDisconnect(connection)}
+            >
+              {disconnecting ? (
+                <Loader2 className="size-4 animate-spin" />
+              ) : (
+                t('manage')
+              )}
+            </Button>
+          </div>
         ) : (
           <Button
             size="sm"
@@ -130,6 +144,14 @@ export function ConnectorCard({
           </Button>
         )}
       </div>
+
+      {isConnected && connection && permsOpen && (
+        <ConnectorPermissionsDialog
+          open={permsOpen}
+          onOpenChange={setPermsOpen}
+          connection={connection}
+        />
+      )}
     </div>
   )
 }
