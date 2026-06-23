@@ -1017,6 +1017,24 @@ class AppLocalizationsJa extends AppLocalizations {
   String get aiErrRateLimited => 'AI へのリクエストが多すぎます。少し時間をおいて再試行してください。';
 
   @override
+  String get feedbackHelpful => '役に立った';
+
+  @override
+  String get feedbackNotHelpful => '役に立たない';
+
+  @override
+  String get feedbackCommentHint => '問題点を教えてください（任意）';
+
+  @override
+  String get feedbackThanks => 'フィードバックありがとうございます';
+
+  @override
+  String get feedbackSend => '送信';
+
+  @override
+  String get feedbackError => 'フィードバックを送信できませんでした。もう一度お試しください。';
+
+  @override
   String get aiSensitiveAction => '重要な操作';
 
   @override

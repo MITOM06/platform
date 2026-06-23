@@ -1028,6 +1028,24 @@ class AppLocalizationsEn extends AppLocalizations {
       'Too many AI requests. Please slow down and try again shortly.';
 
   @override
+  String get feedbackHelpful => 'Helpful';
+
+  @override
+  String get feedbackNotHelpful => 'Not helpful';
+
+  @override
+  String get feedbackCommentHint => 'Tell us what went wrong (optional)';
+
+  @override
+  String get feedbackThanks => 'Thanks for your feedback';
+
+  @override
+  String get feedbackSend => 'Send';
+
+  @override
+  String get feedbackError => 'Couldn\'t submit feedback. Please try again.';
+
+  @override
   String get aiSensitiveAction => 'sensitive action';
 
   @override

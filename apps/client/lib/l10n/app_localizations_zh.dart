@@ -1017,6 +1017,24 @@ class AppLocalizationsZh extends AppLocalizations {
   String get aiErrRateLimited => 'AI 请求过于频繁。请稍后再试。';
 
   @override
+  String get feedbackHelpful => '有帮助';
+
+  @override
+  String get feedbackNotHelpful => '没帮助';
+
+  @override
+  String get feedbackCommentHint => '告诉我们哪里有问题（可选）';
+
+  @override
+  String get feedbackThanks => '感谢您的反馈';
+
+  @override
+  String get feedbackSend => '发送';
+
+  @override
+  String get feedbackError => '无法提交反馈。请重试。';
+
+  @override
   String get aiSensitiveAction => '敏感操作';
 
   @override

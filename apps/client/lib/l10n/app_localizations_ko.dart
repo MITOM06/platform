@@ -1017,6 +1017,24 @@ class AppLocalizationsKo extends AppLocalizations {
   String get aiErrRateLimited => 'AI 요청이 너무 많습니다. 잠시 후 다시 시도해 주세요.';
 
   @override
+  String get feedbackHelpful => '도움이 됨';
+
+  @override
+  String get feedbackNotHelpful => '도움이 안 됨';
+
+  @override
+  String get feedbackCommentHint => '무엇이 잘못되었는지 알려주세요 (선택)';
+
+  @override
+  String get feedbackThanks => '피드백 감사합니다';
+
+  @override
+  String get feedbackSend => '보내기';
+
+  @override
+  String get feedbackError => '피드백을 제출할 수 없습니다. 다시 시도해 주세요.';
+
+  @override
   String get aiSensitiveAction => '민감한 작업';
 
   @override

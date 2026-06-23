@@ -1042,6 +1042,26 @@ class AppLocalizationsFr extends AppLocalizations {
       'Trop de requêtes IA. Veuillez ralentir et réessayer dans un instant.';
 
   @override
+  String get feedbackHelpful => 'Utile';
+
+  @override
+  String get feedbackNotHelpful => 'Pas utile';
+
+  @override
+  String get feedbackCommentHint =>
+      'Dites-nous ce qui n\'a pas fonctionné (facultatif)';
+
+  @override
+  String get feedbackThanks => 'Merci pour votre retour';
+
+  @override
+  String get feedbackSend => 'Envoyer';
+
+  @override
+  String get feedbackError =>
+      'Impossible d\'envoyer le retour. Veuillez réessayer.';
+
+  @override
   String get aiSensitiveAction => 'action sensible';
 
   @override

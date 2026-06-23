@@ -2016,6 +2016,42 @@ abstract class AppLocalizations {
   /// **'Too many AI requests. Please slow down and try again shortly.'**
   String get aiErrRateLimited;
 
+  /// No description provided for @feedbackHelpful.
+  ///
+  /// In en, this message translates to:
+  /// **'Helpful'**
+  String get feedbackHelpful;
+
+  /// No description provided for @feedbackNotHelpful.
+  ///
+  /// In en, this message translates to:
+  /// **'Not helpful'**
+  String get feedbackNotHelpful;
+
+  /// No description provided for @feedbackCommentHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Tell us what went wrong (optional)'**
+  String get feedbackCommentHint;
+
+  /// No description provided for @feedbackThanks.
+  ///
+  /// In en, this message translates to:
+  /// **'Thanks for your feedback'**
+  String get feedbackThanks;
+
+  /// No description provided for @feedbackSend.
+  ///
+  /// In en, this message translates to:
+  /// **'Send'**
+  String get feedbackSend;
+
+  /// No description provided for @feedbackError.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t submit feedback. Please try again.'**
+  String get feedbackError;
+
   /// No description provided for @aiSensitiveAction.
   ///
   /// In en, this message translates to:

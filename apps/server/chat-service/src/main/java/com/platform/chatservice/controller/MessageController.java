@@ -1,5 +1,7 @@
 package com.platform.chatservice.controller;
 
+import com.platform.chatservice.dto.AiFeedbackRequest;
+import com.platform.chatservice.dto.AiFeedbackResponse;
 import com.platform.chatservice.dto.AiTraceResponse;
 import com.platform.chatservice.dto.EditMessageRequest;
 import com.platform.chatservice.dto.ForwardMessageRequest;
@@ -9,6 +11,7 @@ import com.platform.chatservice.dto.ReactionRequest;
 import com.platform.chatservice.dto.SendMessageRequest;
 import com.platform.chatservice.exception.UnauthorizedException;
 import com.platform.chatservice.security.UserPrincipal;
+import com.platform.chatservice.service.AiFeedbackService;
 import com.platform.chatservice.service.AiRedisPublisher;
 import com.platform.chatservice.service.MessageService;
 import com.platform.chatservice.service.RateLimiterService;
@@ -33,6 +36,7 @@ public class MessageController {
   private final SimpMessagingTemplate messagingTemplate;
   private final RateLimiterService rateLimiterService;
   private final AiRedisPublisher aiRedisPublisher;
+  private final AiFeedbackService aiFeedbackService;
 
   @PostMapping
   @ResponseStatus(HttpStatus.CREATED)
@@ -182,6 +186,16 @@ public class MessageController {
     messagingTemplate.convertAndSend(
         "/topic/conversation/" + forwarded.conversationId(), forwarded);
     return forwarded;
+  }
+
+  /**
+   * Record the current user's 👍/👎 feedback on an (AI) message. {@code rating:"none"} clears the
+   * vote. Returns the resulting feedback state. 404 if the message does not exist.
+   */
+  @PostMapping("/{messageId}/feedback")
+  public AiFeedbackResponse submitFeedback(
+      @PathVariable String messageId, @RequestBody AiFeedbackRequest request) {
+    return aiFeedbackService.submitFeedback(currentUserId(), messageId, request);
   }
 
   private void broadcastReaction(MessageResponse message) {

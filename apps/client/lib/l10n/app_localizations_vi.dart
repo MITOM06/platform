@@ -1029,6 +1029,25 @@ class AppLocalizationsVi extends AppLocalizations {
       'Quá nhiều yêu cầu AI. Vui lòng chậm lại và thử lại sau giây lát.';
 
   @override
+  String get feedbackHelpful => 'Hữu ích';
+
+  @override
+  String get feedbackNotHelpful => 'Không hữu ích';
+
+  @override
+  String get feedbackCommentHint =>
+      'Cho chúng tôi biết điều gì chưa ổn (không bắt buộc)';
+
+  @override
+  String get feedbackThanks => 'Cảm ơn phản hồi của bạn';
+
+  @override
+  String get feedbackSend => 'Gửi';
+
+  @override
+  String get feedbackError => 'Không thể gửi phản hồi. Vui lòng thử lại.';
+
+  @override
   String get aiSensitiveAction => 'hành động nhạy cảm';
 
   @override

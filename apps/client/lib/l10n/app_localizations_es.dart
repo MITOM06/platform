@@ -1038,6 +1038,25 @@ class AppLocalizationsEs extends AppLocalizations {
       'Demasiadas solicitudes de IA. Reduce la velocidad e inténtalo de nuevo en breve.';
 
   @override
+  String get feedbackHelpful => 'Útil';
+
+  @override
+  String get feedbackNotHelpful => 'No útil';
+
+  @override
+  String get feedbackCommentHint => 'Cuéntanos qué salió mal (opcional)';
+
+  @override
+  String get feedbackThanks => 'Gracias por tus comentarios';
+
+  @override
+  String get feedbackSend => 'Enviar';
+
+  @override
+  String get feedbackError =>
+      'No se pudo enviar el comentario. Inténtalo de nuevo.';
+
+  @override
   String get aiSensitiveAction => 'acción sensible';
 
   @override
