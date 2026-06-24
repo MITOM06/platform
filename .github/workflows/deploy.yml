@@ -209,6 +209,7 @@ jobs:
             --port=3002
           env_vars: |
             NODE_ENV=production
+            OTEL_ENABLED=false
             JWT_ACCESS_SECRET=${{ secrets.JWT_ACCESS_SECRET }}
             MONGODB_URI=${{ secrets.MONGODB_URI }}
             REDIS_URL=${{ secrets.REDIS_URL }}
