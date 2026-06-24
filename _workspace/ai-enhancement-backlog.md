@@ -85,7 +85,7 @@ For a small team, "the AI gives accurate, sourced answers" is the difference bet
 - **Acceptance:** Eval harness groundedness/accuracy improves on a fixed test set vs. the current pipeline; keyword queries (e.g. an order ID) reliably surface the right chunk.
 - **Effort:** M
 
-### TASK-06 — Clickable citations end-to-end
+### TASK-06 — Clickable citations end-to-end  ✅ DONE (commit 03f27da2)
 - **Why:** The model already emits `[Source N]` markers, but users can't click back to the source chunk. Visible, verifiable sources are what make an assistant feel trustworthy.
 - **Scope:**
   - Backend: include source metadata (documentId, fileName, chunkIndex, snippet) in the `AI_STREAM_DONE` payload (sources field already exists — ensure it carries enough to render).
@@ -95,7 +95,7 @@ For a small team, "the AI gives accurate, sourced answers" is the difference bet
 - **Acceptance:** Clicking a citation in an AI answer (web + mobile) opens the exact source document/snippet it was grounded on.
 - **Effort:** M (cross-platform)
 
-### TASK-07 — Answer feedback loop (👍 / 👎)
+### TASK-07 — Answer feedback loop (👍 / 👎)  ✅ DONE (commit 497bb506)
 - **Why:** No signal currently flows back from real usage. Thumbs feedback is cheap, drives the eval dataset, and tells you which answers are failing in production.
 - **Scope:**
   - Backend: `POST /feedback` (or reuse chat-service) storing `{ messageId, conversationId, userId, rating, optionalComment }` in a new `ai_feedback` collection.
@@ -105,7 +105,7 @@ For a small team, "the AI gives accurate, sourced answers" is the difference bet
 - **Acceptance:** Rating an AI message persists; a script can produce a "bad answers" report for review.
 - **Effort:** M (cross-platform)
 
-### TASK-08 — Eval gating in CI
+### TASK-08 — Eval gating in CI  ✅ DONE (commit 57b3d8b5)
 - **Why:** You already have `eval/run-eval.ts`. Wire it to a gate so prompt/model/RAG changes can't silently regress quality — critical when one or two people maintain the whole stack.
 - **Scope:**
   - Add an npm script + CI job that runs the eval harness on a frozen fixture set and fails if groundedness/accuracy drops below a threshold.
@@ -261,7 +261,7 @@ For a small team, "the AI gives accurate, sourced answers" is the difference bet
 - **Acceptance:** Admin sees this month's tokens, estimated cost, and the worst-rated answers in one screen.
 - **Effort:** M
 
-### TASK-14 — Defense-in-depth conversation access check
+### TASK-14 — Defense-in-depth conversation access check  ✅ DONE (commit 29128aa6)
 - **Why:** ai-service currently assumes chat-service already authorized the user for the conversation. A cheap verification closes a real gap without building full RBAC.
 - **Scope:**
   - Before processing, verify the requesting `userId` is a participant of `conversationId` (lightweight call to chat-service or shared DB check).
