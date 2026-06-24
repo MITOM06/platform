@@ -23,7 +23,7 @@ docker compose -f infra/docker-compose/compose.yml up -d
 cp apps/server/auth-service/.env.example apps/server/auth-service/.env
 cp apps/server/ai-service/.env.example   apps/server/ai-service/.env
 # Edit both files: set JWT_ACCESS_SECRET (same value in both!),
-# ANTHROPIC_API_KEY, OPENAI_API_KEY, and MAIL_* variables.
+# ANTHROPIC_API_KEY, VOYAGE_API_KEY (RAG embeddings), and MAIL_* variables.
 # chat-service reads application.yml — set JWT_ACCESS_SECRET as an env var:
 export JWT_ACCESS_SECRET=your_shared_secret_here
 
@@ -116,8 +116,8 @@ Never use `npm` or `yarn` in this repo — the `pnpm-workspace.yaml` lockfile wi
 
 ```
 JWT_ACCESS_SECRET   — must be IDENTICAL in auth-service and chat-service
-ANTHROPIC_API_KEY   — required for ai-service
-OPENAI_API_KEY      — required for KB embedding (ai-service)
+ANTHROPIC_API_KEY   — required for ai-service (Claude chat)
+VOYAGE_API_KEY      — KB/RAG + memory embeddings (Voyage AI, Anthropic's partner); unset = RAG off
 ```
 
 MongoDB URI is always `mongodb://localhost:27018/platform` locally (port **27018**, not 27017).

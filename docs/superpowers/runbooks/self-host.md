@@ -6,7 +6,7 @@ This stands up the entire PON platform on a single host, on one domain with TLS.
 - A Linux host with Docker Engine + Docker Compose v2.
 - For real HTTPS: a DNS **A record** for your domain → this host's public IP, ports 80/443 open.
 - For a local test: use `DOMAIN=localhost` (browser will warn about Caddy's internal CA).
-- An Anthropic API key (required). Optional: Notion / Google OAuth apps, SMTP, OpenAI.
+- An Anthropic API key (required). Optional: Voyage AI key (RAG embeddings), Notion / Google OAuth apps, SMTP.
 
 ## 2. Configure
 ```bash

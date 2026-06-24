@@ -141,7 +141,8 @@ services:
       REDIS_AI_REQUEST_CHANNEL: ai:request
       REDIS_AI_RESPONSE_PREFIX: ai:response
       QDRANT_URL: http://qdrant:6333
-      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      VOYAGE_API_KEY: ${VOYAGE_API_KEY:-}
+      KB_EMBEDDING_MODEL: ${KB_EMBEDDING_MODEL:-voyage-3.5}
       RABBITMQ_URL: amqp://platform:platform@rabbitmq:5672
       OTEL_ENABLED: "false"
       CONNECTOR_INTERNAL_URL: http://connector-service:3003
