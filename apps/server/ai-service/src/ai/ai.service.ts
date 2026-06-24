@@ -432,7 +432,11 @@ export class AiService {
         if (blocks.length === 0) continue; // nothing usable — drop the turn
         out.push({ role: h.role, content: blocks });
       } else {
-        out.push({ role: h.role, content: h.content });
+        // Drop turns with empty/blank text — the Anthropic API rejects empty
+        // content, and a blank history turn carries no signal anyway.
+        const text = h.content?.trim();
+        if (!text) continue;
+        out.push({ role: h.role, content: text });
       }
     }
     return out;

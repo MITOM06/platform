@@ -137,6 +137,7 @@
   "newDirect": "New chat",
   "createGroup": "Create group",
   "groupName": "Group name",
+  "groupDefaultName": "Group",
   "valGroupNameRequired": "Please enter a group name",
   "selectMembers": "Select members",
   "valSelectMembers": "Select at least 2 members",

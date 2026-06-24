@@ -356,6 +356,9 @@ class AppLocalizationsFr extends AppLocalizations {
   String get groupName => 'Nom du groupe';
 
   @override
+  String get groupDefaultName => 'Groupe';
+
+  @override
   String get valGroupNameRequired => 'Saisissez un nom de groupe';
 
   @override

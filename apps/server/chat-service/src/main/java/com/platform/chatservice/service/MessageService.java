@@ -465,6 +465,16 @@ public class MessageService {
    * which is a single URL or a JSON array, mirroring web's {@code parseImageUrls}) so ai-service
    * can render them as image content blocks. Caption is the (usually empty) text.
    */
+  /**
+   * Resolve a user's human-readable display name for the AI system prompt. Falls back to the raw
+   * userId only if the lookup yields nothing, so the AI is never addressed with a bare ObjectId
+   * when a name is available.
+   */
+  public String resolveDisplayName(String userId) {
+    String name = helper.lookupDisplayName(userId);
+    return (name != null && !name.isBlank()) ? name : userId;
+  }
+
   public List<AiHistoryEntry> getAiHistory(String userId, String conversationId) {
     try {
       PageResponse<MessageResponse> paged = getMessages(userId, conversationId, null, 50);

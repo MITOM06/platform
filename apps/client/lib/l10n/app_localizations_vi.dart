@@ -347,6 +347,9 @@ class AppLocalizationsVi extends AppLocalizations {
   String get groupName => 'Tên nhóm';
 
   @override
+  String get groupDefaultName => 'Nhóm';
+
+  @override
   String get valGroupNameRequired => 'Vui lòng nhập tên nhóm';
 
   @override

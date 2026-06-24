@@ -109,6 +109,7 @@
   "newDirect": "Nouvelle discussion",
   "createGroup": "Créer un groupe",
   "groupName": "Nom du groupe",
+  "groupDefaultName": "Groupe",
   "valGroupNameRequired": "Saisissez un nom de groupe",
   "selectMembers": "Sélectionner des membres",
   "valSelectMembers": "Sélectionnez au moins 2 membres",

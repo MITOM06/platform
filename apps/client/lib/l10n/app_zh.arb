@@ -109,6 +109,7 @@
   "newDirect": "新建聊天",
   "createGroup": "创建群组",
   "groupName": "群组名称",
+  "groupDefaultName": "群组",
   "valGroupNameRequired": "请输入群组名称",
   "selectMembers": "选择成员",
   "valSelectMembers": "请至少选择2位成员",

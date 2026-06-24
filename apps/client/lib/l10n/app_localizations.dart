@@ -762,6 +762,12 @@ abstract class AppLocalizations {
   /// **'Group name'**
   String get groupName;
 
+  /// No description provided for @groupDefaultName.
+  ///
+  /// In en, this message translates to:
+  /// **'Group'**
+  String get groupDefaultName;
+
   /// No description provided for @valGroupNameRequired.
   ///
   /// In en, this message translates to:

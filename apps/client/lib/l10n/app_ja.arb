@@ -109,6 +109,7 @@
   "newDirect": "新しいチャット",
   "createGroup": "グループを作成",
   "groupName": "グループ名",
+  "groupDefaultName": "グループ",
   "valGroupNameRequired": "グループ名を入力してください",
   "selectMembers": "メンバーを選択",
   "valSelectMembers": "2人以上のメンバーを選択してください",

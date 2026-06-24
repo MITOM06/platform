@@ -344,6 +344,9 @@ class AppLocalizationsJa extends AppLocalizations {
   String get groupName => 'グループ名';
 
   @override
+  String get groupDefaultName => 'グループ';
+
+  @override
   String get valGroupNameRequired => 'グループ名を入力してください';
 
   @override

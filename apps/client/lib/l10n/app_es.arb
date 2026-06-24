@@ -109,6 +109,7 @@
   "newDirect": "Nuevo chat",
   "createGroup": "Crear grupo",
   "groupName": "Nombre del grupo",
+  "groupDefaultName": "Grupo",
   "valGroupNameRequired": "Ingresa un nombre de grupo",
   "selectMembers": "Seleccionar miembros",
   "valSelectMembers": "Selecciona al menos 2 miembros",

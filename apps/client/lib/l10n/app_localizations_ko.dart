@@ -344,6 +344,9 @@ class AppLocalizationsKo extends AppLocalizations {
   String get groupName => '그룹 이름';
 
   @override
+  String get groupDefaultName => '그룹';
+
+  @override
   String get valGroupNameRequired => '그룹 이름을 입력하세요';
 
   @override

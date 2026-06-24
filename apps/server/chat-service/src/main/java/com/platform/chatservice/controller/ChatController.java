@@ -65,7 +65,8 @@ public class ChatController {
             try {
               List<AiHistoryEntry> history = messageService.getAiHistory(uid, convId);
               String stripped = raw.replaceAll("(?i)@(AI|ponai)\\b", "").trim();
-              aiRedisPublisher.publishAiRequest(convId, uid, uid, stripped, history);
+              String displayName = messageService.resolveDisplayName(uid);
+              aiRedisPublisher.publishAiRequest(convId, uid, displayName, stripped, history);
             } catch (Exception ignored) {
             }
           });

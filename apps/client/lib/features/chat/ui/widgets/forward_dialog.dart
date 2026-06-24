@@ -27,7 +27,7 @@ class ForwardDialog extends ConsumerWidget {
         height: 320,
         child: convs.when(
           loading: () => const Center(child: CircularProgressIndicator()),
-          error: (e, _) => Center(child: Text('Error: $e')),
+          error: (e, _) => Center(child: Text(l10n.errorWithMsg('$e'))),
           data: (list) {
             final targets =
                 list.where((c) => c.id != sourceConversationId).toList();
@@ -39,7 +39,7 @@ class ForwardDialog extends ConsumerWidget {
               itemBuilder: (ctx, i) {
                 final c = targets[i];
                 final title = c.isGroup
-                    ? (c.name ?? 'Group')
+                    ? (c.name ?? l10n.groupDefaultName)
                     : (c.participants.length > 1
                         ? c.participants
                             .where((p) => p != c.createdBy)
@@ -51,7 +51,7 @@ class ForwardDialog extends ConsumerWidget {
                       (c.name ?? title).substring(0, 1).toUpperCase(),
                     ),
                   ),
-                  title: Text(c.isGroup ? (c.name ?? 'Group') : title),
+                  title: Text(c.isGroup ? (c.name ?? l10n.groupDefaultName) : title),
                   onTap: () => Navigator.of(context).pop(c.id),
                 );
               },

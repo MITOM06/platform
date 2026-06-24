@@ -81,8 +81,15 @@ export class KbProcessorService {
       // Embed
       const vectors = await this.embeddingService.embed(chunks);
 
+      // Guard against an empty/degenerate embedding result — otherwise the
+      // collection would be created with an undefined dimension.
+      const dimension = vectors[0]?.length;
+      if (!vectors.length || !dimension) {
+        throw new Error('Embedding produced no usable vectors');
+      }
+
       // Ensure Qdrant collection exists, sized to the actual embedding dimension.
-      await this.vectorStore.ensureCollection(this.collection, vectors[0]?.length);
+      await this.vectorStore.ensureCollection(this.collection, dimension);
 
       // Upsert vectors
       await this.vectorStore.upsertChunks(this.collection, documentId, chunks, vectors);

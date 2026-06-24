@@ -344,6 +344,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get groupName => '群组名称';
 
   @override
+  String get groupDefaultName => '群组';
+
+  @override
   String get valGroupNameRequired => '请输入群组名称';
 
   @override

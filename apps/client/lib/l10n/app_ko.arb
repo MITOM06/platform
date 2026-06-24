@@ -109,6 +109,7 @@
   "newDirect": "새 채팅",
   "createGroup": "그룹 만들기",
   "groupName": "그룹 이름",
+  "groupDefaultName": "그룹",
   "valGroupNameRequired": "그룹 이름을 입력하세요",
   "selectMembers": "멤버 선택",
   "valSelectMembers": "멤버를 2명 이상 선택하세요",

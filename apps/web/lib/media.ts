@@ -67,8 +67,11 @@ export function formatBytes(bytes: number): string {
 }
 
 /** First http(s) URL found in a text string, or null. */
-const URL_REGEX = /(https?:\/\/[^\s]+)/i
+const URL_REGEX = /(https?:\/\/[^\s<>"']+)/i
 export function firstUrl(text: string): string | null {
   const match = text.match(URL_REGEX)
-  return match ? match[0] : null
+  if (!match) return null
+  // Strip trailing sentence punctuation that is almost never part of the URL
+  // ("see https://x.com." → "https://x.com") so link unfurling gets a clean URL.
+  return match[0].replace(/[.,;:!?]+$/, '')
 }

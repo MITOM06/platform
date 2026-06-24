@@ -109,6 +109,7 @@
   "newDirect": "Trò chuyện mới",
   "createGroup": "Tạo nhóm",
   "groupName": "Tên nhóm",
+  "groupDefaultName": "Nhóm",
   "valGroupNameRequired": "Vui lòng nhập tên nhóm",
   "selectMembers": "Chọn thành viên",
   "valSelectMembers": "Chọn ít nhất 2 thành viên",
