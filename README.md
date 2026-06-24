@@ -367,7 +367,7 @@ Operational notes:
   - **Source Citation:** Renders citation cards below AI messages, linking directly to referenced documents.
 
 ### 🔌 MCP Connectors & Skills
-- 🧩 **Integrations gallery:** connect third-party accounts (Notion live; Gmail/Calendar/Drive via the Google REST adapter — planned P5) over OAuth, with a clear view of the scopes the assistant can touch.
+- 🧩 **Integrations gallery:** connect third-party accounts (Notion via remote MCP; Gmail + Google Calendar live via the Google REST adapter) over OAuth, with a clear view of the scopes the assistant can touch.
 - 🛠️ **Bring-your-own MCP:** point the assistant at any MCP server — discover its tools and use them on the next message (admin-gated for security).
 - 🤖 **Agentic actions from chat:** the assistant decides which tool to call and acts — e.g. "book a sync Thursday and email the brief" → calendar + mail tools run in one turn.
 - 🎚️ **Skills:** turn capabilities (Scheduler, Mail writer, Researcher, Project keeper) on/off; each shows the connectors it needs.
@@ -376,9 +376,17 @@ Operational notes:
 - 🔐 **RBAC:** preset roles (Owner/Admin/Manager/Member) with an admin-editable permission matrix stored as data and enforced from JWT claims across every NestJS service.
 - 🏬 **Workspace & departments:** one company per deployment; members belong to departments; admins manage roles, members, and the connector allow-list.
 - 🛡️ **Connector governance:** workspace vs personal connectors, an admin allow-list, custom-MCP restricted to admins, and sensitive-action gating (e.g. sending mail) by capability.
-- 📋 **Auditability:** privileged actions are designed to be recorded (audit log — roadmap P0 Part 5).
+- 📋 **Auditability:** privileged actions (workspace/department/member/role mutations, connector connect, custom-MCP add, sensitive-skill run) are recorded to an append-only audit log, viewable from the admin console on web and mobile.
+- 🖥️ **Admin console (web + mobile):** capability-gated workspace settings, departments, members, the role × capability matrix, and the audit log — mirrored on both platforms.
+- 🔑 **Enterprise SSO (OIDC):** config-driven OIDC login with JIT provisioning and group → role/department mapping; coexists with password login (web + mobile).
 
-> Build state and the full roadmap (admin console, Google connectors, department-aware group bot, self-host kit, SSO) live in [docs/superpowers/PON-ENTERPRISE-HANDOFF.md](docs/superpowers/PON-ENTERPRISE-HANDOFF.md).
+### 🆕 Latest AI Enhancements
+- 👁️ **Vision / image understanding:** the assistant reads images and scanned PDFs — both inline in chat and as Knowledge Base documents — via Claude vision.
+- ⏰ **Proactive reminders & daily digest:** reminders are delivered as real in-chat AI messages (web + mobile) and an optional daily digest summarizes what's due.
+- 📞 **Group calls + AI notetaker:** multi-party WebRTC calls with an opt-in AI notetaker that transcribes and posts a summary back to the conversation.
+- 🛡️ **Cost & safety guards:** per-user request rate limiting, prompt-injection spotlighting on retrieved/untrusted content, and sensitive-action gating before destructive tools run.
+
+> Full build state and roadmap (P0–P8 enterprise foundation, connectors, group bot, self-host kit, SSO — all complete) live in [docs/superpowers/PON-ENTERPRISE-HANDOFF.md](docs/superpowers/PON-ENTERPRISE-HANDOFF.md).
 
 ---
 

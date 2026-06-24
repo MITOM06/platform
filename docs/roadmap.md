@@ -1,11 +1,13 @@
 # Roadmap — PON Project
 
-> **Status:** Phase 1 (Chat Core) ✅ DONE — Phase 2 (AI Layer) ✅ DONE
+> **Status:** Phase 1 (Chat Core) ✅ DONE — Phase 2 (AI Layer) ✅ DONE — Phase 3 (Enterprise) ✅ DONE
 > **Phase 2 completed:** 2026-06-07
-> **Phase 3 (2026-06-19 →): Enterprise pivot** — PON is becoming a self-hosted, single-tenant-per-deployment B2B AI-assistant platform with governed MCP connectors and RBAC.
-> **Done so far:** P1 MCP Connector Core ✅ · P0 Enterprise Foundation — Part 1 (RBAC backbone) ✅ + Part 2 (enforcement + connector governance) ✅.
-> **Next:** admin console (web/Flutter), audit log, Google connectors (P5), department-aware group bot (P6), self-host kit (P7), SSO (P8).
-> **The authoritative, up-to-date roadmap + build state lives in [`superpowers/PON-ENTERPRISE-HANDOFF.md`](superpowers/PON-ENTERPRISE-HANDOFF.md).** The milestones below are the original chat/AI phases (historical).
+> **Phase 3 (Enterprise pivot):** PON is a self-hosted, single-tenant-per-deployment B2B AI-assistant platform with governed MCP connectors and RBAC.
+> **Done:** P1 MCP Connector Core ✅ · P0 Enterprise Foundation (RBAC + admin console web+mobile + audit log) ✅ · P5 Google connectors ✅ · P6 department-aware group bot ✅ · P7 self-host kit ✅ · P8 SSO (OIDC) ✅.
+> **AI enhancement backlog (TASK-01…14)** ✅ DONE (2026-06-23) — incl. vision/image understanding, proactive reminders + daily digest, group calls + AI notetaker, rate limiting + prompt-injection guard.
+> **QC:** full-project QC passed 2026-06-24 (all builds + tests green across the 5 services + 2 clients).
+> **Remaining:** live E2E validation (needs owner-provided secrets/IdP) and future scale-out (SAML, Helm, multi-company) — each needs a fresh spec + plan.
+> **The authoritative, up-to-date build state lives in [`superpowers/PON-ENTERPRISE-HANDOFF.md`](superpowers/PON-ENTERPRISE-HANDOFF.md).** The milestones below are the original chat/AI phases (historical).
 
 ---
 

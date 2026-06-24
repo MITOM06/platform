@@ -1,5 +1,6 @@
 # TODO — PON PROJECT
-> **Updated:** 2026-06-19
+> **Updated:** 2026-06-24
+> **Status:** Sprints 1–24 (chat core), AI-1…AI-6 (AI layer), Phase 3 (production), enterprise P0–P8, and the AI-enhancement backlog (TASK-01…14) are all **complete**. Full-project QC passed 2026-06-24 (all builds + tests green). Authoritative build state: `docs/superpowers/PON-ENTERPRISE-HANDOFF.md`.
 > **Note:** Sprints 1-24 (chat core) and AI-1 to AI-6 (AI layer) are complete. Active work: Phase 3 (Production Ready) and Web Client (Next.js) parity.
 
 ---
@@ -574,3 +575,28 @@ Phase 5 issues fixed: Web 4, Mobile 13, Backend 1. Status: clear bugs CLEAN; fea
 2. [x] chat-service `application.yml` redis url now defaults to `redis://${SPRING_DATA_REDIS_HOST:localhost}:${SPRING_DATA_REDIS_PORT:6379}` instead of empty → boots locally without `SPRING_DATA_REDIS_URL` (verified: HTTP 200, no "scheme null"). Prod url env still overrides.
 3. [x] Doc drift fixed in chat-service CLAUDE.md (now shows the real `SPRING_DATA_*` var names).
 4. Note: port 8080 is held by an unrelated "Payara Server 7" (404 for our routes) — our chat-service was tested on 8081. Not a code issue.
+
+### SPRINT QC-3 — Full-Project QC + Deep Debug `DONE` (2026-06-24)
+> 4 parallel deep-audit agents (backend / mobile / web / cross-platform sync). Every agent finding was
+> independently re-verified against the real code before any fix — several "P1" claims were rejected as
+> false positives (see below).
+
+**QA LOG — QC Full 2026-06-24**
+Phase 1: auth build ✓ | ai build ✓ | chat compile ✓ | flutter analyze ✓ (0 issues) | web tsc ✓ + build ✓
+Phase 2: auth 53/53 ✓ | ai 299/299 ✓ | chat 99/99 ✓ (1 Testcontainers test needs Docker) | flutter ✓ | web 61/61 ✓
+
+**Fixed (verified):**
+- [x] **[chat-service] AI addressed user by ObjectId** — `MessageController`/`ChatController` passed `uid` as both userId and displayName to `publishAiRequest`, so the AI system prompt read "You are helping <ObjectId>". Added `MessageService.resolveDisplayName()` (looks up `users.displayName`, falls back to uid); updated `ChatControllerTest`.
+- [x] **[web] ESLint error** — `usage-dashboard.tsx` `useMemo(buildMonthOptions, [])` violated `react-hooks/use-memo`; now an inline arrow. Web ESLint back to 0 errors.
+- [x] **[web] Link preview** — `media.ts` `firstUrl()` regex captured trailing punctuation ("…x.com." → bad URL); now strips trailing `.,;:!?` and excludes `<>"'`.
+- [x] **[ai-service] Empty history turn** — `ai.service.ts` `buildHistoryMessages` could push blank content to the Anthropic API; now drops empty/blank turns (consistent with the image branch).
+- [x] **[ai-service] KB embedding guard** — `kb-processor.service.ts` could call `ensureCollection` with an undefined dimension on a degenerate embed result; now guards and throws a clear error.
+- [x] **[Flutter] Silent persona swallow** — `chat_provider.dart` persona-fetch `catchError` was a silent no-op; now logs via `debugPrint` (still degrades gracefully to default persona).
+- [x] **[Flutter] i18n** — `forward_dialog.dart` hardcoded `'Error: $e'` / `'Group'`; now `l10n.errorWithMsg` + new `groupDefaultName` key across all 7 ARBs.
+
+**Rejected after verification (false positives — no change needed):**
+- Dio `async onRequest`/`onError` "drops auth header" — incorrect; Dio awaits before `handler.next()`, the token IS attached (idiomatic pattern).
+- Accept-stranger "doesn't refresh list" — `chat_screen.dart` already calls `refresh()` after accept.
+- Web missing `__AI_RATE_LIMITED__` sentinel — not reachable; web shows AI errors as a toast, never assigns sentinel content.
+
+**Docs cleanup (same sprint):** removed two unreferenced generic debug-scratch docs (`docs/deep_debug_strategy.md`, `docs/hidden_bug_audit_checklist.md`); refreshed `README.md`, `docs/roadmap.md`, `PON-ENTERPRISE-HANDOFF.md`, and this file to current state.
