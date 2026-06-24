@@ -163,7 +163,7 @@ This document captures discussions and locked choices.
 
 ---
 
-## ADR-009: Qdrant Vector Database and OpenAI Embeddings for Knowledge Base (RAG)
+## ADR-009: Qdrant Vector Database and Voyage AI Embeddings for Knowledge Base (RAG)
 
 **Date:** 2026-06-06  
 **Status:** Accepted
@@ -177,17 +177,19 @@ This document captures discussions and locked choices.
 
 **Options considered for Embedding Model:**
 - Local transformers (e.g., SentenceTransformers in Node.js) — Free, but resource intensive for CPU-bound Docker microservices.
-- OpenAI Embeddings (`text-embedding-3-small`) — Industry-standard, cheap ($0.02 / 1M tokens), high dimension accuracy (1536).
-- Anthropic API — Anthropic does not provide an embedding API (requires using Claude directly which is not built/cost-effective for embeddings).
+- OpenAI Embeddings (`text-embedding-3-small`) — industry-standard, but adds a second AI vendor + key outside the Anthropic stack.
+- Voyage AI (`voyage-3.5`) — Anthropic's recommended embeddings partner; Claude-aligned quality, 1024-dim, single-vendor alignment. **(chosen — see Update note)**
 
 **Decision:**
 - Use **Qdrant v1.9.0** as the Vector DB.
-- Use **OpenAI `text-embedding-3-small`** for producing 1536-dimensional embeddings.
+- Use **Voyage AI `voyage-3.5`** for producing 1024-dimensional embeddings (Anthropic's recommended embeddings partner — keeps the whole AI stack in the Anthropic ecosystem, no separate OpenAI dependency).
+
+> **Update (2026-06-23):** embeddings migrated from OpenAI `text-embedding-3-small` (1536-dim) to Voyage AI `voyage-3.5` (1024-dim); env var `OPENAI_API_KEY` → `VOYAGE_API_KEY`. The Qdrant collection is sized to the live model dimension automatically.
 
 **Rationale:**
 - Qdrant is lightweight, easy to integrate in Docker Compose, and supports precise logical filters (e.g. matching `documentId`).
-- OpenAI's embeddings are highly cost-efficient and provide the quality needed for conversational QA context.
-- Keep a clean separation: `ai-service` processes text and interacts with OpenAI/Qdrant, while `chat-service` manages MongoDB document status metadata and REST CRUD endpoints.
+- Voyage AI provides Claude-aligned embedding quality for conversational QA context while keeping the AI stack on a single vendor (Anthropic + its recommended partner).
+- Keep a clean separation: `ai-service` processes text and interacts with Voyage AI / Qdrant, while `chat-service` manages MongoDB document status metadata and REST CRUD endpoints.
 
 **Consequences:**
 - Qdrant collection named `knowledge` is created on boot.
@@ -243,7 +245,7 @@ Web UI:  http://localhost:15672  (user: platform / platform)
 
 ---
 
-## ADR-009: Qdrant Vector Database and OpenAI Embeddings for Knowledge Base (RAG)
+## ADR-009: Qdrant Vector Database and Voyage AI Embeddings for Knowledge Base (RAG)
 
 **Date:** 2026-06-06  
 **Status:** Accepted
@@ -257,17 +259,19 @@ Web UI:  http://localhost:15672  (user: platform / platform)
 
 **Options considered for Embedding Model:**
 - Local transformers (e.g., SentenceTransformers in Node.js) — Free, but resource intensive for CPU-bound Docker microservices.
-- OpenAI Embeddings (`text-embedding-3-small`) — Industry-standard, cheap ($0.02 / 1M tokens), high dimension accuracy (1536).
-- Anthropic API — Anthropic does not provide an embedding API (requires using Claude directly which is not built/cost-effective for embeddings).
+- OpenAI Embeddings (`text-embedding-3-small`) — industry-standard, but adds a second AI vendor + key outside the Anthropic stack.
+- Voyage AI (`voyage-3.5`) — Anthropic's recommended embeddings partner; Claude-aligned quality, 1024-dim, single-vendor alignment. **(chosen — see Update note)**
 
 **Decision:**
 - Use **Qdrant v1.9.0** as the Vector DB.
-- Use **OpenAI `text-embedding-3-small`** for producing 1536-dimensional embeddings.
+- Use **Voyage AI `voyage-3.5`** for producing 1024-dimensional embeddings (Anthropic's recommended embeddings partner — keeps the whole AI stack in the Anthropic ecosystem, no separate OpenAI dependency).
+
+> **Update (2026-06-23):** embeddings migrated from OpenAI `text-embedding-3-small` (1536-dim) to Voyage AI `voyage-3.5` (1024-dim); env var `OPENAI_API_KEY` → `VOYAGE_API_KEY`. The Qdrant collection is sized to the live model dimension automatically.
 
 **Rationale:**
 - Qdrant is lightweight, easy to integrate in Docker Compose, and supports precise logical filters (e.g. matching `documentId`).
-- OpenAI's embeddings are highly cost-efficient and provide the quality needed for conversational QA context.
-- Keep a clean separation: `ai-service` processes text and interacts with OpenAI/Qdrant, while `chat-service` manages MongoDB document status metadata and REST CRUD endpoints.
+- Voyage AI provides Claude-aligned embedding quality for conversational QA context while keeping the AI stack on a single vendor (Anthropic + its recommended partner).
+- Keep a clean separation: `ai-service` processes text and interacts with Voyage AI / Qdrant, while `chat-service` manages MongoDB document status metadata and REST CRUD endpoints.
 
 **Consequences:**
 - Qdrant collection named `knowledge` is created on boot.

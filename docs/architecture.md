@@ -31,7 +31,7 @@ flowchart TD
 
     subgraph ExternalAPIs
         ANTHROPIC[Anthropic Claude API]
-        OPENAI[OpenAI Embeddings API]
+        VOYAGE[Voyage AI Embeddings API]
         FCM[Firebase FCM]
     end
 
@@ -53,7 +53,7 @@ flowchart TD
     AI --> REDIS
     AI --> QD
     AI --> ANTHROPIC
-    AI --> OPENAI
+    AI --> VOYAGE
 
     CHAT -->|OTLP traces| JAEGER
     AI -->|OTLP traces| JAEGER
@@ -187,7 +187,7 @@ sequenceDiagram
     participant MDB as MongoDB
     participant RD as Redis kb:process
     participant AI as ai-service
-    participant OAI as OpenAI Embeddings
+    participant OAI as Voyage AI Embeddings
     participant QDR as Qdrant
 
     C->>CS: upload document (PDF/DOCX/TXT)
@@ -198,7 +198,7 @@ sequenceDiagram
     RD->>AI: subscriber receives job
     AI->>GFS: download file
     AI->>AI: extract text + sentence chunking
-    AI->>OAI: batch embed chunks (text-embedding-3-small)
+    AI->>OAI: batch embed chunks (voyage-3.5)
     AI->>QDR: upsert vectors {documentId, chunkIndex, text, embedding}
     AI->>MDB: update kb_document {status:done}
     AI->>CS: notify via Redis kb:status
@@ -206,7 +206,7 @@ sequenceDiagram
 ```
 
 When the AI later answers a question:
-1. The user's query is embedded (same OpenAI model).
+1. The user's query is embedded (same Voyage AI model).
 2. Qdrant returns the top-k chunks with cosine similarity > 0.5.
 3. Chunks are injected as grounding context into the Claude prompt.
 4. The AI response includes citation cards referencing the source document.

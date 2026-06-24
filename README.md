@@ -11,8 +11,8 @@
 [![MongoDB](https://img.shields.io/badge/MongoDB-47A248?style=flat-square&logo=mongodb&logoColor=white)](https://www.mongodb.com)
 [![Redis](https://img.shields.io/badge/Redis-DC382D?style=flat-square&logo=redis&logoColor=white)](https://redis.io)
 [![RabbitMQ](https://img.shields.io/badge/RabbitMQ-FF6600?style=flat-square&logo=rabbitmq&logoColor=white)](https://www.rabbitmq.com)
-[![OpenAI](https://img.shields.io/badge/OpenAI-412991?style=flat-square&logo=openai&logoColor=white)](https://openai.com)
 [![Anthropic Claude](https://img.shields.io/badge/Anthropic_Claude-D97706?style=flat-square)](https://anthropic.com)
+[![Voyage AI](https://img.shields.io/badge/Voyage_AI_Embeddings-000000?style=flat-square)](https://voyageai.com)
 [![Docker](https://img.shields.io/badge/Docker-2496ED?style=flat-square&logo=docker&logoColor=white)](https://www.docker.com)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=flat-square)](LICENSE)
 
@@ -83,18 +83,18 @@ A high-performance monorepo with four microservices, a Flutter mobile client, an
                                          ▼                       │
                                  ┌─────────────────────────────────┐
                                  │           ai-service            │
-                                 │     NestJS (Claude / OpenAI)    │
+                                 │  NestJS (Claude + Voyage AI)    │
                                  └──────┬──────────────────┬───────┘
                                         │ Embedding        │ Vector Search
                                         ▼                  ▼
                                  ┌──────────────┐    ┌──────────────┐
-                                 │  OpenAI API  │    │  Qdrant DB   │
+                                 │  Voyage AI   │    │  Qdrant DB   │
                                  │  Embeddings  │    │ (port 6333)  │
                                  └──────────────┘    └──────────────┘
 ```
 
 1. **AI Message Flow**: User tags `@AI` in conversation → Client sends message to `chat-service` → `chat-service` persists the message and publishes a job (with the last 20 messages of context) to the RabbitMQ `ai.requests` queue → `ai-service` consumes the job via AMQP, retrieves the memory summary from MongoDB and semantic context from Qdrant, calls the Anthropic Claude Streaming API → stream chunks are published to Redis `ai:response:{conversationId}` → `chat-service` listens on that Redis channel and forwards each chunk down the STOMP socket to the client in real time.
-2. **Knowledge Base (RAG) Flow**: User uploads a document → `chat-service` stores the file in GridFS and publishes metadata to Redis `kb:process` → `ai-service` downloads the file, extracts text, chunks it, requests OpenAI `text-embedding-3-small` embeddings, and upserts them to Qdrant → `ai-service` updates the status to `done` and notifies the client over WebSocket.
+2. **Knowledge Base (RAG) Flow**: User uploads a document → `chat-service` stores the file in GridFS and publishes metadata to Redis `kb:process` → `ai-service` downloads the file, extracts text, chunks it, requests Voyage AI `voyage-3.5` embeddings (Anthropic's recommended embeddings partner), and upserts them to Qdrant → `ai-service` updates the status to `done` and notifies the client over WebSocket.
 3. **Connector / Action Flow**: User connects an account on the **Integrations** screen → `connector-service` (:3003) runs OAuth and stores tokens in the encrypted vault → during an AI request, `ai-service` asks `connector-service`'s internal API for the user's permitted tools and merges them into the agent loop → when the model calls a tool, `ai-service` proxies it back through `connector-service`, which enforces RBAC (capability + allow-list + sensitive-action gates) and executes it against the third party (remote MCP for Notion/custom, REST adapter for Google).
 
 ---
@@ -207,7 +207,8 @@ REDIS_HOST=localhost
 REDIS_PORT=6379
 RABBITMQ_URL=amqp://platform:platform@localhost:5672
 ANTHROPIC_API_KEY=your_anthropic_api_key
-OPENAI_API_KEY=your_openai_api_key
+VOYAGE_API_KEY=your_voyage_api_key
+KB_EMBEDDING_MODEL=voyage-3.5
 QDRANT_URL=http://localhost:6333
 AI_BOT_USER_ID=ai-bot-000000000000000000000001
 AI_BOT_DISPLAY_NAME=PON AI
@@ -362,7 +363,7 @@ Operational notes:
   - **Memory Screen:** Integrated UI for users to view and delete facts that the AI has gathered.
 - 📚 **Knowledge Base & RAG:**
   - **Document Parsing:** Upload PDF, DOCX, or TXT documents directly in conversations.
-  - **Vector Embedding Pipeline:** Automated sentence chunking, OpenAI vectorization, and Qdrant ingestion.
+  - **Vector Embedding Pipeline:** Automated sentence chunking, Voyage AI vectorization, and Qdrant ingestion.
   - **Semantic Context Injection:** Prompts query the vector store and inject relevant chunks into Claude with matching similarity scores > 0.3.
   - **Source Citation:** Renders citation cards below AI messages, linking directly to referenced documents.
 

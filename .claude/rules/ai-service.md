@@ -54,7 +54,8 @@ AI_BOT_USER_ID=ai-bot-000000000000000000000001
 AI_BOT_DISPLAY_NAME=PON AI
 REDIS_AI_RESPONSE_PREFIX=ai:response
 QDRANT_URL=http://localhost:6333
-OPENAI_API_KEY=sk-...
+VOYAGE_API_KEY=...          # Voyage AI embeddings (RAG/memory); unset = RAG off
+KB_EMBEDDING_MODEL=voyage-3.5
 ```
 
 ## Message Bus Protocol
