@@ -5,6 +5,8 @@ const ENV: Record<string, unknown> = {
   'config.webSearch.enabled': true,
   'config.ai.enableThinking': false,
   'config.quota.monthlyTokenLimit': 500000,
+  'config.digest.enabled': false,
+  'config.digest.hour': 8,
 };
 
 function makeService(storedDoc: unknown) {
@@ -29,7 +31,17 @@ describe('SettingsService.resolve (null ⇒ env fallback)', () => {
       thinkingEnabled: false,
       monthlyTokenLimit: 500000,
       allowedConnectors: null,
+      dailyDigestEnabled: false,
+      dailyDigestHour: 8,
     });
+  });
+
+  it('resolves the TASK-11 daily-digest fields (null ⇒ env, override wins)', () => {
+    const { service } = makeService(null);
+    expect(service.resolve(null).dailyDigestEnabled).toBe(false);
+    expect(service.resolve(null).dailyDigestHour).toBe(8);
+    expect(service.resolve({ dailyDigestEnabled: true }).dailyDigestEnabled).toBe(true);
+    expect(service.resolve({ dailyDigestHour: 0 }).dailyDigestHour).toBe(0);
   });
 
   it('honors explicit overrides over env defaults', () => {

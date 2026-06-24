@@ -71,6 +71,22 @@ export class WorkspaceAiSettings {
   // distinction (inherit vs allow-none).
   @Prop({ type: [String], default: () => null })
   allowedConnectors: string[] | null;
+
+  /**
+   * Daily-digest opt-in (TASK-11). `null` ⇒ inherit ai-service env
+   * AI_DIGEST_ENABLED (default false). `true` = post a daily summary of the
+   * prior day's activity into each active AI conversation.
+   */
+  @Prop({ type: Boolean, default: null })
+  dailyDigestEnabled: boolean | null;
+
+  /**
+   * Local hour (0–23) at which the daily digest is delivered (TASK-11).
+   * `null` ⇒ inherit ai-service env AI_DIGEST_HOUR (default 8). Single-tenant
+   * deployment ⇒ server/workspace local hour (per-user timezone is a follow-up).
+   */
+  @Prop({ type: Number, default: null })
+  dailyDigestHour: number | null;
 }
 export const WorkspaceAiSettingsSchema = SchemaFactory.createForClass(WorkspaceAiSettings);
 

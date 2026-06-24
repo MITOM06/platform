@@ -119,16 +119,18 @@ class ChatControllerTest {
     when(messageService.sendMessage(eq(SENDER_ID), any(SendMessageRequest.class)))
         .thenReturn(response);
     when(messageService.getAiHistory(eq(SENDER_ID), eq("conv-456"))).thenReturn(List.of());
+    when(messageService.resolveDisplayName(SENDER_ID)).thenReturn("Alice");
 
     chatController.send(aiDto, principal);
 
     // Give the CompletableFuture time to run
     Thread.sleep(100);
+    // displayName (3rd arg) must be the resolved human name, not the raw userId.
     verify(aiRedisPublisher, times(1))
         .publishAiRequest(
             eq("conv-456"),
             eq(SENDER_ID),
-            eq(SENDER_ID),
+            eq("Alice"),
             argThat(s -> !s.contains("@AI")),
             anyList());
   }

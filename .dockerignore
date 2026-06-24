@@ -1,0 +1,12 @@
+# Keep build artifacts out of the Docker build context so locally-built, stale
+# output can never poison an image (the build compiles everything fresh inside
+# the builder stage). Also keeps the context small for faster uploads.
+**/node_modules
+**/dist
+**/build
+**/*.tsbuildinfo
+.git
+**/.env
+**/.env.*
+**/coverage
+**/*.log

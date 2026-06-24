@@ -762,6 +762,12 @@ abstract class AppLocalizations {
   /// **'Group name'**
   String get groupName;
 
+  /// No description provided for @groupDefaultName.
+  ///
+  /// In en, this message translates to:
+  /// **'Group'**
+  String get groupDefaultName;
+
   /// No description provided for @valGroupNameRequired.
   ///
   /// In en, this message translates to:
@@ -3684,6 +3690,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Allow the assistant to reason step by step.'**
   String get adminAiThinkingDesc;
+
+  /// No description provided for @adminAiDigestSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Daily digest'**
+  String get adminAiDigestSection;
+
+  /// No description provided for @adminAiDailyDigest.
+  ///
+  /// In en, this message translates to:
+  /// **'Daily digest'**
+  String get adminAiDailyDigest;
+
+  /// No description provided for @adminAiDailyDigestDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Post a once-a-day summary of each AI conversation\'s activity.'**
+  String get adminAiDailyDigestDesc;
+
+  /// No description provided for @adminAiDailyDigestHour.
+  ///
+  /// In en, this message translates to:
+  /// **'Delivery time'**
+  String get adminAiDailyDigestHour;
+
+  /// No description provided for @adminAiDailyDigestHourDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Local hour the digest is delivered. Available when the digest is on.'**
+  String get adminAiDailyDigestHourDesc;
 
   /// No description provided for @adminAiQuotaSection.
   ///

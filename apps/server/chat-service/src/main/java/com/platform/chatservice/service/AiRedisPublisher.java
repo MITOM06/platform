@@ -1,13 +1,13 @@
 package com.platform.chatservice.service;
 
 import com.platform.chatservice.config.RabbitMqConfig;
+import com.platform.chatservice.dto.AiHistoryEntry;
 import com.platform.chatservice.dto.AiRequestPayload;
 import com.platform.chatservice.repository.ConversationRepository;
 import io.micrometer.tracing.Span;
 import io.micrometer.tracing.Tracer;
 import io.micrometer.tracing.propagation.Propagator;
 import java.util.List;
-import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
@@ -35,7 +35,7 @@ public class AiRedisPublisher {
       String userId,
       String displayName,
       String content,
-      List<Map<String, String>> history) {
+      List<AiHistoryEntry> history) {
     // Enrich the AI job with the conversation's department so ai-service can
     // department-scope RAG/tools for the group bot (P6). Null for personal chats.
     String departmentId =

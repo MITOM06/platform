@@ -85,7 +85,7 @@ For a small team, "the AI gives accurate, sourced answers" is the difference bet
 - **Acceptance:** Eval harness groundedness/accuracy improves on a fixed test set vs. the current pipeline; keyword queries (e.g. an order ID) reliably surface the right chunk.
 - **Effort:** M
 
-### TASK-06 — Clickable citations end-to-end
+### TASK-06 — Clickable citations end-to-end  ✅ DONE (commit 03f27da2)
 - **Why:** The model already emits `[Source N]` markers, but users can't click back to the source chunk. Visible, verifiable sources are what make an assistant feel trustworthy.
 - **Scope:**
   - Backend: include source metadata (documentId, fileName, chunkIndex, snippet) in the `AI_STREAM_DONE` payload (sources field already exists — ensure it carries enough to render).
@@ -95,7 +95,7 @@ For a small team, "the AI gives accurate, sourced answers" is the difference bet
 - **Acceptance:** Clicking a citation in an AI answer (web + mobile) opens the exact source document/snippet it was grounded on.
 - **Effort:** M (cross-platform)
 
-### TASK-07 — Answer feedback loop (👍 / 👎)
+### TASK-07 — Answer feedback loop (👍 / 👎)  ✅ DONE (commit 497bb506)
 - **Why:** No signal currently flows back from real usage. Thumbs feedback is cheap, drives the eval dataset, and tells you which answers are failing in production.
 - **Scope:**
   - Backend: `POST /feedback` (or reuse chat-service) storing `{ messageId, conversationId, userId, rating, optionalComment }` in a new `ai_feedback` collection.
@@ -105,7 +105,7 @@ For a small team, "the AI gives accurate, sourced answers" is the difference bet
 - **Acceptance:** Rating an AI message persists; a script can produce a "bad answers" report for review.
 - **Effort:** M (cross-platform)
 
-### TASK-08 — Eval gating in CI
+### TASK-08 — Eval gating in CI  ✅ DONE (commit 57b3d8b5)
 - **Why:** You already have `eval/run-eval.ts`. Wire it to a gate so prompt/model/RAG changes can't silently regress quality — critical when one or two people maintain the whole stack.
 - **Scope:**
   - Add an npm script + CI job that runs the eval harness on a frozen fixture set and fails if groundedness/accuracy drops below a threshold.
@@ -142,7 +142,27 @@ For a small team, "the AI gives accurate, sourced answers" is the difference bet
 - **Acceptance:** Asking a question that needs current info triggers `web_search` and returns a cited, accurate answer.
 - **Effort:** M
 
-### TASK-10 — Vision / image understanding in KB + chat
+### TASK-10 — Vision / image understanding in KB + chat  ✅ DONE (2026-06-23)
+> **Status:** Shipped. The assistant now has eyes in both KB and chat.
+> - **KB half (ai-service):** new `VisionDescribeService` calls Claude vision (`claude-opus-4-8`) with a
+>   base64 image block (direct image uploads) or the SDK native PDF document block (scanned/sparse PDFs,
+>   text `< KB_VISION_MIN_TEXT_CHARS`) to produce a text description that flows through the existing
+>   chunk→embed→vector-store path. `document-extractor` no longer throws on images. Gated by
+>   `KB_VISION_ENABLED` (default on); fully graceful (disabled / no key / vision error / unsupported mime
+>   ⇒ prior behavior, never crashes the pipeline). Per-page PDF rasterization DEFERRED (uses native PDF block).
+> - **Chat half (ai-service):** new `ChatImageService` fetches `/api/uploads/{id}` server-side → base64 →
+>   image content blocks (enforces media-type jpeg|png|gif|webp + ~5MB + 4-image cap, fail-soft); `_agenticLoop`
+>   renders image turns (`[...imageBlocks, text]`), forces the vision-capable primary model when images are
+>   present, and suppresses the response cache for image turns.
+> - **Contract change (the one fixed):** `AiRequestPayload.history` element → structured `AiHistoryEntry`
+>   (`role, content, type?, imageUrls?`), mirrored as a Java record in chat-service. `getAiHistory` now emits
+>   `type:"image"` + parsed `imageUrls` (single URL or JSON array, like web parseImageUrls) instead of
+>   flattening image messages to a raw URL string. Text turns backward compatible (`@JsonInclude(NON_NULL)`).
+> - **Clients:** NO change required — web + Flutter already upload images, send `@AI` as a separate text turn,
+>   and render `type:"ai"`/`type:"image"`. Verified in sync (.claude/rules/sync.md).
+> Verify: ai-service build clean + 299 tests (+33); web build ok; flutter analyze clean + **flutter test 47 PASS**;
+> chat-service compiles + MessageServiceTest 32 PASS. QA PASS.
+> **Owner action:** vision defaults ON, requires `ANTHROPIC_API_KEY`; image chat turns force Opus (cost note).
 - **Why:** SMB documents are full of screenshots, scanned invoices, diagrams, and charts that text extraction silently drops today. Claude supports vision natively.
 - **Scope:**
   - KB pipeline: when a PDF page or upload is image-heavy, send the page image to Claude vision to produce a text description, index that alongside extracted text.
@@ -151,7 +171,27 @@ For a small team, "the AI gives accurate, sourced answers" is the difference bet
 - **Acceptance:** Uploading an invoice screenshot and asking "what's the total?" returns the correct figure.
 - **Effort:** L (cross-platform)
 
-### TASK-11 — Proactive reminders & daily digest (assistant, not just chatbot)
+### TASK-11 — Proactive reminders & daily digest (assistant, not just chatbot)  ✅ DONE (2026-06-23)
+> **Status:** Shipped. **Key finding:** chat-service already had a `@Scheduled` `ReminderSweepService` (60s)
+> but it only FCM-pushed due reminders — web never saw them and there was no chat history. That was the gap.
+> - **chat-service** (acceptance-critical): `ReminderSweepService` now also calls the existing
+>   `AiMessageService.saveAiMessage` to persist each fired reminder as a real `type:"ai"` STOMP-broadcast
+>   message (`"🔔 <text>"`), so web+mobile both receive it and history records it. FCM kept best-effort;
+>   `notified=true` only after the in-chat persist (at-least-once, no double-send). No new HTTP endpoint.
+>   Both clients already render `type:"ai"` ⇒ zero new client message-type code.
+> - **ai-service**: added `@nestjs/schedule` (first scheduler) + `DailyDigestCron` (`@Cron('0 * * * *')`) +
+>   `DigestGeneratorService`. Idempotent `ai_digest_log` insert-before-generate (unique `{conversationId,
+>   digestDate}` index; dup-key→skip; rollback on no-activity/failure). Reads yesterday's messages like
+>   SearchMessagesTool, summarizes via fast-tier non-streaming Anthropic (mirrors CallSummaryService),
+>   delivers via synthetic `AI_STREAM_DONE` on Redis `ai:response:{id}` (reuses AiResponseListener).
+> - **digest opt-in = workspace-level** (extends TASK-12 `aiSettings`): `dailyDigestEnabled` (bool, null=inherit
+>   env `AI_DIGEST_ENABLED` default false) + `dailyDigestHour` (0-23, null=inherit env `AI_DIGEST_HOUR`
+>   default 8), `@Min(0)@Max(23)`. web + Flutter admin AI-settings panels got a tri-state toggle + hour picker,
+>   gated by `MANAGE_WORKSPACE`, riding existing `PATCH /admin/workspace`. i18n ×7 both platforms.
+> Verify: database 20, auth-service 53, ai-service build clean + 266 tests, web build ok, flutter analyze clean
+> + **flutter test 47 PASS**, chat-service compiles + `ReminderSweepService` test 4/4. QA PASS.
+> **Owner action:** digest is OFF by default — set `AI_DIGEST_ENABLED=true` (+ `AI_DIGEST_HOUR`) to default-on.
+> Follow-up: per-user opt-in + timezone (currently server/workspace-local, single-tenant).
 - **Why:** `create_reminder` already exists but the assistant is purely reactive. A small differentiator: scheduled, proactive help (morning summary, deadline nudges). Big perceived value for small teams.
 - **Scope:**
   - A scheduler that fires due reminders into the conversation via the normal STOMP pipeline.
@@ -221,7 +261,7 @@ For a small team, "the AI gives accurate, sourced answers" is the difference bet
 - **Acceptance:** Admin sees this month's tokens, estimated cost, and the worst-rated answers in one screen.
 - **Effort:** M
 
-### TASK-14 — Defense-in-depth conversation access check
+### TASK-14 — Defense-in-depth conversation access check  ✅ DONE (commit 29128aa6)
 - **Why:** ai-service currently assumes chat-service already authorized the user for the conversation. A cheap verification closes a real gap without building full RBAC.
 - **Scope:**
   - Before processing, verify the requesting `userId` is a participant of `conversationId` (lightweight call to chat-service or shared DB check).

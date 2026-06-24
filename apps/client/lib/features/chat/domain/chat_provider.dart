@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:collection/collection.dart';
+import 'package:flutter/foundation.dart';
 import 'package:dio/dio.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import '../../auth/domain/auth_provider.dart';
@@ -121,7 +122,12 @@ class ChatNotifier extends _$ChatNotifier with _ChatActionsMixin {
     final results = await Future.wait([
       repo.getMessages(conversationId, size: 20),
       repo.getConversation(conversationId),
-      personaRepo.getPersona(conversationId).then<dynamic>((v) => v).catchError((_) => null),
+      // Persona is optional config — a failure degrades gracefully to the
+      // default persona, but we log it rather than swallowing it silently.
+      personaRepo.getPersona(conversationId).then<dynamic>((v) => v).catchError((Object e) {
+        debugPrint('Persona fetch failed for $conversationId: $e');
+        return null;
+      }),
     ]);
     final paged = results[0] as PagedResult<MessageModel>;
     final conv = results[1] as ConversationModel;

@@ -344,6 +344,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get groupName => '群组名称';
 
   @override
+  String get groupDefaultName => '群组';
+
+  @override
   String get valGroupNameRequired => '请输入群组名称';
 
   @override
@@ -1909,6 +1912,21 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get adminAiThinkingDesc => '允许助手逐步推理。';
+
+  @override
+  String get adminAiDigestSection => '每日摘要';
+
+  @override
+  String get adminAiDailyDigest => '每日摘要';
+
+  @override
+  String get adminAiDailyDigestDesc => '每天发布一次各 AI 对话活动的摘要。';
+
+  @override
+  String get adminAiDailyDigestHour => '发送时间';
+
+  @override
+  String get adminAiDailyDigestHourDesc => '发送摘要的本地时间。开启摘要后可设置。';
 
   @override
   String get adminAiQuotaSection => '使用上限';

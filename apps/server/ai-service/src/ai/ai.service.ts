@@ -20,13 +20,28 @@ import { ConversationAccessService } from '../conversation/conversation-access.s
 import { EmbeddingService } from '../kb/embedding.service';
 import { SettingsService } from '../settings/settings.service';
 import { ResolvedAiSettings } from '../settings/resolved-ai-settings';
+import { ChatImageService } from './chat-image.service';
+
+/**
+ * One conversation-history entry in the `ai.requests` payload (TASK-10 contract).
+ * Text turns carry only `role` + `content` (byte-identical to before). An image
+ * turn additionally sets `type: 'image'` + `imageUrls` (relative `/api/uploads/{id}`
+ * paths, JSON-array decoded by chat-service); ai-service resolves those to image
+ * content blocks. Backward compatible: absent `type`/`imageUrls` ⇒ plain text.
+ */
+export interface AiHistoryEntry {
+  role: 'user' | 'assistant';
+  content: string;
+  type?: string;
+  imageUrls?: string[];
+}
 
 export interface AiRequestPayload {
   conversationId: string;
   userId: string;
   displayName: string;
   content: string;
-  history: Array<{ role: 'user' | 'assistant'; content: string }>;
+  history: AiHistoryEntry[];
   /** Owning department id of the conversation (P6 group bot); null for personal. */
   departmentId?: string;
 }
@@ -95,6 +110,7 @@ export class AiService {
     private readonly responseCache: ResponseCacheService,
     private readonly conversationAccess: ConversationAccessService,
     private readonly settingsService: SettingsService,
+    private readonly chatImageService: ChatImageService,
   ) {
     this.anthropic = new Anthropic({
       apiKey: this.configService.get<string>('config.anthropic.apiKey'),
@@ -255,7 +271,21 @@ export class AiService {
       // Workspace tier override (TASK-12); 'auto' ⇒ env router heuristics.
       forcedTier: settings.modelTier,
     };
-    const selectedModel = selectModel(routeSignals, this.routerConfig);
+    let selectedModel = selectModel(routeSignals, this.routerConfig);
+
+    // TASK-10: if any history turn carries images, force the vision-capable
+    // primary model — the router's haiku/sonnet tiers must not receive image
+    // blocks (vision support unconfirmed → would 400). Gated by chat vision.
+    const hasImageTurn =
+      this.chatImageService.isEnabled() &&
+      history.some((h) => h.type === 'image' && (h.imageUrls?.length ?? 0) > 0);
+    if (hasImageTurn && selectedModel !== this.primaryModel) {
+      this.logger.log(
+        `Forcing primary model ${this.primaryModel} (was ${selectedModel}) — image turn present`,
+      );
+      selectedModel = this.primaryModel;
+    }
+
     this.logger.log(
       `Model routing: selected=${selectedModel} ` +
         `(contentLength=${routeSignals.contentLength}, ` +
@@ -381,6 +411,38 @@ export class AiService {
   }
 
   /**
+   * Map history entries to Anthropic message params (TASK-10). Text turns map to
+   * a plain string `content` (byte-identical to before). An image turn resolves
+   * its `imageUrls` to base64 image blocks placed BEFORE any caption text in the
+   * same user turn (per the claude-api vision constraint). If image resolution
+   * yields nothing (disabled / all skipped) the turn degrades to text — and an
+   * image turn with empty caption + no resolvable images is dropped entirely so
+   * we never send an empty `content` array.
+   */
+  private async buildHistoryMessages(
+    history: AiHistoryEntry[],
+  ): Promise<Anthropic.MessageParam[]> {
+    const out: Anthropic.MessageParam[] = [];
+    for (const h of history) {
+      if (h.type === 'image' && (h.imageUrls?.length ?? 0) > 0) {
+        const imageBlocks = await this.chatImageService.resolveImageBlocks(h.imageUrls ?? []);
+        const blocks: Anthropic.ContentBlockParam[] = [...imageBlocks];
+        const caption = h.content?.trim();
+        if (caption) blocks.push({ type: 'text', text: caption });
+        if (blocks.length === 0) continue; // nothing usable — drop the turn
+        out.push({ role: h.role, content: blocks });
+      } else {
+        // Drop turns with empty/blank text — the Anthropic API rejects empty
+        // content, and a blank history turn carries no signal anyway.
+        const text = h.content?.trim();
+        if (!text) continue;
+        out.push({ role: h.role, content: text });
+      }
+    }
+    return out;
+  }
+
+  /**
    * Single streaming agentic loop. Streams text deltas to Redis; when the turn
    * stops with `tool_use`, runs the tools, appends results, and continues the
    * SAME loop. The final assistant turn is streamed natively — no blind second
@@ -427,13 +489,18 @@ export class AiService {
     let totalCachedTokens = 0;
 
     const messages: Anthropic.MessageParam[] = [
-      ...history.map((h) => ({ role: h.role, content: h.content })),
+      ...(await this.buildHistoryMessages(history)),
       { role: 'user', content: userContent },
     ];
 
     let iteration = 0;
     let fullText = '';
     let streamStarted = false;
+    // Whether the prompt context carries image content blocks (gates the
+    // deterministic response cache — image-grounded answers are not reusable).
+    const hasImages = messages.some(
+      (m) => Array.isArray(m.content) && m.content.some((b) => b.type === 'image'),
+    );
 
     while (iteration < MAX_ITER) {
       const stream = this.anthropic.messages.stream({
@@ -566,11 +633,13 @@ export class AiService {
     });
 
     // Cache only DETERMINISTIC answers: no tool calls (external/non-deterministic),
-    // no RAG sources (context-dependent), and no web sources (time-sensitive).
+    // no RAG sources (context-dependent), no web sources (time-sensitive), and no
+    // images (the answer is grounded on attached pixels, not the text query alone).
     if (
       toolCalls.length === 0 &&
       ctx.ragSources.length === 0 &&
       sourceSink.length === 0 &&
+      !hasImages &&
       ctx.queryVector &&
       fullText.trim()
     ) {

@@ -1,131 +1,190 @@
-## QA Report — TASK-13 Usage & Quality Dashboard — 2026-06-23
+## QA Report — TASK-10 (Vision / image understanding in KB + chat) — 2026-06-23
 
-Verdict: **PASS** (with one P3 type-drift to fix opportunistically + one owner-action for real cost numbers).
+### Verdict: **PASS**
 
-All four reports cross-checked against the code actually on disk. Note: the web and mobile
-reports both claim `_workspace/02_backend_report.md` was a stale TASK-12 file at the time they
-ran; the file on disk now is the correct TASK-13 backend report, and the implemented
-`dashboard.types.ts` matches the plan's frozen contract — so the parallel client work landed on
-the right shape regardless. Verified by reading the real files, not the reports.
-
----
-
-### Build & Test status (exact, run by QA — not trusted from reports)
-
-| Check | Command | Result |
-|-------|---------|--------|
-| ai-service build | `pnpm --filter ai-service build` | **PASS** — `nest build`, exit 0, no errors |
-| ai-service test | `pnpm --filter ai-service test` | **PASS** — `Test Suites: 29 passed, 29 total` / `Tests: 255 passed, 255 total` (6.871 s) |
-| web build | `pnpm --filter @platform/web build` | **PASS** — exit 0; `/admin/usage` confirmed compiled at `.next/server/app/(main)/admin/usage` |
-| flutter analyze | `cd apps/client && flutter analyze` | **PASS** — `No issues found! (ran in 3.7s)` |
-| flutter test | `cd apps/client && flutter test` | **PASS** — `All tests passed!` (47 tests) — **ran explicitly, not just analyze** |
-
-Both Flutter `analyze` AND `test` were run (the prior stale-test footgun was avoided). No new
-test was added for the read-only mobile mirror; logic lives in defensively-parsed models.
+All builds and the targeted/relevant tests pass on every layer. The new `AiHistoryEntry`
+contract is field-for-field identical between chat-service (Java record) and ai-service
+(TS interface). Chat vision wiring, KB vision wiring, and the graceful-degradation gates are
+real and verified by reading the code (not just the reports). Web + mobile genuinely need no
+change and the image-upload + `@AI`-mention + `type:"ai"`/`type:"image"` render path is intact
+and in sync. The acceptance flow (invoice screenshot → "what's the total?") is wired end-to-end.
 
 ---
 
-### Contract parity — `GET /usage/dashboard` (highest-risk check)
+### Build status (EXACT output captured by QA — not trusting reports)
 
-Source of truth: ai-service `src/usage/dashboard.types.ts` (frozen). Compared field-for-field
-against web `lib/api/types.ts` `DashboardResponse` and Flutter
-`features/admin/data/models/usage_dashboard_models.dart` `UsageDashboard`.
+| Service | Command | Result |
+|--------|---------|--------|
+| ai-service build | `pnpm --filter ai-service build` | ✓ `nest build` — no errors |
+| ai-service test | `pnpm --filter ai-service test` | ✓ **Test Suites: 34 passed, 34 total; Tests: 299 passed, 299 total** (4.889 s) |
+| web build | `pnpm --filter @platform/web build` | ✓ `Compiled successfully in 2.1s`, 38/38 static pages, 0 errors |
+| flutter analyze | `cd apps/client && flutter analyze` | ✓ **No issues found! (ran in 3.0s)** |
+| flutter test | `cd apps/client && flutter test` | ✓ **All tests passed! (+47)** — BOTH analyze AND test were run (no stale-test repeat) |
+| chat-service compile | `mvn -q compile` (system Maven, no mvnw) | ✓ exit 0, clean |
+| chat-service targeted test | `mvn -q -Dtest=MessageServiceTest test` | ✓ **Tests run: 32, Failures: 0, Errors: 0, Skipped: 0** (surefire report) — incl. new TASK-10 image-history test `getAiHistory_ImageMessage_CarriesTypeAndImageUrls` and the backward-compat `getAiHistory_ExcludesNonTextTypes_AndMapsBotToAssistant` (asserts text turn `type()` is null) |
 
-| Top-level field | Backend type | Web (`DashboardResponse`) | Flutter (`UsageDashboard`) | Match |
-|---|---|---|---|---|
-| `range {from,to,label}` | `string,string,string` | `UsageRange` same | `UsageRange` (`String?` x3) | ✓ |
-| `totals.inputTokens` | number | number | int | ✓ |
-| `totals.outputTokens` | number | number | int | ✓ |
-| `totals.totalTokens` | number | number | int | ✓ |
-| `totals.requestCount` | number | number | int | ✓ |
-| `totals.estimatedCostUsd` | number | number | double | ✓ |
-| `daily[] {date,inputTokens,outputTokens,totalTokens,requestCount}` | `DailyUsage[]` | `UsageDailyPoint[]` (drives chart) | **absent (intentional)** | ✓* |
-| `perModelCost[].model` | string | string | `String` | ✓ |
-| `perModelCost[].inputTokens/outputTokens/requestCount` | number x3 | number x3 | int x3 | ✓ |
-| `perModelCost[].inputPricePerMTok/outputPricePerMTok` | number x2 | number x2 | double x2 | ✓ |
-| `perModelCost[].costUsd` | number | number | double | ✓ |
-| `topUsers[].userId` | string | string | `String` | ✓ |
-| `topUsers[].displayName` | string | string | `String?` | ✓ (see note) |
-| `topUsers[].totalTokens/requestCount` | number x2 | number x2 | int x2 | ✓ |
-| **`topUsers[].estimatedCostUsd` (pro-rated)** | number | number | double | ✓ — present in all three; pro-rated semantics handled backend-side |
-| `feedback.up/down/total` | number x3 | number x3 | int x3 | ✓ |
-| `feedback.thumbsDownRate` | number (0..1) | number | double | ✓ |
-| `feedback.worstAnswers[].messageId/conversationId` | string x2 | string x2 | `String` / `String?` | ✓ |
-| `feedback.worstAnswers[].comment` | `string \| null` | `string \| null` | `String?` | ✓ |
-| `feedback.worstAnswers[].answerPreview` | string | string | `String?` | ✓ |
-| `feedback.worstAnswers[].createdAt` | **`string \| null`** | **`string` (non-null)** | `String?` | ⚠ P3 drift |
-
-`*` **`daily` absent in Flutter is intentional, NOT drift.** Per plan D6 the mobile mirror omits
-charts; it simply doesn't parse a field it never renders, and the Dart parser ignores extra
-JSON keys. The pro-rated `topUsers[].estimatedCostUsd` (the field flagged as highest-risk) is
-present and correctly typed in all three layers; the backend documents it as a token-volume
-pro-rated share (not exact), which both clients render verbatim — acceptable.
+**chat-service full-suite note (documented precisely):** `mvn -q -Dtest='MessageService*,*AiHistory*' test`
+glob also pulls in **`MessageServicePaginationTest`**, which is a Testcontainers integration test —
+it errored with `IllegalState: Could not find a valid Docker environment` because Docker/Mongo infra
+is not running in this QA environment. This is **environmental, NOT a TASK-10 regression** (that test
+predates TASK-10 and exercises pagination via a real Mongo container). The TASK-10-touching unit test
+class `MessageServiceTest` runs fully without infra and passes 32/32. There is no separate
+`*AiHistory*` test **class** — the AiHistory coverage lives as test methods inside `MessageServiceTest`
+(and `ChatControllerTest`, which references `AiHistoryEntry`). chat-service **COMPILES** and the
+targeted unit tests **PASS**.
 
 ---
 
-### Gating (auth boundary)
+### CRITICAL CHECK 1 — `AiHistoryEntry` contract parity (TS vs Java)
 
-| Layer | Mechanism | Verified |
-|-------|-----------|----------|
-| Backend | `@UseGuards(JwtAuthGuard, RequirePermissionGuard)` on `@Controller('usage')` + `@RequirePermission(Capability.MANAGE_WORKSPACE)` on `GET /dashboard` | ✓ `usage.controller.ts` L19/L24-25; imports from `@platform/database` |
-| Backend wiring | `PassportModule` + `SharedJwtStrategy` registered app-wide (first ai-service controller to use these guards) | ✓ per backend report; build+tests pass |
-| → 401 unauth / 403 without cap | `RequirePermissionGuard` reads JWT `perms` claim | ✓ standard shared guard, same as connector-service |
-| Web | `<RequireCap cap="MANAGE_WORKSPACE">` wraps page; `ADMIN_SECTIONS` entry gated `cap: 'MANAGE_WORKSPACE'` | ✓ `admin/usage/page.tsx` L8, `AdminShell.tsx` L38 |
-| Web base URL | `aiApi` instance (`NEXT_PUBLIC_AI_URL \|\| '/api/ai'`), own `injectToken` + 401 interceptor; `usage.ts` calls `aiApi.get('/usage/dashboard')` — NOT chatApi/authApi | ✓ `axios.ts` L22-38, `usage.ts` |
-| Flutter | Admin section gated `Cap.manageWorkspace` (`admin_screen.dart` L43-44); repo uses `DioClient.createAiDio` → `aiBaseUrl` (:3002) — NOT chatDio/authDio | ✓ `usage_repository.dart`, `dio_client.dart` L62-67, `app_config.dart` L33 |
+`apps/server/ai-service/src/ai/ai.service.ts:32-37` vs
+`apps/server/chat-service/.../dto/AiHistoryEntry.java`
 
-Both clients gate by `MANAGE_WORKSPACE` and hit the ai-service base directly. No bypass.
+| Field | chat-service (Java record) | ai-service (TS interface) | Match |
+|-------|----------------------------|---------------------------|-------|
+| `role` | `String role` | `role: 'user' \| 'assistant'` | ✓ (Java widens to String; values produced are `"user"`/`"assistant"` only) |
+| `content` | `String content` | `content: string` | ✓ |
+| `type` | `String type` (null for text) | `type?: string` (optional) | ✓ |
+| `imageUrls` | `List<String> imageUrls` (null for text) | `imageUrls?: string[]` (optional) | ✓ |
+
+- **JSON keys** are identical: `role`, `content`, `type`, `imageUrls`. Wrapper `AiRequestPayload`
+  fields line up too (`conversationId, userId, displayName, content, history, departmentId`).
+- **Backward compatibility:** chat-service uses the default `Jackson2JsonMessageConverter`
+  (`RabbitMqConfig.java:55`) with **no `@JsonInclude(NON_NULL)`** — so text turns serialize as
+  `{"role":..,"content":..,"type":null,"imageUrls":null}`. This is still backward compatible
+  because ai-service guards on **`h.type === 'image'`** (`ai.service.ts:281`, `:427`) and
+  `(h.imageUrls?.length ?? 0) > 0` — a `null` type/imageUrls is treated exactly as a plain text
+  turn (`out.push({ role, content: h.content })`, `ai.service.ts:435`). The Java doc-comment's
+  mention of `@JsonInclude(NON_NULL)` is aspirational (not actually applied), but it does not
+  affect correctness — confirmed by the green test `getAiHistory_ExcludesNonTextTypes...` which
+  asserts `history.get(0).type()` is null for a text turn. **No drift. Not a P1.**
+- **`getAiHistory` emits image turns correctly** (`MessageService.java:478-483`): image rows are
+  no longer flattened to a URL string — they emit `AiHistoryEntry.image(role, "", imageUrls)`
+  (`type:"image"` + parsed `imageUrls`, empty caption). `parseImageUrls` (`:502-518`) handles
+  both a single URL and a JSON array (`startsWith("[")` → Jackson `List<String>`, else single
+  URL), dropping blanks — mirroring web's `parseImageUrls` and Flutter's `_parseUrls`. Text turns
+  stay backward compatible (`@AI` strip + 20-entry cap + `assistant`/`user` role mapping preserved).
+
+**Parity verdict: ✓ field-for-field match, backward compatible. No P1.**
 
 ---
 
-### Cross-platform sync (per .claude/rules/sync.md)
+### CRITICAL CHECK 2 — Chat vision wiring (verified in code)
 
-- Both clients render the shared core metrics from the identical endpoint: total/period tokens,
-  request count, estimated cost (incl. per-model breakdown), 👎 rate, top users, worst-rated
-  answers. ✓
-- **D6 web-primary deviation is INTENTIONAL (accepted plan decision), not a failure:** web adds the
-  daily bar chart + month selector + up-to-10 lists; mobile is a minimal read-only panel (no chart,
-  no month selector, top-5/worst-5 caps). This is an admin/ops dashboard, not a chat/STOMP/message
-  surface, so the sync rule's hard P1 cases (message types, STOMP events) do not apply. Recorded as
-  designed.
-- i18n: **complete on both platforms across all 7 locales.**
-  - Web: `navUsage` + `usageDashboard` group (incl. `feedbackSummary`) present in en/vi/zh/ja/ko/es/fr — 7/7.
-  - Mobile: 17 usage ARB keys present in all 7 `app_*.arb` — 17/17 each; `flutter gen-l10n` ran, generated files not hand-edited.
+- **Server-side fetch → base64 → image blocks** (`chat-image.service.ts`): `resolveImageBlocks`
+  resolves relative `/api/uploads/{id}` against `config.chat.internalUrl` (default
+  `http://localhost:8080`), authless `fetch` (same pattern KB uses), `arrayBuffer` → `Buffer`.
+- **Media-type enforcement** (`:74-81`): infers from `Content-Type`, falls back to URL extension;
+  validates via `VisionDescribeService.toSupportedImageMediaType` → **jpeg|png|gif|webp ONLY**;
+  unsupported → skip (null), logged.
+- **Size cap** (`:68-71`): `buffer.byteLength > maxImageBytes` (~5MB, `CHAT_VISION_MAX_IMAGE_BYTES`) → skip.
+- **Count cap** (`:46`): `imageUrls.slice(0, this.maxImages)` (`CHAT_VISION_MAX_IMAGES`, default 4).
+- **Fail-soft** (`:50-52`, `:43`): per-image try/catch skips bad ones; disabled/empty → `[]`. A
+  text-only answer always remains possible.
+- **`_agenticLoop` renders image turns** (`buildHistoryMessages`, `ai.service.ts:422-439`): image
+  turn → `content = [...imageBlocks, {type:'text', text:caption?}]` — **image blocks BEFORE text**
+  per the claude-api constraint; turns that resolve to nothing with empty caption are dropped
+  (never an empty `content` array); text turns map to a plain string (byte-identical).
+- **Force vision-capable model** (`:279-287`): if any history turn carries images, `selectedModel`
+  is overridden to `primaryModel` (`claude-opus-4-8`) — confirmed at runtime by the test log line
+  `Forcing primary model test-primary (was claude-haiku-4-5) — image turn present`.
+- **Response cache gated for image turns** (`:497-499`, `:634-642`): `hasImages` inspects the
+  actually-built message blocks; cache `store` only fires when `!hasImages` (plus no tools / no
+  RAG / no web sources) — image-grounded answers are never cached.
+
+**Chat vision verdict: ✓ all present and correct.**
+
+---
+
+### CRITICAL CHECK 3 — KB vision wiring + graceful degradation (verified in code)
+
+- **Routing** (`kb-processor.service.ts:135-177`, `resolveText`): `visionUsable =
+  visionEnabled && visionDescribe.isAvailable()`.
+  - image/* + vision-supported + usable → `describeImage` → indexed text (`:140-143`).
+  - PDF whose `extractText` (pdf-parse) result `< KB_VISION_MIN_TEXT_CHARS` (default 64) +
+    `KB_VISION_PDF_ENABLED` → `describePdf` whole-document block (`:160-174`).
+  - everything else → `extractText` as before (`:153`, `:157`) → zero extra cost on normal text.
+  - Indexed via the **unchanged** chunk → embed → ensureCollection → upsert path (`:74-88`).
+- **`VisionDescribeService`** (verified): `describeImage`/`describePdf` use non-streaming
+  `messages.create` with one image/`application/pdf` document block before the transcribe prompt;
+  validates media type ∈ {jpeg,png,gif,webp} + ~5MB cap; throws `VisionUnsupported`/`Oversized` so
+  the caller degrades; **disabled (no Anthropic client, `isAvailable()===false`) when
+  `ANTHROPIC_API_KEY` is unset**.
+- **Graceful degradation (real & verified):**
+  - `KB_VISION_ENABLED=false` → `visionEnabled` false → always `extractText` (today's behavior).
+  - no key → `isAvailable()` false → `visionUsable` false → `extractText`.
+  - vision error/empty (image) → caught (`:145-149`), falls through to `extractText` (throws for
+    images ⇒ doc marked `error` — prior behavior).
+  - vision error/empty (sparse PDF) → caught (`:171-173`), returns the sparse `text` it has.
+  - unsupported mime (heic/bmp/svg) → `isVisionSupportedImage` false → `extractText`.
+  - The whole `process` body is wrapped in try/catch (`:105-121`) marking the doc `error` +
+    publishing `KB_ERROR` — **a vision failure NEVER crashes the KB pipeline.**
+
+**KB vision verdict: ✓ gate + degradation are real.**
+
+---
+
+### CRITICAL CHECK 4 — Clients (web + mobile): verification-only confirmed
+
+- **No source changes** on web or mobile (both reports + spot-check agree). The flow rides
+  existing behavior; sync (`.claude/rules/sync.md`) is preserved.
+- **Image upload (single URL vs JSON array)** identical on both: web
+  `use-file-attachments.ts:33-34` (`images[0]` or `JSON.stringify(images)`) ↔ Flutter
+  `chat_screen_helpers.dart:122` (`urls.length == 1 ? urls.first : jsonEncode(urls)`) — exactly the
+  shape chat-service `parseImageUrls` decodes.
+- **`@AI` trigger** identical text-based regex: web `page.tsx` `@(AI|ponai)` ↔ Flutter
+  `chat_provider.dart:291` `RegExp(r'@(AI|ponai)\b')`. No caption field (matches DEFERRED scope).
+- **`type:"image"` render**: web `MessageBubble.tsx:241` → `ImageContent` ↔ Flutter
+  `message_bubble.dart:204-205` → `ImageContent`. **`type:"ai"` render**: web
+  `MessageBubble.tsx:259` ↔ Flutter streaming/finalized AI bubble. No new message type, no new
+  STOMP event → clients stay in sync with zero new handling.
+- **i18n:** no new ARB/`messages` keys added (no UI strings) — correctly nothing to verify across
+  the 7 locales; the optional input hint was correctly NOT added on one platform only.
+
+**Client verdict: ✓ genuinely verification-only, in sync.**
+
+---
+
+### Acceptance criterion (reasoned — can't run live without Docker/Anthropic infra)
+
+Invoice screenshot → "what's the total?": **wiring supports it end-to-end.**
+1. Client uploads image → `type:"image"` message with `/api/uploads/{id}` in `content`.
+2. User sends `@AI what's the total?` (separate text message).
+3. chat-service `getAiHistory` includes the image message as
+   `AiHistoryEntry.image("user", "", ["/api/uploads/{id}"])` and the text turn (`@AI` stripped).
+4. ai-service `buildHistoryMessages` → `ChatImageService` fetches + base64-encodes the image into
+   an image block (before any caption); `hasImageTurn` forces `claude-opus-4-8` (vision-capable).
+5. The vision model answers; the `type:"ai"` stream renders on both clients.
+   Confirmed each leg exists in code. Live numeric correctness needs Anthropic API + running infra.
 
 ---
 
 ### Issues found
 
-| Severity | File:line | Issue | Recommended fix |
-|----------|-----------|-------|-----------------|
-| P3 | `apps/web/lib/api/types.ts:301` + `usage-dashboard-parts.tsx:231` | `UsageWorstAnswer.createdAt` typed `string` (non-null) but backend `dashboard.types.ts:65` returns `string \| null`. Web renders `new Date(a.createdAt).toLocaleString()`; on a `null` value this yields the 1970 epoch instead of a clean blank. No crash. Flutter (`String?`) handles it correctly. | Type web field as `string \| null` and guard the render (`a.createdAt ? new Date(a.createdAt).toLocaleString() : ''`). Cosmetic; low likelihood (backend only nulls when a feedback row lacks `createdAt`). |
+| Severity | File:line | Finding | Recommendation |
+|----------|-----------|---------|----------------|
+| Info (none P1/P2) | `dto/AiHistoryEntry.java:9` | Doc-comment claims `@JsonInclude(NON_NULL)` but no such annotation is applied; text turns serialize `type:null,imageUrls:null`. Harmless (ai-service guards on `type==='image'`). | Optional: add `@JsonInclude(JsonInclude.Include.NON_NULL)` to slim the payload, or fix the comment. Not blocking. |
+| Env (expected) | QA environment | `MessageServicePaginationTest` (Testcontainers) errored — no Docker. Pre-existing integration test, unrelated to TASK-10. | Run the full chat-service suite in a CI/infra env with Docker before release. |
 
-No P1/P2 issues. No backend-only feature missing from clients; no one-client-only feature.
-
----
-
-### Owner action items (operational, not code defects)
-
-1. **Set the per-model price-map env vars in each deployment for real cost numbers.** ai-service
-   `configuration.ts` seeds defaults (`AI_PRICE_DEFAULT_IN=3`, `_OUT=15`, plus haiku/sonnet/opus
-   seeds) and falls back gracefully, but `estimatedCostUsd` / `perModelCost[].costUsd` will be
-   estimates off the seeded constants until `AI_PRICE_<MODELKEY>_IN/_OUT` are set to the real
-   billing prices. Format: model id upper-cased, non-alphanumerics → `_` (e.g. `claude-opus-4-8`
-   → `AI_PRICE_CLAUDE_OPUS_4_8_IN` / `_OUT`).
-2. **Set `NEXT_PUBLIC_AI_URL` in the web deploy env** (added to `.env.local`/`.env.production`/
-   `.env.example`; must also be set in the actual deploy env or the admin page falls back to
-   `/api/ai` and can't reach ai-service in prod).
-3. **Watch `messages` per-model aggregation latency at scale.** No `{senderId, createdAt}` index
-   was added (deliberately, per plan + the prod auto-index trap). Add it explicitly only if the
-   dashboard shows latency on a busy month.
+No P1 / P2 issues. No cross-platform drift. No contract drift.
 
 ---
 
-### Conclusion
+### Owner action items
 
-**PASS** — Backend endpoint, web full dashboard, and mobile minimal mirror all build and test
-clean. Contract parity holds field-for-field across all three layers (including the high-risk
-pro-rated `topUsers[].estimatedCostUsd`). Gating is correct and routed to the ai-service base on
-both clients. i18n is complete in all 7 locales on both platforms. The D6 web-primary deviation is
-the intended design. One P3 cosmetic type-drift on `worstAnswers[].createdAt` nullability in the
-web types, and the price-map env vars must be set per deployment for accurate cost figures.
+1. **`KB_VISION_ENABLED` / `KB_VISION_PDF_ENABLED` / `CHAT_VISION_ENABLED` default to TRUE**
+   (gates are `process.env.X !== 'false'`). Vision will be **active in any environment that has
+   `ANTHROPIC_API_KEY` set**. To keep it off, set the flag(s) to `false` explicitly.
+2. **`ANTHROPIC_API_KEY` is required** for any vision to work. Without it,
+   `VisionDescribeService.isAvailable()` is false → KB silently degrades to today's behavior, and
+   the chat agentic loop (which already needs the key) won't have vision. Ensure the key is set in
+   prod (it was previously noted unset in prod for embeddings — same key powers vision).
+3. **Vision cost note:** vision fires on (a) KB image uploads, (b) sparse/scanned PDFs
+   (`< KB_VISION_MIN_TEXT_CHARS=64`), and (c) any chat turn carrying images — which **forces
+   Opus (`claude-opus-4-8`)** regardless of router tier. Full-res images cost ~1.6k–4.7k+ image
+   tokens each (capped 4/turn, ~5MB each). Normal text traffic is untouched (zero extra cost).
+   Monitor token usage after enabling; tune `CHAT_VISION_MAX_IMAGES` / `KB_VISION_MIN_TEXT_CHARS`
+   if cost runs hot. `CHAT_INTERNAL_URL` must point at the chat-service host so relative
+   `/api/uploads/{id}` history refs resolve in prod (defaults to `http://localhost:8080`).
+4. **Run the chat-service full suite in CI** (with Docker) to cover `MessageServicePaginationTest`
+   before release — it could not run in this QA sandbox.

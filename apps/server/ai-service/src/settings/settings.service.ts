@@ -97,6 +97,10 @@ export class SettingsService {
         500000,
       // null = inherit (no AI filter); [] preserved as "allow none".
       allowedConnectors: s.allowedConnectors ?? null,
+      dailyDigestEnabled:
+        s.dailyDigestEnabled ?? this.envBool('config.digest.enabled', false),
+      dailyDigestHour:
+        s.dailyDigestHour ?? this.config.get<number>('config.digest.hour') ?? 8,
     };
   }
 

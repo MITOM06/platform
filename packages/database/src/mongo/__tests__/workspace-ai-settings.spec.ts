@@ -13,6 +13,9 @@ describe('Workspace.aiSettings schema', () => {
     expect(doc.aiSettings.thinkingEnabled).toBeNull();
     expect(doc.aiSettings.monthlyTokenLimit).toBeNull();
     expect(doc.aiSettings.allowedConnectors).toBeNull();
+    // TASK-11 daily-digest opt-in defaults to null (inherit env).
+    expect(doc.aiSettings.dailyDigestEnabled).toBeNull();
+    expect(doc.aiSettings.dailyDigestHour).toBeNull();
   });
 
   it('accepts a fully populated aiSettings config', () => {
@@ -27,6 +30,8 @@ describe('Workspace.aiSettings schema', () => {
         thinkingEnabled: true,
         monthlyTokenLimit: 1000000,
         allowedConnectors: ['gmail', 'notion'],
+        dailyDigestEnabled: true,
+        dailyDigestHour: 8,
       },
     });
     expect(doc.aiSettings.personaName).toBe('Acme Bot');
@@ -36,6 +41,14 @@ describe('Workspace.aiSettings schema', () => {
     expect(doc.aiSettings.thinkingEnabled).toBe(true);
     expect(doc.aiSettings.monthlyTokenLimit).toBe(1000000);
     expect(doc.aiSettings.allowedConnectors).toEqual(['gmail', 'notion']);
+    expect(doc.aiSettings.dailyDigestEnabled).toBe(true);
+    expect(doc.aiSettings.dailyDigestHour).toBe(8);
+  });
+
+  it('preserves explicit dailyDigestHour = 0 (midnight delivery)', () => {
+    const Model = model('WorkspaceAiSettingsTest5', WorkspaceSchema);
+    const doc = new Model({ name: 'Acme', aiSettings: { dailyDigestHour: 0 } });
+    expect(doc.aiSettings.dailyDigestHour).toBe(0);
   });
 
   it('distinguishes [] (allow none) from null (inherit)', () => {

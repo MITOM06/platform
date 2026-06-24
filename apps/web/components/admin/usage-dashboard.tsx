@@ -50,7 +50,7 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 
 export function UsageDashboard() {
   const t = useTranslations('usageDashboard')
-  const monthOptions = useMemo(buildMonthOptions, [])
+  const monthOptions = useMemo(() => buildMonthOptions(), [])
   const [month, setMonth] = useState(monthOptions[0])
 
   const { data, isLoading, error } = useQuery({

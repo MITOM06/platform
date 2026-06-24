@@ -4,6 +4,7 @@ import { AiService } from './ai.service';
 import { FactExtractorService } from './fact-extractor.service';
 import { ContextBuilderService } from './context-builder.service';
 import { ResponseCacheService } from './response-cache.service';
+import { ChatImageService } from './chat-image.service';
 import { RedisModule } from '../redis/redis.module';
 import { MemoryModule } from '../memory/memory.module';
 import { KbModule } from '../kb/kb.module';
@@ -25,7 +26,13 @@ import { ConversationModule } from '../conversation/conversation.module';
     ConversationModule,
   ],
   controllers: [AiController],
-  providers: [AiService, FactExtractorService, ContextBuilderService, ResponseCacheService],
+  providers: [
+    AiService,
+    FactExtractorService,
+    ContextBuilderService,
+    ResponseCacheService,
+    ChatImageService,
+  ],
   exports: [AiService],
 })
 export class AiModule {}

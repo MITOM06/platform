@@ -154,6 +154,12 @@ class WorkspaceAiSettings {
   final int? monthlyTokenLimit;
   final List<String>? allowedConnectors;
 
+  /// Daily digest opt-in (TASK-11). `null` = inherit ai-service env default.
+  final bool? dailyDigestEnabled;
+
+  /// Local hour (0–23) at which the digest is delivered. `null` = inherit env.
+  final int? dailyDigestHour;
+
   const WorkspaceAiSettings({
     this.personaName,
     this.defaultTone,
@@ -162,6 +168,8 @@ class WorkspaceAiSettings {
     this.thinkingEnabled,
     this.monthlyTokenLimit,
     this.allowedConnectors,
+    this.dailyDigestEnabled,
+    this.dailyDigestHour,
   });
 
   factory WorkspaceAiSettings.fromJson(Map<String, dynamic>? json) {
@@ -178,6 +186,9 @@ class WorkspaceAiSettings {
               j['allowedConnectors'] != null
           ? _stringList(j['allowedConnectors'])
           : null,
+      // null (absent or explicit null) = inherit env default. Backward compatible.
+      dailyDigestEnabled: j['dailyDigestEnabled'] as bool?,
+      dailyDigestHour: (j['dailyDigestHour'] as num?)?.toInt(),
     );
   }
 }

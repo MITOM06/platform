@@ -90,7 +90,7 @@ class MessageServiceHelper {
     return mentioned;
   }
 
-  private String lookupDisplayName(String userId) {
+  String lookupDisplayName(String userId) {
     try {
       Query query = new Query(Criteria.where("_id").is(new ObjectId(userId)));
       query.fields().include("displayName");

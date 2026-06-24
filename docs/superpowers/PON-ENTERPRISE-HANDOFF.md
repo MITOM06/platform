@@ -1,7 +1,14 @@
 # PON Enterprise — Master Handoff & Continuation Guide
 
-**Last updated:** 2026-06-22
-**Active branch:** `fix/chat-service-cloudrun-startup` (✅ P0 + ✅ P5 + ✅ P6 + ✅ P7 self-host kit + ✅ P8 SSO OIDC)
+**Last updated:** 2026-06-24
+**Active branch:** `feat/task-10-vision` (✅ P0 + ✅ P5 + ✅ P6 + ✅ P7 self-host kit + ✅ P8 SSO OIDC + ✅ AI-enhancement backlog TASK-01…14)
+
+> **Update 2026-06-24:** Since the P8 milestone, the **AI-enhancement backlog (TASK-01…14)** shipped
+> (rate limiting + prompt-injection guard, vision/image understanding in chat + KB [TASK-10], proactive
+> reminders + daily digest [TASK-11], group calls + AI notetaker, and more — see
+> `_workspace/ai-enhancement-backlog.md` + `docs/superpowers/task-*-report.md`). A full-project QC pass
+> on 2026-06-24 is green across all 5 services + 2 clients (auth 53, ai 299, chat 99, web 61, flutter ✓).
+> Test counts below are from each part's original completion and are now higher.
 **Read order for a fresh session:**
 1. This file (state + remaining work).
 2. `docs/superpowers/specs/2026-06-19-pon-enterprise-reframe.md` (the vision).

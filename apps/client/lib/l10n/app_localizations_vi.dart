@@ -347,6 +347,9 @@ class AppLocalizationsVi extends AppLocalizations {
   String get groupName => 'Tên nhóm';
 
   @override
+  String get groupDefaultName => 'Nhóm';
+
+  @override
   String get valGroupNameRequired => 'Vui lòng nhập tên nhóm';
 
   @override
@@ -1958,6 +1961,23 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get adminAiThinkingDesc => 'Cho phép trợ lý suy luận từng bước.';
+
+  @override
+  String get adminAiDigestSection => 'Bản tóm tắt hằng ngày';
+
+  @override
+  String get adminAiDailyDigest => 'Bản tóm tắt hằng ngày';
+
+  @override
+  String get adminAiDailyDigestDesc =>
+      'Đăng một bản tóm tắt mỗi ngày về hoạt động của từng cuộc trò chuyện AI.';
+
+  @override
+  String get adminAiDailyDigestHour => 'Thời điểm gửi';
+
+  @override
+  String get adminAiDailyDigestHourDesc =>
+      'Giờ địa phương gửi bản tóm tắt. Khả dụng khi bật bản tóm tắt.';
 
   @override
   String get adminAiQuotaSection => 'Giới hạn sử dụng';

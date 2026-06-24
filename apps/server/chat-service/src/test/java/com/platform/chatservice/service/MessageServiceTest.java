@@ -6,6 +6,7 @@ import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 import com.mongodb.client.result.UpdateResult;
+import com.platform.chatservice.dto.AiHistoryEntry;
 import com.platform.chatservice.dto.MessageResponse;
 import com.platform.chatservice.dto.PageResponse;
 import com.platform.chatservice.dto.SendMessageRequest;
@@ -18,7 +19,6 @@ import com.platform.chatservice.repository.ConversationRepository;
 import com.platform.chatservice.repository.MessageRepository;
 import java.time.Instant;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -558,18 +558,59 @@ class MessageServiceTest {
             eq(CONV_ID), any(Pageable.class)))
         .thenReturn(new PageImpl<>(List.of(atAiMsg, stickerMsg, botMsg, voiceMsg, textMsg)));
 
-    List<Map<String, String>> history = messageService.getAiHistory(SENDER_ID, CONV_ID);
+    List<AiHistoryEntry> history = messageService.getAiHistory(SENDER_ID, CONV_ID);
 
     // Should contain only text and ai messages (3), in chronological order
     assertThat(history).hasSize(3);
-    assertThat(history.get(0)).containsEntry("role", "user").containsEntry("content", "Hello");
-    assertThat(history.get(1))
-        .containsEntry("role", "assistant")
-        .containsEntry("content", "AI reply");
+    assertThat(history.get(0).role()).isEqualTo("user");
+    assertThat(history.get(0).content()).isEqualTo("Hello");
+    assertThat(history.get(0).type()).isNull(); // text turn — no image fields
+    assertThat(history.get(1).role()).isEqualTo("assistant");
+    assertThat(history.get(1).content()).isEqualTo("AI reply");
     // @AI mention stripped from last text message
-    assertThat(history.get(2))
-        .containsEntry("role", "user")
-        .satisfies(h -> assertThat(h.get("content")).doesNotContain("@AI").isNotBlank());
+    assertThat(history.get(2).role()).isEqualTo("user");
+    assertThat(history.get(2).content()).doesNotContain("@AI").isNotBlank();
+  }
+
+  // Sprint TASK-10 — getAiHistory image turns → type=image + imageUrls
+  @Test
+  void getAiHistory_ImageMessage_CarriesTypeAndImageUrls() {
+    Message single =
+        Message.builder()
+            .id("im1")
+            .conversationId(CONV_ID)
+            .senderId(SENDER_ID)
+            .content("/api/uploads/665fa1")
+            .type("image")
+            .readBy(new java.util.ArrayList<>())
+            .createdAt(Instant.now().minusSeconds(20))
+            .build();
+    Message multi =
+        Message.builder()
+            .id("im2")
+            .conversationId(CONV_ID)
+            .senderId(SENDER_ID)
+            .content("[\"/api/uploads/a\",\"/api/uploads/b\"]")
+            .type("image")
+            .readBy(new java.util.ArrayList<>())
+            .createdAt(Instant.now().minusSeconds(10))
+            .build();
+
+    when(conversationRepository.findById(CONV_ID)).thenReturn(Optional.of(conversation));
+    when(messageRepository.findByConversationIdOrderByCreatedAtDesc(
+            eq(CONV_ID), any(Pageable.class)))
+        .thenReturn(new PageImpl<>(List.of(multi, single)));
+
+    List<AiHistoryEntry> history = messageService.getAiHistory(SENDER_ID, CONV_ID);
+
+    assertThat(history).hasSize(2);
+    // chronological: single URL first
+    assertThat(history.get(0).type()).isEqualTo("image");
+    assertThat(history.get(0).imageUrls()).containsExactly("/api/uploads/665fa1");
+    assertThat(history.get(0).content()).isEmpty();
+    // JSON-array second
+    assertThat(history.get(1).type()).isEqualTo("image");
+    assertThat(history.get(1).imageUrls()).containsExactly("/api/uploads/a", "/api/uploads/b");
   }
 
   // -------------------------------------------------------------------------

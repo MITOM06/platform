@@ -14,6 +14,7 @@ import { SkillsService } from '../skills/skills.service';
 import { ConversationAccessService } from '../conversation/conversation-access.service';
 import { SettingsService } from '../settings/settings.service';
 import { ResolvedAiSettings } from '../settings/resolved-ai-settings';
+import { ChatImageService } from './chat-image.service';
 
 function makeAsyncIterator(chunks: unknown[]) {
   return {
@@ -112,6 +113,7 @@ describe('AiService', () => {
   let extractFacts: jest.Mock;
   let buildVolatileContext: jest.Mock;
   let getSettings: jest.Mock;
+  let resolveImageBlocks: jest.Mock;
 
   const basePayload: AiRequestPayload = {
     conversationId: 'conv-test',
@@ -205,9 +207,17 @@ describe('AiService', () => {
       thinkingEnabled: false,
       monthlyTokenLimit: 500000,
       allowedConnectors: null,
+      dailyDigestEnabled: false,
+      dailyDigestHour: 8,
     };
     getSettings = jest.fn().mockResolvedValue(defaultSettings);
     const fakeSettings = { getSettings } as unknown as SettingsService;
+
+    resolveImageBlocks = jest.fn().mockResolvedValue([]);
+    const fakeChatImage = {
+      isEnabled: () => true,
+      resolveImageBlocks,
+    } as unknown as ChatImageService;
 
     service = new AiService(
       fakeConfig,
@@ -224,6 +234,7 @@ describe('AiService', () => {
       fakeResponseCache,
       fakeConversationAccess,
       fakeSettings,
+      fakeChatImage,
     );
     (service as any)['anthropic'] = { messages: { stream: mockStream, create: mockCreate } };
   });
@@ -657,5 +668,93 @@ describe('AiService', () => {
     expect(buildSystemPromptFn).toHaveBeenCalled();
     const sys = systemText(mockStream.mock.calls[0][0]);
     expect(sys).toContain('Custom persona prompt');
+  });
+
+  // ─── TASK-10 Vision: image history → image content blocks ─────────────────
+
+  it('keeps text-only history as plain-string content (byte-identical to before)', async () => {
+    const payload: AiRequestPayload = {
+      ...basePayload,
+      history: [{ role: 'user', content: 'earlier question' }],
+    };
+    mockStream.mockReturnValue(makeStream(['OK']));
+
+    await service.handleRequest(payload);
+
+    const messages = mockStream.mock.calls[0][0].messages;
+    expect(messages[0]).toEqual({ role: 'user', content: 'earlier question' });
+    expect(resolveImageBlocks).not.toHaveBeenCalled();
+  });
+
+  it('maps an image history turn to image blocks before the caption text', async () => {
+    resolveImageBlocks.mockResolvedValue([
+      { type: 'image', source: { type: 'base64', media_type: 'image/png', data: 'AAA' } },
+    ]);
+    const payload: AiRequestPayload = {
+      ...basePayload,
+      history: [{ role: 'user', content: 'invoice', type: 'image', imageUrls: ['/api/uploads/1'] }],
+    };
+    mockStream.mockReturnValue(makeStream(['$42']));
+
+    await service.handleRequest(payload);
+
+    expect(resolveImageBlocks).toHaveBeenCalledWith(['/api/uploads/1']);
+    const messages = mockStream.mock.calls[0][0].messages;
+    const imgTurn = messages[0];
+    expect(Array.isArray(imgTurn.content)).toBe(true);
+    // image block precedes the text caption (claude-api vision constraint)
+    expect(imgTurn.content[0].type).toBe('image');
+    expect(imgTurn.content[1]).toEqual({ type: 'text', text: 'invoice' });
+  });
+
+  it('forces the primary model when a history image turn is present', async () => {
+    // Router routes short prompts to a non-primary tier; image must override it.
+    (service as any)['routerConfig'].enabled = true;
+    resolveImageBlocks.mockResolvedValue([
+      { type: 'image', source: { type: 'base64', media_type: 'image/png', data: 'AAA' } },
+    ]);
+    const payload: AiRequestPayload = {
+      ...basePayload,
+      content: 'hi',
+      history: [{ role: 'user', content: '', type: 'image', imageUrls: ['/api/uploads/1'] }],
+    };
+    mockStream.mockReturnValue(makeStream(['answer']));
+
+    await service.handleRequest(payload);
+
+    expect(mockStream.mock.calls[0][0].model).toBe('test-primary');
+  });
+
+  it('drops an image turn entirely when no images resolve and caption is empty', async () => {
+    resolveImageBlocks.mockResolvedValue([]); // all skipped (oversized/unsupported/404)
+    const payload: AiRequestPayload = {
+      ...basePayload,
+      history: [{ role: 'user', content: '', type: 'image', imageUrls: ['/api/uploads/bad'] }],
+    };
+    mockStream.mockReturnValue(makeStream(['OK']));
+
+    await service.handleRequest(payload);
+
+    const messages = mockStream.mock.calls[0][0].messages;
+    // Only the current user turn remains — the empty image turn was dropped.
+    expect(messages).toHaveLength(1);
+    expect(messages[0].content).toBe('Hello AI');
+  });
+
+  it('does not store the response cache when images were present', async () => {
+    resolveImageBlocks.mockResolvedValue([
+      { type: 'image', source: { type: 'base64', media_type: 'image/png', data: 'AAA' } },
+    ]);
+    const store = jest.fn().mockResolvedValue(undefined);
+    (service as any)['responseCache'].store = store;
+    const payload: AiRequestPayload = {
+      ...basePayload,
+      history: [{ role: 'user', content: 'q', type: 'image', imageUrls: ['/api/uploads/1'] }],
+    };
+    mockStream.mockReturnValue(makeStream(['answer']));
+
+    await service.handleRequest(payload);
+
+    expect(store).not.toHaveBeenCalled();
   });
 });

@@ -1,6 +1,9 @@
 package com.platform.chatservice.service;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mongodb.client.result.UpdateResult;
+import com.platform.chatservice.dto.AiHistoryEntry;
 import com.platform.chatservice.dto.AiTraceResponse;
 import com.platform.chatservice.dto.MessageResponse;
 import com.platform.chatservice.dto.PageResponse;
@@ -18,7 +21,6 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.regex.Pattern;
 import lombok.RequiredArgsConstructor;
@@ -454,24 +456,75 @@ public class MessageService {
 
   private static final Pattern AI_MENTION_STRIP = Pattern.compile("(?i)@(AI|ponai)\\b");
 
-  public List<Map<String, String>> getAiHistory(String userId, String conversationId) {
+  private static final ObjectMapper AI_HISTORY_MAPPER = new ObjectMapper();
+
+  /**
+   * Build the AI conversation history (TASK-10). Text turns produce a plain {@code role}/{@code
+   * content} entry (unchanged). {@code image} turns are NOT flattened to a useless URL string
+   * anymore — they carry {@code type="image"} + {@code imageUrls} (parsed from the message content,
+   * which is a single URL or a JSON array, mirroring web's {@code parseImageUrls}) so ai-service
+   * can render them as image content blocks. Caption is the (usually empty) text.
+   */
+  /**
+   * Resolve a user's human-readable display name for the AI system prompt. Falls back to the raw
+   * userId only if the lookup yields nothing, so the AI is never addressed with a bare ObjectId
+   * when a name is available.
+   */
+  public String resolveDisplayName(String userId) {
+    String name = helper.lookupDisplayName(userId);
+    return (name != null && !name.isBlank()) ? name : userId;
+  }
+
+  public List<AiHistoryEntry> getAiHistory(String userId, String conversationId) {
     try {
       PageResponse<MessageResponse> paged = getMessages(userId, conversationId, null, 50);
-      List<Map<String, String>> history = new ArrayList<>();
+      List<AiHistoryEntry> history = new ArrayList<>();
       for (MessageResponse msg : paged.content()) {
         if (history.size() >= 20) break;
         if (msg.recalled() || msg.content() == null || msg.content().isBlank()) continue;
         if (AI_HISTORY_SKIP_TYPES.contains(msg.type())) continue;
         String role = AiConstants.AI_BOT_USER_ID.equals(msg.senderId()) ? "assistant" : "user";
+
+        if ("image".equals(msg.type())) {
+          List<String> imageUrls = parseImageUrls(msg.content());
+          if (imageUrls.isEmpty()) continue;
+          // No caption field on image messages today — caption stays empty.
+          history.add(AiHistoryEntry.image(role, "", imageUrls));
+          continue;
+        }
+
         String content = AI_MENTION_STRIP.matcher(msg.content()).replaceAll("").trim();
         if (content.isBlank()) continue;
-        history.add(Map.of("role", role, "content", content));
+        history.add(AiHistoryEntry.text(role, content));
       }
       Collections.reverse(history); // newest-first → chronological
       return history;
     } catch (Exception e) {
       return List.of();
     }
+  }
+
+  /**
+   * Parse an {@code image}-message content that is either a single URL or a JSON array of URLs
+   * (mirrors web {@code parseImageUrls} / Flutter). Non-JSON content is treated as a single URL.
+   * Blank entries are dropped.
+   */
+  private static List<String> parseImageUrls(String content) {
+    String trimmed = content.trim();
+    if (trimmed.startsWith("[")) {
+      try {
+        List<String> urls =
+            AI_HISTORY_MAPPER.readValue(trimmed, new TypeReference<List<String>>() {});
+        List<String> cleaned = new ArrayList<>();
+        for (String u : urls) {
+          if (u != null && !u.isBlank()) cleaned.add(u);
+        }
+        return cleaned;
+      } catch (Exception ignored) {
+        // not a JSON array — fall through to single-URL handling
+      }
+    }
+    return List.of(trimmed);
   }
 
   /**

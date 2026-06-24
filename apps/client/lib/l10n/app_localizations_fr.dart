@@ -356,6 +356,9 @@ class AppLocalizationsFr extends AppLocalizations {
   String get groupName => 'Nom du groupe';
 
   @override
+  String get groupDefaultName => 'Groupe';
+
+  @override
   String get valGroupNameRequired => 'Saisissez un nom de groupe';
 
   @override
@@ -1987,6 +1990,23 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get adminAiThinkingDesc =>
       'Autoriser l\'assistant à raisonner étape par étape.';
+
+  @override
+  String get adminAiDigestSection => 'Résumé quotidien';
+
+  @override
+  String get adminAiDailyDigest => 'Résumé quotidien';
+
+  @override
+  String get adminAiDailyDigestDesc =>
+      'Publie une fois par jour un résumé de l\'activité de chaque conversation IA.';
+
+  @override
+  String get adminAiDailyDigestHour => 'Heure d\'envoi';
+
+  @override
+  String get adminAiDailyDigestHourDesc =>
+      'Heure locale d\'envoi du résumé. Disponible lorsque le résumé est activé.';
 
   @override
   String get adminAiQuotaSection => 'Limite d\'utilisation';

@@ -2,6 +2,7 @@ package com.platform.chatservice.controller;
 
 import com.platform.chatservice.dto.AiFeedbackRequest;
 import com.platform.chatservice.dto.AiFeedbackResponse;
+import com.platform.chatservice.dto.AiHistoryEntry;
 import com.platform.chatservice.dto.AiTraceResponse;
 import com.platform.chatservice.dto.EditMessageRequest;
 import com.platform.chatservice.dto.ForwardMessageRequest;
@@ -52,9 +53,10 @@ public class MessageController {
       CompletableFuture.runAsync(
           () -> {
             try {
-              List<Map<String, String>> history = messageService.getAiHistory(uid, convId);
+              List<AiHistoryEntry> history = messageService.getAiHistory(uid, convId);
               String stripped = raw.replaceAll("(?i)@(AI|ponai)\\b", "").trim();
-              aiRedisPublisher.publishAiRequest(convId, uid, uid, stripped, history);
+              String displayName = messageService.resolveDisplayName(uid);
+              aiRedisPublisher.publishAiRequest(convId, uid, displayName, stripped, history);
             } catch (Exception ignored) {
             }
           });

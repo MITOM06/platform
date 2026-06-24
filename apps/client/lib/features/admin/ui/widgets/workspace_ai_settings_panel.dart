@@ -33,6 +33,9 @@ class _WorkspaceAiSettingsPanelState
   String _modelTier = 'auto';
   bool? _webSearchEnabled; // null = inherit env
   bool? _thinkingEnabled; // null = inherit env
+  bool? _dailyDigestEnabled; // null = inherit env
+  int? _dailyDigestHour; // null = inherit env; effective hour shown when on
+  static const _digestDefaultHour = 8; // matches AI_DIGEST_HOUR env default
   // Connector governance: when _restrictConnectors is false ⇒ allowedConnectors
   // is null (inherit connectorAllowList). When true ⇒ explicit list (possibly []).
   bool _restrictConnectors = false;
@@ -57,6 +60,8 @@ class _WorkspaceAiSettingsPanelState
     _modelTier = ai.modelTier ?? 'auto';
     _webSearchEnabled = ai.webSearchEnabled;
     _thinkingEnabled = ai.thinkingEnabled;
+    _dailyDigestEnabled = ai.dailyDigestEnabled;
+    _dailyDigestHour = ai.dailyDigestHour;
     _restrictConnectors = ai.allowedConnectors != null;
     _allowed = List<String>.from(ai.allowedConnectors ?? const []);
   }
@@ -70,6 +75,9 @@ class _WorkspaceAiSettingsPanelState
       'modelTier': _modelTier == 'auto' ? null : _modelTier,
       'webSearchEnabled': _webSearchEnabled,
       'thinkingEnabled': _thinkingEnabled,
+      'dailyDigestEnabled': _dailyDigestEnabled,
+      // Only send an explicit hour when the digest is on; otherwise null = inherit.
+      'dailyDigestHour': _dailyDigestEnabled == true ? _dailyDigestHour : null,
       'monthlyTokenLimit': limitText.isEmpty ? null : int.tryParse(limitText),
       // null = inherit connectorAllowList; [] = allow none; [...] = explicit subset.
       'allowedConnectors': _restrictConnectors ? _allowed : null,
@@ -166,6 +174,24 @@ class _WorkspaceAiSettingsPanelState
               inheritLabel: l10n.adminAiInheritOption,
               onChanged: (v) => setState(() => _thinkingEnabled = v),
             ),
+            const SizedBox(height: 24),
+            AiSectionTitle(l10n.adminAiDigestSection),
+            AiTriStateTile(
+              title: l10n.adminAiDailyDigest,
+              subtitle: l10n.adminAiDailyDigestDesc,
+              value: _dailyDigestEnabled,
+              inheritLabel: l10n.adminAiInheritOption,
+              onChanged: (v) => setState(() => _dailyDigestEnabled = v),
+            ),
+            const SizedBox(height: 12),
+            AiHourPicker(
+              label: l10n.adminAiDailyDigestHour,
+              value: _dailyDigestHour ?? _digestDefaultHour,
+              enabled: _dailyDigestEnabled == true,
+              onChanged: (h) => setState(() => _dailyDigestHour = h),
+            ),
+            const SizedBox(height: 6),
+            AiMutedText(l10n.adminAiDailyDigestHourDesc),
             const SizedBox(height: 24),
             AiSectionTitle(l10n.adminAiQuotaSection),
             PonTextField(

@@ -12,7 +12,10 @@ RUN pnpm install --frozen-lockfile
 COPY packages ./packages
 COPY apps/server/ai-service ./apps/server/ai-service
 
-RUN pnpm --filter @platform/database build 2>/dev/null || true
+# @platform/ai-service compiles against @platform/database's built declarations
+# (tsconfig.build.json maps the import to packages/database/dist), so this build
+# must succeed before the ai-service build — do NOT swallow its failures.
+RUN pnpm --filter @platform/database build
 RUN pnpm --filter @platform/ai-service build
 
 FROM node:20-alpine
