@@ -13,6 +13,7 @@ import { UsageModule } from '../usage/usage.module';
 import { PersonaModule } from '../persona/persona.module';
 import { SkillsModule } from '../skills/skills.module';
 import { ConversationModule } from '../conversation/conversation.module';
+import { SettingsModule } from '../settings/settings.module';
 
 @Module({
   imports: [
@@ -24,6 +25,10 @@ import { ConversationModule } from '../conversation/conversation.module';
     PersonaModule,
     SkillsModule,
     ConversationModule,
+    // AiService injects SettingsService (workspace AI settings, TASK-12); without
+    // importing SettingsModule (which exports it) Nest can't resolve it → the
+    // container crashes at boot and the Cloud Run revision never listens.
+    SettingsModule,
   ],
   controllers: [AiController],
   providers: [
