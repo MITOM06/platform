@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.verifyNoInteractions;
 
 import com.platform.chatservice.dto.ConversationResponse;
 import com.platform.chatservice.dto.PageResponse;
@@ -36,6 +37,7 @@ class ConversationServiceTest {
   @Mock private MessageRepository messageRepository;
   @Mock private com.platform.chatservice.repository.FriendshipRepository friendshipRepository;
   @Mock private MongoTemplate mongoTemplate;
+  @Mock private com.platform.chatservice.repository.ExternalBotRepository externalBotRepository;
 
   @InjectMocks private ConversationService conversationService;
 
@@ -105,6 +107,26 @@ class ConversationServiceTest {
     var captor = org.mockito.ArgumentCaptor.forClass(Conversation.class);
     verify(conversationCacheService).save(captor.capture());
     assertThat(captor.getValue().getStatus()).isEqualTo(Conversation.STATUS_ACCEPTED);
+  }
+
+  @Test
+  void createConversation_withExternalBot_isAutoAccepted() {
+    when(conversationRepository.findOneOnOneConversation(any())).thenReturn(Optional.empty());
+    when(externalBotRepository.findByBotUserId("extbot:bf-1"))
+        .thenReturn(
+            Optional.of(
+                com.platform.chatservice.model.ExternalBot.builder()
+                    .botUserId("extbot:bf-1")
+                    .enabled(true)
+                    .build()));
+    org.mockito.ArgumentCaptor<Conversation> captor =
+        org.mockito.ArgumentCaptor.forClass(Conversation.class);
+    when(conversationCacheService.save(captor.capture())).thenAnswer(inv -> inv.getArgument(0));
+
+    conversationService.createConversation(USER_ID, "extbot:bf-1");
+
+    assertThat(captor.getValue().getStatus()).isEqualTo(Conversation.STATUS_ACCEPTED);
+    verifyNoInteractions(friendshipRepository);
   }
 
   @Test
