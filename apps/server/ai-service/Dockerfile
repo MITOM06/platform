@@ -28,6 +28,14 @@ WORKDIR /app
 # → MODULE_NOT_FOUND → exit(1) before the port opens.
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/packages/database ./packages/database
+# @platform/database is consumed as its prebuilt dist; its own node_modules holds a
+# SECOND copy of @nestjs/* (declared as regular deps). A duplicate @nestjs/core means
+# the Reflector class the shared guards (RequirePermissionGuard/JwtAuthGuard) import is
+# a different class than the one this app's Nest container provides → DI fails to
+# resolve the guard's dependency at index 0 → exit(1) before the port opens. Drop it so
+# the guards resolve @nestjs/core from the single root node_modules (verified: all of
+# database's runtime deps still resolve there).
+RUN rm -rf packages/database/node_modules
 COPY --from=builder /app/apps/server/ai-service/dist ./apps/server/ai-service/dist
 
 EXPOSE 3002
