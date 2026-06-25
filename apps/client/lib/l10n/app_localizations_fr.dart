@@ -2405,4 +2405,13 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get usageRetry => 'Réessayer';
+
+  @override
+  String get assistantDefaultName => 'Mon assistant';
+
+  @override
+  String get assistantSubtitle => 'Votre assistant personnel';
+
+  @override
+  String get assistantOpenChat => 'Ouvrir le chat de l’assistant';
 }

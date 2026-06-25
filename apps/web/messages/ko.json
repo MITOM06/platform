@@ -1035,5 +1035,10 @@
     "worstAnswers": "평가가 가장 낮은 답변",
     "noWorstAnswers": "이 기간에 👎 받은 답변이 없습니다",
     "feedbackSummary": "{up} 👍 · {down} 👎 · 평가 {total}건"
+  },
+  "assistant": {
+    "defaultName": "내 어시스턴트",
+    "subtitle": "당신의 개인 어시스턴트",
+    "openChat": "어시스턴트 채팅 열기"
   }
 }

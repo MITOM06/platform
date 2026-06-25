@@ -855,5 +855,8 @@
   "usageUserComment": "«{comment}»",
   "usageNoData": "No hay datos para este periodo.",
   "usageLoadError": "No se pudo cargar el panel de uso.",
-  "usageRetry": "Reintentar"
+  "usageRetry": "Reintentar",
+  "assistantDefaultName": "Mi asistente",
+  "assistantSubtitle": "Tu asistente personal",
+  "assistantOpenChat": "Abrir chat del asistente"
 }

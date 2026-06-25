@@ -16,11 +16,12 @@ import { ReactionsDetailModal } from './ReactionsDetailModal'
 import { MeetingSummaryCard } from './MeetingSummaryCard'
 import { MessageFeedback } from './MessageFeedback'
 import { MessageSources } from './MessageSources'
+import { ExternalBotBubble } from './ExternalBotBubble'
 import { humanizeSystemMessage } from '@/lib/system-messages'
 import { useNickname, getNickname } from '@/lib/nicknames'
 import { useUser } from '@/lib/hooks/use-user'
 import { useQueryClient } from '@tanstack/react-query'
-import type { Message } from '@/lib/api/types'
+import { type Message, isExternalBot } from '@/lib/api/types'
 
 interface Props {
   message: Message
@@ -152,6 +153,13 @@ const MessageBubbleInner = function MessageBubble({
         </span>
       </div>
     )
+  }
+
+  // Personal assistant bot (Bot Factory) — distinct identity, derived from
+  // useAssistant() inside ExternalBotBubble. Rendered before reaction/feedback
+  // logic since bot messages carry none of it.
+  if (isExternalBot(message.senderId)) {
+    return <ExternalBotBubble message={message} />
   }
 
   // Group reactions by emoji

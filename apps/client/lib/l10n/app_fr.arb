@@ -855,5 +855,8 @@
   "usageUserComment": "« {comment} »",
   "usageNoData": "Aucune donnée pour cette période.",
   "usageLoadError": "Impossible de charger le tableau de bord d’utilisation.",
-  "usageRetry": "Réessayer"
+  "usageRetry": "Réessayer",
+  "assistantDefaultName": "Mon assistant",
+  "assistantSubtitle": "Votre assistant personnel",
+  "assistantOpenChat": "Ouvrir le chat de l’assistant"
 }

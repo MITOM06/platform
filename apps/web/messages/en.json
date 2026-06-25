@@ -1035,5 +1035,10 @@
     "worstAnswers": "Worst-rated answers",
     "noWorstAnswers": "No 👎-rated answers in this period",
     "feedbackSummary": "{up} 👍 · {down} 👎 · {total} rated"
+  },
+  "assistant": {
+    "defaultName": "My Assistant",
+    "subtitle": "Your personal assistant",
+    "openChat": "Open assistant chat"
   }
 }

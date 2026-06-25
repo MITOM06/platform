@@ -43,6 +43,11 @@ class MessageBubble extends ConsumerWidget {
     if (message.isMeetingSummary) {
       return MeetingSummaryBubble(message: message);
     }
+    // Bot Factory personal assistant — distinct identity, derived from
+    // assistantProvider inside ExternalBotBubble.
+    if (message.isExternalBot) {
+      return ExternalBotBubble(message: message);
+    }
 
     final chatState = ref
         .watch(chatNotifierProvider(message.conversationId))

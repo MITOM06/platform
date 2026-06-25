@@ -123,6 +123,13 @@ export interface Message {
   sources?: AiSource[]
 }
 
+/**
+ * A `senderId` starting with `extbot:` identifies a Bot Factory personal
+ * assistant bot — rendered with its own identity, distinct from the native
+ * `@AI` bot and from human senders.
+ */
+export const isExternalBot = (senderId: string) => senderId.startsWith('extbot:')
+
 export interface MessagesResponse {
   content: Message[]
   page: number

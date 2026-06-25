@@ -4446,6 +4446,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Retry'**
   String get usageRetry;
+
+  /// No description provided for @assistantDefaultName.
+  ///
+  /// In en, this message translates to:
+  /// **'My Assistant'**
+  String get assistantDefaultName;
+
+  /// No description provided for @assistantSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Your personal assistant'**
+  String get assistantSubtitle;
+
+  /// No description provided for @assistantOpenChat.
+  ///
+  /// In en, this message translates to:
+  /// **'Open assistant chat'**
+  String get assistantOpenChat;
 }
 
 class _AppLocalizationsDelegate

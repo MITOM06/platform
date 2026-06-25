@@ -2306,4 +2306,13 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get usageRetry => '重试';
+
+  @override
+  String get assistantDefaultName => '我的助手';
+
+  @override
+  String get assistantSubtitle => '您的私人助手';
+
+  @override
+  String get assistantOpenChat => '打开助手对话';
 }

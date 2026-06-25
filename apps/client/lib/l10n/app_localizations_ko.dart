@@ -2320,4 +2320,13 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get usageRetry => '다시 시도';
+
+  @override
+  String get assistantDefaultName => '내 어시스턴트';
+
+  @override
+  String get assistantSubtitle => '당신의 개인 어시스턴트';
+
+  @override
+  String get assistantOpenChat => '어시스턴트 채팅 열기';
 }

@@ -2318,4 +2318,13 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get usageRetry => '再試行';
+
+  @override
+  String get assistantDefaultName => 'マイアシスタント';
+
+  @override
+  String get assistantSubtitle => 'あなたの専属アシスタント';
+
+  @override
+  String get assistantOpenChat => 'アシスタントのチャットを開く';
 }

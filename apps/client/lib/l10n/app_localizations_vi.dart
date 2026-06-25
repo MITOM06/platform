@@ -2370,4 +2370,13 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get usageRetry => 'Thử lại';
+
+  @override
+  String get assistantDefaultName => 'Trợ lý của tôi';
+
+  @override
+  String get assistantSubtitle => 'Trợ lý cá nhân của bạn';
+
+  @override
+  String get assistantOpenChat => 'Mở trò chuyện với trợ lý';
 }

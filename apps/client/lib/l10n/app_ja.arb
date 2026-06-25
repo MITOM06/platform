@@ -855,5 +855,8 @@
   "usageUserComment": "「{comment}」",
   "usageNoData": "この期間のデータはありません。",
   "usageLoadError": "使用状況ダッシュボードを読み込めませんでした。",
-  "usageRetry": "再試行"
+  "usageRetry": "再試行",
+  "assistantDefaultName": "マイアシスタント",
+  "assistantSubtitle": "あなたの専属アシスタント",
+  "assistantOpenChat": "アシスタントのチャットを開く"
 }
