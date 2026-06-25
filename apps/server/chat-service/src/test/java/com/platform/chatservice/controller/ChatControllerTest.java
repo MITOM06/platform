@@ -8,6 +8,7 @@ import com.platform.chatservice.dto.MessageResponse;
 import com.platform.chatservice.dto.SendMessageRequest;
 import com.platform.chatservice.service.AiRedisPublisher;
 import com.platform.chatservice.service.ConversationService;
+import com.platform.chatservice.service.ExternalBotService;
 import com.platform.chatservice.service.MessageService;
 import com.platform.chatservice.service.RateLimiterService;
 import java.security.Principal;
@@ -39,6 +40,8 @@ class ChatControllerTest {
   @Mock private RateLimiterService rateLimiterService;
 
   @Mock private AiRedisPublisher aiRedisPublisher;
+
+  @Mock private ExternalBotService externalBotService;
 
   @InjectMocks private ChatController chatController;
 

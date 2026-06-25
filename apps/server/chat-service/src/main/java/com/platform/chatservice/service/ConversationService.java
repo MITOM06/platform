@@ -7,8 +7,10 @@ import com.platform.chatservice.exception.ConversationNotFoundException;
 import com.platform.chatservice.exception.DuplicateConversationException;
 import com.platform.chatservice.exception.ForbiddenException;
 import com.platform.chatservice.model.Conversation;
+import com.platform.chatservice.model.ExternalBot;
 import com.platform.chatservice.model.Message;
 import com.platform.chatservice.repository.ConversationRepository;
+import com.platform.chatservice.repository.ExternalBotRepository;
 import com.platform.chatservice.repository.FriendshipRepository;
 import com.platform.chatservice.repository.MessageRepository;
 import java.time.Instant;
@@ -39,6 +41,7 @@ public class ConversationService {
   private final MessageRepository messageRepository;
   private final FriendshipRepository friendshipRepository;
   private final MongoTemplate mongoTemplate;
+  private final ExternalBotRepository externalBotRepository;
 
   public PageResponse<ConversationResponse> listConversations(String userId, Pageable pageable) {
     return listConversations(userId, pageable, false);
@@ -84,11 +87,12 @@ public class ConversationService {
               throw new DuplicateConversationException(existing.getId());
             });
     // Friends chat freely; a message to a non-friend starts as a stranger
-    // request (PENDING) until the recipient accepts or replies. The AI bot
-    // is always treated as accepted — it never "accepts" a request itself,
-    // so a PENDING status would lock the AI chat behind a stranger banner.
+    // request (PENDING) until the recipient accepts or replies. Bot participants
+    // (built-in AI or registered, enabled external bots) are always treated as
+    // accepted — they never "accept" a request themselves, so a PENDING status
+    // would lock bot chat behind a stranger banner.
     boolean friends =
-        AiConstants.AI_BOT_USER_ID.equals(participantId)
+        isBotParticipant(participantId)
             || friendshipRepository.findAcceptedBetween(currentUserId, participantId).isPresent();
     Conversation saved =
         conversationCacheService.save(
@@ -423,6 +427,17 @@ public class ConversationService {
 
   private boolean isAdmin(Conversation conversation, String userId) {
     return conversation.getAdmins() != null && conversation.getAdmins().contains(userId);
+  }
+
+  /** A bot participant (built-in AI or a registered, enabled external bot) is always accepted. */
+  private boolean isBotParticipant(String participantId) {
+    if (AiConstants.AI_BOT_USER_ID.equals(participantId)) {
+      return true;
+    }
+    return externalBotRepository
+        .findByBotUserId(participantId)
+        .map(ExternalBot::isEnabled)
+        .orElse(false);
   }
 
   private void setClearedAt(Conversation conversation, String userId, Instant when) {

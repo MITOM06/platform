@@ -34,13 +34,27 @@ public class AiMessageService {
    * Called by AiResponseListener when AI_STREAM_DONE is received from Redis.
    */
   public MessageResponse saveAiMessage(String conversationId, String content, AiTraceData trace) {
+    return persistAndBroadcast(conversationId, AiConstants.AI_BOT_USER_ID, content, "ai", trace);
+  }
+
+  /**
+   * Save a message authored by an external bot (Bot Factory personal assistant) under its own
+   * sender id and broadcast it to the conversation topic. Same wire shape as an AI message ({@code
+   * type:"ai"}) so the clients render it as an assistant bubble.
+   */
+  public MessageResponse saveBotMessage(String conversationId, String senderId, String content) {
+    return persistAndBroadcast(conversationId, senderId, content, "ai", null);
+  }
+
+  private MessageResponse persistAndBroadcast(
+      String conversationId, String senderId, String content, String type, AiTraceData trace) {
     Message message =
         messageRepository.save(
             Message.builder()
                 .conversationId(conversationId)
-                .senderId(AiConstants.AI_BOT_USER_ID)
+                .senderId(senderId)
                 .content(content)
-                .type("ai")
+                .type(type)
                 .readBy(new ArrayList<>())
                 .trace(trace)
                 .build());
@@ -53,7 +67,7 @@ public class AiMessageService {
               conv.setLastMessage(
                   Conversation.LastMessage.builder()
                       .content(content)
-                      .senderId(AiConstants.AI_BOT_USER_ID)
+                      .senderId(senderId)
                       .createdAt(savedAt)
                       .build());
               conv.setLastMessageAt(savedAt);

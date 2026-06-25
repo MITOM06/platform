@@ -8,6 +8,7 @@ import com.platform.chatservice.exception.RateLimitExceededException;
 import com.platform.chatservice.service.AiRedisPublisher;
 import com.platform.chatservice.service.CallService;
 import com.platform.chatservice.service.ConversationService;
+import com.platform.chatservice.service.ExternalBotService;
 import com.platform.chatservice.service.MessageService;
 import com.platform.chatservice.service.RateLimiterService;
 import java.security.Principal;
@@ -35,6 +36,7 @@ public class ChatController {
   private final RateLimiterService rateLimiterService;
   private final AiRedisPublisher aiRedisPublisher;
   private final CallService callService;
+  private final ExternalBotService externalBotService;
 
   @MessageMapping("/chat.send")
   public void send(@Payload ChatMessageDto dto, Principal principal) {
@@ -70,6 +72,24 @@ public class ChatController {
             } catch (Exception ignored) {
             }
           });
+    }
+
+    // Async personal-assistant (Bot Factory) trigger — 1-1 conversation with the member's bot.
+    if (dto.getContent() != null) {
+      final String botUid = principal.getName();
+      final String botConvId = dto.getConversationId();
+      final String botRaw = dto.getContent();
+      externalBotService
+          .resolveAssistant(botConvId, botUid)
+          .ifPresent(
+              bot ->
+                  CompletableFuture.runAsync(
+                      () -> {
+                        try {
+                          externalBotService.reply(bot, botConvId, botRaw);
+                        } catch (Exception ignored) {
+                        }
+                      }));
     }
 
     List<String> mentions = response.mentions() == null ? List.of() : response.mentions();

@@ -87,6 +87,11 @@ app:
     allowed-origins: ${ALLOWED_ORIGINS:*}
   jwt:
     secret: ${JWT_ACCESS_SECRET}
+  botfactory:
+    # External Bot Factory service that powers per-member personal assistants.
+    # Leave blank to disable the bridge (graceful no-op).
+    base-url: ${BOTFACTORY_BASE_URL:}
+    worker-token: ${BOTFACTORY_WORKER_TOKEN:}
   firebase:
     # Base64 của file service-account JSON (Firebase Console). Rỗng = FCM tắt (no-op an toàn).
     service-account-base64: ${FIREBASE_SERVICE_ACCOUNT_BASE64:}

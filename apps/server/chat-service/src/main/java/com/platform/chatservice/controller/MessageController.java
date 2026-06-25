@@ -14,6 +14,7 @@ import com.platform.chatservice.exception.UnauthorizedException;
 import com.platform.chatservice.security.UserPrincipal;
 import com.platform.chatservice.service.AiFeedbackService;
 import com.platform.chatservice.service.AiRedisPublisher;
+import com.platform.chatservice.service.ExternalBotService;
 import com.platform.chatservice.service.MessageService;
 import com.platform.chatservice.service.RateLimiterService;
 import java.util.List;
@@ -38,6 +39,7 @@ public class MessageController {
   private final RateLimiterService rateLimiterService;
   private final AiRedisPublisher aiRedisPublisher;
   private final AiFeedbackService aiFeedbackService;
+  private final ExternalBotService externalBotService;
 
   @PostMapping
   @ResponseStatus(HttpStatus.CREATED)
@@ -60,6 +62,21 @@ public class MessageController {
             } catch (Exception ignored) {
             }
           });
+    }
+    if (request.content() != null) {
+      final String botConvId = request.conversationId();
+      final String botRaw = request.content();
+      externalBotService
+          .resolveAssistant(botConvId, uid)
+          .ifPresent(
+              bot ->
+                  CompletableFuture.runAsync(
+                      () -> {
+                        try {
+                          externalBotService.reply(bot, botConvId, botRaw);
+                        } catch (Exception ignored) {
+                        }
+                      }));
     }
     return response;
   }
