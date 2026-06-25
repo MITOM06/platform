@@ -10,6 +10,7 @@ import { CatalogModule } from './catalog/catalog.module';
 import { DirectoryModule } from './directory/directory.module';
 import { OAuthModule } from './oauth/oauth.module';
 import { InternalModule } from './internal/internal.module';
+import { BotModule } from './bot/bot.module';
 
 const mongooseModule: DynamicModule = MongooseModule.forRootAsync({
   useFactory: (configService: ConfigService) => ({
@@ -33,6 +34,7 @@ const mongooseModule: DynamicModule = MongooseModule.forRootAsync({
     DirectoryModule,
     OAuthModule,
     InternalModule,
+    BotModule,
   ],
   providers: [SharedJwtStrategy],
 })
