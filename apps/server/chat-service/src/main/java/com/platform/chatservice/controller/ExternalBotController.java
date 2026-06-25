@@ -6,6 +6,7 @@ import com.platform.chatservice.dto.ExternalBotResponse;
 import com.platform.chatservice.exception.UnauthorizedException;
 import com.platform.chatservice.security.UserPrincipal;
 import com.platform.chatservice.service.ExternalBotAdminService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -29,7 +30,7 @@ public class ExternalBotController {
   @PostMapping("/admin/external-bots")
   @PreAuthorize("hasAuthority('PERM_MANAGE_WORKSPACE')")
   @ResponseStatus(HttpStatus.CREATED)
-  public ExternalBotResponse register(@RequestBody CreateExternalBotRequest req) {
+  public ExternalBotResponse register(@Valid @RequestBody CreateExternalBotRequest req) {
     return service.register(req.ownerUserId(), req.factoryBotId(), req.name(), req.avatarUrl());
   }
 
