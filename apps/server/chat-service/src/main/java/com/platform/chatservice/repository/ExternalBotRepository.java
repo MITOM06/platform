@@ -11,4 +11,6 @@ public interface ExternalBotRepository extends MongoRepository<ExternalBot, Stri
   Optional<ExternalBot> findByOwnerUserIdAndEnabledTrue(String ownerUserId);
 
   boolean existsByBotUserId(String botUserId);
+
+  void deleteByOwnerUserId(String ownerUserId);
 }

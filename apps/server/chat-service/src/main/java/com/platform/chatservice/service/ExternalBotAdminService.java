@@ -42,6 +42,11 @@ public class ExternalBotAdminService {
     return repo.findAll().stream().map(this::toResponse).toList();
   }
 
+  /** Remove the member's assistant mapping entirely (BotFather Zone tear-down). */
+  public void unregister(String ownerUserId) {
+    repo.deleteByOwnerUserId(ownerUserId);
+  }
+
   private ExternalBotResponse toResponse(ExternalBot b) {
     return new ExternalBotResponse(
         b.getId(),

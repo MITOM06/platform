@@ -38,8 +38,7 @@ public class ConnectorServiceClient {
     try {
       String body = objectMapper.writeValueAsString(new BotSessionRequest(userId, botUserId));
       HttpResponse<String> res =
-          httpClient.send(
-              baseRequest("POST", body).build(), HttpResponse.BodyHandlers.ofString());
+          httpClient.send(baseRequest("POST", body).build(), HttpResponse.BodyHandlers.ofString());
       if (res.statusCode() / 100 != 2) {
         throw new IllegalStateException(
             "connector-service issueToken failed: " + res.statusCode() + " " + res.body());

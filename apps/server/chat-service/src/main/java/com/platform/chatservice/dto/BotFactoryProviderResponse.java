@@ -7,5 +7,4 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
  * member needs to pick a model in the BotFather Zone setup wizard.
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
-public record BotFactoryProviderResponse(
-    String id, String label, String provider, String model) {}
+public record BotFactoryProviderResponse(String id, String label, String provider, String model) {}

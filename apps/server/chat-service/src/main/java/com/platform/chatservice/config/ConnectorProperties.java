@@ -6,9 +6,9 @@ import org.springframework.stereotype.Component;
 
 /**
  * Connection settings for the internal connector-service ({@code :3003}) used to issue/revoke the
- * MCP session token a member's Bot Factory assistant authenticates with. Bound from
- * {@code app.connector.*}. When {@code baseUrl} is blank the BotFather Zone provisioning flow is
- * disabled (calls throw), but the rest of chat-service runs fine.
+ * MCP session token a member's Bot Factory assistant authenticates with. Bound from {@code
+ * app.connector.*}. When {@code baseUrl} is blank the BotFather Zone provisioning flow is disabled
+ * (calls throw), but the rest of chat-service runs fine.
  */
 @Component
 @ConfigurationProperties(prefix = "app.connector")

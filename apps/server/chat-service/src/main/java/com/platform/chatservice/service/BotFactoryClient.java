@@ -27,9 +27,9 @@ import org.springframework.stereotype.Service;
  * failure so the caller can simply skip posting a reply.
  *
  * <p>The admin methods ({@code createBot}, {@code updateBot}, {@code deleteBot}, MCP injection,
- * {@code listProviders}) back the self-service "BotFather Zone" provisioning flow. Unlike
- * {@code chat} they throw {@link IllegalStateException} on failure so the orchestrator can surface
- * the error rather than silently swallowing it.
+ * {@code listProviders}) back the self-service "BotFather Zone" provisioning flow. Unlike {@code
+ * chat} they throw {@link IllegalStateException} on failure so the orchestrator can surface the
+ * error rather than silently swallowing it.
  */
 @Service
 @RequiredArgsConstructor
@@ -101,8 +101,7 @@ public class BotFactoryClient {
   }
 
   /** Update a bot's persona (name + system prompt) and default AI provider. */
-  public void updateBot(
-      String botId, String name, String systemPrompt, String defaultProviderId) {
+  public void updateBot(String botId, String name, String systemPrompt, String defaultProviderId) {
     sendJson(
         "PATCH",
         "/api/bots/" + botId,
@@ -119,8 +118,7 @@ public class BotFactoryClient {
   public void addMcpServer(String botId, String mcpName, String mcpUrl, String bearerToken) {
     String headers;
     try {
-      headers =
-          objectMapper.writeValueAsString(Map.of("Authorization", "Bearer " + bearerToken));
+      headers = objectMapper.writeValueAsString(Map.of("Authorization", "Bearer " + bearerToken));
     } catch (IOException e) {
       throw new IllegalStateException("Failed to encode MCP headers", e);
     }
@@ -222,7 +220,13 @@ public class BotFactoryClient {
               baseRequest(method, path, json).build(), HttpResponse.BodyHandlers.ofString());
       if (res.statusCode() / 100 != 2) {
         throw new IllegalStateException(
-            "Bot Factory " + method + " " + path + " failed: " + res.statusCode() + " "
+            "Bot Factory "
+                + method
+                + " "
+                + path
+                + " failed: "
+                + res.statusCode()
+                + " "
                 + res.body());
       }
       if (responseType == null || responseType == Void.class) {
