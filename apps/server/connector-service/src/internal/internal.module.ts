@@ -20,5 +20,6 @@ import { PermResolverService } from './perm-resolver.service';
   ],
   controllers: [InternalController],
   providers: [InternalService, PermResolverService],
+  exports: [InternalService],
 })
 export class InternalModule {}
