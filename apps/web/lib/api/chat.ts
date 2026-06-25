@@ -183,7 +183,15 @@ export const chatService = {
     const form = new FormData()
     form.append('file', new File([file], name, { type }))
     return chatApi
-      .post<UploadResult>('/api/uploads', form)
+      // `chatApi`'s instance default is `Content-Type: application/json`. With a
+      // JSON content-type axios 1.x serializes a FormData body to JSON
+      // (`formDataToJSON` → `{"file":{}}`), dropping the binary entirely and
+      // making chat-service reject the request with 400 (no `file` part). Clearing
+      // the header for THIS request lets the browser set `multipart/form-data`
+      // with the proper boundary itself.
+      .post<UploadResult>('/api/uploads', form, {
+        headers: { 'Content-Type': undefined },
+      })
       .then((r) => r.data)
   },
 
