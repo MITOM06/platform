@@ -83,6 +83,71 @@ class AppLocalizationsEn extends AppLocalizations {
   String get errNetwork => 'Cannot reach the server, check your connection';
 
   @override
+  String get errSlow => 'Connection is too slow, please try again';
+
+  @override
+  String get errSessionExpired => 'Your session has expired';
+
+  @override
+  String get errForbidden => 'You don\'t have permission to do this';
+
+  @override
+  String get errNotFound => 'Data not found';
+
+  @override
+  String get errConflict => 'This data already exists';
+
+  @override
+  String get errInvalidData => 'Invalid data';
+
+  @override
+  String get errServer => 'Server error, please try again later';
+
+  @override
+  String errRequestFailed(String code) {
+    return 'Request failed ($code)';
+  }
+
+  @override
+  String get errCancelled => 'The request was cancelled';
+
+  @override
+  String get errConnection => 'Connection error, please try again';
+
+  @override
+  String get errGeneric => 'Something went wrong, please try again';
+
+  @override
+  String get detailsTitle => 'Details';
+
+  @override
+  String get themeMenuItem => 'Theme';
+
+  @override
+  String get quickReactionTitle => 'Quick Reaction';
+
+  @override
+  String get wallpaperDefaultName => 'Default';
+
+  @override
+  String get changeChatThemeTitle => 'Change Chat Theme';
+
+  @override
+  String get uploadImageButton => 'Upload image';
+
+  @override
+  String get imageFitLabel => 'Image fit';
+
+  @override
+  String get fitCoverLabel => 'Cover';
+
+  @override
+  String get fitContainLabel => 'Contain';
+
+  @override
+  String get fitFillLabel => 'Fill';
+
+  @override
   String get errLoginFailed => 'Sign in failed, please try again';
 
   @override
@@ -2380,6 +2445,63 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get assistantOpenChat => 'Open assistant chat';
+
+  @override
+  String get assistantSetupCta => 'Set up assistant';
+
+  @override
+  String get assistantSetupTitle => 'Set up your assistant';
+
+  @override
+  String get assistantSetupStepName => 'Name your assistant';
+
+  @override
+  String get assistantSetupStepPersona => 'Define its personality';
+
+  @override
+  String get assistantSetupStepModel => 'Choose a model';
+
+  @override
+  String get assistantSetupStepConfirm => 'Review and create';
+
+  @override
+  String get assistantSetupNamePlaceholder => 'e.g. Aria';
+
+  @override
+  String get assistantSetupPersonaPlaceholder =>
+      'You are a helpful assistant who…';
+
+  @override
+  String get assistantSetupPersonaHint =>
+      'Describe how your assistant should talk and behave.';
+
+  @override
+  String get assistantSetupCreateButton => 'Create assistant';
+
+  @override
+  String get assistantSetupCreating => 'Creating…';
+
+  @override
+  String get assistantSetupSuccess => 'Your assistant is ready';
+
+  @override
+  String get assistantSettingsTitle => 'Assistant settings';
+
+  @override
+  String get assistantSettingsEditPersona => 'Personality';
+
+  @override
+  String get assistantSettingsChangeModel => 'Model';
+
+  @override
+  String get assistantSettingsDeleteTitle => 'Delete assistant';
+
+  @override
+  String get assistantSettingsDeleteConfirm =>
+      'This will remove your assistant and its chat. This cannot be undone.';
+
+  @override
+  String get assistantSettingsDeleteButton => 'Delete assistant';
 
   @override
   String get botAdminTitle => 'Bot Integration';

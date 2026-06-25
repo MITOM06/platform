@@ -711,30 +711,101 @@
   "legal": {
     "privacyTitle": "Privacy Policy",
     "termsTitle": "Terms of Service",
-    "viewTerms": "Also read our Terms of Service",
-    "viewPrivacy": "View our Privacy Policy",
-    "title": "Privacy Policy & Terms of Service",
-    "lastUpdated": "Last updated: June 15, 2026",
-    "sections": {
-      "dataCollection": {
-        "title": "1. Data Collection",
-        "content": "We collect information you provide directly to us, such as when you create or modify your account, use our services, or communicate with us. This includes your name, email address, profile picture, and the messages you send."
-      },
-      "dataUsage": {
-        "title": "2. How We Use Your Data",
-        "content": "Your data is used to provide, maintain, and improve our services, including facilitating communication between users, ensuring security, and personalizing your experience."
-      },
-      "security": {
-        "title": "3. Security",
-        "content": "We implement industry-standard security measures to protect your personal information and messages. Access to data is strictly controlled and we use encryption to secure sensitive information."
-      },
-      "userRights": {
-        "title": "4. Your Rights",
-        "content": "You have the right to access, correct, or delete your personal data. You can delete your account at any time through the application settings."
-      },
-      "terms": {
-        "title": "5. Terms of Service",
-        "content": "By using our platform, you agree not to engage in any abusive, harassing, or illegal activities. We reserve the right to suspend or terminate accounts that violate these terms."
+    "lastUpdated": "Last updated: 25 June 2026",
+    "viewTerms": "Read the Terms of Service",
+    "viewPrivacy": "Read the Privacy Policy",
+    "privacy": {
+      "intro": "PON is a self-hosted, single-tenant AI assistant workspace: each deployment is run by one organization for its own members. The organization that operates this deployment is the data controller responsible for your personal data, and this policy explains what information the PON platform processes and how. Your employer’s internal policies may add further terms.",
+      "contactTitle": "Contact",
+      "contactBody": "Questions about your data should go to the administrator of your PON workspace, who operates this deployment and acts as the data controller.",
+      "sections": {
+        "scope": {
+          "title": "1. Scope of this policy",
+          "content": "This policy covers the PON web and mobile apps and the backend services that power them — authentication, chat, the AI assistant, and connectors. It does not cover third-party products you choose to connect, which are governed by their own privacy policies."
+        },
+        "dataWeCollect": {
+          "title": "2. Information we collect",
+          "content": "Account data that you or your organization provide (name, email, password hash, avatar, role, and department). Content you create: messages, group conversations, files and voice notes you upload, reactions, and call metadata. Technical data needed to run the service: device and browser details, IP address, online and last-seen status, and push-notification tokens."
+        },
+        "howWeUse": {
+          "title": "3. How we use information",
+          "content": "To deliver core features — sign-in, real-time messaging, calls, file sharing, and presence — and to keep the workspace secure, prevent abuse, enforce access controls, and diagnose problems. We do not sell your personal data, and we do not use your private messages for advertising."
+        },
+        "aiProcessing": {
+          "title": "4. AI assistant and processing",
+          "content": "When you interact with the AI assistant — for example by mentioning it or using your personal assistant — the relevant messages, and any documents you add to its knowledge base, are sent to our AI providers to generate a response. The assistant may store summaries, “memories”, and vector embeddings to keep context across conversations. AI responses can be inaccurate and should be verified before you rely on them."
+        },
+        "connectors": {
+          "title": "5. Connected third-party tools",
+          "content": "You may connect external services (such as Google or Notion) so the assistant can act on your behalf. Connecting a tool grants PON access tokens, which are stored encrypted in a token vault and used only to perform the actions you request. You can disconnect a tool at any time, which revokes the stored access."
+        },
+        "subprocessors": {
+          "title": "6. Service providers we rely on",
+          "content": "The platform depends on trusted providers to function, including AI model providers (for assistant responses and text embeddings), a push-notification service for mobile alerts, and the infrastructure your organization hosts the deployment on. These providers process data only to provide their service to your deployment."
+        },
+        "retention": {
+          "title": "7. Data retention",
+          "content": "Messages, files, and account data are kept for as long as your account and conversations exist, or until you or your organization delete them. Disappearing messages, cleared history, recalled messages, and deleted accounts are removed using the controls in the app. Operational logs are kept only as long as needed for security and reliability."
+        },
+        "security": {
+          "title": "8. Security",
+          "content": "Access is protected by token-based authentication with short-lived access tokens and rotating refresh tokens. Uploads are validated and scanned, role-based access controls limit who can see what, and sensitive credentials such as connector tokens are encrypted at rest. No system is perfectly secure, so please use a strong password and keep your devices safe."
+        },
+        "yourRights": {
+          "title": "9. Your rights and choices",
+          "content": "You can view and update your profile, control notifications, mute or block other users, and delete your account from the app settings. Depending on where you live, you may have rights to access, correct, export, or erase your personal data — contact your workspace administrator to exercise them, since they are the data controller."
+        },
+        "changes": {
+          "title": "10. Changes to this policy",
+          "content": "We may update this policy as the platform evolves. Material changes are reflected by the “last updated” date above, and where appropriate your organization will notify you. Continued use after an update means you accept the revised policy."
+        }
+      }
+    },
+    "terms": {
+      "intro": "These Terms govern your use of the PON platform — a self-hosted, single-tenant AI assistant workspace operated by your organization. By accessing or using PON, you agree to these Terms. If you use PON as part of your work, your organization’s policies also apply.",
+      "contactTitle": "Contact",
+      "contactBody": "For questions about these Terms, contact the administrator of your PON workspace.",
+      "sections": {
+        "acceptance": {
+          "title": "1. Acceptance of these terms",
+          "content": "By creating an account, signing in, or using any part of PON, you agree to these Terms and to our Privacy Policy. If you do not agree, do not use the platform."
+        },
+        "eligibility": {
+          "title": "2. Accounts and eligibility",
+          "content": "Accounts are intended for members authorized by the organization that operates this deployment. You are responsible for activity under your account and for keeping your credentials confidential. Your administrator may create, suspend, or remove accounts and assign roles and permissions."
+        },
+        "acceptableUse": {
+          "title": "3. Acceptable use",
+          "content": "Do not use PON to harass, threaten, or harm others; to share illegal or infringing content; to distribute malware; to attempt to breach security or access data you are not authorized to; or to disrupt the service. Respect the people you communicate with and your organization’s rules."
+        },
+        "aiOutput": {
+          "title": "4. AI features and accuracy",
+          "content": "The AI assistant generates content automatically and may be incomplete, outdated, or wrong. It does not provide legal, medical, financial, or other professional advice. You are responsible for reviewing AI output and for any actions you take — including actions the assistant performs through connected tools at your request."
+        },
+        "yourContent": {
+          "title": "5. Your content",
+          "content": "You keep ownership of the content you create. You grant the platform the limited permission needed to store, process, transmit, and display that content in order to operate the service for you and your conversation participants. You are responsible for having the right to share what you upload."
+        },
+        "connectors": {
+          "title": "6. Third-party connectors",
+          "content": "When you connect an external service, your use of that service remains subject to its own terms. You authorize PON to access and act on that service only as you instruct. We are not responsible for third-party services, their availability, or their content."
+        },
+        "suspension": {
+          "title": "7. Suspension and termination",
+          "content": "Your organization or the platform may suspend or terminate access for violations of these Terms, for security risks, or at the organization’s direction. On termination, your access ends and content may be deleted according to your organization’s retention settings."
+        },
+        "disclaimer": {
+          "title": "8. Disclaimers",
+          "content": "PON is provided “as is” and “as available”, without warranties of any kind to the maximum extent permitted by law. We do not guarantee that the service will be uninterrupted, error-free, or secure, or that AI output will be accurate."
+        },
+        "liability": {
+          "title": "9. Limitation of liability",
+          "content": "To the maximum extent permitted by law, the providers and operators of PON are not liable for indirect, incidental, or consequential damages, or for loss of data or profits, arising from your use of the platform. Your organization’s agreement may set out additional terms."
+        },
+        "governingLaw": {
+          "title": "10. Governing law and changes",
+          "content": "Because PON is self-hosted, these Terms are governed by the law and the agreements that apply between you and the organization operating your deployment. We may update these Terms; the “last updated” date shows the latest version, and continued use means you accept the changes."
+        }
       }
     }
   },
@@ -1039,7 +1110,30 @@
   "assistant": {
     "defaultName": "My Assistant",
     "subtitle": "Your personal assistant",
-    "openChat": "Open assistant chat"
+    "openChat": "Open assistant chat",
+    "setupCta": "Set up assistant"
+  },
+  "assistantSetup": {
+    "title": "Set up your assistant",
+    "stepName": "Name your assistant",
+    "stepPersona": "Define its persona",
+    "stepModel": "Choose a model",
+    "stepConfirm": "Review and create",
+    "namePlaceholder": "e.g. My Assistant",
+    "personaPlaceholder": "Describe how your assistant should behave and respond…",
+    "personaHint": "This becomes the system prompt that guides every reply.",
+    "createButton": "Create assistant",
+    "creating": "Creating…",
+    "success": "Your assistant is ready!",
+    "continue": "Continue"
+  },
+  "assistantSettings": {
+    "title": "Assistant settings",
+    "editPersona": "Edit persona",
+    "changeModel": "Change model",
+    "deleteTitle": "Delete assistant",
+    "deleteConfirm": "Are you sure you want to delete your assistant? This cannot be undone.",
+    "deleteButton": "Delete assistant"
   },
   "botAdmin": {
     "title": "Bot Factory integration",

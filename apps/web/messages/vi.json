@@ -709,32 +709,103 @@
     "imageAlt": "Phương tiện đã chia sẻ"
   },
   "legal": {
-    "privacyTitle": "Chính sách Quyền riêng tư",
-    "termsTitle": "Điều khoản Dịch vụ",
-    "viewTerms": "Xem thêm Điều khoản Dịch vụ của chúng tôi",
-    "viewPrivacy": "Xem Chính sách Quyền riêng tư",
-    "title": "Chính sách Quyền riêng tư & Điều khoản Dịch vụ",
-    "lastUpdated": "Cập nhật lần cuối: 15/06/2026",
-    "sections": {
-      "dataCollection": {
-        "title": "1. Thu thập dữ liệu",
-        "content": "Chúng tôi thu thập thông tin bạn cung cấp trực tiếp cho chúng tôi, ví dụ như khi bạn tạo hoặc sửa đổi tài khoản, sử dụng dịch vụ của chúng tôi hoặc liên lạc với chúng tôi. Điều này bao gồm tên, địa chỉ email, ảnh đại diện và các tin nhắn bạn gửi."
-      },
-      "dataUsage": {
-        "title": "2. Cách chúng tôi sử dụng dữ liệu",
-        "content": "Dữ liệu của bạn được sử dụng để cung cấp, duy trì và cải thiện các dịch vụ của chúng tôi, bao gồm tạo điều kiện giao tiếp giữa những người dùng, đảm bảo bảo mật và cá nhân hóa trải nghiệm của bạn."
-      },
-      "security": {
-        "title": "3. Bảo mật",
-        "content": "Chúng tôi áp dụng các biện pháp bảo mật tiêu chuẩn ngành để bảo vệ thông tin cá nhân và tin nhắn của bạn. Quyền truy cập dữ liệu được kiểm soát chặt chẽ và chúng tôi sử dụng mã hóa để bảo mật thông tin nhạy cảm."
-      },
-      "userRights": {
-        "title": "4. Quyền của bạn",
-        "content": "Bạn có quyền truy cập, chỉnh sửa hoặc xóa dữ liệu cá nhân của mình. Bạn có thể xóa tài khoản của mình bất kỳ lúc nào thông qua cài đặt ứng dụng."
-      },
-      "terms": {
-        "title": "5. Điều khoản Dịch vụ",
-        "content": "Bằng cách sử dụng nền tảng của chúng tôi, bạn đồng ý không tham gia vào bất kỳ hoạt động lạm dụng, quấy rối hoặc bất hợp pháp nào. Chúng tôi có quyền đình chỉ hoặc chấm dứt các tài khoản vi phạm các điều khoản này."
+    "privacyTitle": "Chính sách quyền riêng tư",
+    "termsTitle": "Điều khoản dịch vụ",
+    "lastUpdated": "Cập nhật lần cuối: 25 tháng 6, 2026",
+    "viewTerms": "Đọc Điều khoản dịch vụ",
+    "viewPrivacy": "Đọc Chính sách quyền riêng tư",
+    "privacy": {
+      "intro": "PON là không gian làm việc trợ lý AI tự lưu trữ (self-hosted), dành riêng cho từng tổ chức: mỗi bản triển khai do một tổ chức vận hành cho các thành viên của mình. Tổ chức vận hành bản triển khai này là bên kiểm soát dữ liệu chịu trách nhiệm về dữ liệu cá nhân của bạn; chính sách này giải thích nền tảng PON xử lý những thông tin gì và xử lý ra sao. Quy định nội bộ của nơi bạn làm việc có thể bổ sung thêm điều khoản.",
+      "contactTitle": "Liên hệ",
+      "contactBody": "Mọi thắc mắc về dữ liệu của bạn, vui lòng liên hệ quản trị viên không gian làm việc PON — người vận hành bản triển khai này và đóng vai trò bên kiểm soát dữ liệu.",
+      "sections": {
+        "scope": {
+          "title": "1. Phạm vi áp dụng",
+          "content": "Chính sách này áp dụng cho ứng dụng web và di động của PON cùng các dịch vụ nền tảng phía sau — xác thực, trò chuyện, trợ lý AI và các trình kết nối. Chính sách không áp dụng cho các sản phẩm bên thứ ba mà bạn chủ động kết nối; những sản phẩm đó tuân theo chính sách quyền riêng tư của riêng họ."
+        },
+        "dataWeCollect": {
+          "title": "2. Thông tin chúng tôi thu thập",
+          "content": "Dữ liệu tài khoản do bạn hoặc tổ chức cung cấp (tên, email, mã băm mật khẩu, ảnh đại diện, vai trò, phòng ban). Nội dung bạn tạo: tin nhắn, cuộc trò chuyện nhóm, tệp và tin nhắn thoại bạn tải lên, biểu tượng cảm xúc và dữ liệu cuộc gọi. Dữ liệu kỹ thuật cần thiết để vận hành: thông tin thiết bị và trình duyệt, địa chỉ IP, trạng thái trực tuyến/lần truy cập cuối, và mã thông báo đẩy."
+        },
+        "howWeUse": {
+          "title": "3. Cách chúng tôi sử dụng thông tin",
+          "content": "Để cung cấp các tính năng cốt lõi — đăng nhập, nhắn tin thời gian thực, cuộc gọi, chia sẻ tệp và trạng thái hiện diện — đồng thời giữ an toàn cho không gian làm việc, ngăn lạm dụng, thực thi kiểm soát truy cập và xử lý sự cố. Chúng tôi không bán dữ liệu cá nhân của bạn và không dùng tin nhắn riêng tư của bạn cho quảng cáo."
+        },
+        "aiProcessing": {
+          "title": "4. Trợ lý AI và việc xử lý dữ liệu",
+          "content": "Khi bạn tương tác với trợ lý AI — ví dụ nhắc tên trợ lý hoặc dùng trợ lý riêng — các tin nhắn liên quan và mọi tài liệu bạn thêm vào kho tri thức sẽ được gửi tới các nhà cung cấp AI để tạo phản hồi. Trợ lý có thể lưu bản tóm tắt, “ghi nhớ” và vector embedding để duy trì ngữ cảnh giữa các cuộc trò chuyện. Phản hồi của AI có thể không chính xác và cần được kiểm chứng trước khi bạn dựa vào."
+        },
+        "connectors": {
+          "title": "5. Công cụ bên thứ ba được kết nối",
+          "content": "Bạn có thể kết nối các dịch vụ bên ngoài (như Google hoặc Notion) để trợ lý thực hiện thay bạn. Việc kết nối cấp cho PON các mã truy cập (access token), được lưu mã hóa trong kho khóa và chỉ dùng để thực hiện các thao tác bạn yêu cầu. Bạn có thể ngắt kết nối bất cứ lúc nào, khi đó quyền truy cập đã lưu sẽ bị thu hồi."
+        },
+        "subprocessors": {
+          "title": "6. Các nhà cung cấp dịch vụ chúng tôi sử dụng",
+          "content": "Nền tảng phụ thuộc vào các nhà cung cấp đáng tin cậy để hoạt động, gồm nhà cung cấp mô hình AI (cho phản hồi của trợ lý và text embedding), dịch vụ thông báo đẩy cho cảnh báo trên di động, và hạ tầng nơi tổ chức của bạn lưu trữ bản triển khai. Các nhà cung cấp này chỉ xử lý dữ liệu để cung cấp dịch vụ cho bản triển khai của bạn."
+        },
+        "retention": {
+          "title": "7. Lưu giữ dữ liệu",
+          "content": "Tin nhắn, tệp và dữ liệu tài khoản được lưu chừng nào tài khoản và cuộc trò chuyện của bạn còn tồn tại, hoặc cho đến khi bạn hay tổ chức xóa chúng. Tin nhắn tự hủy, lịch sử đã xóa, tin nhắn thu hồi và tài khoản đã xóa sẽ được loại bỏ thông qua các tùy chọn trong ứng dụng. Nhật ký vận hành chỉ được giữ trong thời gian cần thiết cho bảo mật và độ tin cậy."
+        },
+        "security": {
+          "title": "8. Bảo mật",
+          "content": "Quyền truy cập được bảo vệ bằng xác thực dựa trên token với access token ngắn hạn và refresh token xoay vòng. Tệp tải lên được kiểm tra và quét, kiểm soát truy cập theo vai trò giới hạn ai thấy được gì, và các thông tin nhạy cảm như token kết nối được mã hóa khi lưu trữ. Không hệ thống nào an toàn tuyệt đối, vì vậy hãy dùng mật khẩu mạnh và giữ an toàn cho thiết bị của bạn."
+        },
+        "yourRights": {
+          "title": "9. Quyền và lựa chọn của bạn",
+          "content": "Bạn có thể xem và cập nhật hồ sơ, kiểm soát thông báo, tắt thông báo hoặc chặn người dùng khác, và xóa tài khoản trong phần cài đặt. Tùy nơi bạn sinh sống, bạn có thể có quyền truy cập, chỉnh sửa, xuất hoặc xóa dữ liệu cá nhân — hãy liên hệ quản trị viên không gian làm việc để thực hiện, vì họ là bên kiểm soát dữ liệu."
+        },
+        "changes": {
+          "title": "10. Thay đổi chính sách",
+          "content": "Chúng tôi có thể cập nhật chính sách này khi nền tảng phát triển. Các thay đổi quan trọng sẽ được phản ánh qua ngày “cập nhật lần cuối” ở trên, và khi cần tổ chức của bạn sẽ thông báo. Việc tiếp tục sử dụng sau khi cập nhật đồng nghĩa bạn chấp nhận chính sách đã sửa đổi."
+        }
+      }
+    },
+    "terms": {
+      "intro": "Các Điều khoản này điều chỉnh việc bạn sử dụng nền tảng PON — không gian làm việc trợ lý AI tự lưu trữ, dành riêng cho tổ chức và do tổ chức của bạn vận hành. Khi truy cập hoặc sử dụng PON, bạn đồng ý với các Điều khoản này. Nếu bạn dùng PON cho công việc, quy định của tổ chức cũng được áp dụng.",
+      "contactTitle": "Liên hệ",
+      "contactBody": "Mọi thắc mắc về các Điều khoản này, vui lòng liên hệ quản trị viên không gian làm việc PON.",
+      "sections": {
+        "acceptance": {
+          "title": "1. Chấp nhận điều khoản",
+          "content": "Bằng việc tạo tài khoản, đăng nhập hoặc sử dụng bất kỳ phần nào của PON, bạn đồng ý với các Điều khoản này và Chính sách quyền riêng tư. Nếu không đồng ý, vui lòng không sử dụng nền tảng."
+        },
+        "eligibility": {
+          "title": "2. Tài khoản và điều kiện sử dụng",
+          "content": "Tài khoản dành cho các thành viên được tổ chức vận hành bản triển khai cấp quyền. Bạn chịu trách nhiệm về hoạt động dưới tài khoản của mình và giữ bí mật thông tin đăng nhập. Quản trị viên có thể tạo, tạm ngưng hoặc xóa tài khoản và gán vai trò, quyền hạn."
+        },
+        "acceptableUse": {
+          "title": "3. Sử dụng hợp lệ",
+          "content": "Không dùng PON để quấy rối, đe dọa hay gây hại cho người khác; chia sẻ nội dung bất hợp pháp hoặc vi phạm; phát tán mã độc; tìm cách phá vỡ bảo mật hay truy cập dữ liệu không được phép; hoặc làm gián đoạn dịch vụ. Hãy tôn trọng những người bạn trao đổi và quy định của tổ chức."
+        },
+        "aiOutput": {
+          "title": "4. Tính năng AI và độ chính xác",
+          "content": "Trợ lý AI tạo nội dung tự động và có thể thiếu sót, lỗi thời hoặc sai. Trợ lý không cung cấp tư vấn pháp lý, y tế, tài chính hay tư vấn chuyên môn khác. Bạn chịu trách nhiệm rà soát kết quả của AI và mọi hành động bạn thực hiện — kể cả các thao tác mà trợ lý thực hiện qua các công cụ kết nối theo yêu cầu của bạn."
+        },
+        "yourContent": {
+          "title": "5. Nội dung của bạn",
+          "content": "Bạn vẫn sở hữu nội dung mình tạo ra. Bạn cấp cho nền tảng quyền hạn giới hạn cần thiết để lưu trữ, xử lý, truyền tải và hiển thị nội dung đó nhằm vận hành dịch vụ cho bạn và những người tham gia cuộc trò chuyện. Bạn chịu trách nhiệm có quyền chia sẻ những gì mình tải lên."
+        },
+        "connectors": {
+          "title": "6. Trình kết nối bên thứ ba",
+          "content": "Khi bạn kết nối một dịch vụ bên ngoài, việc sử dụng dịch vụ đó vẫn tuân theo điều khoản riêng của họ. Bạn ủy quyền cho PON truy cập và thao tác trên dịch vụ đó chỉ theo chỉ dẫn của bạn. Chúng tôi không chịu trách nhiệm về dịch vụ bên thứ ba, khả năng hoạt động hay nội dung của họ."
+        },
+        "suspension": {
+          "title": "7. Tạm ngưng và chấm dứt",
+          "content": "Tổ chức của bạn hoặc nền tảng có thể tạm ngưng hoặc chấm dứt quyền truy cập khi vi phạm các Điều khoản này, vì rủi ro bảo mật, hoặc theo chỉ đạo của tổ chức. Khi chấm dứt, quyền truy cập của bạn kết thúc và nội dung có thể bị xóa theo thiết lập lưu giữ của tổ chức."
+        },
+        "disclaimer": {
+          "title": "8. Tuyên bố miễn trừ",
+          "content": "PON được cung cấp “nguyên trạng” và “theo khả năng sẵn có”, không kèm bảo đảm dưới bất kỳ hình thức nào trong phạm vi tối đa pháp luật cho phép. Chúng tôi không bảo đảm dịch vụ sẽ không gián đoạn, không lỗi hay an toàn tuyệt đối, cũng như không bảo đảm kết quả của AI là chính xác."
+        },
+        "liability": {
+          "title": "9. Giới hạn trách nhiệm",
+          "content": "Trong phạm vi tối đa pháp luật cho phép, các nhà cung cấp và bên vận hành PON không chịu trách nhiệm cho các thiệt hại gián tiếp, ngẫu nhiên hay hệ quả, hoặc mất mát dữ liệu, lợi nhuận phát sinh từ việc bạn sử dụng nền tảng. Thỏa thuận với tổ chức của bạn có thể quy định thêm điều khoản."
+        },
+        "governingLaw": {
+          "title": "10. Luật điều chỉnh và thay đổi",
+          "content": "Vì PON là tự lưu trữ, các Điều khoản này được điều chỉnh bởi pháp luật và các thỏa thuận áp dụng giữa bạn và tổ chức vận hành bản triển khai. Chúng tôi có thể cập nhật các Điều khoản; ngày “cập nhật lần cuối” cho biết phiên bản mới nhất, và việc tiếp tục sử dụng đồng nghĩa bạn chấp nhận các thay đổi."
+        }
       }
     }
   },
@@ -1039,7 +1110,30 @@
   "assistant": {
     "defaultName": "Trợ lý của tôi",
     "subtitle": "Trợ lý cá nhân của bạn",
-    "openChat": "Mở trò chuyện với trợ lý"
+    "openChat": "Mở trò chuyện với trợ lý",
+    "setupCta": "Thiết lập trợ lý"
+  },
+  "assistantSetup": {
+    "title": "Tạo trợ lý của bạn",
+    "stepName": "Đặt tên cho trợ lý",
+    "stepPersona": "Xác định tính cách",
+    "stepModel": "Chọn mô hình",
+    "stepConfirm": "Xem lại và tạo",
+    "namePlaceholder": "ví dụ: Trợ lý của tôi",
+    "personaPlaceholder": "Mô tả cách trợ lý nên hành xử và phản hồi…",
+    "personaHint": "Nội dung này trở thành system prompt định hướng mọi câu trả lời.",
+    "createButton": "Tạo trợ lý",
+    "creating": "Đang tạo…",
+    "success": "Trợ lý của bạn đã sẵn sàng!",
+    "continue": "Tiếp tục"
+  },
+  "assistantSettings": {
+    "title": "Cài đặt trợ lý",
+    "editPersona": "Chỉnh sửa tính cách",
+    "changeModel": "Đổi mô hình",
+    "deleteTitle": "Xoá trợ lý",
+    "deleteConfirm": "Bạn có chắc muốn xoá trợ lý không? Hành động này không thể hoàn tác.",
+    "deleteButton": "Xoá trợ lý"
   },
   "botAdmin": {
     "title": "Tích hợp Bot Factory",
