@@ -61,6 +61,9 @@ interface Props {
   isError: boolean
   isFetchingNextPage: boolean
   typingUserIds: string[]
+  /** True while the personal assistant bot is preparing its reply (no STOMP
+   *  typing event exists for external bots — Bot Factory calls are synchronous). */
+  assistantTyping?: boolean
   aiStream: AiStreamState | null
   topSentinelRef: React.RefObject<HTMLDivElement | null>
   bottomRef: React.RefObject<HTMLDivElement | null>
@@ -83,6 +86,7 @@ export function MessageList({
   isError,
   isFetchingNextPage,
   typingUserIds,
+  assistantTyping = false,
   aiStream,
   topSentinelRef,
   bottomRef,
@@ -193,7 +197,8 @@ export function MessageList({
         </div>
       )}
 
-      {typingUserIds.length > 0 && currentUserId && !typingUserIds.includes(currentUserId) && (
+      {((typingUserIds.length > 0 && currentUserId && !typingUserIds.includes(currentUserId)) ||
+        assistantTyping) && (
         <ChatTypingIndicator />
       )}
 

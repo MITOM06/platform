@@ -16,6 +16,7 @@ import type { WebRTCSignal } from '@/lib/webrtc/call-manager'
 import { useCallStore } from '@/lib/store/call.store'
 import { ConversationList } from '@/components/chat/ConversationList'
 import { ActiveFriendsRow } from '@/components/chat/ActiveFriendsRow'
+import { AssistantEntry } from '@/components/chat/AssistantEntry'
 import { cn } from '@/lib/utils'
 import { MobileTabBar } from '@/components/layout/MobileTabBar'
 import { useUiStore } from '@/lib/store/ui.store'
@@ -388,6 +389,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
         </div>
         <div className="flex-1 flex flex-col overflow-hidden pb-16 md:pb-0">
           <ActiveFriendsRow />
+          <AssistantEntry />
           <ConversationList />
         </div>
       </aside>

@@ -1035,5 +1035,10 @@
     "worstAnswers": "评分最低的回答",
     "noWorstAnswers": "本期内没有被 👎 的回答",
     "feedbackSummary": "{up} 👍 · {down} 👎 · 共 {total} 条评分"
+  },
+  "assistant": {
+    "defaultName": "我的助手",
+    "subtitle": "您的私人助手",
+    "openChat": "打开助手对话"
   }
 }

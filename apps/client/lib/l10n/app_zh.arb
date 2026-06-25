@@ -855,5 +855,8 @@
   "usageUserComment": "“{comment}”",
   "usageNoData": "此期间暂无数据。",
   "usageLoadError": "无法加载用量面板。",
-  "usageRetry": "重试"
+  "usageRetry": "重试",
+  "assistantDefaultName": "我的助手",
+  "assistantSubtitle": "您的私人助手",
+  "assistantOpenChat": "打开助手对话"
 }

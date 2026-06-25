@@ -855,5 +855,8 @@
   "usageUserComment": "“{comment}”",
   "usageNoData": "Không có dữ liệu cho giai đoạn này.",
   "usageLoadError": "Không thể tải bảng điều khiển sử dụng.",
-  "usageRetry": "Thử lại"
+  "usageRetry": "Thử lại",
+  "assistantDefaultName": "Trợ lý của tôi",
+  "assistantSubtitle": "Trợ lý cá nhân của bạn",
+  "assistantOpenChat": "Mở trò chuyện với trợ lý"
 }

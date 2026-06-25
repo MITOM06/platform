@@ -386,6 +386,9 @@ class MessageModel {
   bool get isSystem => type == 'system';
   bool get isAiMessage => type == 'ai';
   bool get isAiBot => senderId == kAiBotUserId;
+  // Bot Factory personal-assistant bot — distinct from the native @AI bot and
+  // from human senders. Identity (name/avatar) comes from GET /api/assistant/me.
+  bool get isExternalBot => senderId.startsWith('extbot:');
   bool get isAiError => isAiMessage && content == kAiErrorSentinel;
   bool get isAiQuotaExceeded => isAiMessage && content == kAiQuotaExceededSentinel;
   bool get isAiStreamInterrupted => isAiMessage && content == kAiStreamInterruptedSentinel;

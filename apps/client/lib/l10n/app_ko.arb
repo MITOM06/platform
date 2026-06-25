@@ -855,5 +855,8 @@
   "usageUserComment": "“{comment}”",
   "usageNoData": "이 기간의 데이터가 없습니다.",
   "usageLoadError": "사용량 대시보드를 불러오지 못했습니다.",
-  "usageRetry": "다시 시도"
+  "usageRetry": "다시 시도",
+  "assistantDefaultName": "내 어시스턴트",
+  "assistantSubtitle": "당신의 개인 어시스턴트",
+  "assistantOpenChat": "어시스턴트 채팅 열기"
 }

@@ -8,6 +8,7 @@ import '../../../core/widgets/pon_widgets.dart';
 import '../../auth/domain/auth_provider.dart';
 import '../../auth/domain/auth_state.dart';
 import '../../home/domain/home_providers.dart';
+import '../../assistant/ui/assistant_entry_tile.dart';
 import '../domain/chat_provider.dart';
 import 'widgets/active_friends_row.dart';
 import 'widgets/conversation_avatar.dart';
@@ -194,6 +195,7 @@ class _ConversationListScreenState
             onChanged: (v) => setState(() => _search = v),
           ),
           const ActiveFriendsRow(),
+          const AssistantEntryTile(),
           Expanded(
             child: Stack(
               children: [

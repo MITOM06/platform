@@ -1035,5 +1035,10 @@
     "worstAnswers": "Câu trả lời bị đánh giá thấp nhất",
     "noWorstAnswers": "Không có câu trả lời bị 👎 trong kỳ này",
     "feedbackSummary": "{up} 👍 · {down} 👎 · {total} lượt đánh giá"
+  },
+  "assistant": {
+    "defaultName": "Trợ lý của tôi",
+    "subtitle": "Trợ lý cá nhân của bạn",
+    "openChat": "Mở trò chuyện với trợ lý"
   }
 }

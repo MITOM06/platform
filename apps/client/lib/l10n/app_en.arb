@@ -1174,5 +1174,8 @@
   },
   "usageNoData": "No data for this period.",
   "usageLoadError": "Could not load the usage dashboard.",
-  "usageRetry": "Retry"
+  "usageRetry": "Retry",
+  "assistantDefaultName": "My Assistant",
+  "assistantSubtitle": "Your personal assistant",
+  "assistantOpenChat": "Open assistant chat"
 }

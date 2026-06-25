@@ -28,6 +28,7 @@ import { useMessageCache } from '@/lib/hooks/use-message-cache'
 import { applyNicknameSystemMessage } from '@/lib/nicknames'
 import { applyQuickReactionSystemMessage } from '@/lib/quick-reaction'
 import type { AiSource, AiStreamState, CallEvent, CallMedia, Message, MessageType, StompEvent } from '@/lib/api/types'
+import { isExternalBot } from '@/lib/api/types'
 
 interface Props {
   params: Promise<{ id: string }>
@@ -108,6 +109,16 @@ export default function ConversationPage({ params }: Props) {
   const { data, isLoading, isError, fetchNextPage, hasNextPage, isFetchingNextPage } =
     useMessages(id)
   const messages = useMemo(() => data?.messages ?? [], [data?.messages])
+
+  // Personal assistant (Bot Factory) replies are synchronous (2–10s) with no
+  // STOMP typing event, so synthesise one: if this is an external-bot DM and the
+  // newest message is the member's own, the bot is preparing its reply. Clears
+  // automatically when the bot's broadcast lands (it becomes the newest message).
+  const isAssistantTyping = useMemo(() => {
+    if (!isExternalBot(otherUserId ?? '')) return false
+    const last = messages[messages.length - 1]
+    return !!last && last.senderId === currentUser?.id
+  }, [otherUserId, messages, currentUser?.id])
 
   // Seed nicknames from historical system messages (parity with Flutter).
   useEffect(() => {
@@ -532,6 +543,7 @@ export default function ConversationPage({ params }: Props) {
             isError={isError}
             isFetchingNextPage={isFetchingNextPage}
             typingUserIds={typingUserIds}
+            assistantTyping={isAssistantTyping}
             aiStream={aiStream}
             topSentinelRef={topSentinelRef}
             bottomRef={bottomRef}

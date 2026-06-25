@@ -2371,4 +2371,13 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get usageRetry => 'Retry';
+
+  @override
+  String get assistantDefaultName => 'My Assistant';
+
+  @override
+  String get assistantSubtitle => 'Your personal assistant';
+
+  @override
+  String get assistantOpenChat => 'Open assistant chat';
 }
