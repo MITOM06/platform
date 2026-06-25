@@ -28,52 +28,57 @@ class WallpaperMockPreview extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Container(
-          height: 200,
-          clipBehavior: Clip.antiAlias,
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: Colors.white24),
-            color: const Color(0xFF101014),
-          ),
-          child: InteractiveViewer(
-            minScale: 1.0,
-            maxScale: 3.0,
-            child: Stack(
-              fit: StackFit.expand,
-              children: [
-                Transform.scale(
-                  scale: scale,
-                  child: Image.network(
-                    absoluteMediaUrl(imageUrl),
-                    fit: fit,
-                    width: double.infinity,
-                    height: double.infinity,
-                    errorBuilder: (_, __, ___) => const Center(
-                      child: Icon(Icons.broken_image_outlined,
-                          color: Colors.white38),
+        // 4:3 mirrors the real chat viewport proportion (and the web picker),
+        // so the cropped preview matches how the wallpaper fills the thread —
+        // instead of the old flat 320x200 (~1.6:1) strip.
+        AspectRatio(
+          aspectRatio: 4 / 3,
+          child: Container(
+            clipBehavior: Clip.antiAlias,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: Colors.white24),
+              color: const Color(0xFF101014),
+            ),
+            child: InteractiveViewer(
+              minScale: 1.0,
+              maxScale: 3.0,
+              child: Stack(
+                fit: StackFit.expand,
+                children: [
+                  Transform.scale(
+                    scale: scale,
+                    child: Image.network(
+                      absoluteMediaUrl(imageUrl),
+                      fit: fit,
+                      width: double.infinity,
+                      height: double.infinity,
+                      errorBuilder: (_, __, ___) => const Center(
+                        child: Icon(Icons.broken_image_outlined,
+                            color: Colors.white38),
+                      ),
                     ),
                   ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.all(10),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      _DummyBubble(
-                        text: context.l10n.wallpaperPreviewIncoming,
-                        outgoing: false,
-                      ),
-                      const SizedBox(height: 6),
-                      _DummyBubble(
-                        text: context.l10n.wallpaperPreviewOutgoing,
-                        outgoing: true,
-                      ),
-                    ],
+                  Padding(
+                    padding: const EdgeInsets.all(10),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _DummyBubble(
+                          text: context.l10n.wallpaperPreviewIncoming,
+                          outgoing: false,
+                        ),
+                        const SizedBox(height: 6),
+                        _DummyBubble(
+                          text: context.l10n.wallpaperPreviewOutgoing,
+                          outgoing: true,
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ),

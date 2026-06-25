@@ -151,7 +151,10 @@ export function WallpaperPickerModal({ conversationId, open, onClose }: Props) {
           <p className="text-xs text-muted-foreground">{t('wallpaperPreview')}</p>
           <div
             className={cn(
-              'h-40 rounded-xl overflow-hidden border border-border/50 relative bg-center',
+              // 4:3 mirrors the real chat viewport proportion (a moderate
+              // landscape) instead of the old flat ~2:1 strip, so the cropped
+              // preview matches how the wallpaper actually fills the thread.
+              'aspect-[4/3] rounded-xl overflow-hidden border border-border/50 relative bg-center',
               !isImage && (previewPreset?.swatch ?? 'bg-muted'),
             )}
             style={previewBgStyle}
