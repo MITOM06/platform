@@ -24,6 +24,7 @@ export default function configuration() {
     jwtAccessSecret: process.env.JWT_ACCESS_SECRET ?? '',
     oauthRedirectBase: process.env.OAUTH_REDIRECT_BASE ?? 'http://localhost:3003',
     clientRedirectUrl: process.env.CLIENT_REDIRECT_URL ?? 'http://localhost:3000/integrations',
+    mcpServerUrl: process.env.MCP_SERVER_URL ?? 'http://localhost:3003/mcp',
     notion: {
       clientId: process.env.NOTION_CLIENT_ID ?? '',
       clientSecret: process.env.NOTION_CLIENT_SECRET ?? '',
