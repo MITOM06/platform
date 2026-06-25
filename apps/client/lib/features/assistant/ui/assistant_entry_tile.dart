@@ -5,9 +5,11 @@ import 'package:go_router/go_router.dart';
 import '../../../core/l10n/l10n_ext.dart';
 import '../../../core/utils/app_error.dart';
 import '../../../core/utils/global_messenger.dart';
+import '../../../core/widgets/motion_widgets.dart';
 import '../../chat/data/chat_repository.dart';
 import '../../home/domain/home_providers.dart';
 import '../state/assistant_provider.dart';
+import 'widgets/assistant_sheen_avatar.dart';
 
 /// Pinned entry at the top of the conversation list that opens (or creates) the
 /// member's 1-1 conversation with their Bot Factory personal assistant. Hidden
@@ -48,40 +50,29 @@ class AssistantEntryTile extends ConsumerWidget {
         final name = assistant.name.isNotEmpty
             ? assistant.name
             : context.l10n.assistantDefaultName;
-        return ListTile(
-          leading: Container(
-            width: 44,
-            height: 44,
-            decoration: const BoxDecoration(
-              shape: BoxShape.circle,
-              gradient: LinearGradient(
-                colors: [Color(0xFF7C3AED), Color(0xFF14B8A6)],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
+        // Entrance (fade + slide-up) the first time the assistant resolves,
+        // then a press-scale on tap. The signature sheen lives on the avatar.
+        return StaggeredEntrance(
+          offset: 8,
+          child: PressScale(
+            child: ListTile(
+              leading: AssistantSheenAvatar(letter: name[0].toUpperCase()),
+              title: Text(
+                name,
+                style: Theme.of(context)
+                    .textTheme
+                    .titleSmall
+                    ?.copyWith(fontWeight: FontWeight.w600),
               ),
-            ),
-            child: Center(
-              child: Text(
-                name[0].toUpperCase(),
-                style: const TextStyle(
-                    color: Colors.white, fontWeight: FontWeight.bold),
+              subtitle: Text(
+                context.l10n.assistantSubtitle,
+                style: Theme.of(context).textTheme.bodySmall,
               ),
+              onTap: () => _openChat(context, ref, assistant.botUserId),
+              contentPadding:
+                  const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
             ),
           ),
-          title: Text(
-            name,
-            style: Theme.of(context)
-                .textTheme
-                .titleSmall
-                ?.copyWith(fontWeight: FontWeight.w600),
-          ),
-          subtitle: Text(
-            context.l10n.assistantSubtitle,
-            style: Theme.of(context).textTheme.bodySmall,
-          ),
-          onTap: () => _openChat(context, ref, assistant.botUserId),
-          contentPadding:
-              const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
         );
       },
     );

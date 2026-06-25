@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo } from 'react'
+import { useMemo, useRef } from 'react'
 import { useVirtualizer } from '@tanstack/react-virtual'
 import { useTranslations, useLocale } from 'next-intl'
 import { Loader2, MessageCircle, Wrench, ShieldAlert } from 'lucide-react'
@@ -100,6 +100,26 @@ export function MessageList({
   const t = useTranslations('chat')
   const locale = useLocale()
 
+  // Entrance-animation guard (motion spec §B): only the single newest *appended*
+  // message animates in. We remember every id we've already laid out; the first
+  // batch (historical load) is recorded without animating, and on a conversation
+  // switch the set is reset. Scroll / virtualization remounts never re-trigger
+  // because the id is already in `seenIdsRef`. The list is never staggered.
+  const seenIdsRef = useRef<Set<string>>(new Set())
+  const seenConvRef = useRef<string | null>(null)
+  const newestId = messages.length > 0 ? messages[messages.length - 1].id : null
+
+  if (seenConvRef.current !== conversationId) {
+    // Conversation changed: treat the whole loaded thread as historical.
+    seenConvRef.current = conversationId
+    seenIdsRef.current = new Set(messages.map((m) => m.id))
+  }
+
+  const justAppendedId =
+    newestId && !seenIdsRef.current.has(newestId) ? newestId : null
+  // Record all current ids so subsequent renders treat them as historical.
+  for (const m of messages) seenIdsRef.current.add(m.id)
+
   // Flatten messages + date separators into virtual rows
   const rows = useMemo<VirtualRow[]>(() => {
     const result: VirtualRow[] = []
@@ -174,7 +194,14 @@ export function MessageList({
                     </span>
                   </div>
                 ) : (
-                  <div className="space-y-2" id={`message-${row.msg.id}`}>
+                  <div
+                    className={
+                      row.msg.id === justAppendedId
+                        ? 'space-y-2 motion-safe:pon-enter'
+                        : 'space-y-2'
+                    }
+                    id={`message-${row.msg.id}`}
+                  >
                     <MessageBubble
                       message={row.msg}
                       isOwn={row.msg.senderId === currentUserId}
@@ -203,7 +230,7 @@ export function MessageList({
       )}
 
       {aiStream !== null && (
-        <div className="flex flex-row items-end gap-1">
+        <div className="flex flex-row items-end gap-1 motion-safe:pon-enter">
           <div className="max-w-[70%] rounded-[24px] rounded-tl-none px-4 py-2.5 text-sm bg-muted/70 border border-border/50 shadow-xs">
             {aiStream.activeTools.length > 0 && (() => {
               const tool = aiStream.activeTools[aiStream.activeTools.length - 1]

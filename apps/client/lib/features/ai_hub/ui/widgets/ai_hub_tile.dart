@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../core/widgets/motion_widgets.dart';
 import '../../../../core/widgets/pon_widgets.dart';
 
 /// A square-ish tappable card used in the AI Hub grid. Mirrors the web
@@ -22,7 +23,9 @@ class AiHubTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return PonCard(
+    return PressScale(
+      scale: 0.98,
+      child: PonCard(
       glowColor: accent,
       glowStrength: 4,
       borderRadius: 18,
@@ -72,6 +75,7 @@ class AiHubTile extends StatelessWidget {
           ),
         ),
       ),
+    ),
     );
   }
 }

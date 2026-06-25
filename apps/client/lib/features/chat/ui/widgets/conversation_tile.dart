@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/l10n/l10n_ext.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/widgets/motion_widgets.dart';
 import '../../../auth/domain/auth_provider.dart';
 import '../../../auth/domain/auth_state.dart';
 import '../../../home/domain/home_providers.dart';
@@ -70,7 +71,9 @@ class ConversationTile extends ConsumerWidget {
             : '?');
     final avatarUrl = isGroup ? conv.avatarUrl : profileData?.avatarUrl;
 
-    return Container(
+    return PressScale(
+      scale: 0.98,
+      child: Container(
       margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
       decoration: BoxDecoration(
         color: isSelected
@@ -234,6 +237,7 @@ class ConversationTile extends ConsumerWidget {
           onLongPress: () => showConversationTileMenu(context, ref, conv),
         ),
       ),
+    ),
     );
   }
 

@@ -140,12 +140,13 @@ class ChatBody extends ConsumerWidget {
                 // no STOMP typing event — synthesise one: external-bot DM whose
                 // newest message is the member's own. Clears when the bot's
                 // broadcast becomes the newest message.
-                if ((chatState.typingUserIds.isNotEmpty &&
-                        !chatState.typingUserIds.contains(currentUserId)) ||
-                    ((otherUserId?.startsWith('extbot:') ?? false) &&
-                        chatState.messages.isNotEmpty &&
-                        chatState.messages.first.senderId == currentUserId))
-                  const ChatTypingIndicator(),
+                ChatTypingIndicator(
+                  visible: (chatState.typingUserIds.isNotEmpty &&
+                          !chatState.typingUserIds.contains(currentUserId)) ||
+                      ((otherUserId?.startsWith('extbot:') ?? false) &&
+                          chatState.messages.isNotEmpty &&
+                          chatState.messages.first.senderId == currentUserId),
+                ),
               ],
             ),
           ),

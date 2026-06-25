@@ -47,9 +47,9 @@ function formatTime(iso: string, locale: string): string {
 
 function ReactionBadge({ emoji, count, onClick }: { emoji: string; count: number; onClick?: () => void }) {
   return (
-    <button 
+    <button
       onClick={onClick}
-      className="inline-flex items-center gap-0.5 bg-muted border rounded-full px-1.5 py-0.5 text-xs leading-none hover:bg-muted/80 transition-colors"
+      className="inline-flex items-center gap-0.5 bg-muted border rounded-full px-1.5 py-0.5 text-xs leading-none hover:bg-muted/80 transition-colors motion-safe:pon-pop"
     >
       {emoji}
       {count > 1 && <span className="text-muted-foreground">{count}</span>}

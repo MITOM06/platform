@@ -102,7 +102,7 @@ function VerifyOtpForm() {
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={handleSubmit} className="space-y-6 motion-safe:pon-stagger">
           <div className="flex justify-center gap-2" onPaste={handlePaste}>
             {otp.map((digit, i) => (
               <Input

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import '../../../../core/l10n/l10n_ext.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/theme/motion.dart';
 import '../../domain/chat_provider.dart';
 import '../../domain/chat_state.dart';
 import 'ai_message_parts.dart';
@@ -58,19 +59,35 @@ class MessageBubble extends ConsumerWidget {
     final locale = Localizations.localeOf(context).languageCode;
     final timeStr = DateFormat.Hm(locale).format(message.createdAt.toLocal());
 
+    // Entrance plays once per message (stable list keys keep the bubble's
+    // element/state across rebuilds, so scroll/rebuild never re-triggers it,
+    // and historical/paged-in messages aren't restaged either).
+    // Reduced-motion → render the final frame.
+    final reduced = AppMotion.reduced(context);
     return TweenAnimationBuilder<double>(
-      tween: Tween<double>(begin: 0.0, end: 1.0),
-      duration: const Duration(milliseconds: 300),
-      curve: Curves.easeOutCubic,
-      builder: (context, animValue, child) => Opacity(
-        opacity: message.isPending ? 0.5 : animValue,
-        child: Transform.translate(
-          offset: Offset(0, 12 * (1.0 - animValue)),
-          child: child,
-        ),
-      ),
+      tween: Tween<double>(begin: reduced ? 1.0 : 0.0, end: 1.0),
+      duration: reduced ? Duration.zero : AppMotion.base,
+      curve: AppMotion.settle,
+      builder: (context, animValue, child) {
+        // Outgoing = small "pop from input" (scale 0.96→1 + slide-up 10px);
+        // incoming = fade + slide-up 8px.
+        final slide = (isSentByMe ? 10.0 : 8.0) * (1.0 - animValue);
+        final scale = isSentByMe ? 0.96 + 0.04 * animValue : 1.0;
+        return Opacity(
+          opacity: message.isPending ? 0.5 : animValue,
+          child: Transform.translate(
+            offset: Offset(0, slide),
+            child: Transform.scale(
+              scale: scale,
+              alignment:
+                  isSentByMe ? Alignment.bottomRight : Alignment.bottomLeft,
+              child: child,
+            ),
+          ),
+        );
+      },
       child: AnimatedContainer(
-        duration: const Duration(milliseconds: 400),
+        duration: AppMotion.slow,
         color: highlighted
             ? AppTheme.ponCyan.withValues(alpha: 0.12)
             : Colors.transparent,
@@ -346,7 +363,8 @@ class MessageBubble extends ConsumerWidget {
                           // a single "other user" tick is meaningless there).
                           if (isSentByMe && !message.recalled && !isGroup) ...[
                             const SizedBox(width: 4),
-                            _buildReadTick(),
+                            ReadTick(
+                                message: message, otherUserId: otherUserId),
                           ],
                         ],
                       ),
@@ -374,18 +392,6 @@ class MessageBubble extends ConsumerWidget {
           ),
         ),
       ),
-    );
-  }
-
-  Widget _buildReadTick() {
-    final isRead =
-        otherUserId != null && message.readBy.contains(otherUserId);
-    return Icon(
-      isRead ? Icons.done_all_rounded : Icons.done_rounded,
-      size: 13,
-      color: isRead
-          ? AppTheme.ponCyan
-          : Colors.white.withValues(alpha: 0.4),
     );
   }
 }

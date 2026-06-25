@@ -99,7 +99,7 @@ export default function RegisterPage() {
         <CardDescription>{t('register.subtitle')}</CardDescription>
       </CardHeader>
       <CardContent>
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 motion-safe:pon-stagger">
           <div className="space-y-1">
             <Label htmlFor="displayName">{t('register.displayNameLabel')}</Label>
             <Input

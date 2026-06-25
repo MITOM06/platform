@@ -5,10 +5,12 @@ import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../core/l10n/l10n_ext.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/widgets/motion_widgets.dart';
 import '../../../core/widgets/pon_widgets.dart';
 import '../data/auth_repository.dart';
 import '../utils/auth_error.dart';
 import 'widgets/password_strength_indicator.dart';
+import 'widgets/register_footer.dart';
 
 class RegisterScreen extends ConsumerStatefulWidget {
   const RegisterScreen({super.key});
@@ -152,11 +154,16 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      const Center(child: PonLogo(size: 100, showText: true)),
+                      const StaggeredEntrance(
+                        index: 0,
+                        child: Center(child: PonLogo(size: 100, showText: true)),
+                      ),
                       const SizedBox(height: 24),
 
                     // Register Form Card
-                    PonCard(
+                    StaggeredEntrance(
+                      index: 1,
+                      child: PonCard(
                       glowColor: AppTheme.ponPink,
                       glowStrength: 8,
                       child: Padding(
@@ -294,48 +301,10 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                         ),
                       ),
                     ),
+                    ),
                     const SizedBox(height: 24),
 
-                      // OAuth divider
-                      Row(
-                        children: [
-                          const Expanded(child: Divider(color: Colors.white24)),
-                          Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 12),
-                            child: Text(
-                              context.l10n.orContinueWith,
-                              style: TextStyle(color: Colors.white.withValues(alpha: 0.5), fontSize: 12),
-                            ),
-                          ),
-                          const Expanded(child: Divider(color: Colors.white24)),
-                        ],
-                      ),
-                      const SizedBox(height: 12),
-                      OutlinedButton.icon(
-                        onPressed: () => _launchOAuth('google'),
-                        icon: const Text('G', style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF4285F4))),
-                        label: Text(context.l10n.registerWithGoogle),
-                        style: OutlinedButton.styleFrom(
-                          foregroundColor: Colors.white,
-                          side: BorderSide(color: Colors.white.withValues(alpha: 0.3)),
-                        ),
-                      ),
-
-
-                      // Back to login
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text(
-                            context.l10n.haveAccount,
-                            style: TextStyle(color: Colors.white.withValues(alpha: 0.6)),
-                          ),
-                          TextButton(
-                            onPressed: () => context.go('/login'),
-                            child: Text(context.l10n.loginLink),
-                          ),
-                        ],
-                      ),
+                      RegisterFooter(onGoogle: () => _launchOAuth('google')),
                     ],
                   ),
                 ),

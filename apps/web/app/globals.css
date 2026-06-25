@@ -139,3 +139,80 @@ body {
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
+
+/* ────────────────────────────────────────────────────────────────────────────
+   PON Motion — subtle micro-interactions (shared identity w/ Flutter side).
+   Tokens: instant 100ms · fast 180ms · base 260ms · slow 420ms · ambient 2800ms.
+   Easing: settle cubic-bezier(.22,1,.36,1) · standard cubic-bezier(.4,0,.2,1)
+           · pop cubic-bezier(.34,1.56,.64,1).
+   Every animation is gated behind prefers-reduced-motion and is independently
+   removable (delete the class + its @keyframes).
+   ──────────────────────────────────────────────────────────────────────────── */
+
+@keyframes pon-enter {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes pon-pop {
+  0%   { opacity: 0; transform: scale(0.6); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+@keyframes pon-sheen {
+  0%   { transform: translateX(-130%) rotate(20deg); }
+  100% { transform: translateX(130%) rotate(20deg); }
+}
+
+/* A. Single-element entrance — fade + slide-up, settle. */
+.pon-enter {
+  animation: pon-enter 260ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* C. Confirmation pop (reactions / send) — overshoot, fast. */
+.pon-pop {
+  animation: pon-pop 180ms cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+/* A. Signature ambient sheen sweep across the assistant avatar.
+   The element is an absolutely-positioned soft highlight inside an
+   overflow-hidden round container; it loops on a slow 2800ms ease-in-out. */
+.pon-sheen {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 55%;
+  height: 100%;
+  background: linear-gradient(
+    100deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.45) 50%,
+    transparent 100%
+  );
+  opacity: 0.25;
+  pointer-events: none;
+  animation: pon-sheen 2800ms cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+/* E. Auth orchestrated reveal — stagger direct children by 60ms (cap ~6). */
+.pon-stagger > * {
+  animation: pon-enter 260ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.pon-stagger > *:nth-child(1) { animation-delay: 0ms; }
+.pon-stagger > *:nth-child(2) { animation-delay: 60ms; }
+.pon-stagger > *:nth-child(3) { animation-delay: 120ms; }
+.pon-stagger > *:nth-child(4) { animation-delay: 180ms; }
+.pon-stagger > *:nth-child(5) { animation-delay: 240ms; }
+.pon-stagger > *:nth-child(6) { animation-delay: 300ms; }
+.pon-stagger > *:nth-child(n + 7) { animation-delay: 300ms; }
+
+/* MANDATORY reduced-motion: disable all PON motion, keep final frame only. */
+@media (prefers-reduced-motion: reduce) {
+  .pon-enter,
+  .pon-pop,
+  .pon-sheen,
+  .pon-stagger > * {
+    animation: none !important;
+  }
+  .pon-sheen { display: none; }
+}

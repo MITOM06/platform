@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/l10n/l10n_ext.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/widgets/motion_widgets.dart';
 import '../../../core/widgets/otp_6box_input.dart';
 import '../../../core/widgets/pon_widgets.dart';
 import '../data/auth_repository.dart';
@@ -179,9 +180,14 @@ class _VerifyOtpScreenState extends ConsumerState<VerifyOtpScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      const Center(child: PonLogo(size: 100, showText: true)),
+                      const StaggeredEntrance(
+                        index: 0,
+                        child: Center(child: PonLogo(size: 100, showText: true)),
+                      ),
                       const SizedBox(height: 16),
-                      Text(
+                      StaggeredEntrance(
+                        index: 1,
+                        child: Text(
                         context.l10n.verifyAccountHeading,
                         style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                               fontWeight: FontWeight.bold,
@@ -189,8 +195,11 @@ class _VerifyOtpScreenState extends ConsumerState<VerifyOtpScreen> {
                             ),
                         textAlign: TextAlign.center,
                       ),
+                      ),
                       const SizedBox(height: 8),
-                      Text(
+                      StaggeredEntrance(
+                        index: 2,
+                        child: Text(
                         context.l10n.otpSentTo(widget.email),
                         textAlign: TextAlign.center,
                         style: TextStyle(
@@ -198,10 +207,13 @@ class _VerifyOtpScreenState extends ConsumerState<VerifyOtpScreen> {
                           height: 1.5,
                         ),
                       ),
+                      ),
                       const SizedBox(height: 32),
 
                       // OTP Form Card
-                      PonCard(
+                      StaggeredEntrance(
+                        index: 3,
+                        child: PonCard(
                         glowColor: AppTheme.ponCyan,
                         glowStrength: 8,
                         child: Padding(
@@ -253,6 +265,7 @@ class _VerifyOtpScreenState extends ConsumerState<VerifyOtpScreen> {
                             ],
                           ),
                         ),
+                      ),
                       ),
                     ],
                   ),

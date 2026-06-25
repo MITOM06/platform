@@ -369,7 +369,7 @@ export function MessageInput({
               size="icon"
               onClick={handleSend}
               disabled={!value.trim() || busy}
-              className="shrink-0"
+              className="shrink-0 transition-transform duration-[180ms] active:scale-95"
               variant={editingMessage ? 'outline' : 'default'}
             >
               {editingMessage ? <Pencil className="size-4" /> : <Send className="size-4" />}

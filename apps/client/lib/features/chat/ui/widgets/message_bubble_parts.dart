@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/theme/motion.dart';
 import '../../../profile/ui/widgets/user_profile_dialog.dart';
 import '../../../../core/l10n/l10n_ext.dart';
 import '../../../auth/domain/auth_provider.dart';
@@ -104,29 +105,85 @@ class ReactionChips extends StatelessWidget {
         spacing: 4,
         children: [
           for (final entry in counts.entries)
-            GestureDetector(
+            // Keyed by emoji so a newly-added reaction pops in (scale 0→1,
+            // easeOutBack); existing chips keep their state and don't re-fire.
+            _ReactionChip(
+              key: ValueKey(entry.key),
+              emoji: entry.key,
+              count: entry.value,
               onTap: () => showReactionsDetailModal(context, message),
-              child: Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
-                decoration: BoxDecoration(
-                  color: AppTheme.darkSurface,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                    color: AppTheme.ponCyan.withValues(alpha: 0.3),
-                    width: 1,
-                  ),
-                ),
-                child: Text(
-                  entry.value > 1
-                      ? '${entry.key} ${entry.value}'
-                      : entry.key,
-                  style: const TextStyle(fontSize: 12),
-                ),
-              ),
             ),
         ],
       ),
+    );
+  }
+}
+
+/// A single reaction chip that pops in on first appearance (confirmation
+/// motion). Reduced-motion → renders at full scale immediately.
+class _ReactionChip extends StatelessWidget {
+  final String emoji;
+  final int count;
+  final VoidCallback onTap;
+
+  const _ReactionChip({
+    super.key,
+    required this.emoji,
+    required this.count,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final reduced = AppMotion.reduced(context);
+    return GestureDetector(
+      onTap: onTap,
+      child: TweenAnimationBuilder<double>(
+        tween: Tween<double>(begin: reduced ? 1.0 : 0.0, end: 1.0),
+        duration: reduced ? Duration.zero : AppMotion.fast,
+        curve: AppMotion.pop,
+        builder: (context, scale, child) =>
+            Transform.scale(scale: scale, child: child),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+          decoration: BoxDecoration(
+            color: AppTheme.darkSurface,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: AppTheme.ponCyan.withValues(alpha: 0.3),
+              width: 1,
+            ),
+          ),
+          child: Text(
+            count > 1 ? '$emoji $count' : emoji,
+            style: const TextStyle(fontSize: 12),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Per-user delivered/read tick shown on outgoing DM messages. Single tick =
+/// delivered, double cyan tick = read by the other participant.
+class ReadTick extends StatelessWidget {
+  final MessageModel message;
+  final String? otherUserId;
+
+  const ReadTick({
+    super.key,
+    required this.message,
+    required this.otherUserId,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final isRead =
+        otherUserId != null && message.readBy.contains(otherUserId);
+    return Icon(
+      isRead ? Icons.done_all_rounded : Icons.done_rounded,
+      size: 13,
+      color: isRead ? AppTheme.ponCyan : Colors.white.withValues(alpha: 0.4),
     );
   }
 }

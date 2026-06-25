@@ -145,7 +145,7 @@ const ConversationItemInner = function ConversationItem({ conversation: conv }: 
         <Link
           href={`/conversations/${conv.id}`}
           className={cn(
-            'flex items-center gap-3 px-3 py-3 rounded-lg transition-colors hover:bg-primary/5',
+            'flex items-center gap-3 px-3 py-3 rounded-lg transition-[background-color,transform] duration-[180ms] hover:bg-primary/5 active:scale-[0.98]',
             isActive
               ? 'bg-primary/[0.08] shadow-[inset_2px_0_0_0_#6AC9FF]'
               : 'hover:bg-muted',

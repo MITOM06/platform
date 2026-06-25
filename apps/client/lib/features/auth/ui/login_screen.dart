@@ -6,6 +6,7 @@ import 'package:url_launcher/url_launcher.dart' show launchUrl, LaunchMode;
 import '../../../core/config/app_config.dart';
 import '../../../core/l10n/l10n_ext.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/widgets/motion_widgets.dart';
 import '../../../core/widgets/pon_widgets.dart';
 import '../data/auth_repository.dart';
 import '../domain/auth_provider.dart';
@@ -176,11 +177,16 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       // Brand Logo
-                      const Center(child: PonLogo(size: 100, showText: true)),
+                      const StaggeredEntrance(
+                        index: 0,
+                        child: Center(child: PonLogo(size: 100, showText: true)),
+                      ),
                     const SizedBox(height: 40),
 
                     // Frosted Glass Form Card
-                    PonCard(
+                    StaggeredEntrance(
+                      index: 1,
+                      child: PonCard(
                       glowColor: AppTheme.ponCyan,
                       glowStrength: 8,
                       child: Padding(
@@ -265,10 +271,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         ),
                       ),
                     ),
+                    ),
                     const SizedBox(height: 24),
 
                       // OAuth divider
-                      Row(
+                      StaggeredEntrance(
+                        index: 2,
+                        child: Row(
                         children: [
                           const Expanded(child: Divider(color: Colors.white24)),
                           Padding(
@@ -281,8 +290,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           const Expanded(child: Divider(color: Colors.white24)),
                         ],
                       ),
+                      ),
                       const SizedBox(height: 12),
-                      OutlinedButton.icon(
+                      StaggeredEntrance(
+                        index: 3,
+                        child: OutlinedButton.icon(
                         onPressed: () => _launchOAuth('google'),
                         icon: const Text('G', style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF4285F4))),
                         label: Text(context.l10n.loginWithGoogle),
@@ -290,6 +302,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           foregroundColor: Colors.white,
                           side: BorderSide(color: Colors.white.withValues(alpha: 0.3)),
                         ),
+                      ),
                       ),
 
                       if (_ssoEnabled) ...[
@@ -307,7 +320,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
 
                       // Navigation to register
-                      Row(
+                      StaggeredEntrance(
+                        index: 4,
+                        child: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Text(
@@ -319,6 +334,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                             child: Text(context.l10n.registerNow),
                           ),
                         ],
+                      ),
                       ),
                     ],
                   ),

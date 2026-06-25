@@ -2,6 +2,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../theme/app_theme.dart';
+import '../theme/motion.dart';
 
 // ---------------------------------------------------------------------------
 // PON Logo — mirrors the web SVG exactly (same paths, same gradient)
@@ -197,7 +198,7 @@ class _PonButtonState extends State<PonButton> {
       onTap: isDisabled ? null : widget.onPressed,
       child: AnimatedScale(
         scale: _isPressed ? 0.96 : 1.0,
-        duration: const Duration(milliseconds: 100),
+        duration: AppMotion.instant,
         child: Container(
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(18),

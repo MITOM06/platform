@@ -40,14 +40,14 @@ export default async function AuthLayout({ children }: { children: React.ReactNo
         style={{ background: 'radial-gradient(circle, rgba(251,182,139,0.14), transparent 70%)' }}
       />
 
-      {/* Brand */}
-      <div className="relative z-10 mb-8 flex flex-col items-center gap-2">
+      {/* Brand — orchestrated fade+slide-up on first mount (motion spec §E). */}
+      <div className="relative z-10 mb-8 flex flex-col items-center gap-2 motion-safe:pon-stagger">
         <PonLogo className="size-20 drop-shadow-[0_0_18px_rgba(106,201,255,0.45)]" />
         <span className="text-4xl font-black tracking-tight pon-gradient-text">PON</span>
         <span className="text-sm text-muted-foreground">{t('tagline')}</span>
       </div>
 
-      <div className="relative z-10 w-full max-w-sm">{children}</div>
+      <div className="relative z-10 w-full max-w-sm motion-safe:pon-enter">{children}</div>
     </div>
   )
 }

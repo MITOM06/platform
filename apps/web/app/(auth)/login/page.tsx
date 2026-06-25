@@ -79,7 +79,7 @@ export default function LoginPage() {
         <CardDescription>{t('login.subtitle')}</CardDescription>
       </CardHeader>
       <CardContent>
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 motion-safe:pon-stagger">
           <div className="space-y-1">
             <Label htmlFor="email">{t('emailLabel')}</Label>
             <Input
