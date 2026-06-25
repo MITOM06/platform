@@ -2329,4 +2329,34 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get assistantOpenChat => '어시스턴트 채팅 열기';
+
+  @override
+  String get botAdminTitle => '봇 연동';
+
+  @override
+  String get botAdminGenerateToken => '토큰 생성';
+
+  @override
+  String get botAdminRevokeToken => '해지';
+
+  @override
+  String get botAdminTokenWarning => '이 토큰은 한 번만 표시되며 다시 확인할 수 없습니다. 지금 복사하세요.';
+
+  @override
+  String get botAdminCopyToken => '복사';
+
+  @override
+  String get botAdminMcpUrl => 'MCP URL';
+
+  @override
+  String get botAdminToken => '연동 토큰';
+
+  @override
+  String get botAdminLastUsed => '마지막 사용';
+
+  @override
+  String get botAdminNeverUsed => '사용한 적 없음';
+
+  @override
+  String get botAdminNoBotsRegistered => '등록된 봇이 아직 없습니다.';
 }

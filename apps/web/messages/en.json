@@ -1040,5 +1040,16 @@
     "defaultName": "My Assistant",
     "subtitle": "Your personal assistant",
     "openChat": "Open assistant chat"
+  },
+  "botAdmin": {
+    "title": "Bot Factory integration",
+    "generateToken": "Generate token",
+    "revokeToken": "Revoke",
+    "tokenWarning": "Copy this token now — it is shown only once and cannot be retrieved later.",
+    "copyToken": "Integration token",
+    "mcpUrl": "MCP URL",
+    "lastUsed": "Last used",
+    "neverUsed": "Never used",
+    "noBotsRegistered": "No bots registered yet."
   }
 }

@@ -2315,4 +2315,34 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get assistantOpenChat => '打开助手对话';
+
+  @override
+  String get botAdminTitle => '机器人集成';
+
+  @override
+  String get botAdminGenerateToken => '生成令牌';
+
+  @override
+  String get botAdminRevokeToken => '撤销';
+
+  @override
+  String get botAdminTokenWarning => '请立即复制此令牌——它仅显示一次，无法再次获取。';
+
+  @override
+  String get botAdminCopyToken => '复制';
+
+  @override
+  String get botAdminMcpUrl => 'MCP 地址';
+
+  @override
+  String get botAdminToken => '集成令牌';
+
+  @override
+  String get botAdminLastUsed => '最近使用';
+
+  @override
+  String get botAdminNeverUsed => '从未使用';
+
+  @override
+  String get botAdminNoBotsRegistered => '尚未注册任何机器人。';
 }

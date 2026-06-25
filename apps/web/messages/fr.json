@@ -1040,5 +1040,16 @@
     "defaultName": "Mon assistant",
     "subtitle": "Votre assistant personnel",
     "openChat": "Ouvrir le chat de l’assistant"
+  },
+  "botAdmin": {
+    "title": "Intégration Bot Factory",
+    "generateToken": "Générer un jeton",
+    "revokeToken": "Révoquer",
+    "tokenWarning": "Copiez ce jeton maintenant : il ne s’affiche qu’une seule fois et ne pourra pas être récupéré ensuite.",
+    "copyToken": "Jeton d’intégration",
+    "mcpUrl": "URL MCP",
+    "lastUsed": "Dernière utilisation",
+    "neverUsed": "Jamais utilisé",
+    "noBotsRegistered": "Aucun bot enregistré pour le moment."
   }
 }

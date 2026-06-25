@@ -858,5 +858,15 @@
   "usageRetry": "重试",
   "assistantDefaultName": "我的助手",
   "assistantSubtitle": "您的私人助手",
-  "assistantOpenChat": "打开助手对话"
+  "assistantOpenChat": "打开助手对话",
+  "botAdminTitle": "机器人集成",
+  "botAdminGenerateToken": "生成令牌",
+  "botAdminRevokeToken": "撤销",
+  "botAdminTokenWarning": "请立即复制此令牌——它仅显示一次，无法再次获取。",
+  "botAdminCopyToken": "复制",
+  "botAdminMcpUrl": "MCP 地址",
+  "botAdminToken": "集成令牌",
+  "botAdminLastUsed": "最近使用",
+  "botAdminNeverUsed": "从未使用",
+  "botAdminNoBotsRegistered": "尚未注册任何机器人。"
 }

@@ -2414,4 +2414,35 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get assistantOpenChat => 'Ouvrir le chat de l’assistant';
+
+  @override
+  String get botAdminTitle => 'Intégration des bots';
+
+  @override
+  String get botAdminGenerateToken => 'Générer un jeton';
+
+  @override
+  String get botAdminRevokeToken => 'Révoquer';
+
+  @override
+  String get botAdminTokenWarning =>
+      'Copiez ce jeton maintenant : il n’est affiché qu’une seule fois et ne peut pas être récupéré.';
+
+  @override
+  String get botAdminCopyToken => 'Copier';
+
+  @override
+  String get botAdminMcpUrl => 'URL MCP';
+
+  @override
+  String get botAdminToken => 'Jeton d\'intégration';
+
+  @override
+  String get botAdminLastUsed => 'Dernière utilisation';
+
+  @override
+  String get botAdminNeverUsed => 'Jamais utilisé';
+
+  @override
+  String get botAdminNoBotsRegistered => 'Aucun bot enregistré pour le moment.';
 }

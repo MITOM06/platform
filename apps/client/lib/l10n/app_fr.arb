@@ -858,5 +858,15 @@
   "usageRetry": "Réessayer",
   "assistantDefaultName": "Mon assistant",
   "assistantSubtitle": "Votre assistant personnel",
-  "assistantOpenChat": "Ouvrir le chat de l’assistant"
+  "assistantOpenChat": "Ouvrir le chat de l’assistant",
+  "botAdminTitle": "Intégration des bots",
+  "botAdminGenerateToken": "Générer un jeton",
+  "botAdminRevokeToken": "Révoquer",
+  "botAdminTokenWarning": "Copiez ce jeton maintenant : il n’est affiché qu’une seule fois et ne peut pas être récupéré.",
+  "botAdminCopyToken": "Copier",
+  "botAdminMcpUrl": "URL MCP",
+  "botAdminToken": "Jeton d'intégration",
+  "botAdminLastUsed": "Dernière utilisation",
+  "botAdminNeverUsed": "Jamais utilisé",
+  "botAdminNoBotsRegistered": "Aucun bot enregistré pour le moment."
 }

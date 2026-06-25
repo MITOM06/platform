@@ -2379,4 +2379,35 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get assistantOpenChat => 'Mở trò chuyện với trợ lý';
+
+  @override
+  String get botAdminTitle => 'Tích hợp Bot';
+
+  @override
+  String get botAdminGenerateToken => 'Tạo token';
+
+  @override
+  String get botAdminRevokeToken => 'Thu hồi';
+
+  @override
+  String get botAdminTokenWarning =>
+      'Hãy sao chép token ngay — nó chỉ hiển thị một lần và không thể lấy lại.';
+
+  @override
+  String get botAdminCopyToken => 'Sao chép';
+
+  @override
+  String get botAdminMcpUrl => 'URL MCP';
+
+  @override
+  String get botAdminToken => 'Token tích hợp';
+
+  @override
+  String get botAdminLastUsed => 'Lần dùng cuối';
+
+  @override
+  String get botAdminNeverUsed => 'Chưa từng dùng';
+
+  @override
+  String get botAdminNoBotsRegistered => 'Chưa có bot nào được đăng ký.';
 }

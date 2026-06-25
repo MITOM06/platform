@@ -858,5 +858,15 @@
   "usageRetry": "Reintentar",
   "assistantDefaultName": "Mi asistente",
   "assistantSubtitle": "Tu asistente personal",
-  "assistantOpenChat": "Abrir chat del asistente"
+  "assistantOpenChat": "Abrir chat del asistente",
+  "botAdminTitle": "Integración de bots",
+  "botAdminGenerateToken": "Generar token",
+  "botAdminRevokeToken": "Revocar",
+  "botAdminTokenWarning": "Copia este token ahora: solo se muestra una vez y no se puede recuperar.",
+  "botAdminCopyToken": "Copiar",
+  "botAdminMcpUrl": "URL de MCP",
+  "botAdminToken": "Token de integración",
+  "botAdminLastUsed": "Último uso",
+  "botAdminNeverUsed": "Nunca usado",
+  "botAdminNoBotsRegistered": "Aún no hay bots registrados."
 }

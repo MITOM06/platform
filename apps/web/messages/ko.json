@@ -1040,5 +1040,16 @@
     "defaultName": "내 어시스턴트",
     "subtitle": "당신의 개인 어시스턴트",
     "openChat": "어시스턴트 채팅 열기"
+  },
+  "botAdmin": {
+    "title": "Bot Factory 연동",
+    "generateToken": "토큰 생성",
+    "revokeToken": "취소",
+    "tokenWarning": "이 토큰은 한 번만 표시되며 나중에 다시 확인할 수 없습니다. 지금 복사하세요.",
+    "copyToken": "연동 토큰",
+    "mcpUrl": "MCP URL",
+    "lastUsed": "마지막 사용",
+    "neverUsed": "사용한 적 없음",
+    "noBotsRegistered": "등록된 봇이 없습니다."
   }
 }

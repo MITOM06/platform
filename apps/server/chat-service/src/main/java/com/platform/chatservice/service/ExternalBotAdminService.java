@@ -3,6 +3,7 @@ package com.platform.chatservice.service;
 import com.platform.chatservice.dto.ExternalBotResponse;
 import com.platform.chatservice.model.ExternalBot;
 import com.platform.chatservice.repository.ExternalBotRepository;
+import java.util.List;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -34,6 +35,11 @@ public class ExternalBotAdminService {
 
   public Optional<ExternalBotResponse> findAssistantFor(String ownerUserId) {
     return repo.findByOwnerUserIdAndEnabledTrue(ownerUserId).map(this::toResponse);
+  }
+
+  /** Workspace-wide list of all registered external bots, for the admin UI. */
+  public List<ExternalBotResponse> listAll() {
+    return repo.findAll().stream().map(this::toResponse).toList();
   }
 
   private ExternalBotResponse toResponse(ExternalBot b) {

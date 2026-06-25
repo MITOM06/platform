@@ -1040,5 +1040,16 @@
     "defaultName": "我的助手",
     "subtitle": "您的私人助手",
     "openChat": "打开助手对话"
+  },
+  "botAdmin": {
+    "title": "Bot Factory 集成",
+    "generateToken": "生成令牌",
+    "revokeToken": "撤销",
+    "tokenWarning": "请立即复制此令牌——它仅显示一次，之后无法再次获取。",
+    "copyToken": "集成令牌",
+    "mcpUrl": "MCP 网址",
+    "lastUsed": "最近使用",
+    "neverUsed": "从未使用",
+    "noBotsRegistered": "尚未注册任何机器人。"
   }
 }

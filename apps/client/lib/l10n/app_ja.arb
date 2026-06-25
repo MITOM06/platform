@@ -858,5 +858,15 @@
   "usageRetry": "再試行",
   "assistantDefaultName": "マイアシスタント",
   "assistantSubtitle": "あなたの専属アシスタント",
-  "assistantOpenChat": "アシスタントのチャットを開く"
+  "assistantOpenChat": "アシスタントのチャットを開く",
+  "botAdminTitle": "ボット連携",
+  "botAdminGenerateToken": "トークンを生成",
+  "botAdminRevokeToken": "取り消す",
+  "botAdminTokenWarning": "このトークンは一度しか表示されず、再取得できません。今すぐコピーしてください。",
+  "botAdminCopyToken": "コピー",
+  "botAdminMcpUrl": "MCP URL",
+  "botAdminToken": "連携トークン",
+  "botAdminLastUsed": "最終使用",
+  "botAdminNeverUsed": "未使用",
+  "botAdminNoBotsRegistered": "登録されたボットはまだありません。"
 }

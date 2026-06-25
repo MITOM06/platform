@@ -1040,5 +1040,16 @@
     "defaultName": "マイアシスタント",
     "subtitle": "あなたの専属アシスタント",
     "openChat": "アシスタントのチャットを開く"
+  },
+  "botAdmin": {
+    "title": "Bot Factory 連携",
+    "generateToken": "トークンを生成",
+    "revokeToken": "取り消し",
+    "tokenWarning": "このトークンは一度しか表示されず、後から取得できません。今すぐコピーしてください。",
+    "copyToken": "連携トークン",
+    "mcpUrl": "MCP URL",
+    "lastUsed": "最終使用",
+    "neverUsed": "未使用",
+    "noBotsRegistered": "まだボットが登録されていません。"
   }
 }

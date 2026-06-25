@@ -2380,4 +2380,35 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get assistantOpenChat => 'Open assistant chat';
+
+  @override
+  String get botAdminTitle => 'Bot Integration';
+
+  @override
+  String get botAdminGenerateToken => 'Generate token';
+
+  @override
+  String get botAdminRevokeToken => 'Revoke';
+
+  @override
+  String get botAdminTokenWarning =>
+      'Copy this token now — it is shown only once and cannot be retrieved again.';
+
+  @override
+  String get botAdminCopyToken => 'Copy';
+
+  @override
+  String get botAdminMcpUrl => 'MCP URL';
+
+  @override
+  String get botAdminToken => 'Integration token';
+
+  @override
+  String get botAdminLastUsed => 'Last used';
+
+  @override
+  String get botAdminNeverUsed => 'Never used';
+
+  @override
+  String get botAdminNoBotsRegistered => 'No bots registered yet.';
 }

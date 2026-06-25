@@ -4464,6 +4464,66 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Open assistant chat'**
   String get assistantOpenChat;
+
+  /// No description provided for @botAdminTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Bot Integration'**
+  String get botAdminTitle;
+
+  /// No description provided for @botAdminGenerateToken.
+  ///
+  /// In en, this message translates to:
+  /// **'Generate token'**
+  String get botAdminGenerateToken;
+
+  /// No description provided for @botAdminRevokeToken.
+  ///
+  /// In en, this message translates to:
+  /// **'Revoke'**
+  String get botAdminRevokeToken;
+
+  /// No description provided for @botAdminTokenWarning.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy this token now — it is shown only once and cannot be retrieved again.'**
+  String get botAdminTokenWarning;
+
+  /// No description provided for @botAdminCopyToken.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy'**
+  String get botAdminCopyToken;
+
+  /// No description provided for @botAdminMcpUrl.
+  ///
+  /// In en, this message translates to:
+  /// **'MCP URL'**
+  String get botAdminMcpUrl;
+
+  /// No description provided for @botAdminToken.
+  ///
+  /// In en, this message translates to:
+  /// **'Integration token'**
+  String get botAdminToken;
+
+  /// No description provided for @botAdminLastUsed.
+  ///
+  /// In en, this message translates to:
+  /// **'Last used'**
+  String get botAdminLastUsed;
+
+  /// No description provided for @botAdminNeverUsed.
+  ///
+  /// In en, this message translates to:
+  /// **'Never used'**
+  String get botAdminNeverUsed;
+
+  /// No description provided for @botAdminNoBotsRegistered.
+  ///
+  /// In en, this message translates to:
+  /// **'No bots registered yet.'**
+  String get botAdminNoBotsRegistered;
 }
 
 class _AppLocalizationsDelegate

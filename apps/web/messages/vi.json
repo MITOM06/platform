@@ -1040,5 +1040,16 @@
     "defaultName": "Trợ lý của tôi",
     "subtitle": "Trợ lý cá nhân của bạn",
     "openChat": "Mở trò chuyện với trợ lý"
+  },
+  "botAdmin": {
+    "title": "Tích hợp Bot Factory",
+    "generateToken": "Tạo token",
+    "revokeToken": "Thu hồi",
+    "tokenWarning": "Hãy sao chép token ngay — token chỉ hiển thị một lần và không thể lấy lại sau này.",
+    "copyToken": "Token tích hợp",
+    "mcpUrl": "URL MCP",
+    "lastUsed": "Lần dùng cuối",
+    "neverUsed": "Chưa từng dùng",
+    "noBotsRegistered": "Chưa có bot nào được đăng ký."
   }
 }

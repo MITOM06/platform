@@ -1177,5 +1177,15 @@
   "usageRetry": "Retry",
   "assistantDefaultName": "My Assistant",
   "assistantSubtitle": "Your personal assistant",
-  "assistantOpenChat": "Open assistant chat"
+  "assistantOpenChat": "Open assistant chat",
+  "botAdminTitle": "Bot Integration",
+  "botAdminGenerateToken": "Generate token",
+  "botAdminRevokeToken": "Revoke",
+  "botAdminTokenWarning": "Copy this token now — it is shown only once and cannot be retrieved again.",
+  "botAdminCopyToken": "Copy",
+  "botAdminMcpUrl": "MCP URL",
+  "botAdminToken": "Integration token",
+  "botAdminLastUsed": "Last used",
+  "botAdminNeverUsed": "Never used",
+  "botAdminNoBotsRegistered": "No bots registered yet."
 }

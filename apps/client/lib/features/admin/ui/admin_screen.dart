@@ -5,6 +5,7 @@ import '../../../core/l10n/l10n_ext.dart';
 import '../../../core/theme/app_theme.dart';
 import '../data/models/admin_models.dart';
 import '../state/capabilities_provider.dart';
+import 'bot_integration_panel.dart';
 import 'widgets/audit_panel.dart';
 import 'widgets/departments_panel.dart';
 import 'widgets/members_panel.dart';
@@ -40,6 +41,8 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
             (c) => c.l10n.adminNavWorkspace, const WorkspacePanel()),
         _Section(Cap.manageWorkspace, Icons.auto_awesome,
             (c) => c.l10n.adminNavAi, const WorkspaceAiSettingsPanel()),
+        _Section(Cap.manageWorkspace, Icons.smart_toy_outlined,
+            (c) => c.l10n.botAdminTitle, const BotIntegrationPanel()),
         _Section(Cap.manageWorkspace, Icons.insights_outlined,
             (c) => c.l10n.adminNavUsage, const UsageDashboardPanel()),
         _Section(Cap.manageWorkspace, Icons.vpn_key_outlined,

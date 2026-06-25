@@ -2327,4 +2327,34 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get assistantOpenChat => 'アシスタントのチャットを開く';
+
+  @override
+  String get botAdminTitle => 'ボット連携';
+
+  @override
+  String get botAdminGenerateToken => 'トークンを生成';
+
+  @override
+  String get botAdminRevokeToken => '取り消す';
+
+  @override
+  String get botAdminTokenWarning => 'このトークンは一度しか表示されず、再取得できません。今すぐコピーしてください。';
+
+  @override
+  String get botAdminCopyToken => 'コピー';
+
+  @override
+  String get botAdminMcpUrl => 'MCP URL';
+
+  @override
+  String get botAdminToken => '連携トークン';
+
+  @override
+  String get botAdminLastUsed => '最終使用';
+
+  @override
+  String get botAdminNeverUsed => '未使用';
+
+  @override
+  String get botAdminNoBotsRegistered => '登録されたボットはまだありません。';
 }
