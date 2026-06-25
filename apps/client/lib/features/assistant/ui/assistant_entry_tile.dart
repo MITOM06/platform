@@ -1,0 +1,89 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+
+import '../../../core/l10n/l10n_ext.dart';
+import '../../../core/utils/app_error.dart';
+import '../../../core/utils/global_messenger.dart';
+import '../../chat/data/chat_repository.dart';
+import '../../home/domain/home_providers.dart';
+import '../state/assistant_provider.dart';
+
+/// Pinned entry at the top of the conversation list that opens (or creates) the
+/// member's 1-1 conversation with their Bot Factory personal assistant. Hidden
+/// gracefully when no assistant is registered (GET /api/assistant/me → 404).
+class AssistantEntryTile extends ConsumerWidget {
+  const AssistantEntryTile({super.key});
+
+  Future<void> _openChat(
+    BuildContext context,
+    WidgetRef ref,
+    String botUserId,
+  ) async {
+    try {
+      final conv =
+          await ref.read(chatRepositoryProvider).getOrCreateConversation(botUserId);
+      if (!context.mounted) return;
+      // Mirror ConversationTile: web shows the thread in the split pane, mobile
+      // pushes the chat route.
+      final isWeb = MediaQuery.of(context).size.width >= kWebBreakpoint;
+      if (isWeb) {
+        ref.read(selectedConversationIdProvider.notifier).state = conv.id;
+      } else {
+        context.push('/chat/${conv.id}');
+      }
+    } catch (e) {
+      showErrorSnackBar(friendlyError(e));
+    }
+  }
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final assistantAsync = ref.watch(assistantProvider);
+    return assistantAsync.when(
+      loading: () => const SizedBox.shrink(),
+      error: (_, __) => const SizedBox.shrink(),
+      data: (assistant) {
+        if (assistant == null) return const SizedBox.shrink();
+        final name = assistant.name.isNotEmpty
+            ? assistant.name
+            : context.l10n.assistantDefaultName;
+        return ListTile(
+          leading: Container(
+            width: 44,
+            height: 44,
+            decoration: const BoxDecoration(
+              shape: BoxShape.circle,
+              gradient: LinearGradient(
+                colors: [Color(0xFF7C3AED), Color(0xFF14B8A6)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+            ),
+            child: Center(
+              child: Text(
+                name[0].toUpperCase(),
+                style: const TextStyle(
+                    color: Colors.white, fontWeight: FontWeight.bold),
+              ),
+            ),
+          ),
+          title: Text(
+            name,
+            style: Theme.of(context)
+                .textTheme
+                .titleSmall
+                ?.copyWith(fontWeight: FontWeight.w600),
+          ),
+          subtitle: Text(
+            context.l10n.assistantSubtitle,
+            style: Theme.of(context).textTheme.bodySmall,
+          ),
+          onTap: () => _openChat(context, ref, assistant.botUserId),
+          contentPadding:
+              const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+        );
+      },
+    );
+  }
+}
