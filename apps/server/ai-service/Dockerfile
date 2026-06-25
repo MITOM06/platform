@@ -21,9 +21,14 @@ RUN pnpm --filter @platform/ai-service build
 FROM node:20-alpine
 WORKDIR /app
 
+# Preserve the monorepo directory depth so the compiled relative require in
+# app.module.js (`../../../../packages/database/dist`) still resolves at runtime.
+# The build emits that path relative to apps/server/ai-service/dist; flattening
+# it to /app/dist would make it point at the nonexistent /packages/database/dist
+# → MODULE_NOT_FOUND → exit(1) before the port opens.
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/packages/database ./packages/database
-COPY --from=builder /app/apps/server/ai-service/dist ./dist
+COPY --from=builder /app/apps/server/ai-service/dist ./apps/server/ai-service/dist
 
 EXPOSE 3002
-CMD ["node", "dist/main.js"]
+CMD ["node", "apps/server/ai-service/dist/main.js"]
