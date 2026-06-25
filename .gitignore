@@ -95,3 +95,8 @@ scripts/set-github-secrets.sh
 
 # Local-only backup of old _workspace reports (recoverable from git history)
 _workspace_prev/
+
+# Editor / office temp & lock files (e.g. Excel "~$" lock files)
+~$*
+*.tmp
+.DS_Store

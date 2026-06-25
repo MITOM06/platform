@@ -3,7 +3,10 @@
 > **Purpose of this file:** orient a fresh AI session so it can continue this work without re-exploring both codebases. Read this top-to-bottom, then open the implementation plan at
 > `docs/superpowers/plans/2026-06-24-botfactory-personal-assistant-bridge.md`.
 >
-> **Last updated:** 2026-06-24 — Plan written, **implementation not started.**
+> **Last updated:** 2026-06-25 — **Phase 1 (server-side bridge) IMPLEMENTED** on branch
+> `feat/botfactory-bridge` (6 TDD tasks: `saveBotMessage`, `BotFactoryClient`, `ExternalBot` registry +
+> `ExternalBotService`, 1-1 trigger in both message paths, auto-accept, register/resolve REST), pending
+> merge to `main`. **Next:** the client UI — `docs/superpowers/plans/2026-06-25-personal-assistant-client-ui.md`.
 
 ---
 
@@ -91,7 +94,7 @@ Member sends a message in a 1-1 conversation with their assistant bot
 
 ## Phasing
 
-- **Phase 1 — server-side bridge (THIS PLAN, not started).** Registry + `saveBotMessage` + `BotFactoryClient` + `ExternalBotService` + 1-1 trigger + auto-accept + register/lookup endpoints. All in chat-service. Plan: `docs/superpowers/plans/2026-06-24-botfactory-personal-assistant-bridge.md`.
+- **Phase 1 — server-side bridge ✅ DONE** (branch `feat/botfactory-bridge`, pending merge). Registry + `saveBotMessage` + `BotFactoryClient` + `ExternalBotService` + 1-1 trigger + auto-accept + register/lookup endpoints. All in chat-service. Plan: `docs/superpowers/plans/2026-06-24-botfactory-personal-assistant-bridge.md`.
 - **Phase 2 — group `@mention`.** Resolve a bot handle among group participants; honor a `respondMode` (all/mention).
 - **Client UI (separate plan).** "Start chat with my assistant" entry + bot identity rendering in `apps/web` AND `apps/client` (Flutter). MUST satisfy `.claude/rules/sync.md` (web↔mobile parity); use the `orchestrate-feature` skill.
 - **Phase 4 — hardening & extension.** Move `worker-token` into connector-service token vault; admin UI to manage bots; auto-provision a Bot Factory bot per member; two-side audit (propagate `traceId` into Bot Factory); optional "personal assistant queries company bot within user RBAC" governed proxy (via connector-service, carrying the user's PON JWT).
