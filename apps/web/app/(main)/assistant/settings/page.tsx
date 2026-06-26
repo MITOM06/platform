@@ -24,21 +24,11 @@ import {
   useDeleteAssistant,
   useSetupAssistant,
 } from '@/lib/hooks/use-assistant'
+import type { AssistantInfo } from '@/lib/api/assistant'
 
 export default function AssistantSettingsPage() {
-  const t = useTranslations('assistantSettings')
-  const ts = useTranslations('assistantSetup')
-  const tc = useTranslations('common')
   const router = useRouter()
   const { data: assistant, isLoading } = useAssistant()
-  const setup = useSetupAssistant()
-  const del = useDeleteAssistant()
-
-  const [name, setName] = useState('')
-  const [systemPrompt, setSystemPrompt] = useState('')
-  const [providerId, setProviderId] = useState('')
-  const [prefilled, setPrefilled] = useState(false)
-  const [confirmOpen, setConfirmOpen] = useState(false)
 
   // Redirect to setup when no assistant exists (once load settles).
   useEffect(() => {
@@ -47,13 +37,32 @@ export default function AssistantSettingsPage() {
     }
   }, [isLoading, assistant, router])
 
-  // Prefill name once (persona is not returned by GET /me — left empty).
-  useEffect(() => {
-    if (assistant && !prefilled) {
-      setName(assistant.name)
-      setPrefilled(true)
-    }
-  }, [assistant, prefilled])
+  if (isLoading || !assistant) {
+    return (
+      <div className="flex h-full items-center justify-center">
+        <Loader2 className="size-6 animate-spin text-primary" />
+      </div>
+    )
+  }
+
+  // Mount the form only once the assistant is loaded, so its state can be
+  // initialized directly from `assistant` (no prefill effect needed).
+  return <AssistantSettingsForm assistant={assistant} />
+}
+
+function AssistantSettingsForm({ assistant }: { assistant: AssistantInfo }) {
+  const t = useTranslations('assistantSettings')
+  const ts = useTranslations('assistantSetup')
+  const tc = useTranslations('common')
+  const router = useRouter()
+  const setup = useSetupAssistant()
+  const del = useDeleteAssistant()
+
+  // Persona is not returned by GET /me — left empty.
+  const [name, setName] = useState(assistant.name)
+  const [systemPrompt, setSystemPrompt] = useState('')
+  const [providerId, setProviderId] = useState('')
+  const [confirmOpen, setConfirmOpen] = useState(false)
 
   async function handleSave() {
     if (!name.trim() || !providerId) return
@@ -77,14 +86,6 @@ export default function AssistantSettingsPage() {
     } catch {
       toast.error(tc('somethingWrong'))
     }
-  }
-
-  if (isLoading || !assistant) {
-    return (
-      <div className="flex h-full items-center justify-center">
-        <Loader2 className="size-6 animate-spin text-primary" />
-      </div>
-    )
   }
 
   return (
