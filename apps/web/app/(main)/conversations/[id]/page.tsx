@@ -130,6 +130,15 @@ export default function ConversationPage({ params }: Props) {
   // state (see MessageViewport for the full rationale).
 
   const { patchMessage, markMessageRead, appendMessage, attachAiSources } = useMessageCache(id)
+
+  // Store message-cache callbacks in a ref so the STOMP subscription effect
+  // only needs [id, stompConnected] in its dep array. The ref always holds the
+  // latest version of each callback so stale-closure bugs are impossible.
+  const msgCallbacksRef = useRef({ patchMessage, markMessageRead, appendMessage, attachAiSources })
+  useEffect(() => {
+    msgCallbacksRef.current = { patchMessage, markMessageRead, appendMessage, attachAiSources }
+  })
+
   // RAG sources from an AI_STREAM_DONE that arrived before the persisted AI
   // message was in the cache — applied to that message on append (rare race).
   const pendingAiSourcesRef = useRef<AiSource[] | null>(null)
@@ -169,19 +178,19 @@ export default function ConversationPage({ params }: Props) {
           if (isStompEvent(parsed)) {
             switch (parsed.type) {
               case 'MESSAGE_UPDATED':
-                patchMessage(parsed.messageId, {
+                msgCallbacksRef.current.patchMessage(parsed.messageId, {
                   content: parsed.content,
                   editedAt: parsed.editedAt,
                 })
                 break
               case 'MESSAGE_RECALLED':
-                patchMessage(parsed.messageId, { recalled: true })
+                msgCallbacksRef.current.patchMessage(parsed.messageId, { recalled: true })
                 break
               case 'MESSAGE_READ':
-                markMessageRead(parsed.messageId, parsed.readerId)
+                msgCallbacksRef.current.markMessageRead(parsed.messageId, parsed.readerId)
                 break
               case 'REACTION_UPDATED':
-                patchMessage(parsed.messageId, { reactions: parsed.reactions })
+                msgCallbacksRef.current.patchMessage(parsed.messageId, { reactions: parsed.reactions })
                 break
               case 'PINNED_MESSAGE':
                 queryClient.invalidateQueries({ queryKey: ['conversation', id] })
@@ -232,7 +241,7 @@ export default function ConversationPage({ params }: Props) {
                 // normally already in the cache; if not (rare reorder), stash the
                 // sources for the next AI message append.
                 const doneSources = parsed.sources ?? []
-                if (doneSources.length > 0 && !attachAiSources(doneSources)) {
+                if (doneSources.length > 0 && !msgCallbacksRef.current.attachAiSources(doneSources)) {
                   pendingAiSourcesRef.current = doneSources
                 }
                 break
@@ -245,10 +254,12 @@ export default function ConversationPage({ params }: Props) {
                   AI_STREAM_INTERRUPTED: t('aiStreamInterrupted'),
                   AI_UNAVAILABLE: t('aiUnavailable'),
                 }
+                // Only show a mapped, localized message — never the raw backend
+                // error string, which is internal/system text.
                 const aiErrMsg = parsed.code && aiErrCodeMap[parsed.code]
                   ? aiErrCodeMap[parsed.code]
-                  : (parsed.error ?? t('aiError'))
-                toast.error(String(aiErrMsg))
+                  : t('aiError')
+                toast.error(aiErrMsg)
                 break
               }
             }
@@ -310,7 +321,7 @@ export default function ConversationPage({ params }: Props) {
               msg.sources = pendingAiSourcesRef.current
               pendingAiSourcesRef.current = null
             }
-            appendMessage(msg)
+            msgCallbacksRef.current.appendMessage(msg)
           }
         } catch {
           // ignore malformed frames
@@ -331,6 +342,8 @@ export default function ConversationPage({ params }: Props) {
           }
         },
       )
+    }).catch(() => {
+      // Connection failed — cleanup will handle retry via stompConnected changing
     })
 
     return () => {
@@ -338,7 +351,7 @@ export default function ConversationPage({ params }: Props) {
       messageSub?.unsubscribe()
       typingSub?.unsubscribe()
     }
-  }, [id, stompConnected, queryClient, currentUser?.id, patchMessage, appendMessage, attachAiSources, markMessageRead, t, armAiWatchdog, clearAiStream])
+  }, [id, stompConnected, queryClient, currentUser?.id, t, armAiWatchdog, clearAiStream])
 
   // Mark conversation as read on open
   useEffect(() => {
@@ -349,6 +362,13 @@ export default function ConversationPage({ params }: Props) {
   // /app/chat.read for messages from others so the sender's seen-tick flips on
   // in realtime. The server persists readBy + broadcasts MESSAGE_READ.
   const sentReadRef = useRef<Set<string>>(new Set())
+
+  // Reset the sent-read set when switching conversations so we don't carry
+  // over IDs from a previous thread into the new one.
+  useEffect(() => {
+    sentReadRef.current = new Set()
+  }, [id])
+
   useEffect(() => {
     if (!currentUser) return
     const sent = sentReadRef.current

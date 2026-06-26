@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../../../core/api/dio_client.dart';
 import '../../../core/l10n/l10n_ext.dart';
+import '../../../core/utils/app_error.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../auth/domain/auth_provider.dart';
 import 'widgets/token_usage_chart.dart';
@@ -83,7 +84,7 @@ class TokenUsageScreen extends ConsumerWidget {
         data: (days) => _Body(days: days, isDark: isDark),
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, _) => Center(
-          child: Text(e.toString(),
+          child: Text(friendlyError(e),
               style: const TextStyle(color: Colors.redAccent)),
         ),
       ),

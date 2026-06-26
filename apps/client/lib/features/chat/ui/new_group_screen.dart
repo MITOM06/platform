@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/l10n/l10n_ext.dart';
+import '../../../core/utils/app_error.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/pon_widgets.dart';
 import '../../friends/domain/friends_provider.dart';
@@ -60,7 +61,7 @@ class _NewGroupScreenState extends ConsumerState<NewGroupScreen> {
       if (mounted) context.go('/chat/${conv.id}');
     } catch (e) {
       messenger.showSnackBar(
-        SnackBar(content: Text(l10n.errorWithMsg(e.toString()))),
+        SnackBar(content: Text(friendlyError(e))),
       );
     } finally {
       if (mounted) setState(() => _busy = false);
@@ -141,7 +142,7 @@ class _NewGroupScreenState extends ConsumerState<NewGroupScreen> {
             child: friendsAsync.when(
               loading: () => const Center(child: CircularProgressIndicator()),
               error: (e, _) => Center(
-                child: Text(context.l10n.errorWithMsg(e.toString())),
+                child: Text(friendlyError(e)),
               ),
               data: (friends) {
                 if (friends.isEmpty) {

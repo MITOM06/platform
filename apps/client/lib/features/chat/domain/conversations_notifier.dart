@@ -27,6 +27,7 @@ class ConversationsNotifier extends _$ConversationsNotifier {
   StreamSubscription<Map<String, dynamic>>? _notifSub;
   StreamSubscription<ConversationModel>? _convUpdateSub;
   StreamSubscription<Map<String, dynamic>>? _webrtcSub;
+  StreamSubscription<void>? _reconnectSub;
 
   @override
   Future<List<ConversationModel>> build() async {
@@ -46,6 +47,11 @@ class ConversationsNotifier extends _$ConversationsNotifier {
     _notifSub = stomp.notifications.listen(_onNotification);
     _convUpdateSub = stomp.conversationUpdates.listen(_onConversationUpdate);
     _webrtcSub = stomp.webrtcSignals.listen(_onWebRTCSignal);
+    // After a STOMP reconnect (e.g. app backgrounded → resumed), any
+    // NEW_MESSAGE notifications that fired during the disconnect window were
+    // never delivered. Silently refetch the list so unread badges + last
+    // messages catch up without flashing a spinner.
+    _reconnectSub = stomp.reconnects.listen((_) => _silentRefetch());
     // Ensure group-call signaling + active-call tracking are live for the
     // whole session (call-ring + mesh signals + roster/started/ended events).
     ref.read(groupCallSignalingProvider);
@@ -54,6 +60,7 @@ class ConversationsNotifier extends _$ConversationsNotifier {
       _notifSub?.cancel();
       _convUpdateSub?.cancel();
       _webrtcSub?.cancel();
+      _reconnectSub?.cancel();
     });
 
     return repo.listConversations();
@@ -267,22 +274,32 @@ class ConversationsNotifier extends _$ConversationsNotifier {
         return;
       }
 
-      final updated = current.map((c) {
-        if (c.id != convId) return c;
-        return c.copyWith(
-          lastMessageAt: DateTime.now(),
-          unreadCount: c.unreadCount + 1,
-          lastMessage: content != null
-              ? LastMessageModel(
-                  content: content,
-                  senderId: senderId,
-                  createdAt: DateTime.now(),
-                )
-              : c.lastMessage,
-        );
-      }).toList()
-        ..sort((a, b) => (b.lastMessageAt ?? DateTime(0))
-            .compareTo(a.lastMessageAt ?? DateTime(0)));
+      // The conversation that just received a message always becomes the most
+      // recent, so it moves to the front. Update it immutably and move-to-front
+      // instead of re-sorting the whole list every message (avoids O(n log n)
+      // churn — the rest of the list was already ordered, and prepending the
+      // freshly-touched conversation preserves that ordering).
+      final idx = current.indexWhere((c) => c.id == convId);
+      if (idx < 0) {
+        refresh();
+        return;
+      }
+      final target = current[idx].copyWith(
+        lastMessageAt: DateTime.now(),
+        unreadCount: current[idx].unreadCount + 1,
+        lastMessage: content != null
+            ? LastMessageModel(
+                content: content,
+                senderId: senderId,
+                createdAt: DateTime.now(),
+              )
+            : current[idx].lastMessage,
+      );
+      final updated = [
+        target,
+        for (int i = 0; i < current.length; i++)
+          if (i != idx) current[i],
+      ];
       state = AsyncData(updated);
     } else if (type == 'new_conversation') {
       refresh();

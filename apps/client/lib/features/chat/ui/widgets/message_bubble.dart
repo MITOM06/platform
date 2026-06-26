@@ -64,7 +64,10 @@ class MessageBubble extends ConsumerWidget {
     // and historical/paged-in messages aren't restaged either).
     // Reduced-motion → render the final frame.
     final reduced = AppMotion.reduced(context);
-    return TweenAnimationBuilder<double>(
+    // Isolate each bubble's paint so list updates / neighbouring repaints
+    // don't churn this bubble's layer.
+    return RepaintBoundary(
+      child: TweenAnimationBuilder<double>(
       tween: Tween<double>(begin: reduced ? 1.0 : 0.0, end: 1.0),
       duration: reduced ? Duration.zero : AppMotion.base,
       curve: AppMotion.settle,
@@ -392,6 +395,7 @@ class MessageBubble extends ConsumerWidget {
           ),
         ),
       ),
+    ),
     );
   }
 }

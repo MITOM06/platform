@@ -94,14 +94,17 @@ public class ChatController {
 
     List<String> mentions = response.mentions() == null ? List.of() : response.mentions();
     List<String> participants = conversationService.getParticipants(dto.getConversationId());
+    // Resolve the sender's human-readable name once (same for every recipient).
+    // Clients display senderName directly, so it must never be a bare userId.
+    String senderDisplayName = messageService.resolveDisplayName(principal.getName());
     for (String participantId : participants) {
       if (!participantId.equals(principal.getName())) {
         boolean muted = conversationService.isMuted(dto.getConversationId(), participantId);
         // Mentioned participants get a priority MENTIONED_YOU event instead
         // of the generic NEW_MESSAGE so the client can surface it specially.
         boolean mentioned = mentions.contains(participantId);
-        // senderName carries the sender's userId; the client resolves it
-        // to a display name. senderId is sent explicitly for clarity.
+        // senderName is the resolved display name; senderId carries the raw
+        // userId for any client-side logic that needs the identity.
         Map<String, String> notification =
             Map.of(
                 "type",
@@ -111,7 +114,7 @@ public class ChatController {
                 "senderId",
                 principal.getName(),
                 "senderName",
-                principal.getName(),
+                senderDisplayName,
                 "content",
                 dto.getContent() != null ? dto.getContent() : "",
                 "messageType",

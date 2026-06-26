@@ -1,4 +1,3 @@
-import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../theme/app_theme.dart';
@@ -123,9 +122,25 @@ class PonCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    // PERF: We intentionally do NOT use BackdropFilter/ImageFilter.blur here.
+    // Real-time backdrop blur is the single most expensive operation on mobile
+    // GPUs and PonCard is used on every list item across the app (friends,
+    // conversations, search...), which made scrolling jank everywhere.
+    // Because the surface is already ~60% opaque, a slightly more opaque solid
+    // surface is visually almost indistinguishable from the frosted glass look
+    // while costing virtually nothing to render.
+    final surfaceOpacity = (bgOpacity + 0.18).clamp(0.0, 1.0);
     return Container(
       decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surface.withValues(alpha: surfaceOpacity),
         borderRadius: BorderRadius.circular(borderRadius),
+        border: Border.all(
+          color: (isDark
+                  ? AppTheme.darkBorder
+                  : Theme.of(context).colorScheme.primary.withValues(alpha: 0.15))
+              .withValues(alpha: borderOpacity),
+          width: 1.5,
+        ),
         boxShadow: glowStrength > 0 && isDark
             ? [
                 BoxShadow(
@@ -138,23 +153,7 @@ class PonCard extends StatelessWidget {
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(borderRadius),
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: blur, sigmaY: blur),
-          child: Container(
-            decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.surface.withValues(alpha: bgOpacity),
-              borderRadius: BorderRadius.circular(borderRadius),
-              border: Border.all(
-                color: (isDark
-                        ? AppTheme.darkBorder
-                        : Theme.of(context).colorScheme.primary.withValues(alpha: 0.15))
-                    .withValues(alpha: borderOpacity),
-                width: 1.5,
-              ),
-            ),
-            child: child,
-          ),
-        ),
+        child: child,
       ),
     );
   }

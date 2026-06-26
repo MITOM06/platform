@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/l10n/l10n_ext.dart';
+import '../../../../core/utils/app_error.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/widgets/pon_widgets.dart';
 import '../../../auth/data/auth_repository.dart';
@@ -87,7 +88,7 @@ class _FriendSearchTabState extends ConsumerState<FriendSearchTab> {
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(context.l10n.errorWithMsg(e.toString()))),
+        SnackBar(content: Text(friendlyError(e))),
       );
     }
   }

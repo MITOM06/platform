@@ -103,6 +103,13 @@ class _DateDivider extends StatelessWidget {
   final DateTime date;
   const _DateDivider({required this.date});
 
+  // Building a DateFormat is comparatively expensive; cache one per language
+  // code so day dividers don't reconstruct it on every build.
+  static final Map<String, DateFormat> _yMMMMdCache = {};
+
+  static DateFormat _yMMMMd(String languageCode) =>
+      _yMMMMdCache[languageCode] ??= DateFormat.yMMMMd(languageCode);
+
   @override
   Widget build(BuildContext context) {
     final now = DateTime.now();
@@ -118,8 +125,7 @@ class _DateDivider extends StatelessWidget {
           date.day == yest.day) {
         dateText = context.l10n.dateYesterday;
       } else {
-        dateText = DateFormat.yMMMMd(
-                Localizations.localeOf(context).languageCode)
+        dateText = _yMMMMd(Localizations.localeOf(context).languageCode)
             .format(date);
       }
     }

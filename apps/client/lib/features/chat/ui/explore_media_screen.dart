@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../core/api/dio_client.dart';
 import '../../../core/l10n/l10n_ext.dart';
+import '../../../core/utils/app_error.dart';
 import '../../../core/theme/app_theme.dart';
 import '../data/chat_repository.dart';
 import '../domain/chat_provider.dart';
@@ -86,7 +87,7 @@ class _MediaGrid extends ConsumerWidget {
     return async.when(
       loading: () => const Center(child: CircularProgressIndicator()),
       error: (e, _) => Center(
-          child: Text(context.l10n.errorWithMsg(e.toString()),
+          child: Text(friendlyError(e),
               style: TextStyle(
                   color: Theme.of(context).colorScheme.onSurfaceVariant))),
       data: (messages) {
@@ -151,7 +152,7 @@ class _FilesList extends ConsumerWidget {
     return async.when(
       loading: () => const Center(child: CircularProgressIndicator()),
       error: (e, _) => Center(
-          child: Text(context.l10n.errorWithMsg(e.toString()),
+          child: Text(friendlyError(e),
               style: TextStyle(
                   color: Theme.of(context).colorScheme.onSurfaceVariant))),
       data: (messages) {
@@ -190,7 +191,7 @@ class _LinksList extends ConsumerWidget {
     return async.when(
       loading: () => const Center(child: CircularProgressIndicator()),
       error: (e, _) => Center(
-          child: Text(context.l10n.errorWithMsg(e.toString()),
+          child: Text(friendlyError(e),
               style: TextStyle(
                   color: Theme.of(context).colorScheme.onSurfaceVariant))),
       data: (messages) {

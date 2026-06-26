@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -133,8 +134,15 @@ class _ChannelTileState extends ConsumerState<_ChannelTile> {
     return ListTile(
       leading: CircleAvatar(
         backgroundColor: AppTheme.ponPink.withValues(alpha: 0.2),
-        backgroundImage:
-            ch.avatarUrl != null ? NetworkImage(ch.avatarUrl!) : null,
+        // Cache + downscale the small (40px) avatar so the list scrolls
+        // without re-decoding full-resolution images each frame.
+        backgroundImage: ch.avatarUrl != null
+            ? CachedNetworkImageProvider(
+                ch.avatarUrl!,
+                maxWidth: 96,
+                maxHeight: 96,
+              )
+            : null,
         child: ch.avatarUrl == null
             ? const Icon(Icons.tag, color: AppTheme.ponPink)
             : null,

@@ -44,7 +44,11 @@ class AssistantEntryTile extends ConsumerWidget {
     final assistantAsync = ref.watch(assistantProvider);
     return assistantAsync.when(
       loading: () => const SizedBox.shrink(),
-      error: (_, __) => const SizedBox.shrink(),
+      // On error (anything but a clean "no assistant" 404 — e.g. the bridge is
+      // not reachable yet) still show the "Set up assistant" row rather than
+      // vanishing. Mirrors web `AssistantEntry`, which renders the setup link
+      // whenever there is no assistant data, error or not.
+      error: (_, __) => _buildSetupRow(context),
       data: (assistant) {
         // No assistant yet → show a "Set up assistant" row instead of hiding.
         if (assistant == null) return _buildSetupRow(context);

@@ -3,6 +3,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/l10n/l10n_ext.dart';
+import '../../../core/utils/app_error.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../auth/data/auth_repository.dart';
 import '../../auth/domain/auth_provider.dart';
@@ -35,7 +36,7 @@ class GroupInfoScreen extends ConsumerWidget {
       body: convAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, _) => Center(
-          child: Text(context.l10n.errorWithMsg(e.toString()),
+          child: Text(friendlyError(e),
               style: TextStyle(
                   color: Theme.of(context).colorScheme.onSurfaceVariant)),
         ),

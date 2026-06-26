@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/l10n/l10n_ext.dart';
+import '../../../core/utils/app_error.dart';
 import '../../auth/domain/auth_provider.dart';
 import '../../auth/domain/auth_state.dart';
 import '../../friends/domain/friends_provider.dart';
@@ -203,7 +204,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(context.l10n.errorWithMsg(e.toString()))),
+          SnackBar(content: Text(friendlyError(e))),
         );
       }
     }
@@ -218,7 +219,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(context.l10n.errorWithMsg(e.toString()))),
+          SnackBar(content: Text(friendlyError(e))),
         );
       }
     }
@@ -286,7 +287,9 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
       },
     );
 
-    final chatAsync = ref.watch(chatNotifierProvider(widget.conversationId));
+    // Note: the chat state is NOT watched here. ChatBody (and its message-list
+    // / typing sub-sections) watch their own narrow slices via `.select`, so a
+    // typing event no longer rebuilds this whole screen + the message list.
     final authState = ref.watch(authNotifierProvider).valueOrNull;
     final currentUserId =
         authState is AuthAuthenticated ? authState.user.id : '';
@@ -340,7 +343,6 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
           children: [
             ChatBody(
               conversationId: widget.conversationId,
-              chatAsync: chatAsync,
               currentUserId: currentUserId,
               isGroup: isGroup,
               otherUserId: otherUserId,

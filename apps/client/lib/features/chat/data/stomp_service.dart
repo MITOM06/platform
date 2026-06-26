@@ -62,6 +62,15 @@ class StompService extends _$StompService {
 
   Future<void> connect(String token) async {
     if (_client?.connected ?? false) return;
+    // A previous client may exist but be disconnected (e.g. its internal
+    // auto-reconnect loop is retrying with a now-expired token). Tear it down
+    // before creating a fresh client so we don't leak the old looping client
+    // and so the new connection uses the fresh token. _pendingConvSubs /
+    // _notifSubPending are intentionally NOT cleared — _onConnect re-subscribes.
+    if (_client != null) {
+      _client!.deactivate();
+      _client = null;
+    }
     _client = StompClient(
       config: StompConfig(
         url: AppConfig.wsUrl,

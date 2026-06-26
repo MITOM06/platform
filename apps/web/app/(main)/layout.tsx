@@ -20,6 +20,7 @@ import { AssistantEntry } from '@/components/chat/AssistantEntry'
 import { cn } from '@/lib/utils'
 import { MobileTabBar } from '@/components/layout/MobileTabBar'
 import { SidebarProfileBar } from '@/components/layout/SidebarProfileBar'
+import { SidebarAiHubButton } from '@/components/layout/SidebarAiHubButton'
 import { useUiStore } from '@/lib/store/ui.store'
 import {
   DropdownMenu,
@@ -318,7 +319,8 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
           <AssistantEntry />
           <ConversationList />
         </div>
-        {/* Account anchor — pinned to the bottom-left of the rail (desktop). */}
+        {/* Bottom cluster — AI Hub launcher sits directly above the account anchor (desktop). */}
+        <SidebarAiHubButton />
         <SidebarProfileBar />
       </aside>
       )}

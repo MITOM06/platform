@@ -183,6 +183,8 @@ jobs:
             SPRING_RABBITMQ_VIRTUAL_HOST=${{ secrets.RABBITMQ_VHOST || '/' }}
             SPRING_RABBITMQ_SSL_ENABLED=true
             ALLOWED_ORIGINS=https://platform-web-omega-amber.vercel.app
+            BOTFACTORY_BASE_URL=${{ secrets.BOTFACTORY_BASE_URL }}
+            BOTFACTORY_WORKER_TOKEN=${{ secrets.BOTFACTORY_WORKER_TOKEN }}
             MAIL_HOST=${{ secrets.MAIL_HOST }}
             MAIL_PORT=${{ secrets.MAIL_PORT }}
             MAIL_USER=${{ secrets.MAIL_USER }}

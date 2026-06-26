@@ -2,9 +2,11 @@ import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/l10n/l10n_ext.dart';
+import '../../../../core/utils/app_error.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/widgets/pon_widgets.dart';
 import '../../../auth/data/auth_repository.dart';
+import '../../../auth/ui/widgets/password_strength_indicator.dart';
 
 void showChangePasswordDialog(BuildContext context, WidgetRef ref) {
   final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -31,6 +33,7 @@ class __ChangePasswordDialogContentState
   final _confirmPasswordController = TextEditingController();
   bool _isLoading = false;
   String? _errorText;
+  String _newPasswordValue = '';
 
   @override
   void dispose() {
@@ -49,8 +52,29 @@ class __ChangePasswordDialogContentState
     // (Google) accounts have no password yet and must be able to set
     // one for the first time. The server enforces the current-password check
     // only for accounts that already have a password.
-    if (newPass.length < 6) {
-      setState(() => _errorText = context.l10n.valPasswordMin6);
+    // Enforce the same strong-password requirements as the register screen.
+    if (newPass.isEmpty) {
+      setState(() => _errorText = context.l10n.valPasswordRequired);
+      return;
+    }
+    if (newPass.length < 8) {
+      setState(() => _errorText = context.l10n.valPasswordMin8);
+      return;
+    }
+    if (!newPass.contains(RegExp(r'[A-Z]'))) {
+      setState(() => _errorText = context.l10n.valPasswordUppercase);
+      return;
+    }
+    if (!newPass.contains(RegExp(r'[a-z]'))) {
+      setState(() => _errorText = context.l10n.valPasswordLowercase);
+      return;
+    }
+    if (!newPass.contains(RegExp(r'[0-9]'))) {
+      setState(() => _errorText = context.l10n.valPasswordDigit);
+      return;
+    }
+    if (!newPass.contains(RegExp(r'[!@#$%^&*]'))) {
+      setState(() => _errorText = context.l10n.valPasswordSpecial);
       return;
     }
     if (newPass != confirmPass) {
@@ -88,7 +112,7 @@ class __ChangePasswordDialogContentState
   /// server returns 409 with a `message` field for each validation failure.
   String _mapError(Object e) {
     final l10n = context.l10n;
-    String message = e.toString();
+    String message = '';
     if (e is DioException) {
       final data = e.response?.data;
       if (data is Map && data['message'] is String) {
@@ -104,7 +128,7 @@ class __ChangePasswordDialogContentState
     if (message.contains('at least 6')) {
       return l10n.valPasswordMin6;
     }
-    return l10n.errorWithMsg(message);
+    return friendlyError(e);
   }
 
   @override
@@ -168,7 +192,9 @@ class __ChangePasswordDialogContentState
               focusColor: activeColor,
               textInputAction: TextInputAction.next,
               enabled: !_isLoading,
+              onChanged: (v) => setState(() => _newPasswordValue = v),
             ),
+            PasswordStrengthIndicator(password: _newPasswordValue),
             const SizedBox(height: 12),
             PonTextField(
               controller: _confirmPasswordController,
