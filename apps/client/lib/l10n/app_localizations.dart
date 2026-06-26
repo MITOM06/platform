@@ -252,6 +252,132 @@ abstract class AppLocalizations {
   /// **'Cannot reach the server, check your connection'**
   String get errNetwork;
 
+  /// No description provided for @errSlow.
+  ///
+  /// In en, this message translates to:
+  /// **'Connection is too slow, please try again'**
+  String get errSlow;
+
+  /// No description provided for @errSessionExpired.
+  ///
+  /// In en, this message translates to:
+  /// **'Your session has expired'**
+  String get errSessionExpired;
+
+  /// No description provided for @errForbidden.
+  ///
+  /// In en, this message translates to:
+  /// **'You don\'t have permission to do this'**
+  String get errForbidden;
+
+  /// No description provided for @errNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'Data not found'**
+  String get errNotFound;
+
+  /// No description provided for @errConflict.
+  ///
+  /// In en, this message translates to:
+  /// **'This data already exists'**
+  String get errConflict;
+
+  /// No description provided for @errInvalidData.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid data'**
+  String get errInvalidData;
+
+  /// No description provided for @errServer.
+  ///
+  /// In en, this message translates to:
+  /// **'Server error, please try again later'**
+  String get errServer;
+
+  /// No description provided for @errRequestFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Request failed ({code})'**
+  String errRequestFailed(String code);
+
+  /// No description provided for @errCancelled.
+  ///
+  /// In en, this message translates to:
+  /// **'The request was cancelled'**
+  String get errCancelled;
+
+  /// No description provided for @errConnection.
+  ///
+  /// In en, this message translates to:
+  /// **'Connection error, please try again'**
+  String get errConnection;
+
+  /// No description provided for @errGeneric.
+  ///
+  /// In en, this message translates to:
+  /// **'Something went wrong, please try again'**
+  String get errGeneric;
+
+  /// No description provided for @detailsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Details'**
+  String get detailsTitle;
+
+  /// No description provided for @themeMenuItem.
+  ///
+  /// In en, this message translates to:
+  /// **'Theme'**
+  String get themeMenuItem;
+
+  /// No description provided for @quickReactionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Quick Reaction'**
+  String get quickReactionTitle;
+
+  /// No description provided for @wallpaperDefaultName.
+  ///
+  /// In en, this message translates to:
+  /// **'Default'**
+  String get wallpaperDefaultName;
+
+  /// No description provided for @changeChatThemeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Change Chat Theme'**
+  String get changeChatThemeTitle;
+
+  /// No description provided for @uploadImageButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Upload image'**
+  String get uploadImageButton;
+
+  /// No description provided for @imageFitLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Image fit'**
+  String get imageFitLabel;
+
+  /// No description provided for @fitCoverLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Cover'**
+  String get fitCoverLabel;
+
+  /// No description provided for @fitContainLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Contain'**
+  String get fitContainLabel;
+
+  /// No description provided for @fitFillLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Fill'**
+  String get fitFillLabel;
+
   /// No description provided for @errLoginFailed.
   ///
   /// In en, this message translates to:
@@ -4464,6 +4590,114 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Open assistant chat'**
   String get assistantOpenChat;
+
+  /// No description provided for @assistantSetupCta.
+  ///
+  /// In en, this message translates to:
+  /// **'Set up assistant'**
+  String get assistantSetupCta;
+
+  /// No description provided for @assistantSetupTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Set up your assistant'**
+  String get assistantSetupTitle;
+
+  /// No description provided for @assistantSetupStepName.
+  ///
+  /// In en, this message translates to:
+  /// **'Name your assistant'**
+  String get assistantSetupStepName;
+
+  /// No description provided for @assistantSetupStepPersona.
+  ///
+  /// In en, this message translates to:
+  /// **'Define its personality'**
+  String get assistantSetupStepPersona;
+
+  /// No description provided for @assistantSetupStepModel.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a model'**
+  String get assistantSetupStepModel;
+
+  /// No description provided for @assistantSetupStepConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Review and create'**
+  String get assistantSetupStepConfirm;
+
+  /// No description provided for @assistantSetupNamePlaceholder.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. Aria'**
+  String get assistantSetupNamePlaceholder;
+
+  /// No description provided for @assistantSetupPersonaPlaceholder.
+  ///
+  /// In en, this message translates to:
+  /// **'You are a helpful assistant who…'**
+  String get assistantSetupPersonaPlaceholder;
+
+  /// No description provided for @assistantSetupPersonaHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Describe how your assistant should talk and behave.'**
+  String get assistantSetupPersonaHint;
+
+  /// No description provided for @assistantSetupCreateButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Create assistant'**
+  String get assistantSetupCreateButton;
+
+  /// No description provided for @assistantSetupCreating.
+  ///
+  /// In en, this message translates to:
+  /// **'Creating…'**
+  String get assistantSetupCreating;
+
+  /// No description provided for @assistantSetupSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Your assistant is ready'**
+  String get assistantSetupSuccess;
+
+  /// No description provided for @assistantSettingsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Assistant settings'**
+  String get assistantSettingsTitle;
+
+  /// No description provided for @assistantSettingsEditPersona.
+  ///
+  /// In en, this message translates to:
+  /// **'Personality'**
+  String get assistantSettingsEditPersona;
+
+  /// No description provided for @assistantSettingsChangeModel.
+  ///
+  /// In en, this message translates to:
+  /// **'Model'**
+  String get assistantSettingsChangeModel;
+
+  /// No description provided for @assistantSettingsDeleteTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete assistant'**
+  String get assistantSettingsDeleteTitle;
+
+  /// No description provided for @assistantSettingsDeleteConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'This will remove your assistant and its chat. This cannot be undone.'**
+  String get assistantSettingsDeleteConfirm;
+
+  /// No description provided for @assistantSettingsDeleteButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete assistant'**
+  String get assistantSettingsDeleteButton;
 
   /// No description provided for @botAdminTitle.
   ///

@@ -87,12 +87,14 @@ class _MediaGrid extends ConsumerWidget {
       loading: () => const Center(child: CircularProgressIndicator()),
       error: (e, _) => Center(
           child: Text(context.l10n.errorWithMsg(e.toString()),
-              style: const TextStyle(color: Colors.white60))),
+              style: TextStyle(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant))),
       data: (messages) {
         if (messages.isEmpty) {
           return Center(
               child: Text(context.l10n.noMediaFound,
-                  style: const TextStyle(color: Colors.white60)));
+                  style: TextStyle(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant)));
         }
         return GridView.builder(
           padding: const EdgeInsets.all(4),
@@ -150,12 +152,14 @@ class _FilesList extends ConsumerWidget {
       loading: () => const Center(child: CircularProgressIndicator()),
       error: (e, _) => Center(
           child: Text(context.l10n.errorWithMsg(e.toString()),
-              style: const TextStyle(color: Colors.white60))),
+              style: TextStyle(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant))),
       data: (messages) {
         if (messages.isEmpty) {
           return Center(
               child: Text(context.l10n.noFilesFound,
-                  style: const TextStyle(color: Colors.white60)));
+                  style: TextStyle(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant)));
         }
         return ListView.builder(
           padding: const EdgeInsets.symmetric(vertical: 8),
@@ -187,12 +191,14 @@ class _LinksList extends ConsumerWidget {
       loading: () => const Center(child: CircularProgressIndicator()),
       error: (e, _) => Center(
           child: Text(context.l10n.errorWithMsg(e.toString()),
-              style: const TextStyle(color: Colors.white60))),
+              style: TextStyle(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant))),
       data: (messages) {
         if (messages.isEmpty) {
           return Center(
               child: Text(context.l10n.noLinksFound,
-                  style: const TextStyle(color: Colors.white60)));
+                  style: TextStyle(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant)));
         }
         return ListView.builder(
           padding: const EdgeInsets.symmetric(vertical: 8),

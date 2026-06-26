@@ -13,7 +13,6 @@ import 'chat_wallpaper_dialog.dart';
 class WallpaperFitScaleSelector extends StatelessWidget {
   final String fit;
   final int scale;
-  final bool isVi;
   final ValueChanged<String> onFitChanged;
   final ValueChanged<int> onScaleChanged;
 
@@ -21,12 +20,9 @@ class WallpaperFitScaleSelector extends StatelessWidget {
     super.key,
     required this.fit,
     required this.scale,
-    required this.isVi,
     required this.onFitChanged,
     required this.onScaleChanged,
   });
-
-  String _label(String vi, String en) => isVi ? vi : en;
 
   @override
   Widget build(BuildContext context) {
@@ -35,11 +31,11 @@ class WallpaperFitScaleSelector extends StatelessWidget {
       children: [
         const SizedBox(height: 16),
         Text(
-          _label('Căn chỉnh ảnh', 'Image fit'),
+          context.l10n.imageFitLabel,
           style: const TextStyle(color: Colors.white70, fontSize: 13),
         ),
         const SizedBox(height: 8),
-        _buildFitSelector(),
+        _buildFitSelector(context),
         // The scale slider is hidden for `fill` (which always stretches to
         // fill the frame), mirroring the web client.
         if (fit != 'fill') ...[
@@ -72,11 +68,11 @@ class WallpaperFitScaleSelector extends StatelessWidget {
     );
   }
 
-  Widget _buildFitSelector() {
+  Widget _buildFitSelector(BuildContext context) {
     final options = <(String, String, String)>[
-      ('cover', _label('Phủ kín', 'Cover'), 'cover'),
-      ('contain', _label('Vừa khung', 'Contain'), 'contain'),
-      ('fill', _label('Kéo giãn', 'Fill'), 'fill'),
+      ('cover', context.l10n.fitCoverLabel, 'cover'),
+      ('contain', context.l10n.fitContainLabel, 'contain'),
+      ('fill', context.l10n.fitFillLabel, 'fill'),
     ];
     return Row(
       children: [

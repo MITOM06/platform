@@ -291,6 +291,14 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     final currentUserId =
         authState is AuthAuthenticated ? authState.user.id : '';
 
+    // [CHATDBG] TEMP diagnostic — remove after root-causing message-side bug.
+    assert(() {
+      debugPrint('[CHATDBG] authState=${authState.runtimeType} '
+          'currentUserId="$currentUserId" '
+          'conv=${widget.conversationId}');
+      return true;
+    }());
+
     final conversations =
         ref.watch(conversationsNotifierProvider).valueOrNull ?? [];
     final ConversationModel? conv = conversations

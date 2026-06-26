@@ -92,6 +92,11 @@ app:
     # Leave blank to disable the bridge (graceful no-op).
     base-url: ${BOTFACTORY_BASE_URL:}
     worker-token: ${BOTFACTORY_WORKER_TOKEN:}
+  connector:
+    # Internal connector-service (:3003) — issues/revokes the MCP session token a member's
+    # Bot Factory assistant authenticates with. Leave blank to disable BotFather Zone provisioning.
+    base-url: ${CONNECTOR_SERVICE_BASE_URL:}
+    internal-key: ${CONNECTOR_INTERNAL_KEY:}
   firebase:
     # Base64 của file service-account JSON (Firebase Console). Rỗng = FCM tắt (no-op an toàn).
     service-account-base64: ${FIREBASE_SERVICE_ACCOUNT_BASE64:}

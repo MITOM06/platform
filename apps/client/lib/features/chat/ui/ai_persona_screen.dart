@@ -132,6 +132,9 @@ class _AiPersonaScreenState extends ConsumerState<AiPersonaScreen> {
   @override
   Widget build(BuildContext context) {
     final personaAsync = ref.watch(aiPersonaProvider(widget.conversationId));
+    final colorScheme = Theme.of(context).colorScheme;
+    final labelStyle = TextStyle(
+        color: colorScheme.onSurface, fontWeight: FontWeight.w600);
 
     personaAsync.whenData((p) => _initFromPersona(p));
 
@@ -165,9 +168,7 @@ class _AiPersonaScreenState extends ConsumerState<AiPersonaScreen> {
               ),
             ),
             const SizedBox(height: 20),
-            Text(context.l10n.aiPersonaNameHint,
-                style: const TextStyle(
-                    color: Colors.white70, fontWeight: FontWeight.w600)),
+            Text(context.l10n.aiPersonaNameHint, style: labelStyle),
             const SizedBox(height: 8),
             PonTextField(
               controller: _nameController,
@@ -176,8 +177,7 @@ class _AiPersonaScreenState extends ConsumerState<AiPersonaScreen> {
               maxLength: 30,
             ),
             const SizedBox(height: 16),
-            Text(context.l10n.avatarUploadLabel,
-                style: const TextStyle(color: Colors.white70, fontWeight: FontWeight.w600)),
+            Text(context.l10n.avatarUploadLabel, style: labelStyle),
             const SizedBox(height: 8),
             Center(
               child: GestureDetector(
@@ -220,35 +220,34 @@ class _AiPersonaScreenState extends ConsumerState<AiPersonaScreen> {
               ),
             ),
             const SizedBox(height: 16),
-            Text(context.l10n.aiPersonaToneLabel,
-                style: const TextStyle(
-                    color: Colors.white70, fontWeight: FontWeight.w600)),
+            Text(context.l10n.aiPersonaToneLabel, style: labelStyle),
             const SizedBox(height: 8),
             _ToneSelector(
               value: _tone,
               onChanged: (v) => setState(() => _tone = v),
             ),
             const SizedBox(height: 16),
-            Text(context.l10n.aiPersonaInstructionsHint,
-                style: const TextStyle(color: Colors.white70, fontWeight: FontWeight.w600)),
+            Text(context.l10n.aiPersonaInstructionsHint, style: labelStyle),
             const SizedBox(height: 8),
             TextField(
               controller: _instructionsController,
               maxLength: 500,
               maxLines: 4,
-              style: const TextStyle(color: Colors.white),
+              style: TextStyle(color: colorScheme.onSurface),
               decoration: InputDecoration(
                 hintText: context.l10n.aiPersonaInstructionsHint,
-                hintStyle: const TextStyle(color: Colors.white38),
+                hintStyle: TextStyle(color: colorScheme.onSurfaceVariant),
                 filled: true,
-                fillColor: Colors.white.withValues(alpha: 0.05),
+                fillColor: colorScheme.onSurface.withValues(alpha: 0.05),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
-                  borderSide: const BorderSide(color: Colors.white24),
+                  borderSide: BorderSide(
+                      color: colorScheme.onSurface.withValues(alpha: 0.2)),
                 ),
                 enabledBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
-                  borderSide: const BorderSide(color: Colors.white24),
+                  borderSide: BorderSide(
+                      color: colorScheme.onSurface.withValues(alpha: 0.2)),
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
@@ -295,6 +294,7 @@ class _ToneSelector extends StatelessWidget {
       ('concise', context.l10n.aiPersonaToneConcise),
       ('creative', context.l10n.aiPersonaToneCreative),
     ];
+    final colorScheme = Theme.of(context).colorScheme;
     return Wrap(
       spacing: 8,
       children: tones.map((t) {
@@ -304,10 +304,12 @@ class _ToneSelector extends StatelessWidget {
           selected: selected,
           selectedColor: AppTheme.ponCyan.withValues(alpha: 0.2),
           labelStyle: TextStyle(
-            color: selected ? AppTheme.ponCyan : Colors.white60,
+            color: selected ? AppTheme.ponCyan : colorScheme.onSurfaceVariant,
           ),
           side: BorderSide(
-            color: selected ? AppTheme.ponCyan : Colors.white24,
+            color: selected
+                ? AppTheme.ponCyan
+                : colorScheme.onSurface.withValues(alpha: 0.2),
           ),
           backgroundColor: Colors.transparent,
           onSelected: (_) => onChanged(t.$1),

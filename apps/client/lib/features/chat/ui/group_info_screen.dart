@@ -36,9 +36,15 @@ class GroupInfoScreen extends ConsumerWidget {
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, _) => Center(
           child: Text(context.l10n.errorWithMsg(e.toString()),
-              style: const TextStyle(color: Colors.white60)),
+              style: TextStyle(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant)),
         ),
         data: (conv) {
+          final colorScheme = Theme.of(context).colorScheme;
+          final isDark = Theme.of(context).brightness == Brightness.dark;
+          final dividerColor = isDark
+              ? Colors.white12
+              : Colors.black.withValues(alpha: 0.08);
           final isAdmin = conv.admins.contains(currentUserId);
           return ListView(
             children: [
@@ -77,15 +83,17 @@ class GroupInfoScreen extends ConsumerWidget {
               Center(
                 child: Text(
                   conv.name ?? context.l10n.conversationDefault,
-                  style: const TextStyle(
-                      color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
+                  style: TextStyle(
+                      color: colorScheme.onSurface,
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold),
                 ),
               ),
               const SizedBox(height: 4),
               Center(
                 child: Text(
                   context.l10n.membersCount(conv.participants.length),
-                  style: TextStyle(color: Colors.white.withValues(alpha: 0.5)),
+                  style: TextStyle(color: colorScheme.onSurfaceVariant),
                 ),
               ),
               const SizedBox(height: 16),
@@ -93,23 +101,23 @@ class GroupInfoScreen extends ConsumerWidget {
                 ListTile(
                   leading: const Icon(Icons.edit_rounded, color: AppTheme.ponCyan),
                   title: Text(context.l10n.renameGroup,
-                      style: const TextStyle(color: Colors.white)),
+                      style: TextStyle(color: colorScheme.onSurface)),
                   onTap: () => _renameGroup(context, ref, conv),
                 ),
               if (isAdmin)
                 ListTile(
                   leading: const Icon(Icons.person_add_alt_1_rounded, color: AppTheme.ponCyan),
                   title: Text(context.l10n.addMembers,
-                      style: const TextStyle(color: Colors.white)),
+                      style: TextStyle(color: colorScheme.onSurface)),
                   onTap: () => _addMember(context, ref),
                 ),
-              const Divider(color: Colors.white12),
+              Divider(color: dividerColor),
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 child: Text(
                   context.l10n.members,
                   style: TextStyle(
-                    color: Colors.white.withValues(alpha: 0.5),
+                    color: colorScheme.onSurfaceVariant,
                     fontWeight: FontWeight.bold,
                     fontSize: 13,
                   ),
@@ -136,7 +144,7 @@ class GroupInfoScreen extends ConsumerWidget {
                 return Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Divider(color: Colors.white12),
+                    Divider(color: dividerColor),
                     PinnedMessagesSection(
                       conversationId: conversationId,
                       pinnedMessages: pinned,
@@ -144,25 +152,27 @@ class GroupInfoScreen extends ConsumerWidget {
                   ],
                 );
               }),
-              const Divider(color: Colors.white12),
+              Divider(color: dividerColor),
               ListTile(
                 leading: const Icon(Icons.perm_media_outlined, color: AppTheme.ponCyan),
                 title: Text(context.l10n.sharedMediaTitle,
-                    style: const TextStyle(color: Colors.white)),
-                trailing: const Icon(Icons.chevron_right, color: Colors.white38),
+                    style: TextStyle(color: colorScheme.onSurface)),
+                trailing: Icon(Icons.chevron_right,
+                    color: colorScheme.onSurfaceVariant),
                 onTap: () => context.push('/shared-media/$conversationId'),
               ),
               if (isAdmin) ...[
-                const Divider(color: Colors.white12),
+                Divider(color: dividerColor),
                 ListTile(
                   leading: const Icon(Icons.smart_toy_outlined, color: AppTheme.ponCyan),
                   title: Text(context.l10n.configureAiPersona,
-                      style: const TextStyle(color: Colors.white)),
-                  trailing: const Icon(Icons.chevron_right, color: Colors.white38),
+                      style: TextStyle(color: colorScheme.onSurface)),
+                  trailing: Icon(Icons.chevron_right,
+                      color: colorScheme.onSurfaceVariant),
                   onTap: () => context.push('/ai-persona/$conversationId'),
                 ),
               ],
-              const Divider(color: Colors.white12),
+              Divider(color: dividerColor),
               ListTile(
                 leading: const Icon(Icons.logout_rounded, color: Colors.redAccent),
                 title: Text(context.l10n.leaveGroup,
@@ -378,7 +388,8 @@ class _MemberTile extends ConsumerWidget {
         fallbackLetter: name.isNotEmpty ? name[0].toUpperCase() : '?',
         size: 40,
       ),
-      title: Text(name, style: const TextStyle(color: Colors.white)),
+      title: Text(name,
+          style: TextStyle(color: Theme.of(context).colorScheme.onSurface)),
       subtitle: isMemberAdmin
           ? Text(context.l10n.admin,
               style: const TextStyle(color: AppTheme.ponCyan, fontSize: 12))

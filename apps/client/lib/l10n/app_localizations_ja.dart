@@ -83,6 +83,71 @@ class AppLocalizationsJa extends AppLocalizations {
   String get errNetwork => 'サーバーに接続できません。ネットワークを確認してください';
 
   @override
+  String get errSlow => '接続が遅すぎます。再試行してください';
+
+  @override
+  String get errSessionExpired => 'セッションの有効期限が切れました';
+
+  @override
+  String get errForbidden => 'この操作を行う権限がありません';
+
+  @override
+  String get errNotFound => 'データが見つかりません';
+
+  @override
+  String get errConflict => 'データはすでに存在します';
+
+  @override
+  String get errInvalidData => 'データが無効です';
+
+  @override
+  String get errServer => 'サーバーエラーです。後でもう一度お試しください';
+
+  @override
+  String errRequestFailed(String code) {
+    return 'リクエストに失敗しました（$code）';
+  }
+
+  @override
+  String get errCancelled => 'リクエストはキャンセルされました';
+
+  @override
+  String get errConnection => '接続エラーです。再試行してください';
+
+  @override
+  String get errGeneric => 'エラーが発生しました。再試行してください';
+
+  @override
+  String get detailsTitle => '詳細';
+
+  @override
+  String get themeMenuItem => 'テーマ';
+
+  @override
+  String get quickReactionTitle => 'クイックリアクション';
+
+  @override
+  String get wallpaperDefaultName => 'デフォルト';
+
+  @override
+  String get changeChatThemeTitle => 'チャットのテーマを変更';
+
+  @override
+  String get uploadImageButton => '画像をアップロード';
+
+  @override
+  String get imageFitLabel => '画像の表示方法';
+
+  @override
+  String get fitCoverLabel => 'カバー';
+
+  @override
+  String get fitContainLabel => '全体表示';
+
+  @override
+  String get fitFillLabel => '引き伸ばし';
+
+  @override
   String get errLoginFailed => 'ログインに失敗しました。再試行してください';
 
   @override
@@ -281,10 +346,10 @@ class AppLocalizationsJa extends AppLocalizations {
   String get emptyTapPlus => '下の「+」ボタンをタップして始めましょう！';
 
   @override
-  String get searchConversationsHint => 'Search conversations...';
+  String get searchConversationsHint => '会話を検索...';
 
   @override
-  String get noConversationsFound => 'No conversations found';
+  String get noConversationsFound => '会話が見つかりません';
 
   @override
   String get offlineBanner => 'ネットワーク接続がありません';
@@ -1181,7 +1246,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get aiPersonaTitle => 'AIペルソナ';
 
   @override
-  String get avatarUploadLabel => 'Change avatar';
+  String get avatarUploadLabel => 'アバターを変更';
 
   @override
   String get aiPersonaNameHint => 'ボット名（例：DevBot）';
@@ -1217,59 +1282,58 @@ class AppLocalizationsJa extends AppLocalizations {
   String get tokenUsageQuota => '月間クォータ';
 
   @override
-  String get errEmailDomainInvalid => 'This email address does not exist';
+  String get errEmailDomainInvalid => 'このメールアドレスは存在しません';
 
   @override
-  String get valPasswordMin8 => 'Password must be at least 8 characters';
+  String get valPasswordMin8 => 'パスワードは8文字以上で入力してください';
 
   @override
-  String get valPasswordUppercase => 'Must contain an uppercase letter (A-Z)';
+  String get valPasswordUppercase => '大文字（A-Z）を含める必要があります';
 
   @override
-  String get valPasswordLowercase => 'Must contain a lowercase letter (a-z)';
+  String get valPasswordLowercase => '小文字（a-z）を含める必要があります';
 
   @override
-  String get valPasswordDigit => 'Must contain a digit (0-9)';
+  String get valPasswordDigit => '数字（0-9）を含める必要があります';
 
   @override
-  String get valPasswordSpecial =>
-      'Must contain a special character (!@#\$%^&*)';
+  String get valPasswordSpecial => '特殊文字（!@#\$%^&*）を含める必要があります';
 
   @override
-  String get pwStrengthWeak => 'Weak';
+  String get pwStrengthWeak => '弱い';
 
   @override
-  String get pwStrengthMedium => 'Medium';
+  String get pwStrengthMedium => '普通';
 
   @override
-  String get pwStrengthStrong => 'Strong';
+  String get pwStrengthStrong => '強い';
 
   @override
-  String get pwStrengthVeryStrong => 'Very Strong';
+  String get pwStrengthVeryStrong => '非常に強い';
 
   @override
-  String get pwReqLength => '≥8 characters';
+  String get pwReqLength => '8文字以上';
 
   @override
-  String get pwReqUppercase => 'Uppercase (A-Z)';
+  String get pwReqUppercase => '大文字（A-Z）';
 
   @override
-  String get pwReqLowercase => 'Lowercase (a-z)';
+  String get pwReqLowercase => '小文字（a-z）';
 
   @override
-  String get pwReqDigit => 'Digit (0-9)';
+  String get pwReqDigit => '数字（0-9）';
 
   @override
-  String get pwReqSpecial => 'Special char (!@#\$...)';
+  String get pwReqSpecial => '特殊文字（!@#\$...）';
 
   @override
-  String get loginWithGoogle => 'Sign in with Google';
+  String get loginWithGoogle => 'Googleでサインイン';
 
   @override
-  String get registerWithGoogle => 'Sign up with Google';
+  String get registerWithGoogle => 'Googleでサインアップ';
 
   @override
-  String get orContinueWith => 'Or continue with';
+  String get orContinueWith => 'または次で続行';
 
   @override
   String agreeToTerms(String privacyPolicy, String termsOfService) {
@@ -1286,31 +1350,31 @@ class AppLocalizationsJa extends AppLocalizations {
   String get valMustAgreeTerms => '登録するには利用規約に同意する必要があります';
 
   @override
-  String get youColon => 'You:';
+  String get youColon => 'あなた:';
 
   @override
-  String get systemNicknameChanged => 'Nickname was changed';
+  String get systemNicknameChanged => 'ニックネームが変更されました';
 
   @override
-  String get systemThemeChanged => 'Chat theme changed';
+  String get systemThemeChanged => 'チャットテーマが変更されました';
 
   @override
-  String get systemQuickReactionChanged => 'Quick reaction changed';
+  String get systemQuickReactionChanged => 'クイックリアクションが変更されました';
 
   @override
-  String get wallpaperUploadError => 'Failed to upload image';
+  String get wallpaperUploadError => '画像のアップロードに失敗しました';
 
   @override
-  String get wallpaperScale => 'Scale';
+  String get wallpaperScale => '拡大率';
 
   @override
-  String get wallpaperPreviewHint => 'Pinch or drag to adjust';
+  String get wallpaperPreviewHint => 'ピンチまたはドラッグで調整';
 
   @override
-  String get wallpaperPreviewIncoming => 'Hi! How does this look?';
+  String get wallpaperPreviewIncoming => 'こんにちは！これはどうですか？';
 
   @override
-  String get wallpaperPreviewOutgoing => 'Looks great 🎉';
+  String get wallpaperPreviewOutgoing => 'いい感じですね 🎉';
 
   @override
   String get errCannotOpenLink => 'リンクを開けませんでした';
@@ -2327,6 +2391,61 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get assistantOpenChat => 'アシスタントのチャットを開く';
+
+  @override
+  String get assistantSetupCta => 'アシスタントを設定';
+
+  @override
+  String get assistantSetupTitle => 'アシスタントを設定';
+
+  @override
+  String get assistantSetupStepName => 'アシスタントに名前を付ける';
+
+  @override
+  String get assistantSetupStepPersona => '性格を定義する';
+
+  @override
+  String get assistantSetupStepModel => 'モデルを選択';
+
+  @override
+  String get assistantSetupStepConfirm => '確認して作成';
+
+  @override
+  String get assistantSetupNamePlaceholder => '例：Aria';
+
+  @override
+  String get assistantSetupPersonaPlaceholder => 'あなたは役に立つアシスタントで…';
+
+  @override
+  String get assistantSetupPersonaHint => 'アシスタントの話し方や振る舞いを説明してください。';
+
+  @override
+  String get assistantSetupCreateButton => 'アシスタントを作成';
+
+  @override
+  String get assistantSetupCreating => '作成中…';
+
+  @override
+  String get assistantSetupSuccess => 'アシスタントの準備ができました';
+
+  @override
+  String get assistantSettingsTitle => 'アシスタント設定';
+
+  @override
+  String get assistantSettingsEditPersona => '性格';
+
+  @override
+  String get assistantSettingsChangeModel => 'モデル';
+
+  @override
+  String get assistantSettingsDeleteTitle => 'アシスタントを削除';
+
+  @override
+  String get assistantSettingsDeleteConfirm =>
+      'アシスタントとそのチャットが削除されます。この操作は取り消せません。';
+
+  @override
+  String get assistantSettingsDeleteButton => 'アシスタントを削除';
 
   @override
   String get botAdminTitle => 'ボット連携';

@@ -49,7 +49,7 @@ export function CallOverlay() {
   // ── Incoming call prompt ────────────────────────────────────────────────
   if (status === 'incoming') {
     return (
-      <div className="fixed bottom-6 right-6 z-[100] w-80 rounded-2xl border bg-background p-5 shadow-2xl">
+      <div className="fixed bottom-6 right-6 z-[100] w-[min(90vw,320px)] sm:w-80 rounded-2xl border bg-background p-5 shadow-2xl">
         <p className="text-sm text-muted-foreground">
           {video ? t('incomingVideo') : t('incomingVoice')}
         </p>

@@ -181,7 +181,7 @@ export function WallpaperPickerModal({ conversationId, open, onClose }: Props) {
         </div>
 
         {/* Preset grid */}
-        <div className="grid grid-cols-3 gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
           {PRESETS.map((p) => {
             const isSel = !isImage && selected === p.value
             return (
@@ -234,7 +234,7 @@ export function WallpaperPickerModal({ conversationId, open, onClose }: Props) {
           <div className="space-y-3">
             <div className="space-y-2">
               <p className="text-xs text-muted-foreground">{t('wallpaperImageFit')}</p>
-              <div className="grid grid-cols-3 gap-2">
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                 {FIT_OPTIONS.map((f) => (
                   <button
                     key={f}

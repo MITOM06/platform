@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:stomp_dart_client/stomp_dart_client.dart';
 import '../../../core/config/app_config.dart';
@@ -178,6 +179,12 @@ class StompService extends _$StompService {
             _kbStatusCtrl.add(data);
             return;
         }
+        // [CHATDBG] TEMP diagnostic — remove after root-causing message-side bug.
+        assert(() {
+          debugPrint('[CHATDBG] STOMP raw msg senderId="${data['senderId']}" '
+              'type="${data['type']}" content="${data['content']}"');
+          return true;
+        }());
         _messageCtrl.add(MessageModel.fromJson(data));
       },
     );

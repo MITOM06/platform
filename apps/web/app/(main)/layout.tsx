@@ -5,7 +5,7 @@ import dynamic from 'next/dynamic'
 import { useQueryClient } from '@tanstack/react-query'
 import { useRouter, usePathname } from 'next/navigation'
 import { toast } from 'sonner'
-import { LogOut, User, Compass, Contact, Settings, Plus, MessageSquarePlus, Users, ShieldCheck } from 'lucide-react'
+import { Compass, Contact, Plus, MessageSquarePlus, Users } from 'lucide-react'
 import Link from 'next/link'
 import { useTranslations } from 'next-intl'
 import { useAuthStore } from '@/lib/store/auth.store'
@@ -19,15 +19,12 @@ import { ActiveFriendsRow } from '@/components/chat/ActiveFriendsRow'
 import { AssistantEntry } from '@/components/chat/AssistantEntry'
 import { cn } from '@/lib/utils'
 import { MobileTabBar } from '@/components/layout/MobileTabBar'
+import { SidebarProfileBar } from '@/components/layout/SidebarProfileBar'
 import { useUiStore } from '@/lib/store/ui.store'
-import { useCanAccessAdmin } from '@/lib/hooks/use-capabilities'
-import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 
@@ -39,11 +36,6 @@ const CallOverlay = dynamic(
   () => import('@/components/call/CallOverlay').then((m) => m.CallOverlay),
   { ssr: false },
 )
-
-function getInitials(name?: string): string {
-  if (!name) return '?'
-  return name.split(' ').slice(0, 2).map((w) => w[0]).join('').toUpperCase()
-}
 
 function PonLogo({ className = 'size-8' }: { className?: string }) {
   return (
@@ -77,11 +69,8 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
   const router = useRouter()
   const pathname = usePathname()
   const queryClient = useQueryClient()
-  const clearAuth = useAuthStore((s) => s.clearAuth)
-  const user = useAuthStore((s) => s.user)
   const accessToken = useAuthStore((s) => s.accessToken)
   const t = useTranslations('layout')
-  const canAccessAdmin = useCanAccessAdmin()
 
   // The conversation-list sidebar belongs ONLY to the messaging area
   // (/conversations and /conversations/:id). Every other page (AI hub,
@@ -244,17 +233,6 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [accessToken])
 
-  const handleLogout = async () => {
-    try {
-      await fetch('/api/auth/clear-cookie', { method: 'POST' })
-      stompService.disconnect()
-      clearAuth()
-      router.push('/login')
-    } catch {
-      toast.error(t('logoutError'))
-    }
-  }
-
   const { openNewChat, openPublicChannels } = useUiStore()
 
   return (
@@ -333,58 +311,6 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
                 <Contact className="size-4" />
               </Link>
             </Button>
-
-            {/* Profile Settings Dropdown */}
-            {user && (
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" className="relative h-8 w-8 rounded-full ml-1">
-                    <Avatar className="h-8 w-8 border border-muted">
-                      <AvatarFallback className="text-xs font-semibold bg-primary/10 text-primary">
-                        {getInitials(user.displayName)}
-                      </AvatarFallback>
-                    </Avatar>
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent className="w-56" align="end" forceMount>
-                  <DropdownMenuLabel className="font-normal">
-                    <div className="flex flex-col space-y-1">
-                      <p className="text-sm font-medium leading-none">{user.displayName}</p>
-                      <p className="text-xs leading-none text-muted-foreground">{user.email}</p>
-                    </div>
-                  </DropdownMenuLabel>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem
-                    onSelect={() => router.push('/profile')}
-                    className="flex w-full items-center cursor-pointer"
-                  >
-                    <User className="mr-2 h-4 w-4" />
-                    <span>{t('menuProfile')}</span>
-                  </DropdownMenuItem>
-                  {canAccessAdmin && (
-                    <DropdownMenuItem
-                      onSelect={() => router.push('/admin')}
-                      className="flex w-full items-center cursor-pointer"
-                    >
-                      <ShieldCheck className="mr-2 h-4 w-4" />
-                      <span>{t('menuAdmin')}</span>
-                    </DropdownMenuItem>
-                  )}
-                  <DropdownMenuItem
-                    onSelect={() => router.push('/settings')}
-                    className="flex w-full items-center cursor-pointer"
-                  >
-                    <Settings className="mr-2 h-4 w-4" />
-                    <span>{t('menuSettings')}</span>
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={handleLogout} className="text-destructive focus:text-destructive cursor-pointer">
-                    <LogOut className="mr-2 h-4 w-4" />
-                    <span>{t('menuLogout')}</span>
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            )}
           </div>
         </div>
         <div className="flex-1 flex flex-col overflow-hidden pb-16 md:pb-0">
@@ -392,6 +318,8 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
           <AssistantEntry />
           <ConversationList />
         </div>
+        {/* Account anchor — pinned to the bottom-left of the rail (desktop). */}
+        <SidebarProfileBar />
       </aside>
       )}
 

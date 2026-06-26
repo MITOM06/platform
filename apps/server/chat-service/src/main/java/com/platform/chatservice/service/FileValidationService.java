@@ -196,7 +196,8 @@ public class FileValidationService {
         || isOgg(h)
         || isWav(h)
         || isFlac(h)
-        || isFtypBox(h); // M4A uses ISO Base Media too
+        || isFtypBox(h) // M4A uses ISO Base Media too
+        || isEbml(h); // audio/webm voice notes (Chrome/Firefox) use the EBML container
   }
 
   private boolean isMpegAudio(byte[] h) {

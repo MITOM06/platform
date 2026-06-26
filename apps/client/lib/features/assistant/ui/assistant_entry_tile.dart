@@ -46,7 +46,9 @@ class AssistantEntryTile extends ConsumerWidget {
       loading: () => const SizedBox.shrink(),
       error: (_, __) => const SizedBox.shrink(),
       data: (assistant) {
-        if (assistant == null) return const SizedBox.shrink();
+        // No assistant yet → show a "Set up assistant" row instead of hiding.
+        if (assistant == null) return _buildSetupRow(context);
+
         final name = assistant.name.isNotEmpty
             ? assistant.name
             : context.l10n.assistantDefaultName;
@@ -68,6 +70,11 @@ class AssistantEntryTile extends ConsumerWidget {
                 context.l10n.assistantSubtitle,
                 style: Theme.of(context).textTheme.bodySmall,
               ),
+              trailing: IconButton(
+                icon: const Icon(Icons.settings_outlined),
+                tooltip: context.l10n.assistantSettingsTitle,
+                onPressed: () => context.push('/assistant/settings'),
+              ),
               onTap: () => _openChat(context, ref, assistant.botUserId),
               contentPadding:
                   const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
@@ -75,6 +82,33 @@ class AssistantEntryTile extends ConsumerWidget {
           ),
         );
       },
+    );
+  }
+
+  Widget _buildSetupRow(BuildContext context) {
+    final muted =
+        Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5);
+    return StaggeredEntrance(
+      offset: 8,
+      child: PressScale(
+        child: ListTile(
+          leading: CircleAvatar(
+            backgroundColor:
+                Theme.of(context).colorScheme.surface.withValues(alpha: 0.5),
+            child: Icon(Icons.add, color: muted),
+          ),
+          title: Text(
+            context.l10n.assistantSetupCta,
+            style: Theme.of(context)
+                .textTheme
+                .titleSmall
+                ?.copyWith(fontWeight: FontWeight.w600, color: muted),
+          ),
+          onTap: () => context.push('/assistant/setup'),
+          contentPadding:
+              const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+        ),
+      ),
     );
   }
 }

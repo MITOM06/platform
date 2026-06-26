@@ -83,7 +83,7 @@ export default function SharedMediaPage() {
           ) : (
             <>
               <TabsContent value="media" className="mt-0 outline-none">
-                <div className="grid grid-cols-3 gap-1">
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-1">
                   {images.map((url, i) => (
                     <a
                       key={i}

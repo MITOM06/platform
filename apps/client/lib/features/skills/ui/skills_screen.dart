@@ -135,6 +135,7 @@ class _SkillTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
+    final colorScheme = Theme.of(context).colorScheme;
     final copy = skillCopy(l10n, def.id);
     final needs = [
       ...def.requires.map(_providerLabel),
@@ -168,8 +169,8 @@ class _SkillTile extends StatelessWidget {
                 children: [
                   Text(
                     copy.name,
-                    style: const TextStyle(
-                      color: Colors.white,
+                    style: TextStyle(
+                      color: colorScheme.onSurface,
                       fontWeight: FontWeight.bold,
                       fontSize: 15,
                     ),
@@ -178,7 +179,7 @@ class _SkillTile extends StatelessWidget {
                   Text(
                     copy.desc,
                     style: TextStyle(
-                      color: Colors.white.withValues(alpha: 0.6),
+                      color: colorScheme.onSurfaceVariant,
                       fontSize: 13,
                       height: 1.3,
                     ),
@@ -187,6 +188,8 @@ class _SkillTile extends StatelessWidget {
                     const SizedBox(height: 8),
                     Text(
                       l10n.skillNeeds(needs),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                       style: const TextStyle(
                         color: AppTheme.ponCyan,
                         fontSize: 11,

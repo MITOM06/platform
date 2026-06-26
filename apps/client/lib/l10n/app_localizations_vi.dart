@@ -83,6 +83,71 @@ class AppLocalizationsVi extends AppLocalizations {
   String get errNetwork => 'Không thể kết nối server, kiểm tra mạng';
 
   @override
+  String get errSlow => 'Kết nối quá chậm, thử lại';
+
+  @override
+  String get errSessionExpired => 'Phiên đăng nhập hết hạn';
+
+  @override
+  String get errForbidden => 'Không có quyền thực hiện';
+
+  @override
+  String get errNotFound => 'Không tìm thấy dữ liệu';
+
+  @override
+  String get errConflict => 'Dữ liệu đã tồn tại';
+
+  @override
+  String get errInvalidData => 'Dữ liệu không hợp lệ';
+
+  @override
+  String get errServer => 'Lỗi server, thử lại sau';
+
+  @override
+  String errRequestFailed(String code) {
+    return 'Yêu cầu thất bại ($code)';
+  }
+
+  @override
+  String get errCancelled => 'Yêu cầu đã bị hủy';
+
+  @override
+  String get errConnection => 'Lỗi kết nối, thử lại';
+
+  @override
+  String get errGeneric => 'Đã xảy ra lỗi, thử lại';
+
+  @override
+  String get detailsTitle => 'Thông tin';
+
+  @override
+  String get themeMenuItem => 'Chủ đề';
+
+  @override
+  String get quickReactionTitle => 'Biểu tượng cảm xúc nhanh';
+
+  @override
+  String get wallpaperDefaultName => 'Mặc định';
+
+  @override
+  String get changeChatThemeTitle => 'Đổi chủ đề đoạn chat';
+
+  @override
+  String get uploadImageButton => 'Tải ảnh lên';
+
+  @override
+  String get imageFitLabel => 'Căn chỉnh ảnh';
+
+  @override
+  String get fitCoverLabel => 'Phủ kín';
+
+  @override
+  String get fitContainLabel => 'Vừa khung';
+
+  @override
+  String get fitFillLabel => 'Kéo giãn';
+
+  @override
   String get errLoginFailed => 'Đăng nhập thất bại, thử lại';
 
   @override
@@ -2379,6 +2444,63 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get assistantOpenChat => 'Mở trò chuyện với trợ lý';
+
+  @override
+  String get assistantSetupCta => 'Thiết lập trợ lý';
+
+  @override
+  String get assistantSetupTitle => 'Thiết lập trợ lý của tôi';
+
+  @override
+  String get assistantSetupStepName => 'Đặt tên cho trợ lý';
+
+  @override
+  String get assistantSetupStepPersona => 'Xác định tính cách';
+
+  @override
+  String get assistantSetupStepModel => 'Chọn mô hình';
+
+  @override
+  String get assistantSetupStepConfirm => 'Xem lại và tạo';
+
+  @override
+  String get assistantSetupNamePlaceholder => 'ví dụ: Aria';
+
+  @override
+  String get assistantSetupPersonaPlaceholder =>
+      'Bạn là một trợ lý hữu ích, người…';
+
+  @override
+  String get assistantSetupPersonaHint =>
+      'Mô tả cách trợ lý của bạn trò chuyện và hành xử.';
+
+  @override
+  String get assistantSetupCreateButton => 'Tạo trợ lý';
+
+  @override
+  String get assistantSetupCreating => 'Đang tạo…';
+
+  @override
+  String get assistantSetupSuccess => 'Trợ lý của bạn đã sẵn sàng';
+
+  @override
+  String get assistantSettingsTitle => 'Cài đặt trợ lý';
+
+  @override
+  String get assistantSettingsEditPersona => 'Tính cách';
+
+  @override
+  String get assistantSettingsChangeModel => 'Mô hình';
+
+  @override
+  String get assistantSettingsDeleteTitle => 'Xoá trợ lý';
+
+  @override
+  String get assistantSettingsDeleteConfirm =>
+      'Thao tác này sẽ xoá trợ lý và cuộc trò chuyện của bạn. Không thể hoàn tác.';
+
+  @override
+  String get assistantSettingsDeleteButton => 'Xoá trợ lý';
 
   @override
   String get botAdminTitle => 'Tích hợp Bot';

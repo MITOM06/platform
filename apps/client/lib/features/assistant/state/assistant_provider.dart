@@ -29,3 +29,9 @@ class AssistantNotifier extends AsyncNotifier<AssistantInfo?> {
   Future<AssistantInfo?> build() =>
       ref.read(assistantRepositoryProvider).fetchAssistant();
 }
+
+/// The AI models the member can choose from when setting up their assistant.
+final assistantProvidersProvider =
+    FutureProvider<List<AssistantProvider>>((ref) {
+  return ref.read(assistantRepositoryProvider).fetchProviders();
+});

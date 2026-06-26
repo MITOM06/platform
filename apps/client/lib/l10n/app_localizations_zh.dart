@@ -83,6 +83,71 @@ class AppLocalizationsZh extends AppLocalizations {
   String get errNetwork => '无法连接服务器，请检查网络';
 
   @override
+  String get errSlow => '连接过慢，请重试';
+
+  @override
+  String get errSessionExpired => '登录会话已过期';
+
+  @override
+  String get errForbidden => '您没有执行此操作的权限';
+
+  @override
+  String get errNotFound => '未找到数据';
+
+  @override
+  String get errConflict => '数据已存在';
+
+  @override
+  String get errInvalidData => '数据无效';
+
+  @override
+  String get errServer => '服务器错误，请稍后重试';
+
+  @override
+  String errRequestFailed(String code) {
+    return '请求失败（$code）';
+  }
+
+  @override
+  String get errCancelled => '请求已取消';
+
+  @override
+  String get errConnection => '连接出错，请重试';
+
+  @override
+  String get errGeneric => '出错了，请重试';
+
+  @override
+  String get detailsTitle => '详情';
+
+  @override
+  String get themeMenuItem => '主题';
+
+  @override
+  String get quickReactionTitle => '快捷表情';
+
+  @override
+  String get wallpaperDefaultName => '默认';
+
+  @override
+  String get changeChatThemeTitle => '更改聊天主题';
+
+  @override
+  String get uploadImageButton => '上传图片';
+
+  @override
+  String get imageFitLabel => '图片适配';
+
+  @override
+  String get fitCoverLabel => '覆盖';
+
+  @override
+  String get fitContainLabel => '适应';
+
+  @override
+  String get fitFillLabel => '拉伸';
+
+  @override
   String get errLoginFailed => '登录失败，请重试';
 
   @override
@@ -281,10 +346,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String get emptyTapPlus => '点击下方的“+”按钮开始吧！';
 
   @override
-  String get searchConversationsHint => 'Search conversations...';
+  String get searchConversationsHint => '搜索会话...';
 
   @override
-  String get noConversationsFound => 'No conversations found';
+  String get noConversationsFound => '未找到会话';
 
   @override
   String get offlineBanner => '无网络连接';
@@ -1180,7 +1245,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get aiPersonaTitle => 'AI 角色';
 
   @override
-  String get avatarUploadLabel => 'Change avatar';
+  String get avatarUploadLabel => '更换头像';
 
   @override
   String get aiPersonaNameHint => '机器人名称（例如：DevBot）';
@@ -1216,59 +1281,58 @@ class AppLocalizationsZh extends AppLocalizations {
   String get tokenUsageQuota => '月度配额';
 
   @override
-  String get errEmailDomainInvalid => 'This email address does not exist';
+  String get errEmailDomainInvalid => '该邮箱地址不存在';
 
   @override
-  String get valPasswordMin8 => 'Password must be at least 8 characters';
+  String get valPasswordMin8 => '密码至少需要 8 个字符';
 
   @override
-  String get valPasswordUppercase => 'Must contain an uppercase letter (A-Z)';
+  String get valPasswordUppercase => '必须包含一个大写字母 (A-Z)';
 
   @override
-  String get valPasswordLowercase => 'Must contain a lowercase letter (a-z)';
+  String get valPasswordLowercase => '必须包含一个小写字母 (a-z)';
 
   @override
-  String get valPasswordDigit => 'Must contain a digit (0-9)';
+  String get valPasswordDigit => '必须包含一个数字 (0-9)';
 
   @override
-  String get valPasswordSpecial =>
-      'Must contain a special character (!@#\$%^&*)';
+  String get valPasswordSpecial => '必须包含一个特殊字符 (!@#\$%^&*)';
 
   @override
-  String get pwStrengthWeak => 'Weak';
+  String get pwStrengthWeak => '弱';
 
   @override
-  String get pwStrengthMedium => 'Medium';
+  String get pwStrengthMedium => '中';
 
   @override
-  String get pwStrengthStrong => 'Strong';
+  String get pwStrengthStrong => '强';
 
   @override
-  String get pwStrengthVeryStrong => 'Very Strong';
+  String get pwStrengthVeryStrong => '非常强';
 
   @override
-  String get pwReqLength => '≥8 characters';
+  String get pwReqLength => '≥8 个字符';
 
   @override
-  String get pwReqUppercase => 'Uppercase (A-Z)';
+  String get pwReqUppercase => '大写字母 (A-Z)';
 
   @override
-  String get pwReqLowercase => 'Lowercase (a-z)';
+  String get pwReqLowercase => '小写字母 (a-z)';
 
   @override
-  String get pwReqDigit => 'Digit (0-9)';
+  String get pwReqDigit => '数字 (0-9)';
 
   @override
-  String get pwReqSpecial => 'Special char (!@#\$...)';
+  String get pwReqSpecial => '特殊字符 (!@#\$...)';
 
   @override
-  String get loginWithGoogle => 'Sign in with Google';
+  String get loginWithGoogle => '使用 Google 登录';
 
   @override
-  String get registerWithGoogle => 'Sign up with Google';
+  String get registerWithGoogle => '使用 Google 注册';
 
   @override
-  String get orContinueWith => 'Or continue with';
+  String get orContinueWith => '或使用以下方式继续';
 
   @override
   String agreeToTerms(String privacyPolicy, String termsOfService) {
@@ -1285,31 +1349,31 @@ class AppLocalizationsZh extends AppLocalizations {
   String get valMustAgreeTerms => '您必须同意服务条款才能注册';
 
   @override
-  String get youColon => 'You:';
+  String get youColon => '你：';
 
   @override
-  String get systemNicknameChanged => 'Nickname was changed';
+  String get systemNicknameChanged => '昵称已更改';
 
   @override
-  String get systemThemeChanged => 'Chat theme changed';
+  String get systemThemeChanged => '聊天主题已更改';
 
   @override
-  String get systemQuickReactionChanged => 'Quick reaction changed';
+  String get systemQuickReactionChanged => '快捷回应已更改';
 
   @override
-  String get wallpaperUploadError => 'Failed to upload image';
+  String get wallpaperUploadError => '图片上传失败';
 
   @override
-  String get wallpaperScale => 'Scale';
+  String get wallpaperScale => '缩放';
 
   @override
-  String get wallpaperPreviewHint => 'Pinch or drag to adjust';
+  String get wallpaperPreviewHint => '捏合或拖动以调整';
 
   @override
-  String get wallpaperPreviewIncoming => 'Hi! How does this look?';
+  String get wallpaperPreviewIncoming => '嗨！这样看起来怎么样？';
 
   @override
-  String get wallpaperPreviewOutgoing => 'Looks great 🎉';
+  String get wallpaperPreviewOutgoing => '看起来很棒 🎉';
 
   @override
   String get errCannotOpenLink => '无法打开链接';
@@ -2315,6 +2379,60 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get assistantOpenChat => '打开助手对话';
+
+  @override
+  String get assistantSetupCta => '设置助手';
+
+  @override
+  String get assistantSetupTitle => '设置我的助手';
+
+  @override
+  String get assistantSetupStepName => '为助手命名';
+
+  @override
+  String get assistantSetupStepPersona => '定义个性';
+
+  @override
+  String get assistantSetupStepModel => '选择模型';
+
+  @override
+  String get assistantSetupStepConfirm => '确认并创建';
+
+  @override
+  String get assistantSetupNamePlaceholder => '例如：Aria';
+
+  @override
+  String get assistantSetupPersonaPlaceholder => '你是一位乐于助人的助手，会……';
+
+  @override
+  String get assistantSetupPersonaHint => '描述你的助手应如何交谈和行事。';
+
+  @override
+  String get assistantSetupCreateButton => '创建助手';
+
+  @override
+  String get assistantSetupCreating => '正在创建……';
+
+  @override
+  String get assistantSetupSuccess => '你的助手已准备就绪';
+
+  @override
+  String get assistantSettingsTitle => '助手设置';
+
+  @override
+  String get assistantSettingsEditPersona => '个性';
+
+  @override
+  String get assistantSettingsChangeModel => '模型';
+
+  @override
+  String get assistantSettingsDeleteTitle => '删除助手';
+
+  @override
+  String get assistantSettingsDeleteConfirm => '此操作将删除你的助手及其对话，且无法撤销。';
+
+  @override
+  String get assistantSettingsDeleteButton => '删除助手';
 
   @override
   String get botAdminTitle => '机器人集成';

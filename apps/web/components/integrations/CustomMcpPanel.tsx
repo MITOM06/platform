@@ -69,14 +69,14 @@ export function CustomMcpPanel() {
   return (
     <div className="mt-4 rounded-xl border border-dashed border-pon-pink/60 bg-card p-[22px]">
       <div className="flex flex-col gap-1.5 md:flex-row md:items-start md:gap-6 md:flex-wrap">
-        <div className="flex-1 min-w-[260px]">
+        <div className="flex-1 w-full sm:min-w-[260px]">
           <h3 className="m-0 mb-1.5 text-base font-semibold">{t('customTitle')}</h3>
           <p className="m-0 text-muted-foreground text-[13.5px] max-w-[46ch]">
             {t('customSubtitle')}
           </p>
         </div>
 
-        <div className="flex-1 min-w-[280px] space-y-3">
+        <div className="flex-1 w-full sm:min-w-[280px] space-y-3">
           <div className="space-y-1.5">
             <Label className="font-mono text-[10.5px] tracking-wide uppercase text-muted-foreground">
               {t('customNameLabel')}

@@ -31,6 +31,8 @@ import '../../features/reminders/reminders_screen.dart';
 import '../../features/integrations/ui/integrations_screen.dart';
 import '../../features/skills/ui/skills_screen.dart';
 import '../../features/ai_hub/ui/ai_hub_screen.dart';
+import '../../features/assistant/ui/assistant_setup_screen.dart';
+import '../../features/assistant/ui/assistant_settings_screen.dart';
 import '../../features/admin/ui/admin_screen.dart';
 import '../../features/settings/ui/token_usage_screen.dart';
 import '../../features/settings/ui/legal_screen.dart';
@@ -264,6 +266,16 @@ GoRouter appRouter(AppRouterRef ref) {
         path: '/ai-hub',
         name: 'ai-hub',
         builder: (context, state) => const AiHubScreen(),
+      ),
+      GoRoute(
+        path: '/assistant/setup',
+        name: 'assistant-setup',
+        builder: (context, state) => const AssistantSetupScreen(),
+      ),
+      GoRoute(
+        path: '/assistant/settings',
+        name: 'assistant-settings',
+        builder: (context, state) => const AssistantSettingsScreen(),
       ),
       GoRoute(
         path: '/admin',

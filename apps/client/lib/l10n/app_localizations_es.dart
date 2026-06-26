@@ -85,6 +85,71 @@ class AppLocalizationsEs extends AppLocalizations {
       'No se puede conectar al servidor, revisa tu conexión';
 
   @override
+  String get errSlow => 'La conexión es demasiado lenta, inténtalo de nuevo';
+
+  @override
+  String get errSessionExpired => 'Tu sesión ha expirado';
+
+  @override
+  String get errForbidden => 'No tienes permiso para hacer esto';
+
+  @override
+  String get errNotFound => 'Datos no encontrados';
+
+  @override
+  String get errConflict => 'Estos datos ya existen';
+
+  @override
+  String get errInvalidData => 'Datos no válidos';
+
+  @override
+  String get errServer => 'Error del servidor, inténtalo más tarde';
+
+  @override
+  String errRequestFailed(String code) {
+    return 'La solicitud falló ($code)';
+  }
+
+  @override
+  String get errCancelled => 'La solicitud fue cancelada';
+
+  @override
+  String get errConnection => 'Error de conexión, inténtalo de nuevo';
+
+  @override
+  String get errGeneric => 'Algo salió mal, inténtalo de nuevo';
+
+  @override
+  String get detailsTitle => 'Detalles';
+
+  @override
+  String get themeMenuItem => 'Tema';
+
+  @override
+  String get quickReactionTitle => 'Reacción rápida';
+
+  @override
+  String get wallpaperDefaultName => 'Predeterminado';
+
+  @override
+  String get changeChatThemeTitle => 'Cambiar tema del chat';
+
+  @override
+  String get uploadImageButton => 'Subir imagen';
+
+  @override
+  String get imageFitLabel => 'Ajuste de imagen';
+
+  @override
+  String get fitCoverLabel => 'Cubrir';
+
+  @override
+  String get fitContainLabel => 'Contener';
+
+  @override
+  String get fitFillLabel => 'Rellenar';
+
+  @override
   String get errLoginFailed => 'Error al iniciar sesión, inténtalo de nuevo';
 
   @override
@@ -289,10 +354,10 @@ class AppLocalizationsEs extends AppLocalizations {
   String get emptyTapPlus => '¡Toca el botón \"+\" de abajo para empezar!';
 
   @override
-  String get searchConversationsHint => 'Search conversations...';
+  String get searchConversationsHint => 'Buscar conversaciones...';
 
   @override
-  String get noConversationsFound => 'No conversations found';
+  String get noConversationsFound => 'No se encontraron conversaciones';
 
   @override
   String get offlineBanner => 'Sin conexión de red';
@@ -1207,7 +1272,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get aiPersonaTitle => 'Persona de IA';
 
   @override
-  String get avatarUploadLabel => 'Change avatar';
+  String get avatarUploadLabel => 'Cambiar avatar';
 
   @override
   String get aiPersonaNameHint => 'Nombre del bot (ej. DevBot)';
@@ -1246,59 +1311,60 @@ class AppLocalizationsEs extends AppLocalizations {
   String get tokenUsageQuota => 'Cuota mensual';
 
   @override
-  String get errEmailDomainInvalid => 'This email address does not exist';
+  String get errEmailDomainInvalid => 'Esta dirección de correo no existe';
 
   @override
-  String get valPasswordMin8 => 'Password must be at least 8 characters';
+  String get valPasswordMin8 =>
+      'La contraseña debe tener al menos 8 caracteres';
 
   @override
-  String get valPasswordUppercase => 'Must contain an uppercase letter (A-Z)';
+  String get valPasswordUppercase => 'Debe contener una letra mayúscula (A-Z)';
 
   @override
-  String get valPasswordLowercase => 'Must contain a lowercase letter (a-z)';
+  String get valPasswordLowercase => 'Debe contener una letra minúscula (a-z)';
 
   @override
-  String get valPasswordDigit => 'Must contain a digit (0-9)';
+  String get valPasswordDigit => 'Debe contener un dígito (0-9)';
 
   @override
   String get valPasswordSpecial =>
-      'Must contain a special character (!@#\$%^&*)';
+      'Debe contener un carácter especial (!@#\$%^&*)';
 
   @override
-  String get pwStrengthWeak => 'Weak';
+  String get pwStrengthWeak => 'Débil';
 
   @override
-  String get pwStrengthMedium => 'Medium';
+  String get pwStrengthMedium => 'Media';
 
   @override
-  String get pwStrengthStrong => 'Strong';
+  String get pwStrengthStrong => 'Fuerte';
 
   @override
-  String get pwStrengthVeryStrong => 'Very Strong';
+  String get pwStrengthVeryStrong => 'Muy fuerte';
 
   @override
-  String get pwReqLength => '≥8 characters';
+  String get pwReqLength => '≥8 caracteres';
 
   @override
-  String get pwReqUppercase => 'Uppercase (A-Z)';
+  String get pwReqUppercase => 'Mayúscula (A-Z)';
 
   @override
-  String get pwReqLowercase => 'Lowercase (a-z)';
+  String get pwReqLowercase => 'Minúscula (a-z)';
 
   @override
-  String get pwReqDigit => 'Digit (0-9)';
+  String get pwReqDigit => 'Dígito (0-9)';
 
   @override
-  String get pwReqSpecial => 'Special char (!@#\$...)';
+  String get pwReqSpecial => 'Carácter especial (!@#\$...)';
 
   @override
-  String get loginWithGoogle => 'Sign in with Google';
+  String get loginWithGoogle => 'Iniciar sesión con Google';
 
   @override
-  String get registerWithGoogle => 'Sign up with Google';
+  String get registerWithGoogle => 'Registrarse con Google';
 
   @override
-  String get orContinueWith => 'Or continue with';
+  String get orContinueWith => 'O continúe con';
 
   @override
   String agreeToTerms(String privacyPolicy, String termsOfService) {
@@ -1316,31 +1382,31 @@ class AppLocalizationsEs extends AppLocalizations {
       'Debes aceptar los Términos del Servicio para registrarte';
 
   @override
-  String get youColon => 'You:';
+  String get youColon => 'Usted:';
 
   @override
-  String get systemNicknameChanged => 'Nickname was changed';
+  String get systemNicknameChanged => 'Se cambió el apodo';
 
   @override
-  String get systemThemeChanged => 'Chat theme changed';
+  String get systemThemeChanged => 'Se cambió el tema del chat';
 
   @override
-  String get systemQuickReactionChanged => 'Quick reaction changed';
+  String get systemQuickReactionChanged => 'Reacción rápida cambiada';
 
   @override
-  String get wallpaperUploadError => 'Failed to upload image';
+  String get wallpaperUploadError => 'No se pudo subir la imagen';
 
   @override
-  String get wallpaperScale => 'Scale';
+  String get wallpaperScale => 'Escala';
 
   @override
-  String get wallpaperPreviewHint => 'Pinch or drag to adjust';
+  String get wallpaperPreviewHint => 'Pellizque o arrastre para ajustar';
 
   @override
-  String get wallpaperPreviewIncoming => 'Hi! How does this look?';
+  String get wallpaperPreviewIncoming => '¡Hola! ¿Cómo se ve esto?';
 
   @override
-  String get wallpaperPreviewOutgoing => 'Looks great 🎉';
+  String get wallpaperPreviewOutgoing => 'Se ve genial 🎉';
 
   @override
   String get errCannotOpenLink => 'No se pudo abrir el enlace';
@@ -2401,6 +2467,62 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get assistantOpenChat => 'Abrir chat del asistente';
+
+  @override
+  String get assistantSetupCta => 'Configurar asistente';
+
+  @override
+  String get assistantSetupTitle => 'Configura tu asistente';
+
+  @override
+  String get assistantSetupStepName => 'Ponle nombre a tu asistente';
+
+  @override
+  String get assistantSetupStepPersona => 'Define su personalidad';
+
+  @override
+  String get assistantSetupStepModel => 'Elige un modelo';
+
+  @override
+  String get assistantSetupStepConfirm => 'Revisar y crear';
+
+  @override
+  String get assistantSetupNamePlaceholder => 'p. ej. Aria';
+
+  @override
+  String get assistantSetupPersonaPlaceholder => 'Eres un asistente útil que…';
+
+  @override
+  String get assistantSetupPersonaHint =>
+      'Describe cómo debe hablar y comportarse tu asistente.';
+
+  @override
+  String get assistantSetupCreateButton => 'Crear asistente';
+
+  @override
+  String get assistantSetupCreating => 'Creando…';
+
+  @override
+  String get assistantSetupSuccess => 'Tu asistente está listo';
+
+  @override
+  String get assistantSettingsTitle => 'Ajustes del asistente';
+
+  @override
+  String get assistantSettingsEditPersona => 'Personalidad';
+
+  @override
+  String get assistantSettingsChangeModel => 'Modelo';
+
+  @override
+  String get assistantSettingsDeleteTitle => 'Eliminar asistente';
+
+  @override
+  String get assistantSettingsDeleteConfirm =>
+      'Esto eliminará tu asistente y su chat. No se puede deshacer.';
+
+  @override
+  String get assistantSettingsDeleteButton => 'Eliminar asistente';
 
   @override
   String get botAdminTitle => 'Integración de bots';

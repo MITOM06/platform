@@ -41,7 +41,7 @@ export function IncomingGroupCall() {
   const decline = () => useCallStore.getState().setIncomingGroupCall(null)
 
   return (
-    <div className="fixed bottom-6 right-6 z-[110] w-80 rounded-2xl border bg-background p-5 shadow-2xl">
+    <div className="fixed bottom-6 right-6 z-[110] w-[min(90vw,320px)] sm:w-80 rounded-2xl border bg-background p-5 shadow-2xl">
       <p className="text-sm text-muted-foreground">
         {incoming.media === 'video' ? t('incomingGroupVideo') : t('incomingGroupVoice')}
       </p>

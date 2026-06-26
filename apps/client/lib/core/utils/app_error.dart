@@ -1,30 +1,50 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/widgets.dart';
+import 'package:platform_client/l10n/app_localizations.dart';
+import 'package:platform_client/l10n/app_localizations_en.dart';
+
+import 'global_messenger.dart';
+
+/// Resolves an [AppLocalizations] without a caller-supplied [BuildContext].
+///
+/// [friendlyError] is called from context-less code paths (Dio interceptor,
+/// global error banners), so we reach for the localized strings via the root
+/// navigator key. If no element is mounted yet (very early startup), we fall
+/// back to the English strings so the message is never raw Vietnamese.
+AppLocalizations _l10n() {
+  final ctx = rootNavigatorKey.currentContext;
+  if (ctx != null) {
+    return AppLocalizations.of(ctx);
+  }
+  return AppLocalizationsEn();
+}
 
 String friendlyError(Object error) {
+  final l10n = _l10n();
   if (error is DioException) {
     switch (error.type) {
       case DioExceptionType.connectionError:
       case DioExceptionType.connectionTimeout:
       case DioExceptionType.receiveTimeout:
-        return 'Không có kết nối mạng, kiểm tra lại';
+        return l10n.errNetwork;
       case DioExceptionType.sendTimeout:
-        return 'Kết nối quá chậm, thử lại';
+        return l10n.errSlow;
       case DioExceptionType.badResponse:
         final code = error.response?.statusCode;
-        if (code == 401) return 'Phiên đăng nhập hết hạn';
-        if (code == 403) return 'Không có quyền thực hiện';
-        if (code == 404) return 'Không tìm thấy dữ liệu';
-        if (code == 409) return 'Dữ liệu đã tồn tại';
-        if (code == 422) return 'Dữ liệu không hợp lệ';
-        if (code != null && code >= 500) return 'Lỗi server, thử lại sau';
-        return 'Yêu cầu thất bại (${code ?? 'unknown'})';
+        if (code == 401) return l10n.errSessionExpired;
+        if (code == 403) return l10n.errForbidden;
+        if (code == 404) return l10n.errNotFound;
+        if (code == 409) return l10n.errConflict;
+        if (code == 422) return l10n.errInvalidData;
+        if (code != null && code >= 500) return l10n.errServer;
+        return l10n.errRequestFailed(code?.toString() ?? 'unknown');
       case DioExceptionType.cancel:
-        return 'Yêu cầu đã bị hủy';
+        return l10n.errCancelled;
       default:
-        return 'Lỗi kết nối, thử lại';
+        return l10n.errConnection;
     }
   }
-  return 'Đã xảy ra lỗi, thử lại';
+  return l10n.errGeneric;
 }
 
 bool isNetworkError(Object error) {

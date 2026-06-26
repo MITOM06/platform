@@ -83,6 +83,71 @@ class AppLocalizationsKo extends AppLocalizations {
   String get errNetwork => '서버에 연결할 수 없습니다. 네트워크를 확인하세요';
 
   @override
+  String get errSlow => '연결이 너무 느립니다. 다시 시도하세요';
+
+  @override
+  String get errSessionExpired => '로그인 세션이 만료되었습니다';
+
+  @override
+  String get errForbidden => '이 작업을 수행할 권한이 없습니다';
+
+  @override
+  String get errNotFound => '데이터를 찾을 수 없습니다';
+
+  @override
+  String get errConflict => '이미 존재하는 데이터입니다';
+
+  @override
+  String get errInvalidData => '유효하지 않은 데이터입니다';
+
+  @override
+  String get errServer => '서버 오류입니다. 잠시 후 다시 시도하세요';
+
+  @override
+  String errRequestFailed(String code) {
+    return '요청에 실패했습니다 ($code)';
+  }
+
+  @override
+  String get errCancelled => '요청이 취소되었습니다';
+
+  @override
+  String get errConnection => '연결 오류입니다. 다시 시도하세요';
+
+  @override
+  String get errGeneric => '오류가 발생했습니다. 다시 시도하세요';
+
+  @override
+  String get detailsTitle => '정보';
+
+  @override
+  String get themeMenuItem => '테마';
+
+  @override
+  String get quickReactionTitle => '빠른 반응';
+
+  @override
+  String get wallpaperDefaultName => '기본';
+
+  @override
+  String get changeChatThemeTitle => '채팅 테마 변경';
+
+  @override
+  String get uploadImageButton => '이미지 업로드';
+
+  @override
+  String get imageFitLabel => '이미지 맞춤';
+
+  @override
+  String get fitCoverLabel => '채우기';
+
+  @override
+  String get fitContainLabel => '맞춤';
+
+  @override
+  String get fitFillLabel => '늘이기';
+
+  @override
   String get errLoginFailed => '로그인에 실패했습니다. 다시 시도하세요';
 
   @override
@@ -281,10 +346,10 @@ class AppLocalizationsKo extends AppLocalizations {
   String get emptyTapPlus => '아래 \"+\" 버튼을 눌러 시작하세요!';
 
   @override
-  String get searchConversationsHint => 'Search conversations...';
+  String get searchConversationsHint => '대화 검색...';
 
   @override
-  String get noConversationsFound => 'No conversations found';
+  String get noConversationsFound => '대화를 찾을 수 없습니다';
 
   @override
   String get offlineBanner => '네트워크 연결 없음';
@@ -1182,7 +1247,7 @@ class AppLocalizationsKo extends AppLocalizations {
   String get aiPersonaTitle => 'AI 페르소나';
 
   @override
-  String get avatarUploadLabel => 'Change avatar';
+  String get avatarUploadLabel => '아바타 변경';
 
   @override
   String get aiPersonaNameHint => '봇 이름 (예: DevBot)';
@@ -1218,59 +1283,58 @@ class AppLocalizationsKo extends AppLocalizations {
   String get tokenUsageQuota => '월간 할당량';
 
   @override
-  String get errEmailDomainInvalid => 'This email address does not exist';
+  String get errEmailDomainInvalid => '이 이메일 주소는 존재하지 않습니다';
 
   @override
-  String get valPasswordMin8 => 'Password must be at least 8 characters';
+  String get valPasswordMin8 => '비밀번호는 8자 이상이어야 합니다';
 
   @override
-  String get valPasswordUppercase => 'Must contain an uppercase letter (A-Z)';
+  String get valPasswordUppercase => '대문자(A-Z)를 포함해야 합니다';
 
   @override
-  String get valPasswordLowercase => 'Must contain a lowercase letter (a-z)';
+  String get valPasswordLowercase => '소문자(a-z)를 포함해야 합니다';
 
   @override
-  String get valPasswordDigit => 'Must contain a digit (0-9)';
+  String get valPasswordDigit => '숫자(0-9)를 포함해야 합니다';
 
   @override
-  String get valPasswordSpecial =>
-      'Must contain a special character (!@#\$%^&*)';
+  String get valPasswordSpecial => '특수문자(!@#\$%^&*)를 포함해야 합니다';
 
   @override
-  String get pwStrengthWeak => 'Weak';
+  String get pwStrengthWeak => '약함';
 
   @override
-  String get pwStrengthMedium => 'Medium';
+  String get pwStrengthMedium => '보통';
 
   @override
-  String get pwStrengthStrong => 'Strong';
+  String get pwStrengthStrong => '강함';
 
   @override
-  String get pwStrengthVeryStrong => 'Very Strong';
+  String get pwStrengthVeryStrong => '매우 강함';
 
   @override
-  String get pwReqLength => '≥8 characters';
+  String get pwReqLength => '8자 이상';
 
   @override
-  String get pwReqUppercase => 'Uppercase (A-Z)';
+  String get pwReqUppercase => '대문자 (A-Z)';
 
   @override
-  String get pwReqLowercase => 'Lowercase (a-z)';
+  String get pwReqLowercase => '소문자 (a-z)';
 
   @override
-  String get pwReqDigit => 'Digit (0-9)';
+  String get pwReqDigit => '숫자 (0-9)';
 
   @override
-  String get pwReqSpecial => 'Special char (!@#\$...)';
+  String get pwReqSpecial => '특수문자 (!@#\$...)';
 
   @override
-  String get loginWithGoogle => 'Sign in with Google';
+  String get loginWithGoogle => 'Google로 로그인';
 
   @override
-  String get registerWithGoogle => 'Sign up with Google';
+  String get registerWithGoogle => 'Google로 가입';
 
   @override
-  String get orContinueWith => 'Or continue with';
+  String get orContinueWith => '또는 다음으로 계속하기';
 
   @override
   String agreeToTerms(String privacyPolicy, String termsOfService) {
@@ -1287,31 +1351,31 @@ class AppLocalizationsKo extends AppLocalizations {
   String get valMustAgreeTerms => '가입하려면 서비스 약관에 동의해야 합니다';
 
   @override
-  String get youColon => 'You:';
+  String get youColon => '나:';
 
   @override
-  String get systemNicknameChanged => 'Nickname was changed';
+  String get systemNicknameChanged => '별명이 변경되었습니다';
 
   @override
-  String get systemThemeChanged => 'Chat theme changed';
+  String get systemThemeChanged => '채팅 테마가 변경되었습니다';
 
   @override
-  String get systemQuickReactionChanged => 'Quick reaction changed';
+  String get systemQuickReactionChanged => '빠른 반응이 변경되었습니다';
 
   @override
-  String get wallpaperUploadError => 'Failed to upload image';
+  String get wallpaperUploadError => '이미지 업로드에 실패했습니다';
 
   @override
-  String get wallpaperScale => 'Scale';
+  String get wallpaperScale => '크기';
 
   @override
-  String get wallpaperPreviewHint => 'Pinch or drag to adjust';
+  String get wallpaperPreviewHint => '손가락으로 확대하거나 드래그하여 조정하세요';
 
   @override
-  String get wallpaperPreviewIncoming => 'Hi! How does this look?';
+  String get wallpaperPreviewIncoming => '안녕하세요! 이렇게 보이는 거 어떤가요?';
 
   @override
-  String get wallpaperPreviewOutgoing => 'Looks great 🎉';
+  String get wallpaperPreviewOutgoing => '아주 좋아요 🎉';
 
   @override
   String get errCannotOpenLink => '링크를 열 수 없습니다';
@@ -2329,6 +2393,61 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get assistantOpenChat => '어시스턴트 채팅 열기';
+
+  @override
+  String get assistantSetupCta => '어시스턴트 설정';
+
+  @override
+  String get assistantSetupTitle => '어시스턴트 설정';
+
+  @override
+  String get assistantSetupStepName => '어시스턴트 이름 정하기';
+
+  @override
+  String get assistantSetupStepPersona => '성격 정의하기';
+
+  @override
+  String get assistantSetupStepModel => '모델 선택';
+
+  @override
+  String get assistantSetupStepConfirm => '확인 후 생성';
+
+  @override
+  String get assistantSetupNamePlaceholder => '예: Aria';
+
+  @override
+  String get assistantSetupPersonaPlaceholder => '당신은 도움을 주는 어시스턴트로…';
+
+  @override
+  String get assistantSetupPersonaHint => '어시스턴트가 어떻게 말하고 행동할지 설명하세요.';
+
+  @override
+  String get assistantSetupCreateButton => '어시스턴트 생성';
+
+  @override
+  String get assistantSetupCreating => '생성 중…';
+
+  @override
+  String get assistantSetupSuccess => '어시스턴트가 준비되었습니다';
+
+  @override
+  String get assistantSettingsTitle => '어시스턴트 설정';
+
+  @override
+  String get assistantSettingsEditPersona => '성격';
+
+  @override
+  String get assistantSettingsChangeModel => '모델';
+
+  @override
+  String get assistantSettingsDeleteTitle => '어시스턴트 삭제';
+
+  @override
+  String get assistantSettingsDeleteConfirm =>
+      '어시스턴트와 해당 채팅이 삭제됩니다. 이 작업은 취소할 수 없습니다.';
+
+  @override
+  String get assistantSettingsDeleteButton => '어시스턴트 삭제';
 
   @override
   String get botAdminTitle => '봇 연동';

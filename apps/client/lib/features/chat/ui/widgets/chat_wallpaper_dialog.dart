@@ -85,10 +85,8 @@ BoxFit wallpaperBoxFit(String fit) {
 }
 
 void showWallpaperDialog(BuildContext context, WidgetRef ref, String conversationId) {
-  final isVi = Localizations.localeOf(context).languageCode == 'vi';
-
   final presets = [
-    {'name': isVi ? 'Mặc định' : 'Default', 'value': ''},
+    {'name': context.l10n.wallpaperDefaultName, 'value': ''},
     {'name': 'Midnight Glow', 'value': 'preset:midnight_glow', 'colors': [const Color(0xFF0F0C20), const Color(0xFF15102A), const Color(0xFF050211)]},
     {'name': 'Neon Teal', 'value': 'preset:neon_teal', 'colors': [const Color(0xFF0A1F1D), const Color(0xFF081215), const Color(0xFF02070A)]},
     {'name': 'Sunset', 'value': 'preset:sunset', 'colors': [const Color(0xFF2C1619), const Color(0xFF1C0D1A), const Color(0xFF0F0611)]},
@@ -99,7 +97,6 @@ void showWallpaperDialog(BuildContext context, WidgetRef ref, String conversatio
   showDialog(
     context: context,
     builder: (ctx) => _WallpaperDialog(
-      isVi: isVi,
       presets: presets,
       conversationId: conversationId,
       ref: ref,
@@ -108,13 +105,11 @@ void showWallpaperDialog(BuildContext context, WidgetRef ref, String conversatio
 }
 
 class _WallpaperDialog extends StatefulWidget {
-  final bool isVi;
   final List<Map<String, Object>> presets;
   final String conversationId;
   final WidgetRef ref;
 
   const _WallpaperDialog({
-    required this.isVi,
     required this.presets,
     required this.conversationId,
     required this.ref,
@@ -147,8 +142,6 @@ class _WallpaperDialogState extends State<_WallpaperDialog> {
   /// and `preset:` values are non-images.
   bool get _isImage =>
       _selected.isNotEmpty && !_selected.startsWith('preset:');
-
-  String _label(String vi, String en) => widget.isVi ? vi : en;
 
   void _confirm() {
     // Encode fit/scale only for uploaded images and only when non-default — this
@@ -197,7 +190,7 @@ class _WallpaperDialogState extends State<_WallpaperDialog> {
     return AlertDialog(
       backgroundColor: AppTheme.darkSurface,
       title: Text(
-        _label('Đổi chủ đề đoạn chat', 'Change Chat Theme'),
+        context.l10n.changeChatThemeTitle,
         style: const TextStyle(color: Colors.white),
       ),
       content: SizedBox(
@@ -272,14 +265,13 @@ class _WallpaperDialogState extends State<_WallpaperDialog> {
                             const EdgeInsets.symmetric(vertical: 12, horizontal: 20),
                       ),
                       icon: const Icon(Icons.add_photo_alternate_outlined),
-                      label: Text(_label('Tải ảnh lên', 'Upload image')),
+                      label: Text(context.l10n.uploadImageButton),
                       onPressed: _uploadImage,
                     ),
               if (_isImage)
                 WallpaperFitScaleSelector(
                   fit: _fit,
                   scale: _scale,
-                  isVi: widget.isVi,
                   onFitChanged: (v) => setState(() => _fit = v),
                   onScaleChanged: (v) => setState(() => _scale = v),
                 ),
@@ -290,13 +282,13 @@ class _WallpaperDialogState extends State<_WallpaperDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
-          child: Text(_label('Hủy', 'Cancel'),
+          child: Text(context.l10n.actionCancel,
               style: const TextStyle(color: Colors.white54)),
         ),
         FilledButton(
           style: FilledButton.styleFrom(backgroundColor: AppTheme.ponCyan),
           onPressed: _confirm,
-          child: Text(_label('Xác nhận đổi', 'Confirm'),
+          child: Text(context.l10n.actionConfirm,
               style: const TextStyle(color: Colors.white)),
         ),
       ],
@@ -332,7 +324,7 @@ class _WallpaperDialogState extends State<_WallpaperDialog> {
       child: colors == null
           ? Center(
               child: Text(
-                _label('Mặc định', 'Default'),
+                context.l10n.wallpaperDefaultName,
                 style: const TextStyle(color: Colors.white38),
               ),
             )

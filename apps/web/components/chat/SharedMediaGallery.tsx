@@ -1,6 +1,7 @@
 'use client'
 
 import { useQuery } from '@tanstack/react-query'
+import { useTranslations } from 'next-intl'
 import { Loader2, ImageIcon, FileText, Link as LinkIcon } from 'lucide-react'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { DialogA11yDescription } from '@/components/common/dialog-a11y-description'
@@ -26,6 +27,7 @@ interface Props {
 }
 
 function GalleryTab({ conversationId, type }: { conversationId: string; type: string }) {
+  const t = useTranslations('sharedMedia')
   const { data, isLoading } = useQuery({
     queryKey: ['attachments', conversationId, type],
     queryFn: () => chatService.getAttachments(conversationId, type),
@@ -41,8 +43,10 @@ function GalleryTab({ conversationId, type }: { conversationId: string; type: st
   }
 
   if (!data || data.content.length === 0) {
+    const emptyKey =
+      type === 'media' ? 'emptyMedia' : type === 'file' ? 'emptyFiles' : 'emptyLinks'
     return (
-      <p className="text-center text-sm text-muted-foreground py-8">Chưa có nội dung</p>
+      <p className="text-center text-sm text-muted-foreground py-8">{t(emptyKey)}</p>
     )
   }
 
@@ -110,11 +114,12 @@ function GalleryTab({ conversationId, type }: { conversationId: string; type: st
 }
 
 export function SharedMediaGallery({ conversationId, open, onClose }: Props) {
+  const t = useTranslations('sharedMedia')
   return (
     <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle>Nội dung đã chia sẻ</DialogTitle>
+          <DialogTitle>{t('title')}</DialogTitle>
         </DialogHeader>
           <DialogA11yDescription />
 
@@ -122,15 +127,15 @@ export function SharedMediaGallery({ conversationId, open, onClose }: Props) {
           <TabsList className="w-full">
             <TabsTrigger value="media" className="flex-1">
               <ImageIcon className="size-4" />
-              Ảnh/Video
+              {t('tabMedia')}
             </TabsTrigger>
             <TabsTrigger value="file" className="flex-1">
               <FileText className="size-4" />
-              Tệp
+              {t('tabFiles')}
             </TabsTrigger>
             <TabsTrigger value="link" className="flex-1">
               <LinkIcon className="size-4" />
-              Liên kết
+              {t('tabLinks')}
             </TabsTrigger>
           </TabsList>
           <div className="mt-3 max-h-80 overflow-y-auto">

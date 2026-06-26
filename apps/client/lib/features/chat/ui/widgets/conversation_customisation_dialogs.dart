@@ -9,14 +9,13 @@ import '../../domain/chat_state.dart';
 import 'conversation_avatar.dart';
 
 void showQuickReactionDialog(BuildContext context, WidgetRef ref, String conversationId) {
-  final isVi = Localizations.localeOf(context).languageCode == 'vi';
   final emojis = ['👍', '❤️', '😂', '😮', '😢', '🙏', '🔥', '🎉', '💯', '👏', '👀', '✨'];
 
   showDialog(
     context: context,
     builder: (context) => AlertDialog(
       backgroundColor: AppTheme.darkSurface,
-      title: Text(isVi ? 'Biểu tượng cảm xúc nhanh' : 'Quick Reaction', style: const TextStyle(color: Colors.white)),
+      title: Text(context.l10n.quickReactionTitle, style: const TextStyle(color: Colors.white)),
       content: SizedBox(
         width: 250,
         child: GridView.builder(

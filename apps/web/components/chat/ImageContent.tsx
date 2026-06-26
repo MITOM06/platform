@@ -69,7 +69,7 @@ export function ImageContent({ content }: { content: string }) {
     )
   } else if (urls.length === 2) {
     grid = (
-      <div className="grid w-[240px] grid-cols-2 gap-0.5 overflow-hidden rounded-2xl">
+      <div className="grid w-full max-w-[240px] grid-cols-2 gap-0.5 overflow-hidden rounded-2xl">
         {urls.map((u, i) => (
           <Tile key={i} url={u} onClick={() => open(i)} className="h-[180px]" />
         ))}
@@ -77,7 +77,7 @@ export function ImageContent({ content }: { content: string }) {
     )
   } else if (urls.length === 3) {
     grid = (
-      <div className="flex w-[240px] gap-0.5 overflow-hidden rounded-2xl">
+      <div className="flex w-full max-w-[240px] gap-0.5 overflow-hidden rounded-2xl">
         <Tile url={urls[0]} onClick={() => open(0)} className="h-[200px] flex-[0.62]" />
         <div className="flex flex-1 flex-col gap-0.5">
           <Tile url={urls[1]} onClick={() => open(1)} className="h-[99px]" />
@@ -88,7 +88,7 @@ export function ImageContent({ content }: { content: string }) {
   } else {
     const extras = urls.length - 4
     grid = (
-      <div className="grid w-[240px] grid-cols-2 gap-0.5 overflow-hidden rounded-2xl">
+      <div className="grid w-full max-w-[240px] grid-cols-2 gap-0.5 overflow-hidden rounded-2xl">
         {urls.slice(0, 4).map((u, i) => (
           <Tile
             key={i}

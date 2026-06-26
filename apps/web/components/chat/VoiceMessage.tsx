@@ -40,7 +40,7 @@ export function VoiceMessage({ content, isOwn }: { content: string; isOwn: boole
   const accent = isOwn ? 'accent-primary-foreground' : 'accent-pon-cyan'
 
   return (
-    <div className="flex w-[220px] items-center gap-2">
+    <div className="flex w-full max-w-[220px] items-center gap-2">
       <button
         type="button"
         onClick={toggle}
