@@ -143,6 +143,18 @@ stompService.waitForConnect().then(() => {
 })
 ```
 
+There is a **second** `waitForConnect().then()` in the read-receipts effect (the one that
+publishes `/app/chat.read` for each loaded message). `publish()` throws on a dead socket, so
+that `.then()` also needs a `.catch()`, otherwise it becomes an unhandled promise rejection:
+
+```ts
+stompService.waitForConnect().then(() => {
+  for (const m of messages) { /* ... */ stompService.publish('/app/chat.read', ...) }
+}).catch(() => {
+  // publish on a dead socket throws — swallow; the next connect re-runs this effect
+})
+```
+
 **Verify:** `pnpm build` passes. ESLint passes (the `react-hooks/exhaustive-deps` rule may need
 a comment suppression for `msgCallbacksRef` — add `// eslint-disable-next-line` if needed).
 

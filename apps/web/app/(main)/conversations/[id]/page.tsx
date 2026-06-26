@@ -383,6 +383,8 @@ export default function ConversationPage({ params }: Props) {
           stompService.publish('/app/chat.read', { conversationId: id, messageId: m.id })
         }
       }
+    }).catch(() => {
+      // publish on a dead socket throws — swallow; the next connect re-runs this effect
     })
   }, [id, messages, currentUser])
 

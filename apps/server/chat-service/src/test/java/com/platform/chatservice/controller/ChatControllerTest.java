@@ -64,6 +64,7 @@ class ChatControllerTest {
         .thenReturn(List.of(SENDER_ID, "user-456"));
     when(messageService.sendMessage(eq(SENDER_ID), any(SendMessageRequest.class)))
         .thenReturn(response);
+    when(messageService.resolveDisplayName(SENDER_ID)).thenReturn("Alice");
 
     chatController.send(chatDto, principal);
 
@@ -156,6 +157,7 @@ class ChatControllerTest {
         .thenReturn(List.of(SENDER_ID, "user-456"));
     when(messageService.sendMessage(eq(SENDER_ID), any(SendMessageRequest.class)))
         .thenReturn(response);
+    when(messageService.resolveDisplayName(SENDER_ID)).thenReturn("Alice");
 
     chatController.send(dto, principal);
 
