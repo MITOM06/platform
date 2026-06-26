@@ -93,7 +93,7 @@ export default function RegisterPage() {
   }
 
   return (
-    <Card className="w-full max-w-sm shadow-none border-border">
+    <Card className="w-full max-w-md shadow-none border-border">
       <CardHeader>
         <CardTitle className="text-2xl">{t('register.title')}</CardTitle>
         <CardDescription>{t('register.subtitle')}</CardDescription>
@@ -106,6 +106,7 @@ export default function RegisterPage() {
               id="displayName"
               placeholder={t('register.displayNamePlaceholder')}
               autoComplete="name"
+              className="h-11 text-base"
               {...register('displayName')}
             />
             {errors.displayName && (
@@ -120,6 +121,7 @@ export default function RegisterPage() {
               type="email"
               placeholder={t('emailPlaceholder')}
               autoComplete="email"
+              className="h-11 text-base"
               {...register('email')}
             />
             {errors.email && (
@@ -135,7 +137,7 @@ export default function RegisterPage() {
                 type={showPassword ? 'text' : 'password'}
                 autoComplete="new-password"
                 placeholder={t('register.passwordPlaceholder')}
-                className="pr-10"
+                className="h-11 text-base pr-10"
                 {...register('password', {
                   onChange: (e) => setPasswordValue(e.target.value),
                 })}
@@ -163,7 +165,7 @@ export default function RegisterPage() {
                 type={showConfirm ? 'text' : 'password'}
                 autoComplete="new-password"
                 placeholder={t('register.confirmPasswordPlaceholder')}
-                className="pr-10"
+                className="h-11 text-base pr-10"
                 {...register('confirmPassword')}
               />
               <button
@@ -201,7 +203,7 @@ export default function RegisterPage() {
 
           <Button
             type="submit"
-            className="w-full font-bold tracking-wide"
+            className="w-full h-11 text-base font-bold tracking-wide"
             disabled={isSubmitting}
           >
             {isSubmitting ? t('register.submitting') : t('register.submit')}

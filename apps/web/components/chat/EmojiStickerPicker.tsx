@@ -55,7 +55,7 @@ export function EmojiStickerPicker({ disabled, onInsertEmoji, onSendSticker }: P
           </TabsList>
 
           <TabsContent value="emoji" className="p-2 m-0 h-48 overflow-y-auto">
-            <div className="grid grid-cols-8 gap-1">
+            <div className="grid grid-cols-6 sm:grid-cols-8 gap-1">
               {EMOJIS.map((emoji) => (
                 <button
                   key={emoji}
@@ -69,7 +69,7 @@ export function EmojiStickerPicker({ disabled, onInsertEmoji, onSendSticker }: P
           </TabsContent>
 
           <TabsContent value="sticker" className="p-2 m-0 h-48 overflow-y-auto">
-            <div className="grid grid-cols-4 gap-2">
+            <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
               {STICKERS.map((sticker) => (
                 <button
                   key={sticker}

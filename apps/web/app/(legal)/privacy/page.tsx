@@ -4,6 +4,21 @@ import { Separator } from '@/components/ui/separator'
 import Link from 'next/link'
 import { BackButton } from '../back-button'
 
+// Ordered list of privacy sections — keys must exist under `legal.privacy.sections`
+// in every messages/*.json locale file.
+const SECTIONS = [
+  'scope',
+  'dataWeCollect',
+  'howWeUse',
+  'aiProcessing',
+  'connectors',
+  'subprocessors',
+  'retention',
+  'security',
+  'yourRights',
+  'changes',
+] as const
+
 export default async function PrivacyPolicyPage() {
   const t = await getTranslations('legal')
   const tc = await getTranslations('common')
@@ -23,16 +38,25 @@ export default async function PrivacyPolicyPage() {
         <Separator className="mb-6" />
 
         <CardContent className="space-y-8 pb-10">
-          {(['dataCollection', 'dataUsage', 'security', 'userRights'] as const).map((section) => (
+          <p className="text-muted-foreground leading-relaxed">{t('privacy.intro')}</p>
+
+          {SECTIONS.map((section) => (
             <div key={section} className="space-y-3">
               <h2 className="text-xl font-semibold tracking-tight text-foreground">
-                {t(`sections.${section}.title`)}
+                {t(`privacy.sections.${section}.title`)}
               </h2>
               <p className="text-muted-foreground leading-relaxed">
-                {t(`sections.${section}.content`)}
+                {t(`privacy.sections.${section}.content`)}
               </p>
             </div>
           ))}
+
+          <div className="space-y-3">
+            <h2 className="text-xl font-semibold tracking-tight text-foreground">
+              {t('privacy.contactTitle')}
+            </h2>
+            <p className="text-muted-foreground leading-relaxed">{t('privacy.contactBody')}</p>
+          </div>
 
           <Separator />
 

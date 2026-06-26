@@ -73,7 +73,7 @@ export default function LoginPage() {
   }
 
   return (
-    <Card className="w-full max-w-sm shadow-none border-border">
+    <Card className="w-full max-w-md shadow-none border-border">
       <CardHeader>
         <CardTitle className="text-2xl">{t('login.title')}</CardTitle>
         <CardDescription>{t('login.subtitle')}</CardDescription>
@@ -87,6 +87,7 @@ export default function LoginPage() {
               type="email"
               placeholder={t('emailPlaceholder')}
               autoComplete="email"
+              className="h-11 text-base"
               {...register('email')}
             />
             {errors.email && (
@@ -101,7 +102,7 @@ export default function LoginPage() {
                 id="password"
                 type={showPassword ? 'text' : 'password'}
                 autoComplete="current-password"
-                className="pr-10"
+                className="h-11 text-base pr-10"
                 {...register('password')}
               />
               <button
@@ -127,7 +128,7 @@ export default function LoginPage() {
             </Link>
           </div>
 
-          <Button type="submit" className="w-full font-bold tracking-wide" disabled={isSubmitting}>
+          <Button type="submit" className="w-full h-11 text-base font-bold tracking-wide" disabled={isSubmitting}>
             {isSubmitting ? t('login.submitting') : t('login.submit')}
           </Button>
         </form>

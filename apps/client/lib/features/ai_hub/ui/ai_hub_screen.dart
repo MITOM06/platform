@@ -197,13 +197,18 @@ class _HubGrid extends StatelessWidget {
       ),
     ];
 
+    // On narrow phones the fixed tiles overflow vertically; lower the aspect
+    // ratio so tiles get taller and the icon + title + subtitle always fit.
+    final width = MediaQuery.sizeOf(context).width;
+    final aspectRatio = width < 360 ? 1.0 : (width < 420 ? 1.1 : 1.25);
+
     return GridView.count(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
       crossAxisCount: 2,
       crossAxisSpacing: 14,
       mainAxisSpacing: 14,
-      childAspectRatio: 1.25,
+      childAspectRatio: aspectRatio,
       children: tiles,
     );
   }

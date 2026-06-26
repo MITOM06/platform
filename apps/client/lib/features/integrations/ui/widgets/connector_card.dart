@@ -232,12 +232,16 @@ class _ActionRow extends StatelessWidget {
           ),
         ]
         else if (available)
-          SizedBox(
-            width: 120,
-            child: PonButton(
-              onPressed: onConnect,
-              child: Text(context.l10n.connectorConnect,
-                  style: const TextStyle(fontSize: 13)),
+          Flexible(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 120),
+              child: PonButton(
+                onPressed: onConnect,
+                child: Text(context.l10n.connectorConnect,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(fontSize: 13)),
+              ),
             ),
           )
         else

@@ -28,7 +28,8 @@ import Link from 'next/link'
 import { useAuthStore } from '@/lib/store/auth.store'
 import { useNotificationPrefs } from '@/lib/store/notification-prefs'
 import { stompService } from '@/lib/stomp/client'
-import { Avatar, AvatarFallback } from '@/components/ui/avatar'
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import { absoluteMediaUrl } from '@/lib/media'
 import { Switch } from '@/components/ui/switch'
 import { ChangePasswordDialog } from '@/components/chat/ChangePasswordDialog'
 import { ThemePickerDialog, LanguagePickerDialog } from '@/components/settings/AppearanceDialogs'
@@ -192,6 +193,9 @@ export default function SettingsPage() {
             <div className="flex flex-col items-center mb-10">
               <div className="relative">
                 <Avatar className="size-20 ring-2 ring-primary/20 ring-offset-2 ring-offset-background">
+                  {user.avatarUrl && (
+                    <AvatarImage src={absoluteMediaUrl(user.avatarUrl)} alt={user.displayName} />
+                  )}
                   <AvatarFallback className="text-xl font-bold bg-gradient-to-br from-pon-cyan to-pon-pink text-white">
                     {getInitials(user.displayName)}
                   </AvatarFallback>

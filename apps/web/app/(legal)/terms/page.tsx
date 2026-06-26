@@ -4,6 +4,21 @@ import { Separator } from '@/components/ui/separator'
 import Link from 'next/link'
 import { BackButton } from '../back-button'
 
+// Ordered list of terms sections — keys must exist under `legal.terms.sections`
+// in every messages/*.json locale file.
+const SECTIONS = [
+  'acceptance',
+  'eligibility',
+  'acceptableUse',
+  'aiOutput',
+  'yourContent',
+  'connectors',
+  'suspension',
+  'disclaimer',
+  'liability',
+  'governingLaw',
+] as const
+
 export default async function TermsOfServicePage() {
   const t = await getTranslations('legal')
   const tc = await getTranslations('common')
@@ -23,13 +38,24 @@ export default async function TermsOfServicePage() {
         <Separator className="mb-6" />
 
         <CardContent className="space-y-8 pb-10">
+          <p className="text-muted-foreground leading-relaxed">{t('terms.intro')}</p>
+
+          {SECTIONS.map((section) => (
+            <div key={section} className="space-y-3">
+              <h2 className="text-xl font-semibold tracking-tight text-foreground">
+                {t(`terms.sections.${section}.title`)}
+              </h2>
+              <p className="text-muted-foreground leading-relaxed">
+                {t(`terms.sections.${section}.content`)}
+              </p>
+            </div>
+          ))}
+
           <div className="space-y-3">
             <h2 className="text-xl font-semibold tracking-tight text-foreground">
-              {t('sections.terms.title')}
+              {t('terms.contactTitle')}
             </h2>
-            <p className="text-muted-foreground leading-relaxed">
-              {t('sections.terms.content')}
-            </p>
+            <p className="text-muted-foreground leading-relaxed">{t('terms.contactBody')}</p>
           </div>
 
           <Separator />

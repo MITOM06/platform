@@ -108,19 +108,21 @@ class _OtpBox extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final baseColor = isDark ? Colors.white : Colors.black;
     return AnimatedContainer(
       duration: const Duration(milliseconds: 150),
       width: 44,
       height: 54,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(12),
-        color: Colors.white.withValues(alpha: isActive ? 0.08 : 0.04),
+        color: baseColor.withValues(alpha: isActive ? 0.08 : 0.04),
         border: Border.all(
           color: isActive
               ? accentColor
               : isFilled
                   ? accentColor.withValues(alpha: 0.6)
-                  : Colors.white.withValues(alpha: 0.2),
+                  : baseColor.withValues(alpha: isDark ? 0.2 : 0.25),
           width: isActive ? 2.0 : 1.5,
         ),
         boxShadow: isActive
@@ -138,10 +140,10 @@ class _OtpBox extends StatelessWidget {
           ? null
           : Text(
               char,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 24,
                 fontWeight: FontWeight.bold,
-                color: Colors.white,
+                color: isDark ? Colors.white : Colors.black87,
               ),
             ),
     );

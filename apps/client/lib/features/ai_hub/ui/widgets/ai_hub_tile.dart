@@ -23,6 +23,7 @@ class AiHubTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return PressScale(
       scale: 0.98,
       child: PonCard(
@@ -53,8 +54,10 @@ class AiHubTile extends StatelessWidget {
                 const SizedBox(height: 14),
                 Text(
                   title,
-                  style: const TextStyle(
-                    color: Colors.white,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    color: colorScheme.onSurface,
                     fontWeight: FontWeight.bold,
                     fontSize: 15,
                   ),
@@ -65,7 +68,7 @@ class AiHubTile extends StatelessWidget {
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
-                    color: Colors.white.withValues(alpha: 0.55),
+                    color: colorScheme.onSurfaceVariant,
                     fontSize: 12,
                     height: 1.25,
                   ),

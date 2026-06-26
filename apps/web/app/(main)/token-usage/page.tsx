@@ -231,7 +231,7 @@ export default function TokenUsagePage() {
             {days && (
               <div className="space-y-5">
                 {/* Summary stat cards */}
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <StatCard
                     icon={<Coins className="size-5 text-primary" />}
                     label={t('thisMonth')}

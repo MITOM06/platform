@@ -14,12 +14,9 @@ class RemindersScreen extends ConsumerWidget {
     final l10n = context.l10n;
 
     return Scaffold(
-      backgroundColor: AppTheme.darkBackground,
       appBar: AppBar(
-        backgroundColor: AppTheme.darkBackground,
         title: Text(l10n.reminders,
-            style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-        iconTheme: const IconThemeData(color: Colors.white),
+            style: const TextStyle(fontWeight: FontWeight.bold)),
       ),
       body: remindersAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
@@ -69,8 +66,7 @@ class RemindersScreen extends ConsumerWidget {
     showDialog<void>(
       context: context,
       builder: (_) => AlertDialog(
-        backgroundColor: AppTheme.darkSurface,
-        content: Text(message, style: const TextStyle(color: Colors.white)),
+        content: Text(message),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
@@ -93,17 +89,18 @@ class RemindersScreen extends ConsumerWidget {
 class _EmptyState extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+    final muted = Theme.of(context).colorScheme.onSurfaceVariant;
     return Center(
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(Icons.alarm_off, size: 64,
-              color: Colors.white.withValues(alpha: 0.25)),
+              color: muted.withValues(alpha: 0.4)),
           const SizedBox(height: 16),
           Text(
             context.l10n.remindersEmpty,
             style: TextStyle(
-              color: Colors.white.withValues(alpha: 0.5),
+              color: muted,
               fontSize: 15,
             ),
             textAlign: TextAlign.center,
@@ -131,23 +128,26 @@ class _ReminderTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final locale = Localizations.localeOf(context).languageCode;
     final dateStr = DateFormat.yMMMd(locale).add_jm().format(remindAt.toLocal());
+    final colorScheme = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Container(
       decoration: BoxDecoration(
-        color: AppTheme.darkSurface.withValues(alpha: 0.7),
+        color: colorScheme.surface.withValues(alpha: 0.7),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: AppTheme.darkBorder.withValues(alpha: 0.4),
+          color: (isDark ? AppTheme.darkBorder : AppTheme.lightBorder)
+              .withValues(alpha: 0.6),
         ),
       ),
       child: ListTile(
         leading: const Icon(Icons.alarm_outlined,
             color: AppTheme.ponCyan, size: 22),
         title: Text(text,
-            style: const TextStyle(color: Colors.white, fontSize: 15)),
+            style: TextStyle(color: colorScheme.onSurface, fontSize: 15)),
         subtitle: Text(dateStr,
             style: TextStyle(
-                color: Colors.white.withValues(alpha: 0.5), fontSize: 12)),
+                color: colorScheme.onSurfaceVariant, fontSize: 12)),
         trailing: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -159,7 +159,7 @@ class _ReminderTile extends StatelessWidget {
             ),
             IconButton(
               icon: Icon(Icons.delete_outline,
-                  color: Colors.white.withValues(alpha: 0.4), size: 20),
+                  color: colorScheme.onSurfaceVariant, size: 20),
               onPressed: onDelete,
             ),
           ],

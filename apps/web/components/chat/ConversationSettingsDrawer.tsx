@@ -235,7 +235,7 @@ export function ConversationSettingsDrawer({
   return (
     <>
     <Sheet open={open} onOpenChange={(o) => !o && onClose()}>
-      <SheetContent side="right" className="w-80 sm:w-[360px] overflow-y-auto p-0">
+      <SheetContent side="right" className="w-[min(90vw,320px)] sm:w-[360px] overflow-y-auto p-0">
         <div className="flex flex-col h-full bg-background">
           {/* Header */}
           <div className="h-14 px-4 flex items-center border-b shrink-0">

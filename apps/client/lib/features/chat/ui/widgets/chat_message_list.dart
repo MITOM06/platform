@@ -54,6 +54,16 @@ class ChatMessageList extends StatelessWidget {
           );
         }
         final msg = chatState.messages[index];
+        // [CHATDBG] TEMP diagnostic — remove after root-causing message-side bug.
+        assert(() {
+          if (index == 0) {
+            debugPrint('[CHATDBG] newest msg.senderId="${msg.senderId}" '
+                'currentUserId="$currentUserId" '
+                'isSentByMe=${msg.senderId == currentUserId} '
+                'isPending=${msg.isPending} content="${msg.content}"');
+          }
+          return true;
+        }());
         bool showDate = index == chatState.messages.length - 1;
         if (!showDate) {
           final prevMsg = chatState.messages[index + 1];

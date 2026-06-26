@@ -70,7 +70,7 @@ class ConversationInfoSidebar extends ConsumerWidget {
             ),
             alignment: Alignment.centerLeft,
             child: Text(
-              context.l10n.localeName == 'vi' ? 'Thông tin' : 'Details',
+              context.l10n.detailsTitle,
               style: const TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.bold,
@@ -190,13 +190,13 @@ class ConversationInfoSidebar extends ConsumerWidget {
               ListTile(
                 dense: true,
                 leading: const Icon(Icons.color_lens_outlined, size: 18),
-                title: Text(context.l10n.localeName == 'vi' ? 'Chủ đề' : 'Theme'),
+                title: Text(context.l10n.themeMenuItem),
                 onTap: () => showWallpaperDialog(context, ref, conversationId),
               ),
               ListTile(
                 dense: true,
                 leading: const Icon(Icons.add_reaction_outlined, size: 18),
-                title: Text(context.l10n.localeName == 'vi' ? 'Biểu tượng cảm xúc nhanh' : 'Quick Reaction'),
+                title: Text(context.l10n.quickReactionTitle),
                 onTap: () => showQuickReactionDialog(context, ref, conversationId),
               ),
               // Nicknames apply to people, not the bot — hidden for AI chats.
@@ -204,7 +204,7 @@ class ConversationInfoSidebar extends ConsumerWidget {
                 ListTile(
                   dense: true,
                   leading: const Icon(Icons.label_outline_rounded, size: 18),
-                  title: Text(context.l10n.localeName == 'vi' ? 'Biệt danh' : 'Nicknames'),
+                  title: Text(context.l10n.nicknameModalTitle),
                   onTap: () => showNicknamesDialog(context, ref, conversationId, conv),
                 ),
               if (isGroup && (conv?.admins.contains(currentUserId) ?? false)) ...[

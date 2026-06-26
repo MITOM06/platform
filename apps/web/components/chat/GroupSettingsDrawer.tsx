@@ -186,7 +186,7 @@ export function GroupSettingsDrawer({ conversation, currentUserId, open, onClose
   return (
     <>
     <Sheet open={open} onOpenChange={(o) => !o && onClose()}>
-      <SheetContent side="right" className="w-80 sm:w-[360px] overflow-y-auto">
+      <SheetContent side="right" className="w-[min(90vw,320px)] sm:w-[360px] overflow-y-auto">
         <SheetHeader>
           <SheetTitle>{t('groupSettingsTitle')}</SheetTitle>
         </SheetHeader>
