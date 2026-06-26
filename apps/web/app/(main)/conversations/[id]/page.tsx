@@ -13,7 +13,7 @@ import { useConversation } from '@/lib/hooks/use-conversation'
 import { useUser } from '@/lib/hooks/use-user'
 import { useRelationship } from '@/lib/hooks/use-relationship'
 import { ConversationHeader } from '@/components/chat/ConversationHeader'
-import { MessageList } from '@/components/chat/MessageList'
+import { MessageViewport } from '@/components/chat/MessageViewport'
 import { MessageInput } from '@/components/chat/MessageInput'
 import { MessageSearchPanel } from '@/components/chat/MessageSearchPanel'
 import { StrangerRequestBanner } from '@/components/chat/StrangerRequestBanner'
@@ -66,11 +66,6 @@ export default function ConversationPage({ params }: Props) {
   // Re-run the STOMP subscribe effect on every (re)connect so a dropped socket
   // is re-subscribed instead of leaving a subscription bound to a dead socket.
   const stompConnected = useStompConnected()
-  const bottomRef = useRef<HTMLDivElement>(null)
-  const topSentinelRef = useRef<HTMLDivElement>(null)
-  const scrollContainerRef = useRef<HTMLDivElement>(null)
-  const prevScrollHeightRef = useRef(0)
-  const isPrependingRef = useRef(false)
 
   const [typingUserIds, setTypingUserIds] = useState<string[]>([])
   const [searchVisible, setSearchVisible] = useState(false)
@@ -130,56 +125,9 @@ export default function ConversationPage({ params }: Props) {
     }
   }, [id, messages])
 
-  // Infinite scroll: observe sentinel at top, preserve scroll position
-  useEffect(() => {
-    const sentinel = topSentinelRef.current
-    if (!sentinel) return
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0].isIntersecting && hasNextPage && !isFetchingNextPage) {
-          const el = scrollContainerRef.current
-          if (el) prevScrollHeightRef.current = el.scrollHeight
-          isPrependingRef.current = true
-          fetchNextPage()
-        }
-      },
-      { threshold: 0.1 },
-    )
-    observer.observe(sentinel)
-    return () => observer.disconnect()
-  }, [hasNextPage, isFetchingNextPage, fetchNextPage])
-
-  // Restore scroll after prepend
-  useEffect(() => {
-    if (!isPrependingRef.current || isFetchingNextPage) return
-    const el = scrollContainerRef.current
-    if (el && prevScrollHeightRef.current) {
-      el.scrollTop = el.scrollHeight - prevScrollHeightRef.current
-    }
-    isPrependingRef.current = false
-    prevScrollHeightRef.current = 0
-  }, [isFetchingNextPage, messages.length])
-
-  // Auto-scroll to bottom on new messages (not prepend) and while the AI
-  // response streams in, so the growing AI bubble stays in view (D-1.2 fix).
-  useEffect(() => {
-    if (isPrependingRef.current) return
-    bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }, [messages.length, aiStream])
-
-  // Jump to the latest message instantly whenever the conversation changes.
-  // The App Router reuses this [id] page instance across conversation switches
-  // (the STOMP effect is keyed on `id` precisely because the component is NOT
-  // remounted), so the scroll container + react-virtual virtualizer otherwise
-  // keep the PREVIOUS thread's scroll offset. When the new thread renders with
-  // the same message count (cached revisit), the length-based effect above does
-  // not fire, the virtualizer positions rows at the stale offset, and the
-  // viewport shows blank until a manual scroll or full page reload. Resetting
-  // here forces a clean recompute — matching the browser-refresh behaviour.
-  useEffect(() => {
-    isPrependingRef.current = false
-    bottomRef.current?.scrollIntoView({ behavior: 'auto' })
-  }, [id])
+  // Scroll positioning + pagination triggers now live in MessageViewport, which
+  // is keyed on the conversation id so every switch starts from a clean scroll
+  // state (see MessageViewport for the full rationale).
 
   const { patchMessage, markMessageRead, appendMessage, attachAiSources } = useMessageCache(id)
   // RAG sources from an AI_STREAM_DONE that arrived before the persisted AI
@@ -527,34 +475,31 @@ export default function ConversationPage({ params }: Props) {
           <div className="absolute -bottom-40 -right-40 size-96 rounded-full bg-pon-peach blur-[128px] animate-pulse duration-[8000ms]" />
         </div>
 
-        {/* Scrolling message list — transparent, rides on top of the backdrop. */}
-        <div
-          ref={scrollContainerRef}
-          className="absolute inset-0 overflow-y-auto px-4 py-4 z-10"
-        >
-          <MessageList
-            messages={messages}
-            currentUserId={currentUser?.id}
-            conversationId={id}
-            otherUserId={otherUserId}
-            pinnedMessages={pinnedMessages}
-            isGroup={isGroup}
-            isLoading={isLoading}
-            isError={isError}
-            isFetchingNextPage={isFetchingNextPage}
-            typingUserIds={typingUserIds}
-            assistantTyping={isAssistantTyping}
-            aiStream={aiStream}
-            topSentinelRef={topSentinelRef}
-            bottomRef={bottomRef}
-            scrollContainerRef={scrollContainerRef}
-            onEdit={setEditingMessage}
-            onForward={setForwardMessage}
-            onReply={setReplyingTo}
-            onAiTrace={setTraceMessageId}
-            onOptimisticUpdate={handleOptimisticUpdate}
-          />
-        </div>
+        {/* Scrolling message list — transparent, rides on top of the backdrop.
+            Keyed on the conversation id so it remounts (fresh scroll state) on
+            every switch instead of inheriting the previous thread's position. */}
+        <MessageViewport
+          key={id}
+          messages={messages}
+          currentUserId={currentUser?.id}
+          conversationId={id}
+          otherUserId={otherUserId}
+          pinnedMessages={pinnedMessages}
+          isGroup={isGroup}
+          isLoading={isLoading}
+          isError={isError}
+          hasNextPage={!!hasNextPage}
+          isFetchingNextPage={isFetchingNextPage}
+          fetchNextPage={fetchNextPage}
+          typingUserIds={typingUserIds}
+          assistantTyping={isAssistantTyping}
+          aiStream={aiStream}
+          onEdit={setEditingMessage}
+          onForward={setForwardMessage}
+          onReply={setReplyingTo}
+          onAiTrace={setTraceMessageId}
+          onOptimisticUpdate={handleOptimisticUpdate}
+        />
       </div>
 
       {isBlocked ? (

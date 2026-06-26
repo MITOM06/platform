@@ -1,9 +1,8 @@
 'use client'
 
-import { useMemo, useRef } from 'react'
-import { useVirtualizer } from '@tanstack/react-virtual'
+import { useMemo, useState } from 'react'
 import { useTranslations, useLocale } from 'next-intl'
-import { Loader2, MessageCircle, Wrench, ShieldAlert } from 'lucide-react'
+import { MessageCircle, Wrench, ShieldAlert } from 'lucide-react'
 import { MessageBubble } from '@/components/chat/MessageBubble'
 import { ChatTypingIndicator } from '@/components/chat/ChatTypingIndicator'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -59,15 +58,11 @@ interface Props {
   isGroup: boolean
   isLoading: boolean
   isError: boolean
-  isFetchingNextPage: boolean
   typingUserIds: string[]
   /** True while the personal assistant bot is preparing its reply (no STOMP
    *  typing event exists for external bots — Bot Factory calls are synchronous). */
   assistantTyping?: boolean
   aiStream: AiStreamState | null
-  topSentinelRef: React.RefObject<HTMLDivElement | null>
-  bottomRef: React.RefObject<HTMLDivElement | null>
-  scrollContainerRef: React.RefObject<HTMLDivElement | null>
   onEdit: (message: Message) => void
   onForward: (message: Message) => void
   onReply: (message: Message) => void
@@ -75,6 +70,13 @@ interface Props {
   onOptimisticUpdate: (updated: Partial<Message> & { id: string }) => void
 }
 
+/**
+ * Pure renderer for the message thread. Scroll positioning and pagination are
+ * owned by the parent MessageViewport — this component only turns the (already
+ * paginated, chronological) `messages` array into bubbles + date separators.
+ * Not virtualized: cursor pagination keeps the DOM small enough to render
+ * directly, which removes the scroll/measure races that virtualization caused.
+ */
 export function MessageList({
   messages,
   currentUserId,
@@ -84,13 +86,9 @@ export function MessageList({
   isGroup,
   isLoading,
   isError,
-  isFetchingNextPage,
   typingUserIds,
   assistantTyping = false,
   aiStream,
-  topSentinelRef,
-  bottomRef,
-  scrollContainerRef,
   onEdit,
   onForward,
   onReply,
@@ -101,26 +99,26 @@ export function MessageList({
   const locale = useLocale()
 
   // Entrance-animation guard (motion spec §B): only the single newest *appended*
-  // message animates in. We remember every id we've already laid out; the first
-  // batch (historical load) is recorded without animating, and on a conversation
-  // switch the set is reset. Scroll / virtualization remounts never re-trigger
-  // because the id is already in `seenIdsRef`. The list is never staggered.
-  const seenIdsRef = useRef<Set<string>>(new Set())
-  const seenConvRef = useRef<string | null>(null)
+  // message animates in. This component is remounted per conversation (the
+  // parent MessageViewport is keyed on the id), so the whole first batch is
+  // treated as historical; afterwards, any change to the newest message id means
+  // a message was appended and only that one animates. Prepended older pages
+  // don't change the newest id, so they never animate. Uses the React-sanctioned
+  // "store information from previous renders" pattern — no refs read in render.
   const newestId = messages.length > 0 ? messages[messages.length - 1].id : null
+  const [hydrated, setHydrated] = useState(false)
+  const [prevNewestId, setPrevNewestId] = useState<string | null>(null)
+  const [justAppendedId, setJustAppendedId] = useState<string | null>(null)
 
-  if (seenConvRef.current !== conversationId) {
-    // Conversation changed: treat the whole loaded thread as historical.
-    seenConvRef.current = conversationId
-    seenIdsRef.current = new Set(messages.map((m) => m.id))
+  if (!hydrated) {
+    setHydrated(true)
+    setPrevNewestId(newestId)
+  } else if (newestId !== prevNewestId) {
+    setPrevNewestId(newestId)
+    setJustAppendedId(newestId)
   }
 
-  const justAppendedId =
-    newestId && !seenIdsRef.current.has(newestId) ? newestId : null
-  // Record all current ids so subsequent renders treat them as historical.
-  for (const m of messages) seenIdsRef.current.add(m.id)
-
-  // Flatten messages + date separators into virtual rows
+  // Flatten messages + date separators into rows.
   const rows = useMemo<VirtualRow[]>(() => {
     const result: VirtualRow[] = []
     let lastDate = ''
@@ -135,25 +133,10 @@ export function MessageList({
     return result
   }, [messages])
 
-  const virtualizer = useVirtualizer({
-    count: rows.length,
-    getScrollElement: () => scrollContainerRef.current,
-    estimateSize: (index) => (rows[index].kind === 'separator' ? 44 : 72),
-    overscan: 5,
-  })
-
   const showContent = !isLoading && !!currentUserId && !isError
 
   return (
     <div className="relative z-10 space-y-2">
-      <div ref={topSentinelRef} className="h-1" />
-
-      {isFetchingNextPage && (
-        <div className="flex justify-center py-2">
-          <Loader2 className="size-4 animate-spin text-muted-foreground" />
-        </div>
-      )}
-
       {(isLoading || !currentUserId) && <MessageSkeletons />}
 
       {isError && (
@@ -170,57 +153,44 @@ export function MessageList({
       )}
 
       {showContent && rows.length > 0 && (
-        <div style={{ height: virtualizer.getTotalSize(), position: 'relative' }}>
-          {virtualizer.getVirtualItems().map((virtualItem) => {
-            const row = rows[virtualItem.index]
-            return (
-              <div
-                key={virtualItem.key}
-                data-index={virtualItem.index}
-                ref={virtualizer.measureElement}
-                style={{
-                  position: 'absolute',
-                  top: virtualItem.start,
-                  width: '100%',
-                }}
-              >
-                {row.kind === 'separator' ? (
-                  <div className="flex justify-center my-4 select-none">
-                    <span className="text-[11px] bg-muted/80 backdrop-blur-xs text-muted-foreground font-semibold px-3 py-1 rounded-full border shadow-xs">
-                      {formatSeparatorDate(row.isoDate, locale, {
-                        today: t('today'),
-                        yesterday: t('yesterday'),
-                      })}
-                    </span>
-                  </div>
-                ) : (
-                  <div
-                    className={
-                      row.msg.id === justAppendedId
-                        ? 'space-y-2 motion-safe:pon-enter'
-                        : 'space-y-2'
-                    }
-                    id={`message-${row.msg.id}`}
-                  >
-                    <MessageBubble
-                      message={row.msg}
-                      isOwn={row.msg.senderId === currentUserId}
-                      currentUserId={currentUserId}
-                      conversationId={conversationId}
-                      otherUserId={otherUserId}
-                      isPinned={pinnedMessages.includes(row.msg.id)}
-                      isGroup={isGroup}
-                      onEdit={onEdit}
-                      onForward={onForward}
-                      onReply={onReply}
-                      onAiTrace={onAiTrace}
-                      onOptimisticUpdate={onOptimisticUpdate}
-                    />
-                  </div>
-                )}
+        <div className="space-y-2">
+          {rows.map((row, i) =>
+            row.kind === 'separator' ? (
+              <div key={`sep-${row.isoDate}-${i}`} className="flex justify-center my-4 select-none">
+                <span className="text-[11px] bg-muted/80 backdrop-blur-xs text-muted-foreground font-semibold px-3 py-1 rounded-full border shadow-xs">
+                  {formatSeparatorDate(row.isoDate, locale, {
+                    today: t('today'),
+                    yesterday: t('yesterday'),
+                  })}
+                </span>
               </div>
-            )
-          })}
+            ) : (
+              <div
+                key={row.msg.id}
+                id={`message-${row.msg.id}`}
+                className={
+                  row.msg.id === justAppendedId
+                    ? 'space-y-2 motion-safe:pon-enter'
+                    : 'space-y-2'
+                }
+              >
+                <MessageBubble
+                  message={row.msg}
+                  isOwn={row.msg.senderId === currentUserId}
+                  currentUserId={currentUserId}
+                  conversationId={conversationId}
+                  otherUserId={otherUserId}
+                  isPinned={pinnedMessages.includes(row.msg.id)}
+                  isGroup={isGroup}
+                  onEdit={onEdit}
+                  onForward={onForward}
+                  onReply={onReply}
+                  onAiTrace={onAiTrace}
+                  onOptimisticUpdate={onOptimisticUpdate}
+                />
+              </div>
+            ),
+          )}
         </div>
       )}
 
@@ -274,8 +244,6 @@ export function MessageList({
           </div>
         </div>
       )}
-
-      <div ref={bottomRef} />
     </div>
   )
 }
