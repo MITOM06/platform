@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/l10n/l10n_ext.dart';
+import '../../../core/utils/app_error.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/pon_widgets.dart';
 import '../../auth/domain/auth_state.dart';
@@ -132,7 +133,7 @@ class _FriendsTab extends ConsumerWidget {
     } catch (e) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(context.l10n.errorWithMsg(e.toString()))),
+          SnackBar(content: Text(friendlyError(e))),
         );
       }
     }
@@ -145,7 +146,7 @@ class _FriendsTab extends ConsumerWidget {
 
     return friends.when(
       loading: () => const Center(child: CircularProgressIndicator()),
-      error: (e, _) => Center(child: Text(context.l10n.errorWithMsg(e.toString()))),
+      error: (e, _) => Center(child: Text(friendlyError(e))),
       data: (list) {
         final filteredList = list.where((friend) {
           final query = searchQuery.toLowerCase();
@@ -252,7 +253,7 @@ class _RequestsTab extends ConsumerWidget {
     } catch (e) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(context.l10n.errorWithMsg(e.toString()))),
+          SnackBar(content: Text(friendlyError(e))),
         );
       }
     }
@@ -266,7 +267,7 @@ class _RequestsTab extends ConsumerWidget {
     } catch (e) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(context.l10n.errorWithMsg(e.toString()))),
+          SnackBar(content: Text(friendlyError(e))),
         );
       }
     }
@@ -279,7 +280,7 @@ class _RequestsTab extends ConsumerWidget {
 
     return requests.when(
       loading: () => const Center(child: CircularProgressIndicator()),
-      error: (e, _) => Center(child: Text(context.l10n.errorWithMsg(e.toString()))),
+      error: (e, _) => Center(child: Text(friendlyError(e))),
       data: (list) {
         final filteredList = list.where((req) {
           final query = searchQuery.toLowerCase();

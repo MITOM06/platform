@@ -71,7 +71,10 @@ class ConversationTile extends ConsumerWidget {
             : '?');
     final avatarUrl = isGroup ? conv.avatarUrl : profileData?.avatarUrl;
 
-    return PressScale(
+    // Isolate each row's paint so one tile repainting (unread badge, online
+    // dot, selection) doesn't invalidate its neighbours in the list.
+    return RepaintBoundary(
+      child: PressScale(
       scale: 0.98,
       child: Container(
       margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
@@ -237,6 +240,7 @@ class ConversationTile extends ConsumerWidget {
           onLongPress: () => showConversationTileMenu(context, ref, conv),
         ),
       ),
+    ),
     ),
     );
   }

@@ -81,7 +81,10 @@ class _AssistantSheenAvatarState extends State<AssistantSheenAvatar>
         children: [
           avatar,
           Positioned.fill(
-            child: AnimatedBuilder(
+            // Isolate the continuous sheen sweep so its per-frame repaint
+            // doesn't invalidate the surrounding list/widgets.
+            child: RepaintBoundary(
+              child: AnimatedBuilder(
               animation: _controller,
               builder: (context, _) {
                 // Sweep the highlight diagonally from off-screen top-left to
@@ -110,6 +113,7 @@ class _AssistantSheenAvatarState extends State<AssistantSheenAvatar>
                   ),
                 );
               },
+            ),
             ),
           ),
         ],

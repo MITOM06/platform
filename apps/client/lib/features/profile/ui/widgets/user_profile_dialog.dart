@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../../../core/api/dio_client.dart';
 import '../../../../core/l10n/l10n_ext.dart';
+import '../../../../core/utils/app_error.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../auth/domain/auth_provider.dart';
 import '../../../auth/domain/auth_state.dart';
@@ -89,7 +90,7 @@ class _UserProfileDialogState extends ConsumerState<UserProfileDialog> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(context.l10n.errorWithMsg(e.toString()))),
+          SnackBar(content: Text(friendlyError(e))),
         );
       }
     } finally {

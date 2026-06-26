@@ -6,6 +6,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import '../../../core/api/dio_client.dart';
 import '../../../core/l10n/l10n_ext.dart';
+import '../../../core/utils/app_error.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/pon_widgets.dart';
 import '../../auth/domain/auth_provider.dart';
@@ -125,7 +126,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(context.l10n.errorWithMsg(e.toString()))),
+          SnackBar(content: Text(friendlyError(e))),
         );
       }
     } finally {

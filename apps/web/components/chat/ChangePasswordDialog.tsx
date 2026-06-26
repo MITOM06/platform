@@ -16,6 +16,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { PasswordStrengthMeter } from '@/components/auth/PasswordStrengthMeter'
 
 interface ChangePasswordDialogProps {
   open: boolean
@@ -25,6 +26,7 @@ interface ChangePasswordDialogProps {
 export function ChangePasswordDialog({ open, onOpenChange }: ChangePasswordDialogProps) {
   const t = useTranslations('settings.changePasswordDialog')
   const tCommon = useTranslations('common')
+  const tReg = useTranslations('auth.register')
   const [currentPassword, setCurrentPassword] = useState('')
   const [newPassword, setNewPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
@@ -50,9 +52,20 @@ export function ChangePasswordDialog({ open, onOpenChange }: ChangePasswordDialo
     onOpenChange(open)
   }
 
+  // Mirror the register page zod schema: min 8, upper, lower, digit, special.
+  const validatePassword = (pw: string): string | null => {
+    if (pw.length < 8) return tReg('passwordMin')
+    if (!/[A-Z]/.test(pw)) return tReg('reqUppercase')
+    if (!/[a-z]/.test(pw)) return tReg('reqLowercase')
+    if (!/[0-9]/.test(pw)) return tReg('reqDigit')
+    if (!/[!@#$%^&*]/.test(pw)) return tReg('reqSpecial')
+    return null
+  }
+
   const handleSubmit = async () => {
-    if (newPassword.length < 6) {
-      setError(t('minLength'))
+    const pwError = validatePassword(newPassword)
+    if (pwError) {
+      setError(pwError)
       return
     }
     if (newPassword !== confirmPassword) {
@@ -167,6 +180,20 @@ export function ChangePasswordDialog({ open, onOpenChange }: ChangePasswordDialo
                 {showNew ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
               </button>
             </div>
+            <PasswordStrengthMeter
+              password={newPassword}
+              labels={{
+                weak: tReg('pwStrengthWeak'),
+                medium: tReg('pwStrengthMedium'),
+                strong: tReg('pwStrengthStrong'),
+                veryStrong: tReg('pwStrengthVeryStrong'),
+                reqLength: tReg('reqLength'),
+                reqUppercase: tReg('reqUppercase'),
+                reqLowercase: tReg('reqLowercase'),
+                reqDigit: tReg('reqDigit'),
+                reqSpecial: tReg('reqSpecial'),
+              }}
+            />
           </div>
 
           {/* Confirm Password */}

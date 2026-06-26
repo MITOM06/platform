@@ -28,7 +28,6 @@ class ConversationListScreen extends ConsumerStatefulWidget {
 class _ConversationListScreenState
     extends ConsumerState<ConversationListScreen> {
   final _searchController = TextEditingController();
-  String _search = '';
 
   @override
   void dispose() {
@@ -192,7 +191,11 @@ class _ConversationListScreenState
           ),
           ConversationSearchBar(
             controller: _searchController,
-            onChanged: (v) => setState(() => _search = v),
+            // Write the query into a dedicated StateProvider instead of
+            // setState — only the filtered list (which watches the provider)
+            // rebuilds on a keystroke, not the whole screen.
+            onChanged: (v) =>
+                ref.read(conversationSearchQueryProvider.notifier).state = v,
           ),
           const ActiveFriendsRow(),
           const AssistantEntryTile(),
@@ -298,13 +301,20 @@ class _ConversationListScreenState
                     ),
                   ),
                   data: (allConversations) {
-                    final conversations = filterConversationsBySearch(
-                      ref,
-                      allConversations,
-                      user?.id ?? '',
-                      _search,
-                    );
-                    return RefreshIndicator(
+                    // Scope keystroke rebuilds: only this Consumer (the filtered
+                    // list) re-runs when the search query changes — the AppBar,
+                    // FAB, ActiveFriendsRow and AssistantEntryTile above do not.
+                    return Consumer(
+                      builder: (context, ref, _) {
+                        final search =
+                            ref.watch(conversationSearchQueryProvider);
+                        final conversations = filterConversationsBySearch(
+                          ref,
+                          allConversations,
+                          user?.id ?? '',
+                          search,
+                        );
+                        return RefreshIndicator(
                     color: isDark
                         ? AppTheme.ponCyan
                         : Theme.of(context).colorScheme.primary,
@@ -337,7 +347,7 @@ class _ConversationListScreenState
                                     ),
                                     const SizedBox(height: 16),
                                     Text(
-                                      _search.isEmpty
+                                      search.isEmpty
                                           ? context.l10n.emptyConversations
                                           : context.l10n.noConversationsFound,
                                       style: TextStyle(
@@ -348,7 +358,7 @@ class _ConversationListScreenState
                                             : Colors.black87,
                                       ),
                                     ),
-                                    if (_search.isEmpty) ...[
+                                    if (search.isEmpty) ...[
                                       const SizedBox(height: 8),
                                       Text(
                                         context.l10n.emptyTapPlus,
@@ -373,7 +383,9 @@ class _ConversationListScreenState
                               return ConversationTile(conv: conv);
                             },
                           ),
-                  );
+                        );
+                      },
+                    );
                   },
                 ),
                 if (isWeb)

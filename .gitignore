@@ -96,6 +96,9 @@ scripts/set-github-secrets.sh
 # Local-only backup of old _workspace reports (recoverable from git history)
 _workspace_prev/
 
+# Orchestrate-feature scratchpad: plans & QA reports (local-only working docs)
+_workspace/
+
 # Editor / office temp & lock files (e.g. Excel "~$" lock files)
 ~$*
 *.tmp

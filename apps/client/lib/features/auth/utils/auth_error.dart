@@ -4,13 +4,20 @@ import '../../../core/l10n/l10n_ext.dart';
 
 /// Parses a DioException from auth-service and returns a localized error string.
 ///
-/// Handles three response shapes per the auth-error-codes contract:
-///   1. Exception body: `{ "message": { "code": "ACCOUNT_LOCKED", "params": { "minutes": 5 } } }`
+/// Handles the response shapes of the auth-error-codes contract:
+///   1. Business body: `{ "code": "ACCOUNT_LOCKED", "params": { "minutes": 5 } }`
+///      (NestJS replies with the thrown object verbatim — no `message` wrapper)
 ///   2. Validation body: `{ "message": ["VAL_EMAIL_INVALID", "VAL_PASSWORD_TOO_SHORT"] }`
-///   3. Fallback: plain string message or generic error
+///   3. Nested/legacy: `{ "message": { "code": ..., "params": ... } }` or a plain string
 String authErrorToString(BuildContext context, DioException e) {
   final data = e.response?.data;
   if (data is Map) {
+    // Business errors: `{ code, params }` at the top level.
+    final topCode = data['code'];
+    if (topCode is String && topCode.isNotEmpty) {
+      final params = (data['params'] as Map?)?.cast<String, dynamic>();
+      return _codeToString(context, topCode, params);
+    }
     final msg = data['message'];
     if (msg is Map) {
       final code = msg['code'] as String?;

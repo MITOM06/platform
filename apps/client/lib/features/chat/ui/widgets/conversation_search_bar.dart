@@ -4,6 +4,12 @@ import '../../../../core/l10n/l10n_ext.dart';
 import '../../domain/chat_provider.dart';
 import '../../domain/chat_state.dart';
 
+/// Current conversation-search query. Held in a dedicated [StateProvider] so a
+/// keystroke only rebuilds the widgets that watch this query (the filtered
+/// list) — not the whole [ConversationListScreen] (AppBar / FAB /
+/// ActiveFriendsRow / AssistantEntryTile).
+final conversationSearchQueryProvider = StateProvider<String>((ref) => '');
+
 /// Search input shown above the conversation list. Mirrors the web client's
 /// `ConversationList.tsx` search bar (filters by group name or DM peer
 /// nickname/display name) — see [filterConversationsBySearch].
@@ -59,6 +65,11 @@ class ConversationSearchBar extends StatelessWidget {
 /// Resolve the searchable terms for a conversation — mirrors web's
 /// `resolveSearchTerms()`: group name, or (for 1:1, non-AI) the peer's
 /// nickname / cached display name.
+///
+/// Uses [ref.read] (not [ref.watch]): filtering on a text query is a one-shot
+/// computation, not a reactive subscription. The nickname map + cached profile
+/// for each peer are read once per conversation here rather than subscribing to
+/// every nicknames/userProfile provider on every keystroke.
 List<String> _searchTerms(
   WidgetRef ref,
   ConversationModel conv,
@@ -70,9 +81,9 @@ List<String> _searchTerms(
     final others = conv.participants.where((p) => p != currentUserId);
     final otherId = others.isEmpty ? null : others.first;
     if (otherId != null && otherId != kAiBotUserId) {
-      final nick = ref.watch(nicknamesProvider(conv.id))[otherId];
+      final nick = ref.read(nicknamesProvider(conv.id))[otherId];
       if (nick != null && nick.isNotEmpty) terms.add(nick);
-      final profile = ref.watch(userProfileProvider(otherId)).valueOrNull;
+      final profile = ref.read(userProfileProvider(otherId)).valueOrNull;
       if (profile != null && profile.displayName.isNotEmpty) {
         terms.add(profile.displayName);
       }

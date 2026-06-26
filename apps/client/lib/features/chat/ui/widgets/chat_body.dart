@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../../core/l10n/l10n_ext.dart';
+import '../../../../core/utils/app_error.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../domain/chat_provider.dart';
 import '../../domain/chat_state.dart';
@@ -25,7 +25,6 @@ import 'stranger_request_banner.dart';
 /// unchanged; this widget only owns layout.
 class ChatBody extends ConsumerWidget {
   final String conversationId;
-  final AsyncValue<ChatState> chatAsync;
   final String currentUserId;
   final bool isGroup;
   final String? otherUserId;
@@ -57,7 +56,6 @@ class ChatBody extends ConsumerWidget {
   const ChatBody({
     super.key,
     required this.conversationId,
-    required this.chatAsync,
     required this.currentUserId,
     required this.isGroup,
     required this.otherUserId,
@@ -86,8 +84,13 @@ class ChatBody extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final editingMessage = chatAsync.valueOrNull?.editingMessage;
-    final replyingTo = chatAsync.valueOrNull?.replyingTo;
+    // Watch only the composer-relevant slices (editing / replying). Typing
+    // events do not touch these, so the composer below does not rebuild when
+    // someone starts/stops typing.
+    final editingMessage = ref.watch(chatNotifierProvider(conversationId)
+        .select((s) => s.valueOrNull?.editingMessage));
+    final replyingTo = ref.watch(chatNotifierProvider(conversationId)
+        .select((s) => s.valueOrNull?.replyingTo));
 
     final theme = Theme.of(context);
     final bool isDark = theme.brightness == Brightness.dark;
@@ -98,57 +101,32 @@ class ChatBody extends ConsumerWidget {
     return Column(
       children: [
         Expanded(
-          child: chatAsync.when(
-            loading: () => const Center(
-              child: CircularProgressIndicator(
-                valueColor: AlwaysStoppedAnimation<Color>(AppTheme.ponCyan),
-              ),
-            ),
-            error: (e, _) => Center(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Icon(Icons.error_outline,
-                      size: 40, color: Colors.redAccent),
-                  const SizedBox(height: 12),
-                  Text(context.l10n.errorWithMsg(e.toString()),
-                      style: const TextStyle(color: Colors.white60)),
-                ],
-              ),
-            ),
-            data: (chatState) => Column(
-              children: [
-                if (chatState.pinnedMessages.isNotEmpty)
-                  PinnedMessageBar(
-                    pinned: chatState.pinnedMessages.first,
-                    onTap: () => onJump(chatState.pinnedMessages.first.id),
-                    onDismiss: () => ref
-                        .read(chatNotifierProvider(conversationId).notifier)
-                        .unpinMessage(chatState.pinnedMessages.first.id),
-                  ),
-                Expanded(
-                  child: ChatMessageList(
-                    chatState: chatState,
-                    currentUserId: currentUserId,
-                    isGroup: isGroup,
-                    otherUserId: otherUserId,
-                    scrollController: scrollController,
-                    keyFor: keyFor,
-                  ),
+          child: Column(
+            children: [
+              // Message-list section (pinned bar + list) watches only its own
+              // slices — never typingUserIds — so a typing event no longer
+              // rebuilds the whole message list.
+              Expanded(
+                child: _ChatMessageListSection(
+                  conversationId: conversationId,
+                  currentUserId: currentUserId,
+                  isGroup: isGroup,
+                  otherUserId: otherUserId,
+                  scrollController: scrollController,
+                  keyFor: keyFor,
+                  onJump: onJump,
                 ),
-                // Personal assistant (Bot Factory) replies are synchronous with
-                // no STOMP typing event — synthesise one: external-bot DM whose
-                // newest message is the member's own. Clears when the bot's
-                // broadcast becomes the newest message.
-                ChatTypingIndicator(
-                  visible: (chatState.typingUserIds.isNotEmpty &&
-                          !chatState.typingUserIds.contains(currentUserId)) ||
-                      ((otherUserId?.startsWith('extbot:') ?? false) &&
-                          chatState.messages.isNotEmpty &&
-                          chatState.messages.first.senderId == currentUserId),
-                ),
-              ],
-            ),
+              ),
+              // Personal assistant (Bot Factory) replies are synchronous with
+              // no STOMP typing event — synthesise one: external-bot DM whose
+              // newest message is the member's own. Clears when the bot's
+              // broadcast becomes the newest message.
+              _TypingIndicatorSection(
+                conversationId: conversationId,
+                currentUserId: currentUserId,
+                otherUserId: otherUserId,
+              ),
+            ],
           ),
         ),
         if (isBlocked)
@@ -196,5 +174,136 @@ class ChatBody extends ConsumerWidget {
         ],
       ],
     );
+  }
+}
+
+/// Pinned bar + message list. Watches only the message-list slices of the chat
+/// state (messages / isLoadingMore / pinnedMessages and the async status) — it
+/// deliberately does NOT watch typingUserIds, so a typing event never rebuilds
+/// the (potentially long) message list.
+class _ChatMessageListSection extends ConsumerWidget {
+  final String conversationId;
+  final String currentUserId;
+  final bool isGroup;
+  final String? otherUserId;
+  final ScrollController scrollController;
+  final GlobalKey Function(String messageId) keyFor;
+  final void Function(String messageId) onJump;
+
+  const _ChatMessageListSection({
+    required this.conversationId,
+    required this.currentUserId,
+    required this.isGroup,
+    required this.otherUserId,
+    required this.scrollController,
+    required this.keyFor,
+    required this.onJump,
+  });
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final provider = chatNotifierProvider(conversationId);
+
+    // Loading: only true on the very first load (before any data).
+    final isLoading = ref.watch(provider.select((s) => s.isLoading && !s.hasValue));
+    if (isLoading) {
+      return const Center(
+        child: CircularProgressIndicator(
+          valueColor: AlwaysStoppedAnimation<Color>(AppTheme.ponCyan),
+        ),
+      );
+    }
+
+    final error = ref.watch(provider.select((s) => s.hasValue ? null : s.error));
+    if (error != null) {
+      return Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.error_outline, size: 40, color: Colors.redAccent),
+            const SizedBox(height: 12),
+            Text(friendlyError(error),
+                style: const TextStyle(color: Colors.white60)),
+          ],
+        ),
+      );
+    }
+
+    // Watch only the list-relevant slices so typing changes don't rebuild here.
+    final messages =
+        ref.watch(provider.select((s) => s.valueOrNull?.messages));
+    if (messages == null) return const SizedBox.shrink();
+    final hasMore =
+        ref.watch(provider.select((s) => s.valueOrNull?.hasMore ?? false));
+    final isLoadingMore =
+        ref.watch(provider.select((s) => s.valueOrNull?.isLoadingMore ?? false));
+    final pinnedMessages =
+        ref.watch(provider.select((s) => s.valueOrNull?.pinnedMessages)) ??
+            const [];
+
+    // Reconstruct the minimal ChatState the (other-agent-owned) ChatMessageList
+    // reads (messages + isLoadingMore). Its signature is unchanged.
+    final listState = ChatState(
+      messages: messages,
+      hasMore: hasMore,
+      isLoadingMore: isLoadingMore,
+    );
+
+    return Column(
+      children: [
+        if (pinnedMessages.isNotEmpty)
+          PinnedMessageBar(
+            pinned: pinnedMessages.first,
+            onTap: () => onJump(pinnedMessages.first.id),
+            onDismiss: () => ref
+                .read(chatNotifierProvider(conversationId).notifier)
+                .unpinMessage(pinnedMessages.first.id),
+          ),
+        Expanded(
+          child: ChatMessageList(
+            chatState: listState,
+            currentUserId: currentUserId,
+            isGroup: isGroup,
+            otherUserId: otherUserId,
+            scrollController: scrollController,
+            keyFor: keyFor,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// Typing indicator. Watches ONLY typingUserIds (plus the newest-message sender
+/// for the synthetic external-bot indicator) so it is the only thing that
+/// rebuilds when a typing event arrives.
+class _TypingIndicatorSection extends ConsumerWidget {
+  final String conversationId;
+  final String currentUserId;
+  final String? otherUserId;
+
+  const _TypingIndicatorSection({
+    required this.conversationId,
+    required this.currentUserId,
+    required this.otherUserId,
+  });
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final provider = chatNotifierProvider(conversationId);
+    final typingUserIds =
+        ref.watch(provider.select((s) => s.valueOrNull?.typingUserIds)) ??
+            const <String>{};
+    final newestSenderId = ref.watch(provider.select((s) {
+      final msgs = s.valueOrNull?.messages;
+      return (msgs == null || msgs.isEmpty) ? null : msgs.first.senderId;
+    }));
+
+    final visible = (typingUserIds.isNotEmpty &&
+            !typingUserIds.contains(currentUserId)) ||
+        ((otherUserId?.startsWith('extbot:') ?? false) &&
+            newestSenderId == currentUserId);
+
+    return ChatTypingIndicator(visible: visible);
   }
 }

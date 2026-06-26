@@ -1,8 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { Search, MessageSquare, Bot } from 'lucide-react'
-import { useRouter } from 'next/navigation'
+import { Search, MessageSquare } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { useQueryClient } from '@tanstack/react-query'
 import { Input } from '@/components/ui/input'
@@ -36,7 +35,6 @@ function ConversationSkeleton() {
 export function ConversationList() {
   const t = useTranslations('chat')
   const [search, setSearch] = useState('')
-  const router = useRouter()
   const queryClient = useQueryClient()
   const currentUserId = useAuthStore((s) => s.user?.id)
   const { data: conversations, isLoading, isError } = useConversations()
@@ -113,8 +111,8 @@ export function ConversationList() {
       />
 
       <div className="flex flex-col h-full">
-        <div className="px-3 py-2 shrink-0 flex items-center gap-2">
-          <div className="relative flex-1">
+        <div className="px-3 py-2 shrink-0">
+          <div className="relative">
             <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
             <Input
               placeholder={t('searchPlaceholder')}
@@ -123,15 +121,6 @@ export function ConversationList() {
               className="pl-8 h-9"
             />
           </div>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => router.push('/ai-hub')}
-            title={t('chatWithAI')}
-            className="shrink-0 h-9 w-9"
-          >
-            <Bot className="size-4" />
-          </Button>
         </div>
 
         <OfflineBanner />

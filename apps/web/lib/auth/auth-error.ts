@@ -7,12 +7,20 @@ interface AuthErrorBody {
 
 /** Extract { code, params } from an AxiosError thrown by auth-service. */
 export function parseAuthError(err: unknown): { code: string; params?: Record<string, string | number> } {
-  const e = err as AxiosError<{ message?: unknown }>
-  const msg = e?.response?.data?.message
+  const e = err as AxiosError<{ code?: string; params?: Record<string, string | number>; message?: unknown }>
+  const data = e?.response?.data
+  // Business errors: NestJS replies with the thrown object verbatim, so the
+  // body is `{ code, params }` at the top level (no `message` wrapper).
+  if (data && typeof data.code === 'string' && data.code) {
+    return { code: data.code, params: data.params }
+  }
+  const msg = data?.message
+  // Defensive: also accept a nested `{ message: { code, params } }` shape.
   if (typeof msg === 'object' && msg !== null && !Array.isArray(msg)) {
     const body = msg as AuthErrorBody
     if (body.code) return { code: body.code, params: body.params }
   }
+  // Validation errors (class-validator) arrive as `{ message: ["VAL_..."] }`.
   if (Array.isArray(msg) && msg.length > 0) {
     return { code: String(msg[0]) }
   }

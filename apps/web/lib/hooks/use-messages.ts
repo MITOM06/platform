@@ -16,6 +16,12 @@ export function useMessages(conversationId: string) {
         ? lastPage.content[lastPage.content.length - 1].id
         : undefined,
     enabled: !!conversationId,
+    // STOMP keeps the cache up to date in real-time.
+    // Never mark cached messages as stale — no background refetch on switch.
+    staleTime: Infinity,
+    // Keep the cache alive for 10 min so rapid switches always hit cache,
+    // not the network.
+    gcTime: 10 * 60 * 1000,
     select: (data) => ({
       pages: data.pages,
       pageParams: data.pageParams,

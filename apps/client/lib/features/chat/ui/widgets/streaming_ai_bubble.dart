@@ -1,4 +1,3 @@
-import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:go_router/go_router.dart';
@@ -25,10 +24,12 @@ class StreamingAiBubble extends StatefulWidget {
 }
 
 class _StreamingAiBubbleState extends State<StreamingAiBubble>
-    with SingleTickerProviderStateMixin {
+    with TickerProviderStateMixin {
   late AnimationController _dotsController;
-  Timer? _cursorTimer;
-  bool _showCursor = true;
+  // Blinking cursor driven by an animation controller instead of a periodic
+  // setState — only the cursor repaints (wrapped in a RepaintBoundary), not
+  // the whole bubble, while the AI streams.
+  late AnimationController _cursorController;
 
   @override
   void initState() {
@@ -38,15 +39,17 @@ class _StreamingAiBubbleState extends State<StreamingAiBubble>
       duration: const Duration(milliseconds: 1200),
     )..repeat();
 
-    _cursorTimer = Timer.periodic(const Duration(milliseconds: 500), (_) {
-      if (mounted) setState(() => _showCursor = !_showCursor);
-    });
+    // 500ms toggle ⇒ 1000ms full on→off→on cycle, matching the old Timer blink.
+    _cursorController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1000),
+    )..repeat(reverse: true);
   }
 
   @override
   void dispose() {
     _dotsController.dispose();
-    _cursorTimer?.cancel();
+    _cursorController.dispose();
     super.dispose();
   }
 
@@ -64,7 +67,10 @@ class _StreamingAiBubbleState extends State<StreamingAiBubble>
         if (widget.isThinking)
           _ThinkingDots(controller: _dotsController)
         else
-          _StreamingText(content: widget.content, showCursor: _showCursor),
+          _StreamingText(
+            content: widget.content,
+            cursorController: _cursorController,
+          ),
       ],
     );
   }
@@ -72,35 +78,62 @@ class _StreamingAiBubbleState extends State<StreamingAiBubble>
 
 class _StreamingText extends StatelessWidget {
   final String content;
-  final bool showCursor;
+  final AnimationController cursorController;
 
-  const _StreamingText({required this.content, required this.showCursor});
+  const _StreamingText({required this.content, required this.cursorController});
 
   @override
   Widget build(BuildContext context) {
-    return RichText(
-      text: TextSpan(
-        children: [
-          TextSpan(
-            text: content,
+    // Text + blinking cursor laid out inline. The cursor lives in its own
+    // RepaintBoundary + FadeTransition so its blink never repaints the text.
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Flexible(
+          child: Text(
+            content,
             style: const TextStyle(
               color: Colors.white,
               fontSize: 15,
               height: 1.45,
             ),
           ),
-          TextSpan(
-            text: showCursor ? '|' : ' ',
-            style: const TextStyle(
-              color: Color(0xFFB47FFF),
-              fontSize: 15,
-              fontWeight: FontWeight.w300,
+        ),
+        RepaintBoundary(
+          child: FadeTransition(
+            // Snap between fully visible and hidden (no smooth fade) to match
+            // the old hard on/off blink.
+            opacity: _CursorBlink(cursorController),
+            child: const Text(
+              '|',
+              style: TextStyle(
+                color: Color(0xFFB47FFF),
+                fontSize: 15,
+                height: 1.45,
+                fontWeight: FontWeight.w300,
+              ),
             ),
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
+}
+
+/// Square-wave 0/1 opacity derived from the controller so the cursor blinks
+/// on/off rather than fading, preserving the original visual.
+class _CursorBlink extends Animation<double>
+    with AnimationWithParentMixin<double> {
+  _CursorBlink(this._parent);
+
+  final Animation<double> _parent;
+
+  @override
+  Animation<double> get parent => _parent;
+
+  @override
+  double get value => _parent.value < 0.5 ? 1.0 : 0.0;
 }
 
 class _ToolIndicatorRow extends StatelessWidget {
