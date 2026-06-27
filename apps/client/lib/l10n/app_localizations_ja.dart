@@ -603,6 +603,18 @@ class AppLocalizationsJa extends AppLocalizations {
   String get attachFile => 'ファイル';
 
   @override
+  String get attachVoice => '音声メッセージ';
+
+  @override
+  String get attachSticker => 'スタンプ';
+
+  @override
+  String get pinnedMessageTitle => 'ピン留めしたメッセージ';
+
+  @override
+  String get pinnedSystemMessage => 'システムメッセージ';
+
+  @override
   String get uploading => 'アップロード中…';
 
   @override

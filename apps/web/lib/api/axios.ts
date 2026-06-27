@@ -32,7 +32,24 @@ const injectToken = (config: InternalAxiosRequestConfig) => {
   return config
 }
 
+// Read the UI locale from the `locale` cookie (set by the language switcher,
+// also consumed by next-intl in i18n/request.ts). Default to English. The
+// auth-service uses this header to localize OTP/password-reset emails.
+const readLocaleCookie = (): string => {
+  if (typeof document === 'undefined') return 'en'
+  const match = document.cookie.match(/(?:^|;\s*)locale=([^;]+)/)
+  return match ? decodeURIComponent(match[1]) : 'en'
+}
+
+// auth-service only: attach the UI locale so server-sent OTP emails match the
+// language the user is browsing in.
+const injectLocale = (config: InternalAxiosRequestConfig) => {
+  config.headers['Accept-Language'] = readLocaleCookie()
+  return config
+}
+
 authApi.interceptors.request.use(injectToken)
+authApi.interceptors.request.use(injectLocale)
 chatApi.interceptors.request.use(injectToken)
 connectorApi.interceptors.request.use(injectToken)
 aiApi.interceptors.request.use(injectToken)

@@ -603,6 +603,18 @@ class AppLocalizationsKo extends AppLocalizations {
   String get attachFile => '파일';
 
   @override
+  String get attachVoice => '음성 메시지';
+
+  @override
+  String get attachSticker => '스티커';
+
+  @override
+  String get pinnedMessageTitle => '고정된 메시지';
+
+  @override
+  String get pinnedSystemMessage => '시스템 메시지';
+
+  @override
   String get uploading => '업로드 중…';
 
   @override

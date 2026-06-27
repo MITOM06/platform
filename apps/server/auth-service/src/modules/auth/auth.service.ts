@@ -278,7 +278,7 @@ export class AuthService {
   }
 
   // ===================== FORGOT / RESET PASSWORD =====================
-  async forgotPassword(email: string) {
+  async forgotPassword(email: string, locale: string = 'en') {
     const user = await this.usersService.findByEmail(email);
     if (!user) throw new NotFoundException({ code: AuthCode.EMAIL_NOT_FOUND });
 
@@ -286,7 +286,7 @@ export class AuthService {
     const expires = new Date(Date.now() + 5 * 60 * 1000);
 
     await this.usersService.updateOtp(user._id, otp, expires);
-    await this.mailService.sendOtpEmail(email, otp);
+    await this.mailService.sendOtpEmail(email, otp, locale);
     return { success: true, code: AuthCode.OTP_SENT };
   }
 
@@ -436,7 +436,7 @@ export class AuthService {
   }
 
   // ===================== REGISTER =====================
-  async register(dto: RegisterDto) {
+  async register(dto: RegisterDto, locale: string = 'en') {
     const domain = dto.email.split('@')[1];
     try {
       const records = await dns.promises.resolveMx(domain);
@@ -457,7 +457,7 @@ export class AuthService {
       const otp = this.generateOtp();
       const expires = new Date(Date.now() + 5 * 60 * 1000);
       await this.usersService.updateOtp(existingUser._id, otp, expires);
-      await this.mailService.sendOtpEmail(dto.email, otp);
+      await this.mailService.sendOtpEmail(dto.email, otp, locale);
       return {
         code: AuthCode.ACCOUNT_UNVERIFIED_OTP_SENT,
         userId: existingUser._id,
@@ -477,7 +477,7 @@ export class AuthService {
     const otp = this.generateOtp();
     const expires = new Date(Date.now() + 5 * 60 * 1000);
     await this.usersService.updateOtp(user._id, otp, expires);
-    await this.mailService.sendOtpEmail(dto.email, otp);
+    await this.mailService.sendOtpEmail(dto.email, otp, locale);
 
     return {
       code: AuthCode.REGISTER_SUCCESS,
@@ -485,7 +485,7 @@ export class AuthService {
     };
   }
 
-  async resendOtp(email: string) {
+  async resendOtp(email: string, locale: string = 'en') {
     const cooldownKey = `otp_resend_cooldown:${email}`;
     const cooldownTTL = Number(
       this.configService.get('OTP_RESEND_COOLDOWN', 60),
@@ -503,7 +503,7 @@ export class AuthService {
     const otp = this.generateOtp();
     const expires = new Date(Date.now() + 5 * 60 * 1000);
     await this.usersService.updateOtp(user._id, otp, expires);
-    await this.mailService.sendOtpEmail(email, otp);
+    await this.mailService.sendOtpEmail(email, otp, locale);
 
     // Reset attempt counter khi gửi lại OTP mới
     await this.redis.del(`otp_attempts:${email}`);

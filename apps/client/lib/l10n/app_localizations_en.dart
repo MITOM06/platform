@@ -608,6 +608,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String get attachFile => 'File';
 
   @override
+  String get attachVoice => 'Voice message';
+
+  @override
+  String get attachSticker => 'Sticker';
+
+  @override
+  String get pinnedMessageTitle => 'Pinned message';
+
+  @override
+  String get pinnedSystemMessage => 'System message';
+
+  @override
   String get uploading => 'Uploading…';
 
   @override

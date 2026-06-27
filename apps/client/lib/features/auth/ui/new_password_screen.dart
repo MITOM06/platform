@@ -8,6 +8,7 @@ import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/pon_widgets.dart';
 import '../data/auth_repository.dart';
 import '../utils/auth_error.dart';
+import 'widgets/password_strength_indicator.dart';
 
 class NewPasswordScreen extends ConsumerStatefulWidget {
   final String email;
@@ -28,6 +29,7 @@ class _NewPasswordScreenState extends ConsumerState<NewPasswordScreen> {
   final _confirmController = TextEditingController();
   bool _isLoading = false;
   bool _obscurePassword = true;
+  String _newPasswordValue = '';
 
   @override
   void initState() {
@@ -199,6 +201,8 @@ class _NewPasswordScreenState extends ConsumerState<NewPasswordScreen> {
                                   prefixIcon: Icons.lock_outlined,
                                   obscureText: _obscurePassword,
                                   focusColor: AppTheme.ponPink,
+                                  onChanged: (v) =>
+                                      setState(() => _newPasswordValue = v),
                                   suffixIcon: IconButton(
                                     icon: Icon(
                                       _obscurePassword
@@ -221,6 +225,8 @@ class _NewPasswordScreenState extends ConsumerState<NewPasswordScreen> {
                                     return null;
                                   },
                                 ),
+                                PasswordStrengthIndicator(
+                                    password: _newPasswordValue),
                                 const SizedBox(height: 16),
 
                                 // Confirm Password

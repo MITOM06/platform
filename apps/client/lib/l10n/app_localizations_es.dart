@@ -615,6 +615,18 @@ class AppLocalizationsEs extends AppLocalizations {
   String get attachFile => 'Archivo';
 
   @override
+  String get attachVoice => 'Mensaje de voz';
+
+  @override
+  String get attachSticker => 'Sticker';
+
+  @override
+  String get pinnedMessageTitle => 'Mensaje fijado';
+
+  @override
+  String get pinnedSystemMessage => 'Mensaje del sistema';
+
+  @override
   String get uploading => 'Subiendo…';
 
   @override

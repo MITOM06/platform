@@ -29,12 +29,18 @@ class PinnedMessageModel {
   final String id;
   final String senderId;
   final String content;
+  // Message type ("text" | "image" | "video" | "file" | "voice" | "sticker" |
+  // "system" | …). Carried so previews can be humanized/sanitized instead of
+  // leaking raw system codes, user ids, or media JSON/URLs (no-raw-system-data
+  // rule). Backend ConversationResponse.PinnedMessageDto includes this.
+  final String type;
   final DateTime? createdAt;
 
   const PinnedMessageModel({
     required this.id,
     required this.senderId,
     required this.content,
+    this.type = 'text',
     this.createdAt,
   });
 
@@ -43,6 +49,7 @@ class PinnedMessageModel {
         id: json['id'] as String,
         senderId: json['senderId'] as String,
         content: json['content'] as String? ?? '',
+        type: json['type'] as String? ?? 'text',
         createdAt: json['createdAt'] != null
             ? DateTime.parse(json['createdAt'] as String)
             : null,
@@ -420,9 +427,24 @@ class MessageModel {
     }
   }
 
-  String get fileUrl => (_fileMeta?['url'] as String?) ?? content;
-  String get fileName => (_fileMeta?['name'] as String?) ?? 'file';
-  int get fileSize => (_fileMeta?['size'] as num?)?.toInt() ?? 0;
+  String get fileUrl => _fileMeta?['url']?.toString() ?? content;
+
+  String get fileName {
+    final name = _fileMeta?['name']?.toString();
+    return (name != null && name.isNotEmpty) ? name : 'file';
+  }
+
+  /// File size in bytes. The backend UploadController serializes `size` as a
+  /// STRING (`String.valueOf`), and web stores it as that string, while native
+  /// uploads may store it as a number. Coerce BOTH so this never throws — an
+  /// unchecked `as num` cast on a String payload would blow up the whole bubble
+  /// into a red RenderErrorBox during build.
+  int get fileSize {
+    final raw = _fileMeta?['size'];
+    if (raw is num) return raw.toInt();
+    if (raw is String) return int.tryParse(raw) ?? 0;
+    return 0;
+  }
 
   factory MessageModel.fromJson(Map<String, dynamic> json) {
     return MessageModel(

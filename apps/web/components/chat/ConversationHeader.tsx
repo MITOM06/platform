@@ -198,7 +198,12 @@ export function ConversationHeader({
       </header>
 
       {/* Pinned messages bar */}
-      <PinnedMessagesBar pinnedMessages={pinnedMessages} onUnpin={handleUnpin} />
+      <PinnedMessagesBar
+        pinnedMessages={pinnedMessages}
+        onUnpin={handleUnpin}
+        conversationId={conversationId}
+        currentUserId={currentUser?.id}
+      />
 
       {/* Drawers & modals */}
       {conversation && currentUser && (

@@ -7,6 +7,7 @@ import {
   Res,
   UseGuards,
   Query,
+  Headers,
   HttpCode,
   HttpStatus,
 } from '@nestjs/common';
@@ -33,6 +34,7 @@ import { ExchangeDto } from './dto/exchange.dto';
 import { VerifyOtpDto } from './dto/verify-otp.dto';
 import { ResendOtpDto } from './dto/resend-otp.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
+import { normalizeLocale } from '../Email/otp-i18n';
 
 // Stricter per-IP limits for credential / OTP endpoints (5 requests / minute).
 // Names must match a ThrottlerModule.forRoot() definition; we override 'medium'.
@@ -179,8 +181,11 @@ export class AuthController {
   @ApiOperation({ summary: 'Register a new account' })
   @ApiResponse({ status: 201, description: 'Account created' })
   @ApiResponse({ status: 409, description: 'Email already in use' })
-  async register(@Body() dto: RegisterDto) {
-    return this.auth.register(dto);
+  async register(
+    @Body() dto: RegisterDto,
+    @Headers('accept-language') acceptLang?: string,
+  ) {
+    return this.auth.register(dto, normalizeLocale(acceptLang));
   }
 
   @Post('login')
@@ -206,8 +211,11 @@ export class AuthController {
   @Post('forgot-password')
   @Throttle(SENSITIVE_THROTTLE)
   @ApiOperation({ summary: 'Send a password-reset OTP to the email' })
-  async forgot(@Body() dto: ForgotPasswordDto) {
-    return this.auth.forgotPassword(dto.email);
+  async forgot(
+    @Body() dto: ForgotPasswordDto,
+    @Headers('accept-language') acceptLang?: string,
+  ) {
+    return this.auth.forgotPassword(dto.email, normalizeLocale(acceptLang));
   }
 
   @Post('verify-otp')
@@ -222,8 +230,11 @@ export class AuthController {
   @Throttle(SENSITIVE_THROTTLE)
   @ApiOperation({ summary: 'Resend a password-reset OTP' })
   @ApiBody({ type: ResendOtpDto })
-  async resend(@Body() dto: ResendOtpDto) {
-    return this.auth.resendOtp(dto.email);
+  async resend(
+    @Body() dto: ResendOtpDto,
+    @Headers('accept-language') acceptLang?: string,
+  ) {
+    return this.auth.resendOtp(dto.email, normalizeLocale(acceptLang));
   }
 
   @Post('reset-password')

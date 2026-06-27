@@ -1236,6 +1236,30 @@ abstract class AppLocalizations {
   /// **'File'**
   String get attachFile;
 
+  /// No description provided for @attachVoice.
+  ///
+  /// In en, this message translates to:
+  /// **'Voice message'**
+  String get attachVoice;
+
+  /// No description provided for @attachSticker.
+  ///
+  /// In en, this message translates to:
+  /// **'Sticker'**
+  String get attachSticker;
+
+  /// No description provided for @pinnedMessageTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Pinned message'**
+  String get pinnedMessageTitle;
+
+  /// No description provided for @pinnedSystemMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'System message'**
+  String get pinnedSystemMessage;
+
   /// No description provided for @uploading.
   ///
   /// In en, this message translates to:

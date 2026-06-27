@@ -33,6 +33,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { absoluteMediaUrl } from '@/lib/media'
 import { Switch } from '@/components/ui/switch'
 import { ChangePasswordDialog } from '@/components/chat/ChangePasswordDialog'
+import { LogoutConfirmDialog } from '@/components/layout/LogoutConfirmDialog'
 import { ThemePickerDialog, LanguagePickerDialog } from '@/components/settings/AppearanceDialogs'
 import { LOCALE_NAMES, type Locale } from '@/i18n/config'
 
@@ -112,6 +113,7 @@ export default function SettingsPage() {
   const setNotificationsEnabled = useNotificationPrefs((s) => s.setEnabled)
   const [loggingOut, setLoggingOut] = useState(false)
   const [changePasswordOpen, setChangePasswordOpen] = useState(false)
+  const [logoutConfirmOpen, setLogoutConfirmOpen] = useState(false)
   const [themePickerOpen, setThemePickerOpen] = useState(false)
   const [languagePickerOpen, setLanguagePickerOpen] = useState(false)
 
@@ -329,7 +331,7 @@ export default function SettingsPage() {
                 }
                 iconBg="rgba(239,68,68,0.1)"
                 title={t('logout')}
-                onClick={handleLogout}
+                onClick={() => setLogoutConfirmOpen(true)}
                 destructive
               />
             </div>
@@ -342,6 +344,11 @@ export default function SettingsPage() {
       </div>
 
       <ChangePasswordDialog open={changePasswordOpen} onOpenChange={setChangePasswordOpen} />
+      <LogoutConfirmDialog
+        open={logoutConfirmOpen}
+        onOpenChange={setLogoutConfirmOpen}
+        onConfirm={handleLogout}
+      />
       <ThemePickerDialog open={themePickerOpen} onOpenChange={setThemePickerOpen} />
       <LanguagePickerDialog open={languagePickerOpen} onOpenChange={setLanguagePickerOpen} />
     </div>

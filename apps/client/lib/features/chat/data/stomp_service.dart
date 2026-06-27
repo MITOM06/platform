@@ -1,8 +1,10 @@
 import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:stomp_dart_client/stomp_dart_client.dart';
+import '../../../core/api/token_manager.dart';
 import '../../../core/config/app_config.dart';
 import '../domain/chat_state.dart';
 
@@ -11,6 +13,15 @@ part 'stomp_service.g.dart';
 @Riverpod(keepAlive: true)
 class StompService extends _$StompService {
   StompClient? _client;
+  final _tokenManager = TokenManager(const FlutterSecureStorage());
+  // Mutable header maps shared by reference with StompConfig. `beforeConnect`
+  // rewrites the Authorization value IN PLACE before every (re)connect, so the
+  // STOMP handler (which reads these maps at connect time, after beforeConnect
+  // resolves) always sends a FRESH, non-expired token. This mirrors the web
+  // client's `beforeConnect` token-refresh hook and fixes the dead-token
+  // reconnect loop that silently killed realtime + notifications.
+  final Map<String, String> _stompHeaders = {};
+  final Map<String, dynamic> _wsHeaders = {};
   final Map<String, StompUnsubscribe> _subs = {};
   final _pendingConvSubs = <String>{};
   bool _notifSubPending = false;
@@ -60,6 +71,10 @@ class StompService extends _$StompService {
 
   bool get isConnected => _client?.connected ?? false;
 
+  /// Establishes the STOMP connection. [token] is the initial access token to
+  /// seed the connect headers; on every (re)connect thereafter, [beforeConnect]
+  /// proactively refreshes it (decode `exp` → refresh if expiring) so the
+  /// socket never loops forever on an expired token.
   Future<void> connect(String token) async {
     if (_client?.connected ?? false) return;
     // A previous client may exist but be disconnected (e.g. its internal
@@ -71,18 +86,48 @@ class StompService extends _$StompService {
       _client!.deactivate();
       _client = null;
     }
+    _setAuthHeader(token);
     _client = StompClient(
       config: StompConfig(
         url: AppConfig.wsUrl,
         onConnect: _onConnect,
         onDisconnect: _onDisconnect,
         onStompError: _onError,
+        onWebSocketError: _onWebSocketError,
+        beforeConnect: _beforeConnect,
         reconnectDelay: const Duration(seconds: 5),
-        stompConnectHeaders: {'Authorization': 'Bearer $token'},
-        webSocketConnectHeaders: {'Authorization': 'Bearer $token'},
+        // Same mutable maps the handler reads at connect time — `_beforeConnect`
+        // refreshes the token into these in place before each attempt.
+        stompConnectHeaders: _stompHeaders,
+        webSocketConnectHeaders: _wsHeaders,
       ),
     );
     _client!.activate();
+  }
+
+  void _setAuthHeader(String token) {
+    final value = 'Bearer $token';
+    _stompHeaders['Authorization'] = value;
+    _wsHeaders['Authorization'] = value;
+  }
+
+  /// Runs before EVERY connect/reconnect (see StompClient._connect, which
+  /// `await`s this before building the handler that reads the header maps).
+  /// Fetches a fresh, valid access token and writes it into the shared header
+  /// maps in place. If no valid token can be obtained the previous header value
+  /// is left as-is — the CONNECT will be rejected and reconnect will retry,
+  /// which is preferable to crashing the keep-alive provider.
+  Future<void> _beforeConnect() async {
+    try {
+      final token = await _tokenManager.getValidAccessToken();
+      if (token != null) {
+        _setAuthHeader(token);
+      } else {
+        debugPrint('[STOMP] beforeConnect: no valid token available');
+      }
+    } catch (e) {
+      debugPrint('[STOMP] beforeConnect error: $e');
+    }
   }
 
   void _onConnect(StompFrame frame) {
@@ -107,7 +152,16 @@ class StompService extends _$StompService {
   }
 
   void _onError(StompFrame frame) {
-    // stomp_dart_client handles reconnect automatically via reconnectDelay
+    // Surface the failure (previously silent) so dead-token / auth rejections
+    // are diagnosable. stomp_dart_client auto-reconnects via reconnectDelay,
+    // and `beforeConnect` refreshes the token before the next attempt — so an
+    // "Invalid or expired JWT token" error now self-heals instead of looping.
+    debugPrint('[STOMP] error frame: command=${frame.command} '
+        'message=${frame.headers['message']} body=${frame.body}');
+  }
+
+  void _onWebSocketError(dynamic error) {
+    debugPrint('[STOMP] websocket error: $error');
   }
 
   void subscribeConversation(String conversationId) {

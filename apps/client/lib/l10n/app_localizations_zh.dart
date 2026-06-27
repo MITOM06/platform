@@ -603,6 +603,18 @@ class AppLocalizationsZh extends AppLocalizations {
   String get attachFile => '文件';
 
   @override
+  String get attachVoice => '语音消息';
+
+  @override
+  String get attachSticker => '贴纸';
+
+  @override
+  String get pinnedMessageTitle => '置顶消息';
+
+  @override
+  String get pinnedSystemMessage => '系统消息';
+
+  @override
   String get uploading => '上传中…';
 
   @override

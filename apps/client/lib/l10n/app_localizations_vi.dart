@@ -608,6 +608,18 @@ class AppLocalizationsVi extends AppLocalizations {
   String get attachFile => 'Tệp';
 
   @override
+  String get attachVoice => 'Tin nhắn thoại';
+
+  @override
+  String get attachSticker => 'Nhãn dán';
+
+  @override
+  String get pinnedMessageTitle => 'Tin nhắn đã ghim';
+
+  @override
+  String get pinnedSystemMessage => 'Tin nhắn hệ thống';
+
+  @override
   String get uploading => 'Đang tải lên…';
 
   @override

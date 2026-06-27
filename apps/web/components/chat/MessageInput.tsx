@@ -94,6 +94,7 @@ export function MessageInput({
     onSend,
     onUploadingChange: setUploading,
     uploadErrorLabel: t('uploadError'),
+    tooLargeLabel: t('uploadTooLarge'),
   })
 
   // Mentions state

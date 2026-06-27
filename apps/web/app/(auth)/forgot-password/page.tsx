@@ -15,6 +15,10 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { OtpInput } from '@/components/auth/OtpInput'
+import { PasswordStrengthMeter } from '@/components/auth/PasswordStrengthMeter'
+
+const OTP_LENGTH = 6
 
 type RequestOtpData = { email: string }
 type ResetPasswordData = { otp: string; password: string }
@@ -26,6 +30,7 @@ export default function ForgotPasswordPage() {
   const [step, setStep] = useState<'request' | 'reset'>('request')
   const [email, setEmail] = useState('')
   const [showPassword, setShowPassword] = useState(false)
+  const [otp, setOtp] = useState<string[]>(Array(OTP_LENGTH).fill(''))
 
   const requestSchema = useMemo(
     () => z.object({ email: z.string().email(tAuth('emailInvalid')) }),
@@ -35,10 +40,16 @@ export default function ForgotPasswordPage() {
   const resetSchema = useMemo(
     () =>
       z.object({
-        otp: z.string().min(6, t('otpMinLength')),
-        password: z.string().min(6, t('newPasswordMin')),
+        otp: z.string().length(OTP_LENGTH, t('otpMinLength')),
+        password: z
+          .string()
+          .min(8, t('newPasswordMin'))
+          .regex(/[A-Z]/, tAuth('register.reqUppercase'))
+          .regex(/[a-z]/, tAuth('register.reqLowercase'))
+          .regex(/[0-9]/, tAuth('register.reqDigit'))
+          .regex(/[!@#$%^&*]/, tAuth('register.reqSpecial')),
       }),
-    [t],
+    [t, tAuth],
   )
 
   const {
@@ -50,8 +61,29 @@ export default function ForgotPasswordPage() {
   const {
     register: registerReset,
     handleSubmit: handleSubmitReset,
+    setValue: setResetValue,
+    watch: watchReset,
     formState: { errors: errorsReset, isSubmitting: isSubmittingReset },
   } = useForm<ResetPasswordData>({ resolver: zodResolver(resetSchema) })
+
+  const passwordValue = watchReset('password') ?? ''
+
+  const strengthLabels = {
+    weak: tAuth('register.pwStrengthWeak'),
+    medium: tAuth('register.pwStrengthMedium'),
+    strong: tAuth('register.pwStrengthStrong'),
+    veryStrong: tAuth('register.pwStrengthVeryStrong'),
+    reqLength: tAuth('register.reqLength'),
+    reqUppercase: tAuth('register.reqUppercase'),
+    reqLowercase: tAuth('register.reqLowercase'),
+    reqDigit: tAuth('register.reqDigit'),
+    reqSpecial: tAuth('register.reqSpecial'),
+  }
+
+  const handleOtpChange = (next: string[]) => {
+    setOtp(next)
+    setResetValue('otp', next.join(''), { shouldValidate: false })
+  }
 
   const onRequestOtp = async (data: RequestOtpData) => {
     try {
@@ -120,17 +152,11 @@ export default function ForgotPasswordPage() {
         ) : (
           <form onSubmit={handleSubmitReset(onResetPassword)} className="space-y-4">
             <div className="space-y-1">
-              <Label htmlFor="otp">{t('otpLabel')}</Label>
-              <Input
-                id="otp"
-                type="text"
-                placeholder={t('otpPlaceholder')}
-                maxLength={6}
-                autoComplete="one-time-code"
-                {...registerReset('otp')}
-              />
+              <Label className="block text-center">{t('otpLabel')}</Label>
+              <input type="hidden" {...registerReset('otp')} />
+              <OtpInput value={otp} onChange={handleOtpChange} length={OTP_LENGTH} />
               {errorsReset.otp && (
-                <p className="text-sm text-destructive">{errorsReset.otp.message}</p>
+                <p className="text-sm text-destructive text-center">{errorsReset.otp.message}</p>
               )}
             </div>
 
@@ -156,6 +182,7 @@ export default function ForgotPasswordPage() {
               {errorsReset.password && (
                 <p className="text-sm text-destructive">{errorsReset.password.message}</p>
               )}
+              <PasswordStrengthMeter password={passwordValue} labels={strengthLabels} />
             </div>
 
             <Button

@@ -1,5 +1,6 @@
 package com.platform.chatservice.controller;
 
+import com.platform.chatservice.dto.AssistantInfoResponse;
 import com.platform.chatservice.dto.AssistantSetupRequest;
 import com.platform.chatservice.dto.AssistantSetupResponse;
 import com.platform.chatservice.dto.BotFactoryProviderResponse;
@@ -10,6 +11,7 @@ import jakarta.validation.Valid;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -31,6 +33,15 @@ import org.springframework.web.bind.annotation.RestController;
 public class AssistantSetupController {
 
   private final AssistantProvisioningService provisioning;
+
+  /** The caller's personal assistant, or 404 if they have not set one up yet. */
+  @GetMapping("/me")
+  public ResponseEntity<AssistantInfoResponse> me() {
+    return provisioning
+        .getMine(currentUserId())
+        .map(ResponseEntity::ok)
+        .orElseGet(() -> ResponseEntity.notFound().build());
+  }
 
   /** Create the member's assistant (or update it in place if one already exists). */
   @PostMapping("/setup")

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import '../../../../core/l10n/l10n_ext.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../domain/chat_state.dart';
+import 'pinned_preview_text.dart';
 
 /// Displays the latest pinned message at the top of ChatScreen.
 class PinnedMessageBar extends StatelessWidget {
@@ -36,16 +38,16 @@ class PinnedMessageBar extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Text(
-                    'Pinned message',
-                    style: TextStyle(
+                  Text(
+                    context.l10n.pinnedMessageTitle,
+                    style: const TextStyle(
                       fontSize: 10,
                       color: AppTheme.ponCyan,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
                   Text(
-                    pinned.content,
+                    pinnedPreviewText(context, pinned),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: Theme.of(context).textTheme.bodySmall,

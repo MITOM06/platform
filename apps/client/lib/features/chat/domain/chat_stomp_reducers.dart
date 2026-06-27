@@ -139,6 +139,9 @@ class ChatStompReducers {
               id: m.id,
               senderId: m.senderId,
               content: m.content,
+              // Carry type so previews stay sanitized (no raw system codes /
+              // media JSON) for realtime-pinned messages too.
+              type: m.type,
               createdAt: m.createdAt,
             ))
         .toList();

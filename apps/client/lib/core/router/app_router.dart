@@ -76,6 +76,7 @@ final _publicRoutes = {
   '/verify-otp',
   '/forgot-password',
   '/new-password',
+  '/legal', // public legal page — reachable from the register screen pre-login
 };
 
 @riverpod
