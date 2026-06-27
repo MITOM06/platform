@@ -8,6 +8,7 @@ import com.platform.chatservice.dto.MessageResponse;
 import com.platform.chatservice.model.ExternalBot;
 import com.platform.chatservice.service.AiRedisPublisher;
 import com.platform.chatservice.service.CallService;
+import com.platform.chatservice.service.ClusterMessageBroker;
 import com.platform.chatservice.service.ConversationService;
 import com.platform.chatservice.service.ExternalBotService;
 import com.platform.chatservice.service.FcmService;
@@ -22,7 +23,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
-import org.springframework.messaging.simp.SimpMessagingTemplate;
 
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
@@ -30,7 +30,7 @@ class ChatControllerExternalBotTest {
 
   @Mock private MessageService messageService;
   @Mock private ConversationService conversationService;
-  @Mock private SimpMessagingTemplate messagingTemplate;
+  @Mock private ClusterMessageBroker clusterBroker;
   @Mock private FcmService fcmService;
   @Mock private RateLimiterService rateLimiterService;
   @Mock private AiRedisPublisher aiRedisPublisher;
@@ -44,7 +44,7 @@ class ChatControllerExternalBotTest {
         new ChatController(
             messageService,
             conversationService,
-            messagingTemplate,
+            clusterBroker,
             fcmService,
             rateLimiterService,
             aiRedisPublisher,
@@ -79,7 +79,7 @@ class ChatControllerExternalBotTest {
         new ChatController(
             messageService,
             conversationService,
-            messagingTemplate,
+            clusterBroker,
             fcmService,
             rateLimiterService,
             aiRedisPublisher,

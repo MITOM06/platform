@@ -84,6 +84,27 @@ const THEME_CATEGORIES: ThemeCategory[] = [
   },
 ]
 
+// Image-based themed wallpapers (the "Chủ đề" category). Mirrors the Flutter
+// `chat_wallpaper_dialog.dart` `themes` category exactly. `value` = the stored
+// wallpaper string; `thumb` = the small circular swatch source.
+//
+// The stored `value` is the RAW Unsplash URL with NO `#fit=` suffix: both
+// `resolveWallpaper` and `splitFit` default a hash-less image URL to `cover`,
+// and both STRIP the `#fit=` suffix when reloading a stored value — so the
+// canonical compared value must itself be hash-less for the selected theme to
+// keep highlighting on reopen and to round-trip identically with Flutter.
+const UNSPLASH_BASE = 'https://images.unsplash.com'
+const THEMED_PRESETS: { value: string; thumb: string; label: string }[] = [
+  { value: `${UNSPLASH_BASE}/photo-1448375240586-882707db888b?w=1920&q=85&auto=format&fit=crop`, thumb: `${UNSPLASH_BASE}/photo-1448375240586-882707db888b?w=80&h=80&auto=format&fit=crop&crop=center`, label: 'wallpaperThemeForest' },
+  { value: `${UNSPLASH_BASE}/photo-1505118380757-91f5f5632de0?w=1920&q=85&auto=format&fit=crop`, thumb: `${UNSPLASH_BASE}/photo-1505118380757-91f5f5632de0?w=80&h=80&auto=format&fit=crop&crop=center`, label: 'wallpaperThemeOcean' },
+  { value: `${UNSPLASH_BASE}/photo-1464822759023-fed622ff2c3b?w=1920&q=85&auto=format&fit=crop`, thumb: `${UNSPLASH_BASE}/photo-1464822759023-fed622ff2c3b?w=80&h=80&auto=format&fit=crop&crop=center`, label: 'wallpaperThemeMountain' },
+  { value: `${UNSPLASH_BASE}/photo-1522383225653-ed111181a951?w=1920&q=85&auto=format&fit=crop`, thumb: `${UNSPLASH_BASE}/photo-1522383225653-ed111181a951?w=80&h=80&auto=format&fit=crop&crop=center`, label: 'wallpaperThemeCherryBlossom' },
+  { value: `${UNSPLASH_BASE}/photo-1462331940025-496dfbfc7564?w=1920&q=85&auto=format&fit=crop`, thumb: `${UNSPLASH_BASE}/photo-1462331940025-496dfbfc7564?w=80&h=80&auto=format&fit=crop&crop=center`, label: 'wallpaperThemeSpace' },
+  { value: `${UNSPLASH_BASE}/photo-1531366936337-7c912a4589a7?w=1920&q=85&auto=format&fit=crop`, thumb: `${UNSPLASH_BASE}/photo-1531366936337-7c912a4589a7?w=80&h=80&auto=format&fit=crop&crop=center`, label: 'wallpaperThemeAurora' },
+  { value: `${UNSPLASH_BASE}/photo-1477959858617-67f85cf4f1df?w=1920&q=85&auto=format&fit=crop`, thumb: `${UNSPLASH_BASE}/photo-1477959858617-67f85cf4f1df?w=80&h=80&auto=format&fit=crop&crop=center`, label: 'wallpaperThemeCityNight' },
+  { value: `${UNSPLASH_BASE}/photo-1509316785289-025f5b846b35?w=1920&q=85&auto=format&fit=crop`, thumb: `${UNSPLASH_BASE}/photo-1509316785289-025f5b846b35?w=80&h=80&auto=format&fit=crop&crop=center`, label: 'wallpaperThemeDesert' },
+]
+
 const FIT_OPTIONS = ['cover', 'contain', 'fill'] as const
 type Fit = (typeof FIT_OPTIONS)[number]
 
@@ -224,6 +245,38 @@ export function WallpaperPickerModal({ conversationId, open, onClose }: Props) {
                 <Check className="size-4 text-pon-cyan ml-auto" />
               )}
             </button>
+
+            {/* Chủ đề — image-based themed photo wallpapers */}
+            <div className="flex items-center gap-2 px-4 py-1.5 mt-1">
+              <span className="text-sm">🌄</span>
+              <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                {t('wallpaperCategoryThemes')}
+              </span>
+            </div>
+            {THEMED_PRESETS.map((p) => {
+              const isSel = selected === p.value
+              return (
+                <button
+                  key={p.value}
+                  onClick={() => setSelected(p.value)}
+                  className={cn(
+                    'flex items-center gap-3 w-full px-4 py-2 text-left transition-colors',
+                    'hover:bg-muted/60',
+                    isSel && 'bg-muted',
+                  )}
+                >
+                  <div
+                    className={cn(
+                      'size-8 rounded-full flex-shrink-0 bg-cover bg-center border',
+                      isSel ? 'border-pon-cyan' : 'border-muted-foreground/20',
+                    )}
+                    style={{ backgroundImage: `url(${p.thumb})` }}
+                  />
+                  <span className="text-sm truncate">{t(p.label)}</span>
+                  {isSel && <Check className="size-4 text-pon-cyan ml-auto flex-shrink-0" />}
+                </button>
+              )
+            })}
 
             {/* Categories */}
             {THEME_CATEGORIES.map((cat) => {

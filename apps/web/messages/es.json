@@ -228,7 +228,38 @@
     "help": "Ayuda y preguntas frecuentes",
     "helpSubtitle": "Encuentra respuestas a preguntas comunes",
     "chooseThemeTitle": "Elegir tema",
-    "chooseLanguageTitle": "Elegir idioma"
+    "chooseLanguageTitle": "Elegir idioma",
+    "securityCard": "Contraseña y seguridad",
+    "securityNoPassword": "Sin contraseña establecida",
+    "securitySubtitle": "Cambia tu contraseña",
+    "security": {
+      "title": "Contraseña y seguridad",
+      "noPasswordTitle": "Aún no hay contraseña",
+      "noPasswordSubtitle": "Establece una contraseña para proteger tu cuenta y habilitar la recuperación por correo.",
+      "changePasswordTitle": "Cambiar contraseña",
+      "changePasswordSubtitle": "Actualiza tu contraseña actual.",
+      "setPasswordTitle": "Configura tu contraseña",
+      "setPasswordSubtitle": "Añade una contraseña a tu cuenta para mayor seguridad.",
+      "currentLabel": "Contraseña actual",
+      "currentPlaceholder": "Ingresa tu contraseña actual",
+      "newLabel": "Nueva contraseña",
+      "passwordLabel": "Contraseña",
+      "newPlaceholder": "Elige una contraseña segura",
+      "confirmLabel": "Confirmar contraseña",
+      "confirmPlaceholder": "Vuelve a ingresar tu contraseña",
+      "staySignedIn": "Permanecerás conectado en este dispositivo.",
+      "changeButton": "Cambiar contraseña",
+      "setButton": "Establecer contraseña",
+      "changeSuccess": "Contraseña cambiada correctamente",
+      "setSuccess": "Contraseña establecida correctamente",
+      "mismatch": "Las contraseñas no coinciden",
+      "incorrectCurrent": "La contraseña actual es incorrecta",
+      "currentRequired": "Por favor ingresa tu contraseña actual",
+      "genericError": "No se pudo actualizar la contraseña",
+      "twoFaTitle": "Autenticación de dos factores",
+      "twoFaSubtitle": "Añade una capa extra de seguridad a tu cuenta.",
+      "twoFaComingSoon": "La autenticación de dos factores estará disponible pronto."
+    }
   },
   "profile": {
     "title": "Editar perfil",
@@ -1227,5 +1258,12 @@
         "deleteHistory": "Abre la conversación, toca Configuración, ve a Privacidad y soporte y selecciona 'Borrar historial'. Esto solo elimina el historial de tu dispositivo."
       }
     }
+  },
+  "notifications": {
+    "title": "Notificaciones",
+    "empty": "Aún no hay notificaciones",
+    "markAllRead": "Marcar todo como leído",
+    "accept": "Aceptar",
+    "decline": "Rechazar"
   }
 }

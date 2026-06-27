@@ -12,6 +12,69 @@ class AppLocalizationsZh extends AppLocalizations {
   String get appName => 'PON';
 
   @override
+  String get notificationsTitle => '通知';
+
+  @override
+  String get notificationsEmpty => '暂无通知';
+
+  @override
+  String get notificationsMarkAllRead => '全部标记为已读';
+
+  @override
+  String get notificationAccept => '接受';
+
+  @override
+  String get notificationDecline => '拒绝';
+
+  @override
+  String get securityTitle => '密码与安全';
+
+  @override
+  String get securitySubtitle => '更改你的密码';
+
+  @override
+  String get securityNoPasswordCardSubtitle => '未设置密码';
+
+  @override
+  String get securityNoPasswordTitle => '尚未设置密码';
+
+  @override
+  String get securityNoPasswordSubtitle => '设置密码以保护账户并启用基于电子邮件的恢复。';
+
+  @override
+  String get securityChangePasswordTitle => '更改密码';
+
+  @override
+  String get securityChangePasswordSubtitle => '更新你当前的密码。';
+
+  @override
+  String get securitySetPasswordTitle => '设置密码';
+
+  @override
+  String get securitySetPasswordSubtitle => '为账户添加密码以增强安全性。';
+
+  @override
+  String get securitySetButton => '设置密码';
+
+  @override
+  String get securityChangeButton => '更改密码';
+
+  @override
+  String get securitySetSuccess => '密码设置成功';
+
+  @override
+  String get securityTwoFaTitle => '双重验证';
+
+  @override
+  String get securityTwoFaSubtitle => '为你的账户增加一层安全保护。';
+
+  @override
+  String get securityTwoFaComingSoon => '双重验证即将推出。';
+
+  @override
+  String get securityComingSoon => '即将推出';
+
+  @override
   String get languageName => '中文';
 
   @override
@@ -143,6 +206,33 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get wallpaperShowLess => '收起';
+
+  @override
+  String get wallpaperCategoryThemes => '主题';
+
+  @override
+  String get wallpaperThemeForest => '森林';
+
+  @override
+  String get wallpaperThemeOcean => '海洋';
+
+  @override
+  String get wallpaperThemeMountain => '雪山';
+
+  @override
+  String get wallpaperThemeCherryBlossom => '樱花';
+
+  @override
+  String get wallpaperThemeSpace => '太空';
+
+  @override
+  String get wallpaperThemeAurora => '极光';
+
+  @override
+  String get wallpaperThemeCityNight => '城市夜景';
+
+  @override
+  String get wallpaperThemeDesert => '沙漠';
 
   @override
   String get changeChatThemeTitle => '更改聊天主题';

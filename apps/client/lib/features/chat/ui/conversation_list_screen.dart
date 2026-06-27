@@ -8,6 +8,7 @@ import '../../../core/widgets/pon_widgets.dart';
 import '../../auth/domain/auth_provider.dart';
 import '../../auth/domain/auth_state.dart';
 import '../../home/domain/home_providers.dart';
+import '../../notifications/ui/notification_bell.dart';
 import '../../assistant/ui/assistant_entry_tile.dart';
 import '../domain/chat_provider.dart';
 import 'widgets/active_friends_row.dart';
@@ -96,6 +97,7 @@ class _ConversationListScreenState
               ],
             ),
             actions: [
+              const NotificationBell(),
               IconButton(
                 icon: const Icon(Icons.explore_outlined),
                 tooltip: context.l10n.exploreChannels,

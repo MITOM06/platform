@@ -132,6 +132,19 @@ class AuthRepository {
 
   Future<void> clearCredentials() => _storage.deleteAll();
 
+  /// Fetch the authenticated user's own profile (includes `hasPassword`).
+  /// Persists the refreshed user into secure storage so the cached session
+  /// stays in sync (mirrors web `authService.getMe()`).
+  Future<UserModel> getMe() async {
+    final response = await _dio.get('/api/users/me');
+    final user = UserModel.fromJson(response.data as Map<String, dynamic>);
+    final userJson = await _storage.read(key: _keyUser);
+    if (userJson != null) {
+      await _storage.write(key: _keyUser, value: jsonEncode(user.toJson()));
+    }
+    return user;
+  }
+
   /// Lấy public profile của bất kỳ user nào theo id — dùng cho chat UI
   Future<UserModel> getUserProfile(String userId) async {
     final response = await _dio.get('/api/users/$userId');

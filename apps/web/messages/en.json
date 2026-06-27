@@ -228,7 +228,38 @@
     "help": "Help & FAQ",
     "helpSubtitle": "Get answers to common questions",
     "chooseThemeTitle": "Choose theme",
-    "chooseLanguageTitle": "Choose language"
+    "chooseLanguageTitle": "Choose language",
+    "securityCard": "Password & Security",
+    "securityNoPassword": "No password set",
+    "securitySubtitle": "Change your password",
+    "security": {
+      "title": "Password & Security",
+      "noPasswordTitle": "No password set yet",
+      "noPasswordSubtitle": "Set a password to secure your account and enable email-based recovery.",
+      "changePasswordTitle": "Change password",
+      "changePasswordSubtitle": "Update your current password.",
+      "setPasswordTitle": "Set up your password",
+      "setPasswordSubtitle": "Add a password to your account for an extra layer of security.",
+      "currentLabel": "Current password",
+      "currentPlaceholder": "Enter your current password",
+      "newLabel": "New password",
+      "passwordLabel": "Password",
+      "newPlaceholder": "Choose a strong password",
+      "confirmLabel": "Confirm password",
+      "confirmPlaceholder": "Re-enter your password",
+      "staySignedIn": "You'll stay signed in on this device.",
+      "changeButton": "Change password",
+      "setButton": "Set password",
+      "changeSuccess": "Password changed successfully",
+      "setSuccess": "Password set successfully",
+      "mismatch": "Passwords don't match",
+      "incorrectCurrent": "Current password is incorrect",
+      "currentRequired": "Please enter your current password",
+      "genericError": "Failed to update password",
+      "twoFaTitle": "Two-factor authentication",
+      "twoFaSubtitle": "Add an extra layer of security to your account.",
+      "twoFaComingSoon": "Two-factor authentication is coming soon."
+    }
   },
   "profile": {
     "title": "Edit Profile",
@@ -370,6 +401,15 @@
     "wallpaperCategoryMinimal": "Minimal",
     "wallpaperShowMore": "Show more",
     "wallpaperShowLess": "Show less",
+    "wallpaperCategoryThemes": "Themes",
+    "wallpaperThemeForest": "Forest",
+    "wallpaperThemeOcean": "Ocean",
+    "wallpaperThemeMountain": "Snow Mountain",
+    "wallpaperThemeCherryBlossom": "Cherry Blossom",
+    "wallpaperThemeSpace": "Space",
+    "wallpaperThemeAurora": "Northern Lights",
+    "wallpaperThemeCityNight": "City Night",
+    "wallpaperThemeDesert": "Desert",
     "quickReactionSuccess": "Quick reaction updated",
     "quickReactionPickTitle": "Pick a quick reaction",
     "nicknameYou": "Your nickname",
@@ -1232,5 +1272,12 @@
         "deleteHistory": "Open the conversation, tap Settings, go to Privacy & Support, and select 'Clear History'. This only removes history from your device."
       }
     }
+  },
+  "notifications": {
+    "title": "Notifications",
+    "empty": "No notifications yet",
+    "markAllRead": "Mark all as read",
+    "accept": "Accept",
+    "decline": "Decline"
   }
 }

@@ -11,7 +11,6 @@ import '../../auth/domain/auth_state.dart';
 import '../../admin/state/capabilities_provider.dart';
 import 'widgets/settings_dialogs.dart';
 import 'widgets/settings_avatar_section.dart';
-import 'widgets/change_password_dialog.dart';
 
 /// Persists whether the user wants push/in-app notifications. Mirrors web's
 /// notification control (web reads the browser permission; mobile keeps a
@@ -112,6 +111,85 @@ class SettingsScreen extends ConsumerWidget {
                     fontSize: 13,
                   ),
                 ),
+          trailing: Icon(
+            Icons.arrow_forward_ios_rounded,
+            color: isDark ? Colors.white24 : Colors.black26,
+            size: 16,
+          ),
+          onTap: onTap,
+        ),
+      ),
+    );
+  }
+
+  /// "Password & Security" card. Shows an amber `!` badge + "No password set"
+  /// subtitle when the account has no local password (OAuth-only), nudging the
+  /// user to set one. Navigates to [SecuritySettingsScreen].
+  Widget _securityCard({
+    required BuildContext context,
+    required bool isDark,
+    required bool hasPassword,
+    required VoidCallback onTap,
+  }) {
+    const amber = Color(0xFFF59E0B);
+    final glowColor = hasPassword ? AppTheme.ponPink : amber;
+    final accent = isDark ? glowColor : Theme.of(context).colorScheme.primary;
+    return PonCard(
+      glowColor: glowColor,
+      glowStrength: isDark ? 4 : 0,
+      child: Material(
+        color: Colors.transparent,
+        child: ListTile(
+          contentPadding:
+              const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
+          leading: Stack(
+            clipBehavior: Clip.none,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: accent.withValues(alpha: 0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(Icons.lock_outline_rounded,
+                    color: accent, size: 20),
+              ),
+              if (!hasPassword)
+                Positioned(
+                  right: -2,
+                  top: -2,
+                  child: Container(
+                    width: 16,
+                    height: 16,
+                    decoration: const BoxDecoration(
+                      color: amber,
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(Icons.priority_high_rounded,
+                        color: Colors.white, size: 11),
+                  ),
+                ),
+            ],
+          ),
+          title: Text(
+            context.l10n.securityTitle,
+            style: TextStyle(
+              color: isDark ? Colors.white : Colors.black87,
+              fontWeight: FontWeight.bold,
+              fontSize: 15,
+            ),
+          ),
+          subtitle: Text(
+            hasPassword
+                ? context.l10n.securitySubtitle
+                : context.l10n.securityNoPasswordCardSubtitle,
+            style: TextStyle(
+              color: hasPassword
+                  ? (isDark ? Colors.white54 : Colors.black54)
+                  : amber,
+              fontSize: 13,
+            ),
+          ),
           trailing: Icon(
             Icons.arrow_forward_ios_rounded,
             color: isDark ? Colors.white24 : Colors.black26,
@@ -308,13 +386,14 @@ class SettingsScreen extends ConsumerWidget {
                   },
                 ),
                 const SizedBox(height: 24),
-                _settingsCard(
+                _securityCard(
                   context: context,
                   isDark: isDark,
-                  glowColor: AppTheme.ponPink,
-                  icon: Icons.lock_outline_rounded,
-                  title: context.l10n.changePasswordTitle,
-                  onTap: () => showChangePasswordDialog(context, ref),
+                  hasPassword: user?.hasPassword ?? true,
+                  onTap: () {
+                    if (isDialog) Navigator.of(context).pop();
+                    context.push('/settings/security');
+                  },
                 ),
                 const SizedBox(height: 24),
                 _settingsCard(

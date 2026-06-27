@@ -12,6 +12,70 @@ class AppLocalizationsJa extends AppLocalizations {
   String get appName => 'PON';
 
   @override
+  String get notificationsTitle => '通知';
+
+  @override
+  String get notificationsEmpty => '通知はまだありません';
+
+  @override
+  String get notificationsMarkAllRead => 'すべて既読にする';
+
+  @override
+  String get notificationAccept => '承認';
+
+  @override
+  String get notificationDecline => '拒否';
+
+  @override
+  String get securityTitle => 'パスワードとセキュリティ';
+
+  @override
+  String get securitySubtitle => 'パスワードを変更する';
+
+  @override
+  String get securityNoPasswordCardSubtitle => 'パスワード未設定';
+
+  @override
+  String get securityNoPasswordTitle => 'パスワードがまだ設定されていません';
+
+  @override
+  String get securityNoPasswordSubtitle =>
+      'アカウントを保護し、メールによる復旧を有効にするためにパスワードを設定してください。';
+
+  @override
+  String get securityChangePasswordTitle => 'パスワードを変更';
+
+  @override
+  String get securityChangePasswordSubtitle => '現在のパスワードを更新します。';
+
+  @override
+  String get securitySetPasswordTitle => 'パスワードを設定';
+
+  @override
+  String get securitySetPasswordSubtitle => 'セキュリティ強化のためにアカウントにパスワードを追加します。';
+
+  @override
+  String get securitySetButton => 'パスワードを設定';
+
+  @override
+  String get securityChangeButton => 'パスワードを変更';
+
+  @override
+  String get securitySetSuccess => 'パスワードを設定しました';
+
+  @override
+  String get securityTwoFaTitle => '二要素認証';
+
+  @override
+  String get securityTwoFaSubtitle => 'アカウントにさらなるセキュリティ層を追加します。';
+
+  @override
+  String get securityTwoFaComingSoon => '二要素認証は近日公開予定です。';
+
+  @override
+  String get securityComingSoon => '近日公開';
+
+  @override
   String get languageName => '日本語';
 
   @override
@@ -143,6 +207,33 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get wallpaperShowLess => '閉じる';
+
+  @override
+  String get wallpaperCategoryThemes => 'テーマ';
+
+  @override
+  String get wallpaperThemeForest => '森林';
+
+  @override
+  String get wallpaperThemeOcean => '海';
+
+  @override
+  String get wallpaperThemeMountain => '雪山';
+
+  @override
+  String get wallpaperThemeCherryBlossom => '桜';
+
+  @override
+  String get wallpaperThemeSpace => '宇宙';
+
+  @override
+  String get wallpaperThemeAurora => 'オーロラ';
+
+  @override
+  String get wallpaperThemeCityNight => '夜の街';
+
+  @override
+  String get wallpaperThemeDesert => '砂漠';
 
   @override
   String get changeChatThemeTitle => 'チャットのテーマを変更';

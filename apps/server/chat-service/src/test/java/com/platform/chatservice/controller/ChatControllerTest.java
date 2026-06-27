@@ -7,6 +7,7 @@ import com.platform.chatservice.dto.ChatMessageDto;
 import com.platform.chatservice.dto.MessageResponse;
 import com.platform.chatservice.dto.SendMessageRequest;
 import com.platform.chatservice.service.AiRedisPublisher;
+import com.platform.chatservice.service.ClusterMessageBroker;
 import com.platform.chatservice.service.ConversationService;
 import com.platform.chatservice.service.ExternalBotService;
 import com.platform.chatservice.service.MessageService;
@@ -21,7 +22,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.messaging.simp.SimpMessagingTemplate;
 
 @SuppressWarnings("null")
 @ExtendWith(MockitoExtension.class)
@@ -31,7 +31,7 @@ class ChatControllerTest {
 
   @Mock private ConversationService conversationService;
 
-  @Mock private SimpMessagingTemplate messagingTemplate;
+  @Mock private ClusterMessageBroker clusterBroker;
 
   @Mock private Principal principal;
 
@@ -69,9 +69,9 @@ class ChatControllerTest {
     chatController.send(chatDto, principal);
 
     verify(messageService, times(1)).sendMessage(eq(SENDER_ID), any(SendMessageRequest.class));
-    verify(messagingTemplate, times(1))
+    verify(clusterBroker, times(1))
         .convertAndSend(eq("/topic/conversation/conv-456"), eq(response));
-    verify(messagingTemplate, times(1))
+    verify(clusterBroker, times(1))
         .convertAndSendToUser(eq("user-456"), eq("/queue/notifications"), any(Map.class));
     verify(fcmService, times(1))
         .sendPushNotification(eq("user-456"), eq(SENDER_ID), eq("Hello"), eq("conv-456"));
@@ -83,7 +83,7 @@ class ChatControllerTest {
 
     chatController.typing(chatDto, principal);
 
-    verify(messagingTemplate, times(1))
+    verify(clusterBroker, times(1))
         .convertAndSend(
             eq("/topic/conversation/conv-456/typing"),
             argThat(
@@ -100,7 +100,7 @@ class ChatControllerTest {
 
     chatController.callOffer(dto, principal);
 
-    verify(messagingTemplate, times(1))
+    verify(clusterBroker, times(1))
         .convertAndSendToUser(eq("user-789"), eq("/queue/webrtc"), eq(dto));
   }
 
@@ -188,7 +188,7 @@ class ChatControllerTest {
 
     chatController.callEnd(dto, principal);
 
-    verify(messagingTemplate, times(1))
+    verify(clusterBroker, times(1))
         .convertAndSendToUser(eq("user-789"), eq("/queue/webrtc"), eq(dto));
 
     verify(messageService, times(1))
@@ -198,7 +198,7 @@ class ChatControllerTest {
                 req ->
                     req.content().equals("Call ended - 02:05") && req.type().equals("call_log")));
 
-    verify(messagingTemplate, times(1))
+    verify(clusterBroker, times(1))
         .convertAndSend(eq("/topic/conversation/conv-999"), eq(mockResponse));
   }
 }

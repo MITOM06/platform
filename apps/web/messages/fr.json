@@ -228,7 +228,38 @@
     "help": "Aide et FAQ",
     "helpSubtitle": "Trouvez des réponses aux questions courantes",
     "chooseThemeTitle": "Choisir le thème",
-    "chooseLanguageTitle": "Choisir la langue"
+    "chooseLanguageTitle": "Choisir la langue",
+    "securityCard": "Mot de passe et sécurité",
+    "securityNoPassword": "Aucun mot de passe défini",
+    "securitySubtitle": "Modifier votre mot de passe",
+    "security": {
+      "title": "Mot de passe et sécurité",
+      "noPasswordTitle": "Aucun mot de passe défini",
+      "noPasswordSubtitle": "Définissez un mot de passe pour sécuriser votre compte et activer la récupération par e-mail.",
+      "changePasswordTitle": "Changer le mot de passe",
+      "changePasswordSubtitle": "Mettez à jour votre mot de passe actuel.",
+      "setPasswordTitle": "Configurer votre mot de passe",
+      "setPasswordSubtitle": "Ajoutez un mot de passe à votre compte pour plus de sécurité.",
+      "currentLabel": "Mot de passe actuel",
+      "currentPlaceholder": "Entrez votre mot de passe actuel",
+      "newLabel": "Nouveau mot de passe",
+      "passwordLabel": "Mot de passe",
+      "newPlaceholder": "Choisissez un mot de passe fort",
+      "confirmLabel": "Confirmer le mot de passe",
+      "confirmPlaceholder": "Saisissez à nouveau votre mot de passe",
+      "staySignedIn": "Vous resterez connecté sur cet appareil.",
+      "changeButton": "Changer le mot de passe",
+      "setButton": "Définir le mot de passe",
+      "changeSuccess": "Mot de passe modifié avec succès",
+      "setSuccess": "Mot de passe défini avec succès",
+      "mismatch": "Les mots de passe ne correspondent pas",
+      "incorrectCurrent": "Le mot de passe actuel est incorrect",
+      "currentRequired": "Veuillez saisir votre mot de passe actuel",
+      "genericError": "Échec de la mise à jour du mot de passe",
+      "twoFaTitle": "Authentification à deux facteurs",
+      "twoFaSubtitle": "Ajoutez une couche de sécurité supplémentaire à votre compte.",
+      "twoFaComingSoon": "L'authentification à deux facteurs arrive bientôt."
+    }
   },
   "profile": {
     "title": "Modifier le profil",
@@ -1227,5 +1258,12 @@
         "deleteHistory": "Ouvrez la conversation, touchez Paramètres, accédez à Confidentialité et assistance et sélectionnez « Effacer l'historique ». Cela supprime uniquement l'historique de votre appareil."
       }
     }
+  },
+  "notifications": {
+    "title": "Notifications",
+    "empty": "Aucune notification pour le moment",
+    "markAllRead": "Tout marquer comme lu",
+    "accept": "Accepter",
+    "decline": "Refuser"
   }
 }

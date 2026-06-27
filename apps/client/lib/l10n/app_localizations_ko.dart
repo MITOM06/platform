@@ -12,6 +12,70 @@ class AppLocalizationsKo extends AppLocalizations {
   String get appName => 'PON';
 
   @override
+  String get notificationsTitle => '알림';
+
+  @override
+  String get notificationsEmpty => '아직 알림이 없습니다';
+
+  @override
+  String get notificationsMarkAllRead => '모두 읽음으로 표시';
+
+  @override
+  String get notificationAccept => '수락';
+
+  @override
+  String get notificationDecline => '거절';
+
+  @override
+  String get securityTitle => '비밀번호 및 보안';
+
+  @override
+  String get securitySubtitle => '비밀번호 변경';
+
+  @override
+  String get securityNoPasswordCardSubtitle => '비밀번호 미설정';
+
+  @override
+  String get securityNoPasswordTitle => '아직 비밀번호가 설정되지 않았습니다';
+
+  @override
+  String get securityNoPasswordSubtitle =>
+      '계정을 보호하고 이메일 기반 복구를 사용하려면 비밀번호를 설정하세요.';
+
+  @override
+  String get securityChangePasswordTitle => '비밀번호 변경';
+
+  @override
+  String get securityChangePasswordSubtitle => '현재 비밀번호를 업데이트합니다.';
+
+  @override
+  String get securitySetPasswordTitle => '비밀번호 설정';
+
+  @override
+  String get securitySetPasswordSubtitle => '보안 강화를 위해 계정에 비밀번호를 추가하세요.';
+
+  @override
+  String get securitySetButton => '비밀번호 설정';
+
+  @override
+  String get securityChangeButton => '비밀번호 변경';
+
+  @override
+  String get securitySetSuccess => '비밀번호가 설정되었습니다';
+
+  @override
+  String get securityTwoFaTitle => '2단계 인증';
+
+  @override
+  String get securityTwoFaSubtitle => '계정에 추가 보안 계층을 더합니다.';
+
+  @override
+  String get securityTwoFaComingSoon => '2단계 인증은 곧 제공될 예정입니다.';
+
+  @override
+  String get securityComingSoon => '곧 제공';
+
+  @override
   String get languageName => '한국어';
 
   @override
@@ -143,6 +207,33 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get wallpaperShowLess => '접기';
+
+  @override
+  String get wallpaperCategoryThemes => '테마';
+
+  @override
+  String get wallpaperThemeForest => '숲';
+
+  @override
+  String get wallpaperThemeOcean => '바다';
+
+  @override
+  String get wallpaperThemeMountain => '설산';
+
+  @override
+  String get wallpaperThemeCherryBlossom => '벚꽃';
+
+  @override
+  String get wallpaperThemeSpace => '우주';
+
+  @override
+  String get wallpaperThemeAurora => '오로라';
+
+  @override
+  String get wallpaperThemeCityNight => '도시의 밤';
+
+  @override
+  String get wallpaperThemeDesert => '사막';
 
   @override
   String get changeChatThemeTitle => '채팅 테마 변경';

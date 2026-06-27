@@ -2,7 +2,6 @@
 
 import { useState } from 'react'
 import { useTranslations } from 'next-intl'
-import NextImage from 'next/image'
 import { Download, X, ChevronLeft, ChevronRight, Play, ImageOff } from 'lucide-react'
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog'
 import { DialogA11yDescription } from '@/components/common/dialog-a11y-description'
@@ -34,13 +33,21 @@ function Tile({
           <ImageOff className="size-6" />
         </div>
       ) : (
-        <NextImage
+        // Plain <img>, NOT next/image. The previous next/image version broke chat
+        // images two ways: (1) the Image Optimizer 400s because the chat-service
+        // upload host drifts per Cloud Run revision (not in next.config
+        // remotePatterns); (2) `fill` makes the <img> position:absolute height:100%,
+        // which collapses to 0px inside the single-image tile (its button has no
+        // fixed height) so the image renders invisible. A natural-sized <img>
+        // matches mobile's CachedNetworkImage and the lightbox, and renders
+        // reliably regardless of host.
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
           src={absoluteMediaUrl(url)}
           alt=""
-          fill
-          sizes="(max-width: 768px) 100vw, 320px"
-          className="object-cover"
+          className="size-full object-cover"
           onError={() => setErrored(true)}
+          loading="lazy"
         />
       )}
       {overlay && (

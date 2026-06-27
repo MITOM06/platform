@@ -748,6 +748,304 @@ Widget _buildShowMoreButton() {
 
 ---
 
+---
+
+## Task 5 — Add "Chủ đề" category with real image wallpapers
+
+**Context:** Tasks 1–4 only added CSS-gradient presets. This task adds a new category of
+real-photo themed wallpapers using Unsplash CDN URLs. No backend changes needed —
+`resolveWallpaper()` already handles raw HTTP image URLs (the non-`preset:` path in the function).
+The stored value is just the full Unsplash URL with `#fit=cover` appended.
+
+> **Important before implementing:** verify each Unsplash URL below loads a 200 OK in the browser.
+> Replace any that 404 with a different Unsplash photo of the same theme.
+
+### 5a — Define themed presets constant in `WallpaperPickerModal.tsx`
+
+Add this constant **above** the existing `PRESETS` array:
+
+```ts
+const BASE = 'https://images.unsplash.com'
+
+/** Image-based themed wallpapers. value = stored URL; thumb = swatch circle src. */
+export const THEMED_PRESETS = [
+  {
+    value: `${BASE}/photo-1448375240586-882707db888b?w=1920&q=85&auto=format&fit=crop#fit=cover`,
+    thumb: `${BASE}/photo-1448375240586-882707db888b?w=80&h=80&auto=format&fit=crop&crop=center`,
+    label: 'wallpaperThemeForest',
+  },
+  {
+    value: `${BASE}/photo-1505118380757-91f5f5632de0?w=1920&q=85&auto=format&fit=crop#fit=cover`,
+    thumb: `${BASE}/photo-1505118380757-91f5f5632de0?w=80&h=80&auto=format&fit=crop&crop=center`,
+    label: 'wallpaperThemeOcean',
+  },
+  {
+    value: `${BASE}/photo-1464822759023-fed622ff2c3b?w=1920&q=85&auto=format&fit=crop#fit=cover`,
+    thumb: `${BASE}/photo-1464822759023-fed622ff2c3b?w=80&h=80&auto=format&fit=crop&crop=center`,
+    label: 'wallpaperThemeMountain',
+  },
+  {
+    value: `${BASE}/photo-1522383225653-ed111181a951?w=1920&q=85&auto=format&fit=crop#fit=cover`,
+    thumb: `${BASE}/photo-1522383225653-ed111181a951?w=80&h=80&auto=format&fit=crop&crop=center`,
+    label: 'wallpaperThemeCherryBlossom',
+  },
+  {
+    value: `${BASE}/photo-1462331940025-496dfbfc7564?w=1920&q=85&auto=format&fit=crop#fit=cover`,
+    thumb: `${BASE}/photo-1462331940025-496dfbfc7564?w=80&h=80&auto=format&fit=crop&crop=center`,
+    label: 'wallpaperThemeSpace',
+  },
+  {
+    value: `${BASE}/photo-1531366936337-7c912a4589a7?w=1920&q=85&auto=format&fit=crop#fit=cover`,
+    thumb: `${BASE}/photo-1531366936337-7c912a4589a7?w=80&h=80&auto=format&fit=crop&crop=center`,
+    label: 'wallpaperThemeAurora',
+  },
+  {
+    value: `${BASE}/photo-1477959858617-67f85cf4f1df?w=1920&q=85&auto=format&fit=crop#fit=cover`,
+    thumb: `${BASE}/photo-1477959858617-67f85cf4f1df?w=80&h=80&auto=format&fit=crop&crop=center`,
+    label: 'wallpaperThemeCityNight',
+  },
+  {
+    value: `${BASE}/photo-1509316785289-025f5b846b35?w=1920&q=85&auto=format&fit=crop#fit=cover`,
+    thumb: `${BASE}/photo-1509316785289-025f5b846b35?w=80&h=80&auto=format&fit=crop&crop=center`,
+    label: 'wallpaperThemeDesert',
+  },
+]
+```
+
+### 5b — Add "Chủ đề" section to the left panel in `WallpaperPickerModal.tsx`
+
+Inside the left panel list (below the Default item and above the "Màu sắc" section header),
+insert a new "Chủ đề" section:
+
+```tsx
+{/* ── Chủ đề (themed photos) ── */}
+<div className="px-3 pt-3 pb-1">
+  <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60 flex items-center gap-1.5">
+    <span>🌄</span> {t('wallpaperCategoryThemes')}
+  </p>
+</div>
+{THEMED_PRESETS.map((p) => {
+  const label = t(p.label as any)
+  const isSelected = selected === p.value
+  return (
+    <button
+      key={p.value}
+      onClick={() => handleSelect(p.value)}
+      className={cn(
+        'w-full flex items-center gap-3 px-3 py-2 text-left transition-colors',
+        isSelected
+          ? 'bg-white/10 text-foreground'
+          : 'hover:bg-white/5 text-muted-foreground hover:text-foreground',
+      )}
+    >
+      {/* Circular image swatch */}
+      <div
+        className={cn(
+          'size-9 rounded-full shrink-0 bg-cover bg-center border-2 transition-colors',
+          isSelected ? 'border-pon-cyan' : 'border-white/20',
+        )}
+        style={{ backgroundImage: `url(${p.thumb})` }}
+      />
+      <span className="flex-1 text-sm">{label}</span>
+      {isSelected && (
+        <Check className="size-4 text-pon-cyan shrink-0" />
+      )}
+    </button>
+  )
+})}
+<div className="mx-3 my-1 h-px bg-white/10" />
+```
+
+**Note:** `selected` is the existing state variable in `WallpaperPickerModal.tsx` that holds the
+current wallpaper value. `handleSelect(value)` is the existing handler that fires the
+`WALLPAPER_EVENT` and sets local state. Use whatever the existing variable/handler names are —
+adapt as needed.
+
+### 5c — Preview panel: handle image themes
+
+In the right-panel preview div, the existing code should already show image wallpapers correctly
+because it uses `resolvedPreview` from `resolveWallpaper(selected)` which already returns
+`style.backgroundImage` for HTTP URLs. No change needed here — just verify visually.
+
+If the preview div uses a `className` prop only (not `style`), update it to also accept `style`:
+```tsx
+<div
+  className={cn('...preview classes...', resolvedPreview.className)}
+  style={resolvedPreview.style}
+/>
+```
+
+### 5d — i18n keys for themes
+
+Add to `apps/web/messages/en.json` (inside the `wallpaper` namespace, or wherever the other
+wallpaper keys live):
+
+```json
+"wallpaperCategoryThemes": "Themes",
+"wallpaperThemeForest": "Forest",
+"wallpaperThemeOcean": "Ocean",
+"wallpaperThemeMountain": "Snow Mountain",
+"wallpaperThemeCherryBlossom": "Cherry Blossom",
+"wallpaperThemeSpace": "Space",
+"wallpaperThemeAurora": "Northern Lights",
+"wallpaperThemeCityNight": "City Night",
+"wallpaperThemeDesert": "Desert"
+```
+
+Add Vietnamese equivalents to `apps/web/messages/vi.json`:
+```json
+"wallpaperCategoryThemes": "Chủ đề",
+"wallpaperThemeForest": "Rừng",
+"wallpaperThemeOcean": "Đại dương",
+"wallpaperThemeMountain": "Núi tuyết",
+"wallpaperThemeCherryBlossom": "Hoa anh đào",
+"wallpaperThemeSpace": "Vũ trụ",
+"wallpaperThemeAurora": "Bắc cực quang",
+"wallpaperThemeCityNight": "Thành phố đêm",
+"wallpaperThemeDesert": "Sa mạc"
+```
+
+Add best-effort translations to the remaining language files.
+
+### 5e — Flutter: add themed presets
+
+**File:** `apps/client/lib/features/chat/ui/widgets/chat_wallpaper_dialog.dart`
+
+Add the themed presets to the `presets` list (after the minimal section and before the upload button logic).
+Add a new `category: 'themes'` for them:
+
+```dart
+// ── Chủ đề (themed photos) ──
+const _unsplashBase = 'https://images.unsplash.com';
+const _themed = [
+  ('wallpaperThemeForest',        'photo-1448375240586-882707db888b'),
+  ('wallpaperThemeOcean',         'photo-1505118380757-91f5f5632de0'),
+  ('wallpaperThemeMountain',      'photo-1464822759023-fed622ff2c3b'),
+  ('wallpaperThemeCherryBlossom', 'photo-1522383225653-ed111181a951'),
+  ('wallpaperThemeSpace',         'photo-1462331940025-496dfbfc7564'),
+  ('wallpaperThemeAurora',        'photo-1531366936337-7c912a4589a7'),
+  ('wallpaperThemeCityNight',     'photo-1477959858617-67f85cf4f1df'),
+  ('wallpaperThemeDesert',        'photo-1509316785289-025f5b846b35'),
+];
+
+for (final (labelKey, photoId) in _themed) {
+  presets.add({
+    'name':     AppLocalizations.of(context)!.translate(labelKey),
+    'value':    '$_unsplashBase/$photoId?w=1920&q=85&auto=format&fit=crop#fit=cover',
+    'imageUrl': '$_unsplashBase/$photoId?w=80&h=80&auto=format&fit=crop&crop=center',
+    'category': 'themes',
+  });
+}
+```
+
+**Note:** Use whatever the project's i18n lookup pattern is (may be `context.l10n.wallpaperThemeForest`
+instead of `translate(labelKey)`) — adapt to match the existing i18n pattern in the Flutter project.
+
+In `_buildThemeTile`, handle the `imageUrl` field alongside `colors`:
+
+```dart
+Widget _buildThemeTile({required WallpaperPreset preset, Widget? icon}) {
+  final val      = preset['value'] as String;
+  final name     = preset['name'] as String;
+  final colors   = preset['colors'] as List<Color>?;
+  final imageUrl = preset['imageUrl'] as String?;
+  final isSel    = !_isImage && _selected == val;
+
+  // Swatch decoration
+  DecorationImage? decoImage;
+  LinearGradient? decoGradient;
+  if (imageUrl != null) {
+    decoImage = DecorationImage(
+      image: NetworkImage(imageUrl),
+      fit: BoxFit.cover,
+    );
+  } else if (colors != null) {
+    decoGradient = LinearGradient(
+      colors: colors,
+      begin: Alignment.topCenter,
+      end: Alignment.bottomCenter,
+    );
+  }
+
+  return InkWell(
+    onTap: () => setState(() => _selected = val),
+    child: Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      child: Row(
+        children: [
+          Container(
+            width: 36, height: 36,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              border: Border.all(
+                color: isSel ? AppTheme.ponCyan : Colors.white24,
+                width: isSel ? 2.5 : 1.5,
+              ),
+              gradient: decoGradient,
+              image: decoImage,
+              color: (decoGradient == null && decoImage == null) ? Colors.transparent : null,
+            ),
+            child: icon ?? (isSel
+                ? const Icon(Icons.check, color: Colors.white, size: 18)
+                : null),
+          ),
+          const SizedBox(width: 12),
+          Expanded(child: Text(name,
+              style: TextStyle(
+                  color: isSel ? Colors.white : Colors.white70,
+                  fontSize: 14))),
+          if (isSel)
+            const Icon(Icons.check_circle, color: AppTheme.ponCyan, size: 18),
+        ],
+      ),
+    ),
+  );
+}
+```
+
+In the dialog's ListView, insert the "Chủ đề" section before the upload button
+(mirroring the web layout — after Tối giản):
+
+```dart
+const Divider(color: Colors.white12, height: 1),
+_buildSectionHeader(context.l10n.wallpaperCategoryThemes, '🌄'),
+...widget.presets
+    .where((p) => p['category'] == 'themes')
+    .map((p) => _buildThemeTile(preset: p)),
+```
+
+### 5f — Flutter ARB keys
+
+Add to all ARB files (`app_en.arb`, `app_vi.arb`, etc.) the same keys from step 5d.
+
+`app_en.arb`:
+```json
+"wallpaperCategoryThemes": "Themes",
+"wallpaperThemeForest": "Forest",
+"wallpaperThemeOcean": "Ocean",
+"wallpaperThemeMountain": "Snow Mountain",
+"wallpaperThemeCherryBlossom": "Cherry Blossom",
+"wallpaperThemeSpace": "Space",
+"wallpaperThemeAurora": "Northern Lights",
+"wallpaperThemeCityNight": "City Night",
+"wallpaperThemeDesert": "Desert"
+```
+
+`app_vi.arb`:
+```json
+"wallpaperCategoryThemes": "Chủ đề",
+"wallpaperThemeForest": "Rừng",
+"wallpaperThemeOcean": "Đại dương",
+"wallpaperThemeMountain": "Núi tuyết",
+"wallpaperThemeCherryBlossom": "Hoa anh đào",
+"wallpaperThemeSpace": "Vũ trụ",
+"wallpaperThemeAurora": "Bắc cực quang",
+"wallpaperThemeCityNight": "Thành phố đêm",
+"wallpaperThemeDesert": "Sa mạc"
+```
+
+---
+
 ## Manual verification
 
 1. Open PON Web. Open any conversation → Wallpaper picker.

@@ -228,7 +228,38 @@
     "help": "帮助与常见问题",
     "helpSubtitle": "获取常见问题的解答",
     "chooseThemeTitle": "选择主题",
-    "chooseLanguageTitle": "选择语言"
+    "chooseLanguageTitle": "选择语言",
+    "securityCard": "密码与安全",
+    "securityNoPassword": "尚未设置密码",
+    "securitySubtitle": "更改您的密码",
+    "security": {
+      "title": "密码与安全",
+      "noPasswordTitle": "尚未设置密码",
+      "noPasswordSubtitle": "设置密码以保护您的账户并启用基于电子邮件的恢复。",
+      "changePasswordTitle": "更改密码",
+      "changePasswordSubtitle": "更新您当前的密码。",
+      "setPasswordTitle": "设置密码",
+      "setPasswordSubtitle": "为账户添加密码以增强安全性。",
+      "currentLabel": "当前密码",
+      "currentPlaceholder": "输入当前密码",
+      "newLabel": "新密码",
+      "passwordLabel": "密码",
+      "newPlaceholder": "选择一个强密码",
+      "confirmLabel": "确认密码",
+      "confirmPlaceholder": "再次输入密码",
+      "staySignedIn": "您将在此设备上保持登录状态。",
+      "changeButton": "更改密码",
+      "setButton": "设置密码",
+      "changeSuccess": "密码更改成功",
+      "setSuccess": "密码设置成功",
+      "mismatch": "密码不匹配",
+      "incorrectCurrent": "当前密码不正确",
+      "currentRequired": "请输入当前密码",
+      "genericError": "更新密码失败",
+      "twoFaTitle": "双重身份验证",
+      "twoFaSubtitle": "为您的账户添加额外的安全层。",
+      "twoFaComingSoon": "双重身份验证即将推出。"
+    }
   },
   "profile": {
     "title": "编辑资料",
@@ -1227,5 +1258,12 @@
         "deleteHistory": "打开对话，点击设置，进入“隐私与支持”，然后选择“清除记录”。此操作仅会从您的设备中移除记录。"
       }
     }
+  },
+  "notifications": {
+    "title": "通知",
+    "empty": "暂无通知",
+    "markAllRead": "全部标为已读",
+    "accept": "接受",
+    "decline": "拒绝"
   }
 }

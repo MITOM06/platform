@@ -12,6 +12,75 @@ class AppLocalizationsFr extends AppLocalizations {
   String get appName => 'PON';
 
   @override
+  String get notificationsTitle => 'Notifications';
+
+  @override
+  String get notificationsEmpty => 'Aucune notification pour le moment';
+
+  @override
+  String get notificationsMarkAllRead => 'Tout marquer comme lu';
+
+  @override
+  String get notificationAccept => 'Accepter';
+
+  @override
+  String get notificationDecline => 'Refuser';
+
+  @override
+  String get securityTitle => 'Mot de passe et sécurité';
+
+  @override
+  String get securitySubtitle => 'Modifier votre mot de passe';
+
+  @override
+  String get securityNoPasswordCardSubtitle => 'Aucun mot de passe défini';
+
+  @override
+  String get securityNoPasswordTitle =>
+      'Aucun mot de passe défini pour le moment';
+
+  @override
+  String get securityNoPasswordSubtitle =>
+      'Définissez un mot de passe pour sécuriser votre compte et activer la récupération par e-mail.';
+
+  @override
+  String get securityChangePasswordTitle => 'Changer le mot de passe';
+
+  @override
+  String get securityChangePasswordSubtitle =>
+      'Mettez à jour votre mot de passe actuel.';
+
+  @override
+  String get securitySetPasswordTitle => 'Configurer votre mot de passe';
+
+  @override
+  String get securitySetPasswordSubtitle =>
+      'Ajoutez un mot de passe à votre compte pour plus de sécurité.';
+
+  @override
+  String get securitySetButton => 'Définir le mot de passe';
+
+  @override
+  String get securityChangeButton => 'Changer le mot de passe';
+
+  @override
+  String get securitySetSuccess => 'Mot de passe défini avec succès';
+
+  @override
+  String get securityTwoFaTitle => 'Authentification à deux facteurs';
+
+  @override
+  String get securityTwoFaSubtitle =>
+      'Ajoutez une couche de sécurité supplémentaire à votre compte.';
+
+  @override
+  String get securityTwoFaComingSoon =>
+      'L\'authentification à deux facteurs arrive bientôt.';
+
+  @override
+  String get securityComingSoon => 'Bientôt disponible';
+
+  @override
   String get languageName => 'Français';
 
   @override
@@ -145,6 +214,33 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get wallpaperShowLess => 'Afficher moins';
+
+  @override
+  String get wallpaperCategoryThemes => 'Thèmes';
+
+  @override
+  String get wallpaperThemeForest => 'Forêt';
+
+  @override
+  String get wallpaperThemeOcean => 'Océan';
+
+  @override
+  String get wallpaperThemeMountain => 'Montagne enneigée';
+
+  @override
+  String get wallpaperThemeCherryBlossom => 'Fleur de cerisier';
+
+  @override
+  String get wallpaperThemeSpace => 'Espace';
+
+  @override
+  String get wallpaperThemeAurora => 'Aurore boréale';
+
+  @override
+  String get wallpaperThemeCityNight => 'Ville la nuit';
+
+  @override
+  String get wallpaperThemeDesert => 'Désert';
 
   @override
   String get changeChatThemeTitle => 'Changer le thème du chat';

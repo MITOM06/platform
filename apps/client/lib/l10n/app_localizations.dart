@@ -114,6 +114,132 @@ abstract class AppLocalizations {
   /// **'PON'**
   String get appName;
 
+  /// No description provided for @notificationsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Notifications'**
+  String get notificationsTitle;
+
+  /// No description provided for @notificationsEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No notifications yet'**
+  String get notificationsEmpty;
+
+  /// No description provided for @notificationsMarkAllRead.
+  ///
+  /// In en, this message translates to:
+  /// **'Mark all as read'**
+  String get notificationsMarkAllRead;
+
+  /// No description provided for @notificationAccept.
+  ///
+  /// In en, this message translates to:
+  /// **'Accept'**
+  String get notificationAccept;
+
+  /// No description provided for @notificationDecline.
+  ///
+  /// In en, this message translates to:
+  /// **'Decline'**
+  String get notificationDecline;
+
+  /// No description provided for @securityTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Password & Security'**
+  String get securityTitle;
+
+  /// No description provided for @securitySubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Change your password'**
+  String get securitySubtitle;
+
+  /// No description provided for @securityNoPasswordCardSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No password set'**
+  String get securityNoPasswordCardSubtitle;
+
+  /// No description provided for @securityNoPasswordTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No password set yet'**
+  String get securityNoPasswordTitle;
+
+  /// No description provided for @securityNoPasswordSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Set a password to secure your account and enable email-based recovery.'**
+  String get securityNoPasswordSubtitle;
+
+  /// No description provided for @securityChangePasswordTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Change password'**
+  String get securityChangePasswordTitle;
+
+  /// No description provided for @securityChangePasswordSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Update your current password.'**
+  String get securityChangePasswordSubtitle;
+
+  /// No description provided for @securitySetPasswordTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Set up your password'**
+  String get securitySetPasswordTitle;
+
+  /// No description provided for @securitySetPasswordSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a password to your account for an extra layer of security.'**
+  String get securitySetPasswordSubtitle;
+
+  /// No description provided for @securitySetButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Set password'**
+  String get securitySetButton;
+
+  /// No description provided for @securityChangeButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Change password'**
+  String get securityChangeButton;
+
+  /// No description provided for @securitySetSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Password set successfully'**
+  String get securitySetSuccess;
+
+  /// No description provided for @securityTwoFaTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Two-factor authentication'**
+  String get securityTwoFaTitle;
+
+  /// No description provided for @securityTwoFaSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Add an extra layer of security to your account.'**
+  String get securityTwoFaSubtitle;
+
+  /// No description provided for @securityTwoFaComingSoon.
+  ///
+  /// In en, this message translates to:
+  /// **'Two-factor authentication is coming soon.'**
+  String get securityTwoFaComingSoon;
+
+  /// No description provided for @securityComingSoon.
+  ///
+  /// In en, this message translates to:
+  /// **'Coming soon'**
+  String get securityComingSoon;
+
   /// No description provided for @languageName.
   ///
   /// In en, this message translates to:
@@ -371,6 +497,60 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Show less'**
   String get wallpaperShowLess;
+
+  /// No description provided for @wallpaperCategoryThemes.
+  ///
+  /// In en, this message translates to:
+  /// **'Themes'**
+  String get wallpaperCategoryThemes;
+
+  /// No description provided for @wallpaperThemeForest.
+  ///
+  /// In en, this message translates to:
+  /// **'Forest'**
+  String get wallpaperThemeForest;
+
+  /// No description provided for @wallpaperThemeOcean.
+  ///
+  /// In en, this message translates to:
+  /// **'Ocean'**
+  String get wallpaperThemeOcean;
+
+  /// No description provided for @wallpaperThemeMountain.
+  ///
+  /// In en, this message translates to:
+  /// **'Snow Mountain'**
+  String get wallpaperThemeMountain;
+
+  /// No description provided for @wallpaperThemeCherryBlossom.
+  ///
+  /// In en, this message translates to:
+  /// **'Cherry Blossom'**
+  String get wallpaperThemeCherryBlossom;
+
+  /// No description provided for @wallpaperThemeSpace.
+  ///
+  /// In en, this message translates to:
+  /// **'Space'**
+  String get wallpaperThemeSpace;
+
+  /// No description provided for @wallpaperThemeAurora.
+  ///
+  /// In en, this message translates to:
+  /// **'Northern Lights'**
+  String get wallpaperThemeAurora;
+
+  /// No description provided for @wallpaperThemeCityNight.
+  ///
+  /// In en, this message translates to:
+  /// **'City Night'**
+  String get wallpaperThemeCityNight;
+
+  /// No description provided for @wallpaperThemeDesert.
+  ///
+  /// In en, this message translates to:
+  /// **'Desert'**
+  String get wallpaperThemeDesert;
 
   /// No description provided for @changeChatThemeTitle.
   ///

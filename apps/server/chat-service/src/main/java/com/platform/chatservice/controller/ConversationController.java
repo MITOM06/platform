@@ -12,6 +12,7 @@ import com.platform.chatservice.dto.WallpaperRequest;
 import com.platform.chatservice.exception.UnauthorizedException;
 import com.platform.chatservice.security.UserPrincipal;
 import com.platform.chatservice.service.AttachmentService;
+import com.platform.chatservice.service.ClusterMessageBroker;
 import com.platform.chatservice.service.ConversationService;
 import com.platform.chatservice.service.MessageService;
 import java.util.List;
@@ -20,7 +21,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
-import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
@@ -32,7 +32,7 @@ public class ConversationController {
   private final ConversationService conversationService;
   private final MessageService messageService;
   private final AttachmentService attachmentService;
-  private final SimpMessagingTemplate messagingTemplate;
+  private final ClusterMessageBroker clusterBroker;
 
   @GetMapping
   public PageResponse<ConversationResponse> listConversations(
@@ -231,7 +231,7 @@ public class ConversationController {
   }
 
   private void broadcastConversationUpdated(ConversationResponse conversation) {
-    messagingTemplate.convertAndSend(
+    clusterBroker.convertAndSend(
         "/topic/conversation/" + conversation.id(),
         Map.of("type", "CONVERSATION_UPDATED", "conversation", conversation));
   }
@@ -239,9 +239,9 @@ public class ConversationController {
   /** Persist + broadcast a system message. Content is an i18n key the client maps. */
   private void broadcastSystem(String conversationId, String contentKey) {
     MessageResponse system = messageService.createSystemMessage(conversationId, contentKey);
-    messagingTemplate.convertAndSend("/topic/conversation/" + conversationId, system);
+    clusterBroker.convertAndSend("/topic/conversation/" + conversationId, system);
     for (String participantId : conversationService.getParticipants(conversationId)) {
-      messagingTemplate.convertAndSendToUser(
+      clusterBroker.convertAndSendToUser(
           participantId,
           "/queue/notifications",
           Map.of("type", "NEW_MESSAGE", "conversationId", conversationId, "senderName", "system"));

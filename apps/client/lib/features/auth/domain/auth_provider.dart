@@ -113,4 +113,14 @@ class AuthNotifier extends _$AuthNotifier {
     ref.invalidate(userProfileProvider(updated.id));
     state = AsyncData(AuthAuthenticated(updated));
   }
+
+  /// Re-fetch the authenticated user from the server and commit it to state.
+  /// Used after setting/changing the password so `hasPassword` updates. Keeps
+  /// the current authenticated state on failure (no AsyncLoading/guard) to
+  /// avoid flicker or an accidental bounce to /login — see [updateProfile].
+  Future<void> refreshUser() async {
+    final fresh = await ref.read(authRepositoryProvider).getMe();
+    ref.invalidate(userProfileProvider(fresh.id));
+    state = AsyncData(AuthAuthenticated(fresh));
+  }
 }
