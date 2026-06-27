@@ -36,6 +36,7 @@ import '../../features/assistant/ui/assistant_settings_screen.dart';
 import '../../features/admin/ui/admin_screen.dart';
 import '../../features/settings/ui/token_usage_screen.dart';
 import '../../features/settings/ui/legal_screen.dart';
+import '../../features/help/ui/help_screen.dart';
 import '../../../core/providers/theme_provider.dart';
 
 part 'app_router.g.dart';
@@ -291,6 +292,11 @@ GoRouter appRouter(AppRouterRef ref) {
         path: '/legal',
         name: 'legal',
         builder: (context, state) => const LegalScreen(),
+      ),
+      GoRoute(
+        path: '/help',
+        name: 'help',
+        builder: (context, state) => const HelpScreen(),
       ),
       GoRoute(
         path: '/call',

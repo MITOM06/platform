@@ -30,6 +30,7 @@ interface Props {
   conversationId?: string
   otherUserId?: string
   isPinned?: boolean
+  pinnedCount?: number
   isGroup?: boolean
   onEdit?: (message: Message) => void
   onForward?: (message: Message) => void
@@ -67,6 +68,7 @@ const MessageBubbleInner = function MessageBubble({
   conversationId,
   otherUserId,
   isPinned = false,
+  pinnedCount = 0,
   isGroup = false,
   onEdit,
   onForward,
@@ -393,6 +395,7 @@ const MessageBubbleInner = function MessageBubble({
           isOwn={isOwn}
           currentUserId={currentUserId}
           isPinned={isPinned}
+          pinnedCount={pinnedCount}
           onEdit={onEdit ? () => onEdit(message) : undefined}
           onForward={onForward ? () => onForward(message) : undefined}
           onReply={onReply ? () => onReply(message) : undefined}
@@ -421,6 +424,7 @@ export const MessageBubble = memo(
     prev.message.readBy === next.message.readBy &&
     prev.message.sources === next.message.sources &&
     prev.isPinned === next.isPinned &&
+    prev.pinnedCount === next.pinnedCount &&
     prev.isOwn === next.isOwn &&
     prev.conversationId === next.conversationId,
 )

@@ -2476,4 +2476,174 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get botAdminNoBotsRegistered => '登録されたボットはまだありません。';
+
+  @override
+  String get helpTitle => 'ヘルプとよくある質問';
+
+  @override
+  String get settingsHelp => 'ヘルプとFAQ';
+
+  @override
+  String get settingsHelpSubtitle => 'ヘルプセンターとよくある質問';
+
+  @override
+  String get helpSearchHint => 'ヘルプを検索…';
+
+  @override
+  String get helpNoResults => '結果が見つかりません';
+
+  @override
+  String get helpCatGettingStarted => 'はじめに';
+
+  @override
+  String get helpCatMessaging => 'メッセージ';
+
+  @override
+  String get helpCatAiFeatures => 'AI機能';
+
+  @override
+  String get helpCatGroups => 'グループ';
+
+  @override
+  String get helpCatAccountSecurity => 'アカウントとセキュリティ';
+
+  @override
+  String get helpGettingStartedQ1 => 'PONとは何ですか？';
+
+  @override
+  String get helpGettingStartedA1 =>
+      'PONは、チームコミュニケーションと統合されたAIアシスタントを組み合わせた、セルフホスト型のAI搭載メッセージングプラットフォームです。ダイレクトメッセージ、グループチャット、AIによるワークフローに対応しています。';
+
+  @override
+  String get helpGettingStartedQ2 => 'アカウントを作成するにはどうすればよいですか？';
+
+  @override
+  String get helpGettingStartedA2 =>
+      'アカウントはワークスペースの管理者によって作成されます。パスワードの設定とアカウントの確認方法を記載した招待メールが届きます。';
+
+  @override
+  String get helpGettingStartedQ3 => '友達を見つけて追加するにはどうすればよいですか？';
+
+  @override
+  String get helpGettingStartedA3 =>
+      '「友達」タブを開き、検索バーを使って名前やメールアドレスで同僚を検索してください。友達リクエストを送り、相手が承認するとチャットを始められます。';
+
+  @override
+  String get helpGettingStartedQ4 => '会話を始めるにはどうすればよいですか？';
+
+  @override
+  String get helpGettingStartedA4 =>
+      '会話画面で作成アイコンをタップし、連絡先を検索して選択すると、新しい会話が開きます。';
+
+  @override
+  String get helpMessagingQ1 => 'メッセージを送信するにはどうすればよいですか？';
+
+  @override
+  String get helpMessagingA1 =>
+      '会話の下部にあるテキストフィールドにメッセージを入力し、Enterキーを押すか送信ボタンをタップしてください。';
+
+  @override
+  String get helpMessagingQ2 => '音声メッセージを送信できますか？';
+
+  @override
+  String get helpMessagingA2 =>
+      'はい！メッセージ入力エリアのマイクボタンを長押しすると音声メッセージを録音できます。指を離すと送信、スワイプするとキャンセルできます。';
+
+  @override
+  String get helpMessagingQ3 => 'ファイルや画像を送信するにはどうすればよいですか？';
+
+  @override
+  String get helpMessagingA3 =>
+      'メッセージ入力欄の横にある添付アイコンをタップして、デバイスから画像、動画、ファイルを選択してください。';
+
+  @override
+  String get helpMessagingQ4 => '重要なメッセージをピン留めするにはどうすればよいですか？';
+
+  @override
+  String get helpMessagingA4 =>
+      'メッセージを長押しまたはカーソルを合わせ、その他メニュー（⋯）をタップして「メッセージをピン留め」を選択します。ピン留めしたメッセージは会話の上部に表示されます。1つの会話につき最大2件までピン留めできます。';
+
+  @override
+  String get helpMessagingQ5 => 'メッセージリアクションとは何ですか？';
+
+  @override
+  String get helpMessagingA5 =>
+      'メッセージにカーソルを合わせるか長押しし、絵文字アイコンをタップするとクイックリアクションを追加できます。他のユーザーもそれを見て自分のリアクションを追加できます。';
+
+  @override
+  String get helpAiFeaturesQ1 => 'AIアシスタントは何ができますか？';
+
+  @override
+  String get helpAiFeaturesA1 =>
+      'AIアシスタント（@AI）は、質問への回答、会話の要約、メッセージ作成の支援、アップロードされた文書の分析、接続されたツールを使ったタスクの実行ができます。';
+
+  @override
+  String get helpAiFeaturesQ2 => '会話で@AIを使うにはどうすればよいですか？';
+
+  @override
+  String get helpAiFeaturesA2 =>
+      '任意の会話で@AIに続けて質問やリクエストを入力してください。アシスタントが会話スレッド内で返信します。';
+
+  @override
+  String get helpAiFeaturesQ3 => 'AIメモリとは何ですか？';
+
+  @override
+  String get helpAiFeaturesA3 =>
+      'AIメモリにより、アシスタントは過去の会話のコンテキストを記憶でき、時間とともにやり取りがよりパーソナライズされ効率的になります。';
+
+  @override
+  String get helpAiFeaturesQ4 => '個人アシスタントを設定するにはどうすればよいですか？';
+
+  @override
+  String get helpAiFeaturesA4 =>
+      'AIアシスタントのセクションを開き、「アシスタントを設定」をタップします。アシスタントのペルソナの設定、ツールの接続、各種設定が行えます。';
+
+  @override
+  String get helpGroupsQ1 => 'グループを作成するにはどうすればよいですか？';
+
+  @override
+  String get helpGroupsA1 =>
+      '作成アイコンをタップし、「新規グループ」を選択して名前を検索しメンバーを追加し、グループ名を設定して「作成」をタップします。';
+
+  @override
+  String get helpGroupsQ2 => 'グループにメンバーを追加するにはどうすればよいですか？';
+
+  @override
+  String get helpGroupsA2 =>
+      'グループの会話を開き、設定アイコンをタップして「メンバーを追加」を選択します。連絡先を検索して追加してください。';
+
+  @override
+  String get helpGroupsQ3 => 'グループの役割とは何ですか？';
+
+  @override
+  String get helpGroupsA3 =>
+      'グループには管理者とメンバーの2つの役割があります。管理者はメンバーの追加・削除、グループ名やアバターの変更、グループ設定の管理ができます。';
+
+  @override
+  String get helpAccountSecurityQ1 => 'プロフィール写真を変更するにはどうすればよいですか？';
+
+  @override
+  String get helpAccountSecurityA1 =>
+      '設定 → プロフィールを開き、現在のアバターをタップしてデバイスから新しい写真を選択してください。';
+
+  @override
+  String get helpAccountSecurityQ2 => '消える メッセージを有効にするにはどうすればよいですか？';
+
+  @override
+  String get helpAccountSecurityA2 =>
+      '会話を開き、設定アイコンをタップしてチャットのカスタマイズに進み、お好みのタイマーで「消えるメッセージ」を有効にしてください。';
+
+  @override
+  String get helpAccountSecurityQ3 => 'ユーザーをブロックするにはどうすればよいですか？';
+
+  @override
+  String get helpAccountSecurityA3 =>
+      'そのユーザーとの会話を開き、設定アイコンをタップしてプライバシーとサポートまでスクロールし、「ユーザーをブロック」を選択してください。';
+
+  @override
+  String get helpAccountSecurityQ4 => 'メッセージ履歴を削除するにはどうすればよいですか？';
+
+  @override
+  String get helpAccountSecurityA4 =>
+      '会話を開いて設定をタップし、プライバシーとサポートに進んで「履歴を消去」を選択します。これはお使いのデバイスから履歴を削除するだけです。';
 }

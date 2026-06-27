@@ -223,6 +223,8 @@
     "integrationsSubtitle": "连接工具和 MCP 服务器",
     "skills": "技能",
     "skillsSubtitle": "选择助手能做什么",
+    "help": "帮助与常见问题",
+    "helpSubtitle": "获取常见问题的解答",
     "chooseThemeTitle": "选择主题",
     "chooseLanguageTitle": "选择语言"
   },
@@ -1145,5 +1147,82 @@
     "lastUsed": "最近使用",
     "neverUsed": "从未使用",
     "noBotsRegistered": "尚未注册任何机器人。"
+  },
+  "help": {
+    "title": "帮助与常见问题",
+    "searchHint": "搜索问题...",
+    "clearSearch": "清除搜索",
+    "noResults": "未找到与 \"{query}\" 相关的结果",
+    "categories": {
+      "gettingStarted": "快速入门",
+      "messaging": "消息",
+      "aiFeatures": "AI 功能",
+      "groups": "群组",
+      "accountSecurity": "账户与安全"
+    },
+    "q": {
+      "start": {
+        "whatIsPon": "PON 是什么？",
+        "createAccount": "如何创建账户？",
+        "addFriends": "如何查找并添加好友？",
+        "startConversation": "如何开始一段对话？"
+      },
+      "msg": {
+        "sendMessages": "如何发送消息？",
+        "voiceMessages": "我可以发送语音消息吗？",
+        "filesImages": "如何发送文件和图片？",
+        "pinMessages": "如何置顶重要消息？",
+        "reactions": "消息表情回应是什么？"
+      },
+      "ai": {
+        "aiCapabilities": "AI 助手能做什么？",
+        "useAtAi": "如何在对话中使用 @AI？",
+        "aiMemory": "AI 记忆是什么？",
+        "personalAssistant": "如何设置我的个人助手？"
+      },
+      "group": {
+        "createGroup": "如何创建群组？",
+        "addMembers": "如何向群组添加成员？",
+        "groupRoles": "群组角色是什么？"
+      },
+      "account": {
+        "changeAvatar": "如何更换我的头像？",
+        "disappearingMessages": "如何启用阅后即焚消息？",
+        "blockUser": "如何屏蔽某个用户？",
+        "deleteHistory": "如何删除消息记录？"
+      }
+    },
+    "a": {
+      "start": {
+        "whatIsPon": "PON 是一个自托管的 AI 驱动消息平台，将团队沟通与集成的 AI 助手相结合。它支持私聊、群聊和由 AI 驱动的工作流程。",
+        "createAccount": "您的账户由工作区管理员创建。您将收到一封邀请邮件，其中包含设置密码和验证账户的说明。",
+        "addFriends": "前往“好友”标签页，使用搜索栏按姓名或邮箱查找同事。发送好友请求，对方接受后即可开始聊天。",
+        "startConversation": "在对话界面点击撰写图标，搜索联系人并选择他们以开启新对话。"
+      },
+      "msg": {
+        "sendMessages": "在对话底部的文本框中输入消息，然后按回车键或点击发送按钮。",
+        "voiceMessages": "可以！按住消息输入区域的麦克风按钮即可录制语音消息。松开发送，或滑动取消。",
+        "filesImages": "点击消息输入框旁边的附件图标，即可从设备中选择图片、视频或文件。",
+        "pinMessages": "长按或将鼠标悬停在消息上，点击“更多”菜单（⋯），然后选择“置顶消息”。置顶的消息会显示在对话顶部。每个对话最多可置顶 2 条消息。",
+        "reactions": "将鼠标悬停在消息上或长按消息，点击表情图标即可添加快捷回应。其他人可以看到并添加自己的回应。"
+      },
+      "ai": {
+        "aiCapabilities": "AI 助手（@AI）可以回答问题、总结对话、协助撰写消息、分析上传的文档，并使用已连接的工具执行任务。",
+        "useAtAi": "在任意对话中输入 @AI，后接您的问题或请求。助手将在该对话中回复。",
+        "aiMemory": "AI 记忆让助手能够记住先前对话中的上下文，随着时间推移使互动更加个性化和高效。",
+        "personalAssistant": "前往 AI 助手部分并点击“设置助手”。您可以配置助手的人格、连接工具并设置偏好。"
+      },
+      "group": {
+        "createGroup": "点击撰写图标，选择“新建群组”，通过搜索姓名添加成员，设置群组名称，然后点击“创建”。",
+        "addMembers": "打开群组对话，点击设置图标，然后选择“添加成员”。搜索联系人并添加他们。",
+        "groupRoles": "群组有两种角色：管理员和成员。管理员可以添加/移除成员、更改群组名称和头像，并管理群组设置。"
+      },
+      "account": {
+        "changeAvatar": "前往“设置 → 个人资料”，点击当前头像，从设备中选择一张新照片。",
+        "disappearingMessages": "打开一段对话，点击设置图标，进入“自定义聊天”，然后启用“阅后即焚消息”并设置您偏好的计时器。",
+        "blockUser": "打开与该用户的对话，点击设置图标，滚动至“隐私与支持”，然后选择“屏蔽用户”。",
+        "deleteHistory": "打开对话，点击设置，进入“隐私与支持”，然后选择“清除记录”。此操作仅会从您的设备中移除记录。"
+      }
+    }
   }
 }

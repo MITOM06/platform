@@ -24,7 +24,7 @@ public record ConversationResponse(
     String wallpaper) {
   public record LastMessageDto(String content, String senderId, Instant createdAt) {}
 
-  public record PinnedMessageDto(String id, String senderId, String content, Instant createdAt) {}
+  public record PinnedMessageDto(String id, String senderId, String content, Instant createdAt, String type) {}
 
   /** Backward-compatible constructor without isPublic/pinnedMessages. */
   public ConversationResponse(

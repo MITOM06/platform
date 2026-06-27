@@ -223,6 +223,8 @@
     "integrationsSubtitle": "Connect tools & MCP servers",
     "skills": "Skills",
     "skillsSubtitle": "Choose what your assistant can do",
+    "help": "Help & FAQ",
+    "helpSubtitle": "Get answers to common questions",
     "chooseThemeTitle": "Choose theme",
     "chooseLanguageTitle": "Choose language"
   },
@@ -1145,5 +1147,82 @@
     "lastUsed": "Last used",
     "neverUsed": "Never used",
     "noBotsRegistered": "No bots registered yet."
+  },
+  "help": {
+    "title": "Help & FAQ",
+    "searchHint": "Search questions...",
+    "clearSearch": "Clear search",
+    "noResults": "No results found for \"{query}\"",
+    "categories": {
+      "gettingStarted": "Getting Started",
+      "messaging": "Messaging",
+      "aiFeatures": "AI Features",
+      "groups": "Groups",
+      "accountSecurity": "Account & Security"
+    },
+    "q": {
+      "start": {
+        "whatIsPon": "What is PON?",
+        "createAccount": "How do I create an account?",
+        "addFriends": "How do I find and add friends?",
+        "startConversation": "How do I start a conversation?"
+      },
+      "msg": {
+        "sendMessages": "How do I send messages?",
+        "voiceMessages": "Can I send voice messages?",
+        "filesImages": "How do I send files and images?",
+        "pinMessages": "How do I pin important messages?",
+        "reactions": "What are message reactions?"
+      },
+      "ai": {
+        "aiCapabilities": "What can the AI Assistant do?",
+        "useAtAi": "How do I use @AI in a conversation?",
+        "aiMemory": "What is AI memory?",
+        "personalAssistant": "How do I set up my personal assistant?"
+      },
+      "group": {
+        "createGroup": "How do I create a group?",
+        "addMembers": "How do I add members to a group?",
+        "groupRoles": "What are group roles?"
+      },
+      "account": {
+        "changeAvatar": "How do I change my profile picture?",
+        "disappearingMessages": "How do I enable disappearing messages?",
+        "blockUser": "How do I block a user?",
+        "deleteHistory": "How do I delete message history?"
+      }
+    },
+    "a": {
+      "start": {
+        "whatIsPon": "PON is a self-hosted AI-powered messaging platform that combines team communication with an integrated AI assistant. It supports direct messages, group chats, and AI-driven workflows.",
+        "createAccount": "Your account is created by your workspace administrator. You'll receive an invitation email with instructions to set your password and verify your account.",
+        "addFriends": "Go to the Friends tab and use the search bar to find colleagues by name or email. Send a friend request and start chatting once accepted.",
+        "startConversation": "Tap the compose icon on the conversations screen, search for a contact, and select them to open a new conversation."
+      },
+      "msg": {
+        "sendMessages": "Type your message in the text field at the bottom of the conversation and press Enter or tap the send button.",
+        "voiceMessages": "Yes! Hold the microphone button in the message input area to record a voice message. Release to send or swipe to cancel.",
+        "filesImages": "Tap the attachment icon next to the message input to select images, videos, or files from your device.",
+        "pinMessages": "Long-press or hover over a message, tap the More menu (⋯), and select 'Pin message'. Pinned messages appear at the top of the conversation. You can pin up to 2 messages per conversation.",
+        "reactions": "Hover over or long-press a message and tap the emoji icon to add a quick reaction. Others can see and add their own reactions."
+      },
+      "ai": {
+        "aiCapabilities": "The AI Assistant (@AI) can answer questions, summarize conversations, help draft messages, analyze uploaded documents, and execute tasks using connected tools.",
+        "useAtAi": "In any conversation, type @AI followed by your question or request. The assistant will respond in the conversation thread.",
+        "aiMemory": "AI memory allows the assistant to remember context from previous conversations, making interactions more personalized and efficient over time.",
+        "personalAssistant": "Go to the AI Assistant section and tap 'Set up assistant'. You can configure the assistant's persona, connect tools, and set preferences."
+      },
+      "group": {
+        "createGroup": "Tap the compose icon, select 'New Group', add members by searching their names, set a group name, and tap Create.",
+        "addMembers": "Open the group conversation, tap the Settings icon, and select 'Add Members'. Search for contacts and add them.",
+        "groupRoles": "Groups have two roles: Admin and Member. Admins can add/remove members, change the group name and avatar, and manage group settings."
+      },
+      "account": {
+        "changeAvatar": "Go to Settings → Profile, tap your current avatar, and choose a new photo from your device.",
+        "disappearingMessages": "Open a conversation, tap the Settings icon, go to Customize Chat, and enable 'Disappearing Messages' with your preferred timer.",
+        "blockUser": "Open the conversation with the user, tap the Settings icon, scroll to Privacy & Support, and select 'Block User'.",
+        "deleteHistory": "Open the conversation, tap Settings, go to Privacy & Support, and select 'Clear History'. This only removes history from your device."
+      }
+    }
   }
 }

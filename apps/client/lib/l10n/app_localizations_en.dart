@@ -2533,4 +2533,174 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get botAdminNoBotsRegistered => 'No bots registered yet.';
+
+  @override
+  String get helpTitle => 'Help & FAQ';
+
+  @override
+  String get settingsHelp => 'Help & FAQ';
+
+  @override
+  String get settingsHelpSubtitle => 'Help center & FAQs';
+
+  @override
+  String get helpSearchHint => 'Search help…';
+
+  @override
+  String get helpNoResults => 'No results found';
+
+  @override
+  String get helpCatGettingStarted => 'Getting Started';
+
+  @override
+  String get helpCatMessaging => 'Messaging';
+
+  @override
+  String get helpCatAiFeatures => 'AI Features';
+
+  @override
+  String get helpCatGroups => 'Groups';
+
+  @override
+  String get helpCatAccountSecurity => 'Account & Security';
+
+  @override
+  String get helpGettingStartedQ1 => 'What is PON?';
+
+  @override
+  String get helpGettingStartedA1 =>
+      'PON is a self-hosted AI-powered messaging platform that combines team communication with an integrated AI assistant. It supports direct messages, group chats, and AI-driven workflows.';
+
+  @override
+  String get helpGettingStartedQ2 => 'How do I create an account?';
+
+  @override
+  String get helpGettingStartedA2 =>
+      'Your account is created by your workspace administrator. You\'ll receive an invitation email with instructions to set your password and verify your account.';
+
+  @override
+  String get helpGettingStartedQ3 => 'How do I find and add friends?';
+
+  @override
+  String get helpGettingStartedA3 =>
+      'Go to the Friends tab and use the search bar to find colleagues by name or email. Send a friend request and start chatting once accepted.';
+
+  @override
+  String get helpGettingStartedQ4 => 'How do I start a conversation?';
+
+  @override
+  String get helpGettingStartedA4 =>
+      'Tap the compose icon on the conversations screen, search for a contact, and select them to open a new conversation.';
+
+  @override
+  String get helpMessagingQ1 => 'How do I send messages?';
+
+  @override
+  String get helpMessagingA1 =>
+      'Type your message in the text field at the bottom of the conversation and press Enter or tap the send button.';
+
+  @override
+  String get helpMessagingQ2 => 'Can I send voice messages?';
+
+  @override
+  String get helpMessagingA2 =>
+      'Yes! Hold the microphone button in the message input area to record a voice message. Release to send or swipe to cancel.';
+
+  @override
+  String get helpMessagingQ3 => 'How do I send files and images?';
+
+  @override
+  String get helpMessagingA3 =>
+      'Tap the attachment icon next to the message input to select images, videos, or files from your device.';
+
+  @override
+  String get helpMessagingQ4 => 'How do I pin important messages?';
+
+  @override
+  String get helpMessagingA4 =>
+      'Long-press or hover over a message, tap the More menu (⋯), and select \'Pin message\'. Pinned messages appear at the top of the conversation. You can pin up to 2 messages per conversation.';
+
+  @override
+  String get helpMessagingQ5 => 'What are message reactions?';
+
+  @override
+  String get helpMessagingA5 =>
+      'Hover over or long-press a message and tap the emoji icon to add a quick reaction. Others can see and add their own reactions.';
+
+  @override
+  String get helpAiFeaturesQ1 => 'What can the AI Assistant do?';
+
+  @override
+  String get helpAiFeaturesA1 =>
+      'The AI Assistant (@AI) can answer questions, summarize conversations, help draft messages, analyze uploaded documents, and execute tasks using connected tools.';
+
+  @override
+  String get helpAiFeaturesQ2 => 'How do I use @AI in a conversation?';
+
+  @override
+  String get helpAiFeaturesA2 =>
+      'In any conversation, type @AI followed by your question or request. The assistant will respond in the conversation thread.';
+
+  @override
+  String get helpAiFeaturesQ3 => 'What is AI memory?';
+
+  @override
+  String get helpAiFeaturesA3 =>
+      'AI memory allows the assistant to remember context from previous conversations, making interactions more personalized and efficient over time.';
+
+  @override
+  String get helpAiFeaturesQ4 => 'How do I set up my personal assistant?';
+
+  @override
+  String get helpAiFeaturesA4 =>
+      'Go to the AI Assistant section and tap \'Set up assistant\'. You can configure the assistant\'s persona, connect tools, and set preferences.';
+
+  @override
+  String get helpGroupsQ1 => 'How do I create a group?';
+
+  @override
+  String get helpGroupsA1 =>
+      'Tap the compose icon, select \'New Group\', add members by searching their names, set a group name, and tap Create.';
+
+  @override
+  String get helpGroupsQ2 => 'How do I add members to a group?';
+
+  @override
+  String get helpGroupsA2 =>
+      'Open the group conversation, tap the Settings icon, and select \'Add Members\'. Search for contacts and add them.';
+
+  @override
+  String get helpGroupsQ3 => 'What are group roles?';
+
+  @override
+  String get helpGroupsA3 =>
+      'Groups have two roles: Admin and Member. Admins can add/remove members, change the group name and avatar, and manage group settings.';
+
+  @override
+  String get helpAccountSecurityQ1 => 'How do I change my profile picture?';
+
+  @override
+  String get helpAccountSecurityA1 =>
+      'Go to Settings → Profile, tap your current avatar, and choose a new photo from your device.';
+
+  @override
+  String get helpAccountSecurityQ2 => 'How do I enable disappearing messages?';
+
+  @override
+  String get helpAccountSecurityA2 =>
+      'Open a conversation, tap the Settings icon, go to Customize Chat, and enable \'Disappearing Messages\' with your preferred timer.';
+
+  @override
+  String get helpAccountSecurityQ3 => 'How do I block a user?';
+
+  @override
+  String get helpAccountSecurityA3 =>
+      'Open the conversation with the user, tap the Settings icon, scroll to Privacy & Support, and select \'Block User\'.';
+
+  @override
+  String get helpAccountSecurityQ4 => 'How do I delete message history?';
+
+  @override
+  String get helpAccountSecurityA4 =>
+      'Open the conversation, tap Settings, go to Privacy & Support, and select \'Clear History\'. This only removes history from your device.';
 }

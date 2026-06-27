@@ -22,20 +22,26 @@ function useSenderName(conversationId: string, senderId: string): string {
   return getNickname(conversationId, senderId) ?? user?.displayName ?? '…'
 }
 
+const MEDIA_TYPES = new Set(['voice', 'image', 'video', 'file', 'sticker'])
+
 function PinnedRow({
   conversationId,
   pinned,
   unpinLabel,
+  attachmentLabel,
   onJump,
   onUnpin,
 }: {
   conversationId: string
   pinned: PinnedMessage
   unpinLabel: string
+  attachmentLabel: string
   onJump?: () => void
   onUnpin: (id: string) => void
 }) {
   const senderName = useSenderName(conversationId, pinned.senderId)
+  const displayContent =
+    pinned.type && MEDIA_TYPES.has(pinned.type) ? attachmentLabel : pinned.content
 
   const handleJump = () => {
     onJump?.()
@@ -48,7 +54,7 @@ function PinnedRow({
 
   return (
     <PinnedMessageRow
-      content={pinned.content}
+      content={displayContent}
       senderLabel={senderName}
       unpinLabel={unpinLabel}
       onJump={handleJump}
@@ -91,6 +97,7 @@ export function PinnedMessagesSection({ conversationId, pinnedMessages, onJump }
             conversationId={conversationId}
             pinned={pinned}
             unpinLabel={t('unpinMessage')}
+            attachmentLabel={t('attachmentLabel')}
             onJump={onJump}
             onUnpin={handleUnpin}
           />

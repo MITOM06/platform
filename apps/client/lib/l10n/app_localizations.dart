@@ -4758,6 +4758,306 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No bots registered yet.'**
   String get botAdminNoBotsRegistered;
+
+  /// No description provided for @helpTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Help & FAQ'**
+  String get helpTitle;
+
+  /// No description provided for @settingsHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Help & FAQ'**
+  String get settingsHelp;
+
+  /// No description provided for @settingsHelpSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Help center & FAQs'**
+  String get settingsHelpSubtitle;
+
+  /// No description provided for @helpSearchHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Search help…'**
+  String get helpSearchHint;
+
+  /// No description provided for @helpNoResults.
+  ///
+  /// In en, this message translates to:
+  /// **'No results found'**
+  String get helpNoResults;
+
+  /// No description provided for @helpCatGettingStarted.
+  ///
+  /// In en, this message translates to:
+  /// **'Getting Started'**
+  String get helpCatGettingStarted;
+
+  /// No description provided for @helpCatMessaging.
+  ///
+  /// In en, this message translates to:
+  /// **'Messaging'**
+  String get helpCatMessaging;
+
+  /// No description provided for @helpCatAiFeatures.
+  ///
+  /// In en, this message translates to:
+  /// **'AI Features'**
+  String get helpCatAiFeatures;
+
+  /// No description provided for @helpCatGroups.
+  ///
+  /// In en, this message translates to:
+  /// **'Groups'**
+  String get helpCatGroups;
+
+  /// No description provided for @helpCatAccountSecurity.
+  ///
+  /// In en, this message translates to:
+  /// **'Account & Security'**
+  String get helpCatAccountSecurity;
+
+  /// No description provided for @helpGettingStartedQ1.
+  ///
+  /// In en, this message translates to:
+  /// **'What is PON?'**
+  String get helpGettingStartedQ1;
+
+  /// No description provided for @helpGettingStartedA1.
+  ///
+  /// In en, this message translates to:
+  /// **'PON is a self-hosted AI-powered messaging platform that combines team communication with an integrated AI assistant. It supports direct messages, group chats, and AI-driven workflows.'**
+  String get helpGettingStartedA1;
+
+  /// No description provided for @helpGettingStartedQ2.
+  ///
+  /// In en, this message translates to:
+  /// **'How do I create an account?'**
+  String get helpGettingStartedQ2;
+
+  /// No description provided for @helpGettingStartedA2.
+  ///
+  /// In en, this message translates to:
+  /// **'Your account is created by your workspace administrator. You\'ll receive an invitation email with instructions to set your password and verify your account.'**
+  String get helpGettingStartedA2;
+
+  /// No description provided for @helpGettingStartedQ3.
+  ///
+  /// In en, this message translates to:
+  /// **'How do I find and add friends?'**
+  String get helpGettingStartedQ3;
+
+  /// No description provided for @helpGettingStartedA3.
+  ///
+  /// In en, this message translates to:
+  /// **'Go to the Friends tab and use the search bar to find colleagues by name or email. Send a friend request and start chatting once accepted.'**
+  String get helpGettingStartedA3;
+
+  /// No description provided for @helpGettingStartedQ4.
+  ///
+  /// In en, this message translates to:
+  /// **'How do I start a conversation?'**
+  String get helpGettingStartedQ4;
+
+  /// No description provided for @helpGettingStartedA4.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap the compose icon on the conversations screen, search for a contact, and select them to open a new conversation.'**
+  String get helpGettingStartedA4;
+
+  /// No description provided for @helpMessagingQ1.
+  ///
+  /// In en, this message translates to:
+  /// **'How do I send messages?'**
+  String get helpMessagingQ1;
+
+  /// No description provided for @helpMessagingA1.
+  ///
+  /// In en, this message translates to:
+  /// **'Type your message in the text field at the bottom of the conversation and press Enter or tap the send button.'**
+  String get helpMessagingA1;
+
+  /// No description provided for @helpMessagingQ2.
+  ///
+  /// In en, this message translates to:
+  /// **'Can I send voice messages?'**
+  String get helpMessagingQ2;
+
+  /// No description provided for @helpMessagingA2.
+  ///
+  /// In en, this message translates to:
+  /// **'Yes! Hold the microphone button in the message input area to record a voice message. Release to send or swipe to cancel.'**
+  String get helpMessagingA2;
+
+  /// No description provided for @helpMessagingQ3.
+  ///
+  /// In en, this message translates to:
+  /// **'How do I send files and images?'**
+  String get helpMessagingQ3;
+
+  /// No description provided for @helpMessagingA3.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap the attachment icon next to the message input to select images, videos, or files from your device.'**
+  String get helpMessagingA3;
+
+  /// No description provided for @helpMessagingQ4.
+  ///
+  /// In en, this message translates to:
+  /// **'How do I pin important messages?'**
+  String get helpMessagingQ4;
+
+  /// No description provided for @helpMessagingA4.
+  ///
+  /// In en, this message translates to:
+  /// **'Long-press or hover over a message, tap the More menu (⋯), and select \'Pin message\'. Pinned messages appear at the top of the conversation. You can pin up to 2 messages per conversation.'**
+  String get helpMessagingA4;
+
+  /// No description provided for @helpMessagingQ5.
+  ///
+  /// In en, this message translates to:
+  /// **'What are message reactions?'**
+  String get helpMessagingQ5;
+
+  /// No description provided for @helpMessagingA5.
+  ///
+  /// In en, this message translates to:
+  /// **'Hover over or long-press a message and tap the emoji icon to add a quick reaction. Others can see and add their own reactions.'**
+  String get helpMessagingA5;
+
+  /// No description provided for @helpAiFeaturesQ1.
+  ///
+  /// In en, this message translates to:
+  /// **'What can the AI Assistant do?'**
+  String get helpAiFeaturesQ1;
+
+  /// No description provided for @helpAiFeaturesA1.
+  ///
+  /// In en, this message translates to:
+  /// **'The AI Assistant (@AI) can answer questions, summarize conversations, help draft messages, analyze uploaded documents, and execute tasks using connected tools.'**
+  String get helpAiFeaturesA1;
+
+  /// No description provided for @helpAiFeaturesQ2.
+  ///
+  /// In en, this message translates to:
+  /// **'How do I use @AI in a conversation?'**
+  String get helpAiFeaturesQ2;
+
+  /// No description provided for @helpAiFeaturesA2.
+  ///
+  /// In en, this message translates to:
+  /// **'In any conversation, type @AI followed by your question or request. The assistant will respond in the conversation thread.'**
+  String get helpAiFeaturesA2;
+
+  /// No description provided for @helpAiFeaturesQ3.
+  ///
+  /// In en, this message translates to:
+  /// **'What is AI memory?'**
+  String get helpAiFeaturesQ3;
+
+  /// No description provided for @helpAiFeaturesA3.
+  ///
+  /// In en, this message translates to:
+  /// **'AI memory allows the assistant to remember context from previous conversations, making interactions more personalized and efficient over time.'**
+  String get helpAiFeaturesA3;
+
+  /// No description provided for @helpAiFeaturesQ4.
+  ///
+  /// In en, this message translates to:
+  /// **'How do I set up my personal assistant?'**
+  String get helpAiFeaturesQ4;
+
+  /// No description provided for @helpAiFeaturesA4.
+  ///
+  /// In en, this message translates to:
+  /// **'Go to the AI Assistant section and tap \'Set up assistant\'. You can configure the assistant\'s persona, connect tools, and set preferences.'**
+  String get helpAiFeaturesA4;
+
+  /// No description provided for @helpGroupsQ1.
+  ///
+  /// In en, this message translates to:
+  /// **'How do I create a group?'**
+  String get helpGroupsQ1;
+
+  /// No description provided for @helpGroupsA1.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap the compose icon, select \'New Group\', add members by searching their names, set a group name, and tap Create.'**
+  String get helpGroupsA1;
+
+  /// No description provided for @helpGroupsQ2.
+  ///
+  /// In en, this message translates to:
+  /// **'How do I add members to a group?'**
+  String get helpGroupsQ2;
+
+  /// No description provided for @helpGroupsA2.
+  ///
+  /// In en, this message translates to:
+  /// **'Open the group conversation, tap the Settings icon, and select \'Add Members\'. Search for contacts and add them.'**
+  String get helpGroupsA2;
+
+  /// No description provided for @helpGroupsQ3.
+  ///
+  /// In en, this message translates to:
+  /// **'What are group roles?'**
+  String get helpGroupsQ3;
+
+  /// No description provided for @helpGroupsA3.
+  ///
+  /// In en, this message translates to:
+  /// **'Groups have two roles: Admin and Member. Admins can add/remove members, change the group name and avatar, and manage group settings.'**
+  String get helpGroupsA3;
+
+  /// No description provided for @helpAccountSecurityQ1.
+  ///
+  /// In en, this message translates to:
+  /// **'How do I change my profile picture?'**
+  String get helpAccountSecurityQ1;
+
+  /// No description provided for @helpAccountSecurityA1.
+  ///
+  /// In en, this message translates to:
+  /// **'Go to Settings → Profile, tap your current avatar, and choose a new photo from your device.'**
+  String get helpAccountSecurityA1;
+
+  /// No description provided for @helpAccountSecurityQ2.
+  ///
+  /// In en, this message translates to:
+  /// **'How do I enable disappearing messages?'**
+  String get helpAccountSecurityQ2;
+
+  /// No description provided for @helpAccountSecurityA2.
+  ///
+  /// In en, this message translates to:
+  /// **'Open a conversation, tap the Settings icon, go to Customize Chat, and enable \'Disappearing Messages\' with your preferred timer.'**
+  String get helpAccountSecurityA2;
+
+  /// No description provided for @helpAccountSecurityQ3.
+  ///
+  /// In en, this message translates to:
+  /// **'How do I block a user?'**
+  String get helpAccountSecurityQ3;
+
+  /// No description provided for @helpAccountSecurityA3.
+  ///
+  /// In en, this message translates to:
+  /// **'Open the conversation with the user, tap the Settings icon, scroll to Privacy & Support, and select \'Block User\'.'**
+  String get helpAccountSecurityA3;
+
+  /// No description provided for @helpAccountSecurityQ4.
+  ///
+  /// In en, this message translates to:
+  /// **'How do I delete message history?'**
+  String get helpAccountSecurityQ4;
+
+  /// No description provided for @helpAccountSecurityA4.
+  ///
+  /// In en, this message translates to:
+  /// **'Open the conversation, tap Settings, go to Privacy & Support, and select \'Clear History\'. This only removes history from your device.'**
+  String get helpAccountSecurityA4;
 }
 
 class _AppLocalizationsDelegate

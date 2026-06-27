@@ -223,6 +223,8 @@
     "integrationsSubtitle": "Kết nối công cụ & máy chủ MCP",
     "skills": "Kỹ năng",
     "skillsSubtitle": "Chọn điều trợ lý có thể làm",
+    "help": "Trợ giúp & Câu hỏi thường gặp",
+    "helpSubtitle": "Tìm câu trả lời cho các câu hỏi thường gặp",
     "chooseThemeTitle": "Chọn giao diện",
     "chooseLanguageTitle": "Chọn ngôn ngữ"
   },
@@ -1145,5 +1147,82 @@
     "lastUsed": "Lần dùng cuối",
     "neverUsed": "Chưa từng dùng",
     "noBotsRegistered": "Chưa có bot nào được đăng ký."
+  },
+  "help": {
+    "title": "Trợ giúp & Câu hỏi thường gặp",
+    "searchHint": "Tìm kiếm câu hỏi...",
+    "clearSearch": "Xóa tìm kiếm",
+    "noResults": "Không tìm thấy kết quả cho \"{query}\"",
+    "categories": {
+      "gettingStarted": "Bắt đầu",
+      "messaging": "Nhắn tin",
+      "aiFeatures": "Tính năng AI",
+      "groups": "Nhóm",
+      "accountSecurity": "Tài khoản & Bảo mật"
+    },
+    "q": {
+      "start": {
+        "whatIsPon": "PON là gì?",
+        "createAccount": "Làm thế nào để tạo tài khoản?",
+        "addFriends": "Làm thế nào để tìm và kết bạn?",
+        "startConversation": "Làm thế nào để bắt đầu một cuộc trò chuyện?"
+      },
+      "msg": {
+        "sendMessages": "Làm thế nào để gửi tin nhắn?",
+        "voiceMessages": "Tôi có thể gửi tin nhắn thoại không?",
+        "filesImages": "Làm thế nào để gửi tệp và hình ảnh?",
+        "pinMessages": "Làm thế nào để ghim tin nhắn quan trọng?",
+        "reactions": "Biểu cảm tin nhắn là gì?"
+      },
+      "ai": {
+        "aiCapabilities": "Trợ lý AI có thể làm gì?",
+        "useAtAi": "Làm thế nào để dùng @AI trong cuộc trò chuyện?",
+        "aiMemory": "Bộ nhớ AI là gì?",
+        "personalAssistant": "Làm thế nào để thiết lập trợ lý cá nhân?"
+      },
+      "group": {
+        "createGroup": "Làm thế nào để tạo nhóm?",
+        "addMembers": "Làm thế nào để thêm thành viên vào nhóm?",
+        "groupRoles": "Vai trò trong nhóm là gì?"
+      },
+      "account": {
+        "changeAvatar": "Làm thế nào để đổi ảnh đại diện?",
+        "disappearingMessages": "Làm thế nào để bật tin nhắn tự hủy?",
+        "blockUser": "Làm thế nào để chặn một người dùng?",
+        "deleteHistory": "Làm thế nào để xóa lịch sử tin nhắn?"
+      }
+    },
+    "a": {
+      "start": {
+        "whatIsPon": "PON là nền tảng nhắn tin tự lưu trữ tích hợp AI, kết hợp giao tiếp nhóm với trợ lý AI tích hợp. Nó hỗ trợ tin nhắn trực tiếp, trò chuyện nhóm và các quy trình do AI điều khiển.",
+        "createAccount": "Tài khoản của bạn được quản trị viên không gian làm việc tạo. Bạn sẽ nhận được email mời kèm hướng dẫn đặt mật khẩu và xác minh tài khoản.",
+        "addFriends": "Vào tab Bạn bè và dùng thanh tìm kiếm để tìm đồng nghiệp theo tên hoặc email. Gửi lời mời kết bạn và bắt đầu trò chuyện khi được chấp nhận.",
+        "startConversation": "Nhấn biểu tượng soạn tin trên màn hình cuộc trò chuyện, tìm một liên hệ và chọn họ để mở cuộc trò chuyện mới."
+      },
+      "msg": {
+        "sendMessages": "Nhập tin nhắn vào ô văn bản ở cuối cuộc trò chuyện rồi nhấn Enter hoặc nhấn nút gửi.",
+        "voiceMessages": "Có! Giữ nút micro trong khu vực nhập tin nhắn để ghi âm tin nhắn thoại. Thả ra để gửi hoặc vuốt để hủy.",
+        "filesImages": "Nhấn biểu tượng đính kèm bên cạnh ô nhập tin nhắn để chọn hình ảnh, video hoặc tệp từ thiết bị của bạn.",
+        "pinMessages": "Nhấn giữ hoặc di chuột qua một tin nhắn, nhấn menu Thêm (⋯) và chọn 'Ghim tin nhắn'. Tin nhắn được ghim sẽ hiển thị ở đầu cuộc trò chuyện. Bạn có thể ghim tối đa 2 tin nhắn mỗi cuộc trò chuyện.",
+        "reactions": "Di chuột qua hoặc nhấn giữ một tin nhắn rồi nhấn biểu tượng emoji để thêm biểu cảm nhanh. Người khác có thể thấy và thêm biểu cảm của riêng họ."
+      },
+      "ai": {
+        "aiCapabilities": "Trợ lý AI (@AI) có thể trả lời câu hỏi, tóm tắt cuộc trò chuyện, hỗ trợ soạn tin nhắn, phân tích tài liệu đã tải lên và thực hiện tác vụ bằng các công cụ đã kết nối.",
+        "useAtAi": "Trong bất kỳ cuộc trò chuyện nào, hãy nhập @AI kèm theo câu hỏi hoặc yêu cầu của bạn. Trợ lý sẽ trả lời ngay trong cuộc trò chuyện.",
+        "aiMemory": "Bộ nhớ AI cho phép trợ lý ghi nhớ ngữ cảnh từ các cuộc trò chuyện trước, giúp tương tác cá nhân hóa và hiệu quả hơn theo thời gian.",
+        "personalAssistant": "Vào phần Trợ lý AI và nhấn 'Thiết lập trợ lý'. Bạn có thể cấu hình tính cách của trợ lý, kết nối công cụ và thiết lập tùy chọn."
+      },
+      "group": {
+        "createGroup": "Nhấn biểu tượng soạn tin, chọn 'Nhóm mới', thêm thành viên bằng cách tìm tên họ, đặt tên nhóm và nhấn Tạo.",
+        "addMembers": "Mở cuộc trò chuyện nhóm, nhấn biểu tượng Cài đặt và chọn 'Thêm thành viên'. Tìm liên hệ và thêm họ.",
+        "groupRoles": "Nhóm có hai vai trò: Quản trị viên và Thành viên. Quản trị viên có thể thêm/xóa thành viên, đổi tên và ảnh đại diện nhóm, và quản lý cài đặt nhóm."
+      },
+      "account": {
+        "changeAvatar": "Vào Cài đặt → Hồ sơ, nhấn vào ảnh đại diện hiện tại và chọn ảnh mới từ thiết bị của bạn.",
+        "disappearingMessages": "Mở một cuộc trò chuyện, nhấn biểu tượng Cài đặt, vào Tùy chỉnh trò chuyện và bật 'Tin nhắn tự hủy' với bộ hẹn giờ bạn muốn.",
+        "blockUser": "Mở cuộc trò chuyện với người dùng, nhấn biểu tượng Cài đặt, cuộn đến Quyền riêng tư & Hỗ trợ và chọn 'Chặn người dùng'.",
+        "deleteHistory": "Mở cuộc trò chuyện, nhấn Cài đặt, vào Quyền riêng tư & Hỗ trợ và chọn 'Xóa lịch sử'. Thao tác này chỉ xóa lịch sử khỏi thiết bị của bạn."
+      }
+    }
   }
 }
