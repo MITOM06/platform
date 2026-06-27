@@ -130,6 +130,21 @@ class AppLocalizationsVi extends AppLocalizations {
   String get wallpaperDefaultName => 'Mặc định';
 
   @override
+  String get wallpaperCategoryColors => 'Màu sắc đơn giản';
+
+  @override
+  String get wallpaperCategoryVibrant => 'Gradient sống động';
+
+  @override
+  String get wallpaperCategoryMinimal => 'Tối giản';
+
+  @override
+  String get wallpaperShowMore => 'Xem thêm';
+
+  @override
+  String get wallpaperShowLess => 'Ẩn bớt';
+
+  @override
   String get changeChatThemeTitle => 'Đổi chủ đề đoạn chat';
 
   @override

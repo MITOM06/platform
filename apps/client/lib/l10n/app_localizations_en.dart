@@ -130,6 +130,21 @@ class AppLocalizationsEn extends AppLocalizations {
   String get wallpaperDefaultName => 'Default';
 
   @override
+  String get wallpaperCategoryColors => 'Simple Colors';
+
+  @override
+  String get wallpaperCategoryVibrant => 'Vibrant Gradients';
+
+  @override
+  String get wallpaperCategoryMinimal => 'Minimal';
+
+  @override
+  String get wallpaperShowMore => 'Show more';
+
+  @override
+  String get wallpaperShowLess => 'Show less';
+
+  @override
   String get changeChatThemeTitle => 'Change Chat Theme';
 
   @override

@@ -130,6 +130,21 @@ class AppLocalizationsJa extends AppLocalizations {
   String get wallpaperDefaultName => 'デフォルト';
 
   @override
+  String get wallpaperCategoryColors => 'シンプルカラー';
+
+  @override
+  String get wallpaperCategoryVibrant => '鮮やかなグラデーション';
+
+  @override
+  String get wallpaperCategoryMinimal => 'ミニマル';
+
+  @override
+  String get wallpaperShowMore => 'もっと見る';
+
+  @override
+  String get wallpaperShowLess => '閉じる';
+
+  @override
   String get changeChatThemeTitle => 'チャットのテーマを変更';
 
   @override

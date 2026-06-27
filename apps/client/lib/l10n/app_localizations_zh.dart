@@ -130,6 +130,21 @@ class AppLocalizationsZh extends AppLocalizations {
   String get wallpaperDefaultName => '默认';
 
   @override
+  String get wallpaperCategoryColors => '简约配色';
+
+  @override
+  String get wallpaperCategoryVibrant => '鲜艳渐变';
+
+  @override
+  String get wallpaperCategoryMinimal => '极简';
+
+  @override
+  String get wallpaperShowMore => '显示更多';
+
+  @override
+  String get wallpaperShowLess => '收起';
+
+  @override
   String get changeChatThemeTitle => '更改聊天主题';
 
   @override

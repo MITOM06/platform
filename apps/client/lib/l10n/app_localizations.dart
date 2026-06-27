@@ -342,6 +342,36 @@ abstract class AppLocalizations {
   /// **'Default'**
   String get wallpaperDefaultName;
 
+  /// No description provided for @wallpaperCategoryColors.
+  ///
+  /// In en, this message translates to:
+  /// **'Simple Colors'**
+  String get wallpaperCategoryColors;
+
+  /// No description provided for @wallpaperCategoryVibrant.
+  ///
+  /// In en, this message translates to:
+  /// **'Vibrant Gradients'**
+  String get wallpaperCategoryVibrant;
+
+  /// No description provided for @wallpaperCategoryMinimal.
+  ///
+  /// In en, this message translates to:
+  /// **'Minimal'**
+  String get wallpaperCategoryMinimal;
+
+  /// No description provided for @wallpaperShowMore.
+  ///
+  /// In en, this message translates to:
+  /// **'Show more'**
+  String get wallpaperShowMore;
+
+  /// No description provided for @wallpaperShowLess.
+  ///
+  /// In en, this message translates to:
+  /// **'Show less'**
+  String get wallpaperShowLess;
+
   /// No description provided for @changeChatThemeTitle.
   ///
   /// In en, this message translates to:
