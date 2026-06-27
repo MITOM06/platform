@@ -2,8 +2,7 @@
 
 import { useState } from 'react'
 import { useTranslations } from 'next-intl'
-import { ArrowLeft, Bot, Settings, Phone, Video, Users } from 'lucide-react'
-import Link from 'next/link'
+import { Bot, Settings, Phone, Video, Users } from 'lucide-react'
 import { useQueryClient } from '@tanstack/react-query'
 import { useConversation } from '@/lib/hooks/use-conversation'
 import { useUserStatus } from '@/lib/hooks/use-user-status'
@@ -94,13 +93,6 @@ export function ConversationHeader({
   return (
     <div className="shrink-0">
       <header className="h-14 border-b px-4 flex items-center gap-3 bg-background">
-        <Link
-          href="/conversations"
-          className="text-muted-foreground hover:text-foreground transition-colors p-2 -m-2 rounded-full"
-        >
-          <ArrowLeft className="size-5" />
-        </Link>
-
         <button
           type="button"
           className="relative shrink-0 rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/50"

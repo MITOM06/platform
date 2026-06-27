@@ -30,6 +30,7 @@ export interface PinnedMessage {
   senderId: string
   content: string
   createdAt: string
+  type?: string
 }
 
 export interface Conversation {

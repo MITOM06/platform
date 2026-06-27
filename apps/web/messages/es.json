@@ -223,6 +223,8 @@
     "integrationsSubtitle": "Conecta herramientas y servidores MCP",
     "skills": "Habilidades",
     "skillsSubtitle": "Elige lo que tu asistente puede hacer",
+    "help": "Ayuda y preguntas frecuentes",
+    "helpSubtitle": "Encuentra respuestas a preguntas comunes",
     "chooseThemeTitle": "Elegir tema",
     "chooseLanguageTitle": "Elegir idioma"
   },
@@ -1145,5 +1147,82 @@
     "lastUsed": "Último uso",
     "neverUsed": "Nunca usado",
     "noBotsRegistered": "Aún no hay bots registrados."
+  },
+  "help": {
+    "title": "Ayuda y preguntas frecuentes",
+    "searchHint": "Buscar preguntas...",
+    "clearSearch": "Borrar búsqueda",
+    "noResults": "No se encontraron resultados para \"{query}\"",
+    "categories": {
+      "gettingStarted": "Primeros pasos",
+      "messaging": "Mensajería",
+      "aiFeatures": "Funciones de IA",
+      "groups": "Grupos",
+      "accountSecurity": "Cuenta y seguridad"
+    },
+    "q": {
+      "start": {
+        "whatIsPon": "¿Qué es PON?",
+        "createAccount": "¿Cómo creo una cuenta?",
+        "addFriends": "¿Cómo encuentro y agrego amigos?",
+        "startConversation": "¿Cómo inicio una conversación?"
+      },
+      "msg": {
+        "sendMessages": "¿Cómo envío mensajes?",
+        "voiceMessages": "¿Puedo enviar mensajes de voz?",
+        "filesImages": "¿Cómo envío archivos e imágenes?",
+        "pinMessages": "¿Cómo fijo mensajes importantes?",
+        "reactions": "¿Qué son las reacciones a los mensajes?"
+      },
+      "ai": {
+        "aiCapabilities": "¿Qué puede hacer el asistente de IA?",
+        "useAtAi": "¿Cómo uso @AI en una conversación?",
+        "aiMemory": "¿Qué es la memoria de IA?",
+        "personalAssistant": "¿Cómo configuro mi asistente personal?"
+      },
+      "group": {
+        "createGroup": "¿Cómo creo un grupo?",
+        "addMembers": "¿Cómo agrego miembros a un grupo?",
+        "groupRoles": "¿Qué son los roles de grupo?"
+      },
+      "account": {
+        "changeAvatar": "¿Cómo cambio mi foto de perfil?",
+        "disappearingMessages": "¿Cómo activo los mensajes temporales?",
+        "blockUser": "¿Cómo bloqueo a un usuario?",
+        "deleteHistory": "¿Cómo elimino el historial de mensajes?"
+      }
+    },
+    "a": {
+      "start": {
+        "whatIsPon": "PON es una plataforma de mensajería autoalojada con IA que combina la comunicación de equipo con un asistente de IA integrado. Admite mensajes directos, chats grupales y flujos de trabajo impulsados por IA.",
+        "createAccount": "Tu cuenta la crea el administrador de tu espacio de trabajo. Recibirás un correo de invitación con instrucciones para establecer tu contraseña y verificar tu cuenta.",
+        "addFriends": "Ve a la pestaña Amigos y usa la barra de búsqueda para encontrar colegas por nombre o correo electrónico. Envía una solicitud de amistad y empieza a chatear cuando la acepten.",
+        "startConversation": "Toca el icono de redactar en la pantalla de conversaciones, busca un contacto y selecciónalo para abrir una nueva conversación."
+      },
+      "msg": {
+        "sendMessages": "Escribe tu mensaje en el campo de texto en la parte inferior de la conversación y pulsa Intro o toca el botón de enviar.",
+        "voiceMessages": "¡Sí! Mantén pulsado el botón del micrófono en el área de entrada de mensajes para grabar un mensaje de voz. Suéltalo para enviarlo o desliza para cancelar.",
+        "filesImages": "Toca el icono de adjuntar junto al campo de mensaje para seleccionar imágenes, vídeos o archivos de tu dispositivo.",
+        "pinMessages": "Mantén pulsado o pasa el cursor sobre un mensaje, toca el menú Más (⋯) y selecciona 'Fijar mensaje'. Los mensajes fijados aparecen en la parte superior de la conversación. Puedes fijar hasta 2 mensajes por conversación.",
+        "reactions": "Pasa el cursor o mantén pulsado un mensaje y toca el icono de emoji para añadir una reacción rápida. Los demás pueden verla y añadir las suyas."
+      },
+      "ai": {
+        "aiCapabilities": "El asistente de IA (@AI) puede responder preguntas, resumir conversaciones, ayudar a redactar mensajes, analizar documentos subidos y ejecutar tareas mediante herramientas conectadas.",
+        "useAtAi": "En cualquier conversación, escribe @AI seguido de tu pregunta o solicitud. El asistente responderá en el hilo de la conversación.",
+        "aiMemory": "La memoria de IA permite que el asistente recuerde el contexto de conversaciones anteriores, haciendo las interacciones más personalizadas y eficientes con el tiempo.",
+        "personalAssistant": "Ve a la sección Asistente de IA y toca 'Configurar asistente'. Puedes configurar la personalidad del asistente, conectar herramientas y establecer preferencias."
+      },
+      "group": {
+        "createGroup": "Toca el icono de redactar, selecciona 'Nuevo grupo', agrega miembros buscando sus nombres, ponle un nombre al grupo y toca Crear.",
+        "addMembers": "Abre la conversación del grupo, toca el icono de Configuración y selecciona 'Agregar miembros'. Busca contactos y agrégalos.",
+        "groupRoles": "Los grupos tienen dos roles: Administrador y Miembro. Los administradores pueden agregar o quitar miembros, cambiar el nombre y el avatar del grupo y gestionar la configuración del grupo."
+      },
+      "account": {
+        "changeAvatar": "Ve a Configuración → Perfil, toca tu avatar actual y elige una nueva foto de tu dispositivo.",
+        "disappearingMessages": "Abre una conversación, toca el icono de Configuración, ve a Personalizar chat y activa 'Mensajes temporales' con el temporizador que prefieras.",
+        "blockUser": "Abre la conversación con el usuario, toca el icono de Configuración, desplázate hasta Privacidad y soporte y selecciona 'Bloquear usuario'.",
+        "deleteHistory": "Abre la conversación, toca Configuración, ve a Privacidad y soporte y selecciona 'Borrar historial'. Esto solo elimina el historial de tu dispositivo."
+      }
+    }
   }
 }

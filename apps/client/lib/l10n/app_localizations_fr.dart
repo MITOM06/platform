@@ -2568,4 +2568,176 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get botAdminNoBotsRegistered => 'Aucun bot enregistré pour le moment.';
+
+  @override
+  String get helpTitle => 'Aide et FAQ';
+
+  @override
+  String get settingsHelp => 'Aide et FAQ';
+
+  @override
+  String get settingsHelpSubtitle => 'Centre d\'aide et questions fréquentes';
+
+  @override
+  String get helpSearchHint => 'Rechercher dans l\'aide…';
+
+  @override
+  String get helpNoResults => 'Aucun résultat trouvé';
+
+  @override
+  String get helpCatGettingStarted => 'Premiers pas';
+
+  @override
+  String get helpCatMessaging => 'Messagerie';
+
+  @override
+  String get helpCatAiFeatures => 'Fonctionnalités d\'IA';
+
+  @override
+  String get helpCatGroups => 'Groupes';
+
+  @override
+  String get helpCatAccountSecurity => 'Compte et sécurité';
+
+  @override
+  String get helpGettingStartedQ1 => 'Qu\'est-ce que PON ?';
+
+  @override
+  String get helpGettingStartedA1 =>
+      'PON est une plateforme de messagerie auto-hébergée propulsée par l\'IA qui combine la communication d\'équipe avec un assistant IA intégré. Elle prend en charge les messages directs, les discussions de groupe et les flux de travail pilotés par l\'IA.';
+
+  @override
+  String get helpGettingStartedQ2 => 'Comment créer un compte ?';
+
+  @override
+  String get helpGettingStartedA2 =>
+      'Votre compte est créé par l\'administrateur de votre espace de travail. Vous recevrez un e-mail d\'invitation contenant les instructions pour définir votre mot de passe et vérifier votre compte.';
+
+  @override
+  String get helpGettingStartedQ3 => 'Comment trouver et ajouter des amis ?';
+
+  @override
+  String get helpGettingStartedA3 =>
+      'Accédez à l\'onglet Amis et utilisez la barre de recherche pour trouver des collègues par nom ou par e-mail. Envoyez une demande d\'ami et commencez à discuter une fois la demande acceptée.';
+
+  @override
+  String get helpGettingStartedQ4 => 'Comment démarrer une conversation ?';
+
+  @override
+  String get helpGettingStartedA4 =>
+      'Touchez l\'icône de rédaction sur l\'écran des conversations, recherchez un contact et sélectionnez-le pour ouvrir une nouvelle conversation.';
+
+  @override
+  String get helpMessagingQ1 => 'Comment envoyer des messages ?';
+
+  @override
+  String get helpMessagingA1 =>
+      'Saisissez votre message dans le champ de texte au bas de la conversation, puis appuyez sur Entrée ou touchez le bouton d\'envoi.';
+
+  @override
+  String get helpMessagingQ2 => 'Puis-je envoyer des messages vocaux ?';
+
+  @override
+  String get helpMessagingA2 =>
+      'Oui ! Maintenez le bouton du microphone dans la zone de saisie pour enregistrer un message vocal. Relâchez pour envoyer ou balayez pour annuler.';
+
+  @override
+  String get helpMessagingQ3 => 'Comment envoyer des fichiers et des images ?';
+
+  @override
+  String get helpMessagingA3 =>
+      'Touchez l\'icône de pièce jointe à côté de la zone de saisie pour sélectionner des images, des vidéos ou des fichiers depuis votre appareil.';
+
+  @override
+  String get helpMessagingQ4 => 'Comment épingler les messages importants ?';
+
+  @override
+  String get helpMessagingA4 =>
+      'Appuyez longuement ou survolez un message, touchez le menu Plus (⋯) et sélectionnez « Épingler le message ». Les messages épinglés apparaissent en haut de la conversation. Vous pouvez épingler jusqu\'à 2 messages par conversation.';
+
+  @override
+  String get helpMessagingQ5 => 'Que sont les réactions aux messages ?';
+
+  @override
+  String get helpMessagingA5 =>
+      'Survolez ou appuyez longuement sur un message, puis touchez l\'icône emoji pour ajouter une réaction rapide. Les autres peuvent la voir et ajouter les leurs.';
+
+  @override
+  String get helpAiFeaturesQ1 => 'Que peut faire l\'assistant IA ?';
+
+  @override
+  String get helpAiFeaturesA1 =>
+      'L\'assistant IA (@AI) peut répondre à des questions, résumer des conversations, aider à rédiger des messages, analyser des documents téléchargés et exécuter des tâches à l\'aide d\'outils connectés.';
+
+  @override
+  String get helpAiFeaturesQ2 => 'Comment utiliser @AI dans une conversation ?';
+
+  @override
+  String get helpAiFeaturesA2 =>
+      'Dans n\'importe quelle conversation, saisissez @AI suivi de votre question ou de votre demande. L\'assistant répondra dans le fil de la conversation.';
+
+  @override
+  String get helpAiFeaturesQ3 => 'Qu\'est-ce que la mémoire de l\'IA ?';
+
+  @override
+  String get helpAiFeaturesA3 =>
+      'La mémoire de l\'IA permet à l\'assistant de se souvenir du contexte des conversations précédentes, rendant les interactions plus personnalisées et plus efficaces au fil du temps.';
+
+  @override
+  String get helpAiFeaturesQ4 => 'Comment configurer mon assistant personnel ?';
+
+  @override
+  String get helpAiFeaturesA4 =>
+      'Accédez à la section Assistant IA et touchez « Configurer l\'assistant ». Vous pouvez configurer la personnalité de l\'assistant, connecter des outils et définir vos préférences.';
+
+  @override
+  String get helpGroupsQ1 => 'Comment créer un groupe ?';
+
+  @override
+  String get helpGroupsA1 =>
+      'Touchez l\'icône de rédaction, sélectionnez « Nouveau groupe », ajoutez des membres en recherchant leurs noms, définissez un nom de groupe, puis touchez Créer.';
+
+  @override
+  String get helpGroupsQ2 => 'Comment ajouter des membres à un groupe ?';
+
+  @override
+  String get helpGroupsA2 =>
+      'Ouvrez la conversation de groupe, touchez l\'icône Paramètres et sélectionnez « Ajouter des membres ». Recherchez des contacts et ajoutez-les.';
+
+  @override
+  String get helpGroupsQ3 => 'Que sont les rôles de groupe ?';
+
+  @override
+  String get helpGroupsA3 =>
+      'Les groupes ont deux rôles : Administrateur et Membre. Les administrateurs peuvent ajouter/supprimer des membres, modifier le nom et l\'avatar du groupe et gérer les paramètres du groupe.';
+
+  @override
+  String get helpAccountSecurityQ1 => 'Comment changer ma photo de profil ?';
+
+  @override
+  String get helpAccountSecurityA1 =>
+      'Accédez à Paramètres → Profil, touchez votre avatar actuel et choisissez une nouvelle photo depuis votre appareil.';
+
+  @override
+  String get helpAccountSecurityQ2 =>
+      'Comment activer les messages éphémères ?';
+
+  @override
+  String get helpAccountSecurityA2 =>
+      'Ouvrez une conversation, touchez l\'icône Paramètres, accédez à Personnaliser la discussion et activez « Messages éphémères » avec le minuteur de votre choix.';
+
+  @override
+  String get helpAccountSecurityQ3 => 'Comment bloquer un utilisateur ?';
+
+  @override
+  String get helpAccountSecurityA3 =>
+      'Ouvrez la conversation avec l\'utilisateur, touchez l\'icône Paramètres, faites défiler jusqu\'à Confidentialité et assistance, puis sélectionnez « Bloquer l\'utilisateur ».';
+
+  @override
+  String get helpAccountSecurityQ4 =>
+      'Comment supprimer l\'historique des messages ?';
+
+  @override
+  String get helpAccountSecurityA4 =>
+      'Ouvrez la conversation, touchez Paramètres, accédez à Confidentialité et assistance, puis sélectionnez « Effacer l\'historique ». Cela supprime uniquement l\'historique de votre appareil.';
 }

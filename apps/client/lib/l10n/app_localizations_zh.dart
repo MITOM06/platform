@@ -2463,4 +2463,162 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get botAdminNoBotsRegistered => '尚未注册任何机器人。';
+
+  @override
+  String get helpTitle => '帮助与常见问题';
+
+  @override
+  String get settingsHelp => '帮助与常见问题';
+
+  @override
+  String get settingsHelpSubtitle => '帮助中心与常见问题';
+
+  @override
+  String get helpSearchHint => '搜索帮助…';
+
+  @override
+  String get helpNoResults => '未找到结果';
+
+  @override
+  String get helpCatGettingStarted => '快速入门';
+
+  @override
+  String get helpCatMessaging => '消息';
+
+  @override
+  String get helpCatAiFeatures => 'AI 功能';
+
+  @override
+  String get helpCatGroups => '群组';
+
+  @override
+  String get helpCatAccountSecurity => '账户与安全';
+
+  @override
+  String get helpGettingStartedQ1 => '什么是 PON？';
+
+  @override
+  String get helpGettingStartedA1 =>
+      'PON 是一个自托管的 AI 消息平台，将团队沟通与集成的 AI 助手相结合。它支持私信、群聊和由 AI 驱动的工作流程。';
+
+  @override
+  String get helpGettingStartedQ2 => '如何创建账户？';
+
+  @override
+  String get helpGettingStartedA2 =>
+      '您的账户由工作区管理员创建。您将收到一封邀请邮件，其中包含设置密码和验证账户的说明。';
+
+  @override
+  String get helpGettingStartedQ3 => '如何查找并添加好友？';
+
+  @override
+  String get helpGettingStartedA3 =>
+      '进入「好友」标签页，使用搜索栏按姓名或电子邮件查找同事。发送好友请求，对方接受后即可开始聊天。';
+
+  @override
+  String get helpGettingStartedQ4 => '如何发起对话？';
+
+  @override
+  String get helpGettingStartedA4 => '在对话列表界面点击撰写图标，搜索联系人，选择后即可打开新对话。';
+
+  @override
+  String get helpMessagingQ1 => '如何发送消息？';
+
+  @override
+  String get helpMessagingA1 => '在对话底部的文本框中输入消息，然后按回车键或点击发送按钮。';
+
+  @override
+  String get helpMessagingQ2 => '我可以发送语音消息吗？';
+
+  @override
+  String get helpMessagingA2 => '可以！按住消息输入区的麦克风按钮录制语音消息。松开即可发送，或滑动取消。';
+
+  @override
+  String get helpMessagingQ3 => '如何发送文件和图片？';
+
+  @override
+  String get helpMessagingA3 => '点击消息输入框旁边的附件图标，从您的设备中选择图片、视频或文件。';
+
+  @override
+  String get helpMessagingQ4 => '如何置顶重要消息？';
+
+  @override
+  String get helpMessagingA4 =>
+      '长按或将鼠标悬停在消息上，点击更多菜单（⋯），然后选择「置顶消息」。置顶消息会显示在对话顶部。每个对话最多可置顶 2 条消息。';
+
+  @override
+  String get helpMessagingQ5 => '什么是消息表情回应？';
+
+  @override
+  String get helpMessagingA5 =>
+      '将鼠标悬停在消息上或长按消息，点击表情图标即可添加快速回应。其他人可以看到并添加自己的回应。';
+
+  @override
+  String get helpAiFeaturesQ1 => 'AI 助手能做什么？';
+
+  @override
+  String get helpAiFeaturesA1 =>
+      'AI 助手（@AI）可以回答问题、总结对话、协助起草消息、分析上传的文档，并使用已连接的工具执行任务。';
+
+  @override
+  String get helpAiFeaturesQ2 => '如何在对话中使用 @AI？';
+
+  @override
+  String get helpAiFeaturesA2 => '在任何对话中输入 @AI，后面跟上您的问题或请求。助手将在对话线程中回复。';
+
+  @override
+  String get helpAiFeaturesQ3 => '什么是 AI 记忆？';
+
+  @override
+  String get helpAiFeaturesA3 => 'AI 记忆使助手能够记住先前对话的上下文，随着时间推移让交互更加个性化和高效。';
+
+  @override
+  String get helpAiFeaturesQ4 => '如何设置我的个人助手？';
+
+  @override
+  String get helpAiFeaturesA4 => '进入 AI 助手部分，点击「设置助手」。您可以配置助手的人格、连接工具并设置偏好。';
+
+  @override
+  String get helpGroupsQ1 => '如何创建群组？';
+
+  @override
+  String get helpGroupsA1 => '点击撰写图标，选择「新建群组」，通过搜索姓名添加成员，设置群组名称，然后点击创建。';
+
+  @override
+  String get helpGroupsQ2 => '如何向群组添加成员？';
+
+  @override
+  String get helpGroupsA2 => '打开群组对话，点击设置图标，然后选择「添加成员」。搜索联系人并添加他们。';
+
+  @override
+  String get helpGroupsQ3 => '群组角色有哪些？';
+
+  @override
+  String get helpGroupsA3 => '群组有两种角色：管理员和成员。管理员可以添加/移除成员、更改群组名称和头像，并管理群组设置。';
+
+  @override
+  String get helpAccountSecurityQ1 => '如何更改我的头像？';
+
+  @override
+  String get helpAccountSecurityA1 => '进入设置 → 个人资料，点击当前头像，然后从您的设备中选择一张新照片。';
+
+  @override
+  String get helpAccountSecurityQ2 => '如何启用阅后即焚消息？';
+
+  @override
+  String get helpAccountSecurityA2 =>
+      '打开一个对话，点击设置图标，进入自定义聊天，然后启用「阅后即焚消息」并设置您偏好的计时器。';
+
+  @override
+  String get helpAccountSecurityQ3 => '如何屏蔽用户？';
+
+  @override
+  String get helpAccountSecurityA3 => '打开与该用户的对话，点击设置图标，滚动到隐私与支持，然后选择「屏蔽用户」。';
+
+  @override
+  String get helpAccountSecurityQ4 => '如何删除消息历史记录？';
+
+  @override
+  String get helpAccountSecurityA4 =>
+      '打开对话，点击设置，进入隐私与支持，然后选择「清除历史记录」。此操作仅删除您设备上的历史记录。';
 }

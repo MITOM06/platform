@@ -499,7 +499,7 @@ public class ConversationService {
         .map(
             m ->
                 new ConversationResponse.PinnedMessageDto(
-                    m.getId(), m.getSenderId(), m.getContent(), m.getCreatedAt()))
+                    m.getId(), m.getSenderId(), m.getContent(), m.getCreatedAt(), m.getType()))
         .toList();
   }
 }

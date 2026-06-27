@@ -23,6 +23,7 @@ import {
   Languages,
   Plug,
   Sparkles,
+  HelpCircle,
 } from 'lucide-react'
 import Link from 'next/link'
 import { useAuthStore } from '@/lib/store/auth.store'
@@ -299,6 +300,14 @@ export default function SettingsPage() {
                 title={t('skills')}
                 subtitle={t('skillsSubtitle')}
                 onClick={() => router.push('/skills')}
+              />
+
+              <SettingsCard
+                icon={<HelpCircle className="size-5 text-pon-cyan" />}
+                iconBg="rgba(106,201,255,0.12)"
+                title={t('help')}
+                subtitle={t('helpSubtitle')}
+                onClick={() => router.push('/help')}
               />
 
               <SettingsCard

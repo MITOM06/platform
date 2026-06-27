@@ -22,6 +22,7 @@ interface Props {
   isOwn: boolean
   currentUserId?: string
   isPinned: boolean
+  pinnedCount?: number
   onEdit?: () => void
   onForward?: () => void
   onReply?: () => void
@@ -36,6 +37,7 @@ export function MessageActions({
   isOwn,
   currentUserId,
   isPinned,
+  pinnedCount = 0,
   onEdit,
   onForward,
   onReply,
@@ -94,6 +96,10 @@ export function MessageActions({
   const canCopy = message.type === 'text' || message.type === 'ai'
 
   const handlePin = async () => {
+    if (!isPinned && pinnedCount >= 2) {
+      toast.warning(t('pinLimitReached'))
+      return
+    }
     try {
       if (isPinned) {
         await chatService.unpinMessage(message.id)

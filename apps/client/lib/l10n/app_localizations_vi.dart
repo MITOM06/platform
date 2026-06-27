@@ -2532,4 +2532,176 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get botAdminNoBotsRegistered => 'Chưa có bot nào được đăng ký.';
+
+  @override
+  String get helpTitle => 'Trợ giúp & Câu hỏi thường gặp';
+
+  @override
+  String get settingsHelp => 'Trợ giúp & FAQ';
+
+  @override
+  String get settingsHelpSubtitle => 'Trung tâm trợ giúp & câu hỏi thường gặp';
+
+  @override
+  String get helpSearchHint => 'Tìm kiếm trợ giúp…';
+
+  @override
+  String get helpNoResults => 'Không tìm thấy kết quả';
+
+  @override
+  String get helpCatGettingStarted => 'Bắt đầu';
+
+  @override
+  String get helpCatMessaging => 'Nhắn tin';
+
+  @override
+  String get helpCatAiFeatures => 'Tính năng AI';
+
+  @override
+  String get helpCatGroups => 'Nhóm';
+
+  @override
+  String get helpCatAccountSecurity => 'Tài khoản & Bảo mật';
+
+  @override
+  String get helpGettingStartedQ1 => 'PON là gì?';
+
+  @override
+  String get helpGettingStartedA1 =>
+      'PON là nền tảng nhắn tin tự lưu trữ tích hợp AI, kết hợp giao tiếp nhóm với trợ lý AI tích hợp. Nền tảng hỗ trợ tin nhắn trực tiếp, trò chuyện nhóm và quy trình làm việc do AI điều khiển.';
+
+  @override
+  String get helpGettingStartedQ2 => 'Làm thế nào để tạo tài khoản?';
+
+  @override
+  String get helpGettingStartedA2 =>
+      'Tài khoản của bạn được quản trị viên không gian làm việc tạo. Bạn sẽ nhận được email mời kèm hướng dẫn để đặt mật khẩu và xác minh tài khoản.';
+
+  @override
+  String get helpGettingStartedQ3 => 'Làm thế nào để tìm và thêm bạn bè?';
+
+  @override
+  String get helpGettingStartedA3 =>
+      'Vào tab Bạn bè và sử dụng thanh tìm kiếm để tìm đồng nghiệp theo tên hoặc email. Gửi lời mời kết bạn và bắt đầu trò chuyện sau khi được chấp nhận.';
+
+  @override
+  String get helpGettingStartedQ4 =>
+      'Làm thế nào để bắt đầu một cuộc trò chuyện?';
+
+  @override
+  String get helpGettingStartedA4 =>
+      'Nhấn vào biểu tượng soạn tin trên màn hình trò chuyện, tìm kiếm một liên hệ và chọn họ để mở cuộc trò chuyện mới.';
+
+  @override
+  String get helpMessagingQ1 => 'Làm thế nào để gửi tin nhắn?';
+
+  @override
+  String get helpMessagingA1 =>
+      'Nhập tin nhắn vào ô văn bản ở cuối cuộc trò chuyện và nhấn Enter hoặc nhấn nút gửi.';
+
+  @override
+  String get helpMessagingQ2 => 'Tôi có thể gửi tin nhắn thoại không?';
+
+  @override
+  String get helpMessagingA2 =>
+      'Có! Giữ nút micro trong khu vực nhập tin nhắn để ghi âm tin nhắn thoại. Thả ra để gửi hoặc vuốt để hủy.';
+
+  @override
+  String get helpMessagingQ3 => 'Làm thế nào để gửi tệp và hình ảnh?';
+
+  @override
+  String get helpMessagingA3 =>
+      'Nhấn vào biểu tượng đính kèm bên cạnh ô nhập tin nhắn để chọn hình ảnh, video hoặc tệp từ thiết bị của bạn.';
+
+  @override
+  String get helpMessagingQ4 => 'Làm thế nào để ghim tin nhắn quan trọng?';
+
+  @override
+  String get helpMessagingA4 =>
+      'Nhấn giữ hoặc di chuột qua một tin nhắn, nhấn menu Thêm (⋯) và chọn \'Ghim tin nhắn\'. Tin nhắn đã ghim sẽ hiển thị ở đầu cuộc trò chuyện. Bạn có thể ghim tối đa 2 tin nhắn cho mỗi cuộc trò chuyện.';
+
+  @override
+  String get helpMessagingQ5 => 'Biểu cảm tin nhắn là gì?';
+
+  @override
+  String get helpMessagingA5 =>
+      'Di chuột qua hoặc nhấn giữ một tin nhắn và nhấn biểu tượng emoji để thêm biểu cảm nhanh. Người khác có thể thấy và thêm biểu cảm của riêng họ.';
+
+  @override
+  String get helpAiFeaturesQ1 => 'Trợ lý AI có thể làm gì?';
+
+  @override
+  String get helpAiFeaturesA1 =>
+      'Trợ lý AI (@AI) có thể trả lời câu hỏi, tóm tắt cuộc trò chuyện, hỗ trợ soạn tin nhắn, phân tích tài liệu đã tải lên và thực hiện các tác vụ bằng các công cụ đã kết nối.';
+
+  @override
+  String get helpAiFeaturesQ2 =>
+      'Làm thế nào để dùng @AI trong cuộc trò chuyện?';
+
+  @override
+  String get helpAiFeaturesA2 =>
+      'Trong bất kỳ cuộc trò chuyện nào, hãy nhập @AI theo sau là câu hỏi hoặc yêu cầu của bạn. Trợ lý sẽ phản hồi trong luồng trò chuyện.';
+
+  @override
+  String get helpAiFeaturesQ3 => 'Bộ nhớ AI là gì?';
+
+  @override
+  String get helpAiFeaturesA3 =>
+      'Bộ nhớ AI cho phép trợ lý ghi nhớ ngữ cảnh từ các cuộc trò chuyện trước đó, giúp các tương tác trở nên cá nhân hóa và hiệu quả hơn theo thời gian.';
+
+  @override
+  String get helpAiFeaturesQ4 => 'Làm thế nào để thiết lập trợ lý cá nhân?';
+
+  @override
+  String get helpAiFeaturesA4 =>
+      'Vào mục Trợ lý AI và nhấn \'Thiết lập trợ lý\'. Bạn có thể cấu hình tính cách của trợ lý, kết nối công cụ và đặt tùy chọn.';
+
+  @override
+  String get helpGroupsQ1 => 'Làm thế nào để tạo một nhóm?';
+
+  @override
+  String get helpGroupsA1 =>
+      'Nhấn vào biểu tượng soạn tin, chọn \'Nhóm mới\', thêm thành viên bằng cách tìm kiếm tên của họ, đặt tên nhóm và nhấn Tạo.';
+
+  @override
+  String get helpGroupsQ2 => 'Làm thế nào để thêm thành viên vào nhóm?';
+
+  @override
+  String get helpGroupsA2 =>
+      'Mở cuộc trò chuyện nhóm, nhấn vào biểu tượng Cài đặt và chọn \'Thêm thành viên\'. Tìm kiếm liên hệ và thêm họ.';
+
+  @override
+  String get helpGroupsQ3 => 'Vai trò trong nhóm là gì?';
+
+  @override
+  String get helpGroupsA3 =>
+      'Nhóm có hai vai trò: Quản trị viên và Thành viên. Quản trị viên có thể thêm/xóa thành viên, thay đổi tên và ảnh đại diện nhóm, và quản lý cài đặt nhóm.';
+
+  @override
+  String get helpAccountSecurityQ1 => 'Làm thế nào để thay đổi ảnh đại diện?';
+
+  @override
+  String get helpAccountSecurityA1 =>
+      'Vào Cài đặt → Hồ sơ, nhấn vào ảnh đại diện hiện tại và chọn một ảnh mới từ thiết bị của bạn.';
+
+  @override
+  String get helpAccountSecurityQ2 => 'Làm thế nào để bật tin nhắn tự hủy?';
+
+  @override
+  String get helpAccountSecurityA2 =>
+      'Mở một cuộc trò chuyện, nhấn vào biểu tượng Cài đặt, vào Tùy chỉnh trò chuyện và bật \'Tin nhắn tự hủy\' với bộ hẹn giờ bạn muốn.';
+
+  @override
+  String get helpAccountSecurityQ3 => 'Làm thế nào để chặn một người dùng?';
+
+  @override
+  String get helpAccountSecurityA3 =>
+      'Mở cuộc trò chuyện với người dùng, nhấn vào biểu tượng Cài đặt, cuộn đến Quyền riêng tư & Hỗ trợ và chọn \'Chặn người dùng\'.';
+
+  @override
+  String get helpAccountSecurityQ4 => 'Làm thế nào để xóa lịch sử tin nhắn?';
+
+  @override
+  String get helpAccountSecurityA4 =>
+      'Mở cuộc trò chuyện, nhấn Cài đặt, vào Quyền riêng tư & Hỗ trợ và chọn \'Xóa lịch sử\'. Thao tác này chỉ xóa lịch sử khỏi thiết bị của bạn.';
 }

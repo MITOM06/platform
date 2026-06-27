@@ -379,6 +379,19 @@ class SettingsScreen extends ConsumerWidget {
                 _settingsCard(
                   context: context,
                   isDark: isDark,
+                  glowColor: AppTheme.ponCyan,
+                  icon: Icons.help_outline_rounded,
+                  title: context.l10n.settingsHelp,
+                  subtitle: context.l10n.settingsHelpSubtitle,
+                  onTap: () {
+                    if (isDialog) Navigator.of(context).pop();
+                    context.push('/help');
+                  },
+                ),
+                const SizedBox(height: 24),
+                _settingsCard(
+                  context: context,
+                  isDark: isDark,
                   glowColor: AppTheme.ponPink,
                   icon: Icons.shield_outlined,
                   title: context.l10n.legalScreenTitle,

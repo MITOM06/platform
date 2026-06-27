@@ -181,6 +181,7 @@ export function MessageList({
                   conversationId={conversationId}
                   otherUserId={otherUserId}
                   isPinned={pinnedMessages.includes(row.msg.id)}
+                  pinnedCount={pinnedMessages.length}
                   isGroup={isGroup}
                   onEdit={onEdit}
                   onForward={onForward}

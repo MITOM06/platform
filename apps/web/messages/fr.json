@@ -223,6 +223,8 @@
     "integrationsSubtitle": "Connecter outils et serveurs MCP",
     "skills": "Compétences",
     "skillsSubtitle": "Choisissez ce que votre assistant peut faire",
+    "help": "Aide et FAQ",
+    "helpSubtitle": "Trouvez des réponses aux questions courantes",
     "chooseThemeTitle": "Choisir le thème",
     "chooseLanguageTitle": "Choisir la langue"
   },
@@ -1145,5 +1147,82 @@
     "lastUsed": "Dernière utilisation",
     "neverUsed": "Jamais utilisé",
     "noBotsRegistered": "Aucun bot enregistré pour le moment."
+  },
+  "help": {
+    "title": "Aide et FAQ",
+    "searchHint": "Rechercher des questions...",
+    "clearSearch": "Effacer la recherche",
+    "noResults": "Aucun résultat trouvé pour « {query} »",
+    "categories": {
+      "gettingStarted": "Premiers pas",
+      "messaging": "Messagerie",
+      "aiFeatures": "Fonctionnalités IA",
+      "groups": "Groupes",
+      "accountSecurity": "Compte et sécurité"
+    },
+    "q": {
+      "start": {
+        "whatIsPon": "Qu'est-ce que PON ?",
+        "createAccount": "Comment créer un compte ?",
+        "addFriends": "Comment trouver et ajouter des amis ?",
+        "startConversation": "Comment démarrer une conversation ?"
+      },
+      "msg": {
+        "sendMessages": "Comment envoyer des messages ?",
+        "voiceMessages": "Puis-je envoyer des messages vocaux ?",
+        "filesImages": "Comment envoyer des fichiers et des images ?",
+        "pinMessages": "Comment épingler des messages importants ?",
+        "reactions": "Que sont les réactions aux messages ?"
+      },
+      "ai": {
+        "aiCapabilities": "Que peut faire l'assistant IA ?",
+        "useAtAi": "Comment utiliser @AI dans une conversation ?",
+        "aiMemory": "Qu'est-ce que la mémoire IA ?",
+        "personalAssistant": "Comment configurer mon assistant personnel ?"
+      },
+      "group": {
+        "createGroup": "Comment créer un groupe ?",
+        "addMembers": "Comment ajouter des membres à un groupe ?",
+        "groupRoles": "Que sont les rôles de groupe ?"
+      },
+      "account": {
+        "changeAvatar": "Comment changer ma photo de profil ?",
+        "disappearingMessages": "Comment activer les messages éphémères ?",
+        "blockUser": "Comment bloquer un utilisateur ?",
+        "deleteHistory": "Comment supprimer l'historique des messages ?"
+      }
+    },
+    "a": {
+      "start": {
+        "whatIsPon": "PON est une plateforme de messagerie auto-hébergée propulsée par l'IA qui combine la communication d'équipe avec un assistant IA intégré. Elle prend en charge les messages directs, les discussions de groupe et les flux de travail pilotés par l'IA.",
+        "createAccount": "Votre compte est créé par l'administrateur de votre espace de travail. Vous recevrez un e-mail d'invitation contenant les instructions pour définir votre mot de passe et vérifier votre compte.",
+        "addFriends": "Accédez à l'onglet Amis et utilisez la barre de recherche pour trouver des collègues par nom ou e-mail. Envoyez une demande d'ami et commencez à discuter une fois acceptée.",
+        "startConversation": "Touchez l'icône de rédaction sur l'écran des conversations, recherchez un contact et sélectionnez-le pour ouvrir une nouvelle conversation."
+      },
+      "msg": {
+        "sendMessages": "Saisissez votre message dans le champ de texte en bas de la conversation, puis appuyez sur Entrée ou touchez le bouton d'envoi.",
+        "voiceMessages": "Oui ! Maintenez le bouton du microphone dans la zone de saisie pour enregistrer un message vocal. Relâchez pour l'envoyer ou faites glisser pour annuler.",
+        "filesImages": "Touchez l'icône de pièce jointe à côté du champ de message pour sélectionner des images, des vidéos ou des fichiers depuis votre appareil.",
+        "pinMessages": "Appuyez longuement ou survolez un message, touchez le menu Plus (⋯) et sélectionnez « Épingler le message ». Les messages épinglés apparaissent en haut de la conversation. Vous pouvez épingler jusqu'à 2 messages par conversation.",
+        "reactions": "Survolez ou appuyez longuement sur un message, puis touchez l'icône emoji pour ajouter une réaction rapide. Les autres peuvent la voir et ajouter les leurs."
+      },
+      "ai": {
+        "aiCapabilities": "L'assistant IA (@AI) peut répondre aux questions, résumer des conversations, aider à rédiger des messages, analyser des documents téléversés et exécuter des tâches à l'aide d'outils connectés.",
+        "useAtAi": "Dans n'importe quelle conversation, saisissez @AI suivi de votre question ou de votre demande. L'assistant répondra dans le fil de la conversation.",
+        "aiMemory": "La mémoire IA permet à l'assistant de se souvenir du contexte des conversations précédentes, rendant les interactions plus personnalisées et efficaces au fil du temps.",
+        "personalAssistant": "Accédez à la section Assistant IA et touchez « Configurer l'assistant ». Vous pouvez configurer la personnalité de l'assistant, connecter des outils et définir vos préférences."
+      },
+      "group": {
+        "createGroup": "Touchez l'icône de rédaction, sélectionnez « Nouveau groupe », ajoutez des membres en recherchant leurs noms, donnez un nom au groupe et touchez Créer.",
+        "addMembers": "Ouvrez la conversation de groupe, touchez l'icône Paramètres et sélectionnez « Ajouter des membres ». Recherchez des contacts et ajoutez-les.",
+        "groupRoles": "Les groupes ont deux rôles : Administrateur et Membre. Les administrateurs peuvent ajouter ou retirer des membres, modifier le nom et l'avatar du groupe et gérer les paramètres du groupe."
+      },
+      "account": {
+        "changeAvatar": "Accédez à Paramètres → Profil, touchez votre avatar actuel et choisissez une nouvelle photo depuis votre appareil.",
+        "disappearingMessages": "Ouvrez une conversation, touchez l'icône Paramètres, accédez à Personnaliser la discussion et activez « Messages éphémères » avec le minuteur de votre choix.",
+        "blockUser": "Ouvrez la conversation avec l'utilisateur, touchez l'icône Paramètres, faites défiler jusqu'à Confidentialité et assistance et sélectionnez « Bloquer l'utilisateur ».",
+        "deleteHistory": "Ouvrez la conversation, touchez Paramètres, accédez à Confidentialité et assistance et sélectionnez « Effacer l'historique ». Cela supprime uniquement l'historique de votre appareil."
+      }
+    }
   }
 }
