@@ -4,8 +4,10 @@ import 'package:collection/collection.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import '../../../core/api/token_manager.dart';
 import '../../../core/l10n/l10n_ext.dart';
 import '../../../core/router/app_router.dart';
+import '../../../core/services/notification_service.dart';
 import '../../../core/utils/global_messenger.dart';
 import '../data/chat_repository.dart';
 import '../data/stomp_service.dart';
@@ -36,8 +38,14 @@ class ConversationsNotifier extends _$ConversationsNotifier {
 
     // Always disconnect first to ensure fresh token on login
     stomp.disconnect();
-    const storage = FlutterSecureStorage();
-    final token = await storage.read(key: 'accessToken');
+    // Obtain a FRESH, valid access token before connecting. Reading the raw
+    // stored token here was the realtime/notification killer: an expired token
+    // got CONNECT-rejected and the socket then auto-reconnected forever with
+    // that same dead token. TokenManager refreshes (and persists the rotated
+    // refresh token) if it's expiring. If there's genuinely no token / refresh
+    // fails, skip connecting rather than loop on a dead token.
+    final token = await TokenManager(const FlutterSecureStorage())
+        .getValidAccessToken();
     if (token != null) {
       await stomp.connect(token);
     }
@@ -351,11 +359,27 @@ class ConversationsNotifier extends _$ConversationsNotifier {
       }
     }
 
+    final title =
+        isMention ? l10n.mentionNotificationTitle : l10n.newNotificationTitle;
+
     showInAppNotification(
-      isMention ? l10n.mentionNotificationTitle : l10n.newNotificationTitle,
+      title,
       bodyText,
       onTap: () => ref.read(appRouterProvider).push('/chat/$convId'),
     );
+
+    // Also fire an OS/local notification with the SAME humanized title + body.
+    // Without this, a foregrounded app with STOMP up showed only the in-app
+    // banner and never an OS notification (the FCM foreground handler only
+    // fires when STOMP is DOWN). Reuses the already-gated path in
+    // _onNotification (notifications enabled + not viewing this conversation),
+    // and the already-sanitized bodyText (no raw content for system/attachment
+    // types).
+    unawaited(showMessageNotification(
+      title: title,
+      body: bodyText,
+      conversationId: convId,
+    ));
   }
 
   Future<void> refresh() async {

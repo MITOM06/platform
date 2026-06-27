@@ -130,6 +130,21 @@ class AppLocalizationsEn extends AppLocalizations {
   String get wallpaperDefaultName => 'Default';
 
   @override
+  String get wallpaperCategoryColors => 'Simple Colors';
+
+  @override
+  String get wallpaperCategoryVibrant => 'Vibrant Gradients';
+
+  @override
+  String get wallpaperCategoryMinimal => 'Minimal';
+
+  @override
+  String get wallpaperShowMore => 'Show more';
+
+  @override
+  String get wallpaperShowLess => 'Show less';
+
+  @override
   String get changeChatThemeTitle => 'Change Chat Theme';
 
   @override
@@ -606,6 +621,18 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get attachFile => 'File';
+
+  @override
+  String get attachVoice => 'Voice message';
+
+  @override
+  String get attachSticker => 'Sticker';
+
+  @override
+  String get pinnedMessageTitle => 'Pinned message';
+
+  @override
+  String get pinnedSystemMessage => 'System message';
 
   @override
   String get uploading => 'Uploading…';

@@ -130,6 +130,21 @@ class AppLocalizationsVi extends AppLocalizations {
   String get wallpaperDefaultName => 'Mặc định';
 
   @override
+  String get wallpaperCategoryColors => 'Màu sắc đơn giản';
+
+  @override
+  String get wallpaperCategoryVibrant => 'Gradient sống động';
+
+  @override
+  String get wallpaperCategoryMinimal => 'Tối giản';
+
+  @override
+  String get wallpaperShowMore => 'Xem thêm';
+
+  @override
+  String get wallpaperShowLess => 'Ẩn bớt';
+
+  @override
   String get changeChatThemeTitle => 'Đổi chủ đề đoạn chat';
 
   @override
@@ -606,6 +621,18 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get attachFile => 'Tệp';
+
+  @override
+  String get attachVoice => 'Tin nhắn thoại';
+
+  @override
+  String get attachSticker => 'Nhãn dán';
+
+  @override
+  String get pinnedMessageTitle => 'Tin nhắn đã ghim';
+
+  @override
+  String get pinnedSystemMessage => 'Tin nhắn hệ thống';
 
   @override
   String get uploading => 'Đang tải lên…';

@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../config/app_config.dart';
 import '../utils/app_error.dart';
 import '../utils/global_messenger.dart';
@@ -7,6 +8,14 @@ import '../utils/global_messenger.dart';
 const _keyAccessToken = 'accessToken';
 const _keyRefreshToken = 'refreshToken';
 const _keySid = 'sid';
+
+/// SharedPreferences key under which [LocaleNotifier] persists the user's
+/// chosen language code. Kept in sync with `locale_provider.dart`.
+const _keyAppLocale = 'app_locale';
+
+/// Languages the backend localizes OTP emails for. Anything else falls back
+/// to English. Mirrors `kSupportedLocales` in `locale_provider.dart`.
+const _supportedLocaleCodes = {'en', 'vi', 'zh', 'ja', 'ko', 'es', 'fr'};
 
 class DioClient {
   /// Public base URL of the chat-service, used e.g. to resolve relative
@@ -30,6 +39,8 @@ class DioClient {
       headers: {'Content-Type': 'application/json'},
     ));
     dio.interceptors.add(_AuthHeaderInterceptor(storage));
+    // Tell auth-service which language to localize OTP emails in.
+    dio.interceptors.add(const _AcceptLanguageInterceptor());
     dio.interceptors.add(const _NetworkErrorInterceptor());
     dio.interceptors.add(
       _TokenRefreshInterceptor(storage, dio, onForceLogout: onForceLogout),
@@ -114,6 +125,33 @@ class _AuthHeaderInterceptor extends Interceptor {
     final token = await _storage.read(key: _keyAccessToken);
     if (token != null) {
       options.headers['Authorization'] = 'Bearer $token';
+    }
+    handler.next(options);
+  }
+}
+
+/// Attaches `Accept-Language: <code>` to every auth-service request so the
+/// backend can localize OTP emails. Reads the persisted locale directly from
+/// SharedPreferences (the same key [LocaleNotifier] writes) to avoid coupling
+/// this static client to Riverpod. Falls back to `en` when no valid choice is
+/// stored (e.g. "follow system" — backend default is English anyway).
+class _AcceptLanguageInterceptor extends Interceptor {
+  const _AcceptLanguageInterceptor();
+
+  @override
+  void onRequest(
+    RequestOptions options,
+    RequestInterceptorHandler handler,
+  ) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final saved = prefs.getString(_keyAppLocale);
+      final code = (saved != null && _supportedLocaleCodes.contains(saved))
+          ? saved
+          : 'en';
+      options.headers['Accept-Language'] = code;
+    } catch (_) {
+      options.headers['Accept-Language'] = 'en';
     }
     handler.next(options);
   }

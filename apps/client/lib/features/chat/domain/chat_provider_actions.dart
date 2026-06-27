@@ -197,6 +197,8 @@ mixin _ChatActionsMixin on _$ChatNotifier {
         id: message.id,
         senderId: message.senderId,
         content: message.content,
+        // Carry type so the optimistic preview is sanitized like the rest.
+        type: message.type,
         createdAt: message.createdAt,
       ),
       ...current.pinnedMessages.where((p) => p.id != message.id),

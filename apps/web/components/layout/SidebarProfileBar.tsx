@@ -1,5 +1,6 @@
 'use client'
 
+import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import { toast } from 'sonner'
@@ -8,6 +9,7 @@ import { useAuthStore } from '@/lib/store/auth.store'
 import { stompService } from '@/lib/stomp/client'
 import { useCanAccessAdmin } from '@/lib/hooks/use-capabilities'
 import { absoluteMediaUrl } from '@/lib/media'
+import { LogoutConfirmDialog } from '@/components/layout/LogoutConfirmDialog'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import {
   DropdownMenu,
@@ -36,6 +38,7 @@ export function SidebarProfileBar() {
   const user = useAuthStore((s) => s.user)
   const clearAuth = useAuthStore((s) => s.clearAuth)
   const canAccessAdmin = useCanAccessAdmin()
+  const [logoutConfirmOpen, setLogoutConfirmOpen] = useState(false)
 
   if (!user) return null
 
@@ -123,7 +126,7 @@ export function SidebarProfileBar() {
           </DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem
-            onClick={handleLogout}
+            onSelect={() => setLogoutConfirmOpen(true)}
             className="text-destructive focus:text-destructive cursor-pointer"
           >
             <LogOut className="mr-2 h-4 w-4" />
@@ -131,6 +134,12 @@ export function SidebarProfileBar() {
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
+
+      <LogoutConfirmDialog
+        open={logoutConfirmOpen}
+        onOpenChange={setLogoutConfirmOpen}
+        onConfirm={handleLogout}
+      />
     </div>
   )
 }

@@ -37,6 +37,19 @@ export interface FileMeta {
   size: number
 }
 
+/**
+ * Coerce a file `size` field to a number. Backends have historically stored it
+ * as a numeric string (`"12345"`, `String.valueOf`), so accept both a number
+ * and a numeric string; anything else → 0. Mirrors the cross-platform contract.
+ */
+function parseFileSize(size: unknown): number {
+  if (typeof size === 'number' && Number.isFinite(size)) return size
+  if (typeof size === 'string' && size.trim() !== '' && !Number.isNaN(Number(size))) {
+    return Number(size)
+  }
+  return 0
+}
+
 /** Decode a `file` message content (`{url,name,size}` JSON, fallback to raw URL). */
 export function parseFileMeta(content: string): FileMeta {
   try {
@@ -45,7 +58,7 @@ export function parseFileMeta(content: string): FileMeta {
       return {
         url: String(decoded.url),
         name: typeof decoded.name === 'string' ? decoded.name : 'file',
-        size: typeof decoded.size === 'number' ? decoded.size : 0,
+        size: parseFileSize(decoded.size),
       }
     }
   } catch {

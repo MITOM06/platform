@@ -342,6 +342,36 @@ abstract class AppLocalizations {
   /// **'Default'**
   String get wallpaperDefaultName;
 
+  /// No description provided for @wallpaperCategoryColors.
+  ///
+  /// In en, this message translates to:
+  /// **'Simple Colors'**
+  String get wallpaperCategoryColors;
+
+  /// No description provided for @wallpaperCategoryVibrant.
+  ///
+  /// In en, this message translates to:
+  /// **'Vibrant Gradients'**
+  String get wallpaperCategoryVibrant;
+
+  /// No description provided for @wallpaperCategoryMinimal.
+  ///
+  /// In en, this message translates to:
+  /// **'Minimal'**
+  String get wallpaperCategoryMinimal;
+
+  /// No description provided for @wallpaperShowMore.
+  ///
+  /// In en, this message translates to:
+  /// **'Show more'**
+  String get wallpaperShowMore;
+
+  /// No description provided for @wallpaperShowLess.
+  ///
+  /// In en, this message translates to:
+  /// **'Show less'**
+  String get wallpaperShowLess;
+
   /// No description provided for @changeChatThemeTitle.
   ///
   /// In en, this message translates to:
@@ -1235,6 +1265,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'File'**
   String get attachFile;
+
+  /// No description provided for @attachVoice.
+  ///
+  /// In en, this message translates to:
+  /// **'Voice message'**
+  String get attachVoice;
+
+  /// No description provided for @attachSticker.
+  ///
+  /// In en, this message translates to:
+  /// **'Sticker'**
+  String get attachSticker;
+
+  /// No description provided for @pinnedMessageTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Pinned message'**
+  String get pinnedMessageTitle;
+
+  /// No description provided for @pinnedSystemMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'System message'**
+  String get pinnedSystemMessage;
 
   /// No description provided for @uploading.
   ///

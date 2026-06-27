@@ -6,6 +6,8 @@ import { toast } from 'sonner'
 import { useUser } from '@/lib/hooks/use-user'
 import { chatService } from '@/lib/api/chat'
 import { getNickname } from '@/lib/nicknames'
+import { humanizeSystemMessage } from '@/lib/system-messages'
+import { useAuthStore } from '@/lib/store/auth.store'
 import { PinnedMessageRow } from './PinnedMessageRow'
 import type { PinnedMessage } from '@/lib/api/types'
 
@@ -24,24 +26,47 @@ function useSenderName(conversationId: string, senderId: string): string {
 
 const MEDIA_TYPES = new Set(['voice', 'image', 'video', 'file', 'sticker'])
 
+type Translate = (key: string, values?: Record<string, string | number>) => string
+
 function PinnedRow({
   conversationId,
+  currentUserId,
   pinned,
   unpinLabel,
   attachmentLabel,
+  t,
   onJump,
   onUnpin,
 }: {
   conversationId: string
+  currentUserId?: string
   pinned: PinnedMessage
   unpinLabel: string
   attachmentLabel: string
+  t: Translate
   onJump?: () => void
   onUnpin: (id: string) => void
 }) {
   const senderName = useSenderName(conversationId, pinned.senderId)
+  const queryClient = useQueryClient()
+
+  // Resolve an actor id → display name for system codes that carry one
+  // (mirror MessageBubble.tsx). Never leak raw ids — see
+  // .claude/rules/no-raw-system-data-in-ui.md.
+  const resolveName = (actorId: string): string | undefined => {
+    if (actorId === currentUserId) return t('you')
+    const nick = getNickname(conversationId, actorId)
+    if (nick) return nick
+    const cached = queryClient.getQueryData<{ displayName?: string }>(['user', actorId])
+    return cached?.displayName
+  }
+
   const displayContent =
-    pinned.type && MEDIA_TYPES.has(pinned.type) ? attachmentLabel : pinned.content
+    pinned.type === 'system'
+      ? humanizeSystemMessage(pinned.content, t, { resolveName })
+      : pinned.type && MEDIA_TYPES.has(pinned.type)
+        ? attachmentLabel
+        : pinned.content
 
   const handleJump = () => {
     onJump?.()
@@ -71,6 +96,7 @@ function PinnedRow({
 export function PinnedMessagesSection({ conversationId, pinnedMessages, onJump }: Props) {
   const t = useTranslations('chat')
   const queryClient = useQueryClient()
+  const currentUserId = useAuthStore((s) => s.user?.id)
 
   if (pinnedMessages.length === 0) return null
 
@@ -95,9 +121,11 @@ export function PinnedMessagesSection({ conversationId, pinnedMessages, onJump }
           <PinnedRow
             key={pinned.id}
             conversationId={conversationId}
+            currentUserId={currentUserId}
             pinned={pinned}
             unpinLabel={t('unpinMessage')}
             attachmentLabel={t('attachmentLabel')}
+            t={t}
             onJump={onJump}
             onUnpin={handleUnpin}
           />

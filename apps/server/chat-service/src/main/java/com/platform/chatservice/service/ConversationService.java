@@ -495,7 +495,7 @@ public class ConversationService {
     }
     return ids.stream()
         .map(messageId -> messageRepository.findById(messageId).orElse(null))
-        .filter(m -> m != null && !m.isRecalled())
+        .filter(m -> m != null && !m.isRecalled() && !"system".equals(m.getType()))
         .map(
             m ->
                 new ConversationResponse.PinnedMessageDto(

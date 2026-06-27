@@ -333,13 +333,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
           alignment: PlaceholderAlignment.baseline,
           baseline: TextBaseline.alphabetic,
           child: GestureDetector(
-            onTap: () async {
-              final uri = Uri.parse(
-                  'https://platform-phi-gules.vercel.app/${isPrivacy ? "privacy" : "terms"}');
-              if (await canLaunchUrl(uri)) {
-                await launchUrl(uri, mode: LaunchMode.externalApplication);
-              }
-            },
+            // Open the native in-app legal screen instead of an external URL
+            // (the old vercel link 404'd). Both Privacy & Terms live on /legal.
+            onTap: () => context.push('/legal'),
             child: Text(
               isPrivacy ? context.l10n.privacyPolicy : context.l10n.termsOfService,
               style: const TextStyle(

@@ -4,6 +4,7 @@ import '../../../../core/l10n/l10n_ext.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../domain/chat_provider.dart';
 import '../../domain/chat_state.dart';
+import 'pinned_preview_text.dart';
 
 /// Info-panel section listing the pinned messages of a conversation
 /// (mobile mirror of the web pinned-messages info section). Renders up to two
@@ -77,8 +78,7 @@ class _PinnedRow extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final profile = ref.watch(userProfileProvider(pinned.senderId)).valueOrNull;
     final senderName = profile?.displayName ?? '…';
-    final preview =
-        pinned.content.trim().isEmpty ? '—' : pinned.content.trim();
+    final preview = pinnedPreviewText(context, pinned);
 
     return ListTile(
       dense: true,

@@ -130,6 +130,21 @@ class AppLocalizationsJa extends AppLocalizations {
   String get wallpaperDefaultName => 'デフォルト';
 
   @override
+  String get wallpaperCategoryColors => 'シンプルカラー';
+
+  @override
+  String get wallpaperCategoryVibrant => '鮮やかなグラデーション';
+
+  @override
+  String get wallpaperCategoryMinimal => 'ミニマル';
+
+  @override
+  String get wallpaperShowMore => 'もっと見る';
+
+  @override
+  String get wallpaperShowLess => '閉じる';
+
+  @override
   String get changeChatThemeTitle => 'チャットのテーマを変更';
 
   @override
@@ -601,6 +616,18 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get attachFile => 'ファイル';
+
+  @override
+  String get attachVoice => '音声メッセージ';
+
+  @override
+  String get attachSticker => 'スタンプ';
+
+  @override
+  String get pinnedMessageTitle => 'ピン留めしたメッセージ';
+
+  @override
+  String get pinnedSystemMessage => 'システムメッセージ';
 
   @override
   String get uploading => 'アップロード中…';

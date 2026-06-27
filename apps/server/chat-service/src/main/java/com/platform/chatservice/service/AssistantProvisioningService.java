@@ -1,5 +1,6 @@
 package com.platform.chatservice.service;
 
+import com.platform.chatservice.dto.AssistantInfoResponse;
 import com.platform.chatservice.dto.AssistantSetupRequest;
 import com.platform.chatservice.dto.AssistantSetupResponse;
 import com.platform.chatservice.dto.BotFactoryProviderResponse;
@@ -91,6 +92,13 @@ public class AssistantProvisioningService {
     } catch (RuntimeException e) {
       log.warn("Tear-down: failed to unregister mapping for {}: {}", userId, e.getMessage());
     }
+  }
+
+  /** The member's current assistant, or empty if they have not set one up yet. */
+  public Optional<AssistantInfoResponse> getMine(String userId) {
+    return externalBotAdminService
+        .findAssistantFor(userId)
+        .map(bot -> new AssistantInfoResponse(bot.botUserId(), bot.name(), bot.avatarUrl()));
   }
 
   /** AI providers a member can pick from (proxied from Bot Factory). */

@@ -311,6 +311,9 @@ public class MessageService {
     if ("call_log".equals(message.getType())) {
       throw new IllegalArgumentException("Cannot pin a call message");
     }
+    if ("system".equals(message.getType())) {
+      throw new IllegalArgumentException("Cannot pin a system message");
+    }
     if (conversation.isGroup()) {
       boolean isAdmin =
           conversation.getAdmins() != null && conversation.getAdmins().contains(userId);

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/l10n/l10n_ext.dart';
+import '../../../auth/domain/auth_provider.dart';
+import '../../../auth/domain/auth_state.dart';
 import '../../domain/chat_provider.dart';
 import '../../domain/chat_state.dart';
 
@@ -36,25 +38,7 @@ class ForwardDialog extends ConsumerWidget {
             }
             return ListView.builder(
               itemCount: targets.length,
-              itemBuilder: (ctx, i) {
-                final c = targets[i];
-                final title = c.isGroup
-                    ? (c.name ?? l10n.groupDefaultName)
-                    : (c.participants.length > 1
-                        ? c.participants
-                            .where((p) => p != c.createdBy)
-                            .first
-                        : c.participants.first);
-                return ListTile(
-                  leading: CircleAvatar(
-                    child: Text(
-                      (c.name ?? title).substring(0, 1).toUpperCase(),
-                    ),
-                  ),
-                  title: Text(c.isGroup ? (c.name ?? l10n.groupDefaultName) : title),
-                  onTap: () => Navigator.of(context).pop(c.id),
-                );
-              },
+              itemBuilder: (ctx, i) => _ForwardTargetTile(conv: targets[i]),
             );
           },
         ),
@@ -65,6 +49,61 @@ class ForwardDialog extends ConsumerWidget {
           child: Text(l10n.actionCancel),
         ),
       ],
+    );
+  }
+}
+
+/// One forward-target row. Resolves the display name the same way
+/// [ConversationTile] does so 1:1 chats show the peer's nickname / display name
+/// instead of a raw participant ID, and AI chats show the assistant label.
+class _ForwardTargetTile extends ConsumerWidget {
+  final ConversationModel conv;
+
+  const _ForwardTargetTile({required this.conv});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
+    final isGroup = conv.isGroup;
+
+    final currentUserId = ref.watch(
+      authNotifierProvider.select((s) {
+        final v = s.valueOrNull;
+        return v is AuthAuthenticated ? v.user.id : '';
+      }),
+    );
+
+    final others =
+        conv.participants.where((p) => p != currentUserId).toList();
+    final otherUserId = !isGroup && others.isNotEmpty ? others.first : '';
+    final isAiBot = !isGroup && otherUserId == kAiBotUserId;
+
+    final profileData = (otherUserId.isNotEmpty && !isAiBot)
+        ? ref.watch(
+            userProfileProvider(otherUserId).select((s) => s.valueOrNull),
+          )
+        : null;
+    final nicknames = ref.watch(nicknamesProvider(conv.id));
+    final dmNickname = (!isGroup && otherUserId.isNotEmpty)
+        ? nicknames[otherUserId]
+        : null;
+
+    final displayName = isGroup
+        ? (conv.name ?? l10n.conversationDefault)
+        : (isAiBot
+            ? l10n.aiAssistant
+            : ((dmNickname != null && dmNickname.isNotEmpty)
+                ? dmNickname
+                : (profileData?.displayName ?? l10n.conversationDefault)));
+
+    final letter = isAiBot
+        ? 'AI'
+        : (displayName.isNotEmpty ? displayName[0].toUpperCase() : '?');
+
+    return ListTile(
+      leading: CircleAvatar(child: Text(letter)),
+      title: Text(displayName),
+      onTap: () => Navigator.of(context).pop(conv.id),
     );
   }
 }

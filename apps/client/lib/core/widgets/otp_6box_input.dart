@@ -54,52 +54,78 @@ class _Otp6BoxInputState extends State<Otp6BoxInput> {
     final text = widget.controller.text;
     final isFocused = _focusNode.hasFocus;
 
-    return GestureDetector(
-      onTap: () => _focusNode.requestFocus(),
-      child: Stack(
-        alignment: Alignment.center,
-        children: [
-          // Visual boxes rendered first (below the transparent overlay)
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: List.generate(
-              6,
-              (i) => _OtpBox(
-                char: i < text.length ? text[i] : '',
-                isActive: isFocused && i == text.length && text.length < 6,
-                isFilled: i < text.length,
-                accentColor: widget.accentColor,
+    // Compute a responsive box width so the 6 boxes + gaps always fit the
+    // available width — fixed 44px boxes overflow on narrow screens (e.g. the
+    // 320px-wide iPhone SE). The height stays fixed for a consistent look.
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        const int count = 6;
+        const double gap = 8.0;
+        const double maxBoxWidth = 48.0;
+        const double minBoxWidth = 36.0;
+
+        final double available = constraints.maxWidth.isFinite
+            ? constraints.maxWidth
+            : maxBoxWidth * count + gap * (count - 1);
+        // Width left for the boxes after subtracting the inter-box gaps.
+        final double usable = available - gap * (count - 1);
+        final double boxWidth =
+            (usable / count).clamp(minBoxWidth, maxBoxWidth);
+
+        return GestureDetector(
+          onTap: () => _focusNode.requestFocus(),
+          child: Stack(
+            alignment: Alignment.center,
+            children: [
+              // Visual boxes rendered first (below the transparent overlay)
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: List.generate(count, (i) {
+                  return Padding(
+                    padding: EdgeInsets.only(right: i == count - 1 ? 0 : gap),
+                    child: _OtpBox(
+                      width: boxWidth,
+                      char: i < text.length ? text[i] : '',
+                      isActive:
+                          isFocused && i == text.length && text.length < 6,
+                      isFilled: i < text.length,
+                      accentColor: widget.accentColor,
+                    ),
+                  );
+                }),
               ),
-            ),
-          ),
-          // Invisible TextField on top intercepts taps and keyboard input
-          Positioned.fill(
-            child: Opacity(
-              opacity: 0.0,
-              child: TextField(
-                controller: widget.controller,
-                focusNode: _focusNode,
-                keyboardType: TextInputType.number,
-                maxLength: 6,
-                decoration: const InputDecoration(counterText: ''),
-                inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                autofocus: false,
+              // Invisible TextField on top intercepts taps and keyboard input
+              Positioned.fill(
+                child: Opacity(
+                  opacity: 0.0,
+                  child: TextField(
+                    controller: widget.controller,
+                    focusNode: _focusNode,
+                    keyboardType: TextInputType.number,
+                    maxLength: 6,
+                    decoration: const InputDecoration(counterText: ''),
+                    inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                    autofocus: false,
+                  ),
+                ),
               ),
-            ),
+            ],
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 }
 
 class _OtpBox extends StatelessWidget {
+  final double width;
   final String char;
   final bool isActive;
   final bool isFilled;
   final Color accentColor;
 
   const _OtpBox({
+    required this.width,
     required this.char,
     required this.isActive,
     required this.isFilled,
@@ -112,7 +138,7 @@ class _OtpBox extends StatelessWidget {
     final baseColor = isDark ? Colors.white : Colors.black;
     return AnimatedContainer(
       duration: const Duration(milliseconds: 150),
-      width: 44,
+      width: width,
       height: 54,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(12),

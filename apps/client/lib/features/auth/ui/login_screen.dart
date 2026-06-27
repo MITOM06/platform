@@ -6,6 +6,7 @@ import 'package:url_launcher/url_launcher.dart' show launchUrl, LaunchMode;
 import '../../../core/config/app_config.dart';
 import '../../../core/l10n/l10n_ext.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/widgets/google_logo_icon.dart';
 import '../../../core/widgets/motion_widgets.dart';
 import '../../../core/widgets/pon_widgets.dart';
 import '../data/auth_repository.dart';
@@ -296,7 +297,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         index: 3,
                         child: OutlinedButton.icon(
                         onPressed: () => _launchOAuth('google'),
-                        icon: const Text('G', style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF4285F4))),
+                        icon: const GoogleLogoIcon(size: 18),
                         label: Text(context.l10n.loginWithGoogle),
                         style: OutlinedButton.styleFrom(
                           foregroundColor: Colors.white,

@@ -43,6 +43,15 @@ function inferContentType(filename: string): string {
   return EXT_CONTENT_TYPE[ext] ?? 'application/octet-stream'
 }
 
+// Cloud Run caps an HTTP/1 request body at 32 MB and rejects anything larger at
+// the load-balancer layer — before the request reaches chat-service, so the
+// rejection carries no CORS headers and the browser reports a misleading
+// "blocked by CORS policy" error. Guard below the cap (30 MB headroom) so the
+// caller can show a real "file too large" message instead. Marker code lets
+// callers distinguish this from a generic upload failure.
+export const MAX_UPLOAD_BYTES = 30 * 1024 * 1024
+export const FILE_TOO_LARGE = 'FILE_TOO_LARGE'
+
 export const chatService = {
   // ── Conversations ──────────────────────────────────────────────────────────
 
@@ -174,6 +183,11 @@ export const chatService = {
   /** Upload a file (image/video/document/voice) to GridFS. Returns stored url + meta. */
   uploadFile: (file: File | Blob, filename?: string) => {
     const name = filename ?? (file instanceof File ? file.name : 'file')
+    if (file.size > MAX_UPLOAD_BYTES) {
+      // Fail fast instead of firing a request Cloud Run will reject with a
+      // CORS-looking error. Callers map this code to a "file too large" message.
+      return Promise.reject(new Error(FILE_TOO_LARGE))
+    }
     // chat-service validates the per-file content-type via magic bytes; a blob
     // with an empty `.type` (or a generic octet-stream) gets rejected with 400.
     // Set an explicit type on the FormData entry: prefer the file's own type,

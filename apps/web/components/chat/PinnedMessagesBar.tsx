@@ -3,8 +3,11 @@
 import { useState } from 'react'
 import { Pin, X, ChevronUp, ChevronDown } from 'lucide-react'
 import { useTranslations } from 'next-intl'
+import { useQueryClient } from '@tanstack/react-query'
 import { Button } from '@/components/ui/button'
 import { chatService } from '@/lib/api/chat'
+import { humanizeSystemMessage } from '@/lib/system-messages'
+import { getNickname } from '@/lib/nicknames'
 import { toast } from 'sonner'
 
 import type { PinnedMessage } from '@/lib/api/types'
@@ -12,17 +15,47 @@ import type { PinnedMessage } from '@/lib/api/types'
 interface Props {
   pinnedMessages: PinnedMessage[]
   onUnpin: (messageId: string) => void
+  conversationId?: string
+  currentUserId?: string
 }
 
 const MEDIA_TYPES = new Set(['voice', 'image', 'video', 'file', 'sticker'])
 
-function getDisplayContent(content: string, type: string | undefined, attachmentLabel: string): string {
-  return type && MEDIA_TYPES.has(type) ? attachmentLabel : content
+type Translate = (key: string, values?: Record<string, string | number>) => string
+
+/**
+ * Humanize a pinned message for display: system codes go through the shared
+ * humanizer (never leak raw `system.*` codes or user ids — see
+ * .claude/rules/no-raw-system-data-in-ui.md), media/file types show the
+ * localized attachment label, everything else shows its content.
+ */
+function getDisplayContent(
+  pinned: PinnedMessage,
+  t: Translate,
+  attachmentLabel: string,
+  resolveName: (actorId: string) => string | undefined,
+): string {
+  if (pinned.type === 'system') {
+    return humanizeSystemMessage(pinned.content, t, { resolveName })
+  }
+  return pinned.type && MEDIA_TYPES.has(pinned.type) ? attachmentLabel : pinned.content
 }
 
-export function PinnedMessagesBar({ pinnedMessages, onUnpin }: Props) {
+export function PinnedMessagesBar({ pinnedMessages, onUnpin, conversationId, currentUserId }: Props) {
   const t = useTranslations('chat')
+  const queryClient = useQueryClient()
   const [expanded, setExpanded] = useState(false)
+
+  // Resolve an actor id to a display name for system codes that carry one
+  // (mirror MessageBubble.tsx): current user → "You", then conversation
+  // nickname, then cached profile name.
+  const resolveName = (actorId: string): string | undefined => {
+    if (actorId === currentUserId) return t('you')
+    const nick = conversationId ? getNickname(conversationId, actorId) : undefined
+    if (nick) return nick
+    const cached = queryClient.getQueryData<{ displayName?: string }>(['user', actorId])
+    return cached?.displayName
+  }
 
   if (pinnedMessages.length === 0) return null
 
@@ -30,7 +63,7 @@ export function PinnedMessagesBar({ pinnedMessages, onUnpin }: Props) {
   const extraCount = pinnedMessages.length - 1
   const hasMore = extraCount > 0
   const attachmentLabel = t('attachmentLabel')
-  const latestContent = getDisplayContent(latest.content, latest.type, attachmentLabel)
+  const latestContent = getDisplayContent(latest, t, attachmentLabel, resolveName)
 
   const handleUnpin = async (messageId: string) => {
     try {
@@ -78,7 +111,7 @@ export function PinnedMessagesBar({ pinnedMessages, onUnpin }: Props) {
           >
             <div className="flex-1 min-w-0">
               <p className="text-xs text-foreground truncate">
-                {getDisplayContent(pin.content, pin.type, attachmentLabel)}
+                {getDisplayContent(pin, t, attachmentLabel, resolveName)}
               </p>
             </div>
             <Button

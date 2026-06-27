@@ -130,6 +130,21 @@ class AppLocalizationsKo extends AppLocalizations {
   String get wallpaperDefaultName => '기본';
 
   @override
+  String get wallpaperCategoryColors => '심플 색상';
+
+  @override
+  String get wallpaperCategoryVibrant => '선명한 그라데이션';
+
+  @override
+  String get wallpaperCategoryMinimal => '미니멀';
+
+  @override
+  String get wallpaperShowMore => '더 보기';
+
+  @override
+  String get wallpaperShowLess => '접기';
+
+  @override
   String get changeChatThemeTitle => '채팅 테마 변경';
 
   @override
@@ -601,6 +616,18 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get attachFile => '파일';
+
+  @override
+  String get attachVoice => '음성 메시지';
+
+  @override
+  String get attachSticker => '스티커';
+
+  @override
+  String get pinnedMessageTitle => '고정된 메시지';
+
+  @override
+  String get pinnedSystemMessage => '시스템 메시지';
 
   @override
   String get uploading => '업로드 중…';

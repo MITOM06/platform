@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/l10n/l10n_ext.dart';
+import '../../../../core/widgets/google_logo_icon.dart';
 import '../../../../core/widgets/motion_widgets.dart';
 
 /// Bottom section of the register screen: the "or continue with" divider, the
@@ -40,9 +41,7 @@ class RegisterFooter extends StatelessWidget {
           index: 3,
           child: OutlinedButton.icon(
             onPressed: onGoogle,
-            icon: const Text('G',
-                style: TextStyle(
-                    fontWeight: FontWeight.bold, color: Color(0xFF4285F4))),
+            icon: const GoogleLogoIcon(size: 18),
             label: Text(context.l10n.registerWithGoogle),
             style: OutlinedButton.styleFrom(
               foregroundColor: Colors.white,
