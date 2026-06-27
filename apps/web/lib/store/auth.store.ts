@@ -7,6 +7,8 @@ export interface AuthUser {
   avatarUrl?: string
   bio?: string
   coverPhoto?: string
+  /** True if the user has set a local password (vs. OAuth-only). */
+  hasPassword?: boolean
 }
 
 interface AuthState {

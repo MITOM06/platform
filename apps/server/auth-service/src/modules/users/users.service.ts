@@ -46,6 +46,19 @@ export class UsersService {
     }
   }
 
+  /** Returns true if the user has set a local password (as opposed to being OAuth-only). */
+  async getHasPassword(userId: string): Promise<boolean> {
+    try {
+      const doc = await this.userModel
+        .findById(userId)
+        .select('+password')
+        .exec();
+      return !!(doc as any)?.password;
+    } catch {
+      return false;
+    }
+  }
+
   /**
    * Batch lookup: resolve many ids in a SINGLE Mongo query. Mirrors
    * `findById`'s `-password` projection. Order of results is NOT guaranteed

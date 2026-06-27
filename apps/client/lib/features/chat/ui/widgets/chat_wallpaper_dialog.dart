@@ -8,9 +8,14 @@ import '../../domain/chat_provider.dart';
 import 'chat_wallpaper_fit_scale_selector.dart';
 import 'chat_wallpaper_preview.dart';
 
-/// A single wallpaper preset entry. `colors` is absent for the default option.
-/// `category` is one of `'default'`, `'colors'`, `'vibrant'`, `'minimal'`.
+/// A single wallpaper preset entry. `colors` is absent for the default option
+/// and image-based themes; `imageUrl` is present only for the `'themes'` category.
+/// `category` is one of `'default'`, `'colors'`, `'vibrant'`, `'minimal'`, `'themes'`.
 typedef WallpaperPreset = Map<String, Object?>;
+
+/// Unsplash CDN base for the image-based themed wallpapers. Kept in lockstep with
+/// `UNSPLASH_BASE` in the web client (`WallpaperPickerModal.tsx`).
+const String _unsplashBase = 'https://images.unsplash.com';
 
 /// Default wallpaper scale, expressed as an integer percentage to match the web
 /// client (`apps/web/.../WallpaperPickerModal.tsx`). 100 = original size.
@@ -144,6 +149,36 @@ void showWallpaperDialog(BuildContext context, WidgetRef ref, String conversatio
      'colors': [const Color(0xFF2A2A2E), const Color(0xFF1E1E22), const Color(0xFF2A2A2E)]},
     {'name': 'Warm Night', 'value': 'preset:warm_night', 'category': 'minimal',
      'colors': [const Color(0xFF0F0F14), const Color(0xFF100518), const Color(0xFF0F0F14)]},
+
+    // ── Chủ đề (themed photos) ──
+    // Stored as the RAW Unsplash URL (no `#fit=` suffix) so it round-trips
+    // identically with the web client (`THEMED_PRESETS` in WallpaperPickerModal.tsx)
+    // and stays highlighted on reopen — `splitWallpaperLayout` strips `#fit=` and
+    // defaults a hash-less image URL to cover.
+    {'name': context.l10n.wallpaperThemeForest, 'category': 'themes',
+     'value': '$_unsplashBase/photo-1448375240586-882707db888b?w=1920&q=85&auto=format&fit=crop',
+     'imageUrl': '$_unsplashBase/photo-1448375240586-882707db888b?w=80&h=80&auto=format&fit=crop&crop=center'},
+    {'name': context.l10n.wallpaperThemeOcean, 'category': 'themes',
+     'value': '$_unsplashBase/photo-1505118380757-91f5f5632de0?w=1920&q=85&auto=format&fit=crop',
+     'imageUrl': '$_unsplashBase/photo-1505118380757-91f5f5632de0?w=80&h=80&auto=format&fit=crop&crop=center'},
+    {'name': context.l10n.wallpaperThemeMountain, 'category': 'themes',
+     'value': '$_unsplashBase/photo-1464822759023-fed622ff2c3b?w=1920&q=85&auto=format&fit=crop',
+     'imageUrl': '$_unsplashBase/photo-1464822759023-fed622ff2c3b?w=80&h=80&auto=format&fit=crop&crop=center'},
+    {'name': context.l10n.wallpaperThemeCherryBlossom, 'category': 'themes',
+     'value': '$_unsplashBase/photo-1522383225653-ed111181a951?w=1920&q=85&auto=format&fit=crop',
+     'imageUrl': '$_unsplashBase/photo-1522383225653-ed111181a951?w=80&h=80&auto=format&fit=crop&crop=center'},
+    {'name': context.l10n.wallpaperThemeSpace, 'category': 'themes',
+     'value': '$_unsplashBase/photo-1462331940025-496dfbfc7564?w=1920&q=85&auto=format&fit=crop',
+     'imageUrl': '$_unsplashBase/photo-1462331940025-496dfbfc7564?w=80&h=80&auto=format&fit=crop&crop=center'},
+    {'name': context.l10n.wallpaperThemeAurora, 'category': 'themes',
+     'value': '$_unsplashBase/photo-1531366936337-7c912a4589a7?w=1920&q=85&auto=format&fit=crop',
+     'imageUrl': '$_unsplashBase/photo-1531366936337-7c912a4589a7?w=80&h=80&auto=format&fit=crop&crop=center'},
+    {'name': context.l10n.wallpaperThemeCityNight, 'category': 'themes',
+     'value': '$_unsplashBase/photo-1477959858617-67f85cf4f1df?w=1920&q=85&auto=format&fit=crop',
+     'imageUrl': '$_unsplashBase/photo-1477959858617-67f85cf4f1df?w=80&h=80&auto=format&fit=crop&crop=center'},
+    {'name': context.l10n.wallpaperThemeDesert, 'category': 'themes',
+     'value': '$_unsplashBase/photo-1509316785289-025f5b846b35?w=1920&q=85&auto=format&fit=crop',
+     'imageUrl': '$_unsplashBase/photo-1509316785289-025f5b846b35?w=80&h=80&auto=format&fit=crop&crop=center'},
   ];
 
   showDialog(
@@ -327,6 +362,14 @@ class _WallpaperDialogState extends State<_WallpaperDialog> {
 
                   const Divider(color: Colors.white12, height: 1),
 
+                  // Themes section (image-based photo wallpapers)
+                  _buildSectionHeader(context.l10n.wallpaperCategoryThemes, '🌄'),
+                  ...widget.presets
+                      .where((p) => p['category'] == 'themes')
+                      .map((p) => _buildThemeTile(preset: p)),
+
+                  const Divider(color: Colors.white12, height: 1),
+
                   // Upload
                   Padding(
                     padding:
@@ -413,7 +456,17 @@ class _WallpaperDialogState extends State<_WallpaperDialog> {
     final val = preset['value'] as String;
     final name = preset['name'] as String;
     final colors = preset['colors'] as List<Color>?;
-    final isSel = !_isImage && _selected == val;
+    final imageUrl = preset['imageUrl'] as String?;
+    // Themed presets are image URLs, so `_isImage` is true while one is active;
+    // match them by exact value. Color/default tiles must NOT highlight when an
+    // (uploaded or themed) image is selected, hence the `!_isImage` guard there.
+    final isSel = imageUrl != null
+        ? _selected == val
+        : (!_isImage && _selected == val);
+
+    final decoImage = imageUrl != null
+        ? DecorationImage(image: NetworkImage(imageUrl), fit: BoxFit.cover)
+        : null;
 
     return InkWell(
       onTap: () => setState(() => _selected = val),
@@ -436,7 +489,10 @@ class _WallpaperDialogState extends State<_WallpaperDialog> {
                         begin: Alignment.topCenter,
                         end: Alignment.bottomCenter)
                     : null,
-                color: colors == null ? Colors.transparent : null,
+                image: decoImage,
+                color: (colors == null && decoImage == null)
+                    ? Colors.transparent
+                    : null,
               ),
               child: icon ??
                   (isSel

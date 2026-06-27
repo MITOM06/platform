@@ -7,6 +7,7 @@ import com.platform.chatservice.dto.SendMessageRequest;
 import com.platform.chatservice.exception.RateLimitExceededException;
 import com.platform.chatservice.service.AiRedisPublisher;
 import com.platform.chatservice.service.CallService;
+import com.platform.chatservice.service.ClusterMessageBroker;
 import com.platform.chatservice.service.ConversationService;
 import com.platform.chatservice.service.ExternalBotService;
 import com.platform.chatservice.service.MessageService;
@@ -19,7 +20,6 @@ import java.util.regex.Pattern;
 import lombok.RequiredArgsConstructor;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
-import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Controller;
 
 @SuppressWarnings("null")
@@ -31,7 +31,7 @@ public class ChatController {
 
   private final MessageService messageService;
   private final ConversationService conversationService;
-  private final SimpMessagingTemplate messagingTemplate;
+  private final ClusterMessageBroker clusterBroker;
   private final com.platform.chatservice.service.FcmService fcmService;
   private final RateLimiterService rateLimiterService;
   private final AiRedisPublisher aiRedisPublisher;
@@ -44,7 +44,7 @@ public class ChatController {
       rateLimiterService.checkMessageRate(principal.getName());
     } catch (RateLimitExceededException e) {
       // STOMP has no HTTP status — send an error event to the user's private queue.
-      messagingTemplate.convertAndSendToUser(
+      clusterBroker.convertAndSendToUser(
           principal.getName(),
           "/queue/notifications",
           Map.of("type", "RATE_LIMITED", "message", e.getMessage()));
@@ -55,7 +55,7 @@ public class ChatController {
         new SendMessageRequest(
             dto.getConversationId(), dto.getContent(), dto.getType(), dto.getReplyToId());
     MessageResponse response = messageService.sendMessage(principal.getName(), request);
-    messagingTemplate.convertAndSend("/topic/conversation/" + dto.getConversationId(), response);
+    clusterBroker.convertAndSend("/topic/conversation/" + dto.getConversationId(), response);
 
     // Async AI trigger — must not block the STOMP response
     if (dto.getContent() != null && AI_MENTION_PATTERN.matcher(dto.getContent()).find()) {
@@ -119,7 +119,7 @@ public class ChatController {
                 dto.getContent() != null ? dto.getContent() : "",
                 "messageType",
                 dto.getType() != null ? dto.getType() : "text");
-        messagingTemplate.convertAndSendToUser(participantId, "/queue/notifications", notification);
+        clusterBroker.convertAndSendToUser(participantId, "/queue/notifications", notification);
 
         // Trigger Push Notification only if the conversation is not muted for this user
         if (!muted) {
@@ -137,7 +137,7 @@ public class ChatController {
             "conversationId", dto.getConversationId(),
             "userId", principal.getName(),
             "typing", Boolean.TRUE.equals(dto.getTyping()));
-    messagingTemplate.convertAndSend(
+    clusterBroker.convertAndSend(
         "/topic/conversation/" + dto.getConversationId() + "/typing", payload);
   }
 
@@ -149,7 +149,7 @@ public class ChatController {
             "type", "MESSAGE_READ",
             "messageId", dto.getMessageId(),
             "readerId", principal.getName());
-    messagingTemplate.convertAndSend("/topic/conversation/" + dto.getConversationId(), event);
+    clusterBroker.convertAndSend("/topic/conversation/" + dto.getConversationId(), event);
   }
 
   // WebRTC Signaling Endpoints.
@@ -183,7 +183,7 @@ public class ChatController {
     }
     // Legacy 1-on-1 relay (unchanged).
     dto.setSenderId(principal.getName());
-    messagingTemplate.convertAndSendToUser(dto.getTargetId(), "/queue/webrtc", dto);
+    clusterBroker.convertAndSendToUser(dto.getTargetId(), "/queue/webrtc", dto);
   }
 
   @MessageMapping("/call.end")
@@ -191,7 +191,7 @@ public class ChatController {
       @Payload com.platform.chatservice.dto.WebRTCSignalDto dto, Principal principal) {
     dto.setSenderId(principal.getName());
     // Notify the other peer
-    messagingTemplate.convertAndSendToUser(dto.getTargetId(), "/queue/webrtc", dto);
+    clusterBroker.convertAndSendToUser(dto.getTargetId(), "/queue/webrtc", dto);
 
     // Save call log
     String content = "Call ended";
@@ -206,6 +206,6 @@ public class ChatController {
     SendMessageRequest logRequest =
         new SendMessageRequest(dto.getConversationId(), content, "call_log", null);
     MessageResponse response = messageService.sendMessage(principal.getName(), logRequest);
-    messagingTemplate.convertAndSend("/topic/conversation/" + dto.getConversationId(), response);
+    clusterBroker.convertAndSend("/topic/conversation/" + dto.getConversationId(), response);
   }
 }

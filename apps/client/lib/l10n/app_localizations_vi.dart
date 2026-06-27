@@ -12,6 +12,73 @@ class AppLocalizationsVi extends AppLocalizations {
   String get appName => 'PON';
 
   @override
+  String get notificationsTitle => 'Thông báo';
+
+  @override
+  String get notificationsEmpty => 'Chưa có thông báo nào';
+
+  @override
+  String get notificationsMarkAllRead => 'Đánh dấu tất cả đã đọc';
+
+  @override
+  String get notificationAccept => 'Chấp nhận';
+
+  @override
+  String get notificationDecline => 'Từ chối';
+
+  @override
+  String get securityTitle => 'Mật khẩu & Bảo mật';
+
+  @override
+  String get securitySubtitle => 'Thay đổi mật khẩu của bạn';
+
+  @override
+  String get securityNoPasswordCardSubtitle => 'Chưa đặt mật khẩu';
+
+  @override
+  String get securityNoPasswordTitle => 'Chưa đặt mật khẩu';
+
+  @override
+  String get securityNoPasswordSubtitle =>
+      'Đặt mật khẩu để bảo vệ tài khoản và bật khôi phục qua email.';
+
+  @override
+  String get securityChangePasswordTitle => 'Đổi mật khẩu';
+
+  @override
+  String get securityChangePasswordSubtitle =>
+      'Cập nhật mật khẩu hiện tại của bạn.';
+
+  @override
+  String get securitySetPasswordTitle => 'Thiết lập mật khẩu';
+
+  @override
+  String get securitySetPasswordSubtitle =>
+      'Thêm mật khẩu vào tài khoản để tăng cường bảo mật.';
+
+  @override
+  String get securitySetButton => 'Đặt mật khẩu';
+
+  @override
+  String get securityChangeButton => 'Đổi mật khẩu';
+
+  @override
+  String get securitySetSuccess => 'Đặt mật khẩu thành công';
+
+  @override
+  String get securityTwoFaTitle => 'Xác thực hai yếu tố';
+
+  @override
+  String get securityTwoFaSubtitle =>
+      'Thêm một lớp bảo mật cho tài khoản của bạn.';
+
+  @override
+  String get securityTwoFaComingSoon => 'Xác thực hai yếu tố sẽ sớm ra mắt.';
+
+  @override
+  String get securityComingSoon => 'Sắp ra mắt';
+
+  @override
   String get languageName => 'Tiếng Việt';
 
   @override
@@ -143,6 +210,33 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get wallpaperShowLess => 'Ẩn bớt';
+
+  @override
+  String get wallpaperCategoryThemes => 'Chủ đề';
+
+  @override
+  String get wallpaperThemeForest => 'Rừng';
+
+  @override
+  String get wallpaperThemeOcean => 'Đại dương';
+
+  @override
+  String get wallpaperThemeMountain => 'Núi tuyết';
+
+  @override
+  String get wallpaperThemeCherryBlossom => 'Hoa anh đào';
+
+  @override
+  String get wallpaperThemeSpace => 'Vũ trụ';
+
+  @override
+  String get wallpaperThemeAurora => 'Bắc cực quang';
+
+  @override
+  String get wallpaperThemeCityNight => 'Thành phố đêm';
+
+  @override
+  String get wallpaperThemeDesert => 'Sa mạc';
 
   @override
   String get changeChatThemeTitle => 'Đổi chủ đề đoạn chat';

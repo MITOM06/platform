@@ -8,6 +8,7 @@ import {
   Friendship,
   FriendshipSchema,
 } from '@platform/database';
+import { NotificationsModule } from '../notifications/notifications.module';
 
 @Module({
   imports: [
@@ -15,6 +16,7 @@ import {
       { name: Friendship.name, schema: FriendshipSchema },
       { name: User.name, schema: UserSchema },
     ]),
+    NotificationsModule,
   ],
   controllers: [FriendsController],
   providers: [FriendsService],

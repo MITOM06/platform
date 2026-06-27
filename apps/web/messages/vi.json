@@ -228,7 +228,38 @@
     "help": "Trợ giúp & Câu hỏi thường gặp",
     "helpSubtitle": "Tìm câu trả lời cho các câu hỏi thường gặp",
     "chooseThemeTitle": "Chọn giao diện",
-    "chooseLanguageTitle": "Chọn ngôn ngữ"
+    "chooseLanguageTitle": "Chọn ngôn ngữ",
+    "securityCard": "Mật khẩu & Bảo mật",
+    "securityNoPassword": "Chưa đặt mật khẩu",
+    "securitySubtitle": "Đổi mật khẩu của bạn",
+    "security": {
+      "title": "Mật khẩu & Bảo mật",
+      "noPasswordTitle": "Chưa đặt mật khẩu",
+      "noPasswordSubtitle": "Đặt mật khẩu để bảo vệ tài khoản và bật khôi phục qua email.",
+      "changePasswordTitle": "Đổi mật khẩu",
+      "changePasswordSubtitle": "Cập nhật mật khẩu hiện tại của bạn.",
+      "setPasswordTitle": "Thiết lập mật khẩu",
+      "setPasswordSubtitle": "Thêm mật khẩu cho tài khoản để tăng cường bảo mật.",
+      "currentLabel": "Mật khẩu hiện tại",
+      "currentPlaceholder": "Nhập mật khẩu hiện tại",
+      "newLabel": "Mật khẩu mới",
+      "passwordLabel": "Mật khẩu",
+      "newPlaceholder": "Chọn một mật khẩu mạnh",
+      "confirmLabel": "Xác nhận mật khẩu",
+      "confirmPlaceholder": "Nhập lại mật khẩu của bạn",
+      "staySignedIn": "Bạn sẽ vẫn đăng nhập trên thiết bị này.",
+      "changeButton": "Đổi mật khẩu",
+      "setButton": "Đặt mật khẩu",
+      "changeSuccess": "Đổi mật khẩu thành công",
+      "setSuccess": "Đặt mật khẩu thành công",
+      "mismatch": "Mật khẩu không khớp",
+      "incorrectCurrent": "Mật khẩu hiện tại không đúng",
+      "currentRequired": "Vui lòng nhập mật khẩu hiện tại",
+      "genericError": "Cập nhật mật khẩu thất bại",
+      "twoFaTitle": "Xác thực hai yếu tố",
+      "twoFaSubtitle": "Thêm một lớp bảo mật cho tài khoản của bạn.",
+      "twoFaComingSoon": "Xác thực hai yếu tố sẽ sớm ra mắt."
+    }
   },
   "profile": {
     "title": "Chỉnh sửa hồ sơ",
@@ -452,6 +483,15 @@
     "wallpaperCategoryMinimal": "Tối giản",
     "wallpaperShowMore": "Xem thêm",
     "wallpaperShowLess": "Ẩn bớt",
+    "wallpaperCategoryThemes": "Chủ đề",
+    "wallpaperThemeForest": "Rừng",
+    "wallpaperThemeOcean": "Đại dương",
+    "wallpaperThemeMountain": "Núi tuyết",
+    "wallpaperThemeCherryBlossom": "Hoa anh đào",
+    "wallpaperThemeSpace": "Vũ trụ",
+    "wallpaperThemeAurora": "Bắc cực quang",
+    "wallpaperThemeCityNight": "Thành phố đêm",
+    "wallpaperThemeDesert": "Sa mạc",
     "quickReactionSuccess": "Đã cập nhật biểu tượng cảm xúc nhanh",
     "quickReactionPickTitle": "Chọn biểu tượng cảm xúc nhanh",
     "nicknameYou": "Biệt danh của bạn",
@@ -1232,5 +1272,12 @@
         "deleteHistory": "Mở cuộc trò chuyện, nhấn Cài đặt, vào Quyền riêng tư & Hỗ trợ và chọn 'Xóa lịch sử'. Thao tác này chỉ xóa lịch sử khỏi thiết bị của bạn."
       }
     }
+  },
+  "notifications": {
+    "title": "Thông báo",
+    "empty": "Chưa có thông báo nào",
+    "markAllRead": "Đánh dấu tất cả đã đọc",
+    "accept": "Chấp nhận",
+    "decline": "Từ chối"
   }
 }

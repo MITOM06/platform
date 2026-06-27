@@ -12,6 +12,74 @@ class AppLocalizationsEs extends AppLocalizations {
   String get appName => 'PON';
 
   @override
+  String get notificationsTitle => 'Notificaciones';
+
+  @override
+  String get notificationsEmpty => 'Aún no hay notificaciones';
+
+  @override
+  String get notificationsMarkAllRead => 'Marcar todo como leído';
+
+  @override
+  String get notificationAccept => 'Aceptar';
+
+  @override
+  String get notificationDecline => 'Rechazar';
+
+  @override
+  String get securityTitle => 'Contraseña y seguridad';
+
+  @override
+  String get securitySubtitle => 'Cambia tu contraseña';
+
+  @override
+  String get securityNoPasswordCardSubtitle => 'Sin contraseña establecida';
+
+  @override
+  String get securityNoPasswordTitle => 'Aún no has establecido una contraseña';
+
+  @override
+  String get securityNoPasswordSubtitle =>
+      'Establece una contraseña para proteger tu cuenta y habilitar la recuperación por correo electrónico.';
+
+  @override
+  String get securityChangePasswordTitle => 'Cambiar contraseña';
+
+  @override
+  String get securityChangePasswordSubtitle =>
+      'Actualiza tu contraseña actual.';
+
+  @override
+  String get securitySetPasswordTitle => 'Configura tu contraseña';
+
+  @override
+  String get securitySetPasswordSubtitle =>
+      'Añade una contraseña a tu cuenta para mayor seguridad.';
+
+  @override
+  String get securitySetButton => 'Establecer contraseña';
+
+  @override
+  String get securityChangeButton => 'Cambiar contraseña';
+
+  @override
+  String get securitySetSuccess => 'Contraseña establecida correctamente';
+
+  @override
+  String get securityTwoFaTitle => 'Autenticación de dos factores';
+
+  @override
+  String get securityTwoFaSubtitle =>
+      'Añade una capa adicional de seguridad a tu cuenta.';
+
+  @override
+  String get securityTwoFaComingSoon =>
+      'La autenticación de dos factores estará disponible pronto.';
+
+  @override
+  String get securityComingSoon => 'Próximamente';
+
+  @override
   String get languageName => 'Español';
 
   @override
@@ -145,6 +213,33 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get wallpaperShowLess => 'Mostrar menos';
+
+  @override
+  String get wallpaperCategoryThemes => 'Temas';
+
+  @override
+  String get wallpaperThemeForest => 'Bosque';
+
+  @override
+  String get wallpaperThemeOcean => 'Océano';
+
+  @override
+  String get wallpaperThemeMountain => 'Montaña nevada';
+
+  @override
+  String get wallpaperThemeCherryBlossom => 'Flor de cerezo';
+
+  @override
+  String get wallpaperThemeSpace => 'Espacio';
+
+  @override
+  String get wallpaperThemeAurora => 'Aurora boreal';
+
+  @override
+  String get wallpaperThemeCityNight => 'Ciudad nocturna';
+
+  @override
+  String get wallpaperThemeDesert => 'Desierto';
 
   @override
   String get changeChatThemeTitle => 'Cambiar tema del chat';

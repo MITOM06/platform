@@ -31,8 +31,8 @@ import { useNotificationPrefs } from '@/lib/store/notification-prefs'
 import { stompService } from '@/lib/stomp/client'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { absoluteMediaUrl } from '@/lib/media'
+import { cn } from '@/lib/utils'
 import { Switch } from '@/components/ui/switch'
-import { ChangePasswordDialog } from '@/components/chat/ChangePasswordDialog'
 import { LogoutConfirmDialog } from '@/components/layout/LogoutConfirmDialog'
 import { ThemePickerDialog, LanguagePickerDialog } from '@/components/settings/AppearanceDialogs'
 import { LOCALE_NAMES, type Locale } from '@/i18n/config'
@@ -112,7 +112,6 @@ export default function SettingsPage() {
   const notificationsEnabled = useNotificationPrefs((s) => s.enabled)
   const setNotificationsEnabled = useNotificationPrefs((s) => s.setEnabled)
   const [loggingOut, setLoggingOut] = useState(false)
-  const [changePasswordOpen, setChangePasswordOpen] = useState(false)
   const [logoutConfirmOpen, setLogoutConfirmOpen] = useState(false)
   const [themePickerOpen, setThemePickerOpen] = useState(false)
   const [languagePickerOpen, setLanguagePickerOpen] = useState(false)
@@ -313,10 +312,26 @@ export default function SettingsPage() {
               />
 
               <SettingsCard
-                icon={<Lock className="size-5 text-pon-pink" />}
-                iconBg="rgba(255,133,179,0.12)"
-                title={t('changePassword')}
-                onClick={() => setChangePasswordOpen(true)}
+                icon={
+                  <Lock
+                    className={cn(
+                      'size-5',
+                      !user.hasPassword ? 'text-amber-500' : 'text-pon-pink',
+                    )}
+                  />
+                }
+                iconBg={
+                  !user.hasPassword
+                    ? 'rgba(245,158,11,0.12)'
+                    : 'rgba(255,133,179,0.12)'
+                }
+                title={t('securityCard')}
+                subtitle={
+                  !user.hasPassword
+                    ? t('securityNoPassword')
+                    : t('securitySubtitle')
+                }
+                onClick={() => router.push('/settings/security')}
               />
             </div>
 
@@ -343,7 +358,6 @@ export default function SettingsPage() {
         </div>
       </div>
 
-      <ChangePasswordDialog open={changePasswordOpen} onOpenChange={setChangePasswordOpen} />
       <LogoutConfirmDialog
         open={logoutConfirmOpen}
         onOpenChange={setLogoutConfirmOpen}

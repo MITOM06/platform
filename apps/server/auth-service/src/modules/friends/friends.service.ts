@@ -14,6 +14,7 @@ import {
   REDIS_CLIENT,
   Redis,
 } from '@platform/database';
+import { NotificationsService } from '../notifications/notifications.service';
 
 // Redis key written by chat-service PresenceEventListener (value "online", 5-min TTL).
 const STATUS_KEY_PREFIX = 'user:status:';
@@ -25,6 +26,7 @@ export class FriendsService {
     private friendshipModel: Model<FriendshipDocument>,
     @InjectModel(User.name) private userModel: Model<UserDocument>,
     @Inject(REDIS_CLIENT) private readonly redis: Redis,
+    private readonly notificationsService: NotificationsService,
   ) {}
 
   /** Count accepted friendships the user participates in (either direction). */
@@ -158,11 +160,33 @@ export class FriendsService {
           : 'A friend request already exists',
       );
     }
-    return this.friendshipModel.create({
+    const friendship = await this.friendshipModel.create({
       requesterId,
       recipientId,
       status: 'pending',
     });
+
+    // Notify the recipient about the incoming friend request.
+    // Fetch the requester's profile for display.
+    const requesterDoc = await this.userModel
+      .findById(requesterId)
+      .select('displayName avatarUrl')
+      .exec();
+
+    if (requesterDoc) {
+      await this.notificationsService.create({
+        recipientId,
+        type: 'FRIEND_REQUEST',
+        title: `${requesterDoc.displayName} sent you a friend request`,
+        body: '',
+        actorId: requesterId,
+        actorName: requesterDoc.displayName,
+        actorAvatarUrl: (requesterDoc as any).avatarUrl ?? '',
+        relatedEntityId: requesterId,
+      });
+    }
+
+    return friendship;
   }
 
   /** Accept a pending request sent by `requesterId` to the current user. */
@@ -181,7 +205,28 @@ export class FriendsService {
       throw new NotFoundException('No pending friend request from this user');
     }
     doc.status = 'accepted';
-    return doc.save();
+    const saved = await doc.save();
+
+    // Notify the original requester that their request was accepted.
+    const accepterDoc = await this.userModel
+      .findById(currentUserId)
+      .select('displayName avatarUrl')
+      .exec();
+
+    if (accepterDoc) {
+      await this.notificationsService.create({
+        recipientId: requesterId,
+        type: 'FRIEND_ACCEPTED',
+        title: `${accepterDoc.displayName} accepted your friend request`,
+        body: '',
+        actorId: currentUserId,
+        actorName: accepterDoc.displayName,
+        actorAvatarUrl: (accepterDoc as any).avatarUrl ?? '',
+        relatedEntityId: currentUserId,
+      });
+    }
+
+    return saved;
   }
 
   /**

@@ -21,6 +21,7 @@ import { cn } from '@/lib/utils'
 import { MobileTabBar } from '@/components/layout/MobileTabBar'
 import { SidebarProfileBar } from '@/components/layout/SidebarProfileBar'
 import { SidebarAiHubButton } from '@/components/layout/SidebarAiHubButton'
+import { NotificationBell } from '@/components/layout/NotificationBell'
 import { useUiStore } from '@/lib/store/ui.store'
 import {
   DropdownMenu,
@@ -264,6 +265,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
 
           {/* Action Icons */}
           <div className="flex items-center gap-0.5">
+            <NotificationBell />
             <Button
               variant="ghost"
               size="icon"

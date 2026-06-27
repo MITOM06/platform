@@ -151,6 +151,8 @@ export const authService = {
   updateProfile: (data: UpdateProfilePayload) =>
     authApi.patch<UserProfile>('/api/users/me', data).then((r) => r.data),
 
-  changePassword: (currentPassword: string, newPassword: string) =>
+  // `currentPassword` is optional: OAuth-only users setting their first password
+  // omit it (the endpoint only requires it when a local password already exists).
+  changePassword: (currentPassword: string | undefined, newPassword: string) =>
     authApi.post('/api/users/me/change-password', { currentPassword, newPassword }),
 }

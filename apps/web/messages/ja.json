@@ -228,7 +228,38 @@
     "help": "ヘルプとよくある質問",
     "helpSubtitle": "よくある質問の回答を確認できます",
     "chooseThemeTitle": "テーマを選択",
-    "chooseLanguageTitle": "言語を選択"
+    "chooseLanguageTitle": "言語を選択",
+    "securityCard": "パスワードとセキュリティ",
+    "securityNoPassword": "パスワード未設定",
+    "securitySubtitle": "パスワードを変更",
+    "security": {
+      "title": "パスワードとセキュリティ",
+      "noPasswordTitle": "パスワード未設定",
+      "noPasswordSubtitle": "アカウントを保護し、メールによる復旧を有効にするためにパスワードを設定してください。",
+      "changePasswordTitle": "パスワードを変更",
+      "changePasswordSubtitle": "現在のパスワードを更新します。",
+      "setPasswordTitle": "パスワードを設定",
+      "setPasswordSubtitle": "セキュリティ強化のためにパスワードを追加します。",
+      "currentLabel": "現在のパスワード",
+      "currentPlaceholder": "現在のパスワードを入力",
+      "newLabel": "新しいパスワード",
+      "passwordLabel": "パスワード",
+      "newPlaceholder": "強力なパスワードを選択",
+      "confirmLabel": "パスワードの確認",
+      "confirmPlaceholder": "パスワードを再入力",
+      "staySignedIn": "このデバイスではログインしたままになります。",
+      "changeButton": "パスワードを変更",
+      "setButton": "パスワードを設定",
+      "changeSuccess": "パスワードを変更しました",
+      "setSuccess": "パスワードを設定しました",
+      "mismatch": "パスワードが一致しません",
+      "incorrectCurrent": "現在のパスワードが正しくありません",
+      "currentRequired": "現在のパスワードを入力してください",
+      "genericError": "パスワードの更新に失敗しました",
+      "twoFaTitle": "二要素認証",
+      "twoFaSubtitle": "アカウントにさらなるセキュリティを追加します。",
+      "twoFaComingSoon": "二要素認証は近日公開予定です。"
+    }
   },
   "profile": {
     "title": "プロフィールを編集",
@@ -1227,5 +1258,12 @@
         "deleteHistory": "会話を開いて設定をタップし、「プライバシーとサポート」に進んで「履歴を消去」を選択します。これにより、お使いのデバイスからのみ履歴が削除されます。"
       }
     }
+  },
+  "notifications": {
+    "title": "通知",
+    "empty": "通知はまだありません",
+    "markAllRead": "すべて既読にする",
+    "accept": "承認",
+    "decline": "拒否"
   }
 }

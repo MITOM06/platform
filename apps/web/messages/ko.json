@@ -228,7 +228,38 @@
     "help": "도움말 및 FAQ",
     "helpSubtitle": "자주 묻는 질문의 답변을 확인하세요",
     "chooseThemeTitle": "테마 선택",
-    "chooseLanguageTitle": "언어 선택"
+    "chooseLanguageTitle": "언어 선택",
+    "securityCard": "비밀번호 및 보안",
+    "securityNoPassword": "비밀번호가 설정되지 않음",
+    "securitySubtitle": "비밀번호 변경",
+    "security": {
+      "title": "비밀번호 및 보안",
+      "noPasswordTitle": "비밀번호가 아직 설정되지 않음",
+      "noPasswordSubtitle": "계정을 보호하고 이메일 기반 복구를 사용하려면 비밀번호를 설정하세요.",
+      "changePasswordTitle": "비밀번호 변경",
+      "changePasswordSubtitle": "현재 비밀번호를 업데이트합니다.",
+      "setPasswordTitle": "비밀번호 설정",
+      "setPasswordSubtitle": "보안 강화를 위해 계정에 비밀번호를 추가하세요.",
+      "currentLabel": "현재 비밀번호",
+      "currentPlaceholder": "현재 비밀번호 입력",
+      "newLabel": "새 비밀번호",
+      "passwordLabel": "비밀번호",
+      "newPlaceholder": "강력한 비밀번호 선택",
+      "confirmLabel": "비밀번호 확인",
+      "confirmPlaceholder": "비밀번호 재입력",
+      "staySignedIn": "이 기기에서 계속 로그인 상태로 유지됩니다.",
+      "changeButton": "비밀번호 변경",
+      "setButton": "비밀번호 설정",
+      "changeSuccess": "비밀번호가 변경되었습니다",
+      "setSuccess": "비밀번호가 설정되었습니다",
+      "mismatch": "비밀번호가 일치하지 않습니다",
+      "incorrectCurrent": "현재 비밀번호가 올바르지 않습니다",
+      "currentRequired": "현재 비밀번호를 입력하세요",
+      "genericError": "비밀번호 업데이트에 실패했습니다",
+      "twoFaTitle": "2단계 인증",
+      "twoFaSubtitle": "계정에 추가 보안 계층을 더합니다.",
+      "twoFaComingSoon": "2단계 인증이 곧 제공됩니다."
+    }
   },
   "profile": {
     "title": "프로필 편집",
@@ -1227,5 +1258,12 @@
         "deleteHistory": "대화를 열고 설정을 누른 뒤 개인정보 및 지원으로 이동해 '기록 지우기'를 선택하세요. 이 작업은 내 기기의 기록만 삭제합니다."
       }
     }
+  },
+  "notifications": {
+    "title": "알림",
+    "empty": "아직 알림이 없습니다",
+    "markAllRead": "모두 읽음으로 표시",
+    "accept": "수락",
+    "decline": "거절"
   }
 }

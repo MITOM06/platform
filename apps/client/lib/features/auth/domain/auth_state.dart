@@ -20,6 +20,11 @@ class UserModel {
   final bool? showPhoneNumber;
   final bool? showGender;
 
+  /// Whether the account has a local password set (vs. OAuth-only). Only
+  /// meaningful on the self response (`GET /api/users/me`). Drives the
+  /// Password & Security screen: set-first-password vs. change-password.
+  final bool hasPassword;
+
   const UserModel({
     required this.id,
     required this.email,
@@ -35,6 +40,7 @@ class UserModel {
     this.showDateOfBirth,
     this.showPhoneNumber,
     this.showGender,
+    this.hasPassword = false,
   });
 
   factory UserModel.fromJson(Map<String, dynamic> json) {
@@ -56,6 +62,7 @@ class UserModel {
       showDateOfBirth: json['showDateOfBirth'] as bool?,
       showPhoneNumber: json['showPhoneNumber'] as bool?,
       showGender: json['showGender'] as bool?,
+      hasPassword: json['hasPassword'] as bool? ?? false,
     );
   }
 
@@ -74,6 +81,7 @@ class UserModel {
         if (showDateOfBirth != null) 'showDateOfBirth': showDateOfBirth,
         if (showPhoneNumber != null) 'showPhoneNumber': showPhoneNumber,
         if (showGender != null) 'showGender': showGender,
+        'hasPassword': hasPassword,
       };
 
   /// Effective per-field visibility for "view as another user" gating.

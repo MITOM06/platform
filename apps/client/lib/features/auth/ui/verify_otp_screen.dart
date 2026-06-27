@@ -91,22 +91,23 @@ class _VerifyOtpScreenState extends ConsumerState<VerifyOtpScreen> {
       return;
     }
 
-    if (widget.isForgotPassword) {
-      context.go(
-        '/new-password?email=${Uri.encodeComponent(widget.email)}'
-        '&otp=${Uri.encodeComponent(otp)}',
-      );
-      return;
-    }
-
     setState(() => _isLoading = true);
     try {
+      // Verify the OTP before advancing. For the forgot-password flow this
+      // gates navigation to the new-password screen so a wrong OTP is caught
+      // here instead of only after the user enters a new password.
       await ref.read(authRepositoryProvider).verifyOtp(widget.email, otp);
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(context.l10n.verifySuccess)));
-        context.go('/login');
+      if (!mounted) return;
+      if (widget.isForgotPassword) {
+        context.go(
+          '/new-password?email=${Uri.encodeComponent(widget.email)}'
+          '&otp=${Uri.encodeComponent(otp)}',
+        );
+        return;
       }
+      ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(context.l10n.verifySuccess)));
+      context.go('/login');
     } on DioException catch (e) {
       if (mounted) {
         final msg = authErrorToString(context, e);

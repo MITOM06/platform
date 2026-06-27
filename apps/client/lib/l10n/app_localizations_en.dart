@@ -12,6 +12,73 @@ class AppLocalizationsEn extends AppLocalizations {
   String get appName => 'PON';
 
   @override
+  String get notificationsTitle => 'Notifications';
+
+  @override
+  String get notificationsEmpty => 'No notifications yet';
+
+  @override
+  String get notificationsMarkAllRead => 'Mark all as read';
+
+  @override
+  String get notificationAccept => 'Accept';
+
+  @override
+  String get notificationDecline => 'Decline';
+
+  @override
+  String get securityTitle => 'Password & Security';
+
+  @override
+  String get securitySubtitle => 'Change your password';
+
+  @override
+  String get securityNoPasswordCardSubtitle => 'No password set';
+
+  @override
+  String get securityNoPasswordTitle => 'No password set yet';
+
+  @override
+  String get securityNoPasswordSubtitle =>
+      'Set a password to secure your account and enable email-based recovery.';
+
+  @override
+  String get securityChangePasswordTitle => 'Change password';
+
+  @override
+  String get securityChangePasswordSubtitle => 'Update your current password.';
+
+  @override
+  String get securitySetPasswordTitle => 'Set up your password';
+
+  @override
+  String get securitySetPasswordSubtitle =>
+      'Add a password to your account for an extra layer of security.';
+
+  @override
+  String get securitySetButton => 'Set password';
+
+  @override
+  String get securityChangeButton => 'Change password';
+
+  @override
+  String get securitySetSuccess => 'Password set successfully';
+
+  @override
+  String get securityTwoFaTitle => 'Two-factor authentication';
+
+  @override
+  String get securityTwoFaSubtitle =>
+      'Add an extra layer of security to your account.';
+
+  @override
+  String get securityTwoFaComingSoon =>
+      'Two-factor authentication is coming soon.';
+
+  @override
+  String get securityComingSoon => 'Coming soon';
+
+  @override
   String get languageName => 'English';
 
   @override
@@ -143,6 +210,33 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get wallpaperShowLess => 'Show less';
+
+  @override
+  String get wallpaperCategoryThemes => 'Themes';
+
+  @override
+  String get wallpaperThemeForest => 'Forest';
+
+  @override
+  String get wallpaperThemeOcean => 'Ocean';
+
+  @override
+  String get wallpaperThemeMountain => 'Snow Mountain';
+
+  @override
+  String get wallpaperThemeCherryBlossom => 'Cherry Blossom';
+
+  @override
+  String get wallpaperThemeSpace => 'Space';
+
+  @override
+  String get wallpaperThemeAurora => 'Northern Lights';
+
+  @override
+  String get wallpaperThemeCityNight => 'City Night';
+
+  @override
+  String get wallpaperThemeDesert => 'Desert';
 
   @override
   String get changeChatThemeTitle => 'Change Chat Theme';

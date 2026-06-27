@@ -14,6 +14,7 @@ import com.platform.chatservice.exception.UnauthorizedException;
 import com.platform.chatservice.security.UserPrincipal;
 import com.platform.chatservice.service.AiFeedbackService;
 import com.platform.chatservice.service.AiRedisPublisher;
+import com.platform.chatservice.service.ClusterMessageBroker;
 import com.platform.chatservice.service.ExternalBotService;
 import com.platform.chatservice.service.MessageService;
 import com.platform.chatservice.service.RateLimiterService;
@@ -23,7 +24,6 @@ import java.util.concurrent.CompletableFuture;
 import java.util.regex.Pattern;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
-import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
@@ -35,7 +35,7 @@ public class MessageController {
   private static final Pattern AI_MENTION_PATTERN = Pattern.compile("(?i)@(AI|ponai)\\b");
 
   private final MessageService messageService;
-  private final SimpMessagingTemplate messagingTemplate;
+  private final ClusterMessageBroker clusterBroker;
   private final RateLimiterService rateLimiterService;
   private final AiRedisPublisher aiRedisPublisher;
   private final AiFeedbackService aiFeedbackService;
@@ -47,7 +47,7 @@ public class MessageController {
     final String uid = currentUserId();
     rateLimiterService.checkMessageRate(uid);
     MessageResponse response = messageService.sendMessage(uid, request);
-    messagingTemplate.convertAndSend("/topic/conversation/" + request.conversationId(), response);
+    clusterBroker.convertAndSend("/topic/conversation/" + request.conversationId(), response);
 
     if (request.content() != null && AI_MENTION_PATTERN.matcher(request.content()).find()) {
       final String convId = request.conversationId();
@@ -85,7 +85,7 @@ public class MessageController {
   public MessageResponse editMessage(
       @PathVariable String id, @RequestBody EditMessageRequest request) {
     MessageResponse updated = messageService.editMessage(currentUserId(), id, request.content());
-    messagingTemplate.convertAndSend(
+    clusterBroker.convertAndSend(
         "/topic/conversation/" + updated.conversationId(),
         Map.of(
             "type", "MESSAGE_UPDATED",
@@ -127,7 +127,7 @@ public class MessageController {
   @DeleteMapping("/{id}")
   public MessageResponse recall(@PathVariable String id) {
     MessageResponse updated = messageService.recallMessage(currentUserId(), id);
-    messagingTemplate.convertAndSend(
+    clusterBroker.convertAndSend(
         "/topic/conversation/" + updated.conversationId(),
         Map.of(
             "type",
@@ -181,7 +181,7 @@ public class MessageController {
    */
   private void broadcastPinResult(String messageId, PinResult result) {
     String destination = "/topic/conversation/" + result.conversationId();
-    messagingTemplate.convertAndSend(
+    clusterBroker.convertAndSend(
         destination,
         Map.of(
             "type",
@@ -192,7 +192,7 @@ public class MessageController {
             messageId,
             "pinnedMessages",
             result.pinnedMessages()));
-    messagingTemplate.convertAndSend(destination, result.systemMessage());
+    clusterBroker.convertAndSend(destination, result.systemMessage());
   }
 
   /** Forward a message to another conversation (Task 53). */
@@ -202,8 +202,7 @@ public class MessageController {
       @PathVariable String id, @RequestBody ForwardMessageRequest request) {
     MessageResponse forwarded =
         messageService.forwardMessage(currentUserId(), id, request.targetConversationId());
-    messagingTemplate.convertAndSend(
-        "/topic/conversation/" + forwarded.conversationId(), forwarded);
+    clusterBroker.convertAndSend("/topic/conversation/" + forwarded.conversationId(), forwarded);
     return forwarded;
   }
 
@@ -218,7 +217,7 @@ public class MessageController {
   }
 
   private void broadcastReaction(MessageResponse message) {
-    messagingTemplate.convertAndSend(
+    clusterBroker.convertAndSend(
         "/topic/conversation/" + message.conversationId(),
         Map.of(
             "type", "REACTION_UPDATED",

@@ -15,7 +15,6 @@ import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.StringRedisTemplate;
-import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
 /**
@@ -48,7 +47,7 @@ public class CallService {
 
   private final CallSessionRepository callSessionRepository;
   private final ConversationRepository conversationRepository;
-  private final SimpMessagingTemplate messagingTemplate;
+  private final ClusterMessageBroker clusterBroker;
   private final StringRedisTemplate redisTemplate;
   private final ObjectMapper objectMapper;
 
@@ -114,7 +113,7 @@ public class CallService {
               .media(session.getMedia())
               .aiNotetaker(session.isAiNotetaker())
               .build();
-      messagingTemplate.convertAndSendToUser(memberId, WEBRTC_QUEUE, ring);
+      clusterBroker.convertAndSendToUser(memberId, WEBRTC_QUEUE, ring);
     }
   }
 
@@ -210,7 +209,7 @@ public class CallService {
     dto.setType(type);
     dto.setFromId(fromUserId);
     dto.setSenderId(fromUserId);
-    messagingTemplate.convertAndSendToUser(dto.getTargetId(), WEBRTC_QUEUE, dto);
+    clusterBroker.convertAndSendToUser(dto.getTargetId(), WEBRTC_QUEUE, dto);
   }
 
   // ----------------------------------------------------------------------------------------------
@@ -255,7 +254,7 @@ public class CallService {
   }
 
   private void broadcastToConversation(String conversationId, CallEventDto event) {
-    messagingTemplate.convertAndSend("/topic/conversation/" + conversationId, event);
+    clusterBroker.convertAndSend("/topic/conversation/" + conversationId, event);
   }
 
   private List<String> membersOf(String conversationId) {

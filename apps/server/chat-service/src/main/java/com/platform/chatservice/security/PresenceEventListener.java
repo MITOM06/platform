@@ -1,12 +1,12 @@
 package com.platform.chatservice.security;
 
+import com.platform.chatservice.service.ClusterMessageBroker;
 import java.security.Principal;
 import java.time.Duration;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.event.EventListener;
 import org.springframework.data.redis.core.StringRedisTemplate;
-import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.stereotype.Component;
 import org.springframework.web.socket.messaging.SessionConnectedEvent;
@@ -21,7 +21,7 @@ public class PresenceEventListener {
   private static final String PRESENCE_TOPIC = "/topic/presence";
 
   private final StringRedisTemplate redisTemplate;
-  private final SimpMessagingTemplate messagingTemplate;
+  private final ClusterMessageBroker clusterBroker;
 
   @EventListener
   public void onConnect(SessionConnectedEvent event) {
@@ -45,6 +45,6 @@ public class PresenceEventListener {
 
   /** Notify subscribers (e.g. the "active friends" row) that a user came online/offline. */
   private void broadcastPresence(String userId, boolean online) {
-    messagingTemplate.convertAndSend(PRESENCE_TOPIC, Map.of("userId", userId, "online", online));
+    clusterBroker.convertAndSend(PRESENCE_TOPIC, Map.of("userId", userId, "online", online));
   }
 }

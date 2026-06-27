@@ -24,6 +24,7 @@ import '../../features/chat/ui/explore_screen.dart';
 import '../../features/chat/ui/explore_media_screen.dart';
 import '../../features/friends/ui/friends_screen.dart';
 import '../../features/settings/ui/settings_screen.dart';
+import '../../features/settings/ui/security_settings_screen.dart';
 import '../../features/chat/ui/ai_memory_screen.dart';
 import '../../features/chat/ui/ai_persona_screen.dart';
 import '../../features/chat/ui/kb_screen.dart';
@@ -182,6 +183,11 @@ GoRouter appRouter(AppRouterRef ref) {
         path: '/settings',
         name: 'settings',
         builder: (context, state) => const SettingsScreen(),
+      ),
+      GoRoute(
+        path: '/settings/security',
+        name: 'settings-security',
+        builder: (context, state) => const SecuritySettingsScreen(),
       ),
       GoRoute(
         path: '/new-conversation',

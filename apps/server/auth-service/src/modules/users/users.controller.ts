@@ -27,8 +27,14 @@ export class UsersController {
 
   @Get('me')
   @ApiOperation({ summary: 'Get the authenticated user profile' })
-  getMe(@Req() req: any) {
-    return this.usersService.findById(req.user.sub);
+  async getMe(@Req() req: any) {
+    const [user, hasPassword] = await Promise.all([
+      this.usersService.findById(req.user.sub),
+      this.usersService.getHasPassword(req.user.sub),
+    ]);
+    if (!user) return null;
+    // user is a Mongoose Document — spread via toObject() so we can add hasPassword.
+    return { ...user.toObject(), hasPassword };
   }
 
   @Patch('me')
