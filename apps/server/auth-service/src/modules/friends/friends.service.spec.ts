@@ -3,12 +3,14 @@ import { getModelToken } from '@nestjs/mongoose';
 import { ConflictException } from '@nestjs/common';
 import { Friendship, User, REDIS_CLIENT } from '@platform/database';
 import { FriendsService } from './friends.service';
+import { NotificationsService } from '../notifications/notifications.service';
 
 describe('FriendsService', () => {
   let service: FriendsService;
   let friendshipModel: any;
   let userModel: any;
   let redis: any;
+  let notificationsService: any;
 
   beforeEach(async () => {
     friendshipModel = {
@@ -17,8 +19,16 @@ describe('FriendsService', () => {
       findOne: jest.fn(),
       create: jest.fn(),
     };
-    userModel = { find: jest.fn() };
+    userModel = {
+      find: jest.fn(),
+      findById: jest.fn().mockReturnValue({
+        select: jest.fn().mockReturnValue({
+          exec: jest.fn().mockResolvedValue(null),
+        }),
+      }),
+    };
     redis = { get: jest.fn() };
+    notificationsService = { create: jest.fn().mockResolvedValue(undefined) };
 
     const moduleRef = await Test.createTestingModule({
       providers: [
@@ -26,6 +36,7 @@ describe('FriendsService', () => {
         { provide: getModelToken(Friendship.name), useValue: friendshipModel },
         { provide: getModelToken(User.name), useValue: userModel },
         { provide: REDIS_CLIENT, useValue: redis },
+        { provide: NotificationsService, useValue: notificationsService },
       ],
     }).compile();
 
