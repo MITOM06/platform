@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { Search, MessageSquare } from 'lucide-react'
+import { Search, MessageSquare, Ban, ChevronDown } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { useQueryClient } from '@tanstack/react-query'
 import { Input } from '@/components/ui/input'
@@ -10,12 +10,13 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { ConversationItem } from './ConversationItem'
 import { NewConversationModal } from './NewConversationModal'
 import { PublicChannelsModal } from './PublicChannelsModal'
-import { useConversations } from '@/lib/hooks/use-conversations'
+import { useConversations, useBlockedConversations } from '@/lib/hooks/use-conversations'
 import { useUiStore } from '@/lib/store/ui.store'
 import { useAuthStore } from '@/lib/store/auth.store'
 import { getNickname } from '@/lib/nicknames'
 import { OfflineBanner } from './OfflineBanner'
 import { authService } from '@/lib/api/auth'
+import { cn } from '@/lib/utils'
 import type { Conversation } from '@/lib/api/types'
 
 const AI_BOT_ID = 'ai-bot-000000000000000000000001'
@@ -35,9 +36,11 @@ function ConversationSkeleton() {
 export function ConversationList() {
   const t = useTranslations('chat')
   const [search, setSearch] = useState('')
+  const [showBlocked, setShowBlocked] = useState(false)
   const queryClient = useQueryClient()
   const currentUserId = useAuthStore((s) => s.user?.id)
   const { data: conversations, isLoading, isError } = useConversations()
+  const { data: blockedConversations } = useBlockedConversations()
   const {
     showNewChatModal,
     showPublicChannelsModal,
@@ -70,6 +73,8 @@ export function ConversationList() {
     const q = search.toLowerCase()
     return resolveSearchTerms(conv).some((term) => term.toLowerCase().includes(q))
   })
+
+  const blockedCount = blockedConversations?.length ?? 0
 
   // Batch-prefetch all participant profiles in ONE request, then seed the
   // per-id (`['user', id]`) cache so ConversationItem's useUser reads from
@@ -140,7 +145,7 @@ export function ConversationList() {
             </div>
           )}
 
-          {!isLoading && !isError && filtered?.length === 0 && (
+          {!isLoading && !isError && filtered?.length === 0 && blockedCount === 0 && (
             <div className="flex flex-col items-center justify-center py-12 gap-3 text-muted-foreground">
               <MessageSquare className="size-8 opacity-40" />
               <p className="text-sm">
@@ -157,6 +162,32 @@ export function ConversationList() {
           {filtered?.map((conv) => (
             <ConversationItem key={conv.id} conversation={conv} />
           ))}
+
+          {/* Blocked conversations collapsible section */}
+          {!search && blockedCount > 0 && (
+            <div className="mt-1">
+              <button
+                className="w-full flex items-center gap-2 px-2 py-1.5 text-xs text-muted-foreground hover:text-foreground rounded-md hover:bg-muted/50 transition-colors"
+                onClick={() => setShowBlocked((v) => !v)}
+              >
+                <Ban className="size-3" />
+                <span>{t('blockedChats')} ({blockedCount})</span>
+                <ChevronDown
+                  className={cn(
+                    'size-3 ml-auto transition-transform duration-200',
+                    showBlocked && 'rotate-180',
+                  )}
+                />
+              </button>
+              {showBlocked && blockedConversations?.map((conv) => (
+                <ConversationItem
+                  key={conv.id}
+                  conversation={conv}
+                  isBlocked={true}
+                />
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </>

@@ -526,7 +526,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String get valSelectMembers => '请至少选择2位成员';
 
   @override
-  String get searchUsers => '按姓名或邮箱搜索';
+  String get searchUsers => '按姓名、邮箱或电话搜索';
+
+  @override
+  String get phoneSearchHint => '请输入完整电话号码进行搜索';
 
   @override
   String get groupInfo => '群组信息';
@@ -1152,6 +1155,50 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get profileShowGender => '向他人显示性别';
+
+  @override
+  String get phoneVerifiedBadge => '已验证';
+
+  @override
+  String get phoneSendOtp => '发送验证码';
+
+  @override
+  String get phoneSending => '正在发送...';
+
+  @override
+  String get phoneChangeNumber => '更换号码';
+
+  @override
+  String get phoneNotVerified => '未验证';
+
+  @override
+  String get phoneSendOtpError => '无法发送验证码，请稍后重试。';
+
+  @override
+  String get phoneVerifyTitle => '验证手机号码';
+
+  @override
+  String phoneOtpSubtitle(String phone) {
+    return '请输入发送至 $phone 的6位验证码';
+  }
+
+  @override
+  String get phoneOtpIncomplete => '请输入完整的6位数字';
+
+  @override
+  String get phoneOtpInvalid => '验证码错误或已过期';
+
+  @override
+  String get phoneVerifiedSuccess => '手机号码已验证！';
+
+  @override
+  String get phoneVerifying => '正在验证...';
+
+  @override
+  String get phoneConfirm => '确认';
+
+  @override
+  String get phoneHint => '901 234 567';
 
   @override
   String get profilePrivacySection => '隐私';
@@ -2738,4 +2785,37 @@ class AppLocalizationsZh extends AppLocalizations {
   @override
   String get helpAccountSecurityA4 =>
       '打开对话，点击设置，进入隐私与支持，然后选择「清除历史记录」。此操作仅删除您设备上的历史记录。';
+
+  @override
+  String get blockedChats => '已屏蔽';
+
+  @override
+  String get noBlockedChats => '没有被屏蔽的会话';
+
+  @override
+  String get blockAndHide => '屏蔽并隐藏';
+
+  @override
+  String get unblockAndRestore => '解除屏蔽';
+
+  @override
+  String get callBlocked => '该用户不希望被联系';
+
+  @override
+  String get mute15min => '15 分钟';
+
+  @override
+  String get mute30min => '30 分钟';
+
+  @override
+  String get mute1hour => '1 小时';
+
+  @override
+  String get mute24hours => '24 小时';
+
+  @override
+  String get muteForever => '直到我手动开启';
+
+  @override
+  String get profileBlockedByOwner => '该用户的个人资料不可用';
 }

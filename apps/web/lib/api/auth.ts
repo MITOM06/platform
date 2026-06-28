@@ -2,6 +2,7 @@ import { authApi } from './axios'
 import type { AuthUser } from '@/lib/store/auth.store'
 import type {
   UserSearchResult,
+  UserSearchResponse,
   LoginRequest,
   RegisterRequest,
   VerifyOtpRequest,
@@ -20,6 +21,8 @@ export interface UserProfile extends AuthUser {
   coverPhoto?: string
   dateOfBirth?: string
   phoneNumber?: string
+  /** True once the phone number has been confirmed via SMS OTP. Self-only. */
+  phoneVerified?: boolean
   gender?: string
   /** Legacy single privacy flag — kept for backward-compat fallback. */
   hideInfo?: boolean
@@ -29,6 +32,10 @@ export interface UserProfile extends AuthUser {
   showPhoneNumber?: boolean
   showGender?: boolean
   friendsCount?: number
+  /** True when the profile owner has blocked the viewer. The server returns a
+   *  minimal profile (name/email/avatar/cover only) and sets this flag so the
+   *  client can render a "profile not available" banner instead of full info. */
+  isBlockedByOwner?: boolean
 }
 
 /** Fields accepted by `PATCH /api/users/me`. */
@@ -100,8 +107,10 @@ export const authService = {
   logout: () =>
     authApi.post('/auth/logout').catch(() => {}),
 
-  searchUsers: (q: string) =>
-    authApi.get<UserSearchResult[]>('/api/users/search', { params: { q } }).then((r) => r.data),
+  searchUsers: (q: string): Promise<UserSearchResponse> =>
+    authApi
+      .get<UserSearchResponse>('/api/users/search', { params: { q } })
+      .then((r) => r.data),
 
   getMe: () =>
     authApi.get<UserProfile>('/api/users/me').then((r) => r.data),
@@ -150,6 +159,19 @@ export const authService = {
 
   updateProfile: (data: UpdateProfilePayload) =>
     authApi.patch<UserProfile>('/api/users/me', data).then((r) => r.data),
+
+  // Phone verification: phone is persisted to the DB only after SMS OTP verify,
+  // never through PATCH /api/users/me. send-otp sends a code, verify confirms it.
+  sendPhoneOtp: (phone: string) =>
+    authApi.post('/api/users/me/phone/send-otp', { phone }).then((r) => r.data),
+
+  verifyPhoneOtp: (otp: string) =>
+    authApi
+      .post<{ success: boolean; phoneNumber: string; phoneVerified: boolean }>(
+        '/api/users/me/phone/verify',
+        { otp },
+      )
+      .then((r) => r.data),
 
   // `currentPassword` is optional: OAuth-only users setting their first password
   // omit it (the endpoint only requires it when a local password already exists).

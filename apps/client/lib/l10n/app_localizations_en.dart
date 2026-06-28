@@ -533,7 +533,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get valSelectMembers => 'Select at least 2 members';
 
   @override
-  String get searchUsers => 'Search by name or email';
+  String get searchUsers => 'Search by name, email or phone';
+
+  @override
+  String get phoneSearchHint => 'Enter the full phone number to search';
 
   @override
   String get groupInfo => 'Group info';
@@ -1165,6 +1168,50 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get profileShowGender => 'Show gender to others';
+
+  @override
+  String get phoneVerifiedBadge => 'Verified';
+
+  @override
+  String get phoneSendOtp => 'Send verification code';
+
+  @override
+  String get phoneSending => 'Sending...';
+
+  @override
+  String get phoneChangeNumber => 'Change number';
+
+  @override
+  String get phoneNotVerified => 'Not verified';
+
+  @override
+  String get phoneSendOtpError => 'Couldn\'t send the code. Try again later.';
+
+  @override
+  String get phoneVerifyTitle => 'Verify phone number';
+
+  @override
+  String phoneOtpSubtitle(String phone) {
+    return 'Enter the 6-digit code sent to $phone';
+  }
+
+  @override
+  String get phoneOtpIncomplete => 'Enter all 6 digits';
+
+  @override
+  String get phoneOtpInvalid => 'Incorrect or expired code';
+
+  @override
+  String get phoneVerifiedSuccess => 'Phone number verified!';
+
+  @override
+  String get phoneVerifying => 'Verifying...';
+
+  @override
+  String get phoneConfirm => 'Confirm';
+
+  @override
+  String get phoneHint => '901 234 567';
 
   @override
   String get profilePrivacySection => 'Privacy';
@@ -2824,4 +2871,37 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get helpAccountSecurityA4 =>
       'Open the conversation, tap Settings, go to Privacy & Support, and select \'Clear History\'. This only removes history from your device.';
+
+  @override
+  String get blockedChats => 'Blocked';
+
+  @override
+  String get noBlockedChats => 'No blocked conversations';
+
+  @override
+  String get blockAndHide => 'Block and hide';
+
+  @override
+  String get unblockAndRestore => 'Unblock';
+
+  @override
+  String get callBlocked => 'This user doesn\'t want to be contacted';
+
+  @override
+  String get mute15min => '15 minutes';
+
+  @override
+  String get mute30min => '30 minutes';
+
+  @override
+  String get mute1hour => '1 hour';
+
+  @override
+  String get mute24hours => '24 hours';
+
+  @override
+  String get muteForever => 'Until I turn it back on';
+
+  @override
+  String get profileBlockedByOwner => 'This user\'s profile is not available';
 }

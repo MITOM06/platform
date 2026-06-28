@@ -527,7 +527,10 @@ class AppLocalizationsJa extends AppLocalizations {
   String get valSelectMembers => '2人以上のメンバーを選択してください';
 
   @override
-  String get searchUsers => '名前またはメールで検索';
+  String get searchUsers => '名前・メール・電話番号で検索';
+
+  @override
+  String get phoneSearchHint => '検索するには完全な電話番号を入力してください';
 
   @override
   String get groupInfo => 'グループ情報';
@@ -1153,6 +1156,50 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get profileShowGender => '性別を他のユーザーに表示';
+
+  @override
+  String get phoneVerifiedBadge => '確認済み';
+
+  @override
+  String get phoneSendOtp => '確認コードを送信';
+
+  @override
+  String get phoneSending => '送信中...';
+
+  @override
+  String get phoneChangeNumber => '番号を変更';
+
+  @override
+  String get phoneNotVerified => '未確認';
+
+  @override
+  String get phoneSendOtpError => 'コードを送信できませんでした。後でもう一度お試しください。';
+
+  @override
+  String get phoneVerifyTitle => '電話番号を確認';
+
+  @override
+  String phoneOtpSubtitle(String phone) {
+    return '$phone に送信された6桁のコードを入力してください';
+  }
+
+  @override
+  String get phoneOtpIncomplete => '6桁すべて入力してください';
+
+  @override
+  String get phoneOtpInvalid => 'コードが正しくないか、有効期限が切れています';
+
+  @override
+  String get phoneVerifiedSuccess => '電話番号が確認されました！';
+
+  @override
+  String get phoneVerifying => '確認中...';
+
+  @override
+  String get phoneConfirm => '確認';
+
+  @override
+  String get phoneHint => '901 234 567';
 
   @override
   String get profilePrivacySection => 'プライバシー';
@@ -2764,4 +2811,37 @@ class AppLocalizationsJa extends AppLocalizations {
   @override
   String get helpAccountSecurityA4 =>
       '会話を開いて設定をタップし、プライバシーとサポートに進んで「履歴を消去」を選択します。これはお使いのデバイスから履歴を削除するだけです。';
+
+  @override
+  String get blockedChats => 'ブロック済み';
+
+  @override
+  String get noBlockedChats => 'ブロックした会話はありません';
+
+  @override
+  String get blockAndHide => 'ブロックして非表示';
+
+  @override
+  String get unblockAndRestore => 'ブロック解除';
+
+  @override
+  String get callBlocked => 'このユーザーは連絡を望んでいません';
+
+  @override
+  String get mute15min => '15 分';
+
+  @override
+  String get mute30min => '30 分';
+
+  @override
+  String get mute1hour => '1 時間';
+
+  @override
+  String get mute24hours => '24 時間';
+
+  @override
+  String get muteForever => '手動でオンにするまで';
+
+  @override
+  String get profileBlockedByOwner => 'このユーザーのプロフィールは表示できません';
 }

@@ -151,11 +151,19 @@ class AuthRepository {
     return UserModel.fromJson(response.data as Map<String, dynamic>);
   }
 
-  /// Tìm kiếm user theo email hoặc displayName — dùng khi tạo conversation
+  /// Search users by name/email (partial) or exact phone number.
+  ///
+  /// The endpoint returns `{ results, matchedBy }`. Phone matches carry a
+  /// `phoneNumber` + `matchedBy: 'phone'` on each result so the UI can
+  /// highlight the matched number; name/email matches never expose phones.
   Future<List<UserModel>> searchUsers(String query) async {
-    final response = await _dio.get('/api/users/search', queryParameters: {'q': query});
-    final list = response.data as List;
-    return list.map((e) => UserModel.fromJson(e as Map<String, dynamic>)).toList();
+    final response =
+        await _dio.get('/api/users/search', queryParameters: {'q': query});
+    final data = response.data as Map<String, dynamic>;
+    final results = (data['results'] as List?) ?? const [];
+    return results
+        .map((e) => UserModel.fromJson(e as Map<String, dynamic>))
+        .toList();
   }
 
   Future<UserModel> updateProfile({
@@ -194,6 +202,22 @@ class AuthRepository {
     }
     
     return updated;
+  }
+
+  /// Send a 6-digit SMS OTP to [phone] (E.164) for phone verification.
+  /// Hits the auth-service (`authDio`, port 3001).
+  Future<void> sendPhoneOtp(String phone) async {
+    await _dio.post('/api/users/me/phone/send-otp', data: {'phone': phone});
+  }
+
+  /// Verify the SMS [otp]; on success the server persists the phone number and
+  /// sets `phoneVerified = true`. Returns the verified phone number from the
+  /// server response.
+  Future<String?> verifyPhoneOtp(String otp) async {
+    final response =
+        await _dio.post('/api/users/me/phone/verify', data: {'otp': otp});
+    final data = response.data as Map<String, dynamic>;
+    return data['phoneNumber'] as String?;
   }
 
   Future<void> changePassword(String currentPassword, String newPassword) async {

@@ -15,6 +15,7 @@ import com.platform.chatservice.repository.FriendshipRepository;
 import com.platform.chatservice.repository.MessageRepository;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -58,6 +59,7 @@ public class ConversationService {
     List<Conversation> conversations =
         page.getContent().stream()
             .filter(c -> c.getHiddenFor() == null || !c.getHiddenFor().contains(userId))
+            .filter(c -> c.getBlockedBy() == null || !c.getBlockedBy().contains(userId))
             .filter(
                 c -> {
                   boolean isArchived =
@@ -223,28 +225,33 @@ public class ConversationService {
     conversationCacheService.save(conversation);
   }
 
-  public ConversationResponse muteConversation(String userId, String conversationId) {
+  /** Sentinel value meaning "muted until the user manually unmutes". */
+  private static final long MUTE_FOREVER_MS = 9_200_000_000_000_000L;
+
+  /**
+   * Mute conversation for userId with a time-based duration.
+   *
+   * @param durationSeconds 900=15min, 1800=30min, 3600=1h, 86400=24h, -1=forever
+   */
+  public ConversationResponse muteConversation(
+      String userId, String conversationId, long durationSeconds) {
     Conversation conversation = getRawConversation(userId, conversationId);
-    List<String> muted =
-        conversation.getMutedUsers() == null
-            ? new ArrayList<>()
-            : new ArrayList<>(conversation.getMutedUsers());
-    if (!muted.contains(userId)) {
-      muted.add(userId);
-      conversation.setMutedUsers(muted);
-      conversationCacheService.save(conversation);
+    if (conversation.getMutedUntil() == null) {
+      conversation.setMutedUntil(new HashMap<>());
     }
+    long expiryMs =
+        (durationSeconds <= 0)
+            ? MUTE_FOREVER_MS
+            : System.currentTimeMillis() + durationSeconds * 1000L;
+    conversation.getMutedUntil().put(userId, expiryMs);
+    conversationCacheService.save(conversation);
     return toResponse(conversation, userId, messageRepository.countUnread(conversationId, userId));
   }
 
   public ConversationResponse unmuteConversation(String userId, String conversationId) {
     Conversation conversation = getRawConversation(userId, conversationId);
-    List<String> muted =
-        conversation.getMutedUsers() == null
-            ? new ArrayList<>()
-            : new ArrayList<>(conversation.getMutedUsers());
-    if (muted.remove(userId)) {
-      conversation.setMutedUsers(muted);
+    if (conversation.getMutedUntil() != null) {
+      conversation.getMutedUntil().remove(userId);
       conversationCacheService.save(conversation);
     }
     return toResponse(conversation, userId, messageRepository.countUnread(conversationId, userId));
@@ -396,9 +403,51 @@ public class ConversationService {
   public boolean isMuted(String conversationId, String userId) {
     return conversationCacheService
         .findByIdOptional(conversationId)
-        .map(Conversation::getMutedUsers)
-        .map(list -> list != null && list.contains(userId))
+        .map(
+            conv -> {
+              if (conv.getMutedUntil() == null) return false;
+              Long until = conv.getMutedUntil().get(userId);
+              return until != null && until > System.currentTimeMillis();
+            })
         .orElse(false);
+  }
+
+  /** Returns conversations the user has moved to the Blocked section. */
+  public PageResponse<ConversationResponse> listBlockedConversations(
+      String userId, Pageable pageable) {
+    Page<Conversation> page =
+        conversationRepository
+            .findByParticipantsContainingAndBlockedByContainingOrderByLastMessageAtDesc(
+                userId, userId, pageable);
+    List<String> conversationIds = page.getContent().stream().map(Conversation::getId).toList();
+    Map<String, Long> unreadCounts = getUnreadCounts(conversationIds, userId);
+    List<ConversationResponse> content =
+        page.getContent().stream()
+            .map(c -> toResponse(c, userId, unreadCounts.getOrDefault(c.getId(), 0L)))
+            .toList();
+    return new PageResponse<>(content, page.getNumber(), page.getSize(), page.getTotalElements());
+  }
+
+  /** Move conversation to the Blocked section for userId (called after blockUser). */
+  public ConversationResponse blockArchiveConversation(String userId, String conversationId) {
+    Conversation conv = getRawConversation(userId, conversationId);
+    if (conv.getBlockedBy() == null) {
+      conv.setBlockedBy(new ArrayList<>());
+    }
+    if (!conv.getBlockedBy().contains(userId)) {
+      conv.getBlockedBy().add(userId);
+      conversationCacheService.save(conv);
+    }
+    return toResponse(conv, userId, messageRepository.countUnread(conversationId, userId));
+  }
+
+  /** Restore conversation from Blocked section (called after unblockUser). */
+  public ConversationResponse blockRestoreConversation(String userId, String conversationId) {
+    Conversation conv = getRawConversation(userId, conversationId);
+    if (conv.getBlockedBy() != null && conv.getBlockedBy().remove(userId)) {
+      conversationCacheService.save(conv);
+    }
+    return toResponse(conv, userId, messageRepository.countUnread(conversationId, userId));
   }
 
   /** Fetch a conversation, enforcing the caller is a participant. */
@@ -459,10 +508,14 @@ public class ConversationService {
               c.getLastMessage().getCreatedAt());
     }
     List<ConversationResponse.PinnedMessageDto> pinned = resolvePinnedMessages(c);
-    boolean isMuted =
-        userId != null && c.getMutedUsers() != null && c.getMutedUsers().contains(userId);
+    Long muteUntil =
+        (userId != null && c.getMutedUntil() != null) ? c.getMutedUntil().get(userId) : null;
+    boolean isMuted = muteUntil != null && muteUntil > System.currentTimeMillis();
+    Long muteExpiresAt = isMuted ? muteUntil : null;
     boolean isArchived =
         userId != null && c.getArchivedBy() != null && c.getArchivedBy().contains(userId);
+    boolean isBlocked =
+        userId != null && c.getBlockedBy() != null && c.getBlockedBy().contains(userId);
     return new ConversationResponse(
         c.getId(),
         c.resolvedType(),
@@ -481,7 +534,9 @@ public class ConversationService {
         pinned,
         isMuted,
         isArchived,
-        c.getWallpaper());
+        c.getWallpaper(),
+        isBlocked,
+        muteExpiresAt);
   }
 
   private List<ConversationResponse.PinnedMessageDto> resolvePinnedMessages(Conversation c) {

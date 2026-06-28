@@ -26,10 +26,8 @@ void showConversationTileMenu(
   final otherUserId =
       !conv.isGroup && others.isNotEmpty ? others.first : '';
 
-  final rel = otherUserId.isNotEmpty
-      ? ref.read(relationshipProvider(otherUserId)).valueOrNull
-      : null;
-  final iBlocked = rel?.iBlocked ?? false;
+  // conv.isBlocked is the authoritative flag for the blocked-archive state.
+  final isConvBlocked = conv.isBlocked;
 
   showModalBottomSheet(
     context: context,
@@ -64,22 +62,27 @@ void showConversationTileMenu(
                 notifier.markConversationUnreadServer(conv.id);
               },
             ),
-          ListTile(
-            leading: Icon(
-                conv.isMuted
-                    ? Icons.volume_up_outlined
-                    : Icons.volume_off_outlined,
-                color: Colors.white70),
-            title: Text(
-                conv.isMuted
-                    ? l10n.unmuteNotifications
-                    : l10n.muteNotifications,
-                style: const TextStyle(color: Colors.white)),
-            onTap: () {
-              Navigator.pop(sheetCtx);
-              notifier.toggleMuteConversation(conv.id, !conv.isMuted);
-            },
-          ),
+          // Mute: unmute directly; mute shows a duration picker bottom sheet.
+          if (conv.isMuted)
+            ListTile(
+              leading: const Icon(Icons.volume_up_outlined, color: Colors.white70),
+              title: Text(l10n.unmuteNotifications,
+                  style: const TextStyle(color: Colors.white)),
+              onTap: () {
+                Navigator.pop(sheetCtx);
+                notifier.toggleMuteConversation(conv.id, false);
+              },
+            )
+          else
+            ListTile(
+              leading: const Icon(Icons.volume_off_outlined, color: Colors.white70),
+              title: Text(l10n.muteNotifications,
+                  style: const TextStyle(color: Colors.white)),
+              onTap: () {
+                Navigator.pop(sheetCtx);
+                _showMuteDurationSheet(context, ref, conv.id, notifier);
+              },
+            ),
           ListTile(
             leading: Icon(
                 conv.isGroup
@@ -136,21 +139,27 @@ void showConversationTileMenu(
                 });
               },
             ),
-            ListTile(
-              leading: Icon(
-                  iBlocked
-                      ? Icons.lock_open_rounded
-                      : Icons.block_rounded,
-                  color: Colors.redAccent),
-              title: Text(iBlocked ? l10n.unblockUser : l10n.blockUser,
-                  style: const TextStyle(color: Colors.redAccent)),
-              onTap: () async {
-                Navigator.pop(sheetCtx);
-                final repo = ref.read(friendsRepositoryProvider);
-                if (iBlocked) {
+            // Block/Unblock — paired with conversation block-archive/restore.
+            if (isConvBlocked)
+              ListTile(
+                leading: const Icon(Icons.lock_open_rounded, color: Colors.white70),
+                title: Text(l10n.unblockAndRestore,
+                    style: const TextStyle(color: Colors.white70)),
+                onTap: () async {
+                  Navigator.pop(sheetCtx);
+                  final repo = ref.read(friendsRepositoryProvider);
                   await repo.unblockUser(otherUserId);
                   ref.invalidate(relationshipProvider(otherUserId));
-                } else {
+                  await notifier.unblockAndRestoreConversation(conv.id);
+                },
+              )
+            else
+              ListTile(
+                leading: const Icon(Icons.block_rounded, color: Colors.redAccent),
+                title: Text(l10n.blockAndHide,
+                    style: const TextStyle(color: Colors.redAccent)),
+                onTap: () async {
+                  Navigator.pop(sheetCtx);
                   final ok = await showDialog<bool>(
                     context: context,
                     builder: (ctx) => AlertDialog(
@@ -170,23 +179,25 @@ void showConversationTileMenu(
                     ),
                   );
                   if (ok == true) {
+                    final repo = ref.read(friendsRepositoryProvider);
                     await repo.blockUser(otherUserId);
                     ref.invalidate(relationshipProvider(otherUserId));
+                    await notifier.blockAndArchiveConversation(conv.id);
                   }
-                }
+                },
+              ),
+          ],
+          if (!isConvBlocked)
+            ListTile(
+              leading:
+                  const Icon(Icons.archive_outlined, color: Colors.white70),
+              title: Text(l10n.archiveChat,
+                  style: const TextStyle(color: Colors.white)),
+              onTap: () {
+                Navigator.pop(sheetCtx);
+                notifier.archiveConversation(conv.id);
               },
             ),
-          ],
-          ListTile(
-            leading:
-                const Icon(Icons.archive_outlined, color: Colors.white70),
-            title: Text(l10n.archiveChat,
-                style: const TextStyle(color: Colors.white)),
-            onTap: () {
-              Navigator.pop(sheetCtx);
-              notifier.archiveConversation(conv.id);
-            },
-          ),
           ListTile(
             leading: const Icon(Icons.delete_outline_rounded,
                 color: Colors.redAccent),
@@ -197,6 +208,64 @@ void showConversationTileMenu(
               notifier.deleteConversation(conv.id);
             },
           ),
+        ],
+      ),
+    ),
+  );
+}
+
+/// Shows a bottom sheet with 5 mute duration options.
+void _showMuteDurationSheet(
+  BuildContext context,
+  WidgetRef ref,
+  String conversationId,
+  ConversationsNotifier notifier,
+) {
+  final l10n = context.l10n;
+  final options = [
+    (label: l10n.mute15min, seconds: 900),
+    (label: l10n.mute30min, seconds: 1800),
+    (label: l10n.mute1hour, seconds: 3600),
+    (label: l10n.mute24hours, seconds: 86400),
+    (label: l10n.muteForever, seconds: -1),
+  ];
+
+  showModalBottomSheet(
+    context: context,
+    backgroundColor: AppTheme.darkSurface,
+    shape: const RoundedRectangleBorder(
+      borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+    ),
+    builder: (sheetCtx) => SafeArea(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const SizedBox(height: 8),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+            child: Text(
+              l10n.muteNotifications,
+              style: const TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+                fontSize: 16,
+              ),
+            ),
+          ),
+          for (final option in options)
+            ListTile(
+              title: Text(option.label,
+                  style: const TextStyle(color: Colors.white)),
+              onTap: () {
+                Navigator.pop(sheetCtx);
+                notifier.toggleMuteConversation(
+                  conversationId,
+                  true,
+                  durationSeconds: option.seconds,
+                );
+              },
+            ),
+          const SizedBox(height: 8),
         ],
       ),
     ),

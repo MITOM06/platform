@@ -216,3 +216,22 @@ body {
   }
   .pon-sheen { display: none; }
 }
+
+/* react-phone-number-input theme integration */
+.phone-input-container .PhoneInputInput {
+  background: transparent;
+  border: none;
+  outline: none;
+  font-size: 0.875rem;
+  color: inherit;
+  width: 100%;
+}
+.phone-input-container .PhoneInputCountry {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+}
+.phone-input-container .PhoneInputCountrySelectArrow {
+  opacity: 0.5;
+}

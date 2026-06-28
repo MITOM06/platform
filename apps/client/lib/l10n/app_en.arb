@@ -202,7 +202,8 @@
   "valGroupNameRequired": "Please enter a group name",
   "selectMembers": "Select members",
   "valSelectMembers": "Select at least 2 members",
-  "searchUsers": "Search by name or email",
+  "searchUsers": "Search by name, email or phone",
+  "phoneSearchHint": "Enter the full phone number to search",
   "groupInfo": "Group info",
   "members": "Members",
   "membersCount": "{count} members",
@@ -545,6 +546,25 @@
   "profileShowDateOfBirth": "Show date of birth to others",
   "profileShowPhone": "Show phone number to others",
   "profileShowGender": "Show gender to others",
+  "phoneVerifiedBadge": "Verified",
+  "phoneSendOtp": "Send verification code",
+  "phoneSending": "Sending...",
+  "phoneChangeNumber": "Change number",
+  "phoneNotVerified": "Not verified",
+  "phoneSendOtpError": "Couldn't send the code. Try again later.",
+  "phoneVerifyTitle": "Verify phone number",
+  "phoneOtpSubtitle": "Enter the 6-digit code sent to {phone}",
+  "@phoneOtpSubtitle": {
+    "placeholders": {
+      "phone": { "type": "String" }
+    }
+  },
+  "phoneOtpIncomplete": "Enter all 6 digits",
+  "phoneOtpInvalid": "Incorrect or expired code",
+  "phoneVerifiedSuccess": "Phone number verified!",
+  "phoneVerifying": "Verifying...",
+  "phoneConfirm": "Confirm",
+  "phoneHint": "901 234 567",
   "profilePrivacySection": "Privacy",
   "profileEditMode": "Edit Profile",
   "profileSave": "Save",
@@ -1320,5 +1340,16 @@
   "helpAccountSecurityQ3": "How do I block a user?",
   "helpAccountSecurityA3": "Open the conversation with the user, tap the Settings icon, scroll to Privacy & Support, and select 'Block User'.",
   "helpAccountSecurityQ4": "How do I delete message history?",
-  "helpAccountSecurityA4": "Open the conversation, tap Settings, go to Privacy & Support, and select 'Clear History'. This only removes history from your device."
+  "helpAccountSecurityA4": "Open the conversation, tap Settings, go to Privacy & Support, and select 'Clear History'. This only removes history from your device.",
+  "blockedChats": "Blocked",
+  "noBlockedChats": "No blocked conversations",
+  "blockAndHide": "Block and hide",
+  "unblockAndRestore": "Unblock",
+  "callBlocked": "This user doesn't want to be contacted",
+  "mute15min": "15 minutes",
+  "mute30min": "30 minutes",
+  "mute1hour": "1 hour",
+  "mute24hours": "24 hours",
+  "muteForever": "Until I turn it back on",
+  "profileBlockedByOwner": "This user's profile is not available"
 }

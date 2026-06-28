@@ -81,6 +81,9 @@ dependencies:
   # Icons
   cupertino_icons: ^1.0.8
 
+  # Phone number input with country code picker (Task 10 — SMS verification)
+  intl_phone_number_input: ^0.7.4
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

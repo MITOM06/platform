@@ -544,7 +544,11 @@ class AppLocalizationsFr extends AppLocalizations {
   String get valSelectMembers => 'Sélectionnez au moins 2 membres';
 
   @override
-  String get searchUsers => 'Rechercher par nom ou e-mail';
+  String get searchUsers => 'Rechercher par nom, e-mail ou téléphone';
+
+  @override
+  String get phoneSearchHint =>
+      'Saisissez le numéro de téléphone complet pour rechercher';
 
   @override
   String get groupInfo => 'Infos du groupe';
@@ -1180,6 +1184,51 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get profileShowGender => 'Afficher le genre aux autres';
+
+  @override
+  String get phoneVerifiedBadge => 'Vérifié';
+
+  @override
+  String get phoneSendOtp => 'Envoyer le code de vérification';
+
+  @override
+  String get phoneSending => 'Envoi...';
+
+  @override
+  String get phoneChangeNumber => 'Changer de numéro';
+
+  @override
+  String get phoneNotVerified => 'Non vérifié';
+
+  @override
+  String get phoneSendOtpError =>
+      'Impossible d\'envoyer le code. Réessayez plus tard.';
+
+  @override
+  String get phoneVerifyTitle => 'Vérifier le numéro de téléphone';
+
+  @override
+  String phoneOtpSubtitle(String phone) {
+    return 'Saisissez le code à 6 chiffres envoyé au $phone';
+  }
+
+  @override
+  String get phoneOtpIncomplete => 'Saisissez les 6 chiffres';
+
+  @override
+  String get phoneOtpInvalid => 'Code incorrect ou expiré';
+
+  @override
+  String get phoneVerifiedSuccess => 'Numéro de téléphone vérifié !';
+
+  @override
+  String get phoneVerifying => 'Vérification...';
+
+  @override
+  String get phoneConfirm => 'Confirmer';
+
+  @override
+  String get phoneHint => '901 234 567';
 
   @override
   String get profilePrivacySection => 'Confidentialité';
@@ -2863,4 +2912,38 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get helpAccountSecurityA4 =>
       'Ouvrez la conversation, touchez Paramètres, accédez à Confidentialité et assistance, puis sélectionnez « Effacer l\'historique ». Cela supprime uniquement l\'historique de votre appareil.';
+
+  @override
+  String get blockedChats => 'Bloqués';
+
+  @override
+  String get noBlockedChats => 'Aucune conversation bloquée';
+
+  @override
+  String get blockAndHide => 'Bloquer et masquer';
+
+  @override
+  String get unblockAndRestore => 'Débloquer';
+
+  @override
+  String get callBlocked => 'Cet utilisateur ne souhaite pas être contacté';
+
+  @override
+  String get mute15min => '15 minutes';
+
+  @override
+  String get mute30min => '30 minutes';
+
+  @override
+  String get mute1hour => '1 heure';
+
+  @override
+  String get mute24hours => '24 heures';
+
+  @override
+  String get muteForever => 'Jusqu\'à ce que je le réactive';
+
+  @override
+  String get profileBlockedByOwner =>
+      'Le profil de cet utilisateur n\'est pas disponible';
 }

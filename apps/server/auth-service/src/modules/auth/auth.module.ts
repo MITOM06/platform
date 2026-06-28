@@ -23,6 +23,7 @@ import { JwtStrategy } from './strategies/jwt.strategy';
 import { TwitterStrategy } from './strategies/x.strategy';
 import { GoogleStrategy } from './strategies/google.strategy';
 import { MailModule } from '../Email/mail.module';
+import { NotificationsModule } from '../notifications/notifications.module';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { PassportModule } from '@nestjs/passport';
 
@@ -38,6 +39,7 @@ import { PassportModule } from '@nestjs/passport';
     PassportModule.register({ defaultStrategy: 'jwt' }),
     UsersModule,
     MailModule,
+    NotificationsModule,
     JwtModule.registerAsync({
       inject: [ConfigService],
       imports: [ConfigModule],

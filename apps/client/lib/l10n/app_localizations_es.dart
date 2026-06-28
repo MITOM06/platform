@@ -541,7 +541,11 @@ class AppLocalizationsEs extends AppLocalizations {
   String get valSelectMembers => 'Selecciona al menos 2 miembros';
 
   @override
-  String get searchUsers => 'Buscar por nombre o correo';
+  String get searchUsers => 'Buscar por nombre, correo o teléfono';
+
+  @override
+  String get phoneSearchHint =>
+      'Introduce el número de teléfono completo para buscar';
 
   @override
   String get groupInfo => 'Información del grupo';
@@ -1175,6 +1179,51 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get profileShowGender => 'Mostrar género a los demás';
+
+  @override
+  String get phoneVerifiedBadge => 'Verificado';
+
+  @override
+  String get phoneSendOtp => 'Enviar código de verificación';
+
+  @override
+  String get phoneSending => 'Enviando...';
+
+  @override
+  String get phoneChangeNumber => 'Cambiar número';
+
+  @override
+  String get phoneNotVerified => 'No verificado';
+
+  @override
+  String get phoneSendOtpError =>
+      'No se pudo enviar el código. Inténtalo más tarde.';
+
+  @override
+  String get phoneVerifyTitle => 'Verificar número de teléfono';
+
+  @override
+  String phoneOtpSubtitle(String phone) {
+    return 'Introduce el código de 6 dígitos enviado a $phone';
+  }
+
+  @override
+  String get phoneOtpIncomplete => 'Introduce los 6 dígitos';
+
+  @override
+  String get phoneOtpInvalid => 'Código incorrecto o caducado';
+
+  @override
+  String get phoneVerifiedSuccess => '¡Número de teléfono verificado!';
+
+  @override
+  String get phoneVerifying => 'Verificando...';
+
+  @override
+  String get phoneConfirm => 'Confirmar';
+
+  @override
+  String get phoneHint => '901 234 567';
 
   @override
   String get profilePrivacySection => 'Privacidad';
@@ -2846,4 +2895,38 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get helpAccountSecurityA4 =>
       'Abre la conversación, toca Configuración, ve a Privacidad y soporte y selecciona \'Borrar historial\'. Esto solo elimina el historial de tu dispositivo.';
+
+  @override
+  String get blockedChats => 'Bloqueados';
+
+  @override
+  String get noBlockedChats => 'No hay conversaciones bloqueadas';
+
+  @override
+  String get blockAndHide => 'Bloquear y ocultar';
+
+  @override
+  String get unblockAndRestore => 'Desbloquear';
+
+  @override
+  String get callBlocked => 'Este usuario no quiere ser contactado';
+
+  @override
+  String get mute15min => '15 minutos';
+
+  @override
+  String get mute30min => '30 minutos';
+
+  @override
+  String get mute1hour => '1 hora';
+
+  @override
+  String get mute24hours => '24 horas';
+
+  @override
+  String get muteForever => 'Hasta que lo active manualmente';
+
+  @override
+  String get profileBlockedByOwner =>
+      'El perfil de este usuario no está disponible';
 }

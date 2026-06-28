@@ -119,7 +119,7 @@
       "sendCode": "Gửi mã xác nhận",
       "otpLabel": "Mã xác nhận (OTP)",
       "otpPlaceholder": "Nhập mã 6 số",
-      "otpMinLength": "Mã OTP phải có 6 ký tự",
+      "otpMinLength": "Vui lòng nhập đủ 6 chữ số",
       "newPasswordLabel": "Mật khẩu mới",
       "newPasswordMin": "Mật khẩu phải có ít nhất 8 ký tự",
       "updating": "Đang cập nhật...",
@@ -127,7 +127,18 @@
       "codeSent": "Mã xác nhận đã được gửi đến email của bạn",
       "sendError": "Không thể yêu cầu đặt lại mật khẩu",
       "resetSuccess": "Mật khẩu đã được đặt lại thành công. Vui lòng đăng nhập.",
-      "resetError": "Mã OTP không hợp lệ hoặc đã hết hạn"
+      "resetError": "Mã OTP không hợp lệ hoặc đã hết hạn",
+      "back": "Quay lại",
+      "otpTitle": "Nhập mã xác minh",
+      "otpSubtitle": "Chúng tôi đã gửi mã 6 chữ số đến",
+      "otpNext": "Tiếp tục",
+      "resend": "Gửi lại mã",
+      "resendCountdown": "Gửi lại sau {seconds}s",
+      "resendError": "Gửi lại thất bại",
+      "newPasswordTitle": "Đặt mật khẩu mới",
+      "newPasswordSubtitle": "Chọn một mật khẩu mạnh cho tài khoản của bạn.",
+      "confirmPasswordLabel": "Xác nhận mật khẩu",
+      "passwordMismatch": "Mật khẩu không khớp"
     },
     "oauth": {
       "verifying": "Đang xác thực...",
@@ -302,7 +313,25 @@
     "showPhoneLabel": "Hiển thị số điện thoại cho người khác",
     "showGenderLabel": "Hiển thị giới tính cho người khác",
     "privacySectionLabel": "Quyền riêng tư",
-    "privacySectionHint": "Chọn thông tin mà người dùng khác có thể thấy."
+    "privacySectionHint": "Chọn thông tin mà người dùng khác có thể thấy.",
+    "phoneSendOtp": "Xác minh",
+    "phoneSending": "Đang gửi...",
+    "phoneVerified": "Đã xác minh",
+    "phoneUnverified": "Chưa được xác minh",
+    "phoneChange": "Thay đổi",
+    "phoneOtpTitle": "Xác minh số điện thoại",
+    "phoneOtpSubtitle": "Nhập mã 6 chữ số đã gửi đến",
+    "phoneOtpConfirm": "Xác nhận",
+    "phoneVerifying": "Đang xác minh...",
+    "phoneOtpIncomplete": "Nhập đủ 6 chữ số",
+    "phoneResend": "Gửi lại mã",
+    "phoneResendCountdown": "Gửi lại sau {seconds}s",
+    "phoneSuccess": "Số điện thoại đã được xác minh!",
+    "phoneErrorInvalid": "Số điện thoại không hợp lệ",
+    "phoneErrorSend": "Không thể gửi OTP. Thử lại sau.",
+    "phoneErrorVerify": "Mã OTP sai hoặc đã hết hạn",
+    "phoneErrorExpired": "Mã đã hết hạn — gửi lại mã mới",
+    "phoneErrorTaken": "Số điện thoại này đã được sử dụng"
   },
   "friends": {
     "title": "Bạn bè",
@@ -314,7 +343,7 @@
     "removeFriend": "Xóa bạn",
     "accept": "Chấp nhận",
     "decline": "Từ chối",
-    "searchPlaceholder": "Tìm kiếm qua Email hoặc Tên...",
+    "searchPlaceholder": "Tìm theo tên, email hoặc số điện thoại đầy đủ...",
     "searching": "Đang tìm kiếm...",
     "noSearchResults": "Không tìm thấy kết quả nào",
     "searchPrompt": "Nhập từ khóa để tìm kiếm người dùng",
@@ -324,7 +353,8 @@
     "acceptRequestSuccess": "Đã chấp nhận lời mời",
     "acceptRequestError": "Không thể chấp nhận lời mời",
     "removeFriendSuccess": "Đã xóa bạn bè/hủy lời mời",
-    "removeFriendError": "Không thể thực hiện hành động này"
+    "removeFriendError": "Không thể thực hiện hành động này",
+    "phoneSearchHint": "Nhập đầy đủ số điện thoại để tìm kiếm"
   },
   "conversations": {
     "selectPrompt": "Chọn một cuộc trò chuyện để bắt đầu"
@@ -539,6 +569,7 @@
     "sendMessageAction": "Nhắn tin",
     "unblockAction": "Bỏ chặn",
     "blockAction": "Chặn người dùng",
+    "profileBlockedByOwner": "Hồ sơ của người dùng này không khả dụng",
     "markAsRead": "Đánh dấu đã đọc",
     "markAsUnread": "Đánh dấu chưa đọc",
     "archiveChat": "Lưu trữ",
@@ -628,7 +659,17 @@
     "newConvDepartment": "Phòng ban (tùy chọn)",
     "newConvNoDepartment": "Không có phòng ban",
     "groupAvatarAlt": "Ảnh nhóm",
-    "imageViewer": "Trình xem ảnh"
+    "imageViewer": "Trình xem ảnh",
+    "blockedChats": "Bị chặn",
+    "noBlockedChats": "Không có cuộc trò chuyện bị chặn",
+    "callBlocked": "Người dùng này không muốn được liên lạc",
+    "blockAndHide": "Chặn",
+    "unblockAndRestore": "Bỏ chặn",
+    "mute15min": "15 phút",
+    "mute30min": "30 phút",
+    "mute1hour": "1 giờ",
+    "mute24hours": "24 giờ",
+    "muteForever": "Cho đến khi tôi bật lại"
   },
   "aiHub": {
     "title": "Trung tâm AI",
@@ -1278,6 +1319,8 @@
     "empty": "Chưa có thông báo nào",
     "markAllRead": "Đánh dấu tất cả đã đọc",
     "accept": "Chấp nhận",
-    "decline": "Từ chối"
+    "decline": "Từ chối",
+    "phoneSetupAction": "Thêm số điện thoại →",
+    "passwordSetupAction": "Đặt mật khẩu ngay →"
   }
 }

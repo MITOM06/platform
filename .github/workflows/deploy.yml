@@ -153,6 +153,9 @@ jobs:
             BASE_URL=https://auth-service-942942821810.asia-southeast1.run.app
             WEB_REDIRECT_URL=https://platform-web-omega-amber.vercel.app/oauth-callback
             MOBILE_DEEPLINK_URL=platform://auth
+            TWILIO_ACCOUNT_SID=${{ secrets.TWILIO_ACCOUNT_SID }}
+            TWILIO_AUTH_TOKEN=${{ secrets.TWILIO_AUTH_TOKEN }}
+            TWILIO_PHONE_NUMBER=${{ secrets.TWILIO_PHONE_NUMBER }}
 
       # Deploy chat-service (min 1 instance — WebSocket needs persistent connection)
       - name: Deploy chat-service

@@ -59,16 +59,19 @@ public class FcmService {
       List<String> tokens = userDoc.getList("fcmTokens", String.class);
       if (tokens == null || tokens.isEmpty()) return;
 
-      // Check if the conversation is muted by the target user
+      // Check if the conversation is muted by the target user (time-based expiry)
       if (conversationId != null && ObjectId.isValid(conversationId)) {
         Query convQuery = new Query(Criteria.where("_id").is(new ObjectId(conversationId)));
-        convQuery.fields().include("mutedUsers");
+        convQuery.fields().include("mutedUntil");
         Document convDoc = mongoTemplate.findOne(convQuery, Document.class, "conversations");
         if (convDoc != null) {
-          List<String> mutedUsers = convDoc.getList("mutedUsers", String.class);
-          if (mutedUsers != null && mutedUsers.contains(targetUserId)) {
-            // Conversation is muted by this user, do not send push notification
-            return;
+          Document mutedUntil = convDoc.get("mutedUntil", Document.class);
+          if (mutedUntil != null) {
+            Long expiryMs = mutedUntil.getLong(targetUserId);
+            if (expiryMs != null && expiryMs > System.currentTimeMillis()) {
+              // Conversation is muted and not yet expired for this user
+              return;
+            }
           }
         }
       }

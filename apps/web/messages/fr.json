@@ -119,7 +119,7 @@
       "sendCode": "Envoyer le code de réinitialisation",
       "otpLabel": "Code de confirmation (OTP)",
       "otpPlaceholder": "Saisissez le code à 6 chiffres",
-      "otpMinLength": "L'OTP doit comporter 6 caractères",
+      "otpMinLength": "Veuillez saisir les 6 chiffres",
       "newPasswordLabel": "Nouveau mot de passe",
       "newPasswordMin": "Le mot de passe doit comporter au moins 8 caractères",
       "updating": "Mise à jour...",
@@ -127,7 +127,18 @@
       "codeSent": "Code de réinitialisation envoyé à votre e-mail",
       "sendError": "Impossible de demander la réinitialisation du mot de passe",
       "resetSuccess": "Mot de passe réinitialisé. Veuillez vous connecter.",
-      "resetError": "Code OTP invalide ou expiré"
+      "resetError": "Code OTP invalide ou expiré",
+      "back": "Retour",
+      "otpTitle": "Saisissez le code de vérification",
+      "otpSubtitle": "Nous avons envoyé un code à 6 chiffres à",
+      "otpNext": "Continuer",
+      "resend": "Renvoyer le code",
+      "resendCountdown": "Renvoyer dans {seconds}s",
+      "resendError": "Échec du renvoi du code",
+      "newPasswordTitle": "Définir un nouveau mot de passe",
+      "newPasswordSubtitle": "Choisissez un mot de passe fort pour votre compte.",
+      "confirmPasswordLabel": "Confirmer le mot de passe",
+      "passwordMismatch": "Les mots de passe ne correspondent pas"
     },
     "oauth": {
       "verifying": "Vérification...",
@@ -302,7 +313,25 @@
     "showPhoneLabel": "Afficher le numéro de téléphone aux autres",
     "showGenderLabel": "Afficher le genre aux autres",
     "privacySectionLabel": "Confidentialité",
-    "privacySectionHint": "Choisissez les informations visibles par les autres utilisateurs."
+    "privacySectionHint": "Choisissez les informations visibles par les autres utilisateurs.",
+    "phoneSendOtp": "Vérifier",
+    "phoneSending": "Envoi...",
+    "phoneVerified": "Vérifié",
+    "phoneUnverified": "Non vérifié",
+    "phoneChange": "Modifier",
+    "phoneOtpTitle": "Vérifier le numéro de téléphone",
+    "phoneOtpSubtitle": "Saisissez le code à 6 chiffres envoyé au",
+    "phoneOtpConfirm": "Confirmer",
+    "phoneVerifying": "Vérification...",
+    "phoneOtpIncomplete": "Saisissez les 6 chiffres",
+    "phoneResend": "Renvoyer le code",
+    "phoneResendCountdown": "Renvoyer dans {seconds}s",
+    "phoneSuccess": "Numéro de téléphone vérifié !",
+    "phoneErrorInvalid": "Numéro de téléphone invalide",
+    "phoneErrorSend": "Impossible d'envoyer l'OTP. Réessayez plus tard.",
+    "phoneErrorVerify": "Code OTP incorrect ou expiré",
+    "phoneErrorExpired": "Code expiré — renvoyez-en un nouveau",
+    "phoneErrorTaken": "Ce numéro de téléphone est déjà utilisé"
   },
   "friends": {
     "title": "Amis",
@@ -314,7 +343,7 @@
     "removeFriend": "Retirer l'ami",
     "accept": "Accepter",
     "decline": "Refuser",
-    "searchPlaceholder": "Rechercher par e-mail ou nom...",
+    "searchPlaceholder": "Rechercher par nom, e-mail ou numéro de téléphone complet...",
     "searching": "Recherche...",
     "noSearchResults": "Aucun résultat trouvé",
     "searchPrompt": "Saisissez un mot-clé pour rechercher des utilisateurs",
@@ -324,7 +353,8 @@
     "acceptRequestSuccess": "Demande d'ami acceptée",
     "acceptRequestError": "Impossible d'accepter la demande d'ami",
     "removeFriendSuccess": "Ami supprimé / demande annulée",
-    "removeFriendError": "Impossible de terminer l'action"
+    "removeFriendError": "Impossible de terminer l'action",
+    "phoneSearchHint": "Saisissez le numéro de téléphone complet pour rechercher"
   },
   "conversations": {
     "selectPrompt": "Sélectionnez une conversation pour commencer"
@@ -525,6 +555,7 @@
     "sendMessageAction": "Message",
     "unblockAction": "Débloquer",
     "blockAction": "Bloquer l'utilisateur",
+    "profileBlockedByOwner": "Le profil de cet utilisateur n'est pas disponible",
     "markAsRead": "Marquer comme lu",
     "markAsUnread": "Marquer comme non lu",
     "archiveChat": "Archiver",
@@ -614,7 +645,17 @@
     "newConvDepartment": "Département (facultatif)",
     "newConvNoDepartment": "Aucun département",
     "groupAvatarAlt": "Avatar du groupe",
-    "imageViewer": "Visionneuse d'images"
+    "imageViewer": "Visionneuse d'images",
+    "blockedChats": "Bloqués",
+    "noBlockedChats": "Aucune conversation bloquée",
+    "callBlocked": "Cet utilisateur ne souhaite pas être contacté",
+    "blockAndHide": "Bloquer",
+    "unblockAndRestore": "Débloquer",
+    "mute15min": "15 minutes",
+    "mute30min": "30 minutes",
+    "mute1hour": "1 heure",
+    "mute24hours": "24 heures",
+    "muteForever": "Jusqu'à ce que je le réactive"
   },
   "aiHub": {
     "title": "Hub IA",
@@ -1264,6 +1305,8 @@
     "empty": "Aucune notification pour le moment",
     "markAllRead": "Tout marquer comme lu",
     "accept": "Accepter",
-    "decline": "Refuser"
+    "decline": "Refuser",
+    "phoneSetupAction": "Ajouter un numéro de téléphone →",
+    "passwordSetupAction": "Définir un mot de passe maintenant →"
   }
 }

@@ -18,6 +18,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import {
   ContextMenu, ContextMenuContent, ContextMenuItem,
   ContextMenuSeparator, ContextMenuTrigger,
+  ContextMenuSub, ContextMenuSubContent, ContextMenuSubTrigger,
 } from '@/components/ui/context-menu'
 import { useAuthStore } from '@/lib/store/auth.store'
 import { useUser } from '@/lib/hooks/use-user'
@@ -29,8 +30,13 @@ import type { Conversation } from '@/lib/api/types'
 
 const AI_BOT_ID = 'ai-bot-000000000000000000000001'
 
+/** epoch ms value chat-service uses for "muted forever" (Long.MAX_VALUE proxy) */
+const MUTE_FOREVER_MS = 9_200_000_000_000_000
+
 interface Props {
   conversation: Conversation
+  /** When true the item is in the Blocked section: show Unblock, hide Block */
+  isBlocked?: boolean
 }
 
 function getInitials(name: string): string {
@@ -53,7 +59,26 @@ function formatTime(iso: string | null, locale: string): string {
   return d.toLocaleDateString(locale, { day: '2-digit', month: '2-digit' })
 }
 
-const ConversationItemInner = function ConversationItem({ conversation: conv }: Props) {
+/** Returns a short human-readable remaining time string for mute expiry. */
+function formatMuteExpiry(expiresAt: number): string {
+  const remaining = expiresAt - Date.now()
+  if (remaining <= 0) return ''
+  const mins = Math.ceil(remaining / 60_000)
+  if (mins < 60) return `${mins}m`
+  const hrs = Math.floor(remaining / 3_600_000)
+  if (hrs < 24) return `${hrs}h`
+  return `${Math.floor(hrs / 24)}d`
+}
+
+const MUTE_OPTIONS = [
+  { labelKey: 'mute15min',   seconds: 900   },
+  { labelKey: 'mute30min',   seconds: 1800  },
+  { labelKey: 'mute1hour',   seconds: 3600  },
+  { labelKey: 'mute24hours', seconds: 86400 },
+  { labelKey: 'muteForever', seconds: -1    },
+] as const
+
+const ConversationItemInner = function ConversationItem({ conversation: conv, isBlocked = false }: Props) {
   const pathname = usePathname()
   const router = useRouter()
   const t = useTranslations('chat')
@@ -70,7 +95,7 @@ const ConversationItemInner = function ConversationItem({ conversation: conv }: 
 
   const { data: otherUser } = useUser(otherUserId)
   const otherNickname = useNickname(conv.id, otherUserId)
-  const { relationship, block, unblock } = useRelationship(otherUserId)
+  const { relationship } = useRelationship(otherUserId)
 
   const displayName =
     conv.name ??
@@ -91,14 +116,15 @@ const ConversationItemInner = function ConversationItem({ conversation: conv }: 
     previewText = isPlainOwn ? `${t('youColon')}${humanized}` : humanized
   }
 
-  const invalidateConversations = () => {
+  const invalidateAll = () => {
     queryClient.invalidateQueries({ queryKey: ['conversations'] })
+    queryClient.invalidateQueries({ queryKey: ['blocked-conversations'] })
   }
 
   const run = async (fn: () => Promise<unknown>, errorKey: string) => {
     try {
       await fn()
-      invalidateConversations()
+      queryClient.invalidateQueries({ queryKey: ['conversations'] })
     } catch {
       toast.error(t(errorKey))
     }
@@ -106,11 +132,20 @@ const ConversationItemInner = function ConversationItem({ conversation: conv }: 
 
   const handleMarkRead = () => run(() => chatService.markConversationRead(conv.id), 'actionFailed')
   const handleMarkUnread = () => run(() => chatService.markConversationUnread(conv.id), 'actionFailed')
-  const handleMute = () =>
-    run(
-      () => (conv.isMuted ? chatService.unmuteConversation(conv.id) : chatService.muteConversation(conv.id)),
-      'actionFailed',
-    )
+
+  const handleUnmute = () =>
+    run(() => chatService.unmuteConversation(conv.id), 'actionFailed')
+
+  const handleMuteWithDuration = async (seconds: number) => {
+    try {
+      await chatService.muteConversation(conv.id, seconds)
+      queryClient.invalidateQueries({ queryKey: ['conversations'] })
+      toast.success(t('muteSuccess'))
+    } catch {
+      toast.error(t('actionFailed'))
+    }
+  }
+
   const handleArchive = () =>
     run(
       () =>
@@ -124,20 +159,50 @@ const ConversationItemInner = function ConversationItem({ conversation: conv }: 
   const handleBlock = async () => {
     if (!otherUserId) return
     try {
-      if (relationship?.iBlocked) {
-        await unblock(otherUserId)
-        toast.success(t('userUnblocked'))
-      } else {
-        await block(otherUserId)
-        toast.success(t('userBlocked'))
-      }
-      invalidateConversations()
+      await chatService.blockUser(otherUserId)
+      await chatService.blockArchiveConversation(conv.id)
+      invalidateAll()
+      toast.success(t('userBlocked'))
+    } catch {
+      toast.error(t('actionFailed'))
+    }
+  }
+
+  /** Full unblock: used in the Blocked section (isBlocked=true). Restores the conversation. */
+  const handleUnblock = async () => {
+    if (!otherUserId) return
+    try {
+      await chatService.unblockUser(otherUserId)
+      await chatService.blockRestoreConversation(conv.id)
+      invalidateAll()
+      toast.success(t('userUnblocked'))
+    } catch {
+      toast.error(t('actionFailed'))
+    }
+  }
+
+  /**
+   * Unblock-only: used in the normal list when `relationship?.iBlocked` is true
+   * but the conversation was never block-archived (i.e. `isBlocked` prop is false).
+   * Only calls unblockUser — no blockRestoreConversation.
+   */
+  const handleUnblockOnly = async () => {
+    if (!otherUserId) return
+    try {
+      await chatService.unblockUser(otherUserId)
+      invalidateAll()
+      toast.success(t('userUnblocked'))
     } catch {
       toast.error(t('actionFailed'))
     }
   }
 
   const handleInfo = () => router.push(`/conversations/${conv.id}`)
+
+  const showMuteExpiry =
+    conv.isMuted &&
+    typeof conv.muteExpiresAt === 'number' &&
+    conv.muteExpiresAt < MUTE_FOREVER_MS
 
   return (
     <ContextMenu>
@@ -175,7 +240,17 @@ const ConversationItemInner = function ConversationItem({ conversation: conv }: 
                     AI
                   </span>
                 )}
-                {conv.isMuted && <VolumeX className="size-3 text-muted-foreground shrink-0" />}
+                {isBlocked && <Ban className="size-3 text-destructive/60 shrink-0" />}
+                {conv.isMuted && (
+                  <span className="flex items-center gap-0.5 text-muted-foreground shrink-0">
+                    <VolumeX className="size-3" />
+                    {showMuteExpiry && (
+                      <span className="text-xs">
+                        {formatMuteExpiry(conv.muteExpiresAt!)}
+                      </span>
+                    )}
+                  </span>
+                )}
               </div>
               <span className="text-xs text-muted-foreground shrink-0">
                 {formatTime(conv.lastMessageAt, locale)}
@@ -210,10 +285,37 @@ const ConversationItemInner = function ConversationItem({ conversation: conv }: 
             {t('markAsUnread')}
           </ContextMenuItem>
         )}
-        <ContextMenuItem onClick={handleMute}>
-          {conv.isMuted ? <Volume2 className="size-4" /> : <VolumeX className="size-4" />}
-          {conv.isMuted ? t('unmuteNotifications') : t('muteNotifications')}
-        </ContextMenuItem>
+
+        {/* Mute: single unmute item when already muted, submenu when not */}
+        {conv.isMuted ? (
+          <ContextMenuItem onClick={handleUnmute}>
+            <Volume2 className="size-4" />
+            <span>{t('unmuteNotifications')}</span>
+            {showMuteExpiry && (
+              <span className="ml-auto text-xs text-muted-foreground">
+                {formatMuteExpiry(conv.muteExpiresAt!)}
+              </span>
+            )}
+          </ContextMenuItem>
+        ) : (
+          <ContextMenuSub>
+            <ContextMenuSubTrigger>
+              <VolumeX className="size-4" />
+              {t('muteNotifications')}
+            </ContextMenuSubTrigger>
+            <ContextMenuSubContent>
+              {MUTE_OPTIONS.map(({ labelKey, seconds }) => (
+                <ContextMenuItem
+                  key={seconds}
+                  onClick={() => handleMuteWithDuration(seconds)}
+                >
+                  {t(labelKey)}
+                </ContextMenuItem>
+              ))}
+            </ContextMenuSubContent>
+          </ContextMenuSub>
+        )}
+
         <ContextMenuItem onClick={handleArchive}>
           {conv.isArchived ? <ArchiveRestore className="size-4" /> : <Archive className="size-4" />}
           {conv.isArchived ? t('unarchiveChat') : t('archiveChat')}
@@ -226,10 +328,22 @@ const ConversationItemInner = function ConversationItem({ conversation: conv }: 
         {otherUserId && (
           <>
             <ContextMenuSeparator />
-            <ContextMenuItem variant="destructive" onClick={handleBlock}>
-              {relationship?.iBlocked ? <ShieldOff className="size-4" /> : <Ban className="size-4" />}
-              {relationship?.iBlocked ? t('unblockAction') : t('blockAction')}
-            </ContextMenuItem>
+            {isBlocked ? (
+              <ContextMenuItem onClick={handleUnblock}>
+                <ShieldOff className="size-4" />
+                {t('unblockAndRestore')}
+              </ContextMenuItem>
+            ) : relationship?.iBlocked ? (
+              <ContextMenuItem variant="destructive" onClick={handleUnblockOnly}>
+                <ShieldOff className="size-4" />
+                {t('unblockAction')}
+              </ContextMenuItem>
+            ) : (
+              <ContextMenuItem variant="destructive" onClick={handleBlock}>
+                <Ban className="size-4" />
+                {t('blockAndHide')}
+              </ContextMenuItem>
+            )}
           </>
         )}
 
@@ -251,5 +365,8 @@ export const ConversationItem = memo(
     prev.conversation.unreadCount === next.conversation.unreadCount &&
     prev.conversation.lastMessage?.content === next.conversation.lastMessage?.content &&
     prev.conversation.isMuted === next.conversation.isMuted &&
-    prev.conversation.isArchived === next.conversation.isArchived,
+    prev.conversation.muteExpiresAt === next.conversation.muteExpiresAt &&
+    prev.conversation.isArchived === next.conversation.isArchived &&
+    prev.conversation.isBlocked === next.conversation.isBlocked &&
+    prev.isBlocked === next.isBlocked,
 )

@@ -119,7 +119,7 @@
       "sendCode": "재설정 코드 보내기",
       "otpLabel": "확인 코드 (OTP)",
       "otpPlaceholder": "6자리 코드를 입력하세요",
-      "otpMinLength": "OTP는 6자리여야 합니다",
+      "otpMinLength": "6자리를 모두 입력하세요",
       "newPasswordLabel": "새 비밀번호",
       "newPasswordMin": "비밀번호는 8자 이상이어야 합니다",
       "updating": "업데이트 중...",
@@ -127,7 +127,18 @@
       "codeSent": "재설정 코드를 이메일로 전송했습니다",
       "sendError": "비밀번호 재설정을 요청할 수 없습니다",
       "resetSuccess": "비밀번호가 재설정되었습니다. 로그인해 주세요.",
-      "resetError": "유효하지 않거나 만료된 OTP 코드입니다"
+      "resetError": "유효하지 않거나 만료된 OTP 코드입니다",
+      "back": "뒤로",
+      "otpTitle": "인증 코드 입력",
+      "otpSubtitle": "6자리 코드를 다음 주소로 보냈습니다",
+      "otpNext": "계속",
+      "resend": "코드 재전송",
+      "resendCountdown": "{seconds}초 후 재전송",
+      "resendError": "코드 재전송에 실패했습니다",
+      "newPasswordTitle": "새 비밀번호 설정",
+      "newPasswordSubtitle": "계정에 강력한 비밀번호를 설정하세요.",
+      "confirmPasswordLabel": "비밀번호 확인",
+      "passwordMismatch": "비밀번호가 일치하지 않습니다"
     },
     "oauth": {
       "verifying": "인증 중...",
@@ -302,7 +313,25 @@
     "showPhoneLabel": "전화번호를 다른 사용자에게 표시",
     "showGenderLabel": "성별을 다른 사용자에게 표시",
     "privacySectionLabel": "개인정보 공개",
-    "privacySectionHint": "다른 사용자에게 보여줄 정보를 선택하세요."
+    "privacySectionHint": "다른 사용자에게 보여줄 정보를 선택하세요.",
+    "phoneSendOtp": "인증",
+    "phoneSending": "전송 중...",
+    "phoneVerified": "인증됨",
+    "phoneUnverified": "인증되지 않음",
+    "phoneChange": "변경",
+    "phoneOtpTitle": "전화번호 인증",
+    "phoneOtpSubtitle": "다음 번호로 전송된 6자리 코드를 입력하세요",
+    "phoneOtpConfirm": "확인",
+    "phoneVerifying": "인증 중...",
+    "phoneOtpIncomplete": "6자리를 모두 입력하세요",
+    "phoneResend": "코드 재전송",
+    "phoneResendCountdown": "{seconds}초 후 재전송",
+    "phoneSuccess": "전화번호가 인증되었습니다!",
+    "phoneErrorInvalid": "유효하지 않은 전화번호입니다",
+    "phoneErrorSend": "OTP를 보낼 수 없습니다. 나중에 다시 시도하세요.",
+    "phoneErrorVerify": "OTP 코드가 잘못되었거나 만료되었습니다",
+    "phoneErrorExpired": "코드가 만료되었습니다 — 새 코드를 재전송하세요",
+    "phoneErrorTaken": "이 전화번호는 이미 사용 중입니다"
   },
   "friends": {
     "title": "친구",
@@ -314,7 +343,7 @@
     "removeFriend": "친구 삭제",
     "accept": "수락",
     "decline": "거절",
-    "searchPlaceholder": "이메일 또는 이름으로 검색...",
+    "searchPlaceholder": "이름, 이메일 또는 전체 전화번호로 검색...",
     "searching": "검색 중...",
     "noSearchResults": "결과가 없습니다",
     "searchPrompt": "사용자를 검색할 키워드를 입력하세요",
@@ -324,7 +353,8 @@
     "acceptRequestSuccess": "친구 요청을 수락했습니다",
     "acceptRequestError": "친구 요청을 수락할 수 없습니다",
     "removeFriendSuccess": "친구를 삭제/요청을 취소했습니다",
-    "removeFriendError": "작업을 완료할 수 없습니다"
+    "removeFriendError": "작업을 완료할 수 없습니다",
+    "phoneSearchHint": "검색하려면 전체 전화번호를 입력하세요"
   },
   "conversations": {
     "selectPrompt": "시작할 대화를 선택하세요"
@@ -525,6 +555,7 @@
     "sendMessageAction": "메시지",
     "unblockAction": "차단 해제",
     "blockAction": "사용자 차단",
+    "profileBlockedByOwner": "이 사용자의 프로필을 볼 수 없습니다",
     "markAsRead": "읽음으로 표시",
     "markAsUnread": "안 읽음으로 표시",
     "archiveChat": "보관",
@@ -614,7 +645,17 @@
     "newConvDepartment": "부서 (선택)",
     "newConvNoDepartment": "부서 없음",
     "groupAvatarAlt": "그룹 아바타",
-    "imageViewer": "이미지 뷰어"
+    "imageViewer": "이미지 뷰어",
+    "blockedChats": "차단됨",
+    "noBlockedChats": "차단된 대화가 없습니다",
+    "callBlocked": "이 사용자는 연락을 원하지 않습니다",
+    "blockAndHide": "차단",
+    "unblockAndRestore": "차단 해제",
+    "mute15min": "15분",
+    "mute30min": "30분",
+    "mute1hour": "1시간",
+    "mute24hours": "24시간",
+    "muteForever": "직접 끌 때까지"
   },
   "aiHub": {
     "title": "AI 허브",
@@ -1264,6 +1305,8 @@
     "empty": "아직 알림이 없습니다",
     "markAllRead": "모두 읽음으로 표시",
     "accept": "수락",
-    "decline": "거절"
+    "decline": "거절",
+    "phoneSetupAction": "전화번호 추가 →",
+    "passwordSetupAction": "지금 비밀번호 설정 →"
   }
 }

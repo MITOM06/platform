@@ -527,7 +527,10 @@ class AppLocalizationsKo extends AppLocalizations {
   String get valSelectMembers => '멤버를 2명 이상 선택하세요';
 
   @override
-  String get searchUsers => '이름 또는 이메일로 검색';
+  String get searchUsers => '이름, 이메일 또는 전화번호로 검색';
+
+  @override
+  String get phoneSearchHint => '검색하려면 전체 전화번호를 입력하세요';
 
   @override
   String get groupInfo => '그룹 정보';
@@ -1153,6 +1156,50 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get profileShowGender => '다른 사람에게 성별 표시';
+
+  @override
+  String get phoneVerifiedBadge => '인증됨';
+
+  @override
+  String get phoneSendOtp => '인증 코드 보내기';
+
+  @override
+  String get phoneSending => '보내는 중...';
+
+  @override
+  String get phoneChangeNumber => '번호 변경';
+
+  @override
+  String get phoneNotVerified => '인증되지 않음';
+
+  @override
+  String get phoneSendOtpError => '코드를 보낼 수 없습니다. 나중에 다시 시도하세요.';
+
+  @override
+  String get phoneVerifyTitle => '전화번호 인증';
+
+  @override
+  String phoneOtpSubtitle(String phone) {
+    return '$phone(으)로 전송된 6자리 코드를 입력하세요';
+  }
+
+  @override
+  String get phoneOtpIncomplete => '6자리를 모두 입력하세요';
+
+  @override
+  String get phoneOtpInvalid => '코드가 잘못되었거나 만료되었습니다';
+
+  @override
+  String get phoneVerifiedSuccess => '전화번호가 인증되었습니다!';
+
+  @override
+  String get phoneVerifying => '인증 중...';
+
+  @override
+  String get phoneConfirm => '확인';
+
+  @override
+  String get phoneHint => '901 234 567';
 
   @override
   String get profilePrivacySection => '개인정보 보호';
@@ -2766,4 +2813,37 @@ class AppLocalizationsKo extends AppLocalizations {
   @override
   String get helpAccountSecurityA4 =>
       '대화를 열고 설정을 누른 후 개인정보 및 지원으로 이동하여 \'기록 지우기\'를 선택하세요. 이 작업은 기기에서만 기록을 삭제합니다.';
+
+  @override
+  String get blockedChats => '차단됨';
+
+  @override
+  String get noBlockedChats => '차단된 대화가 없습니다';
+
+  @override
+  String get blockAndHide => '차단하고 숨기기';
+
+  @override
+  String get unblockAndRestore => '차단 해제';
+
+  @override
+  String get callBlocked => '이 사용자는 연락을 원하지 않습니다';
+
+  @override
+  String get mute15min => '15분';
+
+  @override
+  String get mute30min => '30분';
+
+  @override
+  String get mute1hour => '1시간';
+
+  @override
+  String get mute24hours => '24시간';
+
+  @override
+  String get muteForever => '직접 끌 때까지';
+
+  @override
+  String get profileBlockedByOwner => '이 사용자의 프로필을 볼 수 없습니다';
 }

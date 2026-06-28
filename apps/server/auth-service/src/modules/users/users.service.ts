@@ -1,8 +1,22 @@
-import { ConflictException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  ConflictException,
+  Inject,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { User, UserDocument, UserBlock, UserBlockDocument } from '@platform/database';
+import {
+  User,
+  UserDocument,
+  UserBlock,
+  UserBlockDocument,
+  REDIS_CLIENT,
+  Redis,
+} from '@platform/database';
 import * as bcrypt from 'bcrypt';
+import { SmsService } from '../sms/sms.service';
 
 @Injectable()
 export class UsersService {
@@ -12,6 +26,8 @@ export class UsersService {
     @InjectModel(User.name) private userModel: Model<UserDocument>,
     @InjectModel(UserBlock.name)
     private userBlockModel: Model<UserBlockDocument>,
+    @Inject(REDIS_CLIENT) private readonly redis: Redis,
+    private readonly smsService: SmsService,
     // ❌ Xóa: SessionService — UsersService không cần biết về session
   ) {}
 
@@ -137,21 +153,66 @@ export class UsersService {
     });
   }
 
-  async findBySearchQuery(query: string): Promise<UserDocument[]> {
+  /**
+   * Search users by name/email (partial match) OR by phone number (exact only).
+   *
+   * - If the query looks like a phone number (only +, digits, separators, and
+   *   ≥ 7 digits): exact match on the normalized E.164 `phoneNumber`. Only
+   *   returns a user that is active AND has `phoneVerified` AND `showPhoneNumber`.
+   *   Result is tagged `matchedBy: 'phone'` so the FE can highlight the number.
+   *   Vietnamese local numbers (`0xxxxxxxxx`) are normalized to `+84xxxxxxxxx`.
+   * - Otherwise: partial, case-insensitive match on `displayName`/`email`.
+   *   `phoneNumber` is NEVER included in name/email results (privacy — must
+   *   never leak someone else's phone via a name search).
+   *
+   * Returns no users for an empty query (avoid leaking the whole user list).
+   */
+  async findBySearchQuery(
+    query: string,
+  ): Promise<{ users: UserDocument[]; matchedBy: 'phone' | 'name_email' }> {
     const trimmed = (query ?? '').trim();
-    // Empty query: trả về rỗng thay vì match-all (tránh leak toàn bộ user list)
-    if (!trimmed) return [];
-    // Escape regex metachars — email chứa '.', '+' và input '[' sẽ làm
-    // new RegExp() throw (500) hoặc match sai nếu không escape.
+    if (!trimmed) return { users: [], matchedBy: 'name_email' };
+
+    // Phone detection: only +, digits and separators, with ≥ 7 digits.
+    const digitsOnly = trimmed.replace(/[\s\-().]/g, '');
+    const isPhone = /^\+?\d{7,15}$/.test(digitsOnly);
+
+    if (isPhone) {
+      // Normalize to E.164. Vietnamese local `0xxxxxxxxx` → `+84xxxxxxxxx`.
+      let e164 = digitsOnly;
+      if (e164.startsWith('0')) e164 = '+84' + e164.slice(1);
+      else if (!e164.startsWith('+')) e164 = '+' + e164;
+
+      const user = await this.userModel
+        .findOne({
+          phoneNumber: e164,
+          phoneVerified: true,
+          showPhoneNumber: true,
+          status: 'active',
+        })
+        .select('-trustedDevices -socialLinks -fcmTokens')
+        .exec();
+
+      return { users: user ? [user] : [], matchedBy: 'phone' };
+    }
+
+    // Name / email search (partial, case-insensitive). Escape regex metachars —
+    // email contains '.', '+' and input '[' would make new RegExp() throw (500)
+    // or match incorrectly if not escaped.
     const escaped = trimmed.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     const pattern = new RegExp(escaped, 'i');
-    return this.userModel
+    const users = await this.userModel
       .find({
         $or: [{ email: pattern }, { displayName: pattern }],
+        status: 'active',
       })
       .limit(10)
-      .select('-password')
+      // phoneNumber excluded from name/email search → never leak another
+      // user's phone via a name search.
+      .select('-password -trustedDevices -socialLinks -fcmTokens -phoneNumber')
       .exec();
+
+    return { users, matchedBy: 'name_email' };
   }
 
   async updateProfile(
@@ -181,8 +242,11 @@ export class UsersService {
         ? new Date(data.dateOfBirth)
         : null;
     }
-    if (data.phoneNumber !== undefined)
+    if (data.phoneNumber !== undefined) {
       updateData.phoneNumber = data.phoneNumber || null; // '' → null to satisfy sparse unique index
+      // Phone changed via the unverified PATCH path — always require re-verification.
+      updateData.phoneVerified = false;
+    }
     if (data.gender !== undefined) updateData.gender = data.gender;
     if (data.hideInfo !== undefined) updateData.hideInfo = data.hideInfo;
     if (data.showDateOfBirth !== undefined)
@@ -199,6 +263,69 @@ export class UsersService {
         .exec();
     }
     return this.findById(userId);
+  }
+
+  /**
+   * Generates a 6-digit OTP, stores it in Redis for 5 min, and sends it via
+   * SMS to the given phone number.
+   * Rate-limited: max 3 sends per user per 10 minutes (Redis counter).
+   */
+  async sendPhoneOtp(userId: string, phone: string): Promise<void> {
+    // Rate limit: max 3 OTP sends per 10 min per user.
+    const rateKey = `phone_otp_rate:${userId}`;
+    const sends = await this.redis.incr(rateKey);
+    if (sends === 1) await this.redis.expire(rateKey, 600); // 10 min window
+    if (sends > 3) {
+      throw new BadRequestException({ code: 'PHONE_OTP_RATE_LIMIT' });
+    }
+
+    const otp = String(Math.floor(100000 + Math.random() * 900000));
+    const payload = JSON.stringify({ phone, otp });
+    // Store for 5 min.
+    await this.redis.set(`phone_otp:${userId}`, payload, 'EX', 300);
+
+    await this.smsService.sendSms(
+      phone,
+      `Your PON verification code is: ${otp}. Valid for 5 minutes.`,
+    );
+  }
+
+  /**
+   * Verifies the OTP for a phone number. On success:
+   * - saves phoneNumber and phoneVerified=true to the user doc
+   * - clears the Redis OTP entry
+   */
+  async verifyPhoneOtp(userId: string, otp: string): Promise<UserDocument> {
+    const raw = await this.redis.get(`phone_otp:${userId}`);
+    if (!raw) throw new BadRequestException({ code: 'PHONE_OTP_EXPIRED' });
+
+    const { phone, otp: stored } = JSON.parse(raw) as {
+      phone: string;
+      otp: string;
+    };
+    if (otp !== stored) {
+      throw new BadRequestException({ code: 'PHONE_OTP_INVALID' });
+    }
+
+    await this.redis.del(`phone_otp:${userId}`);
+
+    // Check for duplicate phone across other users.
+    const conflict = await this.userModel.findOne({
+      phoneNumber: phone,
+      _id: { $ne: userId },
+    });
+    if (conflict) throw new BadRequestException({ code: 'PHONE_ALREADY_TAKEN' });
+
+    const user = await this.userModel
+      .findByIdAndUpdate(
+        userId,
+        { $set: { phoneNumber: phone, phoneVerified: true } },
+        { new: true },
+      )
+      .select('-password')
+      .exec();
+    if (!user) throw new NotFoundException({ code: 'USER_NOT_FOUND' });
+    return user;
   }
 
   async changePassword(
@@ -266,6 +393,19 @@ export class UsersService {
       .deleteOne({ blockerId: userId, blockedId: targetId })
       .exec();
     return { success: true };
+  }
+
+  /**
+   * Returns true if `ownerId` has blocked `callerId`.
+   * Used to enforce profile privacy: if the profile owner has blocked the
+   * caller, the caller sees only a minimal public view.
+   */
+  async isBlockedBy(ownerId: string, callerId: string): Promise<boolean> {
+    const exists = await this.userBlockModel.exists({
+      blockerId: ownerId,
+      blockedId: callerId,
+    });
+    return !!exists;
   }
 
   /**

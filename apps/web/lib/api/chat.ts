@@ -1,4 +1,4 @@
-import { chatApi } from './axios'
+import { chatApi, authApi } from './axios'
 import type {
   AiTraceResponse,
   Conversation,
@@ -106,8 +106,14 @@ export const chatService = {
   clearHistory: (id: string) =>
     chatApi.post(`/api/conversations/${id}/clear`),
 
-  muteConversation: (id: string) =>
-    chatApi.post<Conversation>(`/api/conversations/${id}/mute`).then((r) => r.data),
+  /**
+   * Mute conversation for the current user with a duration.
+   * durationSeconds: 900=15min, 1800=30min, 3600=1h, 86400=24h, -1=forever
+   */
+  muteConversation: (id: string, durationSeconds: number = -1) =>
+    chatApi
+      .post<Conversation>(`/api/conversations/${id}/mute`, { durationSeconds })
+      .then((r) => r.data),
 
   unmuteConversation: (id: string) =>
     chatApi.post<Conversation>(`/api/conversations/${id}/unmute`).then((r) => r.data),
@@ -124,11 +130,26 @@ export const chatService = {
   markConversationUnread: (conversationId: string) =>
     chatApi.post(`/api/conversations/${conversationId}/unread`),
 
+  // Bug fix (Task 9): these endpoints live in auth-service, not chat-service.
   blockUser: (userId: string) =>
-    chatApi.post(`/api/users/block/${userId}`),
+    authApi.post(`/api/users/block/${userId}`),
 
   unblockUser: (userId: string) =>
-    chatApi.post(`/api/users/unblock/${userId}`),
+    authApi.post(`/api/users/unblock/${userId}`),
+
+  /** GET /api/conversations?blocked=true — returns conversations in the Blocked section */
+  getBlockedConversations: () =>
+    chatApi
+      .get<ConversationsResponse>('/api/conversations', { params: { blocked: true } })
+      .then((r) => r.data),
+
+  /** Move conversation to the Blocked section (call after blockUser) */
+  blockArchiveConversation: (id: string) =>
+    chatApi.post<Conversation>(`/api/conversations/${id}/block-archive`).then((r) => r.data),
+
+  /** Restore conversation from the Blocked section (call after unblockUser) */
+  blockRestoreConversation: (id: string) =>
+    chatApi.post<Conversation>(`/api/conversations/${id}/block-restore`).then((r) => r.data),
 
   acceptConversation: (id: string) =>
     chatApi.post<Conversation>(`/api/conversations/${id}/accept`).then((r) => r.data),

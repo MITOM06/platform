@@ -70,16 +70,65 @@ export class UsersController {
     );
   }
 
+  @Post('me/phone/send-otp')
+  @ApiOperation({ summary: 'Send SMS OTP to the given phone number' })
+  async sendPhoneOtp(@Req() req: any, @Body('phone') phone: string) {
+    if (!phone || !phone.startsWith('+')) {
+      throw new BadRequestException({ code: 'PHONE_INVALID_FORMAT' });
+    }
+    await this.usersService.sendPhoneOtp(req.user.sub, phone);
+    return { success: true };
+  }
+
+  @Post('me/phone/verify')
+  @ApiOperation({ summary: 'Verify SMS OTP and save the phone number' })
+  async verifyPhoneOtp(@Req() req: any, @Body('otp') otp: string) {
+    const user = await this.usersService.verifyPhoneOtp(req.user.sub, otp);
+    return {
+      success: true,
+      phoneNumber: user.phoneNumber,
+      phoneVerified: user.phoneVerified,
+    };
+  }
+
   @Post('device-tokens')
   addDeviceToken(@Req() req: any, @Body('token') token: string) {
     return this.usersService.addDeviceToken(req.user.sub, token);
   }
 
   @Get('search')
-  @ApiOperation({ summary: 'Search users by display name or email' })
+  @ApiOperation({
+    summary: 'Search users by display name, email, or exact phone',
+  })
   @ApiQuery({ name: 'q', required: false, description: 'Search query' })
-  search(@Query('q') query: string) {
-    return this.usersService.findBySearchQuery(query ?? '');
+  async search(@Query('q') query: string) {
+    const { users, matchedBy } = await this.usersService.findBySearchQuery(
+      query ?? '',
+    );
+
+    const results = users.map((user) => {
+      const doc = user.toObject();
+      const result: any = {
+        _id: doc._id,
+        id: doc._id,
+        email: doc.email,
+        displayName: doc.displayName,
+        avatarUrl: doc.avatarUrl ?? '',
+        bio: doc.bio ?? '',
+        isVerified: doc.isVerified ?? false,
+      };
+
+      // Only surface phoneNumber when the match WAS by phone, so the FE can
+      // highlight it. Never leak it on name/email searches.
+      if (matchedBy === 'phone') {
+        result.phoneNumber = doc.phoneNumber;
+        result.matchedBy = 'phone';
+      }
+
+      return result;
+    });
+
+    return { results, matchedBy };
   }
 
   @Post('block/:targetId')
@@ -144,14 +193,42 @@ export class UsersController {
   async findById(@Req() req: any, @Param('id') id: string) {
     const user = await this.usersService.findById(id);
     if (!user) return user;
-    const friendsCount = await this.friendsService.countAccepted(id);
-    return this.toProfile(user.toObject(), req.user.sub, friendsCount);
+    const [friendsCount, isBlockedByOwner] = await Promise.all([
+      this.friendsService.countAccepted(id),
+      this.usersService.isBlockedBy(id, req.user.sub),
+    ]);
+    return this.toProfile(user.toObject(), req.user.sub, friendsCount, isBlockedByOwner);
   }
 
   // Shared public-profile mapping used by both the single (`:id`) and batch
   // endpoints so they return the identical UserProfile DTO shape.
-  private toProfile(doc: any, callerId: string, friendsCount: number): any {
+  // NOTE: isBlockedByOwner is only set for single GET /api/users/:id — batch
+  // endpoint (findManyByIds) intentionally omits it to avoid breaking
+  // conversation participant rendering.
+  private toProfile(
+    doc: any,
+    callerId: string,
+    friendsCount: number,
+    isBlockedByOwner = false,
+  ): any {
     const isSelf = callerId === String(doc._id);
+
+    // Caller is blocked by the profile owner → return minimal public info only.
+    // Tells the client to hide action buttons and sensitive profile details.
+    if (!isSelf && isBlockedByOwner) {
+      return {
+        _id: doc._id,
+        id: doc._id,
+        displayName: doc.displayName,
+        avatarUrl: doc.avatarUrl ?? '',
+        coverPhoto: doc.coverPhoto ?? '',
+        email: doc.email,
+        isVerified: doc.isVerified ?? false,
+        friendsCount: 0,
+        bio: '',
+        isBlockedByOwner: true,
+      };
+    }
 
     // Explicit public-profile whitelist. NEVER expose fcmTokens, blockedUsers,
     // trustedDevices, socialLinks, status, password, otpCode, otpExpires.
@@ -179,6 +256,7 @@ export class UsersController {
     if (isSelf) {
       // Self gets everything + the toggle flags to seed the edit form.
       profile.email = doc.email;
+      profile.phoneVerified = doc.phoneVerified ?? false;
       profile.showDateOfBirth = showDob;
       profile.showPhoneNumber = showPhone;
       profile.showGender = showGen;

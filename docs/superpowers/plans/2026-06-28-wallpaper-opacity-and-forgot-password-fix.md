@@ -1,3 +1,99 @@
+# Fix: Wallpaper Opacity + Forgot Password Flow
+
+---
+
+## Fix 1 — Increase wallpaper gradient opacity
+
+**Problem:** All CSS gradient presets in `WALLPAPER_CLASSES` are too subtle — opacity values
+are so low the chat background barely changes from the default.
+
+**File:** `apps/web/lib/hooks/use-wallpaper.ts`
+
+Replace the entire `WALLPAPER_CLASSES` constant with the version below.
+Rule applied: light-mode stop values roughly **3×** the originals; dark-mode values **1.5–2×**.
+`default` and the image-URL path are untouched.
+
+```ts
+const WALLPAPER_CLASSES: Record<string, string> = {
+  // ── default ──
+  default: 'bg-background',
+
+  // ── original 5 ──
+  sunset:
+    'bg-gradient-to-br from-orange-400/30 via-pink-500/20 to-purple-600/30 dark:from-orange-800/50 dark:via-pink-900/35 dark:to-purple-900/50',
+  midnight:
+    'bg-gradient-to-br from-indigo-900/45 via-slate-800/55 to-purple-900/50 dark:from-indigo-950/70 dark:via-slate-950/80 dark:to-purple-950/75',
+  sweet_pink:
+    'bg-gradient-to-br from-pink-300/30 via-rose-400/20 to-red-400/30 dark:from-pink-900/50 dark:via-rose-950/40 dark:to-red-950/50',
+  neon_teal:
+    'bg-gradient-to-br from-teal-800/40 via-cyan-800/50 to-emerald-800/40 dark:from-teal-950/65 dark:via-cyan-950/75 dark:to-emerald-950/65',
+  dark_shadow:
+    'bg-gradient-to-br from-black/45 via-zinc-900/60 to-zinc-950/55 dark:from-black/80 dark:via-zinc-950/88 dark:to-zinc-950/90',
+
+  // ── màu sắc đơn giản ──
+  ocean_blue:
+    'bg-gradient-to-br from-blue-800/40 via-sky-800/30 to-blue-800/50 dark:from-blue-950/70 dark:via-sky-950/60 dark:to-blue-950/80',
+  forest_green:
+    'bg-gradient-to-br from-green-800/40 via-emerald-800/30 to-green-800/50 dark:from-green-950/70 dark:via-emerald-950/60 dark:to-green-950/80',
+  purple_haze:
+    'bg-gradient-to-br from-purple-800/40 via-violet-800/30 to-fuchsia-800/40 dark:from-purple-950/70 dark:via-violet-950/60 dark:to-fuchsia-950/70',
+  warm_amber:
+    'bg-gradient-to-br from-amber-700/35 via-yellow-700/25 to-orange-700/35 dark:from-amber-900/60 dark:via-yellow-950/50 dark:to-orange-900/60',
+  rose_gold:
+    'bg-gradient-to-br from-rose-700/35 via-pink-700/25 to-amber-700/30 dark:from-rose-900/60 dark:via-pink-950/50 dark:to-amber-900/55',
+  storm:
+    'bg-gradient-to-br from-slate-700/45 via-blue-900/35 to-slate-700/50 dark:from-slate-950/75 dark:via-blue-950/65 dark:to-slate-950/80',
+  cherry_blossom:
+    'bg-gradient-to-br from-pink-300/25 via-pink-400/18 to-rose-300/25 dark:from-pink-900/55 dark:via-rose-950/45 dark:to-pink-900/55',
+  midnight_purple:
+    'bg-gradient-to-br from-purple-900/55 via-indigo-900/65 to-slate-900/70 dark:from-purple-950/80 dark:via-indigo-950/88 dark:to-slate-950/92',
+  coral_reef:
+    'bg-gradient-to-br from-red-700/40 via-orange-700/30 to-rose-800/40 dark:from-red-900/65 dark:via-orange-950/55 dark:to-rose-950/65',
+  arctic_ice:
+    'bg-gradient-to-br from-sky-300/25 via-blue-200/18 to-cyan-300/22 dark:from-sky-900/55 dark:via-blue-950/45 dark:to-cyan-950/55',
+
+  // ── gradient sống động ──
+  aurora:
+    'bg-gradient-to-br from-teal-700/45 via-emerald-800/35 to-purple-700/45 dark:from-teal-950/72 dark:via-emerald-950/60 dark:to-purple-950/72',
+  galaxy:
+    'bg-gradient-to-br from-indigo-900/65 via-purple-900/55 to-slate-900/75 dark:from-indigo-950/88 dark:via-purple-950/80 dark:to-slate-950/92',
+  fire_ice:
+    'bg-gradient-to-br from-red-700/45 via-slate-800/40 to-blue-700/45 dark:from-red-900/68 dark:via-slate-950/70 dark:to-blue-900/68',
+  tropical:
+    'bg-gradient-to-br from-green-700/35 via-cyan-700/28 to-yellow-700/30 dark:from-green-900/62 dark:via-cyan-950/55 dark:to-yellow-900/58',
+  candy:
+    'bg-gradient-to-br from-pink-400/30 via-violet-400/22 to-cyan-400/25 dark:from-pink-900/55 dark:via-violet-950/48 dark:to-cyan-950/55',
+
+  // ── tối giản ──
+  pure_dark: 'bg-[#050507] dark:bg-[#030303]',
+  soft_gray:
+    'bg-gradient-to-br from-zinc-600/35 via-zinc-700/28 to-zinc-600/35 dark:from-zinc-800/70 dark:via-zinc-900/80 dark:to-zinc-800/70',
+  warm_night:
+    'bg-gradient-to-br from-zinc-900/60 via-purple-900/25 to-zinc-900/65 dark:from-zinc-950/82 dark:via-purple-950/45 dark:to-zinc-950/85',
+}
+```
+
+**Verify:** Open the wallpaper picker, select each gradient preset — the chat background should
+show a clearly visible coloured/gradient tint while message bubbles remain readable.
+`pure_dark` should look near-black.
+
+---
+
+## Fix 2 — Forgot password: split into 3 steps (email → OTP → new password)
+
+**Problem:** The web flow collapses OTP input + new password into a single step (`'reset'`).
+Mobile shows them on separate screens. The fix splits into 3 distinct steps:
+1. `'request'` — enter email → sends OTP
+2. `'otp'` — enter 6-digit OTP → "Tiếp tục" stores OTP locally, advances to step 3
+3. `'reset'` — enter new password + confirm → submits `resetPassword(email, otp, password)`
+
+No backend changes needed — `resetPassword(email, otp, password)` already handles everything.
+
+**File:** `apps/web/app/(auth)/forgot-password/page.tsx`
+
+Replace the entire file content with:
+
+```tsx
 'use client'
 
 import { useState, useMemo } from 'react'
@@ -6,6 +102,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
+import Link from 'next/link'
 import { Eye, EyeOff, ArrowLeft } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { authService } from '@/lib/api/auth'
@@ -330,3 +427,51 @@ export default function ForgotPasswordPage() {
     </Card>
   )
 }
+```
+
+### i18n keys to add
+
+Add to `apps/web/messages/en.json` inside `"auth.forgotPassword"`:
+```json
+"back": "Back",
+"otpTitle": "Enter verification code",
+"otpSubtitle": "We sent a 6-digit code to",
+"otpNext": "Continue",
+"otpMinLength": "Please enter all 6 digits",
+"resend": "Resend code",
+"resendCountdown": "Resend in {seconds}s",
+"resendError": "Failed to resend code",
+"newPasswordTitle": "Set new password",
+"newPasswordSubtitle": "Choose a strong password for your account.",
+"confirmPasswordLabel": "Confirm password",
+"passwordMismatch": "Passwords don't match"
+```
+
+Add Vietnamese equivalents to `apps/web/messages/vi.json`:
+```json
+"back": "Quay lại",
+"otpTitle": "Nhập mã xác minh",
+"otpSubtitle": "Chúng tôi đã gửi mã 6 chữ số đến",
+"otpNext": "Tiếp tục",
+"otpMinLength": "Vui lòng nhập đủ 6 chữ số",
+"resend": "Gửi lại mã",
+"resendCountdown": "Gửi lại sau {seconds}s",
+"resendError": "Gửi lại thất bại",
+"newPasswordTitle": "Đặt mật khẩu mới",
+"newPasswordSubtitle": "Chọn một mật khẩu mạnh cho tài khoản của bạn.",
+"confirmPasswordLabel": "Xác nhận mật khẩu",
+"passwordMismatch": "Mật khẩu không khớp"
+```
+
+Add best-effort translations to remaining language files.
+
+### Verify
+
+1. Go to `/forgot-password`.
+2. Enter email → toast "Code sent" → screen changes to OTP step (only OTP input, no password field).
+3. Leave OTP empty → click Continue → error "Please enter all 6 digits".
+4. Enter OTP → click Continue → screen changes to password step (only password + confirm, no OTP).
+5. Enter non-matching passwords → error "Passwords don't match".
+6. Enter valid matching password → submit → success toast → redirect to `/login`.
+7. Enter valid OTP but wrong password format → error, stays on step 3.
+8. Enter wrong OTP → submit on step 3 → backend rejects → user bounced back to step 2 (OTP cleared).

@@ -533,7 +533,10 @@ class AppLocalizationsVi extends AppLocalizations {
   String get valSelectMembers => 'Chọn ít nhất 2 thành viên';
 
   @override
-  String get searchUsers => 'Tìm theo tên hoặc email';
+  String get searchUsers => 'Tìm theo tên, email hoặc SĐT';
+
+  @override
+  String get phoneSearchHint => 'Nhập đầy đủ số điện thoại để tìm kiếm';
 
   @override
   String get groupInfo => 'Thông tin nhóm';
@@ -1166,6 +1169,50 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get profileShowGender => 'Hiển thị giới tính cho người khác';
+
+  @override
+  String get phoneVerifiedBadge => 'Đã xác minh';
+
+  @override
+  String get phoneSendOtp => 'Gửi mã xác minh';
+
+  @override
+  String get phoneSending => 'Đang gửi...';
+
+  @override
+  String get phoneChangeNumber => 'Thay đổi số';
+
+  @override
+  String get phoneNotVerified => 'Chưa được xác minh';
+
+  @override
+  String get phoneSendOtpError => 'Không thể gửi mã. Thử lại sau.';
+
+  @override
+  String get phoneVerifyTitle => 'Xác minh số điện thoại';
+
+  @override
+  String phoneOtpSubtitle(String phone) {
+    return 'Nhập mã 6 chữ số đã gửi đến $phone';
+  }
+
+  @override
+  String get phoneOtpIncomplete => 'Nhập đủ 6 chữ số';
+
+  @override
+  String get phoneOtpInvalid => 'Mã OTP sai hoặc đã hết hạn';
+
+  @override
+  String get phoneVerifiedSuccess => 'Số điện thoại đã được xác minh!';
+
+  @override
+  String get phoneVerifying => 'Đang xác minh...';
+
+  @override
+  String get phoneConfirm => 'Xác nhận';
+
+  @override
+  String get phoneHint => '901 234 567';
 
   @override
   String get profilePrivacySection => 'Quyền riêng tư';
@@ -2825,4 +2872,37 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get helpAccountSecurityA4 =>
       'Mở cuộc trò chuyện, nhấn Cài đặt, vào Quyền riêng tư & Hỗ trợ và chọn \'Xóa lịch sử\'. Thao tác này chỉ xóa lịch sử khỏi thiết bị của bạn.';
+
+  @override
+  String get blockedChats => 'Đã chặn';
+
+  @override
+  String get noBlockedChats => 'Không có cuộc trò chuyện bị chặn';
+
+  @override
+  String get blockAndHide => 'Chặn và ẩn';
+
+  @override
+  String get unblockAndRestore => 'Bỏ chặn';
+
+  @override
+  String get callBlocked => 'Người dùng này không muốn được liên lạc';
+
+  @override
+  String get mute15min => '15 phút';
+
+  @override
+  String get mute30min => '30 phút';
+
+  @override
+  String get mute1hour => '1 giờ';
+
+  @override
+  String get mute24hours => '24 giờ';
+
+  @override
+  String get muteForever => 'Cho đến khi tôi bật lại';
+
+  @override
+  String get profileBlockedByOwner => 'Hồ sơ của người dùng này không khả dụng';
 }

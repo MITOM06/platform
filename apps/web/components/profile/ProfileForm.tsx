@@ -6,7 +6,6 @@ import {
   Save,
   Pencil,
   Cake,
-  Phone,
   Users,
   Lock,
   Loader2,
@@ -23,12 +22,14 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Separator } from '@/components/ui/separator'
+import { PhoneField } from '@/components/profile/PhoneField'
 
 export type ProfileFormValues = {
   displayName: string
   bio?: string
   dateOfBirth?: string
-  phoneNumber?: string
+  phoneNumber?: string // E.164 value
+  phoneVerified?: boolean // local verification state
   gender?: string
   showDateOfBirth: boolean
   showPhoneNumber: boolean
@@ -46,6 +47,24 @@ type ProfileFormTexts = {
   dobLabel: string
   phoneLabel: string
   phonePlaceholder: string
+  phoneSendOtp: string
+  phoneSending: string
+  phoneVerified: string
+  phoneUnverified: string
+  phoneChange: string
+  phoneOtpTitle: string
+  phoneOtpSubtitle: string
+  phoneOtpConfirm: string
+  phoneVerifying: string
+  phoneOtpIncomplete: string
+  phoneResend: string
+  phoneResendCountdown: string
+  phoneSuccess: string
+  phoneErrorInvalid: string
+  phoneErrorSend: string
+  phoneErrorVerify: string
+  phoneErrorExpired: string
+  phoneErrorTaken: string
   genderLabel: string
   genderPlaceholder: string
   genderMale: string
@@ -67,6 +86,8 @@ type ProfileFormProps = {
   showDateOfBirth: boolean
   showPhoneNumber: boolean
   showGender: boolean
+  phoneNumber?: string
+  phoneVerified?: boolean
   email: string
   saving: boolean
   canSave: boolean
@@ -74,6 +95,7 @@ type ProfileFormProps = {
   onSubmit: (e: React.FormEvent<HTMLFormElement>) => void
   onGenderChange: (value: string) => void
   onShowFieldChange: (field: PrivacyField, value: boolean) => void
+  onPhoneChange: (phone: string, verified: boolean) => void
 }
 
 export function ProfileForm({
@@ -83,6 +105,8 @@ export function ProfileForm({
   showDateOfBirth,
   showPhoneNumber,
   showGender,
+  phoneNumber,
+  phoneVerified,
   email,
   saving,
   canSave,
@@ -90,6 +114,7 @@ export function ProfileForm({
   onSubmit,
   onGenderChange,
   onShowFieldChange,
+  onPhoneChange,
 }: ProfileFormProps) {
   return (
     <form onSubmit={onSubmit} className="space-y-5 pb-24 md:pb-10">
@@ -143,22 +168,35 @@ export function ProfileForm({
         <Input id="dateOfBirth" type="date" {...register('dateOfBirth')} />
       </div>
 
-      {/* Phone number */}
-      <div className="space-y-2">
-        <Label htmlFor="phoneNumber" className="text-sm font-medium flex items-center gap-2">
-          <Phone className="size-4 text-primary" />
-          {texts.phoneLabel}
-        </Label>
-        <Input
-          id="phoneNumber"
-          type="tel"
-          {...register('phoneNumber')}
-          placeholder={texts.phonePlaceholder}
-        />
-        {errors.phoneNumber && (
-          <p className="text-xs text-destructive">{errors.phoneNumber.message}</p>
-        )}
-      </div>
+      {/* Phone number — country picker + SMS OTP verification */}
+      <PhoneField
+        value={phoneNumber ?? ''}
+        verified={phoneVerified ?? false}
+        onChange={onPhoneChange}
+        disabled={saving}
+        labels={{
+          label: texts.phoneLabel,
+          placeholder: texts.phonePlaceholder,
+          sendOtp: texts.phoneSendOtp,
+          sending: texts.phoneSending,
+          verified: texts.phoneVerified,
+          unverified: texts.phoneUnverified,
+          change: texts.phoneChange,
+          otpTitle: texts.phoneOtpTitle,
+          otpSubtitle: texts.phoneOtpSubtitle,
+          otpConfirm: texts.phoneOtpConfirm,
+          verifying: texts.phoneVerifying,
+          otpIncomplete: texts.phoneOtpIncomplete,
+          resend: texts.phoneResend,
+          resendCountdown: texts.phoneResendCountdown,
+          successToast: texts.phoneSuccess,
+          errorInvalid: texts.phoneErrorInvalid,
+          errorSend: texts.phoneErrorSend,
+          errorVerify: texts.phoneErrorVerify,
+          errorExpired: texts.phoneErrorExpired,
+          errorTaken: texts.phoneErrorTaken,
+        }}
+      />
 
       {/* Gender */}
       <div className="space-y-2">

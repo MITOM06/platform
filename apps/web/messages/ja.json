@@ -119,7 +119,7 @@
       "sendCode": "リセットコードを送信",
       "otpLabel": "確認コード（OTP）",
       "otpPlaceholder": "6桁のコードを入力",
-      "otpMinLength": "OTPは6文字で入力してください",
+      "otpMinLength": "6桁すべてを入力してください",
       "newPasswordLabel": "新しいパスワード",
       "newPasswordMin": "パスワードは8文字以上で入力してください",
       "updating": "更新しています...",
@@ -127,7 +127,18 @@
       "codeSent": "リセットコードをメールに送信しました",
       "sendError": "パスワードリセットを要求できませんでした",
       "resetSuccess": "パスワードをリセットしました。サインインしてください。",
-      "resetError": "OTPコードが無効または期限切れです"
+      "resetError": "OTPコードが無効または期限切れです",
+      "back": "戻る",
+      "otpTitle": "確認コードを入力",
+      "otpSubtitle": "6桁のコードを次の宛先に送信しました",
+      "otpNext": "続行",
+      "resend": "コードを再送信",
+      "resendCountdown": "{seconds}秒後に再送信",
+      "resendError": "コードの再送信に失敗しました",
+      "newPasswordTitle": "新しいパスワードを設定",
+      "newPasswordSubtitle": "アカウントに強力なパスワードを設定してください。",
+      "confirmPasswordLabel": "パスワードの確認",
+      "passwordMismatch": "パスワードが一致しません"
     },
     "oauth": {
       "verifying": "認証中...",
@@ -302,7 +313,25 @@
     "showPhoneLabel": "電話番号を他のユーザーに表示",
     "showGenderLabel": "性別を他のユーザーに表示",
     "privacySectionLabel": "プライバシー",
-    "privacySectionHint": "他のユーザーに表示する情報を選択します。"
+    "privacySectionHint": "他のユーザーに表示する情報を選択します。",
+    "phoneSendOtp": "認証",
+    "phoneSending": "送信中...",
+    "phoneVerified": "認証済み",
+    "phoneUnverified": "未認証",
+    "phoneChange": "変更",
+    "phoneOtpTitle": "電話番号を認証",
+    "phoneOtpSubtitle": "次の番号に送信された6桁のコードを入力してください",
+    "phoneOtpConfirm": "確認",
+    "phoneVerifying": "認証中...",
+    "phoneOtpIncomplete": "6桁すべて入力してください",
+    "phoneResend": "コードを再送信",
+    "phoneResendCountdown": "{seconds}秒後に再送信",
+    "phoneSuccess": "電話番号が認証されました！",
+    "phoneErrorInvalid": "無効な電話番号です",
+    "phoneErrorSend": "OTPを送信できませんでした。後でもう一度お試しください。",
+    "phoneErrorVerify": "OTPコードが間違っているか期限切れです",
+    "phoneErrorExpired": "コードの有効期限が切れました。新しいコードを再送信してください",
+    "phoneErrorTaken": "この電話番号はすでに使用されています"
   },
   "friends": {
     "title": "友達",
@@ -314,7 +343,7 @@
     "removeFriend": "友達を削除",
     "accept": "承認",
     "decline": "拒否",
-    "searchPlaceholder": "メールアドレスまたは名前で検索...",
+    "searchPlaceholder": "名前、メール、または完全な電話番号で検索...",
     "searching": "検索中...",
     "noSearchResults": "結果が見つかりません",
     "searchPrompt": "ユーザーを検索するキーワードを入力してください",
@@ -324,7 +353,8 @@
     "acceptRequestSuccess": "友達リクエストを承認しました",
     "acceptRequestError": "友達リクエストを承認できませんでした",
     "removeFriendSuccess": "友達を削除/リクエストをキャンセルしました",
-    "removeFriendError": "操作を完了できませんでした"
+    "removeFriendError": "操作を完了できませんでした",
+    "phoneSearchHint": "検索するには完全な電話番号を入力してください"
   },
   "conversations": {
     "selectPrompt": "開始する会話を選択してください"
@@ -525,6 +555,7 @@
     "sendMessageAction": "メッセージ",
     "unblockAction": "ブロック解除",
     "blockAction": "ユーザーをブロック",
+    "profileBlockedByOwner": "このユーザーのプロフィールは表示できません",
     "markAsRead": "既読にする",
     "markAsUnread": "未読にする",
     "archiveChat": "アーカイブ",
@@ -614,7 +645,17 @@
     "newConvDepartment": "部門（任意）",
     "newConvNoDepartment": "部門なし",
     "groupAvatarAlt": "グループのアバター",
-    "imageViewer": "画像ビューア"
+    "imageViewer": "画像ビューア",
+    "blockedChats": "ブロック中",
+    "noBlockedChats": "ブロックされた会話はありません",
+    "callBlocked": "このユーザーは連絡を希望していません",
+    "blockAndHide": "ブロック",
+    "unblockAndRestore": "ブロック解除",
+    "mute15min": "15 分",
+    "mute30min": "30 分",
+    "mute1hour": "1 時間",
+    "mute24hours": "24 時間",
+    "muteForever": "手動でオンにするまで"
   },
   "aiHub": {
     "title": "AI ハブ",
@@ -1264,6 +1305,8 @@
     "empty": "通知はまだありません",
     "markAllRead": "すべて既読にする",
     "accept": "承認",
-    "decline": "拒否"
+    "decline": "拒否",
+    "phoneSetupAction": "電話番号を追加 →",
+    "passwordSetupAction": "今すぐパスワードを設定 →"
   }
 }

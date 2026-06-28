@@ -9,6 +9,19 @@ const ACTION_CLS = 'flex flex-col items-center gap-1.5 w-16'
 const ICON_WRAP = 'size-10 rounded-full bg-pon-cyan/10 text-pon-cyan flex items-center justify-center'
 const LABEL_CLS = 'text-[11px] text-muted-foreground truncate w-full text-center'
 
+/** epoch ms value chat-service uses for "muted forever" */
+const MUTE_FOREVER_MS = 9_200_000_000_000_000
+
+function formatMuteExpiry(expiresAt: number): string {
+  const remaining = expiresAt - Date.now()
+  if (remaining <= 0) return ''
+  const mins = Math.ceil(remaining / 60_000)
+  if (mins < 60) return `${mins}m`
+  const hrs = Math.floor(remaining / 3_600_000)
+  if (hrs < 24) return `${hrs}h`
+  return `${Math.floor(hrs / 24)}d`
+}
+
 interface Props {
   displayName: string
   avatarUrl?: string
@@ -16,6 +29,7 @@ interface Props {
   isDirect: boolean
   isAI: boolean
   isMuted: boolean
+  muteExpiresAt?: number | null
   saving: boolean
   onOpenProfile?: () => void
   onMuteToggle: () => void
@@ -30,12 +44,21 @@ export function SettingsHeader({
   isDirect,
   isAI,
   isMuted,
+  muteExpiresAt,
   saving,
   onOpenProfile,
   onMuteToggle,
   onSearch,
 }: Props) {
   const t = useTranslations('chat')
+
+  const showMuteExpiry =
+    isMuted &&
+    typeof muteExpiresAt === 'number' &&
+    muteExpiresAt < MUTE_FOREVER_MS
+
+  const muteExpiryLabel = showMuteExpiry ? ` (${formatMuteExpiry(muteExpiresAt!)})` : ''
+
   return (
     <>
       <div className="flex flex-col items-center gap-3">
@@ -68,7 +91,9 @@ export function SettingsHeader({
             {isMuted ? <BellOff className="size-5" /> : <Bell className="size-5" />}
           </div>
           <span className={LABEL_CLS}>
-            {isMuted ? t('unmuteNotifications') : t('muteNotifications')}
+            {isMuted
+              ? `${t('unmuteNotifications')}${muteExpiryLabel}`
+              : t('muteNotifications')}
           </span>
         </button>
         <button onClick={onSearch} className={ACTION_CLS}>

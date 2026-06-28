@@ -4,8 +4,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.platform.chatservice.dto.CallEventDto;
 import com.platform.chatservice.dto.WebRTCSignalDto;
 import com.platform.chatservice.model.CallSession;
+import com.platform.chatservice.model.Conversation;
 import com.platform.chatservice.repository.CallSessionRepository;
 import com.platform.chatservice.repository.ConversationRepository;
+import com.platform.chatservice.repository.UserBlockRepository;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -47,6 +49,7 @@ public class CallService {
 
   private final CallSessionRepository callSessionRepository;
   private final ConversationRepository conversationRepository;
+  private final UserBlockRepository userBlockRepository;
   private final ClusterMessageBroker clusterBroker;
   private final StringRedisTemplate redisTemplate;
   private final ObjectMapper objectMapper;
@@ -60,6 +63,25 @@ public class CallService {
     if (conversationId == null || conversationId.isBlank()) {
       return;
     }
+
+    // Block guard: for DM conversations, reject call if any other participant has blocked the
+    // caller
+    Conversation conv = conversationRepository.findById(conversationId).orElse(null);
+    if (conv != null && conv.getParticipants() != null && conv.getParticipants().size() == 2) {
+      for (String p : conv.getParticipants()) {
+        if (!p.equals(userId) && userBlockRepository.existsByBlockerIdAndBlockedId(p, userId)) {
+          WebRTCSignalDto blocked =
+              WebRTCSignalDto.builder()
+                  .type("call-blocked")
+                  .conversationId(conversationId)
+                  .senderId(userId)
+                  .build();
+          clusterBroker.convertAndSendToUser(userId, WEBRTC_QUEUE, blocked);
+          return;
+        }
+      }
+    }
+
     String callId = UUID.randomUUID().toString();
     Instant now = Instant.now();
 

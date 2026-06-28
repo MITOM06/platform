@@ -25,6 +25,7 @@ class _FriendSearchTabState extends ConsumerState<FriendSearchTab> {
   final TextEditingController _controller = TextEditingController();
   Timer? _debounce;
   String _query = '';
+  String _rawInput = '';
   bool _loading = false;
   Object? _error;
   List<UserModel> _results = const [];
@@ -40,8 +41,19 @@ class _FriendSearchTabState extends ConsumerState<FriendSearchTab> {
   }
 
   void _onChanged(String value) {
+    setState(() => _rawInput = value);
     _debounce?.cancel();
     _debounce = Timer(const Duration(milliseconds: 500), () => _search(value));
+  }
+
+  /// True when the input looks like a phone number still being typed (< 7
+  /// digits) → hint the user to enter the full number, since phone search is
+  /// exact-match only.
+  bool get _showPhoneHint {
+    final digits = _rawInput.replaceAll(RegExp(r'[^\d]'), '');
+    return digits.isNotEmpty &&
+        digits.length < 7 &&
+        RegExp(r'^[+\d\s\-().]+$').hasMatch(_rawInput.trim());
   }
 
   Future<void> _search(String value) async {
@@ -107,6 +119,17 @@ class _FriendSearchTabState extends ConsumerState<FriendSearchTab> {
             onChanged: _onChanged,
           ),
         ),
+        if (_showPhoneHint)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: Text(
+                context.l10n.phoneSearchHint,
+                style: const TextStyle(color: Colors.amber, fontSize: 12),
+              ),
+            ),
+          ),
         Expanded(child: _buildBody()),
       ],
     );
@@ -155,9 +178,44 @@ class _FriendSearchTabState extends ConsumerState<FriendSearchTab> {
             style:
                 const TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
           ),
-          subtitle: Text(
-            user.email,
-            style: const TextStyle(color: Colors.white54, fontSize: 13),
+          subtitle: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                user.email,
+                style: const TextStyle(color: Colors.white54, fontSize: 13),
+              ),
+              if (user.matchedBy == 'phone' && user.phoneNumber != null) ...[
+                const SizedBox(height: 4),
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: AppTheme.ponCyan.withValues(alpha: 0.12),
+                    border: Border.all(
+                        color: AppTheme.ponCyan.withValues(alpha: 0.3)),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(Icons.phone,
+                          size: 12, color: AppTheme.ponCyan),
+                      const SizedBox(width: 4),
+                      Text(
+                        user.phoneNumber!,
+                        style: const TextStyle(
+                          color: AppTheme.ponCyan,
+                          fontSize: 11,
+                          fontFamily: 'monospace',
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ],
           ),
           trailing: alreadyRequested
               ? Text(

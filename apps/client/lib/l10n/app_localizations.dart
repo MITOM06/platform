@@ -1125,8 +1125,14 @@ abstract class AppLocalizations {
   /// No description provided for @searchUsers.
   ///
   /// In en, this message translates to:
-  /// **'Search by name or email'**
+  /// **'Search by name, email or phone'**
   String get searchUsers;
+
+  /// No description provided for @phoneSearchHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter the full phone number to search'**
+  String get phoneSearchHint;
 
   /// No description provided for @groupInfo.
   ///
@@ -2285,6 +2291,90 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Show gender to others'**
   String get profileShowGender;
+
+  /// No description provided for @phoneVerifiedBadge.
+  ///
+  /// In en, this message translates to:
+  /// **'Verified'**
+  String get phoneVerifiedBadge;
+
+  /// No description provided for @phoneSendOtp.
+  ///
+  /// In en, this message translates to:
+  /// **'Send verification code'**
+  String get phoneSendOtp;
+
+  /// No description provided for @phoneSending.
+  ///
+  /// In en, this message translates to:
+  /// **'Sending...'**
+  String get phoneSending;
+
+  /// No description provided for @phoneChangeNumber.
+  ///
+  /// In en, this message translates to:
+  /// **'Change number'**
+  String get phoneChangeNumber;
+
+  /// No description provided for @phoneNotVerified.
+  ///
+  /// In en, this message translates to:
+  /// **'Not verified'**
+  String get phoneNotVerified;
+
+  /// No description provided for @phoneSendOtpError.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t send the code. Try again later.'**
+  String get phoneSendOtpError;
+
+  /// No description provided for @phoneVerifyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Verify phone number'**
+  String get phoneVerifyTitle;
+
+  /// No description provided for @phoneOtpSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter the 6-digit code sent to {phone}'**
+  String phoneOtpSubtitle(String phone);
+
+  /// No description provided for @phoneOtpIncomplete.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter all 6 digits'**
+  String get phoneOtpIncomplete;
+
+  /// No description provided for @phoneOtpInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'Incorrect or expired code'**
+  String get phoneOtpInvalid;
+
+  /// No description provided for @phoneVerifiedSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Phone number verified!'**
+  String get phoneVerifiedSuccess;
+
+  /// No description provided for @phoneVerifying.
+  ///
+  /// In en, this message translates to:
+  /// **'Verifying...'**
+  String get phoneVerifying;
+
+  /// No description provided for @phoneConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm'**
+  String get phoneConfirm;
+
+  /// No description provided for @phoneHint.
+  ///
+  /// In en, this message translates to:
+  /// **'901 234 567'**
+  String get phoneHint;
 
   /// No description provided for @profilePrivacySection.
   ///
@@ -5292,6 +5382,72 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Open the conversation, tap Settings, go to Privacy & Support, and select \'Clear History\'. This only removes history from your device.'**
   String get helpAccountSecurityA4;
+
+  /// No description provided for @blockedChats.
+  ///
+  /// In en, this message translates to:
+  /// **'Blocked'**
+  String get blockedChats;
+
+  /// No description provided for @noBlockedChats.
+  ///
+  /// In en, this message translates to:
+  /// **'No blocked conversations'**
+  String get noBlockedChats;
+
+  /// No description provided for @blockAndHide.
+  ///
+  /// In en, this message translates to:
+  /// **'Block and hide'**
+  String get blockAndHide;
+
+  /// No description provided for @unblockAndRestore.
+  ///
+  /// In en, this message translates to:
+  /// **'Unblock'**
+  String get unblockAndRestore;
+
+  /// No description provided for @callBlocked.
+  ///
+  /// In en, this message translates to:
+  /// **'This user doesn\'t want to be contacted'**
+  String get callBlocked;
+
+  /// No description provided for @mute15min.
+  ///
+  /// In en, this message translates to:
+  /// **'15 minutes'**
+  String get mute15min;
+
+  /// No description provided for @mute30min.
+  ///
+  /// In en, this message translates to:
+  /// **'30 minutes'**
+  String get mute30min;
+
+  /// No description provided for @mute1hour.
+  ///
+  /// In en, this message translates to:
+  /// **'1 hour'**
+  String get mute1hour;
+
+  /// No description provided for @mute24hours.
+  ///
+  /// In en, this message translates to:
+  /// **'24 hours'**
+  String get mute24hours;
+
+  /// No description provided for @muteForever.
+  ///
+  /// In en, this message translates to:
+  /// **'Until I turn it back on'**
+  String get muteForever;
+
+  /// No description provided for @profileBlockedByOwner.
+  ///
+  /// In en, this message translates to:
+  /// **'This user\'s profile is not available'**
+  String get profileBlockedByOwner;
 }
 
 class _AppLocalizationsDelegate

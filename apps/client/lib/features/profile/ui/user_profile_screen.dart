@@ -167,6 +167,41 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
                       fontWeight: FontWeight.bold,
                     ),
                   ),
+                  // When the profile owner has blocked the viewer, show only
+                  // minimal info: avatar, cover, name, email. Hide bio, friend
+                  // count, and action buttons per the no-raw-system-data rule.
+                  if (user.isBlockedByOwner) ...[
+                    const SizedBox(height: 8),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 32),
+                      child: Text(
+                        user.email,
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          color: Theme.of(context)
+                              .colorScheme
+                              .onSurface
+                              .withValues(alpha: 0.6),
+                          fontSize: 13,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 32),
+                      child: Text(
+                        context.l10n.profileBlockedByOwner,
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          color: Theme.of(context)
+                              .colorScheme
+                              .onSurface
+                              .withValues(alpha: 0.45),
+                          fontSize: 13,
+                        ),
+                      ),
+                    ),
+                  ] else ...[
                   if (user.friendsCount != null) ...[
                     const SizedBox(height: 4),
                     Text(
@@ -243,6 +278,7 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
                       ),
                     ),
                   ],
+                  ], // end else (not isBlockedByOwner)
                 ],
               ),
             ),

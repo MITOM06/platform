@@ -37,6 +37,11 @@ export default function EditProfilePage() {
   const queryClient = useQueryClient()
   const [saving, setSaving] = useState(false)
 
+  // Phone is saved to the DB only via the OTP verify endpoint, not on form
+  // submit — so it lives in local state, seeded from the persisted profile.
+  const [localPhone, setLocalPhone] = useState('')
+  const [localPhoneVerified, setLocalPhoneVerified] = useState(false)
+
   const { data: me } = useQuery({
     queryKey: ['me'],
     queryFn: authService.getMe,
@@ -112,8 +117,17 @@ export default function EditProfilePage() {
         showPhoneNumber: me.showPhoneNumber ?? !me.hideInfo,
         showGender: me.showGender ?? !me.hideInfo,
       })
+      setLocalPhone(me.phoneNumber ?? '')
+      setLocalPhoneVerified(me.phoneVerified ?? false)
     }
   }, [me, reset])
+
+  const handlePhoneChange = (phone: string, verified: boolean) => {
+    setLocalPhone(phone)
+    setLocalPhoneVerified(verified)
+    // Mark the form dirty so the "Save Changes" button enables.
+    setValue('phoneNumber', phone, { shouldDirty: true })
+  }
 
   const openCropper = (target: CropTarget, file: File) => {
     const objectUrl = URL.createObjectURL(file)
@@ -173,7 +187,7 @@ export default function EditProfilePage() {
         displayName: values.displayName,
         bio: values.bio ?? '',
         dateOfBirth: values.dateOfBirth || undefined,
-        phoneNumber: values.phoneNumber || null,
+        // phoneNumber intentionally omitted — set only via phone OTP verification
         gender: values.gender || undefined,
         showDateOfBirth: values.showDateOfBirth,
         showPhoneNumber: values.showPhoneNumber,
@@ -255,6 +269,8 @@ export default function EditProfilePage() {
             showDateOfBirth={showDateOfBirth}
             showPhoneNumber={showPhoneNumber}
             showGender={showGender}
+            phoneNumber={localPhone}
+            phoneVerified={localPhoneVerified}
             email={user.email}
             saving={saving}
             canSave={isDirty || hasPendingImageEdits}
@@ -266,6 +282,24 @@ export default function EditProfilePage() {
               dobLabel: t('dobLabel'),
               phoneLabel: t('phoneLabel'),
               phonePlaceholder: t('phonePlaceholder'),
+              phoneSendOtp: t('phoneSendOtp'),
+              phoneSending: t('phoneSending'),
+              phoneVerified: t('phoneVerified'),
+              phoneUnverified: t('phoneUnverified'),
+              phoneChange: t('phoneChange'),
+              phoneOtpTitle: t('phoneOtpTitle'),
+              phoneOtpSubtitle: t('phoneOtpSubtitle'),
+              phoneOtpConfirm: t('phoneOtpConfirm'),
+              phoneVerifying: t('phoneVerifying'),
+              phoneOtpIncomplete: t('phoneOtpIncomplete'),
+              phoneResend: t('phoneResend'),
+              phoneResendCountdown: t('phoneResendCountdown'),
+              phoneSuccess: t('phoneSuccess'),
+              phoneErrorInvalid: t('phoneErrorInvalid'),
+              phoneErrorSend: t('phoneErrorSend'),
+              phoneErrorVerify: t('phoneErrorVerify'),
+              phoneErrorExpired: t('phoneErrorExpired'),
+              phoneErrorTaken: t('phoneErrorTaken'),
               genderLabel: t('genderLabel'),
               genderPlaceholder: t('genderPlaceholder'),
               genderMale: t('genderMale'),
@@ -282,6 +316,7 @@ export default function EditProfilePage() {
             onSubmit={handleSubmit(onSubmit)}
             onGenderChange={(v) => setValue('gender', v, { shouldDirty: true })}
             onShowFieldChange={(field, v) => setValue(field, v, { shouldDirty: true })}
+            onPhoneChange={handlePhoneChange}
           />
         </div>
       </div>

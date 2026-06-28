@@ -103,8 +103,8 @@ export function NewConversationModal({ open, onClose, defaultTab }: Props) {
     debounceRef.current = setTimeout(async () => {
       setIsSearching(true)
       try {
-        const data = await authService.searchUsers(query.trim())
-        setResults(data)
+        const { results } = await authService.searchUsers(query.trim())
+        setResults(results)
       } catch {
         setResults([])
       } finally {

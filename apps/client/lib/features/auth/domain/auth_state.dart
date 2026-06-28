@@ -11,6 +11,10 @@ class UserModel {
   final int? friendsCount;
   final DateTime? dateOfBirth;
   final String? phoneNumber;
+
+  /// Whether [phoneNumber] has been confirmed via SMS OTP. Only meaningful on
+  /// the self response (`GET /api/users/me`). Drives the green verified badge.
+  final bool phoneVerified;
   final String? gender;
   final bool hideInfo;
 
@@ -25,6 +29,16 @@ class UserModel {
   /// Password & Security screen: set-first-password vs. change-password.
   final bool hasPassword;
 
+  /// How a user-search result was matched: `'phone'` | `'name_email'`. Only
+  /// present on `/api/users/search` results matched by exact phone number;
+  /// drives the highlighted phone badge in friend search. Null otherwise.
+  final String? matchedBy;
+
+  /// When `true`, the profile owner has blocked the current viewer. The server
+  /// returns only minimal info (name, avatar, email) and hides bio, friend
+  /// count, and action buttons. See auth-service `GET /api/users/:id`.
+  final bool isBlockedByOwner;
+
   const UserModel({
     required this.id,
     required this.email,
@@ -35,12 +49,15 @@ class UserModel {
     this.friendsCount,
     this.dateOfBirth,
     this.phoneNumber,
+    this.phoneVerified = false,
     this.gender,
     this.hideInfo = false,
     this.showDateOfBirth,
     this.showPhoneNumber,
     this.showGender,
     this.hasPassword = false,
+    this.matchedBy,
+    this.isBlockedByOwner = false,
   });
 
   factory UserModel.fromJson(Map<String, dynamic> json) {
@@ -57,12 +74,15 @@ class UserModel {
           ? DateTime.tryParse(json['dateOfBirth'] as String)
           : null,
       phoneNumber: json['phoneNumber'] as String?,
+      phoneVerified: json['phoneVerified'] as bool? ?? false,
       gender: json['gender'] as String?,
       hideInfo: json['hideInfo'] as bool? ?? false,
       showDateOfBirth: json['showDateOfBirth'] as bool?,
       showPhoneNumber: json['showPhoneNumber'] as bool?,
       showGender: json['showGender'] as bool?,
       hasPassword: json['hasPassword'] as bool? ?? false,
+      matchedBy: json['matchedBy'] as String?,
+      isBlockedByOwner: json['isBlockedByOwner'] as bool? ?? false,
     );
   }
 
@@ -76,6 +96,7 @@ class UserModel {
         if (friendsCount != null) 'friendsCount': friendsCount,
         if (dateOfBirth != null) 'dateOfBirth': dateOfBirth!.toIso8601String(),
         if (phoneNumber != null) 'phoneNumber': phoneNumber,
+        'phoneVerified': phoneVerified,
         if (gender != null) 'gender': gender,
         'hideInfo': hideInfo,
         if (showDateOfBirth != null) 'showDateOfBirth': showDateOfBirth,

@@ -119,7 +119,7 @@
       "sendCode": "发送重置验证码",
       "otpLabel": "确认验证码 (OTP)",
       "otpPlaceholder": "请输入 6 位验证码",
-      "otpMinLength": "OTP 必须为 6 个字符",
+      "otpMinLength": "请输入完整的 6 位验证码",
       "newPasswordLabel": "新密码",
       "newPasswordMin": "密码至少需要 8 个字符",
       "updating": "正在更新...",
@@ -127,7 +127,18 @@
       "codeSent": "重置验证码已发送至您的邮箱",
       "sendError": "无法请求重置密码",
       "resetSuccess": "密码重置成功，请登录。",
-      "resetError": "OTP 验证码无效或已过期"
+      "resetError": "OTP 验证码无效或已过期",
+      "back": "返回",
+      "otpTitle": "输入验证码",
+      "otpSubtitle": "我们已将 6 位验证码发送至",
+      "otpNext": "继续",
+      "resend": "重新发送验证码",
+      "resendCountdown": "{seconds} 秒后可重新发送",
+      "resendError": "重新发送失败",
+      "newPasswordTitle": "设置新密码",
+      "newPasswordSubtitle": "为您的账户选择一个强密码。",
+      "confirmPasswordLabel": "确认密码",
+      "passwordMismatch": "两次输入的密码不一致"
     },
     "oauth": {
       "verifying": "正在验证...",
@@ -302,7 +313,25 @@
     "showPhoneLabel": "向他人显示电话号码",
     "showGenderLabel": "向他人显示性别",
     "privacySectionLabel": "隐私",
-    "privacySectionHint": "选择其他用户可以看到的信息。"
+    "privacySectionHint": "选择其他用户可以看到的信息。",
+    "phoneSendOtp": "验证",
+    "phoneSending": "发送中...",
+    "phoneVerified": "已验证",
+    "phoneUnverified": "未验证",
+    "phoneChange": "更改",
+    "phoneOtpTitle": "验证手机号码",
+    "phoneOtpSubtitle": "请输入发送至以下号码的 6 位验证码",
+    "phoneOtpConfirm": "确认",
+    "phoneVerifying": "验证中...",
+    "phoneOtpIncomplete": "请输入全部 6 位数字",
+    "phoneResend": "重新发送验证码",
+    "phoneResendCountdown": "{seconds} 秒后重新发送",
+    "phoneSuccess": "手机号码已验证！",
+    "phoneErrorInvalid": "手机号码无效",
+    "phoneErrorSend": "无法发送验证码，请稍后重试。",
+    "phoneErrorVerify": "验证码错误或已过期",
+    "phoneErrorExpired": "验证码已过期，请重新发送",
+    "phoneErrorTaken": "该手机号码已被使用"
   },
   "friends": {
     "title": "好友",
@@ -314,7 +343,7 @@
     "removeFriend": "删除好友",
     "accept": "接受",
     "decline": "拒绝",
-    "searchPlaceholder": "按邮箱或名称搜索...",
+    "searchPlaceholder": "按姓名、邮箱或完整电话号码搜索...",
     "searching": "搜索中...",
     "noSearchResults": "未找到结果",
     "searchPrompt": "输入关键词以搜索用户",
@@ -324,7 +353,8 @@
     "acceptRequestSuccess": "已接受好友请求",
     "acceptRequestError": "无法接受好友请求",
     "removeFriendSuccess": "已删除好友/取消请求",
-    "removeFriendError": "无法完成此操作"
+    "removeFriendError": "无法完成此操作",
+    "phoneSearchHint": "请输入完整电话号码进行搜索"
   },
   "conversations": {
     "selectPrompt": "选择一个会话开始聊天"
@@ -525,6 +555,7 @@
     "sendMessageAction": "发消息",
     "unblockAction": "解除拉黑",
     "blockAction": "拉黑用户",
+    "profileBlockedByOwner": "该用户的个人资料不可用",
     "markAsRead": "标记为已读",
     "markAsUnread": "标记为未读",
     "archiveChat": "归档",
@@ -614,7 +645,17 @@
     "newConvDepartment": "部门（可选）",
     "newConvNoDepartment": "无部门",
     "groupAvatarAlt": "群组头像",
-    "imageViewer": "图片查看器"
+    "imageViewer": "图片查看器",
+    "blockedChats": "已屏蔽",
+    "noBlockedChats": "没有被屏蔽的对话",
+    "callBlocked": "该用户不希望被联系",
+    "blockAndHide": "屏蔽",
+    "unblockAndRestore": "解除屏蔽",
+    "mute15min": "15 分钟",
+    "mute30min": "30 分钟",
+    "mute1hour": "1 小时",
+    "mute24hours": "24 小时",
+    "muteForever": "直到我手动开启"
   },
   "aiHub": {
     "title": "AI 中心",
@@ -1264,6 +1305,8 @@
     "empty": "暂无通知",
     "markAllRead": "全部标为已读",
     "accept": "接受",
-    "decline": "拒绝"
+    "decline": "拒绝",
+    "phoneSetupAction": "添加电话号码 →",
+    "passwordSetupAction": "立即设置密码 →"
   }
 }

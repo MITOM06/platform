@@ -33,6 +33,31 @@ class ChatRepository {
         .toList();
   }
 
+  /// Lists conversations the current user has blocked-archived.
+  Future<List<ConversationModel>> listBlockedConversations() async {
+    final response = await _dio.get(
+      '/api/conversations',
+      queryParameters: {'blocked': true},
+    );
+    final data = response.data as Map<String, dynamic>;
+    final content = data['content'] as List;
+    return content
+        .map((e) => ConversationModel.fromJson(e as Map<String, dynamic>))
+        .toList();
+  }
+
+  /// Move conversation to the Blocked section for the current user.
+  Future<ConversationModel> blockArchiveConversation(String conversationId) async {
+    final response = await _dio.post('/api/conversations/$conversationId/block-archive');
+    return ConversationModel.fromJson(response.data as Map<String, dynamic>);
+  }
+
+  /// Restore conversation from Blocked section for the current user.
+  Future<ConversationModel> blockRestoreConversation(String conversationId) async {
+    final response = await _dio.post('/api/conversations/$conversationId/block-restore');
+    return ConversationModel.fromJson(response.data as Map<String, dynamic>);
+  }
+
   /// Cursor-based message history. Pass [before] = the oldest message id the
   /// caller already has to fetch the next older page; omit it for the newest
   /// page. Avoids the duplication/jumping of offset paging.
@@ -216,8 +241,14 @@ class ChatRepository {
     return ConversationModel.fromJson(response.data as Map<String, dynamic>);
   }
 
-  Future<ConversationModel> muteConversation(String conversationId) async {
-    final response = await _dio.post('/api/conversations/$conversationId/mute');
+  /// Mute conversation with a duration. [durationSeconds]: 900=15min,
+  /// 1800=30min, 3600=1h, 86400=24h, -1=forever (until manual unmute).
+  Future<ConversationModel> muteConversation(String conversationId,
+      {int durationSeconds = -1}) async {
+    final response = await _dio.post(
+      '/api/conversations/$conversationId/mute',
+      data: {'durationSeconds': durationSeconds},
+    );
     return ConversationModel.fromJson(response.data as Map<String, dynamic>);
   }
 

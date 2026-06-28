@@ -9,3 +9,12 @@ export function useConversations() {
     select: (data) => data.content,
   })
 }
+
+export function useBlockedConversations() {
+  return useQuery({
+    queryKey: ['blocked-conversations'],
+    queryFn: () => chatService.getBlockedConversations(),
+    staleTime: 2 * 60 * 1000,
+    select: (data) => data.content,
+  })
+}

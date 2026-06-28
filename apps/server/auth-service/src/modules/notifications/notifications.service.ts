@@ -66,4 +66,74 @@ export class NotificationsService {
       )
       .exec();
   }
+
+  /**
+   * Called after every successful login (email+password or OAuth).
+   * - Creates a PASSWORD_SETUP notification if the user has no local password
+   *   (OAuth-only account).
+   * - Creates a PHONE_SETUP notification if the user has not verified a phone.
+   * - Auto-reads any outstanding PHONE_SETUP notification once the phone is
+   *   verified.
+   *
+   * Uses `updateOne + $setOnInsert + upsert` so each type is created exactly
+   * once per user — logging in 1000 times never produces a duplicate.
+   */
+  async createSetupNotificationsIfNeeded(
+    userId: string,
+    user: { hasPassword: boolean; phoneVerified: boolean },
+  ): Promise<void> {
+    const ops: Promise<unknown>[] = [];
+
+    if (!user.hasPassword) {
+      ops.push(
+        this.notificationModel
+          .updateOne(
+            { recipientId: userId, type: 'PASSWORD_SETUP' },
+            {
+              $setOnInsert: {
+                recipientId: userId,
+                type: 'PASSWORD_SETUP',
+                title: 'Bảo vệ tài khoản của bạn',
+                body: 'Tài khoản của bạn chưa có mật khẩu. Hãy thiết lập mật khẩu để tăng tính bảo mật.',
+                readAt: null,
+              },
+            },
+            { upsert: true },
+          )
+          .exec(),
+      );
+    }
+
+    if (!user.phoneVerified) {
+      ops.push(
+        this.notificationModel
+          .updateOne(
+            { recipientId: userId, type: 'PHONE_SETUP' },
+            {
+              $setOnInsert: {
+                recipientId: userId,
+                type: 'PHONE_SETUP',
+                title: 'Xác minh số điện thoại',
+                body: 'Thêm và xác minh số điện thoại để bạn bè có thể tìm thấy bạn và tăng tính bảo mật tài khoản.',
+                readAt: null,
+              },
+            },
+            { upsert: true },
+          )
+          .exec(),
+      );
+    } else {
+      // Phone already verified → silently read any outstanding PHONE_SETUP nudge.
+      ops.push(
+        this.notificationModel
+          .updateMany(
+            { recipientId: userId, type: 'PHONE_SETUP', readAt: null },
+            { $set: { readAt: new Date() } },
+          )
+          .exec(),
+      );
+    }
+
+    await Promise.all(ops);
+  }
 }
