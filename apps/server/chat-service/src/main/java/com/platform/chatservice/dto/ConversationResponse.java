@@ -23,7 +23,8 @@ public record ConversationResponse(
     boolean isArchived,
     String wallpaper,
     boolean isBlocked,
-    Long muteExpiresAt) {
+    Long muteExpiresAt,
+    List<String> pendingMembers) {
   public record LastMessageDto(String content, String senderId, Instant createdAt) {}
 
   public record PinnedMessageDto(
@@ -64,7 +65,8 @@ public record ConversationResponse(
         false,
         null,
         false,
-        null);
+        null,
+        List.of());
   }
 
   /** Backward-compatible constructor without the wallpaper field. */
@@ -106,6 +108,7 @@ public record ConversationResponse(
         isArchived,
         null,
         false,
-        null);
+        null,
+        List.of());
   }
 }

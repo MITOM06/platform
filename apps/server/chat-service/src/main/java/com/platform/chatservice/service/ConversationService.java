@@ -16,9 +16,11 @@ import com.platform.chatservice.repository.MessageRepository;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.bson.Document;
@@ -120,6 +122,8 @@ public class ConversationService {
     if (members.size() < 2) {
       throw new IllegalArgumentException("A group needs at least 2 members");
     }
+    List<String> pendingMembers = new ArrayList<>(members);
+    pendingMembers.remove(creatorId);
     Conversation saved =
         conversationCacheService.save(
             Conversation.builder()
@@ -131,6 +135,7 @@ public class ConversationService {
                 .createdBy(creatorId)
                 .departmentId(request.departmentId())
                 .lastMessageAt(Instant.now())
+                .pendingMembers(pendingMembers)
                 .build());
     return toResponse(saved, creatorId, 0L);
   }
@@ -162,6 +167,9 @@ public class ConversationService {
   public ConversationResponse addMembers(
       String userId, String conversationId, List<String> userIds) {
     Conversation conversation = requireGroupAdmin(userId, conversationId);
+    // Snapshot existing participants BEFORE mutating, so an already-accepted member
+    // re-passed in userIds is not wrongly demoted back to pending.
+    Set<String> alreadyIn = new HashSet<>(conversation.getParticipants());
     List<String> participants = new ArrayList<>(conversation.getParticipants());
     for (String id : userIds) {
       if (id != null && !participants.contains(id)) {
@@ -169,6 +177,15 @@ public class ConversationService {
       }
     }
     conversation.setParticipants(participants);
+    if (conversation.getPendingMembers() == null) conversation.setPendingMembers(new ArrayList<>());
+    for (String id : userIds) {
+      if (id != null
+          && !alreadyIn.contains(id)
+          && !conversation.getPendingMembers().contains(id)
+          && !id.equals(conversation.getCreatedBy())) {
+        conversation.getPendingMembers().add(id);
+      }
+    }
     Conversation saved = conversationCacheService.save(conversation);
     return toResponse(saved, userId, messageRepository.countUnread(conversationId, userId));
   }
@@ -198,6 +215,9 @@ public class ConversationService {
         admins.add(participants.get(0));
       }
       conversation.setAdmins(admins);
+    }
+    if (conversation.getPendingMembers() != null) {
+      conversation.getPendingMembers().remove(targetUserId);
     }
     Conversation saved = conversationCacheService.save(conversation);
     return toResponse(saved, userId, 0L);
@@ -334,10 +354,16 @@ public class ConversationService {
    */
   public ConversationResponse acceptConversation(String userId, String conversationId) {
     Conversation conversation = getRawConversation(userId, conversationId);
-    if (userId.equals(conversation.getCreatedBy())) {
-      throw new ForbiddenException("The initiator cannot accept their own request");
+    if (Conversation.TYPE_DIRECT.equals(conversation.resolvedType())) {
+      if (userId.equals(conversation.getCreatedBy())) {
+        throw new ForbiddenException("The initiator cannot accept their own request");
+      }
+      conversation.setStatus(Conversation.STATUS_ACCEPTED);
+    } else {
+      if (conversation.getPendingMembers() != null) {
+        conversation.getPendingMembers().remove(userId);
+      }
     }
-    conversation.setStatus(Conversation.STATUS_ACCEPTED);
     Conversation saved = conversationCacheService.save(conversation);
     return toResponse(saved, userId, messageRepository.countUnread(conversationId, userId));
   }
@@ -536,7 +562,8 @@ public class ConversationService {
         isArchived,
         c.getWallpaper(),
         isBlocked,
-        muteExpiresAt);
+        muteExpiresAt,
+        c.getPendingMembers() != null ? c.getPendingMembers() : List.of());
   }
 
   private List<ConversationResponse.PinnedMessageDto> resolvePinnedMessages(Conversation c) {

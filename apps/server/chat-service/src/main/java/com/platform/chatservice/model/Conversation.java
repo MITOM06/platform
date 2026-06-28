@@ -109,6 +109,12 @@ public class Conversation {
   /** Users for whom this conversation is in the "Blocked" section (blocker side only). */
   @Builder.Default private List<String> blockedBy = new ArrayList<>();
 
+  /**
+   * Group members who were invited but have not yet accepted. Empty for DMs (which use the
+   * top-level {@code status} field instead).
+   */
+  @Builder.Default private List<String> pendingMembers = new ArrayList<>();
+
   private LastMessage lastMessage;
 
   private Instant lastMessageAt;
