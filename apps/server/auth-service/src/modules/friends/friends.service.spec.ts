@@ -1,7 +1,7 @@
 import { Test } from '@nestjs/testing';
 import { getModelToken } from '@nestjs/mongoose';
 import { ConflictException } from '@nestjs/common';
-import { Friendship, User, REDIS_CLIENT } from '@platform/database';
+import { Friendship, User, UserBlock, REDIS_CLIENT } from '@platform/database';
 import { FriendsService } from './friends.service';
 import { NotificationsService } from '../notifications/notifications.service';
 
@@ -9,6 +9,7 @@ describe('FriendsService', () => {
   let service: FriendsService;
   let friendshipModel: any;
   let userModel: any;
+  let userBlockModel: any;
   let redis: any;
   let notificationsService: any;
 
@@ -27,6 +28,12 @@ describe('FriendsService', () => {
         }),
       }),
     };
+    userBlockModel = {
+      // listOnlineFriends awaits this directly (no .exec()), so default to [].
+      find: jest.fn().mockResolvedValue([]),
+      findOne: jest.fn(),
+      exists: jest.fn(),
+    };
     redis = { get: jest.fn() };
     notificationsService = { create: jest.fn().mockResolvedValue(undefined) };
 
@@ -35,6 +42,7 @@ describe('FriendsService', () => {
         FriendsService,
         { provide: getModelToken(Friendship.name), useValue: friendshipModel },
         { provide: getModelToken(User.name), useValue: userModel },
+        { provide: getModelToken(UserBlock.name), useValue: userBlockModel },
         { provide: REDIS_CLIENT, useValue: redis },
         { provide: NotificationsService, useValue: notificationsService },
       ],
