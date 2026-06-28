@@ -50,6 +50,8 @@ export interface Conversation {
   isArchived: boolean
   /** true when this conversation has been moved to the Blocked section by the current user */
   isBlocked?: boolean
+  /** userIds that have a pending invitation to this group (backend field) */
+  pendingMembers?: string[]
   pinnedMessages: PinnedMessage[]
   autoDeleteSeconds: number | null
   lastMessage: {

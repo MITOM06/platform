@@ -517,6 +517,27 @@ class AppLocalizationsEs extends AppLocalizations {
   String get tabChats => 'Chats';
 
   @override
+  String get tabArchived => 'Archivados';
+
+  @override
+  String get tabRequests => 'Solicitudes';
+
+  @override
+  String get noRequests => 'No hay solicitudes pendientes';
+
+  @override
+  String get declineRequest => 'Rechazar';
+
+  @override
+  String get dmRequestSubtitle => 'Quiere enviarte un mensaje';
+
+  @override
+  String get groupInviteSubtitle => 'Te invitó a un grupo';
+
+  @override
+  String get blockedChatsTitle => 'Chats bloqueados';
+
+  @override
   String get newGroup => 'Nuevo grupo';
 
   @override

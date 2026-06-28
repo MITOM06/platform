@@ -192,6 +192,8 @@
     "themeChanged": "{theme}テーマに切り替えました",
     "archived": "アーカイブしたチャット",
     "archivedSubtitle": "非表示の会話を表示",
+    "blockedChats": "ブロックしたチャット",
+    "blockedChatsSubtitle": "ブロックした会話を管理",
     "explore": "コミュニティを探す",
     "exploreSubtitle": "公開チャンネルを見つけて参加",
     "notifications": "通知",
@@ -655,7 +657,16 @@
     "mute30min": "30 分",
     "mute1hour": "1 時間",
     "mute24hours": "24 時間",
-    "muteForever": "手動でオンにするまで"
+    "muteForever": "手動でオンにするまで",
+    "tabChats": "チャット",
+    "tabArchived": "アーカイブ",
+    "tabRequests": "リクエスト",
+    "dmRequestSubtitle": "メッセージを送りたがっています",
+    "groupInviteSubtitle": "グループに招待されました",
+    "acceptRequest": "承認",
+    "declineRequest": "拒否",
+    "noRequests": "保留中のリクエストはありません",
+    "groupLabel": "グループ"
   },
   "aiHub": {
     "title": "AI ハブ",

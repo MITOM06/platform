@@ -509,6 +509,27 @@ class AppLocalizationsVi extends AppLocalizations {
   String get tabChats => 'Trò chuyện';
 
   @override
+  String get tabArchived => 'Lưu trữ';
+
+  @override
+  String get tabRequests => 'Người lạ';
+
+  @override
+  String get noRequests => 'Không có lời mời nào';
+
+  @override
+  String get declineRequest => 'Từ chối';
+
+  @override
+  String get dmRequestSubtitle => 'Muốn nhắn tin với bạn';
+
+  @override
+  String get groupInviteSubtitle => 'Đã mời bạn vào nhóm';
+
+  @override
+  String get blockedChatsTitle => 'Tin nhắn bị chặn';
+
+  @override
   String get newGroup => 'Tạo nhóm';
 
   @override

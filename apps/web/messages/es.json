@@ -192,6 +192,8 @@
     "themeChanged": "Se cambió al tema {theme}",
     "archived": "Chats archivados",
     "archivedSubtitle": "Ver conversaciones ocultas",
+    "blockedChats": "Chats bloqueados",
+    "blockedChatsSubtitle": "Gestionar conversaciones bloqueadas",
     "explore": "Explorar comunidad",
     "exploreSubtitle": "Encuentre y únase a canales públicos",
     "notifications": "Notificaciones",
@@ -655,7 +657,16 @@
     "mute30min": "30 minutos",
     "mute1hour": "1 hora",
     "mute24hours": "24 horas",
-    "muteForever": "Hasta que lo reactive"
+    "muteForever": "Hasta que lo reactive",
+    "tabChats": "Chats",
+    "tabArchived": "Archivados",
+    "tabRequests": "Solicitudes",
+    "dmRequestSubtitle": "Quiere enviarte un mensaje",
+    "groupInviteSubtitle": "Te invitó a un grupo",
+    "acceptRequest": "Aceptar",
+    "declineRequest": "Rechazar",
+    "noRequests": "No hay solicitudes pendientes",
+    "groupLabel": "Grupo"
   },
   "aiHub": {
     "title": "Centro de IA",

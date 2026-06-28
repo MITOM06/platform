@@ -1074,6 +1074,48 @@ abstract class AppLocalizations {
   /// **'Chats'**
   String get tabChats;
 
+  /// No description provided for @tabArchived.
+  ///
+  /// In en, this message translates to:
+  /// **'Archived'**
+  String get tabArchived;
+
+  /// No description provided for @tabRequests.
+  ///
+  /// In en, this message translates to:
+  /// **'Requests'**
+  String get tabRequests;
+
+  /// No description provided for @noRequests.
+  ///
+  /// In en, this message translates to:
+  /// **'No pending requests'**
+  String get noRequests;
+
+  /// No description provided for @declineRequest.
+  ///
+  /// In en, this message translates to:
+  /// **'Decline'**
+  String get declineRequest;
+
+  /// No description provided for @dmRequestSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Wants to message you'**
+  String get dmRequestSubtitle;
+
+  /// No description provided for @groupInviteSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Invited you to a group'**
+  String get groupInviteSubtitle;
+
+  /// No description provided for @blockedChatsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Blocked chats'**
+  String get blockedChatsTitle;
+
   /// No description provided for @newGroup.
   ///
   /// In en, this message translates to:

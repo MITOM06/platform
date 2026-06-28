@@ -503,6 +503,27 @@ class AppLocalizationsKo extends AppLocalizations {
   String get tabChats => '채팅';
 
   @override
+  String get tabArchived => '보관됨';
+
+  @override
+  String get tabRequests => '요청';
+
+  @override
+  String get noRequests => '대기 중인 요청이 없습니다';
+
+  @override
+  String get declineRequest => '거절';
+
+  @override
+  String get dmRequestSubtitle => '메시지를 보내려고 합니다';
+
+  @override
+  String get groupInviteSubtitle => '그룹에 초대했습니다';
+
+  @override
+  String get blockedChatsTitle => '차단된 채팅';
+
+  @override
   String get newGroup => '새 그룹';
 
   @override

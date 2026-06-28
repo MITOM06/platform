@@ -192,6 +192,8 @@
     "themeChanged": "{theme} 테마로 전환했습니다",
     "archived": "보관된 채팅",
     "archivedSubtitle": "숨긴 대화 보기",
+    "blockedChats": "차단된 채팅",
+    "blockedChatsSubtitle": "차단된 대화 관리",
     "explore": "커뮤니티 탐색",
     "exploreSubtitle": "공개 채널을 찾아 참여하세요",
     "notifications": "알림",
@@ -655,7 +657,16 @@
     "mute30min": "30분",
     "mute1hour": "1시간",
     "mute24hours": "24시간",
-    "muteForever": "직접 끌 때까지"
+    "muteForever": "직접 끌 때까지",
+    "tabChats": "채팅",
+    "tabArchived": "보관함",
+    "tabRequests": "요청",
+    "dmRequestSubtitle": "메시지를 보내고 싶어합니다",
+    "groupInviteSubtitle": "그룹에 초대되었습니다",
+    "acceptRequest": "수락",
+    "declineRequest": "거절",
+    "noRequests": "대기 중인 요청이 없습니다",
+    "groupLabel": "그룹"
   },
   "aiHub": {
     "title": "AI 허브",

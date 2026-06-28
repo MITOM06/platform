@@ -15,7 +15,7 @@ import {
   LogOut,
   Loader2,
   ChevronRight,
-  Archive,
+  Ban,
   Bell,
   Coins,
   BrainCircuit,
@@ -233,11 +233,11 @@ export default function SettingsPage() {
               />
 
               <SettingsCard
-                icon={<Archive className="size-5 text-primary" />}
-                iconBg="rgba(106,201,255,0.12)"
-                title={t('archived')}
-                subtitle={t('archivedSubtitle')}
-                onClick={() => router.push('/archived')}
+                icon={<Ban className="size-5 text-destructive" />}
+                iconBg="rgba(239,68,68,0.1)"
+                title={t('blockedChats')}
+                subtitle={t('blockedChatsSubtitle')}
+                onClick={() => router.push('/blocked')}
               />
 
               <SettingsCard

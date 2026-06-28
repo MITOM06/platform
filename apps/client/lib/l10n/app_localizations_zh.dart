@@ -502,6 +502,27 @@ class AppLocalizationsZh extends AppLocalizations {
   String get tabChats => '聊天';
 
   @override
+  String get tabArchived => '已归档';
+
+  @override
+  String get tabRequests => '请求';
+
+  @override
+  String get noRequests => '没有待处理的请求';
+
+  @override
+  String get declineRequest => '拒绝';
+
+  @override
+  String get dmRequestSubtitle => '想给你发消息';
+
+  @override
+  String get groupInviteSubtitle => '邀请您加入群组';
+
+  @override
+  String get blockedChatsTitle => '已屏蔽的聊天';
+
+  @override
   String get newGroup => '新建群组';
 
   @override

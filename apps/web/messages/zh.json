@@ -192,6 +192,8 @@
     "themeChanged": "已切换到{theme}主题",
     "archived": "已归档聊天",
     "archivedSubtitle": "查看隐藏的会话",
+    "blockedChats": "已屏蔽的聊天",
+    "blockedChatsSubtitle": "管理已屏蔽的对话",
     "explore": "探索社区",
     "exploreSubtitle": "查找并加入公开频道",
     "notifications": "通知",
@@ -655,7 +657,16 @@
     "mute30min": "30 分钟",
     "mute1hour": "1 小时",
     "mute24hours": "24 小时",
-    "muteForever": "直到我手动开启"
+    "muteForever": "直到我手动开启",
+    "tabChats": "聊天",
+    "tabArchived": "已归档",
+    "tabRequests": "请求",
+    "dmRequestSubtitle": "想要和您发消息",
+    "groupInviteSubtitle": "邀请您加入群组",
+    "acceptRequest": "接受",
+    "declineRequest": "拒绝",
+    "noRequests": "没有待处理的请求",
+    "groupLabel": "群组"
   },
   "aiHub": {
     "title": "AI 中心",

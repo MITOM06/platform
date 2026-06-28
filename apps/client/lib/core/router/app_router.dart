@@ -11,6 +11,7 @@ import '../../features/auth/ui/new_password_screen.dart';
 import '../../features/auth/ui/theme_onboarding_screen.dart';
 import '../../features/chat/ui/chat_screen.dart';
 import '../../features/chat/ui/archived_chats_screen.dart';
+import '../../features/chat/ui/blocked_conversations_screen.dart';
 import '../../features/home/ui/responsive_home_layout.dart';
 import '../utils/global_messenger.dart';
 import '../../features/chat/presentation/call_screen.dart';
@@ -178,6 +179,11 @@ GoRouter appRouter(AppRouterRef ref) {
         path: '/archived',
         name: 'archived',
         builder: (context, state) => const ArchivedChatsScreen(),
+      ),
+      GoRoute(
+        path: '/blocked',
+        name: 'blocked',
+        builder: (context, state) => const BlockedConversationsScreen(),
       ),
       GoRoute(
         path: '/settings',

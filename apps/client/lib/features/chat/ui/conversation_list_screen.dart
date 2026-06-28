@@ -11,12 +11,13 @@ import '../../home/domain/home_providers.dart';
 import '../../notifications/ui/notification_bell.dart';
 import '../../assistant/ui/assistant_entry_tile.dart';
 import '../domain/chat_provider.dart';
+import '../domain/chat_state.dart';
 import 'widgets/active_friends_row.dart';
-import 'widgets/archived_entry_tile.dart';
-import 'widgets/blocked_entry_tile.dart';
+import 'widgets/archived_tab.dart';
+import 'widgets/chats_tab.dart';
 import 'widgets/conversation_avatar.dart';
 import 'widgets/conversation_search_bar.dart';
-import 'widgets/conversation_tile.dart';
+import 'widgets/requests_tab.dart';
 import 'widgets/offline_banner.dart';
 import 'widgets/web_settings_button.dart';
 
@@ -222,187 +223,10 @@ class _ConversationListScreenState
                       ),
                     ),
                   ),
-                convsAsync.when(
-                  loading: () => Center(
-                    child: CircularProgressIndicator(
-                      valueColor: AlwaysStoppedAnimation<Color>(
-                        isDark
-                            ? AppTheme.ponCyan
-                            : Theme.of(context).colorScheme.primary,
-                      ),
-                    ),
-                  ),
-                  error: (e, _) => Center(
-                    child: Padding(
-                      padding: const EdgeInsets.all(24.0),
-                      child: PonCard(
-                        glowColor: Colors.redAccent,
-                        glowStrength: isDark ? 4 : 0,
-                        child: Padding(
-                          padding: const EdgeInsets.all(24.0),
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              const Icon(Icons.cloud_off_outlined,
-                                  size: 48, color: Colors.redAccent),
-                              const SizedBox(height: 16),
-                              Text(
-                                context.l10n.listLoadFailed,
-                                style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 16,
-                                  color: isDark
-                                      ? Colors.white
-                                      : Colors.black87,
-                                ),
-                              ),
-                              const SizedBox(height: 8),
-                              Text(
-                                e.toString().contains('connect') ||
-                                        e.toString().contains('network')
-                                    ? context.l10n.listCheckNetwork
-                                    : context.l10n.listGenericError,
-                                textAlign: TextAlign.center,
-                                style: TextStyle(
-                                  color: isDark
-                                      ? Colors.white.withValues(alpha: 0.5)
-                                      : Colors.black54,
-                                ),
-                              ),
-                              const SizedBox(height: 20),
-                              SizedBox(
-                                width: 140,
-                                child: PonButton(
-                                  onPressed: () => ref
-                                      .read(conversationsNotifierProvider
-                                          .notifier)
-                                      .refresh(),
-                                  gradientColors: isDark
-                                      ? const [
-                                          AppTheme.ponCyan,
-                                          AppTheme.ponCyan
-                                        ]
-                                      : [
-                                          Theme.of(context)
-                                              .colorScheme
-                                              .primary,
-                                          Theme.of(context)
-                                              .colorScheme
-                                              .primaryContainer
-                                        ],
-                                  glowColor: isDark
-                                      ? AppTheme.ponCyan
-                                      : Theme.of(context)
-                                          .colorScheme
-                                          .primary,
-                                  child: Text(context.l10n.actionRetry),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                  data: (allConversations) {
-                    // Scope keystroke rebuilds: only this Consumer (the filtered
-                    // list) re-runs when the search query changes — the AppBar,
-                    // FAB, ActiveFriendsRow and AssistantEntryTile above do not.
-                    return Consumer(
-                      builder: (context, ref, _) {
-                        final search =
-                            ref.watch(conversationSearchQueryProvider);
-                        final conversations = filterConversationsBySearch(
-                          ref,
-                          allConversations,
-                          user?.id ?? '',
-                          search,
-                        );
-                        return RefreshIndicator(
-                    color: isDark
-                        ? AppTheme.ponCyan
-                        : Theme.of(context).colorScheme.primary,
-                    backgroundColor:
-                        isDark ? AppTheme.darkSurface : Colors.white,
-                    onRefresh: () => ref
-                        .read(conversationsNotifierProvider.notifier)
-                        .refresh(),
-                    child: conversations.isEmpty
-                        ? ListView(
-                            physics: const AlwaysScrollableScrollPhysics(),
-                            children: [
-                              SizedBox(
-                                  height:
-                                      MediaQuery.of(context).size.height *
-                                          0.25),
-                              Center(
-                                child: Column(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Icon(
-                                      Icons.chat_bubble_outline,
-                                      size: 64,
-                                      color: isDark
-                                          ? AppTheme.ponPeach
-                                          : Theme.of(context)
-                                              .colorScheme
-                                              .primary
-                                              .withValues(alpha: 0.6),
-                                    ),
-                                    const SizedBox(height: 16),
-                                    Text(
-                                      search.isEmpty
-                                          ? context.l10n.emptyConversations
-                                          : context.l10n.noConversationsFound,
-                                      style: TextStyle(
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.bold,
-                                        color: isDark
-                                            ? Colors.white70
-                                            : Colors.black87,
-                                      ),
-                                    ),
-                                    if (search.isEmpty) ...[
-                                      const SizedBox(height: 8),
-                                      Text(
-                                        context.l10n.emptyTapPlus,
-                                        style: TextStyle(
-                                          color: isDark
-                                              ? Colors.white38
-                                              : Colors.black38,
-                                        ),
-                                      ),
-                                    ],
-                                  ],
-                                ),
-                              ),
-                            ],
-                          )
-                        : ListView.builder(
-                            physics:
-                                const AlwaysScrollableScrollPhysics(),
-                            // +2 for the archived entry tile and blocked
-                            // section appended after the conversation list
-                            // (only shown when search is empty).
-                            itemCount: conversations.length +
-                                (search.isEmpty ? 2 : 0),
-                            itemBuilder: (context, index) {
-                              if (index < conversations.length) {
-                                return ConversationTile(
-                                    conv: conversations[index]);
-                              }
-                              // After conversations: archived + blocked sections
-                              final extra = index - conversations.length;
-                              if (extra == 0) {
-                                return const ArchivedEntryTile();
-                              }
-                              return const BlockedConversationsSection();
-                            },
-                          ),
-                        );
-                      },
-                    );
-                  },
+                _ConversationTabs(
+                  convsAsync: convsAsync,
+                  currentUserId: user?.id ?? '',
+                  isDark: isDark,
                 ),
                 if (isWeb)
                   const Positioned(
@@ -410,6 +234,112 @@ class _ConversationListScreenState
                     bottom: 0,
                     child: WebSettingsButton(),
                   ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// 3-tab body of the conversation list: Chats / Archived / Requests. The
+/// Requests tab shows a badge with the incoming-request count.
+class _ConversationTabs extends StatelessWidget {
+  final AsyncValue<List<ConversationModel>> convsAsync;
+  final String currentUserId;
+  final bool isDark;
+
+  const _ConversationTabs({
+    required this.convsAsync,
+    required this.currentUserId,
+    required this.isDark,
+  });
+
+  int _requestCount() {
+    final all = convsAsync.valueOrNull;
+    if (all == null) return 0;
+    return all.where((c) {
+      final isPendingDm = c.type == 'direct' &&
+          c.status == 'pending' &&
+          c.createdBy != currentUserId;
+      final isPendingGroup = c.pendingMembers.contains(currentUserId);
+      return isPendingDm || isPendingGroup;
+    }).length;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final accent =
+        isDark ? AppTheme.ponCyan : Theme.of(context).colorScheme.primary;
+    final requestCount = _requestCount();
+
+    return DefaultTabController(
+      length: 3,
+      child: Column(
+        children: [
+          TabBar(
+            labelColor: accent,
+            unselectedLabelColor: isDark ? Colors.white54 : Colors.black45,
+            indicatorColor: accent,
+            tabs: [
+              Tab(
+                icon: const Icon(Icons.chat_bubble_outline),
+                text: context.l10n.tabChats,
+              ),
+              Tab(
+                icon: const Icon(Icons.archive_outlined),
+                text: context.l10n.tabArchived,
+              ),
+              Tab(
+                icon: Stack(
+                  clipBehavior: Clip.none,
+                  children: [
+                    const Icon(Icons.person_add_outlined),
+                    if (requestCount > 0)
+                      Positioned(
+                        right: -8,
+                        top: -4,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 5, vertical: 1),
+                          decoration: BoxDecoration(
+                            color: isDark
+                                ? AppTheme.ponPink
+                                : Theme.of(context).colorScheme.secondary,
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          constraints:
+                              const BoxConstraints(minWidth: 16),
+                          child: Text(
+                            requestCount > 99 ? '99+' : '$requestCount',
+                            textAlign: TextAlign.center,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 9,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+                text: context.l10n.tabRequests,
+              ),
+            ],
+          ),
+          Expanded(
+            child: TabBarView(
+              children: [
+                ChatsTab(
+                  convsAsync: convsAsync,
+                  currentUserId: currentUserId,
+                ),
+                ArchivedTab(currentUserId: currentUserId),
+                RequestsTab(
+                  convsAsync: convsAsync,
+                  currentUserId: currentUserId,
+                ),
               ],
             ),
           ),

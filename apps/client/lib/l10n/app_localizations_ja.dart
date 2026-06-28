@@ -503,6 +503,27 @@ class AppLocalizationsJa extends AppLocalizations {
   String get tabChats => 'チャット';
 
   @override
+  String get tabArchived => 'アーカイブ';
+
+  @override
+  String get tabRequests => 'リクエスト';
+
+  @override
+  String get noRequests => '保留中のリクエストはありません';
+
+  @override
+  String get declineRequest => '拒否';
+
+  @override
+  String get dmRequestSubtitle => 'メッセージを送りたい';
+
+  @override
+  String get groupInviteSubtitle => 'グループに招待されました';
+
+  @override
+  String get blockedChatsTitle => 'ブロック中のチャット';
+
+  @override
   String get newGroup => '新しいグループ';
 
   @override

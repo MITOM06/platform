@@ -192,6 +192,8 @@
     "themeChanged": "Passé au thème {theme}",
     "archived": "Discussions archivées",
     "archivedSubtitle": "Voir les conversations masquées",
+    "blockedChats": "Discussions bloquées",
+    "blockedChatsSubtitle": "Gérer les conversations bloquées",
     "explore": "Explorer la communauté",
     "exploreSubtitle": "Trouver et rejoindre des canaux publics",
     "notifications": "Notifications",
@@ -655,7 +657,16 @@
     "mute30min": "30 minutes",
     "mute1hour": "1 heure",
     "mute24hours": "24 heures",
-    "muteForever": "Jusqu'à ce que je le réactive"
+    "muteForever": "Jusqu'à ce que je le réactive",
+    "tabChats": "Discussions",
+    "tabArchived": "Archivées",
+    "tabRequests": "Demandes",
+    "dmRequestSubtitle": "Veut vous envoyer un message",
+    "groupInviteSubtitle": "Vous a invité dans un groupe",
+    "acceptRequest": "Accepter",
+    "declineRequest": "Refuser",
+    "noRequests": "Aucune demande en attente",
+    "groupLabel": "Groupe"
   },
   "aiHub": {
     "title": "Hub IA",

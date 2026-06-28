@@ -192,6 +192,8 @@
     "themeChanged": "Đã chuyển sang giao diện {theme}",
     "archived": "Tin nhắn đã lưu trữ",
     "archivedSubtitle": "Xem các cuộc trò chuyện đã ẩn",
+    "blockedChats": "Tin nhắn bị chặn",
+    "blockedChatsSubtitle": "Quản lý các cuộc trò chuyện đã chặn",
     "explore": "Khám phá cộng đồng",
     "exploreSubtitle": "Tìm và tham gia các kênh công khai",
     "notifications": "Thông báo",
@@ -669,7 +671,16 @@
     "mute30min": "30 phút",
     "mute1hour": "1 giờ",
     "mute24hours": "24 giờ",
-    "muteForever": "Cho đến khi tôi bật lại"
+    "muteForever": "Cho đến khi tôi bật lại",
+    "tabChats": "Đoạn chat",
+    "tabArchived": "Lưu trữ",
+    "tabRequests": "Người lạ",
+    "dmRequestSubtitle": "Muốn nhắn tin với bạn",
+    "groupInviteSubtitle": "Đã mời bạn vào nhóm",
+    "acceptRequest": "Chấp nhận",
+    "declineRequest": "Từ chối",
+    "noRequests": "Không có yêu cầu đang chờ",
+    "groupLabel": "Nhóm"
   },
   "aiHub": {
     "title": "Trung tâm AI",
