@@ -97,10 +97,38 @@ export class UsersController {
   }
 
   @Get('search')
-  @ApiOperation({ summary: 'Search users by display name or email' })
+  @ApiOperation({
+    summary: 'Search users by display name, email, or exact phone',
+  })
   @ApiQuery({ name: 'q', required: false, description: 'Search query' })
-  search(@Query('q') query: string) {
-    return this.usersService.findBySearchQuery(query ?? '');
+  async search(@Query('q') query: string) {
+    const { users, matchedBy } = await this.usersService.findBySearchQuery(
+      query ?? '',
+    );
+
+    const results = users.map((user) => {
+      const doc = user.toObject();
+      const result: any = {
+        _id: doc._id,
+        id: doc._id,
+        email: doc.email,
+        displayName: doc.displayName,
+        avatarUrl: doc.avatarUrl ?? '',
+        bio: doc.bio ?? '',
+        isVerified: doc.isVerified ?? false,
+      };
+
+      // Only surface phoneNumber when the match WAS by phone, so the FE can
+      // highlight it. Never leak it on name/email searches.
+      if (matchedBy === 'phone') {
+        result.phoneNumber = doc.phoneNumber;
+        result.matchedBy = 'phone';
+      }
+
+      return result;
+    });
+
+    return { results, matchedBy };
   }
 
   @Post('block/:targetId')

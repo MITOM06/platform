@@ -533,7 +533,10 @@ class AppLocalizationsVi extends AppLocalizations {
   String get valSelectMembers => 'Chọn ít nhất 2 thành viên';
 
   @override
-  String get searchUsers => 'Tìm theo tên hoặc email';
+  String get searchUsers => 'Tìm theo tên, email hoặc SĐT';
+
+  @override
+  String get phoneSearchHint => 'Nhập đầy đủ số điện thoại để tìm kiếm';
 
   @override
   String get groupInfo => 'Thông tin nhóm';

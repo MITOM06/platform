@@ -343,7 +343,7 @@
     "removeFriend": "Xóa bạn",
     "accept": "Chấp nhận",
     "decline": "Từ chối",
-    "searchPlaceholder": "Tìm kiếm qua Email hoặc Tên...",
+    "searchPlaceholder": "Tìm theo tên, email hoặc số điện thoại đầy đủ...",
     "searching": "Đang tìm kiếm...",
     "noSearchResults": "Không tìm thấy kết quả nào",
     "searchPrompt": "Nhập từ khóa để tìm kiếm người dùng",
@@ -353,7 +353,8 @@
     "acceptRequestSuccess": "Đã chấp nhận lời mời",
     "acceptRequestError": "Không thể chấp nhận lời mời",
     "removeFriendSuccess": "Đã xóa bạn bè/hủy lời mời",
-    "removeFriendError": "Không thể thực hiện hành động này"
+    "removeFriendError": "Không thể thực hiện hành động này",
+    "phoneSearchHint": "Nhập đầy đủ số điện thoại để tìm kiếm"
   },
   "conversations": {
     "selectPrompt": "Chọn một cuộc trò chuyện để bắt đầu"
@@ -1307,6 +1308,8 @@
     "empty": "Chưa có thông báo nào",
     "markAllRead": "Đánh dấu tất cả đã đọc",
     "accept": "Chấp nhận",
-    "decline": "Từ chối"
+    "decline": "Từ chối",
+    "phoneSetupAction": "Thêm số điện thoại →",
+    "passwordSetupAction": "Đặt mật khẩu ngay →"
   }
 }

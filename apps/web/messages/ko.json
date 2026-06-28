@@ -343,7 +343,7 @@
     "removeFriend": "친구 삭제",
     "accept": "수락",
     "decline": "거절",
-    "searchPlaceholder": "이메일 또는 이름으로 검색...",
+    "searchPlaceholder": "이름, 이메일 또는 전체 전화번호로 검색...",
     "searching": "검색 중...",
     "noSearchResults": "결과가 없습니다",
     "searchPrompt": "사용자를 검색할 키워드를 입력하세요",
@@ -353,7 +353,8 @@
     "acceptRequestSuccess": "친구 요청을 수락했습니다",
     "acceptRequestError": "친구 요청을 수락할 수 없습니다",
     "removeFriendSuccess": "친구를 삭제/요청을 취소했습니다",
-    "removeFriendError": "작업을 완료할 수 없습니다"
+    "removeFriendError": "작업을 완료할 수 없습니다",
+    "phoneSearchHint": "검색하려면 전체 전화번호를 입력하세요"
   },
   "conversations": {
     "selectPrompt": "시작할 대화를 선택하세요"
@@ -1293,6 +1294,8 @@
     "empty": "아직 알림이 없습니다",
     "markAllRead": "모두 읽음으로 표시",
     "accept": "수락",
-    "decline": "거절"
+    "decline": "거절",
+    "phoneSetupAction": "전화번호 추가 →",
+    "passwordSetupAction": "지금 비밀번호 설정 →"
   }
 }

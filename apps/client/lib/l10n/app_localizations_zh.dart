@@ -526,7 +526,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String get valSelectMembers => '请至少选择2位成员';
 
   @override
-  String get searchUsers => '按姓名或邮箱搜索';
+  String get searchUsers => '按姓名、邮箱或电话搜索';
+
+  @override
+  String get phoneSearchHint => '请输入完整电话号码进行搜索';
 
   @override
   String get groupInfo => '群组信息';

@@ -527,7 +527,10 @@ class AppLocalizationsJa extends AppLocalizations {
   String get valSelectMembers => '2人以上のメンバーを選択してください';
 
   @override
-  String get searchUsers => '名前またはメールで検索';
+  String get searchUsers => '名前・メール・電話番号で検索';
+
+  @override
+  String get phoneSearchHint => '検索するには完全な電話番号を入力してください';
 
   @override
   String get groupInfo => 'グループ情報';

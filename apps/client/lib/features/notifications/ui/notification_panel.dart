@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import '../../../core/l10n/l10n_ext.dart';
 import '../../../core/theme/app_theme.dart';
@@ -159,6 +160,26 @@ class _NotificationTileState extends ConsumerState<_NotificationTile> {
         () => ref.read(friendsRepositoryProvider).removeFriend(id));
   }
 
+  /// Setup nudges (PHONE_SETUP / PASSWORD_SETUP) deep-link to the screen where
+  /// the user resolves them. Closes the bottom sheet, marks read, navigates.
+  void _onTap() {
+    final n = widget.notification;
+    String? route;
+    if (n.type == 'PHONE_SETUP') {
+      route = '/edit-profile';
+    } else if (n.type == 'PASSWORD_SETUP') {
+      route = '/settings/security';
+    }
+
+    if (n.isUnread) {
+      ref.read(notificationsProvider.notifier).markRead(n.id);
+    }
+    if (route != null) {
+      Navigator.of(context).pop(); // dismiss the bottom sheet first
+      context.push(route);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final n = widget.notification;
@@ -171,8 +192,10 @@ class _NotificationTileState extends ConsumerState<_NotificationTile> {
       child: ListTile(
         contentPadding:
             const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-        onTap: n.isUnread
-            ? () => ref.read(notificationsProvider.notifier).markRead(n.id)
+        onTap: (n.isUnread ||
+                n.type == 'PHONE_SETUP' ||
+                n.type == 'PASSWORD_SETUP')
+            ? _onTap
             : null,
         leading: _Avatar(notification: n),
         title: Text(
@@ -277,6 +300,8 @@ class _Avatar extends StatelessWidget {
         return Icons.people_alt_rounded;
       case 'PASSWORD_SETUP':
         return Icons.shield_outlined;
+      case 'PHONE_SETUP':
+        return Icons.phone_android_outlined;
       default:
         return Icons.info_outline_rounded;
     }

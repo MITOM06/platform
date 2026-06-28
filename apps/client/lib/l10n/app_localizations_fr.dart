@@ -544,7 +544,11 @@ class AppLocalizationsFr extends AppLocalizations {
   String get valSelectMembers => 'Sélectionnez au moins 2 membres';
 
   @override
-  String get searchUsers => 'Rechercher par nom ou e-mail';
+  String get searchUsers => 'Rechercher par nom, e-mail ou téléphone';
+
+  @override
+  String get phoneSearchHint =>
+      'Saisissez le numéro de téléphone complet pour rechercher';
 
   @override
   String get groupInfo => 'Infos du groupe';

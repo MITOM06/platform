@@ -343,7 +343,7 @@
     "removeFriend": "删除好友",
     "accept": "接受",
     "decline": "拒绝",
-    "searchPlaceholder": "按邮箱或名称搜索...",
+    "searchPlaceholder": "按姓名、邮箱或完整电话号码搜索...",
     "searching": "搜索中...",
     "noSearchResults": "未找到结果",
     "searchPrompt": "输入关键词以搜索用户",
@@ -353,7 +353,8 @@
     "acceptRequestSuccess": "已接受好友请求",
     "acceptRequestError": "无法接受好友请求",
     "removeFriendSuccess": "已删除好友/取消请求",
-    "removeFriendError": "无法完成此操作"
+    "removeFriendError": "无法完成此操作",
+    "phoneSearchHint": "请输入完整电话号码进行搜索"
   },
   "conversations": {
     "selectPrompt": "选择一个会话开始聊天"
@@ -1293,6 +1294,8 @@
     "empty": "暂无通知",
     "markAllRead": "全部标为已读",
     "accept": "接受",
-    "decline": "拒绝"
+    "decline": "拒绝",
+    "phoneSetupAction": "添加电话号码 →",
+    "passwordSetupAction": "立即设置密码 →"
   }
 }

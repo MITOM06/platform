@@ -11,6 +11,7 @@ import { UsersService } from '../users/users.service';
 import { MailService } from '../Email/mail.service';
 import { OidcService } from './oidc/oidc.service';
 import { SsoMappingService } from './oidc/sso-mapping.service';
+import { NotificationsService } from '../notifications/notifications.service';
 
 describe('AuthService.signAccessToken — RBAC claims', () => {
   let service: AuthService;
@@ -29,6 +30,7 @@ describe('AuthService.signAccessToken — RBAC claims', () => {
         { provide: MailService, useValue: {} },
         { provide: OidcService, useValue: {} },
         { provide: SsoMappingService, useValue: {} },
+        { provide: NotificationsService, useValue: {} },
         {
           provide: ConfigService,
           useValue: { get: (k: string) => (k === 'JWT_ACCESS_SECRET' ? 'secret' : undefined) },

@@ -343,7 +343,7 @@
     "removeFriend": "友達を削除",
     "accept": "承認",
     "decline": "拒否",
-    "searchPlaceholder": "メールアドレスまたは名前で検索...",
+    "searchPlaceholder": "名前、メール、または完全な電話番号で検索...",
     "searching": "検索中...",
     "noSearchResults": "結果が見つかりません",
     "searchPrompt": "ユーザーを検索するキーワードを入力してください",
@@ -353,7 +353,8 @@
     "acceptRequestSuccess": "友達リクエストを承認しました",
     "acceptRequestError": "友達リクエストを承認できませんでした",
     "removeFriendSuccess": "友達を削除/リクエストをキャンセルしました",
-    "removeFriendError": "操作を完了できませんでした"
+    "removeFriendError": "操作を完了できませんでした",
+    "phoneSearchHint": "検索するには完全な電話番号を入力してください"
   },
   "conversations": {
     "selectPrompt": "開始する会話を選択してください"
@@ -1293,6 +1294,8 @@
     "empty": "通知はまだありません",
     "markAllRead": "すべて既読にする",
     "accept": "承認",
-    "decline": "拒否"
+    "decline": "拒否",
+    "phoneSetupAction": "電話番号を追加 →",
+    "passwordSetupAction": "今すぐパスワードを設定 →"
   }
 }

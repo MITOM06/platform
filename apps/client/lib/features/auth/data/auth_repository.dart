@@ -151,11 +151,19 @@ class AuthRepository {
     return UserModel.fromJson(response.data as Map<String, dynamic>);
   }
 
-  /// Tìm kiếm user theo email hoặc displayName — dùng khi tạo conversation
+  /// Search users by name/email (partial) or exact phone number.
+  ///
+  /// The endpoint returns `{ results, matchedBy }`. Phone matches carry a
+  /// `phoneNumber` + `matchedBy: 'phone'` on each result so the UI can
+  /// highlight the matched number; name/email matches never expose phones.
   Future<List<UserModel>> searchUsers(String query) async {
-    final response = await _dio.get('/api/users/search', queryParameters: {'q': query});
-    final list = response.data as List;
-    return list.map((e) => UserModel.fromJson(e as Map<String, dynamic>)).toList();
+    final response =
+        await _dio.get('/api/users/search', queryParameters: {'q': query});
+    final data = response.data as Map<String, dynamic>;
+    final results = (data['results'] as List?) ?? const [];
+    return results
+        .map((e) => UserModel.fromJson(e as Map<String, dynamic>))
+        .toList();
   }
 
   Future<UserModel> updateProfile({

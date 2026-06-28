@@ -7,7 +7,8 @@ export type NotificationType =
   | 'FRIEND_REQUEST'
   | 'FRIEND_ACCEPTED'
   | 'SYSTEM'
-  | 'PASSWORD_SETUP';
+  | 'PASSWORD_SETUP'
+  | 'PHONE_SETUP';
 
 @Schema({ timestamps: true })
 export class Notification {

@@ -29,6 +29,11 @@ class UserModel {
   /// Password & Security screen: set-first-password vs. change-password.
   final bool hasPassword;
 
+  /// How a user-search result was matched: `'phone'` | `'name_email'`. Only
+  /// present on `/api/users/search` results matched by exact phone number;
+  /// drives the highlighted phone badge in friend search. Null otherwise.
+  final String? matchedBy;
+
   const UserModel({
     required this.id,
     required this.email,
@@ -46,6 +51,7 @@ class UserModel {
     this.showPhoneNumber,
     this.showGender,
     this.hasPassword = false,
+    this.matchedBy,
   });
 
   factory UserModel.fromJson(Map<String, dynamic> json) {
@@ -69,6 +75,7 @@ class UserModel {
       showPhoneNumber: json['showPhoneNumber'] as bool?,
       showGender: json['showGender'] as bool?,
       hasPassword: json['hasPassword'] as bool? ?? false,
+      matchedBy: json['matchedBy'] as String?,
     );
   }
 

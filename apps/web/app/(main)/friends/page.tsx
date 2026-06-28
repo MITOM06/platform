@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { ArrowLeft, Search, UserPlus, UserMinus, Check, X, Users, UserCheck } from 'lucide-react'
+import { ArrowLeft, Search, UserPlus, UserMinus, Check, X, Users, UserCheck, Phone } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { useFriends, useFriendRequests, useFriendActions } from '@/lib/hooks/use-friends'
 import { authService } from '@/lib/api/auth'
@@ -32,7 +32,7 @@ export default function FriendsPage() {
     const doSearch = async () => {
       setSearching(true)
       try {
-        const results = await authService.searchUsers(debouncedSearch)
+        const { results } = await authService.searchUsers(debouncedSearch)
         setSearchResults(results)
       } catch {
         setSearchResults([])
@@ -75,6 +75,12 @@ export default function FriendsPage() {
             <div className="flex-1 min-w-0">
               <h3 className="font-semibold text-sm truncate">{user.displayName}</h3>
               <p className="text-xs text-muted-foreground truncate">{user.email}</p>
+              {user.matchedBy === 'phone' && user.phoneNumber && (
+                <div className="mt-1 inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-pon-cyan/15 border border-pon-cyan/30 text-xs text-pon-cyan font-mono">
+                  <Phone className="size-3" />
+                  {user.phoneNumber}
+                </div>
+              )}
             </div>
             <div className="flex items-center gap-2">{actionButtons(user)}</div>
           </div>
@@ -170,14 +176,22 @@ export default function FriendsPage() {
           </TabsContent>
 
           <TabsContent value="search" className="mt-0 space-y-6">
-            <div className="relative max-w-md">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
-              <Input
-                placeholder={t('searchPlaceholder')}
-                className="pl-9 bg-card/50"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
+            <div className="max-w-md">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
+                <Input
+                  placeholder={t('searchPlaceholder')}
+                  className="pl-9 bg-card/50"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
+              </div>
+              {/* Looks like a partial phone number (< 7 digits) → hint to type the full number. */}
+              {/^\+?\d{1,6}$/.test(searchQuery.replace(/\s/g, '')) && (
+                <p className="text-xs text-muted-foreground mt-1 px-1">
+                  {t('phoneSearchHint')}
+                </p>
+              )}
             </div>
 
             {searching ? (

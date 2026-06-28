@@ -98,7 +98,7 @@ export function GroupSettingsDrawer({ conversation, currentUserId, open, onClose
     setSearchQuery(q)
     if (!q.trim()) { setSearchResults([]); return }
     try {
-      const results = await authService.searchUsers(q.trim())
+      const { results } = await authService.searchUsers(q.trim())
       setSearchResults(results.filter((u) => {
         const uid = u._id ?? u.id ?? ''
         return !conversation.participants.includes(uid)

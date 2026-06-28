@@ -533,7 +533,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get valSelectMembers => 'Select at least 2 members';
 
   @override
-  String get searchUsers => 'Search by name or email';
+  String get searchUsers => 'Search by name, email or phone';
+
+  @override
+  String get phoneSearchHint => 'Enter the full phone number to search';
 
   @override
   String get groupInfo => 'Group info';

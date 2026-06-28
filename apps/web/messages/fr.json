@@ -343,7 +343,7 @@
     "removeFriend": "Retirer l'ami",
     "accept": "Accepter",
     "decline": "Refuser",
-    "searchPlaceholder": "Rechercher par e-mail ou nom...",
+    "searchPlaceholder": "Rechercher par nom, e-mail ou numéro de téléphone complet...",
     "searching": "Recherche...",
     "noSearchResults": "Aucun résultat trouvé",
     "searchPrompt": "Saisissez un mot-clé pour rechercher des utilisateurs",
@@ -353,7 +353,8 @@
     "acceptRequestSuccess": "Demande d'ami acceptée",
     "acceptRequestError": "Impossible d'accepter la demande d'ami",
     "removeFriendSuccess": "Ami supprimé / demande annulée",
-    "removeFriendError": "Impossible de terminer l'action"
+    "removeFriendError": "Impossible de terminer l'action",
+    "phoneSearchHint": "Saisissez le numéro de téléphone complet pour rechercher"
   },
   "conversations": {
     "selectPrompt": "Sélectionnez une conversation pour commencer"
@@ -1293,6 +1294,8 @@
     "empty": "Aucune notification pour le moment",
     "markAllRead": "Tout marquer comme lu",
     "accept": "Accepter",
-    "decline": "Refuser"
+    "decline": "Refuser",
+    "phoneSetupAction": "Ajouter un numéro de téléphone →",
+    "passwordSetupAction": "Définir un mot de passe maintenant →"
   }
 }

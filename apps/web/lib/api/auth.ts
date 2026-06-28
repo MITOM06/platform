@@ -2,6 +2,7 @@ import { authApi } from './axios'
 import type { AuthUser } from '@/lib/store/auth.store'
 import type {
   UserSearchResult,
+  UserSearchResponse,
   LoginRequest,
   RegisterRequest,
   VerifyOtpRequest,
@@ -102,8 +103,10 @@ export const authService = {
   logout: () =>
     authApi.post('/auth/logout').catch(() => {}),
 
-  searchUsers: (q: string) =>
-    authApi.get<UserSearchResult[]>('/api/users/search', { params: { q } }).then((r) => r.data),
+  searchUsers: (q: string): Promise<UserSearchResponse> =>
+    authApi
+      .get<UserSearchResponse>('/api/users/search', { params: { q } })
+      .then((r) => r.data),
 
   getMe: () =>
     authApi.get<UserProfile>('/api/users/me').then((r) => r.data),

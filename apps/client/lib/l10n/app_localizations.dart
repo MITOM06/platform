@@ -1125,8 +1125,14 @@ abstract class AppLocalizations {
   /// No description provided for @searchUsers.
   ///
   /// In en, this message translates to:
-  /// **'Search by name or email'**
+  /// **'Search by name, email or phone'**
   String get searchUsers;
+
+  /// No description provided for @phoneSearchHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter the full phone number to search'**
+  String get phoneSearchHint;
 
   /// No description provided for @groupInfo.
   ///

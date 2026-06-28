@@ -1,7 +1,8 @@
 'use client'
 
 import { useState } from 'react'
-import { Bell, UserPlus, Users, ShieldAlert, Info } from 'lucide-react'
+import Link from 'next/link'
+import { Bell, UserPlus, Users, ShieldAlert, Smartphone, Info } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { Button } from '@/components/ui/button'
 import {
@@ -45,6 +46,8 @@ function NotifIcon({ type }: { type: AppNotification['type'] }) {
       return <Users className="size-4 text-green-500" />
     case 'PASSWORD_SETUP':
       return <ShieldAlert className="size-4 text-amber-500" />
+    case 'PHONE_SETUP':
+      return <Smartphone className="size-4 text-amber-500" />
     default:
       return <Info className="size-4 text-muted-foreground" />
   }
@@ -98,9 +101,37 @@ function NotificationRow({
 
       <div className="flex-1 min-w-0">
         <p className="text-sm leading-snug line-clamp-2">{n.title}</p>
+        {(n.type === 'PHONE_SETUP' || n.type === 'PASSWORD_SETUP') && n.body && (
+          <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{n.body}</p>
+        )}
         <p className="text-xs text-muted-foreground mt-0.5">
           {relativeTime(n.createdAt)}
         </p>
+
+        {n.type === 'PHONE_SETUP' && (
+          <Link
+            href="/profile/edit"
+            className="mt-1.5 text-xs text-pon-cyan hover:underline inline-block"
+            onClick={(e) => {
+              e.stopPropagation()
+              onMarkRead(n._id)
+            }}
+          >
+            {t('phoneSetupAction')}
+          </Link>
+        )}
+        {n.type === 'PASSWORD_SETUP' && (
+          <Link
+            href="/settings/security"
+            className="mt-1.5 text-xs text-pon-cyan hover:underline inline-block"
+            onClick={(e) => {
+              e.stopPropagation()
+              onMarkRead(n._id)
+            }}
+          >
+            {t('passwordSetupAction')}
+          </Link>
+        )}
 
         {n.type === 'FRIEND_REQUEST' && n.relatedEntityId && (
           <div className="flex gap-2 mt-2">

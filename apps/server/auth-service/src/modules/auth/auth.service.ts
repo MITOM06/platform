@@ -23,6 +23,7 @@ import { Response } from 'express';
 import { AuthCode } from '../../common/auth-code.enum';
 import { OidcService } from './oidc/oidc.service';
 import { SsoMappingService } from './oidc/sso-mapping.service';
+import { NotificationsService } from '../notifications/notifications.service';
 
 @Injectable()
 export class AuthService {
@@ -35,8 +36,32 @@ export class AuthService {
     private readonly configService: ConfigService,
     private readonly oidc: OidcService,
     private readonly ssoMapping: SsoMappingService,
+    private readonly notificationsService: NotificationsService,
     @Inject(REDIS_CLIENT) private readonly redis: Redis,
   ) {}
+
+  /**
+   * Fire-and-forget setup-notification nudge after a successful login.
+   * Resolves whether a local password exists, then asks the notifications
+   * service to (idempotently) create PASSWORD_SETUP / PHONE_SETUP nudges.
+   * Never awaited by callers and never throws — login latency/flow is unaffected.
+   */
+  private triggerSetupNotifications(
+    userId: string,
+    phoneVerified: boolean,
+  ): void {
+    void this.usersService
+      .getHasPassword(userId)
+      .then((hasPassword) =>
+        this.notificationsService.createSetupNotificationsIfNeeded(userId, {
+          hasPassword,
+          phoneVerified,
+        }),
+      )
+      .catch(() => {
+        /* silent — a notification failure must never break login */
+      });
+  }
 
   // Cryptographically secure 6-digit OTP (100000–999999).
   private generateOtp(): string {
@@ -256,6 +281,12 @@ export class AuthService {
     );
     await this.redis.del(`failed_attempts:${dto.email}`);
 
+    // Fire-and-forget: nudge the user to set a password / verify their phone.
+    this.triggerSetupNotifications(
+      user._id.toString(),
+      user.phoneVerified ?? false,
+    );
+
     return {
       code: AuthCode.LOGIN_SUCCESS,
       accessToken,
@@ -408,6 +439,11 @@ export class AuthService {
 
     // ✅ IMPROVEMENT: Trả về thông tin user
     const user = await this.usersService.findById(userId);
+
+    if (user) {
+      // Fire-and-forget: nudge the user to set a password / verify their phone.
+      this.triggerSetupNotifications(userId, user.phoneVerified ?? false);
+    }
 
     return {
       userId,

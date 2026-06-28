@@ -343,7 +343,7 @@
     "removeFriend": "Eliminar amigo",
     "accept": "Aceptar",
     "decline": "Rechazar",
-    "searchPlaceholder": "Buscar por correo o nombre...",
+    "searchPlaceholder": "Buscar por nombre, correo o número de teléfono completo...",
     "searching": "Buscando...",
     "noSearchResults": "No se encontraron resultados",
     "searchPrompt": "Introduzca una palabra clave para buscar usuarios",
@@ -353,7 +353,8 @@
     "acceptRequestSuccess": "Solicitud de amistad aceptada",
     "acceptRequestError": "No se pudo aceptar la solicitud de amistad",
     "removeFriendSuccess": "Amigo eliminado / solicitud cancelada",
-    "removeFriendError": "No se pudo completar la acción"
+    "removeFriendError": "No se pudo completar la acción",
+    "phoneSearchHint": "Introduce el número de teléfono completo para buscar"
   },
   "conversations": {
     "selectPrompt": "Seleccione una conversación para empezar"
@@ -1293,6 +1294,8 @@
     "empty": "Aún no hay notificaciones",
     "markAllRead": "Marcar todo como leído",
     "accept": "Aceptar",
-    "decline": "Rechazar"
+    "decline": "Rechazar",
+    "phoneSetupAction": "Agregar número de teléfono →",
+    "passwordSetupAction": "Establecer una contraseña ahora →"
   }
 }

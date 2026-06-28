@@ -527,7 +527,10 @@ class AppLocalizationsKo extends AppLocalizations {
   String get valSelectMembers => '멤버를 2명 이상 선택하세요';
 
   @override
-  String get searchUsers => '이름 또는 이메일로 검색';
+  String get searchUsers => '이름, 이메일 또는 전화번호로 검색';
+
+  @override
+  String get phoneSearchHint => '검색하려면 전체 전화번호를 입력하세요';
 
   @override
   String get groupInfo => '그룹 정보';

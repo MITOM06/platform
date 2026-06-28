@@ -153,21 +153,66 @@ export class UsersService {
     });
   }
 
-  async findBySearchQuery(query: string): Promise<UserDocument[]> {
+  /**
+   * Search users by name/email (partial match) OR by phone number (exact only).
+   *
+   * - If the query looks like a phone number (only +, digits, separators, and
+   *   ≥ 7 digits): exact match on the normalized E.164 `phoneNumber`. Only
+   *   returns a user that is active AND has `phoneVerified` AND `showPhoneNumber`.
+   *   Result is tagged `matchedBy: 'phone'` so the FE can highlight the number.
+   *   Vietnamese local numbers (`0xxxxxxxxx`) are normalized to `+84xxxxxxxxx`.
+   * - Otherwise: partial, case-insensitive match on `displayName`/`email`.
+   *   `phoneNumber` is NEVER included in name/email results (privacy — must
+   *   never leak someone else's phone via a name search).
+   *
+   * Returns no users for an empty query (avoid leaking the whole user list).
+   */
+  async findBySearchQuery(
+    query: string,
+  ): Promise<{ users: UserDocument[]; matchedBy: 'phone' | 'name_email' }> {
     const trimmed = (query ?? '').trim();
-    // Empty query: trả về rỗng thay vì match-all (tránh leak toàn bộ user list)
-    if (!trimmed) return [];
-    // Escape regex metachars — email chứa '.', '+' và input '[' sẽ làm
-    // new RegExp() throw (500) hoặc match sai nếu không escape.
+    if (!trimmed) return { users: [], matchedBy: 'name_email' };
+
+    // Phone detection: only +, digits and separators, with ≥ 7 digits.
+    const digitsOnly = trimmed.replace(/[\s\-().]/g, '');
+    const isPhone = /^\+?\d{7,15}$/.test(digitsOnly);
+
+    if (isPhone) {
+      // Normalize to E.164. Vietnamese local `0xxxxxxxxx` → `+84xxxxxxxxx`.
+      let e164 = digitsOnly;
+      if (e164.startsWith('0')) e164 = '+84' + e164.slice(1);
+      else if (!e164.startsWith('+')) e164 = '+' + e164;
+
+      const user = await this.userModel
+        .findOne({
+          phoneNumber: e164,
+          phoneVerified: true,
+          showPhoneNumber: true,
+          status: 'active',
+        })
+        .select('-trustedDevices -socialLinks -fcmTokens')
+        .exec();
+
+      return { users: user ? [user] : [], matchedBy: 'phone' };
+    }
+
+    // Name / email search (partial, case-insensitive). Escape regex metachars —
+    // email contains '.', '+' and input '[' would make new RegExp() throw (500)
+    // or match incorrectly if not escaped.
     const escaped = trimmed.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     const pattern = new RegExp(escaped, 'i');
-    return this.userModel
+    const users = await this.userModel
       .find({
         $or: [{ email: pattern }, { displayName: pattern }],
+        status: 'active',
       })
       .limit(10)
-      .select('-password')
+      // phoneNumber excluded from name/email search → never leak another
+      // user's phone via a name search.
+      .select('-password -trustedDevices -socialLinks -fcmTokens -phoneNumber')
       .exec();
+
+    return { users, matchedBy: 'name_email' };
   }
 
   async updateProfile(

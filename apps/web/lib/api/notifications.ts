@@ -5,6 +5,7 @@ export type AppNotificationType =
   | 'FRIEND_ACCEPTED'
   | 'SYSTEM'
   | 'PASSWORD_SETUP'
+  | 'PHONE_SETUP'
 
 export interface AppNotification {
   _id: string

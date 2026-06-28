@@ -152,6 +152,18 @@ export interface UserSearchResult {
   email: string
   displayName: string
   avatarUrl: string | null
+  bio?: string
+  isVerified?: boolean
+  /** Only present when the user was matched by exact phone number. */
+  phoneNumber?: string
+  /** How this result was matched. 'phone' results carry phoneNumber. */
+  matchedBy?: 'phone' | 'name_email'
+}
+
+/** Response shape of `GET /api/users/search`. */
+export interface UserSearchResponse {
+  results: UserSearchResult[]
+  matchedBy: 'phone' | 'name_email'
 }
 
 export interface UserStatus {

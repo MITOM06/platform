@@ -343,7 +343,7 @@
     "removeFriend": "Remove Friend",
     "accept": "Accept",
     "decline": "Decline",
-    "searchPlaceholder": "Search by email or name...",
+    "searchPlaceholder": "Search by name, email, or full phone number...",
     "searching": "Searching...",
     "noSearchResults": "No results found",
     "searchPrompt": "Enter a keyword to search for users",
@@ -353,7 +353,8 @@
     "acceptRequestSuccess": "Friend request accepted",
     "acceptRequestError": "Failed to accept friend request",
     "removeFriendSuccess": "Friend removed / request cancelled",
-    "removeFriendError": "Action could not be completed"
+    "removeFriendError": "Action could not be completed",
+    "phoneSearchHint": "Enter the full phone number to search"
   },
   "conversations": {
     "selectPrompt": "Select a conversation to start"
@@ -1307,6 +1308,8 @@
     "empty": "No notifications yet",
     "markAllRead": "Mark all as read",
     "accept": "Accept",
-    "decline": "Decline"
+    "decline": "Decline",
+    "phoneSetupAction": "Add phone number →",
+    "passwordSetupAction": "Set a password now →"
   }
 }
