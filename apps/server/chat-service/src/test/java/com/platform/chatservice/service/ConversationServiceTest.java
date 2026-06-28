@@ -255,10 +255,17 @@ class ConversationServiceTest {
         .thenAnswer(inv -> inv.getArgument(0));
     when(messageRepository.countUnread(CONV_ID, USER_ID)).thenReturn(0L);
 
-    ConversationResponse response = conversationService.muteConversation(USER_ID, CONV_ID, 3600L);
+    long durationSeconds = 3600L;
+    long beforeCall = System.currentTimeMillis();
+    ConversationResponse response =
+        conversationService.muteConversation(USER_ID, CONV_ID, durationSeconds);
+    long slack = 2_000L; // 2-second slack for test execution time
 
     assertThat(response.isMuted()).isTrue();
     assertThat(response.muteExpiresAt()).isNotNull();
+    assertThat(response.muteExpiresAt()).isGreaterThan(System.currentTimeMillis());
+    assertThat(response.muteExpiresAt())
+        .isLessThanOrEqualTo(beforeCall + durationSeconds * 1_000L + slack);
   }
 
   @Test

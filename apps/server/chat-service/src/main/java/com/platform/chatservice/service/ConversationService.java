@@ -416,16 +416,13 @@ public class ConversationService {
   public PageResponse<ConversationResponse> listBlockedConversations(
       String userId, Pageable pageable) {
     Page<Conversation> page =
-        conversationRepository.findByParticipantsContainingOrderByLastMessageAtDesc(
-            userId, pageable);
-    List<Conversation> blocked =
-        page.getContent().stream()
-            .filter(c -> c.getBlockedBy() != null && c.getBlockedBy().contains(userId))
-            .toList();
-    List<String> conversationIds = blocked.stream().map(Conversation::getId).toList();
+        conversationRepository
+            .findByParticipantsContainingAndBlockedByContainingOrderByLastMessageAtDesc(
+                userId, userId, pageable);
+    List<String> conversationIds = page.getContent().stream().map(Conversation::getId).toList();
     Map<String, Long> unreadCounts = getUnreadCounts(conversationIds, userId);
     List<ConversationResponse> content =
-        blocked.stream()
+        page.getContent().stream()
             .map(c -> toResponse(c, userId, unreadCounts.getOrDefault(c.getId(), 0L)))
             .toList();
     return new PageResponse<>(content, page.getNumber(), page.getSize(), page.getTotalElements());

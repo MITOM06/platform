@@ -13,6 +13,11 @@ public interface ConversationRepository extends MongoRepository<Conversation, St
   Page<Conversation> findByParticipantsContainingOrderByLastMessageAtDesc(
       String userId, Pageable pageable);
 
+  Page<Conversation> findByParticipantsContainingAndBlockedByContainingOrderByLastMessageAtDesc(
+      String participant, String blockedBy, Pageable pageable);
+
+  long countByParticipantsContainingAndBlockedByContaining(String participant, String blockedBy);
+
   @Query("{ 'participants': { $all: ?0, $size: 2 } }")
   Optional<Conversation> findOneOnOneConversation(List<String> participants);
 
