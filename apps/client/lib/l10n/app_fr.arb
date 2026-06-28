@@ -1011,5 +1011,16 @@
   "helpAccountSecurityQ3": "Comment bloquer un utilisateur ?",
   "helpAccountSecurityA3": "Ouvrez la conversation avec l'utilisateur, touchez l'icône Paramètres, faites défiler jusqu'à Confidentialité et assistance, puis sélectionnez « Bloquer l'utilisateur ».",
   "helpAccountSecurityQ4": "Comment supprimer l'historique des messages ?",
-  "helpAccountSecurityA4": "Ouvrez la conversation, touchez Paramètres, accédez à Confidentialité et assistance, puis sélectionnez « Effacer l'historique ». Cela supprime uniquement l'historique de votre appareil."
+  "helpAccountSecurityA4": "Ouvrez la conversation, touchez Paramètres, accédez à Confidentialité et assistance, puis sélectionnez « Effacer l'historique ». Cela supprime uniquement l'historique de votre appareil.",
+  "blockedChats": "Bloqués",
+  "noBlockedChats": "Aucune conversation bloquée",
+  "blockAndHide": "Bloquer et masquer",
+  "unblockAndRestore": "Débloquer",
+  "callBlocked": "Cet utilisateur ne souhaite pas être contacté",
+  "mute15min": "15 minutes",
+  "mute30min": "30 minutes",
+  "mute1hour": "1 heure",
+  "mute24hours": "24 heures",
+  "muteForever": "Jusqu'à ce que je le réactive",
+  "profileBlockedByOwner": "Le profil de cet utilisateur n'est pas disponible"
 }

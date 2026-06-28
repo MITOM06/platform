@@ -1011,5 +1011,16 @@
   "helpAccountSecurityQ3": "Làm thế nào để chặn một người dùng?",
   "helpAccountSecurityA3": "Mở cuộc trò chuyện với người dùng, nhấn vào biểu tượng Cài đặt, cuộn đến Quyền riêng tư & Hỗ trợ và chọn 'Chặn người dùng'.",
   "helpAccountSecurityQ4": "Làm thế nào để xóa lịch sử tin nhắn?",
-  "helpAccountSecurityA4": "Mở cuộc trò chuyện, nhấn Cài đặt, vào Quyền riêng tư & Hỗ trợ và chọn 'Xóa lịch sử'. Thao tác này chỉ xóa lịch sử khỏi thiết bị của bạn."
+  "helpAccountSecurityA4": "Mở cuộc trò chuyện, nhấn Cài đặt, vào Quyền riêng tư & Hỗ trợ và chọn 'Xóa lịch sử'. Thao tác này chỉ xóa lịch sử khỏi thiết bị của bạn.",
+  "blockedChats": "Đã chặn",
+  "noBlockedChats": "Không có cuộc trò chuyện bị chặn",
+  "blockAndHide": "Chặn và ẩn",
+  "unblockAndRestore": "Bỏ chặn",
+  "callBlocked": "Người dùng này không muốn được liên lạc",
+  "mute15min": "15 phút",
+  "mute30min": "30 phút",
+  "mute1hour": "1 giờ",
+  "mute24hours": "24 giờ",
+  "muteForever": "Cho đến khi tôi bật lại",
+  "profileBlockedByOwner": "Hồ sơ của người dùng này không khả dụng"
 }

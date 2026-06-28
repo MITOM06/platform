@@ -2811,4 +2811,37 @@ class AppLocalizationsJa extends AppLocalizations {
   @override
   String get helpAccountSecurityA4 =>
       '会話を開いて設定をタップし、プライバシーとサポートに進んで「履歴を消去」を選択します。これはお使いのデバイスから履歴を削除するだけです。';
+
+  @override
+  String get blockedChats => 'ブロック済み';
+
+  @override
+  String get noBlockedChats => 'ブロックした会話はありません';
+
+  @override
+  String get blockAndHide => 'ブロックして非表示';
+
+  @override
+  String get unblockAndRestore => 'ブロック解除';
+
+  @override
+  String get callBlocked => 'このユーザーは連絡を望んでいません';
+
+  @override
+  String get mute15min => '15 分';
+
+  @override
+  String get mute30min => '30 分';
+
+  @override
+  String get mute1hour => '1 時間';
+
+  @override
+  String get mute24hours => '24 時間';
+
+  @override
+  String get muteForever => '手動でオンにするまで';
+
+  @override
+  String get profileBlockedByOwner => 'このユーザーのプロフィールは表示できません';
 }

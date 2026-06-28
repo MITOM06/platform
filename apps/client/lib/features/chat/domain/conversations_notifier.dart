@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:math';
 import 'package:collection/collection.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart' show ScaffoldMessenger, SnackBar, Text;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import '../../../core/api/token_manager.dart';
@@ -108,12 +109,13 @@ class ConversationsNotifier extends _$ConversationsNotifier {
     }
   }
 
-  Future<void> toggleMuteConversation(String conversationId, bool isMuted) async {
+  Future<void> toggleMuteConversation(String conversationId, bool isMuted,
+      {int durationSeconds = -1}) async {
     final current = state.valueOrNull;
     if (current != null) {
       state = AsyncData(current.map((c) {
         if (c.id == conversationId) {
-          return c.copyWith(isMuted: isMuted);
+          return c.copyWith(isMuted: isMuted, clearMuteExpiresAt: !isMuted);
         }
         return c;
       }).toList());
@@ -121,10 +123,55 @@ class ConversationsNotifier extends _$ConversationsNotifier {
     try {
       final repo = ref.read(chatRepositoryProvider);
       if (isMuted) {
-        await repo.muteConversation(conversationId);
+        final updated = await repo.muteConversation(
+          conversationId,
+          durationSeconds: durationSeconds,
+        );
+        final latest = state.valueOrNull;
+        if (latest != null) {
+          state = AsyncData(latest.map((c) {
+            if (c.id == conversationId) {
+              return c.copyWith(
+                isMuted: updated.isMuted,
+                muteExpiresAt: updated.muteExpiresAt,
+              );
+            }
+            return c;
+          }).toList());
+        }
       } else {
         await repo.unmuteConversation(conversationId);
       }
+    } catch (_) {
+      await _silentRefetch();
+    }
+  }
+
+  /// Block a user and archive-block the conversation.
+  /// Auth-service block is handled by the caller (FriendsRepository.blockUser);
+  /// this method only tells chat-service to block-archive the conversation.
+  Future<void> blockAndArchiveConversation(String conversationId) async {
+    // Optimistic: remove from main list immediately
+    final current = state.valueOrNull;
+    if (current != null) {
+      state = AsyncData(
+          current.where((c) => c.id != conversationId).toList());
+    }
+    try {
+      await ref.read(chatRepositoryProvider).blockArchiveConversation(conversationId);
+      ref.invalidate(blockedConversationsProvider);
+    } catch (_) {
+      await _silentRefetch();
+    }
+  }
+
+  /// Unblock a user and restore the conversation from the Blocked section.
+  /// Auth-service unblock is handled by the caller (FriendsRepository.unblockUser).
+  Future<void> unblockAndRestoreConversation(String conversationId) async {
+    try {
+      await ref.read(chatRepositoryProvider).blockRestoreConversation(conversationId);
+      ref.invalidate(blockedConversationsProvider);
+      await _silentRefetch();
     } catch (_) {
       await _silentRefetch();
     }
@@ -190,6 +237,23 @@ class ConversationsNotifier extends _$ConversationsNotifier {
       // callId) are handled by GroupCallSignaling. Ignore them here so the
       // legacy 1-on-1 flow stays untouched.
       if (type == 'call-ring' || signal['callId'] != null) return;
+
+      // The callee has us blocked — notify the caller and bail.
+      if (type == 'call-blocked') {
+        final context =
+            ref.read(appRouterProvider).routerDelegate.navigatorKey.currentContext;
+        if (context != null && context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(context.l10n.callBlocked)),
+          );
+        }
+        // Mirror web: close the call screen. dispose() fires onCallEnded →
+        // Navigator.pop() in CallScreen. Safe to call even when no active
+        // call exists — WebRTCService.dispose() is idempotent.
+        ref.read(webRtcServiceProvider).dispose();
+        return;
+      }
+
       if (type == 'offer') {
         final senderId = signal['senderId'] as String?;
         final convId = signal['conversationId'] as String?;

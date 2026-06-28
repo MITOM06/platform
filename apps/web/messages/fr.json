@@ -644,7 +644,17 @@
     "newConvDepartment": "Département (facultatif)",
     "newConvNoDepartment": "Aucun département",
     "groupAvatarAlt": "Avatar du groupe",
-    "imageViewer": "Visionneuse d'images"
+    "imageViewer": "Visionneuse d'images",
+    "blockedChats": "Bloqués",
+    "noBlockedChats": "Aucune conversation bloquée",
+    "callBlocked": "Cet utilisateur ne souhaite pas être contacté",
+    "blockAndHide": "Bloquer",
+    "unblockAndRestore": "Débloquer",
+    "mute15min": "15 minutes",
+    "mute30min": "30 minutes",
+    "mute1hour": "1 heure",
+    "mute24hours": "24 heures",
+    "muteForever": "Jusqu'à ce que je le réactive"
   },
   "aiHub": {
     "title": "Hub IA",

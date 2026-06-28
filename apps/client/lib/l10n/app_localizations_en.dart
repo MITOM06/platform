@@ -2871,4 +2871,37 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get helpAccountSecurityA4 =>
       'Open the conversation, tap Settings, go to Privacy & Support, and select \'Clear History\'. This only removes history from your device.';
+
+  @override
+  String get blockedChats => 'Blocked';
+
+  @override
+  String get noBlockedChats => 'No blocked conversations';
+
+  @override
+  String get blockAndHide => 'Block and hide';
+
+  @override
+  String get unblockAndRestore => 'Unblock';
+
+  @override
+  String get callBlocked => 'This user doesn\'t want to be contacted';
+
+  @override
+  String get mute15min => '15 minutes';
+
+  @override
+  String get mute30min => '30 minutes';
+
+  @override
+  String get mute1hour => '1 hour';
+
+  @override
+  String get mute24hours => '24 hours';
+
+  @override
+  String get muteForever => 'Until I turn it back on';
+
+  @override
+  String get profileBlockedByOwner => 'This user\'s profile is not available';
 }

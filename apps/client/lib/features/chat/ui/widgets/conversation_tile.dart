@@ -163,7 +163,16 @@ class ConversationTile extends ConsumerWidget {
                   ),
                 ),
               ),
-              if (conv.isMuted) ...[
+              if (conv.isBlocked) ...[
+                const SizedBox(width: 6),
+                Icon(
+                  Icons.block_rounded,
+                  size: 15,
+                  color: isDark
+                      ? Colors.redAccent.withValues(alpha: 0.6)
+                      : Colors.redAccent.withValues(alpha: 0.5),
+                ),
+              ] else if (conv.isMuted) ...[
                 const SizedBox(width: 6),
                 Icon(
                   Icons.volume_off_rounded,
@@ -172,6 +181,21 @@ class ConversationTile extends ConsumerWidget {
                       ? Colors.white.withValues(alpha: 0.4)
                       : Colors.black.withValues(alpha: 0.4),
                 ),
+                // Show remaining time only when muted until a specific time
+                // (not forever). MUTE_FOREVER sentinel = 9200000000000000.
+                if (conv.muteExpiresAt != null &&
+                    conv.muteExpiresAt! < ConversationModel.muteForeverSentinel) ...[
+                  const SizedBox(width: 2),
+                  Text(
+                    _formatMuteExpiry(conv.muteExpiresAt!),
+                    style: TextStyle(
+                      fontSize: 10,
+                      color: isDark
+                          ? Colors.white.withValues(alpha: 0.35)
+                          : Colors.black.withValues(alpha: 0.35),
+                    ),
+                  ),
+                ],
               ],
             ],
           ),
@@ -243,6 +267,17 @@ class ConversationTile extends ConsumerWidget {
     ),
     ),
     );
+  }
+
+  /// Format remaining mute time as a short string (e.g. "14m", "2h", "1d").
+  String _formatMuteExpiry(int expiresAtMs) {
+    final remaining = expiresAtMs - DateTime.now().millisecondsSinceEpoch;
+    if (remaining <= 0) return '';
+    final mins = (remaining / 60000).ceil();
+    if (mins < 60) return '${mins}m';
+    final hrs = (remaining / 3600000).floor();
+    if (hrs < 24) return '${hrs}h';
+    return '${(hrs / 24).floor()}d';
   }
 
   /// Builds the subtitle, optionally prefixing the humanised body with

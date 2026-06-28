@@ -1011,5 +1011,16 @@
   "helpAccountSecurityQ3": "사용자는 어떻게 차단하나요?",
   "helpAccountSecurityA3": "해당 사용자와의 대화를 열고 설정 아이콘을 누른 후 개인정보 및 지원으로 스크롤하여 '사용자 차단'을 선택하세요.",
   "helpAccountSecurityQ4": "메시지 기록은 어떻게 삭제하나요?",
-  "helpAccountSecurityA4": "대화를 열고 설정을 누른 후 개인정보 및 지원으로 이동하여 '기록 지우기'를 선택하세요. 이 작업은 기기에서만 기록을 삭제합니다."
+  "helpAccountSecurityA4": "대화를 열고 설정을 누른 후 개인정보 및 지원으로 이동하여 '기록 지우기'를 선택하세요. 이 작업은 기기에서만 기록을 삭제합니다.",
+  "blockedChats": "차단됨",
+  "noBlockedChats": "차단된 대화가 없습니다",
+  "blockAndHide": "차단하고 숨기기",
+  "unblockAndRestore": "차단 해제",
+  "callBlocked": "이 사용자는 연락을 원하지 않습니다",
+  "mute15min": "15분",
+  "mute30min": "30분",
+  "mute1hour": "1시간",
+  "mute24hours": "24시간",
+  "muteForever": "직접 끌 때까지",
+  "profileBlockedByOwner": "이 사용자의 프로필을 볼 수 없습니다"
 }

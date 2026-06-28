@@ -45,7 +45,11 @@ export interface Conversation {
   isPublic: boolean
   status: 'pending' | 'accepted'
   isMuted: boolean
+  /** epoch ms; 9_200_000_000_000_000 = muted forever; null = not muted */
+  muteExpiresAt?: number | null
   isArchived: boolean
+  /** true when this conversation has been moved to the Blocked section by the current user */
+  isBlocked?: boolean
   pinnedMessages: PinnedMessage[]
   autoDeleteSeconds: number | null
   lastMessage: {

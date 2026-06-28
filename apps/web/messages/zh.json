@@ -644,7 +644,17 @@
     "newConvDepartment": "部门（可选）",
     "newConvNoDepartment": "无部门",
     "groupAvatarAlt": "群组头像",
-    "imageViewer": "图片查看器"
+    "imageViewer": "图片查看器",
+    "blockedChats": "已屏蔽",
+    "noBlockedChats": "没有被屏蔽的对话",
+    "callBlocked": "该用户不希望被联系",
+    "blockAndHide": "屏蔽",
+    "unblockAndRestore": "解除屏蔽",
+    "mute15min": "15 分钟",
+    "mute30min": "30 分钟",
+    "mute1hour": "1 小时",
+    "mute24hours": "24 小时",
+    "muteForever": "直到我手动开启"
   },
   "aiHub": {
     "title": "AI 中心",

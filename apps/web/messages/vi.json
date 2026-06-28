@@ -658,7 +658,17 @@
     "newConvDepartment": "Phòng ban (tùy chọn)",
     "newConvNoDepartment": "Không có phòng ban",
     "groupAvatarAlt": "Ảnh nhóm",
-    "imageViewer": "Trình xem ảnh"
+    "imageViewer": "Trình xem ảnh",
+    "blockedChats": "Bị chặn",
+    "noBlockedChats": "Không có cuộc trò chuyện bị chặn",
+    "callBlocked": "Người dùng này không muốn được liên lạc",
+    "blockAndHide": "Chặn",
+    "unblockAndRestore": "Bỏ chặn",
+    "mute15min": "15 phút",
+    "mute30min": "30 phút",
+    "mute1hour": "1 giờ",
+    "mute24hours": "24 giờ",
+    "muteForever": "Cho đến khi tôi bật lại"
   },
   "aiHub": {
     "title": "Trung tâm AI",

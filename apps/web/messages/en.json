@@ -658,7 +658,17 @@
     "newConvDepartment": "Department (optional)",
     "newConvNoDepartment": "No department",
     "groupAvatarAlt": "Group avatar",
-    "imageViewer": "Image viewer"
+    "imageViewer": "Image viewer",
+    "blockedChats": "Blocked",
+    "noBlockedChats": "No blocked conversations",
+    "callBlocked": "This user doesn't want to be contacted",
+    "blockAndHide": "Block",
+    "unblockAndRestore": "Unblock",
+    "mute15min": "15 minutes",
+    "mute30min": "30 minutes",
+    "mute1hour": "1 hour",
+    "mute24hours": "24 hours",
+    "muteForever": "Until I turn back on"
   },
   "aiHub": {
     "title": "AI Hub",

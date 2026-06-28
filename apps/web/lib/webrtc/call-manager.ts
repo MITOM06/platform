@@ -14,7 +14,7 @@ export interface WebRTCSignal {
   senderId?: string
   targetId?: string
   conversationId?: string
-  type: 'offer' | 'answer' | 'ice' | 'end' | 'call-ring'
+  type: 'offer' | 'answer' | 'ice' | 'end' | 'call-ring' | 'call-blocked'
   sdp?: string
   candidate?: RTCIceCandidateInit
   // ── Group-call fields (Track A §3). Absent on legacy 1-on-1 signals. ───────

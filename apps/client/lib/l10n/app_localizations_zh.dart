@@ -2785,4 +2785,37 @@ class AppLocalizationsZh extends AppLocalizations {
   @override
   String get helpAccountSecurityA4 =>
       '打开对话，点击设置，进入隐私与支持，然后选择「清除历史记录」。此操作仅删除您设备上的历史记录。';
+
+  @override
+  String get blockedChats => '已屏蔽';
+
+  @override
+  String get noBlockedChats => '没有被屏蔽的会话';
+
+  @override
+  String get blockAndHide => '屏蔽并隐藏';
+
+  @override
+  String get unblockAndRestore => '解除屏蔽';
+
+  @override
+  String get callBlocked => '该用户不希望被联系';
+
+  @override
+  String get mute15min => '15 分钟';
+
+  @override
+  String get mute30min => '30 分钟';
+
+  @override
+  String get mute1hour => '1 小时';
+
+  @override
+  String get mute24hours => '24 小时';
+
+  @override
+  String get muteForever => '直到我手动开启';
+
+  @override
+  String get profileBlockedByOwner => '该用户的个人资料不可用';
 }

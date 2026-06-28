@@ -24,6 +24,7 @@ import { CustomizeChatSection } from './group/CustomizeChatSection'
 import { FilesMediaSection } from './group/FilesMediaSection'
 import { PrivacySupportSection } from './group/PrivacySupportSection'
 import { PinnedMessagesSection } from './PinnedMessagesSection'
+import { MuteDurationPicker } from './MuteDurationPicker'
 import { setNickname, nicknameSystemMessage, useNicknames } from '@/lib/nicknames'
 import {
   useQuickReaction, setQuickReaction, quickReactionSystemMessage,
@@ -63,6 +64,7 @@ export function ConversationSettingsDrawer({
   const [confirmClearOpen, setConfirmClearOpen] = useState(false)
   const [wallpaperOpen, setWallpaperOpen] = useState(false)
   const [isBlocked, setIsBlocked] = useState(false)
+  const [muteDurationOpen, setMuteDurationOpen] = useState(false)
 
   const isMuted = conversation.isMuted
   const isArchived = conversation.isArchived
@@ -136,6 +138,12 @@ export function ConversationSettingsDrawer({
     queryClient.invalidateQueries({ queryKey: ['conversation', conversation.id] })
   }
 
+  const invalidateAll = () => {
+    queryClient.invalidateQueries({ queryKey: ['conversations'] })
+    queryClient.invalidateQueries({ queryKey: ['blocked-conversations'] })
+    queryClient.invalidateQueries({ queryKey: ['conversation', conversation.id] })
+  }
+
   const run = async (action: () => Promise<unknown>, success: string) => {
     setSaving(true)
     try {
@@ -149,13 +157,22 @@ export function ConversationSettingsDrawer({
     }
   }
 
-  const handleMuteToggle = () =>
+  const handleMuteToggle = () => {
+    if (isMuted) {
+      run(() => chatService.unmuteConversation(conversation.id), t('unmuteSuccess'))
+    } else {
+      // Open the duration picker instead of muting forever immediately
+      setMuteDurationOpen(true)
+    }
+  }
+
+  const handleMuteWithDuration = (durationSeconds: number) => {
+    setMuteDurationOpen(false)
     run(
-      () => isMuted
-        ? chatService.unmuteConversation(conversation.id)
-        : chatService.muteConversation(conversation.id),
-      isMuted ? t('unmuteSuccess') : t('muteSuccess'),
+      () => chatService.muteConversation(conversation.id, durationSeconds),
+      t('muteSuccess'),
     )
+  }
 
   const handleMarkRead = () =>
     run(() => chatService.markConversationRead(conversation.id), t('markReadSuccess'))
@@ -177,11 +194,15 @@ export function ConversationSettingsDrawer({
     try {
       if (isBlocked) {
         await chatService.unblockUser(otherUserId)
+        await chatService.blockRestoreConversation(conversation.id)
         setIsBlocked(false)
+        invalidateAll()
         toast.success(t('unblockSuccess'))
       } else {
         await chatService.blockUser(otherUserId)
+        await chatService.blockArchiveConversation(conversation.id)
         setIsBlocked(true)
+        invalidateAll()
         toast.success(t('blockSuccess'))
       }
     } catch {
@@ -250,6 +271,7 @@ export function ConversationSettingsDrawer({
               isDirect={isDirect}
               isAI={isAI}
               isMuted={isMuted}
+              muteExpiresAt={conversation.muteExpiresAt ?? undefined}
               saving={saving}
               onOpenProfile={onOpenProfile ? () => { onOpenProfile(); onClose() } : undefined}
               onMuteToggle={handleMuteToggle}
@@ -338,6 +360,13 @@ export function ConversationSettingsDrawer({
       conversationId={conversation.id}
       open={wallpaperOpen}
       onClose={() => setWallpaperOpen(false)}
+    />
+
+    {/* Mute duration picker */}
+    <MuteDurationPicker
+      open={muteDurationOpen}
+      onClose={() => setMuteDurationOpen(false)}
+      onSelect={handleMuteWithDuration}
     />
 
     {/* Confirmation dialog for Clear History */}

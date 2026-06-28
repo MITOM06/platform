@@ -38,6 +38,12 @@ final archivedConversationsProvider =
   return ref.read(chatRepositoryProvider).listArchivedConversations();
 });
 
+/// Conversations the current user has blocked-archived.
+final blockedConversationsProvider =
+    FutureProvider.autoDispose<List<ConversationModel>>((ref) {
+  return ref.read(chatRepositoryProvider).listBlockedConversations();
+});
+
 /// Fetches Open Graph metadata for a URL (cached per-url for the screen's life).
 final linkPreviewProvider =
     FutureProvider.autoDispose.family<LinkPreviewData, String>((ref, url) {

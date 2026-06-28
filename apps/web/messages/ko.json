@@ -644,7 +644,17 @@
     "newConvDepartment": "부서 (선택)",
     "newConvNoDepartment": "부서 없음",
     "groupAvatarAlt": "그룹 아바타",
-    "imageViewer": "이미지 뷰어"
+    "imageViewer": "이미지 뷰어",
+    "blockedChats": "차단됨",
+    "noBlockedChats": "차단된 대화가 없습니다",
+    "callBlocked": "이 사용자는 연락을 원하지 않습니다",
+    "blockAndHide": "차단",
+    "unblockAndRestore": "차단 해제",
+    "mute15min": "15분",
+    "mute30min": "30분",
+    "mute1hour": "1시간",
+    "mute24hours": "24시간",
+    "muteForever": "직접 끌 때까지"
   },
   "aiHub": {
     "title": "AI 허브",

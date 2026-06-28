@@ -2813,4 +2813,37 @@ class AppLocalizationsKo extends AppLocalizations {
   @override
   String get helpAccountSecurityA4 =>
       '대화를 열고 설정을 누른 후 개인정보 및 지원으로 이동하여 \'기록 지우기\'를 선택하세요. 이 작업은 기기에서만 기록을 삭제합니다.';
+
+  @override
+  String get blockedChats => '차단됨';
+
+  @override
+  String get noBlockedChats => '차단된 대화가 없습니다';
+
+  @override
+  String get blockAndHide => '차단하고 숨기기';
+
+  @override
+  String get unblockAndRestore => '차단 해제';
+
+  @override
+  String get callBlocked => '이 사용자는 연락을 원하지 않습니다';
+
+  @override
+  String get mute15min => '15분';
+
+  @override
+  String get mute30min => '30분';
+
+  @override
+  String get mute1hour => '1시간';
+
+  @override
+  String get mute24hours => '24시간';
+
+  @override
+  String get muteForever => '직접 끌 때까지';
+
+  @override
+  String get profileBlockedByOwner => '이 사용자의 프로필을 볼 수 없습니다';
 }

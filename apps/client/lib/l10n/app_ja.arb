@@ -1011,5 +1011,16 @@
   "helpAccountSecurityQ3": "ユーザーをブロックするにはどうすればよいですか？",
   "helpAccountSecurityA3": "そのユーザーとの会話を開き、設定アイコンをタップしてプライバシーとサポートまでスクロールし、「ユーザーをブロック」を選択してください。",
   "helpAccountSecurityQ4": "メッセージ履歴を削除するにはどうすればよいですか？",
-  "helpAccountSecurityA4": "会話を開いて設定をタップし、プライバシーとサポートに進んで「履歴を消去」を選択します。これはお使いのデバイスから履歴を削除するだけです。"
+  "helpAccountSecurityA4": "会話を開いて設定をタップし、プライバシーとサポートに進んで「履歴を消去」を選択します。これはお使いのデバイスから履歴を削除するだけです。",
+  "blockedChats": "ブロック済み",
+  "noBlockedChats": "ブロックした会話はありません",
+  "blockAndHide": "ブロックして非表示",
+  "unblockAndRestore": "ブロック解除",
+  "callBlocked": "このユーザーは連絡を望んでいません",
+  "mute15min": "15 分",
+  "mute30min": "30 分",
+  "mute1hour": "1 時間",
+  "mute24hours": "24 時間",
+  "muteForever": "手動でオンにするまで",
+  "profileBlockedByOwner": "このユーザーのプロフィールは表示できません"
 }

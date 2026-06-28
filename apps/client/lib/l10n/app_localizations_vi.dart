@@ -2872,4 +2872,37 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get helpAccountSecurityA4 =>
       'Mở cuộc trò chuyện, nhấn Cài đặt, vào Quyền riêng tư & Hỗ trợ và chọn \'Xóa lịch sử\'. Thao tác này chỉ xóa lịch sử khỏi thiết bị của bạn.';
+
+  @override
+  String get blockedChats => 'Đã chặn';
+
+  @override
+  String get noBlockedChats => 'Không có cuộc trò chuyện bị chặn';
+
+  @override
+  String get blockAndHide => 'Chặn và ẩn';
+
+  @override
+  String get unblockAndRestore => 'Bỏ chặn';
+
+  @override
+  String get callBlocked => 'Người dùng này không muốn được liên lạc';
+
+  @override
+  String get mute15min => '15 phút';
+
+  @override
+  String get mute30min => '30 phút';
+
+  @override
+  String get mute1hour => '1 giờ';
+
+  @override
+  String get mute24hours => '24 giờ';
+
+  @override
+  String get muteForever => 'Cho đến khi tôi bật lại';
+
+  @override
+  String get profileBlockedByOwner => 'Hồ sơ của người dùng này không khả dụng';
 }

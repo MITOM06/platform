@@ -74,10 +74,17 @@ class ConversationModel {
   final bool isPublic; // public discoverable channel (Task 52)
   final List<PinnedMessageModel> pinnedMessages; // pinned messages (Task 53)
   final bool isMuted;
+  // Epoch-ms until which the conversation is muted. Null = not muted.
+  // 9200000000000000 (9.2e15) = muted forever (MUTE_FOREVER sentinel).
+  final int? muteExpiresAt;
   final bool isArchived;
+  // Whether the current user has blocked and archived this conversation.
+  final bool isBlocked;
   // Shared per-conversation wallpaper (Issue 6). Null = default. Stored on the
   // Conversation document server-side and distributed via CONVERSATION_UPDATED.
   final String? wallpaper;
+
+  static const int muteForeverSentinel = 9200000000000000;
 
   const ConversationModel({
     required this.id,
@@ -96,7 +103,9 @@ class ConversationModel {
     this.isPublic = false,
     this.pinnedMessages = const [],
     this.isMuted = false,
+    this.muteExpiresAt,
     this.isArchived = false,
+    this.isBlocked = false,
     this.wallpaper,
   });
 
@@ -131,7 +140,9 @@ class ConversationModel {
               PinnedMessageModel.fromJson(e as Map<String, dynamic>))
           .toList(),
       isMuted: json['isMuted'] as bool? ?? false,
+      muteExpiresAt: (json['muteExpiresAt'] as num?)?.toInt(),
       isArchived: json['isArchived'] as bool? ?? false,
+      isBlocked: json['isBlocked'] as bool? ?? false,
       wallpaper: json['wallpaper'] as String?,
     );
   }
@@ -153,7 +164,10 @@ class ConversationModel {
     bool? isPublic,
     List<PinnedMessageModel>? pinnedMessages,
     bool? isMuted,
+    int? muteExpiresAt,
+    bool clearMuteExpiresAt = false,
     bool? isArchived,
+    bool? isBlocked,
     String? wallpaper,
     bool clearWallpaper = false,
   }) {
@@ -174,7 +188,9 @@ class ConversationModel {
       isPublic: isPublic ?? this.isPublic,
       pinnedMessages: pinnedMessages ?? this.pinnedMessages,
       isMuted: isMuted ?? this.isMuted,
+      muteExpiresAt: clearMuteExpiresAt ? null : (muteExpiresAt ?? this.muteExpiresAt),
       isArchived: isArchived ?? this.isArchived,
+      isBlocked: isBlocked ?? this.isBlocked,
       wallpaper: clearWallpaper ? null : (wallpaper ?? this.wallpaper),
     );
   }

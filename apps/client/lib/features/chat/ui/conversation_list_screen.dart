@@ -12,6 +12,8 @@ import '../../notifications/ui/notification_bell.dart';
 import '../../assistant/ui/assistant_entry_tile.dart';
 import '../domain/chat_provider.dart';
 import 'widgets/active_friends_row.dart';
+import 'widgets/archived_entry_tile.dart';
+import 'widgets/blocked_entry_tile.dart';
 import 'widgets/conversation_avatar.dart';
 import 'widgets/conversation_search_bar.dart';
 import 'widgets/conversation_tile.dart';
@@ -379,10 +381,22 @@ class _ConversationListScreenState
                         : ListView.builder(
                             physics:
                                 const AlwaysScrollableScrollPhysics(),
-                            itemCount: conversations.length,
+                            // +2 for the archived entry tile and blocked
+                            // section appended after the conversation list
+                            // (only shown when search is empty).
+                            itemCount: conversations.length +
+                                (search.isEmpty ? 2 : 0),
                             itemBuilder: (context, index) {
-                              final conv = conversations[index];
-                              return ConversationTile(conv: conv);
+                              if (index < conversations.length) {
+                                return ConversationTile(
+                                    conv: conversations[index]);
+                              }
+                              // After conversations: archived + blocked sections
+                              final extra = index - conversations.length;
+                              if (extra == 0) {
+                                return const ArchivedEntryTile();
+                              }
+                              return const BlockedConversationsSection();
                             },
                           ),
                         );

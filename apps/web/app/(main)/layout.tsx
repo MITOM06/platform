@@ -73,6 +73,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
   const queryClient = useQueryClient()
   const accessToken = useAuthStore((s) => s.accessToken)
   const t = useTranslations('layout')
+  const tChat = useTranslations('chat')
 
   // The conversation-list sidebar belongs ONLY to the messaging area
   // (/conversations and /conversations/:id). Every other page (AI hub,
@@ -156,6 +157,15 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
       stompService.subscribe('/user/queue/webrtc', (frame) => {
         try {
           const signal: WebRTCSignal = JSON.parse(frame.body)
+
+          // ── Caller is blocked by the callee — show error toast and abort ───
+          if (signal.type === 'call-blocked') {
+            toast.error(tChat('callBlocked'))
+            // Reset call state without sending a signal to the other side
+            // (there is no active call session to clean up peer-to-peer).
+            useCallStore.getState().reset()
+            return
+          }
 
           // ── Group call ring → open the incoming-group-call prompt ───────────
           if (signal.type === 'call-ring') {

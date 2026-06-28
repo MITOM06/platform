@@ -644,7 +644,17 @@
     "newConvDepartment": "部門（任意）",
     "newConvNoDepartment": "部門なし",
     "groupAvatarAlt": "グループのアバター",
-    "imageViewer": "画像ビューア"
+    "imageViewer": "画像ビューア",
+    "blockedChats": "ブロック中",
+    "noBlockedChats": "ブロックされた会話はありません",
+    "callBlocked": "このユーザーは連絡を希望していません",
+    "blockAndHide": "ブロック",
+    "unblockAndRestore": "ブロック解除",
+    "mute15min": "15 分",
+    "mute30min": "30 分",
+    "mute1hour": "1 時間",
+    "mute24hours": "24 時間",
+    "muteForever": "手動でオンにするまで"
   },
   "aiHub": {
     "title": "AI ハブ",

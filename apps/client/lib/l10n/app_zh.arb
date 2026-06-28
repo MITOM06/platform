@@ -1011,5 +1011,16 @@
   "helpAccountSecurityQ3": "如何屏蔽用户？",
   "helpAccountSecurityA3": "打开与该用户的对话，点击设置图标，滚动到隐私与支持，然后选择「屏蔽用户」。",
   "helpAccountSecurityQ4": "如何删除消息历史记录？",
-  "helpAccountSecurityA4": "打开对话，点击设置，进入隐私与支持，然后选择「清除历史记录」。此操作仅删除您设备上的历史记录。"
+  "helpAccountSecurityA4": "打开对话，点击设置，进入隐私与支持，然后选择「清除历史记录」。此操作仅删除您设备上的历史记录。",
+  "blockedChats": "已屏蔽",
+  "noBlockedChats": "没有被屏蔽的会话",
+  "blockAndHide": "屏蔽并隐藏",
+  "unblockAndRestore": "解除屏蔽",
+  "callBlocked": "该用户不希望被联系",
+  "mute15min": "15 分钟",
+  "mute30min": "30 分钟",
+  "mute1hour": "1 小时",
+  "mute24hours": "24 小时",
+  "muteForever": "直到我手动开启",
+  "profileBlockedByOwner": "该用户的个人资料不可用"
 }

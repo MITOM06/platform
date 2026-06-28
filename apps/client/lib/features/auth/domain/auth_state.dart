@@ -34,6 +34,11 @@ class UserModel {
   /// drives the highlighted phone badge in friend search. Null otherwise.
   final String? matchedBy;
 
+  /// When `true`, the profile owner has blocked the current viewer. The server
+  /// returns only minimal info (name, avatar, email) and hides bio, friend
+  /// count, and action buttons. See auth-service `GET /api/users/:id`.
+  final bool isBlockedByOwner;
+
   const UserModel({
     required this.id,
     required this.email,
@@ -52,6 +57,7 @@ class UserModel {
     this.showGender,
     this.hasPassword = false,
     this.matchedBy,
+    this.isBlockedByOwner = false,
   });
 
   factory UserModel.fromJson(Map<String, dynamic> json) {
@@ -76,6 +82,7 @@ class UserModel {
       showGender: json['showGender'] as bool?,
       hasPassword: json['hasPassword'] as bool? ?? false,
       matchedBy: json['matchedBy'] as String?,
+      isBlockedByOwner: json['isBlockedByOwner'] as bool? ?? false,
     );
   }
 
