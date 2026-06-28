@@ -427,6 +427,23 @@
   "phoneVerifying": "Vérification...",
   "phoneConfirm": "Confirmer",
   "phoneHint": "901 234 567",
+  "phoneNoNumber": "Aucun numéro de téléphone",
+  "phoneNoticeText": "Ajoutez un numéro de téléphone pour sécuriser votre compte.",
+  "phoneVerifyAction": "Vérifier",
+  "phoneUnverifiedBadge": "Non vérifié",
+  "phoneModalPhoneSubtitle": "Saisissez votre numéro de téléphone pour recevoir un code.",
+  "phoneRateLimit": "Veuillez patienter avant de demander un autre code.",
+  "phoneAlreadyTaken": "Ce numéro de téléphone est déjà utilisé.",
+  "phoneOtpExpired": "Code expiré — demandez-en un nouveau.",
+  "phoneResend": "Renvoyer le code",
+  "phoneResendCountdown": "Renvoyer dans {seconds}s",
+  "@phoneResendCountdown": {
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
   "profilePrivacySection": "Confidentialité",
   "profileEditMode": "Modifier le profil",
   "profileSave": "Enregistrer",
@@ -1029,5 +1046,10 @@
   "mute1hour": "1 heure",
   "mute24hours": "24 heures",
   "muteForever": "Jusqu'à ce que je le réactive",
-  "profileBlockedByOwner": "Le profil de cet utilisateur n'est pas disponible"
+  "profileBlockedByOwner": "Le profil de cet utilisateur n'est pas disponible",
+  "unsavedChangesTitle": "Vous avez des modifications non enregistrées",
+  "unsavedChangesDesc": "Si vous quittez, vos modifications seront perdues.",
+  "keepEditing": "Continuer la modification",
+  "saveAndLeave": "Enregistrer et quitter",
+  "leaveWithoutSaving": "Quitter sans enregistrer"
 }

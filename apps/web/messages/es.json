@@ -180,7 +180,8 @@
     "errValDisplayNameTooShort": "El nombre de visualización es demasiado corto (mínimo 2 caracteres).",
     "errValPasswordTooShort": "La contraseña debe tener al menos 8 caracteres.",
     "errGeneric": "Ocurrió un error. Por favor, inténtalo de nuevo.",
-    "tagline": "Conecta y chatea"
+    "tagline": "Conecta y chatea",
+    "errTooManyOtpRequests": "Has solicitado demasiados códigos OTP. Inténtalo de nuevo en 10 minutos."
   },
   "settings": {
     "title": "Ajustes",
@@ -333,7 +334,18 @@
     "phoneErrorSend": "No se pudo enviar el OTP. Inténtalo más tarde.",
     "phoneErrorVerify": "Código OTP incorrecto o caducado",
     "phoneErrorExpired": "El código caducó — reenvía uno nuevo",
-    "phoneErrorTaken": "Este número de teléfono ya está en uso"
+    "phoneErrorTaken": "Este número de teléfono ya está en uso",
+    "phoneNoticeText": "Agrega un número de teléfono para ayudar a proteger tu cuenta.",
+    "phoneVerifyAction": "Verificar",
+    "phoneModalPhoneTitle": "Verificar número de teléfono",
+    "phoneModalPhoneSubtitle": "Ingresa tu número de teléfono para recibir un código de verificación.",
+    "phoneErrorRateLimit": "Espera antes de solicitar otro código de verificación.",
+    "dobPlaceholder": "Selecciona fecha de nacimiento",
+    "unsavedChangesTitle": "Tienes cambios sin guardar",
+    "unsavedChangesDesc": "Si sales, se perderán tus cambios.",
+    "keepEditing": "Seguir editando",
+    "saveAndLeave": "Guardar y salir",
+    "leaveWithoutSaving": "Salir sin guardar"
   },
   "friends": {
     "title": "Amigos",
@@ -356,7 +368,9 @@
     "acceptRequestError": "No se pudo aceptar la solicitud de amistad",
     "removeFriendSuccess": "Amigo eliminado / solicitud cancelada",
     "removeFriendError": "No se pudo completar la acción",
-    "phoneSearchHint": "Introduce el número de teléfono completo para buscar"
+    "phoneSearchHint": "Introduce el número de teléfono completo para buscar",
+    "unfriendConfirmTitle": "¿Eliminar amistad?",
+    "unfriendConfirmDesc": "Tú y esta persona dejarán de ser amigos. Podrás enviar una solicitud de amistad de nuevo más adelante."
   },
   "conversations": {
     "selectPrompt": "Seleccione una conversación para empezar"
@@ -666,7 +680,11 @@
     "acceptRequest": "Aceptar",
     "declineRequest": "Rechazar",
     "noRequests": "No hay solicitudes pendientes",
-    "groupLabel": "Grupo"
+    "groupLabel": "Grupo",
+    "blockConfirmTitle": "¿Bloquear a {name}?",
+    "blockConfirmDesc": "{name} no podrá enviarte mensajes ni ver la mayor parte de la información de tu perfil.",
+    "unfriendConfirmTitle": "¿Eliminar amistad?",
+    "unfriendConfirmDesc": "Tú y esta persona dejarán de ser amigos. Podrás enviar una solicitud de amistad de nuevo más adelante."
   },
   "aiHub": {
     "title": "Centro de IA",

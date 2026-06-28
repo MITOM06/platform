@@ -1222,6 +1222,38 @@ class AppLocalizationsZh extends AppLocalizations {
   String get phoneHint => '901 234 567';
 
   @override
+  String get phoneNoNumber => '暂无电话号码';
+
+  @override
+  String get phoneNoticeText => '添加电话号码以提升账户安全性。';
+
+  @override
+  String get phoneVerifyAction => '验证';
+
+  @override
+  String get phoneUnverifiedBadge => '未验证';
+
+  @override
+  String get phoneModalPhoneSubtitle => '输入电话号码以接收验证码。';
+
+  @override
+  String get phoneRateLimit => '请稍候再请求新的验证码。';
+
+  @override
+  String get phoneAlreadyTaken => '该电话号码已被使用。';
+
+  @override
+  String get phoneOtpExpired => '验证码已过期，请重新获取。';
+
+  @override
+  String get phoneResend => '重新发送验证码';
+
+  @override
+  String phoneResendCountdown(int seconds) {
+    return '$seconds秒后重新发送';
+  }
+
+  @override
   String get profilePrivacySection => '隐私';
 
   @override
@@ -2839,4 +2871,19 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get profileBlockedByOwner => '该用户的个人资料不可用';
+
+  @override
+  String get unsavedChangesTitle => '您有未保存的更改';
+
+  @override
+  String get unsavedChangesDesc => '如果离开，您的更改将会丢失。';
+
+  @override
+  String get keepEditing => '继续编辑';
+
+  @override
+  String get saveAndLeave => '保存并离开';
+
+  @override
+  String get leaveWithoutSaving => '不保存离开';
 }

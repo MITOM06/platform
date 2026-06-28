@@ -39,6 +39,25 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
   bool _showPhone = true;
   bool _showGender = true;
 
+  // Initial snapshot for the unsaved-changes guard (phone is excluded — it is
+  // persisted immediately via the OTP verify endpoint, not on this form's save).
+  String _initialName = '';
+  String _initialBio = '';
+  String? _initialGender;
+  DateTime? _initialDob;
+  bool _initialShowDob = true;
+  bool _initialShowPhone = true;
+  bool _initialShowGender = true;
+
+  bool get _hasUnsavedChanges =>
+      _nameController.text.trim() != _initialName ||
+      _bioController.text.trim() != _initialBio ||
+      _gender != _initialGender ||
+      _selectedDateOfBirth != _initialDob ||
+      _showDob != _initialShowDob ||
+      _showPhone != _initialShowPhone ||
+      _showGender != _initialShowGender;
+
   @override
   void initState() {
     super.initState();
@@ -53,6 +72,56 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
     _showDob = current?.effectiveShowDateOfBirth ?? true;
     _showPhone = current?.effectiveShowPhoneNumber ?? true;
     _showGender = current?.effectiveShowGender ?? true;
+    // Capture the initial state so the unsaved-changes guard can detect edits.
+    _initialName = _nameController.text.trim();
+    _initialBio = _bioController.text.trim();
+    _initialGender = _gender;
+    _initialDob = _selectedDateOfBirth;
+    _initialShowDob = _showDob;
+    _initialShowPhone = _showPhone;
+    _initialShowGender = _showGender;
+    // Rebuild on text edits so PopScope.canPop reflects unsaved changes live.
+    _nameController.addListener(_onFieldChanged);
+    _bioController.addListener(_onFieldChanged);
+  }
+
+  void _onFieldChanged() {
+    if (mounted) setState(() {});
+  }
+
+  /// Confirm before discarding unsaved edits. Returns true if it is safe to leave.
+  Future<bool> _confirmLeave() async {
+    if (!_hasUnsavedChanges) return true;
+    final action = await showDialog<String>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(context.l10n.unsavedChangesTitle),
+        content: Text(context.l10n.unsavedChangesDesc),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop('keep'),
+            child: Text(context.l10n.keepEditing),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop('leave'),
+            child: Text(
+              context.l10n.leaveWithoutSaving,
+              style: const TextStyle(color: Colors.redAccent),
+            ),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(ctx).pop('save'),
+            child: Text(context.l10n.saveAndLeave),
+          ),
+        ],
+      ),
+    );
+    if (action == 'leave') return true;
+    if (action == 'save') {
+      await _save(); // _save pops on success; treat as handled.
+      return false;
+    }
+    return false; // 'keep' or dismissed
   }
 
   @override
@@ -146,7 +215,14 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
     final authState = ref.watch(authNotifierProvider).valueOrNull;
     final user = authState is AuthAuthenticated ? authState.user : null;
 
-    return Scaffold(
+    return PopScope(
+      canPop: !_hasUnsavedChanges,
+      onPopInvokedWithResult: (didPop, result) async {
+        if (didPop) return;
+        final shouldLeave = await _confirmLeave();
+        if (shouldLeave && context.mounted) context.pop();
+      },
+      child: Scaffold(
       appBar: AppBar(title: Text(context.l10n.editProfile)),
       body: SafeArea(
         child: ListView(
@@ -164,7 +240,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                     child: GestureDetector(
                       onTap: _isLoading ? null : _uploadCover,
                       child: Container(
-                        height: 140,
+                        height: 128,
                         decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(12),
                           gradient: const LinearGradient(
@@ -183,7 +259,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                                       ? user.coverPhoto!
                                       : '${DioClient.chatBaseUrl}${user.coverPhoto}',
                                   width: double.infinity,
-                                  height: 140,
+                                  height: 128,
                                   fit: BoxFit.cover,
                                 ),
                               ),
@@ -291,9 +367,39 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                 prefixIcon: const Icon(Icons.wc_outlined, color: AppTheme.ponCyan),
               ),
               items: [
-                DropdownMenuItem(value: 'male', child: Text(context.l10n.genderMale)),
-                DropdownMenuItem(value: 'female', child: Text(context.l10n.genderFemale)),
-                DropdownMenuItem(value: 'other', child: Text(context.l10n.genderOther)),
+                DropdownMenuItem(
+                  value: 'male',
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(Icons.male, color: Colors.blue, size: 18),
+                      const SizedBox(width: 8),
+                      Text(context.l10n.genderMale),
+                    ],
+                  ),
+                ),
+                DropdownMenuItem(
+                  value: 'female',
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(Icons.female, color: Colors.pink, size: 18),
+                      const SizedBox(width: 8),
+                      Text(context.l10n.genderFemale),
+                    ],
+                  ),
+                ),
+                DropdownMenuItem(
+                  value: 'other',
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(Icons.transgender, color: Colors.purple, size: 18),
+                      const SizedBox(width: 8),
+                      Text(context.l10n.genderOther),
+                    ],
+                  ),
+                ),
               ],
               onChanged: _isLoading ? null : (v) => setState(() => _gender = v),
             ),
@@ -343,6 +449,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
             ),
           ],
         ),
+      ),
       ),
     );
   }

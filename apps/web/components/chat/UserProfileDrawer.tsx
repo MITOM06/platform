@@ -11,6 +11,7 @@ import {
 } from 'lucide-react'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { DialogA11yDescription } from '@/components/common/dialog-a11y-description'
+import { ConfirmDialog } from '@/components/common/ConfirmDialog'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
@@ -54,6 +55,8 @@ export function UserProfileDrawer({ userId, onClose }: Props) {
   const t = useTranslations('chat')
   const locale = useLocale()
   const [actionLoading, setActionLoading] = useState(false)
+  const [blockConfirmOpen, setBlockConfirmOpen] = useState(false)
+  const [unfriendConfirmOpen, setUnfriendConfirmOpen] = useState(false)
   const currentUserId = useAuthStore((s) => s.user?.id)
 
   const { data: user, isLoading } = useUser(userId ?? undefined)
@@ -90,12 +93,15 @@ export function UserProfileDrawer({ userId, onClose }: Props) {
 
   const handleFriendAction = async () => {
     if (!userId || !relationship) return
+    // Removing an existing friend is destructive — confirm first. Sending or
+    // accepting a request stays a direct, single-tap action.
+    if (relationship.friendStatus === 'accepted') {
+      setUnfriendConfirmOpen(true)
+      return
+    }
     setActionLoading(true)
     try {
-      if (relationship.friendStatus === 'accepted') {
-        await friendsService.removeFriend(userId)
-        toast.success(t('friendRemoved'))
-      } else if (relationship.friendStatus === 'none') {
+      if (relationship.friendStatus === 'none') {
         await friendsService.sendRequest(userId)
         toast.success(t('friendRequestSent'))
       } else if (relationship.friendStatus === 'incoming') {
@@ -107,6 +113,30 @@ export function UserProfileDrawer({ userId, onClose }: Props) {
       toast.error(t('actionFailed'))
     } finally {
       setActionLoading(false)
+    }
+  }
+
+  const doRemoveFriend = async () => {
+    if (!userId) return
+    setActionLoading(true)
+    try {
+      await friendsService.removeFriend(userId)
+      toast.success(t('friendRemoved'))
+      refetchRel()
+    } catch {
+      toast.error(t('actionFailed'))
+    } finally {
+      setActionLoading(false)
+    }
+  }
+
+  // The Block button opens a confirmation first; unblocking is harmless so it
+  // runs directly.
+  const handleBlockButtonClick = () => {
+    if (relationship?.iBlocked) {
+      handleBlock()
+    } else {
+      setBlockConfirmOpen(true)
     }
   }
 
@@ -274,7 +304,7 @@ export function UserProfileDrawer({ userId, onClose }: Props) {
                   <Button
                     variant="ghost"
                     className="w-full justify-start gap-2 text-muted-foreground hover:text-destructive"
-                    onClick={handleBlock}
+                    onClick={handleBlockButtonClick}
                     disabled={actionLoading}
                   >
                     {relationship?.iBlocked ? (
@@ -295,6 +325,24 @@ export function UserProfileDrawer({ userId, onClose }: Props) {
           </div>
         )}
       </DialogContent>
+
+      <ConfirmDialog
+        open={blockConfirmOpen}
+        onOpenChange={setBlockConfirmOpen}
+        title={t('blockConfirmTitle', { name: displayName })}
+        description={t('blockConfirmDesc', { name: displayName })}
+        confirmLabel={t('blockAction')}
+        onConfirm={handleBlock}
+      />
+
+      <ConfirmDialog
+        open={unfriendConfirmOpen}
+        onOpenChange={setUnfriendConfirmOpen}
+        title={t('unfriendConfirmTitle')}
+        description={t('unfriendConfirmDesc')}
+        confirmLabel={t('friendRemove')}
+        onConfirm={doRemoveFriend}
+      />
     </Dialog>
   )
 }

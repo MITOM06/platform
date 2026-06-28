@@ -427,6 +427,23 @@
   "phoneVerifying": "Đang xác minh...",
   "phoneConfirm": "Xác nhận",
   "phoneHint": "901 234 567",
+  "phoneNoNumber": "Chưa có số điện thoại",
+  "phoneNoticeText": "Thêm số điện thoại để tăng tính bảo mật cho tài khoản.",
+  "phoneVerifyAction": "Xác minh",
+  "phoneUnverifiedBadge": "Chưa xác minh",
+  "phoneModalPhoneSubtitle": "Nhập số điện thoại để nhận mã xác minh.",
+  "phoneRateLimit": "Vui lòng chờ trước khi yêu cầu mã mới.",
+  "phoneAlreadyTaken": "Số điện thoại này đã được sử dụng.",
+  "phoneOtpExpired": "Mã đã hết hạn — vui lòng yêu cầu mã mới.",
+  "phoneResend": "Gửi lại mã",
+  "phoneResendCountdown": "Gửi lại sau {seconds}s",
+  "@phoneResendCountdown": {
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
   "profilePrivacySection": "Quyền riêng tư",
   "profileEditMode": "Chỉnh sửa hồ sơ",
   "profileSave": "Lưu",
@@ -1029,5 +1046,10 @@
   "mute1hour": "1 giờ",
   "mute24hours": "24 giờ",
   "muteForever": "Cho đến khi tôi bật lại",
-  "profileBlockedByOwner": "Hồ sơ của người dùng này không khả dụng"
+  "profileBlockedByOwner": "Hồ sơ của người dùng này không khả dụng",
+  "unsavedChangesTitle": "Bạn có thay đổi chưa lưu",
+  "unsavedChangesDesc": "Nếu rời trang, các thay đổi của bạn sẽ bị mất.",
+  "keepEditing": "Tiếp tục chỉnh sửa",
+  "saveAndLeave": "Lưu và thoát",
+  "leaveWithoutSaving": "Thoát không lưu"
 }

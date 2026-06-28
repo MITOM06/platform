@@ -9,11 +9,15 @@ import {
   Users,
   Lock,
   Loader2,
+  CalendarIcon,
 } from 'lucide-react'
+import { Controller } from 'react-hook-form'
 import type {
   UseFormRegister,
   FieldErrors,
+  Control,
 } from 'react-hook-form'
+import { format, parse, isValid } from 'date-fns'
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select'
@@ -22,6 +26,9 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Separator } from '@/components/ui/separator'
+import { Calendar } from '@/components/ui/calendar'
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
+import { cn } from '@/lib/utils'
 import { PhoneField } from '@/components/profile/PhoneField'
 
 export type ProfileFormValues = {
@@ -45,6 +52,7 @@ type ProfileFormTexts = {
   bioLabel: string
   bioPlaceholder: string
   dobLabel: string
+  dobPlaceholder: string
   phoneLabel: string
   phonePlaceholder: string
   phoneSendOtp: string
@@ -65,6 +73,11 @@ type ProfileFormTexts = {
   phoneErrorVerify: string
   phoneErrorExpired: string
   phoneErrorTaken: string
+  phoneNoticeText: string
+  phoneVerifyAction: string
+  phoneModalPhoneTitle: string
+  phoneModalPhoneSubtitle: string
+  phoneErrorRateLimit: string
   genderLabel: string
   genderPlaceholder: string
   genderMale: string
@@ -81,6 +94,7 @@ type ProfileFormTexts = {
 
 type ProfileFormProps = {
   register: UseFormRegister<ProfileFormValues>
+  control: Control<ProfileFormValues>
   errors: FieldErrors<ProfileFormValues>
   gender?: string
   showDateOfBirth: boolean
@@ -100,6 +114,7 @@ type ProfileFormProps = {
 
 export function ProfileForm({
   register,
+  control,
   errors,
   gender,
   showDateOfBirth,
@@ -165,7 +180,55 @@ export function ProfileForm({
           <Cake className="size-4 text-primary" />
           {texts.dobLabel}
         </Label>
-        <Input id="dateOfBirth" type="date" {...register('dateOfBirth')} />
+
+        <Controller
+          control={control}
+          name="dateOfBirth"
+          render={({ field }) => {
+            // Convert between the stored "yyyy-MM-dd" string and a Date object.
+            const selectedDate = field.value
+              ? parse(field.value, 'yyyy-MM-dd', new Date())
+              : undefined
+            const isValidDate = !!selectedDate && isValid(selectedDate)
+
+            return (
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className={cn(
+                      'w-full justify-start text-left font-normal h-10',
+                      !isValidDate && 'text-muted-foreground',
+                    )}
+                  >
+                    <CalendarIcon className="mr-2 size-4 text-muted-foreground" />
+                    {isValidDate ? format(selectedDate, 'dd/MM/yyyy') : texts.dobPlaceholder}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={isValidDate ? selectedDate : undefined}
+                    onSelect={(date) =>
+                      field.onChange(date ? format(date, 'yyyy-MM-dd') : '')
+                    }
+                    captionLayout="dropdown"
+                    startMonth={new Date(1900, 0)}
+                    endMonth={new Date()}
+                    disabled={{ after: new Date() }}
+                    defaultMonth={isValidDate ? selectedDate : new Date(2000, 0)}
+                    autoFocus
+                  />
+                </PopoverContent>
+              </Popover>
+            )
+          }}
+        />
+
+        {errors.dateOfBirth && (
+          <p className="text-xs text-destructive">{errors.dateOfBirth.message}</p>
+        )}
       </div>
 
       {/* Phone number — country picker + SMS OTP verification */}
@@ -195,6 +258,11 @@ export function ProfileForm({
           errorVerify: texts.phoneErrorVerify,
           errorExpired: texts.phoneErrorExpired,
           errorTaken: texts.phoneErrorTaken,
+          noticeText: texts.phoneNoticeText,
+          verifyAction: texts.phoneVerifyAction,
+          modalPhoneTitle: texts.phoneModalPhoneTitle,
+          modalPhoneSubtitle: texts.phoneModalPhoneSubtitle,
+          errorRateLimit: texts.phoneErrorRateLimit,
         }}
       />
 
@@ -209,9 +277,24 @@ export function ProfileForm({
             <SelectValue placeholder={texts.genderPlaceholder} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="male">{texts.genderMale}</SelectItem>
-            <SelectItem value="female">{texts.genderFemale}</SelectItem>
-            <SelectItem value="other">{texts.genderOther}</SelectItem>
+            <SelectItem value="male">
+              <span className="flex items-center gap-2">
+                <span className="text-blue-500">♂</span>
+                {texts.genderMale}
+              </span>
+            </SelectItem>
+            <SelectItem value="female">
+              <span className="flex items-center gap-2">
+                <span className="text-pink-500">♀</span>
+                {texts.genderFemale}
+              </span>
+            </SelectItem>
+            <SelectItem value="other">
+              <span className="flex items-center gap-2">
+                <span className="text-purple-500">⚧</span>
+                {texts.genderOther}
+              </span>
+            </SelectItem>
           </SelectContent>
         </Select>
       </div>

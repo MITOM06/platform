@@ -180,7 +180,8 @@
     "errValDisplayNameTooShort": "Display name is too short (minimum 2 characters).",
     "errValPasswordTooShort": "Password must be at least 8 characters.",
     "errGeneric": "An error occurred. Please try again.",
-    "tagline": "Connect & Chat"
+    "tagline": "Connect & Chat",
+    "errTooManyOtpRequests": "You've requested too many OTP codes. Please try again in 10 minutes."
   },
   "settings": {
     "title": "Settings",
@@ -333,7 +334,18 @@
     "phoneErrorSend": "Couldn't send OTP. Try again later.",
     "phoneErrorVerify": "Wrong or expired OTP code",
     "phoneErrorExpired": "Code expired — resend a new one",
-    "phoneErrorTaken": "This phone number is already in use"
+    "phoneErrorTaken": "This phone number is already in use",
+    "phoneNoticeText": "Add a phone number to help secure your account.",
+    "phoneVerifyAction": "Verify",
+    "phoneModalPhoneTitle": "Verify phone number",
+    "phoneModalPhoneSubtitle": "Enter your phone number to receive a verification code.",
+    "phoneErrorRateLimit": "Please wait before requesting another verification code.",
+    "dobPlaceholder": "Select date of birth",
+    "unsavedChangesTitle": "You have unsaved changes",
+    "unsavedChangesDesc": "If you leave, your changes will be lost.",
+    "keepEditing": "Keep editing",
+    "saveAndLeave": "Save and leave",
+    "leaveWithoutSaving": "Leave without saving"
   },
   "friends": {
     "title": "Friends",
@@ -356,7 +368,9 @@
     "acceptRequestError": "Failed to accept friend request",
     "removeFriendSuccess": "Friend removed / request cancelled",
     "removeFriendError": "Action could not be completed",
-    "phoneSearchHint": "Enter the full phone number to search"
+    "phoneSearchHint": "Enter the full phone number to search",
+    "unfriendConfirmTitle": "Remove friend?",
+    "unfriendConfirmDesc": "You and this person will no longer be friends. You can send a friend request again later."
   },
   "conversations": {
     "selectPrompt": "Select a conversation to start"
@@ -680,7 +694,11 @@
     "acceptRequest": "Accept",
     "declineRequest": "Decline",
     "noRequests": "No pending requests",
-    "groupLabel": "Group"
+    "groupLabel": "Group",
+    "blockConfirmTitle": "Block {name}?",
+    "blockConfirmDesc": "{name} won't be able to message you or see most of your profile information.",
+    "unfriendConfirmTitle": "Remove friend?",
+    "unfriendConfirmDesc": "You and this person will no longer be friends. You can send a friend request again later."
   },
   "aiHub": {
     "title": "AI Hub",

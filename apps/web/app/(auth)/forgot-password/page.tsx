@@ -48,6 +48,9 @@ export default function ForgotPasswordPage() {
       await authService.forgotPassword(e)
       setEmail(e)
       setStep('otp')
+      // Start the 60s cooldown immediately so the user can't spam "Resend"
+      // the moment they land on the OTP step.
+      startResendTimer()
       toast.success(t('codeSent'))
     } catch (err: unknown) {
       const { code, params } = parseAuthError(err)
@@ -76,8 +79,11 @@ export default function ForgotPasswordPage() {
       await authService.forgotPassword(email)
       toast.success(t('codeSent'))
       startResendTimer()
-    } catch {
-      toast.error(t('resendError'))
+    } catch (err: unknown) {
+      // Surface the specific backend code (e.g. per-email OTP rate limit)
+      // instead of a generic resend error.
+      const { code, params } = parseAuthError(err)
+      toast.error(code === 'GENERIC_ERROR' ? t('resendError') : tAuth(authCodeToI18nKey(code), params))
     }
   }
 

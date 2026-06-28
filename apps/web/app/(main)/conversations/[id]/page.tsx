@@ -100,6 +100,9 @@ export default function ConversationPage({ params }: Props) {
   const isBlocked = !!(relationship?.iBlocked || relationship?.blockedMe)
 
   const wp = useWallpaper(id)
+  // True when a non-default wallpaper (image or gradient preset) is set — used to
+  // hide the ambient glow spheres so they don't tint the chosen wallpaper.
+  const hasWallpaper = wp.isImage || (!!wp.className && wp.className !== 'bg-background')
 
   const { data, isLoading, isError, fetchNextPage, hasNextPage, isFetchingNextPage } =
     useMessages(id)
@@ -484,16 +487,19 @@ export default function ConversationPage({ params }: Props) {
           style={wp.style}
         />
 
-        {/* Custom Wallpaper Darken Overlay */}
+        {/* Custom Wallpaper Darken Overlay — kept light so the image stays
+            visible while text remains readable. */}
         {wp.isImage && (
-          <div className="absolute inset-0 bg-background/80 dark:bg-background/90 z-0 pointer-events-none" />
+          <div className="absolute inset-0 bg-background/20 dark:bg-background/30 z-0 pointer-events-none" />
         )}
 
-        {/* Glow Spheres */}
-        <div className="absolute inset-0 overflow-hidden pointer-events-none z-0 opacity-40 dark:opacity-20">
-          <div className="absolute -top-40 -left-40 size-96 rounded-full bg-pon-cyan blur-[128px] animate-pulse duration-[6000ms]" />
-          <div className="absolute -bottom-40 -right-40 size-96 rounded-full bg-pon-peach blur-[128px] animate-pulse duration-[8000ms]" />
-        </div>
+        {/* Glow Spheres — only when no wallpaper is set, so they don't tint it. */}
+        {!hasWallpaper && (
+          <div className="absolute inset-0 overflow-hidden pointer-events-none z-0 opacity-40 dark:opacity-20">
+            <div className="absolute -top-40 -left-40 size-96 rounded-full bg-pon-cyan blur-[128px] animate-pulse duration-[6000ms]" />
+            <div className="absolute -bottom-40 -right-40 size-96 rounded-full bg-pon-peach blur-[128px] animate-pulse duration-[8000ms]" />
+          </div>
+        )}
 
         {/* Scrolling message list — transparent, rides on top of the backdrop.
             Keyed on the conversation id so it remounts (fresh scroll state) on

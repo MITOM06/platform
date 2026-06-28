@@ -122,7 +122,9 @@ export default function SettingsPage() {
       await fetch('/api/auth/clear-cookie', { method: 'POST' })
       stompService.disconnect()
       clearAuth()
-      router.push('/login')
+      // `?cleared=1` tells the login page to wipe any browser-autofilled
+      // credentials so the next person doesn't see the prior account.
+      router.push('/login?cleared=1')
     } catch {
       toast.error(t('logoutError'))
       setLoggingOut(false)

@@ -1,6 +1,6 @@
 'use client'
 
-import { memo } from 'react'
+import { memo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
@@ -26,6 +26,7 @@ import { useRelationship } from '@/lib/hooks/use-relationship'
 import { useNickname } from '@/lib/nicknames'
 import { chatService } from '@/lib/api/chat'
 import { humanizeSystemMessage } from '@/lib/system-messages'
+import { ConfirmDialog } from '@/components/common/ConfirmDialog'
 import type { Conversation } from '@/lib/api/types'
 
 const AI_BOT_ID = 'ai-bot-000000000000000000000001'
@@ -84,6 +85,7 @@ const ConversationItemInner = function ConversationItem({ conversation: conv, is
   const t = useTranslations('chat')
   const locale = useLocale()
   const queryClient = useQueryClient()
+  const [blockConfirmOpen, setBlockConfirmOpen] = useState(false)
   const isActive = pathname === `/conversations/${conv.id}`
   const currentUser = useAuthStore((s) => s.user)
 
@@ -205,6 +207,7 @@ const ConversationItemInner = function ConversationItem({ conversation: conv, is
     conv.muteExpiresAt < MUTE_FOREVER_MS
 
   return (
+    <>
     <ContextMenu>
       <ContextMenuTrigger asChild>
         <Link
@@ -339,7 +342,7 @@ const ConversationItemInner = function ConversationItem({ conversation: conv, is
                 {t('unblockAction')}
               </ContextMenuItem>
             ) : (
-              <ContextMenuItem variant="destructive" onClick={handleBlock}>
+              <ContextMenuItem variant="destructive" onClick={() => setBlockConfirmOpen(true)}>
                 <Ban className="size-4" />
                 {t('blockAndHide')}
               </ContextMenuItem>
@@ -354,6 +357,16 @@ const ConversationItemInner = function ConversationItem({ conversation: conv, is
         </ContextMenuItem>
       </ContextMenuContent>
     </ContextMenu>
+
+      <ConfirmDialog
+        open={blockConfirmOpen}
+        onOpenChange={setBlockConfirmOpen}
+        title={t('blockConfirmTitle', { name: displayName })}
+        description={t('blockConfirmDesc', { name: displayName })}
+        confirmLabel={t('blockAction')}
+        onConfirm={handleBlock}
+      />
+    </>
   )
 }
 

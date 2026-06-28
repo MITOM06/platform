@@ -427,6 +427,23 @@
   "phoneVerifying": "正在验证...",
   "phoneConfirm": "确认",
   "phoneHint": "901 234 567",
+  "phoneNoNumber": "暂无电话号码",
+  "phoneNoticeText": "添加电话号码以提升账户安全性。",
+  "phoneVerifyAction": "验证",
+  "phoneUnverifiedBadge": "未验证",
+  "phoneModalPhoneSubtitle": "输入电话号码以接收验证码。",
+  "phoneRateLimit": "请稍候再请求新的验证码。",
+  "phoneAlreadyTaken": "该电话号码已被使用。",
+  "phoneOtpExpired": "验证码已过期，请重新获取。",
+  "phoneResend": "重新发送验证码",
+  "phoneResendCountdown": "{seconds}秒后重新发送",
+  "@phoneResendCountdown": {
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
   "profilePrivacySection": "隐私",
   "profileEditMode": "编辑资料",
   "profileSave": "保存",
@@ -1029,5 +1046,10 @@
   "mute1hour": "1 小时",
   "mute24hours": "24 小时",
   "muteForever": "直到我手动开启",
-  "profileBlockedByOwner": "该用户的个人资料不可用"
+  "profileBlockedByOwner": "该用户的个人资料不可用",
+  "unsavedChangesTitle": "您有未保存的更改",
+  "unsavedChangesDesc": "如果离开，您的更改将会丢失。",
+  "keepEditing": "继续编辑",
+  "saveAndLeave": "保存并离开",
+  "leaveWithoutSaving": "不保存离开"
 }

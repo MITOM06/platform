@@ -33,7 +33,7 @@ export function ProfileImageHeader({
   return (
     <>
       {/* Cover Photo Section */}
-      <div className="relative h-40 w-full overflow-hidden group">
+      <div className="relative h-32 w-full overflow-hidden group">
         {resolvedCover ? (
           <Image src={resolvedCover} alt="" fill unoptimized className="object-cover" />
         ) : (
@@ -58,7 +58,7 @@ export function ProfileImageHeader({
       </div>
 
       {/* Avatar overlapping cover */}
-      <div className="relative max-w-md mx-auto px-6">
+      <div className="relative max-w-2xl mx-auto px-6">
         <div className="flex justify-center -mt-14">
           <div className="relative group">
             <Avatar className="size-28 ring-4 ring-background shadow-xl">
