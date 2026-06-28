@@ -396,6 +396,19 @@ export class UsersService {
   }
 
   /**
+   * Returns true if `ownerId` has blocked `callerId`.
+   * Used to enforce profile privacy: if the profile owner has blocked the
+   * caller, the caller sees only a minimal public view.
+   */
+  async isBlockedBy(ownerId: string, callerId: string): Promise<boolean> {
+    const exists = await this.userBlockModel.exists({
+      blockerId: ownerId,
+      blockedId: callerId,
+    });
+    return !!exists;
+  }
+
+  /**
    * Block relationship between two users, from `userId`'s point of view:
    *   - `iBlocked`  — current user has blocked `otherId`
    *   - `blockedMe` — `otherId` has blocked the current user

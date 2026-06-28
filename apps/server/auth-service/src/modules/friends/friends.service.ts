@@ -11,6 +11,8 @@ import {
   FriendshipDocument,
   User,
   UserDocument,
+  UserBlock,
+  UserBlockDocument,
   REDIS_CLIENT,
   Redis,
 } from '@platform/database';
@@ -25,6 +27,8 @@ export class FriendsService {
     @InjectModel(Friendship.name)
     private friendshipModel: Model<FriendshipDocument>,
     @InjectModel(User.name) private userModel: Model<UserDocument>,
+    @InjectModel(UserBlock.name)
+    private readonly userBlockModel: Model<UserBlockDocument>,
     @Inject(REDIS_CLIENT) private readonly redis: Redis,
     private readonly notificationsService: NotificationsService,
   ) {}
@@ -122,14 +126,33 @@ export class FriendsService {
       .filter((x) => x !== null);
   }
 
-  /** Accepted friends that are currently online (Redis presence). */
+  /** Accepted friends that are currently online (Redis presence).
+   *  Excludes anyone who has a block relationship with `userId` in either
+   *  direction — neither party should see the other as online.
+   */
   async listOnlineFriends(userId: string): Promise<UserDocument[]> {
     const friends = await this.listFriends(userId);
     if (friends.length === 0) return [];
     const statuses = await Promise.all(
       friends.map((f) => this.redis.get(STATUS_KEY_PREFIX + String(f._id))),
     );
-    return friends.filter((_, i) => statuses[i] === 'online');
+    const onlineFriends = friends.filter((_, i) => statuses[i] === 'online');
+
+    // Exclude anyone who has blocked userId OR been blocked by userId.
+    if (onlineFriends.length === 0) return [];
+    const friendIds = onlineFriends.map((f) => String(f._id));
+    const blocks = await this.userBlockModel.find({
+      $or: [
+        { blockerId: userId, blockedId: { $in: friendIds } },
+        { blockerId: { $in: friendIds }, blockedId: userId },
+      ],
+    });
+    const blockedSet = new Set<string>();
+    for (const b of blocks) {
+      blockedSet.add(b.blockerId === userId ? b.blockedId : b.blockerId);
+    }
+
+    return onlineFriends.filter((f) => !blockedSet.has(String(f._id)));
   }
 
   /** Returns the friendship doc between two users (either direction), if any. */

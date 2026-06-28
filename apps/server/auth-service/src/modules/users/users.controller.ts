@@ -193,14 +193,42 @@ export class UsersController {
   async findById(@Req() req: any, @Param('id') id: string) {
     const user = await this.usersService.findById(id);
     if (!user) return user;
-    const friendsCount = await this.friendsService.countAccepted(id);
-    return this.toProfile(user.toObject(), req.user.sub, friendsCount);
+    const [friendsCount, isBlockedByOwner] = await Promise.all([
+      this.friendsService.countAccepted(id),
+      this.usersService.isBlockedBy(id, req.user.sub),
+    ]);
+    return this.toProfile(user.toObject(), req.user.sub, friendsCount, isBlockedByOwner);
   }
 
   // Shared public-profile mapping used by both the single (`:id`) and batch
   // endpoints so they return the identical UserProfile DTO shape.
-  private toProfile(doc: any, callerId: string, friendsCount: number): any {
+  // NOTE: isBlockedByOwner is only set for single GET /api/users/:id — batch
+  // endpoint (findManyByIds) intentionally omits it to avoid breaking
+  // conversation participant rendering.
+  private toProfile(
+    doc: any,
+    callerId: string,
+    friendsCount: number,
+    isBlockedByOwner = false,
+  ): any {
     const isSelf = callerId === String(doc._id);
+
+    // Caller is blocked by the profile owner → return minimal public info only.
+    // Tells the client to hide action buttons and sensitive profile details.
+    if (!isSelf && isBlockedByOwner) {
+      return {
+        _id: doc._id,
+        id: doc._id,
+        displayName: doc.displayName,
+        avatarUrl: doc.avatarUrl ?? '',
+        coverPhoto: doc.coverPhoto ?? '',
+        email: doc.email,
+        isVerified: doc.isVerified ?? false,
+        friendsCount: 0,
+        bio: '',
+        isBlockedByOwner: true,
+      };
+    }
 
     // Explicit public-profile whitelist. NEVER expose fcmTokens, blockedUsers,
     // trustedDevices, socialLinks, status, password, otpCode, otpExpires.

@@ -7,6 +7,8 @@ import {
   UserSchema,
   Friendship,
   FriendshipSchema,
+  UserBlock,
+  UserBlockSchema,
 } from '@platform/database';
 import { NotificationsModule } from '../notifications/notifications.module';
 
@@ -15,6 +17,7 @@ import { NotificationsModule } from '../notifications/notifications.module';
     MongooseModule.forFeature([
       { name: Friendship.name, schema: FriendshipSchema },
       { name: User.name, schema: UserSchema },
+      { name: UserBlock.name, schema: UserBlockSchema },
     ]),
     NotificationsModule,
   ],
