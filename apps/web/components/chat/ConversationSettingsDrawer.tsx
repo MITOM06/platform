@@ -63,8 +63,19 @@ export function ConversationSettingsDrawer({
   const [saving, setSaving] = useState(false)
   const [confirmClearOpen, setConfirmClearOpen] = useState(false)
   const [wallpaperOpen, setWallpaperOpen] = useState(false)
-  const [isBlocked, setIsBlocked] = useState(false)
+  // Track which conversation id the local block override belongs to so the
+  // derived value automatically resets when the active conversation switches.
+  const [localBlockedConvId, setLocalBlockedConvId] = useState<string | null>(null)
+  const [localBlockedValue, setLocalBlockedValue] = useState(false)
   const [muteDurationOpen, setMuteDurationOpen] = useState(false)
+
+  // Derived: use the local override only while we are still on the same
+  // conversation; once the conversation prop switches, fall back to the prop.
+  const isBlocked =
+    localBlockedConvId === conversation.id
+      ? localBlockedValue
+      : (conversation.isBlocked ?? false)
+
 
   const isMuted = conversation.isMuted
   const isArchived = conversation.isArchived
@@ -195,13 +206,15 @@ export function ConversationSettingsDrawer({
       if (isBlocked) {
         await chatService.unblockUser(otherUserId)
         await chatService.blockRestoreConversation(conversation.id)
-        setIsBlocked(false)
+        setLocalBlockedConvId(conversation.id)
+        setLocalBlockedValue(false)
         invalidateAll()
         toast.success(t('unblockSuccess'))
       } else {
         await chatService.blockUser(otherUserId)
         await chatService.blockArchiveConversation(conversation.id)
-        setIsBlocked(true)
+        setLocalBlockedConvId(conversation.id)
+        setLocalBlockedValue(true)
         invalidateAll()
         toast.success(t('blockSuccess'))
       }

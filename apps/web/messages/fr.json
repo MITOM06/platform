@@ -555,6 +555,7 @@
     "sendMessageAction": "Message",
     "unblockAction": "Débloquer",
     "blockAction": "Bloquer l'utilisateur",
+    "profileBlockedByOwner": "Le profil de cet utilisateur n'est pas disponible",
     "markAsRead": "Marquer comme lu",
     "markAsUnread": "Marquer comme non lu",
     "archiveChat": "Archiver",

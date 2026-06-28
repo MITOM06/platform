@@ -555,6 +555,7 @@
     "sendMessageAction": "发消息",
     "unblockAction": "解除拉黑",
     "blockAction": "拉黑用户",
+    "profileBlockedByOwner": "该用户的个人资料不可用",
     "markAsRead": "标记为已读",
     "markAsUnread": "标记为未读",
     "archiveChat": "归档",

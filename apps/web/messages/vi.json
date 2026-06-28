@@ -569,6 +569,7 @@
     "sendMessageAction": "Nhắn tin",
     "unblockAction": "Bỏ chặn",
     "blockAction": "Chặn người dùng",
+    "profileBlockedByOwner": "Hồ sơ của người dùng này không khả dụng",
     "markAsRead": "Đánh dấu đã đọc",
     "markAsUnread": "Đánh dấu chưa đọc",
     "archiveChat": "Lưu trữ",

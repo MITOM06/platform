@@ -555,6 +555,7 @@
     "sendMessageAction": "メッセージ",
     "unblockAction": "ブロック解除",
     "blockAction": "ユーザーをブロック",
+    "profileBlockedByOwner": "このユーザーのプロフィールは表示できません",
     "markAsRead": "既読にする",
     "markAsUnread": "未読にする",
     "archiveChat": "アーカイブ",

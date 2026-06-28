@@ -32,6 +32,10 @@ export interface UserProfile extends AuthUser {
   showPhoneNumber?: boolean
   showGender?: boolean
   friendsCount?: number
+  /** True when the profile owner has blocked the viewer. The server returns a
+   *  minimal profile (name/email/avatar/cover only) and sets this flag so the
+   *  client can render a "profile not available" banner instead of full info. */
+  isBlockedByOwner?: boolean
 }
 
 /** Fields accepted by `PATCH /api/users/me`. */

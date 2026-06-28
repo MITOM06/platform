@@ -569,6 +569,7 @@
     "sendMessageAction": "Message",
     "unblockAction": "Unblock",
     "blockAction": "Block user",
+    "profileBlockedByOwner": "This user's profile is not available",
     "markAsRead": "Mark as read",
     "markAsUnread": "Mark as unread",
     "archiveChat": "Archive",

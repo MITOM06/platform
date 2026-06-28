@@ -129,6 +129,8 @@ export function UserProfileDrawer({ userId, onClose }: Props) {
     }
   }
 
+  const blockedByOwner = user?.isBlockedByOwner === true
+
   const displayName = user?.displayName ?? t('userFallback')
   const friendLabel =
     relationship?.friendStatus === 'accepted' ? t('friendRemove')
@@ -197,78 +199,99 @@ export function UserProfileDrawer({ userId, onClose }: Props) {
               <p className="text-xs text-muted-foreground">
                 {status?.online ? t('online') : t('offline')}
               </p>
-              {user?.bio && (
-                <p className="text-sm text-center text-muted-foreground max-w-[220px] leading-snug">
-                  {user.bio}
-                </p>
+
+              {/* When the profile owner has blocked the viewer, show only
+                  avatar/cover/name/email + a banner. Hide bio, friend count,
+                  and all action buttons — mirroring user_profile_screen.dart. */}
+              {blockedByOwner ? (
+                <>
+                  {user?.email && (
+                    <p className="text-xs text-muted-foreground">{user.email}</p>
+                  )}
+                  <p className="text-sm text-center text-muted-foreground/60 max-w-[220px] leading-snug mt-1">
+                    {t('profileBlockedByOwner')}
+                  </p>
+                </>
+              ) : (
+                <>
+                  {user?.bio && (
+                    <p className="text-sm text-center text-muted-foreground max-w-[220px] leading-snug">
+                      {user.bio}
+                    </p>
+                  )}
+                </>
               )}
             </div>
 
-            {/* Profile info — each field gated independently by its show flag */}
-            {(dobText || phoneText || genderText) && (
+            {!blockedByOwner && (
               <>
+                {/* Profile info — each field gated independently by its show flag */}
+                {(dobText || phoneText || genderText) && (
+                  <>
+                    <Separator />
+                    <div className="flex flex-col gap-2 px-1">
+                      {dobText && <InfoRow icon={<Cake className="size-4" />} value={dobText} />}
+                      {phoneText && <InfoRow icon={<Phone className="size-4" />} value={phoneText} />}
+                      {genderText && <InfoRow icon={<Users className="size-4" />} value={genderText} />}
+                    </div>
+                  </>
+                )}
+
                 <Separator />
+
+                {/* Action buttons */}
                 <div className="flex flex-col gap-2 px-1">
-                  {dobText && <InfoRow icon={<Cake className="size-4" />} value={dobText} />}
-                  {phoneText && <InfoRow icon={<Phone className="size-4" />} value={phoneText} />}
-                  {genderText && <InfoRow icon={<Users className="size-4" />} value={genderText} />}
+                  <Button
+                    className="w-full justify-start gap-2"
+                    onClick={handleSendMessage}
+                    disabled={actionLoading}
+                  >
+                    <MessageCircle className="size-4" />
+                    {t('sendMessageAction')}
+                  </Button>
+
+                  {relationship && !relationship.blockedMe && (
+                    <Button
+                      variant="outline"
+                      className={[
+                        'w-full justify-start gap-2',
+                        relationship.friendStatus === 'accepted'
+                          ? 'text-destructive hover:text-destructive'
+                          : '',
+                      ].join(' ')}
+                      onClick={handleFriendAction}
+                      disabled={actionLoading || relationship.friendStatus === 'outgoing'}
+                    >
+                      {relationship.friendStatus === 'accepted' ? (
+                        <UserMinus className="size-4" />
+                      ) : (
+                        <UserPlus className="size-4" />
+                      )}
+                      {friendLabel}
+                    </Button>
+                  )}
+
+                  <Button
+                    variant="ghost"
+                    className="w-full justify-start gap-2 text-muted-foreground hover:text-destructive"
+                    onClick={handleBlock}
+                    disabled={actionLoading}
+                  >
+                    {relationship?.iBlocked ? (
+                      <>
+                        <ShieldOff className="size-4" />
+                        {t('unblockAction')}
+                      </>
+                    ) : (
+                      <>
+                        <ShieldAlert className="size-4" />
+                        {t('blockAction')}
+                      </>
+                    )}
+                  </Button>
                 </div>
               </>
             )}
-
-            <Separator />
-
-            {/* Action buttons */}
-            <div className="flex flex-col gap-2 px-1">
-              <Button
-                className="w-full justify-start gap-2"
-                onClick={handleSendMessage}
-                disabled={actionLoading}
-              >
-                <MessageCircle className="size-4" />
-                {t('sendMessageAction')}
-              </Button>
-
-              {relationship && !relationship.blockedMe && (
-                <Button
-                  variant="outline"
-                  className={[
-                    'w-full justify-start gap-2',
-                    relationship.friendStatus === 'accepted'
-                      ? 'text-destructive hover:text-destructive'
-                      : '',
-                  ].join(' ')}
-                  onClick={handleFriendAction}
-                  disabled={actionLoading || relationship.friendStatus === 'outgoing'}
-                >
-                  {relationship.friendStatus === 'accepted' ? (
-                    <UserMinus className="size-4" />
-                  ) : (
-                    <UserPlus className="size-4" />
-                  )}
-                  {friendLabel}
-                </Button>
-              )}
-
-              <Button
-                variant="ghost"
-                className="w-full justify-start gap-2 text-muted-foreground hover:text-destructive"
-                onClick={handleBlock}
-                disabled={actionLoading}
-              >
-                {relationship?.iBlocked ? (
-                  <>
-                    <ShieldOff className="size-4" />
-                    {t('unblockAction')}
-                  </>
-                ) : (
-                  <>
-                    <ShieldAlert className="size-4" />
-                    {t('blockAction')}
-                  </>
-                )}
-              </Button>
-            </div>
           </div>
         )}
       </DialogContent>

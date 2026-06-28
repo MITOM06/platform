@@ -555,6 +555,7 @@
     "sendMessageAction": "메시지",
     "unblockAction": "차단 해제",
     "blockAction": "사용자 차단",
+    "profileBlockedByOwner": "이 사용자의 프로필을 볼 수 없습니다",
     "markAsRead": "읽음으로 표시",
     "markAsUnread": "안 읽음으로 표시",
     "archiveChat": "보관",
