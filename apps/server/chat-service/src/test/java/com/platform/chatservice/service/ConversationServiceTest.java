@@ -249,20 +249,36 @@ class ConversationServiceTest {
   }
 
   @Test
-  void muteConversation_ShouldAddUserToMutedUsersList() {
+  void muteConversation_ShouldSetMutedUntilExpiry() {
     when(conversationCacheService.findByIdOptional(CONV_ID)).thenReturn(Optional.of(conversation));
     when(conversationCacheService.save(any(Conversation.class)))
         .thenAnswer(inv -> inv.getArgument(0));
     when(messageRepository.countUnread(CONV_ID, USER_ID)).thenReturn(0L);
 
-    ConversationResponse response = conversationService.muteConversation(USER_ID, CONV_ID);
+    ConversationResponse response = conversationService.muteConversation(USER_ID, CONV_ID, 3600L);
 
     assertThat(response.isMuted()).isTrue();
+    assertThat(response.muteExpiresAt()).isNotNull();
   }
 
   @Test
-  void unmuteConversation_ShouldRemoveUserFromMutedUsersList() {
-    conversation.setMutedUsers(new java.util.ArrayList<>(List.of(USER_ID)));
+  void muteConversation_Forever_ShouldSetForeverSentinel() {
+    when(conversationCacheService.findByIdOptional(CONV_ID)).thenReturn(Optional.of(conversation));
+    when(conversationCacheService.save(any(Conversation.class)))
+        .thenAnswer(inv -> inv.getArgument(0));
+    when(messageRepository.countUnread(CONV_ID, USER_ID)).thenReturn(0L);
+
+    ConversationResponse response = conversationService.muteConversation(USER_ID, CONV_ID, -1L);
+
+    assertThat(response.isMuted()).isTrue();
+    assertThat(response.muteExpiresAt()).isEqualTo(9_200_000_000_000_000L);
+  }
+
+  @Test
+  void unmuteConversation_ShouldRemoveUserFromMutedUntil() {
+    java.util.Map<String, Long> mutedUntil = new java.util.HashMap<>();
+    mutedUntil.put(USER_ID, System.currentTimeMillis() + 3_600_000L);
+    conversation.setMutedUntil(mutedUntil);
     when(conversationCacheService.findByIdOptional(CONV_ID)).thenReturn(Optional.of(conversation));
     when(conversationCacheService.save(any(Conversation.class)))
         .thenAnswer(inv -> inv.getArgument(0));

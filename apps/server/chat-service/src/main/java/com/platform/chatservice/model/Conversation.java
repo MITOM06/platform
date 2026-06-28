@@ -2,6 +2,7 @@ package com.platform.chatservice.model;
 
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import lombok.*;
@@ -96,11 +97,17 @@ public class Conversation {
    */
   private List<String> hiddenFor;
 
-  /** Users who muted this conversation. */
-  @Builder.Default private List<String> mutedUsers = new ArrayList<>();
+  /**
+   * Per-user mute expiry: userId → epoch-millisecond expiry. 9_200_000_000_000_000L means "muted
+   * until the user manually unmutes". Missing key or expired value = not muted.
+   */
+  @Builder.Default private Map<String, Long> mutedUntil = new HashMap<>();
 
   /** Users who archived this conversation. */
   @Builder.Default private List<String> archivedBy = new ArrayList<>();
+
+  /** Users for whom this conversation is in the "Blocked" section (blocker side only). */
+  @Builder.Default private List<String> blockedBy = new ArrayList<>();
 
   private LastMessage lastMessage;
 

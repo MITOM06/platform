@@ -21,7 +21,9 @@ public record ConversationResponse(
     List<PinnedMessageDto> pinnedMessages,
     boolean isMuted,
     boolean isArchived,
-    String wallpaper) {
+    String wallpaper,
+    boolean isBlocked,
+    Long muteExpiresAt) {
   public record LastMessageDto(String content, String senderId, Instant createdAt) {}
 
   public record PinnedMessageDto(
@@ -59,6 +61,8 @@ public record ConversationResponse(
         false,
         List.of(),
         false,
+        false,
+        null,
         false,
         null);
   }
@@ -100,6 +104,8 @@ public record ConversationResponse(
         pinnedMessages,
         isMuted,
         isArchived,
+        null,
+        false,
         null);
   }
 }

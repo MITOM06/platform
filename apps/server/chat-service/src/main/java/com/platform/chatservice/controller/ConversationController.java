@@ -38,7 +38,12 @@ public class ConversationController {
   public PageResponse<ConversationResponse> listConversations(
       @RequestParam(defaultValue = "0") int page,
       @RequestParam(defaultValue = "20") int size,
-      @RequestParam(defaultValue = "false") boolean archived) {
+      @RequestParam(defaultValue = "false") boolean archived,
+      @RequestParam(defaultValue = "false") boolean blocked) {
+    if (blocked) {
+      return conversationService.listBlockedConversations(
+          currentUserId(), PageRequest.of(page, size));
+    }
     return conversationService.listConversations(
         currentUserId(), PageRequest.of(page, size), archived);
   }
@@ -123,9 +128,14 @@ public class ConversationController {
     return updated;
   }
 
+  record MuteDurationRequest(Long durationSeconds) {}
+
   @PostMapping("/{id}/mute")
-  public ConversationResponse muteConversation(@PathVariable String id) {
-    ConversationResponse updated = conversationService.muteConversation(currentUserId(), id);
+  public ConversationResponse muteConversation(
+      @PathVariable String id, @RequestBody(required = false) MuteDurationRequest body) {
+    long seconds = (body == null || body.durationSeconds() == null) ? -1L : body.durationSeconds();
+    ConversationResponse updated =
+        conversationService.muteConversation(currentUserId(), id, seconds);
     broadcastConversationUpdated(updated);
     return updated;
   }
@@ -147,6 +157,22 @@ public class ConversationController {
   @PostMapping("/{id}/unarchive")
   public ConversationResponse unarchiveConversation(@PathVariable String id) {
     ConversationResponse updated = conversationService.unarchiveConversation(currentUserId(), id);
+    broadcastConversationUpdated(updated);
+    return updated;
+  }
+
+  @PostMapping("/{id}/block-archive")
+  public ConversationResponse blockArchive(@PathVariable String id) {
+    ConversationResponse updated =
+        conversationService.blockArchiveConversation(currentUserId(), id);
+    broadcastConversationUpdated(updated);
+    return updated;
+  }
+
+  @PostMapping("/{id}/block-restore")
+  public ConversationResponse blockRestore(@PathVariable String id) {
+    ConversationResponse updated =
+        conversationService.blockRestoreConversation(currentUserId(), id);
     broadcastConversationUpdated(updated);
     return updated;
   }
