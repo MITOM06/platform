@@ -180,7 +180,8 @@
     "errValDisplayNameTooShort": "Le nom d'affichage est trop court (minimum 2 caractères).",
     "errValPasswordTooShort": "Le mot de passe doit comporter au moins 8 caractères.",
     "errGeneric": "Une erreur s'est produite. Veuillez réessayer.",
-    "tagline": "Connecter & Discuter"
+    "tagline": "Connecter & Discuter",
+    "errTooManyOtpRequests": "Vous avez demandé trop de codes OTP. Veuillez réessayer dans 10 minutes."
   },
   "settings": {
     "title": "Paramètres",
@@ -192,6 +193,8 @@
     "themeChanged": "Passé au thème {theme}",
     "archived": "Discussions archivées",
     "archivedSubtitle": "Voir les conversations masquées",
+    "blockedChats": "Discussions bloquées",
+    "blockedChatsSubtitle": "Gérer les conversations bloquées",
     "explore": "Explorer la communauté",
     "exploreSubtitle": "Trouver et rejoindre des canaux publics",
     "notifications": "Notifications",
@@ -331,7 +334,18 @@
     "phoneErrorSend": "Impossible d'envoyer l'OTP. Réessayez plus tard.",
     "phoneErrorVerify": "Code OTP incorrect ou expiré",
     "phoneErrorExpired": "Code expiré — renvoyez-en un nouveau",
-    "phoneErrorTaken": "Ce numéro de téléphone est déjà utilisé"
+    "phoneErrorTaken": "Ce numéro de téléphone est déjà utilisé",
+    "phoneNoticeText": "Ajoutez un numéro de téléphone pour sécuriser votre compte.",
+    "phoneVerifyAction": "Vérifier",
+    "phoneModalPhoneTitle": "Vérifier le numéro de téléphone",
+    "phoneModalPhoneSubtitle": "Saisissez votre numéro de téléphone pour recevoir un code de vérification.",
+    "phoneErrorRateLimit": "Veuillez patienter avant de demander un nouveau code de vérification.",
+    "dobPlaceholder": "Choisir la date de naissance",
+    "unsavedChangesTitle": "Vous avez des modifications non enregistrées",
+    "unsavedChangesDesc": "Si vous quittez, vos modifications seront perdues.",
+    "keepEditing": "Continuer la modification",
+    "saveAndLeave": "Enregistrer et quitter",
+    "leaveWithoutSaving": "Quitter sans enregistrer"
   },
   "friends": {
     "title": "Amis",
@@ -354,7 +368,9 @@
     "acceptRequestError": "Impossible d'accepter la demande d'ami",
     "removeFriendSuccess": "Ami supprimé / demande annulée",
     "removeFriendError": "Impossible de terminer l'action",
-    "phoneSearchHint": "Saisissez le numéro de téléphone complet pour rechercher"
+    "phoneSearchHint": "Saisissez le numéro de téléphone complet pour rechercher",
+    "unfriendConfirmTitle": "Retirer cet ami ?",
+    "unfriendConfirmDesc": "Vous et cette personne ne serez plus amis. Vous pourrez renvoyer une demande d'ami plus tard."
   },
   "conversations": {
     "selectPrompt": "Sélectionnez une conversation pour commencer"
@@ -655,7 +671,20 @@
     "mute30min": "30 minutes",
     "mute1hour": "1 heure",
     "mute24hours": "24 heures",
-    "muteForever": "Jusqu'à ce que je le réactive"
+    "muteForever": "Jusqu'à ce que je le réactive",
+    "tabChats": "Discussions",
+    "tabArchived": "Archivées",
+    "tabRequests": "Demandes",
+    "dmRequestSubtitle": "Veut vous envoyer un message",
+    "groupInviteSubtitle": "Vous a invité dans un groupe",
+    "acceptRequest": "Accepter",
+    "declineRequest": "Refuser",
+    "noRequests": "Aucune demande en attente",
+    "groupLabel": "Groupe",
+    "blockConfirmTitle": "Bloquer {name} ?",
+    "blockConfirmDesc": "{name} ne pourra plus vous envoyer de messages ni voir la plupart des informations de votre profil.",
+    "unfriendConfirmTitle": "Retirer cet ami ?",
+    "unfriendConfirmDesc": "Vous et cette personne ne serez plus amis. Vous pourrez renvoyer une demande d'ami plus tard."
   },
   "aiHub": {
     "title": "Hub IA",

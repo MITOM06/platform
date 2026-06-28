@@ -503,6 +503,27 @@ class AppLocalizationsKo extends AppLocalizations {
   String get tabChats => '채팅';
 
   @override
+  String get tabArchived => '보관됨';
+
+  @override
+  String get tabRequests => '요청';
+
+  @override
+  String get noRequests => '대기 중인 요청이 없습니다';
+
+  @override
+  String get declineRequest => '거절';
+
+  @override
+  String get dmRequestSubtitle => '메시지를 보내려고 합니다';
+
+  @override
+  String get groupInviteSubtitle => '그룹에 초대했습니다';
+
+  @override
+  String get blockedChatsTitle => '차단된 채팅';
+
+  @override
   String get newGroup => '새 그룹';
 
   @override
@@ -1200,6 +1221,38 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get phoneHint => '901 234 567';
+
+  @override
+  String get phoneNoNumber => '전화번호 없음';
+
+  @override
+  String get phoneNoticeText => '계정 보안을 강화하려면 전화번호를 추가하세요.';
+
+  @override
+  String get phoneVerifyAction => '인증';
+
+  @override
+  String get phoneUnverifiedBadge => '미인증';
+
+  @override
+  String get phoneModalPhoneSubtitle => '인증 코드를 받을 전화번호를 입력하세요.';
+
+  @override
+  String get phoneRateLimit => '새 코드를 요청하기 전에 잠시 기다려 주세요.';
+
+  @override
+  String get phoneAlreadyTaken => '이미 사용 중인 전화번호입니다.';
+
+  @override
+  String get phoneOtpExpired => '코드가 만료되었습니다. 새 코드를 요청하세요.';
+
+  @override
+  String get phoneResend => '코드 재전송';
+
+  @override
+  String phoneResendCountdown(int seconds) {
+    return '$seconds초 후 재전송';
+  }
 
   @override
   String get profilePrivacySection => '개인정보 보호';
@@ -2846,4 +2899,19 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get profileBlockedByOwner => '이 사용자의 프로필을 볼 수 없습니다';
+
+  @override
+  String get unsavedChangesTitle => '저장하지 않은 변경 사항이 있습니다';
+
+  @override
+  String get unsavedChangesDesc => '페이지를 떠나면 변경 사항이 사라집니다.';
+
+  @override
+  String get keepEditing => '계속 편집';
+
+  @override
+  String get saveAndLeave => '저장 후 나가기';
+
+  @override
+  String get leaveWithoutSaving => '저장하지 않고 나가기';
 }

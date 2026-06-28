@@ -10,7 +10,17 @@ import { toast } from 'sonner'
 import { useTranslations } from 'next-intl'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { ArrowLeft } from 'lucide-react'
-import Link from 'next/link'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
+import { Button } from '@/components/ui/button'
 import { useAuthStore } from '@/lib/store/auth.store'
 import { authService } from '@/lib/api/auth'
 import { chatService } from '@/lib/api/chat'
@@ -36,6 +46,7 @@ export default function EditProfilePage() {
   const accessToken = useAuthStore((s) => s.accessToken)
   const queryClient = useQueryClient()
   const [saving, setSaving] = useState(false)
+  const [leaveConfirmOpen, setLeaveConfirmOpen] = useState(false)
 
   // Phone is saved to the DB only via the OTP verify endpoint, not on form
   // submit — so it lives in local state, seeded from the persisted profile.
@@ -77,6 +88,7 @@ export default function EditProfilePage() {
 
   const {
     register,
+    control,
     handleSubmit,
     reset,
     watch,
@@ -219,6 +231,32 @@ export default function EditProfilePage() {
     }
   }
 
+  // Submit handler exposed so the unsaved-changes dialog can "Save and leave".
+  const handleSave = handleSubmit(onSubmit)
+
+  // Unsaved-changes guard: dirty form fields OR staged (not-yet-uploaded) images.
+  const hasUnsavedChanges = isDirty || !!avatarBlob || !!coverBlob
+
+  // Warn on browser close/refresh while there are unsaved changes.
+  useEffect(() => {
+    const handler = (e: BeforeUnloadEvent) => {
+      if (!hasUnsavedChanges) return
+      e.preventDefault()
+      e.returnValue = '' // required for Chrome to show the native dialog
+    }
+    window.addEventListener('beforeunload', handler)
+    return () => window.removeEventListener('beforeunload', handler)
+  }, [hasUnsavedChanges])
+
+  // In-app back navigation: confirm before discarding unsaved changes.
+  const handleBack = () => {
+    if (hasUnsavedChanges) {
+      setLeaveConfirmOpen(true)
+    } else {
+      router.push('/profile')
+    }
+  }
+
   if (!user) return null
 
   const initials = user.displayName
@@ -236,12 +274,13 @@ export default function EditProfilePage() {
     <div className="flex flex-col h-full">
       {/* Header */}
       <header className="h-14 border-b px-4 flex items-center gap-3 shrink-0 bg-background/95 backdrop-blur-md z-10">
-        <Link
-          href="/profile"
+        <button
+          type="button"
+          onClick={handleBack}
           className="text-muted-foreground hover:text-foreground transition-colors"
         >
           <ArrowLeft className="size-5" />
-        </Link>
+        </button>
         <span className="font-semibold text-base">{t('title')}</span>
       </header>
 
@@ -259,11 +298,12 @@ export default function EditProfilePage() {
           onAvatarPick={handleAvatarPick}
         />
 
-        <div className="relative max-w-md mx-auto px-6">
+        <div className="relative max-w-2xl mx-auto px-6">
           <Separator className="mb-6" />
 
           <ProfileForm
             register={register}
+            control={control}
             errors={errors}
             gender={gender}
             showDateOfBirth={showDateOfBirth}
@@ -280,6 +320,7 @@ export default function EditProfilePage() {
               bioLabel: t('bioLabel'),
               bioPlaceholder: t('bioPlaceholder'),
               dobLabel: t('dobLabel'),
+              dobPlaceholder: t('dobPlaceholder'),
               phoneLabel: t('phoneLabel'),
               phonePlaceholder: t('phonePlaceholder'),
               phoneSendOtp: t('phoneSendOtp'),
@@ -300,6 +341,11 @@ export default function EditProfilePage() {
               phoneErrorVerify: t('phoneErrorVerify'),
               phoneErrorExpired: t('phoneErrorExpired'),
               phoneErrorTaken: t('phoneErrorTaken'),
+              phoneNoticeText: t('phoneNoticeText'),
+              phoneVerifyAction: t('phoneVerifyAction'),
+              phoneModalPhoneTitle: t('phoneModalPhoneTitle'),
+              phoneModalPhoneSubtitle: t('phoneModalPhoneSubtitle'),
+              phoneErrorRateLimit: t('phoneErrorRateLimit'),
               genderLabel: t('genderLabel'),
               genderPlaceholder: t('genderPlaceholder'),
               genderMale: t('genderMale'),
@@ -331,6 +377,36 @@ export default function EditProfilePage() {
           onConfirm={handleCropConfirm}
         />
       )}
+
+      <AlertDialog open={leaveConfirmOpen} onOpenChange={setLeaveConfirmOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t('unsavedChangesTitle')}</AlertDialogTitle>
+            <AlertDialogDescription>{t('unsavedChangesDesc')}</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{t('keepEditing')}</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={async () => {
+                setLeaveConfirmOpen(false)
+                await handleSave()
+              }}
+            >
+              {t('saveAndLeave')}
+            </AlertDialogAction>
+            <Button
+              variant="ghost"
+              className="text-destructive hover:text-destructive"
+              onClick={() => {
+                setLeaveConfirmOpen(false)
+                router.push('/profile')
+              }}
+            >
+              {t('leaveWithoutSaving')}
+            </Button>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }

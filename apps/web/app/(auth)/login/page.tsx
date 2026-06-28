@@ -1,11 +1,11 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { useQuery } from '@tanstack/react-query'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { toast } from 'sonner'
 import Link from 'next/link'
 import { Eye, EyeOff } from 'lucide-react'
@@ -48,8 +48,23 @@ export default function LoginPage() {
   const {
     register,
     handleSubmit,
+    setValue,
     formState: { errors, isSubmitting },
   } = useForm<FormData>({ resolver: zodResolver(schema) })
+
+  // After a logout we redirect here with `?cleared=1`. Browsers re-autofill the
+  // form *after* React renders, so we wipe the fields on a short delay to win
+  // that race. A normal visit to /login (no `?cleared=1`) keeps legitimate
+  // autofill working.
+  const searchParams = useSearchParams()
+  useEffect(() => {
+    if (searchParams?.get('cleared') !== '1') return
+    const timer = setTimeout(() => {
+      setValue('email', '')
+      setValue('password', '')
+    }, 150)
+    return () => clearTimeout(timer)
+  }, [searchParams, setValue])
 
   const onSubmit = async (data: FormData) => {
     try {

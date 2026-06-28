@@ -309,7 +309,28 @@ export class AuthService {
   }
 
   // ===================== FORGOT / RESET PASSWORD =====================
+
+  /**
+   * Per-email OTP send rate limit: max 3 sends per 10-minute window.
+   * Shared key across forgotPassword + resendOtp so the total OTP emails to a
+   * given address (regardless of which endpoint triggered them) count toward
+   * one window. Guards against multi-IP spam that the global IP throttler misses.
+   */
+  private async enforceForgotOtpRateLimit(email: string): Promise<void> {
+    const rateKey = `forgot_otp_rate:${email.toLowerCase()}`;
+    const sends = await this.redis.incr(rateKey);
+    if (sends === 1) {
+      await this.redis.expire(rateKey, 600); // 10 min window
+    }
+    if (sends > 3) {
+      throw new BadRequestException({ code: AuthCode.TOO_MANY_OTP_REQUESTS });
+    }
+  }
+
   async forgotPassword(email: string, locale: string = 'en') {
+    // ── Per-email rate limit: max 3 OTP sends per 10 minutes ──
+    await this.enforceForgotOtpRateLimit(email);
+
     const user = await this.usersService.findByEmail(email);
     if (!user) throw new NotFoundException({ code: AuthCode.EMAIL_NOT_FOUND });
 
@@ -522,6 +543,9 @@ export class AuthService {
   }
 
   async resendOtp(email: string, locale: string = 'en') {
+    // ── Per-email rate limit (shared window with forgotPassword) ──
+    await this.enforceForgotOtpRateLimit(email);
+
     const cooldownKey = `otp_resend_cooldown:${email}`;
     const cooldownTTL = Number(
       this.configService.get('OTP_RESEND_COOLDOWN', 60),

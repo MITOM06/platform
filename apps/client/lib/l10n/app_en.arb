@@ -62,7 +62,9 @@
   "errRequestFailed": "Request failed ({code})",
   "@errRequestFailed": {
     "placeholders": {
-      "code": { "type": "String" }
+      "code": {
+        "type": "String"
+      }
     }
   },
   "errCancelled": "The request was cancelled",
@@ -194,6 +196,13 @@
   "typingLabel": "typing",
   "messageHint": "Type a message...",
   "tabChats": "Chats",
+  "tabArchived": "Archived",
+  "tabRequests": "Requests",
+  "noRequests": "No pending requests",
+  "declineRequest": "Decline",
+  "dmRequestSubtitle": "Wants to message you",
+  "groupInviteSubtitle": "Invited you to a group",
+  "blockedChatsTitle": "Blocked chats",
   "newGroup": "New group",
   "newDirect": "New chat",
   "createGroup": "Create group",
@@ -556,7 +565,9 @@
   "phoneOtpSubtitle": "Enter the 6-digit code sent to {phone}",
   "@phoneOtpSubtitle": {
     "placeholders": {
-      "phone": { "type": "String" }
+      "phone": {
+        "type": "String"
+      }
     }
   },
   "phoneOtpIncomplete": "Enter all 6 digits",
@@ -565,6 +576,23 @@
   "phoneVerifying": "Verifying...",
   "phoneConfirm": "Confirm",
   "phoneHint": "901 234 567",
+  "phoneNoNumber": "No phone number",
+  "phoneNoticeText": "Add a phone number to help secure your account.",
+  "phoneVerifyAction": "Verify",
+  "phoneUnverifiedBadge": "Unverified",
+  "phoneModalPhoneSubtitle": "Enter your phone number to receive a verification code.",
+  "phoneRateLimit": "Please wait before requesting another code.",
+  "phoneAlreadyTaken": "This phone number is already in use.",
+  "phoneOtpExpired": "Code expired — request a new one.",
+  "phoneResend": "Resend code",
+  "phoneResendCountdown": "Resend in {seconds}s",
+  "@phoneResendCountdown": {
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
   "profilePrivacySection": "Privacy",
   "profileEditMode": "Edit Profile",
   "profileSave": "Save",
@@ -1351,5 +1379,10 @@
   "mute1hour": "1 hour",
   "mute24hours": "24 hours",
   "muteForever": "Until I turn it back on",
-  "profileBlockedByOwner": "This user's profile is not available"
+  "profileBlockedByOwner": "This user's profile is not available",
+  "unsavedChangesTitle": "You have unsaved changes",
+  "unsavedChangesDesc": "If you leave, your changes will be lost.",
+  "keepEditing": "Keep editing",
+  "saveAndLeave": "Save and leave",
+  "leaveWithoutSaving": "Leave without saving"
 }

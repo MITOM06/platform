@@ -503,6 +503,27 @@ class AppLocalizationsJa extends AppLocalizations {
   String get tabChats => 'チャット';
 
   @override
+  String get tabArchived => 'アーカイブ';
+
+  @override
+  String get tabRequests => 'リクエスト';
+
+  @override
+  String get noRequests => '保留中のリクエストはありません';
+
+  @override
+  String get declineRequest => '拒否';
+
+  @override
+  String get dmRequestSubtitle => 'メッセージを送りたい';
+
+  @override
+  String get groupInviteSubtitle => 'グループに招待されました';
+
+  @override
+  String get blockedChatsTitle => 'ブロック中のチャット';
+
+  @override
   String get newGroup => '新しいグループ';
 
   @override
@@ -1200,6 +1221,38 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get phoneHint => '901 234 567';
+
+  @override
+  String get phoneNoNumber => '電話番号がありません';
+
+  @override
+  String get phoneNoticeText => 'アカウントのセキュリティを高めるために電話番号を追加してください。';
+
+  @override
+  String get phoneVerifyAction => '認証';
+
+  @override
+  String get phoneUnverifiedBadge => '未認証';
+
+  @override
+  String get phoneModalPhoneSubtitle => '認証コードを受け取る電話番号を入力してください。';
+
+  @override
+  String get phoneRateLimit => '新しいコードをリクエストするまで少しお待ちください。';
+
+  @override
+  String get phoneAlreadyTaken => 'この電話番号は既に使用されています。';
+
+  @override
+  String get phoneOtpExpired => 'コードの有効期限が切れました。新しいコードをリクエストしてください。';
+
+  @override
+  String get phoneResend => 'コードを再送信';
+
+  @override
+  String phoneResendCountdown(int seconds) {
+    return '$seconds秒後に再送信';
+  }
 
   @override
   String get profilePrivacySection => 'プライバシー';
@@ -2844,4 +2897,19 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get profileBlockedByOwner => 'このユーザーのプロフィールは表示できません';
+
+  @override
+  String get unsavedChangesTitle => '保存されていない変更があります';
+
+  @override
+  String get unsavedChangesDesc => 'このページを離れると、変更内容は失われます。';
+
+  @override
+  String get keepEditing => '編集を続ける';
+
+  @override
+  String get saveAndLeave => '保存して移動';
+
+  @override
+  String get leaveWithoutSaving => '保存せずに移動';
 }

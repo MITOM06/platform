@@ -376,13 +376,12 @@ class SettingsScreen extends ConsumerWidget {
                 _settingsCard(
                   context: context,
                   isDark: isDark,
-                  glowColor: AppTheme.ponCyan,
-                  icon: Icons.archive_outlined,
-                  title: context.l10n.archivedChats,
-                  subtitle: context.l10n.archivedChatsSubtitle,
+                  glowColor: Colors.redAccent,
+                  icon: Icons.block_rounded,
+                  title: context.l10n.blockedChatsTitle,
                   onTap: () {
                     if (isDialog) Navigator.of(context).pop();
-                    context.push('/archived');
+                    context.push('/blocked');
                   },
                 ),
                 const SizedBox(height: 24),

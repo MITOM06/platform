@@ -509,6 +509,27 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tabChats => 'Chats';
 
   @override
+  String get tabArchived => 'Archived';
+
+  @override
+  String get tabRequests => 'Requests';
+
+  @override
+  String get noRequests => 'No pending requests';
+
+  @override
+  String get declineRequest => 'Decline';
+
+  @override
+  String get dmRequestSubtitle => 'Wants to message you';
+
+  @override
+  String get groupInviteSubtitle => 'Invited you to a group';
+
+  @override
+  String get blockedChatsTitle => 'Blocked chats';
+
+  @override
   String get newGroup => 'New group';
 
   @override
@@ -1212,6 +1233,40 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get phoneHint => '901 234 567';
+
+  @override
+  String get phoneNoNumber => 'No phone number';
+
+  @override
+  String get phoneNoticeText =>
+      'Add a phone number to help secure your account.';
+
+  @override
+  String get phoneVerifyAction => 'Verify';
+
+  @override
+  String get phoneUnverifiedBadge => 'Unverified';
+
+  @override
+  String get phoneModalPhoneSubtitle =>
+      'Enter your phone number to receive a verification code.';
+
+  @override
+  String get phoneRateLimit => 'Please wait before requesting another code.';
+
+  @override
+  String get phoneAlreadyTaken => 'This phone number is already in use.';
+
+  @override
+  String get phoneOtpExpired => 'Code expired — request a new one.';
+
+  @override
+  String get phoneResend => 'Resend code';
+
+  @override
+  String phoneResendCountdown(int seconds) {
+    return 'Resend in ${seconds}s';
+  }
 
   @override
   String get profilePrivacySection => 'Privacy';
@@ -2904,4 +2959,19 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get profileBlockedByOwner => 'This user\'s profile is not available';
+
+  @override
+  String get unsavedChangesTitle => 'You have unsaved changes';
+
+  @override
+  String get unsavedChangesDesc => 'If you leave, your changes will be lost.';
+
+  @override
+  String get keepEditing => 'Keep editing';
+
+  @override
+  String get saveAndLeave => 'Save and leave';
+
+  @override
+  String get leaveWithoutSaving => 'Leave without saving';
 }

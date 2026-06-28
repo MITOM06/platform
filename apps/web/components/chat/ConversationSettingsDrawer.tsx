@@ -25,6 +25,7 @@ import { FilesMediaSection } from './group/FilesMediaSection'
 import { PrivacySupportSection } from './group/PrivacySupportSection'
 import { PinnedMessagesSection } from './PinnedMessagesSection'
 import { MuteDurationPicker } from './MuteDurationPicker'
+import { ConfirmDialog } from '@/components/common/ConfirmDialog'
 import { setNickname, nicknameSystemMessage, useNicknames } from '@/lib/nicknames'
 import {
   useQuickReaction, setQuickReaction, quickReactionSystemMessage,
@@ -62,6 +63,7 @@ export function ConversationSettingsDrawer({
   const queryClient = useQueryClient()
   const [saving, setSaving] = useState(false)
   const [confirmClearOpen, setConfirmClearOpen] = useState(false)
+  const [blockConfirmOpen, setBlockConfirmOpen] = useState(false)
   const [wallpaperOpen, setWallpaperOpen] = useState(false)
   // Track which conversation id the local block override belongs to so the
   // derived value automatically resets when the active conversation switches.
@@ -198,6 +200,15 @@ export function ConversationSettingsDrawer({
         : chatService.archiveConversation(conversation.id),
       isArchived ? t('unarchiveSuccess') : t('archiveSuccess'),
     )
+
+  // Blocking is destructive → confirm first. Unblocking runs directly.
+  const handleBlockButtonClick = () => {
+    if (isBlocked) {
+      handleBlockToggle()
+    } else {
+      setBlockConfirmOpen(true)
+    }
+  }
 
   const handleBlockToggle = async () => {
     if (!otherUserId) return
@@ -356,7 +367,7 @@ export function ConversationSettingsDrawer({
                 isAI={isAI}
                 isBlocked={isBlocked}
                 saving={saving}
-                onBlockToggle={handleBlockToggle}
+                onBlockToggle={handleBlockButtonClick}
                 onLeaveGroup={handleLeaveGroup}
                 onClearHistory={() => setConfirmClearOpen(true)}
                 onDelete={handleDelete}
@@ -399,6 +410,16 @@ export function ConversationSettingsDrawer({
         </DialogFooter>
       </DialogContent>
     </Dialog>
+
+    {/* Confirmation dialog for Block user */}
+    <ConfirmDialog
+      open={blockConfirmOpen}
+      onOpenChange={setBlockConfirmOpen}
+      title={t('blockConfirmTitle', { name: displayName })}
+      description={t('blockConfirmDesc', { name: displayName })}
+      confirmLabel={t('blockUser')}
+      onConfirm={handleBlockToggle}
+    />
     </>
   )
 }

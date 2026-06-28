@@ -520,6 +520,27 @@ class AppLocalizationsFr extends AppLocalizations {
   String get tabChats => 'Discussions';
 
   @override
+  String get tabArchived => 'Archivés';
+
+  @override
+  String get tabRequests => 'Demandes';
+
+  @override
+  String get noRequests => 'Aucune demande en attente';
+
+  @override
+  String get declineRequest => 'Refuser';
+
+  @override
+  String get dmRequestSubtitle => 'Veut vous envoyer un message';
+
+  @override
+  String get groupInviteSubtitle => 'Vous a invité dans un groupe';
+
+  @override
+  String get blockedChatsTitle => 'Chats bloqués';
+
+  @override
   String get newGroup => 'Nouveau groupe';
 
   @override
@@ -1229,6 +1250,41 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get phoneHint => '901 234 567';
+
+  @override
+  String get phoneNoNumber => 'Aucun numéro de téléphone';
+
+  @override
+  String get phoneNoticeText =>
+      'Ajoutez un numéro de téléphone pour sécuriser votre compte.';
+
+  @override
+  String get phoneVerifyAction => 'Vérifier';
+
+  @override
+  String get phoneUnverifiedBadge => 'Non vérifié';
+
+  @override
+  String get phoneModalPhoneSubtitle =>
+      'Saisissez votre numéro de téléphone pour recevoir un code.';
+
+  @override
+  String get phoneRateLimit =>
+      'Veuillez patienter avant de demander un autre code.';
+
+  @override
+  String get phoneAlreadyTaken => 'Ce numéro de téléphone est déjà utilisé.';
+
+  @override
+  String get phoneOtpExpired => 'Code expiré — demandez-en un nouveau.';
+
+  @override
+  String get phoneResend => 'Renvoyer le code';
+
+  @override
+  String phoneResendCountdown(int seconds) {
+    return 'Renvoyer dans ${seconds}s';
+  }
 
   @override
   String get profilePrivacySection => 'Confidentialité';
@@ -2946,4 +3002,21 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get profileBlockedByOwner =>
       'Le profil de cet utilisateur n\'est pas disponible';
+
+  @override
+  String get unsavedChangesTitle =>
+      'Vous avez des modifications non enregistrées';
+
+  @override
+  String get unsavedChangesDesc =>
+      'Si vous quittez, vos modifications seront perdues.';
+
+  @override
+  String get keepEditing => 'Continuer la modification';
+
+  @override
+  String get saveAndLeave => 'Enregistrer et quitter';
+
+  @override
+  String get leaveWithoutSaving => 'Quitter sans enregistrer';
 }

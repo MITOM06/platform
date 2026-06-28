@@ -180,7 +180,8 @@
     "errValDisplayNameTooShort": "Tên hiển thị quá ngắn (tối thiểu 2 ký tự).",
     "errValPasswordTooShort": "Mật khẩu phải có ít nhất 8 ký tự.",
     "errGeneric": "Đã xảy ra lỗi. Vui lòng thử lại.",
-    "tagline": "Kết nối & Trò chuyện"
+    "tagline": "Kết nối & Trò chuyện",
+    "errTooManyOtpRequests": "Bạn đã yêu cầu quá nhiều mã OTP. Vui lòng thử lại sau 10 phút."
   },
   "settings": {
     "title": "Cài đặt",
@@ -192,6 +193,8 @@
     "themeChanged": "Đã chuyển sang giao diện {theme}",
     "archived": "Tin nhắn đã lưu trữ",
     "archivedSubtitle": "Xem các cuộc trò chuyện đã ẩn",
+    "blockedChats": "Tin nhắn bị chặn",
+    "blockedChatsSubtitle": "Quản lý các cuộc trò chuyện đã chặn",
     "explore": "Khám phá cộng đồng",
     "exploreSubtitle": "Tìm và tham gia các kênh công khai",
     "notifications": "Thông báo",
@@ -331,7 +334,18 @@
     "phoneErrorSend": "Không thể gửi OTP. Thử lại sau.",
     "phoneErrorVerify": "Mã OTP sai hoặc đã hết hạn",
     "phoneErrorExpired": "Mã đã hết hạn — gửi lại mã mới",
-    "phoneErrorTaken": "Số điện thoại này đã được sử dụng"
+    "phoneErrorTaken": "Số điện thoại này đã được sử dụng",
+    "phoneNoticeText": "Thêm số điện thoại để tăng tính bảo mật cho tài khoản.",
+    "phoneVerifyAction": "Xác minh",
+    "phoneModalPhoneTitle": "Xác minh số điện thoại",
+    "phoneModalPhoneSubtitle": "Nhập số điện thoại để nhận mã xác minh.",
+    "phoneErrorRateLimit": "Vui lòng chờ trước khi gửi lại mã xác minh.",
+    "dobPlaceholder": "Chọn ngày sinh",
+    "unsavedChangesTitle": "Bạn có thay đổi chưa lưu",
+    "unsavedChangesDesc": "Nếu rời trang, các thay đổi của bạn sẽ bị mất.",
+    "keepEditing": "Tiếp tục chỉnh sửa",
+    "saveAndLeave": "Lưu và thoát",
+    "leaveWithoutSaving": "Thoát không lưu"
   },
   "friends": {
     "title": "Bạn bè",
@@ -354,7 +368,9 @@
     "acceptRequestError": "Không thể chấp nhận lời mời",
     "removeFriendSuccess": "Đã xóa bạn bè/hủy lời mời",
     "removeFriendError": "Không thể thực hiện hành động này",
-    "phoneSearchHint": "Nhập đầy đủ số điện thoại để tìm kiếm"
+    "phoneSearchHint": "Nhập đầy đủ số điện thoại để tìm kiếm",
+    "unfriendConfirmTitle": "Xóa kết bạn?",
+    "unfriendConfirmDesc": "Bạn và người này sẽ không còn là bạn bè. Bạn vẫn có thể gửi lời mời kết bạn lại sau."
   },
   "conversations": {
     "selectPrompt": "Chọn một cuộc trò chuyện để bắt đầu"
@@ -669,7 +685,20 @@
     "mute30min": "30 phút",
     "mute1hour": "1 giờ",
     "mute24hours": "24 giờ",
-    "muteForever": "Cho đến khi tôi bật lại"
+    "muteForever": "Cho đến khi tôi bật lại",
+    "tabChats": "Đoạn chat",
+    "tabArchived": "Lưu trữ",
+    "tabRequests": "Người lạ",
+    "dmRequestSubtitle": "Muốn nhắn tin với bạn",
+    "groupInviteSubtitle": "Đã mời bạn vào nhóm",
+    "acceptRequest": "Chấp nhận",
+    "declineRequest": "Từ chối",
+    "noRequests": "Không có yêu cầu đang chờ",
+    "groupLabel": "Nhóm",
+    "blockConfirmTitle": "Chặn {name}?",
+    "blockConfirmDesc": "{name} sẽ không thể nhắn tin cho bạn hoặc xem hầu hết thông tin hồ sơ của bạn.",
+    "unfriendConfirmTitle": "Xóa kết bạn?",
+    "unfriendConfirmDesc": "Bạn và người này sẽ không còn là bạn bè. Bạn vẫn có thể gửi lời mời kết bạn lại sau."
   },
   "aiHub": {
     "title": "Trung tâm AI",

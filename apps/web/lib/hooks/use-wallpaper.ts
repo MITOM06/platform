@@ -19,56 +19,56 @@ const WALLPAPER_CLASSES: Record<string, string> = {
 
   // ── original 5 ──
   sunset:
-    'bg-gradient-to-br from-orange-400/30 via-pink-500/20 to-purple-600/30 dark:from-orange-800/50 dark:via-pink-900/35 dark:to-purple-900/50',
+    'bg-gradient-to-br from-orange-400/85 via-pink-500/75 to-purple-600/85 dark:from-orange-800/90 dark:via-pink-900/85 dark:to-purple-900/90',
   midnight:
-    'bg-gradient-to-br from-indigo-900/45 via-slate-800/55 to-purple-900/50 dark:from-indigo-950/70 dark:via-slate-950/80 dark:to-purple-950/75',
+    'bg-gradient-to-br from-indigo-900/90 via-slate-800/92 to-purple-900/90 dark:from-indigo-950/95 dark:via-slate-950/97 dark:to-purple-950/95',
   sweet_pink:
-    'bg-gradient-to-br from-pink-300/30 via-rose-400/20 to-red-400/30 dark:from-pink-900/50 dark:via-rose-950/40 dark:to-red-950/50',
+    'bg-gradient-to-br from-pink-300/80 via-rose-400/75 to-red-400/80 dark:from-pink-900/88 dark:via-rose-950/85 dark:to-red-950/88',
   neon_teal:
-    'bg-gradient-to-br from-teal-800/40 via-cyan-800/50 to-emerald-800/40 dark:from-teal-950/65 dark:via-cyan-950/75 dark:to-emerald-950/65',
+    'bg-gradient-to-br from-teal-800/88 via-cyan-800/90 to-emerald-800/88 dark:from-teal-950/93 dark:via-cyan-950/95 dark:to-emerald-950/93',
   dark_shadow:
-    'bg-gradient-to-br from-black/45 via-zinc-900/60 to-zinc-950/55 dark:from-black/80 dark:via-zinc-950/88 dark:to-zinc-950/90',
+    'bg-gradient-to-br from-black/90 via-zinc-900/93 to-zinc-950/92 dark:from-black/97 dark:via-zinc-950/98 dark:to-zinc-950/98',
 
   // ── màu sắc đơn giản ──
   ocean_blue:
-    'bg-gradient-to-br from-blue-800/40 via-sky-800/30 to-blue-800/50 dark:from-blue-950/70 dark:via-sky-950/60 dark:to-blue-950/80',
+    'bg-gradient-to-br from-blue-800/85 via-sky-800/80 to-blue-800/88 dark:from-blue-950/92 dark:via-sky-950/90 dark:to-blue-950/95',
   forest_green:
-    'bg-gradient-to-br from-green-800/40 via-emerald-800/30 to-green-800/50 dark:from-green-950/70 dark:via-emerald-950/60 dark:to-green-950/80',
+    'bg-gradient-to-br from-green-800/85 via-emerald-800/80 to-green-800/88 dark:from-green-950/92 dark:via-emerald-950/90 dark:to-green-950/95',
   purple_haze:
-    'bg-gradient-to-br from-purple-800/40 via-violet-800/30 to-fuchsia-800/40 dark:from-purple-950/70 dark:via-violet-950/60 dark:to-fuchsia-950/70',
+    'bg-gradient-to-br from-purple-800/85 via-violet-800/80 to-fuchsia-800/85 dark:from-purple-950/92 dark:via-violet-950/88 dark:to-fuchsia-950/92',
   warm_amber:
-    'bg-gradient-to-br from-amber-700/35 via-yellow-700/25 to-orange-700/35 dark:from-amber-900/60 dark:via-yellow-950/50 dark:to-orange-900/60',
+    'bg-gradient-to-br from-amber-700/82 via-yellow-700/78 to-orange-700/82 dark:from-amber-900/90 dark:via-yellow-950/88 dark:to-orange-900/90',
   rose_gold:
-    'bg-gradient-to-br from-rose-700/35 via-pink-700/25 to-amber-700/30 dark:from-rose-900/60 dark:via-pink-950/50 dark:to-amber-900/55',
+    'bg-gradient-to-br from-rose-700/82 via-pink-700/78 to-amber-700/80 dark:from-rose-900/90 dark:via-pink-950/88 dark:to-amber-900/88',
   storm:
-    'bg-gradient-to-br from-slate-700/45 via-blue-900/35 to-slate-700/50 dark:from-slate-950/75 dark:via-blue-950/65 dark:to-slate-950/80',
+    'bg-gradient-to-br from-slate-700/88 via-blue-900/85 to-slate-700/90 dark:from-slate-950/95 dark:via-blue-950/93 dark:to-slate-950/97',
   cherry_blossom:
-    'bg-gradient-to-br from-pink-300/25 via-pink-400/18 to-rose-300/25 dark:from-pink-900/55 dark:via-rose-950/45 dark:to-pink-900/55',
+    'bg-gradient-to-br from-pink-300/78 via-pink-400/72 to-rose-300/78 dark:from-pink-900/88 dark:via-rose-950/85 dark:to-pink-900/88',
   midnight_purple:
-    'bg-gradient-to-br from-purple-900/55 via-indigo-900/65 to-slate-900/70 dark:from-purple-950/80 dark:via-indigo-950/88 dark:to-slate-950/92',
+    'bg-gradient-to-br from-purple-900/92 via-indigo-900/95 to-slate-900/95 dark:from-purple-950/97 dark:via-indigo-950/98 dark:to-slate-950/99',
   coral_reef:
-    'bg-gradient-to-br from-red-700/40 via-orange-700/30 to-rose-800/40 dark:from-red-900/65 dark:via-orange-950/55 dark:to-rose-950/65',
+    'bg-gradient-to-br from-red-700/85 via-orange-700/80 to-rose-800/85 dark:from-red-900/92 dark:via-orange-950/90 dark:to-rose-950/92',
   arctic_ice:
-    'bg-gradient-to-br from-sky-300/25 via-blue-200/18 to-cyan-300/22 dark:from-sky-900/55 dark:via-blue-950/45 dark:to-cyan-950/55',
+    'bg-gradient-to-br from-sky-300/75 via-blue-200/70 to-cyan-300/72 dark:from-sky-900/88 dark:via-blue-950/85 dark:to-cyan-950/88',
 
   // ── gradient sống động ──
   aurora:
-    'bg-gradient-to-br from-teal-700/45 via-emerald-800/35 to-purple-700/45 dark:from-teal-950/72 dark:via-emerald-950/60 dark:to-purple-950/72',
+    'bg-gradient-to-br from-teal-700/88 via-emerald-800/82 to-purple-700/88 dark:from-teal-950/95 dark:via-emerald-950/90 dark:to-purple-950/95',
   galaxy:
-    'bg-gradient-to-br from-indigo-900/65 via-purple-900/55 to-slate-900/75 dark:from-indigo-950/88 dark:via-purple-950/80 dark:to-slate-950/92',
+    'bg-gradient-to-br from-indigo-900/95 via-purple-900/92 to-slate-900/97 dark:from-indigo-950/98 dark:via-purple-950/96 dark:to-slate-950/99',
   fire_ice:
-    'bg-gradient-to-br from-red-700/45 via-slate-800/40 to-blue-700/45 dark:from-red-900/68 dark:via-slate-950/70 dark:to-blue-900/68',
+    'bg-gradient-to-br from-red-700/88 via-slate-800/85 to-blue-700/88 dark:from-red-900/93 dark:via-slate-950/95 dark:to-blue-900/93',
   tropical:
-    'bg-gradient-to-br from-green-700/35 via-cyan-700/28 to-yellow-700/30 dark:from-green-900/62 dark:via-cyan-950/55 dark:to-yellow-900/58',
+    'bg-gradient-to-br from-green-700/82 via-cyan-700/78 to-yellow-700/78 dark:from-green-900/90 dark:via-cyan-950/88 dark:to-yellow-900/88',
   candy:
-    'bg-gradient-to-br from-pink-400/30 via-violet-400/22 to-cyan-400/25 dark:from-pink-900/55 dark:via-violet-950/48 dark:to-cyan-950/55',
+    'bg-gradient-to-br from-pink-400/80 via-violet-400/75 to-cyan-400/78 dark:from-pink-900/90 dark:via-violet-950/88 dark:to-cyan-950/90',
 
   // ── tối giản ──
   pure_dark: 'bg-[#050507] dark:bg-[#030303]',
   soft_gray:
-    'bg-gradient-to-br from-zinc-600/35 via-zinc-700/28 to-zinc-600/35 dark:from-zinc-800/70 dark:via-zinc-900/80 dark:to-zinc-800/70',
+    'bg-gradient-to-br from-zinc-600/85 via-zinc-700/88 to-zinc-600/85 dark:from-zinc-800/93 dark:via-zinc-900/95 dark:to-zinc-800/93',
   warm_night:
-    'bg-gradient-to-br from-zinc-900/60 via-purple-900/25 to-zinc-900/65 dark:from-zinc-950/82 dark:via-purple-950/45 dark:to-zinc-950/85',
+    'bg-gradient-to-br from-zinc-900/92 via-purple-900/78 to-zinc-900/95 dark:from-zinc-950/97 dark:via-purple-950/85 dark:to-zinc-950/98',
 }
 
 // Resolve a stored wallpaper value into a class (presets) or an inline image

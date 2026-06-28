@@ -161,6 +161,13 @@
   "typingLabel": "入力中",
   "messageHint": "メッセージを入力…",
   "tabChats": "チャット",
+  "tabArchived": "アーカイブ",
+  "tabRequests": "リクエスト",
+  "noRequests": "保留中のリクエストはありません",
+  "declineRequest": "拒否",
+  "dmRequestSubtitle": "メッセージを送りたい",
+  "groupInviteSubtitle": "グループに招待されました",
+  "blockedChatsTitle": "ブロック中のチャット",
   "newGroup": "新しいグループ",
   "newDirect": "新しいチャット",
   "createGroup": "グループを作成",
@@ -420,6 +427,23 @@
   "phoneVerifying": "確認中...",
   "phoneConfirm": "確認",
   "phoneHint": "901 234 567",
+  "phoneNoNumber": "電話番号がありません",
+  "phoneNoticeText": "アカウントのセキュリティを高めるために電話番号を追加してください。",
+  "phoneVerifyAction": "認証",
+  "phoneUnverifiedBadge": "未認証",
+  "phoneModalPhoneSubtitle": "認証コードを受け取る電話番号を入力してください。",
+  "phoneRateLimit": "新しいコードをリクエストするまで少しお待ちください。",
+  "phoneAlreadyTaken": "この電話番号は既に使用されています。",
+  "phoneOtpExpired": "コードの有効期限が切れました。新しいコードをリクエストしてください。",
+  "phoneResend": "コードを再送信",
+  "phoneResendCountdown": "{seconds}秒後に再送信",
+  "@phoneResendCountdown": {
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
   "profilePrivacySection": "プライバシー",
   "profileEditMode": "プロフィール編集",
   "profileSave": "保存",
@@ -1022,5 +1046,10 @@
   "mute1hour": "1 時間",
   "mute24hours": "24 時間",
   "muteForever": "手動でオンにするまで",
-  "profileBlockedByOwner": "このユーザーのプロフィールは表示できません"
+  "profileBlockedByOwner": "このユーザーのプロフィールは表示できません",
+  "unsavedChangesTitle": "保存されていない変更があります",
+  "unsavedChangesDesc": "このページを離れると、変更内容は失われます。",
+  "keepEditing": "編集を続ける",
+  "saveAndLeave": "保存して移動",
+  "leaveWithoutSaving": "保存せずに移動"
 }

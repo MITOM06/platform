@@ -517,6 +517,27 @@ class AppLocalizationsEs extends AppLocalizations {
   String get tabChats => 'Chats';
 
   @override
+  String get tabArchived => 'Archivados';
+
+  @override
+  String get tabRequests => 'Solicitudes';
+
+  @override
+  String get noRequests => 'No hay solicitudes pendientes';
+
+  @override
+  String get declineRequest => 'Rechazar';
+
+  @override
+  String get dmRequestSubtitle => 'Quiere enviarte un mensaje';
+
+  @override
+  String get groupInviteSubtitle => 'Te invitó a un grupo';
+
+  @override
+  String get blockedChatsTitle => 'Chats bloqueados';
+
+  @override
   String get newGroup => 'Nuevo grupo';
 
   @override
@@ -1224,6 +1245,40 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get phoneHint => '901 234 567';
+
+  @override
+  String get phoneNoNumber => 'Sin número de teléfono';
+
+  @override
+  String get phoneNoticeText =>
+      'Agrega un número de teléfono para proteger tu cuenta.';
+
+  @override
+  String get phoneVerifyAction => 'Verificar';
+
+  @override
+  String get phoneUnverifiedBadge => 'Sin verificar';
+
+  @override
+  String get phoneModalPhoneSubtitle =>
+      'Introduce tu número de teléfono para recibir un código.';
+
+  @override
+  String get phoneRateLimit => 'Espera antes de solicitar otro código.';
+
+  @override
+  String get phoneAlreadyTaken => 'Este número de teléfono ya está en uso.';
+
+  @override
+  String get phoneOtpExpired => 'El código caducó: solicita uno nuevo.';
+
+  @override
+  String get phoneResend => 'Reenviar código';
+
+  @override
+  String phoneResendCountdown(int seconds) {
+    return 'Reenviar en ${seconds}s';
+  }
 
   @override
   String get profilePrivacySection => 'Privacidad';
@@ -2929,4 +2984,19 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get profileBlockedByOwner =>
       'El perfil de este usuario no está disponible';
+
+  @override
+  String get unsavedChangesTitle => 'Tienes cambios sin guardar';
+
+  @override
+  String get unsavedChangesDesc => 'Si sales, se perderán tus cambios.';
+
+  @override
+  String get keepEditing => 'Seguir editando';
+
+  @override
+  String get saveAndLeave => 'Guardar y salir';
+
+  @override
+  String get leaveWithoutSaving => 'Salir sin guardar';
 }

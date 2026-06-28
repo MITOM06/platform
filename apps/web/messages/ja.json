@@ -180,7 +180,8 @@
     "errValDisplayNameTooShort": "表示名が短すぎます（最小2文字）。",
     "errValPasswordTooShort": "パスワードは8文字以上必要です。",
     "errGeneric": "エラーが発生しました。もう一度お試しください。",
-    "tagline": "つながって、チャット"
+    "tagline": "つながって、チャット",
+    "errTooManyOtpRequests": "OTP コードのリクエストが多すぎます。10 分後にもう一度お試しください。"
   },
   "settings": {
     "title": "設定",
@@ -192,6 +193,8 @@
     "themeChanged": "{theme}テーマに切り替えました",
     "archived": "アーカイブしたチャット",
     "archivedSubtitle": "非表示の会話を表示",
+    "blockedChats": "ブロックしたチャット",
+    "blockedChatsSubtitle": "ブロックした会話を管理",
     "explore": "コミュニティを探す",
     "exploreSubtitle": "公開チャンネルを見つけて参加",
     "notifications": "通知",
@@ -331,7 +334,18 @@
     "phoneErrorSend": "OTPを送信できませんでした。後でもう一度お試しください。",
     "phoneErrorVerify": "OTPコードが間違っているか期限切れです",
     "phoneErrorExpired": "コードの有効期限が切れました。新しいコードを再送信してください",
-    "phoneErrorTaken": "この電話番号はすでに使用されています"
+    "phoneErrorTaken": "この電話番号はすでに使用されています",
+    "phoneNoticeText": "アカウントの安全性を高めるために電話番号を追加してください。",
+    "phoneVerifyAction": "確認",
+    "phoneModalPhoneTitle": "電話番号を確認",
+    "phoneModalPhoneSubtitle": "確認コードを受け取る電話番号を入力してください。",
+    "phoneErrorRateLimit": "新しい確認コードをリクエストする前に少しお待ちください。",
+    "dobPlaceholder": "生年月日を選択",
+    "unsavedChangesTitle": "保存されていない変更があります",
+    "unsavedChangesDesc": "このページを離れると、変更内容は失われます。",
+    "keepEditing": "編集を続ける",
+    "saveAndLeave": "保存して移動",
+    "leaveWithoutSaving": "保存せずに移動"
   },
   "friends": {
     "title": "友達",
@@ -354,7 +368,9 @@
     "acceptRequestError": "友達リクエストを承認できませんでした",
     "removeFriendSuccess": "友達を削除/リクエストをキャンセルしました",
     "removeFriendError": "操作を完了できませんでした",
-    "phoneSearchHint": "検索するには完全な電話番号を入力してください"
+    "phoneSearchHint": "検索するには完全な電話番号を入力してください",
+    "unfriendConfirmTitle": "友達を削除しますか？",
+    "unfriendConfirmDesc": "あなたとこの相手は友達ではなくなります。後でもう一度友達リクエストを送ることができます。"
   },
   "conversations": {
     "selectPrompt": "開始する会話を選択してください"
@@ -655,7 +671,20 @@
     "mute30min": "30 分",
     "mute1hour": "1 時間",
     "mute24hours": "24 時間",
-    "muteForever": "手動でオンにするまで"
+    "muteForever": "手動でオンにするまで",
+    "tabChats": "チャット",
+    "tabArchived": "アーカイブ",
+    "tabRequests": "リクエスト",
+    "dmRequestSubtitle": "メッセージを送りたがっています",
+    "groupInviteSubtitle": "グループに招待されました",
+    "acceptRequest": "承認",
+    "declineRequest": "拒否",
+    "noRequests": "保留中のリクエストはありません",
+    "groupLabel": "グループ",
+    "blockConfirmTitle": "{name} さんをブロックしますか？",
+    "blockConfirmDesc": "{name} さんはあなたにメッセージを送ったり、プロフィール情報の大半を見ることができなくなります。",
+    "unfriendConfirmTitle": "友達を削除しますか？",
+    "unfriendConfirmDesc": "あなたとこの相手は友達ではなくなります。後でもう一度友達リクエストを送ることができます。"
   },
   "aiHub": {
     "title": "AI ハブ",

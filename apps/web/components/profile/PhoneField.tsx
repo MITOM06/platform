@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import PhoneInput, { isValidPhoneNumber } from 'react-phone-number-input'
 import 'react-phone-number-input/style.css'
-import { CheckCircle2, Loader2, ShieldCheck } from 'lucide-react'
+import { CheckCircle2, Loader2, ShieldAlert, Phone } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { OtpInput } from '@/components/auth/OtpInput'
@@ -38,6 +38,12 @@ export interface PhoneFieldLabels {
   errorVerify: string
   errorExpired: string
   errorTaken: string
+  // ── notice-first redesign labels ──
+  noticeText: string
+  verifyAction: string
+  modalPhoneTitle: string
+  modalPhoneSubtitle: string
+  errorRateLimit: string
 }
 
 interface PhoneFieldProps {
@@ -52,6 +58,8 @@ interface PhoneFieldProps {
 const OTP_LENGTH = 6
 const RESEND_COOLDOWN = 60
 
+type VerifyStep = 'phone' | 'otp'
+
 /** Reads the typed auth-service error code (`response.data.code`) without `any`. */
 function errorCode(err: unknown): string | undefined {
   if (typeof err === 'object' && err !== null && 'response' in err) {
@@ -61,18 +69,20 @@ function errorCode(err: unknown): string | undefined {
   return undefined
 }
 
+/**
+ * Notice-first phone verification field with three resting states (no number /
+ * unverified / verified). Tapping Verify or Change opens a two-step modal:
+ * enter number → enter OTP. Mirrors the Flutter PhoneVerificationSection.
+ */
 export function PhoneField({ value, verified, onChange, disabled, labels }: PhoneFieldProps) {
-  // local draft (what's currently in the input, may differ from saved value)
-  const [draft, setDraft] = useState<string>(value ?? '')
-  const [showOtpDialog, setShowOtpDialog] = useState(false)
+  const [modalOpen, setModalOpen] = useState(false)
+  const [step, setStep] = useState<VerifyStep>('phone')
+  const [draft, setDraft] = useState('')
   const [otp, setOtp] = useState<string[]>(Array(OTP_LENGTH).fill(''))
   const [sending, setSending] = useState(false)
   const [verifying, setVerifying] = useState(false)
   const [resendTimer, setResendTimer] = useState(0)
   const [otpError, setOtpError] = useState('')
-
-  // Has the user changed the input from the saved verified number?
-  const isDirty = draft !== value
 
   const startTimer = () => {
     setResendTimer(RESEND_COOLDOWN)
@@ -87,6 +97,14 @@ export function PhoneField({ value, verified, onChange, disabled, labels }: Phon
     }, 1000)
   }
 
+  const openModal = () => {
+    setDraft(value ?? '')
+    setStep('phone')
+    setOtp(Array(OTP_LENGTH).fill(''))
+    setOtpError('')
+    setModalOpen(true)
+  }
+
   const handleSendOtp = async () => {
     if (!draft || !isValidPhoneNumber(draft)) {
       toast.error(labels.errorInvalid)
@@ -97,11 +115,17 @@ export function PhoneField({ value, verified, onChange, disabled, labels }: Phon
       await authService.sendPhoneOtp(draft)
       setOtp(Array(OTP_LENGTH).fill(''))
       setOtpError('')
-      setShowOtpDialog(true)
+      setStep('otp')
       startTimer()
     } catch (err: unknown) {
       const code = errorCode(err)
-      toast.error(code === 'PHONE_ALREADY_TAKEN' ? labels.errorTaken : labels.errorSend)
+      if (code === 'PHONE_OTP_RATE_LIMIT') {
+        toast.error(labels.errorRateLimit)
+      } else if (code === 'PHONE_ALREADY_TAKEN') {
+        toast.error(labels.errorTaken)
+      } else {
+        toast.error(labels.errorSend)
+      }
     } finally {
       setSending(false)
     }
@@ -118,7 +142,7 @@ export function PhoneField({ value, verified, onChange, disabled, labels }: Phon
     try {
       await authService.verifyPhoneOtp(code)
       toast.success(labels.successToast)
-      setShowOtpDialog(false)
+      setModalOpen(false)
       onChange(draft, true)
     } catch (err: unknown) {
       const errCode = errorCode(err)
@@ -128,111 +152,67 @@ export function PhoneField({ value, verified, onChange, disabled, labels }: Phon
     }
   }
 
-  const handleResend = async () => {
+  const handleResend = () => {
     if (resendTimer > 0) return
-    await handleSendOtp()
+    // Go back to the phone step so the user re-confirms the number before we
+    // send another code (and reset the OTP digits).
+    setOtp(Array(OTP_LENGTH).fill(''))
+    setOtpError('')
+    setStep('phone')
   }
 
-  const handlePhoneInputChange = (v: string | undefined) => {
-    const next = v ?? ''
-    setDraft(next)
-    // If the user changes the number away from the saved value, revoke the
-    // locally-shown verified state (the DB still holds the old value until
-    // they verify the new one).
-    if (next !== value) onChange(value, false)
-  }
-
-  const showSendButton = !!draft && (isDirty || !verified)
-  const showChangeButton = verified && !isDirty
-
-  return (
-    <>
-      <div className="space-y-2">
-        <label className="text-sm font-medium flex items-center gap-1.5">
-          {labels.label}
-          {verified && !isDirty && (
-            <span className="inline-flex items-center gap-1 text-xs text-green-500 font-medium">
-              <CheckCircle2 className="size-3.5" />
-              {labels.verified}
-            </span>
-          )}
-        </label>
-
-        <div className="flex gap-2">
-          {/* react-phone-number-input renders country selector + number input */}
-          <PhoneInput
-            international
-            defaultCountry="VN"
-            value={draft}
-            onChange={handlePhoneInputChange}
-            disabled={disabled}
-            className={cn(
-              'flex-1 phone-input-container',
-              'border border-input rounded-md px-3 py-2 text-sm bg-background',
-              'focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-0',
+  const modal = (
+    <Dialog open={modalOpen} onOpenChange={setModalOpen}>
+      <DialogContent className="max-w-sm">
+        <DialogHeader>
+          <DialogTitle>
+            {step === 'phone' ? labels.modalPhoneTitle : labels.otpTitle}
+          </DialogTitle>
+          <DialogDescription>
+            {step === 'phone' ? (
+              labels.modalPhoneSubtitle
+            ) : (
+              <>
+                {labels.otpSubtitle}{' '}
+                <span className="font-medium text-foreground">{draft}</span>
+              </>
             )}
-            placeholder={labels.placeholder}
-          />
+          </DialogDescription>
+        </DialogHeader>
 
-          {showSendButton && (
+        {step === 'phone' ? (
+          <div className="space-y-4 pt-2">
+            <PhoneInput
+              international
+              defaultCountry="VN"
+              value={draft}
+              onChange={(v) => setDraft(v ?? '')}
+              className={cn(
+                'phone-input-container',
+                'border border-input rounded-md px-3 py-2 text-sm bg-background',
+                'focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-0',
+              )}
+              placeholder={labels.placeholder}
+            />
             <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              className="shrink-0"
               onClick={handleSendOtp}
-              disabled={disabled || sending || !isValidPhoneNumber(draft)}
+              disabled={sending || !draft || !isValidPhoneNumber(draft)}
+              className="w-full"
             >
               {sending ? (
                 <>
-                  <Loader2 className="size-3.5 animate-spin mr-1" />
+                  <Loader2 className="size-4 animate-spin mr-2" />
                   {labels.sending}
                 </>
               ) : (
                 labels.sendOtp
               )}
             </Button>
-          )}
-
-          {showChangeButton && (
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              className="shrink-0 text-muted-foreground"
-              onClick={() => setDraft('')}
-              disabled={disabled}
-            >
-              {labels.change}
-            </Button>
-          )}
-        </div>
-
-        {/* Hint text */}
-        {!draft && <p className="text-xs text-muted-foreground">{labels.placeholder}</p>}
-        {draft && isValidPhoneNumber(draft) && !verified && (
-          <p className="text-xs text-amber-500 flex items-center gap-1">
-            <ShieldCheck className="size-3.5" />
-            {labels.unverified}
-          </p>
-        )}
-      </div>
-
-      {/* OTP verification dialog */}
-      <Dialog open={showOtpDialog} onOpenChange={setShowOtpDialog}>
-        <DialogContent className="max-w-sm">
-          <DialogHeader>
-            <DialogTitle>{labels.otpTitle}</DialogTitle>
-            <DialogDescription>
-              {labels.otpSubtitle}{' '}
-              <span className="font-medium text-foreground">{draft}</span>
-            </DialogDescription>
-          </DialogHeader>
-
+          </div>
+        ) : (
           <div className="space-y-5 pt-2">
             <OtpInput value={otp} onChange={setOtp} length={OTP_LENGTH} />
             {otpError && <p className="text-sm text-destructive text-center">{otpError}</p>}
-
             <Button onClick={handleVerify} disabled={verifying} className="w-full">
               {verifying ? (
                 <>
@@ -243,7 +223,6 @@ export function PhoneField({ value, verified, onChange, disabled, labels }: Phon
                 labels.otpConfirm
               )}
             </Button>
-
             <div className="text-center text-sm text-muted-foreground">
               {resendTimer > 0 ? (
                 <span>{labels.resendCountdown.replace('{seconds}', String(resendTimer))}</span>
@@ -258,8 +237,84 @@ export function PhoneField({ value, verified, onChange, disabled, labels }: Phon
               )}
             </div>
           </div>
-        </DialogContent>
-      </Dialog>
-    </>
+        )}
+      </DialogContent>
+    </Dialog>
+  )
+
+  // ── State 3: number present and verified ──
+  if (value && verified) {
+    return (
+      <div className="space-y-1">
+        <label className="text-sm font-medium">{labels.label}</label>
+        <div className="flex items-center gap-2 rounded-md border border-input bg-muted/40 px-3 py-2">
+          <Phone className="size-4 text-muted-foreground shrink-0" />
+          <span className="flex-1 text-sm font-mono truncate">{value}</span>
+          <span className="inline-flex items-center gap-1 text-xs text-green-600 font-medium shrink-0">
+            <CheckCircle2 className="size-3.5" />
+            {labels.verified}
+          </span>
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            className="h-7 text-xs shrink-0"
+            onClick={openModal}
+            disabled={disabled}
+          >
+            {labels.change}
+          </Button>
+        </div>
+        {modal}
+      </div>
+    )
+  }
+
+  // ── State 2: number present but not yet verified ──
+  if (value && !verified) {
+    return (
+      <div className="space-y-1">
+        <label className="text-sm font-medium">{labels.label}</label>
+        <div className="flex items-center gap-2 rounded-md border border-amber-200 bg-amber-50 dark:border-amber-900/40 dark:bg-amber-950/20 px-3 py-2">
+          <Phone className="size-4 text-amber-600 shrink-0" />
+          <span className="flex-1 text-sm font-mono text-muted-foreground truncate">{value}</span>
+          <span className="inline-flex items-center gap-1 text-xs text-amber-600 font-medium shrink-0">
+            <ShieldAlert className="size-3.5" />
+            {labels.unverified}
+          </span>
+          <Button
+            type="button"
+            size="sm"
+            className="h-7 text-xs shrink-0"
+            onClick={openModal}
+            disabled={disabled}
+          >
+            {labels.verifyAction}
+          </Button>
+        </div>
+        {modal}
+      </div>
+    )
+  }
+
+  // ── State 1: no number yet (primary state) ──
+  return (
+    <div className="space-y-1">
+      <label className="text-sm font-medium">{labels.label}</label>
+      <div className="flex items-center gap-3 rounded-md border border-dashed border-border bg-muted/20 px-3 py-3">
+        <ShieldAlert className="size-4 text-muted-foreground shrink-0" />
+        <p className="flex-1 text-sm text-muted-foreground">{labels.noticeText}</p>
+        <Button
+          type="button"
+          size="sm"
+          className="shrink-0"
+          onClick={openModal}
+          disabled={disabled}
+        >
+          {labels.verifyAction}
+        </Button>
+      </div>
+      {modal}
+    </div>
   )
 }

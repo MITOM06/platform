@@ -33,6 +33,23 @@ String authErrorToString(BuildContext context, DioException e) {
   return context.l10n.errActionFailed;
 }
 
+/// Extracts the business error `code` from an auth-service error response.
+///
+/// The auth-error contract puts `{ code, params }` at the top level (and a
+/// nested `{ message: { code } }` legacy shape). Returns `null` when no code is
+/// present (e.g. a network failure). Callers branch on specific codes such as
+/// `PHONE_OTP_RATE_LIMIT` / `PHONE_ALREADY_TAKEN` / `PHONE_OTP_EXPIRED`.
+String? authErrorCode(Object error) {
+  if (error is! DioException) return null;
+  final data = error.response?.data;
+  if (data is! Map) return null;
+  final topCode = data['code'];
+  if (topCode is String && topCode.isNotEmpty) return topCode;
+  final msg = data['message'];
+  if (msg is Map && msg['code'] is String) return msg['code'] as String;
+  return null;
+}
+
 String _codeToString(
   BuildContext context,
   String code,

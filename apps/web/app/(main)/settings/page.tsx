@@ -15,7 +15,7 @@ import {
   LogOut,
   Loader2,
   ChevronRight,
-  Archive,
+  Ban,
   Bell,
   Coins,
   BrainCircuit,
@@ -122,7 +122,9 @@ export default function SettingsPage() {
       await fetch('/api/auth/clear-cookie', { method: 'POST' })
       stompService.disconnect()
       clearAuth()
-      router.push('/login')
+      // `?cleared=1` tells the login page to wipe any browser-autofilled
+      // credentials so the next person doesn't see the prior account.
+      router.push('/login?cleared=1')
     } catch {
       toast.error(t('logoutError'))
       setLoggingOut(false)
@@ -233,11 +235,11 @@ export default function SettingsPage() {
               />
 
               <SettingsCard
-                icon={<Archive className="size-5 text-primary" />}
-                iconBg="rgba(106,201,255,0.12)"
-                title={t('archived')}
-                subtitle={t('archivedSubtitle')}
-                onClick={() => router.push('/archived')}
+                icon={<Ban className="size-5 text-destructive" />}
+                iconBg="rgba(239,68,68,0.1)"
+                title={t('blockedChats')}
+                subtitle={t('blockedChatsSubtitle')}
+                onClick={() => router.push('/blocked')}
               />
 
               <SettingsCard

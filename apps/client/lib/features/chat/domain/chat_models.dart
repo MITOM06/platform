@@ -80,6 +80,10 @@ class ConversationModel {
   final bool isArchived;
   // Whether the current user has blocked and archived this conversation.
   final bool isBlocked;
+  // Members invited to a group who have not yet accepted. While the current
+  // user is in this list the conversation is a pending group invite (Requests
+  // tab), not an active chat.
+  final List<String> pendingMembers;
   // Shared per-conversation wallpaper (Issue 6). Null = default. Stored on the
   // Conversation document server-side and distributed via CONVERSATION_UPDATED.
   final String? wallpaper;
@@ -106,6 +110,7 @@ class ConversationModel {
     this.muteExpiresAt,
     this.isArchived = false,
     this.isBlocked = false,
+    this.pendingMembers = const [],
     this.wallpaper,
   });
 
@@ -143,6 +148,8 @@ class ConversationModel {
       muteExpiresAt: (json['muteExpiresAt'] as num?)?.toInt(),
       isArchived: json['isArchived'] as bool? ?? false,
       isBlocked: json['isBlocked'] as bool? ?? false,
+      pendingMembers:
+          List<String>.from(json['pendingMembers'] as List? ?? []),
       wallpaper: json['wallpaper'] as String?,
     );
   }
@@ -168,6 +175,7 @@ class ConversationModel {
     bool clearMuteExpiresAt = false,
     bool? isArchived,
     bool? isBlocked,
+    List<String>? pendingMembers,
     String? wallpaper,
     bool clearWallpaper = false,
   }) {
@@ -191,6 +199,7 @@ class ConversationModel {
       muteExpiresAt: clearMuteExpiresAt ? null : (muteExpiresAt ?? this.muteExpiresAt),
       isArchived: isArchived ?? this.isArchived,
       isBlocked: isBlocked ?? this.isBlocked,
+      pendingMembers: pendingMembers ?? this.pendingMembers,
       wallpaper: clearWallpaper ? null : (wallpaper ?? this.wallpaper),
     );
   }

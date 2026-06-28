@@ -509,6 +509,27 @@ class AppLocalizationsVi extends AppLocalizations {
   String get tabChats => 'Trò chuyện';
 
   @override
+  String get tabArchived => 'Lưu trữ';
+
+  @override
+  String get tabRequests => 'Người lạ';
+
+  @override
+  String get noRequests => 'Không có lời mời nào';
+
+  @override
+  String get declineRequest => 'Từ chối';
+
+  @override
+  String get dmRequestSubtitle => 'Muốn nhắn tin với bạn';
+
+  @override
+  String get groupInviteSubtitle => 'Đã mời bạn vào nhóm';
+
+  @override
+  String get blockedChatsTitle => 'Tin nhắn bị chặn';
+
+  @override
   String get newGroup => 'Tạo nhóm';
 
   @override
@@ -1213,6 +1234,40 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get phoneHint => '901 234 567';
+
+  @override
+  String get phoneNoNumber => 'Chưa có số điện thoại';
+
+  @override
+  String get phoneNoticeText =>
+      'Thêm số điện thoại để tăng tính bảo mật cho tài khoản.';
+
+  @override
+  String get phoneVerifyAction => 'Xác minh';
+
+  @override
+  String get phoneUnverifiedBadge => 'Chưa xác minh';
+
+  @override
+  String get phoneModalPhoneSubtitle =>
+      'Nhập số điện thoại để nhận mã xác minh.';
+
+  @override
+  String get phoneRateLimit => 'Vui lòng chờ trước khi yêu cầu mã mới.';
+
+  @override
+  String get phoneAlreadyTaken => 'Số điện thoại này đã được sử dụng.';
+
+  @override
+  String get phoneOtpExpired => 'Mã đã hết hạn — vui lòng yêu cầu mã mới.';
+
+  @override
+  String get phoneResend => 'Gửi lại mã';
+
+  @override
+  String phoneResendCountdown(int seconds) {
+    return 'Gửi lại sau ${seconds}s';
+  }
 
   @override
   String get profilePrivacySection => 'Quyền riêng tư';
@@ -2905,4 +2960,20 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get profileBlockedByOwner => 'Hồ sơ của người dùng này không khả dụng';
+
+  @override
+  String get unsavedChangesTitle => 'Bạn có thay đổi chưa lưu';
+
+  @override
+  String get unsavedChangesDesc =>
+      'Nếu rời trang, các thay đổi của bạn sẽ bị mất.';
+
+  @override
+  String get keepEditing => 'Tiếp tục chỉnh sửa';
+
+  @override
+  String get saveAndLeave => 'Lưu và thoát';
+
+  @override
+  String get leaveWithoutSaving => 'Thoát không lưu';
 }

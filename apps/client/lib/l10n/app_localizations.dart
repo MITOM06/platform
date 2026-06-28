@@ -1074,6 +1074,48 @@ abstract class AppLocalizations {
   /// **'Chats'**
   String get tabChats;
 
+  /// No description provided for @tabArchived.
+  ///
+  /// In en, this message translates to:
+  /// **'Archived'**
+  String get tabArchived;
+
+  /// No description provided for @tabRequests.
+  ///
+  /// In en, this message translates to:
+  /// **'Requests'**
+  String get tabRequests;
+
+  /// No description provided for @noRequests.
+  ///
+  /// In en, this message translates to:
+  /// **'No pending requests'**
+  String get noRequests;
+
+  /// No description provided for @declineRequest.
+  ///
+  /// In en, this message translates to:
+  /// **'Decline'**
+  String get declineRequest;
+
+  /// No description provided for @dmRequestSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Wants to message you'**
+  String get dmRequestSubtitle;
+
+  /// No description provided for @groupInviteSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Invited you to a group'**
+  String get groupInviteSubtitle;
+
+  /// No description provided for @blockedChatsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Blocked chats'**
+  String get blockedChatsTitle;
+
   /// No description provided for @newGroup.
   ///
   /// In en, this message translates to:
@@ -2375,6 +2417,66 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'901 234 567'**
   String get phoneHint;
+
+  /// No description provided for @phoneNoNumber.
+  ///
+  /// In en, this message translates to:
+  /// **'No phone number'**
+  String get phoneNoNumber;
+
+  /// No description provided for @phoneNoticeText.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a phone number to help secure your account.'**
+  String get phoneNoticeText;
+
+  /// No description provided for @phoneVerifyAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Verify'**
+  String get phoneVerifyAction;
+
+  /// No description provided for @phoneUnverifiedBadge.
+  ///
+  /// In en, this message translates to:
+  /// **'Unverified'**
+  String get phoneUnverifiedBadge;
+
+  /// No description provided for @phoneModalPhoneSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter your phone number to receive a verification code.'**
+  String get phoneModalPhoneSubtitle;
+
+  /// No description provided for @phoneRateLimit.
+  ///
+  /// In en, this message translates to:
+  /// **'Please wait before requesting another code.'**
+  String get phoneRateLimit;
+
+  /// No description provided for @phoneAlreadyTaken.
+  ///
+  /// In en, this message translates to:
+  /// **'This phone number is already in use.'**
+  String get phoneAlreadyTaken;
+
+  /// No description provided for @phoneOtpExpired.
+  ///
+  /// In en, this message translates to:
+  /// **'Code expired — request a new one.'**
+  String get phoneOtpExpired;
+
+  /// No description provided for @phoneResend.
+  ///
+  /// In en, this message translates to:
+  /// **'Resend code'**
+  String get phoneResend;
+
+  /// No description provided for @phoneResendCountdown.
+  ///
+  /// In en, this message translates to:
+  /// **'Resend in {seconds}s'**
+  String phoneResendCountdown(int seconds);
 
   /// No description provided for @profilePrivacySection.
   ///
@@ -5448,6 +5550,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'This user\'s profile is not available'**
   String get profileBlockedByOwner;
+
+  /// No description provided for @unsavedChangesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'You have unsaved changes'**
+  String get unsavedChangesTitle;
+
+  /// No description provided for @unsavedChangesDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'If you leave, your changes will be lost.'**
+  String get unsavedChangesDesc;
+
+  /// No description provided for @keepEditing.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep editing'**
+  String get keepEditing;
+
+  /// No description provided for @saveAndLeave.
+  ///
+  /// In en, this message translates to:
+  /// **'Save and leave'**
+  String get saveAndLeave;
+
+  /// No description provided for @leaveWithoutSaving.
+  ///
+  /// In en, this message translates to:
+  /// **'Leave without saving'**
+  String get leaveWithoutSaving;
 }
 
 class _AppLocalizationsDelegate

@@ -65,14 +65,42 @@ class OtherUserActions extends ConsumerWidget {
           onTap: () async {
             final repo = ref.read(friendsRepositoryProvider);
             if (iBlocked) {
+              // Unblocking is non-destructive — no confirmation needed.
               await repo.unblockUser(userId);
             } else {
+              // Blocking is destructive — confirm first.
+              final ok = await _confirmBlock(context);
+              if (ok != true) return;
               await repo.blockUser(userId);
             }
             ref.invalidate(relationshipProvider(userId));
           },
         ),
       ],
+    );
+  }
+
+  /// Confirmation dialog shown before blocking a user. Returns `true` when the
+  /// user confirms. Reuses the existing block i18n keys.
+  Future<bool?> _confirmBlock(BuildContext context) {
+    final l10n = context.l10n;
+    return showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(l10n.blockUser),
+        content: Text(l10n.blockUserConfirm),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text(l10n.actionCancel),
+          ),
+          FilledButton(
+            style: FilledButton.styleFrom(backgroundColor: Colors.redAccent),
+            onPressed: () => Navigator.pop(ctx, true),
+            child: Text(l10n.actionConfirm),
+          ),
+        ],
+      ),
     );
   }
 }

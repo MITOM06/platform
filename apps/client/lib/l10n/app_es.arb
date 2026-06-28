@@ -161,6 +161,13 @@
   "typingLabel": "escribiendo",
   "messageHint": "Escribe un mensaje...",
   "tabChats": "Chats",
+  "tabArchived": "Archivados",
+  "tabRequests": "Solicitudes",
+  "noRequests": "No hay solicitudes pendientes",
+  "declineRequest": "Rechazar",
+  "dmRequestSubtitle": "Quiere enviarte un mensaje",
+  "groupInviteSubtitle": "Te invitó a un grupo",
+  "blockedChatsTitle": "Chats bloqueados",
   "newGroup": "Nuevo grupo",
   "newDirect": "Nuevo chat",
   "createGroup": "Crear grupo",
@@ -420,6 +427,23 @@
   "phoneVerifying": "Verificando...",
   "phoneConfirm": "Confirmar",
   "phoneHint": "901 234 567",
+  "phoneNoNumber": "Sin número de teléfono",
+  "phoneNoticeText": "Agrega un número de teléfono para proteger tu cuenta.",
+  "phoneVerifyAction": "Verificar",
+  "phoneUnverifiedBadge": "Sin verificar",
+  "phoneModalPhoneSubtitle": "Introduce tu número de teléfono para recibir un código.",
+  "phoneRateLimit": "Espera antes de solicitar otro código.",
+  "phoneAlreadyTaken": "Este número de teléfono ya está en uso.",
+  "phoneOtpExpired": "El código caducó: solicita uno nuevo.",
+  "phoneResend": "Reenviar código",
+  "phoneResendCountdown": "Reenviar en {seconds}s",
+  "@phoneResendCountdown": {
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
   "profilePrivacySection": "Privacidad",
   "profileEditMode": "Editar perfil",
   "profileSave": "Guardar",
@@ -1022,5 +1046,10 @@
   "mute1hour": "1 hora",
   "mute24hours": "24 horas",
   "muteForever": "Hasta que lo active manualmente",
-  "profileBlockedByOwner": "El perfil de este usuario no está disponible"
+  "profileBlockedByOwner": "El perfil de este usuario no está disponible",
+  "unsavedChangesTitle": "Tienes cambios sin guardar",
+  "unsavedChangesDesc": "Si sales, se perderán tus cambios.",
+  "keepEditing": "Seguir editando",
+  "saveAndLeave": "Guardar y salir",
+  "leaveWithoutSaving": "Salir sin guardar"
 }

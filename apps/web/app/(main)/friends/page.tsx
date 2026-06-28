@@ -12,6 +12,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { ConfirmDialog } from '@/components/common/ConfirmDialog'
 import { absoluteMediaUrl } from '@/lib/media'
 
 export default function FriendsPage() {
@@ -24,6 +25,8 @@ export default function FriendsPage() {
   const debouncedSearch = useDebounce(searchQuery, 500)
   const [searchResults, setSearchResults] = useState<UserSearchResult[]>([])
   const [searching, setSearching] = useState(false)
+  // userId pending unfriend-confirmation (Friends tab). null = dialog closed.
+  const [unfriendTarget, setUnfriendTarget] = useState<string | null>(null)
 
   useEffect(() => {
     if (!debouncedSearch.trim()) {
@@ -135,7 +138,7 @@ export default function FriendsPage() {
                   size="sm"
                   variant="ghost"
                   className="min-h-[44px] min-w-[44px] text-destructive hover:text-destructive hover:bg-destructive/10"
-                  onClick={() => removeFriend.mutate(user.id || user._id!)}
+                  onClick={() => setUnfriendTarget(user.id || user._id!)}
                   title={t('removeFriend')}
                   disabled={removeFriend.isPending}
                 >
@@ -215,6 +218,18 @@ export default function FriendsPage() {
           </TabsContent>
         </Tabs>
       </div>
+
+      <ConfirmDialog
+        open={!!unfriendTarget}
+        onOpenChange={(o) => !o && setUnfriendTarget(null)}
+        title={t('unfriendConfirmTitle')}
+        description={t('unfriendConfirmDesc')}
+        confirmLabel={t('removeFriend')}
+        onConfirm={() => {
+          if (unfriendTarget) removeFriend.mutate(unfriendTarget)
+          setUnfriendTarget(null)
+        }}
+      />
     </div>
   )
 }
