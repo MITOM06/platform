@@ -545,6 +545,25 @@
   "profileShowDateOfBirth": "Show date of birth to others",
   "profileShowPhone": "Show phone number to others",
   "profileShowGender": "Show gender to others",
+  "phoneVerifiedBadge": "Verified",
+  "phoneSendOtp": "Send verification code",
+  "phoneSending": "Sending...",
+  "phoneChangeNumber": "Change number",
+  "phoneNotVerified": "Not verified",
+  "phoneSendOtpError": "Couldn't send the code. Try again later.",
+  "phoneVerifyTitle": "Verify phone number",
+  "phoneOtpSubtitle": "Enter the 6-digit code sent to {phone}",
+  "@phoneOtpSubtitle": {
+    "placeholders": {
+      "phone": { "type": "String" }
+    }
+  },
+  "phoneOtpIncomplete": "Enter all 6 digits",
+  "phoneOtpInvalid": "Incorrect or expired code",
+  "phoneVerifiedSuccess": "Phone number verified!",
+  "phoneVerifying": "Verifying...",
+  "phoneConfirm": "Confirm",
+  "phoneHint": "901 234 567",
   "profilePrivacySection": "Privacy",
   "profileEditMode": "Edit Profile",
   "profileSave": "Save",

@@ -1155,6 +1155,50 @@ class AppLocalizationsKo extends AppLocalizations {
   String get profileShowGender => '다른 사람에게 성별 표시';
 
   @override
+  String get phoneVerifiedBadge => '인증됨';
+
+  @override
+  String get phoneSendOtp => '인증 코드 보내기';
+
+  @override
+  String get phoneSending => '보내는 중...';
+
+  @override
+  String get phoneChangeNumber => '번호 변경';
+
+  @override
+  String get phoneNotVerified => '인증되지 않음';
+
+  @override
+  String get phoneSendOtpError => '코드를 보낼 수 없습니다. 나중에 다시 시도하세요.';
+
+  @override
+  String get phoneVerifyTitle => '전화번호 인증';
+
+  @override
+  String phoneOtpSubtitle(String phone) {
+    return '$phone(으)로 전송된 6자리 코드를 입력하세요';
+  }
+
+  @override
+  String get phoneOtpIncomplete => '6자리를 모두 입력하세요';
+
+  @override
+  String get phoneOtpInvalid => '코드가 잘못되었거나 만료되었습니다';
+
+  @override
+  String get phoneVerifiedSuccess => '전화번호가 인증되었습니다!';
+
+  @override
+  String get phoneVerifying => '인증 중...';
+
+  @override
+  String get phoneConfirm => '확인';
+
+  @override
+  String get phoneHint => '901 234 567';
+
+  @override
   String get profilePrivacySection => '개인정보 보호';
 
   @override

@@ -11,6 +11,10 @@ class UserModel {
   final int? friendsCount;
   final DateTime? dateOfBirth;
   final String? phoneNumber;
+
+  /// Whether [phoneNumber] has been confirmed via SMS OTP. Only meaningful on
+  /// the self response (`GET /api/users/me`). Drives the green verified badge.
+  final bool phoneVerified;
   final String? gender;
   final bool hideInfo;
 
@@ -35,6 +39,7 @@ class UserModel {
     this.friendsCount,
     this.dateOfBirth,
     this.phoneNumber,
+    this.phoneVerified = false,
     this.gender,
     this.hideInfo = false,
     this.showDateOfBirth,
@@ -57,6 +62,7 @@ class UserModel {
           ? DateTime.tryParse(json['dateOfBirth'] as String)
           : null,
       phoneNumber: json['phoneNumber'] as String?,
+      phoneVerified: json['phoneVerified'] as bool? ?? false,
       gender: json['gender'] as String?,
       hideInfo: json['hideInfo'] as bool? ?? false,
       showDateOfBirth: json['showDateOfBirth'] as bool?,
@@ -76,6 +82,7 @@ class UserModel {
         if (friendsCount != null) 'friendsCount': friendsCount,
         if (dateOfBirth != null) 'dateOfBirth': dateOfBirth!.toIso8601String(),
         if (phoneNumber != null) 'phoneNumber': phoneNumber,
+        'phoneVerified': phoneVerified,
         if (gender != null) 'gender': gender,
         'hideInfo': hideInfo,
         if (showDateOfBirth != null) 'showDateOfBirth': showDateOfBirth,

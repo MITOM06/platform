@@ -1182,6 +1182,51 @@ class AppLocalizationsFr extends AppLocalizations {
   String get profileShowGender => 'Afficher le genre aux autres';
 
   @override
+  String get phoneVerifiedBadge => 'Vérifié';
+
+  @override
+  String get phoneSendOtp => 'Envoyer le code de vérification';
+
+  @override
+  String get phoneSending => 'Envoi...';
+
+  @override
+  String get phoneChangeNumber => 'Changer de numéro';
+
+  @override
+  String get phoneNotVerified => 'Non vérifié';
+
+  @override
+  String get phoneSendOtpError =>
+      'Impossible d\'envoyer le code. Réessayez plus tard.';
+
+  @override
+  String get phoneVerifyTitle => 'Vérifier le numéro de téléphone';
+
+  @override
+  String phoneOtpSubtitle(String phone) {
+    return 'Saisissez le code à 6 chiffres envoyé au $phone';
+  }
+
+  @override
+  String get phoneOtpIncomplete => 'Saisissez les 6 chiffres';
+
+  @override
+  String get phoneOtpInvalid => 'Code incorrect ou expiré';
+
+  @override
+  String get phoneVerifiedSuccess => 'Numéro de téléphone vérifié !';
+
+  @override
+  String get phoneVerifying => 'Vérification...';
+
+  @override
+  String get phoneConfirm => 'Confirmer';
+
+  @override
+  String get phoneHint => '901 234 567';
+
+  @override
   String get profilePrivacySection => 'Confidentialité';
 
   @override

@@ -38,6 +38,9 @@ export class User {
   @Prop({ unique: true, sparse: true })
   phoneNumber: string;
 
+  @Prop({ default: false })
+  phoneVerified: boolean;
+
   @Prop({ select: false })
   password: string;
 

@@ -1177,6 +1177,51 @@ class AppLocalizationsEs extends AppLocalizations {
   String get profileShowGender => 'Mostrar género a los demás';
 
   @override
+  String get phoneVerifiedBadge => 'Verificado';
+
+  @override
+  String get phoneSendOtp => 'Enviar código de verificación';
+
+  @override
+  String get phoneSending => 'Enviando...';
+
+  @override
+  String get phoneChangeNumber => 'Cambiar número';
+
+  @override
+  String get phoneNotVerified => 'No verificado';
+
+  @override
+  String get phoneSendOtpError =>
+      'No se pudo enviar el código. Inténtalo más tarde.';
+
+  @override
+  String get phoneVerifyTitle => 'Verificar número de teléfono';
+
+  @override
+  String phoneOtpSubtitle(String phone) {
+    return 'Introduce el código de 6 dígitos enviado a $phone';
+  }
+
+  @override
+  String get phoneOtpIncomplete => 'Introduce los 6 dígitos';
+
+  @override
+  String get phoneOtpInvalid => 'Código incorrecto o caducado';
+
+  @override
+  String get phoneVerifiedSuccess => '¡Número de teléfono verificado!';
+
+  @override
+  String get phoneVerifying => 'Verificando...';
+
+  @override
+  String get phoneConfirm => 'Confirmar';
+
+  @override
+  String get phoneHint => '901 234 567';
+
+  @override
   String get profilePrivacySection => 'Privacidad';
 
   @override

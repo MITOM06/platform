@@ -13,6 +13,7 @@ import '../../auth/domain/auth_provider.dart';
 import '../../auth/domain/auth_state.dart';
 import '../../chat/data/chat_repository.dart';
 import '../../chat/ui/widgets/conversation_avatar.dart';
+import 'widgets/phone_verification_section.dart';
 
 /// Lets the signed-in user edit their own profile (avatar, display name, bio).
 class EditProfileScreen extends ConsumerStatefulWidget {
@@ -25,10 +26,14 @@ class EditProfileScreen extends ConsumerStatefulWidget {
 class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
   late final TextEditingController _nameController;
   late final TextEditingController _bioController;
-  late final TextEditingController _phoneController;
   bool _isLoading = false;
   DateTime? _selectedDateOfBirth;
   String? _gender;
+  // Phone is verified + saved via the SMS OTP endpoint, NOT via the profile
+  // PATCH below. We only track its initial value here so the field can seed
+  // its country picker and verified badge.
+  String _initialPhone = '';
+  bool _initialPhoneVerified = false;
   // Per-field "show to others" privacy toggles, seeded from the current user.
   bool _showDob = true;
   bool _showPhone = true;
@@ -41,7 +46,8 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
     final current = user is AuthAuthenticated ? user.user : null;
     _nameController = TextEditingController(text: current?.displayName ?? '');
     _bioController = TextEditingController(text: current?.bio ?? '');
-    _phoneController = TextEditingController(text: current?.phoneNumber ?? '');
+    _initialPhone = current?.phoneNumber ?? '';
+    _initialPhoneVerified = current?.phoneVerified ?? false;
     _selectedDateOfBirth = current?.dateOfBirth;
     _gender = current?.gender;
     _showDob = current?.effectiveShowDateOfBirth ?? true;
@@ -53,7 +59,6 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
   void dispose() {
     _nameController.dispose();
     _bioController.dispose();
-    _phoneController.dispose();
     super.dispose();
   }
 
@@ -107,10 +112,12 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
     }
     setState(() => _isLoading = true);
     try {
+      // phoneNumber is intentionally omitted — it is persisted only through the
+      // SMS OTP verify endpoint (PhoneVerificationSection), so a normal save
+      // must not overwrite or clear the verified number.
       await ref.read(authNotifierProvider.notifier).updateProfile(
             displayName: name,
             bio: _bioController.text.trim(),
-            phoneNumber: _phoneController.text.trim(),
             gender: _gender,
             dateOfBirth: _selectedDateOfBirth,
             showDateOfBirth: _showDob,
@@ -261,12 +268,15 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
               maxLength: 160,
             ),
             const SizedBox(height: 16),
-            PonTextField(
-              controller: _phoneController,
-              labelText: context.l10n.profilePhone,
-              prefixIcon: Icons.phone_outlined,
-              keyboardType: TextInputType.phone,
-              textInputAction: TextInputAction.next,
+            PhoneVerificationSection(
+              initialPhone: _initialPhone,
+              initialVerified: _initialPhoneVerified,
+              // Phone is saved server-side on verify; nothing to persist on the
+              // form's normal save, so we just keep local references in sync.
+              onChanged: (phone, verified) {
+                _initialPhone = phone;
+                _initialPhoneVerified = verified;
+              },
             ),
             _PrivacyToggle(
               label: context.l10n.profileShowPhone,

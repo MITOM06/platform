@@ -20,6 +20,8 @@ export interface UserProfile extends AuthUser {
   coverPhoto?: string
   dateOfBirth?: string
   phoneNumber?: string
+  /** True once the phone number has been confirmed via SMS OTP. Self-only. */
+  phoneVerified?: boolean
   gender?: string
   /** Legacy single privacy flag — kept for backward-compat fallback. */
   hideInfo?: boolean
@@ -150,6 +152,19 @@ export const authService = {
 
   updateProfile: (data: UpdateProfilePayload) =>
     authApi.patch<UserProfile>('/api/users/me', data).then((r) => r.data),
+
+  // Phone verification: phone is persisted to the DB only after SMS OTP verify,
+  // never through PATCH /api/users/me. send-otp sends a code, verify confirms it.
+  sendPhoneOtp: (phone: string) =>
+    authApi.post('/api/users/me/phone/send-otp', { phone }).then((r) => r.data),
+
+  verifyPhoneOtp: (otp: string) =>
+    authApi
+      .post<{ success: boolean; phoneNumber: string; phoneVerified: boolean }>(
+        '/api/users/me/phone/verify',
+        { otp },
+      )
+      .then((r) => r.data),
 
   // `currentPassword` is optional: OAuth-only users setting their first password
   // omit it (the endpoint only requires it when a local password already exists).

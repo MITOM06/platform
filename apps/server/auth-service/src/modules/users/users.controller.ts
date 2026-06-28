@@ -70,6 +70,27 @@ export class UsersController {
     );
   }
 
+  @Post('me/phone/send-otp')
+  @ApiOperation({ summary: 'Send SMS OTP to the given phone number' })
+  async sendPhoneOtp(@Req() req: any, @Body('phone') phone: string) {
+    if (!phone || !phone.startsWith('+')) {
+      throw new BadRequestException({ code: 'PHONE_INVALID_FORMAT' });
+    }
+    await this.usersService.sendPhoneOtp(req.user.sub, phone);
+    return { success: true };
+  }
+
+  @Post('me/phone/verify')
+  @ApiOperation({ summary: 'Verify SMS OTP and save the phone number' })
+  async verifyPhoneOtp(@Req() req: any, @Body('otp') otp: string) {
+    const user = await this.usersService.verifyPhoneOtp(req.user.sub, otp);
+    return {
+      success: true,
+      phoneNumber: user.phoneNumber,
+      phoneVerified: user.phoneVerified,
+    };
+  }
+
   @Post('device-tokens')
   addDeviceToken(@Req() req: any, @Body('token') token: string) {
     return this.usersService.addDeviceToken(req.user.sub, token);
@@ -179,6 +200,7 @@ export class UsersController {
     if (isSelf) {
       // Self gets everything + the toggle flags to seed the edit form.
       profile.email = doc.email;
+      profile.phoneVerified = doc.phoneVerified ?? false;
       profile.showDateOfBirth = showDob;
       profile.showPhoneNumber = showPhone;
       profile.showGender = showGen;

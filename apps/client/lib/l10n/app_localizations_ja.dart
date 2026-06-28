@@ -1155,6 +1155,50 @@ class AppLocalizationsJa extends AppLocalizations {
   String get profileShowGender => '性別を他のユーザーに表示';
 
   @override
+  String get phoneVerifiedBadge => '確認済み';
+
+  @override
+  String get phoneSendOtp => '確認コードを送信';
+
+  @override
+  String get phoneSending => '送信中...';
+
+  @override
+  String get phoneChangeNumber => '番号を変更';
+
+  @override
+  String get phoneNotVerified => '未確認';
+
+  @override
+  String get phoneSendOtpError => 'コードを送信できませんでした。後でもう一度お試しください。';
+
+  @override
+  String get phoneVerifyTitle => '電話番号を確認';
+
+  @override
+  String phoneOtpSubtitle(String phone) {
+    return '$phone に送信された6桁のコードを入力してください';
+  }
+
+  @override
+  String get phoneOtpIncomplete => '6桁すべて入力してください';
+
+  @override
+  String get phoneOtpInvalid => 'コードが正しくないか、有効期限が切れています';
+
+  @override
+  String get phoneVerifiedSuccess => '電話番号が確認されました！';
+
+  @override
+  String get phoneVerifying => '確認中...';
+
+  @override
+  String get phoneConfirm => '確認';
+
+  @override
+  String get phoneHint => '901 234 567';
+
+  @override
   String get profilePrivacySection => 'プライバシー';
 
   @override

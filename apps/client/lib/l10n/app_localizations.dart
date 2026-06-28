@@ -2286,6 +2286,90 @@ abstract class AppLocalizations {
   /// **'Show gender to others'**
   String get profileShowGender;
 
+  /// No description provided for @phoneVerifiedBadge.
+  ///
+  /// In en, this message translates to:
+  /// **'Verified'**
+  String get phoneVerifiedBadge;
+
+  /// No description provided for @phoneSendOtp.
+  ///
+  /// In en, this message translates to:
+  /// **'Send verification code'**
+  String get phoneSendOtp;
+
+  /// No description provided for @phoneSending.
+  ///
+  /// In en, this message translates to:
+  /// **'Sending...'**
+  String get phoneSending;
+
+  /// No description provided for @phoneChangeNumber.
+  ///
+  /// In en, this message translates to:
+  /// **'Change number'**
+  String get phoneChangeNumber;
+
+  /// No description provided for @phoneNotVerified.
+  ///
+  /// In en, this message translates to:
+  /// **'Not verified'**
+  String get phoneNotVerified;
+
+  /// No description provided for @phoneSendOtpError.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t send the code. Try again later.'**
+  String get phoneSendOtpError;
+
+  /// No description provided for @phoneVerifyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Verify phone number'**
+  String get phoneVerifyTitle;
+
+  /// No description provided for @phoneOtpSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter the 6-digit code sent to {phone}'**
+  String phoneOtpSubtitle(String phone);
+
+  /// No description provided for @phoneOtpIncomplete.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter all 6 digits'**
+  String get phoneOtpIncomplete;
+
+  /// No description provided for @phoneOtpInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'Incorrect or expired code'**
+  String get phoneOtpInvalid;
+
+  /// No description provided for @phoneVerifiedSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Phone number verified!'**
+  String get phoneVerifiedSuccess;
+
+  /// No description provided for @phoneVerifying.
+  ///
+  /// In en, this message translates to:
+  /// **'Verifying...'**
+  String get phoneVerifying;
+
+  /// No description provided for @phoneConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm'**
+  String get phoneConfirm;
+
+  /// No description provided for @phoneHint.
+  ///
+  /// In en, this message translates to:
+  /// **'901 234 567'**
+  String get phoneHint;
+
   /// No description provided for @profilePrivacySection.
   ///
   /// In en, this message translates to:

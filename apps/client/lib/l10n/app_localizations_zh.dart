@@ -1154,6 +1154,50 @@ class AppLocalizationsZh extends AppLocalizations {
   String get profileShowGender => '向他人显示性别';
 
   @override
+  String get phoneVerifiedBadge => '已验证';
+
+  @override
+  String get phoneSendOtp => '发送验证码';
+
+  @override
+  String get phoneSending => '正在发送...';
+
+  @override
+  String get phoneChangeNumber => '更换号码';
+
+  @override
+  String get phoneNotVerified => '未验证';
+
+  @override
+  String get phoneSendOtpError => '无法发送验证码，请稍后重试。';
+
+  @override
+  String get phoneVerifyTitle => '验证手机号码';
+
+  @override
+  String phoneOtpSubtitle(String phone) {
+    return '请输入发送至 $phone 的6位验证码';
+  }
+
+  @override
+  String get phoneOtpIncomplete => '请输入完整的6位数字';
+
+  @override
+  String get phoneOtpInvalid => '验证码错误或已过期';
+
+  @override
+  String get phoneVerifiedSuccess => '手机号码已验证！';
+
+  @override
+  String get phoneVerifying => '正在验证...';
+
+  @override
+  String get phoneConfirm => '确认';
+
+  @override
+  String get phoneHint => '901 234 567';
+
+  @override
   String get profilePrivacySection => '隐私';
 
   @override

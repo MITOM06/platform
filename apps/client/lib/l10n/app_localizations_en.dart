@@ -1167,6 +1167,50 @@ class AppLocalizationsEn extends AppLocalizations {
   String get profileShowGender => 'Show gender to others';
 
   @override
+  String get phoneVerifiedBadge => 'Verified';
+
+  @override
+  String get phoneSendOtp => 'Send verification code';
+
+  @override
+  String get phoneSending => 'Sending...';
+
+  @override
+  String get phoneChangeNumber => 'Change number';
+
+  @override
+  String get phoneNotVerified => 'Not verified';
+
+  @override
+  String get phoneSendOtpError => 'Couldn\'t send the code. Try again later.';
+
+  @override
+  String get phoneVerifyTitle => 'Verify phone number';
+
+  @override
+  String phoneOtpSubtitle(String phone) {
+    return 'Enter the 6-digit code sent to $phone';
+  }
+
+  @override
+  String get phoneOtpIncomplete => 'Enter all 6 digits';
+
+  @override
+  String get phoneOtpInvalid => 'Incorrect or expired code';
+
+  @override
+  String get phoneVerifiedSuccess => 'Phone number verified!';
+
+  @override
+  String get phoneVerifying => 'Verifying...';
+
+  @override
+  String get phoneConfirm => 'Confirm';
+
+  @override
+  String get phoneHint => '901 234 567';
+
+  @override
   String get profilePrivacySection => 'Privacy';
 
   @override

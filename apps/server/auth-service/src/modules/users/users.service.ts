@@ -1,8 +1,22 @@
-import { ConflictException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  ConflictException,
+  Inject,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { User, UserDocument, UserBlock, UserBlockDocument } from '@platform/database';
+import {
+  User,
+  UserDocument,
+  UserBlock,
+  UserBlockDocument,
+  REDIS_CLIENT,
+  Redis,
+} from '@platform/database';
 import * as bcrypt from 'bcrypt';
+import { SmsService } from '../sms/sms.service';
 
 @Injectable()
 export class UsersService {
@@ -12,6 +26,8 @@ export class UsersService {
     @InjectModel(User.name) private userModel: Model<UserDocument>,
     @InjectModel(UserBlock.name)
     private userBlockModel: Model<UserBlockDocument>,
+    @Inject(REDIS_CLIENT) private readonly redis: Redis,
+    private readonly smsService: SmsService,
     // ❌ Xóa: SessionService — UsersService không cần biết về session
   ) {}
 
@@ -181,8 +197,11 @@ export class UsersService {
         ? new Date(data.dateOfBirth)
         : null;
     }
-    if (data.phoneNumber !== undefined)
+    if (data.phoneNumber !== undefined) {
       updateData.phoneNumber = data.phoneNumber || null; // '' → null to satisfy sparse unique index
+      // Phone changed via the unverified PATCH path — always require re-verification.
+      updateData.phoneVerified = false;
+    }
     if (data.gender !== undefined) updateData.gender = data.gender;
     if (data.hideInfo !== undefined) updateData.hideInfo = data.hideInfo;
     if (data.showDateOfBirth !== undefined)
@@ -199,6 +218,69 @@ export class UsersService {
         .exec();
     }
     return this.findById(userId);
+  }
+
+  /**
+   * Generates a 6-digit OTP, stores it in Redis for 5 min, and sends it via
+   * SMS to the given phone number.
+   * Rate-limited: max 3 sends per user per 10 minutes (Redis counter).
+   */
+  async sendPhoneOtp(userId: string, phone: string): Promise<void> {
+    // Rate limit: max 3 OTP sends per 10 min per user.
+    const rateKey = `phone_otp_rate:${userId}`;
+    const sends = await this.redis.incr(rateKey);
+    if (sends === 1) await this.redis.expire(rateKey, 600); // 10 min window
+    if (sends > 3) {
+      throw new BadRequestException({ code: 'PHONE_OTP_RATE_LIMIT' });
+    }
+
+    const otp = String(Math.floor(100000 + Math.random() * 900000));
+    const payload = JSON.stringify({ phone, otp });
+    // Store for 5 min.
+    await this.redis.set(`phone_otp:${userId}`, payload, 'EX', 300);
+
+    await this.smsService.sendSms(
+      phone,
+      `Your PON verification code is: ${otp}. Valid for 5 minutes.`,
+    );
+  }
+
+  /**
+   * Verifies the OTP for a phone number. On success:
+   * - saves phoneNumber and phoneVerified=true to the user doc
+   * - clears the Redis OTP entry
+   */
+  async verifyPhoneOtp(userId: string, otp: string): Promise<UserDocument> {
+    const raw = await this.redis.get(`phone_otp:${userId}`);
+    if (!raw) throw new BadRequestException({ code: 'PHONE_OTP_EXPIRED' });
+
+    const { phone, otp: stored } = JSON.parse(raw) as {
+      phone: string;
+      otp: string;
+    };
+    if (otp !== stored) {
+      throw new BadRequestException({ code: 'PHONE_OTP_INVALID' });
+    }
+
+    await this.redis.del(`phone_otp:${userId}`);
+
+    // Check for duplicate phone across other users.
+    const conflict = await this.userModel.findOne({
+      phoneNumber: phone,
+      _id: { $ne: userId },
+    });
+    if (conflict) throw new BadRequestException({ code: 'PHONE_ALREADY_TAKEN' });
+
+    const user = await this.userModel
+      .findByIdAndUpdate(
+        userId,
+        { $set: { phoneNumber: phone, phoneVerified: true } },
+        { new: true },
+      )
+      .select('-password')
+      .exec();
+    if (!user) throw new NotFoundException({ code: 'USER_NOT_FOUND' });
+    return user;
   }
 
   async changePassword(
