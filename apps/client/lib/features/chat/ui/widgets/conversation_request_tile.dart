@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import '../../../../core/l10n/l10n_ext.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../data/chat_repository.dart';
@@ -115,70 +116,74 @@ class _ConversationRequestTileState
           width: 1,
         ),
       ),
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
-        child: Row(
-          children: [
-            ConversationAvatar(
-              avatarUrl: avatarUrl,
-              fallbackLetter: tileLetter,
-              isGroup: isGroup,
-              size: 48,
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    displayName.isEmpty ? l10n.conversationDefault : displayName,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      fontWeight: FontWeight.w600,
-                      fontSize: 15,
-                      color: isDark ? Colors.white : Colors.black87,
-                    ),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    isGroup ? l10n.groupInviteSubtitle : l10n.dmRequestSubtitle,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: isDark ? Colors.white54 : Colors.black54,
-                    ),
-                  ),
-                ],
+      child: InkWell(
+        borderRadius: BorderRadius.circular(16),
+        onTap: () => context.push('/chat/${conv.id}'),
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
+          child: Row(
+            children: [
+              ConversationAvatar(
+                avatarUrl: avatarUrl,
+                fallbackLetter: tileLetter,
+                isGroup: isGroup,
+                size: 48,
               ),
-            ),
-            const SizedBox(width: 8),
-            if (_isLoading)
-              SizedBox(
-                width: 24,
-                height: 24,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  valueColor: AlwaysStoppedAnimation<Color>(accent),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      displayName.isEmpty ? l10n.conversationDefault : displayName,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 15,
+                        color: isDark ? Colors.white : Colors.black87,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      isGroup ? l10n.groupInviteSubtitle : l10n.dmRequestSubtitle,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: isDark ? Colors.white54 : Colors.black54,
+                      ),
+                    ),
+                  ],
                 ),
-              )
-            else ...[
-              IconButton(
-                icon: const Icon(Icons.check_circle_rounded),
-                color: accent,
-                tooltip: l10n.acceptRequest,
-                onPressed: _accept,
               ),
-              IconButton(
-                icon: const Icon(Icons.cancel_rounded),
-                color: Colors.redAccent,
-                tooltip: l10n.declineRequest,
-                onPressed: _decline,
-              ),
+              const SizedBox(width: 8),
+              if (_isLoading)
+                SizedBox(
+                  width: 24,
+                  height: 24,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    valueColor: AlwaysStoppedAnimation<Color>(accent),
+                  ),
+                )
+              else ...[
+                IconButton(
+                  icon: const Icon(Icons.check_circle_rounded),
+                  color: accent,
+                  tooltip: l10n.acceptRequest,
+                  onPressed: _accept,
+                ),
+                IconButton(
+                  icon: const Icon(Icons.cancel_rounded),
+                  color: Colors.redAccent,
+                  tooltip: l10n.declineRequest,
+                  onPressed: _decline,
+                ),
+              ],
             ],
-          ],
+          ),
         ),
       ),
     );
