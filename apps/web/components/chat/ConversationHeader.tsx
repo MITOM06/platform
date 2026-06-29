@@ -162,7 +162,7 @@ export function ConversationHeader({
 
         {/* Header action buttons */}
         <div className="flex items-center gap-0.5 shrink-0">
-          {/* Primary action: always visible on all screen sizes */}
+          {/* Group call — always visible for group conversations */}
           {isGroup && !isAI && (
             <Button
               variant="ghost"
@@ -174,6 +174,7 @@ export function ConversationHeader({
               <Users className="size-4" />
             </Button>
           )}
+          {/* Voice call — always visible for DMs */}
           {otherUserId && (
             <Button
               variant="ghost"
@@ -186,9 +187,20 @@ export function ConversationHeader({
             </Button>
           )}
 
-          {/* Desktop: remaining actions inline */}
-          <div className="hidden md:flex items-center gap-0.5">
-            {otherUserId && (
+          {/* Settings — always visible on all screen sizes */}
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => isGroup ? setGroupSettingsOpen(true) : setSettingsOpen(true)}
+            title={t('settingsTooltip')}
+            className="tap"
+          >
+            <Settings className="size-4" />
+          </Button>
+
+          {/* Desktop: video call inline — DM only */}
+          {otherUserId && (
+            <div className="hidden md:flex items-center gap-0.5">
               <Button
                 variant="ghost"
                 size="icon"
@@ -198,47 +210,32 @@ export function ConversationHeader({
               >
                 <Video className="size-4" />
               </Button>
-            )}
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => isGroup ? setGroupSettingsOpen(true) : setSettingsOpen(true)}
-              title={t('settingsTooltip')}
-              className="tap"
-            >
-              <Settings className="size-4" />
-            </Button>
-          </div>
+            </div>
+          )}
 
-          {/* Mobile: overflow menu for secondary actions */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="md:hidden tap"
-                aria-label={t('moreActions')}
-              >
-                <MoreVertical className="size-5" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              {otherUserId && (
+          {/* Mobile: overflow menu — DM only (video call is the sole overflowed action) */}
+          {otherUserId && (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="md:hidden tap"
+                  aria-label={t('moreActions')}
+                >
+                  <MoreVertical className="size-5" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
                 <DropdownMenuItem
                   onClick={() => startCall(otherUserId, displayName, conversationId, true)}
                 >
                   <Video className="size-4 mr-2" />
                   {t('videoCall')}
                 </DropdownMenuItem>
-              )}
-              <DropdownMenuItem
-                onClick={() => isGroup ? setGroupSettingsOpen(true) : setSettingsOpen(true)}
-              >
-                <Settings className="size-4 mr-2" />
-                {t('settingsTooltip')}
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
         </div>
       </header>
 
