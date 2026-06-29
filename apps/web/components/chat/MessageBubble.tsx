@@ -1,24 +1,18 @@
 'use client'
 
 import { useState, useRef, memo } from 'react'
-import Link from 'next/link'
 import { useTranslations, useLocale } from 'next-intl'
-import { Phone, Video, Check, CheckCheck, AlertTriangle } from 'lucide-react'
+import { Phone, Video, Check, CheckCheck } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { firstUrl } from '@/lib/media'
 import { MessageActions } from './MessageActions'
-import { ImageContent, VideoContent } from './ImageContent'
-import { FileContent } from './FileContent'
-import { VoiceMessage } from './VoiceMessage'
-import { LinkPreviewCard } from './LinkPreviewCard'
 import { UserProfileDrawer } from './UserProfileDrawer'
 import { GroupReadDetailsModal } from './GroupReadDetailsModal'
 import { ReactionsDetailModal } from './ReactionsDetailModal'
-import { MeetingSummaryCard } from './MeetingSummaryCard'
 import { MessageFeedback } from './MessageFeedback'
 import { MessageSources } from './MessageSources'
-import { MarkdownContent } from './MarkdownContent'
 import { ExternalBotBubble } from './ExternalBotBubble'
+import { MessageBubbleBody } from './MessageBubbleBody'
+import { formatTime, ReactionBadge, BARE_TYPES } from './message-bubble-helpers'
 import { humanizeSystemMessage } from '@/lib/system-messages'
 import { useNickname, getNickname } from '@/lib/nicknames'
 import { useUser } from '@/lib/hooks/use-user'
@@ -40,28 +34,6 @@ interface Props {
   onAiTrace?: (messageId: string) => void
   onOptimisticUpdate: (updated: Partial<Message> & { id: string }) => void
 }
-
-function formatTime(iso: string, locale: string): string {
-  return new Date(iso).toLocaleTimeString(locale, {
-    hour: '2-digit',
-    minute: '2-digit',
-  })
-}
-
-function ReactionBadge({ emoji, count, onClick }: { emoji: string; count: number; onClick?: () => void }) {
-  return (
-    <button
-      onClick={onClick}
-      className="inline-flex items-center gap-0.5 bg-muted border rounded-full px-1.5 py-0.5 text-xs leading-none hover:bg-muted/80 transition-colors motion-safe:pon-pop"
-    >
-      {emoji}
-      {count > 1 && <span className="text-muted-foreground">{count}</span>}
-    </button>
-  )
-}
-
-// Media + summary-card types render without the colored chat bubble (mirror Flutter).
-const BARE_TYPES = new Set(['image', 'video', 'sticker', 'meeting_summary'])
 
 const MessageBubbleInner = function MessageBubble({
   message,
@@ -173,7 +145,6 @@ const MessageBubbleInner = function MessageBubble({
   })
 
   const isBare = BARE_TYPES.has(message.type)
-  const linkUrl = message.type === 'text' ? firstUrl(message.content) : null
   // Feedback only on real AI answers — not the error/quota/interrupted sentinels.
   const showFeedback =
     message.type === 'ai' &&
@@ -248,89 +219,7 @@ const MessageBubbleInner = function MessageBubble({
   )
 
   // ── Inner content by type ──────────────────────────────────────────────────
-  let body: React.ReactNode
-  switch (message.type) {
-    case 'image':
-      body = <ImageContent content={message.content} />
-      break
-    case 'video':
-      body = <VideoContent content={message.content} />
-      break
-    case 'sticker':
-      body = <span className="text-5xl leading-none">{message.content}</span>
-      break
-    case 'file':
-      body = <FileContent content={message.content} isOwn={isOwn} />
-      break
-    case 'voice':
-      body = <VoiceMessage content={message.content} isOwn={isOwn} />
-      break
-    case 'meeting_summary':
-      body = <MeetingSummaryCard content={message.content} isPinned={isPinned} />
-      break
-    case 'ai':
-      if (message.content === '__AI_ERROR__') {
-        body = (
-          <span className="flex items-center gap-1.5 text-sm text-destructive">
-            <AlertTriangle className="size-4 shrink-0" />
-            {t('aiError')}
-          </span>
-        )
-      } else if (message.content === '__AI_QUOTA__') {
-        body = (
-          <div className="text-sm italic text-muted-foreground space-y-1">
-            <p>{t('aiQuotaExceeded')}</p>
-            <Link
-              href="/token-usage"
-              className="not-italic font-medium text-primary underline underline-offset-2 hover:opacity-80"
-            >
-              {t('viewUsage')}
-            </Link>
-          </div>
-        )
-      } else if (message.content === '__AI_INTERRUPTED__') {
-        body = (
-          <span className="flex items-center gap-1.5 text-sm text-destructive">
-            <AlertTriangle className="size-4 shrink-0" />
-            {t('aiStreamInterrupted')}
-          </span>
-        )
-      } else if (message.content === '__AI_UNAVAILABLE__') {
-        body = (
-          <span className="flex items-center gap-1.5 text-sm text-destructive">
-            <AlertTriangle className="size-4 shrink-0" />
-            {t('aiUnavailable')}
-          </span>
-        )
-      } else {
-        body = <MarkdownContent content={message.content} />
-      }
-      break
-    default:
-      body = (
-        <>
-          <p className="whitespace-pre-wrap leading-relaxed">
-            {message.content.split(/(@\w+)/g).map((part, i) => {
-              if (part.startsWith('@') && part.length > 1) {
-                return (
-                  <span
-                    key={i}
-                    className={cn(
-                      'font-semibold px-1 rounded-sm cursor-pointer mx-0.5',
-                      isOwn ? 'bg-primary-foreground/20' : 'bg-primary/20 text-primary hover:bg-primary/30'
-                    )}
-                  >
-                    {part}
-                  </span>
-                )
-              }
-              return <span key={i}>{part}</span>
-            })}
-          </p>
-          {linkUrl && <LinkPreviewCard url={linkUrl} />}
-        </>
-      )
-  }
+  const body = <MessageBubbleBody message={message} isOwn={isOwn} isPinned={isPinned} />
 
   return (
     <>
