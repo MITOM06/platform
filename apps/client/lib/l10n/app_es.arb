@@ -457,6 +457,7 @@
   "phoneModalPhoneSubtitle": "Introduce tu número de teléfono para recibir un código.",
   "phoneRateLimit": "Espera antes de solicitar otro código.",
   "phoneAlreadyTaken": "Este número de teléfono ya está en uso.",
+  "phoneInvalidNumber": "Número de teléfono no válido.",
   "phoneOtpExpired": "El código caducó: solicita uno nuevo.",
   "phoneResend": "Reenviar código",
   "phoneResendCountdown": "Reenviar en {seconds}s",

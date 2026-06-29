@@ -3,7 +3,7 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { UsersService } from './users.service';
 import { UsersController } from './users.controller';
 import { FriendsModule } from '../friends/friends.module';
-import { SmsModule } from '../sms/sms.module';
+import { FirebaseAdminModule } from '../firebase/firebase.module';
 import { User, UserSchema, UserBlock, UserBlockSchema } from '@platform/database';
 
 @Module({
@@ -15,8 +15,8 @@ import { User, UserSchema, UserBlock, UserBlockSchema } from '@platform/database
     ]),
     // FriendsService cung cấp số bạn bè + danh sách bạn online cho UsersController
     FriendsModule,
-    // SmsService cung cấp gửi SMS OTP cho phone verification
-    SmsModule,
+    // FirebaseAdminService xác thực Firebase Phone Auth ID token
+    FirebaseAdminModule,
   ],
   controllers: [UsersController],
   providers: [UsersService],

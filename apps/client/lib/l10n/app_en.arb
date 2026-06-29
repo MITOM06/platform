@@ -606,6 +606,7 @@
   "phoneModalPhoneSubtitle": "Enter your phone number to receive a verification code.",
   "phoneRateLimit": "Please wait before requesting another code.",
   "phoneAlreadyTaken": "This phone number is already in use.",
+  "phoneInvalidNumber": "Invalid phone number.",
   "phoneOtpExpired": "Code expired — request a new one.",
   "phoneResend": "Resend code",
   "phoneResendCountdown": "Resend in {seconds}s",

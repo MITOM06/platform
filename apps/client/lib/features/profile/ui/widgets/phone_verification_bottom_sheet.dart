@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl_phone_number_input/intl_phone_number_input.dart';
@@ -7,20 +8,20 @@ import 'package:platform_client/l10n/app_localizations.dart';
 
 import '../../../../core/l10n/l10n_ext.dart';
 import '../../../../core/theme/app_theme.dart';
-import '../../../../core/utils/app_error.dart';
 import '../../../../core/widgets/otp_6box_input.dart';
 import '../../../auth/data/auth_repository.dart';
 import '../../../auth/domain/auth_provider.dart';
-import '../../../auth/utils/auth_error.dart';
 
 enum _VerifyStep { phone, otp }
 
-/// Two-step bottom sheet that verifies a phone number via SMS OTP.
+/// Two-step bottom sheet that verifies a phone number via Firebase Phone Auth.
 ///
 /// Step 1 ([_VerifyStep.phone]) collects the number with a country-code picker
-/// and sends the OTP. Step 2 ([_VerifyStep.otp]) collects the 6-digit code and
-/// verifies it, with a 60s resend cooldown. On success the phone is persisted
-/// server-side and [onVerified] is invoked with the confirmed E.164 number.
+/// and triggers Firebase to send the SMS OTP. Step 2 ([_VerifyStep.otp])
+/// collects the 6-digit code and verifies it client-side via Firebase, with a
+/// 60s resend cooldown. On success the resulting Firebase ID token is sent to
+/// our backend (which persists the phone server-side) and [onVerified] is
+/// invoked with the confirmed E.164 number.
 ///
 /// Open it with [showPhoneVerificationSheet].
 class PhoneVerificationBottomSheet extends ConsumerStatefulWidget {
@@ -43,6 +44,8 @@ class _PhoneVerificationBottomSheetState
   _VerifyStep _step = _VerifyStep.phone;
   PhoneNumber? _phone;
   String _e164Sent = '';
+  String _verificationId = ''; // Firebase verification ID
+  int? _resendToken; // Firebase resend token
   final TextEditingController _otpController = TextEditingController();
 
   bool _sending = false;
@@ -92,49 +95,49 @@ class _PhoneVerificationBottomSheetState
       _sending = true;
       _phoneError = null;
     });
-    try {
-      await ref.read(authRepositoryProvider).sendPhoneOtp(e164);
-      if (!mounted) return;
-      setState(() {
-        _sending = false;
-        _e164Sent = e164;
-        _step = _VerifyStep.otp;
-        _otpController.clear();
-        _otpError = null;
-      });
-      _startTimer();
-    } catch (e) {
-      if (!mounted) return;
-      setState(() {
-        _sending = false;
-        _phoneError = _mapSendError(e);
-      });
-    }
+
+    await FirebaseAuth.instance.verifyPhoneNumber(
+      phoneNumber: e164,
+      forceResendingToken: _resendToken,
+      verificationCompleted: (PhoneAuthCredential credential) async {
+        // Android auto-verification (SMS auto-read) — complete immediately.
+        await _signInWithCredential(credential);
+      },
+      verificationFailed: (FirebaseAuthException e) {
+        if (!mounted) return;
+        setState(() {
+          _sending = false;
+          _phoneError = _mapFirebaseError(e);
+        });
+      },
+      codeSent: (String verificationId, int? resendToken) {
+        if (!mounted) return;
+        setState(() {
+          _sending = false;
+          _verificationId = verificationId;
+          _resendToken = resendToken;
+          _e164Sent = e164;
+          _step = _VerifyStep.otp;
+          _otpController.clear();
+          _otpError = null;
+        });
+        _startTimer();
+      },
+      codeAutoRetrievalTimeout: (String verificationId) {
+        if (mounted) setState(() => _verificationId = verificationId);
+      },
+      timeout: const Duration(seconds: 60),
+    );
   }
 
-  /// Resend from the OTP step: re-sends to the already-entered number without
-  /// going back to the phone step.
+  /// Resend from the OTP step: re-triggers Firebase with the resend token.
   Future<void> _resend() async {
     if (_resendTimer > 0 || _sending) return;
     setState(() {
-      _sending = true;
+      _otpController.clear();
       _otpError = null;
     });
-    try {
-      await ref.read(authRepositoryProvider).sendPhoneOtp(_e164Sent);
-      if (!mounted) return;
-      setState(() {
-        _sending = false;
-        _otpController.clear();
-      });
-      _startTimer();
-    } catch (e) {
-      if (!mounted) return;
-      setState(() {
-        _sending = false;
-        _otpError = _mapSendError(e);
-      });
-    }
+    await _sendOtp();
   }
 
   Future<void> _verify() async {
@@ -147,46 +150,62 @@ class _PhoneVerificationBottomSheetState
       _verifying = true;
       _otpError = null;
     });
+
     try {
-      final serverPhone =
-          await ref.read(authRepositoryProvider).verifyPhoneOtp(code);
-      // Refresh cached user so phoneVerified/phoneNumber stay in sync.
-      await ref.read(authNotifierProvider.notifier).refreshUser();
+      final credential = PhoneAuthProvider.credential(
+        verificationId: _verificationId,
+        smsCode: code,
+      );
+      await _signInWithCredential(credential);
+    } on FirebaseAuthException catch (e) {
       if (!mounted) return;
-      Navigator.of(context).pop();
-      widget.onVerified(serverPhone ?? _e164Sent);
+      setState(() {
+        _verifying = false;
+        _otpError = e.code == 'invalid-verification-code'
+            ? context.l10n.phoneOtpInvalid
+            : context.l10n.phoneOtpExpired;
+      });
     } catch (e) {
       if (!mounted) return;
       setState(() {
         _verifying = false;
-        _otpError = _mapVerifyError(e);
+        _otpError = context.l10n.phoneOtpInvalid;
       });
     }
   }
 
-  /// Maps a send-OTP error to a localized message — never raw exception text.
-  String _mapSendError(Object e) {
-    final l10n = context.l10n;
-    switch (authErrorCode(e)) {
-      case 'PHONE_OTP_RATE_LIMIT':
-        return l10n.phoneRateLimit;
-      case 'PHONE_ALREADY_TAKEN':
-        return l10n.phoneAlreadyTaken;
-      default:
-        return isNetworkError(e) ? friendlyError(e) : l10n.phoneSendOtpError;
-    }
+  /// Signs in to Firebase with the phone credential, gets an ID token,
+  /// sends it to our backend, then signs out of Firebase.
+  Future<void> _signInWithCredential(PhoneAuthCredential credential) async {
+    final userCredential =
+        await FirebaseAuth.instance.signInWithCredential(credential);
+
+    final idToken = await userCredential.user?.getIdToken();
+    if (idToken == null) throw Exception('No ID token');
+
+    final serverPhone =
+        await ref.read(authRepositoryProvider).verifyFirebasePhoneToken(idToken);
+
+    // We use our own auth system — sign out of Firebase after getting the token.
+    await FirebaseAuth.instance.signOut();
+
+    // Refresh cached PON user so phoneVerified/phoneNumber stay in sync.
+    await ref.read(authNotifierProvider.notifier).refreshUser();
+
+    if (!mounted) return;
+    Navigator.of(context).pop();
+    widget.onVerified(serverPhone ?? _e164Sent);
   }
 
-  /// Maps a verify-OTP error to a localized message — never raw exception text.
-  String _mapVerifyError(Object e) {
-    final l10n = context.l10n;
-    switch (authErrorCode(e)) {
-      case 'PHONE_OTP_EXPIRED':
-        return l10n.phoneOtpExpired;
-      case 'PHONE_ALREADY_TAKEN':
-        return l10n.phoneAlreadyTaken;
+  /// Maps a Firebase auth error to a localized message — never raw exception text.
+  String _mapFirebaseError(FirebaseAuthException e) {
+    switch (e.code) {
+      case 'invalid-phone-number':
+        return context.l10n.phoneInvalidNumber;
+      case 'too-many-requests':
+        return context.l10n.phoneRateLimit;
       default:
-        return isNetworkError(e) ? friendlyError(e) : l10n.phoneOtpInvalid;
+        return context.l10n.phoneSendOtpError;
     }
   }
 

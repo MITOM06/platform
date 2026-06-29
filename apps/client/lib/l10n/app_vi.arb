@@ -457,6 +457,7 @@
   "phoneModalPhoneSubtitle": "Nhập số điện thoại để nhận mã xác minh.",
   "phoneRateLimit": "Vui lòng chờ trước khi yêu cầu mã mới.",
   "phoneAlreadyTaken": "Số điện thoại này đã được sử dụng.",
+  "phoneInvalidNumber": "Số điện thoại không hợp lệ.",
   "phoneOtpExpired": "Mã đã hết hạn — vui lòng yêu cầu mã mới.",
   "phoneResend": "Gửi lại mã",
   "phoneResendCountdown": "Gửi lại sau {seconds}s",

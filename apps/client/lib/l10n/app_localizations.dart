@@ -2598,6 +2598,12 @@ abstract class AppLocalizations {
   /// **'This phone number is already in use.'**
   String get phoneAlreadyTaken;
 
+  /// No description provided for @phoneInvalidNumber.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid phone number.'**
+  String get phoneInvalidNumber;
+
   /// No description provided for @phoneOtpExpired.
   ///
   /// In en, this message translates to:

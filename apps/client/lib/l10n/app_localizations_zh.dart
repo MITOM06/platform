@@ -1312,6 +1312,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get phoneAlreadyTaken => '该电话号码已被使用。';
 
   @override
+  String get phoneInvalidNumber => '电话号码无效。';
+
+  @override
   String get phoneOtpExpired => '验证码已过期，请重新获取。';
 
   @override

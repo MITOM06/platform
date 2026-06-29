@@ -1327,6 +1327,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get phoneAlreadyTaken => 'This phone number is already in use.';
 
   @override
+  String get phoneInvalidNumber => 'Invalid phone number.';
+
+  @override
   String get phoneOtpExpired => 'Code expired — request a new one.';
 
   @override

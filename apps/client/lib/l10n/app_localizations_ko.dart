@@ -1313,6 +1313,9 @@ class AppLocalizationsKo extends AppLocalizations {
   String get phoneAlreadyTaken => '이미 사용 중인 전화번호입니다.';
 
   @override
+  String get phoneInvalidNumber => '유효하지 않은 전화번호입니다.';
+
+  @override
   String get phoneOtpExpired => '코드가 만료되었습니다. 새 코드를 요청하세요.';
 
   @override

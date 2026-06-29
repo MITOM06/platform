@@ -1328,6 +1328,9 @@ class AppLocalizationsVi extends AppLocalizations {
   String get phoneAlreadyTaken => 'Số điện thoại này đã được sử dụng.';
 
   @override
+  String get phoneInvalidNumber => 'Số điện thoại không hợp lệ.';
+
+  @override
   String get phoneOtpExpired => 'Mã đã hết hạn — vui lòng yêu cầu mã mới.';
 
   @override
