@@ -23,10 +23,7 @@ export function MobileTabBar() {
   }
 
   return (
-    <nav
-      className="md:hidden fixed bottom-0 left-0 right-0 z-50 h-16 border-t bg-background/95 backdrop-blur-md flex items-stretch"
-      style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
-    >
+    <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 h-16 border-t bg-background/95 backdrop-blur-md flex items-stretch pb-safe">
       {tabs.map(({ key, href, icon: Icon, labelKey }) => {
         const active = isActive(href)
         return (
