@@ -238,7 +238,7 @@ export function MessageInput({
   const busy = disabled || sending || uploading
 
   return (
-    <div className="flex flex-col border-t bg-background" style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
+    <div className="flex flex-col border-t bg-background pb-safe">
       {/* Reply banner */}
       {replyingTo && !editingMessage && (
         <div className="flex items-center gap-2 px-3 py-1.5 bg-primary/5 border-b text-sm">
@@ -290,10 +290,10 @@ export function MessageInput({
           <span className="flex-1 text-sm text-muted-foreground">
             {t('recording', { time: fmtSeconds(recordSeconds) })}
           </span>
-          <Button variant="ghost" size="icon" onClick={cancelRecording}>
+          <Button variant="ghost" size="icon" onClick={cancelRecording} className="tap">
             <Trash2 className="size-4" />
           </Button>
-          <Button size="icon" onClick={stopAndSend} className="shrink-0">
+          <Button size="icon" onClick={stopAndSend} className="shrink-0 tap">
             <Send className="size-4" />
           </Button>
         </div>
@@ -303,7 +303,7 @@ export function MessageInput({
           {!editingMessage && (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="shrink-0" disabled={busy}>
+                <Button variant="ghost" size="icon" className="shrink-0 tap" disabled={busy}>
                   <Paperclip className="size-5 text-pon-peach" />
                 </Button>
               </DropdownMenuTrigger>
@@ -370,7 +370,7 @@ export function MessageInput({
               size="icon"
               onClick={handleSend}
               disabled={!value.trim() || busy}
-              className="shrink-0 transition-transform duration-[180ms] active:scale-95"
+              className="shrink-0 transition-transform duration-[180ms] active:scale-95 tap"
               variant={editingMessage ? 'outline' : 'default'}
             >
               {editingMessage ? <Pencil className="size-4" /> : <Send className="size-4" />}
@@ -382,7 +382,7 @@ export function MessageInput({
                 variant="ghost"
                 onClick={startRecording}
                 disabled={busy}
-                className="shrink-0"
+                className="shrink-0 tap"
                 title={t('attachVoice')}
               >
                 <Mic className="size-5 text-pon-cyan" />
@@ -390,7 +390,7 @@ export function MessageInput({
               <button
                 onClick={() => onSend(quickReaction, 'text')}
                 disabled={busy}
-                className="size-9 shrink-0 flex items-center justify-center text-xl transition-transform hover:scale-110 active:scale-95"
+                className="size-9 shrink-0 flex items-center justify-center text-xl transition-transform hover:scale-110 active:scale-95 tap"
                 title={t('quickSend')}
               >
                 {quickReaction}
