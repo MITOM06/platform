@@ -457,6 +457,7 @@
   "phoneModalPhoneSubtitle": "输入电话号码以接收验证码。",
   "phoneRateLimit": "请稍候再请求新的验证码。",
   "phoneAlreadyTaken": "该电话号码已被使用。",
+  "phoneInvalidNumber": "电话号码无效。",
   "phoneOtpExpired": "验证码已过期，请重新获取。",
   "phoneResend": "重新发送验证码",
   "phoneResendCountdown": "{seconds}秒后重新发送",

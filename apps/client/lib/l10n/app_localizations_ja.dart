@@ -1313,6 +1313,9 @@ class AppLocalizationsJa extends AppLocalizations {
   String get phoneAlreadyTaken => 'この電話番号は既に使用されています。';
 
   @override
+  String get phoneInvalidNumber => '電話番号が無効です。';
+
+  @override
   String get phoneOtpExpired => 'コードの有効期限が切れました。新しいコードをリクエストしてください。';
 
   @override

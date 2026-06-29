@@ -57,6 +57,7 @@ dependencies:
   # Firebase Push Notifications
   firebase_core: ^3.1.1
   firebase_messaging: ^15.0.1
+  firebase_auth: ^5.0.0 # Phone Auth (compatible with firebase_core ^3.x)
   flutter_local_notifications: ^17.2.3
 
   # WebRTC for 1-1 + group (mesh) Calling

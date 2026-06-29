@@ -70,20 +70,17 @@ export class UsersController {
     );
   }
 
-  @Post('me/phone/send-otp')
-  @ApiOperation({ summary: 'Send SMS OTP to the given phone number' })
-  async sendPhoneOtp(@Req() req: any, @Body('phone') phone: string) {
-    if (!phone || !phone.startsWith('+')) {
-      throw new BadRequestException({ code: 'PHONE_INVALID_FORMAT' });
-    }
-    await this.usersService.sendPhoneOtp(req.user.sub, phone);
-    return { success: true };
-  }
-
   @Post('me/phone/verify')
-  @ApiOperation({ summary: 'Verify SMS OTP and save the phone number' })
-  async verifyPhoneOtp(@Req() req: any, @Body('otp') otp: string) {
-    const user = await this.usersService.verifyPhoneOtp(req.user.sub, otp);
+  @ApiOperation({ summary: 'Verify Firebase Phone Auth token and save phone number' })
+  async verifyFirebasePhoneToken(
+    @Req() req: any,
+    @Body('firebaseIdToken') idToken: string,
+  ) {
+    if (!idToken) throw new BadRequestException({ code: 'PHONE_TOKEN_MISSING' });
+    const user = await this.usersService.verifyFirebasePhoneToken(
+      req.user.sub,
+      idToken,
+    );
     return {
       success: true,
       phoneNumber: user.phoneNumber,

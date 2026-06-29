@@ -457,6 +457,7 @@
   "phoneModalPhoneSubtitle": "認証コードを受け取る電話番号を入力してください。",
   "phoneRateLimit": "新しいコードをリクエストするまで少しお待ちください。",
   "phoneAlreadyTaken": "この電話番号は既に使用されています。",
+  "phoneInvalidNumber": "電話番号が無効です。",
   "phoneOtpExpired": "コードの有効期限が切れました。新しいコードをリクエストしてください。",
   "phoneResend": "コードを再送信",
   "phoneResendCountdown": "{seconds}秒後に再送信",

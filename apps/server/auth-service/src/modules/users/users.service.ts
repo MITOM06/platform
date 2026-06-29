@@ -1,10 +1,8 @@
 import {
   BadRequestException,
   ConflictException,
-  Inject,
   Injectable,
   NotFoundException,
-  ServiceUnavailableException,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
@@ -13,11 +11,9 @@ import {
   UserDocument,
   UserBlock,
   UserBlockDocument,
-  REDIS_CLIENT,
-  Redis,
 } from '@platform/database';
 import * as bcrypt from 'bcrypt';
-import { SmsService } from '../sms/sms.service';
+import { FirebaseAdminService } from '../firebase/firebase-admin.service';
 
 @Injectable()
 export class UsersService {
@@ -27,8 +23,7 @@ export class UsersService {
     @InjectModel(User.name) private userModel: Model<UserDocument>,
     @InjectModel(UserBlock.name)
     private userBlockModel: Model<UserBlockDocument>,
-    @Inject(REDIS_CLIENT) private readonly redis: Redis,
-    private readonly smsService: SmsService,
+    private readonly firebaseAdmin: FirebaseAdminService,
     // ❌ Xóa: SessionService — UsersService không cần biết về session
   ) {}
 
@@ -266,61 +261,26 @@ export class UsersService {
   }
 
   /**
-   * Generates a 6-digit OTP, stores it in Redis for 5 min, and sends it via
-   * SMS to the given phone number.
-   * Rate-limited: max 3 sends per user per 10 minutes (Redis counter).
+   * Verifies a Firebase Phone Auth ID token.
+   * The token is issued by Firebase after the user successfully enters the SMS OTP.
+   * Extracts the phone number from the token's claims, checks for conflicts,
+   * and persists phoneNumber + phoneVerified=true on the user document.
    */
-  async sendPhoneOtp(userId: string, phone: string): Promise<void> {
-    // Rate limit: max 3 OTP sends per 10 min per user.
-    const rateKey = `phone_otp_rate:${userId}`;
-    const sends = await this.redis.incr(rateKey);
-    if (sends === 1) await this.redis.expire(rateKey, 600); // 10 min window
-    if (sends > 3) {
-      throw new BadRequestException({ code: 'PHONE_OTP_RATE_LIMIT' });
-    }
-
-    const otp = String(Math.floor(100000 + Math.random() * 900000));
-    const payload = JSON.stringify({ phone, otp });
-    // Store for 5 min.
-    await this.redis.set(`phone_otp:${userId}`, payload, 'EX', 300);
-
+  async verifyFirebasePhoneToken(
+    userId: string,
+    idToken: string,
+  ): Promise<UserDocument> {
+    let decoded: import('firebase-admin').auth.DecodedIdToken;
     try {
-      await this.smsService.sendSms(
-        phone,
-        `Your PON verification code is: ${otp}. Valid for 5 minutes.`,
-      );
+      decoded = await this.firebaseAdmin.verifyIdToken(idToken);
     } catch {
-      // The SMS provider (Twilio) rejected the send — e.g. geo-permissions not
-      // enabled for the destination country, an unverified trial recipient, or
-      // an unreachable To/From combination. This is an expected provider/input
-      // failure, NOT a server fault: surface a typed code the client can map to
-      // a friendly message instead of leaking a raw 500. Roll back the OTP entry
-      // and the rate-limit counter so the failed attempt isn't held against the
-      // user (SmsService already logged the underlying Twilio error).
-      await this.redis.del(`phone_otp:${userId}`);
-      await this.redis.decr(rateKey);
-      throw new ServiceUnavailableException({ code: 'PHONE_OTP_SEND_FAILED' });
-    }
-  }
-
-  /**
-   * Verifies the OTP for a phone number. On success:
-   * - saves phoneNumber and phoneVerified=true to the user doc
-   * - clears the Redis OTP entry
-   */
-  async verifyPhoneOtp(userId: string, otp: string): Promise<UserDocument> {
-    const raw = await this.redis.get(`phone_otp:${userId}`);
-    if (!raw) throw new BadRequestException({ code: 'PHONE_OTP_EXPIRED' });
-
-    const { phone, otp: stored } = JSON.parse(raw) as {
-      phone: string;
-      otp: string;
-    };
-    if (otp !== stored) {
-      throw new BadRequestException({ code: 'PHONE_OTP_INVALID' });
+      throw new BadRequestException({ code: 'PHONE_TOKEN_INVALID' });
     }
 
-    await this.redis.del(`phone_otp:${userId}`);
+    const phone = decoded.phone_number;
+    if (!phone) {
+      throw new BadRequestException({ code: 'PHONE_TOKEN_NO_NUMBER' });
+    }
 
     // Check for duplicate phone across other users.
     const conflict = await this.userModel.findOne({

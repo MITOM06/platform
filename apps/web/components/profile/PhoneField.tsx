@@ -1,10 +1,15 @@
 'use client'
 
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import PhoneInput, { isValidPhoneNumber } from 'react-phone-number-input'
 import 'react-phone-number-input/style.css'
 import { CheckCircle2, Loader2, ShieldAlert, Phone } from 'lucide-react'
 import { toast } from 'sonner'
+import {
+  signInWithPhoneNumber,
+  RecaptchaVerifier,
+  type ConfirmationResult,
+} from 'firebase/auth'
 import { Button } from '@/components/ui/button'
 import { OtpInput } from '@/components/auth/OtpInput'
 import {
@@ -15,6 +20,7 @@ import {
   DialogDescription,
 } from '@/components/ui/dialog'
 import { authService } from '@/lib/api/auth'
+import { firebaseAuth } from '@/lib/firebase'
 import { cn } from '@/lib/utils'
 
 export interface PhoneFieldLabels {
@@ -83,6 +89,8 @@ export function PhoneField({ value, verified, onChange, disabled, labels }: Phon
   const [verifying, setVerifying] = useState(false)
   const [resendTimer, setResendTimer] = useState(0)
   const [otpError, setOtpError] = useState('')
+  const [confirmationResult, setConfirmationResult] = useState<ConfirmationResult | null>(null)
+  const recaptchaRef = useRef<RecaptchaVerifier | null>(null)
 
   const startTimer = () => {
     setResendTimer(RESEND_COOLDOWN)
@@ -112,20 +120,26 @@ export function PhoneField({ value, verified, onChange, disabled, labels }: Phon
     }
     setSending(true)
     try {
-      await authService.sendPhoneOtp(draft)
+      // Create invisible reCAPTCHA verifier once
+      if (!recaptchaRef.current) {
+        recaptchaRef.current = new RecaptchaVerifier(
+          firebaseAuth,
+          'recaptcha-container', // <-- invisible div rendered in the modal
+          { size: 'invisible' },
+        )
+      }
+      const result = await signInWithPhoneNumber(firebaseAuth, draft, recaptchaRef.current)
+      setConfirmationResult(result)
       setOtp(Array(OTP_LENGTH).fill(''))
       setOtpError('')
       setStep('otp')
       startTimer()
     } catch (err: unknown) {
-      const code = errorCode(err)
-      if (code === 'PHONE_OTP_RATE_LIMIT') {
-        toast.error(labels.errorRateLimit)
-      } else if (code === 'PHONE_ALREADY_TAKEN') {
-        toast.error(labels.errorTaken)
-      } else {
-        toast.error(labels.errorSend)
-      }
+      console.error('Firebase sendOtp error:', err)
+      toast.error(labels.errorSend)
+      // Reset reCAPTCHA on failure so user can retry
+      recaptchaRef.current?.clear()
+      recaptchaRef.current = null
     } finally {
       setSending(false)
     }
@@ -137,16 +151,32 @@ export function PhoneField({ value, verified, onChange, disabled, labels }: Phon
       setOtpError(labels.otpIncomplete)
       return
     }
+    if (!confirmationResult) {
+      setOtpError(labels.errorSend)
+      return
+    }
     setVerifying(true)
     setOtpError('')
     try {
-      await authService.verifyPhoneOtp(code)
+      // Firebase verifies OTP client-side
+      const credential = await confirmationResult.confirm(code)
+      // Get Firebase ID token with phone_number claim
+      const idToken = await credential.user.getIdToken()
+      // Backend saves phone to our DB and marks verified
+      await authService.verifyFirebasePhoneToken(idToken)
+      // Sign out from Firebase Auth (we use our own auth system)
+      await firebaseAuth.signOut()
       toast.success(labels.successToast)
       setModalOpen(false)
       onChange(draft, true)
     } catch (err: unknown) {
-      const errCode = errorCode(err)
-      setOtpError(errCode === 'PHONE_OTP_EXPIRED' ? labels.errorExpired : labels.errorVerify)
+      const code = errorCode(err)
+      if (code === 'PHONE_ALREADY_TAKEN') {
+        setOtpError(labels.errorTaken)
+      } else {
+        // Firebase OTP wrong/expired → show generic invalid message
+        setOtpError(labels.errorVerify)
+      }
     } finally {
       setVerifying(false)
     }
@@ -154,8 +184,10 @@ export function PhoneField({ value, verified, onChange, disabled, labels }: Phon
 
   const handleResend = () => {
     if (resendTimer > 0) return
-    // Go back to the phone step so the user re-confirms the number before we
-    // send another code (and reset the OTP digits).
+    // Clear Firebase confirmation state and reCAPTCHA, go back to phone step
+    setConfirmationResult(null)
+    recaptchaRef.current?.clear()
+    recaptchaRef.current = null
     setOtp(Array(OTP_LENGTH).fill(''))
     setOtpError('')
     setStep('phone')
@@ -164,6 +196,8 @@ export function PhoneField({ value, verified, onChange, disabled, labels }: Phon
   const modal = (
     <Dialog open={modalOpen} onOpenChange={setModalOpen}>
       <DialogContent className="max-w-sm">
+        {/* Invisible reCAPTCHA anchor — Firebase attaches the widget here */}
+        <div id="recaptcha-container" />
         <DialogHeader>
           <DialogTitle>
             {step === 'phone' ? labels.modalPhoneTitle : labels.otpTitle}

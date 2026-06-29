@@ -204,20 +204,15 @@ class AuthRepository {
     return updated;
   }
 
-  /// Send a 6-digit SMS OTP to [phone] (E.164) for phone verification.
-  /// Hits the auth-service (`authDio`, port 3001).
-  Future<void> sendPhoneOtp(String phone) async {
-    await _dio.post('/api/users/me/phone/send-otp', data: {'phone': phone});
-  }
-
-  /// Verify the SMS [otp]; on success the server persists the phone number and
-  /// sets `phoneVerified = true`. Returns the verified phone number from the
-  /// server response.
-  Future<String?> verifyPhoneOtp(String otp) async {
-    final response =
-        await _dio.post('/api/users/me/phone/verify', data: {'otp': otp});
-    final data = response.data as Map<String, dynamic>;
-    return data['phoneNumber'] as String?;
+  /// Verifies a Firebase Phone Auth ID token on the server.
+  /// The token is obtained after Firebase verifies the SMS OTP client-side.
+  /// On success, the server persists the phone number and sets phoneVerified=true.
+  Future<String?> verifyFirebasePhoneToken(String idToken) async {
+    final response = await _dio.post(
+      '/api/users/me/phone/verify',
+      data: {'firebaseIdToken': idToken},
+    );
+    return response.data['phoneNumber'] as String?;
   }
 
   Future<void> changePassword(String currentPassword, String newPassword) async {
