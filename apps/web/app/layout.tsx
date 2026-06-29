@@ -16,8 +16,14 @@ const geistMono = Geist_Mono({
 })
 
 export const metadata: Metadata = {
-  title: 'Platform',
-  description: 'Realtime messaging + AI assistant',
+  title: {
+    default: 'PON',
+    template: '%s | PON',
+  },
+  description: 'PON – Nhắn tin, kết nối và cộng tác cùng AI',
+  icons: {
+    icon: '/icon.svg',
+  },
 }
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
