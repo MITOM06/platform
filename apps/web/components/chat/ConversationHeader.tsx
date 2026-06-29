@@ -2,8 +2,14 @@
 
 import { useState } from 'react'
 import { useTranslations } from 'next-intl'
-import { Bot, Settings, Phone, Video, Users } from 'lucide-react'
+import { Bot, Settings, Phone, Video, Users, MoreVertical } from 'lucide-react'
 import { useQueryClient } from '@tanstack/react-query'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 import { useConversation } from '@/lib/hooks/use-conversation'
 import { useUserStatus } from '@/lib/hooks/use-user-status'
 import { useAuthStore } from '@/lib/store/auth.store'
@@ -156,44 +162,83 @@ export function ConversationHeader({
 
         {/* Header action buttons */}
         <div className="flex items-center gap-0.5 shrink-0">
+          {/* Primary action: always visible on all screen sizes */}
           {isGroup && !isAI && (
             <Button
               variant="ghost"
               size="icon"
               onClick={() => setStartCallOpen(true)}
               title={t('groupCall')}
+              className="tap"
             >
               <Users className="size-4" />
             </Button>
           )}
           {otherUserId && (
-            <>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => startCall(otherUserId, displayName, conversationId, false)}
-                title={t('voiceCall')}
-              >
-                <Phone className="size-4" />
-              </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => startCall(otherUserId, displayName, conversationId, false)}
+              title={t('voiceCall')}
+              className="tap"
+            >
+              <Phone className="size-4" />
+            </Button>
+          )}
+
+          {/* Desktop: remaining actions inline */}
+          <div className="hidden md:flex items-center gap-0.5">
+            {otherUserId && (
               <Button
                 variant="ghost"
                 size="icon"
                 onClick={() => startCall(otherUserId, displayName, conversationId, true)}
                 title={t('videoCall')}
+                className="tap"
               >
                 <Video className="size-4" />
               </Button>
-            </>
-          )}
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => isGroup ? setGroupSettingsOpen(true) : setSettingsOpen(true)}
-            title={t('settingsTooltip')}
-          >
-            <Settings className="size-4" />
-          </Button>
+            )}
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => isGroup ? setGroupSettingsOpen(true) : setSettingsOpen(true)}
+              title={t('settingsTooltip')}
+              className="tap"
+            >
+              <Settings className="size-4" />
+            </Button>
+          </div>
+
+          {/* Mobile: overflow menu for secondary actions */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="md:hidden tap"
+                aria-label={t('moreActions')}
+              >
+                <MoreVertical className="size-5" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              {otherUserId && (
+                <DropdownMenuItem
+                  onClick={() => startCall(otherUserId, displayName, conversationId, true)}
+                >
+                  <Video className="size-4 mr-2" />
+                  {t('videoCall')}
+                </DropdownMenuItem>
+              )}
+              <DropdownMenuItem
+                onClick={() => isGroup ? setGroupSettingsOpen(true) : setSettingsOpen(true)}
+              >
+                <Settings className="size-4 mr-2" />
+                {t('settingsTooltip')}
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </header>
 
