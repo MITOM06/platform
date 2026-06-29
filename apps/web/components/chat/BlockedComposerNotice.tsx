@@ -7,8 +7,10 @@ import { toast } from 'sonner'
 import { Ban, ShieldCheck, Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { authService } from '@/lib/api/auth'
+import { chatService } from '@/lib/api/chat'
 
 interface Props {
+  conversationId: string
   otherUserId: string
   otherUserName: string
   /** True when the current user has blocked the other user. */
@@ -19,6 +21,7 @@ interface Props {
 }
 
 export function BlockedComposerNotice({
+  conversationId,
   otherUserId,
   otherUserName,
   iBlocked,
@@ -33,6 +36,10 @@ export function BlockedComposerNotice({
     setUnblocking(true)
     try {
       await authService.unblockUser(otherUserId)
+      // Also restore the conversation out of the Blocked section (parity with
+      // ConversationItem.handleUnblock + mobile). Backend is idempotent — a no-op
+      // when the conversation was never block-archived.
+      await chatService.blockRestoreConversation(conversationId)
       queryClient.invalidateQueries({ queryKey: ['relationship', otherUserId] })
       queryClient.invalidateQueries({ queryKey: ['conversations'] })
       onUnblocked?.()

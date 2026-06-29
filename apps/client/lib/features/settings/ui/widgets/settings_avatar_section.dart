@@ -4,6 +4,7 @@ import 'package:image_picker/image_picker.dart';
 
 import '../../../../core/l10n/l10n_ext.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/utils/global_messenger.dart';
 import '../../../auth/domain/auth_provider.dart';
 import '../../../auth/domain/auth_state.dart';
 import '../../../chat/data/chat_repository.dart';
@@ -28,16 +29,13 @@ class _SettingsAvatarSectionState extends ConsumerState<SettingsAvatarSection> {
     if (pickedFile == null) return;
     setState(() => _uploading = true);
     try {
-      final url =
-          await ref.read(chatRepositoryProvider).uploadFile(pickedFile);
+      final url = await ref.read(chatRepositoryProvider).uploadFile(pickedFile);
       await ref
           .read(authNotifierProvider.notifier)
           .updateProfile(avatarUrl: url);
     } catch (_) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(context.l10n.uploadFailed)),
-        );
+        showErrorSnackBar(context.l10n.uploadFailed);
       }
     } finally {
       if (mounted) setState(() => _uploading = false);

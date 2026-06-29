@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/l10n/l10n_ext.dart';
 import '../../../core/utils/app_error.dart';
+import '../../../core/utils/global_messenger.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../auth/data/auth_repository.dart';
 import '../../auth/domain/auth_provider.dart';
@@ -15,8 +16,8 @@ import 'widgets/conversation_avatar.dart';
 import 'widgets/pinned_messages_section.dart';
 
 /// Loads a single conversation (used for group info, refreshed on demand).
-final groupConversationProvider = FutureProvider.autoDispose
-    .family<ConversationModel, String>((ref, id) {
+final groupConversationProvider =
+    FutureProvider.autoDispose.family<ConversationModel, String>((ref, id) {
   return ref.read(chatRepositoryProvider).getConversation(id);
 });
 
@@ -43,23 +44,24 @@ class GroupInfoScreen extends ConsumerWidget {
         data: (conv) {
           final colorScheme = Theme.of(context).colorScheme;
           final isDark = Theme.of(context).brightness == Brightness.dark;
-          final dividerColor = isDark
-              ? Colors.white12
-              : Colors.black.withValues(alpha: 0.08);
+          final dividerColor =
+              isDark ? Colors.white12 : Colors.black.withValues(alpha: 0.08);
           final isAdmin = conv.admins.contains(currentUserId);
           return ListView(
             children: [
               const SizedBox(height: 16),
               Center(
                 child: GestureDetector(
-                  onTap: isAdmin ? () => _uploadGroupAvatar(context, ref) : null,
+                  onTap:
+                      isAdmin ? () => _uploadGroupAvatar(context, ref) : null,
                   child: Stack(
                     alignment: Alignment.center,
                     children: [
                       ConversationAvatar(
                         avatarUrl: conv.avatarUrl,
-                        fallbackLetter:
-                            (conv.name?.isNotEmpty ?? false) ? conv.name![0].toUpperCase() : '?',
+                        fallbackLetter: (conv.name?.isNotEmpty ?? false)
+                            ? conv.name![0].toUpperCase()
+                            : '?',
                         isGroup: true,
                         size: 88,
                       ),
@@ -73,7 +75,8 @@ class GroupInfoScreen extends ConsumerWidget {
                               color: AppTheme.ponCyan,
                               shape: BoxShape.circle,
                             ),
-                            child: const Icon(Icons.camera_alt, color: Colors.white, size: 16),
+                            child: const Icon(Icons.camera_alt,
+                                color: Colors.white, size: 16),
                           ),
                         ),
                     ],
@@ -100,21 +103,24 @@ class GroupInfoScreen extends ConsumerWidget {
               const SizedBox(height: 16),
               if (isAdmin)
                 ListTile(
-                  leading: const Icon(Icons.edit_rounded, color: AppTheme.ponCyan),
+                  leading:
+                      const Icon(Icons.edit_rounded, color: AppTheme.ponCyan),
                   title: Text(context.l10n.renameGroup,
                       style: TextStyle(color: colorScheme.onSurface)),
                   onTap: () => _renameGroup(context, ref, conv),
                 ),
               if (isAdmin)
                 ListTile(
-                  leading: const Icon(Icons.person_add_alt_1_rounded, color: AppTheme.ponCyan),
+                  leading: const Icon(Icons.person_add_alt_1_rounded,
+                      color: AppTheme.ponCyan),
                   title: Text(context.l10n.addMembers,
                       style: TextStyle(color: colorScheme.onSurface)),
                   onTap: () => _addMember(context, ref),
                 ),
               Divider(color: dividerColor),
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 child: Text(
                   context.l10n.members,
                   style: TextStyle(
@@ -135,9 +141,8 @@ class GroupInfoScreen extends ConsumerWidget {
               // Pinned messages (Task 53). Prefer the live chat-state list so
               // unpins reflect immediately; fall back to the loaded snapshot.
               Builder(builder: (context) {
-                final liveState = ref
-                    .watch(chatNotifierProvider(conversationId))
-                    .valueOrNull;
+                final liveState =
+                    ref.watch(chatNotifierProvider(conversationId)).valueOrNull;
                 final pinned = liveState?.pinnedMessages.isNotEmpty == true
                     ? liveState!.pinnedMessages
                     : conv.pinnedMessages;
@@ -155,7 +160,8 @@ class GroupInfoScreen extends ConsumerWidget {
               }),
               Divider(color: dividerColor),
               ListTile(
-                leading: const Icon(Icons.perm_media_outlined, color: AppTheme.ponCyan),
+                leading: const Icon(Icons.perm_media_outlined,
+                    color: AppTheme.ponCyan),
                 title: Text(context.l10n.sharedMediaTitle,
                     style: TextStyle(color: colorScheme.onSurface)),
                 trailing: Icon(Icons.chevron_right,
@@ -165,7 +171,8 @@ class GroupInfoScreen extends ConsumerWidget {
               if (isAdmin) ...[
                 Divider(color: dividerColor),
                 ListTile(
-                  leading: const Icon(Icons.smart_toy_outlined, color: AppTheme.ponCyan),
+                  leading: const Icon(Icons.smart_toy_outlined,
+                      color: AppTheme.ponCyan),
                   title: Text(context.l10n.configureAiPersona,
                       style: TextStyle(color: colorScheme.onSurface)),
                   trailing: Icon(Icons.chevron_right,
@@ -175,7 +182,8 @@ class GroupInfoScreen extends ConsumerWidget {
               ],
               Divider(color: dividerColor),
               ListTile(
-                leading: const Icon(Icons.logout_rounded, color: Colors.redAccent),
+                leading:
+                    const Icon(Icons.logout_rounded, color: Colors.redAccent),
                 title: Text(context.l10n.leaveGroup,
                     style: const TextStyle(color: Colors.redAccent)),
                 onTap: () => _leaveGroup(context, ref, currentUserId),
@@ -196,7 +204,8 @@ class GroupInfoScreen extends ConsumerWidget {
         context: context,
         builder: (ctx) => AlertDialog(
           backgroundColor: AppTheme.darkSurface,
-          title: Text(ctx.l10n.renameGroup, style: const TextStyle(color: Colors.white)),
+          title: Text(ctx.l10n.renameGroup,
+              style: const TextStyle(color: Colors.white)),
           content: TextField(
             controller: controller,
             autofocus: true,
@@ -228,9 +237,7 @@ class GroupInfoScreen extends ConsumerWidget {
       ref.invalidate(conversationsNotifierProvider);
     } catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(context.l10n.listGenericError)),
-        );
+        showErrorSnackBar(context.l10n.listGenericError);
       }
     }
   }
@@ -239,17 +246,17 @@ class GroupInfoScreen extends ConsumerWidget {
     final picker = ImagePicker();
     final pickedFile = await picker.pickImage(source: ImageSource.gallery);
     if (pickedFile == null) return;
-    
+
     try {
       final url = await ref.read(chatRepositoryProvider).uploadFile(pickedFile);
-      await ref.read(chatRepositoryProvider).updateConversation(conversationId, avatarUrl: url);
+      await ref
+          .read(chatRepositoryProvider)
+          .updateConversation(conversationId, avatarUrl: url);
       ref.invalidate(groupConversationProvider(conversationId));
       ref.invalidate(conversationsNotifierProvider);
     } catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(context.l10n.uploadFailed)),
-        );
+        showErrorSnackBar(context.l10n.uploadFailed);
       }
     }
   }
@@ -262,7 +269,8 @@ class GroupInfoScreen extends ConsumerWidget {
         context: context,
         builder: (ctx) => AlertDialog(
           backgroundColor: AppTheme.darkSurface,
-          title: Text(ctx.l10n.addMembers, style: const TextStyle(color: Colors.white)),
+          title: Text(ctx.l10n.addMembers,
+              style: const TextStyle(color: Colors.white)),
           content: TextField(
             controller: controller,
             autofocus: true,
@@ -290,23 +298,23 @@ class GroupInfoScreen extends ConsumerWidget {
       final users = await ref.read(authRepositoryProvider).searchUsers(query);
       final matches =
           users.where((u) => u.email.toLowerCase() == query.toLowerCase());
-      final user = matches.isNotEmpty ? matches.first : (users.isNotEmpty ? users.first : null);
+      final user = matches.isNotEmpty
+          ? matches.first
+          : (users.isNotEmpty ? users.first : null);
       if (user == null) {
         if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(context.l10n.errUserNotFoundEmail)),
-          );
+          showErrorSnackBar(context.l10n.errUserNotFoundEmail);
         }
         return;
       }
-      await ref.read(chatRepositoryProvider).addMembers(conversationId, [user.id]);
+      await ref
+          .read(chatRepositoryProvider)
+          .addMembers(conversationId, [user.id]);
       ref.invalidate(groupConversationProvider(conversationId));
       ref.invalidate(conversationsNotifierProvider);
     } catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(context.l10n.listGenericError)),
-        );
+        showErrorSnackBar(context.l10n.listGenericError);
       }
     }
   }
@@ -314,13 +322,13 @@ class GroupInfoScreen extends ConsumerWidget {
   Future<void> _removeMember(
       BuildContext context, WidgetRef ref, String userId) async {
     try {
-      await ref.read(chatRepositoryProvider).removeMember(conversationId, userId);
+      await ref
+          .read(chatRepositoryProvider)
+          .removeMember(conversationId, userId);
       ref.invalidate(groupConversationProvider(conversationId));
     } catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(context.l10n.listGenericError)),
-        );
+        showErrorSnackBar(context.l10n.listGenericError);
       }
     }
   }
@@ -331,7 +339,8 @@ class GroupInfoScreen extends ConsumerWidget {
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: AppTheme.darkSurface,
-        title: Text(ctx.l10n.leaveGroup, style: const TextStyle(color: Colors.white)),
+        title: Text(ctx.l10n.leaveGroup,
+            style: const TextStyle(color: Colors.white)),
         content: Text(ctx.l10n.leaveGroupConfirm,
             style: const TextStyle(color: Colors.white70)),
         actions: [
@@ -349,14 +358,14 @@ class GroupInfoScreen extends ConsumerWidget {
     );
     if (confirm != true) return;
     try {
-      await ref.read(chatRepositoryProvider).removeMember(conversationId, currentUserId);
+      await ref
+          .read(chatRepositoryProvider)
+          .removeMember(conversationId, currentUserId);
       ref.read(conversationsNotifierProvider.notifier).refresh();
       if (context.mounted) context.go('/');
     } catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(context.l10n.listGenericError)),
-        );
+        showErrorSnackBar(context.l10n.listGenericError);
       }
     }
   }
@@ -380,9 +389,7 @@ class _MemberTile extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final profile = ref.watch(userProfileProvider(userId)).valueOrNull;
-    final name = isSelf
-        ? context.l10n.you
-        : (profile?.displayName ?? '…');
+    final name = isSelf ? context.l10n.you : (profile?.displayName ?? '…');
     return ListTile(
       leading: ConversationAvatar(
         avatarUrl: profile?.avatarUrl,
@@ -397,7 +404,8 @@ class _MemberTile extends ConsumerWidget {
           : null,
       trailing: canRemove
           ? IconButton(
-              icon: const Icon(Icons.remove_circle_outline, color: Colors.redAccent),
+              icon: const Icon(Icons.remove_circle_outline,
+                  color: Colors.redAccent),
               onPressed: onRemove,
             )
           : null,

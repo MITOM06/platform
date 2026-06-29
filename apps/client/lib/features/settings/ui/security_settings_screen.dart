@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/l10n/l10n_ext.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/utils/app_error.dart';
+import '../../../core/utils/global_messenger.dart';
 import '../../../core/widgets/pon_widgets.dart';
 import '../../auth/data/auth_repository.dart';
 import '../../auth/domain/auth_provider.dart';
@@ -169,14 +170,10 @@ class _PasswordFormState extends ConsumerState<_PasswordForm> {
       // Re-fetch the user so `hasPassword` flips and the UI updates.
       await ref.read(authNotifierProvider.notifier).refreshUser();
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            widget.hasPassword
-                ? context.l10n.passwordChangedSuccess
-                : context.l10n.securitySetSuccess,
-          ),
-        ),
+      showInfoSnackBar(
+        widget.hasPassword
+            ? context.l10n.passwordChangedSuccess
+            : context.l10n.securitySetSuccess,
       );
       _currentController.clear();
       _newController.clear();
@@ -280,8 +277,7 @@ class _PasswordFormState extends ConsumerState<_PasswordForm> {
                 prefixIcon: Icons.lock_outline_rounded,
                 obscureText: true,
                 enableVisibilityToggle: true,
-                style: TextStyle(
-                    color: isDark ? Colors.white : Colors.black87),
+                style: TextStyle(color: isDark ? Colors.white : Colors.black87),
                 focusColor: accent,
                 textInputAction: TextInputAction.next,
                 enabled: !_isLoading,

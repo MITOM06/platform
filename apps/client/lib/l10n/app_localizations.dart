@@ -552,6 +552,144 @@ abstract class AppLocalizations {
   /// **'Desert'**
   String get wallpaperThemeDesert;
 
+  /// No description provided for @wallpaperPresetMidnightGlow.
+  ///
+  /// In en, this message translates to:
+  /// **'Midnight Glow'**
+  String get wallpaperPresetMidnightGlow;
+
+  /// No description provided for @wallpaperPresetNeonTeal.
+  ///
+  /// In en, this message translates to:
+  /// **'Neon Teal'**
+  String get wallpaperPresetNeonTeal;
+
+  /// No description provided for @wallpaperPresetSunset.
+  ///
+  /// In en, this message translates to:
+  /// **'Sunset'**
+  String get wallpaperPresetSunset;
+
+  /// No description provided for @wallpaperPresetSweetPink.
+  ///
+  /// In en, this message translates to:
+  /// **'Sweet Pink'**
+  String get wallpaperPresetSweetPink;
+
+  /// No description provided for @wallpaperPresetDarkShadow.
+  ///
+  /// In en, this message translates to:
+  /// **'Dark Shadow'**
+  String get wallpaperPresetDarkShadow;
+
+  /// No description provided for @wallpaperPresetOceanBlue.
+  ///
+  /// In en, this message translates to:
+  /// **'Ocean Blue'**
+  String get wallpaperPresetOceanBlue;
+
+  /// No description provided for @wallpaperPresetForestGreen.
+  ///
+  /// In en, this message translates to:
+  /// **'Forest Green'**
+  String get wallpaperPresetForestGreen;
+
+  /// No description provided for @wallpaperPresetPurpleHaze.
+  ///
+  /// In en, this message translates to:
+  /// **'Purple Haze'**
+  String get wallpaperPresetPurpleHaze;
+
+  /// No description provided for @wallpaperPresetWarmAmber.
+  ///
+  /// In en, this message translates to:
+  /// **'Warm Amber'**
+  String get wallpaperPresetWarmAmber;
+
+  /// No description provided for @wallpaperPresetRoseGold.
+  ///
+  /// In en, this message translates to:
+  /// **'Rose Gold'**
+  String get wallpaperPresetRoseGold;
+
+  /// No description provided for @wallpaperPresetStorm.
+  ///
+  /// In en, this message translates to:
+  /// **'Storm'**
+  String get wallpaperPresetStorm;
+
+  /// No description provided for @wallpaperPresetCherryBlossom.
+  ///
+  /// In en, this message translates to:
+  /// **'Cherry Blossom'**
+  String get wallpaperPresetCherryBlossom;
+
+  /// No description provided for @wallpaperPresetMidnightPurple.
+  ///
+  /// In en, this message translates to:
+  /// **'Midnight Purple'**
+  String get wallpaperPresetMidnightPurple;
+
+  /// No description provided for @wallpaperPresetCoralReef.
+  ///
+  /// In en, this message translates to:
+  /// **'Coral Reef'**
+  String get wallpaperPresetCoralReef;
+
+  /// No description provided for @wallpaperPresetArcticIce.
+  ///
+  /// In en, this message translates to:
+  /// **'Arctic Ice'**
+  String get wallpaperPresetArcticIce;
+
+  /// No description provided for @wallpaperPresetAurora.
+  ///
+  /// In en, this message translates to:
+  /// **'Aurora'**
+  String get wallpaperPresetAurora;
+
+  /// No description provided for @wallpaperPresetGalaxy.
+  ///
+  /// In en, this message translates to:
+  /// **'Galaxy'**
+  String get wallpaperPresetGalaxy;
+
+  /// No description provided for @wallpaperPresetFireIce.
+  ///
+  /// In en, this message translates to:
+  /// **'Fire & Ice'**
+  String get wallpaperPresetFireIce;
+
+  /// No description provided for @wallpaperPresetTropical.
+  ///
+  /// In en, this message translates to:
+  /// **'Tropical'**
+  String get wallpaperPresetTropical;
+
+  /// No description provided for @wallpaperPresetCandy.
+  ///
+  /// In en, this message translates to:
+  /// **'Candy'**
+  String get wallpaperPresetCandy;
+
+  /// No description provided for @wallpaperPresetPureDark.
+  ///
+  /// In en, this message translates to:
+  /// **'Pure Dark'**
+  String get wallpaperPresetPureDark;
+
+  /// No description provided for @wallpaperPresetSoftGray.
+  ///
+  /// In en, this message translates to:
+  /// **'Soft Gray'**
+  String get wallpaperPresetSoftGray;
+
+  /// No description provided for @wallpaperPresetWarmNight.
+  ///
+  /// In en, this message translates to:
+  /// **'Warm Night'**
+  String get wallpaperPresetWarmNight;
+
   /// No description provided for @changeChatThemeTitle.
   ///
   /// In en, this message translates to:

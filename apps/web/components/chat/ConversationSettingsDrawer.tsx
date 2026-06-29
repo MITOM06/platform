@@ -1,9 +1,6 @@
 'use client'
 
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
-import { toast } from 'sonner'
-import { useQueryClient, useQuery } from '@tanstack/react-query'
+import { useQuery } from '@tanstack/react-query'
 import { useTranslations } from 'next-intl'
 import {
   Sheet, SheetContent,
@@ -14,7 +11,6 @@ import {
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion'
-import { chatService } from '@/lib/api/chat'
 import { authService } from '@/lib/api/auth'
 import { WallpaperPickerModal } from './WallpaperPickerModal'
 import { SettingsHeader } from './group/SettingsHeader'
@@ -26,10 +22,9 @@ import { PrivacySupportSection } from './group/PrivacySupportSection'
 import { PinnedMessagesSection } from './PinnedMessagesSection'
 import { MuteDurationPicker } from './MuteDurationPicker'
 import { ConfirmDialog } from '@/components/common/ConfirmDialog'
-import { setNickname, nicknameSystemMessage, useNicknames } from '@/lib/nicknames'
-import {
-  useQuickReaction, setQuickReaction, quickReactionSystemMessage,
-} from '@/lib/quick-reaction'
+import { useNicknames } from '@/lib/nicknames'
+import { useQuickReaction } from '@/lib/quick-reaction'
+import { useConversationSettings } from './use-conversation-settings'
 import type { Conversation } from '@/lib/api/types'
 
 interface Props {
@@ -59,223 +54,25 @@ export function ConversationSettingsDrawer({
 }: Props) {
   const t = useTranslations('chat')
   const tCommon = useTranslations('common')
-  const router = useRouter()
-  const queryClient = useQueryClient()
-  const [saving, setSaving] = useState(false)
-  const [confirmClearOpen, setConfirmClearOpen] = useState(false)
-  const [blockConfirmOpen, setBlockConfirmOpen] = useState(false)
-  const [wallpaperOpen, setWallpaperOpen] = useState(false)
-  // Track which conversation id the local block override belongs to so the
-  // derived value automatically resets when the active conversation switches.
-  const [localBlockedConvId, setLocalBlockedConvId] = useState<string | null>(null)
-  const [localBlockedValue, setLocalBlockedValue] = useState(false)
-  const [muteDurationOpen, setMuteDurationOpen] = useState(false)
 
-  // Derived: use the local override only while we are still on the same
-  // conversation; once the conversation prop switches, fall back to the prop.
-  const isBlocked =
-    localBlockedConvId === conversation.id
-      ? localBlockedValue
-      : (conversation.isBlocked ?? false)
+  const s = useConversationSettings({ conversation, currentUserId, onClose })
 
-
-  const isMuted = conversation.isMuted
-  const isArchived = conversation.isArchived
-  const isDirect = conversation.type === 'direct'
-  const isGroup = conversation.type === 'group'
-  const isAI = conversation.participants.includes('ai-bot-000000000000000000000001')
-
-  const otherUserId = isDirect && !isAI
-    ? conversation.participants.find((p) => p !== currentUserId)
-    : null
-
-  // Nickname editing covers every human participant (self + others), AI bot excluded.
-  const AI_BOT_ID = 'ai-bot-000000000000000000000001'
-  const nicknameParticipantIds = conversation.participants.filter((p) => p !== AI_BOT_ID)
   const nicknameMap = useNicknames(conversation.id)
-
   const quickReaction = useQuickReaction(conversation.id)
 
-  const saveNickname = async (targetId: string, value: string) => {
-    setNickname(conversation.id, targetId, value)
-    try {
-      await chatService.sendMessage(
-        conversation.id,
-        nicknameSystemMessage(targetId, value.trim()),
-        'system',
-      )
-    } catch {
-      // local nickname still applied even if broadcast fails
-    }
-    toast.success(t('nicknameSuccess'))
-  }
-
-  const handlePickQuickReaction = async (emoji: string) => {
-    setQuickReaction(conversation.id, emoji)
-    try {
-      await chatService.sendMessage(
-        conversation.id,
-        quickReactionSystemMessage(emoji),
-        'system',
-      )
-    } catch {
-      // local emoji still applied even if broadcast fails
-    }
-    toast.success(t('quickReactionSuccess'))
-  }
-
   const { data: otherUser } = useQuery({
-    queryKey: ['user', otherUserId],
-    queryFn: () => otherUserId ? authService.getUser(otherUserId) : null,
-    enabled: !!otherUserId,
+    queryKey: ['user', s.otherUserId],
+    queryFn: () => s.otherUserId ? authService.getUser(s.otherUserId) : null,
+    enabled: !!s.otherUserId,
   })
 
-  const displayName = isGroup
+  const displayName = s.isGroup
     ? (conversation.name || t('conversationDefault'))
-    : isAI
+    : s.isAI
       ? t('aiAssistant')
       : (otherUser?.displayName || t('conversationDefault'))
-  const avatarUrl = isGroup ? conversation.avatarUrl : otherUser?.avatarUrl
+  const avatarUrl = s.isGroup ? conversation.avatarUrl : otherUser?.avatarUrl
   const avatarLetter = getInitial(displayName)
-
-  const autoDeleteOptions = [
-    { label: t('autoDeleteOff'), value: 0 },
-    { label: t('autoDelete1h'), value: 3600 },
-    { label: t('autoDelete1d'), value: 86400 },
-    { label: t('autoDelete1w'), value: 604800 },
-    { label: t('autoDelete1m'), value: 2592000 },
-  ]
-
-  const invalidate = () => {
-    queryClient.invalidateQueries({ queryKey: ['conversations'] })
-    queryClient.invalidateQueries({ queryKey: ['conversation', conversation.id] })
-  }
-
-  const invalidateAll = () => {
-    queryClient.invalidateQueries({ queryKey: ['conversations'] })
-    queryClient.invalidateQueries({ queryKey: ['blocked-conversations'] })
-    queryClient.invalidateQueries({ queryKey: ['conversation', conversation.id] })
-  }
-
-  const run = async (action: () => Promise<unknown>, success: string) => {
-    setSaving(true)
-    try {
-      await action()
-      toast.success(success)
-      invalidate()
-    } catch {
-      toast.error(t('actionError'))
-    } finally {
-      setSaving(false)
-    }
-  }
-
-  const handleMuteToggle = () => {
-    if (isMuted) {
-      run(() => chatService.unmuteConversation(conversation.id), t('unmuteSuccess'))
-    } else {
-      // Open the duration picker instead of muting forever immediately
-      setMuteDurationOpen(true)
-    }
-  }
-
-  const handleMuteWithDuration = (durationSeconds: number) => {
-    setMuteDurationOpen(false)
-    run(
-      () => chatService.muteConversation(conversation.id, durationSeconds),
-      t('muteSuccess'),
-    )
-  }
-
-  const handleMarkRead = () =>
-    run(() => chatService.markConversationRead(conversation.id), t('markReadSuccess'))
-
-  const handleMarkUnread = () =>
-    run(() => chatService.markConversationUnread(conversation.id), t('markUnreadSuccess'))
-
-  const handleArchiveToggle = () =>
-    run(
-      () => isArchived
-        ? chatService.unarchiveConversation(conversation.id)
-        : chatService.archiveConversation(conversation.id),
-      isArchived ? t('unarchiveSuccess') : t('archiveSuccess'),
-    )
-
-  // Blocking is destructive → confirm first. Unblocking runs directly.
-  const handleBlockButtonClick = () => {
-    if (isBlocked) {
-      handleBlockToggle()
-    } else {
-      setBlockConfirmOpen(true)
-    }
-  }
-
-  const handleBlockToggle = async () => {
-    if (!otherUserId) return
-    setSaving(true)
-    try {
-      if (isBlocked) {
-        await chatService.unblockUser(otherUserId)
-        await chatService.blockRestoreConversation(conversation.id)
-        setLocalBlockedConvId(conversation.id)
-        setLocalBlockedValue(false)
-        invalidateAll()
-        toast.success(t('unblockSuccess'))
-      } else {
-        await chatService.blockUser(otherUserId)
-        await chatService.blockArchiveConversation(conversation.id)
-        setLocalBlockedConvId(conversation.id)
-        setLocalBlockedValue(true)
-        invalidateAll()
-        toast.success(t('blockSuccess'))
-      }
-    } catch {
-      toast.error(t('actionError'))
-    } finally {
-      setSaving(false)
-    }
-  }
-
-  const handleClearHistory = async () => {
-    await run(() => chatService.clearHistory(conversation.id), t('clearHistorySuccess'))
-    // removeQueries drops the cached pages so the thread refetches fresh on next
-    // mount — a following invalidate would be redundant.
-    queryClient.removeQueries({ queryKey: ['messages', conversation.id], exact: true })
-    setConfirmClearOpen(false)
-  }
-
-  const handleDelete = async () => {
-    if (!confirm(t('deleteConversationConfirm'))) return
-    await run(async () => {
-      await chatService.deleteConversation(conversation.id)
-      invalidate()
-      onClose()
-      router.push('/conversations')
-    }, t('deleteSuccess'))
-  }
-
-  const handleLeaveGroup = async () => {
-    if (!confirm(t('leaveGroupConfirm'))) return
-    await run(async () => {
-      await chatService.removeMember(conversation.id, currentUserId)
-      invalidate()
-      onClose()
-      router.push('/conversations')
-    }, t('leaveSuccess'))
-  }
-
-  const handleAutoDelete = async (idx: number) => {
-    const seconds = autoDeleteOptions[idx]?.value ?? 0
-    await run(
-      () => chatService.updateSettings(conversation.id, seconds > 0 ? seconds : null),
-      t('autoDeleteSuccess'),
-    )
-  }
-
-  const currentAutoDeleteIdx = autoDeleteOptions.findIndex(
-    (o) => o.value === (conversation.autoDeleteSeconds ?? 0),
-  )
-  const sliderValue = currentAutoDeleteIdx >= 0 ? currentAutoDeleteIdx : 0
 
   return (
     <>
@@ -292,13 +89,13 @@ export function ConversationSettingsDrawer({
               displayName={displayName}
               avatarUrl={avatarUrl ?? undefined}
               avatarLetter={avatarLetter}
-              isDirect={isDirect}
-              isAI={isAI}
-              isMuted={isMuted}
+              isDirect={s.isDirect}
+              isAI={s.isAI}
+              isMuted={s.isMuted}
               muteExpiresAt={conversation.muteExpiresAt ?? undefined}
-              saving={saving}
+              saving={s.saving}
               onOpenProfile={onOpenProfile ? () => { onOpenProfile(); onClose() } : undefined}
-              onMuteToggle={handleMuteToggle}
+              onMuteToggle={s.handleMuteToggle}
               onSearch={onSearch ? () => { onSearch(); onClose() } : undefined}
             />
 
@@ -308,7 +105,7 @@ export function ConversationSettingsDrawer({
             <Accordion type="multiple" className="w-full px-1 space-y-2">
 
               {/* AI Assistant — bot-specific controls (replaces person-only items) */}
-              {isAI && (
+              {s.isAI && (
                 <AiAssistantSection conversationId={conversation.id} onClose={onClose} />
               )}
 
@@ -330,29 +127,29 @@ export function ConversationSettingsDrawer({
 
               {/* Action Options (React-specific: Mark read, Archive, Auto-Delete) */}
               <ActionOptionsSection
-                saving={saving}
-                isArchived={isArchived}
-                autoDeleteOptions={autoDeleteOptions}
-                sliderValue={sliderValue}
-                onMarkRead={handleMarkRead}
-                onMarkUnread={handleMarkUnread}
-                onArchiveToggle={handleArchiveToggle}
-                onAutoDelete={handleAutoDelete}
+                saving={s.saving}
+                isArchived={s.isArchived}
+                autoDeleteOptions={s.autoDeleteOptions}
+                sliderValue={s.sliderValue}
+                onMarkRead={s.handleMarkRead}
+                onMarkUnread={s.handleMarkUnread}
+                onArchiveToggle={s.handleArchiveToggle}
+                onAutoDelete={s.handleAutoDelete}
               />
 
               {/* Customize Chat */}
               <CustomizeChatSection
-                isDirect={isDirect}
-                isGroup={isGroup}
-                otherUserId={otherUserId}
+                isDirect={s.isDirect}
+                isGroup={s.isGroup}
+                otherUserId={s.otherUserId}
                 currentUserId={currentUserId}
-                participantIds={nicknameParticipantIds}
+                participantIds={s.nicknameParticipantIds}
                 nicknames={nicknameMap}
-                saving={saving}
+                saving={s.saving}
                 quickReaction={quickReaction}
-                onOpenWallpaper={() => setWallpaperOpen(true)}
-                onPickQuickReaction={handlePickQuickReaction}
-                onSaveNickname={saveNickname}
+                onOpenWallpaper={() => s.setWallpaperOpen(true)}
+                onPickQuickReaction={s.handlePickQuickReaction}
+                onSaveNickname={s.saveNickname}
                 onOpenGroupInfo={onOpenGroupInfo}
                 onCloseDrawer={onClose}
               />
@@ -362,15 +159,15 @@ export function ConversationSettingsDrawer({
 
               {/* Privacy & Support */}
               <PrivacySupportSection
-                isDirect={isDirect}
-                isGroup={isGroup}
-                isAI={isAI}
-                isBlocked={isBlocked}
-                saving={saving}
-                onBlockToggle={handleBlockButtonClick}
-                onLeaveGroup={handleLeaveGroup}
-                onClearHistory={() => setConfirmClearOpen(true)}
-                onDelete={handleDelete}
+                isDirect={s.isDirect}
+                isGroup={s.isGroup}
+                isAI={s.isAI}
+                isBlocked={s.isBlocked}
+                saving={s.saving}
+                onBlockToggle={s.handleBlockButtonClick}
+                onLeaveGroup={s.handleLeaveGroup}
+                onClearHistory={() => s.setConfirmClearOpen(true)}
+                onDelete={s.handleDelete}
               />
 
             </Accordion>
@@ -382,29 +179,29 @@ export function ConversationSettingsDrawer({
     {/* Wallpaper picker */}
     <WallpaperPickerModal
       conversationId={conversation.id}
-      open={wallpaperOpen}
-      onClose={() => setWallpaperOpen(false)}
+      open={s.wallpaperOpen}
+      onClose={() => s.setWallpaperOpen(false)}
     />
 
     {/* Mute duration picker */}
     <MuteDurationPicker
-      open={muteDurationOpen}
-      onClose={() => setMuteDurationOpen(false)}
-      onSelect={handleMuteWithDuration}
+      open={s.muteDurationOpen}
+      onClose={() => s.setMuteDurationOpen(false)}
+      onSelect={s.handleMuteWithDuration}
     />
 
     {/* Confirmation dialog for Clear History */}
-    <Dialog open={confirmClearOpen} onOpenChange={setConfirmClearOpen}>
+    <Dialog open={s.confirmClearOpen} onOpenChange={s.setConfirmClearOpen}>
       <DialogContent showCloseButton={false}>
         <DialogHeader>
           <DialogTitle>{t('clearHistory')}</DialogTitle>
           <DialogDescription>{t('clearHistoryConfirm')}</DialogDescription>
         </DialogHeader>
         <DialogFooter>
-          <Button variant="outline" onClick={() => setConfirmClearOpen(false)}>
+          <Button variant="outline" onClick={() => s.setConfirmClearOpen(false)}>
             {tCommon('cancel')}
           </Button>
-          <Button variant="destructive" onClick={handleClearHistory} disabled={saving}>
+          <Button variant="destructive" onClick={s.handleClearHistory} disabled={s.saving}>
             {tCommon('delete')}
           </Button>
         </DialogFooter>
@@ -413,12 +210,12 @@ export function ConversationSettingsDrawer({
 
     {/* Confirmation dialog for Block user */}
     <ConfirmDialog
-      open={blockConfirmOpen}
-      onOpenChange={setBlockConfirmOpen}
+      open={s.blockConfirmOpen}
+      onOpenChange={s.setBlockConfirmOpen}
       title={t('blockConfirmTitle', { name: displayName })}
       description={t('blockConfirmDesc', { name: displayName })}
       confirmLabel={t('blockUser')}
-      onConfirm={handleBlockToggle}
+      onConfirm={s.handleBlockToggle}
     />
     </>
   )

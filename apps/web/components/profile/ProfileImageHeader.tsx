@@ -31,9 +31,9 @@ export function ProfileImageHeader({
   onAvatarPick,
 }: ProfileImageHeaderProps) {
   return (
-    <>
+    <div className="max-w-2xl mx-auto px-6 pt-6">
       {/* Cover Photo Section */}
-      <div className="relative h-32 w-full overflow-hidden group">
+      <div className="relative h-36 rounded-xl overflow-hidden group">
         {resolvedCover ? (
           <Image src={resolvedCover} alt="" fill unoptimized className="object-cover" />
         ) : (
@@ -58,48 +58,46 @@ export function ProfileImageHeader({
       </div>
 
       {/* Avatar overlapping cover */}
-      <div className="relative max-w-2xl mx-auto px-6">
-        <div className="flex justify-center -mt-14">
-          <div className="relative group">
-            <Avatar className="size-28 ring-4 ring-background shadow-xl">
-              {resolvedAvatar ? (
-                <AvatarImage src={resolvedAvatar} alt={displayName} />
-              ) : (
-                <AvatarFallback className="text-3xl font-bold bg-gradient-to-br from-pon-cyan to-pon-pink text-white">
-                  {initials}
-                </AvatarFallback>
-              )}
-            </Avatar>
+      <div className="flex justify-center -mt-14">
+        <div className="relative group">
+          <Avatar className="size-28 ring-4 ring-background shadow-xl">
+            {resolvedAvatar ? (
+              <AvatarImage src={resolvedAvatar} alt={displayName} />
+            ) : (
+              <AvatarFallback className="text-3xl font-bold bg-gradient-to-br from-pon-cyan to-pon-pink text-white">
+                {initials}
+              </AvatarFallback>
+            )}
+          </Avatar>
 
-            <button
-              onClick={() => avatarInputRef.current?.click()}
-              className="absolute inset-0 rounded-full bg-black/0 group-hover:bg-black/40 transition-colors flex items-center justify-center cursor-pointer"
-            >
-              <div className="opacity-0 group-hover:opacity-100 transition-opacity">
-                <Camera className="size-6 text-white" />
-              </div>
-            </button>
-
-            <div className="absolute -bottom-1 -right-1 size-8 rounded-full bg-primary flex items-center justify-center shadow-md border-2 border-background">
-              <Camera className="size-3.5 text-white" />
+          <button
+            onClick={() => avatarInputRef.current?.click()}
+            className="absolute inset-0 rounded-full bg-black/0 group-hover:bg-black/40 transition-colors flex items-center justify-center cursor-pointer"
+          >
+            <div className="opacity-0 group-hover:opacity-100 transition-opacity">
+              <Camera className="size-6 text-white" />
             </div>
+          </button>
 
-            <input
-              ref={avatarInputRef}
-              type="file"
-              accept="image/*"
-              className="hidden"
-              onChange={onAvatarPick}
-            />
+          <div className="absolute -bottom-1 -right-1 size-8 rounded-full bg-primary flex items-center justify-center shadow-md border-2 border-background">
+            <Camera className="size-3.5 text-white" />
           </div>
-        </div>
 
-        {/* User info */}
-        <div className="text-center mt-4 mb-8">
-          <h2 className="text-xl font-bold text-foreground">{displayName}</h2>
-          <p className="text-sm text-muted-foreground mt-1">{email}</p>
+          <input
+            ref={avatarInputRef}
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={onAvatarPick}
+          />
         </div>
       </div>
-    </>
+
+        {/* User info */}
+      <div className="text-center mt-4 mb-8">
+        <h2 className="text-xl font-bold text-foreground">{displayName}</h2>
+        <p className="text-sm text-muted-foreground mt-1">{email}</p>
+      </div>
+    </div>
   )
 }

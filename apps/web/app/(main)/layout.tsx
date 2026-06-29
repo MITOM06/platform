@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, useRef, useState, type CSSProperties } from 'react'
 import dynamic from 'next/dynamic'
 import { useQueryClient } from '@tanstack/react-query'
 import { useRouter, usePathname } from 'next/navigation'
@@ -81,7 +81,60 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
   const isConversationOpen = /^\/conversations\/.+/.test(pathname)
   const isMessagingArea = /^\/conversations(\/|$)/.test(pathname)
   const showSidebar = isMessagingArea
-  const showTabBar = !isConversationOpen
+  // Hide the generic mobile nav across the whole messaging area — the
+  // conversation list owns the screen there and has its own bottom tab bar.
+  const showTabBar = !isMessagingArea
+
+  // ── Resizable sidebar (desktop only) ──────────────────────────────────────
+  // Width is applied via a CSS variable so mobile stays full-width (`w-full`)
+  // and only `md:w-[var(--sidebar-w)]` picks up the dynamic value.
+  const [sidebarWidth, setSidebarWidth] = useState(288)
+  const isDragging = useRef(false)
+  const dragStartX = useRef(0)
+  const dragStartWidth = useRef(0)
+  const currentWidth = useRef(288)
+
+  // Restore persisted width on mount.
+  useEffect(() => {
+    const stored = localStorage.getItem('pon-sidebar-width')
+    if (stored) {
+      const w = parseInt(stored, 10)
+      if (!isNaN(w) && w >= 68 && w <= window.innerWidth * 0.8) {
+        // One-time restore from localStorage on mount — must run post-hydration
+        // (localStorage/window are unavailable during SSR), so a render-time
+        // initializer isn't an option here.
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        setSidebarWidth(w)
+        currentWidth.current = w
+      }
+    }
+  }, [])
+
+  const handleDragStart = (e: React.MouseEvent) => {
+    e.preventDefault()
+    isDragging.current = true
+    dragStartX.current = e.clientX
+    dragStartWidth.current = sidebarWidth
+
+    const onMove = (ev: MouseEvent) => {
+      if (!isDragging.current) return
+      const delta = ev.clientX - dragStartX.current
+      const next = Math.min(
+        Math.max(dragStartWidth.current + delta, 68),
+        window.innerWidth * 0.8,
+      )
+      currentWidth.current = next
+      setSidebarWidth(next)
+    }
+    const onUp = () => {
+      isDragging.current = false
+      localStorage.setItem('pon-sidebar-width', String(currentWidth.current))
+      window.removeEventListener('mousemove', onMove)
+      window.removeEventListener('mouseup', onUp)
+    }
+    window.addEventListener('mousemove', onMove)
+    window.addEventListener('mouseup', onUp)
+  }
 
   useEffect(() => {
     if (!accessToken || stompService.isConnected()) return
@@ -255,10 +308,18 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
       {showSidebar && (
       <aside
         className={cn(
-          'w-full md:w-72 border-r flex-col shrink-0 relative overflow-hidden',
+          'w-full md:w-[var(--sidebar-w)] border-r flex-col shrink-0 relative overflow-hidden',
           isConversationOpen ? 'hidden md:flex' : 'flex',
         )}
+        style={{ '--sidebar-w': `${sidebarWidth}px` } as CSSProperties}
       >
+        {/* Drag handle — right edge, desktop only. 4px hot-zone that tints on hover. */}
+        <div
+          onMouseDown={handleDragStart}
+          role="separator"
+          aria-orientation="vertical"
+          className="hidden md:block absolute right-0 top-0 bottom-0 w-1 cursor-col-resize z-20 hover:bg-primary/20 active:bg-primary/40 transition-colors"
+        />
         {/* Ambient neon glow spheres */}
         <div className="absolute inset-0 pointer-events-none overflow-hidden">
           <div className="absolute -top-16 -left-16 size-40 rounded-full bg-pon-cyan blur-[60px] opacity-[0.06] dark:opacity-[0.09]" />

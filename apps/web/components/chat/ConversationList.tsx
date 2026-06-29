@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { Search, MessageSquare, Archive, UserX } from 'lucide-react'
+import { Search, MessageSquare, Archive, UserX, MessageSquarePlus } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { useQueryClient } from '@tanstack/react-query'
 import { Input } from '@/components/ui/input'
@@ -156,22 +156,6 @@ export function ConversationList() {
         <OfflineBanner />
 
         <Tabs defaultValue="chats" className="flex flex-col flex-1 min-h-0">
-          <TabsList className="grid grid-cols-3 mx-3 mb-1 shrink-0">
-            <TabsTrigger value="chats" className="text-xs gap-1">
-              <MessageSquare className="size-3.5" />
-              {t('tabChats')}
-            </TabsTrigger>
-            <TabsTrigger value="archived" className="text-xs gap-1">
-              <Archive className="size-3.5" />
-              {t('tabArchived')}
-            </TabsTrigger>
-            <TabsTrigger value="requests" className="text-xs gap-1">
-              <UserX className="size-3.5" />
-              {t('tabRequests')}
-              <RequestsBadge count={requestCount} />
-            </TabsTrigger>
-          </TabsList>
-
           {/* Chats tab */}
           <TabsContent value="chats" className="flex-1 overflow-y-auto px-2 pb-2 mt-0">
             {isLoading && (
@@ -239,6 +223,51 @@ export function ConversationList() {
               <ConversationRequestItem key={conv.id} conversation={conv} />
             ))}
           </TabsContent>
+
+          {/* ── Tab bar ── Desktop: compact at top; Mobile: full-height at bottom ── */}
+          <div
+            className="shrink-0 order-last md:order-first border-t md:border-t-0 md:border-b bg-background/95 md:bg-transparent backdrop-blur-md md:backdrop-blur-none"
+            style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
+          >
+            <div className="flex items-stretch h-14 md:h-auto md:px-3 md:py-1.5">
+              <TabsList className="flex-1 flex md:grid md:grid-cols-3 rounded-none md:rounded-md h-14 md:h-auto bg-transparent md:bg-muted p-0 md:p-1 mx-0 md:mx-3">
+                <TabsTrigger
+                  value="chats"
+                  className="flex-1 flex-col md:flex-row gap-0.5 md:gap-1 text-[10px] md:text-xs h-full md:h-auto rounded-none md:rounded-sm px-2"
+                >
+                  <MessageSquare className="size-5 md:size-3.5 shrink-0" />
+                  <span>{t('tabChats')}</span>
+                </TabsTrigger>
+                <TabsTrigger
+                  value="archived"
+                  className="flex-1 flex-col md:flex-row gap-0.5 md:gap-1 text-[10px] md:text-xs h-full md:h-auto rounded-none md:rounded-sm px-2"
+                >
+                  <Archive className="size-5 md:size-3.5 shrink-0" />
+                  <span>{t('tabArchived')}</span>
+                </TabsTrigger>
+                <TabsTrigger
+                  value="requests"
+                  className="flex-1 flex-col md:flex-row gap-0.5 md:gap-1 text-[10px] md:text-xs h-full md:h-auto rounded-none md:rounded-sm px-2"
+                >
+                  <UserX className="size-5 md:size-3.5 shrink-0" />
+                  <span className="relative">
+                    {t('tabRequests')}
+                    <RequestsBadge count={requestCount} />
+                  </span>
+                </TabsTrigger>
+              </TabsList>
+
+              {/* "+ New" — MOBILE ONLY (desktop has the + button in the sidebar header) */}
+              <button
+                onClick={() => openNewChat('direct')}
+                className="md:hidden flex flex-col items-center justify-center gap-0.5 px-4 text-muted-foreground hover:text-foreground transition-colors border-l border-border"
+                title={t('newConversation')}
+              >
+                <MessageSquarePlus className="size-5 shrink-0" />
+                <span className="text-[10px]">{t('new')}</span>
+              </button>
+            </div>
+          </div>
         </Tabs>
       </div>
     </>

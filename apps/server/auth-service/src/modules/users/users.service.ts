@@ -4,6 +4,7 @@ import {
   Inject,
   Injectable,
   NotFoundException,
+  ServiceUnavailableException,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
@@ -231,7 +232,7 @@ export class UsersService {
       showGender?: boolean;
     },
   ): Promise<UserDocument | null> {
-    const updateData: any = {};
+    const updateData: Record<string, unknown> = {};
     if (data.displayName !== undefined)
       updateData.displayName = data.displayName;
     if (data.avatarUrl !== undefined) updateData.avatarUrl = data.avatarUrl;
@@ -253,8 +254,7 @@ export class UsersService {
       updateData.showDateOfBirth = data.showDateOfBirth;
     if (data.showPhoneNumber !== undefined)
       updateData.showPhoneNumber = data.showPhoneNumber;
-    if (data.showGender !== undefined)
-      updateData.showGender = data.showGender;
+    if (data.showGender !== undefined) updateData.showGender = data.showGender;
 
     if (Object.keys(updateData).length > 0) {
       return this.userModel
@@ -284,10 +284,23 @@ export class UsersService {
     // Store for 5 min.
     await this.redis.set(`phone_otp:${userId}`, payload, 'EX', 300);
 
-    await this.smsService.sendSms(
-      phone,
-      `Your PON verification code is: ${otp}. Valid for 5 minutes.`,
-    );
+    try {
+      await this.smsService.sendSms(
+        phone,
+        `Your PON verification code is: ${otp}. Valid for 5 minutes.`,
+      );
+    } catch {
+      // The SMS provider (Twilio) rejected the send — e.g. geo-permissions not
+      // enabled for the destination country, an unverified trial recipient, or
+      // an unreachable To/From combination. This is an expected provider/input
+      // failure, NOT a server fault: surface a typed code the client can map to
+      // a friendly message instead of leaking a raw 500. Roll back the OTP entry
+      // and the rate-limit counter so the failed attempt isn't held against the
+      // user (SmsService already logged the underlying Twilio error).
+      await this.redis.del(`phone_otp:${userId}`);
+      await this.redis.decr(rateKey);
+      throw new ServiceUnavailableException({ code: 'PHONE_OTP_SEND_FAILED' });
+    }
   }
 
   /**
@@ -314,7 +327,8 @@ export class UsersService {
       phoneNumber: phone,
       _id: { $ne: userId },
     });
-    if (conflict) throw new BadRequestException({ code: 'PHONE_ALREADY_TAKEN' });
+    if (conflict)
+      throw new BadRequestException({ code: 'PHONE_ALREADY_TAKEN' });
 
     const user = await this.userModel
       .findByIdAndUpdate(
