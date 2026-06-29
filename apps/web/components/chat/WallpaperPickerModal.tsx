@@ -42,22 +42,22 @@ const THEME_CATEGORIES: ThemeCategory[] = [
     icon: '🎨',
     collapsible: true,
     items: [
-      { value: 'preset:midnight_glow',   label: 'Midnight Glow',   swatch: 'bg-gradient-to-br from-indigo-900 to-slate-950' },
-      { value: 'preset:neon_teal',       label: 'Neon Teal',       swatch: 'bg-gradient-to-br from-teal-900 to-cyan-800' },
-      { value: 'preset:sunset',          label: 'Sunset',          swatch: 'bg-gradient-to-br from-orange-400 to-purple-600' },
-      { value: 'preset:sweet_pink',      label: 'Sweet Pink',      swatch: 'bg-gradient-to-br from-pink-300 to-red-400' },
-      { value: 'preset:dark_shadow',     label: 'Dark Shadow',     swatch: 'bg-gradient-to-br from-zinc-800 to-zinc-950' },
+      { value: 'preset:midnight_glow',   label: 'wallpaperPresetMidnightGlow',   swatch: 'bg-gradient-to-br from-indigo-900 to-slate-950' },
+      { value: 'preset:neon_teal',       label: 'wallpaperPresetNeonTeal',       swatch: 'bg-gradient-to-br from-teal-900 to-cyan-800' },
+      { value: 'preset:sunset',          label: 'wallpaperPresetSunset',          swatch: 'bg-gradient-to-br from-orange-400 to-purple-600' },
+      { value: 'preset:sweet_pink',      label: 'wallpaperPresetSweetPink',      swatch: 'bg-gradient-to-br from-pink-300 to-red-400' },
+      { value: 'preset:dark_shadow',     label: 'wallpaperPresetDarkShadow',     swatch: 'bg-gradient-to-br from-zinc-800 to-zinc-950' },
       // ↑ first 5 shown by default when collapsible; below hidden until "xem thêm"
-      { value: 'preset:ocean_blue',      label: 'Ocean Blue',      swatch: 'bg-gradient-to-br from-blue-700 to-sky-500' },
-      { value: 'preset:forest_green',    label: 'Forest Green',    swatch: 'bg-gradient-to-br from-green-800 to-emerald-600' },
-      { value: 'preset:purple_haze',     label: 'Purple Haze',     swatch: 'bg-gradient-to-br from-purple-700 to-fuchsia-600' },
-      { value: 'preset:warm_amber',      label: 'Warm Amber',      swatch: 'bg-gradient-to-br from-amber-600 to-orange-500' },
-      { value: 'preset:rose_gold',       label: 'Rose Gold',       swatch: 'bg-gradient-to-br from-rose-400 to-amber-300' },
-      { value: 'preset:storm',           label: 'Storm',           swatch: 'bg-gradient-to-br from-slate-700 to-blue-900' },
-      { value: 'preset:cherry_blossom',  label: 'Cherry Blossom',  swatch: 'bg-gradient-to-br from-pink-300 to-rose-300' },
-      { value: 'preset:midnight_purple', label: 'Midnight Purple', swatch: 'bg-gradient-to-br from-purple-900 to-indigo-950' },
-      { value: 'preset:coral_reef',      label: 'Coral Reef',      swatch: 'bg-gradient-to-br from-red-500 to-orange-400' },
-      { value: 'preset:arctic_ice',      label: 'Arctic Ice',      swatch: 'bg-gradient-to-br from-sky-200 to-blue-300' },
+      { value: 'preset:ocean_blue',      label: 'wallpaperPresetOceanBlue',      swatch: 'bg-gradient-to-br from-blue-700 to-sky-500' },
+      { value: 'preset:forest_green',    label: 'wallpaperPresetForestGreen',    swatch: 'bg-gradient-to-br from-green-800 to-emerald-600' },
+      { value: 'preset:purple_haze',     label: 'wallpaperPresetPurpleHaze',     swatch: 'bg-gradient-to-br from-purple-700 to-fuchsia-600' },
+      { value: 'preset:warm_amber',      label: 'wallpaperPresetWarmAmber',      swatch: 'bg-gradient-to-br from-amber-600 to-orange-500' },
+      { value: 'preset:rose_gold',       label: 'wallpaperPresetRoseGold',       swatch: 'bg-gradient-to-br from-rose-400 to-amber-300' },
+      { value: 'preset:storm',           label: 'wallpaperPresetStorm',           swatch: 'bg-gradient-to-br from-slate-700 to-blue-900' },
+      { value: 'preset:cherry_blossom',  label: 'wallpaperPresetCherryBlossom',  swatch: 'bg-gradient-to-br from-pink-300 to-rose-300' },
+      { value: 'preset:midnight_purple', label: 'wallpaperPresetMidnightPurple', swatch: 'bg-gradient-to-br from-purple-900 to-indigo-950' },
+      { value: 'preset:coral_reef',      label: 'wallpaperPresetCoralReef',      swatch: 'bg-gradient-to-br from-red-500 to-orange-400' },
+      { value: 'preset:arctic_ice',      label: 'wallpaperPresetArcticIce',      swatch: 'bg-gradient-to-br from-sky-200 to-blue-300' },
     ],
   },
   {
@@ -65,11 +65,11 @@ const THEME_CATEGORIES: ThemeCategory[] = [
     labelKey: 'wallpaperCategoryVibrant',
     icon: '✨',
     items: [
-      { value: 'preset:aurora',   label: 'Aurora',     swatch: 'bg-gradient-to-br from-teal-500 via-emerald-600 to-purple-600' },
-      { value: 'preset:galaxy',   label: 'Galaxy',     swatch: 'bg-gradient-to-br from-indigo-800 via-purple-800 to-slate-900' },
-      { value: 'preset:fire_ice', label: 'Fire & Ice', swatch: 'bg-gradient-to-br from-red-500 to-blue-600' },
-      { value: 'preset:tropical', label: 'Tropical',   swatch: 'bg-gradient-to-br from-green-500 via-cyan-500 to-yellow-400' },
-      { value: 'preset:candy',    label: 'Candy',      swatch: 'bg-gradient-to-br from-pink-300 via-violet-400 to-cyan-300' },
+      { value: 'preset:aurora',   label: 'wallpaperPresetAurora',     swatch: 'bg-gradient-to-br from-teal-500 via-emerald-600 to-purple-600' },
+      { value: 'preset:galaxy',   label: 'wallpaperPresetGalaxy',     swatch: 'bg-gradient-to-br from-indigo-800 via-purple-800 to-slate-900' },
+      { value: 'preset:fire_ice', label: 'wallpaperPresetFireIce', swatch: 'bg-gradient-to-br from-red-500 to-blue-600' },
+      { value: 'preset:tropical', label: 'wallpaperPresetTropical',   swatch: 'bg-gradient-to-br from-green-500 via-cyan-500 to-yellow-400' },
+      { value: 'preset:candy',    label: 'wallpaperPresetCandy',      swatch: 'bg-gradient-to-br from-pink-300 via-violet-400 to-cyan-300' },
     ],
   },
   {
@@ -77,9 +77,9 @@ const THEME_CATEGORIES: ThemeCategory[] = [
     labelKey: 'wallpaperCategoryMinimal',
     icon: '⬛',
     items: [
-      { value: 'preset:pure_dark',  label: 'Pure Dark',  swatch: 'bg-[#050507] border border-zinc-700' },
-      { value: 'preset:soft_gray',  label: 'Soft Gray',  swatch: 'bg-zinc-500' },
-      { value: 'preset:warm_night', label: 'Warm Night', swatch: 'bg-gradient-to-br from-zinc-800 to-purple-950' },
+      { value: 'preset:pure_dark',  label: 'wallpaperPresetPureDark',  swatch: 'bg-[#050507] border border-zinc-700' },
+      { value: 'preset:soft_gray',  label: 'wallpaperPresetSoftGray',  swatch: 'bg-zinc-500' },
+      { value: 'preset:warm_night', label: 'wallpaperPresetWarmNight', swatch: 'bg-gradient-to-br from-zinc-800 to-purple-950' },
     ],
   },
 ]
@@ -307,7 +307,7 @@ export function WallpaperPickerModal({ conversationId, open, onClose }: Props) {
                         )}
                       >
                         <div className={cn('size-8 rounded-full flex-shrink-0', item.swatch)} />
-                        <span className="text-sm truncate">{item.label}</span>
+                        <span className="text-sm truncate">{t(item.label)}</span>
                         {isSel && <Check className="size-4 text-pon-cyan ml-auto flex-shrink-0" />}
                       </button>
                     )

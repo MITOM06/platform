@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useRef, memo } from 'react'
+import Link from 'next/link'
 import { useTranslations, useLocale } from 'next-intl'
 import { Phone, Video, Check, CheckCheck, AlertTriangle } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -16,6 +17,7 @@ import { ReactionsDetailModal } from './ReactionsDetailModal'
 import { MeetingSummaryCard } from './MeetingSummaryCard'
 import { MessageFeedback } from './MessageFeedback'
 import { MessageSources } from './MessageSources'
+import { MarkdownContent } from './MarkdownContent'
 import { ExternalBotBubble } from './ExternalBotBubble'
 import { humanizeSystemMessage } from '@/lib/system-messages'
 import { useNickname, getNickname } from '@/lib/nicknames'
@@ -276,7 +278,15 @@ const MessageBubbleInner = function MessageBubble({
         )
       } else if (message.content === '__AI_QUOTA__') {
         body = (
-          <p className="text-sm italic text-muted-foreground">{t('aiQuotaExceeded')}</p>
+          <div className="text-sm italic text-muted-foreground space-y-1">
+            <p>{t('aiQuotaExceeded')}</p>
+            <Link
+              href="/token-usage"
+              className="not-italic font-medium text-primary underline underline-offset-2 hover:opacity-80"
+            >
+              {t('viewUsage')}
+            </Link>
+          </div>
         )
       } else if (message.content === '__AI_INTERRUPTED__') {
         body = (
@@ -293,9 +303,7 @@ const MessageBubbleInner = function MessageBubble({
           </span>
         )
       } else {
-        body = (
-          <p className="whitespace-pre-wrap leading-relaxed">{message.content}</p>
-        )
+        body = <MarkdownContent content={message.content} />
       }
       break
     default:

@@ -25,6 +25,7 @@ import { useUser } from '@/lib/hooks/use-user'
 import { useRelationship } from '@/lib/hooks/use-relationship'
 import { useNickname } from '@/lib/nicknames'
 import { chatService } from '@/lib/api/chat'
+import { authService } from '@/lib/api/auth'
 import { humanizeSystemMessage } from '@/lib/system-messages'
 import { ConfirmDialog } from '@/components/common/ConfirmDialog'
 import type { Conversation } from '@/lib/api/types'
@@ -161,7 +162,7 @@ const ConversationItemInner = function ConversationItem({ conversation: conv, is
   const handleBlock = async () => {
     if (!otherUserId) return
     try {
-      await chatService.blockUser(otherUserId)
+      await authService.blockUser(otherUserId)
       await chatService.blockArchiveConversation(conv.id)
       invalidateAll()
       toast.success(t('userBlocked'))
@@ -174,7 +175,7 @@ const ConversationItemInner = function ConversationItem({ conversation: conv, is
   const handleUnblock = async () => {
     if (!otherUserId) return
     try {
-      await chatService.unblockUser(otherUserId)
+      await authService.unblockUser(otherUserId)
       await chatService.blockRestoreConversation(conv.id)
       invalidateAll()
       toast.success(t('userUnblocked'))
@@ -191,7 +192,7 @@ const ConversationItemInner = function ConversationItem({ conversation: conv, is
   const handleUnblockOnly = async () => {
     if (!otherUserId) return
     try {
-      await chatService.unblockUser(otherUserId)
+      await authService.unblockUser(otherUserId)
       invalidateAll()
       toast.success(t('userUnblocked'))
     } catch {

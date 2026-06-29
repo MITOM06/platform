@@ -239,6 +239,75 @@ class AppLocalizationsVi extends AppLocalizations {
   String get wallpaperThemeDesert => 'Sa mạc';
 
   @override
+  String get wallpaperPresetMidnightGlow => 'Ánh đêm';
+
+  @override
+  String get wallpaperPresetNeonTeal => 'Xanh neon';
+
+  @override
+  String get wallpaperPresetSunset => 'Hoàng hôn';
+
+  @override
+  String get wallpaperPresetSweetPink => 'Hồng ngọt';
+
+  @override
+  String get wallpaperPresetDarkShadow => 'Bóng tối';
+
+  @override
+  String get wallpaperPresetOceanBlue => 'Xanh đại dương';
+
+  @override
+  String get wallpaperPresetForestGreen => 'Xanh rừng';
+
+  @override
+  String get wallpaperPresetPurpleHaze => 'Tím khói';
+
+  @override
+  String get wallpaperPresetWarmAmber => 'Hổ phách ấm';
+
+  @override
+  String get wallpaperPresetRoseGold => 'Vàng hồng';
+
+  @override
+  String get wallpaperPresetStorm => 'Bão';
+
+  @override
+  String get wallpaperPresetCherryBlossom => 'Hoa anh đào';
+
+  @override
+  String get wallpaperPresetMidnightPurple => 'Tím nửa đêm';
+
+  @override
+  String get wallpaperPresetCoralReef => 'San hô';
+
+  @override
+  String get wallpaperPresetArcticIce => 'Băng Bắc cực';
+
+  @override
+  String get wallpaperPresetAurora => 'Cực quang';
+
+  @override
+  String get wallpaperPresetGalaxy => 'Thiên hà';
+
+  @override
+  String get wallpaperPresetFireIce => 'Lửa & Băng';
+
+  @override
+  String get wallpaperPresetTropical => 'Nhiệt đới';
+
+  @override
+  String get wallpaperPresetCandy => 'Kẹo ngọt';
+
+  @override
+  String get wallpaperPresetPureDark => 'Đen tuyền';
+
+  @override
+  String get wallpaperPresetSoftGray => 'Xám dịu';
+
+  @override
+  String get wallpaperPresetWarmNight => 'Đêm ấm';
+
+  @override
   String get changeChatThemeTitle => 'Đổi chủ đề đoạn chat';
 
   @override

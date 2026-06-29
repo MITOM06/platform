@@ -243,6 +243,75 @@ class AppLocalizationsFr extends AppLocalizations {
   String get wallpaperThemeDesert => 'Désert';
 
   @override
+  String get wallpaperPresetMidnightGlow => 'Lueur de minuit';
+
+  @override
+  String get wallpaperPresetNeonTeal => 'Turquoise néon';
+
+  @override
+  String get wallpaperPresetSunset => 'Coucher de soleil';
+
+  @override
+  String get wallpaperPresetSweetPink => 'Rose doux';
+
+  @override
+  String get wallpaperPresetDarkShadow => 'Ombre sombre';
+
+  @override
+  String get wallpaperPresetOceanBlue => 'Bleu océan';
+
+  @override
+  String get wallpaperPresetForestGreen => 'Vert forêt';
+
+  @override
+  String get wallpaperPresetPurpleHaze => 'Brume violette';
+
+  @override
+  String get wallpaperPresetWarmAmber => 'Ambre chaud';
+
+  @override
+  String get wallpaperPresetRoseGold => 'Or rose';
+
+  @override
+  String get wallpaperPresetStorm => 'Tempête';
+
+  @override
+  String get wallpaperPresetCherryBlossom => 'Fleur de cerisier';
+
+  @override
+  String get wallpaperPresetMidnightPurple => 'Violet de minuit';
+
+  @override
+  String get wallpaperPresetCoralReef => 'Récif corallien';
+
+  @override
+  String get wallpaperPresetArcticIce => 'Glace arctique';
+
+  @override
+  String get wallpaperPresetAurora => 'Aurore';
+
+  @override
+  String get wallpaperPresetGalaxy => 'Galaxie';
+
+  @override
+  String get wallpaperPresetFireIce => 'Feu et glace';
+
+  @override
+  String get wallpaperPresetTropical => 'Tropical';
+
+  @override
+  String get wallpaperPresetCandy => 'Bonbon';
+
+  @override
+  String get wallpaperPresetPureDark => 'Noir pur';
+
+  @override
+  String get wallpaperPresetSoftGray => 'Gris doux';
+
+  @override
+  String get wallpaperPresetWarmNight => 'Nuit chaude';
+
+  @override
   String get changeChatThemeTitle => 'Changer le thème du chat';
 
   @override

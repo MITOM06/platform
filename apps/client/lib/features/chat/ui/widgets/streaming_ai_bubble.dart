@@ -291,10 +291,12 @@ class _SourceChipsRow extends StatelessWidget {
   const _SourceChipsRow({required this.sources, this.conversationId});
 
   /// Short fallback label when a source has no fileName (e.g. a bare
-  /// documentId from legacy payloads): the leading 8 chars of the id.
+  /// documentId from legacy payloads). Mirrors web MessageSources.fallbackLabel:
+  /// a `#` prefix + the leading 6 chars of the id.
   String _fallbackLabel(String documentId) {
-    if (documentId.length <= 8) return documentId;
-    return documentId.substring(0, 8);
+    final head =
+        documentId.length <= 6 ? documentId : documentId.substring(0, 6);
+    return '#$head';
   }
 
   Future<void> _openExternal(String url) async {

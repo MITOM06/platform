@@ -1,4 +1,4 @@
-import { chatApi, authApi } from './axios'
+import { chatApi } from './axios'
 import type {
   AiTraceResponse,
   Conversation,
@@ -130,12 +130,9 @@ export const chatService = {
   markConversationUnread: (conversationId: string) =>
     chatApi.post(`/api/conversations/${conversationId}/unread`),
 
-  // Bug fix (Task 9): these endpoints live in auth-service, not chat-service.
-  blockUser: (userId: string) =>
-    authApi.post(`/api/users/block/${userId}`),
-
-  unblockUser: (userId: string) =>
-    authApi.post(`/api/users/unblock/${userId}`),
+  // NOTE: user block/unblock lives in auth-service — use `authService.blockUser`
+  // / `authService.unblockUser` (lib/api/auth.ts). Do not re-add a chatService
+  // wrapper here; the duplicate caused confusion about which service owns blocks.
 
   /** GET /api/conversations?blocked=true — returns conversations in the Blocked section */
   getBlockedConversations: () =>
@@ -183,6 +180,18 @@ export const chatService = {
       .get<MessagesResponse>(`/api/conversations/${conversationId}/messages`, { params })
       .then((r) => r.data)
   },
+
+  /**
+   * Catch-up fetch (Task 55, parity with Flutter chat_repository.getMessagesSince):
+   * returns messages with createdAt > `afterIso`, oldest-first. Called after a
+   * STOMP reconnect to pull in messages missed while the socket was down.
+   */
+  getMessagesSince: (conversationId: string, afterIso: string) =>
+    chatApi
+      .get<MessagesResponse>(`/api/conversations/${conversationId}/messages`, {
+        params: { after: afterIso },
+      })
+      .then((r) => r.data.content),
 
   sendMessage: (
     conversationId: string,

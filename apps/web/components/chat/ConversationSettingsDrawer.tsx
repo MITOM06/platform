@@ -215,14 +215,14 @@ export function ConversationSettingsDrawer({
     setSaving(true)
     try {
       if (isBlocked) {
-        await chatService.unblockUser(otherUserId)
+        await authService.unblockUser(otherUserId)
         await chatService.blockRestoreConversation(conversation.id)
         setLocalBlockedConvId(conversation.id)
         setLocalBlockedValue(false)
         invalidateAll()
         toast.success(t('unblockSuccess'))
       } else {
-        await chatService.blockUser(otherUserId)
+        await authService.blockUser(otherUserId)
         await chatService.blockArchiveConversation(conversation.id)
         setLocalBlockedConvId(conversation.id)
         setLocalBlockedValue(true)

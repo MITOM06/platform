@@ -235,6 +235,75 @@ class AppLocalizationsZh extends AppLocalizations {
   String get wallpaperThemeDesert => '沙漠';
 
   @override
+  String get wallpaperPresetMidnightGlow => '午夜微光';
+
+  @override
+  String get wallpaperPresetNeonTeal => '霓虹青';
+
+  @override
+  String get wallpaperPresetSunset => '日落';
+
+  @override
+  String get wallpaperPresetSweetPink => '甜美粉';
+
+  @override
+  String get wallpaperPresetDarkShadow => '暗影';
+
+  @override
+  String get wallpaperPresetOceanBlue => '海洋蓝';
+
+  @override
+  String get wallpaperPresetForestGreen => '森林绿';
+
+  @override
+  String get wallpaperPresetPurpleHaze => '紫雾';
+
+  @override
+  String get wallpaperPresetWarmAmber => '暖琥珀';
+
+  @override
+  String get wallpaperPresetRoseGold => '玫瑰金';
+
+  @override
+  String get wallpaperPresetStorm => '风暴';
+
+  @override
+  String get wallpaperPresetCherryBlossom => '樱花';
+
+  @override
+  String get wallpaperPresetMidnightPurple => '午夜紫';
+
+  @override
+  String get wallpaperPresetCoralReef => '珊瑚礁';
+
+  @override
+  String get wallpaperPresetArcticIce => '北极冰';
+
+  @override
+  String get wallpaperPresetAurora => '极光';
+
+  @override
+  String get wallpaperPresetGalaxy => '银河';
+
+  @override
+  String get wallpaperPresetFireIce => '冰与火';
+
+  @override
+  String get wallpaperPresetTropical => '热带';
+
+  @override
+  String get wallpaperPresetCandy => '糖果';
+
+  @override
+  String get wallpaperPresetPureDark => '纯黑';
+
+  @override
+  String get wallpaperPresetSoftGray => '柔灰';
+
+  @override
+  String get wallpaperPresetWarmNight => '暖夜';
+
+  @override
   String get changeChatThemeTitle => '更改聊天主题';
 
   @override

@@ -8,6 +8,7 @@ import { toast } from 'sonner'
 import { useTranslations } from 'next-intl'
 import { useAuthStore } from '@/lib/store/auth.store'
 import { chatService } from '@/lib/api/chat'
+import { authService } from '@/lib/api/auth'
 import { absoluteMediaUrl } from '@/lib/media'
 import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
@@ -93,7 +94,7 @@ export default function BlockedChatsPage() {
 
   const unblockMutation = useMutation({
     mutationFn: async ({ conv, otherUserId }: { conv: Conversation; otherUserId: string }) => {
-      await chatService.unblockUser(otherUserId)
+      await authService.unblockUser(otherUserId)
       await chatService.blockRestoreConversation(conv.id)
     },
     onMutate: ({ conv }) => {

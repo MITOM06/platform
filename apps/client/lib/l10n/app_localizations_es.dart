@@ -242,6 +242,75 @@ class AppLocalizationsEs extends AppLocalizations {
   String get wallpaperThemeDesert => 'Desierto';
 
   @override
+  String get wallpaperPresetMidnightGlow => 'Brillo de medianoche';
+
+  @override
+  String get wallpaperPresetNeonTeal => 'Verde neón';
+
+  @override
+  String get wallpaperPresetSunset => 'Atardecer';
+
+  @override
+  String get wallpaperPresetSweetPink => 'Rosa dulce';
+
+  @override
+  String get wallpaperPresetDarkShadow => 'Sombra oscura';
+
+  @override
+  String get wallpaperPresetOceanBlue => 'Azul océano';
+
+  @override
+  String get wallpaperPresetForestGreen => 'Verde bosque';
+
+  @override
+  String get wallpaperPresetPurpleHaze => 'Bruma púrpura';
+
+  @override
+  String get wallpaperPresetWarmAmber => 'Ámbar cálido';
+
+  @override
+  String get wallpaperPresetRoseGold => 'Oro rosa';
+
+  @override
+  String get wallpaperPresetStorm => 'Tormenta';
+
+  @override
+  String get wallpaperPresetCherryBlossom => 'Flor de cerezo';
+
+  @override
+  String get wallpaperPresetMidnightPurple => 'Púrpura medianoche';
+
+  @override
+  String get wallpaperPresetCoralReef => 'Arrecife de coral';
+
+  @override
+  String get wallpaperPresetArcticIce => 'Hielo ártico';
+
+  @override
+  String get wallpaperPresetAurora => 'Aurora';
+
+  @override
+  String get wallpaperPresetGalaxy => 'Galaxia';
+
+  @override
+  String get wallpaperPresetFireIce => 'Fuego y hielo';
+
+  @override
+  String get wallpaperPresetTropical => 'Tropical';
+
+  @override
+  String get wallpaperPresetCandy => 'Caramelo';
+
+  @override
+  String get wallpaperPresetPureDark => 'Negro puro';
+
+  @override
+  String get wallpaperPresetSoftGray => 'Gris suave';
+
+  @override
+  String get wallpaperPresetWarmNight => 'Noche cálida';
+
+  @override
   String get changeChatThemeTitle => 'Cambiar tema del chat';
 
   @override

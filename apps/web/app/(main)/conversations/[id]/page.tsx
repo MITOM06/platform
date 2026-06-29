@@ -108,6 +108,13 @@ export default function ConversationPage({ params }: Props) {
     useMessages(id)
   const messages = useMemo(() => data?.messages ?? [], [data?.messages])
 
+  // Mirror of `messages` for stale-closure-free reads inside the STOMP effect
+  // (which only depends on [id, stompConnected]). Used by the reconnect catch-up.
+  const messagesRef = useRef(messages)
+  useEffect(() => {
+    messagesRef.current = messages
+  })
+
   // Personal assistant (Bot Factory) replies are synchronous (2–10s) with no
   // STOMP typing event, so synthesise one: if this is an external-bot DM and the
   // newest message is the member's own, the bot is preparing its reply. Clears
@@ -345,6 +352,24 @@ export default function ConversationPage({ params }: Props) {
           }
         },
       )
+
+      // Catch-up: pull in messages that arrived while the socket was down (parity
+      // with Flutter chat_provider._catchupMessages, Task 55). We subscribe first
+      // (above) so no live message is missed, then backfill the gap from the
+      // newest message we already hold. `messages` are chronological (oldest →
+      // newest), so the last entry is the freshest. appendMessage de-dupes by id.
+      const newest = messagesRef.current[messagesRef.current.length - 1]
+      if (newest?.createdAt) {
+        chatService
+          .getMessagesSince(id, newest.createdAt)
+          .then((missed) => {
+            if (!active) return
+            for (const m of missed) msgCallbacksRef.current.appendMessage(m)
+          })
+          .catch(() => {
+            // Best-effort: a failed catch-up is non-fatal; scrolling/refetch recovers.
+          })
+      }
     }).catch(() => {
       // Connection failed — cleanup will handle retry via stompConnected changing
     })
@@ -530,6 +555,7 @@ export default function ConversationPage({ params }: Props) {
 
       {isBlocked ? (
         <BlockedComposerNotice
+          conversationId={id}
           otherUserId={otherUserId!}
           otherUserName={conversation?.name || otherUser?.displayName || t('userFallback')}
           iBlocked={relationship!.iBlocked}

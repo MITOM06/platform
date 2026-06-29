@@ -236,6 +236,75 @@ class AppLocalizationsKo extends AppLocalizations {
   String get wallpaperThemeDesert => '사막';
 
   @override
+  String get wallpaperPresetMidnightGlow => '한밤의 빛';
+
+  @override
+  String get wallpaperPresetNeonTeal => '네온 틸';
+
+  @override
+  String get wallpaperPresetSunset => '노을';
+
+  @override
+  String get wallpaperPresetSweetPink => '스위트 핑크';
+
+  @override
+  String get wallpaperPresetDarkShadow => '다크 섀도우';
+
+  @override
+  String get wallpaperPresetOceanBlue => '오션 블루';
+
+  @override
+  String get wallpaperPresetForestGreen => '포레스트 그린';
+
+  @override
+  String get wallpaperPresetPurpleHaze => '퍼플 헤이즈';
+
+  @override
+  String get wallpaperPresetWarmAmber => '웜 앰버';
+
+  @override
+  String get wallpaperPresetRoseGold => '로즈 골드';
+
+  @override
+  String get wallpaperPresetStorm => '폭풍';
+
+  @override
+  String get wallpaperPresetCherryBlossom => '벚꽃';
+
+  @override
+  String get wallpaperPresetMidnightPurple => '미드나잇 퍼플';
+
+  @override
+  String get wallpaperPresetCoralReef => '산호초';
+
+  @override
+  String get wallpaperPresetArcticIce => '북극 얼음';
+
+  @override
+  String get wallpaperPresetAurora => '오로라';
+
+  @override
+  String get wallpaperPresetGalaxy => '갤럭시';
+
+  @override
+  String get wallpaperPresetFireIce => '불과 얼음';
+
+  @override
+  String get wallpaperPresetTropical => '트로피컬';
+
+  @override
+  String get wallpaperPresetCandy => '캔디';
+
+  @override
+  String get wallpaperPresetPureDark => '퓨어 다크';
+
+  @override
+  String get wallpaperPresetSoftGray => '소프트 그레이';
+
+  @override
+  String get wallpaperPresetWarmNight => '따뜻한 밤';
+
+  @override
   String get changeChatThemeTitle => '채팅 테마 변경';
 
   @override
