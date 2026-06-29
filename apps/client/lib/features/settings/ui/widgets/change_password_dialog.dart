@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/l10n/l10n_ext.dart';
 import '../../../../core/utils/app_error.dart';
+import '../../../../core/utils/global_messenger.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/widgets/pon_widgets.dart';
 import '../../../auth/data/auth_repository.dart';
@@ -92,9 +93,7 @@ class __ChangePasswordDialogContentState
           .read(authRepositoryProvider)
           .changePassword(currentPass, newPass);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(context.l10n.passwordChangedSuccess)),
-        );
+        showInfoSnackBar(context.l10n.passwordChangedSuccess);
         Navigator.pop(context);
       }
     } catch (e) {
@@ -172,7 +171,8 @@ class __ChangePasswordDialogContentState
               prefixIcon: Icons.lock_outline_rounded,
               obscureText: true,
               enableVisibilityToggle: true,
-              style: TextStyle(color: widget.isDark ? Colors.white : Colors.black87),
+              style: TextStyle(
+                  color: widget.isDark ? Colors.white : Colors.black87),
               focusColor: activeColor,
               textInputAction: TextInputAction.next,
               enabled: !_isLoading,
@@ -188,7 +188,8 @@ class __ChangePasswordDialogContentState
               prefixIcon: Icons.lock_open_rounded,
               obscureText: true,
               enableVisibilityToggle: true,
-              style: TextStyle(color: widget.isDark ? Colors.white : Colors.black87),
+              style: TextStyle(
+                  color: widget.isDark ? Colors.white : Colors.black87),
               focusColor: activeColor,
               textInputAction: TextInputAction.next,
               enabled: !_isLoading,
@@ -202,7 +203,8 @@ class __ChangePasswordDialogContentState
               prefixIcon: Icons.lock_rounded,
               obscureText: true,
               enableVisibilityToggle: true,
-              style: TextStyle(color: widget.isDark ? Colors.white : Colors.black87),
+              style: TextStyle(
+                  color: widget.isDark ? Colors.white : Colors.black87),
               focusColor: activeColor,
               textInputAction: TextInputAction.done,
               enabled: !_isLoading,
@@ -229,7 +231,8 @@ class __ChangePasswordDialogContentState
             child: SizedBox(
               width: 16,
               height: 16,
-              child: CircularProgressIndicator(strokeWidth: 2, color: AppTheme.ponCyan),
+              child: CircularProgressIndicator(
+                  strokeWidth: 2, color: AppTheme.ponCyan),
             ),
           )
         else

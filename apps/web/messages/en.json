@@ -380,6 +380,7 @@
     "exploreChannels": "Public Channels",
     "chatWithAI": "Chat with AI Assistant",
     "newConversation": "New Conversation",
+    "new": "New",
     "loadError": "Failed to load list",
     "noResults": "No results found",
     "noConversations": "No conversations yet",
