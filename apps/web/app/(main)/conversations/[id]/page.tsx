@@ -105,7 +105,6 @@ export default function ConversationPage({ params }: Props) {
   // Scroll positioning + pagination triggers now live in MessageViewport, which
   // is keyed on the conversation id so every switch starts from a clean scroll
   // state (see MessageViewport for the full rationale).
-
   const handleTypingChange = useCallback(
     (isTyping: boolean) => {
       stompService.publish('/app/chat.typing', { conversationId: id, typing: isTyping })
