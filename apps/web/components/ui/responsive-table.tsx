@@ -49,9 +49,9 @@ export function ResponsiveTable<T>({
   const mobileRest = columns.filter((c) => !c.primary && !c.hideOnMobile)
 
   return (
-    <>
+    <div className={className}>
       {/* Desktop: real table */}
-      <div className={cn('hidden md:block overflow-x-auto', className)}>
+      <div className="hidden md:block overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b text-left text-muted-foreground">
@@ -71,6 +71,14 @@ export function ResponsiveTable<T>({
                   onRowClick && 'cursor-pointer hover:bg-muted/50',
                 )}
                 onClick={onRowClick ? () => onRowClick(row) : undefined}
+                role={onRowClick ? 'button' : undefined}
+                tabIndex={onRowClick ? 0 : undefined}
+                onKeyDown={onRowClick ? (e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault()
+                    onRowClick(row)
+                  }
+                } : undefined}
               >
                 {columns.map((c) => (
                   <td key={c.key} className={cn('py-2 px-3', c.className)}>
@@ -93,6 +101,14 @@ export function ResponsiveTable<T>({
               onRowClick && 'cursor-pointer active:bg-muted/50',
             )}
             onClick={onRowClick ? () => onRowClick(row) : undefined}
+            role={onRowClick ? 'button' : undefined}
+            tabIndex={onRowClick ? 0 : undefined}
+            onKeyDown={onRowClick ? (e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault()
+                onRowClick(row)
+              }
+            } : undefined}
           >
             {primary && (
               <div className="font-medium mb-2 break-words">{cellValue(primary, row)}</div>
@@ -108,6 +124,6 @@ export function ResponsiveTable<T>({
           </div>
         ))}
       </div>
-    </>
+    </div>
   )
 }
