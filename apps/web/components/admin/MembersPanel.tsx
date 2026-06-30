@@ -103,7 +103,7 @@ export function MembersPanel() {
           {roleName(m.roleId) && (
             <Badge variant="secondary">{roleName(m.roleId)}</Badge>
           )}
-          <Button variant="ghost" size="icon" onClick={() => openEdit(m)}>
+          <Button variant="ghost" size="icon" className="tap" onClick={() => openEdit(m)}>
             <Pencil className="size-4" />
           </Button>
         </div>
