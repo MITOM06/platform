@@ -1,6 +1,7 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import { useTranslations } from 'next-intl'
 import { Button } from '@/components/ui/button'
 import { Switch } from '@/components/ui/switch'
 import {
@@ -36,9 +37,14 @@ export function RolesPanelMobile({
   capLabel,
   isPending,
 }: RolesPanelMobileProps) {
+  const t = useTranslations('admin')
   const [selectedId, setSelectedId] = useState(roles[0]?._id ?? '')
   const role = roles.find((r) => r._id === selectedId) ?? roles[0]
   if (!role) return null
+
+  useEffect(() => {
+    if (role && selectedId !== role._id) setSelectedId(role._id)
+  }, [role, selectedId])
 
   const readOnly = role.name === OWNER
 
@@ -72,7 +78,7 @@ export function RolesPanelMobile({
             disabled={!isDirty(role) || isPending}
             onClick={() => saveRole(role)}
           >
-            Save
+            {t('save')}
           </Button>
         )}
       </div>
