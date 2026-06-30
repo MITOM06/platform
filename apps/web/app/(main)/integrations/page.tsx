@@ -89,7 +89,7 @@ export default function IntegrationsPage() {
         </Button>
       </div>
 
-      <div className="p-6 pb-24 md:pb-6 max-w-5xl w-full mx-auto space-y-8">
+      <div className="p-6 pb-tabbar md:pb-6 max-w-5xl w-full mx-auto space-y-8">
         <DirectorySection />
 
         <section>

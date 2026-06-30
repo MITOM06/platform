@@ -111,7 +111,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
         </nav>
       </div>
 
-      <div className="p-6 pb-24 md:pb-6 max-w-5xl w-full mx-auto">{children}</div>
+      <div className="p-6 pb-tabbar md:pb-6 max-w-5xl w-full mx-auto">{children}</div>
     </div>
   )
 }

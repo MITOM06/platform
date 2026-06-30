@@ -48,7 +48,7 @@ export default function SkillsPage() {
         </Button>
       </div>
 
-      <div className="p-6 pb-24 md:pb-6 max-w-4xl w-full mx-auto">
+      <div className="p-6 pb-tabbar md:pb-6 max-w-4xl w-full mx-auto">
         <div className="mb-5">
           <div className="font-mono text-pon-pink text-xs tracking-[2px]">
             {t('sectionNum')}
