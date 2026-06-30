@@ -281,7 +281,7 @@ export function WorstAnswers({ answers }: { answers: UsageWorstAnswer[] }) {
           </div>
           <p className="text-sm text-foreground/90 line-clamp-3">{a.answerPreview}</p>
           {a.comment && (
-            <p className="text-xs text-destructive/80 italic">"{a.comment}"</p>
+            <p className="text-xs text-destructive/80 italic">&ldquo;{a.comment}&rdquo;</p>
           )}
         </div>
       ))}
