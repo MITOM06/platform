@@ -19,7 +19,8 @@ import {
 } from '@/components/ui/dialog'
 import { useRoles, useRoleActions } from '@/lib/hooks/use-admin'
 import { CAPABILITIES } from '@/lib/api/admin-types'
-import type { PermissionMatrix, Role } from '@/lib/api/admin-types'
+import type { Capability, PermissionMatrix, Role } from '@/lib/api/admin-types'
+import { RolesPanelMobile } from './RolesPanelMobile'
 
 const OWNER = 'Owner'
 
@@ -42,10 +43,10 @@ export function RolesPanel() {
     setEdited(Object.fromEntries(roles.map((r) => [r._id, { ...r.permissions }])))
   }
 
-  const toggle = (roleId: string, cap: string) =>
+  const toggle = (roleId: string, cap: Capability) =>
     setEdited((prev) => ({
       ...prev,
-      [roleId]: { ...prev[roleId], [cap]: !prev[roleId]?.[cap as keyof PermissionMatrix] },
+      [roleId]: { ...prev[roleId], [cap]: !prev[roleId]?.[cap] },
     }))
 
   const isDirty = (r: Role) =>
@@ -73,7 +74,7 @@ export function RolesPanel() {
     <div className="space-y-4">
       <p className="text-sm text-muted-foreground">{t('roleHint')}</p>
 
-      <div className="overflow-x-auto">
+      <div className="hidden md:block overflow-x-auto">
         <table className="w-full border-separate border-spacing-0 text-sm">
           <thead>
             <tr>
@@ -132,7 +133,7 @@ export function RolesPanel() {
                         checked={
                           readOnly
                             ? true
-                            : !!edited[r._id]?.[cap as keyof PermissionMatrix]
+                            : !!edited[r._id]?.[cap]
                         }
                         disabled={readOnly}
                         onCheckedChange={() => toggle(r._id, cap)}
@@ -145,6 +146,17 @@ export function RolesPanel() {
           </tbody>
         </table>
       </div>
+
+      <RolesPanelMobile
+        roles={roles}
+        capabilities={CAPABILITIES}
+        edited={edited}
+        toggle={toggle}
+        isDirty={isDirty}
+        saveRole={saveRole}
+        capLabel={(cap) => t(`caps.${cap}`)}
+        isPending={update.isPending}
+      />
 
       <Dialog open={!!cloneFrom} onOpenChange={(o) => !o && setCloneFrom(null)}>
         <DialogContent>
