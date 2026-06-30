@@ -627,6 +627,7 @@
     "genderOther": "その他",
     "typing": "入力中...",
     "settingsTooltip": "設定",
+    "moreActions": "その他の操作",
     "groupInfoTooltip": "グループ情報",
     "viewProfileTooltip": "プロフィールを見る",
     "today": "今日",
@@ -1250,7 +1251,8 @@
     "tokens": "トークン",
     "worstAnswers": "評価が最も低い回答",
     "noWorstAnswers": "この期間に 👎 された回答はありません",
-    "feedbackSummary": "{up} 👍 · {down} 👎 · 評価 {total} 件"
+    "feedbackSummary": "{up} 👍 · {down} 👎 · 評価 {total} 件",
+    "usageDailySummary": "合計：{total} トークン · ピーク {peak}"
   },
   "assistant": {
     "defaultName": "マイアシスタント",

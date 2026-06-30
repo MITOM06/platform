@@ -627,6 +627,7 @@
     "genderOther": "기타",
     "typing": "입력 중...",
     "settingsTooltip": "설정",
+    "moreActions": "더 보기",
     "groupInfoTooltip": "그룹 정보",
     "viewProfileTooltip": "프로필 보기",
     "today": "오늘",
@@ -1250,7 +1251,8 @@
     "tokens": "토큰",
     "worstAnswers": "평가가 가장 낮은 답변",
     "noWorstAnswers": "이 기간에 👎 받은 답변이 없습니다",
-    "feedbackSummary": "{up} 👍 · {down} 👎 · 평가 {total}건"
+    "feedbackSummary": "{up} 👍 · {down} 👎 · 평가 {total}건",
+    "usageDailySummary": "합계: {total} 토큰 · 최고 {peak}"
   },
   "assistant": {
     "defaultName": "내 어시스턴트",

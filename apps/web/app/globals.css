@@ -1,6 +1,19 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 
+/* ── Responsive / mobile primitives ─────────────────────────────────────── */
+/* Safe-area insets (notch / home indicator). Additive padding on the named side. */
+@utility pb-safe { padding-bottom: env(safe-area-inset-bottom); }
+@utility pt-safe { padding-top: env(safe-area-inset-top); }
+@utility pl-safe { padding-left: env(safe-area-inset-left); }
+@utility pr-safe { padding-right: env(safe-area-inset-right); }
+
+/* Minimum 44×44 touch target for icon buttons on mobile. */
+@utility tap { min-width: 44px; min-height: 44px; }
+
+/* Bottom space that clears the fixed mobile tab bar (h-16 = 4rem) + safe area. */
+@utility pb-tabbar { padding-bottom: calc(4rem + env(safe-area-inset-bottom)); }
+
 @custom-variant dark (&:is(.dark *));
 
 :root {
@@ -234,4 +247,9 @@ body {
 }
 .phone-input-container .PhoneInputCountrySelectArrow {
   opacity: 0.5;
+}
+
+/* Hide reCAPTCHA badge — allowed per Google ToS when disclosure text is shown */
+.grecaptcha-badge {
+  visibility: hidden !important;
 }

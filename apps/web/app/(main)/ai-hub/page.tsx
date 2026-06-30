@@ -38,7 +38,7 @@ export default function AiHubPage() {
           <div className="absolute -top-24 -left-24 w-72 h-72 rounded-full bg-pon-cyan/5 blur-3xl pointer-events-none dark:bg-pon-cyan/8" />
           <div className="absolute -bottom-24 -right-24 w-72 h-72 rounded-full bg-pon-pink/5 blur-3xl pointer-events-none dark:bg-pon-pink/8" />
 
-          <div className="relative max-w-5xl mx-auto px-6 md:px-10 py-8 pb-24 md:pb-12">
+          <div className="relative max-w-5xl mx-auto px-6 md:px-10 py-8 pb-tabbar md:pb-12">
             {/* Hero — Start chat with PON AI */}
             <div className="mb-8 rounded-2xl border bg-card overflow-hidden relative">
               <div

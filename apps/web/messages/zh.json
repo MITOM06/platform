@@ -627,6 +627,7 @@
     "genderOther": "其他",
     "typing": "正在输入...",
     "settingsTooltip": "设置",
+    "moreActions": "更多操作",
     "groupInfoTooltip": "群组信息",
     "viewProfileTooltip": "查看资料",
     "today": "今天",
@@ -1250,7 +1251,8 @@
     "tokens": "令牌",
     "worstAnswers": "评分最低的回答",
     "noWorstAnswers": "本期内没有被 👎 的回答",
-    "feedbackSummary": "{up} 👍 · {down} 👎 · 共 {total} 条评分"
+    "feedbackSummary": "{up} 👍 · {down} 👎 · 共 {total} 条评分",
+    "usageDailySummary": "合计：{total} 令牌 · 峰值 {peak}"
   },
   "assistant": {
     "defaultName": "我的助手",

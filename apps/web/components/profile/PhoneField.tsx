@@ -92,6 +92,14 @@ export function PhoneField({ value, verified, onChange, disabled, labels }: Phon
   const [confirmationResult, setConfirmationResult] = useState<ConfirmationResult | null>(null)
   const recaptchaRef = useRef<RecaptchaVerifier | null>(null)
 
+  /** Xoá RecaptchaVerifier và innerHTML container để tránh "already been rendered" error */
+  const clearRecaptcha = () => {
+    recaptchaRef.current?.clear()
+    recaptchaRef.current = null
+    const el = document.getElementById('recaptcha-container')
+    if (el) el.innerHTML = ''
+  }
+
   const startTimer = () => {
     setResendTimer(RESEND_COOLDOWN)
     const id = setInterval(() => {
@@ -122,6 +130,9 @@ export function PhoneField({ value, verified, onChange, disabled, labels }: Phon
     try {
       // Create invisible reCAPTCHA verifier once
       if (!recaptchaRef.current) {
+        // Đảm bảo container sạch trước khi render widget mới
+        const el = document.getElementById('recaptcha-container')
+        if (el) el.innerHTML = ''
         recaptchaRef.current = new RecaptchaVerifier(
           firebaseAuth,
           'recaptcha-container', // <-- invisible div rendered in the modal
@@ -137,9 +148,7 @@ export function PhoneField({ value, verified, onChange, disabled, labels }: Phon
     } catch (err: unknown) {
       console.error('Firebase sendOtp error:', err)
       toast.error(labels.errorSend)
-      // Reset reCAPTCHA on failure so user can retry
-      recaptchaRef.current?.clear()
-      recaptchaRef.current = null
+      clearRecaptcha()
     } finally {
       setSending(false)
     }
@@ -186,15 +195,20 @@ export function PhoneField({ value, verified, onChange, disabled, labels }: Phon
     if (resendTimer > 0) return
     // Clear Firebase confirmation state and reCAPTCHA, go back to phone step
     setConfirmationResult(null)
-    recaptchaRef.current?.clear()
-    recaptchaRef.current = null
+    clearRecaptcha() // dùng helper thay vì inline
     setOtp(Array(OTP_LENGTH).fill(''))
     setOtpError('')
     setStep('phone')
   }
 
   const modal = (
-    <Dialog open={modalOpen} onOpenChange={setModalOpen}>
+    <Dialog
+      open={modalOpen}
+      onOpenChange={(open) => {
+        if (!open) clearRecaptcha()
+        setModalOpen(open)
+      }}
+    >
       <DialogContent className="max-w-sm">
         {/* Invisible reCAPTCHA anchor — Firebase attaches the widget here */}
         <div id="recaptcha-container" />
@@ -272,6 +286,27 @@ export function PhoneField({ value, verified, onChange, disabled, labels }: Phon
             </div>
           </div>
         )}
+
+        <p className="text-[10px] text-muted-foreground/60 text-center mt-2 leading-tight">
+          Protected by reCAPTCHA —{' '}
+          <a
+            href="https://policies.google.com/privacy"
+            target="_blank"
+            rel="noreferrer"
+            className="underline"
+          >
+            Privacy
+          </a>{' '}
+          &{' '}
+          <a
+            href="https://policies.google.com/terms"
+            target="_blank"
+            rel="noreferrer"
+            className="underline"
+          >
+            Terms
+          </a>
+        </p>
       </DialogContent>
     </Dialog>
   )

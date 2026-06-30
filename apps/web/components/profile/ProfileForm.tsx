@@ -132,7 +132,7 @@ export function ProfileForm({
   onPhoneChange,
 }: ProfileFormProps) {
   return (
-    <form onSubmit={onSubmit} className="space-y-5 pb-24 md:pb-10">
+    <form onSubmit={onSubmit} className="space-y-5 pb-tabbar md:pb-10">
       {/* Display name */}
       <div className="space-y-2">
         <Label htmlFor="displayName" className="text-sm font-medium flex items-center gap-2">

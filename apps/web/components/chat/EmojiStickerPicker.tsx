@@ -33,7 +33,7 @@ export function EmojiStickerPicker({ disabled, onInsertEmoji, onSendSticker }: P
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
-        <Button variant="ghost" size="icon" className="shrink-0" disabled={disabled}>
+        <Button variant="ghost" size="icon" className="shrink-0 tap" disabled={disabled}>
           <Smile className="size-5 text-pon-cyan" />
         </Button>
       </PopoverTrigger>

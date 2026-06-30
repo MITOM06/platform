@@ -2,8 +2,14 @@
 
 import { useState } from 'react'
 import { useTranslations } from 'next-intl'
-import { Bot, Settings, Phone, Video, Users } from 'lucide-react'
+import { Bot, Settings, Phone, Video, Users, MoreVertical } from 'lucide-react'
 import { useQueryClient } from '@tanstack/react-query'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 import { useConversation } from '@/lib/hooks/use-conversation'
 import { useUserStatus } from '@/lib/hooks/use-user-status'
 import { useAuthStore } from '@/lib/store/auth.store'
@@ -156,44 +162,80 @@ export function ConversationHeader({
 
         {/* Header action buttons */}
         <div className="flex items-center gap-0.5 shrink-0">
+          {/* Group call — always visible for group conversations */}
           {isGroup && !isAI && (
             <Button
               variant="ghost"
               size="icon"
               onClick={() => setStartCallOpen(true)}
               title={t('groupCall')}
+              className="tap"
             >
               <Users className="size-4" />
             </Button>
           )}
+          {/* Voice call — always visible for DMs */}
           {otherUserId && (
-            <>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => startCall(otherUserId, displayName, conversationId, false)}
-                title={t('voiceCall')}
-              >
-                <Phone className="size-4" />
-              </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => startCall(otherUserId, displayName, conversationId, true)}
-                title={t('videoCall')}
-              >
-                <Video className="size-4" />
-              </Button>
-            </>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => startCall(otherUserId, displayName, conversationId, false)}
+              title={t('voiceCall')}
+              className="tap"
+            >
+              <Phone className="size-4" />
+            </Button>
           )}
+
+          {/* Settings — always visible on all screen sizes */}
           <Button
             variant="ghost"
             size="icon"
             onClick={() => isGroup ? setGroupSettingsOpen(true) : setSettingsOpen(true)}
             title={t('settingsTooltip')}
+            className="tap"
           >
             <Settings className="size-4" />
           </Button>
+
+          {/* Desktop: video call inline — DM only */}
+          {otherUserId && (
+            <div className="hidden md:flex items-center gap-0.5">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => startCall(otherUserId, displayName, conversationId, true)}
+                title={t('videoCall')}
+                className="tap"
+              >
+                <Video className="size-4" />
+              </Button>
+            </div>
+          )}
+
+          {/* Mobile: overflow menu — DM only (video call is the sole overflowed action) */}
+          {otherUserId && (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="md:hidden tap"
+                  aria-label={t('moreActions')}
+                >
+                  <MoreVertical className="size-5" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem
+                  onClick={() => startCall(otherUserId, displayName, conversationId, true)}
+                >
+                  <Video className="size-4 mr-2" />
+                  {t('videoCall')}
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
         </div>
       </header>
 

@@ -62,7 +62,7 @@ export default function ExplorePage() {
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto p-4 space-y-3 pb-20 md:pb-4">
+      <div className="flex-1 overflow-y-auto p-4 space-y-3 pb-tabbar md:pb-4">
         {isLoading ? (
           <div className="flex justify-center py-8">
             <Loader2 className="size-6 animate-spin text-primary" />

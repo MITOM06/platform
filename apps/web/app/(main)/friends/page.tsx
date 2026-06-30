@@ -112,7 +112,7 @@ export default function FriendsPage() {
         </div>
       </div>
 
-      <div className="p-6 overflow-y-auto flex-1 pb-20 md:pb-6">
+      <div className="p-6 overflow-y-auto flex-1 pb-tabbar md:pb-6">
         <Tabs defaultValue="friends" className="w-full max-w-5xl mx-auto space-y-6">
           <TabsList className="bg-muted/50 p-1">
             <TabsTrigger value="friends" className="rounded-md">

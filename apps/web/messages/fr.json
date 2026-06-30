@@ -627,6 +627,7 @@
     "genderOther": "Autre",
     "typing": "en train d'écrire...",
     "settingsTooltip": "Paramètres",
+    "moreActions": "Plus d'options",
     "groupInfoTooltip": "Infos du groupe",
     "viewProfileTooltip": "Voir le profil",
     "today": "Aujourd'hui",
@@ -1250,7 +1251,8 @@
     "tokens": "Jetons",
     "worstAnswers": "Réponses les moins bien notées",
     "noWorstAnswers": "Aucune réponse 👎 sur cette période",
-    "feedbackSummary": "{up} 👍 · {down} 👎 · {total} notées"
+    "feedbackSummary": "{up} 👍 · {down} 👎 · {total} notées",
+    "usageDailySummary": "Total : {total} jetons · Pic {peak}"
   },
   "assistant": {
     "defaultName": "Mon assistant",

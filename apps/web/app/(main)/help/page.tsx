@@ -50,7 +50,7 @@ export default function HelpPage() {
           <div className="absolute -top-24 -left-24 w-72 h-72 rounded-full bg-pon-cyan/5 blur-3xl pointer-events-none dark:bg-pon-cyan/8" />
           <div className="absolute -bottom-24 -right-24 w-72 h-72 rounded-full bg-pon-peach/5 blur-3xl pointer-events-none dark:bg-pon-peach/8" />
 
-          <div className="relative max-w-3xl mx-auto px-6 py-6 pb-24 md:pb-12">
+          <div className="relative max-w-3xl mx-auto px-6 py-6 pb-tabbar md:pb-12">
             <div className="sticky top-0 z-10 -mx-6 px-6 py-3 bg-background/80 backdrop-blur-md">
               <FaqSearch value={query} onChange={setQuery} />
             </div>

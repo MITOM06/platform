@@ -627,6 +627,7 @@
     "genderOther": "Other",
     "typing": "typing...",
     "settingsTooltip": "Settings",
+    "moreActions": "More actions",
     "groupInfoTooltip": "Group info",
     "viewProfileTooltip": "View profile",
     "today": "Today",
@@ -1250,7 +1251,8 @@
     "tokens": "Tokens",
     "worstAnswers": "Worst-rated answers",
     "noWorstAnswers": "No 👎-rated answers in this period",
-    "feedbackSummary": "{up} 👍 · {down} 👎 · {total} rated"
+    "feedbackSummary": "{up} 👍 · {down} 👎 · {total} rated",
+    "usageDailySummary": "Total: {total} tokens · Peak {peak}"
   },
   "assistant": {
     "defaultName": "My Assistant",
