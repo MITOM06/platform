@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { Button } from '@/components/ui/button'
 import { Switch } from '@/components/ui/switch'
@@ -41,10 +41,6 @@ export function RolesPanelMobile({
   const [selectedId, setSelectedId] = useState(roles[0]?._id ?? '')
   const role = roles.find((r) => r._id === selectedId) ?? roles[0]
   if (!role) return null
-
-  useEffect(() => {
-    if (role && selectedId !== role._id) setSelectedId(role._id)
-  }, [role, selectedId])
 
   const readOnly = role.name === OWNER
 
