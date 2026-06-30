@@ -9,14 +9,7 @@ import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Label } from '@/components/ui/label'
 import { Skeleton } from '@/components/ui/skeleton'
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog'
+import { ResponsiveModal } from '@/components/ui/responsive-modal'
 import {
   Select,
   SelectContent,
@@ -109,69 +102,68 @@ export function MembersPanel() {
         </div>
       ))}
 
-      <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>{t('memberEdit')}</DialogTitle>
-            <DialogDescription>
-              {editing?.displayName} · {t('memberRevokeNote')}
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4 py-2">
-            {canRoles && (
-              <div className="space-y-1.5">
-                <Label>{t('memberRole')}</Label>
-                <Select value={roleId} onValueChange={setRoleId}>
-                  <SelectTrigger>
-                    <SelectValue placeholder={t('memberRoleNone')} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value={NO_ROLE}>{t('memberRoleNone')}</SelectItem>
-                    {roles.map((r) => (
-                      <SelectItem key={r._id} value={r._id}>
-                        {r.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            )}
-            {canDepts && (
-              <div className="space-y-1.5">
-                <Label>{t('memberDepartments')}</Label>
-                {departments.length === 0 ? (
-                  <p className="text-sm text-muted-foreground">
-                    {t('deptEmpty')}
-                  </p>
-                ) : (
-                  <div className="space-y-1.5 max-h-48 overflow-y-auto">
-                    {departments.map((d) => (
-                      <label
-                        key={d._id}
-                        className="flex items-center gap-3 rounded-lg border px-3 py-2 cursor-pointer hover:bg-muted/50"
-                      >
-                        <Checkbox
-                          checked={deptIds.includes(d._id)}
-                          onCheckedChange={() => toggleDept(d._id)}
-                        />
-                        <span className="text-sm">{d.name}</span>
-                      </label>
-                    ))}
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-          <DialogFooter>
+      <ResponsiveModal
+        open={open}
+        onOpenChange={setOpen}
+        title={t('memberEdit')}
+        description={`${editing?.displayName ?? ''} · ${t('memberRevokeNote')}`}
+        footer={
+          <>
             <Button variant="outline" onClick={() => setOpen(false)}>
               {t('cancel')}
             </Button>
             <Button onClick={onSubmit} disabled={updateMember.isPending}>
               {t('save')}
             </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+          </>
+        }
+      >
+        <div className="space-y-4 py-2">
+          {canRoles && (
+            <div className="space-y-1.5">
+              <Label>{t('memberRole')}</Label>
+              <Select value={roleId} onValueChange={setRoleId}>
+                <SelectTrigger>
+                  <SelectValue placeholder={t('memberRoleNone')} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={NO_ROLE}>{t('memberRoleNone')}</SelectItem>
+                  {roles.map((r) => (
+                    <SelectItem key={r._id} value={r._id}>
+                      {r.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+          {canDepts && (
+            <div className="space-y-1.5">
+              <Label>{t('memberDepartments')}</Label>
+              {departments.length === 0 ? (
+                <p className="text-sm text-muted-foreground">
+                  {t('deptEmpty')}
+                </p>
+              ) : (
+                <div className="space-y-1.5 max-h-48 overflow-y-auto">
+                  {departments.map((d) => (
+                    <label
+                      key={d._id}
+                      className="flex items-center gap-3 rounded-lg border px-3 py-2 cursor-pointer hover:bg-muted/50"
+                    >
+                      <Checkbox
+                        checked={deptIds.includes(d._id)}
+                        onCheckedChange={() => toggleDept(d._id)}
+                      />
+                      <span className="text-sm">{d.name}</span>
+                    </label>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      </ResponsiveModal>
     </div>
   )
 }

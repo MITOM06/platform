@@ -9,7 +9,7 @@ import {
   MessageCircle, UserPlus, UserMinus, ShieldOff, ShieldAlert, Loader2,
   Cake, Phone, Users,
 } from 'lucide-react'
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { ResponsiveModal } from '@/components/ui/responsive-modal'
 import { DialogA11yDescription } from '@/components/common/dialog-a11y-description'
 import { ConfirmDialog } from '@/components/common/ConfirmDialog'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
@@ -184,12 +184,14 @@ export function UserProfileDrawer({ userId, onClose }: Props) {
   const genderText = showGender && user?.gender ? genderLabel(user.gender, t) : null
 
   return (
-    <Dialog open={!!userId} onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="max-w-sm overflow-hidden p-0 gap-0">
-        <DialogHeader className="px-6 pt-6">
-          <DialogTitle>{t('profileTitle')}</DialogTitle>
-        </DialogHeader>
-          <DialogA11yDescription />
+    <>
+      <ResponsiveModal
+        open={userId !== null}
+        onOpenChange={(o) => { if (!o) onClose() }}
+        title={t('profileTitle')}
+        className="max-w-sm overflow-hidden p-0 gap-0"
+      >
+        <DialogA11yDescription />
 
         {isLoading ? (
           <div className="flex justify-center py-12">
@@ -324,7 +326,7 @@ export function UserProfileDrawer({ userId, onClose }: Props) {
             )}
           </div>
         )}
-      </DialogContent>
+      </ResponsiveModal>
 
       <ConfirmDialog
         open={blockConfirmOpen}
@@ -343,6 +345,6 @@ export function UserProfileDrawer({ userId, onClose }: Props) {
         confirmLabel={t('friendRemove')}
         onConfirm={doRemoveFriend}
       />
-    </Dialog>
+    </>
   )
 }

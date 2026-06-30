@@ -7,9 +7,7 @@ import { Search, Loader2, X, Users, MessageCircle } from 'lucide-react'
 import { useQueryClient } from '@tanstack/react-query'
 import { useTranslations } from 'next-intl'
 import axios from 'axios'
-import {
-  Dialog, DialogContent, DialogHeader, DialogTitle,
-} from '@/components/ui/dialog'
+import { ResponsiveModal } from '@/components/ui/responsive-modal'
 import { DialogA11yDescription } from '@/components/common/dialog-a11y-description'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
@@ -216,107 +214,108 @@ export function NewConversationModal({ open, onClose, defaultTab }: Props) {
   )
 
   return (
-    <Dialog key={`${open}-${defaultTab}`} open={open} onOpenChange={(o) => !o && handleClose()}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle>{t('newConvTitle')}</DialogTitle>
-        </DialogHeader>
-          <DialogA11yDescription />
+    <ResponsiveModal
+      key={`${open}-${defaultTab}`}
+      open={open}
+      onOpenChange={(o) => { if (!o) handleClose() }}
+      title={t('newConvTitle')}
+      className="sm:max-w-md"
+    >
+      <DialogA11yDescription />
 
-        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'direct' | 'group')}>
-          <TabsList className="w-full">
-            <TabsTrigger value="direct" className="flex-1">
-              <MessageCircle className="size-4" />
-              {t('newConvTabDirect')}
-            </TabsTrigger>
-            <TabsTrigger value="group" className="flex-1">
-              <Users className="size-4" />
-              {t('newConvTabGroup')}
-            </TabsTrigger>
-          </TabsList>
+      <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'direct' | 'group')}>
+        <TabsList className="w-full">
+          <TabsTrigger value="direct" className="flex-1">
+            <MessageCircle className="size-4" />
+            {t('newConvTabDirect')}
+          </TabsTrigger>
+          <TabsTrigger value="group" className="flex-1">
+            <Users className="size-4" />
+            {t('newConvTabGroup')}
+          </TabsTrigger>
+        </TabsList>
 
-          {/* ── Direct tab ── */}
-          <TabsContent value="direct">
-            {SearchSection}
-            {!isSearching && results.map((user) => {
-              const uid = getUserId(user)
-              return (
-                <UserRow
-                  key={uid}
-                  user={user}
-                  loading={creatingId === uid}
-                  onSelect={() => handleSelectDirect(user)}
-                />
-              )
-            })}
-          </TabsContent>
+        {/* ── Direct tab ── */}
+        <TabsContent value="direct">
+          {SearchSection}
+          {!isSearching && results.map((user) => {
+            const uid = getUserId(user)
+            return (
+              <UserRow
+                key={uid}
+                user={user}
+                loading={creatingId === uid}
+                onSelect={() => handleSelectDirect(user)}
+              />
+            )
+          })}
+        </TabsContent>
 
-          {/* ── Group tab ── */}
-          <TabsContent value="group" className="space-y-3">
-            <Input
-              placeholder={t('newConvGroupNamePlaceholder')}
-              value={groupName}
-              onChange={(e) => setGroupName(e.target.value)}
-            />
+        {/* ── Group tab ── */}
+        <TabsContent value="group" className="space-y-3">
+          <Input
+            placeholder={t('newConvGroupNamePlaceholder')}
+            value={groupName}
+            onChange={(e) => setGroupName(e.target.value)}
+          />
 
-            {/* Department group (P6) — admins can scope the group + bot to a department */}
-            {canDepts && departments.length > 0 && (
-              <Select value={departmentId} onValueChange={setDepartmentId}>
-                <SelectTrigger>
-                  <SelectValue placeholder={t('newConvDepartment')} />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value={NO_DEPT}>{t('newConvNoDepartment')}</SelectItem>
-                  {departments.map((d) => (
-                    <SelectItem key={d._id} value={d._id}>
-                      {d.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            )}
-
-            {/* Selected members chips */}
-            {selectedMembers.length > 0 && (
-              <div className="flex flex-wrap gap-1.5">
-                {selectedMembers.map((u) => (
-                  <span
-                    key={getUserId(u)}
-                    className="flex items-center gap-1 bg-primary/10 text-primary rounded-full px-2.5 py-1 text-xs"
-                  >
-                    {u.displayName}
-                    <button onClick={() => toggleMember(u)}>
-                      <X className="size-3" />
-                    </button>
-                  </span>
+          {/* Department group (P6) — admins can scope the group + bot to a department */}
+          {canDepts && departments.length > 0 && (
+            <Select value={departmentId} onValueChange={setDepartmentId}>
+              <SelectTrigger>
+                <SelectValue placeholder={t('newConvDepartment')} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value={NO_DEPT}>{t('newConvNoDepartment')}</SelectItem>
+                {departments.map((d) => (
+                  <SelectItem key={d._id} value={d._id}>
+                    {d.name}
+                  </SelectItem>
                 ))}
-              </div>
-            )}
+              </SelectContent>
+            </Select>
+          )}
 
-            {SearchSection}
-            {!isSearching && results.map((user) => {
-              const uid = getUserId(user)
-              const isSelected = selectedMembers.some((u) => getUserId(u) === uid)
-              return (
-                <UserRow
-                  key={uid}
-                  user={user}
-                  selected={isSelected}
-                  onSelect={() => toggleMember(user)}
-                />
-              )
-            })}
+          {/* Selected members chips */}
+          {selectedMembers.length > 0 && (
+            <div className="flex flex-wrap gap-1.5">
+              {selectedMembers.map((u) => (
+                <span
+                  key={getUserId(u)}
+                  className="flex items-center gap-1 bg-primary/10 text-primary rounded-full px-2.5 py-1 text-xs"
+                >
+                  {u.displayName}
+                  <button onClick={() => toggleMember(u)}>
+                    <X className="size-3" />
+                  </button>
+                </span>
+              ))}
+            </div>
+          )}
 
-            <Button
-              onClick={handleCreateGroup}
-              disabled={creatingGroup || selectedMembers.length < 1 || !groupName.trim()}
-              className="w-full"
-            >
-              {creatingGroup ? <Loader2 className="size-4 animate-spin" /> : t('newConvCreateGroup')}
-            </Button>
-          </TabsContent>
-        </Tabs>
-      </DialogContent>
-    </Dialog>
+          {SearchSection}
+          {!isSearching && results.map((user) => {
+            const uid = getUserId(user)
+            const isSelected = selectedMembers.some((u) => getUserId(u) === uid)
+            return (
+              <UserRow
+                key={uid}
+                user={user}
+                selected={isSelected}
+                onSelect={() => toggleMember(user)}
+              />
+            )
+          })}
+
+          <Button
+            onClick={handleCreateGroup}
+            disabled={creatingGroup || selectedMembers.length < 1 || !groupName.trim()}
+            className="w-full"
+          >
+            {creatingGroup ? <Loader2 className="size-4 animate-spin" /> : t('newConvCreateGroup')}
+          </Button>
+        </TabsContent>
+      </Tabs>
+    </ResponsiveModal>
   )
 }
