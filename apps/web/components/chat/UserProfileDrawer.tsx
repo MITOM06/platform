@@ -10,7 +10,6 @@ import {
   Cake, Phone, Users,
 } from 'lucide-react'
 import { ResponsiveModal } from '@/components/ui/responsive-modal'
-import { DialogA11yDescription } from '@/components/common/dialog-a11y-description'
 import { ConfirmDialog } from '@/components/common/ConfirmDialog'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
@@ -191,8 +190,6 @@ export function UserProfileDrawer({ userId, onClose }: Props) {
         title={t('profileTitle')}
         className="max-w-sm overflow-hidden p-0 gap-0"
       >
-        <DialogA11yDescription />
-
         {isLoading ? (
           <div className="flex justify-center py-12">
             <Loader2 className="size-6 animate-spin text-muted-foreground" />

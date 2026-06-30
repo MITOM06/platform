@@ -106,7 +106,7 @@ export function MembersPanel() {
         open={open}
         onOpenChange={setOpen}
         title={t('memberEdit')}
-        description={`${editing?.displayName ?? ''} · ${t('memberRevokeNote')}`}
+        description={editing ? `${editing.displayName} · ${t('memberRevokeNote')}` : undefined}
         footer={
           <>
             <Button variant="outline" onClick={() => setOpen(false)}>

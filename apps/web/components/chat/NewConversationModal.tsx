@@ -8,7 +8,6 @@ import { useQueryClient } from '@tanstack/react-query'
 import { useTranslations } from 'next-intl'
 import axios from 'axios'
 import { ResponsiveModal } from '@/components/ui/responsive-modal'
-import { DialogA11yDescription } from '@/components/common/dialog-a11y-description'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
@@ -221,8 +220,6 @@ export function NewConversationModal({ open, onClose, defaultTab }: Props) {
       title={t('newConvTitle')}
       className="sm:max-w-md"
     >
-      <DialogA11yDescription />
-
       <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'direct' | 'group')}>
         <TabsList className="w-full">
           <TabsTrigger value="direct" className="flex-1">

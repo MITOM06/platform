@@ -5,7 +5,6 @@ import { useTranslations } from 'next-intl'
 import { toast } from 'sonner'
 import { Check, Ban, ImagePlus, Loader2 } from 'lucide-react'
 import { ResponsiveModal } from '@/components/ui/responsive-modal'
-import { DialogA11yDescription } from '@/components/common/dialog-a11y-description'
 import { Button } from '@/components/ui/button'
 import { Slider } from '@/components/ui/slider'
 import { chatService } from '@/lib/api/chat'
@@ -129,8 +128,6 @@ export function WallpaperPickerModal({ conversationId, open, onClose }: Props) {
       footer={footer}
       className="max-w-sm sm:max-w-[680px] p-0 gap-0 overflow-hidden"
     >
-      <DialogA11yDescription />
-
       {/* Two-panel body */}
       <div className="flex flex-col sm:flex-row min-h-0" style={{ maxHeight: '60vh' }}>
 

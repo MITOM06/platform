@@ -1,6 +1,7 @@
 'use client'
 
 import type { ReactNode } from 'react'
+import { useTranslations } from 'next-intl'
 import { cn } from '@/lib/utils'
 import { useIsMobile } from '@/lib/hooks/use-is-mobile'
 import {
@@ -40,6 +41,7 @@ export function ResponsiveModal({
   className,
 }: ResponsiveModalProps) {
   const isMobile = useIsMobile()
+  const t = useTranslations('common')
 
   if (isMobile) {
     return (
@@ -54,6 +56,7 @@ export function ResponsiveModal({
               {description && <SheetDescription>{description}</SheetDescription>}
             </SheetHeader>
           )}
+          {!description && <SheetDescription className="sr-only">{t('dialogDescription')}</SheetDescription>}
           {children}
           {footer && <SheetFooter>{footer}</SheetFooter>}
         </SheetContent>
@@ -70,6 +73,7 @@ export function ResponsiveModal({
             {description && <DialogDescription>{description}</DialogDescription>}
           </DialogHeader>
         )}
+        {!description && <DialogDescription className="sr-only">{t('dialogDescription')}</DialogDescription>}
         {children}
         {footer && <DialogFooter>{footer}</DialogFooter>}
       </DialogContent>
