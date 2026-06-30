@@ -64,6 +64,7 @@ export function DailyBarChart({
   noDataLabel: string
 }) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
+  const t = useTranslations('usageDashboard')
 
   // Compute summary values from the days data
   const total = days.reduce((sum, d) => sum + d.totalTokens, 0)
@@ -84,7 +85,7 @@ export function DailyBarChart({
       const rect = canvas.getBoundingClientRect()
       canvas.width = rect.width * dpr
       canvas.height = rect.height * dpr
-      ctx.scale(dpr, dpr)
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
       ctx.clearRect(0, 0, rect.width, rect.height)
 
       const maxVal = Math.max(1, ...days.map((d) => d.totalTokens))
@@ -152,7 +153,7 @@ export function DailyBarChart({
   return (
     <div className="space-y-3">
       <div className="mb-2 text-sm text-muted-foreground">
-        Total: {total.toLocaleString()} tokens · Peak {peakLabel}
+        {t('usageDailySummary', { total: total.toLocaleString(), peak: peakLabel })}
       </div>
       <canvas ref={canvasRef} className="w-full h-40" />
       <div className="flex items-center gap-6 justify-center">

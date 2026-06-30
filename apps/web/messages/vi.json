@@ -1251,7 +1251,8 @@
     "tokens": "Token",
     "worstAnswers": "Câu trả lời bị đánh giá thấp nhất",
     "noWorstAnswers": "Không có câu trả lời bị 👎 trong kỳ này",
-    "feedbackSummary": "{up} 👍 · {down} 👎 · {total} lượt đánh giá"
+    "feedbackSummary": "{up} 👍 · {down} 👎 · {total} lượt đánh giá",
+    "usageDailySummary": "Tổng: {total} token · Cao nhất {peak}"
   },
   "assistant": {
     "defaultName": "Trợ lý của tôi",

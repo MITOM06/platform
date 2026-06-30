@@ -1251,7 +1251,8 @@
     "tokens": "Jetons",
     "worstAnswers": "Réponses les moins bien notées",
     "noWorstAnswers": "Aucune réponse 👎 sur cette période",
-    "feedbackSummary": "{up} 👍 · {down} 👎 · {total} notées"
+    "feedbackSummary": "{up} 👍 · {down} 👎 · {total} notées",
+    "usageDailySummary": "Total : {total} jetons · Pic {peak}"
   },
   "assistant": {
     "defaultName": "Mon assistant",

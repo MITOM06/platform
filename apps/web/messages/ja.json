@@ -1251,7 +1251,8 @@
     "tokens": "トークン",
     "worstAnswers": "評価が最も低い回答",
     "noWorstAnswers": "この期間に 👎 された回答はありません",
-    "feedbackSummary": "{up} 👍 · {down} 👎 · 評価 {total} 件"
+    "feedbackSummary": "{up} 👍 · {down} 👎 · 評価 {total} 件",
+    "usageDailySummary": "合計：{total} トークン · ピーク {peak}"
   },
   "assistant": {
     "defaultName": "マイアシスタント",
