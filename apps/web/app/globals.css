@@ -248,3 +248,8 @@ body {
 .phone-input-container .PhoneInputCountrySelectArrow {
   opacity: 0.5;
 }
+
+/* Hide reCAPTCHA badge — allowed per Google ToS when disclosure text is shown */
+.grecaptcha-badge {
+  visibility: hidden !important;
+}
