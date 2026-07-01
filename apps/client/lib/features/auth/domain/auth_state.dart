@@ -29,6 +29,11 @@ class UserModel {
   /// Password & Security screen: set-first-password vs. change-password.
   final bool hasPassword;
 
+  /// Workspace role name (Owner/Admin/Manager/Member or custom). `null` = the
+  /// user has no assigned role → UI renders the default "Member". Always public
+  /// (no privacy gate); omitted on blocked-by-owner minimal profiles.
+  final String? roleName;
+
   /// How a user-search result was matched: `'phone'` | `'name_email'`. Only
   /// present on `/api/users/search` results matched by exact phone number;
   /// drives the highlighted phone badge in friend search. Null otherwise.
@@ -56,6 +61,7 @@ class UserModel {
     this.showPhoneNumber,
     this.showGender,
     this.hasPassword = false,
+    this.roleName,
     this.matchedBy,
     this.isBlockedByOwner = false,
   });
@@ -81,6 +87,7 @@ class UserModel {
       showPhoneNumber: json['showPhoneNumber'] as bool?,
       showGender: json['showGender'] as bool?,
       hasPassword: json['hasPassword'] as bool? ?? false,
+      roleName: json['roleName'] as String?,
       matchedBy: json['matchedBy'] as String?,
       isBlockedByOwner: json['isBlockedByOwner'] as bool? ?? false,
     );
@@ -103,6 +110,7 @@ class UserModel {
         if (showPhoneNumber != null) 'showPhoneNumber': showPhoneNumber,
         if (showGender != null) 'showGender': showGender,
         'hasPassword': hasPassword,
+        if (roleName != null) 'roleName': roleName,
       };
 
   /// Effective per-field visibility for "view as another user" gating.

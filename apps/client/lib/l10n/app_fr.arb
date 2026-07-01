@@ -327,6 +327,8 @@
   "meetingSummaryKeyPoints": "Points clés",
   "meetingSummaryActionItems": "Actions à mener",
   "profileTitle": "Profil",
+  "profileRoleLabel": "Rôle",
+  "profileRoleMemberDefault": "Membre",
   "editProfile": "Modifier le profil",
   "bio": "Biographie",
   "friendsCountLabel": "{count} amis",

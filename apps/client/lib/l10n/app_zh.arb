@@ -327,6 +327,8 @@
   "meetingSummaryKeyPoints": "要点",
   "meetingSummaryActionItems": "待办事项",
   "profileTitle": "个人资料",
+  "profileRoleLabel": "角色",
+  "profileRoleMemberDefault": "成员",
   "editProfile": "编辑资料",
   "bio": "简介",
   "friendsCountLabel": "{count} 位好友",

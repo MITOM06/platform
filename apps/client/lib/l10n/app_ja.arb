@@ -327,6 +327,8 @@
   "meetingSummaryKeyPoints": "要点",
   "meetingSummaryActionItems": "アクションアイテム",
   "profileTitle": "プロフィール",
+  "profileRoleLabel": "ロール",
+  "profileRoleMemberDefault": "メンバー",
   "editProfile": "プロフィール編集",
   "bio": "自己紹介",
   "friendsCountLabel": "友達 {count} 人",

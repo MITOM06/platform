@@ -276,6 +276,8 @@
     }
   },
   "profile": {
+    "roleLabel": "역할",
+    "memberDefault": "멤버",
     "title": "프로필 편집",
     "displayNameLabel": "표시 이름",
     "displayNamePlaceholder": "표시 이름을 입력하세요...",
@@ -376,6 +378,7 @@
     "selectPrompt": "시작할 대화를 선택하세요"
   },
   "chat": {
+    "memberDefault": "멤버",
     "searchPlaceholder": "검색...",
     "exploreChannels": "공개 채널",
     "chatWithAI": "AI 어시스턴트와 채팅",

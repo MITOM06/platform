@@ -946,6 +946,12 @@ class AppLocalizationsVi extends AppLocalizations {
   String get profileTitle => 'Trang cá nhân';
 
   @override
+  String get profileRoleLabel => 'Vai trò';
+
+  @override
+  String get profileRoleMemberDefault => 'Thành viên';
+
+  @override
   String get editProfile => 'Chỉnh sửa trang cá nhân';
 
   @override

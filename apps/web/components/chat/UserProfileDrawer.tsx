@@ -225,6 +225,13 @@ export function UserProfileDrawer({ userId, onClose }: Props) {
                 )}
               </div>
               <p className="font-semibold text-base">{displayName}</p>
+              {/* Role badge — read-only. Hidden on blocked-by-owner minimal
+                  profiles; otherwise falls back to the default "Member". */}
+              {!blockedByOwner && (
+                <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-medium text-muted-foreground">
+                  {user?.roleName ?? t('memberDefault')}
+                </span>
+              )}
               <p className="text-xs text-muted-foreground">
                 {status?.online ? t('online') : t('offline')}
               </p>

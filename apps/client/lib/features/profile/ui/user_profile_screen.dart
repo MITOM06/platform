@@ -167,6 +167,32 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
                       fontWeight: FontWeight.bold,
                     ),
                   ),
+                  // Role chip — read-only. Hidden on blocked-by-owner minimal
+                  // profiles (mirrors web); otherwise falls back to "Member".
+                  if (!user.isBlockedByOwner) ...[
+                    const SizedBox(height: 6),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 4),
+                      decoration: BoxDecoration(
+                        border: Border.all(
+                            color: Theme.of(context).colorScheme.outline),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Text(
+                        user.roleName ?? context.l10n.profileRoleMemberDefault,
+                        style: Theme.of(context)
+                            .textTheme
+                            .labelSmall
+                            ?.copyWith(
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .onSurface
+                                  .withValues(alpha: 0.6),
+                            ),
+                      ),
+                    ),
+                  ],
                   // When the profile owner has blocked the viewer, show only
                   // minimal info: avatar, cover, name, email. Hide bio, friend
                   // count, and action buttons per the no-raw-system-data rule.

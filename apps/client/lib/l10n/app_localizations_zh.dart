@@ -935,6 +935,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get profileTitle => '个人资料';
 
   @override
+  String get profileRoleLabel => '角色';
+
+  @override
+  String get profileRoleMemberDefault => '成员';
+
+  @override
   String get editProfile => '编辑资料';
 
   @override

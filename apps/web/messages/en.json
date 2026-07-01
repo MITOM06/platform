@@ -276,6 +276,8 @@
     }
   },
   "profile": {
+    "roleLabel": "Role",
+    "memberDefault": "Member",
     "title": "Edit Profile",
     "displayNameLabel": "Display Name",
     "displayNamePlaceholder": "Enter display name...",
@@ -376,6 +378,7 @@
     "selectPrompt": "Select a conversation to start"
   },
   "chat": {
+    "memberDefault": "Member",
     "searchPlaceholder": "Search...",
     "exploreChannels": "Public Channels",
     "chatWithAI": "Chat with AI Assistant",

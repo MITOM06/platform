@@ -102,10 +102,16 @@ export default function ProfilePage() {
             </Avatar>
           </div>
 
-          {/* Name + email */}
+          {/* Name + email + role */}
           <div className="text-center mt-4 mb-2">
             <h2 className="text-xl font-bold text-foreground">{user.displayName}</h2>
             <p className="text-sm text-muted-foreground mt-1">{user.email}</p>
+            {/* Role badge — read-only, always shown (fallback to default "Member"). */}
+            <div className="mt-2 flex justify-center">
+              <span className="inline-flex items-center rounded-full border px-3 py-0.5 text-xs font-medium text-muted-foreground">
+                {me?.roleName ?? t('memberDefault')}
+              </span>
+            </div>
           </div>
 
           <Separator className="my-4" />

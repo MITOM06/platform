@@ -936,6 +936,12 @@ class AppLocalizationsKo extends AppLocalizations {
   String get profileTitle => '프로필';
 
   @override
+  String get profileRoleLabel => '역할';
+
+  @override
+  String get profileRoleMemberDefault => '멤버';
+
+  @override
   String get editProfile => '프로필 편집';
 
   @override

@@ -276,6 +276,8 @@
     }
   },
   "profile": {
+    "roleLabel": "角色",
+    "memberDefault": "成员",
     "title": "编辑资料",
     "displayNameLabel": "显示名称",
     "displayNamePlaceholder": "请输入显示名称...",
@@ -376,6 +378,7 @@
     "selectPrompt": "选择一个会话开始聊天"
   },
   "chat": {
+    "memberDefault": "成员",
     "searchPlaceholder": "搜索...",
     "exploreChannels": "公开频道",
     "chatWithAI": "与 AI 助手聊天",

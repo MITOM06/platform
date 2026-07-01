@@ -936,6 +936,12 @@ class AppLocalizationsJa extends AppLocalizations {
   String get profileTitle => 'プロフィール';
 
   @override
+  String get profileRoleLabel => 'ロール';
+
+  @override
+  String get profileRoleMemberDefault => 'メンバー';
+
+  @override
   String get editProfile => 'プロフィール編集';
 
   @override

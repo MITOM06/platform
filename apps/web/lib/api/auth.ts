@@ -32,6 +32,10 @@ export interface UserProfile extends AuthUser {
   showPhoneNumber?: boolean
   showGender?: boolean
   friendsCount?: number
+  /** Workspace role name (Owner/Admin/Manager/Member or custom). Null/undefined
+   *  = user has no assigned role → client renders the default "Member". Always
+   *  public (no privacy gate), but omitted on blocked-by-owner minimal profiles. */
+  roleName?: string | null
   /** True when the profile owner has blocked the viewer. The server returns a
    *  minimal profile (name/email/avatar/cover only) and sets this flag so the
    *  client can render a "profile not available" banner instead of full info. */

@@ -327,6 +327,8 @@
   "meetingSummaryKeyPoints": "Puntos clave",
   "meetingSummaryActionItems": "Tareas pendientes",
   "profileTitle": "Perfil",
+  "profileRoleLabel": "Rol",
+  "profileRoleMemberDefault": "Miembro",
   "editProfile": "Editar perfil",
   "bio": "Biografía",
   "friendsCountLabel": "{count} amigos",

@@ -276,6 +276,8 @@
     }
   },
   "profile": {
+    "roleLabel": "ロール",
+    "memberDefault": "メンバー",
     "title": "プロフィールを編集",
     "displayNameLabel": "表示名",
     "displayNamePlaceholder": "表示名を入力...",
@@ -376,6 +378,7 @@
     "selectPrompt": "開始する会話を選択してください"
   },
   "chat": {
+    "memberDefault": "メンバー",
     "searchPlaceholder": "検索...",
     "exploreChannels": "公開チャンネル",
     "chatWithAI": "AIアシスタントとチャット",

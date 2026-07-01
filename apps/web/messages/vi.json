@@ -276,6 +276,8 @@
     }
   },
   "profile": {
+    "roleLabel": "Vai trò",
+    "memberDefault": "Thành viên",
     "title": "Chỉnh sửa hồ sơ",
     "displayNameLabel": "Tên hiển thị",
     "displayNamePlaceholder": "Nhập tên hiển thị...",
@@ -376,6 +378,7 @@
     "selectPrompt": "Chọn một cuộc trò chuyện để bắt đầu"
   },
   "chat": {
+    "memberDefault": "Thành viên",
     "searchPlaceholder": "Tìm kiếm...",
     "exploreChannels": "Kênh công khai",
     "chatWithAI": "Chat với AI Assistant",

@@ -1860,6 +1860,18 @@ abstract class AppLocalizations {
   /// **'Profile'**
   String get profileTitle;
 
+  /// No description provided for @profileRoleLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Role'**
+  String get profileRoleLabel;
+
+  /// No description provided for @profileRoleMemberDefault.
+  ///
+  /// In en, this message translates to:
+  /// **'Member'**
+  String get profileRoleMemberDefault;
+
   /// No description provided for @editProfile.
   ///
   /// In en, this message translates to:

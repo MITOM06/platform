@@ -955,6 +955,12 @@ class AppLocalizationsEs extends AppLocalizations {
   String get profileTitle => 'Perfil';
 
   @override
+  String get profileRoleLabel => 'Rol';
+
+  @override
+  String get profileRoleMemberDefault => 'Miembro';
+
+  @override
   String get editProfile => 'Editar perfil';
 
   @override

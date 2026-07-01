@@ -327,6 +327,8 @@
   "meetingSummaryKeyPoints": "핵심 내용",
   "meetingSummaryActionItems": "할 일",
   "profileTitle": "프로필",
+  "profileRoleLabel": "역할",
+  "profileRoleMemberDefault": "멤버",
   "editProfile": "프로필 편집",
   "bio": "소개",
   "friendsCountLabel": "친구 {count}명",

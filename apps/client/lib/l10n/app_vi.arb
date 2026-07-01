@@ -327,6 +327,8 @@
   "meetingSummaryKeyPoints": "Điểm chính",
   "meetingSummaryActionItems": "Việc cần làm",
   "profileTitle": "Trang cá nhân",
+  "profileRoleLabel": "Vai trò",
+  "profileRoleMemberDefault": "Thành viên",
   "editProfile": "Chỉnh sửa trang cá nhân",
   "bio": "Tiểu sử",
   "friendsCountLabel": "{count} bạn bè",
