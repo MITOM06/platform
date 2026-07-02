@@ -3063,4 +3063,25 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get leaveWithoutSaving => 'Thoát không lưu';
+
+  @override
+  String get aiSessionHistory => 'Lịch sử cuộc trò chuyện';
+
+  @override
+  String get aiNewSession => 'Cuộc trò chuyện mới';
+
+  @override
+  String get aiSessionActive => 'Đang hoạt động';
+
+  @override
+  String get aiSessionSummarized => 'Đã tóm tắt';
+
+  @override
+  String get aiSessionEmpty => 'Chưa có cuộc trò chuyện nào trước đây';
+
+  @override
+  String get aiSessionResume => 'Tiếp tục';
+
+  @override
+  String get aiSessionLoadError => 'Không thể tải lịch sử cuộc trò chuyện';
 }

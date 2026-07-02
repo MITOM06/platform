@@ -21,6 +21,8 @@ import { EmbeddingService } from '../kb/embedding.service';
 import { SettingsService } from '../settings/settings.service';
 import { ResolvedAiSettings } from '../settings/resolved-ai-settings';
 import { ChatImageService } from './chat-image.service';
+import { AiSessionService } from '../session/ai-session.service';
+import { CompactService } from '../session/compact.service';
 
 /**
  * One conversation-history entry in the `ai.requests` payload (TASK-10 contract).
@@ -84,6 +86,29 @@ interface RequestContext {
 
 const MAX_ITER = 5;
 
+/**
+ * User-facing notices published as ordinary AI messages (reusing the Redis
+ * stream mechanism). Backend-authored text — the plan's primary deployment
+ * language is Vietnamese; the web/mobile i18n keys mirror these strings.
+ */
+const NEW_SESSION_NOTICE =
+  '✅ Đã bắt đầu cuộc trò chuyện mới. Cuộc trò chuyện trước đó đã được lưu lại và có thể tiếp tục sau.';
+const CONTEXT_COMPACTED_NOTICE =
+  '🗜️ Ngữ cảnh đã được tóm tắt để tối ưu bộ nhớ. Lịch sử đầy đủ vẫn được lưu trong phiên trò chuyện.';
+
+/** A zeroed trace for system-authored (non-model) stream responses. */
+const SYSTEM_TRACE: AiTrace = {
+  thinkingBlocks: [],
+  toolCalls: [],
+  inputTokens: 0,
+  outputTokens: 0,
+  cachedInputTokens: 0,
+  thinkingTokens: 0,
+  processingMs: 0,
+  model: 'system',
+  iterationCount: 0,
+};
+
 @Injectable()
 export class AiService {
   private readonly logger = new Logger(AiService.name);
@@ -111,6 +136,8 @@ export class AiService {
     private readonly conversationAccess: ConversationAccessService,
     private readonly settingsService: SettingsService,
     private readonly chatImageService: ChatImageService,
+    private readonly aiSessionService: AiSessionService,
+    private readonly compactService: CompactService,
   ) {
     this.anthropic = new Anthropic({
       apiKey: this.configService.get<string>('config.anthropic.apiKey'),
@@ -162,6 +189,15 @@ export class AiService {
       return; // expected condition — do NOT dead-letter.
     }
 
+    // Explicit context reset (`/new`): deactivate the current session, start a
+    // fresh one, confirm to the user, and return WITHOUT calling Claude. Not
+    // gated by quota/rate limits — it is not a model call.
+    if (payload.content.trim() === '/new') {
+      await this.aiSessionService.createNewSession(userId, conversationId);
+      await this.publishSystemResponse(conversationId, NEW_SESSION_NOTICE);
+      return;
+    }
+
     // Resolve workspace AI settings once (cached) and thread through the request.
     const settings = await this.settingsService.getSettings();
 
@@ -204,9 +240,30 @@ export class AiService {
     payload: AiRequestPayload,
     settings: ResolvedAiSettings,
   ): Promise<void> {
-    const { conversationId, userId, displayName, content, history, departmentId } = payload;
+    const { conversationId, userId, displayName, content, departmentId } = payload;
     const startMs = Date.now();
     this.logger.log(`AI request for conversation ${conversationId} from ${displayName}`);
+
+    // Session is the AI-layer source of truth for textual history (not
+    // payload.history). Resolve the active session, auto-compact if it is near
+    // the context limit, then snapshot the PRIOR turns before the current one is
+    // appended — the agentic loop adds the current message as the final turn.
+    let session = await this.aiSessionService.getOrCreateActiveSession(userId, conversationId);
+    const { session: compactedSession, compacted } =
+      await this.compactService.maybeCompact(session);
+    session = compactedSession;
+    if (compacted) {
+      await this.publishSystemResponse(conversationId, CONTEXT_COMPACTED_NOTICE);
+    }
+    const sessionId = session._id.toString();
+    const history = await this.aiSessionService.buildMessageHistory(session);
+    // NOTE: the current user turn is intentionally NOT persisted here. It is
+    // persisted TOGETHER with the assistant turn only AFTER the agentic loop
+    // succeeds (see below). Persisting it up-front would leave an orphan `user`
+    // turn if both the primary and fallback models fail (→ two consecutive
+    // `user` turns next request → Anthropic 400 → session bricked until `/new`).
+    // The current message still reaches Claude exactly once via the loop's
+    // `userContent` argument; `history` was snapshot before this point.
 
     // Embed the user message ONCE — reused for both RAG and memory retrieval.
     let queryVector: number[] | null = null;
@@ -222,6 +279,12 @@ export class AiService {
       const cached = await this.responseCache.lookup(conversationId, queryVector);
       if (cached) {
         await this.streamCachedAnswer(conversationId, cached);
+        // Keep the session consistent — a cache hit is still a turn in history.
+        // Append BOTH the user turn and the cached assistant turn (the user turn
+        // is not persisted earlier — see the note above). User first so
+        // auto-naming still fires on the first message.
+        await this.aiSessionService.appendMessage(sessionId, 'user', content);
+        await this.aiSessionService.appendMessage(sessionId, 'assistant', cached);
         await this.memoryService
           .incrementMessageCount(conversationId)
           .catch((err) => this.logger.warn(`message count failed for ${conversationId}`, err));
@@ -264,9 +327,18 @@ export class AiService {
       settings,
     };
 
+    // Text history is the session (source of truth). Images are NOT persisted in
+    // the session, so image turns are still sourced from the ephemeral RabbitMQ
+    // payload.history and appended — vision keeps working across the window while
+    // text continuity comes from the session (compaction / `/new` aware).
+    const imageTurns: AiHistoryEntry[] = this.chatImageService.isEnabled()
+      ? payload.history.filter((h) => h.type === 'image' && (h.imageUrls?.length ?? 0) > 0)
+      : [];
+    const loopHistory: AiHistoryEntry[] = [...history, ...imageTurns];
+
     const routeSignals: RouteSignals = {
       contentLength: content.length,
-      historyLength: history.length,
+      historyLength: loopHistory.length,
       hasKbContext: ctx.ragSources.length > 0,
       // Workspace tier override (TASK-12); 'auto' ⇒ env router heuristics.
       forcedTier: settings.modelTier,
@@ -276,9 +348,7 @@ export class AiService {
     // TASK-10: if any history turn carries images, force the vision-capable
     // primary model — the router's haiku/sonnet tiers must not receive image
     // blocks (vision support unconfirmed → would 400). Gated by chat vision.
-    const hasImageTurn =
-      this.chatImageService.isEnabled() &&
-      history.some((h) => h.type === 'image' && (h.imageUrls?.length ?? 0) > 0);
+    const hasImageTurn = imageTurns.length > 0;
     if (hasImageTurn && selectedModel !== this.primaryModel) {
       this.logger.log(
         `Forcing primary model ${this.primaryModel} (was ${selectedModel}) — image turn present`,
@@ -294,10 +364,13 @@ export class AiService {
         `for conversation ${conversationId}`,
     );
 
+    // Captures the final assistant text so it can be appended to the session
+    // after the (streaming) loop completes on either the primary or fallback model.
+    const resultSink = { fullContent: '' };
     let trace: AiTrace | null = null;
     try {
       trace = await withAgenticLoopSpan(selectedModel, conversationId, () =>
-        this._agenticLoop(selectedModel, ctx, content, history, startMs),
+        this._agenticLoop(selectedModel, ctx, content, loopHistory, startMs, resultSink),
       );
     } catch (primaryError) {
       this.logger.error(
@@ -317,7 +390,7 @@ export class AiService {
       }
       try {
         trace = await withAgenticLoopSpan(this.fallbackModel, conversationId, () =>
-          this._agenticLoop(this.fallbackModel, ctx, content, history, startMs),
+          this._agenticLoop(this.fallbackModel, ctx, content, loopHistory, startMs, resultSink),
         );
       } catch (fallbackError) {
         this.logger.error(
@@ -340,10 +413,24 @@ export class AiService {
         .catch((err) => this.logger.warn(`Usage tracking failed for ${conversationId}`, err));
     }
 
+    // Persist the user + assistant turns TOGETHER, and ONLY after a successful
+    // assistant turn (non-empty). Appending the user turn earlier would leave an
+    // orphan `user` turn on model failure (→ two consecutive user turns next
+    // request → Anthropic 400). Order matters: the user turn is appended first so
+    // auto-naming (which fires on the first message) still sees a user message.
+    if (resultSink.fullContent.trim()) {
+      try {
+        await this.aiSessionService.appendMessage(sessionId, 'user', content);
+        await this.aiSessionService.appendMessage(sessionId, 'assistant', resultSink.fullContent);
+      } catch (err) {
+        this.logger.warn(`Appending user/assistant turn pair failed for ${sessionId}`, err);
+      }
+    }
+
     try {
       const count = await this.memoryService.incrementMessageCount(conversationId);
       if (this.extractEveryTurns > 0 && count % this.extractEveryTurns === 0) {
-        this.factExtractor.extractFacts(conversationId, userId, history, count).catch((err) => {
+        this.factExtractor.extractFacts(conversationId, userId, loopHistory, count).catch((err) => {
           this.logger.error(`Fact extraction failed for ${conversationId}`, err);
         });
       }
@@ -372,6 +459,21 @@ export class AiService {
         model: 'cache',
         iterationCount: 0,
       },
+    });
+  }
+
+  /**
+   * Publish a system-authored notice (e.g. `/new` confirmation, compaction
+   * notice) as an ordinary AI message via the existing Redis stream mechanism.
+   * chat-service persists any non-blank `fullContent` as an AI message.
+   */
+  private async publishSystemResponse(conversationId: string, text: string): Promise<void> {
+    await this.publisher.publish(conversationId, { type: 'AI_STREAM_CHUNK', chunk: text });
+    await this.publisher.publish(conversationId, {
+      type: 'AI_STREAM_DONE',
+      fullContent: text,
+      sources: [],
+      trace: SYSTEM_TRACE,
     });
   }
 
@@ -454,6 +556,7 @@ export class AiService {
     userContent: string,
     history: AiRequestPayload['history'],
     startMs: number,
+    resultSink?: { fullContent: string },
   ): Promise<AiTrace> {
     // Workspace thinking toggle (TASK-12) — already resolved against the env
     // default (AI_ENABLE_THINKING) by SettingsService.
@@ -488,10 +591,16 @@ export class AiService {
     let totalOutputTokens = 0;
     let totalCachedTokens = 0;
 
-    const messages: Anthropic.MessageParam[] = [
+    // Single chokepoint for the final messages array. normalizeMessages drops a
+    // leading assistant turn (array must start with `user`) and merges
+    // consecutive same-role PLAIN-TEXT turns (defense for the orphan-user and
+    // summary-priming bugs → no two consecutive same-role turns → no Anthropic
+    // 400). Image/multimodal turns (block-array content) are never merged, so
+    // vision turns reach Claude intact and still force the vision model.
+    const messages: Anthropic.MessageParam[] = normalizeMessages([
       ...(await this.buildHistoryMessages(history)),
       { role: 'user', content: userContent },
-    ];
+    ]);
 
     let iteration = 0;
     let fullText = '';
@@ -605,6 +714,10 @@ export class AiService {
       fullText = 'I had trouble completing that action. Please try again.';
     }
 
+    // Expose the final assistant text so processRequest can persist it to the
+    // session (the loop streams natively, so the caller can't read fullText).
+    if (resultSink) resultSink.fullContent = fullText;
+
     const trace: AiTrace = {
       thinkingBlocks,
       toolCalls,
@@ -668,6 +781,52 @@ export function mergeSources(rag: RagSource[], web: RagSource[]): RagSource[] {
     if (seen.has(s.documentId)) continue;
     seen.add(s.documentId);
     out.push(s);
+  }
+  return out;
+}
+
+/**
+ * Normalize an assembled Anthropic messages array so it is a valid alternation
+ * the API will accept. This is the single defense against the two ways history
+ * can violate role rules:
+ *   - an orphan `user` turn (a failed turn persisted the user but no assistant)
+ *     followed by the next `user` turn → two consecutive `user` turns;
+ *   - compaction summary priming (synthetic `assistant`) placed before a kept
+ *     slice that itself starts with an `assistant` turn → two consecutive
+ *     `assistant` turns.
+ *
+ * Rules:
+ *   1. Drop leading `assistant` message(s) so the array starts with `user`.
+ *   2. Merge consecutive same-role turns whose content is PLAIN TEXT (string),
+ *      concatenating with `\n\n`.
+ *   3. NEVER merge into/over a turn whose content is a block array (image /
+ *      multimodal). Those turns pass through untouched so vision stays intact.
+ *      (A same-role block-array turn adjacent to a string turn is left as-is —
+ *      the vision pipeline already positions image turns so this does not
+ *      arise in the text-continuity paths that #1/#2 protect.)
+ */
+export function normalizeMessages(
+  messages: Anthropic.MessageParam[],
+): Anthropic.MessageParam[] {
+  const out: Anthropic.MessageParam[] = [];
+  for (const msg of messages) {
+    // Rule 1: skip any leading assistant turn(s).
+    if (out.length === 0 && msg.role === 'assistant') continue;
+
+    const prev = out[out.length - 1];
+    // Rule 2 + 3: merge only when BOTH adjacent turns are same-role plain text.
+    if (
+      prev &&
+      prev.role === msg.role &&
+      typeof prev.content === 'string' &&
+      typeof msg.content === 'string'
+    ) {
+      prev.content = `${prev.content}\n\n${msg.content}`;
+      continue;
+    }
+    // Shallow copy so mutating `prev.content` above never touches the caller's
+    // objects (image block arrays are shared by reference but never mutated).
+    out.push({ ...msg });
   }
   return out;
 }

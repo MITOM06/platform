@@ -12,6 +12,7 @@ import { KbModule } from './kb/kb.module';
 import { ToolsModule } from './tools/tools.module';
 import { UsageModule } from './usage/usage.module';
 import { PersonaModule } from './persona/persona.module';
+import { SessionModule } from './session/session.module';
 import { RetentionModule } from './retention/retention.module';
 import { CallModule } from './call/call.module';
 import { RabbitmqModule } from './rabbitmq/rabbitmq.module';
@@ -49,6 +50,7 @@ const mongooseModule: DynamicModule = MongooseModule.forRootAsync({
     ToolsModule,
     UsageModule,
     PersonaModule,
+    SessionModule,
     RetentionModule,
     CallModule,
     AiModule,

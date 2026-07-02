@@ -1082,5 +1082,12 @@
   "unsavedChangesDesc": "このページを離れると、変更内容は失われます。",
   "keepEditing": "編集を続ける",
   "saveAndLeave": "保存して移動",
-  "leaveWithoutSaving": "保存せずに移動"
+  "leaveWithoutSaving": "保存せずに移動",
+  "aiSessionHistory": "会話履歴",
+  "aiNewSession": "新しい会話",
+  "aiSessionActive": "使用中",
+  "aiSessionSummarized": "要約済み",
+  "aiSessionEmpty": "過去の会話はありません",
+  "aiSessionResume": "再開",
+  "aiSessionLoadError": "会話履歴を読み込めませんでした"
 }

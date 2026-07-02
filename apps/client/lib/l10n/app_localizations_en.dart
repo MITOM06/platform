@@ -3061,4 +3061,25 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get leaveWithoutSaving => 'Leave without saving';
+
+  @override
+  String get aiSessionHistory => 'Conversation history';
+
+  @override
+  String get aiNewSession => 'New conversation';
+
+  @override
+  String get aiSessionActive => 'Active';
+
+  @override
+  String get aiSessionSummarized => 'Summarized';
+
+  @override
+  String get aiSessionEmpty => 'No previous conversations';
+
+  @override
+  String get aiSessionResume => 'Resume';
+
+  @override
+  String get aiSessionLoadError => 'Couldn\'t load conversation history';
 }

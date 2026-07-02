@@ -11,6 +11,7 @@ import { KbModule } from '../kb/kb.module';
 import { ToolsModule } from '../tools/tools.module';
 import { UsageModule } from '../usage/usage.module';
 import { PersonaModule } from '../persona/persona.module';
+import { SessionModule } from '../session/session.module';
 import { SkillsModule } from '../skills/skills.module';
 import { ConversationModule } from '../conversation/conversation.module';
 import { SettingsModule } from '../settings/settings.module';
@@ -23,6 +24,7 @@ import { SettingsModule } from '../settings/settings.module';
     ToolsModule,
     UsageModule,
     PersonaModule,
+    SessionModule,
     SkillsModule,
     ConversationModule,
     // AiService injects SettingsService (workspace AI settings, TASK-12); without

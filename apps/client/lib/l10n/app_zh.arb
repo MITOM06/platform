@@ -1082,5 +1082,12 @@
   "unsavedChangesDesc": "如果离开，您的更改将会丢失。",
   "keepEditing": "继续编辑",
   "saveAndLeave": "保存并离开",
-  "leaveWithoutSaving": "不保存离开"
+  "leaveWithoutSaving": "不保存离开",
+  "aiSessionHistory": "对话历史",
+  "aiNewSession": "新对话",
+  "aiSessionActive": "使用中",
+  "aiSessionSummarized": "已摘要",
+  "aiSessionEmpty": "暂无历史对话",
+  "aiSessionResume": "恢复",
+  "aiSessionLoadError": "无法加载对话历史"
 }

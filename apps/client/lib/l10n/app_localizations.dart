@@ -5754,6 +5754,48 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Leave without saving'**
   String get leaveWithoutSaving;
+
+  /// No description provided for @aiSessionHistory.
+  ///
+  /// In en, this message translates to:
+  /// **'Conversation history'**
+  String get aiSessionHistory;
+
+  /// No description provided for @aiNewSession.
+  ///
+  /// In en, this message translates to:
+  /// **'New conversation'**
+  String get aiNewSession;
+
+  /// No description provided for @aiSessionActive.
+  ///
+  /// In en, this message translates to:
+  /// **'Active'**
+  String get aiSessionActive;
+
+  /// No description provided for @aiSessionSummarized.
+  ///
+  /// In en, this message translates to:
+  /// **'Summarized'**
+  String get aiSessionSummarized;
+
+  /// No description provided for @aiSessionEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No previous conversations'**
+  String get aiSessionEmpty;
+
+  /// No description provided for @aiSessionResume.
+  ///
+  /// In en, this message translates to:
+  /// **'Resume'**
+  String get aiSessionResume;
+
+  /// No description provided for @aiSessionLoadError.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t load conversation history'**
+  String get aiSessionLoadError;
 }
 
 class _AppLocalizationsDelegate
