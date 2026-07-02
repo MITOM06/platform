@@ -114,6 +114,14 @@ describe('AiService', () => {
   let buildVolatileContext: jest.Mock;
   let getSettings: jest.Mock;
   let resolveImageBlocks: jest.Mock;
+  // AI session fakes (Phase 1). `sessionMessages` is the session's text history
+  // that buildMessageHistory returns — seed it per-test to simulate prior turns.
+  let sessionMessages: Array<{ role: 'user' | 'assistant'; content: string }>;
+  let getOrCreateActiveSession: jest.Mock;
+  let buildMessageHistory: jest.Mock;
+  let appendMessage: jest.Mock;
+  let createNewSession: jest.Mock;
+  let maybeCompact: jest.Mock;
 
   const basePayload: AiRequestPayload = {
     conversationId: 'conv-test',
@@ -219,6 +227,27 @@ describe('AiService', () => {
       resolveImageBlocks,
     } as unknown as ChatImageService;
 
+    sessionMessages = [];
+    const fakeSession = { _id: { toString: () => 'sess-1' }, messages: sessionMessages, summary: null };
+    getOrCreateActiveSession = jest.fn().mockResolvedValue(fakeSession);
+    buildMessageHistory = jest.fn(async () => sessionMessages.map((m) => ({ role: m.role, content: m.content })));
+    appendMessage = jest.fn().mockResolvedValue(undefined);
+    createNewSession = jest.fn().mockResolvedValue(fakeSession);
+    const fakeAiSession = {
+      getOrCreateActiveSession,
+      buildMessageHistory,
+      appendMessage,
+      createNewSession,
+      resumeSession: jest.fn(),
+      listSessions: jest.fn(),
+      renameSession: jest.fn(),
+    } as unknown as import('../session/ai-session.service').AiSessionService;
+
+    maybeCompact = jest.fn(async (s: unknown) => ({ session: s, compacted: false }));
+    const fakeCompact = {
+      maybeCompact,
+    } as unknown as import('../session/compact.service').CompactService;
+
     service = new AiService(
       fakeConfig,
       fakePublisher,
@@ -235,6 +264,8 @@ describe('AiService', () => {
       fakeConversationAccess,
       fakeSettings,
       fakeChatImage,
+      fakeAiSession,
+      fakeCompact,
     );
     (service as any)['anthropic'] = { messages: { stream: mockStream, create: mockCreate } };
   });
@@ -361,20 +392,18 @@ describe('AiService', () => {
   // ─── Fact extraction ──────────────────────────────────────────────────────
 
   it('triggers fact extraction at messageCount divisible by 20', async () => {
-    const payloadWithHistory: AiRequestPayload = {
-      ...basePayload,
-      history: [{ role: 'user', content: 'What is Flutter?' }],
-    };
+    // Text history is now sourced from the session, not payload.history.
+    sessionMessages.push({ role: 'user', content: 'What is Flutter?' });
     incrementMessageCount.mockResolvedValue(20);
     mockStream.mockReturnValue(makeStream(['OK']));
 
-    await service.handleRequest(payloadWithHistory);
+    await service.handleRequest(basePayload);
     await new Promise((r) => setTimeout(r, 50));
 
     expect(extractFacts).toHaveBeenCalledWith(
       'conv-test',
       'user-1',
-      payloadWithHistory.history,
+      [{ role: 'user', content: 'What is Flutter?' }],
       20,
     );
   });
@@ -670,19 +699,111 @@ describe('AiService', () => {
     expect(sys).toContain('Custom persona prompt');
   });
 
-  // ─── TASK-10 Vision: image history → image content blocks ─────────────────
+  // ─── Session: /new command ────────────────────────────────────────────────
 
-  it('keeps text-only history as plain-string content (byte-identical to before)', async () => {
-    const payload: AiRequestPayload = {
-      ...basePayload,
-      history: [{ role: 'user', content: 'earlier question' }],
-    };
-    mockStream.mockReturnValue(makeStream(['OK']));
+  it('handles /new by starting a new session and skipping the model', async () => {
+    const payload: AiRequestPayload = { ...basePayload, content: '/new' };
 
     await service.handleRequest(payload);
 
+    expect(createNewSession).toHaveBeenCalledWith('user-1', 'conv-test');
+    // No model call — the loop never streams for /new.
+    expect(mockStream).not.toHaveBeenCalled();
+    // A confirmation message is streamed via the normal Redis mechanism.
+    expect(publish).toHaveBeenCalledWith(
+      'conv-test',
+      expect.objectContaining({ type: 'AI_STREAM_DONE' }),
+    );
+  });
+
+  // ─── Session persistence: orphan-user defense (bug #1) ────────────────────
+
+  it('persists user + assistant TOGETHER (user first) after a successful turn', async () => {
+    mockStream.mockReturnValue(makeStream(['Answer']));
+
+    await service.handleRequest(basePayload);
+
+    // Both turns persisted, user before assistant (so auto-naming sees a user).
+    const turnCalls = appendMessage.mock.calls.filter(
+      (c) => c[1] === 'user' || c[1] === 'assistant',
+    );
+    expect(turnCalls).toEqual([
+      ['sess-1', 'user', 'Hello AI'],
+      ['sess-1', 'assistant', 'Answer'],
+    ]);
+  });
+
+  it('persists NOTHING (no orphan user turn) when both models fail', async () => {
+    mockStream.mockImplementation(() => {
+      throw new Error('model overloaded');
+    });
+
+    await expect(service.handleRequest(basePayload)).rejects.toThrow();
+
+    // The user turn must NOT have been persisted — otherwise the next request
+    // produces two consecutive user turns → Anthropic 400 → bricked session.
+    expect(appendMessage).not.toHaveBeenCalled();
+  });
+
+  it('does not persist a turn when the successful response is empty', async () => {
+    mockStream.mockReturnValue(makeStream([])); // stream ends with no text
+
+    await service.handleRequest(basePayload);
+
+    expect(appendMessage).not.toHaveBeenCalled();
+  });
+
+  it('cached-response path persists BOTH the user and the cached assistant turn', async () => {
+    (service as any)['responseCache'].lookup = jest.fn().mockResolvedValue('cached answer');
+
+    await service.handleRequest(basePayload);
+
+    // Model skipped, but the session stays consistent: user + assistant appended.
+    expect(mockStream).not.toHaveBeenCalled();
+    const turnCalls = appendMessage.mock.calls.filter(
+      (c) => c[1] === 'user' || c[1] === 'assistant',
+    );
+    expect(turnCalls).toEqual([
+      ['sess-1', 'user', 'Hello AI'],
+      ['sess-1', 'assistant', 'cached answer'],
+    ]);
+  });
+
+  it('never sends two consecutive same-role turns when summary priming meets a kept assistant turn', async () => {
+    // buildMessageHistory (real behavior) prepends synthetic user+assistant when a
+    // summary is set; simulate a kept slice that starts with an assistant turn.
+    buildMessageHistory.mockResolvedValue([
+      { role: 'user', content: '[Context from earlier conversation]\nsummary' },
+      { role: 'assistant', content: 'Understood.' },
+      { role: 'assistant', content: 'kept assistant turn' },
+    ]);
+    mockStream.mockReturnValue(makeStream(['OK']));
+
+    await service.handleRequest(basePayload);
+
+    const messages = mockStream.mock.calls[0][0].messages as Array<{ role: string }>;
+    expect(messages[0].role).toBe('user');
+    for (let i = 1; i < messages.length; i++) {
+      expect(messages[i].role).not.toBe(messages[i - 1].role);
+    }
+  });
+
+  // ─── TASK-10 Vision: image history → image content blocks ─────────────────
+
+  it('keeps text-only session history as plain-string content (byte-identical to before)', async () => {
+    // Prior text turns now come from the session (source of truth), not payload.
+    // Seed a proper user/assistant alternation — a healthy session always ends on
+    // an assistant turn (user + assistant are persisted together after success).
+    sessionMessages.push({ role: 'user', content: 'earlier question' });
+    sessionMessages.push({ role: 'assistant', content: 'earlier answer' });
+    mockStream.mockReturnValue(makeStream(['OK']));
+
+    await service.handleRequest(basePayload);
+
     const messages = mockStream.mock.calls[0][0].messages;
     expect(messages[0]).toEqual({ role: 'user', content: 'earlier question' });
+    expect(messages[1]).toEqual({ role: 'assistant', content: 'earlier answer' });
+    expect(messages[2]).toEqual({ role: 'user', content: 'Hello AI' });
     expect(resolveImageBlocks).not.toHaveBeenCalled();
   });
 

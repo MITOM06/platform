@@ -1082,5 +1082,12 @@
   "unsavedChangesDesc": "Si vous quittez, vos modifications seront perdues.",
   "keepEditing": "Continuer la modification",
   "saveAndLeave": "Enregistrer et quitter",
-  "leaveWithoutSaving": "Quitter sans enregistrer"
+  "leaveWithoutSaving": "Quitter sans enregistrer",
+  "aiSessionHistory": "Historique des conversations",
+  "aiNewSession": "Nouvelle conversation",
+  "aiSessionActive": "Active",
+  "aiSessionSummarized": "Résumée",
+  "aiSessionEmpty": "Aucune conversation précédente",
+  "aiSessionResume": "Reprendre",
+  "aiSessionLoadError": "Impossible de charger l'historique des conversations"
 }

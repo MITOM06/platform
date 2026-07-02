@@ -1082,5 +1082,12 @@
   "unsavedChangesDesc": "Si sales, se perderán tus cambios.",
   "keepEditing": "Seguir editando",
   "saveAndLeave": "Guardar y salir",
-  "leaveWithoutSaving": "Salir sin guardar"
+  "leaveWithoutSaving": "Salir sin guardar",
+  "aiSessionHistory": "Historial de conversaciones",
+  "aiNewSession": "Nueva conversación",
+  "aiSessionActive": "Activa",
+  "aiSessionSummarized": "Resumida",
+  "aiSessionEmpty": "No hay conversaciones anteriores",
+  "aiSessionResume": "Reanudar",
+  "aiSessionLoadError": "No se pudo cargar el historial de conversaciones"
 }

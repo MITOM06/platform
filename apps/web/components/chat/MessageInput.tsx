@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react'
 import {
-  Send, X, Pencil, Paperclip, ImagePlus, FileText, Mic, Trash2, Reply,
+  Send, X, Pencil, Paperclip, ImagePlus, FileText, Mic, Trash2, Reply, Plus,
 } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { Button } from '@/components/ui/button'
@@ -16,6 +16,7 @@ import { useQuickReaction } from '@/lib/quick-reaction'
 import { useVoiceRecorder } from '@/lib/hooks/use-voice-recorder'
 import { useFileAttachments } from '@/lib/hooks/use-file-attachments'
 import { useAuthStore } from '@/lib/store/auth.store'
+import { AI_BOT_ID } from '@/lib/constants'
 import { EmojiStickerPicker } from '@/components/chat/EmojiStickerPicker'
 import type { Message, MessageType, Conversation } from '@/lib/api/types'
 
@@ -164,6 +165,34 @@ export function MessageInput({
       setSending(false)
     }
   }
+
+  // `/new` slash command: send it as a plain text message. ai-service intercepts
+  // it to start a fresh session (mirrors the AiSessionPanel "new" button).
+  const sendSlashNew = async () => {
+    if (sending) return
+    setSending(true)
+    if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current)
+    onTypingChange?.(false)
+    try {
+      await onSend('/new', 'text')
+      setValue('')
+      textareaRef.current?.focus()
+    } finally {
+      setSending(false)
+    }
+  }
+
+  // Show the `/new` suggestion only in 1-1 (direct) AI conversations, when the
+  // input is exactly '/', and not while editing or mentioning. AI conversations
+  // are detected by the presence of the AI bot participant (mirrors the drawer).
+  // In GROUP AI conversations, chat-service only routes `@AI`-mentioned messages
+  // to ai-service, so a bare `/new` never starts a session — it just posts as
+  // plain chat text (a confusing no-op), so we hide the suggestion there.
+  const isDirectAiConversation =
+    conversation?.type !== 'group' &&
+    (conversation?.participants?.includes(AI_BOT_ID) ?? false)
+  const showSlashSuggestion =
+    isDirectAiConversation && value === '/' && !editingMessage && !mentionQuery
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (mentionQuery) {
@@ -335,6 +364,25 @@ export function MessageInput({
               rows={1}
               disabled={disabled || sending}
             />
+
+            {/* `/new` slash suggestion (AI conversations) */}
+            {showSlashSuggestion && (
+              <div className="absolute bottom-full left-0 mb-2 min-w-48 bg-popover border rounded-xl shadow-lg z-50 p-1">
+                <button
+                  onClick={sendSlashNew}
+                  disabled={busy}
+                  className="flex items-center gap-2 w-full px-3 py-2 text-sm text-left rounded-lg hover:bg-muted transition-colors"
+                >
+                  <Plus className="size-4 text-primary shrink-0" />
+                  <div className="min-w-0">
+                    <p className="font-medium">{t('aiNewSessionCommand')}</p>
+                    <p className="text-xs text-muted-foreground truncate">
+                      {t('aiNewSessionCommandDesc')}
+                    </p>
+                  </div>
+                </button>
+              </div>
+            )}
 
             {/* Mention Popover */}
             {mentionQuery && mentionCandidates.length > 0 && (

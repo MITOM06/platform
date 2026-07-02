@@ -1417,5 +1417,12 @@
   "unsavedChangesDesc": "If you leave, your changes will be lost.",
   "keepEditing": "Keep editing",
   "saveAndLeave": "Save and leave",
-  "leaveWithoutSaving": "Leave without saving"
+  "leaveWithoutSaving": "Leave without saving",
+  "aiSessionHistory": "Conversation history",
+  "aiNewSession": "New conversation",
+  "aiSessionActive": "Active",
+  "aiSessionSummarized": "Summarized",
+  "aiSessionEmpty": "No previous conversations",
+  "aiSessionResume": "Resume",
+  "aiSessionLoadError": "Couldn't load conversation history"
 }

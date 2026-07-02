@@ -3001,4 +3001,25 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get leaveWithoutSaving => '저장하지 않고 나가기';
+
+  @override
+  String get aiSessionHistory => '대화 기록';
+
+  @override
+  String get aiNewSession => '새 대화';
+
+  @override
+  String get aiSessionActive => '사용 중';
+
+  @override
+  String get aiSessionSummarized => '요약됨';
+
+  @override
+  String get aiSessionEmpty => '이전 대화가 없습니다';
+
+  @override
+  String get aiSessionResume => '다시 시작';
+
+  @override
+  String get aiSessionLoadError => '대화 기록을 불러올 수 없습니다';
 }

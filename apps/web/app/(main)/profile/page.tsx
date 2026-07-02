@@ -76,7 +76,7 @@ export default function ProfilePage() {
         <span className="font-semibold text-base">{t('viewTitle')}</span>
       </header>
 
-      <div className="flex-1 overflow-y-auto flex justify-center px-4 py-6 md:py-10">
+      <div className="flex-1 overflow-y-auto flex justify-center px-4 py-6 md:py-10 pb-tabbar md:pb-10">
         <div className="w-full max-w-md rounded-2xl border bg-card shadow-sm overflow-hidden self-start">
         {/* Cover Photo */}
         <div className="relative h-40 w-full overflow-hidden">

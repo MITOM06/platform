@@ -2999,4 +2999,25 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get leaveWithoutSaving => '保存せずに移動';
+
+  @override
+  String get aiSessionHistory => '会話履歴';
+
+  @override
+  String get aiNewSession => '新しい会話';
+
+  @override
+  String get aiSessionActive => '使用中';
+
+  @override
+  String get aiSessionSummarized => '要約済み';
+
+  @override
+  String get aiSessionEmpty => '過去の会話はありません';
+
+  @override
+  String get aiSessionResume => '再開';
+
+  @override
+  String get aiSessionLoadError => '会話履歴を読み込めませんでした';
 }

@@ -2973,4 +2973,25 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get leaveWithoutSaving => '不保存离开';
+
+  @override
+  String get aiSessionHistory => '对话历史';
+
+  @override
+  String get aiNewSession => '新对话';
+
+  @override
+  String get aiSessionActive => '使用中';
+
+  @override
+  String get aiSessionSummarized => '已摘要';
+
+  @override
+  String get aiSessionEmpty => '暂无历史对话';
+
+  @override
+  String get aiSessionResume => '恢复';
+
+  @override
+  String get aiSessionLoadError => '无法加载对话历史';
 }

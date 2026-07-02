@@ -3106,4 +3106,26 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get leaveWithoutSaving => 'Quitter sans enregistrer';
+
+  @override
+  String get aiSessionHistory => 'Historique des conversations';
+
+  @override
+  String get aiNewSession => 'Nouvelle conversation';
+
+  @override
+  String get aiSessionActive => 'Active';
+
+  @override
+  String get aiSessionSummarized => 'Résumée';
+
+  @override
+  String get aiSessionEmpty => 'Aucune conversation précédente';
+
+  @override
+  String get aiSessionResume => 'Reprendre';
+
+  @override
+  String get aiSessionLoadError =>
+      'Impossible de charger l\'historique des conversations';
 }

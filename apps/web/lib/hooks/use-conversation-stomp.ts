@@ -362,6 +362,9 @@ export function useConversationStomp({
           stompService.publish('/app/chat.read', { conversationId: id, messageId: m.id })
         }
       }
+    }).catch(() => {
+      // Socket never connected — read receipts will be resent on reconnect
+      // when this effect re-runs. Swallow to avoid an unhandled rejection.
     })
   }, [id, messages, currentUserId])
 

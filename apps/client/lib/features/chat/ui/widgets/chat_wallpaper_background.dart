@@ -97,45 +97,61 @@ class ChatWallpaperBackground extends StatelessWidget {
     );
   }
 
+  /// Moderate, readable preset gradients. These mirror the web wallpaper
+  /// presets (`apps/web/lib/hooks/use-wallpaper.ts`, plan
+  /// 2026-06-28-wallpaper-opacity): the app defaults to dark mode, so each stop
+  /// uses the web *dark-mode* Tailwind colour with its `/XX` alpha translated to
+  /// `withValues(alpha:)`. Semi-transparent stops composite over the dark
+  /// scaffold background — a moderate, visible wallpaper that keeps message
+  /// bubbles readable, rather than the previous near-black opaque fill.
+  ///
+  /// Diagonal (topLeft→bottomRight) matches the web `bg-gradient-to-br`.
   BoxDecoration? _presetDecoration(String preset) {
+    List<Color>? colors;
     switch (preset) {
-      case 'midnight_glow':
-        return const BoxDecoration(
-          gradient: LinearGradient(
-            colors: [Color(0xFF0F0C20), Color(0xFF15102A), Color(0xFF050211)],
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-          ),
-        );
+      case 'midnight_glow': // web key: midnight
+        colors = [
+          const Color(0xFF1E1B4B).withValues(alpha: 0.70), // indigo-950/70
+          const Color(0xFF020617).withValues(alpha: 0.80), // slate-950/80
+          const Color(0xFF3B0764).withValues(alpha: 0.75), // purple-950/75
+        ];
+        break;
       case 'neon_teal':
-        return const BoxDecoration(
-          gradient: LinearGradient(
-            colors: [Color(0xFF0A1F1D), Color(0xFF081215), Color(0xFF02070A)],
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-          ),
-        );
+        colors = [
+          const Color(0xFF042F2E).withValues(alpha: 0.65), // teal-950/65
+          const Color(0xFF083344).withValues(alpha: 0.75), // cyan-950/75
+          const Color(0xFF022C22).withValues(alpha: 0.65), // emerald-950/65
+        ];
+        break;
       case 'sunset':
-        return const BoxDecoration(
-          gradient: LinearGradient(
-            colors: [Color(0xFF2C1619), Color(0xFF1C0D1A), Color(0xFF0F0611)],
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-          ),
-        );
+        colors = [
+          const Color(0xFF9A3412).withValues(alpha: 0.50), // orange-800/50
+          const Color(0xFF831843).withValues(alpha: 0.35), // pink-900/35
+          const Color(0xFF581C87).withValues(alpha: 0.50), // purple-900/50
+        ];
+        break;
       case 'sweet_pink':
-        return const BoxDecoration(
-          gradient: LinearGradient(
-            colors: [Color(0xFF2A1020), Color(0xFF160A18), Color(0xFF0C020A)],
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-          ),
-        );
+        colors = [
+          const Color(0xFF831843).withValues(alpha: 0.50), // pink-900/50
+          const Color(0xFF4C0519).withValues(alpha: 0.40), // rose-950/40
+          const Color(0xFF450A0A).withValues(alpha: 0.50), // red-950/50
+        ];
+        break;
       case 'dark_shadow':
-        return const BoxDecoration(
-          color: Color(0xFF121214),
-        );
+        colors = [
+          const Color(0xFF000000).withValues(alpha: 0.80), // black/80
+          const Color(0xFF09090B).withValues(alpha: 0.88), // zinc-950/88
+          const Color(0xFF09090B).withValues(alpha: 0.90), // zinc-950/90
+        ];
+        break;
     }
-    return null;
+    if (colors == null) return null;
+    return BoxDecoration(
+      gradient: LinearGradient(
+        colors: colors,
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+      ),
+    );
   }
 }

@@ -3086,4 +3086,26 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get leaveWithoutSaving => 'Salir sin guardar';
+
+  @override
+  String get aiSessionHistory => 'Historial de conversaciones';
+
+  @override
+  String get aiNewSession => 'Nueva conversación';
+
+  @override
+  String get aiSessionActive => 'Activa';
+
+  @override
+  String get aiSessionSummarized => 'Resumida';
+
+  @override
+  String get aiSessionEmpty => 'No hay conversaciones anteriores';
+
+  @override
+  String get aiSessionResume => 'Reanudar';
+
+  @override
+  String get aiSessionLoadError =>
+      'No se pudo cargar el historial de conversaciones';
 }
