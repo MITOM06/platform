@@ -133,7 +133,7 @@ function NotificationRow({
           </Link>
         )}
 
-        {n.type === 'FRIEND_REQUEST' && n.relatedEntityId && (
+        {n.type === 'FRIEND_REQUEST' && n.relatedEntityId && !n.readAt && (
           <div className="flex gap-2 mt-2">
             <Button
               size="sm"
@@ -177,6 +177,8 @@ export function NotificationBell() {
   const { acceptRequest, removeFriend } = useFriendActions()
 
   const unreadCount = notifications.filter((n) => !n.readAt).length
+  const unread = notifications.filter((n) => !n.readAt)
+  const read = notifications.filter((n) => !!n.readAt)
 
   const handleOpen = (next: boolean) => {
     setOpen(next)
@@ -224,24 +226,55 @@ export function NotificationBell() {
           )}
         </div>
 
-        <div className="max-h-96 overflow-y-auto divide-y divide-border/50">
+        <div className="max-h-96 overflow-y-auto">
           {notifications.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-10 gap-2 text-muted-foreground">
               <Bell className="size-8 opacity-20" />
               <p className="text-sm">{t('empty')}</p>
             </div>
           ) : (
-            notifications.map((n) => (
-              <NotificationRow
-                key={n._id}
-                n={n}
-                onMarkRead={(id) => markRead.mutate(id)}
-                onAccept={handleAccept}
-                onDecline={handleDecline}
-                accepting={acceptRequest.isPending}
-                declining={removeFriend.isPending}
-              />
-            ))
+            <>
+              {unread.length > 0 && (
+                <>
+                  <div className="px-4 py-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/70 bg-muted/30 border-b">
+                    {t('sectionUnread')} ({unread.length})
+                  </div>
+                  <div className="divide-y divide-border/50">
+                    {unread.map((n) => (
+                      <NotificationRow
+                        key={n._id}
+                        n={n}
+                        onMarkRead={(id) => markRead.mutate(id)}
+                        onAccept={handleAccept}
+                        onDecline={handleDecline}
+                        accepting={acceptRequest.isPending}
+                        declining={removeFriend.isPending}
+                      />
+                    ))}
+                  </div>
+                </>
+              )}
+              {read.length > 0 && (
+                <>
+                  <div className="px-4 py-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/70 bg-muted/30 border-b border-t">
+                    {t('sectionRead')}
+                  </div>
+                  <div className="divide-y divide-border/50">
+                    {read.map((n) => (
+                      <NotificationRow
+                        key={n._id}
+                        n={n}
+                        onMarkRead={(id) => markRead.mutate(id)}
+                        onAccept={handleAccept}
+                        onDecline={handleDecline}
+                        accepting={acceptRequest.isPending}
+                        declining={removeFriend.isPending}
+                      />
+                    ))}
+                  </div>
+                </>
+              )}
+            </>
           )}
         </div>
       </PopoverContent>

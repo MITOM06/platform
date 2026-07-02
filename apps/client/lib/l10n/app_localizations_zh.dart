@@ -15,6 +15,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get notificationsTitle => '通知';
 
   @override
+  String get notificationsSectionUnread => '未读';
+
+  @override
+  String get notificationsSectionRead => '已读';
+
+  @override
   String get notificationsEmpty => '暂无通知';
 
   @override
@@ -933,6 +939,12 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get profileTitle => '个人资料';
+
+  @override
+  String get profileRoleLabel => '角色';
+
+  @override
+  String get profileRoleMemberDefault => '成员';
 
   @override
   String get editProfile => '编辑资料';

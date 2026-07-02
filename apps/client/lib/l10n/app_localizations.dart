@@ -120,6 +120,18 @@ abstract class AppLocalizations {
   /// **'Notifications'**
   String get notificationsTitle;
 
+  /// No description provided for @notificationsSectionUnread.
+  ///
+  /// In en, this message translates to:
+  /// **'Unread'**
+  String get notificationsSectionUnread;
+
+  /// No description provided for @notificationsSectionRead.
+  ///
+  /// In en, this message translates to:
+  /// **'Earlier'**
+  String get notificationsSectionRead;
+
   /// No description provided for @notificationsEmpty.
   ///
   /// In en, this message translates to:
@@ -1859,6 +1871,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Profile'**
   String get profileTitle;
+
+  /// No description provided for @profileRoleLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Role'**
+  String get profileRoleLabel;
+
+  /// No description provided for @profileRoleMemberDefault.
+  ///
+  /// In en, this message translates to:
+  /// **'Member'**
+  String get profileRoleMemberDefault;
 
   /// No description provided for @editProfile.
   ///

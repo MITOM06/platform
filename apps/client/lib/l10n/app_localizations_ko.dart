@@ -15,6 +15,12 @@ class AppLocalizationsKo extends AppLocalizations {
   String get notificationsTitle => '알림';
 
   @override
+  String get notificationsSectionUnread => '읽지 않음';
+
+  @override
+  String get notificationsSectionRead => '읽음';
+
+  @override
   String get notificationsEmpty => '아직 알림이 없습니다';
 
   @override
@@ -934,6 +940,12 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get profileTitle => '프로필';
+
+  @override
+  String get profileRoleLabel => '역할';
+
+  @override
+  String get profileRoleMemberDefault => '멤버';
 
   @override
   String get editProfile => '프로필 편집';

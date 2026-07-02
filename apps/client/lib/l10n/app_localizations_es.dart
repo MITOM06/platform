@@ -15,6 +15,12 @@ class AppLocalizationsEs extends AppLocalizations {
   String get notificationsTitle => 'Notificaciones';
 
   @override
+  String get notificationsSectionUnread => 'Sin leer';
+
+  @override
+  String get notificationsSectionRead => 'Leídas';
+
+  @override
   String get notificationsEmpty => 'Aún no hay notificaciones';
 
   @override
@@ -953,6 +959,12 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get profileTitle => 'Perfil';
+
+  @override
+  String get profileRoleLabel => 'Rol';
+
+  @override
+  String get profileRoleMemberDefault => 'Miembro';
 
   @override
   String get editProfile => 'Editar perfil';

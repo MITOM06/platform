@@ -34,7 +34,13 @@ export class UsersController {
     ]);
     if (!user) return null;
     // user is a Mongoose Document — spread via toObject() so we can add hasPassword.
-    return { ...user.toObject(), hasPassword };
+    const doc = user.toObject();
+    return {
+      ...doc,
+      hasPassword,
+      // Role is populated on findById; expose the name (null → client shows "Member").
+      roleName: (doc.roleId as any)?.name ?? null,
+    };
   }
 
   @Patch('me')
@@ -239,6 +245,8 @@ export class UsersController {
       hideInfo: doc.hideInfo ?? false, // legacy fallback safety-net
       createdAt: doc.createdAt,
       friendsCount,
+      // Role is always public — no privacy gate. null → client shows "Member".
+      roleName: (doc.roleId as any)?.name ?? null,
     };
 
     // Per-field visibility. New per-field flags win; when absent on legacy

@@ -276,6 +276,8 @@
     }
   },
   "profile": {
+    "roleLabel": "Rôle",
+    "memberDefault": "Membre",
     "title": "Modifier le profil",
     "displayNameLabel": "Nom affiché",
     "displayNamePlaceholder": "Saisissez le nom affiché...",
@@ -376,6 +378,7 @@
     "selectPrompt": "Sélectionnez une conversation pour commencer"
   },
   "chat": {
+    "memberDefault": "Membre",
     "searchPlaceholder": "Rechercher...",
     "exploreChannels": "Canaux publics",
     "chatWithAI": "Discuter avec l'assistant IA",
@@ -628,6 +631,8 @@
     "typing": "en train d'écrire...",
     "settingsTooltip": "Paramètres",
     "moreActions": "Plus d'options",
+    "showSidebar": "Afficher la barre latérale",
+    "hideSidebar": "Masquer la barre latérale",
     "groupInfoTooltip": "Infos du groupe",
     "viewProfileTooltip": "Voir le profil",
     "today": "Aujourd'hui",
@@ -1377,6 +1382,8 @@
     "accept": "Accepter",
     "decline": "Refuser",
     "phoneSetupAction": "Ajouter un numéro de téléphone →",
-    "passwordSetupAction": "Définir un mot de passe maintenant →"
+    "passwordSetupAction": "Définir un mot de passe maintenant →",
+    "sectionUnread": "Non lues",
+    "sectionRead": "Lues"
   }
 }

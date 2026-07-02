@@ -15,6 +15,12 @@ class AppLocalizationsJa extends AppLocalizations {
   String get notificationsTitle => '通知';
 
   @override
+  String get notificationsSectionUnread => '未読';
+
+  @override
+  String get notificationsSectionRead => '既読';
+
+  @override
   String get notificationsEmpty => '通知はまだありません';
 
   @override
@@ -934,6 +940,12 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get profileTitle => 'プロフィール';
+
+  @override
+  String get profileRoleLabel => 'ロール';
+
+  @override
+  String get profileRoleMemberDefault => 'メンバー';
 
   @override
   String get editProfile => 'プロフィール編集';

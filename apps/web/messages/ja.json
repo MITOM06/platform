@@ -276,6 +276,8 @@
     }
   },
   "profile": {
+    "roleLabel": "ロール",
+    "memberDefault": "メンバー",
     "title": "プロフィールを編集",
     "displayNameLabel": "表示名",
     "displayNamePlaceholder": "表示名を入力...",
@@ -376,6 +378,7 @@
     "selectPrompt": "開始する会話を選択してください"
   },
   "chat": {
+    "memberDefault": "メンバー",
     "searchPlaceholder": "検索...",
     "exploreChannels": "公開チャンネル",
     "chatWithAI": "AIアシスタントとチャット",
@@ -628,6 +631,8 @@
     "typing": "入力中...",
     "settingsTooltip": "設定",
     "moreActions": "その他の操作",
+    "showSidebar": "サイドバーを表示",
+    "hideSidebar": "サイドバーを非表示",
     "groupInfoTooltip": "グループ情報",
     "viewProfileTooltip": "プロフィールを見る",
     "today": "今日",
@@ -1377,6 +1382,8 @@
     "accept": "承認",
     "decline": "拒否",
     "phoneSetupAction": "電話番号を追加 →",
-    "passwordSetupAction": "今すぐパスワードを設定 →"
+    "passwordSetupAction": "今すぐパスワードを設定 →",
+    "sectionUnread": "未読",
+    "sectionRead": "既読"
   }
 }

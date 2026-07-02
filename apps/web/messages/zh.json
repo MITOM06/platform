@@ -276,6 +276,8 @@
     }
   },
   "profile": {
+    "roleLabel": "角色",
+    "memberDefault": "成员",
     "title": "编辑资料",
     "displayNameLabel": "显示名称",
     "displayNamePlaceholder": "请输入显示名称...",
@@ -376,6 +378,7 @@
     "selectPrompt": "选择一个会话开始聊天"
   },
   "chat": {
+    "memberDefault": "成员",
     "searchPlaceholder": "搜索...",
     "exploreChannels": "公开频道",
     "chatWithAI": "与 AI 助手聊天",
@@ -628,6 +631,8 @@
     "typing": "正在输入...",
     "settingsTooltip": "设置",
     "moreActions": "更多操作",
+    "showSidebar": "显示侧边栏",
+    "hideSidebar": "隐藏侧边栏",
     "groupInfoTooltip": "群组信息",
     "viewProfileTooltip": "查看资料",
     "today": "今天",
@@ -1377,6 +1382,8 @@
     "accept": "接受",
     "decline": "拒绝",
     "phoneSetupAction": "添加电话号码 →",
-    "passwordSetupAction": "立即设置密码 →"
+    "passwordSetupAction": "立即设置密码 →",
+    "sectionUnread": "未读",
+    "sectionRead": "已读"
   }
 }

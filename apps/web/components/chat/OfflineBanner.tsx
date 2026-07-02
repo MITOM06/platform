@@ -1,17 +1,36 @@
-import { useEffect, useState } from 'react'
+'use client'
+
+import { useEffect, useRef, useState } from 'react'
 import { WifiOff } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { stompService } from '@/lib/stomp/client'
 
+// Debounce: only show "offline" banner after this many ms of disconnection.
+// Prevents false positives during token-refresh reconnect cycles (~1-2s).
+const OFFLINE_DEBOUNCE_MS = 3_000
+
 export function OfflineBanner() {
   const t = useTranslations('chat')
-  const [isOffline, setIsOffline] = useState(!stompService.isConnected())
+  const [isOffline, setIsOffline] = useState(false) // start hidden — don't flash on mount
+  const timerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
 
   useEffect(() => {
     const unsubscribe = stompService.onStateChange((connected) => {
-      setIsOffline(!connected)
+      if (connected) {
+        // Reconnected → clear pending debounce and immediately hide banner
+        clearTimeout(timerRef.current)
+        setIsOffline(false)
+      } else {
+        // Disconnected → wait before showing banner (avoid reconnect flicker)
+        timerRef.current = setTimeout(() => {
+          setIsOffline(true)
+        }, OFFLINE_DEBOUNCE_MS)
+      }
     })
-    return () => unsubscribe()
+    return () => {
+      unsubscribe()
+      clearTimeout(timerRef.current)
+    }
   }, [])
 
   if (!isOffline) return null

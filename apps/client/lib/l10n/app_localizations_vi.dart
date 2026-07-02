@@ -15,6 +15,12 @@ class AppLocalizationsVi extends AppLocalizations {
   String get notificationsTitle => 'Thông báo';
 
   @override
+  String get notificationsSectionUnread => 'Chưa xem';
+
+  @override
+  String get notificationsSectionRead => 'Đã xem';
+
+  @override
   String get notificationsEmpty => 'Chưa có thông báo nào';
 
   @override
@@ -944,6 +950,12 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get profileTitle => 'Trang cá nhân';
+
+  @override
+  String get profileRoleLabel => 'Vai trò';
+
+  @override
+  String get profileRoleMemberDefault => 'Thành viên';
 
   @override
   String get editProfile => 'Chỉnh sửa trang cá nhân';

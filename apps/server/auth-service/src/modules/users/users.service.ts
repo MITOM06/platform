@@ -50,7 +50,11 @@ export class UsersService {
 
   async findById(id: string): Promise<UserDocument | null> {
     try {
-      return await this.userModel.findById(id).select('-password').exec();
+      return await this.userModel
+        .findById(id)
+        .select('-password')
+        .populate('roleId', 'name isPreset')
+        .exec();
     } catch (err: any) {
       // Mongoose throws CastError for non-ObjectId strings (e.g. 'ai-bot-…')
       if (err?.name === 'CastError') return null;
@@ -83,6 +87,7 @@ export class UsersService {
       return await this.userModel
         .find({ _id: { $in: ids } })
         .select('-password')
+        .populate('roleId', 'name isPreset')
         .exec();
     } catch (err: any) {
       if (err?.name === 'CastError') return [];
