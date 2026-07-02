@@ -826,6 +826,9 @@ class AppLocalizationsKo extends AppLocalizations {
   String get downloadMedia => '다운로드';
 
   @override
+  String get imageDownloadHd => 'HD로 보기';
+
+  @override
   String get attachmentLabel => '📎 첨부파일';
 
   @override

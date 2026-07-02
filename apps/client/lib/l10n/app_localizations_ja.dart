@@ -826,6 +826,9 @@ class AppLocalizationsJa extends AppLocalizations {
   String get downloadMedia => 'ダウンロード';
 
   @override
+  String get imageDownloadHd => 'HDで表示';
+
+  @override
   String get attachmentLabel => '📎 添付ファイル';
 
   @override

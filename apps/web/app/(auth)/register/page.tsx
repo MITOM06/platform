@@ -189,10 +189,10 @@ export default function RegisterPage() {
               onCheckedChange={(checked) => setValue('agreeToTerms', checked as boolean)}
             />
             <div className="space-y-1 leading-none">
-              <Label htmlFor="agreeToTerms" className="font-normal text-sm text-muted-foreground cursor-pointer">
+              <Label htmlFor="agreeToTerms" className="font-normal text-sm text-muted-foreground cursor-pointer flex flex-wrap items-center gap-x-1">
                 {t.rich('register.agreeToTerms', {
-                  privacyPolicy: (chunks) => <Link href="/privacy" target="_blank" className="text-primary hover:underline">{chunks}</Link>,
-                  termsOfService: (chunks) => <Link href="/terms" target="_blank" className="text-primary hover:underline">{chunks}</Link>
+                  privacyPolicy: (chunks) => <Link href="/privacy" target="_blank" className="text-primary hover:underline whitespace-nowrap">{chunks}</Link>,
+                  termsOfService: (chunks) => <Link href="/terms" target="_blank" className="text-primary hover:underline whitespace-nowrap">{chunks}</Link>
                 })}
               </Label>
               {errors.agreeToTerms && (

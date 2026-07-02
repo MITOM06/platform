@@ -28,6 +28,8 @@ export interface WorkspacePublicConfig {
   name: string
   features: Record<string, boolean>
   connectorAllowList: string[]
+  /** Configured AI assistant display name (`aiSettings.personaName`); `null` when unset. */
+  assistantName: string | null
 }
 
 /** `GET /me/capabilities` — the caller's resolved RBAC claims + workspace config. */

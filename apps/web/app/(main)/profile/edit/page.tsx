@@ -53,6 +53,13 @@ export default function EditProfilePage() {
   const [localPhone, setLocalPhone] = useState('')
   const [localPhoneVerified, setLocalPhoneVerified] = useState(false)
 
+  // The form is initially seeded from the partial authStore user; the real
+  // server profile arrives via `me` and triggers reset(). Until that reset
+  // runs, react-hook-form can report isDirty=true for fields (e.g. bio) whose
+  // defaultValues differ from the real values — which would pop the unsaved
+  // dialog on a Back tap even when the user changed nothing. Gate on this flag.
+  const [isFormReady, setIsFormReady] = useState(false)
+
   const { data: me } = useQuery({
     queryKey: ['me'],
     queryFn: authService.getMe,
@@ -131,6 +138,7 @@ export default function EditProfilePage() {
       })
       setLocalPhone(me.phoneNumber ?? '')
       setLocalPhoneVerified(me.phoneVerified ?? false)
+      setIsFormReady(true)
     }
   }, [me, reset])
 
@@ -186,12 +194,15 @@ export default function EditProfilePage() {
       let avatarUrl: string | undefined
       let coverPhoto: string | undefined
 
+      // The cropper exports WebP when supported, else JPEG — keep the stored
+      // filename extension consistent with the actual blob type.
+      const ext = (blob: Blob) => (blob.type === 'image/webp' ? 'webp' : 'jpg')
       if (avatarBlob) {
-        const result = await chatService.uploadFile(avatarBlob, 'avatar.jpg')
+        const result = await chatService.uploadFile(avatarBlob, `avatar.${ext(avatarBlob)}`)
         avatarUrl = result.url
       }
       if (coverBlob) {
-        const result = await chatService.uploadFile(coverBlob, 'cover.jpg')
+        const result = await chatService.uploadFile(coverBlob, `cover.${ext(coverBlob)}`)
         coverPhoto = result.url
       }
 
@@ -234,8 +245,10 @@ export default function EditProfilePage() {
   // Submit handler exposed so the unsaved-changes dialog can "Save and leave".
   const handleSave = handleSubmit(onSubmit)
 
-  // Unsaved-changes guard: dirty form fields OR staged (not-yet-uploaded) images.
-  const hasUnsavedChanges = isDirty || !!avatarBlob || !!coverBlob
+  // Unsaved-changes guard: dirty form fields OR staged (not-yet-uploaded)
+  // images. Only meaningful once the form has been seeded from server data —
+  // before that, isDirty is a false positive from the partial default values.
+  const hasUnsavedChanges = isFormReady && (isDirty || !!avatarBlob || !!coverBlob)
 
   // Warn on browser close/refresh while there are unsaved changes.
   useEffect(() => {

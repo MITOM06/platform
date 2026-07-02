@@ -47,7 +47,7 @@ export default async function AuthLayout({ children }: { children: React.ReactNo
         <span className="text-sm text-muted-foreground">{t('tagline')}</span>
       </div>
 
-      <div className="relative z-10 w-full max-w-sm motion-safe:pon-enter">{children}</div>
+      <div className="relative z-10 w-full max-w-md motion-safe:pon-enter">{children}</div>
     </div>
   )
 }

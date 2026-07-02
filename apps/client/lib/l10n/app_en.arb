@@ -378,6 +378,7 @@
   "pinnedSystemMessage": "System message",
   "uploading": "Uploading…",
   "downloadMedia": "Download",
+  "imageDownloadHd": "View HD",
   "attachmentLabel": "📎 Attachment",
   "callIncoming": "Incoming call",
   "callIncomingBody": "{name} is calling you",

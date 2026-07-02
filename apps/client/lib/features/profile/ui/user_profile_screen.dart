@@ -167,32 +167,6 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
                       fontWeight: FontWeight.bold,
                     ),
                   ),
-                  // Role chip — read-only. Hidden on blocked-by-owner minimal
-                  // profiles (mirrors web); otherwise falls back to "Member".
-                  if (!user.isBlockedByOwner) ...[
-                    const SizedBox(height: 6),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 12, vertical: 4),
-                      decoration: BoxDecoration(
-                        border: Border.all(
-                            color: Theme.of(context).colorScheme.outline),
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: Text(
-                        user.roleName ?? context.l10n.profileRoleMemberDefault,
-                        style: Theme.of(context)
-                            .textTheme
-                            .labelSmall
-                            ?.copyWith(
-                              color: Theme.of(context)
-                                  .colorScheme
-                                  .onSurface
-                                  .withValues(alpha: 0.6),
-                            ),
-                      ),
-                    ),
-                  ],
                   // When the profile owner has blocked the viewer, show only
                   // minimal info: avatar, cover, name, email. Hide bio, friend
                   // count, and action buttons per the no-raw-system-data rule.
@@ -228,6 +202,12 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
                       ),
                     ),
                   ] else ...[
+                  // Role — always shown as the first info row (mirrors web).
+                  // Falls back to the localized "Member" default.
+                  _InfoRow(
+                    icon: Icons.work_outline,
+                    value: user.roleName ?? context.l10n.profileRoleMemberDefault,
+                  ),
                   if (user.friendsCount != null) ...[
                     const SizedBox(height: 4),
                     Text(
@@ -387,6 +367,34 @@ class _RelationshipActions extends ConsumerWidget {
                 rel.iBlocked ? context.l10n.unblockUser : context.l10n.blockUser,
                 style: const TextStyle(color: Colors.redAccent),
               ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// A single centered info row (icon + value), used for role/DOB-style details.
+class _InfoRow extends StatelessWidget {
+  final IconData icon;
+  final String value;
+  const _InfoRow({required this.icon, required this.value});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(top: 12),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(icon, size: 16, color: Colors.white60),
+          const SizedBox(width: 6),
+          Flexible(
+            child: Text(
+              value,
+              textAlign: TextAlign.center,
+              style: const TextStyle(color: Colors.white60, fontSize: 13.5),
             ),
           ),
         ],

@@ -322,6 +322,13 @@ class _GalleryViewerState extends State<_GalleryViewer> {
                   ),
                 ),
               IconButton(
+                icon: const Icon(Icons.hd_outlined, color: Colors.white),
+                tooltip: context.l10n.imageDownloadHd,
+                // Opens the original, full-resolution file externally (no
+                // downscaling) so the user can view/save it in HD.
+                onPressed: () => openExternally(widget.urls[_currentIndex]),
+              ),
+              IconButton(
                 icon: const Icon(Icons.download_rounded, color: Colors.white),
                 tooltip: context.l10n.downloadMedia,
                 onPressed: () => downloadMedia(widget.urls[_currentIndex]),

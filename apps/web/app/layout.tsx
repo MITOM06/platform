@@ -1,9 +1,10 @@
 import type { Metadata, Viewport } from 'next'
 import { Geist, Geist_Mono } from 'next/font/google'
+import NextTopLoader from 'nextjs-toploader'
 import './globals.css'
 import { Providers } from '@/components/providers'
 import { NextIntlClientProvider } from 'next-intl'
-import { getMessages, getLocale } from 'next-intl/server'
+import { getMessages, getLocale, getTranslations } from 'next-intl/server'
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -15,15 +16,18 @@ const geistMono = Geist_Mono({
   subsets: ['latin'],
 })
 
-export const metadata: Metadata = {
-  title: {
-    default: 'PON',
-    template: '%s | PON',
-  },
-  description: 'PON – Nhắn tin, kết nối và cộng tác cùng AI',
-  icons: {
-    icon: '/icon.svg',
-  },
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations('meta')
+  return {
+    title: {
+      default: 'PON',
+      template: '%s | PON',
+    },
+    description: t('description'),
+    icons: {
+      icon: '/icon.svg',
+    },
+  }
 }
 
 export const viewport: Viewport = {
@@ -43,6 +47,14 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
+        {/* Thin top progress bar during route navigation (YouTube/GitHub style).
+            Uses the PON brand cyan; spinner disabled so only the bar shows. */}
+        <NextTopLoader
+          color="#6AC9FF"
+          height={2}
+          showSpinner={false}
+          shadow="0 0 10px #6AC9FF,0 0 5px #6AC9FF"
+        />
         <NextIntlClientProvider locale={locale} messages={messages}>
           <Providers>{children}</Providers>
         </NextIntlClientProvider>

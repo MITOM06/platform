@@ -846,6 +846,9 @@ class AppLocalizationsFr extends AppLocalizations {
   String get downloadMedia => 'Télécharger';
 
   @override
+  String get imageDownloadHd => 'Voir en HD';
+
+  @override
   String get attachmentLabel => '📎 Pièce jointe';
 
   @override

@@ -7,7 +7,7 @@ import { useTranslations, useLocale } from 'next-intl'
 import { toast } from 'sonner'
 import {
   MessageCircle, UserPlus, UserMinus, ShieldOff, ShieldAlert, Loader2,
-  Cake, Phone, Users,
+  Cake, Phone, Users, Briefcase,
 } from 'lucide-react'
 import { ResponsiveModal } from '@/components/ui/responsive-modal'
 import { ConfirmDialog } from '@/components/common/ConfirmDialog'
@@ -188,6 +188,9 @@ export function UserProfileDrawer({ userId, onClose }: Props) {
         open={userId !== null}
         onOpenChange={(o) => { if (!o) onClose() }}
         title={t('profileTitle')}
+        // Keep the title for screen readers but hide it visually — the cover
+        // photo (with a negative top margin) would otherwise overlap it.
+        hideTitle
         className="max-w-sm overflow-hidden p-0 gap-0"
       >
         {isLoading ? (
@@ -225,13 +228,8 @@ export function UserProfileDrawer({ userId, onClose }: Props) {
                 )}
               </div>
               <p className="font-semibold text-base">{displayName}</p>
-              {/* Role badge — read-only. Hidden on blocked-by-owner minimal
-                  profiles; otherwise falls back to the default "Member". */}
-              {!blockedByOwner && (
-                <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-medium text-muted-foreground">
-                  {user?.roleName ?? t('memberDefault')}
-                </span>
-              )}
+              {/* Role is shown as an InfoRow below (with Briefcase icon), not a
+                  badge chip — see the profile info section. */}
               <p className="text-xs text-muted-foreground">
                 {status?.online ? t('online') : t('offline')}
               </p>
@@ -261,17 +259,18 @@ export function UserProfileDrawer({ userId, onClose }: Props) {
 
             {!blockedByOwner && (
               <>
-                {/* Profile info — each field gated independently by its show flag */}
-                {(dobText || phoneText || genderText) && (
-                  <>
-                    <Separator />
-                    <div className="flex flex-col gap-2 px-1">
-                      {dobText && <InfoRow icon={<Cake className="size-4" />} value={dobText} />}
-                      {phoneText && <InfoRow icon={<Phone className="size-4" />} value={phoneText} />}
-                      {genderText && <InfoRow icon={<Users className="size-4" />} value={genderText} />}
-                    </div>
-                  </>
-                )}
+                {/* Profile info — role always shown first; the other fields are
+                    each gated independently by their per-field show flag. */}
+                <Separator />
+                <div className="flex flex-col gap-2 px-1">
+                  <InfoRow
+                    icon={<Briefcase className="size-4" />}
+                    value={user?.roleName ?? t('memberDefault')}
+                  />
+                  {dobText && <InfoRow icon={<Cake className="size-4" />} value={dobText} />}
+                  {phoneText && <InfoRow icon={<Phone className="size-4" />} value={phoneText} />}
+                  {genderText && <InfoRow icon={<Users className="size-4" />} value={genderText} />}
+                </div>
 
                 <Separator />
 

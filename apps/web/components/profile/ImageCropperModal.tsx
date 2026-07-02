@@ -45,11 +45,16 @@ async function getCroppedBlob(imageSrc: string, cropArea: Area): Promise<Blob> {
     cropArea.height,
   )
 
+  // Prefer WebP (smaller at equal visual quality) when the browser can encode
+  // it; fall back to JPEG. Bumped to 0.95 so avatars/covers stay crisp.
+  const supportsWebp = canvas.toDataURL('image/webp').startsWith('data:image/webp')
+  const mimeType = supportsWebp ? 'image/webp' : 'image/jpeg'
+
   return new Promise((resolve, reject) => {
     canvas.toBlob((blob) => {
       if (blob) resolve(blob)
       else reject(new Error('Failed to export cropped image'))
-    }, 'image/jpeg', 0.92)
+    }, mimeType, 0.95)
   })
 }
 

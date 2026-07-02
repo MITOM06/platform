@@ -14,6 +14,8 @@ import { useConversation } from '@/lib/hooks/use-conversation'
 import { useUserStatus } from '@/lib/hooks/use-user-status'
 import { useAuthStore } from '@/lib/store/auth.store'
 import { useUser } from '@/lib/hooks/use-user'
+import { useAssistant } from '@/lib/hooks/use-assistant'
+import { useAssistantName } from '@/lib/hooks/use-capabilities'
 import type { Conversation } from '@/lib/api/types'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
@@ -69,22 +71,32 @@ export function ConversationHeader({
   const [startCallOpen, setStartCallOpen] = useState(false)
 
   const isAI = conversation?.participants.includes(AI_BOT_ID) ?? false
+  // Bot Factory personal assistants join as `extbot:*` participants.
+  const isExtBot =
+    !isAI && (conversation?.participants.some((p) => p.startsWith('extbot:')) ?? false)
+  const isAnyBot = isAI || isExtBot
   const isGroup = conversation?.type === 'group'
   const otherUserId =
-    !isAI && !isGroup && conversation?.type === 'direct'
+    !isAnyBot && !isGroup && conversation?.type === 'direct'
       ? conversation.participants.find((id) => id !== currentUser?.id)
       : undefined
 
   const { data: status } = useUserStatus(otherUserId)
   const { data: otherUser } = useUser(otherUserId)
   const nickname = useNickname(conversationId, otherUserId)
+  const assistantName = useAssistantName()
+  const { data: extBotAssistant } = useAssistant()
   const sidebarCollapsed = useUiStore((s) => s.sidebarCollapsed)
   const toggleSidebar = useUiStore((s) => s.toggleSidebar)
 
   const displayName =
     nickname ??
     conversation?.name ??
-    (isAI ? t('aiAssistant') : (otherUser?.displayName ?? t('conversationDefault')))
+    (isAI
+      ? (assistantName ?? t('aiAssistant'))
+      : isExtBot
+        ? (extBotAssistant?.name ?? t('aiAssistant'))
+        : (otherUser?.displayName ?? t('conversationDefault')))
   const avatarUrl = conversation?.avatarUrl ?? otherUser?.avatarUrl
   const isTyping = typingUserIds.length > 0
   const pinnedMessages = conversation?.pinnedMessages ?? []
@@ -127,7 +139,7 @@ export function ConversationHeader({
           title={isGroup ? t('groupInfoTooltip') : t('viewProfileTooltip')}
         >
           <Avatar className="size-9 shrink-0">
-            {isAI ? (
+            {isAnyBot ? (
               <AvatarFallback className="bg-primary/10 text-primary text-sm font-medium">
                 <Bot className="size-4" />
               </AvatarFallback>
@@ -159,7 +171,7 @@ export function ConversationHeader({
             >
               {displayName}
             </span>
-            {isAI && (
+            {isAnyBot && (
               <span className="text-xs bg-primary/10 text-primary px-1.5 py-0.5 rounded font-medium shrink-0">
                 AI
               </span>

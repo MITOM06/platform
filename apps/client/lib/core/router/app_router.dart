@@ -77,6 +77,34 @@ final _publicRoutes = {
   '/legal', // public legal page — reachable from the register screen pre-login
 };
 
+/// Builds a page with a subtle fade + slide-up transition (iOS-like) used for
+/// the main standalone routes. Forward 220ms / reverse 180ms, Curves.easeOut,
+/// slide from Offset(0, 0.04).
+CustomTransitionPage<void> _fadeSlidePage(
+  GoRouterState state,
+  Widget child,
+) {
+  return CustomTransitionPage<void>(
+    key: state.pageKey,
+    child: child,
+    transitionDuration: const Duration(milliseconds: 220),
+    reverseTransitionDuration: const Duration(milliseconds: 180),
+    transitionsBuilder: (context, animation, secondaryAnimation, child) {
+      final curved = CurvedAnimation(parent: animation, curve: Curves.easeOut);
+      return FadeTransition(
+        opacity: curved,
+        child: SlideTransition(
+          position: Tween<Offset>(
+            begin: const Offset(0, 0.04),
+            end: Offset.zero,
+          ).animate(curved),
+          child: child,
+        ),
+      );
+    },
+  );
+}
+
 @riverpod
 GoRouter appRouter(AppRouterRef ref) {
   final notifier = ref.watch(routerNotifierProvider.notifier);
@@ -159,7 +187,8 @@ GoRouter appRouter(AppRouterRef ref) {
       GoRoute(
         path: '/',
         name: 'conversations',
-        builder: (context, state) => const ResponsiveHomeLayout(),
+        pageBuilder: (context, state) =>
+            _fadeSlidePage(state, const ResponsiveHomeLayout()),
         routes: [
           GoRoute(
             path: 'chat/:id',
@@ -184,7 +213,8 @@ GoRouter appRouter(AppRouterRef ref) {
       GoRoute(
         path: '/settings',
         name: 'settings',
-        builder: (context, state) => const SettingsScreen(),
+        pageBuilder: (context, state) =>
+            _fadeSlidePage(state, const SettingsScreen()),
       ),
       GoRoute(
         path: '/settings/security',
@@ -204,21 +234,26 @@ GoRouter appRouter(AppRouterRef ref) {
       GoRoute(
         path: '/user/:id',
         name: 'user-profile',
-        builder: (context, state) {
+        pageBuilder: (context, state) {
           final id = state.pathParameters['id']!;
           final convId = state.uri.queryParameters['conversationId'];
-          return UserProfileScreen(userId: id, conversationId: convId);
+          return _fadeSlidePage(
+            state,
+            UserProfileScreen(userId: id, conversationId: convId),
+          );
         },
       ),
       GoRoute(
         path: '/edit-profile',
         name: 'edit-profile',
-        builder: (context, state) => const EditProfileScreen(),
+        pageBuilder: (context, state) =>
+            _fadeSlidePage(state, const EditProfileScreen()),
       ),
       GoRoute(
         path: '/friends',
         name: 'friends',
-        builder: (context, state) => const FriendsScreen(),
+        pageBuilder: (context, state) =>
+            _fadeSlidePage(state, const FriendsScreen()),
       ),
       GoRoute(
         path: '/group-info/:id',

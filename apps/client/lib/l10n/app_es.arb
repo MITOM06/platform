@@ -264,6 +264,7 @@
   "pinnedSystemMessage": "Mensaje del sistema",
   "uploading": "Subiendo…",
   "downloadMedia": "Descargar",
+  "imageDownloadHd": "Ver en HD",
   "attachmentLabel": "📎 Adjunto",
   "callIncoming": "Llamada entrante",
   "callIncomingBody": "{name} te está llamando",

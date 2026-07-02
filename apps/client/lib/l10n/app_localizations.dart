@@ -1680,6 +1680,12 @@ abstract class AppLocalizations {
   /// **'Download'**
   String get downloadMedia;
 
+  /// No description provided for @imageDownloadHd.
+  ///
+  /// In en, this message translates to:
+  /// **'View HD'**
+  String get imageDownloadHd;
+
   /// No description provided for @attachmentLabel.
   ///
   /// In en, this message translates to:

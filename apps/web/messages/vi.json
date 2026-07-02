@@ -16,6 +16,9 @@
     "retry": "Thử lại",
     "dialogDescription": "Nội dung hộp thoại"
   },
+  "meta": {
+    "description": "PON – Nhắn tin, kết nối và cộng tác cùng AI"
+  },
   "layout": {
     "navExplore": "Khám phá",
     "navCreate": "Tạo mới",
@@ -207,7 +210,7 @@
     "notificationsTurnedOff": "Đã tắt thông báo",
     "tokenUsage": "Lượng token AI",
     "tokenUsageSubtitle": "Xem thống kê sử dụng token",
-    "aiMemory": "AI Memory",
+    "aiMemory": "Bộ nhớ AI",
     "aiMemorySubtitle": "Quản lý bộ nhớ AI",
     "changePassword": "Đổi mật khẩu",
     "language": "Ngôn ngữ",
@@ -707,6 +710,7 @@
     "newConvNoDepartment": "Không có phòng ban",
     "groupAvatarAlt": "Ảnh nhóm",
     "imageViewer": "Trình xem ảnh",
+    "imageViewHd": "Xem HD",
     "blockedChats": "Bị chặn",
     "noBlockedChats": "Không có cuộc trò chuyện bị chặn",
     "callBlocked": "Người dùng này không muốn được liên lạc",
@@ -766,7 +770,7 @@
     "resetError": "Không thể đặt lại"
   },
   "aiMemory": {
-    "title": "AI Memory",
+    "title": "Bộ nhớ AI",
     "headerCount": "{count} memory",
     "loading": "Đang tải memory...",
     "loadError": "Không thể tải danh sách memory",
@@ -845,15 +849,15 @@
     "monthlyLimit": "Hạn mức tháng",
     "usedPercent": "{percent}% đã sử dụng tháng này",
     "noData": "Không có dữ liệu",
-    "inputTokens": "Input tokens",
-    "outputTokens": "Output tokens",
+    "inputTokens": "Token đầu vào",
+    "outputTokens": "Token đầu ra",
     "dailyChart": "Biểu đồ hàng ngày (30 ngày)"
   },
   "sharedMedia": {
     "title": "File & Phương tiện",
-    "tabMedia": "Media",
+    "tabMedia": "Phương tiện",
     "tabFiles": "Tài liệu",
-    "tabLinks": "Links",
+    "tabLinks": "Liên kết",
     "emptyMedia": "Chưa có hình ảnh/video nào được chia sẻ",
     "emptyFiles": "Chưa có tài liệu nào được chia sẻ",
     "emptyLinks": "Chưa có liên kết nào được chia sẻ",

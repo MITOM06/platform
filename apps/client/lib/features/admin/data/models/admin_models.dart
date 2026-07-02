@@ -51,10 +51,15 @@ class WorkspacePublicConfig {
   final Map<String, bool> features;
   final List<String> connectorAllowList;
 
+  /// Configured AI assistant display name (`aiSettings.personaName`); `null` when
+  /// unset — clients fall back to their localized "AI Assistant" label.
+  final String? assistantName;
+
   const WorkspacePublicConfig({
     required this.name,
     required this.features,
     required this.connectorAllowList,
+    this.assistantName,
   });
 
   factory WorkspacePublicConfig.fromJson(Map<String, dynamic> json) =>
@@ -62,6 +67,7 @@ class WorkspacePublicConfig {
         name: json['name'] as String? ?? '',
         features: _boolMap(json['features']),
         connectorAllowList: _stringList(json['connectorAllowList']),
+        assistantName: json['assistantName'] as String?,
       );
 }
 

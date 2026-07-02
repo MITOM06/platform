@@ -28,6 +28,12 @@ export interface OtpEmailStrings {
   instruction: string;
   /** Small note about expiry / ignoring the email. */
   expiryNote: string;
+  /** Footer security reminder about not sharing the OTP code. */
+  securityNote: string;
+  /** Footer copyright line. */
+  copyright: string;
+  /** Bottom "sent by" signature line. */
+  sentBy: string;
 }
 
 const STRINGS: Record<SupportedLocale, OtpEmailStrings> = {
@@ -39,6 +45,9 @@ const STRINGS: Record<SupportedLocale, OtpEmailStrings> = {
       'You requested a verification code. Please use the OTP below to continue:',
     expiryNote:
       'This code is valid for 5 minutes. If you did not request this, please ignore this email.',
+    securityNote: 'Do not share your OTP code with anyone.',
+    copyright: '© 2025 PON. All rights reserved.',
+    sentBy: 'Sent by PON Support',
   },
   vi: {
     subject: 'Mã xác thực OTP - Ứng dụng PON',
@@ -48,6 +57,9 @@ const STRINGS: Record<SupportedLocale, OtpEmailStrings> = {
       'Bạn đã yêu cầu mã xác thực. Vui lòng sử dụng mã OTP dưới đây để tiếp tục:',
     expiryNote:
       'Mã này có hiệu lực trong vòng 5 phút. Nếu bạn không thực hiện yêu cầu này, vui lòng bỏ qua email này.',
+    securityNote: 'Không chia sẻ mã OTP với bất kỳ ai.',
+    copyright: '© 2025 PON. Bảo lưu mọi quyền.',
+    sentBy: 'Gửi bởi bộ phận hỗ trợ PON',
   },
   zh: {
     subject: '您的验证码 - PON',
@@ -55,6 +67,9 @@ const STRINGS: Record<SupportedLocale, OtpEmailStrings> = {
     greeting: '您好，',
     instruction: '您请求了一个验证码。请使用下面的 OTP 继续操作：',
     expiryNote: '此验证码有效期为 5 分钟。如果这不是您本人的操作，请忽略此邮件。',
+    securityNote: '请勿与任何人分享您的 OTP 验证码。',
+    copyright: '© 2025 PON. 保留所有权利。',
+    sentBy: '由 PON 支持团队发送',
   },
   ja: {
     subject: '認証コード - PON',
@@ -63,6 +78,9 @@ const STRINGS: Record<SupportedLocale, OtpEmailStrings> = {
     instruction: '認証コードがリクエストされました。下記の OTP を使用して続行してください：',
     expiryNote:
       'このコードの有効期限は 5 分間です。お心当たりがない場合は、このメールを無視してください。',
+    securityNote: 'OTP コードは誰とも共有しないでください。',
+    copyright: '© 2025 PON. 全著作権所有。',
+    sentBy: 'PON サポートより送信',
   },
   ko: {
     subject: '인증 코드 - PON',
@@ -71,6 +89,9 @@ const STRINGS: Record<SupportedLocale, OtpEmailStrings> = {
     instruction: '인증 코드를 요청하셨습니다. 아래 OTP를 사용하여 계속 진행하세요:',
     expiryNote:
       '이 코드는 5분 동안 유효합니다. 요청하지 않으셨다면 이 이메일을 무시하셔도 됩니다.',
+    securityNote: 'OTP 코드를 누구와도 공유하지 마세요.',
+    copyright: '© 2025 PON. 모든 권리 보유.',
+    sentBy: 'PON 지원팀에서 발송',
   },
   es: {
     subject: 'Tu código de verificación - PON',
@@ -80,6 +101,9 @@ const STRINGS: Record<SupportedLocale, OtpEmailStrings> = {
       'Has solicitado un código de verificación. Usa el OTP de abajo para continuar:',
     expiryNote:
       'Este código es válido durante 5 minutos. Si no realizaste esta solicitud, ignora este correo.',
+    securityNote: 'No compartas tu código OTP con nadie.',
+    copyright: '© 2025 PON. Todos los derechos reservados.',
+    sentBy: 'Enviado por el soporte de PON',
   },
   fr: {
     subject: 'Votre code de vérification - PON',
@@ -89,6 +113,9 @@ const STRINGS: Record<SupportedLocale, OtpEmailStrings> = {
       'Vous avez demandé un code de vérification. Veuillez utiliser le code OTP ci-dessous pour continuer :',
     expiryNote:
       "Ce code est valable pendant 5 minutes. Si vous n'êtes pas à l'origine de cette demande, veuillez ignorer cet e-mail.",
+    securityNote: 'Ne partagez votre code OTP avec personne.',
+    copyright: '© 2025 PON. Tous droits réservés.',
+    sentBy: 'Envoyé par le support PON',
   },
 };
 

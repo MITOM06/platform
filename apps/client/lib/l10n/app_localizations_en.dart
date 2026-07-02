@@ -834,6 +834,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get downloadMedia => 'Download';
 
   @override
+  String get imageDownloadHd => 'View HD';
+
+  @override
   String get attachmentLabel => '📎 Attachment';
 
   @override

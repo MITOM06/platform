@@ -147,6 +147,19 @@ export default function ForgotPasswordPage() {
     try {
       await authService.resetPassword(email, collectedOtp, password)
       toast.success(t('resetSuccess'))
+
+      // Bridge the just-set credentials to the login form so the user doesn't
+      // have to retype them. sessionStorage (not localStorage) auto-clears when
+      // the tab closes and never lands in URL history — safer than query params.
+      try {
+        sessionStorage.setItem(
+          'pon:auth:prefill',
+          JSON.stringify({ email, password, _ts: Date.now() }),
+        )
+      } catch {
+        // sessionStorage may be blocked (incognito strict mode) — non-fatal.
+      }
+
       router.push('/login')
     } catch (err: unknown) {
       const { code, params } = parseAuthError(err)
