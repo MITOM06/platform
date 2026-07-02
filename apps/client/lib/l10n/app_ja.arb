@@ -264,6 +264,7 @@
   "pinnedSystemMessage": "システムメッセージ",
   "uploading": "アップロード中…",
   "downloadMedia": "ダウンロード",
+  "imageDownloadHd": "HDで表示",
   "attachmentLabel": "📎 添付ファイル",
   "callIncoming": "着信",
   "callIncomingBody": "{name} があなたを呼び出しています",

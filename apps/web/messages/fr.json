@@ -16,6 +16,9 @@
     "retry": "Réessayer",
     "dialogDescription": "Contenu de la boîte de dialogue"
   },
+  "meta": {
+    "description": "PON – Messagerie, connexion et collaboration avec l'IA"
+  },
   "layout": {
     "navExplore": "Explorer",
     "navCreate": "Créer",
@@ -707,6 +710,7 @@
     "newConvNoDepartment": "Aucun département",
     "groupAvatarAlt": "Avatar du groupe",
     "imageViewer": "Visionneuse d'images",
+    "imageViewHd": "Voir en HD",
     "blockedChats": "Bloqués",
     "noBlockedChats": "Aucune conversation bloquée",
     "callBlocked": "Cet utilisateur ne souhaite pas être contacté",

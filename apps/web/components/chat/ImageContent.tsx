@@ -161,6 +161,18 @@ function Lightbox({
                 {index + 1} / {urls.length}
               </span>
             )}
+            {/* Open the original, full-resolution file in a new tab (no
+                download flag, no Next.js optimization) — the "HD" affordance,
+                mirroring the mobile viewer's View-HD button. */}
+            <a
+              href={absoluteMediaUrl(urls[index])}
+              target="_blank"
+              rel="noopener noreferrer"
+              title={t('imageViewHd')}
+              className="rounded-full bg-black/60 px-2.5 py-2 text-xs font-semibold leading-none text-white hover:bg-black/80"
+            >
+              HD
+            </a>
             <a
               href={downloadMediaUrl(urls[index])}
               target="_blank"

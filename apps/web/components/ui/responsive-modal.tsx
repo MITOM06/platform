@@ -29,6 +29,13 @@ interface ResponsiveModalProps {
   children: ReactNode
   footer?: ReactNode
   className?: string
+  /**
+   * Render the header (title/description) visually hidden but still present for
+   * screen readers. Use when the content provides its own visual header and a
+   * visible DialogTitle would overlap it — while keeping Radix's required title
+   * for accessibility.
+   */
+  hideTitle?: boolean
 }
 
 export function ResponsiveModal({
@@ -39,6 +46,7 @@ export function ResponsiveModal({
   children,
   footer,
   className,
+  hideTitle = false,
 }: ResponsiveModalProps) {
   const isMobile = useIsMobile()
   const t = useTranslations('common')
@@ -51,7 +59,7 @@ export function ResponsiveModal({
           className={cn('max-h-[90dvh] overflow-y-auto rounded-t-2xl pb-safe', className)}
         >
           {(title || description) && (
-            <SheetHeader>
+            <SheetHeader className={cn(hideTitle && 'sr-only')}>
               {title && <SheetTitle>{title}</SheetTitle>}
               {description && <SheetDescription>{description}</SheetDescription>}
             </SheetHeader>
@@ -68,7 +76,7 @@ export function ResponsiveModal({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className={cn('max-h-[90dvh] overflow-y-auto', className)}>
         {(title || description) && (
-          <DialogHeader>
+          <DialogHeader className={cn(hideTitle && 'sr-only')}>
             {title && <DialogTitle>{title}</DialogTitle>}
             {description && <DialogDescription>{description}</DialogDescription>}
           </DialogHeader>

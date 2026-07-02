@@ -264,6 +264,7 @@
   "pinnedSystemMessage": "시스템 메시지",
   "uploading": "업로드 중…",
   "downloadMedia": "다운로드",
+  "imageDownloadHd": "HD로 보기",
   "attachmentLabel": "📎 첨부파일",
   "callIncoming": "수신 전화",
   "callIncomingBody": "{name}님이 전화하고 있습니다",

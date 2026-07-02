@@ -16,6 +16,9 @@
     "retry": "再試行",
     "dialogDescription": "ダイアログの内容"
   },
+  "meta": {
+    "description": "PON – AI とメッセージ、つながり、コラボレーション"
+  },
   "layout": {
     "navExplore": "探索",
     "navCreate": "新規作成",
@@ -707,6 +710,7 @@
     "newConvNoDepartment": "部門なし",
     "groupAvatarAlt": "グループのアバター",
     "imageViewer": "画像ビューア",
+    "imageViewHd": "HDで表示",
     "blockedChats": "ブロック中",
     "noBlockedChats": "ブロックされた会話はありません",
     "callBlocked": "このユーザーは連絡を希望していません",

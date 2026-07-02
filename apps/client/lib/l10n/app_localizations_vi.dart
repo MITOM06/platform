@@ -834,6 +834,9 @@ class AppLocalizationsVi extends AppLocalizations {
   String get downloadMedia => 'Tải về';
 
   @override
+  String get imageDownloadHd => 'Xem HD';
+
+  @override
   String get attachmentLabel => '📎 Tệp đính kèm';
 
   @override

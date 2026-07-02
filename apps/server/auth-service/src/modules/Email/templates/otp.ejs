@@ -77,9 +77,8 @@
           <tr>
             <td style="padding:20px 40px 28px; text-align:center;">
               <p style="font-size:12px; color:#9CA3AF; margin:0; line-height:1.8;">
-                Nếu bạn không yêu cầu mã này, hãy bỏ qua email này.<br/>
-                Không chia sẻ mã OTP với bất kỳ ai.<br/>
-                <span style="color:#D1D5DB;">© 2025 PON. All rights reserved.</span>
+                <%= t.securityNote %><br/>
+                <span style="color:#D1D5DB;"><%= t.copyright %></span>
               </p>
             </td>
           </tr>
@@ -88,7 +87,7 @@
 
         <!-- Bottom spacing -->
         <p style="font-size:12px; color:#9CA3AF; margin:20px 0 0; text-align:center;">
-          Sent by PON Support
+          <%= t.sentBy %>
         </p>
 
       </td>

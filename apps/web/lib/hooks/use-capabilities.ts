@@ -24,6 +24,17 @@ export function useHasCapability(cap: Capability): boolean {
   return data?.perms.includes(cap) ?? false
 }
 
+/**
+ * The workspace-configured AI assistant display name (`aiSettings.personaName`),
+ * or `null` when unset. Rides on the already-cached `/me/capabilities` query, so
+ * any member — not just admins — can label the AI bot. Callers fall back to their
+ * localized "AI Assistant" string when this is `null`.
+ */
+export function useAssistantName(): string | null {
+  const { data } = useCapabilities()
+  return data?.workspace.assistantName ?? null
+}
+
 /** Capabilities that grant access to at least one admin console section. */
 export const ADMIN_SECTION_CAPS: Capability[] = [
   'MANAGE_WORKSPACE',

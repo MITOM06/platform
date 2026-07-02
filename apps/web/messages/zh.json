@@ -16,6 +16,9 @@
     "retry": "重试",
     "dialogDescription": "对话框内容"
   },
+  "meta": {
+    "description": "PON – 与 AI 一起消息、连接与协作"
+  },
   "layout": {
     "navExplore": "探索",
     "navCreate": "新建",
@@ -707,6 +710,7 @@
     "newConvNoDepartment": "无部门",
     "groupAvatarAlt": "群组头像",
     "imageViewer": "图片查看器",
+    "imageViewHd": "查看高清",
     "blockedChats": "已屏蔽",
     "noBlockedChats": "没有被屏蔽的对话",
     "callBlocked": "该用户不希望被联系",

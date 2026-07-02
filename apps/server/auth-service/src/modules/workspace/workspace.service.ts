@@ -7,6 +7,13 @@ export interface WorkspacePublicConfig {
   name: string;
   features: Record<string, boolean>;
   connectorAllowList: string[];
+  /**
+   * Configured AI assistant display name (`aiSettings.personaName`). `null` when
+   * unset — clients fall back to their localized "AI Assistant" label. Exposed
+   * here so non-admin members can label the AI bot without the admin-only
+   * workspace endpoint.
+   */
+  assistantName: string | null;
 }
 
 /**
@@ -27,6 +34,7 @@ export class WorkspaceService {
       name: ws?.name ?? 'PON Workspace',
       features: ws?.features ?? {},
       connectorAllowList: ws?.connectorAllowList ?? [],
+      assistantName: ws?.aiSettings?.personaName ?? null,
     };
   }
 }

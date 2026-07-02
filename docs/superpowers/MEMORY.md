@@ -94,6 +94,9 @@ NEXT_PUBLIC_FIREBASE_APP_ID=1:246431845875:web:246c24ecc32054f798d686
 | `plans/2026-07-01-role-display-in-profile.md` | Hiển thị role trong profile (read-only, web + mobile) | ⏳ Chưa execute |
 | `plans/2026-07-01-chat-ux-redesign.md` | Sidebar 2-state toggle + timestamp redesign + emoji bare | ⏳ Chưa execute |
 | `plans/2026-07-01-notification-and-auth-fixes.md` | Notification buttons + read/unread split + OAuth redirect + OfflineBanner debounce | ⏳ Chưa execute |
+| `plans/2026-07-02-ux-polish.md` | Page loading animation + unsaved changes fix + role InfoRow + Profile title fix + image/video quality | ⏳ Chưa execute |
+| `plans/2026-07-02-auth-ui-and-bot-fixes.md` | Auth form wider + Terms no-wrap + prefill sau reset password + AI bot naming + extbot badge | ⏳ Chưa execute |
+| `plans/2026-07-02-ai-memory-sessions.md` | AI session management: /new command + session list UI + auto-summarize compact | ⏳ Chưa execute |
 
 ### Prompt cho Claude Code thực thi tất cả
 
@@ -112,8 +115,12 @@ NEXT_PUBLIC_FIREBASE_APP_ID=1:246431845875:web:246c24ecc32054f798d686
 10. platform/docs/superpowers/plans/2026-07-01-role-display-in-profile.md
 11. platform/docs/superpowers/plans/2026-07-01-chat-ux-redesign.md
 12. platform/docs/superpowers/plans/2026-07-01-notification-and-auth-fixes.md
+13. platform/docs/superpowers/plans/2026-07-02-ux-polish.md
+14. platform/docs/superpowers/plans/2026-07-02-auth-ui-and-bot-fixes.md
+15. platform/docs/superpowers/plans/2026-07-02-ai-memory-sessions.md
 
 Không bỏ sót task nào trong mỗi plan.
+Lưu ý: plan 13 override Task 4+5 của plan 10 (role-display) — đọc plan 13 SAU plan 10.
 ```
 
 ---

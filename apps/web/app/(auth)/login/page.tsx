@@ -66,6 +66,28 @@ export default function LoginPage() {
     return () => clearTimeout(timer)
   }, [searchParams, setValue])
 
+  // Pre-fill from a just-completed password reset (see forgot-password page).
+  // Consume-once: read, immediately clear, and ignore anything older than 5 min.
+  useEffect(() => {
+    try {
+      const raw = sessionStorage.getItem('pon:auth:prefill')
+      if (!raw) return
+      sessionStorage.removeItem('pon:auth:prefill')
+
+      const { email, password, _ts } = JSON.parse(raw) as {
+        email: string
+        password: string
+        _ts: number
+      }
+      if (Date.now() - _ts > 5 * 60 * 1000) return
+
+      setValue('email', email, { shouldDirty: false })
+      setValue('password', password, { shouldDirty: false })
+    } catch {
+      // Malformed JSON or storage blocked — nothing to prefill.
+    }
+  }, [setValue])
+
   const onSubmit = async (data: FormData) => {
     try {
       const { data: result } = await authService.login(data.email, data.password)

@@ -16,6 +16,9 @@
     "retry": "Reintentar",
     "dialogDescription": "Contenido del diálogo"
   },
+  "meta": {
+    "description": "PON – Mensajería, conexión y colaboración con IA"
+  },
   "layout": {
     "navExplore": "Explorar",
     "navCreate": "Crear",
@@ -707,6 +710,7 @@
     "newConvNoDepartment": "Sin departamento",
     "groupAvatarAlt": "Avatar del grupo",
     "imageViewer": "Visor de imágenes",
+    "imageViewHd": "Ver en HD",
     "blockedChats": "Bloqueados",
     "noBlockedChats": "No hay conversaciones bloqueadas",
     "callBlocked": "Este usuario no quiere ser contactado",

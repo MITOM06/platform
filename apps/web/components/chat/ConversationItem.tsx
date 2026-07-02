@@ -22,6 +22,8 @@ import {
 } from '@/components/ui/context-menu'
 import { useAuthStore } from '@/lib/store/auth.store'
 import { useUser } from '@/lib/hooks/use-user'
+import { useAssistant } from '@/lib/hooks/use-assistant'
+import { useAssistantName } from '@/lib/hooks/use-capabilities'
 import { useRelationship } from '@/lib/hooks/use-relationship'
 import { useNickname } from '@/lib/nicknames'
 import { chatService } from '@/lib/api/chat'
@@ -91,20 +93,30 @@ const ConversationItemInner = function ConversationItem({ conversation: conv, is
   const currentUser = useAuthStore((s) => s.user)
 
   const isAI = conv.participants.includes(AI_BOT_ID)
+  // Bot Factory personal assistants join as `extbot:*` participants — treat them
+  // as bots too (badge + bot avatar), just with the assistant's own name.
+  const isExtBot = !isAI && conv.participants.some((p) => p.startsWith('extbot:'))
+  const isAnyBot = isAI || isExtBot
   const otherUserId =
-    !isAI && conv.type === 'direct'
+    !isAnyBot && conv.type === 'direct'
       ? conv.participants.find((id) => id !== currentUser?.id)
       : undefined
 
   const { data: otherUser } = useUser(otherUserId)
   const otherNickname = useNickname(conv.id, otherUserId)
   const { relationship } = useRelationship(otherUserId)
+  const assistantName = useAssistantName()
+  // The member's own personal assistant (the extbot in this 1-1) — name/avatar
+  // come from the assistant mapping, not a user lookup.
+  const { data: extBotAssistant } = useAssistant()
 
   const displayName =
     conv.name ??
     (isAI
-      ? t('aiAssistant')
-      : (otherNickname || otherUser?.displayName || t('conversationDefault')))
+      ? (assistantName ?? t('aiAssistant'))
+      : isExtBot
+        ? (extBotAssistant?.name ?? t('aiAssistant'))
+        : (otherNickname || otherUser?.displayName || t('conversationDefault')))
   const avatarUrl = conv.avatarUrl ?? otherUser?.avatarUrl
 
   // Sidebar preview: "You: <msg>" for own last message in direct chats, with
@@ -221,7 +233,7 @@ const ConversationItemInner = function ConversationItem({ conversation: conv, is
           )}
         >
           <Avatar className="size-10 shrink-0">
-            {isAI ? (
+            {isAnyBot ? (
               <AvatarFallback className="bg-primary/10 text-primary text-sm font-medium">
                 <Bot className="size-4" />
               </AvatarFallback>
@@ -239,7 +251,7 @@ const ConversationItemInner = function ConversationItem({ conversation: conv, is
             <div className="flex items-center justify-between gap-1">
               <div className="flex items-center gap-1.5 min-w-0">
                 <span className="font-medium text-sm truncate">{displayName}</span>
-                {isAI && (
+                {isAnyBot && (
                   <span className="text-[10px] bg-primary/10 text-primary px-1.5 py-0.5 rounded font-medium shrink-0">
                     AI
                   </span>

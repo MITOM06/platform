@@ -264,6 +264,7 @@
   "pinnedSystemMessage": "系统消息",
   "uploading": "上传中…",
   "downloadMedia": "下载",
+  "imageDownloadHd": "查看高清",
   "attachmentLabel": "📎 附件",
   "callIncoming": "来电",
   "callIncomingBody": "{name} 正在呼叫您",

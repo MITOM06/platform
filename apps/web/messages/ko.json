@@ -16,6 +16,9 @@
     "retry": "다시 시도",
     "dialogDescription": "대화 상자 내용"
   },
+  "meta": {
+    "description": "PON – AI와 함께 메시지, 연결 및 협업"
+  },
   "layout": {
     "navExplore": "탐색",
     "navCreate": "새로 만들기",
@@ -707,6 +710,7 @@
     "newConvNoDepartment": "부서 없음",
     "groupAvatarAlt": "그룹 아바타",
     "imageViewer": "이미지 뷰어",
+    "imageViewHd": "HD로 보기",
     "blockedChats": "차단됨",
     "noBlockedChats": "차단된 대화가 없습니다",
     "callBlocked": "이 사용자는 연락을 원하지 않습니다",

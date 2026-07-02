@@ -825,6 +825,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get downloadMedia => '下载';
 
   @override
+  String get imageDownloadHd => '查看高清';
+
+  @override
   String get attachmentLabel => '📎 附件';
 
   @override
