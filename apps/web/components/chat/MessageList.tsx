@@ -18,8 +18,13 @@ const TOOL_LABEL_KEYS: Record<string, string> = {
   create_reminder: 'toolCreateReminder',
 }
 
+// Gap between consecutive messages beyond which a lightweight time marker is
+// inserted (Messenger-style grouping). Tunable in one place.
+const TIME_GROUP_GAP_MS = 15 * 60 * 1000 // 15 minutes
+
 type VirtualRow =
   | { kind: 'separator'; isoDate: string }
+  | { kind: 'time-separator'; isoDate: string }
   | { kind: 'message'; msg: Message }
 
 function formatSeparatorDate(
@@ -68,6 +73,10 @@ interface Props {
   onReply: (message: Message) => void
   onAiTrace: (messageId: string) => void
   onOptimisticUpdate: (updated: Partial<Message> & { id: string }) => void
+  /** Fired when a message's actions menu opens/closes — used to surface that
+   *  message's exact timestamp as a sticky chip at the top of the viewport. */
+  onMenuOpen?: (createdAt: string) => void
+  onMenuClose?: () => void
 }
 
 /**
@@ -94,6 +103,8 @@ export function MessageList({
   onReply,
   onAiTrace,
   onOptimisticUpdate,
+  onMenuOpen,
+  onMenuClose,
 }: Props) {
   const t = useTranslations('chat')
   const locale = useLocale()
@@ -118,16 +129,25 @@ export function MessageList({
     setJustAppendedId(newestId)
   }
 
-  // Flatten messages + date separators into rows.
+  // Flatten messages + date separators + time-group markers into rows. A date
+  // separator opens each new calendar day; within a day, a lighter time marker
+  // appears whenever more than TIME_GROUP_GAP_MS elapsed since the previous
+  // message (so a burst of messages shows one time, not one per bubble).
   const rows = useMemo<VirtualRow[]>(() => {
     const result: VirtualRow[] = []
     let lastDate = ''
+    let lastTimestamp = 0
     for (const msg of messages) {
-      const dateStr = new Date(msg.createdAt).toDateString()
+      const msgDate = new Date(msg.createdAt)
+      const dateStr = msgDate.toDateString()
+      const msgTs = msgDate.getTime()
       if (dateStr !== lastDate) {
         result.push({ kind: 'separator', isoDate: msg.createdAt })
         lastDate = dateStr
+      } else if (msgTs - lastTimestamp > TIME_GROUP_GAP_MS) {
+        result.push({ kind: 'time-separator', isoDate: msg.createdAt })
       }
+      lastTimestamp = msgTs
       result.push({ kind: 'message', msg })
     }
     return result
@@ -164,6 +184,15 @@ export function MessageList({
                   })}
                 </span>
               </div>
+            ) : row.kind === 'time-separator' ? (
+              <div key={`tsep-${row.isoDate}-${i}`} className="flex justify-center my-2 select-none">
+                <span className="text-[10px] text-muted-foreground/60 font-medium tracking-wide">
+                  {new Date(row.isoDate).toLocaleTimeString(locale, {
+                    hour: '2-digit',
+                    minute: '2-digit',
+                  })}
+                </span>
+              </div>
             ) : (
               <div
                 key={row.msg.id}
@@ -188,6 +217,8 @@ export function MessageList({
                   onReply={onReply}
                   onAiTrace={onAiTrace}
                   onOptimisticUpdate={onOptimisticUpdate}
+                  onMenuOpen={onMenuOpen}
+                  onMenuClose={onMenuClose}
                 />
               </div>
             ),

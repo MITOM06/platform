@@ -631,6 +631,8 @@
     "typing": "đang nhập...",
     "settingsTooltip": "Cài đặt",
     "moreActions": "Thêm tùy chọn",
+    "showSidebar": "Hiện thanh bên",
+    "hideSidebar": "Ẩn thanh bên",
     "groupInfoTooltip": "Thông tin nhóm",
     "viewProfileTooltip": "Xem hồ sơ",
     "today": "Hôm nay",
@@ -1380,6 +1382,8 @@
     "accept": "Chấp nhận",
     "decline": "Từ chối",
     "phoneSetupAction": "Thêm số điện thoại →",
-    "passwordSetupAction": "Đặt mật khẩu ngay →"
+    "passwordSetupAction": "Đặt mật khẩu ngay →",
+    "sectionUnread": "Chưa xem",
+    "sectionRead": "Đã xem"
   }
 }

@@ -631,6 +631,8 @@
     "typing": "typing...",
     "settingsTooltip": "Settings",
     "moreActions": "More actions",
+    "showSidebar": "Show sidebar",
+    "hideSidebar": "Hide sidebar",
     "groupInfoTooltip": "Group info",
     "viewProfileTooltip": "View profile",
     "today": "Today",
@@ -1380,6 +1382,8 @@
     "accept": "Accept",
     "decline": "Decline",
     "phoneSetupAction": "Add phone number →",
-    "passwordSetupAction": "Set a password now →"
+    "passwordSetupAction": "Set a password now →",
+    "sectionUnread": "Unread",
+    "sectionRead": "Earlier"
   }
 }

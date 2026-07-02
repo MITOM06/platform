@@ -631,6 +631,8 @@
     "typing": "입력 중...",
     "settingsTooltip": "설정",
     "moreActions": "더 보기",
+    "showSidebar": "사이드바 표시",
+    "hideSidebar": "사이드바 숨기기",
     "groupInfoTooltip": "그룹 정보",
     "viewProfileTooltip": "프로필 보기",
     "today": "오늘",
@@ -1380,6 +1382,8 @@
     "accept": "수락",
     "decline": "거절",
     "phoneSetupAction": "전화번호 추가 →",
-    "passwordSetupAction": "지금 비밀번호 설정 →"
+    "passwordSetupAction": "지금 비밀번호 설정 →",
+    "sectionUnread": "읽지 않음",
+    "sectionRead": "읽음"
   }
 }

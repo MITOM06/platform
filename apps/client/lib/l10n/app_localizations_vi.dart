@@ -15,6 +15,12 @@ class AppLocalizationsVi extends AppLocalizations {
   String get notificationsTitle => 'Thông báo';
 
   @override
+  String get notificationsSectionUnread => 'Chưa xem';
+
+  @override
+  String get notificationsSectionRead => 'Đã xem';
+
+  @override
   String get notificationsEmpty => 'Chưa có thông báo nào';
 
   @override

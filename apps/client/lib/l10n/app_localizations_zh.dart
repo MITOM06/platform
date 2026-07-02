@@ -15,6 +15,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get notificationsTitle => '通知';
 
   @override
+  String get notificationsSectionUnread => '未读';
+
+  @override
+  String get notificationsSectionRead => '已读';
+
+  @override
   String get notificationsEmpty => '暂无通知';
 
   @override

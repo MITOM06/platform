@@ -76,16 +76,35 @@ class NotificationPanel extends ConsumerWidget {
                   ),
                 ),
               ),
-              data: (items) => items.isEmpty
-                  ? _EmptyState(isDark: isDark)
-                  : ListView.separated(
-                      shrinkWrap: true,
-                      padding: const EdgeInsets.only(bottom: 8),
-                      itemCount: items.length,
-                      separatorBuilder: (_, __) => const Divider(height: 1),
-                      itemBuilder: (_, i) =>
-                          _NotificationTile(notification: items[i]),
-                    ),
+              data: (items) {
+                if (items.isEmpty) return _EmptyState(isDark: isDark);
+
+                final unread = items.where((n) => n.isUnread).toList();
+                final read = items.where((n) => !n.isUnread).toList();
+
+                return ListView(
+                  shrinkWrap: true,
+                  padding: const EdgeInsets.only(bottom: 8),
+                  children: [
+                    if (unread.isNotEmpty) ...[
+                      _SectionHeader(
+                        label: context.l10n.notificationsSectionUnread,
+                        count: unread.length,
+                        isDark: isDark,
+                      ),
+                      ...unread.map((n) => _NotificationTile(notification: n)),
+                      const Divider(height: 1),
+                    ],
+                    if (read.isNotEmpty) ...[
+                      _SectionHeader(
+                        label: context.l10n.notificationsSectionRead,
+                        isDark: isDark,
+                      ),
+                      ...read.map((n) => _NotificationTile(notification: n)),
+                    ],
+                  ],
+                );
+              },
             ),
           ),
         ],
@@ -113,6 +132,34 @@ class _EmptyState extends StatelessWidget {
             style: TextStyle(color: muted, fontSize: 14),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _SectionHeader extends StatelessWidget {
+  final String label;
+  final int? count;
+  final bool isDark;
+  const _SectionHeader({required this.label, this.count, required this.isDark});
+
+  @override
+  Widget build(BuildContext context) {
+    final text = count != null ? '$label ($count)' : label;
+    return Container(
+      color: isDark
+          ? Colors.white.withValues(alpha: 0.03)
+          : Colors.black.withValues(alpha: 0.03),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+      width: double.infinity,
+      child: Text(
+        text.toUpperCase(),
+        style: TextStyle(
+          fontSize: 11,
+          fontWeight: FontWeight.w600,
+          letterSpacing: 0.8,
+          color: isDark ? Colors.white38 : Colors.black38,
+        ),
       ),
     );
   }
@@ -217,7 +264,7 @@ class _NotificationTileState extends ConsumerState<_NotificationTile> {
                 color: isDark ? Colors.white54 : Colors.black54,
               ),
             ),
-            if (n.isFriendRequest && n.relatedEntityId != null) ...[
+            if (n.isFriendRequest && n.relatedEntityId != null && n.isUnread) ...[
               const SizedBox(height: 8),
               Row(
                 children: [

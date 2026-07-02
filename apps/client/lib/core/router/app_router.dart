@@ -48,23 +48,19 @@ part 'app_router.g.dart';
 // ---------------------------------------------------------------------------
 
 @riverpod
-class RouterNotifier extends _$RouterNotifier implements Listenable {
-  VoidCallback? _listener;
-
+class RouterNotifier extends _$RouterNotifier
+    with ChangeNotifier
+    implements Listenable {
   @override
   Future<bool> build() async {
     final authValue = ref.watch(authNotifierProvider);
     ref.watch(themeOnboardingNotifierProvider); // also listen to onboarding state
-    _listener?.call();
+    // Notify GoRouter on a microtask to avoid "notifyListeners during build".
+    // ChangeNotifier fans out to every registered listener, so a rebuild that
+    // re-registers GoRouter's listener can no longer strand a stale/null slot
+    // (the previous single-slot impl could, causing OAuth logins to not redirect).
+    Future.microtask(notifyListeners);
     return authValue.valueOrNull is AuthAuthenticated;
-  }
-
-  @override
-  void addListener(VoidCallback listener) => _listener = listener;
-
-  @override
-  void removeListener(VoidCallback listener) {
-    if (_listener == listener) _listener = null;
   }
 }
 

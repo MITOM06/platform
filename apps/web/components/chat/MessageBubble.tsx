@@ -12,7 +12,7 @@ import { MessageFeedback } from './MessageFeedback'
 import { MessageSources } from './MessageSources'
 import { ExternalBotBubble } from './ExternalBotBubble'
 import { MessageBubbleBody } from './MessageBubbleBody'
-import { formatTime, ReactionBadge, BARE_TYPES } from './message-bubble-helpers'
+import { formatTime, ReactionBadge, BARE_TYPES, isEmojiOnly } from './message-bubble-helpers'
 import { humanizeSystemMessage } from '@/lib/system-messages'
 import { useNickname, getNickname } from '@/lib/nicknames'
 import { useUser } from '@/lib/hooks/use-user'
@@ -33,6 +33,8 @@ interface Props {
   onReply?: (message: Message) => void
   onAiTrace?: (messageId: string) => void
   onOptimisticUpdate: (updated: Partial<Message> & { id: string }) => void
+  onMenuOpen?: (createdAt: string) => void
+  onMenuClose?: () => void
 }
 
 const MessageBubbleInner = function MessageBubble({
@@ -49,6 +51,8 @@ const MessageBubbleInner = function MessageBubble({
   onReply,
   onAiTrace,
   onOptimisticUpdate,
+  onMenuOpen,
+  onMenuClose,
 }: Props) {
   const t = useTranslations('chat')
   const locale = useLocale()
@@ -145,6 +149,8 @@ const MessageBubbleInner = function MessageBubble({
   })
 
   const isBare = BARE_TYPES.has(message.type)
+  // Emoji-only text renders large and frameless (no bubble), like Messenger.
+  const isEmojiMsg = message.type === 'text' && isEmojiOnly(message.content)
   // Feedback only on real AI answers — not the error/quota/interrupted sentinels.
   const showFeedback =
     message.type === 'ai' &&
@@ -205,17 +211,27 @@ const MessageBubbleInner = function MessageBubble({
       : <Check className="size-3 opacity-50" aria-label={t('sent')} />
   )
 
-  const timeLabel = (
-    <p
+  // Read receipt + "edited" marker — now shown BELOW the bubble (the time itself
+  // lives in the hover tooltip / group time-separator, no longer in-bubble).
+  const metaRow = (readTick || message.editedAt) && (
+    <div className={cn('flex items-center gap-1', isOwn ? 'justify-end' : 'justify-start')}>
+      {message.editedAt && (
+        <span className="text-[10px] italic text-muted-foreground/70">{t('edited')}</span>
+      )}
+      {readTick}
+    </div>
+  )
+
+  // Exact-time tooltip revealed on hover, beside the bubble (desktop pointer).
+  const hoverTime = (
+    <span
       className={cn(
-        'text-[10px] mt-1.5 text-right font-medium tracking-wide flex items-center justify-end gap-1',
-        isOwn ? 'text-primary-foreground/70' : 'text-muted-foreground/80',
+        'absolute top-1/2 -translate-y-1/2 text-[10px] text-muted-foreground/60 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap',
+        isOwn ? 'right-full mr-2' : 'left-full ml-2',
       )}
     >
       {formatTime(message.createdAt, locale)}
-      {message.editedAt && <span className="italic opacity-85">{t('edited')}</span>}
-      {readTick}
-    </p>
+    </span>
   )
 
   // ── Inner content by type ──────────────────────────────────────────────────
@@ -232,16 +248,20 @@ const MessageBubbleInner = function MessageBubble({
       onTouchMove={handleTouchMove}
       onClick={handleRowClick}
     >
-      <div className="flex flex-col gap-1 max-w-[70%]">
-        {isBare ? (
+      <div className="relative flex flex-col gap-1 max-w-[70%]">
+        {hoverTime}
+        {isEmojiMsg ? (
+          <div className={cn('flex flex-col', isOwn ? 'items-end' : 'items-start')}>
+            {senderLabel}
+            {replyPreview}
+            {/* Emoji-only: large & frameless, no bubble background/border. */}
+            <span className="text-5xl leading-none select-none py-0.5">{message.content}</span>
+          </div>
+        ) : isBare ? (
           <div className={cn('flex flex-col', isOwn ? 'items-end' : 'items-start')}>
             {senderLabel}
             {replyPreview}
             {body}
-            <span className="mt-0.5 text-[10px] font-medium text-muted-foreground/70 flex items-center gap-1">
-              {formatTime(message.createdAt, locale)}
-              {readTick}
-            </span>
           </div>
         ) : (
           <div
@@ -259,9 +279,10 @@ const MessageBubbleInner = function MessageBubble({
             {showFeedback && message.sources && message.sources.length > 0 && (
               <MessageSources sources={message.sources} conversationId={conversationId} />
             )}
-            {timeLabel}
           </div>
         )}
+
+        {metaRow}
 
         {/* AI answer feedback (👍/👎) — under the bubble, AI messages only */}
         {showFeedback && (
@@ -300,6 +321,8 @@ const MessageBubbleInner = function MessageBubble({
           onOptimisticUpdate={onOptimisticUpdate}
           onGroupReadDetails={isOwn && isGroup ? () => setShowReadDetails(true) : undefined}
           onReactionsDetail={message.reactions && message.reactions.length > 0 ? () => setShowReactionsDetail(true) : undefined}
+          onMenuOpen={onMenuOpen ? () => onMenuOpen(message.createdAt) : undefined}
+          onMenuClose={onMenuClose}
         />
       </div>
     </div>

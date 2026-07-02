@@ -1,6 +1,7 @@
 'use client'
 
-import { useEffect, useLayoutEffect, useRef } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { useLocale } from 'next-intl'
 import { Loader2 } from 'lucide-react'
 import { MessageList } from '@/components/chat/MessageList'
 import type { AiStreamState, Message } from '@/lib/api/types'
@@ -53,6 +54,11 @@ const FOLLOW_THRESHOLD_PX = 220
  */
 export function MessageViewport(props: Props) {
   const { messages, hasNextPage, isFetchingNextPage, fetchNextPage, aiStream } = props
+  const locale = useLocale()
+
+  // Exact timestamp of the message whose actions menu is currently open — shown
+  // as a sticky chip pinned to the top of the viewport while the menu is open.
+  const [activeMessageTime, setActiveMessageTime] = useState<string | null>(null)
 
   const scrollContainerRef = useRef<HTMLDivElement>(null)
   const topSentinelRef = useRef<HTMLDivElement>(null)
@@ -127,19 +133,42 @@ export function MessageViewport(props: Props) {
   }, [messages.length, aiStream])
 
   return (
-    <div
-      ref={scrollContainerRef}
-      className="absolute inset-0 overflow-y-auto px-4 py-4 z-10"
-    >
-      <div ref={topSentinelRef} className="h-1" />
-
-      {isFetchingNextPage && (
-        <div className="flex justify-center py-2">
-          <Loader2 className="size-4 animate-spin text-muted-foreground" />
+    <div className="absolute inset-0 z-10">
+      {/* Sticky exact-time chip — overlays the top of the viewport while a
+          message's actions menu is open. Sits outside the scroll container so
+          it stays pinned regardless of scroll position. */}
+      {activeMessageTime && (
+        <div className="absolute top-2 left-0 right-0 flex justify-center z-30 pointer-events-none">
+          <span className="text-[11px] bg-background/90 backdrop-blur-sm border px-3 py-1 rounded-full shadow-sm text-muted-foreground font-medium">
+            {new Date(activeMessageTime).toLocaleString(locale, {
+              hour: '2-digit',
+              minute: '2-digit',
+              day: '2-digit',
+              month: '2-digit',
+              year: 'numeric',
+            })}
+          </span>
         </div>
       )}
 
-      <MessageList {...props} />
+      <div
+        ref={scrollContainerRef}
+        className="absolute inset-0 overflow-y-auto px-4 py-4"
+      >
+        <div ref={topSentinelRef} className="h-1" />
+
+        {isFetchingNextPage && (
+          <div className="flex justify-center py-2">
+            <Loader2 className="size-4 animate-spin text-muted-foreground" />
+          </div>
+        )}
+
+        <MessageList
+          {...props}
+          onMenuOpen={setActiveMessageTime}
+          onMenuClose={() => setActiveMessageTime(null)}
+        />
+      </div>
     </div>
   )
 }

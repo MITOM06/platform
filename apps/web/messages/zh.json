@@ -631,6 +631,8 @@
     "typing": "正在输入...",
     "settingsTooltip": "设置",
     "moreActions": "更多操作",
+    "showSidebar": "显示侧边栏",
+    "hideSidebar": "隐藏侧边栏",
     "groupInfoTooltip": "群组信息",
     "viewProfileTooltip": "查看资料",
     "today": "今天",
@@ -1380,6 +1382,8 @@
     "accept": "接受",
     "decline": "拒绝",
     "phoneSetupAction": "添加电话号码 →",
-    "passwordSetupAction": "立即设置密码 →"
+    "passwordSetupAction": "立即设置密码 →",
+    "sectionUnread": "未读",
+    "sectionRead": "已读"
   }
 }

@@ -30,6 +30,10 @@ interface Props {
   onGroupReadDetails?: () => void
   onReactionsDetail?: () => void
   onOptimisticUpdate: (updated: Partial<Message> & { id: string }) => void
+  /** Notifies the parent when the actions menu opens/closes, so the exact
+   *  timestamp can be surfaced as a sticky chip at the top of the viewport. */
+  onMenuOpen?: () => void
+  onMenuClose?: () => void
 }
 
 export function MessageActions({
@@ -45,6 +49,8 @@ export function MessageActions({
   onGroupReadDetails,
   onReactionsDetail,
   onOptimisticUpdate,
+  onMenuOpen,
+  onMenuClose,
 }: Props) {
   const [emojiOpen, setEmojiOpen] = useState(false)
   const t = useTranslations('chat')
@@ -136,7 +142,12 @@ export function MessageActions({
       </Popover>
 
       {/* More actions menu */}
-      <DropdownMenu>
+      <DropdownMenu
+        onOpenChange={(open) => {
+          if (open) onMenuOpen?.()
+          else onMenuClose?.()
+        }}
+      >
         <DropdownMenuTrigger asChild>
           <Button variant="ghost" size="icon-xs" className="size-6 rounded-full">
             <MoreHorizontal className="size-3.5" />

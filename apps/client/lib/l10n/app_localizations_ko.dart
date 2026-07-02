@@ -15,6 +15,12 @@ class AppLocalizationsKo extends AppLocalizations {
   String get notificationsTitle => '알림';
 
   @override
+  String get notificationsSectionUnread => '읽지 않음';
+
+  @override
+  String get notificationsSectionRead => '읽음';
+
+  @override
   String get notificationsEmpty => '아직 알림이 없습니다';
 
   @override

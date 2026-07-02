@@ -1,5 +1,7 @@
+import 'package:go_router/go_router.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
+import '../../../core/utils/global_messenger.dart';
 import '../../chat/domain/chat_provider.dart';
 import '../data/auth_repository.dart';
 import 'auth_state.dart';
@@ -65,6 +67,26 @@ class AuthNotifier extends _$AuthNotifier {
       _registerFcmToken();
       return AuthAuthenticated(user);
     });
+
+    // Fallback: if the router's refreshListenable didn't fire (race between
+    // deep-link handling and GoRouter init), navigate explicitly so the user
+    // isn't stranded on the login/register screen after a successful OAuth.
+    if (state.valueOrNull is AuthAuthenticated) {
+      final context = rootNavigatorKey.currentContext;
+      if (context != null && context.mounted) {
+        // Small delay to give the router listener a chance to redirect first.
+        await Future.delayed(const Duration(milliseconds: 300));
+        if (context.mounted) {
+          final router = GoRouter.of(context);
+          final location =
+              router.routerDelegate.currentConfiguration.uri.path;
+          const publicPaths = {'/login', '/register', '/verify-otp'};
+          if (publicPaths.contains(location)) {
+            context.go('/');
+          }
+        }
+      }
+    }
   }
 
   Future<void> logout() async {

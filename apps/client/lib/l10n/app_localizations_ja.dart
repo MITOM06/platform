@@ -15,6 +15,12 @@ class AppLocalizationsJa extends AppLocalizations {
   String get notificationsTitle => '通知';
 
   @override
+  String get notificationsSectionUnread => '未読';
+
+  @override
+  String get notificationsSectionRead => '既読';
+
+  @override
   String get notificationsEmpty => '通知はまだありません';
 
   @override
