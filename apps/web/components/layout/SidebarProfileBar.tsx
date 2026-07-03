@@ -61,7 +61,7 @@ export function SidebarProfileBar() {
         <DropdownMenuTrigger asChild>
           <button
             type="button"
-            className="group relative flex w-full items-center gap-3 rounded-xl p-2 text-left transition-colors hover:bg-muted/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pon-cyan/50 data-[state=open]:bg-muted/70"
+            className="group relative flex w-full items-center gap-3 rounded-xl p-2 text-left transition-colors hover:bg-muted/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pon-cyan/50 data-[state=open]:bg-muted/70 justify-center @[200px]:justify-start"
           >
             {/* Avatar with PON-gradient ring + presence dot */}
             <span className="relative shrink-0">
@@ -78,7 +78,7 @@ export function SidebarProfileBar() {
               <span className="absolute bottom-0.5 right-0.5 size-3 rounded-full border-2 border-background bg-emerald-500" />
             </span>
 
-            <span className="min-w-0 flex-1">
+            <span className="hidden @[200px]:block min-w-0 flex-1">
               <span className="block truncate text-sm font-semibold leading-tight">
                 {user.displayName}
               </span>
@@ -87,7 +87,7 @@ export function SidebarProfileBar() {
               </span>
             </span>
 
-            <ChevronsUpDown className="size-4 shrink-0 text-muted-foreground transition-colors group-hover:text-foreground" />
+            <ChevronsUpDown className="hidden @[200px]:block size-4 shrink-0 text-muted-foreground transition-colors group-hover:text-foreground" />
           </button>
         </DropdownMenuTrigger>
         <DropdownMenuContent

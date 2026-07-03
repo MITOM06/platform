@@ -28,7 +28,7 @@ export function AssistantEntry() {
     return (
       <Link
         href="/assistant/setup"
-        className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl
+        className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl justify-center @[200px]:justify-start
                    hover:bg-accent transition-[background-color,transform] duration-[180ms]
                    active:scale-[0.98] text-left mb-1 motion-safe:pon-enter"
         aria-label={t('setupCta')}
@@ -39,7 +39,7 @@ export function AssistantEntry() {
         >
           <Plus className="size-5" />
         </div>
-        <div className="flex flex-col min-w-0">
+        <div className="hidden @[200px]:flex flex-col min-w-0">
           <span className="text-sm font-semibold truncate">{t('setupCta')}</span>
           <span className="text-xs text-muted-foreground truncate">{t('subtitle')}</span>
         </div>
@@ -69,9 +69,9 @@ export function AssistantEntry() {
       <button
         onClick={handleOpen}
         disabled={loading}
-        className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl
+        className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl justify-center @[200px]:justify-start
                    hover:bg-accent transition-[background-color,transform] duration-[180ms]
-                   active:scale-[0.98] text-left disabled:opacity-60 pr-12"
+                   active:scale-[0.98] text-left disabled:opacity-60 pr-3 @[200px]:pr-12"
         aria-label={t('openChat')}
       >
         <div
@@ -83,7 +83,7 @@ export function AssistantEntry() {
           <span aria-hidden className="motion-safe:pon-sheen" />
           <span className="relative">{assistant.name[0]?.toUpperCase() ?? '🤖'}</span>
         </div>
-        <div className="flex flex-col min-w-0">
+        <div className="hidden @[200px]:flex flex-col min-w-0">
           <span className="text-sm font-semibold truncate">{assistant.name}</span>
           <span className="text-xs text-muted-foreground truncate">{t('subtitle')}</span>
         </div>
@@ -91,7 +91,7 @@ export function AssistantEntry() {
       <button
         onClick={handleSettings}
         className="absolute right-2 top-1/2 -translate-y-1/2 size-8 rounded-lg
-                   flex items-center justify-center text-muted-foreground
+                   hidden @[200px]:flex items-center justify-center text-muted-foreground
                    hover:bg-background hover:text-foreground transition-colors"
         aria-label={tSettings('title')}
       >

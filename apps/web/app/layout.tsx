@@ -51,9 +51,11 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             Uses the PON brand cyan; spinner disabled so only the bar shows. */}
         <NextTopLoader
           color="#6AC9FF"
-          height={2}
+          height={3}
           showSpinner={false}
-          shadow="0 0 10px #6AC9FF,0 0 5px #6AC9FF"
+          shadow="0 0 12px #6AC9FF,0 0 6px #6AC9FF"
+          initialPosition={0.1}
+          crawlSpeed={200}
         />
         <NextIntlClientProvider locale={locale} messages={messages}>
           <Providers>{children}</Providers>
