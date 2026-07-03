@@ -27,7 +27,7 @@ import { UserProfileDrawer } from './UserProfileDrawer'
 import { StartCallSheet } from '@/components/call/StartCallSheet'
 import { useNickname } from '@/lib/nicknames'
 import { absoluteMediaUrl } from '@/lib/media'
-import { useUiStore } from '@/lib/store/ui.store'
+import { useUiStore, SIDEBAR_COLLAPSE_THRESHOLD } from '@/lib/store/ui.store'
 import { cn } from '@/lib/utils'
 
 const AI_BOT_ID = 'ai-bot-000000000000000000000001'
@@ -86,7 +86,7 @@ export function ConversationHeader({
   const nickname = useNickname(conversationId, otherUserId)
   const assistantName = useAssistantName()
   const { data: extBotAssistant } = useAssistant()
-  const sidebarCollapsed = useUiStore((s) => s.sidebarCollapsed)
+  const sidebarCollapsed = useUiStore((s) => s.sidebarWidth <= SIDEBAR_COLLAPSE_THRESHOLD)
   const toggleSidebar = useUiStore((s) => s.toggleSidebar)
 
   const displayName =

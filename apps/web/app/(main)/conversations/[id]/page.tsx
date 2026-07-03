@@ -22,6 +22,7 @@ import { AiTraceModal } from '@/components/chat/AiTraceModal'
 import { ForwardMessageModal } from '@/components/chat/ForwardMessageModal'
 import { ActiveCallBanner } from '@/components/call/ActiveCallBanner'
 import { useCallStore } from '@/lib/store/call.store'
+import { Skeleton } from '@/components/ui/skeleton'
 import { cn } from '@/lib/utils'
 import { useWallpaper } from '@/lib/hooks/use-wallpaper'
 import { useMessageCache } from '@/lib/hooks/use-message-cache'
@@ -47,7 +48,7 @@ export default function ConversationPage({ params }: Props) {
   const [traceMessageId, setTraceMessageId] = useState<string | null>(null)
   const groupCallId = useCallStore((s) => s.groupCallId)
 
-  const { data: conversation } = useConversation(id)
+  const { data: conversation, isLoading: convLoading } = useConversation(id)
 
   const pinnedMessages = useMemo(
     () => conversation?.pinnedMessages?.map((m) => m.id) ?? [],
@@ -153,6 +154,38 @@ export default function ConversationPage({ params }: Props) {
     },
     [patchMessage],
   )
+
+  // First visit with no cached conversation: show a full-page skeleton instead
+  // of a blank screen while the conversation (and its messages) load. Once the
+  // conversation is cached, subsequent visits render instantly and skip this.
+  if (convLoading && !conversation) {
+    return (
+      <div className="flex flex-col h-full">
+        {/* Header skeleton */}
+        <div className="h-14 border-b px-4 flex items-center gap-3 shrink-0">
+          <Skeleton className="size-9 rounded-full" />
+          <div className="flex-1 space-y-1.5">
+            <Skeleton className="h-4 w-32 rounded" />
+            <Skeleton className="h-3 w-20 rounded" />
+          </div>
+        </div>
+        {/* Message skeletons */}
+        <div className="flex-1 p-4 space-y-3 overflow-hidden">
+          {[80, 55, 70, 40, 65, 50].map((w, i) => (
+            <div key={i} className={`flex ${i % 2 === 0 ? 'justify-end' : 'justify-start'}`}>
+              {i % 2 !== 0 && <Skeleton className="size-7 rounded-full mr-2 shrink-0 self-end" />}
+              <Skeleton className="h-9 rounded-2xl" style={{ width: `${w}%`, maxWidth: '320px' }} />
+            </div>
+          ))}
+        </div>
+        {/* Input skeleton */}
+        <div className="h-16 border-t px-4 flex items-center gap-3 shrink-0">
+          <Skeleton className="flex-1 h-10 rounded-xl" />
+          <Skeleton className="size-9 rounded-full" />
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="flex flex-col h-full relative">

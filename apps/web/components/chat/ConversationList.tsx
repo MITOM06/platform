@@ -141,7 +141,7 @@ export function ConversationList() {
       />
 
       <div className="flex flex-col h-full">
-        <div className="px-3 py-2 shrink-0">
+        <div className="hidden @[200px]:block px-3 py-2 shrink-0">
           <div className="relative">
             <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
             <Input
@@ -236,14 +236,14 @@ export function ConversationList() {
                   className="flex-1 flex-col md:flex-row gap-0.5 md:gap-1 text-[10px] md:text-xs h-full md:h-auto rounded-none md:rounded-sm px-2"
                 >
                   <MessageSquare className="size-5 md:size-3.5 shrink-0" />
-                  <span>{t('tabChats')}</span>
+                  <span className="hidden @[200px]:inline">{t('tabChats')}</span>
                 </TabsTrigger>
                 <TabsTrigger
                   value="archived"
                   className="flex-1 flex-col md:flex-row gap-0.5 md:gap-1 text-[10px] md:text-xs h-full md:h-auto rounded-none md:rounded-sm px-2"
                 >
                   <Archive className="size-5 md:size-3.5 shrink-0" />
-                  <span>{t('tabArchived')}</span>
+                  <span className="hidden @[200px]:inline">{t('tabArchived')}</span>
                 </TabsTrigger>
                 <TabsTrigger
                   value="requests"
@@ -251,7 +251,7 @@ export function ConversationList() {
                 >
                   <UserX className="size-5 md:size-3.5 shrink-0" />
                   <span className="relative">
-                    {t('tabRequests')}
+                    <span className="hidden @[200px]:inline">{t('tabRequests')}</span>
                     <RequestsBadge count={requestCount} />
                   </span>
                 </TabsTrigger>

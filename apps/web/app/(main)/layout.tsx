@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, useRef, type CSSProperties } from 'react'
 import dynamic from 'next/dynamic'
 import { useQueryClient } from '@tanstack/react-query'
 import { useRouter, usePathname } from 'next/navigation'
@@ -85,18 +85,56 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
   // conversation list owns the screen there and has its own bottom tab bar.
   const showTabBar = !isMessagingArea
 
-  // ── Collapsible sidebar (desktop only) ────────────────────────────────────
-  // Two-state show/hide (no continuous drag-resize). The persisted value lives
-  // in localStorage and is applied post-hydration to avoid an SSR mismatch. The
-  // toggle button itself lives in ConversationHeader.
-  const setSidebarCollapsed = useUiStore((s) => s.setSidebarCollapsed)
-  const sidebarCollapsed = useUiStore((s) => s.sidebarCollapsed)
+  // ── Resizable sidebar (desktop only) ──────────────────────────────────────
+  // Width lives in the UI store (single source of truth shared with the
+  // ConversationHeader collapse toggle) and is applied via a CSS variable so
+  // mobile stays full-width (`w-full`) and only `md:w-[var(--sidebar-w)]` picks
+  // up the dynamic value. The sidebar content adapts to narrow widths via CSS
+  // container queries (`@container` on <aside> + `@[200px]:` variants below).
+  const sidebarWidth = useUiStore((s) => s.sidebarWidth)
+  const setSidebarWidth = useUiStore((s) => s.setSidebarWidth)
+  const isDragging = useRef(false)
+  const dragStartX = useRef(0)
+  const dragStartWidth = useRef(0)
 
+  // Restore persisted width on mount (post-hydration — localStorage/window are
+  // unavailable during SSR). `persist: false` so we don't rewrite what we read.
   useEffect(() => {
-    if (localStorage.getItem('pon-sidebar-collapsed') === 'true') {
-      setSidebarCollapsed(true)
+    const stored = localStorage.getItem('pon-sidebar-width')
+    if (stored) {
+      const w = parseInt(stored, 10)
+      if (!isNaN(w) && w >= 68 && w <= window.innerWidth * 0.8) {
+        setSidebarWidth(w, false)
+      }
     }
-  }, [setSidebarCollapsed])
+  }, [setSidebarWidth])
+
+  const handleDragStart = (e: React.MouseEvent) => {
+    e.preventDefault()
+    isDragging.current = true
+    dragStartX.current = e.clientX
+    dragStartWidth.current = useUiStore.getState().sidebarWidth
+
+    const onMove = (ev: MouseEvent) => {
+      if (!isDragging.current) return
+      const delta = ev.clientX - dragStartX.current
+      const next = Math.min(
+        Math.max(dragStartWidth.current + delta, 68),
+        window.innerWidth * 0.8,
+      )
+      // Live update without persisting on every frame.
+      setSidebarWidth(next, false)
+    }
+    const onUp = () => {
+      isDragging.current = false
+      // Persist the final width once, on release.
+      setSidebarWidth(useUiStore.getState().sidebarWidth, true)
+      window.removeEventListener('mousemove', onMove)
+      window.removeEventListener('mouseup', onUp)
+    }
+    window.addEventListener('mousemove', onMove)
+    window.addEventListener('mouseup', onUp)
+  }
 
   useEffect(() => {
     if (!accessToken || stompService.isConnected()) return
@@ -270,30 +308,37 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
       {showSidebar && (
       <aside
         className={cn(
-          'w-full border-r flex-col shrink-0 relative overflow-hidden transition-[width] duration-200',
+          'w-full border-r flex-col shrink-0 relative overflow-hidden @container',
           isConversationOpen ? 'hidden md:flex' : 'flex',
-          // Desktop: 288px expanded; collapsed to hidden only while a conversation
-          // is open (the toggle lives in ConversationHeader, so on the list page
-          // the sidebar always stays visible and can't get stuck hidden).
-          sidebarCollapsed && isConversationOpen ? 'md:hidden' : 'md:w-72',
+          // Desktop: dynamic width driven by the drag handle / collapse toggle.
+          'md:w-[var(--sidebar-w)]',
         )}
+        style={{ '--sidebar-w': `${sidebarWidth}px` } as CSSProperties}
       >
+        {/* Drag handle — right edge, desktop only. 4px hot-zone that tints on
+            hover; drag to resize, sidebar content compacts at narrow widths. */}
+        <div
+          onMouseDown={handleDragStart}
+          role="separator"
+          aria-orientation="vertical"
+          className="hidden md:block absolute right-0 top-0 bottom-0 w-1 cursor-col-resize z-20 hover:bg-primary/20 active:bg-primary/40 transition-colors"
+        />
         {/* Ambient neon glow spheres */}
         <div className="absolute inset-0 pointer-events-none overflow-hidden">
           <div className="absolute -top-16 -left-16 size-40 rounded-full bg-pon-cyan blur-[60px] opacity-[0.06] dark:opacity-[0.09]" />
           <div className="absolute -bottom-16 -right-16 size-40 rounded-full bg-pon-peach blur-[60px] opacity-[0.06] dark:opacity-[0.09]" />
         </div>
-        <div className="h-16 border-b px-4 flex items-center justify-between shrink-0 bg-background/95 backdrop-blur-md">
-          {/* Logo & PON Text */}
+        <div className="h-16 border-b px-2 @[200px]:px-4 flex items-center justify-center @[200px]:justify-between shrink-0 bg-background/95 backdrop-blur-md">
+          {/* Logo & PON Text — text hides when the rail is compact */}
           <div className="flex items-center gap-2 select-none">
             <PonLogo className="size-8" />
-            <span className="font-bold text-xl tracking-wider bg-gradient-to-r from-pon-cyan via-pon-peach to-pon-pink bg-clip-text text-transparent">
+            <span className="hidden @[200px]:inline font-bold text-xl tracking-wider bg-gradient-to-r from-pon-cyan via-pon-peach to-pon-pink bg-clip-text text-transparent">
               PON
             </span>
           </div>
 
-          {/* Action Icons */}
-          <div className="flex items-center gap-0.5">
+          {/* Action Icons — hidden when the rail is compact (expand to reach them) */}
+          <div className="hidden @[200px]:flex items-center gap-0.5">
             <NotificationBell />
             <Button
               variant="ghost"
@@ -346,7 +391,10 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
           </div>
         </div>
         <div className="flex-1 flex flex-col overflow-hidden pb-16 md:pb-0">
-          <ActiveFriendsRow />
+          {/* Horizontal presence row doesn't fit the compact rail — hide it. */}
+          <div className="hidden @[200px]:block">
+            <ActiveFriendsRow />
+          </div>
           <AssistantEntry />
           <ConversationList />
         </div>

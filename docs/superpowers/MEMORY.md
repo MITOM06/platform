@@ -97,6 +97,7 @@ NEXT_PUBLIC_FIREBASE_APP_ID=1:246431845875:web:246c24ecc32054f798d686
 | `plans/2026-07-02-ux-polish.md` | Page loading animation + unsaved changes fix + role InfoRow + Profile title fix + image/video quality | ⏳ Chưa execute |
 | `plans/2026-07-02-auth-ui-and-bot-fixes.md` | Auth form wider + Terms no-wrap + prefill sau reset password + AI bot naming + extbot badge | ⏳ Chưa execute |
 | `plans/2026-07-02-ai-memory-sessions.md` | AI session management: /new command + session list UI + auto-summarize compact | ⏳ Chưa execute |
+| `plans/2026-07-02-fix-loading-and-sidebar.md` | **URGENT FIX** — Khôi phục sidebar drag-resize (bị xóa sai) + CSS container queries compact mode + full-page conversation skeleton | ⏳ Chưa execute |
 
 ### Prompt cho Claude Code thực thi tất cả
 
@@ -118,9 +119,11 @@ NEXT_PUBLIC_FIREBASE_APP_ID=1:246431845875:web:246c24ecc32054f798d686
 13. platform/docs/superpowers/plans/2026-07-02-ux-polish.md
 14. platform/docs/superpowers/plans/2026-07-02-auth-ui-and-bot-fixes.md
 15. platform/docs/superpowers/plans/2026-07-02-ai-memory-sessions.md
+16. platform/docs/superpowers/plans/2026-07-02-fix-loading-and-sidebar.md  ← URGENT, execute trước các plan khác
 
 Không bỏ sót task nào trong mỗi plan.
 Lưu ý: plan 13 override Task 4+5 của plan 10 (role-display) — đọc plan 13 SAU plan 10.
+Plan 16 phải execute TRƯỚC plan 11 và 13 (vì nó fix implementation sai của các plan cũ).
 ```
 
 ---
