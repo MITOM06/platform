@@ -98,6 +98,9 @@ NEXT_PUBLIC_FIREBASE_APP_ID=1:246431845875:web:246c24ecc32054f798d686
 | `plans/2026-07-02-auth-ui-and-bot-fixes.md` | Auth form wider + Terms no-wrap + prefill sau reset password + AI bot naming + extbot badge | ⏳ Chưa execute |
 | `plans/2026-07-02-ai-memory-sessions.md` | AI session management: /new command + session list UI + auto-summarize compact | ⏳ Chưa execute |
 | `plans/2026-07-02-fix-loading-and-sidebar.md` | **URGENT FIX** — Khôi phục sidebar drag-resize (bị xóa sai) + CSS container queries compact mode + full-page conversation skeleton | ⏳ Chưa execute |
+| `plans/2026-07-03-security-hardening.md` | Security hardening: block SVG upload (XSS), CORS wildcard fix, UUID file ID, block executable extensions, timingSafeEqual internal key, Next.js security headers, remove password from sessionStorage | ✅ Done |
+| `plans/2026-07-03-security-hardening-2.md` | Security hardening round 2: SSRF fix (KB fileUrl validation), message content size limit (@Size + WebSocket frame cap), OTP hashing (SHA-256) | ⏳ Chưa execute |
+| `plans/2026-07-04-sidebar-min-width-and-offline-banner.md` | Sidebar min drag = 200px (dừng ở tab icon-only, conversation vẫn có text); OfflineBanner compact = icon-only + tooltip khi hover | ⏳ Chưa execute |
 
 ### Prompt cho Claude Code thực thi tất cả
 
@@ -120,6 +123,8 @@ NEXT_PUBLIC_FIREBASE_APP_ID=1:246431845875:web:246c24ecc32054f798d686
 14. platform/docs/superpowers/plans/2026-07-02-auth-ui-and-bot-fixes.md
 15. platform/docs/superpowers/plans/2026-07-02-ai-memory-sessions.md
 16. platform/docs/superpowers/plans/2026-07-02-fix-loading-and-sidebar.md  ← URGENT, execute trước các plan khác
+17. platform/docs/superpowers/plans/2026-07-03-security-hardening.md  ← ✅ Done
+18. platform/docs/superpowers/plans/2026-07-03-security-hardening-2.md
 
 Không bỏ sót task nào trong mỗi plan.
 Lưu ý: plan 13 override Task 4+5 của plan 10 (role-display) — đọc plan 13 SAU plan 10.

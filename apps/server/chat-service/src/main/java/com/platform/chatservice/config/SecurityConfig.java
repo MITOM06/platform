@@ -3,6 +3,7 @@ package com.platform.chatservice.config;
 import com.platform.chatservice.security.JwtAuthenticationFilter;
 import java.util.Arrays;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -23,11 +24,14 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 @EnableWebSecurity
 @EnableMethodSecurity
 @RequiredArgsConstructor
+@Slf4j
 public class SecurityConfig {
 
   private final JwtAuthenticationFilter jwtAuthenticationFilter;
 
-  @Value("${app.cors.allowed-origins:*}")
+  // REQUIRED in every environment. No open-CORS default — the service refuses to
+  // start (below) if ALLOWED_ORIGINS is unset, and warns if it is the wildcard "*".
+  @Value("${app.cors.allowed-origins:}")
   private String allowedOrigins;
 
   @Bean
@@ -75,6 +79,13 @@ public class SecurityConfig {
 
   @Bean
   public CorsConfigurationSource corsConfigurationSource() {
+    if (allowedOrigins == null || allowedOrigins.isBlank()) {
+      throw new IllegalStateException(
+          "ALLOWED_ORIGINS must be set. Refusing to start with open CORS.");
+    }
+    if ("*".equals(allowedOrigins.trim())) {
+      log.warn("⚠️  CORS ALLOWED_ORIGINS='*' — only acceptable in local dev, NEVER in production");
+    }
     CorsConfiguration config = new CorsConfiguration();
     // Read allowed origins from ALLOWED_ORIGINS env (comma-separated). Use origin
     // patterns so credentials are allowed even when the wildcard "*" default is used.

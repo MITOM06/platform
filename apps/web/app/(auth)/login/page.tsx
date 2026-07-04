@@ -74,15 +74,15 @@ export default function LoginPage() {
       if (!raw) return
       sessionStorage.removeItem('pon:auth:prefill')
 
-      const { email, password, _ts } = JSON.parse(raw) as {
+      const { email, _ts } = JSON.parse(raw) as {
         email: string
-        password: string
         _ts: number
       }
       if (Date.now() - _ts > 5 * 60 * 1000) return
 
+      // Only the email is pre-filled — the password is never persisted (XSS risk).
+      // The user re-enters the password they just set.
       setValue('email', email, { shouldDirty: false })
-      setValue('password', password, { shouldDirty: false })
     } catch {
       // Malformed JSON or storage blocked — nothing to prefill.
     }

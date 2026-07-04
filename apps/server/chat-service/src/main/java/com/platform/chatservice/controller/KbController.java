@@ -37,7 +37,8 @@ public class KbController {
 
   @PostMapping
   public ResponseEntity<KbDocumentResponse> uploadDocument(
-      @RequestBody KbUploadRequest request, Principal principal) throws JsonProcessingException {
+      @jakarta.validation.Valid @RequestBody KbUploadRequest request, Principal principal)
+      throws JsonProcessingException {
 
     Conversation conv = requireParticipant(request.getConversationId(), principal.getName());
 

@@ -9,6 +9,7 @@ import org.springframework.messaging.simp.config.MessageBrokerRegistry;
 import org.springframework.web.socket.config.annotation.EnableWebSocketMessageBroker;
 import org.springframework.web.socket.config.annotation.StompEndpointRegistry;
 import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerConfigurer;
+import org.springframework.web.socket.config.annotation.WebSocketTransportRegistration;
 
 @Configuration
 @EnableWebSocketMessageBroker
@@ -45,5 +46,19 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
   @Override
   public void configureClientInboundChannel(ChannelRegistration registration) {
     registration.interceptors(authChannelInterceptor);
+  }
+
+  /**
+   * DoS guard on the STOMP transport. Caps a single inbound STOMP frame at 64KB (message content is
+   * separately capped at 10,000 chars via {@code @Size}, so this only needs headroom for frame
+   * headers/metadata), bounds the per-session send buffer, and times out a slow-consuming client
+   * instead of letting its buffer grow unbounded.
+   */
+  @Override
+  public void configureWebSocketTransport(WebSocketTransportRegistration registration) {
+    registration
+        .setMessageSizeLimit(64 * 1024) // 64KB max per STOMP message
+        .setSendBufferSizeLimit(512 * 1024) // 512KB send buffer per session
+        .setSendTimeLimit(20_000); // 20s timeout if a client receives slowly
   }
 }

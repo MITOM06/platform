@@ -6,7 +6,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import * as dns from 'node:dns';
-import { randomInt } from 'node:crypto';
+import { randomInt, createHash } from 'node:crypto';
 import { JwtService, JwtSignOptions } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { nanoid } from 'nanoid';
@@ -66,6 +66,16 @@ export class AuthService {
   // Cryptographically secure 6-digit OTP (100000–999999).
   private generateOtp(): string {
     return randomInt(100000, 1000000).toString();
+  }
+
+  /**
+   * One-way hash of an OTP before it is persisted. SHA-256 (not bcrypt) is the
+   * right tool here: OTPs are short-lived (5 min) and brute-force is already
+   * rate-limited at the verify layer, so we only need to ensure a DB dump can't
+   * reveal live OTPs. Compare hash-to-hash; never store or match the raw code.
+   */
+  private hashOtp(otp: string): string {
+    return createHash('sha256').update(otp).digest('hex');
   }
 
   // ===================== SOCIAL LOGIN =====================
@@ -337,7 +347,7 @@ export class AuthService {
     const otp = this.generateOtp();
     const expires = new Date(Date.now() + 5 * 60 * 1000);
 
-    await this.usersService.updateOtp(user._id, otp, expires);
+    await this.usersService.updateOtp(user._id, this.hashOtp(otp), expires);
     await this.mailService.sendOtpEmail(email, otp, locale);
     return { success: true, code: AuthCode.OTP_SENT };
   }
@@ -368,7 +378,7 @@ export class AuthService {
       throw new BadRequestException({ code: AuthCode.OTP_EXPIRED });
     }
 
-    if (user.otpCode !== otp) {
+    if (user.otpCode !== this.hashOtp(otp)) {
       const remaining = maxAttempts - attempts;
       throw new BadRequestException({
         code: AuthCode.OTP_WRONG_WITH_REMAINING,
@@ -513,7 +523,7 @@ export class AuthService {
       // Account exists but unverified → resend OTP instead of erroring
       const otp = this.generateOtp();
       const expires = new Date(Date.now() + 5 * 60 * 1000);
-      await this.usersService.updateOtp(existingUser._id, otp, expires);
+      await this.usersService.updateOtp(existingUser._id, this.hashOtp(otp), expires);
       await this.mailService.sendOtpEmail(dto.email, otp, locale);
       return {
         code: AuthCode.ACCOUNT_UNVERIFIED_OTP_SENT,
@@ -533,7 +543,7 @@ export class AuthService {
 
     const otp = this.generateOtp();
     const expires = new Date(Date.now() + 5 * 60 * 1000);
-    await this.usersService.updateOtp(user._id, otp, expires);
+    await this.usersService.updateOtp(user._id, this.hashOtp(otp), expires);
     await this.mailService.sendOtpEmail(dto.email, otp, locale);
 
     return {
@@ -562,7 +572,7 @@ export class AuthService {
 
     const otp = this.generateOtp();
     const expires = new Date(Date.now() + 5 * 60 * 1000);
-    await this.usersService.updateOtp(user._id, otp, expires);
+    await this.usersService.updateOtp(user._id, this.hashOtp(otp), expires);
     await this.mailService.sendOtpEmail(email, otp, locale);
 
     // Reset attempt counter khi gửi lại OTP mới

@@ -51,6 +51,49 @@ if (chatUrl) {
 const nextConfig: NextConfig = {
   output: 'standalone',
   images: { remotePatterns },
+
+  async headers() {
+    return [
+      {
+        // Apply security headers to all routes.
+        source: '/(.*)',
+        headers: [
+          { key: 'X-Frame-Options', value: 'DENY' },
+          { key: 'X-Content-Type-Options', value: 'nosniff' },
+          { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
+          {
+            key: 'Permissions-Policy',
+            value: 'camera=(), microphone=(), geolocation=()',
+          },
+          // HSTS — production only (Vercel is always HTTPS). Next.js does not
+          // add this automatically, so set it explicitly.
+          ...(process.env.NODE_ENV === 'production'
+            ? [
+                {
+                  key: 'Strict-Transport-Security',
+                  value: 'max-age=31536000; includeSubDomains; preload',
+                },
+              ]
+            : []),
+          // Baseline CSP. 'unsafe-inline'/'unsafe-eval' are a temporary tradeoff
+          // for Next.js + shadcn inline styles/scripts; tighten as the app stabilises.
+          {
+            key: 'Content-Security-Policy',
+            value: [
+              "default-src 'self'",
+              "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.gstatic.com https://apis.google.com",
+              "style-src 'self' 'unsafe-inline'",
+              `img-src 'self' data: blob: ${process.env.NEXT_PUBLIC_CHAT_URL ?? ''} https://lh3.googleusercontent.com`,
+              `connect-src 'self' ${process.env.NEXT_PUBLIC_AUTH_URL ?? ''} ${process.env.NEXT_PUBLIC_CHAT_URL ?? ''} ${process.env.NEXT_PUBLIC_AI_URL ?? ''} wss: ws:`,
+              "frame-ancestors 'none'",
+              "base-uri 'self'",
+              "form-action 'self'",
+            ].join('; '),
+          },
+        ],
+      },
+    ]
+  },
 }
 
 export default withNextIntl(nextConfig)
