@@ -8,11 +8,15 @@ import com.platform.chatservice.service.RateLimiterService;
 import com.platform.chatservice.service.VirusScanService;
 import java.io.IOException;
 import java.util.Map;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.bson.Document;
 import org.bson.types.ObjectId;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.core.io.Resource;
+import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.gridfs.GridFsOperations;
 import org.springframework.data.mongodb.gridfs.GridFsResource;
 import org.springframework.data.mongodb.gridfs.GridFsTemplate;
@@ -70,10 +74,19 @@ public class UploadController {
     // Virus/malware scan (no-op stub in dev; swap for ClamAV in prod)
     virusScanService.scan(file);
 
-    var objectId =
-        gridFsTemplate.store(file.getInputStream(), file.getOriginalFilename(), contentType);
+    // Use a cryptographically random UUID as the public storage key so URLs
+    // can't be enumerated (a Mongo ObjectId leaks its creation timestamp).
+    String fileId = UUID.randomUUID().toString();
+    Document metadata =
+        new Document()
+            .append("fileId", fileId)
+            .append("originalFilename", file.getOriginalFilename())
+            .append("uploadedBy", principal.getUserId());
 
-    String url = "/api/uploads/" + objectId.toString();
+    // Store with the UUID as GridFS filename and mirror it into metadata for lookup.
+    gridFsTemplate.store(file.getInputStream(), fileId, contentType, metadata);
+
+    String url = "/api/uploads/" + fileId;
     // Trả về kèm filename + size để client dựng "file card" (tên, dung lượng).
     return ResponseEntity.ok(
         Map.of(
@@ -102,17 +115,24 @@ public class UploadController {
   public ResponseEntity<Resource> getFile(
       @PathVariable String id,
       @RequestParam(name = "download", required = false) boolean download) {
-    ObjectId objectId;
-    try {
-      objectId = new ObjectId(id);
-    } catch (IllegalArgumentException e) {
+    // New files use a random UUID key; legacy files still resolve by ObjectId.
+    boolean isUuid = id.matches("[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}");
+    boolean isObjectId = id.matches("[0-9a-f]{24}");
+    if (!isUuid && !isObjectId) {
       return ResponseEntity.notFound().build();
     }
 
-    com.mongodb.client.gridfs.model.GridFSFile gridFSFile =
-        gridFsTemplate.findOne(
-            new org.springframework.data.mongodb.core.query.Query(
-                org.springframework.data.mongodb.core.query.Criteria.where("_id").is(objectId)));
+    com.mongodb.client.gridfs.model.GridFSFile gridFSFile;
+    if (isUuid) {
+      gridFSFile = gridFsTemplate.findOne(Query.query(Criteria.where("metadata.fileId").is(id)));
+    } else {
+      try {
+        ObjectId objectId = new ObjectId(id);
+        gridFSFile = gridFsTemplate.findOne(Query.query(Criteria.where("_id").is(objectId)));
+      } catch (IllegalArgumentException e) {
+        return ResponseEntity.notFound().build();
+      }
+    }
 
     if (gridFSFile == null) {
       return ResponseEntity.notFound().build();
@@ -130,10 +150,26 @@ public class UploadController {
       // contentType không hợp lệ → giữ octet-stream
     }
 
+    // Prefer the original filename (stored in metadata for UUID-keyed files) so a
+    // download keeps its real name rather than exposing the UUID storage key.
+    String displayName = resource.getFilename();
+    Document meta = gridFSFile.getMetadata();
+    if (meta != null && meta.getString("originalFilename") != null) {
+      displayName = meta.getString("originalFilename");
+    }
+
     // download=true → buộc trình duyệt/thiết bị tải file về (attachment);
     // mặc định inline để hiển thị ngay trong app.
     String disposition =
-        (download ? "attachment" : "inline") + "; filename=\"" + resource.getFilename() + "\"";
+        (download ? "attachment" : "inline") + "; filename=\"" + displayName + "\"";
+
+    // Defense-in-depth: never let SVG/XML render inline — force download so any
+    // embedded <script> can't execute. Covers files stored before SVG was blocked.
+    String storedTypeLower = mediaType.toString().toLowerCase();
+    if (storedTypeLower.contains("svg") || storedTypeLower.contains("xml")) {
+      mediaType = MediaType.APPLICATION_OCTET_STREAM;
+      disposition = "attachment; filename=\"" + displayName + "\"";
+    }
 
     try {
       return ResponseEntity.ok()
@@ -184,7 +220,7 @@ public class UploadController {
     if (lower.endsWith(".bmp")) return "image/bmp";
     if (lower.endsWith(".heic")) return "image/heic";
     if (lower.endsWith(".heif")) return "image/heif";
-    if (lower.endsWith(".svg")) return "image/svg+xml";
+    // SVG intentionally omitted — see FileValidationService (stored-XSS vector).
     // Video
     if (lower.endsWith(".mp4")) return "video/mp4";
     if (lower.endsWith(".mov")) return "video/quicktime";

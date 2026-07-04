@@ -148,13 +148,13 @@ export default function ForgotPasswordPage() {
       await authService.resetPassword(email, collectedOtp, password)
       toast.success(t('resetSuccess'))
 
-      // Bridge the just-set credentials to the login form so the user doesn't
-      // have to retype them. sessionStorage (not localStorage) auto-clears when
-      // the tab closes and never lands in URL history — safer than query params.
+      // Bridge just the email to the login form so the user doesn't have to
+      // retype it. NEVER persist the password — sessionStorage is readable by
+      // any XSS on the page. The user re-enters the password they just set.
       try {
         sessionStorage.setItem(
           'pon:auth:prefill',
-          JSON.stringify({ email, password, _ts: Date.now() }),
+          JSON.stringify({ email, _ts: Date.now() }),
         )
       } catch {
         // sessionStorage may be blocked (incognito strict mode) — non-fatal.

@@ -62,7 +62,8 @@ export class KbProcessorService {
         { upsert: true, new: true },
       );
 
-      // Fetch file content
+      // Fetch file content (SSRF guard runs first — see validateFileUrl).
+      this.validateFileUrl(fileUrl);
       const response = await fetch(fileUrl);
       if (!response.ok) throw new Error(`HTTP ${response.status} fetching ${fileUrl}`);
       const arrayBuffer = await response.arrayBuffer();
@@ -125,6 +126,62 @@ export class KbProcessorService {
           error: message,
         })
         .catch(() => {});
+    }
+  }
+
+  /**
+   * SSRF guard applied before fetching a KB document. Only URLs that point at a
+   * chat-service GridFS upload path are allowed. This is defense-in-depth: the
+   * chat-service `KbUploadRequest.@Pattern` already rejects hostile fileUrls, but
+   * ai-service re-validates so a compromised/spoofed Redis payload can never make
+   * it fetch a metadata endpoint or an internal host.
+   */
+  private validateFileUrl(fileUrl: string): void {
+    // Relative upload paths originate inside chat-service and cannot target an
+    // external host — allow them straight through.
+    if (fileUrl.startsWith('/api/uploads/')) return;
+
+    let parsed: URL;
+    try {
+      parsed = new URL(fileUrl);
+    } catch {
+      throw new Error(`Invalid fileUrl: ${fileUrl}`);
+    }
+
+    const { hostname } = parsed;
+
+    // Known cloud metadata hosts.
+    const blockedHosts = [
+      '169.254.169.254', // AWS/GCP/Azure link-local metadata
+      'metadata.google.internal',
+      '100.100.100.200', // Alibaba metadata
+    ];
+    if (blockedHosts.includes(hostname)) {
+      throw new Error(`SSRF blocked: fileUrl points to restricted host ${hostname}`);
+    }
+
+    // Private / loopback IP ranges.
+    const privateRanges = [
+      /^127\./, // loopback
+      /^10\./, // RFC 1918
+      /^172\.(1[6-9]|2\d|3[01])\./, // RFC 1918
+      /^192\.168\./, // RFC 1918
+      /^169\.254\./, // link-local
+      /^::1$/, // IPv6 loopback
+      /^fd/, // IPv6 ULA
+    ];
+    if (privateRanges.some((re) => re.test(hostname))) {
+      // Allow localhost only outside production (local dev fetches from :8080).
+      if (process.env.NODE_ENV !== 'production' && hostname === 'localhost') return;
+      throw new Error(`SSRF blocked: fileUrl points to private IP ${hostname}`);
+    }
+
+    if (!['http:', 'https:'].includes(parsed.protocol)) {
+      throw new Error(`SSRF blocked: scheme ${parsed.protocol} not allowed`);
+    }
+
+    if (!parsed.pathname.startsWith('/api/uploads/')) {
+      throw new Error(`SSRF blocked: fileUrl path must be /api/uploads/*, got ${parsed.pathname}`);
     }
   }
 

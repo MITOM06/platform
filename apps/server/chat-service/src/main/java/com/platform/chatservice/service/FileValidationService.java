@@ -3,6 +3,7 @@ package com.platform.chatservice.service;
 import com.platform.chatservice.exception.BadRequestException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -21,10 +22,93 @@ public class FileValidationService {
   private static final long MAX_AUDIO_BYTES = 20L * 1024 * 1024; // 20 MB
   private static final long MAX_DOC_BYTES = 20L * 1024 * 1024; // 20 MB
 
+  /** Extensions that must never be uploaded — executables, scripts, or macro-carrying formats. */
+  private static final Set<String> BLOCKED_EXTENSIONS =
+      Set.of(
+          // Windows executables
+          "exe",
+          "msi",
+          "bat",
+          "cmd",
+          "com",
+          "scr",
+          "pif",
+          "vbs",
+          "vbe",
+          "js",
+          "jse",
+          "ws",
+          "wsh",
+          "wsf",
+          "ps1",
+          "ps1xml",
+          "ps2",
+          "ps2xml",
+          "psc1",
+          "psc2",
+          "msh",
+          "msh1",
+          "msh2",
+          "mshxml",
+          "reg",
+          "inf",
+          // Linux/Mac executables
+          "sh",
+          "bash",
+          "zsh",
+          "fish",
+          "csh",
+          "ksh",
+          "run",
+          "app",
+          "dmg",
+          "pkg",
+          // Android/Java
+          "apk",
+          "jar",
+          "class",
+          "dex",
+          // Office macros (high risk)
+          "xlsm",
+          "xlsb",
+          "docm",
+          "pptm",
+          "xltm",
+          "dotm",
+          "potm",
+          "ppam",
+          // Other dangerous
+          "hta",
+          "cpl",
+          "msc",
+          "dll",
+          "sys",
+          "drv",
+          "lnk");
+
   /** Validates size caps then checks the file's magic bytes against the declared content type. */
   public void validate(MultipartFile file, String resolvedContentType) throws IOException {
+    validateExtension(file);
     validateSize(file, resolvedContentType);
     validateMagicBytes(file, resolvedContentType);
+  }
+
+  // --- blocked extensions -------------------------------------------------
+
+  private void validateExtension(MultipartFile file) {
+    String name = file.getOriginalFilename();
+    if (name == null) return;
+    String ext = name.toLowerCase();
+    int dot = ext.lastIndexOf('.');
+    if (dot >= 0) ext = ext.substring(dot + 1);
+    if (BLOCKED_EXTENSIONS.contains(ext)) {
+      log.warn(
+          "Upload rejected [blocked-extension]: filename='{}', ext='{}'",
+          file.getOriginalFilename(),
+          ext);
+      throw new BadRequestException(
+          "File type '." + ext + "' is not allowed for security reasons.");
+    }
   }
 
   // --- size cap -----------------------------------------------------------
@@ -138,8 +222,8 @@ public class FileValidationService {
         || isGif(h)
         || isWebP(h)
         || isBmp(h)
-        || isFtypBox(h) // HEIC / HEIF use ISO Base Media box
-        || isSvgOrXml(h); // SVG is text-based
+        || isFtypBox(h); // HEIC / HEIF use ISO Base Media box
+    // SVG removed — it can contain <script> and is a stored-XSS vector.
   }
 
   private boolean isJpeg(byte[] h) {
@@ -165,10 +249,6 @@ public class FileValidationService {
 
   private boolean isBmp(byte[] h) {
     return startsWith(h, 0x42, 0x4D);
-  }
-
-  private boolean isSvgOrXml(byte[] h) {
-    return (h[0] & 0xFF) == '<'; // SVG starts with <svg or <?xml
   }
 
   // --- video signatures ---------------------------------------------------

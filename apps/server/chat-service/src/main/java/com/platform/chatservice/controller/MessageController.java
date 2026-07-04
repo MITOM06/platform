@@ -43,7 +43,8 @@ public class MessageController {
 
   @PostMapping
   @ResponseStatus(HttpStatus.CREATED)
-  public MessageResponse sendMessage(@RequestBody SendMessageRequest request) {
+  public MessageResponse sendMessage(
+      @jakarta.validation.Valid @RequestBody SendMessageRequest request) {
     final String uid = currentUserId();
     rateLimiterService.checkMessageRate(uid);
     MessageResponse response = messageService.sendMessage(uid, request);
@@ -83,7 +84,7 @@ public class MessageController {
 
   @PutMapping("/{id}")
   public MessageResponse editMessage(
-      @PathVariable String id, @RequestBody EditMessageRequest request) {
+      @PathVariable String id, @jakarta.validation.Valid @RequestBody EditMessageRequest request) {
     MessageResponse updated = messageService.editMessage(currentUserId(), id, request.content());
     clusterBroker.convertAndSend(
         "/topic/conversation/" + updated.conversationId(),

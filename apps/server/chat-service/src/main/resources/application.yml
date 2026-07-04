@@ -83,8 +83,10 @@ sentry:
 
 app:
   cors:
-    # Comma-separated allowed origins for REST + WebSocket. Default "*" for local dev.
-    allowed-origins: ${ALLOWED_ORIGINS:*}
+    # Comma-separated allowed origins for REST + WebSocket.
+    # REQUIRED in every environment — no open-"*" default. The service fails fast
+    # if unset (see SecurityConfig). Local dev: ALLOWED_ORIGINS=http://localhost:3000
+    allowed-origins: ${ALLOWED_ORIGINS:}
   jwt:
     secret: ${JWT_ACCESS_SECRET}
   botfactory:
