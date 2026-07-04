@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useTranslations } from 'next-intl'
-import { Bot, Settings, Phone, Video, Users, MoreVertical, PanelLeftOpen, PanelLeftClose } from 'lucide-react'
+import { Bot, Settings, Phone, Video, Users, MoreVertical } from 'lucide-react'
 import { useQueryClient } from '@tanstack/react-query'
 import {
   DropdownMenu,
@@ -27,7 +27,6 @@ import { UserProfileDrawer } from './UserProfileDrawer'
 import { StartCallSheet } from '@/components/call/StartCallSheet'
 import { useNickname } from '@/lib/nicknames'
 import { absoluteMediaUrl } from '@/lib/media'
-import { useUiStore, SIDEBAR_COLLAPSE_THRESHOLD } from '@/lib/store/ui.store'
 import { cn } from '@/lib/utils'
 
 const AI_BOT_ID = 'ai-bot-000000000000000000000001'
@@ -86,8 +85,6 @@ export function ConversationHeader({
   const nickname = useNickname(conversationId, otherUserId)
   const assistantName = useAssistantName()
   const { data: extBotAssistant } = useAssistant()
-  const sidebarCollapsed = useUiStore((s) => s.sidebarWidth <= SIDEBAR_COLLAPSE_THRESHOLD)
-  const toggleSidebar = useUiStore((s) => s.toggleSidebar)
 
   const displayName =
     nickname ??
@@ -114,21 +111,6 @@ export function ConversationHeader({
   return (
     <div className="shrink-0">
       <header className="h-14 border-b px-4 flex items-center gap-3 bg-background">
-        {/* Sidebar toggle — desktop only. Shows/hides the conversation sidebar. */}
-        <Button
-          variant="ghost"
-          size="icon"
-          className="hidden md:flex h-8 w-8 shrink-0"
-          onClick={toggleSidebar}
-          title={sidebarCollapsed ? t('showSidebar') : t('hideSidebar')}
-          aria-label={sidebarCollapsed ? t('showSidebar') : t('hideSidebar')}
-        >
-          {sidebarCollapsed ? (
-            <PanelLeftOpen className="size-4" />
-          ) : (
-            <PanelLeftClose className="size-4" />
-          )}
-        </Button>
         <button
           type="button"
           className="relative shrink-0 rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/50"

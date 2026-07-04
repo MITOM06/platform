@@ -22,7 +22,7 @@ import { MobileTabBar } from '@/components/layout/MobileTabBar'
 import { SidebarProfileBar } from '@/components/layout/SidebarProfileBar'
 import { SidebarAiHubButton } from '@/components/layout/SidebarAiHubButton'
 import { NotificationBell } from '@/components/layout/NotificationBell'
-import { useUiStore } from '@/lib/store/ui.store'
+import { useUiStore, SIDEBAR_MIN_WIDTH } from '@/lib/store/ui.store'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -103,7 +103,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
     const stored = localStorage.getItem('pon-sidebar-width')
     if (stored) {
       const w = parseInt(stored, 10)
-      if (!isNaN(w) && w >= 68 && w <= window.innerWidth * 0.8) {
+      if (!isNaN(w) && w >= SIDEBAR_MIN_WIDTH && w <= window.innerWidth * 0.8) {
         setSidebarWidth(w, false)
       }
     }
@@ -119,7 +119,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
       if (!isDragging.current) return
       const delta = ev.clientX - dragStartX.current
       const next = Math.min(
-        Math.max(dragStartWidth.current + delta, 68),
+        Math.max(dragStartWidth.current + delta, SIDEBAR_MIN_WIDTH),
         window.innerWidth * 0.8,
       )
       // Live update without persisting on every frame.
