@@ -199,17 +199,6 @@ export function ConversationHeader({
             </Button>
           )}
 
-          {/* Settings — always visible on all screen sizes */}
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => isGroup ? setGroupSettingsOpen(true) : setSettingsOpen(true)}
-            title={t('settingsTooltip')}
-            className="tap"
-          >
-            <Settings className="size-4" />
-          </Button>
-
           {/* Desktop: video call inline — DM only */}
           {otherUserId && (
             <div className="hidden md:flex items-center gap-0.5">
@@ -224,6 +213,17 @@ export function ConversationHeader({
               </Button>
             </div>
           )}
+
+          {/* Settings — always visible on all screen sizes */}
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => isGroup ? setGroupSettingsOpen(true) : setSettingsOpen(true)}
+            title={t('settingsTooltip')}
+            className="tap"
+          >
+            <Settings className="size-4" />
+          </Button>
 
           {/* Mobile: overflow menu — DM only (video call is the sole overflowed action) */}
           {otherUserId && (

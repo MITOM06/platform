@@ -90,7 +90,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
   // ConversationHeader collapse toggle) and is applied via a CSS variable so
   // mobile stays full-width (`w-full`) and only `md:w-[var(--sidebar-w)]` picks
   // up the dynamic value. The sidebar content adapts to narrow widths via CSS
-  // container queries (`@container` on <aside> + `@[200px]:` variants below).
+  // container queries (`@container` on <aside> + `@[120px]:`/`@[300px]:` variants below).
   const sidebarWidth = useUiStore((s) => s.sidebarWidth)
   const setSidebarWidth = useUiStore((s) => s.setSidebarWidth)
   const isDragging = useRef(false)
@@ -392,7 +392,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
         </div>
         <div className="flex-1 flex flex-col overflow-hidden pb-16 md:pb-0">
           {/* Horizontal presence row doesn't fit the compact rail — hide it. */}
-          <div className="hidden @[200px]:block">
+          <div className="hidden @[300px]:block">
             <ActiveFriendsRow />
           </div>
           <AssistantEntry />

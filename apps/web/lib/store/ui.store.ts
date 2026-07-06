@@ -3,9 +3,9 @@ import { create } from 'zustand'
 const SIDEBAR_WIDTH_KEY = 'pon-sidebar-width'
 
 /** Minimum sidebar width — the drag floor. At this width the tab bar collapses
- *  to icon-only (`@[200px]` container-query threshold) while conversation items
- *  still show avatar + name + preview, so the rail stays readable. */
-export const SIDEBAR_MIN_WIDTH = 200
+ *  to icon-only (`@[300px]` container-query threshold) while conversation items
+ *  still show avatar + name + preview (`@[120px]`), so the rail stays readable. */
+export const SIDEBAR_MIN_WIDTH = 240
 /** Default expanded sidebar width. */
 export const SIDEBAR_DEFAULT_WIDTH = 288
 

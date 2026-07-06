@@ -83,7 +83,7 @@ const nextConfig: NextConfig = {
               "default-src 'self'",
               "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.gstatic.com https://apis.google.com",
               "style-src 'self' 'unsafe-inline'",
-              `img-src 'self' data: blob: ${process.env.NEXT_PUBLIC_CHAT_URL ?? ''} https://lh3.googleusercontent.com`,
+              `img-src 'self' data: blob: ${process.env.NEXT_PUBLIC_CHAT_URL ?? ''} https://lh3.googleusercontent.com https://images.unsplash.com`,
               `connect-src 'self' ${process.env.NEXT_PUBLIC_AUTH_URL ?? ''} ${process.env.NEXT_PUBLIC_CHAT_URL ?? ''} ${process.env.NEXT_PUBLIC_AI_URL ?? ''} wss: ws:`,
               "frame-ancestors 'none'",
               "base-uri 'self'",

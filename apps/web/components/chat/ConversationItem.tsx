@@ -226,7 +226,7 @@ const ConversationItemInner = function ConversationItem({ conversation: conv, is
         <Link
           href={`/conversations/${conv.id}`}
           className={cn(
-            'flex items-center gap-0 @[200px]:gap-3 justify-center @[200px]:justify-start px-3 py-3 rounded-lg transition-[background-color,transform] duration-[180ms] hover:bg-primary/5 active:scale-[0.98]',
+            'flex items-center gap-0 @[120px]:gap-3 justify-center @[120px]:justify-start px-3 py-3 rounded-lg transition-[background-color,transform] duration-[180ms] hover:bg-primary/5 active:scale-[0.98]',
             isActive
               ? 'bg-primary/[0.08] shadow-[inset_2px_0_0_0_#6AC9FF]'
               : 'hover:bg-muted',
@@ -250,11 +250,11 @@ const ConversationItemInner = function ConversationItem({ conversation: conv, is
             {/* Compact rail: unread shows as a dot on the avatar (the full badge
                 lives in the meta block, which is hidden when narrow). */}
             {conv.unreadCount > 0 && (
-              <span className="@[200px]:hidden absolute -top-0.5 -right-0.5 size-3 rounded-full bg-primary border-2 border-background" />
+              <span className="@[120px]:hidden absolute -top-0.5 -right-0.5 size-3 rounded-full bg-primary border-2 border-background" />
             )}
           </div>
 
-          <div className="hidden @[200px]:block flex-1 min-w-0">
+          <div className="hidden @[120px]:block flex-1 min-w-0">
             <div className="flex items-center justify-between gap-1">
               <div className="flex items-center gap-1.5 min-w-0">
                 <span className="font-medium text-sm truncate">{displayName}</span>

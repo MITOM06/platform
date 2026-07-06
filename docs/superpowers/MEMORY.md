@@ -100,7 +100,8 @@ NEXT_PUBLIC_FIREBASE_APP_ID=1:246431845875:web:246c24ecc32054f798d686
 | `plans/2026-07-02-fix-loading-and-sidebar.md` | **URGENT FIX** — Khôi phục sidebar drag-resize (bị xóa sai) + CSS container queries compact mode + full-page conversation skeleton | ⏳ Chưa execute |
 | `plans/2026-07-03-security-hardening.md` | Security hardening: block SVG upload (XSS), CORS wildcard fix, UUID file ID, block executable extensions, timingSafeEqual internal key, Next.js security headers, remove password from sessionStorage | ✅ Done |
 | `plans/2026-07-03-security-hardening-2.md` | Security hardening round 2: SSRF fix (KB fileUrl validation), message content size limit (@Size + WebSocket frame cap), OTP hashing (SHA-256) | ⏳ Chưa execute |
-| `plans/2026-07-04-sidebar-min-width-and-offline-banner.md` | Sidebar min drag = 200px (dừng ở tab icon-only, conversation vẫn có text); OfflineBanner compact = icon-only + tooltip khi hover | ⏳ Chưa execute |
+| `plans/2026-07-04-sidebar-min-width-and-offline-banner.md` | Sidebar min drag = 200px (dừng ở tab icon-only, conversation vẫn có text); OfflineBanner compact = icon-only + tooltip khi hover; xóa toggle button trong ConversationHeader | ⏳ Chưa execute |
+| `plans/2026-07-04-sidebar-ux-and-header-fixes.md` | **Override plan trên**: min=240px, tab threshold @[300px], conversation threshold @[120px]; header button order Phone→Video→Settings; wallpaper CSP fix (thêm images.unsplash.com) | ✅ Done |
 
 ### Prompt cho Claude Code thực thi tất cả
 
