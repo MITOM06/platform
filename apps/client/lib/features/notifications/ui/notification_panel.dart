@@ -227,12 +227,41 @@ class _NotificationTileState extends ConsumerState<_NotificationTile> {
     }
   }
 
+  /// Localize a notification's title/body from its `type` (a stable code) so it
+  /// renders in the user's language regardless of the language the backend
+  /// stored it in. Falls back to the raw backend text only for SYSTEM/unknown
+  /// types. See .claude/rules/i18n.md + .claude/rules/no-raw-system-data-in-ui.md.
+  ({String title, String body}) _localized(BuildContext context) {
+    final n = widget.notification;
+    final l = context.l10n;
+    final name = n.actorName ?? '';
+    switch (n.type) {
+      case 'FRIEND_REQUEST':
+        return (title: l.notificationFriendRequestTitle(name), body: '');
+      case 'FRIEND_ACCEPTED':
+        return (title: l.notificationFriendAcceptedTitle(name), body: '');
+      case 'PHONE_SETUP':
+        return (
+          title: l.notificationPhoneSetupTitle,
+          body: l.notificationPhoneSetupBody
+        );
+      case 'PASSWORD_SETUP':
+        return (
+          title: l.notificationPasswordSetupTitle,
+          body: l.notificationPasswordSetupBody
+        );
+      default:
+        return (title: n.title, body: n.body);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final n = widget.notification;
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final accent =
         isDark ? AppTheme.ponCyan : Theme.of(context).colorScheme.primary;
+    final text = _localized(context);
 
     return Container(
       color: n.isUnread ? accent.withValues(alpha: 0.06) : null,
@@ -246,7 +275,7 @@ class _NotificationTileState extends ConsumerState<_NotificationTile> {
             : null,
         leading: _Avatar(notification: n),
         title: Text(
-          n.title,
+          text.title,
           style: TextStyle(
             fontSize: 14,
             color: isDark ? Colors.white : Colors.black87,
@@ -256,6 +285,16 @@ class _NotificationTileState extends ConsumerState<_NotificationTile> {
         subtitle: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            if (text.body.isNotEmpty) ...[
+              const SizedBox(height: 2),
+              Text(
+                text.body,
+                style: TextStyle(
+                  fontSize: 12,
+                  color: isDark ? Colors.white60 : Colors.black54,
+                ),
+              ),
+            ],
             const SizedBox(height: 2),
             Text(
               _relativeTime(context, n.createdAt),

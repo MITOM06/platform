@@ -33,6 +33,30 @@ class AppLocalizationsJa extends AppLocalizations {
   String get notificationDecline => '拒否';
 
   @override
+  String notificationFriendRequestTitle(String name) {
+    return '$name さんから友達リクエストが届きました';
+  }
+
+  @override
+  String notificationFriendAcceptedTitle(String name) {
+    return '$name さんが友達リクエストを承認しました';
+  }
+
+  @override
+  String get notificationPhoneSetupTitle => '電話番号を確認';
+
+  @override
+  String get notificationPhoneSetupBody =>
+      '電話番号を追加して確認すると、友達が見つけやすくなり、アカウントの安全性が高まります。';
+
+  @override
+  String get notificationPasswordSetupTitle => 'アカウントを保護';
+
+  @override
+  String get notificationPasswordSetupBody =>
+      'アカウントにパスワードが設定されていません。安全性を高めるために設定してください。';
+
+  @override
   String get securityTitle => 'パスワードとセキュリティ';
 
   @override

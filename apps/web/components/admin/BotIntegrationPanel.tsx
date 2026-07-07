@@ -75,6 +75,7 @@ function TokenDialog({
   onClose: () => void
 }) {
   const t = useTranslations('botAdmin')
+  const tc = useTranslations('common')
   return (
     <Dialog open={issued !== null} onOpenChange={(o) => !o && onClose()}>
       <DialogContent>
@@ -99,7 +100,7 @@ function TokenDialog({
           </div>
         )}
         <DialogFooter>
-          <Button onClick={onClose}>OK</Button>
+          <Button onClick={onClose}>{tc('ok')}</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

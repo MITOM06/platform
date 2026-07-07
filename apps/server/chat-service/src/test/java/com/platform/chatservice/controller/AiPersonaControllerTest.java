@@ -130,6 +130,45 @@ class AiPersonaControllerTest {
   }
 
   @Test
+  void upsertPersona_SavesForOwnerOf1on1AiChat() {
+    // A personal AI conversation: direct type, AI bot is a participant, no admins.
+    Conversation aiDm =
+        Conversation.builder()
+            .id(CONV_ID)
+            .type("direct")
+            .participants(
+                List.of(ADMIN_ID, com.platform.chatservice.service.AiConstants.AI_BOT_USER_ID))
+            .build();
+    when(conversationRepository.findById(CONV_ID)).thenReturn(Optional.of(aiDm));
+    when(aiPersonaRepository.findByConversationId(CONV_ID)).thenReturn(Optional.empty());
+    when(aiPersonaRepository.save(any())).thenReturn(persona);
+
+    AiPersonaRequest req = new AiPersonaRequest("MyBot", null, "friendly", null);
+    ResponseEntity<AiPersonaResponse> response = controller.upsertPersona(CONV_ID, req, principal);
+
+    assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+    verify(aiPersonaRepository).save(any(AiPersona.class));
+  }
+
+  @Test
+  void deletePersona_Returns204ForOwnerOf1on1AiChat() {
+    Conversation aiDm =
+        Conversation.builder()
+            .id(CONV_ID)
+            .type("direct")
+            .participants(
+                List.of(ADMIN_ID, com.platform.chatservice.service.AiConstants.AI_BOT_USER_ID))
+            .build();
+    when(conversationRepository.findById(CONV_ID)).thenReturn(Optional.of(aiDm));
+    doNothing().when(aiPersonaRepository).deleteByConversationId(CONV_ID);
+
+    ResponseEntity<Void> response = controller.deletePersona(CONV_ID, principal);
+
+    assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
+    verify(aiPersonaRepository).deleteByConversationId(CONV_ID);
+  }
+
+  @Test
   void upsertPersona_SavesCorrectlyForAdmin() {
     when(conversationRepository.findById(CONV_ID)).thenReturn(Optional.of(groupConv));
     when(aiPersonaRepository.findByConversationId(CONV_ID)).thenReturn(Optional.empty());

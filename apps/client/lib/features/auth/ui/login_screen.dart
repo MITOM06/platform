@@ -46,6 +46,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           ScaffoldMessenger.of(context)
               .showSnackBar(SnackBar(content: Text(msg)));
           setState(() => _isLoading = false);
+          // Unverified account: the backend resent a fresh OTP and refused the
+          // session. Mirror the web login flow — steer the user to the OTP
+          // screen instead of leaving them stuck on a snackbar they can't act on.
+          if (authErrorCode(next.error!) == 'ACCOUNT_UNVERIFIED_OTP_SENT') {
+            context.go(
+              '/verify-otp?email=${Uri.encodeComponent(_emailController.text.trim())}',
+            );
+          }
         }
       });
     });

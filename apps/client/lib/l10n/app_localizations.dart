@@ -156,6 +156,42 @@ abstract class AppLocalizations {
   /// **'Decline'**
   String get notificationDecline;
 
+  /// No description provided for @notificationFriendRequestTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} sent you a friend request'**
+  String notificationFriendRequestTitle(String name);
+
+  /// No description provided for @notificationFriendAcceptedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} accepted your friend request'**
+  String notificationFriendAcceptedTitle(String name);
+
+  /// No description provided for @notificationPhoneSetupTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Verify phone number'**
+  String get notificationPhoneSetupTitle;
+
+  /// No description provided for @notificationPhoneSetupBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Add and verify a phone number so friends can find you and to improve account security.'**
+  String get notificationPhoneSetupBody;
+
+  /// No description provided for @notificationPasswordSetupTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Protect your account'**
+  String get notificationPasswordSetupTitle;
+
+  /// No description provided for @notificationPasswordSetupBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Your account doesn\'t have a password yet. Set one to improve security.'**
+  String get notificationPasswordSetupBody;
+
   /// No description provided for @securityTitle.
   ///
   /// In en, this message translates to:

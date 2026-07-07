@@ -14,6 +14,7 @@
     "somethingWrong": "エラーが発生しました",
     "unknownError": "不明なエラー",
     "retry": "再試行",
+    "ok": "OK",
     "dialogDescription": "ダイアログの内容"
   },
   "meta": {
@@ -111,7 +112,8 @@
       "resend": "OTPを再送信",
       "backToLogin": "サインインに戻る",
       "resendSuccess": "OTPコードを再送信しました",
-      "resendError": "OTPの再送信に失敗しました"
+      "resendError": "OTPの再送信に失敗しました",
+      "backToRegister": "登録に戻る"
     },
     "forgotPassword": {
       "title": "パスワードをお忘れの方",
@@ -738,7 +740,8 @@
     "blockConfirmTitle": "{name} さんをブロックしますか？",
     "blockConfirmDesc": "{name} さんはあなたにメッセージを送ったり、プロフィール情報の大半を見ることができなくなります。",
     "unfriendConfirmTitle": "友達を削除しますか？",
-    "unfriendConfirmDesc": "あなたとこの相手は友達ではなくなります。後でもう一度友達リクエストを送ることができます。"
+    "unfriendConfirmDesc": "あなたとこの相手は友達ではなくなります。後でもう一度友達リクエストを送ることができます。",
+    "backToList": "戻る"
   },
   "aiHub": {
     "title": "AI ハブ",
@@ -833,7 +836,8 @@
     "unarchive": "アーカイブを解除",
     "unarchiveSuccess": "チャットを復元しました",
     "unarchiveError": "チャットの復元に失敗しました",
-    "defaultName": "会話"
+    "defaultName": "会話",
+    "groupFallback": "グループチャット"
   },
   "explore": {
     "title": "コミュニティを探す",
@@ -1392,6 +1396,12 @@
     "decline": "拒否",
     "phoneSetupAction": "電話番号を追加 →",
     "passwordSetupAction": "今すぐパスワードを設定 →",
+    "friendRequestTitle": "{name} さんから友達リクエストが届きました",
+    "friendAcceptedTitle": "{name} さんが友達リクエストを承認しました",
+    "phoneSetupTitle": "電話番号を確認",
+    "phoneSetupBody": "電話番号を追加して確認すると、友達が見つけやすくなり、アカウントの安全性が高まります。",
+    "passwordSetupTitle": "アカウントを保護",
+    "passwordSetupBody": "アカウントにパスワードが設定されていません。安全性を高めるために設定してください。",
     "sectionUnread": "未読",
     "sectionRead": "既読"
   }

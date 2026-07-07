@@ -99,8 +99,8 @@ function VerifyOtpForm() {
         </div>
 
         <p className="mt-2 text-center text-sm text-muted-foreground">
-          <Link href="/login" className="underline underline-offset-4 hover:text-primary">
-            {t('backToLogin')}
+          <Link href="/register" className="underline underline-offset-4 hover:text-primary">
+            {t('backToRegister')}
           </Link>
         </p>
       </CardContent>

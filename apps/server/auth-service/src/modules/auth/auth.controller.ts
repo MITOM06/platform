@@ -193,8 +193,11 @@ export class AuthController {
   @ApiOperation({ summary: 'Authenticate with email + password' })
   @ApiResponse({ status: 201, description: 'Login succeeded; tokens issued' })
   @ApiResponse({ status: 401, description: 'Invalid credentials' })
-  async login(@Body() dto: LoginDto) {
-    return this.auth.login(dto);
+  async login(
+    @Body() dto: LoginDto,
+    @Headers('accept-language') acceptLang?: string,
+  ) {
+    return this.auth.login(dto, normalizeLocale(acceptLang));
   }
 
   // ✅ Logout — yêu cầu JWT token trong header

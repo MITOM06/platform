@@ -33,6 +33,28 @@ class AppLocalizationsZh extends AppLocalizations {
   String get notificationDecline => '拒绝';
 
   @override
+  String notificationFriendRequestTitle(String name) {
+    return '$name 向你发送了好友请求';
+  }
+
+  @override
+  String notificationFriendAcceptedTitle(String name) {
+    return '$name 接受了你的好友请求';
+  }
+
+  @override
+  String get notificationPhoneSetupTitle => '验证手机号码';
+
+  @override
+  String get notificationPhoneSetupBody => '添加并验证手机号码，让好友能找到你并增强账户安全性。';
+
+  @override
+  String get notificationPasswordSetupTitle => '保护你的账户';
+
+  @override
+  String get notificationPasswordSetupBody => '你的账户还没有设置密码。请设置密码以增强安全性。';
+
+  @override
   String get securityTitle => '密码与安全';
 
   @override

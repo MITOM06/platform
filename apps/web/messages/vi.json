@@ -14,6 +14,7 @@
     "somethingWrong": "Đã xảy ra lỗi",
     "unknownError": "Lỗi không xác định",
     "retry": "Thử lại",
+    "ok": "OK",
     "dialogDescription": "Nội dung hộp thoại"
   },
   "meta": {
@@ -111,7 +112,8 @@
       "resend": "Gửi lại mã OTP",
       "backToLogin": "Quay lại đăng nhập",
       "resendSuccess": "Đã gửi lại mã OTP",
-      "resendError": "Không thể gửi lại mã OTP"
+      "resendError": "Không thể gửi lại mã OTP",
+      "backToRegister": "Quay lại đăng ký"
     },
     "forgotPassword": {
       "title": "Quên mật khẩu",
@@ -738,7 +740,8 @@
     "blockConfirmTitle": "Chặn {name}?",
     "blockConfirmDesc": "{name} sẽ không thể nhắn tin cho bạn hoặc xem hầu hết thông tin hồ sơ của bạn.",
     "unfriendConfirmTitle": "Xóa kết bạn?",
-    "unfriendConfirmDesc": "Bạn và người này sẽ không còn là bạn bè. Bạn vẫn có thể gửi lời mời kết bạn lại sau."
+    "unfriendConfirmDesc": "Bạn và người này sẽ không còn là bạn bè. Bạn vẫn có thể gửi lời mời kết bạn lại sau.",
+    "backToList": "Quay lại"
   },
   "aiHub": {
     "title": "Trung tâm AI",
@@ -833,7 +836,8 @@
     "unarchive": "Bỏ lưu trữ",
     "unarchiveSuccess": "Đã khôi phục đoạn chat",
     "unarchiveError": "Không thể khôi phục đoạn chat",
-    "defaultName": "Cuộc trò chuyện"
+    "defaultName": "Cuộc trò chuyện",
+    "groupFallback": "Nhóm trò chuyện"
   },
   "explore": {
     "title": "Khám phá cộng đồng",
@@ -1392,6 +1396,12 @@
     "decline": "Từ chối",
     "phoneSetupAction": "Thêm số điện thoại →",
     "passwordSetupAction": "Đặt mật khẩu ngay →",
+    "friendRequestTitle": "{name} đã gửi cho bạn lời mời kết bạn",
+    "friendAcceptedTitle": "{name} đã chấp nhận lời mời kết bạn của bạn",
+    "phoneSetupTitle": "Xác minh số điện thoại",
+    "phoneSetupBody": "Thêm và xác minh số điện thoại để bạn bè có thể tìm thấy bạn và tăng tính bảo mật tài khoản.",
+    "passwordSetupTitle": "Bảo vệ tài khoản của bạn",
+    "passwordSetupBody": "Tài khoản của bạn chưa có mật khẩu. Hãy thiết lập mật khẩu để tăng tính bảo mật.",
     "sectionUnread": "Chưa xem",
     "sectionRead": "Đã xem"
   }

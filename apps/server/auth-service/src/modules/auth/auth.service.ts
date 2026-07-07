@@ -262,7 +262,7 @@ export class AuthService {
   }
 
   // ===================== LOGIN / LOGOUT =====================
-  async login(dto: LoginDto) {
+  async login(dto: LoginDto, locale: string = 'en') {
     await this.checkBruteForce(dto.email);
     const user = await this.usersService.findByEmail(dto.email);
 
@@ -277,6 +277,24 @@ export class AuthService {
     if (!isMatch) {
       await this.handleFailedLogin(dto.email);
       return; // unreachable
+    }
+
+    // ── SECURITY: an unverified account must never receive a session. ──
+    // Credentials are correct but the email was never confirmed (user hit
+    // "back" on the OTP screen and logged in). Resend a fresh OTP and steer
+    // the client to /verify-otp instead of minting tokens. The per-email OTP
+    // rate limit (shared with forgot/resend) keeps this from being an
+    // email-spam vector even with valid credentials.
+    if (!user.isVerified) {
+      await this.enforceForgotOtpRateLimit(user.email);
+      const otp = this.generateOtp();
+      const expires = new Date(Date.now() + 5 * 60 * 1000);
+      await this.usersService.updateOtp(user._id, this.hashOtp(otp), expires);
+      await this.mailService.sendOtpEmail(user.email, otp, locale);
+      throw new UnauthorizedException({
+        code: AuthCode.ACCOUNT_UNVERIFIED_OTP_SENT,
+        params: { email: user.email },
+      });
     }
 
     const { sid, refreshToken } = await this.session.createSession({

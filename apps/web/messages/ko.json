@@ -14,6 +14,7 @@
     "somethingWrong": "오류가 발생했습니다",
     "unknownError": "알 수 없는 오류",
     "retry": "다시 시도",
+    "ok": "확인",
     "dialogDescription": "대화 상자 내용"
   },
   "meta": {
@@ -111,7 +112,8 @@
       "resend": "OTP 재전송",
       "backToLogin": "로그인으로 돌아가기",
       "resendSuccess": "OTP 코드를 재전송했습니다",
-      "resendError": "OTP 재전송에 실패했습니다"
+      "resendError": "OTP 재전송에 실패했습니다",
+      "backToRegister": "회원가입으로 돌아가기"
     },
     "forgotPassword": {
       "title": "비밀번호 찾기",
@@ -738,7 +740,8 @@
     "blockConfirmTitle": "{name}님을 차단하시겠습니까?",
     "blockConfirmDesc": "{name}님은 회원님에게 메시지를 보내거나 프로필 정보의 대부분을 볼 수 없게 됩니다.",
     "unfriendConfirmTitle": "친구를 삭제하시겠습니까?",
-    "unfriendConfirmDesc": "회원님과 이 사람은 더 이상 친구가 아닙니다. 나중에 다시 친구 요청을 보낼 수 있습니다."
+    "unfriendConfirmDesc": "회원님과 이 사람은 더 이상 친구가 아닙니다. 나중에 다시 친구 요청을 보낼 수 있습니다.",
+    "backToList": "뒤로"
   },
   "aiHub": {
     "title": "AI 허브",
@@ -833,7 +836,8 @@
     "unarchive": "보관 해제",
     "unarchiveSuccess": "채팅이 복원되었습니다",
     "unarchiveError": "채팅 복원에 실패했습니다",
-    "defaultName": "대화"
+    "defaultName": "대화",
+    "groupFallback": "그룹 채팅"
   },
   "explore": {
     "title": "커뮤니티 탐색",
@@ -1392,6 +1396,12 @@
     "decline": "거절",
     "phoneSetupAction": "전화번호 추가 →",
     "passwordSetupAction": "지금 비밀번호 설정 →",
+    "friendRequestTitle": "{name}님이 친구 요청을 보냈습니다",
+    "friendAcceptedTitle": "{name}님이 친구 요청을 수락했습니다",
+    "phoneSetupTitle": "전화번호 인증",
+    "phoneSetupBody": "친구가 회원님을 찾을 수 있고 계정 보안을 강화하도록 전화번호를 추가하고 인증하세요.",
+    "passwordSetupTitle": "계정 보호",
+    "passwordSetupBody": "계정에 아직 비밀번호가 없습니다. 보안을 강화하려면 비밀번호를 설정하세요.",
     "sectionUnread": "읽지 않음",
     "sectionRead": "읽음"
   }

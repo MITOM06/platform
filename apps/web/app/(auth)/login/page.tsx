@@ -106,6 +106,11 @@ export default function LoginPage() {
     } catch (err: unknown) {
       const { code, params } = parseAuthError(err)
       toast.error(t(authCodeToI18nKey(code), params))
+      // Unverified account: backend resent a fresh OTP → steer to verification
+      // instead of leaving the user stuck on a login error they can't resolve.
+      if (code === 'ACCOUNT_UNVERIFIED_OTP_SENT') {
+        router.push(`/verify-otp?email=${encodeURIComponent(data.email)}`)
+      }
     }
   }
 

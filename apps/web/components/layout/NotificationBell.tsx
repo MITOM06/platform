@@ -38,6 +38,32 @@ function relativeTime(iso: string): string {
   return new Date(then).toLocaleDateString()
 }
 
+/**
+ * Localize a notification's title/body from its `type` (a stable code) so every
+ * one of the 7 UI languages renders correctly, regardless of the language the
+ * backend happened to store the text in. Falls back to the raw backend title/
+ * body only for SYSTEM / unknown types that carry no code-derived copy.
+ * See .claude/rules/i18n.md and .claude/rules/no-raw-system-data-in-ui.md.
+ */
+function localizedNotification(
+  n: AppNotification,
+  t: ReturnType<typeof useTranslations>,
+): { title: string; body: string } {
+  const name = n.actorName ?? ''
+  switch (n.type) {
+    case 'FRIEND_REQUEST':
+      return { title: t('friendRequestTitle', { name }), body: '' }
+    case 'FRIEND_ACCEPTED':
+      return { title: t('friendAcceptedTitle', { name }), body: '' }
+    case 'PHONE_SETUP':
+      return { title: t('phoneSetupTitle'), body: t('phoneSetupBody') }
+    case 'PASSWORD_SETUP':
+      return { title: t('passwordSetupTitle'), body: t('passwordSetupBody') }
+    default:
+      return { title: n.title, body: n.body }
+  }
+}
+
 function NotifIcon({ type }: { type: AppNotification['type'] }) {
   switch (type) {
     case 'FRIEND_REQUEST':
@@ -69,6 +95,7 @@ function NotificationRow({
   declining: boolean
 }) {
   const t = useTranslations('notifications')
+  const { title, body } = localizedNotification(n, t)
   return (
     <div
       className={cn(
@@ -100,9 +127,9 @@ function NotificationRow({
       </div>
 
       <div className="flex-1 min-w-0">
-        <p className="text-sm leading-snug line-clamp-2">{n.title}</p>
-        {(n.type === 'PHONE_SETUP' || n.type === 'PASSWORD_SETUP') && n.body && (
-          <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{n.body}</p>
+        <p className="text-sm leading-snug line-clamp-2">{title}</p>
+        {(n.type === 'PHONE_SETUP' || n.type === 'PASSWORD_SETUP') && body && (
+          <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{body}</p>
         )}
         <p className="text-xs text-muted-foreground mt-0.5">
           {relativeTime(n.createdAt)}

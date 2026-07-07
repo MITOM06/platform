@@ -1,8 +1,9 @@
 'use client'
 
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
-import { Bot, Settings, Phone, Video, Users, MoreVertical } from 'lucide-react'
+import { ArrowLeft, Bot, Settings, Phone, Video, Users, MoreVertical } from 'lucide-react'
 import { useQueryClient } from '@tanstack/react-query'
 import {
   DropdownMenu,
@@ -60,6 +61,7 @@ export function ConversationHeader({
   onSearchToggle,
 }: Props) {
   const t = useTranslations('chat')
+  const router = useRouter()
   const { data: conversation } = useConversation(conversationId)
   const queryClient = useQueryClient()
   const currentUser = useAuthStore((s) => s.user)
@@ -111,6 +113,18 @@ export function ConversationHeader({
   return (
     <div className="shrink-0">
       <header className="h-14 border-b px-4 flex items-center gap-3 bg-background">
+        {/* Mobile back button — returns to the conversation list. Navigating to
+            /conversations flips the layout's isConversationOpen to false, so the
+            sidebar (list) reclaims the screen on mobile. Hidden on desktop. */}
+        <Button
+          variant="ghost"
+          size="icon"
+          className="md:hidden h-8 w-8 shrink-0 -ml-1"
+          onClick={() => router.push('/conversations')}
+          title={t('backToList')}
+        >
+          <ArrowLeft className="size-5" />
+        </Button>
         <button
           type="button"
           className="relative shrink-0 rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/50"
