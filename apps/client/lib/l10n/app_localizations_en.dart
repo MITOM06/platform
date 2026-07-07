@@ -1251,6 +1251,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get aiSkills => 'Skills';
 
   @override
+  String get adminOwnerOnly => 'Admin or Owner only';
+
+  @override
   String get aiConnectedApps => 'Connected apps';
 
   @override

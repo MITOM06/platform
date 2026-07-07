@@ -249,7 +249,7 @@ const ConversationItemInner = function ConversationItem({ conversation: conv, is
             </Avatar>
             {/* Compact rail: unread shows as a dot on the avatar (the full badge
                 lives in the meta block, which is hidden when narrow). */}
-            {conv.unreadCount > 0 && (
+            {conv.unreadCount > 0 && !isAnyBot && (
               <span className="@[120px]:hidden absolute -top-0.5 -right-0.5 size-3 rounded-full bg-primary border-2 border-background" />
             )}
           </div>
@@ -283,7 +283,7 @@ const ConversationItemInner = function ConversationItem({ conversation: conv, is
               <p className="text-xs text-muted-foreground truncate">
                 {previewText}
               </p>
-              {conv.unreadCount > 0 && (
+              {conv.unreadCount > 0 && !isAnyBot && (
                 <Badge
                   variant="default"
                   className="text-xs h-4 min-w-4 px-1 shrink-0 rounded-full"
@@ -297,16 +297,19 @@ const ConversationItemInner = function ConversationItem({ conversation: conv, is
       </ContextMenuTrigger>
 
       <ContextMenuContent className="w-52">
-        {conv.unreadCount > 0 ? (
-          <ContextMenuItem onClick={handleMarkRead}>
-            <MailOpen className="size-4" />
-            {t('markAsRead')}
-          </ContextMenuItem>
-        ) : (
-          <ContextMenuItem onClick={handleMarkUnread}>
-            <Mail className="size-4" />
-            {t('markAsUnread')}
-          </ContextMenuItem>
+        {/* Mark read/unread is meaningless on AI/extbot conversations — hide it. */}
+        {!isAnyBot && (
+          conv.unreadCount > 0 ? (
+            <ContextMenuItem onClick={handleMarkRead}>
+              <MailOpen className="size-4" />
+              {t('markAsRead')}
+            </ContextMenuItem>
+          ) : (
+            <ContextMenuItem onClick={handleMarkUnread}>
+              <Mail className="size-4" />
+              {t('markAsUnread')}
+            </ContextMenuItem>
+          )
         )}
 
         {/* Mute: single unmute item when already muted, submenu when not */}

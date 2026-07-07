@@ -1236,6 +1236,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get aiSkills => '技能';
 
   @override
+  String get adminOwnerOnly => '仅限管理员或所有者';
+
+  @override
   String get aiConnectedApps => '已连接的应用';
 
   @override

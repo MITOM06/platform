@@ -1239,6 +1239,9 @@ class AppLocalizationsJa extends AppLocalizations {
   String get aiSkills => 'スキル';
 
   @override
+  String get adminOwnerOnly => '管理者またはオーナーのみ';
+
+  @override
   String get aiConnectedApps => '連携アプリ';
 
   @override

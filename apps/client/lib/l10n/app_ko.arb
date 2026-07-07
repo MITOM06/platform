@@ -433,6 +433,7 @@
   "aiPersonality": "성격",
   "aiMemory": "메모리",
   "aiSkills": "스킬",
+  "adminOwnerOnly": "관리자 또는 소유자만 가능",
   "aiConnectedApps": "연결된 앱",
   "aiUsage": "사용량",
   "chatInfoCategory": "채팅 세부 정보",

@@ -433,6 +433,7 @@
   "aiPersonality": "个性",
   "aiMemory": "记忆",
   "aiSkills": "技能",
+  "adminOwnerOnly": "仅限管理员或所有者",
   "aiConnectedApps": "已连接的应用",
   "aiUsage": "用量",
   "chatInfoCategory": "聊天详情",

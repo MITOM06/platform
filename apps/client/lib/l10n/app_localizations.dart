@@ -2442,6 +2442,12 @@ abstract class AppLocalizations {
   /// **'Skills'**
   String get aiSkills;
 
+  /// Hint shown on locked AI settings rows (Persona/Memory/Skills) for non-admin members
+  ///
+  /// In en, this message translates to:
+  /// **'Admin or Owner only'**
+  String get adminOwnerOnly;
+
   /// No description provided for @aiConnectedApps.
   ///
   /// In en, this message translates to:

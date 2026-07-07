@@ -22,6 +22,42 @@ async function bootstrap() {
     contentSecurityPolicy: false,
   }));
 
+  // Restrict CORS to an env-driven allowlist instead of reflecting any origin.
+  // Mirrors auth-service: CORS_ORIGINS is a comma-separated list; falls back to
+  // known web + dev origins. Without this the browser blocks every cross-origin
+  // XHR from the web app (e.g. GET /api/sessions/:conversationId).
+  const defaultOrigins = [
+    'https://platform-web-omega-amber.vercel.app',
+    'http://localhost:3000',
+    'http://localhost:8081',
+  ];
+  const allowedOrigins = process.env.CORS_ORIGINS
+    ? process.env.CORS_ORIGINS.split(',').map((o) => o.trim()).filter(Boolean)
+    : defaultOrigins;
+
+  app.enableCors({
+    origin: (
+      origin: string | undefined,
+      cb: (err: Error | null, allow?: boolean) => void,
+    ) => {
+      // Allow non-browser clients (no Origin header) and whitelisted origins.
+      if (!origin || allowedOrigins.includes(origin)) {
+        cb(null, true);
+      } else {
+        cb(new Error(`Origin ${origin} not allowed by CORS`));
+      }
+    },
+    credentials: true,
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
+    allowedHeaders: [
+      'Content-Type',
+      'Accept',
+      'Authorization',
+      'ngrok-skip-browser-warning',
+      'X-Requested-With',
+    ],
+  });
+
   // Swagger UI at /docs (non-production, or when ENABLE_SWAGGER=true).
   setupSwagger(app);
 
