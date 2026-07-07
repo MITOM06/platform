@@ -64,6 +64,12 @@ class ConversationTile extends ConsumerWidget {
             ? dmNickname
             : (profileData?.displayName ?? '...'));
     final isAiBot = !isGroup && otherUserId == kAiBotUserId;
+    // Bot Factory personal assistants join as `extbot:*` participants — treat
+    // them as bots too. Mirrors web ConversationItem `isAnyBot`.
+    final isAnyBot = isAiBot || (!isGroup && otherUserId.startsWith('extbot:'));
+    // Unread indicators are meaningless on bot conversations — web hides them
+    // entirely (badge, bold title, border highlight) when the peer is a bot.
+    final showUnread = conv.unreadCount > 0 && !isAnyBot;
     final tileLetter = isAiBot
         ? 'AI'
         : (displayName.isNotEmpty && displayName != '...'
@@ -93,7 +99,7 @@ class ConversationTile extends ConsumerWidget {
                       ? AppTheme.ponCyan
                       : Theme.of(context).colorScheme.primary)
                   .withValues(alpha: 0.6)
-              : conv.unreadCount > 0
+              : showUnread
                   ? (isDark
                           ? AppTheme.ponCyan
                           : Theme.of(context).colorScheme.primary)
@@ -128,7 +134,7 @@ class ConversationTile extends ConsumerWidget {
                   isGroup: isGroup,
                   size: 48,
                   online: isOnline,
-                  gradientColors: conv.unreadCount > 0
+                  gradientColors: showUnread
                       ? [
                           isDark
                               ? AppTheme.ponCyan
@@ -153,8 +159,8 @@ class ConversationTile extends ConsumerWidget {
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
                     fontWeight:
-                        conv.unreadCount > 0 ? FontWeight.bold : FontWeight.w600,
-                    color: conv.unreadCount > 0
+                        showUnread ? FontWeight.bold : FontWeight.w600,
+                    color: showUnread
                         ? (isDark ? Colors.white : Colors.black)
                         : (isDark
                             ? Colors.white.withValues(alpha: 0.85)
@@ -214,7 +220,7 @@ class ConversationTile extends ConsumerWidget {
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(
-                      color: conv.unreadCount > 0
+                      color: showUnread
                           ? (isDark
                               ? Colors.white.withValues(alpha: 0.8)
                               : Colors.black87)
@@ -226,7 +232,7 @@ class ConversationTile extends ConsumerWidget {
                   ),
                 )
               : null,
-          trailing: conv.unreadCount > 0
+          trailing: showUnread
               ? Container(
                   padding:
                       const EdgeInsets.symmetric(horizontal: 8, vertical: 4),

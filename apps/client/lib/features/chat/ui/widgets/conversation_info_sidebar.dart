@@ -5,6 +5,7 @@ import '../../../../core/l10n/l10n_ext.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../auth/domain/auth_provider.dart';
 import '../../../auth/domain/auth_state.dart';
+import '../../../admin/state/capabilities_provider.dart';
 import '../../../home/domain/home_providers.dart';
 import '../../domain/chat_provider.dart';
 import '../../domain/chat_state.dart';
@@ -126,6 +127,9 @@ class ConversationInfoSidebar extends ConsumerWidget {
   ) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final textColor = isDark ? Colors.white70 : Colors.black87;
+    // Admin/Owner capability gates the shared-assistant settings (Persona /
+    // Memory / Skills). Mirrors web `useHasCapability('MANAGE_WORKSPACE')`.
+    final canManage = ref.watch(hasCapabilityProvider('MANAGE_WORKSPACE'));
     final expansionTheme = ExpansionTileThemeData(
       iconColor: textColor,
       collapsedIconColor: textColor,
@@ -148,22 +152,26 @@ class ConversationInfoSidebar extends ConsumerWidget {
                   style: const TextStyle(
                       fontWeight: FontWeight.w600, fontSize: 14)),
               children: [
-                ListTile(
-                  dense: true,
-                  leading: const Icon(Icons.auto_awesome, size: 18),
-                  title: Text(context.l10n.aiPersonality),
+                // Persona / Memory / Skills configure the *shared* company
+                // assistant, so they are gated to admins/owners
+                // (MANAGE_WORKSPACE). Integrations + Usage stay open to every
+                // member. Mirrors web AiAssistantSection.
+                _AiSettingTile(
+                  icon: Icons.auto_awesome,
+                  label: context.l10n.aiPersonality,
+                  canManage: canManage,
                   onTap: () => context.push('/ai-persona/$conversationId'),
                 ),
-                ListTile(
-                  dense: true,
-                  leading: const Icon(Icons.psychology_outlined, size: 18),
-                  title: Text(context.l10n.aiMemory),
+                _AiSettingTile(
+                  icon: Icons.psychology_outlined,
+                  label: context.l10n.aiMemory,
+                  canManage: canManage,
                   onTap: () => context.push('/ai-memories'),
                 ),
-                ListTile(
-                  dense: true,
-                  leading: const Icon(Icons.extension_outlined, size: 18),
-                  title: Text(context.l10n.aiSkills),
+                _AiSettingTile(
+                  icon: Icons.extension_outlined,
+                  label: context.l10n.aiSkills,
+                  canManage: canManage,
                   onTap: () => context.push('/skills'),
                 ),
                 ListTile(
@@ -333,5 +341,44 @@ class ConversationInfoSidebar extends ConsumerWidget {
     } else {
       context.go('/');
     }
+  }
+}
+
+/// A single AI-settings row. When [canManage] is false the row is shown locked
+/// (lock icon, greyed out, non-tappable) with an "admin only" hint — mirrors
+/// web AiAssistantSection's disabled state for Persona / Memory / Skills.
+class _AiSettingTile extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final bool canManage;
+  final VoidCallback onTap;
+
+  const _AiSettingTile({
+    required this.icon,
+    required this.label,
+    required this.canManage,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    if (canManage) {
+      return ListTile(
+        dense: true,
+        leading: Icon(icon, size: 18),
+        title: Text(label),
+        onTap: onTap,
+      );
+    }
+    return ListTile(
+      dense: true,
+      enabled: false,
+      leading: const Icon(Icons.lock_outline, size: 18),
+      title: Text(label),
+      subtitle: Text(
+        context.l10n.adminOwnerOnly,
+        style: const TextStyle(fontSize: 11),
+      ),
+    );
   }
 }

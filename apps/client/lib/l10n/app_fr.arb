@@ -433,6 +433,7 @@
   "aiPersonality": "Personnalité",
   "aiMemory": "Mémoire",
   "aiSkills": "Compétences",
+  "adminOwnerOnly": "Admin ou propriétaire uniquement",
   "aiConnectedApps": "Apps connectées",
   "aiUsage": "Utilisation",
   "chatInfoCategory": "Détails de la discussion",

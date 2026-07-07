@@ -131,17 +131,20 @@ export function ConversationSettingsDrawer({
                 </AccordionItem>
               )}
 
-              {/* Action Options (React-specific: Mark read, Archive, Auto-Delete) */}
-              <ActionOptionsSection
-                saving={s.saving}
-                isArchived={s.isArchived}
-                autoDeleteOptions={s.autoDeleteOptions}
-                sliderValue={s.sliderValue}
-                onMarkRead={s.handleMarkRead}
-                onMarkUnread={s.handleMarkUnread}
-                onArchiveToggle={s.handleArchiveToggle}
-                onAutoDelete={s.handleAutoDelete}
-              />
+              {/* Action Options (Mark read/unread, Archive, Auto-Delete) — hidden
+                  for AI conversations, where none of these apply. */}
+              {!s.isAI && (
+                <ActionOptionsSection
+                  saving={s.saving}
+                  isArchived={s.isArchived}
+                  autoDeleteOptions={s.autoDeleteOptions}
+                  sliderValue={s.sliderValue}
+                  onMarkRead={s.handleMarkRead}
+                  onMarkUnread={s.handleMarkUnread}
+                  onArchiveToggle={s.handleArchiveToggle}
+                  onAutoDelete={s.handleAutoDelete}
+                />
+              )}
 
               {/* Customize Chat */}
               <CustomizeChatSection

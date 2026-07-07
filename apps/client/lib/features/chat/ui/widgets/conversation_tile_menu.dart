@@ -26,6 +26,11 @@ void showConversationTileMenu(
   final otherUserId =
       !conv.isGroup && others.isNotEmpty ? others.first : '';
 
+  // AI bot + Bot Factory extbot (`extbot:*`) conversations — mark read/unread
+  // is meaningless, so hide it (mirrors web ConversationItem `isAnyBot`).
+  final isAnyBot = !conv.isGroup &&
+      (otherUserId == kAiBotUserId || otherUserId.startsWith('extbot:'));
+
   // conv.isBlocked is the authoritative flag for the blocked-archive state.
   final isConvBlocked = conv.isBlocked;
 
@@ -40,7 +45,7 @@ void showConversationTileMenu(
         mainAxisSize: MainAxisSize.min,
         children: [
           const SizedBox(height: 8),
-          if (conv.unreadCount > 0)
+          if (!isAnyBot && conv.unreadCount > 0)
             ListTile(
               leading: const Icon(Icons.mark_chat_read_outlined,
                   color: Colors.white70),
@@ -51,7 +56,7 @@ void showConversationTileMenu(
                 notifier.markConversationReadServer(conv.id);
               },
             )
-          else
+          else if (!isAnyBot)
             ListTile(
               leading: const Icon(Icons.mark_chat_unread_outlined,
                   color: Colors.white70),

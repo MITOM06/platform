@@ -591,6 +591,10 @@
   "aiPersonality": "Personality",
   "aiMemory": "Memory",
   "aiSkills": "Skills",
+  "adminOwnerOnly": "Admin or Owner only",
+  "@adminOwnerOnly": {
+    "description": "Hint shown on locked AI settings rows (Persona/Memory/Skills) for non-admin members"
+  },
   "aiConnectedApps": "Connected apps",
   "aiUsage": "Usage",
   "chatInfoCategory": "Chat Details",

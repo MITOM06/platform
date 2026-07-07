@@ -1239,6 +1239,9 @@ class AppLocalizationsKo extends AppLocalizations {
   String get aiSkills => '스킬';
 
   @override
+  String get adminOwnerOnly => '관리자 또는 소유자만 가능';
+
+  @override
   String get aiConnectedApps => '연결된 앱';
 
   @override

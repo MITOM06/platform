@@ -433,6 +433,7 @@
   "aiPersonality": "Tính cách",
   "aiMemory": "Bộ nhớ",
   "aiSkills": "Kỹ năng",
+  "adminOwnerOnly": "Chỉ Admin hoặc Owner",
   "aiConnectedApps": "Ứng dụng đã kết nối",
   "aiUsage": "Sử dụng",
   "chatInfoCategory": "Thông tin về đoạn chat",

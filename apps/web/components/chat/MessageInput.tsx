@@ -112,6 +112,7 @@ export function MessageInput({
       } else {
         setValue('')
       }
+      resizeTextarea()
     }, 0)
     return () => clearTimeout(timer)
   }, [editingMessage])
@@ -121,9 +122,20 @@ export function MessageInput({
     if (replyingTo) textareaRef.current?.focus()
   }, [replyingTo])
 
+  // Grow the textarea to fit content, capped at max-h-32 (128px). Driven by JS
+  // (not `field-sizing-content`) so the box never grows to fit the *placeholder*
+  // — that was blowing the empty input up to 60-70px on mobile.
+  const resizeTextarea = () => {
+    const el = textareaRef.current
+    if (!el) return
+    el.style.height = 'auto'
+    el.style.height = Math.min(el.scrollHeight, 128) + 'px'
+  }
+
   const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const val = e.target.value
     setValue(val)
+    resizeTextarea()
 
     // Check for mention
     const cursor = e.target.selectionStart
@@ -160,6 +172,7 @@ export function MessageInput({
     try {
       await onSend(content, 'text')
       setValue('')
+      if (textareaRef.current) textareaRef.current.style.height = 'auto'
       textareaRef.current?.focus()
     } finally {
       setSending(false)
@@ -176,6 +189,7 @@ export function MessageInput({
     try {
       await onSend('/new', 'text')
       setValue('')
+      if (textareaRef.current) textareaRef.current.style.height = 'auto'
       textareaRef.current?.focus()
     } finally {
       setSending(false)
@@ -360,7 +374,7 @@ export function MessageInput({
                   ? t('editPlaceholder')
                   : t('inputPlaceholder')
               }
-              className="min-h-10 max-h-32 resize-none w-full"
+              className="min-h-10 max-h-32 resize-none w-full [field-sizing:fixed]"
               rows={1}
               disabled={disabled || sending}
             />

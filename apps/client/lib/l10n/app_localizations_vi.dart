@@ -1252,6 +1252,9 @@ class AppLocalizationsVi extends AppLocalizations {
   String get aiSkills => 'Kỹ năng';
 
   @override
+  String get adminOwnerOnly => 'Chỉ Admin hoặc Owner';
+
+  @override
   String get aiConnectedApps => 'Ứng dụng đã kết nối';
 
   @override
