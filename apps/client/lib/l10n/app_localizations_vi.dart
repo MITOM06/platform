@@ -33,6 +33,30 @@ class AppLocalizationsVi extends AppLocalizations {
   String get notificationDecline => 'Từ chối';
 
   @override
+  String notificationFriendRequestTitle(String name) {
+    return '$name đã gửi cho bạn lời mời kết bạn';
+  }
+
+  @override
+  String notificationFriendAcceptedTitle(String name) {
+    return '$name đã chấp nhận lời mời kết bạn của bạn';
+  }
+
+  @override
+  String get notificationPhoneSetupTitle => 'Xác minh số điện thoại';
+
+  @override
+  String get notificationPhoneSetupBody =>
+      'Thêm và xác minh số điện thoại để bạn bè có thể tìm thấy bạn và tăng tính bảo mật tài khoản.';
+
+  @override
+  String get notificationPasswordSetupTitle => 'Bảo vệ tài khoản của bạn';
+
+  @override
+  String get notificationPasswordSetupBody =>
+      'Tài khoản của bạn chưa có mật khẩu. Hãy thiết lập mật khẩu để tăng tính bảo mật.';
+
+  @override
   String get securityTitle => 'Mật khẩu & Bảo mật';
 
   @override

@@ -314,7 +314,7 @@ export function MessageInput({
       />
 
       {recording ? (
-        <div className="flex items-center gap-3 p-3">
+        <div className="flex items-center gap-3 p-2 md:p-3">
           <Mic className="size-5 animate-pulse text-red-500" />
           <span className="flex-1 text-sm text-muted-foreground">
             {t('recording', { time: fmtSeconds(recordSeconds) })}
@@ -327,7 +327,7 @@ export function MessageInput({
           </Button>
         </div>
       ) : (
-        <div className="flex items-end gap-1 p-3">
+        <div className="flex items-end gap-1 p-2 md:p-3">
           {/* Attach — left side */}
           {!editingMessage && (
             <DropdownMenu>

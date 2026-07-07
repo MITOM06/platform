@@ -14,6 +14,7 @@
     "somethingWrong": "Algo salió mal",
     "unknownError": "Error desconocido",
     "retry": "Reintentar",
+    "ok": "Aceptar",
     "dialogDescription": "Contenido del diálogo"
   },
   "meta": {
@@ -111,7 +112,8 @@
       "resend": "Reenviar OTP",
       "backToLogin": "Volver a iniciar sesión",
       "resendSuccess": "Código OTP reenviado",
-      "resendError": "No se pudo reenviar el OTP"
+      "resendError": "No se pudo reenviar el OTP",
+      "backToRegister": "Volver a registrarse"
     },
     "forgotPassword": {
       "title": "Olvidé mi contraseña",
@@ -738,7 +740,8 @@
     "blockConfirmTitle": "¿Bloquear a {name}?",
     "blockConfirmDesc": "{name} no podrá enviarte mensajes ni ver la mayor parte de la información de tu perfil.",
     "unfriendConfirmTitle": "¿Eliminar amistad?",
-    "unfriendConfirmDesc": "Tú y esta persona dejarán de ser amigos. Podrás enviar una solicitud de amistad de nuevo más adelante."
+    "unfriendConfirmDesc": "Tú y esta persona dejarán de ser amigos. Podrás enviar una solicitud de amistad de nuevo más adelante.",
+    "backToList": "Atrás"
   },
   "aiHub": {
     "title": "Centro de IA",
@@ -833,7 +836,8 @@
     "unarchive": "Desarchivar",
     "unarchiveSuccess": "Chat restaurado",
     "unarchiveError": "No se pudo restaurar el chat",
-    "defaultName": "Conversación"
+    "defaultName": "Conversación",
+    "groupFallback": "Chat grupal"
   },
   "explore": {
     "title": "Explorar comunidad",
@@ -1392,6 +1396,12 @@
     "decline": "Rechazar",
     "phoneSetupAction": "Agregar número de teléfono →",
     "passwordSetupAction": "Establecer una contraseña ahora →",
+    "friendRequestTitle": "{name} te envió una solicitud de amistad",
+    "friendAcceptedTitle": "{name} aceptó tu solicitud de amistad",
+    "phoneSetupTitle": "Verificar número de teléfono",
+    "phoneSetupBody": "Agrega y verifica un número de teléfono para que tus amigos puedan encontrarte y mejorar la seguridad de tu cuenta.",
+    "passwordSetupTitle": "Protege tu cuenta",
+    "passwordSetupBody": "Tu cuenta aún no tiene contraseña. Establece una para mejorar la seguridad.",
     "sectionUnread": "Sin leer",
     "sectionRead": "Leídas"
   }

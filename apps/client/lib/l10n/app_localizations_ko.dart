@@ -33,6 +33,30 @@ class AppLocalizationsKo extends AppLocalizations {
   String get notificationDecline => '거절';
 
   @override
+  String notificationFriendRequestTitle(String name) {
+    return '$name님이 친구 요청을 보냈습니다';
+  }
+
+  @override
+  String notificationFriendAcceptedTitle(String name) {
+    return '$name님이 친구 요청을 수락했습니다';
+  }
+
+  @override
+  String get notificationPhoneSetupTitle => '전화번호 인증';
+
+  @override
+  String get notificationPhoneSetupBody =>
+      '친구가 회원님을 찾을 수 있고 계정 보안을 강화하도록 전화번호를 추가하고 인증하세요.';
+
+  @override
+  String get notificationPasswordSetupTitle => '계정 보호';
+
+  @override
+  String get notificationPasswordSetupBody =>
+      '계정에 아직 비밀번호가 없습니다. 보안을 강화하려면 비밀번호를 설정하세요.';
+
+  @override
   String get securityTitle => '비밀번호 및 보안';
 
   @override

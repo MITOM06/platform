@@ -14,6 +14,7 @@
     "somethingWrong": "Something went wrong",
     "unknownError": "Unknown error",
     "retry": "Try again",
+    "ok": "OK",
     "dialogDescription": "Dialog content"
   },
   "meta": {
@@ -111,7 +112,8 @@
       "resend": "Resend OTP",
       "backToLogin": "Back to sign in",
       "resendSuccess": "OTP code resent",
-      "resendError": "Failed to resend OTP"
+      "resendError": "Failed to resend OTP",
+      "backToRegister": "Back to Register"
     },
     "forgotPassword": {
       "title": "Forgot Password",
@@ -738,7 +740,8 @@
     "blockConfirmTitle": "Block {name}?",
     "blockConfirmDesc": "{name} won't be able to message you or see most of your profile information.",
     "unfriendConfirmTitle": "Remove friend?",
-    "unfriendConfirmDesc": "You and this person will no longer be friends. You can send a friend request again later."
+    "unfriendConfirmDesc": "You and this person will no longer be friends. You can send a friend request again later.",
+    "backToList": "Back"
   },
   "aiHub": {
     "title": "AI Hub",
@@ -833,7 +836,8 @@
     "unarchive": "Unarchive",
     "unarchiveSuccess": "Chat restored",
     "unarchiveError": "Failed to restore chat",
-    "defaultName": "Conversation"
+    "defaultName": "Conversation",
+    "groupFallback": "Group chat"
   },
   "explore": {
     "title": "Explore Community",
@@ -1392,6 +1396,12 @@
     "decline": "Decline",
     "phoneSetupAction": "Add phone number →",
     "passwordSetupAction": "Set a password now →",
+    "friendRequestTitle": "{name} sent you a friend request",
+    "friendAcceptedTitle": "{name} accepted your friend request",
+    "phoneSetupTitle": "Verify phone number",
+    "phoneSetupBody": "Add and verify a phone number so friends can find you and to improve account security.",
+    "passwordSetupTitle": "Protect your account",
+    "passwordSetupBody": "Your account doesn't have a password yet. Set one to improve security.",
     "sectionUnread": "Unread",
     "sectionRead": "Earlier"
   }

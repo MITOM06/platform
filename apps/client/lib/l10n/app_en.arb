@@ -10,6 +10,26 @@
   "notificationsMarkAllRead": "Mark all as read",
   "notificationAccept": "Accept",
   "notificationDecline": "Decline",
+  "notificationFriendRequestTitle": "{name} sent you a friend request",
+  "@notificationFriendRequestTitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "notificationFriendAcceptedTitle": "{name} accepted your friend request",
+  "@notificationFriendAcceptedTitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "notificationPhoneSetupTitle": "Verify phone number",
+  "notificationPhoneSetupBody": "Add and verify a phone number so friends can find you and to improve account security.",
+  "notificationPasswordSetupTitle": "Protect your account",
+  "notificationPasswordSetupBody": "Your account doesn't have a password yet. Set one to improve security.",
   "securityTitle": "Password & Security",
   "securitySubtitle": "Change your password",
   "securityNoPasswordCardSubtitle": "No password set",

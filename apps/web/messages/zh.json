@@ -14,6 +14,7 @@
     "somethingWrong": "出现错误",
     "unknownError": "未知错误",
     "retry": "重试",
+    "ok": "确定",
     "dialogDescription": "对话框内容"
   },
   "meta": {
@@ -111,7 +112,8 @@
       "resend": "重新发送 OTP",
       "backToLogin": "返回登录",
       "resendSuccess": "已重新发送 OTP 验证码",
-      "resendError": "重新发送 OTP 失败"
+      "resendError": "重新发送 OTP 失败",
+      "backToRegister": "返回注册"
     },
     "forgotPassword": {
       "title": "忘记密码",
@@ -738,7 +740,8 @@
     "blockConfirmTitle": "屏蔽 {name}？",
     "blockConfirmDesc": "{name} 将无法向你发送消息或查看你的大部分个人资料。",
     "unfriendConfirmTitle": "删除好友？",
-    "unfriendConfirmDesc": "你和此人将不再是好友。之后你仍可以重新发送好友请求。"
+    "unfriendConfirmDesc": "你和此人将不再是好友。之后你仍可以重新发送好友请求。",
+    "backToList": "返回"
   },
   "aiHub": {
     "title": "AI 中心",
@@ -833,7 +836,8 @@
     "unarchive": "取消归档",
     "unarchiveSuccess": "聊天已恢复",
     "unarchiveError": "恢复聊天失败",
-    "defaultName": "会话"
+    "defaultName": "会话",
+    "groupFallback": "群聊"
   },
   "explore": {
     "title": "探索社区",
@@ -1392,6 +1396,12 @@
     "decline": "拒绝",
     "phoneSetupAction": "添加电话号码 →",
     "passwordSetupAction": "立即设置密码 →",
+    "friendRequestTitle": "{name} 向你发送了好友请求",
+    "friendAcceptedTitle": "{name} 接受了你的好友请求",
+    "phoneSetupTitle": "验证手机号码",
+    "phoneSetupBody": "添加并验证手机号码，让好友能找到你并增强账户安全性。",
+    "passwordSetupTitle": "保护你的账户",
+    "passwordSetupBody": "你的账户还没有设置密码。请设置密码以增强安全性。",
     "sectionUnread": "未读",
     "sectionRead": "已读"
   }

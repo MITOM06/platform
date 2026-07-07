@@ -14,6 +14,7 @@
     "somethingWrong": "Une erreur s'est produite",
     "unknownError": "Erreur inconnue",
     "retry": "Réessayer",
+    "ok": "OK",
     "dialogDescription": "Contenu de la boîte de dialogue"
   },
   "meta": {
@@ -111,7 +112,8 @@
       "resend": "Renvoyer l'OTP",
       "backToLogin": "Retour à la connexion",
       "resendSuccess": "Code OTP renvoyé",
-      "resendError": "Échec du renvoi de l'OTP"
+      "resendError": "Échec du renvoi de l'OTP",
+      "backToRegister": "Retour à l’inscription"
     },
     "forgotPassword": {
       "title": "Mot de passe oublié",
@@ -738,7 +740,8 @@
     "blockConfirmTitle": "Bloquer {name} ?",
     "blockConfirmDesc": "{name} ne pourra plus vous envoyer de messages ni voir la plupart des informations de votre profil.",
     "unfriendConfirmTitle": "Retirer cet ami ?",
-    "unfriendConfirmDesc": "Vous et cette personne ne serez plus amis. Vous pourrez renvoyer une demande d'ami plus tard."
+    "unfriendConfirmDesc": "Vous et cette personne ne serez plus amis. Vous pourrez renvoyer une demande d'ami plus tard.",
+    "backToList": "Retour"
   },
   "aiHub": {
     "title": "Hub IA",
@@ -833,7 +836,8 @@
     "unarchive": "Désarchiver",
     "unarchiveSuccess": "Discussion restaurée",
     "unarchiveError": "Échec de la restauration de la discussion",
-    "defaultName": "Conversation"
+    "defaultName": "Conversation",
+    "groupFallback": "Discussion de groupe"
   },
   "explore": {
     "title": "Explorer la communauté",
@@ -1392,6 +1396,12 @@
     "decline": "Refuser",
     "phoneSetupAction": "Ajouter un numéro de téléphone →",
     "passwordSetupAction": "Définir un mot de passe maintenant →",
+    "friendRequestTitle": "{name} vous a envoyé une demande d'ami",
+    "friendAcceptedTitle": "{name} a accepté votre demande d'ami",
+    "phoneSetupTitle": "Vérifier le numéro de téléphone",
+    "phoneSetupBody": "Ajoutez et vérifiez un numéro de téléphone pour que vos amis puissent vous trouver et renforcer la sécurité de votre compte.",
+    "passwordSetupTitle": "Protégez votre compte",
+    "passwordSetupBody": "Votre compte n'a pas encore de mot de passe. Définissez-en un pour renforcer la sécurité.",
     "sectionUnread": "Non lues",
     "sectionRead": "Lues"
   }

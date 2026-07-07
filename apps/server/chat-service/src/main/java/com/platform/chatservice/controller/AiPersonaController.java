@@ -6,6 +6,7 @@ import com.platform.chatservice.model.AiPersona;
 import com.platform.chatservice.model.Conversation;
 import com.platform.chatservice.repository.AiPersonaRepository;
 import com.platform.chatservice.repository.ConversationRepository;
+import com.platform.chatservice.service.AiConstants;
 import jakarta.validation.Valid;
 import java.security.Principal;
 import java.time.Instant;
@@ -56,10 +57,7 @@ public class AiPersonaController {
     }
     Conversation conv = convOpt.get();
 
-    if (!conv.isGroup()) {
-      return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
-    }
-    if (conv.getAdmins() == null || !conv.getAdmins().contains(userId)) {
+    if (!canManagePersona(conv, userId)) {
       return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
     }
 
@@ -93,15 +91,34 @@ public class AiPersonaController {
     }
     Conversation conv = convOpt.get();
 
-    if (!conv.isGroup()) {
-      return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
-    }
-    if (conv.getAdmins() == null || !conv.getAdmins().contains(userId)) {
+    if (!canManagePersona(conv, userId)) {
       return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
     }
 
     aiPersonaRepository.deleteByConversationId(conversationId);
     return ResponseEntity.noContent().build();
+  }
+
+  /**
+   * Who may create/update/delete the AI persona for a conversation:
+   *
+   * <ul>
+   *   <li><b>Group</b> — only group admins (shared "bot tổng" persona is a group-wide setting).
+   *   <li><b>1-1 AI chat</b> — the human owner of their personal AI conversation (a direct
+   *       conversation where the AI bot is a participant). This is the user's own bot.
+   * </ul>
+   *
+   * Plain human-to-human direct chats have no persona and are always rejected.
+   */
+  private boolean canManagePersona(Conversation conv, String userId) {
+    if (conv.getParticipants() == null || !conv.getParticipants().contains(userId)) {
+      return false;
+    }
+    if (conv.isGroup()) {
+      return conv.getAdmins() != null && conv.getAdmins().contains(userId);
+    }
+    // Direct conversation: only the user's personal AI chat (AI bot is a participant).
+    return conv.getParticipants().contains(AiConstants.AI_BOT_USER_ID);
   }
 
   private AiPersonaResponse toResponse(AiPersona p) {
