@@ -534,6 +534,7 @@
     "viewProfile": "View profile",
     "groupInfo": "Group info",
     "voiceCall": "Voice call",
+    "callBlockedByUser": "This user is not accepting calls",
     "videoCall": "Video call",
     "callComingSoon": "Coming soon",
     "blockUser": "Block user",

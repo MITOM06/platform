@@ -477,6 +477,7 @@
     "viewProfile": "프로필 보기",
     "groupInfo": "그룹 정보",
     "voiceCall": "음성 통화",
+    "callBlockedByUser": "이 사용자는 통화를 받지 않습니다",
     "videoCall": "영상 통화",
     "callComingSoon": "곧 제공 예정",
     "blockUser": "사용자 차단",

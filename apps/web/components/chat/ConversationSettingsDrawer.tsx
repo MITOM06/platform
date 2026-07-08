@@ -171,7 +171,8 @@ export function ConversationSettingsDrawer({
                 isDirect={s.isDirect}
                 isGroup={s.isGroup}
                 isAI={s.isAI}
-                isBlocked={s.isBlocked}
+                iBlocked={s.iBlocked}
+                blockedMe={s.blockedMe}
                 saving={s.saving}
                 onBlockToggle={s.handleBlockButtonClick}
                 onLeaveGroup={s.handleLeaveGroup}

@@ -17,7 +17,6 @@ import { useConversations } from '@/lib/hooks/use-conversations'
 import { useUiStore } from '@/lib/store/ui.store'
 import { useAuthStore } from '@/lib/store/auth.store'
 import { getNickname } from '@/lib/nicknames'
-import { OfflineBanner } from './OfflineBanner'
 import { authService } from '@/lib/api/auth'
 import { AI_BOT_ID } from '@/lib/constants'
 import type { Conversation } from '@/lib/api/types'
@@ -152,8 +151,6 @@ export function ConversationList() {
             />
           </div>
         </div>
-
-        <OfflineBanner />
 
         <Tabs defaultValue="chats" className="flex flex-col flex-1 min-h-0">
           {/* Chats tab */}
