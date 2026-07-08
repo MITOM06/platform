@@ -1093,6 +1093,10 @@
     "docDrafterDesc": "구조화된 제안서, 명세서, 보고서를 작성합니다.",
     "translatorName": "번역가",
     "translatorDesc": "여러 언어 간 텍스트를 자연스럽게 번역하고 현지화합니다.",
+    "webSearchName": "웹 검색",
+    "webSearchDesc": "웹에서 최신 정보를 찾고 출처를 인용합니다.",
+    "weatherForecastName": "날씨 예보",
+    "weatherForecastDesc": "모든 위치의 날씨와 예보를 조회합니다.",
     "sectionNum": "03 / 스킬"
   },
   "admin": {

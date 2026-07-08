@@ -2245,6 +2245,20 @@ class AppLocalizationsVi extends AppLocalizations {
       'Dịch và bản địa hóa văn bản tự nhiên giữa các ngôn ngữ.';
 
   @override
+  String get skillWebSearchName => 'Tìm kiếm Web';
+
+  @override
+  String get skillWebSearchDesc =>
+      'Tìm thông tin mới nhất trên web và trích dẫn nguồn.';
+
+  @override
+  String get skillWeatherForecastName => 'Dự báo thời tiết';
+
+  @override
+  String get skillWeatherForecastDesc =>
+      'Tra cứu thời tiết và dự báo cho bất kỳ địa điểm nào.';
+
+  @override
   String get adminTitle => 'Bảng quản trị';
 
   @override

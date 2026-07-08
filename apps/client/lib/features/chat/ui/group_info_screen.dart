@@ -13,6 +13,7 @@ import '../data/chat_repository.dart';
 import '../domain/chat_provider.dart';
 import '../domain/chat_state.dart';
 import 'widgets/conversation_avatar.dart';
+import 'widgets/member_tile.dart';
 import 'widgets/pinned_messages_section.dart';
 
 /// Loads a single conversation (used for group info, refreshed on demand).
@@ -131,7 +132,7 @@ class GroupInfoScreen extends ConsumerWidget {
                 ),
               ),
               for (final memberId in conv.participants)
-                _MemberTile(
+                MemberTile(
                   userId: memberId,
                   isMemberAdmin: conv.admins.contains(memberId),
                   canRemove: isAdmin && memberId != currentUserId,
@@ -371,44 +372,3 @@ class GroupInfoScreen extends ConsumerWidget {
   }
 }
 
-class _MemberTile extends ConsumerWidget {
-  final String userId;
-  final bool isMemberAdmin;
-  final bool canRemove;
-  final bool isSelf;
-  final VoidCallback onRemove;
-
-  const _MemberTile({
-    required this.userId,
-    required this.isMemberAdmin,
-    required this.canRemove,
-    required this.isSelf,
-    required this.onRemove,
-  });
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final profile = ref.watch(userProfileProvider(userId)).valueOrNull;
-    final name = isSelf ? context.l10n.you : (profile?.displayName ?? '…');
-    return ListTile(
-      leading: ConversationAvatar(
-        avatarUrl: profile?.avatarUrl,
-        fallbackLetter: name.isNotEmpty ? name[0].toUpperCase() : '?',
-        size: 40,
-      ),
-      title: Text(name,
-          style: TextStyle(color: Theme.of(context).colorScheme.onSurface)),
-      subtitle: isMemberAdmin
-          ? Text(context.l10n.admin,
-              style: const TextStyle(color: AppTheme.ponCyan, fontSize: 12))
-          : null,
-      trailing: canRemove
-          ? IconButton(
-              icon: const Icon(Icons.remove_circle_outline,
-                  color: Colors.redAccent),
-              onPressed: onRemove,
-            )
-          : null,
-    );
-  }
-}

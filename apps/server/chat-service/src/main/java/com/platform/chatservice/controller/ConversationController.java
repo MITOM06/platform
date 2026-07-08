@@ -13,7 +13,9 @@ import com.platform.chatservice.exception.UnauthorizedException;
 import com.platform.chatservice.security.UserPrincipal;
 import com.platform.chatservice.service.AttachmentService;
 import com.platform.chatservice.service.ClusterMessageBroker;
+import com.platform.chatservice.service.ConversationQueryService;
 import com.platform.chatservice.service.ConversationService;
+import com.platform.chatservice.service.MessageQueryService;
 import com.platform.chatservice.service.MessageService;
 import java.util.List;
 import java.util.Map;
@@ -30,7 +32,9 @@ import org.springframework.web.bind.annotation.*;
 public class ConversationController {
 
   private final ConversationService conversationService;
+  private final ConversationQueryService conversationQueryService;
   private final MessageService messageService;
+  private final MessageQueryService messageQueryService;
   private final AttachmentService attachmentService;
   private final ClusterMessageBroker clusterBroker;
 
@@ -41,10 +45,10 @@ public class ConversationController {
       @RequestParam(defaultValue = "false") boolean archived,
       @RequestParam(defaultValue = "false") boolean blocked) {
     if (blocked) {
-      return conversationService.listBlockedConversations(
+      return conversationQueryService.listBlockedConversations(
           currentUserId(), PageRequest.of(page, size));
     }
-    return conversationService.listConversations(
+    return conversationQueryService.listConversations(
         currentUserId(), PageRequest.of(page, size), archived);
   }
 
@@ -210,7 +214,7 @@ public class ConversationController {
       @RequestParam(required = false) String q,
       @RequestParam(defaultValue = "0") int page,
       @RequestParam(defaultValue = "20") int size) {
-    return conversationService.listPublicChannels(q, PageRequest.of(page, size));
+    return conversationQueryService.listPublicChannels(q, PageRequest.of(page, size));
   }
 
   /** Join a public channel (Task 52). */
@@ -236,10 +240,10 @@ public class ConversationController {
     if (after != null && !after.isBlank()) {
       java.time.Instant afterTimestamp = java.time.Instant.parse(after);
       List<MessageResponse> content =
-          messageService.getMessagesSince(currentUserId(), conversationId, afterTimestamp);
+          messageQueryService.getMessagesSince(currentUserId(), conversationId, afterTimestamp);
       return new PageResponse<>(content, 0, content.size(), content.size());
     }
-    return messageService.getMessages(currentUserId(), conversationId, before, size);
+    return messageQueryService.getMessages(currentUserId(), conversationId, before, size);
   }
 
   /** Shared media/files/links gallery (Task 57). */
@@ -266,7 +270,7 @@ public class ConversationController {
   private void broadcastSystem(String conversationId, String contentKey) {
     MessageResponse system = messageService.createSystemMessage(conversationId, contentKey);
     clusterBroker.convertAndSend("/topic/conversation/" + conversationId, system);
-    for (String participantId : conversationService.getParticipants(conversationId)) {
+    for (String participantId : conversationQueryService.getParticipants(conversationId)) {
       clusterBroker.convertAndSendToUser(
           participantId,
           "/queue/notifications",

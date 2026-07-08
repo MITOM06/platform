@@ -107,9 +107,50 @@ class _IconBadge extends StatelessWidget {
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: AppTheme.darkBorder),
       ),
-      child: Text(icon, style: const TextStyle(fontSize: 22)),
+      child: _ConnectorLogo(id: icon),
     );
   }
+}
+
+/// Renders a brand logo for a provider id using the official favicon CDN.
+/// Falls back to the provider's initial letter if the image can't load
+/// (e.g. offline).
+class _ConnectorLogo extends StatelessWidget {
+  final String id;
+  const _ConnectorLogo({required this.id});
+
+  static const _logos = {
+    'notion': 'https://www.notion.so/front-static/favicon.ico',
+    'gmail': 'https://ssl.gstatic.com/ui/v1/icons/mail/rfr/gmail.ico',
+    'calendar':
+        'https://calendar.google.com/googlecalendar/images/favicon_v2018_256.png',
+    'drive':
+        'https://ssl.gstatic.com/images/branding/product/1x/drive_2020q4_32dp.png',
+  };
+
+  @override
+  Widget build(BuildContext context) {
+    final url = _logos[id];
+    if (url == null) {
+      return _initials();
+    }
+    return Image.network(
+      url,
+      width: 26,
+      height: 26,
+      fit: BoxFit.contain,
+      errorBuilder: (_, __, ___) => _initials(),
+    );
+  }
+
+  Widget _initials() => Text(
+        id.isNotEmpty ? id[0].toUpperCase() : '?',
+        style: const TextStyle(
+          color: Colors.white54,
+          fontSize: 18,
+          fontWeight: FontWeight.bold,
+        ),
+      );
 }
 
 class _StatusPill extends StatelessWidget {

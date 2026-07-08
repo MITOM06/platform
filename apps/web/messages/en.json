@@ -1093,6 +1093,10 @@
     "docDrafterDesc": "Draft structured proposals, specs and reports.",
     "translatorName": "Translator",
     "translatorDesc": "Translate and localize text naturally across languages.",
+    "webSearchName": "Web Searcher",
+    "webSearchDesc": "Finds current information on the web and cites sources.",
+    "weatherForecastName": "Weather Forecast",
+    "weatherForecastDesc": "Looks up weather and forecast for any location.",
     "sectionNum": "03 / SKILLS"
   },
   "admin": {

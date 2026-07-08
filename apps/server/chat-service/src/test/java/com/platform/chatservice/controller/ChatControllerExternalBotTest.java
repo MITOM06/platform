@@ -9,9 +9,10 @@ import com.platform.chatservice.model.ExternalBot;
 import com.platform.chatservice.service.AiRedisPublisher;
 import com.platform.chatservice.service.CallService;
 import com.platform.chatservice.service.ClusterMessageBroker;
-import com.platform.chatservice.service.ConversationService;
+import com.platform.chatservice.service.ConversationQueryService;
 import com.platform.chatservice.service.ExternalBotService;
 import com.platform.chatservice.service.FcmService;
+import com.platform.chatservice.service.MessageQueryService;
 import com.platform.chatservice.service.MessageService;
 import com.platform.chatservice.service.RateLimiterService;
 import java.security.Principal;
@@ -29,7 +30,8 @@ import org.mockito.quality.Strictness;
 class ChatControllerExternalBotTest {
 
   @Mock private MessageService messageService;
-  @Mock private ConversationService conversationService;
+  @Mock private MessageQueryService messageQueryService;
+  @Mock private ConversationQueryService conversationQueryService;
   @Mock private ClusterMessageBroker clusterBroker;
   @Mock private FcmService fcmService;
   @Mock private RateLimiterService rateLimiterService;
@@ -43,7 +45,8 @@ class ChatControllerExternalBotTest {
     ChatController controller =
         new ChatController(
             messageService,
-            conversationService,
+            messageQueryService,
+            conversationQueryService,
             clusterBroker,
             fcmService,
             rateLimiterService,
@@ -53,7 +56,7 @@ class ChatControllerExternalBotTest {
 
     when(messageService.sendMessage(any(), any())).thenReturn(messageResponse);
     when(messageResponse.mentions()).thenReturn(null);
-    when(conversationService.getParticipants("conv-1")).thenReturn(List.of("user-1"));
+    when(conversationQueryService.getParticipants("conv-1")).thenReturn(List.of("user-1"));
     ExternalBot bot =
         ExternalBot.builder()
             .botUserId("extbot:bf-1")
@@ -78,7 +81,8 @@ class ChatControllerExternalBotTest {
     ChatController controller =
         new ChatController(
             messageService,
-            conversationService,
+            messageQueryService,
+            conversationQueryService,
             clusterBroker,
             fcmService,
             rateLimiterService,
@@ -88,7 +92,7 @@ class ChatControllerExternalBotTest {
 
     when(messageService.sendMessage(any(), any())).thenReturn(messageResponse);
     when(messageResponse.mentions()).thenReturn(null);
-    when(conversationService.getParticipants("conv-1")).thenReturn(List.of("user-1"));
+    when(conversationQueryService.getParticipants("conv-1")).thenReturn(List.of("user-1"));
     when(externalBotService.resolveAssistant("conv-1", "user-1")).thenReturn(Optional.empty());
 
     ChatMessageDto dto = new ChatMessageDto();

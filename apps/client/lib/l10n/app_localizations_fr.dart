@@ -2280,6 +2280,20 @@ class AppLocalizationsFr extends AppLocalizations {
       'Traduit et localise les textes naturellement entre les langues.';
 
   @override
+  String get skillWebSearchName => 'Recherche web';
+
+  @override
+  String get skillWebSearchDesc =>
+      'Trouve des informations récentes sur le web et cite les sources.';
+
+  @override
+  String get skillWeatherForecastName => 'Météo';
+
+  @override
+  String get skillWeatherForecastDesc =>
+      'Consulte la météo et les prévisions pour tout lieu.';
+
+  @override
   String get adminTitle => 'Console d\'administration';
 
   @override

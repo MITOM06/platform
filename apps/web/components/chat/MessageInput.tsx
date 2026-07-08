@@ -1,23 +1,19 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
-import {
-  Send, X, Pencil, Paperclip, ImagePlus, FileText, Mic, Trash2, Reply, Plus,
-} from 'lucide-react'
+import { Send, Pencil, Mic } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
-import {
-  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
-import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { authService } from '@/lib/api/auth'
 import { useQuickReaction } from '@/lib/quick-reaction'
 import { useVoiceRecorder } from '@/lib/hooks/use-voice-recorder'
 import { useFileAttachments } from '@/lib/hooks/use-file-attachments'
-import { useAuthStore } from '@/lib/store/auth.store'
+import { useMentionParticipants } from '@/lib/hooks/use-mention-participants'
 import { AI_BOT_ID } from '@/lib/constants'
 import { EmojiStickerPicker } from '@/components/chat/EmojiStickerPicker'
+import {
+  ReplyBanner, EditBanner, RecordingBar, AttachMenu, SlashSuggestion, MentionPopover,
+} from '@/components/chat/MessageInputParts'
 import type { Message, MessageType, Conversation } from '@/lib/api/types'
 
 interface Props {
@@ -43,35 +39,8 @@ export function MessageInput({
 }: Props) {
   const t = useTranslations('chat')
   const quickReaction = useQuickReaction(conversation?.id ?? '')
-  const currentUserId = useAuthStore((s) => s.user?.id)
 
-  // Resolve group participant userIds → display names for @mentions. Mirrors
-  // Flutter (mention_list.dart) which filters + inserts by display name. The
-  // AI bot and self are excluded from the candidate list.
-  const queryClient = useQueryClient()
-  const mentionableIds = (conversation?.type === 'group'
-    ? conversation.participants.filter(
-        (p) => p !== currentUserId && p !== 'ai-bot-000000000000000000000001',
-      )
-    : []
-  )
-  // Resolve all mentionable participants in ONE batched request (was an N+1
-  // useQueries fanning out one request per participant → 429s), then seed the
-  // per-id `['user', id]` cache so other consumers (useUser) hit cache too.
-  const mentionKey = [...mentionableIds].sort().join(',')
-  const { data: batchedUsers } = useQuery({
-    queryKey: ['users-batch', mentionKey],
-    queryFn: () => authService.getUsers(mentionableIds),
-    enabled: mentionableIds.length > 0,
-    staleTime: 5 * 60 * 1000,
-  })
-  useEffect(() => {
-    batchedUsers?.forEach((u) => queryClient.setQueryData(['user', u.id], u))
-  }, [batchedUsers, queryClient])
-  const participants = mentionableIds.map((uid) => {
-    const cached = queryClient.getQueryData<{ displayName?: string }>(['user', uid])
-    return { id: uid, name: cached?.displayName ?? uid }
-  })
+  const participants = useMentionParticipants(conversation)
   const [value, setValue] = useState('')
   const [sending, setSending] = useState(false)
   const [uploading, setUploading] = useState(false)
@@ -275,40 +244,18 @@ export function MessageInput({
     }
   }
 
-  const fmtSeconds = (s: number) =>
-    `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`
-
   const busy = disabled || sending || uploading
 
   return (
     <div className="flex flex-col border-t bg-background pb-safe">
       {/* Reply banner */}
       {replyingTo && !editingMessage && (
-        <div className="flex items-center gap-2 px-3 py-1.5 bg-primary/5 border-b text-sm">
-          <Reply className="size-3.5 text-primary shrink-0" />
-          <div className="min-w-0 flex-1">
-            <p className="text-[11px] font-semibold text-primary">
-              {t('replyTo', { name: replyingTo.senderName || '' })}
-            </p>
-            <p className="truncate text-xs text-muted-foreground">{replyingTo.content}</p>
-          </div>
-          <Button variant="ghost" size="icon-xs" onClick={onCancelReply}>
-            <X className="size-3.5" />
-          </Button>
-        </div>
+        <ReplyBanner replyingTo={replyingTo} onCancelReply={onCancelReply} />
       )}
 
       {/* Edit mode banner */}
       {editingMessage && (
-        <div className="flex items-center gap-2 px-3 py-1.5 bg-primary/5 border-b text-sm">
-          <Pencil className="size-3.5 text-primary shrink-0" />
-          <span className="text-muted-foreground flex-1 truncate text-xs">
-            {t('editing', { content: editingMessage.content })}
-          </span>
-          <Button variant="ghost" size="icon-xs" onClick={onCancelEdit}>
-            <X className="size-3.5" />
-          </Button>
-        </div>
+        <EditBanner editingMessage={editingMessage} onCancelEdit={onCancelEdit} />
       )}
 
       {/* Hidden file inputs */}
@@ -328,39 +275,20 @@ export function MessageInput({
       />
 
       {recording ? (
-        <div className="flex items-center gap-3 p-2 md:p-3">
-          <Mic className="size-5 animate-pulse text-red-500" />
-          <span className="flex-1 text-sm text-muted-foreground">
-            {t('recording', { time: fmtSeconds(recordSeconds) })}
-          </span>
-          <Button variant="ghost" size="icon" onClick={cancelRecording} className="tap">
-            <Trash2 className="size-4" />
-          </Button>
-          <Button size="icon" onClick={stopAndSend} className="shrink-0 tap">
-            <Send className="size-4" />
-          </Button>
-        </div>
+        <RecordingBar
+          recordSeconds={recordSeconds}
+          onCancel={cancelRecording}
+          onStopAndSend={stopAndSend}
+        />
       ) : (
         <div className="flex items-end gap-1 p-2 md:p-3">
           {/* Attach — left side */}
           {!editingMessage && (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="shrink-0 tap" disabled={busy}>
-                  <Paperclip className="size-5 text-pon-peach" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="start" side="top">
-                <DropdownMenuItem onClick={() => imageInputRef.current?.click()}>
-                  <ImagePlus className="size-4" />
-                  {t('attachImageVideo')}
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => fileInputRef.current?.click()}>
-                  <FileText className="size-4" />
-                  {t('attachFile')}
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            <AttachMenu
+              disabled={busy}
+              onPickImage={() => imageInputRef.current?.click()}
+              onPickFile={() => fileInputRef.current?.click()}
+            />
           )}
 
           <div className="relative flex-1 min-w-0">
@@ -381,41 +309,17 @@ export function MessageInput({
 
             {/* `/new` slash suggestion (AI conversations) */}
             {showSlashSuggestion && (
-              <div className="absolute bottom-full left-0 mb-2 min-w-48 bg-popover border rounded-xl shadow-lg z-50 p-1">
-                <button
-                  onClick={sendSlashNew}
-                  disabled={busy}
-                  className="flex items-center gap-2 w-full px-3 py-2 text-sm text-left rounded-lg hover:bg-muted transition-colors"
-                >
-                  <Plus className="size-4 text-primary shrink-0" />
-                  <div className="min-w-0">
-                    <p className="font-medium">{t('aiNewSessionCommand')}</p>
-                    <p className="text-xs text-muted-foreground truncate">
-                      {t('aiNewSessionCommandDesc')}
-                    </p>
-                  </div>
-                </button>
-              </div>
+              <SlashSuggestion disabled={busy} onSelect={sendSlashNew} />
             )}
 
             {/* Mention Popover */}
             {mentionQuery && mentionCandidates.length > 0 && (
-              <div className="absolute bottom-full left-0 mb-2 w-48 max-h-48 overflow-y-auto bg-popover border rounded-xl shadow-lg z-50">
-                <div className="p-1 space-y-0.5">
-                  {mentionCandidates.map((candidate, idx) => (
-                    <button
-                      key={candidate.id}
-                      onClick={() => insertMention(candidate)}
-                      onMouseEnter={() => setMentionIndex(idx)}
-                      className={`w-full text-left px-3 py-2 text-sm rounded-lg truncate transition-colors ${
-                        idx === mentionIndex ? 'bg-primary/10 text-primary font-medium' : 'hover:bg-muted text-foreground'
-                      }`}
-                    >
-                      {candidate.name}
-                    </button>
-                  ))}
-                </div>
-              </div>
+              <MentionPopover
+                candidates={mentionCandidates}
+                activeIndex={mentionIndex}
+                onSelect={insertMention}
+                onHover={setMentionIndex}
+              />
             )}
           </div>
 

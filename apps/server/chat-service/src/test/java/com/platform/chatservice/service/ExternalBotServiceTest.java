@@ -20,14 +20,14 @@ import org.mockito.quality.Strictness;
 @MockitoSettings(strictness = Strictness.LENIENT)
 class ExternalBotServiceTest {
 
-  @Mock private ConversationService conversationService;
+  @Mock private ConversationQueryService conversationQueryService;
   @Mock private ExternalBotRepository externalBotRepository;
   @Mock private BotFactoryClient botFactoryClient;
   @Mock private AiMessageService aiMessageService;
 
   private ExternalBotService service() {
     return new ExternalBotService(
-        conversationService, externalBotRepository, botFactoryClient, aiMessageService);
+        conversationQueryService, externalBotRepository, botFactoryClient, aiMessageService);
   }
 
   private ExternalBot bot() {
@@ -43,7 +43,7 @@ class ExternalBotServiceTest {
 
   @Test
   void resolveAssistant_returnsBot_forOwned1on1() {
-    when(conversationService.getParticipants("conv-1"))
+    when(conversationQueryService.getParticipants("conv-1"))
         .thenReturn(List.of("user-1", "extbot:bf-1"));
     when(externalBotRepository.findByBotUserId("extbot:bf-1")).thenReturn(Optional.of(bot()));
 
@@ -55,14 +55,14 @@ class ExternalBotServiceTest {
 
   @Test
   void resolveAssistant_empty_whenGroup() {
-    when(conversationService.getParticipants("conv-1"))
+    when(conversationQueryService.getParticipants("conv-1"))
         .thenReturn(List.of("user-1", "user-2", "extbot:bf-1"));
     assertThat(service().resolveAssistant("conv-1", "user-1")).isEmpty();
   }
 
   @Test
   void resolveAssistant_empty_whenSenderIsNotOwner() {
-    when(conversationService.getParticipants("conv-1"))
+    when(conversationQueryService.getParticipants("conv-1"))
         .thenReturn(List.of("user-2", "extbot:bf-1"));
     when(externalBotRepository.findByBotUserId("extbot:bf-1")).thenReturn(Optional.of(bot()));
     assertThat(service().resolveAssistant("conv-1", "user-2")).isEmpty();

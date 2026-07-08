@@ -1,6 +1,6 @@
 package com.platform.chatservice.security;
 
-import com.platform.chatservice.service.ConversationService;
+import com.platform.chatservice.service.ConversationQueryService;
 import java.security.Principal;
 import java.time.Duration;
 import java.util.List;
@@ -27,7 +27,7 @@ public class AuthChannelInterceptor implements ChannelInterceptor {
 
   private final JwtUtil jwtUtil;
   private final StringRedisTemplate redisTemplate;
-  private final ConversationService conversationService;
+  private final ConversationQueryService conversationQueryService;
 
   @Override
   public Message<?> preSend(@NonNull Message<?> message, @NonNull MessageChannel channel) {
@@ -71,7 +71,7 @@ public class AuthChannelInterceptor implements ChannelInterceptor {
           if (user == null) {
             throw new MessageDeliveryException("Unauthorized subscription");
           }
-          List<String> participants = conversationService.getParticipants(conversationId);
+          List<String> participants = conversationQueryService.getParticipants(conversationId);
           if (!participants.contains(user.getName())) {
             throw new MessageDeliveryException("Unauthorized subscription");
           }

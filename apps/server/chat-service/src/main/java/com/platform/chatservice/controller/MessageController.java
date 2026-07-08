@@ -16,6 +16,7 @@ import com.platform.chatservice.service.AiFeedbackService;
 import com.platform.chatservice.service.AiRedisPublisher;
 import com.platform.chatservice.service.ClusterMessageBroker;
 import com.platform.chatservice.service.ExternalBotService;
+import com.platform.chatservice.service.MessageQueryService;
 import com.platform.chatservice.service.MessageService;
 import com.platform.chatservice.service.RateLimiterService;
 import java.util.List;
@@ -35,6 +36,7 @@ public class MessageController {
   private static final Pattern AI_MENTION_PATTERN = Pattern.compile("(?i)@(AI|ponai)\\b");
 
   private final MessageService messageService;
+  private final MessageQueryService messageQueryService;
   private final ClusterMessageBroker clusterBroker;
   private final RateLimiterService rateLimiterService;
   private final AiRedisPublisher aiRedisPublisher;
@@ -56,9 +58,9 @@ public class MessageController {
       CompletableFuture.runAsync(
           () -> {
             try {
-              List<AiHistoryEntry> history = messageService.getAiHistory(uid, convId);
+              List<AiHistoryEntry> history = messageQueryService.getAiHistory(uid, convId);
               String stripped = raw.replaceAll("(?i)@(AI|ponai)\\b", "").trim();
-              String displayName = messageService.resolveDisplayName(uid);
+              String displayName = messageQueryService.resolveDisplayName(uid);
               aiRedisPublisher.publishAiRequest(convId, uid, displayName, stripped, history);
             } catch (Exception ignored) {
             }
@@ -101,7 +103,7 @@ public class MessageController {
   @GetMapping("/search")
   public List<MessageResponse> search(
       @RequestParam("q") String query, @RequestParam("conversationId") String conversationId) {
-    return messageService.searchMessages(currentUserId(), conversationId, query);
+    return messageQueryService.searchMessages(currentUserId(), conversationId, query);
   }
 
   @PutMapping("/{id}/read")

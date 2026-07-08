@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { AiController } from './ai.controller';
 import { AiService } from './ai.service';
+import { AgenticLoopService } from './agentic-loop.service';
 import { FactExtractorService } from './fact-extractor.service';
 import { ContextBuilderService } from './context-builder.service';
 import { ResponseCacheService } from './response-cache.service';
@@ -35,6 +36,7 @@ import { SettingsModule } from '../settings/settings.module';
   controllers: [AiController],
   providers: [
     AiService,
+    AgenticLoopService,
     FactExtractorService,
     ContextBuilderService,
     ResponseCacheService,

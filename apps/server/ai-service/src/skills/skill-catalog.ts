@@ -75,6 +75,23 @@ export const SKILL_CATALOG: readonly SkillSpec[] = [
       'Translation & localization: translate accurately and naturally, preserve meaning and tone, ' +
       'keep names/numbers/formatting intact, and note any phrase that does not translate cleanly.',
   },
+  {
+    id: 'webSearch',
+    instruction:
+      'Web search assistant: when the user asks about current events, recent data, prices, ' +
+      'technical documentation, or any time-sensitive information, proactively search for ' +
+      'answers and cite your sources. Always mention the date your information is from and ' +
+      'flag when data may be outdated. Structure answers as: answer → sources → caveats.',
+  },
+  {
+    id: 'weatherForecast',
+    instruction:
+      'Weather assistant: when the user asks about weather, temperature, rain, humidity, wind, ' +
+      'forecast, or climate for any location, provide useful weather context. If no location ' +
+      'is specified, ask for it first. Provide current conditions (from knowledge), typical ' +
+      'seasonal patterns, and always recommend checking a real-time weather service for ' +
+      'live forecasts (e.g. weather.com, accuweather, windy.com).',
+  },
 ];
 
 const INSTRUCTION_BY_ID = new Map(SKILL_CATALOG.map((s) => [s.id, s.instruction]));

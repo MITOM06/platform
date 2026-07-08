@@ -58,3 +58,26 @@ export function selectModel(signals: RouteSignals, config: RouterConfig): string
 
   return config.complexModel;
 }
+
+/**
+ * Whether a model accepts the `output_config.effort` parameter. Sending it to
+ * a model that doesn't support it returns a hard 400
+ * ("This model does not support the effort parameter") — which, because it
+ * hits both the primary and fallback model, surfaces to the user as the
+ * `AI_UNAVAILABLE` error. Effort is supported on Opus 4.5+, Sonnet 4.6+,
+ * Sonnet 5, and Fable/Mythos 5 — but NOT on Sonnet 4.5 or Haiku 4.5 (the
+ * models this deployment routes to), so the parameter must be gated per-model.
+ */
+export function modelSupportsEffort(model: string): boolean {
+  const EFFORT_MODEL_PREFIXES = [
+    'claude-opus-4-5',
+    'claude-opus-4-6',
+    'claude-opus-4-7',
+    'claude-opus-4-8',
+    'claude-sonnet-4-6',
+    'claude-sonnet-5',
+    'claude-fable-5',
+    'claude-mythos-5',
+  ];
+  return EFFORT_MODEL_PREFIXES.some((prefix) => model.startsWith(prefix));
+}

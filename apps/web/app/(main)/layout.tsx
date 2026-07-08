@@ -1,19 +1,12 @@
 'use client'
 
-import { useEffect, useRef, type CSSProperties } from 'react'
+import { type CSSProperties } from 'react'
 import dynamic from 'next/dynamic'
-import { useQueryClient } from '@tanstack/react-query'
-import { useRouter, usePathname } from 'next/navigation'
-import { toast } from 'sonner'
+import { usePathname } from 'next/navigation'
 import { Compass, Contact, Plus, MessageSquarePlus, Users } from 'lucide-react'
 import Link from 'next/link'
 import { useTranslations } from 'next-intl'
-import { useAuthStore } from '@/lib/store/auth.store'
-import { useNotificationPrefs } from '@/lib/store/notification-prefs'
 import { Button } from '@/components/ui/button'
-import { stompService } from '@/lib/stomp/client'
-import type { WebRTCSignal } from '@/lib/webrtc/call-manager'
-import { useCallStore } from '@/lib/store/call.store'
 import { ConversationList } from '@/components/chat/ConversationList'
 import { OfflineBanner } from '@/components/chat/OfflineBanner'
 import { ActiveFriendsRow } from '@/components/chat/ActiveFriendsRow'
@@ -23,8 +16,10 @@ import { MobileTabBar } from '@/components/layout/MobileTabBar'
 import { SidebarProfileBar } from '@/components/layout/SidebarProfileBar'
 import { SidebarAiHubButton } from '@/components/layout/SidebarAiHubButton'
 import { NotificationBell } from '@/components/layout/NotificationBell'
-import { useUiStore, SIDEBAR_MIN_WIDTH } from '@/lib/store/ui.store'
-import { humanizeMessagePreview } from '@/lib/system-messages'
+import { PonLogo } from '@/components/layout/PonLogo'
+import { useUiStore } from '@/lib/store/ui.store'
+import { useSidebarResize } from '@/lib/hooks/use-sidebar-resize'
+import { useRealtimeNotifications } from '@/lib/hooks/use-realtime-notifications'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -41,47 +36,9 @@ const CallOverlay = dynamic(
   { ssr: false },
 )
 
-function PonLogo({ className = 'size-8' }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className={className}>
-      <defs>
-        <linearGradient id="ponGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stopColor="#6AC9FF" />
-          <stop offset="50%" stopColor="#FBB68B" />
-          <stop offset="100%" stopColor="#FF85B3" />
-        </linearGradient>
-      </defs>
-      <path
-        d="M12 2C6.48 2 2 6.48 2 12C2 14.52 2.93 16.82 4.46 18.6L3 21L5.8 20.3C7.54 21.37 9.6 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM12 18C8.69 18 6 15.31 6 12C6 8.69 8.69 6 12 6C15.31 6 18 8.69 18 12C18 15.31 15.31 18 12 18Z"
-        fill="url(#ponGradient)"
-      />
-      <circle cx="12" cy="12" r="3" fill="url(#ponGradient)" />
-    </svg>
-  )
-}
-
-interface NotificationPayload {
-  type: string
-  conversationId: string
-  senderName: string
-  senderId?: string
-  content?: string
-  messageType?: string
-}
-
 export default function MainLayout({ children }: { children: React.ReactNode }) {
-  const router = useRouter()
   const pathname = usePathname()
-  const queryClient = useQueryClient()
-  // Depend on a STABLE boolean, not the token value: the token is rotated on
-  // every ~15-min refresh (and on every 401-refresh), and a value dependency
-  // here would tear down + rebuild the STOMP singleton on each rotation — a
-  // realtime blip that can also kill WebRTC signaling mid-call. `beforeConnect`
-  // already pulls the freshest token, so we only need to (re)connect when the
-  // user transitions between authed / unauthed.
-  const isAuthed = useAuthStore((s) => !!s.accessToken)
   const t = useTranslations('layout')
-  const tChat = useTranslations('chat')
 
   // The conversation-list sidebar belongs ONLY to the messaging area
   // (/conversations and /conversations/:id). Every other page (AI hub,
@@ -99,225 +56,11 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
   // mobile stays full-width (`w-full`) and only `md:w-[var(--sidebar-w)]` picks
   // up the dynamic value. The sidebar content adapts to narrow widths via CSS
   // container queries (`@container` on <aside> + `@[120px]:`/`@[300px]:` variants below).
-  const sidebarWidth = useUiStore((s) => s.sidebarWidth)
-  const setSidebarWidth = useUiStore((s) => s.setSidebarWidth)
-  const isDragging = useRef(false)
-  const dragStartX = useRef(0)
-  const dragStartWidth = useRef(0)
+  const { sidebarWidth, handleDragStart } = useSidebarResize()
 
-  // Restore persisted width on mount (post-hydration — localStorage/window are
-  // unavailable during SSR). `persist: false` so we don't rewrite what we read.
-  useEffect(() => {
-    const stored = localStorage.getItem('pon-sidebar-width')
-    if (stored) {
-      const w = parseInt(stored, 10)
-      if (!isNaN(w) && w >= SIDEBAR_MIN_WIDTH && w <= window.innerWidth * 0.8) {
-        setSidebarWidth(w, false)
-      }
-    }
-  }, [setSidebarWidth])
-
-  const handleDragStart = (e: React.MouseEvent) => {
-    e.preventDefault()
-    isDragging.current = true
-    dragStartX.current = e.clientX
-    dragStartWidth.current = useUiStore.getState().sidebarWidth
-
-    const onMove = (ev: MouseEvent) => {
-      if (!isDragging.current) return
-      const delta = ev.clientX - dragStartX.current
-      const next = Math.min(
-        Math.max(dragStartWidth.current + delta, SIDEBAR_MIN_WIDTH),
-        window.innerWidth * 0.8,
-      )
-      // Live update without persisting on every frame.
-      setSidebarWidth(next, false)
-    }
-    const onUp = () => {
-      isDragging.current = false
-      // Persist the final width once, on release.
-      setSidebarWidth(useUiStore.getState().sidebarWidth, true)
-      window.removeEventListener('mousemove', onMove)
-      window.removeEventListener('mouseup', onUp)
-    }
-    window.addEventListener('mousemove', onMove)
-    window.addEventListener('mouseup', onUp)
-  }
-
-  useEffect(() => {
-    const token = useAuthStore.getState().accessToken
-    if (!token || stompService.isConnected()) return
-
-    stompService.connect(token).then(() => {
-      // NOTE: notification-permission prompting was moved to the post-login /
-      // post-register success path (see lib/notifications.ts). It must NOT be
-      // requested here — that fired on every authenticated session load.
-
-      stompService.subscribe('/user/queue/notifications', (frame) => {
-        try {
-          const payload: NotificationPayload = JSON.parse(frame.body)
-          // Backend sends RATE_LIMITED to /user/queue/notifications when the
-          // message send-rate is exceeded (mirror of Flutter conversations_notifier).
-          // Surface it as an error toast so the user knows their message was dropped.
-          if (payload.type === 'RATE_LIMITED') {
-            toast.error(t('rateLimitError'))
-            return
-          }
-          if (payload.type !== 'NEW_MESSAGE' && payload.type !== 'MENTIONED_YOU') {
-            return
-          }
-          // Refresh the sidebar (last-message preview, timestamp, unread badge)
-          // for conversations that aren't currently open — the open one is kept
-          // live by the thread's own STOMP subscription. This runs regardless of
-          // the notification preference so unread counts stay correct when OFF.
-          queryClient.invalidateQueries({ queryKey: ['conversations'] })
-          // App-level notification toggle (mirror Flutter notificationsEnabledProvider).
-          // When OFF, keep unread counts live (above) but suppress the visible
-          // OS notification and in-app toast.
-          if (!useNotificationPrefs.getState().enabled) {
-            return
-          }
-          // Don't notify for the conversation already open on screen.
-          if (window.location.pathname === `/conversations/${payload.conversationId}`) {
-            return
-          }
-
-          // Backend sends senderName: "system" (and a raw `system.*` content
-          // code) for group system events. Never render either raw — show a
-          // generic localized title and humanize the body (rule:
-          // no-raw-system-data-in-ui).
-          const isSystemEvent =
-            payload.senderName === 'system' || (payload.content?.startsWith('system.') ?? false)
-          const title = isSystemEvent
-            ? t('notificationSystemTitle')
-            : t('notificationTitle', { name: payload.senderName })
-          const body = isSystemEvent
-            ? payload.content
-              ? humanizeMessagePreview(payload.content, payload.messageType, tChat, { short: true })
-              : t('notificationFallback')
-            : payload.messageType && payload.messageType !== 'text'
-              ? t('notificationAttachment')
-              : payload.content || t('notificationFallback')
-
-          if (
-            typeof Notification !== 'undefined' &&
-            Notification.permission === 'granted' &&
-            document.visibilityState === 'hidden'
-          ) {
-            // Tab in background → OS-level notification.
-            const n = new Notification(title, { body })
-            n.onclick = () => {
-              window.focus()
-              router.push(`/conversations/${payload.conversationId}`)
-            }
-          } else {
-            // Tab visible → in-app toast so the user still sees it.
-            toast(title, {
-              description: body,
-              action: {
-                label: t('notificationOpen'),
-                onClick: () => router.push(`/conversations/${payload.conversationId}`),
-              },
-            })
-          }
-        } catch {
-          // ignore
-        }
-      })
-
-      // WebRTC call signaling. Group signals carry a `callId` and route into the
-      // mesh manager; legacy 1-on-1 signals (no callId) keep their old path.
-      stompService.subscribe('/user/queue/webrtc', (frame) => {
-        try {
-          const signal: WebRTCSignal = JSON.parse(frame.body)
-
-          // ── Caller is blocked by the callee — show error toast and abort ───
-          if (signal.type === 'call-blocked') {
-            toast.error(tChat('callBlocked'))
-            // Reset call state without sending a signal to the other side
-            // (there is no active call session to clean up peer-to-peer).
-            useCallStore.getState().reset()
-            return
-          }
-
-          // ── Group call ring → open the incoming-group-call prompt ───────────
-          if (signal.type === 'call-ring') {
-            // Ignore a ring while already in any call.
-            const st = useCallStore.getState()
-            if (st.groupCallId || st.status !== 'idle') return
-            st.setIncomingGroupCall({
-              callId: signal.callId ?? '',
-              conversationId: signal.conversationId ?? '',
-              startedBy: signal.senderId ?? '',
-              startedByName: signal.startedByName ?? '',
-              media: signal.media ?? 'video',
-              aiNotetaker: signal.aiNotetaker ?? false,
-            })
-            return
-          }
-
-          // ── Mesh signaling (offer/answer/ice with a callId) ─────────────────
-          if (signal.callId) {
-            void import('@/lib/webrtc/group-call-manager').then((m) =>
-              m.groupCallManager.handleSignal(signal),
-            )
-            return
-          }
-
-          // ── Legacy 1-on-1 ───────────────────────────────────────────────────
-          if (signal.type === 'offer') {
-            // Ignore a second offer while already in a call.
-            if (useCallStore.getState().status !== 'idle') return
-            useCallStore.getState().setIncoming({
-              peerId: signal.senderId ?? '',
-              peerName: '',
-              conversationId: signal.conversationId ?? '',
-              sdp: signal.sdp ?? '',
-              video: (signal.sdp ?? '').includes('m=video'),
-            })
-          } else {
-            // Lazy-load the WebRTC module only when an active call needs it —
-            // keeps RTCPeerConnection code out of the initial layout bundle.
-            void import('@/lib/webrtc/call-manager').then((m) =>
-              m.callManager.handleSignal(signal),
-            )
-          }
-        } catch {
-          // ignore
-        }
-      })
-
-      // Real-time friend presence — mirror Flutter friends_provider.dart.
-      // Offline → remove immediately; Online → debounce + re-fetch (burst protection).
-      let presenceDebounce: ReturnType<typeof setTimeout> | null = null
-      stompService.subscribe('/topic/presence', (frame) => {
-        try {
-          const { userId, online } = JSON.parse(frame.body) as { userId: string; online: boolean }
-          if (online) {
-            if (presenceDebounce) clearTimeout(presenceDebounce)
-            presenceDebounce = setTimeout(() => {
-              queryClient.invalidateQueries({ queryKey: ['onlineFriends'] })
-            }, 400)
-          } else {
-            queryClient.setQueryData<{ id?: string; _id?: string }[]>(['onlineFriends'], (prev) =>
-              prev ? prev.filter((u) => (u.id ?? u._id) !== userId) : prev,
-            )
-          }
-        } catch {
-          // ignore
-        }
-      })
-    }).catch(() => {
-      toast.error(t('realtimeError'))
-    })
-
-    return () => {
-      stompService.disconnect()
-    }
-    // `router` from next/navigation is stable; only (dis)connect on the
-    // authed↔unauthed transition — NOT on token rotation (see isAuthed above).
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isAuthed])
+  // Session-level STOMP realtime pipeline (notifications, WebRTC signaling,
+  // presence) — (dis)connects on the authed↔unauthed transition.
+  useRealtimeNotifications()
 
   const { openNewChat, openPublicChannels } = useUiStore()
 

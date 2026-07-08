@@ -1093,6 +1093,10 @@
     "docDrafterDesc": "Soạn đề xuất, đặc tả và báo cáo có cấu trúc.",
     "translatorName": "Phiên dịch",
     "translatorDesc": "Dịch và bản địa hóa văn bản tự nhiên giữa các ngôn ngữ.",
+    "webSearchName": "Tìm kiếm Web",
+    "webSearchDesc": "Tìm thông tin mới nhất trên web và trích dẫn nguồn.",
+    "weatherForecastName": "Dự báo thời tiết",
+    "weatherForecastDesc": "Tra cứu thời tiết và dự báo cho bất kỳ địa điểm nào.",
     "sectionNum": "03 / KỸ NĂNG"
   },
   "admin": {

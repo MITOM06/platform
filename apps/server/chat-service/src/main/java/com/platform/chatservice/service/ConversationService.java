@@ -2,7 +2,6 @@ package com.platform.chatservice.service;
 
 import com.platform.chatservice.dto.ConversationResponse;
 import com.platform.chatservice.dto.CreateGroupRequest;
-import com.platform.chatservice.dto.PageResponse;
 import com.platform.chatservice.exception.ConversationNotFoundException;
 import com.platform.chatservice.exception.DuplicateConversationException;
 import com.platform.chatservice.exception.ForbiddenException;
@@ -21,20 +20,23 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
-import org.bson.Document;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.MongoTemplate;
-import org.springframework.data.mongodb.core.aggregation.Aggregation;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.stereotype.Service;
 
+/**
+ * Write-side of the conversation domain: creation, group management, membership, per-user state
+ * (mute/archive/block/read), wallpaper, auto-delete and stranger-request acceptance. Read/list
+ * concerns live in {@link ConversationQueryService}; response mapping lives in {@link
+ * ConversationMapper}.
+ */
 @Service
 @RequiredArgsConstructor
 public class ConversationService {
@@ -45,42 +47,7 @@ public class ConversationService {
   private final FriendshipRepository friendshipRepository;
   private final MongoTemplate mongoTemplate;
   private final ExternalBotRepository externalBotRepository;
-
-  public PageResponse<ConversationResponse> listConversations(String userId, Pageable pageable) {
-    return listConversations(userId, pageable, false);
-  }
-
-  // Lists the user's conversations. When archived is true only archived
-  // conversations are returned; otherwise archived ones are excluded.
-  public PageResponse<ConversationResponse> listConversations(
-      String userId, Pageable pageable, boolean archived) {
-    Page<Conversation> page =
-        conversationRepository.findByParticipantsContainingOrderByLastMessageAtDesc(
-            userId, pageable);
-
-    List<Conversation> conversations =
-        page.getContent().stream()
-            .filter(c -> c.getHiddenFor() == null || !c.getHiddenFor().contains(userId))
-            .filter(c -> c.getBlockedBy() == null || !c.getBlockedBy().contains(userId))
-            .filter(
-                c -> {
-                  boolean isArchived =
-                      c.getArchivedBy() != null && c.getArchivedBy().contains(userId);
-                  return archived == isArchived;
-                })
-            .toList();
-
-    List<String> conversationIds = conversations.stream().map(Conversation::getId).toList();
-
-    Map<String, Long> unreadCounts = getUnreadCounts(conversationIds, userId);
-
-    List<ConversationResponse> content =
-        conversations.stream()
-            .map(c -> toResponse(c, userId, unreadCounts.getOrDefault(c.getId(), 0L)))
-            .toList();
-
-    return new PageResponse<>(content, page.getNumber(), page.getSize(), page.getTotalElements());
-  }
+  private final ConversationMapper conversationMapper;
 
   public ConversationResponse createConversation(String currentUserId, String participantId) {
     List<String> participants = List.of(currentUserId, participantId);
@@ -366,38 +333,6 @@ public class ConversationService {
     return toResponse(saved, userId, messageRepository.countUnread(conversationId, userId));
   }
 
-  private Map<String, Long> getUnreadCounts(List<String> conversationIds, String userId) {
-    if (conversationIds.isEmpty()) {
-      return Map.of();
-    }
-
-    Aggregation aggregation =
-        Aggregation.newAggregation(
-            Aggregation.match(
-                Criteria.where("conversationId").in(conversationIds).and("readBy").nin(userId)),
-            Aggregation.group("conversationId").count().as("count"));
-
-    List<Document> results =
-        mongoTemplate.aggregate(aggregation, "messages", Document.class).getMappedResults();
-
-    return results.stream()
-        .collect(
-            Collectors.toMap(
-                doc -> doc.get("_id", String.class),
-                doc -> ((Number) doc.get("count")).longValue()));
-  }
-
-  /** List public group channels visible to everyone, optionally filtered by name. */
-  public PageResponse<ConversationResponse> listPublicChannels(String query, Pageable pageable) {
-    Page<Conversation> page =
-        (query != null && !query.isBlank())
-            ? conversationRepository.findPublicGroupsByName(query.trim(), pageable)
-            : conversationRepository.findPublicGroups(pageable);
-    List<ConversationResponse> content =
-        page.getContent().stream().map(c -> toResponse(c, null, 0L)).toList();
-    return new PageResponse<>(content, page.getNumber(), page.getSize(), page.getTotalElements());
-  }
-
   /** Join a public channel. Idempotent — no-op if the user is already a member. */
   public ConversationResponse joinChannel(String userId, String conversationId) {
     Conversation conversation =
@@ -415,41 +350,6 @@ public class ConversationService {
       conversationCacheService.save(conversation);
     }
     return toResponse(conversation, userId, messageRepository.countUnread(conversationId, userId));
-  }
-
-  public List<String> getParticipants(String conversationId) {
-    return conversationCacheService
-        .findByIdOptional(conversationId)
-        .map(Conversation::getParticipants)
-        .orElse(List.of());
-  }
-
-  public boolean isMuted(String conversationId, String userId) {
-    return conversationCacheService
-        .findByIdOptional(conversationId)
-        .map(
-            conv -> {
-              if (conv.getMutedUntil() == null) return false;
-              Long until = conv.getMutedUntil().get(userId);
-              return until != null && until > System.currentTimeMillis();
-            })
-        .orElse(false);
-  }
-
-  /** Returns conversations the user has moved to the Blocked section. */
-  public PageResponse<ConversationResponse> listBlockedConversations(
-      String userId, Pageable pageable) {
-    Page<Conversation> page =
-        conversationRepository
-            .findByParticipantsContainingAndBlockedByContainingOrderByLastMessageAtDesc(
-                userId, userId, pageable);
-    List<String> conversationIds = page.getContent().stream().map(Conversation::getId).toList();
-    Map<String, Long> unreadCounts = getUnreadCounts(conversationIds, userId);
-    List<ConversationResponse> content =
-        page.getContent().stream()
-            .map(c -> toResponse(c, userId, unreadCounts.getOrDefault(c.getId(), 0L)))
-            .toList();
-    return new PageResponse<>(content, page.getNumber(), page.getSize(), page.getTotalElements());
   }
 
   /** Move conversation to the Blocked section for userId (called after blockUser). */
@@ -523,63 +423,6 @@ public class ConversationService {
   }
 
   private ConversationResponse toResponse(Conversation c, String userId, long unreadCount) {
-    ConversationResponse.LastMessageDto lastMsg = null;
-    if (c.getLastMessage() != null) {
-      lastMsg =
-          new ConversationResponse.LastMessageDto(
-              c.getLastMessage().getContent(),
-              c.getLastMessage().getSenderId(),
-              c.getLastMessage().getCreatedAt());
-    }
-    List<ConversationResponse.PinnedMessageDto> pinned = resolvePinnedMessages(c);
-    Long muteUntil =
-        (userId != null && c.getMutedUntil() != null) ? c.getMutedUntil().get(userId) : null;
-    boolean isMuted = muteUntil != null && muteUntil > System.currentTimeMillis();
-    Long muteExpiresAt = isMuted ? muteUntil : null;
-    boolean isArchived =
-        userId != null && c.getArchivedBy() != null && c.getArchivedBy().contains(userId);
-    boolean isBlocked =
-        userId != null && c.getBlockedBy() != null && c.getBlockedBy().contains(userId);
-    return new ConversationResponse(
-        c.getId(),
-        c.resolvedType(),
-        c.getName(),
-        c.getAvatarUrl(),
-        c.getParticipants(),
-        c.getAdmins(),
-        c.getCreatedBy(),
-        c.getAutoDeleteSeconds(),
-        lastMsg,
-        c.getLastMessageAt(),
-        unreadCount,
-        c.getCreatedAt(),
-        c.resolvedStatus(),
-        c.isPublicChannel(),
-        pinned,
-        isMuted,
-        isArchived,
-        c.getWallpaper(),
-        isBlocked,
-        muteExpiresAt,
-        c.getPendingMembers() != null ? c.getPendingMembers() : List.of());
-  }
-
-  private List<ConversationResponse.PinnedMessageDto> resolvePinnedMessages(Conversation c) {
-    if (c.getPinnedMessages() == null || c.getPinnedMessages().isEmpty()) {
-      return List.of();
-    }
-    // Clamp to the same max as the pin write-path (MessageService.MAX_PINNED_MESSAGES).
-    List<String> ids = c.getPinnedMessages();
-    if (ids.size() > MessageService.MAX_PINNED_MESSAGES) {
-      ids = ids.subList(0, MessageService.MAX_PINNED_MESSAGES);
-    }
-    return ids.stream()
-        .map(messageId -> messageRepository.findById(messageId).orElse(null))
-        .filter(m -> m != null && !m.isRecalled() && !"system".equals(m.getType()))
-        .map(
-            m ->
-                new ConversationResponse.PinnedMessageDto(
-                    m.getId(), m.getSenderId(), m.getContent(), m.getCreatedAt(), m.getType()))
-        .toList();
+    return conversationMapper.toResponse(c, userId, unreadCount);
   }
 }

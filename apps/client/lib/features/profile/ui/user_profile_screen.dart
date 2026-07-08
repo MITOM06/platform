@@ -1,12 +1,9 @@
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
-import '../../../core/api/dio_client.dart';
 import '../../../core/l10n/l10n_ext.dart';
 import '../../../core/utils/app_error.dart';
-import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/pon_widgets.dart';
 import '../../auth/domain/auth_provider.dart';
 import '../../auth/domain/auth_state.dart';
@@ -15,6 +12,8 @@ import '../../chat/domain/chat_provider.dart';
 import '../../chat/ui/widgets/conversation_avatar.dart';
 import '../../friends/data/friends_repository.dart';
 import '../../friends/domain/friends_provider.dart';
+import 'widgets/user_profile_parts.dart';
+import 'widgets/user_profile_relationship_actions.dart';
 
 /// Public profile of any user: cover photo, avatar, name, bio, friend count,
 /// and actions to message or send a friend request.
@@ -146,7 +145,7 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
         ),
         data: (user) => ListView(
           children: [
-            _Cover(coverPhoto: user.coverPhoto),
+            ProfileCover(coverPhoto: user.coverPhoto),
             Transform.translate(
               offset: const Offset(0, -48),
               child: Column(
@@ -204,7 +203,7 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
                   ] else ...[
                   // Role — always shown as the first info row (mirrors web).
                   // Falls back to the localized "Member" default.
-                  _InfoRow(
+                  ProfileCenteredInfoRow(
                     icon: Icons.work_outline,
                     value: user.roleName ?? context.l10n.profileRoleMemberDefault,
                   ),
@@ -261,7 +260,7 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
                       ),
                     )
                   else
-                    _RelationshipActions(
+                    RelationshipActions(
                       userId: widget.userId,
                       busy: _busy,
                       onMessage: () => _message(user),
@@ -291,145 +290,6 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
           ],
         ),
       ),
-    );
-  }
-}
-
-/// Message + friend + block buttons, driven by the live relationship state.
-class _RelationshipActions extends ConsumerWidget {
-  final String userId;
-  final bool busy;
-  final VoidCallback onMessage;
-  final Future<void> Function(RelationshipState) onFriendAction;
-  final Future<void> Function(RelationshipState) onBlockAction;
-
-  const _RelationshipActions({
-    required this.userId,
-    required this.busy,
-    required this.onMessage,
-    required this.onFriendAction,
-    required this.onBlockAction,
-  });
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final relAsync = ref.watch(relationshipProvider(userId));
-    final rel = relAsync.valueOrNull ??
-        const RelationshipState(
-            friendStatus: 'none', iBlocked: false, blockedMe: false);
-
-    final String friendLabel;
-    switch (rel.friendStatus) {
-      case 'accepted':
-        friendLabel = context.l10n.unfriend;
-      case 'outgoing':
-        friendLabel = context.l10n.friendRequestPending;
-      case 'incoming':
-        friendLabel = context.l10n.acceptFriend;
-      default:
-        friendLabel = context.l10n.addFriend;
-    }
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 32),
-      child: Column(
-        children: [
-          Row(
-            children: [
-              Expanded(
-                child: PonButton(
-                  onPressed: busy ? null : onMessage,
-                  child: Text(context.l10n.messageAction),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: PonButton(
-                  gradientColors: const [AppTheme.ponPeach, AppTheme.ponPink],
-                  glowColor: AppTheme.ponPink,
-                  onPressed: busy ? null : () => onFriendAction(rel),
-                  child: Text(friendLabel),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          SizedBox(
-            width: double.infinity,
-            child: TextButton.icon(
-              onPressed: busy ? null : () => onBlockAction(rel),
-              icon: Icon(
-                rel.iBlocked ? Icons.lock_open_rounded : Icons.block_rounded,
-                color: Colors.redAccent,
-                size: 18,
-              ),
-              label: Text(
-                rel.iBlocked ? context.l10n.unblockUser : context.l10n.blockUser,
-                style: const TextStyle(color: Colors.redAccent),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-/// A single centered info row (icon + value), used for role/DOB-style details.
-class _InfoRow extends StatelessWidget {
-  final IconData icon;
-  final String value;
-  const _InfoRow({required this.icon, required this.value});
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(top: 12),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(icon, size: 16, color: Colors.white60),
-          const SizedBox(width: 6),
-          Flexible(
-            child: Text(
-              value,
-              textAlign: TextAlign.center,
-              style: const TextStyle(color: Colors.white60, fontSize: 13.5),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _Cover extends StatelessWidget {
-  final String? coverPhoto;
-  const _Cover({this.coverPhoto});
-
-  @override
-  Widget build(BuildContext context) {
-    final hasCover = coverPhoto != null && coverPhoto!.isNotEmpty;
-    final url = hasCover && coverPhoto!.startsWith('http')
-        ? coverPhoto!
-        : (hasCover ? '${DioClient.chatBaseUrl}$coverPhoto' : null);
-    return Container(
-      height: 160,
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          colors: [AppTheme.ponCyan, AppTheme.ponPink],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-      ),
-      child: url != null
-          ? CachedNetworkImage(
-              imageUrl: url,
-              fit: BoxFit.cover,
-              width: double.infinity,
-              errorWidget: (_, __, ___) => const SizedBox.shrink(),
-            )
-          : null,
     );
   }
 }

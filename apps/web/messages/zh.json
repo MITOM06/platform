@@ -1093,6 +1093,10 @@
     "docDrafterDesc": "起草结构化的提案、规格和报告。",
     "translatorName": "翻译",
     "translatorDesc": "在不同语言间自然地翻译和本地化文本。",
+    "webSearchName": "网络搜索",
+    "webSearchDesc": "在网络上查找最新信息并引用来源。",
+    "weatherForecastName": "天气预报",
+    "weatherForecastDesc": "查询任何地点的天气和预报。",
     "sectionNum": "03 / 技能"
   },
   "admin": {

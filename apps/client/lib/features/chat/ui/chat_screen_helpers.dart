@@ -244,3 +244,61 @@ Future<bool?> showConfirmDialog(
     ),
   );
 }
+
+// ---------------------------------------------------------------------------
+// Composer text utilities (mention detection + emoji insertion). Extracted
+// from chat_screen.dart for the clean-code file limit; behaviour is unchanged.
+// ---------------------------------------------------------------------------
+
+/// Returns the active @mention token currently being typed — the text after
+/// the last '@' that begins a word up to the caret — or null when the caret is
+/// not inside a mention.
+String? activeMentionQuery(TextEditingController controller) {
+  final sel = controller.selection;
+  if (!sel.isValid || sel.start < 0) return null;
+  final caret = sel.start;
+  final text = controller.text;
+  if (caret > text.length) return null;
+  final before = text.substring(0, caret);
+  final at = before.lastIndexOf('@');
+  if (at < 0) return null;
+  if (at > 0 && !RegExp(r'\s').hasMatch(before[at - 1])) return null;
+  final token = before.substring(at + 1);
+  if (token.contains('\n') || token.length > 30) return null;
+  return token;
+}
+
+/// Replaces the in-progress @mention at the caret with `@displayName ` and
+/// moves the caret after it. Returns true when a mention was applied (so the
+/// caller can clear its mention-query state), false when there was nothing to
+/// replace.
+bool applyMentionToController(
+    TextEditingController controller, String displayName) {
+  final sel = controller.selection;
+  final caret = sel.start < 0 ? controller.text.length : sel.start;
+  final text = controller.text;
+  final before = text.substring(0, caret);
+  final at = before.lastIndexOf('@');
+  if (at < 0) return false;
+  final insert = '@$displayName ';
+  final newText = text.substring(0, at) + insert + text.substring(caret);
+  controller.value = TextEditingValue(
+    text: newText,
+    selection: TextSelection.collapsed(offset: at + insert.length),
+  );
+  return true;
+}
+
+/// Inserts [emoji] at the caret, replacing any active selection, and keeps the
+/// caret positioned after the inserted emoji.
+void insertEmojiIntoController(TextEditingController controller, String emoji) {
+  final text = controller.text;
+  final sel = controller.selection;
+  final start = sel.start < 0 ? text.length : sel.start;
+  final end = sel.end < 0 ? text.length : sel.end;
+  final newText = text.replaceRange(start, end, emoji);
+  controller.value = TextEditingValue(
+    text: newText,
+    selection: TextSelection.collapsed(offset: start + emoji.length),
+  );
+}

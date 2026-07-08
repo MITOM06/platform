@@ -7,13 +7,11 @@ import { ToolRegistryService } from '../tools/tool-registry.service';
 import { UsageService } from '../usage/usage.service';
 import { RateLimiterService } from '../usage/rate-limiter.service';
 import { PersonaService } from '../persona/persona.service';
-import { ToolContext } from '../tools/tool.interface';
-import { selectModel, RouteSignals, RouterConfig } from './model-router';
+import { selectModel, RouteSignals, RouterConfig, modelSupportsEffort } from './model-router';
 import { AiStreamErrorCode } from './ai-stream-error';
 import { withAgenticLoopSpan } from './tracing-helpers';
-import { isSensitiveTool, wrapUntrusted } from './injection-guard';
 import { FactExtractorService } from './fact-extractor.service';
-import { ContextBuilderService, RagSource } from './context-builder.service';
+import { ContextBuilderService } from './context-builder.service';
 import { ResponseCacheService } from './response-cache.service';
 import { SkillsService } from '../skills/skills.service';
 import { ConversationAccessService } from '../conversation/conversation-access.service';
@@ -23,68 +21,19 @@ import { ResolvedAiSettings } from '../settings/resolved-ai-settings';
 import { ChatImageService } from './chat-image.service';
 import { AiSessionService } from '../session/ai-session.service';
 import { CompactService } from '../session/compact.service';
+import { AgenticLoopService } from './agentic-loop.service';
+import {
+  AiHistoryEntry,
+  AiRequestPayload,
+  AiTrace,
+  RequestContext,
+} from './ai.types';
 
-/**
- * One conversation-history entry in the `ai.requests` payload (TASK-10 contract).
- * Text turns carry only `role` + `content` (byte-identical to before). An image
- * turn additionally sets `type: 'image'` + `imageUrls` (relative `/api/uploads/{id}`
- * paths, JSON-array decoded by chat-service); ai-service resolves those to image
- * content blocks. Backward compatible: absent `type`/`imageUrls` ⇒ plain text.
- */
-export interface AiHistoryEntry {
-  role: 'user' | 'assistant';
-  content: string;
-  type?: string;
-  imageUrls?: string[];
-}
-
-export interface AiRequestPayload {
-  conversationId: string;
-  userId: string;
-  displayName: string;
-  content: string;
-  history: AiHistoryEntry[];
-  /** Owning department id of the conversation (P6 group bot); null for personal. */
-  departmentId?: string;
-}
-
-interface ToolTraceEntry {
-  toolName: string;
-  inputSummary: string;
-  resultSummary: string;
-}
-
-export interface AiTrace {
-  thinkingBlocks: string[];
-  toolCalls: ToolTraceEntry[];
-  inputTokens: number;
-  outputTokens: number;
-  /** Input tokens served from the Anthropic prompt cache (savings indicator). */
-  cachedInputTokens: number;
-  thinkingTokens: number;
-  processingMs: number;
-  model: string;
-  iterationCount: number;
-}
-
-interface RequestContext {
-  conversationId: string;
-  userId: string;
-  displayName: string;
-  /** Owning department id (P6 group bot); scopes KB retrieval when present. */
-  departmentId?: string;
-  /** Stable, cacheable persona + grounding contract. */
-  baseSystem: string;
-  /** Volatile per-request grounding block (RAG + memory). Placed AFTER cache. */
-  volatileSystem: string;
-  ragSources: RagSource[];
-  /** Embedded user query — used to populate the semantic response cache. */
-  queryVector?: number[] | null;
-  /** Resolved workspace AI settings (TASK-12) threaded into the loop. */
-  settings: ResolvedAiSettings;
-}
-
-const MAX_ITER = 5;
+// Re-exported so existing importers (`ai.consumer`, `fact-extractor`,
+// `tracing-helpers`, the merge/normalize specs) keep their `./ai.service`
+// import paths after the clean-code extraction.
+export { AiHistoryEntry, AiRequestPayload, AiTrace } from './ai.types';
+export { mergeSources, normalizeMessages } from './message-utils';
 
 /**
  * User-facing notices published as ordinary AI messages (reusing the Redis
@@ -115,9 +64,7 @@ export class AiService {
   private readonly anthropic: Anthropic;
   private readonly primaryModel: string;
   private readonly fallbackModel: string;
-  private readonly effort: 'low' | 'medium' | 'high';
   private readonly extractEveryTurns: number;
-  private readonly promptCacheEnabled: boolean;
   private readonly routerConfig: RouterConfig;
 
   constructor(
@@ -138,6 +85,7 @@ export class AiService {
     private readonly chatImageService: ChatImageService,
     private readonly aiSessionService: AiSessionService,
     private readonly compactService: CompactService,
+    private readonly agenticLoop: AgenticLoopService,
   ) {
     this.anthropic = new Anthropic({
       apiKey: this.configService.get<string>('config.anthropic.apiKey'),
@@ -146,13 +94,8 @@ export class AiService {
       this.configService.get<string>('config.anthropic.model') ?? 'claude-opus-4-8';
     this.fallbackModel =
       this.configService.get<string>('config.anthropic.fallbackModel') ?? 'claude-haiku-4-5';
-    this.effort =
-      (this.configService.get<string>('config.anthropic.effort') as 'low' | 'medium' | 'high') ??
-      'high';
     this.extractEveryTurns =
       this.configService.get<number>('config.memory.extractEveryTurns') ?? 20;
-    this.promptCacheEnabled =
-      this.configService.get<boolean>('config.cache.promptCacheEnabled') ?? true;
     this.routerConfig = {
       enabled: this.configService.get<boolean>('config.anthropic.router.enabled') ?? true,
       simpleModel:
@@ -174,26 +117,13 @@ export class AiService {
   }
 
   /**
-   * Whether a model accepts the `output_config.effort` parameter. Sending it to
-   * a model that doesn't support it returns a hard 400
-   * ("This model does not support the effort parameter") — which, because it
-   * hits both the primary and fallback model, surfaces to the user as the
-   * `AI_UNAVAILABLE` error. Effort is supported on Opus 4.5+, Sonnet 4.6+,
-   * Sonnet 5, and Fable/Mythos 5 — but NOT on Sonnet 4.5 or Haiku 4.5 (the
-   * models this deployment routes to), so the parameter must be gated per-model.
+   * Whether a model accepts the `output_config.effort` parameter. Delegates to
+   * the shared pure predicate in model-router (kept here so the effort-gating
+   * regression test can assert against the service). See the exported
+   * `modelSupportsEffort` for the full per-model rationale.
    */
   private modelSupportsEffort(model: string): boolean {
-    const EFFORT_MODEL_PREFIXES = [
-      'claude-opus-4-5',
-      'claude-opus-4-6',
-      'claude-opus-4-7',
-      'claude-opus-4-8',
-      'claude-sonnet-4-6',
-      'claude-sonnet-5',
-      'claude-fable-5',
-      'claude-mythos-5',
-    ];
-    return EFFORT_MODEL_PREFIXES.some((prefix) => model.startsWith(prefix));
+    return modelSupportsEffort(model);
   }
 
   async handleRequest(payload: AiRequestPayload): Promise<void> {
@@ -393,7 +323,15 @@ export class AiService {
     let trace: AiTrace | null = null;
     try {
       trace = await withAgenticLoopSpan(selectedModel, conversationId, () =>
-        this._agenticLoop(selectedModel, ctx, content, loopHistory, startMs, resultSink),
+        this.agenticLoop.run(
+          this.anthropic,
+          selectedModel,
+          ctx,
+          content,
+          loopHistory,
+          startMs,
+          resultSink,
+        ),
       );
     } catch (primaryError) {
       this.logger.error(
@@ -413,7 +351,15 @@ export class AiService {
       }
       try {
         trace = await withAgenticLoopSpan(this.fallbackModel, conversationId, () =>
-          this._agenticLoop(this.fallbackModel, ctx, content, loopHistory, startMs, resultSink),
+          this.agenticLoop.run(
+            this.anthropic,
+            this.fallbackModel,
+            ctx,
+            content,
+            loopHistory,
+            startMs,
+            resultSink,
+          ),
         );
       } catch (fallbackError) {
         this.logger.error(
@@ -499,387 +445,4 @@ export class AiService {
       trace: SYSTEM_TRACE,
     });
   }
-
-  /** System blocks: stable (cached) persona/contract + volatile grounding after it. */
-  private buildSystemBlocks(ctx: RequestContext): Anthropic.TextBlockParam[] {
-    const blocks: Anthropic.TextBlockParam[] = [
-      {
-        type: 'text',
-        text: ctx.baseSystem,
-        ...(this.promptCacheEnabled
-          ? { cache_control: { type: 'ephemeral' as const } }
-          : {}),
-      },
-    ];
-    if (ctx.volatileSystem.trim()) {
-      // Volatile content AFTER the cache breakpoint — does not bust the cache.
-      blocks.push({ type: 'text', text: ctx.volatileSystem });
-    }
-    return blocks;
-  }
-
-  /** Tool definitions with a cache breakpoint on the last tool. */
-  private async buildTools(ctx: ToolContext): Promise<Anthropic.Tool[]> {
-    const defs = await this.toolRegistry.getDefinitions(ctx);
-    const tools = defs.map((d) => ({
-      name: d.name,
-      description: d.description,
-      input_schema: d.input_schema,
-    })) as Anthropic.Tool[];
-    if (tools.length > 0 && this.promptCacheEnabled) {
-      tools[tools.length - 1] = {
-        ...tools[tools.length - 1],
-        cache_control: { type: 'ephemeral' },
-      };
-    }
-    return tools;
-  }
-
-  /**
-   * Map history entries to Anthropic message params (TASK-10). Text turns map to
-   * a plain string `content` (byte-identical to before). An image turn resolves
-   * its `imageUrls` to base64 image blocks placed BEFORE any caption text in the
-   * same user turn (per the claude-api vision constraint). If image resolution
-   * yields nothing (disabled / all skipped) the turn degrades to text — and an
-   * image turn with empty caption + no resolvable images is dropped entirely so
-   * we never send an empty `content` array.
-   */
-  private async buildHistoryMessages(
-    history: AiHistoryEntry[],
-  ): Promise<Anthropic.MessageParam[]> {
-    const out: Anthropic.MessageParam[] = [];
-    for (const h of history) {
-      if (h.type === 'image' && (h.imageUrls?.length ?? 0) > 0) {
-        const imageBlocks = await this.chatImageService.resolveImageBlocks(h.imageUrls ?? []);
-        const blocks: Anthropic.ContentBlockParam[] = [...imageBlocks];
-        const caption = h.content?.trim();
-        if (caption) blocks.push({ type: 'text', text: caption });
-        if (blocks.length === 0) continue; // nothing usable — drop the turn
-        out.push({ role: h.role, content: blocks });
-      } else {
-        // Drop turns with empty/blank text — the Anthropic API rejects empty
-        // content, and a blank history turn carries no signal anyway.
-        const text = h.content?.trim();
-        if (!text) continue;
-        out.push({ role: h.role, content: text });
-      }
-    }
-    return out;
-  }
-
-  /**
-   * Single streaming agentic loop. Streams text deltas to Redis; when the turn
-   * stops with `tool_use`, runs the tools, appends results, and continues the
-   * SAME loop. The final assistant turn is streamed natively — no blind second
-   * call. Usage is counted once per API call (no double counting).
-   */
-  private async _agenticLoop(
-    model: string,
-    ctx: RequestContext,
-    userContent: string,
-    history: AiRequestPayload['history'],
-    startMs: number,
-    resultSink?: { fullContent: string },
-  ): Promise<AiTrace> {
-    // Workspace thinking toggle (TASK-12) — already resolved against the env
-    // default (AI_ENABLE_THINKING) by SettingsService.
-    const enableThinking = ctx.settings.thinkingEnabled;
-    // Adaptive thinking only on the primary model (Opus 4.8 / Sonnet 4.6).
-    const useThinking = enableThinking && model === this.primaryModel;
-    const thinkingParam: { thinking?: Anthropic.ThinkingConfigParam } = useThinking
-      ? { thinking: { type: 'adaptive', display: 'summarized' } }
-      : {};
-
-    const system = this.buildSystemBlocks(ctx);
-    // Per-request sink for tool-produced citable sources (e.g. web_search). Tools
-    // push RagSource entries here inside the loop; merged into AI_STREAM_DONE below.
-    const sourceSink: RagSource[] = [];
-    const toolCtx: ToolContext = {
-      conversationId: ctx.conversationId,
-      userId: ctx.userId,
-      displayName: ctx.displayName,
-      departmentId: ctx.departmentId,
-      sourceSink,
-      // Workspace tool governance (TASK-12): web-search toggle + AI connector
-      // allow-list. The registry composes these with the provider gate / the
-      // workspace-wide allow-list already enforced by connector-service.
-      webSearchEnabled: ctx.settings.webSearchEnabled,
-      allowedConnectors: ctx.settings.allowedConnectors,
-    };
-    const tools = await this.buildTools(toolCtx);
-
-    const toolCalls: ToolTraceEntry[] = [];
-    const thinkingBlocks: string[] = [];
-    let totalInputTokens = 0;
-    let totalOutputTokens = 0;
-    let totalCachedTokens = 0;
-
-    // Single chokepoint for the final messages array. normalizeMessages drops a
-    // leading assistant turn (array must start with `user`) and merges
-    // consecutive same-role PLAIN-TEXT turns (defense for the orphan-user and
-    // summary-priming bugs → no two consecutive same-role turns → no Anthropic
-    // 400). Image/multimodal turns (block-array content) are never merged, so
-    // vision turns reach Claude intact and still force the vision model.
-    const messages: Anthropic.MessageParam[] = normalizeMessages([
-      ...(await this.buildHistoryMessages(history)),
-      { role: 'user', content: userContent },
-    ]);
-
-    let iteration = 0;
-    let fullText = '';
-    // Text the model streamed BEFORE issuing a tool_use turn. It was already
-    // sent to the client as AI_STREAM_CHUNK, so it must survive into the final
-    // persisted message — otherwise the live view and the stored message
-    // diverge. Accumulated across tool iterations and prepended to the final
-    // answer below.
-    let carriedText = '';
-    let streamStarted = false;
-    // Whether the prompt context carries image content blocks (gates the
-    // deterministic response cache — image-grounded answers are not reusable).
-    const hasImages = messages.some(
-      (m) => Array.isArray(m.content) && m.content.some((b) => b.type === 'image'),
-    );
-
-    while (iteration < MAX_ITER) {
-      const stream = this.anthropic.messages.stream({
-        model,
-        max_tokens: 4096,
-        system,
-        messages,
-        tools,
-        tool_choice: { type: 'auto' },
-        // `output_config.effort` is only accepted by effort-capable models
-        // (Opus 4.5+, Sonnet 4.6+, Sonnet 5, Fable/Mythos 5). Sending it to
-        // Sonnet 4.5 / Haiku 4.5 returns a 400 and takes the whole turn down.
-        ...(this.modelSupportsEffort(model) ? { output_config: { effort: this.effort } } : {}),
-        ...thinkingParam,
-      } as Anthropic.MessageStreamParams);
-
-      let isInThinkingBlock = false;
-      let currentThinkingText = '';
-
-      try {
-        for await (const event of stream) {
-          const e = event as Anthropic.RawMessageStreamEvent;
-          if (e.type === 'content_block_start') {
-            isInThinkingBlock = e.content_block?.type === 'thinking';
-            currentThinkingText = '';
-          } else if (e.type === 'content_block_stop') {
-            if (isInThinkingBlock && currentThinkingText) {
-              thinkingBlocks.push(currentThinkingText);
-            }
-            isInThinkingBlock = false;
-            currentThinkingText = '';
-          } else if (e.type === 'content_block_delta') {
-            const d = e.delta as { type: string; thinking?: string; text?: string };
-            if (isInThinkingBlock && d.type === 'thinking_delta') {
-              currentThinkingText += d.thinking ?? '';
-            } else if (!isInThinkingBlock && d.type === 'text_delta') {
-              streamStarted = true;
-              fullText += d.text ?? '';
-              await this.publisher.publish(ctx.conversationId, {
-                type: 'AI_STREAM_CHUNK',
-                chunk: d.text ?? '',
-              });
-            }
-          }
-        }
-      } catch (err) {
-        if (streamStarted) throw new Error('STREAM_ALREADY_STARTED');
-        throw err;
-      }
-
-      const finalMsg = await stream.finalMessage();
-      // Count usage ONCE per API call.
-      totalInputTokens += finalMsg.usage.input_tokens;
-      totalOutputTokens += finalMsg.usage.output_tokens;
-      // Tokens served from the prompt cache (read) — the savings indicator.
-      totalCachedTokens += finalMsg.usage.cache_read_input_tokens ?? 0;
-
-      if (finalMsg.stop_reason === 'tool_use') {
-        const toolUseBlocks = finalMsg.content.filter(
-          (b): b is Anthropic.ToolUseBlock => b.type === 'tool_use',
-        );
-        const toolResults: Anthropic.ToolResultBlockParam[] = [];
-
-        for (const block of toolUseBlocks) {
-          const inputSummary = JSON.stringify(block.input).slice(0, 100);
-          // Flag state-changing / outbound tools so the client can surface a
-          // confirmation affordance before the action is shown as done.
-          await this.publisher.publish(ctx.conversationId, {
-            type: 'AI_TOOL_CALL',
-            toolName: block.name,
-            inputSummary,
-            sensitive: isSensitiveTool(block.name),
-          });
-          const result = await this.toolRegistry.execute(
-            block.name,
-            block.input as Record<string, unknown>,
-            toolCtx,
-          );
-          toolCalls.push({
-            toolName: block.name,
-            inputSummary,
-            resultSummary: result.slice(0, 200),
-          });
-          // Fence tool output as UNTRUSTED before it re-enters the model
-          // context (indirect prompt-injection surface): a connector/MCP tool
-          // can return attacker-controlled text (an email body, a doc, an issue
-          // comment). web_search already wraps its own output at source
-          // (web-search.tool.ts) — don't double-wrap it. Fall back to the raw
-          // string when wrapping yields '' (empty result) so we never send an
-          // empty tool_result content.
-          const fencedResult =
-            block.name === 'web_search'
-              ? result
-              : wrapUntrusted(`Tool Result: ${block.name}`, result) || result;
-          toolResults.push({
-            type: 'tool_result',
-            tool_use_id: block.id,
-            content: fencedResult,
-          });
-        }
-
-        messages.push({ role: 'assistant', content: finalMsg.content });
-        messages.push({ role: 'user', content: toolResults });
-        iteration++;
-        // Keep any text streamed before this tool_use turn (it already reached
-        // the client). Accumulate it, newline-separated, then reset fullText so
-        // the next iteration streams the post-tool answer cleanly.
-        if (fullText.trim()) {
-          carriedText = carriedText ? `${carriedText}\n${fullText}` : fullText;
-        }
-        fullText = '';
-        continue;
-      }
-
-      // stop_reason is end_turn / max_tokens / stop_sequence — final answer done.
-      break;
-    }
-
-    if (iteration >= MAX_ITER && !fullText && !carriedText) {
-      fullText = 'I had trouble completing that action. Please try again.';
-    }
-
-    // Prepend the pre-tool-call text that was already streamed to the client so
-    // AI_STREAM_DONE.fullContent (and the persisted message) match the live view.
-    if (carriedText) {
-      fullText = fullText ? `${carriedText}\n${fullText}` : carriedText;
-    }
-
-    // Expose the final assistant text so processRequest can persist it to the
-    // session (the loop streams natively, so the caller can't read fullText).
-    if (resultSink) resultSink.fullContent = fullText;
-
-    const trace: AiTrace = {
-      thinkingBlocks,
-      toolCalls,
-      inputTokens: totalInputTokens,
-      outputTokens: totalOutputTokens,
-      cachedInputTokens: totalCachedTokens,
-      thinkingTokens: Math.round(thinkingBlocks.join('').length / 4),
-      processingMs: Date.now() - startMs,
-      model,
-      iterationCount: iteration,
-    };
-
-    if (totalCachedTokens > 0) {
-      this.logger.log(
-        `Prompt cache hit for ${ctx.conversationId}: ${totalCachedTokens} input tokens served from cache`,
-      );
-    }
-
-    await this.publisher.publish(ctx.conversationId, {
-      type: 'AI_STREAM_DONE',
-      fullContent: fullText,
-      // RAG sources first, then tool-produced (web) sources — contiguous order so
-      // the [Source N] markers the model emitted line up with the merged array.
-      sources: mergeSources(ctx.ragSources, sourceSink),
-      trace,
-    });
-
-    // Cache only DETERMINISTIC answers: no tool calls (external/non-deterministic),
-    // no RAG sources (context-dependent), no web sources (time-sensitive), and no
-    // images (the answer is grounded on attached pixels, not the text query alone).
-    if (
-      toolCalls.length === 0 &&
-      ctx.ragSources.length === 0 &&
-      sourceSink.length === 0 &&
-      !hasImages &&
-      ctx.queryVector &&
-      fullText.trim()
-    ) {
-      await this.responseCache.store(ctx.conversationId, ctx.queryVector, fullText);
-    }
-
-    return trace;
-  }
-}
-
-/**
- * Merge pre-retrieved RAG sources with tool-produced (web) sources into a single
- * contiguous array that matches the `[Source N]` numbering the model emits.
- *
- * Ordering assumption: RAG/KB context is injected into the system prompt BEFORE
- * the loop (numbered [Source 1..k]); the web-search tool then numbers its own
- * results [Source 1..m] in its tool_result text. The model, seeing both, emits
- * markers against whichever it cites — so we keep RAG first, web after, and let
- * the array index be the chip order. De-duped by documentId (KB ids are document
- * ids; web ids are distinct `web:N`, so they never collapse together).
- */
-export function mergeSources(rag: RagSource[], web: RagSource[]): RagSource[] {
-  const seen = new Set<string>();
-  const out: RagSource[] = [];
-  for (const s of [...rag, ...web]) {
-    if (seen.has(s.documentId)) continue;
-    seen.add(s.documentId);
-    out.push(s);
-  }
-  return out;
-}
-
-/**
- * Normalize an assembled Anthropic messages array so it is a valid alternation
- * the API will accept. This is the single defense against the two ways history
- * can violate role rules:
- *   - an orphan `user` turn (a failed turn persisted the user but no assistant)
- *     followed by the next `user` turn → two consecutive `user` turns;
- *   - compaction summary priming (synthetic `assistant`) placed before a kept
- *     slice that itself starts with an `assistant` turn → two consecutive
- *     `assistant` turns.
- *
- * Rules:
- *   1. Drop leading `assistant` message(s) so the array starts with `user`.
- *   2. Merge consecutive same-role turns whose content is PLAIN TEXT (string),
- *      concatenating with `\n\n`.
- *   3. NEVER merge into/over a turn whose content is a block array (image /
- *      multimodal). Those turns pass through untouched so vision stays intact.
- *      (A same-role block-array turn adjacent to a string turn is left as-is —
- *      the vision pipeline already positions image turns so this does not
- *      arise in the text-continuity paths that #1/#2 protect.)
- */
-export function normalizeMessages(
-  messages: Anthropic.MessageParam[],
-): Anthropic.MessageParam[] {
-  const out: Anthropic.MessageParam[] = [];
-  for (const msg of messages) {
-    // Rule 1: skip any leading assistant turn(s).
-    if (out.length === 0 && msg.role === 'assistant') continue;
-
-    const prev = out[out.length - 1];
-    // Rule 2 + 3: merge only when BOTH adjacent turns are same-role plain text.
-    if (
-      prev &&
-      prev.role === msg.role &&
-      typeof prev.content === 'string' &&
-      typeof msg.content === 'string'
-    ) {
-      prev.content = `${prev.content}\n\n${msg.content}`;
-      continue;
-    }
-    // Shallow copy so mutating `prev.content` above never touches the caller's
-    // objects (image block arrays are shared by reference but never mutated).
-    out.push({ ...msg });
-  }
-  return out;
 }
