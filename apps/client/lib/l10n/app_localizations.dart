@@ -4225,6 +4225,30 @@ abstract class AppLocalizations {
   /// **'Translate and localize text naturally across languages.'**
   String get skillTranslatorDesc;
 
+  /// No description provided for @skillWebSearchName.
+  ///
+  /// In en, this message translates to:
+  /// **'Web Searcher'**
+  String get skillWebSearchName;
+
+  /// No description provided for @skillWebSearchDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Finds current information on the web and cites sources.'**
+  String get skillWebSearchDesc;
+
+  /// No description provided for @skillWeatherForecastName.
+  ///
+  /// In en, this message translates to:
+  /// **'Weather Forecast'**
+  String get skillWeatherForecastName;
+
+  /// No description provided for @skillWeatherForecastDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Looks up weather and forecast for any location.'**
+  String get skillWeatherForecastDesc;
+
   /// No description provided for @adminTitle.
   ///
   /// In en, this message translates to:

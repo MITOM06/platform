@@ -2190,6 +2190,18 @@ class AppLocalizationsZh extends AppLocalizations {
   String get skillTranslatorDesc => '在多种语言之间自然地翻译和本地化文本。';
 
   @override
+  String get skillWebSearchName => '网络搜索';
+
+  @override
+  String get skillWebSearchDesc => '在网络上查找最新信息并引用来源。';
+
+  @override
+  String get skillWeatherForecastName => '天气预报';
+
+  @override
+  String get skillWeatherForecastDesc => '查询任何地点的天气和预报。';
+
+  @override
   String get adminTitle => '管理控制台';
 
   @override

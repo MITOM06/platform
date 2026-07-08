@@ -8,8 +8,9 @@ import com.platform.chatservice.dto.MessageResponse;
 import com.platform.chatservice.dto.SendMessageRequest;
 import com.platform.chatservice.service.AiRedisPublisher;
 import com.platform.chatservice.service.ClusterMessageBroker;
-import com.platform.chatservice.service.ConversationService;
+import com.platform.chatservice.service.ConversationQueryService;
 import com.platform.chatservice.service.ExternalBotService;
+import com.platform.chatservice.service.MessageQueryService;
 import com.platform.chatservice.service.MessageService;
 import com.platform.chatservice.service.RateLimiterService;
 import java.security.Principal;
@@ -29,7 +30,9 @@ class ChatControllerTest {
 
   @Mock private MessageService messageService;
 
-  @Mock private ConversationService conversationService;
+  @Mock private MessageQueryService messageQueryService;
+
+  @Mock private ConversationQueryService conversationQueryService;
 
   @Mock private ClusterMessageBroker clusterBroker;
 
@@ -60,11 +63,11 @@ class ChatControllerTest {
         new MessageResponse(
             "msg-999", "conv-456", SENDER_ID, "Hello", "text", List.of(SENDER_ID), Instant.now());
 
-    when(conversationService.getParticipants("conv-456"))
+    when(conversationQueryService.getParticipants("conv-456"))
         .thenReturn(List.of(SENDER_ID, "user-456"));
     when(messageService.sendMessage(eq(SENDER_ID), any(SendMessageRequest.class)))
         .thenReturn(response);
-    when(messageService.resolveDisplayName(SENDER_ID)).thenReturn("Alice");
+    when(messageQueryService.resolveDisplayName(SENDER_ID)).thenReturn("Alice");
 
     chatController.send(chatDto, principal);
 
@@ -118,12 +121,12 @@ class ChatControllerTest {
             List.of(SENDER_ID),
             Instant.now());
 
-    when(conversationService.getParticipants("conv-456"))
+    when(conversationQueryService.getParticipants("conv-456"))
         .thenReturn(List.of(SENDER_ID, "user-456"));
     when(messageService.sendMessage(eq(SENDER_ID), any(SendMessageRequest.class)))
         .thenReturn(response);
-    when(messageService.getAiHistory(eq(SENDER_ID), eq("conv-456"))).thenReturn(List.of());
-    when(messageService.resolveDisplayName(SENDER_ID)).thenReturn("Alice");
+    when(messageQueryService.getAiHistory(eq(SENDER_ID), eq("conv-456"))).thenReturn(List.of());
+    when(messageQueryService.resolveDisplayName(SENDER_ID)).thenReturn("Alice");
 
     chatController.send(aiDto, principal);
 
@@ -153,11 +156,11 @@ class ChatControllerTest {
             List.of(SENDER_ID),
             Instant.now());
 
-    when(conversationService.getParticipants("conv-456"))
+    when(conversationQueryService.getParticipants("conv-456"))
         .thenReturn(List.of(SENDER_ID, "user-456"));
     when(messageService.sendMessage(eq(SENDER_ID), any(SendMessageRequest.class)))
         .thenReturn(response);
-    when(messageService.resolveDisplayName(SENDER_ID)).thenReturn("Alice");
+    when(messageQueryService.resolveDisplayName(SENDER_ID)).thenReturn("Alice");
 
     chatController.send(dto, principal);
 

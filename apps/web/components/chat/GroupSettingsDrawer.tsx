@@ -1,9 +1,6 @@
 'use client'
 /* eslint-disable @next/next/no-img-element */
 
-import { useState } from 'react'
-import { toast } from 'sonner'
-import { useQueryClient } from '@tanstack/react-query'
 import { useTranslations } from 'next-intl'
 import {
   UserPlus, Pencil, Check, X, LogOut, Camera, FolderOpen, Images, Bot,
@@ -15,18 +12,15 @@ import { Input } from '@/components/ui/input'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
-import { chatService } from '@/lib/api/chat'
-import { authService } from '@/lib/api/auth'
-import {
-  useQuickReaction, setQuickReaction, quickReactionSystemMessage,
-} from '@/lib/quick-reaction'
+import { useQuickReaction } from '@/lib/quick-reaction'
 import { absoluteMediaUrl } from '@/lib/media'
 import { WallpaperPickerModal } from './WallpaperPickerModal'
 import { GroupMemberRow } from './group/GroupMemberRow'
 import { NicknamesModal } from './group/NicknamesModal'
-import { setNickname, nicknameSystemMessage, useNicknames } from '@/lib/nicknames'
+import { useNicknames } from '@/lib/nicknames'
+import { useGroupSettings } from './use-group-settings'
 import { PinnedMessagesSection } from './PinnedMessagesSection'
-import type { Conversation, UserSearchResult } from '@/lib/api/types'
+import type { Conversation } from '@/lib/api/types'
 import { useRouter } from 'next/navigation'
 
 const QUICK_REACTION_EMOJIS = [
@@ -43,14 +37,6 @@ interface Props {
 export function GroupSettingsDrawer({ conversation, currentUserId, open, onClose }: Props) {
   const t = useTranslations('chat')
   const router = useRouter()
-  const queryClient = useQueryClient()
-  const [editingName, setEditingName] = useState(false)
-  const [nameValue, setNameValue] = useState(conversation.name ?? '')
-  const [searchQuery, setSearchQuery] = useState('')
-  const [searchResults, setSearchResults] = useState<UserSearchResult[]>([])
-  const [saving, setSaving] = useState(false)
-  const [wallpaperOpen, setWallpaperOpen] = useState(false)
-  const [nicknamesOpen, setNicknamesOpen] = useState(false)
   const isAdmin = conversation.admins.includes(currentUserId)
   const quickReaction = useQuickReaction(conversation.id)
 
@@ -60,125 +46,23 @@ export function GroupSettingsDrawer({ conversation, currentUserId, open, onClose
   const nicknameParticipantIds = conversation.participants.filter((p) => p !== AI_BOT_ID)
   const nicknameMap = useNicknames(conversation.id)
 
-  const saveNickname = async (targetId: string, value: string) => {
-    setNickname(conversation.id, targetId, value)
-    try {
-      await chatService.sendMessage(
-        conversation.id,
-        nicknameSystemMessage(targetId, value.trim()),
-        'system',
-      )
-    } catch {
-      // local nickname still applied even if broadcast fails
-    }
-    toast.success(t('nicknameSuccess'))
-  }
-
-  const invalidate = () => {
-    queryClient.invalidateQueries({ queryKey: ['conversations'] })
-    queryClient.invalidateQueries({ queryKey: ['conversation', conversation.id] })
-  }
-
-  const handleSaveName = async () => {
-    if (!nameValue.trim()) return
-    setSaving(true)
-    try {
-      await chatService.updateGroup(conversation.id, nameValue.trim())
-      invalidate()
-      setEditingName(false)
-      toast.success(t('groupNameSuccess'))
-    } catch {
-      toast.error(t('groupNameError'))
-    } finally {
-      setSaving(false)
-    }
-  }
-
-  const handleSearchUsers = async (q: string) => {
-    setSearchQuery(q)
-    if (!q.trim()) { setSearchResults([]); return }
-    try {
-      const { results } = await authService.searchUsers(q.trim())
-      setSearchResults(results.filter((u) => {
-        const uid = u._id ?? u.id ?? ''
-        return !conversation.participants.includes(uid)
-      }))
-    } catch {
-      setSearchResults([])
-    }
-  }
-
-  const handleAddMember = async (user: UserSearchResult) => {
-    const uid = user._id ?? user.id ?? ''
-    if (!uid) return
-    setSaving(true)
-    try {
-      await chatService.addMembers(conversation.id, [uid])
-      invalidate()
-      setSearchQuery('')
-      setSearchResults([])
-      toast.success(t('groupAddSuccess', { name: user.displayName }))
-    } catch {
-      toast.error(t('groupAddError'))
-    } finally {
-      setSaving(false)
-    }
-  }
-
-  const handleRemoveMember = async (userId: string) => {
-    setSaving(true)
-    try {
-      await chatService.removeMember(conversation.id, userId)
-      invalidate()
-      toast.success(t('groupRemoveSuccess'))
-    } catch {
-      toast.error(t('groupRemoveError'))
-    } finally {
-      setSaving(false)
-    }
-  }
-
-  const handleLeaveGroup = async () => {
-    if (!confirm(t('groupLeaveConfirm'))) return
-    setSaving(true)
-    try {
-      await chatService.removeMember(conversation.id, currentUserId)
-      invalidate()
-      onClose()
-      router.push('/')
-      toast.success(t('groupLeaveSuccess'))
-    } catch {
-      toast.error(t('groupLeaveError'))
-    } finally {
-      setSaving(false)
-    }
-  }
-
-  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file) return
-    setSaving(true)
-    try {
-      const uploaded = await chatService.uploadFile(file)
-      await chatService.updateGroup(conversation.id, undefined, uploaded.url)
-      invalidate()
-      toast.success(t('groupAvatarSuccess'))
-    } catch {
-      toast.error(t('groupAvatarError'))
-    } finally {
-      setSaving(false)
-    }
-  }
-
-  const handlePickQuickReaction = async (emoji: string) => {
-    setQuickReaction(conversation.id, emoji)
-    try {
-      await chatService.sendMessage(conversation.id, quickReactionSystemMessage(emoji), 'system')
-    } catch {
-      // local emoji still applied even if broadcast fails
-    }
-    toast.success(t('quickReactionSuccess'))
-  }
+  const {
+    editingName, setEditingName,
+    nameValue, setNameValue,
+    searchQuery,
+    searchResults,
+    saving,
+    wallpaperOpen, setWallpaperOpen,
+    nicknamesOpen, setNicknamesOpen,
+    saveNickname,
+    handleSaveName,
+    handleSearchUsers,
+    handleAddMember,
+    handleRemoveMember,
+    handleLeaveGroup,
+    handleAvatarUpload,
+    handlePickQuickReaction,
+  } = useGroupSettings({ conversation, currentUserId, onClose })
 
   const triggerCls = 'hover:no-underline py-2 data-[state=open]:text-pon-cyan'
   const itemBtnCls = 'flex items-center gap-3 w-full text-left px-2 py-2.5 hover:bg-muted/50 rounded-lg text-sm transition-colors'

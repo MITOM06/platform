@@ -7,7 +7,6 @@ import static org.mockito.Mockito.*;
 import static org.mockito.Mockito.verifyNoInteractions;
 
 import com.platform.chatservice.dto.ConversationResponse;
-import com.platform.chatservice.dto.PageResponse;
 import com.platform.chatservice.exception.ConversationNotFoundException;
 import com.platform.chatservice.exception.DuplicateConversationException;
 import com.platform.chatservice.model.Conversation;
@@ -16,19 +15,19 @@ import com.platform.chatservice.repository.MessageRepository;
 import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
-import org.bson.Document;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.mongodb.core.MongoTemplate;
-import org.springframework.data.mongodb.core.aggregation.Aggregation;
-import org.springframework.data.mongodb.core.aggregation.AggregationResults;
 
+/**
+ * Unit tests for the write-side of the conversation domain ({@link ConversationService}). The
+ * read/list side lives in {@link ConversationQueryServiceTest}. A real {@link ConversationMapper}
+ * (wired over the mocked {@link MessageRepository}) is used so response assertions exercise the
+ * same mapping the production code does.
+ */
 @ExtendWith(MockitoExtension.class)
 class ConversationServiceTest {
 
@@ -39,7 +38,7 @@ class ConversationServiceTest {
   @Mock private MongoTemplate mongoTemplate;
   @Mock private com.platform.chatservice.repository.ExternalBotRepository externalBotRepository;
 
-  @InjectMocks private ConversationService conversationService;
+  private ConversationService conversationService;
 
   private static final String USER_ID = "user-001";
   private static final String OTHER_ID = "user-002";
@@ -49,6 +48,17 @@ class ConversationServiceTest {
 
   @BeforeEach
   void setUp() {
+    ConversationMapper conversationMapper = new ConversationMapper(messageRepository);
+    conversationService =
+        new ConversationService(
+            conversationRepository,
+            conversationCacheService,
+            messageRepository,
+            friendshipRepository,
+            mongoTemplate,
+            externalBotRepository,
+            conversationMapper);
+
     conversation =
         Conversation.builder()
             .id(CONV_ID)
@@ -191,61 +201,6 @@ class ConversationServiceTest {
 
     assertThatThrownBy(() -> conversationService.getConversation(USER_ID, CONV_ID))
         .isInstanceOf(ConversationNotFoundException.class);
-  }
-
-  @Test
-  @SuppressWarnings("unchecked")
-  void listConversations_ShouldReturnPagedResult() {
-    var pageable = PageRequest.of(0, 20);
-    when(conversationRepository.findByParticipantsContainingOrderByLastMessageAtDesc(
-            USER_ID, pageable))
-        .thenReturn(new PageImpl<>(List.of(conversation)));
-
-    AggregationResults<Document> aggResults = mock(AggregationResults.class);
-    when(aggResults.getMappedResults()).thenReturn(List.of());
-    when(mongoTemplate.aggregate(any(Aggregation.class), eq("messages"), eq(Document.class)))
-        .thenReturn(aggResults);
-
-    PageResponse<ConversationResponse> result =
-        conversationService.listConversations(USER_ID, pageable);
-
-    assertThat(result.content()).hasSize(1);
-    assertThat(result.content().get(0).id()).isEqualTo(CONV_ID);
-    assertThat(result.page()).isZero();
-    assertThat(result.totalElements()).isEqualTo(1L);
-  }
-
-  @Test
-  @SuppressWarnings("unchecked")
-  void listConversations_WhenEmpty_ShouldReturnEmptyPage() {
-    var pageable = PageRequest.of(0, 20);
-    when(conversationRepository.findByParticipantsContainingOrderByLastMessageAtDesc(
-            USER_ID, pageable))
-        .thenReturn(new PageImpl<>(List.of()));
-
-    PageResponse<ConversationResponse> result =
-        conversationService.listConversations(USER_ID, pageable);
-
-    assertThat(result.content()).isEmpty();
-    verifyNoInteractions(mongoTemplate);
-  }
-
-  @Test
-  void getParticipants_ShouldReturnParticipantList() {
-    when(conversationCacheService.findByIdOptional(CONV_ID)).thenReturn(Optional.of(conversation));
-
-    List<String> participants = conversationService.getParticipants(CONV_ID);
-
-    assertThat(participants).containsExactlyInAnyOrder(USER_ID, OTHER_ID);
-  }
-
-  @Test
-  void getParticipants_WhenNotFound_ShouldReturnEmptyList() {
-    when(conversationCacheService.findByIdOptional(CONV_ID)).thenReturn(Optional.empty());
-
-    List<String> participants = conversationService.getParticipants(CONV_ID);
-
-    assertThat(participants).isEmpty();
   }
 
   @Test

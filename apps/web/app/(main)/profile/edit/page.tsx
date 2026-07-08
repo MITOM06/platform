@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef, useMemo, useEffect } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import dynamic from 'next/dynamic'
 import { useRouter } from 'next/navigation'
 import { useForm } from 'react-hook-form'
@@ -28,6 +28,8 @@ import { absoluteMediaUrl } from '@/lib/media'
 import { Separator } from '@/components/ui/separator'
 import { ProfileImageHeader } from '@/components/profile/ProfileImageHeader'
 import { ProfileForm, type ProfileFormValues } from '@/components/profile/ProfileForm'
+import { buildProfileFormTexts } from '@/components/profile/profile-form-texts'
+import { useProfileImageEditor } from '@/lib/hooks/use-profile-image-editor'
 
 // Code-split the cropper (pulls in react-easy-crop) — only needed once the user
 // picks an image to crop, so it must not ship in the edit page's first load.
@@ -35,8 +37,6 @@ const ImageCropperModal = dynamic(
   () => import('@/components/profile/ImageCropperModal').then((m) => m.ImageCropperModal),
   { ssr: false },
 )
-
-type CropTarget = 'avatar' | 'cover' | null
 
 export default function EditProfilePage() {
   const t = useTranslations('profile')
@@ -66,17 +66,21 @@ export default function EditProfilePage() {
     enabled: !!accessToken,
   })
 
-  // Staged (not-yet-uploaded) image edits — only persisted on explicit Save Changes.
-  const [avatarPreview, setAvatarPreview] = useState<string | null>(null)
-  const [avatarBlob, setAvatarBlob] = useState<Blob | null>(null)
-  const [coverPreview, setCoverPreview] = useState<string | null>(null)
-  const [coverBlob, setCoverBlob] = useState<Blob | null>(null)
-  const avatarInputRef = useRef<HTMLInputElement>(null)
-  const coverInputRef = useRef<HTMLInputElement>(null)
-
-  // Cropper modal state
-  const [cropTarget, setCropTarget] = useState<CropTarget>(null)
-  const [cropSourceUrl, setCropSourceUrl] = useState<string | null>(null)
+  // Staged (not-yet-uploaded) image edits + cropper state.
+  const {
+    avatarPreview,
+    avatarBlob, setAvatarBlob,
+    coverPreview,
+    coverBlob, setCoverBlob,
+    avatarInputRef,
+    coverInputRef,
+    cropTarget,
+    cropSourceUrl,
+    handleAvatarPick,
+    handleCoverPick,
+    closeCropper,
+    handleCropConfirm,
+  } = useProfileImageEditor()
 
   const schema = useMemo(
     () =>
@@ -147,44 +151,6 @@ export default function EditProfilePage() {
     setLocalPhoneVerified(verified)
     // Mark the form dirty so the "Save Changes" button enables.
     setValue('phoneNumber', phone, { shouldDirty: true })
-  }
-
-  const openCropper = (target: CropTarget, file: File) => {
-    const objectUrl = URL.createObjectURL(file)
-    setCropSourceUrl(objectUrl)
-    setCropTarget(target)
-  }
-
-  const handleAvatarPick = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    e.target.value = ''
-    if (file) openCropper('avatar', file)
-  }
-
-  const handleCoverPick = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    e.target.value = ''
-    if (file) openCropper('cover', file)
-  }
-
-  const closeCropper = () => {
-    if (cropSourceUrl) URL.revokeObjectURL(cropSourceUrl)
-    setCropSourceUrl(null)
-    setCropTarget(null)
-  }
-
-  const handleCropConfirm = (blob: Blob) => {
-    const previewUrl = URL.createObjectURL(blob)
-    if (cropTarget === 'avatar') {
-      if (avatarPreview) URL.revokeObjectURL(avatarPreview)
-      setAvatarPreview(previewUrl)
-      setAvatarBlob(blob)
-    } else if (cropTarget === 'cover') {
-      if (coverPreview) URL.revokeObjectURL(coverPreview)
-      setCoverPreview(previewUrl)
-      setCoverBlob(blob)
-    }
-    closeCropper()
   }
 
   const onSubmit = async (values: ProfileFormValues) => {
@@ -327,51 +293,7 @@ export default function EditProfilePage() {
             email={user.email}
             saving={saving}
             canSave={isDirty || hasPendingImageEdits}
-            texts={{
-              displayNameLabel: t('displayNameLabel'),
-              displayNamePlaceholder: t('displayNamePlaceholder'),
-              bioLabel: t('bioLabel'),
-              bioPlaceholder: t('bioPlaceholder'),
-              dobLabel: t('dobLabel'),
-              dobPlaceholder: t('dobPlaceholder'),
-              phoneLabel: t('phoneLabel'),
-              phonePlaceholder: t('phonePlaceholder'),
-              phoneSendOtp: t('phoneSendOtp'),
-              phoneSending: t('phoneSending'),
-              phoneVerified: t('phoneVerified'),
-              phoneUnverified: t('phoneUnverified'),
-              phoneChange: t('phoneChange'),
-              phoneOtpTitle: t('phoneOtpTitle'),
-              phoneOtpSubtitle: t('phoneOtpSubtitle'),
-              phoneOtpConfirm: t('phoneOtpConfirm'),
-              phoneVerifying: t('phoneVerifying'),
-              phoneOtpIncomplete: t('phoneOtpIncomplete'),
-              phoneResend: t('phoneResend'),
-              phoneResendCountdown: t('phoneResendCountdown'),
-              phoneSuccess: t('phoneSuccess'),
-              phoneErrorInvalid: t('phoneErrorInvalid'),
-              phoneErrorSend: t('phoneErrorSend'),
-              phoneErrorVerify: t('phoneErrorVerify'),
-              phoneErrorExpired: t('phoneErrorExpired'),
-              phoneErrorTaken: t('phoneErrorTaken'),
-              phoneNoticeText: t('phoneNoticeText'),
-              phoneVerifyAction: t('phoneVerifyAction'),
-              phoneModalPhoneTitle: t('phoneModalPhoneTitle'),
-              phoneModalPhoneSubtitle: t('phoneModalPhoneSubtitle'),
-              phoneErrorRateLimit: t('phoneErrorRateLimit'),
-              genderLabel: t('genderLabel'),
-              genderPlaceholder: t('genderPlaceholder'),
-              genderMale: t('genderMale'),
-              genderFemale: t('genderFemale'),
-              genderOther: t('genderOther'),
-              privacySectionLabel: t('privacySectionLabel'),
-              privacySectionHint: t('privacySectionHint'),
-              showDobLabel: t('showDobLabel'),
-              showPhoneLabel: t('showPhoneLabel'),
-              showGenderLabel: t('showGenderLabel'),
-              emailLabel: t('emailLabel'),
-              saveButton: t('saveButton'),
-            }}
+            texts={buildProfileFormTexts(t)}
             onSubmit={handleSubmit(onSubmit)}
             onGenderChange={(v) => setValue('gender', v, { shouldDirty: true })}
             onShowFieldChange={(field, v) => setValue(field, v, { shouldDirty: true })}

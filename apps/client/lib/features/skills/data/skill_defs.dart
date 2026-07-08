@@ -67,4 +67,12 @@ const List<SkillDef> kSkillDefs = [
     id: 'translator',
     icon: '🌐',
   ),
+  SkillDef(
+    id: 'webSearch',
+    icon: '🔍',
+  ),
+  SkillDef(
+    id: 'weatherForecast',
+    icon: '🌤️',
+  ),
 ];

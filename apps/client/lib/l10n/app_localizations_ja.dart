@@ -2201,6 +2201,18 @@ class AppLocalizationsJa extends AppLocalizations {
   String get skillTranslatorDesc => '言語をまたいで自然にテキストを翻訳・ローカライズします。';
 
   @override
+  String get skillWebSearchName => 'ウェブ検索';
+
+  @override
+  String get skillWebSearchDesc => '最新情報をウェブで検索し、出典を引用します。';
+
+  @override
+  String get skillWeatherForecastName => '天気予報';
+
+  @override
+  String get skillWeatherForecastDesc => 'あらゆる場所の天気と予報を調べます。';
+
+  @override
   String get adminTitle => '管理コンソール';
 
   @override

@@ -107,39 +107,14 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     ref
         .read(chatNotifierProvider(widget.conversationId).notifier)
         .startTyping();
-    final q = _activeMentionQuery();
+    final q = activeMentionQuery(_textCtrl);
     if (q != _mentionQuery) setState(() => _mentionQuery = q);
   }
 
-  String? _activeMentionQuery() {
-    final sel = _textCtrl.selection;
-    if (!sel.isValid || sel.start < 0) return null;
-    final caret = sel.start;
-    final text = _textCtrl.text;
-    if (caret > text.length) return null;
-    final before = text.substring(0, caret);
-    final at = before.lastIndexOf('@');
-    if (at < 0) return null;
-    if (at > 0 && !RegExp(r'\s').hasMatch(before[at - 1])) return null;
-    final token = before.substring(at + 1);
-    if (token.contains('\n') || token.length > 30) return null;
-    return token;
-  }
-
   void _applyMention(String displayName) {
-    final sel = _textCtrl.selection;
-    final caret = sel.start < 0 ? _textCtrl.text.length : sel.start;
-    final text = _textCtrl.text;
-    final before = text.substring(0, caret);
-    final at = before.lastIndexOf('@');
-    if (at < 0) return;
-    final insert = '@$displayName ';
-    final newText = text.substring(0, at) + insert + text.substring(caret);
-    _textCtrl.value = TextEditingValue(
-      text: newText,
-      selection: TextSelection.collapsed(offset: at + insert.length),
-    );
-    setState(() => _mentionQuery = null);
+    if (applyMentionToController(_textCtrl, displayName)) {
+      setState(() => _mentionQuery = null);
+    }
   }
 
   GlobalKey _keyFor(String messageId) =>
@@ -225,17 +200,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     }
   }
 
-  void _insertEmoji(String emoji) {
-    final text = _textCtrl.text;
-    final sel = _textCtrl.selection;
-    final start = sel.start < 0 ? text.length : sel.start;
-    final end = sel.end < 0 ? text.length : sel.end;
-    final newText = text.replaceRange(start, end, emoji);
-    _textCtrl.value = TextEditingValue(
-      text: newText,
-      selection: TextSelection.collapsed(offset: start + emoji.length),
-    );
-  }
+  void _insertEmoji(String emoji) => insertEmojiIntoController(_textCtrl, emoji);
 
   void _onStickerSelected(String sticker) {
     setState(() => _showEmoji = false);

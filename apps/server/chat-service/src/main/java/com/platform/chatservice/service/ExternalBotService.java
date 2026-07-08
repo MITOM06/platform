@@ -16,7 +16,7 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class ExternalBotService {
 
-  private final ConversationService conversationService;
+  private final ConversationQueryService conversationQueryService;
   private final ExternalBotRepository externalBotRepository;
   private final BotFactoryClient botFactoryClient;
   private final AiMessageService aiMessageService;
@@ -26,7 +26,7 @@ public class ExternalBotService {
    * not a 1-1 between {@code senderId} and an enabled bot they own.
    */
   public Optional<ExternalBot> resolveAssistant(String conversationId, String senderId) {
-    List<String> participants = conversationService.getParticipants(conversationId);
+    List<String> participants = conversationQueryService.getParticipants(conversationId);
     if (participants == null || participants.size() != 2 || !participants.contains(senderId)) {
       return Optional.empty();
     }

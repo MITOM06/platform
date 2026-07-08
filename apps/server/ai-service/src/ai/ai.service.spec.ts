@@ -1,5 +1,6 @@
 import { ConfigService } from '@nestjs/config';
 import { AiService, AiRequestPayload } from './ai.service';
+import { AgenticLoopService } from './agentic-loop.service';
 import { RedisPublisherService } from '../redis/redis-publisher.service';
 import { MemoryService } from '../memory/memory.service';
 import { EmbeddingService } from '../kb/embedding.service';
@@ -266,6 +267,18 @@ describe('AiService', () => {
       maybeCompact,
     } as unknown as import('../session/compact.service').CompactService;
 
+    // The agentic loop was extracted into its own injectable (clean-code 500-line
+    // limit). Construct the REAL loop with the same fakes so streaming/tool
+    // behavior is exercised end-to-end; AiService passes its `anthropic` client
+    // into the loop, so the `service['anthropic']` override below still applies.
+    const agenticLoop = new AgenticLoopService(
+      fakeConfig,
+      fakePublisher,
+      fakeToolRegistry,
+      fakeResponseCache,
+      fakeChatImage,
+    );
+
     service = new AiService(
       fakeConfig,
       fakePublisher,
@@ -284,6 +297,7 @@ describe('AiService', () => {
       fakeChatImage,
       fakeAiSession,
       fakeCompact,
+      agenticLoop,
     );
     (service as any)['anthropic'] = { messages: { stream: mockStream, create: mockCreate } };
   });

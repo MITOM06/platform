@@ -2203,6 +2203,18 @@ class AppLocalizationsKo extends AppLocalizations {
   String get skillTranslatorDesc => '여러 언어로 텍스트를 자연스럽게 번역하고 현지화합니다.';
 
   @override
+  String get skillWebSearchName => '웹 검색';
+
+  @override
+  String get skillWebSearchDesc => '웹에서 최신 정보를 찾고 출처를 인용합니다.';
+
+  @override
+  String get skillWeatherForecastName => '날씨 예보';
+
+  @override
+  String get skillWeatherForecastDesc => '모든 위치의 날씨와 예보를 조회합니다.';
+
+  @override
   String get adminTitle => '관리자 콘솔';
 
   @override

@@ -2246,6 +2246,20 @@ class AppLocalizationsEn extends AppLocalizations {
       'Translate and localize text naturally across languages.';
 
   @override
+  String get skillWebSearchName => 'Web Searcher';
+
+  @override
+  String get skillWebSearchDesc =>
+      'Finds current information on the web and cites sources.';
+
+  @override
+  String get skillWeatherForecastName => 'Weather Forecast';
+
+  @override
+  String get skillWeatherForecastDesc =>
+      'Looks up weather and forecast for any location.';
+
+  @override
   String get adminTitle => 'Admin Console';
 
   @override

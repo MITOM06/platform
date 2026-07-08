@@ -8,8 +8,9 @@ import com.platform.chatservice.exception.RateLimitExceededException;
 import com.platform.chatservice.service.AiRedisPublisher;
 import com.platform.chatservice.service.CallService;
 import com.platform.chatservice.service.ClusterMessageBroker;
-import com.platform.chatservice.service.ConversationService;
+import com.platform.chatservice.service.ConversationQueryService;
 import com.platform.chatservice.service.ExternalBotService;
+import com.platform.chatservice.service.MessageQueryService;
 import com.platform.chatservice.service.MessageService;
 import com.platform.chatservice.service.RateLimiterService;
 import java.security.Principal;
@@ -30,7 +31,8 @@ public class ChatController {
   private static final Pattern AI_MENTION_PATTERN = Pattern.compile("(?i)@(AI|ponai)\\b");
 
   private final MessageService messageService;
-  private final ConversationService conversationService;
+  private final MessageQueryService messageQueryService;
+  private final ConversationQueryService conversationQueryService;
   private final ClusterMessageBroker clusterBroker;
   private final com.platform.chatservice.service.FcmService fcmService;
   private final RateLimiterService rateLimiterService;
@@ -65,9 +67,9 @@ public class ChatController {
       CompletableFuture.runAsync(
           () -> {
             try {
-              List<AiHistoryEntry> history = messageService.getAiHistory(uid, convId);
+              List<AiHistoryEntry> history = messageQueryService.getAiHistory(uid, convId);
               String stripped = raw.replaceAll("(?i)@(AI|ponai)\\b", "").trim();
-              String displayName = messageService.resolveDisplayName(uid);
+              String displayName = messageQueryService.resolveDisplayName(uid);
               aiRedisPublisher.publishAiRequest(convId, uid, displayName, stripped, history);
             } catch (Exception ignored) {
             }
@@ -93,13 +95,13 @@ public class ChatController {
     }
 
     List<String> mentions = response.mentions() == null ? List.of() : response.mentions();
-    List<String> participants = conversationService.getParticipants(dto.getConversationId());
+    List<String> participants = conversationQueryService.getParticipants(dto.getConversationId());
     // Resolve the sender's human-readable name once (same for every recipient).
     // Clients display senderName directly, so it must never be a bare userId.
-    String senderDisplayName = messageService.resolveDisplayName(principal.getName());
+    String senderDisplayName = messageQueryService.resolveDisplayName(principal.getName());
     for (String participantId : participants) {
       if (!participantId.equals(principal.getName())) {
-        boolean muted = conversationService.isMuted(dto.getConversationId(), participantId);
+        boolean muted = conversationQueryService.isMuted(dto.getConversationId(), participantId);
         // Mentioned participants get a priority MENTIONED_YOU event instead
         // of the generic NEW_MESSAGE so the client can surface it specially.
         boolean mentioned = mentions.contains(participantId);

@@ -18,7 +18,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.data.mongo.DataMongoTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.data.mongodb.core.MongoTemplate;
-import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.testcontainers.containers.MongoDBContainer;
@@ -26,11 +25,12 @@ import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
 /**
- * Integration test for cursor-based pagination in {@link MessageService}.
+ * Integration test for cursor-based pagination in {@link MessageQueryService}.
  *
  * <p>Uses Testcontainers to spin up a real MongoDB 7 instance so that the actual Spring Data query
  * methods and compound indexes are exercised — bugs in query derivation or index definitions are
- * caught here but would be invisible in the mock-based unit tests in {@link MessageServiceTest}.
+ * caught here but would be invisible in the mock-based unit tests in {@link
+ * MessageQueryServiceTest}.
  *
  * <p>Annotated with {@code @DataMongoTest} (MongoDB slice) so the full application context
  * (RabbitMQ, Redis, JWT secret, Firebase) is NOT started. Non-MongoDB collaborators are supplied as
@@ -61,7 +61,7 @@ class MessageServicePaginationTest {
 
   @Autowired private MessageMapper messageMapper;
 
-  private MessageService messageService;
+  private MessageQueryService messageQueryService;
 
   private static final String USER_ID = "user-it-001";
   private static final String OTHER_USER_ID = "user-it-002";
@@ -73,31 +73,12 @@ class MessageServicePaginationTest {
     messageRepository.deleteAll();
     conversationRepository.deleteAll();
 
-    // Wire MessageService with real MongoDB repos + mocked non-Mongo deps
-    SimpMessagingTemplate messagingTemplate = mock(SimpMessagingTemplate.class);
-    // A real cache wrapper over the real repo; its @CacheEvict is a no-op outside a Spring proxy,
-    // which is fine here — these tests exercise the Mongo query/persistence paths, not caching.
-    ConversationCacheService conversationCacheService =
-        new ConversationCacheService(conversationRepository);
-    AiMessageService aiMessageService =
-        new AiMessageService(
-            messageRepository,
-            conversationRepository,
-            messagingTemplate,
-            messageMapper,
-            mongoTemplate,
-            conversationCacheService);
+    // Wire MessageQueryService with real MongoDB repos + a mocked non-Mongo helper.
     MessageServiceHelper helper = mock(MessageServiceHelper.class);
 
-    messageService =
-        new MessageService(
-            messageRepository,
-            conversationRepository,
-            mongoTemplate,
-            helper,
-            messageMapper,
-            aiMessageService,
-            conversationCacheService);
+    messageQueryService =
+        new MessageQueryService(
+            messageRepository, conversationRepository, mongoTemplate, helper, messageMapper);
 
     // Insert the primary test conversation with USER_ID as participant
     conversationRepository.save(
@@ -133,7 +114,7 @@ class MessageServicePaginationTest {
    */
   @Test
   void firstPage_returnsNewestTwoMessages_andHasMore() {
-    PageResponse<MessageResponse> page = messageService.getMessages(USER_ID, CONV_ID, null, 2);
+    PageResponse<MessageResponse> page = messageQueryService.getMessages(USER_ID, CONV_ID, null, 2);
 
     assertThat(page.content()).hasSize(2);
     // Newest first: msg-it-4 (createdAt+4s), msg-it-3 (createdAt+3s)
@@ -152,7 +133,8 @@ class MessageServicePaginationTest {
     // Page 1 cursor = id of the last (oldest) item on the first page = msg-it-3
     String cursor = "msg-it-3";
 
-    PageResponse<MessageResponse> page2 = messageService.getMessages(USER_ID, CONV_ID, cursor, 2);
+    PageResponse<MessageResponse> page2 =
+        messageQueryService.getMessages(USER_ID, CONV_ID, cursor, 2);
 
     assertThat(page2.content()).hasSize(2);
     // Must be the two messages older than msg-it-3: msg-it-2 then msg-it-1
@@ -175,7 +157,7 @@ class MessageServicePaginationTest {
     String cursor = "msg-it-1";
 
     PageResponse<MessageResponse> lastPage =
-        messageService.getMessages(USER_ID, CONV_ID, cursor, 2);
+        messageQueryService.getMessages(USER_ID, CONV_ID, cursor, 2);
 
     assertThat(lastPage.content()).hasSize(1);
     assertThat(lastPage.content().get(0).id()).isEqualTo("msg-it-0");
@@ -208,7 +190,8 @@ class MessageServicePaginationTest {
     messageRepository.save(otherMsg);
 
     // Fetch messages for the PRIMARY conversation — must return exactly 5, none from OTHER_CONV_ID
-    PageResponse<MessageResponse> page = messageService.getMessages(USER_ID, CONV_ID, null, 10);
+    PageResponse<MessageResponse> page =
+        messageQueryService.getMessages(USER_ID, CONV_ID, null, 10);
 
     assertThat(page.content()).hasSize(5);
     assertThat(page.content()).extracting(MessageResponse::conversationId).containsOnly(CONV_ID);
@@ -244,12 +227,13 @@ class MessageServicePaginationTest {
     }
 
     // Page 1 (size 2): newest-first by _id → idC, idB.
-    PageResponse<MessageResponse> page1 = messageService.getMessages(USER_ID, CONV_ID, null, 2);
+    PageResponse<MessageResponse> page1 =
+        messageQueryService.getMessages(USER_ID, CONV_ID, null, 2);
     assertThat(page1.content()).extracting(MessageResponse::id).containsExactly(idC, idB);
     assertThat(page1.hasNext()).isTrue();
 
     // Page 2 using idB (same createdAt) as cursor must return the remaining idA — not skip it.
-    PageResponse<MessageResponse> page2 = messageService.getMessages(USER_ID, CONV_ID, idB, 2);
+    PageResponse<MessageResponse> page2 = messageQueryService.getMessages(USER_ID, CONV_ID, idB, 2);
     assertThat(page2.content()).extracting(MessageResponse::id).containsExactly(idA);
     assertThat(page2.hasNext()).isFalse();
   }

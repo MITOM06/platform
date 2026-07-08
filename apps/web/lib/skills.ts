@@ -23,4 +23,6 @@ export const SKILLS: SkillDef[] = [
   { id: 'dataAnalyst', icon: '📊', requires: [] },
   { id: 'docDrafter', icon: '📝', requires: [] },
   { id: 'translator', icon: '🌐', requires: [] },
+  { id: 'webSearch', icon: '🔍', requires: [] },
+  { id: 'weatherForecast', icon: '🌤️', requires: [] },
 ]

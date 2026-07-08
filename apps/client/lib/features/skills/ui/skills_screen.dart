@@ -116,6 +116,16 @@ class SkillsScreen extends ConsumerWidget {
         name: l10n.skillTranslatorName,
         desc: l10n.skillTranslatorDesc
       );
+    case 'webSearch':
+      return (
+        name: l10n.skillWebSearchName,
+        desc: l10n.skillWebSearchDesc
+      );
+    case 'weatherForecast':
+      return (
+        name: l10n.skillWeatherForecastName,
+        desc: l10n.skillWeatherForecastDesc
+      );
     default:
       return (name: id, desc: '');
   }

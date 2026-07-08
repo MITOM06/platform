@@ -1093,6 +1093,10 @@
     "docDrafterDesc": "Redacta propuestas, especificaciones e informes estructurados.",
     "translatorName": "Traductor",
     "translatorDesc": "Traduce y localiza texto con naturalidad entre idiomas.",
+    "webSearchName": "Búsqueda web",
+    "webSearchDesc": "Encuentra información reciente en la web y cita fuentes.",
+    "weatherForecastName": "Pronóstico del tiempo",
+    "weatherForecastDesc": "Consulta el tiempo y el pronóstico para cualquier lugar.",
     "sectionNum": "03 / HABILIDADES"
   },
   "admin": {

@@ -1093,6 +1093,10 @@
     "docDrafterDesc": "Rédige propositions, spécifications et rapports structurés.",
     "translatorName": "Traducteur",
     "translatorDesc": "Traduit et localise le texte naturellement entre les langues.",
+    "webSearchName": "Recherche web",
+    "webSearchDesc": "Trouve des informations récentes sur le web et cite les sources.",
+    "weatherForecastName": "Météo",
+    "weatherForecastDesc": "Consulte la météo et les prévisions pour tout lieu.",
     "sectionNum": "03 / COMPÉTENCES"
   },
   "admin": {

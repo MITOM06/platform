@@ -1,10 +1,8 @@
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
-import '../../../core/api/dio_client.dart';
 import '../../../core/l10n/l10n_ext.dart';
 import '../../../core/utils/app_error.dart';
 import '../../../core/theme/app_theme.dart';
@@ -12,7 +10,8 @@ import '../../../core/widgets/pon_widgets.dart';
 import '../../auth/domain/auth_provider.dart';
 import '../../auth/domain/auth_state.dart';
 import '../../chat/data/chat_repository.dart';
-import '../../chat/ui/widgets/conversation_avatar.dart';
+import 'widgets/edit_profile_header.dart';
+import 'widgets/edit_profile_privacy_toggle.dart';
 import 'widgets/phone_verification_section.dart';
 
 /// Lets the signed-in user edit their own profile (avatar, display name, bio).
@@ -228,104 +227,11 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
         child: ListView(
           padding: const EdgeInsets.all(24),
           children: [
-            SizedBox(
-              height: 200,
-              child: Stack(
-                children: [
-                  // Cover Photo
-                  Positioned(
-                    top: 0,
-                    left: 0,
-                    right: 0,
-                    child: GestureDetector(
-                      onTap: _isLoading ? null : _uploadCover,
-                      child: Container(
-                        height: 128,
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(12),
-                          gradient: const LinearGradient(
-                            colors: [AppTheme.ponCyan, AppTheme.ponPink],
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                          ),
-                        ),
-                        child: Stack(
-                          children: [
-                            if (user?.coverPhoto != null && user!.coverPhoto!.isNotEmpty)
-                              ClipRRect(
-                                borderRadius: BorderRadius.circular(12),
-                                child: CachedNetworkImage(
-                                  imageUrl: user.coverPhoto!.startsWith('http')
-                                      ? user.coverPhoto!
-                                      : '${DioClient.chatBaseUrl}${user.coverPhoto}',
-                                  width: double.infinity,
-                                  height: 128,
-                                  fit: BoxFit.cover,
-                                ),
-                              ),
-                            Container(
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(12),
-                                color: Colors.black.withValues(alpha: 0.25),
-                              ),
-                            ),
-                            const Positioned(
-                              top: 8,
-                              right: 8,
-                              child: CircleAvatar(
-                                radius: 16,
-                                backgroundColor: Colors.black54,
-                                child: Icon(Icons.camera_alt_rounded, color: Colors.white, size: 16),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                  // Avatar
-                  Positioned(
-                    bottom: 0,
-                    left: 0,
-                    right: 0,
-                    child: Center(
-                      child: Stack(
-                        children: [
-                          Container(
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              border: Border.all(color: AppTheme.darkBackground, width: 4),
-                            ),
-                            child: ConversationAvatar(
-                              avatarUrl: user?.avatarUrl,
-                              fallbackLetter: (user?.displayName.isNotEmpty ?? false)
-                                  ? user!.displayName[0].toUpperCase()
-                                  : '?',
-                              size: 96,
-                            ),
-                          ),
-                          Positioned(
-                            right: 0,
-                            bottom: 0,
-                            child: GestureDetector(
-                              onTap: _isLoading ? null : _uploadAvatar,
-                              child: Container(
-                                padding: const EdgeInsets.all(6),
-                                decoration: const BoxDecoration(
-                                  color: AppTheme.ponCyan,
-                                  shape: BoxShape.circle,
-                                ),
-                                child: const Icon(Icons.camera_alt_rounded,
-                                    size: 18, color: Colors.white),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
-              ),
+            EditProfileHeader(
+              user: user,
+              isLoading: _isLoading,
+              onTapCover: _uploadCover,
+              onTapAvatar: _uploadAvatar,
             ),
             const SizedBox(height: 24),
             PonTextField(
@@ -354,7 +260,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                 _initialPhoneVerified = verified;
               },
             ),
-            _PrivacyToggle(
+            EditProfilePrivacyToggle(
               label: context.l10n.profileShowPhone,
               value: _showPhone,
               onChanged: _isLoading ? null : (v) => setState(() => _showPhone = v),
@@ -403,7 +309,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
               ],
               onChanged: _isLoading ? null : (v) => setState(() => _gender = v),
             ),
-            _PrivacyToggle(
+            EditProfilePrivacyToggle(
               label: context.l10n.profileShowGender,
               value: _showGender,
               onChanged: _isLoading ? null : (v) => setState(() => _showGender = v),
@@ -436,7 +342,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                       }
                     },
             ),
-            _PrivacyToggle(
+            EditProfilePrivacyToggle(
               label: context.l10n.profileShowDateOfBirth,
               value: _showDob,
               onChanged: _isLoading ? null : (v) => setState(() => _showDob = v),
@@ -451,34 +357,6 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
         ),
       ),
       ),
-    );
-  }
-}
-
-/// Compact "show to others" privacy switch shown under each gated field.
-class _PrivacyToggle extends StatelessWidget {
-  final String label;
-  final bool value;
-  final ValueChanged<bool>? onChanged;
-  const _PrivacyToggle({
-    required this.label,
-    required this.value,
-    required this.onChanged,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return SwitchListTile(
-      value: value,
-      onChanged: onChanged,
-      title: Text(
-        label,
-        style: const TextStyle(fontSize: 13, color: Colors.white70),
-      ),
-      activeThumbColor: AppTheme.ponCyan,
-      dense: true,
-      contentPadding: EdgeInsets.zero,
-      visualDensity: VisualDensity.compact,
     );
   }
 }
