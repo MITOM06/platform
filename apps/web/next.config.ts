@@ -87,7 +87,7 @@ const nextConfig: NextConfig = {
               // media-src is required for <audio>/<video> (voice messages, video, AI voice
               // replies). Without it these fall back to default-src 'self' and get blocked.
               `media-src 'self' data: blob: ${process.env.NEXT_PUBLIC_CHAT_URL ?? ''} ${process.env.NEXT_PUBLIC_AI_URL ?? ''}`,
-              `connect-src 'self' ${process.env.NEXT_PUBLIC_AUTH_URL ?? ''} ${process.env.NEXT_PUBLIC_CHAT_URL ?? ''} ${process.env.NEXT_PUBLIC_AI_URL ?? ''} wss: ws:`,
+              `connect-src 'self' ${process.env.NEXT_PUBLIC_AUTH_URL ?? ''} ${process.env.NEXT_PUBLIC_CHAT_URL ?? ''} ${process.env.NEXT_PUBLIC_AI_URL ?? ''} ${process.env.NEXT_PUBLIC_CONNECTOR_URL ?? ''} wss: ws:`,
               "frame-ancestors 'none'",
               "base-uri 'self'",
               "form-action 'self'",
