@@ -5,7 +5,6 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
-import com.mongodb.client.result.UpdateResult;
 import com.platform.chatservice.dto.AiHistoryEntry;
 import com.platform.chatservice.dto.MessageResponse;
 import com.platform.chatservice.dto.PageResponse;
@@ -20,13 +19,12 @@ import com.platform.chatservice.repository.MessageRepository;
 import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
+import org.bson.Document;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
@@ -39,6 +37,7 @@ class MessageServiceTest {
   @Mock private MongoTemplate mongoTemplate;
   @Mock private org.springframework.messaging.simp.SimpMessagingTemplate messagingTemplate;
   @Mock private MessageServiceHelper messageServiceHelper;
+  @Mock private ConversationCacheService conversationCacheService;
 
   // Collaborators extracted from MessageService are wired with real instances so
   // these tests still exercise the same behavior through the same mocked deps.
@@ -57,7 +56,12 @@ class MessageServiceTest {
     MessageMapper messageMapper = new MessageMapper();
     AiMessageService aiMessageService =
         new AiMessageService(
-            messageRepository, conversationRepository, messagingTemplate, messageMapper);
+            messageRepository,
+            conversationRepository,
+            messagingTemplate,
+            messageMapper,
+            mongoTemplate,
+            conversationCacheService);
     messageService =
         new MessageService(
             messageRepository,
@@ -65,7 +69,8 @@ class MessageServiceTest {
             mongoTemplate,
             messageServiceHelper,
             messageMapper,
-            aiMessageService);
+            aiMessageService,
+            conversationCacheService);
 
     conversation =
         Conversation.builder().id(CONV_ID).participants(List.of(SENDER_ID, OTHER_ID)).build();
@@ -85,7 +90,6 @@ class MessageServiceTest {
   void sendMessage_ShouldSaveMessageAndUpdateConversation() {
     when(conversationRepository.findById(CONV_ID)).thenReturn(Optional.of(conversation));
     when(messageRepository.save(any(Message.class))).thenReturn(savedMessage);
-    when(conversationRepository.save(any(Conversation.class))).thenReturn(conversation);
 
     MessageResponse response =
         messageService.sendMessage(SENDER_ID, new SendMessageRequest(CONV_ID, "Hello", "text"));
@@ -94,7 +98,9 @@ class MessageServiceTest {
     assertThat(response.content()).isEqualTo("Hello");
     assertThat(response.senderId()).isEqualTo(SENDER_ID);
     verify(messageRepository).save(any(Message.class));
-    verify(conversationRepository).save(any(Conversation.class));
+    // Conversation bump is now a targeted atomic $set (not a whole-document save) + cache evict.
+    verify(mongoTemplate).updateFirst(any(Query.class), any(Update.class), eq(Conversation.class));
+    verify(conversationCacheService).evict(CONV_ID);
   }
 
   @Test
@@ -108,13 +114,15 @@ class MessageServiceTest {
             .build();
     when(conversationRepository.findById(CONV_ID)).thenReturn(Optional.of(pending));
     when(messageRepository.save(any(Message.class))).thenReturn(savedMessage);
-    when(conversationRepository.save(any(Conversation.class)))
-        .thenAnswer(inv -> inv.getArgument(0));
 
     messageService.sendMessage(SENDER_ID, new SendMessageRequest(CONV_ID, "Hello", "text"));
 
-    verify(conversationRepository)
-        .save(argThat(c -> Conversation.STATUS_ACCEPTED.equals(c.getStatus())));
+    // The recipient's reply flips status→accepted via the atomic $set update.
+    verify(mongoTemplate)
+        .updateFirst(
+            any(Query.class),
+            argThat((Update u) -> Conversation.STATUS_ACCEPTED.equals(setValue(u, "status"))),
+            eq(Conversation.class));
   }
 
   @Test
@@ -128,20 +136,21 @@ class MessageServiceTest {
             .build();
     when(conversationRepository.findById(CONV_ID)).thenReturn(Optional.of(pending));
     when(messageRepository.save(any(Message.class))).thenReturn(savedMessage);
-    when(conversationRepository.save(any(Conversation.class)))
-        .thenAnswer(inv -> inv.getArgument(0));
 
     messageService.sendMessage(SENDER_ID, new SendMessageRequest(CONV_ID, "Hi", "text"));
 
-    verify(conversationRepository)
-        .save(argThat(c -> Conversation.STATUS_PENDING.equals(c.getStatus())));
+    // The initiator's own message must NOT set status (stays pending): the $set has no status key.
+    verify(mongoTemplate)
+        .updateFirst(
+            any(Query.class),
+            argThat((Update u) -> setValue(u, "status") == null),
+            eq(Conversation.class));
   }
 
   @Test
   void sendMessage_ShouldDefaultTypeToText_WhenTypeIsNull() {
     when(conversationRepository.findById(CONV_ID)).thenReturn(Optional.of(conversation));
     when(messageRepository.save(any(Message.class))).thenReturn(savedMessage);
-    when(conversationRepository.save(any(Conversation.class))).thenReturn(conversation);
 
     messageService.sendMessage(SENDER_ID, new SendMessageRequest(CONV_ID, "Hello", null));
 
@@ -205,9 +214,8 @@ class MessageServiceTest {
   @Test
   void getMessages_ShouldReturnPagedResponse() {
     when(conversationRepository.findById(CONV_ID)).thenReturn(Optional.of(conversation));
-    when(messageRepository.findByConversationIdOrderByCreatedAtDesc(
-            eq(CONV_ID), any(Pageable.class)))
-        .thenReturn(new PageImpl<>(List.of(savedMessage)));
+    // Visibility filtering + the compound cursor are pushed into a single MongoTemplate query.
+    when(mongoTemplate.find(any(Query.class), eq(Message.class))).thenReturn(List.of(savedMessage));
 
     // No cursor → most recent page.
     PageResponse<MessageResponse> result = messageService.getMessages(SENDER_ID, CONV_ID, null, 20);
@@ -223,17 +231,15 @@ class MessageServiceTest {
   void getMessages_WithCursor_ShouldQueryOlderMessages() {
     when(conversationRepository.findById(CONV_ID)).thenReturn(Optional.of(conversation));
     when(messageRepository.findById(MSG_ID)).thenReturn(Optional.of(savedMessage));
-    when(messageRepository.findByConversationIdAndCreatedAtLessThanOrderByCreatedAtDesc(
-            eq(CONV_ID), any(Instant.class), any(Pageable.class)))
-        .thenReturn(List.of());
+    when(mongoTemplate.find(any(Query.class), eq(Message.class))).thenReturn(List.of());
 
     PageResponse<MessageResponse> result =
         messageService.getMessages(SENDER_ID, CONV_ID, MSG_ID, 20);
 
     assertThat(result.content()).isEmpty();
-    verify(messageRepository)
-        .findByConversationIdAndCreatedAtLessThanOrderByCreatedAtDesc(
-            eq(CONV_ID), any(Instant.class), any(Pageable.class));
+    // Cursor message is resolved to build the compound (createdAt, _id) tiebreaker query.
+    verify(messageRepository).findById(MSG_ID);
+    verify(mongoTemplate).find(any(Query.class), eq(Message.class));
   }
 
   @Test
@@ -331,8 +337,6 @@ class MessageServiceTest {
               m.setCreatedAt(Instant.now());
               return m;
             });
-    when(conversationRepository.save(any(Conversation.class)))
-        .thenAnswer(inv -> inv.getArgument(0));
     when(messageServiceHelper.parseMentions(anyString(), anyList(), anyString()))
         .thenReturn(List.of(mentioneeId));
 
@@ -344,26 +348,27 @@ class MessageServiceTest {
   }
 
   @Test
-  void markAsRead_WhenMessageExists_ShouldUpdateReadBy() {
-    UpdateResult updateResult = mock(UpdateResult.class);
-    when(updateResult.getMatchedCount()).thenReturn(1L);
-    when(mongoTemplate.updateFirst(any(Query.class), any(Update.class), eq(Message.class)))
-        .thenReturn(updateResult);
+  void markAsRead_WhenParticipant_ShouldUpdateReadByAndReturnConversationId() {
+    // requireParticipantMessage enforces membership and yields the message (with its convId).
+    when(messageServiceHelper.requireParticipantMessage(SENDER_ID, MSG_ID))
+        .thenReturn(savedMessage);
 
-    messageService.markAsRead(SENDER_ID, MSG_ID);
+    String conversationId = messageService.markAsRead(SENDER_ID, MSG_ID);
 
+    assertThat(conversationId).isEqualTo(CONV_ID);
     verify(mongoTemplate).updateFirst(any(Query.class), any(Update.class), eq(Message.class));
   }
 
   @Test
   void markAsRead_WhenMessageNotFound_ShouldThrow() {
-    UpdateResult updateResult = mock(UpdateResult.class);
-    when(updateResult.getMatchedCount()).thenReturn(0L);
-    when(mongoTemplate.updateFirst(any(Query.class), any(Update.class), eq(Message.class)))
-        .thenReturn(updateResult);
+    when(messageServiceHelper.requireParticipantMessage(SENDER_ID, "non-existent"))
+        .thenThrow(new MessageNotFoundException("non-existent"));
 
     assertThatThrownBy(() -> messageService.markAsRead(SENDER_ID, "non-existent"))
         .isInstanceOf(MessageNotFoundException.class);
+
+    verify(mongoTemplate, never())
+        .updateFirst(any(Query.class), any(Update.class), eq(Message.class));
   }
 
   // -----------------------------------------------------------------------
@@ -437,8 +442,6 @@ class MessageServiceTest {
               m.setCreatedAt(Instant.now());
               return m;
             });
-    when(conversationRepository.save(any(Conversation.class)))
-        .thenAnswer(inv -> inv.getArgument(0));
 
     MessageResponse result = messageService.forwardMessage(SENDER_ID, MSG_ID, targetConvId);
 
@@ -554,9 +557,8 @@ class MessageServiceTest {
             .build();
 
     when(conversationRepository.findById(CONV_ID)).thenReturn(Optional.of(conversation));
-    when(messageRepository.findByConversationIdOrderByCreatedAtDesc(
-            eq(CONV_ID), any(Pageable.class)))
-        .thenReturn(new PageImpl<>(List.of(atAiMsg, stickerMsg, botMsg, voiceMsg, textMsg)));
+    when(mongoTemplate.find(any(Query.class), eq(Message.class)))
+        .thenReturn(List.of(atAiMsg, stickerMsg, botMsg, voiceMsg, textMsg));
 
     List<AiHistoryEntry> history = messageService.getAiHistory(SENDER_ID, CONV_ID);
 
@@ -597,9 +599,8 @@ class MessageServiceTest {
             .build();
 
     when(conversationRepository.findById(CONV_ID)).thenReturn(Optional.of(conversation));
-    when(messageRepository.findByConversationIdOrderByCreatedAtDesc(
-            eq(CONV_ID), any(Pageable.class)))
-        .thenReturn(new PageImpl<>(List.of(multi, single)));
+    when(mongoTemplate.find(any(Query.class), eq(Message.class)))
+        .thenReturn(List.of(multi, single));
 
     List<AiHistoryEntry> history = messageService.getAiHistory(SENDER_ID, CONV_ID);
 
@@ -631,8 +632,6 @@ class MessageServiceTest {
             .createdAt(Instant.now())
             .build();
     when(messageRepository.save(any(Message.class))).thenReturn(aiMessage);
-    when(conversationRepository.findById(CONV_ID)).thenReturn(Optional.of(conversation));
-    when(conversationRepository.save(any(Conversation.class))).thenReturn(conversation);
 
     MessageResponse response = messageService.saveAiMessage(CONV_ID, content, null);
 
@@ -650,5 +649,12 @@ class MessageServiceTest {
                         && content.equals(m.getContent())));
     verify(messagingTemplate)
         .convertAndSend(eq("/topic/conversation/" + CONV_ID), (Object) eq(response));
+  }
+
+  /** Read a field out of an Update's {@code $set} document (null if the key was not set). */
+  private static Object setValue(Update update, String key) {
+    Document updateDoc = update.getUpdateObject();
+    Document set = updateDoc.get("$set", Document.class);
+    return set == null ? null : set.get(key);
   }
 }

@@ -42,6 +42,25 @@ describe('OAuthController (JWT-derived identity)', () => {
     expect(guards).not.toContain(JwtAuthGuard);
   });
 
+  it('callback forwards a provider ?error to the service (deny flow)', async () => {
+    oauth.handleCallback.mockResolvedValue('https://client?error=access_denied');
+    const res = { redirect: jest.fn() } as any;
+    await controller.callback(
+      'notion',
+      undefined as any,
+      'the-state',
+      'access_denied',
+      res,
+    );
+    expect(oauth.handleCallback).toHaveBeenCalledWith(
+      'notion',
+      undefined,
+      'the-state',
+      'access_denied',
+    );
+    expect(res.redirect).toHaveBeenCalledWith(302, 'https://client?error=access_denied');
+  });
+
   it('startDirectory delegates to DirectoryConnectService with the JWT user', async () => {
     const user = { sub: 'jwt-user', perms: [] } as any;
     const res = await controller.startDirectory('acme', user);

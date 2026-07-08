@@ -75,9 +75,18 @@ class MessageServicePaginationTest {
 
     // Wire MessageService with real MongoDB repos + mocked non-Mongo deps
     SimpMessagingTemplate messagingTemplate = mock(SimpMessagingTemplate.class);
+    // A real cache wrapper over the real repo; its @CacheEvict is a no-op outside a Spring proxy,
+    // which is fine here — these tests exercise the Mongo query/persistence paths, not caching.
+    ConversationCacheService conversationCacheService =
+        new ConversationCacheService(conversationRepository);
     AiMessageService aiMessageService =
         new AiMessageService(
-            messageRepository, conversationRepository, messagingTemplate, messageMapper);
+            messageRepository,
+            conversationRepository,
+            messagingTemplate,
+            messageMapper,
+            mongoTemplate,
+            conversationCacheService);
     MessageServiceHelper helper = mock(MessageServiceHelper.class);
 
     messageService =
@@ -87,7 +96,8 @@ class MessageServicePaginationTest {
             mongoTemplate,
             helper,
             messageMapper,
-            aiMessageService);
+            aiMessageService,
+            conversationCacheService);
 
     // Insert the primary test conversation with USER_ID as participant
     conversationRepository.save(
@@ -203,5 +213,44 @@ class MessageServicePaginationTest {
     assertThat(page.content()).hasSize(5);
     assertThat(page.content()).extracting(MessageResponse::conversationId).containsOnly(CONV_ID);
     assertThat(page.content()).extracting(MessageResponse::id).doesNotContain("msg-other-0");
+  }
+
+  /**
+   * TEST 5 — Same-millisecond tiebreaker: three messages sharing the exact same {@code createdAt}
+   * must NOT be skipped by cursor pagination. With a createdAt-only cursor the older same-instant
+   * rows were silently dropped; the compound {@code (createdAt, _id)} cursor pages through all of
+   * them with no gap and no overlap.
+   */
+  @Test
+  void sameMillisecondMessages_areNotSkippedByCursor() {
+    messageRepository.deleteAll();
+    // Distinct ObjectId hex ids (production-shaped) sharing one timestamp; _id order is a=b<c.
+    Instant sameInstant = Instant.parse("2026-02-02T12:00:00Z");
+    String idA = "507f1f77bcf86cd799430001";
+    String idB = "507f1f77bcf86cd799430002";
+    String idC = "507f1f77bcf86cd799430003";
+    for (String id : List.of(idA, idB, idC)) {
+      Message m =
+          Message.builder()
+              .id(id)
+              .conversationId(CONV_ID)
+              .senderId(USER_ID)
+              .content("same-instant " + id)
+              .type("text")
+              .readBy(new ArrayList<>(List.of(USER_ID)))
+              .build();
+      m.setCreatedAt(sameInstant);
+      messageRepository.save(m);
+    }
+
+    // Page 1 (size 2): newest-first by _id → idC, idB.
+    PageResponse<MessageResponse> page1 = messageService.getMessages(USER_ID, CONV_ID, null, 2);
+    assertThat(page1.content()).extracting(MessageResponse::id).containsExactly(idC, idB);
+    assertThat(page1.hasNext()).isTrue();
+
+    // Page 2 using idB (same createdAt) as cursor must return the remaining idA — not skip it.
+    PageResponse<MessageResponse> page2 = messageService.getMessages(USER_ID, CONV_ID, idB, 2);
+    assertThat(page2.content()).extracting(MessageResponse::id).containsExactly(idA);
+    assertThat(page2.hasNext()).isFalse();
   }
 }

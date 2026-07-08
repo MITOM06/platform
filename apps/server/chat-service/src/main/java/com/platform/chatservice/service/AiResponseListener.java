@@ -6,11 +6,13 @@ import com.platform.chatservice.model.AiTraceData;
 import io.micrometer.tracing.Span;
 import io.micrometer.tracing.Tracer;
 import io.micrometer.tracing.propagation.Propagator;
+import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.connection.MessageListener;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Component;
 
@@ -28,11 +30,15 @@ import org.springframework.stereotype.Component;
 @Slf4j
 public class AiResponseListener implements MessageListener {
 
+  /** Dedupe window for the "who persists this AI_STREAM_DONE" claim across instances. */
+  private static final Duration DONE_CLAIM_TTL = Duration.ofMinutes(5);
+
   private final SimpMessagingTemplate messagingTemplate;
   private final MessageService messageService;
   private final ObjectMapper objectMapper;
   private final Tracer tracer;
   private final Propagator propagator;
+  private final StringRedisTemplate redisTemplate;
 
   @Override
   @SuppressWarnings("null")
@@ -128,9 +134,16 @@ public class AiResponseListener implements MessageListener {
           }
         }
         if (fullContent != null && !fullContent.isBlank()) {
-          // saveAiMessage already broadcasts the saved message to the topic,
-          // so we must NOT broadcast it again here (would duplicate on clients).
-          messageService.saveAiMessage(convId, fullContent, trace);
+          // Every instance subscribed to the Redis ai:response:* pattern receives this DONE event,
+          // so guard the Mongo write with an atomic SET NX claim: only the instance that wins the
+          // claim persists the message, preventing N duplicate inserts under multi-instance
+          // (Cloud Run max-instances > 1). saveAiMessage already broadcasts the saved message to
+          // the topic, so we must NOT broadcast it again here (would duplicate on clients).
+          String claimKey = "ai:done:" + convId + ":" + Integer.toHexString(fullContent.hashCode());
+          Boolean claimed = redisTemplate.opsForValue().setIfAbsent(claimKey, "1", DONE_CLAIM_TTL);
+          if (Boolean.TRUE.equals(claimed)) {
+            messageService.saveAiMessage(convId, fullContent, trace);
+          }
         }
         Map<String, Object> doneEvent = new HashMap<>();
         doneEvent.put("type", "AI_STREAM_DONE");

@@ -9,6 +9,7 @@ import io.micrometer.tracing.Span;
 import io.micrometer.tracing.TraceContext;
 import io.micrometer.tracing.Tracer;
 import io.micrometer.tracing.propagation.Propagator;
+import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
@@ -20,6 +21,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
 import org.springframework.data.redis.connection.Message;
+import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 
 /**
@@ -40,6 +43,8 @@ class AiResponseListenerTest {
   @Mock private Span.Builder spanBuilder;
   @Mock private Tracer.SpanInScope spanInScope;
   @Mock private TraceContext traceContext;
+  @Mock private StringRedisTemplate redisTemplate;
+  @Mock private ValueOperations<String, String> valueOperations;
 
   private AiResponseListener listener;
 
@@ -62,8 +67,14 @@ class AiResponseListenerTest {
     when(spanBuilder.tag(anyString(), anyString())).thenReturn(spanBuilder);
     when(spanBuilder.start()).thenReturn(span);
 
+    // AI_STREAM_DONE dedup claim: default to winning the SET NX so the persist path runs.
+    when(redisTemplate.opsForValue()).thenReturn(valueOperations);
+    when(valueOperations.setIfAbsent(anyString(), anyString(), any(Duration.class)))
+        .thenReturn(true);
+
     listener =
-        new AiResponseListener(messagingTemplate, messageService, objectMapper, tracer, propagator);
+        new AiResponseListener(
+            messagingTemplate, messageService, objectMapper, tracer, propagator, redisTemplate);
   }
 
   @Test
@@ -116,6 +127,33 @@ class AiResponseListenerTest {
     // so the listener must NOT broadcast `saved` again — it only emits the AI_STREAM_DONE event.
     verify(messageService).saveAiMessage(eq("conv-1"), eq("Full AI reply"), isNull());
     verify(messagingTemplate, never()).convertAndSend(anyString(), (Object) eq(saved));
+    verify(messagingTemplate)
+        .convertAndSend(
+            eq("/topic/conversation/conv-1"),
+            (Object)
+                argThat(
+                    arg ->
+                        arg instanceof Map
+                            && "AI_STREAM_DONE".equals(((Map<?, ?>) arg).get("type"))));
+  }
+
+  @Test
+  void onMessage_AI_STREAM_DONE_whenClaimLost_doesNotPersist_butStillBroadcastsDone()
+      throws Exception {
+    // Another instance already claimed this DONE (SET NX returned false) → this instance must NOT
+    // persist the AI message (prevents duplicate Mongo inserts) but still emits the DONE event.
+    when(valueOperations.setIfAbsent(anyString(), anyString(), any(Duration.class)))
+        .thenReturn(false);
+    Map<String, Object> payload =
+        Map.of(
+            "type", "AI_STREAM_DONE",
+            "fullContent", "Full AI reply",
+            "conversationId", "conv-1");
+    when(redisMessage.getBody()).thenReturn(objectMapper.writeValueAsBytes(payload));
+
+    listener.onMessage(redisMessage, null);
+
+    verify(messageService, never()).saveAiMessage(any(), any(), any());
     verify(messagingTemplate)
         .convertAndSend(
             eq("/topic/conversation/conv-1"),

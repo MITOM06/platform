@@ -4,6 +4,7 @@ import com.platform.chatservice.model.Conversation;
 import com.platform.chatservice.repository.ConversationRepository;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
@@ -34,5 +35,15 @@ public class ConversationCacheService {
   @CachePut(value = "conversation", key = "#result.id")
   public Conversation save(Conversation conversation) {
     return repository.save(conversation);
+  }
+
+  /**
+   * Evict a conversation from the cache so the next read reloads it fresh. Called after a targeted
+   * atomic {@code $set} update (e.g. lastMessage/lastMessageAt bumps performed via MongoTemplate)
+   * that does not go through {@link #save}, so cached reads do not serve stale data.
+   */
+  @CacheEvict(value = "conversation", key = "#id")
+  public void evict(String id) {
+    // Body intentionally empty — the @CacheEvict annotation performs the eviction.
   }
 }

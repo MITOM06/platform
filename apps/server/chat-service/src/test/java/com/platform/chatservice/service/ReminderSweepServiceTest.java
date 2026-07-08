@@ -9,6 +9,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.mongodb.client.result.UpdateResult;
 import com.platform.chatservice.model.Reminder;
 import com.platform.chatservice.repository.ReminderRepository;
 import java.time.Instant;
@@ -20,11 +21,16 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.mongodb.core.query.Update;
 
 /**
- * TASK-11: verifies the sweep persists a fired reminder as an in-chat type:"ai" message (the
- * load-bearing delivery), still attempts the FCM push, and only flags {@code notified=true} after
- * the in-chat persist succeeds (idempotency / at-least-once on failure).
+ * TASK-11 + concurrency hardening: the sweep atomically CLAIMS each due reminder (flip
+ * notified=false→true in one conditional update) before acting, so only the instance that wins the
+ * race delivers it — preventing duplicate delivery across instances. After a claim, a delivery
+ * failure is NOT retried (notified stays true) so a poison reminder can't be re-attempted forever;
+ * behavior is single-delivery, at-least-effort.
  */
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
@@ -33,6 +39,7 @@ class ReminderSweepServiceTest {
   @Mock private ReminderRepository reminderRepository;
   @Mock private FcmService fcmService;
   @Mock private AiMessageService aiMessageService;
+  @Mock private MongoTemplate mongoTemplate;
 
   @InjectMocks private ReminderSweepService service;
 
@@ -48,6 +55,11 @@ class ReminderSweepServiceTest {
         .build();
   }
 
+  /** A claim result with the given modifiedCount (1 = won the claim, 0 = another instance won). */
+  private UpdateResult claimResult(long modifiedCount) {
+    return UpdateResult.acknowledged(modifiedCount, modifiedCount, null);
+  }
+
   @Test
   void formatsReminderTextWithBellPrefix() {
     assertThat(ReminderSweepService.formatReminderText("Standup")).isEqualTo("🔔 Standup");
@@ -55,50 +67,74 @@ class ReminderSweepServiceTest {
   }
 
   @Test
-  void persistsInChatMessageAndPushesAndMarksNotified() {
+  void claimsThenPersistsInChatMessageAndPushes() {
     Reminder r = due("r1");
     when(reminderRepository.findByDoneFalseAndNotifiedFalseAndRemindAtLessThanEqual(any()))
         .thenReturn(List.of(r));
+    when(mongoTemplate.updateFirst(any(Query.class), any(Update.class), eq(Reminder.class)))
+        .thenReturn(claimResult(1));
 
     service.sweepDueReminders();
 
+    // Claim happened via an atomic conditional update (not reminderRepository.save).
+    verify(mongoTemplate).updateFirst(any(Query.class), any(Update.class), eq(Reminder.class));
+    verify(reminderRepository, never()).save(any());
     // In-chat type:"ai" persist with the bell-prefixed text, null trace.
     verify(aiMessageService).saveAiMessage(eq("conv-1"), eq("🔔 Standup"), isNull());
     // FCM push kept (best-effort) with the RAW text.
     verify(fcmService).sendReminderPush("user-1", "Standup", "conv-1");
-    // notified flag set + persisted exactly once.
-    assertThat(r.isNotified()).isTrue();
-    verify(reminderRepository).save(r);
   }
 
   @Test
-  void doesNotMarkNotifiedWhenInChatPersistFails() {
+  void skipsReminderWhenClaimLostToAnotherInstance() {
     Reminder r = due("r2");
     when(reminderRepository.findByDoneFalseAndNotifiedFalseAndRemindAtLessThanEqual(any()))
         .thenReturn(List.of(r));
+    // modifiedCount == 0 → another instance already claimed it this tick.
+    when(mongoTemplate.updateFirst(any(Query.class), any(Update.class), eq(Reminder.class)))
+        .thenReturn(claimResult(0));
+
+    service.sweepDueReminders();
+
+    verify(aiMessageService, never()).saveAiMessage(any(), any(), any());
+    verify(fcmService, never()).sendReminderPush(any(), any(), any());
+  }
+
+  @Test
+  void doesNotRetryAfterClaimWhenInChatPersistFails() {
+    Reminder r = due("r3");
+    when(reminderRepository.findByDoneFalseAndNotifiedFalseAndRemindAtLessThanEqual(any()))
+        .thenReturn(List.of(r));
+    when(mongoTemplate.updateFirst(any(Query.class), any(Update.class), eq(Reminder.class)))
+        .thenReturn(claimResult(1));
     doThrow(new RuntimeException("mongo down"))
         .when(aiMessageService)
         .saveAiMessage(any(), any(), any());
 
     service.sweepDueReminders();
 
-    // Persist failed → leave notified=false so it retries next tick (at-least-once).
-    assertThat(r.isNotified()).isFalse();
+    // Claim already flipped notified=true; on failure we must NOT reset it (no re-delivery). The
+    // reminder is never handed back to reminderRepository.save.
     verify(reminderRepository, never()).save(any());
+    // attempts is incremented for observability (a second updateFirst on the same collection).
+    verify(mongoTemplate, org.mockito.Mockito.times(2))
+        .updateFirst(any(Query.class), any(Update.class), eq(Reminder.class));
   }
 
   @Test
-  void stillMarksNotifiedWhenOnlyFcmPushFails() {
-    Reminder r = due("r3");
+  void stillDeliversWhenOnlyFcmPushFails() {
+    Reminder r = due("r4");
     when(reminderRepository.findByDoneFalseAndNotifiedFalseAndRemindAtLessThanEqual(any()))
         .thenReturn(List.of(r));
+    when(mongoTemplate.updateFirst(any(Query.class), any(Update.class), eq(Reminder.class)))
+        .thenReturn(claimResult(1));
     doThrow(new RuntimeException("fcm 500")).when(fcmService).sendReminderPush(any(), any(), any());
 
     service.sweepDueReminders();
 
-    // In-chat delivery is the source of truth; a failed best-effort push must not block it.
+    // In-chat delivery is the source of truth; a failed best-effort push must not undo the claim
+    // or trigger the attempts-increment failure path.
     verify(aiMessageService).saveAiMessage(eq("conv-1"), eq("🔔 Standup"), isNull());
-    assertThat(r.isNotified()).isTrue();
-    verify(reminderRepository).save(r);
+    verify(mongoTemplate).updateFirst(any(Query.class), any(Update.class), eq(Reminder.class));
   }
 }

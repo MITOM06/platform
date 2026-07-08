@@ -38,5 +38,12 @@ public class Reminder {
   /** True once a push notification has been delivered, so the sweep never re-sends. */
   @Builder.Default private boolean notified = false;
 
+  /**
+   * Number of delivery attempts that failed AFTER the reminder was claimed. Incremented for
+   * observability only — the sweep does not retry claimed-then-failed reminders (single-delivery,
+   * at-least-effort), so this never resets {@code notified}.
+   */
+  @Builder.Default private int attempts = 0;
+
   @Builder.Default private Instant createdAt = Instant.now();
 }

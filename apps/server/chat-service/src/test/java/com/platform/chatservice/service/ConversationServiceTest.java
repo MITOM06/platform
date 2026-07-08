@@ -322,7 +322,7 @@ class ConversationServiceTest {
   }
 
   @Test
-  void markConversationUnread_WhenMessageExists_ShouldRemoveUserFromReadBy() {
+  void markConversationUnread_WhenMessageExists_ShouldAtomicallyPullUserFromReadBy() {
     when(conversationCacheService.findByIdOptional(CONV_ID)).thenReturn(Optional.of(conversation));
     com.platform.chatservice.model.Message lastMsg =
         com.platform.chatservice.model.Message.builder()
@@ -334,15 +334,25 @@ class ConversationServiceTest {
             .build();
     when(messageRepository.findByConversationIdOrderByCreatedAtDesc(eq(CONV_ID), any()))
         .thenReturn(new org.springframework.data.domain.PageImpl<>(List.of(lastMsg)));
-    when(messageRepository.save(any(com.platform.chatservice.model.Message.class)))
-        .thenReturn(lastMsg);
     when(messageRepository.countUnread(CONV_ID, USER_ID)).thenReturn(1L);
 
     ConversationResponse response = conversationService.markConversationUnread(USER_ID, CONV_ID);
 
     assertThat(response.unreadCount()).isEqualTo(1L);
-    assertThat(lastMsg.getReadBy()).containsExactly(OTHER_ID);
-    verify(messageRepository).save(lastMsg);
+    // New implementation performs an atomic $pull on the last message (mirrors
+    // markConversationRead)
+    // instead of a read-modify-write + save.
+    var updateCaptor =
+        org.mockito.ArgumentCaptor.forClass(
+            org.springframework.data.mongodb.core.query.Update.class);
+    verify(mongoTemplate)
+        .updateFirst(
+            any(org.springframework.data.mongodb.core.query.Query.class),
+            updateCaptor.capture(),
+            eq(com.platform.chatservice.model.Message.class));
+    String updateDoc = updateCaptor.getValue().getUpdateObject().toString();
+    assertThat(updateDoc).contains("$pull").contains(USER_ID);
+    verify(messageRepository, never()).save(any());
   }
 
   @Test
