@@ -64,6 +64,7 @@ export function ResponsiveModal({
               {description && <SheetDescription>{description}</SheetDescription>}
             </SheetHeader>
           )}
+          {!title && <SheetTitle className="sr-only">{t('dialogTitle')}</SheetTitle>}
           {!description && <SheetDescription className="sr-only">{t('dialogDescription')}</SheetDescription>}
           {children}
           {footer && <SheetFooter>{footer}</SheetFooter>}
@@ -81,6 +82,7 @@ export function ResponsiveModal({
             {description && <DialogDescription>{description}</DialogDescription>}
           </DialogHeader>
         )}
+        {!title && <DialogTitle className="sr-only">{t('dialogTitle')}</DialogTitle>}
         {!description && <DialogDescription className="sr-only">{t('dialogDescription')}</DialogDescription>}
         {children}
         {footer && <DialogFooter>{footer}</DialogFooter>}

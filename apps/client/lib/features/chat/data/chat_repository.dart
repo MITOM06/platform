@@ -10,10 +10,15 @@ part 'chat_repository_conversation_ops.dart';
 part 'chat_repository_message_ops.dart';
 part 'chat_repository_upload_ops.dart';
 
-class ChatRepository {
+class ChatRepository
+    with
+        ChatRepositoryConversationOps,
+        ChatRepositoryMessageOps,
+        ChatRepositoryUploadOps {
+  @override
   final Dio _dio;
 
-  const ChatRepository(this._dio);
+  ChatRepository(this._dio);
 }
 
 final chatRepositoryProvider = Provider<ChatRepository>((ref) {

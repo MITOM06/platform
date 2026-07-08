@@ -2,7 +2,9 @@ part of 'chat_repository.dart';
 
 /// Message-level operations: history, search, link preview, sending,
 /// read receipts, pin/forward, reactions, feedback, edit/recall/delete.
-extension ChatRepositoryMessageOps on ChatRepository {
+mixin ChatRepositoryMessageOps {
+  Dio get _dio;
+
   /// Cursor-based message history. Pass [before] = the oldest message id the
   /// caller already has to fetch the next older page; omit it for the newest
   /// page. Avoids the duplication/jumping of offset paging.

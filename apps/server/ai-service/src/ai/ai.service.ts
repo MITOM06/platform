@@ -44,6 +44,8 @@ const NEW_SESSION_NOTICE =
   '✅ Đã bắt đầu cuộc trò chuyện mới. Cuộc trò chuyện trước đó đã được lưu lại và có thể tiếp tục sau.';
 const CONTEXT_COMPACTED_NOTICE =
   '🗜️ Ngữ cảnh đã được tóm tắt để tối ưu bộ nhớ. Lịch sử đầy đủ vẫn được lưu trong phiên trò chuyện.';
+const MEMORY_EMPTY_NOTICE =
+  '🧠 Chưa có ký ức nào được lưu trong cuộc trò chuyện này. Hãy chat thêm một chút để tôi học được về bạn.';
 
 /** A zeroed trace for system-authored (non-model) stream responses. */
 const SYSTEM_TRACE: AiTrace = {
@@ -148,6 +150,29 @@ export class AiService {
     if (payload.content.trim() === '/new') {
       await this.aiSessionService.createNewSession(userId, conversationId);
       await this.publishSystemResponse(conversationId, NEW_SESSION_NOTICE);
+      return;
+    }
+
+    // Memory inspection (`/memory`, `/ai-memory`): return the REAL stored memory
+    // from the DB rather than letting Claude hallucinate it from history. System
+    // response — not gated by quota/rate limits, costs no tokens.
+    const trimmedContent = payload.content.trim();
+    if (trimmedContent === '/memory' || trimmedContent === '/ai-memory') {
+      const memory = await this.memoryService.getMemory(conversationId);
+      if (!memory || (!memory.summary && memory.keyFacts.length === 0)) {
+        await this.publishSystemResponse(conversationId, MEMORY_EMPTY_NOTICE);
+      } else {
+        const factsText =
+          memory.keyFacts.length > 0
+            ? '\n\n**Thông tin đã ghi nhớ:**\n' +
+              memory.keyFacts.map((f) => `• ${f}`).join('\n')
+            : '';
+        const notice =
+          `🧠 **Ký ức của cuộc trò chuyện này (${memory.messageCount} tin nhắn):**\n\n` +
+          `${memory.summary}` +
+          factsText;
+        await this.publishSystemResponse(conversationId, notice);
+      }
       return;
     }
 
@@ -398,7 +423,13 @@ export class AiService {
 
     try {
       const count = await this.memoryService.incrementMessageCount(conversationId);
-      if (this.extractEveryTurns > 0 && count % this.extractEveryTurns === 0) {
+      // Extract facts:
+      //   - First time: after turn 3 (enough context, but don't wait too long)
+      //   - Periodically: every extractEveryTurns thereafter (default 10, not 20)
+      const isFirstExtraction = count === 3;
+      const isPeriodicExtraction =
+        this.extractEveryTurns > 0 && count > 3 && count % this.extractEveryTurns === 0;
+      if (isFirstExtraction || isPeriodicExtraction) {
         this.factExtractor.extractFacts(conversationId, userId, loopHistory, count).catch((err) => {
           this.logger.error(`Fact extraction failed for ${conversationId}`, err);
         });

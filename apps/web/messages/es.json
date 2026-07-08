@@ -15,6 +15,7 @@
     "unknownError": "Error desconocido",
     "retry": "Reintentar",
     "ok": "Aceptar",
+    "dialogTitle": "Diálogo",
     "dialogDescription": "Contenido del diálogo"
   },
   "meta": {

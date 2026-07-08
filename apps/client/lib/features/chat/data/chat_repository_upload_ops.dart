@@ -1,7 +1,9 @@
 part of 'chat_repository.dart';
 
 /// File/media upload operations and MIME-type resolution.
-extension ChatRepositoryUploadOps on ChatRepository {
+mixin ChatRepositoryUploadOps {
+  Dio get _dio;
+
   Future<String> uploadFile(XFile file) async {
     // Đọc bytes thay vì fromFile(path) để hoạt động trên cả web (blob URL,
     // không có filesystem) lẫn mobile, hỗ trợ ảnh lẫn video.

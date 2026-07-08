@@ -15,6 +15,7 @@
     "unknownError": "Unknown error",
     "retry": "Try again",
     "ok": "OK",
+    "dialogTitle": "Dialog",
     "dialogDescription": "Dialog content"
   },
   "meta": {

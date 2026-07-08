@@ -15,6 +15,7 @@
     "unknownError": "알 수 없는 오류",
     "retry": "다시 시도",
     "ok": "확인",
+    "dialogTitle": "대화 상자",
     "dialogDescription": "대화 상자 내용"
   },
   "meta": {

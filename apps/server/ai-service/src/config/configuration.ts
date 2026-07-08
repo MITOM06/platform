@@ -127,7 +127,7 @@ export default registerAs('config', () => ({
     // Cosine similarity above which two facts are treated as duplicates.
     dedupThreshold: parseFloat(process.env.MEMORY_DEDUP_THRESHOLD ?? '0.92'),
     // Extract/refresh facts every N turns.
-    extractEveryTurns: parseInt(process.env.MEMORY_EXTRACT_EVERY ?? '20', 10),
+    extractEveryTurns: parseInt(process.env.MEMORY_EXTRACT_EVERY ?? '10', 10),
     // Recency half-life in days for fact decay scoring.
     halfLifeDays: parseFloat(process.env.MEMORY_HALFLIFE_DAYS ?? '30'),
   },

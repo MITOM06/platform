@@ -2,7 +2,9 @@ part of 'chat_repository.dart';
 
 /// Conversation-level operations: listing, group management, lifecycle,
 /// mute/archive/block, public channels and user status.
-extension ChatRepositoryConversationOps on ChatRepository {
+mixin ChatRepositoryConversationOps {
+  Dio get _dio;
+
   Future<List<ConversationModel>> listConversations() async {
     final response = await _dio.get('/api/conversations');
     final data = response.data as Map<String, dynamic>;

@@ -119,6 +119,7 @@ describe('AiService', () => {
   let mockStream: jest.Mock;
   let mockCreate: jest.Mock;
   let incrementMessageCount: jest.Mock;
+  let getMemory: jest.Mock;
   let embedOne: jest.Mock;
   let toolRegistryExecute: jest.Mock;
   let toolRegistryGetDefinitions: jest.Mock;
@@ -160,6 +161,7 @@ describe('AiService', () => {
     mockStream = jest.fn().mockReturnValue(makeStream(['OK']));
     mockCreate = jest.fn().mockResolvedValue({ content: [] });
     incrementMessageCount = jest.fn().mockResolvedValue(1);
+    getMemory = jest.fn().mockResolvedValue(null);
     embedOne = jest.fn().mockResolvedValue([0.1, 0.2]);
     toolRegistryExecute = jest.fn().mockResolvedValue('tool result');
     toolRegistryGetDefinitions = jest.fn().mockReturnValue([]);
@@ -197,7 +199,7 @@ describe('AiService', () => {
     } as unknown as ConfigService;
 
     const fakePublisher = { publish } as unknown as RedisPublisherService;
-    const fakeMemory = { incrementMessageCount } as unknown as MemoryService;
+    const fakeMemory = { incrementMessageCount, getMemory } as unknown as MemoryService;
     const fakeEmbedding = { embedOne } as unknown as EmbeddingService;
     const fakeToolRegistry = {
       getDefinitions: toolRegistryGetDefinitions,
@@ -825,6 +827,62 @@ describe('AiService', () => {
     expect(publish).toHaveBeenCalledWith(
       'conv-test',
       expect.objectContaining({ type: 'AI_STREAM_DONE' }),
+    );
+  });
+
+  // ─── Memory inspection: /memory command ───────────────────────────────────
+
+  it('handles /memory with no stored memory by returning the empty notice', async () => {
+    getMemory.mockResolvedValue(null);
+    const payload: AiRequestPayload = { ...basePayload, content: '/memory' };
+
+    await service.handleRequest(payload);
+
+    // No model call — served straight from the DB lookup.
+    expect(mockStream).not.toHaveBeenCalled();
+    expect(getMemory).toHaveBeenCalledWith('conv-test');
+    expect(publish).toHaveBeenCalledWith(
+      'conv-test',
+      expect.objectContaining({
+        type: 'AI_STREAM_DONE',
+        fullContent: expect.stringContaining('Chưa có ký ức'),
+      }),
+    );
+  });
+
+  it('handles /ai-memory by returning the real stored summary + facts (no hallucination)', async () => {
+    getMemory.mockResolvedValue({
+      summary: 'User is a developer named Khang.',
+      keyFacts: ['Uses NestJS', 'Uses Flutter'],
+      messageCount: 7,
+    });
+    const payload: AiRequestPayload = { ...basePayload, content: '/ai-memory' };
+
+    await service.handleRequest(payload);
+
+    expect(mockStream).not.toHaveBeenCalled();
+    const doneCall = publish.mock.calls.find((c) => c[1]?.type === 'AI_STREAM_DONE');
+    expect(doneCall).toBeDefined();
+    const body: string = doneCall![1].fullContent;
+    expect(body).toContain('User is a developer named Khang.');
+    expect(body).toContain('• Uses NestJS');
+    expect(body).toContain('• Uses Flutter');
+    expect(body).toContain('7 tin nhắn');
+  });
+
+  it('extracts facts on the FIRST turn at messageCount === 3', async () => {
+    sessionMessages.push({ role: 'user', content: 'Tao tên là Khang' });
+    incrementMessageCount.mockResolvedValue(3);
+    mockStream.mockReturnValue(makeStream(['OK']));
+
+    await service.handleRequest(basePayload);
+    await new Promise((r) => setTimeout(r, 50));
+
+    expect(extractFacts).toHaveBeenCalledWith(
+      'conv-test',
+      'user-1',
+      [{ role: 'user', content: 'Tao tên là Khang' }],
+      3,
     );
   });
 
