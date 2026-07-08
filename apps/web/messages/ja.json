@@ -15,6 +15,7 @@
     "unknownError": "不明なエラー",
     "retry": "再試行",
     "ok": "OK",
+    "dialogTitle": "ダイアログ",
     "dialogDescription": "ダイアログの内容"
   },
   "meta": {

@@ -16,6 +16,7 @@ import com.platform.chatservice.service.AiFeedbackService;
 import com.platform.chatservice.service.AiRedisPublisher;
 import com.platform.chatservice.service.ClusterMessageBroker;
 import com.platform.chatservice.service.ExternalBotService;
+import com.platform.chatservice.service.MessageNotificationService;
 import com.platform.chatservice.service.MessageQueryService;
 import com.platform.chatservice.service.MessageService;
 import com.platform.chatservice.service.RateLimiterService;
@@ -37,6 +38,7 @@ public class MessageController {
 
   private final MessageService messageService;
   private final MessageQueryService messageQueryService;
+  private final MessageNotificationService messageNotificationService;
   private final ClusterMessageBroker clusterBroker;
   private final RateLimiterService rateLimiterService;
   private final AiRedisPublisher aiRedisPublisher;
@@ -51,6 +53,10 @@ public class MessageController {
     rateLimiterService.checkMessageRate(uid);
     MessageResponse response = messageService.sendMessage(uid, request);
     clusterBroker.convertAndSend("/topic/conversation/" + request.conversationId(), response);
+    // Same fan-out as the STOMP path: banner/unread events + FCM push for every
+    // other participant. REST sends (web, attachments, mobile fallback) were
+    // historically silent — recipients saw nothing until reload.
+    messageNotificationService.notifyNewMessage(uid, response);
 
     if (request.content() != null && AI_MENTION_PATTERN.matcher(request.content()).find()) {
       final String convId = request.conversationId();
@@ -206,6 +212,7 @@ public class MessageController {
     MessageResponse forwarded =
         messageService.forwardMessage(currentUserId(), id, request.targetConversationId());
     clusterBroker.convertAndSend("/topic/conversation/" + forwarded.conversationId(), forwarded);
+    messageNotificationService.notifyNewMessage(currentUserId(), forwarded);
     return forwarded;
   }
 

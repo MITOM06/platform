@@ -8,8 +8,8 @@ import com.platform.chatservice.dto.MessageResponse;
 import com.platform.chatservice.dto.SendMessageRequest;
 import com.platform.chatservice.service.AiRedisPublisher;
 import com.platform.chatservice.service.ClusterMessageBroker;
-import com.platform.chatservice.service.ConversationQueryService;
 import com.platform.chatservice.service.ExternalBotService;
+import com.platform.chatservice.service.MessageNotificationService;
 import com.platform.chatservice.service.MessageQueryService;
 import com.platform.chatservice.service.MessageService;
 import com.platform.chatservice.service.RateLimiterService;
@@ -32,13 +32,11 @@ class ChatControllerTest {
 
   @Mock private MessageQueryService messageQueryService;
 
-  @Mock private ConversationQueryService conversationQueryService;
-
   @Mock private ClusterMessageBroker clusterBroker;
 
   @Mock private Principal principal;
 
-  @Mock private com.platform.chatservice.service.FcmService fcmService;
+  @Mock private MessageNotificationService messageNotificationService;
 
   @Mock private RateLimiterService rateLimiterService;
 
@@ -63,21 +61,15 @@ class ChatControllerTest {
         new MessageResponse(
             "msg-999", "conv-456", SENDER_ID, "Hello", "text", List.of(SENDER_ID), Instant.now());
 
-    when(conversationQueryService.getParticipants("conv-456"))
-        .thenReturn(List.of(SENDER_ID, "user-456"));
     when(messageService.sendMessage(eq(SENDER_ID), any(SendMessageRequest.class)))
         .thenReturn(response);
-    when(messageQueryService.resolveDisplayName(SENDER_ID)).thenReturn("Alice");
 
     chatController.send(chatDto, principal);
 
     verify(messageService, times(1)).sendMessage(eq(SENDER_ID), any(SendMessageRequest.class));
     verify(clusterBroker, times(1))
         .convertAndSend(eq("/topic/conversation/conv-456"), eq(response));
-    verify(clusterBroker, times(1))
-        .convertAndSendToUser(eq("user-456"), eq("/queue/notifications"), any(Map.class));
-    verify(fcmService, times(1))
-        .sendPushNotification(eq("user-456"), eq(SENDER_ID), eq("Hello"), eq("conv-456"));
+    verify(messageNotificationService, times(1)).notifyNewMessage(eq(SENDER_ID), eq(response));
   }
 
   @Test
@@ -121,8 +113,6 @@ class ChatControllerTest {
             List.of(SENDER_ID),
             Instant.now());
 
-    when(conversationQueryService.getParticipants("conv-456"))
-        .thenReturn(List.of(SENDER_ID, "user-456"));
     when(messageService.sendMessage(eq(SENDER_ID), any(SendMessageRequest.class)))
         .thenReturn(response);
     when(messageQueryService.getAiHistory(eq(SENDER_ID), eq("conv-456"))).thenReturn(List.of());
@@ -156,11 +146,8 @@ class ChatControllerTest {
             List.of(SENDER_ID),
             Instant.now());
 
-    when(conversationQueryService.getParticipants("conv-456"))
-        .thenReturn(List.of(SENDER_ID, "user-456"));
     when(messageService.sendMessage(eq(SENDER_ID), any(SendMessageRequest.class)))
         .thenReturn(response);
-    when(messageQueryService.resolveDisplayName(SENDER_ID)).thenReturn("Alice");
 
     chatController.send(dto, principal);
 

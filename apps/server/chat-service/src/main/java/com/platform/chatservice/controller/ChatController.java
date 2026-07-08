@@ -8,8 +8,8 @@ import com.platform.chatservice.exception.RateLimitExceededException;
 import com.platform.chatservice.service.AiRedisPublisher;
 import com.platform.chatservice.service.CallService;
 import com.platform.chatservice.service.ClusterMessageBroker;
-import com.platform.chatservice.service.ConversationQueryService;
 import com.platform.chatservice.service.ExternalBotService;
+import com.platform.chatservice.service.MessageNotificationService;
 import com.platform.chatservice.service.MessageQueryService;
 import com.platform.chatservice.service.MessageService;
 import com.platform.chatservice.service.RateLimiterService;
@@ -32,9 +32,8 @@ public class ChatController {
 
   private final MessageService messageService;
   private final MessageQueryService messageQueryService;
-  private final ConversationQueryService conversationQueryService;
   private final ClusterMessageBroker clusterBroker;
-  private final com.platform.chatservice.service.FcmService fcmService;
+  private final MessageNotificationService messageNotificationService;
   private final RateLimiterService rateLimiterService;
   private final AiRedisPublisher aiRedisPublisher;
   private final CallService callService;
@@ -94,42 +93,7 @@ public class ChatController {
                       }));
     }
 
-    List<String> mentions = response.mentions() == null ? List.of() : response.mentions();
-    List<String> participants = conversationQueryService.getParticipants(dto.getConversationId());
-    // Resolve the sender's human-readable name once (same for every recipient).
-    // Clients display senderName directly, so it must never be a bare userId.
-    String senderDisplayName = messageQueryService.resolveDisplayName(principal.getName());
-    for (String participantId : participants) {
-      if (!participantId.equals(principal.getName())) {
-        boolean muted = conversationQueryService.isMuted(dto.getConversationId(), participantId);
-        // Mentioned participants get a priority MENTIONED_YOU event instead
-        // of the generic NEW_MESSAGE so the client can surface it specially.
-        boolean mentioned = mentions.contains(participantId);
-        // senderName is the resolved display name; senderId carries the raw
-        // userId for any client-side logic that needs the identity.
-        Map<String, String> notification =
-            Map.of(
-                "type",
-                mentioned ? "MENTIONED_YOU" : "NEW_MESSAGE",
-                "conversationId",
-                dto.getConversationId(),
-                "senderId",
-                principal.getName(),
-                "senderName",
-                senderDisplayName,
-                "content",
-                dto.getContent() != null ? dto.getContent() : "",
-                "messageType",
-                dto.getType() != null ? dto.getType() : "text");
-        clusterBroker.convertAndSendToUser(participantId, "/queue/notifications", notification);
-
-        // Trigger Push Notification only if the conversation is not muted for this user
-        if (!muted) {
-          fcmService.sendPushNotification(
-              participantId, principal.getName(), dto.getContent(), dto.getConversationId());
-        }
-      }
-    }
+    messageNotificationService.notifyNewMessage(principal.getName(), response);
   }
 
   @MessageMapping("/chat.typing")
