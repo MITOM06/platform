@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:stomp_dart_client/stomp_dart_client.dart';
 import '../../../core/api/token_manager.dart';
@@ -13,7 +12,10 @@ part 'stomp_service.g.dart';
 @Riverpod(keepAlive: true)
 class StompService extends _$StompService {
   StompClient? _client;
-  final _tokenManager = TokenManager(const FlutterSecureStorage());
+  // Shared, process-wide instance so STOMP refreshes coalesce with the Dio 401
+  // interceptors onto ONE in-flight request (rotating refresh tokens must be
+  // spent once, else the token family is revoked → forced logout).
+  final _tokenManager = TokenManager.shared;
   // Mutable header maps shared by reference with StompConfig. `beforeConnect`
   // rewrites the Authorization value IN PLACE before every (re)connect, so the
   // STOMP handler (which reads these maps at connect time, after beforeConnect

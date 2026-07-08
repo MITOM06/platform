@@ -242,6 +242,7 @@
   "actionCopy": "コピー",
   "actionReact": "リアクション",
   "messageRecalled": "メッセージは取り消されました",
+  "messageSendFailedRetry": "送信に失敗しました。タップして再試行。",
   "replyingTo": "{name} に返信中",
   "copiedToClipboard": "クリップボードにコピーしました",
   "recallConfirm": "全員に対してこのメッセージを取り消しますか？",

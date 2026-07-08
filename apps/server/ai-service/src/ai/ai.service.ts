@@ -11,7 +11,7 @@ import { ToolContext } from '../tools/tool.interface';
 import { selectModel, RouteSignals, RouterConfig } from './model-router';
 import { AiStreamErrorCode } from './ai-stream-error';
 import { withAgenticLoopSpan } from './tracing-helpers';
-import { isSensitiveTool } from './injection-guard';
+import { isSensitiveTool, wrapUntrusted } from './injection-guard';
 import { FactExtractorService } from './fact-extractor.service';
 import { ContextBuilderService, RagSource } from './context-builder.service';
 import { ResponseCacheService } from './response-cache.service';
@@ -171,6 +171,29 @@ export class AiService {
       midMaxHistory:
         this.configService.get<number>('config.anthropic.router.midMaxHistory') ?? 20,
     };
+  }
+
+  /**
+   * Whether a model accepts the `output_config.effort` parameter. Sending it to
+   * a model that doesn't support it returns a hard 400
+   * ("This model does not support the effort parameter") — which, because it
+   * hits both the primary and fallback model, surfaces to the user as the
+   * `AI_UNAVAILABLE` error. Effort is supported on Opus 4.5+, Sonnet 4.6+,
+   * Sonnet 5, and Fable/Mythos 5 — but NOT on Sonnet 4.5 or Haiku 4.5 (the
+   * models this deployment routes to), so the parameter must be gated per-model.
+   */
+  private modelSupportsEffort(model: string): boolean {
+    const EFFORT_MODEL_PREFIXES = [
+      'claude-opus-4-5',
+      'claude-opus-4-6',
+      'claude-opus-4-7',
+      'claude-opus-4-8',
+      'claude-sonnet-4-6',
+      'claude-sonnet-5',
+      'claude-fable-5',
+      'claude-mythos-5',
+    ];
+    return EFFORT_MODEL_PREFIXES.some((prefix) => model.startsWith(prefix));
   }
 
   async handleRequest(payload: AiRequestPayload): Promise<void> {
@@ -604,6 +627,12 @@ export class AiService {
 
     let iteration = 0;
     let fullText = '';
+    // Text the model streamed BEFORE issuing a tool_use turn. It was already
+    // sent to the client as AI_STREAM_CHUNK, so it must survive into the final
+    // persisted message — otherwise the live view and the stored message
+    // diverge. Accumulated across tool iterations and prepended to the final
+    // answer below.
+    let carriedText = '';
     let streamStarted = false;
     // Whether the prompt context carries image content blocks (gates the
     // deterministic response cache — image-grounded answers are not reusable).
@@ -619,7 +648,10 @@ export class AiService {
         messages,
         tools,
         tool_choice: { type: 'auto' },
-        output_config: { effort: this.effort },
+        // `output_config.effort` is only accepted by effort-capable models
+        // (Opus 4.5+, Sonnet 4.6+, Sonnet 5, Fable/Mythos 5). Sending it to
+        // Sonnet 4.5 / Haiku 4.5 returns a 400 and takes the whole turn down.
+        ...(this.modelSupportsEffort(model) ? { output_config: { effort: this.effort } } : {}),
         ...thinkingParam,
       } as Anthropic.MessageStreamParams);
 
@@ -690,18 +722,33 @@ export class AiService {
             inputSummary,
             resultSummary: result.slice(0, 200),
           });
+          // Fence tool output as UNTRUSTED before it re-enters the model
+          // context (indirect prompt-injection surface): a connector/MCP tool
+          // can return attacker-controlled text (an email body, a doc, an issue
+          // comment). web_search already wraps its own output at source
+          // (web-search.tool.ts) — don't double-wrap it. Fall back to the raw
+          // string when wrapping yields '' (empty result) so we never send an
+          // empty tool_result content.
+          const fencedResult =
+            block.name === 'web_search'
+              ? result
+              : wrapUntrusted(`Tool Result: ${block.name}`, result) || result;
           toolResults.push({
             type: 'tool_result',
             tool_use_id: block.id,
-            content: result,
+            content: fencedResult,
           });
         }
 
         messages.push({ role: 'assistant', content: finalMsg.content });
         messages.push({ role: 'user', content: toolResults });
         iteration++;
-        // Discard any partial text emitted before a tool_use turn; the model
-        // will produce the user-facing answer after tools resolve.
+        // Keep any text streamed before this tool_use turn (it already reached
+        // the client). Accumulate it, newline-separated, then reset fullText so
+        // the next iteration streams the post-tool answer cleanly.
+        if (fullText.trim()) {
+          carriedText = carriedText ? `${carriedText}\n${fullText}` : fullText;
+        }
         fullText = '';
         continue;
       }
@@ -710,8 +757,14 @@ export class AiService {
       break;
     }
 
-    if (iteration >= MAX_ITER && !fullText) {
+    if (iteration >= MAX_ITER && !fullText && !carriedText) {
       fullText = 'I had trouble completing that action. Please try again.';
+    }
+
+    // Prepend the pre-tool-call text that was already streamed to the client so
+    // AI_STREAM_DONE.fullContent (and the persisted message) match the live view.
+    if (carriedText) {
+      fullText = fullText ? `${carriedText}\n${fullText}` : carriedText;
     }
 
     // Expose the final assistant text so processRequest can persist it to the

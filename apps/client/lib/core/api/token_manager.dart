@@ -29,6 +29,16 @@ const _expirySkew = Duration(seconds: 60);
 class TokenManager {
   TokenManager(this._storage);
 
+  /// Process-wide shared instance. Refresh MUST be globally single-flight: the
+  /// backend rotates refresh tokens with reuse detection, so two concurrent
+  /// refreshes (e.g. two Dio instances 401ing at once, or a Dio 401 racing the
+  /// STOMP beforeConnect) would spend the same rotating token twice → the token
+  /// family is revoked → forced logout. Every Dio interceptor and the STOMP
+  /// `beforeConnect` hook use THIS instance so they coalesce onto one in-flight
+  /// refresh. Uses `const FlutterSecureStorage()` — the plugin is stateless and
+  /// reads/writes the same platform keystore as any other instance.
+  static final TokenManager shared = TokenManager(const FlutterSecureStorage());
+
   final FlutterSecureStorage _storage;
 
   /// Guards against concurrent refreshes (e.g. STOMP reconnect + a Dio 401
@@ -45,13 +55,29 @@ class TokenManager {
     if (access != null && !_isExpiredOrExpiringSoon(access)) {
       return access;
     }
-    // Coalesce concurrent refreshes onto a single in-flight future.
-    _inFlight ??= _refresh();
-    try {
-      return await _inFlight;
-    } finally {
-      _inFlight = null;
-    }
+    return _coalescedRefresh();
+  }
+
+  /// Forces a token refresh regardless of the local `exp` check, coalescing
+  /// concurrent callers onto the single in-flight request. Used by the Dio 401
+  /// interceptors: the server rejected the token, so a local-exp check isn't
+  /// enough — we must actually refresh, but still only ONCE across all Dio
+  /// instances + STOMP.
+  Future<String?> forceRefresh() => _coalescedRefresh();
+
+  /// Runs [_refresh] behind a single shared in-flight future so overlapping
+  /// callers await the same request rather than each spending the rotating
+  /// refresh token.
+  Future<String?> _coalescedRefresh() {
+    final existing = _inFlight;
+    if (existing != null) return existing;
+    final future = _refresh();
+    _inFlight = future;
+    future.whenComplete(() {
+      // Only clear if still ours — a later refresh may have replaced it.
+      if (identical(_inFlight, future)) _inFlight = null;
+    });
+    return future;
   }
 
   Future<String?> _refresh() async {

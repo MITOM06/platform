@@ -173,10 +173,21 @@ export class DirectoryConnectService {
 
   // ── Callback ───────────────────────────────────────────────────────────────
 
-  async handleCallback(slug: string, code: string, state: string): Promise<string> {
+  async handleCallback(
+    slug: string,
+    code: string,
+    state: string,
+    error?: string,
+  ): Promise<string> {
     const payload = this.oauth.verifyState(state);
     if (payload.provider !== slug) {
       throw new BadRequestException('State/provider mismatch');
+    }
+    // Provider-side denial or a missing code: bounce to the client with an
+    // error code instead of throwing a raw body the browser renders as JSON
+    // (.claude/rules/no-raw-system-data-in-ui.md).
+    if (error || !code) {
+      return this.clientRedirect('error', error ?? 'missing_code');
     }
     if (!payload.enc) {
       throw new BadRequestException('Missing OAuth flow secret');
@@ -198,7 +209,7 @@ export class DirectoryConnectService {
     const scope = payload.scope ?? 'personal';
     await this.persistTokens(slug, payload.userId, scope, secret, tokens);
     await this.auditConnect(payload.userId, slug, scope);
-    return this.clientRedirect(slug);
+    return this.clientRedirect('connected', slug);
   }
 
   // ── Apikey connect ───────────────────────────────────────────────────────
@@ -345,9 +356,9 @@ export class DirectoryConnectService {
     return `${base}/oauth/directory/${slug}/callback`;
   }
 
-  private clientRedirect(slug: string): string {
+  private clientRedirect(param: 'connected' | 'error', value: string): string {
     const clientUrl = this.cfg.get<string>('clientRedirectUrl') ?? '';
     const sep = clientUrl.includes('?') ? '&' : '?';
-    return `${clientUrl}${sep}connected=${encodeURIComponent(slug)}`;
+    return `${clientUrl}${sep}${param}=${encodeURIComponent(value)}`;
   }
 }

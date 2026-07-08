@@ -773,6 +773,9 @@ class AppLocalizationsEs extends AppLocalizations {
   String get messageRecalled => 'El mensaje fue retirado';
 
   @override
+  String get messageSendFailedRetry => 'Error al enviar. Toca para reintentar.';
+
+  @override
   String replyingTo(String name) {
     return 'Respondiendo a $name';
   }

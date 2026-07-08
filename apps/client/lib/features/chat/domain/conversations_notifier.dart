@@ -3,7 +3,6 @@ import 'dart:math';
 import 'package:collection/collection.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart' show ScaffoldMessenger, SnackBar, Text;
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import '../../../core/api/token_manager.dart';
 import '../../../core/l10n/l10n_ext.dart';
@@ -45,8 +44,7 @@ class ConversationsNotifier extends _$ConversationsNotifier {
     // that same dead token. TokenManager refreshes (and persists the rotated
     // refresh token) if it's expiring. If there's genuinely no token / refresh
     // fails, skip connecting rather than loop on a dead token.
-    final token = await TokenManager(const FlutterSecureStorage())
-        .getValidAccessToken();
+    final token = await TokenManager.shared.getValidAccessToken();
     if (token != null) {
       await stomp.connect(token);
     }
@@ -326,12 +324,16 @@ class ConversationsNotifier extends _$ConversationsNotifier {
 
       final content = notif['content'] as String?;
       final messageType = notif['messageType'] as String?;
-      // Gate ONLY the visible banner on the user's notification preference.
-      // Unread badge + conversation-list refresh below stay unaffected so
-      // unread counts remain correct even when notifications are disabled.
+      // Gate ONLY the visible banner on the user's notification preference AND
+      // on whether the conversation is muted. Unread badge + conversation-list
+      // refresh below stay unaffected so unread counts remain correct even when
+      // notifications are disabled or the conversation is muted (parity with
+      // web: muted = no banner/OS notification, but still counts as unread).
       final notificationsEnabled = ref.read(notificationsEnabledProvider);
+      final isMuted =
+          current.firstWhereOrNull((c) => c.id == convId)?.isMuted ?? false;
       final currentRoute = ref.read(appRouterProvider).routeInformationProvider.value.uri.path;
-      if (notificationsEnabled && currentRoute != '/chat/$convId') {
+      if (notificationsEnabled && !isMuted && currentRoute != '/chat/$convId') {
         _showMessageBanner(
           convId: convId,
           senderId: senderId,

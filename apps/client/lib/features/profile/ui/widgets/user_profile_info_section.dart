@@ -57,6 +57,9 @@ class ProfilePersonalInfo extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
+    // Locale-aware short date (respects the user's selected language) instead
+    // of a hardcoded dd/MM/yyyy pattern.
+    final locale = Localizations.localeOf(context).languageCode;
     if (!editMode) {
       final items = <Widget>[];
       // bio is always visible.
@@ -75,7 +78,7 @@ class ProfilePersonalInfo extends StatelessWidget {
         items.add(ProfileInfoRow(
           icon: Icons.cake_outlined,
           label: l10n.profileDateOfBirth,
-          value: DateFormat('dd/MM/yyyy').format(u.dateOfBirth!),
+          value: DateFormat.yMd(locale).format(u.dateOfBirth!),
         ));
       }
       if ((isSelf || u.effectiveShowPhoneNumber) &&
@@ -133,7 +136,7 @@ class ProfilePersonalInfo extends StatelessWidget {
             leading: const Icon(Icons.cake_outlined),
             title: Text(l10n.profileDateOfBirth),
             subtitle: Text(dob != null
-                ? DateFormat('dd/MM/yyyy').format(dob!)
+                ? DateFormat.yMd(locale).format(dob!)
                 : '—'),
             onTap: onPickDate,
           ),

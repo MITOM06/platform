@@ -143,13 +143,20 @@ public class ChatController {
 
   @MessageMapping("/chat.read")
   public void markRead(@Payload ChatMessageDto dto, Principal principal) {
-    messageService.markAsRead(principal.getName(), dto.getMessageId());
+    // markAsRead enforces participant membership and returns the message's real conversationId.
+    String actualConversationId =
+        messageService.markAsRead(principal.getName(), dto.getMessageId());
+    // Only broadcast if the client-supplied conversationId matches the message's actual one, so a
+    // spoofed conversationId can't fan a MESSAGE_READ event into an unrelated conversation.
+    if (!actualConversationId.equals(dto.getConversationId())) {
+      return;
+    }
     Map<String, String> event =
         Map.of(
             "type", "MESSAGE_READ",
             "messageId", dto.getMessageId(),
             "readerId", principal.getName());
-    clusterBroker.convertAndSend("/topic/conversation/" + dto.getConversationId(), event);
+    clusterBroker.convertAndSend("/topic/conversation/" + actualConversationId, event);
   }
 
   // WebRTC Signaling Endpoints.

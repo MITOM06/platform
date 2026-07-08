@@ -41,7 +41,8 @@
     "tabChat": "채팅",
     "tabFriends": "친구",
     "menuAdmin": "관리자",
-    "rateLimitError": "메시지를 너무 많이 보내고 있습니다. 잠시 후 다시 시도하세요."
+    "rateLimitError": "메시지를 너무 많이 보내고 있습니다. 잠시 후 다시 시도하세요.",
+    "notificationSystemTitle": "알림"
   },
   "auth": {
     "emailLabel": "이메일",
@@ -743,7 +744,8 @@
     "blockConfirmDesc": "{name}님은 회원님에게 메시지를 보내거나 프로필 정보의 대부분을 볼 수 없게 됩니다.",
     "unfriendConfirmTitle": "친구를 삭제하시겠습니까?",
     "unfriendConfirmDesc": "회원님과 이 사람은 더 이상 친구가 아닙니다. 나중에 다시 친구 요청을 보낼 수 있습니다.",
-    "backToList": "뒤로"
+    "backToList": "뒤로",
+    "meetingSummaryLabel": "[회의 요약]"
   },
   "aiHub": {
     "title": "AI 허브",

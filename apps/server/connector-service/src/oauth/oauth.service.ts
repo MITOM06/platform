@@ -29,6 +29,8 @@ export interface OAuthStatePayload {
   provider: string;
   scope?: ConnectionScope;
   nonce?: string;
+  /** Issued-at epoch-ms; used to reject stale states (see STATE_TTL_MS). */
+  iat?: number;
   /**
    * Directory (MCP-native) flows only: vault-encrypted JSON blob carrying the
    * PKCE code_verifier + DCR client creds + token endpoint. Encrypted (not just
@@ -56,6 +58,9 @@ interface TokenResponse {
 export class OAuthService {
   private readonly logger = new Logger(OAuthService.name);
 
+  /** A signed OAuth state is only valid for 10 minutes (replay/stale window). */
+  private static readonly STATE_TTL_MS = 10 * 60 * 1000;
+
   constructor(
     private readonly cfg: ConfigService,
     private readonly vault: TokenVaultService,
@@ -72,6 +77,7 @@ export class OAuthService {
     const body = {
       ...payload,
       nonce: payload.nonce ?? randomBytes(8).toString('hex'),
+      iat: payload.iat ?? Date.now(),
     };
     const encoded = Buffer.from(JSON.stringify(body)).toString('base64url');
     return `${encoded}.${this.hmac(encoded)}`;
@@ -88,11 +94,22 @@ export class OAuthService {
     if (a.length !== b.length || !timingSafeEqual(a, b)) {
       throw new BadRequestException('Invalid OAuth state signature');
     }
+    let payload: OAuthStatePayload;
     try {
-      return JSON.parse(Buffer.from(encoded, 'base64url').toString('utf8'));
+      payload = JSON.parse(
+        Buffer.from(encoded, 'base64url').toString('utf8'),
+      ) as OAuthStatePayload;
     } catch {
       throw new BadRequestException('Corrupt OAuth state payload');
     }
+    // Reject stale states so a leaked/paused authorize URL can't be replayed.
+    if (
+      typeof payload.iat === 'number' &&
+      Date.now() - payload.iat > OAuthService.STATE_TTL_MS
+    ) {
+      throw new BadRequestException('OAuth state expired');
+    }
+    return payload;
   }
 
   private hmac(data: string): string {
@@ -283,10 +300,22 @@ export class OAuthService {
 
   // ── Callback orchestration ────────────────────────────────────────────────
 
-  async handleCallback(provider: string, code: string, state: string): Promise<string> {
+  async handleCallback(
+    provider: string,
+    code: string,
+    state: string,
+    error?: string,
+  ): Promise<string> {
     const payload = this.verifyState(state);
     if (payload.provider !== provider) {
       throw new BadRequestException('State/provider mismatch');
+    }
+    // Provider-side denial (?error=access_denied) or a missing code (user
+    // declined): bounce back to the client with an error code instead of
+    // throwing a raw provider body the browser would render as JSON
+    // (.claude/rules/no-raw-system-data-in-ui.md).
+    if (error || !code) {
+      return this.clientRedirect('error', error ?? 'missing_code');
     }
     const entry = this.requireOAuthEntry(provider);
     const tokens = await this.exchangeCode(entry, code);
@@ -303,9 +332,14 @@ export class OAuthService {
         meta: { scope },
       });
     }
-    const clientUrl = this.cfg.get<string>('clientRedirectUrl');
+    return this.clientRedirect('connected', provider);
+  }
+
+  /** Bounce back to the client app with a single query param (success or error). */
+  private clientRedirect(param: 'connected' | 'error', value: string): string {
+    const clientUrl = this.cfg.get<string>('clientRedirectUrl') ?? '';
     const sep = clientUrl.includes('?') ? '&' : '?';
-    return `${clientUrl}${sep}connected=${encodeURIComponent(provider)}`;
+    return `${clientUrl}${sep}${param}=${encodeURIComponent(value)}`;
   }
 
   private requireOAuthEntry(provider: string): CatalogEntry {

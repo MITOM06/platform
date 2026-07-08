@@ -52,9 +52,10 @@ export class OAuthController {
     @Param('provider') provider: string,
     @Query('code') code: string,
     @Query('state') state: string,
+    @Query('error') error: string,
     @Res() res: Response,
   ): Promise<void> {
-    const redirectUrl = await this.oauth.handleCallback(provider, code, state);
+    const redirectUrl = await this.oauth.handleCallback(provider, code, state, error);
     res.redirect(302, redirectUrl);
   }
 
@@ -95,9 +96,10 @@ export class OAuthController {
     @Param('slug') slug: string,
     @Query('code') code: string,
     @Query('state') state: string,
+    @Query('error') error: string,
     @Res() res: Response,
   ): Promise<void> {
-    const redirectUrl = await this.directoryConnect.handleCallback(slug, code, state);
+    const redirectUrl = await this.directoryConnect.handleCallback(slug, code, state, error);
     res.redirect(302, redirectUrl);
   }
 }

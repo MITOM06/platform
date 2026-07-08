@@ -378,6 +378,9 @@ class MessageModel {
   final List<String> mentions;
   // Client-only flag for optimistic UI — not in server response
   final bool isPending;
+  // Client-only: set when an optimistic STOMP send got no server echo within
+  // the send watchdog window, so the bubble can show a tap-to-retry affordance.
+  final bool sendFailed;
   // AI streaming state — client-only, not persisted
   final bool isStreaming;
   final bool isThinking;
@@ -405,6 +408,7 @@ class MessageModel {
     this.editedAt,
     this.mentions = const [],
     this.isPending = false,
+    this.sendFailed = false,
     this.isStreaming = false,
     this.isThinking = false,
     this.sources,
@@ -512,6 +516,7 @@ class MessageModel {
     DateTime? editedAt,
     List<String>? mentions,
     bool? isPending,
+    bool? sendFailed,
     bool? isStreaming,
     bool? isThinking,
     List<AiSource>? sources,
@@ -534,6 +539,7 @@ class MessageModel {
       editedAt: editedAt ?? this.editedAt,
       mentions: mentions ?? this.mentions,
       isPending: isPending ?? this.isPending,
+      sendFailed: sendFailed ?? this.sendFailed,
       isStreaming: isStreaming ?? this.isStreaming,
       isThinking: isThinking ?? this.isThinking,
       sources: sources ?? this.sources,

@@ -62,6 +62,24 @@ function makeToolUseStream(toolName: string, toolId: string, input: Record<strin
   };
 }
 
+/** A tool_use turn that ALSO streams some text before issuing the tool call. */
+function makeToolUseStreamWithText(
+  text: string,
+  toolName: string,
+  toolId: string,
+  input: Record<string, unknown>,
+) {
+  const events = [{ type: 'content_block_delta', delta: { type: 'text_delta', text } }];
+  return {
+    ...makeAsyncIterator(events),
+    finalMessage: jest.fn().mockResolvedValue({
+      stop_reason: 'tool_use',
+      content: [{ type: 'tool_use', id: toolId, name: toolName, input }],
+      usage: { input_tokens: 8, output_tokens: 12 },
+    }),
+  };
+}
+
 function makeThinkingStream(thinkingText: string, responseText: string) {
   const events = [
     { type: 'content_block_start', content_block: { type: 'thinking' } },
@@ -298,18 +316,38 @@ describe('AiService', () => {
     expect(mockCreate).not.toHaveBeenCalled();
   });
 
-  it('sends tools and effort/output_config and a cached system block', async () => {
+  it('sends tools and a cached system block; omits effort for a non-effort model', async () => {
     toolRegistryGetDefinitions.mockReturnValue(SAMPLE_TOOLS);
     mockStream.mockReturnValue(makeStream(['OK']));
 
     await service.handleRequest(basePayload);
 
     const params = mockStream.mock.calls[0][0];
-    expect(params.output_config).toEqual({ effort: 'high' });
+    // The test model ('test-primary') is not effort-capable, so output_config
+    // must be omitted — sending `effort` to such a model is a hard 400.
+    expect(params.output_config).toBeUndefined();
     expect(Array.isArray(params.system)).toBe(true);
     expect(params.system[0].cache_control).toEqual({ type: 'ephemeral' });
     // last tool carries a cache breakpoint
     expect(params.tools[params.tools.length - 1].cache_control).toEqual({ type: 'ephemeral' });
+  });
+
+  it('only sends output_config.effort for effort-capable models (regression: AI_UNAVAILABLE)', () => {
+    const supports = (m: string) => (service as any).modelSupportsEffort(m);
+    // Effort-capable — must receive output_config.effort
+    for (const m of [
+      'claude-opus-4-5',
+      'claude-opus-4-8',
+      'claude-sonnet-4-6',
+      'claude-sonnet-5',
+      'claude-fable-5',
+    ]) {
+      expect(supports(m)).toBe(true);
+    }
+    // NOT effort-capable — sending `effort` here returns a 400 and breaks the turn
+    for (const m of ['claude-haiku-4-5', 'claude-sonnet-4-5', 'claude-opus-4-1']) {
+      expect(supports(m)).toBe(false);
+    }
   });
 
   it('retries fallback model when primary fails before any chunks', async () => {
@@ -546,6 +584,66 @@ describe('AiService', () => {
         ]),
       }),
     }));
+  });
+
+  // ─── Tool-result fencing (indirect prompt-injection defense) ──────────────
+
+  it('fences connector/MCP tool_result content as UNTRUSTED before re-entry', async () => {
+    toolRegistryGetDefinitions.mockReturnValue(SAMPLE_TOOLS);
+    mockStream
+      .mockReturnValueOnce(makeToolUseStream('search_messages', 't1', { query: 'x' }))
+      .mockReturnValueOnce(makeStream(['done']));
+    toolRegistryExecute.mockResolvedValue('SECRET tool output');
+
+    await service.handleRequest(basePayload);
+
+    // messages is the same array reference across iterations — inspect final state.
+    const messages = mockStream.mock.calls[0][0].messages as Array<{ content: unknown }>;
+    const block = messages
+      .flatMap((m) => (Array.isArray(m.content) ? m.content : []))
+      .find((b: any) => b.type === 'tool_result') as { content: string };
+    expect(typeof block.content).toBe('string');
+    expect(block.content).toContain('UNTRUSTED');
+    expect(block.content).toContain('SECRET tool output');
+  });
+
+  it('does NOT double-wrap web_search results (already fenced at source)', async () => {
+    toolRegistryGetDefinitions.mockReturnValue(SAMPLE_TOOLS);
+    mockStream
+      .mockReturnValueOnce(makeToolUseStream('web_search', 't1', { query: 'x' }))
+      .mockReturnValueOnce(makeStream(['done']));
+    toolRegistryExecute.mockResolvedValue(
+      '## Web Search Results\n<<<UNTRUSTED_DATA>>>\nbody\n<<<END_UNTRUSTED_DATA>>>',
+    );
+
+    await service.handleRequest(basePayload);
+
+    const messages = mockStream.mock.calls[0][0].messages as Array<{ content: unknown }>;
+    const block = messages
+      .flatMap((m) => (Array.isArray(m.content) ? m.content : []))
+      .find((b: any) => b.type === 'tool_result') as { content: string };
+    const opens = (block.content.match(/<<<UNTRUSTED_DATA>>>/g) || []).length;
+    expect(opens).toBe(1);
+  });
+
+  // ─── Pre-tool-call streamed text preservation ─────────────────────────────
+
+  it('preserves pre-tool-call streamed text in the final DONE + persisted message', async () => {
+    toolRegistryGetDefinitions.mockReturnValue(SAMPLE_TOOLS);
+    mockStream
+      .mockReturnValueOnce(
+        makeToolUseStreamWithText('Let me check that.', 'search_messages', 't1', { query: 'x' }),
+      )
+      .mockReturnValueOnce(makeStream(['Here is the answer']));
+    toolRegistryExecute.mockResolvedValue('r');
+
+    await service.handleRequest(basePayload);
+
+    const done = publish.mock.calls.find((c) => c[1]?.type === 'AI_STREAM_DONE');
+    expect(done?.[1].fullContent).toBe('Let me check that.\nHere is the answer');
+    // The persisted assistant turn must match what was streamed.
+    const assistantTurns = appendMessage.mock.calls.filter((c) => c[1] === 'assistant');
+    expect(assistantTurns[0][2]).toBe('Let me check that.\nHere is the answer');
   });
 
   it('publishes fallback message when MAX_ITER exhausted', async () => {

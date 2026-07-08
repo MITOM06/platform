@@ -7,9 +7,9 @@
 # Firebase service account (admin SDK) — SECRET, never commit
 *firebase-adminsdk*.json
 # Firebase client config — generated per-project by `flutterfire configure`
+# (firebase_options.dart is committed on purpose: public client config, needed by CI `flutter analyze`)
 **/google-services.json
 **/GoogleService-Info.plist
-apps/client/lib/firebase_options.dart
 # Web push service worker chứa firebaseConfig thật (dùng .example để tái tạo)
 apps/client/web/firebase-messaging-sw.js
 # flutterfire manifest (metadata app/project id — tái tạo bằng `flutterfire configure`)
@@ -40,12 +40,6 @@ target/
 hs_err_pid*
 replay_pid*
 
-# ─── Go ──────────────────────────────────────────────────────────────────────
-# Compiled binaries
-apps/server/chat-service/cmd/*/
-*.exe
-*.exe~
-
 # ─── Flutter / Dart ──────────────────────────────────────────────────────────
 build/
 .dart_tool/
@@ -55,9 +49,7 @@ build/
 *.freezed.dart
 pubspec.lock
 
-# ─── Expo / React Native (legacy reference) ──────────────────────────────────
-.expo/
-.expo-shared/
+# ─── Mobile signing keys ─────────────────────────────────────────────────────
 *.jks
 *.keystore
 *.p8
@@ -78,18 +70,15 @@ CLAUDE.local.md
 project_tree.txt
 NewEra AI Platform - Timeline.pdf
 
-# ─── React Native (legacy reference — đã migrate sang Flutter) ───────────────
-apps/client/src/
-
 # ─── Flutter IDE / build artifacts ───────────────────────────────────────────
 apps/client/.metadata
 apps/client/.flutter-plugins
 apps/client/.flutter-plugins-dependencies
 
 # ─── IDE ─────────────────────────────────────────────────────────────────────
+# (.vscode/settings.json is committed on purpose: shared java/ts editor config)
 .idea/
 *.iml
-.vscode/settings.json
 scripts/set-github-secrets.sh
 !apps/web/.env.production
 
@@ -102,4 +91,6 @@ _workspace/
 # Editor / office temp & lock files (e.g. Excel "~$" lock files)
 ~$*
 *.tmp
-.DS_Store
+
+# Testcontainers debris (compiled strategy class dumped at repo root during tests)
+org/

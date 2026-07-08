@@ -9,6 +9,7 @@ import '../../../auth/domain/auth_state.dart';
 import '../../domain/chat_provider.dart';
 import '../../domain/chat_state.dart';
 import 'conversation_avatar.dart';
+import 'message_preview_text.dart';
 import 'reactions_detail_modal.dart';
 
 /// Header shown above a received message bubble in group chats: the sender's
@@ -77,7 +78,10 @@ class ReplyQuote extends StatelessWidget {
         ),
       ),
       child: Text(
-        preview.content,
+        // Sanitize per no-raw-system-data-in-ui: a reply can quote a media
+        // message (raw /api/uploads/… URL or file JSON) or a system message
+        // (raw system.* code). Humanize/label instead of showing it verbatim.
+        messagePreviewFromContent(context, preview.content),
         maxLines: 2,
         overflow: TextOverflow.ellipsis,
         style: TextStyle(
@@ -326,7 +330,9 @@ class _CallSystemMessage extends StatelessWidget {
           ? context.l10n.systemVideoCallMissed
           : context.l10n.systemVoiceCallMissed;
     } else {
-      final secs = int.tryParse(parts.length > 3 ? parts[3] : '0') ?? 0;
+      // `system.call.ended:{kind}:{secs}` → secs is at index 2 (web parses the
+      // same index). Reading parts[3] here always missed it → duration 00:00.
+      final secs = int.tryParse(parts.length > 2 ? parts[2] : '0') ?? 0;
       final mm = (secs ~/ 60).toString().padLeft(2, '0');
       final ss = (secs % 60).toString().padLeft(2, '0');
       final duration = '$mm:$ss';

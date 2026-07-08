@@ -192,9 +192,19 @@ export class InternalService {
     tool: string,
     input: Record<string, unknown>,
   ): Promise<string> {
-    const conn = await this.connModel
-      .findOne({ userId, provider, status: 'active' })
+    // Resolve the connection with the SAME visibility as getTools: the caller's
+    // own connection OR a shared workspace-scoped one (owned by any member). A
+    // member invoking a workspace connector tool owned by an admin must resolve
+    // that shared doc — an owner-only findOne would always miss it and return
+    // "no active connection". Prefer the caller's own connection when both exist.
+    const conns = await this.connModel
+      .find({
+        $or: [{ userId }, { scope: 'workspace' }],
+        provider,
+        status: 'active',
+      })
       .lean();
+    const conn = conns.find((c) => c.userId === userId) ?? conns[0];
     if (!conn) return `Tool error: no active ${provider} connection`;
     // Defense in depth: re-check the action-group grant at execution time so a
     // stale/forged tool list can't bypass the permission the user set.

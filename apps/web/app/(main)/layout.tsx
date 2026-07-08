@@ -24,6 +24,7 @@ import { SidebarProfileBar } from '@/components/layout/SidebarProfileBar'
 import { SidebarAiHubButton } from '@/components/layout/SidebarAiHubButton'
 import { NotificationBell } from '@/components/layout/NotificationBell'
 import { useUiStore, SIDEBAR_MIN_WIDTH } from '@/lib/store/ui.store'
+import { humanizeMessagePreview } from '@/lib/system-messages'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -72,7 +73,13 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
   const router = useRouter()
   const pathname = usePathname()
   const queryClient = useQueryClient()
-  const accessToken = useAuthStore((s) => s.accessToken)
+  // Depend on a STABLE boolean, not the token value: the token is rotated on
+  // every ~15-min refresh (and on every 401-refresh), and a value dependency
+  // here would tear down + rebuild the STOMP singleton on each rotation — a
+  // realtime blip that can also kill WebRTC signaling mid-call. `beforeConnect`
+  // already pulls the freshest token, so we only need to (re)connect when the
+  // user transitions between authed / unauthed.
+  const isAuthed = useAuthStore((s) => !!s.accessToken)
   const t = useTranslations('layout')
   const tChat = useTranslations('chat')
 
@@ -138,9 +145,10 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
   }
 
   useEffect(() => {
-    if (!accessToken || stompService.isConnected()) return
+    const token = useAuthStore.getState().accessToken
+    if (!token || stompService.isConnected()) return
 
-    stompService.connect(accessToken).then(() => {
+    stompService.connect(token).then(() => {
       // NOTE: notification-permission prompting was moved to the post-login /
       // post-register success path (see lib/notifications.ts). It must NOT be
       // requested here — that fired on every authenticated session load.
@@ -174,9 +182,20 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
             return
           }
 
-          const title = t('notificationTitle', { name: payload.senderName })
-          const body =
-            payload.messageType && payload.messageType !== 'text'
+          // Backend sends senderName: "system" (and a raw `system.*` content
+          // code) for group system events. Never render either raw — show a
+          // generic localized title and humanize the body (rule:
+          // no-raw-system-data-in-ui).
+          const isSystemEvent =
+            payload.senderName === 'system' || (payload.content?.startsWith('system.') ?? false)
+          const title = isSystemEvent
+            ? t('notificationSystemTitle')
+            : t('notificationTitle', { name: payload.senderName })
+          const body = isSystemEvent
+            ? payload.content
+              ? humanizeMessagePreview(payload.content, payload.messageType, tChat, { short: true })
+              : t('notificationFallback')
+            : payload.messageType && payload.messageType !== 'text'
               ? t('notificationAttachment')
               : payload.content || t('notificationFallback')
 
@@ -295,9 +314,10 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
     return () => {
       stompService.disconnect()
     }
-    // `router` from next/navigation is stable; only re-run on auth change.
+    // `router` from next/navigation is stable; only (dis)connect on the
+    // authed↔unauthed transition — NOT on token rotation (see isAuthed above).
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [accessToken])
+  }, [isAuthed])
 
   const { openNewChat, openPublicChannels } = useUiStore()
 

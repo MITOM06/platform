@@ -12,6 +12,10 @@ import com.platform.chatservice.repository.MessageRepository;
 import java.time.Instant;
 import java.util.ArrayList;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
@@ -28,6 +32,8 @@ public class AiMessageService {
   private final ConversationRepository conversationRepository;
   private final SimpMessagingTemplate messagingTemplate;
   private final MessageMapper messageMapper;
+  private final MongoTemplate mongoTemplate;
+  private final ConversationCacheService conversationCacheService;
 
   /**
    * Save an AI-generated message (with optional trace) and broadcast it to the conversation topic.
@@ -60,23 +66,33 @@ public class AiMessageService {
                 .build());
 
     Instant savedAt = message.getCreatedAt() != null ? message.getCreatedAt() : Instant.now();
-    conversationRepository
-        .findById(conversationId)
-        .ifPresent(
-            conv -> {
-              conv.setLastMessage(
-                  Conversation.LastMessage.builder()
-                      .content(content)
-                      .senderId(senderId)
-                      .createdAt(savedAt)
-                      .build());
-              conv.setLastMessageAt(savedAt);
-              conversationRepository.save(conv);
-            });
+    bumpConversation(conversationId, content, senderId, savedAt);
 
     MessageResponse response = messageMapper.toResponse(message);
     messagingTemplate.convertAndSend("/topic/conversation/" + conversationId, response);
     return response;
+  }
+
+  /**
+   * Targeted atomic bump of a conversation's lastMessage/lastMessageAt plus cache eviction. Avoids
+   * the load-then-save of the whole document (which clobbered concurrent archive/mute/member writes
+   * and bypassed the conversation cache).
+   */
+  private void bumpConversation(
+      String conversationId, String content, String senderId, Instant at) {
+    mongoTemplate.updateFirst(
+        new Query(Criteria.where("_id").is(conversationId)),
+        new Update()
+            .set(
+                "lastMessage",
+                Conversation.LastMessage.builder()
+                    .content(content)
+                    .senderId(senderId)
+                    .createdAt(at)
+                    .build())
+            .set("lastMessageAt", at),
+        Conversation.class);
+    conversationCacheService.evict(conversationId);
   }
 
   /**
@@ -97,19 +113,7 @@ public class AiMessageService {
                 .build());
 
     Instant savedAt = message.getCreatedAt() != null ? message.getCreatedAt() : Instant.now();
-    conversationRepository
-        .findById(conversationId)
-        .ifPresent(
-            conv -> {
-              conv.setLastMessage(
-                  Conversation.LastMessage.builder()
-                      .content(contentJson)
-                      .senderId(AiConstants.AI_BOT_USER_ID)
-                      .createdAt(savedAt)
-                      .build());
-              conv.setLastMessageAt(savedAt);
-              conversationRepository.save(conv);
-            });
+    bumpConversation(conversationId, contentJson, AiConstants.AI_BOT_USER_ID, savedAt);
 
     MessageResponse response = messageMapper.toResponse(message);
     messagingTemplate.convertAndSend("/topic/conversation/" + conversationId, response);

@@ -2,7 +2,6 @@ package com.platform.chatservice.service;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.mongodb.client.result.UpdateResult;
 import com.platform.chatservice.dto.AiHistoryEntry;
 import com.platform.chatservice.dto.AiTraceResponse;
 import com.platform.chatservice.dto.MessageResponse;
@@ -24,6 +23,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.regex.Pattern;
 import lombok.RequiredArgsConstructor;
+import org.bson.types.ObjectId;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -53,6 +53,7 @@ public class MessageService {
   private final MessageServiceHelper helper;
   private final MessageMapper messageMapper;
   private final AiMessageService aiMessageService;
+  private final ConversationCacheService conversationCacheService;
 
   /**
    * Cursor-based pagination (newest first). When {@code beforeId} is null/blank the most recent
@@ -76,40 +77,65 @@ public class MessageService {
         conversation.getClearedAt() == null ? null : conversation.getClearedAt().get(userId);
 
     int pageSize = size <= 0 ? 20 : size;
-    Pageable pageable = PageRequest.of(0, pageSize + 1, Sort.by(Sort.Direction.DESC, "createdAt"));
 
-    List<Message> rows;
-    Instant cursor =
-        (beforeId == null || beforeId.isBlank())
-            ? null
-            : messageRepository.findById(beforeId).map(Message::getCreatedAt).orElse(null);
-    if (cursor != null) {
-      rows =
-          messageRepository.findByConversationIdAndCreatedAtLessThanOrderByCreatedAtDesc(
-              conversationId, cursor, pageable);
-    } else {
-      rows =
-          messageRepository
-              .findByConversationIdOrderByCreatedAtDesc(conversationId, pageable)
-              .getContent();
-    }
+    // Visibility filtering (deletedFor / clearedAt) is applied in the Mongo query itself, so the
+    // over-fetched (pageSize + 1) rows are already the rows this user can actually see — this keeps
+    // hasMore accurate and pages full (fixes the previous "filter after slice" under-fill bug).
+    List<Message> rows =
+        queryMessagePage(conversationId, userId, clearedAt, beforeId, pageSize + 1);
 
     boolean hasMore = rows.size() > pageSize;
     List<Message> pageRows = hasMore ? rows.subList(0, pageSize) : rows;
-    List<MessageResponse> content =
-        pageRows.stream()
-            .filter(m -> m.getDeletedFor() == null || !m.getDeletedFor().contains(userId))
-            .filter(
-                m ->
-                    clearedAt == null
-                        || m.getCreatedAt() == null
-                        || m.getCreatedAt().isAfter(clearedAt))
-            .map(this::toResponse)
-            .toList();
+    List<MessageResponse> content = pageRows.stream().map(this::toResponse).toList();
 
     // page=0 always; totalElements is synthetic so hasNext() reflects `hasMore`.
     long total = hasMore ? (long) pageSize + 1 : content.size();
     return new PageResponse<>(content, 0, pageSize, total);
+  }
+
+  /**
+   * Build one page of visible messages, newest first, with a stable compound cursor.
+   *
+   * <p>The cursor is a compound {@code (createdAt, _id)} tiebreaker so messages sharing the same
+   * millisecond are never skipped: we return rows where {@code createdAt < cursor.createdAt} OR
+   * ({@code createdAt == cursor.createdAt} AND {@code _id < cursor._id}), ordered by {@code
+   * createdAt} desc then {@code _id} desc. Visibility filters ({@code deletedFor != userId}, and
+   * {@code createdAt > clearedAt} when the user has a clear cutoff) are pushed into the query.
+   */
+  private List<Message> queryMessagePage(
+      String conversationId, String userId, Instant clearedAt, String beforeId, int limit) {
+    List<Criteria> ands = new ArrayList<>();
+    ands.add(Criteria.where("conversationId").is(conversationId));
+    ands.add(Criteria.where("deletedFor").ne(userId));
+    if (clearedAt != null) {
+      ands.add(Criteria.where("createdAt").gt(clearedAt));
+    }
+
+    if (beforeId != null && !beforeId.isBlank()) {
+      Message cursor = messageRepository.findById(beforeId).orElse(null);
+      if (cursor == null || cursor.getCreatedAt() == null) {
+        // Unknown/incomplete cursor — return an empty page rather than the whole history.
+        return List.of();
+      }
+      Instant cursorAt = cursor.getCreatedAt();
+      // _id compares by its stored BSON type: ObjectId in prod (24-hex ids), String otherwise.
+      Object cursorId = ObjectId.isValid(beforeId) ? new ObjectId(beforeId) : beforeId;
+      ands.add(
+          new Criteria()
+              .orOperator(
+                  Criteria.where("createdAt").lt(cursorAt),
+                  new Criteria()
+                      .andOperator(
+                          Criteria.where("createdAt").is(cursorAt),
+                          Criteria.where("_id").lt(cursorId))));
+    }
+
+    Query query =
+        new Query(new Criteria().andOperator(ands.toArray(new Criteria[0])))
+            .with(
+                Sort.by(Sort.Direction.DESC, "createdAt").and(Sort.by(Sort.Direction.DESC, "_id")))
+            .limit(limit);
+    return mongoTemplate.find(query, Message.class);
   }
 
   public MessageResponse sendMessage(String senderId, SendMessageRequest request) {
@@ -149,23 +175,41 @@ public class MessageService {
                 .build());
 
     Instant sentAt = message.getCreatedAt() != null ? message.getCreatedAt() : Instant.now();
-    conversation.setLastMessage(
-        Conversation.LastMessage.builder()
-            .content(message.getContent())
-            .senderId(senderId)
-            .createdAt(sentAt)
-            .build());
-    conversation.setLastMessageAt(sentAt);
-    // A new message un-hides the conversation for everyone who had deleted it.
-    conversation.setHiddenFor(new ArrayList<>());
+    // Targeted atomic $set update instead of loading + saving the whole Conversation document:
+    // avoids clobbering concurrent archive/mute/member changes and does not overwrite fields the
+    // caller never intended to touch. The cache is evicted so the next read reloads fresh.
+    Update update =
+        new Update()
+            .set(
+                "lastMessage",
+                Conversation.LastMessage.builder()
+                    .content(message.getContent())
+                    .senderId(senderId)
+                    .createdAt(sentAt)
+                    .build())
+            .set("lastMessageAt", sentAt)
+            // A new message un-hides the conversation for everyone who had deleted it.
+            .set("hiddenFor", new ArrayList<String>());
     // A reply from the recipient of a stranger request accepts it.
     if (Conversation.STATUS_PENDING.equals(conversation.getStatus())
         && !senderId.equals(conversation.getCreatedBy())) {
-      conversation.setStatus(Conversation.STATUS_ACCEPTED);
+      update.set("status", Conversation.STATUS_ACCEPTED);
     }
-    conversationRepository.save(conversation);
+    bumpConversation(request.conversationId(), update);
 
     return toResponse(message);
+  }
+
+  /**
+   * Apply a targeted atomic update to a conversation and evict it from the cache. Used for
+   * lastMessage/lastMessageAt bumps (and related single-field flips) so we never do a
+   * load-then-save of the whole document that would clobber concurrent writes or leave the
+   * {@code @CachePut} cache serving stale data.
+   */
+  void bumpConversation(String conversationId, Update update) {
+    mongoTemplate.updateFirst(
+        new Query(Criteria.where("_id").is(conversationId)), update, Conversation.class);
+    conversationCacheService.evict(conversationId);
   }
 
   /** Persist a "system" message (e.g. group events) and bump the conversation. */
@@ -179,30 +223,33 @@ public class MessageService {
                 .type("system")
                 .readBy(new ArrayList<>())
                 .build());
-    conversationRepository
-        .findById(conversationId)
-        .ifPresent(
-            conversation -> {
-              Instant at = message.getCreatedAt() != null ? message.getCreatedAt() : Instant.now();
-              conversation.setLastMessage(
-                  Conversation.LastMessage.builder()
-                      .content(content)
-                      .senderId(SYSTEM_SENDER)
-                      .createdAt(at)
-                      .build());
-              conversation.setLastMessageAt(at);
-              conversationRepository.save(conversation);
-            });
+    Instant at = message.getCreatedAt() != null ? message.getCreatedAt() : Instant.now();
+    bumpConversation(
+        conversationId,
+        new Update()
+            .set(
+                "lastMessage",
+                Conversation.LastMessage.builder()
+                    .content(content)
+                    .senderId(SYSTEM_SENDER)
+                    .createdAt(at)
+                    .build())
+            .set("lastMessageAt", at));
     return toResponse(message);
   }
 
-  public void markAsRead(String userId, String messageId) {
+  /**
+   * Mark a message read for the given user. Enforces that the caller is a participant of the
+   * message's conversation (throws otherwise), then atomically adds them to {@code readBy}. Returns
+   * the message's actual conversationId so callers can validate a client-supplied conversationId
+   * before broadcasting a MESSAGE_READ event.
+   */
+  public String markAsRead(String userId, String messageId) {
+    Message message = helper.requireParticipantMessage(userId, messageId);
     Query query = new Query(Criteria.where("id").is(messageId));
     Update update = new Update().addToSet("readBy", userId);
-    UpdateResult result = mongoTemplate.updateFirst(query, update, Message.class);
-    if (result.getMatchedCount() == 0) {
-      throw new MessageNotFoundException(messageId);
-    }
+    mongoTemplate.updateFirst(query, update, Message.class);
+    return message.getConversationId();
   }
 
   /**
@@ -271,12 +318,9 @@ public class MessageService {
     return toResponse(messageRepository.save(message));
   }
 
-  /** Hide a message for the requesting user only. */
+  /** Hide a message for the requesting user only. Caller must be a conversation participant. */
   public void deleteForMe(String userId, String messageId) {
-    Message message =
-        messageRepository
-            .findById(messageId)
-            .orElseThrow(() -> new MessageNotFoundException(messageId));
+    Message message = helper.requireParticipantMessage(userId, messageId);
     List<String> deletedFor =
         message.getDeletedFor() == null
             ? new ArrayList<>()

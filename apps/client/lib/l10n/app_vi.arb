@@ -242,6 +242,7 @@
   "actionCopy": "Sao chép",
   "actionReact": "Cảm xúc",
   "messageRecalled": "Tin nhắn đã được thu hồi",
+  "messageSendFailedRetry": "Gửi thất bại. Nhấn để thử lại.",
   "replyingTo": "Đang trả lời {name}",
   "copiedToClipboard": "Đã sao chép",
   "recallConfirm": "Thu hồi tin nhắn này với mọi người?",

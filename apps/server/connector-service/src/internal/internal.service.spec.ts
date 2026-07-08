@@ -131,4 +131,71 @@ describe('InternalService', () => {
       { title: 'X' },
     );
   });
+
+  // ── Workspace-scoped connection resolution (HIGH bug) ──────────────────────
+
+  it('callBuiltin resolves a workspace connection owned by ANOTHER member', async () => {
+    // Admin owns the shared workspace connection; a different member invokes it.
+    const wsConn = { ...connDoc, _id: 'ws', userId: 'admin', scope: 'workspace' };
+    connModel.find.mockReturnValue({ lean: jest.fn().mockResolvedValue([wsConn]) });
+    adapter.callTool.mockResolvedValue('shared results');
+
+    const out = await svc.callTool('u2', 'mcp__notion__search', { q: 'X' });
+
+    expect(out.result).toBe('shared results');
+    // Resolved via the same $or visibility getTools uses — NOT owner-only.
+    expect(connModel.find).toHaveBeenCalledWith(
+      expect.objectContaining({
+        provider: 'notion',
+        status: 'active',
+        $or: [{ userId: 'u2' }, { scope: 'workspace' }],
+      }),
+    );
+    expect(adapter.callTool).toHaveBeenCalledWith(
+      expect.objectContaining({ _id: 'ws' }),
+      'search',
+      { q: 'X' },
+    );
+  });
+
+  it('callBuiltin prefers the callers OWN connection over a workspace one', async () => {
+    const shared = { ...connDoc, _id: 'ws', userId: 'admin', scope: 'workspace' };
+    const own = { ...connDoc, _id: 'own', userId: 'u2', scope: 'personal' };
+    connModel.find.mockReturnValue({ lean: jest.fn().mockResolvedValue([shared, own]) });
+    adapter.callTool.mockResolvedValue('ok');
+
+    await svc.callTool('u2', 'mcp__notion__search', { q: 'X' });
+
+    expect(adapter.callTool).toHaveBeenCalledWith(
+      expect.objectContaining({ _id: 'own' }),
+      'search',
+      { q: 'X' },
+    );
+  });
+
+  it('callBuiltin re-checks the action-group grant on the RESOLVED workspace doc', async () => {
+    // Shared connection grants only 'create'; a 'view' tool (search) must be
+    // blocked on the resolved doc, mirroring the getTools list filter.
+    const wsConn = {
+      ...connDoc,
+      _id: 'ws',
+      userId: 'admin',
+      scope: 'workspace',
+      actionGroups: ['create'],
+    };
+    connModel.find.mockReturnValue({ lean: jest.fn().mockResolvedValue([wsConn]) });
+
+    const out = await svc.callTool('u2', 'mcp__notion__search', { q: 'X' });
+
+    expect(out.result).toMatch(/not permitted/i);
+    expect(adapter.callTool).not.toHaveBeenCalled();
+  });
+
+  it('callBuiltin returns "no active connection" when neither own nor workspace exists', async () => {
+    connModel.find.mockReturnValue({ lean: jest.fn().mockResolvedValue([]) });
+
+    const out = await svc.callTool('u2', 'mcp__notion__search', { q: 'X' });
+
+    expect(out.result).toMatch(/no active notion connection/i);
+  });
 });

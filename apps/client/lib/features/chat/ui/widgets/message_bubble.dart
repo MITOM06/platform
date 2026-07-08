@@ -13,6 +13,7 @@ import 'image_content.dart';
 import 'meeting_summary_card.dart';
 import 'message_bubble_parts.dart';
 import 'message_feedback.dart';
+import 'send_failed_retry.dart';
 import 'streaming_ai_bubble.dart';
 import 'text_content.dart';
 import 'tool_trace_panel.dart';
@@ -376,6 +377,13 @@ class MessageBubble extends ConsumerWidget {
                   ),
                 ),
               ),
+              // Optimistic send failed (no STOMP echo within the watchdog
+              // window) — offer a tap-to-retry affordance.
+              if (isSentByMe && message.sendFailed)
+                SendFailedRetry(
+                  conversationId: message.conversationId,
+                  messageId: message.id,
+                ),
               // 👍/👎 feedback only on finalized, successful AI answers.
               if (message.isAiMessage &&
                   !message.isStreaming &&

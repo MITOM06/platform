@@ -242,6 +242,7 @@
   "actionCopy": "Copiar",
   "actionReact": "Reaccionar",
   "messageRecalled": "El mensaje fue retirado",
+  "messageSendFailedRetry": "Error al enviar. Toca para reintentar.",
   "replyingTo": "Respondiendo a {name}",
   "copiedToClipboard": "Copiado al portapapeles",
   "recallConfirm": "¿Retirar este mensaje para todos?",

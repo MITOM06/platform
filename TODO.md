@@ -20,13 +20,13 @@
 
 ## 📋 PHASE 3 — PRODUCTION READY
 
-### SPRINT P3-1 — CI/CD & Cloud Deployment `PENDING`
+### SPRINT P3-1 — CI/CD & Cloud Deployment `DONE except P3-1.4` (relabeled 2026-07-08 QC sweep)
 - [x] **Task P3-1.1: GitHub Actions CI/CD Pipeline**
   - Create pipeline running on push to `main`: lint → test → build → push Docker images to Artifact Registry → deploy. **DONE — ci.yml covers auth-service, chat-service, ai-service, web (Next.js), flutter-client. deploy.yml covers all 3 backend services to Cloud Run.**
-- [ ] **Task P3-1.2: Google Cloud Run Setup**
-  - Deploy `auth-service`, `chat-service`, and `ai-service` to Cloud Run.
-- [ ] **Task P3-1.3: Production Environment Management**
-  - Configure production environment variables and secrets (GCP Secret Manager / GitHub Secrets).
+- [x] **Task P3-1.2: Google Cloud Run Setup**
+  - Deploy `auth-service`, `chat-service`, and `ai-service` to Cloud Run. **DONE — all 4 backend services (incl. connector-service) live on Cloud Run via `deploy.yml`; prod URLs in `docs/superpowers/MEMORY.md`.**
+- [x] **Task P3-1.3: Production Environment Management**
+  - Configure production environment variables and secrets (GCP Secret Manager / GitHub Secrets). **DONE — GitHub Secrets injected by `deploy.yml` (JWT, RabbitMQ vhost, SESSION_SECRET, Firebase admin base64…).**
 - [ ] **Task P3-1.4: Domain & SSL Configuration**
   - Set up custom domains with SSL certificate management.
 
@@ -174,7 +174,7 @@ emoji char · `text` = plain (detect URL → link preview). Media URLs may be re
 resolve with `NEXT_PUBLIC_CHAT_URL` (`apps/web/lib/media.ts` → `absoluteMediaUrl`).
 Mirror: `apps/client/lib/features/chat/ui/widgets/{image_content,file_content,voice_message_bubble,link_preview_card,message_bubble,chat_input_bar}.dart`.
 
-### SPRINT W-9 — Complete Web Chat (CURRENT PRIORITY) `IN PROGRESS`
+### SPRINT W-9 — Complete Web Chat `DONE except W-9.12 manual smoke`
 - [x] **Task W-9.1: Media helpers + chat API** `S`
   - `lib/media.ts` (absoluteMediaUrl, parseImageUrls, parseFileMeta, formatBytes, firstUrl);
     extend `lib/api/chat.ts` `sendMessage(type, replyToId)` + `uploadFile` + `fetchLinkPreview`;
@@ -210,7 +210,7 @@ Mirror: `apps/client/lib/features/chat/ui/widgets/{image_content,file_content,vo
   - Local backend: text/image/file/voice/reply/reaction/pin/edit/recall/forward/link/
     infinite-scroll/STOMP realtime.
 
-### SPRINT W-10 — Missing Web Screens (parity) `PENDING`
+### SPRINT W-10 — Missing Web Screens (parity) `DONE`
 - [x] **Task W-10.1: Friends / Contacts** `L` — list, requests, search/add, accept/decline/remove/block (`friends_screen.dart`). **DONE — `app/(main)/friends/page.tsx` and `useFriends` hook.**
 - [x] **Task W-10.2: Settings screen** `M` — theme, language, account, logout, sub-screen links (`settings_screen.dart`). **DONE — `app/(main)/settings/page.tsx`.**
 - [x] **Task W-10.3: Change password dialog** `S` (`change_password_dialog.dart`). **DONE — `components/chat/ChangePasswordDialog.tsx`.**
@@ -228,7 +228,7 @@ Mirror: `apps/client/lib/features/chat/ui/widgets/{image_content,file_content,vo
 - [x] **Task W-10.15: Calls (WebRTC)** `L` — defer; largest item (`call_screen.dart`, `webrtc_service.dart`). **DONE — Implemented WebRTC on Web (call-manager.ts, CallOverlay.tsx) and Flutter (webrtc_service.dart, call_screen.dart).**
 - [x] **Task W-10.16: Mentions (@) composer + bubble** `M` (`mention_list.dart`). **DONE — integrated into `MessageInput.tsx` and `MessageBubble.tsx`.**
 
-### SPRINT W-11 — Web Polish & Consistency `PENDING`
+### SPRINT W-11 — Web Polish & Consistency `DONE`
 - [x] **Task W-11.1: i18n** — web is hardcoded Vietnamese; Flutter has 7 locales (`L` to adopt). **DONE — adopted `next-intl` 4.x (cookie-based locale, no URL prefix). `i18n/request.ts` + `i18n/config.ts` + `messages/{vi,en,zh,ja,ko,es,fr}.json` (vi=full, en=full, others=English stubs). All 21 pages/components updated to `useTranslations()`. Language switcher added to Settings page (cycles all 7 locales, persists via `locale` cookie + `router.refresh()`). `next build` passes clean.**
 - [x] **Task W-11.2: Visual parity pass** — PON neon theme, bubbles, avatars, glow spheres `M`. **DONE — own-bubble neon shadow, active conversation neon left-border, online dot #00E676, sidebar ambient glow spheres.**
 - [x] **Task W-11.3: Responsive/mobile audit** `M`. **DONE — h-screen→h-dvh, safe-area-inset-bottom on input, emoji picker max-w-[calc(100vw-1rem)], image button hidden on xs.**
@@ -254,7 +254,7 @@ Mirror: `apps/client/lib/features/chat/ui/widgets/{image_content,file_content,vo
 5. W-10.14, W-10.9 → W-10.12, W-10.16 (remaining parity)
 6. W-11.* polish; W-10.15 calls last
 
-### SPRINT W-12 — Web Chat Logic Bug Fixes `IN PROGRESS`
+### SPRINT W-12 — Web Chat Logic Bug Fixes `DONE`
 > **Audit (2026-06-11):** 3 bugs + 1 missing feature found in web chat after code review.
 
 - [x] **Task W-12.1: REST sendMessage missing STOMP broadcast** `S`
@@ -282,7 +282,7 @@ Mirror: `apps/client/lib/features/chat/ui/widgets/{image_content,file_content,vo
   - Fix: call `queryClient.removeQueries({ queryKey: ['messages', id], exact: true })` **before** `invalidateQueries` to clear the cache immediately.
   - File: `apps/web/components/chat/ConversationSettingsDrawer.tsx`
 
-### SPRINT W-13 — Bug Fixes (from production audit 2026-06-12) `PENDING`
+### SPRINT W-13 — Bug Fixes (from production audit 2026-06-12) `DONE`
 > Source: live testing on https://platform-web-omega-amber.vercel.app after GCP migration.
 > Read `apps/web/CLAUDE.md` before starting. All fixes are in `apps/web/`.
 
@@ -309,7 +309,7 @@ Mirror: `apps/client/lib/features/chat/ui/widgets/{image_content,file_content,vo
   - New file: `apps/web/components/chat/UserProfileDrawer.tsx` — Sheet with avatar, name, bio, online status, Send/Friend/Block buttons.
   - Edit: `apps/web/components/chat/MessageBubble.tsx` — sender label is now a clickable button that opens `UserProfileDrawer`.
 
-### SPRINT W-14 — UX/UI Refinement (Audit 2026-06-12) `PENDING`
+### SPRINT W-14 — UX/UI Refinement (Audit 2026-06-12) `DONE`
 > **Focus:** Web Client (Next.js) UX improvements. Fix usability flaws identified during QA. Optimize UI for touch devices.
 
 - [x] **Task W-14.1: Prevent Send/Mic button misclicks on mobile** `S`
@@ -371,11 +371,35 @@ Mirror: `apps/client/lib/features/chat/ui/widgets/{image_content,file_content,vo
 ---
 
 ## 🧪 QA LOG
-*(Will be appended after implementation)*
+
+```text
+QC Full 2026-07-08 (Sprint QC-4 — full-project sweep + cleanup)
+Phase 1: auth build ✓ | ai build ✓ | connector build ✓ | chat compile ✓ | flutter analyze ✓ (0 issues) | web lint+tsc ✓
+Phase 2: auth test 53/53 | ai test 325/325 | connector test 101/101 | chat test 136/136 | flutter test 50/50 | web test 70/70
+Phase 3: infra ✓ (fixed jaeger image tag 1.62→1.62.0) | auth-svc ✓ (fixed broken start:dev --entryFile) | chat-svc ✓
+Phase 4: jwt ✓ (chat 200) | profile ✓ | search ✓ | conversation ✓ | message send+list ✓ | presence ✓
+i18n: mobile 956 keys × 7 locales in sync | web 1258 keys × 7 locales in sync
+Web↔Mobile sync audit: PASS — message types, STOMP topics, endpoints, 18 feature spot-checks all in parity
+Issues fixed: 26 —
+  chat-service (7): dup AI persist multi-instance (Redis SETNX claim), reminder dup/poison (atomic claim),
+    cursor pagination same-ms skip (compound tiebreaker), Conversation lost-update+stale cache (atomic $set+evict),
+    markAsRead/deleteForMe missing participant authz, markConversationUnread race, pagination under-fill
+  connector (3): workspace connectors not executable by members (HIGH), OAuth deny → raw 400 JSON, state no-expiry (10m TTL)
+  ai-service (2): unfenced MCP tool_result (prompt-injection), pre-tool streamed text dropped from persisted msg
+  web (5): STOMP torn down on every token refresh (HIGH), reply-quote raw content leak (P1),
+    "system" literal in notif title, conversations refetch storm, meeting_summary/ai raw preview leak (P1)
+  mobile (9): mute ignored in foreground (HIGH), token-refresh race → forced logout (HIGH), call duration 00:00,
+    reply-quote raw leak (P1), stuck-pending send watchdog+retry, hardcoded EN string, non-locale date,
+    unknown system.* leak in conv list, meeting_summary/ai raw preview leak (P1)
+Cleanup: deleted org/ .superpowers/sdd/ _workspace_prev/ flutter logs .iml empty apps/web/apps;
+  .gitignore pruned dead Go/Expo/RN rules + org/ added; docs refreshed (MEMORY.md facts, plans/README index 44 plans,
+  CLAUDE.md bridge merged, TODO sprint labels)
+Status: CLEAN — all builds/tests green, smoke test PASS
+```
 
 ---
 
-### SPRINT W-14 — UI/UX Polish & Feature Completion `PENDING`
+### SPRINT W-14 — UI/UX Polish & Feature Completion `DONE`
 > Source: live production audit 2026-06-12.
 > **MANDATORY before every task**: Read `.claude/rules/sync.md` (cross-platform sync rule).
 > Then read `apps/web/CLAUDE.md` + `apps/client/CLAUDE.md`. Mirror Flutter file listed per task.
@@ -432,7 +456,7 @@ Mirror: `apps/client/lib/features/chat/ui/widgets/{image_content,file_content,vo
   - **UI Regressions from prior AI:** Restored the `ActiveFriendsRow` and the "Explore Channels" (`Hash`) buttons in `ConversationList.tsx`, and the "New Chat" (`MessageSquarePlus`) button in `layout.tsx` which were incorrectly deleted during earlier sync tasks.
   - **React Warnings:** Fixed an exhaustive-deps `useEffect` warning in `page.tsx` by wrapping the fallback empty array in `useMemo`.
 
-### SPRINT W-15 — Chat UI/UX Refinement & Parity
+### SPRINT W-15 — Chat UI/UX Refinement & Parity `DONE`
 > **Based on AI Codebase Planner & Execution Prompt**
 
 - [x] **Task W-15.1: Chat List Sidebar Preview Logic & System Messages Formatting**
@@ -457,7 +481,7 @@ Mirror: `apps/client/lib/features/chat/ui/widgets/{image_content,file_content,vo
   - **Platform:** Web
   - **Feature:** Update Group Chat settings sidebar to match standard Messenger-like settings menu (collapsible sections for Chat Info, Customize Chat, Media/Files, Privacy & Support). Ensure all buttons and toggles are fully functional and wired.
 
-### SPRINT M-15 — Mobile Chat UI/UX Refinement
+### SPRINT M-15 — Mobile Chat UI/UX Refinement `DONE`
 > **Follow-up to SPRINT W-15 for Flutter Client Parity**
 
 - [x] **Task M-15.1: Conversation List Subtitle Logic & System Messages Formatting**
@@ -470,7 +494,7 @@ Mirror: `apps/client/lib/features/chat/ui/widgets/{image_content,file_content,vo
   - **Fix:** Fix any current issues preventing chat background images from uploading correctly via `chatService`.
   - **Feature:** Live Preview Modal. When uploading a new background image, do not apply it immediately. Open a Preview Modal with a mockup chat interface and dummy messages over the newly uploaded background. Allow the user to adjust, crop, or scale the image within this modal. Apply the exact cropped/adjusted image only on "Submit/Save".
 
-### SPRINT W-16 — Phase 2: Bug Fixes, UI/UX Refinement & Profile Overhaul
+### SPRINT W-16 — Phase 2: Bug Fixes, UI/UX Refinement & Profile Overhaul `DONE`
 > **Based on AI Codebase Planner & Execution Prompt - Part 2**
 
 - [x] **Task W-16.1: Shared Media & Links Gallery Bug (Web)**
@@ -493,7 +517,7 @@ Mirror: `apps/client/lib/features/chat/ui/widgets/{image_content,file_content,vo
   - **Access Control:** Include "Edit" button for self profile; make other's profile view-only.
   - **Field Removal:** Completely remove the "Date of Birth" field from viewing and editing.
 
-### SPRINT W-17 — Phase 3: Authentication, Media Persistence & Core UX Fixes
+### SPRINT W-17 — Phase 3: Authentication, Media Persistence & Core UX Fixes `DONE`
 > **Based on AI Codebase Planner & Execution Prompt - Part 3**
 
 - [x] **Task W-17.1: Reaction Notification in Chat Sidebar (Web)**

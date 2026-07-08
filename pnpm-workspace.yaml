@@ -1,5 +1,7 @@
 packages:
-  - "client"
   - "apps/**"
   - "packages/**"
   - "infra/**"
+  # Never treat vendored/generated package.json files inside build output as workspace members
+  # (Flutter iOS SourcePackages checkouts previously leaked ~2800 lines of phantom importers into the lockfile)
+  - "!apps/client/build/**"

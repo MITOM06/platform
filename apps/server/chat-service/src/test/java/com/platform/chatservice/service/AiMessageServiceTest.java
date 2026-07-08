@@ -9,7 +9,6 @@ import com.platform.chatservice.model.Message;
 import com.platform.chatservice.repository.ConversationRepository;
 import com.platform.chatservice.repository.MessageRepository;
 import java.util.List;
-import java.util.Optional;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -27,14 +26,20 @@ class AiMessageServiceTest {
   @Mock private ConversationRepository conversationRepository;
   @Mock private SimpMessagingTemplate messagingTemplate;
   @Mock private MessageMapper messageMapper;
+  @Mock private org.springframework.data.mongodb.core.MongoTemplate mongoTemplate;
+  @Mock private ConversationCacheService conversationCacheService;
 
   @Test
   void saveBotMessage_persistsWithGivenSenderAndBroadcasts() {
     AiMessageService service =
         new AiMessageService(
-            messageRepository, conversationRepository, messagingTemplate, messageMapper);
+            messageRepository,
+            conversationRepository,
+            messagingTemplate,
+            messageMapper,
+            mongoTemplate,
+            conversationCacheService);
     when(messageRepository.save(any(Message.class))).thenAnswer(inv -> inv.getArgument(0));
-    when(conversationRepository.findById(any())).thenReturn(Optional.empty());
     when(messageMapper.toResponse(any(Message.class)))
         .thenReturn(
             new MessageResponse(

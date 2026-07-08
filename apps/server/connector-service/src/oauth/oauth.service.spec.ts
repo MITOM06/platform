@@ -52,6 +52,46 @@ describe('OAuthService state signing', () => {
     const [body] = state.split('.');
     expect(() => svc.verifyState(`${body}.deadbeef`)).toThrow();
   });
+
+  it('accepts a fresh state within the TTL', () => {
+    const state = svc.signState({ userId: 'u1', provider: 'notion' });
+    expect(svc.verifyState(state).userId).toBe('u1');
+  });
+
+  it('rejects a state older than the 10-minute TTL', () => {
+    const now = jest.spyOn(Date, 'now');
+    // Sign 11 minutes in the past, then verify at real "now".
+    now.mockReturnValue(1_000_000_000_000);
+    const state = svc.signState({ userId: 'u1', provider: 'notion' });
+    now.mockReturnValue(1_000_000_000_000 + 11 * 60 * 1000);
+    expect(() => svc.verifyState(state)).toThrow(/expired/i);
+    now.mockRestore();
+  });
+});
+
+describe('OAuthService callback deny handling (no raw JSON to browser)', () => {
+  it('bounces to the client with ?error on provider deny (does not throw)', async () => {
+    const svc = makeService();
+    const state = svc.signState({ userId: 'u1', provider: 'notion' });
+    const url = await svc.handleCallback(
+      'notion',
+      undefined as unknown as string,
+      state,
+      'access_denied',
+    );
+    expect(url).toBe('http://localhost:3000/integrations?error=access_denied');
+  });
+
+  it('bounces with ?error=missing_code when code is absent and no error param', async () => {
+    const svc = makeService();
+    const state = svc.signState({ userId: 'u1', provider: 'notion' });
+    const url = await svc.handleCallback(
+      'notion',
+      undefined as unknown as string,
+      state,
+    );
+    expect(url).toContain('error=missing_code');
+  });
 });
 
 describe('OAuthService buildAuthorizeUrl (Task P5-1)', () => {

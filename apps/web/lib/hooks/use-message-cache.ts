@@ -2,7 +2,13 @@
 
 import { useCallback } from 'react'
 import { useQueryClient, type InfiniteData } from '@tanstack/react-query'
-import type { AiSource, Message, MessagesResponse } from '@/lib/api/types'
+import type {
+  AiSource,
+  Conversation,
+  ConversationsResponse,
+  Message,
+  MessagesResponse,
+} from '@/lib/api/types'
 
 /**
  * Direct TanStack Query cache mutations for a conversation's message thread.
@@ -72,7 +78,37 @@ export function useMessageCache(conversationId: string) {
           ),
         }
       })
-      queryClient.invalidateQueries({ queryKey: ['conversations'] })
+      // Refresh the conversation-list preview WITHOUT a full refetch: patch the
+      // matching conversation's last-message + timestamp and move it to front.
+      // On busy threads this fires per message, so invalidating (refetching the
+      // whole list) every time was a refetch storm. Fall back to invalidate only
+      // when the list cache is empty or doesn't yet contain this conversation
+      // (a brand-new thread must be pulled in from the server).
+      const existing = queryClient.getQueryData<ConversationsResponse>(['conversations'])
+      const hasConv = existing?.content.some((c) => c.id === incoming.conversationId) ?? false
+      if (!existing || existing.content.length === 0 || !hasConv) {
+        queryClient.invalidateQueries({ queryKey: ['conversations'] })
+        return
+      }
+      queryClient.setQueryData<ConversationsResponse>(['conversations'], (old) => {
+        if (!old) return old
+        const idx = old.content.findIndex((c) => c.id === incoming.conversationId)
+        if (idx === -1) return old
+        const conv = old.content[idx]!
+        const updated: Conversation = {
+          ...conv,
+          lastMessage: {
+            content: incoming.content,
+            senderId: incoming.senderId,
+            createdAt: incoming.createdAt,
+          },
+          lastMessageAt: incoming.createdAt,
+        }
+        return {
+          ...old,
+          content: [updated, ...old.content.filter((_, i) => i !== idx)],
+        }
+      })
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [conversationId, queryClient],

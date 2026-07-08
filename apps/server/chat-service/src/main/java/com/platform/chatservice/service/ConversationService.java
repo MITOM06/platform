@@ -311,14 +311,12 @@ public class ConversationService {
         messageRepository.findByConversationIdOrderByCreatedAtDesc(conversationId, pageable);
     if (!page.isEmpty()) {
       Message lastMessage = page.getContent().get(0);
-      List<String> readBy =
-          lastMessage.getReadBy() == null
-              ? new ArrayList<>()
-              : new ArrayList<>(lastMessage.getReadBy());
-      if (readBy.remove(userId)) {
-        lastMessage.setReadBy(readBy);
-        messageRepository.save(lastMessage);
-      }
+      // Atomic $pull mirrors markConversationRead's $addToSet: avoids the read-modify-write race
+      // where a concurrent read could silently re-add the user to readBy.
+      mongoTemplate.updateFirst(
+          new Query(Criteria.where("_id").is(lastMessage.getId())),
+          new Update().pull("readBy", userId),
+          Message.class);
     }
     return toResponse(conversation, userId, messageRepository.countUnread(conversationId, userId));
   }

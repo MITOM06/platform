@@ -7,10 +7,62 @@
 part of 'chat_provider.dart';
 
 mixin _ChatActionsMixin on _$ChatNotifier {
+  /// Provided by ChatNotifier (the class this mixin is applied to). Declared
+  /// here so mixin methods (e.g. [retrySend]) can invoke the optimistic-send
+  /// path without duplicating it.
+  Future<void> sendMessage(String content, {String type = 'text'});
+
   /// Message ids with a reaction request in flight. Guards against rapid
   /// repeated double-taps spamming the server with add/remove churn before the
   /// authoritative REACTION_UPDATED broadcast lands.
   final Set<String> _reactionInFlight = {};
+
+  /// Per-optimistic-message send watchdogs (keyed by the local `pending_…` id).
+  /// A STOMP send has no ack; if no server echo arrives in [_sendTimeout] the
+  /// bubble is marked failed so the user can retry instead of spinning forever.
+  final Map<String, Timer> _sendWatchdogs = {};
+  static const Duration _sendTimeout = Duration(seconds: 15);
+
+  /// Arms the send watchdog for the optimistic message [pendingId].
+  void _startSendWatchdog(String pendingId) {
+    _sendWatchdogs[pendingId]?.cancel();
+    _sendWatchdogs[pendingId] = Timer(_sendTimeout, () {
+      _sendWatchdogs.remove(pendingId);
+      final current = state.valueOrNull;
+      if (current == null) return;
+      // If the message is gone (reconciled with the server echo) or already
+      // resolved, this is a no-op — mirrors the AI placeholder watchdog.
+      final idx = current.messages.indexWhere(
+        (m) => m.id == pendingId && m.isPending,
+      );
+      if (idx == -1) return;
+      final updated = List<MessageModel>.from(current.messages);
+      updated[idx] =
+          current.messages[idx].copyWith(isPending: false, sendFailed: true);
+      state = AsyncData(current.copyWith(messages: updated));
+    });
+  }
+
+  void _cancelSendWatchdogs() {
+    for (final t in _sendWatchdogs.values) {
+      t.cancel();
+    }
+    _sendWatchdogs.clear();
+  }
+
+  /// Retry a message whose optimistic send failed: drop the failed placeholder
+  /// and re-send its content (reuses the normal optimistic send path).
+  Future<void> retrySend(String messageId) async {
+    final current = state.valueOrNull;
+    if (current == null) return;
+    final msg = current.messages.firstWhereOrNull((m) => m.id == messageId);
+    if (msg == null || !msg.sendFailed) return;
+    _sendWatchdogs.remove(messageId)?.cancel();
+    state = AsyncData(current.copyWith(
+      messages: current.messages.where((m) => m.id != messageId).toList(),
+    ));
+    await sendMessage(msg.content, type: msg.type);
+  }
 
   String? get _currentUserId {
     final auth = ref.read(authNotifierProvider).valueOrNull;
@@ -128,6 +180,16 @@ mixin _ChatActionsMixin on _$ChatNotifier {
         ref.read(appRouterProvider).routerDelegate.navigatorKey.currentContext;
     if (context == null) return;
     showErrorSnackBar(context.l10n.errActionFailed);
+  }
+
+  /// Surface the localized rate-limit (429) message. Resolves a context via the
+  /// router to avoid the BuildContext-across-async-gap lint.
+  void _showRateLimitError() {
+    final context =
+        ref.read(appRouterProvider).routerDelegate.navigatorKey.currentContext;
+    showErrorSnackBar(context != null
+        ? context.l10n.rateLimitError
+        : 'Too many messages. Please slow down.');
   }
 
   /// Edit a sent message. Optimistically updates locally; the server's
