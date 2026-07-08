@@ -41,7 +41,8 @@
     "tabChat": "Trò chuyện",
     "tabFriends": "Bạn bè",
     "menuAdmin": "Quản trị",
-    "rateLimitError": "Bạn gửi quá nhiều tin nhắn. Hãy chậm lại."
+    "rateLimitError": "Bạn gửi quá nhiều tin nhắn. Hãy chậm lại.",
+    "notificationSystemTitle": "Thông báo"
   },
   "auth": {
     "emailLabel": "Email",
@@ -743,7 +744,8 @@
     "blockConfirmDesc": "{name} sẽ không thể nhắn tin cho bạn hoặc xem hầu hết thông tin hồ sơ của bạn.",
     "unfriendConfirmTitle": "Xóa kết bạn?",
     "unfriendConfirmDesc": "Bạn và người này sẽ không còn là bạn bè. Bạn vẫn có thể gửi lời mời kết bạn lại sau.",
-    "backToList": "Quay lại"
+    "backToList": "Quay lại",
+    "meetingSummaryLabel": "[Tóm tắt cuộc họp]"
   },
   "aiHub": {
     "title": "Trung tâm AI",

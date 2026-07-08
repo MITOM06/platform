@@ -342,6 +342,10 @@
   "actionCopy": "Copy",
   "actionReact": "React",
   "messageRecalled": "Message was recalled",
+  "messageSendFailedRetry": "Failed to send. Tap to retry.",
+  "@messageSendFailedRetry": {
+    "description": "Shown under an outgoing message whose optimistic send got no server acknowledgement; tapping it retries the send."
+  },
   "replyingTo": "Replying to {name}",
   "@replyingTo": {
     "placeholders": {

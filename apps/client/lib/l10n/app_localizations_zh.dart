@@ -755,6 +755,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get messageRecalled => '消息已撤回';
 
   @override
+  String get messageSendFailedRetry => '发送失败，点按重试。';
+
+  @override
   String replyingTo(String name) {
     return '正在回复 $name';
   }

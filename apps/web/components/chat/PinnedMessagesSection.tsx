@@ -6,7 +6,7 @@ import { toast } from 'sonner'
 import { useUser } from '@/lib/hooks/use-user'
 import { chatService } from '@/lib/api/chat'
 import { getNickname } from '@/lib/nicknames'
-import { humanizeSystemMessage } from '@/lib/system-messages'
+import { humanizeMessagePreview } from '@/lib/system-messages'
 import { useAuthStore } from '@/lib/store/auth.store'
 import { PinnedMessageRow } from './PinnedMessageRow'
 import type { PinnedMessage } from '@/lib/api/types'
@@ -24,8 +24,6 @@ function useSenderName(conversationId: string, senderId: string): string {
   return getNickname(conversationId, senderId) ?? user?.displayName ?? '…'
 }
 
-const MEDIA_TYPES = new Set(['voice', 'image', 'video', 'file', 'sticker'])
-
 type Translate = (key: string, values?: Record<string, string | number>) => string
 
 function PinnedRow({
@@ -33,7 +31,6 @@ function PinnedRow({
   currentUserId,
   pinned,
   unpinLabel,
-  attachmentLabel,
   t,
   onJump,
   onUnpin,
@@ -42,7 +39,6 @@ function PinnedRow({
   currentUserId?: string
   pinned: PinnedMessage
   unpinLabel: string
-  attachmentLabel: string
   t: Translate
   onJump?: () => void
   onUnpin: (id: string) => void
@@ -61,12 +57,11 @@ function PinnedRow({
     return cached?.displayName
   }
 
-  const displayContent =
-    pinned.type === 'system'
-      ? humanizeSystemMessage(pinned.content, t, { resolveName })
-      : pinned.type && MEDIA_TYPES.has(pinned.type)
-        ? attachmentLabel
-        : pinned.content
+  // Never leak raw JSON/markdown/system codes — see
+  // .claude/rules/no-raw-system-data-in-ui.md. The shared preview humanizer maps
+  // media/file → attachment label, meeting_summary → its label, ai → flattened
+  // text, and system codes → humanized sentence.
+  const displayContent = humanizeMessagePreview(pinned.content, pinned.type, t, { resolveName })
 
   const handleJump = () => {
     onJump?.()
@@ -124,7 +119,6 @@ export function PinnedMessagesSection({ conversationId, pinnedMessages, onJump }
             currentUserId={currentUserId}
             pinned={pinned}
             unpinLabel={t('unpinMessage')}
-            attachmentLabel={t('attachmentLabel')}
             t={t}
             onJump={onJump}
             onUnpin={handleUnpin}

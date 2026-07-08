@@ -6,7 +6,7 @@ import { useTranslations } from 'next-intl'
 import { useQueryClient } from '@tanstack/react-query'
 import { Button } from '@/components/ui/button'
 import { chatService } from '@/lib/api/chat'
-import { humanizeSystemMessage } from '@/lib/system-messages'
+import { humanizeMessagePreview } from '@/lib/system-messages'
 import { getNickname } from '@/lib/nicknames'
 import { toast } from 'sonner'
 
@@ -19,26 +19,21 @@ interface Props {
   currentUserId?: string
 }
 
-const MEDIA_TYPES = new Set(['voice', 'image', 'video', 'file', 'sticker'])
-
 type Translate = (key: string, values?: Record<string, string | number>) => string
 
 /**
- * Humanize a pinned message for display: system codes go through the shared
- * humanizer (never leak raw `system.*` codes or user ids — see
- * .claude/rules/no-raw-system-data-in-ui.md), media/file types show the
- * localized attachment label, everything else shows its content.
+ * Humanize a pinned message for display (never leak raw `system.*` codes, user
+ * ids, JSON file/meeting payloads or markdown — see
+ * .claude/rules/no-raw-system-data-in-ui.md). Delegates to the shared preview
+ * humanizer, which maps media/file → attachment label, meeting_summary → its
+ * label, ai → flattened text, and system codes → humanized sentence.
  */
 function getDisplayContent(
   pinned: PinnedMessage,
   t: Translate,
-  attachmentLabel: string,
   resolveName: (actorId: string) => string | undefined,
 ): string {
-  if (pinned.type === 'system') {
-    return humanizeSystemMessage(pinned.content, t, { resolveName })
-  }
-  return pinned.type && MEDIA_TYPES.has(pinned.type) ? attachmentLabel : pinned.content
+  return humanizeMessagePreview(pinned.content, pinned.type, t, { short: true, resolveName })
 }
 
 export function PinnedMessagesBar({ pinnedMessages, onUnpin, conversationId, currentUserId }: Props) {
@@ -62,8 +57,7 @@ export function PinnedMessagesBar({ pinnedMessages, onUnpin, conversationId, cur
   const latest = pinnedMessages[0]!
   const extraCount = pinnedMessages.length - 1
   const hasMore = extraCount > 0
-  const attachmentLabel = t('attachmentLabel')
-  const latestContent = getDisplayContent(latest, t, attachmentLabel, resolveName)
+  const latestContent = getDisplayContent(latest, t, resolveName)
 
   const handleUnpin = async (messageId: string) => {
     try {
@@ -111,7 +105,7 @@ export function PinnedMessagesBar({ pinnedMessages, onUnpin, conversationId, cur
           >
             <div className="flex-1 min-w-0">
               <p className="text-xs text-foreground truncate">
-                {getDisplayContent(pin, t, attachmentLabel, resolveName)}
+                {getDisplayContent(pin, t, resolveName)}
               </p>
             </div>
             <Button

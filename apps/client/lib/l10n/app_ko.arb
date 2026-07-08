@@ -242,6 +242,7 @@
   "actionCopy": "복사",
   "actionReact": "반응",
   "messageRecalled": "메시지가 회수되었습니다",
+  "messageSendFailedRetry": "전송 실패. 눌러서 다시 시도하세요.",
   "replyingTo": "{name}님에게 답장 중",
   "copiedToClipboard": "클립보드에 복사되었습니다",
   "recallConfirm": "모두에게서 이 메시지를 회수하시겠습니까?",

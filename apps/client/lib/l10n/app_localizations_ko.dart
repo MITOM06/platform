@@ -758,6 +758,9 @@ class AppLocalizationsKo extends AppLocalizations {
   String get messageRecalled => '메시지가 회수되었습니다';
 
   @override
+  String get messageSendFailedRetry => '전송 실패. 눌러서 다시 시도하세요.';
+
+  @override
   String replyingTo(String name) {
     return '$name님에게 답장 중';
   }

@@ -4,6 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../config/app_config.dart';
 import '../utils/app_error.dart';
 import '../utils/global_messenger.dart';
+import 'token_manager.dart';
 
 const _keyAccessToken = 'accessToken';
 const _keyRefreshToken = 'refreshToken';
@@ -170,13 +171,17 @@ class _NetworkErrorInterceptor extends Interceptor {
   }
 }
 
-/// On 401: attempt token refresh, retry original request once.
-/// On refresh failure: clear credentials and call onForceLogout if provided.
+/// On 401: refresh the token (globally single-flight via [TokenManager.shared])
+/// and retry the original request once. On refresh failure: clear credentials
+/// and call onForceLogout if provided.
 class _TokenRefreshInterceptor extends Interceptor {
   final FlutterSecureStorage _storage;
   final Dio _dio;
   final void Function()? onForceLogout;
-  bool _isRefreshing = false;
+
+  /// Marks a request that has already been retried after a refresh, so a second
+  /// 401 on the retry doesn't loop forever (401 → refresh → 401 → …).
+  static const _retriedKey = '_tokenRefreshRetried';
 
   _TokenRefreshInterceptor(
     this._storage,
@@ -186,44 +191,44 @@ class _TokenRefreshInterceptor extends Interceptor {
 
   @override
   void onError(DioException err, ErrorInterceptorHandler handler) async {
-    if (err.response?.statusCode != 401 || _isRefreshing) {
+    final alreadyRetried = err.requestOptions.extra[_retriedKey] == true;
+    if (err.response?.statusCode != 401 || alreadyRetried) {
       return handler.next(err);
     }
 
-    _isRefreshing = true;
-    try {
-      final refreshToken = await _storage.read(key: _keyRefreshToken);
-      final sid = await _storage.read(key: _keySid);
-
-      if (refreshToken == null || sid == null) {
-        await _clearCredentials();
-        onForceLogout?.call();
-        return handler.next(err);
-      }
-
-      // Use a fresh Dio to avoid interceptor loops
-      final refreshDio = Dio(BaseOptions(baseUrl: AppConfig.authBaseUrl));
-      final response = await refreshDio.post('/auth/refresh', data: {
-        'sid': sid,
-        'refreshToken': refreshToken,
-      });
-
-      final newAccess = response.data['accessToken'] as String;
-      final newRefresh = response.data['refreshToken'] as String;
-      await _storage.write(key: _keyAccessToken, value: newAccess);
-      await _storage.write(key: _keyRefreshToken, value: newRefresh);
-
-      // Retry original request with new token
-      final retryOptions = err.requestOptions;
-      retryOptions.headers['Authorization'] = 'Bearer $newAccess';
-      final retryResponse = await _dio.fetch(retryOptions);
-      return handler.resolve(retryResponse);
-    } catch (_) {
+    // Must have refresh credentials to even attempt.
+    final refreshToken = await _storage.read(key: _keyRefreshToken);
+    final sid = await _storage.read(key: _keySid);
+    if (refreshToken == null || sid == null) {
       await _clearCredentials();
       onForceLogout?.call();
-      handler.next(err);
-    } finally {
-      _isRefreshing = false;
+      return handler.next(err);
+    }
+
+    // Globally single-flight refresh: ALL Dio instances + STOMP coalesce onto
+    // TokenManager.shared's in-flight request, so the rotating refresh token is
+    // spent exactly once even when several requests 401 concurrently. A request
+    // that arrives while a refresh is in flight awaits the SAME future here
+    // rather than passing through as an error, then retries with the new token.
+    final newAccess = await TokenManager.shared.forceRefresh();
+    if (newAccess == null) {
+      await _clearCredentials();
+      onForceLogout?.call();
+      return handler.next(err);
+    }
+
+    try {
+      // TokenManager already persisted the rotated tokens; the auth-header
+      // interceptor will attach the fresh one, but set it explicitly too.
+      final retryOptions = err.requestOptions;
+      retryOptions.headers['Authorization'] = 'Bearer $newAccess';
+      retryOptions.extra[_retriedKey] = true;
+      final retryResponse = await _dio.fetch(retryOptions);
+      return handler.resolve(retryResponse);
+    } on DioException catch (e) {
+      return handler.next(e);
+    } catch (_) {
+      return handler.next(err);
     }
   }
 

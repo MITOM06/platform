@@ -41,7 +41,8 @@
     "tabChat": "聊天",
     "tabFriends": "好友",
     "menuAdmin": "管理",
-    "rateLimitError": "消息发送过于频繁，请放慢速度。"
+    "rateLimitError": "消息发送过于频繁，请放慢速度。",
+    "notificationSystemTitle": "通知"
   },
   "auth": {
     "emailLabel": "邮箱",
@@ -743,7 +744,8 @@
     "blockConfirmDesc": "{name} 将无法向你发送消息或查看你的大部分个人资料。",
     "unfriendConfirmTitle": "删除好友？",
     "unfriendConfirmDesc": "你和此人将不再是好友。之后你仍可以重新发送好友请求。",
-    "backToList": "返回"
+    "backToList": "返回",
+    "meetingSummaryLabel": "[会议摘要]"
   },
   "aiHub": {
     "title": "AI 中心",

@@ -28,6 +28,22 @@ export function humanizeSystemMessage(
   // Attachment detection (mirror Flutter conversation_tile `/api/uploads/`).
   if (content.includes('/api/uploads/')) return t('attachmentLabel')
 
+  // JSON payloads (file/media message content or a meeting-summary) must never
+  // render raw (.claude/rules/no-raw-system-data-in-ui.md). Sniff the shape when
+  // no message type is available (e.g. conversation-list last-message, reply
+  // quotes) and map to the localized label.
+  if (content.startsWith('{') && content.endsWith('}')) {
+    try {
+      const obj = JSON.parse(content) as Record<string, unknown>
+      if ('overview' in obj || 'actionItems' in obj || 'keyPoints' in obj) {
+        return t('meetingSummaryLabel')
+      }
+      if ('url' in obj) return t('attachmentLabel')
+    } catch {
+      // not JSON — fall through
+    }
+  }
+
   if (content.startsWith('system.message.pinned:') || content.startsWith('system.message.unpinned:')) {
     const pinned = content.startsWith('system.message.pinned:')
     const actorId = content.slice(content.indexOf(':') + 1)
@@ -84,5 +100,56 @@ export function humanizeSystemMessage(
     return `📢 ${content.split(':')[0].replace('system.', '').replace(/\./g, ' ')}`
   }
 
-  return content
+  // Plain text (incl. AI answers) — flatten markdown to a clean one-line preview
+  // so previews never leak raw markdown syntax.
+  return flattenMarkdown(content)
+}
+
+const MEDIA_PREVIEW_TYPES = new Set(['voice', 'image', 'video', 'file', 'sticker'])
+
+/**
+ * Flatten markdown to a compact plain-text preview: strip code fences, inline
+ * code, images/links, headings, emphasis, bullets and blockquotes, and collapse
+ * whitespace. Plain text passes through (minus newline collapsing). Used for
+ * previews (pinned bar/section, conversation-list, reply quotes) so AI markdown
+ * never leaks its raw syntax.
+ */
+export function flattenMarkdown(md: string): string {
+  return md
+    .replace(/```[\s\S]*?```/g, ' ') // fenced code blocks
+    .replace(/`([^`]+)`/g, '$1') // inline code
+    .replace(/!\[[^\]]*\]\([^)]*\)/g, ' ') // images
+    .replace(/\[([^\]]+)\]\([^)]*\)/g, '$1') // links → text
+    .replace(/^#{1,6}\s+/gm, '') // headings
+    .replace(/(\*\*|__|\*|_|~~)/g, '') // emphasis markers
+    .replace(/^\s*[-*+]\s+/gm, '') // list bullets
+    .replace(/^\s*>\s?/gm, '') // blockquotes
+    .replace(/\s+/g, ' ') // collapse whitespace/newlines
+    .trim()
+}
+
+/**
+ * Humanize any message for a compact preview (pinned bar/section,
+ * conversation-list last-message, reply quotes). Never leaks raw JSON payloads,
+ * markdown, `system.*` codes or upload URLs — see
+ * .claude/rules/no-raw-system-data-in-ui.md. `type` is optional (the
+ * conversation-list last-message and reply quotes carry none); when absent the
+ * content itself is sniffed via {@link humanizeSystemMessage}.
+ */
+export function humanizeMessagePreview(
+  content: string,
+  type: string | undefined,
+  t: Translate,
+  opts?: { short?: boolean; resolveName?: (actorId: string) => string | undefined },
+): string {
+  if (!content) return content
+  if (type === 'system' || content.startsWith('system.')) {
+    return humanizeSystemMessage(content, t, opts)
+  }
+  if (type && MEDIA_PREVIEW_TYPES.has(type)) return t('attachmentLabel')
+  if (type === 'meeting_summary') return t('meetingSummaryLabel')
+  if (type === 'ai') return flattenMarkdown(content) || t('attachmentLabel')
+  // Unknown/typeless → sniff the content (system codes, uploads, JSON payloads,
+  // markdown) through the shared humanizer.
+  return humanizeSystemMessage(content, t, opts)
 }

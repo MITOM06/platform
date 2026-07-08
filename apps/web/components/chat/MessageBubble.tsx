@@ -13,7 +13,7 @@ import { MessageSources } from './MessageSources'
 import { ExternalBotBubble } from './ExternalBotBubble'
 import { MessageBubbleBody } from './MessageBubbleBody'
 import { formatTime, ReactionBadge, BARE_TYPES, isEmojiOnly } from './message-bubble-helpers'
-import { humanizeSystemMessage } from '@/lib/system-messages'
+import { humanizeSystemMessage, humanizeMessagePreview } from '@/lib/system-messages'
 import { useNickname, getNickname } from '@/lib/nicknames'
 import { useUser } from '@/lib/hooks/use-user'
 import { useQueryClient } from '@tanstack/react-query'
@@ -97,6 +97,19 @@ const MessageBubbleInner = function MessageBubble({
     setLongPressActive(false)
   }
 
+  // Resolve an actor's display name for system codes that carry an actor id
+  // (e.g. `system.message.pinned:<actorId>`), and for humanizing the reply
+  // quote when the replied-to message is a system event. Order mirrors the
+  // chat bubble: current user → "You", then conversation nickname, then cached
+  // profile name.
+  const resolveName = (actorId: string): string | undefined => {
+    if (actorId === currentUserId) return t('you')
+    const nick = conversationId ? getNickname(conversationId, actorId) : undefined
+    if (nick) return nick
+    const cached = queryClient.getQueryData<{ displayName?: string }>(['user', actorId])
+    return cached?.displayName
+  }
+
   if (message.recalled) {
     return (
       <div className={cn('flex', isOwn ? 'justify-end' : 'justify-start')}>
@@ -108,16 +121,6 @@ const MessageBubbleInner = function MessageBubble({
   }
 
   if (message.type === 'system') {
-    // Resolve an actor's display name for system codes that carry an actor id
-    // (e.g. `system.message.pinned:<actorId>`). Order mirrors the chat bubble:
-    // current user → "You", then conversation nickname, then cached profile.
-    const resolveName = (actorId: string): string | undefined => {
-      if (actorId === currentUserId) return t('you')
-      const nick = conversationId ? getNickname(conversationId, actorId) : undefined
-      if (nick) return nick
-      const cached = queryClient.getQueryData<{ displayName?: string }>(['user', actorId])
-      return cached?.displayName
-    }
     // Humanise structured system events (parity with Flutter message_bubble_parts.dart).
     const systemText = humanizeSystemMessage(message.content, t, { resolveName })
     const isCallMsg = message.content.startsWith('system.call.')
@@ -183,7 +186,16 @@ const MessageBubbleInner = function MessageBubble({
           ? t('you')
           : (replyNickname || repliedSender?.displayName || '')}
       </p>
-      <p className="truncate italic">{message.replyPreview.content}</p>
+      {/* Never render the replied-to content raw: it may be a `system.*` code,
+          an /api/uploads/ URL, or a JSON file/meeting payload (rule:
+          no-raw-system-data-in-ui). The reply preview carries no message type,
+          so humanize by sniffing the content. */}
+      <p className="truncate italic">
+        {humanizeMessagePreview(message.replyPreview.content, undefined, t, {
+          short: true,
+          resolveName,
+        })}
+      </p>
     </button>
   )
 

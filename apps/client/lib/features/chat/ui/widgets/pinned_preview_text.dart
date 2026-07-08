@@ -31,6 +31,15 @@ String pinnedPreviewText(BuildContext context, PinnedMessageModel pinned) {
       return '[${l10n.attachVoice}]';
     case 'sticker':
       return '[${l10n.attachSticker}]';
+    case 'meeting_summary':
+      // Content is a JSON payload (attendees/overview/keyPoints/…) — show a
+      // localized label instead of leaking the raw serialized JSON.
+      return '[${l10n.meetingSummaryTitle}]';
+    case 'ai':
+      // AI replies are plain markdown text — safe to preview flattened; fall
+      // back to the em dash when empty.
+      final aiText = pinned.content.trim();
+      return aiText.isEmpty ? '—' : aiText;
     default:
       final text = pinned.content.trim();
       return text.isEmpty ? '—' : text;

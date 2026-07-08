@@ -764,6 +764,9 @@ class AppLocalizationsVi extends AppLocalizations {
   String get messageRecalled => 'Tin nhắn đã được thu hồi';
 
   @override
+  String get messageSendFailedRetry => 'Gửi thất bại. Nhấn để thử lại.';
+
+  @override
   String replyingTo(String name) {
     return 'Đang trả lời $name';
   }

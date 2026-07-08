@@ -108,6 +108,7 @@ class ChatNotifier extends _$ChatNotifier with _ChatActionsMixin {
       _reconnectSub?.cancel();
       _aiStreamSub?.cancel();
       _ai.dispose();
+      _cancelSendWatchdogs();
       _typingTimer?.cancel();
       for (final t in _typingTimers.values) {
         t.cancel();
@@ -296,10 +297,10 @@ class ChatNotifier extends _$ChatNotifier with _ChatActionsMixin {
 
   static final _aiMentionRe = RegExp(r'@(AI|ponai)\b', caseSensitive: false);
 
+  @override
   Future<void> sendMessage(String content, {String type = 'text'}) async {
     final current = state.valueOrNull;
     if (current == null) return;
-
     final uid = _currentUserId;
     if (uid == null) return;
 
@@ -324,8 +325,7 @@ class ChatNotifier extends _$ChatNotifier with _ChatActionsMixin {
       replyPreview: replyPreview,
       isPending: true,
     );
-
-    // If the message mentions @AI, also insert a thinking placeholder
+    // @AI mention → insert a thinking placeholder too.
     final hasAiMention = type == 'text' && _aiMentionRe.hasMatch(content);
     final aiPlaceholderId = 'ai-pending-${DateTime.now().millisecondsSinceEpoch}';
     final aiPlaceholder = hasAiMention
@@ -345,23 +345,24 @@ class ChatNotifier extends _$ChatNotifier with _ChatActionsMixin {
       _ai.beginPending(aiPlaceholderId);
     }
 
-    // Adding the message also clears the reply composer.
     state = AsyncData(current.copyWith(
       messages: [
         if (aiPlaceholder != null) aiPlaceholder,
         optimistic,
         ...current.messages,
       ],
-      clearReplyingTo: true,
+      clearReplyingTo: true, // adding the message also clears the reply composer
     ));
 
     final stomp = ref.read(stompServiceProvider.notifier);
     if (stomp.isConnected) {
       stomp.sendMessage(conversationId, content,
           type: type, replyToId: replyTo?.id);
+      // STOMP send has no ack; watchdog fails the bubble (tap-to-retry) on no echo.
+      _startSendWatchdog(optimistic.id);
     } else {
-      // REST fallback when STOMP unavailable
       try {
+        // REST fallback when STOMP unavailable.
         final sent = await ref
             .read(chatRepositoryProvider)
             .sendMessageRest(conversationId, content,
@@ -382,8 +383,7 @@ class ChatNotifier extends _$ChatNotifier with _ChatActionsMixin {
           ));
         }
         if (e is DioException && e.response?.statusCode == 429) {
-          // Use global snackbar key — avoids BuildContext-across-async-gap lint.
-          showErrorSnackBar('Too many messages. Please slow down.');
+          _showRateLimitError();
         }
       }
     }

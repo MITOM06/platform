@@ -15,6 +15,7 @@ import 'package:platform_client/features/auth/domain/auth_provider.dart';
 import 'package:platform_client/features/chat/domain/chat_models.dart';
 import 'package:platform_client/features/chat/domain/chat_misc_providers.dart';
 import 'package:platform_client/features/chat/ui/widgets/message_bubble.dart';
+import 'package:platform_client/features/chat/ui/widgets/message_bubble_parts.dart';
 import 'package:platform_client/core/providers/theme_provider.dart';
 import 'package:platform_client/l10n/app_localizations.dart';
 
@@ -166,6 +167,60 @@ void main() {
       expect(find.byType(MessageBubble), findsOneWidget);
       // _CallSystemMessage always contains at least one Icon (phone/videocam).
       expect(find.byType(Icon), findsAtLeastNWidgets(1));
+    });
+
+    testWidgets('ended call renders the duration from parts[2] (not parts[3])',
+        (tester) async {
+      // 'system.call.ended:voice:125' → 125s = 02:05. The bug read parts[3]
+      // (missing) so it always showed 00:00; secs live at parts[2].
+      final overrides = await _buildOverrides();
+      final message = _systemMessage(content: 'system.call.ended:voice:125');
+
+      await tester.pumpWidget(
+        _wrap(
+          MessageBubble(message: message, isSentByMe: false),
+          overrides: overrides,
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.textContaining('02:05'), findsOneWidget);
+      expect(find.textContaining('00:00'), findsNothing);
+    });
+  });
+
+  group('ReplyQuote — sanitized preview (no-raw-system-data-in-ui)', () {
+    testWidgets('humanizes a system-code reply instead of showing the raw code',
+        (tester) async {
+      await tester.pumpWidget(
+        _wrap(const ReplyQuote(
+          preview: ReplyPreview(
+            senderId: 'user-abc',
+            content: 'system.group.created',
+          ),
+        )),
+      );
+      await tester.pumpAndSettle();
+
+      // Never leak the raw system.* code; show the localized label.
+      expect(find.text('system.group.created'), findsNothing);
+      expect(find.text('Create group'), findsOneWidget);
+    });
+
+    testWidgets('labels a media (upload URL) reply instead of showing the URL',
+        (tester) async {
+      await tester.pumpWidget(
+        _wrap(const ReplyQuote(
+          preview: ReplyPreview(
+            senderId: 'user-abc',
+            content: '/api/uploads/6e8f0011223344.jpg',
+          ),
+        )),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.textContaining('/api/uploads/'), findsNothing);
+      expect(find.text('[Photo]'), findsOneWidget);
     });
   });
 }

@@ -41,7 +41,8 @@
     "tabChat": "チャット",
     "tabFriends": "友達",
     "menuAdmin": "管理",
-    "rateLimitError": "メッセージを送りすぎています。少し落ち着いてください。"
+    "rateLimitError": "メッセージを送りすぎています。少し落ち着いてください。",
+    "notificationSystemTitle": "通知"
   },
   "auth": {
     "emailLabel": "メールアドレス",
@@ -743,7 +744,8 @@
     "blockConfirmDesc": "{name} さんはあなたにメッセージを送ったり、プロフィール情報の大半を見ることができなくなります。",
     "unfriendConfirmTitle": "友達を削除しますか？",
     "unfriendConfirmDesc": "あなたとこの相手は友達ではなくなります。後でもう一度友達リクエストを送ることができます。",
-    "backToList": "戻る"
+    "backToList": "戻る",
+    "meetingSummaryLabel": "[会議の要約]"
   },
   "aiHub": {
     "title": "AI ハブ",

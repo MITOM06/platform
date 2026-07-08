@@ -242,6 +242,7 @@
   "actionCopy": "复制",
   "actionReact": "表态",
   "messageRecalled": "消息已撤回",
+  "messageSendFailedRetry": "发送失败，点按重试。",
   "replyingTo": "正在回复 {name}",
   "copiedToClipboard": "已复制到剪贴板",
   "recallConfirm": "对所有人撤回这条消息吗？",

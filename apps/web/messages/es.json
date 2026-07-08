@@ -41,7 +41,8 @@
     "tabChat": "Chat",
     "tabFriends": "Amigos",
     "menuAdmin": "Administración",
-    "rateLimitError": "Demasiados mensajes. Por favor, más despacio."
+    "rateLimitError": "Demasiados mensajes. Por favor, más despacio.",
+    "notificationSystemTitle": "Notificación"
   },
   "auth": {
     "emailLabel": "Correo electrónico",
@@ -743,7 +744,8 @@
     "blockConfirmDesc": "{name} no podrá enviarte mensajes ni ver la mayor parte de la información de tu perfil.",
     "unfriendConfirmTitle": "¿Eliminar amistad?",
     "unfriendConfirmDesc": "Tú y esta persona dejarán de ser amigos. Podrás enviar una solicitud de amistad de nuevo más adelante.",
-    "backToList": "Atrás"
+    "backToList": "Atrás",
+    "meetingSummaryLabel": "[Resumen de la reunión]"
   },
   "aiHub": {
     "title": "Centro de IA",

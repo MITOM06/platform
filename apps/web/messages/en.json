@@ -41,7 +41,8 @@
     "tabChat": "Chat",
     "tabFriends": "Friends",
     "menuAdmin": "Admin",
-    "rateLimitError": "Too many messages. Please slow down."
+    "rateLimitError": "Too many messages. Please slow down.",
+    "notificationSystemTitle": "Notification"
   },
   "auth": {
     "emailLabel": "Email",
@@ -743,7 +744,8 @@
     "blockConfirmDesc": "{name} won't be able to message you or see most of your profile information.",
     "unfriendConfirmTitle": "Remove friend?",
     "unfriendConfirmDesc": "You and this person will no longer be friends. You can send a friend request again later.",
-    "backToList": "Back"
+    "backToList": "Back",
+    "meetingSummaryLabel": "[Meeting summary]"
   },
   "aiHub": {
     "title": "AI Hub",

@@ -758,6 +758,9 @@ class AppLocalizationsJa extends AppLocalizations {
   String get messageRecalled => 'メッセージは取り消されました';
 
   @override
+  String get messageSendFailedRetry => '送信に失敗しました。タップして再試行。';
+
+  @override
   String replyingTo(String name) {
     return '$name に返信中';
   }

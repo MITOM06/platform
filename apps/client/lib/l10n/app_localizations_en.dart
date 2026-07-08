@@ -764,6 +764,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get messageRecalled => 'Message was recalled';
 
   @override
+  String get messageSendFailedRetry => 'Failed to send. Tap to retry.';
+
+  @override
   String replyingTo(String name) {
     return 'Replying to $name';
   }

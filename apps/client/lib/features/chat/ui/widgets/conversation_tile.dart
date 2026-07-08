@@ -11,6 +11,7 @@ import '../../domain/chat_provider.dart';
 import '../../domain/chat_state.dart';
 import 'conversation_avatar.dart';
 import 'conversation_tile_menu.dart';
+import 'message_preview_text.dart';
 
 class ConversationTile extends ConsumerWidget {
   final ConversationModel conv;
@@ -302,47 +303,12 @@ class ConversationTile extends ConsumerWidget {
     return body;
   }
 
-  String _subtitleText(BuildContext context, String content) {
-    if (content.contains('/api/uploads/')) return context.l10n.attachmentLabel;
-    if (content.startsWith('system.nickname.changed:')) {
-      return context.l10n.systemNicknameChanged;
-    }
-    if (content.startsWith('system.theme.changed:')) {
-      return context.l10n.systemThemeChanged;
-    }
-    if (content.startsWith('system.quick_reaction.changed:')) {
-      return context.l10n.systemQuickReactionChanged;
-    }
-    // Pin/unpin notices carry an actor id (system.message.pinned:<id>). The
-    // list preview has no participant name-resolution context, so use the
-    // generic actor name — mirrors web's ConversationItem behaviour.
-    if (content.startsWith('system.message.pinned:')) {
-      return context.l10n.sysPinnedMessage(context.l10n.someone);
-    }
-    if (content.startsWith('system.message.unpinned:')) {
-      return context.l10n.sysUnpinnedMessage(context.l10n.someone);
-    }
-    if (content.startsWith('system.')) {
-      // Map group/member system codes to the same l10n strings used by the
-      // chat bubble humaniser (message_bubble_parts._systemText) to keep the
-      // tile and bubble in sync.
-      switch (content) {
-        case 'system.group.created':
-          return context.l10n.createGroup;
-        case 'system.members.added':
-          return context.l10n.addMembers;
-        case 'system.member.left':
-          return context.l10n.leaveGroup;
-        case 'system.member.removed':
-          return context.l10n.removeMember;
-        case 'system.member.joined':
-          return context.l10n.joinChannel;
-        default:
-          return content;
-      }
-    }
-    return content;
-  }
+  // Sanitized, localized subtitle. Delegates to the shared content-based
+  // preview helper so the tile, reply quotes, and pinned previews humanize
+  // system codes / media URLs / JSON payloads identically (never leaking a raw
+  // system.* code, upload URL, or file/meeting-summary JSON).
+  String _subtitleText(BuildContext context, String content) =>
+      messagePreviewFromContent(context, content);
 
 }
 

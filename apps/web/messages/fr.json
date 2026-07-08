@@ -41,7 +41,8 @@
     "tabChat": "Discussion",
     "tabFriends": "Amis",
     "menuAdmin": "Administration",
-    "rateLimitError": "Trop de messages. Veuillez ralentir."
+    "rateLimitError": "Trop de messages. Veuillez ralentir.",
+    "notificationSystemTitle": "Notification"
   },
   "auth": {
     "emailLabel": "E-mail",
@@ -743,7 +744,8 @@
     "blockConfirmDesc": "{name} ne pourra plus vous envoyer de messages ni voir la plupart des informations de votre profil.",
     "unfriendConfirmTitle": "Retirer cet ami ?",
     "unfriendConfirmDesc": "Vous et cette personne ne serez plus amis. Vous pourrez renvoyer une demande d'ami plus tard.",
-    "backToList": "Retour"
+    "backToList": "Retour",
+    "meetingSummaryLabel": "[Résumé de la réunion]"
   },
   "aiHub": {
     "title": "Hub IA",

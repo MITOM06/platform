@@ -1548,6 +1548,12 @@ abstract class AppLocalizations {
   /// **'Message was recalled'**
   String get messageRecalled;
 
+  /// Shown under an outgoing message whose optimistic send got no server acknowledgement; tapping it retries the send.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to send. Tap to retry.'**
+  String get messageSendFailedRetry;
+
   /// No description provided for @replyingTo.
   ///
   /// In en, this message translates to:
