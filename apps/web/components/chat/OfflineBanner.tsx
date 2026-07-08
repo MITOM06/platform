@@ -1,36 +1,29 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { WifiOff } from 'lucide-react'
 import { useTranslations } from 'next-intl'
-import { stompService } from '@/lib/stomp/client'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
-
-// Debounce: only show "offline" banner after this many ms of disconnection.
-// Prevents false positives during token-refresh reconnect cycles (~1-2s).
-const OFFLINE_DEBOUNCE_MS = 3_000
 
 export function OfflineBanner() {
   const t = useTranslations('chat')
   const [isOffline, setIsOffline] = useState(false) // start hidden — don't flash on mount
-  const timerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
 
+  // Key the banner off the browser's REAL network state, never off the STOMP
+  // socket. Cloud Run severs the WebSocket on its request-timeout every N
+  // minutes; STOMP then reconnects (reconnectDelay), and keying "No internet"
+  // off those healthy reconnect cycles made the banner flash constantly even
+  // with a perfect connection. navigator.onLine mirrors what the Flutter client
+  // does with connectivity_plus — both platforms now show this banner only when
+  // the device is genuinely offline.
   useEffect(() => {
-    const unsubscribe = stompService.onStateChange((connected) => {
-      if (connected) {
-        // Reconnected → clear pending debounce and immediately hide banner
-        clearTimeout(timerRef.current)
-        setIsOffline(false)
-      } else {
-        // Disconnected → wait before showing banner (avoid reconnect flicker)
-        timerRef.current = setTimeout(() => {
-          setIsOffline(true)
-        }, OFFLINE_DEBOUNCE_MS)
-      }
-    })
+    const update = () => setIsOffline(!navigator.onLine)
+    update() // sync to the current network state on mount
+    window.addEventListener('online', update)
+    window.addEventListener('offline', update)
     return () => {
-      unsubscribe()
-      clearTimeout(timerRef.current)
+      window.removeEventListener('online', update)
+      window.removeEventListener('offline', update)
     }
   }, [])
 

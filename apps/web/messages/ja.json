@@ -477,6 +477,7 @@
     "viewProfile": "プロフィールを表示",
     "groupInfo": "グループ情報",
     "voiceCall": "音声通話",
+    "callBlockedByUser": "このユーザーは通話を受け付けていません",
     "videoCall": "ビデオ通話",
     "callComingSoon": "近日公開",
     "blockUser": "ユーザーをブロック",

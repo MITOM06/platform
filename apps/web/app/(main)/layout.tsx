@@ -15,6 +15,7 @@ import { stompService } from '@/lib/stomp/client'
 import type { WebRTCSignal } from '@/lib/webrtc/call-manager'
 import { useCallStore } from '@/lib/store/call.store'
 import { ConversationList } from '@/components/chat/ConversationList'
+import { OfflineBanner } from '@/components/chat/OfflineBanner'
 import { ActiveFriendsRow } from '@/components/chat/ActiveFriendsRow'
 import { AssistantEntry } from '@/components/chat/AssistantEntry'
 import { cn } from '@/lib/utils'
@@ -391,6 +392,10 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
           </div>
         </div>
         <div className="flex-1 flex flex-col overflow-hidden pb-16 md:pb-0">
+          {/* Banner stack — top of the sidebar body, above all list content, so
+              every status banner flows top→down (mirrors the Flutter list screen
+              where OfflineBanner is the first child of the body Column). */}
+          <OfflineBanner />
           {/* Horizontal presence row doesn't fit the compact rail — hide it. */}
           <div className="hidden @[300px]:block">
             <ActiveFriendsRow />

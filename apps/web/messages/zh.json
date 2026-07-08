@@ -477,6 +477,7 @@
     "viewProfile": "查看资料",
     "groupInfo": "群组信息",
     "voiceCall": "语音通话",
+    "callBlockedByUser": "该用户不接受通话",
     "videoCall": "视频通话",
     "callComingSoon": "敬请期待",
     "blockUser": "屏蔽用户",

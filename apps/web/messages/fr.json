@@ -477,6 +477,7 @@
     "viewProfile": "Voir le profil",
     "groupInfo": "Infos du groupe",
     "voiceCall": "Appel vocal",
+    "callBlockedByUser": "Cet utilisateur ne répond pas aux appels",
     "videoCall": "Appel vidéo",
     "callComingSoon": "Bientôt disponible",
     "blockUser": "Bloquer l'utilisateur",

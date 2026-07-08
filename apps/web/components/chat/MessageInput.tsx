@@ -103,6 +103,16 @@ export function MessageInput({
   const [mentionIndex, setMentionIndex] = useState(0)
   const [mentionQuery, setMentionQuery] = useState<{ start: number, end: number, text: string } | null>(null)
 
+  // Grow the textarea to fit content, capped at max-h-32 (128px). Driven by JS
+  // (not `field-sizing-content`) so the box never grows to fit the *placeholder*
+  // — that was blowing the empty input up to 60-70px on mobile.
+  const resizeTextarea = () => {
+    const el = textareaRef.current
+    if (!el) return
+    el.style.height = 'auto'
+    el.style.height = Math.min(el.scrollHeight, 128) + 'px'
+  }
+
   // Populate textarea when entering edit mode
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -121,16 +131,6 @@ export function MessageInput({
   useEffect(() => {
     if (replyingTo) textareaRef.current?.focus()
   }, [replyingTo])
-
-  // Grow the textarea to fit content, capped at max-h-32 (128px). Driven by JS
-  // (not `field-sizing-content`) so the box never grows to fit the *placeholder*
-  // — that was blowing the empty input up to 60-70px on mobile.
-  const resizeTextarea = () => {
-    const el = textareaRef.current
-    if (!el) return
-    el.style.height = 'auto'
-    el.style.height = Math.min(el.scrollHeight, 128) + 'px'
-  }
 
   const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const val = e.target.value

@@ -3,9 +3,12 @@ package com.platform.chatservice.config;
 import com.platform.chatservice.security.AuthChannelInterceptor;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.messaging.simp.config.ChannelRegistration;
 import org.springframework.messaging.simp.config.MessageBrokerRegistry;
+import org.springframework.scheduling.TaskScheduler;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 import org.springframework.web.socket.config.annotation.EnableWebSocketMessageBroker;
 import org.springframework.web.socket.config.annotation.StompEndpointRegistry;
 import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerConfigurer;
@@ -39,8 +42,25 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     // KHÔNG để "/user" ở đây — "/user" là userDestinationPrefix, do
     // UserDestinationMessageHandler xử lý, không phải broker. Thiếu "/queue"
     // khiến convertAndSendToUser(.../queue/notifications) bị broker drop.
-    registry.enableSimpleBroker("/topic", "/queue");
+    // Heartbeat (10s/10s) is a STOMP-level keepalive: it keeps the WebSocket
+    // considered "alive" through idle periods and lets each side detect a dead
+    // socket within ~2 missed beats. Requires a TaskScheduler — without one the
+    // SimpleBroker silently negotiates heartbeats to 0/0 (disabled).
+    registry
+        .enableSimpleBroker("/topic", "/queue")
+        .setHeartbeatValue(new long[] {10_000, 10_000})
+        .setTaskScheduler(heartbeatScheduler());
     registry.setUserDestinationPrefix("/user");
+  }
+
+  /** Dedicated scheduler driving STOMP broker heartbeats (see configureMessageBroker). */
+  @Bean
+  public TaskScheduler heartbeatScheduler() {
+    ThreadPoolTaskScheduler scheduler = new ThreadPoolTaskScheduler();
+    scheduler.setPoolSize(1);
+    scheduler.setThreadNamePrefix("ws-heartbeat-");
+    scheduler.initialize();
+    return scheduler;
   }
 
   @Override

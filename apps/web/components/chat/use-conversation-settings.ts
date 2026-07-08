@@ -7,6 +7,7 @@ import { useQueryClient } from '@tanstack/react-query'
 import { useTranslations } from 'next-intl'
 import { chatService } from '@/lib/api/chat'
 import { authService } from '@/lib/api/auth'
+import { useRelationship } from '@/lib/hooks/use-relationship'
 import {
   setNickname, nicknameSystemMessage,
 } from '@/lib/nicknames'
@@ -41,13 +42,6 @@ export function useConversationSettings({ conversation, currentUserId, onClose }
   const [localBlockedValue, setLocalBlockedValue] = useState(false)
   const [muteDurationOpen, setMuteDurationOpen] = useState(false)
 
-  // Derived: use the local override only while we are still on the same
-  // conversation; once the conversation prop switches, fall back to the prop.
-  const isBlocked =
-    localBlockedConvId === conversation.id
-      ? localBlockedValue
-      : (conversation.isBlocked ?? false)
-
   const isMuted = conversation.isMuted
   const isArchived = conversation.isArchived
   const isDirect = conversation.type === 'direct'
@@ -57,6 +51,20 @@ export function useConversationSettings({ conversation, currentUserId, onClose }
   const otherUserId = isDirect && !isAI
     ? conversation.participants.find((p) => p !== currentUserId)
     : null
+
+  // Relationship granular — phân biệt "B chặn A" (iBlocked) vs "A chặn B" (blockedMe).
+  // conversation.isBlocked là combined boolean nên không đủ để quyết định
+  // hiển thị nút Block/Unblock hay chặn block ngược.
+  const { relationship } = useRelationship(otherUserId ?? undefined)
+  // Derived: use the local override only while we are still on the same
+  // conversation; once the conversation prop switches, fall back to relationship.
+  // Local override tracks B's own block/unblock action, i.e. iBlocked.
+  const iBlocked =
+    localBlockedConvId === conversation.id
+      ? localBlockedValue
+      : (relationship?.iBlocked ?? (conversation.isBlocked ?? false))
+  const blockedMe = relationship?.blockedMe ?? false
+  const isBlocked = iBlocked || blockedMe
 
   // Nickname editing covers every human participant (self + others), AI bot excluded.
   const nicknameParticipantIds = conversation.participants.filter((p) => p !== AI_BOT_ID)
@@ -153,10 +161,11 @@ export function useConversationSettings({ conversation, currentUserId, onClose }
     )
 
   // Blocking is destructive → confirm first. Unblocking runs directly.
+  // Nếu A đã chặn B (blockedMe) → không cho B chặn ngược.
   const handleBlockButtonClick = () => {
-    if (isBlocked) {
+    if (iBlocked) {
       handleBlockToggle()
-    } else {
+    } else if (!blockedMe) {
       setBlockConfirmOpen(true)
     }
   }
@@ -165,14 +174,14 @@ export function useConversationSettings({ conversation, currentUserId, onClose }
     if (!otherUserId) return
     setSaving(true)
     try {
-      if (isBlocked) {
+      if (iBlocked) {
         await authService.unblockUser(otherUserId)
         await chatService.blockRestoreConversation(conversation.id)
         setLocalBlockedConvId(conversation.id)
         setLocalBlockedValue(false)
         invalidateAll()
         toast.success(t('unblockSuccess'))
-      } else {
+      } else if (!blockedMe) {
         await authService.blockUser(otherUserId)
         await chatService.blockArchiveConversation(conversation.id)
         setLocalBlockedConvId(conversation.id)
@@ -230,7 +239,7 @@ export function useConversationSettings({ conversation, currentUserId, onClose }
 
   return {
     // derived flags
-    isBlocked, isMuted, isArchived, isDirect, isGroup, isAI,
+    iBlocked, blockedMe, isBlocked, isMuted, isArchived, isDirect, isGroup, isAI,
     otherUserId, nicknameParticipantIds, autoDeleteOptions, sliderValue,
     // ui state
     saving,

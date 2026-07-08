@@ -95,7 +95,12 @@ class StompService extends _$StompService {
         onStompError: _onError,
         onWebSocketError: _onWebSocketError,
         beforeConnect: _beforeConnect,
-        reconnectDelay: const Duration(seconds: 5),
+        // Fast reconnect so realtime recovers quickly after Cloud Run severs
+        // the socket on its request-timeout. Heartbeats (10s/10s, negotiated
+        // with the server) keep the connection alive and detect dead sockets.
+        reconnectDelay: const Duration(seconds: 2),
+        heartbeatIncoming: const Duration(seconds: 10),
+        heartbeatOutgoing: const Duration(seconds: 10),
         // Same mutable maps the handler reads at connect time — `_beforeConnect`
         // refreshes the token into these in place before each attempt.
         stompConnectHeaders: _stompHeaders,

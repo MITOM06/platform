@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
+import { toast } from 'sonner'
 import { ArrowLeft, Bot, Settings, Phone, Video, Users, MoreVertical } from 'lucide-react'
 import { useQueryClient } from '@tanstack/react-query'
 import {
@@ -13,6 +14,7 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { useConversation } from '@/lib/hooks/use-conversation'
 import { useUserStatus } from '@/lib/hooks/use-user-status'
+import { useRelationship } from '@/lib/hooks/use-relationship'
 import { useAuthStore } from '@/lib/store/auth.store'
 import { useUser } from '@/lib/hooks/use-user'
 import { useAssistant } from '@/lib/hooks/use-assistant'
@@ -83,6 +85,9 @@ export function ConversationHeader({
       : undefined
 
   const { data: status } = useUserStatus(otherUserId)
+  const { relationship } = useRelationship(otherUserId)
+  // A đã chặn B → ẩn online status & chặn không cho B gọi ngược.
+  const blockedMe = relationship?.blockedMe ?? false
   const { data: otherUser } = useUser(otherUserId)
   const nickname = useNickname(conversationId, otherUserId)
   const assistantName = useAssistantName()
@@ -99,6 +104,16 @@ export function ConversationHeader({
   const avatarUrl = conversation?.avatarUrl ?? otherUser?.avatarUrl
   const isTyping = typingUserIds.length > 0
   const pinnedMessages = conversation?.pinnedMessages ?? []
+
+  // Nếu A đã chặn B, B không được khởi tạo cuộc gọi — chỉ hiện toast.
+  const guardedCall = (video: boolean) => {
+    if (!otherUserId) return
+    if (blockedMe) {
+      toast.error(t('callBlockedByUser'))
+      return
+    }
+    startCall(otherUserId, displayName, conversationId, video)
+  }
 
   const handleUnpin = (messageId: string) => {
     queryClient.setQueryData(
@@ -148,7 +163,8 @@ export function ConversationHeader({
               </>
             )}
           </Avatar>
-          {otherUserId && status?.online && (
+          {/* Ẩn online dot khi A đã chặn B */}
+          {otherUserId && status?.online && !blockedMe && (
             <span className="absolute bottom-0 right-0 size-2.5 rounded-full bg-[#00E676] border-2 border-background shadow-[0_0_6px_rgba(0,230,118,0.6)]" />
           )}
         </button>
@@ -175,7 +191,7 @@ export function ConversationHeader({
           </div>
           {isTyping ? (
             <p className="text-xs text-pon-cyan font-medium animate-pulse">{t('typing')}</p>
-          ) : otherUserId && status ? (
+          ) : otherUserId && status && !blockedMe ? (
             <p className="text-xs text-muted-foreground">
               {status.online ? t('online') : t('offline')}
             </p>
@@ -205,7 +221,7 @@ export function ConversationHeader({
             <Button
               variant="ghost"
               size="icon"
-              onClick={() => startCall(otherUserId, displayName, conversationId, false)}
+              onClick={() => guardedCall(false)}
               title={t('voiceCall')}
               className="tap"
             >
@@ -219,7 +235,7 @@ export function ConversationHeader({
               <Button
                 variant="ghost"
                 size="icon"
-                onClick={() => startCall(otherUserId, displayName, conversationId, true)}
+                onClick={() => guardedCall(true)}
                 title={t('videoCall')}
                 className="tap"
               >
@@ -254,7 +270,7 @@ export function ConversationHeader({
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
                 <DropdownMenuItem
-                  onClick={() => startCall(otherUserId, displayName, conversationId, true)}
+                  onClick={() => guardedCall(true)}
                 >
                   <Video className="size-4 mr-2" />
                   {t('videoCall')}

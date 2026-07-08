@@ -84,6 +84,9 @@ const nextConfig: NextConfig = {
               "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.gstatic.com https://apis.google.com",
               "style-src 'self' 'unsafe-inline'",
               `img-src 'self' data: blob: ${process.env.NEXT_PUBLIC_CHAT_URL ?? ''} https://lh3.googleusercontent.com https://images.unsplash.com`,
+              // media-src is required for <audio>/<video> (voice messages, video, AI voice
+              // replies). Without it these fall back to default-src 'self' and get blocked.
+              `media-src 'self' data: blob: ${process.env.NEXT_PUBLIC_CHAT_URL ?? ''} ${process.env.NEXT_PUBLIC_AI_URL ?? ''}`,
               `connect-src 'self' ${process.env.NEXT_PUBLIC_AUTH_URL ?? ''} ${process.env.NEXT_PUBLIC_CHAT_URL ?? ''} ${process.env.NEXT_PUBLIC_AI_URL ?? ''} wss: ws:`,
               "frame-ancestors 'none'",
               "base-uri 'self'",

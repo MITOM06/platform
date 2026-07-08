@@ -12,7 +12,8 @@ interface Props {
   isDirect: boolean
   isGroup: boolean
   isAI: boolean
-  isBlocked: boolean
+  iBlocked: boolean // B chủ động chặn A
+  blockedMe: boolean // A đã chặn B
   saving: boolean
   onBlockToggle: () => void
   onLeaveGroup: () => void
@@ -25,7 +26,8 @@ export function PrivacySupportSection({
   isDirect,
   isGroup,
   isAI,
-  isBlocked,
+  iBlocked,
+  blockedMe,
   saving,
   onBlockToggle,
   onLeaveGroup,
@@ -39,10 +41,12 @@ export function PrivacySupportSection({
         <span className="font-semibold text-sm">{t('privacyAndSupportCategory')}</span>
       </AccordionTrigger>
       <AccordionContent className="pb-4 pt-1 space-y-1">
-        {isDirect && !isAI && (
+        {/* Chỉ hiện Block/Unblock khi B chưa bị A chặn.
+            Khi blockedMe → ẩn hoàn toàn, B chỉ còn Clear History / Delete. */}
+        {isDirect && !isAI && !blockedMe && (
           <button onClick={onBlockToggle} disabled={saving} className={ROW_CLS}>
-            {isBlocked ? <Shield className="size-4" /> : <ShieldOff className="size-4" />}
-            <span>{isBlocked ? t('unblockUser') : t('blockUser')}</span>
+            {iBlocked ? <Shield className="size-4" /> : <ShieldOff className="size-4" />}
+            <span>{iBlocked ? t('unblockUser') : t('blockUser')}</span>
           </button>
         )}
         {isGroup && (

@@ -60,7 +60,12 @@ export const stompService = {
       // never the module-level `client`, which can be nulled by disconnect().
       const instance = new Client({
         brokerURL: resolveBrokerURL(),
-        reconnectDelay: 5000,
+        // Fast reconnect so realtime recovers quickly after Cloud Run severs
+        // the socket on its request-timeout. Heartbeats (10s/10s, negotiated
+        // with the server) keep the connection alive and detect dead sockets.
+        reconnectDelay: 2000,
+        heartbeatIncoming: 10_000,
+        heartbeatOutgoing: 10_000,
         beforeConnect: async () => {
           let currentToken = useAuthStore.getState().accessToken ?? token
 
