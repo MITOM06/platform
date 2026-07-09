@@ -35,6 +35,11 @@ interface Props {
   onOptimisticUpdate: (updated: Partial<Message> & { id: string }) => void
   onMenuOpen?: (createdAt: string) => void
   onMenuClose?: () => void
+  /** Multi-select thread mode: whole row toggles selection, actions are hidden. */
+  multiSelectMode?: boolean
+  isSelected?: boolean
+  onSelectMessage?: (message: Message) => void
+  onEnterMultiSelect?: () => void
 }
 
 const MessageBubbleInner = function MessageBubble({
@@ -53,6 +58,10 @@ const MessageBubbleInner = function MessageBubble({
   onOptimisticUpdate,
   onMenuOpen,
   onMenuClose,
+  multiSelectMode = false,
+  isSelected = false,
+  onSelectMessage,
+  onEnterMultiSelect,
 }: Props) {
   const t = useTranslations('chat')
   const locale = useLocale()
@@ -98,10 +107,8 @@ const MessageBubbleInner = function MessageBubble({
   }
 
   // Resolve an actor's display name for system codes that carry an actor id
-  // (e.g. `system.message.pinned:<actorId>`), and for humanizing the reply
-  // quote when the replied-to message is a system event. Order mirrors the
-  // chat bubble: current user → "You", then conversation nickname, then cached
-  // profile name.
+  // (e.g. `system.message.pinned:<actorId>`) and for humanizing system reply
+  // quotes. Order: current user → "You", conversation nickname, cached profile.
   const resolveName = (actorId: string): string | undefined => {
     if (actorId === currentUserId) return t('you')
     const nick = conversationId ? getNickname(conversationId, actorId) : undefined
@@ -110,13 +117,40 @@ const MessageBubbleInner = function MessageBubble({
     return cached?.displayName
   }
 
-  if (message.recalled) {
+  // Multi-select: the whole row toggles selection — overlay a checkbox and
+  // neutralize inner controls so any tap selects instead of firing actions.
+  const wrapSelectable = (node: React.ReactNode) => {
+    if (!multiSelectMode) return node
     return (
+      <div
+        className={cn(
+          'relative cursor-pointer select-none rounded-xl transition-colors',
+          isSelected && 'bg-pon-cyan/10',
+        )}
+        onClick={() => onSelectMessage?.(message)}
+      >
+        <div className="absolute left-1 top-1/2 -translate-y-1/2 z-20 pointer-events-none">
+          <div
+            className={cn(
+              'size-5 rounded-full border-2 flex items-center justify-center transition-colors',
+              isSelected ? 'bg-pon-cyan border-pon-cyan' : 'border-muted-foreground/50 bg-background/80',
+            )}
+          >
+            {isSelected && <Check className="size-3 text-black" strokeWidth={3} />}
+          </div>
+        </div>
+        <div className="pl-8 pointer-events-none">{node}</div>
+      </div>
+    )
+  }
+
+  if (message.recalled) {
+    return wrapSelectable(
       <div className={cn('flex', isOwn ? 'justify-end' : 'justify-start')}>
         <div className="max-w-[70%] rounded-[24px] px-4 py-2 text-sm italic text-muted-foreground border border-dashed bg-muted/20">
           {t('recalled')}
         </div>
-      </div>
+      </div>,
     )
   }
 
@@ -125,7 +159,7 @@ const MessageBubbleInner = function MessageBubble({
     const systemText = humanizeSystemMessage(message.content, t, { resolveName })
     const isCallMsg = message.content.startsWith('system.call.')
     const isVideoCall = isCallMsg && message.content.includes(':video')
-    return (
+    return wrapSelectable(
       <div className="flex justify-center my-1">
         <span className="flex items-center gap-1.5 text-[11px] text-muted-foreground bg-muted/65 rounded-full px-3 py-1 border border-border/20">
           {isCallMsg && (isVideoCall
@@ -134,15 +168,14 @@ const MessageBubbleInner = function MessageBubble({
           )}
           {systemText}
         </span>
-      </div>
+      </div>,
     )
   }
 
-  // Personal assistant bot (Bot Factory) — distinct identity, derived from
-  // useAssistant() inside ExternalBotBubble. Rendered before reaction/feedback
-  // logic since bot messages carry none of it.
+  // Personal assistant bot (Bot Factory) — distinct identity via ExternalBotBubble.
+  // Rendered before reaction/feedback logic since bot messages carry none of it.
   if (isExternalBot(message.senderId)) {
-    return <ExternalBotBubble message={message} />
+    return wrapSelectable(<ExternalBotBubble message={message} />)
   }
 
   // Group reactions by emoji
@@ -186,10 +219,8 @@ const MessageBubbleInner = function MessageBubble({
           ? t('you')
           : (replyNickname || repliedSender?.displayName || '')}
       </p>
-      {/* Never render the replied-to content raw: it may be a `system.*` code,
-          an /api/uploads/ URL, or a JSON file/meeting payload (rule:
-          no-raw-system-data-in-ui). The reply preview carries no message type,
-          so humanize by sniffing the content. */}
+      {/* Never render replied-to content raw (system code / upload URL / JSON
+          payload — rule: no-raw-system-data-in-ui); humanize by sniffing it. */}
       <p className="truncate italic">
         {humanizeMessagePreview(message.replyPreview.content, undefined, t, {
           short: true,
@@ -213,9 +244,8 @@ const MessageBubbleInner = function MessageBubble({
     </button>
   )
 
-  // Read receipt tick for OWN messages in direct chats (parity with mobile
-  // message_bubble.dart): single check = sent, double cyan check = seen by the
-  // other participant (their userId present in readBy).
+  // Read receipt tick for OWN messages in direct chats (parity with mobile):
+  // single check = sent, double cyan check = seen (otherUserId in readBy).
   const isRead = !!otherUserId && (message.readBy?.includes(otherUserId) ?? false)
   const readTick = isOwn && !isGroup && otherUserId && (
     isRead
@@ -223,8 +253,8 @@ const MessageBubbleInner = function MessageBubble({
       : <Check className="size-3 opacity-50" aria-label={t('sent')} />
   )
 
-  // Read receipt + "edited" marker — now shown BELOW the bubble (the time itself
-  // lives in the hover tooltip / group time-separator, no longer in-bubble).
+  // Read receipt + "edited" marker, shown below the bubble (time lives in the
+  // hover tooltip / group separator).
   const metaRow = (readTick || message.editedAt) && (
     <div className={cn('flex items-center gap-1', isOwn ? 'justify-end' : 'justify-start')}>
       {message.editedAt && (
@@ -251,6 +281,7 @@ const MessageBubbleInner = function MessageBubble({
 
   return (
     <>
+    {wrapSelectable(
     <div
       className={cn('flex group', isOwn ? 'flex-row-reverse' : 'flex-row', 'items-end gap-1')}
       onMouseEnter={() => setHovered(true)}
@@ -318,26 +349,31 @@ const MessageBubbleInner = function MessageBubble({
         )}
       </div>
 
-      {/* Action menu — visible on hover (desktop) or long-press (touch) */}
-      <div className={cn('flex items-center mb-1', !hovered && !longPressActive && 'invisible')}>
-        <MessageActions
-          message={message}
-          isOwn={isOwn}
-          currentUserId={currentUserId}
-          isPinned={isPinned}
-          pinnedCount={pinnedCount}
-          onEdit={onEdit ? () => onEdit(message) : undefined}
-          onForward={onForward ? () => onForward(message) : undefined}
-          onReply={onReply ? () => onReply(message) : undefined}
-          onAiTrace={onAiTrace ? () => onAiTrace(message.id) : undefined}
-          onOptimisticUpdate={onOptimisticUpdate}
-          onGroupReadDetails={isOwn && isGroup ? () => setShowReadDetails(true) : undefined}
-          onReactionsDetail={message.reactions && message.reactions.length > 0 ? () => setShowReactionsDetail(true) : undefined}
-          onMenuOpen={onMenuOpen ? () => onMenuOpen(message.createdAt) : undefined}
-          onMenuClose={onMenuClose}
-        />
-      </div>
-    </div>
+      {/* Action menu — visible on hover (desktop) or long-press (touch).
+          Hidden entirely in multi-select mode (row is a selection target). */}
+      {!multiSelectMode && (
+        <div className={cn('flex items-center mb-1', !hovered && !longPressActive && 'invisible')}>
+          <MessageActions
+            message={message}
+            isOwn={isOwn}
+            currentUserId={currentUserId}
+            isPinned={isPinned}
+            pinnedCount={pinnedCount}
+            onEdit={onEdit ? () => onEdit(message) : undefined}
+            onForward={onForward ? () => onForward(message) : undefined}
+            onReply={onReply ? () => onReply(message) : undefined}
+            onAiTrace={onAiTrace ? () => onAiTrace(message.id) : undefined}
+            onOptimisticUpdate={onOptimisticUpdate}
+            onGroupReadDetails={isOwn && isGroup ? () => setShowReadDetails(true) : undefined}
+            onReactionsDetail={message.reactions && message.reactions.length > 0 ? () => setShowReactionsDetail(true) : undefined}
+            onEnterMultiSelect={onEnterMultiSelect}
+            onMenuOpen={onMenuOpen ? () => onMenuOpen(message.createdAt) : undefined}
+            onMenuClose={onMenuClose}
+          />
+        </div>
+      )}
+    </div>,
+    )}
     <UserProfileDrawer userId={profileUserId} onClose={() => setProfileUserId(null)} />
     {showReadDetails && <GroupReadDetailsModal message={message} open={showReadDetails} onClose={() => setShowReadDetails(false)} />}
     {showReactionsDetail && <ReactionsDetailModal message={message} open={showReactionsDetail} onClose={() => setShowReactionsDetail(false)} />}
@@ -358,5 +394,7 @@ export const MessageBubble = memo(
     prev.isPinned === next.isPinned &&
     prev.pinnedCount === next.pinnedCount &&
     prev.isOwn === next.isOwn &&
-    prev.conversationId === next.conversationId,
+    prev.conversationId === next.conversationId &&
+    prev.multiSelectMode === next.multiSelectMode &&
+    prev.isSelected === next.isSelected,
 )

@@ -3,14 +3,17 @@
 import { useState, useRef, useEffect } from 'react'
 import { Send, Pencil, Mic } from 'lucide-react'
 import { useTranslations } from 'next-intl'
+import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { useQuickReaction } from '@/lib/quick-reaction'
 import { useVoiceRecorder } from '@/lib/hooks/use-voice-recorder'
-import { useFileAttachments } from '@/lib/hooks/use-file-attachments'
+import { useStagedAttachments } from '@/lib/hooks/use-staged-attachments'
 import { useMentionParticipants } from '@/lib/hooks/use-mention-participants'
 import { AI_BOT_ID } from '@/lib/constants'
+import { FILE_TOO_LARGE } from '@/lib/api/chat'
 import { EmojiStickerPicker } from '@/components/chat/EmojiStickerPicker'
+import { MediaPreviewStrip } from '@/components/chat/MediaPreviewStrip'
 import {
   ReplyBanner, EditBanner, RecordingBar, AttachMenu, SlashSuggestion, MentionPopover,
 } from '@/components/chat/MessageInputParts'
@@ -60,12 +63,14 @@ export function MessageInput({
       },
     })
 
-  const { handleImagePick, handleFilePick } = useFileAttachments({
-    onSend,
-    onUploadingChange: setUploading,
-    uploadErrorLabel: t('uploadError'),
-    tooLargeLabel: t('uploadTooLarge'),
-  })
+  const {
+    pendingAttachments,
+    stageImages,
+    stageFile,
+    removeAttachment,
+    toggleHD,
+    flushAttachments,
+  } = useStagedAttachments()
 
   // Mentions state
   const [mentionCandidates, setMentionCandidates] = useState<{ id: string; name: string }[]>([])
@@ -73,8 +78,7 @@ export function MessageInput({
   const [mentionQuery, setMentionQuery] = useState<{ start: number, end: number, text: string } | null>(null)
 
   // Grow the textarea to fit content, capped at max-h-32 (128px). Driven by JS
-  // (not `field-sizing-content`) so the box never grows to fit the *placeholder*
-  // — that was blowing the empty input up to 60-70px on mobile.
+  // (not `field-sizing-content`) so the empty box doesn't grow to the placeholder.
   const resizeTextarea = () => {
     const el = textareaRef.current
     if (!el) return
@@ -133,6 +137,24 @@ export function MessageInput({
   }
 
   const handleSend = async () => {
+    // Staged attachments take priority: upload + send, then stop (text isn't
+    // sent in the same action — matches Messenger/Zalo).
+    if (pendingAttachments.length > 0 && !editingMessage) {
+      if (sending) return
+      setSending(true)
+      if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current)
+      onTypingChange?.(false)
+      try {
+        await flushAttachments(onSend)
+      } catch (err) {
+        const tooLarge = err instanceof Error && err.message === FILE_TOO_LARGE
+        toast.error(tooLarge ? t('uploadTooLarge') : t('uploadError'))
+      } finally {
+        setSending(false)
+      }
+      return
+    }
+
     const content = value.trim()
     if (!content || sending) return
     setSending(true)
@@ -166,11 +188,9 @@ export function MessageInput({
   }
 
   // Show the `/new` suggestion only in 1-1 (direct) AI conversations, when the
-  // input is exactly '/', and not while editing or mentioning. AI conversations
-  // are detected by the presence of the AI bot participant (mirrors the drawer).
-  // In GROUP AI conversations, chat-service only routes `@AI`-mentioned messages
-  // to ai-service, so a bare `/new` never starts a session — it just posts as
-  // plain chat text (a confusing no-op), so we hide the suggestion there.
+  // input is exactly '/', and not while editing or mentioning. In GROUP AI
+  // conversations a bare `/new` never starts a session (chat-service only routes
+  // `@AI`-mentioned messages), so we hide the suggestion there.
   const isDirectAiConversation =
     conversation?.type !== 'group' &&
     (conversation?.participants?.includes(AI_BOT_ID) ?? false)
@@ -265,14 +285,24 @@ export function MessageInput({
         accept="image/*,video/*"
         multiple
         className="hidden"
-        onChange={handleImagePick}
+        onChange={stageImages}
       />
       <input
         ref={fileInputRef}
         type="file"
         className="hidden"
-        onChange={handleFilePick}
+        onChange={stageFile}
       />
+
+      {/* Staged attachments preview (above the composer row) */}
+      {!editingMessage && (
+        <MediaPreviewStrip
+          attachments={pendingAttachments}
+          onRemove={removeAttachment}
+          onToggleHD={toggleHD}
+          onAddMore={() => imageInputRef.current?.click()}
+        />
+      )}
 
       {recording ? (
         <RecordingBar
@@ -330,12 +360,12 @@ export function MessageInput({
             onSendSticker={(sticker) => onSend(sticker, 'sticker')}
           />
 
-          {/* Send (when text present) OR Mic+👍 (when empty) */}
-          {value.trim() || editingMessage ? (
+          {/* Send (when text OR staged attachments present) OR Mic+👍 (when empty) */}
+          {value.trim() || editingMessage || pendingAttachments.length > 0 ? (
             <Button
               size="icon"
               onClick={handleSend}
-              disabled={!value.trim() || busy}
+              disabled={(!value.trim() && pendingAttachments.length === 0) || busy}
               className="shrink-0 transition-transform duration-[180ms] active:scale-95 tap"
               variant={editingMessage ? 'outline' : 'default'}
             >

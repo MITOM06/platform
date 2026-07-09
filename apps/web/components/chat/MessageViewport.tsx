@@ -30,6 +30,10 @@ interface Props {
   onReply: (message: Message) => void
   onAiTrace: (messageId: string) => void
   onOptimisticUpdate: (updated: Partial<Message> & { id: string }) => void
+  multiSelectMode?: boolean
+  selectedIds?: Set<string>
+  onSelectMessage?: (message: Message) => void
+  onEnterMultiSelect?: () => void
 }
 
 // How close to the bottom (px) the user must be for an incoming message to

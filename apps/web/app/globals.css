@@ -14,6 +14,14 @@
 /* Bottom space that clears the fixed mobile tab bar (h-16 = 4rem) + safe area. */
 @utility pb-tabbar { padding-bottom: calc(4rem + env(safe-area-inset-bottom)); }
 
+/* Hide the scrollbar while keeping the element scrollable (e.g. the attachment
+   preview strip above the composer). */
+@utility no-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  &::-webkit-scrollbar { display: none; }
+}
+
 @custom-variant dark (&:is(.dark *));
 
 :root {

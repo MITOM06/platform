@@ -210,10 +210,28 @@ class _TokenRefreshInterceptor extends Interceptor {
     // spent exactly once even when several requests 401 concurrently. A request
     // that arrives while a refresh is in flight awaits the SAME future here
     // rather than passing through as an error, then retries with the new token.
-    final newAccess = await TokenManager.shared.forceRefresh();
-    if (newAccess == null) {
+    //
+    // Logout ONLY when the server genuinely rejected the refresh token
+    // (RefreshRejectedException = 401/403). A transient failure (network down,
+    // timeout, 5xx, resume race) returns null → keep the session and just fail
+    // THIS request; the next refresh succeeds once the network recovers. This
+    // mirrors the web client's `isAuthFailure` guard and fixes the iOS bug
+    // where a flaky refresh on background→resume wiped the keychain and logged
+    // the user out on next launch.
+    final String? newAccess;
+    try {
+      newAccess = await TokenManager.shared.forceRefresh();
+    } on RefreshRejectedException {
       await _clearCredentials();
       onForceLogout?.call();
+      return handler.next(err);
+    } catch (_) {
+      // Any other error obtaining a token (e.g. a secure-storage read failure)
+      // is treated as transient — keep the session, just fail this request.
+      return handler.next(err);
+    }
+    if (newAccess == null) {
+      // Transient refresh failure — do NOT clear credentials or log out.
       return handler.next(err);
     }
 
