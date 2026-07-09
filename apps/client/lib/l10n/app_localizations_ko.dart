@@ -3064,4 +3064,57 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get aiSessionLoadError => '대화 기록을 불러올 수 없습니다';
+
+  @override
+  String multiSelectCount(int count) {
+    return '$count개 선택됨';
+  }
+
+  @override
+  String get multiSelectEmpty => '선택된 메시지가 없습니다';
+
+  @override
+  String get multiSelectCancel => '취소';
+
+  @override
+  String multiSelectTypeWarning(String type) {
+    return '$type을(를) 선택하고 있습니다. 같은 유형만 선택할 수 있습니다.';
+  }
+
+  @override
+  String multiDeleted(int count) {
+    return '$count개의 메시지를 삭제했습니다';
+  }
+
+  @override
+  String multiRecalled(int count) {
+    return '$count개의 메시지를 회수했습니다';
+  }
+
+  @override
+  String get multiForwardHint => '전달할 메시지를 하나만 선택하세요';
+
+  @override
+  String get msgTypeText => '텍스트';
+
+  @override
+  String get msgTypeImage => '사진/동영상';
+
+  @override
+  String get msgTypeFile => '파일';
+
+  @override
+  String get selectMessages => '메시지 선택';
+
+  @override
+  String get removeAttachment => '제거';
+
+  @override
+  String get addMore => '추가';
+
+  @override
+  String get attachHdOn => 'HD — 고화질';
+
+  @override
+  String get attachHdOff => 'SD — 압축';
 }

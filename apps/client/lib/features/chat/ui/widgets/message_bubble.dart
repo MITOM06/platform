@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
+import '../../../../core/l10n/l10n_ext.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/motion.dart';
 import '../../domain/chat_provider.dart';
 import '../../domain/chat_state.dart';
+import '../../domain/message_selection_provider.dart';
 import 'ai_message_parts.dart';
 import 'floating_reaction_sheet.dart';
 import 'meeting_summary_card.dart';
@@ -51,6 +53,13 @@ class MessageBubble extends ConsumerWidget {
     final aiPersonaName = chatState?.aiPersonaName ?? 'PON AI';
     final aiPersonaAvatarUrl = chatState?.aiPersonaAvatarUrl;
 
+    // Multi-select: in select mode a tap toggles selection instead of opening
+    // the reaction sheet, and the selected bubble is tinted with a check badge.
+    final selectMode = ref.watch(messageSelectionProvider(message.conversationId)
+        .select((s) => s.active));
+    final isSelected = ref.watch(messageSelectionProvider(message.conversationId)
+        .select((s) => s.selectedIds.contains(message.id)));
+
     final locale = Localizations.localeOf(context).languageCode;
     final timeStr = DateFormat.Hm(locale).format(message.createdAt.toLocal());
 
@@ -86,10 +95,59 @@ class MessageBubble extends ConsumerWidget {
       },
       child: AnimatedContainer(
         duration: AppMotion.slow,
-        color: highlighted
-            ? AppTheme.ponCyan.withValues(alpha: 0.12)
-            : Colors.transparent,
-        child: Align(
+        color: (selectMode && isSelected)
+            ? AppTheme.ponCyan.withValues(alpha: 0.18)
+            : highlighted
+                ? AppTheme.ponCyan.withValues(alpha: 0.12)
+                : Colors.transparent,
+        child: selectMode
+            ? GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTap: () => _toggleSelect(context, ref),
+                child: Row(
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.only(left: 12),
+                      child: _SelectCheck(selected: isSelected),
+                    ),
+                    Expanded(child: _bubble(context, ref, selectMode, timeStr,
+                        aiPersonaName, aiPersonaAvatarUrl)),
+                  ],
+                ),
+              )
+            : _bubble(context, ref, selectMode, timeStr, aiPersonaName,
+                aiPersonaAvatarUrl),
+      ),
+    ),
+    );
+  }
+
+  void _toggleSelect(BuildContext context, WidgetRef ref) {
+    final rejected = ref
+        .read(messageSelectionProvider(message.conversationId).notifier)
+        .toggle(message.id, message.type);
+    if (rejected != null) {
+      final l10n = context.l10n;
+      final typeLabel = switch (rejected) {
+        SelectionGroup.image => l10n.msgTypeImage,
+        SelectionGroup.file => l10n.msgTypeFile,
+        SelectionGroup.text => l10n.msgTypeText,
+      };
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.multiSelectTypeWarning(typeLabel))),
+      );
+    }
+  }
+
+  Widget _bubble(
+    BuildContext context,
+    WidgetRef ref,
+    bool selectMode,
+    String timeStr,
+    String aiPersonaName,
+    String? aiPersonaAvatarUrl,
+  ) {
+    return Align(
           alignment:
               isSentByMe ? Alignment.centerRight : Alignment.centerLeft,
           child: Column(
@@ -122,14 +180,16 @@ class MessageBubble extends ConsumerWidget {
                   ),
                 ),
               GestureDetector(
-                onLongPress: (message.recalled || message.isAiMessage)
-                    ? (message.isAiMessage && !message.isStreaming
-                        ? () => FloatingReactionSheet.show(
-                            context, ref, message, isSentByMe)
-                        : null)
-                    : () => FloatingReactionSheet.show(
-                        context, ref, message, isSentByMe),
-                onDoubleTap: message.recalled
+                onLongPress: selectMode
+                    ? null
+                    : (message.recalled || message.isAiMessage)
+                        ? (message.isAiMessage && !message.isStreaming
+                            ? () => FloatingReactionSheet.show(
+                                context, ref, message, isSentByMe)
+                            : null)
+                        : () => FloatingReactionSheet.show(
+                            context, ref, message, isSentByMe),
+                onDoubleTap: (selectMode || message.recalled)
                     ? null
                     : () {
                         ref
@@ -233,9 +293,36 @@ class MessageBubble extends ConsumerWidget {
                 ReactionChips(message: message),
             ],
           ),
+        );
+  }
+}
+
+/// The selection check circle shown to the left of each bubble while
+/// multi-select is active.
+class _SelectCheck extends StatelessWidget {
+  final bool selected;
+  const _SelectCheck({required this.selected});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 22,
+      height: 22,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: selected ? AppTheme.ponCyan : Colors.transparent,
+        border: Border.all(
+          color: selected
+              ? AppTheme.ponCyan
+              : Theme.of(context).brightness == Brightness.dark
+                  ? Colors.white38
+                  : Colors.black38,
+          width: 1.5,
         ),
       ),
-    ),
+      child: selected
+          ? const Icon(Icons.check, size: 14, color: Colors.white)
+          : null,
     );
   }
 }

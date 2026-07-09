@@ -5868,6 +5868,96 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Couldn\'t load conversation history'**
   String get aiSessionLoadError;
+
+  /// No description provided for @multiSelectCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} selected'**
+  String multiSelectCount(int count);
+
+  /// No description provided for @multiSelectEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No messages selected'**
+  String get multiSelectEmpty;
+
+  /// No description provided for @multiSelectCancel.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get multiSelectCancel;
+
+  /// No description provided for @multiSelectTypeWarning.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'re selecting {type}. You can only select one type at a time.'**
+  String multiSelectTypeWarning(String type);
+
+  /// No description provided for @multiDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Deleted {count} messages'**
+  String multiDeleted(int count);
+
+  /// No description provided for @multiRecalled.
+  ///
+  /// In en, this message translates to:
+  /// **'Recalled {count} messages'**
+  String multiRecalled(int count);
+
+  /// No description provided for @multiForwardHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Select a single message to forward'**
+  String get multiForwardHint;
+
+  /// No description provided for @msgTypeText.
+  ///
+  /// In en, this message translates to:
+  /// **'text'**
+  String get msgTypeText;
+
+  /// No description provided for @msgTypeImage.
+  ///
+  /// In en, this message translates to:
+  /// **'photos/videos'**
+  String get msgTypeImage;
+
+  /// No description provided for @msgTypeFile.
+  ///
+  /// In en, this message translates to:
+  /// **'files'**
+  String get msgTypeFile;
+
+  /// No description provided for @selectMessages.
+  ///
+  /// In en, this message translates to:
+  /// **'Select messages'**
+  String get selectMessages;
+
+  /// No description provided for @removeAttachment.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove'**
+  String get removeAttachment;
+
+  /// No description provided for @addMore.
+  ///
+  /// In en, this message translates to:
+  /// **'Add more'**
+  String get addMore;
+
+  /// No description provided for @attachHdOn.
+  ///
+  /// In en, this message translates to:
+  /// **'HD — high quality'**
+  String get attachHdOn;
+
+  /// No description provided for @attachHdOff.
+  ///
+  /// In en, this message translates to:
+  /// **'SD — compressed'**
+  String get attachHdOff;
 }
 
 class _AppLocalizationsDelegate

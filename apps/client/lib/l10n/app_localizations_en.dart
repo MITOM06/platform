@@ -3126,4 +3126,57 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get aiSessionLoadError => 'Couldn\'t load conversation history';
+
+  @override
+  String multiSelectCount(int count) {
+    return '$count selected';
+  }
+
+  @override
+  String get multiSelectEmpty => 'No messages selected';
+
+  @override
+  String get multiSelectCancel => 'Cancel';
+
+  @override
+  String multiSelectTypeWarning(String type) {
+    return 'You\'re selecting $type. You can only select one type at a time.';
+  }
+
+  @override
+  String multiDeleted(int count) {
+    return 'Deleted $count messages';
+  }
+
+  @override
+  String multiRecalled(int count) {
+    return 'Recalled $count messages';
+  }
+
+  @override
+  String get multiForwardHint => 'Select a single message to forward';
+
+  @override
+  String get msgTypeText => 'text';
+
+  @override
+  String get msgTypeImage => 'photos/videos';
+
+  @override
+  String get msgTypeFile => 'files';
+
+  @override
+  String get selectMessages => 'Select messages';
+
+  @override
+  String get removeAttachment => 'Remove';
+
+  @override
+  String get addMore => 'Add more';
+
+  @override
+  String get attachHdOn => 'HD — high quality';
+
+  @override
+  String get attachHdOff => 'SD — compressed';
 }

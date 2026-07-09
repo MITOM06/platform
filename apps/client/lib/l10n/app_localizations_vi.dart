@@ -3128,4 +3128,57 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get aiSessionLoadError => 'Không thể tải lịch sử cuộc trò chuyện';
+
+  @override
+  String multiSelectCount(int count) {
+    return 'Đã chọn $count tin nhắn';
+  }
+
+  @override
+  String get multiSelectEmpty => 'Chưa chọn tin nhắn nào';
+
+  @override
+  String get multiSelectCancel => 'Hủy';
+
+  @override
+  String multiSelectTypeWarning(String type) {
+    return 'Bạn đang chọn $type. Chỉ được chọn cùng một loại.';
+  }
+
+  @override
+  String multiDeleted(int count) {
+    return 'Đã xóa $count tin nhắn';
+  }
+
+  @override
+  String multiRecalled(int count) {
+    return 'Đã thu hồi $count tin nhắn';
+  }
+
+  @override
+  String get multiForwardHint => 'Chọn một tin nhắn để chuyển tiếp';
+
+  @override
+  String get msgTypeText => 'văn bản';
+
+  @override
+  String get msgTypeImage => 'ảnh/video';
+
+  @override
+  String get msgTypeFile => 'tệp';
+
+  @override
+  String get selectMessages => 'Chọn tin nhắn';
+
+  @override
+  String get removeAttachment => 'Xóa';
+
+  @override
+  String get addMore => 'Thêm';
+
+  @override
+  String get attachHdOn => 'HD — chất lượng cao';
+
+  @override
+  String get attachHdOff => 'SD — nén';
 }

@@ -15,6 +15,9 @@ class ChatInputBar extends StatefulWidget {
   final bool emojiActive;
   final String quickReactionEmoji;
   final VoidCallback onQuickReaction;
+  // Whether the composer has staged (not-yet-sent) attachments — shows the
+  // send button even when the text field is empty.
+  final bool hasAttachments;
   // Called with the local file path of the recorded audio when the user stops.
   final Future<void> Function(String path)? onVoiceSend;
 
@@ -28,6 +31,7 @@ class ChatInputBar extends StatefulWidget {
     required this.emojiActive,
     required this.quickReactionEmoji,
     required this.onQuickReaction,
+    this.hasAttachments = false,
     this.onVoiceSend,
   });
 
@@ -261,7 +265,7 @@ class _ChatInputBarState extends State<ChatInputBar> {
           ),
         ),
         const SizedBox(width: 8),
-        if (_hasText)
+        if (_hasText || widget.hasAttachments)
           AnimatedContainer(
             duration: const Duration(milliseconds: 200),
             decoration: BoxDecoration(
