@@ -730,6 +730,10 @@
   "reminderDone": "Mark as done",
   "tokenUsage": "Token Usage",
   "tokenUsageTitle": "Token Usage Dashboard",
+  "tokenUsageSelectRange": "Select date range",
+  "tokenUsageDateRangeError": "Start date must be before end date",
+  "coverPhotoPreviewTitle": "Preview cover photo",
+  "saveCoverPhoto": "Set as cover",
   "tokenUsageThisMonth": "Total tokens this month",
   "tokenUsageRequests": "AI requests",
   "tokenUsageEstCost": "Estimated cost (USD)",
@@ -1475,5 +1479,8 @@
   "removeAttachment": "Remove",
   "addMore": "Add more",
   "attachHdOn": "HD — high quality",
-  "attachHdOff": "SD — compressed"
+  "attachHdOff": "SD — compressed",
+  "hdOn": "HD ON",
+  "hdOff": "HD OFF",
+  "videoCannotPlay": "Cannot play video"
 }

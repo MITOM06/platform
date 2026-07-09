@@ -556,6 +556,10 @@
   "reminderDone": "Đánh dấu hoàn thành",
   "tokenUsage": "Sử dụng Token",
   "tokenUsageTitle": "Bảng thống kê Token",
+  "tokenUsageSelectRange": "Chọn khoảng thời gian",
+  "tokenUsageDateRangeError": "Ngày bắt đầu phải trước ngày kết thúc",
+  "coverPhotoPreviewTitle": "Xem trước ảnh bìa",
+  "saveCoverPhoto": "Đặt làm ảnh bìa",
   "tokenUsageThisMonth": "Tổng token tháng này",
   "tokenUsageRequests": "Số yêu cầu AI",
   "tokenUsageEstCost": "Chi phí ước tính (USD)",
@@ -1116,5 +1120,8 @@
   "removeAttachment": "Xóa",
   "addMore": "Thêm",
   "attachHdOn": "HD — chất lượng cao",
-  "attachHdOff": "SD — nén"
+  "attachHdOff": "SD — nén",
+  "hdOn": "HD BẬT",
+  "hdOff": "HD TẮT",
+  "videoCannotPlay": "Không thể phát video"
 }

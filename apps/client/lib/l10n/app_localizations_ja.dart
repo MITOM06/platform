@@ -1554,6 +1554,18 @@ class AppLocalizationsJa extends AppLocalizations {
   String get tokenUsageTitle => 'トークン使用量ダッシュボード';
 
   @override
+  String get tokenUsageSelectRange => '期間を選択';
+
+  @override
+  String get tokenUsageDateRangeError => '開始日は終了日より前である必要があります';
+
+  @override
+  String get coverPhotoPreviewTitle => 'カバー写真をプレビュー';
+
+  @override
+  String get saveCoverPhoto => 'カバーに設定';
+
+  @override
   String get tokenUsageThisMonth => '今月の合計トークン';
 
   @override
@@ -3115,4 +3127,13 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get attachHdOff => 'SD — 圧縮';
+
+  @override
+  String get hdOn => 'HD オン';
+
+  @override
+  String get hdOff => 'HD オフ';
+
+  @override
+  String get videoCannotPlay => '動画を再生できません';
 }

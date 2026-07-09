@@ -10,15 +10,14 @@ import 'chat_provider.dart';
 
 /// One attachment staged in the composer but not yet uploaded/sent. Mirrors the
 /// web `PendingAttachment`: images/videos are previewed from their local path;
-/// a document replaces the strip (single-shot). `isHD` toggles SD JPEG
-/// re-encoding for images before upload.
+/// a document replaces the strip (single-shot). HD/SD is a single global flag
+/// on the composer ([isAllHDProvider]), not per-attachment.
 class StagedAttachment {
   final String id;
   final String type; // 'image' | 'video' | 'file'
   final XFile? file; // image / video (local path for preview + upload)
   final List<int>? docBytes; // document only
   final String? docName; // document only
-  final bool isHD;
 
   const StagedAttachment({
     required this.id,
@@ -26,18 +25,14 @@ class StagedAttachment {
     this.file,
     this.docBytes,
     this.docName,
-    this.isHD = true,
   });
-
-  StagedAttachment copyWith({bool? isHD}) => StagedAttachment(
-        id: id,
-        type: type,
-        file: file,
-        docBytes: docBytes,
-        docName: docName,
-        isHD: isHD ?? this.isHD,
-      );
 }
+
+/// Single global HD flag for the composer's staged media, per conversation.
+/// Default ON = upload images at original quality; OFF re-encodes to SD JPEG.
+final isAllHDProvider = StateProvider.family<bool, String>(
+  (ref, conversationId) => true,
+);
 
 /// Owns the "stage first, upload on Send" attachment flow for one conversation.
 /// Mirrors the web `useStagedAttachments` hook — images/videos append and are
@@ -83,19 +78,15 @@ class StagedAttachmentsNotifier extends StateNotifier<List<StagedAttachment>> {
   void remove(String id) =>
       state = state.where((a) => a.id != id).toList();
 
-  void toggleHD(String id) => state = [
-        for (final a in state) a.id == id ? a.copyWith(isHD: !a.isHD) : a,
-      ];
-
   void clear() => state = const [];
 
   bool get isEmpty => state.isEmpty;
 
   /// Re-encode an image to JPEG at a lower quality for the SD path. Falls back
   /// to the original bytes if it can't be decoded/encoded (mirrors web).
-  Future<List<int>> _bytesForImage(StagedAttachment att) async {
+  Future<List<int>> _bytesForImage(StagedAttachment att, bool isHD) async {
     final bytes = await att.file!.readAsBytes();
-    if (att.isHD) return bytes;
+    if (isHD) return bytes;
     try {
       final decoded = img.decodeImage(bytes);
       if (decoded == null) return bytes;
@@ -111,6 +102,7 @@ class StagedAttachmentsNotifier extends StateNotifier<List<StagedAttachment>> {
     if (items.isEmpty) return;
     final repo = ref.read(chatRepositoryProvider);
     final chat = ref.read(chatNotifierProvider(conversationId).notifier);
+    final isHD = ref.read(isAllHDProvider(conversationId));
     final images = <String>[];
 
     for (final att in items) {
@@ -126,10 +118,10 @@ class StagedAttachmentsNotifier extends StateNotifier<List<StagedAttachment>> {
         final url = await repo.uploadFile(att.file!);
         await chat.sendMessage(url, type: 'video');
       } else {
-        final url = att.isHD
+        final url = isHD
             ? await repo.uploadFile(att.file!)
             : await repo.uploadFile(XFile.fromData(
-                Uint8List.fromList(await _bytesForImage(att)),
+                Uint8List.fromList(await _bytesForImage(att, isHD)),
                 name: '${att.file!.name.split('.').first}.jpg',
                 mimeType: 'image/jpeg',
               ));
@@ -144,6 +136,8 @@ class StagedAttachmentsNotifier extends StateNotifier<List<StagedAttachment>> {
     }
 
     clear();
+    // Reset to default (HD ON) for the next batch.
+    ref.read(isAllHDProvider(conversationId).notifier).state = true;
   }
 }
 

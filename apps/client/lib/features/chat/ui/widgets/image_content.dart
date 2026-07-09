@@ -6,6 +6,7 @@ import '../../../../core/theme/app_theme.dart';
 import '../../../../core/utils/media_url.dart';
 import 'image_gallery_viewer.dart';
 import 'media_actions.dart';
+import 'video_player_dialog.dart';
 
 // `absoluteMediaUrl` moved to core/utils/media_url.dart. Re-exported so the
 // many existing `image_content.dart` importers keep working unchanged.
@@ -257,7 +258,7 @@ class VideoContent extends StatelessWidget {
     return ClipRRect(
       borderRadius: BorderRadius.circular(16),
       child: GestureDetector(
-        onTap: () => openExternally(url),
+        onTap: () => showVideoPlayer(context, url),
         child: Container(
           width: 220,
           height: 150,

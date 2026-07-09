@@ -8,27 +8,57 @@ export interface PendingAttachment {
   file: File
   previewUrl: string
   type: 'image' | 'video' | 'file'
-  isHD: boolean
+  // HD is now a single global flag on the composer (see `isAllHD`), not
+  // per-attachment — one toggle applies to every staged image.
 }
 
 interface Props {
   attachments: PendingAttachment[]
+  isAllHD: boolean
   onRemove: (id: string) => void
-  onToggleHD: (id: string) => void
+  onToggleAllHD: () => void
   onAddMore: () => void
 }
 
 /**
  * Messenger-style preview strip that sits above the composer while attachments
  * are staged (not yet uploaded). The user can add more, remove individual
- * items, and toggle HD/SD per image before pressing Send.
+ * items, and toggle HD/SD for the whole batch with a single global button
+ * before pressing Send.
  */
-export function MediaPreviewStrip({ attachments, onRemove, onToggleHD, onAddMore }: Props) {
+export function MediaPreviewStrip({
+  attachments,
+  isAllHD,
+  onRemove,
+  onToggleAllHD,
+  onAddMore,
+}: Props) {
   const t = useTranslations('chat')
   if (attachments.length === 0) return null
+  const hasImages = attachments.some((a) => a.type === 'image')
 
   return (
-    <div className="border-t bg-background/95 px-3 pt-3 pb-1">
+    <div className="border-t bg-background/95 px-3 pt-2 pb-1">
+      {/* Header: single global HD toggle (images only) */}
+      {hasImages && (
+        <div className="flex items-center justify-end mb-2">
+          <button
+            type="button"
+            onClick={onToggleAllHD}
+            className={`flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-bold transition-colors ${
+              isAllHD
+                ? 'bg-pon-cyan/20 text-pon-cyan border border-pon-cyan/40'
+                : 'bg-muted/60 text-muted-foreground border border-border'
+            }`}
+            title={isAllHD ? t('attachHdOn') : t('attachHdOff')}
+          >
+            <Zap className="size-3" />
+            {isAllHD ? t('hdOn') : t('hdOff')}
+          </button>
+        </div>
+      )}
+
+      {/* Thumbnails — no per-thumbnail HD button anymore */}
       <div className="flex items-start gap-2 overflow-x-auto no-scrollbar">
         {attachments.map((att) => (
           <div key={att.id} className="relative shrink-0 group">
@@ -61,21 +91,6 @@ export function MediaPreviewStrip({ attachments, onRemove, onToggleHD, onAddMore
             >
               <X className="size-3" />
             </button>
-
-            {/* HD toggle — images only */}
-            {att.type === 'image' && (
-              <button
-                type="button"
-                onClick={() => onToggleHD(att.id)}
-                className={`absolute bottom-1 left-1 px-1.5 py-0.5 rounded text-[10px] font-bold flex items-center gap-0.5 transition-colors ${
-                  att.isHD ? 'bg-pon-cyan/90 text-black' : 'bg-black/50 text-white/70'
-                }`}
-                title={att.isHD ? t('attachHdOn') : t('attachHdOff')}
-              >
-                <Zap className="size-2.5" />
-                HD
-              </button>
-            )}
           </div>
         ))}
 

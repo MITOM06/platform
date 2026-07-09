@@ -68,13 +68,22 @@ class RouterNotifier extends _$RouterNotifier
 // GoRouter provider
 // ---------------------------------------------------------------------------
 
-final _publicRoutes = {
+/// Routes only meant for guests — an authenticated user landing on one of these
+/// is bounced back to '/'.
+final _guestOnlyRoutes = {
   '/login',
   '/register',
   '/verify-otp',
   '/forgot-password',
   '/new-password',
-  '/legal', // public legal page — reachable from the register screen pre-login
+};
+
+/// Routes reachable without auth. Includes every guest-only route plus pages
+/// that stay open to everyone (guests AND signed-in users), such as /legal —
+/// a signed-in user tapping "Privacy & Terms" must NOT be redirected home.
+final _publicRoutes = {
+  ..._guestOnlyRoutes,
+  '/legal', // visible to everyone, pre- and post-login
 };
 
 /// Builds a page with a subtle fade + slide-up transition (iOS-like) used for
@@ -134,7 +143,9 @@ GoRouter appRouter(AppRouterRef ref) {
           return '/';
         }
 
-        if (onPublic) return '/';
+        // Only bounce authenticated users off guest-only routes. Always-public
+        // pages like /legal stay reachable while signed in.
+        if (_guestOnlyRoutes.contains(state.uri.path)) return '/';
       }
       return null;
     },

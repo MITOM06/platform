@@ -1575,6 +1575,19 @@ class AppLocalizationsVi extends AppLocalizations {
   String get tokenUsageTitle => 'Bảng thống kê Token';
 
   @override
+  String get tokenUsageSelectRange => 'Chọn khoảng thời gian';
+
+  @override
+  String get tokenUsageDateRangeError =>
+      'Ngày bắt đầu phải trước ngày kết thúc';
+
+  @override
+  String get coverPhotoPreviewTitle => 'Xem trước ảnh bìa';
+
+  @override
+  String get saveCoverPhoto => 'Đặt làm ảnh bìa';
+
+  @override
   String get tokenUsageThisMonth => 'Tổng token tháng này';
 
   @override
@@ -3181,4 +3194,13 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get attachHdOff => 'SD — nén';
+
+  @override
+  String get hdOn => 'HD BẬT';
+
+  @override
+  String get hdOff => 'HD TẮT';
+
+  @override
+  String get videoCannotPlay => 'Không thể phát video';
 }

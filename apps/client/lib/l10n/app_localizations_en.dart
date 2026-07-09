@@ -1573,6 +1573,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tokenUsageTitle => 'Token Usage Dashboard';
 
   @override
+  String get tokenUsageSelectRange => 'Select date range';
+
+  @override
+  String get tokenUsageDateRangeError => 'Start date must be before end date';
+
+  @override
+  String get coverPhotoPreviewTitle => 'Preview cover photo';
+
+  @override
+  String get saveCoverPhoto => 'Set as cover';
+
+  @override
   String get tokenUsageThisMonth => 'Total tokens this month';
 
   @override
@@ -3179,4 +3191,13 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get attachHdOff => 'SD — compressed';
+
+  @override
+  String get hdOn => 'HD ON';
+
+  @override
+  String get hdOff => 'HD OFF';
+
+  @override
+  String get videoCannotPlay => 'Cannot play video';
 }

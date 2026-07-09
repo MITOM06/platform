@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/l10n/l10n_ext.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../auth/domain/auth_provider.dart';
 import '../../../auth/domain/auth_state.dart';
 import '../../../friends/domain/friends_provider.dart';
 import '../../domain/chat_provider.dart';
@@ -16,7 +17,14 @@ class ActiveFriendsRow extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final online = ref.watch(onlineFriendsNotifierProvider).valueOrNull ?? [];
+    // Never show the current user in the "active now" row — presence events on
+    // /topic/presence carry every user (including self), and a self entry would
+    // render a green dot on our own avatar.
+    final authState = ref.watch(authNotifierProvider).valueOrNull;
+    final ownId = authState is AuthAuthenticated ? authState.user.id : null;
+    final online = (ref.watch(onlineFriendsNotifierProvider).valueOrNull ?? [])
+        .where((f) => f.id != ownId)
+        .toList();
     if (online.isEmpty) return const SizedBox.shrink();
 
     final isDark = Theme.of(context).brightness == Brightness.dark;

@@ -1550,6 +1550,18 @@ class AppLocalizationsZh extends AppLocalizations {
   String get tokenUsageTitle => 'Token 用量仪表板';
 
   @override
+  String get tokenUsageSelectRange => '选择日期范围';
+
+  @override
+  String get tokenUsageDateRangeError => '开始日期必须早于结束日期';
+
+  @override
+  String get coverPhotoPreviewTitle => '预览封面照片';
+
+  @override
+  String get saveCoverPhoto => '设为封面';
+
+  @override
   String get tokenUsageThisMonth => '本月总 Token';
 
   @override
@@ -3087,4 +3099,13 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get attachHdOff => 'SD — 压缩';
+
+  @override
+  String get hdOn => 'HD 开';
+
+  @override
+  String get hdOff => 'HD 关';
+
+  @override
+  String get videoCannotPlay => '无法播放视频';
 }

@@ -51,6 +51,10 @@ dependencies:
   # Open / download media (image & video) cross-platform (web + mobile)
   url_launcher: ^6.3.0
 
+  # Inline video playback in chat bubbles (tap-to-play instead of download)
+  video_player: ^2.9.5
+  chewie: ^1.11.0
+
   # Deep link handling — OAuth callback (platform://auth?code=xxx)
   app_links: ^6.3.0
 

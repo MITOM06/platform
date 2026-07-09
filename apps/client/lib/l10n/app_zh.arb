@@ -556,6 +556,10 @@
   "reminderDone": "标记为完成",
   "tokenUsage": "Token 用量",
   "tokenUsageTitle": "Token 用量仪表板",
+  "tokenUsageSelectRange": "选择日期范围",
+  "tokenUsageDateRangeError": "开始日期必须早于结束日期",
+  "coverPhotoPreviewTitle": "预览封面照片",
+  "saveCoverPhoto": "设为封面",
   "tokenUsageThisMonth": "本月总 Token",
   "tokenUsageRequests": "AI 请求次数",
   "tokenUsageEstCost": "预估费用 (USD)",
@@ -1116,5 +1120,8 @@
   "removeAttachment": "移除",
   "addMore": "添加",
   "attachHdOn": "HD — 高清",
-  "attachHdOff": "SD — 压缩"
+  "attachHdOff": "SD — 压缩",
+  "hdOn": "HD 开",
+  "hdOff": "HD 关",
+  "videoCannotPlay": "无法播放视频"
 }

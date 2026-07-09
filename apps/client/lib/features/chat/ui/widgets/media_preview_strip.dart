@@ -9,8 +9,8 @@ import '../../domain/staged_attachments_provider.dart';
 
 /// Messenger-style preview strip above the composer while attachments are
 /// staged (not yet uploaded). The user can add more, remove individual items,
-/// and toggle HD/SD per image before pressing Send. Mirrors the web
-/// `MediaPreviewStrip`.
+/// and toggle HD/SD for the whole batch with a single global button before
+/// pressing Send. Mirrors the web `MediaPreviewStrip`.
 class MediaPreviewStrip extends ConsumerWidget {
   final String conversationId;
   final VoidCallback onAddMore;
@@ -33,34 +33,105 @@ class MediaPreviewStrip extends ConsumerWidget {
         ? AppTheme.darkBorder.withValues(alpha: 0.4)
         : Colors.black.withValues(alpha: 0.1);
     final isMedia = attachments.first.type != 'file';
+    final hasImages = attachments.any((a) => a.type == 'image');
+    final isAllHD = ref.watch(isAllHDProvider(conversationId));
 
     return Container(
       decoration: BoxDecoration(
         color: theme.scaffoldBackgroundColor,
         border: Border(top: BorderSide(color: borderColor, width: 1)),
       ),
-      padding: const EdgeInsets.fromLTRB(12, 10, 12, 6),
-      child: SizedBox(
-        height: 84,
-        child: ListView.separated(
-          scrollDirection: Axis.horizontal,
-          itemCount: attachments.length + (isMedia ? 1 : 0),
-          separatorBuilder: (_, __) => const SizedBox(width: 8),
-          itemBuilder: (context, index) {
-            if (index == attachments.length) {
-              return _AddMoreButton(
-                borderColor: borderColor,
-                onTap: onAddMore,
-                label: context.l10n.addMore,
-              );
-            }
-            final att = attachments[index];
-            return _StagedTile(
-              attachment: att,
-              onRemove: () => notifier.remove(att.id),
-              onToggleHD: () => notifier.toggleHD(att.id),
-            );
-          },
+      padding: const EdgeInsets.fromLTRB(12, 8, 12, 6),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          // Header: single global HD toggle (images only)
+          if (hasImages)
+            Align(
+              alignment: Alignment.centerRight,
+              child: _HdToggle(
+                isAllHD: isAllHD,
+                onTap: () {
+                  ref.read(isAllHDProvider(conversationId).notifier).state =
+                      !isAllHD;
+                },
+              ),
+            ),
+          if (hasImages) const SizedBox(height: 8),
+          SizedBox(
+            height: 84,
+            child: ListView.separated(
+              scrollDirection: Axis.horizontal,
+              itemCount: attachments.length + (isMedia ? 1 : 0),
+              separatorBuilder: (_, __) => const SizedBox(width: 8),
+              itemBuilder: (context, index) {
+                if (index == attachments.length) {
+                  return _AddMoreButton(
+                    borderColor: borderColor,
+                    onTap: onAddMore,
+                    label: context.l10n.addMore,
+                  );
+                }
+                final att = attachments[index];
+                return _StagedTile(
+                  attachment: att,
+                  onRemove: () => notifier.remove(att.id),
+                );
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Single global HD/SD toggle shown in the strip header.
+class _HdToggle extends StatelessWidget {
+  final bool isAllHD;
+  final VoidCallback onTap;
+
+  const _HdToggle({required this.isAllHD, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Tooltip(
+        message:
+            isAllHD ? context.l10n.attachHdOn : context.l10n.attachHdOff,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 150),
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+          decoration: BoxDecoration(
+            color: isAllHD
+                ? AppTheme.ponCyan.withValues(alpha: 0.15)
+                : Colors.white.withValues(alpha: 0.08),
+            border: Border.all(
+              color: isAllHD
+                  ? AppTheme.ponCyan.withValues(alpha: 0.5)
+                  : Colors.white24,
+            ),
+            borderRadius: BorderRadius.circular(6),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.bolt,
+                  size: 12,
+                  color: isAllHD ? AppTheme.ponCyan : Colors.white38),
+              const SizedBox(width: 3),
+              Text(
+                isAllHD ? context.l10n.hdOn : context.l10n.hdOff,
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.bold,
+                  color: isAllHD ? AppTheme.ponCyan : Colors.white38,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -70,12 +141,10 @@ class MediaPreviewStrip extends ConsumerWidget {
 class _StagedTile extends StatelessWidget {
   final StagedAttachment attachment;
   final VoidCallback onRemove;
-  final VoidCallback onToggleHD;
 
   const _StagedTile({
     required this.attachment,
     required this.onRemove,
-    required this.onToggleHD,
   });
 
   @override
@@ -127,46 +196,6 @@ class _StagedTile extends StatelessWidget {
             ),
           ),
         ),
-        // HD toggle — images only
-        if (att.type == 'image')
-          Positioned(
-            bottom: 4,
-            left: 4,
-            child: GestureDetector(
-              onTap: onToggleHD,
-              child: Tooltip(
-                message: att.isHD
-                    ? context.l10n.attachHdOn
-                    : context.l10n.attachHdOff,
-                child: Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
-                  decoration: BoxDecoration(
-                    color: att.isHD
-                        ? AppTheme.ponCyan.withValues(alpha: 0.9)
-                        : Colors.black.withValues(alpha: 0.5),
-                    borderRadius: BorderRadius.circular(6),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(Icons.bolt,
-                          size: 11,
-                          color: att.isHD ? Colors.black : Colors.white70),
-                      Text(
-                        'HD',
-                        style: TextStyle(
-                          fontSize: 10,
-                          fontWeight: FontWeight.bold,
-                          color: att.isHD ? Colors.black : Colors.white70,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          ),
       ],
     );
   }

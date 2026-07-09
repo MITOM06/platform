@@ -22,11 +22,32 @@ public class UsageController {
   private final TokenUsageRepository tokenUsageRepository;
 
   @GetMapping("/tokens")
-  public List<TokenUsageDayResponse> getTokenUsage(@RequestParam(defaultValue = "30") int days) {
+  public List<TokenUsageDayResponse> getTokenUsage(
+      @RequestParam(defaultValue = "30") int days,
+      @RequestParam(required = false) String startDate,
+      @RequestParam(required = false) String endDate) {
     final String userId = currentUserId();
     final DateTimeFormatter fmt = DateTimeFormatter.ISO_LOCAL_DATE;
-    final LocalDate toDate = LocalDate.now();
-    final LocalDate fromDate = toDate.minusDays(days - 1L);
+    final LocalDate today = LocalDate.now();
+
+    LocalDate toDate;
+    LocalDate fromDate;
+
+    if (startDate != null && endDate != null) {
+      // Custom range mode. Clamp to today and guard against inverted ranges.
+      fromDate = LocalDate.parse(startDate, fmt);
+      toDate = LocalDate.parse(endDate, fmt);
+      if (toDate.isAfter(today)) {
+        toDate = today;
+      }
+      if (fromDate.isAfter(toDate)) {
+        fromDate = toDate.minusDays(6);
+      }
+    } else {
+      // Backward-compatible "last N days" mode.
+      toDate = today;
+      fromDate = today.minusDays(days - 1L);
+    }
 
     List<TokenUsage> rows =
         tokenUsageRepository.findByUserIdAndDateBetweenOrderByDateAsc(

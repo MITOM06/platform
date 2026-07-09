@@ -556,6 +556,10 @@
   "reminderDone": "完了としてマーク",
   "tokenUsage": "トークン使用量",
   "tokenUsageTitle": "トークン使用量ダッシュボード",
+  "tokenUsageSelectRange": "期間を選択",
+  "tokenUsageDateRangeError": "開始日は終了日より前である必要があります",
+  "coverPhotoPreviewTitle": "カバー写真をプレビュー",
+  "saveCoverPhoto": "カバーに設定",
   "tokenUsageThisMonth": "今月の合計トークン",
   "tokenUsageRequests": "AIリクエスト数",
   "tokenUsageEstCost": "推定コスト (USD)",
@@ -1116,5 +1120,8 @@
   "removeAttachment": "削除",
   "addMore": "追加",
   "attachHdOn": "HD — 高画質",
-  "attachHdOff": "SD — 圧縮"
+  "attachHdOff": "SD — 圧縮",
+  "hdOn": "HD オン",
+  "hdOff": "HD オフ",
+  "videoCannotPlay": "動画を再生できません"
 }

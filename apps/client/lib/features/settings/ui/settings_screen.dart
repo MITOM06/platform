@@ -154,11 +154,18 @@ class SettingsScreen extends ConsumerWidget {
                   glowColor: AppTheme.ponCyan,
                   icon: Icons.person_rounded,
                   title: context.l10n.editProfile,
-                  // When shown as a web dialog, close it first so Edit Profile
-                  // doesn't render underneath the still-open settings modal.
+                  // Open the user's OWN public profile first (as others see it);
+                  // the profile screen offers an "Edit profile" button for self.
+                  // Falls back to the edit form if the id can't be resolved.
+                  // When shown as a web dialog, close it first so the pushed
+                  // screen doesn't render underneath the still-open modal.
                   onTap: () {
                     if (isDialog) Navigator.of(context).pop();
-                    context.push('/edit-profile');
+                    if (user != null) {
+                      context.push('/user/${user.id}');
+                    } else {
+                      context.push('/edit-profile');
+                    }
                   },
                 ),
                 const SizedBox(height: 24),
