@@ -6,18 +6,13 @@
 >
 > Last regenerated: 2026-07-09 (Bot Factory client UI verification).
 
-## ✅ Done — Bot Factory features (client UI + self-service setup)
+## ✅ Done — Bot Factory complete integration (Phase 1–3)
 
 | Plan | Scope |
 |------|-------|
 | `2026-06-25-personal-assistant-client-ui.md` | Bot Factory assistant UI (web + Flutter) — Task 1–4 complete, both platforms verified |
 | `2026-06-25-botfather-zone.md` | BotFather zone UX (self-service setup wizard) — Tasks 1–6 complete, all backends + frontends verified |
-
-## 🟡 Active / not started — Bot Factory UX extensions
-
-| Plan | Scope | Status |
-|------|-------|--------|
-| `2026-06-25-identity-bridge-bot-connector.md` | Identity bridge for bot connector | 🟡 Not started |
+| `2026-06-25-identity-bridge-bot-connector.md` | Identity bridge for bot connector (MCP token + connector tools) — Tasks 1–4 complete, all services verified |
 
 ## ✅ Done — enterprise foundation (P0–P8)
 
