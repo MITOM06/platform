@@ -3054,6 +3054,30 @@ abstract class AppLocalizations {
   /// **'Token Usage Dashboard'**
   String get tokenUsageTitle;
 
+  /// No description provided for @tokenUsageSelectRange.
+  ///
+  /// In en, this message translates to:
+  /// **'Select date range'**
+  String get tokenUsageSelectRange;
+
+  /// No description provided for @tokenUsageDateRangeError.
+  ///
+  /// In en, this message translates to:
+  /// **'Start date must be before end date'**
+  String get tokenUsageDateRangeError;
+
+  /// No description provided for @coverPhotoPreviewTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Preview cover photo'**
+  String get coverPhotoPreviewTitle;
+
+  /// No description provided for @saveCoverPhoto.
+  ///
+  /// In en, this message translates to:
+  /// **'Set as cover'**
+  String get saveCoverPhoto;
+
   /// No description provided for @tokenUsageThisMonth.
   ///
   /// In en, this message translates to:
@@ -5958,6 +5982,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'SD — compressed'**
   String get attachHdOff;
+
+  /// No description provided for @hdOn.
+  ///
+  /// In en, this message translates to:
+  /// **'HD ON'**
+  String get hdOn;
+
+  /// No description provided for @hdOff.
+  ///
+  /// In en, this message translates to:
+  /// **'HD OFF'**
+  String get hdOff;
+
+  /// No description provided for @videoCannotPlay.
+  ///
+  /// In en, this message translates to:
+  /// **'Cannot play video'**
+  String get videoCannotPlay;
 }
 
 class _AppLocalizationsDelegate

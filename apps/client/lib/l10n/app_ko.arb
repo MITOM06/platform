@@ -556,6 +556,10 @@
   "reminderDone": "완료로 표시",
   "tokenUsage": "토큰 사용량",
   "tokenUsageTitle": "토큰 사용량 대시보드",
+  "tokenUsageSelectRange": "기간 선택",
+  "tokenUsageDateRangeError": "시작일은 종료일보다 이전이어야 합니다",
+  "coverPhotoPreviewTitle": "커버 사진 미리보기",
+  "saveCoverPhoto": "커버로 설정",
   "tokenUsageThisMonth": "이번 달 총 토큰",
   "tokenUsageRequests": "AI 요청 수",
   "tokenUsageEstCost": "예상 비용 (USD)",
@@ -1116,5 +1120,8 @@
   "removeAttachment": "제거",
   "addMore": "추가",
   "attachHdOn": "HD — 고화질",
-  "attachHdOff": "SD — 압축"
+  "attachHdOff": "SD — 압축",
+  "hdOn": "HD 켜기",
+  "hdOff": "HD 끄기",
+  "videoCannotPlay": "동영상을 재생할 수 없습니다"
 }

@@ -59,6 +59,8 @@ type SendFn = (content: string, type?: MessageType) => Promise<void>
  */
 export function useStagedAttachments() {
   const [pendingAttachments, setPendingAttachments] = useState<PendingAttachment[]>([])
+  // Single global HD flag for the whole batch (default ON = original quality).
+  const [isAllHD, setIsAllHD] = useState(true)
 
   // Mirror into a ref so unmount cleanup and flush see the *current* set
   // without re-subscribing effects on every change (which would revoke URLs
@@ -85,7 +87,6 @@ export function useStagedAttachments() {
       file,
       previewUrl: URL.createObjectURL(file),
       type: file.type.startsWith('video/') ? 'video' : 'image',
-      isHD: true,
     }))
     setPendingAttachments((prev) => {
       // A staged document doesn't mix with media — replace it.
@@ -103,7 +104,7 @@ export function useStagedAttachments() {
     if (!file) return
     setPendingAttachments((prev) => {
       prev.forEach((a) => a.previewUrl && URL.revokeObjectURL(a.previewUrl))
-      return [{ id: randomId(), file, previewUrl: '', type: 'file', isHD: false }]
+      return [{ id: randomId(), file, previewUrl: '', type: 'file' }]
     })
   }, [])
 
@@ -115,11 +116,7 @@ export function useStagedAttachments() {
     })
   }, [])
 
-  const toggleHD = useCallback((id: string) => {
-    setPendingAttachments((prev) =>
-      prev.map((a) => (a.id === id ? { ...a, isHD: !a.isHD } : a)),
-    )
-  }, [])
+  const toggleAllHD = useCallback(() => setIsAllHD((v) => !v), [])
 
   /**
    * Upload every staged attachment then send it. Images are batched into one
@@ -142,7 +139,7 @@ export function useStagedAttachments() {
         const { url } = await chatService.uploadFile(att.file)
         await onSend(url, 'video')
       } else {
-        const fileToUpload = att.isHD ? att.file : await compressImage(att.file, 0.7)
+        const fileToUpload = isAllHD ? att.file : await compressImage(att.file, 0.7)
         const { url } = await chatService.uploadFile(fileToUpload)
         images.push(url)
       }
@@ -152,14 +149,16 @@ export function useStagedAttachments() {
 
     items.forEach((a) => a.previewUrl && URL.revokeObjectURL(a.previewUrl))
     setPendingAttachments([])
-  }, [])
+    setIsAllHD(true) // reset to default (HD ON) for the next batch
+  }, [isAllHD])
 
   return {
     pendingAttachments,
+    isAllHD,
     stageImages,
     stageFile,
     removeAttachment,
-    toggleHD,
+    toggleAllHD,
     flushAttachments,
   }
 }

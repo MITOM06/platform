@@ -65,10 +65,11 @@ export function MessageInput({
 
   const {
     pendingAttachments,
+    isAllHD,
     stageImages,
     stageFile,
     removeAttachment,
-    toggleHD,
+    toggleAllHD,
     flushAttachments,
   } = useStagedAttachments()
 
@@ -298,8 +299,9 @@ export function MessageInput({
       {!editingMessage && (
         <MediaPreviewStrip
           attachments={pendingAttachments}
+          isAllHD={isAllHD}
           onRemove={removeAttachment}
-          onToggleHD={toggleHD}
+          onToggleAllHD={toggleAllHD}
           onAddMore={() => imageInputRef.current?.click()}
         />
       )}

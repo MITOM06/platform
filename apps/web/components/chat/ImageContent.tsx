@@ -214,19 +214,71 @@ function Lightbox({
   )
 }
 
-// ── Video (thumbnail card opening in a new tab) ───────────────────────────────
+// ── Video (thumbnail card that plays inline in a dialog) ──────────────────────
 
 export function VideoContent({ content }: { content: string }) {
+  const t = useTranslations('chat')
+  const [open, setOpen] = useState(false)
+  const url = absoluteMediaUrl(content)
+
   return (
-    <a
-      href={absoluteMediaUrl(content)}
-      target="_blank"
-      rel="noopener noreferrer"
-      className="relative flex h-[150px] w-[220px] items-center justify-center overflow-hidden rounded-2xl bg-black"
-    >
-      <div className="rounded-full bg-black/50 p-2.5">
-        <Play className="size-7 fill-white text-white" />
-      </div>
-    </a>
+    <>
+      {/* Thumbnail — tapping plays inline instead of downloading */}
+      <button
+        type="button"
+        onClick={() => setOpen(true)}
+        className="group relative flex h-[150px] w-[220px] items-center justify-center overflow-hidden rounded-2xl bg-black"
+      >
+        <div className="rounded-full bg-black/50 p-2.5 transition-colors group-hover:bg-black/70">
+          <Play className="size-7 fill-white text-white" />
+        </div>
+        <a
+          href={downloadMediaUrl(content)}
+          target="_blank"
+          rel="noopener noreferrer"
+          onClick={(e) => e.stopPropagation()}
+          className="absolute bottom-2 right-2 flex items-center justify-center rounded-full bg-black/50 p-1.5 text-white transition-colors hover:bg-black/70"
+        >
+          <Download className="size-3.5" />
+        </a>
+      </button>
+
+      {/* Inline video player dialog */}
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent
+          className="flex max-w-[95vw] items-center justify-center border-none bg-black/95 p-0 sm:max-w-[85vw]"
+          showCloseButton={false}
+        >
+          <DialogTitle className="sr-only">{t('videoViewer')}</DialogTitle>
+          <DialogA11yDescription />
+          <div className="relative flex w-full flex-col items-center justify-center">
+            {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
+            <video
+              src={url}
+              controls
+              autoPlay
+              className="max-h-[80vh] max-w-full rounded-lg outline-none"
+            />
+            <div className="absolute right-3 top-3 flex gap-2">
+              <a
+                href={downloadMediaUrl(content)}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="rounded-full bg-black/60 p-2 text-white hover:bg-black/80"
+              >
+                <Download className="size-4" />
+              </a>
+              <button
+                type="button"
+                onClick={() => setOpen(false)}
+                className="rounded-full bg-black/60 p-2 text-white hover:bg-black/80"
+              >
+                <X className="size-4" />
+              </button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </>
   )
 }

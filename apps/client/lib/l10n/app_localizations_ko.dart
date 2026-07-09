@@ -1555,6 +1555,18 @@ class AppLocalizationsKo extends AppLocalizations {
   String get tokenUsageTitle => '토큰 사용량 대시보드';
 
   @override
+  String get tokenUsageSelectRange => '기간 선택';
+
+  @override
+  String get tokenUsageDateRangeError => '시작일은 종료일보다 이전이어야 합니다';
+
+  @override
+  String get coverPhotoPreviewTitle => '커버 사진 미리보기';
+
+  @override
+  String get saveCoverPhoto => '커버로 설정';
+
+  @override
   String get tokenUsageThisMonth => '이번 달 총 토큰';
 
   @override
@@ -3117,4 +3129,13 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get attachHdOff => 'SD — 압축';
+
+  @override
+  String get hdOn => 'HD 켜기';
+
+  @override
+  String get hdOff => 'HD 끄기';
+
+  @override
+  String get videoCannotPlay => '동영상을 재생할 수 없습니다';
 }

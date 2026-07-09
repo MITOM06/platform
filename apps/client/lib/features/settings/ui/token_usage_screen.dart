@@ -2,12 +2,14 @@ import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:intl/intl.dart';
 import '../../../core/api/dio_client.dart';
 import '../../../core/l10n/l10n_ext.dart';
 import '../../../core/utils/app_error.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../auth/domain/auth_provider.dart';
 import 'widgets/token_usage_chart.dart';
+import 'widgets/token_usage_range_selector.dart';
 
 // ── Quota / pricing config ──────────────────────────────────────────────────
 // Anthropic Claude per-token prices (USD) and the monthly token allowance.
@@ -54,12 +56,21 @@ final _chatDioProvider = Provider<Dio>((ref) {
   );
 });
 
+/// Query params for the token-usage endpoint. Use [days] for the "last N days"
+/// preset mode, or [startDate]/[endDate] (ISO yyyy-MM-dd) for a custom range.
+typedef TokenUsageQuery = ({int? days, String? startDate, String? endDate});
+
 final tokenUsageProvider = FutureProvider.autoDispose
-    .family<List<TokenUsageDay>, int>((ref, days) async {
+    .family<List<TokenUsageDay>, TokenUsageQuery>((ref, query) async {
   final dio = ref.read(_chatDioProvider);
+  final queryParams = <String, dynamic>{};
+  if (query.days != null) queryParams['days'] = query.days;
+  if (query.startDate != null) queryParams['startDate'] = query.startDate;
+  if (query.endDate != null) queryParams['endDate'] = query.endDate;
+
   final response = await dio.get<List<dynamic>>(
     '/api/usage/tokens',
-    queryParameters: {'days': days},
+    queryParameters: queryParams,
   );
   return (response.data ?? [])
       .map((e) => TokenUsageDay.fromJson(e as Map<String, dynamic>))
@@ -68,27 +79,111 @@ final tokenUsageProvider = FutureProvider.autoDispose
 
 // ── Screen ────────────────────────────────────────────────────────────────────
 
-class TokenUsageScreen extends ConsumerWidget {
+class TokenUsageScreen extends ConsumerStatefulWidget {
   const TokenUsageScreen({super.key});
 
-  static const _days = 30;
+  @override
+  ConsumerState<TokenUsageScreen> createState() => _TokenUsageScreenState();
+}
+
+class _TokenUsageScreenState extends ConsumerState<TokenUsageScreen> {
+  static const _presets = [7, 30, 90];
+
+  /// Active "last N days" preset. Null while a custom range is selected.
+  int? _activeDays = 30;
+
+  /// Custom date range. Null while a preset is active.
+  DateTimeRange? _customRange;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final usageAsync = ref.watch(tokenUsageProvider(_days));
+  Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
+    final TokenUsageQuery query = _customRange == null
+        ? (days: _activeDays ?? 30, startDate: null, endDate: null)
+        : (
+            days: null,
+            startDate: DateFormat('yyyy-MM-dd').format(_customRange!.start),
+            endDate: DateFormat('yyyy-MM-dd').format(_customRange!.end),
+          );
+
+    final usageAsync = ref.watch(tokenUsageProvider(query));
+
     return Scaffold(
-      appBar: AppBar(title: Text(context.l10n.tokenUsageTitle)),
-      body: usageAsync.when(
-        data: (days) => _Body(days: days, isDark: isDark),
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(
-          child: Text(friendlyError(e),
-              style: const TextStyle(color: Colors.redAccent)),
-        ),
+      appBar: AppBar(
+        title: Text(context.l10n.tokenUsageTitle),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.calendar_month_outlined),
+            tooltip: context.l10n.tokenUsageSelectRange,
+            onPressed: _pickDateRange,
+          ),
+        ],
+      ),
+      body: Column(
+        children: [
+          TokenUsageRangeSelector(
+            presets: _presets,
+            activeDays: _activeDays,
+            customRange: _customRange,
+            onPreset: (days) => setState(() {
+              _activeDays = days;
+              _customRange = null;
+            }),
+          ),
+          Expanded(
+            child: usageAsync.when(
+              data: (days) => _Body(days: days, isDark: isDark),
+              loading: () => const Center(child: CircularProgressIndicator()),
+              error: (e, _) => Center(
+                child: Text(friendlyError(e),
+                    style: const TextStyle(color: Colors.redAccent)),
+              ),
+            ),
+          ),
+        ],
       ),
     );
+  }
+
+  Future<void> _pickDateRange() async {
+    final today = DateTime.now();
+    final range = await showDateRangePicker(
+      context: context,
+      firstDate: DateTime(today.year - 1),
+      lastDate: today, // no future dates
+      initialDateRange: _customRange ??
+          DateTimeRange(
+            start: today.subtract(const Duration(days: 29)),
+            end: today,
+          ),
+      builder: (context, child) => Theme(
+        data: Theme.of(context).copyWith(
+          colorScheme: const ColorScheme.dark(
+            primary: AppTheme.ponCyan,
+            onPrimary: Colors.black,
+          ),
+        ),
+        child: child!,
+      ),
+    );
+
+    if (range == null || !mounted) return;
+
+    final start = range.start;
+    final end = range.end.isAfter(today) ? today : range.end;
+
+    if (start.isAfter(end)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(context.l10n.tokenUsageDateRangeError)),
+      );
+      return;
+    }
+
+    setState(() {
+      _customRange = DateTimeRange(start: start, end: end);
+      _activeDays = null;
+    });
   }
 }
 

@@ -556,6 +556,10 @@
   "reminderDone": "Marcar como completado",
   "tokenUsage": "Uso de tokens",
   "tokenUsageTitle": "Panel de uso de tokens",
+  "tokenUsageSelectRange": "Seleccionar rango de fechas",
+  "tokenUsageDateRangeError": "La fecha de inicio debe ser anterior a la fecha de fin",
+  "coverPhotoPreviewTitle": "Vista previa de la foto de portada",
+  "saveCoverPhoto": "Establecer como portada",
   "tokenUsageThisMonth": "Total de tokens este mes",
   "tokenUsageRequests": "Solicitudes de IA",
   "tokenUsageEstCost": "Costo estimado (USD)",
@@ -1116,5 +1120,8 @@
   "removeAttachment": "Quitar",
   "addMore": "Añadir",
   "attachHdOn": "HD — alta calidad",
-  "attachHdOff": "SD — comprimido"
+  "attachHdOff": "SD — comprimido",
+  "hdOn": "HD SÍ",
+  "hdOff": "HD NO",
+  "videoCannotPlay": "No se puede reproducir el video"
 }

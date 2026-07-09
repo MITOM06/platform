@@ -1588,6 +1588,19 @@ class AppLocalizationsEs extends AppLocalizations {
   String get tokenUsageTitle => 'Panel de uso de tokens';
 
   @override
+  String get tokenUsageSelectRange => 'Seleccionar rango de fechas';
+
+  @override
+  String get tokenUsageDateRangeError =>
+      'La fecha de inicio debe ser anterior a la fecha de fin';
+
+  @override
+  String get coverPhotoPreviewTitle => 'Vista previa de la foto de portada';
+
+  @override
+  String get saveCoverPhoto => 'Establecer como portada';
+
+  @override
   String get tokenUsageThisMonth => 'Total de tokens este mes';
 
   @override
@@ -3205,4 +3218,13 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get attachHdOff => 'SD — comprimido';
+
+  @override
+  String get hdOn => 'HD SÍ';
+
+  @override
+  String get hdOff => 'HD NO';
+
+  @override
+  String get videoCannotPlay => 'No se puede reproducir el video';
 }
