@@ -1,3 +1,218 @@
+# Plan: 5 UI Polish Issues
+
+> **Ngày:** 2026-07-08
+> **Scope:** Web + Flutter (mobile logo only)
+
+---
+
+## Issue 1 — Directory Card: dùng logo thật thay vì monogram
+
+### Root cause
+`DirectoryCard.tsx` dùng `entry.name.charAt(0).toUpperCase()` (monogram) thay vì logo thật.
+`entry.icon` là slug string (`'asana'`, `'github'`, v.v.) — không được render.
+
+### Fix — `apps/web/components/integrations/DirectoryCard.tsx`
+
+Thêm function `DirectoryLogo` TRƯỚC `DirectoryCard` component (sau imports):
+
+```tsx
+const DIRECTORY_LOGO_URLS: Record<string, string> = {
+  notion: 'https://www.notion.so/front-static/favicon.ico',
+  linear: 'https://linear.app/favicon.ico',
+  sentry: 'https://sentry.io/favicon.ico',
+  atlassian: 'https://atlassian.com/favicon.ico',
+  github: 'https://github.com/favicon.ico',
+  stripe: 'https://stripe.com/favicon.ico',
+  huggingface: 'https://huggingface.co/favicon.ico',
+  asana: 'https://asana.com/favicon.ico',
+  gmail: 'https://ssl.gstatic.com/ui/v1/icons/mail/rfr/gmail.ico',
+  calendar: 'https://calendar.google.com/googlecalendar/images/favicon_v2018_256.png',
+  drive: 'https://ssl.gstatic.com/images/branding/product/1x/drive_2020q4_32dp.png',
+}
+
+function DirectoryLogo({ icon, name }: { icon: string; name: string }) {
+  const url = DIRECTORY_LOGO_URLS[icon.toLowerCase()]
+  if (!url) {
+    return (
+      <span className="text-lg font-bold text-pon-cyan" aria-hidden>
+        {name.charAt(0).toUpperCase()}
+      </span>
+    )
+  }
+  return (
+    // eslint-disable-next-line @next/next/no-img-element
+    <img
+      src={url}
+      alt={name}
+      width={26}
+      height={26}
+      className="object-contain"
+      onError={(e) => {
+        // Fallback to monogram on load error
+        const parent = (e.target as HTMLElement).parentElement
+        if (parent) {
+          parent.innerHTML = `<span class="text-lg font-bold text-pon-cyan">${name.charAt(0).toUpperCase()}</span>`
+        }
+      }}
+    />
+  )
+}
+```
+
+Tìm đoạn trong `DirectoryCard`:
+```tsx
+<div className="size-[42px] rounded-[11px] grid place-items-center text-lg font-bold bg-background border text-pon-cyan shrink-0">
+  <span aria-hidden>{monogram}</span>
+</div>
+```
+
+Thay bằng:
+```tsx
+<div className="size-[42px] rounded-[11px] grid place-items-center bg-background border shrink-0 overflow-hidden">
+  <DirectoryLogo icon={entry.icon} name={entry.name} />
+</div>
+```
+
+Xóa dòng `const monogram = entry.name.charAt(0).toUpperCase()` (không còn dùng).
+
+---
+
+## Issue 2 — Hiển thị thời gian offline ("hoạt động 1 giờ trước")
+
+### Root cause
+`ConversationHeader.tsx` line 196: chỉ hiển thị `t('online')` hoặc `t('offline')`.
+`UserStatus` type có `lastSeen: string | null` — nhưng không được dùng.
+
+### Fix — `apps/web/components/chat/ConversationHeader.tsx`
+
+Thêm helper `formatLastSeen` vào đầu file (sau imports):
+
+```tsx
+function formatLastSeen(lastSeen: string | null, t: (key: string, params?: Record<string, unknown>) => string): string {
+  if (!lastSeen) return t('offline')
+  const diffMs = Date.now() - new Date(lastSeen).getTime()
+  const diffMin = Math.floor(diffMs / 60_000)
+  const diffHour = Math.floor(diffMs / 3_600_000)
+  const diffDay = Math.floor(diffMs / 86_400_000)
+
+  if (diffMin < 1) return t('justNow')           // "Vừa online"
+  if (diffMin < 60) return t('minutesAgo', { count: diffMin })  // "5 phút trước"
+  if (diffHour < 24) return t('hoursAgo', { count: diffHour })  // "2 giờ trước"
+  if (diffDay < 7) return t('daysAgo', { count: diffDay })      // "3 ngày trước"
+  return t('offline')
+}
+```
+
+Tìm đoạn hiển thị status text (khoảng line 194-198):
+```tsx
+) : otherUserId && status && !blockedMe ? (
+  <p className="text-xs text-muted-foreground">
+    {status.online ? t('online') : t('offline')}
+  </p>
+```
+
+Thay thành:
+```tsx
+) : otherUserId && status && !blockedMe ? (
+  <p className="text-xs text-muted-foreground">
+    {status.online ? t('online') : formatLastSeen(status.lastSeen, t)}
+  </p>
+```
+
+**Thêm i18n keys** vào tất cả 7 `messages/*.json` (namespace `"chat"`):
+```json
+// en.json:
+"justNow": "Just now",
+"minutesAgo": "{count} min ago",
+"hoursAgo": "{count}h ago",
+"daysAgo": "{count}d ago"
+
+// vi.json:
+"justNow": "Vừa online",
+"minutesAgo": "{count} phút trước",
+"hoursAgo": "{count} giờ trước",
+"daysAgo": "{count} ngày trước"
+
+// zh.json:
+"justNow": "刚刚在线",
+"minutesAgo": "{count}分钟前",
+"hoursAgo": "{count}小时前",
+"daysAgo": "{count}天前"
+
+// ja.json:
+"justNow": "たった今",
+"minutesAgo": "{count}分前",
+"hoursAgo": "{count}時間前",
+"daysAgo": "{count}日前"
+
+// ko.json:
+"justNow": "방금 전",
+"minutesAgo": "{count}분 전",
+"hoursAgo": "{count}시간 전",
+"daysAgo": "{count}일 전"
+
+// fr.json:
+"justNow": "À l'instant",
+"minutesAgo": "Il y a {count} min",
+"hoursAgo": "Il y a {count}h",
+"daysAgo": "Il y a {count}j"
+
+// es.json:
+"justNow": "Justo ahora",
+"minutesAgo": "Hace {count} min",
+"hoursAgo": "Hace {count}h",
+"daysAgo": "Hace {count}d"
+```
+
+**Lưu ý:** `next-intl` dùng `{count}` placeholder trong messages — không phải `{{count}}`.
+
+---
+
+## Issue 3 — Ẩn chấm xanh trên avatar của chính mình
+
+### Các vị trí bị ảnh hưởng
+
+**Vị trí 1: `apps/web/app/(main)/settings/page.tsx` line 207**
+
+Tìm:
+```tsx
+<div className="absolute -bottom-0.5 -right-0.5 size-5 rounded-full bg-online-green border-2 border-background" />
+```
+
+Xóa dòng này hoàn toàn. Avatar của chính user không cần hiển thị trạng thái online vì luôn luôn là "đang online" khi đang dùng app — gây misleading.
+
+**Vị trí 2: Kiểm tra `ConversationItem.tsx`**
+
+Ở ConversationItem, green dot hiện ra dựa vào `status` của `otherUserId` — không phải currentUser → không bị ảnh hưởng. Không cần sửa.
+
+**Vị trí 3: Kiểm tra `ConversationHeader.tsx`**
+
+Green dot trong header ở line ~167:
+```tsx
+{otherUserId && status?.online && !blockedMe && (
+  <span className="absolute bottom-0 right-0 size-2.5 rounded-full bg-[#00E676] ..." />
+)}
+```
+
+Điều kiện `otherUserId` đảm bảo chỉ hiện dot cho OTHER user — đúng behavior. Không cần sửa.
+
+**Kết luận:** Chỉ cần xóa dot ở `settings/page.tsx`.
+
+---
+
+## Issue 4 — Token Usage: redesign UI to be bigger, interactive line chart
+
+### Vấn đề với UI hiện tại
+- Layout quá hẹp (`max-w-lg`)
+- Canvas bar chart, không có hover tooltip
+- Không có time range selector
+- Không hiện chi tiết input/output tokens riêng
+
+### Fix — `apps/web/app/(main)/token-usage/page.tsx`
+
+**Rewrite toàn bộ file** (dùng React SVG thay Canvas để support hover):
+
+```tsx
 'use client'
 
 import { useState, useRef, useCallback } from 'react'
@@ -119,8 +334,7 @@ function LineChart({ days, inputLabel, outputLabel, noDataLabel }: {
     const screenX = rect.left + px / scaleX
     const screenY = e.clientY
     setTooltip({ x: screenX, y: screenY, day: days[clamped], pointX: px })
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [days])
+  }, [days, W, PAD, chartW])
 
   if (days.length === 0) {
     return (
@@ -373,3 +587,93 @@ export default function TokenUsagePage() {
     </div>
   )
 }
+```
+
+**Thêm i18n keys** `inputTokens` và `outputTokens` vào `messages/*.json` namespace `"tokenUsage"` nếu chưa có.
+
+---
+
+## Issue 5 — Mobile: thay logo Flutter mặc định bằng logo PON
+
+### Vấn đề
+Flutter tạo default icon (Flutter logo xanh) ở:
+- iOS: `ios/Runner/Assets.xcassets/AppIcon.appiconset/*.png`
+- Android: `android/app/src/main/res/mipmap-*/ic_launcher.png`
+
+### Cách làm đúng — dùng `flutter_launcher_icons`
+
+**Bước 1:** Mày cần chuẩn bị một file PNG logo của PON, tối thiểu **1024x1024px**, nền trong suốt hoặc màu nền phù hợp. Đặt vào: `apps/client/assets/images/app_icon.png`
+
+**Bước 2:** `apps/client/pubspec.yaml` — thêm package và config:
+
+```yaml
+# Trong dev_dependencies:
+dev_dependencies:
+  flutter_launcher_icons: ^0.14.3
+
+# Thêm section mới ở cuối file:
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path: "assets/images/app_icon.png"
+  # iOS: không cần nền vì iOS 20+ dùng adaptive icons
+  adaptive_icon_background: "#0A0A0A"   # màu nền dark của PON
+  adaptive_icon_foreground: "assets/images/app_icon_foreground.png"
+  min_sdk_android: 21
+  web:
+    generate: false
+  remove_alpha_ios: true
+```
+
+**Bước 3:** Chạy:
+```bash
+cd apps/client
+flutter pub get
+flutter pub run flutter_launcher_icons
+```
+
+→ Tool tự generate tất cả kích thước cần thiết và replace các file PNG.
+
+### Nếu chưa có logo file
+
+Cần Claude Code tạo một SVG đơn giản cho PON app icon dạng:
+- Nền màu gradient dark (#0A0A0F → #1a1a2e)
+- Chữ "P" hoặc logo PON ở giữa với màu pon-cyan (#00E5FF)
+- Convert sang PNG 1024x1024 bằng Inkscape/Imagemagick
+
+Hoặc mày cung cấp file logo PNG cho Claude Code để đặt vào đúng thư mục.
+
+**Lưu ý cho Claude Code:**
+- Nếu không có file logo sẵn, tạo file SVG simple rồi convert → PNG bằng `rsvg-convert` hoặc Python `cairosvg`.
+- Sau khi generate icon: rebuild app để verify icon mới xuất hiện.
+
+---
+
+## Verification
+
+1. **Directory logos**: Mở `/integrations` → Directory section → cards hiển thị logo thật (Asana, GitHub, Notion, Linear... — không còn chữ cái đơn lẻ).
+
+2. **Offline time**: Vào conversation 1-1 với user đang offline → header hiển thị "3 giờ trước" thay vì "Offline".
+
+3. **Settings dot**: Vào `/settings` → avatar của chính mình không có chấm xanh.
+
+4. **Token Usage**: Vào `/token-usage`:
+   - Có 3 nút 7d / 30d / 90d ở header, click đổi range, chart cập nhật
+   - 4 stat cards: Total / Input / Output / Queries
+   - Line chart SVG với 2 đường (cyan = input, purple = output)
+   - Di chuột vào chart → tooltip floating hiển thị input/output tại ngày đó
+
+5. **Mobile logo**: Chạy app trên iOS Simulator hoặc thiết bị → màn hình home/launch hiển thị PON logo thay vì Flutter logo.
+
+---
+
+## Lưu ý cho Claude Code
+
+- **Issue 1**: `img` tag với `onError` handle graceful fallback — không dùng `next/image` để tránh cần cấu hình `domains` cho nhiều external domain.
+- **Issue 2**: `formatLastSeen` là pure function, đặt ở module scope. `t()` từ `useTranslations('chat')` đã được dùng trong component, truyền vào function.
+- **Issue 3**: Chỉ xóa 1 dòng trong settings/page.tsx. Không đụng ConversationItem hay ConversationHeader.
+- **Issue 4**: File Token Usage page được **rewrite hoàn toàn** — xóa toàn bộ nội dung cũ và thay bằng code mới trong plan. Import `ArrowDownToLine` và `ArrowUpFromLine` từ `lucide-react`.
+- **Issue 4**: `fixed` positioning cho tooltip — hoạt động đúng khi chart nằm trong scrollable container.
+- **Issue 4**: `useCallback` cho `handleMouseMove` dependency array cần include `days`, `W`, `PAD`, `chartW` — nhưng vì `W` và `PAD` là constants, chỉ cần `[days]`.
+- **Issue 5**: Nếu không có logo file, tạo SVG placeholder đơn giản rồi convert PNG.
+- Chạy `pnpm build` trong `apps/web/` để verify TypeScript.

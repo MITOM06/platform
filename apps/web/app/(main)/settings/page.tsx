@@ -204,7 +204,6 @@ export default function SettingsPage() {
                     {getInitials(user.displayName)}
                   </AvatarFallback>
                 </Avatar>
-                <div className="absolute -bottom-0.5 -right-0.5 size-5 rounded-full bg-online-green border-2 border-background" />
               </div>
               <h2 className="mt-4 text-lg font-bold text-foreground">{user.displayName}</h2>
               <p className="text-sm text-muted-foreground">{user.email}</p>

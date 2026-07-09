@@ -746,7 +746,11 @@
     "unfriendConfirmTitle": "Retirer cet ami ?",
     "unfriendConfirmDesc": "Vous et cette personne ne serez plus amis. Vous pourrez renvoyer une demande d'ami plus tard.",
     "backToList": "Retour",
-    "meetingSummaryLabel": "[Résumé de la réunion]"
+    "meetingSummaryLabel": "[Résumé de la réunion]",
+    "justNow": "À l'instant",
+    "minutesAgo": "Il y a {count} min",
+    "hoursAgo": "Il y a {count}h",
+    "daysAgo": "Il y a {count}j"
   },
   "aiHub": {
     "title": "Hub IA",
@@ -865,7 +869,7 @@
     "noData": "Aucune donnée",
     "inputTokens": "Jetons d'entrée",
     "outputTokens": "Jetons de sortie",
-    "dailyChart": "Graphique quotidien (30 jours)"
+    "dailyChart": "Graphique quotidien"
   },
   "sharedMedia": {
     "title": "Fichiers et médias",

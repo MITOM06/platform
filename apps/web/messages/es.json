@@ -746,7 +746,11 @@
     "unfriendConfirmTitle": "¿Eliminar amistad?",
     "unfriendConfirmDesc": "Tú y esta persona dejarán de ser amigos. Podrás enviar una solicitud de amistad de nuevo más adelante.",
     "backToList": "Atrás",
-    "meetingSummaryLabel": "[Resumen de la reunión]"
+    "meetingSummaryLabel": "[Resumen de la reunión]",
+    "justNow": "Justo ahora",
+    "minutesAgo": "Hace {count} min",
+    "hoursAgo": "Hace {count}h",
+    "daysAgo": "Hace {count}d"
   },
   "aiHub": {
     "title": "Centro de IA",
@@ -865,7 +869,7 @@
     "noData": "Sin datos",
     "inputTokens": "Tokens de entrada",
     "outputTokens": "Tokens de salida",
-    "dailyChart": "Gráfico diario (30 días)"
+    "dailyChart": "Gráfico diario"
   },
   "sharedMedia": {
     "title": "Archivos y multimedia",
