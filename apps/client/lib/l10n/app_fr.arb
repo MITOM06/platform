@@ -1101,5 +1101,20 @@
   "aiSessionSummarized": "Résumée",
   "aiSessionEmpty": "Aucune conversation précédente",
   "aiSessionResume": "Reprendre",
-  "aiSessionLoadError": "Impossible de charger l'historique des conversations"
+  "aiSessionLoadError": "Impossible de charger l'historique des conversations",
+  "multiSelectCount": "{count} sélectionné(s)",
+  "multiSelectEmpty": "Aucun message sélectionné",
+  "multiSelectCancel": "Annuler",
+  "multiSelectTypeWarning": "Vous sélectionnez {type}. Vous ne pouvez sélectionner qu’un seul type.",
+  "multiDeleted": "{count} messages supprimés",
+  "multiRecalled": "{count} messages annulés",
+  "multiForwardHint": "Sélectionnez un seul message à transférer",
+  "msgTypeText": "texte",
+  "msgTypeImage": "photos/vidéos",
+  "msgTypeFile": "fichiers",
+  "selectMessages": "Sélectionner des messages",
+  "removeAttachment": "Supprimer",
+  "addMore": "Ajouter",
+  "attachHdOn": "HD — haute qualité",
+  "attachHdOff": "SD — compressé"
 }

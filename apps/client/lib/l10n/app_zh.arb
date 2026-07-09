@@ -1101,5 +1101,20 @@
   "aiSessionSummarized": "已摘要",
   "aiSessionEmpty": "暂无历史对话",
   "aiSessionResume": "恢复",
-  "aiSessionLoadError": "无法加载对话历史"
+  "aiSessionLoadError": "无法加载对话历史",
+  "multiSelectCount": "已选择 {count} 条",
+  "multiSelectEmpty": "未选择任何消息",
+  "multiSelectCancel": "取消",
+  "multiSelectTypeWarning": "您正在选择{type}。只能选择同一类型。",
+  "multiDeleted": "已删除 {count} 条消息",
+  "multiRecalled": "已撤回 {count} 条消息",
+  "multiForwardHint": "请选择一条消息进行转发",
+  "msgTypeText": "文本",
+  "msgTypeImage": "图片/视频",
+  "msgTypeFile": "文件",
+  "selectMessages": "选择消息",
+  "removeAttachment": "移除",
+  "addMore": "添加",
+  "attachHdOn": "HD — 高清",
+  "attachHdOff": "SD — 压缩"
 }

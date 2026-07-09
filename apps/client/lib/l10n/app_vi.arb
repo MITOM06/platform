@@ -1101,5 +1101,20 @@
   "aiSessionSummarized": "Đã tóm tắt",
   "aiSessionEmpty": "Chưa có cuộc trò chuyện nào trước đây",
   "aiSessionResume": "Tiếp tục",
-  "aiSessionLoadError": "Không thể tải lịch sử cuộc trò chuyện"
+  "aiSessionLoadError": "Không thể tải lịch sử cuộc trò chuyện",
+  "multiSelectCount": "Đã chọn {count} tin nhắn",
+  "multiSelectEmpty": "Chưa chọn tin nhắn nào",
+  "multiSelectCancel": "Hủy",
+  "multiSelectTypeWarning": "Bạn đang chọn {type}. Chỉ được chọn cùng một loại.",
+  "multiDeleted": "Đã xóa {count} tin nhắn",
+  "multiRecalled": "Đã thu hồi {count} tin nhắn",
+  "multiForwardHint": "Chọn một tin nhắn để chuyển tiếp",
+  "msgTypeText": "văn bản",
+  "msgTypeImage": "ảnh/video",
+  "msgTypeFile": "tệp",
+  "selectMessages": "Chọn tin nhắn",
+  "removeAttachment": "Xóa",
+  "addMore": "Thêm",
+  "attachHdOn": "HD — chất lượng cao",
+  "attachHdOff": "SD — nén"
 }

@@ -5,13 +5,18 @@ import '../../../../core/utils/app_error.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../domain/chat_provider.dart';
 import '../../domain/chat_state.dart';
+import '../../domain/message_selection_provider.dart';
+import '../../domain/staged_attachments_provider.dart';
+import '../chat_screen_helpers.dart';
 import 'blocked_composer_notice.dart';
 import 'chat_input_bar.dart';
 import 'chat_message_list.dart';
 import 'chat_typing_indicator.dart';
 import 'edit_composer_bar.dart';
 import 'emoji_sticker_panel.dart';
+import 'media_preview_strip.dart';
 import 'mention_list.dart';
+import 'multi_select_bar.dart';
 import 'pinned_message_bar.dart';
 import 'reply_composer_bar.dart';
 import 'stranger_request_banner.dart';
@@ -91,6 +96,13 @@ class ChatBody extends ConsumerWidget {
         .select((s) => s.valueOrNull?.editingMessage));
     final replyingTo = ref.watch(chatNotifierProvider(conversationId)
         .select((s) => s.valueOrNull?.replyingTo));
+    // Multi-select takes over the composer area (bulk forward/recall/delete).
+    final selectMode = ref.watch(
+        messageSelectionProvider(conversationId).select((s) => s.active));
+    // Staged (not-yet-sent) attachments shown in the preview strip above the
+    // composer; enables the send button even with no text.
+    final hasAttachments = ref.watch(stagedAttachmentsProvider(conversationId)
+        .select((list) => list.isNotEmpty));
 
     final theme = Theme.of(context);
     final bool isDark = theme.brightness == Brightness.dark;
@@ -129,7 +141,12 @@ class ChatBody extends ConsumerWidget {
             ],
           ),
         ),
-        if (isBlocked)
+        if (selectMode)
+          MultiSelectBar(
+            conversationId: conversationId,
+            currentUserId: currentUserId,
+          )
+        else if (isBlocked)
           const BlockedComposerNotice()
         else if (isStrangerRequest)
           StrangerRequestBanner(
@@ -152,6 +169,11 @@ class ChatBody extends ConsumerWidget {
               query: mentionQuery!,
               onSelected: onMentionSelected,
             ),
+          if (hasAttachments)
+            MediaPreviewStrip(
+              conversationId: conversationId,
+              onAddMore: () => pickAndStageImages(ref, conversationId),
+            ),
           ChatInputBar(
             controller: textController,
             onSend: onSend,
@@ -159,6 +181,7 @@ class ChatBody extends ConsumerWidget {
             emojiActive: showEmoji,
             onEmojiToggle: onEmojiToggle,
             onChanged: onComposerChanged,
+            hasAttachments: hasAttachments,
             quickReactionEmoji:
                 ref.watch(quickReactionProvider(conversationId)),
             onQuickReaction: onQuickReaction,

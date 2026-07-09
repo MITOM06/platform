@@ -1,4 +1,3 @@
-import 'dart:convert';
 import 'dart:io';
 
 import 'package:file_picker/file_picker.dart';
@@ -9,6 +8,7 @@ import '../../../core/l10n/l10n_ext.dart';
 import '../../../core/theme/app_theme.dart';
 import '../data/chat_repository.dart';
 import '../domain/chat_provider.dart';
+import '../domain/staged_attachments_provider.dart';
 
 /// Uploads a locally recorded audio file and sends it as a voice message,
 /// then runs [onSent] (e.g. to scroll to the bottom). Extracted from
@@ -40,8 +40,10 @@ Future<void> sendVoiceMessage(
   }
 }
 
-/// Pick an image or video, upload to GridFS, then send as a chat message.
-Future<void> pickAndSendMedia(
+/// Pick an image / video / document and STAGE it in the composer preview strip
+/// (upload happens on Send, mirroring web). Documents are single-shot; images
+/// and videos append to the strip.
+Future<void> pickAndStageMedia(
   BuildContext context,
   WidgetRef ref,
   String conversationId,
@@ -86,78 +88,64 @@ Future<void> pickAndSendMedia(
     ),
   );
   if (source == null || !context.mounted) return;
+  final notifier = ref.read(stagedAttachmentsProvider(conversationId).notifier);
 
   if (source == 'file') {
-    await pickAndSendDocument(context, ref, conversationId);
+    final result = await FilePicker.platform.pickFiles(withData: true);
+    if (result == null || result.files.isEmpty) return;
+    final picked = result.files.first;
+    final bytes = picked.bytes;
+    if (bytes == null) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(l10n.uploadFailed)));
+      }
+      return;
+    }
+    notifier.addDocument(bytes, picked.name);
     return;
   }
 
   final picker = ImagePicker();
-
   if (source == 'video') {
     final XFile? file = await picker.pickVideo(source: ImageSource.gallery);
-    if (file == null || !context.mounted) return;
-    final messenger = ScaffoldMessenger.of(context);
-    messenger.showSnackBar(SnackBar(content: Text(context.l10n.uploading)));
-    try {
-      final url = await ref.read(chatRepositoryProvider).uploadFile(file);
-      await ref
-          .read(chatNotifierProvider(conversationId).notifier)
-          .sendMessage(url, type: 'video');
-    } catch (_) {
-      messenger.showSnackBar(SnackBar(content: Text(l10n.uploadFailed)));
-    }
+    if (file == null) return;
+    notifier.addVideo(file);
     return;
   }
 
-  // Multi-image pick
   final List<XFile> files = await picker.pickMultiImage();
-  if (files.isEmpty || !context.mounted) return;
-  final messenger = ScaffoldMessenger.of(context);
-  messenger.showSnackBar(SnackBar(content: Text(context.l10n.uploading)));
-  try {
-    final repo = ref.read(chatRepositoryProvider);
-    final urls = await Future.wait(files.map((f) => repo.uploadFile(f)));
-    // Single image → plain URL; multiple → JSON array for grid layout
-    final content = urls.length == 1 ? urls.first : jsonEncode(urls);
-    await ref
-        .read(chatNotifierProvider(conversationId).notifier)
-        .sendMessage(content, type: 'image');
-  } catch (_) {
-    messenger.showSnackBar(SnackBar(content: Text(l10n.uploadFailed)));
-  }
+  notifier.addImages(files);
 }
 
-/// Pick a generic document (PDF / DOC / ZIP …), upload, then send as `file` message.
-Future<void> pickAndSendDocument(
+/// "Add more" from the preview strip — pick additional images and stage them.
+Future<void> pickAndStageImages(
+  WidgetRef ref,
+  String conversationId,
+) async {
+  final files = await ImagePicker().pickMultiImage();
+  ref.read(stagedAttachmentsProvider(conversationId).notifier).addImages(files);
+}
+
+/// Upload + send everything staged in the composer, surfacing a localized error
+/// on failure. Returns true when there was nothing staged (so the caller can
+/// fall back to sending the text message).
+Future<bool> flushStagedAttachments(
   BuildContext context,
   WidgetRef ref,
   String conversationId,
 ) async {
-  final l10n = context.l10n;
-  final result = await FilePicker.platform.pickFiles(withData: true);
-  if (result == null || result.files.isEmpty || !context.mounted) return;
-  final picked = result.files.first;
-  final bytes = picked.bytes;
-  if (bytes == null) {
-    ScaffoldMessenger.of(context)
-        .showSnackBar(SnackBar(content: Text(l10n.uploadFailed)));
-    return;
-  }
-
+  final notifier = ref.read(stagedAttachmentsProvider(conversationId).notifier);
+  if (notifier.isEmpty) return true;
   final messenger = ScaffoldMessenger.of(context);
-  messenger.showSnackBar(SnackBar(content: Text(l10n.uploading)));
+  final failedMsg = context.l10n.uploadFailed;
+  messenger.showSnackBar(SnackBar(content: Text(context.l10n.uploading)));
   try {
-    final uploaded =
-        await ref.read(chatRepositoryProvider).uploadDocument(bytes, picked.name);
-    final content = jsonEncode(
-        {'url': uploaded.url, 'name': uploaded.name, 'size': uploaded.size});
-    await ref
-        .read(chatNotifierProvider(conversationId).notifier)
-        .sendMessage(content, type: 'file');
+    await notifier.flush();
   } catch (_) {
-    messenger.showSnackBar(SnackBar(content: Text(l10n.uploadFailed)));
+    messenger.showSnackBar(SnackBar(content: Text(failedMsg)));
   }
+  return false;
 }
 
 /// Show the auto-delete duration picker sheet.

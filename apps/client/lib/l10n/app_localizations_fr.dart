@@ -3173,4 +3173,57 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get aiSessionLoadError =>
       'Impossible de charger l\'historique des conversations';
+
+  @override
+  String multiSelectCount(int count) {
+    return '$count sélectionné(s)';
+  }
+
+  @override
+  String get multiSelectEmpty => 'Aucun message sélectionné';
+
+  @override
+  String get multiSelectCancel => 'Annuler';
+
+  @override
+  String multiSelectTypeWarning(String type) {
+    return 'Vous sélectionnez $type. Vous ne pouvez sélectionner qu’un seul type.';
+  }
+
+  @override
+  String multiDeleted(int count) {
+    return '$count messages supprimés';
+  }
+
+  @override
+  String multiRecalled(int count) {
+    return '$count messages annulés';
+  }
+
+  @override
+  String get multiForwardHint => 'Sélectionnez un seul message à transférer';
+
+  @override
+  String get msgTypeText => 'texte';
+
+  @override
+  String get msgTypeImage => 'photos/vidéos';
+
+  @override
+  String get msgTypeFile => 'fichiers';
+
+  @override
+  String get selectMessages => 'Sélectionner des messages';
+
+  @override
+  String get removeAttachment => 'Supprimer';
+
+  @override
+  String get addMore => 'Ajouter';
+
+  @override
+  String get attachHdOn => 'HD — haute qualité';
+
+  @override
+  String get attachHdOff => 'SD — compressé';
 }

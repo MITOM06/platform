@@ -10,6 +10,7 @@ import '../../home/domain/home_providers.dart';
 import '../data/chat_repository.dart';
 import '../domain/chat_provider.dart';
 import '../domain/chat_state.dart';
+import '../domain/staged_attachments_provider.dart';
 import 'chat_screen_helpers.dart';
 import 'widgets/active_call_banner.dart';
 import 'widgets/chat_app_bar.dart';
@@ -65,19 +66,32 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     }
   }
 
-  void _onSend() {
+  Future<void> _onSend() async {
     final content = _textCtrl.text.trim();
-    if (content.isEmpty) return;
     final notifier =
         ref.read(chatNotifierProvider(widget.conversationId).notifier);
     final editing = ref
         .read(chatNotifierProvider(widget.conversationId))
         .valueOrNull
         ?.editingMessage;
-    _textCtrl.clear();
+    // Editing an existing message: text-only, staged media is irrelevant.
     if (editing != null) {
+      if (content.isEmpty) return;
+      _textCtrl.clear();
       notifier.editMessage(editing.id, content);
-    } else {
+      return;
+    }
+
+    final hasStaged =
+        !ref.read(stagedAttachmentsProvider(widget.conversationId).notifier).isEmpty;
+    if (content.isEmpty && !hasStaged) return;
+    _textCtrl.clear();
+    // Upload + send staged attachments first (mirrors web: media, then caption).
+    if (hasStaged) {
+      await flushStagedAttachments(context, ref, widget.conversationId);
+      _scrollToBottom();
+    }
+    if (content.isNotEmpty) {
       notifier.sendMessage(content);
       _scrollToBottom();
     }
@@ -324,7 +338,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
               onJump: _jumpToSearchResult,
               onSend: _onSend,
               onAttach: () =>
-                  pickAndSendMedia(context, ref, widget.conversationId),
+                  pickAndStageMedia(context, ref, widget.conversationId),
               onEmojiToggle: () {
                 FocusScope.of(context).unfocus();
                 setState(() => _showEmoji = !_showEmoji);

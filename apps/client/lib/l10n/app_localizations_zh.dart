@@ -3034,4 +3034,57 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get aiSessionLoadError => '无法加载对话历史';
+
+  @override
+  String multiSelectCount(int count) {
+    return '已选择 $count 条';
+  }
+
+  @override
+  String get multiSelectEmpty => '未选择任何消息';
+
+  @override
+  String get multiSelectCancel => '取消';
+
+  @override
+  String multiSelectTypeWarning(String type) {
+    return '您正在选择$type。只能选择同一类型。';
+  }
+
+  @override
+  String multiDeleted(int count) {
+    return '已删除 $count 条消息';
+  }
+
+  @override
+  String multiRecalled(int count) {
+    return '已撤回 $count 条消息';
+  }
+
+  @override
+  String get multiForwardHint => '请选择一条消息进行转发';
+
+  @override
+  String get msgTypeText => '文本';
+
+  @override
+  String get msgTypeImage => '图片/视频';
+
+  @override
+  String get msgTypeFile => '文件';
+
+  @override
+  String get selectMessages => '选择消息';
+
+  @override
+  String get removeAttachment => '移除';
+
+  @override
+  String get addMore => '添加';
+
+  @override
+  String get attachHdOn => 'HD — 高清';
+
+  @override
+  String get attachHdOff => 'SD — 压缩';
 }

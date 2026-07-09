@@ -1101,5 +1101,20 @@
   "aiSessionSummarized": "要約済み",
   "aiSessionEmpty": "過去の会話はありません",
   "aiSessionResume": "再開",
-  "aiSessionLoadError": "会話履歴を読み込めませんでした"
+  "aiSessionLoadError": "会話履歴を読み込めませんでした",
+  "multiSelectCount": "{count}件選択中",
+  "multiSelectEmpty": "メッセージが選択されていません",
+  "multiSelectCancel": "キャンセル",
+  "multiSelectTypeWarning": "{type}を選択しています。同じ種類のみ選択できます。",
+  "multiDeleted": "{count}件のメッセージを削除しました",
+  "multiRecalled": "{count}件のメッセージを取り消しました",
+  "multiForwardHint": "転送するメッセージを1件選択してください",
+  "msgTypeText": "テキスト",
+  "msgTypeImage": "写真/動画",
+  "msgTypeFile": "ファイル",
+  "selectMessages": "メッセージを選択",
+  "removeAttachment": "削除",
+  "addMore": "追加",
+  "attachHdOn": "HD — 高画質",
+  "attachHdOff": "SD — 圧縮"
 }

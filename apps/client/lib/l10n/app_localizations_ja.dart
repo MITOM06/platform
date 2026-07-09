@@ -3062,4 +3062,57 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get aiSessionLoadError => '会話履歴を読み込めませんでした';
+
+  @override
+  String multiSelectCount(int count) {
+    return '$count件選択中';
+  }
+
+  @override
+  String get multiSelectEmpty => 'メッセージが選択されていません';
+
+  @override
+  String get multiSelectCancel => 'キャンセル';
+
+  @override
+  String multiSelectTypeWarning(String type) {
+    return '$typeを選択しています。同じ種類のみ選択できます。';
+  }
+
+  @override
+  String multiDeleted(int count) {
+    return '$count件のメッセージを削除しました';
+  }
+
+  @override
+  String multiRecalled(int count) {
+    return '$count件のメッセージを取り消しました';
+  }
+
+  @override
+  String get multiForwardHint => '転送するメッセージを1件選択してください';
+
+  @override
+  String get msgTypeText => 'テキスト';
+
+  @override
+  String get msgTypeImage => '写真/動画';
+
+  @override
+  String get msgTypeFile => 'ファイル';
+
+  @override
+  String get selectMessages => 'メッセージを選択';
+
+  @override
+  String get removeAttachment => '削除';
+
+  @override
+  String get addMore => '追加';
+
+  @override
+  String get attachHdOn => 'HD — 高画質';
+
+  @override
+  String get attachHdOff => 'SD — 圧縮';
 }

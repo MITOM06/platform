@@ -7,6 +7,7 @@ import '../../../../core/l10n/l10n_ext.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../domain/chat_provider.dart';
 import '../../domain/chat_state.dart';
+import '../../domain/message_selection_provider.dart';
 import 'forward_dialog.dart';
 import 'group_read_details_modal.dart';
 
@@ -193,6 +194,18 @@ class FloatingReactionSheet extends ConsumerWidget {
                             context.pop();
                           },
                         ),
+                      ListTile(
+                        leading: const Icon(Icons.checklist_rounded, color: Colors.white70),
+                        title: Text(l10n.selectMessages, style: const TextStyle(color: Colors.white)),
+                        onTap: () {
+                          context.pop();
+                          final notifier = ref.read(
+                              messageSelectionProvider(message.conversationId)
+                                  .notifier);
+                          notifier.enter();
+                          notifier.toggle(message.id, message.type);
+                        },
+                      ),
                       ListTile(
                         leading: const Icon(Icons.forward_to_inbox_outlined, color: Colors.white70),
                         title: Text(l10n.forwardMessage, style: const TextStyle(color: Colors.white)),
