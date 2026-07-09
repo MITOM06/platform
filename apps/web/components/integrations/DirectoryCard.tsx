@@ -6,6 +6,48 @@ import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import type { DirectoryEntry, ConnectionView } from '@/lib/api/connector-types'
 
+const DIRECTORY_LOGO_URLS: Record<string, string> = {
+  notion: 'https://www.notion.so/front-static/favicon.ico',
+  linear: 'https://linear.app/favicon.ico',
+  sentry: 'https://sentry.io/favicon.ico',
+  atlassian: 'https://atlassian.com/favicon.ico',
+  github: 'https://github.com/favicon.ico',
+  stripe: 'https://stripe.com/favicon.ico',
+  huggingface: 'https://huggingface.co/favicon.ico',
+  asana: 'https://asana.com/favicon.ico',
+  gmail: 'https://ssl.gstatic.com/ui/v1/icons/mail/rfr/gmail.ico',
+  calendar: 'https://calendar.google.com/googlecalendar/images/favicon_v2018_256.png',
+  drive: 'https://ssl.gstatic.com/images/branding/product/1x/drive_2020q4_32dp.png',
+}
+
+function DirectoryLogo({ icon, name }: { icon: string; name: string }) {
+  const url = DIRECTORY_LOGO_URLS[icon.toLowerCase()]
+  if (!url) {
+    return (
+      <span className="text-lg font-bold text-pon-cyan" aria-hidden>
+        {name.charAt(0).toUpperCase()}
+      </span>
+    )
+  }
+  return (
+    // eslint-disable-next-line @next/next/no-img-element
+    <img
+      src={url}
+      alt={name}
+      width={26}
+      height={26}
+      className="object-contain"
+      onError={(e) => {
+        // Fallback to monogram on load error
+        const parent = (e.target as HTMLElement).parentElement
+        if (parent) {
+          parent.innerHTML = `<span class="text-lg font-bold text-pon-cyan">${name.charAt(0).toUpperCase()}</span>`
+        }
+      }}
+    />
+  )
+}
+
 interface DirectoryCardProps {
   entry: DirectoryEntry
   connection?: ConnectionView
@@ -31,7 +73,6 @@ export function DirectoryCard({
 }: DirectoryCardProps) {
   const t = useTranslations('integrations')
   const isConnected = connection?.status === 'active'
-  const monogram = entry.name.charAt(0).toUpperCase()
 
   return (
     <div
@@ -43,8 +84,8 @@ export function DirectoryCard({
       )}
     >
       <div className="flex items-start gap-3">
-        <div className="size-[42px] rounded-[11px] grid place-items-center text-lg font-bold bg-background border text-pon-cyan shrink-0">
-          <span aria-hidden>{monogram}</span>
+        <div className="size-[42px] rounded-[11px] grid place-items-center bg-background border shrink-0 overflow-hidden">
+          <DirectoryLogo icon={entry.icon} name={entry.name} />
         </div>
         <div className="min-w-0 flex-1">
           <h3 className="m-0 text-[15.5px] font-semibold truncate">{entry.name}</h3>

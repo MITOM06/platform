@@ -746,7 +746,11 @@
     "unfriendConfirmTitle": "Remove friend?",
     "unfriendConfirmDesc": "You and this person will no longer be friends. You can send a friend request again later.",
     "backToList": "Back",
-    "meetingSummaryLabel": "[Meeting summary]"
+    "meetingSummaryLabel": "[Meeting summary]",
+    "justNow": "Just now",
+    "minutesAgo": "{count} min ago",
+    "hoursAgo": "{count}h ago",
+    "daysAgo": "{count}d ago"
   },
   "aiHub": {
     "title": "AI Hub",
@@ -865,7 +869,7 @@
     "noData": "No data",
     "inputTokens": "Input tokens",
     "outputTokens": "Output tokens",
-    "dailyChart": "Daily chart (30 days)"
+    "dailyChart": "Daily chart"
   },
   "sharedMedia": {
     "title": "Files & Media",

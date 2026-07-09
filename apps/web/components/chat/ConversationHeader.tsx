@@ -34,6 +34,23 @@ import { cn } from '@/lib/utils'
 
 const AI_BOT_ID = 'ai-bot-000000000000000000000001'
 
+function formatLastSeen(
+  lastSeen: string | null,
+  t: (key: string, params?: Record<string, string | number | Date>) => string,
+): string {
+  if (!lastSeen) return t('offline')
+  const diffMs = Date.now() - new Date(lastSeen).getTime()
+  const diffMin = Math.floor(diffMs / 60_000)
+  const diffHour = Math.floor(diffMs / 3_600_000)
+  const diffDay = Math.floor(diffMs / 86_400_000)
+
+  if (diffMin < 1) return t('justNow')
+  if (diffMin < 60) return t('minutesAgo', { count: diffMin })
+  if (diffHour < 24) return t('hoursAgo', { count: diffHour })
+  if (diffDay < 7) return t('daysAgo', { count: diffDay })
+  return t('offline')
+}
+
 // Lazy-load the WebRTC stack only when the user actually starts a call, so the
 // RTCPeerConnection code stays out of the conversation route's initial bundle.
 function startCall(
@@ -193,7 +210,7 @@ export function ConversationHeader({
             <p className="text-xs text-pon-cyan font-medium animate-pulse">{t('typing')}</p>
           ) : otherUserId && status && !blockedMe ? (
             <p className="text-xs text-muted-foreground">
-              {status.online ? t('online') : t('offline')}
+              {status.online ? t('online') : formatLastSeen(status.lastSeen, t)}
             </p>
           ) : isGroup ? (
             <p className="text-xs text-muted-foreground">

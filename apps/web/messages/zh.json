@@ -746,7 +746,11 @@
     "unfriendConfirmTitle": "删除好友？",
     "unfriendConfirmDesc": "你和此人将不再是好友。之后你仍可以重新发送好友请求。",
     "backToList": "返回",
-    "meetingSummaryLabel": "[会议摘要]"
+    "meetingSummaryLabel": "[会议摘要]",
+    "justNow": "刚刚在线",
+    "minutesAgo": "{count}分钟前",
+    "hoursAgo": "{count}小时前",
+    "daysAgo": "{count}天前"
   },
   "aiHub": {
     "title": "AI 中心",
@@ -865,7 +869,7 @@
     "noData": "暂无数据",
     "inputTokens": "输入 Token",
     "outputTokens": "输出 Token",
-    "dailyChart": "每日图表（30 天）"
+    "dailyChart": "每日图表"
   },
   "sharedMedia": {
     "title": "文件与媒体",

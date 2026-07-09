@@ -746,7 +746,11 @@
     "unfriendConfirmTitle": "友達を削除しますか？",
     "unfriendConfirmDesc": "あなたとこの相手は友達ではなくなります。後でもう一度友達リクエストを送ることができます。",
     "backToList": "戻る",
-    "meetingSummaryLabel": "[会議の要約]"
+    "meetingSummaryLabel": "[会議の要約]",
+    "justNow": "たった今",
+    "minutesAgo": "{count}分前",
+    "hoursAgo": "{count}時間前",
+    "daysAgo": "{count}日前"
   },
   "aiHub": {
     "title": "AI ハブ",
@@ -865,7 +869,7 @@
     "noData": "データなし",
     "inputTokens": "入力トークン",
     "outputTokens": "出力トークン",
-    "dailyChart": "日別グラフ（30日間）"
+    "dailyChart": "日別チャート"
   },
   "sharedMedia": {
     "title": "ファイルとメディア",

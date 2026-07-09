@@ -746,7 +746,11 @@
     "unfriendConfirmTitle": "친구를 삭제하시겠습니까?",
     "unfriendConfirmDesc": "회원님과 이 사람은 더 이상 친구가 아닙니다. 나중에 다시 친구 요청을 보낼 수 있습니다.",
     "backToList": "뒤로",
-    "meetingSummaryLabel": "[회의 요약]"
+    "meetingSummaryLabel": "[회의 요약]",
+    "justNow": "방금 전",
+    "minutesAgo": "{count}분 전",
+    "hoursAgo": "{count}시간 전",
+    "daysAgo": "{count}일 전"
   },
   "aiHub": {
     "title": "AI 허브",
@@ -865,7 +869,7 @@
     "noData": "데이터 없음",
     "inputTokens": "입력 토큰",
     "outputTokens": "출력 토큰",
-    "dailyChart": "일별 차트 (30일)"
+    "dailyChart": "일별 차트"
   },
   "sharedMedia": {
     "title": "파일 및 미디어",

@@ -746,7 +746,11 @@
     "unfriendConfirmTitle": "Xóa kết bạn?",
     "unfriendConfirmDesc": "Bạn và người này sẽ không còn là bạn bè. Bạn vẫn có thể gửi lời mời kết bạn lại sau.",
     "backToList": "Quay lại",
-    "meetingSummaryLabel": "[Tóm tắt cuộc họp]"
+    "meetingSummaryLabel": "[Tóm tắt cuộc họp]",
+    "justNow": "Vừa online",
+    "minutesAgo": "{count} phút trước",
+    "hoursAgo": "{count} giờ trước",
+    "daysAgo": "{count} ngày trước"
   },
   "aiHub": {
     "title": "Trung tâm AI",
@@ -865,7 +869,7 @@
     "noData": "Không có dữ liệu",
     "inputTokens": "Token đầu vào",
     "outputTokens": "Token đầu ra",
-    "dailyChart": "Biểu đồ hàng ngày (30 ngày)"
+    "dailyChart": "Biểu đồ theo ngày"
   },
   "sharedMedia": {
     "title": "File & Phương tiện",
