@@ -77,6 +77,10 @@ interface Props {
    *  message's exact timestamp as a sticky chip at the top of the viewport. */
   onMenuOpen?: (createdAt: string) => void
   onMenuClose?: () => void
+  multiSelectMode?: boolean
+  selectedIds?: Set<string>
+  onSelectMessage?: (message: Message) => void
+  onEnterMultiSelect?: () => void
 }
 
 /**
@@ -105,6 +109,10 @@ export function MessageList({
   onOptimisticUpdate,
   onMenuOpen,
   onMenuClose,
+  multiSelectMode = false,
+  selectedIds,
+  onSelectMessage,
+  onEnterMultiSelect,
 }: Props) {
   const t = useTranslations('chat')
   const locale = useLocale()
@@ -219,6 +227,10 @@ export function MessageList({
                   onOptimisticUpdate={onOptimisticUpdate}
                   onMenuOpen={onMenuOpen}
                   onMenuClose={onMenuClose}
+                  multiSelectMode={multiSelectMode}
+                  isSelected={!!selectedIds?.has(row.msg.id)}
+                  onSelectMessage={onSelectMessage}
+                  onEnterMultiSelect={onEnterMultiSelect}
                 />
               </div>
             ),

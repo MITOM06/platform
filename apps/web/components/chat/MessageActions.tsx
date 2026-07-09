@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { useTranslations } from 'next-intl'
 import {
-  MoreHorizontal, Pencil, Trash2, Trash, Share2, Pin, PinOff, Smile, Brain, Reply, CheckCheck, Copy,
+  MoreHorizontal, Pencil, Trash2, Trash, Share2, Pin, PinOff, Smile, Brain, Reply, CheckCheck, Copy, CheckSquare,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import {
@@ -29,6 +29,7 @@ interface Props {
   onAiTrace?: () => void
   onGroupReadDetails?: () => void
   onReactionsDetail?: () => void
+  onEnterMultiSelect?: () => void
   onOptimisticUpdate: (updated: Partial<Message> & { id: string }) => void
   /** Notifies the parent when the actions menu opens/closes, so the exact
    *  timestamp can be surfaced as a sticky chip at the top of the viewport. */
@@ -48,6 +49,7 @@ export function MessageActions({
   onAiTrace,
   onGroupReadDetails,
   onReactionsDetail,
+  onEnterMultiSelect,
   onOptimisticUpdate,
   onMenuOpen,
   onMenuClose,
@@ -154,6 +156,15 @@ export function MessageActions({
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align={isOwn ? 'end' : 'start'} className="min-w-44">
+          {onEnterMultiSelect && (
+            <>
+              <DropdownMenuItem onClick={onEnterMultiSelect}>
+                <CheckSquare className="size-4" />
+                {t('selectMessages')}
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+            </>
+          )}
           <DropdownMenuItem onClick={onReply}>
             <Reply className="size-4" />
             {t('replyAction')}

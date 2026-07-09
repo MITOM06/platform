@@ -12,9 +12,11 @@ import { useConversation } from '@/lib/hooks/use-conversation'
 import { useUser } from '@/lib/hooks/use-user'
 import { useRelationship } from '@/lib/hooks/use-relationship'
 import { useConversationStomp } from '@/lib/hooks/use-conversation-stomp'
+import { useMultiSelect } from '@/lib/hooks/use-multi-select'
 import { ConversationHeader } from '@/components/chat/ConversationHeader'
 import { MessageViewport } from '@/components/chat/MessageViewport'
 import { MessageInput } from '@/components/chat/MessageInput'
+import { MultiSelectBar } from '@/components/chat/MultiSelectBar'
 import { MessageSearchPanel } from '@/components/chat/MessageSearchPanel'
 import { StrangerRequestBanner } from '@/components/chat/StrangerRequestBanner'
 import { BlockedComposerNotice } from '@/components/chat/BlockedComposerNotice'
@@ -155,6 +157,19 @@ export default function ConversationPage({ params }: Props) {
     [patchMessage],
   )
 
+  // Multi-select thread mode (bulk forward / delete / recall).
+  const {
+    multiSelectMode,
+    selectedIds,
+    canRecall,
+    enterMultiSelect,
+    exitMultiSelect,
+    toggleSelect,
+    handleMultiDelete,
+    handleMultiRecall,
+    handleMultiForward,
+  } = useMultiSelect(messages, currentUser?.id, setForwardMessage, handleOptimisticUpdate)
+
   // First visit with no cached conversation: show a full-page skeleton instead
   // of a blank screen while the conversation (and its messages) load. Once the
   // conversation is cached, subsequent visits render instantly and skip this.
@@ -274,10 +289,23 @@ export default function ConversationPage({ params }: Props) {
           onReply={setReplyingTo}
           onAiTrace={setTraceMessageId}
           onOptimisticUpdate={handleOptimisticUpdate}
+          multiSelectMode={multiSelectMode}
+          selectedIds={selectedIds}
+          onSelectMessage={toggleSelect}
+          onEnterMultiSelect={enterMultiSelect}
         />
       </div>
 
-      {isBlocked ? (
+      {multiSelectMode ? (
+        <MultiSelectBar
+          selectedCount={selectedIds.size}
+          canRecall={canRecall}
+          onCancel={exitMultiSelect}
+          onForward={handleMultiForward}
+          onDelete={handleMultiDelete}
+          onRecall={handleMultiRecall}
+        />
+      ) : isBlocked ? (
         <BlockedComposerNotice
           conversationId={id}
           otherUserId={otherUserId!}

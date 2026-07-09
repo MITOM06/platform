@@ -13,6 +13,22 @@ const _keySid = 'sid';
 /// `isTokenExpiredOrExpiringSoon` 60-second skew.
 const _expirySkew = Duration(seconds: 60);
 
+/// Thrown by [TokenManager] when a refresh fails because the SERVER genuinely
+/// rejected the refresh token (HTTP 401/403 — expired/rotated/revoked/reused).
+/// This is the ONLY condition under which the user should be logged out.
+///
+/// A transient failure (no response, connect/receive timeout, DNS not ready on
+/// resume, 5xx) is NOT this — [TokenManager] returns `null` for those so the
+/// caller keeps the session and retries once the network recovers. Mirrors the
+/// web client's `isAuthFailure` guard in `apps/web/lib/api/axios.ts`: without
+/// this distinction, a flaky refresh on an iOS background→resume cycle wiped
+/// the keychain and logged the user out on next launch.
+class RefreshRejectedException implements Exception {
+  const RefreshRejectedException();
+  @override
+  String toString() => 'RefreshRejectedException';
+}
+
 /// Single source of truth for obtaining a *valid* access token.
 ///
 /// Why this exists: STOMP CONNECT is rejected by the chat-service
@@ -27,7 +43,12 @@ const _expirySkew = Duration(seconds: 60);
 /// so the rotated `refreshToken` (and new `accessToken`) MUST be persisted —
 /// failing to do so causes logout loops.
 class TokenManager {
-  TokenManager(this._storage);
+  /// [refreshDio] is a test seam: inject a mockable Dio for the `/auth/refresh`
+  /// call. In production it is null and a bare, interceptor-free Dio is built
+  /// per refresh (see [_refresh]) to avoid refresh/401 loops.
+  TokenManager(this._storage, {Dio? refreshDio}) : _refreshDio = refreshDio;
+
+  final Dio? _refreshDio;
 
   /// Process-wide shared instance. Refresh MUST be globally single-flight: the
   /// backend rotates refresh tokens with reuse detection, so two concurrent
@@ -55,7 +76,16 @@ class TokenManager {
     if (access != null && !_isExpiredOrExpiringSoon(access)) {
       return access;
     }
-    return _coalescedRefresh();
+    try {
+      return await _coalescedRefresh();
+    } on RefreshRejectedException {
+      // Session is genuinely dead. Callers of this method (STOMP beforeConnect,
+      // conversation-list reconnect) must NOT log the user out or wipe
+      // credentials — they simply skip connecting. The Dio 401 interceptor is
+      // the single place that performs the actual logout, so it alone reacts to
+      // [RefreshRejectedException] (via [forceRefresh]).
+      return null;
+    }
   }
 
   /// Forces a token refresh regardless of the local `exp` check, coalescing
@@ -73,13 +103,23 @@ class TokenManager {
     if (existing != null) return existing;
     final future = _refresh();
     _inFlight = future;
+    // Clear the slot when the refresh settles. `_refresh` can now throw
+    // (RefreshRejectedException), so this cleanup future would otherwise carry
+    // an UNOBSERVED error and crash the zone — `.ignore()` marks it handled.
+    // The real error/result is still delivered to whoever awaits `future`.
     future.whenComplete(() {
       // Only clear if still ours — a later refresh may have replaced it.
       if (identical(_inFlight, future)) _inFlight = null;
-    });
+    }).ignore();
     return future;
   }
 
+  /// Returns the new access token on success. Returns `null` on a TRANSIENT
+  /// failure (missing local creds, no network response, timeout, 5xx) — the
+  /// caller keeps the session and retries later. Throws
+  /// [RefreshRejectedException] ONLY when the server rejected the refresh token
+  /// with 401/403 (expired/rotated/revoked/reused) — the one case that warrants
+  /// a logout.
   Future<String?> _refresh() async {
     final refreshToken = await _storage.read(key: _keyRefreshToken);
     final sid = await _storage.read(key: _keySid);
@@ -87,7 +127,8 @@ class TokenManager {
 
     try {
       // Bare Dio — no interceptors — to avoid refresh/401 loops.
-      final dio = Dio(BaseOptions(baseUrl: AppConfig.authBaseUrl));
+      final dio =
+          _refreshDio ?? Dio(BaseOptions(baseUrl: AppConfig.authBaseUrl));
       final res = await dio.post('/auth/refresh', data: {
         'sid': sid,
         'refreshToken': refreshToken,
@@ -99,7 +140,20 @@ class TokenManager {
       await _storage.write(key: _keyAccessToken, value: newAccess);
       await _storage.write(key: _keyRefreshToken, value: newRefresh);
       return newAccess;
+    } on DioException catch (e) {
+      final status = e.response?.statusCode;
+      if (status == 401 || status == 403) {
+        // Server genuinely rejected the refresh token — the session is dead.
+        debugPrint('[TokenManager] refresh rejected by server ($status)');
+        throw const RefreshRejectedException();
+      }
+      // Transient: no response (network down / resume race), timeout, or 5xx.
+      // Keep the session — do NOT wipe credentials over a flaky network.
+      debugPrint('[TokenManager] refresh transient failure: $e');
+      return null;
     } catch (e) {
+      // Unexpected (e.g. malformed body). Treat as transient rather than wiping
+      // the user's session on an ambiguous error.
       debugPrint('[TokenManager] refresh failed: $e');
       return null;
     }
