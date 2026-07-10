@@ -59,4 +59,6 @@ export interface RequestContext {
   queryVector?: number[] | null;
   /** Resolved workspace AI settings (TASK-12) threaded into the loop. */
   settings: ResolvedAiSettings;
+  /** Skill ids enabled for this user; gates action-skill MCP tools in the registry. */
+  enabledSkillIds?: string[];
 }

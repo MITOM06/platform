@@ -41,22 +41,29 @@
 
 ## 3. TẤT CẢ PLAN ĐÃ VIẾT + TRẠNG THÁI
 
+> **CẬP NHẬT 2026-07-09 (session sau):** Toàn bộ danh sách "PENDING" bên dưới đã được verify lại
+> bằng `git show` + `grep` trực tiếp trên code — **tất cả 8 plan đều đã có code trên branch hiện tại**,
+> không còn plan nào thực sự pending. Danh sách gốc dưới đây được giữ nguyên cho lịch sử; xem
+> `docs/superpowers/plans/README.md` mục "2026-07-08 / 2026-07-09 batch" để biết plan nào verify ở
+> commit nào. **Chưa verify:** build/test thật sự (`pnpm build`, `flutter analyze`, `mvn compile`)
+> trong session này, và services đang chạy (dev/prod) đã restart để pick up code mới chưa.
+
 ### ✅ WEB DONE (Claude Code đã làm xong web, Flutter còn pending)
 | Plan | Nội dung | Trạng thái |
 |------|----------|------------|
-| `2026-07-09-upload-preview-and-multiselect.md` | Upload preview strip + multi-select messages | Web ✅ / Flutter ⏳ |
+| `2026-07-09-upload-preview-and-multiselect.md` | Upload preview strip + multi-select messages | Web ✅ / Flutter ✅ (`698cc0bd`) |
 
-### ⏳ PENDING (chưa execute — Claude Code cần làm)
-| Plan | Nội dung |
-|------|----------|
-| `2026-07-07-auth-archived-mobile-fixes.md` | Auth + archived fixes mobile |
-| `2026-07-07-bot-ux-and-input-fixes.md` | Bot UX + input fixes |
-| `2026-07-07-block-ux-fixes.md` | Block UX fixes |
-| `2026-07-08-connector-logos-and-new-skills.md` | **MCP Directory logos** (Asana/GitHub/Notion... dùng CDN logo thật thay monogram) |
-| `2026-07-08-memory-extraction-fix.md` | Memory extraction threshold + `/new` slash command fix |
-| `2026-07-08-ui-polish-5-issues.md` | 5 UI issues (DirectoryCard logos, offline time, own avatar green dot web, Token Usage redesign, mobile app icon) |
-| `2026-07-09-video-hd-greendhot-fixes.md` | Video inline player + HD global toggle + own avatar green dot |
-| `2026-07-09-settings-mobile-fixes.md` | Legal screen crash + Profile flow + Cover photo preview + Save button + Token date range |
+### ✅ ĐÃ CÓ CODE (trước đây ghi PENDING — nhầm, xem cập nhật ở trên)
+| Plan | Nội dung | Commit |
+|------|----------|--------|
+| `2026-07-07-auth-archived-mobile-fixes.md` | Auth + archived fixes mobile | `92002b13` |
+| `2026-07-07-bot-ux-and-input-fixes.md` | Bot UX + input fixes | `121dd957` |
+| `2026-07-07-block-ux-fixes.md` | Block UX fixes | `c1cedc67` |
+| `2026-07-08-connector-logos-and-new-skills.md` | **MCP Directory logos** (Asana/GitHub/Notion... dùng CDN logo thật thay monogram) | `b0d8b852` (ConnectorCard) + `228eb28f` (DirectoryCard) |
+| `2026-07-08-memory-extraction-fix.md` | Memory extraction threshold + `/memory`/`/ai-memory` slash command fix | trong `ai.service.ts`/`configuration.ts` hiện tại |
+| `2026-07-08-ui-polish-5-issues.md` | 5 UI issues (DirectoryCard logos, offline time, own avatar green dot web, Token Usage redesign, mobile app icon) | `228eb28f` |
+| `2026-07-09-video-hd-greendhot-fixes.md` | Video inline player + HD global toggle + own avatar green dot | `a6655116` |
+| `2026-07-09-settings-mobile-fixes.md` | Legal screen crash + Profile flow + Cover photo preview + Save button + Token date range | `a6655116` |
 
 ---
 

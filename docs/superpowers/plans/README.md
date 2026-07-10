@@ -4,7 +4,29 @@
 > if you are actively building/extending that feature. Authoritative build state + remaining work:
 > [`../PON-ENTERPRISE-HANDOFF.md`](../PON-ENTERPRISE-HANDOFF.md).
 >
-> Last regenerated: 2026-07-09 (Bot Factory client UI verification).
+> Last regenerated: 2026-07-09 (full status sweep — all 2026-07-07/08/09 plans verified complete).
+
+## 🟡 NEW — 2026-07-10 batch (written, not yet executed by Claude Code)
+
+| Plan | Nội dung | Ghi chú |
+|------|----------|---------|
+| `2026-07-10-sidebar-profile-dot-video-hd-recheck.md` | Xoá hardcoded green dot ở `SidebarProfileBar.tsx` (own avatar) | Bug thật mới, 1 file, low risk |
+| `2026-07-10-directory-logo-csp-fix.md` | Thêm domain favicon connector vào CSP `img-src` (`next.config.ts`) | Bug thật (không phải build cũ) — logo bị CSP chặn |
+| `2026-07-10-skills-copy-honesty-fix.md` | Sửa copy skill sai sự thật + fix `requires` id mismatch (web+Flutter) | Content-only, làm trước plan lớn bên dưới |
+| `2026-07-10-skills-real-tool-wiring.md` | Gate MCP tool (calendar/gmail/notion) theo skill enable — 4/11 skill wire được vào tool thật | **Chặn 1 phần bởi thiếu secret**: `webSearch` cần `WEB_SEARCH_API_URL`/`WEB_SEARCH_API_KEY` (đang rỗng trong `.env`) từ user, không code được; `weatherForecast` không có tool nào — ngoài scope |
+
+## ✅ Done — 2026-07-08 / 2026-07-09 batch (verified via code inspection, not yet build-deployed)
+
+| Plan | Scope | Verified in commit(s) |
+|------|-------|------------------------|
+| `2026-07-08-connector-logos-and-new-skills.md` | Real connector logos (web `ConnectorCard`+ Flutter) + webSearch/weatherForecast skills | `b0d8b852` |
+| `2026-07-08-ui-polish-5-issues.md` | Directory logos (`DirectoryCard`), last-seen text, own-avatar green dot (web), token-usage chart, mobile app icon | `228eb28f` |
+| `2026-07-08-memory-extraction-fix.md` | Extraction threshold 20→10 + first-extract at turn 3 + `/memory` `/ai-memory` slash command (no more hallucination) | present in `ai.service.ts` / `configuration.ts` (commit not individually tagged — bundled in an ai-service batch) |
+| `2026-07-09-upload-preview-and-multiselect.md` | Upload preview strip + multi-select messages | web `d9fb9f67`, Flutter `698cc0bd` |
+| `2026-07-09-video-hd-greendhot-fixes.md` | Inline video player, global HD/SD toggle, own-avatar green dot (Flutter) | `a6655116` |
+| `2026-07-09-settings-mobile-fixes.md` | `/legal` redirect crash, profile view→edit flow + cover-photo preview + AppBar save button, token-usage date range picker (Flutter + chat-service) | `a6655116` |
+
+**Note:** these six plans were still listed as "pending" in `SESSION-HANDOFF-2026-07-09.md` — that doc was stale relative to the commits above. Code-level verification (grep + git show) confirms all changes are present on the current branch. What's NOT verified: an actual `pnpm build` / `flutter analyze` / `mvn compile` run in this session, and whether the running dev/prod instances have picked up these commits (restart/rebuild may be needed — see Action Items below).
 
 ## ✅ Done — Bot Factory complete integration (Phase 1–3)
 

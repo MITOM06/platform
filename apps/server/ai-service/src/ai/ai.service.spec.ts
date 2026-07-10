@@ -217,6 +217,7 @@ describe('AiService', () => {
     } as unknown as ContextBuilderService;
     const fakeSkills = {
       getEnabledSkillInstructions: jest.fn().mockResolvedValue(''),
+      getEnabledSkillIds: jest.fn().mockResolvedValue([]),
     } as unknown as SkillsService;
     const fakeResponseCache = {
       isEnabled: false,

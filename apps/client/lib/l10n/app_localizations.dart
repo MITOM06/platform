@@ -4129,6 +4129,12 @@ abstract class AppLocalizations {
   /// **'Skills bundle a set of tools and a way of working. Turn on only what you need — each one tells you what it requires.'**
   String get skillsSubtitle;
 
+  /// No description provided for @skillsRealActionNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Skills change how your assistant thinks and talks. To let it actually act (send email, create events, write to Notion...), connect the matching app below.'**
+  String get skillsRealActionNote;
+
   /// No description provided for @skillsSettingsSubtitle.
   ///
   /// In en, this message translates to:
@@ -4150,7 +4156,7 @@ abstract class AppLocalizations {
   /// No description provided for @skillSchedulerDesc.
   ///
   /// In en, this message translates to:
-  /// **'Books meetings, finds slots, sends invites and reminders.'**
+  /// **'Suggests meeting times and drafts invites — you still send them via your calendar/mail app (or connect Google Calendar/Gmail so it can act directly).'**
   String get skillSchedulerDesc;
 
   /// No description provided for @skillMailWriterName.
@@ -4174,7 +4180,7 @@ abstract class AppLocalizations {
   /// No description provided for @skillResearcherDesc.
   ///
   /// In en, this message translates to:
-  /// **'Searches the web and your Drive, returns cited answers.'**
+  /// **'Answers from what\'s in this conversation and your training knowledge, with sources cited when possible — not a live web search.'**
   String get skillResearcherDesc;
 
   /// No description provided for @skillProjectKeeperName.
@@ -4186,7 +4192,7 @@ abstract class AppLocalizations {
   /// No description provided for @skillProjectKeeperDesc.
   ///
   /// In en, this message translates to:
-  /// **'Files notes and tasks into Notion, keeps databases tidy.'**
+  /// **'Tracks tasks, owners and decisions in the conversation and summarizes them — connect Notion so it can actually write them there.'**
   String get skillProjectKeeperDesc;
 
   /// No description provided for @skillMeetingNotesName.

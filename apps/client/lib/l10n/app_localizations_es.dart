@@ -2208,6 +2208,10 @@ class AppLocalizationsEs extends AppLocalizations {
       'Las habilidades agrupan un conjunto de herramientas y una forma de trabajar. Activa solo lo que necesites — cada una indica lo que requiere.';
 
   @override
+  String get skillsRealActionNote =>
+      'Las habilidades cambian cómo piensa y se expresa tu asistente. Para que actúe de verdad (enviar correos, crear eventos, escribir en Notion…), conecta la app correspondiente que aparece abajo.';
+
+  @override
   String get skillsSettingsSubtitle => 'Elige en qué es bueno tu asistente';
 
   @override
@@ -2220,7 +2224,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get skillSchedulerDesc =>
-      'Agenda reuniones, encuentra huecos, envía invitaciones y recordatorios.';
+      'Sugiere horarios de reunión y redacta invitaciones — aún debes enviarlas desde tu app de calendario/correo (o conecta Google Calendar/Gmail para que actúe directamente).';
 
   @override
   String get skillMailWriterName => 'Redactor de correos';
@@ -2234,14 +2238,14 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get skillResearcherDesc =>
-      'Busca en la web y en tu Drive, devuelve respuestas con citas.';
+      'Responde a partir del contenido de esta conversación y su conocimiento previo, citando fuentes cuando es posible — no es una búsqueda web en vivo.';
 
   @override
   String get skillProjectKeeperName => 'Gestor de proyectos';
 
   @override
   String get skillProjectKeeperDesc =>
-      'Archiva notas y tareas en Notion, mantiene las bases de datos ordenadas.';
+      'Hace seguimiento de tareas, responsables y decisiones en la conversación y las resume — conecta Notion para que realmente pueda escribirlas allí.';
 
   @override
   String get skillMeetingNotesName => 'Notas de reunión';

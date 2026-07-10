@@ -18,17 +18,26 @@ export class SkillsService {
     @InjectModel(UserSkill.name) private readonly skillModel: Model<UserSkillDocument>,
   ) {}
 
-  async getEnabledSkillInstructions(userId: string): Promise<string> {
+  /**
+   * Raw list of enabled skill ids for a user. Used both to build the system
+   * prompt instructions and to gate action-skill MCP tools (skill-tool wiring).
+   * Fails soft → `[]`.
+   */
+  async getEnabledSkillIds(userId: string): Promise<string[]> {
     try {
       const docs = await this.skillModel
         .find({ userId, enabled: true })
         .select('skillId')
         .lean()
         .exec();
-      return buildSkillInstructions(docs.map((d) => d.skillId));
+      return docs.map((d) => d.skillId);
     } catch (err) {
-      this.logger.warn(`Skill lookup failed for ${userId}: ${(err as Error).message}`);
-      return '';
+      this.logger.warn(`Skill id lookup failed for ${userId}: ${(err as Error).message}`);
+      return [];
     }
+  }
+
+  async getEnabledSkillInstructions(userId: string): Promise<string> {
+    return buildSkillInstructions(await this.getEnabledSkillIds(userId));
   }
 }

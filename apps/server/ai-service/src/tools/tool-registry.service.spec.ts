@@ -9,7 +9,7 @@ import { WebSearchService } from './web-search/web-search.service';
 import { McpConnectorClient } from './mcp-connector.client';
 import { ToolResultCacheService } from './tool-result-cache.service';
 import { ToolContext, ToolDefinition } from './tool.interface';
-import { filterByAllowedConnectors } from './tool-registry.service';
+import { filterByAllowedConnectors, filterBySkillGate } from './tool-registry.service';
 
 /** In-memory fake of ToolResultCacheService for tests. Disabled by default. */
 function makeCache(enabled = false): ToolResultCacheService {
@@ -125,10 +125,11 @@ describe('ToolRegistryService', () => {
     expect(result).toBe('[Source 1] hit — https://x');
   });
 
-  it('merges dynamic MCP tools from the connector', async () => {
+  it('merges dynamic MCP tools from the connector (gating skill enabled)', async () => {
     const getTools = jest.fn().mockResolvedValue([dynamicTool]);
     const registry = makeRegistry({ mcpGetTools: getTools });
-    const defs = await registry.getDefinitions(ctx);
+    // notion is gated by the projectKeeper skill — enable it so the tool passes.
+    const defs = await registry.getDefinitions({ ...ctx, enabledSkillIds: ['projectKeeper'] });
     expect(getTools).toHaveBeenCalledWith('user-1');
     expect(defs).toHaveLength(6);
     expect(defs.map((d) => d.name)).toContain('mcp__notion__create_page');
@@ -249,7 +250,11 @@ describe('ToolRegistryService', () => {
       { name: 'mcp__gmail__send_email', description: '', input_schema: { type: 'object', properties: {}, required: [] } },
     ]);
     const registry = makeRegistry({ mcpGetTools: getTools });
-    const defs = await registry.getDefinitions({ ...ctx, allowedConnectors: ['notion'] });
+    const defs = await registry.getDefinitions({
+      ...ctx,
+      allowedConnectors: ['notion'],
+      enabledSkillIds: ['projectKeeper'],
+    });
     const names = defs.map((d) => d.name);
     expect(names).toContain('mcp__notion__create_page');
     expect(names).not.toContain('mcp__gmail__send_email');
@@ -266,8 +271,52 @@ describe('ToolRegistryService', () => {
   it('allowedConnectors=null/undefined does NOT filter MCP tools (inherit)', async () => {
     const getTools = jest.fn().mockResolvedValue([dynamicTool]);
     const registry = makeRegistry({ mcpGetTools: getTools });
-    const defs = await registry.getDefinitions({ ...ctx, allowedConnectors: null });
+    const defs = await registry.getDefinitions({
+      ...ctx,
+      allowedConnectors: null,
+      enabledSkillIds: ['projectKeeper'],
+    });
     expect(defs.map((d) => d.name)).toContain('mcp__notion__create_page');
+  });
+
+  // ─── Skill consent gate (Approach A) — integration via getDefinitions ──────
+
+  it('gates a gated-provider MCP tool OFF when the skill is disabled (connector on)', async () => {
+    // Google Calendar connected (RBAC allows it) but Scheduler skill NOT enabled.
+    const getTools = jest.fn().mockResolvedValue([
+      { name: 'mcp__calendar__create_event', description: '', input_schema: { type: 'object', properties: {}, required: [] } },
+    ]);
+    const registry = makeRegistry({ mcpGetTools: getTools });
+    const defs = await registry.getDefinitions({
+      ...ctx,
+      allowedConnectors: ['calendar'],
+      enabledSkillIds: [],
+    });
+    expect(defs.map((d) => d.name)).not.toContain('mcp__calendar__create_event');
+    expect(defs).toHaveLength(5); // only static tools
+  });
+
+  it('keeps a gated-provider MCP tool when BOTH the skill and connector are on', async () => {
+    const getTools = jest.fn().mockResolvedValue([
+      { name: 'mcp__calendar__create_event', description: '', input_schema: { type: 'object', properties: {}, required: [] } },
+    ]);
+    const registry = makeRegistry({ mcpGetTools: getTools });
+    const defs = await registry.getDefinitions({
+      ...ctx,
+      allowedConnectors: ['calendar'],
+      enabledSkillIds: ['scheduler'],
+    });
+    expect(defs.map((d) => d.name)).toContain('mcp__calendar__create_event');
+  });
+
+  it('does not crash when a skill is on but the connector is off (tool simply absent)', async () => {
+    // Scheduler enabled but Google Calendar never connected ⇒ no calendar tool
+    // in dynamicDefs. Gate must be a no-op here — only static tools remain.
+    const getTools = jest.fn().mockResolvedValue([]);
+    const registry = makeRegistry({ mcpGetTools: getTools });
+    const defs = await registry.getDefinitions({ ...ctx, enabledSkillIds: ['scheduler'] });
+    expect(defs.map((d) => d.name)).not.toContain('mcp__calendar__create_event');
+    expect(defs).toHaveLength(5);
   });
 });
 
@@ -300,5 +349,58 @@ describe('filterByAllowedConnectors (pure)', () => {
     // be selected by the admin UI and is dropped whenever a non-null list is set.
     const out = filterByAllowedConnectors(tools, ['notion', 'gmail']);
     expect(out.map((t) => t.name)).not.toContain('mcp__custom:abc123__run');
+  });
+});
+
+describe('filterBySkillGate (pure)', () => {
+  const calendarTool: ToolDefinition = {
+    name: 'mcp__calendar__create_event',
+    description: '',
+    input_schema: { type: 'object', properties: {}, required: [] },
+  };
+  const gmailTool: ToolDefinition = {
+    name: 'mcp__gmail__send_email',
+    description: '',
+    input_schema: { type: 'object', properties: {}, required: [] },
+  };
+  const nonGatedTool: ToolDefinition = {
+    name: 'mcp__github__create_issue',
+    description: '',
+    input_schema: { type: 'object', properties: {}, required: [] },
+  };
+  const staticTool: ToolDefinition = {
+    name: 'search_messages',
+    description: '',
+    input_schema: { type: 'object', properties: {}, required: [] },
+  };
+
+  it('drops a gated-provider tool when no matching skill is enabled', () => {
+    const out = filterBySkillGate([calendarTool], []);
+    expect(out).toHaveLength(0);
+  });
+
+  it('keeps a gated-provider tool when its matching skill is enabled', () => {
+    const out = filterBySkillGate([calendarTool], ['scheduler']);
+    expect(out.map((t) => t.name)).toEqual(['mcp__calendar__create_event']);
+  });
+
+  it('gmail requires gmail-mapped skills (mailWriter / inboxTriage)', () => {
+    expect(filterBySkillGate([gmailTool], [])).toHaveLength(0);
+    expect(filterBySkillGate([gmailTool], ['mailWriter']).map((t) => t.name)).toEqual([
+      'mcp__gmail__send_email',
+    ]);
+    expect(filterBySkillGate([gmailTool], ['inboxTriage']).map((t) => t.name)).toEqual([
+      'mcp__gmail__send_email',
+    ]);
+  });
+
+  it('never gates non-mapped providers or static tools', () => {
+    const out = filterBySkillGate([nonGatedTool, staticTool], []);
+    expect(out.map((t) => t.name)).toEqual(['mcp__github__create_issue', 'search_messages']);
+  });
+
+  it('gates each provider independently (calendar on, gmail off)', () => {
+    const out = filterBySkillGate([calendarTool, gmailTool], ['scheduler']);
+    expect(out.map((t) => t.name)).toEqual(['mcp__calendar__create_event']);
   });
 });

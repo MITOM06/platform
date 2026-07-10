@@ -55,6 +55,7 @@ export default function SkillsPage() {
           </div>
           <h2 className="text-xl font-bold tracking-tight mt-1">{t('heading')}</h2>
           <p className="text-sm text-muted-foreground mt-1">{t('description')}</p>
+          <p className="text-sm text-pon-peach/80 mt-1">{t('realActionNote')}</p>
         </div>
 
         {isLoading ? (

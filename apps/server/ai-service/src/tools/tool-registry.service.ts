@@ -10,6 +10,7 @@ import { McpConnectorClient } from './mcp-connector.client';
 import { ToolContext, ToolDefinition } from './tool.interface';
 import { ToolResultCacheService } from './tool-result-cache.service';
 import { isSensitiveTool } from '../ai/injection-guard';
+import { SKILL_TOOL_REQUIREMENTS } from '../skills/skill-catalog';
 
 /**
  * Filter dynamic MCP tools by the workspace AI connector allow-list (TASK-12).
@@ -42,8 +43,39 @@ export function filterByAllowedConnectors(
   });
 }
 
+/**
+ * Gate action-skill MCP tools by enabled skills (Approach A). An MCP tool whose
+ * provider is in `SKILL_TOOL_REQUIREMENTS` (calendar/gmail/notion) is kept ONLY
+ * when its required skill is enabled; a provider NOT in the map passes through
+ * unchanged. Non-MCP tools (`providerOf` → null) always pass. Applied AFTER the
+ * RBAC allow-list filter so RBAC stays the highest-priority gate.
+ */
+export function filterBySkillGate(
+  tools: ToolDefinition[],
+  enabledSkillIds: readonly string[],
+): ToolDefinition[] {
+  const enabled = new Set(enabledSkillIds);
+  // Every provider subject to skill gating (may be mapped by >1 skill, e.g.
+  // gmail ← mailWriter + inboxTriage).
+  const gatedProviders = new Set(
+    Object.values(SKILL_TOOL_REQUIREMENTS).map((req) => req.provider),
+  );
+  // A provider is UNLOCKED if AT LEAST ONE of its mapping skills is enabled.
+  const unlockedProviders = new Set(
+    Object.entries(SKILL_TOOL_REQUIREMENTS)
+      .filter(([skillId]) => enabled.has(skillId))
+      .map(([, req]) => req.provider),
+  );
+  return tools.filter((t) => {
+    const provider = providerOf(t.name);
+    if (provider === null) return true; // non-MCP tool — never gated
+    if (!gatedProviders.has(provider)) return true; // provider not gated by any skill
+    return unlockedProviders.has(provider); // gated → keep only if unlocked
+  });
+}
+
 /** Extract the `<provider>` segment from `mcp__<provider>__<tool>`; else null. */
-function providerOf(name: string): string | null {
+export function providerOf(name: string): string | null {
   const PREFIX = 'mcp__';
   const SEP = '__';
   if (!name.startsWith(PREFIX)) return null;
@@ -84,7 +116,10 @@ export class ToolRegistryService {
       staticDefs.push(WebSearchTool.definition);
     }
     const dynamicDefs = await this.mcpConnector.getTools(ctx.userId);
-    return [...staticDefs, ...filterByAllowedConnectors(dynamicDefs, ctx.allowedConnectors)];
+    // RBAC allow-list first (highest priority), then the skill consent gate.
+    const rbacFiltered = filterByAllowedConnectors(dynamicDefs, ctx.allowedConnectors);
+    const skillFiltered = filterBySkillGate(rbacFiltered, ctx.enabledSkillIds ?? []);
+    return [...staticDefs, ...skillFiltered];
   }
 
   async execute(

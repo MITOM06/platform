@@ -32,4 +32,11 @@ export interface ToolContext {
    * (`[]` ⇒ no MCP tools). `undefined`/`null` ⇒ no AI-specific filtering.
    */
   allowedConnectors?: string[] | null;
+  /**
+   * Skill ids currently enabled for this user. Gates action-skill MCP tools:
+   * an MCP tool whose provider is in `SKILL_TOOL_REQUIREMENTS` is only exposed
+   * when the matching skill id is in this list (Approach A consent layer).
+   * `undefined`/`[]` ⇒ no gated-provider tools are offered.
+   */
+  enabledSkillIds?: string[];
 }

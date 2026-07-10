@@ -14,6 +14,7 @@ import { FactExtractorService } from './fact-extractor.service';
 import { ContextBuilderService } from './context-builder.service';
 import { ResponseCacheService } from './response-cache.service';
 import { SkillsService } from '../skills/skills.service';
+import { buildSkillInstructions } from '../skills/skill-catalog';
 import { ConversationAccessService } from '../conversation/conversation-access.service';
 import { EmbeddingService } from '../kb/embedding.service';
 import { SettingsService } from '../settings/settings.service';
@@ -278,7 +279,7 @@ export class AiService {
       defaultTone: settings.defaultTone,
     });
 
-    const [volatileContext, skillInstructions] = await Promise.all([
+    const [volatileContext, enabledSkillIds] = await Promise.all([
       this.contextBuilder.buildVolatileContext(
         conversationId,
         userId,
@@ -286,10 +287,13 @@ export class AiService {
         content,
         departmentId,
       ),
-      // Enabled skills change how the assistant behaves; injected per-user after
-      // the cached persona block so they never bust the prompt cache.
-      this.skillsService.getEnabledSkillInstructions(userId),
+      // Enabled skills change how the assistant behaves AND gate action-skill MCP
+      // tools (skill-tool wiring). Fetch the raw ids once and derive both the
+      // system-prompt instruction block and the tool gate from them (one query).
+      this.skillsService.getEnabledSkillIds(userId),
     ]);
+    // Injected per-user after the cached persona block so they never bust the cache.
+    const skillInstructions = buildSkillInstructions(enabledSkillIds);
 
     const ctx: RequestContext = {
       conversationId,
@@ -303,6 +307,7 @@ export class AiService {
       ragSources: volatileContext.ragSources,
       queryVector,
       settings,
+      enabledSkillIds,
     };
 
     // Text history is the session (source of truth). Images are NOT persisted in
