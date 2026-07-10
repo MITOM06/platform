@@ -150,6 +150,9 @@ export class AgenticLoopService {
       // workspace-wide allow-list already enforced by connector-service.
       webSearchEnabled: ctx.settings.webSearchEnabled,
       allowedConnectors: ctx.settings.allowedConnectors,
+      // Skill consent gate (Approach A): action-skill MCP tools (calendar/gmail/
+      // notion) are only exposed when the matching skill is enabled.
+      enabledSkillIds: ctx.enabledSkillIds,
     };
     const tools = await this.buildTools(toolCtx);
 

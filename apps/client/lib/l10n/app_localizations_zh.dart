@@ -2140,6 +2140,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String get skillsSubtitle => '技能将一组工具和工作方式打包。只开启你需要的——每个技能都会告诉你它的要求。';
 
   @override
+  String get skillsRealActionNote =>
+      '技能会改变助手的思考和表达方式。若要让它真正执行操作（发送邮件、创建日程、写入 Notion……），请连接下方对应的应用。';
+
+  @override
   String get skillsSettingsSubtitle => '选择助手擅长的事';
 
   @override
@@ -2151,7 +2155,8 @@ class AppLocalizationsZh extends AppLocalizations {
   String get skillSchedulerName => '日程助手';
 
   @override
-  String get skillSchedulerDesc => '预订会议、查找空档、发送邀请和提醒。';
+  String get skillSchedulerDesc =>
+      '建议会议时间并起草邀请——你仍需通过日历/邮件应用自行发送（或连接 Google 日历/Gmail 让它直接代为操作）。';
 
   @override
   String get skillMailWriterName => '邮件撰写';
@@ -2163,13 +2168,14 @@ class AppLocalizationsZh extends AppLocalizations {
   String get skillResearcherName => '研究员';
 
   @override
-  String get skillResearcherDesc => '搜索网络和你的云端硬盘，返回带引用的答案。';
+  String get skillResearcherDesc => '根据本次对话内容和已有知识作答，并尽可能标注来源——并非实时网络搜索。';
 
   @override
   String get skillProjectKeeperName => '项目管家';
 
   @override
-  String get skillProjectKeeperDesc => '将笔记和任务归档到 Notion，保持数据库整洁。';
+  String get skillProjectKeeperDesc =>
+      '在对话中跟踪任务、负责人和决策并进行总结——连接 Notion 让它真正写入其中。';
 
   @override
   String get skillMeetingNotesName => '会议纪要';

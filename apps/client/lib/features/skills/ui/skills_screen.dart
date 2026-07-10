@@ -46,6 +46,15 @@ class SkillsScreen extends ConsumerWidget {
                 height: 1.4,
               ),
             ),
+            const SizedBox(height: 8),
+            Text(
+              l10n.skillsRealActionNote,
+              style: TextStyle(
+                color: AppTheme.ponPeach.withValues(alpha: 0.85),
+                fontSize: 13,
+                height: 1.4,
+              ),
+            ),
             const SizedBox(height: 20),
             ...kSkillDefs.map(
               (def) => Padding(
@@ -147,8 +156,10 @@ class _SkillTile extends StatelessWidget {
     final l10n = context.l10n;
     final colorScheme = Theme.of(context).colorScheme;
     final copy = skillCopy(l10n, def.id);
+    // Mirror web: resolve connector ids to display labels and drop any id that
+    // doesn't map to a known connector (never render a raw id).
     final needs = [
-      ...def.requires.map(_providerLabel),
+      ...def.requires.map(_providerLabel).whereType<String>(),
       ...def.extras,
     ].join(' · ');
 
@@ -222,19 +233,21 @@ class _SkillTile extends StatelessWidget {
     );
   }
 
-  /// Human label for a connector provider id used in the "Needs …" line.
-  String _providerLabel(String providerId) {
+  /// Human label for a connector provider id (matching connector-service
+  /// catalog ids) used in the "Needs …" line. Returns `null` for an unknown id
+  /// so the caller can filter it out instead of leaking a raw id.
+  String? _providerLabel(String providerId) {
     switch (providerId) {
-      case 'google-calendar':
+      case 'calendar':
         return 'Google Calendar';
-      case 'google-drive':
+      case 'drive':
         return 'Google Drive';
       case 'gmail':
         return 'Gmail';
       case 'notion':
         return 'Notion';
       default:
-        return providerId;
+        return null;
     }
   }
 }

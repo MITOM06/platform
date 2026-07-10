@@ -63,7 +63,7 @@ export function SidebarProfileBar() {
             type="button"
             className="group relative flex w-full items-center gap-3 rounded-xl p-2 text-left transition-colors hover:bg-muted/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pon-cyan/50 data-[state=open]:bg-muted/70 justify-center @[200px]:justify-start"
           >
-            {/* Avatar with PON-gradient ring + presence dot */}
+            {/* Avatar with PON-gradient ring */}
             <span className="relative shrink-0">
               <span className="block rounded-full bg-gradient-to-br from-pon-cyan via-pon-peach to-pon-pink p-[2px] shadow-[0_0_12px_-2px] shadow-pon-peach/40">
                 <Avatar className="size-11 border-2 border-background">
@@ -75,7 +75,6 @@ export function SidebarProfileBar() {
                   </AvatarFallback>
                 </Avatar>
               </span>
-              <span className="absolute bottom-0.5 right-0.5 size-3 rounded-full border-2 border-background bg-emerald-500" />
             </span>
 
             <span className="hidden @[200px]:block min-w-0 flex-1">

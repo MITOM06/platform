@@ -2187,6 +2187,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'Skills bundle a set of tools and a way of working. Turn on only what you need — each one tells you what it requires.';
 
   @override
+  String get skillsRealActionNote =>
+      'Skills change how your assistant thinks and talks. To let it actually act (send email, create events, write to Notion...), connect the matching app below.';
+
+  @override
   String get skillsSettingsSubtitle => 'Choose what your assistant is good at';
 
   @override
@@ -2199,7 +2203,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get skillSchedulerDesc =>
-      'Books meetings, finds slots, sends invites and reminders.';
+      'Suggests meeting times and drafts invites — you still send them via your calendar/mail app (or connect Google Calendar/Gmail so it can act directly).';
 
   @override
   String get skillMailWriterName => 'Mail writer';
@@ -2213,14 +2217,14 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get skillResearcherDesc =>
-      'Searches the web and your Drive, returns cited answers.';
+      'Answers from what\'s in this conversation and your training knowledge, with sources cited when possible — not a live web search.';
 
   @override
   String get skillProjectKeeperName => 'Project keeper';
 
   @override
   String get skillProjectKeeperDesc =>
-      'Files notes and tasks into Notion, keeps databases tidy.';
+      'Tracks tasks, owners and decisions in the conversation and summarizes them — connect Notion so it can actually write them there.';
 
   @override
   String get skillMeetingNotesName => 'Meeting notes';

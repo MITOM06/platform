@@ -2187,6 +2187,10 @@ class AppLocalizationsVi extends AppLocalizations {
       'Kỹ năng gói gọn một bộ công cụ và cách làm việc. Chỉ bật những gì bạn cần — mỗi kỹ năng cho biết nó yêu cầu gì.';
 
   @override
+  String get skillsRealActionNote =>
+      'Skill thay đổi CÁCH assistant suy nghĩ và trả lời. Để AI thực sự hành động (gửi mail, tạo lịch, ghi vào Notion...), kết nối app tương ứng bên dưới.';
+
+  @override
   String get skillsSettingsSubtitle => 'Chọn thế mạnh cho trợ lý của bạn';
 
   @override
@@ -2199,7 +2203,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get skillSchedulerDesc =>
-      'Đặt lịch họp, tìm khung giờ, gửi lời mời và nhắc nhở.';
+      'Đề xuất giờ họp và soạn sẵn lời mời — bạn vẫn cần tự gửi qua lịch/mail (hoặc kết nối Google Calendar/Gmail để AI tự thao tác được).';
 
   @override
   String get skillMailWriterName => 'Soạn thư';
@@ -2213,14 +2217,14 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get skillResearcherDesc =>
-      'Tìm trên web và Drive của bạn, trả lời kèm trích dẫn.';
+      'Trả lời dựa trên nội dung cuộc trò chuyện và kiến thức có sẵn, có trích nguồn khi có thể — không phải tìm kiếm web trực tiếp.';
 
   @override
   String get skillProjectKeeperName => 'Quản lý dự án';
 
   @override
   String get skillProjectKeeperDesc =>
-      'Lưu ghi chú và việc cần làm vào Notion, giữ cơ sở dữ liệu gọn gàng.';
+      'Theo dõi công việc, người phụ trách và quyết định trong cuộc trò chuyện rồi tóm tắt lại — kết nối Notion để AI thực sự ghi vào đó.';
 
   @override
   String get skillMeetingNotesName => 'Ghi chú cuộc họp';

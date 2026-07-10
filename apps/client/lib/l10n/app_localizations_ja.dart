@@ -2151,6 +2151,10 @@ class AppLocalizationsJa extends AppLocalizations {
       'スキルはツール群と働き方をまとめたものです。必要なものだけオンにしてください。各スキルが必要条件を示します。';
 
   @override
+  String get skillsRealActionNote =>
+      'スキルはアシスタントの考え方や話し方を変えます。実際に操作させる（メール送信、予定作成、Notion への書き込みなど）には、下の対応アプリを連携してください。';
+
+  @override
   String get skillsSettingsSubtitle => 'アシスタントの得意分野を選ぶ';
 
   @override
@@ -2162,7 +2166,8 @@ class AppLocalizationsJa extends AppLocalizations {
   String get skillSchedulerName => 'スケジューラー';
 
   @override
-  String get skillSchedulerDesc => '会議を予約し、空き時間を探し、招待とリマインダーを送ります。';
+  String get skillSchedulerDesc =>
+      '会議の時間を提案し招待状の下書きを作成します——送信はカレンダー/メールアプリでご自身で行ってください（Google カレンダー/Gmail を連携すると直接操作できます）。';
 
   @override
   String get skillMailWriterName => 'メール作成';
@@ -2174,13 +2179,15 @@ class AppLocalizationsJa extends AppLocalizations {
   String get skillResearcherName => 'リサーチャー';
 
   @override
-  String get skillResearcherDesc => 'ウェブと Drive を検索し、出典付きの回答を返します。';
+  String get skillResearcherDesc =>
+      'この会話の内容と既存の知識をもとに回答し、可能な場合は出典を示します——リアルタイムのウェブ検索ではありません。';
 
   @override
   String get skillProjectKeeperName => 'プロジェクト管理';
 
   @override
-  String get skillProjectKeeperDesc => 'メモやタスクを Notion に保存し、データベースを整理します。';
+  String get skillProjectKeeperDesc =>
+      '会話の中でタスク・担当者・決定事項を記録して要約します——Notion を連携すると実際に書き込めます。';
 
   @override
   String get skillMeetingNotesName => '議事録';

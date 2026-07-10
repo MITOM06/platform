@@ -20,14 +20,16 @@ export const SKILL_CATALOG: readonly SkillSpec[] = [
     instruction:
       'Scheduling assistant: when the user mentions times, deadlines, meetings or reminders, ' +
       'proactively offer to create calendar events or reminders, propose concrete time slots, ' +
-      'and confirm timezone and duration before acting.',
+      'and confirm timezone and duration before acting.' +
+      ' If no calendar tool is available, tell the user to connect Google Calendar in Integrations first — never fabricate a booking.',
   },
   {
     id: 'mailWriter',
     instruction:
       'Email writing: help draft clear, professional emails. Match the requested tone, keep them ' +
       'concise, propose a subject line, and end with a clear call to action. Never send without ' +
-      'showing the draft and getting explicit confirmation.',
+      'showing the draft and getting explicit confirmation.' +
+      ' If no email tool is available, tell the user to connect Gmail in Integrations first — never claim an email was sent.',
   },
   {
     id: 'researcher',
@@ -41,7 +43,8 @@ export const SKILL_CATALOG: readonly SkillSpec[] = [
     instruction:
       'Project keeping: track tasks, owners, deadlines and decisions across the conversation. When ' +
       'asked for status, produce a structured summary (Done / In progress / Blocked / Next) and ' +
-      'surface action items with owners.',
+      'surface action items with owners.' +
+      ' If no Notion tool is available, tell the user to connect Notion in Integrations first — never claim something was saved.',
   },
   // ── Expanded professional skills ──
   {
@@ -54,7 +57,8 @@ export const SKILL_CATALOG: readonly SkillSpec[] = [
     id: 'inboxTriage',
     instruction:
       'Inbox triage: when reviewing messages/emails, prioritize them (urgent / today / later / FYI), ' +
-      'summarize each in one line, and suggest a short reply or next action for the important ones.',
+      'summarize each in one line, and suggest a short reply or next action for the important ones.' +
+      ' If no email tool is available, tell the user to connect Gmail in Integrations first.',
   },
   {
     id: 'dataAnalyst',
@@ -93,6 +97,21 @@ export const SKILL_CATALOG: readonly SkillSpec[] = [
       'live forecasts (e.g. weather.com, accuweather, windy.com).',
   },
 ];
+
+/**
+ * Skill ids that gate real tool access: an "action skill" must be ENABLED for
+ * its provider's MCP tools to be exposed to the assistant (Approach A — skill is
+ * a mandatory consent layer on top of the connector OAuth + RBAC allow-list).
+ * `provider` must match the connector-service CATALOG id (the `<provider>`
+ * segment of `mcp__<provider>__<tool>`). Providers NOT listed here are never
+ * gated by a skill.
+ */
+export const SKILL_TOOL_REQUIREMENTS: Readonly<Record<string, { provider: string }>> = {
+  scheduler: { provider: 'calendar' },
+  mailWriter: { provider: 'gmail' },
+  inboxTriage: { provider: 'gmail' },
+  projectKeeper: { provider: 'notion' },
+};
 
 const INSTRUCTION_BY_ID = new Map(SKILL_CATALOG.map((s) => [s.id, s.instruction]));
 

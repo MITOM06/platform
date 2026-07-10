@@ -28,7 +28,7 @@ const List<SkillDef> kSkillDefs = [
   SkillDef(
     id: 'scheduler',
     icon: '🗓️',
-    requires: ['google-calendar', 'gmail'],
+    requires: ['calendar', 'gmail'],
   ),
   SkillDef(
     id: 'mailWriter',
@@ -38,7 +38,7 @@ const List<SkillDef> kSkillDefs = [
   SkillDef(
     id: 'researcher',
     icon: '📚',
-    requires: ['google-drive'],
+    requires: ['drive'],
     extras: ['web'],
   ),
   SkillDef(

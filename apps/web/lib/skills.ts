@@ -14,9 +14,9 @@ export interface SkillDef {
 }
 
 export const SKILLS: SkillDef[] = [
-  { id: 'scheduler', icon: '🗓️', requires: ['gcal', 'gmail'] },
+  { id: 'scheduler', icon: '🗓️', requires: ['calendar', 'gmail'] },
   { id: 'mailWriter', icon: '✍️', requires: ['gmail'] },
-  { id: 'researcher', icon: '📚', requires: ['gdrive'] },
+  { id: 'researcher', icon: '📚', requires: ['drive'] },
   { id: 'projectKeeper', icon: '🧩', requires: ['notion'] },
   { id: 'meetingNotes', icon: '🎙️', requires: [] },
   { id: 'inboxTriage', icon: '📥', requires: ['gmail'] },
