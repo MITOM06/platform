@@ -194,6 +194,74 @@ describe('axios 401-refresh interceptor', () => {
     expect(clearAuth).toHaveBeenCalledTimes(1)
   })
 
+  it('retries the refresh once on the benign REFRESH_TOKEN_ROTATED race and does NOT log out', async () => {
+    // A sibling tab rotated the refresh token first: the proxy answers 401 with
+    // code REFRESH_TOKEN_ROTATED. The retry runs with the sibling's rotated
+    // cookie and succeeds — the user must stay logged in.
+    const rotatedRace = new axios.AxiosError(
+      'race lost',
+      'ERR_BAD_REQUEST',
+      undefined,
+      null,
+      {
+        status: 401,
+        statusText: 'Unauthorized',
+        headers: {},
+        config: {},
+        data: { code: 'REFRESH_TOKEN_ROTATED' },
+      } as AxiosResponse,
+    )
+    const adapter = buildSequentialAdapter([
+      // Call 1 → refresh loses the rotation race
+      { type: 'reject', error: rotatedRace },
+      // Call 2 → the single retry succeeds with the rotated cookie
+      { type: 'resolve', data: { accessToken: 'race-winner-token' } },
+      // Call 3 → chatApi retry of the original request succeeds
+      { type: 'resolve', data: { id: 'msg-2' } },
+    ])
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    axios.defaults.adapter = adapter as any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    chatApi.defaults.adapter = adapter as any
+
+    const handler = getInterceptorHandler()
+    const result = (await handler(make401('/api/conversations'))) as AxiosResponse
+
+    expect(result.data).toEqual({ id: 'msg-2' })
+    const { clearAuth, setAuth } = getStoreState()
+    expect(clearAuth).not.toHaveBeenCalled()
+    expect(setAuth).toHaveBeenCalledWith(expect.objectContaining({ id: 'u1' }), 'race-winner-token')
+  })
+
+  it('does NOT clear auth when the refresh proxy answers 503 (transient upstream failure)', async () => {
+    // The Next.js refresh route now maps upstream network/5xx errors to 503 so
+    // they are never mistaken for a dead session.
+    const transient = new axios.AxiosError(
+      'transient',
+      'ERR_BAD_RESPONSE',
+      undefined,
+      null,
+      {
+        status: 503,
+        statusText: 'Service Unavailable',
+        headers: {},
+        config: {},
+        data: { error: 'transient' },
+      } as AxiosResponse,
+    )
+    const adapter = buildSequentialAdapter([{ type: 'reject', error: transient }])
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    axios.defaults.adapter = adapter as any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    chatApi.defaults.adapter = adapter as any
+
+    const handler = getInterceptorHandler()
+    await expect(handler(make401('/api/conversations'))).rejects.toThrow()
+
+    const { clearAuth } = getStoreState()
+    expect(clearAuth).not.toHaveBeenCalled()
+  })
+
   it('does NOT clear auth on a transient network error during refresh', async () => {
     // No `response` → network error (wifi sleep / ERR_NETWORK_CHANGED). The
     // user must stay logged in so STOMP / the next request can retry.

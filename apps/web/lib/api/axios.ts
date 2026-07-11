@@ -65,6 +65,53 @@ export function isAuthFailure(err: unknown): boolean {
   )
 }
 
+// The backend answered 401 REFRESH_TOKEN_ROTATED: a benign race where another
+// concurrent refresh (usually a sibling tab) rotated the token first. The
+// winner's Set-Cookie already updated the shared cookie jar, so a single retry
+// with the fresh cookie succeeds. NOT a dead session — never log out on this.
+function isRotatedRace(err: unknown): boolean {
+  return (
+    axios.isAxiosError(err) &&
+    err.response?.status === 401 &&
+    (err.response.data as { code?: string } | undefined)?.code ===
+      'REFRESH_TOKEN_ROTATED'
+  )
+}
+
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms))
+
+// Serialize refreshes ACROSS TABS with the Web Locks API. Refresh tokens rotate
+// with reuse detection, so two tabs refreshing concurrently spend the same
+// token twice; the loser 401s (or worse, trips reuse detection). Holding a
+// browser-wide lock makes the second tab wait, and its refresh then runs with
+// the winner's rotated cookie — a normal rotation. Falls back to no locking
+// where the API is unavailable (old browsers, jsdom tests).
+function withRefreshLock<T>(fn: () => Promise<T>): Promise<T> {
+  if (typeof navigator !== 'undefined' && navigator.locks?.request) {
+    return navigator.locks.request('pon-auth-refresh', fn) as Promise<T>
+  }
+  return fn()
+}
+
+/**
+ * Single shared way to refresh the access token via the Next.js cookie proxy.
+ * Throws on failure; callers decide logout via isAuthFailure(err). Retries the
+ * benign REFRESH_TOKEN_ROTATED race once with the sibling tab's rotated cookie.
+ */
+export async function refreshAccessToken(): Promise<string> {
+  return withRefreshLock(async () => {
+    try {
+      const { data } = await axios.post<{ accessToken: string }>('/api/auth/refresh')
+      return data.accessToken
+    } catch (err) {
+      if (!isRotatedRace(err)) throw err
+      await sleep(300)
+      const { data } = await axios.post<{ accessToken: string }>('/api/auth/refresh')
+      return data.accessToken
+    }
+  })
+}
+
 // ─── response interceptor — handle 401 / token refresh ────────────────────────
 
 let isRefreshing = false
@@ -112,8 +159,7 @@ const create401ResponseInterceptor = (apiInstance: typeof chatApi) => {
     isRefreshing = true
 
     try {
-      const { data } = await axios.post<{ accessToken: string }>('/api/auth/refresh')
-      const { accessToken } = data
+      const accessToken = await refreshAccessToken()
 
       const { user } = useAuthStore.getState()
       if (user) useAuthStore.getState().setAuth(user, accessToken)

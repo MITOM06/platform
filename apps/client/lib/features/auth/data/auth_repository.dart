@@ -130,7 +130,15 @@ class AuthRepository {
     await _storage.write(key: _keyUser, value: jsonEncode(user.toJson()));
   }
 
-  Future<void> clearCredentials() => _storage.deleteAll();
+  /// Delete only the auth session keys — NOT the whole secure store.
+  /// deleteAll() would wipe unrelated secrets other features may persist
+  /// (mirrors _TokenRefreshInterceptor._clearCredentials in dio_client.dart).
+  Future<void> clearCredentials() => Future.wait([
+        _storage.delete(key: _keyAccessToken),
+        _storage.delete(key: _keyRefreshToken),
+        _storage.delete(key: _keySid),
+        _storage.delete(key: _keyUser),
+      ]);
 
   /// Fetch the authenticated user's own profile (includes `hasPassword`).
   /// Persists the refreshed user into secure storage so the cached session

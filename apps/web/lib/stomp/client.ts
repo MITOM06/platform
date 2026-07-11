@@ -1,7 +1,7 @@
 import { Client, type IMessage, type StompSubscription } from '@stomp/stompjs'
 import axios from 'axios'
 import { useAuthStore } from '@/lib/store/auth.store'
-import { isAuthFailure } from '@/lib/api/axios'
+import { isAuthFailure, refreshAccessToken as postRefresh } from '@/lib/api/axios'
 
 // Single-origin self-host has no NEXT_PUBLIC_WS_URL — derive wss://<host>/ws
 // from the page origin at runtime. Cloud Run / local dev set the env explicitly.
@@ -38,10 +38,13 @@ type RefreshOutcome =
 
 async function refreshAccessToken(): Promise<RefreshOutcome> {
   try {
-    const { data } = await axios.post<{ accessToken: string }>('/api/auth/refresh')
+    // Shared helper: cross-tab lock + one retry on the benign
+    // REFRESH_TOKEN_ROTATED race, so a STOMP reconnect never logs the user out
+    // because a sibling tab refreshed a moment earlier.
+    const token = await postRefresh()
     const { user } = useAuthStore.getState()
-    if (user) useAuthStore.getState().setAuth(user, data.accessToken)
-    return { token: data.accessToken }
+    if (user) useAuthStore.getState().setAuth(user, token)
+    return { token }
   } catch (err) {
     return { token: null, authFailed: isAuthFailure(err) }
   }
