@@ -277,7 +277,7 @@ export default function EditProfilePage() {
           onAvatarPick={handleAvatarPick}
         />
 
-        <div className="relative max-w-2xl mx-auto px-6">
+        <div className="relative max-w-3xl mx-auto px-6">
           <Separator className="mb-6" />
 
           <ProfileForm
@@ -291,6 +291,7 @@ export default function EditProfilePage() {
             phoneNumber={localPhone}
             phoneVerified={localPhoneVerified}
             email={user.email}
+            roleName={me?.roleName ?? t('memberDefault')}
             saving={saving}
             canSave={isDirty || hasPendingImageEdits}
             texts={buildProfileFormTexts(t)}

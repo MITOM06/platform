@@ -102,13 +102,29 @@ class MessageModel {
   // from human senders. Identity (name/avatar) comes from GET /api/assistant/me.
   bool get isExternalBot => senderId.startsWith('extbot:');
   bool get isAiError => isAiMessage && content == kAiErrorSentinel;
-  bool get isAiQuotaExceeded => isAiMessage && content == kAiQuotaExceededSentinel;
-  bool get isAiStreamInterrupted => isAiMessage && content == kAiStreamInterruptedSentinel;
+  bool get isAiQuotaExceeded =>
+      isAiMessage && content == kAiQuotaExceededSentinel;
+  bool get isAiStreamInterrupted =>
+      isAiMessage && content == kAiStreamInterruptedSentinel;
   bool get isAiUnavailable => isAiMessage && content == kAiUnavailableSentinel;
   bool get isAiRateLimited => isAiMessage && content == kAiRateLimitedSentinel;
   bool get isImage => type == 'image';
   bool get isVideo => type == 'video';
   bool get isMedia => isImage || isVideo;
+
+  /// True when an image message carries a JSON array of more than one URL
+  /// (a collage). Copying a single image is unambiguous; copying a collage is
+  /// not, so the UI only offers "copy image" for single images.
+  bool get isMultiImage {
+    if (!isImage) return false;
+    try {
+      final decoded = jsonDecode(content);
+      return decoded is List && decoded.length > 1;
+    } catch (_) {
+      return false;
+    }
+  }
+
   // Generic document attachment (PDF / DOC / ZIP …).
   bool get isFile => type == 'file';
   // Recorded voice audio (m4a/aac URL stored in content).
@@ -266,7 +282,8 @@ class LinkPreviewData {
       (title != null && title!.isNotEmpty) ||
       (image != null && image!.isNotEmpty);
 
-  factory LinkPreviewData.fromJson(Map<String, dynamic> json) => LinkPreviewData(
+  factory LinkPreviewData.fromJson(Map<String, dynamic> json) =>
+      LinkPreviewData(
         url: json['url'] as String? ?? '',
         title: json['title'] as String?,
         description: json['description'] as String?,

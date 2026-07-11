@@ -758,6 +758,9 @@ class AppLocalizationsVi extends AppLocalizations {
   String get actionCopy => 'Sao chép';
 
   @override
+  String get downloadAction => 'Tải xuống';
+
+  @override
   String get actionReact => 'Cảm xúc';
 
   @override
@@ -986,6 +989,12 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get profileRoleMemberDefault => 'Thành viên';
+
+  @override
+  String get roleLabel => 'Vai trò';
+
+  @override
+  String get privacySectionLabel => 'Quyền riêng tư';
 
   @override
   String get editProfile => 'Chỉnh sửa trang cá nhân';

@@ -752,6 +752,9 @@ class AppLocalizationsKo extends AppLocalizations {
   String get actionCopy => '복사';
 
   @override
+  String get downloadAction => '다운로드';
+
+  @override
   String get actionReact => '반응';
 
   @override
@@ -976,6 +979,12 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get profileRoleMemberDefault => '멤버';
+
+  @override
+  String get roleLabel => '역할';
+
+  @override
+  String get privacySectionLabel => '개인정보';
 
   @override
   String get editProfile => '프로필 편집';

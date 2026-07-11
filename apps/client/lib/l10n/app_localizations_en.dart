@@ -758,6 +758,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get actionCopy => 'Copy';
 
   @override
+  String get downloadAction => 'Download';
+
+  @override
   String get actionReact => 'React';
 
   @override
@@ -986,6 +989,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get profileRoleMemberDefault => 'Member';
+
+  @override
+  String get roleLabel => 'Role';
+
+  @override
+  String get privacySectionLabel => 'Privacy';
 
   @override
   String get editProfile => 'Edit profile';

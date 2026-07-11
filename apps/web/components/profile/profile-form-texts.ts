@@ -44,6 +44,7 @@ export function buildProfileFormTexts(t: (key: string) => string) {
     showDobLabel: t('showDobLabel'),
     showPhoneLabel: t('showPhoneLabel'),
     showGenderLabel: t('showGenderLabel'),
+    roleLabel: t('roleLabel'),
     emailLabel: t('emailLabel'),
     saveButton: t('saveButton'),
   }

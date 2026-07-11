@@ -1,5 +1,20 @@
+import 'dart:convert';
+
 import 'package:url_launcher/url_launcher.dart';
 import '../../../../core/utils/media_url.dart';
+
+/// Returns the first URL from an image message's [content], which may be either
+/// a single URL string or a JSON array of URLs (collage). Used when an action
+/// (download/copy) targets a single representative image.
+String firstImageUrl(String content) {
+  try {
+    final decoded = jsonDecode(content);
+    if (decoded is List && decoded.isNotEmpty) {
+      return decoded.first.toString();
+    }
+  } catch (_) {}
+  return content;
+}
 
 /// Opens the original media file externally (browser / system viewer) so the
 /// user can view it at full resolution.

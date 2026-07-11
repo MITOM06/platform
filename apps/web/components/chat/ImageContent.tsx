@@ -142,17 +142,17 @@ function Lightbox({
   return (
     <Dialog open onOpenChange={(o) => !o && onClose()}>
       <DialogContent
-        className="flex max-w-[95vw] items-center justify-center border-none bg-black/95 p-0 sm:max-w-[90vw]"
+        className="flex h-fit w-fit max-h-[92vh] max-w-[95vw] items-center justify-center border-none bg-black/85 p-2 sm:p-3"
         showCloseButton={false}
       >
         <DialogTitle className="sr-only">{t('imageViewer')}</DialogTitle>
         <DialogA11yDescription />
-        <div className="relative flex h-[85vh] w-full items-center justify-center">
+        <div className="relative flex items-center justify-center">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={absoluteMediaUrl(urls[index])}
             alt=""
-            className="max-h-full max-w-full object-contain"
+            className="block max-h-[88vh] max-w-[93vw] rounded-sm object-contain"
           />
 
           <div className="absolute right-3 top-3 flex items-center gap-2">
@@ -223,41 +223,43 @@ export function VideoContent({ content }: { content: string }) {
 
   return (
     <>
-      {/* Thumbnail — tapping plays inline instead of downloading */}
+      {/* Thumbnail — tapping plays inline. A muted <video preload="metadata">
+          renders the first frame as a natural poster instead of a flat black box.
+          Download moved to the message 3-dot menu (MessageActions). */}
       <button
         type="button"
         onClick={() => setOpen(true)}
         className="group relative flex h-[150px] w-[220px] items-center justify-center overflow-hidden rounded-2xl bg-black"
       >
-        <div className="rounded-full bg-black/50 p-2.5 transition-colors group-hover:bg-black/70">
+        {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
+        <video
+          src={url}
+          preload="metadata"
+          muted
+          playsInline
+          className="absolute inset-0 h-full w-full object-cover"
+        />
+        <div className="absolute inset-0 bg-black/10 transition-colors group-hover:bg-black/20" />
+        <div className="relative rounded-full bg-black/50 p-2.5 transition-colors group-hover:bg-black/70">
           <Play className="size-7 fill-white text-white" />
         </div>
-        <a
-          href={downloadMediaUrl(content)}
-          target="_blank"
-          rel="noopener noreferrer"
-          onClick={(e) => e.stopPropagation()}
-          className="absolute bottom-2 right-2 flex items-center justify-center rounded-full bg-black/50 p-1.5 text-white transition-colors hover:bg-black/70"
-        >
-          <Download className="size-3.5" />
-        </a>
       </button>
 
       {/* Inline video player dialog */}
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent
-          className="flex max-w-[95vw] items-center justify-center border-none bg-black/95 p-0 sm:max-w-[85vw]"
+          className="flex h-fit w-fit max-h-[92vh] max-w-[95vw] items-center justify-center border-none bg-black/85 p-2 sm:p-3"
           showCloseButton={false}
         >
           <DialogTitle className="sr-only">{t('videoViewer')}</DialogTitle>
           <DialogA11yDescription />
-          <div className="relative flex w-full flex-col items-center justify-center">
+          <div className="relative flex items-center justify-center">
             {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
             <video
               src={url}
               controls
               autoPlay
-              className="max-h-[80vh] max-w-full rounded-lg outline-none"
+              className="block max-h-[88vh] max-w-[93vw] rounded-sm object-contain outline-none"
             />
             <div className="absolute right-3 top-3 flex gap-2">
               <a

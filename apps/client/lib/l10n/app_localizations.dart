@@ -1536,6 +1536,12 @@ abstract class AppLocalizations {
   /// **'Copy'**
   String get actionCopy;
 
+  /// No description provided for @downloadAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Download'**
+  String get downloadAction;
+
   /// No description provided for @actionReact.
   ///
   /// In en, this message translates to:
@@ -1931,6 +1937,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Member'**
   String get profileRoleMemberDefault;
+
+  /// No description provided for @roleLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Role'**
+  String get roleLabel;
+
+  /// No description provided for @privacySectionLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Privacy'**
+  String get privacySectionLabel;
 
   /// No description provided for @editProfile.
   ///

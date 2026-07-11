@@ -4,16 +4,18 @@
 > if you are actively building/extending that feature. Authoritative build state + remaining work:
 > [`../PON-ENTERPRISE-HANDOFF.md`](../PON-ENTERPRISE-HANDOFF.md).
 >
-> Last regenerated: 2026-07-09 (full status sweep — all 2026-07-07/08/09 plans verified complete).
+> Last regenerated: 2026-07-11 (2026-07-10 batch fully executed — all 6 plans done & verified).
 
-## 🟡 NEW — 2026-07-10 batch (written, not yet executed by Claude Code)
+## ✅ Done — 2026-07-10 batch (all executed & verified)
 
-| Plan | Nội dung | Ghi chú |
-|------|----------|---------|
-| `2026-07-10-sidebar-profile-dot-video-hd-recheck.md` | Xoá hardcoded green dot ở `SidebarProfileBar.tsx` (own avatar) | Bug thật mới, 1 file, low risk |
-| `2026-07-10-directory-logo-csp-fix.md` | Thêm domain favicon connector vào CSP `img-src` (`next.config.ts`) | Bug thật (không phải build cũ) — logo bị CSP chặn |
-| `2026-07-10-skills-copy-honesty-fix.md` | Sửa copy skill sai sự thật + fix `requires` id mismatch (web+Flutter) | Content-only, làm trước plan lớn bên dưới |
-| `2026-07-10-skills-real-tool-wiring.md` | Gate MCP tool (calendar/gmail/notion) theo skill enable — 4/11 skill wire được vào tool thật | **Chặn 1 phần bởi thiếu secret**: `webSearch` cần `WEB_SEARCH_API_URL`/`WEB_SEARCH_API_KEY` (đang rỗng trong `.env`) từ user, không code được; `weatherForecast` không có tool nào — ngoài scope |
+| Plan | Scope | Verified in |
+|------|-------|-------------|
+| `2026-07-10-sidebar-profile-dot-video-hd-recheck.md` | Xoá hardcoded green dot own-avatar (`SidebarProfileBar.tsx`) | commit `c22356b9` |
+| `2026-07-10-directory-logo-csp-fix.md` | Domain favicon connector vào CSP `img-src` (`next.config.ts`) | commit `c22356b9` |
+| `2026-07-10-skills-copy-honesty-fix.md` | Sửa copy skill sai + fix `requires` id mismatch (web+Flutter) | commit `c22356b9` |
+| `2026-07-10-skills-real-tool-wiring.md` | Gate MCP tool (calendar/gmail/notion) theo skill enable | commit `c22356b9` — **1 phần vẫn chặn bởi secret**: `webSearch` cần `WEB_SEARCH_API_URL`/`WEB_SEARCH_API_KEY` (rỗng trong `.env`); `weatherForecast` không có tool — ngoài scope |
+| `2026-07-10-edit-profile-cover-role-privacy.md` | Cover 16:6 nhất quán (web+Flutter), field Role read-only, dời Privacy xuống cuối form | 2026-07-11: web `pnpm build` PASS, Flutter `flutter analyze` clean (chưa commit) |
+| `2026-07-10-media-message-actions-and-viewer-frame.md` | Video thumbnail hiện frame đầu + bỏ nút download rời, Copy ảnh thật + Download vào menu 3 chấm, khung viewer web ôm sát media | 2026-07-11: web `pnpm build` PASS, Flutter `flutter analyze` clean (chưa commit). **Flutter thêm package `super_clipboard` — build đầu tiên cần Rust toolchain (cargokit)** |
 
 ## ✅ Done — 2026-07-08 / 2026-07-09 batch (verified via code inspection, not yet build-deployed)
 
