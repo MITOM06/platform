@@ -140,7 +140,9 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
     setState(() => _isLoading = true);
     try {
       final url = await ref.read(chatRepositoryProvider).uploadFile(pickedFile);
-      await ref.read(authNotifierProvider.notifier).updateProfile(avatarUrl: url);
+      await ref
+          .read(authNotifierProvider.notifier)
+          .updateProfile(avatarUrl: url);
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -165,7 +167,9 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
     setState(() => _isLoading = true);
     try {
       final url = await ref.read(chatRepositoryProvider).uploadFile(pickedFile);
-      await ref.read(authNotifierProvider.notifier).updateProfile(coverPhoto: url);
+      await ref
+          .read(authNotifierProvider.notifier)
+          .updateProfile(coverPhoto: url);
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -328,164 +332,224 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
         if (shouldLeave && context.mounted) context.pop();
       },
       child: Scaffold(
-      appBar: AppBar(
-        title: Text(context.l10n.editProfile),
-        actions: [
-          if (_isLoading)
-            const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 16),
-              child: Center(
-                child: SizedBox(
-                  width: 20,
-                  height: 20,
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                ),
-              ),
-            )
-          else
-            TextButton(
-              onPressed: _hasUnsavedChanges ? _save : null,
-              child: Text(
-                context.l10n.actionSave,
-                style: TextStyle(
-                  color: _hasUnsavedChanges
-                      ? AppTheme.ponCyan
-                      : Colors.white30,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 15,
-                ),
-              ),
-            ),
-        ],
-      ),
-      body: SafeArea(
-        child: ListView(
-          padding: const EdgeInsets.all(24),
-          children: [
-            EditProfileHeader(
-              user: user,
-              isLoading: _isLoading,
-              onTapCover: _uploadCover,
-              onTapAvatar: _uploadAvatar,
-            ),
-            const SizedBox(height: 24),
-            PonTextField(
-              controller: _nameController,
-              labelText: context.l10n.fieldDisplayName,
-              prefixIcon: Icons.person_outline_rounded,
-              textInputAction: TextInputAction.next,
-            ),
-            const SizedBox(height: 16),
-            PonTextField(
-              controller: _bioController,
-              labelText: context.l10n.bio,
-              prefixIcon: Icons.info_outline_rounded,
-              keyboardType: TextInputType.multiline,
-              textInputAction: TextInputAction.newline,
-              maxLength: 160,
-            ),
-            const SizedBox(height: 16),
-            PhoneVerificationSection(
-              initialPhone: _initialPhone,
-              initialVerified: _initialPhoneVerified,
-              // Phone is saved server-side on verify; nothing to persist on the
-              // form's normal save, so we just keep local references in sync.
-              onChanged: (phone, verified) {
-                _initialPhone = phone;
-                _initialPhoneVerified = verified;
-              },
-            ),
-            EditProfilePrivacyToggle(
-              label: context.l10n.profileShowPhone,
-              value: _showPhone,
-              onChanged: _isLoading ? null : (v) => setState(() => _showPhone = v),
-            ),
-            const SizedBox(height: 8),
-            DropdownButtonFormField<String>(
-              initialValue: _gender,
-              decoration: InputDecoration(
-                labelText: context.l10n.profileGender,
-                prefixIcon: const Icon(Icons.wc_outlined, color: AppTheme.ponCyan),
-              ),
-              items: [
-                DropdownMenuItem(
-                  value: 'male',
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Icon(Icons.male, color: Colors.blue, size: 18),
-                      const SizedBox(width: 8),
-                      Text(context.l10n.genderMale),
-                    ],
+        appBar: AppBar(
+          title: Text(context.l10n.editProfile),
+          actions: [
+            if (_isLoading)
+              const Padding(
+                padding: EdgeInsets.symmetric(horizontal: 16),
+                child: Center(
+                  child: SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(strokeWidth: 2),
                   ),
                 ),
-                DropdownMenuItem(
-                  value: 'female',
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Icon(Icons.female, color: Colors.pink, size: 18),
-                      const SizedBox(width: 8),
-                      Text(context.l10n.genderFemale),
-                    ],
+              )
+            else
+              TextButton(
+                onPressed: _hasUnsavedChanges ? _save : null,
+                child: Text(
+                  context.l10n.actionSave,
+                  style: TextStyle(
+                    color:
+                        _hasUnsavedChanges ? AppTheme.ponCyan : Colors.white30,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 15,
                   ),
                 ),
-                DropdownMenuItem(
-                  value: 'other',
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Icon(Icons.transgender, color: Colors.purple, size: 18),
-                      const SizedBox(width: 8),
-                      Text(context.l10n.genderOther),
-                    ],
-                  ),
-                ),
-              ],
-              onChanged: _isLoading ? null : (v) => setState(() => _gender = v),
-            ),
-            EditProfilePrivacyToggle(
-              label: context.l10n.profileShowGender,
-              value: _showGender,
-              onChanged: _isLoading ? null : (v) => setState(() => _showGender = v),
-            ),
-            const SizedBox(height: 8),
-            ListTile(
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-              tileColor: Theme.of(context).colorScheme.surface,
-              leading: const Icon(Icons.cake_outlined, color: AppTheme.ponCyan),
-              title: Text(context.l10n.dateOfBirth, style: const TextStyle(color: Colors.white)),
-              subtitle: Text(
-                _selectedDateOfBirth != null
-                    ? DateFormat.yMMMd().format(_selectedDateOfBirth!.toLocal())
-                    : context.l10n.notSet,
-                style: const TextStyle(color: Colors.white70),
               ),
-              trailing: const Icon(Icons.calendar_today_rounded, size: 18, color: Colors.white54),
-              onTap: _isLoading
-                  ? null
-                  : () async {
-                      final now = DateTime.now();
-                      final picked = await showDatePicker(
-                        context: context,
-                        initialDate: _selectedDateOfBirth ?? DateTime(2000, 1, 1),
-                        firstDate: DateTime(1900),
-                        lastDate: now,
-                      );
-                      if (picked != null) {
-                        setState(() => _selectedDateOfBirth = picked);
-                      }
-                    },
-            ),
-            EditProfilePrivacyToggle(
-              label: context.l10n.profileShowDateOfBirth,
-              value: _showDob,
-              onChanged: _isLoading ? null : (v) => setState(() => _showDob = v),
-            ),
-            const SizedBox(height: 24),
           ],
         ),
-      ),
+        body: SafeArea(
+          child: ListView(
+            padding: const EdgeInsets.all(24),
+            children: [
+              EditProfileHeader(
+                user: user,
+                isLoading: _isLoading,
+                onTapCover: _uploadCover,
+                onTapAvatar: _uploadAvatar,
+              ),
+              const SizedBox(height: 24),
+              PonTextField(
+                controller: _nameController,
+                labelText: context.l10n.fieldDisplayName,
+                prefixIcon: Icons.person_outline_rounded,
+                textInputAction: TextInputAction.next,
+              ),
+              const SizedBox(height: 16),
+              PonTextField(
+                controller: _bioController,
+                labelText: context.l10n.bio,
+                prefixIcon: Icons.info_outline_rounded,
+                keyboardType: TextInputType.multiline,
+                textInputAction: TextInputAction.newline,
+                maxLength: 160,
+              ),
+              const SizedBox(height: 16),
+              // Role — read-only, mirrors the value shown on the view-profile
+              // screen. Not editable here (assigned by workspace admins).
+              ListTile(
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10)),
+                tileColor: Theme.of(context).colorScheme.surface,
+                leading:
+                    const Icon(Icons.work_outline, color: AppTheme.ponCyan),
+                title: Text(context.l10n.roleLabel,
+                    style:
+                        const TextStyle(color: Colors.white70, fontSize: 12)),
+                subtitle: Text(
+                  user?.roleName ?? context.l10n.profileRoleMemberDefault,
+                  style: const TextStyle(color: Colors.white),
+                ),
+              ),
+              const SizedBox(height: 16),
+              PhoneVerificationSection(
+                initialPhone: _initialPhone,
+                initialVerified: _initialPhoneVerified,
+                // Phone is saved server-side on verify; nothing to persist on the
+                // form's normal save, so we just keep local references in sync.
+                onChanged: (phone, verified) {
+                  _initialPhone = phone;
+                  _initialPhoneVerified = verified;
+                },
+              ),
+              const SizedBox(height: 8),
+              DropdownButtonFormField<String>(
+                initialValue: _gender,
+                decoration: InputDecoration(
+                  labelText: context.l10n.profileGender,
+                  prefixIcon:
+                      const Icon(Icons.wc_outlined, color: AppTheme.ponCyan),
+                ),
+                items: [
+                  DropdownMenuItem(
+                    value: 'male',
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(Icons.male, color: Colors.blue, size: 18),
+                        const SizedBox(width: 8),
+                        Text(context.l10n.genderMale),
+                      ],
+                    ),
+                  ),
+                  DropdownMenuItem(
+                    value: 'female',
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(Icons.female, color: Colors.pink, size: 18),
+                        const SizedBox(width: 8),
+                        Text(context.l10n.genderFemale),
+                      ],
+                    ),
+                  ),
+                  DropdownMenuItem(
+                    value: 'other',
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(Icons.transgender,
+                            color: Colors.purple, size: 18),
+                        const SizedBox(width: 8),
+                        Text(context.l10n.genderOther),
+                      ],
+                    ),
+                  ),
+                ],
+                onChanged:
+                    _isLoading ? null : (v) => setState(() => _gender = v),
+              ),
+              const SizedBox(height: 8),
+              ListTile(
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10)),
+                tileColor: Theme.of(context).colorScheme.surface,
+                leading:
+                    const Icon(Icons.cake_outlined, color: AppTheme.ponCyan),
+                title: Text(context.l10n.dateOfBirth,
+                    style: const TextStyle(color: Colors.white)),
+                subtitle: Text(
+                  _selectedDateOfBirth != null
+                      ? DateFormat.yMMMd()
+                          .format(_selectedDateOfBirth!.toLocal())
+                      : context.l10n.notSet,
+                  style: const TextStyle(color: Colors.white70),
+                ),
+                trailing: const Icon(Icons.calendar_today_rounded,
+                    size: 18, color: Colors.white54),
+                onTap: _isLoading
+                    ? null
+                    : () async {
+                        final now = DateTime.now();
+                        final picked = await showDatePicker(
+                          context: context,
+                          initialDate:
+                              _selectedDateOfBirth ?? DateTime(2000, 1, 1),
+                          firstDate: DateTime(1900),
+                          lastDate: now,
+                        );
+                        if (picked != null) {
+                          setState(() => _selectedDateOfBirth = picked);
+                        }
+                      },
+              ),
+              const SizedBox(height: 20),
+              // Privacy — grouped at the end (mirrors web where the whole privacy
+              // block sits below the fields), instead of interleaved per field.
+              Container(
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Colors.white12),
+                ),
+                child: Column(
+                  children: [
+                    Row(
+                      children: [
+                        const Icon(Icons.lock_outline,
+                            color: AppTheme.ponCyan, size: 18),
+                        const SizedBox(width: 8),
+                        Text(
+                          context.l10n.privacySectionLabel,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 6),
+                    EditProfilePrivacyToggle(
+                      label: context.l10n.profileShowDateOfBirth,
+                      value: _showDob,
+                      onChanged: _isLoading
+                          ? null
+                          : (v) => setState(() => _showDob = v),
+                    ),
+                    EditProfilePrivacyToggle(
+                      label: context.l10n.profileShowPhone,
+                      value: _showPhone,
+                      onChanged: _isLoading
+                          ? null
+                          : (v) => setState(() => _showPhone = v),
+                    ),
+                    EditProfilePrivacyToggle(
+                      label: context.l10n.profileShowGender,
+                      value: _showGender,
+                      onChanged: _isLoading
+                          ? null
+                          : (v) => setState(() => _showGender = v),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 24),
+            ],
+          ),
+        ),
       ),
     );
   }

@@ -770,6 +770,9 @@ class AppLocalizationsFr extends AppLocalizations {
   String get actionCopy => 'Copier';
 
   @override
+  String get downloadAction => 'Télécharger';
+
+  @override
   String get actionReact => 'Réagir';
 
   @override
@@ -999,6 +1002,12 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get profileRoleMemberDefault => 'Membre';
+
+  @override
+  String get roleLabel => 'Rôle';
+
+  @override
+  String get privacySectionLabel => 'Confidentialité';
 
   @override
   String get editProfile => 'Modifier le profil';

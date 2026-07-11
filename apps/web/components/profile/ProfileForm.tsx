@@ -88,6 +88,7 @@ type ProfileFormTexts = {
   showDobLabel: string
   showPhoneLabel: string
   showGenderLabel: string
+  roleLabel: string
   emailLabel: string
   saveButton: string
 }
@@ -103,6 +104,7 @@ type ProfileFormProps = {
   phoneNumber?: string
   phoneVerified?: boolean
   email: string
+  roleName: string
   saving: boolean
   canSave: boolean
   texts: ProfileFormTexts
@@ -123,6 +125,7 @@ export function ProfileForm({
   phoneNumber,
   phoneVerified,
   email,
+  roleName,
   saving,
   canSave,
   texts,
@@ -299,6 +302,28 @@ export function ProfileForm({
         </Select>
       </div>
 
+      {/* Role (read-only) */}
+      <div className="space-y-2">
+        <Label className="text-sm font-medium flex items-center gap-2 text-muted-foreground">
+          <Users className="size-4" />
+          {texts.roleLabel}
+        </Label>
+        <Input value={roleName} disabled className="text-muted-foreground bg-muted/50" />
+      </div>
+
+      {/* Email (read-only) */}
+      <div className="space-y-2">
+        <Label className="text-sm font-medium flex items-center gap-2 text-muted-foreground">
+          <span className="text-base">@</span>
+          {texts.emailLabel}
+        </Label>
+        <Input
+          value={email}
+          disabled
+          className="text-muted-foreground bg-muted/50"
+        />
+      </div>
+
       {/* Privacy section — per-field visibility toggles */}
       <div className="rounded-lg border p-3 space-y-3">
         <div className="flex items-center gap-2 min-w-0">
@@ -341,19 +366,6 @@ export function ProfileForm({
             onCheckedChange={(v) => onShowFieldChange('showGender', v)}
           />
         </div>
-      </div>
-
-      {/* Email (read-only) */}
-      <div className="space-y-2">
-        <Label className="text-sm font-medium flex items-center gap-2 text-muted-foreground">
-          <span className="text-base">@</span>
-          {texts.emailLabel}
-        </Label>
-        <Input
-          value={email}
-          disabled
-          className="text-muted-foreground bg-muted/50"
-        />
       </div>
 
       <Separator />

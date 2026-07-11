@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { useTranslations } from 'next-intl'
 import {
-  MoreHorizontal, Pencil, Trash2, Trash, Share2, Pin, PinOff, Smile, Brain, Reply, CheckCheck, Copy, CheckSquare,
+  MoreHorizontal, Pencil, Trash2, Trash, Share2, Pin, PinOff, Smile, Brain, Reply, CheckCheck, Copy, CheckSquare, Download,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import {
@@ -13,6 +13,7 @@ import {
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { Button } from '@/components/ui/button'
 import { chatService } from '@/lib/api/chat'
+import { absoluteMediaUrl, downloadMediaUrl, parseImageUrls } from '@/lib/media'
 import type { Message } from '@/lib/api/types'
 
 const QUICK_EMOJIS = ['👍', '❤️', '😂', '😮', '😢', '🔥']
@@ -92,16 +93,34 @@ export function MessageActions({
     }
   }
 
+  // A single (non-collage) image message: content is one URL, not a JSON array.
+  const isSingleImage = message.type === 'image' && !message.content.trim().startsWith('[')
+  // Copying a real image needs the async Clipboard API with ClipboardItem, which
+  // is absent on some browsers (old Firefox/Safari, non-secure contexts). Feature
+  // detect so we hide Copy for images there instead of crashing on click.
+  const canCopyImage = isSingleImage && typeof ClipboardItem !== 'undefined'
+  const canCopy = message.type === 'text' || message.type === 'ai' || canCopyImage
+  const canDownload = message.type === 'image' || message.type === 'video'
+
   const handleCopy = async () => {
     try {
-      await navigator.clipboard.writeText(message.content)
+      if (canCopyImage) {
+        const res = await fetch(absoluteMediaUrl(message.content))
+        const blob = await res.blob()
+        await navigator.clipboard.write([new ClipboardItem({ [blob.type]: blob })])
+      } else {
+        await navigator.clipboard.writeText(message.content)
+      }
       toast.success(t('copySuccess'))
     } catch {
       toast.error(t('copyError'))
     }
   }
 
-  const canCopy = message.type === 'text' || message.type === 'ai'
+  const handleDownload = () => {
+    const url = message.type === 'video' ? message.content : parseImageUrls(message.content)[0]
+    window.open(downloadMediaUrl(url), '_blank', 'noopener,noreferrer')
+  }
 
   const handlePin = async () => {
     if (!isPinned && pinnedCount >= 2) {
@@ -173,6 +192,12 @@ export function MessageActions({
             <DropdownMenuItem onClick={handleCopy}>
               <Copy className="size-4" />
               {t('copyAction')}
+            </DropdownMenuItem>
+          )}
+          {canDownload && !message.recalled && (
+            <DropdownMenuItem onClick={handleDownload}>
+              <Download className="size-4" />
+              {t('downloadAction')}
             </DropdownMenuItem>
           )}
           {isOwn && !message.recalled && message.type === 'text' && (

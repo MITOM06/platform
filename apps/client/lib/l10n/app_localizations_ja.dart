@@ -752,6 +752,9 @@ class AppLocalizationsJa extends AppLocalizations {
   String get actionCopy => 'コピー';
 
   @override
+  String get downloadAction => 'ダウンロード';
+
+  @override
   String get actionReact => 'リアクション';
 
   @override
@@ -976,6 +979,12 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get profileRoleMemberDefault => 'メンバー';
+
+  @override
+  String get roleLabel => '役割';
+
+  @override
+  String get privacySectionLabel => 'プライバシー';
 
   @override
   String get editProfile => 'プロフィール編集';

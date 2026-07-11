@@ -749,6 +749,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get actionCopy => '复制';
 
   @override
+  String get downloadAction => '下载';
+
+  @override
   String get actionReact => '表态';
 
   @override
@@ -973,6 +976,12 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get profileRoleMemberDefault => '成员';
+
+  @override
+  String get roleLabel => '角色';
+
+  @override
+  String get privacySectionLabel => '隐私';
 
   @override
   String get editProfile => '编辑资料';

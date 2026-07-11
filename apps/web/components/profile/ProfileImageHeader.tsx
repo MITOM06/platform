@@ -31,9 +31,10 @@ export function ProfileImageHeader({
   onAvatarPick,
 }: ProfileImageHeaderProps) {
   return (
-    <div className="max-w-2xl mx-auto px-6 pt-6">
-      {/* Cover Photo Section */}
-      <div className="relative h-32 rounded-xl overflow-hidden group">
+    <div className="max-w-3xl mx-auto px-6 pt-6">
+      {/* Cover Photo Section — aspect-ratio matches the cropper (16/6) so the
+          saved crop displays exactly as previewed, instead of a fixed height. */}
+      <div className="relative aspect-[16/6] rounded-xl overflow-hidden group">
         {resolvedCover ? (
           <Image src={resolvedCover} alt="" fill unoptimized className="object-cover" />
         ) : (

@@ -2,10 +2,10 @@ import 'dart:convert';
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:video_player/video_player.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/utils/media_url.dart';
 import 'image_gallery_viewer.dart';
-import 'media_actions.dart';
 import 'video_player_dialog.dart';
 
 // `absoluteMediaUrl` moved to core/utils/media_url.dart. Re-exported so the
@@ -220,10 +220,10 @@ class _MultiImageGrid extends StatelessWidget {
               width: width,
               height: height,
               fit: BoxFit.cover,
-              placeholder: (_, __) =>
-                  Container(width: width, height: height, color: Colors.black26),
-              errorWidget: (_, __, ___) =>
-                  Container(width: width, height: height, color: Colors.black26),
+              placeholder: (_, __) => Container(
+                  width: width, height: height, color: Colors.black26),
+              errorWidget: (_, __, ___) => Container(
+                  width: width, height: height, color: Colors.black26),
             ),
             Container(
               width: width,
@@ -247,18 +247,50 @@ class _MultiImageGrid extends StatelessWidget {
   }
 }
 
-// ── VideoContent (unchanged) ─────────────────────────────────────────────────
+// ── VideoContent ─────────────────────────────────────────────────────────────
 
-class VideoContent extends StatelessWidget {
+/// Video thumbnail in a chat bubble. Shows the video's first frame as a poster
+/// (via a paused [VideoPlayerController]) instead of a flat black tile, and a
+/// play overlay. Tapping opens the full-screen player. The download action now
+/// lives in the long-press actions sheet, not on the thumbnail.
+class VideoContent extends StatefulWidget {
   final String url;
   const VideoContent({super.key, required this.url});
 
   @override
+  State<VideoContent> createState() => _VideoContentState();
+}
+
+class _VideoContentState extends State<VideoContent> {
+  VideoPlayerController? _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    final controller = VideoPlayerController.networkUrl(
+      Uri.parse(absoluteMediaUrl(widget.url)),
+    );
+    _controller = controller;
+    // Initialize only to surface the first frame — never autoplay in a list.
+    controller.initialize().then((_) {
+      if (mounted) setState(() {});
+    }).catchError((_) {});
+  }
+
+  @override
+  void dispose() {
+    _controller?.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final controller = _controller;
+    final ready = controller != null && controller.value.isInitialized;
     return ClipRRect(
       borderRadius: BorderRadius.circular(16),
       child: GestureDetector(
-        onTap: () => showVideoPlayer(context, url),
+        onTap: () => showVideoPlayer(context, widget.url),
         child: Container(
           width: 220,
           height: 150,
@@ -266,8 +298,18 @@ class VideoContent extends StatelessWidget {
           child: Stack(
             alignment: Alignment.center,
             children: [
-              const Icon(Icons.movie_creation_outlined,
-                  color: Colors.white24, size: 48),
+              if (ready)
+                FittedBox(
+                  fit: BoxFit.cover,
+                  child: SizedBox(
+                    width: controller.value.size.width,
+                    height: controller.value.size.height,
+                    child: VideoPlayer(controller),
+                  ),
+                )
+              else
+                const Icon(Icons.movie_creation_outlined,
+                    color: Colors.white24, size: 48),
               Container(
                 decoration: const BoxDecoration(
                   color: Colors.black54,
@@ -276,23 +318,6 @@ class VideoContent extends StatelessWidget {
                 padding: const EdgeInsets.all(10),
                 child: const Icon(Icons.play_arrow_rounded,
                     color: Colors.white, size: 34),
-              ),
-              Positioned(
-                top: 6,
-                right: 6,
-                child: Material(
-                  color: Colors.black45,
-                  shape: const CircleBorder(),
-                  child: InkWell(
-                    customBorder: const CircleBorder(),
-                    onTap: () => downloadMedia(url),
-                    child: const Padding(
-                      padding: EdgeInsets.all(6),
-                      child: Icon(Icons.download_rounded,
-                          color: Colors.white, size: 18),
-                    ),
-                  ),
-                ),
               ),
             ],
           ),
