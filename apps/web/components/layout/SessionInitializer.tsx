@@ -7,6 +7,7 @@ import { Loader2 } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { useAuthStore } from '@/lib/store/auth.store'
 import type { AuthUser } from '@/lib/store/auth.store'
+import { isAuthFailure } from '@/lib/api/axios'
 
 const PUBLIC_PATHS = [
   '/login',
@@ -32,19 +33,47 @@ export function SessionInitializer({ children }: { children: React.ReactNode }) 
       return
     }
 
+    let cancelled = false
+    const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms))
+
     const initSession = async () => {
-      try {
-        const { data } = await axios.get<{ user: AuthUser; accessToken: string }>('/api/auth/session')
-        setAuth(data.user, data.accessToken)
-      } catch {
-        clearAuth()
-        router.push('/login')
-      } finally {
-        setLoading(false)
+      // Retry loop: a transient failure (auth-service cold start, network blip,
+      // 503 from the session route) must NEVER bounce the user to /login —
+      // that was the "kicked out after reopening the app" bug. Only a genuine
+      // 401/403 (session dead / cookies gone) logs out. The one benign 401 is
+      // REFRESH_TOKEN_ROTATED (a sibling tab rotated first): retrying sends the
+      // sibling's rotated cookie and succeeds, so give auth failures one retry
+      // before giving up.
+      let authFailures = 0
+      for (let attempt = 0; !cancelled; attempt++) {
+        try {
+          const { data } = await axios.get<{ user: AuthUser; accessToken: string }>('/api/auth/session')
+          if (!cancelled) setAuth(data.user, data.accessToken)
+          break
+        } catch (err) {
+          if (isAuthFailure(err)) {
+            authFailures++
+            if (authFailures >= 2) {
+              if (!cancelled) {
+                clearAuth()
+                router.push('/login')
+              }
+              break
+            }
+            await sleep(400)
+            continue
+          }
+          // Transient — keep the spinner and retry with capped backoff.
+          await sleep(Math.min(2000 * 2 ** attempt, 15000))
+        }
       }
+      if (!cancelled) setLoading(false)
     }
 
     initSession()
+    return () => {
+      cancelled = true
+    }
   }, [isPublicPath, setAuth, clearAuth, router])
 
   if (loading) {

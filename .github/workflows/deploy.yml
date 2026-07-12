@@ -135,6 +135,7 @@ jobs:
             SESSION_SECRET=${{ secrets.SESSION_SECRET }}
             JWT_ACCESS_EXPIRES=15m
             JWT_REFRESH_EXPIRES=30d
+            REFRESH_TOKEN_TTL_SECONDS=2592000
             MONGO_URI=${{ secrets.MONGODB_URI }}
             MONGODB_URI=${{ secrets.MONGODB_URI }}
             REDIS_URL=${{ secrets.REDIS_URL }}

@@ -63,7 +63,8 @@ export class SessionService {
       'tokenVersion', ARGV[2],
       'refreshHash', ARGV[3],
       'prevRefreshHash', oldHash,
-      'lastSeenAt', ARGV[4])
+      'lastSeenAt', ARGV[4],
+      'rotatedAt', ARGV[4])
     redis.call('EXPIRE', KEYS[1], ARGV[5])
     return 1
   `;
@@ -85,6 +86,18 @@ export class SessionService {
   // just the compromised session. Defaults to false (revoke just this session).
   private get revokeFamilyOnReuse() {
     return process.env.REFRESH_REUSE_REVOKE_ALL === 'true';
+  }
+
+  // Grace window after a rotation during which presenting the immediately-
+  // superseded token is treated as a benign race (REFRESH_TOKEN_ROTATED, no
+  // revoke) rather than theft. Covers staggered concurrent refreshes that the
+  // CAS alone cannot: e.g. two browser tabs both read the same refresh cookie,
+  // tab A rotates first, tab B's request lands 200ms later carrying the now-
+  // previous token. Without the grace this revokes the session and logs the
+  // user out of every tab. A real thief replaying inside the window still gets
+  // a 401 and no token — it only skips the revocation.
+  private get reuseGraceMs() {
+    return Number(process.env.REFRESH_REUSE_GRACE_MS ?? 60_000);
   }
 
   // Refresh tokens are opaque to clients; we encode the version in the token so
@@ -125,6 +138,7 @@ export class SessionService {
         revoked: '0',
         createdAt: Date.now().toString(),
         lastSeenAt: Date.now().toString(),
+        rotatedAt: '0',
       })
       .expire(key, ttl)
       .sadd(this.userSessSetKey(params.userId), sid)
@@ -163,6 +177,21 @@ export class SessionService {
         presentedVersion !== null && presentedVersion < currentVersion;
 
       if (matchesPrev || isOlderVersion) {
+        // Staggered benign race: the immediately-previous token presented
+        // within the grace window after its rotation is a concurrent client
+        // (multi-tab / retried request), not a replayed theft. Reject without
+        // revoking so the client can retry with the rotated token it (or a
+        // sibling tab) already holds.
+        const rotatedAt = Number(data.rotatedAt ?? 0);
+        if (
+          matchesPrev &&
+          rotatedAt > 0 &&
+          Date.now() - rotatedAt < this.reuseGraceMs
+        ) {
+          throw new UnauthorizedException({
+            code: AuthCode.REFRESH_TOKEN_ROTATED,
+          });
+        }
         this.logger.warn(
           `Refresh-token reuse detected for user=${data.userId} sid=${params.sid} ` +
             `presentedVersion=${presentedVersion ?? 'n/a'} currentVersion=${currentVersion}. ` +
