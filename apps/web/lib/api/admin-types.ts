@@ -16,6 +16,9 @@ export const CAPABILITIES = [
   'USE_GROUP_BOT',
   'RUN_SENSITIVE_SKILL',
   'VIEW_AUDIT_LOG',
+  'MANAGE_AI_CONTEXT',
+  'VIEW_INTERNAL_CONTEXT',
+  'VIEW_CONFIDENTIAL_CONTEXT',
 ] as const
 
 export type Capability = (typeof CAPABILITIES)[number]
