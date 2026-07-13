@@ -146,6 +146,16 @@ Changes in `apps/server/ai-service/src/memory/`:
 - `remember_fact` tool + `FactExtractorService`: write with `userId` scope (the tool added on
   2026-07-12 keeps working; only its scope changes).
 
+**As-built (P2b, 2026-07-13):** No Mongo migration was needed. Retrieval/dedup/list switched to
+a `{userId}` Qdrant filter, so global recall took effect immediately (the important part —
+what the AI actually recalls — is per-user now). The `ai_memories` Mongo docs stay
+per-conversation; instead of re-keying the collection, the chat-service `/api/ai/memories`
+endpoint aggregates the caller's docs into ONE deduped per-user view (union `keyFacts`
+most-recent-conversation-first, newest `summary`, total `messageCount`). `conversationId`
+is retained in the Qdrant payload for provenance and as the conversation-delete key. **Client
+contract change:** `GET /api/ai/memories` now returns a single object, not an array — the
+web/Flutter AI-context surfaces (P3/P4) must consume one aggregate.
+
 ## 7. Prompt Assembly (ai-service `context-builder.service.ts`)
 
 Each turn, prepend a bounded **"About the user & their organization"** block:
