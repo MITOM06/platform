@@ -1265,7 +1265,11 @@
     "aiRestrictConnectors": "Restreindre les connecteurs de l’assistant",
     "aiRestrictConnectorsHint": "Désactivé = hérite de la liste de l’espace de travail. Activé = uniquement les connecteurs sélectionnés (aucun si vide).",
     "aiNoConnectors": "Aucun connecteur dans la liste de l’espace de travail.",
-    "navUsage": "Utilisation"
+    "navUsage": "Utilisation",
+    "editAiContext": "Edit AI context",
+    "aiContextJobTitle": "Job title",
+    "aiContextProjects": "Current projects",
+    "aiContextProjectsHint": "One project per line"
   },
   "call": {
     "peerFallback": "Utilisateur",

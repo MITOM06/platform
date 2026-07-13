@@ -1265,7 +1265,11 @@
     "aiRestrictConnectors": "Restrict assistant connectors",
     "aiRestrictConnectorsHint": "Off = inherit the workspace allow-list. On = only the selected connectors (none if empty).",
     "aiNoConnectors": "No connectors in the workspace allow-list.",
-    "navUsage": "Usage"
+    "navUsage": "Usage",
+    "editAiContext": "Edit AI context",
+    "aiContextJobTitle": "Job title",
+    "aiContextProjects": "Current projects",
+    "aiContextProjectsHint": "One project per line"
   },
   "call": {
     "peerFallback": "User",

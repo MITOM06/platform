@@ -1265,7 +1265,11 @@
     "aiRestrictConnectors": "アシスタントのコネクタを制限",
     "aiRestrictConnectorsHint": "オフ = ワークスペースの許可リストを継承。オン = 選択したコネクタのみ（空の場合はなし）。",
     "aiNoConnectors": "ワークスペースの許可リストにコネクタがありません。",
-    "navUsage": "使用状況"
+    "navUsage": "使用状況",
+    "editAiContext": "Edit AI context",
+    "aiContextJobTitle": "Job title",
+    "aiContextProjects": "Current projects",
+    "aiContextProjectsHint": "One project per line"
   },
   "call": {
     "peerFallback": "ユーザー",

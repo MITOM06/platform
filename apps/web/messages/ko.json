@@ -1265,7 +1265,11 @@
     "aiRestrictConnectors": "어시스턴트 커넥터 제한",
     "aiRestrictConnectorsHint": "끄기 = 워크스페이스 허용 목록 상속. 켜기 = 선택한 커넥터만 (비어 있으면 없음).",
     "aiNoConnectors": "워크스페이스 허용 목록에 커넥터가 없습니다.",
-    "navUsage": "사용량"
+    "navUsage": "사용량",
+    "editAiContext": "Edit AI context",
+    "aiContextJobTitle": "Job title",
+    "aiContextProjects": "Current projects",
+    "aiContextProjectsHint": "One project per line"
   },
   "call": {
     "peerFallback": "사용자",

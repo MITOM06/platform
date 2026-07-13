@@ -1265,7 +1265,11 @@
     "aiRestrictConnectors": "Giới hạn trình kết nối của trợ lý",
     "aiRestrictConnectorsHint": "Tắt = kế thừa danh sách của không gian làm việc. Bật = chỉ các trình kết nối đã chọn (không có nếu để trống).",
     "aiNoConnectors": "Không có trình kết nối nào trong danh sách của không gian làm việc.",
-    "navUsage": "Sử dụng"
+    "navUsage": "Sử dụng",
+    "editAiContext": "Edit AI context",
+    "aiContextJobTitle": "Job title",
+    "aiContextProjects": "Current projects",
+    "aiContextProjectsHint": "One project per line"
   },
   "call": {
     "peerFallback": "Người dùng",

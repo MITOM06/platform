@@ -1265,7 +1265,11 @@
     "aiRestrictConnectors": "限制助手连接器",
     "aiRestrictConnectorsHint": "关闭 = 继承工作区允许列表。开启 = 仅选定的连接器（为空则无）。",
     "aiNoConnectors": "工作区允许列表中没有连接器。",
-    "navUsage": "使用情况"
+    "navUsage": "使用情况",
+    "editAiContext": "Edit AI context",
+    "aiContextJobTitle": "Job title",
+    "aiContextProjects": "Current projects",
+    "aiContextProjectsHint": "One project per line"
   },
   "call": {
     "peerFallback": "用户",

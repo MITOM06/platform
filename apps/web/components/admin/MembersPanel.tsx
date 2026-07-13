@@ -2,7 +2,8 @@
 
 import { useState } from 'react'
 import { useTranslations } from 'next-intl'
-import { Pencil } from 'lucide-react'
+import { Pencil, Brain } from 'lucide-react'
+import { EditMemberAiContextModal } from '@/components/admin/EditMemberAiContextModal'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -37,6 +38,7 @@ export function MembersPanel() {
   const { data: members = [], isLoading } = useMembers()
   const canRoles = useHasCapability('MANAGE_ROLES')
   const canDepts = useHasCapability('MANAGE_DEPARTMENTS')
+  const canManageMembers = useHasCapability('MANAGE_MEMBERS')
   const { data: roles = [] } = useRoles(canRoles)
   const { data: departments = [] } = useDepartments(canDepts)
   const updateMember = useUpdateMember()
@@ -45,6 +47,13 @@ export function MembersPanel() {
   const [open, setOpen] = useState(false)
   const [roleId, setRoleId] = useState<string>(NO_ROLE)
   const [deptIds, setDeptIds] = useState<string[]>([])
+  const [aiCtxMember, setAiCtxMember] = useState<Member | null>(null)
+  const [aiCtxOpen, setAiCtxOpen] = useState(false)
+
+  const openAiContext = (m: Member) => {
+    setAiCtxMember(m)
+    setAiCtxOpen(true)
+  }
 
   const openEdit = (m: Member) => {
     setEditing(m)
@@ -96,11 +105,28 @@ export function MembersPanel() {
           {roleName(m.roleId) && (
             <Badge variant="secondary">{roleName(m.roleId)}</Badge>
           )}
+          {canManageMembers && (
+            <Button
+              variant="ghost"
+              size="icon"
+              className="tap"
+              title={t('editAiContext')}
+              onClick={() => openAiContext(m)}
+            >
+              <Brain className="size-4" />
+            </Button>
+          )}
           <Button variant="ghost" size="icon" className="tap" onClick={() => openEdit(m)}>
             <Pencil className="size-4" />
           </Button>
         </div>
       ))}
+
+      <EditMemberAiContextModal
+        member={aiCtxMember}
+        open={aiCtxOpen}
+        onOpenChange={setAiCtxOpen}
+      />
 
       <ResponsiveModal
         open={open}
