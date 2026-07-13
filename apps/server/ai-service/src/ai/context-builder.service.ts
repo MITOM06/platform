@@ -85,11 +85,7 @@ export class ContextBuilderService {
     // --- Retrieved memory facts (most relevant only) ---
     if (queryVector) {
       try {
-        const facts = await this.memoryService.retrieveRelevantFacts(
-          userId,
-          conversationId,
-          queryVector,
-        );
+        const facts = await this.memoryService.retrieveRelevantFacts(userId, queryVector);
         if (facts.length > 0) {
           // Facts originate from prior user content — defang any injection
           // markers but keep them as readable remembered facts.

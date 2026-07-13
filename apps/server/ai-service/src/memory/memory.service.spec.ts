@@ -77,6 +77,20 @@ describe('MemoryService', () => {
     expect(model.deleteOne).toHaveBeenCalledWith({ conversationId: CONV_ID });
   });
 
+  it('retrieveRelevantFacts — queries the vector store per-user (no conversationId)', async () => {
+    const model = makeModel();
+    const vector = {
+      ...vectorStub,
+      retrieve: jest
+        .fn()
+        .mockResolvedValue([{ text: 'Name is Khang', createdAt: Date.now(), score: 0.9 }]),
+    };
+    const service = new MemoryService(model as any, vector as any, embedStub as any, configStub as any);
+    const res = await service.retrieveRelevantFacts(USER_ID, [0.1, 0.2]);
+    expect(vector.retrieve).toHaveBeenCalledWith(USER_ID, [0.1, 0.2], expect.any(Number));
+    expect(res[0].text).toBe('Name is Khang');
+  });
+
   it('incrementMessageCount — returns updated count', async () => {
     const updated: Partial<AiMemory> = { conversationId: CONV_ID, messageCount: 3 };
     const model = makeModel({

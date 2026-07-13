@@ -38,18 +38,17 @@ export class MemoryService {
 
   /**
    * Retrieve only the MOST RELEVANT facts for the current message, applying a
-   * recency-decay re-rank so stale facts sink. Returns [] gracefully when the
-   * vector collection is empty (migration-safe).
+   * recency-decay re-rank so stale facts sink. Scoped per-**user** (global): a
+   * fact taught in any conversation is recalled here. Returns [] gracefully when
+   * the vector collection is empty (migration-safe).
    */
   async retrieveRelevantFacts(
     userId: string,
-    conversationId: string,
     queryVector: number[],
   ): Promise<RelevantFact[]> {
     // Over-fetch a bit, then decay-rerank and keep topFacts.
     const candidates = await this.vectorStore.retrieve(
       userId,
-      conversationId,
       queryVector,
       Math.max(this.topFacts * 2, this.topFacts),
     );
@@ -74,7 +73,9 @@ export class MemoryService {
   /**
    * Add extracted facts with near-duplicate dedup. A fact whose nearest
    * existing neighbour exceeds the cosine dedup threshold UPDATES that point
-   * (refreshing text + recency) instead of appending a duplicate.
+   * (refreshing text + recency) instead of appending a duplicate. Dedup +
+   * canonical rebuild are per-**user** (a fact taught in any conversation
+   * dedupes against the user's whole set and is recalled everywhere).
    * Then rebuilds the canonical Mongo list + a short summary for clients.
    *
    * Returns the number of facts that were actually embedded + persisted (facts
@@ -104,7 +105,7 @@ export class MemoryService {
         this.logger.warn(`Embedding fact failed, skipping: ${(err as Error).message}`);
         continue;
       }
-      const nearest = await this.vectorStore.nearest(userId, conversationId, vector);
+      const nearest = await this.vectorStore.nearest(userId, vector);
       const isDup = nearest !== null && nearest.score >= this.dedupThreshold;
       await this.vectorStore.upsertFact(userId, conversationId, {
         id: isDup ? nearest!.id : undefined,
@@ -117,7 +118,7 @@ export class MemoryService {
     }
 
     // Rebuild canonical fact list from the vector store for client REST/STOMP.
-    const all = await this.vectorStore.listFacts(userId, conversationId);
+    const all = await this.vectorStore.listFacts(userId);
     const keyFacts = all
       .sort((a, b) => b.createdAt - a.createdAt)
       .map((f) => f.text)

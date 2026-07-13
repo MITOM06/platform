@@ -21,8 +21,11 @@ interface UpsertFactInput {
 
 /**
  * Embedding-backed semantic fact store on a dedicated Qdrant collection.
- * Points are keyed by {userId, conversationId} (stored in payload + used as filter).
- * Migrates gracefully: all reads tolerate a missing/empty collection.
+ * Points carry {userId, conversationId} in payload, but READS filter by `userId`
+ * ONLY (global per-user recall — a fact taught in any conversation is recalled
+ * everywhere). `conversationId` is retained in the payload for provenance and as
+ * the delete key for conversation removal. Migrates gracefully: all reads
+ * tolerate a missing/empty collection.
  */
 @Injectable()
 export class MemoryVectorService {
@@ -57,19 +60,13 @@ export class MemoryVectorService {
     this.ensured = true;
   }
 
-  private scopeFilter(userId: string, conversationId: string) {
-    return {
-      must: [
-        { key: 'userId', match: { value: userId } },
-        { key: 'conversationId', match: { value: conversationId } },
-      ],
-    };
+  private userScopeFilter(userId: string) {
+    return { must: [{ key: 'userId', match: { value: userId } }] };
   }
 
-  /** Retrieve the most relevant facts for a query, scoped to {userId, conversationId}. */
+  /** Retrieve the most relevant facts for a query, scoped to {userId} (global per-user). */
   async retrieve(
     userId: string,
-    conversationId: string,
     queryVector: number[],
     topN: number,
   ): Promise<MemoryFactPoint[]> {
@@ -78,7 +75,7 @@ export class MemoryVectorService {
       const results = await this.client.search(this.collection, {
         vector: queryVector,
         limit: topN,
-        filter: this.scopeFilter(userId, conversationId),
+        filter: this.userScopeFilter(userId),
         with_payload: true,
       });
       return results.map((r) => ({
@@ -98,17 +95,13 @@ export class MemoryVectorService {
    * Find the nearest existing fact to a candidate vector (for dedup).
    * Returns null if the collection is empty or on error.
    */
-  async nearest(
-    userId: string,
-    conversationId: string,
-    vector: number[],
-  ): Promise<MemoryFactPoint | null> {
+  async nearest(userId: string, vector: number[]): Promise<MemoryFactPoint | null> {
     try {
       await this.ensureCollection(vector.length);
       const results = await this.client.search(this.collection, {
         vector,
         limit: 1,
-        filter: this.scopeFilter(userId, conversationId),
+        filter: this.userScopeFilter(userId),
         with_payload: true,
       });
       if (results.length === 0) return null;
@@ -155,12 +148,12 @@ export class MemoryVectorService {
     }
   }
 
-  /** List all facts for a conversation (used to rebuild the canonical Mongo list). */
-  async listFacts(userId: string, conversationId: string): Promise<MemoryFactPoint[]> {
+  /** List all facts for a user (used to rebuild the canonical Mongo list). */
+  async listFacts(userId: string): Promise<MemoryFactPoint[]> {
     try {
       await this.ensureCollection();
       const res = await this.client.scroll(this.collection, {
-        filter: this.scopeFilter(userId, conversationId),
+        filter: this.userScopeFilter(userId),
         with_payload: true,
         limit: 256,
       });
