@@ -75,7 +75,7 @@ export default function AiHubPage() {
                 icon={<BrainCircuit className="size-5 text-[#B47FFF]" />}
                 iconBg="rgba(180,127,255,0.12)"
                 title={t('memory')}
-                onClick={() => router.push('/ai-memory')}
+                onClick={() => router.push('/ai-context')}
               />
               <AiHubCard
                 icon={<Plug className="size-5 text-pon-cyan" />}

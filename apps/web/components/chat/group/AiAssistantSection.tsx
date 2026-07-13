@@ -62,16 +62,16 @@ export function AiAssistantSection({ conversationId, onClose }: Props) {
           </div>
         )}
 
-        {/* Memory — Admin/Owner only */}
+        {/* AI Context — Admin/Owner only */}
         {canManage ? (
-          <button onClick={() => go('/ai-memory')} className={ROW_CLS}>
+          <button onClick={() => go('/ai-context')} className={ROW_CLS}>
             <BrainCircuit className="size-4 text-muted-foreground" />
-            <span>{t('aiMemory')}</span>
+            <span>{t('aiContext')}</span>
           </button>
         ) : (
           <div className={ROW_DISABLED_CLS} title={t('adminOwnerOnly')}>
             <Lock className="size-4 text-muted-foreground" />
-            <span>{t('aiMemory')}</span>
+            <span>{t('aiContext')}</span>
           </div>
         )}
 

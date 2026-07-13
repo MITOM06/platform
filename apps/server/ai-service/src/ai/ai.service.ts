@@ -46,7 +46,7 @@ const NEW_SESSION_NOTICE =
 const CONTEXT_COMPACTED_NOTICE =
   '🗜️ Ngữ cảnh đã được tóm tắt để tối ưu bộ nhớ. Lịch sử đầy đủ vẫn được lưu trong phiên trò chuyện.';
 const MEMORY_EMPTY_NOTICE =
-  '🧠 Chưa có ký ức nào được lưu trong cuộc trò chuyện này. Hãy chat thêm một chút để tôi học được về bạn.';
+  '🧠 Tôi chưa ghi nhớ điều gì về bạn. Hãy chat thêm một chút để tôi học được về bạn.';
 
 /** A zeroed trace for system-authored (non-model) stream responses. */
 const SYSTEM_TRACE: AiTrace = {
@@ -169,7 +169,7 @@ export class AiService {
               memory.keyFacts.map((f) => `• ${f}`).join('\n')
             : '';
         const notice =
-          `🧠 **Ký ức của cuộc trò chuyện này (${memory.messageCount} tin nhắn):**\n\n` +
+          `🧠 **Những gì tôi đã ghi nhớ về bạn (${memory.messageCount} tin nhắn):**\n\n` +
           `${memory.summary}` +
           factsText;
         await this.publishSystemResponse(conversationId, notice);
@@ -286,6 +286,7 @@ export class AiService {
         queryVector,
         content,
         departmentId,
+        { perms: payload.perms ?? [], departmentIds: payload.departmentIds ?? [], role: payload.role },
       ),
       // Enabled skills change how the assistant behaves AND gate action-skill MCP
       // tools (skill-tool wiring). Fetch the raw ids once and derive both the
@@ -300,6 +301,9 @@ export class AiService {
       userId,
       displayName,
       departmentId,
+      role: payload.role,
+      perms: payload.perms ?? [],
+      departmentIds: payload.departmentIds ?? [],
       baseSystem,
       volatileSystem: [skillInstructions, volatileContext.text]
         .filter((s) => s && s.trim())

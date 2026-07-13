@@ -1,5 +1,6 @@
 class AiMemoryModel {
-  final String conversationId;
+  // P2b: memory is global per-user; the aggregate has no single conversationId.
+  final String? conversationId;
   final String summary;
   final List<String> keyFacts;
   final int messageCount;
@@ -15,7 +16,7 @@ class AiMemoryModel {
 
   factory AiMemoryModel.fromJson(Map<String, dynamic> json) {
     return AiMemoryModel(
-      conversationId: json['conversationId'] as String? ?? '',
+      conversationId: json['conversationId'] as String?,
       summary: json['summary'] as String? ?? '',
       keyFacts: (json['keyFacts'] as List<dynamic>?)
               ?.map((e) => e as String)

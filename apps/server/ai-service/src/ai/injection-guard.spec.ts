@@ -6,6 +6,8 @@ describe('isSensitiveTool', () => {
     expect(isSensitiveTool('mcp__notion__create_page')).toBe(true);
     expect(isSensitiveTool('mcp__gcal__delete_event')).toBe(true);
     expect(isSensitiveTool('create_reminder')).toBe(true);
+    // remember_fact writes per-conversation memory; must be uncacheable.
+    expect(isSensitiveTool('remember_fact')).toBe(true);
   });
 
   it('treats read-only built-ins as safe', () => {

@@ -11,6 +11,7 @@ import { HealthModule } from './health/health.module';
 import { WorkspaceModule } from './modules/workspace/workspace.module';
 import { AdminModule } from './modules/admin/admin.module';
 import { NotificationsModule } from './modules/notifications/notifications.module';
+import { AiContextModule } from './modules/ai-context/ai-context.module';
 
 @Module({
   imports: [
@@ -29,6 +30,7 @@ import { NotificationsModule } from './modules/notifications/notifications.modul
     WorkspaceModule,
     AdminModule,
     NotificationsModule,
+    AiContextModule,
   ],
   providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],
 })

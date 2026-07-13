@@ -6,6 +6,7 @@ import { useEffect } from 'react'
 import {
   ArrowLeft,
   BarChart3,
+  Brain,
   Building2,
   ClipboardList,
   KeyRound,
@@ -39,6 +40,7 @@ export const ADMIN_SECTIONS: AdminSection[] = [
   { href: '/admin/departments', cap: 'MANAGE_DEPARTMENTS', labelKey: 'navDepartments', icon: UsersRound },
   { href: '/admin/members', cap: 'MANAGE_MEMBERS', labelKey: 'navMembers', icon: Users },
   { href: '/admin/roles', cap: 'MANAGE_ROLES', labelKey: 'navRoles', icon: ShieldCheck },
+  { href: '/admin/ai-context', cap: 'MANAGE_AI_CONTEXT', labelKey: 'navAiContext', icon: Brain },
   { href: '/admin/audit', cap: 'VIEW_AUDIT_LOG', labelKey: 'navAudit', icon: ClipboardList },
 ]
 

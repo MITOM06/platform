@@ -16,6 +16,7 @@ import { SessionModule } from '../session/session.module';
 import { SkillsModule } from '../skills/skills.module';
 import { ConversationModule } from '../conversation/conversation.module';
 import { SettingsModule } from '../settings/settings.module';
+import { AiContextModule } from '../ai-context/ai-context.module';
 
 @Module({
   imports: [
@@ -32,6 +33,8 @@ import { SettingsModule } from '../settings/settings.module';
     // importing SettingsModule (which exports it) Nest can't resolve it → the
     // container crashes at boot and the Cloud Run revision never listens.
     SettingsModule,
+    // Role-aware org context reader (P2a) — ContextBuilderService injects it.
+    AiContextModule,
   ],
   controllers: [AiController],
   providers: [

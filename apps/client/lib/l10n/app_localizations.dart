@@ -2454,12 +2454,6 @@ abstract class AppLocalizations {
   /// **'Personality'**
   String get aiPersonality;
 
-  /// No description provided for @aiMemory.
-  ///
-  /// In en, this message translates to:
-  /// **'Memory'**
-  String get aiMemory;
-
   /// No description provided for @aiSkills.
   ///
   /// In en, this message translates to:
@@ -2897,42 +2891,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Message deleted'**
   String get aiMessageDeleted;
-
-  /// No description provided for @aiMemoryTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'AI Memory'**
-  String get aiMemoryTitle;
-
-  /// No description provided for @aiMemoryEmptyState.
-  ///
-  /// In en, this message translates to:
-  /// **'No memories yet. Chat with PON AI to start building memories.'**
-  String get aiMemoryEmptyState;
-
-  /// No description provided for @aiMemoryDeleteConfirm.
-  ///
-  /// In en, this message translates to:
-  /// **'Delete this memory? The AI will no longer remember this conversation\'s context.'**
-  String get aiMemoryDeleteConfirm;
-
-  /// No description provided for @aiMemoryDeleted.
-  ///
-  /// In en, this message translates to:
-  /// **'Memory deleted'**
-  String get aiMemoryDeleted;
-
-  /// No description provided for @aiMemoryUpdated.
-  ///
-  /// In en, this message translates to:
-  /// **'Updated {date}'**
-  String aiMemoryUpdated(String date);
-
-  /// No description provided for @aiMemoryFacts.
-  ///
-  /// In en, this message translates to:
-  /// **'Key facts:'**
-  String get aiMemoryFacts;
 
   /// No description provided for @viewAiMemory.
   ///
@@ -6024,6 +5982,264 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Cannot play video'**
   String get videoCannotPlay;
+
+  /// No description provided for @aiContextTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'AI Context'**
+  String get aiContextTitle;
+
+  /// No description provided for @aiContextIdentityTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Identity & organization'**
+  String get aiContextIdentityTitle;
+
+  /// No description provided for @aiContextResponseStyleTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Response style'**
+  String get aiContextResponseStyleTitle;
+
+  /// No description provided for @aiContextLearnedFactsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'What the AI has learned'**
+  String get aiContextLearnedFactsTitle;
+
+  /// No description provided for @aiContextCompanyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Company context'**
+  String get aiContextCompanyTitle;
+
+  /// No description provided for @aiContextDepartmentTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Department context'**
+  String get aiContextDepartmentTitle;
+
+  /// No description provided for @aiContextLabelRole.
+  ///
+  /// In en, this message translates to:
+  /// **'Role'**
+  String get aiContextLabelRole;
+
+  /// No description provided for @aiContextLabelDepartment.
+  ///
+  /// In en, this message translates to:
+  /// **'Department'**
+  String get aiContextLabelDepartment;
+
+  /// No description provided for @aiContextLabelJobTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Job title'**
+  String get aiContextLabelJobTitle;
+
+  /// No description provided for @aiContextLabelProjects.
+  ///
+  /// In en, this message translates to:
+  /// **'Projects'**
+  String get aiContextLabelProjects;
+
+  /// No description provided for @aiContextRoleUnknown.
+  ///
+  /// In en, this message translates to:
+  /// **'Not assigned'**
+  String get aiContextRoleUnknown;
+
+  /// No description provided for @aiContextNoDepartment.
+  ///
+  /// In en, this message translates to:
+  /// **'No department'**
+  String get aiContextNoDepartment;
+
+  /// No description provided for @aiContextNotSet.
+  ///
+  /// In en, this message translates to:
+  /// **'Not set'**
+  String get aiContextNotSet;
+
+  /// No description provided for @aiContextIdentityManaged.
+  ///
+  /// In en, this message translates to:
+  /// **'These are set by your manager or admin.'**
+  String get aiContextIdentityManaged;
+
+  /// No description provided for @aiContextStyleLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Preferred response style'**
+  String get aiContextStyleLabel;
+
+  /// No description provided for @aiContextStyleHint.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. concise, formal, code-first'**
+  String get aiContextStyleHint;
+
+  /// No description provided for @aiContextPreferencesLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Other preferences'**
+  String get aiContextPreferencesLabel;
+
+  /// No description provided for @aiContextPreferencesHint.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. avoid emoji, answer in Vietnamese'**
+  String get aiContextPreferencesHint;
+
+  /// No description provided for @aiContextUpdate.
+  ///
+  /// In en, this message translates to:
+  /// **'Update'**
+  String get aiContextUpdate;
+
+  /// No description provided for @aiContextSaving.
+  ///
+  /// In en, this message translates to:
+  /// **'Saving...'**
+  String get aiContextSaving;
+
+  /// No description provided for @aiContextStyleSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Response style updated'**
+  String get aiContextStyleSaved;
+
+  /// No description provided for @aiContextSaveError.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to save'**
+  String get aiContextSaveError;
+
+  /// No description provided for @aiContextKeyFacts.
+  ///
+  /// In en, this message translates to:
+  /// **'Key facts:'**
+  String get aiContextKeyFacts;
+
+  /// No description provided for @aiContextMemoryEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing learned yet'**
+  String get aiContextMemoryEmpty;
+
+  /// No description provided for @aiContextMemoryEmptyHint.
+  ///
+  /// In en, this message translates to:
+  /// **'As you chat, the assistant will remember useful facts about you here.'**
+  String get aiContextMemoryEmptyHint;
+
+  /// No description provided for @aiContextTierPublic.
+  ///
+  /// In en, this message translates to:
+  /// **'Public'**
+  String get aiContextTierPublic;
+
+  /// No description provided for @aiContextTierInternal.
+  ///
+  /// In en, this message translates to:
+  /// **'Internal'**
+  String get aiContextTierInternal;
+
+  /// No description provided for @aiContextTierConfidential.
+  ///
+  /// In en, this message translates to:
+  /// **'Confidential'**
+  String get aiContextTierConfidential;
+
+  /// No description provided for @adminEditAiContext.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit AI context'**
+  String get adminEditAiContext;
+
+  /// No description provided for @adminAiContextJobTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Job title'**
+  String get adminAiContextJobTitle;
+
+  /// No description provided for @adminAiContextProjects.
+  ///
+  /// In en, this message translates to:
+  /// **'Current projects'**
+  String get adminAiContextProjects;
+
+  /// No description provided for @adminAiContextProjectsHint.
+  ///
+  /// In en, this message translates to:
+  /// **'One project per line'**
+  String get adminAiContextProjectsHint;
+
+  /// No description provided for @adminAiContextEntriesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Company AI context'**
+  String get adminAiContextEntriesTitle;
+
+  /// No description provided for @adminAiContextEntriesEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No context entries yet.'**
+  String get adminAiContextEntriesEmpty;
+
+  /// No description provided for @adminEntryLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Label'**
+  String get adminEntryLabel;
+
+  /// No description provided for @adminEntryText.
+  ///
+  /// In en, this message translates to:
+  /// **'Context'**
+  String get adminEntryText;
+
+  /// No description provided for @adminEntryTier.
+  ///
+  /// In en, this message translates to:
+  /// **'Sensitivity'**
+  String get adminEntryTier;
+
+  /// No description provided for @adminEntryScope.
+  ///
+  /// In en, this message translates to:
+  /// **'Scope'**
+  String get adminEntryScope;
+
+  /// No description provided for @adminScopeCompany.
+  ///
+  /// In en, this message translates to:
+  /// **'Company'**
+  String get adminScopeCompany;
+
+  /// No description provided for @adminScopeDepartment.
+  ///
+  /// In en, this message translates to:
+  /// **'Department'**
+  String get adminScopeDepartment;
+
+  /// No description provided for @adminCreateEntry.
+  ///
+  /// In en, this message translates to:
+  /// **'Add entry'**
+  String get adminCreateEntry;
+
+  /// No description provided for @adminEditEntry.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit entry'**
+  String get adminEditEntry;
+
+  /// No description provided for @adminDeleteEntry.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete entry'**
+  String get adminDeleteEntry;
 }
 
 class _AppLocalizationsDelegate

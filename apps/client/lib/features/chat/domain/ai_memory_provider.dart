@@ -2,23 +2,21 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../data/ai_memory_repository.dart';
 import 'ai_memory_model.dart';
 
-class AiMemoriesNotifier extends AsyncNotifier<List<AiMemoryModel>> {
+/// P2b: memory is a single global per-user aggregate (nullable when empty).
+class AiMemoriesNotifier extends AsyncNotifier<AiMemoryModel?> {
   @override
-  Future<List<AiMemoryModel>> build() async {
+  Future<AiMemoryModel?> build() async {
     return ref.read(aiMemoryRepositoryProvider).getMyMemories();
   }
 
   Future<void> deleteMemory(String conversationId) async {
     await ref.read(aiMemoryRepositoryProvider).deleteMemory(conversationId);
-    state = AsyncData(
-      (state.valueOrNull ?? [])
-          .where((m) => m.conversationId != conversationId)
-          .toList(),
-    );
+    ref.invalidateSelf();
+    await future;
   }
 }
 
 final aiMemoriesProvider =
-    AsyncNotifierProvider<AiMemoriesNotifier, List<AiMemoryModel>>(
+    AsyncNotifierProvider<AiMemoriesNotifier, AiMemoryModel?>(
   AiMemoriesNotifier.new,
 );

@@ -31,7 +31,30 @@ describe('PRESET_ROLES', () => {
     expect(member!.permissions[Capability.USE_PERSONAL_ASSISTANT]).toBe(true);
   });
 
-  it('exposes all 11 capabilities in the catalog', () => {
-    expect(Object.keys(Capability)).toHaveLength(11);
+  it('exposes all 14 capabilities in the catalog', () => {
+    expect(Object.keys(Capability)).toHaveLength(14);
+  });
+
+  it('grants AI-context capabilities per the design tiers', () => {
+    const byName = (n: string) => PRESET_ROLES.find((r) => r.name === n)!.permissions;
+
+    // Owner has everything (buildFullMatrix)
+    expect(byName('Owner')[Capability.MANAGE_AI_CONTEXT]).toBe(true);
+    expect(byName('Owner')[Capability.VIEW_CONFIDENTIAL_CONTEXT]).toBe(true);
+
+    // Admin: manage + both view tiers
+    expect(byName('Admin')[Capability.MANAGE_AI_CONTEXT]).toBe(true);
+    expect(byName('Admin')[Capability.VIEW_INTERNAL_CONTEXT]).toBe(true);
+    expect(byName('Admin')[Capability.VIEW_CONFIDENTIAL_CONTEXT]).toBe(true);
+
+    // Manager: internal view only, no workspace-wide manage, no confidential
+    expect(byName('Manager')[Capability.MANAGE_AI_CONTEXT]).toBe(false);
+    expect(byName('Manager')[Capability.VIEW_INTERNAL_CONTEXT]).toBe(true);
+    expect(byName('Manager')[Capability.VIEW_CONFIDENTIAL_CONTEXT]).toBe(false);
+
+    // Member: none
+    expect(byName('Member')[Capability.MANAGE_AI_CONTEXT]).toBe(false);
+    expect(byName('Member')[Capability.VIEW_INTERNAL_CONTEXT]).toBe(false);
+    expect(byName('Member')[Capability.VIEW_CONFIDENTIAL_CONTEXT]).toBe(false);
   });
 });

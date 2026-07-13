@@ -13,4 +13,6 @@ export * from './mongo/department.schema';
 export * from './mongo/role.schema';
 export * from './mongo/audit-log.schema';
 export * from './mongo/ai-session.schema';
+export * from './mongo/ai-context-entry.schema';
+export * from './mongo/ai-user-context.schema';
 export { REDIS_CLIENT } from './redis/redis.module';

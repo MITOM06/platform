@@ -52,17 +52,54 @@ class AiMemoryControllerTest {
   }
 
   @Test
-  void getMyMemories_ReturnsOnlyUserMemories() {
-    when(aiMemoryRepository.findByUserId(USER_ID)).thenReturn(List.of(memory));
+  void getMyMemories_aggregatesAllConversationsIntoOnePerUserMemory() {
+    AiMemory older =
+        AiMemory.builder()
+            .id("mem-a")
+            .conversationId("cA")
+            .userId(USER_ID)
+            .summary("older")
+            .keyFacts(List.of("Name is Khang", "Likes Flutter"))
+            .messageCount(3)
+            .updatedAt(Instant.ofEpochSecond(100))
+            .build();
+    AiMemory newest =
+        AiMemory.builder()
+            .id("mem-b")
+            .conversationId("cB")
+            .userId(USER_ID)
+            .summary("newest")
+            .keyFacts(List.of("Likes Flutter", "Works on PON"))
+            .messageCount(5)
+            .updatedAt(Instant.ofEpochSecond(200))
+            .build();
+    when(aiMemoryRepository.findByUserId(USER_ID)).thenReturn(List.of(older, newest));
 
-    ResponseEntity<List<AiMemoryResponse>> response = controller.getMyMemories(principal);
+    ResponseEntity<AiMemoryResponse> response = controller.getMyMemories(principal);
 
     assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-    assertThat(response.getBody()).hasSize(1);
-    assertThat(response.getBody().get(0).conversationId()).isEqualTo(CONV_ID);
-    assertThat(response.getBody().get(0).summary())
-        .isEqualTo("The user discussed Flutter and Redis.");
+    AiMemoryResponse body = response.getBody();
+    assertThat(body).isNotNull();
+    // Most-recent conversation first (cB), union deduped preserving each doc's order.
+    assertThat(body.keyFacts()).containsExactly("Likes Flutter", "Works on PON", "Name is Khang");
+    assertThat(body.summary()).isEqualTo("newest");
+    assertThat(body.messageCount()).isEqualTo(8);
+    assertThat(body.conversationId()).isNull();
     verify(aiMemoryRepository).findByUserId(USER_ID);
+  }
+
+  @Test
+  void getMyMemories_returnsEmptyAggregateWhenNoMemories() {
+    when(aiMemoryRepository.findByUserId(USER_ID)).thenReturn(List.of());
+
+    ResponseEntity<AiMemoryResponse> response = controller.getMyMemories(principal);
+
+    assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+    AiMemoryResponse body = response.getBody();
+    assertThat(body).isNotNull();
+    assertThat(body.keyFacts()).isEmpty();
+    assertThat(body.summary()).isEmpty();
+    assertThat(body.messageCount()).isZero();
   }
 
   @Test

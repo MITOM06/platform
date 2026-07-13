@@ -69,17 +69,33 @@ class AiRedisPublisherTest {
         .when(propagator)
         .inject(eq(traceContext), any(MessageProperties.class), any());
 
-    publisher.publishAiRequest("conv-1", "user-1", "Alice", "@AI hello", List.of());
+    publisher.publishAiRequest(
+        "conv-1",
+        "user-1",
+        "Alice",
+        "@AI hello",
+        List.of(),
+        "Manager",
+        List.of("VIEW_INTERNAL_CONTEXT"),
+        List.of("d1"));
 
     // Capture the MessagePostProcessor passed to convertAndSend and run it against a real Message.
     ArgumentCaptor<MessagePostProcessor> captor =
         ArgumentCaptor.forClass(MessagePostProcessor.class);
+    ArgumentCaptor<Object> payloadCaptor = ArgumentCaptor.forClass(Object.class);
     verify(rabbitTemplate)
         .convertAndSend(
             eq(RabbitMqConfig.AI_EXCHANGE),
             eq(RabbitMqConfig.AI_ROUTING_KEY),
-            any(Object.class),
+            payloadCaptor.capture(),
             captor.capture());
+
+    // The RBAC claims must be forwarded onto the ai.requests payload (P2a).
+    com.platform.chatservice.dto.AiRequestPayload sent =
+        (com.platform.chatservice.dto.AiRequestPayload) payloadCaptor.getValue();
+    assertThat(sent.role()).isEqualTo("Manager");
+    assertThat(sent.perms()).containsExactly("VIEW_INTERNAL_CONTEXT");
+    assertThat(sent.departmentIds()).containsExactly("d1");
 
     Message msg = new Message("body".getBytes(), new MessageProperties());
     Message processed = captor.getValue().postProcessMessage(msg);

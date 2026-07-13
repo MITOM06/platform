@@ -61,13 +61,20 @@ public class MessageController {
     if (request.content() != null && AI_MENTION_PATTERN.matcher(request.content()).find()) {
       final String convId = request.conversationId();
       final String raw = request.content();
+      // Forward the caller's RBAC claims (P2a) so ai-service can role-filter the
+      // org-context block. Legacy/unauthenticated principals yield null/empty.
+      final UserPrincipal principal = currentPrincipal();
+      final String role = principal != null ? principal.getRole() : null;
+      final List<String> perms = principal != null ? principal.getPerms() : List.of();
+      final List<String> depts = principal != null ? principal.getDepts() : List.of();
       CompletableFuture.runAsync(
           () -> {
             try {
               List<AiHistoryEntry> history = messageQueryService.getAiHistory(uid, convId);
               String stripped = raw.replaceAll("(?i)@(AI|ponai)\\b", "").trim();
               String displayName = messageQueryService.resolveDisplayName(uid);
-              aiRedisPublisher.publishAiRequest(convId, uid, displayName, stripped, history);
+              aiRedisPublisher.publishAiRequest(
+                  convId, uid, displayName, stripped, history, role, perms, depts);
             } catch (Exception ignored) {
             }
           });
@@ -241,5 +248,11 @@ public class MessageController {
       return principal.getUserId();
     }
     throw new UnauthorizedException("User is not authenticated");
+  }
+
+  /** The authenticated principal for RBAC-claim forwarding, or null if not a UserPrincipal. */
+  private UserPrincipal currentPrincipal() {
+    var authentication = SecurityContextHolder.getContext().getAuthentication();
+    return authentication instanceof UserPrincipal principal ? principal : null;
   }
 }

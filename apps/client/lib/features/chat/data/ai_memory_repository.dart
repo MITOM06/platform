@@ -10,12 +10,12 @@ class AiMemoryRepository {
 
   const AiMemoryRepository(this._dio);
 
-  Future<List<AiMemoryModel>> getMyMemories() async {
+  // P2b: returns ONE aggregated per-user object (not an array).
+  Future<AiMemoryModel?> getMyMemories() async {
     final response = await _dio.get('/api/ai/memories');
-    final data = response.data as List<dynamic>;
-    return data
-        .map((e) => AiMemoryModel.fromJson(e as Map<String, dynamic>))
-        .toList();
+    final data = response.data;
+    if (data is! Map) return null;
+    return AiMemoryModel.fromJson(data.cast<String, dynamic>());
   }
 
   Future<AiMemoryModel?> getConversationMemory(String conversationId) async {

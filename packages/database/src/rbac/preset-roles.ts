@@ -48,6 +48,9 @@ export const PRESET_ROLES: PresetRole[] = [
       [C.USE_GROUP_BOT]: true,
       [C.RUN_SENSITIVE_SKILL]: true,
       [C.VIEW_AUDIT_LOG]: true,
+      [C.MANAGE_AI_CONTEXT]: true,
+      [C.VIEW_INTERNAL_CONTEXT]: true,
+      [C.VIEW_CONFIDENTIAL_CONTEXT]: true,
     },
   },
   {
@@ -65,6 +68,9 @@ export const PRESET_ROLES: PresetRole[] = [
       [C.USE_GROUP_BOT]: true,
       [C.RUN_SENSITIVE_SKILL]: true,
       [C.VIEW_AUDIT_LOG]: false,
+      [C.MANAGE_AI_CONTEXT]: false,
+      [C.VIEW_INTERNAL_CONTEXT]: true,
+      [C.VIEW_CONFIDENTIAL_CONTEXT]: false,
     },
   },
   {
@@ -82,6 +88,9 @@ export const PRESET_ROLES: PresetRole[] = [
       [C.USE_GROUP_BOT]: true,
       [C.RUN_SENSITIVE_SKILL]: false,
       [C.VIEW_AUDIT_LOG]: false,
+      [C.MANAGE_AI_CONTEXT]: false,
+      [C.VIEW_INTERNAL_CONTEXT]: false,
+      [C.VIEW_CONFIDENTIAL_CONTEXT]: false,
     },
   },
 ];

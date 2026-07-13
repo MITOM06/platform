@@ -283,9 +283,9 @@ export default function SettingsPage() {
               <SettingsCard
                 icon={<BrainCircuit className="size-5 text-[#B47FFF]" />}
                 iconBg="rgba(180,127,255,0.12)"
-                title={t('aiMemory')}
-                subtitle={t('aiMemorySubtitle')}
-                onClick={() => router.push('/ai-memory')}
+                title={t('aiContext')}
+                subtitle={t('aiContextSubtitle')}
+                onClick={() => router.push('/ai-context')}
               />
 
               <SettingsCard

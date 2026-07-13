@@ -1245,9 +1245,6 @@ class AppLocalizationsJa extends AppLocalizations {
   String get aiPersonality => 'パーソナリティ';
 
   @override
-  String get aiMemory => 'メモリ';
-
-  @override
   String get aiSkills => 'スキル';
 
   @override
@@ -1469,26 +1466,6 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get aiMessageDeleted => 'メッセージが削除されました';
-
-  @override
-  String get aiMemoryTitle => 'AIメモリ';
-
-  @override
-  String get aiMemoryEmptyState => 'まだメモリがありません。PON AIとチャットしてメモリを作成しましょう。';
-
-  @override
-  String get aiMemoryDeleteConfirm => 'このメモリを削除しますか？AIはこの会話のコンテキストを記憶しなくなります。';
-
-  @override
-  String get aiMemoryDeleted => 'メモリが削除されました';
-
-  @override
-  String aiMemoryUpdated(String date) {
-    return '$date更新';
-  }
-
-  @override
-  String get aiMemoryFacts => '重要な情報：';
 
   @override
   String get viewAiMemory => 'メモリを表示';
@@ -3152,4 +3129,136 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get videoCannotPlay => '動画を再生できません';
+
+  @override
+  String get aiContextTitle => 'AI Context';
+
+  @override
+  String get aiContextIdentityTitle => 'Identity & organization';
+
+  @override
+  String get aiContextResponseStyleTitle => 'Response style';
+
+  @override
+  String get aiContextLearnedFactsTitle => 'What the AI has learned';
+
+  @override
+  String get aiContextCompanyTitle => 'Company context';
+
+  @override
+  String get aiContextDepartmentTitle => 'Department context';
+
+  @override
+  String get aiContextLabelRole => 'Role';
+
+  @override
+  String get aiContextLabelDepartment => 'Department';
+
+  @override
+  String get aiContextLabelJobTitle => 'Job title';
+
+  @override
+  String get aiContextLabelProjects => 'Projects';
+
+  @override
+  String get aiContextRoleUnknown => 'Not assigned';
+
+  @override
+  String get aiContextNoDepartment => 'No department';
+
+  @override
+  String get aiContextNotSet => 'Not set';
+
+  @override
+  String get aiContextIdentityManaged =>
+      'These are set by your manager or admin.';
+
+  @override
+  String get aiContextStyleLabel => 'Preferred response style';
+
+  @override
+  String get aiContextStyleHint => 'e.g. concise, formal, code-first';
+
+  @override
+  String get aiContextPreferencesLabel => 'Other preferences';
+
+  @override
+  String get aiContextPreferencesHint =>
+      'e.g. avoid emoji, answer in Vietnamese';
+
+  @override
+  String get aiContextUpdate => 'Update';
+
+  @override
+  String get aiContextSaving => 'Saving...';
+
+  @override
+  String get aiContextStyleSaved => 'Response style updated';
+
+  @override
+  String get aiContextSaveError => 'Failed to save';
+
+  @override
+  String get aiContextKeyFacts => 'Key facts:';
+
+  @override
+  String get aiContextMemoryEmpty => 'Nothing learned yet';
+
+  @override
+  String get aiContextMemoryEmptyHint =>
+      'As you chat, the assistant will remember useful facts about you here.';
+
+  @override
+  String get aiContextTierPublic => 'Public';
+
+  @override
+  String get aiContextTierInternal => 'Internal';
+
+  @override
+  String get aiContextTierConfidential => 'Confidential';
+
+  @override
+  String get adminEditAiContext => 'Edit AI context';
+
+  @override
+  String get adminAiContextJobTitle => 'Job title';
+
+  @override
+  String get adminAiContextProjects => 'Current projects';
+
+  @override
+  String get adminAiContextProjectsHint => 'One project per line';
+
+  @override
+  String get adminAiContextEntriesTitle => 'Company AI context';
+
+  @override
+  String get adminAiContextEntriesEmpty => 'No context entries yet.';
+
+  @override
+  String get adminEntryLabel => 'Label';
+
+  @override
+  String get adminEntryText => 'Context';
+
+  @override
+  String get adminEntryTier => 'Sensitivity';
+
+  @override
+  String get adminEntryScope => 'Scope';
+
+  @override
+  String get adminScopeCompany => 'Company';
+
+  @override
+  String get adminScopeDepartment => 'Department';
+
+  @override
+  String get adminCreateEntry => 'Add entry';
+
+  @override
+  String get adminEditEntry => 'Edit entry';
+
+  @override
+  String get adminDeleteEntry => 'Delete entry';
 }

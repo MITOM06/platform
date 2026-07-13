@@ -1245,9 +1245,6 @@ class AppLocalizationsKo extends AppLocalizations {
   String get aiPersonality => '성격';
 
   @override
-  String get aiMemory => '메모리';
-
-  @override
   String get aiSkills => '스킬';
 
   @override
@@ -1469,27 +1466,6 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get aiMessageDeleted => '메시지가 삭제되었습니다';
-
-  @override
-  String get aiMemoryTitle => 'AI 메모리';
-
-  @override
-  String get aiMemoryEmptyState => '아직 메모리가 없습니다. PON AI와 채팅하여 메모리를 만들어 보세요.';
-
-  @override
-  String get aiMemoryDeleteConfirm =>
-      '이 메모리를 삭제하시겠습니까? AI는 더 이상 이 대화의 컨텍스트를 기억하지 않습니다.';
-
-  @override
-  String get aiMemoryDeleted => '메모리가 삭제되었습니다';
-
-  @override
-  String aiMemoryUpdated(String date) {
-    return '$date에 업데이트됨';
-  }
-
-  @override
-  String get aiMemoryFacts => '주요 사실:';
 
   @override
   String get viewAiMemory => '메모리 보기';
@@ -3153,4 +3129,136 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get videoCannotPlay => '동영상을 재생할 수 없습니다';
+
+  @override
+  String get aiContextTitle => 'AI Context';
+
+  @override
+  String get aiContextIdentityTitle => 'Identity & organization';
+
+  @override
+  String get aiContextResponseStyleTitle => 'Response style';
+
+  @override
+  String get aiContextLearnedFactsTitle => 'What the AI has learned';
+
+  @override
+  String get aiContextCompanyTitle => 'Company context';
+
+  @override
+  String get aiContextDepartmentTitle => 'Department context';
+
+  @override
+  String get aiContextLabelRole => 'Role';
+
+  @override
+  String get aiContextLabelDepartment => 'Department';
+
+  @override
+  String get aiContextLabelJobTitle => 'Job title';
+
+  @override
+  String get aiContextLabelProjects => 'Projects';
+
+  @override
+  String get aiContextRoleUnknown => 'Not assigned';
+
+  @override
+  String get aiContextNoDepartment => 'No department';
+
+  @override
+  String get aiContextNotSet => 'Not set';
+
+  @override
+  String get aiContextIdentityManaged =>
+      'These are set by your manager or admin.';
+
+  @override
+  String get aiContextStyleLabel => 'Preferred response style';
+
+  @override
+  String get aiContextStyleHint => 'e.g. concise, formal, code-first';
+
+  @override
+  String get aiContextPreferencesLabel => 'Other preferences';
+
+  @override
+  String get aiContextPreferencesHint =>
+      'e.g. avoid emoji, answer in Vietnamese';
+
+  @override
+  String get aiContextUpdate => 'Update';
+
+  @override
+  String get aiContextSaving => 'Saving...';
+
+  @override
+  String get aiContextStyleSaved => 'Response style updated';
+
+  @override
+  String get aiContextSaveError => 'Failed to save';
+
+  @override
+  String get aiContextKeyFacts => 'Key facts:';
+
+  @override
+  String get aiContextMemoryEmpty => 'Nothing learned yet';
+
+  @override
+  String get aiContextMemoryEmptyHint =>
+      'As you chat, the assistant will remember useful facts about you here.';
+
+  @override
+  String get aiContextTierPublic => 'Public';
+
+  @override
+  String get aiContextTierInternal => 'Internal';
+
+  @override
+  String get aiContextTierConfidential => 'Confidential';
+
+  @override
+  String get adminEditAiContext => 'Edit AI context';
+
+  @override
+  String get adminAiContextJobTitle => 'Job title';
+
+  @override
+  String get adminAiContextProjects => 'Current projects';
+
+  @override
+  String get adminAiContextProjectsHint => 'One project per line';
+
+  @override
+  String get adminAiContextEntriesTitle => 'Company AI context';
+
+  @override
+  String get adminAiContextEntriesEmpty => 'No context entries yet.';
+
+  @override
+  String get adminEntryLabel => 'Label';
+
+  @override
+  String get adminEntryText => 'Context';
+
+  @override
+  String get adminEntryTier => 'Sensitivity';
+
+  @override
+  String get adminEntryScope => 'Scope';
+
+  @override
+  String get adminScopeCompany => 'Company';
+
+  @override
+  String get adminScopeDepartment => 'Department';
+
+  @override
+  String get adminCreateEntry => 'Add entry';
+
+  @override
+  String get adminEditEntry => 'Edit entry';
+
+  @override
+  String get adminDeleteEntry => 'Delete entry';
 }

@@ -7,6 +7,8 @@ import { VectorStoreService } from '../kb/vector-store.service';
 import { RerankerService } from '../kb/reranker.service';
 import { wrapUntrusted, sanitizeUntrusted } from './injection-guard';
 import { RagSource } from './rag-source.type';
+import { AiContextReaderService } from '../ai-context/ai-context-reader.service';
+import { formatOrgContextBlock } from './org-context-block';
 
 // Re-exported for backward compatibility — `RagSource` now lives in a shared
 // type module (so the tools layer can depend on it without a circular import).
@@ -31,6 +33,7 @@ export class ContextBuilderService {
   private readonly overFetch: number;
   private readonly candidatePool: number;
   private readonly scoreThreshold: number;
+  private readonly orgMaxChars: number;
 
   constructor(
     private readonly configService: ConfigService,
@@ -39,6 +42,7 @@ export class ContextBuilderService {
     private readonly embeddingService: EmbeddingService,
     private readonly vectorStore: VectorStoreService,
     private readonly reranker: RerankerService,
+    private readonly orgReader: AiContextReaderService,
   ) {
     this.qdrantCollection =
       this.configService.get<string>('config.kb.qdrantCollection') ?? 'knowledge';
@@ -46,6 +50,7 @@ export class ContextBuilderService {
     this.overFetch = this.configService.get<number>('config.kb.overFetch') ?? 8;
     this.candidatePool = this.configService.get<number>('config.kb.candidatePool') ?? 25;
     this.scoreThreshold = this.configService.get<number>('config.kb.scoreThreshold') ?? 0.5;
+    this.orgMaxChars = this.configService.get<number>('config.aiContext.blockMaxChars') ?? 2000;
   }
 
   async buildVolatileContext(
@@ -54,18 +59,33 @@ export class ContextBuilderService {
     queryVector: number[] | null,
     queryText: string,
     departmentId?: string,
+    org?: { perms: string[]; departmentIds: string[]; role?: string },
   ): Promise<VolatileContext> {
     const parts: string[] = [];
     const ragSources: RagSource[] = [];
 
+    // --- Role-aware org context block (personal profile + company/dept notes) ---
+    // Trusted (admin/superior-authored) → placed first, not fenced as untrusted.
+    // Fail-soft: any read error is swallowed by the reader (returns empty).
+    if (org) {
+      try {
+        const orgCtx = await this.orgReader.getUserOrgContext({
+          userId,
+          perms: org.perms,
+          departmentIds: org.departmentIds,
+          role: org.role,
+        });
+        const block = formatOrgContextBlock(orgCtx, this.orgMaxChars);
+        if (block) parts.push(block);
+      } catch (err) {
+        this.logger.warn(`Org-context block build failed for ${conversationId}`, err);
+      }
+    }
+
     // --- Retrieved memory facts (most relevant only) ---
     if (queryVector) {
       try {
-        const facts = await this.memoryService.retrieveRelevantFacts(
-          userId,
-          conversationId,
-          queryVector,
-        );
+        const facts = await this.memoryService.retrieveRelevantFacts(userId, queryVector);
         if (facts.length > 0) {
           // Facts originate from prior user content — defang any injection
           // markers but keep them as readable remembered facts.

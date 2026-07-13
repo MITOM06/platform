@@ -183,7 +183,7 @@ class ChatScreenAppBar extends ConsumerWidget implements PreferredSizeWidget {
               icon: const Icon(Icons.more_vert, color: Colors.white, size: 22),
               onSelected: (value) {
                 if (value == 'view_memory') {
-                  context.push('/ai-memories');
+                  context.push('/ai-context');
                 } else if (value == 'kb_manage') {
                   context.push('/kb/$conversationId');
                 }

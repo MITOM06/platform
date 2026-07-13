@@ -11,7 +11,8 @@ export interface TokenUsageDay {
 }
 
 export interface AiMemory {
-  conversationId: string
+  // P2b: memory is global per-user; the aggregate has no single conversationId.
+  conversationId: string | null
   summary: string
   keyFacts: string[]
   messageCount: number
@@ -35,9 +36,9 @@ export const aiService = {
       .get<TokenUsageDay[]>('/api/usage/tokens', { params: { days } })
       .then((r) => r.data),
 
-  // AI Memory
+  // AI Memory — P2b: returns ONE aggregated per-user object (not an array).
   getMyMemories: () =>
-    chatApi.get<AiMemory[]>('/api/ai/memories').then((r) => r.data),
+    chatApi.get<AiMemory>('/api/ai/memories').then((r) => r.data),
 
   getConversationMemory: (conversationId: string) =>
     chatApi

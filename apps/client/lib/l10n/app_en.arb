@@ -596,7 +596,6 @@
   "emptyArchivedChats": "No archived chats",
   "webNoChatSelected": "Select a conversation to start chatting",
   "aiPersonality": "Personality",
-  "aiMemory": "Memory",
   "aiSkills": "Skills",
   "adminOwnerOnly": "Admin or Owner only",
   "@adminOwnerOnly": {
@@ -690,19 +689,6 @@
   },
   "aiErrorRetry": "Retry",
   "aiMessageDeleted": "Message deleted",
-  "aiMemoryTitle": "AI Memory",
-  "aiMemoryEmptyState": "No memories yet. Chat with PON AI to start building memories.",
-  "aiMemoryDeleteConfirm": "Delete this memory? The AI will no longer remember this conversation's context.",
-  "aiMemoryDeleted": "Memory deleted",
-  "aiMemoryUpdated": "Updated {date}",
-  "@aiMemoryUpdated": {
-    "placeholders": {
-      "date": {
-        "type": "String"
-      }
-    }
-  },
-  "aiMemoryFacts": "Key facts:",
   "viewAiMemory": "View Memory",
   "kbTitle": "Knowledge Base",
   "kbEmptyState": "No documents yet.\nTap the upload button to add a PDF, DOCX, or TXT file.",
@@ -1466,15 +1452,39 @@
   "aiSessionResume": "Resume",
   "aiSessionLoadError": "Couldn't load conversation history",
   "multiSelectCount": "{count} selected",
-  "@multiSelectCount": {"placeholders": {"count": {"type": "int"}}},
+  "@multiSelectCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "multiSelectEmpty": "No messages selected",
   "multiSelectCancel": "Cancel",
   "multiSelectTypeWarning": "You're selecting {type}. You can only select one type at a time.",
-  "@multiSelectTypeWarning": {"placeholders": {"type": {"type": "String"}}},
+  "@multiSelectTypeWarning": {
+    "placeholders": {
+      "type": {
+        "type": "String"
+      }
+    }
+  },
   "multiDeleted": "Deleted {count} messages",
-  "@multiDeleted": {"placeholders": {"count": {"type": "int"}}},
+  "@multiDeleted": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "multiRecalled": "Recalled {count} messages",
-  "@multiRecalled": {"placeholders": {"count": {"type": "int"}}},
+  "@multiRecalled": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "multiForwardHint": "Select a single message to forward",
   "msgTypeText": "text",
   "msgTypeImage": "photos/videos",
@@ -1486,5 +1496,48 @@
   "attachHdOff": "SD — compressed",
   "hdOn": "HD ON",
   "hdOff": "HD OFF",
-  "videoCannotPlay": "Cannot play video"
+  "videoCannotPlay": "Cannot play video",
+  "aiContextTitle": "AI Context",
+  "aiContextIdentityTitle": "Identity & organization",
+  "aiContextResponseStyleTitle": "Response style",
+  "aiContextLearnedFactsTitle": "What the AI has learned",
+  "aiContextCompanyTitle": "Company context",
+  "aiContextDepartmentTitle": "Department context",
+  "aiContextLabelRole": "Role",
+  "aiContextLabelDepartment": "Department",
+  "aiContextLabelJobTitle": "Job title",
+  "aiContextLabelProjects": "Projects",
+  "aiContextRoleUnknown": "Not assigned",
+  "aiContextNoDepartment": "No department",
+  "aiContextNotSet": "Not set",
+  "aiContextIdentityManaged": "These are set by your manager or admin.",
+  "aiContextStyleLabel": "Preferred response style",
+  "aiContextStyleHint": "e.g. concise, formal, code-first",
+  "aiContextPreferencesLabel": "Other preferences",
+  "aiContextPreferencesHint": "e.g. avoid emoji, answer in Vietnamese",
+  "aiContextUpdate": "Update",
+  "aiContextSaving": "Saving...",
+  "aiContextStyleSaved": "Response style updated",
+  "aiContextSaveError": "Failed to save",
+  "aiContextKeyFacts": "Key facts:",
+  "aiContextMemoryEmpty": "Nothing learned yet",
+  "aiContextMemoryEmptyHint": "As you chat, the assistant will remember useful facts about you here.",
+  "aiContextTierPublic": "Public",
+  "aiContextTierInternal": "Internal",
+  "aiContextTierConfidential": "Confidential",
+  "adminEditAiContext": "Edit AI context",
+  "adminAiContextJobTitle": "Job title",
+  "adminAiContextProjects": "Current projects",
+  "adminAiContextProjectsHint": "One project per line",
+  "adminAiContextEntriesTitle": "Company AI context",
+  "adminAiContextEntriesEmpty": "No context entries yet.",
+  "adminEntryLabel": "Label",
+  "adminEntryText": "Context",
+  "adminEntryTier": "Sensitivity",
+  "adminEntryScope": "Scope",
+  "adminScopeCompany": "Company",
+  "adminScopeDepartment": "Department",
+  "adminCreateEntry": "Add entry",
+  "adminEditEntry": "Edit entry",
+  "adminDeleteEntry": "Delete entry"
 }

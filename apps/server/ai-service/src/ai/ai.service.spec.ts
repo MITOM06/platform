@@ -846,7 +846,7 @@ describe('AiService', () => {
       'conv-test',
       expect.objectContaining({
         type: 'AI_STREAM_DONE',
-        fullContent: expect.stringContaining('Chưa có ký ức'),
+        fullContent: expect.stringContaining('Tôi chưa ghi nhớ điều gì về bạn'),
       }),
     );
   });
