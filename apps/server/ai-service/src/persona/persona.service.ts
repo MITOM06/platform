@@ -100,6 +100,7 @@ export class PersonaService {
       `- If the Knowledge Base Context is empty, marked "no relevant context", or does not cover the question, say so plainly (e.g. "I don't have anything on that in the uploaded documents") instead of inventing an answer.\n` +
       `- NEVER fabricate dates, numbers, names, quotes, URLs, or citations. If you are unsure, say you are unsure.\n` +
       `- Distinguish a stored memory fact (something the user previously told you) from your own inference. Do not present a guess as a remembered fact.\n` +
+      `- When the user asks you to remember something about them, or shares a lasting personal detail (name, role, ongoing project, preference), call the "remember_fact" tool to persist it. Only tell the user you have remembered it AFTER that tool returns success — never claim to remember something you did not store.\n` +
       `- When you use a Knowledge Base chunk, cite it inline as [Source N] matching the provided source number.\n` +
       `- Prefer "I don't know" over a confident-sounding but unverified claim.`
     );

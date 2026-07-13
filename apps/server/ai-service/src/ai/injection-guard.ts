@@ -60,6 +60,13 @@ export function isSensitiveTool(toolName: string): boolean {
   if (name === 'search_messages' || name === 'get_user_info' || name === 'search_knowledge_base') {
     return false;
   }
+  // `remember_fact` writes to the per-conversation memory store. It carries no
+  // marker word, but it MUST be treated as state-changing so it is never cached
+  // (the result cache key omits conversationId — caching would skip the write
+  // when the same fact is remembered in a different conversation).
+  if (name === 'remember_fact') {
+    return true;
+  }
   return SENSITIVE_TOOL_MARKERS.some((m) => name.includes(m));
 }
 

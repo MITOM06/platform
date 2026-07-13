@@ -4,6 +4,7 @@ import { GetUserInfoTool } from './get-user-info.tool';
 import { SearchKnowledgeBaseTool } from './search-knowledge-base.tool';
 import { SummarizeConversationTool } from './summarize-conversation.tool';
 import { CreateReminderTool } from './create-reminder.tool';
+import { RememberFactTool } from './remember-fact.tool';
 import { WebSearchTool } from './web-search.tool';
 import { WebSearchService } from './web-search/web-search.service';
 import { McpConnectorClient } from './mcp-connector.client';
@@ -94,6 +95,7 @@ export class ToolRegistryService {
     private readonly searchKnowledgeBase: SearchKnowledgeBaseTool,
     private readonly summarizeConversation: SummarizeConversationTool,
     private readonly createReminder: CreateReminderTool,
+    private readonly rememberFact: RememberFactTool,
     private readonly webSearch: WebSearchTool,
     private readonly webSearchService: WebSearchService,
     private readonly mcpConnector: McpConnectorClient,
@@ -107,6 +109,7 @@ export class ToolRegistryService {
       SearchKnowledgeBaseTool.definition,
       SummarizeConversationTool.definition,
       CreateReminderTool.definition,
+      RememberFactTool.definition,
     ];
     // Offer web search when: the workspace toggle is not explicitly OFF
     // (TASK-12) AND a provider is configured (TASK-09 graceful-degradation gate).
@@ -167,6 +170,8 @@ export class ToolRegistryService {
           return await this.summarizeConversation.execute(input, ctx);
         case 'create_reminder':
           return await this.createReminder.execute(input, ctx);
+        case 'remember_fact':
+          return await this.rememberFact.execute(input, ctx);
         case 'web_search':
           return await this.webSearch.execute(input, ctx);
         default:

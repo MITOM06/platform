@@ -76,6 +76,11 @@ export class MemoryService {
    * existing neighbour exceeds the cosine dedup threshold UPDATES that point
    * (refreshing text + recency) instead of appending a duplicate.
    * Then rebuilds the canonical Mongo list + a short summary for clients.
+   *
+   * Returns the number of facts that were actually embedded + persisted (facts
+   * skipped because they were blank or their embedding failed are NOT counted).
+   * Callers that surface a result to the user (e.g. the `remember_fact` tool)
+   * rely on this so they never claim a fact was stored when it silently wasn't.
    */
   async addFacts(
     conversationId: string,
@@ -84,10 +89,11 @@ export class MemoryService {
     summary: string,
     messageCount: number,
     source = 'auto-extract',
-  ): Promise<void> {
+  ): Promise<number> {
     // Scrub credentials / card numbers before anything is persisted at rest.
     // Emails & phones are kept — they are legitimate, useful user facts.
     const safeSummary = redactPii(summary, REDACT_SECRETS_ONLY);
+    let stored = 0;
     for (const rawText of facts) {
       const clean = redactPii(rawText, REDACT_SECRETS_ONLY).trim();
       if (!clean) continue;
@@ -107,6 +113,7 @@ export class MemoryService {
         source,
         createdAt: Date.now(),
       });
+      stored++;
     }
 
     // Rebuild canonical fact list from the vector store for client REST/STOMP.
@@ -121,6 +128,7 @@ export class MemoryService {
       { $set: { userId, summary: safeSummary, keyFacts, messageCount, updatedAt: new Date() } },
       { upsert: true, new: true },
     );
+    return stored;
   }
 
   /**
