@@ -131,6 +131,12 @@ export default registerAs('config', () => ({
     // Recency half-life in days for fact decay scoring.
     halfLifeDays: parseFloat(process.env.MEMORY_HALFLIFE_DAYS ?? '30'),
   },
+  aiContext: {
+    // Per-user TTL (ms) for the cached role-aware org context read (P2a).
+    cacheTtlMs: Number(process.env.AI_CONTEXT_CACHE_TTL_MS ?? 60000),
+    // Hard cap (chars) on the injected "About the user & their organization" block.
+    blockMaxChars: Number(process.env.AI_CONTEXT_BLOCK_MAX_CHARS ?? 2000),
+  },
   ai: {
     // When true, enable adaptive thinking on the primary model.
     enableThinking: process.env.AI_ENABLE_THINKING === 'true',
