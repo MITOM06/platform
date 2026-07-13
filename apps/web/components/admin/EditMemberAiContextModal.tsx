@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -24,13 +24,14 @@ export function EditMemberAiContextModal({
   const update = useUpdateMemberHard()
   const [jobTitle, setJobTitle] = useState('')
   const [projectsText, setProjectsText] = useState('')
-
-  useEffect(() => {
-    if (data) {
-      setJobTitle(data.jobTitle ?? '')
-      setProjectsText((data.projects ?? []).join('\n'))
-    }
-  }, [data])
+  // Seed form fields once per loaded context doc (render-time reseed avoids the
+  // cascading-render lint of setState-in-effect).
+  const [seed, setSeed] = useState<typeof data>(undefined)
+  if (data && data !== seed) {
+    setSeed(data)
+    setJobTitle(data.jobTitle ?? '')
+    setProjectsText((data.projects ?? []).join('\n'))
+  }
 
   const onSubmit = () => {
     if (!member) return

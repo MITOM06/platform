@@ -10,7 +10,7 @@ describe('aiContextService', () => {
   beforeEach(() => vi.clearAllMocks())
 
   it('getMine GETs /ai-context/me', async () => {
-    ;(authApi.get as any).mockResolvedValue({
+    vi.mocked(authApi.get).mockResolvedValue({
       data: { context: { style: 's' }, identity: { role: 'Manager', departmentNames: [] }, entries: [] },
     })
     const res = await aiContextService.getMine()
@@ -19,7 +19,7 @@ describe('aiContextService', () => {
   })
 
   it('updateMyStyle PATCHes /ai-context/me/style', async () => {
-    ;(authApi.patch as any).mockResolvedValue({ data: { style: 'brief' } })
+    vi.mocked(authApi.patch).mockResolvedValue({ data: { style: 'brief' } })
     await aiContextService.updateMyStyle({ style: 'brief' })
     expect(authApi.patch).toHaveBeenCalledWith('/ai-context/me/style', { style: 'brief' })
   })

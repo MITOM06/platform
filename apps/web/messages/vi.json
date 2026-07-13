@@ -1269,7 +1269,21 @@
     "editAiContext": "Edit AI context",
     "aiContextJobTitle": "Job title",
     "aiContextProjects": "Current projects",
-    "aiContextProjectsHint": "One project per line"
+    "aiContextProjectsHint": "One project per line",
+    "navAiContext": "AI Context",
+    "aiContextEntriesTitle": "Company AI context",
+    "aiContextEntriesEmpty": "No context entries yet.",
+    "entryLabel": "Label",
+    "entryText": "Context",
+    "entryTier": "Sensitivity",
+    "scopeCompany": "Company",
+    "scopeDepartment": "Department",
+    "createEntry": "Add entry",
+    "editEntry": "Edit entry",
+    "deleteEntry": "Delete entry",
+    "tierPublic": "Public",
+    "tierInternal": "Internal",
+    "tierConfidential": "Confidential"
   },
   "call": {
     "peerFallback": "Người dùng",
