@@ -66,3 +66,54 @@ describe('AiContextService — per-user context', () => {
     expect(res.jobTitle).toBe('Dev');
   });
 });
+
+describe('AiContextService — entries', () => {
+  function makeEntryService(over: any = {}) {
+    const entry = {
+      find: jest.fn().mockReturnValue({ sort: () => ({ lean: () => ({ exec: () => Promise.resolve(over.entries ?? []) }) }) }),
+      findById: jest.fn().mockReturnValue({ lean: () => ({ exec: () => Promise.resolve(over.entry ?? null) }) }),
+      findByIdAndUpdate: jest.fn().mockReturnValue({ lean: () => ({ exec: () => Promise.resolve(over.saved ?? {}) }) }),
+      create: jest.fn().mockResolvedValue(over.saved ?? { scope: 'company' }),
+      deleteOne: jest.fn().mockReturnValue({ exec: () => Promise.resolve({}) }),
+    };
+    const dept = {
+      findById: jest.fn().mockReturnValue({ lean: () => ({ exec: () => Promise.resolve(over.dept ?? null) }) }),
+      find: jest.fn().mockReturnValue({ lean: () => ({ exec: () => Promise.resolve([]) }) }),
+    };
+    const svc = new AiContextService({} as any, entry as any, {} as any, dept as any);
+    return { svc, entry, dept };
+  }
+
+  it('company entry create requires MANAGE_AI_CONTEXT', async () => {
+    const { svc } = makeEntryService();
+    await expect(
+      svc.upsertEntry({ sub: 'm', perms: [] }, { scope: 'company', label: 'x', text: 'y' }),
+    ).rejects.toBeInstanceOf(ForbiddenException);
+  });
+
+  it('company entry create allowed with MANAGE_AI_CONTEXT', async () => {
+    const { svc, entry } = makeEntryService({ saved: { scope: 'company', label: 'x' } });
+    const res = await svc.upsertEntry(
+      { sub: 'admin', perms: [Capability.MANAGE_AI_CONTEXT] },
+      { scope: 'company', label: 'x', text: 'y' },
+    );
+    expect(entry.create).toHaveBeenCalled();
+    expect(res.label).toBe('x');
+  });
+
+  it('department entry allowed for the department lead without MANAGE_AI_CONTEXT', async () => {
+    const { svc } = makeEntryService({ dept: { _id: 'd1', leadUserId: 'manager' }, saved: { scope: 'department' } });
+    const ok = await svc.canManageEntryScope({ sub: 'manager', perms: [] }, 'department', 'd1');
+    expect(ok).toBe(true);
+  });
+
+  it('getVisibleEntriesForUser filters by requiredCapability', async () => {
+    const entries = [
+      { scope: 'company', requiredCapability: null, text: 'public' },
+      { scope: 'company', requiredCapability: Capability.VIEW_CONFIDENTIAL_CONTEXT, text: 'secret' },
+    ];
+    const { svc } = makeEntryService({ entries });
+    const visible = await svc.getVisibleEntriesForUser('u1', [Capability.VIEW_INTERNAL_CONTEXT], []);
+    expect(visible.map((e) => e.text)).toEqual(['public']);
+  });
+});

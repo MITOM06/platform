@@ -91,4 +91,103 @@ export class AiContextService {
       targetDeptIds.includes(String((d as { _id: unknown })._id)),
     );
   }
+
+  async canManageEntryScope(
+    actor: Actor,
+    scope: 'company' | 'department',
+    scopeId?: string | null,
+  ): Promise<boolean> {
+    if (actor.perms.includes(Capability.MANAGE_AI_CONTEXT)) return true;
+    if (scope === 'department' && scopeId) {
+      const dept = await this.deptModel.findById(scopeId).lean().exec();
+      return (
+        !!dept &&
+        String((dept as { leadUserId?: unknown }).leadUserId) === actor.sub
+      );
+    }
+    return false;
+  }
+
+  async listEntries(
+    scope: 'company' | 'department',
+    scopeId?: string | null,
+  ): Promise<AiContextEntry[]> {
+    const filter: Record<string, unknown> = { scope };
+    if (scope === 'department') filter.scopeId = scopeId ?? null;
+    return this.entryModel
+      .find(filter)
+      .sort({ updatedAt: -1 })
+      .lean()
+      .exec() as Promise<AiContextEntry[]>;
+  }
+
+  async upsertEntry(
+    actor: Actor,
+    dto: {
+      scope: 'company' | 'department';
+      scopeId?: string | null;
+      label: string;
+      text: string;
+      requiredCapability?: Capability | null;
+    },
+    id?: string,
+  ): Promise<AiContextEntry> {
+    if (!(await this.canManageEntryScope(actor, dto.scope, dto.scopeId))) {
+      throw new ForbiddenException({ code: 'INSUFFICIENT_PERMISSION' });
+    }
+    const base = {
+      scope: dto.scope,
+      scopeId: dto.scope === 'department' ? dto.scopeId ?? null : null,
+      label: dto.label,
+      text: dto.text,
+      requiredCapability: dto.requiredCapability ?? null,
+      updatedBy: actor.sub,
+    };
+    if (id) {
+      return this.entryModel
+        .findByIdAndUpdate(id, { $set: base }, { new: true })
+        .lean()
+        .exec() as Promise<AiContextEntry>;
+    }
+    return this.entryModel.create({
+      ...base,
+      createdBy: actor.sub,
+    }) as unknown as Promise<AiContextEntry>;
+  }
+
+  async deleteEntry(actor: Actor, id: string): Promise<void> {
+    const entry = await this.entryModel.findById(id).lean().exec();
+    if (!entry) return;
+    const e = entry as unknown as {
+      scope: 'company' | 'department';
+      scopeId?: string | null;
+    };
+    if (!(await this.canManageEntryScope(actor, e.scope, e.scopeId))) {
+      throw new ForbiddenException({ code: 'INSUFFICIENT_PERMISSION' });
+    }
+    await this.entryModel.deleteOne({ _id: id }).exec();
+  }
+
+  async getVisibleEntriesForUser(
+    _userId: string,
+    perms: string[],
+    departmentIds: string[],
+  ): Promise<AiContextEntry[]> {
+    const gate = (cap: Capability | null | undefined) =>
+      cap == null || perms.includes(cap);
+    const company = (await this.entryModel
+      .find({ scope: 'company' })
+      .sort({ updatedAt: -1 })
+      .lean()
+      .exec()) as AiContextEntry[];
+    let dept: AiContextEntry[] = [];
+    if (departmentIds.length > 0) {
+      dept = (await this.entryModel
+        .find({ scope: 'department', scopeId: { $in: departmentIds } })
+        .sort({ updatedAt: -1 })
+        .lean()
+        .exec()) as AiContextEntry[];
+    }
+    return [...company, ...dept].filter((e) => gate(e.requiredCapability));
+  }
 }
