@@ -18,7 +18,10 @@ class AiMemoryScreen extends ConsumerWidget {
         title: Text(context.l10n.aiMemoryTitle),
       ),
       body: memoriesAsync.when(
-        data: (memories) {
+        data: (memory) {
+          // P2b: single aggregate. Task 3 replaces this screen with the AI Context
+          // layout; this keeps the interim screen compiling.
+          final memories = memory == null ? <AiMemoryModel>[] : [memory];
           if (memories.isEmpty) {
             return _EmptyState();
           }
@@ -32,7 +35,8 @@ class AiMemoryScreen extends ConsumerWidget {
             itemBuilder: (context, index) {
               return _MemoryTile(
                 memory: memories[index],
-                onDelete: () => _confirmDelete(context, ref, memories[index].conversationId),
+                onDelete: () =>
+                    _confirmDelete(context, ref, memories[index].conversationId ?? ''),
               );
             },
           );

@@ -15,6 +15,9 @@ abstract class Cap {
   static const useGroupBot = 'USE_GROUP_BOT';
   static const runSensitiveSkill = 'RUN_SENSITIVE_SKILL';
   static const viewAuditLog = 'VIEW_AUDIT_LOG';
+  static const manageAiContext = 'MANAGE_AI_CONTEXT';
+  static const viewInternalContext = 'VIEW_INTERNAL_CONTEXT';
+  static const viewConfidentialContext = 'VIEW_CONFIDENTIAL_CONTEXT';
 
   /// Every capability key, in the canonical order used by the roles matrix.
   static const all = <String>[
@@ -29,6 +32,9 @@ abstract class Cap {
     useGroupBot,
     runSensitiveSkill,
     viewAuditLog,
+    manageAiContext,
+    viewInternalContext,
+    viewConfidentialContext,
   ];
 
   /// Capabilities that grant access to at least one admin console section.
@@ -38,6 +44,7 @@ abstract class Cap {
     manageMembers,
     manageRoles,
     viewAuditLog,
+    manageAiContext,
   ];
 }
 
