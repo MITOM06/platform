@@ -7,6 +7,7 @@ import '../../../../core/utils/global_messenger.dart';
 import '../../data/models/admin_models.dart';
 import '../../state/admin_providers.dart';
 import '../../state/capabilities_provider.dart';
+import '../../../ai_context/data/ai_context_repository.dart';
 
 /// Members admin — list users, edit role + departments. Mirrors the web
 /// `MembersPanel`. Saving revokes the member's sessions (enforced server-side).
@@ -123,6 +124,85 @@ class MembersPanel extends ConsumerWidget {
     }
   }
 
+  Future<void> _editAiContext(BuildContext context, WidgetRef ref, Member m) async {
+    final l10n = context.l10n;
+    final repo = ref.read(aiContextRepositoryProvider);
+    final jobCtrl = TextEditingController();
+    final projCtrl = TextEditingController();
+    try {
+      final ctx = await repo.getUser(m.id);
+      jobCtrl.text = ctx.jobTitle;
+      projCtrl.text = ctx.projects.join('\n');
+    } catch (_) {
+      // Fresh/empty context — start blank.
+    }
+    if (!context.mounted) return;
+
+    final saved = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AppTheme.darkSurface,
+        title: Text(l10n.adminEditAiContext,
+            style: const TextStyle(color: Colors.white)),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(m.displayName,
+                  style: const TextStyle(color: Colors.white60, fontSize: 12)),
+              const SizedBox(height: 12),
+              TextField(
+                controller: jobCtrl,
+                maxLength: 200,
+                style: const TextStyle(color: Colors.white),
+                decoration: InputDecoration(
+                  labelText: l10n.adminAiContextJobTitle,
+                  labelStyle: const TextStyle(color: Colors.white70),
+                ),
+              ),
+              const SizedBox(height: 8),
+              TextField(
+                controller: projCtrl,
+                maxLines: 4,
+                style: const TextStyle(color: Colors.white),
+                decoration: InputDecoration(
+                  labelText: l10n.adminAiContextProjects,
+                  hintText: l10n.adminAiContextProjectsHint,
+                  labelStyle: const TextStyle(color: Colors.white70),
+                ),
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text(l10n.adminCancel),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: Text(l10n.adminSave,
+                style: const TextStyle(color: AppTheme.ponCyan)),
+          ),
+        ],
+      ),
+    );
+
+    if (saved != true) return;
+    final projects = projCtrl.text
+        .split('\n')
+        .map((p) => p.trim())
+        .where((p) => p.isNotEmpty)
+        .toList();
+    try {
+      await repo.updateUserHard(m.id, jobTitle: jobCtrl.text, projects: projects);
+      showInfoSnackBar(l10n.adminToastSaved);
+    } catch (_) {
+      showErrorSnackBar(l10n.adminToastError);
+    }
+  }
+
   String _initials(String name) {
     final parts = name.trim().split(' ').where((p) => p.isNotEmpty).toList();
     if (parts.isEmpty) return '?';
@@ -134,6 +214,7 @@ class MembersPanel extends ConsumerWidget {
     final l10n = context.l10n;
     final async = ref.watch(membersProvider);
     final roles = ref.watch(rolesProvider).valueOrNull ?? [];
+    final canManageMembers = ref.watch(hasCapabilityProvider(Cap.manageMembers));
 
     return async.when(
       loading: () => const Center(child: CircularProgressIndicator()),
@@ -186,6 +267,13 @@ class MembersPanel extends ConsumerWidget {
                     child: Text(roleName,
                         style: const TextStyle(
                             color: AppTheme.ponPink, fontSize: 11)),
+                  ),
+                if (canManageMembers)
+                  IconButton(
+                    icon: const Icon(Icons.psychology_outlined,
+                        color: Colors.white70),
+                    tooltip: l10n.adminEditAiContext,
+                    onPressed: () => _editAiContext(context, ref, m),
                   ),
                 IconButton(
                   icon: const Icon(Icons.edit_outlined, color: Colors.white70),
