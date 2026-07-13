@@ -4,6 +4,7 @@ import com.platform.chatservice.dto.AiMemoryResponse;
 import com.platform.chatservice.model.AiMemory;
 import com.platform.chatservice.repository.AiMemoryRepository;
 import java.security.Principal;
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
@@ -19,10 +20,37 @@ public class AiMemoryController {
   private final AiMemoryRepository aiMemoryRepository;
 
   @GetMapping
-  public ResponseEntity<List<AiMemoryResponse>> getMyMemories(Principal principal) {
-    List<AiMemory> memories = aiMemoryRepository.findByUserId(principal.getName());
-    List<AiMemoryResponse> response = memories.stream().map(this::toResponse).toList();
-    return ResponseEntity.ok(response);
+  public ResponseEntity<AiMemoryResponse> getMyMemories(Principal principal) {
+    List<AiMemory> memories =
+        new java.util.ArrayList<>(aiMemoryRepository.findByUserId(principal.getName()));
+    // Memory is now global per-user (facts recall across every conversation). Collapse
+    // the caller's per-conversation docs into ONE aggregate: union of keyFacts
+    // (most-recent conversation first, deduped), newest summary, total message count.
+    memories.sort(
+        java.util.Comparator.comparing(
+                AiMemory::getUpdatedAt,
+                java.util.Comparator.nullsLast(java.util.Comparator.naturalOrder()))
+            .reversed());
+    java.util.LinkedHashSet<String> facts = new java.util.LinkedHashSet<>();
+    for (AiMemory m : memories) {
+      if (m.getKeyFacts() != null) {
+        facts.addAll(m.getKeyFacts());
+      }
+    }
+    String summary = memories.isEmpty() ? "" : memories.get(0).getSummary();
+    Instant updatedAt = memories.isEmpty() ? null : memories.get(0).getUpdatedAt();
+    int totalCount =
+        memories.stream()
+            .mapToInt(m -> m.getMessageCount() == null ? 0 : m.getMessageCount())
+            .sum();
+    AiMemoryResponse aggregate =
+        new AiMemoryResponse(
+            null,
+            summary == null ? "" : summary,
+            new java.util.ArrayList<>(facts),
+            totalCount,
+            updatedAt);
+    return ResponseEntity.ok(aggregate);
   }
 
   @GetMapping("/{conversationId}")
