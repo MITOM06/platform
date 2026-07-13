@@ -21,7 +21,7 @@ export class RememberFactTool {
     description:
       'Persist durable facts the user asks you to remember about them (their name, ' +
       'role, preferences, ongoing projects, important context) so you can recall them ' +
-      'in later messages. Call this whenever the user asks you to remember something ' +
+      'in any conversation with this user later. Call this whenever the user asks you to remember something ' +
       '("remember that…", "nhớ giúp tôi…", "ghi nhớ…") or states a lasting personal ' +
       'detail worth keeping. Only store what the user actually stated — never invent ' +
       'facts. Do NOT tell the user you have remembered something unless this tool ' +
