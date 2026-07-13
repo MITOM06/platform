@@ -1258,9 +1258,6 @@ class AppLocalizationsVi extends AppLocalizations {
   String get aiPersonality => 'Tính cách';
 
   @override
-  String get aiMemory => 'Bộ nhớ';
-
-  @override
   String get aiSkills => 'Kỹ năng';
 
   @override
@@ -1487,28 +1484,6 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get aiMessageDeleted => 'Tin nhắn đã bị xóa';
-
-  @override
-  String get aiMemoryTitle => 'Bộ nhớ AI';
-
-  @override
-  String get aiMemoryEmptyState =>
-      'Chưa có bộ nhớ nào. Hãy chat với PON AI để bắt đầu tạo bộ nhớ.';
-
-  @override
-  String get aiMemoryDeleteConfirm =>
-      'Xóa bộ nhớ này? AI sẽ không còn nhớ ngữ cảnh cuộc trò chuyện này nữa.';
-
-  @override
-  String get aiMemoryDeleted => 'Đã xóa bộ nhớ';
-
-  @override
-  String aiMemoryUpdated(String date) {
-    return 'Cập nhật $date';
-  }
-
-  @override
-  String get aiMemoryFacts => 'Thông tin chính:';
 
   @override
   String get viewAiMemory => 'Xem bộ nhớ';

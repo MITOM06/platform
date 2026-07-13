@@ -2454,12 +2454,6 @@ abstract class AppLocalizations {
   /// **'Personality'**
   String get aiPersonality;
 
-  /// No description provided for @aiMemory.
-  ///
-  /// In en, this message translates to:
-  /// **'Memory'**
-  String get aiMemory;
-
   /// No description provided for @aiSkills.
   ///
   /// In en, this message translates to:
@@ -2897,42 +2891,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Message deleted'**
   String get aiMessageDeleted;
-
-  /// No description provided for @aiMemoryTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'AI Memory'**
-  String get aiMemoryTitle;
-
-  /// No description provided for @aiMemoryEmptyState.
-  ///
-  /// In en, this message translates to:
-  /// **'No memories yet. Chat with PON AI to start building memories.'**
-  String get aiMemoryEmptyState;
-
-  /// No description provided for @aiMemoryDeleteConfirm.
-  ///
-  /// In en, this message translates to:
-  /// **'Delete this memory? The AI will no longer remember this conversation\'s context.'**
-  String get aiMemoryDeleteConfirm;
-
-  /// No description provided for @aiMemoryDeleted.
-  ///
-  /// In en, this message translates to:
-  /// **'Memory deleted'**
-  String get aiMemoryDeleted;
-
-  /// No description provided for @aiMemoryUpdated.
-  ///
-  /// In en, this message translates to:
-  /// **'Updated {date}'**
-  String aiMemoryUpdated(String date);
-
-  /// No description provided for @aiMemoryFacts.
-  ///
-  /// In en, this message translates to:
-  /// **'Key facts:'**
-  String get aiMemoryFacts;
 
   /// No description provided for @viewAiMemory.
   ///

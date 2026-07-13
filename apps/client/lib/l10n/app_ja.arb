@@ -435,7 +435,6 @@
   "emptyArchivedChats": "アーカイブされたチャットはありません",
   "webNoChatSelected": "会話を選択してチャットを始めましょう",
   "aiPersonality": "パーソナリティ",
-  "aiMemory": "メモリ",
   "aiSkills": "スキル",
   "adminOwnerOnly": "管理者またはオーナーのみ",
   "aiConnectedApps": "連携アプリ",
@@ -516,19 +515,6 @@
   "sourcesLabel": "出典",
   "aiErrorRetry": "再試行",
   "aiMessageDeleted": "メッセージが削除されました",
-  "aiMemoryTitle": "AIメモリ",
-  "aiMemoryEmptyState": "まだメモリがありません。PON AIとチャットしてメモリを作成しましょう。",
-  "aiMemoryDeleteConfirm": "このメモリを削除しますか？AIはこの会話のコンテキストを記憶しなくなります。",
-  "aiMemoryDeleted": "メモリが削除されました",
-  "aiMemoryUpdated": "{date}更新",
-  "@aiMemoryUpdated": {
-    "placeholders": {
-      "date": {
-        "type": "String"
-      }
-    }
-  },
-  "aiMemoryFacts": "重要な情報：",
   "viewAiMemory": "メモリを表示",
   "kbTitle": "ナレッジベース",
   "kbEmptyState": "ドキュメントがありません。\nアップロードボタンをタップして PDF、DOCX、TXT ファイルを追加してください。",

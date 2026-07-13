@@ -1242,9 +1242,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get aiPersonality => '个性';
 
   @override
-  String get aiMemory => '记忆';
-
-  @override
   String get aiSkills => '技能';
 
   @override
@@ -1466,26 +1463,6 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get aiMessageDeleted => '消息已删除';
-
-  @override
-  String get aiMemoryTitle => 'AI记忆';
-
-  @override
-  String get aiMemoryEmptyState => '暂无记忆。与PON AI聊天以开始建立记忆。';
-
-  @override
-  String get aiMemoryDeleteConfirm => '删除此记忆？AI将不再记住此对话的上下文。';
-
-  @override
-  String get aiMemoryDeleted => '记忆已删除';
-
-  @override
-  String aiMemoryUpdated(String date) {
-    return '更新于 $date';
-  }
-
-  @override
-  String get aiMemoryFacts => '关键事实：';
 
   @override
   String get viewAiMemory => '查看记忆';

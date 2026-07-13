@@ -1273,9 +1273,6 @@ class AppLocalizationsFr extends AppLocalizations {
   String get aiPersonality => 'Personnalité';
 
   @override
-  String get aiMemory => 'Mémoire';
-
-  @override
   String get aiSkills => 'Compétences';
 
   @override
@@ -1507,28 +1504,6 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get aiMessageDeleted => 'Message supprimé';
-
-  @override
-  String get aiMemoryTitle => 'Mémoire IA';
-
-  @override
-  String get aiMemoryEmptyState =>
-      'Aucun souvenir pour l\'instant. Discutez avec PON AI pour commencer à créer des souvenirs.';
-
-  @override
-  String get aiMemoryDeleteConfirm =>
-      'Supprimer ce souvenir ? L\'IA ne se souviendra plus du contexte de cette conversation.';
-
-  @override
-  String get aiMemoryDeleted => 'Souvenir supprimé';
-
-  @override
-  String aiMemoryUpdated(String date) {
-    return 'Mis à jour le $date';
-  }
-
-  @override
-  String get aiMemoryFacts => 'Faits clés :';
 
   @override
   String get viewAiMemory => 'Voir la mémoire';

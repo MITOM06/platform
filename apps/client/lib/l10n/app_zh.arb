@@ -435,7 +435,6 @@
   "emptyArchivedChats": "没有已归档的聊天",
   "webNoChatSelected": "选择一个会话开始聊天",
   "aiPersonality": "个性",
-  "aiMemory": "记忆",
   "aiSkills": "技能",
   "adminOwnerOnly": "仅限管理员或所有者",
   "aiConnectedApps": "已连接的应用",
@@ -516,19 +515,6 @@
   "sourcesLabel": "来源",
   "aiErrorRetry": "重试",
   "aiMessageDeleted": "消息已删除",
-  "aiMemoryTitle": "AI记忆",
-  "aiMemoryEmptyState": "暂无记忆。与PON AI聊天以开始建立记忆。",
-  "aiMemoryDeleteConfirm": "删除此记忆？AI将不再记住此对话的上下文。",
-  "aiMemoryDeleted": "记忆已删除",
-  "aiMemoryUpdated": "更新于 {date}",
-  "@aiMemoryUpdated": {
-    "placeholders": {
-      "date": {
-        "type": "String"
-      }
-    }
-  },
-  "aiMemoryFacts": "关键事实：",
   "viewAiMemory": "查看记忆",
   "kbTitle": "知识库",
   "kbEmptyState": "暂无文档。\n点击上传按钮添加 PDF、DOCX 或 TXT 文件。",

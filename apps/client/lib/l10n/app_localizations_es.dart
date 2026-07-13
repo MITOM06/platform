@@ -1267,9 +1267,6 @@ class AppLocalizationsEs extends AppLocalizations {
   String get aiPersonality => 'Personalidad';
 
   @override
-  String get aiMemory => 'Memoria';
-
-  @override
   String get aiSkills => 'Habilidades';
 
   @override
@@ -1499,28 +1496,6 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get aiMessageDeleted => 'Mensaje eliminado';
-
-  @override
-  String get aiMemoryTitle => 'Memoria de IA';
-
-  @override
-  String get aiMemoryEmptyState =>
-      'Aún no hay memorias. Chatea con PON AI para comenzar a crear memorias.';
-
-  @override
-  String get aiMemoryDeleteConfirm =>
-      '¿Eliminar esta memoria? La IA ya no recordará el contexto de esta conversación.';
-
-  @override
-  String get aiMemoryDeleted => 'Memoria eliminada';
-
-  @override
-  String aiMemoryUpdated(String date) {
-    return 'Actualizado el $date';
-  }
-
-  @override
-  String get aiMemoryFacts => 'Datos clave:';
 
   @override
   String get viewAiMemory => 'Ver memoria';

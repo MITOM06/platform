@@ -435,7 +435,6 @@
   "emptyArchivedChats": "Chưa có trò chuyện nào được lưu trữ",
   "webNoChatSelected": "Chọn một cuộc trò chuyện để bắt đầu",
   "aiPersonality": "Tính cách",
-  "aiMemory": "Bộ nhớ",
   "aiSkills": "Kỹ năng",
   "adminOwnerOnly": "Chỉ Admin hoặc Owner",
   "aiConnectedApps": "Ứng dụng đã kết nối",
@@ -516,19 +515,6 @@
   "sourcesLabel": "Nguồn",
   "aiErrorRetry": "Thử lại",
   "aiMessageDeleted": "Tin nhắn đã bị xóa",
-  "aiMemoryTitle": "Bộ nhớ AI",
-  "aiMemoryEmptyState": "Chưa có bộ nhớ nào. Hãy chat với PON AI để bắt đầu tạo bộ nhớ.",
-  "aiMemoryDeleteConfirm": "Xóa bộ nhớ này? AI sẽ không còn nhớ ngữ cảnh cuộc trò chuyện này nữa.",
-  "aiMemoryDeleted": "Đã xóa bộ nhớ",
-  "aiMemoryUpdated": "Cập nhật {date}",
-  "@aiMemoryUpdated": {
-    "placeholders": {
-      "date": {
-        "type": "String"
-      }
-    }
-  },
-  "aiMemoryFacts": "Thông tin chính:",
   "viewAiMemory": "Xem bộ nhớ",
   "kbTitle": "Cơ sở tri thức",
   "kbEmptyState": "Chưa có tài liệu nào.\nNhấn nút tải lên để thêm tệp PDF, DOCX hoặc TXT.",

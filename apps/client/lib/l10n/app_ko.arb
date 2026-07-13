@@ -435,7 +435,6 @@
   "emptyArchivedChats": "보관된 채팅이 없습니다",
   "webNoChatSelected": "대화를 선택하여 채팅을 시작하세요",
   "aiPersonality": "성격",
-  "aiMemory": "메모리",
   "aiSkills": "스킬",
   "adminOwnerOnly": "관리자 또는 소유자만 가능",
   "aiConnectedApps": "연결된 앱",
@@ -516,19 +515,6 @@
   "sourcesLabel": "출처",
   "aiErrorRetry": "다시 시도",
   "aiMessageDeleted": "메시지가 삭제되었습니다",
-  "aiMemoryTitle": "AI 메모리",
-  "aiMemoryEmptyState": "아직 메모리가 없습니다. PON AI와 채팅하여 메모리를 만들어 보세요.",
-  "aiMemoryDeleteConfirm": "이 메모리를 삭제하시겠습니까? AI는 더 이상 이 대화의 컨텍스트를 기억하지 않습니다.",
-  "aiMemoryDeleted": "메모리가 삭제되었습니다",
-  "aiMemoryUpdated": "{date}에 업데이트됨",
-  "@aiMemoryUpdated": {
-    "placeholders": {
-      "date": {
-        "type": "String"
-      }
-    }
-  },
-  "aiMemoryFacts": "주요 사실:",
   "viewAiMemory": "메모리 보기",
   "kbTitle": "지식 베이스",
   "kbEmptyState": "문서가 없습니다.\n업로드 버튼을 눌러 PDF, DOCX 또는 TXT 파일을 추가하세요.",

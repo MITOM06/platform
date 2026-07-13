@@ -596,7 +596,6 @@
   "emptyArchivedChats": "No archived chats",
   "webNoChatSelected": "Select a conversation to start chatting",
   "aiPersonality": "Personality",
-  "aiMemory": "Memory",
   "aiSkills": "Skills",
   "adminOwnerOnly": "Admin or Owner only",
   "@adminOwnerOnly": {
@@ -690,19 +689,6 @@
   },
   "aiErrorRetry": "Retry",
   "aiMessageDeleted": "Message deleted",
-  "aiMemoryTitle": "AI Memory",
-  "aiMemoryEmptyState": "No memories yet. Chat with PON AI to start building memories.",
-  "aiMemoryDeleteConfirm": "Delete this memory? The AI will no longer remember this conversation's context.",
-  "aiMemoryDeleted": "Memory deleted",
-  "aiMemoryUpdated": "Updated {date}",
-  "@aiMemoryUpdated": {
-    "placeholders": {
-      "date": {
-        "type": "String"
-      }
-    }
-  },
-  "aiMemoryFacts": "Key facts:",
   "viewAiMemory": "View Memory",
   "kbTitle": "Knowledge Base",
   "kbEmptyState": "No documents yet.\nTap the upload button to add a PDF, DOCX, or TXT file.",

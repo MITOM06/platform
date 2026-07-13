@@ -1245,9 +1245,6 @@ class AppLocalizationsJa extends AppLocalizations {
   String get aiPersonality => 'パーソナリティ';
 
   @override
-  String get aiMemory => 'メモリ';
-
-  @override
   String get aiSkills => 'スキル';
 
   @override
@@ -1469,26 +1466,6 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get aiMessageDeleted => 'メッセージが削除されました';
-
-  @override
-  String get aiMemoryTitle => 'AIメモリ';
-
-  @override
-  String get aiMemoryEmptyState => 'まだメモリがありません。PON AIとチャットしてメモリを作成しましょう。';
-
-  @override
-  String get aiMemoryDeleteConfirm => 'このメモリを削除しますか？AIはこの会話のコンテキストを記憶しなくなります。';
-
-  @override
-  String get aiMemoryDeleted => 'メモリが削除されました';
-
-  @override
-  String aiMemoryUpdated(String date) {
-    return '$date更新';
-  }
-
-  @override
-  String get aiMemoryFacts => '重要な情報：';
 
   @override
   String get viewAiMemory => 'メモリを表示';

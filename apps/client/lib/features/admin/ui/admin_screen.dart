@@ -6,6 +6,7 @@ import '../../../core/theme/app_theme.dart';
 import '../data/models/admin_models.dart';
 import '../state/capabilities_provider.dart';
 import 'bot_integration_panel.dart';
+import 'widgets/ai_context_entries_panel.dart';
 import 'widgets/audit_panel.dart';
 import 'widgets/departments_panel.dart';
 import 'widgets/members_panel.dart';
@@ -53,6 +54,9 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
             (c) => c.l10n.adminNavMembers, const MembersPanel()),
         _Section(Cap.manageRoles, Icons.shield_outlined,
             (c) => c.l10n.adminNavRoles, const RolesPanel()),
+        _Section(Cap.manageAiContext, Icons.psychology_outlined,
+            (c) => c.l10n.adminAiContextEntriesTitle,
+            const AiContextEntriesPanel()),
         _Section(Cap.viewAuditLog, Icons.fact_check_outlined,
             (c) => c.l10n.adminNavAudit, const AuditPanel()),
       ];
