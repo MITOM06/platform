@@ -214,8 +214,8 @@
     "notificationsTurnedOff": "Notifications turned off",
     "tokenUsage": "AI Token Usage",
     "tokenUsageSubtitle": "View token usage statistics",
-    "aiMemory": "AI Memory",
-    "aiMemorySubtitle": "Manage AI memory",
+    "aiContext": "AI Context",
+    "aiContextSubtitle": "Manage your AI context",
     "changePassword": "Change Password",
     "language": "Language",
     "languageSubtitle": "Select display language",
@@ -293,7 +293,6 @@
     "bioLabel": "Bio",
     "bioPlaceholder": "A short introduction about yourself...",
     "bioTooLong": "Bio must be 160 characters or less",
-    "roleLabel": "Role",
     "emailLabel": "Email",
     "saveButton": "Save Changes",
     "avatarSuccess": "Avatar updated",
@@ -552,7 +551,7 @@
     "bio": "Bio",
     "dateOfBirth": "Date of Birth",
     "aiPersonality": "Personality",
-    "aiMemory": "Memory",
+    "aiContext": "AI Context",
     "aiSkills": "Skills",
     "aiConnectedApps": "Connected apps",
     "aiUsage": "Usage",
@@ -806,19 +805,42 @@
     "resetSuccess": "Reset to default",
     "resetError": "Failed to reset"
   },
-  "aiMemory": {
-    "title": "AI Memory",
+  "aiContext": {
+    "title": "AI Context",
     "headerCount": "{count} memories",
     "loading": "Loading memories...",
     "loadError": "Failed to load memories",
-    "empty": "No memories yet",
-    "emptyHint": "AI will automatically remember important information from your conversations.",
+    "learnedFactsTitle": "What the AI has learned",
+    "memoryEmpty": "Nothing learned yet",
+    "memoryEmptyHint": "As you chat, the assistant will remember useful facts about you here.",
+    "memoryDeleted": "Memory cleared",
     "keyInfo": "Key information:",
     "usageCount": "{count} uses",
     "deleteTitle": "Delete AI Memory",
     "deleteMessage": "Are you sure you want to delete this memory? The AI will no longer remember information from this conversation.",
     "deleteSuccess": "Memory deleted",
-    "deleteError": "Failed to delete memory"
+    "deleteError": "Failed to clear memory",
+    "identityTitle": "Identity & organization",
+    "roleUnknown": "Not assigned",
+    "noDepartment": "No department",
+    "notSet": "Not set",
+    "identityManagedBySuperior": "These are set by your manager or admin.",
+    "responseStyleTitle": "Response style",
+    "styleLabel": "Preferred response style",
+    "stylePlaceholder": "e.g. concise, formal, code-first, explain step by step",
+    "preferencesLabel": "Other preferences",
+    "preferencesPlaceholder": "e.g. avoid emoji, answer in Vietnamese, prefer bullet points",
+    "update": "Update",
+    "saving": "Saving...",
+    "styleSaved": "Response style updated",
+    "saveError": "Failed to save",
+    "companyContextTitle": "Company context",
+    "departmentContextTitle": "Department context",
+    "tierPublic": "Public",
+    "tierInternal": "Internal",
+    "tierConfidential": "Confidential",
+    "empty": "No memories yet",
+    "emptyHint": "AI will automatically remember important information from your conversations."
   },
   "kb": {
     "title": "Knowledge Base",
@@ -1374,7 +1396,7 @@
       "ai": {
         "aiCapabilities": "What can the AI Assistant do?",
         "useAtAi": "How do I use @AI in a conversation?",
-        "aiMemory": "What is AI memory?",
+        "aiContext": "What is AI memory?",
         "personalAssistant": "How do I set up my personal assistant?"
       },
       "group": {
@@ -1406,7 +1428,7 @@
       "ai": {
         "aiCapabilities": "The AI Assistant (@AI) can answer questions, summarize conversations, help draft messages, analyze uploaded documents, and execute tasks using connected tools.",
         "useAtAi": "In any conversation, type @AI followed by your question or request. The assistant will respond in the conversation thread.",
-        "aiMemory": "AI memory allows the assistant to remember context from previous conversations, making interactions more personalized and efficient over time.",
+        "aiContext": "AI memory allows the assistant to remember context from previous conversations, making interactions more personalized and efficient over time.",
         "personalAssistant": "Go to the AI Assistant section and tap 'Set up assistant'. You can configure the assistant's persona, connect tools, and set preferences."
       },
       "group": {

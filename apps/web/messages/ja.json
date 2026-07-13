@@ -214,8 +214,8 @@
     "notificationsTurnedOff": "通知をオフにしました",
     "tokenUsage": "AIトークン使用量",
     "tokenUsageSubtitle": "トークン使用統計を表示",
-    "aiMemory": "AIメモリー",
-    "aiMemorySubtitle": "AIメモリーを管理",
+    "aiContext": "AIメモリー",
+    "aiContextSubtitle": "AIメモリーを管理",
     "changePassword": "パスワードを変更",
     "language": "言語",
     "languageSubtitle": "表示言語を選択",
@@ -283,7 +283,7 @@
     }
   },
   "profile": {
-    "roleLabel": "ロール",
+    "roleLabel": "役割",
     "memberDefault": "メンバー",
     "title": "プロフィールを編集",
     "displayNameLabel": "表示名",
@@ -293,7 +293,6 @@
     "bioLabel": "自己紹介",
     "bioPlaceholder": "あなたについて簡単に紹介...",
     "bioTooLong": "自己紹介は160文字以内で入力してください",
-    "roleLabel": "役割",
     "emailLabel": "メールアドレス",
     "saveButton": "変更を保存",
     "avatarSuccess": "アバターを更新しました",
@@ -495,7 +494,7 @@
     "bio": "自己紹介",
     "dateOfBirth": "生年月日",
     "aiPersonality": "パーソナリティ",
-    "aiMemory": "メモリ",
+    "aiContext": "メモリ",
     "aiSkills": "スキル",
     "aiConnectedApps": "連携アプリ",
     "aiUsage": "使用量",
@@ -806,19 +805,42 @@
     "resetSuccess": "デフォルトに戻しました",
     "resetError": "リセットに失敗しました"
   },
-  "aiMemory": {
+  "aiContext": {
     "title": "AIメモリー",
     "headerCount": "{count}件のメモリー",
     "loading": "メモリーを読み込み中...",
     "loadError": "メモリーの読み込みに失敗しました",
-    "empty": "まだメモリーがありません",
-    "emptyHint": "AIは会話の中の重要な情報を自動的に記憶します。",
+    "learnedFactsTitle": "What the AI has learned",
+    "memoryEmpty": "Nothing learned yet",
+    "memoryEmptyHint": "As you chat, the assistant will remember useful facts about you here.",
+    "memoryDeleted": "Memory cleared",
     "keyInfo": "重要な情報:",
     "usageCount": "{count}回使用",
     "deleteTitle": "AIメモリーを削除",
     "deleteMessage": "このメモリーを削除してもよろしいですか？AIはこの会話の情報を記憶しなくなります。",
     "deleteSuccess": "メモリーを削除しました",
-    "deleteError": "メモリーの削除に失敗しました"
+    "deleteError": "メモリーの削除に失敗しました",
+    "identityTitle": "Identity & organization",
+    "roleUnknown": "Not assigned",
+    "noDepartment": "No department",
+    "notSet": "Not set",
+    "identityManagedBySuperior": "These are set by your manager or admin.",
+    "responseStyleTitle": "Response style",
+    "styleLabel": "Preferred response style",
+    "stylePlaceholder": "e.g. concise, formal, code-first, explain step by step",
+    "preferencesLabel": "Other preferences",
+    "preferencesPlaceholder": "e.g. avoid emoji, answer in Vietnamese, prefer bullet points",
+    "update": "Update",
+    "saving": "Saving...",
+    "styleSaved": "Response style updated",
+    "saveError": "Failed to save",
+    "companyContextTitle": "Company context",
+    "departmentContextTitle": "Department context",
+    "tierPublic": "Public",
+    "tierInternal": "Internal",
+    "tierConfidential": "Confidential",
+    "empty": "まだメモリーがありません",
+    "emptyHint": "AIは会話の中の重要な情報を自動的に記憶します。"
   },
   "kb": {
     "title": "ナレッジベース",
@@ -1374,7 +1396,7 @@
       "ai": {
         "aiCapabilities": "AI アシスタントには何ができますか？",
         "useAtAi": "会話の中で @AI を使うにはどうすればよいですか？",
-        "aiMemory": "AI メモリとは何ですか？",
+        "aiContext": "AI メモリとは何ですか？",
         "personalAssistant": "個人用アシスタントを設定するにはどうすればよいですか？"
       },
       "group": {
@@ -1406,7 +1428,7 @@
       "ai": {
         "aiCapabilities": "AI アシスタント（@AI）は、質問への回答、会話の要約、メッセージ作成の補助、アップロードした文書の分析、連携ツールを使ったタスクの実行ができます。",
         "useAtAi": "どの会話でも、@AI に続けて質問や依頼を入力してください。アシスタントがその会話スレッド内で返信します。",
-        "aiMemory": "AI メモリにより、アシスタントは過去の会話のコンテキストを記憶し、時間とともにやり取りをよりパーソナライズされた効率的なものにします。",
+        "aiContext": "AI メモリにより、アシスタントは過去の会話のコンテキストを記憶し、時間とともにやり取りをよりパーソナライズされた効率的なものにします。",
         "personalAssistant": "AI アシスタントのセクションを開き、「アシスタントを設定」をタップします。アシスタントのペルソナを設定したり、ツールを連携したり、好みを設定したりできます。"
       },
       "group": {

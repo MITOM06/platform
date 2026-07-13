@@ -62,7 +62,7 @@ export const FAQ_CATEGORIES: FaqCategory[] = [
     items: [
       item('ai', 'aiCapabilities'),
       item('ai', 'useAtAi'),
-      item('ai', 'aiMemory'),
+      item('ai', 'aiContext'),
       item('ai', 'personalAssistant'),
     ],
   },
