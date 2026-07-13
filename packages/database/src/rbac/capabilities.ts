@@ -32,6 +32,12 @@ export enum Capability {
   RUN_SENSITIVE_SKILL = 'RUN_SENSITIVE_SKILL',
   /** View the audit log. */
   VIEW_AUDIT_LOG = 'VIEW_AUDIT_LOG',
+  /** Create/edit/delete company & department AI-context entries. */
+  MANAGE_AI_CONTEXT = 'MANAGE_AI_CONTEXT',
+  /** Receive "Internal"-tier company/department context in the AI prompt. */
+  VIEW_INTERNAL_CONTEXT = 'VIEW_INTERNAL_CONTEXT',
+  /** Receive "Confidential"-tier company/department context in the AI prompt. */
+  VIEW_CONFIDENTIAL_CONTEXT = 'VIEW_CONFIDENTIAL_CONTEXT',
 }
 
 /**
