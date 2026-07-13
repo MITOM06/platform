@@ -14,7 +14,6 @@ import org.springframework.messaging.simp.stomp.StompCommand;
 import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.messaging.support.ChannelInterceptor;
 import org.springframework.messaging.support.MessageHeaderAccessor;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -54,7 +53,12 @@ public class AuthChannelInterceptor implements ChannelInterceptor {
       }
 
       String userId = jwtUtil.extractUserId(token);
-      accessor.setUser(new UsernamePasswordAuthenticationToken(userId, null, List.of()));
+      accessor.setUser(
+          new UserPrincipal(
+              userId,
+              jwtUtil.extractRole(token),
+              jwtUtil.extractPerms(token),
+              jwtUtil.extractDepts(token)));
       // Presence key is set by PresenceEventListener.onConnect (fires after the
       // Principal is registered). No need to refresh here — the key doesn't exist yet.
       return message;

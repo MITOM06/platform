@@ -19,7 +19,6 @@ import org.springframework.messaging.MessageDeliveryException;
 import org.springframework.messaging.simp.stomp.StompCommand;
 import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.messaging.support.MessageHeaderAccessor;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 
 @SuppressWarnings("null")
 @ExtendWith(MockitoExtension.class)
@@ -143,12 +142,15 @@ class AuthChannelInterceptorTest {
   }
 
   @Test
-  void preSend_WhenTokenIsValid_ShouldSetUserPrincipal() {
+  void preSend_WhenTokenIsValid_ShouldSetUserPrincipalWithRbacClaims() {
     try (MockedStatic<MessageHeaderAccessor> mocked = mockStatic(MessageHeaderAccessor.class)) {
       when(accessor.getCommand()).thenReturn(StompCommand.CONNECT);
       when(accessor.getNativeHeader("Authorization")).thenReturn(List.of("Bearer valid.jwt.token"));
       when(jwtUtil.isValid("valid.jwt.token")).thenReturn(true);
       when(jwtUtil.extractUserId("valid.jwt.token")).thenReturn("user-001");
+      when(jwtUtil.extractRole("valid.jwt.token")).thenReturn("Manager");
+      when(jwtUtil.extractPerms("valid.jwt.token")).thenReturn(List.of("VIEW_INTERNAL_CONTEXT"));
+      when(jwtUtil.extractDepts("valid.jwt.token")).thenReturn(List.of("d1"));
       mocked
           .when(
               () ->
@@ -163,8 +165,11 @@ class AuthChannelInterceptorTest {
           .setUser(
               argThat(
                   principal ->
-                      principal instanceof UsernamePasswordAuthenticationToken
-                          && "user-001".equals(principal.getName())));
+                      principal instanceof UserPrincipal up
+                          && "user-001".equals(up.getName())
+                          && "Manager".equals(up.getRole())
+                          && up.getPerms().contains("VIEW_INTERNAL_CONTEXT")
+                          && up.getDepts().contains("d1")));
     }
   }
 }
