@@ -9,6 +9,7 @@ describe('AiContextController', () => {
     upsertEntry: jest.fn().mockResolvedValue({ label: 'x' }),
     deleteEntry: jest.fn().mockResolvedValue(undefined),
     listEntries: jest.fn().mockResolvedValue([]),
+    resolveDepartmentNames: jest.fn().mockResolvedValue(['Engineering']),
   } as any;
   const ctrl = new AiContextController(svc);
   const user = { sub: 'u1', perms: ['VIEW_INTERNAL_CONTEXT'], depts: [] } as any;
@@ -18,6 +19,13 @@ describe('AiContextController', () => {
     expect(res.context.style).toBe('s');
     expect(res.entries).toEqual([{ label: 'x' }]);
     expect(svc.getVisibleEntriesForUser).toHaveBeenCalledWith('u1', user.perms, []);
+  });
+
+  it('GET /me includes identity (role + resolved department names)', async () => {
+    const u = { sub: 'u1', perms: ['VIEW_INTERNAL_CONTEXT'], role: 'Manager', depts: ['d1'] } as any;
+    const res = await ctrl.getMine(u);
+    expect(res.identity).toEqual({ role: 'Manager', departmentNames: ['Engineering'] });
+    expect(svc.resolveDepartmentNames).toHaveBeenCalledWith(['d1']);
   });
 
   it('PATCH /me/style updates soft fields for the caller', async () => {

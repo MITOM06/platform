@@ -38,15 +38,17 @@ export class AiContextController {
 
   @Get('me')
   async getMine(@CurrentUser() user: JwtUser) {
-    const [context, entries] = await Promise.all([
+    const depts = this.deptIds(user);
+    const [context, entries, departmentNames] = await Promise.all([
       this.service.getUserContext(user.sub),
-      this.service.getVisibleEntriesForUser(
-        user.sub,
-        user.perms ?? [],
-        this.deptIds(user),
-      ),
+      this.service.getVisibleEntriesForUser(user.sub, user.perms ?? [], depts),
+      this.service.resolveDepartmentNames(depts),
     ]);
-    return { context, entries };
+    return {
+      context,
+      identity: { role: user.role ?? null, departmentNames },
+      entries,
+    };
   }
 
   @Patch('me/style')

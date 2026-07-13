@@ -40,6 +40,21 @@ export class AiContextService {
     private readonly deptModel: Model<DepartmentDocument>,
   ) {}
 
+  async resolveDepartmentNames(deptIds: string[]): Promise<string[]> {
+    if (!deptIds || deptIds.length === 0) return [];
+    try {
+      const docs = await this.deptModel.find({ _id: { $in: deptIds } }).lean().exec();
+      const byId = new Map(
+        (docs as any[]).map((d) => [String(d._id), String(d.name ?? '')]),
+      );
+      return deptIds
+        .map((id) => byId.get(String(id)))
+        .filter((n): n is string => !!n);
+    } catch {
+      return [];
+    }
+  }
+
   async getUserContext(userId: string): Promise<AiUserContext> {
     const doc = await this.userCtxModel.findOne({ userId }).lean().exec();
     return (doc as AiUserContext) ?? EMPTY_CONTEXT(userId);

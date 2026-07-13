@@ -117,3 +117,29 @@ describe('AiContextService — entries', () => {
     expect(visible.map((e) => e.text)).toEqual(['public']);
   });
 });
+
+describe('AiContextService — resolveDepartmentNames', () => {
+  it('maps ids to names, preserving order and dropping unknowns', async () => {
+    const dept = {
+      find: jest.fn().mockReturnValue({
+        lean: () => ({
+          exec: () =>
+            Promise.resolve([
+              { _id: 'd2', name: 'Sales' },
+              { _id: 'd1', name: 'Engineering' },
+            ]),
+        }),
+      }),
+    };
+    const svc = new AiContextService({} as any, {} as any, {} as any, dept as any);
+    const names = await svc.resolveDepartmentNames(['d1', 'd2', 'dX']);
+    expect(names).toEqual(['Engineering', 'Sales']);
+  });
+
+  it('returns [] for empty input without querying', async () => {
+    const dept = { find: jest.fn() };
+    const svc = new AiContextService({} as any, {} as any, {} as any, dept as any);
+    expect(await svc.resolveDepartmentNames([])).toEqual([]);
+    expect(dept.find).not.toHaveBeenCalled();
+  });
+});
