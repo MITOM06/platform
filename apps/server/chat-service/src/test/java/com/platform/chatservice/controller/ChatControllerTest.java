@@ -129,6 +129,9 @@ class ChatControllerTest {
             eq(SENDER_ID),
             eq("Alice"),
             argThat(s -> !s.contains("@AI")),
+            anyList(),
+            any(),
+            anyList(),
             anyList());
   }
 
@@ -152,7 +155,8 @@ class ChatControllerTest {
     chatController.send(dto, principal);
 
     Thread.sleep(100);
-    verify(aiRedisPublisher, never()).publishAiRequest(any(), any(), any(), any(), any());
+    verify(aiRedisPublisher, never())
+        .publishAiRequest(any(), any(), any(), any(), any(), any(), any(), any());
   }
 
   @Test

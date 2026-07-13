@@ -35,13 +35,25 @@ public class AiRedisPublisher {
       String userId,
       String displayName,
       String content,
-      List<AiHistoryEntry> history) {
+      List<AiHistoryEntry> history,
+      String role,
+      List<String> perms,
+      List<String> departmentIds) {
     // Enrich the AI job with the conversation's department so ai-service can
     // department-scope RAG/tools for the group bot (P6). Null for personal chats.
     String departmentId =
         conversationRepository.findById(conversationId).map(c -> c.getDepartmentId()).orElse(null);
     AiRequestPayload payload =
-        new AiRequestPayload(conversationId, userId, displayName, content, history, departmentId);
+        new AiRequestPayload(
+            conversationId,
+            userId,
+            displayName,
+            content,
+            history,
+            departmentId,
+            role,
+            perms == null ? List.of() : perms,
+            departmentIds == null ? List.of() : departmentIds);
 
     // Create a child span for the RabbitMQ publish operation. The scope is closed
     // explicitly BEFORE the span is ended so the thread-local context is cleared

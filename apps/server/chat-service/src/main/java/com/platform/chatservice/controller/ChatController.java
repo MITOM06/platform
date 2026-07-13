@@ -5,6 +5,7 @@ import com.platform.chatservice.dto.ChatMessageDto;
 import com.platform.chatservice.dto.MessageResponse;
 import com.platform.chatservice.dto.SendMessageRequest;
 import com.platform.chatservice.exception.RateLimitExceededException;
+import com.platform.chatservice.security.UserPrincipal;
 import com.platform.chatservice.service.AiRedisPublisher;
 import com.platform.chatservice.service.CallService;
 import com.platform.chatservice.service.ClusterMessageBroker;
@@ -63,13 +64,19 @@ public class ChatController {
       final String uid = principal.getName();
       final String convId = dto.getConversationId();
       final String raw = dto.getContent();
+      // Forward the caller's RBAC claims (P2a) so ai-service can role-filter the
+      // org-context block. Legacy/unauthenticated principals yield null/empty.
+      final String role = principal instanceof UserPrincipal up ? up.getRole() : null;
+      final List<String> perms = principal instanceof UserPrincipal up ? up.getPerms() : List.of();
+      final List<String> depts = principal instanceof UserPrincipal up ? up.getDepts() : List.of();
       CompletableFuture.runAsync(
           () -> {
             try {
               List<AiHistoryEntry> history = messageQueryService.getAiHistory(uid, convId);
               String stripped = raw.replaceAll("(?i)@(AI|ponai)\\b", "").trim();
               String displayName = messageQueryService.resolveDisplayName(uid);
-              aiRedisPublisher.publishAiRequest(convId, uid, displayName, stripped, history);
+              aiRedisPublisher.publishAiRequest(
+                  convId, uid, displayName, stripped, history, role, perms, depts);
             } catch (Exception ignored) {
             }
           });
