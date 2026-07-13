@@ -286,6 +286,7 @@ export class AiService {
         queryVector,
         content,
         departmentId,
+        { perms: payload.perms ?? [], departmentIds: payload.departmentIds ?? [], role: payload.role },
       ),
       // Enabled skills change how the assistant behaves AND gate action-skill MCP
       // tools (skill-tool wiring). Fetch the raw ids once and derive both the
