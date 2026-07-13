@@ -23,6 +23,12 @@ export interface AiRequestPayload {
   history: AiHistoryEntry[];
   /** Owning department id of the conversation (P6 group bot); null for personal. */
   departmentId?: string;
+  /** Role NAME from the caller's JWT (e.g. 'Owner'|'Admin'|'Manager'|'Member'); absent for legacy tokens. */
+  role?: string;
+  /** Enabled capability keys from the JWT `perms` claim; absent ⇒ treat as no capabilities. */
+  perms?: string[];
+  /** Department ids the caller belongs to (JWT `depts` claim); absent ⇒ no departments. */
+  departmentIds?: string[];
 }
 
 export interface ToolTraceEntry {
@@ -50,6 +56,12 @@ export interface RequestContext {
   displayName: string;
   /** Owning department id (P6 group bot); scopes KB retrieval when present. */
   departmentId?: string;
+  /** Caller role NAME for the org-context block (may be undefined for legacy tokens). */
+  role?: string;
+  /** Resolved caller capabilities — gates which context entries are injected. */
+  perms: string[];
+  /** Resolved caller department ids — gates department-scoped context entries. */
+  departmentIds: string[];
   /** Stable, cacheable persona + grounding contract. */
   baseSystem: string;
   /** Volatile per-request grounding block (RAG + memory). Placed AFTER cache. */

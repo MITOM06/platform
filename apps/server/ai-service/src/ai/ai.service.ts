@@ -300,6 +300,9 @@ export class AiService {
       userId,
       displayName,
       departmentId,
+      role: payload.role,
+      perms: payload.perms ?? [],
+      departmentIds: payload.departmentIds ?? [],
       baseSystem,
       volatileSystem: [skillInstructions, volatileContext.text]
         .filter((s) => s && s.trim())
