@@ -26,7 +26,7 @@ import '../../features/chat/ui/explore_media_screen.dart';
 import '../../features/friends/ui/friends_screen.dart';
 import '../../features/settings/ui/settings_screen.dart';
 import '../../features/settings/ui/security_settings_screen.dart';
-import '../../features/chat/ui/ai_memory_screen.dart';
+import '../../features/ai_context/ui/ai_context_screen.dart';
 import '../../features/chat/ui/ai_persona_screen.dart';
 import '../../features/chat/ui/kb_screen.dart';
 import '../../features/reminders/reminders_screen.dart';
@@ -285,9 +285,9 @@ GoRouter appRouter(AppRouterRef ref) {
         ),
       ),
       GoRoute(
-        path: '/ai-memories',
-        name: 'ai-memories',
-        builder: (context, state) => const AiMemoryScreen(),
+        path: '/ai-context',
+        name: 'ai-context',
+        builder: (context, state) => const AiContextScreen(),
       ),
       GoRoute(
         path: '/ai-persona/:conversationId',

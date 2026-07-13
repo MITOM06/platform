@@ -166,7 +166,7 @@ class ConversationInfoSidebar extends ConsumerWidget {
                   icon: Icons.psychology_outlined,
                   label: context.l10n.aiMemory,
                   canManage: canManage,
-                  onTap: () => context.push('/ai-memories'),
+                  onTap: () => context.push('/ai-context'),
                 ),
                 _AiSettingTile(
                   icon: Icons.extension_outlined,

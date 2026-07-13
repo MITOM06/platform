@@ -172,7 +172,7 @@ class _HubGrid extends StatelessWidget {
         title: l10n.aiHubMemory,
         subtitle: l10n.aiMemoryTitle,
         accent: AppTheme.ponCyan,
-        onTap: () => context.push('/ai-memories'),
+        onTap: () => context.push('/ai-context'),
       ),
       AiHubTile(
         icon: Icons.hub_rounded,
