@@ -188,6 +188,18 @@
     "errValPasswordTooShort": "パスワードは8文字以上必要です。",
     "errGeneric": "エラーが発生しました。もう一度お試しください。",
     "tagline": "つながって、チャット",
+    "showcase": {
+      "convoChannel": "AI チームメイト",
+      "convoOtherMsg": "スタンドアップの前に共有ドキュメントから Q3 の数値を取ってきてくれる？",
+      "convoOwnMsg": "了解——完了です。要約はスレッドに置きました。",
+      "headline": "ひとりの AI チームメイトが、すべての会話に。",
+      "subheadline": "PON は会社を理解する AI アシスタントをチームチャットの中に直接組み込みます——ロールに基づく権限管理で、すべて自社インフラ上でホスト。",
+      "chip": {
+        "selfHosted": "セルフホスト",
+        "governedAi": "ロールに基づく AI アクセス",
+        "oneWorkspace": "1 つのワークスペースにすべてのチーム"
+      }
+    },
     "errTooManyOtpRequests": "OTP コードのリクエストが多すぎます。10 分後にもう一度お試しください。"
   },
   "settings": {
