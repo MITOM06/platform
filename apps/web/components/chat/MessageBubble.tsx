@@ -291,7 +291,14 @@ const MessageBubbleInner = function MessageBubble({
       onTouchMove={handleTouchMove}
       onClick={handleRowClick}
     >
-      <div className="relative flex flex-col gap-1 max-w-[70%]">
+      <div
+        className={cn(
+          'relative flex flex-col gap-1 max-w-[70%]',
+          // AI replies are long-form prose: cap the line length on wide screens for a
+          // comfortable reading measure (~80-90 chars). User messages stay percentage-based.
+          message.type === 'ai' && 'lg:max-w-[640px]',
+        )}
+      >
         {hoverTime}
         {isEmojiMsg ? (
           <div className={cn('flex flex-col', isOwn ? 'items-end' : 'items-start')}>
