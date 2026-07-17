@@ -8,6 +8,7 @@ import com.platform.chatservice.dto.MessageResponse;
 import com.platform.chatservice.dto.SendMessageRequest;
 import com.platform.chatservice.service.AiRedisPublisher;
 import com.platform.chatservice.service.ClusterMessageBroker;
+import com.platform.chatservice.service.ConversationService;
 import com.platform.chatservice.service.ExternalBotService;
 import com.platform.chatservice.service.MessageNotificationService;
 import com.platform.chatservice.service.MessageQueryService;
@@ -43,6 +44,8 @@ class ChatControllerTest {
   @Mock private AiRedisPublisher aiRedisPublisher;
 
   @Mock private ExternalBotService externalBotService;
+
+  @Mock private ConversationService conversationService;
 
   @InjectMocks private ChatController chatController;
 
@@ -157,6 +160,36 @@ class ChatControllerTest {
     Thread.sleep(100);
     verify(aiRedisPublisher, never())
         .publishAiRequest(any(), any(), any(), any(), any(), any(), any(), any());
+  }
+
+  @Test
+  void send_InDirectAiConversation_WithoutMention_ShouldTriggerAiPublisher() throws Exception {
+    // 1-1 with the native AI bot: a plain message with no "@AI" must still trigger the AI.
+    ChatMessageDto dto = new ChatMessageDto("conv-456", "chào bạn", "text", false, null, null);
+    MessageResponse response =
+        new MessageResponse(
+            "msg-3", "conv-456", SENDER_ID, "chào bạn", "text", List.of(SENDER_ID), Instant.now());
+
+    when(messageService.sendMessage(eq(SENDER_ID), any(SendMessageRequest.class)))
+        .thenReturn(response);
+    when(conversationService.isDirectAiConversation("conv-456")).thenReturn(true);
+    when(messageQueryService.getAiHistory(eq(SENDER_ID), eq("conv-456"))).thenReturn(List.of());
+    when(messageQueryService.resolveDisplayName(SENDER_ID)).thenReturn("Alice");
+
+    chatController.send(dto, principal);
+
+    Thread.sleep(100);
+    // The full message is forwarded verbatim (nothing to strip when there is no mention).
+    verify(aiRedisPublisher, times(1))
+        .publishAiRequest(
+            eq("conv-456"),
+            eq(SENDER_ID),
+            eq("Alice"),
+            eq("chào bạn"),
+            anyList(),
+            any(),
+            anyList(),
+            anyList());
   }
 
   @Test
