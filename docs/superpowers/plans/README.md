@@ -17,6 +17,13 @@
 | `2026-07-10-edit-profile-cover-role-privacy.md` | Cover 16:6 nhất quán (web+Flutter), field Role read-only, dời Privacy xuống cuối form | 2026-07-11: web `pnpm build` PASS, Flutter `flutter analyze` clean (chưa commit) |
 | `2026-07-10-media-message-actions-and-viewer-frame.md` | Video thumbnail hiện frame đầu + bỏ nút download rời, Copy ảnh thật + Download vào menu 3 chấm, khung viewer web ôm sát media | 2026-07-11: web `pnpm build` PASS, Flutter `flutter analyze` clean (chưa commit). **Flutter thêm package `super_clipboard` — build đầu tiên cần Rust toolchain (cargokit)** |
 
+## ✅ Done — 2026-07-11 batch (executed & verified 2026-07-17)
+
+| Plan | Scope | Ghi chú |
+|------|-------|---------|
+| `2026-07-10-direct-ai-chat-and-message-width.md` | Chat 1-1 với @AI không cần gõ mention (`ChatController.java` + `MessageController.java`, cả 2 platform tự hưởng vì chung backend) + giới hạn bề rộng bubble AI trên web màn hình rộng (`MessageBubble.tsx`) | 2026-07-17: `mvn test` controller suites PASS (Testcontainers pagination test cần Docker), web `pnpm build` PASS |
+| `2026-07-11-auth-split-screen-redesign.md` | Redesign `/login`, `/register` (web) — layout 2 cột, cột trái animation hội thoại lặp lại + tagline riêng của PON (không copy ảnh tham khảo) | Web only, Flutter có auth UI riêng không đụng tới. 2026-07-17: web `pnpm build` PASS |
+
 ## ✅ Done — 2026-07-08 / 2026-07-09 batch (verified via code inspection, not yet build-deployed)
 
 | Plan | Scope | Verified in commit(s) |
