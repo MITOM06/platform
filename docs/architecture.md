@@ -6,7 +6,7 @@ This document provides detailed diagrams and descriptions of the Platform monore
 
 ## 1. Service Topology
 
-The platform consists of three backend microservices, two client applications, and five infrastructure components.
+The platform consists of four backend microservices, two client applications, and five infrastructure components.
 
 ```mermaid
 flowchart TD
@@ -19,6 +19,7 @@ flowchart TD
         AUTH[auth-service<br/>NestJS · 3001]
         CHAT[chat-service<br/>Spring Boot 3 · 8080]
         AI[ai-service<br/>NestJS · 3002]
+        CONN[connector-service<br/>NestJS · 3003<br/>MCP · OAuth · token vault]
     end
 
     subgraph Infra
@@ -54,6 +55,12 @@ flowchart TD
     AI --> QD
     AI --> ANTHROPIC
     AI --> VOYAGE
+    AI -->|internal API: per-user MCP tools| CONN
+
+    FL -->|REST| CONN
+    WEB -->|REST| CONN
+    CONN --> MONGO
+    CONN -->|OAuth · third-party MCP| EXT[Third-party MCP / OAuth providers]
 
     CHAT -->|OTLP traces| JAEGER
     AI -->|OTLP traces| JAEGER
@@ -66,6 +73,7 @@ flowchart TD
 | auth-service | 3001 | HTTP/REST |
 | chat-service | 8080 | HTTP/REST + WebSocket/STOMP |
 | ai-service | 3002 | HTTP/REST (health) |
+| connector-service | 3003 | HTTP/REST (MCP connectors, OAuth, AES-256-GCM token vault) |
 | MongoDB | **27018** (non-standard) | TCP |
 | Redis | 6379 | TCP |
 | RabbitMQ AMQP | 5672 | AMQP |
@@ -171,7 +179,8 @@ Environment variables controlling routing (all in `apps/server/ai-service/.env`)
 | `ANTHROPIC_ROUTER_ENABLED` | `true` | `false` forces Opus for every request |
 | `ANTHROPIC_SIMPLE_MODEL` | `claude-haiku-4-5` | Model for simple tier |
 | `ANTHROPIC_MID_MODEL` | `claude-sonnet-4-6` | Model for mid tier |
-| `ANTHROPIC_MODEL` | `claude-opus-4-8` | Model for complex tier (also used when router is off) |
+| `ANTHROPIC_COMPLEX_MODEL` | `claude-opus-4-8` | Model for the complex tier — and the model used when the router is off (`ANTHROPIC_ROUTER_ENABLED=false`) |
+| `ANTHROPIC_MODEL` | `claude-opus-4-8` | Top-level primary model used by the non-routed AI paths (vision describe, call summaries) and as the base default |
 | `ANTHROPIC_ROUTER_SIMPLE_MAX_CHARS` | `280` | Char threshold for simple tier |
 | `ANTHROPIC_ROUTER_MID_MAX_CHARS` | `1200` | Char threshold for mid tier |
 

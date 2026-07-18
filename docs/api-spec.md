@@ -126,6 +126,23 @@ POST /api/conversations/{id}/unarchive
 Response 200: { "success": true }
 ```
 
+### Block-Archive / Block-Restore Conversation
+```http
+POST /api/conversations/{id}/block-archive
+POST /api/conversations/{id}/block-restore
+Response 200: Conversation object (broadcasts CONVERSATION_UPDATED)
+```
+> Used when a user blocks the other party: the conversation is moved to a blocked/archived
+> state and later restored. Distinct from plain archive/unarchive.
+
+### Set Conversation Wallpaper
+```http
+PUT /api/conversations/{id}/wallpaper
+Body: { "wallpaper": "string (url or preset id, nullable to clear)" }
+Response 200: Conversation object (broadcasts CONVERSATION_UPDATED)
+```
+> Shared wallpaper for direct + group conversations. Any participant may set it (NOT admin-gated).
+
 ### Mark Conversation as Read/Unread
 ```http
 POST /api/conversations/{id}/read
@@ -251,6 +268,14 @@ Body: { "targetConversationIds": ["id1", "id2"] }
 Response 200: { "success": true }
 ```
 
+### Submit AI Message Feedback (👍 / 👎)
+```http
+POST /api/messages/{messageId}/feedback
+Body: { "rating": "up | down | none", "comment": "string (optional, usually for down votes)" }   # "none" clears the current vote
+Response 200: { "rating": "up | down | none", "comment": "string (nullable)" }
+Response 404: message does not exist
+```
+
 ---
 
 ## 🤖 AI Customization (`/api/conversations/{id}/ai-persona`)
@@ -278,6 +303,60 @@ Response 200: AiPersona object
 ```http
 DELETE /api/conversations/{conversationId}/ai-persona
 Response 204: No Content (Reverts to global default)
+```
+
+---
+
+## 🧑‍💼 Personal Assistant Setup (`/api/assistant`)
+
+> The member's own "trợ lý riêng" — a personal assistant provisioned via the Bot Factory bridge
+> (see `docs/superpowers/BOTFACTORY-BRIDGE-DIRECTION.md`). Distinct from the company `@AI` bot.
+
+### Get My Assistant
+```http
+GET /api/assistant/me
+Response 200: { "botUserId": "string", "name": "string", "avatarUrl": "string (nullable)" }
+Response 404: caller has not set up an assistant yet
+```
+
+### Create / Update My Assistant
+```http
+POST /api/assistant/setup
+Body: { "name": "string", "systemPrompt": "string", "providerId": "string" }
+Response 200: { "botUserId": "string", "name": "string" }
+```
+
+### Tear Down My Assistant
+```http
+DELETE /api/assistant/setup
+Response 204: No Content
+```
+
+### List Available AI Providers (proxied from Bot Factory)
+```http
+GET /api/assistant/providers
+Response 200: [ { "id": "string", "label": "string", "provider": "string", "model": "string" } ]
+```
+
+---
+
+## 🤖 External Bots — Admin (`/api/admin/external-bots`)
+
+> Workspace-admin CRUD for member → Bot Factory bot mappings. Requires authority
+> `PERM_MANAGE_WORKSPACE`.
+
+### Register / Update External Bot (Admins only)
+```http
+POST /api/admin/external-bots
+Body: { "ownerUserId": "string", "factoryBotId": "string", "name": "string", "avatarUrl": "string (optional)" }
+Response 201: ExternalBotResponse
+  { "id", "botUserId", "factoryBotId", "ownerUserId", "name", "avatarUrl", "enabled" }
+```
+
+### List External Bots (Admins only)
+```http
+GET /api/admin/external-bots
+Response 200: List of ExternalBotResponse objects
 ```
 
 ---
@@ -323,24 +402,24 @@ Response 200:
 
 ---
 
-## 📚 Knowledge Base / RAG (`/api/kb`)
+## 📚 Knowledge Base / RAG (`/api/kb/documents`)
 
 ### Upload Knowledge Document
 ```http
-POST /api/kb
+POST /api/kb/documents
 Body: Multi-part file (PDF / DOCX / TXT)
 Response 201: KbDocument metadata object
 ```
 
 ### List Uploaded Knowledge Documents
 ```http
-GET /api/kb
+GET /api/kb/documents
 Response 200: List of KbDocument objects
 ```
 
 ### Delete Knowledge Document
 ```http
-DELETE /api/kb/{documentId}
+DELETE /api/kb/documents/{documentId}
 Response 204: No Content
 ```
 
@@ -429,3 +508,18 @@ Response 200: { "success": true }
   Payload: `{ "userId": "string", "typing": boolean }`
 - **User Notifications Queue:** `/user/queue/notifications`  
   Payload: `{ "type": "NEW_MESSAGE", "conversationId": "string", "senderName": "string" }`
+
+### Group Calls (WebRTC signaling over STOMP)
+
+Group-call lifecycle is driven entirely over STOMP `@MessageMapping` routes (`CallController`).
+Signaling payloads use `WebRTCSignalDto`; transcript chunks use `CallTranscriptDto`.
+
+- **Start call:** `/app/call.start`  
+  Payload: `{ "conversationId": "string", "media": "audio | video", "aiNotetaker": boolean }`  
+  Server generates a `callId` (UUID) and rings participants.
+- **Join call:** `/app/call.join`  
+  Payload: `{ "callId": "string" }`
+- **Leave call:** `/app/call.leave`  
+  Payload: `{ "callId": "string" }`
+- **Append transcript (AI notetaker STT):** `/app/call.transcript`  
+  Payload: `{ "callId": "string", "text": "string", "ts": 1234567890 }`

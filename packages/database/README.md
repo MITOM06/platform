@@ -9,6 +9,8 @@ This package is consumed by the TypeScript/NestJS services:
 
 - `apps/server/auth-service`
 - `apps/server/ai-service`
+- `apps/server/connector-service` — imports the RBAC capabilities plus the shared
+  JWT strategy/guard and `Workspace` schema
 
 It is **not** used by `apps/server/chat-service` (Spring Boot / Java), which has
 its own Spring Data MongoDB + Redis configuration and its own entity classes.
@@ -21,7 +23,12 @@ manually when a collection is shared across the Java and Node services.
 - `DatabaseMongoModule` / `mongo.module` — `MongooseModule` configuration
 - `DatabaseRedisModule` + `REDIS_CLIENT` token — Redis provider (ioredis)
 - `Redis` — re-export of the `ioredis` client type
-- `user.schema`, `friendship.schema`, `user-block.schema` — shared Mongo schemas
+- Mongo schemas: `user.schema`, `friendship.schema`, `user-block.schema`,
+  `workspace.schema`, `department.schema`, `role.schema`, `audit-log.schema`,
+  `ai-digest-log.schema`, `ai-session.schema`, `ai-context-entry.schema`,
+  `ai-user-context.schema`
+- `rbac/capabilities`, `rbac/preset-roles` — RBAC capability list + preset roles
+- `auth/auth.index` — shared JWT strategy/guard (`SharedJwtStrategy`, `JwtAuthGuard`, `JwtUser`)
 
 > **`user-block.schema`** (`user_blocks` collection): one row per blocker→blocked
 > pair, replacing the former embedded `users.blockedUsers[]` array (see ADR-011).

@@ -27,10 +27,11 @@ cp apps/server/ai-service/.env.example   apps/server/ai-service/.env
 # chat-service reads application.yml — set JWT_ACCESS_SECRET as an env var:
 export JWT_ACCESS_SECRET=your_shared_secret_here
 
-# 4. Start the backend services (three separate terminals)
-cd apps/server/auth-service && pnpm start:dev          # port 3001
-cd apps/server/ai-service   && pnpm start:dev          # port 3002
-cd apps/server/chat-service && mvn spring-boot:run     # port 8080
+# 4. Start the backend services (separate terminals)
+cd apps/server/auth-service      && pnpm start:dev     # port 3001
+cd apps/server/ai-service        && pnpm start:dev     # port 3002
+cd apps/server/connector-service && pnpm start:dev     # port 3003
+cd apps/server/chat-service      && mvn spring-boot:run # port 8080
 
 # 5. Start a client
 # Flutter mobile:
@@ -70,12 +71,13 @@ platform/
 │   │   │       ├── controller/    # REST + WS endpoints
 │   │   │       ├── service/       # MessageService, ConversationService, FcmService
 │   │   │       └── security/      # AuthChannelInterceptor (JWT validation)
-│   │   └── ai-service/            # NestJS (port 3002) — Claude, RAG, memory, routing
-│   │       └── src/
-│   │           ├── ai/            # Claude streaming, agentic loop, model router
-│   │           ├── memory/        # Long-term memory summarisation (MongoDB)
-│   │           ├── kb/            # Document parsing + Qdrant ingestion
-│   │           └── redis/         # Pub/Sub subscriber (kb:process, kb:delete)
+│   │   ├── ai-service/            # NestJS (port 3002) — Claude, RAG, memory, routing
+│   │   │   └── src/
+│   │   │       ├── ai/            # Claude streaming, agentic loop, model router
+│   │   │       ├── memory/        # Long-term memory summarisation (MongoDB)
+│   │   │       ├── kb/            # Document parsing + Qdrant ingestion
+│   │   │       └── redis/         # Pub/Sub subscriber (kb:process, kb:delete)
+│   │   └── connector-service/     # NestJS (port 3003) — governed MCP connectors, OAuth, AES-256-GCM token vault
 │   ├── client/                    # Flutter 3 mobile app
 │   │   └── lib/
 │   │       ├── core/              # Dio clients, GoRouter, STOMP service, theme
@@ -115,7 +117,7 @@ Never use `npm` or `yarn` in this repo — the `pnpm-workspace.yaml` lockfile wi
 ### Critical Environment Variables
 
 ```
-JWT_ACCESS_SECRET   — must be IDENTICAL in auth-service and chat-service
+JWT_ACCESS_SECRET   — must be IDENTICAL across auth-service, chat-service, ai-service, and connector-service
 ANTHROPIC_API_KEY   — required for ai-service (Claude chat)
 VOYAGE_API_KEY      — KB/RAG + memory embeddings (Voyage AI, Anthropic's partner); unset = RAG off
 ```
@@ -131,8 +133,8 @@ auth-service returns machine-readable error codes, **not** localized strings. Ex
 ```
 
 Both clients map codes to localized text:
-- Flutter: `lib/core/utils/auth_error_mapper.dart` → `context.l10n.<key>`
-- Web: `lib/api/auth-error-codes.ts` → `t('errors.<key>')`
+- Flutter: `lib/features/auth/utils/auth_error.dart` → `context.l10n.<key>`
+- Web: `lib/auth/auth-error.ts` → `t('errors.<key>')`
 
 The full code list is in [docs/auth-error-codes.md](docs/auth-error-codes.md). Never show raw codes in the UI.
 
@@ -145,7 +147,7 @@ This is a messaging app. Every feature on one client must be mirrored on the oth
 | `components/chat/MessageBubble.tsx` | `features/chat/ui/widgets/message_bubble.dart` |
 | `components/chat/MessageInput.tsx` | `features/chat/ui/widgets/chat_input_bar.dart` |
 | `app/(main)/conversations/[id]/page.tsx` | `features/chat/ui/chat_screen.dart` |
-| `lib/stomp/client.ts` | `core/services/stomp_service.dart` |
+| `lib/stomp/client.ts` | `features/chat/data/stomp_service.dart` |
 
 A feature that works on web but not mobile (or vice versa) is a P1 bug.
 
@@ -252,7 +254,7 @@ Full tracing protocol is documented in [docs/observability.md](docs/observabilit
 This repo uses a harness of specialized Claude agents. Before touching code:
 
 1. Read `CLAUDE.md` (project-wide rules) and the relevant sub-service `CLAUDE.md`.
-2. The `JWT_ACCESS_SECRET` env var must be **identical** across auth-service, chat-service, and ai-service — never change it in one place without updating all.
+2. The `JWT_ACCESS_SECRET` env var must be **identical** across auth-service, chat-service, ai-service, and connector-service — never change it in one place without updating all.
 3. MongoDB port is **27018** locally (Docker maps 27018→27017 internally). Never use 27017 in local config.
 4. Never commit to `main` directly — always use feature branches.
 5. `apps/server/auth-service/` has full read+write access per `.claude/rules/auth-guard.md`.

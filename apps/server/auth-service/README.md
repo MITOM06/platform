@@ -17,11 +17,12 @@
 
 - User registration with email OTP verification
 - Login with JWT access token + refresh token rotation
-- OAuth 2.0 social login (Google, Facebook, Twitter)
-- `/auth/me` and user profile management
+- OAuth 2.0 social login (Google, X (formerly Twitter))
+- OIDC / enterprise SSO (`/auth/oidc/login`, `/auth/sso/info`)
+- User profile management (`/api/users`)
+- Enterprise ownership: workspace / RBAC (`admin`), friends, notifications,
+  ai-context, audit logging, and firebase (FCM push)
 - Issues JWT tokens that **chat-service validates independently** — no inter-service calls required at runtime
-
-> This service is considered **complete**. Do not modify it unless explicitly required.
 
 ---
 
@@ -45,18 +46,19 @@
 |--------|------|-------------|
 | `GET` | `/auth/google` | Redirect to Google OAuth |
 | `GET` | `/auth/google/callback` | Google OAuth callback |
-| `GET` | `/auth/facebook` | Redirect to Facebook OAuth |
-| `GET` | `/auth/facebook/callback` | Facebook OAuth callback |
-| `GET` | `/auth/twitter` | Redirect to Twitter OAuth |
-| `GET` | `/auth/twitter/callback` | Twitter OAuth callback |
+| `GET` | `/auth/twitter` | Redirect to X (formerly Twitter) OAuth |
+| `GET` | `/auth/twitter/callback` | X (formerly Twitter) OAuth callback |
+
+> The X strategy lives in `strategies/x.strategy.ts` (rebranded from Twitter); the
+> controller routes are still mounted at `/auth/twitter`.
 
 ### User endpoints
 
 | Method | Path | Description | Auth required |
 |--------|------|-------------|:---:|
-| `GET` | `/users/me` | Current user profile | Bearer |
-| `PATCH` | `/users/me` | Update display name / avatar | Bearer |
-| `GET` | `/users/search?q=` | Search users by name/email | Bearer |
+| `GET` | `/api/users/me` | Current user profile | Bearer |
+| `PATCH` | `/api/users/me` | Update display name / avatar | Bearer |
+| `GET` | `/api/users/search?q=` | Search users by name/email | Bearer |
 
 ---
 
@@ -86,10 +88,6 @@ MAIL_FROM="Platform <noreply@example.com>"
 GOOGLE_CLIENT_ID=
 GOOGLE_CLIENT_SECRET=
 GOOGLE_CALLBACK_URL=http://localhost:3001/auth/google/callback
-
-FACEBOOK_APP_ID=
-FACEBOOK_APP_SECRET=
-FACEBOOK_CALLBACK_URL=http://localhost:3001/auth/facebook/callback
 ```
 
 ---
@@ -126,9 +124,16 @@ pnpm test:cov        # coverage report
 ```
 src/
 ├── modules/
-│   ├── auth/          # AuthController, AuthService, strategies (JWT, local, OAuth)
+│   ├── admin/         # Workspace / RBAC administration
+│   ├── ai-context/    # AI context entries CRUD
+│   ├── audit/         # Audit logging
+│   ├── auth/          # AuthController, AuthService, strategies (JWT, Google, X), OIDC/SSO
+│   ├── Email/         # EmailService (OTP mailer)
+│   ├── firebase/      # FCM push
+│   ├── friends/       # Friend requests / relationships
+│   ├── notifications/ # User notifications
 │   ├── users/         # UsersController, UsersService, User schema
-│   └── email/         # EmailService (OTP mailer)
+│   └── workspace/     # Workspace / department model
 ├── config/            # ConfigModule setup
 ├── database/          # MongooseModule config
 └── main.ts
