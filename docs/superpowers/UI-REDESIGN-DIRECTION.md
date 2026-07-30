@@ -4,8 +4,10 @@
 > redesign program without re-litigating the visual direction. Read this top-to-bottom, then open
 > the current plan file it points to.
 >
-> **Last updated:** 2026-07-30 — direction locked with the owner; P1 (design tokens) written **and
-> executed** (commit `86ca2212`). Next un-written plan: Layer 2 (shared component visual language).
+> **Last updated:** 2026-07-30 — direction locked; **Layer 1 executed** (commit `86ca2212`) and
+> **Layer 2 executed** (commit `a26f492c`). The old neon brand is fully gone from both apps.
+> Next un-written plans: Layer 3 per-screen batches. Neither layer has been visually confirmed on
+> a real screen yet — do that before starting Layer 3.
 
 ---
 
@@ -92,15 +94,23 @@ Touches only: `apps/web/app/globals.css`, `apps/client/lib/core/theme/app_theme.
 downstream inherits automatically because shadcn (`components/ui/*`) reads CSS variables and
 Flutter's `ColorScheme`/`ThemeData` propagate through Material widgets.
 
-### Layer 2 — Shared component visual language (do second, after P1 lands)
-Not yet written. Will cover:
-- Flutter: `apps/client/lib/core/widgets/pon_widgets.dart` (`PonButton`, `PonCard`, `PonTextField`)
-  + `motion_widgets.dart`/`bouncing_dots.dart` if they hardcode old gradient colors.
-- Web: any hand-rolled component that hardcodes `pon-cyan/peach/pink` or gradients outside
-  `globals.css` tokens (e.g. `AuthShowcasePanel.tsx`, `MessageBubble.tsx`, logo SVGs) — NOT the
-  shadcn files in `components/ui/`, those inherit from tokens automatically.
-- Deliverable: an inventory grep pass (`grep -rn "ponCyan\|ponPeach\|ponPink\|#6AC9FF\|#FBB68B\|#FF85B3" apps/`)
-  to find every hardcoded reference, then fix each.
+### Layer 2 — Shared component visual language ✅ done, commit `a26f492c`
+Plan (written during execution, as the decision record):
+`plans/2026-07-30-ui-redesign-p2-component-language.md`. Delivered:
+- Symbols renamed for real — web `pon-cyan/peach/pink` → the theme-aware `primary` token (the 3
+  `--color-pon-*` tokens deleted); Flutter `ponCyan/ponPeach/ponPink` → one `ponAccent`,
+  `ponGradient` deleted. L1's `TODO(ui-redesign-L2)` markers are all paid off.
+- Degenerate brand gradients collapsed to flat fills; decorative aura orbs and every coloured
+  glow shadow removed; the AI-purple second accent folded into the one accent.
+- `pon_widgets.dart` rewritten: `PonCard` = opaque surface + 1px hairline (no glass/glow),
+  `PonButton` = flat accent + 10px radius, `PonTextField` focus = theme border, `PonLogo` flat.
+- Both logo marks now flat `currentColor`; `app/icon.svg` keeps a literal hex (CSS vars don't
+  resolve in a standalone favicon).
+- `AuthShowcasePanel` rewritten to dark-scoped tokens instead of a hardcoded indigo gradient.
+- Chat bubbles asymmetric 14/4 on both platforms.
+- `components/ui/` untouched (verified: no shadcn file references a brand token).
+- Deliberately kept: motion tokens, success green, connector brand colours, chat wallpaper
+  presets (user-selectable content, not chrome).
 
 ### Layer 3 — Per-screen rollout batches (do after Layer 2, one plan per batch)
 Not yet written. Proposed batches (each = one Claude Code session, one plan.md):

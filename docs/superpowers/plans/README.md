@@ -14,7 +14,9 @@
 
 | Plan | Scope | Trạng thái |
 |------|-------|------------|
-| `2026-07-30-ui-redesign-p1-design-tokens.md` | Layer 1 — design tokens (`globals.css` + `app_theme.dart`) | **Done** — commit `86ca2212`. Web `pnpm build` PASS, `flutter analyze` clean, contrast WCAG AA verified (no value adjustment needed). Layer 2 (rename symbols + hardcoded call sites) not yet written |
+| `2026-07-30-ui-redesign-p1-design-tokens.md` | Layer 1 — design tokens (`globals.css` + `app_theme.dart`) | **Done** — commit `86ca2212`. Web `pnpm build` PASS, `flutter analyze` clean, contrast WCAG AA verified (no value adjustment needed) |
+| `2026-07-30-ui-redesign-p2-component-language.md` | Layer 2 — retire the neon brand: symbol rename, gradient/glow/aura removal, shared widgets (`pon_widgets.dart`), logo marks, chat-bubble radius | **Done** — commit `a26f492c` (210 files). Web build PASS, `flutter analyze` clean, `flutter test` 60/60. Neither layer visually verified on a real screen yet |
+| Layer 3 — per-screen batches (auth / chat / settings / AI / admin / remainder) | radius + spacing per screen, drop the no-op compat params | Not written yet — see the direction doc §3 and P2's "Còn lại cho Layer 3" |
 
 ## ✅ Done — 2026-07-10 batch (all executed & verified)
 
