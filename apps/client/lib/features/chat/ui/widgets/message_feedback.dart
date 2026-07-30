@@ -136,12 +136,12 @@ class _MessageFeedbackState extends ConsumerState<MessageFeedback> {
               controller: _commentController,
               maxLines: 2,
               minLines: 1,
-              style: const TextStyle(color: Colors.white, fontSize: 13),
+              style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontSize: 13),
               decoration: InputDecoration(
                 isDense: true,
                 hintText: context.l10n.feedbackCommentHint,
                 hintStyle: TextStyle(
-                  color: Colors.white.withValues(alpha: 0.4),
+                  color: AppTheme.mutedText(context),
                   fontSize: 12,
                 ),
                 contentPadding: const EdgeInsets.symmetric(
@@ -196,7 +196,7 @@ class _FeedbackButton extends StatelessWidget {
   Widget build(BuildContext context) {
     final color = active
         ? AppTheme.ponAccent
-        : Colors.white.withValues(alpha: 0.45);
+        : AppTheme.mutedText(context);
     return Tooltip(
       message: tooltip,
       child: InkWell(

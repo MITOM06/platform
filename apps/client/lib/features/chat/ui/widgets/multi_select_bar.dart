@@ -90,10 +90,10 @@ class MultiSelectBar extends ConsumerWidget {
 
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
-    final textColor = isDark ? Colors.white : Colors.black87;
+    final textColor = Theme.of(context).colorScheme.onSurface;
     final borderColor = isDark
         ? AppTheme.darkBorder.withValues(alpha: 0.4)
-        : Colors.black.withValues(alpha: 0.08);
+        : AppTheme.hairline(context);
 
     return Container(
       decoration: BoxDecoration(

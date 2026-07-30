@@ -44,7 +44,7 @@ class RequestsTab extends ConsumerWidget {
                 context.l10n.listLoadFailed,
                 style: TextStyle(
                   fontWeight: FontWeight.bold,
-                  color: isDark ? Colors.white : Colors.black87,
+                  color: Theme.of(context).colorScheme.onSurface,
                 ),
               ),
               const SizedBox(height: 16),
@@ -68,7 +68,7 @@ class RequestsTab extends ConsumerWidget {
 
         return RefreshIndicator(
           color: accent,
-          backgroundColor: isDark ? AppTheme.darkSurface : Colors.white,
+          backgroundColor: Theme.of(context).colorScheme.surface,
           onRefresh: () =>
               ref.read(conversationsNotifierProvider.notifier).refresh(),
           child: requests.isEmpty
@@ -115,7 +115,7 @@ class _EmptyRequests extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
-                  color: isDark ? Colors.white70 : Colors.black87,
+                  color: Theme.of(context).colorScheme.onSurface,
                 ),
               ),
             ],

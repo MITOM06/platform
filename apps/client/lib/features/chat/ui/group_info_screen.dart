@@ -44,9 +44,8 @@ class GroupInfoScreen extends ConsumerWidget {
         ),
         data: (conv) {
           final colorScheme = Theme.of(context).colorScheme;
-          final isDark = Theme.of(context).brightness == Brightness.dark;
           final dividerColor =
-              isDark ? Colors.white12 : Colors.black.withValues(alpha: 0.08);
+              AppTheme.hairline(context);
           final isAdmin = conv.admins.contains(currentUserId);
           return ListView(
             children: [
@@ -204,12 +203,10 @@ class GroupInfoScreen extends ConsumerWidget {
       newName = await showDialog<String>(
         context: context,
         builder: (ctx) => AlertDialog(
-          title: Text(ctx.l10n.renameGroup,
-              style: const TextStyle(color: Colors.white)),
+          title: Text(ctx.l10n.renameGroup),
           content: TextField(
             controller: controller,
             autofocus: true,
-            style: const TextStyle(color: Colors.white),
             decoration: InputDecoration(hintText: ctx.l10n.groupName),
           ),
           actions: [
@@ -268,12 +265,10 @@ class GroupInfoScreen extends ConsumerWidget {
       email = await showDialog<String>(
         context: context,
         builder: (ctx) => AlertDialog(
-          title: Text(ctx.l10n.addMembers,
-              style: const TextStyle(color: Colors.white)),
+          title: Text(ctx.l10n.addMembers),
           content: TextField(
             controller: controller,
             autofocus: true,
-            style: const TextStyle(color: Colors.white),
             decoration: InputDecoration(hintText: ctx.l10n.searchUsers),
           ),
           actions: [
@@ -337,10 +332,8 @@ class GroupInfoScreen extends ConsumerWidget {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: Text(ctx.l10n.leaveGroup,
-            style: const TextStyle(color: Colors.white)),
-        content: Text(ctx.l10n.leaveGroupConfirm,
-            style: const TextStyle(color: Colors.white70)),
+        title: Text(ctx.l10n.leaveGroup),
+        content: Text(ctx.l10n.leaveGroupConfirm),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),

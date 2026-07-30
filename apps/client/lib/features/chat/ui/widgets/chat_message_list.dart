@@ -138,17 +138,17 @@ class _DateDivider extends StatelessWidget {
         decoration: BoxDecoration(
           color: isDark
               ? AppTheme.darkSurface.withValues(alpha: 0.8)
-              : Colors.black.withValues(alpha: 0.06),
+              : AppTheme.hairline(context),
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
               color: isDark
                   ? AppTheme.darkBorder.withValues(alpha: 0.5)
-                  : Colors.black.withValues(alpha: 0.08)),
+                  : AppTheme.hairline(context)),
         ),
         child: Text(
           dateText,
           style: TextStyle(
-              color: isDark ? Colors.white70 : Colors.black54,
+              color: AppTheme.mutedText(context),
               fontSize: 11,
               fontWeight: FontWeight.bold),
         ),

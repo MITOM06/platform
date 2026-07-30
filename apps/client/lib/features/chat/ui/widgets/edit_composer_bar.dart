@@ -12,7 +12,7 @@ class EditComposerBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      color: AppTheme.darkSurface.withValues(alpha: 0.6),
+      color: Theme.of(context).colorScheme.surface,
       padding: const EdgeInsets.fromLTRB(16, 8, 8, 8),
       child: Row(
         children: [
@@ -36,7 +36,7 @@ class EditComposerBar extends StatelessWidget {
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
-                    color: Colors.white.withValues(alpha: 0.6),
+                    color: AppTheme.mutedText(context),
                     fontSize: 13,
                   ),
                 ),
@@ -44,7 +44,7 @@ class EditComposerBar extends StatelessWidget {
             ),
           ),
           IconButton(
-            icon: const Icon(Icons.close_rounded, color: Colors.white54, size: 20),
+            icon: Icon(Icons.close_rounded, color: AppTheme.mutedText(context), size: 20),
             onPressed: onCancel,
           ),
         ],

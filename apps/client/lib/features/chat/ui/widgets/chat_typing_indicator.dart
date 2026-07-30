@@ -57,7 +57,7 @@ class _TypingBubble extends StatelessWidget {
                   context.l10n.typingLabel,
                   style: TextStyle(
                     fontSize: 12,
-                    color: Colors.white.withValues(alpha: 0.5),
+                    color: AppTheme.mutedText(context),
                     fontWeight: FontWeight.w500,
                   ),
                 ),

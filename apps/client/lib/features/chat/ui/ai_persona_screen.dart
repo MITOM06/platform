@@ -194,8 +194,8 @@ class _AiPersonaScreenState extends ConsumerState<AiPersonaScreen> {
                       onBackgroundImageError:
                           _avatarController.text.isNotEmpty ? (_, __) {} : null,
                       child: _avatarController.text.isEmpty
-                          ? const Icon(Icons.smart_toy_outlined,
-                              color: Colors.white38, size: 28)
+                          ? Icon(Icons.smart_toy_outlined,
+                              color: AppTheme.mutedText(context), size: 28)
                           : null,
                     ),
                     if (_uploadingAvatar)
@@ -211,8 +211,9 @@ class _AiPersonaScreenState extends ConsumerState<AiPersonaScreen> {
                             color: AppTheme.ponAccent,
                             shape: BoxShape.circle,
                           ),
+                          // On the burgundy fill: white, not black (was ~2:1).
                           child: const Icon(Icons.camera_alt,
-                              size: 14, color: Colors.black),
+                              size: 14, color: Colors.white),
                         ),
                       ),
                   ],

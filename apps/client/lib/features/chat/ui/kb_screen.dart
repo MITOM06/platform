@@ -19,12 +19,12 @@ class KbScreen extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(
         title: Text(context.l10n.kbTitle),
-        backgroundColor: AppTheme.darkBackground,
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => _pickAndUpload(context, ref),
         backgroundColor: AppTheme.ponAccent,
-        child: const Icon(Icons.upload_file, color: Colors.black),
+        // White on the burgundy FAB — black sat at roughly 2:1.
+        child: const Icon(Icons.upload_file, color: Colors.white),
       ),
       body: docsAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
@@ -131,12 +131,12 @@ class _EmptyState extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(Icons.folder_open,
-              size: 64, color: Colors.white.withValues(alpha: 0.2)),
+              size: 64, color: AppTheme.hairline(context)),
           const SizedBox(height: 16),
           Text(
             context.l10n.kbEmptyState,
             style: TextStyle(
-              color: Colors.white.withValues(alpha: 0.4),
+              color: AppTheme.mutedText(context),
               fontSize: 15,
             ),
             textAlign: TextAlign.center,
@@ -159,7 +159,7 @@ class _DocumentTile extends StatelessWidget {
       leading: const Icon(Icons.description_outlined, color: AppTheme.ponAccent),
       title: Text(
         doc.fileName,
-        style: const TextStyle(color: Colors.white, fontSize: 14),
+        style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontSize: 14),
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
       ),
@@ -171,7 +171,7 @@ class _DocumentTile extends StatelessWidget {
             Text(
               '${doc.chunkCount} ${context.l10n.kbChunks}',
               style: TextStyle(
-                  fontSize: 11, color: Colors.white.withValues(alpha: 0.4)),
+                  fontSize: 11, color: AppTheme.mutedText(context)),
             ),
           ],
         ],

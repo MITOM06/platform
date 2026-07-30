@@ -64,7 +64,7 @@ class AiSessionPanel extends ConsumerWidget {
                 Expanded(
                   child: Text(
                     context.l10n.aiSessionLoadError,
-                    style: const TextStyle(fontSize: 12, color: Colors.white54),
+                    style: TextStyle(fontSize: 12, color: AppTheme.mutedText(context)),
                   ),
                 ),
                 TextButton(
@@ -97,7 +97,7 @@ class _SessionList extends ConsumerWidget {
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         child: Text(
           context.l10n.aiSessionEmpty,
-          style: const TextStyle(fontSize: 12, color: Colors.white54),
+          style: TextStyle(fontSize: 12, color: AppTheme.mutedText(context)),
         ),
       );
     }
@@ -150,7 +150,7 @@ class _SessionTile extends ConsumerWidget {
       ),
       subtitle: Text(
         subtitle,
-        style: const TextStyle(fontSize: 12, color: Colors.white54),
+        style: TextStyle(fontSize: 12, color: AppTheme.mutedText(context)),
       ),
       trailing: session.isActive
           ? _ActiveChip()

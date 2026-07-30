@@ -59,7 +59,7 @@ class ChatsTab extends ConsumerWidget {
               color: isDark
                   ? AppTheme.ponAccent
                   : Theme.of(context).colorScheme.primary,
-              backgroundColor: isDark ? AppTheme.darkSurface : Colors.white,
+              backgroundColor: Theme.of(context).colorScheme.surface,
               onRefresh: () =>
                   ref.read(conversationsNotifierProvider.notifier).refresh(),
               child: conversations.isEmpty
@@ -112,7 +112,7 @@ class _EmptyChats extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
-                  color: isDark ? Colors.white70 : Colors.black87,
+                  color: Theme.of(context).colorScheme.onSurface,
                 ),
               ),
               if (!hasQuery) ...[
@@ -120,7 +120,7 @@ class _EmptyChats extends StatelessWidget {
                 Text(
                   context.l10n.emptyTapPlus,
                   style: TextStyle(
-                    color: isDark ? Colors.white38 : Colors.black38,
+                    color: AppTheme.mutedText(context),
                   ),
                 ),
               ],
@@ -160,7 +160,7 @@ class _ChatsError extends ConsumerWidget {
                   style: TextStyle(
                     fontWeight: FontWeight.bold,
                     fontSize: 16,
-                    color: isDark ? Colors.white : Colors.black87,
+                    color: Theme.of(context).colorScheme.onSurface,
                   ),
                 ),
                 const SizedBox(height: 8),
@@ -171,8 +171,8 @@ class _ChatsError extends ConsumerWidget {
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     color: isDark
-                        ? Colors.white.withValues(alpha: 0.5)
-                        : Colors.black54,
+                        ? AppTheme.mutedText(context)
+                        : AppTheme.mutedText(context),
                   ),
                 ),
                 const SizedBox(height: 20),

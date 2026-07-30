@@ -70,7 +70,7 @@ class _ThinkingBlock extends StatelessWidget {
       padding: const EdgeInsets.all(8),
       constraints: const BoxConstraints(maxHeight: 200),
       decoration: BoxDecoration(
-        color: const Color(0xFF1A0E3A),
+        color: Theme.of(context).scaffoldBackgroundColor,
         borderRadius: BorderRadius.circular(6),
       ),
       child: SingleChildScrollView(
@@ -79,7 +79,7 @@ class _ThinkingBlock extends StatelessWidget {
           style: const TextStyle(
             fontSize: 11,
             fontFamily: 'monospace',
-            color: Color(0xFFE8B4BE),
+            color: AppTheme.darkTintFg,
           ),
         ),
       ),
@@ -151,7 +151,7 @@ class _ToolEntry extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Icon(_toolIcon(entry.toolName),
-              size: 13, color: Colors.white.withValues(alpha: 0.5)),
+              size: 13, color: AppTheme.mutedText(context)),
           const SizedBox(width: 6),
           Expanded(
             child: Column(
@@ -159,10 +159,10 @@ class _ToolEntry extends StatelessWidget {
               children: [
                 Text(
                   entry.toolName,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 12,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
+                    fontWeight: FontWeight.w600,
+                    color: Theme.of(context).colorScheme.onSurface,
                   ),
                 ),
                 if (entry.inputSummary.isNotEmpty)
@@ -170,7 +170,7 @@ class _ToolEntry extends StatelessWidget {
                     entry.inputSummary,
                     style: TextStyle(
                       fontSize: 11,
-                      color: Colors.white.withValues(alpha: 0.45),
+                      color: AppTheme.mutedText(context),
                     ),
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
@@ -181,7 +181,7 @@ class _ToolEntry extends StatelessWidget {
                     style: TextStyle(
                       fontSize: 11,
                       fontStyle: FontStyle.italic,
-                      color: Colors.white.withValues(alpha: 0.35),
+                      color: AppTheme.mutedText(context),
                     ),
                   ),
               ],
@@ -199,10 +199,14 @@ class _StatsRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const chipStyle = TextStyle(fontSize: 11, color: Colors.white70);
-    const chipDecoration = BoxDecoration(
-      color: Color(0xFF2A2040),
-      borderRadius: BorderRadius.all(Radius.circular(10)),
+    final chipStyle =
+        TextStyle(fontSize: 11, color: AppTheme.mutedText(context));
+    // Was a hardcoded dark purple (#2A2040) — off-palette and unreadable in
+    // light mode. Now a page-shade step behind the sheet surface.
+    final chipDecoration = BoxDecoration(
+      color: Theme.of(context).scaffoldBackgroundColor,
+      borderRadius: const BorderRadius.all(Radius.circular(10)),
+      border: Border.all(color: AppTheme.hairline(context), width: 1),
     );
     Widget chip(String text) => Container(
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),

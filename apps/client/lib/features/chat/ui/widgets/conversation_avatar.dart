@@ -106,12 +106,12 @@ class _LetterCircle extends StatelessWidget {
       width: size,
       height: size,
       alignment: Alignment.center,
-      color: AppTheme.darkSurface,
+      color: Theme.of(context).colorScheme.surface,
       child: Text(
         letter,
         style: TextStyle(
-          color: Colors.white,
-          fontWeight: FontWeight.bold,
+          color: Theme.of(context).colorScheme.onSurface,
+          fontWeight: FontWeight.w600,
           fontSize: size * 0.36,
         ),
       ),

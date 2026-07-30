@@ -66,7 +66,7 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
                       )
                     : null,
                 border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(24)),
+                    borderRadius: BorderRadius.circular(AppTheme.radiusControl)),
                 contentPadding: const EdgeInsets.symmetric(horizontal: 16),
               ),
               onChanged: (v) => setState(() => _query = v.trim()),

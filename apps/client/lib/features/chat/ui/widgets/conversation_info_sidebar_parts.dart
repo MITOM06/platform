@@ -46,10 +46,10 @@ class SidebarHeader extends StatelessWidget {
         const SizedBox(height: 12),
         Text(
           displayName,
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 18,
-            fontWeight: FontWeight.bold,
-            color: Colors.white,
+            fontWeight: FontWeight.w600,
+            color: Theme.of(context).colorScheme.onSurface,
           ),
           textAlign: TextAlign.center,
           maxLines: 2,
@@ -160,7 +160,7 @@ class SidebarActionButton extends StatelessWidget {
           const SizedBox(height: 6),
           Text(
             label,
-            style: const TextStyle(fontSize: 11, color: Colors.white60),
+            style: TextStyle(fontSize: 11, color: AppTheme.mutedText(context)),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
           ),

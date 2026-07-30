@@ -84,11 +84,12 @@ class FloatingReactionSheet extends ConsumerWidget {
         chatState?.pinnedMessages.any((p) => p.id == message.id) ?? false;
 
     return Container(
-      decoration: const BoxDecoration(
-        color: AppTheme.darkSurface,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surface,
+        borderRadius: const BorderRadius.vertical(
+            top: Radius.circular(AppTheme.radiusSheet)),
         border: Border(
-          top: BorderSide(color: AppTheme.darkBorder, width: 1),
+          top: BorderSide(color: AppTheme.hairline(context), width: 1),
         ),
       ),
       padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
@@ -101,7 +102,7 @@ class FloatingReactionSheet extends ConsumerWidget {
               width: 40,
               height: 4.5,
               decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.2),
+                color: AppTheme.hairline(context),
                 borderRadius: BorderRadius.circular(10),
               ),
             ),
@@ -111,10 +112,10 @@ class FloatingReactionSheet extends ConsumerWidget {
             Container(
               padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
               decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.05),
+                color: Theme.of(context).scaffoldBackgroundColor,
                 borderRadius: BorderRadius.circular(32),
                 border: Border.all(
-                  color: Colors.white.withValues(alpha: 0.05),
+                  color: AppTheme.hairline(context),
                   width: 1,
                 ),
               ),
@@ -146,7 +147,7 @@ class FloatingReactionSheet extends ConsumerWidget {
               ),
             ),
             const SizedBox(height: 16),
-            const Divider(height: 1, color: Colors.white10),
+            Divider(height: 1, color: AppTheme.hairline(context)),
 
             // Actions list — scrollable so it never overflows on small
             // screens / when the keyboard is up (D-1.1 fix).
@@ -156,10 +157,9 @@ class FloatingReactionSheet extends ConsumerWidget {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     ListTile(
-                      leading: const Icon(Icons.reply_rounded,
-                          color: Colors.white70),
-                      title: Text(l10n.actionReply,
-                          style: const TextStyle(color: Colors.white)),
+                      leading: Icon(Icons.reply_rounded,
+                          color: AppTheme.mutedText(context)),
+                      title: Text(l10n.actionReply),
                       onTap: () {
                         notifier.startReply(message);
                         context.pop();
@@ -167,9 +167,8 @@ class FloatingReactionSheet extends ConsumerWidget {
                     ),
                     ListTile(
                       leading:
-                          const Icon(Icons.copy_rounded, color: Colors.white70),
-                      title: Text(l10n.actionCopy,
-                          style: const TextStyle(color: Colors.white)),
+                          Icon(Icons.copy_rounded, color: AppTheme.mutedText(context)),
+                      title: Text(l10n.actionCopy),
                       onTap: () async {
                         final messenger = ScaffoldMessenger.of(context);
                         final copiedMsg = context.l10n.copiedToClipboard;
@@ -191,10 +190,9 @@ class FloatingReactionSheet extends ConsumerWidget {
                     ),
                     if (message.isImage || message.isVideo)
                       ListTile(
-                        leading: const Icon(Icons.download_rounded,
-                            color: Colors.white70),
-                        title: Text(l10n.downloadAction,
-                            style: const TextStyle(color: Colors.white)),
+                        leading: Icon(Icons.download_rounded,
+                            color: AppTheme.mutedText(context)),
+                        title: Text(l10n.downloadAction),
                         onTap: () {
                           context.pop();
                           downloadMedia(message.isVideo
@@ -256,10 +254,9 @@ class FloatingReactionSheet extends ConsumerWidget {
                         },
                       ),
                     ListTile(
-                      leading: const Icon(Icons.checklist_rounded,
-                          color: Colors.white70),
-                      title: Text(l10n.selectMessages,
-                          style: const TextStyle(color: Colors.white)),
+                      leading: Icon(Icons.checklist_rounded,
+                          color: AppTheme.mutedText(context)),
+                      title: Text(l10n.selectMessages),
                       onTap: () {
                         context.pop();
                         final notifier = ref.read(
@@ -270,10 +267,9 @@ class FloatingReactionSheet extends ConsumerWidget {
                       },
                     ),
                     ListTile(
-                      leading: const Icon(Icons.forward_to_inbox_outlined,
-                          color: Colors.white70),
-                      title: Text(l10n.forwardMessage,
-                          style: const TextStyle(color: Colors.white)),
+                      leading: Icon(Icons.forward_to_inbox_outlined,
+                          color: AppTheme.mutedText(context)),
+                      title: Text(l10n.forwardMessage),
                       onTap: () {
                         context.pop();
                         showForwardDialog(

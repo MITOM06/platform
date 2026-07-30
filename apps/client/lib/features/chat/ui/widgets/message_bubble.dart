@@ -318,8 +318,8 @@ class _SelectCheck extends StatelessWidget {
           color: selected
               ? AppTheme.ponAccent
               : Theme.of(context).brightness == Brightness.dark
-                  ? Colors.white38
-                  : Colors.black38,
+                  ? AppTheme.mutedText(context)
+                  : AppTheme.mutedText(context),
           width: 1.5,
         ),
       ),

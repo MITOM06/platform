@@ -6,11 +6,11 @@
 >
 > **Last updated:** 2026-07-30 — direction locked; **Layer 1 executed** (commit `86ca2212`),
 > **Layer 2 executed** (commit `a26f492c`), and the **L3-pre cross-cutting chrome sweep executed**
-> (commit `11d641aa`), **Layer 3 batch 1 (Auth)** and **batch 2a (Chat core, structural)** executed.
-> The old neon brand is fully gone from both apps, and so are all elevation shadows, glass blur, and
-> candy radii. Next: batch 2b (chat long tail), then 3–6 (settings / AI / admin / remainder) — none
-> written yet. **None of this has been visually confirmed on a real screen yet — worth doing before
-> the remaining batches.**
+> (commit `11d641aa`), **Layer 3 batch 1 (Auth)**, **batch 2a** and **batch 2b (Chat core)** executed.
+> The old neon brand is now genuinely gone from both apps (2b found the last neon-cyan literal), and
+> so are all elevation shadows, glass blur, and candy radii. Next: batches 3–6 (settings / AI /
+> admin / remainder) — none written yet. **None of this has been visually confirmed on a real screen
+> yet — auth and chat are the two flows most worth eyeballing before continuing.**
 >
 > **Lesson from batch 1: do not trust a previous layer's "done" claim without grepping.** Layer 2
 > reported every aura orb and brand gradient removed, but all 6 Flutter auth screens still had both,
@@ -154,9 +154,23 @@ one Claude Code session, one plan.md):
      which is *why* ~25 call sites hardcoded a dark sheet (so sheets/dialogs rendered dark in light
      mode). Also: the accent hex was hand-copied in **31** places instead of using `ponAccent`, and
      a **teal `#14B8A6` second accent** lived in the external-bot avatar on both platforms.
-   - **2b — not written.** Long tail: ~180 colour literals in ~30 chrome widgets + 28 radii.
+   - **2b ✅ done** — `plans/2026-07-30-ui-redesign-l3-batch2b-chat-longtail.md`. The long tail:
+     ~270 colour literals → tokens across 53 chrome widgets, 26 radii normalised. Found the old
+     **neon cyan `#4FE3FF` still alive** in an AI source chip (L1/L2 both missed it because it was a
+     local literal, not a symbol), plus purple/teal leftovers and two black-on-burgundy contrast
+     bugs. Also fixed a light-mode regression 2a itself introduced (dialogs lost their dark
+     background override while keeping white text).
      ⚠️ `lib/features/chat` is **not** `dart format`-clean; do semantic edits only or the diff
      drowns in formatting noise.
+
+**Two rules the remaining batches must inherit from 2b:**
+1. **Not every `Colors.white` is a bug.** White is *correct* on the burgundy accent (send button,
+   unread badge, bot avatar, own bubble) and on media/black scrims (viewer, call). It is *wrong* on
+   `surface`/`scaffoldBackground`. Safe split: the shade/alpha variants (`white70`, `white24`,
+   `withValues(alpha:…)`, `black87`…) are never "on accent", so they can be mapped wholesale; plain
+   `Colors.white` must be checked per site.
+2. **Mapping by alpha confuses fills with borders.** `white@5–25%` → `hairline` is right for a
+   border and wrong for a background; 2b had to walk back 4 such sites. Check each one's role.
 3. Settings/Profile — `apps/client/lib/features/settings/`, `profile/` (6) + web equivalents (~6)
 4. AI features — `ai_context/`, `ai_hub/`, `assistant/` (5 Flutter) + `ai-context/`, `ai-hub/`,
    `assistant/*`, `ai-persona/`, `ai-memory/` (8 web pages)

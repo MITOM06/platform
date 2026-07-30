@@ -95,8 +95,8 @@ class _PromptCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: AppTheme.darkSurface,
-        borderRadius: BorderRadius.circular(16),
+        color: Theme.of(context).colorScheme.surface,
+        borderRadius: BorderRadius.circular(AppTheme.radiusCard),
         border: Border.all(color: AppTheme.ponAccent.withValues(alpha: 0.5)),
       ),
       child: Row(
@@ -110,10 +110,10 @@ class _PromptCard extends StatelessWidget {
               children: [
                 Text(
                   l10n.incomingGroupCallTitle,
-                  style: const TextStyle(
-                      color: Colors.white,
+                  style: TextStyle(
+                      color: Theme.of(context).colorScheme.onSurface,
                       fontSize: 15,
-                      fontWeight: FontWeight.bold),
+                      fontWeight: FontWeight.w600),
                 ),
                 const SizedBox(height: 2),
                 Text(
@@ -121,7 +121,7 @@ class _PromptCard extends StatelessWidget {
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
-                      color: Colors.white.withValues(alpha: 0.6),
+                      color: AppTheme.mutedText(context),
                       fontSize: 12),
                 ),
               ],

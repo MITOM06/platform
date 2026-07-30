@@ -21,11 +21,9 @@ class LinkPreviewCard extends ConsumerWidget {
           onTap: () => openExternally(url),
           child: Container(
             decoration: BoxDecoration(
-              color: Colors.black.withValues(alpha: 0.2),
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(
-                color: AppTheme.darkBorder.withValues(alpha: 0.4),
-              ),
+              color: Theme.of(context).scaffoldBackgroundColor,
+              borderRadius: BorderRadius.circular(AppTheme.radiusCard),
+              border: Border.all(color: AppTheme.hairline(context)),
             ),
             clipBehavior: Clip.antiAlias,
             child: Column(
@@ -66,10 +64,10 @@ class LinkPreviewCard extends ConsumerWidget {
                           data.title!,
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 13,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
+                            fontWeight: FontWeight.w600,
+                            color: Theme.of(context).colorScheme.onSurface,
                           ),
                         ),
                       if (data.description != null &&
@@ -82,7 +80,7 @@ class LinkPreviewCard extends ConsumerWidget {
                             overflow: TextOverflow.ellipsis,
                             style: TextStyle(
                               fontSize: 11.5,
-                              color: Colors.white.withValues(alpha: 0.6),
+                              color: AppTheme.mutedText(context),
                             ),
                           ),
                         ),

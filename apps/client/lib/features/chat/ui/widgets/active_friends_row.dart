@@ -27,16 +27,12 @@ class ActiveFriendsRow extends ConsumerWidget {
         .toList();
     if (online.isEmpty) return const SizedBox.shrink();
 
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
     return Container(
       padding: const EdgeInsets.only(top: 8, bottom: 4),
       decoration: BoxDecoration(
         border: Border(
           bottom: BorderSide(
-            color: isDark
-                ? AppTheme.darkBorder.withValues(alpha: 0.2)
-                : Colors.black.withValues(alpha: 0.05),
+            color: AppTheme.hairline(context),
           ),
         ),
       ),
@@ -50,7 +46,7 @@ class ActiveFriendsRow extends ConsumerWidget {
               style: TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.w600,
-                color: isDark ? Colors.white54 : Colors.black54,
+                color: AppTheme.mutedText(context),
               ),
             ),
           ),
@@ -82,7 +78,6 @@ class _ActiveFriendTile extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
     final letter =
         friend.displayName.isNotEmpty ? friend.displayName[0].toUpperCase() : '?';
     final status = ref.watch(userStatusProvider(friend.id)).valueOrNull;
@@ -113,7 +108,7 @@ class _ActiveFriendTile extends ConsumerWidget {
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 11,
-                  color: isDark ? Colors.white70 : Colors.black87,
+                  color: Theme.of(context).colorScheme.onSurface,
                 ),
               ),
               Text(
@@ -125,7 +120,7 @@ class _ActiveFriendTile extends ConsumerWidget {
                   fontSize: 10,
                   color: (status?.online ?? true)
                       ? AppTheme.onlineGreen.withValues(alpha: 0.9)
-                      : (isDark ? Colors.white38 : Colors.black45),
+                      : (AppTheme.mutedText(context)),
                 ),
               ),
             ],

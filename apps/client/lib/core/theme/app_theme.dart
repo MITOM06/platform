@@ -14,6 +14,11 @@ class AppTheme {
   static const Color darkAccentTint = Color(0xFF3A2A2C);
   static const Color lightAccentTint = Color(0xFFF1E4E6);
 
+  /// Readable foreground for content sitting ON [darkAccentTint]. The accent
+  /// itself only reaches 2.7:1 there, so it must not be used as text.
+  /// Exposed on the dark ColorScheme as `onPrimaryContainer`.
+  static const Color darkTintFg = Color(0xFFE8B4BE);
+
   static const Color onlineGreen = Color(0xFF00E676);
   static const Color offlineGrey = Color(0xFF9E9E9E);
 
@@ -77,7 +82,7 @@ class AppTheme {
         primaryContainer: darkAccentTint,
         // A lighter burgundy tint, not the accent itself: accent-on-tint only
         // reaches 2.7:1, which fails WCAG for text.
-        onPrimaryContainer: Color(0xFFE8B4BE),
+        onPrimaryContainer: darkTintFg,
       ),
       appBarTheme: const AppBarTheme(
         backgroundColor: Colors.transparent,

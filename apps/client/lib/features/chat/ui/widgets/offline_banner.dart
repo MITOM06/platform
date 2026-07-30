@@ -7,7 +7,6 @@ class OfflineBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Material(
       color: Colors.redAccent.withValues(alpha: 0.2),
       child: SafeArea(
@@ -21,9 +20,7 @@ class OfflineBanner extends StatelessWidget {
               Text(
                 context.l10n.offlineBanner,
                 style: TextStyle(
-                  color: isDark
-                      ? Colors.white.withValues(alpha: 0.9)
-                      : Colors.redAccent.shade700,
+                  color: Theme.of(context).colorScheme.error,
                   fontSize: 13,
                   fontWeight: FontWeight.w600,
                 ),

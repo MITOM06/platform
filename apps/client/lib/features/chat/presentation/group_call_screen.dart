@@ -117,7 +117,7 @@ class _NotetakerBanner extends StatelessWidget {
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
       decoration: BoxDecoration(
-        color: const Color(0xFF3A2A2C).withValues(alpha: 0.8),
+        color: AppTheme.darkAccentTint.withValues(alpha: 0.8),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: AppTheme.ponAccent.withValues(alpha: 0.5)),
       ),
@@ -130,7 +130,7 @@ class _NotetakerBanner extends StatelessWidget {
             child: Text(
               context.l10n.groupCallNotetakerActive,
               style: const TextStyle(
-                  color: Color(0xFFE8B4BE),
+                  color: AppTheme.darkTintFg,
                   fontSize: 13,
                   fontWeight: FontWeight.w500),
             ),

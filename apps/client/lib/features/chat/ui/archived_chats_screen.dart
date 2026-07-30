@@ -48,7 +48,7 @@ class ArchivedChatsScreen extends ConsumerWidget {
                   context.l10n.listLoadFailed,
                   style: TextStyle(
                     fontWeight: FontWeight.bold,
-                    color: isDark ? Colors.white : Colors.black87,
+                    color: Theme.of(context).colorScheme.onSurface,
                   ),
                 ),
                 const SizedBox(height: 16),
@@ -97,7 +97,7 @@ class _EmptyArchived extends StatelessWidget {
             style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.bold,
-              color: isDark ? Colors.white70 : Colors.black87,
+              color: Theme.of(context).colorScheme.onSurface,
             ),
           ),
         ],
@@ -140,21 +140,21 @@ class _ArchivedTile extends ConsumerWidget {
       margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
       decoration: BoxDecoration(
         color:
-            isDark ? AppTheme.darkSurface.withValues(alpha: 0.4) : Colors.white,
-        borderRadius: BorderRadius.circular(16),
+            Theme.of(context).colorScheme.surface,
+        borderRadius: BorderRadius.circular(AppTheme.radiusCard),
         border: Border.all(
           color: isDark
               ? AppTheme.darkBorder.withValues(alpha: 0.2)
-              : Colors.black.withValues(alpha: 0.05),
+              : AppTheme.hairline(context),
           width: 1,
         ),
       ),
       child: Material(
         color: Colors.transparent,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(AppTheme.radiusCard),
         child: ListTile(
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(AppTheme.radiusCard),
           ),
           leading: ConversationAvatar(
             avatarUrl: avatarUrl,
@@ -168,7 +168,7 @@ class _ArchivedTile extends ConsumerWidget {
             overflow: TextOverflow.ellipsis,
             style: TextStyle(
               fontWeight: FontWeight.w600,
-              color: isDark ? Colors.white : Colors.black87,
+              color: Theme.of(context).colorScheme.onSurface,
               fontSize: 15,
             ),
           ),
@@ -180,7 +180,7 @@ class _ArchivedTile extends ConsumerWidget {
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
-                    color: isDark ? Colors.white54 : Colors.black54,
+                    color: AppTheme.mutedText(context),
                     fontSize: 13,
                   ),
                 )

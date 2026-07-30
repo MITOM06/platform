@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/l10n/l10n_ext.dart';
+import '../../../../core/theme/app_theme.dart';
 import '../../domain/chat_provider.dart';
 import '../../domain/chat_state.dart';
 
@@ -31,13 +32,13 @@ class ConversationSearchBar extends StatelessWidget {
       child: TextField(
         controller: controller,
         onChanged: onChanged,
-        style: TextStyle(color: isDark ? Colors.white : Colors.black87),
+        style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
         decoration: InputDecoration(
           isDense: true,
           hintText: context.l10n.searchConversationsHint,
-          hintStyle: TextStyle(color: isDark ? Colors.white38 : Colors.black38),
+          hintStyle: TextStyle(color: AppTheme.mutedText(context)),
           prefixIcon: Icon(Icons.search,
-              size: 20, color: isDark ? Colors.white38 : Colors.black38),
+              size: 20, color: AppTheme.mutedText(context)),
           suffixIcon: controller.text.isNotEmpty
               ? IconButton(
                   icon: const Icon(Icons.close, size: 18),
@@ -49,11 +50,11 @@ class ConversationSearchBar extends StatelessWidget {
               : null,
           filled: true,
           fillColor: isDark
-              ? Colors.white.withValues(alpha: 0.05)
-              : Colors.black.withValues(alpha: 0.04),
+              ? AppTheme.hairline(context)
+              : AppTheme.hairline(context),
           contentPadding: const EdgeInsets.symmetric(vertical: 10),
           border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: BorderRadius.circular(AppTheme.radiusControl),
             borderSide: BorderSide.none,
           ),
         ),

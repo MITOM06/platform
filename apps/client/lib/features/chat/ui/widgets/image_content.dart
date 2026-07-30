@@ -288,7 +288,7 @@ class _VideoContentState extends State<VideoContent> {
     final controller = _controller;
     final ready = controller != null && controller.value.isInitialized;
     return ClipRRect(
-      borderRadius: BorderRadius.circular(16),
+      borderRadius: BorderRadius.circular(AppTheme.radiusCard),
       child: GestureDetector(
         onTap: () => showVideoPlayer(context, widget.url),
         child: Container(

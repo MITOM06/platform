@@ -55,7 +55,7 @@ class _EmojiStickerPanelState extends State<EmojiStickerPanel>
               controller: _tabCtrl,
               indicatorColor: AppTheme.ponAccent,
               labelColor: AppTheme.ponAccent,
-              unselectedLabelColor: Colors.white38,
+              unselectedLabelColor: AppTheme.mutedText(context),
               labelStyle: const TextStyle(fontSize: 13),
               tabs: [
                 Tab(text: context.l10n.emojiTab),

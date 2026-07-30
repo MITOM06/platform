@@ -212,8 +212,10 @@ class _NewConversationScreenState
         children: [
           Text(
             l10n.startConversationHeading,
-            style: const TextStyle(
-                fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
+            style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                color: Theme.of(context).colorScheme.onSurface),
           ),
           const SizedBox(height: 16),
           PonTextField(
@@ -281,8 +283,6 @@ class _NewConversationScreenState
               for (final m in _selectedMembers)
                 Chip(
                   label: Text(m.displayName),
-                  labelStyle: const TextStyle(color: Colors.white),
-                  deleteIconColor: Colors.white54,
                   onDeleted: () => setState(() => _selectedMembers.remove(m)),
                 ),
             ],
@@ -310,10 +310,10 @@ class _AiBotTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: const Color(0xFF3A2A2C).withValues(alpha: 0.7),
-      borderRadius: BorderRadius.circular(16),
+      color: AppTheme.darkAccentTint.withValues(alpha: 0.7),
+      borderRadius: BorderRadius.circular(AppTheme.radiusCard),
       child: InkWell(
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(AppTheme.radiusCard),
         onTap: loading ? null : onTap,
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -336,11 +336,11 @@ class _AiBotTile extends StatelessWidget {
                   children: [
                     Row(
                       children: [
-                        const Text(
+                        Text(
                           'PON AI',
                           style: TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold,
+                              color: Theme.of(context).colorScheme.onSurface,
+                              fontWeight: FontWeight.w600,
                               fontSize: 15),
                         ),
                         const SizedBox(width: 6),
@@ -363,7 +363,7 @@ class _AiBotTile extends StatelessWidget {
                     Text(
                       context.l10n.startChatWithAI,
                       style: TextStyle(
-                          color: Colors.white.withValues(alpha: 0.55),
+                          color: AppTheme.mutedText(context),
                           fontSize: 12),
                     ),
                   ],

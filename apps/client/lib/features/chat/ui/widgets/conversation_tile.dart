@@ -90,10 +90,8 @@ class ConversationTile extends ConsumerWidget {
             ? (isDark
                 ? AppTheme.ponAccent.withValues(alpha: 0.12)
                 : Theme.of(context).colorScheme.primary.withValues(alpha: 0.08))
-            : (isDark
-                ? AppTheme.darkSurface.withValues(alpha: 0.4)
-                : Colors.white),
-        borderRadius: BorderRadius.circular(16),
+            : Theme.of(context).colorScheme.surface,
+        borderRadius: BorderRadius.circular(AppTheme.radiusCard),
         border: Border.all(
           color: isSelected
               ? (isDark
@@ -107,16 +105,16 @@ class ConversationTile extends ConsumerWidget {
                       .withValues(alpha: 0.25)
                   : (isDark
                       ? AppTheme.darkBorder.withValues(alpha: 0.2)
-                      : Colors.black.withValues(alpha: 0.05)),
+                      : AppTheme.hairline(context)),
           width: isSelected ? 1.5 : 1,
         ),
       ),
       child: Material(
         color: Colors.transparent,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(AppTheme.radiusCard),
         child: ListTile(
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(AppTheme.radiusCard),
           ),
           leading: isAiBot
               ? _AiBotTileAvatar(isDark: isDark)
@@ -153,10 +151,8 @@ class ConversationTile extends ConsumerWidget {
                     fontWeight:
                         showUnread ? FontWeight.bold : FontWeight.w600,
                     color: showUnread
-                        ? (isDark ? Colors.white : Colors.black)
-                        : (isDark
-                            ? Colors.white.withValues(alpha: 0.85)
-                            : Colors.black87),
+                        ? (Theme.of(context).colorScheme.onSurface)
+                        : Theme.of(context).colorScheme.onSurface,
                     fontSize: 15,
                   ),
                 ),
@@ -175,9 +171,7 @@ class ConversationTile extends ConsumerWidget {
                 Icon(
                   Icons.volume_off_rounded,
                   size: 15,
-                  color: isDark
-                      ? Colors.white.withValues(alpha: 0.4)
-                      : Colors.black.withValues(alpha: 0.4),
+                  color: AppTheme.mutedText(context),
                 ),
                 // Show remaining time only when muted until a specific time
                 // (not forever). MUTE_FOREVER sentinel = 9200000000000000.
@@ -188,9 +182,7 @@ class ConversationTile extends ConsumerWidget {
                     _formatMuteExpiry(conv.muteExpiresAt!),
                     style: TextStyle(
                       fontSize: 10,
-                      color: isDark
-                          ? Colors.white.withValues(alpha: 0.35)
-                          : Colors.black.withValues(alpha: 0.35),
+                      color: AppTheme.mutedText(context),
                     ),
                   ),
                 ],
@@ -213,12 +205,10 @@ class ConversationTile extends ConsumerWidget {
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(
                       color: showUnread
-                          ? (isDark
-                              ? Colors.white.withValues(alpha: 0.8)
-                              : Colors.black87)
+                          ? Theme.of(context).colorScheme.onSurface
                           : (isDark
-                              ? Colors.white.withValues(alpha: 0.45)
-                              : Colors.black54),
+                              ? AppTheme.mutedText(context)
+                              : AppTheme.mutedText(context)),
                       fontSize: 13,
                     ),
                   ),

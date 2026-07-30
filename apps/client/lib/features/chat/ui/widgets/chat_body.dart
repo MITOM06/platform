@@ -246,7 +246,7 @@ class _ChatMessageListSection extends ConsumerWidget {
             const Icon(Icons.error_outline, size: 40, color: Colors.redAccent),
             const SizedBox(height: 12),
             Text(friendlyError(error),
-                style: const TextStyle(color: Colors.white60)),
+                style: TextStyle(color: AppTheme.mutedText(context))),
           ],
         ),
       );

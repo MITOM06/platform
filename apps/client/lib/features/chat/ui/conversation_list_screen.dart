@@ -64,7 +64,7 @@ class _ConversationListScreenState
                 bottom: BorderSide(
                   color: isDark
                       ? AppTheme.darkBorder.withValues(alpha: 0.3)
-                      : Colors.black.withValues(alpha: 0.06),
+                      : AppTheme.hairline(context),
                   width: 1,
                 ),
               ),

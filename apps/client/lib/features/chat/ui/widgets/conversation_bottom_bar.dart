@@ -48,12 +48,12 @@ class ConversationBottomBar extends StatelessWidget {
 
         return Container(
           decoration: BoxDecoration(
-            color: isDark ? AppTheme.darkSurface : Colors.white,
+            color: Theme.of(context).colorScheme.surface,
             border: Border(
               top: BorderSide(
                 color: isDark
                     ? AppTheme.darkBorder.withValues(alpha: 0.3)
-                    : Colors.black.withValues(alpha: 0.08),
+                    : AppTheme.hairline(context),
                 width: 0.5,
               ),
             ),
@@ -136,7 +136,7 @@ class _BottomTabItem extends StatelessWidget {
   Widget build(BuildContext context) {
     final color = (isActive || isAction)
         ? accent
-        : (isDark ? Colors.white54 : Colors.black45);
+        : (AppTheme.mutedText(context));
 
     return Expanded(
       child: InkWell(

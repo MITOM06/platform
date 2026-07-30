@@ -80,13 +80,13 @@ class _SearchOverlayState extends ConsumerState<SearchOverlay> {
     final locale = Localizations.localeOf(context).languageCode;
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
-    final textColor = isDark ? Colors.white : Colors.black87;
+    final textColor = Theme.of(context).colorScheme.onSurface;
     final mutedColor = isDark
-        ? Colors.white.withValues(alpha: 0.3)
+        ? AppTheme.mutedText(context)
         : Colors.black.withValues(alpha: 0.4);
     final dividerColor = isDark
-        ? Colors.white12
-        : Colors.black.withValues(alpha: 0.08);
+        ? AppTheme.hairline(context)
+        : AppTheme.hairline(context);
     return Container(
       color: theme.scaffoldBackgroundColor,
       child: SafeArea(
