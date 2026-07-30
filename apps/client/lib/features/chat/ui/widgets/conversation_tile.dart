@@ -136,8 +136,8 @@ class ConversationTile extends ConsumerWidget {
                       : [
                           isDark
                               ? AppTheme.ponAccent.withValues(alpha: 0.6)
-                              : Colors.grey.shade400,
-                          isDark ? AppTheme.darkBorder : Colors.grey.shade300,
+                              : AppTheme.hairline(context),
+                          AppTheme.hairline(context),
                         ],
                 ),
           title: Row(

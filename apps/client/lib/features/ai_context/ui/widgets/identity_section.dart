@@ -26,7 +26,7 @@ class IdentitySection extends StatelessWidget {
             children: [
               Expanded(
                 child: Text(label,
-                    style: const TextStyle(fontSize: 12, color: Colors.grey)),
+                    style: TextStyle(fontSize: 12, color: AppTheme.mutedText(ctx))),
               ),
               Expanded(
                 flex: 2,

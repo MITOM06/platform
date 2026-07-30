@@ -430,7 +430,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        const Icon(Icons.male, color: Colors.blue, size: 18),
+                        Icon(Icons.male, color: AppTheme.mutedText(context), size: 18),
                         const SizedBox(width: 8),
                         Text(context.l10n.genderMale),
                       ],
@@ -441,7 +441,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        const Icon(Icons.female, color: Colors.pink, size: 18),
+                        Icon(Icons.female, color: AppTheme.mutedText(context), size: 18),
                         const SizedBox(width: 8),
                         Text(context.l10n.genderFemale),
                       ],
@@ -452,8 +452,8 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        const Icon(Icons.transgender,
-                            color: Colors.purple, size: 18),
+                        Icon(Icons.transgender,
+                            color: AppTheme.mutedText(context), size: 18),
                         const SizedBox(width: 8),
                         Text(context.l10n.genderOther),
                       ],

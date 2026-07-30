@@ -1,13 +1,19 @@
 import 'package:flutter/material.dart';
+import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/motion.dart';
 
-/// The violet→teal gradient assistant avatar with the ONE signature ambient
-/// sheen sweep — a soft diagonal light highlight that loops slowly across the
-/// circle ([AppMotion.ambient], low opacity). This is the single bold motion in
-/// the app; everything else stays quiet.
+/// The assistant avatar: a flat accent circle carrying the ONE signature
+/// ambient sheen sweep — a soft diagonal light highlight that loops slowly
+/// across it ([AppMotion.ambient], low opacity). This is the single bold motion
+/// in the app; everything else stays quiet.
+///
+/// The base fill used to be a violet→teal gradient, i.e. both a gradient and a
+/// second accent (UI-REDESIGN-DIRECTION.md §2 rules 1-2). The sheen itself is a
+/// lighting effect, not a brand gradient, so Layer 2's "motion tokens kept"
+/// carve-out applies and it stays.
 ///
 /// Respects reduced-motion: when animations are disabled the sheen never runs
-/// and the avatar renders as a static gradient circle.
+/// and the avatar renders as a static accent circle.
 class AssistantSheenAvatar extends StatefulWidget {
   final String letter;
   final double size;
@@ -57,11 +63,7 @@ class _AssistantSheenAvatarState extends State<AssistantSheenAvatar>
       height: widget.size,
       decoration: const BoxDecoration(
         shape: BoxShape.circle,
-        gradient: LinearGradient(
-          colors: [Color(0xFF96435B), Color(0xFF14B8A6)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
+        color: AppTheme.ponAccent,
       ),
       child: Center(
         child: Text(

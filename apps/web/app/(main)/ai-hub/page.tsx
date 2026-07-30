@@ -66,25 +66,21 @@ export default function AiHubPage() {
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <AiHubCard
                 icon={<BrainCircuit className="size-5 text-primary" />}
-                iconBg="rgba(180,127,255,0.12)"
                 title={t('memory')}
                 onClick={() => router.push('/ai-context')}
               />
               <AiHubCard
                 icon={<Plug className="size-5 text-primary" />}
-                iconBg="rgba(150, 67, 91,0.12)"
                 title={t('integrations')}
                 onClick={() => router.push('/integrations')}
               />
               <AiHubCard
                 icon={<Sparkles className="size-5 text-primary" />}
-                iconBg="rgba(180,127,255,0.12)"
                 title={t('skills')}
                 onClick={() => router.push('/skills')}
               />
               <AiHubCard
                 icon={<Coins className="size-5 text-primary" />}
-                iconBg="rgba(150, 67, 91,0.12)"
                 title={t('tokenUsage')}
                 onClick={() => router.push('/token-usage')}
               />

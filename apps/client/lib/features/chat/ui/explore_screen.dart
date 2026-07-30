@@ -153,7 +153,7 @@ class _ChannelTileState extends ConsumerState<_ChannelTile> {
         style: Theme.of(context)
             .textTheme
             .bodySmall
-            ?.copyWith(color: Colors.grey),
+            ?.copyWith(color: AppTheme.mutedText(context)),
       ),
       trailing: _joining
           ? const SizedBox(

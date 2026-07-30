@@ -6,9 +6,10 @@
 >
 > **Last updated:** 2026-07-30 — direction locked; **Layer 1 executed** (commit `86ca2212`),
 > **Layer 2 executed** (commit `a26f492c`), and the **L3-pre cross-cutting chrome sweep executed**
-> (commit `11d641aa`), **Layer 3 batches 1 (Auth), 2a+2b (Chat core) and 3 (Settings/Profile)**
-> executed. All elevation shadows, glass blur and candy radii are gone. Next: batches 4–6 (AI /
-> admin / remainder) — none written yet.
+> (commit `11d641aa`), **Layer 3 batches 1 (Auth), 2a+2b (Chat core), 3 (Settings/Profile) and
+> 4 (AI features)** executed. All elevation shadows, glass blur and candy radii are gone, and as of
+> batch 4 there are **no off-palette decorative colours left anywhere in the Flutter app**. Next:
+> batches 5 (admin) and 6 (remainder), plus a final app-wide pass — none written yet.
 >
 > **Do not assume the old brand is fully dead.** Each batch so far has found another old-brand or
 > off-palette literal that earlier layers missed, because L1/L2 only renamed *symbols* while these
@@ -186,6 +187,15 @@ one Claude Code session, one plan.md):
    accent. Replace the prop with a semantic flag (`destructive`) instead of fixing callers one by one.
 5. **Before regex-deleting a param by name, check for `required this.<name>`** — batch 3's sweep for
    Layer 2's no-op `glowColor` also hit a local widget's genuinely-required param of the same name.
+6. **Grep the whole Material palette, not just `Colors.white|black`.** Batches 1–3 used only that
+   pattern and so never saw `Colors.grey` / `blue` / `pink` / `purple`; batch 4 found leftovers in
+   already-"finished" batch-2 and batch-3 files. Use
+   `Colors\.(grey|red|redAccent|blue|pink|purple|teal|cyan|indigo|green|amber|orange|yellow|lime|brown)`.
+   Decorative ones are now 0 app-wide; what remains is semantic (destructive/success/warning) and
+   deliberately kept.
+7. **`AppTheme.mutedText(context)` assumes the BuildContext is named `context`.** Batch 4 hit a widget
+   whose `BuildContext` was `ctx` *and* which had a field literally named `context` of another type —
+   it compiled into a type error. Check each file's `build(BuildContext …)` parameter name.
 3. ~~Settings/Profile~~ ✅ **done** — `plans/2026-07-30-ui-redesign-l3-batch3-settings-profile.md`.
    Also swept `token-usage` (its Flutter mirror lives under `settings/`). Biggest find: the
    *per-card colour API itself* — Flutter `SettingsCard` took a `required Color glowColor` and web
@@ -193,8 +203,11 @@ one Claude Code session, one plan.md):
    violet second accent. Both now derive the tint from a `destructive` flag, giving the two
    platforms the same API. Also: leftover **neon cyan** in the usage chart, the rejected
    **dark-indigo `#1A1A2E`**, 4 more aura orbs, and 5 black-on-burgundy contrast bugs.
-4. AI features — `ai_context/`, `ai_hub/`, `assistant/` (5 Flutter) + `ai-context/`, `ai-hub/`,
-   `assistant/*`, `ai-persona/`, `ai-memory/` (8 web pages)
+4. ~~AI features~~ ✅ **done** — `plans/2026-07-30-ui-redesign-l3-batch4-ai-features.md`. Smallest
+   batch (15 files) because `ai_context` was written after the neon era and already used tokens.
+   Removed the `AiHubTile.accent` / `AiHubCard.iconBg` per-item colour props on both platforms and
+   flattened the assistant avatar's violet→teal gradient — **keeping the sheen**, since it is a
+   lighting effect and Layer 2 explicitly kept motion. Closed a **grep gap**: see rule 6 below.
 5. Admin console — `apps/client/lib/features/admin/` (1 shell, many tabs) + `apps/web/app/(main)/admin/*` (9 pages)
 6. Remainder — friends, reminders, help, integrations, skills, legal, explore, shared-media,
    token-usage, blocked, archived

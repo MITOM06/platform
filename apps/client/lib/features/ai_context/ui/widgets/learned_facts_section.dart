@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../core/theme/app_theme.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/l10n/l10n_ext.dart';
 import '../../../../core/widgets/pon_widgets.dart';
@@ -32,10 +33,10 @@ class LearnedFactsSection extends ConsumerWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(l.aiContextMemoryEmpty,
-                        style: const TextStyle(color: Colors.grey)),
+                        style: TextStyle(color: AppTheme.mutedText(context))),
                     const SizedBox(height: 4),
                     Text(l.aiContextMemoryEmptyHint,
-                        style: const TextStyle(fontSize: 12, color: Colors.grey)),
+                        style: TextStyle(fontSize: 12, color: AppTheme.mutedText(context))),
                   ],
                 );
               }

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../core/theme/app_theme.dart';
 import '../../../../core/l10n/l10n_ext.dart';
 import '../../../../core/widgets/pon_widgets.dart';
 import '../../data/ai_context_models.dart';
@@ -47,7 +48,7 @@ class CompanyContextSection extends StatelessWidget {
                     ],
                   ),
                   Text(e.text,
-                      style: const TextStyle(fontSize: 12, color: Colors.grey)),
+                      style: TextStyle(fontSize: 12, color: AppTheme.mutedText(context))),
                 ],
               ),
             ),

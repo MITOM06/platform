@@ -17,8 +17,8 @@ export function AssistantPreviewAvatar({
   const glyph = emoji || name.trim()[0]?.toUpperCase() || '🤖'
   return (
     <div
-      className={`rounded-full bg-gradient-to-br from-violet-500 to-teal-400
-                  flex items-center justify-center text-white font-bold shrink-0
+      className={`rounded-full bg-primary
+                  flex items-center justify-center text-primary-foreground font-bold shrink-0
                   overflow-hidden ${className}`}
     >
       <span className="relative">{glyph}</span>
