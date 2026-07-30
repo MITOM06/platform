@@ -6,6 +6,16 @@
 >
 > Last regenerated: 2026-07-11 (2026-07-10 batch fully executed — all 6 plans done & verified).
 
+## 🎨 In progress — UI Redesign (Warm Grey & Burgundy)
+
+> Direction/handoff: [`../UI-REDESIGN-DIRECTION.md`](../UI-REDESIGN-DIRECTION.md). Multi-layer
+> program (tokens → shared components → per-screen batches) — read the direction doc before
+> opening any plan below or writing the next one.
+
+| Plan | Scope | Trạng thái |
+|------|-------|------------|
+| `2026-07-30-ui-redesign-p1-design-tokens.md` | Layer 1 — design tokens (`globals.css` + `app_theme.dart`) | **Done** — commit `86ca2212`. Web `pnpm build` PASS, `flutter analyze` clean, contrast WCAG AA verified (no value adjustment needed). Layer 2 (rename symbols + hardcoded call sites) not yet written |
+
 ## ✅ Done — 2026-07-10 batch (all executed & verified)
 
 | Plan | Scope | Verified in |
