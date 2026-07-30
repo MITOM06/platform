@@ -51,8 +51,11 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   }
 
   Future<void> _launchOAuth(String provider) async {
-    const authBase = String.fromEnvironment('AUTH_BASE_URL', defaultValue: 'https://auth-service-942942821810.asia-southeast1.run.app');
-    final uri = Uri.parse('$authBase/auth/social/$provider/init?platform=mobile');
+    const authBase = String.fromEnvironment('AUTH_BASE_URL',
+        defaultValue:
+            'https://auth-service-942942821810.asia-southeast1.run.app');
+    final uri =
+        Uri.parse('$authBase/auth/social/$provider/init?platform=mobile');
     if (await canLaunchUrl(uri)) {
       await launchUrl(uri, mode: LaunchMode.externalApplication);
     } else if (mounted) {
@@ -78,17 +81,18 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
             _passwordController.text,
           );
       if (mounted) {
-        context.go('/verify-otp?email=${Uri.encodeComponent(_emailController.text.trim())}');
+        context.go(
+            '/verify-otp?email=${Uri.encodeComponent(_emailController.text.trim())}');
       }
     } on DioException catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(_friendlyError(context, e))));
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(_friendlyError(context, e))));
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(_friendlyError(context, e))));
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(_friendlyError(context, e))));
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);
@@ -105,67 +109,28 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
           onPressed: () => context.go('/login'),
         ),
       ),
-      body: Stack(
-        children: [
-          // Background ambient lights
-          Positioned(
-            top: -100,
-            right: -100,
-            child: Container(
-              width: 320,
-              height: 320,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                gradient: RadialGradient(
-                  colors: [
-                    AppTheme.ponAccent.withValues(alpha: 0.12),
-                    Colors.transparent,
-                  ],
-                ),
-              ),
-            ),
-          ),
-          Positioned(
-            bottom: -120,
-            left: -120,
-            child: Container(
-              width: 350,
-              height: 350,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                gradient: RadialGradient(
-                  colors: [
-                    AppTheme.ponAccent.withValues(alpha: 0.15),
-                    Colors.transparent,
-                  ],
-                ),
-              ),
-            ),
-          ),
+      // No decorative accent orbs: the accent means "primary action"
+      // only (UI-REDESIGN-DIRECTION.md §2 rules 1-2).
+      body: SafeArea(
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 450),
+            child: SingleChildScrollView(
+              physics: const BouncingScrollPhysics(),
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  const StaggeredEntrance(
+                    index: 0,
+                    child: Center(child: PonLogo(size: 100, showText: true)),
+                  ),
+                  const SizedBox(height: 24),
 
-          // Content
-          SafeArea(
-            child: Center(
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 450),
-                child: SingleChildScrollView(
-                  physics: const BouncingScrollPhysics(),
-                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      const StaggeredEntrance(
-                        index: 0,
-                        child: Center(child: PonLogo(size: 100, showText: true)),
-                      ),
-                      const SizedBox(height: 24),
-
-                    // Register Form Card
-                    StaggeredEntrance(
-                      index: 1,
-                      child: PonCard(
-                      glowColor: AppTheme.ponAccent,
-                      glowStrength: 8,
+                  // Register Form Card
+                  StaggeredEntrance(
+                    index: 1,
+                    child: PonCard(
                       child: Padding(
                         padding: const EdgeInsets.all(24.0),
                         child: Form(
@@ -178,10 +143,13 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                                 controller: _nameController,
                                 labelText: context.l10n.fieldDisplayName,
                                 prefixIcon: Icons.badge_outlined,
-                                focusColor: AppTheme.ponAccent,
                                 validator: (v) {
-                                  if (v == null || v.trim().isEmpty) return context.l10n.valNameRequired;
-                                  if (v.trim().length < 2) return context.l10n.valNameMin2;
+                                  if (v == null || v.trim().isEmpty) {
+                                    return context.l10n.valNameRequired;
+                                  }
+                                  if (v.trim().length < 2) {
+                                    return context.l10n.valNameMin2;
+                                  }
                                   return null;
                                 },
                               ),
@@ -193,10 +161,13 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                                 labelText: context.l10n.fieldEmail,
                                 prefixIcon: Icons.email_outlined,
                                 keyboardType: TextInputType.emailAddress,
-                                focusColor: AppTheme.ponAccent,
                                 validator: (v) {
-                                  if (v == null || v.isEmpty) return context.l10n.valEmailRequired;
-                                  if (!v.contains('@')) return context.l10n.valEmailInvalid;
+                                  if (v == null || v.isEmpty) {
+                                    return context.l10n.valEmailRequired;
+                                  }
+                                  if (!v.contains('@')) {
+                                    return context.l10n.valEmailInvalid;
+                                  }
                                   return null;
                                 },
                               ),
@@ -208,29 +179,42 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                                 labelText: context.l10n.fieldPassword,
                                 prefixIcon: Icons.lock_outlined,
                                 obscureText: _obscurePassword,
-                                focusColor: AppTheme.ponAccent,
-                                onChanged: (v) => setState(() => _passwordValue = v),
+                                onChanged: (v) =>
+                                    setState(() => _passwordValue = v),
                                 suffixIcon: IconButton(
                                   icon: Icon(
                                     _obscurePassword
                                         ? Icons.visibility_outlined
                                         : Icons.visibility_off_outlined,
-                                    color: Colors.white.withValues(alpha: 0.5),
+                                    color: AppTheme.mutedText(context),
                                   ),
-                                  onPressed: () =>
-                                      setState(() => _obscurePassword = !_obscurePassword),
+                                  onPressed: () => setState(() =>
+                                      _obscurePassword = !_obscurePassword),
                                 ),
                                 validator: (v) {
-                                  if (v == null || v.isEmpty) return context.l10n.valPasswordRequired;
-                                  if (v.length < 8) return context.l10n.valPasswordMin8;
-                                  if (!v.contains(RegExp(r'[A-Z]'))) return context.l10n.valPasswordUppercase;
-                                  if (!v.contains(RegExp(r'[a-z]'))) return context.l10n.valPasswordLowercase;
-                                  if (!v.contains(RegExp(r'[0-9]'))) return context.l10n.valPasswordDigit;
-                                  if (!v.contains(RegExp(r'[!@#$%^&*]'))) return context.l10n.valPasswordSpecial;
+                                  if (v == null || v.isEmpty) {
+                                    return context.l10n.valPasswordRequired;
+                                  }
+                                  if (v.length < 8) {
+                                    return context.l10n.valPasswordMin8;
+                                  }
+                                  if (!v.contains(RegExp(r'[A-Z]'))) {
+                                    return context.l10n.valPasswordUppercase;
+                                  }
+                                  if (!v.contains(RegExp(r'[a-z]'))) {
+                                    return context.l10n.valPasswordLowercase;
+                                  }
+                                  if (!v.contains(RegExp(r'[0-9]'))) {
+                                    return context.l10n.valPasswordDigit;
+                                  }
+                                  if (!v.contains(RegExp(r'[!@#$%^&*]'))) {
+                                    return context.l10n.valPasswordSpecial;
+                                  }
                                   return null;
                                 },
                               ),
-                              PasswordStrengthIndicator(password: _passwordValue),
+                              PasswordStrengthIndicator(
+                                  password: _passwordValue),
                               const SizedBox(height: 16),
 
                               // Confirm Password
@@ -240,7 +224,6 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                                 prefixIcon: Icons.lock_outline,
                                 obscureText: _obscurePassword,
                                 textInputAction: TextInputAction.done,
-                                focusColor: AppTheme.ponAccent,
                                 onFieldSubmitted: (_) => _submit(),
                                 validator: (v) {
                                   if (v != _passwordController.text) {
@@ -261,25 +244,29 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                                     child: Checkbox(
                                       value: _agreeToTerms,
                                       onChanged: (val) {
-                                        setState(() => _agreeToTerms = val ?? false);
+                                        setState(
+                                            () => _agreeToTerms = val ?? false);
                                       },
                                       activeColor: AppTheme.ponAccent,
-                                      side: BorderSide(color: Colors.white.withValues(alpha: 0.5)),
+                                      side: BorderSide(
+                                          color: AppTheme.mutedText(context)),
                                     ),
                                   ),
                                   const SizedBox(width: 12),
                                   Expanded(
                                     child: GestureDetector(
                                       onTap: () {
-                                        setState(() => _agreeToTerms = !_agreeToTerms);
+                                        setState(() =>
+                                            _agreeToTerms = !_agreeToTerms);
                                       },
                                       child: RichText(
                                         text: TextSpan(
                                           style: TextStyle(
-                                            color: Colors.white.withValues(alpha: 0.7),
+                                            color: AppTheme.mutedText(context),
                                             fontSize: 13,
                                           ),
-                                          children: _buildTermsTextSpans(context),
+                                          children:
+                                              _buildTermsTextSpans(context),
                                         ),
                                       ),
                                     ),
@@ -292,8 +279,6 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                               PonButton(
                                 onPressed: _submit,
                                 isLoading: _isLoading,
-                                gradientColors: const [AppTheme.ponAccent, AppTheme.ponAccent],
-                                glowColor: AppTheme.ponAccent,
                                 child: Text(context.l10n.registerButton),
                               ),
                             ],
@@ -301,17 +286,15 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                         ),
                       ),
                     ),
-                    ),
-                    const SizedBox(height: 24),
-
-                      RegisterFooter(onGoogle: () => _launchOAuth('google')),
-                    ],
                   ),
-                ),
+                  const SizedBox(height: 24),
+
+                  RegisterFooter(onGoogle: () => _launchOAuth('google')),
+                ],
               ),
             ),
           ),
-        ],
+        ),
       ),
     );
   }
@@ -319,7 +302,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   List<InlineSpan> _buildTermsTextSpans(BuildContext context) {
     final text = context.l10n.agreeToTerms('__PRIVACY__', '__TERMS__');
     final parts = text.split(RegExp(r'(__PRIVACY__|__TERMS__)'));
-    final matches = RegExp(r'(__PRIVACY__|__TERMS__)').allMatches(text).toList();
+    final matches =
+        RegExp(r'(__PRIVACY__|__TERMS__)').allMatches(text).toList();
 
     final spans = <InlineSpan>[];
     for (int i = 0; i < parts.length; i++) {
@@ -337,7 +321,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
             // (the old vercel link 404'd). Both Privacy & Terms live on /legal.
             onTap: () => context.push('/legal'),
             child: Text(
-              isPrivacy ? context.l10n.privacyPolicy : context.l10n.termsOfService,
+              isPrivacy
+                  ? context.l10n.privacyPolicy
+                  : context.l10n.termsOfService,
               style: const TextStyle(
                 color: AppTheme.ponAccent,
                 fontWeight: FontWeight.bold,

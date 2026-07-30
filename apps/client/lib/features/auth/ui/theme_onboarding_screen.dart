@@ -11,9 +11,9 @@ class ThemeOnboardingScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final isDarkTheme = Theme.of(context).brightness == Brightness.dark;
+    // No backgroundColor override: the theme's scaffoldBackgroundColor already
+    // carries the warm page tone in both modes (pure #FFF was off-palette).
     return Scaffold(
-      backgroundColor: isDarkTheme ? AppTheme.darkBackground : Colors.white,
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
@@ -21,23 +21,17 @@ class ThemeOnboardingScreen extends ConsumerWidget {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               const Spacer(flex: 1),
-              Center(
-                child: ShaderMask(
-                  shaderCallback: (bounds) {
-                    return const LinearGradient(
-                      colors: [AppTheme.ponAccent, AppTheme.ponAccent],
-                    ).createShader(bounds);
-                  },
-                  child: Text(
-                    context.l10n.onboardingChooseTheme,
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(
-                      fontSize: 28,
-                      fontWeight: FontWeight.w900,
-                      color: Colors.white,
-                      letterSpacing: 1.5,
-                    ),
-                  ),
+              // Hierarchy from weight + shade, not from colour (§2 rule 6):
+              // the old ShaderMask painted this heading in the accent, which
+              // the accent is not allowed to do (§2 rule 1).
+              Text(
+                context.l10n.onboardingChooseTheme,
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 28,
+                  fontWeight: FontWeight.w600,
+                  color: Theme.of(context).colorScheme.onSurface,
+                  letterSpacing: 0.2,
                 ),
               ),
               const SizedBox(height: 16),
@@ -46,9 +40,7 @@ class ThemeOnboardingScreen extends ConsumerWidget {
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 16,
-                  color: isDarkTheme 
-                      ? Colors.white.withValues(alpha: 0.7) 
-                      : Colors.black.withValues(alpha: 0.6),
+                  color: AppTheme.mutedText(context),
                 ),
               ),
               const SizedBox(height: 48),
@@ -57,7 +49,6 @@ class ThemeOnboardingScreen extends ConsumerWidget {
                 subtitle: context.l10n.themeLightSubtitle,
                 icon: Icons.light_mode_rounded,
                 themeMode: ThemeMode.light,
-                activeColor: Colors.amber,
               ),
               const SizedBox(height: 16),
               _ThemeOptionCard(
@@ -65,7 +56,6 @@ class ThemeOnboardingScreen extends ConsumerWidget {
                 subtitle: context.l10n.themeDarkSubtitle,
                 icon: Icons.dark_mode_rounded,
                 themeMode: ThemeMode.dark,
-                activeColor: AppTheme.ponAccent,
               ),
               const SizedBox(height: 16),
               _ThemeOptionCard(
@@ -73,17 +63,17 @@ class ThemeOnboardingScreen extends ConsumerWidget {
                 subtitle: context.l10n.themeSystemSubtitle,
                 icon: Icons.brightness_auto_rounded,
                 themeMode: ThemeMode.system,
-                activeColor: AppTheme.ponAccent,
               ),
               const Spacer(flex: 2),
               PonButton(
                 onPressed: () async {
-                  await ref.read(themeOnboardingNotifierProvider.notifier).completeOnboarding();
+                  await ref
+                      .read(themeOnboardingNotifierProvider.notifier)
+                      .completeOnboarding();
                   if (context.mounted) {
                     context.go('/');
                   }
                 },
-                glowColor: AppTheme.ponAccent,
                 child: Text(context.l10n.startExperience),
               ),
               const SizedBox(height: 16),
@@ -100,14 +90,12 @@ class _ThemeOptionCard extends ConsumerWidget {
   final String subtitle;
   final IconData icon;
   final ThemeMode themeMode;
-  final Color activeColor;
 
   const _ThemeOptionCard({
     required this.title,
     required this.subtitle,
     required this.icon,
     required this.themeMode,
-    required this.activeColor,
   });
 
   @override
@@ -115,6 +103,10 @@ class _ThemeOptionCard extends ConsumerWidget {
     final currentMode = ref.watch(themeModeNotifierProvider);
     final isSelected = currentMode == themeMode;
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final scheme = Theme.of(context).colorScheme;
+    // One accent for every option — the old per-option activeColor made the
+    // Light card amber, i.e. a second accent in the same view (§2 rule 1).
+    final tint = isDark ? AppTheme.darkAccentTint : AppTheme.lightAccentTint;
 
     return GestureDetector(
       // Defer the state mutation off the current build/gesture frame: switching
@@ -122,21 +114,22 @@ class _ThemeOptionCard extends ConsumerWidget {
       // handler can throw during the in-progress frame. Future.microtask schedules
       // it safely after the frame settles.
       onTap: () => Future.microtask(
-        () => ref.read(themeModeNotifierProvider.notifier).setThemeMode(themeMode),
+        () => ref
+            .read(themeModeNotifierProvider.notifier)
+            .setThemeMode(themeMode),
       ),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
-          color: isSelected
-              ? activeColor.withValues(alpha: isDark ? 0.08 : 0.05)
-              : (isDark ? AppTheme.darkSurface : Colors.grey.shade50),
-          borderRadius: BorderRadius.circular(20),
+          // Selected = accent tint background, which is exactly what §2's
+          // "accent tint" token is for (selected row). Unselected = plain
+          // surface. Separation is by border + shade step, never a shadow.
+          color: isSelected ? tint : scheme.surface,
+          borderRadius: BorderRadius.circular(AppTheme.radiusCard),
           border: Border.all(
-            color: isSelected
-                ? activeColor.withValues(alpha: 0.6)
-                : (isDark ? AppTheme.darkBorder : Colors.black.withValues(alpha: 0.08)),
-            width: isSelected ? 2 : 1.5,
+            color: isSelected ? AppTheme.ponAccent : AppTheme.hairline(context),
+            width: isSelected ? 1.5 : 1,
           ),
         ),
         child: Row(
@@ -145,13 +138,17 @@ class _ThemeOptionCard extends ConsumerWidget {
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
                 color: isSelected
-                    ? activeColor.withValues(alpha: 0.15)
-                    : (isDark ? Colors.white.withValues(alpha: 0.05) : Colors.black.withValues(alpha: 0.03)),
+                    ? AppTheme.ponAccent.withValues(alpha: 0.14)
+                    : (isDark
+                        ? AppTheme.darkBackground
+                        : AppTheme.lightBackground),
                 shape: BoxShape.circle,
               ),
               child: Icon(
                 icon,
-                color: isSelected ? activeColor : (isDark ? Colors.white54 : Colors.black54),
+                color: isSelected
+                    ? AppTheme.ponAccent
+                    : AppTheme.mutedText(context),
                 size: 28,
               ),
             ),
@@ -164,8 +161,8 @@ class _ThemeOptionCard extends ConsumerWidget {
                     title,
                     style: TextStyle(
                       fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: isDark ? Colors.white : Colors.black87,
+                      fontWeight: FontWeight.w600,
+                      color: scheme.onSurface,
                     ),
                   ),
                   const SizedBox(height: 4),
@@ -173,16 +170,16 @@ class _ThemeOptionCard extends ConsumerWidget {
                     subtitle,
                     style: TextStyle(
                       fontSize: 13,
-                      color: isDark ? Colors.white54 : Colors.black54,
+                      color: AppTheme.mutedText(context),
                     ),
                   ),
                 ],
               ),
             ),
             if (isSelected)
-              Icon(
+              const Icon(
                 Icons.check_circle_rounded,
-                color: activeColor,
+                color: AppTheme.ponAccent,
                 size: 26,
               ),
           ],

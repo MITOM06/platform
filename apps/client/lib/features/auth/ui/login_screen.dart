@@ -39,10 +39,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     });
     // Listen for login errors
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.listenManual<AsyncValue<AuthState>>(authNotifierProvider,
-          (_, next) {
+      ref.listenManual<AsyncValue<AuthState>>(authNotifierProvider, (_, next) {
         if (next.hasError && mounted) {
-          final msg = _friendlyError(context, next.error!); // safe: checked hasError
+          final msg =
+              _friendlyError(context, next.error!); // safe: checked hasError
           ScaffoldMessenger.of(context)
               .showSnackBar(SnackBar(content: Text(msg)));
           setState(() => _isLoading = false);
@@ -78,8 +78,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   }
 
   Future<void> _launchOAuth(String provider) async {
-    const authBase = String.fromEnvironment('AUTH_BASE_URL', defaultValue: 'https://auth-service-942942821810.asia-southeast1.run.app');
-    final uri = Uri.parse('$authBase/auth/social/$provider/init?platform=mobile');
+    const authBase = String.fromEnvironment('AUTH_BASE_URL',
+        defaultValue:
+            'https://auth-service-942942821810.asia-southeast1.run.app');
+    final uri =
+        Uri.parse('$authBase/auth/social/$provider/init?platform=mobile');
     try {
       await launchUrl(uri, mode: LaunchMode.externalApplication);
     } catch (_) {
@@ -94,7 +97,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   // OIDC SSO uses the PON_DOMAIN-aware base; the IdP redirect deep-links back
   // via the existing platform://auth?code=… handler (provider-agnostic).
   Future<void> _launchSso() async {
-    final uri = Uri.parse('${AppConfig.authBaseUrl}/auth/oidc/login?platform=mobile');
+    final uri =
+        Uri.parse('${AppConfig.authBaseUrl}/auth/oidc/login?platform=mobile');
     try {
       await launchUrl(uri, mode: LaunchMode.externalApplication);
     } catch (_) {
@@ -119,85 +123,29 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Stack(
-        children: [
-          // Background ambient lights
-          Positioned(
-            top: -120,
-            left: -120,
-            child: Container(
-              width: 320,
-              height: 320,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                gradient: RadialGradient(
-                  colors: [
-                    AppTheme.ponAccent.withValues(alpha: 0.18),
-                    Colors.transparent,
-                  ],
-                ),
-              ),
-            ),
-          ),
-          Positioned(
-            bottom: -150,
-            right: -100,
-            child: Container(
-              width: 380,
-              height: 380,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                gradient: RadialGradient(
-                  colors: [
-                    AppTheme.ponAccent.withValues(alpha: 0.15),
-                    Colors.transparent,
-                  ],
-                ),
-              ),
-            ),
-          ),
-          Positioned(
-            top: 250,
-            right: -120,
-            child: Container(
-              width: 300,
-              height: 300,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                gradient: RadialGradient(
-                  colors: [
-                    AppTheme.ponAccent.withValues(alpha: 0.12),
-                    Colors.transparent,
-                  ],
-                ),
-              ),
-            ),
-          ),
+      // No decorative accent orbs: the accent means "primary action" only
+      // (UI-REDESIGN-DIRECTION.md §2 rules 1-2).
+      body: SafeArea(
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 450),
+            child: SingleChildScrollView(
+              physics: const BouncingScrollPhysics(),
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  // Brand Logo
+                  const StaggeredEntrance(
+                    index: 0,
+                    child: Center(child: PonLogo(size: 100, showText: true)),
+                  ),
+                  const SizedBox(height: 40),
 
-          // Scrollable main content
-          SafeArea(
-            child: Center(
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 450),
-                child: SingleChildScrollView(
-                  physics: const BouncingScrollPhysics(),
-                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      // Brand Logo
-                      const StaggeredEntrance(
-                        index: 0,
-                        child: Center(child: PonLogo(size: 100, showText: true)),
-                      ),
-                    const SizedBox(height: 40),
-
-                    // Frosted Glass Form Card
-                    StaggeredEntrance(
-                      index: 1,
-                      child: PonCard(
-                      glowColor: AppTheme.ponAccent,
-                      glowStrength: 8,
+                  // Form card — opaque surface + hairline border
+                  StaggeredEntrance(
+                    index: 1,
+                    child: PonCard(
                       child: Padding(
                         padding: const EdgeInsets.all(24.0),
                         child: Form(
@@ -207,10 +155,15 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                             children: [
                               Text(
                                 context.l10n.loginTitle,
-                                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.white,
-                                ),
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .headlineSmall
+                                    ?.copyWith(
+                                      fontWeight: FontWeight.w600,
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .onSurface,
+                                    ),
                                 textAlign: TextAlign.center,
                               ),
                               const SizedBox(height: 28),
@@ -222,10 +175,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                 prefixIcon: Icons.email_outlined,
                                 keyboardType: TextInputType.emailAddress,
                                 textInputAction: TextInputAction.next,
-                                focusColor: AppTheme.ponAccent,
                                 validator: (v) {
-                                  if (v == null || v.isEmpty) return context.l10n.valEmailRequired;
-                                  if (!v.contains('@')) return context.l10n.valEmailInvalid;
+                                  if (v == null || v.isEmpty) {
+                                    return context.l10n.valEmailRequired;
+                                  }
+                                  if (!v.contains('@')) {
+                                    return context.l10n.valEmailInvalid;
+                                  }
                                   return null;
                                 },
                               ),
@@ -238,21 +194,24 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                 prefixIcon: Icons.lock_outlined,
                                 obscureText: _obscurePassword,
                                 textInputAction: TextInputAction.done,
-                                focusColor: AppTheme.ponAccent,
                                 onFieldSubmitted: (_) => _submit(),
                                 suffixIcon: IconButton(
                                   icon: Icon(
                                     _obscurePassword
                                         ? Icons.visibility_outlined
                                         : Icons.visibility_off_outlined,
-                                    color: Colors.white.withValues(alpha: 0.5),
+                                    color: AppTheme.mutedText(context),
                                   ),
-                                  onPressed: () =>
-                                      setState(() => _obscurePassword = !_obscurePassword),
+                                  onPressed: () => setState(() =>
+                                      _obscurePassword = !_obscurePassword),
                                 ),
                                 validator: (v) {
-                                  if (v == null || v.isEmpty) return context.l10n.valPasswordRequired;
-                                  if (v.length < 6) return context.l10n.valPasswordMin6;
+                                  if (v == null || v.isEmpty) {
+                                    return context.l10n.valPasswordRequired;
+                                  }
+                                  if (v.length < 6) {
+                                    return context.l10n.valPasswordMin6;
+                                  }
                                   return null;
                                 },
                               ),
@@ -261,7 +220,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                               Align(
                                 alignment: Alignment.centerRight,
                                 child: TextButton(
-                                  onPressed: () => context.go('/forgot-password'),
+                                  onPressed: () =>
+                                      context.go('/forgot-password'),
                                   child: Text(context.l10n.forgotPasswordLink),
                                 ),
                               ),
@@ -271,8 +231,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                               PonButton(
                                 onPressed: _submit,
                                 isLoading: _isLoading,
-                                gradientColors: const [AppTheme.ponAccent, AppTheme.ponAccent],
-                                glowColor: AppTheme.ponAccent,
                                 child: Text(context.l10n.loginButton),
                               ),
                             ],
@@ -280,78 +238,81 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         ),
                       ),
                     ),
-                    ),
-                    const SizedBox(height: 24),
+                  ),
+                  const SizedBox(height: 24),
 
-                      // OAuth divider
-                      StaggeredEntrance(
-                        index: 2,
-                        child: Row(
-                        children: [
-                          const Expanded(child: Divider(color: Colors.white24)),
-                          Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 12),
-                            child: Text(
-                              context.l10n.orContinueWith,
-                              style: TextStyle(color: Colors.white.withValues(alpha: 0.5), fontSize: 12),
-                            ),
+                  // OAuth divider
+                  StaggeredEntrance(
+                    index: 2,
+                    child: Row(
+                      children: [
+                        Expanded(
+                            child: Divider(color: AppTheme.hairline(context))),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 12),
+                          child: Text(
+                            context.l10n.orContinueWith,
+                            style: TextStyle(
+                                color: AppTheme.mutedText(context),
+                                fontSize: 12),
                           ),
-                          const Expanded(child: Divider(color: Colors.white24)),
-                        ],
-                      ),
-                      ),
-                      const SizedBox(height: 12),
-                      StaggeredEntrance(
-                        index: 3,
-                        child: OutlinedButton.icon(
-                        onPressed: () => _launchOAuth('google'),
-                        icon: const GoogleLogoIcon(size: 18),
-                        label: Text(context.l10n.loginWithGoogle),
-                        style: OutlinedButton.styleFrom(
-                          foregroundColor: Colors.white,
-                          side: BorderSide(color: Colors.white.withValues(alpha: 0.3)),
                         ),
+                        Expanded(
+                            child: Divider(color: AppTheme.hairline(context))),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  StaggeredEntrance(
+                    index: 3,
+                    child: OutlinedButton.icon(
+                      onPressed: () => _launchOAuth('google'),
+                      icon: const GoogleLogoIcon(size: 18),
+                      label: Text(context.l10n.loginWithGoogle),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor:
+                            Theme.of(context).colorScheme.onSurface,
+                        side: BorderSide(color: AppTheme.hairline(context)),
                       ),
-                      ),
+                    ),
+                  ),
 
-                      if (_ssoEnabled) ...[
-                        const SizedBox(height: 12),
-                        OutlinedButton.icon(
-                          onPressed: _launchSso,
-                          icon: const Icon(Icons.vpn_key_outlined, size: 18),
-                          label: Text(context.l10n.loginWithSso),
-                          style: OutlinedButton.styleFrom(
-                            foregroundColor: AppTheme.ponAccent,
-                            side: BorderSide(color: AppTheme.ponAccent.withValues(alpha: 0.5)),
-                          ),
+                  if (_ssoEnabled) ...[
+                    const SizedBox(height: 12),
+                    OutlinedButton.icon(
+                      onPressed: _launchSso,
+                      icon: const Icon(Icons.vpn_key_outlined, size: 18),
+                      label: Text(context.l10n.loginWithSso),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor:
+                            Theme.of(context).colorScheme.onSurface,
+                        side: BorderSide(color: AppTheme.hairline(context)),
+                      ),
+                    ),
+                  ],
+
+                  // Navigation to register
+                  StaggeredEntrance(
+                    index: 4,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          context.l10n.noAccountYet,
+                          style: TextStyle(color: AppTheme.mutedText(context)),
+                        ),
+                        TextButton(
+                          onPressed: () => context.go('/register'),
+                          child: Text(context.l10n.registerNow),
                         ),
                       ],
-
-
-                      // Navigation to register
-                      StaggeredEntrance(
-                        index: 4,
-                        child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text(
-                            context.l10n.noAccountYet,
-                            style: TextStyle(color: Colors.white.withValues(alpha: 0.6)),
-                          ),
-                          TextButton(
-                            onPressed: () => context.go('/register'),
-                            child: Text(context.l10n.registerNow),
-                          ),
-                        ],
-                      ),
-                      ),
-                    ],
+                    ),
                   ),
-                ),
+                ],
               ),
             ),
           ),
-        ],
+        ),
       ),
     );
   }

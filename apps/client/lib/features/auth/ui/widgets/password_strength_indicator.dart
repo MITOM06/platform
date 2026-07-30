@@ -10,7 +10,10 @@ class PasswordStrengthIndicator extends StatelessWidget {
     if (password.isEmpty) return 0;
     int s = 0;
     if (password.length >= 8) s++;
-    if (password.contains(RegExp(r'[A-Z]')) && password.contains(RegExp(r'[a-z]'))) s++;
+    if (password.contains(RegExp(r'[A-Z]')) &&
+        password.contains(RegExp(r'[a-z]'))) {
+      s++;
+    }
     if (password.contains(RegExp(r'[0-9]'))) s++;
     if (password.contains(RegExp(r'[!@#$%^&*]'))) s++;
     return s;
@@ -20,7 +23,13 @@ class PasswordStrengthIndicator extends StatelessWidget {
   Widget build(BuildContext context) {
     if (password.isEmpty) return const SizedBox.shrink();
     final score = _score();
-    final colors = [Colors.red, Colors.orange, Colors.yellow, Colors.green, Colors.green];
+    final colors = [
+      Colors.red,
+      Colors.orange,
+      Colors.yellow,
+      Colors.green,
+      Colors.green
+    ];
     final barColor = colors[score.clamp(0, 4)];
     final labels = [
       context.l10n.pwStrengthWeak,
@@ -50,9 +59,7 @@ class PasswordStrengthIndicator extends StatelessWidget {
                   height: 4,
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(2),
-                    color: i < score
-                        ? barColor
-                        : Colors.white.withValues(alpha: 0.15),
+                    color: i < score ? barColor : AppTheme.hairline(context),
                   ),
                 ),
               );
@@ -75,11 +82,13 @@ class PasswordStrengthIndicator extends StatelessWidget {
               child: Row(
                 children: [
                   Icon(
-                    passed ? Icons.check_circle_outline : Icons.radio_button_unchecked,
+                    passed
+                        ? Icons.check_circle_outline
+                        : Icons.radio_button_unchecked,
                     size: 14,
                     color: passed
                         ? AppTheme.ponAccent
-                        : Colors.white.withValues(alpha: 0.4),
+                        : AppTheme.hairline(context),
                   ),
                   const SizedBox(width: 6),
                   Text(
@@ -87,8 +96,8 @@ class PasswordStrengthIndicator extends StatelessWidget {
                     style: TextStyle(
                       fontSize: 12,
                       color: passed
-                          ? Colors.white.withValues(alpha: 0.85)
-                          : Colors.white.withValues(alpha: 0.4),
+                          ? AppTheme.mutedText(context)
+                          : AppTheme.hairline(context),
                     ),
                   ),
                 ],

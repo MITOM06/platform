@@ -64,14 +64,15 @@ class _VerifyOtpScreenState extends ConsumerState<VerifyOtpScreen> {
     try {
       await ref.read(authRepositoryProvider).resendOtp(widget.email);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(context.l10n.otpResent)));
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(context.l10n.otpResent)));
         _startCooldown(60);
       }
     } on DioException catch (e) {
       if (mounted) {
         final msg = authErrorToString(context, e);
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(msg)));
       }
     } catch (_) {
       if (mounted) {
@@ -86,8 +87,8 @@ class _VerifyOtpScreenState extends ConsumerState<VerifyOtpScreen> {
   Future<void> _submit() async {
     final otp = _otpController.text.trim();
     if (otp.length != 6) {
-      ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(context.l10n.valOtp6)));
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(context.l10n.valOtp6)));
       return;
     }
 
@@ -105,13 +106,14 @@ class _VerifyOtpScreenState extends ConsumerState<VerifyOtpScreen> {
         );
         return;
       }
-      ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(context.l10n.verifySuccess)));
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(context.l10n.verifySuccess)));
       context.go('/login');
     } on DioException catch (e) {
       if (mounted) {
         final msg = authErrorToString(context, e);
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(msg)));
       }
     } catch (_) {
       if (mounted) {
@@ -136,148 +138,110 @@ class _VerifyOtpScreenState extends ConsumerState<VerifyOtpScreen> {
               context.go(widget.isForgotPassword ? '/login' : '/register'),
         ),
       ),
-      body: Stack(
-        children: [
-          Positioned(
-            top: -120,
-            left: -120,
-            child: Container(
-              width: 320,
-              height: 320,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                gradient: RadialGradient(
-                  colors: [
-                    AppTheme.ponAccent.withValues(alpha: 0.12),
-                    Colors.transparent,
-                  ],
-                ),
-              ),
-            ),
-          ),
-          Positioned(
-            bottom: -150,
-            right: -100,
-            child: Container(
-              width: 380,
-              height: 380,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                gradient: RadialGradient(
-                  colors: [
-                    AppTheme.ponAccent.withValues(alpha: 0.15),
-                    Colors.transparent,
-                  ],
-                ),
-              ),
-            ),
-          ),
-
-          // Content
-          SafeArea(
-            child: Center(
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 450),
-                child: SingleChildScrollView(
-                  physics: const BouncingScrollPhysics(),
-                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      const StaggeredEntrance(
-                        index: 0,
-                        child: Center(child: PonLogo(size: 100, showText: true)),
+      // No decorative accent orbs: the accent means "primary action"
+      // only (UI-REDESIGN-DIRECTION.md §2 rules 1-2).
+      body: SafeArea(
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 450),
+            child: SingleChildScrollView(
+              physics: const BouncingScrollPhysics(),
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  const StaggeredEntrance(
+                    index: 0,
+                    child: Center(child: PonLogo(size: 100, showText: true)),
+                  ),
+                  const SizedBox(height: 16),
+                  StaggeredEntrance(
+                    index: 1,
+                    child: Text(
+                      context.l10n.verifyAccountHeading,
+                      style:
+                          Theme.of(context).textTheme.headlineSmall?.copyWith(
+                                fontWeight: FontWeight.bold,
+                                color: Theme.of(context).colorScheme.onSurface,
+                              ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  StaggeredEntrance(
+                    index: 2,
+                    child: Text(
+                      context.l10n.otpSentTo(widget.email),
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        color: AppTheme.mutedText(context),
+                        height: 1.5,
                       ),
-                      const SizedBox(height: 16),
-                      StaggeredEntrance(
-                        index: 1,
-                        child: Text(
-                        context.l10n.verifyAccountHeading,
-                        style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
+                    ),
+                  ),
+                  const SizedBox(height: 32),
+
+                  // OTP Form Card
+                  StaggeredEntrance(
+                    index: 3,
+                    child: PonCard(
+                      child: Padding(
+                        padding: const EdgeInsets.all(24.0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            // 6-box OTP input
+                            Otp6BoxInput(
+                              controller: _otpController,
+                              accentColor: AppTheme.ponAccent,
+                              onCompleted: (_) => _submit(),
                             ),
-                        textAlign: TextAlign.center,
-                      ),
-                      ),
-                      const SizedBox(height: 8),
-                      StaggeredEntrance(
-                        index: 2,
-                        child: Text(
-                        context.l10n.otpSentTo(widget.email),
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          color: Colors.white.withValues(alpha: 0.5),
-                          height: 1.5,
-                        ),
-                      ),
-                      ),
-                      const SizedBox(height: 32),
+                            const SizedBox(height: 28),
 
-                      // OTP Form Card
-                      StaggeredEntrance(
-                        index: 3,
-                        child: PonCard(
-                        glowColor: AppTheme.ponAccent,
-                        glowStrength: 8,
-                        child: Padding(
-                          padding: const EdgeInsets.all(24.0),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.stretch,
-                            children: [
-                              // 6-box OTP input
-                              Otp6BoxInput(
-                                controller: _otpController,
-                                accentColor: AppTheme.ponAccent,
-                                onCompleted: (_) => _submit(),
-                              ),
-                              const SizedBox(height: 28),
+                            // Submit Button
+                            PonButton(
+                              onPressed: _submit,
+                              isLoading: _isLoading,
+                              child: Text(context.l10n.confirmButton),
+                            ),
+                            const SizedBox(height: 16),
 
-                              // Submit Button
-                              PonButton(
-                                onPressed: _submit,
-                                isLoading: _isLoading,
-                                gradientColors: const [AppTheme.ponAccent, AppTheme.ponAccent],
-                                glowColor: AppTheme.ponAccent,
-                                child: Text(context.l10n.confirmButton),
-                              ),
-                              const SizedBox(height: 16),
-
-                              // Resend OTP Button
-                              Center(
-                                child: _isResending
-                                    ? const SizedBox(
-                                        width: 20,
-                                        height: 20,
-                                        child: CircularProgressIndicator(strokeWidth: 2),
-                                      )
-                                    : TextButton(
-                                        onPressed: _resendCooldown > 0 ? null : _resend,
-                                        child: Text(
-                                          _resendCooldown > 0
-                                              ? context.l10n.resendIn(_resendCooldown)
-                                              : context.l10n.resendOtp,
-                                          style: TextStyle(
-                                            color: _resendCooldown > 0
-                                                ? Colors.white38
-                                                : AppTheme.ponAccent,
-                                            fontWeight: FontWeight.w600,
-                                          ),
+                            // Resend OTP Button
+                            Center(
+                              child: _isResending
+                                  ? const SizedBox(
+                                      width: 20,
+                                      height: 20,
+                                      child: CircularProgressIndicator(
+                                          strokeWidth: 2),
+                                    )
+                                  : TextButton(
+                                      onPressed:
+                                          _resendCooldown > 0 ? null : _resend,
+                                      child: Text(
+                                        _resendCooldown > 0
+                                            ? context.l10n
+                                                .resendIn(_resendCooldown)
+                                            : context.l10n.resendOtp,
+                                        style: TextStyle(
+                                          color: _resendCooldown > 0
+                                              ? AppTheme.mutedText(context)
+                                              : AppTheme.ponAccent,
+                                          fontWeight: FontWeight.w600,
                                         ),
                                       ),
-                              ),
-                            ],
-                          ),
+                                    ),
+                            ),
+                          ],
                         ),
                       ),
-                      ),
-                    ],
+                    ),
                   ),
-                ),
+                ],
               ),
             ),
           ),
-        ],
+        ),
       ),
     );
   }

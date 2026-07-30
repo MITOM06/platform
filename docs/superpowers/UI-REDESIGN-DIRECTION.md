@@ -6,9 +6,15 @@
 >
 > **Last updated:** 2026-07-30 — direction locked; **Layer 1 executed** (commit `86ca2212`),
 > **Layer 2 executed** (commit `a26f492c`), and the **L3-pre cross-cutting chrome sweep executed**
-> (commit `11d641aa`). The old neon brand is fully gone from both apps, and so are all elevation
-> shadows, glass blur, and candy radii. Next un-written plans: Layer 3 per-screen batches. **None of
-> this has been visually confirmed on a real screen yet — do that before starting Layer 3.**
+> (commit `11d641aa`), and **Layer 3 batch 1 (Auth) executed**. The old neon brand is fully gone from
+> both apps, and so are all elevation shadows, glass blur, and candy radii. Next: Layer 3 batches
+> 2–6 (chat / settings / AI / admin / remainder), none written yet. **None of this has been visually
+> confirmed on a real screen yet — worth doing before the remaining batches.**
+>
+> **Lesson from batch 1: do not trust a previous layer's "done" claim without grepping.** Layer 2
+> reported every aura orb and brand gradient removed, but all 6 Flutter auth screens still had both,
+> plus a second accent and hardcoded `Colors.white` that made them illegible in light mode. Verify
+> per-batch with a grep, don't assume.
 
 ---
 
@@ -133,7 +139,13 @@ Not yet written. Chrome (shadow/glass/radius) is already handled by L3-pre — e
 owns its screen's spacing, typography, layout, the remaining oversized Flutter radii inside
 per-screen widgets (37 sites), and the ad-hoc text-alpha → token audit. Proposed batches (each =
 one Claude Code session, one plan.md):
-1. Auth — `apps/client/lib/features/auth/` (6 screens) + `apps/web/app/(auth)/*` (5 pages)
+1. ~~Auth~~ ✅ **done** — `plans/2026-07-30-ui-redesign-l3-batch1-auth.md`. Key finding: the two
+   platforms had drifted badly — web auth was already clean from Layer 2, while **all 6 Flutter auth
+   screens still had the neon legacy and were illegible in light mode** (hardcoded `Colors.white` on
+   the `#F5F2ED` page). Also removed a second accent (amber), the accent aura orbs Layer 2 missed,
+   and the no-op compat params at every auth call site. Added `AppTheme.mutedText(context)` /
+   `AppTheme.hairline(context)` resolvers so screens never hardcode white/black again — **use these
+   in the remaining batches.**
 2. Chat core — `apps/client/lib/features/chat/` (13 screens) + `apps/web/app/(main)/conversations/*`
 3. Settings/Profile — `apps/client/lib/features/settings/`, `profile/` (6) + web equivalents (~6)
 4. AI features — `ai_context/`, `ai_hub/`, `assistant/` (5 Flutter) + `ai-context/`, `ai-hub/`,
