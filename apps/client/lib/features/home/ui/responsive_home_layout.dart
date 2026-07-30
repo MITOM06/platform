@@ -30,7 +30,7 @@ class ResponsiveHomeLayout extends ConsumerWidget {
         final isDark = Theme.of(context).brightness == Brightness.dark;
         final dividerColor = isDark
             ? AppTheme.darkBorder.withValues(alpha: 0.3)
-            : Colors.black.withValues(alpha: 0.06);
+            : AppTheme.hairline(context);
 
         return Scaffold(
           body: Row(
@@ -86,7 +86,7 @@ class _EmptyDetailPane extends StatelessWidget {
             style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.w600,
-              color: isDark ? Colors.white60 : Colors.black54,
+              color: AppTheme.mutedText(context),
             ),
           ),
         ],

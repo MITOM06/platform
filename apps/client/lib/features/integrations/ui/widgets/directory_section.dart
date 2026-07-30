@@ -89,9 +89,9 @@ class _DirectorySectionState extends ConsumerState<DirectorySection>
     final credential = await showDialog<String>(
       context: context,
       builder: (_) => AlertDialog(
-        backgroundColor: AppTheme.darkSurface,
+        backgroundColor: Theme.of(context).colorScheme.surface,
         title: Text(l10n.directoryKeyTitle(entry.name),
-            style: const TextStyle(color: Colors.white)),
+            style: TextStyle(color: Theme.of(context).colorScheme.onSurface)),
         content: PonTextField(
           controller: ctrl,
           labelText: l10n.directoryKeyLabel,
@@ -129,10 +129,10 @@ class _DirectorySectionState extends ConsumerState<DirectorySection>
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (_) => AlertDialog(
-        backgroundColor: AppTheme.darkSurface,
-        title: Text(item.entry.name, style: const TextStyle(color: Colors.white)),
+        backgroundColor: Theme.of(context).colorScheme.surface,
+        title: Text(item.entry.name, style: TextStyle(color: Theme.of(context).colorScheme.onSurface)),
         content: Text(l10n.connectorDisconnectConfirm,
-            style: const TextStyle(color: Colors.white70)),
+            style: TextStyle(color: AppTheme.mutedText(context))),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
@@ -188,8 +188,8 @@ class _DirectorySectionState extends ConsumerState<DirectorySection>
             Expanded(
               child: Text(
                 l10n.sectionDirectoryTitle,
-                style: const TextStyle(
-                  color: Colors.white,
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.onSurface,
                   fontWeight: FontWeight.bold,
                   fontSize: 18,
                 ),
@@ -207,7 +207,7 @@ class _DirectorySectionState extends ConsumerState<DirectorySection>
         Text(
           l10n.sectionDirectoryDesc,
           style: TextStyle(
-            color: Colors.white.withValues(alpha: 0.55),
+            color: AppTheme.mutedText(context),
             fontSize: 13,
             height: 1.3,
           ),
@@ -228,7 +228,7 @@ class _DirectorySectionState extends ConsumerState<DirectorySection>
           error: (e, _) => Padding(
             padding: const EdgeInsets.symmetric(vertical: 16),
             child: Text('$e',
-                style: TextStyle(color: Colors.white.withValues(alpha: 0.5))),
+                style: TextStyle(color: AppTheme.mutedText(context))),
           ),
           data: (items) {
             final filtered = _filter(items);
@@ -237,7 +237,7 @@ class _DirectorySectionState extends ConsumerState<DirectorySection>
                 padding: const EdgeInsets.symmetric(vertical: 24),
                 child: Center(
                   child: Text(l10n.directoryEmpty,
-                      style: TextStyle(color: Colors.white.withValues(alpha: 0.5))),
+                      style: TextStyle(color: AppTheme.mutedText(context))),
                 ),
               );
             }

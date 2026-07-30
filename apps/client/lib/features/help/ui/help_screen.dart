@@ -20,11 +20,6 @@ class _HelpScreenState extends State<HelpScreen> {
   String _query = '';
 
   /// Glow colors cycled across category sections, matching the legal screen.
-  static const _glowColors = [
-    AppTheme.ponAccent,
-    AppTheme.ponAccent,
-    AppTheme.ponAccent,
-  ];
 
   @override
   void dispose() {
@@ -68,38 +63,6 @@ class _HelpScreenState extends State<HelpScreen> {
       ),
       body: Stack(
         children: [
-          if (isDark) ...[
-            Positioned(
-              top: -100,
-              left: -100,
-              child: Container(
-                width: 300,
-                height: 300,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  gradient: RadialGradient(colors: [
-                    AppTheme.ponAccent.withValues(alpha: 0.08),
-                    Colors.transparent,
-                  ]),
-                ),
-              ),
-            ),
-            Positioned(
-              bottom: -100,
-              right: -100,
-              child: Container(
-                width: 300,
-                height: 300,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  gradient: RadialGradient(colors: [
-                    AppTheme.ponAccent.withValues(alpha: 0.08),
-                    Colors.transparent,
-                  ]),
-                ),
-              ),
-            ),
-          ],
           Column(
             children: [
               Padding(
@@ -136,8 +99,7 @@ class _HelpScreenState extends State<HelpScreen> {
     AppLocalizations l,
     bool isDark,
   ) {
-    final glow = _glowColors[index % _glowColors.length];
-    final accent = isDark ? glow : Theme.of(context).colorScheme.primary;
+    final accent = Theme.of(context).colorScheme.primary;
     return [
       Padding(
         padding: EdgeInsets.only(top: index == 0 ? 4 : 20, bottom: 12),
@@ -148,7 +110,7 @@ class _HelpScreenState extends State<HelpScreen> {
             Text(
               fc.category.title(l),
               style: TextStyle(
-                color: isDark ? Colors.white : Colors.black87,
+                color: Theme.of(context).colorScheme.onSurface,
                 fontWeight: FontWeight.bold,
                 fontSize: 16,
               ),
@@ -160,7 +122,6 @@ class _HelpScreenState extends State<HelpScreen> {
         FaqItemTile(
           question: fc.items[j].question(l),
           answer: fc.items[j].answer(l),
-          glowColor: _glowColors[j % _glowColors.length],
         ),
     ];
   }
@@ -205,26 +166,26 @@ class _SearchField extends StatelessWidget {
                 },
               ),
         filled: true,
-        fillColor: (isDark ? Colors.white : Colors.black)
+        fillColor: (Theme.of(context).colorScheme.onSurface)
             .withValues(alpha: 0.04),
         contentPadding:
             const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(AppTheme.radiusControl),
           borderSide: BorderSide(
-            color: (isDark ? Colors.white : Colors.black)
+            color: (Theme.of(context).colorScheme.onSurface)
                 .withValues(alpha: 0.12),
           ),
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(AppTheme.radiusControl),
           borderSide: BorderSide(
-            color: (isDark ? Colors.white : Colors.black)
+            color: (Theme.of(context).colorScheme.onSurface)
                 .withValues(alpha: 0.12),
           ),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(AppTheme.radiusControl),
           borderSide: const BorderSide(color: AppTheme.ponAccent, width: 1.5),
         ),
       ),
@@ -247,13 +208,13 @@ class _EmptyState extends StatelessWidget {
           Icon(
             Icons.search_off_rounded,
             size: 48,
-            color: isDark ? Colors.white24 : Colors.black26,
+            color: AppTheme.mutedText(context),
           ),
           const SizedBox(height: 12),
           Text(
             message,
             style: TextStyle(
-              color: isDark ? Colors.white54 : Colors.black54,
+              color: AppTheme.mutedText(context),
               fontSize: 15,
             ),
           ),

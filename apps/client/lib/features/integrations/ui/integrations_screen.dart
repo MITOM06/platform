@@ -76,12 +76,12 @@ class _IntegrationsScreenState extends ConsumerState<IntegrationsScreen>
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (_) => AlertDialog(
-        backgroundColor: AppTheme.darkSurface,
+        backgroundColor: Theme.of(context).colorScheme.surface,
         title: Text(item.entry.name,
-            style: const TextStyle(color: Colors.white)),
+            style: TextStyle(color: Theme.of(context).colorScheme.onSurface)),
         content: Text(
           l10n.connectorDisconnectConfirm,
-          style: const TextStyle(color: Colors.white70),
+          style: TextStyle(color: AppTheme.mutedText(context)),
         ),
         actions: [
           TextButton(
@@ -110,15 +110,14 @@ class _IntegrationsScreenState extends ConsumerState<IntegrationsScreen>
     final itemsAsync = ref.watch(integrationsProvider);
 
     return Scaffold(
-      backgroundColor: AppTheme.darkBackground,
+      backgroundColor: Theme.of(context).colorScheme.surface,
       appBar: AppBar(
-        backgroundColor: AppTheme.darkBackground,
+        backgroundColor: Theme.of(context).colorScheme.surface,
         title: Text(
           l10n.integrationsTitle,
-          style: const TextStyle(
-              color: Colors.white, fontWeight: FontWeight.bold),
+          style: TextStyle(
+              color: Theme.of(context).colorScheme.onSurface, fontWeight: FontWeight.bold),
         ),
-        iconTheme: const IconThemeData(color: Colors.white),
         actions: [
           IconButton(
             icon: const Icon(Icons.add_link, color: AppTheme.ponAccent),
@@ -142,7 +141,7 @@ class _IntegrationsScreenState extends ConsumerState<IntegrationsScreen>
               Text(
                 l10n.integrationsSubtitle,
                 style: TextStyle(
-                  color: Colors.white.withValues(alpha: 0.6),
+                  color: AppTheme.mutedText(context),
                   fontSize: 14,
                   height: 1.4,
                 ),
@@ -182,11 +181,11 @@ class _CustomMcpCta extends StatelessWidget {
     final l10n = context.l10n;
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(16),
+      borderRadius: BorderRadius.circular(AppTheme.radiusCard),
       child: Container(
         padding: const EdgeInsets.all(18),
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(AppTheme.radiusCard),
           border: Border.all(
             color: AppTheme.ponAccent.withValues(alpha: 0.4),
             width: 1.2,
@@ -203,8 +202,8 @@ class _CustomMcpCta extends StatelessWidget {
                 children: [
                   Text(
                     l10n.customMcpTitle,
-                    style: const TextStyle(
-                      color: Colors.white,
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.onSurface,
                       fontWeight: FontWeight.bold,
                       fontSize: 15,
                     ),
@@ -213,14 +212,14 @@ class _CustomMcpCta extends StatelessWidget {
                   Text(
                     l10n.customMcpSubtitle,
                     style: TextStyle(
-                      color: Colors.white.withValues(alpha: 0.55),
+                      color: AppTheme.mutedText(context),
                       fontSize: 12.5,
                     ),
                   ),
                 ],
               ),
             ),
-            const Icon(Icons.chevron_right, color: Colors.white38),
+            Icon(Icons.chevron_right, color: AppTheme.mutedText(context)),
           ],
         ),
       ),
@@ -242,12 +241,12 @@ class _ErrorState extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(Icons.cloud_off,
-                size: 56, color: Colors.white.withValues(alpha: 0.3)),
+                size: 56, color: AppTheme.mutedText(context)),
             const SizedBox(height: 12),
             Text(
               message,
               textAlign: TextAlign.center,
-              style: TextStyle(color: Colors.white.withValues(alpha: 0.6)),
+              style: TextStyle(color: AppTheme.mutedText(context)),
             ),
             const SizedBox(height: 16),
             SizedBox(

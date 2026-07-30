@@ -30,8 +30,6 @@ class ConnectorCard extends StatelessWidget {
     final available = entry.available;
 
     return PonCard(
-      glowColor: connected ? AppTheme.onlineGreen : AppTheme.ponAccent,
-      glowStrength: connected ? 5 : 2,
       borderRadius: 16,
       child: Padding(
         padding: const EdgeInsets.all(18),
@@ -45,8 +43,8 @@ class ConnectorCard extends StatelessWidget {
                 Flexible(
                   child: Text(
                     entry.name,
-                    style: const TextStyle(
-                      color: Colors.white,
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.onSurface,
                       fontWeight: FontWeight.bold,
                       fontSize: 16,
                     ),
@@ -61,7 +59,7 @@ class ConnectorCard extends StatelessWidget {
             Text(
               entry.description,
               style: TextStyle(
-                color: Colors.white.withValues(alpha: 0.6),
+                color: AppTheme.mutedText(context),
                 fontSize: 13,
                 height: 1.3,
               ),
@@ -103,7 +101,7 @@ class _IconBadge extends StatelessWidget {
       height: 44,
       alignment: Alignment.center,
       decoration: BoxDecoration(
-        color: AppTheme.darkBackground,
+        color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: AppTheme.darkBorder),
       ),
@@ -132,21 +130,21 @@ class _ConnectorLogo extends StatelessWidget {
   Widget build(BuildContext context) {
     final url = _logos[id];
     if (url == null) {
-      return _initials();
+      return _initials(context);
     }
     return Image.network(
       url,
       width: 26,
       height: 26,
       fit: BoxFit.contain,
-      errorBuilder: (_, __, ___) => _initials(),
+      errorBuilder: (_, __, ___) => _initials(context),
     );
   }
 
-  Widget _initials() => Text(
+  Widget _initials(BuildContext context) => Text(
         id.isNotEmpty ? id[0].toUpperCase() : '?',
-        style: const TextStyle(
-          color: Colors.white54,
+        style: TextStyle(
+          color: AppTheme.mutedText(context),
           fontSize: 18,
           fontWeight: FontWeight.bold,
         ),
@@ -245,7 +243,7 @@ class _ActionRow extends StatelessWidget {
           child: Text(
             meta,
             style: TextStyle(
-              color: Colors.white.withValues(alpha: 0.35),
+              color: AppTheme.mutedText(context),
               fontSize: 11,
               fontFamily: 'monospace',
             ),
@@ -289,7 +287,7 @@ class _ActionRow extends StatelessWidget {
           Text(
             context.l10n.connectorStatusComingSoon,
             style: TextStyle(
-              color: Colors.white.withValues(alpha: 0.3),
+              color: AppTheme.mutedText(context),
               fontSize: 12,
             ),
           ),
