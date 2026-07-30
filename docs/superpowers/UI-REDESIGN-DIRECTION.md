@@ -4,10 +4,11 @@
 > redesign program without re-litigating the visual direction. Read this top-to-bottom, then open
 > the current plan file it points to.
 >
-> **Last updated:** 2026-07-30 — direction locked; **Layer 1 executed** (commit `86ca2212`) and
-> **Layer 2 executed** (commit `a26f492c`). The old neon brand is fully gone from both apps.
-> Next un-written plans: Layer 3 per-screen batches. Neither layer has been visually confirmed on
-> a real screen yet — do that before starting Layer 3.
+> **Last updated:** 2026-07-30 — direction locked; **Layer 1 executed** (commit `86ca2212`),
+> **Layer 2 executed** (commit `a26f492c`), and the **L3-pre cross-cutting chrome sweep executed**
+> (commit `11d641aa`). The old neon brand is fully gone from both apps, and so are all elevation
+> shadows, glass blur, and candy radii. Next un-written plans: Layer 3 per-screen batches. **None of
+> this has been visually confirmed on a real screen yet — do that before starting Layer 3.**
 
 ---
 
@@ -88,7 +89,7 @@ Reason for layering: reading the entire ~76-screen codebase in one session is wh
 original attempt (via a different tool) to run out of context before finishing. Each layer/plan
 below is scoped so a single Claude Code session only needs to read a handful of files.
 
-### Layer 1 — Design tokens (foundation, do first)
+### Layer 1 — Design tokens (foundation, do first) ✅ done, commit `86ca2212`
 Plan: `plans/2026-07-30-ui-redesign-p1-design-tokens.md` — **done, commit `86ca2212`.**
 Touches only: `apps/web/app/globals.css`, `apps/client/lib/core/theme/app_theme.dart`. Everything
 downstream inherits automatically because shadcn (`components/ui/*`) reads CSS variables and
@@ -112,8 +113,26 @@ Plan (written during execution, as the decision record):
 - Deliberately kept: motion tokens, success green, connector brand colours, chat wallpaper
   presets (user-selectable content, not chrome).
 
-### Layer 3 — Per-screen rollout batches (do after Layer 2, one plan per batch)
-Not yet written. Proposed batches (each = one Claude Code session, one plan.md):
+### L3-pre — Cross-cutting chrome sweep ✅ done, commit `11d641aa`
+Plan (written during execution, as the decision record):
+`plans/2026-07-30-ui-redesign-l3-pre-chrome-sweep.md`. 57 files. Sits between Layer 2 and Layer 3
+because §2 rules 2–5 are mechanical and identical on every screen — doing them once is cheaper and
+more consistent than spreading them over 6 per-screen batches. Delivered:
+- Every elevation shadow gone on both platforms (web `shadow-*`, Flutter `boxShadow`); each floating
+  surface was checked to already carry a 1px border before its shadow was removed.
+- All glassmorphism gone (`backdrop-blur` 28 → 0, `BackdropFilter` 1 → 0). Surfaces that existed
+  only to be blurred are now **genuinely opaque** — keeping the alpha after removing the blur let
+  scrolled content bleed through sticky headers, tab bars and composer chrome.
+- Candy radii normalised; chat bubbles asymmetric 14/4; OTP box unified to 10px on both platforms
+  (was 6px web / 12px Flutter — also a `sync.md` parity fix).
+- Recovered an interrupted session and fixed two bugs it left behind: the mangled Tailwind class
+  `md:-none` (from cutting `md:backdrop-blur-none`) and a failing `flutter analyze`.
+
+### Layer 3 — Per-screen rollout batches (do after L3-pre, one plan per batch)
+Not yet written. Chrome (shadow/glass/radius) is already handled by L3-pre — each batch now only
+owns its screen's spacing, typography, layout, the remaining oversized Flutter radii inside
+per-screen widgets (37 sites), and the ad-hoc text-alpha → token audit. Proposed batches (each =
+one Claude Code session, one plan.md):
 1. Auth — `apps/client/lib/features/auth/` (6 screens) + `apps/web/app/(auth)/*` (5 pages)
 2. Chat core — `apps/client/lib/features/chat/` (13 screens) + `apps/web/app/(main)/conversations/*`
 3. Settings/Profile — `apps/client/lib/features/settings/`, `profile/` (6) + web equivalents (~6)

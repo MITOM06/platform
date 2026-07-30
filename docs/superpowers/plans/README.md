@@ -16,7 +16,8 @@
 |------|-------|------------|
 | `2026-07-30-ui-redesign-p1-design-tokens.md` | Layer 1 — design tokens (`globals.css` + `app_theme.dart`) | **Done** — commit `86ca2212`. Web `pnpm build` PASS, `flutter analyze` clean, contrast WCAG AA verified (no value adjustment needed) |
 | `2026-07-30-ui-redesign-p2-component-language.md` | Layer 2 — retire the neon brand: symbol rename, gradient/glow/aura removal, shared widgets (`pon_widgets.dart`), logo marks, chat-bubble radius | **Done** — commit `a26f492c` (210 files). Web build PASS, `flutter analyze` clean, `flutter test` 60/60. Neither layer visually verified on a real screen yet |
-| Layer 3 — per-screen batches (auth / chat / settings / AI / admin / remainder) | radius + spacing per screen, drop the no-op compat params | Not written yet — see the direction doc §3 and P2's "Còn lại cho Layer 3" |
+| `2026-07-30-ui-redesign-l3-pre-chrome-sweep.md` | L3-pre — cross-cutting chrome pass: drop elevation shadows, remove all glass blur (+ de-alpha the surfaces that only existed to be blurred), normalise candy radii, OTP box 10px parity fix | **Done** — commit `11d641aa` (57 files). Web build PASS (exit 0), `flutter analyze` clean. Written *during* execution as the decision record; recovers an interrupted session and fixes 2 bugs it left (mangled class `md:-none`, failing `flutter analyze`) |
+| Layer 3 — per-screen batches (auth / chat / settings / AI / admin / remainder) | spacing + typography + layout per screen, 37 remaining oversized Flutter radii, ad-hoc text-alpha audit, drop the no-op compat params | Not written yet — see the direction doc §3, P2's "Còn lại cho Layer 3", and L3-pre's "Cố ý KHÔNG làm" |
 
 ## ✅ Done — 2026-07-10 batch (all executed & verified)
 
