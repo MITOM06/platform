@@ -4,7 +4,9 @@ import '../theme/app_theme.dart';
 import '../theme/motion.dart';
 
 // ---------------------------------------------------------------------------
-// PON Logo — mirrors the web SVG exactly (same paths, same gradient)
+// PON Logo — mirrors the web SVG (same paths). The neon 3-stop gradient was
+// retired in the redesign: the mark is a single flat accent shape on both
+// platforms, so it inherits the theme's one accent colour.
 // ---------------------------------------------------------------------------
 class PonLogo extends StatelessWidget {
   final double size;
@@ -13,9 +15,10 @@ class PonLogo extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
     final iconWidget = CustomPaint(
       size: Size(size, size),
-      painter: _PonLogoPainter(),
+      painter: _PonLogoPainter(scheme.primary),
     );
 
     if (!showText) return iconWidget;
@@ -25,17 +28,13 @@ class PonLogo extends StatelessWidget {
       children: [
         iconWidget,
         const SizedBox(height: 8),
-        ShaderMask(
-          shaderCallback: (bounds) =>
-              AppTheme.ponGradient.createShader(bounds),
-          child: Text(
-            'PON',
-            style: TextStyle(
-              fontSize: size * 0.48,
-              fontWeight: FontWeight.w900,
-              color: Colors.white,
-              letterSpacing: 2,
-            ),
+        Text(
+          'PON',
+          style: TextStyle(
+            fontSize: size * 0.48,
+            fontWeight: FontWeight.w900,
+            color: scheme.primary,
+            letterSpacing: 2,
           ),
         ),
         const SizedBox(height: 4),
@@ -43,7 +42,7 @@ class PonLogo extends StatelessWidget {
           'Connect & Chat',
           style: TextStyle(
             fontSize: size * 0.15,
-            color: Colors.white54,
+            color: scheme.onSurface.withValues(alpha: 0.6),
             letterSpacing: 0.5,
           ),
         ),
@@ -53,15 +52,16 @@ class PonLogo extends StatelessWidget {
 }
 
 class _PonLogoPainter extends CustomPainter {
+  final Color color;
+  const _PonLogoPainter(this.color);
+
   @override
   void paint(Canvas canvas, Size size) {
     final sx = size.width / 24;
     final sy = size.height / 24;
 
     final paint = Paint()
-      ..shader = AppTheme.ponGradient.createShader(
-        Rect.fromLTWH(0, 0, size.width, size.height),
-      )
+      ..color = color
       ..style = PaintingStyle.fill;
 
     // Outer speech-bubble + inner ring hole — evenOdd makes the inner area transparent
@@ -93,15 +93,22 @@ class _PonLogoPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+  bool shouldRepaint(covariant _PonLogoPainter oldDelegate) =>
+      oldDelegate.color != color;
 }
 
 // ---------------------------------------------------------------------------
-// Frosted Glass Neon Card (Glassmorphism)
+// Surface card — an opaque surface + 1px hairline border. No glass, no glow.
+// Elevation is expressed as a background-shade step (background -> surface),
+// per UI-REDESIGN-DIRECTION.md §2 rule 3.
 // ---------------------------------------------------------------------------
 class PonCard extends StatelessWidget {
   final Widget child;
   final double borderRadius;
+
+  /// Kept only so the ~70 existing call sites keep compiling. The frosted-glass
+  /// and neon-glow look they configured no longer exists, so these are ignored.
+  /// TODO(ui-redesign-L3): drop these params and clean up every call site.
   final double blur;
   final double borderOpacity;
   final double bgOpacity;
@@ -111,45 +118,25 @@ class PonCard extends StatelessWidget {
   const PonCard({
     super.key,
     required this.child,
-    this.borderRadius = 24.0,
-    this.blur = 15.0,
-    this.borderOpacity = 0.25,
-    this.bgOpacity = 0.6,
-    this.glowColor = AppTheme.ponPeach,
-    this.glowStrength = 6.0,
+    this.borderRadius = AppTheme.radiusCard,
+    this.blur = 0,
+    this.borderOpacity = 1,
+    this.bgOpacity = 1,
+    this.glowColor = AppTheme.ponAccent,
+    this.glowStrength = 0,
   });
 
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    // PERF: We intentionally do NOT use BackdropFilter/ImageFilter.blur here.
-    // Real-time backdrop blur is the single most expensive operation on mobile
-    // GPUs and PonCard is used on every list item across the app (friends,
-    // conversations, search...), which made scrolling jank everywhere.
-    // Because the surface is already ~60% opaque, a slightly more opaque solid
-    // surface is visually almost indistinguishable from the frosted glass look
-    // while costing virtually nothing to render.
-    final surfaceOpacity = (bgOpacity + 0.18).clamp(0.0, 1.0);
     return Container(
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surface.withValues(alpha: surfaceOpacity),
+        color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(borderRadius),
         border: Border.all(
-          color: (isDark
-                  ? AppTheme.darkBorder
-                  : Theme.of(context).colorScheme.primary.withValues(alpha: 0.15))
-              .withValues(alpha: borderOpacity),
-          width: 1.5,
+          color: isDark ? AppTheme.darkBorder : AppTheme.lightBorder,
+          width: 1,
         ),
-        boxShadow: glowStrength > 0 && isDark
-            ? [
-                BoxShadow(
-                  color: glowColor.withValues(alpha: 0.08),
-                  blurRadius: glowStrength * 3,
-                  spreadRadius: 1,
-                )
-              ]
-            : null,
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(borderRadius),
@@ -160,12 +147,18 @@ class PonCard extends StatelessWidget {
 }
 
 // ---------------------------------------------------------------------------
-// Neon Gradient Button with Glow & Scale animation
+// Primary action button — flat accent fill, 10px radius, press-scale only.
+// No gradient, no glow (UI-REDESIGN-DIRECTION.md §2 rules 2-4).
 // ---------------------------------------------------------------------------
 class PonButton extends StatefulWidget {
   final VoidCallback? onPressed;
   final Widget child;
-  final List<Color> gradientColors;
+
+  /// Kept for call-site compatibility. The button is a flat single-accent fill
+  /// now; if a non-null list is passed, only its FIRST colour is honoured so a
+  /// deliberately-coloured button (e.g. destructive) still reads correctly.
+  /// TODO(ui-redesign-L3): replace with an explicit `variant` enum.
+  final List<Color>? gradientColors;
   final Color glowColor;
   final bool isLoading;
 
@@ -173,8 +166,8 @@ class PonButton extends StatefulWidget {
     super.key,
     required this.onPressed,
     required this.child,
-    this.gradientColors = const [AppTheme.ponCyan, AppTheme.ponPink],
-    this.glowColor = AppTheme.ponCyan,
+    this.gradientColors,
+    this.glowColor = AppTheme.ponAccent,
     this.isLoading = false,
   });
 
@@ -200,26 +193,11 @@ class _PonButtonState extends State<PonButton> {
         duration: AppMotion.instant,
         child: Container(
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(18),
-            gradient: LinearGradient(
-              colors: isDisabled
-                  ? (isDark
-                      ? [Colors.grey.shade800, Colors.grey.shade900]
-                      : [Colors.grey.shade300, Colors.grey.shade400])
-                  : widget.gradientColors,
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-            boxShadow: isDisabled || !isDark
-                ? null
-                : [
-                    BoxShadow(
-                      color: widget.glowColor.withValues(alpha: 0.35),
-                      blurRadius: _isPressed ? 8 : 16,
-                      spreadRadius: 1,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
+            borderRadius: BorderRadius.circular(AppTheme.radiusControl),
+            color: isDisabled
+                ? (isDark ? AppTheme.darkBorder : AppTheme.lightBorder)
+                : (widget.gradientColors?.first ??
+                    Theme.of(context).colorScheme.primary),
           ),
           padding: const EdgeInsets.symmetric(vertical: 16),
           alignment: Alignment.center,
@@ -248,7 +226,8 @@ class _PonButtonState extends State<PonButton> {
 }
 
 // ---------------------------------------------------------------------------
-// Glowing Text Field (Glows neon when focused)
+// Text field — focus is shown by the 2px accent border from
+// `inputDecorationTheme`, not by a neon glow.
 // ---------------------------------------------------------------------------
 class PonTextField extends StatefulWidget {
   final TextEditingController controller;
@@ -291,7 +270,7 @@ class PonTextField extends StatefulWidget {
     this.onFieldSubmitted,
     this.validator,
     this.focusNode,
-    this.focusColor = AppTheme.ponCyan,
+    this.focusColor = AppTheme.ponAccent,
     this.maxLength,
     this.counterText,
     this.style,
@@ -307,7 +286,6 @@ class PonTextField extends StatefulWidget {
 
 class _PonTextFieldState extends State<PonTextField> {
   late FocusNode _internalFocusNode;
-  bool _isFocused = false;
   late bool _obscured;
 
   @override
@@ -315,45 +293,22 @@ class _PonTextFieldState extends State<PonTextField> {
     super.initState();
     _obscured = widget.obscureText;
     _internalFocusNode = widget.focusNode ?? FocusNode();
-    _internalFocusNode.addListener(_handleFocusChange);
-  }
-
-  void _handleFocusChange() {
-    if (mounted) {
-      setState(() {
-        _isFocused = _internalFocusNode.hasFocus;
-      });
-    }
   }
 
   @override
   void dispose() {
-    // Only dispose if it was created internally
+    // Only dispose if it was created internally.
+    // No focus listener any more: the focused state is drawn by
+    // `inputDecorationTheme.focusedBorder`, so no rebuild is needed on focus.
     if (widget.focusNode == null) {
       _internalFocusNode.dispose();
-    } else {
-      _internalFocusNode.removeListener(_handleFocusChange);
     }
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 250),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: _isFocused
-                ? widget.focusColor.withValues(alpha: 0.15)
-                : Colors.transparent,
-            blurRadius: 10,
-            spreadRadius: 1,
-          )
-        ],
-      ),
-      child: TextFormField(
+    return TextFormField(
         controller: widget.controller,
         focusNode: _internalFocusNode,
         obscureText: widget.enableVisibilityToggle
@@ -386,7 +341,6 @@ class _PonTextFieldState extends State<PonTextField> {
               : widget.suffixIcon,
           counterText: widget.counterText,
         ),
-      ),
     );
   }
 }

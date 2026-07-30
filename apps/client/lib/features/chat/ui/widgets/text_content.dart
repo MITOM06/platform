@@ -115,7 +115,7 @@ class _TextContentState extends ConsumerState<TextContent> {
       code: base.copyWith(
         fontFamily: 'monospace',
         fontSize: 13,
-        color: AppTheme.ponCyan,
+        color: AppTheme.ponAccent,
         backgroundColor: Colors.black26,
       ),
       codeblockDecoration: BoxDecoration(
@@ -127,7 +127,7 @@ class _TextContentState extends ConsumerState<TextContent> {
       h2: base.copyWith(fontSize: 17, fontWeight: FontWeight.bold),
       h3: base.copyWith(fontSize: 15, fontWeight: FontWeight.w600),
       a: base.copyWith(
-        color: AppTheme.ponCyan,
+        color: AppTheme.ponAccent,
         decoration: TextDecoration.underline,
       ),
       blockquote: base.copyWith(
@@ -136,8 +136,8 @@ class _TextContentState extends ConsumerState<TextContent> {
       ),
       blockquoteDecoration: BoxDecoration(
         border: const Border(
-            left: BorderSide(color: AppTheme.ponCyan, width: 3)),
-        color: AppTheme.ponCyan.withValues(alpha: 0.05),
+            left: BorderSide(color: AppTheme.ponAccent, width: 3)),
+        color: AppTheme.ponAccent.withValues(alpha: 0.05),
       ),
     );
   }
@@ -153,7 +153,7 @@ class _TextContentState extends ConsumerState<TextContent> {
     final regex = RegExp(pattern, caseSensitive: false);
 
     final mentionStyle = baseStyle.copyWith(
-      color: AppTheme.ponCyan,
+      color: AppTheme.ponAccent,
       fontWeight: FontWeight.w700,
     );
 

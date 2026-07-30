@@ -37,7 +37,7 @@ export function VoiceMessage({ content, isOwn }: { content: string; isOwn: boole
   }
 
   const pct = duration > 0 ? (position / duration) * 100 : 0
-  const accent = isOwn ? 'accent-primary-foreground' : 'accent-pon-cyan'
+  const accent = isOwn ? 'accent-primary-foreground' : 'accent-primary'
 
   return (
     <div className="flex w-full max-w-[220px] items-center gap-2">
@@ -46,7 +46,7 @@ export function VoiceMessage({ content, isOwn }: { content: string; isOwn: boole
         onClick={toggle}
         className={cn(
           'flex size-9 shrink-0 items-center justify-center rounded-full',
-          isOwn ? 'bg-primary-foreground/20 text-primary-foreground' : 'bg-pon-cyan/20 text-pon-cyan',
+          isOwn ? 'bg-primary-foreground/20 text-primary-foreground' : 'bg-primary/20 text-primary',
         )}
       >
         {playing ? <Pause className="size-5" /> : <Play className="size-5" />}

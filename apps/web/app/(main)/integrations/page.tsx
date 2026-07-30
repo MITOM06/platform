@@ -78,7 +78,7 @@ export default function IntegrationsPage() {
         </Button>
         <div>
           <h1 className="text-2xl font-bold flex items-center gap-2">
-            <Plug className="text-pon-cyan size-6" /> {t('title')}
+            <Plug className="text-primary size-6" /> {t('title')}
           </h1>
           <p className="text-sm text-muted-foreground mt-1">{t('subtitle')}</p>
         </div>
@@ -94,7 +94,7 @@ export default function IntegrationsPage() {
 
         <section>
           <div className="mb-4">
-            <div className="font-mono text-pon-pink text-xs tracking-[2px]">
+            <div className="font-mono text-primary text-xs tracking-[2px]">
               {t('sectionConnectorsNum')}
             </div>
             <h2 className="text-xl font-bold tracking-tight mt-1">
@@ -134,7 +134,7 @@ export default function IntegrationsPage() {
 
         <section>
           <div className="mb-1">
-            <div className="font-mono text-pon-pink text-xs tracking-[2px]">
+            <div className="font-mono text-primary text-xs tracking-[2px]">
               {t('sectionCustomNum')}
             </div>
             <h2 className="text-xl font-bold tracking-tight mt-1">

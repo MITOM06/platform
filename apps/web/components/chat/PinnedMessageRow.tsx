@@ -30,15 +30,15 @@ export function PinnedMessageRow({
 }: Props) {
   return (
     <div
-      className="bg-pon-cyan/10 border-l-[3px] border-l-pon-cyan px-3 py-1.5 flex items-center gap-2 rounded-r-md transition-colors hover:bg-pon-cyan/15 shrink-0"
+      className="bg-primary/10 border-l-[3px] border-l-primary px-3 py-1.5 flex items-center gap-2 rounded-r-md transition-colors hover:bg-primary/15 shrink-0"
       onClick={onJump}
       role={onJump ? 'button' : undefined}
       style={onJump ? { cursor: 'pointer' } : undefined}
     >
-      <Pin className="size-3.5 text-pon-cyan shrink-0" />
+      <Pin className="size-3.5 text-primary shrink-0" />
       <div className="flex-1 min-w-0">
         {senderLabel && (
-          <p className="text-[11px] text-pon-cyan font-semibold truncate">{senderLabel}</p>
+          <p className="text-[11px] text-primary font-semibold truncate">{senderLabel}</p>
         )}
         <p className="text-xs text-foreground truncate">{content}</p>
       </div>

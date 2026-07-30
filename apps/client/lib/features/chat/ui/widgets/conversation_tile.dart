@@ -88,7 +88,7 @@ class ConversationTile extends ConsumerWidget {
       decoration: BoxDecoration(
         color: isSelected
             ? (isDark
-                ? AppTheme.ponCyan.withValues(alpha: 0.12)
+                ? AppTheme.ponAccent.withValues(alpha: 0.12)
                 : Theme.of(context).colorScheme.primary.withValues(alpha: 0.08))
             : (isDark
                 ? AppTheme.darkSurface.withValues(alpha: 0.4)
@@ -97,12 +97,12 @@ class ConversationTile extends ConsumerWidget {
         border: Border.all(
           color: isSelected
               ? (isDark
-                      ? AppTheme.ponCyan
+                      ? AppTheme.ponAccent
                       : Theme.of(context).colorScheme.primary)
                   .withValues(alpha: 0.6)
               : showUnread
                   ? (isDark
-                          ? AppTheme.ponCyan
+                          ? AppTheme.ponAccent
                           : Theme.of(context).colorScheme.primary)
                       .withValues(alpha: 0.25)
                   : (isDark
@@ -138,15 +138,15 @@ class ConversationTile extends ConsumerWidget {
                   gradientColors: showUnread
                       ? [
                           isDark
-                              ? AppTheme.ponCyan
+                              ? AppTheme.ponAccent
                               : Theme.of(context).colorScheme.primary,
                           isDark
-                              ? AppTheme.ponPink
+                              ? AppTheme.ponAccent
                               : Theme.of(context).colorScheme.secondary,
                         ]
                       : [
                           isDark
-                              ? AppTheme.ponPeach.withValues(alpha: 0.6)
+                              ? AppTheme.ponAccent.withValues(alpha: 0.6)
                               : Colors.grey.shade400,
                           isDark ? AppTheme.darkBorder : Colors.grey.shade300,
                         ],
@@ -239,13 +239,13 @@ class ConversationTile extends ConsumerWidget {
                       const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
                     color: isDark
-                        ? AppTheme.ponPink
+                        ? AppTheme.ponAccent
                         : Theme.of(context).colorScheme.secondary,
                     borderRadius: BorderRadius.circular(10),
                     boxShadow: isDark
                         ? [
                             BoxShadow(
-                              color: AppTheme.ponPink.withValues(alpha: 0.4),
+                              color: AppTheme.ponAccent.withValues(alpha: 0.4),
                               blurRadius: 8,
                             )
                           ]
@@ -327,7 +327,7 @@ class _AiBotTileAvatar extends StatelessWidget {
           decoration: const BoxDecoration(
             shape: BoxShape.circle,
             gradient: LinearGradient(
-              colors: [Color(0xFF6B2FA0), Color(0xFF2D1B69)],
+              colors: [Color(0xFF7A2E3A), Color(0xFF3A2A2C)],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
@@ -341,7 +341,7 @@ class _AiBotTileAvatar extends StatelessWidget {
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
             decoration: BoxDecoration(
-              color: const Color(0xFFB47FFF),
+              color: const Color(0xFF96435B),
               borderRadius: BorderRadius.circular(6),
               border: Border.all(
                   color: Theme.of(context).scaffoldBackgroundColor, width: 1.5),

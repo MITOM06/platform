@@ -89,14 +89,14 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
         />
         {/* Ambient neon glow spheres */}
         <div className="absolute inset-0 pointer-events-none overflow-hidden">
-          <div className="absolute -top-16 -left-16 size-40 rounded-full bg-pon-cyan blur-[60px] opacity-[0.06] dark:opacity-[0.09]" />
-          <div className="absolute -bottom-16 -right-16 size-40 rounded-full bg-pon-peach blur-[60px] opacity-[0.06] dark:opacity-[0.09]" />
+          <div className="absolute -top-16 -left-16 size-40 rounded-full bg-primary blur-[60px] opacity-[0.06] dark:opacity-[0.09]" />
+          <div className="absolute -bottom-16 -right-16 size-40 rounded-full bg-primary blur-[60px] opacity-[0.06] dark:opacity-[0.09]" />
         </div>
         <div className="h-16 border-b px-2 @[200px]:px-4 flex items-center justify-center @[200px]:justify-between shrink-0 bg-background/95 backdrop-blur-md">
           {/* Logo & PON Text — text hides when the rail is compact */}
           <div className="flex items-center gap-2 select-none">
             <PonLogo className="size-8" />
-            <span className="hidden @[200px]:inline font-bold text-xl tracking-wider bg-gradient-to-r from-pon-cyan via-pon-peach to-pon-pink bg-clip-text text-transparent">
+            <span className="hidden @[200px]:inline font-bold text-xl tracking-wider bg-primary bg-clip-text text-transparent">
               PON
             </span>
           </div>

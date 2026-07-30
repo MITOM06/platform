@@ -148,7 +148,7 @@ class _VerifyOtpScreenState extends ConsumerState<VerifyOtpScreen> {
                 shape: BoxShape.circle,
                 gradient: RadialGradient(
                   colors: [
-                    AppTheme.ponCyan.withValues(alpha: 0.12),
+                    AppTheme.ponAccent.withValues(alpha: 0.12),
                     Colors.transparent,
                   ],
                 ),
@@ -165,7 +165,7 @@ class _VerifyOtpScreenState extends ConsumerState<VerifyOtpScreen> {
                 shape: BoxShape.circle,
                 gradient: RadialGradient(
                   colors: [
-                    AppTheme.ponPeach.withValues(alpha: 0.15),
+                    AppTheme.ponAccent.withValues(alpha: 0.15),
                     Colors.transparent,
                   ],
                 ),
@@ -218,7 +218,7 @@ class _VerifyOtpScreenState extends ConsumerState<VerifyOtpScreen> {
                       StaggeredEntrance(
                         index: 3,
                         child: PonCard(
-                        glowColor: AppTheme.ponCyan,
+                        glowColor: AppTheme.ponAccent,
                         glowStrength: 8,
                         child: Padding(
                           padding: const EdgeInsets.all(24.0),
@@ -228,7 +228,7 @@ class _VerifyOtpScreenState extends ConsumerState<VerifyOtpScreen> {
                               // 6-box OTP input
                               Otp6BoxInput(
                                 controller: _otpController,
-                                accentColor: AppTheme.ponCyan,
+                                accentColor: AppTheme.ponAccent,
                                 onCompleted: (_) => _submit(),
                               ),
                               const SizedBox(height: 28),
@@ -237,8 +237,8 @@ class _VerifyOtpScreenState extends ConsumerState<VerifyOtpScreen> {
                               PonButton(
                                 onPressed: _submit,
                                 isLoading: _isLoading,
-                                gradientColors: const [AppTheme.ponCyan, AppTheme.ponCyan],
-                                glowColor: AppTheme.ponCyan,
+                                gradientColors: const [AppTheme.ponAccent, AppTheme.ponAccent],
+                                glowColor: AppTheme.ponAccent,
                                 child: Text(context.l10n.confirmButton),
                               ),
                               const SizedBox(height: 16),
@@ -260,7 +260,7 @@ class _VerifyOtpScreenState extends ConsumerState<VerifyOtpScreen> {
                                           style: TextStyle(
                                             color: _resendCooldown > 0
                                                 ? Colors.white38
-                                                : AppTheme.ponCyan,
+                                                : AppTheme.ponAccent,
                                             fontWeight: FontWeight.w600,
                                           ),
                                         ),

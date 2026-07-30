@@ -142,7 +142,7 @@ class _ReminderTile extends StatelessWidget {
       ),
       child: ListTile(
         leading: const Icon(Icons.alarm_outlined,
-            color: AppTheme.ponCyan, size: 22),
+            color: AppTheme.ponAccent, size: 22),
         title: Text(text,
             style: TextStyle(color: colorScheme.onSurface, fontSize: 15)),
         subtitle: Text(dateStr,
@@ -153,7 +153,7 @@ class _ReminderTile extends StatelessWidget {
           children: [
             IconButton(
               icon: const Icon(Icons.check_circle_outline,
-                  color: AppTheme.ponCyan, size: 20),
+                  color: AppTheme.ponAccent, size: 20),
               tooltip: context.l10n.reminderDone,
               onPressed: onDone,
             ),

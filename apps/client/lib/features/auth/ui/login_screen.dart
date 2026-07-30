@@ -132,7 +132,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 shape: BoxShape.circle,
                 gradient: RadialGradient(
                   colors: [
-                    AppTheme.ponCyan.withValues(alpha: 0.18),
+                    AppTheme.ponAccent.withValues(alpha: 0.18),
                     Colors.transparent,
                   ],
                 ),
@@ -149,7 +149,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 shape: BoxShape.circle,
                 gradient: RadialGradient(
                   colors: [
-                    AppTheme.ponPink.withValues(alpha: 0.15),
+                    AppTheme.ponAccent.withValues(alpha: 0.15),
                     Colors.transparent,
                   ],
                 ),
@@ -166,7 +166,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 shape: BoxShape.circle,
                 gradient: RadialGradient(
                   colors: [
-                    AppTheme.ponPeach.withValues(alpha: 0.12),
+                    AppTheme.ponAccent.withValues(alpha: 0.12),
                     Colors.transparent,
                   ],
                 ),
@@ -196,7 +196,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     StaggeredEntrance(
                       index: 1,
                       child: PonCard(
-                      glowColor: AppTheme.ponCyan,
+                      glowColor: AppTheme.ponAccent,
                       glowStrength: 8,
                       child: Padding(
                         padding: const EdgeInsets.all(24.0),
@@ -222,7 +222,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                 prefixIcon: Icons.email_outlined,
                                 keyboardType: TextInputType.emailAddress,
                                 textInputAction: TextInputAction.next,
-                                focusColor: AppTheme.ponCyan,
+                                focusColor: AppTheme.ponAccent,
                                 validator: (v) {
                                   if (v == null || v.isEmpty) return context.l10n.valEmailRequired;
                                   if (!v.contains('@')) return context.l10n.valEmailInvalid;
@@ -238,7 +238,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                 prefixIcon: Icons.lock_outlined,
                                 obscureText: _obscurePassword,
                                 textInputAction: TextInputAction.done,
-                                focusColor: AppTheme.ponPink,
+                                focusColor: AppTheme.ponAccent,
                                 onFieldSubmitted: (_) => _submit(),
                                 suffixIcon: IconButton(
                                   icon: Icon(
@@ -271,8 +271,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                               PonButton(
                                 onPressed: _submit,
                                 isLoading: _isLoading,
-                                gradientColors: const [AppTheme.ponCyan, AppTheme.ponCyan],
-                                glowColor: AppTheme.ponCyan,
+                                gradientColors: const [AppTheme.ponAccent, AppTheme.ponAccent],
+                                glowColor: AppTheme.ponAccent,
                                 child: Text(context.l10n.loginButton),
                               ),
                             ],
@@ -321,8 +321,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           icon: const Icon(Icons.vpn_key_outlined, size: 18),
                           label: Text(context.l10n.loginWithSso),
                           style: OutlinedButton.styleFrom(
-                            foregroundColor: AppTheme.ponCyan,
-                            side: BorderSide(color: AppTheme.ponCyan.withValues(alpha: 0.5)),
+                            foregroundColor: AppTheme.ponAccent,
+                            side: BorderSide(color: AppTheme.ponAccent.withValues(alpha: 0.5)),
                           ),
                         ),
                       ],

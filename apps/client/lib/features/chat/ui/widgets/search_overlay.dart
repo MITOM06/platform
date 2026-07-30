@@ -122,7 +122,7 @@ class _SearchOverlayState extends ConsumerState<SearchOverlay> {
                   ? const Center(
                       child: CircularProgressIndicator(
                         valueColor:
-                            AlwaysStoppedAnimation<Color>(AppTheme.ponCyan),
+                            AlwaysStoppedAnimation<Color>(AppTheme.ponAccent),
                       ),
                     )
                   : (_searched && _results.isEmpty)

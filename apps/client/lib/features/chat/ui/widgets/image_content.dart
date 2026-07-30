@@ -81,7 +81,7 @@ class _SingleImageTile extends StatelessWidget {
             height: 22,
             child: CircularProgressIndicator(
               strokeWidth: 2,
-              valueColor: AlwaysStoppedAnimation<Color>(AppTheme.ponCyan),
+              valueColor: AlwaysStoppedAnimation<Color>(AppTheme.ponAccent),
             ),
           ),
         ),

@@ -49,7 +49,7 @@ export function SkillToggle({
         disabled={pending}
         onCheckedChange={(v) => onToggle(skill.id, v)}
         className={cn(
-          'mt-1 data-[state=checked]:bg-pon-cyan',
+          'mt-1 data-[state=checked]:bg-primary',
         )}
         aria-label={t(`${skill.id}Name`)}
       />

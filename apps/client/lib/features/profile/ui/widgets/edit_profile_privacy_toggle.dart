@@ -24,7 +24,7 @@ class EditProfilePrivacyToggle extends StatelessWidget {
         label,
         style: const TextStyle(fontSize: 13, color: Colors.white70),
       ),
-      activeThumbColor: AppTheme.ponCyan,
+      activeThumbColor: AppTheme.ponAccent,
       dense: true,
       contentPadding: EdgeInsets.zero,
       visualDensity: VisualDensity.compact,

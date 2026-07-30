@@ -23,7 +23,7 @@ class KbScreen extends ConsumerWidget {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => _pickAndUpload(context, ref),
-        backgroundColor: AppTheme.ponCyan,
+        backgroundColor: AppTheme.ponAccent,
         child: const Icon(Icons.upload_file, color: Colors.black),
       ),
       body: docsAsync.when(
@@ -156,7 +156,7 @@ class _DocumentTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ListTile(
-      leading: const Icon(Icons.description_outlined, color: AppTheme.ponCyan),
+      leading: const Icon(Icons.description_outlined, color: AppTheme.ponAccent),
       title: Text(
         doc.fileName,
         style: const TextStyle(color: Colors.white, fontSize: 14),

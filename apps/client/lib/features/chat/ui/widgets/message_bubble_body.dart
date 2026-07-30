@@ -93,13 +93,13 @@ class MessageBubbleBody extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               const Icon(Icons.warning_amber_rounded,
-                  color: Color(0xFFFF6B6B), size: 16),
+                  color: Color(0xFFE5484D), size: 16),
               const SizedBox(width: 6),
               Flexible(
                 child: Text(
                   context.l10n.aiErrStreamInterrupted,
                   style: const TextStyle(
-                      color: Color(0xFFFF6B6B), fontSize: 14),
+                      color: Color(0xFFE5484D), fontSize: 14),
                 ),
               ),
             ],
@@ -109,13 +109,13 @@ class MessageBubbleBody extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               const Icon(Icons.warning_amber_rounded,
-                  color: Color(0xFFFF6B6B), size: 16),
+                  color: Color(0xFFE5484D), size: 16),
               const SizedBox(width: 6),
               Flexible(
                 child: Text(
                   context.l10n.aiErrUnavailable,
                   style: const TextStyle(
-                      color: Color(0xFFFF6B6B), fontSize: 14),
+                      color: Color(0xFFE5484D), fontSize: 14),
                 ),
               ),
             ],
@@ -125,13 +125,13 @@ class MessageBubbleBody extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               const Icon(Icons.warning_amber_rounded,
-                  color: Color(0xFFFF6B6B), size: 16),
+                  color: Color(0xFFE5484D), size: 16),
               const SizedBox(width: 6),
               Flexible(
                 child: Text(
                   context.l10n.aiError,
                   style: const TextStyle(
-                      color: Color(0xFFFF6B6B), fontSize: 14),
+                      color: Color(0xFFE5484D), fontSize: 14),
                 ),
               ),
             ],

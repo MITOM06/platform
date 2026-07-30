@@ -41,9 +41,9 @@ class _VideoPlayerDialogState extends State<VideoPlayerDialog> {
         looping: false,
         aspectRatio: controller.value.aspectRatio,
         materialProgressColors: ChewieProgressColors(
-          playedColor: AppTheme.ponCyan,
-          bufferedColor: AppTheme.ponCyan.withValues(alpha: 0.3),
-          handleColor: AppTheme.ponCyan,
+          playedColor: AppTheme.ponAccent,
+          bufferedColor: AppTheme.ponAccent.withValues(alpha: 0.3),
+          handleColor: AppTheme.ponAccent,
           backgroundColor: Colors.white24,
         ),
       );
@@ -90,7 +90,7 @@ class _VideoPlayerDialogState extends State<VideoPlayerDialog> {
             )
           else
             const Center(
-              child: CircularProgressIndicator(color: AppTheme.ponCyan),
+              child: CircularProgressIndicator(color: AppTheme.ponAccent),
             ),
 
           // Close button

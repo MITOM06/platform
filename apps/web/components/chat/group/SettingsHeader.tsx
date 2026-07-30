@@ -6,7 +6,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { absoluteMediaUrl } from '@/lib/media'
 
 const ACTION_CLS = 'flex flex-col items-center gap-1.5 w-16'
-const ICON_WRAP = 'size-10 rounded-full bg-pon-cyan/10 text-pon-cyan flex items-center justify-center'
+const ICON_WRAP = 'size-10 rounded-full bg-primary/10 text-primary flex items-center justify-center'
 const LABEL_CLS = 'text-[11px] text-muted-foreground truncate w-full text-center'
 
 /** epoch ms value chat-service uses for "muted forever" */
@@ -64,14 +64,14 @@ export function SettingsHeader({
       <div className="flex flex-col items-center gap-3">
         <Avatar className="size-24 border-2 border-border/50">
           {avatarUrl && <AvatarImage src={absoluteMediaUrl(avatarUrl)} alt={displayName} />}
-          <AvatarFallback className="text-3xl font-medium bg-gradient-to-br from-pon-cyan/80 to-pon-peach/80 text-white">
+          <AvatarFallback className="text-3xl font-medium bg-primary/80 text-white">
             {avatarLetter}
           </AvatarFallback>
         </Avatar>
         <div className="text-center">
           <h2 className="text-xl font-bold line-clamp-2 px-4">{displayName}</h2>
           {isAI && (
-            <div className="flex items-center justify-center gap-1.5 mt-1 text-xs text-pon-cyan">
+            <div className="flex items-center justify-center gap-1.5 mt-1 text-xs text-primary">
               <Sparkles className="size-3" />
               <span>{t('aiAssistant')}</span>
             </div>

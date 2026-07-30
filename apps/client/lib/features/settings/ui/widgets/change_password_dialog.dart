@@ -133,7 +133,7 @@ class __ChangePasswordDialogContentState
   @override
   Widget build(BuildContext context) {
     final activeColor = widget.isDark
-        ? AppTheme.ponCyan
+        ? AppTheme.ponAccent
         : Theme.of(context).colorScheme.primary;
 
     return AlertDialog(
@@ -232,7 +232,7 @@ class __ChangePasswordDialogContentState
               width: 16,
               height: 16,
               child: CircularProgressIndicator(
-                  strokeWidth: 2, color: AppTheme.ponCyan),
+                  strokeWidth: 2, color: AppTheme.ponAccent),
             ),
           )
         else

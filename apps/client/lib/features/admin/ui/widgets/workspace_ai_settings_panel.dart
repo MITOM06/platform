@@ -206,7 +206,7 @@ class _WorkspaceAiSettingsPanelState
             AiSectionTitle(l10n.adminAiConnectorsSection),
             SwitchListTile(
               contentPadding: EdgeInsets.zero,
-              activeThumbColor: AppTheme.ponCyan,
+              activeThumbColor: AppTheme.ponAccent,
               title: Text(l10n.adminAiRestrictConnectors,
                   style: const TextStyle(color: Colors.white)),
               subtitle: Text(

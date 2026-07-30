@@ -34,7 +34,7 @@ export function ActionOptionsSection({
   const t = useTranslations('chat')
   return (
     <AccordionItem value="options" className="border-none">
-      <AccordionTrigger className="hover:no-underline py-2 data-[state=open]:text-pon-cyan">
+      <AccordionTrigger className="hover:no-underline py-2 data-[state=open]:text-primary">
         <span className="font-semibold text-sm">{t('actionOptions')}</span>
       </AccordionTrigger>
       <AccordionContent className="pb-4 pt-1 space-y-1">

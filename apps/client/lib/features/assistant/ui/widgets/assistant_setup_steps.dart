@@ -109,11 +109,11 @@ class _EmojiButton extends StatelessWidget {
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(14),
           color: selected
-              ? AppTheme.ponCyan.withValues(alpha: 0.15)
+              ? AppTheme.ponAccent.withValues(alpha: 0.15)
               : Theme.of(context).colorScheme.surface.withValues(alpha: 0.4),
           border: Border.all(
             color: selected
-                ? AppTheme.ponCyan
+                ? AppTheme.ponAccent
                 : Theme.of(context)
                     .colorScheme
                     .onSurface
@@ -244,11 +244,11 @@ class AssistantProviderTile extends StatelessWidget {
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(14),
             color: selected
-                ? AppTheme.ponCyan.withValues(alpha: 0.12)
+                ? AppTheme.ponAccent.withValues(alpha: 0.12)
                 : theme.colorScheme.surface.withValues(alpha: 0.4),
             border: Border.all(
               color: selected
-                  ? AppTheme.ponCyan
+                  ? AppTheme.ponAccent
                   : theme.colorScheme.onSurface.withValues(alpha: 0.12),
               width: selected ? 2 : 1,
             ),
@@ -260,7 +260,7 @@ class AssistantProviderTile extends StatelessWidget {
                     ? Icons.radio_button_checked
                     : Icons.radio_button_unchecked,
                 color: selected
-                    ? AppTheme.ponCyan
+                    ? AppTheme.ponAccent
                     : theme.colorScheme.onSurface.withValues(alpha: 0.4),
                 size: 20,
               ),

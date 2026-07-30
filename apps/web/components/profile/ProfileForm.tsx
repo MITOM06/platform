@@ -373,7 +373,7 @@ export function ProfileForm({
       {/* Save button */}
       <Button
         type="submit"
-        className="w-full bg-gradient-to-r from-pon-cyan via-pon-peach to-pon-pink hover:opacity-90 text-white font-semibold h-11 shadow-lg shadow-primary/20 transition-all"
+        className="w-full bg-primary hover:opacity-90 text-white font-semibold h-11 transition-all"
         disabled={saving || !canSave}
       >
         {saving ? (

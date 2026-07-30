@@ -102,7 +102,7 @@ export function AttachMenu({
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" size="icon" className="shrink-0 tap" disabled={disabled}>
-          <Paperclip className="size-5 text-pon-peach" />
+          <Paperclip className="size-5 text-primary" />
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="start" side="top">

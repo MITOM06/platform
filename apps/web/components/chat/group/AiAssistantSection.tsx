@@ -39,7 +39,7 @@ export function AiAssistantSection({ conversationId, onClose }: Props) {
 
   return (
     <AccordionItem value="ai" className="border-none">
-      <AccordionTrigger className="hover:no-underline py-2 data-[state=open]:text-pon-cyan">
+      <AccordionTrigger className="hover:no-underline py-2 data-[state=open]:text-primary">
         <span className="font-semibold text-sm flex items-center gap-2">
           <Bot className="size-4" /> {t('aiAssistant')}
         </span>

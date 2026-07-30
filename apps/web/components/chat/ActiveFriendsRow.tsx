@@ -22,9 +22,9 @@ export function ActiveFriendsRow() {
           {activeFriends.map((friend) => (
             <div key={friend.id || friend._id} className="flex flex-col items-center gap-1.5 cursor-pointer group">
               <div className="relative">
-                <Avatar className="size-12 ring-2 ring-transparent transition-all group-hover:ring-pon-cyan/50">
+                <Avatar className="size-12 ring-2 ring-transparent transition-all group-hover:ring-primary/50">
                   <AvatarImage src={friend.avatarUrl ? absoluteMediaUrl(friend.avatarUrl) : undefined} />
-                  <AvatarFallback className="bg-gradient-to-br from-pon-cyan/80 to-pon-peach/80 text-white font-medium">
+                  <AvatarFallback className="bg-primary/80 text-white font-medium">
                     {friend.displayName[0]?.toUpperCase()}
                   </AvatarFallback>
                 </Avatar>

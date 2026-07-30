@@ -73,7 +73,7 @@ class _RolesPanelState extends ConsumerState<RolesPanel> {
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
             child: Text(l10n.adminRoleClone,
-                style: const TextStyle(color: AppTheme.ponCyan)),
+                style: const TextStyle(color: AppTheme.ponAccent)),
           ),
         ],
       ),
@@ -148,7 +148,7 @@ class _RolesPanelState extends ConsumerState<RolesPanel> {
                   if (r.isPreset)
                     Text(l10n.adminRolePreset,
                         style: const TextStyle(
-                            color: AppTheme.ponPeach, fontSize: 10)),
+                            color: AppTheme.ponAccent, fontSize: 10)),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
@@ -165,7 +165,7 @@ class _RolesPanelState extends ConsumerState<RolesPanel> {
                           icon: Icon(Icons.save_outlined,
                               size: 16,
                               color: _isDirty(r)
-                                  ? AppTheme.ponCyan
+                                  ? AppTheme.ponAccent
                                   : Colors.white24),
                           tooltip: l10n.adminSave,
                           onPressed: _isDirty(r) ? () => _save(r) : null,
@@ -197,7 +197,7 @@ class _RolesPanelState extends ConsumerState<RolesPanel> {
               width: _roleColWidth,
               child: Center(
                 child: Checkbox(
-                  activeColor: AppTheme.ponCyan,
+                  activeColor: AppTheme.ponAccent,
                   value: checked,
                   onChanged: readOnly
                       ? null

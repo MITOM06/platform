@@ -112,7 +112,7 @@ class _SsoPanelState extends ConsumerState<SsoPanel> {
             const SizedBox(height: 8),
             SwitchListTile(
               contentPadding: EdgeInsets.zero,
-              activeThumbColor: AppTheme.ponCyan,
+              activeThumbColor: AppTheme.ponAccent,
               title: Text(l10n.adminSsoEnabled,
                   style: const TextStyle(color: Colors.white)),
               value: _enabled,
@@ -302,8 +302,8 @@ class _AddBtn extends StatelessWidget {
         alignment: Alignment.centerLeft,
         child: TextButton.icon(
           onPressed: onTap,
-          icon: const Icon(Icons.add, color: AppTheme.ponCyan, size: 18),
-          label: Text(label, style: const TextStyle(color: AppTheme.ponCyan)),
+          icon: const Icon(Icons.add, color: AppTheme.ponAccent, size: 18),
+          label: Text(label, style: const TextStyle(color: AppTheme.ponAccent)),
         ),
       );
 }

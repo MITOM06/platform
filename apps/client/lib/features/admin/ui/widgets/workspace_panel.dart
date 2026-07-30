@@ -126,7 +126,7 @@ class _WorkspacePanelState extends ConsumerState<WorkspacePanel> {
               ..._features.keys.map(
                 (k) => SwitchListTile(
                   contentPadding: EdgeInsets.zero,
-                  activeThumbColor: AppTheme.ponCyan,
+                  activeThumbColor: AppTheme.ponAccent,
                   title: Text(k, style: const TextStyle(color: Colors.white)),
                   value: _features[k] ?? false,
                   onChanged: (v) => setState(() => _features[k] = v),
@@ -146,7 +146,7 @@ class _WorkspacePanelState extends ConsumerState<WorkspacePanel> {
                           .map(
                             (entry) => CheckboxListTile(
                               contentPadding: EdgeInsets.zero,
-                              activeColor: AppTheme.ponCyan,
+                              activeColor: AppTheme.ponAccent,
                               controlAffinity:
                                   ListTileControlAffinity.leading,
                               title: Text(entry.name,
@@ -178,9 +178,9 @@ class _WorkspacePanelState extends ConsumerState<WorkspacePanel> {
 
   Color _parseColor(String hex) {
     final cleaned = hex.replaceAll('#', '').trim();
-    if (cleaned.length != 6) return AppTheme.ponCyan;
+    if (cleaned.length != 6) return AppTheme.ponAccent;
     final value = int.tryParse('FF$cleaned', radix: 16);
-    return value == null ? AppTheme.ponCyan : Color(value);
+    return value == null ? AppTheme.ponAccent : Color(value);
   }
 }
 

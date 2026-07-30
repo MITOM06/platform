@@ -37,7 +37,7 @@ export default function SkillsPage() {
         </Button>
         <div>
           <h1 className="text-2xl font-bold flex items-center gap-2">
-            <Sparkles className="text-[#B47FFF] size-6" /> {t('title')}
+            <Sparkles className="text-primary size-6" /> {t('title')}
           </h1>
           <p className="text-sm text-muted-foreground mt-1">{t('subtitle')}</p>
         </div>
@@ -50,12 +50,12 @@ export default function SkillsPage() {
 
       <div className="p-6 pb-tabbar md:pb-6 max-w-4xl w-full mx-auto">
         <div className="mb-5">
-          <div className="font-mono text-pon-pink text-xs tracking-[2px]">
+          <div className="font-mono text-primary text-xs tracking-[2px]">
             {t('sectionNum')}
           </div>
           <h2 className="text-xl font-bold tracking-tight mt-1">{t('heading')}</h2>
           <p className="text-sm text-muted-foreground mt-1">{t('description')}</p>
-          <p className="text-sm text-pon-peach/80 mt-1">{t('realActionNote')}</p>
+          <p className="text-sm text-primary/80 mt-1">{t('realActionNote')}</p>
         </div>
 
         {isLoading ? (

@@ -94,7 +94,7 @@ export function DailyBarChart({
       const chartH = rect.height - 20
 
       const inputColor = '#00E5FF'
-      const outputColor = '#B47FFF'
+      const outputColor = 'var(--primary)'
 
       for (let i = 0; i < days.length; i++) {
         const d = days[i]
@@ -162,7 +162,7 @@ export function DailyBarChart({
           <span className="text-xs text-muted-foreground">{inputLabel}</span>
         </div>
         <div className="flex items-center gap-2">
-          <div className="size-3 rounded-sm" style={{ background: '#B47FFF' }} />
+          <div className="size-3 rounded-sm" style={{ background: 'var(--primary)' }} />
           <span className="text-xs text-muted-foreground">{outputLabel}</span>
         </div>
       </div>
@@ -193,7 +193,7 @@ const perModelColumns: ResponsiveColumn<UsagePerModelCost>[] = [
     key: 'costUsd',
     header: 'Cost',
     render: (r) => fmtUsd(r.costUsd),
-    className: 'text-pon-peach font-medium',
+    className: 'text-primary font-medium',
   },
 ]
 

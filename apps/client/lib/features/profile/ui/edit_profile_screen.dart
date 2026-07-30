@@ -259,7 +259,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                       child: ElevatedButton(
                         onPressed: () => Navigator.of(ctx).pop(true),
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: AppTheme.ponCyan,
+                          backgroundColor: AppTheme.ponAccent,
                           foregroundColor: Colors.black,
                           padding: const EdgeInsets.symmetric(vertical: 14),
                           shape: RoundedRectangleBorder(
@@ -353,7 +353,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                   context.l10n.actionSave,
                   style: TextStyle(
                     color:
-                        _hasUnsavedChanges ? AppTheme.ponCyan : Colors.white30,
+                        _hasUnsavedChanges ? AppTheme.ponAccent : Colors.white30,
                     fontWeight: FontWeight.bold,
                     fontSize: 15,
                   ),
@@ -395,7 +395,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                     borderRadius: BorderRadius.circular(10)),
                 tileColor: Theme.of(context).colorScheme.surface,
                 leading:
-                    const Icon(Icons.work_outline, color: AppTheme.ponCyan),
+                    const Icon(Icons.work_outline, color: AppTheme.ponAccent),
                 title: Text(context.l10n.roleLabel,
                     style:
                         const TextStyle(color: Colors.white70, fontSize: 12)),
@@ -421,7 +421,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                 decoration: InputDecoration(
                   labelText: context.l10n.profileGender,
                   prefixIcon:
-                      const Icon(Icons.wc_outlined, color: AppTheme.ponCyan),
+                      const Icon(Icons.wc_outlined, color: AppTheme.ponAccent),
                 ),
                 items: [
                   DropdownMenuItem(
@@ -468,7 +468,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                     borderRadius: BorderRadius.circular(10)),
                 tileColor: Theme.of(context).colorScheme.surface,
                 leading:
-                    const Icon(Icons.cake_outlined, color: AppTheme.ponCyan),
+                    const Icon(Icons.cake_outlined, color: AppTheme.ponAccent),
                 title: Text(context.l10n.dateOfBirth,
                     style: const TextStyle(color: Colors.white)),
                 subtitle: Text(
@@ -510,7 +510,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                     Row(
                       children: [
                         const Icon(Icons.lock_outline,
-                            color: AppTheme.ponCyan, size: 18),
+                            color: AppTheme.ponAccent, size: 18),
                         const SizedBox(width: 8),
                         Text(
                           context.l10n.privacySectionLabel,

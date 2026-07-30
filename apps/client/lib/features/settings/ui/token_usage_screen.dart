@@ -160,7 +160,7 @@ class _TokenUsageScreenState extends ConsumerState<TokenUsageScreen> {
       builder: (context, child) => Theme(
         data: Theme.of(context).copyWith(
           colorScheme: const ColorScheme.dark(
-            primary: AppTheme.ponCyan,
+            primary: AppTheme.ponAccent,
             onPrimary: Colors.black,
           ),
         ),
@@ -266,7 +266,7 @@ class _QuotaProgressCard extends StatelessWidget {
         ? Colors.redAccent
         : fraction >= 0.7
             ? const Color(0xFFFFB74D)
-            : AppTheme.ponCyan;
+            : AppTheme.ponAccent;
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -356,7 +356,7 @@ class _SummaryCards extends StatelessWidget {
                 label: context.l10n.tokenUsageThisMonth,
                 value: _fmt(totalInput + totalOutput),
                 icon: Icons.toll_outlined,
-                color: AppTheme.ponCyan,
+                color: AppTheme.ponAccent,
                 isDark: isDark,
               ),
             ),
@@ -366,7 +366,7 @@ class _SummaryCards extends StatelessWidget {
                 label: context.l10n.tokenUsageRequests,
                 value: totalRequests.toString(),
                 icon: Icons.question_answer_outlined,
-                color: const Color(0xFFB47FFF),
+                color: const Color(0xFF96435B),
                 isDark: isDark,
               ),
             ),
@@ -377,7 +377,7 @@ class _SummaryCards extends StatelessWidget {
           label: context.l10n.tokenUsageEstCost,
           value: context.l10n.tokenUsageCostUsd(estimatedCost.toStringAsFixed(4)),
           icon: Icons.attach_money_outlined,
-          color: AppTheme.ponPeach,
+          color: AppTheme.ponAccent,
           isDark: isDark,
         ),
       ],

@@ -30,7 +30,7 @@ class ChatsTab extends ConsumerWidget {
       loading: () => Center(
         child: CircularProgressIndicator(
           valueColor: AlwaysStoppedAnimation<Color>(
-            isDark ? AppTheme.ponCyan : Theme.of(context).colorScheme.primary,
+            isDark ? AppTheme.ponAccent : Theme.of(context).colorScheme.primary,
           ),
         ),
       ),
@@ -57,7 +57,7 @@ class ChatsTab extends ConsumerWidget {
             );
             return RefreshIndicator(
               color: isDark
-                  ? AppTheme.ponCyan
+                  ? AppTheme.ponAccent
                   : Theme.of(context).colorScheme.primary,
               backgroundColor: isDark ? AppTheme.darkSurface : Colors.white,
               onRefresh: () =>
@@ -98,7 +98,7 @@ class _EmptyChats extends StatelessWidget {
                 Icons.chat_bubble_outline,
                 size: 64,
                 color: isDark
-                    ? AppTheme.ponPeach
+                    ? AppTheme.ponAccent
                     : Theme.of(context)
                         .colorScheme
                         .primary
@@ -183,13 +183,13 @@ class _ChatsError extends ConsumerWidget {
                         .read(conversationsNotifierProvider.notifier)
                         .refresh(),
                     gradientColors: isDark
-                        ? const [AppTheme.ponCyan, AppTheme.ponCyan]
+                        ? const [AppTheme.ponAccent, AppTheme.ponAccent]
                         : [
                             Theme.of(context).colorScheme.primary,
                             Theme.of(context).colorScheme.primaryContainer,
                           ],
                     glowColor: isDark
-                        ? AppTheme.ponCyan
+                        ? AppTheme.ponAccent
                         : Theme.of(context).colorScheme.primary,
                     child: Text(context.l10n.actionRetry),
                   ),

@@ -48,13 +48,13 @@ function ReminderTile({
   })
 
   return (
-    <div className="group rounded-xl border bg-card p-4 transition-all hover:shadow-lg hover:border-pon-cyan/30 relative flex items-center gap-4 overflow-hidden">
+    <div className="group rounded-xl border bg-card p-4 transition-all hover:shadow-lg hover:border-primary/30 relative flex items-center gap-4 overflow-hidden">
       {/* Subtle glow */}
-      <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none rounded-xl bg-gradient-to-r from-pon-cyan/[0.03] to-transparent" />
+      <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none rounded-xl bg-primary/[0.03]" />
 
       {/* Icon */}
-      <div className="size-10 rounded-lg bg-pon-cyan/10 flex items-center justify-center shrink-0">
-        <AlarmClock className="size-5 text-pon-cyan" />
+      <div className="size-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+        <AlarmClock className="size-5 text-primary" />
       </div>
 
       {/* Content */}
@@ -71,7 +71,7 @@ function ReminderTile({
       <div className="flex items-center gap-1 shrink-0">
         <button
           onClick={onDone}
-          className="size-8 rounded-lg flex items-center justify-center text-pon-cyan/70 hover:text-pon-cyan hover:bg-pon-cyan/10 transition-colors"
+          className="size-8 rounded-lg flex items-center justify-center text-primary/70 hover:text-primary hover:bg-primary/10 transition-colors"
           title={markDoneTitle}
         >
           <CheckCircle className="size-4" />
@@ -157,13 +157,13 @@ export default function RemindersPage() {
       <div className="flex-1 overflow-y-auto relative">
         {/* Background glows */}
         <div className="absolute inset-0 pointer-events-none overflow-hidden">
-          <div className="absolute -top-24 -left-24 w-72 h-72 rounded-full bg-pon-cyan/5 blur-3xl" />
+          <div className="absolute -top-24 -left-24 w-72 h-72 rounded-full bg-primary/5 blur-3xl" />
         </div>
 
         <div className="relative max-w-lg mx-auto px-6 py-6">
           {isLoading && (
             <div className="flex flex-col items-center justify-center py-20 gap-3">
-              <Loader2 className="size-8 animate-spin text-pon-cyan" />
+              <Loader2 className="size-8 animate-spin text-primary" />
               <p className="text-sm text-muted-foreground">{t('loading')}</p>
             </div>
           )}
@@ -214,7 +214,7 @@ export default function RemindersPage() {
               {tc('cancel')}
             </Button>
             <Button
-              className="bg-pon-cyan text-black hover:bg-pon-cyan/90"
+              className="bg-primary text-primary-foreground hover:bg-primary/90"
               onClick={() => confirmDoneTarget && doneMutation.mutate(confirmDoneTarget.id)}
               disabled={doneMutation.isPending}
             >

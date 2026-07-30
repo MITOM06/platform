@@ -73,7 +73,7 @@ class GroupInfoScreen extends ConsumerWidget {
                           child: Container(
                             padding: const EdgeInsets.all(8),
                             decoration: const BoxDecoration(
-                              color: AppTheme.ponCyan,
+                              color: AppTheme.ponAccent,
                               shape: BoxShape.circle,
                             ),
                             child: const Icon(Icons.camera_alt,
@@ -105,7 +105,7 @@ class GroupInfoScreen extends ConsumerWidget {
               if (isAdmin)
                 ListTile(
                   leading:
-                      const Icon(Icons.edit_rounded, color: AppTheme.ponCyan),
+                      const Icon(Icons.edit_rounded, color: AppTheme.ponAccent),
                   title: Text(context.l10n.renameGroup,
                       style: TextStyle(color: colorScheme.onSurface)),
                   onTap: () => _renameGroup(context, ref, conv),
@@ -113,7 +113,7 @@ class GroupInfoScreen extends ConsumerWidget {
               if (isAdmin)
                 ListTile(
                   leading: const Icon(Icons.person_add_alt_1_rounded,
-                      color: AppTheme.ponCyan),
+                      color: AppTheme.ponAccent),
                   title: Text(context.l10n.addMembers,
                       style: TextStyle(color: colorScheme.onSurface)),
                   onTap: () => _addMember(context, ref),
@@ -162,7 +162,7 @@ class GroupInfoScreen extends ConsumerWidget {
               Divider(color: dividerColor),
               ListTile(
                 leading: const Icon(Icons.perm_media_outlined,
-                    color: AppTheme.ponCyan),
+                    color: AppTheme.ponAccent),
                 title: Text(context.l10n.sharedMediaTitle,
                     style: TextStyle(color: colorScheme.onSurface)),
                 trailing: Icon(Icons.chevron_right,
@@ -173,7 +173,7 @@ class GroupInfoScreen extends ConsumerWidget {
                 Divider(color: dividerColor),
                 ListTile(
                   leading: const Icon(Icons.smart_toy_outlined,
-                      color: AppTheme.ponCyan),
+                      color: AppTheme.ponAccent),
                   title: Text(context.l10n.configureAiPersona,
                       style: TextStyle(color: colorScheme.onSurface)),
                   trailing: Icon(Icons.chevron_right,

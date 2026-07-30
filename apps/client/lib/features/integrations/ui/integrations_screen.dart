@@ -121,7 +121,7 @@ class _IntegrationsScreenState extends ConsumerState<IntegrationsScreen>
         iconTheme: const IconThemeData(color: Colors.white),
         actions: [
           IconButton(
-            icon: const Icon(Icons.add_link, color: AppTheme.ponCyan),
+            icon: const Icon(Icons.add_link, color: AppTheme.ponAccent),
             tooltip: l10n.customMcpTitle,
             onPressed: () => CustomMcpSheet.show(context),
           ),
@@ -188,14 +188,14 @@ class _CustomMcpCta extends StatelessWidget {
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: AppTheme.ponPink.withValues(alpha: 0.4),
+            color: AppTheme.ponAccent.withValues(alpha: 0.4),
             width: 1.2,
           ),
         ),
         child: Row(
           children: [
             const Icon(Icons.dashboard_customize_outlined,
-                color: AppTheme.ponPink),
+                color: AppTheme.ponAccent),
             const SizedBox(width: 14),
             Expanded(
               child: Column(

@@ -30,7 +30,7 @@ class ConnectorCard extends StatelessWidget {
     final available = entry.available;
 
     return PonCard(
-      glowColor: connected ? AppTheme.onlineGreen : AppTheme.ponCyan,
+      glowColor: connected ? AppTheme.onlineGreen : AppTheme.ponAccent,
       glowStrength: connected ? 5 : 2,
       borderRadius: 16,
       child: Padding(
@@ -166,7 +166,7 @@ class _StatusPill extends StatelessWidget {
       color = AppTheme.onlineGreen;
       label = context.l10n.connectorStatusConnected;
     } else if (available) {
-      color = AppTheme.ponCyan;
+      color = AppTheme.ponAccent;
       label = context.l10n.connectorStatusAvailable;
     } else {
       color = AppTheme.offlineGrey;
@@ -201,14 +201,14 @@ class _ScopeChip extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
       decoration: BoxDecoration(
-        color: AppTheme.ponCyan.withValues(alpha: 0.08),
+        color: AppTheme.ponAccent.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(6),
-        border: Border.all(color: AppTheme.ponCyan.withValues(alpha: 0.2)),
+        border: Border.all(color: AppTheme.ponAccent.withValues(alpha: 0.2)),
       ),
       child: Text(
         label,
         style: const TextStyle(
-          color: AppTheme.ponCyan,
+          color: AppTheme.ponAccent,
           fontSize: 10.5,
           fontFamily: 'monospace',
         ),
@@ -264,12 +264,12 @@ class _ActionRow extends StatelessWidget {
             onPressed: onPermissions,
             visualDensity: VisualDensity.compact,
             tooltip: context.l10n.permManage,
-            icon: const Icon(Icons.tune, color: AppTheme.ponCyan, size: 20),
+            icon: const Icon(Icons.tune, color: AppTheme.ponAccent, size: 20),
           ),
           TextButton(
             onPressed: onManage,
             child: Text(context.l10n.connectorManage,
-                style: const TextStyle(color: AppTheme.ponCyan)),
+                style: const TextStyle(color: AppTheme.ponAccent)),
           ),
         ]
         else if (available)

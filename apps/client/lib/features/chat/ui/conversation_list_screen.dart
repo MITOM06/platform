@@ -80,7 +80,7 @@ class _ConversationListScreenState
                     child: ShaderMask(
                       shaderCallback: (bounds) => LinearGradient(
                         colors: isDark
-                            ? const [AppTheme.ponCyan, AppTheme.ponPink]
+                            ? const [AppTheme.ponAccent, AppTheme.ponAccent]
                             : [
                                 Theme.of(context).colorScheme.primary,
                                 Theme.of(context).colorScheme.secondary
@@ -121,7 +121,7 @@ class _ConversationListScreenState
                         shape: BoxShape.circle,
                         border: Border.all(
                           color: (isDark
-                                  ? AppTheme.ponCyan
+                                  ? AppTheme.ponAccent
                                   : Theme.of(context).colorScheme.primary)
                               .withValues(alpha: 0.5),
                           width: 1.5,
@@ -130,7 +130,7 @@ class _ConversationListScreenState
                             ? [
                                 BoxShadow(
                                   color:
-                                      AppTheme.ponCyan.withValues(alpha: 0.2),
+                                      AppTheme.ponAccent.withValues(alpha: 0.2),
                                   blurRadius: 8,
                                 )
                               ]
@@ -190,7 +190,7 @@ class _ConversationListScreenState
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
                           gradient: RadialGradient(colors: [
-                            AppTheme.ponPeach.withValues(alpha: 0.08),
+                            AppTheme.ponAccent.withValues(alpha: 0.08),
                             Colors.transparent,
                           ]),
                         ),

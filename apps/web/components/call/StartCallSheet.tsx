@@ -68,7 +68,7 @@ export function StartCallSheet({ open, conversationId, onClose }: Props) {
 
         <div className="flex items-center justify-between rounded-xl border bg-muted/40 px-4 py-3">
           <Label htmlFor="ai-notetaker" className="flex items-center gap-2 cursor-pointer">
-            <Sparkles className="size-4 text-pon-cyan" />
+            <Sparkles className="size-4 text-primary" />
             <span className="flex flex-col">
               <span className="text-sm font-medium">{t('aiNotetaker')}</span>
               <span className="text-xs text-muted-foreground">{t('aiNotetakerDesc')}</span>

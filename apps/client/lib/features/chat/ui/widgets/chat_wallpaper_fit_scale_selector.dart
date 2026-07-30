@@ -49,7 +49,7 @@ class WallpaperFitScaleSelector extends StatelessWidget {
               const Spacer(),
               Text(
                 '$scale%',
-                style: const TextStyle(color: AppTheme.ponCyan, fontSize: 13),
+                style: const TextStyle(color: AppTheme.ponAccent, fontSize: 13),
               ),
             ],
           ),
@@ -59,7 +59,7 @@ class WallpaperFitScaleSelector extends StatelessWidget {
             max: kWallpaperMaxScale.toDouble(),
             divisions:
                 (kWallpaperMaxScale - kWallpaperMinScale) ~/ kWallpaperScaleStep,
-            activeColor: AppTheme.ponCyan,
+            activeColor: AppTheme.ponAccent,
             label: '$scale%',
             onChanged: (v) => onScaleChanged(v.round()),
           ),
@@ -87,18 +87,18 @@ class WallpaperFitScaleSelector extends StatelessWidget {
                   alignment: Alignment.center,
                   decoration: BoxDecoration(
                     color: fit == opt.$1
-                        ? AppTheme.ponCyan.withValues(alpha: 0.18)
+                        ? AppTheme.ponAccent.withValues(alpha: 0.18)
                         : Colors.white.withValues(alpha: 0.05),
                     borderRadius: BorderRadius.circular(10),
                     border: Border.all(
-                      color: fit == opt.$1 ? AppTheme.ponCyan : Colors.white12,
+                      color: fit == opt.$1 ? AppTheme.ponAccent : Colors.white12,
                     ),
                   ),
                   child: Text(
                     opt.$2,
                     style: TextStyle(
                       fontSize: 12,
-                      color: fit == opt.$1 ? AppTheme.ponCyan : Colors.white60,
+                      color: fit == opt.$1 ? AppTheme.ponAccent : Colors.white60,
                     ),
                   ),
                 ),

@@ -39,7 +39,7 @@ class AiConnectorChecklist extends StatelessWidget {
               .map(
                 (entry) => CheckboxListTile(
                   contentPadding: EdgeInsets.zero,
-                  activeColor: AppTheme.ponCyan,
+                  activeColor: AppTheme.ponAccent,
                   controlAffinity: ListTileControlAffinity.leading,
                   title: Text(entry.name as String,
                       style: const TextStyle(color: Colors.white)),
@@ -88,7 +88,7 @@ class AiTriStateTile extends StatelessWidget {
             style: ButtonStyle(
               backgroundColor: WidgetStateProperty.resolveWith(
                 (s) => s.contains(WidgetState.selected)
-                    ? AppTheme.ponCyan.withValues(alpha: 0.18)
+                    ? AppTheme.ponAccent.withValues(alpha: 0.18)
                     : Colors.transparent,
               ),
               foregroundColor: WidgetStateProperty.all(Colors.white),

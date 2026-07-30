@@ -91,7 +91,7 @@ class DepartmentsPanel extends ConsumerWidget {
             TextButton(
               onPressed: () => Navigator.pop(ctx, true),
               child: Text(l10n.adminSave,
-                  style: const TextStyle(color: AppTheme.ponCyan)),
+                  style: const TextStyle(color: AppTheme.ponAccent)),
             ),
           ],
         ),
@@ -158,7 +158,7 @@ class DepartmentsPanel extends ConsumerWidget {
     return Scaffold(
       backgroundColor: Colors.transparent,
       floatingActionButton: FloatingActionButton.extended(
-        backgroundColor: AppTheme.ponCyan,
+        backgroundColor: AppTheme.ponAccent,
         foregroundColor: Colors.black,
         onPressed: () => _openEditor(context, ref),
         icon: const Icon(Icons.add),
@@ -185,7 +185,7 @@ class DepartmentsPanel extends ConsumerWidget {
                   return PonCard(
                     child: ListTile(
                       leading: const Icon(Icons.groups_outlined,
-                          color: AppTheme.ponCyan),
+                          color: AppTheme.ponAccent),
                       title: Text(d.name,
                           style: const TextStyle(color: Colors.white)),
                       subtitle: d.description == null

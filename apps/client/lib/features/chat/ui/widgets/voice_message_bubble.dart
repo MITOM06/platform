@@ -73,7 +73,7 @@ class _VoiceMessageBubbleState extends State<VoiceMessageBubble> {
 
     final iconColor = widget.isSentByMe ? Colors.white : Colors.white70;
     final trackActive =
-        widget.isSentByMe ? Colors.white : AppTheme.ponCyan;
+        widget.isSentByMe ? Colors.white : AppTheme.ponAccent;
     final trackInactive = widget.isSentByMe
         ? Colors.white.withValues(alpha: 0.3)
         : Colors.white.withValues(alpha: 0.2);
@@ -90,7 +90,7 @@ class _VoiceMessageBubbleState extends State<VoiceMessageBubble> {
               height: 36,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: (widget.isSentByMe ? Colors.white : AppTheme.ponCyan)
+                color: (widget.isSentByMe ? Colors.white : AppTheme.ponAccent)
                     .withValues(alpha: 0.18),
               ),
               child: Icon(

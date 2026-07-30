@@ -57,7 +57,7 @@ export function CustomizeChatSection({
   return (
     <>
     <AccordionItem value="customize" className="border-none">
-      <AccordionTrigger className="hover:no-underline py-2 data-[state=open]:text-pon-cyan">
+      <AccordionTrigger className="hover:no-underline py-2 data-[state=open]:text-primary">
         <span className="font-semibold text-sm">{t('customizeChatCategory')}</span>
       </AccordionTrigger>
       <AccordionContent className="pb-4 pt-1 space-y-1">
@@ -82,7 +82,7 @@ export function CustomizeChatSection({
                   key={emoji}
                   onClick={() => onPickQuickReaction(emoji)}
                   className={`p-1.5 rounded-lg text-lg flex items-center justify-center transition-colors hover:bg-muted ${
-                    quickReaction === emoji ? 'bg-pon-cyan/15 ring-1 ring-pon-cyan' : ''
+                    quickReaction === emoji ? 'bg-primary/15 ring-1 ring-primary' : ''
                   }`}
                 >
                   {emoji}

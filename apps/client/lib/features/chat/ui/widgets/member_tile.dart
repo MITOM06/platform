@@ -37,7 +37,7 @@ class MemberTile extends ConsumerWidget {
           style: TextStyle(color: Theme.of(context).colorScheme.onSurface)),
       subtitle: isMemberAdmin
           ? Text(context.l10n.admin,
-              style: const TextStyle(color: AppTheme.ponCyan, fontSize: 12))
+              style: const TextStyle(color: AppTheme.ponAccent, fontSize: 12))
           : null,
       trailing: canRemove
           ? IconButton(

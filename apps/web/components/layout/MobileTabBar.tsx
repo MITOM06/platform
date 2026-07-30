@@ -35,7 +35,7 @@ export function MobileTabBar() {
               active ? 'text-primary' : 'text-muted-foreground hover:text-foreground',
             )}
           >
-            <Icon className={cn('size-5 shrink-0', active && 'drop-shadow-[0_0_6px_currentColor]')} />
+            <Icon className="size-5 shrink-0" />
             <span className="leading-none">{t(labelKey)}</span>
           </Link>
         )

@@ -79,7 +79,7 @@ export default function FriendsPage() {
               <h3 className="font-semibold text-sm truncate">{user.displayName}</h3>
               <p className="text-xs text-muted-foreground truncate">{user.email}</p>
               {user.matchedBy === 'phone' && user.phoneNumber && (
-                <div className="mt-1 inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-pon-cyan/15 border border-pon-cyan/30 text-xs text-pon-cyan font-mono">
+                <div className="mt-1 inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-primary/15 border border-primary/30 text-xs text-primary font-mono">
                   <Phone className="size-3" />
                   {user.phoneNumber}
                 </div>
@@ -156,7 +156,7 @@ export default function FriendsPage() {
                 <>
                   <Button
                     size="sm"
-                    className="min-h-[44px] min-w-[44px] bg-pon-cyan hover:bg-pon-cyan/90 text-black"
+                    className="min-h-[44px] min-w-[44px] bg-primary hover:bg-primary/90 text-primary-foreground"
                     onClick={() => acceptRequest.mutate(user.id || user._id!)}
                     title={t('accept')}
                     disabled={acceptRequest.isPending}

@@ -163,21 +163,21 @@ class _Chip extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
         decoration: BoxDecoration(
           color: active
-              ? AppTheme.ponCyan.withValues(alpha: 0.15)
+              ? AppTheme.ponAccent.withValues(alpha: 0.15)
               : Colors.transparent,
           borderRadius: BorderRadius.circular(10),
           border: Border.all(
-            color: active ? AppTheme.ponCyan : AppTheme.darkBorder,
+            color: active ? AppTheme.ponAccent : AppTheme.darkBorder,
           ),
         ),
         child: Row(
           children: [
             Icon(icon,
-                size: 16, color: active ? AppTheme.ponCyan : Colors.white60),
+                size: 16, color: active ? AppTheme.ponAccent : Colors.white60),
             const SizedBox(width: 6),
             Text(label,
                 style: TextStyle(
-                    color: active ? AppTheme.ponCyan : Colors.white60,
+                    color: active ? AppTheme.ponAccent : Colors.white60,
                     fontWeight: active ? FontWeight.w600 : FontWeight.normal)),
           ],
         ),

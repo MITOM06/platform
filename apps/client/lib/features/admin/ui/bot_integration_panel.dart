@@ -197,13 +197,13 @@ class _Avatar extends StatelessWidget {
     final initial = name.trim().isEmpty ? '?' : name.trim()[0].toUpperCase();
     return CircleAvatar(
       radius: 20,
-      backgroundColor: AppTheme.ponCyan.withValues(alpha: 0.15),
+      backgroundColor: AppTheme.ponAccent.withValues(alpha: 0.15),
       backgroundImage:
           (url != null && url!.isNotEmpty) ? NetworkImage(url!) : null,
       child: (url == null || url!.isEmpty)
           ? Text(initial,
               style: const TextStyle(
-                  color: AppTheme.ponCyan, fontWeight: FontWeight.bold))
+                  color: AppTheme.ponAccent, fontWeight: FontWeight.bold))
           : null,
     );
   }
@@ -254,8 +254,8 @@ class _RevokeButton extends StatelessWidget {
     return OutlinedButton(
       onPressed: onPressed,
       style: OutlinedButton.styleFrom(
-        foregroundColor: AppTheme.ponPink,
-        side: BorderSide(color: AppTheme.ponPink.withValues(alpha: 0.7)),
+        foregroundColor: AppTheme.ponAccent,
+        side: BorderSide(color: AppTheme.ponAccent.withValues(alpha: 0.7)),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
         shape:
             RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
@@ -290,21 +290,21 @@ class _TokenDialog extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: AppTheme.ponPeach.withValues(alpha: 0.12),
+                color: AppTheme.ponAccent.withValues(alpha: 0.12),
                 borderRadius: BorderRadius.circular(10),
                 border: Border.all(
-                    color: AppTheme.ponPeach.withValues(alpha: 0.4)),
+                    color: AppTheme.ponAccent.withValues(alpha: 0.4)),
               ),
               child: Row(
                 children: [
                   const Icon(Icons.warning_amber_rounded,
-                      color: AppTheme.ponPeach, size: 18),
+                      color: AppTheme.ponAccent, size: 18),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
                       l10n.botAdminTokenWarning,
                       style: const TextStyle(
-                          color: AppTheme.ponPeach, fontSize: 12),
+                          color: AppTheme.ponAccent, fontSize: 12),
                     ),
                   ),
                 ],
@@ -321,7 +321,7 @@ class _TokenDialog extends StatelessWidget {
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
           child: Text(l10n.actionCancel,
-              style: const TextStyle(color: AppTheme.ponCyan)),
+              style: const TextStyle(color: AppTheme.ponAccent)),
         ),
       ],
     );
@@ -364,7 +364,7 @@ class _CopyField extends StatelessWidget {
               ),
               IconButton(
                 tooltip: l10n.botAdminCopyToken,
-                icon: const Icon(Icons.copy, size: 18, color: AppTheme.ponCyan),
+                icon: const Icon(Icons.copy, size: 18, color: AppTheme.ponAccent),
                 onPressed: () async {
                   await Clipboard.setData(ClipboardData(text: value));
                   showInfoSnackBar(l10n.botAdminCopyToken);

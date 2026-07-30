@@ -106,11 +106,11 @@ class _HdToggle extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
           decoration: BoxDecoration(
             color: isAllHD
-                ? AppTheme.ponCyan.withValues(alpha: 0.15)
+                ? AppTheme.ponAccent.withValues(alpha: 0.15)
                 : Colors.white.withValues(alpha: 0.08),
             border: Border.all(
               color: isAllHD
-                  ? AppTheme.ponCyan.withValues(alpha: 0.5)
+                  ? AppTheme.ponAccent.withValues(alpha: 0.5)
                   : Colors.white24,
             ),
             borderRadius: BorderRadius.circular(6),
@@ -120,14 +120,14 @@ class _HdToggle extends StatelessWidget {
             children: [
               Icon(Icons.bolt,
                   size: 12,
-                  color: isAllHD ? AppTheme.ponCyan : Colors.white38),
+                  color: isAllHD ? AppTheme.ponAccent : Colors.white38),
               const SizedBox(width: 3),
               Text(
                 isAllHD ? context.l10n.hdOn : context.l10n.hdOff,
                 style: TextStyle(
                   fontSize: 11,
                   fontWeight: FontWeight.bold,
-                  color: isAllHD ? AppTheme.ponCyan : Colors.white38,
+                  color: isAllHD ? AppTheme.ponAccent : Colors.white38,
                 ),
               ),
             ],
@@ -224,7 +224,7 @@ class _IconTile extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(icon, size: 26, color: AppTheme.ponCyan),
+          Icon(icon, size: 26, color: AppTheme.ponAccent),
           if (label != null) ...[
             const SizedBox(height: 2),
             Text(
@@ -269,10 +269,10 @@ class _AddMoreButton extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.add, size: 24, color: AppTheme.ponCyan),
+            const Icon(Icons.add, size: 24, color: AppTheme.ponAccent),
             Text(
               label,
-              style: const TextStyle(fontSize: 9, color: AppTheme.ponCyan),
+              style: const TextStyle(fontSize: 9, color: AppTheme.ponAccent),
             ),
           ],
         ),

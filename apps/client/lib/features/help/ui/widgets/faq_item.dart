@@ -17,7 +17,7 @@ class FaqItemTile extends StatelessWidget {
     super.key,
     required this.question,
     required this.answer,
-    this.glowColor = AppTheme.ponCyan,
+    this.glowColor = AppTheme.ponAccent,
   });
 
   @override

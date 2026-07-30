@@ -170,7 +170,7 @@ class _NewConversationScreenState
               ),
               const SizedBox(height: 24),
               PonCard(
-                glowColor: AppTheme.ponCyan,
+                glowColor: AppTheme.ponAccent,
                 glowStrength: 4,
                 child: Padding(
                   padding: const EdgeInsets.all(20.0),
@@ -220,7 +220,7 @@ class _NewConversationScreenState
             controller: _controller,
             labelText: l10n.fieldRecipient,
             prefixIcon: Icons.person_outline_rounded,
-            focusColor: AppTheme.ponCyan,
+            focusColor: AppTheme.ponAccent,
             textInputAction: TextInputAction.done,
             onFieldSubmitted: (_) => _loading ? null : _submitDirect(),
             validator: (v) {
@@ -234,8 +234,8 @@ class _NewConversationScreenState
           PonButton(
             onPressed: _submitDirect,
             isLoading: _loading,
-            gradientColors: const [AppTheme.ponCyan, AppTheme.ponCyan],
-            glowColor: AppTheme.ponCyan,
+            gradientColors: const [AppTheme.ponAccent, AppTheme.ponAccent],
+            glowColor: AppTheme.ponAccent,
             child: Text(l10n.startConversationButton),
           ),
         ],
@@ -251,7 +251,7 @@ class _NewConversationScreenState
           controller: _groupNameController,
           labelText: l10n.groupName,
           prefixIcon: Icons.group_rounded,
-          focusColor: AppTheme.ponCyan,
+          focusColor: AppTheme.ponAccent,
         ),
         const SizedBox(height: 16),
         Row(
@@ -261,13 +261,13 @@ class _NewConversationScreenState
                 controller: _controller,
                 labelText: l10n.searchUsers,
                 prefixIcon: Icons.person_add_alt_1_rounded,
-                focusColor: AppTheme.ponCyan,
+                focusColor: AppTheme.ponAccent,
                 textInputAction: TextInputAction.done,
                 onFieldSubmitted: (_) => _loading ? null : _addMember(),
               ),
             ),
             IconButton(
-              icon: const Icon(Icons.add_circle, color: AppTheme.ponCyan),
+              icon: const Icon(Icons.add_circle, color: AppTheme.ponAccent),
               onPressed: _loading ? null : _addMember,
             ),
           ],
@@ -293,8 +293,8 @@ class _NewConversationScreenState
         PonButton(
           onPressed: _submitGroup,
           isLoading: _loading,
-          gradientColors: const [AppTheme.ponCyan, AppTheme.ponCyan],
-          glowColor: AppTheme.ponCyan,
+          gradientColors: const [AppTheme.ponAccent, AppTheme.ponAccent],
+          glowColor: AppTheme.ponAccent,
           child: Text(l10n.createGroup),
         ),
       ],
@@ -311,7 +311,7 @@ class _AiBotTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: const Color(0xFF2D1B69).withValues(alpha: 0.7),
+      color: const Color(0xFF3A2A2C).withValues(alpha: 0.7),
       borderRadius: BorderRadius.circular(16),
       child: InkWell(
         borderRadius: BorderRadius.circular(16),
@@ -326,7 +326,7 @@ class _AiBotTile extends StatelessWidget {
                 decoration: const BoxDecoration(
                   shape: BoxShape.circle,
                   gradient: LinearGradient(
-                    colors: [Color(0xFF6B2FA0), Color(0xFF2D1B69)],
+                    colors: [Color(0xFF7A2E3A), Color(0xFF3A2A2C)],
                   ),
                 ),
                 child: const Icon(Icons.smart_toy_outlined,
@@ -351,7 +351,7 @@ class _AiBotTile extends StatelessWidget {
                           padding: const EdgeInsets.symmetric(
                               horizontal: 6, vertical: 2),
                           decoration: BoxDecoration(
-                            color: const Color(0xFFB47FFF),
+                            color: const Color(0xFF96435B),
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: const Text('AI',
@@ -373,7 +373,7 @@ class _AiBotTile extends StatelessWidget {
                 ),
               ),
               const Icon(Icons.arrow_forward_ios_rounded,
-                  color: Color(0xFFB47FFF), size: 16),
+                  color: Color(0xFF96435B), size: 16),
             ],
           ),
         ),

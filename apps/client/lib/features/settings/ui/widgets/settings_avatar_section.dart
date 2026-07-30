@@ -59,7 +59,7 @@ class _SettingsAvatarSectionState extends ConsumerState<SettingsAvatarSection> {
         shape: BoxShape.circle,
         gradient: LinearGradient(
           colors: isDark
-              ? const [AppTheme.ponCyan, AppTheme.ponPink]
+              ? const [AppTheme.ponAccent, AppTheme.ponAccent]
               : [
                   Theme.of(context).colorScheme.primary,
                   Theme.of(context).colorScheme.secondary
@@ -70,7 +70,7 @@ class _SettingsAvatarSectionState extends ConsumerState<SettingsAvatarSection> {
         boxShadow: isDark
             ? [
                 BoxShadow(
-                  color: AppTheme.ponCyan.withValues(alpha: 0.2),
+                  color: AppTheme.ponAccent.withValues(alpha: 0.2),
                   blurRadius: 16,
                 )
               ]
@@ -98,7 +98,7 @@ class _SettingsAvatarSectionState extends ConsumerState<SettingsAvatarSection> {
                 child: Container(
                   padding: const EdgeInsets.all(8),
                   decoration: const BoxDecoration(
-                    color: AppTheme.ponCyan,
+                    color: AppTheme.ponAccent,
                     shape: BoxShape.circle,
                   ),
                   child: _uploading

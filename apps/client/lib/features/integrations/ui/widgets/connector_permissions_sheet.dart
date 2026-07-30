@@ -180,7 +180,7 @@ class _PermTile extends StatelessWidget {
   Widget build(BuildContext context) {
     return SwitchListTile(
       contentPadding: EdgeInsets.zero,
-      activeThumbColor: AppTheme.ponCyan,
+      activeThumbColor: AppTheme.ponAccent,
       value: value,
       onChanged: onChanged,
       title: Text(

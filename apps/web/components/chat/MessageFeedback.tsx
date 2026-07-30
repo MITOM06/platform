@@ -49,7 +49,7 @@ export function MessageFeedback({ messageId }: Props) {
           onClick={() => vote('up')}
           className={cn(
             'rounded-md p-1 transition-colors hover:bg-muted hover:text-foreground',
-            rating === 'up' && 'bg-pon-cyan/15 text-pon-cyan hover:text-pon-cyan',
+            rating === 'up' && 'bg-primary/15 text-primary hover:text-primary',
           )}
         >
           <ThumbsUp className="size-3.5" />

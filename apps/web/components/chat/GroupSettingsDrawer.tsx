@@ -64,7 +64,7 @@ export function GroupSettingsDrawer({ conversation, currentUserId, open, onClose
     handlePickQuickReaction,
   } = useGroupSettings({ conversation, currentUserId, onClose })
 
-  const triggerCls = 'hover:no-underline py-2 data-[state=open]:text-pon-cyan'
+  const triggerCls = 'hover:no-underline py-2 data-[state=open]:text-primary'
   const itemBtnCls = 'flex items-center gap-3 w-full text-left px-2 py-2.5 hover:bg-muted/50 rounded-lg text-sm transition-colors'
 
   return (
@@ -83,13 +83,13 @@ export function GroupSettingsDrawer({ conversation, currentUserId, open, onClose
                 {conversation.avatarUrl ? (
                   <img src={absoluteMediaUrl(conversation.avatarUrl)} alt={t('groupAvatarAlt')} className="w-full h-full object-cover" />
                 ) : (
-                  <AvatarFallback className="text-2xl bg-gradient-to-br from-pon-cyan to-pon-peach text-white">
+                  <AvatarFallback className="text-2xl bg-primary text-white">
                     {(conversation.name ?? 'Group')[0]?.toUpperCase()}
                   </AvatarFallback>
                 )}
               </Avatar>
               {isAdmin && (
-                <label className="absolute bottom-0 right-0 p-1.5 bg-pon-cyan text-black rounded-full cursor-pointer shadow-sm hover:scale-110 transition-transform">
+                <label className="absolute bottom-0 right-0 p-1.5 bg-primary text-primary-foreground rounded-full cursor-pointer shadow-sm hover:scale-110 transition-transform">
                   <Camera className="size-3.5" />
                   <input type="file" className="hidden" accept="image/*" onChange={handleAvatarUpload} disabled={saving} />
                 </label>
@@ -231,7 +231,7 @@ export function GroupSettingsDrawer({ conversation, currentUserId, open, onClose
                           key={emoji}
                           onClick={() => handlePickQuickReaction(emoji)}
                           className={`p-1.5 rounded-lg text-lg flex items-center justify-center transition-colors hover:bg-muted ${
-                            quickReaction === emoji ? 'bg-pon-cyan/15 ring-1 ring-pon-cyan' : ''
+                            quickReaction === emoji ? 'bg-primary/15 ring-1 ring-primary' : ''
                           }`}
                         >
                           {emoji}
@@ -250,11 +250,11 @@ export function GroupSettingsDrawer({ conversation, currentUserId, open, onClose
               </AccordionTrigger>
               <AccordionContent className="pb-4 pt-1 space-y-1">
                 <button onClick={() => { onClose(); router.push(`/shared-media/${conversation.id}`) }} className={itemBtnCls}>
-                  <Images className="size-4 text-pon-cyan" />
+                  <Images className="size-4 text-primary" />
                   <span>{t('groupSharedMedia')}</span>
                 </button>
                 <button onClick={() => { onClose(); router.push(`/kb/${conversation.id}`) }} className={itemBtnCls}>
-                  <FolderOpen className="size-4 text-pon-peach" />
+                  <FolderOpen className="size-4 text-primary" />
                   <span>{t('groupKnowledgeBase')}</span>
                 </button>
               </AccordionContent>
@@ -268,7 +268,7 @@ export function GroupSettingsDrawer({ conversation, currentUserId, open, onClose
               <AccordionContent className="pb-4 pt-1 space-y-1">
                 {isAdmin && (
                   <button onClick={() => { onClose(); router.push(`/ai-persona?conversationId=${conversation.id}`) }} className={itemBtnCls}>
-                    <Bot className="size-4 text-[#B47FFF]" />
+                    <Bot className="size-4 text-primary" />
                     <span>{t('groupAiPersona')}</span>
                   </button>
                 )}

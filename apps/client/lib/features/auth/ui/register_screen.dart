@@ -118,7 +118,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 shape: BoxShape.circle,
                 gradient: RadialGradient(
                   colors: [
-                    AppTheme.ponPink.withValues(alpha: 0.12),
+                    AppTheme.ponAccent.withValues(alpha: 0.12),
                     Colors.transparent,
                   ],
                 ),
@@ -135,7 +135,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 shape: BoxShape.circle,
                 gradient: RadialGradient(
                   colors: [
-                    AppTheme.ponCyan.withValues(alpha: 0.15),
+                    AppTheme.ponAccent.withValues(alpha: 0.15),
                     Colors.transparent,
                   ],
                 ),
@@ -164,7 +164,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                     StaggeredEntrance(
                       index: 1,
                       child: PonCard(
-                      glowColor: AppTheme.ponPink,
+                      glowColor: AppTheme.ponAccent,
                       glowStrength: 8,
                       child: Padding(
                         padding: const EdgeInsets.all(24.0),
@@ -178,7 +178,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                                 controller: _nameController,
                                 labelText: context.l10n.fieldDisplayName,
                                 prefixIcon: Icons.badge_outlined,
-                                focusColor: AppTheme.ponCyan,
+                                focusColor: AppTheme.ponAccent,
                                 validator: (v) {
                                   if (v == null || v.trim().isEmpty) return context.l10n.valNameRequired;
                                   if (v.trim().length < 2) return context.l10n.valNameMin2;
@@ -193,7 +193,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                                 labelText: context.l10n.fieldEmail,
                                 prefixIcon: Icons.email_outlined,
                                 keyboardType: TextInputType.emailAddress,
-                                focusColor: AppTheme.ponCyan,
+                                focusColor: AppTheme.ponAccent,
                                 validator: (v) {
                                   if (v == null || v.isEmpty) return context.l10n.valEmailRequired;
                                   if (!v.contains('@')) return context.l10n.valEmailInvalid;
@@ -208,7 +208,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                                 labelText: context.l10n.fieldPassword,
                                 prefixIcon: Icons.lock_outlined,
                                 obscureText: _obscurePassword,
-                                focusColor: AppTheme.ponPink,
+                                focusColor: AppTheme.ponAccent,
                                 onChanged: (v) => setState(() => _passwordValue = v),
                                 suffixIcon: IconButton(
                                   icon: Icon(
@@ -240,7 +240,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                                 prefixIcon: Icons.lock_outline,
                                 obscureText: _obscurePassword,
                                 textInputAction: TextInputAction.done,
-                                focusColor: AppTheme.ponPink,
+                                focusColor: AppTheme.ponAccent,
                                 onFieldSubmitted: (_) => _submit(),
                                 validator: (v) {
                                   if (v != _passwordController.text) {
@@ -263,7 +263,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                                       onChanged: (val) {
                                         setState(() => _agreeToTerms = val ?? false);
                                       },
-                                      activeColor: AppTheme.ponPink,
+                                      activeColor: AppTheme.ponAccent,
                                       side: BorderSide(color: Colors.white.withValues(alpha: 0.5)),
                                     ),
                                   ),
@@ -292,8 +292,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                               PonButton(
                                 onPressed: _submit,
                                 isLoading: _isLoading,
-                                gradientColors: const [AppTheme.ponPink, AppTheme.ponPeach],
-                                glowColor: AppTheme.ponPink,
+                                gradientColors: const [AppTheme.ponAccent, AppTheme.ponAccent],
+                                glowColor: AppTheme.ponAccent,
                                 child: Text(context.l10n.registerButton),
                               ),
                             ],
@@ -339,10 +339,10 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
             child: Text(
               isPrivacy ? context.l10n.privacyPolicy : context.l10n.termsOfService,
               style: const TextStyle(
-                color: AppTheme.ponPink,
+                color: AppTheme.ponAccent,
                 fontWeight: FontWeight.bold,
                 decoration: TextDecoration.underline,
-                decorationColor: AppTheme.ponPink,
+                decorationColor: AppTheme.ponAccent,
               ),
             ),
           ),

@@ -137,7 +137,7 @@ class FloatingReactionSheet extends ConsumerWidget {
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
                           color: hasReacted
-                              ? AppTheme.ponCyan.withValues(alpha: 0.15)
+                              ? AppTheme.ponAccent.withValues(alpha: 0.15)
                               : Colors.transparent,
                         ),
                         child: Text(
@@ -209,9 +209,9 @@ class FloatingReactionSheet extends ConsumerWidget {
                       if (isSentByMe && !message.isMedia && !message.isFile)
                         ListTile(
                           leading: const Icon(Icons.edit_rounded,
-                              color: AppTheme.ponCyan),
+                              color: AppTheme.ponAccent),
                           title: Text(l10n.actionEdit,
-                              style: const TextStyle(color: AppTheme.ponCyan)),
+                              style: const TextStyle(color: AppTheme.ponAccent)),
                           onTap: () {
                             notifier.startEditing(message);
                             context.pop();
@@ -232,9 +232,9 @@ class FloatingReactionSheet extends ConsumerWidget {
                       if (isSentByMe && isGroupChat)
                         ListTile(
                           leading: const Icon(Icons.done_all_rounded,
-                              color: AppTheme.ponCyan),
+                              color: AppTheme.ponAccent),
                           title: Text(l10n.readDetails,
-                              style: const TextStyle(color: AppTheme.ponCyan)),
+                              style: const TextStyle(color: AppTheme.ponAccent)),
                           onTap: () {
                             context.pop();
                             showGroupReadDetailsModal(context, message);
@@ -245,11 +245,11 @@ class FloatingReactionSheet extends ConsumerWidget {
                         ListTile(
                           leading: Icon(
                             isPinned ? Icons.push_pin : Icons.push_pin_outlined,
-                            color: AppTheme.ponCyan,
+                            color: AppTheme.ponAccent,
                           ),
                           title: Text(
                             isPinned ? l10n.unpinMessage : l10n.pinMessage,
-                            style: const TextStyle(color: AppTheme.ponCyan),
+                            style: const TextStyle(color: AppTheme.ponAccent),
                           ),
                           onTap: () {
                             if (isPinned) {

@@ -96,9 +96,9 @@ class MessageBubble extends ConsumerWidget {
       child: AnimatedContainer(
         duration: AppMotion.slow,
         color: (selectMode && isSelected)
-            ? AppTheme.ponCyan.withValues(alpha: 0.18)
+            ? AppTheme.ponAccent.withValues(alpha: 0.18)
             : highlighted
-                ? AppTheme.ponCyan.withValues(alpha: 0.12)
+                ? AppTheme.ponAccent.withValues(alpha: 0.12)
                 : Colors.transparent,
         child: selectMode
             ? GestureDetector(
@@ -172,7 +172,7 @@ class MessageBubble extends ConsumerWidget {
                         aiPersonaName,
                         style: TextStyle(
                           fontSize: 11,
-                          color: const Color(0xFFB47FFF).withValues(alpha: 0.9),
+                          color: const Color(0xFF96435B).withValues(alpha: 0.9),
                           fontWeight: FontWeight.w600,
                         ),
                       ),
@@ -218,8 +218,8 @@ class MessageBubble extends ConsumerWidget {
                           gradient: isSentByMe && !message.recalled && !message.isAiMessage
                               ? const LinearGradient(
                                   colors: [
-                                    AppTheme.ponCyan,
-                                    AppTheme.ponPeach
+                                    AppTheme.ponAccent,
+                                    AppTheme.ponAccent
                                   ],
                                   begin: Alignment.topLeft,
                                   end: Alignment.bottomRight,
@@ -233,17 +233,17 @@ class MessageBubble extends ConsumerWidget {
                                       message.isAiRateLimited
                                   ? const Color(0xFF3D2800)
                                   : message.isAiMessage && !message.recalled
-                                      ? const Color(0xFF2D1B69)
+                                      ? const Color(0xFF3A2A2C)
                                   : isSentByMe && !message.recalled
                                       ? null
                                       : AppTheme.darkSurface.withValues(alpha: 0.7),
                           borderRadius: BorderRadius.only(
-                            topLeft: const Radius.circular(20),
-                            topRight: const Radius.circular(20),
+                            topLeft: const Radius.circular(14),
+                            topRight: const Radius.circular(14),
                             bottomLeft:
-                                Radius.circular(isSentByMe ? 20 : 4),
+                                Radius.circular(isSentByMe ? 14 : 4),
                             bottomRight:
-                                Radius.circular(isSentByMe ? 4 : 20),
+                                Radius.circular(isSentByMe ? 4 : 14),
                           ),
                           border: isSentByMe && !message.recalled
                               ? null
@@ -310,10 +310,10 @@ class _SelectCheck extends StatelessWidget {
       height: 22,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        color: selected ? AppTheme.ponCyan : Colors.transparent,
+        color: selected ? AppTheme.ponAccent : Colors.transparent,
         border: Border.all(
           color: selected
-              ? AppTheme.ponCyan
+              ? AppTheme.ponAccent
               : Theme.of(context).brightness == Brightness.dark
                   ? Colors.white38
                   : Colors.black38,

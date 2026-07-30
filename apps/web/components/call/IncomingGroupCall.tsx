@@ -49,7 +49,7 @@ export function IncomingGroupCall() {
         {resolveName(incoming.startedBy) || t('peerFallback')}
       </p>
       {incoming.aiNotetaker && (
-        <p className="mt-1 flex items-center gap-1.5 text-xs text-pon-cyan">
+        <p className="mt-1 flex items-center gap-1.5 text-xs text-primary">
           <Sparkles className="size-3.5" />
           {t('aiTakingNotes')}
         </p>

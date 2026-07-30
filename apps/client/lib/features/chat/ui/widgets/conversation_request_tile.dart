@@ -102,7 +102,7 @@ class _ConversationRequestTileState
     final avatarUrl = isGroup ? conv.avatarUrl : profileData?.avatarUrl;
 
     final accent =
-        isDark ? AppTheme.ponCyan : Theme.of(context).colorScheme.primary;
+        isDark ? AppTheme.ponAccent : Theme.of(context).colorScheme.primary;
 
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),

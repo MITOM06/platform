@@ -43,14 +43,14 @@ void showThemeSelectionDialog(BuildContext context, WidgetRef ref) {
               title: context.l10n.themeDark,
               icon: Icons.dark_mode_rounded,
               themeMode: ThemeMode.dark,
-              activeColor: AppTheme.ponCyan,
+              activeColor: AppTheme.ponAccent,
             ),
             const SizedBox(height: 8),
             ThemeDialogOption(
               title: context.l10n.themeSystem,
               icon: Icons.brightness_auto_rounded,
               themeMode: ThemeMode.system,
-              activeColor: AppTheme.ponPeach,
+              activeColor: AppTheme.ponAccent,
             ),
           ],
         ),
@@ -159,7 +159,7 @@ class LanguageDialogOption extends ConsumerWidget {
     final isSelected = active.languageCode == locale.languageCode;
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final activeColor = isDark
-        ? AppTheme.ponCyan
+        ? AppTheme.ponAccent
         : Theme.of(context).colorScheme.primary;
 
     return ListTile(

@@ -84,7 +84,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
           </Button>
           <div>
             <h1 className="text-2xl font-bold flex items-center gap-2">
-              <ShieldCheck className="text-pon-cyan size-6" /> {t('title')}
+              <ShieldCheck className="text-primary size-6" /> {t('title')}
             </h1>
             <p className="text-sm text-muted-foreground mt-1">{t('subtitle')}</p>
           </div>

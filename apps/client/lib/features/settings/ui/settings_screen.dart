@@ -97,7 +97,7 @@ class SettingsScreen extends ConsumerWidget {
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   gradient: RadialGradient(colors: [
-                    AppTheme.ponCyan.withValues(alpha: 0.08),
+                    AppTheme.ponAccent.withValues(alpha: 0.08),
                     Colors.transparent,
                   ]),
                 ),
@@ -112,7 +112,7 @@ class SettingsScreen extends ConsumerWidget {
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   gradient: RadialGradient(colors: [
-                    AppTheme.ponPeach.withValues(alpha: 0.08),
+                    AppTheme.ponAccent.withValues(alpha: 0.08),
                     Colors.transparent,
                   ]),
                 ),
@@ -151,7 +151,7 @@ class SettingsScreen extends ConsumerWidget {
                 const SizedBox(height: 36),
                 SettingsCard(
                   isDark: isDark,
-                  glowColor: AppTheme.ponCyan,
+                  glowColor: AppTheme.ponAccent,
                   icon: Icons.person_rounded,
                   title: context.l10n.editProfile,
                   // Open the user's OWN public profile first (as others see it);
@@ -171,7 +171,7 @@ class SettingsScreen extends ConsumerWidget {
                 const SizedBox(height: 24),
                 SettingsCard(
                   isDark: isDark,
-                  glowColor: AppTheme.ponPeach,
+                  glowColor: AppTheme.ponAccent,
                   icon: _getThemeIcon(currentThemeMode),
                   title: context.l10n.appearance,
                   subtitle: _getThemeLabel(context, currentThemeMode),
@@ -180,7 +180,7 @@ class SettingsScreen extends ConsumerWidget {
                 const SizedBox(height: 24),
                 SettingsCard(
                   isDark: isDark,
-                  glowColor: AppTheme.ponCyan,
+                  glowColor: AppTheme.ponAccent,
                   icon: Icons.translate_rounded,
                   title: context.l10n.language,
                   subtitle: kLanguageNames[resolveActiveLocale(
@@ -219,7 +219,7 @@ class SettingsScreen extends ConsumerWidget {
                 const SizedBox(height: 24),
                 SettingsCard(
                   isDark: isDark,
-                  glowColor: AppTheme.ponCyan,
+                  glowColor: AppTheme.ponAccent,
                   icon: Icons.alarm_outlined,
                   title: context.l10n.reminders,
                   onTap: () => context.push('/reminders'),
@@ -228,7 +228,7 @@ class SettingsScreen extends ConsumerWidget {
                   const SizedBox(height: 24),
                   SettingsCard(
                     isDark: isDark,
-                    glowColor: AppTheme.ponPink,
+                    glowColor: AppTheme.ponAccent,
                     icon: Icons.admin_panel_settings_outlined,
                     title: context.l10n.adminMenu,
                     subtitle: context.l10n.adminSettingsSubtitle,
@@ -241,7 +241,7 @@ class SettingsScreen extends ConsumerWidget {
                 const SizedBox(height: 24),
                 SettingsCard(
                   isDark: isDark,
-                  glowColor: AppTheme.ponCyan,
+                  glowColor: AppTheme.ponAccent,
                   icon: Icons.hub_outlined,
                   title: context.l10n.integrationsTitle,
                   subtitle: context.l10n.integrationsSettingsSubtitle,
@@ -253,7 +253,7 @@ class SettingsScreen extends ConsumerWidget {
                 const SizedBox(height: 24),
                 SettingsCard(
                   isDark: isDark,
-                  glowColor: AppTheme.ponPeach,
+                  glowColor: AppTheme.ponAccent,
                   icon: Icons.auto_awesome_outlined,
                   title: context.l10n.skillsTitle,
                   subtitle: context.l10n.skillsSettingsSubtitle,
@@ -265,7 +265,7 @@ class SettingsScreen extends ConsumerWidget {
                 const SizedBox(height: 24),
                 SettingsCard(
                   isDark: isDark,
-                  glowColor: AppTheme.ponCyan,
+                  glowColor: AppTheme.ponAccent,
                   icon: Icons.toll_outlined,
                   title: context.l10n.tokenUsage,
                   onTap: () => context.push('/token-usage'),
@@ -273,7 +273,7 @@ class SettingsScreen extends ConsumerWidget {
                 const SizedBox(height: 24),
                 SettingsCard(
                   isDark: isDark,
-                  glowColor: AppTheme.ponCyan,
+                  glowColor: AppTheme.ponAccent,
                   icon: Icons.help_outline_rounded,
                   title: context.l10n.settingsHelp,
                   subtitle: context.l10n.settingsHelpSubtitle,
@@ -285,7 +285,7 @@ class SettingsScreen extends ConsumerWidget {
                 const SizedBox(height: 24),
                 SettingsCard(
                   isDark: isDark,
-                  glowColor: AppTheme.ponPink,
+                  glowColor: AppTheme.ponAccent,
                   icon: Icons.shield_outlined,
                   title: context.l10n.legalScreenTitle,
                   onTap: () => context.push('/legal'),

@@ -31,7 +31,7 @@ function ReadUserTile({ userId }: { userId: string }) {
         <span className="text-sm font-medium">{name}</span>
       </div>
       <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-        <CheckCheck className="size-4 text-pon-cyan" />
+        <CheckCheck className="size-4 text-primary" />
         <span>{t('seenStatus')}</span>
       </div>
     </div>

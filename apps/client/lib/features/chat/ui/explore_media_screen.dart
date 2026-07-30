@@ -236,14 +236,14 @@ class _LinkTile extends ConsumerWidget {
           color: AppTheme.darkSurface,
           borderRadius: BorderRadius.circular(10),
           border: Border.all(
-              color: AppTheme.ponCyan.withValues(alpha: 0.15), width: 1),
+              color: AppTheme.ponAccent.withValues(alpha: 0.15), width: 1),
         ),
         child: preview.when(
           loading: () => Text(url,
-              style: const TextStyle(color: AppTheme.ponCyan, fontSize: 13),
+              style: const TextStyle(color: AppTheme.ponAccent, fontSize: 13),
               overflow: TextOverflow.ellipsis),
           error: (_, __) => Text(url,
-              style: const TextStyle(color: AppTheme.ponCyan, fontSize: 13),
+              style: const TextStyle(color: AppTheme.ponAccent, fontSize: 13),
               overflow: TextOverflow.ellipsis),
           data: (data) => Row(
             crossAxisAlignment: CrossAxisAlignment.start,

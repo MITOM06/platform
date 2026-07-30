@@ -107,7 +107,7 @@ class _DirectorySectionState extends ConsumerState<DirectorySection>
           TextButton(
             onPressed: () => Navigator.pop(context, ctrl.text.trim()),
             child: Text(l10n.connectorConnect,
-                style: const TextStyle(color: AppTheme.ponCyan)),
+                style: const TextStyle(color: AppTheme.ponAccent)),
           ),
         ],
       ),
@@ -198,9 +198,9 @@ class _DirectorySectionState extends ConsumerState<DirectorySection>
             if (isAdmin)
               TextButton.icon(
                 onPressed: () => DirectoryAdminSheet.show(context),
-                icon: const Icon(Icons.add, size: 18, color: AppTheme.ponCyan),
+                icon: const Icon(Icons.add, size: 18, color: AppTheme.ponAccent),
                 label: Text(l10n.directoryAdd,
-                    style: const TextStyle(color: AppTheme.ponCyan)),
+                    style: const TextStyle(color: AppTheme.ponAccent)),
               ),
           ],
         ),

@@ -260,8 +260,8 @@ export default function ConversationPage({ params }: Props) {
         {/* Glow Spheres — only when no wallpaper is set, so they don't tint it. */}
         {!hasWallpaper && (
           <div className="absolute inset-0 overflow-hidden pointer-events-none z-0 opacity-40 dark:opacity-20">
-            <div className="absolute -top-40 -left-40 size-96 rounded-full bg-pon-cyan blur-[128px] animate-pulse duration-[6000ms]" />
-            <div className="absolute -bottom-40 -right-40 size-96 rounded-full bg-pon-peach blur-[128px] animate-pulse duration-[8000ms]" />
+            <div className="absolute -top-40 -left-40 size-96 rounded-full bg-primary blur-[128px] animate-pulse duration-[6000ms]" />
+            <div className="absolute -bottom-40 -right-40 size-96 rounded-full bg-primary blur-[128px] animate-pulse duration-[8000ms]" />
           </div>
         )}
 

@@ -115,8 +115,8 @@ export default function SharedMediaPage() {
                       rel="noopener noreferrer"
                       className="flex items-center gap-3 p-3 rounded-xl border hover:bg-muted/50 transition-colors"
                     >
-                      <div className="size-10 rounded-lg bg-pon-cyan/10 flex items-center justify-center shrink-0">
-                        <FileText className="size-5 text-pon-cyan" />
+                      <div className="size-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                        <FileText className="size-5 text-primary" />
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium truncate">{meta.name}</p>
@@ -137,8 +137,8 @@ export default function SharedMediaPage() {
                     rel="noopener noreferrer"
                     className="flex items-start gap-3 p-3 rounded-xl border hover:bg-muted/50 transition-colors"
                   >
-                    <div className="size-10 rounded-lg bg-pon-peach/10 flex items-center justify-center shrink-0">
-                      <LinkIcon className="size-5 text-pon-peach" />
+                    <div className="size-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                      <LinkIcon className="size-5 text-primary" />
                     </div>
                     <div className="flex-1 min-w-0 pt-0.5">
                       <p className="text-sm text-foreground break-all line-clamp-2">

@@ -212,10 +212,10 @@ class _PasswordFormState extends ConsumerState<_PasswordForm> {
   Widget build(BuildContext context) {
     final isDark = widget.isDark;
     final accent =
-        isDark ? AppTheme.ponCyan : Theme.of(context).colorScheme.primary;
+        isDark ? AppTheme.ponAccent : Theme.of(context).colorScheme.primary;
 
     return PonCard(
-      glowColor: AppTheme.ponPink,
+      glowColor: AppTheme.ponAccent,
       glowStrength: isDark ? 4 : 0,
       child: Padding(
         padding: const EdgeInsets.all(20),
@@ -349,7 +349,7 @@ class _TwoFaPlaceholder extends StatelessWidget {
   Widget build(BuildContext context) {
     final muted = isDark ? Colors.white54 : Colors.black54;
     return PonCard(
-      glowColor: AppTheme.ponPeach,
+      glowColor: AppTheme.ponAccent,
       glowStrength: 0,
       child: Opacity(
         opacity: 0.7,

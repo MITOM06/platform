@@ -38,7 +38,7 @@ export function ProfileImageHeader({
         {resolvedCover ? (
           <Image src={resolvedCover} alt="" fill unoptimized className="object-cover" />
         ) : (
-          <div className="absolute inset-0 bg-gradient-to-br from-pon-cyan via-pon-peach to-pon-pink" />
+          <div className="absolute inset-0 bg-primary" />
         )}
         <div className="absolute inset-0 bg-black/20" />
 
@@ -65,7 +65,7 @@ export function ProfileImageHeader({
             {resolvedAvatar ? (
               <AvatarImage src={resolvedAvatar} alt={displayName} />
             ) : (
-              <AvatarFallback className="text-3xl font-bold bg-gradient-to-br from-pon-cyan to-pon-pink text-white">
+              <AvatarFallback className="text-3xl font-bold bg-primary text-white">
                 {initials}
               </AvatarFallback>
             )}

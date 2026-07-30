@@ -34,7 +34,7 @@ export function LinkPreviewCard({ url }: { url: string }) {
       )}
       <div className="p-2.5">
         {data.siteName && (
-          <p className="mb-0.5 text-[10px] font-semibold uppercase text-pon-cyan/80">
+          <p className="mb-0.5 text-[10px] font-semibold uppercase text-primary/80">
             {data.siteName}
           </p>
         )}

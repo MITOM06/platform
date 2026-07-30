@@ -34,7 +34,7 @@ class DirectoryCard extends StatelessWidget {
     final connected = item.isConnected;
 
     return PonCard(
-      glowColor: connected ? AppTheme.onlineGreen : AppTheme.ponCyan,
+      glowColor: connected ? AppTheme.onlineGreen : AppTheme.ponAccent,
       glowStrength: connected ? 5 : 2,
       borderRadius: 16,
       child: Padding(
@@ -148,7 +148,7 @@ class _Monogram extends StatelessWidget {
       child: Text(
         letter,
         style: const TextStyle(
-          color: AppTheme.ponCyan,
+          color: AppTheme.ponAccent,
           fontSize: 18,
           fontWeight: FontWeight.bold,
         ),
@@ -201,7 +201,7 @@ class _ActionRow extends StatelessWidget {
           TextButton(
             onPressed: onManage,
             child: Text(context.l10n.connectorManage,
-                style: const TextStyle(color: AppTheme.ponCyan)),
+                style: const TextStyle(color: AppTheme.ponAccent)),
           )
         else
           Flexible(

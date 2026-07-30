@@ -61,7 +61,7 @@ export function WorkspaceSettings() {
       {/* Identity & branding */}
       <section className="space-y-4">
         <h2 className="text-lg font-semibold flex items-center gap-2">
-          <Building2 className="size-5 text-pon-cyan" /> {t('wsIdentity')}
+          <Building2 className="size-5 text-primary" /> {t('wsIdentity')}
         </h2>
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="space-y-1.5">

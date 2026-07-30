@@ -89,7 +89,7 @@ export default function ExplorePage() {
                   {channel.avatarUrl ? (
                     <AvatarImage src={absoluteMediaUrl(channel.avatarUrl)} alt={channel.name ?? ''} className="object-cover" />
                   ) : (
-                    <AvatarFallback className="bg-pon-cyan/10 text-pon-cyan text-lg">
+                    <AvatarFallback className="bg-primary/10 text-primary text-lg">
                       <Hash className="size-6" />
                     </AvatarFallback>
                   )}
@@ -110,7 +110,7 @@ export default function ExplorePage() {
                 <Button
                   onClick={() => joinMutation.mutate(channel.id)}
                   disabled={isJoining}
-                  className="shrink-0 rounded-full px-5 bg-gradient-to-r from-pon-cyan to-pon-peach text-white font-medium shadow-sm hover:opacity-90"
+                  className="shrink-0 rounded-full px-5 bg-primary text-white font-medium shadow-sm hover:opacity-90"
                 >
                   {isJoining ? (
                     <Loader2 className="size-4 animate-spin" />

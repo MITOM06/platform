@@ -33,9 +33,9 @@ class TokenUsageRangeSelector extends StatelessWidget {
                 label: Text('${days}d'),
                 selected: selected,
                 onSelected: (_) => onPreset(days),
-                selectedColor: AppTheme.ponCyan.withValues(alpha: 0.2),
+                selectedColor: AppTheme.ponAccent.withValues(alpha: 0.2),
                 labelStyle: TextStyle(
-                  color: selected ? AppTheme.ponCyan : Colors.white60,
+                  color: selected ? AppTheme.ponAccent : Colors.white60,
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
                 ),
@@ -46,13 +46,13 @@ class TokenUsageRangeSelector extends StatelessWidget {
             const SizedBox(width: 4),
             Chip(
               avatar: const Icon(Icons.calendar_today,
-                  size: 14, color: AppTheme.ponCyan),
+                  size: 14, color: AppTheme.ponAccent),
               label: Text(
                 '${DateFormat('dd/MM').format(customRange!.start)} – '
                 '${DateFormat('dd/MM').format(customRange!.end)}',
-                style: const TextStyle(fontSize: 11, color: AppTheme.ponCyan),
+                style: const TextStyle(fontSize: 11, color: AppTheme.ponAccent),
               ),
-              backgroundColor: AppTheme.ponCyan.withValues(alpha: 0.1),
+              backgroundColor: AppTheme.ponAccent.withValues(alpha: 0.1),
             ),
           ],
         ],

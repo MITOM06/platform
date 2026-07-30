@@ -91,7 +91,7 @@ class SecurityCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     const amber = Color(0xFFF59E0B);
-    final glowColor = hasPassword ? AppTheme.ponPink : amber;
+    final glowColor = hasPassword ? AppTheme.ponAccent : amber;
     final accent = isDark ? glowColor : Theme.of(context).colorScheme.primary;
     return PonCard(
       glowColor: glowColor,
@@ -178,9 +178,9 @@ class NotificationsCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final accent =
-        isDark ? AppTheme.ponPeach : Theme.of(context).colorScheme.primary;
+        isDark ? AppTheme.ponAccent : Theme.of(context).colorScheme.primary;
     return PonCard(
-      glowColor: AppTheme.ponPeach,
+      glowColor: AppTheme.ponAccent,
       glowStrength: isDark ? 4 : 0,
       child: Material(
         color: Colors.transparent,
@@ -213,7 +213,7 @@ class NotificationsCard extends StatelessWidget {
             ),
           ),
           value: enabled,
-          activeThumbColor: AppTheme.ponCyan,
+          activeThumbColor: AppTheme.ponAccent,
           onChanged: onChanged,
         ),
       ),

@@ -175,7 +175,7 @@ class _NewGroupScreenState extends ConsumerState<NewGroupScreen> {
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
-                      activeColor: AppTheme.ponCyan,
+                      activeColor: AppTheme.ponAccent,
                     );
                   },
                 );

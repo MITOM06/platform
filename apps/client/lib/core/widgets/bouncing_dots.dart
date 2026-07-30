@@ -9,7 +9,7 @@ class BouncingDots extends StatefulWidget {
   final double size;
   const BouncingDots({
     super.key,
-    this.color = AppTheme.ponCyan,
+    this.color = AppTheme.ponAccent,
     this.size = 6.0,
   });
 

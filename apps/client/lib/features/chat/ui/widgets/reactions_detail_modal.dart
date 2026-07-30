@@ -88,9 +88,9 @@ class _ReactionsDetailModalState extends ConsumerState<ReactionsDetailModal>
                           '$e ${_reactorsByEmoji[e]!.length}',
                     ))
                 .toList(),
-            labelColor: AppTheme.ponCyan,
+            labelColor: AppTheme.ponAccent,
             unselectedLabelColor: Colors.white54,
-            indicatorColor: AppTheme.ponCyan,
+            indicatorColor: AppTheme.ponAccent,
           ),
           Expanded(
             child: TabBarView(

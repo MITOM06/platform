@@ -27,8 +27,8 @@ export function FaqAccordion({ category, items, hideHeader }: FaqAccordionProps)
     <section className="mb-8 last:mb-0">
       {!hideHeader && (
         <div className="mb-2 flex items-center gap-2 border-b pb-2">
-          <div className="flex size-8 items-center justify-center rounded-full bg-pon-cyan/10">
-            <Icon className="size-4 text-pon-cyan" />
+          <div className="flex size-8 items-center justify-center rounded-full bg-primary/10">
+            <Icon className="size-4 text-primary" />
           </div>
           <h2 className="text-sm font-semibold text-foreground">{t(category.titleKey)}</h2>
         </div>

@@ -42,7 +42,7 @@ class PinnedMessagesSection extends ConsumerWidget {
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             child: Row(
               children: [
-                const Icon(Icons.push_pin, size: 15, color: AppTheme.ponCyan),
+                const Icon(Icons.push_pin, size: 15, color: AppTheme.ponAccent),
                 const SizedBox(width: 6),
                 Text(
                   context.l10n.pinnedMessagesTitle,
@@ -83,7 +83,7 @@ class _PinnedRow extends ConsumerWidget {
     return ListTile(
       dense: true,
       leading: const Icon(Icons.push_pin_outlined,
-          size: 18, color: AppTheme.ponCyan),
+          size: 18, color: AppTheme.ponAccent),
       title: Text(
         senderName,
         style: const TextStyle(

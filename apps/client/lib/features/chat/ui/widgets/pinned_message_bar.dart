@@ -23,15 +23,15 @@ class PinnedMessageBar extends StatelessWidget {
       onTap: onTap,
       child: Container(
         decoration: BoxDecoration(
-          color: AppTheme.ponCyan.withValues(alpha: 0.08),
+          color: AppTheme.ponAccent.withValues(alpha: 0.08),
           border: const Border(
-            left: BorderSide(color: AppTheme.ponCyan, width: 3),
+            left: BorderSide(color: AppTheme.ponAccent, width: 3),
           ),
         ),
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         child: Row(
           children: [
-            const Icon(Icons.push_pin, size: 14, color: AppTheme.ponCyan),
+            const Icon(Icons.push_pin, size: 14, color: AppTheme.ponAccent),
             const SizedBox(width: 8),
             Expanded(
               child: Column(
@@ -42,7 +42,7 @@ class PinnedMessageBar extends StatelessWidget {
                     context.l10n.pinnedMessageTitle,
                     style: const TextStyle(
                       fontSize: 10,
-                      color: AppTheme.ponCyan,
+                      color: AppTheme.ponAccent,
                       fontWeight: FontWeight.w600,
                     ),
                   ),

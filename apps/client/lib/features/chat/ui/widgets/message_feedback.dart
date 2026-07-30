@@ -153,12 +153,12 @@ class _MessageFeedbackState extends ConsumerState<MessageFeedback> {
                 enabledBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(10),
                   borderSide: BorderSide(
-                    color: AppTheme.ponCyan.withValues(alpha: 0.3),
+                    color: AppTheme.ponAccent.withValues(alpha: 0.3),
                   ),
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(10),
-                  borderSide: const BorderSide(color: AppTheme.ponCyan),
+                  borderSide: const BorderSide(color: AppTheme.ponAccent),
                 ),
               ),
             ),
@@ -167,7 +167,7 @@ class _MessageFeedbackState extends ConsumerState<MessageFeedback> {
           TextButton(
             onPressed: _submitting ? null : _sendComment,
             style: TextButton.styleFrom(
-              foregroundColor: AppTheme.ponCyan,
+              foregroundColor: AppTheme.ponAccent,
               padding: const EdgeInsets.symmetric(horizontal: 10),
               minimumSize: const Size(0, 36),
             ),
@@ -195,7 +195,7 @@ class _FeedbackButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final color = active
-        ? AppTheme.ponCyan
+        ? AppTheme.ponAccent
         : Colors.white.withValues(alpha: 0.45);
     return Tooltip(
       message: tooltip,

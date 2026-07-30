@@ -106,12 +106,12 @@ class _GroupCallStartSheetState extends ConsumerState<GroupCallStartSheet> {
           SwitchListTile(
             contentPadding: EdgeInsets.zero,
             value: _aiNotetaker,
-            activeThumbColor: const Color(0xFFB47FFF),
+            activeThumbColor: const Color(0xFF96435B),
             onChanged: (v) => setState(() => _aiNotetaker = v),
             title: Row(
               children: [
                 const Icon(Icons.auto_awesome,
-                    color: Color(0xFFB47FFF), size: 18),
+                    color: Color(0xFF96435B), size: 18),
                 const SizedBox(width: 8),
                 Text(l10n.groupCallNotetakerToggle,
                     style: const TextStyle(color: Colors.white, fontSize: 15)),
@@ -161,11 +161,11 @@ class _MediaChoice extends StatelessWidget {
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(14),
           color: selected
-              ? AppTheme.ponCyan.withValues(alpha: 0.18)
+              ? AppTheme.ponAccent.withValues(alpha: 0.18)
               : Colors.white.withValues(alpha: 0.05),
           border: Border.all(
             color: selected
-                ? AppTheme.ponCyan
+                ? AppTheme.ponAccent
                 : AppTheme.darkBorder.withValues(alpha: 0.6),
             width: selected ? 2 : 1,
           ),
@@ -173,7 +173,7 @@ class _MediaChoice extends StatelessWidget {
         child: Column(
           children: [
             Icon(icon,
-                color: selected ? AppTheme.ponCyan : Colors.white70, size: 28),
+                color: selected ? AppTheme.ponAccent : Colors.white70, size: 28),
             const SizedBox(height: 6),
             Text(label,
                 style: TextStyle(

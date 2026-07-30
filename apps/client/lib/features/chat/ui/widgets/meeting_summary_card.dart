@@ -36,7 +36,7 @@ class MeetingSummaryBubble extends ConsumerWidget {
                     'PON AI',
                     style: TextStyle(
                       fontSize: 11,
-                      color: const Color(0xFFB47FFF).withValues(alpha: 0.9),
+                      color: const Color(0xFF96435B).withValues(alpha: 0.9),
                       fontWeight: FontWeight.w600,
                     ),
                   ),
@@ -106,10 +106,10 @@ class MeetingSummaryCard extends StatelessWidget {
     return Container(
       constraints: const BoxConstraints(maxWidth: 360),
       decoration: BoxDecoration(
-        color: const Color(0xFF2D1B69).withValues(alpha: 0.55),
+        color: const Color(0xFF3A2A2C).withValues(alpha: 0.55),
         borderRadius: BorderRadius.circular(16),
         border:
-            Border.all(color: const Color(0xFFB47FFF).withValues(alpha: 0.5)),
+            Border.all(color: const Color(0xFF96435B).withValues(alpha: 0.5)),
       ),
       padding: const EdgeInsets.all(14),
       child: Column(
@@ -120,7 +120,7 @@ class MeetingSummaryCard extends StatelessWidget {
           Row(
             children: [
               const Icon(Icons.auto_awesome,
-                  color: Color(0xFFB47FFF), size: 18),
+                  color: Color(0xFF96435B), size: 18),
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
@@ -181,7 +181,7 @@ class _SectionTitle extends StatelessWidget {
     return Text(
       text.toUpperCase(),
       style: TextStyle(
-        color: const Color(0xFFD6BBFF).withValues(alpha: 0.9),
+        color: const Color(0xFFE8B4BE).withValues(alpha: 0.9),
         fontSize: 11,
         fontWeight: FontWeight.w700,
         letterSpacing: 0.6,
@@ -202,7 +202,7 @@ class _Bullet extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text('•  ',
-              style: TextStyle(color: Color(0xFFB47FFF), fontSize: 14)),
+              style: TextStyle(color: Color(0xFF96435B), fontSize: 14)),
           Expanded(
             child: Text(text,
                 style: const TextStyle(color: Colors.white, fontSize: 14)),
@@ -227,7 +227,7 @@ class _ChecklistItem extends StatelessWidget {
           const Padding(
             padding: EdgeInsets.only(top: 1, right: 6),
             child: Icon(Icons.check_box_outline_blank,
-                color: AppTheme.ponCyan, size: 16),
+                color: AppTheme.ponAccent, size: 16),
           ),
           Expanded(
             child: Text(text,

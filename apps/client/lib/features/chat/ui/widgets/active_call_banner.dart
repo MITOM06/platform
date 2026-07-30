@@ -45,14 +45,14 @@ class ActiveCallBanner extends ConsumerWidget {
     }
 
     return Material(
-      color: AppTheme.ponCyan.withValues(alpha: 0.12),
+      color: AppTheme.ponAccent.withValues(alpha: 0.12),
       child: InkWell(
         onTap: () => _join(context, ref, info),
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
           child: Row(
             children: [
-              const Icon(Icons.groups, color: AppTheme.ponCyan, size: 20),
+              const Icon(Icons.groups, color: AppTheme.ponAccent, size: 20),
               const SizedBox(width: 10),
               Expanded(
                 child: Text(
@@ -66,7 +66,7 @@ class ActiveCallBanner extends ConsumerWidget {
               FilledButton(
                 onPressed: () => _join(context, ref, info),
                 style: FilledButton.styleFrom(
-                  backgroundColor: AppTheme.ponCyan,
+                  backgroundColor: AppTheme.ponAccent,
                   padding: const EdgeInsets.symmetric(
                       horizontal: 16, vertical: 6),
                   minimumSize: const Size(0, 32),

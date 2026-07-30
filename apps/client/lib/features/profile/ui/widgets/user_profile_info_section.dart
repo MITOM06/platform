@@ -171,7 +171,7 @@ class _ShowToggle extends StatelessWidget {
         label,
         style: const TextStyle(fontSize: 12, color: Colors.white60),
       ),
-      activeThumbColor: AppTheme.ponCyan,
+      activeThumbColor: AppTheme.ponAccent,
       dense: true,
       contentPadding: EdgeInsets.zero,
       visualDensity: VisualDensity.compact,

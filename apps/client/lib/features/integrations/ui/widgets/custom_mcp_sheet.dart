@@ -264,9 +264,9 @@ class _ToolsPreview extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 16),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: AppTheme.ponCyan.withValues(alpha: 0.06),
+        color: AppTheme.ponAccent.withValues(alpha: 0.06),
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: AppTheme.ponCyan.withValues(alpha: 0.22)),
+        border: Border.all(color: AppTheme.ponAccent.withValues(alpha: 0.22)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -274,7 +274,7 @@ class _ToolsPreview extends StatelessWidget {
           Text(
             context.l10n.customMcpToolsFound(tools.length),
             style: const TextStyle(
-              color: AppTheme.ponCyan,
+              color: AppTheme.ponAccent,
               fontWeight: FontWeight.w600,
               fontSize: 12.5,
             ),

@@ -89,7 +89,7 @@ export function StrangerRequestBanner({
           size="sm"
           onClick={handleAccept}
           disabled={loading !== null}
-          className="rounded-full text-xs font-semibold px-5 bg-gradient-to-r from-pon-cyan via-pon-peach to-pon-pink text-white hover:opacity-90 shadow-sm border-0"
+          className="rounded-full text-xs font-semibold px-5 bg-primary text-white hover:opacity-90 shadow-sm border-0"
         >
           {loading === 'accept' && <Loader2 className="size-3 animate-spin mr-1.5" />}
           {t('strangerAccept')}

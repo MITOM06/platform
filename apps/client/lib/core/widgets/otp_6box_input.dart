@@ -13,7 +13,7 @@ class Otp6BoxInput extends StatefulWidget {
     super.key,
     required this.controller,
     this.onCompleted,
-    this.accentColor = AppTheme.ponCyan,
+    this.accentColor = AppTheme.ponAccent,
   });
 
   @override

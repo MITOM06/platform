@@ -125,9 +125,8 @@
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
-  --color-pon-cyan: #96435B; /* TODO(ui-redesign-L2): rename to --color-pon-accent, was #6AC9FF */
-  --color-pon-peach: #96435B; /* TODO(ui-redesign-L2): rename/retire, was #FBB68B */
-  --color-pon-pink: #96435B; /* TODO(ui-redesign-L2): rename/retire, was #FF85B3 */
+  /* The old 3-colour neon brand set (pon-cyan/peach/pink) was retired in L2:
+     every call site now uses the theme-aware `primary` token instead. */
   --color-pon-blue: #4C7BFF;
   --color-pon-green: #43E8A6;
   --color-online-green: #00E676;
@@ -150,18 +149,8 @@ body {
   font-family: var(--font-sans, Arial, Helvetica, sans-serif);
 }
 
-.pon-gradient {
-  /* TODO(ui-redesign-L2): rename class, no longer a gradient by design */
-  background: var(--primary);
-}
-
-.pon-gradient-text {
-  /* TODO(ui-redesign-L2): rename class, no longer a gradient by design */
-  background: var(--primary);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
+/* .pon-gradient / .pon-gradient-text were removed in L2 — a flat accent needs no
+   background-clip trick, so their call sites use `bg-primary` / `text-primary`. */
 
 /* ────────────────────────────────────────────────────────────────────────────
    PON Motion — subtle micro-interactions (shared identity w/ Flutter side).

@@ -71,13 +71,13 @@ function DocumentTile({
   chunksLabel: (count: number) => string
 }) {
   return (
-    <div className="group rounded-xl border bg-card p-4 transition-all hover:shadow-lg hover:border-pon-cyan/30 relative overflow-hidden flex items-center gap-4">
+    <div className="group rounded-xl border bg-card p-4 transition-all hover:shadow-lg hover:border-primary/30 relative overflow-hidden flex items-center gap-4">
       {/* Subtle glow */}
-      <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none rounded-xl bg-gradient-to-r from-pon-cyan/[0.03] to-transparent" />
+      <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none rounded-xl bg-primary/[0.03]" />
 
       {/* Icon */}
-      <div className="size-10 rounded-lg bg-pon-cyan/10 flex items-center justify-center shrink-0">
-        <FileText className="size-5 text-pon-cyan" />
+      <div className="size-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+        <FileText className="size-5 text-primary" />
       </div>
 
       {/* Content */}
@@ -254,13 +254,13 @@ export default function KbPage({ params }: { params: Promise<{ conversationId: s
       <div className="flex-1 overflow-y-auto relative">
         {/* Background glows */}
         <div className="absolute inset-0 pointer-events-none overflow-hidden">
-          <div className="absolute -top-24 -left-24 w-72 h-72 rounded-full bg-pon-cyan/5 blur-3xl" />
+          <div className="absolute -top-24 -left-24 w-72 h-72 rounded-full bg-primary/5 blur-3xl" />
         </div>
 
         <div className="relative max-w-2xl mx-auto px-6 py-6">
           {isLoading && (
             <div className="flex flex-col items-center justify-center py-20 gap-3">
-              <Loader2 className="size-8 animate-spin text-pon-cyan" />
+              <Loader2 className="size-8 animate-spin text-primary" />
               <p className="text-sm text-muted-foreground">{t('loading')}</p>
             </div>
           )}
@@ -296,7 +296,7 @@ export default function KbPage({ params }: { params: Promise<{ conversationId: s
       <div className="absolute bottom-6 right-6">
         <Button
           size="icon"
-          className="size-14 rounded-full shadow-lg bg-pon-cyan hover:bg-pon-cyan/90 text-black"
+          className="size-14 rounded-full shadow-lg bg-primary hover:bg-primary/90 text-primary-foreground"
           onClick={() => fileInputRef.current?.click()}
           disabled={uploadMutation.isPending}
         >

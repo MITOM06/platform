@@ -48,12 +48,13 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     >
       <body className="min-h-full flex flex-col">
         {/* Thin top progress bar during route navigation (YouTube/GitHub style).
-            Uses the PON brand cyan; spinner disabled so only the bar shows. */}
+            Uses the burgundy accent token; no glow (see the "no shadows for
+            elevation" rule in docs/superpowers/UI-REDESIGN-DIRECTION.md §2). */}
         <NextTopLoader
-          color="#6AC9FF"
+          color="var(--primary)"
           height={3}
           showSpinner={false}
-          shadow="0 0 12px #6AC9FF,0 0 6px #6AC9FF"
+          shadow={false}
           initialPosition={0.1}
           crawlSpeed={200}
         />

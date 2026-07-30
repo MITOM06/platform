@@ -97,7 +97,7 @@ class _ReadUserTile extends ConsumerWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             const Icon(Icons.done_all_rounded,
-                size: 16, color: AppTheme.ponCyan),
+                size: 16, color: AppTheme.ponAccent),
             const SizedBox(width: 4),
             Text(
               context.l10n.seenStatus,
@@ -120,7 +120,7 @@ class _ReadUserTile extends ConsumerWidget {
               child: CircularProgressIndicator(
                 strokeWidth: 2,
                 valueColor:
-                    AlwaysStoppedAnimation<Color>(AppTheme.ponCyan),
+                    AlwaysStoppedAnimation<Color>(AppTheme.ponAccent),
               ),
             ),
           ),

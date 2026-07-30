@@ -17,27 +17,27 @@ class LegalScreen extends StatelessWidget {
       (
         title: context.l10n.legalDataCollectionTitle,
         content: context.l10n.legalDataCollectionContent,
-        color: AppTheme.ponCyan,
+        color: AppTheme.ponAccent,
       ),
       (
         title: context.l10n.legalDataUsageTitle,
         content: context.l10n.legalDataUsageContent,
-        color: AppTheme.ponPeach,
+        color: AppTheme.ponAccent,
       ),
       (
         title: context.l10n.legalSecurityTitle,
         content: context.l10n.legalSecurityContent,
-        color: AppTheme.ponCyan,
+        color: AppTheme.ponAccent,
       ),
       (
         title: context.l10n.legalUserRightsTitle,
         content: context.l10n.legalUserRightsContent,
-        color: AppTheme.ponPink,
+        color: AppTheme.ponAccent,
       ),
       (
         title: context.l10n.legalTermsTitle,
         content: context.l10n.legalTermsContent,
-        color: AppTheme.ponPeach,
+        color: AppTheme.ponAccent,
       ),
     ];
 
@@ -61,7 +61,7 @@ class LegalScreen extends StatelessWidget {
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   gradient: RadialGradient(colors: [
-                    AppTheme.ponCyan.withValues(alpha: 0.08),
+                    AppTheme.ponAccent.withValues(alpha: 0.08),
                     Colors.transparent,
                   ]),
                 ),
@@ -76,7 +76,7 @@ class LegalScreen extends StatelessWidget {
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   gradient: RadialGradient(colors: [
-                    AppTheme.ponPeach.withValues(alpha: 0.08),
+                    AppTheme.ponAccent.withValues(alpha: 0.08),
                     Colors.transparent,
                   ]),
                 ),

@@ -20,7 +20,7 @@ class ArchivedTab extends ConsumerWidget {
     final archivedAsync = ref.watch(archivedConversationsProvider);
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final accent =
-        isDark ? AppTheme.ponCyan : Theme.of(context).colorScheme.primary;
+        isDark ? AppTheme.ponAccent : Theme.of(context).colorScheme.primary;
 
     return archivedAsync.when(
       loading: () => Center(

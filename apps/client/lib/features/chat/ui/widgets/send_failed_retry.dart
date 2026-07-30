@@ -26,11 +26,11 @@ class SendFailedRetry extends ConsumerWidget {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.error_outline, size: 13, color: Color(0xFFFF6B6B)),
+            const Icon(Icons.error_outline, size: 13, color: Color(0xFFE5484D)),
             const SizedBox(width: 4),
             Text(
               context.l10n.messageSendFailedRetry,
-              style: const TextStyle(fontSize: 10.5, color: Color(0xFFFF6B6B)),
+              style: const TextStyle(fontSize: 10.5, color: Color(0xFFE5484D)),
             ),
           ],
         ),

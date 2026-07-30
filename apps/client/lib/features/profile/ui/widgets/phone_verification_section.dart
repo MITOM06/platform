@@ -122,7 +122,7 @@ class _NoticeRow extends StatelessWidget {
           const SizedBox(width: 8),
           TextButton(
             onPressed: onVerify,
-            style: TextButton.styleFrom(foregroundColor: AppTheme.ponCyan),
+            style: TextButton.styleFrom(foregroundColor: AppTheme.ponAccent),
             child: Text(l10n.phoneVerifyAction),
           ),
         ],
@@ -149,13 +149,13 @@ class _PhoneRow extends StatelessWidget {
     final l10n = context.l10n;
     final borderColor = verified
         ? AppTheme.onlineGreen.withValues(alpha: 0.4)
-        : AppTheme.ponPeach.withValues(alpha: 0.5);
+        : AppTheme.ponAccent.withValues(alpha: 0.5);
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(8),
         border: Border.all(color: borderColor),
-        color: (verified ? AppTheme.onlineGreen : AppTheme.ponPeach)
+        color: (verified ? AppTheme.onlineGreen : AppTheme.ponAccent)
             .withValues(alpha: 0.06),
       ),
       child: Row(
@@ -163,7 +163,7 @@ class _PhoneRow extends StatelessWidget {
           Icon(
             verified ? Icons.verified : Icons.shield_outlined,
             size: 18,
-            color: verified ? AppTheme.onlineGreen : AppTheme.ponPeach,
+            color: verified ? AppTheme.onlineGreen : AppTheme.ponAccent,
           ),
           const SizedBox(width: 10),
           Expanded(
@@ -183,7 +183,7 @@ class _PhoneRow extends StatelessWidget {
                     fontSize: 12,
                     fontWeight: FontWeight.w600,
                     color:
-                        verified ? AppTheme.onlineGreen : AppTheme.ponPeach,
+                        verified ? AppTheme.onlineGreen : AppTheme.ponAccent,
                   ),
                 ),
               ],
@@ -192,7 +192,7 @@ class _PhoneRow extends StatelessWidget {
           const SizedBox(width: 8),
           TextButton(
             onPressed: onAction,
-            style: TextButton.styleFrom(foregroundColor: AppTheme.ponCyan),
+            style: TextButton.styleFrom(foregroundColor: AppTheme.ponAccent),
             child: Text(
               verified ? l10n.phoneChangeNumber : l10n.phoneVerifyAction,
             ),

@@ -88,7 +88,7 @@ export function DirectorySection() {
     <section>
       <div className="mb-4 flex items-end justify-between gap-3 flex-wrap">
         <div>
-          <div className="font-mono text-pon-pink text-xs tracking-[2px]">
+          <div className="font-mono text-primary text-xs tracking-[2px]">
             {t('sectionDirectoryNum')}
           </div>
           <h2 className="text-xl font-bold tracking-tight mt-1">

@@ -60,8 +60,8 @@ export function MeetingSummaryCard({ content, isPinned }: { content: string; isP
       )}
     >
       {/* Header */}
-      <div className="flex items-center gap-2 border-b bg-gradient-to-r from-pon-cyan/15 via-pon-peach/10 to-pon-pink/15 px-4 py-3">
-        <FileText className="size-5 text-pon-cyan shrink-0" />
+      <div className="flex items-center gap-2 border-b bg-primary/15 px-4 py-3">
+        <FileText className="size-5 text-primary shrink-0" />
         <div className="min-w-0">
           <p className="text-sm font-semibold">{t('meetingSummaryTitle')}</p>
           <div className="mt-0.5 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-xs text-muted-foreground">
