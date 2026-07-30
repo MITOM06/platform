@@ -172,8 +172,8 @@ function LineChart({ days, inputLabel, outputLabel, noDataLabel }: {
             <stop offset="100%" stopColor="var(--primary)" stopOpacity="0" />
           </linearGradient>
           <linearGradient id="inputGrad" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="#00E5FF" stopOpacity="0.15" />
-            <stop offset="100%" stopColor="#00E5FF" stopOpacity="0" />
+            <stop offset="0%" stopColor="var(--primary)" stopOpacity="0.08" />
+            <stop offset="100%" stopColor="var(--primary)" stopOpacity="0" />
           </linearGradient>
         </defs>
         <polyline
@@ -187,17 +187,17 @@ function LineChart({ days, inputLabel, outputLabel, noDataLabel }: {
 
         {/* Lines */}
         <polyline points={outputPoints} fill="none" stroke="var(--primary)" strokeWidth={2} strokeLinejoin="round" strokeLinecap="round" />
-        <polyline points={inputPoints} fill="none" stroke="#00E5FF" strokeWidth={2} strokeLinejoin="round" strokeLinecap="round" />
+        <polyline points={inputPoints} fill="none" stroke="var(--primary)" strokeOpacity={0.45} strokeWidth={2} strokeLinejoin="round" strokeLinecap="round" />
 
         {/* Hover vertical line + dots */}
         {tooltip && activeIdx >= 0 && (
           <>
             <line x1={tooltip.pointX} y1={PAD.top} x2={tooltip.pointX} y2={PAD.top + chartH}
-              stroke="rgba(255,255,255,0.15)" strokeWidth={1} strokeDasharray="4 3" />
+              stroke="var(--border)" strokeWidth={1} strokeDasharray="4 3" />
             <circle cx={tooltip.pointX} cy={yOf(days[activeIdx].inputTokens)} r={5}
-              fill="#00E5FF" stroke="#0a0a0a" strokeWidth={2} />
+              fill="var(--primary)" fillOpacity={0.45} stroke="var(--card)" strokeWidth={2} />
             <circle cx={tooltip.pointX} cy={yOf(days[activeIdx].outputTokens)} r={5}
-              fill="var(--primary)" stroke="#0a0a0a" strokeWidth={2} />
+              fill="var(--primary)" stroke="var(--card)" strokeWidth={2} />
           </>
         )}
       </svg>
@@ -210,7 +210,7 @@ function LineChart({ days, inputLabel, outputLabel, noDataLabel }: {
         >
           <p className="text-muted-foreground/70 mb-1.5 font-mono">{tooltip.day.date}</p>
           <div className="flex items-center gap-2 mb-1">
-            <span className="size-2 rounded-full bg-[#00E5FF]" />
+            <span className="size-2 rounded-full bg-primary/45" />
             <span className="text-foreground">{inputLabel}: <strong>{fmt(tooltip.day.inputTokens)}</strong></span>
           </div>
           <div className="flex items-center gap-2">
@@ -223,7 +223,7 @@ function LineChart({ days, inputLabel, outputLabel, noDataLabel }: {
       {/* Legend */}
       <div className="flex items-center gap-6 justify-center mt-3">
         <div className="flex items-center gap-2">
-          <div className="size-3 rounded-sm bg-[#00E5FF]" />
+          <div className="size-3 rounded-sm bg-primary/45" />
           <span className="text-xs text-muted-foreground">{inputLabel}</span>
         </div>
         <div className="flex items-center gap-2">
@@ -316,7 +316,7 @@ export default function TokenUsagePage() {
                     sub={`${fmt(totalInput)} + ${fmt(totalOutput)}`}
                   />
                   <StatCard
-                    icon={<ArrowDownToLine className="size-4 text-[#00E5FF]" />}
+                    icon={<ArrowDownToLine className="size-4 text-primary" />}
                     label={t('inputTokens')}
                     value={fmt(totalInput)}
                   />

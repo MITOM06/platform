@@ -27,7 +27,7 @@ class BotIntegrationPanel extends ConsumerWidget {
           child: Text(
             '$e',
             textAlign: TextAlign.center,
-            style: TextStyle(color: Colors.white.withValues(alpha: 0.6)),
+            style: TextStyle(color: AppTheme.mutedText(context)),
           ),
         ),
       ),
@@ -39,7 +39,7 @@ class BotIntegrationPanel extends ConsumerWidget {
               child: Text(
                 l10n.botAdminNoBotsRegistered,
                 textAlign: TextAlign.center,
-                style: TextStyle(color: Colors.white.withValues(alpha: 0.6)),
+                style: TextStyle(color: AppTheme.mutedText(context)),
               ),
             ),
           );
@@ -136,8 +136,8 @@ class _BotRowState extends ConsumerState<_BotRow> {
                     children: [
                       Text(
                         bot.name.isEmpty ? bot.botUserId : bot.name,
-                        style: const TextStyle(
-                          color: Colors.white,
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.onSurface,
                           fontWeight: FontWeight.w600,
                           fontSize: 15,
                         ),
@@ -146,7 +146,7 @@ class _BotRowState extends ConsumerState<_BotRow> {
                       Text(
                         bot.botUserId,
                         style: TextStyle(
-                          color: Colors.white.withValues(alpha: 0.5),
+                          color: AppTheme.mutedText(context),
                           fontSize: 12,
                         ),
                       ),
@@ -155,7 +155,7 @@ class _BotRowState extends ConsumerState<_BotRow> {
                 ),
                 if (!bot.enabled)
                   Icon(Icons.block,
-                      size: 18, color: Colors.white.withValues(alpha: 0.4)),
+                      size: 18, color: AppTheme.mutedText(context)),
               ],
             ),
             const SizedBox(height: 12),
@@ -233,12 +233,12 @@ class _LastUsed extends StatelessWidget {
     return Row(
       children: [
         Icon(Icons.schedule,
-            size: 14, color: Colors.white.withValues(alpha: 0.45)),
+            size: 14, color: AppTheme.mutedText(context)),
         const SizedBox(width: 6),
         Text(
           '${l10n.botAdminLastUsed}: $value',
           style: TextStyle(
-              color: Colors.white.withValues(alpha: 0.6), fontSize: 12),
+              color: AppTheme.mutedText(context), fontSize: 12),
         ),
       ],
     );
@@ -258,7 +258,7 @@ class _RevokeButton extends StatelessWidget {
         side: BorderSide(color: AppTheme.ponAccent.withValues(alpha: 0.7)),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
         shape:
-            RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+            RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppTheme.radiusCard)),
       ),
       child: Text(context.l10n.botAdminRevokeToken),
     );
@@ -275,13 +275,8 @@ class _TokenDialog extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     return AlertDialog(
-      backgroundColor: AppTheme.darkBackground,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-        side: const BorderSide(color: AppTheme.darkBorder),
-      ),
       title: Text(l10n.botAdminGenerateToken,
-          style: const TextStyle(color: Colors.white)),
+          style: TextStyle(color: Theme.of(context).colorScheme.onSurface)),
       content: SingleChildScrollView(
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -341,12 +336,12 @@ class _CopyField extends StatelessWidget {
       children: [
         Text(label,
             style: TextStyle(
-                color: Colors.white.withValues(alpha: 0.6), fontSize: 12)),
+                color: AppTheme.mutedText(context), fontSize: 12)),
         const SizedBox(height: 4),
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
           decoration: BoxDecoration(
-            color: Colors.black.withValues(alpha: 0.35),
+            color: Theme.of(context).scaffoldBackgroundColor,
             borderRadius: BorderRadius.circular(10),
             border: Border.all(color: AppTheme.darkBorder),
           ),
@@ -356,8 +351,8 @@ class _CopyField extends StatelessWidget {
                 child: SelectableText(
                   value,
                   maxLines: 3,
-                  style: const TextStyle(
-                      color: Colors.white,
+                  style: TextStyle(
+                      color: Theme.of(context).colorScheme.onSurface,
                       fontSize: 12,
                       fontFamily: 'monospace'),
                 ),

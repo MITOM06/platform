@@ -31,26 +31,25 @@ class MembersPanel extends ConsumerWidget {
       context: context,
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setState) => AlertDialog(
-          backgroundColor: AppTheme.darkSurface,
           title: Text(l10n.adminMemberEdit,
-              style: const TextStyle(color: Colors.white)),
+              style: TextStyle(color: Theme.of(context).colorScheme.onSurface)),
           content: SingleChildScrollView(
             child: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text('${m.displayName} · ${l10n.adminMemberRevokeNote}',
-                    style: const TextStyle(color: Colors.white60, fontSize: 12)),
+                    style: TextStyle(color: AppTheme.mutedText(context), fontSize: 12)),
                 const SizedBox(height: 12),
                 if (canRoles)
                   DropdownButtonFormField<String?>(
                     initialValue: roleId,
                     isExpanded: true,
-                    dropdownColor: AppTheme.darkSurface,
-                    style: const TextStyle(color: Colors.white),
+                    dropdownColor: Theme.of(context).colorScheme.surface,
+                    style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
                     decoration: InputDecoration(
                       labelText: l10n.adminMemberRole,
-                      labelStyle: const TextStyle(color: Colors.white70),
+                      labelStyle: TextStyle(color: AppTheme.mutedText(context)),
                     ),
                     items: [
                       DropdownMenuItem(
@@ -67,13 +66,13 @@ class MembersPanel extends ConsumerWidget {
                   Align(
                     alignment: Alignment.centerLeft,
                     child: Text(l10n.adminMemberDepartments,
-                        style: const TextStyle(color: Colors.white70)),
+                        style: TextStyle(color: AppTheme.mutedText(context))),
                   ),
                   if (depts.isEmpty)
                     Padding(
                       padding: const EdgeInsets.only(top: 8),
                       child: Text(l10n.adminDeptEmpty,
-                          style: const TextStyle(color: Colors.white38)),
+                          style: TextStyle(color: AppTheme.mutedText(context))),
                     )
                   else
                     ...depts.map(
@@ -82,7 +81,7 @@ class MembersPanel extends ConsumerWidget {
                         activeColor: AppTheme.ponAccent,
                         controlAffinity: ListTileControlAffinity.leading,
                         title: Text(d.name,
-                            style: const TextStyle(color: Colors.white)),
+                            style: TextStyle(color: Theme.of(context).colorScheme.onSurface)),
                         value: selected.contains(d.id),
                         onChanged: (_) => setState(() {
                           if (selected.contains(d.id)) {
@@ -141,35 +140,34 @@ class MembersPanel extends ConsumerWidget {
     final saved = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: AppTheme.darkSurface,
         title: Text(l10n.adminEditAiContext,
-            style: const TextStyle(color: Colors.white)),
+            style: TextStyle(color: Theme.of(context).colorScheme.onSurface)),
         content: SingleChildScrollView(
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(m.displayName,
-                  style: const TextStyle(color: Colors.white60, fontSize: 12)),
+                  style: TextStyle(color: AppTheme.mutedText(context), fontSize: 12)),
               const SizedBox(height: 12),
               TextField(
                 controller: jobCtrl,
                 maxLength: 200,
-                style: const TextStyle(color: Colors.white),
+                style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
                 decoration: InputDecoration(
                   labelText: l10n.adminAiContextJobTitle,
-                  labelStyle: const TextStyle(color: Colors.white70),
+                  labelStyle: TextStyle(color: AppTheme.mutedText(context)),
                 ),
               ),
               const SizedBox(height: 8),
               TextField(
                 controller: projCtrl,
                 maxLines: 4,
-                style: const TextStyle(color: Colors.white),
+                style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
                 decoration: InputDecoration(
                   labelText: l10n.adminAiContextProjects,
                   hintText: l10n.adminAiContextProjectsHint,
-                  labelStyle: const TextStyle(color: Colors.white70),
+                  labelStyle: TextStyle(color: AppTheme.mutedText(context)),
                 ),
               ),
             ],
@@ -220,7 +218,7 @@ class MembersPanel extends ConsumerWidget {
       loading: () => const Center(child: CircularProgressIndicator()),
       error: (e, _) => Center(
         child: Text('$e',
-            style: TextStyle(color: Colors.white.withValues(alpha: 0.6))),
+            style: TextStyle(color: AppTheme.mutedText(context))),
       ),
       data: (members) => ListView.separated(
         padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
@@ -232,7 +230,7 @@ class MembersPanel extends ConsumerWidget {
               padding: const EdgeInsets.only(bottom: 4),
               child: Text(l10n.adminMemberHint,
                   style: TextStyle(
-                      color: Colors.white.withValues(alpha: 0.55),
+                      color: AppTheme.mutedText(context),
                       fontSize: 13)),
             );
           }
@@ -240,7 +238,7 @@ class MembersPanel extends ConsumerWidget {
           final roleName =
               roles.where((r) => r.id == m.roleId).map((r) => r.name).firstOrNull;
           return ListTile(
-            tileColor: AppTheme.darkSurface,
+            tileColor: Theme.of(context).colorScheme.surface,
             shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12)),
             leading: CircleAvatar(
@@ -250,9 +248,9 @@ class MembersPanel extends ConsumerWidget {
                       color: AppTheme.ponAccent, fontSize: 13)),
             ),
             title: Text(m.displayName,
-                style: const TextStyle(color: Colors.white)),
+                style: TextStyle(color: Theme.of(context).colorScheme.onSurface)),
             subtitle: Text(m.email,
-                style: const TextStyle(color: Colors.white60)),
+                style: TextStyle(color: AppTheme.mutedText(context))),
             trailing: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -270,13 +268,13 @@ class MembersPanel extends ConsumerWidget {
                   ),
                 if (canManageMembers)
                   IconButton(
-                    icon: const Icon(Icons.psychology_outlined,
-                        color: Colors.white70),
+                    icon: Icon(Icons.psychology_outlined,
+                        color: AppTheme.mutedText(context)),
                     tooltip: l10n.adminEditAiContext,
                     onPressed: () => _editAiContext(context, ref, m),
                   ),
                 IconButton(
-                  icon: const Icon(Icons.edit_outlined, color: Colors.white70),
+                  icon: Icon(Icons.edit_outlined, color: AppTheme.mutedText(context)),
                   onPressed: () => _edit(context, ref, m),
                 ),
               ],

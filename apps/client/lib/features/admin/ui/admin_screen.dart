@@ -67,19 +67,16 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
     final capsAsync = ref.watch(capabilitiesProvider);
 
     return Scaffold(
-      backgroundColor: AppTheme.darkBackground,
       appBar: AppBar(
-        backgroundColor: AppTheme.darkBackground,
-        iconTheme: const IconThemeData(color: Colors.white),
         title: Text(l10n.adminTitle,
-            style: const TextStyle(
-                color: Colors.white, fontWeight: FontWeight.bold)),
+            style: TextStyle(
+                color: Theme.of(context).colorScheme.onSurface, fontWeight: FontWeight.bold)),
       ),
       body: capsAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, _) => Center(
           child: Text('$e',
-              style: TextStyle(color: Colors.white.withValues(alpha: 0.6))),
+              style: TextStyle(color: AppTheme.mutedText(context))),
         ),
         data: (caps) {
           if (!caps.canAccessAdmin) {
@@ -173,11 +170,11 @@ class _Chip extends StatelessWidget {
         child: Row(
           children: [
             Icon(icon,
-                size: 16, color: active ? AppTheme.ponAccent : Colors.white60),
+                size: 16, color: active ? AppTheme.ponAccent : AppTheme.mutedText(context)),
             const SizedBox(width: 6),
             Text(label,
                 style: TextStyle(
-                    color: active ? AppTheme.ponAccent : Colors.white60,
+                    color: active ? AppTheme.ponAccent : AppTheme.mutedText(context),
                     fontWeight: active ? FontWeight.w600 : FontWeight.normal)),
           ],
         ),

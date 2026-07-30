@@ -26,7 +26,10 @@ class WorkspacePanel extends ConsumerStatefulWidget {
 class _WorkspacePanelState extends ConsumerState<WorkspacePanel> {
   final _name = TextEditingController();
   final _logoUrl = TextEditingController();
-  final _primaryColor = TextEditingController(text: '#00e5ff');
+  // Fallback brand colour for a workspace that has not set one. Was the old
+  // neon cyan #00e5ff, so a fresh deployment branded itself off-palette.
+  static const _defaultPrimaryColor = '#96435B';
+  final _primaryColor = TextEditingController(text: _defaultPrimaryColor);
   Map<String, bool> _features = {};
   List<String> _allowList = [];
   bool _seeded = false;
@@ -45,7 +48,7 @@ class _WorkspacePanelState extends ConsumerState<WorkspacePanel> {
     _seeded = true;
     _name.text = ws.name ?? '';
     _logoUrl.text = ws.logoUrl ?? '';
-    _primaryColor.text = ws.primaryColor ?? '#00e5ff';
+    _primaryColor.text = ws.primaryColor ?? _defaultPrimaryColor;
     _features = Map<String, bool>.from(ws.features);
     _allowList = List<String>.from(ws.connectorAllowList);
   }
@@ -127,7 +130,7 @@ class _WorkspacePanelState extends ConsumerState<WorkspacePanel> {
                 (k) => SwitchListTile(
                   contentPadding: EdgeInsets.zero,
                   activeThumbColor: AppTheme.ponAccent,
-                  title: Text(k, style: const TextStyle(color: Colors.white)),
+                  title: Text(k, style: TextStyle(color: Theme.of(context).colorScheme.onSurface)),
                   value: _features[k] ?? false,
                   onChanged: (v) => setState(() => _features[k] = v),
                 ),
@@ -150,8 +153,7 @@ class _WorkspacePanelState extends ConsumerState<WorkspacePanel> {
                               controlAffinity:
                                   ListTileControlAffinity.leading,
                               title: Text(entry.name,
-                                  style:
-                                      const TextStyle(color: Colors.white)),
+                                  style: TextStyle(color: Theme.of(context).colorScheme.onSurface)),
                               value: _allowList.contains(entry.id),
                               onChanged: (_) => setState(() {
                                 if (_allowList.contains(entry.id)) {
@@ -193,8 +195,8 @@ class _SectionTitle extends StatelessWidget {
         padding: const EdgeInsets.only(bottom: 12),
         child: Text(
           text,
-          style: const TextStyle(
-            color: Colors.white,
+          style: TextStyle(
+            color: Theme.of(context).colorScheme.onSurface,
             fontSize: 16,
             fontWeight: FontWeight.bold,
           ),
@@ -209,7 +211,7 @@ class _Muted extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Text(
         text,
-        style: TextStyle(color: Colors.white.withValues(alpha: 0.55), fontSize: 13),
+        style: TextStyle(color: AppTheme.mutedText(context), fontSize: 13),
       );
 }
 
@@ -223,7 +225,7 @@ class _Err extends StatelessWidget {
           padding: const EdgeInsets.all(24),
           child: Text(message,
               textAlign: TextAlign.center,
-              style: TextStyle(color: Colors.white.withValues(alpha: 0.6))),
+              style: TextStyle(color: AppTheme.mutedText(context))),
         ),
       );
 }

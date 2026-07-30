@@ -108,25 +108,21 @@ export function UsageDashboard() {
               icon={<Coins className="size-5 text-primary" />}
               label={t('totalTokens')}
               value={fmtTokens(data.totals.totalTokens)}
-              glowColor="rgba(150, 67, 91,0.06)"
             />
             <StatCard
               icon={<MessageSquare className="size-5 text-primary" />}
               label={t('requests')}
               value={data.totals.requestCount.toString()}
-              glowColor="rgba(180,127,255,0.06)"
             />
             <StatCard
               icon={<DollarSign className="size-5 text-primary" />}
               label={t('estimatedCost')}
               value={fmtUsd(data.totals.estimatedCostUsd)}
-              glowColor="rgba(150, 67, 91,0.06)"
             />
             <StatCard
               icon={<ThumbsDown className="size-5 text-destructive" />}
               label={t('thumbsDownRate')}
               value={thumbsDownPercent}
-              glowColor="rgba(239,68,68,0.06)"
             />
           </div>
 

@@ -48,9 +48,8 @@ class _AiContextEntriesPanelState extends ConsumerState<AiContextEntriesPanel> {
       context: context,
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setState) => AlertDialog(
-          backgroundColor: AppTheme.darkSurface,
           title: Text(entry == null ? l.adminCreateEntry : l.adminEditEntry,
-              style: const TextStyle(color: Colors.white)),
+              style: TextStyle(color: Theme.of(context).colorScheme.onSurface)),
           content: SingleChildScrollView(
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -59,30 +58,30 @@ class _AiContextEntriesPanelState extends ConsumerState<AiContextEntriesPanel> {
                 TextField(
                   controller: labelCtrl,
                   maxLength: 120,
-                  style: const TextStyle(color: Colors.white),
+                  style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
                   decoration: InputDecoration(
                     labelText: l.adminEntryLabel,
-                    labelStyle: const TextStyle(color: Colors.white70),
+                    labelStyle: TextStyle(color: AppTheme.mutedText(context)),
                   ),
                 ),
                 TextField(
                   controller: textCtrl,
                   maxLines: 4,
                   maxLength: 4000,
-                  style: const TextStyle(color: Colors.white),
+                  style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
                   decoration: InputDecoration(
                     labelText: l.adminEntryText,
-                    labelStyle: const TextStyle(color: Colors.white70),
+                    labelStyle: TextStyle(color: AppTheme.mutedText(context)),
                   ),
                 ),
                 const SizedBox(height: 8),
                 DropdownButtonFormField<ContextTier>(
                   initialValue: tier,
-                  dropdownColor: AppTheme.darkSurface,
-                  style: const TextStyle(color: Colors.white),
+                  dropdownColor: Theme.of(context).colorScheme.surface,
+                  style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
                   decoration: InputDecoration(
                     labelText: l.adminEntryTier,
-                    labelStyle: const TextStyle(color: Colors.white70),
+                    labelStyle: TextStyle(color: AppTheme.mutedText(context)),
                   ),
                   items: ContextTier.values
                       .map((t) => DropdownMenuItem(
@@ -157,8 +156,8 @@ class _AiContextEntriesPanelState extends ConsumerState<AiContextEntriesPanel> {
             children: [
               DropdownButton<String>(
                 value: _scope,
-                dropdownColor: AppTheme.darkSurface,
-                style: const TextStyle(color: Colors.white),
+                dropdownColor: Theme.of(context).colorScheme.surface,
+                style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
                 items: [
                   DropdownMenuItem(
                       value: 'company', child: Text(l.adminScopeCompany)),
@@ -173,10 +172,10 @@ class _AiContextEntriesPanelState extends ConsumerState<AiContextEntriesPanel> {
                   child: DropdownButton<String>(
                     value: _deptId,
                     isExpanded: true,
-                    dropdownColor: AppTheme.darkSurface,
-                    style: const TextStyle(color: Colors.white),
+                    dropdownColor: Theme.of(context).colorScheme.surface,
+                    style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
                     hint: Text(l.adminScopeDepartment,
-                        style: const TextStyle(color: Colors.white38)),
+                        style: TextStyle(color: AppTheme.mutedText(context))),
                     items: departments
                         .map((d) => DropdownMenuItem(
                             value: d.id, child: Text(d.name)))
@@ -198,13 +197,13 @@ class _AiContextEntriesPanelState extends ConsumerState<AiContextEntriesPanel> {
             loading: () => const Center(child: CircularProgressIndicator()),
             error: (e, _) => Center(
               child: Text('$e',
-                  style: TextStyle(color: Colors.white.withValues(alpha: 0.6))),
+                  style: TextStyle(color: AppTheme.mutedText(context))),
             ),
             data: (entries) {
               if (entries.isEmpty) {
                 return Center(
                   child: Text(l.adminAiContextEntriesEmpty,
-                      style: const TextStyle(color: Colors.white38)),
+                      style: TextStyle(color: AppTheme.mutedText(context))),
                 );
               }
               return ListView.separated(
@@ -214,23 +213,23 @@ class _AiContextEntriesPanelState extends ConsumerState<AiContextEntriesPanel> {
                 itemBuilder: (_, i) {
                   final e = entries[i];
                   return ListTile(
-                    tileColor: AppTheme.darkSurface,
+                    tileColor: Theme.of(context).colorScheme.surface,
                     shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12)),
                     title: Text(e.label,
-                        style: const TextStyle(color: Colors.white)),
+                        style: TextStyle(color: Theme.of(context).colorScheme.onSurface)),
                     subtitle: Text(
                       '${_tierLabel(context, tierFromCapability(e.requiredCapability))} · ${e.text}',
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(color: Colors.white60),
+                      style: TextStyle(color: AppTheme.mutedText(context)),
                     ),
                     trailing: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         IconButton(
-                          icon: const Icon(Icons.edit_outlined,
-                              color: Colors.white70),
+                          icon: Icon(Icons.edit_outlined,
+                              color: AppTheme.mutedText(context)),
                           onPressed: () => _edit(context, entry: e),
                         ),
                         IconButton(

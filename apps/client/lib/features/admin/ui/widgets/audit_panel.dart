@@ -28,7 +28,7 @@ class _AuditPanelState extends ConsumerState<AuditPanel> {
       loading: () => const Center(child: CircularProgressIndicator()),
       error: (e, _) => Center(
         child: Text('$e',
-            style: TextStyle(color: Colors.white.withValues(alpha: 0.6))),
+            style: TextStyle(color: AppTheme.mutedText(context))),
       ),
       data: (result) {
         if (result.total == 0) {
@@ -37,17 +37,17 @@ class _AuditPanelState extends ConsumerState<AuditPanel> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Icon(Icons.fact_check_outlined,
-                    size: 56, color: Colors.white.withValues(alpha: 0.25)),
+                    size: 56, color: AppTheme.hairline(context)),
                 const SizedBox(height: 14),
                 Text(l10n.adminAuditTitle,
-                    style: const TextStyle(
-                        color: Colors.white,
+                    style: TextStyle(
+                        color: Theme.of(context).colorScheme.onSurface,
                         fontSize: 16,
                         fontWeight: FontWeight.bold)),
                 const SizedBox(height: 8),
                 Text(l10n.adminAuditEmpty,
                     style:
-                        TextStyle(color: Colors.white.withValues(alpha: 0.55))),
+                        TextStyle(color: AppTheme.mutedText(context))),
               ],
             ),
           );
@@ -93,7 +93,7 @@ class _AuditTile extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: AppTheme.darkSurface,
+        color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: AppTheme.darkBorder),
       ),
@@ -119,19 +119,19 @@ class _AuditTile extends StatelessWidget {
               if (when != null)
                 Text(
                   '${when.toLocal()}'.split('.').first,
-                  style: const TextStyle(color: Colors.white38, fontSize: 11),
+                  style: TextStyle(color: AppTheme.mutedText(context), fontSize: 11),
                 ),
             ],
           ),
           const SizedBox(height: 6),
           Text(
             entry.actorName ?? entry.actorId,
-            style: const TextStyle(color: Colors.white, fontSize: 14),
+            style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontSize: 14),
           ),
           Text(
             '${entry.targetType}'
             '${entry.targetId != null ? ' (${entry.targetId})' : ''}',
-            style: const TextStyle(color: Colors.white54, fontSize: 12),
+            style: TextStyle(color: AppTheme.mutedText(context), fontSize: 12),
           ),
         ],
       ),
@@ -166,7 +166,7 @@ class _Pager extends StatelessWidget {
         children: [
           Text('$from–$to / $total',
               style: TextStyle(
-                  color: Colors.white.withValues(alpha: 0.55), fontSize: 12)),
+                  color: AppTheme.mutedText(context), fontSize: 12)),
           const Spacer(),
           TextButton.icon(
             onPressed: onPrev,
