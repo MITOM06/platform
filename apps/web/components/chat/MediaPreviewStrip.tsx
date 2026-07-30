@@ -38,7 +38,7 @@ export function MediaPreviewStrip({
   const hasImages = attachments.some((a) => a.type === 'image')
 
   return (
-    <div className="border-t bg-background/95 px-3 pt-2 pb-1">
+    <div className="border-t bg-background px-3 pt-2 pb-1">
       {/* Header: single global HD toggle (images only) */}
       {hasImages && (
         <div className="flex items-center justify-end mb-2">

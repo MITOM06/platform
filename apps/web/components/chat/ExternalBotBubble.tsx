@@ -26,8 +26,8 @@ export function ExternalBotBubble({ message }: { message: Message }) {
       <div className="flex flex-col gap-1 max-w-[70%]">
         <span className="text-xs text-muted-foreground font-medium pl-1">{name}</span>
         <div
-          className="bg-muted/70 text-foreground border border-border/50 rounded-[24px] rounded-tl-none
-                     px-4 py-2.5 text-sm leading-relaxed whitespace-pre-wrap break-words shadow-xs"
+          className="bg-muted/70 text-foreground border border-border/50 rounded-[14px] rounded-tl-[4px]
+                     px-4 py-2.5 text-sm leading-relaxed whitespace-pre-wrap break-words"
         >
           {message.content}
         </div>

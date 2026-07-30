@@ -67,14 +67,6 @@ class _SettingsAvatarSectionState extends ConsumerState<SettingsAvatarSection> {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
-        boxShadow: isDark
-            ? [
-                BoxShadow(
-                  color: AppTheme.ponAccent.withValues(alpha: 0.2),
-                  blurRadius: 16,
-                )
-              ]
-            : null,
       ),
       child: Container(
         padding: const EdgeInsets.all(3),

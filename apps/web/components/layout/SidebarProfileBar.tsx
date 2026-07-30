@@ -56,7 +56,7 @@ export function SidebarProfileBar() {
   }
 
   return (
-    <div className="hidden md:block shrink-0 border-t bg-background/95 backdrop-blur-md p-2.5">
+    <div className="hidden md:block shrink-0 border-t bg-background p-2.5">
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <button

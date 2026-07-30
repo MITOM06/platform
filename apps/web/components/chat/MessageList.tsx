@@ -47,7 +47,7 @@ function MessageSkeletons() {
     <div className="space-y-3 py-4 px-4">
       {[60, 80, 50, 90, 65].map((w, i) => (
         <div key={i} className={`flex ${i % 2 === 0 ? 'justify-start' : 'justify-end'}`}>
-          <Skeleton className="h-9 rounded-2xl" style={{ width: `${w}%`, maxWidth: '320px' }} />
+          <Skeleton className="h-9 rounded-[14px]" style={{ width: `${w}%`, maxWidth: '320px' }} />
         </div>
       ))}
     </div>
@@ -185,7 +185,7 @@ export function MessageList({
           {rows.map((row, i) =>
             row.kind === 'separator' ? (
               <div key={`sep-${row.isoDate}-${i}`} className="flex justify-center my-4 select-none">
-                <span className="text-[11px] bg-muted/80 backdrop-blur-xs text-muted-foreground font-semibold px-3 py-1 rounded-full border shadow-xs">
+                <span className="text-[11px] bg-muted/80 text-muted-foreground font-semibold px-3 py-1 rounded-full border">
                   {formatSeparatorDate(row.isoDate, locale, {
                     today: t('today'),
                     yesterday: t('yesterday'),
@@ -245,7 +245,7 @@ export function MessageList({
 
       {aiStream !== null && (
         <div className="flex flex-row items-end gap-1 motion-safe:pon-enter">
-          <div className="max-w-[70%] rounded-[24px] rounded-tl-none px-4 py-2.5 text-sm bg-muted/70 border border-border/50 shadow-xs">
+          <div className="max-w-[70%] rounded-[14px] rounded-tl-[4px] px-4 py-2.5 text-sm bg-muted/70 border border-border/50">
             {aiStream.activeTools.length > 0 && (() => {
               const tool = aiStream.activeTools[aiStream.activeTools.length - 1]
               const key = TOOL_LABEL_KEYS[tool]

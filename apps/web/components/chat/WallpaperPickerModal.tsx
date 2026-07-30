@@ -265,17 +265,17 @@ export function WallpaperPickerModal({ conversationId, open, onClose }: Props) {
                 <div className="absolute inset-0 bg-background/10 dark:bg-background/30" />
                 <div className="relative z-10 flex flex-col justify-end h-full gap-1.5 p-3">
                   <div className="flex justify-start">
-                    <div className="max-w-[70%] rounded-2xl rounded-tl-none bg-muted/90 text-foreground border border-border/50 px-3 py-1.5 text-xs shadow-sm">
+                    <div className="max-w-[70%] rounded-[14px] rounded-tl-[4px] bg-muted/90 text-foreground border border-border/50 px-3 py-1.5 text-xs">
                       {t('inputPlaceholder')}
                     </div>
                   </div>
                   <div className="flex justify-end">
-                    <div className="max-w-[70%] rounded-2xl rounded-tr-none bg-primary text-primary-foreground px-3 py-1.5 text-xs shadow-sm">
+                    <div className="max-w-[70%] rounded-[14px] rounded-tr-[4px] bg-primary text-primary-foreground px-3 py-1.5 text-xs">
                       👍
                     </div>
                   </div>
                   <div className="flex justify-start">
-                    <div className="max-w-[70%] rounded-2xl rounded-tl-none bg-muted/90 text-foreground border border-border/50 px-3 py-1.5 text-xs shadow-sm">
+                    <div className="max-w-[70%] rounded-[14px] rounded-tl-[4px] bg-muted/90 text-foreground border border-border/50 px-3 py-1.5 text-xs">
                       ✨
                     </div>
                   </div>

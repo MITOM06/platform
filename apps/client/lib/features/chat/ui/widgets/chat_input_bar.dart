@@ -80,8 +80,7 @@ class _ChatInputBarState extends State<ChatInputBar> {
       _isRecording = true;
       _recordingSeconds = 0;
     });
-    _recordingTimer =
-        Timer.periodic(const Duration(seconds: 1), (_) {
+    _recordingTimer = Timer.periodic(const Duration(seconds: 1), (_) {
       if (mounted) setState(() => _recordingSeconds++);
     });
   }
@@ -179,11 +178,7 @@ class _ChatInputBarState extends State<ChatInputBar> {
           duration: const Duration(milliseconds: 200),
           decoration: const BoxDecoration(
             shape: BoxShape.circle,
-            gradient: LinearGradient(
-              colors: [AppTheme.ponAccent, AppTheme.ponAccent],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
+            color: AppTheme.ponAccent,
           ),
           child: IconButton(
             onPressed: _stopAndSend,
@@ -221,15 +216,6 @@ class _ChatInputBarState extends State<ChatInputBar> {
         Expanded(
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 200),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(24),
-              boxShadow: [
-                BoxShadow(
-                  color: AppTheme.ponAccent.withValues(alpha: 0.04),
-                  blurRadius: 8,
-                )
-              ],
-            ),
             child: TextField(
               controller: widget.controller,
               onChanged: widget.onChanged,
@@ -247,18 +233,16 @@ class _ChatInputBarState extends State<ChatInputBar> {
                 ),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(24),
-                  borderSide:
-                      BorderSide(color: fieldBorderColor, width: 1),
+                  borderSide: BorderSide(color: fieldBorderColor, width: 1),
                 ),
                 enabledBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(24),
-                  borderSide:
-                      BorderSide(color: fieldBorderColor, width: 1),
+                  borderSide: BorderSide(color: fieldBorderColor, width: 1),
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(24),
-                  borderSide: const BorderSide(
-                      color: AppTheme.ponAccent, width: 1.5),
+                  borderSide:
+                      const BorderSide(color: AppTheme.ponAccent, width: 1.5),
                 ),
               ),
             ),
@@ -268,20 +252,9 @@ class _ChatInputBarState extends State<ChatInputBar> {
         if (_hasText || widget.hasAttachments)
           AnimatedContainer(
             duration: const Duration(milliseconds: 200),
-            decoration: BoxDecoration(
+            decoration: const BoxDecoration(
               shape: BoxShape.circle,
-              gradient: const LinearGradient(
-                colors: [AppTheme.ponAccent, AppTheme.ponAccent],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: AppTheme.ponAccent.withValues(alpha: 0.35),
-                  blurRadius: 10,
-                  spreadRadius: 1,
-                )
-              ],
+              color: AppTheme.ponAccent,
             ),
             child: IconButton(
               onPressed: widget.onSend,

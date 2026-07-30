@@ -58,7 +58,7 @@ function ToneSelector({
             onClick={() => onChange(t.id)}
             className={`px-3.5 py-2 rounded-lg text-sm font-medium border transition-all duration-200 flex items-center gap-1.5 ${
               selected
-                ? 'border-primary bg-primary/10 text-primary shadow-sm'
+                ? 'border-primary bg-primary/10 text-primary'
                 : 'border-border bg-card text-muted-foreground hover:border-primary/40 hover:text-foreground'
             } ${disabled ? 'opacity-50 pointer-events-none' : ''}`}
           >
@@ -169,7 +169,7 @@ export default function AiPersonaPage() {
   if (!conversationId) {
     return (
       <div className="flex flex-col h-full">
-        <header className="h-14 border-b px-4 flex items-center gap-3 shrink-0 bg-background/95 backdrop-blur-md">
+        <header className="h-14 border-b px-4 flex items-center gap-3 shrink-0 bg-background">
           <Link href="/conversations" className="text-muted-foreground hover:text-foreground transition-colors">
             <ArrowLeft className="size-5" />
           </Link>
@@ -190,7 +190,7 @@ export default function AiPersonaPage() {
   return (
     <div className="flex flex-col h-full">
       {/* Header */}
-      <header className="h-14 border-b px-4 flex items-center gap-3 shrink-0 bg-background/95 backdrop-blur-md">
+      <header className="h-14 border-b px-4 flex items-center gap-3 shrink-0 bg-background">
         <Link
           href={`/conversations/${conversationId}`}
           className="text-muted-foreground hover:text-foreground transition-colors"

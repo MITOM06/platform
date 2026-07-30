@@ -62,7 +62,7 @@ export function OtpInput({ value, onChange, length = 6, disabled = false }: Prop
           value={value[i] ?? ''}
           onChange={(e) => handleChange(i, e.target.value)}
           onKeyDown={(e) => handleKeyDown(i, e)}
-          className="w-12 h-14 text-center text-xl font-bold rounded-2xl"
+          className="w-12 h-14 text-center text-xl font-bold rounded-[10px]"
         />
       ))}
     </div>

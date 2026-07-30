@@ -110,15 +110,6 @@ class ConversationTile extends ConsumerWidget {
                       : Colors.black.withValues(alpha: 0.05)),
           width: isSelected ? 1.5 : 1,
         ),
-        boxShadow: !isDark
-            ? [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.02),
-                  blurRadius: 6,
-                  offset: const Offset(0, 2),
-                )
-              ]
-            : null,
       ),
       child: Material(
         color: Colors.transparent,
@@ -242,14 +233,6 @@ class ConversationTile extends ConsumerWidget {
                         ? AppTheme.ponAccent
                         : Theme.of(context).colorScheme.secondary,
                     borderRadius: BorderRadius.circular(10),
-                    boxShadow: isDark
-                        ? [
-                            BoxShadow(
-                              color: AppTheme.ponAccent.withValues(alpha: 0.4),
-                              blurRadius: 8,
-                            )
-                          ]
-                        : null,
                   ),
                   child: Text(
                     '${conv.unreadCount}',

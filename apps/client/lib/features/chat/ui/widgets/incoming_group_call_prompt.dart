@@ -98,13 +98,6 @@ class _PromptCard extends StatelessWidget {
         color: AppTheme.darkSurface,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: AppTheme.ponAccent.withValues(alpha: 0.5)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.4),
-            blurRadius: 16,
-            offset: const Offset(0, 6),
-          ),
-        ],
       ),
       child: Row(
         children: [

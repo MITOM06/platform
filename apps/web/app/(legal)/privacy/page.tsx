@@ -29,7 +29,7 @@ export default async function PrivacyPolicyPage() {
         <BackButton label={tc('back')} />
       </div>
 
-      <Card className="border-border shadow-md">
+      <Card className="border-border">
         <CardHeader className="pb-6">
           <CardTitle className="text-3xl font-bold tracking-tight">{t('privacyTitle')}</CardTitle>
           <CardDescription className="text-sm mt-2">{t('lastUpdated')}</CardDescription>

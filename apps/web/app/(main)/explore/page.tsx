@@ -83,7 +83,7 @@ export default function ExplorePage() {
             return (
               <div
                 key={channel.id}
-                className="flex items-center gap-4 p-4 rounded-2xl border bg-card hover:shadow-md transition-all group"
+                className="flex items-center gap-4 p-4 rounded-lg border bg-card transition-all group"
               >
                 <Avatar className="size-14 shrink-0">
                   {channel.avatarUrl ? (
@@ -110,7 +110,7 @@ export default function ExplorePage() {
                 <Button
                   onClick={() => joinMutation.mutate(channel.id)}
                   disabled={isJoining}
-                  className="shrink-0 rounded-full px-5 bg-primary text-white font-medium shadow-sm hover:opacity-90"
+                  className="shrink-0 rounded-full px-5 bg-primary text-primary-foreground font-medium hover:opacity-90"
                 >
                   {isJoining ? (
                     <Loader2 className="size-4 animate-spin" />

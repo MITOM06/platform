@@ -189,7 +189,7 @@ export default function ConversationPage({ params }: Props) {
           {[80, 55, 70, 40, 65, 50].map((w, i) => (
             <div key={i} className={`flex ${i % 2 === 0 ? 'justify-end' : 'justify-start'}`}>
               {i % 2 !== 0 && <Skeleton className="size-7 rounded-full mr-2 shrink-0 self-end" />}
-              <Skeleton className="h-9 rounded-2xl" style={{ width: `${w}%`, maxWidth: '320px' }} />
+              <Skeleton className="h-9 rounded-[14px]" style={{ width: `${w}%`, maxWidth: '320px' }} />
             </div>
           ))}
         </div>

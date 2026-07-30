@@ -71,7 +71,7 @@ function DocumentTile({
   chunksLabel: (count: number) => string
 }) {
   return (
-    <div className="group rounded-xl border bg-card p-4 transition-all hover:shadow-lg hover:border-primary/30 relative overflow-hidden flex items-center gap-4">
+    <div className="group rounded-xl border bg-card p-4 transition-all hover:border-primary/30 relative overflow-hidden flex items-center gap-4">
       {/* Subtle glow */}
       <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none rounded-xl bg-primary/[0.03]" />
 
@@ -240,7 +240,7 @@ export default function KbPage({ params }: { params: Promise<{ conversationId: s
   return (
     <div className="flex flex-col h-full">
       {/* Header */}
-      <header className="h-14 border-b px-4 flex items-center gap-3 shrink-0 bg-background/95 backdrop-blur-md">
+      <header className="h-14 border-b px-4 flex items-center gap-3 shrink-0 bg-background">
         <Link
           href={`/conversations/${conversationId}`}
           className="text-muted-foreground hover:text-foreground transition-colors"
@@ -296,7 +296,7 @@ export default function KbPage({ params }: { params: Promise<{ conversationId: s
       <div className="absolute bottom-6 right-6">
         <Button
           size="icon"
-          className="size-14 rounded-full shadow-lg bg-primary hover:bg-primary/90 text-primary-foreground"
+          className="size-14 rounded-full bg-primary hover:bg-primary/90 text-primary-foreground"
           onClick={() => fileInputRef.current?.click()}
           disabled={uploadMutation.isPending}
         >

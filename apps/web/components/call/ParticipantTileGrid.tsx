@@ -37,7 +37,7 @@ function VideoTile({
   const hasVideoTrack = video && !!stream?.getVideoTracks().some((t) => t.enabled)
 
   return (
-    <div className="relative aspect-video w-full overflow-hidden rounded-2xl border border-white/10 bg-neutral-900">
+    <div className="relative aspect-video w-full overflow-hidden rounded-lg border border-white/10 bg-neutral-900">
       <video
         ref={ref}
         autoPlay

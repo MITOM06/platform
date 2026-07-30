@@ -57,7 +57,7 @@ export function StrangerRequestBanner({
   }
 
   return (
-    <div className="mx-4 my-3 p-4 border border-border/80 bg-card rounded-[24px] shadow-sm flex flex-col md:flex-row items-center justify-between gap-4 transition-all">
+    <div className="mx-4 my-3 p-4 border border-border/80 bg-card rounded-lg flex flex-col md:flex-row items-center justify-between gap-4 transition-all">
       <div className="flex items-center gap-3">
         <div className="size-10 rounded-full bg-accent/10 flex items-center justify-center shrink-0">
           <MessageCircle className="size-5 text-accent" />
@@ -89,7 +89,7 @@ export function StrangerRequestBanner({
           size="sm"
           onClick={handleAccept}
           disabled={loading !== null}
-          className="rounded-full text-xs font-semibold px-5 bg-primary text-white hover:opacity-90 shadow-sm border-0"
+          className="rounded-full text-xs font-semibold px-5 bg-primary text-primary-foreground hover:opacity-90 border-0"
         >
           {loading === 'accept' && <Loader2 className="size-3 animate-spin mr-1.5" />}
           {t('strangerAccept')}

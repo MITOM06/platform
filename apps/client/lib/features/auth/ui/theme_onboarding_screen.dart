@@ -138,15 +138,6 @@ class _ThemeOptionCard extends ConsumerWidget {
                 : (isDark ? AppTheme.darkBorder : Colors.black.withValues(alpha: 0.08)),
             width: isSelected ? 2 : 1.5,
           ),
-          boxShadow: isSelected
-              ? [
-                  BoxShadow(
-                    color: activeColor.withValues(alpha: 0.15),
-                    blurRadius: 10,
-                    spreadRadius: 0.5,
-                  )
-                ]
-              : null,
         ),
         child: Row(
           children: [

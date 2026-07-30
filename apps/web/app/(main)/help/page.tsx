@@ -35,7 +35,7 @@ export default function HelpPage() {
 
   return (
     <div className="flex flex-col h-full">
-      <header className="h-14 border-b px-4 flex items-center gap-3 shrink-0 bg-background/95 backdrop-blur-md">
+      <header className="h-14 border-b px-4 flex items-center gap-3 shrink-0 bg-background">
         <Link
           href="/settings"
           className="text-muted-foreground hover:text-foreground transition-colors"
@@ -51,7 +51,7 @@ export default function HelpPage() {
           <div className="absolute -bottom-24 -right-24 w-72 h-72 rounded-full bg-primary/5 blur-3xl pointer-events-none dark:bg-primary/8" />
 
           <div className="relative max-w-3xl mx-auto px-6 py-6 pb-tabbar md:pb-12">
-            <div className="sticky top-0 z-10 -mx-6 px-6 py-3 bg-background/80 backdrop-blur-md">
+            <div className="sticky top-0 z-10 -mx-6 px-6 py-3 bg-background">
               <FaqSearch value={query} onChange={setQuery} />
             </div>
 

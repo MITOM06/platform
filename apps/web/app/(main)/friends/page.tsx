@@ -67,7 +67,7 @@ export default function FriendsPage() {
         {users.map((user) => (
           <div
             key={user.id || user._id}
-            className="flex items-center gap-4 p-4 rounded-xl border bg-card/50 backdrop-blur-sm transition-all hover:bg-card hover:shadow-sm"
+            className="flex items-center gap-4 p-4 rounded-xl border bg-card transition-colors hover:bg-accent"
           >
             <Avatar className="size-12">
               <AvatarImage src={user.avatarUrl ? absoluteMediaUrl(user.avatarUrl) : undefined} />
@@ -94,7 +94,7 @@ export default function FriendsPage() {
 
   return (
     <div className="flex-1 flex flex-col h-full bg-background/50">
-      <div className="border-b px-6 py-4 bg-background/80 backdrop-blur-md sticky top-0 z-10">
+      <div className="border-b px-6 py-4 bg-background sticky top-0 z-10">
         <div className="flex items-center gap-3">
           <Link
             href="/conversations"

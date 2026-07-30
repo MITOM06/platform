@@ -126,15 +126,6 @@ class _ConversationListScreenState
                               .withValues(alpha: 0.5),
                           width: 1.5,
                         ),
-                        boxShadow: isDark
-                            ? [
-                                BoxShadow(
-                                  color:
-                                      AppTheme.ponAccent.withValues(alpha: 0.2),
-                                  blurRadius: 8,
-                                )
-                              ]
-                            : null,
                       ),
                       child: ConversationAvatar(
                         avatarUrl: user?.avatarUrl,

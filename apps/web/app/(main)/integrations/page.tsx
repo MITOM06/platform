@@ -65,7 +65,7 @@ export default function IntegrationsPage() {
 
   return (
     <div className="flex-1 flex flex-col h-full bg-background/50 overflow-y-auto">
-      <div className="border-b px-6 py-4 bg-background/80 backdrop-blur-md sticky top-0 z-10 flex items-center gap-3">
+      <div className="border-b px-6 py-4 bg-background sticky top-0 z-10 flex items-center gap-3">
         <Button
           variant="ghost"
           size="icon"

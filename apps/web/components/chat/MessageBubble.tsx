@@ -147,7 +147,7 @@ const MessageBubbleInner = function MessageBubble({
   if (message.recalled) {
     return wrapSelectable(
       <div className={cn('flex', isOwn ? 'justify-end' : 'justify-start')}>
-        <div className="max-w-[70%] rounded-[24px] px-4 py-2 text-sm italic text-muted-foreground border border-dashed bg-muted/20">
+        <div className="max-w-[70%] rounded-[14px] px-4 py-2 text-sm italic text-muted-foreground border border-dashed bg-muted/20">
           {t('recalled')}
         </div>
       </div>,

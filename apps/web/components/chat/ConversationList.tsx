@@ -223,7 +223,7 @@ export function ConversationList() {
 
           {/* ── Tab bar ── Desktop: compact at top; Mobile: full-height at bottom ── */}
           <div
-            className="shrink-0 order-last md:order-first border-t md:border-t-0 md:border-b bg-background/95 md:bg-transparent backdrop-blur-md md:backdrop-blur-none"
+            className="shrink-0 order-last md:order-first border-t md:border-t-0 md:border-b bg-background md:bg-transparent"
             style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
           >
             <div className="flex items-stretch h-14 md:h-auto md:px-3 md:py-1.5">

@@ -66,13 +66,6 @@ class _BouncingDotsState extends State<BouncingDots>
                   decoration: BoxDecoration(
                     color: widget.color.withValues(alpha: 0.8),
                     shape: BoxShape.circle,
-                    boxShadow: [
-                      BoxShadow(
-                        color: widget.color.withValues(alpha: 0.4),
-                        blurRadius: 4,
-                        spreadRadius: 0.5,
-                      )
-                    ],
                   ),
                 ),
               ),

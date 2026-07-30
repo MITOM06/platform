@@ -60,7 +60,7 @@ function SettingsCard({ icon, iconBg, title, subtitle, onClick, destructive }: S
   return (
     <button
       onClick={onClick}
-      className={`w-full group relative rounded-xl border bg-card p-0 transition-all duration-200 hover:shadow-lg hover:scale-[1.01] active:scale-[0.99] text-left overflow-hidden ${
+      className={`w-full group relative rounded-xl border bg-card p-0 transition-all duration-200 hover:scale-[1.01] active:scale-[0.99] text-left overflow-hidden ${
         destructive ? 'hover:border-destructive/30' : 'hover:border-primary/30'
       }`}
     >
@@ -178,7 +178,7 @@ export default function SettingsPage() {
 
   return (
     <div className="flex flex-col h-full">
-      <header className="h-14 border-b px-4 flex items-center gap-3 shrink-0 bg-background/95 backdrop-blur-md">
+      <header className="h-14 border-b px-4 flex items-center gap-3 shrink-0 bg-background">
         <Link
           href="/conversations"
           className="text-muted-foreground hover:text-foreground transition-colors"

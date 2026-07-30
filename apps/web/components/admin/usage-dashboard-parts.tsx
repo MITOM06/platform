@@ -36,7 +36,7 @@ export function StatCard({
   glowColor: string
 }) {
   return (
-    <div className="relative rounded-xl border bg-card p-4 overflow-hidden transition-all hover:shadow-lg group">
+    <div className="relative rounded-xl border bg-card p-4 overflow-hidden transition-all group">
       <div
         className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none rounded-xl"
         style={{ background: `radial-gradient(circle at 20% 50%, ${glowColor}, transparent 70%)` }}

@@ -46,7 +46,7 @@ export function MeetingSummaryCard({ content, isPinned }: { content: string; isP
 
   if (!data) {
     return (
-      <div className="rounded-2xl border bg-muted/50 px-4 py-3 text-sm text-muted-foreground">
+      <div className="rounded-lg border bg-muted/50 px-4 py-3 text-sm text-muted-foreground">
         {t('summaryUnavailable')}
       </div>
     )
@@ -55,7 +55,7 @@ export function MeetingSummaryCard({ content, isPinned }: { content: string; isP
   return (
     <div
       className={cn(
-        'w-full max-w-md overflow-hidden rounded-2xl border bg-card shadow-sm',
+        'w-full max-w-md overflow-hidden rounded-lg border bg-card',
         isPinned && 'ring-2 ring-primary/40',
       )}
     >

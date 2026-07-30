@@ -89,7 +89,7 @@ export function GroupSettingsDrawer({ conversation, currentUserId, open, onClose
                 )}
               </Avatar>
               {isAdmin && (
-                <label className="absolute bottom-0 right-0 p-1.5 bg-primary text-primary-foreground rounded-full cursor-pointer shadow-sm hover:scale-110 transition-transform">
+                <label className="absolute bottom-0 right-0 p-1.5 bg-primary text-primary-foreground rounded-full cursor-pointer hover:scale-110 transition-transform">
                   <Camera className="size-3.5" />
                   <input type="file" className="hidden" accept="image/*" onChange={handleAvatarUpload} disabled={saving} />
                 </label>

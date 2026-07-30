@@ -48,7 +48,7 @@ function ReminderTile({
   })
 
   return (
-    <div className="group rounded-xl border bg-card p-4 transition-all hover:shadow-lg hover:border-primary/30 relative flex items-center gap-4 overflow-hidden">
+    <div className="group rounded-xl border bg-card p-4 transition-all hover:border-primary/30 relative flex items-center gap-4 overflow-hidden">
       {/* Subtle glow */}
       <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none rounded-xl bg-primary/[0.03]" />
 
@@ -144,7 +144,7 @@ export default function RemindersPage() {
   return (
     <div className="flex flex-col h-full">
       {/* Header */}
-      <header className="h-14 border-b px-4 flex items-center gap-3 shrink-0 bg-background/95 backdrop-blur-md">
+      <header className="h-14 border-b px-4 flex items-center gap-3 shrink-0 bg-background">
         <Link
           href="/settings"
           className="text-muted-foreground hover:text-foreground transition-colors"

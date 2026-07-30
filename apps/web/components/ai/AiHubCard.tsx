@@ -16,7 +16,7 @@ export function AiHubCard({ icon, iconBg, title, subtitle, onClick }: AiHubCardP
   return (
     <button
       onClick={onClick}
-      className="w-full group relative rounded-xl border bg-card p-0 transition-all duration-200 hover:shadow-lg hover:scale-[1.01] active:scale-[0.99] text-left overflow-hidden hover:border-primary/30"
+      className="w-full group relative rounded-xl border bg-card p-0 transition-all duration-200 hover:scale-[1.01] active:scale-[0.99] text-left overflow-hidden hover:border-primary/30"
     >
       <div className="absolute inset-0 rounded-xl pointer-events-none opacity-0 transition-opacity duration-300 group-hover:opacity-100 bg-accent/60" />
       <div className="relative flex items-center gap-4 px-5 py-4">

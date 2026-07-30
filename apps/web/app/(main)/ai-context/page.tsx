@@ -15,7 +15,7 @@ export default function AiContextPage() {
 
   return (
     <div className="flex h-full flex-col">
-      <header className="flex h-14 shrink-0 items-center gap-3 border-b bg-background/95 px-4 backdrop-blur-md">
+      <header className="flex h-14 shrink-0 items-center gap-3 border-b bg-background px-4">
         <Link
           href="/settings"
           className="text-muted-foreground transition-colors hover:text-foreground"

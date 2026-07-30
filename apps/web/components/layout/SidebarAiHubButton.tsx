@@ -15,7 +15,7 @@ export function SidebarAiHubButton() {
   const t = useTranslations('aiHub')
 
   return (
-    <div className="hidden md:block shrink-0 border-t bg-background/95 backdrop-blur-md px-2.5 pt-2.5">
+    <div className="hidden md:block shrink-0 border-t bg-background px-2.5 pt-2.5">
       <button
         type="button"
         onClick={() => router.push('/ai-hub')}

@@ -71,12 +71,12 @@ export function ImageContent({ content }: { content: string }) {
       <Tile
         url={urls[0]}
         onClick={() => open(0)}
-        className="max-h-[280px] max-w-[240px] rounded-2xl [&>img]:max-h-[280px] [&>img]:w-auto"
+        className="max-h-[280px] max-w-[240px] rounded-lg [&>img]:max-h-[280px] [&>img]:w-auto"
       />
     )
   } else if (urls.length === 2) {
     grid = (
-      <div className="grid w-full max-w-[240px] grid-cols-2 gap-0.5 overflow-hidden rounded-2xl">
+      <div className="grid w-full max-w-[240px] grid-cols-2 gap-0.5 overflow-hidden rounded-lg">
         {urls.map((u, i) => (
           <Tile key={i} url={u} onClick={() => open(i)} className="h-[180px]" />
         ))}
@@ -84,7 +84,7 @@ export function ImageContent({ content }: { content: string }) {
     )
   } else if (urls.length === 3) {
     grid = (
-      <div className="flex w-full max-w-[240px] gap-0.5 overflow-hidden rounded-2xl">
+      <div className="flex w-full max-w-[240px] gap-0.5 overflow-hidden rounded-lg">
         <Tile url={urls[0]} onClick={() => open(0)} className="h-[200px] flex-[0.62]" />
         <div className="flex flex-1 flex-col gap-0.5">
           <Tile url={urls[1]} onClick={() => open(1)} className="h-[99px]" />
@@ -95,7 +95,7 @@ export function ImageContent({ content }: { content: string }) {
   } else {
     const extras = urls.length - 4
     grid = (
-      <div className="grid w-full max-w-[240px] grid-cols-2 gap-0.5 overflow-hidden rounded-2xl">
+      <div className="grid w-full max-w-[240px] grid-cols-2 gap-0.5 overflow-hidden rounded-lg">
         {urls.slice(0, 4).map((u, i) => (
           <Tile
             key={i}
@@ -229,7 +229,7 @@ export function VideoContent({ content }: { content: string }) {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="group relative flex h-[150px] w-[220px] items-center justify-center overflow-hidden rounded-2xl bg-black"
+        className="group relative flex h-[150px] w-[220px] items-center justify-center overflow-hidden rounded-lg bg-black"
       >
         {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
         <video

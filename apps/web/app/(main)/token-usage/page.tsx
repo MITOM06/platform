@@ -24,9 +24,9 @@ function StatCard({ label, value, sub, icon, glowColor }: {
   label: string; value: string; sub?: string; icon: React.ReactNode; glowColor: string
 }) {
   return (
-    <div className="relative rounded-2xl border bg-card p-5 overflow-hidden transition-all hover:shadow-xl group">
+    <div className="relative rounded-lg border bg-card p-5 overflow-hidden transition-all group">
       <div
-        className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none rounded-2xl"
+        className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none rounded-lg"
         style={{ background: `radial-gradient(circle at 20% 50%, ${glowColor}, transparent 70%)` }}
       />
       <div className="relative">
@@ -50,7 +50,7 @@ function QuotaProgress({ used, limit, monthlyLimitLabel, usedPercentLabel }: {
   const barColor = fraction >= 0.9 ? '#EF4444' : fraction >= 0.7 ? '#FB923C' : 'var(--primary)'
 
   return (
-    <div className="rounded-2xl border bg-card p-5">
+    <div className="rounded-lg border bg-card p-5">
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
           <Activity className="size-4" style={{ color: barColor }} />
@@ -206,7 +206,7 @@ function LineChart({ days, inputLabel, outputLabel, noDataLabel }: {
       {/* Floating tooltip */}
       {tooltip && (
         <div
-          className="fixed z-50 pointer-events-none bg-card border border-border rounded-xl px-3 py-2.5 shadow-2xl text-xs"
+          className="fixed z-50 pointer-events-none bg-card border border-border rounded-xl px-3 py-2.5 text-xs"
           style={{ left: tooltip.x + 12, top: tooltip.y - 70 }}
         >
           <p className="text-muted-foreground/70 mb-1.5 font-mono">{tooltip.day.date}</p>
@@ -262,7 +262,7 @@ export default function TokenUsagePage() {
   return (
     <div className="flex flex-col h-full">
       {/* Header */}
-      <header className="h-14 border-b px-4 flex items-center gap-3 shrink-0 bg-background/95 backdrop-blur-md">
+      <header className="h-14 border-b px-4 flex items-center gap-3 shrink-0 bg-background">
         <Link href="/settings" className="text-muted-foreground hover:text-foreground transition-colors">
           <ArrowLeft className="size-5" />
         </Link>
@@ -276,7 +276,7 @@ export default function TokenUsagePage() {
               onClick={() => setRange(r)}
               className={`px-3 py-1 rounded-md text-xs font-semibold transition-all ${
                 range === r
-                  ? 'bg-background text-foreground shadow-sm'
+                  ? 'bg-background text-foreground'
                   : 'text-muted-foreground hover:text-foreground'
               }`}
             >
@@ -354,7 +354,7 @@ export default function TokenUsagePage() {
                 </div>
 
                 {/* Line Chart */}
-                <div className="rounded-2xl border bg-card p-5">
+                <div className="rounded-lg border bg-card p-5">
                   <h3 className="text-sm font-semibold mb-4">
                     {t('dailyChart')} <span className="text-muted-foreground/50 font-normal">({range}d)</span>
                   </h3>
