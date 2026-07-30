@@ -20,17 +20,16 @@ function fmt(n: number): string {
 
 // ── Stat Card ──────────────────────────────────────────────────────────────
 
-function StatCard({ label, value, sub, icon, glowColor }: {
-  label: string; value: string; sub?: string; icon: React.ReactNode; glowColor: string
+// The per-card `glowColor` prop is gone: its values included the old brand's
+// neon cyan and a violet, i.e. two extra
+// accents (§2 rule 1), painted as a radial gradient (§2 rule 2).
+function StatCard({ label, value, sub, icon }: {
+  label: string; value: string; sub?: string; icon: React.ReactNode
 }) {
   return (
-    <div className="relative rounded-lg border bg-card p-5 overflow-hidden transition-all group">
-      <div
-        className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none rounded-lg"
-        style={{ background: `radial-gradient(circle at 20% 50%, ${glowColor}, transparent 70%)` }}
-      />
+    <div className="relative rounded-lg border bg-card p-5 overflow-hidden transition-colors group hover:bg-accent">
       <div className="relative">
-        <div className="mb-3 p-2 rounded-lg w-fit" style={{ background: glowColor }}>{icon}</div>
+        <div className="mb-3 p-2 rounded-lg w-fit bg-primary/10">{icon}</div>
         <p className="text-3xl font-bold text-foreground tabular-nums">{value}</p>
         {sub && <p className="text-xs text-muted-foreground/60 mt-0.5 tabular-nums">{sub}</p>}
         <p className="text-xs text-muted-foreground mt-2">{label}</p>
@@ -315,25 +314,21 @@ export default function TokenUsagePage() {
                     label={t('thisMonth')}
                     value={fmt(totalUsed)}
                     sub={`${fmt(totalInput)} + ${fmt(totalOutput)}`}
-                    glowColor="rgba(150, 67, 91,0.08)"
                   />
                   <StatCard
                     icon={<ArrowDownToLine className="size-4 text-[#00E5FF]" />}
                     label={t('inputTokens')}
                     value={fmt(totalInput)}
-                    glowColor="rgba(0,229,255,0.08)"
                   />
                   <StatCard
                     icon={<ArrowUpFromLine className="size-4 text-primary" />}
                     label={t('outputTokens')}
                     value={fmt(totalOutput)}
-                    glowColor="rgba(180,127,255,0.08)"
                   />
                   <StatCard
                     icon={<MessageSquare className="size-4 text-primary" />}
                     label={t('queries')}
                     value={totalRequests.toString()}
-                    glowColor="rgba(150, 67, 91,0.08)"
                   />
                 </div>
 
@@ -343,7 +338,6 @@ export default function TokenUsagePage() {
                     icon={<DollarSign className="size-4 text-primary" />}
                     label={t('estimatedCost')}
                     value={`$${estimatedCost.toFixed(4)}`}
-                    glowColor="rgba(150, 67, 91,0.08)"
                   />
                   <QuotaProgress
                     used={totalUsed}

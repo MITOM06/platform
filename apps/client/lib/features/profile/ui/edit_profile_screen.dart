@@ -189,9 +189,10 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (ctx) => Container(
-        decoration: const BoxDecoration(
-          color: Color(0xFF1A1A2E),
-          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        decoration: BoxDecoration(
+          color: Theme.of(context).colorScheme.surface,
+          borderRadius: const BorderRadius.vertical(
+              top: Radius.circular(AppTheme.radiusSheet)),
         ),
         child: SafeArea(
           top: false,
@@ -203,7 +204,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                 width: 36,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: Colors.white24,
+                  color: AppTheme.hairline(context),
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
@@ -212,9 +213,9 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: Text(
                   ctx.l10n.coverPhotoPreviewTitle,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.onSurface,
+                    fontWeight: FontWeight.w600,
                     fontSize: 16,
                   ),
                 ),
@@ -244,8 +245,8 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                       child: OutlinedButton(
                         onPressed: () => Navigator.of(ctx).pop(false),
                         style: OutlinedButton.styleFrom(
-                          foregroundColor: Colors.white70,
-                          side: const BorderSide(color: Colors.white24),
+                          foregroundColor: AppTheme.mutedText(context),
+                          side: BorderSide(color: AppTheme.hairline(context)),
                           padding: const EdgeInsets.symmetric(vertical: 14),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(10),
@@ -260,7 +261,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                         onPressed: () => Navigator.of(ctx).pop(true),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: AppTheme.ponAccent,
-                          foregroundColor: Colors.black,
+                          foregroundColor: Colors.white,
                           padding: const EdgeInsets.symmetric(vertical: 14),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(10),
@@ -353,7 +354,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                   context.l10n.actionSave,
                   style: TextStyle(
                     color:
-                        _hasUnsavedChanges ? AppTheme.ponAccent : Colors.white30,
+                        _hasUnsavedChanges ? AppTheme.ponAccent : AppTheme.mutedText(context),
                     fontWeight: FontWeight.bold,
                     fontSize: 15,
                   ),
@@ -398,10 +399,10 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                     const Icon(Icons.work_outline, color: AppTheme.ponAccent),
                 title: Text(context.l10n.roleLabel,
                     style:
-                        const TextStyle(color: Colors.white70, fontSize: 12)),
+                        TextStyle(color: AppTheme.mutedText(context), fontSize: 12)),
                 subtitle: Text(
                   user?.roleName ?? context.l10n.profileRoleMemberDefault,
-                  style: const TextStyle(color: Colors.white),
+                  style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
                 ),
               ),
               const SizedBox(height: 16),
@@ -470,16 +471,16 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                 leading:
                     const Icon(Icons.cake_outlined, color: AppTheme.ponAccent),
                 title: Text(context.l10n.dateOfBirth,
-                    style: const TextStyle(color: Colors.white)),
+                    style: TextStyle(color: Theme.of(context).colorScheme.onSurface)),
                 subtitle: Text(
                   _selectedDateOfBirth != null
                       ? DateFormat.yMMMd()
                           .format(_selectedDateOfBirth!.toLocal())
                       : context.l10n.notSet,
-                  style: const TextStyle(color: Colors.white70),
+                  style: TextStyle(color: AppTheme.mutedText(context)),
                 ),
-                trailing: const Icon(Icons.calendar_today_rounded,
-                    size: 18, color: Colors.white54),
+                trailing: Icon(Icons.calendar_today_rounded,
+                    size: 18, color: AppTheme.mutedText(context)),
                 onTap: _isLoading
                     ? null
                     : () async {
@@ -503,7 +504,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                 padding: const EdgeInsets.all(14),
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Colors.white12),
+                  border: Border.all(color: AppTheme.hairline(context)),
                 ),
                 child: Column(
                   children: [
@@ -514,8 +515,8 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                         const SizedBox(width: 8),
                         Text(
                           context.l10n.privacySectionLabel,
-                          style: const TextStyle(
-                            color: Colors.white,
+                          style: TextStyle(
+                            color: Theme.of(context).colorScheme.onSurface,
                             fontWeight: FontWeight.w600,
                           ),
                         ),

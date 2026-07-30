@@ -137,20 +137,11 @@ class __ChangePasswordDialogContentState
         : Theme.of(context).colorScheme.primary;
 
     return AlertDialog(
-      backgroundColor: widget.isDark ? AppTheme.darkSurface : Colors.white,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(20),
-        side: BorderSide(
-          color: widget.isDark
-              ? AppTheme.darkBorder.withValues(alpha: 0.5)
-              : Colors.black.withValues(alpha: 0.08),
-        ),
-      ),
       title: Text(
         context.l10n.changePasswordTitle,
         style: TextStyle(
           fontWeight: FontWeight.bold,
-          color: widget.isDark ? Colors.white : Colors.black87,
+          color: Theme.of(context).colorScheme.onSurface,
         ),
       ),
       content: SingleChildScrollView(
@@ -172,8 +163,7 @@ class __ChangePasswordDialogContentState
               obscureText: true,
               enableVisibilityToggle: true,
               style: TextStyle(
-                  color: widget.isDark ? Colors.white : Colors.black87),
-              focusColor: activeColor,
+                  color: Theme.of(context).colorScheme.onSurface),
               textInputAction: TextInputAction.next,
               enabled: !_isLoading,
               // Issue 4: never let OS/browser autofill prefill the current
@@ -189,8 +179,7 @@ class __ChangePasswordDialogContentState
               obscureText: true,
               enableVisibilityToggle: true,
               style: TextStyle(
-                  color: widget.isDark ? Colors.white : Colors.black87),
-              focusColor: activeColor,
+                  color: Theme.of(context).colorScheme.onSurface),
               textInputAction: TextInputAction.next,
               enabled: !_isLoading,
               onChanged: (v) => setState(() => _newPasswordValue = v),
@@ -204,8 +193,7 @@ class __ChangePasswordDialogContentState
               obscureText: true,
               enableVisibilityToggle: true,
               style: TextStyle(
-                  color: widget.isDark ? Colors.white : Colors.black87),
-              focusColor: activeColor,
+                  color: Theme.of(context).colorScheme.onSurface),
               textInputAction: TextInputAction.done,
               enabled: !_isLoading,
               onFieldSubmitted: (_) => _submit(),
@@ -219,9 +207,7 @@ class __ChangePasswordDialogContentState
           child: Text(
             context.l10n.actionCancel,
             style: TextStyle(
-              color: widget.isDark
-                  ? Colors.white.withValues(alpha: 0.6)
-                  : Colors.black54,
+              color: AppTheme.mutedText(context),
             ),
           ),
         ),

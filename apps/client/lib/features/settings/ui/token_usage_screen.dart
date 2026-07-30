@@ -161,7 +161,8 @@ class _TokenUsageScreenState extends ConsumerState<TokenUsageScreen> {
         data: Theme.of(context).copyWith(
           colorScheme: const ColorScheme.dark(
             primary: AppTheme.ponAccent,
-            onPrimary: Colors.black,
+            // White, not black: black on burgundy is roughly 2:1.
+            onPrimary: Colors.white,
           ),
         ),
         child: child!,
@@ -230,7 +231,7 @@ class _Body extends StatelessWidget {
             style: TextStyle(
               fontSize: 15,
               fontWeight: FontWeight.bold,
-              color: isDark ? Colors.white : Colors.black87,
+              color: Theme.of(context).colorScheme.onSurface,
             ),
           ),
           const SizedBox(height: 12),
@@ -271,7 +272,7 @@ class _QuotaProgressCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1A1A2E) : Colors.white,
+        color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
           color: barColor.withValues(alpha: 0.3),
@@ -290,7 +291,7 @@ class _QuotaProgressCard extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 13,
                   fontWeight: FontWeight.w600,
-                  color: isDark ? Colors.white70 : Colors.black54,
+                  color: AppTheme.mutedText(context),
                 ),
               ),
               const Spacer(),
@@ -311,7 +312,7 @@ class _QuotaProgressCard extends StatelessWidget {
               value: fraction,
               minHeight: 8,
               backgroundColor:
-                  isDark ? Colors.white12 : Colors.black12,
+                  AppTheme.hairline(context),
               valueColor: AlwaysStoppedAnimation<Color>(barColor),
             ),
           ),
@@ -321,7 +322,7 @@ class _QuotaProgressCard extends StatelessWidget {
                 .tokenUsagePercentUsed((fraction * 100).toStringAsFixed(1)),
             style: TextStyle(
               fontSize: 11,
-              color: isDark ? Colors.white38 : Colors.black38,
+              color: AppTheme.mutedText(context),
             ),
           ),
         ],
@@ -366,7 +367,7 @@ class _SummaryCards extends StatelessWidget {
                 label: context.l10n.tokenUsageRequests,
                 value: totalRequests.toString(),
                 icon: Icons.question_answer_outlined,
-                color: const Color(0xFF96435B),
+                color: AppTheme.ponAccent,
                 isDark: isDark,
               ),
             ),
@@ -411,7 +412,7 @@ class _StatCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1A1A2E) : Colors.white,
+        color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: color.withValues(alpha: 0.3)),
       ),
@@ -425,14 +426,14 @@ class _StatCard extends StatelessWidget {
             style: TextStyle(
               fontSize: 22,
               fontWeight: FontWeight.bold,
-              color: isDark ? Colors.white : Colors.black87,
+              color: Theme.of(context).colorScheme.onSurface,
             ),
           ),
           Text(
             label,
             style: TextStyle(
               fontSize: 12,
-              color: isDark ? Colors.white54 : Colors.black54,
+              color: AppTheme.mutedText(context),
             ),
           ),
         ],

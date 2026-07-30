@@ -65,7 +65,7 @@ export function ProfileImageHeader({
             {resolvedAvatar ? (
               <AvatarImage src={resolvedAvatar} alt={displayName} />
             ) : (
-              <AvatarFallback className="text-3xl font-bold bg-primary text-white">
+              <AvatarFallback className="text-3xl font-bold bg-primary text-primary-foreground">
                 {initials}
               </AvatarFallback>
             )}
@@ -81,7 +81,7 @@ export function ProfileImageHeader({
           </button>
 
           <div className="absolute -bottom-1 -right-1 size-8 rounded-full bg-primary flex items-center justify-center border-2 border-background">
-            <Camera className="size-3.5 text-white" />
+            <Camera className="size-3.5 text-primary-foreground" />
           </div>
 
           <input

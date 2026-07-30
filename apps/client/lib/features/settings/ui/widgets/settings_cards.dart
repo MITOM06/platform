@@ -7,30 +7,29 @@ import '../../../../core/widgets/pon_widgets.dart';
 /// Reusable navigation card used for the settings action tiles.
 /// Extracted from settings_screen.dart (clean-code file limit).
 class SettingsCard extends StatelessWidget {
-  final bool isDark;
-  final Color glowColor;
   final IconData icon;
   final String title;
   final String? subtitle;
   final VoidCallback onTap;
 
+  /// Semantically-red variant. Replaces the old free-form `glowColor`, which
+  /// let every card pick its own hue — §2 rule 1 allows exactly one accent.
+  final bool destructive;
+
   const SettingsCard({
     super.key,
-    required this.isDark,
-    required this.glowColor,
     required this.icon,
     required this.title,
     this.subtitle,
     required this.onTap,
+    this.destructive = false,
   });
 
   @override
   Widget build(BuildContext context) {
-    final accent =
-        isDark ? glowColor : Theme.of(context).colorScheme.primary;
+    final scheme = Theme.of(context).colorScheme;
+    final accent = destructive ? scheme.error : scheme.primary;
     return PonCard(
-      glowColor: glowColor,
-      glowStrength: isDark ? 4 : 0,
       child: Material(
         color: Colors.transparent,
         child: ListTile(
@@ -47,7 +46,7 @@ class SettingsCard extends StatelessWidget {
           title: Text(
             title,
             style: TextStyle(
-              color: isDark ? Colors.white : Colors.black87,
+              color: Theme.of(context).colorScheme.onSurface,
               fontWeight: FontWeight.bold,
               fontSize: 15,
             ),
@@ -57,13 +56,13 @@ class SettingsCard extends StatelessWidget {
               : Text(
                   subtitle!,
                   style: TextStyle(
-                    color: isDark ? Colors.white54 : Colors.black54,
+                    color: AppTheme.mutedText(context),
                     fontSize: 13,
                   ),
                 ),
           trailing: Icon(
             Icons.arrow_forward_ios_rounded,
-            color: isDark ? Colors.white24 : Colors.black26,
+            color: AppTheme.mutedText(context),
             size: 16,
           ),
           onTap: onTap,
@@ -77,25 +76,23 @@ class SettingsCard extends StatelessWidget {
 /// subtitle when the account has no local password (OAuth-only), nudging the
 /// user to set one. Navigates to [SecuritySettingsScreen].
 class SecurityCard extends StatelessWidget {
-  final bool isDark;
   final bool hasPassword;
   final VoidCallback onTap;
 
   const SecurityCard({
     super.key,
-    required this.isDark,
     required this.hasPassword,
     required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
+    // Amber is a semantic warning (no local password), not a second brand
+    // accent — same carve-out as destructive/success in §2.
     const amber = Color(0xFFF59E0B);
-    final glowColor = hasPassword ? AppTheme.ponAccent : amber;
-    final accent = isDark ? glowColor : Theme.of(context).colorScheme.primary;
+    final accent =
+        hasPassword ? Theme.of(context).colorScheme.primary : amber;
     return PonCard(
-      glowColor: glowColor,
-      glowStrength: isDark ? 4 : 0,
       child: Material(
         color: Colors.transparent,
         child: ListTile(
@@ -133,7 +130,7 @@ class SecurityCard extends StatelessWidget {
           title: Text(
             context.l10n.securityTitle,
             style: TextStyle(
-              color: isDark ? Colors.white : Colors.black87,
+              color: Theme.of(context).colorScheme.onSurface,
               fontWeight: FontWeight.bold,
               fontSize: 15,
             ),
@@ -144,14 +141,14 @@ class SecurityCard extends StatelessWidget {
                 : context.l10n.securityNoPasswordCardSubtitle,
             style: TextStyle(
               color: hasPassword
-                  ? (isDark ? Colors.white54 : Colors.black54)
+                  ? (AppTheme.mutedText(context))
                   : amber,
               fontSize: 13,
             ),
           ),
           trailing: Icon(
             Icons.arrow_forward_ios_rounded,
-            color: isDark ? Colors.white24 : Colors.black26,
+            color: AppTheme.mutedText(context),
             size: 16,
           ),
           onTap: onTap,
@@ -164,24 +161,19 @@ class SecurityCard extends StatelessWidget {
 /// Toggle card for enabling/disabling notifications (parity with web's
 /// notification control). Persists via `notificationsEnabledProvider`.
 class NotificationsCard extends StatelessWidget {
-  final bool isDark;
   final bool enabled;
   final ValueChanged<bool> onChanged;
 
   const NotificationsCard({
     super.key,
-    required this.isDark,
     required this.enabled,
     required this.onChanged,
   });
 
   @override
   Widget build(BuildContext context) {
-    final accent =
-        isDark ? AppTheme.ponAccent : Theme.of(context).colorScheme.primary;
+    final accent = Theme.of(context).colorScheme.primary;
     return PonCard(
-      glowColor: AppTheme.ponAccent,
-      glowStrength: isDark ? 4 : 0,
       child: Material(
         color: Colors.transparent,
         child: SwitchListTile(
@@ -198,7 +190,7 @@ class NotificationsCard extends StatelessWidget {
           title: Text(
             context.l10n.notifications,
             style: TextStyle(
-              color: isDark ? Colors.white : Colors.black87,
+              color: Theme.of(context).colorScheme.onSurface,
               fontWeight: FontWeight.bold,
               fontSize: 15,
             ),
@@ -208,7 +200,7 @@ class NotificationsCard extends StatelessWidget {
                 ? context.l10n.notificationsEnabled
                 : context.l10n.notificationsDisabled,
             style: TextStyle(
-              color: isDark ? Colors.white54 : Colors.black54,
+              color: AppTheme.mutedText(context),
               fontSize: 13,
             ),
           ),

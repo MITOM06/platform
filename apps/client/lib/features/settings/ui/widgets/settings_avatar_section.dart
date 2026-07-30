@@ -51,28 +51,18 @@ class _SettingsAvatarSectionState extends ConsumerState<SettingsAvatarSection> {
     final initials = user != null && user.displayName.isNotEmpty
         ? user.displayName.trim()[0].toUpperCase()
         : '?';
-    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Container(
       padding: const EdgeInsets.all(4),
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         shape: BoxShape.circle,
-        gradient: LinearGradient(
-          colors: isDark
-              ? const [AppTheme.ponAccent, AppTheme.ponAccent]
-              : [
-                  Theme.of(context).colorScheme.primary,
-                  Theme.of(context).colorScheme.secondary
-                ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
+        color: AppTheme.ponAccent,
       ),
       child: Container(
         padding: const EdgeInsets.all(3),
         decoration: BoxDecoration(
           shape: BoxShape.circle,
-          color: isDark ? AppTheme.darkBackground : Colors.white,
+          color: Theme.of(context).scaffoldBackgroundColor,
         ),
         child: GestureDetector(
           onTap: _uploading ? null : _uploadAvatar,

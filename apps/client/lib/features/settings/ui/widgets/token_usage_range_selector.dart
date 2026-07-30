@@ -35,7 +35,7 @@ class TokenUsageRangeSelector extends StatelessWidget {
                 onSelected: (_) => onPreset(days),
                 selectedColor: AppTheme.ponAccent.withValues(alpha: 0.2),
                 labelStyle: TextStyle(
-                  color: selected ? AppTheme.ponAccent : Colors.white60,
+                  color: selected ? AppTheme.ponAccent : AppTheme.mutedText(context),
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
                 ),

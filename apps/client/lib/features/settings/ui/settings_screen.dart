@@ -88,36 +88,6 @@ class SettingsScreen extends ConsumerWidget {
       body: Stack(
         children: [
           if (isDark) ...[
-            Positioned(
-              top: -100,
-              left: -100,
-              child: Container(
-                width: 300,
-                height: 300,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  gradient: RadialGradient(colors: [
-                    AppTheme.ponAccent.withValues(alpha: 0.08),
-                    Colors.transparent,
-                  ]),
-                ),
-              ),
-            ),
-            Positioned(
-              bottom: -100,
-              right: -100,
-              child: Container(
-                width: 300,
-                height: 300,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  gradient: RadialGradient(colors: [
-                    AppTheme.ponAccent.withValues(alpha: 0.08),
-                    Colors.transparent,
-                  ]),
-                ),
-              ),
-            ),
           ],
           SingleChildScrollView(
             physics: const BouncingScrollPhysics(),
@@ -132,7 +102,7 @@ class SettingsScreen extends ConsumerWidget {
                   Text(
                     user!.displayName,
                     style: TextStyle(
-                      color: isDark ? Colors.white : Colors.black87,
+                      color: Theme.of(context).colorScheme.onSurface,
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
                     ),
@@ -141,17 +111,13 @@ class SettingsScreen extends ConsumerWidget {
                 Text(
                   user?.email ?? '',
                   style: TextStyle(
-                    color: isDark
-                        ? Colors.white.withValues(alpha: 0.4)
-                        : Colors.black54,
+                    color: AppTheme.mutedText(context),
                     fontSize: 14,
                     fontWeight: FontWeight.w500,
                   ),
                 ),
                 const SizedBox(height: 36),
                 SettingsCard(
-                  isDark: isDark,
-                  glowColor: AppTheme.ponAccent,
                   icon: Icons.person_rounded,
                   title: context.l10n.editProfile,
                   // Open the user's OWN public profile first (as others see it);
@@ -170,8 +136,6 @@ class SettingsScreen extends ConsumerWidget {
                 ),
                 const SizedBox(height: 24),
                 SettingsCard(
-                  isDark: isDark,
-                  glowColor: AppTheme.ponAccent,
                   icon: _getThemeIcon(currentThemeMode),
                   title: context.l10n.appearance,
                   subtitle: _getThemeLabel(context, currentThemeMode),
@@ -179,8 +143,6 @@ class SettingsScreen extends ConsumerWidget {
                 ),
                 const SizedBox(height: 24),
                 SettingsCard(
-                  isDark: isDark,
-                  glowColor: AppTheme.ponAccent,
                   icon: Icons.translate_rounded,
                   title: context.l10n.language,
                   subtitle: kLanguageNames[resolveActiveLocale(
@@ -191,16 +153,14 @@ class SettingsScreen extends ConsumerWidget {
                 ),
                 const SizedBox(height: 24),
                 NotificationsCard(
-                  isDark: isDark,
                   enabled: notificationsEnabled,
                   onChanged: (v) =>
                       ref.read(notificationsEnabledProvider.notifier).toggle(v),
                 ),
                 const SizedBox(height: 24),
                 SettingsCard(
-                  isDark: isDark,
-                  glowColor: Colors.redAccent,
                   icon: Icons.block_rounded,
+                  destructive: true,
                   title: context.l10n.blockedChatsTitle,
                   onTap: () {
                     if (isDialog) Navigator.of(context).pop();
@@ -209,7 +169,6 @@ class SettingsScreen extends ConsumerWidget {
                 ),
                 const SizedBox(height: 24),
                 SecurityCard(
-                  isDark: isDark,
                   hasPassword: user?.hasPassword ?? true,
                   onTap: () {
                     if (isDialog) Navigator.of(context).pop();
@@ -218,8 +177,6 @@ class SettingsScreen extends ConsumerWidget {
                 ),
                 const SizedBox(height: 24),
                 SettingsCard(
-                  isDark: isDark,
-                  glowColor: AppTheme.ponAccent,
                   icon: Icons.alarm_outlined,
                   title: context.l10n.reminders,
                   onTap: () => context.push('/reminders'),
@@ -227,8 +184,6 @@ class SettingsScreen extends ConsumerWidget {
                 if (ref.watch(canAccessAdminProvider)) ...[
                   const SizedBox(height: 24),
                   SettingsCard(
-                    isDark: isDark,
-                    glowColor: AppTheme.ponAccent,
                     icon: Icons.admin_panel_settings_outlined,
                     title: context.l10n.adminMenu,
                     subtitle: context.l10n.adminSettingsSubtitle,
@@ -240,8 +195,6 @@ class SettingsScreen extends ConsumerWidget {
                 ],
                 const SizedBox(height: 24),
                 SettingsCard(
-                  isDark: isDark,
-                  glowColor: AppTheme.ponAccent,
                   icon: Icons.hub_outlined,
                   title: context.l10n.integrationsTitle,
                   subtitle: context.l10n.integrationsSettingsSubtitle,
@@ -252,8 +205,6 @@ class SettingsScreen extends ConsumerWidget {
                 ),
                 const SizedBox(height: 24),
                 SettingsCard(
-                  isDark: isDark,
-                  glowColor: AppTheme.ponAccent,
                   icon: Icons.auto_awesome_outlined,
                   title: context.l10n.skillsTitle,
                   subtitle: context.l10n.skillsSettingsSubtitle,
@@ -264,16 +215,12 @@ class SettingsScreen extends ConsumerWidget {
                 ),
                 const SizedBox(height: 24),
                 SettingsCard(
-                  isDark: isDark,
-                  glowColor: AppTheme.ponAccent,
                   icon: Icons.toll_outlined,
                   title: context.l10n.tokenUsage,
                   onTap: () => context.push('/token-usage'),
                 ),
                 const SizedBox(height: 24),
                 SettingsCard(
-                  isDark: isDark,
-                  glowColor: AppTheme.ponAccent,
                   icon: Icons.help_outline_rounded,
                   title: context.l10n.settingsHelp,
                   subtitle: context.l10n.settingsHelpSubtitle,
@@ -284,8 +231,6 @@ class SettingsScreen extends ConsumerWidget {
                 ),
                 const SizedBox(height: 24),
                 SettingsCard(
-                  isDark: isDark,
-                  glowColor: AppTheme.ponAccent,
                   icon: Icons.shield_outlined,
                   title: context.l10n.legalScreenTitle,
                   onTap: () => context.push('/legal'),

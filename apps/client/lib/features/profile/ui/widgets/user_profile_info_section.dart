@@ -169,7 +169,7 @@ class _ShowToggle extends StatelessWidget {
       onChanged: onChanged,
       title: Text(
         label,
-        style: const TextStyle(fontSize: 12, color: Colors.white60),
+        style: TextStyle(fontSize: 12, color: AppTheme.mutedText(context)),
       ),
       activeThumbColor: AppTheme.ponAccent,
       dense: true,
@@ -190,8 +190,8 @@ class ProfileInfoRow extends StatelessWidget {
   Widget build(BuildContext context) {
     return ListTile(
       dense: true,
-      leading: Icon(icon, size: 18, color: Colors.white54),
-      title: Text(label, style: const TextStyle(fontSize: 11, color: Colors.white54)),
+      leading: Icon(icon, size: 18, color: AppTheme.mutedText(context)),
+      title: Text(label, style: TextStyle(fontSize: 11, color: AppTheme.mutedText(context))),
       subtitle: Text(value, style: const TextStyle(fontSize: 13)),
     );
   }

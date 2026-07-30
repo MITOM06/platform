@@ -11,22 +11,12 @@ void showThemeSelectionDialog(BuildContext context, WidgetRef ref) {
   showDialog(
     context: context,
     builder: (ctx) {
-      final isDark = Theme.of(context).brightness == Brightness.dark;
       return AlertDialog(
-        backgroundColor: isDark ? AppTheme.darkSurface : Colors.white,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-          side: BorderSide(
-            color: isDark
-                ? AppTheme.darkBorder.withValues(alpha: 0.5)
-                : Colors.black.withValues(alpha: 0.08),
-          ),
-        ),
         title: Text(
           context.l10n.chooseThemeTitle,
           style: TextStyle(
             fontWeight: FontWeight.bold,
-            color: isDark ? Colors.white : Colors.black87,
+            color: Theme.of(context).colorScheme.onSurface,
           ),
         ),
         content: Column(
@@ -63,22 +53,12 @@ void showLanguageSelectionDialog(BuildContext context, WidgetRef ref) {
   showDialog(
     context: context,
     builder: (ctx) {
-      final isDark = Theme.of(context).brightness == Brightness.dark;
       return AlertDialog(
-        backgroundColor: isDark ? AppTheme.darkSurface : Colors.white,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-          side: BorderSide(
-            color: isDark
-                ? AppTheme.darkBorder.withValues(alpha: 0.5)
-                : Colors.black.withValues(alpha: 0.08),
-          ),
-        ),
         title: Text(
           context.l10n.chooseLanguageTitle,
           style: TextStyle(
             fontWeight: FontWeight.bold,
-            color: isDark ? Colors.white : Colors.black87,
+            color: Theme.of(context).colorScheme.onSurface,
           ),
         ),
         content: SizedBox(
@@ -114,7 +94,6 @@ class ThemeDialogOption extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final currentMode = ref.watch(themeModeNotifierProvider);
     final isSelected = currentMode == themeMode;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return ListTile(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -122,14 +101,14 @@ class ThemeDialogOption extends ConsumerWidget {
         icon,
         color: isSelected
             ? activeColor
-            : (isDark ? Colors.white54 : Colors.black54),
+            : (AppTheme.mutedText(context)),
       ),
       title: Text(
         title,
         style: TextStyle(
           color: isSelected
               ? activeColor
-              : (isDark ? Colors.white70 : Colors.black87),
+              : (Theme.of(context).colorScheme.onSurface),
           fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
         ),
       ),
@@ -170,7 +149,7 @@ class LanguageDialogOption extends ConsumerWidget {
         style: TextStyle(
           color: isSelected
               ? activeColor
-              : (isDark ? Colors.white70 : Colors.black87),
+              : (Theme.of(context).colorScheme.onSurface),
           fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
         ),
       ),
@@ -192,9 +171,6 @@ class SettingsLogoutCard extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     return PonCard(
-      glowColor: Colors.redAccent,
-      glowStrength: 0,
-      borderOpacity: isDark ? 0.15 : 0.08,
       child: Material(
         color: Colors.transparent,
         child: ListTile(
@@ -219,7 +195,7 @@ class SettingsLogoutCard extends ConsumerWidget {
           ),
           trailing: Icon(
             Icons.arrow_forward_ios_rounded,
-            color: isDark ? Colors.white24 : Colors.black26,
+            color: AppTheme.mutedText(context),
             size: 16,
           ),
           onTap: () => _showLogoutDialog(context, ref, isDark),
@@ -233,26 +209,17 @@ class SettingsLogoutCard extends ConsumerWidget {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: isDark ? AppTheme.darkSurface : Colors.white,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-          side: BorderSide(
-            color: isDark
-                ? AppTheme.darkBorder.withValues(alpha: 0.5)
-                : Colors.black.withValues(alpha: 0.08),
-          ),
-        ),
         title: Text(
           context.l10n.actionLogout,
           style: TextStyle(
             fontWeight: FontWeight.bold,
-            color: isDark ? Colors.white : Colors.black87,
+            color: Theme.of(context).colorScheme.onSurface,
           ),
         ),
         content: Text(
           context.l10n.logoutConfirmBody,
           style: TextStyle(
-            color: isDark ? Colors.white70 : Colors.black87,
+            color: Theme.of(context).colorScheme.onSurface,
           ),
         ),
         actions: [
@@ -261,9 +228,7 @@ class SettingsLogoutCard extends ConsumerWidget {
             child: Text(
               context.l10n.actionCancel,
               style: TextStyle(
-                color: isDark
-                    ? Colors.white.withValues(alpha: 0.6)
-                    : Colors.black54,
+                color: AppTheme.mutedText(context),
               ),
             ),
           ),

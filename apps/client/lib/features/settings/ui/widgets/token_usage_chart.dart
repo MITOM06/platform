@@ -1,6 +1,8 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
+import '../../../../core/theme/app_theme.dart';
+
 import '../token_usage_screen.dart' show TokenUsageDay;
 
 /// Stacked input/output token bar chart for the token usage screen. Extracted
@@ -38,8 +40,11 @@ class _BarChartPainter extends CustomPainter {
     final gap = size.width / days.length;
     final chartH = size.height - 16;
 
-    final inputPaint = Paint()..color = const Color(0xFF00E5FF);
-    final outputPaint = Paint()..color = const Color(0xFF96435B);
+    // One accent, two shades — the input series was still the old brand's
+    // neon cyan (#00E5FF), which L1/L2 missed because it was a local literal.
+    final inputPaint = Paint()
+      ..color = AppTheme.ponAccent.withValues(alpha: 0.45);
+    final outputPaint = Paint()..color = AppTheme.ponAccent;
 
     for (int i = 0; i < days.length; i++) {
       final d = days[i];

@@ -50,11 +50,7 @@ class EditProfileHeader extends StatelessWidget {
                     child: Container(
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(12),
-                        gradient: const LinearGradient(
-                          colors: [AppTheme.ponAccent, AppTheme.ponAccent],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                        ),
+                        color: AppTheme.ponAccent,
                       ),
                       child: Stack(
                         children: [
@@ -77,6 +73,8 @@ class EditProfileHeader extends StatelessWidget {
                               color: Colors.black.withValues(alpha: 0.25),
                             ),
                           ),
+                          // Scrim badge sitting ON the cover photo, so it stays
+                          // a dark wash with white glyph regardless of theme.
                           const Positioned(
                             top: 8,
                             right: 8,

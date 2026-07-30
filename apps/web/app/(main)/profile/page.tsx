@@ -95,7 +95,7 @@ export default function ProfilePage() {
               {resolvedAvatar ? (
                 <AvatarImage src={resolvedAvatar} alt={user.displayName} />
               ) : (
-                <AvatarFallback className="text-3xl font-bold bg-primary text-white">
+                <AvatarFallback className="text-3xl font-bold bg-primary text-primary-foreground">
                   {initials}
                 </AvatarFallback>
               )}
