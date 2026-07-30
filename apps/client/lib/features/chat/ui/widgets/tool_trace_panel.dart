@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../core/theme/app_theme.dart';
 import '../../../../core/l10n/l10n_ext.dart';
 import '../../domain/chat_state.dart';
 
@@ -16,17 +17,17 @@ class TracePanel extends StatelessWidget {
         child: ExpansionTile(
           tilePadding: EdgeInsets.zero,
           childrenPadding: const EdgeInsets.only(left: 4, bottom: 8),
-          leading: const Icon(Icons.account_tree, size: 14, color: Color(0xFF96435B)),
+          leading: const Icon(Icons.account_tree, size: 14, color: AppTheme.ponAccent),
           title: Text(
             context.l10n.aiTraceTitle,
             style: const TextStyle(
               fontSize: 12,
-              color: Color(0xFF96435B),
+              color: AppTheme.ponAccent,
               fontStyle: FontStyle.italic,
             ),
           ),
-          iconColor: const Color(0xFF96435B),
-          collapsedIconColor: const Color(0xFF96435B),
+          iconColor: AppTheme.ponAccent,
+          collapsedIconColor: AppTheme.ponAccent,
           children: [
             if (trace.thinkingBlocks.isNotEmpty) _ThinkingSection(blocks: trace.thinkingBlocks),
             if (trace.toolCalls.isNotEmpty) _ToolCallsSection(toolCalls: trace.toolCalls),
@@ -46,13 +47,13 @@ class _ThinkingSection extends StatelessWidget {
   Widget build(BuildContext context) {
     return ExpansionTile(
       tilePadding: const EdgeInsets.symmetric(horizontal: 4),
-      leading: const Icon(Icons.psychology, size: 14, color: Color(0xFF96435B)),
+      leading: const Icon(Icons.psychology, size: 14, color: AppTheme.ponAccent),
       title: Text(
         context.l10n.aiTraceThinking,
-        style: const TextStyle(fontSize: 12, color: Color(0xFF96435B)),
+        style: const TextStyle(fontSize: 12, color: AppTheme.ponAccent),
       ),
-      iconColor: const Color(0xFF96435B),
-      collapsedIconColor: const Color(0xFF96435B),
+      iconColor: AppTheme.ponAccent,
+      collapsedIconColor: AppTheme.ponAccent,
       children: blocks.map((block) => _ThinkingBlock(text: block)).toList(),
     );
   }
@@ -99,13 +100,13 @@ class _ToolCallsSection extends StatelessWidget {
           padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 4),
           child: Row(
             children: [
-              const Icon(Icons.build_outlined, size: 12, color: Color(0xFF96435B)),
+              const Icon(Icons.build_outlined, size: 12, color: AppTheme.ponAccent),
               const SizedBox(width: 4),
               Text(
                 context.l10n.aiTraceTools,
                 style: const TextStyle(
                   fontSize: 11,
-                  color: Color(0xFF96435B),
+                  color: AppTheme.ponAccent,
                   fontWeight: FontWeight.bold,
                 ),
               ),

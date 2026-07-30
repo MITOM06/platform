@@ -188,7 +188,6 @@ class _AiPersonaScreenState extends ConsumerState<AiPersonaScreen> {
                   children: [
                     CircleAvatar(
                       radius: 36,
-                      backgroundColor: AppTheme.darkSurface,
                       backgroundImage: _avatarController.text.isNotEmpty
                           ? NetworkImage(_avatarController.text)
                           : null,

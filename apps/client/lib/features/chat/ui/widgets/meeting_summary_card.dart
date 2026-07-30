@@ -36,7 +36,7 @@ class MeetingSummaryBubble extends ConsumerWidget {
                     'PON AI',
                     style: TextStyle(
                       fontSize: 11,
-                      color: const Color(0xFF96435B).withValues(alpha: 0.9),
+                      color: AppTheme.ponAccent.withValues(alpha: 0.9),
                       fontWeight: FontWeight.w600,
                     ),
                   ),
@@ -109,7 +109,7 @@ class MeetingSummaryCard extends StatelessWidget {
         color: const Color(0xFF3A2A2C).withValues(alpha: 0.55),
         borderRadius: BorderRadius.circular(16),
         border:
-            Border.all(color: const Color(0xFF96435B).withValues(alpha: 0.5)),
+            Border.all(color: AppTheme.ponAccent.withValues(alpha: 0.5)),
       ),
       padding: const EdgeInsets.all(14),
       child: Column(
@@ -120,7 +120,7 @@ class MeetingSummaryCard extends StatelessWidget {
           Row(
             children: [
               const Icon(Icons.auto_awesome,
-                  color: Color(0xFF96435B), size: 18),
+                  color: AppTheme.ponAccent, size: 18),
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
@@ -202,7 +202,7 @@ class _Bullet extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text('•  ',
-              style: TextStyle(color: Color(0xFF96435B), fontSize: 14)),
+              style: TextStyle(color: AppTheme.ponAccent, fontSize: 14)),
           Expanded(
             child: Text(text,
                 style: const TextStyle(color: Colors.white, fontSize: 14)),

@@ -309,11 +309,7 @@ class _AiBotTileAvatar extends StatelessWidget {
           height: 48,
           decoration: const BoxDecoration(
             shape: BoxShape.circle,
-            gradient: LinearGradient(
-              colors: [Color(0xFF7A2E3A), Color(0xFF3A2A2C)],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
+            color: AppTheme.ponAccent,
           ),
           child: const Icon(Icons.smart_toy_outlined,
               color: Colors.white, size: 26),
@@ -324,7 +320,7 @@ class _AiBotTileAvatar extends StatelessWidget {
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
             decoration: BoxDecoration(
-              color: const Color(0xFF96435B),
+              color: AppTheme.ponAccent,
               borderRadius: BorderRadius.circular(6),
               border: Border.all(
                   color: Theme.of(context).scaffoldBackgroundColor, width: 1.5),

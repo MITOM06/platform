@@ -64,7 +64,7 @@ export function SettingsHeader({
       <div className="flex flex-col items-center gap-3">
         <Avatar className="size-24 border-2 border-border/50">
           {avatarUrl && <AvatarImage src={absoluteMediaUrl(avatarUrl)} alt={displayName} />}
-          <AvatarFallback className="text-3xl font-medium bg-primary/80 text-white">
+          <AvatarFallback className="text-3xl font-medium bg-primary/80 text-primary-foreground">
             {avatarLetter}
           </AvatarFallback>
         </Avatar>

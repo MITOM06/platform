@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../core/theme/app_theme.dart';
 import '../../../../core/l10n/l10n_ext.dart';
 
 // Re-exported so existing importers of `streaming_ai_bubble.dart` keep getting
@@ -108,7 +109,7 @@ class _StreamingText extends StatelessWidget {
             child: const Text(
               '|',
               style: TextStyle(
-                color: Color(0xFF96435B),
+                color: AppTheme.ponAccent,
                 fontSize: 15,
                 height: 1.45,
                 fontWeight: FontWeight.w300,

@@ -281,7 +281,6 @@ class _NewConversationScreenState
               for (final m in _selectedMembers)
                 Chip(
                   label: Text(m.displayName),
-                  backgroundColor: AppTheme.darkSurface,
                   labelStyle: const TextStyle(color: Colors.white),
                   deleteIconColor: Colors.white54,
                   onDeleted: () => setState(() => _selectedMembers.remove(m)),
@@ -325,9 +324,7 @@ class _AiBotTile extends StatelessWidget {
                 height: 44,
                 decoration: const BoxDecoration(
                   shape: BoxShape.circle,
-                  gradient: LinearGradient(
-                    colors: [Color(0xFF7A2E3A), Color(0xFF3A2A2C)],
-                  ),
+                  color: AppTheme.ponAccent,
                 ),
                 child: const Icon(Icons.smart_toy_outlined,
                     color: Colors.white, size: 24),
@@ -351,7 +348,7 @@ class _AiBotTile extends StatelessWidget {
                           padding: const EdgeInsets.symmetric(
                               horizontal: 6, vertical: 2),
                           decoration: BoxDecoration(
-                            color: const Color(0xFF96435B),
+                            color: AppTheme.ponAccent,
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: const Text('AI',
@@ -373,7 +370,7 @@ class _AiBotTile extends StatelessWidget {
                 ),
               ),
               const Icon(Icons.arrow_forward_ios_rounded,
-                  color: Color(0xFF96435B), size: 16),
+                  color: AppTheme.ponAccent, size: 16),
             ],
           ),
         ),

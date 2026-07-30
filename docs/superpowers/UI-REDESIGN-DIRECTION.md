@@ -6,10 +6,11 @@
 >
 > **Last updated:** 2026-07-30 — direction locked; **Layer 1 executed** (commit `86ca2212`),
 > **Layer 2 executed** (commit `a26f492c`), and the **L3-pre cross-cutting chrome sweep executed**
-> (commit `11d641aa`), and **Layer 3 batch 1 (Auth) executed**. The old neon brand is fully gone from
-> both apps, and so are all elevation shadows, glass blur, and candy radii. Next: Layer 3 batches
-> 2–6 (chat / settings / AI / admin / remainder), none written yet. **None of this has been visually
-> confirmed on a real screen yet — worth doing before the remaining batches.**
+> (commit `11d641aa`), **Layer 3 batch 1 (Auth)** and **batch 2a (Chat core, structural)** executed.
+> The old neon brand is fully gone from both apps, and so are all elevation shadows, glass blur, and
+> candy radii. Next: batch 2b (chat long tail), then 3–6 (settings / AI / admin / remainder) — none
+> written yet. **None of this has been visually confirmed on a real screen yet — worth doing before
+> the remaining batches.**
 >
 > **Lesson from batch 1: do not trust a previous layer's "done" claim without grepping.** Layer 2
 > reported every aura orb and brand gradient removed, but all 6 Flutter auth screens still had both,
@@ -146,7 +147,16 @@ one Claude Code session, one plan.md):
    and the no-op compat params at every auth call site. Added `AppTheme.mutedText(context)` /
    `AppTheme.hairline(context)` resolvers so screens never hardcode white/black again — **use these
    in the remaining batches.**
-2. Chat core — `apps/client/lib/features/chat/` (13 screens) + `apps/web/app/(main)/conversations/*`
+2. Chat core — **split into 2a/2b**, because this batch is *not* 13 screens: `features/chat` has
+   **79 UI files** and ~390 hardcoded colour literals.
+   - **2a ✅ done** — `plans/2026-07-30-ui-redesign-l3-batch2a-chat-structural.md`. Root causes +
+     high-traffic surfaces. Biggest find: the theme had **no `bottomSheetTheme`/`dialogTheme`**,
+     which is *why* ~25 call sites hardcoded a dark sheet (so sheets/dialogs rendered dark in light
+     mode). Also: the accent hex was hand-copied in **31** places instead of using `ponAccent`, and
+     a **teal `#14B8A6` second accent** lived in the external-bot avatar on both platforms.
+   - **2b — not written.** Long tail: ~180 colour literals in ~30 chrome widgets + 28 radii.
+     ⚠️ `lib/features/chat` is **not** `dart format`-clean; do semantic edits only or the diff
+     drowns in formatting noise.
 3. Settings/Profile — `apps/client/lib/features/settings/`, `profile/` (6) + web equivalents (~6)
 4. AI features — `ai_context/`, `ai_hub/`, `assistant/` (5 Flutter) + `ai-context/`, `ai-hub/`,
    `assistant/*`, `ai-persona/`, `ai-memory/` (8 web pages)

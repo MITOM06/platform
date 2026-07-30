@@ -146,7 +146,7 @@ class ChatScreenAppBar extends ConsumerWidget implements PreferredSizeWidget {
                       aiPersonaName,
                       style: TextStyle(
                         fontSize: 11,
-                        color: const Color(0xFF96435B).withValues(alpha: 0.9),
+                        color: AppTheme.ponAccent.withValues(alpha: 0.9),
                         fontWeight: FontWeight.w500,
                       ),
                     )

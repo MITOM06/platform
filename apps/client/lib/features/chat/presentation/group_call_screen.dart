@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../core/theme/app_theme.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/l10n/l10n_ext.dart';
@@ -118,12 +119,12 @@ class _NotetakerBanner extends StatelessWidget {
       decoration: BoxDecoration(
         color: const Color(0xFF3A2A2C).withValues(alpha: 0.8),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFF96435B).withValues(alpha: 0.5)),
+        border: Border.all(color: AppTheme.ponAccent.withValues(alpha: 0.5)),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(Icons.auto_awesome, color: Color(0xFF96435B), size: 18),
+          const Icon(Icons.auto_awesome, color: AppTheme.ponAccent, size: 18),
           const SizedBox(width: 8),
           Flexible(
             child: Text(

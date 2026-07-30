@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../core/theme/app_theme.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -28,7 +29,7 @@ class FinalizedAiBubble extends StatelessWidget {
           styleSheet: MarkdownStyleSheet(
             p: const TextStyle(color: Colors.white, fontSize: 15, height: 1.45),
             code: const TextStyle(
-              color: Color(0xFF96435B),
+              color: AppTheme.ponAccent,
               backgroundColor: Color(0x33B47FFF),
               fontSize: 13,
             ),

@@ -106,7 +106,7 @@ function NicknameParticipantRow({
     <div className="flex items-start gap-3 px-2 py-2.5 rounded-lg hover:bg-muted/40">
       <Avatar className="size-10 shrink-0">
         {user?.avatarUrl && <AvatarImage src={absoluteMediaUrl(user.avatarUrl)} alt={accountName} />}
-        <AvatarFallback className="text-sm font-medium bg-primary/80 text-white">
+        <AvatarFallback className="text-sm font-medium bg-primary/80 text-primary-foreground">
           {getInitial(user?.displayName)}
         </AvatarFallback>
       </Avatar>

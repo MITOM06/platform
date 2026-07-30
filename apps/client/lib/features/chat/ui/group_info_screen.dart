@@ -204,7 +204,6 @@ class GroupInfoScreen extends ConsumerWidget {
       newName = await showDialog<String>(
         context: context,
         builder: (ctx) => AlertDialog(
-          backgroundColor: AppTheme.darkSurface,
           title: Text(ctx.l10n.renameGroup,
               style: const TextStyle(color: Colors.white)),
           content: TextField(
@@ -269,7 +268,6 @@ class GroupInfoScreen extends ConsumerWidget {
       email = await showDialog<String>(
         context: context,
         builder: (ctx) => AlertDialog(
-          backgroundColor: AppTheme.darkSurface,
           title: Text(ctx.l10n.addMembers,
               style: const TextStyle(color: Colors.white)),
           content: TextField(
@@ -339,7 +337,6 @@ class GroupInfoScreen extends ConsumerWidget {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: AppTheme.darkSurface,
         title: Text(ctx.l10n.leaveGroup,
             style: const TextStyle(color: Colors.white)),
         content: Text(ctx.l10n.leaveGroupConfirm,

@@ -16,11 +16,7 @@ void showGroupReadDetailsModal(BuildContext context, MessageModel message) {
   }
   showModalBottomSheet(
     context: context,
-    backgroundColor: AppTheme.darkSurface,
     isScrollControlled: true,
-    shape: const RoundedRectangleBorder(
-      borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-    ),
     builder: (_) => GroupReadDetailsModal(message: message),
   );
 }
@@ -44,21 +40,21 @@ class GroupReadDetailsModal extends ConsumerWidget {
             width: 40,
             height: 4.5,
             decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.2),
+              color: AppTheme.hairline(context),
               borderRadius: BorderRadius.circular(10),
             ),
           ),
           const SizedBox(height: 16),
           Text(
             l10n.readDetails,
-            style: const TextStyle(
-              color: Colors.white,
+            style: TextStyle(
+              color: Theme.of(context).colorScheme.onSurface,
               fontSize: 16,
               fontWeight: FontWeight.w600,
             ),
           ),
           const SizedBox(height: 8),
-          const Divider(height: 1, color: Colors.white10),
+          Divider(height: 1, color: AppTheme.hairline(context)),
           Expanded(
             child: ListView.builder(
               controller: scrollController,
@@ -91,7 +87,7 @@ class _ReadUserTile extends ConsumerWidget {
         ),
         title: Text(
           profile.displayName,
-          style: const TextStyle(color: Colors.white, fontSize: 14),
+          style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontSize: 14),
         ),
         trailing: Row(
           mainAxisSize: MainAxisSize.min,
@@ -102,15 +98,15 @@ class _ReadUserTile extends ConsumerWidget {
             Text(
               context.l10n.seenStatus,
               style: TextStyle(
-                color: Colors.white.withValues(alpha: 0.55),
+                color: AppTheme.mutedText(context),
                 fontSize: 12,
               ),
             ),
           ],
         ),
       ),
-      loading: () => const ListTile(
-        leading: SizedBox(
+      loading: () => ListTile(
+        leading: const SizedBox(
           width: 40,
           height: 40,
           child: Center(
@@ -125,7 +121,7 @@ class _ReadUserTile extends ConsumerWidget {
             ),
           ),
         ),
-        title: Text('...', style: TextStyle(color: Colors.white38)),
+        title: Text('...', style: TextStyle(color: AppTheme.mutedText(context))),
       ),
       error: (_, __) => const SizedBox.shrink(),
     );

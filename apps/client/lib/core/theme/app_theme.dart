@@ -160,6 +160,27 @@ class AppTheme {
         iconColor: darkTextMuted,
         textColor: darkText,
       ),
+      // Sheets/dialogs were missing from the theme, which is why ~25 call sites
+      // hardcoded `backgroundColor: AppTheme.darkSurface` + a 24px radius (and
+      // so rendered a dark sheet in light mode). Centralised here instead.
+      bottomSheetTheme: const BottomSheetThemeData(
+        backgroundColor: darkSurface,
+        surfaceTintColor: Colors.transparent,
+        elevation: 0,
+        shape: RoundedRectangleBorder(
+          borderRadius:
+              BorderRadius.vertical(top: Radius.circular(radiusSheet)),
+        ),
+      ),
+      dialogTheme: DialogThemeData(
+        backgroundColor: darkSurface,
+        surfaceTintColor: Colors.transparent,
+        elevation: 0,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(radiusCard),
+          side: const BorderSide(color: darkBorder, width: 1),
+        ),
+      ),
     );
   }
 
@@ -259,6 +280,24 @@ class AppTheme {
         contentPadding: EdgeInsets.symmetric(horizontal: 20, vertical: 8),
         iconColor: lightTextMuted,
         textColor: lightText,
+      ),
+      bottomSheetTheme: const BottomSheetThemeData(
+        backgroundColor: lightSurface,
+        surfaceTintColor: Colors.transparent,
+        elevation: 0,
+        shape: RoundedRectangleBorder(
+          borderRadius:
+              BorderRadius.vertical(top: Radius.circular(radiusSheet)),
+        ),
+      ),
+      dialogTheme: DialogThemeData(
+        backgroundColor: lightSurface,
+        surfaceTintColor: Colors.transparent,
+        elevation: 0,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(radiusCard),
+          side: const BorderSide(color: lightBorder, width: 1),
+        ),
       ),
     );
   }

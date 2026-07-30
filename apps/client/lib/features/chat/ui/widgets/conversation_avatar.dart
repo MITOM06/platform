@@ -25,8 +25,11 @@ class ConversationAvatar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = gradientColors ??
-        const [AppTheme.ponAccent, AppTheme.ponAccent];
+    // Flat accent fill — no decorative gradients (§2 rule 2). Every call site
+    // already passes an accent-only pair, so collapsing to the first stop is
+    // faithful. TODO(ui-redesign-L3-final): replace `gradientColors` with a
+    // single `Color?` once the remaining batches stop passing a list.
+    final fill = (gradientColors ?? const [AppTheme.ponAccent]).first;
     final hasImage = avatarUrl != null && avatarUrl!.isNotEmpty;
 
     Widget inner;
@@ -63,13 +66,7 @@ class ConversationAvatar extends StatelessWidget {
           alignment: Alignment.center,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            gradient: hasImage
-                ? null
-                : LinearGradient(
-                    colors: colors,
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
+            color: hasImage ? null : fill,
           ),
           child: inner,
         ),
