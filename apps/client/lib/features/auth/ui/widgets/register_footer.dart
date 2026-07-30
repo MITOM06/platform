@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/l10n/l10n_ext.dart';
+import '../../../../core/theme/app_theme.dart';
 import '../../../../core/widgets/google_logo_icon.dart';
 import '../../../../core/widgets/motion_widgets.dart';
 
@@ -23,16 +24,16 @@ class RegisterFooter extends StatelessWidget {
           index: 2,
           child: Row(
             children: [
-              const Expanded(child: Divider(color: Colors.white24)),
+              Expanded(child: Divider(color: AppTheme.hairline(context))),
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 12),
                 child: Text(
                   context.l10n.orContinueWith,
                   style: TextStyle(
-                      color: Colors.white.withValues(alpha: 0.5), fontSize: 12),
+                      color: AppTheme.mutedText(context), fontSize: 12),
                 ),
               ),
-              const Expanded(child: Divider(color: Colors.white24)),
+              Expanded(child: Divider(color: AppTheme.hairline(context))),
             ],
           ),
         ),
@@ -44,8 +45,8 @@ class RegisterFooter extends StatelessWidget {
             icon: const GoogleLogoIcon(size: 18),
             label: Text(context.l10n.registerWithGoogle),
             style: OutlinedButton.styleFrom(
-              foregroundColor: Colors.white,
-              side: BorderSide(color: Colors.white.withValues(alpha: 0.3)),
+              foregroundColor: Theme.of(context).colorScheme.onSurface,
+              side: BorderSide(color: AppTheme.hairline(context)),
             ),
           ),
         ),
@@ -58,7 +59,7 @@ class RegisterFooter extends StatelessWidget {
             children: [
               Text(
                 context.l10n.haveAccount,
-                style: TextStyle(color: Colors.white.withValues(alpha: 0.6)),
+                style: TextStyle(color: AppTheme.mutedText(context)),
               ),
               TextButton(
                 onPressed: () => context.go('/login'),

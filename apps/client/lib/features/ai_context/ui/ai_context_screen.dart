@@ -21,7 +21,7 @@ class AiContextScreen extends ConsumerWidget {
         error: (_, __) => Center(
           child: Text(
             l.listGenericError,
-            style: const TextStyle(color: Colors.redAccent),
+            style: TextStyle(color: Theme.of(context).colorScheme.error),
           ),
         ),
         data: (ctx) => ListView(

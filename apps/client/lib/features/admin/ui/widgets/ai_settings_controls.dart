@@ -42,7 +42,7 @@ class AiConnectorChecklist extends StatelessWidget {
                   activeColor: AppTheme.ponAccent,
                   controlAffinity: ListTileControlAffinity.leading,
                   title: Text(entry.name as String,
-                      style: const TextStyle(color: Colors.white)),
+                      style: TextStyle(color: Theme.of(context).colorScheme.onSurface)),
                   value: selected.contains(entry.id as String),
                   onChanged: (_) => onToggle(entry.id as String),
                 ),
@@ -77,11 +77,11 @@ class AiTriStateTile extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(title, style: const TextStyle(color: Colors.white)),
+          Text(title, style: TextStyle(color: Theme.of(context).colorScheme.onSurface)),
           const SizedBox(height: 2),
           Text(subtitle,
               style: TextStyle(
-                  color: Colors.white.withValues(alpha: 0.55), fontSize: 13)),
+                  color: AppTheme.mutedText(context), fontSize: 13)),
           const SizedBox(height: 8),
           SegmentedButton<int>(
             showSelectedIcon: false,
@@ -91,7 +91,7 @@ class AiTriStateTile extends StatelessWidget {
                     ? AppTheme.ponAccent.withValues(alpha: 0.18)
                     : Colors.transparent,
               ),
-              foregroundColor: WidgetStateProperty.all(Colors.white),
+              foregroundColor: WidgetStateProperty.all(Theme.of(context).colorScheme.onSurface),
             ),
             segments: [
               ButtonSegment(value: 0, label: Text(inheritLabel)),
@@ -130,14 +130,14 @@ class AiHourPicker extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final disabledColor = Colors.white.withValues(alpha: 0.35);
+    final disabledColor = AppTheme.mutedText(context);
     return Opacity(
       opacity: enabled ? 1 : 0.5,
       child: InputDecorator(
         decoration: InputDecoration(
           labelText: label,
           labelStyle: TextStyle(
-              color: Colors.white.withValues(alpha: enabled ? 0.7 : 0.35)),
+              color: enabled ? Theme.of(context).colorScheme.onSurface : AppTheme.mutedText(context)),
           enabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
             borderSide: const BorderSide(color: AppTheme.darkBorder),
@@ -149,16 +149,16 @@ class AiHourPicker extends StatelessWidget {
         child: DropdownButtonHideUnderline(
           child: DropdownButton<int>(
             isExpanded: true,
-            dropdownColor: AppTheme.darkSurface,
+            dropdownColor: Theme.of(context).colorScheme.surface,
             value: value,
             style:
-                TextStyle(color: enabled ? Colors.white : disabledColor),
+                TextStyle(color: enabled ? Theme.of(context).colorScheme.onSurface : disabledColor),
             items: List.generate(
               24,
               (h) => DropdownMenuItem(
                 value: h,
                 child: Text(_fmt(h),
-                    style: const TextStyle(color: Colors.white)),
+                    style: TextStyle(color: Theme.of(context).colorScheme.onSurface)),
               ),
             ),
             onChanged: enabled
@@ -197,7 +197,7 @@ class AiLabeledDropdown extends StatelessWidget {
     return InputDecorator(
       decoration: InputDecoration(
         labelText: label,
-        labelStyle: TextStyle(color: Colors.white.withValues(alpha: 0.7)),
+        labelStyle: TextStyle(color: AppTheme.mutedText(context)),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: const BorderSide(color: AppTheme.darkBorder),
@@ -209,14 +209,14 @@ class AiLabeledDropdown extends StatelessWidget {
       child: DropdownButtonHideUnderline(
         child: DropdownButton<String>(
           isExpanded: true,
-          dropdownColor: AppTheme.darkSurface,
+          dropdownColor: Theme.of(context).colorScheme.surface,
           value: value,
-          style: const TextStyle(color: Colors.white),
+          style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
           items: items
               .map((it) => DropdownMenuItem(
                     value: it.value,
                     child: Text(it.label,
-                        style: const TextStyle(color: Colors.white)),
+                        style: TextStyle(color: Theme.of(context).colorScheme.onSurface)),
                   ))
               .toList(),
           onChanged: (v) {
@@ -237,8 +237,8 @@ class AiSectionTitle extends StatelessWidget {
         padding: const EdgeInsets.only(bottom: 12),
         child: Text(
           text,
-          style: const TextStyle(
-            color: Colors.white,
+          style: TextStyle(
+            color: Theme.of(context).colorScheme.onSurface,
             fontSize: 16,
             fontWeight: FontWeight.bold,
           ),
@@ -254,7 +254,7 @@ class AiMutedText extends StatelessWidget {
   Widget build(BuildContext context) => Text(
         text,
         style:
-            TextStyle(color: Colors.white.withValues(alpha: 0.55), fontSize: 13),
+            TextStyle(color: AppTheme.mutedText(context), fontSize: 13),
       );
 }
 
@@ -268,7 +268,7 @@ class AiErrorView extends StatelessWidget {
           padding: const EdgeInsets.all(24),
           child: Text(message,
               textAlign: TextAlign.center,
-              style: TextStyle(color: Colors.white.withValues(alpha: 0.6))),
+              style: TextStyle(color: AppTheme.mutedText(context))),
         ),
       );
 }

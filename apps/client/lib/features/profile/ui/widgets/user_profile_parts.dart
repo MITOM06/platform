@@ -22,13 +22,13 @@ class ProfileCenteredInfoRow extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(icon, size: 16, color: Colors.white60),
+          Icon(icon, size: 16, color: AppTheme.mutedText(context)),
           const SizedBox(width: 6),
           Flexible(
             child: Text(
               value,
               textAlign: TextAlign.center,
-              style: const TextStyle(color: Colors.white60, fontSize: 13.5),
+              style: TextStyle(color: AppTheme.mutedText(context), fontSize: 13.5),
             ),
           ),
         ],
@@ -52,11 +52,7 @@ class ProfileCover extends StatelessWidget {
     return Container(
       height: 160,
       decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          colors: [AppTheme.ponAccent, AppTheme.ponAccent],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
+        color: AppTheme.ponAccent,
       ),
       child: url != null
           ? CachedNetworkImage(

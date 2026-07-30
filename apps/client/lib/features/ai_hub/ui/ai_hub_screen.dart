@@ -67,7 +67,7 @@ class _AiHubScreenState extends ConsumerState<AiHubScreen> {
               Text(
                 l10n.aiHubSubtitle,
                 style: TextStyle(
-                  color: Colors.white.withValues(alpha: 0.6),
+                  color: AppTheme.mutedText(context),
                   fontSize: 14,
                 ),
               ),
@@ -93,13 +93,11 @@ class _HeroCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     return PonCard(
-      glowColor: AppTheme.ponAccent,
-      glowStrength: 6,
       child: Material(
         color: Colors.transparent,
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(AppTheme.radiusCard),
         child: InkWell(
-          borderRadius: BorderRadius.circular(24),
+          borderRadius: BorderRadius.circular(AppTheme.radiusCard),
           onTap: loading ? null : onTap,
           child: Padding(
             padding: const EdgeInsets.all(20),
@@ -110,9 +108,7 @@ class _HeroCard extends StatelessWidget {
                   height: 56,
                   decoration: const BoxDecoration(
                     shape: BoxShape.circle,
-                    gradient: LinearGradient(
-                      colors: [AppTheme.ponAccent, AppTheme.ponAccent],
-                    ),
+                    color: AppTheme.ponAccent,
                   ),
                   child: const Icon(Icons.auto_awesome_rounded,
                       color: Colors.white, size: 28),
@@ -124,9 +120,9 @@ class _HeroCard extends StatelessWidget {
                     children: [
                       Text(
                         l10n.aiHubStartChat,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.onSurface,
+                          fontWeight: FontWeight.w600,
                           fontSize: 16,
                         ),
                       ),
@@ -134,7 +130,7 @@ class _HeroCard extends StatelessWidget {
                       Text(
                         l10n.startChatWithAI,
                         style: TextStyle(
-                          color: Colors.white.withValues(alpha: 0.6),
+                          color: AppTheme.mutedText(context),
                           fontSize: 12.5,
                         ),
                       ),
@@ -171,28 +167,24 @@ class _HubGrid extends StatelessWidget {
         icon: Icons.psychology_rounded,
         title: l10n.aiHubMemory,
         subtitle: l10n.aiContextTitle,
-        accent: AppTheme.ponAccent,
         onTap: () => context.push('/ai-context'),
       ),
       AiHubTile(
         icon: Icons.hub_rounded,
         title: l10n.aiHubIntegrations,
         subtitle: l10n.integrationsTitle,
-        accent: AppTheme.ponAccent,
         onTap: () => context.push('/integrations'),
       ),
       AiHubTile(
         icon: Icons.bolt_rounded,
         title: l10n.aiHubSkills,
         subtitle: l10n.skillsTitle,
-        accent: AppTheme.ponAccent,
         onTap: () => context.push('/skills'),
       ),
       AiHubTile(
         icon: Icons.data_usage_rounded,
         title: l10n.aiHubTokenUsage,
         subtitle: l10n.tokenUsage,
-        accent: AppTheme.ponAccent,
         onTap: () => context.push('/token-usage'),
       ),
     ];

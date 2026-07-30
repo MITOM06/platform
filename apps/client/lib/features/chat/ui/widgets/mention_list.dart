@@ -31,7 +31,7 @@ class MentionList extends ConsumerWidget {
     return Container(
       constraints: const BoxConstraints(maxHeight: 180),
       decoration: BoxDecoration(
-        color: AppTheme.darkSurface,
+        color: Theme.of(context).colorScheme.surface,
         border: Border(
           top: BorderSide(color: AppTheme.darkBorder.withValues(alpha: 0.4)),
         ),
@@ -60,7 +60,7 @@ class MentionList extends ConsumerWidget {
             ),
             title: Text(
               entry.value,
-              style: const TextStyle(color: Colors.white, fontSize: 14),
+              style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontSize: 14),
             ),
             onTap: () => onSelected(entry.value),
           );

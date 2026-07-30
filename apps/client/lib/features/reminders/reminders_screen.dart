@@ -21,7 +21,7 @@ class RemindersScreen extends ConsumerWidget {
       body: remindersAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, _) => Center(
-          child: Text('$e', style: const TextStyle(color: Colors.red)),
+          child: Text('$e', style: TextStyle(color: Theme.of(context).colorScheme.error)),
         ),
         data: (reminders) {
           if (reminders.isEmpty) {
@@ -78,7 +78,7 @@ class RemindersScreen extends ConsumerWidget {
               onConfirm();
             },
             child: Text(context.l10n.actionOk,
-                style: const TextStyle(color: Colors.red)),
+                style: TextStyle(color: Theme.of(context).colorScheme.error)),
           ),
         ],
       ),

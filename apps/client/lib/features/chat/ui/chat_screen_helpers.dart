@@ -49,16 +49,9 @@ Future<void> pickAndStageMedia(
   String conversationId,
 ) async {
   final l10n = context.l10n;
-  final theme = Theme.of(context);
-  final isDark = theme.brightness == Brightness.dark;
-  final sheetColor = isDark ? AppTheme.darkSurface : theme.cardColor;
-  final textColor = isDark ? Colors.white : Colors.black87;
+  final textColor = Theme.of(context).colorScheme.onSurface;
   final source = await showModalBottomSheet<String>(
     context: context,
-    backgroundColor: sheetColor,
-    shape: const RoundedRectangleBorder(
-      borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-    ),
     builder: (ctx) => SafeArea(
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -155,16 +148,9 @@ Future<void> showAutoDeletePicker(
   String conversationId,
 ) async {
   final l10n = context.l10n;
-  final theme = Theme.of(context);
-  final isDark = theme.brightness == Brightness.dark;
-  final sheetColor = isDark ? AppTheme.darkSurface : theme.cardColor;
-  final textColor = isDark ? Colors.white : Colors.black87;
+  final textColor = Theme.of(context).colorScheme.onSurface;
   final seconds = await showModalBottomSheet<int?>(
     context: context,
-    backgroundColor: sheetColor,
-    shape: const RoundedRectangleBorder(
-      borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-    ),
     builder: (ctx) => SafeArea(
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -208,10 +194,9 @@ Future<bool?> showConfirmDialog(
   required String body,
 }) {
   final theme = Theme.of(context);
-  final isDark = theme.brightness == Brightness.dark;
-  final dialogColor = isDark ? AppTheme.darkSurface : Colors.white;
-  final titleColor = isDark ? Colors.white : Colors.black87;
-  final bodyColor = isDark ? Colors.white70 : Colors.black54;
+  final dialogColor = theme.colorScheme.surface;
+  final titleColor = theme.colorScheme.onSurface;
+  final bodyColor = AppTheme.mutedText(context);
   return showDialog<bool>(
     context: context,
     builder: (ctx) => AlertDialog(
@@ -224,7 +209,7 @@ Future<bool?> showConfirmDialog(
           child: Text(ctx.l10n.actionCancel),
         ),
         FilledButton(
-          style: FilledButton.styleFrom(backgroundColor: Colors.redAccent),
+          style: FilledButton.styleFrom(backgroundColor: Theme.of(context).colorScheme.error),
           onPressed: () => Navigator.pop(ctx, true),
           child: Text(ctx.l10n.actionConfirm),
         ),

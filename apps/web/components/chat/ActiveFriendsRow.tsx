@@ -24,7 +24,7 @@ export function ActiveFriendsRow() {
               <div className="relative">
                 <Avatar className="size-12 ring-2 ring-transparent transition-all group-hover:ring-primary/50">
                   <AvatarImage src={friend.avatarUrl ? absoluteMediaUrl(friend.avatarUrl) : undefined} />
-                  <AvatarFallback className="bg-primary/80 text-white font-medium">
+                  <AvatarFallback className="bg-primary/80 text-primary-foreground font-medium">
                     {friend.displayName[0]?.toUpperCase()}
                   </AvatarFallback>
                 </Avatar>

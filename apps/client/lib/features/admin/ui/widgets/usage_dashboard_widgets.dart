@@ -18,45 +18,51 @@ class UsageStatCard extends StatelessWidget {
   final String label;
   final String value;
   final IconData icon;
-  final Color color;
   final String? subtitle;
+
+  /// Semantically-red variant (e.g. a thumbs-down rate over threshold).
+  /// Replaces a free-form `Color color` prop — a per-item colour prop is what
+  /// lets a second accent in (§2 rule 1).
+  final bool alert;
 
   const UsageStatCard({
     super.key,
     required this.label,
     required this.value,
     required this.icon,
-    required this.color,
     this.subtitle,
+    this.alert = false,
   });
 
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final accent = alert ? scheme.error : scheme.primary;
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: const Color(0xFF1A1A2E),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withValues(alpha: 0.3)),
+        color: scheme.surface,
+        borderRadius: BorderRadius.circular(AppTheme.radiusCard),
+        border: Border.all(color: AppTheme.hairline(context)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, color: color, size: 20),
+          Icon(icon, color: accent, size: 20),
           const SizedBox(height: 8),
           Text(value,
-              style: const TextStyle(
+              style: TextStyle(
                   fontSize: 22,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white)),
+                  fontWeight: FontWeight.w600,
+                  color: Theme.of(context).colorScheme.onSurface)),
           Text(label,
-              style: const TextStyle(fontSize: 12, color: Colors.white54)),
+              style: TextStyle(fontSize: 12, color: AppTheme.mutedText(context))),
           if (subtitle != null)
             Padding(
               padding: const EdgeInsets.only(top: 2),
               child: Text(subtitle!,
                   style:
-                      const TextStyle(fontSize: 10, color: Colors.white38)),
+                      TextStyle(fontSize: 10, color: AppTheme.mutedText(context))),
             ),
         ],
       ),
@@ -140,17 +146,17 @@ class _WorstAnswerCard extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 10),
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: const Color(0xFF1A1A2E),
+        color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.redAccent.withValues(alpha: 0.3)),
+        border: Border.all(color: Theme.of(context).colorScheme.error.withValues(alpha: 0.3)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              const Icon(Icons.thumb_down_alt_outlined,
-                  size: 14, color: Colors.redAccent),
+              Icon(Icons.thumb_down_alt_outlined,
+                  size: 14, color: Theme.of(context).colorScheme.error),
               const SizedBox(width: 6),
               Expanded(
                 child: Text(
@@ -159,7 +165,7 @@ class _WorstAnswerCard extends StatelessWidget {
                       : context.l10n.usageNoPreview,
                   maxLines: 3,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(color: Colors.white, fontSize: 13),
+                  style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontSize: 13),
                 ),
               ),
             ],
@@ -172,7 +178,7 @@ class _WorstAnswerCard extends StatelessWidget {
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
                 style: TextStyle(
-                    color: Colors.white.withValues(alpha: 0.55),
+                    color: AppTheme.mutedText(context),
                     fontSize: 12,
                     fontStyle: FontStyle.italic),
               ),
@@ -205,7 +211,7 @@ class UsageListTileCard extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 10),
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       decoration: BoxDecoration(
-        color: const Color(0xFF1A1A2E),
+        color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: AppTheme.darkBorder),
       ),
@@ -230,14 +236,14 @@ class UsageListTileCard extends StatelessWidget {
                 Text(title,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                        color: Colors.white,
+                    style: TextStyle(
+                        color: Theme.of(context).colorScheme.onSurface,
                         fontSize: 14,
                         fontWeight: FontWeight.w600)),
                 const SizedBox(height: 2),
                 Text(subtitle,
                     style:
-                        const TextStyle(color: Colors.white54, fontSize: 11)),
+                        TextStyle(color: AppTheme.mutedText(context), fontSize: 11)),
               ],
             ),
           ),
@@ -259,7 +265,7 @@ class UsageEmptyRow extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 16),
       child: Text(context.l10n.usageNoData,
-          style: TextStyle(color: Colors.white.withValues(alpha: 0.4))),
+          style: TextStyle(color: AppTheme.mutedText(context))),
     );
   }
 }

@@ -16,7 +16,7 @@ class StrangerRequestBanner extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      color: AppTheme.darkSurface.withValues(alpha: 0.8),
+      color: Theme.of(context).colorScheme.surface,
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
       child: SafeArea(
         top: false,
@@ -25,9 +25,9 @@ class StrangerRequestBanner extends StatelessWidget {
           children: [
             Text(
               context.l10n.strangerBannerTitle,
-              style: const TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
+              style: TextStyle(
+                color: Theme.of(context).colorScheme.onSurface,
+                fontWeight: FontWeight.w600,
                 fontSize: 15,
               ),
             ),
@@ -36,7 +36,7 @@ class StrangerRequestBanner extends StatelessWidget {
               context.l10n.strangerBannerBody,
               textAlign: TextAlign.center,
               style: TextStyle(
-                color: Colors.white.withValues(alpha: 0.6),
+                color: AppTheme.mutedText(context),
                 fontSize: 13,
               ),
             ),
@@ -47,8 +47,8 @@ class StrangerRequestBanner extends StatelessWidget {
                   child: OutlinedButton(
                     onPressed: () => onReject(),
                     style: OutlinedButton.styleFrom(
-                      foregroundColor: Colors.redAccent,
-                      side: const BorderSide(color: Colors.redAccent),
+                      foregroundColor: Theme.of(context).colorScheme.error,
+                      side: BorderSide(color: Theme.of(context).colorScheme.error),
                     ),
                     child: Text(context.l10n.rejectRequest),
                   ),

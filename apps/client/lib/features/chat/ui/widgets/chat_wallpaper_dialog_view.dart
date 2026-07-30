@@ -112,8 +112,6 @@ class _WallpaperDialogState extends State<WallpaperDialog> {
   @override
   Widget build(BuildContext context) {
     return Dialog(
-      backgroundColor: AppTheme.darkSurface,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 360, maxHeight: 600),
         child: Column(
@@ -127,14 +125,14 @@ class _WallpaperDialogState extends State<WallpaperDialog> {
                   Expanded(
                     child: Text(
                       context.l10n.changeChatThemeTitle,
-                      style: const TextStyle(
-                          color: Colors.white,
+                      style: TextStyle(
+                          color: Theme.of(context).colorScheme.onSurface,
                           fontSize: 16,
                           fontWeight: FontWeight.w600),
                     ),
                   ),
                   IconButton(
-                    icon: const Icon(Icons.close, color: Colors.white54),
+                    icon: Icon(Icons.close, color: AppTheme.mutedText(context)),
                     onPressed: () => Navigator.pop(context),
                   ),
                 ],
@@ -147,7 +145,7 @@ class _WallpaperDialogState extends State<WallpaperDialog> {
               child: _buildPreview(),
             ),
 
-            const Divider(color: Colors.white12, height: 1),
+            Divider(color: AppTheme.hairline(context), height: 1),
 
             // Scrollable theme list
             Expanded(
@@ -157,9 +155,9 @@ class _WallpaperDialogState extends State<WallpaperDialog> {
                   // Default
                   _buildThemeTile(
                     preset: widget.presets.first,
-                    icon: const Icon(Icons.block, color: Colors.white54, size: 20),
+                    icon: Icon(Icons.block, color: AppTheme.mutedText(context), size: 20),
                   ),
-                  const Divider(color: Colors.white12, height: 1),
+                  Divider(color: AppTheme.hairline(context), height: 1),
 
                   // Colors section
                   WallpaperSectionHeader(
@@ -167,7 +165,7 @@ class _WallpaperDialogState extends State<WallpaperDialog> {
                   ..._buildColorItems(),
                   _buildShowMoreButton(),
 
-                  const Divider(color: Colors.white12, height: 1),
+                  Divider(color: AppTheme.hairline(context), height: 1),
 
                   // Vibrant section
                   WallpaperSectionHeader(
@@ -176,7 +174,7 @@ class _WallpaperDialogState extends State<WallpaperDialog> {
                       .where((p) => p['category'] == 'vibrant')
                       .map((p) => _buildThemeTile(preset: p)),
 
-                  const Divider(color: Colors.white12, height: 1),
+                  Divider(color: AppTheme.hairline(context), height: 1),
 
                   // Minimal section
                   WallpaperSectionHeader(
@@ -185,7 +183,7 @@ class _WallpaperDialogState extends State<WallpaperDialog> {
                       .where((p) => p['category'] == 'minimal')
                       .map((p) => _buildThemeTile(preset: p)),
 
-                  const Divider(color: Colors.white12, height: 1),
+                  Divider(color: AppTheme.hairline(context), height: 1),
 
                   // Themes section (image-based photo wallpapers)
                   WallpaperSectionHeader(
@@ -194,7 +192,7 @@ class _WallpaperDialogState extends State<WallpaperDialog> {
                       .where((p) => p['category'] == 'themes')
                       .map((p) => _buildThemeTile(preset: p)),
 
-                  const Divider(color: Colors.white12, height: 1),
+                  Divider(color: AppTheme.hairline(context), height: 1),
 
                   // Upload
                   Padding(
@@ -230,7 +228,7 @@ class _WallpaperDialogState extends State<WallpaperDialog> {
             ),
 
             // Actions
-            const Divider(color: Colors.white12, height: 1),
+            Divider(color: AppTheme.hairline(context), height: 1),
             Padding(
               padding: const EdgeInsets.fromLTRB(12, 8, 12, 12),
               child: Row(
@@ -239,7 +237,7 @@ class _WallpaperDialogState extends State<WallpaperDialog> {
                   TextButton(
                     onPressed: () => Navigator.pop(context),
                     child: Text(context.l10n.actionCancel,
-                        style: const TextStyle(color: Colors.white54)),
+                        style: TextStyle(color: AppTheme.mutedText(context))),
                   ),
                   const SizedBox(width: 8),
                   FilledButton(
@@ -247,7 +245,7 @@ class _WallpaperDialogState extends State<WallpaperDialog> {
                         FilledButton.styleFrom(backgroundColor: AppTheme.ponAccent),
                     onPressed: _confirm,
                     child: Text(context.l10n.actionConfirm,
-                        style: const TextStyle(color: Colors.white)),
+                        ),
                   ),
                 ],
               ),
@@ -287,7 +285,7 @@ class _WallpaperDialogState extends State<WallpaperDialog> {
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 border: Border.all(
-                  color: isSel ? AppTheme.ponAccent : Colors.white24,
+                  color: isSel ? AppTheme.ponAccent : AppTheme.hairline(context),
                   width: isSel ? 2.5 : 1.5,
                 ),
                 gradient: colors != null
@@ -310,7 +308,7 @@ class _WallpaperDialogState extends State<WallpaperDialog> {
             Expanded(
               child: Text(name,
                   style: TextStyle(
-                      color: isSel ? Colors.white : Colors.white70,
+                      color: isSel ? AppTheme.ponAccent : AppTheme.mutedText(context),
                       fontSize: 14)),
             ),
             if (isSel)
@@ -357,7 +355,7 @@ class _WallpaperDialogState extends State<WallpaperDialog> {
       clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: Colors.white24),
+        border: Border.all(color: AppTheme.hairline(context)),
         gradient: colors != null
             ? LinearGradient(
                 colors: colors,
@@ -370,7 +368,7 @@ class _WallpaperDialogState extends State<WallpaperDialog> {
           ? Center(
               child: Text(
                 context.l10n.wallpaperDefaultName,
-                style: const TextStyle(color: Colors.white38),
+                style: TextStyle(color: AppTheme.mutedText(context)),
               ),
             )
           : null,

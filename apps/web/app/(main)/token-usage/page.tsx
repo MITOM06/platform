@@ -20,17 +20,16 @@ function fmt(n: number): string {
 
 // ── Stat Card ──────────────────────────────────────────────────────────────
 
-function StatCard({ label, value, sub, icon, glowColor }: {
-  label: string; value: string; sub?: string; icon: React.ReactNode; glowColor: string
+// The per-card `glowColor` prop is gone: its values included the old brand's
+// neon cyan and a violet, i.e. two extra
+// accents (§2 rule 1), painted as a radial gradient (§2 rule 2).
+function StatCard({ label, value, sub, icon }: {
+  label: string; value: string; sub?: string; icon: React.ReactNode
 }) {
   return (
-    <div className="relative rounded-lg border bg-card p-5 overflow-hidden transition-all group">
-      <div
-        className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none rounded-lg"
-        style={{ background: `radial-gradient(circle at 20% 50%, ${glowColor}, transparent 70%)` }}
-      />
+    <div className="relative rounded-lg border bg-card p-5 overflow-hidden transition-colors group hover:bg-accent">
       <div className="relative">
-        <div className="mb-3 p-2 rounded-lg w-fit" style={{ background: glowColor }}>{icon}</div>
+        <div className="mb-3 p-2 rounded-lg w-fit bg-primary/10">{icon}</div>
         <p className="text-3xl font-bold text-foreground tabular-nums">{value}</p>
         {sub && <p className="text-xs text-muted-foreground/60 mt-0.5 tabular-nums">{sub}</p>}
         <p className="text-xs text-muted-foreground mt-2">{label}</p>
@@ -173,8 +172,8 @@ function LineChart({ days, inputLabel, outputLabel, noDataLabel }: {
             <stop offset="100%" stopColor="var(--primary)" stopOpacity="0" />
           </linearGradient>
           <linearGradient id="inputGrad" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="#00E5FF" stopOpacity="0.15" />
-            <stop offset="100%" stopColor="#00E5FF" stopOpacity="0" />
+            <stop offset="0%" stopColor="var(--primary)" stopOpacity="0.08" />
+            <stop offset="100%" stopColor="var(--primary)" stopOpacity="0" />
           </linearGradient>
         </defs>
         <polyline
@@ -188,17 +187,17 @@ function LineChart({ days, inputLabel, outputLabel, noDataLabel }: {
 
         {/* Lines */}
         <polyline points={outputPoints} fill="none" stroke="var(--primary)" strokeWidth={2} strokeLinejoin="round" strokeLinecap="round" />
-        <polyline points={inputPoints} fill="none" stroke="#00E5FF" strokeWidth={2} strokeLinejoin="round" strokeLinecap="round" />
+        <polyline points={inputPoints} fill="none" stroke="var(--primary)" strokeOpacity={0.45} strokeWidth={2} strokeLinejoin="round" strokeLinecap="round" />
 
         {/* Hover vertical line + dots */}
         {tooltip && activeIdx >= 0 && (
           <>
             <line x1={tooltip.pointX} y1={PAD.top} x2={tooltip.pointX} y2={PAD.top + chartH}
-              stroke="rgba(255,255,255,0.15)" strokeWidth={1} strokeDasharray="4 3" />
+              stroke="var(--border)" strokeWidth={1} strokeDasharray="4 3" />
             <circle cx={tooltip.pointX} cy={yOf(days[activeIdx].inputTokens)} r={5}
-              fill="#00E5FF" stroke="#0a0a0a" strokeWidth={2} />
+              fill="var(--primary)" fillOpacity={0.45} stroke="var(--card)" strokeWidth={2} />
             <circle cx={tooltip.pointX} cy={yOf(days[activeIdx].outputTokens)} r={5}
-              fill="var(--primary)" stroke="#0a0a0a" strokeWidth={2} />
+              fill="var(--primary)" stroke="var(--card)" strokeWidth={2} />
           </>
         )}
       </svg>
@@ -211,7 +210,7 @@ function LineChart({ days, inputLabel, outputLabel, noDataLabel }: {
         >
           <p className="text-muted-foreground/70 mb-1.5 font-mono">{tooltip.day.date}</p>
           <div className="flex items-center gap-2 mb-1">
-            <span className="size-2 rounded-full bg-[#00E5FF]" />
+            <span className="size-2 rounded-full bg-primary/45" />
             <span className="text-foreground">{inputLabel}: <strong>{fmt(tooltip.day.inputTokens)}</strong></span>
           </div>
           <div className="flex items-center gap-2">
@@ -224,7 +223,7 @@ function LineChart({ days, inputLabel, outputLabel, noDataLabel }: {
       {/* Legend */}
       <div className="flex items-center gap-6 justify-center mt-3">
         <div className="flex items-center gap-2">
-          <div className="size-3 rounded-sm bg-[#00E5FF]" />
+          <div className="size-3 rounded-sm bg-primary/45" />
           <span className="text-xs text-muted-foreground">{inputLabel}</span>
         </div>
         <div className="flex items-center gap-2">
@@ -315,25 +314,21 @@ export default function TokenUsagePage() {
                     label={t('thisMonth')}
                     value={fmt(totalUsed)}
                     sub={`${fmt(totalInput)} + ${fmt(totalOutput)}`}
-                    glowColor="rgba(150, 67, 91,0.08)"
                   />
                   <StatCard
-                    icon={<ArrowDownToLine className="size-4 text-[#00E5FF]" />}
+                    icon={<ArrowDownToLine className="size-4 text-primary" />}
                     label={t('inputTokens')}
                     value={fmt(totalInput)}
-                    glowColor="rgba(0,229,255,0.08)"
                   />
                   <StatCard
                     icon={<ArrowUpFromLine className="size-4 text-primary" />}
                     label={t('outputTokens')}
                     value={fmt(totalOutput)}
-                    glowColor="rgba(180,127,255,0.08)"
                   />
                   <StatCard
                     icon={<MessageSquare className="size-4 text-primary" />}
                     label={t('queries')}
                     value={totalRequests.toString()}
-                    glowColor="rgba(150, 67, 91,0.08)"
                   />
                 </div>
 
@@ -343,7 +338,6 @@ export default function TokenUsagePage() {
                     icon={<DollarSign className="size-4 text-primary" />}
                     label={t('estimatedCost')}
                     value={`$${estimatedCost.toFixed(4)}`}
-                    glowColor="rgba(150, 67, 91,0.08)"
                   />
                   <QuotaProgress
                     used={totalUsed}

@@ -290,14 +290,14 @@ class _PhoneVerificationBottomSheetState
           const SizedBox(height: 8),
           Text(
             _phoneError!,
-            style: const TextStyle(color: Colors.redAccent, fontSize: 12),
+            style: TextStyle(color: Theme.of(context).colorScheme.error, fontSize: 12),
           ),
         ],
         const SizedBox(height: 16),
         FilledButton(
           style: FilledButton.styleFrom(
             backgroundColor: AppTheme.ponAccent,
-            foregroundColor: Colors.black,
+            foregroundColor: Colors.white,
           ),
           onPressed: (_sending || !_hasValidNumber) ? null : _sendOtp,
           child: _sending
@@ -306,7 +306,7 @@ class _PhoneVerificationBottomSheetState
                   width: 18,
                   child: CircularProgressIndicator(
                     strokeWidth: 2,
-                    valueColor: AlwaysStoppedAnimation(Colors.black),
+                    valueColor: AlwaysStoppedAnimation(Colors.white),
                   ),
                 )
               : Text(l10n.phoneSendOtp),
@@ -334,7 +334,7 @@ class _PhoneVerificationBottomSheetState
           const SizedBox(height: 12),
           Text(
             _otpError!,
-            style: const TextStyle(color: Colors.redAccent, fontSize: 12),
+            style: TextStyle(color: Theme.of(context).colorScheme.error, fontSize: 12),
             textAlign: TextAlign.center,
           ),
         ],
@@ -342,7 +342,7 @@ class _PhoneVerificationBottomSheetState
         FilledButton(
           style: FilledButton.styleFrom(
             backgroundColor: AppTheme.ponAccent,
-            foregroundColor: Colors.black,
+            foregroundColor: Colors.white,
           ),
           onPressed: _verifying ? null : _verify,
           child: _verifying
@@ -351,7 +351,7 @@ class _PhoneVerificationBottomSheetState
                   width: 18,
                   child: CircularProgressIndicator(
                     strokeWidth: 2,
-                    valueColor: AlwaysStoppedAnimation(Colors.black),
+                    valueColor: AlwaysStoppedAnimation(Colors.white),
                   ),
                 )
               : Text(l10n.phoneConfirm),
@@ -385,7 +385,7 @@ Future<void> showPhoneVerificationSheet(
     showDragHandle: false,
     backgroundColor: Theme.of(context).colorScheme.surface,
     shape: const RoundedRectangleBorder(
-      borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      borderRadius: BorderRadius.vertical(top: Radius.circular(AppTheme.radiusSheet)),
     ),
     builder: (_) => PhoneVerificationBottomSheet(
       initialPhone: initialPhone,

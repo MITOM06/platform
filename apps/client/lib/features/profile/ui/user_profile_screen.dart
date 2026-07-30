@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../core/theme/app_theme.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
@@ -118,7 +119,7 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
             child: Text(ctx.l10n.actionCancel),
           ),
           FilledButton(
-            style: FilledButton.styleFrom(backgroundColor: Colors.redAccent),
+            style: FilledButton.styleFrom(backgroundColor: Theme.of(context).colorScheme.error),
             onPressed: () => Navigator.pop(ctx, true),
             child: Text(ctx.l10n.actionConfirm),
           ),
@@ -241,11 +242,11 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        const Icon(Icons.cake_outlined, size: 16, color: Colors.white60),
+                        Icon(Icons.cake_outlined, size: 16, color: AppTheme.mutedText(context)),
                         const SizedBox(width: 6),
                         Text(
                           DateFormat.yMMMd().format(user.dateOfBirth!.toLocal()),
-                          style: const TextStyle(color: Colors.white60, fontSize: 13.5),
+                          style: TextStyle(color: AppTheme.mutedText(context), fontSize: 13.5),
                         ),
                       ],
                     ),

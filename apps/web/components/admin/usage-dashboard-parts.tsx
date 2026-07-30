@@ -28,19 +28,16 @@ export function StatCard({
   label,
   value,
   icon,
-  glowColor,
 }: {
   label: string
   value: string
   icon: React.ReactNode
-  glowColor: string
 }) {
+  // No per-card `glowColor`: one of the four was passing a violet second accent,
+  // and it was painted as a radial gradient (§2 rules 1-2). The icon already
+  // carries the semantic colour via text-primary / text-destructive.
   return (
-    <div className="relative rounded-xl border bg-card p-4 overflow-hidden transition-all group">
-      <div
-        className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none rounded-xl"
-        style={{ background: `radial-gradient(circle at 20% 50%, ${glowColor}, transparent 70%)` }}
-      />
+    <div className="relative rounded-xl border bg-card p-4 overflow-hidden transition-colors hover:bg-accent">
       <div className="relative">
         <div className="mb-3">{icon}</div>
         <p className="text-2xl font-bold text-foreground">{value}</p>
@@ -93,8 +90,10 @@ export function DailyBarChart({
       const gap = rect.width / days.length
       const chartH = rect.height - 20
 
-      const inputColor = '#00E5FF'
-      const outputColor = 'var(--primary)'
+      const rootStyle = getComputedStyle(document.documentElement)
+      const accent = rootStyle.getPropertyValue('--primary').trim() || '#96435B'
+      const axisColor =
+        rootStyle.getPropertyValue('--muted-foreground').trim() || '#6B6259'
 
       for (let i = 0; i < days.length; i++) {
         const d = days[i]
@@ -105,20 +104,23 @@ export function DailyBarChart({
         const inputH = (d.inputTokens / maxVal) * chartH
         const outputH = totalH - inputH
 
-        ctx.fillStyle = outputColor
+        ctx.fillStyle = accent
+        ctx.globalAlpha = 1
         ctx.beginPath()
         ctx.roundRect(x, chartH - totalH, barW, outputH, [3, 3, 0, 0])
         ctx.fill()
 
-        ctx.fillStyle = inputColor
+        // Input series = the same accent at 45%, so the chart stays single-hue.
+        ctx.globalAlpha = 0.45
         ctx.fillRect(x, chartH - inputH, barW, inputH)
+        ctx.globalAlpha = 1
       }
 
       // Thin x-axis labels on narrow widths to prevent overlap
       const step = rect.width < 480 ? Math.ceil(days.length / 6) : 1
 
       ctx.font = '10px system-ui'
-      ctx.fillStyle = '#9CA3AF'
+      ctx.fillStyle = axisColor
 
       days.forEach((d, i) => {
         if (i % step !== 0) return
@@ -158,11 +160,11 @@ export function DailyBarChart({
       <canvas ref={canvasRef} className="w-full h-40" />
       <div className="flex items-center gap-6 justify-center">
         <div className="flex items-center gap-2">
-          <div className="size-3 rounded-sm" style={{ background: '#00E5FF' }} />
+          <div className="size-3 rounded-sm bg-primary/45" />
           <span className="text-xs text-muted-foreground">{inputLabel}</span>
         </div>
         <div className="flex items-center gap-2">
-          <div className="size-3 rounded-sm" style={{ background: 'var(--primary)' }} />
+          <div className="size-3 rounded-sm bg-primary" />
           <span className="text-xs text-muted-foreground">{outputLabel}</span>
         </div>
       </div>

@@ -59,7 +59,7 @@ class ChatsTab extends ConsumerWidget {
               color: isDark
                   ? AppTheme.ponAccent
                   : Theme.of(context).colorScheme.primary,
-              backgroundColor: isDark ? AppTheme.darkSurface : Colors.white,
+              backgroundColor: Theme.of(context).colorScheme.surface,
               onRefresh: () =>
                   ref.read(conversationsNotifierProvider.notifier).refresh(),
               child: conversations.isEmpty
@@ -112,7 +112,7 @@ class _EmptyChats extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
-                  color: isDark ? Colors.white70 : Colors.black87,
+                  color: Theme.of(context).colorScheme.onSurface,
                 ),
               ),
               if (!hasQuery) ...[
@@ -120,7 +120,7 @@ class _EmptyChats extends StatelessWidget {
                 Text(
                   context.l10n.emptyTapPlus,
                   style: TextStyle(
-                    color: isDark ? Colors.white38 : Colors.black38,
+                    color: AppTheme.mutedText(context),
                   ),
                 ),
               ],
@@ -145,22 +145,20 @@ class _ChatsError extends ConsumerWidget {
       child: Padding(
         padding: const EdgeInsets.all(24.0),
         child: PonCard(
-          glowColor: Colors.redAccent,
-          glowStrength: isDark ? 4 : 0,
           child: Padding(
             padding: const EdgeInsets.all(24.0),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Icon(Icons.cloud_off_outlined,
-                    size: 48, color: Colors.redAccent),
+                Icon(Icons.cloud_off_outlined,
+                    size: 48, color: Theme.of(context).colorScheme.error),
                 const SizedBox(height: 16),
                 Text(
                   context.l10n.listLoadFailed,
                   style: TextStyle(
                     fontWeight: FontWeight.bold,
                     fontSize: 16,
-                    color: isDark ? Colors.white : Colors.black87,
+                    color: Theme.of(context).colorScheme.onSurface,
                   ),
                 ),
                 const SizedBox(height: 8),
@@ -170,9 +168,7 @@ class _ChatsError extends ConsumerWidget {
                       : context.l10n.listGenericError,
                   textAlign: TextAlign.center,
                   style: TextStyle(
-                    color: isDark
-                        ? Colors.white.withValues(alpha: 0.5)
-                        : Colors.black54,
+                    color: AppTheme.mutedText(context),
                   ),
                 ),
                 const SizedBox(height: 20),
@@ -182,15 +178,6 @@ class _ChatsError extends ConsumerWidget {
                     onPressed: () => ref
                         .read(conversationsNotifierProvider.notifier)
                         .refresh(),
-                    gradientColors: isDark
-                        ? const [AppTheme.ponAccent, AppTheme.ponAccent]
-                        : [
-                            Theme.of(context).colorScheme.primary,
-                            Theme.of(context).colorScheme.primaryContainer,
-                          ],
-                    glowColor: isDark
-                        ? AppTheme.ponAccent
-                        : Theme.of(context).colorScheme.primary,
                     child: Text(context.l10n.actionRetry),
                   ),
                 ),

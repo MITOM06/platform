@@ -48,8 +48,7 @@ class FileContent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final sizeStr = formatBytes(message.fileSize);
-    final onColor =
-        isSentByMe ? Colors.white : Colors.white.withValues(alpha: 0.9);
+    final onColor = isSentByMe ? Colors.white : Theme.of(context).colorScheme.onSurface;
     return GestureDetector(
       onTap: () => downloadMedia(message.fileUrl),
       child: ConstrainedBox(

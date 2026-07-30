@@ -34,14 +34,14 @@ class ArchivedTab extends ConsumerWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(Icons.cloud_off_outlined,
-                  size: 48, color: Colors.redAccent),
+              Icon(Icons.cloud_off_outlined,
+                  size: 48, color: Theme.of(context).colorScheme.error),
               const SizedBox(height: 16),
               Text(
                 context.l10n.listLoadFailed,
                 style: TextStyle(
                   fontWeight: FontWeight.bold,
-                  color: isDark ? Colors.white : Colors.black87,
+                  color: Theme.of(context).colorScheme.onSurface,
                 ),
               ),
               const SizedBox(height: 16),
@@ -67,7 +67,7 @@ class ArchivedTab extends ConsumerWidget {
             );
             return RefreshIndicator(
               color: accent,
-              backgroundColor: isDark ? AppTheme.darkSurface : Colors.white,
+              backgroundColor: Theme.of(context).colorScheme.surface,
               onRefresh: () async =>
                   ref.invalidate(archivedConversationsProvider),
               child: conversations.isEmpty
@@ -114,7 +114,7 @@ class _EmptyArchived extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
-                  color: isDark ? Colors.white70 : Colors.black87,
+                  color: Theme.of(context).colorScheme.onSurface,
                 ),
               ),
             ],

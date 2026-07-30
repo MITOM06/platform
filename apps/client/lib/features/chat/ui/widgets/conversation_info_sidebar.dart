@@ -50,12 +50,8 @@ class ConversationInfoSidebar extends ConsumerWidget {
     final avatarLetter =
         displayName.isNotEmpty ? displayName[0].toUpperCase() : '?';
 
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
     return Container(
-      color: isDark
-          ? AppTheme.darkSurface.withValues(alpha: 0.95)
-          : Theme.of(context).colorScheme.surface,
+      color: Theme.of(context).colorScheme.surface,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -73,10 +69,10 @@ class ConversationInfoSidebar extends ConsumerWidget {
             alignment: Alignment.centerLeft,
             child: Text(
               context.l10n.detailsTitle,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 16,
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
+                fontWeight: FontWeight.w600,
+                color: Theme.of(context).colorScheme.onSurface,
               ),
             ),
           ),
@@ -125,15 +121,14 @@ class ConversationInfoSidebar extends ConsumerWidget {
     String? otherUserId,
     String currentUserId,
   ) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final textColor = isDark ? Colors.white70 : Colors.black87;
+    final textColor = Theme.of(context).colorScheme.onSurface;
     // Admin/Owner capability gates the shared-assistant settings (Persona /
     // Memory / Skills). Mirrors web `useHasCapability('MANAGE_WORKSPACE')`.
     final canManage = ref.watch(hasCapabilityProvider('MANAGE_WORKSPACE'));
     final expansionTheme = ExpansionTileThemeData(
       iconColor: textColor,
       collapsedIconColor: textColor,
-      textColor: isDark ? Colors.white : Colors.black87,
+      textColor: Theme.of(context).colorScheme.onSurface,
       collapsedTextColor: textColor,
       tilePadding: EdgeInsets.zero,
       childrenPadding: const EdgeInsets.only(bottom: 8),
@@ -294,28 +289,28 @@ class ConversationInfoSidebar extends ConsumerWidget {
               if (!isGroup && !isAi && otherUserId != null)
                 ListTile(
                   dense: true,
-                  leading: const Icon(Icons.block_outlined, size: 18,
-                      color: Colors.redAccent),
+                  leading: Icon(Icons.block_outlined, size: 18,
+                      color: Theme.of(context).colorScheme.error),
                   title: Text(context.l10n.blockUser,
-                      style: const TextStyle(color: Colors.redAccent)),
+                      style: TextStyle(color: Theme.of(context).colorScheme.error)),
                   onTap: () =>
                       context.push('/user/$otherUserId?conversationId=$conversationId'),
                 ),
               if (isGroup)
                 ListTile(
                   dense: true,
-                  leading: const Icon(Icons.exit_to_app_outlined, size: 18,
-                      color: Colors.redAccent),
+                  leading: Icon(Icons.exit_to_app_outlined, size: 18,
+                      color: Theme.of(context).colorScheme.error),
                   title: Text(context.l10n.leaveGroup,
-                      style: const TextStyle(color: Colors.redAccent)),
+                      style: TextStyle(color: Theme.of(context).colorScheme.error)),
                   onTap: () => context.push('/group-info/$conversationId'),
                 ),
               ListTile(
                 dense: true,
-                leading: const Icon(Icons.delete_outline, size: 18,
-                    color: Colors.redAccent),
+                leading: Icon(Icons.delete_outline, size: 18,
+                    color: Theme.of(context).colorScheme.error),
                 title: Text(context.l10n.deleteConversation,
-                    style: const TextStyle(color: Colors.redAccent)),
+                    style: TextStyle(color: Theme.of(context).colorScheme.error)),
                 onTap: () => _deleteConversation(context, ref),
               ),
             ],

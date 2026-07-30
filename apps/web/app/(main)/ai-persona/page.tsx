@@ -242,16 +242,16 @@ export default function AiPersonaPage() {
                       {avatarUrl ? (
                         <AvatarImage src={absoluteMediaUrl(avatarUrl)} alt={name} />
                       ) : (
-                        <AvatarFallback className="text-2xl bg-primary text-white">
+                        <AvatarFallback className="text-2xl bg-primary text-primary-foreground">
                           <Bot className="size-8" />
                         </AvatarFallback>
                       )}
                     </Avatar>
                     <div className="absolute -bottom-1 -right-1 size-6 rounded-full bg-primary border-2 border-background flex items-center justify-center">
                       {uploading ? (
-                        <Loader2 className="size-3 text-white animate-spin" />
+                        <Loader2 className="size-3 text-primary-foreground animate-spin" />
                       ) : (
-                        <Camera className="size-3 text-white" />
+                        <Camera className="size-3 text-primary-foreground" />
                       )}
                     </div>
                   </button>
@@ -306,7 +306,7 @@ export default function AiPersonaPage() {
                 <Button
                   onClick={handleSave}
                   disabled={isBusy}
-                  className="w-full bg-primary hover:opacity-90 text-white font-semibold h-11"
+                  className="w-full bg-primary hover:opacity-90 text-primary-foreground font-semibold h-11"
                 >
                   {saveMutation.isPending ? (
                     <Loader2 className="size-4 mr-2 animate-spin" />

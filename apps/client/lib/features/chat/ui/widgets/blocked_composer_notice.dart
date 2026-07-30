@@ -9,21 +9,21 @@ class BlockedComposerNotice extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      color: AppTheme.darkSurface.withValues(alpha: 0.8),
+      color: Theme.of(context).colorScheme.surface,
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
       child: SafeArea(
         top: false,
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.block_rounded, color: Colors.white38, size: 18),
+            Icon(Icons.block_rounded, color: AppTheme.mutedText(context), size: 18),
             const SizedBox(width: 8),
             Flexible(
               child: Text(
                 context.l10n.blockedComposerNotice,
                 textAlign: TextAlign.center,
                 style: TextStyle(
-                  color: Colors.white.withValues(alpha: 0.6),
+                  color: AppTheme.mutedText(context),
                   fontSize: 13,
                 ),
               ),

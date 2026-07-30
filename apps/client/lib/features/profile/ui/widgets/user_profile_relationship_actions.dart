@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/l10n/l10n_ext.dart';
-import '../../../../core/theme/app_theme.dart';
 import '../../../../core/widgets/pon_widgets.dart';
 import '../../../friends/data/friends_repository.dart';
 import '../../../friends/domain/friends_provider.dart';
@@ -58,8 +57,6 @@ class RelationshipActions extends ConsumerWidget {
               const SizedBox(width: 12),
               Expanded(
                 child: PonButton(
-                  gradientColors: const [AppTheme.ponAccent, AppTheme.ponAccent],
-                  glowColor: AppTheme.ponAccent,
                   onPressed: busy ? null : () => onFriendAction(rel),
                   child: Text(friendLabel),
                 ),
@@ -73,12 +70,12 @@ class RelationshipActions extends ConsumerWidget {
               onPressed: busy ? null : () => onBlockAction(rel),
               icon: Icon(
                 rel.iBlocked ? Icons.lock_open_rounded : Icons.block_rounded,
-                color: Colors.redAccent,
+                color: Theme.of(context).colorScheme.error,
                 size: 18,
               ),
               label: Text(
                 rel.iBlocked ? context.l10n.unblockUser : context.l10n.blockUser,
-                style: const TextStyle(color: Colors.redAccent),
+                style: TextStyle(color: Theme.of(context).colorScheme.error),
               ),
             ),
           ),

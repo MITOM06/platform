@@ -6,9 +6,31 @@
 >
 > **Last updated:** 2026-07-30 — direction locked; **Layer 1 executed** (commit `86ca2212`),
 > **Layer 2 executed** (commit `a26f492c`), and the **L3-pre cross-cutting chrome sweep executed**
-> (commit `11d641aa`). The old neon brand is fully gone from both apps, and so are all elevation
-> shadows, glass blur, and candy radii. Next un-written plans: Layer 3 per-screen batches. **None of
-> this has been visually confirmed on a real screen yet — do that before starting Layer 3.**
+> (commit `11d641aa`), **Layer 3 batches 1 (Auth), 2a+2b (Chat core), 3 (Settings/Profile) and
+> 4 (AI features), 5 (Admin) and 6 (Remainder)** executed, plus the **final app-wide pass**
+> (`plans/2026-07-30-ui-redesign-final-pass.md`). **The redesign programme is code-complete.**
+>
+> Programme-wide audit now reads 0 for: no-op compat params, `Colors.redAccent`, every old neon hex,
+> the rejected dark-indigo `#1A1A2E`, hand-copied accent hexes, and `#00e5ff` anywhere including the
+> backend. The only decorative Material colour left is `call_screen`'s `grey.shade900` video
+> backdrop, which is dark-by-design.
+>
+> **What is NOT done: nobody has looked at it.** All 11 commits were verified with analyze/test/build
+> and computed contrast ratios — none of which catch "looks wrong". The owner has taken E2E testing.
+>
+> **Do not assume the old brand is fully dead.** Each batch so far has found another old-brand or
+> off-palette literal that earlier layers missed, because L1/L2 only renamed *symbols* while these
+> were *local literals*: batch 2b found neon cyan `#4FE3FF`, batch 3 found neon cyan `#00E5FF` plus
+> the rejected dark-indigo `#1A1A2E` and a violet `rgba(180,127,255,…)` on web. Grep every new batch
+> for raw hex/rgba before declaring it clean.
+>
+> **None of this has been visually confirmed on a real screen yet** — auth, chat and settings are the
+> three flows most worth eyeballing before continuing.
+>
+> **Lesson from batch 1: do not trust a previous layer's "done" claim without grepping.** Layer 2
+> reported every aura orb and brand gradient removed, but all 6 Flutter auth screens still had both,
+> plus a second accent and hardcoded `Colors.white` that made them illegible in light mode. Verify
+> per-batch with a grep, don't assume.
 
 ---
 
@@ -133,14 +155,78 @@ Not yet written. Chrome (shadow/glass/radius) is already handled by L3-pre — e
 owns its screen's spacing, typography, layout, the remaining oversized Flutter radii inside
 per-screen widgets (37 sites), and the ad-hoc text-alpha → token audit. Proposed batches (each =
 one Claude Code session, one plan.md):
-1. Auth — `apps/client/lib/features/auth/` (6 screens) + `apps/web/app/(auth)/*` (5 pages)
-2. Chat core — `apps/client/lib/features/chat/` (13 screens) + `apps/web/app/(main)/conversations/*`
-3. Settings/Profile — `apps/client/lib/features/settings/`, `profile/` (6) + web equivalents (~6)
-4. AI features — `ai_context/`, `ai_hub/`, `assistant/` (5 Flutter) + `ai-context/`, `ai-hub/`,
-   `assistant/*`, `ai-persona/`, `ai-memory/` (8 web pages)
-5. Admin console — `apps/client/lib/features/admin/` (1 shell, many tabs) + `apps/web/app/(main)/admin/*` (9 pages)
-6. Remainder — friends, reminders, help, integrations, skills, legal, explore, shared-media,
-   token-usage, blocked, archived
+1. ~~Auth~~ ✅ **done** — `plans/2026-07-30-ui-redesign-l3-batch1-auth.md`. Key finding: the two
+   platforms had drifted badly — web auth was already clean from Layer 2, while **all 6 Flutter auth
+   screens still had the neon legacy and were illegible in light mode** (hardcoded `Colors.white` on
+   the `#F5F2ED` page). Also removed a second accent (amber), the accent aura orbs Layer 2 missed,
+   and the no-op compat params at every auth call site. Added `AppTheme.mutedText(context)` /
+   `AppTheme.hairline(context)` resolvers so screens never hardcode white/black again — **use these
+   in the remaining batches.**
+2. Chat core — **split into 2a/2b**, because this batch is *not* 13 screens: `features/chat` has
+   **79 UI files** and ~390 hardcoded colour literals.
+   - **2a ✅ done** — `plans/2026-07-30-ui-redesign-l3-batch2a-chat-structural.md`. Root causes +
+     high-traffic surfaces. Biggest find: the theme had **no `bottomSheetTheme`/`dialogTheme`**,
+     which is *why* ~25 call sites hardcoded a dark sheet (so sheets/dialogs rendered dark in light
+     mode). Also: the accent hex was hand-copied in **31** places instead of using `ponAccent`, and
+     a **teal `#14B8A6` second accent** lived in the external-bot avatar on both platforms.
+   - **2b ✅ done** — `plans/2026-07-30-ui-redesign-l3-batch2b-chat-longtail.md`. The long tail:
+     ~270 colour literals → tokens across 53 chrome widgets, 26 radii normalised. Found the old
+     **neon cyan `#4FE3FF` still alive** in an AI source chip (L1/L2 both missed it because it was a
+     local literal, not a symbol), plus purple/teal leftovers and two black-on-burgundy contrast
+     bugs. Also fixed a light-mode regression 2a itself introduced (dialogs lost their dark
+     background override while keeping white text).
+     ⚠️ `lib/features/chat` is **not** `dart format`-clean; do semantic edits only or the diff
+     drowns in formatting noise.
+
+**Two rules the remaining batches must inherit from 2b:**
+1. **Not every `Colors.white` is a bug.** White is *correct* on the burgundy accent (send button,
+   unread badge, bot avatar, own bubble) and on media/black scrims (viewer, call). It is *wrong* on
+   `surface`/`scaffoldBackground`. Safe split: the shade/alpha variants (`white70`, `white24`,
+   `withValues(alpha:…)`, `black87`…) are never "on accent", so they can be mapped wholesale; plain
+   `Colors.white` must be checked per site.
+2. **Mapping by alpha confuses fills with borders.** `white@5–25%` → `hairline` is right for a
+   border and wrong for a background; 2b had to walk back 4 such sites. Check each one's role.
+3. **Grep these two patterns first — they are recurring bugs, not style nits** (2b found 2, batch 3
+   found 5): `foregroundColor: Colors.black` and `onPrimary: Colors.black` on anything filled with
+   the accent. Black on burgundy is ~2:1.
+4. **A per-item colour *prop* is the real violation, not the call site.** Batch 3 found
+   `SettingsCard(glowColor:)` on Flutter and `iconBg`/`glowColor` on web — APIs that invite a second
+   accent. Replace the prop with a semantic flag (`destructive`) instead of fixing callers one by one.
+5. **Before regex-deleting a param by name, check for `required this.<name>`** — batch 3's sweep for
+   Layer 2's no-op `glowColor` also hit a local widget's genuinely-required param of the same name.
+6. **Grep the whole Material palette, not just `Colors.white|black`.** Batches 1–3 used only that
+   pattern and so never saw `Colors.grey` / `blue` / `pink` / `purple`; batch 4 found leftovers in
+   already-"finished" batch-2 and batch-3 files. Use
+   `Colors\.(grey|red|redAccent|blue|pink|purple|teal|cyan|indigo|green|amber|orange|yellow|lime|brown)`.
+   Decorative ones are now 0 app-wide; what remains is semantic (destructive/success/warning) and
+   deliberately kept.
+7. **`AppTheme.mutedText(context)` assumes the BuildContext is named `context`.** Batch 4 hit a widget
+   whose `BuildContext` was `ctx` *and* which had a field literally named `context` of another type —
+   it compiled into a type error. Check each file's `build(BuildContext …)` parameter name.
+3. ~~Settings/Profile~~ ✅ **done** — `plans/2026-07-30-ui-redesign-l3-batch3-settings-profile.md`.
+   Also swept `token-usage` (its Flutter mirror lives under `settings/`). Biggest find: the
+   *per-card colour API itself* — Flutter `SettingsCard` took a `required Color glowColor` and web
+   took `iconBg: string`, so every card could pick its own hue, and four web cards were passing a
+   violet second accent. Both now derive the tint from a `destructive` flag, giving the two
+   platforms the same API. Also: leftover **neon cyan** in the usage chart, the rejected
+   **dark-indigo `#1A1A2E`**, 4 more aura orbs, and 5 black-on-burgundy contrast bugs.
+4. ~~AI features~~ ✅ **done** — `plans/2026-07-30-ui-redesign-l3-batch4-ai-features.md`. Smallest
+   batch (15 files) because `ai_context` was written after the neon era and already used tokens.
+   Removed the `AiHubTile.accent` / `AiHubCard.iconBg` per-item colour props on both platforms and
+   flattened the assistant avatar's violet→teal gradient — **keeping the sheen**, since it is a
+   lighting effect and Layer 2 explicitly kept motion. Closed a **grep gap**: see rule 6 below.
+5. ~~Admin console~~ ✅ **done** — `plans/2026-07-30-ui-redesign-l3-batch5-admin.md`. The console was
+   hardcoded dark end-to-end (**zero** `isDark` ternaries), so it would have broken in light mode
+   exactly like auth did. Beyond the sweep it fixed a **real rendering bug**: the web usage chart set
+   `ctx.fillStyle = 'var(--primary)'`, but canvas does not resolve CSS variables, so those bars were
+   painting black. Also found the workspace's default brand colour still falling back to the old neon
+   cyan on both platforms, and a batch-3 miss (web token-usage SVG chart).
+6. ~~Remainder~~ ✅ **done** — `plans/2026-07-30-ui-redesign-l3-batch6-remainder.md`. All 7 priority
+   greps came back clean, so this batch was purely mechanical. **Layer 3 is complete.** What it did
+   surface: 17 no-op call sites still live in `features/chat` in multi-line/conditional forms that
+   batch 2's single-line regex missed — they must be cleaned before `pon_widgets.dart`'s param
+   declarations can go, which is why the final pass re-greps the whole app rather than trusting any
+   batch's "done".
 
 Each batch plan must, per `.claude/rules/sync.md`, cover its web AND Flutter mirror together (not
 split across two sessions) so the two platforms never drift.

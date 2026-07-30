@@ -43,7 +43,7 @@ class UsageDashboardPanel extends ConsumerWidget {
       ),
       data: (d) => RefreshIndicator(
         color: AppTheme.ponAccent,
-        backgroundColor: AppTheme.darkBackground,
+        backgroundColor: Theme.of(context).colorScheme.surface,
         onRefresh: () => ref.read(usageDashboardProvider.notifier).refresh(),
         child: ListView(
           padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
@@ -78,12 +78,12 @@ class _RangeLabel extends StatelessWidget {
         : context.l10n.usageThisMonth;
     return Row(
       children: [
-        const Icon(Icons.calendar_month_outlined,
-            size: 16, color: Colors.white54),
+        Icon(Icons.calendar_month_outlined,
+            size: 16, color: AppTheme.mutedText(context)),
         const SizedBox(width: 6),
         Text(text,
-            style: const TextStyle(
-                color: Colors.white70,
+            style: TextStyle(
+                color: AppTheme.mutedText(context),
                 fontSize: 14,
                 fontWeight: FontWeight.w600)),
       ],
@@ -109,7 +109,6 @@ class _HeadlineCards extends StatelessWidget {
                 label: l10n.usageTotalTokens,
                 value: fmtCount(totals.totalTokens),
                 icon: Icons.toll_outlined,
-                color: AppTheme.ponAccent,
               ),
             ),
             const SizedBox(width: 12),
@@ -118,7 +117,6 @@ class _HeadlineCards extends StatelessWidget {
                 label: l10n.usageRequests,
                 value: fmtCount(totals.requestCount),
                 icon: Icons.question_answer_outlined,
-                color: AppTheme.ponAccent,
               ),
             ),
           ],
@@ -131,7 +129,6 @@ class _HeadlineCards extends StatelessWidget {
                 label: l10n.usageEstCost,
                 value: fmtUsd(totals.estimatedCostUsd),
                 icon: Icons.attach_money_outlined,
-                color: AppTheme.ponAccent,
               ),
             ),
             const SizedBox(width: 12),
@@ -140,9 +137,7 @@ class _HeadlineCards extends StatelessWidget {
                 label: l10n.usageThumbsDownRate,
                 value: '$downPct%',
                 icon: Icons.thumb_down_alt_outlined,
-                color: feedback.thumbsDownRate >= 0.2
-                    ? Colors.redAccent
-                    : Colors.white70,
+                alert: feedback.thumbsDownRate >= 0.2,
                 subtitle: l10n.usageFeedbackBreakdown(
                     feedback.down, feedback.total),
               ),

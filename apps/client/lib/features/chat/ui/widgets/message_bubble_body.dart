@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../core/theme/app_theme.dart';
 import '../../../../core/l10n/l10n_ext.dart';
 import '../../domain/chat_state.dart';
 import 'ai_message_parts.dart';
@@ -42,7 +43,7 @@ class MessageBubbleBody extends StatelessWidget {
           Text(
             context.l10n.messageRecalled,
             style: TextStyle(
-              color: Colors.white.withValues(alpha: 0.55),
+              color: AppTheme.mutedText(context),
               fontSize: 14,
               fontStyle: FontStyle.italic,
             ),
@@ -93,13 +94,13 @@ class MessageBubbleBody extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               const Icon(Icons.warning_amber_rounded,
-                  color: Color(0xFFE5484D), size: 16),
+                  color: AppTheme.darkDanger, size: 16),
               const SizedBox(width: 6),
               Flexible(
                 child: Text(
                   context.l10n.aiErrStreamInterrupted,
                   style: const TextStyle(
-                      color: Color(0xFFE5484D), fontSize: 14),
+                      color: AppTheme.darkDanger, fontSize: 14),
                 ),
               ),
             ],
@@ -109,13 +110,13 @@ class MessageBubbleBody extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               const Icon(Icons.warning_amber_rounded,
-                  color: Color(0xFFE5484D), size: 16),
+                  color: AppTheme.darkDanger, size: 16),
               const SizedBox(width: 6),
               Flexible(
                 child: Text(
                   context.l10n.aiErrUnavailable,
                   style: const TextStyle(
-                      color: Color(0xFFE5484D), fontSize: 14),
+                      color: AppTheme.darkDanger, fontSize: 14),
                 ),
               ),
             ],
@@ -125,13 +126,13 @@ class MessageBubbleBody extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               const Icon(Icons.warning_amber_rounded,
-                  color: Color(0xFFE5484D), size: 16),
+                  color: AppTheme.darkDanger, size: 16),
               const SizedBox(width: 6),
               Flexible(
                 child: Text(
                   context.l10n.aiError,
                   style: const TextStyle(
-                      color: Color(0xFFE5484D), fontSize: 14),
+                      color: AppTheme.darkDanger, fontSize: 14),
                 ),
               ),
             ],
@@ -165,8 +166,8 @@ class MessageBubbleBody extends StatelessWidget {
               style: TextStyle(
                 fontSize: 9.5,
                 color: isSentByMe
-                    ? Colors.white.withValues(alpha: 0.65)
-                    : Colors.white.withValues(alpha: 0.35),
+                    ? AppTheme.mutedText(context)
+                    : AppTheme.mutedText(context),
               ),
             ),
             if (message.isEdited && !message.recalled) ...[
@@ -177,8 +178,8 @@ class MessageBubbleBody extends StatelessWidget {
                   fontSize: 9.5,
                   fontStyle: FontStyle.italic,
                   color: isSentByMe
-                      ? Colors.white.withValues(alpha: 0.65)
-                      : Colors.white.withValues(alpha: 0.35),
+                      ? AppTheme.mutedText(context)
+                      : AppTheme.mutedText(context),
                 ),
               ),
             ],

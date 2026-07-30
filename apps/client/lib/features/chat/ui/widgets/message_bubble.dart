@@ -172,7 +172,7 @@ class MessageBubble extends ConsumerWidget {
                         aiPersonaName,
                         style: TextStyle(
                           fontSize: 11,
-                          color: const Color(0xFF96435B).withValues(alpha: 0.9),
+                          color: AppTheme.ponAccent.withValues(alpha: 0.9),
                           fontWeight: FontWeight.w600,
                         ),
                       ),
@@ -215,28 +215,32 @@ class MessageBubble extends ConsumerWidget {
                   decoration: (message.isSticker && !message.recalled)
                       ? null
                       : BoxDecoration(
-                          gradient: isSentByMe && !message.recalled && !message.isAiMessage
-                              ? const LinearGradient(
-                                  colors: [
-                                    AppTheme.ponAccent,
-                                    AppTheme.ponAccent
-                                  ],
-                                  begin: Alignment.topLeft,
-                                  end: Alignment.bottomRight,
-                                )
-                              : null,
+                          // Own bubble = flat accent (was a degenerate
+                          // [accent, accent] gradient). The AI-state tints are
+                          // derived from theme tokens so they also work in
+                          // light mode, where the old hardcoded dark hexes
+                          // (#3D1515 / #3D2800 / #3A2A2C) looked broken.
                           color: message.isAiError ||
                                   message.isAiStreamInterrupted ||
                                   message.isAiUnavailable
-                              ? const Color(0xFF3D1515)
+                              ? Theme.of(context)
+                                  .colorScheme
+                                  .error
+                                  .withValues(alpha: 0.14)
                               : message.isAiQuotaExceeded ||
                                       message.isAiRateLimited
-                                  ? const Color(0xFF3D2800)
+                                  ? const Color(0xFFFFB74D)
+                                      .withValues(alpha: 0.16)
                                   : message.isAiMessage && !message.recalled
-                                      ? const Color(0xFF3A2A2C)
-                                  : isSentByMe && !message.recalled
-                                      ? null
-                                      : AppTheme.darkSurface.withValues(alpha: 0.7),
+                                      ? (Theme.of(context).brightness ==
+                                              Brightness.dark
+                                          ? AppTheme.darkAccentTint
+                                          : AppTheme.lightAccentTint)
+                                      : isSentByMe && !message.recalled
+                                          ? AppTheme.ponAccent
+                                          : Theme.of(context)
+                                              .colorScheme
+                                              .surface,
                           borderRadius: BorderRadius.only(
                             topLeft: const Radius.circular(14),
                             topRight: const Radius.circular(14),
@@ -248,8 +252,7 @@ class MessageBubble extends ConsumerWidget {
                           border: isSentByMe && !message.recalled
                               ? null
                               : Border.all(
-                                  color: AppTheme.darkBorder
-                                      .withValues(alpha: 0.4),
+                                  color: AppTheme.hairline(context),
                                   width: 1,
                                 ),
                         ),
@@ -315,8 +318,8 @@ class _SelectCheck extends StatelessWidget {
           color: selected
               ? AppTheme.ponAccent
               : Theme.of(context).brightness == Brightness.dark
-                  ? Colors.white38
-                  : Colors.black38,
+                  ? AppTheme.mutedText(context)
+                  : AppTheme.mutedText(context),
           width: 1.5,
         ),
       ),

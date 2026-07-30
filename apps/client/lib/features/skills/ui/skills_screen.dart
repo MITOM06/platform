@@ -19,15 +19,14 @@ class SkillsScreen extends ConsumerWidget {
     final skillsAsync = ref.watch(skillsProvider);
 
     return Scaffold(
-      backgroundColor: AppTheme.darkBackground,
+      backgroundColor: Theme.of(context).colorScheme.surface,
       appBar: AppBar(
-        backgroundColor: AppTheme.darkBackground,
+        backgroundColor: Theme.of(context).colorScheme.surface,
         title: Text(
           l10n.skillsTitle,
-          style: const TextStyle(
-              color: Colors.white, fontWeight: FontWeight.bold),
+          style: TextStyle(
+              color: Theme.of(context).colorScheme.onSurface, fontWeight: FontWeight.bold),
         ),
-        iconTheme: const IconThemeData(color: Colors.white),
       ),
       body: skillsAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
@@ -41,7 +40,7 @@ class SkillsScreen extends ConsumerWidget {
             Text(
               l10n.skillsSubtitle,
               style: TextStyle(
-                color: Colors.white.withValues(alpha: 0.6),
+                color: AppTheme.mutedText(context),
                 fontSize: 14,
                 height: 1.4,
               ),
@@ -164,8 +163,6 @@ class _SkillTile extends StatelessWidget {
     ].join(' · ');
 
     return PonCard(
-      glowColor: enabled ? AppTheme.ponAccent : AppTheme.ponAccent,
-      glowStrength: enabled ? 4 : 1,
       borderRadius: 16,
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -177,7 +174,7 @@ class _SkillTile extends StatelessWidget {
               height: 40,
               alignment: Alignment.center,
               decoration: BoxDecoration(
-                color: AppTheme.darkBackground,
+                color: Theme.of(context).colorScheme.surface,
                 borderRadius: BorderRadius.circular(11),
                 border: Border.all(color: AppTheme.darkBorder),
               ),
@@ -266,12 +263,12 @@ class _ErrorState extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(Icons.cloud_off,
-                size: 56, color: Colors.white.withValues(alpha: 0.3)),
+                size: 56, color: AppTheme.mutedText(context)),
             const SizedBox(height: 12),
             Text(
               message,
               textAlign: TextAlign.center,
-              style: TextStyle(color: Colors.white.withValues(alpha: 0.6)),
+              style: TextStyle(color: AppTheme.mutedText(context)),
             ),
             const SizedBox(height: 16),
             SizedBox(

@@ -20,10 +20,6 @@ class ConnectorPermissionsSheet extends ConsumerStatefulWidget {
     return showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
-      backgroundColor: AppTheme.darkSurface,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
       builder: (_) => ConnectorPermissionsSheet(item: item),
     );
   }
@@ -101,8 +97,8 @@ class _ConnectorPermissionsSheetState
           children: [
             Text(
               l10n.permissionsTitle,
-              style: const TextStyle(
-                color: Colors.white,
+              style: TextStyle(
+                color: Theme.of(context).colorScheme.onSurface,
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
               ),
@@ -111,7 +107,7 @@ class _ConnectorPermissionsSheetState
             Text(
               l10n.permissionsSubtitle,
               style: TextStyle(
-                color: Colors.white.withValues(alpha: 0.55),
+                color: AppTheme.mutedText(context),
                 fontSize: 13,
               ),
             ),
@@ -144,7 +140,7 @@ class _ConnectorPermissionsSheetState
             if (_error != null) ...[
               Text(
                 _error!,
-                style: const TextStyle(color: Colors.redAccent, fontSize: 12),
+                style: TextStyle(color: Theme.of(context).colorScheme.error, fontSize: 12),
               ),
               const SizedBox(height: 12),
             ],
@@ -185,8 +181,8 @@ class _PermTile extends StatelessWidget {
       onChanged: onChanged,
       title: Text(
         title,
-        style: const TextStyle(
-          color: Colors.white,
+        style: TextStyle(
+          color: Theme.of(context).colorScheme.onSurface,
           fontWeight: FontWeight.w600,
           fontSize: 14.5,
         ),
@@ -194,7 +190,7 @@ class _PermTile extends StatelessWidget {
       subtitle: Text(
         description,
         style: TextStyle(
-          color: Colors.white.withValues(alpha: 0.5),
+          color: AppTheme.mutedText(context),
           fontSize: 12,
         ),
       ),

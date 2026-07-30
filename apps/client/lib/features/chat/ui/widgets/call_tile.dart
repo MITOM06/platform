@@ -26,9 +26,9 @@ class CallTile extends StatelessWidget {
     final showVideo = hasVideo && renderer != null;
     return Container(
       decoration: BoxDecoration(
-        color: AppTheme.darkSurface,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppTheme.darkBorder.withValues(alpha: 0.6)),
+        color: Theme.of(context).colorScheme.surface,
+        borderRadius: BorderRadius.circular(AppTheme.radiusCard),
+        border: Border.all(color: AppTheme.hairline(context)),
       ),
       clipBehavior: Clip.antiAlias,
       child: Stack(
@@ -47,10 +47,10 @@ class CallTile extends StatelessWidget {
                 backgroundColor: AppTheme.ponAccent.withValues(alpha: 0.25),
                 child: Text(
                   label.isNotEmpty ? label[0].toUpperCase() : '?',
-                  style: const TextStyle(
-                    color: Colors.white,
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.onSurface,
                     fontSize: 28,
-                    fontWeight: FontWeight.bold,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
               ),

@@ -14,9 +14,6 @@ class WebSettingsButton extends StatelessWidget {
       barrierDismissible: true,
       builder: (dialogContext) => Dialog(
         clipBehavior: Clip.antiAlias,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-        ),
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 480, maxHeight: 680),
           child: const SettingsScreen(isDialog: true),
@@ -34,7 +31,7 @@ class WebSettingsButton extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.all(12),
       child: Material(
-        color: isDark ? AppTheme.darkSurface : Colors.white,
+        color: Theme.of(context).colorScheme.surface,
         shape: const CircleBorder(),
         elevation: 2,
         child: IconButton(

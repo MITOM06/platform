@@ -12,6 +12,10 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { useWorkspace, useUpdateWorkspace } from '@/lib/hooks/use-admin'
 import { useCatalog } from '@/lib/hooks/use-connectors'
 
+// Fallback brand colour for a workspace that has not set one. Was the old
+// neon cyan #00e5ff, so a fresh deployment branded itself off-palette.
+const WORKSPACE_DEFAULT_COLOR = '#96435B'
+
 /** Workspace settings: name, branding, feature flags, connector allow-list. */
 export function WorkspaceSettings() {
   const t = useTranslations('admin')
@@ -22,7 +26,7 @@ export function WorkspaceSettings() {
   const [prevWs, setPrevWs] = useState(ws)
   const [name, setName] = useState(ws?.name ?? '')
   const [logoUrl, setLogoUrl] = useState(ws?.logoUrl ?? '')
-  const [primaryColor, setPrimaryColor] = useState(ws?.primaryColor ?? '#00e5ff')
+  const [primaryColor, setPrimaryColor] = useState(ws?.primaryColor ?? WORKSPACE_DEFAULT_COLOR)
   const [features, setFeatures] = useState<Record<string, boolean>>(ws?.features ?? {})
   const [allowList, setAllowList] = useState<string[]>(ws?.connectorAllowList ?? [])
 
@@ -31,7 +35,7 @@ export function WorkspaceSettings() {
     setPrevWs(ws)
     setName(ws.name ?? '')
     setLogoUrl(ws.logoUrl ?? '')
-    setPrimaryColor(ws.primaryColor ?? '#00e5ff')
+    setPrimaryColor(ws.primaryColor ?? WORKSPACE_DEFAULT_COLOR)
     setFeatures(ws.features ?? {})
     setAllowList(ws.connectorAllowList ?? [])
   }

@@ -34,8 +34,6 @@ class DirectoryCard extends StatelessWidget {
     final connected = item.isConnected;
 
     return PonCard(
-      glowColor: connected ? AppTheme.onlineGreen : AppTheme.ponAccent,
-      glowStrength: connected ? 5 : 2,
       borderRadius: 16,
       child: Padding(
         padding: const EdgeInsets.all(18),
@@ -53,8 +51,8 @@ class DirectoryCard extends StatelessWidget {
                     children: [
                       Text(
                         entry.name,
-                        style: const TextStyle(
-                          color: Colors.white,
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.onSurface,
                           fontWeight: FontWeight.bold,
                           fontSize: 16,
                         ),
@@ -64,7 +62,7 @@ class DirectoryCard extends StatelessWidget {
                       Text(
                         '${_tierLabel(context)} · ${directoryAuthModeToString(entry.authMode)}',
                         style: TextStyle(
-                          color: Colors.white.withValues(alpha: 0.4),
+                          color: AppTheme.mutedText(context),
                           fontSize: 10.5,
                           fontFamily: 'monospace',
                         ),
@@ -75,16 +73,16 @@ class DirectoryCard extends StatelessWidget {
                 if (isAdmin) ...[
                   IconButton(
                     visualDensity: VisualDensity.compact,
-                    icon: const Icon(Icons.edit_outlined,
-                        size: 18, color: Colors.white54),
+                    icon: Icon(Icons.edit_outlined,
+                        size: 18, color: AppTheme.mutedText(context)),
                     tooltip: l10n.directoryEdit,
                     onPressed: onEdit,
                   ),
                   if (!entry.builtin)
                     IconButton(
                       visualDensity: VisualDensity.compact,
-                      icon: const Icon(Icons.delete_outline,
-                          size: 18, color: Colors.white54),
+                      icon: Icon(Icons.delete_outline,
+                          size: 18, color: AppTheme.mutedText(context)),
                       tooltip: l10n.directoryDelete,
                       onPressed: onDelete,
                     ),
@@ -97,7 +95,7 @@ class DirectoryCard extends StatelessWidget {
               maxLines: 3,
               overflow: TextOverflow.ellipsis,
               style: TextStyle(
-                color: Colors.white.withValues(alpha: 0.6),
+                color: AppTheme.mutedText(context),
                 fontSize: 13,
                 height: 1.3,
               ),
@@ -141,7 +139,7 @@ class _Monogram extends StatelessWidget {
       height: 42,
       alignment: Alignment.center,
       decoration: BoxDecoration(
-        color: AppTheme.darkBackground,
+        color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(11),
         border: Border.all(color: AppTheme.darkBorder),
       ),
@@ -183,7 +181,7 @@ class _ActionRow extends StatelessWidget {
           child: Text(
             meta,
             style: TextStyle(
-              color: Colors.white.withValues(alpha: 0.35),
+              color: AppTheme.mutedText(context),
               fontSize: 11,
               fontFamily: 'monospace',
             ),

@@ -75,8 +75,8 @@ export function AssistantEntry() {
         aria-label={t('openChat')}
       >
         <div
-          className="relative size-10 rounded-full bg-gradient-to-br from-violet-500 to-teal-400
-                     flex items-center justify-center text-white font-bold text-sm shrink-0
+          className="relative size-10 rounded-full bg-primary
+                     flex items-center justify-center text-primary-foreground font-bold text-sm shrink-0
                      overflow-hidden"
         >
           {/* Signature ambient sheen sweep — the one bold motion moment. */}

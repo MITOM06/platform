@@ -36,10 +36,6 @@ void showConversationTileMenu(
 
   showModalBottomSheet(
     context: context,
-    backgroundColor: AppTheme.darkSurface,
-    shape: const RoundedRectangleBorder(
-      borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-    ),
     builder: (sheetCtx) => SafeArea(
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -47,10 +43,8 @@ void showConversationTileMenu(
           const SizedBox(height: 8),
           if (!isAnyBot && conv.unreadCount > 0)
             ListTile(
-              leading: const Icon(Icons.mark_chat_read_outlined,
-                  color: Colors.white70),
-              title: Text(l10n.markAsRead,
-                  style: const TextStyle(color: Colors.white)),
+              leading: const Icon(Icons.mark_chat_read_outlined),
+              title: Text(l10n.markAsRead),
               onTap: () {
                 Navigator.pop(sheetCtx);
                 notifier.markConversationReadServer(conv.id);
@@ -58,10 +52,8 @@ void showConversationTileMenu(
             )
           else if (!isAnyBot)
             ListTile(
-              leading: const Icon(Icons.mark_chat_unread_outlined,
-                  color: Colors.white70),
-              title: Text(l10n.markAsUnread,
-                  style: const TextStyle(color: Colors.white)),
+              leading: const Icon(Icons.mark_chat_unread_outlined),
+              title: Text(l10n.markAsUnread),
               onTap: () {
                 Navigator.pop(sheetCtx);
                 notifier.markConversationUnreadServer(conv.id);
@@ -70,9 +62,8 @@ void showConversationTileMenu(
           // Mute: unmute directly; mute shows a duration picker bottom sheet.
           if (conv.isMuted)
             ListTile(
-              leading: const Icon(Icons.volume_up_outlined, color: Colors.white70),
-              title: Text(l10n.unmuteNotifications,
-                  style: const TextStyle(color: Colors.white)),
+              leading: const Icon(Icons.volume_up_outlined),
+              title: Text(l10n.unmuteNotifications),
               onTap: () {
                 Navigator.pop(sheetCtx);
                 notifier.toggleMuteConversation(conv.id, false);
@@ -80,9 +71,8 @@ void showConversationTileMenu(
             )
           else
             ListTile(
-              leading: const Icon(Icons.volume_off_outlined, color: Colors.white70),
-              title: Text(l10n.muteNotifications,
-                  style: const TextStyle(color: Colors.white)),
+              leading: const Icon(Icons.volume_off_outlined),
+              title: Text(l10n.muteNotifications),
               onTap: () {
                 Navigator.pop(sheetCtx);
                 _showMuteDurationSheet(context, ref, conv.id, notifier);
@@ -92,10 +82,8 @@ void showConversationTileMenu(
             leading: Icon(
                 conv.isGroup
                     ? Icons.info_outline_rounded
-                    : Icons.person_outline_rounded,
-                color: Colors.white70),
-            title: Text(conv.isGroup ? l10n.groupInfo : l10n.viewProfile,
-                style: const TextStyle(color: Colors.white)),
+                    : Icons.person_outline_rounded),
+            title: Text(conv.isGroup ? l10n.groupInfo : l10n.viewProfile),
             onTap: () {
               Navigator.pop(sheetCtx);
               if (conv.isGroup) {
@@ -108,9 +96,8 @@ void showConversationTileMenu(
           if (!conv.isGroup && otherUserId.isNotEmpty) ...[
             ListTile(
               leading:
-                  const Icon(Icons.phone_outlined, color: Colors.white70),
-              title: Text(l10n.voiceCall,
-                  style: const TextStyle(color: Colors.white)),
+                  const Icon(Icons.phone_outlined),
+              title: Text(l10n.voiceCall),
               onTap: () {
                 Navigator.pop(sheetCtx);
                 final profile =
@@ -127,9 +114,8 @@ void showConversationTileMenu(
             ),
             ListTile(
               leading:
-                  const Icon(Icons.videocam_outlined, color: Colors.white70),
-              title: Text(l10n.videoCall,
-                  style: const TextStyle(color: Colors.white)),
+                  const Icon(Icons.videocam_outlined),
+              title: Text(l10n.videoCall),
               onTap: () {
                 Navigator.pop(sheetCtx);
                 final profile =
@@ -147,9 +133,9 @@ void showConversationTileMenu(
             // Block/Unblock — paired with conversation block-archive/restore.
             if (isConvBlocked)
               ListTile(
-                leading: const Icon(Icons.lock_open_rounded, color: Colors.white70),
+                leading: const Icon(Icons.lock_open_rounded),
                 title: Text(l10n.unblockAndRestore,
-                    style: const TextStyle(color: Colors.white70)),
+                    style: TextStyle(color: AppTheme.mutedText(sheetCtx))),
                 onTap: () async {
                   Navigator.pop(sheetCtx);
                   final repo = ref.read(friendsRepositoryProvider);
@@ -160,9 +146,9 @@ void showConversationTileMenu(
               )
             else
               ListTile(
-                leading: const Icon(Icons.block_rounded, color: Colors.redAccent),
+                leading: Icon(Icons.block_rounded, color: Theme.of(context).colorScheme.error),
                 title: Text(l10n.blockAndHide,
-                    style: const TextStyle(color: Colors.redAccent)),
+                    style: TextStyle(color: Theme.of(context).colorScheme.error)),
                 onTap: () async {
                   Navigator.pop(sheetCtx);
                   final ok = await showDialog<bool>(
@@ -176,7 +162,7 @@ void showConversationTileMenu(
                             child: Text(l10n.actionCancel)),
                         FilledButton(
                           style: FilledButton.styleFrom(
-                              backgroundColor: Colors.redAccent),
+                              backgroundColor: Theme.of(context).colorScheme.error),
                           onPressed: () => Navigator.pop(ctx, true),
                           child: Text(l10n.actionConfirm),
                         ),
@@ -195,19 +181,18 @@ void showConversationTileMenu(
           if (!isConvBlocked)
             ListTile(
               leading:
-                  const Icon(Icons.archive_outlined, color: Colors.white70),
-              title: Text(l10n.archiveChat,
-                  style: const TextStyle(color: Colors.white)),
+                  const Icon(Icons.archive_outlined),
+              title: Text(l10n.archiveChat),
               onTap: () {
                 Navigator.pop(sheetCtx);
                 notifier.archiveConversation(conv.id);
               },
             ),
           ListTile(
-            leading: const Icon(Icons.delete_outline_rounded,
-                color: Colors.redAccent),
+            leading: Icon(Icons.delete_outline_rounded,
+                color: Theme.of(context).colorScheme.error),
             title: Text(l10n.deleteConversation,
-                style: const TextStyle(color: Colors.redAccent)),
+                style: TextStyle(color: Theme.of(context).colorScheme.error)),
             onTap: () {
               Navigator.pop(sheetCtx);
               notifier.deleteConversation(conv.id);
@@ -237,10 +222,6 @@ void _showMuteDurationSheet(
 
   showModalBottomSheet(
     context: context,
-    backgroundColor: AppTheme.darkSurface,
-    shape: const RoundedRectangleBorder(
-      borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-    ),
     builder: (sheetCtx) => SafeArea(
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -250,17 +231,16 @@ void _showMuteDurationSheet(
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
             child: Text(
               l10n.muteNotifications,
-              style: const TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
+              style: TextStyle(
+                color: Theme.of(sheetCtx).colorScheme.onSurface,
+                fontWeight: FontWeight.w600,
                 fontSize: 16,
               ),
             ),
           ),
           for (final option in options)
             ListTile(
-              title: Text(option.label,
-                  style: const TextStyle(color: Colors.white)),
+              title: Text(option.label),
               onTap: () {
                 Navigator.pop(sheetCtx);
                 notifier.toggleMuteConversation(

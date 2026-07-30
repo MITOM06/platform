@@ -20,10 +20,6 @@ class DirectoryAdminSheet extends ConsumerStatefulWidget {
     return showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
-      backgroundColor: AppTheme.darkSurface,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
       builder: (_) => DirectoryAdminSheet(entry: entry),
     );
   }
@@ -145,8 +141,8 @@ class _DirectoryAdminSheetState extends ConsumerState<DirectoryAdminSheet> {
           children: [
             Text(
               _isEdit ? l10n.directoryEditTitle : l10n.directoryAddTitle,
-              style: const TextStyle(
-                color: Colors.white,
+              style: TextStyle(
+                color: Theme.of(context).colorScheme.onSurface,
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
               ),
@@ -155,7 +151,7 @@ class _DirectoryAdminSheetState extends ConsumerState<DirectoryAdminSheet> {
             Text(
               l10n.directoryDialogDesc,
               style: TextStyle(
-                color: Colors.white.withValues(alpha: 0.55),
+                color: AppTheme.mutedText(context),
                 fontSize: 13,
               ),
             ),
@@ -219,7 +215,7 @@ class _DirectoryAdminSheetState extends ConsumerState<DirectoryAdminSheet> {
               Text(
                 l10n.directoryEnvHint,
                 style: TextStyle(
-                  color: Colors.white.withValues(alpha: 0.45),
+                  color: AppTheme.mutedText(context),
                   fontSize: 12,
                 ),
               ),
@@ -254,7 +250,7 @@ class _DirectoryAdminSheetState extends ConsumerState<DirectoryAdminSheet> {
             if (_error != null) ...[
               Text(
                 _error!,
-                style: const TextStyle(color: Colors.redAccent, fontSize: 12),
+                style: TextStyle(color: Theme.of(context).colorScheme.error, fontSize: 12),
               ),
               const SizedBox(height: 12),
             ],
@@ -303,7 +299,7 @@ class _EnumDropdown<T> extends StatelessWidget {
     return InputDecorator(
       decoration: InputDecoration(
         labelText: label,
-        labelStyle: const TextStyle(color: Colors.white54),
+        labelStyle: TextStyle(color: AppTheme.mutedText(context)),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: const BorderSide(color: AppTheme.darkBorder),
@@ -315,8 +311,8 @@ class _EnumDropdown<T> extends StatelessWidget {
         child: DropdownButton<T>(
           value: value,
           isExpanded: true,
-          dropdownColor: AppTheme.darkSurface,
-          style: const TextStyle(color: Colors.white, fontSize: 13),
+          dropdownColor: Theme.of(context).colorScheme.surface,
+          style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontSize: 13),
           items: [
             for (final v in values)
               DropdownMenuItem<T>(value: v, child: Text(labelOf(v))),

@@ -61,7 +61,7 @@ class OtherUserActions extends ConsumerWidget {
         ProfileActionChip(
           icon: iBlocked ? Icons.lock_open_rounded : Icons.block_rounded,
           label: context.l10n.actionBlock,
-          color: Colors.redAccent,
+          color: Theme.of(context).colorScheme.error,
           onTap: () async {
             final repo = ref.read(friendsRepositoryProvider);
             if (iBlocked) {
@@ -95,7 +95,7 @@ class OtherUserActions extends ConsumerWidget {
             child: Text(l10n.actionCancel),
           ),
           FilledButton(
-            style: FilledButton.styleFrom(backgroundColor: Colors.redAccent),
+            style: FilledButton.styleFrom(backgroundColor: Theme.of(context).colorScheme.error),
             onPressed: () => Navigator.pop(ctx, true),
             child: Text(l10n.actionConfirm),
           ),

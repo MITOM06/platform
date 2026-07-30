@@ -11,7 +11,6 @@ class ConversationAvatar extends StatelessWidget {
   final bool isGroup;
   final double size;
   final bool online;
-  final List<Color>? gradientColors;
 
   const ConversationAvatar({
     super.key,
@@ -20,13 +19,12 @@ class ConversationAvatar extends StatelessWidget {
     this.isGroup = false,
     this.size = 48,
     this.online = false,
-    this.gradientColors,
   });
 
   @override
   Widget build(BuildContext context) {
-    final colors = gradientColors ??
-        const [AppTheme.ponAccent, AppTheme.ponAccent];
+    // Flat accent fill — no decorative gradients (§2 rule 2).
+    final fill = Theme.of(context).colorScheme.primary;
     final hasImage = avatarUrl != null && avatarUrl!.isNotEmpty;
 
     Widget inner;
@@ -63,13 +61,7 @@ class ConversationAvatar extends StatelessWidget {
           alignment: Alignment.center,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            gradient: hasImage
-                ? null
-                : LinearGradient(
-                    colors: colors,
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
+            color: hasImage ? null : fill,
           ),
           child: inner,
         ),
@@ -109,12 +101,12 @@ class _LetterCircle extends StatelessWidget {
       width: size,
       height: size,
       alignment: Alignment.center,
-      color: AppTheme.darkSurface,
+      color: Theme.of(context).colorScheme.surface,
       child: Text(
         letter,
         style: TextStyle(
-          color: Colors.white,
-          fontWeight: FontWeight.bold,
+          color: Theme.of(context).colorScheme.onSurface,
+          fontWeight: FontWeight.w600,
           fontSize: size * 0.36,
         ),
       ),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../core/theme/app_theme.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -26,18 +27,24 @@ class FinalizedAiBubble extends StatelessWidget {
         MarkdownBody(
           data: content,
           styleSheet: MarkdownStyleSheet(
-            p: const TextStyle(color: Colors.white, fontSize: 15, height: 1.45),
-            code: const TextStyle(
-              color: Color(0xFF96435B),
-              backgroundColor: Color(0x33B47FFF),
+            p: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontSize: 15, height: 1.45),
+            // Inline code was tinted with a translucent purple (0x33B47FFF) —
+            // an off-palette third colour. Uses the accent tint now.
+            code: TextStyle(
+              color: AppTheme.ponAccent,
+              backgroundColor: Theme.of(context).brightness == Brightness.dark
+                  ? AppTheme.darkAccentTint
+                  : AppTheme.lightAccentTint,
               fontSize: 13,
             ),
             codeblockDecoration: BoxDecoration(
-              color: Colors.black.withValues(alpha: 0.35),
+              color: Theme.of(context).scaffoldBackgroundColor,
               borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: AppTheme.hairline(context), width: 1),
             ),
-            strong: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-            em: const TextStyle(color: Colors.white, fontStyle: FontStyle.italic),
+            strong: TextStyle(
+                color: Theme.of(context).colorScheme.onSurface, fontWeight: FontWeight.w600),
+            em: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontStyle: FontStyle.italic),
           ),
         ),
         if (sources != null && sources!.isNotEmpty)
@@ -82,7 +89,7 @@ class _SourceChipsRow extends StatelessWidget {
     for (final s in sources) {
       if (seen.add(s.documentId)) deduped.add(s);
     }
-    final muted = Colors.white.withValues(alpha: 0.55);
+    final muted = AppTheme.mutedText(context);
     return Padding(
       padding: const EdgeInsets.only(top: 8),
       child: Column(
@@ -140,7 +147,6 @@ class _SourceChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const neonCyan = Color(0xFF4FE3FF);
     return Material(
       color: Colors.transparent,
       child: InkWell(
@@ -150,15 +156,15 @@ class _SourceChip extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
           constraints: const BoxConstraints(maxWidth: 220),
           decoration: BoxDecoration(
-            color: neonCyan.withValues(alpha: 0.08),
+            color: AppTheme.ponAccent.withValues(alpha: 0.08),
             borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: neonCyan.withValues(alpha: 0.35)),
+            border: Border.all(color: AppTheme.ponAccent.withValues(alpha: 0.35)),
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
               Icon(isWeb ? Icons.public : Icons.description_outlined,
-                  size: 12, color: neonCyan),
+                  size: 12, color: AppTheme.ponAccent),
               const SizedBox(width: 4),
               Flexible(
                 child: Text(
@@ -167,7 +173,7 @@ class _SourceChip extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                   style: const TextStyle(
                     fontSize: 11,
-                    color: neonCyan,
+                    color: AppTheme.ponAccent,
                   ),
                 ),
               ),

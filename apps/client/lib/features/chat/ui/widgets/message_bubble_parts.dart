@@ -86,7 +86,7 @@ class ReplyQuote extends StatelessWidget {
         overflow: TextOverflow.ellipsis,
         style: TextStyle(
           fontSize: 12.5,
-          color: Colors.white.withValues(alpha: 0.7),
+          color: AppTheme.mutedText(context),
         ),
       ),
     );
@@ -151,7 +151,7 @@ class _ReactionChip extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
           decoration: BoxDecoration(
-            color: AppTheme.darkSurface,
+            color: Theme.of(context).colorScheme.surface,
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
               color: AppTheme.ponAccent.withValues(alpha: 0.3),
@@ -187,7 +187,7 @@ class ReadTick extends StatelessWidget {
     return Icon(
       isRead ? Icons.done_all_rounded : Icons.done_rounded,
       size: 13,
-      color: isRead ? AppTheme.ponAccent : Colors.white.withValues(alpha: 0.4),
+      color: isRead ? AppTheme.ponAccent : AppTheme.mutedText(context),
     );
   }
 }
@@ -274,15 +274,16 @@ class SystemMessage extends ConsumerWidget {
         margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 40),
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
         decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.06),
+          color: Theme.of(context).colorScheme.surface,
           borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: AppTheme.hairline(context), width: 1),
         ),
         child: Text(
           text,
           textAlign: TextAlign.center,
           style: TextStyle(
             fontSize: 11.5,
-            color: Colors.white.withValues(alpha: 0.5),
+            color: AppTheme.mutedText(context),
           ),
         ),
       ),
@@ -346,8 +347,9 @@ class _CallSystemMessage extends StatelessWidget {
         margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 40),
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
         decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.06),
+          color: Theme.of(context).colorScheme.surface,
           borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: AppTheme.hairline(context), width: 1),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
@@ -356,15 +358,15 @@ class _CallSystemMessage extends StatelessWidget {
               isVideo ? Icons.videocam : Icons.call,
               size: 14,
               color: isMissed
-                  ? Colors.redAccent.withValues(alpha: 0.8)
-                  : Colors.white.withValues(alpha: 0.5),
+                  ? Theme.of(context).colorScheme.error.withValues(alpha: 0.8)
+                  : AppTheme.mutedText(context),
             ),
             const SizedBox(width: 6),
             Text(
               text,
               style: TextStyle(
                 fontSize: 11.5,
-                color: Colors.white.withValues(alpha: 0.5),
+                color: AppTheme.mutedText(context),
               ),
             ),
           ],

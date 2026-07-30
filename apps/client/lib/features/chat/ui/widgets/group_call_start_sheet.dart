@@ -26,11 +26,7 @@ class GroupCallStartSheet extends ConsumerStatefulWidget {
   }) {
     return showModalBottomSheet(
       context: context,
-      backgroundColor: AppTheme.darkSurface,
       isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
       builder: (_) => GroupCallStartSheet(
         conversationId: conversationId,
         initialVideo: initialVideo,
@@ -75,8 +71,8 @@ class _GroupCallStartSheetState extends ConsumerState<GroupCallStartSheet> {
         children: [
           Text(
             l10n.groupCallStartTitle,
-            style: const TextStyle(
-                color: Colors.white,
+            style: TextStyle(
+                color: Theme.of(context).colorScheme.onSurface,
                 fontSize: 18,
                 fontWeight: FontWeight.bold),
           ),
@@ -106,21 +102,21 @@ class _GroupCallStartSheetState extends ConsumerState<GroupCallStartSheet> {
           SwitchListTile(
             contentPadding: EdgeInsets.zero,
             value: _aiNotetaker,
-            activeThumbColor: const Color(0xFF96435B),
+            activeThumbColor: AppTheme.ponAccent,
             onChanged: (v) => setState(() => _aiNotetaker = v),
             title: Row(
               children: [
                 const Icon(Icons.auto_awesome,
-                    color: Color(0xFF96435B), size: 18),
+                    color: AppTheme.ponAccent, size: 18),
                 const SizedBox(width: 8),
                 Text(l10n.groupCallNotetakerToggle,
-                    style: const TextStyle(color: Colors.white, fontSize: 15)),
+                    style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontSize: 15)),
               ],
             ),
             subtitle: Text(
               l10n.groupCallNotetakerHint,
               style: TextStyle(
-                  color: Colors.white.withValues(alpha: 0.5), fontSize: 12),
+                  color: AppTheme.mutedText(context), fontSize: 12),
             ),
           ),
           const SizedBox(height: 16),
@@ -162,7 +158,7 @@ class _MediaChoice extends StatelessWidget {
           borderRadius: BorderRadius.circular(14),
           color: selected
               ? AppTheme.ponAccent.withValues(alpha: 0.18)
-              : Colors.white.withValues(alpha: 0.05),
+              : Theme.of(context).scaffoldBackgroundColor,
           border: Border.all(
             color: selected
                 ? AppTheme.ponAccent
@@ -173,11 +169,11 @@ class _MediaChoice extends StatelessWidget {
         child: Column(
           children: [
             Icon(icon,
-                color: selected ? AppTheme.ponAccent : Colors.white70, size: 28),
+                color: selected ? AppTheme.ponAccent : AppTheme.mutedText(context), size: 28),
             const SizedBox(height: 6),
             Text(label,
                 style: TextStyle(
-                    color: selected ? Colors.white : Colors.white70,
+                    color: selected ? Theme.of(context).colorScheme.onSurface : AppTheme.mutedText(context),
                     fontWeight: FontWeight.w600)),
           ],
         ),

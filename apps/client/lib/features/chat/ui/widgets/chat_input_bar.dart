@@ -120,19 +120,11 @@ class _ChatInputBarState extends State<ChatInputBar> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
-    final borderColor = isDark
-        ? AppTheme.darkBorder.withValues(alpha: 0.4)
-        : Colors.black.withValues(alpha: 0.08);
-    final textColor = isDark ? Colors.white : Colors.black87;
-    final hintColor = isDark
-        ? Colors.white.withValues(alpha: 0.25)
-        : Colors.black.withValues(alpha: 0.35);
-    final fillColor = isDark
-        ? AppTheme.darkSurface.withValues(alpha: 0.6)
-        : Colors.black.withValues(alpha: 0.04);
-    final fieldBorderColor = isDark
-        ? AppTheme.darkBorder.withValues(alpha: 0.5)
-        : Colors.black.withValues(alpha: 0.1);
+    final borderColor = AppTheme.hairline(context);
+    final textColor = Theme.of(context).colorScheme.onSurface;
+    final hintColor = AppTheme.mutedText(context);
+    final fillColor = Theme.of(context).colorScheme.surface;
+    final fieldBorderColor = AppTheme.hairline(context);
 
     return Container(
       decoration: BoxDecoration(
@@ -155,13 +147,13 @@ class _ChatInputBarState extends State<ChatInputBar> {
   Widget _buildRecordingRow(bool isDark) {
     return Row(
       children: [
-        const Icon(Icons.mic, color: Colors.redAccent, size: 22),
+        Icon(Icons.mic, color: Theme.of(context).colorScheme.error, size: 22),
         const SizedBox(width: 6),
         Expanded(
           child: Text(
             '${context.l10n.recording}  ${_fmtSeconds(_recordingSeconds)}',
             style: TextStyle(
-              color: isDark ? Colors.white70 : Colors.black54,
+              color: AppTheme.mutedText(context),
               fontSize: 15,
             ),
           ),
@@ -171,7 +163,7 @@ class _ChatInputBarState extends State<ChatInputBar> {
           onPressed: _cancelRecording,
           icon: Icon(
             Icons.delete_outline_rounded,
-            color: Colors.white.withValues(alpha: 0.5),
+            color: AppTheme.mutedText(context),
           ),
         ),
         AnimatedContainer(
@@ -232,15 +224,15 @@ class _ChatInputBarState extends State<ChatInputBar> {
                   vertical: 10,
                 ),
                 border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(24),
+                  borderRadius: BorderRadius.circular(AppTheme.radiusControl),
                   borderSide: BorderSide(color: fieldBorderColor, width: 1),
                 ),
                 enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(24),
+                  borderRadius: BorderRadius.circular(AppTheme.radiusControl),
                   borderSide: BorderSide(color: fieldBorderColor, width: 1),
                 ),
                 focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(24),
+                  borderRadius: BorderRadius.circular(AppTheme.radiusControl),
                   borderSide:
                       const BorderSide(color: AppTheme.ponAccent, width: 1.5),
                 ),

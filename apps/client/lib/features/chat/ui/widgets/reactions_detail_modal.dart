@@ -12,10 +12,6 @@ void showReactionsDetailModal(BuildContext context, MessageModel message) {
   if (message.reactions.isEmpty) return;
   showModalBottomSheet(
     context: context,
-    backgroundColor: AppTheme.darkSurface,
-    shape: const RoundedRectangleBorder(
-      borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-    ),
     isScrollControlled: true,
     builder: (_) => ReactionsDetailModal(message: message),
   );
@@ -66,17 +62,17 @@ class _ReactionsDetailModalState extends ConsumerState<ReactionsDetailModal>
             width: 40,
             height: 4,
             decoration: BoxDecoration(
-              color: Colors.white24,
+              color: AppTheme.hairline(context),
               borderRadius: BorderRadius.circular(2),
             ),
           ),
           const SizedBox(height: 12),
           Text(
             context.l10n.reactionsDetail,
-            style: const TextStyle(
+            style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.bold,
-                color: Colors.white),
+                color: Theme.of(context).colorScheme.onSurface),
           ),
           const SizedBox(height: 8),
           TabBar(
@@ -89,7 +85,7 @@ class _ReactionsDetailModalState extends ConsumerState<ReactionsDetailModal>
                     ))
                 .toList(),
             labelColor: AppTheme.ponAccent,
-            unselectedLabelColor: Colors.white54,
+            unselectedLabelColor: AppTheme.mutedText(context),
             indicatorColor: AppTheme.ponAccent,
           ),
           Expanded(
@@ -140,7 +136,7 @@ class _ReactorTile extends ConsumerWidget {
         fallbackLetter: name.isNotEmpty ? name[0].toUpperCase() : '?',
         size: 40,
       ),
-      title: Text(name, style: const TextStyle(color: Colors.white)),
+      title: Text(name),
     );
   }
 }

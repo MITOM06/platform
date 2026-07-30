@@ -71,12 +71,12 @@ class _VoiceMessageBubbleState extends State<VoiceMessageBubble> {
     final posMs = _position.inMilliseconds;
     final sliderVal = totalMs > 0 ? (posMs / totalMs).clamp(0.0, 1.0) : 0.0;
 
-    final iconColor = widget.isSentByMe ? Colors.white : Colors.white70;
+    final iconColor = widget.isSentByMe ? Colors.white : AppTheme.mutedText(context);
     final trackActive =
         widget.isSentByMe ? Colors.white : AppTheme.ponAccent;
     final trackInactive = widget.isSentByMe
-        ? Colors.white.withValues(alpha: 0.3)
-        : Colors.white.withValues(alpha: 0.2);
+        ? AppTheme.mutedText(context)
+        : AppTheme.hairline(context);
 
     return SizedBox(
       width: 220,

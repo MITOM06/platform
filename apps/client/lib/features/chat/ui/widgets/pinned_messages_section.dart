@@ -47,7 +47,7 @@ class PinnedMessagesSection extends ConsumerWidget {
                 Text(
                   context.l10n.pinnedMessagesTitle,
                   style: TextStyle(
-                    color: Colors.white.withValues(alpha: 0.5),
+                    color: AppTheme.mutedText(context),
                     fontWeight: FontWeight.bold,
                     fontSize: 13,
                   ),
@@ -86,19 +86,19 @@ class _PinnedRow extends ConsumerWidget {
           size: 18, color: AppTheme.ponAccent),
       title: Text(
         senderName,
-        style: const TextStyle(
-            color: Colors.white, fontWeight: FontWeight.w600, fontSize: 13),
+        style: TextStyle(
+            color: Theme.of(context).colorScheme.onSurface, fontWeight: FontWeight.w600, fontSize: 13),
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
       ),
       subtitle: Text(
         preview,
-        style: TextStyle(color: Colors.white.withValues(alpha: 0.6), fontSize: 12),
+        style: TextStyle(color: AppTheme.mutedText(context), fontSize: 12),
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
       ),
       trailing: IconButton(
-        icon: const Icon(Icons.close, size: 18, color: Colors.white54),
+        icon: Icon(Icons.close, size: 18, color: AppTheme.mutedText(context)),
         tooltip: context.l10n.unpinMessage,
         onPressed: () => ref
             .read(chatNotifierProvider(conversationId).notifier)

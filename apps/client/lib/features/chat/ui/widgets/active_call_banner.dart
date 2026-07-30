@@ -57,8 +57,8 @@ class ActiveCallBanner extends ConsumerWidget {
               Expanded(
                 child: Text(
                   context.l10n.activeCallBanner(info.participantCount),
-                  style: const TextStyle(
-                      color: Colors.white,
+                  style: TextStyle(
+                      color: Theme.of(context).colorScheme.onSurface,
                       fontSize: 13,
                       fontWeight: FontWeight.w500),
                 ),

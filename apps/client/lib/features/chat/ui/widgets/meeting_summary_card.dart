@@ -36,7 +36,7 @@ class MeetingSummaryBubble extends ConsumerWidget {
                     'PON AI',
                     style: TextStyle(
                       fontSize: 11,
-                      color: const Color(0xFF96435B).withValues(alpha: 0.9),
+                      color: AppTheme.ponAccent.withValues(alpha: 0.9),
                       fontWeight: FontWeight.w600,
                     ),
                   ),
@@ -106,10 +106,10 @@ class MeetingSummaryCard extends StatelessWidget {
     return Container(
       constraints: const BoxConstraints(maxWidth: 360),
       decoration: BoxDecoration(
-        color: const Color(0xFF3A2A2C).withValues(alpha: 0.55),
-        borderRadius: BorderRadius.circular(16),
+        color: AppTheme.darkAccentTint.withValues(alpha: 0.55),
+        borderRadius: BorderRadius.circular(AppTheme.radiusCard),
         border:
-            Border.all(color: const Color(0xFF96435B).withValues(alpha: 0.5)),
+            Border.all(color: AppTheme.ponAccent.withValues(alpha: 0.5)),
       ),
       padding: const EdgeInsets.all(14),
       child: Column(
@@ -120,15 +120,15 @@ class MeetingSummaryCard extends StatelessWidget {
           Row(
             children: [
               const Icon(Icons.auto_awesome,
-                  color: Color(0xFF96435B), size: 18),
+                  color: AppTheme.ponAccent, size: 18),
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
                   context.l10n.meetingSummaryTitle,
-                  style: const TextStyle(
-                      color: Colors.white,
+                  style: TextStyle(
+                      color: Theme.of(context).colorScheme.onSurface,
                       fontSize: 15,
-                      fontWeight: FontWeight.bold),
+                      fontWeight: FontWeight.w600),
                 ),
               ),
             ],
@@ -137,14 +137,14 @@ class MeetingSummaryCard extends StatelessWidget {
           Text(
             _formatDuration(context, durationSec),
             style: TextStyle(
-                color: Colors.white.withValues(alpha: 0.6), fontSize: 12),
+                color: AppTheme.mutedText(context), fontSize: 12),
           ),
           if (attendees.isNotEmpty) ...[
             const SizedBox(height: 2),
             Text(
               context.l10n.meetingSummaryAttendees(attendees.join(', ')),
               style: TextStyle(
-                  color: Colors.white.withValues(alpha: 0.6), fontSize: 12),
+                  color: AppTheme.mutedText(context), fontSize: 12),
             ),
           ],
           if (overview.isNotEmpty) ...[
@@ -152,7 +152,7 @@ class MeetingSummaryCard extends StatelessWidget {
             _SectionTitle(context.l10n.meetingSummaryOverview),
             const SizedBox(height: 4),
             Text(overview,
-                style: const TextStyle(color: Colors.white, fontSize: 14)),
+                style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontSize: 14)),
           ],
           if (keyPoints.isNotEmpty) ...[
             const SizedBox(height: 12),
@@ -181,7 +181,7 @@ class _SectionTitle extends StatelessWidget {
     return Text(
       text.toUpperCase(),
       style: TextStyle(
-        color: const Color(0xFFE8B4BE).withValues(alpha: 0.9),
+        color: AppTheme.darkTintFg.withValues(alpha: 0.9),
         fontSize: 11,
         fontWeight: FontWeight.w700,
         letterSpacing: 0.6,
@@ -202,10 +202,10 @@ class _Bullet extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text('•  ',
-              style: TextStyle(color: Color(0xFF96435B), fontSize: 14)),
+              style: TextStyle(color: AppTheme.ponAccent, fontSize: 14)),
           Expanded(
             child: Text(text,
-                style: const TextStyle(color: Colors.white, fontSize: 14)),
+                style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontSize: 14)),
           ),
         ],
       ),
@@ -231,7 +231,7 @@ class _ChecklistItem extends StatelessWidget {
           ),
           Expanded(
             child: Text(text,
-                style: const TextStyle(color: Colors.white, fontSize: 14)),
+                style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontSize: 14)),
           ),
         ],
       ),

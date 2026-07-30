@@ -123,10 +123,10 @@ class ChatScreenAppBar extends ConsumerWidget implements PreferredSizeWidget {
                 children: [
                   Text(
                     displayName,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
+                      fontWeight: FontWeight.w600,
+                      color: Theme.of(context).colorScheme.onSurface,
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -138,7 +138,7 @@ class ChatScreenAppBar extends ConsumerWidget implements PreferredSizeWidget {
                           conv?.participants.length ?? 0),
                       style: TextStyle(
                         fontSize: 11,
-                        color: Colors.white.withValues(alpha: 0.4),
+                        color: AppTheme.mutedText(context),
                       ),
                     )
                   else if (isAiConversation)
@@ -146,7 +146,7 @@ class ChatScreenAppBar extends ConsumerWidget implements PreferredSizeWidget {
                       aiPersonaName,
                       style: TextStyle(
                         fontSize: 11,
-                        color: const Color(0xFF96435B).withValues(alpha: 0.9),
+                        color: AppTheme.ponAccent.withValues(alpha: 0.9),
                         fontWeight: FontWeight.w500,
                       ),
                     )
@@ -158,7 +158,7 @@ class ChatScreenAppBar extends ConsumerWidget implements PreferredSizeWidget {
                           fontSize: 11,
                           color: status.online
                               ? AppTheme.onlineGreen.withValues(alpha: 0.8)
-                              : Colors.white.withValues(alpha: 0.35),
+                              : AppTheme.mutedText(context),
                           fontWeight: status.online
                               ? FontWeight.w600
                               : FontWeight.normal,
@@ -168,7 +168,7 @@ class ChatScreenAppBar extends ConsumerWidget implements PreferredSizeWidget {
                         '...',
                         style: TextStyle(
                             fontSize: 11,
-                            color: Colors.white.withValues(alpha: 0.3)),
+                            color: AppTheme.mutedText(context)),
                       ),
                       error: (_, __) => const SizedBox.shrink(),
                     ),
@@ -180,7 +180,7 @@ class ChatScreenAppBar extends ConsumerWidget implements PreferredSizeWidget {
         actions: [
           if (isAiConversation) ...[
             PopupMenuButton<String>(
-              icon: const Icon(Icons.more_vert, color: Colors.white, size: 22),
+              icon: const Icon(Icons.more_vert, size: 22),
               onSelected: (value) {
                 if (value == 'view_memory') {
                   context.push('/ai-context');
@@ -214,7 +214,7 @@ class ChatScreenAppBar extends ConsumerWidget implements PreferredSizeWidget {
           ],
           if (!isGroup && otherUserId != null && !isAiConversation) ...[
             IconButton(
-              icon: const Icon(Icons.call_outlined, color: Colors.white, size: 22),
+              icon: const Icon(Icons.call_outlined, size: 22),
               onPressed: () => context.push('/call', extra: {
                 'targetId': otherUserId,
                 'targetName': displayName,
@@ -224,7 +224,7 @@ class ChatScreenAppBar extends ConsumerWidget implements PreferredSizeWidget {
               }),
             ),
             IconButton(
-              icon: const Icon(Icons.videocam_outlined, color: Colors.white, size: 24),
+              icon: const Icon(Icons.videocam_outlined, size: 24),
               onPressed: () => context.push('/call', extra: {
                 'targetId': otherUserId,
                 'targetName': displayName,
@@ -236,7 +236,7 @@ class ChatScreenAppBar extends ConsumerWidget implements PreferredSizeWidget {
           ],
           if (isGroup) ...[
             IconButton(
-              icon: const Icon(Icons.call_outlined, color: Colors.white, size: 22),
+              icon: const Icon(Icons.call_outlined, size: 22),
               tooltip: context.l10n.groupCallStartAction,
               onPressed: () => GroupCallStartSheet.show(
                 context,
@@ -245,7 +245,7 @@ class ChatScreenAppBar extends ConsumerWidget implements PreferredSizeWidget {
               ),
             ),
             IconButton(
-              icon: const Icon(Icons.videocam_outlined, color: Colors.white, size: 24),
+              icon: const Icon(Icons.videocam_outlined, size: 24),
               tooltip: context.l10n.groupCallStartAction,
               onPressed: () => GroupCallStartSheet.show(
                 context,
@@ -262,7 +262,7 @@ class ChatScreenAppBar extends ConsumerWidget implements PreferredSizeWidget {
                 return IconButton(
                   icon: Icon(
                     sidebarOpen ? Icons.info : Icons.info_outline,
-                    color: Colors.white,
+                    color: Theme.of(context).colorScheme.onSurface,
                     size: 22,
                   ),
                   onPressed: () => ref
@@ -271,7 +271,7 @@ class ChatScreenAppBar extends ConsumerWidget implements PreferredSizeWidget {
                 );
               }
               return IconButton(
-                icon: const Icon(Icons.info_outline, color: Colors.white, size: 22),
+                icon: const Icon(Icons.info_outline, size: 22),
                 onPressed: () {
                   Navigator.of(context).push(MaterialPageRoute(
                     builder: (context) => Scaffold(

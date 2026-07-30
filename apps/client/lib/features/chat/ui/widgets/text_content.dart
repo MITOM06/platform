@@ -49,9 +49,10 @@ class _TextContentState extends ConsumerState<TextContent> {
     _recognizers.clear();
 
     final url = urlRegex.firstMatch(widget.content)?.group(0);
-    final baseColor = widget.isSentByMe
-        ? Colors.white
-        : Colors.white.withValues(alpha: 0.9);
+    // Own bubble sits on the burgundy accent (white is correct); the incoming
+    // bubble is a theme surface, so it must use onSurface — white-on-white
+    // otherwise in light mode.
+    final baseColor = widget.isSentByMe ? Colors.white : Theme.of(context).colorScheme.onSurface;
     final baseStyle = TextStyle(color: baseColor, fontSize: 14.5, height: 1.35);
 
     // Build mention map (uid → displayName) for highlighting.
@@ -116,10 +117,10 @@ class _TextContentState extends ConsumerState<TextContent> {
         fontFamily: 'monospace',
         fontSize: 13,
         color: AppTheme.ponAccent,
-        backgroundColor: Colors.black26,
+        backgroundColor: AppTheme.mutedText(context),
       ),
       codeblockDecoration: BoxDecoration(
-        color: Colors.black26,
+        color: AppTheme.mutedText(context),
         borderRadius: BorderRadius.circular(8),
       ),
       listBullet: base,

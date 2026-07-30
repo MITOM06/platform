@@ -33,7 +33,7 @@ class NotificationPanel extends ConsumerWidget {
             width: 40,
             height: 4,
             decoration: BoxDecoration(
-              color: isDark ? Colors.white24 : Colors.black26,
+              color: AppTheme.mutedText(context),
               borderRadius: BorderRadius.circular(2),
             ),
           ),
@@ -46,7 +46,7 @@ class NotificationPanel extends ConsumerWidget {
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
-                    color: isDark ? Colors.white : Colors.black87,
+                    color: Theme.of(context).colorScheme.onSurface,
                   ),
                 ),
                 const Spacer(),
@@ -72,7 +72,7 @@ class NotificationPanel extends ConsumerWidget {
                   child: Text(
                     friendlyError(e),
                     style: TextStyle(
-                        color: isDark ? Colors.white54 : Colors.black54),
+                        color: AppTheme.mutedText(context)),
                   ),
                 ),
               ),
@@ -119,7 +119,7 @@ class _EmptyState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final muted = isDark ? Colors.white38 : Colors.black38;
+    final muted = AppTheme.mutedText(context);
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 56),
       child: Column(
@@ -147,9 +147,7 @@ class _SectionHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     final text = count != null ? '$label ($count)' : label;
     return Container(
-      color: isDark
-          ? Colors.white.withValues(alpha: 0.03)
-          : Colors.black.withValues(alpha: 0.03),
+      color: Theme.of(context).scaffoldBackgroundColor,
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
       width: double.infinity,
       child: Text(
@@ -158,7 +156,7 @@ class _SectionHeader extends StatelessWidget {
           fontSize: 11,
           fontWeight: FontWeight.w600,
           letterSpacing: 0.8,
-          color: isDark ? Colors.white38 : Colors.black38,
+          color: AppTheme.mutedText(context),
         ),
       ),
     );
@@ -278,7 +276,7 @@ class _NotificationTileState extends ConsumerState<_NotificationTile> {
           text.title,
           style: TextStyle(
             fontSize: 14,
-            color: isDark ? Colors.white : Colors.black87,
+            color: Theme.of(context).colorScheme.onSurface,
             fontWeight: n.isUnread ? FontWeight.w600 : FontWeight.normal,
           ),
         ),
@@ -291,7 +289,7 @@ class _NotificationTileState extends ConsumerState<_NotificationTile> {
                 text.body,
                 style: TextStyle(
                   fontSize: 12,
-                  color: isDark ? Colors.white60 : Colors.black54,
+                  color: AppTheme.mutedText(context),
                 ),
               ),
             ],
@@ -300,7 +298,7 @@ class _NotificationTileState extends ConsumerState<_NotificationTile> {
               _relativeTime(context, n.createdAt),
               style: TextStyle(
                 fontSize: 12,
-                color: isDark ? Colors.white54 : Colors.black54,
+                color: AppTheme.mutedText(context),
               ),
             ),
             if (n.isFriendRequest && n.relatedEntityId != null && n.isUnread) ...[

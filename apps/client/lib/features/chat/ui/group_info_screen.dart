@@ -44,9 +44,8 @@ class GroupInfoScreen extends ConsumerWidget {
         ),
         data: (conv) {
           final colorScheme = Theme.of(context).colorScheme;
-          final isDark = Theme.of(context).brightness == Brightness.dark;
           final dividerColor =
-              isDark ? Colors.white12 : Colors.black.withValues(alpha: 0.08);
+              AppTheme.hairline(context);
           final isAdmin = conv.admins.contains(currentUserId);
           return ListView(
             children: [
@@ -184,9 +183,9 @@ class GroupInfoScreen extends ConsumerWidget {
               Divider(color: dividerColor),
               ListTile(
                 leading:
-                    const Icon(Icons.logout_rounded, color: Colors.redAccent),
+                    Icon(Icons.logout_rounded, color: Theme.of(context).colorScheme.error),
                 title: Text(context.l10n.leaveGroup,
-                    style: const TextStyle(color: Colors.redAccent)),
+                    style: TextStyle(color: Theme.of(context).colorScheme.error)),
                 onTap: () => _leaveGroup(context, ref, currentUserId),
               ),
             ],
@@ -204,13 +203,10 @@ class GroupInfoScreen extends ConsumerWidget {
       newName = await showDialog<String>(
         context: context,
         builder: (ctx) => AlertDialog(
-          backgroundColor: AppTheme.darkSurface,
-          title: Text(ctx.l10n.renameGroup,
-              style: const TextStyle(color: Colors.white)),
+          title: Text(ctx.l10n.renameGroup),
           content: TextField(
             controller: controller,
             autofocus: true,
-            style: const TextStyle(color: Colors.white),
             decoration: InputDecoration(hintText: ctx.l10n.groupName),
           ),
           actions: [
@@ -269,13 +265,10 @@ class GroupInfoScreen extends ConsumerWidget {
       email = await showDialog<String>(
         context: context,
         builder: (ctx) => AlertDialog(
-          backgroundColor: AppTheme.darkSurface,
-          title: Text(ctx.l10n.addMembers,
-              style: const TextStyle(color: Colors.white)),
+          title: Text(ctx.l10n.addMembers),
           content: TextField(
             controller: controller,
             autofocus: true,
-            style: const TextStyle(color: Colors.white),
             decoration: InputDecoration(hintText: ctx.l10n.searchUsers),
           ),
           actions: [
@@ -339,18 +332,15 @@ class GroupInfoScreen extends ConsumerWidget {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: AppTheme.darkSurface,
-        title: Text(ctx.l10n.leaveGroup,
-            style: const TextStyle(color: Colors.white)),
-        content: Text(ctx.l10n.leaveGroupConfirm,
-            style: const TextStyle(color: Colors.white70)),
+        title: Text(ctx.l10n.leaveGroup),
+        content: Text(ctx.l10n.leaveGroupConfirm),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
             child: Text(ctx.l10n.actionCancel),
           ),
           FilledButton(
-            style: FilledButton.styleFrom(backgroundColor: Colors.redAccent),
+            style: FilledButton.styleFrom(backgroundColor: Theme.of(context).colorScheme.error),
             onPressed: () => Navigator.pop(ctx, true),
             child: Text(ctx.l10n.actionLeave),
           ),

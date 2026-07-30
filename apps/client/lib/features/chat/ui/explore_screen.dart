@@ -66,7 +66,7 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
                       )
                     : null,
                 border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(24)),
+                    borderRadius: BorderRadius.circular(AppTheme.radiusControl)),
                 contentPadding: const EdgeInsets.symmetric(horizontal: 16),
               ),
               onChanged: (v) => setState(() => _query = v.trim()),
@@ -153,7 +153,7 @@ class _ChannelTileState extends ConsumerState<_ChannelTile> {
         style: Theme.of(context)
             .textTheme
             .bodySmall
-            ?.copyWith(color: Colors.grey),
+            ?.copyWith(color: AppTheme.mutedText(context)),
       ),
       trailing: _joining
           ? const SizedBox(

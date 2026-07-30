@@ -60,7 +60,7 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
               ),
             ),
             labelColor: isDark ? AppTheme.ponAccent : Theme.of(context).colorScheme.primary,
-            unselectedLabelColor: isDark ? Colors.white54 : Colors.black54,
+            unselectedLabelColor: AppTheme.mutedText(context),
             labelStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
             unselectedLabelStyle: const TextStyle(fontWeight: FontWeight.normal, fontSize: 16),
             tabs: [
@@ -162,7 +162,6 @@ class _FriendsTab extends ConsumerWidget {
                 controller: controller,
                 labelText: context.l10n.searchHint,
                 prefixIcon: Icons.search,
-                focusColor: AppTheme.ponAccent,
                 onChanged: onSearchChanged,
               ),
             ),
@@ -180,8 +179,6 @@ class _FriendsTab extends ConsumerWidget {
                           return Padding(
                             padding: const EdgeInsets.only(bottom: 12),
                             child: PonCard(
-                              glowColor: AppTheme.ponAccent,
-                              glowStrength: isDark ? 4 : 0,
                               child: ListTile(
                                 contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
                                 leading: ConversationAvatar(
@@ -193,11 +190,11 @@ class _FriendsTab extends ConsumerWidget {
                                 ),
                                 title: Text(
                                   friend.displayName,
-                                  style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
+                                  style: TextStyle(fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.onSurface),
                                 ),
                                 subtitle: Text(
                                   friend.email,
-                                  style: const TextStyle(color: Colors.white54, fontSize: 13),
+                                  style: TextStyle(color: AppTheme.mutedText(context), fontSize: 13),
                                 ),
                                 trailing: Row(
                                   mainAxisSize: MainAxisSize.min,
@@ -296,7 +293,6 @@ class _RequestsTab extends ConsumerWidget {
                 controller: controller,
                 labelText: context.l10n.searchHint,
                 prefixIcon: Icons.search,
-                focusColor: AppTheme.ponAccent,
                 onChanged: onSearchChanged,
               ),
             ),
@@ -315,8 +311,6 @@ class _RequestsTab extends ConsumerWidget {
                           return Padding(
                             padding: const EdgeInsets.only(bottom: 12),
                             child: PonCard(
-                              glowColor: AppTheme.ponAccent,
-                              glowStrength: isDark ? 4 : 0,
                               child: ListTile(
                                 contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
                                 leading: ConversationAvatar(
@@ -328,11 +322,11 @@ class _RequestsTab extends ConsumerWidget {
                                 ),
                                 title: Text(
                                   requester.displayName,
-                                  style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
+                                  style: TextStyle(fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.onSurface),
                                 ),
                                 subtitle: Text(
                                   requester.email,
-                                  style: const TextStyle(color: Colors.white54, fontSize: 13),
+                                  style: TextStyle(color: AppTheme.mutedText(context), fontSize: 13),
                                 ),
                                 trailing: Row(
                                   mainAxisSize: MainAxisSize.min,

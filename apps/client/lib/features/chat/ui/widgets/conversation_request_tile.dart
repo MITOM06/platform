@@ -107,17 +107,17 @@ class _ConversationRequestTileState
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
       decoration: BoxDecoration(
-        color: isDark ? AppTheme.darkSurface.withValues(alpha: 0.4) : Colors.white,
-        borderRadius: BorderRadius.circular(16),
+        color: Theme.of(context).colorScheme.surface,
+        borderRadius: BorderRadius.circular(AppTheme.radiusCard),
         border: Border.all(
           color: isDark
               ? AppTheme.darkBorder.withValues(alpha: 0.2)
-              : Colors.black.withValues(alpha: 0.05),
+              : AppTheme.hairline(context),
           width: 1,
         ),
       ),
       child: InkWell(
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(AppTheme.radiusCard),
         onTap: () => context.push('/chat/${conv.id}'),
         child: Padding(
           padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
@@ -142,7 +142,7 @@ class _ConversationRequestTileState
                       style: TextStyle(
                         fontWeight: FontWeight.w600,
                         fontSize: 15,
-                        color: isDark ? Colors.white : Colors.black87,
+                        color: Theme.of(context).colorScheme.onSurface,
                       ),
                     ),
                     const SizedBox(height: 2),
@@ -152,7 +152,7 @@ class _ConversationRequestTileState
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(
                         fontSize: 12,
-                        color: isDark ? Colors.white54 : Colors.black54,
+                        color: AppTheme.mutedText(context),
                       ),
                     ),
                   ],
@@ -177,7 +177,7 @@ class _ConversationRequestTileState
                 ),
                 IconButton(
                   icon: const Icon(Icons.cancel_rounded),
-                  color: Colors.redAccent,
+                  color: Theme.of(context).colorScheme.error,
                   tooltip: l10n.declineRequest,
                   onPressed: _decline,
                 ),

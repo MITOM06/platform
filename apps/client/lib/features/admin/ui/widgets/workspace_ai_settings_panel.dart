@@ -208,12 +208,12 @@ class _WorkspaceAiSettingsPanelState
               contentPadding: EdgeInsets.zero,
               activeThumbColor: AppTheme.ponAccent,
               title: Text(l10n.adminAiRestrictConnectors,
-                  style: const TextStyle(color: Colors.white)),
+                  style: TextStyle(color: Theme.of(context).colorScheme.onSurface)),
               subtitle: Text(
                 _restrictConnectors
                     ? l10n.adminAiConnectorsExplicit
                     : l10n.adminAiConnectorsInherit,
-                style: TextStyle(color: Colors.white.withValues(alpha: 0.55)),
+                style: TextStyle(color: AppTheme.mutedText(context)),
               ),
               value: _restrictConnectors,
               onChanged: (v) => setState(() => _restrictConnectors = v),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../core/theme/app_theme.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/l10n/l10n_ext.dart';
@@ -116,20 +117,20 @@ class _NotetakerBanner extends StatelessWidget {
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
       decoration: BoxDecoration(
-        color: const Color(0xFF3A2A2C).withValues(alpha: 0.8),
+        color: AppTheme.darkAccentTint.withValues(alpha: 0.8),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFF96435B).withValues(alpha: 0.5)),
+        border: Border.all(color: AppTheme.ponAccent.withValues(alpha: 0.5)),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(Icons.auto_awesome, color: Color(0xFF96435B), size: 18),
+          const Icon(Icons.auto_awesome, color: AppTheme.ponAccent, size: 18),
           const SizedBox(width: 8),
           Flexible(
             child: Text(
               context.l10n.groupCallNotetakerActive,
               style: const TextStyle(
-                  color: Color(0xFFE8B4BE),
+                  color: AppTheme.darkTintFg,
                   fontSize: 13,
                   fontWeight: FontWeight.w500),
             ),
@@ -237,7 +238,7 @@ class _Controls extends StatelessWidget {
           const SizedBox(width: 18),
           FloatingActionButton(
             heroTag: 'leave_group_call',
-            backgroundColor: Colors.red,
+            backgroundColor: Theme.of(context).colorScheme.error,
             onPressed: onLeave,
             tooltip: context.l10n.callLeave,
             child: const Icon(Icons.call_end, color: Colors.white, size: 30),

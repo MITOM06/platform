@@ -131,12 +131,8 @@ class _UserProfileDialogState extends ConsumerState<UserProfileDialog> {
 
     if (profile != null && _editMode) _initEditFields(profile);
 
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
     return Dialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-      backgroundColor: isDark ? AppTheme.darkSurface : Colors.white,
-      insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 40),
+            insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 40),
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 420),
         child: _ProfileDialogContent(
@@ -252,7 +248,7 @@ class _ProfileDialogContent extends ConsumerWidget {
                 height: 120,
                 decoration: BoxDecoration(
                   borderRadius:
-                      const BorderRadius.vertical(top: Radius.circular(20)),
+                      const BorderRadius.vertical(top: Radius.circular(AppTheme.radiusSheet)),
                   color: AppTheme.ponAccent.withValues(alpha: 0.2),
                   image: coverUrl != null
                       ? DecorationImage(
@@ -291,7 +287,7 @@ class _ProfileDialogContent extends ConsumerWidget {
                               decoration: BoxDecoration(
                                 color: AppTheme.ponAccent,
                                 shape: BoxShape.circle,
-                                border: Border.all(color: AppTheme.darkSurface, width: 2),
+                                border: Border.all(color: Theme.of(context).colorScheme.surface, width: 2),
                               ),
                               child: const Icon(Icons.camera_alt, size: 14, color: Colors.white),
                             ),
@@ -329,10 +325,10 @@ class _ProfileDialogContent extends ConsumerWidget {
                 alignment: Alignment.centerLeft,
                 child: Text(
                   context.l10n.profilePrivacySection,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.bold,
-                    color: Colors.white60,
+                    color: AppTheme.mutedText(context),
                   ),
                 ),
               ),

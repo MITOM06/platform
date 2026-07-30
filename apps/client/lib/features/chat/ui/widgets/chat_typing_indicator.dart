@@ -45,9 +45,6 @@ class _TypingBubble extends StatelessWidget {
         padding: const EdgeInsets.only(left: 16, bottom: 8, top: 4),
         child: PonCard(
           borderRadius: 16,
-          borderOpacity: 0.15,
-          bgOpacity: 0.4,
-          glowStrength: 0,
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
             child: Row(
@@ -57,7 +54,7 @@ class _TypingBubble extends StatelessWidget {
                   context.l10n.typingLabel,
                   style: TextStyle(
                     fontSize: 12,
-                    color: Colors.white.withValues(alpha: 0.5),
+                    color: AppTheme.mutedText(context),
                     fontWeight: FontWeight.w500,
                   ),
                 ),

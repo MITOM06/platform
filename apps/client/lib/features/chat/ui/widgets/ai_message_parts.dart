@@ -27,15 +27,9 @@ class AiBotAvatar extends StatelessWidget {
           height: 28,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            gradient: avatarUrl == null
-                ? const LinearGradient(
-                    colors: [Color(0xFF7A2E3A), Color(0xFF3A2A2C)],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  )
-                : null,
+            color: avatarUrl == null ? AppTheme.ponAccent : null,
             border: Border.all(
-                color: const Color(0xFF96435B).withValues(alpha: 0.6), width: 1),
+                color: AppTheme.ponAccent.withValues(alpha: 0.6), width: 1),
           ),
           child: avatarUrl != null
               ? ClipOval(
@@ -61,7 +55,7 @@ class AiBotAvatar extends StatelessWidget {
             width: 10,
             height: 10,
             decoration: BoxDecoration(
-              color: const Color(0xFF96435B),
+              color: AppTheme.ponAccent,
               shape: BoxShape.circle,
               border: Border.all(
                   color: Theme.of(context).scaffoldBackgroundColor, width: 1.5),
@@ -77,8 +71,8 @@ class AiBotAvatar extends StatelessWidget {
   }
 }
 
-/// Gradient avatar (violet→teal) for a Bot Factory personal assistant. Distinct
-/// from [AiBotAvatar] (the company @AI bot) — no "AI" badge.
+/// Avatar for a Bot Factory personal assistant. Distinct from [AiBotAvatar]
+/// (the company @AI bot) — no "AI" badge. Flat accent fill, no gradient.
 class _ExternalBotAvatar extends StatelessWidget {
   final String name;
   const _ExternalBotAvatar({required this.name});
@@ -88,13 +82,11 @@ class _ExternalBotAvatar extends StatelessWidget {
     return Container(
       width: 28,
       height: 28,
+      // Flat accent fill: the old gradient introduced a teal second accent
+      // (UI-REDESIGN-DIRECTION.md §2 rules 1-2).
       decoration: const BoxDecoration(
         shape: BoxShape.circle,
-        gradient: LinearGradient(
-          colors: [Color(0xFF96435B), Color(0xFF14B8A6)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
+        color: AppTheme.ponAccent,
       ),
       child: Center(
         child: Text(
@@ -110,7 +102,7 @@ class _ExternalBotAvatar extends StatelessWidget {
 /// Renders a message from a Bot Factory personal assistant (`senderId` starts
 /// with `extbot:`). Identity (name/avatar) comes from [assistantProvider], NOT
 /// a user lookup — the bot is not a real user. Left-aligned like the @AI bubble
-/// but with its own gradient; no reactions / read receipts / feedback.
+/// but visually plainer; no reactions / read receipts / feedback.
 class ExternalBotBubble extends ConsumerWidget {
   final MessageModel message;
   const ExternalBotBubble({super.key, required this.message});
@@ -138,7 +130,7 @@ class ExternalBotBubble extends ConsumerWidget {
                   botName,
                   style: TextStyle(
                     fontSize: 11,
-                    color: const Color(0xFF14B8A6).withValues(alpha: 0.9),
+                    color: AppTheme.mutedText(context),
                     fontWeight: FontWeight.w600,
                   ),
                 ),
@@ -151,15 +143,15 @@ class ExternalBotBubble extends ConsumerWidget {
               constraints:
                   BoxConstraints(maxWidth: constraints.maxWidth * 0.82),
               decoration: BoxDecoration(
-                color: AppTheme.darkSurface.withValues(alpha: 0.7),
+                color: Theme.of(context).colorScheme.surface,
                 borderRadius: const BorderRadius.only(
-                  topLeft: Radius.circular(20),
-                  topRight: Radius.circular(20),
+                  topLeft: Radius.circular(14),
+                  topRight: Radius.circular(14),
                   bottomLeft: Radius.circular(4),
-                  bottomRight: Radius.circular(20),
+                  bottomRight: Radius.circular(14),
                 ),
                 border: Border.all(
-                  color: AppTheme.darkBorder.withValues(alpha: 0.4),
+                  color: AppTheme.hairline(context),
                   width: 1,
                 ),
               ),
@@ -178,7 +170,7 @@ class ExternalBotBubble extends ConsumerWidget {
                     timeStr,
                     style: TextStyle(
                       fontSize: 9.5,
-                      color: Colors.white.withValues(alpha: 0.35),
+                      color: AppTheme.mutedText(context),
                     ),
                   ),
                 ],

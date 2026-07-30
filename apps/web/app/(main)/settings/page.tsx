@@ -49,34 +49,31 @@ function getInitials(name?: string): string {
 
 interface SettingsCardProps {
   icon: React.ReactNode
-  iconBg: string
   title: string
   subtitle?: string
   onClick: () => void
   destructive?: boolean
 }
 
-function SettingsCard({ icon, iconBg, title, subtitle, onClick, destructive }: SettingsCardProps) {
+// The icon tint is derived from `destructive`, not passed per card. The old
+// `iconBg` prop let each card hand-pick an rgba — including a violet
+// second accent — which §2 rule 1 forbids. The decorative
+// radial-gradient hover glow is gone too (§2 rule 2); hover is a flat tint.
+function SettingsCard({ icon, title, subtitle, onClick, destructive }: SettingsCardProps) {
   return (
     <button
       onClick={onClick}
-      className={`w-full group relative rounded-xl border bg-card p-0 transition-all duration-200 hover:scale-[1.01] active:scale-[0.99] text-left overflow-hidden ${
-        destructive ? 'hover:border-destructive/30' : 'hover:border-primary/30'
+      className={`w-full group relative rounded-xl border bg-card p-0 transition-colors duration-200 text-left overflow-hidden ${
+        destructive
+          ? 'hover:border-destructive/30 hover:bg-destructive/5'
+          : 'hover:border-primary/30 hover:bg-accent'
       }`}
     >
-      <div
-        className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-xl pointer-events-none"
-        style={{
-          background: `radial-gradient(circle at 30% 50%, ${
-            destructive ? 'rgba(239,68,68,0.04)' : 'rgba(150, 67, 91,0.06)'
-          }, transparent 70%)`,
-        }}
-      />
-
       <div className="relative flex items-center gap-4 px-5 py-4">
         <div
-          className="size-10 rounded-full flex items-center justify-center shrink-0 transition-transform group-hover:scale-110"
-          style={{ background: iconBg }}
+          className={`size-10 rounded-full flex items-center justify-center shrink-0 ${
+            destructive ? 'bg-destructive/10' : 'bg-primary/10'
+          }`}
         >
           {icon}
         </div>
@@ -200,7 +197,7 @@ export default function SettingsPage() {
                   {user.avatarUrl && (
                     <AvatarImage src={absoluteMediaUrl(user.avatarUrl)} alt={user.displayName} />
                   )}
-                  <AvatarFallback className="text-xl font-bold bg-primary text-white">
+                  <AvatarFallback className="text-xl font-bold bg-primary text-primary-foreground">
                     {getInitials(user.displayName)}
                   </AvatarFallback>
                 </Avatar>
@@ -212,14 +209,12 @@ export default function SettingsPage() {
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <SettingsCard
                 icon={<User className="size-5 text-primary" />}
-                iconBg="rgba(150, 67, 91,0.12)"
                 title={t('editProfile')}
                 onClick={() => router.push('/profile')}
               />
 
               <SettingsCard
                 icon={themeIcon()}
-                iconBg="rgba(150, 67, 91,0.12)"
                 title={t('theme')}
                 subtitle={themeLabel()}
                 onClick={() => setThemePickerOpen(true)}
@@ -227,7 +222,6 @@ export default function SettingsPage() {
 
               <SettingsCard
                 icon={<Languages className="size-5 text-primary" />}
-                iconBg="rgba(150, 67, 91,0.12)"
                 title={t('language')}
                 subtitle={LOCALE_NAMES[locale as Locale] ?? locale}
                 onClick={() => setLanguagePickerOpen(true)}
@@ -235,7 +229,6 @@ export default function SettingsPage() {
 
               <SettingsCard
                 icon={<Ban className="size-5 text-destructive" />}
-                iconBg="rgba(239,68,68,0.1)"
                 title={t('blockedChats')}
                 subtitle={t('blockedChatsSubtitle')}
                 onClick={() => router.push('/blocked')}
@@ -243,7 +236,6 @@ export default function SettingsPage() {
 
               <SettingsCard
                 icon={<Hash className="size-5 text-primary" />}
-                iconBg="rgba(180,127,255,0.12)"
                 title={t('explore')}
                 subtitle={t('exploreSubtitle')}
                 onClick={() => router.push('/explore')}
@@ -274,7 +266,6 @@ export default function SettingsPage() {
 
               <SettingsCard
                 icon={<Coins className="size-5 text-primary" />}
-                iconBg="rgba(150, 67, 91,0.12)"
                 title={t('tokenUsage')}
                 subtitle={t('tokenUsageSubtitle')}
                 onClick={() => router.push('/token-usage')}
@@ -282,7 +273,6 @@ export default function SettingsPage() {
 
               <SettingsCard
                 icon={<BrainCircuit className="size-5 text-primary" />}
-                iconBg="rgba(180,127,255,0.12)"
                 title={t('aiContext')}
                 subtitle={t('aiContextSubtitle')}
                 onClick={() => router.push('/ai-context')}
@@ -290,7 +280,6 @@ export default function SettingsPage() {
 
               <SettingsCard
                 icon={<Plug className="size-5 text-primary" />}
-                iconBg="rgba(150, 67, 91,0.12)"
                 title={t('integrations')}
                 subtitle={t('integrationsSubtitle')}
                 onClick={() => router.push('/integrations')}
@@ -298,7 +287,6 @@ export default function SettingsPage() {
 
               <SettingsCard
                 icon={<Sparkles className="size-5 text-primary" />}
-                iconBg="rgba(180,127,255,0.12)"
                 title={t('skills')}
                 subtitle={t('skillsSubtitle')}
                 onClick={() => router.push('/skills')}
@@ -306,7 +294,6 @@ export default function SettingsPage() {
 
               <SettingsCard
                 icon={<HelpCircle className="size-5 text-primary" />}
-                iconBg="rgba(150, 67, 91,0.12)"
                 title={t('help')}
                 subtitle={t('helpSubtitle')}
                 onClick={() => router.push('/help')}
@@ -320,11 +307,6 @@ export default function SettingsPage() {
                       !user.hasPassword ? 'text-amber-500' : 'text-primary',
                     )}
                   />
-                }
-                iconBg={
-                  !user.hasPassword
-                    ? 'rgba(245,158,11,0.12)'
-                    : 'rgba(150, 67, 91,0.12)'
                 }
                 title={t('securityCard')}
                 subtitle={
@@ -345,7 +327,6 @@ export default function SettingsPage() {
                     <LogOut className="size-5 text-destructive" />
                   )
                 }
-                iconBg="rgba(239,68,68,0.1)"
                 title={t('logout')}
                 onClick={() => setLogoutConfirmOpen(true)}
                 destructive

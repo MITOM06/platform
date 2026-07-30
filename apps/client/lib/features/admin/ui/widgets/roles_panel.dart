@@ -57,9 +57,8 @@ class _RolesPanelState extends ConsumerState<RolesPanel> {
     final ok = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: AppTheme.darkSurface,
         title: Text(l10n.adminRoleCloneTitle(r.name),
-            style: const TextStyle(color: Colors.white)),
+            style: TextStyle(color: Theme.of(context).colorScheme.onSurface)),
         content: PonTextField(
           controller: ctrl,
           labelText: l10n.adminRoleName,
@@ -99,7 +98,7 @@ class _RolesPanelState extends ConsumerState<RolesPanel> {
       loading: () => const Center(child: CircularProgressIndicator()),
       error: (e, _) => Center(
         child: Text('$e',
-            style: TextStyle(color: Colors.white.withValues(alpha: 0.6))),
+            style: TextStyle(color: AppTheme.mutedText(context))),
       ),
       data: (roles) {
         _seed(roles);
@@ -108,7 +107,7 @@ class _RolesPanelState extends ConsumerState<RolesPanel> {
           children: [
             Text(l10n.adminRoleHint,
                 style: TextStyle(
-                    color: Colors.white.withValues(alpha: 0.55),
+                    color: AppTheme.mutedText(context),
                     fontSize: 13)),
             const SizedBox(height: 16),
             SingleChildScrollView(
@@ -134,16 +133,16 @@ class _RolesPanelState extends ConsumerState<RolesPanel> {
         SizedBox(
           width: _capColWidth,
           child: Text(l10n.adminRoleCapability,
-              style: const TextStyle(
-                  color: Colors.white, fontWeight: FontWeight.bold)),
+              style: TextStyle(
+                  color: Theme.of(context).colorScheme.onSurface, fontWeight: FontWeight.bold)),
         ),
         ...roles.map((r) => SizedBox(
               width: _roleColWidth,
               child: Column(
                 children: [
                   Text(r.name,
-                      style: const TextStyle(
-                          color: Colors.white, fontWeight: FontWeight.w600),
+                      style: TextStyle(
+                          color: Theme.of(context).colorScheme.onSurface, fontWeight: FontWeight.w600),
                       overflow: TextOverflow.ellipsis),
                   if (r.isPreset)
                     Text(l10n.adminRolePreset,
@@ -154,8 +153,8 @@ class _RolesPanelState extends ConsumerState<RolesPanel> {
                     children: [
                       IconButton(
                         visualDensity: VisualDensity.compact,
-                        icon: const Icon(Icons.copy_outlined,
-                            size: 16, color: Colors.white54),
+                        icon: Icon(Icons.copy_outlined,
+                            size: 16, color: AppTheme.mutedText(context)),
                         tooltip: l10n.adminRoleClone,
                         onPressed: () => _clone(r),
                       ),
@@ -166,7 +165,7 @@ class _RolesPanelState extends ConsumerState<RolesPanel> {
                               size: 16,
                               color: _isDirty(r)
                                   ? AppTheme.ponAccent
-                                  : Colors.white24),
+                                  : AppTheme.hairline(context)),
                           tooltip: l10n.adminSave,
                           onPressed: _isDirty(r) ? () => _save(r) : null,
                         ),
@@ -187,7 +186,7 @@ class _RolesPanelState extends ConsumerState<RolesPanel> {
           SizedBox(
             width: _capColWidth,
             child: Text(capabilityLabel(context, cap),
-                style: const TextStyle(color: Colors.white70, fontSize: 13)),
+                style: TextStyle(color: AppTheme.mutedText(context), fontSize: 13)),
           ),
           ...roles.map((r) {
             final readOnly = r.isOwner;

@@ -97,7 +97,7 @@ class _SsoPanelState extends ConsumerState<SsoPanel> {
           padding: const EdgeInsets.all(24),
           child: Text('$e',
               textAlign: TextAlign.center,
-              style: TextStyle(color: Colors.white.withValues(alpha: 0.6))),
+              style: TextStyle(color: AppTheme.mutedText(context))),
         ),
       ),
       data: (ws) {
@@ -114,7 +114,7 @@ class _SsoPanelState extends ConsumerState<SsoPanel> {
               contentPadding: EdgeInsets.zero,
               activeThumbColor: AppTheme.ponAccent,
               title: Text(l10n.adminSsoEnabled,
-                  style: const TextStyle(color: Colors.white)),
+                  style: TextStyle(color: Theme.of(context).colorScheme.onSurface)),
               value: _enabled,
               onChanged: (v) => setState(() => _enabled = v),
             ),
@@ -193,17 +193,17 @@ class _RoleDropdown extends StatelessWidget {
   Widget build(BuildContext context) => InputDecorator(
         decoration: InputDecoration(
           labelText: label,
-          labelStyle: TextStyle(color: Colors.white.withValues(alpha: 0.7)),
+          labelStyle: TextStyle(color: AppTheme.mutedText(context)),
           border: const OutlineInputBorder(),
         ),
         child: DropdownButtonHideUnderline(
           child: DropdownButton<String?>(
             isExpanded: true,
-            dropdownColor: AppTheme.darkSurface,
+            dropdownColor: Theme.of(context).colorScheme.surface,
             value: roles.any((r) => r.name == value) ? value : null,
             hint: Text(noneLabel,
-                style: TextStyle(color: Colors.white.withValues(alpha: 0.5))),
-            style: const TextStyle(color: Colors.white),
+                style: TextStyle(color: AppTheme.mutedText(context))),
+            style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
             items: [
               DropdownMenuItem<String?>(value: null, child: Text(noneLabel)),
               ...roles.map((r) =>
@@ -240,11 +240,11 @@ class _MapRow extends StatelessWidget {
           Expanded(
             child: TextFormField(
               initialValue: row.group,
-              style: const TextStyle(color: Colors.white),
+              style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
               decoration: InputDecoration(
                 hintText: placeholder,
                 hintStyle:
-                    TextStyle(color: Colors.white.withValues(alpha: 0.4)),
+                    TextStyle(color: AppTheme.mutedText(context)),
                 border: const OutlineInputBorder(),
                 isDense: true,
               ),
@@ -254,24 +254,24 @@ class _MapRow extends StatelessWidget {
               },
             ),
           ),
-          const Padding(
-            padding: EdgeInsets.symmetric(horizontal: 8),
-            child: Text('→', style: TextStyle(color: Colors.white54)),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8),
+            child: Text('→', style: TextStyle(color: AppTheme.mutedText(context))),
           ),
           Expanded(
             child: DropdownButtonFormField<String>(
               initialValue:
                   options.containsKey(row.value) ? row.value : null,
               isExpanded: true,
-              dropdownColor: AppTheme.darkSurface,
-              style: const TextStyle(color: Colors.white),
+              dropdownColor: Theme.of(context).colorScheme.surface,
+              style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
               decoration: const InputDecoration(
                 border: OutlineInputBorder(),
                 isDense: true,
               ),
               hint: Text(noneLabel,
                   style:
-                      TextStyle(color: Colors.white.withValues(alpha: 0.5))),
+                      TextStyle(color: AppTheme.mutedText(context))),
               items: options.entries
                   .map((e) =>
                       DropdownMenuItem<String>(value: e.key, child: Text(e.value)))
@@ -283,7 +283,7 @@ class _MapRow extends StatelessWidget {
             ),
           ),
           IconButton(
-            icon: const Icon(Icons.delete_outline, color: Colors.white54),
+            icon: Icon(Icons.delete_outline, color: AppTheme.mutedText(context)),
             onPressed: onRemove,
           ),
         ],
@@ -316,8 +316,8 @@ class _Title extends StatelessWidget {
   Widget build(BuildContext context) => Padding(
         padding: const EdgeInsets.only(bottom: 12),
         child: Text(text,
-            style: const TextStyle(
-                color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
+            style: TextStyle(
+                color: Theme.of(context).colorScheme.onSurface, fontSize: 16, fontWeight: FontWeight.bold)),
       );
 }
 
@@ -327,5 +327,5 @@ class _Muted extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Text(text,
-      style: TextStyle(color: Colors.white.withValues(alpha: 0.55), fontSize: 13));
+      style: TextStyle(color: AppTheme.mutedText(context), fontSize: 13));
 }

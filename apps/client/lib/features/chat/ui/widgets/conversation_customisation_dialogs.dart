@@ -14,8 +14,7 @@ void showQuickReactionDialog(BuildContext context, WidgetRef ref, String convers
   showDialog(
     context: context,
     builder: (context) => AlertDialog(
-      backgroundColor: AppTheme.darkSurface,
-      title: Text(context.l10n.quickReactionTitle, style: const TextStyle(color: Colors.white)),
+      title: Text(context.l10n.quickReactionTitle),
       content: SizedBox(
         width: 250,
         child: GridView.builder(
@@ -37,7 +36,7 @@ void showQuickReactionDialog(BuildContext context, WidgetRef ref, String convers
               child: Container(
                 alignment: Alignment.center,
                 decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.05),
+                  color: Theme.of(context).scaffoldBackgroundColor,
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Text(emoji, style: const TextStyle(fontSize: 28)),
@@ -93,9 +92,7 @@ class _NicknamesModal extends ConsumerWidget {
     ];
 
     return AlertDialog(
-      backgroundColor: AppTheme.darkSurface,
-      title: Text(context.l10n.nicknameModalTitle,
-          style: const TextStyle(color: Colors.white)),
+      title: Text(context.l10n.nicknameModalTitle),
       content: SizedBox(
         width: 340,
         child: SingleChildScrollView(
@@ -116,7 +113,7 @@ class _NicknamesModal extends ConsumerWidget {
         TextButton(
           onPressed: () => Navigator.pop(context),
           child: Text(context.l10n.actionOk,
-              style: const TextStyle(color: Colors.white70)),
+              style: TextStyle(color: AppTheme.mutedText(context))),
         ),
       ],
     );
@@ -197,8 +194,8 @@ class _NicknameRowState extends ConsumerState<_NicknameRow> {
               children: [
                 Text(
                   nameLabel,
-                  style: const TextStyle(
-                      color: Colors.white, fontWeight: FontWeight.bold),
+                  style: TextStyle(
+                      color: Theme.of(context).colorScheme.onSurface, fontWeight: FontWeight.bold),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -207,13 +204,13 @@ class _NicknameRowState extends ConsumerState<_NicknameRow> {
                   TextField(
                     controller: _controller,
                     autofocus: true,
-                    style: const TextStyle(color: Colors.white, fontSize: 14),
-                    decoration: const InputDecoration(
+                    style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontSize: 14),
+                    decoration: InputDecoration(
                       isDense: true,
-                      contentPadding: EdgeInsets.symmetric(vertical: 4),
+                      contentPadding: const EdgeInsets.symmetric(vertical: 4),
                       enabledBorder: UnderlineInputBorder(
-                          borderSide: BorderSide(color: Colors.white24)),
-                      focusedBorder: UnderlineInputBorder(
+                          borderSide: BorderSide(color: AppTheme.hairline(context))),
+                      focusedBorder: const UnderlineInputBorder(
                           borderSide: BorderSide(color: AppTheme.ponAccent)),
                     ),
                     onSubmitted: (_) => _save(),
@@ -226,7 +223,7 @@ class _NicknameRowState extends ConsumerState<_NicknameRow> {
                     style: TextStyle(
                       color: nickname.isNotEmpty
                           ? AppTheme.ponAccent
-                          : Colors.white38,
+                          : AppTheme.mutedText(context),
                       fontSize: 13,
                       fontStyle: nickname.isNotEmpty
                           ? FontStyle.normal
@@ -245,8 +242,8 @@ class _NicknameRowState extends ConsumerState<_NicknameRow> {
                   onPressed: _save,
                 )
               : IconButton(
-                  icon: const Icon(Icons.edit_outlined,
-                      color: Colors.white54, size: 18),
+                  icon: Icon(Icons.edit_outlined,
+                      color: AppTheme.mutedText(context), size: 18),
                   onPressed: () => setState(() => _editing = true),
                 ),
         ],

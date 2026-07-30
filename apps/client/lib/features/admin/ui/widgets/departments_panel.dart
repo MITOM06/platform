@@ -32,10 +32,9 @@ class DepartmentsPanel extends ConsumerWidget {
       context: context,
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setState) => AlertDialog(
-          backgroundColor: AppTheme.darkSurface,
           title: Text(
             existing == null ? l10n.adminDeptNew : l10n.adminDeptEdit,
-            style: const TextStyle(color: Colors.white),
+            style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
           ),
           content: SingleChildScrollView(
             child: Column(
@@ -57,12 +56,12 @@ class DepartmentsPanel extends ConsumerWidget {
                   DropdownButtonFormField<String?>(
                     initialValue: leadId,
                     isExpanded: true,
-                    dropdownColor: AppTheme.darkSurface,
-                    style: const TextStyle(color: Colors.white),
+                    dropdownColor: Theme.of(context).colorScheme.surface,
+                    style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
                     decoration: InputDecoration(
                       labelText: l10n.adminDeptLead,
                       labelStyle:
-                          const TextStyle(color: Colors.white70),
+                          TextStyle(color: AppTheme.mutedText(context)),
                     ),
                     items: [
                       DropdownMenuItem(
@@ -123,10 +122,9 @@ class DepartmentsPanel extends ConsumerWidget {
     final ok = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: AppTheme.darkSurface,
         content: Text(
           l10n.adminDeptDeleteConfirm(d.name),
-          style: const TextStyle(color: Colors.white70),
+          style: TextStyle(color: AppTheme.mutedText(context)),
         ),
         actions: [
           TextButton(
@@ -136,7 +134,7 @@ class DepartmentsPanel extends ConsumerWidget {
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
             child: Text(l10n.adminToastDeleted,
-                style: const TextStyle(color: Colors.red)),
+                style: TextStyle(color: Theme.of(context).colorScheme.error)),
           ),
         ],
       ),
@@ -159,7 +157,7 @@ class DepartmentsPanel extends ConsumerWidget {
       backgroundColor: Colors.transparent,
       floatingActionButton: FloatingActionButton.extended(
         backgroundColor: AppTheme.ponAccent,
-        foregroundColor: Colors.black,
+        foregroundColor: Colors.white,
         onPressed: () => _openEditor(context, ref),
         icon: const Icon(Icons.add),
         label: Text(l10n.adminDeptNew),
@@ -168,13 +166,13 @@ class DepartmentsPanel extends ConsumerWidget {
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, _) => Center(
           child: Text('$e',
-              style: TextStyle(color: Colors.white.withValues(alpha: 0.6))),
+              style: TextStyle(color: AppTheme.mutedText(context))),
         ),
         data: (departments) => departments.isEmpty
             ? Center(
                 child: Text(l10n.adminDeptEmpty,
                     style: TextStyle(
-                        color: Colors.white.withValues(alpha: 0.6))),
+                        color: AppTheme.mutedText(context))),
               )
             : ListView.separated(
                 padding: const EdgeInsets.fromLTRB(16, 16, 16, 88),
@@ -187,23 +185,23 @@ class DepartmentsPanel extends ConsumerWidget {
                       leading: const Icon(Icons.groups_outlined,
                           color: AppTheme.ponAccent),
                       title: Text(d.name,
-                          style: const TextStyle(color: Colors.white)),
+                          style: TextStyle(color: Theme.of(context).colorScheme.onSurface)),
                       subtitle: d.description == null
                           ? null
                           : Text(d.description!,
-                              style: const TextStyle(color: Colors.white60)),
+                              style: TextStyle(color: AppTheme.mutedText(context))),
                       trailing: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           IconButton(
-                            icon: const Icon(Icons.edit_outlined,
-                                color: Colors.white70),
+                            icon: Icon(Icons.edit_outlined,
+                                color: AppTheme.mutedText(context)),
                             onPressed: () =>
                                 _openEditor(context, ref, existing: d),
                           ),
                           IconButton(
-                            icon: const Icon(Icons.delete_outline,
-                                color: Colors.redAccent),
+                            icon: Icon(Icons.delete_outline,
+                                color: Theme.of(context).colorScheme.error),
                             onPressed: () => _delete(context, ref, d),
                           ),
                         ],

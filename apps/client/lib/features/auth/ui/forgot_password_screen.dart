@@ -41,7 +41,8 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
     } on DioException catch (e) {
       if (mounted) {
         final msg = authErrorToString(context, e);
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(msg)));
       }
     } catch (_) {
       if (mounted) {
@@ -63,124 +64,84 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
           onPressed: () => context.go('/login'),
         ),
       ),
-      body: Stack(
-        children: [
-          // Background ambient lights
-          Positioned(
-            top: -100,
-            right: -100,
-            child: Container(
-              width: 300,
-              height: 300,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                gradient: RadialGradient(
-                  colors: [
-                    AppTheme.ponAccent.withValues(alpha: 0.12),
-                    Colors.transparent,
-                  ],
-                ),
-              ),
-            ),
-          ),
-          Positioned(
-            bottom: -150,
-            left: -100,
-            child: Container(
-              width: 350,
-              height: 350,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                gradient: RadialGradient(
-                  colors: [
-                    AppTheme.ponAccent.withValues(alpha: 0.15),
-                    Colors.transparent,
-                  ],
-                ),
-              ),
-            ),
-          ),
-
-          // Content
-          SafeArea(
-            child: Center(
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 450),
-                child: SingleChildScrollView(
-                  physics: const BouncingScrollPhysics(),
-                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      const Center(child: PonLogo(size: 100, showText: true)),
-                      const SizedBox(height: 16),
-                      Text(
-                      context.l10n.forgotHeading,
-                      style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
-                          ),
-                      textAlign: TextAlign.center,
+      // No decorative accent orbs: the accent means "primary action"
+      // only (UI-REDESIGN-DIRECTION.md §2 rules 1-2).
+      body: SafeArea(
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 450),
+            child: SingleChildScrollView(
+              physics: const BouncingScrollPhysics(),
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  const Center(child: PonLogo(size: 100, showText: true)),
+                  const SizedBox(height: 16),
+                  Text(
+                    context.l10n.forgotHeading,
+                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                          fontWeight: FontWeight.bold,
+                          color: Theme.of(context).colorScheme.onSurface,
+                        ),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    context.l10n.forgotSubtitle,
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      color: AppTheme.mutedText(context),
+                      height: 1.5,
                     ),
-                    const SizedBox(height: 8),
-                    Text(
-                      context.l10n.forgotSubtitle,
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        color: Colors.white.withValues(alpha: 0.5),
-                        height: 1.5,
-                      ),
-                    ),
-                    const SizedBox(height: 32),
+                  ),
+                  const SizedBox(height: 32),
 
-                      // Forgot Form Card
-                      PonCard(
-                        glowColor: AppTheme.ponAccent,
-                        glowStrength: 8,
-                        child: Padding(
-                          padding: const EdgeInsets.all(24.0),
-                          child: Form(
-                            key: _formKey,
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.stretch,
-                              children: [
-                                // Email
-                                PonTextField(
-                                  controller: _emailController,
-                                  labelText: context.l10n.fieldEmail,
-                                  prefixIcon: Icons.email_outlined,
-                                  keyboardType: TextInputType.emailAddress,
-                                  textInputAction: TextInputAction.done,
-                                  onFieldSubmitted: (_) => _submit(),
-                                  focusColor: AppTheme.ponAccent,
-                                  validator: (v) {
-                                    if (v == null || v.isEmpty) return context.l10n.valEmailRequired;
-                                    if (!v.contains('@')) return context.l10n.valEmailInvalid;
-                                    return null;
-                                  },
-                                ),
-                                const SizedBox(height: 28),
-
-                                // Submit Button
-                                PonButton(
-                                  onPressed: _submit,
-                                  isLoading: _isLoading,
-                                  gradientColors: const [AppTheme.ponAccent, AppTheme.ponAccent],
-                                  glowColor: AppTheme.ponAccent,
-                                  child: Text(context.l10n.sendOtpButton),
-                                ),
-                              ],
+                  // Forgot Form Card
+                  PonCard(
+                    child: Padding(
+                      padding: const EdgeInsets.all(24.0),
+                      child: Form(
+                        key: _formKey,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            // Email
+                            PonTextField(
+                              controller: _emailController,
+                              labelText: context.l10n.fieldEmail,
+                              prefixIcon: Icons.email_outlined,
+                              keyboardType: TextInputType.emailAddress,
+                              textInputAction: TextInputAction.done,
+                              onFieldSubmitted: (_) => _submit(),
+                              validator: (v) {
+                                if (v == null || v.isEmpty) {
+                                  return context.l10n.valEmailRequired;
+                                }
+                                if (!v.contains('@')) {
+                                  return context.l10n.valEmailInvalid;
+                                }
+                                return null;
+                              },
                             ),
-                          ),
+                            const SizedBox(height: 28),
+
+                            // Submit Button
+                            PonButton(
+                              onPressed: _submit,
+                              isLoading: _isLoading,
+                              child: Text(context.l10n.sendOtpButton),
+                            ),
+                          ],
                         ),
                       ),
-                    ],
+                    ),
                   ),
-                ),
+                ],
               ),
             ),
           ),
-        ],
+        ),
       ),
     );
   }

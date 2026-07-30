@@ -64,38 +64,31 @@ class _ConversationListScreenState
                 bottom: BorderSide(
                   color: isDark
                       ? AppTheme.darkBorder.withValues(alpha: 0.3)
-                      : Colors.black.withValues(alpha: 0.06),
+                      : AppTheme.hairline(context),
                   width: 1,
                 ),
               ),
             ),
             child: AppBar(
               titleSpacing: 8,
-              title: Row(
+              title: const Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const PonLogo(size: 26, showText: false),
-                  const SizedBox(width: 8),
+                  PonLogo(size: 26, showText: false),
+                  SizedBox(width: 8),
+                  // Wordmark: plain accent text. The ShaderMask painted a
+                  // degenerate [accent, accent] gradient, i.e. a flat fill via
+                  // a shader (§2 rule 2).
                   Flexible(
-                    child: ShaderMask(
-                      shaderCallback: (bounds) => LinearGradient(
-                        colors: isDark
-                            ? const [AppTheme.ponAccent, AppTheme.ponAccent]
-                            : [
-                                Theme.of(context).colorScheme.primary,
-                                Theme.of(context).colorScheme.secondary
-                              ],
-                      ).createShader(bounds),
-                      child: const Text(
-                        'PON',
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          fontWeight: FontWeight.w900,
-                          fontSize: 22,
-                          letterSpacing: 1.5,
-                          color: Colors.white,
-                        ),
+                    child: Text(
+                      'PON',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 22,
+                        letterSpacing: 1.5,
+                        color: AppTheme.ponAccent,
                       ),
                     ),
                   ),
@@ -171,22 +164,6 @@ class _ConversationListScreenState
             Expanded(
               child: Stack(
                 children: [
-                  if (isDark)
-                    Positioned(
-                      bottom: -100,
-                      left: -100,
-                      child: Container(
-                        width: 300,
-                        height: 300,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          gradient: RadialGradient(colors: [
-                            AppTheme.ponAccent.withValues(alpha: 0.08),
-                            Colors.transparent,
-                          ]),
-                        ),
-                      ),
-                    ),
                   TabBarView(
                     children: [
                       ChatsTab(

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../core/theme/app_theme.dart';
 import '../../../../core/l10n/l10n_ext.dart';
 
 // Re-exported so existing importers of `streaming_ai_bubble.dart` keep getting
@@ -93,8 +94,8 @@ class _StreamingText extends StatelessWidget {
         Flexible(
           child: Text(
             content,
-            style: const TextStyle(
-              color: Colors.white,
+            style: TextStyle(
+              color: Theme.of(context).colorScheme.onSurface,
               fontSize: 15,
               height: 1.45,
             ),
@@ -108,7 +109,7 @@ class _StreamingText extends StatelessWidget {
             child: const Text(
               '|',
               style: TextStyle(
-                color: Color(0xFF96435B),
+                color: AppTheme.ponAccent,
                 fontSize: 15,
                 height: 1.45,
                 fontWeight: FontWeight.w300,
@@ -168,7 +169,7 @@ class _ToolIndicatorRow extends StatelessWidget {
     final isSensitive = sensitiveTools.contains(toolName);
     // Sensitive (state-changing / outbound) tools get a shield icon + red tint
     // so the user notices the assistant is about to act on their behalf.
-    final color = isSensitive ? const Color(0xFFE5484D) : const Color(0xFFFFB74D);
+    final color = isSensitive ? AppTheme.darkDanger : const Color(0xFFFFB74D);
     final label = isSensitive
         ? '${_toolLabel(context, toolName)} · ${context.l10n.aiSensitiveAction}'
         : _toolLabel(context, toolName);
@@ -225,7 +226,8 @@ class _ThinkingDots extends StatelessWidget {
               height: 8,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: Colors.white.withValues(alpha: opacity.clamp(0.15, 1.0)),
+                color: AppTheme.ponAccent
+                    .withValues(alpha: opacity.clamp(0.15, 1.0)),
               ),
             );
           },

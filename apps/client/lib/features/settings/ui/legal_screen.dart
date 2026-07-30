@@ -52,36 +52,6 @@ class LegalScreen extends StatelessWidget {
       body: Stack(
         children: [
           if (isDark) ...[
-            Positioned(
-              top: -100,
-              left: -100,
-              child: Container(
-                width: 300,
-                height: 300,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  gradient: RadialGradient(colors: [
-                    AppTheme.ponAccent.withValues(alpha: 0.08),
-                    Colors.transparent,
-                  ]),
-                ),
-              ),
-            ),
-            Positioned(
-              bottom: -100,
-              right: -100,
-              child: Container(
-                width: 300,
-                height: 300,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  gradient: RadialGradient(colors: [
-                    AppTheme.ponAccent.withValues(alpha: 0.08),
-                    Colors.transparent,
-                  ]),
-                ),
-              ),
-            ),
           ],
           SingleChildScrollView(
             physics: const BouncingScrollPhysics(),
@@ -92,7 +62,7 @@ class LegalScreen extends StatelessWidget {
                 Text(
                   context.l10n.legalLastUpdated,
                   style: TextStyle(
-                    color: isDark ? Colors.white38 : Colors.black45,
+                    color: AppTheme.mutedText(context),
                     fontSize: 12,
                   ),
                 ),
@@ -101,8 +71,6 @@ class LegalScreen extends StatelessWidget {
                   (s) => Padding(
                     padding: const EdgeInsets.only(bottom: 16),
                     child: PonCard(
-                      glowColor: s.color,
-                      glowStrength: isDark ? 3 : 0,
                       child: Padding(
                         padding: const EdgeInsets.all(20),
                         child: Column(
@@ -122,7 +90,7 @@ class LegalScreen extends StatelessWidget {
                             Text(
                               s.content,
                               style: TextStyle(
-                                color: isDark ? Colors.white70 : Colors.black87,
+                                color: Theme.of(context).colorScheme.onSurface,
                                 fontSize: 14,
                                 height: 1.6,
                               ),

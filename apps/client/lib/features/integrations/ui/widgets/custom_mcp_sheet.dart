@@ -16,10 +16,6 @@ class CustomMcpSheet extends ConsumerStatefulWidget {
     return showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
-      backgroundColor: AppTheme.darkSurface,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
       builder: (_) => const CustomMcpSheet(),
     );
   }
@@ -120,8 +116,8 @@ class _CustomMcpSheetState extends ConsumerState<CustomMcpSheet> {
           children: [
             Text(
               l10n.customMcpTitle,
-              style: const TextStyle(
-                color: Colors.white,
+              style: TextStyle(
+                color: Theme.of(context).colorScheme.onSurface,
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
               ),
@@ -130,7 +126,7 @@ class _CustomMcpSheetState extends ConsumerState<CustomMcpSheet> {
             Text(
               l10n.customMcpSubtitle,
               style: TextStyle(
-                color: Colors.white.withValues(alpha: 0.55),
+                color: AppTheme.mutedText(context),
                 fontSize: 13,
               ),
             ),
@@ -171,7 +167,7 @@ class _CustomMcpSheetState extends ConsumerState<CustomMcpSheet> {
             if (_error != null) ...[
               Text(
                 _error!,
-                style: const TextStyle(color: Colors.redAccent, fontSize: 12),
+                style: TextStyle(color: Theme.of(context).colorScheme.error, fontSize: 12),
               ),
               const SizedBox(height: 12),
             ],
@@ -224,7 +220,7 @@ class _AuthSelector extends StatelessWidget {
         Text(
           l10n.customMcpAuth,
           style: TextStyle(
-            color: Colors.white.withValues(alpha: 0.5),
+            color: AppTheme.mutedText(context),
             fontSize: 11,
             letterSpacing: 0.6,
           ),
@@ -286,7 +282,7 @@ class _ToolsPreview extends StatelessWidget {
                   child: Text(
                     '• ${t.name}',
                     style: TextStyle(
-                      color: Colors.white.withValues(alpha: 0.75),
+                      color: AppTheme.mutedText(context),
                       fontSize: 12,
                       fontFamily: 'monospace',
                     ),

@@ -115,7 +115,6 @@ class _FriendSearchTabState extends ConsumerState<FriendSearchTab> {
             controller: _controller,
             labelText: context.l10n.searchUsers,
             prefixIcon: Icons.person_search,
-            focusColor: AppTheme.ponAccent,
             onChanged: _onChanged,
           ),
         ),
@@ -161,8 +160,6 @@ class _FriendSearchTabState extends ConsumerState<FriendSearchTab> {
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: PonCard(
-        glowColor: AppTheme.ponAccent,
-        glowStrength: isDark ? 4 : 0,
         child: ListTile(
           contentPadding:
               const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
@@ -176,7 +173,7 @@ class _FriendSearchTabState extends ConsumerState<FriendSearchTab> {
           title: Text(
             user.displayName,
             style:
-                const TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
+                TextStyle(fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.onSurface),
           ),
           subtitle: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -184,7 +181,7 @@ class _FriendSearchTabState extends ConsumerState<FriendSearchTab> {
             children: [
               Text(
                 user.email,
-                style: const TextStyle(color: Colors.white54, fontSize: 13),
+                style: TextStyle(color: AppTheme.mutedText(context), fontSize: 13),
               ),
               if (user.matchedBy == 'phone' && user.phoneNumber != null) ...[
                 const SizedBox(height: 4),
@@ -220,7 +217,7 @@ class _FriendSearchTabState extends ConsumerState<FriendSearchTab> {
           trailing: alreadyRequested
               ? Text(
                   context.l10n.friendRequestPending,
-                  style: const TextStyle(color: Colors.white54, fontSize: 13),
+                  style: TextStyle(color: AppTheme.mutedText(context), fontSize: 13),
                 )
               : TextButton.icon(
                   style: TextButton.styleFrom(

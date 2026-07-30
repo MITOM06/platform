@@ -14,6 +14,11 @@ class AppTheme {
   static const Color darkAccentTint = Color(0xFF3A2A2C);
   static const Color lightAccentTint = Color(0xFFF1E4E6);
 
+  /// Readable foreground for content sitting ON [darkAccentTint]. The accent
+  /// itself only reaches 2.7:1 there, so it must not be used as text.
+  /// Exposed on the dark ColorScheme as `onPrimaryContainer`.
+  static const Color darkTintFg = Color(0xFFE8B4BE);
+
   static const Color onlineGreen = Color(0xFF00E676);
   static const Color offlineGrey = Color(0xFF9E9E9E);
 
@@ -42,6 +47,24 @@ class AppTheme {
   static const double radiusCard = 12;
   static const double radiusSheet = 18;
 
+  // ── Theme-aware resolvers ────────────────────────────────────────────────
+  // Screens must never hardcode Colors.white/black for text or borders: that
+  // is what made the auth flow illegible in light mode. Primary text already
+  // has a token via `Theme.of(context).colorScheme.onSurface`; these cover the
+  // two shades Material's ColorScheme doesn't give us in the right hue.
+
+  /// Secondary / supporting text — the "muted" shade of §2's text hierarchy.
+  static Color mutedText(BuildContext context) =>
+      Theme.of(context).brightness == Brightness.dark
+          ? darkTextMuted
+          : lightTextMuted;
+
+  /// 1px hairline border — the only elevation device in this direction (§2 r3).
+  static Color hairline(BuildContext context) =>
+      Theme.of(context).brightness == Brightness.dark
+          ? darkBorder
+          : lightBorder;
+
   static ThemeData get darkTheme {
     return ThemeData(
       brightness: Brightness.dark,
@@ -59,7 +82,7 @@ class AppTheme {
         primaryContainer: darkAccentTint,
         // A lighter burgundy tint, not the accent itself: accent-on-tint only
         // reaches 2.7:1, which fails WCAG for text.
-        onPrimaryContainer: Color(0xFFE8B4BE),
+        onPrimaryContainer: darkTintFg,
       ),
       appBarTheme: const AppBarTheme(
         backgroundColor: Colors.transparent,
@@ -84,9 +107,11 @@ class AppTheme {
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: darkSurface,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 18),
+        contentPadding:
+            const EdgeInsets.symmetric(horizontal: 24, vertical: 18),
         labelStyle: TextStyle(color: Colors.white.withValues(alpha: 0.6)),
-        floatingLabelStyle: const TextStyle(color: ponAccent, fontWeight: FontWeight.w600),
+        floatingLabelStyle:
+            const TextStyle(color: ponAccent, fontWeight: FontWeight.w600),
         hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.3)),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(10),
@@ -140,6 +165,27 @@ class AppTheme {
         iconColor: darkTextMuted,
         textColor: darkText,
       ),
+      // Sheets/dialogs were missing from the theme, which is why ~25 call sites
+      // hardcoded `backgroundColor: AppTheme.darkSurface` + a 24px radius (and
+      // so rendered a dark sheet in light mode). Centralised here instead.
+      bottomSheetTheme: const BottomSheetThemeData(
+        backgroundColor: darkSurface,
+        surfaceTintColor: Colors.transparent,
+        elevation: 0,
+        shape: RoundedRectangleBorder(
+          borderRadius:
+              BorderRadius.vertical(top: Radius.circular(radiusSheet)),
+        ),
+      ),
+      dialogTheme: DialogThemeData(
+        backgroundColor: darkSurface,
+        surfaceTintColor: Colors.transparent,
+        elevation: 0,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(radiusCard),
+          side: const BorderSide(color: darkBorder, width: 1),
+        ),
+      ),
     );
   }
 
@@ -182,9 +228,11 @@ class AppTheme {
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: lightSurface,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 18),
+        contentPadding:
+            const EdgeInsets.symmetric(horizontal: 24, vertical: 18),
         labelStyle: TextStyle(color: Colors.black.withValues(alpha: 0.5)),
-        floatingLabelStyle: const TextStyle(color: ponAccent, fontWeight: FontWeight.w600),
+        floatingLabelStyle:
+            const TextStyle(color: ponAccent, fontWeight: FontWeight.w600),
         hintStyle: TextStyle(color: Colors.black.withValues(alpha: 0.3)),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(10),
@@ -237,6 +285,24 @@ class AppTheme {
         contentPadding: EdgeInsets.symmetric(horizontal: 20, vertical: 8),
         iconColor: lightTextMuted,
         textColor: lightText,
+      ),
+      bottomSheetTheme: const BottomSheetThemeData(
+        backgroundColor: lightSurface,
+        surfaceTintColor: Colors.transparent,
+        elevation: 0,
+        shape: RoundedRectangleBorder(
+          borderRadius:
+              BorderRadius.vertical(top: Radius.circular(radiusSheet)),
+        ),
+      ),
+      dialogTheme: DialogThemeData(
+        backgroundColor: lightSurface,
+        surfaceTintColor: Colors.transparent,
+        elevation: 0,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(radiusCard),
+          side: const BorderSide(color: lightBorder, width: 1),
+        ),
       ),
     );
   }

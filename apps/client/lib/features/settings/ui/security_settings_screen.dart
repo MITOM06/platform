@@ -215,8 +215,6 @@ class _PasswordFormState extends ConsumerState<_PasswordForm> {
         isDark ? AppTheme.ponAccent : Theme.of(context).colorScheme.primary;
 
     return PonCard(
-      glowColor: AppTheme.ponAccent,
-      glowStrength: isDark ? 4 : 0,
       child: Padding(
         padding: const EdgeInsets.all(20),
         child: Column(
@@ -242,7 +240,7 @@ class _PasswordFormState extends ConsumerState<_PasswordForm> {
                             ? context.l10n.securityChangePasswordTitle
                             : context.l10n.securitySetPasswordTitle,
                         style: TextStyle(
-                          color: isDark ? Colors.white : Colors.black87,
+                          color: Theme.of(context).colorScheme.onSurface,
                           fontWeight: FontWeight.bold,
                           fontSize: 15,
                         ),
@@ -253,7 +251,7 @@ class _PasswordFormState extends ConsumerState<_PasswordForm> {
                             ? context.l10n.securityChangePasswordSubtitle
                             : context.l10n.securitySetPasswordSubtitle,
                         style: TextStyle(
-                          color: isDark ? Colors.white54 : Colors.black54,
+                          color: AppTheme.mutedText(context),
                           fontSize: 12.5,
                         ),
                       ),
@@ -266,7 +264,7 @@ class _PasswordFormState extends ConsumerState<_PasswordForm> {
             if (_errorText != null) ...[
               Text(
                 _errorText!,
-                style: const TextStyle(color: Colors.redAccent, fontSize: 13),
+                style: TextStyle(color: Theme.of(context).colorScheme.error, fontSize: 13),
               ),
               const SizedBox(height: 12),
             ],
@@ -277,8 +275,7 @@ class _PasswordFormState extends ConsumerState<_PasswordForm> {
                 prefixIcon: Icons.lock_outline_rounded,
                 obscureText: true,
                 enableVisibilityToggle: true,
-                style: TextStyle(color: isDark ? Colors.white : Colors.black87),
-                focusColor: accent,
+                style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
                 textInputAction: TextInputAction.next,
                 enabled: !_isLoading,
                 // Never let OS autofill prefill the current password.
@@ -292,8 +289,7 @@ class _PasswordFormState extends ConsumerState<_PasswordForm> {
               prefixIcon: Icons.lock_open_rounded,
               obscureText: true,
               enableVisibilityToggle: true,
-              style: TextStyle(color: isDark ? Colors.white : Colors.black87),
-              focusColor: accent,
+              style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
               textInputAction: TextInputAction.next,
               enabled: !_isLoading,
               onChanged: (v) => setState(() => _newPasswordValue = v),
@@ -306,8 +302,7 @@ class _PasswordFormState extends ConsumerState<_PasswordForm> {
               prefixIcon: Icons.lock_rounded,
               obscureText: true,
               enableVisibilityToggle: true,
-              style: TextStyle(color: isDark ? Colors.white : Colors.black87),
-              focusColor: accent,
+              style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
               textInputAction: TextInputAction.done,
               enabled: !_isLoading,
               onFieldSubmitted: (_) => _submit(),
@@ -347,10 +342,8 @@ class _TwoFaPlaceholder extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final muted = isDark ? Colors.white54 : Colors.black54;
+    final muted = AppTheme.mutedText(context);
     return PonCard(
-      glowColor: AppTheme.ponAccent,
-      glowStrength: 0,
       child: Opacity(
         opacity: 0.7,
         child: ListTile(
@@ -381,7 +374,7 @@ class _TwoFaPlaceholder extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
             decoration: BoxDecoration(
               color: muted.withValues(alpha: 0.12),
-              borderRadius: BorderRadius.circular(20),
+              borderRadius: BorderRadius.circular(AppTheme.radiusCard),
             ),
             child: Text(
               context.l10n.securityComingSoon,
