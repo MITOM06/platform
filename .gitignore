@@ -90,3 +90,8 @@ apps/client/.flutter-plugins-dependencies
 .idea/
 *.iml
 .vscode/settings.json
+
+# Real secret-loading script — only the .example.sh placeholder version is tracked.
+# The real one once got committed with live production credentials (Mongo, Redis,
+# Anthropic, JWT, Google/Facebook OAuth) and was caught by GitHub push protection.
+scripts/set-github-secrets.sh
