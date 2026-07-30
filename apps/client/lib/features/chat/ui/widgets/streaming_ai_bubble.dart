@@ -108,7 +108,7 @@ class _StreamingText extends StatelessWidget {
             child: const Text(
               '|',
               style: TextStyle(
-                color: Color(0xFFB47FFF),
+                color: Color(0xFF96435B),
                 fontSize: 15,
                 height: 1.45,
                 fontWeight: FontWeight.w300,
@@ -168,7 +168,7 @@ class _ToolIndicatorRow extends StatelessWidget {
     final isSensitive = sensitiveTools.contains(toolName);
     // Sensitive (state-changing / outbound) tools get a shield icon + red tint
     // so the user notices the assistant is about to act on their behalf.
-    final color = isSensitive ? const Color(0xFFFF6B6B) : const Color(0xFFFFB74D);
+    final color = isSensitive ? const Color(0xFFE5484D) : const Color(0xFFFFB74D);
     final label = isSensitive
         ? '${_toolLabel(context, toolName)} · ${context.l10n.aiSensitiveAction}'
         : _toolLabel(context, toolName);

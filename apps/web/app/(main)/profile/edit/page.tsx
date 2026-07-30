@@ -252,7 +252,7 @@ export default function EditProfilePage() {
   return (
     <div className="flex flex-col h-full">
       {/* Header */}
-      <header className="h-14 border-b px-4 flex items-center gap-3 shrink-0 bg-background/95 backdrop-blur-md z-10">
+      <header className="h-14 border-b px-4 flex items-center gap-3 shrink-0 bg-background z-10">
         <button
           type="button"
           onClick={handleBack}

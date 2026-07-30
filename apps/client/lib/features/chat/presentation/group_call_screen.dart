@@ -116,20 +116,20 @@ class _NotetakerBanner extends StatelessWidget {
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
       decoration: BoxDecoration(
-        color: const Color(0xFF2D1B69).withValues(alpha: 0.8),
+        color: const Color(0xFF3A2A2C).withValues(alpha: 0.8),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFFB47FFF).withValues(alpha: 0.5)),
+        border: Border.all(color: const Color(0xFF96435B).withValues(alpha: 0.5)),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(Icons.auto_awesome, color: Color(0xFFB47FFF), size: 18),
+          const Icon(Icons.auto_awesome, color: Color(0xFF96435B), size: 18),
           const SizedBox(width: 8),
           Flexible(
             child: Text(
               context.l10n.groupCallNotetakerActive,
               style: const TextStyle(
-                  color: Color(0xFFD6BBFF),
+                  color: Color(0xFFE8B4BE),
                   fontSize: 13,
                   fontWeight: FontWeight.w500),
             ),

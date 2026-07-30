@@ -62,11 +62,11 @@ class SidebarHeader extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(Icons.auto_awesome, size: 13, color: AppTheme.ponCyan),
+              const Icon(Icons.auto_awesome, size: 13, color: AppTheme.ponAccent),
               const SizedBox(width: 4),
               Text(
                 context.l10n.aiAssistant,
-                style: const TextStyle(fontSize: 12, color: AppTheme.ponCyan),
+                style: const TextStyle(fontSize: 12, color: AppTheme.ponAccent),
               ),
             ],
           ),
@@ -152,10 +152,10 @@ class SidebarActionButton extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: AppTheme.ponCyan.withValues(alpha: 0.12),
+              color: AppTheme.ponAccent.withValues(alpha: 0.12),
               shape: BoxShape.circle,
             ),
-            child: Icon(icon, color: AppTheme.ponCyan, size: 20),
+            child: Icon(icon, color: AppTheme.ponAccent, size: 20),
           ),
           const SizedBox(height: 6),
           Text(

@@ -224,8 +224,8 @@ export function MessageActions({
           )}
           {onGroupReadDetails && (
             <DropdownMenuItem onClick={onGroupReadDetails}>
-              <CheckCheck className="size-4 text-pon-cyan" />
-              <span className="text-pon-cyan">{t('readByDetails')}</span>
+              <CheckCheck className="size-4 text-primary" />
+              <span className="text-primary">{t('readByDetails')}</span>
             </DropdownMenuItem>
           )}
           {onReactionsDetail && message.reactions && message.reactions.length > 0 && (

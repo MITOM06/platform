@@ -24,9 +24,9 @@ function StatCard({ label, value, sub, icon, glowColor }: {
   label: string; value: string; sub?: string; icon: React.ReactNode; glowColor: string
 }) {
   return (
-    <div className="relative rounded-2xl border bg-card p-5 overflow-hidden transition-all hover:shadow-xl group">
+    <div className="relative rounded-lg border bg-card p-5 overflow-hidden transition-all group">
       <div
-        className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none rounded-2xl"
+        className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none rounded-lg"
         style={{ background: `radial-gradient(circle at 20% 50%, ${glowColor}, transparent 70%)` }}
       />
       <div className="relative">
@@ -47,10 +47,10 @@ function QuotaProgress({ used, limit, monthlyLimitLabel, usedPercentLabel }: {
 }) {
   const fraction = Math.min(used / limit, 1)
   const percent = (fraction * 100).toFixed(1)
-  const barColor = fraction >= 0.9 ? '#EF4444' : fraction >= 0.7 ? '#FB923C' : '#6AC9FF'
+  const barColor = fraction >= 0.9 ? '#EF4444' : fraction >= 0.7 ? '#FB923C' : 'var(--primary)'
 
   return (
-    <div className="rounded-2xl border bg-card p-5">
+    <div className="rounded-lg border bg-card p-5">
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
           <Activity className="size-4" style={{ color: barColor }} />
@@ -169,8 +169,8 @@ function LineChart({ days, inputLabel, outputLabel, noDataLabel }: {
         {/* Area fill under output line */}
         <defs>
           <linearGradient id="outputGrad" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="#B47FFF" stopOpacity="0.18" />
-            <stop offset="100%" stopColor="#B47FFF" stopOpacity="0" />
+            <stop offset="0%" stopColor="var(--primary)" stopOpacity="0.18" />
+            <stop offset="100%" stopColor="var(--primary)" stopOpacity="0" />
           </linearGradient>
           <linearGradient id="inputGrad" x1="0" y1="0" x2="0" y2="1">
             <stop offset="0%" stopColor="#00E5FF" stopOpacity="0.15" />
@@ -187,7 +187,7 @@ function LineChart({ days, inputLabel, outputLabel, noDataLabel }: {
         />
 
         {/* Lines */}
-        <polyline points={outputPoints} fill="none" stroke="#B47FFF" strokeWidth={2} strokeLinejoin="round" strokeLinecap="round" />
+        <polyline points={outputPoints} fill="none" stroke="var(--primary)" strokeWidth={2} strokeLinejoin="round" strokeLinecap="round" />
         <polyline points={inputPoints} fill="none" stroke="#00E5FF" strokeWidth={2} strokeLinejoin="round" strokeLinecap="round" />
 
         {/* Hover vertical line + dots */}
@@ -198,7 +198,7 @@ function LineChart({ days, inputLabel, outputLabel, noDataLabel }: {
             <circle cx={tooltip.pointX} cy={yOf(days[activeIdx].inputTokens)} r={5}
               fill="#00E5FF" stroke="#0a0a0a" strokeWidth={2} />
             <circle cx={tooltip.pointX} cy={yOf(days[activeIdx].outputTokens)} r={5}
-              fill="#B47FFF" stroke="#0a0a0a" strokeWidth={2} />
+              fill="var(--primary)" stroke="#0a0a0a" strokeWidth={2} />
           </>
         )}
       </svg>
@@ -206,7 +206,7 @@ function LineChart({ days, inputLabel, outputLabel, noDataLabel }: {
       {/* Floating tooltip */}
       {tooltip && (
         <div
-          className="fixed z-50 pointer-events-none bg-card border border-border rounded-xl px-3 py-2.5 shadow-2xl text-xs"
+          className="fixed z-50 pointer-events-none bg-card border border-border rounded-xl px-3 py-2.5 text-xs"
           style={{ left: tooltip.x + 12, top: tooltip.y - 70 }}
         >
           <p className="text-muted-foreground/70 mb-1.5 font-mono">{tooltip.day.date}</p>
@@ -215,7 +215,7 @@ function LineChart({ days, inputLabel, outputLabel, noDataLabel }: {
             <span className="text-foreground">{inputLabel}: <strong>{fmt(tooltip.day.inputTokens)}</strong></span>
           </div>
           <div className="flex items-center gap-2">
-            <span className="size-2 rounded-full bg-[#B47FFF]" />
+            <span className="size-2 rounded-full bg-primary" />
             <span className="text-foreground">{outputLabel}: <strong>{fmt(tooltip.day.outputTokens)}</strong></span>
           </div>
         </div>
@@ -228,7 +228,7 @@ function LineChart({ days, inputLabel, outputLabel, noDataLabel }: {
           <span className="text-xs text-muted-foreground">{inputLabel}</span>
         </div>
         <div className="flex items-center gap-2">
-          <div className="size-3 rounded-sm bg-[#B47FFF]" />
+          <div className="size-3 rounded-sm bg-primary" />
           <span className="text-xs text-muted-foreground">{outputLabel}</span>
         </div>
       </div>
@@ -262,7 +262,7 @@ export default function TokenUsagePage() {
   return (
     <div className="flex flex-col h-full">
       {/* Header */}
-      <header className="h-14 border-b px-4 flex items-center gap-3 shrink-0 bg-background/95 backdrop-blur-md">
+      <header className="h-14 border-b px-4 flex items-center gap-3 shrink-0 bg-background">
         <Link href="/settings" className="text-muted-foreground hover:text-foreground transition-colors">
           <ArrowLeft className="size-5" />
         </Link>
@@ -276,7 +276,7 @@ export default function TokenUsagePage() {
               onClick={() => setRange(r)}
               className={`px-3 py-1 rounded-md text-xs font-semibold transition-all ${
                 range === r
-                  ? 'bg-background text-foreground shadow-sm'
+                  ? 'bg-background text-foreground'
                   : 'text-muted-foreground hover:text-foreground'
               }`}
             >
@@ -288,8 +288,8 @@ export default function TokenUsagePage() {
 
       <div className="flex-1 overflow-y-auto">
         <div className="relative">
-          <div className="absolute -top-24 -left-24 w-72 h-72 rounded-full bg-pon-cyan/5 blur-3xl pointer-events-none" />
-          <div className="absolute top-1/2 -right-24 w-72 h-72 rounded-full bg-[#B47FFF]/5 blur-3xl pointer-events-none" />
+          <div className="absolute -top-24 -left-24 w-72 h-72 rounded-full bg-primary/5 blur-3xl pointer-events-none" />
+          <div className="absolute top-1/2 -right-24 w-72 h-72 rounded-full bg-primary/5 blur-3xl pointer-events-none" />
 
           <div className="relative max-w-3xl mx-auto px-6 py-8">
             {isLoading && (
@@ -315,7 +315,7 @@ export default function TokenUsagePage() {
                     label={t('thisMonth')}
                     value={fmt(totalUsed)}
                     sub={`${fmt(totalInput)} + ${fmt(totalOutput)}`}
-                    glowColor="rgba(106,201,255,0.08)"
+                    glowColor="rgba(150, 67, 91,0.08)"
                   />
                   <StatCard
                     icon={<ArrowDownToLine className="size-4 text-[#00E5FF]" />}
@@ -324,26 +324,26 @@ export default function TokenUsagePage() {
                     glowColor="rgba(0,229,255,0.08)"
                   />
                   <StatCard
-                    icon={<ArrowUpFromLine className="size-4 text-[#B47FFF]" />}
+                    icon={<ArrowUpFromLine className="size-4 text-primary" />}
                     label={t('outputTokens')}
                     value={fmt(totalOutput)}
                     glowColor="rgba(180,127,255,0.08)"
                   />
                   <StatCard
-                    icon={<MessageSquare className="size-4 text-pon-peach" />}
+                    icon={<MessageSquare className="size-4 text-primary" />}
                     label={t('queries')}
                     value={totalRequests.toString()}
-                    glowColor="rgba(251,182,139,0.08)"
+                    glowColor="rgba(150, 67, 91,0.08)"
                   />
                 </div>
 
                 {/* Cost + Quota */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <StatCard
-                    icon={<DollarSign className="size-4 text-pon-peach" />}
+                    icon={<DollarSign className="size-4 text-primary" />}
                     label={t('estimatedCost')}
                     value={`$${estimatedCost.toFixed(4)}`}
-                    glowColor="rgba(251,182,139,0.08)"
+                    glowColor="rgba(150, 67, 91,0.08)"
                   />
                   <QuotaProgress
                     used={totalUsed}
@@ -354,7 +354,7 @@ export default function TokenUsagePage() {
                 </div>
 
                 {/* Line Chart */}
-                <div className="rounded-2xl border bg-card p-5">
+                <div className="rounded-lg border bg-card p-5">
                   <h3 className="text-sm font-semibold mb-4">
                     {t('dailyChart')} <span className="text-muted-foreground/50 font-normal">({range}d)</span>
                   </h3>

@@ -188,7 +188,7 @@ const ConversationItemInner = function ConversationItem({ conversation: conv, is
           className={cn(
             'flex items-center gap-0 @[120px]:gap-3 justify-center @[120px]:justify-start px-3 py-3 rounded-lg transition-[background-color,transform] duration-[180ms] hover:bg-primary/5 active:scale-[0.98]',
             isActive
-              ? 'bg-primary/[0.08] shadow-[inset_2px_0_0_0_#6AC9FF]'
+              ? 'bg-primary/[0.08] shadow-[inset_2px_0_0_0_var(--primary)]'
               : 'hover:bg-muted',
           )}
         >

@@ -102,7 +102,7 @@ export function AttachMenu({
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" size="icon" className="shrink-0 tap" disabled={disabled}>
-          <Paperclip className="size-5 text-pon-peach" />
+          <Paperclip className="size-5 text-primary" />
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="start" side="top">
@@ -128,7 +128,7 @@ export function SlashSuggestion({
 }) {
   const t = useTranslations('chat')
   return (
-    <div className="absolute bottom-full left-0 mb-2 min-w-48 bg-popover border rounded-xl shadow-lg z-50 p-1">
+    <div className="absolute bottom-full left-0 mb-2 min-w-48 bg-popover border rounded-xl z-50 p-1">
       <button
         onClick={onSelect}
         disabled={disabled}
@@ -158,7 +158,7 @@ export function MentionPopover({
   onHover: (idx: number) => void
 }) {
   return (
-    <div className="absolute bottom-full left-0 mb-2 w-48 max-h-48 overflow-y-auto bg-popover border rounded-xl shadow-lg z-50">
+    <div className="absolute bottom-full left-0 mb-2 w-48 max-h-48 overflow-y-auto bg-popover border rounded-xl z-50">
       <div className="p-1 space-y-0.5">
         {candidates.map((candidate, idx) => (
           <button

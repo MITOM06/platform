@@ -53,7 +53,7 @@ class ProfileCover extends StatelessWidget {
       height: 160,
       decoration: const BoxDecoration(
         gradient: LinearGradient(
-          colors: [AppTheme.ponCyan, AppTheme.ponPink],
+          colors: [AppTheme.ponAccent, AppTheme.ponAccent],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),

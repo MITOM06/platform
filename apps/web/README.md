@@ -4,7 +4,7 @@
 
 **PON realtime messaging platform — browser client**
 
-[![Next.js](https://img.shields.io/badge/Next.js_15-000000?style=flat-square&logo=nextdotjs&logoColor=white)](https://nextjs.org)
+[![Next.js](https://img.shields.io/badge/Next.js_16-000000?style=flat-square&logo=nextdotjs&logoColor=white)](https://nextjs.org)
 [![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=flat-square&logo=typescript&logoColor=white)](https://www.typescriptlang.org)
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-06B6D4?style=flat-square&logo=tailwindcss&logoColor=white)](https://tailwindcss.com)
 [![Vercel](https://img.shields.io/badge/Vercel-000000?style=flat-square&logo=vercel&logoColor=white)](https://vercel.com)
@@ -17,7 +17,7 @@
 
 | Layer | Choice |
 |-------|--------|
-| Framework | Next.js 15 — App Router, Server Components by default |
+| Framework | Next.js 16 (React 19) — App Router, Server Components by default |
 | Language | TypeScript (strict) |
 | UI | shadcn/ui + Tailwind CSS |
 | State | Zustand (auth/UI) + TanStack Query v5 (server data) |
@@ -35,18 +35,30 @@
 apps/web/
   app/
     (auth)/             # Public routes — login, register, verify-otp, oauth-callback
+    (legal)/            # Public legal pages — terms, privacy
     (main)/             # Protected routes — conversations, profile, settings, …
     api/                # Next.js route handlers (cookie proxies, auth helpers)
   components/
     ui/                 # shadcn/ui generated components (do not hand-edit)
     chat/               # Domain components — MessageBubble, ConversationItem, …
+    admin/              # Admin/workspace management UI
+    ai/                 # AI assistant / persona / memory UI
+    auth/               # Auth form components
     call/               # WebRTC call overlay modals
+    common/             # Shared cross-domain widgets
+    help/               # Help center UI
+    integrations/       # MCP connector / integration UI
+    layout/             # Sidebar, Header, etc.
     profile/            # Profile card and image cropper
+    settings/           # Settings panels
   lib/
     api/
       auth.ts           # auth-service API calls
       chat.ts           # chat-service API calls
       axios.ts          # axios instances + silent-refresh interceptor
+    actions/            # Server actions
+    auth/               # Auth helpers (cookies, session)
+    help/               # Help center data/content
     store/
       auth.store.ts     # Zustand — currentUser, tokens
       ui.store.ts       # Zustand — modal open states

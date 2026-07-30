@@ -38,13 +38,13 @@ export function ProfileImageHeader({
         {resolvedCover ? (
           <Image src={resolvedCover} alt="" fill unoptimized className="object-cover" />
         ) : (
-          <div className="absolute inset-0 bg-gradient-to-br from-pon-cyan via-pon-peach to-pon-pink" />
+          <div className="absolute inset-0 bg-primary" />
         )}
         <div className="absolute inset-0 bg-black/20" />
 
         <button
           onClick={() => coverInputRef.current?.click()}
-          className="absolute bottom-3 right-3 flex items-center gap-1.5 rounded-full bg-black/50 hover:bg-black/70 transition-colors text-white text-xs font-medium px-3 py-1.5 backdrop-blur-sm"
+          className="absolute bottom-3 right-3 flex items-center gap-1.5 rounded-full bg-black/50 hover:bg-black/70 transition-colors text-white text-xs font-medium px-3 py-1.5"
         >
           <ImagePlus className="size-3.5" />
           {changeCoverLabel}
@@ -61,11 +61,11 @@ export function ProfileImageHeader({
       {/* Avatar overlapping cover */}
       <div className="flex justify-center -mt-14">
         <div className="relative group">
-          <Avatar className="size-28 ring-4 ring-background shadow-xl">
+          <Avatar className="size-28 ring-4 ring-background">
             {resolvedAvatar ? (
               <AvatarImage src={resolvedAvatar} alt={displayName} />
             ) : (
-              <AvatarFallback className="text-3xl font-bold bg-gradient-to-br from-pon-cyan to-pon-pink text-white">
+              <AvatarFallback className="text-3xl font-bold bg-primary text-white">
                 {initials}
               </AvatarFallback>
             )}
@@ -80,7 +80,7 @@ export function ProfileImageHeader({
             </div>
           </button>
 
-          <div className="absolute -bottom-1 -right-1 size-8 rounded-full bg-primary flex items-center justify-center shadow-md border-2 border-background">
+          <div className="absolute -bottom-1 -right-1 size-8 rounded-full bg-primary flex items-center justify-center border-2 border-background">
             <Camera className="size-3.5 text-white" />
           </div>
 

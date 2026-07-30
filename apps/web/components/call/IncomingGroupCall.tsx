@@ -41,7 +41,7 @@ export function IncomingGroupCall() {
   const decline = () => useCallStore.getState().setIncomingGroupCall(null)
 
   return (
-    <div className="fixed bottom-6 right-6 z-[110] w-[min(90vw,320px)] sm:w-80 rounded-2xl border bg-background p-5 shadow-2xl">
+    <div className="fixed bottom-6 right-6 z-[110] w-[min(90vw,320px)] sm:w-80 rounded-2xl border bg-background p-5">
       <p className="text-sm text-muted-foreground">
         {incoming.media === 'video' ? t('incomingGroupVideo') : t('incomingGroupVoice')}
       </p>
@@ -49,7 +49,7 @@ export function IncomingGroupCall() {
         {resolveName(incoming.startedBy) || t('peerFallback')}
       </p>
       {incoming.aiNotetaker && (
-        <p className="mt-1 flex items-center gap-1.5 text-xs text-pon-cyan">
+        <p className="mt-1 flex items-center gap-1.5 text-xs text-primary">
           <Sparkles className="size-3.5" />
           {t('aiTakingNotes')}
         </p>

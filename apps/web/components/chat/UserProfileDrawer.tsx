@@ -210,7 +210,7 @@ export function UserProfileDrawer({ userId, onClose }: Props) {
                   className="object-cover"
                 />
               ) : (
-                <div className="absolute inset-0 bg-gradient-to-br from-pon-cyan via-pon-peach to-pon-pink opacity-60" />
+                <div className="absolute inset-0 bg-primary opacity-60" />
               )}
             </div>
 

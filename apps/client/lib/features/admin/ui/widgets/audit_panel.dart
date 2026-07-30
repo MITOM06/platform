@@ -106,12 +106,12 @@ class _AuditTile extends StatelessWidget {
                 padding:
                     const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                 decoration: BoxDecoration(
-                  color: AppTheme.ponCyan.withValues(alpha: 0.12),
+                  color: AppTheme.ponAccent.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(6),
                 ),
                 child: Text(entry.action,
                     style: const TextStyle(
-                        color: AppTheme.ponCyan,
+                        color: AppTheme.ponAccent,
                         fontSize: 11,
                         fontFamily: 'monospace')),
               ),

@@ -75,7 +75,7 @@ export function BlockedComposerNotice({
           size="sm"
           onClick={handleUnblock}
           disabled={unblocking}
-          className="rounded-full text-xs font-semibold px-4 bg-primary text-primary-foreground hover:opacity-90 shadow-sm shrink-0"
+          className="rounded-full text-xs font-semibold px-4 bg-primary text-primary-foreground hover:opacity-90 shrink-0"
         >
           {unblocking ? (
             <Loader2 className="size-3 animate-spin mr-1.5" />

@@ -13,7 +13,7 @@ class Otp6BoxInput extends StatefulWidget {
     super.key,
     required this.controller,
     this.onCompleted,
-    this.accentColor = AppTheme.ponCyan,
+    this.accentColor = AppTheme.ponAccent,
   });
 
   @override
@@ -141,7 +141,7 @@ class _OtpBox extends StatelessWidget {
       width: width,
       height: 54,
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(10),
         color: baseColor.withValues(alpha: isActive ? 0.08 : 0.04),
         border: Border.all(
           color: isActive
@@ -151,15 +151,6 @@ class _OtpBox extends StatelessWidget {
                   : baseColor.withValues(alpha: isDark ? 0.2 : 0.25),
           width: isActive ? 2.0 : 1.5,
         ),
-        boxShadow: isActive
-            ? [
-                BoxShadow(
-                  color: accentColor.withValues(alpha: 0.25),
-                  blurRadius: 10,
-                  spreadRadius: 1,
-                )
-              ]
-            : null,
       ),
       alignment: Alignment.center,
       child: char.isEmpty

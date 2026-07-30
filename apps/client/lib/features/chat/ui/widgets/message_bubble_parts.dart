@@ -51,7 +51,7 @@ class GroupSenderHeader extends ConsumerWidget {
               style: TextStyle(
                 fontSize: 11,
                 fontWeight: FontWeight.w600,
-                color: AppTheme.ponCyan.withValues(alpha: 0.8),
+                color: AppTheme.ponAccent.withValues(alpha: 0.8),
               ),
             ),
           ],
@@ -74,7 +74,7 @@ class ReplyQuote extends StatelessWidget {
         color: Colors.black.withValues(alpha: 0.2),
         borderRadius: BorderRadius.circular(8),
         border: const Border(
-          left: BorderSide(color: AppTheme.ponCyan, width: 3),
+          left: BorderSide(color: AppTheme.ponAccent, width: 3),
         ),
       ),
       child: Text(
@@ -154,7 +154,7 @@ class _ReactionChip extends StatelessWidget {
             color: AppTheme.darkSurface,
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
-              color: AppTheme.ponCyan.withValues(alpha: 0.3),
+              color: AppTheme.ponAccent.withValues(alpha: 0.3),
               width: 1,
             ),
           ),
@@ -187,7 +187,7 @@ class ReadTick extends StatelessWidget {
     return Icon(
       isRead ? Icons.done_all_rounded : Icons.done_rounded,
       size: 13,
-      color: isRead ? AppTheme.ponCyan : Colors.white.withValues(alpha: 0.4),
+      color: isRead ? AppTheme.ponAccent : Colors.white.withValues(alpha: 0.4),
     );
   }
 }

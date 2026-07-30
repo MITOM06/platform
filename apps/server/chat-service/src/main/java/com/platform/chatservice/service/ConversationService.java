@@ -402,6 +402,20 @@ public class ConversationService {
     return conversation.getAdmins() != null && conversation.getAdmins().contains(userId);
   }
 
+  /**
+   * True iff {@code conversationId} is a 1-1 (exactly 2 participants) with the native AI bot as the
+   * other participant — i.e. every message here is implicitly "to the AI", so no {@code @AI}
+   * mention is needed to trigger a reply. Group chats (and 1-1s between two humans) still require
+   * an explicit mention.
+   */
+  public boolean isDirectAiConversation(String conversationId) {
+    return conversationCacheService
+        .findByIdOptional(conversationId)
+        .map(Conversation::getParticipants)
+        .map(p -> p.size() == 2 && p.contains(AiConstants.AI_BOT_USER_ID))
+        .orElse(false);
+  }
+
   /** A bot participant (built-in AI or a registered, enabled external bot) is always accepted. */
   private boolean isBotParticipant(String participantId) {
     if (AiConstants.AI_BOT_USER_ID.equals(participantId)) {

@@ -118,7 +118,7 @@ export function ConversationSettingsDrawer({
               {/* Pinned Messages */}
               {conversation.pinnedMessages.length > 0 && (
                 <AccordionItem value="pinned" className="border-none">
-                  <AccordionTrigger className="hover:no-underline py-2 data-[state=open]:text-pon-cyan">
+                  <AccordionTrigger className="hover:no-underline py-2 data-[state=open]:text-primary">
                     <span className="font-semibold text-sm">{t('pinnedMessages')}</span>
                   </AccordionTrigger>
                   <AccordionContent className="pb-4 pt-1">

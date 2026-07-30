@@ -75,7 +75,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="flex-1 flex flex-col h-full bg-background/50 overflow-y-auto">
-      <div className="border-b px-6 py-4 bg-background/80 backdrop-blur-md sticky top-0 z-10">
+      <div className="border-b px-6 py-4 bg-background sticky top-0 z-10">
         <div className="flex items-center gap-3">
           <Button variant="ghost" size="icon" asChild aria-label={t('back')}>
             <Link href="/settings">
@@ -84,7 +84,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
           </Button>
           <div>
             <h1 className="text-2xl font-bold flex items-center gap-2">
-              <ShieldCheck className="text-pon-cyan size-6" /> {t('title')}
+              <ShieldCheck className="text-primary size-6" /> {t('title')}
             </h1>
             <p className="text-sm text-muted-foreground mt-1">{t('subtitle')}</p>
           </div>

@@ -106,7 +106,7 @@ export function RolesPanel() {
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="size-7 text-pon-cyan disabled:opacity-40"
+                        className="size-7 text-primary disabled:opacity-40"
                         title={t('save')}
                         disabled={!isDirty(r) || update.isPending}
                         onClick={() => saveRole(r)}

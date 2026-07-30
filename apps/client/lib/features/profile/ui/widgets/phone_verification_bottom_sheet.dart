@@ -296,7 +296,7 @@ class _PhoneVerificationBottomSheetState
         const SizedBox(height: 16),
         FilledButton(
           style: FilledButton.styleFrom(
-            backgroundColor: AppTheme.ponCyan,
+            backgroundColor: AppTheme.ponAccent,
             foregroundColor: Colors.black,
           ),
           onPressed: (_sending || !_hasValidNumber) ? null : _sendOtp,
@@ -341,7 +341,7 @@ class _PhoneVerificationBottomSheetState
         const SizedBox(height: 16),
         FilledButton(
           style: FilledButton.styleFrom(
-            backgroundColor: AppTheme.ponCyan,
+            backgroundColor: AppTheme.ponAccent,
             foregroundColor: Colors.black,
           ),
           onPressed: _verifying ? null : _verify,

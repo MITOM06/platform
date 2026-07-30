@@ -143,7 +143,7 @@ export function MessageViewport(props: Props) {
           it stays pinned regardless of scroll position. */}
       {activeMessageTime && (
         <div className="absolute top-2 left-0 right-0 flex justify-center z-30 pointer-events-none">
-          <span className="text-[11px] bg-background/90 backdrop-blur-sm border px-3 py-1 rounded-full shadow-sm text-muted-foreground font-medium">
+          <span className="text-[11px] bg-background border px-3 py-1 rounded-full text-muted-foreground font-medium">
             {new Date(activeMessageTime).toLocaleString(locale, {
               hour: '2-digit',
               minute: '2-digit',

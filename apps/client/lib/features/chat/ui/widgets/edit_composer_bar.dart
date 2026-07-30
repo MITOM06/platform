@@ -16,7 +16,7 @@ class EditComposerBar extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(16, 8, 8, 8),
       child: Row(
         children: [
-          const Icon(Icons.edit_rounded, color: AppTheme.ponPeach, size: 18),
+          const Icon(Icons.edit_rounded, color: AppTheme.ponAccent, size: 18),
           const SizedBox(width: 10),
           Expanded(
             child: Column(
@@ -26,7 +26,7 @@ class EditComposerBar extends StatelessWidget {
                 Text(
                   context.l10n.actionEdit,
                   style: const TextStyle(
-                    color: AppTheme.ponPeach,
+                    color: AppTheme.ponAccent,
                     fontSize: 11,
                     fontWeight: FontWeight.w600,
                   ),

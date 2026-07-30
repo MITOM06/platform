@@ -55,11 +55,11 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
           bottom: TabBar(
             indicator: UnderlineTabIndicator(
               borderSide: BorderSide(
-                color: isDark ? AppTheme.ponCyan : Theme.of(context).colorScheme.primary,
+                color: isDark ? AppTheme.ponAccent : Theme.of(context).colorScheme.primary,
                 width: 3.0,
               ),
             ),
-            labelColor: isDark ? AppTheme.ponCyan : Theme.of(context).colorScheme.primary,
+            labelColor: isDark ? AppTheme.ponAccent : Theme.of(context).colorScheme.primary,
             unselectedLabelColor: isDark ? Colors.white54 : Colors.black54,
             labelStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
             unselectedLabelStyle: const TextStyle(fontWeight: FontWeight.normal, fontSize: 16),
@@ -119,7 +119,7 @@ class _FriendsTab extends ConsumerWidget {
             child: Text(context.l10n.actionCancel),
           ),
           TextButton(
-            style: TextButton.styleFrom(foregroundColor: AppTheme.ponPink),
+            style: TextButton.styleFrom(foregroundColor: AppTheme.ponAccent),
             onPressed: () => Navigator.of(ctx).pop(true),
             child: Text(context.l10n.unfriend),
           ),
@@ -162,7 +162,7 @@ class _FriendsTab extends ConsumerWidget {
                 controller: controller,
                 labelText: context.l10n.searchHint,
                 prefixIcon: Icons.search,
-                focusColor: AppTheme.ponCyan,
+                focusColor: AppTheme.ponAccent,
                 onChanged: onSearchChanged,
               ),
             ),
@@ -180,7 +180,7 @@ class _FriendsTab extends ConsumerWidget {
                           return Padding(
                             padding: const EdgeInsets.only(bottom: 12),
                             child: PonCard(
-                              glowColor: AppTheme.ponCyan,
+                              glowColor: AppTheme.ponAccent,
                               glowStrength: isDark ? 4 : 0,
                               child: ListTile(
                                 contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
@@ -205,14 +205,14 @@ class _FriendsTab extends ConsumerWidget {
                                     Icon(
                                       Icons.chat_bubble_outline_rounded,
                                       color: isDark
-                                          ? AppTheme.ponCyan
+                                          ? AppTheme.ponAccent
                                           : Theme.of(context).colorScheme.primary,
                                       size: 20,
                                     ),
                                     IconButton(
                                       icon: const Icon(Icons.person_remove_outlined,
                                           size: 20),
-                                      color: AppTheme.ponPink,
+                                      color: AppTheme.ponAccent,
                                       tooltip: context.l10n.unfriend,
                                       onPressed: () =>
                                           _unfriend(ref, context, friend),
@@ -296,7 +296,7 @@ class _RequestsTab extends ConsumerWidget {
                 controller: controller,
                 labelText: context.l10n.searchHint,
                 prefixIcon: Icons.search,
-                focusColor: AppTheme.ponPink,
+                focusColor: AppTheme.ponAccent,
                 onChanged: onSearchChanged,
               ),
             ),
@@ -315,7 +315,7 @@ class _RequestsTab extends ConsumerWidget {
                           return Padding(
                             padding: const EdgeInsets.only(bottom: 12),
                             child: PonCard(
-                              glowColor: AppTheme.ponPink,
+                              glowColor: AppTheme.ponAccent,
                               glowStrength: isDark ? 4 : 0,
                               child: ListTile(
                                 contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
@@ -340,7 +340,7 @@ class _RequestsTab extends ConsumerWidget {
                                     TextButton(
                                       style: TextButton.styleFrom(
                                         foregroundColor: isDark
-                                            ? AppTheme.ponCyan
+                                            ? AppTheme.ponAccent
                                             : Theme.of(context).colorScheme.primary,
                                         textStyle: const TextStyle(
                                             fontWeight: FontWeight.bold),
@@ -351,7 +351,7 @@ class _RequestsTab extends ConsumerWidget {
                                     ),
                                     IconButton(
                                       icon: const Icon(Icons.close, size: 20),
-                                      color: AppTheme.ponPink,
+                                      color: AppTheme.ponAccent,
                                       tooltip: context.l10n.declineFriend,
                                       onPressed: () =>
                                           _decline(ref, context, requester),

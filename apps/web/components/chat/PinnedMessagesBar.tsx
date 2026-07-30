@@ -84,23 +84,23 @@ export function PinnedMessagesBar({ pinnedMessages, onUnpin, conversationId, cur
 
   if (expanded) {
     return (
-      <div className="bg-pon-cyan/10 border-l-[3px] border-l-pon-cyan shrink-0">
+      <div className="bg-primary/10 border-l-[3px] border-l-primary shrink-0">
         {/* Expanded header — click to collapse */}
         <div
-          className="flex items-center gap-2 px-3 py-1.5 cursor-pointer hover:bg-pon-cyan/15 transition-colors"
+          className="flex items-center gap-2 px-3 py-1.5 cursor-pointer hover:bg-primary/15 transition-colors"
           onClick={() => setExpanded(false)}
         >
-          <Pin className="size-3.5 text-pon-cyan shrink-0" />
-          <p className="text-[10px] text-pon-cyan font-semibold uppercase tracking-wider flex-1">
+          <Pin className="size-3.5 text-primary shrink-0" />
+          <p className="text-[10px] text-primary font-semibold uppercase tracking-wider flex-1">
             {t('pinnedMessages')} ({pinnedMessages.length})
           </p>
-          <ChevronUp className="size-3.5 text-pon-cyan shrink-0" />
+          <ChevronUp className="size-3.5 text-primary shrink-0" />
         </div>
         {/* Each pinned message as its own row */}
         {pinnedMessages.map((pin) => (
           <div
             key={pin.id}
-            className="flex items-center gap-2 px-3 py-1.5 hover:bg-pon-cyan/15 cursor-pointer transition-colors border-t border-pon-cyan/10"
+            className="flex items-center gap-2 px-3 py-1.5 hover:bg-primary/15 cursor-pointer transition-colors border-t border-primary/10"
             onClick={() => { setExpanded(false); setTimeout(() => handleJump(pin.id), 150) }}
           >
             <div className="flex-1 min-w-0">
@@ -126,23 +126,23 @@ export function PinnedMessagesBar({ pinnedMessages, onUnpin, conversationId, cur
   // Collapsed view — single row showing latest pin
   return (
     <div
-      className="bg-pon-cyan/10 border-l-[3px] border-l-pon-cyan px-3 py-1.5 flex items-center gap-2 cursor-pointer transition-colors hover:bg-pon-cyan/15 shrink-0"
+      className="bg-primary/10 border-l-[3px] border-l-primary px-3 py-1.5 flex items-center gap-2 cursor-pointer transition-colors hover:bg-primary/15 shrink-0"
       onClick={() => (hasMore ? setExpanded(true) : handleJump(latest.id))}
     >
-      <Pin className="size-3.5 text-pon-cyan shrink-0" />
+      <Pin className="size-3.5 text-primary shrink-0" />
       <div className="flex-1 min-w-0">
-        <p className="text-[10px] text-pon-cyan font-semibold uppercase tracking-wider mb-0.5">
+        <p className="text-[10px] text-primary font-semibold uppercase tracking-wider mb-0.5">
           {t('pinnedMessages')}
         </p>
         <p className="text-xs text-foreground truncate">{latestContent}</p>
       </div>
       {hasMore && (
-        <span className="text-[10px] font-semibold text-pon-cyan bg-pon-cyan/20 px-1.5 py-0.5 rounded-full shrink-0">
+        <span className="text-[10px] font-semibold text-primary bg-primary/20 px-1.5 py-0.5 rounded-full shrink-0">
           +{extraCount}
         </span>
       )}
       {hasMore ? (
-        <ChevronDown className="size-3.5 text-pon-cyan shrink-0" />
+        <ChevronDown className="size-3.5 text-primary shrink-0" />
       ) : (
         <Button
           variant="ghost"

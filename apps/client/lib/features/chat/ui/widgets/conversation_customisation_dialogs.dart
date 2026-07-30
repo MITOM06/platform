@@ -214,7 +214,7 @@ class _NicknameRowState extends ConsumerState<_NicknameRow> {
                       enabledBorder: UnderlineInputBorder(
                           borderSide: BorderSide(color: Colors.white24)),
                       focusedBorder: UnderlineInputBorder(
-                          borderSide: BorderSide(color: AppTheme.ponCyan)),
+                          borderSide: BorderSide(color: AppTheme.ponAccent)),
                     ),
                     onSubmitted: (_) => _save(),
                   )
@@ -225,7 +225,7 @@ class _NicknameRowState extends ConsumerState<_NicknameRow> {
                         : context.l10n.nicknameNonePlaceholder,
                     style: TextStyle(
                       color: nickname.isNotEmpty
-                          ? AppTheme.ponCyan
+                          ? AppTheme.ponAccent
                           : Colors.white38,
                       fontSize: 13,
                       fontStyle: nickname.isNotEmpty
@@ -241,7 +241,7 @@ class _NicknameRowState extends ConsumerState<_NicknameRow> {
           const SizedBox(width: 8),
           _editing
               ? IconButton(
-                  icon: const Icon(Icons.check, color: AppTheme.ponCyan, size: 20),
+                  icon: const Icon(Icons.check, color: AppTheme.ponAccent, size: 20),
                   onPressed: _save,
                 )
               : IconButton(

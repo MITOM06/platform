@@ -135,7 +135,7 @@ export function WorkspaceAiSettings() {
       {/* Persona defaults */}
       <section className="space-y-4">
         <h2 className="text-lg font-semibold flex items-center gap-2">
-          <Sparkles className="size-5 text-pon-cyan" /> {t('aiPersonaTitle')}
+          <Sparkles className="size-5 text-primary" /> {t('aiPersonaTitle')}
         </h2>
         <p className="text-sm text-muted-foreground">{t('aiInheritHint')}</p>
 

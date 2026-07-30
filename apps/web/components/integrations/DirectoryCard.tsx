@@ -24,7 +24,7 @@ function DirectoryLogo({ icon, name }: { icon: string; name: string }) {
   const url = DIRECTORY_LOGO_URLS[icon.toLowerCase()]
   if (!url) {
     return (
-      <span className="text-lg font-bold text-pon-cyan" aria-hidden>
+      <span className="text-lg font-bold text-primary" aria-hidden>
         {name.charAt(0).toUpperCase()}
       </span>
     )
@@ -41,7 +41,7 @@ function DirectoryLogo({ icon, name }: { icon: string; name: string }) {
         // Fallback to monogram on load error
         const parent = (e.target as HTMLElement).parentElement
         if (parent) {
-          parent.innerHTML = `<span class="text-lg font-bold text-pon-cyan">${name.charAt(0).toUpperCase()}</span>`
+          parent.innerHTML = `<span class="text-lg font-bold text-primary">${name.charAt(0).toUpperCase()}</span>`
         }
       }}
     />
@@ -80,7 +80,7 @@ export function DirectoryCard({
         'relative flex flex-col rounded-xl border p-[18px] overflow-hidden min-h-[170px]',
         'bg-gradient-to-b from-card to-muted/40',
         isConnected &&
-          'border-pon-green/40 shadow-[0_0_0_1px_rgba(67,232,166,0.12),0_14px_40px_-22px_rgba(67,232,166,0.5)]',
+          'border-pon-green/40',
       )}
     >
       <div className="flex items-start gap-3">
@@ -93,7 +93,7 @@ export function DirectoryCard({
             <span className="font-mono text-[10px] text-muted-foreground uppercase tracking-wide">
               {t(`tier_${entry.tier}` as 'tier_both')}
             </span>
-            <span className="font-mono text-[10px] text-pon-peach/80 uppercase tracking-wide">
+            <span className="font-mono text-[10px] text-primary/80 uppercase tracking-wide">
               · {entry.authMode}
             </span>
           </div>
@@ -147,7 +147,7 @@ export function DirectoryCard({
         ) : (
           <Button
             size="sm"
-            className="bg-gradient-to-r from-pon-cyan to-pon-blue text-black hover:opacity-90 shadow-[0_0_20px_-4px_rgba(61,224,255,0.6)]"
+            className="bg-primary text-primary-foreground hover:opacity-90"
             disabled={connecting}
             onClick={() => onConnect(entry)}
           >

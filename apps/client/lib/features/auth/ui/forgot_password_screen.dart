@@ -76,7 +76,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                 shape: BoxShape.circle,
                 gradient: RadialGradient(
                   colors: [
-                    AppTheme.ponPink.withValues(alpha: 0.12),
+                    AppTheme.ponAccent.withValues(alpha: 0.12),
                     Colors.transparent,
                   ],
                 ),
@@ -93,7 +93,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                 shape: BoxShape.circle,
                 gradient: RadialGradient(
                   colors: [
-                    AppTheme.ponCyan.withValues(alpha: 0.15),
+                    AppTheme.ponAccent.withValues(alpha: 0.15),
                     Colors.transparent,
                   ],
                 ),
@@ -135,7 +135,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
 
                       // Forgot Form Card
                       PonCard(
-                        glowColor: AppTheme.ponPeach,
+                        glowColor: AppTheme.ponAccent,
                         glowStrength: 8,
                         child: Padding(
                           padding: const EdgeInsets.all(24.0),
@@ -152,7 +152,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                                   keyboardType: TextInputType.emailAddress,
                                   textInputAction: TextInputAction.done,
                                   onFieldSubmitted: (_) => _submit(),
-                                  focusColor: AppTheme.ponCyan,
+                                  focusColor: AppTheme.ponAccent,
                                   validator: (v) {
                                     if (v == null || v.isEmpty) return context.l10n.valEmailRequired;
                                     if (!v.contains('@')) return context.l10n.valEmailInvalid;
@@ -165,8 +165,8 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                                 PonButton(
                                   onPressed: _submit,
                                   isLoading: _isLoading,
-                                  gradientColors: const [AppTheme.ponPeach, AppTheme.ponPink],
-                                  glowColor: AppTheme.ponPink,
+                                  gradientColors: const [AppTheme.ponAccent, AppTheme.ponAccent],
+                                  glowColor: AppTheme.ponAccent,
                                   child: Text(context.l10n.sendOtpButton),
                                 ),
                               ],

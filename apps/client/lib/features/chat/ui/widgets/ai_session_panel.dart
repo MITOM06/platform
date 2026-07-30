@@ -35,7 +35,7 @@ class AiSessionPanel extends ConsumerWidget {
             child: TextButton.icon(
               icon: const Icon(Icons.add, size: 16),
               label: Text(context.l10n.aiNewSession),
-              style: TextButton.styleFrom(foregroundColor: AppTheme.ponCyan),
+              style: TextButton.styleFrom(foregroundColor: AppTheme.ponAccent),
               onPressed: () => ref
                   .read(aiSessionsProvider(conversationId).notifier)
                   .createNew(),
@@ -136,7 +136,7 @@ class _SessionTile extends ConsumerWidget {
     return ListTile(
       dense: true,
       tileColor: session.isActive
-          ? AppTheme.ponCyan.withValues(alpha: 0.10)
+          ? AppTheme.ponAccent.withValues(alpha: 0.10)
           : null,
       contentPadding: const EdgeInsets.symmetric(horizontal: 16),
       title: Text(
@@ -176,16 +176,16 @@ class _ActiveChip extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
-        color: AppTheme.ponCyan.withValues(alpha: 0.18),
+        color: AppTheme.ponAccent.withValues(alpha: 0.18),
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: AppTheme.ponCyan.withValues(alpha: 0.4)),
+        border: Border.all(color: AppTheme.ponAccent.withValues(alpha: 0.4)),
       ),
       child: Text(
         context.l10n.aiSessionActive,
         style: const TextStyle(
           fontSize: 10,
           fontWeight: FontWeight.w600,
-          color: AppTheme.ponCyan,
+          color: AppTheme.ponAccent,
         ),
       ),
     );

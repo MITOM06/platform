@@ -34,7 +34,7 @@ export function GroupMemberRow({
       </Avatar>
       <div className="flex-1 min-w-0">
         <p className="text-sm truncate">{name}</p>
-        {isMemberAdmin && <p className="text-[11px] text-pon-cyan">{adminLabel}</p>}
+        {isMemberAdmin && <p className="text-[11px] text-primary">{adminLabel}</p>}
       </div>
       {canRemove && (
         <Button size="icon-xs" variant="ghost" onClick={onRemove} disabled={saving}>

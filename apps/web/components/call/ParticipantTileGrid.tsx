@@ -37,7 +37,7 @@ function VideoTile({
   const hasVideoTrack = video && !!stream?.getVideoTracks().some((t) => t.enabled)
 
   return (
-    <div className="relative aspect-video w-full overflow-hidden rounded-2xl border border-white/10 bg-neutral-900">
+    <div className="relative aspect-video w-full overflow-hidden rounded-lg border border-white/10 bg-neutral-900">
       <video
         ref={ref}
         autoPlay
@@ -47,7 +47,7 @@ function VideoTile({
       />
       {!hasVideoTrack && (
         <div className="absolute inset-0 flex items-center justify-center">
-          <div className="flex size-16 items-center justify-center rounded-full bg-gradient-to-br from-pon-cyan/40 to-pon-peach/40 text-2xl font-semibold text-white ring-2 ring-white/10">
+          <div className="flex size-16 items-center justify-center rounded-full bg-primary/40 text-2xl font-semibold text-white ring-2 ring-white/10">
             {initial(name)}
           </div>
         </div>

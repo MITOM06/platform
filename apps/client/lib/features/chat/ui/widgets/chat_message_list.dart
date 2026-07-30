@@ -47,7 +47,7 @@ class ChatMessageList extends StatelessWidget {
                 child: CircularProgressIndicator(
                   strokeWidth: 2,
                   valueColor:
-                      AlwaysStoppedAnimation<Color>(AppTheme.ponCyan),
+                      AlwaysStoppedAnimation<Color>(AppTheme.ponAccent),
                 ),
               ),
             ),

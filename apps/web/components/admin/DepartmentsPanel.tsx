@@ -100,7 +100,7 @@ export function DepartmentsPanel() {
               key={d._id}
               className="flex items-center gap-3 rounded-lg border px-4 py-3"
             >
-              <UsersRound className="size-5 text-pon-cyan shrink-0" />
+              <UsersRound className="size-5 text-primary shrink-0" />
               <div className="min-w-0 flex-1">
                 <p className="font-medium truncate">{d.name}</p>
                 {d.description && (

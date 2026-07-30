@@ -16,17 +16,17 @@ class TracePanel extends StatelessWidget {
         child: ExpansionTile(
           tilePadding: EdgeInsets.zero,
           childrenPadding: const EdgeInsets.only(left: 4, bottom: 8),
-          leading: const Icon(Icons.account_tree, size: 14, color: Color(0xFFB47FFF)),
+          leading: const Icon(Icons.account_tree, size: 14, color: Color(0xFF96435B)),
           title: Text(
             context.l10n.aiTraceTitle,
             style: const TextStyle(
               fontSize: 12,
-              color: Color(0xFFB47FFF),
+              color: Color(0xFF96435B),
               fontStyle: FontStyle.italic,
             ),
           ),
-          iconColor: const Color(0xFFB47FFF),
-          collapsedIconColor: const Color(0xFFB47FFF),
+          iconColor: const Color(0xFF96435B),
+          collapsedIconColor: const Color(0xFF96435B),
           children: [
             if (trace.thinkingBlocks.isNotEmpty) _ThinkingSection(blocks: trace.thinkingBlocks),
             if (trace.toolCalls.isNotEmpty) _ToolCallsSection(toolCalls: trace.toolCalls),
@@ -46,13 +46,13 @@ class _ThinkingSection extends StatelessWidget {
   Widget build(BuildContext context) {
     return ExpansionTile(
       tilePadding: const EdgeInsets.symmetric(horizontal: 4),
-      leading: const Icon(Icons.psychology, size: 14, color: Color(0xFF9B7FFF)),
+      leading: const Icon(Icons.psychology, size: 14, color: Color(0xFF96435B)),
       title: Text(
         context.l10n.aiTraceThinking,
-        style: const TextStyle(fontSize: 12, color: Color(0xFF9B7FFF)),
+        style: const TextStyle(fontSize: 12, color: Color(0xFF96435B)),
       ),
-      iconColor: const Color(0xFF9B7FFF),
-      collapsedIconColor: const Color(0xFF9B7FFF),
+      iconColor: const Color(0xFF96435B),
+      collapsedIconColor: const Color(0xFF96435B),
       children: blocks.map((block) => _ThinkingBlock(text: block)).toList(),
     );
   }
@@ -78,7 +78,7 @@ class _ThinkingBlock extends StatelessWidget {
           style: const TextStyle(
             fontSize: 11,
             fontFamily: 'monospace',
-            color: Color(0xFFD8C5FF),
+            color: Color(0xFFE8B4BE),
           ),
         ),
       ),
@@ -99,13 +99,13 @@ class _ToolCallsSection extends StatelessWidget {
           padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 4),
           child: Row(
             children: [
-              const Icon(Icons.build_outlined, size: 12, color: Color(0xFFB47FFF)),
+              const Icon(Icons.build_outlined, size: 12, color: Color(0xFF96435B)),
               const SizedBox(width: 4),
               Text(
                 context.l10n.aiTraceTools,
                 style: const TextStyle(
                   fontSize: 11,
-                  color: Color(0xFFB47FFF),
+                  color: Color(0xFF96435B),
                   fontWeight: FontWeight.bold,
                 ),
               ),

@@ -58,7 +58,7 @@ function ToneSelector({
             onClick={() => onChange(t.id)}
             className={`px-3.5 py-2 rounded-lg text-sm font-medium border transition-all duration-200 flex items-center gap-1.5 ${
               selected
-                ? 'border-primary bg-primary/10 text-primary shadow-sm'
+                ? 'border-primary bg-primary/10 text-primary'
                 : 'border-border bg-card text-muted-foreground hover:border-primary/40 hover:text-foreground'
             } ${disabled ? 'opacity-50 pointer-events-none' : ''}`}
           >
@@ -169,7 +169,7 @@ export default function AiPersonaPage() {
   if (!conversationId) {
     return (
       <div className="flex flex-col h-full">
-        <header className="h-14 border-b px-4 flex items-center gap-3 shrink-0 bg-background/95 backdrop-blur-md">
+        <header className="h-14 border-b px-4 flex items-center gap-3 shrink-0 bg-background">
           <Link href="/conversations" className="text-muted-foreground hover:text-foreground transition-colors">
             <ArrowLeft className="size-5" />
           </Link>
@@ -190,7 +190,7 @@ export default function AiPersonaPage() {
   return (
     <div className="flex flex-col h-full">
       {/* Header */}
-      <header className="h-14 border-b px-4 flex items-center gap-3 shrink-0 bg-background/95 backdrop-blur-md">
+      <header className="h-14 border-b px-4 flex items-center gap-3 shrink-0 bg-background">
         <Link
           href={`/conversations/${conversationId}`}
           className="text-muted-foreground hover:text-foreground transition-colors"
@@ -203,8 +203,8 @@ export default function AiPersonaPage() {
       <div className="flex-1 overflow-y-auto">
         {/* Background glows */}
         <div className="relative">
-          <div className="absolute -top-24 -left-24 w-72 h-72 rounded-full bg-[#B47FFF]/5 blur-3xl pointer-events-none dark:bg-[#B47FFF]/8" />
-          <div className="absolute -bottom-24 -right-24 w-72 h-72 rounded-full bg-pon-cyan/5 blur-3xl pointer-events-none dark:bg-pon-cyan/8" />
+          <div className="absolute -top-24 -left-24 w-72 h-72 rounded-full bg-primary/5 blur-3xl pointer-events-none dark:bg-primary/8" />
+          <div className="absolute -bottom-24 -right-24 w-72 h-72 rounded-full bg-primary/5 blur-3xl pointer-events-none dark:bg-primary/8" />
 
           <div className="relative max-w-md mx-auto px-6 py-8">
             {isLoading ? (
@@ -238,16 +238,16 @@ export default function AiPersonaPage() {
                     className="relative group disabled:opacity-60"
                     title={t('avatarUploadLabel')}
                   >
-                    <Avatar className="size-20 ring-2 ring-[#B47FFF]/30 ring-offset-2 ring-offset-background">
+                    <Avatar className="size-20 ring-2 ring-primary/30 ring-offset-2 ring-offset-background">
                       {avatarUrl ? (
                         <AvatarImage src={absoluteMediaUrl(avatarUrl)} alt={name} />
                       ) : (
-                        <AvatarFallback className="text-2xl bg-gradient-to-br from-[#B47FFF] to-primary text-white">
+                        <AvatarFallback className="text-2xl bg-primary text-white">
                           <Bot className="size-8" />
                         </AvatarFallback>
                       )}
                     </Avatar>
-                    <div className="absolute -bottom-1 -right-1 size-6 rounded-full bg-[#B47FFF] border-2 border-background flex items-center justify-center">
+                    <div className="absolute -bottom-1 -right-1 size-6 rounded-full bg-primary border-2 border-background flex items-center justify-center">
                       {uploading ? (
                         <Loader2 className="size-3 text-white animate-spin" />
                       ) : (
@@ -261,7 +261,7 @@ export default function AiPersonaPage() {
                 {/* Bot name */}
                 <div className="space-y-2">
                   <Label className="text-sm font-medium flex items-center gap-2">
-                    <Bot className="size-4 text-[#B47FFF]" />
+                    <Bot className="size-4 text-primary" />
                     {t('botNameLabel')}
                   </Label>
                   <Input
@@ -276,7 +276,7 @@ export default function AiPersonaPage() {
                 {/* Tone selector */}
                 <div className="space-y-2">
                   <Label className="text-sm font-medium flex items-center gap-2">
-                    <MessageCircle className="size-4 text-[#B47FFF]" />
+                    <MessageCircle className="size-4 text-primary" />
                     {t('toneLabel')}
                   </Label>
                   <ToneSelector value={tone} onChange={setTone} disabled={isBusy} toneLabels={toneLabels} />
@@ -285,7 +285,7 @@ export default function AiPersonaPage() {
                 {/* System instructions */}
                 <div className="space-y-2">
                   <Label className="text-sm font-medium flex items-center gap-2">
-                    <Sparkles className="size-4 text-[#B47FFF]" />
+                    <Sparkles className="size-4 text-primary" />
                     {t('systemPromptLabel')}
                   </Label>
                   <textarea
@@ -306,7 +306,7 @@ export default function AiPersonaPage() {
                 <Button
                   onClick={handleSave}
                   disabled={isBusy}
-                  className="w-full bg-gradient-to-r from-[#B47FFF] to-primary hover:opacity-90 text-white font-semibold h-11 shadow-lg shadow-[#B47FFF]/20"
+                  className="w-full bg-primary hover:opacity-90 text-white font-semibold h-11"
                 >
                   {saveMutation.isPending ? (
                     <Loader2 className="size-4 mr-2 animate-spin" />

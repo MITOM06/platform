@@ -67,7 +67,7 @@ export function CustomMcpPanel() {
   }
 
   return (
-    <div className="mt-4 rounded-xl border border-dashed border-pon-pink/60 bg-card p-[22px]">
+    <div className="mt-4 rounded-xl border border-dashed border-primary/60 bg-card p-[22px]">
       <div className="flex flex-col gap-1.5 md:flex-row md:items-start md:gap-6 md:flex-wrap">
         <div className="flex-1 w-full sm:min-w-[260px]">
           <h3 className="m-0 mb-1.5 text-base font-semibold">{t('customTitle')}</h3>
@@ -140,7 +140,7 @@ export function CustomMcpPanel() {
 
           {tools && tools.length > 0 && (
             <div className="rounded-lg border bg-background/60 p-3">
-              <p className="font-mono text-[10.5px] uppercase tracking-wide text-pon-cyan mb-2">
+              <p className="font-mono text-[10.5px] uppercase tracking-wide text-primary mb-2">
                 {t('customToolsFound', { count: tools.length })}
               </p>
               <ul className="space-y-1">
@@ -160,7 +160,7 @@ export function CustomMcpPanel() {
           <div className="flex gap-2.5 pt-1">
             {tools === null ? (
               <Button
-                className="bg-gradient-to-r from-pon-cyan to-pon-blue text-black hover:opacity-90"
+                className="bg-primary text-primary-foreground hover:opacity-90"
                 disabled={!url.trim() || discover.isPending}
                 onClick={() => discover.mutate()}
               >
@@ -171,7 +171,7 @@ export function CustomMcpPanel() {
               </Button>
             ) : (
               <Button
-                className="bg-gradient-to-r from-pon-cyan to-pon-blue text-black hover:opacity-90"
+                className="bg-primary text-primary-foreground hover:opacity-90"
                 disabled={saveCustomMcp.isPending}
                 onClick={handleSave}
               >

@@ -29,13 +29,13 @@ class AiBotAvatar extends StatelessWidget {
             shape: BoxShape.circle,
             gradient: avatarUrl == null
                 ? const LinearGradient(
-                    colors: [Color(0xFF6B2FA0), Color(0xFF2D1B69)],
+                    colors: [Color(0xFF7A2E3A), Color(0xFF3A2A2C)],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   )
                 : null,
             border: Border.all(
-                color: const Color(0xFFB47FFF).withValues(alpha: 0.6), width: 1),
+                color: const Color(0xFF96435B).withValues(alpha: 0.6), width: 1),
           ),
           child: avatarUrl != null
               ? ClipOval(
@@ -61,7 +61,7 @@ class AiBotAvatar extends StatelessWidget {
             width: 10,
             height: 10,
             decoration: BoxDecoration(
-              color: const Color(0xFFB47FFF),
+              color: const Color(0xFF96435B),
               shape: BoxShape.circle,
               border: Border.all(
                   color: Theme.of(context).scaffoldBackgroundColor, width: 1.5),
@@ -91,7 +91,7 @@ class _ExternalBotAvatar extends StatelessWidget {
       decoration: const BoxDecoration(
         shape: BoxShape.circle,
         gradient: LinearGradient(
-          colors: [Color(0xFF7C3AED), Color(0xFF14B8A6)],
+          colors: [Color(0xFF96435B), Color(0xFF14B8A6)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),

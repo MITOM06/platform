@@ -232,7 +232,7 @@ class _ChatMessageListSection extends ConsumerWidget {
     if (isLoading) {
       return const Center(
         child: CircularProgressIndicator(
-          valueColor: AlwaysStoppedAnimation<Color>(AppTheme.ponCyan),
+          valueColor: AlwaysStoppedAnimation<Color>(AppTheme.ponAccent),
         ),
       );
     }

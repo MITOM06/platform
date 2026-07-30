@@ -253,7 +253,7 @@ class _ProfileDialogContent extends ConsumerWidget {
                 decoration: BoxDecoration(
                   borderRadius:
                       const BorderRadius.vertical(top: Radius.circular(20)),
-                  color: AppTheme.ponCyan.withValues(alpha: 0.2),
+                  color: AppTheme.ponAccent.withValues(alpha: 0.2),
                   image: coverUrl != null
                       ? DecorationImage(
                           image: CachedNetworkImageProvider(coverUrl),
@@ -272,7 +272,7 @@ class _ProfileDialogContent extends ConsumerWidget {
                         radius: 40,
                         backgroundImage:
                             avatarUrl != null ? CachedNetworkImageProvider(avatarUrl) : null,
-                        backgroundColor: AppTheme.ponCyan.withValues(alpha: 0.3),
+                        backgroundColor: AppTheme.ponAccent.withValues(alpha: 0.3),
                         child: avatarUrl == null
                             ? Text(
                                 u.displayName.isNotEmpty ? u.displayName[0].toUpperCase() : '?',
@@ -289,7 +289,7 @@ class _ProfileDialogContent extends ConsumerWidget {
                             child: Container(
                               padding: const EdgeInsets.all(4),
                               decoration: BoxDecoration(
-                                color: AppTheme.ponCyan,
+                                color: AppTheme.ponAccent,
                                 shape: BoxShape.circle,
                                 border: Border.all(color: AppTheme.darkSurface, width: 2),
                               ),
@@ -378,7 +378,7 @@ class _ProfileDialogContent extends ConsumerWidget {
                                 : const Icon(Icons.check, size: 16),
                             label: Text(context.l10n.profileSave),
                             onPressed: saving ? null : onSave,
-                            style: FilledButton.styleFrom(backgroundColor: AppTheme.ponCyan),
+                            style: FilledButton.styleFrom(backgroundColor: AppTheme.ponAccent),
                           ),
                         ),
                       ],

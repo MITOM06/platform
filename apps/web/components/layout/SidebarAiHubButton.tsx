@@ -15,14 +15,14 @@ export function SidebarAiHubButton() {
   const t = useTranslations('aiHub')
 
   return (
-    <div className="hidden md:block shrink-0 border-t bg-background/95 backdrop-blur-md px-2.5 pt-2.5">
+    <div className="hidden md:block shrink-0 border-t bg-background px-2.5 pt-2.5">
       <button
         type="button"
         onClick={() => router.push('/ai-hub')}
-        className="group relative flex w-full items-center gap-3 rounded-xl p-2.5 text-left transition-colors hover:bg-muted/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pon-cyan/50 justify-center @[200px]:justify-start"
+        className="group relative flex w-full items-center gap-3 rounded-xl p-2.5 text-left transition-colors hover:bg-muted/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 justify-center @[200px]:justify-start"
       >
         {/* Gradient icon badge — same PON gradient as the account avatar ring */}
-        <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-pon-cyan via-pon-peach to-pon-pink shadow-[0_0_12px_-2px] shadow-pon-peach/40">
+        <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-primary">
           <Bot className="size-5 text-white" />
         </span>
 

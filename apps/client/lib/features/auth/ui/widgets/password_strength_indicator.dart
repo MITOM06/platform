@@ -78,7 +78,7 @@ class PasswordStrengthIndicator extends StatelessWidget {
                     passed ? Icons.check_circle_outline : Icons.radio_button_unchecked,
                     size: 14,
                     color: passed
-                        ? AppTheme.ponCyan
+                        ? AppTheme.ponAccent
                         : Colors.white.withValues(alpha: 0.4),
                   ),
                   const SizedBox(width: 6),

@@ -21,9 +21,9 @@ class _HelpScreenState extends State<HelpScreen> {
 
   /// Glow colors cycled across category sections, matching the legal screen.
   static const _glowColors = [
-    AppTheme.ponCyan,
-    AppTheme.ponPeach,
-    AppTheme.ponPink,
+    AppTheme.ponAccent,
+    AppTheme.ponAccent,
+    AppTheme.ponAccent,
   ];
 
   @override
@@ -78,7 +78,7 @@ class _HelpScreenState extends State<HelpScreen> {
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   gradient: RadialGradient(colors: [
-                    AppTheme.ponCyan.withValues(alpha: 0.08),
+                    AppTheme.ponAccent.withValues(alpha: 0.08),
                     Colors.transparent,
                   ]),
                 ),
@@ -93,7 +93,7 @@ class _HelpScreenState extends State<HelpScreen> {
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   gradient: RadialGradient(colors: [
-                    AppTheme.ponPeach.withValues(alpha: 0.08),
+                    AppTheme.ponAccent.withValues(alpha: 0.08),
                     Colors.transparent,
                   ]),
                 ),
@@ -225,7 +225,7 @@ class _SearchField extends StatelessWidget {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
-          borderSide: const BorderSide(color: AppTheme.ponCyan, width: 1.5),
+          borderSide: const BorderSide(color: AppTheme.ponAccent, width: 1.5),
         ),
       ),
     );

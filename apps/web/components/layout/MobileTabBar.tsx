@@ -23,7 +23,7 @@ export function MobileTabBar() {
   }
 
   return (
-    <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 h-16 border-t bg-background/95 backdrop-blur-md flex items-stretch pb-safe">
+    <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 h-16 border-t bg-background flex items-stretch pb-safe">
       {tabs.map(({ key, href, icon: Icon, labelKey }) => {
         const active = isActive(href)
         return (
@@ -35,7 +35,7 @@ export function MobileTabBar() {
               active ? 'text-primary' : 'text-muted-foreground hover:text-foreground',
             )}
           >
-            <Icon className={cn('size-5 shrink-0', active && 'drop-shadow-[0_0_6px_currentColor]')} />
+            <Icon className="size-5 shrink-0" />
             <span className="leading-none">{t(labelKey)}</span>
           </Link>
         )

@@ -9,6 +9,7 @@ import com.platform.chatservice.model.ExternalBot;
 import com.platform.chatservice.service.AiRedisPublisher;
 import com.platform.chatservice.service.CallService;
 import com.platform.chatservice.service.ClusterMessageBroker;
+import com.platform.chatservice.service.ConversationService;
 import com.platform.chatservice.service.ExternalBotService;
 import com.platform.chatservice.service.MessageNotificationService;
 import com.platform.chatservice.service.MessageQueryService;
@@ -35,6 +36,7 @@ class ChatControllerExternalBotTest {
   @Mock private AiRedisPublisher aiRedisPublisher;
   @Mock private CallService callService;
   @Mock private ExternalBotService externalBotService;
+  @Mock private ConversationService conversationService;
   @Mock private MessageResponse messageResponse;
 
   @Test
@@ -48,7 +50,8 @@ class ChatControllerExternalBotTest {
             rateLimiterService,
             aiRedisPublisher,
             callService,
-            externalBotService);
+            externalBotService,
+            conversationService);
 
     when(messageService.sendMessage(any(), any())).thenReturn(messageResponse);
     ExternalBot bot =
@@ -81,7 +84,8 @@ class ChatControllerExternalBotTest {
             rateLimiterService,
             aiRedisPublisher,
             callService,
-            externalBotService);
+            externalBotService,
+            conversationService);
 
     when(messageService.sendMessage(any(), any())).thenReturn(messageResponse);
     when(externalBotService.resolveAssistant("conv-1", "user-1")).thenReturn(Optional.empty());

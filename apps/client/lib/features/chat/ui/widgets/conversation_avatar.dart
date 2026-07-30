@@ -26,7 +26,7 @@ class ConversationAvatar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = gradientColors ??
-        const [AppTheme.ponCyan, AppTheme.ponPeach];
+        const [AppTheme.ponAccent, AppTheme.ponAccent];
     final hasImage = avatarUrl != null && avatarUrl!.isNotEmpty;
 
     Widget inner;

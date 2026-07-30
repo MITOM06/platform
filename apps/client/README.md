@@ -33,7 +33,11 @@ The Flutter client provides a cross-platform mobile UI (Android & iOS) for the P
 | WebSocket | `stomp_dart_client` (STOMP over WS) |
 | Secure storage | `flutter_secure_storage` (tokens) |
 | Preferences | `shared_preferences` |
-| UI | Material Design 3 |
+| UI | Material Design 3 + Dark Neon Theme |
+| Voice messages | `record` (record) + `audioplayers` (playback) |
+| Emoji | `emoji_picker_flutter` |
+| i18n | Flutter ARB — 7 locales (en, vi, zh, ja, ko, es, fr) |
+| Error tracking | `sentry_flutter` |
 
 ---
 
@@ -42,28 +46,32 @@ The Flutter client provides a cross-platform mobile UI (Android & iOS) for the P
 ```
 lib/
 ├── core/
-│   ├── api/
-│   │   ├── auth_dio.dart          # Dio instance → :3001 (auth-service)
-│   │   └── chat_dio.dart          # Dio instance → :8080 (chat-service, with refresh)
-│   ├── router/
-│   │   ├── app_router.dart        # go_router config + RouterNotifier
-│   │   └── app_router.g.dart      # generated
-│   └── theme/
-│       └── app_theme.dart
-├── features/
-│   ├── auth/
-│   │   ├── data/                  # AuthRepository, AuthApi
-│   │   ├── domain/                # AuthState, User model, AuthProvider
-│   │   └── ui/                    # LoginScreen, RegisterScreen, VerifyOtpScreen
-│   └── chat/
-│       ├── data/                  # ChatRepository, StompService
-│       ├── domain/                # ChatState, Message model, ChatProvider
-│       └── ui/
-│           ├── conversation_list_screen.dart
-│           ├── chat_screen.dart
-│           ├── new_conversation_screen.dart
-│           └── widgets/
-│               └── message_bubble.dart
+│   ├── api/                       # Dio instances (authDio :3001, chatDio :8080) + interceptors
+│   ├── router/                    # go_router config + RouterNotifier (+ generated)
+│   ├── theme/                     # AppTheme (neon dark)
+│   ├── l10n/                      # l10n extension (context.l10n)
+│   ├── config/                    # AppConfig (base URLs, flags)
+│   ├── providers/                 # cross-cutting providers (locale, connectivity, …)
+│   ├── utils/                     # helpers (media URLs, formatters, …)
+│   ├── services/                  # shared services (notifications, storage, …)
+│   └── widgets/                   # NeonButton, NeonTextField, NeonCard, PonLogo
+├── features/                      # feature-based: <name>/{data,domain,ui}
+│   ├── assistant/                 # personal assistant (Bot Factory bridge)
+│   ├── settings/
+│   ├── home/
+│   ├── chat/                      # data / domain / ui / presentation
+│   ├── auth/                      # 6 screens: forgot_password, login, new_password,
+│   │                              #            register, theme_onboarding, verify_otp
+│   ├── admin/                     # workspace / department / RBAC admin
+│   ├── integrations/              # MCP connectors
+│   ├── ai_context/                # role-aware AI context
+│   ├── ai_hub/                    # AI memory / persona / KB
+│   ├── profile/
+│   ├── skills/
+│   ├── friends/
+│   ├── notifications/
+│   ├── reminders/
+│   └── help/
 └── main.dart
 ```
 

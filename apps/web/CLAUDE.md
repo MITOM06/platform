@@ -6,7 +6,7 @@
 
 | Layer | Choice |
 |-------|--------|
-| Framework | Next.js 15 (App Router) |
+| Framework | Next.js 16 (App Router) |
 | Language | TypeScript strict |
 | UI | shadcn/ui + Tailwind CSS |
 | State | Zustand (auth/UI) + TanStack Query v5 (server state) |

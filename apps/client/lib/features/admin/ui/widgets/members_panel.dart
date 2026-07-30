@@ -79,7 +79,7 @@ class MembersPanel extends ConsumerWidget {
                     ...depts.map(
                       (d) => CheckboxListTile(
                         contentPadding: EdgeInsets.zero,
-                        activeColor: AppTheme.ponCyan,
+                        activeColor: AppTheme.ponAccent,
                         controlAffinity: ListTileControlAffinity.leading,
                         title: Text(d.name,
                             style: const TextStyle(color: Colors.white)),
@@ -105,7 +105,7 @@ class MembersPanel extends ConsumerWidget {
             TextButton(
               onPressed: () => Navigator.pop(ctx, true),
               child: Text(l10n.adminSave,
-                  style: const TextStyle(color: AppTheme.ponCyan)),
+                  style: const TextStyle(color: AppTheme.ponAccent)),
             ),
           ],
         ),
@@ -183,7 +183,7 @@ class MembersPanel extends ConsumerWidget {
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
             child: Text(l10n.adminSave,
-                style: const TextStyle(color: AppTheme.ponCyan)),
+                style: const TextStyle(color: AppTheme.ponAccent)),
           ),
         ],
       ),
@@ -244,10 +244,10 @@ class MembersPanel extends ConsumerWidget {
             shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12)),
             leading: CircleAvatar(
-              backgroundColor: AppTheme.ponCyan.withValues(alpha: 0.15),
+              backgroundColor: AppTheme.ponAccent.withValues(alpha: 0.15),
               child: Text(_initials(m.displayName),
                   style: const TextStyle(
-                      color: AppTheme.ponCyan, fontSize: 13)),
+                      color: AppTheme.ponAccent, fontSize: 13)),
             ),
             title: Text(m.displayName,
                 style: const TextStyle(color: Colors.white)),
@@ -261,12 +261,12 @@ class MembersPanel extends ConsumerWidget {
                     padding: const EdgeInsets.symmetric(
                         horizontal: 8, vertical: 3),
                     decoration: BoxDecoration(
-                      color: AppTheme.ponPink.withValues(alpha: 0.15),
+                      color: AppTheme.ponAccent.withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Text(roleName,
                         style: const TextStyle(
-                            color: AppTheme.ponPink, fontSize: 11)),
+                            color: AppTheme.ponAccent, fontSize: 11)),
                   ),
                 if (canManageMembers)
                   IconButton(

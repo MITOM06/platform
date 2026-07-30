@@ -77,7 +77,7 @@ export function GroupCallModal() {
 
       {/* AI notetaker banner */}
       {aiNotetaker && (
-        <div className="mx-auto mt-3 flex items-center gap-2 rounded-full border border-pon-cyan/30 bg-pon-cyan/10 px-4 py-1.5 text-xs font-medium text-pon-cyan">
+        <div className="mx-auto mt-3 flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-4 py-1.5 text-xs font-medium text-primary">
           <Sparkles className="size-3.5 animate-pulse" />
           {t('aiTakingNotes')}
         </div>

@@ -87,7 +87,7 @@ export function SsoPanel() {
     <div className="space-y-8">
       <section className="space-y-4">
         <h2 className="text-lg font-semibold flex items-center gap-2">
-          <KeyRound className="size-5 text-pon-cyan" /> {t('ssoTitle')}
+          <KeyRound className="size-5 text-primary" /> {t('ssoTitle')}
         </h2>
         <p className="text-sm text-muted-foreground">{t('ssoHint')}</p>
 

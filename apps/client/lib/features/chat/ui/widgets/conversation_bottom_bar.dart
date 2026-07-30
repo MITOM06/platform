@@ -38,7 +38,7 @@ class ConversationBottomBar extends StatelessWidget {
     final tabController = DefaultTabController.of(context);
     final l10n = context.l10n;
     final accent =
-        isDark ? AppTheme.ponCyan : Theme.of(context).colorScheme.primary;
+        isDark ? AppTheme.ponAccent : Theme.of(context).colorScheme.primary;
     final reqCount = _requestCount;
 
     return AnimatedBuilder(
@@ -93,7 +93,7 @@ class ConversationBottomBar extends StatelessWidget {
                     label: l10n.tooltipNewConversation,
                     isActive: false,
                     accent: isDark
-                        ? AppTheme.ponPink
+                        ? AppTheme.ponAccent
                         : Theme.of(context).colorScheme.secondary,
                     onTap: onNewConversation,
                     isDark: isDark,
@@ -157,7 +157,7 @@ class _BottomTabItem extends StatelessWidget {
                           horizontal: 4, vertical: 1),
                       decoration: BoxDecoration(
                         color: isDark
-                            ? AppTheme.ponPink
+                            ? AppTheme.ponAccent
                             : Theme.of(context).colorScheme.secondary,
                         borderRadius: BorderRadius.circular(8),
                       ),

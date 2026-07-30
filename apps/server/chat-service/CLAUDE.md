@@ -103,9 +103,9 @@ app.reminder.sweep-interval-ms: ${REMINDER_SWEEP_INTERVAL_MS:60000}  # due-remin
 - `/app/chat.read` — Mark message read: `{ conversationId, messageId }`
 
 ### Server-to-Client Broker
-- `/topic/conversation/{conversationId}` — Recieve messages, reactions, edits, recalls, and AI streaming.
-- `/topic/conversation/{conversationId}/typing` — Recieve typing status: `{ userId, typing: boolean }`
-- `/user/queue/notifications` — Recieve unread notifications: `{ type: "NEW_MESSAGE", conversationId, senderName }`
+- `/topic/conversation/{conversationId}` — Receive messages, reactions, edits, recalls, and AI streaming.
+- `/topic/conversation/{conversationId}/typing` — Receive typing status: `{ userId, typing: boolean }`
+- `/user/queue/notifications` — Receive unread notifications: `{ type: "NEW_MESSAGE", conversationId, senderName }`
 
 ---
 

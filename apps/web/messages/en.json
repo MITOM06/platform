@@ -188,6 +188,18 @@
     "errValPasswordTooShort": "Password must be at least 8 characters.",
     "errGeneric": "An error occurred. Please try again.",
     "tagline": "Connect & Chat",
+    "showcase": {
+      "convoChannel": "AI Teammate",
+      "convoOtherMsg": "Can you pull the Q3 numbers from the shared doc before standup?",
+      "convoOwnMsg": "On it — done, summary's in the thread.",
+      "headline": "One AI teammate. Every conversation.",
+      "subheadline": "PON puts a company-aware AI assistant right inside your team chat — governed by role, hosted entirely on your own infrastructure.",
+      "chip": {
+        "selfHosted": "Self-hosted",
+        "governedAi": "Role-governed AI access",
+        "oneWorkspace": "One workspace, every team"
+      }
+    },
     "errTooManyOtpRequests": "You've requested too many OTP codes. Please try again in 10 minutes."
   },
   "settings": {

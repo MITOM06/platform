@@ -260,7 +260,7 @@ class _NotificationTileState extends ConsumerState<_NotificationTile> {
     final n = widget.notification;
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final accent =
-        isDark ? AppTheme.ponCyan : Theme.of(context).colorScheme.primary;
+        isDark ? AppTheme.ponAccent : Theme.of(context).colorScheme.primary;
     final text = _localized(context);
 
     return Container(
@@ -369,12 +369,12 @@ class _Avatar extends StatelessWidget {
     final hasAvatar = url != null && url.isNotEmpty;
     return CircleAvatar(
       radius: 22,
-      backgroundColor: AppTheme.ponCyan.withValues(alpha: 0.15),
+      backgroundColor: AppTheme.ponAccent.withValues(alpha: 0.15),
       backgroundImage:
           hasAvatar ? NetworkImage(absoluteMediaUrl(url)) : null,
       child: hasAvatar
           ? null
-          : Icon(_iconFor(n.type), color: AppTheme.ponCyan, size: 20),
+          : Icon(_iconFor(n.type), color: AppTheme.ponAccent, size: 20),
     );
   }
 

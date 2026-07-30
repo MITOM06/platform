@@ -158,14 +158,14 @@ docker compose -f infra/docker-compose/compose.yml up -d chat-service
 ```bash
 # Requires MongoDB on :27018 and Redis on :6379
 cd apps/server/chat-service
-./mvnw spring-boot:run     # http://localhost:8080
+mvn spring-boot:run     # http://localhost:8080
 ```
 
 ### Tests
 
 ```bash
-./mvnw test                # all unit tests (JUnit 5)
-./mvnw test -pl . -Dtest=ConversationServiceTest
+mvn test                # all unit tests (JUnit 5)
+mvn test -pl . -Dtest=ConversationServiceTest
 ```
 
 ---
@@ -178,10 +178,22 @@ src/main/java/com/platform/chatservice/
 │   ├── SecurityConfig.java          # Spring Security — JWT filter chain
 │   ├── WebSocketConfig.java         # STOMP broker, endpoint, JWT handshake
 │   └── RabbitMqConfig.java          # Exchange, queue, DLQ declarations for AI jobs
-├── controller/
+├── controller/                      # 15 controllers:
 │   ├── ChatController.java          # @MessageMapping — STOMP handlers
 │   ├── ConversationController.java  # REST /api/conversations
-│   └── UserStatusController.java   # REST /api/users/:id/status
+│   ├── MessageController.java       # REST /api/messages
+│   ├── UserStatusController.java    # REST /api/users/:id/status
+│   ├── AiMemoryController.java      # REST /api/ai/memories
+│   ├── AiPersonaController.java     # REST /api/conversations/:id/ai-persona
+│   ├── AssistantSetupController.java
+│   ├── CallController.java
+│   ├── ExternalBotController.java   # Bot Factory bridge
+│   ├── HealthController.java
+│   ├── KbController.java            # REST /api/kb — RAG documents
+│   ├── ReminderController.java      # REST /api/reminders
+│   ├── UploadController.java        # REST /api/uploads — GridFS
+│   ├── UsageController.java         # REST /api/usage
+│   └── UtilsController.java         # REST /api/utils (link preview)
 ├── service/
 │   ├── ConversationService.java
 │   ├── MessageService.java
@@ -189,8 +201,11 @@ src/main/java/com/platform/chatservice/
 ├── security/
 │   ├── AuthChannelInterceptor.java  # JWT validation on WS CONNECT frame
 │   └── PresenceEventListener.java  # connect/disconnect → Redis presence
+├── websocket/                       # STOMP broker bridge / broadcast listeners
 ├── repository/                      # Spring Data MongoDB repos
 ├── model/                           # MongoDB documents
+├── domain/                          # Domain types / value objects
+├── exception/                       # Exception handlers
 └── dto/                             # Request/Response DTOs
 ```
 

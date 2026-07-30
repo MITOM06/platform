@@ -93,7 +93,7 @@ class _HeroCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     return PonCard(
-      glowColor: AppTheme.ponPink,
+      glowColor: AppTheme.ponAccent,
       glowStrength: 6,
       child: Material(
         color: Colors.transparent,
@@ -111,7 +111,7 @@ class _HeroCard extends StatelessWidget {
                   decoration: const BoxDecoration(
                     shape: BoxShape.circle,
                     gradient: LinearGradient(
-                      colors: [AppTheme.ponPink, AppTheme.ponPeach],
+                      colors: [AppTheme.ponAccent, AppTheme.ponAccent],
                     ),
                   ),
                   child: const Icon(Icons.auto_awesome_rounded,
@@ -147,11 +147,11 @@ class _HeroCard extends StatelessWidget {
                     width: 20,
                     height: 20,
                     child: CircularProgressIndicator(
-                        strokeWidth: 2, color: AppTheme.ponPink),
+                        strokeWidth: 2, color: AppTheme.ponAccent),
                   )
                 else
                   const Icon(Icons.arrow_forward_ios_rounded,
-                      color: AppTheme.ponPink, size: 18),
+                      color: AppTheme.ponAccent, size: 18),
               ],
             ),
           ),
@@ -171,28 +171,28 @@ class _HubGrid extends StatelessWidget {
         icon: Icons.psychology_rounded,
         title: l10n.aiHubMemory,
         subtitle: l10n.aiContextTitle,
-        accent: AppTheme.ponCyan,
+        accent: AppTheme.ponAccent,
         onTap: () => context.push('/ai-context'),
       ),
       AiHubTile(
         icon: Icons.hub_rounded,
         title: l10n.aiHubIntegrations,
         subtitle: l10n.integrationsTitle,
-        accent: AppTheme.ponPeach,
+        accent: AppTheme.ponAccent,
         onTap: () => context.push('/integrations'),
       ),
       AiHubTile(
         icon: Icons.bolt_rounded,
         title: l10n.aiHubSkills,
         subtitle: l10n.skillsTitle,
-        accent: AppTheme.ponPink,
+        accent: AppTheme.ponAccent,
         onTap: () => context.push('/skills'),
       ),
       AiHubTile(
         icon: Icons.data_usage_rounded,
         title: l10n.aiHubTokenUsage,
         subtitle: l10n.tokenUsage,
-        accent: AppTheme.ponCyan,
+        accent: AppTheme.ponAccent,
         onTap: () => context.push('/token-usage'),
       ),
     ];

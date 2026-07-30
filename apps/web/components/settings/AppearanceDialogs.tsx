@@ -26,8 +26,8 @@ type ThemeValue = 'light' | 'dark' | 'system'
 
 const THEME_OPTIONS: { value: ThemeValue; icon: typeof Sun; activeColor: string }[] = [
   { value: 'light', icon: Sun, activeColor: 'text-amber-500' },
-  { value: 'dark', icon: Moon, activeColor: 'text-pon-cyan' },
-  { value: 'system', icon: Monitor, activeColor: 'text-pon-peach' },
+  { value: 'dark', icon: Moon, activeColor: 'text-primary' },
+  { value: 'system', icon: Monitor, activeColor: 'text-primary' },
 ]
 
 /** Theme picker — shows Light / Dark / System options like the mobile dialog. */

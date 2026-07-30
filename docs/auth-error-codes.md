@@ -53,6 +53,22 @@
 | `VAL_DISPLAYNAME_REQUIRED` | 400 validation | Display name is required. | — |
 | `VAL_DISPLAYNAME_TOO_SHORT` | 400 validation | Display name is too short (minimum 2 characters). | — |
 | `VAL_PASSWORD_TOO_SHORT` | 400 validation | Password must be at least 8 characters. | — |
+| `INSUFFICIENT_PERMISSION` | 403 | You do not have permission to perform this action. | — |
+| `DEPARTMENT_NOT_FOUND` | 404 | Department not found. | — |
+| `ROLE_NOT_FOUND` | 404 | Role not found. | — |
+| `MEMBER_NOT_FOUND` | 404 | Member not found. | — |
+| `OWNER_ROLE_IMMUTABLE` | 400 | The Owner role cannot be modified or deleted. | — |
+| `AI_CONNECTORS_NOT_IN_ALLOW_LIST` | 400 | Selected AI connectors must be a subset of the workspace connector allow-list. | — |
+| `SSO_DISABLED` | 401 | Single sign-on is not enabled for this workspace. | — |
+| `SSO_DOMAIN_NOT_ALLOWED` | 401 | This email domain is not permitted to sign in via SSO. | — |
+| `OIDC_NO_STATE` | 401 | Missing OIDC state parameter. | — |
+| `OIDC_BAD_STATE` | 401 | Invalid or expired OIDC state. | — |
+| `OIDC_EXCHANGE_FAILED` | 401 | Failed to exchange the OIDC authorization code. | — |
+| `OIDC_EMAIL_UNVERIFIED` | 401 | The email on the OIDC account is not verified. | — |
+| `PHONE_TOKEN_MISSING` | 400 | Phone verification token is required. | — |
+| `PHONE_TOKEN_INVALID` | 400 | Phone verification token is invalid or expired. | — |
+| `PHONE_TOKEN_NO_NUMBER` | 400 | Phone verification token contains no phone number. | — |
+| `PHONE_ALREADY_TAKEN` | 400 | This phone number is already in use. | — |
 
 ## Example response shapes
 

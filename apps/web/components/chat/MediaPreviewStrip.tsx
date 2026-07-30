@@ -38,7 +38,7 @@ export function MediaPreviewStrip({
   const hasImages = attachments.some((a) => a.type === 'image')
 
   return (
-    <div className="border-t bg-background/95 px-3 pt-2 pb-1">
+    <div className="border-t bg-background px-3 pt-2 pb-1">
       {/* Header: single global HD toggle (images only) */}
       {hasImages && (
         <div className="flex items-center justify-end mb-2">
@@ -47,7 +47,7 @@ export function MediaPreviewStrip({
             onClick={onToggleAllHD}
             className={`flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-bold transition-colors ${
               isAllHD
-                ? 'bg-pon-cyan/20 text-pon-cyan border border-pon-cyan/40'
+                ? 'bg-primary/20 text-primary border border-primary/40'
                 : 'bg-muted/60 text-muted-foreground border border-border'
             }`}
             title={isAllHD ? t('attachHdOn') : t('attachHdOff')}
@@ -100,7 +100,7 @@ export function MediaPreviewStrip({
             type="button"
             onClick={onAddMore}
             title={t('addMore')}
-            className="size-20 shrink-0 rounded-xl border-2 border-dashed border-border flex items-center justify-center text-muted-foreground hover:border-pon-cyan hover:text-pon-cyan transition-colors"
+            className="size-20 shrink-0 rounded-xl border-2 border-dashed border-border flex items-center justify-center text-muted-foreground hover:border-primary hover:text-primary transition-colors"
           >
             <span className="text-2xl leading-none">+</span>
           </button>

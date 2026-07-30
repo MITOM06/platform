@@ -58,7 +58,7 @@ class _AssistantSheenAvatarState extends State<AssistantSheenAvatar>
       decoration: const BoxDecoration(
         shape: BoxShape.circle,
         gradient: LinearGradient(
-          colors: [Color(0xFF7C3AED), Color(0xFF14B8A6)],
+          colors: [Color(0xFF96435B), Color(0xFF14B8A6)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),

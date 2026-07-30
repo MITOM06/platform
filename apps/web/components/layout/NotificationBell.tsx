@@ -67,7 +67,7 @@ function localizedNotification(
 function NotifIcon({ type }: { type: AppNotification['type'] }) {
   switch (type) {
     case 'FRIEND_REQUEST':
-      return <UserPlus className="size-4 text-pon-cyan" />
+      return <UserPlus className="size-4 text-primary" />
     case 'FRIEND_ACCEPTED':
       return <Users className="size-4 text-green-500" />
     case 'PASSWORD_SETUP':
@@ -100,7 +100,7 @@ function NotificationRow({
     <div
       className={cn(
         'flex gap-3 px-4 py-3 hover:bg-muted/40 transition-colors cursor-pointer',
-        !n.readAt && 'bg-pon-cyan/5',
+        !n.readAt && 'bg-primary/5',
       )}
       onClick={() => {
         if (!n.readAt) onMarkRead(n._id)
@@ -138,7 +138,7 @@ function NotificationRow({
         {n.type === 'PHONE_SETUP' && (
           <Link
             href="/profile/edit"
-            className="mt-1.5 text-xs text-pon-cyan hover:underline inline-block"
+            className="mt-1.5 text-xs text-primary hover:underline inline-block"
             onClick={(e) => {
               e.stopPropagation()
               onMarkRead(n._id)
@@ -150,7 +150,7 @@ function NotificationRow({
         {n.type === 'PASSWORD_SETUP' && (
           <Link
             href="/settings/security"
-            className="mt-1.5 text-xs text-pon-cyan hover:underline inline-block"
+            className="mt-1.5 text-xs text-primary hover:underline inline-block"
             onClick={(e) => {
               e.stopPropagation()
               onMarkRead(n._id)
@@ -164,7 +164,7 @@ function NotificationRow({
           <div className="flex gap-2 mt-2">
             <Button
               size="sm"
-              className="h-7 px-3 text-xs bg-pon-cyan hover:bg-pon-cyan/90 text-black"
+              className="h-7 px-3 text-xs bg-primary hover:bg-primary/90 text-primary-foreground"
               onClick={(e) => {
                 e.stopPropagation()
                 onAccept(n)
@@ -190,7 +190,7 @@ function NotificationRow({
       </div>
 
       {!n.readAt && (
-        <div className="size-2 rounded-full bg-pon-cyan shrink-0 mt-1.5" />
+        <div className="size-2 rounded-full bg-primary shrink-0 mt-1.5" />
       )}
     </div>
   )
@@ -246,7 +246,7 @@ export function NotificationBell() {
           {unreadCount > 0 && (
             <button
               onClick={() => markAllRead.mutate()}
-              className="text-xs text-pon-cyan hover:text-pon-cyan/80 transition-colors"
+              className="text-xs text-primary hover:text-primary/80 transition-colors"
             >
               {t('markAllRead')}
             </button>

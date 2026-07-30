@@ -2,7 +2,7 @@
 
 ## Tech Stack
 
-- **Flutter SDK 3.44.0**, **Dart 3.x**
+- **Flutter 3.x** (Dart `>=3.0.0 <4.0.0` per pubspec)
 - State management: **Riverpod** (`flutter_riverpod` + `riverpod_annotation`)
 - HTTP: **Dio** with auto-attach JWT interceptor
 - WebSocket: **stomp_dart_client** (STOMP over raw WebSocket)
@@ -35,16 +35,20 @@ lib/
 │   ├── api/          # DioClient (authDio + chatDio) + interceptors
 │   ├── router/       # go_router + RouterNotifier
 │   ├── theme/        # AppTheme (neon dark)
+│   ├── l10n/         # l10n extension (context.l10n)
+│   ├── config/       # AppConfig (base URLs, flags)
+│   ├── providers/    # cross-cutting providers (locale, connectivity, …)
+│   ├── utils/        # helpers (media URLs, formatters, …)
+│   ├── services/     # shared services (notifications, storage, …)
 │   └── widgets/      # NeonButton, NeonTextField, NeonCard, PonLogo
-├── features/
+├── features/         # feature-based: <name>/{data,domain,ui}
 │   ├── auth/
 │   │   ├── data/     # AuthRepository (login/register/OTP/searchUsers)
 │   │   ├── domain/   # AuthState, UserModel, AuthNotifier
-│   │   └── ui/       # 5 auth screens
-│   └── chat/
-│       ├── data/     # ChatRepository, StompService (keepAlive)
-│       ├── domain/   # ChatState, ChatNotifier, ConversationsNotifier
-│       └── ui/       # ChatScreen, ConversationListScreen, NewConversationScreen + widgets
+│   │   └── ui/       # 6 auth screens
+│   ├── chat/         # data / domain / ui / presentation (+ widgets)
+│   └── …             # admin, ai_context, ai_hub, assistant, friends, help, home,
+│                     # integrations, notifications, profile, reminders, settings, skills
 └── main.dart
 ```
 
@@ -56,7 +60,7 @@ lib/
 - Async state: `AsyncValue.when(data:, loading:, error:)` — never leave error case empty
 - Navigation: `go_router` only — do not use `Navigator.push` directly
 - Null safety: full Dart 3 — no `!` force-unwrap without justification
-- `withValues(alpha:)` instead of `withOpacity()` (deprecated Flutter 3.44)
+- `withValues(alpha:)` instead of `withOpacity()` (deprecated in recent Flutter)
 
 ## i18n (Multi-language) — REQUIRED
 

@@ -56,7 +56,7 @@ class LinkPreviewCard extends ConsumerWidget {
                             style: TextStyle(
                               fontSize: 10,
                               color:
-                                  AppTheme.ponCyan.withValues(alpha: 0.8),
+                                  AppTheme.ponAccent.withValues(alpha: 0.8),
                               fontWeight: FontWeight.w600,
                             ),
                           ),

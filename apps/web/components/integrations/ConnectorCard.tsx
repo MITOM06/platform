@@ -79,7 +79,7 @@ function StatusPill({
         variant === 'on' &&
           'text-pon-green bg-pon-green/10 border-pon-green/30',
         variant === 'off' && 'text-muted-foreground bg-background border-border',
-        variant === 'beta' && 'text-pon-peach bg-pon-peach/10 border-pon-peach/30',
+        variant === 'beta' && 'text-primary bg-primary/10 border-primary/30',
       )}
     >
       {label}
@@ -113,7 +113,7 @@ export function ConnectorCard({
         'relative flex flex-col rounded-xl border p-[18px] overflow-hidden min-h-[158px]',
         'bg-gradient-to-b from-card to-muted/40',
         isConnected &&
-          'border-pon-green/40 shadow-[0_0_0_1px_rgba(67,232,166,0.12),0_14px_40px_-22px_rgba(67,232,166,0.5)]',
+          'border-pon-green/40',
       )}
     >
       <div className="size-[42px] rounded-[11px] grid place-items-center bg-background border mb-[13px] overflow-hidden">
@@ -140,7 +140,7 @@ export function ConnectorCard({
           {entry.scopes.map((scope) => (
             <span
               key={scope}
-              className="font-mono text-[10px] text-pon-cyan bg-pon-cyan/10 border border-pon-cyan/20 px-[7px] py-0.5 rounded-md"
+              className="font-mono text-[10px] text-primary bg-primary/10 border border-primary/20 px-[7px] py-0.5 rounded-md"
             >
               {scope}
             </span>
@@ -180,7 +180,7 @@ export function ConnectorCard({
         ) : (
           <Button
             size="sm"
-            className="bg-gradient-to-r from-pon-cyan to-pon-blue text-black hover:opacity-90 shadow-[0_0_20px_-4px_rgba(61,224,255,0.6)]"
+            className="bg-primary text-primary-foreground hover:opacity-90"
             disabled={!entry.available || connecting}
             onClick={() => onConnect(entry)}
           >

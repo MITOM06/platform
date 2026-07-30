@@ -115,7 +115,7 @@ class _FriendSearchTabState extends ConsumerState<FriendSearchTab> {
             controller: _controller,
             labelText: context.l10n.searchUsers,
             prefixIcon: Icons.person_search,
-            focusColor: AppTheme.ponCyan,
+            focusColor: AppTheme.ponAccent,
             onChanged: _onChanged,
           ),
         ),
@@ -161,7 +161,7 @@ class _FriendSearchTabState extends ConsumerState<FriendSearchTab> {
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: PonCard(
-        glowColor: AppTheme.ponCyan,
+        glowColor: AppTheme.ponAccent,
         glowStrength: isDark ? 4 : 0,
         child: ListTile(
           contentPadding:
@@ -192,21 +192,21 @@ class _FriendSearchTabState extends ConsumerState<FriendSearchTab> {
                   padding:
                       const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                   decoration: BoxDecoration(
-                    color: AppTheme.ponCyan.withValues(alpha: 0.12),
+                    color: AppTheme.ponAccent.withValues(alpha: 0.12),
                     border: Border.all(
-                        color: AppTheme.ponCyan.withValues(alpha: 0.3)),
+                        color: AppTheme.ponAccent.withValues(alpha: 0.3)),
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       const Icon(Icons.phone,
-                          size: 12, color: AppTheme.ponCyan),
+                          size: 12, color: AppTheme.ponAccent),
                       const SizedBox(width: 4),
                       Text(
                         user.phoneNumber!,
                         style: const TextStyle(
-                          color: AppTheme.ponCyan,
+                          color: AppTheme.ponAccent,
                           fontSize: 11,
                           fontFamily: 'monospace',
                         ),
@@ -225,7 +225,7 @@ class _FriendSearchTabState extends ConsumerState<FriendSearchTab> {
               : TextButton.icon(
                   style: TextButton.styleFrom(
                     foregroundColor: isDark
-                        ? AppTheme.ponCyan
+                        ? AppTheme.ponAccent
                         : Theme.of(context).colorScheme.primary,
                     textStyle: const TextStyle(fontWeight: FontWeight.bold),
                   ),

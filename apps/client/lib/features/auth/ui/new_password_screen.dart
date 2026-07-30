@@ -100,7 +100,7 @@ class _NewPasswordScreenState extends ConsumerState<NewPasswordScreen> {
                 shape: BoxShape.circle,
                 gradient: RadialGradient(
                   colors: [
-                    AppTheme.ponCyan.withValues(alpha: 0.12),
+                    AppTheme.ponAccent.withValues(alpha: 0.12),
                     Colors.transparent,
                   ],
                 ),
@@ -117,7 +117,7 @@ class _NewPasswordScreenState extends ConsumerState<NewPasswordScreen> {
                 shape: BoxShape.circle,
                 gradient: RadialGradient(
                   colors: [
-                    AppTheme.ponPink.withValues(alpha: 0.15),
+                    AppTheme.ponAccent.withValues(alpha: 0.15),
                     Colors.transparent,
                   ],
                 ),
@@ -159,7 +159,7 @@ class _NewPasswordScreenState extends ConsumerState<NewPasswordScreen> {
 
                       // Reset Form Card
                       PonCard(
-                        glowColor: AppTheme.ponPink,
+                        glowColor: AppTheme.ponAccent,
                         glowStrength: 8,
                         child: Padding(
                           padding: const EdgeInsets.all(24.0),
@@ -185,7 +185,7 @@ class _NewPasswordScreenState extends ConsumerState<NewPasswordScreen> {
                                     ),
                                     inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                                     textInputAction: TextInputAction.next,
-                                    focusColor: AppTheme.ponCyan,
+                                    focusColor: AppTheme.ponAccent,
                                     validator: (v) {
                                       if (v == null || v.length != 6) return context.l10n.valOtp6;
                                       return null;
@@ -200,7 +200,7 @@ class _NewPasswordScreenState extends ConsumerState<NewPasswordScreen> {
                                   labelText: context.l10n.fieldNewPassword,
                                   prefixIcon: Icons.lock_outlined,
                                   obscureText: _obscurePassword,
-                                  focusColor: AppTheme.ponPink,
+                                  focusColor: AppTheme.ponAccent,
                                   onChanged: (v) =>
                                       setState(() => _newPasswordValue = v),
                                   suffixIcon: IconButton(
@@ -236,7 +236,7 @@ class _NewPasswordScreenState extends ConsumerState<NewPasswordScreen> {
                                   prefixIcon: Icons.lock_outline,
                                   obscureText: _obscurePassword,
                                   textInputAction: TextInputAction.done,
-                                  focusColor: AppTheme.ponPink,
+                                  focusColor: AppTheme.ponAccent,
                                   onFieldSubmitted: (_) => _submit(),
                                   validator: (v) {
                                     if (v != _passwordController.text) {
@@ -251,8 +251,8 @@ class _NewPasswordScreenState extends ConsumerState<NewPasswordScreen> {
                                 PonButton(
                                   onPressed: _submit,
                                   isLoading: _isLoading,
-                                  gradientColors: const [AppTheme.ponPink, AppTheme.ponPeach],
-                                  glowColor: AppTheme.ponPink,
+                                  gradientColors: const [AppTheme.ponAccent, AppTheme.ponAccent],
+                                  glowColor: AppTheme.ponAccent,
                                   child: Text(context.l10n.confirmButton),
                                 ),
                               ],

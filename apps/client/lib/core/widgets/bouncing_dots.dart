@@ -9,7 +9,7 @@ class BouncingDots extends StatefulWidget {
   final double size;
   const BouncingDots({
     super.key,
-    this.color = AppTheme.ponCyan,
+    this.color = AppTheme.ponAccent,
     this.size = 6.0,
   });
 
@@ -66,13 +66,6 @@ class _BouncingDotsState extends State<BouncingDots>
                   decoration: BoxDecoration(
                     color: widget.color.withValues(alpha: 0.8),
                     shape: BoxShape.circle,
-                    boxShadow: [
-                      BoxShadow(
-                        color: widget.color.withValues(alpha: 0.4),
-                        blurRadius: 4,
-                        spreadRadius: 0.5,
-                      )
-                    ],
                   ),
                 ),
               ),

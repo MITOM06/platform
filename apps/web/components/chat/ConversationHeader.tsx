@@ -207,7 +207,7 @@ export function ConversationHeader({
             )}
           </div>
           {isTyping ? (
-            <p className="text-xs text-pon-cyan font-medium animate-pulse">{t('typing')}</p>
+            <p className="text-xs text-primary font-medium animate-pulse">{t('typing')}</p>
           ) : otherUserId && status && !blockedMe ? (
             <p className="text-xs text-muted-foreground">
               {status.online ? t('online') : formatLastSeen(status.lastSeen, t)}

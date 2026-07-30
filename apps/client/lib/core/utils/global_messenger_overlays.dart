@@ -71,7 +71,7 @@ class _TopSlideBannerWidgetState extends State<TopSlideBannerWidget>
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final accent = widget.isError
         ? Colors.redAccent
-        : (isDark ? AppTheme.ponCyan : Theme.of(context).colorScheme.primary);
+        : (isDark ? AppTheme.ponAccent : Theme.of(context).colorScheme.primary);
 
     return Positioned(
       top: 0,
@@ -100,13 +100,6 @@ class _TopSlideBannerWidgetState extends State<TopSlideBannerWidget>
                         color: accent.withValues(alpha: 0.4),
                         width: 1,
                       ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: accent.withValues(alpha: 0.15),
-                          blurRadius: 12,
-                          offset: const Offset(0, 4),
-                        ),
-                      ],
                     ),
                     child: Row(
                       children: [
@@ -217,7 +210,7 @@ class _TopSlideNotificationState extends State<TopSlideNotification>
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final scheme = Theme.of(context).colorScheme;
-    final accent = isDark ? AppTheme.ponCyan : scheme.primary;
+    final accent = isDark ? AppTheme.ponAccent : scheme.primary;
 
     // Positioned (not full-screen) so taps outside the banner pass through.
     return Positioned(
@@ -256,15 +249,6 @@ class _TopSlideNotificationState extends State<TopSlideNotification>
                           color: accent.withValues(alpha: 0.3),
                           width: 1,
                         ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: isDark
-                                ? accent.withValues(alpha: 0.18)
-                                : Colors.black.withValues(alpha: 0.12),
-                            blurRadius: 16,
-                            offset: const Offset(0, 4),
-                          ),
-                        ],
                       ),
                       child: Row(
                         children: [
@@ -276,8 +260,8 @@ class _TopSlideNotificationState extends State<TopSlideNotification>
                               gradient: LinearGradient(
                                 colors: isDark
                                     ? const [
-                                        AppTheme.ponCyan,
-                                        AppTheme.ponPink
+                                        AppTheme.ponAccent,
+                                        AppTheme.ponAccent
                                       ]
                                     : [scheme.primary, scheme.secondary],
                               ),

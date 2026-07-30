@@ -67,7 +67,7 @@ export default function FriendsPage() {
         {users.map((user) => (
           <div
             key={user.id || user._id}
-            className="flex items-center gap-4 p-4 rounded-xl border bg-card/50 backdrop-blur-sm transition-all hover:bg-card hover:shadow-sm"
+            className="flex items-center gap-4 p-4 rounded-xl border bg-card transition-colors hover:bg-accent"
           >
             <Avatar className="size-12">
               <AvatarImage src={user.avatarUrl ? absoluteMediaUrl(user.avatarUrl) : undefined} />
@@ -79,7 +79,7 @@ export default function FriendsPage() {
               <h3 className="font-semibold text-sm truncate">{user.displayName}</h3>
               <p className="text-xs text-muted-foreground truncate">{user.email}</p>
               {user.matchedBy === 'phone' && user.phoneNumber && (
-                <div className="mt-1 inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-pon-cyan/15 border border-pon-cyan/30 text-xs text-pon-cyan font-mono">
+                <div className="mt-1 inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-primary/15 border border-primary/30 text-xs text-primary font-mono">
                   <Phone className="size-3" />
                   {user.phoneNumber}
                 </div>
@@ -94,7 +94,7 @@ export default function FriendsPage() {
 
   return (
     <div className="flex-1 flex flex-col h-full bg-background/50">
-      <div className="border-b px-6 py-4 bg-background/80 backdrop-blur-md sticky top-0 z-10">
+      <div className="border-b px-6 py-4 bg-background sticky top-0 z-10">
         <div className="flex items-center gap-3">
           <Link
             href="/conversations"
@@ -156,7 +156,7 @@ export default function FriendsPage() {
                 <>
                   <Button
                     size="sm"
-                    className="min-h-[44px] min-w-[44px] bg-pon-cyan hover:bg-pon-cyan/90 text-black"
+                    className="min-h-[44px] min-w-[44px] bg-primary hover:bg-primary/90 text-primary-foreground"
                     onClick={() => acceptRequest.mutate(user.id || user._id!)}
                     title={t('accept')}
                     disabled={acceptRequest.isPending}

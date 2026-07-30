@@ -56,16 +56,16 @@ export function SidebarProfileBar() {
   }
 
   return (
-    <div className="hidden md:block shrink-0 border-t bg-background/95 backdrop-blur-md p-2.5">
+    <div className="hidden md:block shrink-0 border-t bg-background p-2.5">
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <button
             type="button"
-            className="group relative flex w-full items-center gap-3 rounded-xl p-2 text-left transition-colors hover:bg-muted/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pon-cyan/50 data-[state=open]:bg-muted/70 justify-center @[200px]:justify-start"
+            className="group relative flex w-full items-center gap-3 rounded-xl p-2 text-left transition-colors hover:bg-muted/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 data-[state=open]:bg-muted/70 justify-center @[200px]:justify-start"
           >
             {/* Avatar with PON-gradient ring */}
             <span className="relative shrink-0">
-              <span className="block rounded-full bg-gradient-to-br from-pon-cyan via-pon-peach to-pon-pink p-[2px] shadow-[0_0_12px_-2px] shadow-pon-peach/40">
+              <span className="block rounded-full bg-primary p-[2px]">
                 <Avatar className="size-11 border-2 border-background">
                   {user.avatarUrl && (
                     <AvatarImage src={absoluteMediaUrl(user.avatarUrl)} alt={user.displayName} />

@@ -188,6 +188,18 @@
     "errValPasswordTooShort": "Mật khẩu phải có ít nhất 8 ký tự.",
     "errGeneric": "Đã xảy ra lỗi. Vui lòng thử lại.",
     "tagline": "Kết nối & Trò chuyện",
+    "showcase": {
+      "convoChannel": "Trợ lý AI",
+      "convoOtherMsg": "Lấy giúp số liệu Q3 từ file chung trước standup được không?",
+      "convoOwnMsg": "Để mình — xong rồi, tóm tắt ở trong thread nhé.",
+      "headline": "Một AI đồng đội. Mọi cuộc trò chuyện.",
+      "subheadline": "PON đưa 1 trợ lý AI hiểu rõ công ty vào ngay trong chat của team — phân quyền theo vai trò, tự host toàn bộ trên hạ tầng của chính bạn.",
+      "chip": {
+        "selfHosted": "Tự host (self-hosted)",
+        "governedAi": "AI truy cập theo quyền hạn",
+        "oneWorkspace": "1 workspace, mọi phòng ban"
+      }
+    },
     "errTooManyOtpRequests": "Bạn đã yêu cầu quá nhiều mã OTP. Vui lòng thử lại sau 10 phút."
   },
   "settings": {

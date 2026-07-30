@@ -67,7 +67,7 @@ export function ReactionsDetailModal({ message, open, onClose }: Props) {
                 <TabsTrigger 
                   key={emoji} 
                   value={emoji}
-                  className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:text-pon-cyan data-[state=active]:border-b-2 data-[state=active]:border-pon-cyan rounded-none px-4 py-2"
+                  className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:text-primary data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none px-4 py-2"
                 >
                   <span className="text-lg leading-none mr-2">{emoji}</span>
                   <span className="text-sm">{reactorsByEmoji.get(emoji)?.length}</span>

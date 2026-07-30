@@ -188,6 +188,18 @@
     "errValPasswordTooShort": "Le mot de passe doit comporter au moins 8 caractères.",
     "errGeneric": "Une erreur s'est produite. Veuillez réessayer.",
     "tagline": "Connecter & Discuter",
+    "showcase": {
+      "convoChannel": "Coéquipier IA",
+      "convoOtherMsg": "Tu peux récupérer les chiffres du T3 dans le doc partagé avant le stand-up ?",
+      "convoOwnMsg": "Je m'en occupe — c'est fait, le résumé est dans le fil.",
+      "headline": "Un coéquipier IA. Chaque conversation.",
+      "subheadline": "PON place un assistant IA qui connaît votre entreprise directement dans le chat de votre équipe — gouverné par les rôles, hébergé entièrement sur votre propre infrastructure.",
+      "chip": {
+        "selfHosted": "Auto-hébergé",
+        "governedAi": "Accès IA gouverné par les rôles",
+        "oneWorkspace": "Un seul espace de travail pour toutes les équipes"
+      }
+    },
     "errTooManyOtpRequests": "Vous avez demandé trop de codes OTP. Veuillez réessayer dans 10 minutes."
   },
   "settings": {

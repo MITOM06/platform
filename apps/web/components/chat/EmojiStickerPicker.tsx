@@ -34,7 +34,7 @@ export function EmojiStickerPicker({ disabled, onInsertEmoji, onSendSticker }: P
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
         <Button variant="ghost" size="icon" className="shrink-0 tap" disabled={disabled}>
-          <Smile className="size-5 text-pon-cyan" />
+          <Smile className="size-5 text-primary" />
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-[300px] max-w-[calc(100vw-1rem)] p-0" align="end" side="top">
@@ -42,13 +42,13 @@ export function EmojiStickerPicker({ disabled, onInsertEmoji, onSendSticker }: P
           <TabsList className="w-full grid grid-cols-2 rounded-none border-b border-border bg-transparent h-10 p-0">
             <TabsTrigger
               value="emoji"
-              className="rounded-none data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-pon-cyan text-xs"
+              className="rounded-none data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary text-xs"
             >
               {t('emojiTab')}
             </TabsTrigger>
             <TabsTrigger
               value="sticker"
-              className="rounded-none data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-pon-cyan text-xs"
+              className="rounded-none data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary text-xs"
             >
               {t('stickerTab')}
             </TabsTrigger>
@@ -77,7 +77,7 @@ export function EmojiStickerPicker({ disabled, onInsertEmoji, onSendSticker }: P
                     onSendSticker(sticker)
                     setOpen(false)
                   }}
-                  className="hover:bg-pon-cyan/10 p-2 rounded-xl text-4xl flex items-center justify-center transition-colors hover:scale-105"
+                  className="hover:bg-primary/10 p-2 rounded-xl text-4xl flex items-center justify-center transition-colors hover:scale-105"
                 >
                   {sticker}
                 </button>

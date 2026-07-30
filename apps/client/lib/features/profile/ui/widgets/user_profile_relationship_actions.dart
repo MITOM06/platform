@@ -58,8 +58,8 @@ class RelationshipActions extends ConsumerWidget {
               const SizedBox(width: 12),
               Expanded(
                 child: PonButton(
-                  gradientColors: const [AppTheme.ponPeach, AppTheme.ponPink],
-                  glowColor: AppTheme.ponPink,
+                  gradientColors: const [AppTheme.ponAccent, AppTheme.ponAccent],
+                  glowColor: AppTheme.ponAccent,
                   onPressed: busy ? null : () => onFriendAction(rel),
                   child: Text(friendLabel),
                 ),

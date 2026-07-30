@@ -109,7 +109,7 @@ class _DummyBubble extends StatelessWidget {
         decoration: BoxDecoration(
           gradient: outgoing
               ? const LinearGradient(
-                  colors: [AppTheme.ponCyan, AppTheme.ponPink],
+                  colors: [AppTheme.ponAccent, AppTheme.ponAccent],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 )

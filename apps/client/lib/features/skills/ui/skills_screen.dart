@@ -50,7 +50,7 @@ class SkillsScreen extends ConsumerWidget {
             Text(
               l10n.skillsRealActionNote,
               style: TextStyle(
-                color: AppTheme.ponPeach.withValues(alpha: 0.85),
+                color: AppTheme.ponAccent.withValues(alpha: 0.85),
                 fontSize: 13,
                 height: 1.4,
               ),
@@ -164,7 +164,7 @@ class _SkillTile extends StatelessWidget {
     ].join(' · ');
 
     return PonCard(
-      glowColor: enabled ? AppTheme.ponCyan : AppTheme.ponPeach,
+      glowColor: enabled ? AppTheme.ponAccent : AppTheme.ponAccent,
       glowStrength: enabled ? 4 : 1,
       borderRadius: 16,
       child: Padding(
@@ -212,7 +212,7 @@ class _SkillTile extends StatelessWidget {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: const TextStyle(
-                        color: AppTheme.ponCyan,
+                        color: AppTheme.ponAccent,
                         fontSize: 11,
                         fontFamily: 'monospace',
                       ),
@@ -224,7 +224,7 @@ class _SkillTile extends StatelessWidget {
             const SizedBox(width: 8),
             Switch(
               value: enabled,
-              activeThumbColor: AppTheme.ponCyan,
+              activeThumbColor: AppTheme.ponAccent,
               onChanged: onChanged,
             ),
           ],

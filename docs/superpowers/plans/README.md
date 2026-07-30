@@ -6,6 +6,19 @@
 >
 > Last regenerated: 2026-07-11 (2026-07-10 batch fully executed — all 6 plans done & verified).
 
+## 🎨 In progress — UI Redesign (Warm Grey & Burgundy)
+
+> Direction/handoff: [`../UI-REDESIGN-DIRECTION.md`](../UI-REDESIGN-DIRECTION.md). Multi-layer
+> program (tokens → shared components → per-screen batches) — read the direction doc before
+> opening any plan below or writing the next one.
+
+| Plan | Scope | Trạng thái |
+|------|-------|------------|
+| `2026-07-30-ui-redesign-p1-design-tokens.md` | Layer 1 — design tokens (`globals.css` + `app_theme.dart`) | **Done** — commit `86ca2212`. Web `pnpm build` PASS, `flutter analyze` clean, contrast WCAG AA verified (no value adjustment needed) |
+| `2026-07-30-ui-redesign-p2-component-language.md` | Layer 2 — retire the neon brand: symbol rename, gradient/glow/aura removal, shared widgets (`pon_widgets.dart`), logo marks, chat-bubble radius | **Done** — commit `a26f492c` (210 files). Web build PASS, `flutter analyze` clean, `flutter test` 60/60. Neither layer visually verified on a real screen yet |
+| `2026-07-30-ui-redesign-l3-pre-chrome-sweep.md` | L3-pre — cross-cutting chrome pass: drop elevation shadows, remove all glass blur (+ de-alpha the surfaces that only existed to be blurred), normalise candy radii, OTP box 10px parity fix | **Done** — commit `11d641aa` (57 files). Web build PASS (exit 0), `flutter analyze` clean. Written *during* execution as the decision record; recovers an interrupted session and fixes 2 bugs it left (mangled class `md:-none`, failing `flutter analyze`) |
+| Layer 3 — per-screen batches (auth / chat / settings / AI / admin / remainder) | spacing + typography + layout per screen, 37 remaining oversized Flutter radii, ad-hoc text-alpha audit, drop the no-op compat params | Not written yet — see the direction doc §3, P2's "Còn lại cho Layer 3", and L3-pre's "Cố ý KHÔNG làm" |
+
 ## ✅ Done — 2026-07-10 batch (all executed & verified)
 
 | Plan | Scope | Verified in |
@@ -16,6 +29,13 @@
 | `2026-07-10-skills-real-tool-wiring.md` | Gate MCP tool (calendar/gmail/notion) theo skill enable | commit `c22356b9` — **1 phần vẫn chặn bởi secret**: `webSearch` cần `WEB_SEARCH_API_URL`/`WEB_SEARCH_API_KEY` (rỗng trong `.env`); `weatherForecast` không có tool — ngoài scope |
 | `2026-07-10-edit-profile-cover-role-privacy.md` | Cover 16:6 nhất quán (web+Flutter), field Role read-only, dời Privacy xuống cuối form | 2026-07-11: web `pnpm build` PASS, Flutter `flutter analyze` clean (chưa commit) |
 | `2026-07-10-media-message-actions-and-viewer-frame.md` | Video thumbnail hiện frame đầu + bỏ nút download rời, Copy ảnh thật + Download vào menu 3 chấm, khung viewer web ôm sát media | 2026-07-11: web `pnpm build` PASS, Flutter `flutter analyze` clean (chưa commit). **Flutter thêm package `super_clipboard` — build đầu tiên cần Rust toolchain (cargokit)** |
+
+## ✅ Done — 2026-07-11 batch (executed & verified 2026-07-17)
+
+| Plan | Scope | Ghi chú |
+|------|-------|---------|
+| `2026-07-10-direct-ai-chat-and-message-width.md` | Chat 1-1 với @AI không cần gõ mention (`ChatController.java` + `MessageController.java`, cả 2 platform tự hưởng vì chung backend) + giới hạn bề rộng bubble AI trên web màn hình rộng (`MessageBubble.tsx`) | 2026-07-17: `mvn test` controller suites PASS (Testcontainers pagination test cần Docker), web `pnpm build` PASS |
+| `2026-07-11-auth-split-screen-redesign.md` | Redesign `/login`, `/register` (web) — layout 2 cột, cột trái animation hội thoại lặp lại + tagline riêng của PON (không copy ảnh tham khảo) | Web only, Flutter có auth UI riêng không đụng tới. 2026-07-17: web `pnpm build` PASS |
 
 ## ✅ Done — 2026-07-08 / 2026-07-09 batch (verified via code inspection, not yet build-deployed)
 

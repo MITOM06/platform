@@ -30,7 +30,7 @@ export function MultiSelectBar({
   const empty = selectedCount === 0
 
   return (
-    <div className="border-t bg-background/95 backdrop-blur-md pb-safe">
+    <div className="border-t bg-background pb-safe">
       {/* Count row */}
       <div className="flex items-center justify-between px-4 pt-3 pb-2">
         <span className="text-sm font-semibold text-foreground">

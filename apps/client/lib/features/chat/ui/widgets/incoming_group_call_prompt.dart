@@ -97,19 +97,12 @@ class _PromptCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppTheme.darkSurface,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppTheme.ponCyan.withValues(alpha: 0.5)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.4),
-            blurRadius: 16,
-            offset: const Offset(0, 6),
-          ),
-        ],
+        border: Border.all(color: AppTheme.ponAccent.withValues(alpha: 0.5)),
       ),
       child: Row(
         children: [
           Icon(call.isVideo ? Icons.videocam : Icons.groups,
-              color: AppTheme.ponCyan, size: 30),
+              color: AppTheme.ponAccent, size: 30),
           const SizedBox(width: 12),
           Expanded(
             child: Column(

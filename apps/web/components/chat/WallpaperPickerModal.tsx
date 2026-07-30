@@ -148,7 +148,7 @@ export function WallpaperPickerModal({ conversationId, open, onClose }: Props) {
             </div>
             <span className="text-sm">{t('wallpaperDefault')}</span>
             {selected === '' && !isImage && (
-              <Check className="size-4 text-pon-cyan ml-auto" />
+              <Check className="size-4 text-primary ml-auto" />
             )}
           </button>
 
@@ -174,12 +174,12 @@ export function WallpaperPickerModal({ conversationId, open, onClose }: Props) {
                 <div
                   className={cn(
                     'size-8 rounded-full flex-shrink-0 bg-cover bg-center border',
-                    isSel ? 'border-pon-cyan' : 'border-muted-foreground/20',
+                    isSel ? 'border-primary' : 'border-muted-foreground/20',
                   )}
                   style={{ backgroundImage: `url(${p.thumb})` }}
                 />
                 <span className="text-sm truncate">{t(p.label)}</span>
-                {isSel && <Check className="size-4 text-pon-cyan ml-auto flex-shrink-0" />}
+                {isSel && <Check className="size-4 text-primary ml-auto flex-shrink-0" />}
               </button>
             )
           })}
@@ -214,7 +214,7 @@ export function WallpaperPickerModal({ conversationId, open, onClose }: Props) {
                     >
                       <div className={cn('size-8 rounded-full flex-shrink-0', item.swatch)} />
                       <span className="text-sm truncate">{t(item.label)}</span>
-                      {isSel && <Check className="size-4 text-pon-cyan ml-auto flex-shrink-0" />}
+                      {isSel && <Check className="size-4 text-primary ml-auto flex-shrink-0" />}
                     </button>
                   )
                 })}
@@ -223,7 +223,7 @@ export function WallpaperPickerModal({ conversationId, open, onClose }: Props) {
                 {cat.collapsible && (
                   <button
                     onClick={() => setColorsExpanded((v) => !v)}
-                    className="flex items-center gap-1.5 w-full px-4 py-2 text-xs text-pon-cyan hover:text-pon-cyan/80 transition-colors"
+                    className="flex items-center gap-1.5 w-full px-4 py-2 text-xs text-primary hover:text-primary/80 transition-colors"
                   >
                     {colorsExpanded ? t('wallpaperShowLess') : t('wallpaperShowMore')}
                   </button>
@@ -265,17 +265,17 @@ export function WallpaperPickerModal({ conversationId, open, onClose }: Props) {
                 <div className="absolute inset-0 bg-background/10 dark:bg-background/30" />
                 <div className="relative z-10 flex flex-col justify-end h-full gap-1.5 p-3">
                   <div className="flex justify-start">
-                    <div className="max-w-[70%] rounded-2xl rounded-tl-none bg-muted/90 text-foreground border border-border/50 px-3 py-1.5 text-xs shadow-sm">
+                    <div className="max-w-[70%] rounded-[14px] rounded-tl-[4px] bg-muted/90 text-foreground border border-border/50 px-3 py-1.5 text-xs">
                       {t('inputPlaceholder')}
                     </div>
                   </div>
                   <div className="flex justify-end">
-                    <div className="max-w-[70%] rounded-2xl rounded-tr-none bg-primary text-primary-foreground px-3 py-1.5 text-xs shadow-sm">
+                    <div className="max-w-[70%] rounded-[14px] rounded-tr-[4px] bg-primary text-primary-foreground px-3 py-1.5 text-xs">
                       👍
                     </div>
                   </div>
                   <div className="flex justify-start">
-                    <div className="max-w-[70%] rounded-2xl rounded-tl-none bg-muted/90 text-foreground border border-border/50 px-3 py-1.5 text-xs shadow-sm">
+                    <div className="max-w-[70%] rounded-[14px] rounded-tl-[4px] bg-muted/90 text-foreground border border-border/50 px-3 py-1.5 text-xs">
                       ✨
                     </div>
                   </div>
@@ -295,7 +295,7 @@ export function WallpaperPickerModal({ conversationId, open, onClose }: Props) {
                       className={cn(
                         'py-1.5 rounded-lg text-xs border transition-colors',
                         fit === f
-                          ? 'border-pon-cyan text-pon-cyan bg-pon-cyan/10'
+                          ? 'border-primary text-primary bg-primary/10'
                           : 'border-border text-muted-foreground hover:bg-muted/50',
                       )}>
                       {t(f === 'cover' ? 'wallpaperFitCover' : f === 'contain' ? 'wallpaperFitContain' : 'wallpaperFitFill')}

@@ -25,7 +25,7 @@ class ThemeOnboardingScreen extends ConsumerWidget {
                 child: ShaderMask(
                   shaderCallback: (bounds) {
                     return const LinearGradient(
-                      colors: [AppTheme.ponCyan, AppTheme.ponPink],
+                      colors: [AppTheme.ponAccent, AppTheme.ponAccent],
                     ).createShader(bounds);
                   },
                   child: Text(
@@ -65,7 +65,7 @@ class ThemeOnboardingScreen extends ConsumerWidget {
                 subtitle: context.l10n.themeDarkSubtitle,
                 icon: Icons.dark_mode_rounded,
                 themeMode: ThemeMode.dark,
-                activeColor: AppTheme.ponCyan,
+                activeColor: AppTheme.ponAccent,
               ),
               const SizedBox(height: 16),
               _ThemeOptionCard(
@@ -73,7 +73,7 @@ class ThemeOnboardingScreen extends ConsumerWidget {
                 subtitle: context.l10n.themeSystemSubtitle,
                 icon: Icons.brightness_auto_rounded,
                 themeMode: ThemeMode.system,
-                activeColor: AppTheme.ponPeach,
+                activeColor: AppTheme.ponAccent,
               ),
               const Spacer(flex: 2),
               PonButton(
@@ -83,7 +83,7 @@ class ThemeOnboardingScreen extends ConsumerWidget {
                     context.go('/');
                   }
                 },
-                glowColor: AppTheme.ponCyan,
+                glowColor: AppTheme.ponAccent,
                 child: Text(context.l10n.startExperience),
               ),
               const SizedBox(height: 16),
@@ -138,15 +138,6 @@ class _ThemeOptionCard extends ConsumerWidget {
                 : (isDark ? AppTheme.darkBorder : Colors.black.withValues(alpha: 0.08)),
             width: isSelected ? 2 : 1.5,
           ),
-          boxShadow: isSelected
-              ? [
-                  BoxShadow(
-                    color: activeColor.withValues(alpha: 0.15),
-                    blurRadius: 10,
-                    spreadRadius: 0.5,
-                  )
-                ]
-              : null,
         ),
         child: Row(
           children: [

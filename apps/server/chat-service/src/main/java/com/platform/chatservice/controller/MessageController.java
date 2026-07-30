@@ -15,6 +15,7 @@ import com.platform.chatservice.security.UserPrincipal;
 import com.platform.chatservice.service.AiFeedbackService;
 import com.platform.chatservice.service.AiRedisPublisher;
 import com.platform.chatservice.service.ClusterMessageBroker;
+import com.platform.chatservice.service.ConversationService;
 import com.platform.chatservice.service.ExternalBotService;
 import com.platform.chatservice.service.MessageNotificationService;
 import com.platform.chatservice.service.MessageQueryService;
@@ -44,6 +45,7 @@ public class MessageController {
   private final AiRedisPublisher aiRedisPublisher;
   private final AiFeedbackService aiFeedbackService;
   private final ExternalBotService externalBotService;
+  private final ConversationService conversationService;
 
   @PostMapping
   @ResponseStatus(HttpStatus.CREATED)
@@ -58,7 +60,14 @@ public class MessageController {
     // historically silent — recipients saw nothing until reload.
     messageNotificationService.notifyNewMessage(uid, response);
 
-    if (request.content() != null && AI_MENTION_PATTERN.matcher(request.content()).find()) {
+    // Same fan-out as the STOMP path: trigger the AI on an explicit @AI mention, OR on any message
+    // in a 1-1 conversation with the native AI bot (no mention required there).
+    boolean hasMention =
+        request.content() != null && AI_MENTION_PATTERN.matcher(request.content()).find();
+    boolean isDirectAi =
+        request.content() != null
+            && conversationService.isDirectAiConversation(request.conversationId());
+    if (hasMention || isDirectAi) {
       final String convId = request.conversationId();
       final String raw = request.content();
       // Forward the caller's RBAC claims (P2a) so ai-service can role-filter the

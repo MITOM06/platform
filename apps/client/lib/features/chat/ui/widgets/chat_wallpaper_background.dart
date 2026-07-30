@@ -68,7 +68,7 @@ class ChatWallpaperBackground extends StatelessWidget {
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   gradient: RadialGradient(colors: [
-                    AppTheme.ponCyan.withValues(alpha: 0.06),
+                    AppTheme.ponAccent.withValues(alpha: 0.06),
                     Colors.transparent,
                   ]),
                 ),
@@ -83,7 +83,7 @@ class ChatWallpaperBackground extends StatelessWidget {
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   gradient: RadialGradient(colors: [
-                    AppTheme.ponPeach.withValues(alpha: 0.06),
+                    AppTheme.ponAccent.withValues(alpha: 0.06),
                     Colors.transparent,
                   ]),
                 ),

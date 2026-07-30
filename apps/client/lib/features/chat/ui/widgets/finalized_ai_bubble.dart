@@ -28,7 +28,7 @@ class FinalizedAiBubble extends StatelessWidget {
           styleSheet: MarkdownStyleSheet(
             p: const TextStyle(color: Colors.white, fontSize: 15, height: 1.45),
             code: const TextStyle(
-              color: Color(0xFFB47FFF),
+              color: Color(0xFF96435B),
               backgroundColor: Color(0x33B47FFF),
               fontSize: 13,
             ),

@@ -125,7 +125,7 @@ const MessageBubbleInner = function MessageBubble({
       <div
         className={cn(
           'relative cursor-pointer select-none rounded-xl transition-colors',
-          isSelected && 'bg-pon-cyan/10',
+          isSelected && 'bg-primary/10',
         )}
         onClick={() => onSelectMessage?.(message)}
       >
@@ -133,10 +133,10 @@ const MessageBubbleInner = function MessageBubble({
           <div
             className={cn(
               'size-5 rounded-full border-2 flex items-center justify-center transition-colors',
-              isSelected ? 'bg-pon-cyan border-pon-cyan' : 'border-muted-foreground/50 bg-background/80',
+              isSelected ? 'bg-primary border-primary' : 'border-muted-foreground/50 bg-background/80',
             )}
           >
-            {isSelected && <Check className="size-3 text-black" strokeWidth={3} />}
+            {isSelected && <Check className="size-3 text-primary-foreground" strokeWidth={3} />}
           </div>
         </div>
         <div className="pl-8 pointer-events-none">{node}</div>
@@ -147,7 +147,7 @@ const MessageBubbleInner = function MessageBubble({
   if (message.recalled) {
     return wrapSelectable(
       <div className={cn('flex', isOwn ? 'justify-end' : 'justify-start')}>
-        <div className="max-w-[70%] rounded-[24px] px-4 py-2 text-sm italic text-muted-foreground border border-dashed bg-muted/20">
+        <div className="max-w-[70%] rounded-[14px] px-4 py-2 text-sm italic text-muted-foreground border border-dashed bg-muted/20">
           {t('recalled')}
         </div>
       </div>,
@@ -249,7 +249,7 @@ const MessageBubbleInner = function MessageBubble({
   const isRead = !!otherUserId && (message.readBy?.includes(otherUserId) ?? false)
   const readTick = isOwn && !isGroup && otherUserId && (
     isRead
-      ? <CheckCheck className="size-3 text-pon-cyan" aria-label={t('seen')} />
+      ? <CheckCheck className="size-3 text-primary" aria-label={t('seen')} />
       : <Check className="size-3 opacity-50" aria-label={t('sent')} />
   )
 
@@ -291,7 +291,14 @@ const MessageBubbleInner = function MessageBubble({
       onTouchMove={handleTouchMove}
       onClick={handleRowClick}
     >
-      <div className="relative flex flex-col gap-1 max-w-[70%]">
+      <div
+        className={cn(
+          'relative flex flex-col gap-1 max-w-[70%]',
+          // AI replies are long-form prose: cap the line length on wide screens for a
+          // comfortable reading measure (~80-90 chars). User messages stay percentage-based.
+          message.type === 'ai' && 'lg:max-w-[640px]',
+        )}
+      >
         {hoverTime}
         {isEmojiMsg ? (
           <div className={cn('flex flex-col', isOwn ? 'items-end' : 'items-start')}>
@@ -309,10 +316,10 @@ const MessageBubbleInner = function MessageBubble({
         ) : (
           <div
             className={cn(
-              'rounded-[24px] px-4 py-2.5 text-sm break-words relative overflow-hidden shadow-xs border',
+              'rounded-[14px] px-4 py-2.5 text-sm break-words relative overflow-hidden border',
               isOwn
-                ? 'bg-primary text-primary-foreground border-primary/30 rounded-tr-none shadow-[0_2px_12px_rgba(106,201,255,0.25)] dark:shadow-[0_2px_16px_rgba(106,201,255,0.2)]'
-                : 'bg-muted/70 text-foreground border-border/50 rounded-tl-none',
+                ? 'bg-primary text-primary-foreground border-primary/30 rounded-tr-[4px]'
+                : 'bg-muted/70 text-foreground border-border/50 rounded-tl-[4px]',
               isPinned && 'ring-2 ring-primary/40',
             )}
           >

@@ -1,45 +1,65 @@
 import 'package:flutter/material.dart';
 
+/// Design tokens for the "Warm Grey & Burgundy" direction.
+/// Source of truth: `docs/superpowers/UI-REDESIGN-DIRECTION.md` §2.
+/// The old 3-colour neon brand set (cyan/peach/pink) was retired: there is now
+/// exactly ONE accent, and hierarchy is carried by text shade + weight.
 class AppTheme {
-  // Brand colors extracted from logo (Cyan -> Peach -> Pink)
-  static const Color ponCyan = Color(0xFF6AC9FF);
-  static const Color ponPeach = Color(0xFFFBB68B);
-  static const Color ponPink = Color(0xFFFF85B3);
+  /// The single accent. Only ever means "this is the primary action" — never
+  /// decoration. A mid-tone burgundy so it works on both light and dark
+  /// surfaces from one constant.
+  static const Color ponAccent = Color(0xFF96435B);
+
+  /// Accent tints used as subtle backgrounds (selected row, badge, hover).
+  static const Color darkAccentTint = Color(0xFF3A2A2C);
+  static const Color lightAccentTint = Color(0xFFF1E4E6);
+
   static const Color onlineGreen = Color(0xFF00E676);
   static const Color offlineGrey = Color(0xFF9E9E9E);
-  
-  // Gradients
-  static const LinearGradient ponGradient = LinearGradient(
-    colors: [ponCyan, ponPeach, ponPink],
-    begin: Alignment.topLeft,
-    end: Alignment.bottomRight,
-  );
+
+  // Text — warm ink, never pure #000/#FFF.
+  static const Color darkText = Color(0xFFF3EEE8);
+  static const Color darkTextMuted = Color(0xFFB0A79C);
+  static const Color lightText = Color(0xFF241F1D);
+  static const Color lightTextMuted = Color(0xFF6B6259);
+
+  // Destructive stays semantically red — the accent hue is not overloaded.
+  static const Color darkDanger = Color(0xFFE5484D);
+  static const Color lightDanger = Color(0xFFB3261E);
 
   // Backgrounds - Dark
-  static const Color darkBackground = Color(0xFF121212);
-  static const Color darkSurface = Color(0xFF1E1E1E);
-  static const Color darkBorder = Color(0xFF2C2C2C);
+  static const Color darkBackground = Color(0xFF1A1614);
+  static const Color darkSurface = Color(0xFF221D1A);
+  static const Color darkBorder = Color(0xFF332B27);
 
   // Backgrounds - Light
-  static const Color lightBackground = Color(0xFFF5F7FA);
+  static const Color lightBackground = Color(0xFFF5F2ED);
   static const Color lightSurface = Colors.white;
-  static const Color lightBorder = Color(0xFFE5E7EB);
-  
+  static const Color lightBorder = Color(0xFFDDD8D0);
+
+  // Radius scale — controls 10, cards 12, full-screen sheets 16-20.
+  static const double radiusControl = 10;
+  static const double radiusCard = 12;
+  static const double radiusSheet = 18;
+
   static ThemeData get darkTheme {
     return ThemeData(
       brightness: Brightness.dark,
       useMaterial3: true,
       scaffoldBackgroundColor: darkBackground,
       colorScheme: const ColorScheme.dark(
-        primary: ponCyan,
-        secondary: ponPink,
-        tertiary: ponPeach,
+        primary: ponAccent,
+        secondary: ponAccent,
+        tertiary: ponAccent,
         surface: darkSurface,
-        error: Colors.redAccent,
-        onPrimary: Colors.white,
-        onSecondary: Colors.white,
-        primaryContainer: Color(0xFF2C2C2C),
-        onPrimaryContainer: ponCyan,
+        onSurface: darkText,
+        error: darkDanger,
+        onPrimary: darkText,
+        onSecondary: darkText,
+        primaryContainer: darkAccentTint,
+        // A lighter burgundy tint, not the accent itself: accent-on-tint only
+        // reaches 2.7:1, which fails WCAG for text.
+        onPrimaryContainer: Color(0xFFE8B4BE),
       ),
       appBarTheme: const AppBarTheme(
         backgroundColor: Colors.transparent,
@@ -48,15 +68,15 @@ class AppTheme {
         titleTextStyle: TextStyle(
           fontSize: 20,
           fontWeight: FontWeight.w700,
-          color: Colors.white,
+          color: darkText,
           letterSpacing: 0.2,
         ),
-        iconTheme: IconThemeData(color: Colors.white),
+        iconTheme: IconThemeData(color: darkText),
       ),
       cardTheme: CardThemeData(
         color: darkSurface,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(24),
+          borderRadius: BorderRadius.circular(12),
           side: const BorderSide(color: darkBorder, width: 1),
         ),
         elevation: 0,
@@ -66,38 +86,38 @@ class AppTheme {
         fillColor: darkSurface,
         contentPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 18),
         labelStyle: TextStyle(color: Colors.white.withValues(alpha: 0.6)),
-        floatingLabelStyle: const TextStyle(color: ponCyan, fontWeight: FontWeight.w600),
+        floatingLabelStyle: const TextStyle(color: ponAccent, fontWeight: FontWeight.w600),
         hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.3)),
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(24),
+          borderRadius: BorderRadius.circular(10),
           borderSide: BorderSide.none,
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(24),
+          borderRadius: BorderRadius.circular(10),
           borderSide: const BorderSide(color: darkBorder, width: 1.5),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(24),
-          borderSide: const BorderSide(color: ponCyan, width: 2),
+          borderRadius: BorderRadius.circular(10),
+          borderSide: const BorderSide(color: ponAccent, width: 2),
         ),
         errorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(24),
-          borderSide: const BorderSide(color: Colors.redAccent, width: 1.5),
+          borderRadius: BorderRadius.circular(10),
+          borderSide: const BorderSide(color: darkDanger, width: 1.5),
         ),
         focusedErrorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(24),
-          borderSide: const BorderSide(color: Colors.redAccent, width: 2),
+          borderRadius: BorderRadius.circular(10),
+          borderSide: const BorderSide(color: darkDanger, width: 2),
         ),
         prefixIconColor: Colors.white.withValues(alpha: 0.5),
         suffixIconColor: Colors.white.withValues(alpha: 0.5),
       ),
       filledButtonTheme: FilledButtonThemeData(
         style: FilledButton.styleFrom(
-          backgroundColor: ponCyan,
+          backgroundColor: ponAccent,
           foregroundColor: Colors.white,
           padding: const EdgeInsets.symmetric(vertical: 18),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(24),
+            borderRadius: BorderRadius.circular(10),
           ),
           textStyle: const TextStyle(
             fontSize: 16,
@@ -108,7 +128,7 @@ class AppTheme {
       ),
       textButtonTheme: TextButtonThemeData(
         style: TextButton.styleFrom(
-          foregroundColor: ponCyan,
+          foregroundColor: ponAccent,
           textStyle: const TextStyle(
             fontWeight: FontWeight.bold,
             fontSize: 15,
@@ -117,8 +137,8 @@ class AppTheme {
       ),
       listTileTheme: const ListTileThemeData(
         contentPadding: EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-        iconColor: Colors.white70,
-        textColor: Colors.white,
+        iconColor: darkTextMuted,
+        textColor: darkText,
       ),
     );
   }
@@ -129,15 +149,16 @@ class AppTheme {
       useMaterial3: true,
       scaffoldBackgroundColor: lightBackground,
       colorScheme: const ColorScheme.light(
-        primary: ponCyan,
-        secondary: ponPink,
-        tertiary: ponPeach,
+        primary: ponAccent,
+        secondary: ponAccent,
+        tertiary: ponAccent,
         surface: lightSurface,
-        error: Colors.redAccent,
+        onSurface: lightText,
+        error: lightDanger,
         onPrimary: Colors.white,
         onSecondary: Colors.white,
-        primaryContainer: Color(0xFFF3F4F6),
-        onPrimaryContainer: ponCyan,
+        primaryContainer: lightAccentTint,
+        onPrimaryContainer: Color(0xFF7A2E3A),
       ),
       appBarTheme: const AppBarTheme(
         backgroundColor: Colors.transparent,
@@ -145,15 +166,15 @@ class AppTheme {
         titleTextStyle: TextStyle(
           fontSize: 20,
           fontWeight: FontWeight.w700,
-          color: Color(0xFF111827),
+          color: lightText,
           letterSpacing: 0.2,
         ),
-        iconTheme: IconThemeData(color: Color(0xFF111827)),
+        iconTheme: IconThemeData(color: lightText),
       ),
       cardTheme: CardThemeData(
         color: lightSurface,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(24),
+          borderRadius: BorderRadius.circular(12),
           side: const BorderSide(color: lightBorder, width: 1),
         ),
         elevation: 0,
@@ -163,38 +184,38 @@ class AppTheme {
         fillColor: lightSurface,
         contentPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 18),
         labelStyle: TextStyle(color: Colors.black.withValues(alpha: 0.5)),
-        floatingLabelStyle: const TextStyle(color: ponCyan, fontWeight: FontWeight.w600),
+        floatingLabelStyle: const TextStyle(color: ponAccent, fontWeight: FontWeight.w600),
         hintStyle: TextStyle(color: Colors.black.withValues(alpha: 0.3)),
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(24),
+          borderRadius: BorderRadius.circular(10),
           borderSide: BorderSide.none,
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(24),
+          borderRadius: BorderRadius.circular(10),
           borderSide: const BorderSide(color: lightBorder, width: 1.5),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(24),
-          borderSide: const BorderSide(color: ponCyan, width: 2),
+          borderRadius: BorderRadius.circular(10),
+          borderSide: const BorderSide(color: ponAccent, width: 2),
         ),
         errorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(24),
-          borderSide: const BorderSide(color: Colors.redAccent, width: 1.5),
+          borderRadius: BorderRadius.circular(10),
+          borderSide: const BorderSide(color: lightDanger, width: 1.5),
         ),
         focusedErrorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(24),
-          borderSide: const BorderSide(color: Colors.redAccent, width: 2),
+          borderRadius: BorderRadius.circular(10),
+          borderSide: const BorderSide(color: lightDanger, width: 2),
         ),
         prefixIconColor: Colors.black.withValues(alpha: 0.4),
         suffixIconColor: Colors.black.withValues(alpha: 0.4),
       ),
       filledButtonTheme: FilledButtonThemeData(
         style: FilledButton.styleFrom(
-          backgroundColor: ponCyan,
+          backgroundColor: ponAccent,
           foregroundColor: Colors.white,
           padding: const EdgeInsets.symmetric(vertical: 18),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(24),
+            borderRadius: BorderRadius.circular(10),
           ),
           textStyle: const TextStyle(
             fontSize: 16,
@@ -205,7 +226,7 @@ class AppTheme {
       ),
       textButtonTheme: TextButtonThemeData(
         style: TextButton.styleFrom(
-          foregroundColor: ponCyan,
+          foregroundColor: ponAccent,
           textStyle: const TextStyle(
             fontWeight: FontWeight.bold,
             fontSize: 15,
@@ -214,8 +235,8 @@ class AppTheme {
       ),
       listTileTheme: const ListTileThemeData(
         contentPadding: EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-        iconColor: Colors.black54,
-        textColor: Colors.black87,
+        iconColor: lightTextMuted,
+        textColor: lightText,
       ),
     );
   }

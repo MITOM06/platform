@@ -101,7 +101,7 @@ class _AiContextEntriesPanelState extends ConsumerState<AiContextEntriesPanel> {
             TextButton(
               onPressed: () => Navigator.pop(ctx, true),
               child: Text(l.adminSave,
-                  style: const TextStyle(color: AppTheme.ponCyan)),
+                  style: const TextStyle(color: AppTheme.ponAccent)),
             ),
           ],
         ),
@@ -186,7 +186,7 @@ class _AiContextEntriesPanelState extends ConsumerState<AiContextEntriesPanel> {
                 ),
               const Spacer(),
               IconButton(
-                icon: const Icon(Icons.add, color: AppTheme.ponCyan),
+                icon: const Icon(Icons.add, color: AppTheme.ponAccent),
                 tooltip: l.adminCreateEntry,
                 onPressed: canCreate ? () => _edit(context) : null,
               ),

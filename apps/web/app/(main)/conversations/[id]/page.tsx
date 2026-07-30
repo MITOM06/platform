@@ -189,7 +189,7 @@ export default function ConversationPage({ params }: Props) {
           {[80, 55, 70, 40, 65, 50].map((w, i) => (
             <div key={i} className={`flex ${i % 2 === 0 ? 'justify-end' : 'justify-start'}`}>
               {i % 2 !== 0 && <Skeleton className="size-7 rounded-full mr-2 shrink-0 self-end" />}
-              <Skeleton className="h-9 rounded-2xl" style={{ width: `${w}%`, maxWidth: '320px' }} />
+              <Skeleton className="h-9 rounded-[14px]" style={{ width: `${w}%`, maxWidth: '320px' }} />
             </div>
           ))}
         </div>
@@ -260,8 +260,8 @@ export default function ConversationPage({ params }: Props) {
         {/* Glow Spheres — only when no wallpaper is set, so they don't tint it. */}
         {!hasWallpaper && (
           <div className="absolute inset-0 overflow-hidden pointer-events-none z-0 opacity-40 dark:opacity-20">
-            <div className="absolute -top-40 -left-40 size-96 rounded-full bg-pon-cyan blur-[128px] animate-pulse duration-[6000ms]" />
-            <div className="absolute -bottom-40 -right-40 size-96 rounded-full bg-pon-peach blur-[128px] animate-pulse duration-[8000ms]" />
+            <div className="absolute -top-40 -left-40 size-96 rounded-full bg-primary blur-[128px] animate-pulse duration-[6000ms]" />
+            <div className="absolute -bottom-40 -right-40 size-96 rounded-full bg-primary blur-[128px] animate-pulse duration-[8000ms]" />
           </div>
         )}
 

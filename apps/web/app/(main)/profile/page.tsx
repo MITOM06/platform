@@ -66,7 +66,7 @@ export default function ProfilePage() {
   return (
     <div className="flex flex-col h-full">
       {/* Header */}
-      <header className="h-14 border-b px-4 flex items-center gap-3 shrink-0 bg-background/95 backdrop-blur-md z-10">
+      <header className="h-14 border-b px-4 flex items-center gap-3 shrink-0 bg-background z-10">
         <Link
           href="/conversations"
           className="text-muted-foreground hover:text-foreground transition-colors"
@@ -77,13 +77,13 @@ export default function ProfilePage() {
       </header>
 
       <div className="flex-1 overflow-y-auto flex justify-center px-4 py-6 md:py-10 pb-tabbar md:pb-10">
-        <div className="w-full max-w-md rounded-2xl border bg-card shadow-sm overflow-hidden self-start">
+        <div className="w-full max-w-md rounded-lg border bg-card overflow-hidden self-start">
         {/* Cover Photo */}
         <div className="relative h-40 w-full overflow-hidden">
           {resolvedCover ? (
             <Image src={resolvedCover} alt="" fill unoptimized className="object-cover" />
           ) : (
-            <div className="absolute inset-0 bg-gradient-to-br from-pon-cyan via-pon-peach to-pon-pink" />
+            <div className="absolute inset-0 bg-primary" />
           )}
           <div className="absolute inset-0 bg-black/20" />
         </div>
@@ -91,11 +91,11 @@ export default function ProfilePage() {
         <div className="relative px-6">
           {/* Avatar overlapping cover */}
           <div className="flex justify-center -mt-14">
-            <Avatar className="size-28 ring-4 ring-background shadow-xl">
+            <Avatar className="size-28 ring-4 ring-background">
               {resolvedAvatar ? (
                 <AvatarImage src={resolvedAvatar} alt={user.displayName} />
               ) : (
-                <AvatarFallback className="text-3xl font-bold bg-gradient-to-br from-pon-cyan to-pon-pink text-white">
+                <AvatarFallback className="text-3xl font-bold bg-primary text-white">
                   {initials}
                 </AvatarFallback>
               )}

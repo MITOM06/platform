@@ -60,7 +60,7 @@ function SettingsCard({ icon, iconBg, title, subtitle, onClick, destructive }: S
   return (
     <button
       onClick={onClick}
-      className={`w-full group relative rounded-xl border bg-card p-0 transition-all duration-200 hover:shadow-lg hover:scale-[1.01] active:scale-[0.99] text-left overflow-hidden ${
+      className={`w-full group relative rounded-xl border bg-card p-0 transition-all duration-200 hover:scale-[1.01] active:scale-[0.99] text-left overflow-hidden ${
         destructive ? 'hover:border-destructive/30' : 'hover:border-primary/30'
       }`}
     >
@@ -68,7 +68,7 @@ function SettingsCard({ icon, iconBg, title, subtitle, onClick, destructive }: S
         className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-xl pointer-events-none"
         style={{
           background: `radial-gradient(circle at 30% 50%, ${
-            destructive ? 'rgba(239,68,68,0.04)' : 'rgba(106,201,255,0.06)'
+            destructive ? 'rgba(239,68,68,0.04)' : 'rgba(150, 67, 91,0.06)'
           }, transparent 70%)`,
         }}
       />
@@ -178,7 +178,7 @@ export default function SettingsPage() {
 
   return (
     <div className="flex flex-col h-full">
-      <header className="h-14 border-b px-4 flex items-center gap-3 shrink-0 bg-background/95 backdrop-blur-md">
+      <header className="h-14 border-b px-4 flex items-center gap-3 shrink-0 bg-background">
         <Link
           href="/conversations"
           className="text-muted-foreground hover:text-foreground transition-colors"
@@ -190,8 +190,8 @@ export default function SettingsPage() {
 
       <div className="flex-1 overflow-y-auto">
         <div className="relative">
-          <div className="absolute -top-24 -left-24 w-72 h-72 rounded-full bg-pon-cyan/5 blur-3xl pointer-events-none dark:bg-pon-cyan/8" />
-          <div className="absolute -bottom-24 -right-24 w-72 h-72 rounded-full bg-pon-peach/5 blur-3xl pointer-events-none dark:bg-pon-peach/8" />
+          <div className="absolute -top-24 -left-24 w-72 h-72 rounded-full bg-primary/5 blur-3xl pointer-events-none dark:bg-primary/8" />
+          <div className="absolute -bottom-24 -right-24 w-72 h-72 rounded-full bg-primary/5 blur-3xl pointer-events-none dark:bg-primary/8" />
 
           <div className="relative max-w-5xl mx-auto px-6 md:px-10 py-8 pb-tabbar md:pb-12">
             <div className="flex flex-col items-center mb-10">
@@ -200,7 +200,7 @@ export default function SettingsPage() {
                   {user.avatarUrl && (
                     <AvatarImage src={absoluteMediaUrl(user.avatarUrl)} alt={user.displayName} />
                   )}
-                  <AvatarFallback className="text-xl font-bold bg-gradient-to-br from-pon-cyan to-pon-pink text-white">
+                  <AvatarFallback className="text-xl font-bold bg-primary text-white">
                     {getInitials(user.displayName)}
                   </AvatarFallback>
                 </Avatar>
@@ -212,14 +212,14 @@ export default function SettingsPage() {
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <SettingsCard
                 icon={<User className="size-5 text-primary" />}
-                iconBg="rgba(106,201,255,0.12)"
+                iconBg="rgba(150, 67, 91,0.12)"
                 title={t('editProfile')}
                 onClick={() => router.push('/profile')}
               />
 
               <SettingsCard
                 icon={themeIcon()}
-                iconBg="rgba(251,182,139,0.12)"
+                iconBg="rgba(150, 67, 91,0.12)"
                 title={t('theme')}
                 subtitle={themeLabel()}
                 onClick={() => setThemePickerOpen(true)}
@@ -227,7 +227,7 @@ export default function SettingsPage() {
 
               <SettingsCard
                 icon={<Languages className="size-5 text-primary" />}
-                iconBg="rgba(106,201,255,0.12)"
+                iconBg="rgba(150, 67, 91,0.12)"
                 title={t('language')}
                 subtitle={LOCALE_NAMES[locale as Locale] ?? locale}
                 onClick={() => setLanguagePickerOpen(true)}
@@ -242,7 +242,7 @@ export default function SettingsPage() {
               />
 
               <SettingsCard
-                icon={<Hash className="size-5 text-[#B47FFF]" />}
+                icon={<Hash className="size-5 text-primary" />}
                 iconBg="rgba(180,127,255,0.12)"
                 title={t('explore')}
                 subtitle={t('exploreSubtitle')}
@@ -253,9 +253,9 @@ export default function SettingsPage() {
                 <div className="relative flex items-center gap-4 px-5 py-4">
                   <div
                     className="size-10 rounded-full flex items-center justify-center shrink-0"
-                    style={{ background: 'rgba(251,182,139,0.12)' }}
+                    style={{ background: 'rgba(150, 67, 91,0.12)' }}
                   >
-                    <Bell className="size-5 text-pon-peach" />
+                    <Bell className="size-5 text-primary" />
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-semibold text-foreground">{t('notifications')}</p>
@@ -273,15 +273,15 @@ export default function SettingsPage() {
               </div>
 
               <SettingsCard
-                icon={<Coins className="size-5 text-pon-peach" />}
-                iconBg="rgba(251,182,139,0.12)"
+                icon={<Coins className="size-5 text-primary" />}
+                iconBg="rgba(150, 67, 91,0.12)"
                 title={t('tokenUsage')}
                 subtitle={t('tokenUsageSubtitle')}
                 onClick={() => router.push('/token-usage')}
               />
 
               <SettingsCard
-                icon={<BrainCircuit className="size-5 text-[#B47FFF]" />}
+                icon={<BrainCircuit className="size-5 text-primary" />}
                 iconBg="rgba(180,127,255,0.12)"
                 title={t('aiContext')}
                 subtitle={t('aiContextSubtitle')}
@@ -289,15 +289,15 @@ export default function SettingsPage() {
               />
 
               <SettingsCard
-                icon={<Plug className="size-5 text-pon-cyan" />}
-                iconBg="rgba(106,201,255,0.12)"
+                icon={<Plug className="size-5 text-primary" />}
+                iconBg="rgba(150, 67, 91,0.12)"
                 title={t('integrations')}
                 subtitle={t('integrationsSubtitle')}
                 onClick={() => router.push('/integrations')}
               />
 
               <SettingsCard
-                icon={<Sparkles className="size-5 text-[#B47FFF]" />}
+                icon={<Sparkles className="size-5 text-primary" />}
                 iconBg="rgba(180,127,255,0.12)"
                 title={t('skills')}
                 subtitle={t('skillsSubtitle')}
@@ -305,8 +305,8 @@ export default function SettingsPage() {
               />
 
               <SettingsCard
-                icon={<HelpCircle className="size-5 text-pon-cyan" />}
-                iconBg="rgba(106,201,255,0.12)"
+                icon={<HelpCircle className="size-5 text-primary" />}
+                iconBg="rgba(150, 67, 91,0.12)"
                 title={t('help')}
                 subtitle={t('helpSubtitle')}
                 onClick={() => router.push('/help')}
@@ -317,14 +317,14 @@ export default function SettingsPage() {
                   <Lock
                     className={cn(
                       'size-5',
-                      !user.hasPassword ? 'text-amber-500' : 'text-pon-pink',
+                      !user.hasPassword ? 'text-amber-500' : 'text-primary',
                     )}
                   />
                 }
                 iconBg={
                   !user.hasPassword
                     ? 'rgba(245,158,11,0.12)'
-                    : 'rgba(255,133,179,0.12)'
+                    : 'rgba(150, 67, 91,0.12)'
                 }
                 title={t('securityCard')}
                 subtitle={

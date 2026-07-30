@@ -19,7 +19,7 @@ class ArchivedChatsScreen extends ConsumerWidget {
     final archivedAsync = ref.watch(archivedConversationsProvider);
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final accent =
-        isDark ? AppTheme.ponCyan : Theme.of(context).colorScheme.primary;
+        isDark ? AppTheme.ponAccent : Theme.of(context).colorScheme.primary;
 
     return Scaffold(
       appBar: AppBar(
@@ -188,7 +188,7 @@ class _ArchivedTile extends ConsumerWidget {
           trailing: IconButton(
             icon: const Icon(Icons.unarchive_outlined),
             tooltip: context.l10n.unarchiveChat,
-            color: isDark ? AppTheme.ponCyan : Theme.of(context).colorScheme.primary,
+            color: isDark ? AppTheme.ponAccent : Theme.of(context).colorScheme.primary,
             onPressed: () => ref
                 .read(conversationsNotifierProvider.notifier)
                 .unarchiveConversation(conv.id),

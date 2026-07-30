@@ -82,7 +82,7 @@ class UsagePerModelCostList extends StatelessWidget {
               fmtCount(r.outputTokens),
               fmtCount(r.requestCount),
             ),
-            accent: AppTheme.ponPeach,
+            accent: AppTheme.ponAccent,
           ),
       ],
     );
@@ -106,7 +106,7 @@ class UsageTopUsersList extends StatelessWidget {
             title: top[i].label,
             trailing: fmtCount(top[i].totalTokens),
             subtitle: context.l10n.usageUserRequests(top[i].requestCount),
-            accent: AppTheme.ponCyan,
+            accent: AppTheme.ponAccent,
           ),
       ],
     );

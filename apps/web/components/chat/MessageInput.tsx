@@ -383,7 +383,7 @@ export function MessageInput({
                 className="shrink-0 tap"
                 title={t('attachVoice')}
               >
-                <Mic className="size-5 text-pon-cyan" />
+                <Mic className="size-5 text-primary" />
               </Button>
               <button
                 onClick={() => onSend(quickReaction, 'text')}

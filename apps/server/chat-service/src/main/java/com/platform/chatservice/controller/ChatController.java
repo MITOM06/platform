@@ -9,6 +9,7 @@ import com.platform.chatservice.security.UserPrincipal;
 import com.platform.chatservice.service.AiRedisPublisher;
 import com.platform.chatservice.service.CallService;
 import com.platform.chatservice.service.ClusterMessageBroker;
+import com.platform.chatservice.service.ConversationService;
 import com.platform.chatservice.service.ExternalBotService;
 import com.platform.chatservice.service.MessageNotificationService;
 import com.platform.chatservice.service.MessageQueryService;
@@ -39,6 +40,7 @@ public class ChatController {
   private final AiRedisPublisher aiRedisPublisher;
   private final CallService callService;
   private final ExternalBotService externalBotService;
+  private final ConversationService conversationService;
 
   @MessageMapping("/chat.send")
   public void send(@Payload ChatMessageDto dto, Principal principal) {
@@ -59,8 +61,15 @@ public class ChatController {
     MessageResponse response = messageService.sendMessage(principal.getName(), request);
     clusterBroker.convertAndSend("/topic/conversation/" + dto.getConversationId(), response);
 
-    // Async AI trigger — must not block the STOMP response
-    if (dto.getContent() != null && AI_MENTION_PATTERN.matcher(dto.getContent()).find()) {
+    // Async AI trigger — must not block the STOMP response.
+    // Trigger when the message mentions @AI, OR when this is a 1-1 conversation with the native AI
+    // bot (every message there is implicitly addressed to the AI, so no mention is required).
+    boolean hasMention =
+        dto.getContent() != null && AI_MENTION_PATTERN.matcher(dto.getContent()).find();
+    boolean isDirectAi =
+        dto.getContent() != null
+            && conversationService.isDirectAiConversation(dto.getConversationId());
+    if (hasMention || isDirectAi) {
       final String uid = principal.getName();
       final String convId = dto.getConversationId();
       final String raw = dto.getContent();

@@ -37,11 +37,11 @@ export function ActiveCallBanner({ callId, conversationId, media, aiNotetaker, j
   }
 
   return (
-    <div className="flex items-center gap-3 border-b bg-pon-cyan/10 px-4 py-2 text-sm">
+    <div className="flex items-center gap-3 border-b bg-primary/10 px-4 py-2 text-sm">
       {media === 'video' ? (
-        <Video className="size-4 text-pon-cyan shrink-0" />
+        <Video className="size-4 text-primary shrink-0" />
       ) : (
-        <Phone className="size-4 text-pon-cyan shrink-0" />
+        <Phone className="size-4 text-primary shrink-0" />
       )}
       <span className="flex-1 truncate font-medium">
         {t('activeCallBanner', { count: joinedCount })}

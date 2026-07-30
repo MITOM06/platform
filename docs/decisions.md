@@ -195,7 +195,7 @@ This document captures discussions and locked choices.
 - Qdrant collection named `knowledge` is created on boot.
 - Redis channels `kb:process` and `kb:delete` are used to communicate jobs from `chat-service` to `ai-service`.
 - Custom text chunker uses 512-character chunks with 80-character overlap aligned to sentence boundaries.
-- Context is retrieved using cosine similarity with a score threshold >= `0.3` for prompt injection.
+- Context is retrieved using cosine similarity with a score threshold >= `0.5` (`KB_SCORE_THRESHOLD`) for prompt injection. (The separate Cohere reranker uses its own `COHERE_RERANK_THRESHOLD` default `0.3`.)
 
 ---
 
@@ -242,42 +242,6 @@ Web UI:  http://localhost:15672  (user: platform / platform)
 - `ai-service` adds `@golevelup/nestjs-rabbitmq`, `RabbitmqModule`, and `AiConsumer`.
 - `ai-service` `RedisSubscriberService` is trimmed to `kb:process` / `kb:delete` only.
 - Docker Compose adds a `rabbitmq` service with a healthcheck; both `chat-service` and `ai-service` depend on it.
-
----
-
-## ADR-009: Qdrant Vector Database and Voyage AI Embeddings for Knowledge Base (RAG)
-
-**Date:** 2026-06-06  
-**Status:** Accepted
-
-**Context:** Starting Phase 2 — Sprint AI-3: Knowledge Base / RAG pipeline. Need to store and retrieve document chunk embeddings for context injection.
-
-**Options considered for Vector DB:**
-- PGVector (PostgreSQL) — Good if already using SQL DB, but stack uses MongoDB. PGVector would require setting up Postgres from scratch.
-- MongoDB Atlas Vector Search — Native to MongoDB, but local Docker setup lacks full Atlas features or requires complex setups.
-- Qdrant — High performance, extremely developer-friendly Node.js client, natively supports payload filtering, low memory footprint.
-
-**Options considered for Embedding Model:**
-- Local transformers (e.g., SentenceTransformers in Node.js) — Free, but resource intensive for CPU-bound Docker microservices.
-- OpenAI Embeddings (`text-embedding-3-small`) — industry-standard, but adds a second AI vendor + key outside the Anthropic stack.
-- Voyage AI (`voyage-3.5`) — Anthropic's recommended embeddings partner; Claude-aligned quality, 1024-dim, single-vendor alignment. **(chosen — see Update note)**
-
-**Decision:**
-- Use **Qdrant v1.9.0** as the Vector DB.
-- Use **Voyage AI `voyage-3.5`** for producing 1024-dimensional embeddings (Anthropic's recommended embeddings partner — keeps the whole AI stack in the Anthropic ecosystem, no separate OpenAI dependency).
-
-> **Update (2026-06-23):** embeddings migrated from OpenAI `text-embedding-3-small` (1536-dim) to Voyage AI `voyage-3.5` (1024-dim); env var `OPENAI_API_KEY` → `VOYAGE_API_KEY`. The Qdrant collection is sized to the live model dimension automatically.
-
-**Rationale:**
-- Qdrant is lightweight, easy to integrate in Docker Compose, and supports precise logical filters (e.g. matching `documentId`).
-- Voyage AI provides Claude-aligned embedding quality for conversational QA context while keeping the AI stack on a single vendor (Anthropic + its recommended partner).
-- Keep a clean separation: `ai-service` processes text and interacts with Voyage AI / Qdrant, while `chat-service` manages MongoDB document status metadata and REST CRUD endpoints.
-
-**Consequences:**
-- Qdrant collection named `knowledge` is created on boot.
-- Redis channels `kb:process` and `kb:delete` are used to communicate jobs from `chat-service` to `ai-service`.
-- Custom text chunker uses 512-character chunks with 80-character overlap aligned to sentence boundaries.
-- Context is retrieved using cosine similarity with a score threshold >= `0.3` for prompt injection.
 
 ---
 

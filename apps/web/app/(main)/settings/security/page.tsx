@@ -105,7 +105,7 @@ export default function SecurityPage() {
 
   return (
     <div className="flex flex-col h-full">
-      <header className="h-14 border-b px-4 flex items-center gap-3 shrink-0 bg-background/95 backdrop-blur-md">
+      <header className="h-14 border-b px-4 flex items-center gap-3 shrink-0 bg-background">
         <Link
           href="/settings"
           className="text-muted-foreground hover:text-foreground transition-colors"

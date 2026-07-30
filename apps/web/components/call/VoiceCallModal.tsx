@@ -45,7 +45,7 @@ export function VoiceCallModal() {
       <audio ref={audioRef} autoPlay className="hidden" />
 
       <div className="flex flex-col items-center gap-5 mt-16">
-        <div className="size-32 rounded-full bg-gradient-to-br from-pon-cyan/40 to-pon-peach/40 flex items-center justify-center text-5xl font-semibold text-white ring-4 ring-white/10">
+        <div className="size-32 rounded-full bg-primary/40 flex items-center justify-center text-5xl font-semibold text-white ring-4 ring-white/10">
           {(peerName || '?')[0]?.toUpperCase()}
         </div>
         <p className="text-2xl font-semibold text-white">{peerName || t('peerFallback')}</p>
@@ -59,7 +59,7 @@ export function VoiceCallModal() {
             {[0, 1, 2, 3, 4, 5, 6].map((i) => (
               <span
                 key={i}
-                className="w-1.5 rounded-full bg-pon-cyan/80 animate-pulse"
+                className="w-1.5 rounded-full bg-primary/80 animate-pulse"
                 style={{
                   height: `${30 + ((i * 13) % 70)}%`,
                   animationDelay: `${i * 120}ms`,

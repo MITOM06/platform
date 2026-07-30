@@ -204,13 +204,13 @@ class _WallpaperDialogState extends State<WallpaperDialog> {
                         ? const Center(
                             child: CircularProgressIndicator(
                               valueColor:
-                                  AlwaysStoppedAnimation<Color>(AppTheme.ponCyan),
+                                  AlwaysStoppedAnimation<Color>(AppTheme.ponAccent),
                             ),
                           )
                         : OutlinedButton.icon(
                             style: OutlinedButton.styleFrom(
-                              foregroundColor: AppTheme.ponCyan,
-                              side: const BorderSide(color: AppTheme.ponCyan),
+                              foregroundColor: AppTheme.ponAccent,
+                              side: const BorderSide(color: AppTheme.ponAccent),
                             ),
                             icon: const Icon(Icons.add_photo_alternate_outlined),
                             label: Text(context.l10n.uploadImageButton),
@@ -244,7 +244,7 @@ class _WallpaperDialogState extends State<WallpaperDialog> {
                   const SizedBox(width: 8),
                   FilledButton(
                     style:
-                        FilledButton.styleFrom(backgroundColor: AppTheme.ponCyan),
+                        FilledButton.styleFrom(backgroundColor: AppTheme.ponAccent),
                     onPressed: _confirm,
                     child: Text(context.l10n.actionConfirm,
                         style: const TextStyle(color: Colors.white)),
@@ -287,7 +287,7 @@ class _WallpaperDialogState extends State<WallpaperDialog> {
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 border: Border.all(
-                  color: isSel ? AppTheme.ponCyan : Colors.white24,
+                  color: isSel ? AppTheme.ponAccent : Colors.white24,
                   width: isSel ? 2.5 : 1.5,
                 ),
                 gradient: colors != null
@@ -314,7 +314,7 @@ class _WallpaperDialogState extends State<WallpaperDialog> {
                       fontSize: 14)),
             ),
             if (isSel)
-              const Icon(Icons.check_circle, color: AppTheme.ponCyan, size: 18),
+              const Icon(Icons.check_circle, color: AppTheme.ponAccent, size: 18),
           ],
         ),
       ),
@@ -332,7 +332,7 @@ class _WallpaperDialogState extends State<WallpaperDialog> {
   /// "Xem thêm / Ẩn bớt" toggle button.
   Widget _buildShowMoreButton() {
     return TextButton(
-      style: TextButton.styleFrom(foregroundColor: AppTheme.ponCyan),
+      style: TextButton.styleFrom(foregroundColor: AppTheme.ponAccent),
       onPressed: () => setState(() => _colorsExpanded = !_colorsExpanded),
       child: Text(_colorsExpanded
           ? context.l10n.wallpaperShowLess

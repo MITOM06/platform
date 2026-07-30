@@ -152,7 +152,7 @@ function BotRow({
   return (
     <div className="flex items-center justify-between gap-4 rounded-lg border px-4 py-3">
       <div className="flex items-center gap-3 min-w-0">
-        <Bot className="size-5 shrink-0 text-pon-cyan" />
+        <Bot className="size-5 shrink-0 text-primary" />
         <div className="min-w-0">
           <p className="text-sm font-medium truncate">{bot.name}</p>
           <p className="text-xs text-muted-foreground truncate font-mono">
@@ -203,7 +203,7 @@ export function BotIntegrationPanel() {
   return (
     <section className="space-y-4">
       <h2 className="text-lg font-semibold flex items-center gap-2">
-        <Bot className="size-5 text-pon-cyan" /> {t('title')}
+        <Bot className="size-5 text-primary" /> {t('title')}
       </h2>
 
       {isLoading ? (

@@ -39,7 +39,7 @@ class _BarChartPainter extends CustomPainter {
     final chartH = size.height - 16;
 
     final inputPaint = Paint()..color = const Color(0xFF00E5FF);
-    final outputPaint = Paint()..color = const Color(0xFFB47FFF);
+    final outputPaint = Paint()..color = const Color(0xFF96435B);
 
     for (int i = 0; i < days.length; i++) {
       final d = days[i];

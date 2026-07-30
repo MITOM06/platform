@@ -51,7 +51,7 @@ class EditProfileHeader extends StatelessWidget {
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(12),
                         gradient: const LinearGradient(
-                          colors: [AppTheme.ponCyan, AppTheme.ponPink],
+                          colors: [AppTheme.ponAccent, AppTheme.ponAccent],
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
                         ),
@@ -124,7 +124,7 @@ class EditProfileHeader extends StatelessWidget {
                           child: Container(
                             padding: const EdgeInsets.all(6),
                             decoration: const BoxDecoration(
-                              color: AppTheme.ponCyan,
+                              color: AppTheme.ponAccent,
                               shape: BoxShape.circle,
                             ),
                             child: const Icon(Icons.camera_alt_rounded,

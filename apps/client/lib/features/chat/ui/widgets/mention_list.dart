@@ -48,11 +48,11 @@ class MentionList extends ConsumerWidget {
             dense: true,
             leading: CircleAvatar(
               radius: 16,
-              backgroundColor: AppTheme.ponCyan.withValues(alpha: 0.2),
+              backgroundColor: AppTheme.ponAccent.withValues(alpha: 0.2),
               child: Text(
                 letter,
                 style: const TextStyle(
-                  color: AppTheme.ponCyan,
+                  color: AppTheme.ponAccent,
                   fontSize: 13,
                   fontWeight: FontWeight.bold,
                 ),
