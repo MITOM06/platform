@@ -238,7 +238,7 @@ class _Controls extends StatelessWidget {
           const SizedBox(width: 18),
           FloatingActionButton(
             heroTag: 'leave_group_call',
-            backgroundColor: Colors.red,
+            backgroundColor: Theme.of(context).colorScheme.error,
             onPressed: onLeave,
             tooltip: context.l10n.callLeave,
             child: const Icon(Icons.call_end, color: Colors.white, size: 30),

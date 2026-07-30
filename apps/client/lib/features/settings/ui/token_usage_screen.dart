@@ -137,7 +137,7 @@ class _TokenUsageScreenState extends ConsumerState<TokenUsageScreen> {
               loading: () => const Center(child: CircularProgressIndicator()),
               error: (e, _) => Center(
                 child: Text(friendlyError(e),
-                    style: const TextStyle(color: Colors.redAccent)),
+                    style: TextStyle(color: Theme.of(context).colorScheme.error)),
               ),
             ),
           ),
@@ -264,7 +264,7 @@ class _QuotaProgressCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final barColor = fraction >= 0.9
-        ? Colors.redAccent
+        ? Theme.of(context).colorScheme.error
         : fraction >= 0.7
             ? const Color(0xFFFFB74D)
             : AppTheme.ponAccent;

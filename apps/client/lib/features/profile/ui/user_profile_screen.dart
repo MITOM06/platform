@@ -119,7 +119,7 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
             child: Text(ctx.l10n.actionCancel),
           ),
           FilledButton(
-            style: FilledButton.styleFrom(backgroundColor: Colors.redAccent),
+            style: FilledButton.styleFrom(backgroundColor: Theme.of(context).colorScheme.error),
             onPressed: () => Navigator.pop(ctx, true),
             child: Text(ctx.l10n.actionConfirm),
           ),

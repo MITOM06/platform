@@ -160,7 +160,7 @@ class MultiSelectBar extends ConsumerWidget {
                     child: _ActionButton(
                       icon: Icons.delete_outline_rounded,
                       label: l10n.actionDeleteForMe,
-                      color: Colors.redAccent,
+                      color: Theme.of(context).colorScheme.error,
                       onPressed: empty ? null : () => _delete(context, ref),
                     ),
                   ),

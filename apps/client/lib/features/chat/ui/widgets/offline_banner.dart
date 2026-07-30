@@ -8,14 +8,14 @@ class OfflineBanner extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: Colors.redAccent.withValues(alpha: 0.2),
+      color: Theme.of(context).colorScheme.error.withValues(alpha: 0.2),
       child: SafeArea(
         bottom: false,
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           child: Row(
             children: [
-              const Icon(Icons.wifi_off, size: 16, color: Colors.redAccent),
+              Icon(Icons.wifi_off, size: 16, color: Theme.of(context).colorScheme.error),
               const SizedBox(width: 8),
               Text(
                 context.l10n.offlineBanner,

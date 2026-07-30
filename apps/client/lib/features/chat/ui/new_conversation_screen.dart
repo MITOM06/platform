@@ -170,8 +170,6 @@ class _NewConversationScreenState
               ),
               const SizedBox(height: 24),
               PonCard(
-                glowColor: AppTheme.ponAccent,
-                glowStrength: 4,
                 child: Padding(
                   padding: const EdgeInsets.all(20.0),
                   child: _groupMode ? _buildGroupForm(l10n) : _buildDirectForm(l10n),
@@ -181,14 +179,14 @@ class _NewConversationScreenState
                 const SizedBox(height: 16),
                 Row(
                   children: [
-                    const Icon(Icons.error_outline_rounded,
-                        color: Colors.redAccent, size: 16),
+                    Icon(Icons.error_outline_rounded,
+                        color: Theme.of(context).colorScheme.error, size: 16),
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
                         _error!,
-                        style: const TextStyle(
-                          color: Colors.redAccent,
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.error,
                           fontSize: 13,
                           fontWeight: FontWeight.w500,
                         ),
@@ -222,7 +220,6 @@ class _NewConversationScreenState
             controller: _controller,
             labelText: l10n.fieldRecipient,
             prefixIcon: Icons.person_outline_rounded,
-            focusColor: AppTheme.ponAccent,
             textInputAction: TextInputAction.done,
             onFieldSubmitted: (_) => _loading ? null : _submitDirect(),
             validator: (v) {
@@ -236,8 +233,6 @@ class _NewConversationScreenState
           PonButton(
             onPressed: _submitDirect,
             isLoading: _loading,
-            gradientColors: const [AppTheme.ponAccent, AppTheme.ponAccent],
-            glowColor: AppTheme.ponAccent,
             child: Text(l10n.startConversationButton),
           ),
         ],
@@ -253,7 +248,6 @@ class _NewConversationScreenState
           controller: _groupNameController,
           labelText: l10n.groupName,
           prefixIcon: Icons.group_rounded,
-          focusColor: AppTheme.ponAccent,
         ),
         const SizedBox(height: 16),
         Row(
@@ -263,7 +257,6 @@ class _NewConversationScreenState
                 controller: _controller,
                 labelText: l10n.searchUsers,
                 prefixIcon: Icons.person_add_alt_1_rounded,
-                focusColor: AppTheme.ponAccent,
                 textInputAction: TextInputAction.done,
                 onFieldSubmitted: (_) => _loading ? null : _addMember(),
               ),
@@ -292,8 +285,6 @@ class _NewConversationScreenState
         PonButton(
           onPressed: _submitGroup,
           isLoading: _loading,
-          gradientColors: const [AppTheme.ponAccent, AppTheme.ponAccent],
-          glowColor: AppTheme.ponAccent,
           child: Text(l10n.createGroup),
         ),
       ],

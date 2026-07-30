@@ -148,15 +148,15 @@ class _WorstAnswerCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.redAccent.withValues(alpha: 0.3)),
+        border: Border.all(color: Theme.of(context).colorScheme.error.withValues(alpha: 0.3)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              const Icon(Icons.thumb_down_alt_outlined,
-                  size: 14, color: Colors.redAccent),
+              Icon(Icons.thumb_down_alt_outlined,
+                  size: 14, color: Theme.of(context).colorScheme.error),
               const SizedBox(width: 6),
               Expanded(
                 child: Text(

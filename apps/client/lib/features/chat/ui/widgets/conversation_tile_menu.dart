@@ -146,9 +146,9 @@ void showConversationTileMenu(
               )
             else
               ListTile(
-                leading: const Icon(Icons.block_rounded, color: Colors.redAccent),
+                leading: Icon(Icons.block_rounded, color: Theme.of(context).colorScheme.error),
                 title: Text(l10n.blockAndHide,
-                    style: const TextStyle(color: Colors.redAccent)),
+                    style: TextStyle(color: Theme.of(context).colorScheme.error)),
                 onTap: () async {
                   Navigator.pop(sheetCtx);
                   final ok = await showDialog<bool>(
@@ -162,7 +162,7 @@ void showConversationTileMenu(
                             child: Text(l10n.actionCancel)),
                         FilledButton(
                           style: FilledButton.styleFrom(
-                              backgroundColor: Colors.redAccent),
+                              backgroundColor: Theme.of(context).colorScheme.error),
                           onPressed: () => Navigator.pop(ctx, true),
                           child: Text(l10n.actionConfirm),
                         ),
@@ -189,10 +189,10 @@ void showConversationTileMenu(
               },
             ),
           ListTile(
-            leading: const Icon(Icons.delete_outline_rounded,
-                color: Colors.redAccent),
+            leading: Icon(Icons.delete_outline_rounded,
+                color: Theme.of(context).colorScheme.error),
             title: Text(l10n.deleteConversation,
-                style: const TextStyle(color: Colors.redAccent)),
+                style: TextStyle(color: Theme.of(context).colorScheme.error)),
             onTap: () {
               Navigator.pop(sheetCtx);
               notifier.deleteConversation(conv.id);

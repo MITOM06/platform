@@ -122,7 +122,7 @@ export class UpdateWorkspaceDto {
   @IsString()
   logoUrl?: string;
 
-  @ApiPropertyOptional({ example: '#00e5ff' })
+  @ApiPropertyOptional({ example: '#96435B' })
   @IsOptional()
   @IsHexColor()
   primaryColor?: string;

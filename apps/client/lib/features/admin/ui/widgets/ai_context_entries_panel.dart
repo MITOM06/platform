@@ -233,8 +233,8 @@ class _AiContextEntriesPanelState extends ConsumerState<AiContextEntriesPanel> {
                           onPressed: () => _edit(context, entry: e),
                         ),
                         IconButton(
-                          icon: const Icon(Icons.delete_outline,
-                              color: Colors.redAccent),
+                          icon: Icon(Icons.delete_outline,
+                              color: Theme.of(context).colorScheme.error),
                           onPressed: () => _delete(context, e),
                         ),
                       ],

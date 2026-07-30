@@ -358,7 +358,7 @@ class _CallSystemMessage extends StatelessWidget {
               isVideo ? Icons.videocam : Icons.call,
               size: 14,
               color: isMissed
-                  ? Colors.redAccent.withValues(alpha: 0.8)
+                  ? Theme.of(context).colorScheme.error.withValues(alpha: 0.8)
                   : AppTheme.mutedText(context),
             ),
             const SizedBox(width: 6),

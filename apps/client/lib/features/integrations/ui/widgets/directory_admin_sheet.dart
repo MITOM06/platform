@@ -250,7 +250,7 @@ class _DirectoryAdminSheetState extends ConsumerState<DirectoryAdminSheet> {
             if (_error != null) ...[
               Text(
                 _error!,
-                style: const TextStyle(color: Colors.redAccent, fontSize: 12),
+                style: TextStyle(color: Theme.of(context).colorScheme.error, fontSize: 12),
               ),
               const SizedBox(height: 12),
             ],

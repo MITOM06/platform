@@ -270,7 +270,7 @@ class _AiPersonaScreenState extends ConsumerState<AiPersonaScreen> {
                 onPressed: () => _reset(context),
                 child: Text(
                   context.l10n.aiPersonaResetToDefault,
-                  style: const TextStyle(color: Colors.redAccent),
+                  style: TextStyle(color: Theme.of(context).colorScheme.error),
                 ),
               ),
             ),

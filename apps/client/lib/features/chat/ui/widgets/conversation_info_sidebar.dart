@@ -289,28 +289,28 @@ class ConversationInfoSidebar extends ConsumerWidget {
               if (!isGroup && !isAi && otherUserId != null)
                 ListTile(
                   dense: true,
-                  leading: const Icon(Icons.block_outlined, size: 18,
-                      color: Colors.redAccent),
+                  leading: Icon(Icons.block_outlined, size: 18,
+                      color: Theme.of(context).colorScheme.error),
                   title: Text(context.l10n.blockUser,
-                      style: const TextStyle(color: Colors.redAccent)),
+                      style: TextStyle(color: Theme.of(context).colorScheme.error)),
                   onTap: () =>
                       context.push('/user/$otherUserId?conversationId=$conversationId'),
                 ),
               if (isGroup)
                 ListTile(
                   dense: true,
-                  leading: const Icon(Icons.exit_to_app_outlined, size: 18,
-                      color: Colors.redAccent),
+                  leading: Icon(Icons.exit_to_app_outlined, size: 18,
+                      color: Theme.of(context).colorScheme.error),
                   title: Text(context.l10n.leaveGroup,
-                      style: const TextStyle(color: Colors.redAccent)),
+                      style: TextStyle(color: Theme.of(context).colorScheme.error)),
                   onTap: () => context.push('/group-info/$conversationId'),
                 ),
               ListTile(
                 dense: true,
-                leading: const Icon(Icons.delete_outline, size: 18,
-                    color: Colors.redAccent),
+                leading: Icon(Icons.delete_outline, size: 18,
+                    color: Theme.of(context).colorScheme.error),
                 title: Text(context.l10n.deleteConversation,
-                    style: const TextStyle(color: Colors.redAccent)),
+                    style: TextStyle(color: Theme.of(context).colorScheme.error)),
                 onTap: () => _deleteConversation(context, ref),
               ),
             ],

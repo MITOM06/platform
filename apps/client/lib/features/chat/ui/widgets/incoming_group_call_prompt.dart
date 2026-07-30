@@ -129,7 +129,7 @@ class _PromptCard extends StatelessWidget {
           ),
           IconButton(
             onPressed: onDecline,
-            icon: const Icon(Icons.call_end, color: Colors.red),
+            icon: Icon(Icons.call_end, color: Theme.of(context).colorScheme.error),
             tooltip: l10n.callDecline,
           ),
           IconButton(

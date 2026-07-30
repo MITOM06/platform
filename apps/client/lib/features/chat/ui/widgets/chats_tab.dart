@@ -145,15 +145,13 @@ class _ChatsError extends ConsumerWidget {
       child: Padding(
         padding: const EdgeInsets.all(24.0),
         child: PonCard(
-          glowColor: Colors.redAccent,
-          glowStrength: isDark ? 4 : 0,
           child: Padding(
             padding: const EdgeInsets.all(24.0),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Icon(Icons.cloud_off_outlined,
-                    size: 48, color: Colors.redAccent),
+                Icon(Icons.cloud_off_outlined,
+                    size: 48, color: Theme.of(context).colorScheme.error),
                 const SizedBox(height: 16),
                 Text(
                   context.l10n.listLoadFailed,
@@ -170,9 +168,7 @@ class _ChatsError extends ConsumerWidget {
                       : context.l10n.listGenericError,
                   textAlign: TextAlign.center,
                   style: TextStyle(
-                    color: isDark
-                        ? AppTheme.mutedText(context)
-                        : AppTheme.mutedText(context),
+                    color: AppTheme.mutedText(context),
                   ),
                 ),
                 const SizedBox(height: 20),
@@ -182,15 +178,6 @@ class _ChatsError extends ConsumerWidget {
                     onPressed: () => ref
                         .read(conversationsNotifierProvider.notifier)
                         .refresh(),
-                    gradientColors: isDark
-                        ? const [AppTheme.ponAccent, AppTheme.ponAccent]
-                        : [
-                            Theme.of(context).colorScheme.primary,
-                            Theme.of(context).colorScheme.primaryContainer,
-                          ],
-                    glowColor: isDark
-                        ? AppTheme.ponAccent
-                        : Theme.of(context).colorScheme.primary,
                     child: Text(context.l10n.actionRetry),
                   ),
                 ),

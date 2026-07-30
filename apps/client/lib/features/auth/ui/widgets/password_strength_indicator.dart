@@ -24,7 +24,7 @@ class PasswordStrengthIndicator extends StatelessWidget {
     if (password.isEmpty) return const SizedBox.shrink();
     final score = _score();
     final colors = [
-      Colors.red,
+      Theme.of(context).colorScheme.error,
       Colors.orange,
       Colors.yellow,
       Colors.green,

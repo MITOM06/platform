@@ -183,9 +183,9 @@ class GroupInfoScreen extends ConsumerWidget {
               Divider(color: dividerColor),
               ListTile(
                 leading:
-                    const Icon(Icons.logout_rounded, color: Colors.redAccent),
+                    Icon(Icons.logout_rounded, color: Theme.of(context).colorScheme.error),
                 title: Text(context.l10n.leaveGroup,
-                    style: const TextStyle(color: Colors.redAccent)),
+                    style: TextStyle(color: Theme.of(context).colorScheme.error)),
                 onTap: () => _leaveGroup(context, ref, currentUserId),
               ),
             ],
@@ -340,7 +340,7 @@ class GroupInfoScreen extends ConsumerWidget {
             child: Text(ctx.l10n.actionCancel),
           ),
           FilledButton(
-            style: FilledButton.styleFrom(backgroundColor: Colors.redAccent),
+            style: FilledButton.styleFrom(backgroundColor: Theme.of(context).colorScheme.error),
             onPressed: () => Navigator.pop(ctx, true),
             child: Text(ctx.l10n.actionLeave),
           ),

@@ -134,7 +134,7 @@ class DepartmentsPanel extends ConsumerWidget {
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
             child: Text(l10n.adminToastDeleted,
-                style: const TextStyle(color: Colors.red)),
+                style: TextStyle(color: Theme.of(context).colorScheme.error)),
           ),
         ],
       ),
@@ -200,8 +200,8 @@ class DepartmentsPanel extends ConsumerWidget {
                                 _openEditor(context, ref, existing: d),
                           ),
                           IconButton(
-                            icon: const Icon(Icons.delete_outline,
-                                color: Colors.redAccent),
+                            icon: Icon(Icons.delete_outline,
+                                color: Theme.of(context).colorScheme.error),
                             onPressed: () => _delete(context, ref, d),
                           ),
                         ],

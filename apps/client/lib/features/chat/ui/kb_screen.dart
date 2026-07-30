@@ -87,7 +87,7 @@ class KbScreen extends ConsumerWidget {
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(true),
             child: Text(context.l10n.actionDelete,
-                style: const TextStyle(color: Colors.red)),
+                style: TextStyle(color: Theme.of(context).colorScheme.error)),
           ),
         ],
       ),
@@ -177,7 +177,7 @@ class _DocumentTile extends StatelessWidget {
         ],
       ),
       trailing: IconButton(
-        icon: const Icon(Icons.delete_outline, color: Colors.red, size: 20),
+        icon: Icon(Icons.delete_outline, color: Theme.of(context).colorScheme.error, size: 20),
         onPressed: onDelete,
       ),
     );
@@ -221,14 +221,14 @@ class _StatusChip extends StatelessWidget {
         ],
       );
     } else {
-      color = Colors.red;
+      color = Theme.of(context).colorScheme.error;
       child = Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Icon(Icons.error_outline, size: 10, color: Colors.red),
+          Icon(Icons.error_outline, size: 10, color: Theme.of(context).colorScheme.error),
           const SizedBox(width: 4),
           Text(context.l10n.kbError,
-              style: const TextStyle(fontSize: 10, color: Colors.red)),
+              style: TextStyle(fontSize: 10, color: Theme.of(context).colorScheme.error)),
         ],
       );
     }

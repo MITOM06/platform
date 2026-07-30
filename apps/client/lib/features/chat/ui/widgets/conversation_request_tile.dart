@@ -177,7 +177,7 @@ class _ConversationRequestTileState
                 ),
                 IconButton(
                   icon: const Icon(Icons.cancel_rounded),
-                  color: Colors.redAccent,
+                  color: Theme.of(context).colorScheme.error,
                   tooltip: l10n.declineRequest,
                   onPressed: _decline,
                 ),

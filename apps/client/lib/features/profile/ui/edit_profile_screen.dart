@@ -107,7 +107,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
             onPressed: () => Navigator.of(ctx).pop('leave'),
             child: Text(
               context.l10n.leaveWithoutSaving,
-              style: const TextStyle(color: Colors.redAccent),
+              style: TextStyle(color: Theme.of(context).colorScheme.error),
             ),
           ),
           FilledButton(

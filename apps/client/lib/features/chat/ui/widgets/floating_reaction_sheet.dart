@@ -277,10 +277,10 @@ class FloatingReactionSheet extends ConsumerWidget {
                       },
                     ),
                     ListTile(
-                      leading: const Icon(Icons.delete_outline_rounded,
-                          color: Colors.redAccent),
+                      leading: Icon(Icons.delete_outline_rounded,
+                          color: Theme.of(context).colorScheme.error),
                       title: Text(l10n.actionDeleteForMe,
-                          style: const TextStyle(color: Colors.redAccent)),
+                          style: TextStyle(color: Theme.of(context).colorScheme.error)),
                       onTap: () {
                         notifier.deleteForMe(message.id);
                         context.pop();

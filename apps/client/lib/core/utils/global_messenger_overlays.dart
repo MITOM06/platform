@@ -70,7 +70,7 @@ class _TopSlideBannerWidgetState extends State<TopSlideBannerWidget>
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final accent = widget.isError
-        ? Colors.redAccent
+        ? Theme.of(context).colorScheme.error
         : (isDark ? AppTheme.ponAccent : Theme.of(context).colorScheme.primary);
 
     return Positioned(

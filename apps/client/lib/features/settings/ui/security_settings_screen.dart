@@ -264,7 +264,7 @@ class _PasswordFormState extends ConsumerState<_PasswordForm> {
             if (_errorText != null) ...[
               Text(
                 _errorText!,
-                style: const TextStyle(color: Colors.redAccent, fontSize: 13),
+                style: TextStyle(color: Theme.of(context).colorScheme.error, fontSize: 13),
               ),
               const SizedBox(height: 12),
             ],

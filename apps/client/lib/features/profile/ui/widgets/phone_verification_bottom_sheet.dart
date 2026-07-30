@@ -290,7 +290,7 @@ class _PhoneVerificationBottomSheetState
           const SizedBox(height: 8),
           Text(
             _phoneError!,
-            style: const TextStyle(color: Colors.redAccent, fontSize: 12),
+            style: TextStyle(color: Theme.of(context).colorScheme.error, fontSize: 12),
           ),
         ],
         const SizedBox(height: 16),
@@ -334,7 +334,7 @@ class _PhoneVerificationBottomSheetState
           const SizedBox(height: 12),
           Text(
             _otpError!,
-            style: const TextStyle(color: Colors.redAccent, fontSize: 12),
+            style: TextStyle(color: Theme.of(context).colorScheme.error, fontSize: 12),
             textAlign: TextAlign.center,
           ),
         ],

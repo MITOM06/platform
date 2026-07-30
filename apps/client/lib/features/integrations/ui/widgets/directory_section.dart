@@ -141,7 +141,7 @@ class _DirectorySectionState extends ConsumerState<DirectorySection>
           TextButton(
             onPressed: () => Navigator.pop(context, true),
             child: Text(l10n.connectorDisconnect,
-                style: const TextStyle(color: Colors.red)),
+                style: TextStyle(color: Theme.of(context).colorScheme.error)),
           ),
         ],
       ),

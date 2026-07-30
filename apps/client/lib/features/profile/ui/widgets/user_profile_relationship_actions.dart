@@ -70,12 +70,12 @@ class RelationshipActions extends ConsumerWidget {
               onPressed: busy ? null : () => onBlockAction(rel),
               icon: Icon(
                 rel.iBlocked ? Icons.lock_open_rounded : Icons.block_rounded,
-                color: Colors.redAccent,
+                color: Theme.of(context).colorScheme.error,
                 size: 18,
               ),
               label: Text(
                 rel.iBlocked ? context.l10n.unblockUser : context.l10n.blockUser,
-                style: const TextStyle(color: Colors.redAccent),
+                style: TextStyle(color: Theme.of(context).colorScheme.error),
               ),
             ),
           ),

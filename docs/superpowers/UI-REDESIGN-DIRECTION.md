@@ -7,10 +7,16 @@
 > **Last updated:** 2026-07-30 — direction locked; **Layer 1 executed** (commit `86ca2212`),
 > **Layer 2 executed** (commit `a26f492c`), and the **L3-pre cross-cutting chrome sweep executed**
 > (commit `11d641aa`), **Layer 3 batches 1 (Auth), 2a+2b (Chat core), 3 (Settings/Profile) and
-> 4 (AI features), 5 (Admin) and 6 (Remainder)** executed — **Layer 3 is complete**. All elevation
-> shadows, glass blur and candy radii are gone; there are no off-palette decorative colours left in
-> the Flutter app, and **the old neon cyan is now 0 on both platforms**. One item remains: the
-> **final app-wide pass** (see `plans/README.md`).
+> 4 (AI features), 5 (Admin) and 6 (Remainder)** executed, plus the **final app-wide pass**
+> (`plans/2026-07-30-ui-redesign-final-pass.md`). **The redesign programme is code-complete.**
+>
+> Programme-wide audit now reads 0 for: no-op compat params, `Colors.redAccent`, every old neon hex,
+> the rejected dark-indigo `#1A1A2E`, hand-copied accent hexes, and `#00e5ff` anywhere including the
+> backend. The only decorative Material colour left is `call_screen`'s `grey.shade900` video
+> backdrop, which is dark-by-design.
+>
+> **What is NOT done: nobody has looked at it.** All 11 commits were verified with analyze/test/build
+> and computed contrast ratios — none of which catch "looks wrong". The owner has taken E2E testing.
 >
 > **Do not assume the old brand is fully dead.** Each batch so far has found another old-brand or
 > off-palette literal that earlier layers missed, because L1/L2 only renamed *symbols* while these

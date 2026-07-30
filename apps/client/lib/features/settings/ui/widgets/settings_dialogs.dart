@@ -179,16 +179,16 @@ class SettingsLogoutCard extends ConsumerWidget {
           leading: Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: Colors.redAccent.withValues(alpha: 0.1),
+              color: Theme.of(context).colorScheme.error.withValues(alpha: 0.1),
               shape: BoxShape.circle,
             ),
-            child: const Icon(Icons.logout_rounded,
-                color: Colors.redAccent, size: 20),
+            child: Icon(Icons.logout_rounded,
+                color: Theme.of(context).colorScheme.error, size: 20),
           ),
           title: Text(
             context.l10n.actionLogout,
-            style: const TextStyle(
-              color: Colors.redAccent,
+            style: TextStyle(
+              color: Theme.of(context).colorScheme.error,
               fontWeight: FontWeight.bold,
               fontSize: 15,
             ),
@@ -234,7 +234,7 @@ class SettingsLogoutCard extends ConsumerWidget {
           ),
           FilledButton(
             style: FilledButton.styleFrom(
-              backgroundColor: Colors.redAccent,
+              backgroundColor: Theme.of(context).colorScheme.error,
               foregroundColor: Colors.white,
             ),
             onPressed: () => Navigator.pop(ctx, true),

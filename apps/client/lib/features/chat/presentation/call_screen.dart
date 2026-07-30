@@ -103,7 +103,7 @@ class _CallScreenState extends ConsumerState<CallScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(context.l10n.callMediaError),
-            backgroundColor: Colors.red,
+            backgroundColor: Theme.of(context).colorScheme.error,
           ),
         );
         Navigator.of(context).pop();
@@ -225,7 +225,7 @@ class _CallScreenState extends ConsumerState<CallScreen> {
               children: [
                 FloatingActionButton(
                   heroTag: 'end_call',
-                  backgroundColor: Colors.red,
+                  backgroundColor: Theme.of(context).colorScheme.error,
                   onPressed: _endCall,
                   child: const Icon(Icons.call_end, color: Colors.white, size: 32),
                 ),

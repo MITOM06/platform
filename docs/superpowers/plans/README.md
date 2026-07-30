@@ -6,7 +6,7 @@
 >
 > Last regenerated: 2026-07-11 (2026-07-10 batch fully executed — all 6 plans done & verified).
 
-## 🎨 In progress — UI Redesign (Warm Grey & Burgundy)
+## 🎨 UI Redesign (Warm Grey & Burgundy) — code complete, awaiting visual QA
 
 > Direction/handoff: [`../UI-REDESIGN-DIRECTION.md`](../UI-REDESIGN-DIRECTION.md). Multi-layer
 > program (tokens → shared components → per-screen batches) — read the direction doc before
@@ -24,7 +24,7 @@
 | `2026-07-30-ui-redesign-l3-batch4-ai-features.md` | Layer 3 batch 4 — **AI features**: `AiHubTile.accent` / `AiHubCard.iconBg` per-item colour props removed on both platforms, assistant avatar's violet→teal gradient flattened (sheen motion kept), and **a grep gap closed** — batches 1–3 only searched `Colors.white\|black`, missing the rest of the Material palette | **Done** — 15 files, +58/−69. `flutter analyze` clean, `flutter test` 60/60, web build PASS. Off-palette decorative Material colours are now **0 app-wide** |
 | `2026-07-30-ui-redesign-l3-batch5-admin.md` | Layer 3 batch 5 — **Admin console**: was hardcoded dark end-to-end (121 literals, 18 unconditional `darkSurface`, zero `isDark`). `UsageStatCard.color` → `alert` flag, 3 more rejected dark-indigo `#1A1A2E`, and **a real canvas bug** — `ctx.fillStyle = 'var(--primary)'` never worked, so the output bars painted black. Also caught a batch-3 miss (web token-usage SVG chart still on neon cyan) | **Done** — 17 files, +204/−213. `flutter analyze` clean, `flutter test` 60/60, web build PASS. **Neon cyan is now 0 app-wide on both platforms** |
 | `2026-07-30-ui-redesign-l3-batch6-remainder.md` | Layer 3 batch 6 — **Remainder** (friends, reminders, help, integrations, skills, notifications, home): the 7 priority greps came back clean, so this was mechanical — 74 literals → tokens, 18 no-op params dropped, `FaqItemTile.glowColor` + its dead 3×-same-accent palette array retired, 2 more aura orbs. **Last batch of Layer 3** | **Done** — 15 files, +106/−189. `flutter analyze` clean, `flutter test` 60/60, web build PASS |
-| Layer 3 — final pass (after batch 6) | (a) clean the **17 remaining no-op call sites — all in `features/chat`**, which batch 2 missed because they are multi-line/conditional forms, then delete the param declarations in `pon_widgets.dart`; (b) app-wide `Colors.redAccent` → `colorScheme.error` sweep (64 sites — `redAccent` is `#FF5252` while the palette's light destructive is `#B3261E`); (c) check the **backend** default for `workspace.primaryColor` (batch 5 fixed only the client fallbacks) | Not written yet |
+| `2026-07-30-ui-redesign-final-pass.md` | **Final pass (app-wide)** — (a) last 17 no-op call sites cleaned and all 12 param *declarations* deleted from `pon_widgets.dart`, paying off Layer 2's debt in full; (b) `Colors.redAccent` → `colorScheme.error` across 45 files (light-mode destructive was `#FF5252` instead of the palette's `#B3261E`); (c) backend checked — and found the **OAuth deeplink redirect page in `auth-service` still fully on the neon brand**, outside both apps' theming | **Done** — 50 files, +107/−174. `flutter analyze` clean, `flutter test` 60/60, web build PASS, auth-service build PASS. **UI redesign programme complete** |
 
 ## ✅ Done — 2026-07-10 batch (all executed & verified)
 

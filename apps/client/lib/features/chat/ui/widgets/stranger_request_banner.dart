@@ -47,8 +47,8 @@ class StrangerRequestBanner extends StatelessWidget {
                   child: OutlinedButton(
                     onPressed: () => onReject(),
                     style: OutlinedButton.styleFrom(
-                      foregroundColor: Colors.redAccent,
-                      side: const BorderSide(color: Colors.redAccent),
+                      foregroundColor: Theme.of(context).colorScheme.error,
+                      side: BorderSide(color: Theme.of(context).colorScheme.error),
                     ),
                     child: Text(context.l10n.rejectRequest),
                   ),

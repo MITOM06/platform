@@ -37,8 +37,8 @@ class RequestsTab extends ConsumerWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(Icons.cloud_off_outlined,
-                  size: 48, color: Colors.redAccent),
+              Icon(Icons.cloud_off_outlined,
+                  size: 48, color: Theme.of(context).colorScheme.error),
               const SizedBox(height: 16),
               Text(
                 context.l10n.listLoadFailed,

@@ -106,24 +106,10 @@ class PonCard extends StatelessWidget {
   final Widget child;
   final double borderRadius;
 
-  /// Kept only so the ~70 existing call sites keep compiling. The frosted-glass
-  /// and neon-glow look they configured no longer exists, so these are ignored.
-  /// TODO(ui-redesign-L3): drop these params and clean up every call site.
-  final double blur;
-  final double borderOpacity;
-  final double bgOpacity;
-  final Color glowColor;
-  final double glowStrength;
-
   const PonCard({
     super.key,
     required this.child,
     this.borderRadius = AppTheme.radiusCard,
-    this.blur = 0,
-    this.borderOpacity = 1,
-    this.bgOpacity = 1,
-    this.glowColor = AppTheme.ponAccent,
-    this.glowStrength = 0,
   });
 
   @override
@@ -154,20 +140,12 @@ class PonButton extends StatefulWidget {
   final VoidCallback? onPressed;
   final Widget child;
 
-  /// Kept for call-site compatibility. The button is a flat single-accent fill
-  /// now; if a non-null list is passed, only its FIRST colour is honoured so a
-  /// deliberately-coloured button (e.g. destructive) still reads correctly.
-  /// TODO(ui-redesign-L3): replace with an explicit `variant` enum.
-  final List<Color>? gradientColors;
-  final Color glowColor;
   final bool isLoading;
 
   const PonButton({
     super.key,
     required this.onPressed,
     required this.child,
-    this.gradientColors,
-    this.glowColor = AppTheme.ponAccent,
     this.isLoading = false,
   });
 
@@ -196,8 +174,7 @@ class _PonButtonState extends State<PonButton> {
             borderRadius: BorderRadius.circular(AppTheme.radiusControl),
             color: isDisabled
                 ? (isDark ? AppTheme.darkBorder : AppTheme.lightBorder)
-                : (widget.gradientColors?.first ??
-                    Theme.of(context).colorScheme.primary),
+                : Theme.of(context).colorScheme.primary,
           ),
           padding: const EdgeInsets.symmetric(vertical: 16),
           alignment: Alignment.center,
@@ -244,7 +221,6 @@ class PonTextField extends StatefulWidget {
   final ValueChanged<String>? onFieldSubmitted;
   final String? Function(String?)? validator;
   final FocusNode? focusNode;
-  final Color focusColor;
   final int? maxLength;
   final String? counterText;
   final TextStyle? style;
@@ -270,7 +246,6 @@ class PonTextField extends StatefulWidget {
     this.onFieldSubmitted,
     this.validator,
     this.focusNode,
-    this.focusColor = AppTheme.ponAccent,
     this.maxLength,
     this.counterText,
     this.style,

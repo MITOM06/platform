@@ -147,7 +147,7 @@ class _ChatInputBarState extends State<ChatInputBar> {
   Widget _buildRecordingRow(bool isDark) {
     return Row(
       children: [
-        const Icon(Icons.mic, color: Colors.redAccent, size: 22),
+        Icon(Icons.mic, color: Theme.of(context).colorScheme.error, size: 22),
         const SizedBox(width: 6),
         Expanded(
           child: Text(

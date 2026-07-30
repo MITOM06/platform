@@ -11,7 +11,6 @@ class ConversationAvatar extends StatelessWidget {
   final bool isGroup;
   final double size;
   final bool online;
-  final List<Color>? gradientColors;
 
   const ConversationAvatar({
     super.key,
@@ -20,16 +19,12 @@ class ConversationAvatar extends StatelessWidget {
     this.isGroup = false,
     this.size = 48,
     this.online = false,
-    this.gradientColors,
   });
 
   @override
   Widget build(BuildContext context) {
-    // Flat accent fill — no decorative gradients (§2 rule 2). Every call site
-    // already passes an accent-only pair, so collapsing to the first stop is
-    // faithful. TODO(ui-redesign-L3-final): replace `gradientColors` with a
-    // single `Color?` once the remaining batches stop passing a list.
-    final fill = (gradientColors ?? const [AppTheme.ponAccent]).first;
+    // Flat accent fill — no decorative gradients (§2 rule 2).
+    final fill = Theme.of(context).colorScheme.primary;
     final hasImage = avatarUrl != null && avatarUrl!.isNotEmpty;
 
     Widget inner;

@@ -124,21 +124,6 @@ class ConversationTile extends ConsumerWidget {
                   isGroup: isGroup,
                   size: 48,
                   online: isOnline,
-                  gradientColors: showUnread
-                      ? [
-                          isDark
-                              ? AppTheme.ponAccent
-                              : Theme.of(context).colorScheme.primary,
-                          isDark
-                              ? AppTheme.ponAccent
-                              : Theme.of(context).colorScheme.secondary,
-                        ]
-                      : [
-                          isDark
-                              ? AppTheme.ponAccent.withValues(alpha: 0.6)
-                              : AppTheme.hairline(context),
-                          AppTheme.hairline(context),
-                        ],
                 ),
           title: Row(
             children: [
@@ -163,8 +148,8 @@ class ConversationTile extends ConsumerWidget {
                   Icons.block_rounded,
                   size: 15,
                   color: isDark
-                      ? Colors.redAccent.withValues(alpha: 0.6)
-                      : Colors.redAccent.withValues(alpha: 0.5),
+                      ? Theme.of(context).colorScheme.error.withValues(alpha: 0.6)
+                      : Theme.of(context).colorScheme.error.withValues(alpha: 0.5),
                 ),
               ] else if (conv.isMuted) ...[
                 const SizedBox(width: 6),
