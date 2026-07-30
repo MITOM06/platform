@@ -25,72 +25,72 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
-  --radius: 1.5rem;
-  --background: #F5F7FA;
-  --foreground: #111827;
+  --radius: 0.75rem;
+  --background: #F5F2ED;
+  --foreground: #241F1D;
   --card: #FFFFFF;
-  --card-foreground: #111827;
+  --card-foreground: #241F1D;
   --popover: #FFFFFF;
-  --popover-foreground: #111827;
-  --primary: #6AC9FF;
+  --popover-foreground: #241F1D;
+  --primary: #7A2E3A;
   --primary-foreground: #FFFFFF;
-  --secondary: #FF85B3;
-  --secondary-foreground: #FFFFFF;
-  --muted: #F3F4F6;
-  --muted-foreground: #6B7280;
-  --accent: #FBB68B;
-  --accent-foreground: #111827;
-  --destructive: #EF4444;
-  --border: #E5E7EB;
+  --secondary: #EFEAE3;
+  --secondary-foreground: #241F1D;
+  --muted: #EFEAE3;
+  --muted-foreground: #6B6259;
+  --accent: #F1E4E6;
+  --accent-foreground: #7A2E3A;
+  --destructive: #B3261E;
+  --border: #DDD8D0;
   --input: #FFFFFF;
-  --ring: #6AC9FF;
+  --ring: #7A2E3A;
   --chart-1: oklch(0.646 0.222 41.116);
   --chart-2: oklch(0.6 0.118 184.704);
   --chart-3: oklch(0.398 0.07 227.392);
   --chart-4: oklch(0.828 0.189 84.429);
   --chart-5: oklch(0.769 0.188 70.08);
-  --sidebar: #FFFFFF;
-  --sidebar-foreground: #111827;
-  --sidebar-primary: #6AC9FF;
+  --sidebar: #EFEAE3;
+  --sidebar-foreground: #241F1D;
+  --sidebar-primary: #7A2E3A;
   --sidebar-primary-foreground: #FFFFFF;
-  --sidebar-accent: #F3F4F6;
-  --sidebar-accent-foreground: #111827;
-  --sidebar-border: #E5E7EB;
-  --sidebar-ring: #6AC9FF;
+  --sidebar-accent: #F1E4E6;
+  --sidebar-accent-foreground: #7A2E3A;
+  --sidebar-border: #DDD8D0;
+  --sidebar-ring: #7A2E3A;
 }
 
 .dark {
-  --background: #121212;
-  --foreground: #F9FAFB;
-  --card: #1E1E1E;
-  --card-foreground: #F9FAFB;
-  --popover: #1E1E1E;
-  --popover-foreground: #F9FAFB;
-  --primary: #6AC9FF;
-  --primary-foreground: #FFFFFF;
-  --secondary: #FF85B3;
-  --secondary-foreground: #FFFFFF;
-  --muted: #2C2C2C;
-  --muted-foreground: #9CA3AF;
-  --accent: #FBB68B;
-  --accent-foreground: #F9FAFB;
-  --destructive: #F87171;
-  --border: #2C2C2C;
-  --input: #1E1E1E;
-  --ring: #6AC9FF;
+  --background: #1A1614;
+  --foreground: #F3EEE8;
+  --card: #221D1A;
+  --card-foreground: #F3EEE8;
+  --popover: #221D1A;
+  --popover-foreground: #F3EEE8;
+  --primary: #A8475A;
+  --primary-foreground: #F3EEE8;
+  --secondary: #2C2521;
+  --secondary-foreground: #F3EEE8;
+  --muted: #2C2521;
+  --muted-foreground: #B0A79C;
+  --accent: #3A2A2C;
+  --accent-foreground: #E8B4BE;
+  --destructive: #E5484D;
+  --border: #332B27;
+  --input: #221D1A;
+  --ring: #A8475A;
   --chart-1: oklch(0.488 0.243 264.376);
   --chart-2: oklch(0.696 0.17 162.48);
   --chart-3: oklch(0.769 0.188 70.08);
   --chart-4: oklch(0.627 0.265 303.9);
   --chart-5: oklch(0.645 0.246 16.439);
-  --sidebar: #1E1E1E;
-  --sidebar-foreground: #F9FAFB;
-  --sidebar-primary: #6AC9FF;
-  --sidebar-primary-foreground: #FFFFFF;
-  --sidebar-accent: #2C2C2C;
-  --sidebar-accent-foreground: #F9FAFB;
-  --sidebar-border: #2C2C2C;
-  --sidebar-ring: #6AC9FF;
+  --sidebar: #151110;
+  --sidebar-foreground: #F3EEE8;
+  --sidebar-primary: #A8475A;
+  --sidebar-primary-foreground: #F3EEE8;
+  --sidebar-accent: #2C2521;
+  --sidebar-accent-foreground: #E8B4BE;
+  --sidebar-border: #332B27;
+  --sidebar-ring: #A8475A;
 }
 
 @theme inline {
@@ -125,9 +125,9 @@
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
-  --color-pon-cyan: #6AC9FF;
-  --color-pon-peach: #FBB68B;
-  --color-pon-pink: #FF85B3;
+  --color-pon-cyan: #96435B; /* TODO(ui-redesign-L2): rename to --color-pon-accent, was #6AC9FF */
+  --color-pon-peach: #96435B; /* TODO(ui-redesign-L2): rename/retire, was #FBB68B */
+  --color-pon-pink: #96435B; /* TODO(ui-redesign-L2): rename/retire, was #FF85B3 */
   --color-pon-blue: #4C7BFF;
   --color-pon-green: #43E8A6;
   --color-online-green: #00E676;
@@ -151,11 +151,13 @@ body {
 }
 
 .pon-gradient {
-  background: linear-gradient(135deg, #6AC9FF 0%, #FBB68B 50%, #FF85B3 100%);
+  /* TODO(ui-redesign-L2): rename class, no longer a gradient by design */
+  background: var(--primary);
 }
 
 .pon-gradient-text {
-  background: linear-gradient(135deg, #6AC9FF 0%, #FBB68B 50%, #FF85B3 100%);
+  /* TODO(ui-redesign-L2): rename class, no longer a gradient by design */
+  background: var(--primary);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
