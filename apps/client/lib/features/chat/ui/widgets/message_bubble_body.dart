@@ -64,6 +64,11 @@ class MessageBubbleBody extends StatelessWidget {
           )
         else if (message.isFile)
           FileContent(message: message, isSentByMe: isSentByMe)
+        else if (message.isCallLog)
+          LegacyCallLogContent(
+            content: message.content,
+            isSentByMe: isSentByMe,
+          )
         else if (message.isAiMessage && message.isStreaming)
           StreamingAiBubble(
             content: message.content,

@@ -159,9 +159,19 @@ const MessageBubbleInner = function MessageBubble({
     const systemText = humanizeSystemMessage(message.content, t, { resolveName })
     const isCallMsg = message.content.startsWith('system.call.')
     const isVideoCall = isCallMsg && message.content.includes(':video')
+    const isMissedCall = isCallMsg && message.content.startsWith('system.call.missed:')
     return wrapSelectable(
       <div className="flex justify-center my-1">
-        <span className="flex items-center gap-1.5 text-[11px] text-muted-foreground bg-muted/65 rounded-full px-3 py-1 border border-border/20">
+        <span
+          className={cn(
+            'flex items-center gap-1.5 text-[11px] font-medium rounded-full px-3 py-1.5',
+            isCallMsg
+              ? isMissedCall
+                ? 'text-destructive bg-destructive/10'
+                : 'text-primary bg-primary/10 dark:bg-primary/20'
+              : 'text-muted-foreground bg-muted/65 border border-border/20',
+          )}
+        >
           {isCallMsg && (isVideoCall
             ? <Video className="size-3 shrink-0" />
             : <Phone className="size-3 shrink-0" />
