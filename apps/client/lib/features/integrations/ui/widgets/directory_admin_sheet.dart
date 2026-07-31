@@ -302,7 +302,7 @@ class _EnumDropdown<T> extends StatelessWidget {
         labelStyle: TextStyle(color: AppTheme.mutedText(context)),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: AppTheme.darkBorder),
+          borderSide: BorderSide(color: AppTheme.hairline(context)),
         ),
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
         contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),

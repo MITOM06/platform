@@ -213,7 +213,7 @@ class UsageListTileCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppTheme.darkBorder),
+        border: Border.all(color: AppTheme.hairline(context)),
       ),
       child: Row(
         children: [

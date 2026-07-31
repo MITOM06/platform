@@ -116,7 +116,7 @@ class _WorkspacePanelState extends ConsumerState<WorkspacePanel> {
                   decoration: BoxDecoration(
                     color: _parseColor(_primaryColor.text),
                     borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: AppTheme.darkBorder),
+                    border: Border.all(color: AppTheme.hairline(context)),
                   ),
                 ),
               ],
