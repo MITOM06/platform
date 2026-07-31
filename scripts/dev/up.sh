@@ -6,7 +6,8 @@
 #   ./scripts/dev/up.sh --build         # force-rebuild the 4 backend images first
 #   ./scripts/dev/up.sh --seed          # (re)seed the fake test data
 #   ./scripts/dev/up.sh --no-web        # backends only, don't start the Next.js dev server
-#   ./scripts/dev/up.sh --flutter       # also boot an iOS simulator and run the Flutter app
+#   ./scripts/dev/up.sh --phone         # run the Flutter app on a real phone over the LAN
+#   ./scripts/dev/up.sh --flutter       # ...or on an iOS simulator (heavier on the Mac)
 #
 # Flags combine. Everything here is idempotent — safe to re-run.
 
@@ -16,13 +17,14 @@ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 COMPOSE="docker compose -f $ROOT/infra/docker-compose/compose.yml"
 SIMULATOR="${PON_SIMULATOR:-iPhone 17 Pro}"
 
-DO_BUILD=0 DO_SEED=0 DO_WEB=1 DO_FLUTTER=0
+DO_BUILD=0 DO_SEED=0 DO_WEB=1 DO_FLUTTER=0 DO_PHONE=0
 for arg in "$@"; do
   case "$arg" in
     --build)   DO_BUILD=1 ;;
     --seed)    DO_SEED=1 ;;
     --no-web)  DO_WEB=0 ;;
     --flutter) DO_FLUTTER=1 ;;
+    --phone)   DO_PHONE=1 ;;
     -h|--help) sed -n '3,12p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
     *) echo "unknown flag: $arg (try --help)" >&2; exit 2 ;;
   esac
@@ -128,13 +130,21 @@ if [ "$DO_WEB" = 1 ]; then
 fi
 
 # ----------------------------------------------------------------- flutter
-DEFINES=(
-  --dart-define=PON_AUTH_URL=http://localhost:3001
-  --dart-define=PON_CHAT_URL=http://localhost:8080
-  --dart-define=PON_AI_URL=http://localhost:3002
-  --dart-define=PON_CONNECTOR_URL=http://localhost:3003
-  --dart-define=PON_WS_URL=ws://localhost:8080/ws
-)
+LAN_IP="$(ipconfig getifaddr en0 2>/dev/null || ipconfig getifaddr en1 2>/dev/null || true)"
+
+# A simulator shares the Mac's loopback, so localhost works. A physical phone
+# does not — it has to come in over the LAN, and Docker already publishes every
+# port on 0.0.0.0, so the Mac's LAN IP is all that's needed.
+defines_for() {
+  local host=$1
+  printf '%s' "--dart-define=PON_AUTH_URL=http://$host:3001 \
+--dart-define=PON_CHAT_URL=http://$host:8080 \
+--dart-define=PON_AI_URL=http://$host:3002 \
+--dart-define=PON_CONNECTOR_URL=http://$host:3003 \
+--dart-define=PON_WS_URL=ws://$host:8080/ws"
+}
+read -r -a DEFINES <<<"$(defines_for localhost)"
+read -r -a PHONE_DEFINES <<<"$(defines_for "${LAN_IP:-<your-lan-ip>}")"
 
 step "Ready"
 cat <<EOF
@@ -145,15 +155,43 @@ cat <<EOF
   test accounts  dev@pon.local / alice@pon.local / bob@pon.local
                  password: Devpass123!   (only exist after --seed)
 
-  flutter:
+  flutter on a real phone (lightest — no simulator on the Mac):
+    ./scripts/dev/up.sh --phone
+  or by hand:
+    cd apps/client && flutter run -d <device> \\
+      ${PHONE_DEFINES[*]}
+
+  flutter on the simulator:
     cd apps/client && flutter run -d "$SIMULATOR" \\
       ${DEFINES[*]}
 
-  a physical device can't reach localhost — swap in your LAN IP:
-    $(ipconfig getifaddr en0 2>/dev/null || echo '<your-lan-ip>')
-
   stop everything:  $COMPOSE down
 EOF
+
+if [ "$DO_PHONE" = 1 ]; then
+  step "Launching Flutter on a physical device"
+  [ -n "$LAN_IP" ] || die "couldn't determine the Mac's LAN IP (en0/en1) — is Wi-Fi on?"
+  # Pick the first real (non-emulator) mobile device flutter can see.
+  phone_json="$(cd "$ROOT/apps/client" && flutter devices --machine 2>/dev/null)"
+  phone_id="$(printf '%s' "$phone_json" | node -e '
+    let s = "";
+    process.stdin.on("data", (d) => (s += d)).on("end", () => {
+      let list = [];
+      try { list = JSON.parse(s); } catch { process.exit(0); }
+      // Skips simulators/emulators (emulator: true) and the macOS/Chrome
+      // targets (targetPlatform darwin / web-javascript).
+      const d = list.find(
+        (x) => !x.emulator && ["ios", "android"].includes(x.targetPlatform?.split("-")[0]),
+      );
+      if (d) console.log(`${d.id}\t${d.name}`);
+    });
+  ')"
+  [ -n "$phone_id" ] || die "no physical phone found — plug it in (or enable wireless debugging) and check: flutter devices"
+  printf '  device: %s\n  backend: http://%s (phone must be on the same Wi-Fi)\n' \
+    "$(printf '%s' "$phone_id" | cut -f2)" "$LAN_IP"
+  cd "$ROOT/apps/client" \
+    && exec flutter run -d "$(printf '%s' "$phone_id" | cut -f1)" "${PHONE_DEFINES[@]}"
+fi
 
 if [ "$DO_FLUTTER" = 1 ]; then
   step "Launching Flutter on $SIMULATOR"
