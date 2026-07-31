@@ -43,7 +43,7 @@ class FaqCategory {
 final List<FaqCategory> kFaqData = [
   FaqCategory(
     id: 'gettingStarted',
-    icon: Icons.rocket_launch_outlined,
+    icon: Icons.rocket_launch_rounded,
     title: (l) => l.helpCatGettingStarted,
     items: [
       FaqItem(
@@ -102,7 +102,7 @@ final List<FaqCategory> kFaqData = [
   ),
   FaqCategory(
     id: 'aiFeatures',
-    icon: Icons.auto_awesome_outlined,
+    icon: Icons.auto_awesome_rounded,
     title: (l) => l.helpCatAiFeatures,
     items: [
       FaqItem(
@@ -129,7 +129,7 @@ final List<FaqCategory> kFaqData = [
   ),
   FaqCategory(
     id: 'groups',
-    icon: Icons.groups_outlined,
+    icon: Icons.groups_rounded,
     title: (l) => l.helpCatGroups,
     items: [
       FaqItem(
@@ -151,7 +151,7 @@ final List<FaqCategory> kFaqData = [
   ),
   FaqCategory(
     id: 'accountSecurity',
-    icon: Icons.shield_outlined,
+    icon: Icons.shield_rounded,
     title: (l) => l.helpCatAccountSecurity,
     items: [
       FaqItem(

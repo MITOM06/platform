@@ -114,7 +114,7 @@ class _TokenUsageScreenState extends ConsumerState<TokenUsageScreen> {
         title: Text(context.l10n.tokenUsageTitle),
         actions: [
           IconButton(
-            icon: const Icon(Icons.calendar_month_outlined),
+            icon: const Icon(Icons.calendar_month_rounded),
             tooltip: context.l10n.tokenUsageSelectRange,
             onPressed: _pickDateRange,
           ),
@@ -284,7 +284,7 @@ class _QuotaProgressCard extends StatelessWidget {
         children: [
           Row(
             children: [
-              Icon(Icons.data_usage, size: 16, color: barColor),
+              Icon(Icons.data_usage_rounded, size: 16, color: barColor),
               const SizedBox(width: 6),
               Text(
                 context.l10n.tokenUsageQuota,
@@ -356,7 +356,7 @@ class _SummaryCards extends StatelessWidget {
               child: _StatCard(
                 label: context.l10n.tokenUsageThisMonth,
                 value: _fmt(totalInput + totalOutput),
-                icon: Icons.toll_outlined,
+                icon: Icons.toll_rounded,
                 color: AppTheme.ponAccent,
                 isDark: isDark,
               ),
@@ -366,7 +366,7 @@ class _SummaryCards extends StatelessWidget {
               child: _StatCard(
                 label: context.l10n.tokenUsageRequests,
                 value: totalRequests.toString(),
-                icon: Icons.question_answer_outlined,
+                icon: Icons.question_answer_rounded,
                 color: AppTheme.ponAccent,
                 isDark: isDark,
               ),
@@ -377,7 +377,7 @@ class _SummaryCards extends StatelessWidget {
         _StatCard(
           label: context.l10n.tokenUsageEstCost,
           value: context.l10n.tokenUsageCostUsd(estimatedCost.toStringAsFixed(4)),
-          icon: Icons.attach_money_outlined,
+          icon: Icons.attach_money_rounded,
           color: AppTheme.ponAccent,
           isDark: isDark,
         ),

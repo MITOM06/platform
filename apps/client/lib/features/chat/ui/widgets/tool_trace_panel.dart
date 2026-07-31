@@ -17,7 +17,7 @@ class TracePanel extends StatelessWidget {
         child: ExpansionTile(
           tilePadding: EdgeInsets.zero,
           childrenPadding: const EdgeInsets.only(left: 4, bottom: 8),
-          leading: const Icon(Icons.account_tree, size: 14, color: AppTheme.ponAccent),
+          leading: const Icon(Icons.account_tree_rounded, size: 14, color: AppTheme.ponAccent),
           title: Text(
             context.l10n.aiTraceTitle,
             style: const TextStyle(
@@ -47,7 +47,7 @@ class _ThinkingSection extends StatelessWidget {
   Widget build(BuildContext context) {
     return ExpansionTile(
       tilePadding: const EdgeInsets.symmetric(horizontal: 4),
-      leading: const Icon(Icons.psychology, size: 14, color: AppTheme.ponAccent),
+      leading: const Icon(Icons.psychology_rounded, size: 14, color: AppTheme.ponAccent),
       title: Text(
         context.l10n.aiTraceThinking,
         style: const TextStyle(fontSize: 12, color: AppTheme.ponAccent),
@@ -100,7 +100,7 @@ class _ToolCallsSection extends StatelessWidget {
           padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 4),
           child: Row(
             children: [
-              const Icon(Icons.build_outlined, size: 12, color: AppTheme.ponAccent),
+              const Icon(Icons.build_rounded, size: 12, color: AppTheme.ponAccent),
               const SizedBox(width: 4),
               Text(
                 context.l10n.aiTraceTools,
@@ -122,17 +122,17 @@ class _ToolCallsSection extends StatelessWidget {
 IconData _toolIcon(String toolName) {
   switch (toolName) {
     case 'search_messages':
-      return Icons.search;
+      return Icons.search_rounded;
     case 'get_user_info':
-      return Icons.person_outline;
+      return Icons.person_outline_rounded;
     case 'search_knowledge_base':
-      return Icons.auto_stories;
+      return Icons.auto_stories_rounded;
     case 'summarize_conversation':
-      return Icons.summarize_outlined;
+      return Icons.summarize_rounded;
     case 'create_reminder':
-      return Icons.alarm_add_outlined;
+      return Icons.alarm_add_rounded;
     default:
-      return Icons.build_outlined;
+      return Icons.build_rounded;
   }
 }
 

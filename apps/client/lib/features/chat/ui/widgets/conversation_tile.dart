@@ -286,7 +286,7 @@ class _AiBotTileAvatar extends StatelessWidget {
             shape: BoxShape.circle,
             color: AppTheme.ponAccent,
           ),
-          child: const Icon(Icons.smart_toy_outlined,
+          child: const Icon(Icons.smart_toy_rounded,
               color: Colors.white, size: 26),
         ),
         Positioned(

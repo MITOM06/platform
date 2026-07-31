@@ -289,7 +289,7 @@ class _ProfileDialogContent extends ConsumerWidget {
                                 shape: BoxShape.circle,
                                 border: Border.all(color: Theme.of(context).colorScheme.surface, width: 2),
                               ),
-                              child: const Icon(Icons.camera_alt, size: 14, color: Colors.white),
+                              child: const Icon(Icons.camera_alt_rounded, size: 14, color: Colors.white),
                             ),
                           ),
                         ),
@@ -360,7 +360,7 @@ class _ProfileDialogContent extends ConsumerWidget {
                     children: [
                       Expanded(
                         child: OutlinedButton.icon(
-                          icon: Icon(editMode ? Icons.close : Icons.edit_outlined, size: 16),
+                          icon: Icon(editMode ? Icons.close_rounded : Icons.edit_rounded, size: 16),
                           label: Text(editMode ? context.l10n.actionCancel : context.l10n.profileEditMode),
                           onPressed: onToggleEdit,
                         ),
@@ -371,7 +371,7 @@ class _ProfileDialogContent extends ConsumerWidget {
                           child: FilledButton.icon(
                             icon: saving
                                 ? const SizedBox(height: 14, width: 14, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                                : const Icon(Icons.check, size: 16),
+                                : const Icon(Icons.check_rounded, size: 16),
                             label: Text(context.l10n.profileSave),
                             onPressed: saving ? null : onSave,
                             style: FilledButton.styleFrom(backgroundColor: AppTheme.ponAccent),

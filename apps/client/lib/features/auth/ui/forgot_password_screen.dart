@@ -110,7 +110,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                             PonTextField(
                               controller: _emailController,
                               labelText: context.l10n.fieldEmail,
-                              prefixIcon: Icons.email_outlined,
+                              prefixIcon: Icons.email_rounded,
                               keyboardType: TextInputType.emailAddress,
                               textInputAction: TextInputAction.done,
                               onFieldSubmitted: (_) => _submit(),

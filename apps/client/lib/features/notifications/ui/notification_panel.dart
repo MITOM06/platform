@@ -383,9 +383,9 @@ class _Avatar extends StatelessWidget {
       case 'FRIEND_ACCEPTED':
         return Icons.people_alt_rounded;
       case 'PASSWORD_SETUP':
-        return Icons.shield_outlined;
+        return Icons.shield_rounded;
       case 'PHONE_SETUP':
-        return Icons.phone_android_outlined;
+        return Icons.phone_android_rounded;
       default:
         return Icons.info_outline_rounded;
     }

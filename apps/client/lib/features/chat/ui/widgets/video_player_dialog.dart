@@ -73,7 +73,7 @@ class _VideoPlayerDialogState extends State<VideoPlayerDialog> {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Icon(Icons.error_outline,
+                  const Icon(Icons.error_outline_rounded,
                       color: Colors.white54, size: 48),
                   const SizedBox(height: 12),
                   Text(context.l10n.videoCannotPlay,
@@ -105,7 +105,7 @@ class _VideoPlayerDialogState extends State<VideoPlayerDialog> {
                 onTap: () => Navigator.of(context).pop(),
                 child: const Padding(
                   padding: EdgeInsets.all(8),
-                  child: Icon(Icons.close, color: Colors.white, size: 20),
+                  child: Icon(Icons.close_rounded, color: Colors.white, size: 20),
                 ),
               ),
             ),

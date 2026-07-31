@@ -180,7 +180,7 @@ class ChatScreenAppBar extends ConsumerWidget implements PreferredSizeWidget {
         actions: [
           if (isAiConversation) ...[
             PopupMenuButton<String>(
-              icon: const Icon(Icons.more_vert, size: 22),
+              icon: const Icon(Icons.more_vert_rounded, size: 22),
               onSelected: (value) {
                 if (value == 'view_memory') {
                   context.push('/ai-context');
@@ -193,7 +193,7 @@ class ChatScreenAppBar extends ConsumerWidget implements PreferredSizeWidget {
                   value: 'view_memory',
                   child: Row(
                     children: [
-                      const Icon(Icons.psychology_outlined, size: 20),
+                      const Icon(Icons.psychology_rounded, size: 20),
                       const SizedBox(width: 10),
                       Text(context.l10n.viewAiMemory),
                     ],
@@ -203,7 +203,7 @@ class ChatScreenAppBar extends ConsumerWidget implements PreferredSizeWidget {
                   value: 'kb_manage',
                   child: Row(
                     children: [
-                      const Icon(Icons.auto_stories_outlined, size: 20),
+                      const Icon(Icons.auto_stories_rounded, size: 20),
                       const SizedBox(width: 10),
                       Text(context.l10n.kbManage),
                     ],
@@ -214,7 +214,7 @@ class ChatScreenAppBar extends ConsumerWidget implements PreferredSizeWidget {
           ],
           if (!isGroup && otherUserId != null && !isAiConversation) ...[
             IconButton(
-              icon: const Icon(Icons.call_outlined, size: 22),
+              icon: const Icon(Icons.call_rounded, size: 22),
               onPressed: () => context.push('/call', extra: {
                 'targetId': otherUserId,
                 'targetName': displayName,
@@ -224,7 +224,7 @@ class ChatScreenAppBar extends ConsumerWidget implements PreferredSizeWidget {
               }),
             ),
             IconButton(
-              icon: const Icon(Icons.videocam_outlined, size: 24),
+              icon: const Icon(Icons.videocam_rounded, size: 24),
               onPressed: () => context.push('/call', extra: {
                 'targetId': otherUserId,
                 'targetName': displayName,
@@ -236,7 +236,7 @@ class ChatScreenAppBar extends ConsumerWidget implements PreferredSizeWidget {
           ],
           if (isGroup) ...[
             IconButton(
-              icon: const Icon(Icons.call_outlined, size: 22),
+              icon: const Icon(Icons.call_rounded, size: 22),
               tooltip: context.l10n.groupCallStartAction,
               onPressed: () => GroupCallStartSheet.show(
                 context,
@@ -245,7 +245,7 @@ class ChatScreenAppBar extends ConsumerWidget implements PreferredSizeWidget {
               ),
             ),
             IconButton(
-              icon: const Icon(Icons.videocam_outlined, size: 24),
+              icon: const Icon(Icons.videocam_rounded, size: 24),
               tooltip: context.l10n.groupCallStartAction,
               onPressed: () => GroupCallStartSheet.show(
                 context,
@@ -261,7 +261,7 @@ class ChatScreenAppBar extends ConsumerWidget implements PreferredSizeWidget {
                 final sidebarOpen = ref.watch(showChatInfoSidebarProvider);
                 return IconButton(
                   icon: Icon(
-                    sidebarOpen ? Icons.info : Icons.info_outline,
+                    sidebarOpen ? Icons.info_rounded : Icons.info_outline_rounded,
                     color: Theme.of(context).colorScheme.onSurface,
                     size: 22,
                   ),
@@ -271,7 +271,7 @@ class ChatScreenAppBar extends ConsumerWidget implements PreferredSizeWidget {
                 );
               }
               return IconButton(
-                icon: const Icon(Icons.info_outline, size: 22),
+                icon: const Icon(Icons.info_outline_rounded, size: 22),
                 onPressed: () {
                   Navigator.of(context).push(MaterialPageRoute(
                     builder: (context) => Scaffold(

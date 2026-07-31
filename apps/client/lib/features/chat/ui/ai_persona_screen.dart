@@ -156,7 +156,7 @@ class _AiPersonaScreenState extends ConsumerState<AiPersonaScreen> {
               ),
               child: Row(
                 children: [
-                  const Icon(Icons.info_outline, size: 16, color: AppTheme.ponAccent),
+                  const Icon(Icons.info_outline_rounded, size: 16, color: AppTheme.ponAccent),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
@@ -174,7 +174,7 @@ class _AiPersonaScreenState extends ConsumerState<AiPersonaScreen> {
             PonTextField(
               controller: _nameController,
               labelText: context.l10n.aiPersonaNameHint,
-              prefixIcon: Icons.smart_toy_outlined,
+              prefixIcon: Icons.smart_toy_rounded,
               maxLength: 30,
             ),
             const SizedBox(height: 16),
@@ -194,7 +194,7 @@ class _AiPersonaScreenState extends ConsumerState<AiPersonaScreen> {
                       onBackgroundImageError:
                           _avatarController.text.isNotEmpty ? (_, __) {} : null,
                       child: _avatarController.text.isEmpty
-                          ? Icon(Icons.smart_toy_outlined,
+                          ? Icon(Icons.smart_toy_rounded,
                               color: AppTheme.mutedText(context), size: 28)
                           : null,
                     ),
@@ -212,7 +212,7 @@ class _AiPersonaScreenState extends ConsumerState<AiPersonaScreen> {
                             shape: BoxShape.circle,
                           ),
                           // On the burgundy fill: white, not black (was ~2:1).
-                          child: const Icon(Icons.camera_alt,
+                          child: const Icon(Icons.camera_alt_rounded,
                               size: 14, color: Colors.white),
                         ),
                       ),

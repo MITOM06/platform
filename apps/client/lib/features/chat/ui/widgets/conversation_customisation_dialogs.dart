@@ -238,11 +238,11 @@ class _NicknameRowState extends ConsumerState<_NicknameRow> {
           const SizedBox(width: 8),
           _editing
               ? IconButton(
-                  icon: const Icon(Icons.check, color: AppTheme.ponAccent, size: 20),
+                  icon: const Icon(Icons.check_rounded, color: AppTheme.ponAccent, size: 20),
                   onPressed: _save,
                 )
               : IconButton(
-                  icon: Icon(Icons.edit_outlined,
+                  icon: Icon(Icons.edit_rounded,
                       color: AppTheme.mutedText(context), size: 18),
                   onPressed: () => setState(() => _editing = true),
                 ),

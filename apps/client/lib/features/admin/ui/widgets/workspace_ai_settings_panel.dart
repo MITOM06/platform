@@ -135,7 +135,7 @@ class _WorkspaceAiSettingsPanelState
             PonTextField(
               controller: _personaName,
               labelText: l10n.adminAiPersonaName,
-              prefixIcon: Icons.smart_toy_outlined,
+              prefixIcon: Icons.smart_toy_rounded,
             ),
             const SizedBox(height: 14),
             AiLabeledDropdown(
@@ -197,7 +197,7 @@ class _WorkspaceAiSettingsPanelState
             PonTextField(
               controller: _tokenLimit,
               labelText: l10n.adminAiTokenLimit,
-              prefixIcon: Icons.data_usage_outlined,
+              prefixIcon: Icons.data_usage_rounded,
               keyboardType: TextInputType.number,
               inputFormatters: [FilteringTextInputFormatter.digitsOnly],
             ),

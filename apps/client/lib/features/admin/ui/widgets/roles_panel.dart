@@ -62,7 +62,7 @@ class _RolesPanelState extends ConsumerState<RolesPanel> {
         content: PonTextField(
           controller: ctrl,
           labelText: l10n.adminRoleName,
-          prefixIcon: Icons.shield_outlined,
+          prefixIcon: Icons.shield_rounded,
         ),
         actions: [
           TextButton(
@@ -153,7 +153,7 @@ class _RolesPanelState extends ConsumerState<RolesPanel> {
                     children: [
                       IconButton(
                         visualDensity: VisualDensity.compact,
-                        icon: Icon(Icons.copy_outlined,
+                        icon: Icon(Icons.copy_rounded,
                             size: 16, color: AppTheme.mutedText(context)),
                         tooltip: l10n.adminRoleClone,
                         onPressed: () => _clone(r),
@@ -161,7 +161,7 @@ class _RolesPanelState extends ConsumerState<RolesPanel> {
                       if (!r.isOwner)
                         IconButton(
                           visualDensity: VisualDensity.compact,
-                          icon: Icon(Icons.save_outlined,
+                          icon: Icon(Icons.save_rounded,
                               size: 16,
                               color: _isDirty(r)
                                   ? AppTheme.ponAccent

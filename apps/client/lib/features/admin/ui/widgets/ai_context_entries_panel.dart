@@ -185,7 +185,7 @@ class _AiContextEntriesPanelState extends ConsumerState<AiContextEntriesPanel> {
                 ),
               const Spacer(),
               IconButton(
-                icon: const Icon(Icons.add, color: AppTheme.ponAccent),
+                icon: const Icon(Icons.add_rounded, color: AppTheme.ponAccent),
                 tooltip: l.adminCreateEntry,
                 onPressed: canCreate ? () => _edit(context) : null,
               ),
@@ -228,12 +228,12 @@ class _AiContextEntriesPanelState extends ConsumerState<AiContextEntriesPanel> {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         IconButton(
-                          icon: Icon(Icons.edit_outlined,
+                          icon: Icon(Icons.edit_rounded,
                               color: AppTheme.mutedText(context)),
                           onPressed: () => _edit(context, entry: e),
                         ),
                         IconButton(
-                          icon: Icon(Icons.delete_outline,
+                          icon: Icon(Icons.delete_outline_rounded,
                               color: Theme.of(context).colorScheme.error),
                           onPressed: () => _delete(context, e),
                         ),

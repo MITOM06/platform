@@ -243,6 +243,29 @@ one Claude Code session, one plan.md):
    land on the same weight (the `--border`/`hairline` hexes are already identical per §2).
    **Lesson: a batch marked "done" only certifies the files that existed that day.** Re-run the §2
    token greps whenever a new feature area lands, not just at the end of a batch.
+8. ~~Media corners in bubbles + icon family sweep~~ ✅ **done** —
+   `plans/2026-07-30-ui-redesign-l3-batch8-media-corners-and-icons.md`. Flutter-only (web uses
+   `lucide-react` + its own `rounded-*` on media, so neither bug existed there). The other half of the
+   owner review that produced item 7 ("góc vuông, icon như app Android rẻ tiền"). Three findings:
+   (a) **a single image sent in chat had no `ClipRRect` at all** — the 1-image branch of
+   `image_content.dart` only wrapped the `CachedNetworkImage` in a `ConstrainedBox`, and because a
+   `Container.decoration.borderRadius` does **not** clip children (the bubble sets no `clipBehavior`),
+   the image rendered hard 90° corners inside a 14px-rounded bubble. The 2+-image grid was already
+   correct, which is why the bug survived every earlier batch — a per-branch blind spot, not a token
+   one. (b) `VideoContent` clipped at `AppTheme.radiusCard` (12) while the bubble and the collage use
+   14 → all three now use the same literal. (c) **Icon sweep: 318 usages across 101 files moved from
+   `_outlined`/bare-filled Material glyphs to `_rounded`** (450/453 usages now rounded; the 3
+   holdouts are `radio_button_checked/unchecked`, where "rounded" is meaningless for a circle).
+   **Two traps a mechanical icon sweep must handle:** (i) resolve the target name against the SDK's
+   `icons.dart` (`static const IconData <name>`) instead of trial-and-error compiling — 8825 names,
+   and `flutter analyze` only catches non-existent ones, not wrong ones; (ii) **the sweep silently
+   flattens filled-vs-outlined *state pairs* into one glyph** — `isPinned ? push_pin : push_pin_outlined`
+   became `push_pin_rounded : push_pin_rounded`, i.e. an on/off affordance with no visible off state,
+   and `flutter analyze` is green either way. Detect by diffing HEAD for two variants of the same icon
+   base in one file; fixed here by using the rounded `_alt`/`_off_alt` pair for thumbs and keeping
+   `push_pin_outlined` for the unpinned state (no rounded outline pin exists). Regression guard:
+   `test/features/chat/image_content_test.dart` asserts the 14px clip on single image, collage and
+   video (verified failing on the pre-fix file).
 
 Each batch plan must, per `.claude/rules/sync.md`, cover its web AND Flutter mirror together (not
 split across two sessions) so the two platforms never drift.

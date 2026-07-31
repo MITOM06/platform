@@ -40,12 +40,12 @@ class AiBotAvatar extends StatelessWidget {
                     height: 28,
                     fit: BoxFit.cover,
                     errorBuilder: (_, __, ___) => const Icon(
-                        Icons.smart_toy_outlined,
+                        Icons.smart_toy_rounded,
                         color: Colors.white,
                         size: 16),
                   ),
                 )
-              : const Icon(Icons.smart_toy_outlined,
+              : const Icon(Icons.smart_toy_rounded,
                   color: Colors.white, size: 16),
         ),
         Positioned(
@@ -193,7 +193,7 @@ class QuotaExceededBubble extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Icon(Icons.data_usage, color: Color(0xFFFFB74D), size: 16),
+        const Icon(Icons.data_usage_rounded, color: Color(0xFFFFB74D), size: 16),
         const SizedBox(width: 6),
         Flexible(
           child: Column(

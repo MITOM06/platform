@@ -41,7 +41,7 @@ class MemberTile extends ConsumerWidget {
           : null,
       trailing: canRemove
           ? IconButton(
-              icon: Icon(Icons.remove_circle_outline,
+              icon: Icon(Icons.remove_circle_outline_rounded,
                   color: Theme.of(context).colorScheme.error),
               onPressed: onRemove,
             )

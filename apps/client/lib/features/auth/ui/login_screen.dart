@@ -172,7 +172,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                               PonTextField(
                                 controller: _emailController,
                                 labelText: context.l10n.fieldEmail,
-                                prefixIcon: Icons.email_outlined,
+                                prefixIcon: Icons.email_rounded,
                                 keyboardType: TextInputType.emailAddress,
                                 textInputAction: TextInputAction.next,
                                 validator: (v) {
@@ -191,15 +191,15 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                               PonTextField(
                                 controller: _passwordController,
                                 labelText: context.l10n.fieldPassword,
-                                prefixIcon: Icons.lock_outlined,
+                                prefixIcon: Icons.lock_rounded,
                                 obscureText: _obscurePassword,
                                 textInputAction: TextInputAction.done,
                                 onFieldSubmitted: (_) => _submit(),
                                 suffixIcon: IconButton(
                                   icon: Icon(
                                     _obscurePassword
-                                        ? Icons.visibility_outlined
-                                        : Icons.visibility_off_outlined,
+                                        ? Icons.visibility_rounded
+                                        : Icons.visibility_off_rounded,
                                     color: AppTheme.mutedText(context),
                                   ),
                                   onPressed: () => setState(() =>
@@ -281,7 +281,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     const SizedBox(height: 12),
                     OutlinedButton.icon(
                       onPressed: _launchSso,
-                      icon: const Icon(Icons.vpn_key_outlined, size: 18),
+                      icon: const Icon(Icons.vpn_key_rounded, size: 18),
                       label: Text(context.l10n.loginWithSso),
                       style: OutlinedButton.styleFrom(
                         foregroundColor:

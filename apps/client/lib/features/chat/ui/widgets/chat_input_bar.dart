@@ -147,7 +147,7 @@ class _ChatInputBarState extends State<ChatInputBar> {
   Widget _buildRecordingRow(bool isDark) {
     return Row(
       children: [
-        Icon(Icons.mic, color: Theme.of(context).colorScheme.error, size: 22),
+        Icon(Icons.mic_rounded, color: Theme.of(context).colorScheme.error, size: 22),
         const SizedBox(width: 6),
         Expanded(
           child: Text(
@@ -194,14 +194,14 @@ class _ChatInputBarState extends State<ChatInputBar> {
           icon: Icon(
             widget.emojiActive
                 ? Icons.keyboard_rounded
-                : Icons.emoji_emotions_outlined,
+                : Icons.emoji_emotions_rounded,
             color: AppTheme.ponAccent.withValues(alpha: 0.8),
           ),
         ),
         IconButton(
           onPressed: widget.onAttach,
           icon: Icon(
-            Icons.add_photo_alternate_outlined,
+            Icons.add_photo_alternate_rounded,
             color: AppTheme.ponAccent.withValues(alpha: 0.85),
           ),
         ),
@@ -262,7 +262,7 @@ class _ChatInputBarState extends State<ChatInputBar> {
             tooltip: context.l10n.voiceMicTooltip,
             onPressed: _startRecording,
             icon: Icon(
-              Icons.mic_none_outlined,
+              Icons.mic_none_rounded,
               color: AppTheme.ponAccent.withValues(alpha: 0.8),
             ),
           )

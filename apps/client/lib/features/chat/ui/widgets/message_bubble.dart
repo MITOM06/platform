@@ -324,7 +324,7 @@ class _SelectCheck extends StatelessWidget {
         ),
       ),
       child: selected
-          ? const Icon(Icons.check, size: 14, color: Colors.white)
+          ? const Icon(Icons.check_rounded, size: 14, color: Colors.white)
           : null,
     );
   }

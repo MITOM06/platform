@@ -228,7 +228,7 @@ class _PasswordFormState extends ConsumerState<_PasswordForm> {
                     color: accent.withValues(alpha: 0.1),
                     shape: BoxShape.circle,
                   ),
-                  child: Icon(Icons.vpn_key_outlined, color: accent, size: 20),
+                  child: Icon(Icons.vpn_key_rounded, color: accent, size: 20),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
@@ -356,7 +356,7 @@ class _TwoFaPlaceholder extends StatelessWidget {
               color: muted.withValues(alpha: 0.12),
               shape: BoxShape.circle,
             ),
-            child: Icon(Icons.shield_outlined, color: muted, size: 20),
+            child: Icon(Icons.shield_rounded, color: muted, size: 20),
           ),
           title: Text(
             context.l10n.securityTwoFaTitle,

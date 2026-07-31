@@ -54,7 +54,7 @@ class WallpaperMockPreview extends StatelessWidget {
                       width: double.infinity,
                       height: double.infinity,
                       errorBuilder: (_, __, ___) => const Center(
-                        child: Icon(Icons.broken_image_outlined,
+                        child: Icon(Icons.broken_image_rounded,
                             color: Colors.white38),
                       ),
                     ),

@@ -97,12 +97,12 @@ class _ConversationListScreenState
               actions: [
                 const NotificationBell(),
                 IconButton(
-                  icon: const Icon(Icons.explore_outlined),
+                  icon: const Icon(Icons.explore_rounded),
                   tooltip: context.l10n.exploreChannels,
                   onPressed: () => context.push('/explore'),
                 ),
                 IconButton(
-                  icon: const Icon(Icons.people_alt_outlined),
+                  icon: const Icon(Icons.people_alt_rounded),
                   tooltip: context.l10n.contacts,
                   onPressed: () => context.push('/friends'),
                 ),

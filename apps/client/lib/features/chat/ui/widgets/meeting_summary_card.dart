@@ -119,7 +119,7 @@ class MeetingSummaryCard extends StatelessWidget {
           // Header
           Row(
             children: [
-              const Icon(Icons.auto_awesome,
+              const Icon(Icons.auto_awesome_rounded,
                   color: AppTheme.ponAccent, size: 18),
               const SizedBox(width: 8),
               Expanded(
@@ -226,7 +226,7 @@ class _ChecklistItem extends StatelessWidget {
         children: [
           const Padding(
             padding: EdgeInsets.only(top: 1, right: 6),
-            child: Icon(Icons.check_box_outline_blank,
+            child: Icon(Icons.check_box_outline_blank_rounded,
                 color: AppTheme.ponAccent, size: 16),
           ),
           Expanded(

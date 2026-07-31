@@ -55,10 +55,10 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
               controller: _searchCtrl,
               decoration: InputDecoration(
                 hintText: l10n.searchChannelsHint,
-                prefixIcon: const Icon(Icons.search),
+                prefixIcon: const Icon(Icons.search_rounded),
                 suffixIcon: _query.isNotEmpty
                     ? IconButton(
-                        icon: const Icon(Icons.clear),
+                        icon: const Icon(Icons.clear_rounded),
                         onPressed: () {
                           _searchCtrl.clear();
                           setState(() => _query = '');
@@ -144,7 +144,7 @@ class _ChannelTileState extends ConsumerState<_ChannelTile> {
               )
             : null,
         child: ch.avatarUrl == null
-            ? const Icon(Icons.tag, color: AppTheme.ponAccent)
+            ? const Icon(Icons.tag_rounded, color: AppTheme.ponAccent)
             : null,
       ),
       title: Text(ch.name ?? l10n.unnamedChannel),

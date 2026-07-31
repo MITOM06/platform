@@ -237,7 +237,11 @@ class FloatingReactionSheet extends ConsumerWidget {
                     if (!message.isCallLog)
                       ListTile(
                         leading: Icon(
-                          isPinned ? Icons.push_pin : Icons.push_pin_outlined,
+                          // No rounded outline pin exists, so the unpinned state
+                          // keeps the outlined variant to stay distinguishable.
+                          isPinned
+                              ? Icons.push_pin_rounded
+                              : Icons.push_pin_outlined,
                           color: AppTheme.ponAccent,
                         ),
                         title: Text(
@@ -267,7 +271,7 @@ class FloatingReactionSheet extends ConsumerWidget {
                       },
                     ),
                     ListTile(
-                      leading: Icon(Icons.forward_to_inbox_outlined,
+                      leading: Icon(Icons.forward_to_inbox_rounded,
                           color: AppTheme.mutedText(context)),
                       title: Text(l10n.forwardMessage),
                       onTap: () {

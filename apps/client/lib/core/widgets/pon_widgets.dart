@@ -308,8 +308,8 @@ class _PonTextFieldState extends State<PonTextField> {
               ? IconButton(
                   icon: Icon(
                     _obscured
-                        ? Icons.visibility_outlined
-                        : Icons.visibility_off_outlined,
+                        ? Icons.visibility_rounded
+                        : Icons.visibility_off_rounded,
                   ),
                   onPressed: () => setState(() => _obscured = !_obscured),
                 )

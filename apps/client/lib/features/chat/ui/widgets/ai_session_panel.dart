@@ -26,14 +26,14 @@ class AiSessionPanel extends ConsumerWidget {
         context.l10n.aiSessionHistory,
         style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
       ),
-      leading: const Icon(Icons.history, size: 18),
+      leading: const Icon(Icons.history_rounded, size: 18),
       children: [
         Align(
           alignment: Alignment.centerRight,
           child: Padding(
             padding: const EdgeInsets.only(right: 8, bottom: 4),
             child: TextButton.icon(
-              icon: const Icon(Icons.add, size: 16),
+              icon: const Icon(Icons.add_rounded, size: 16),
               label: Text(context.l10n.aiNewSession),
               style: TextButton.styleFrom(foregroundColor: AppTheme.ponAccent),
               onPressed: () => ref
@@ -155,7 +155,7 @@ class _SessionTile extends ConsumerWidget {
       trailing: session.isActive
           ? _ActiveChip()
           : IconButton(
-              icon: const Icon(Icons.restore, size: 18),
+              icon: const Icon(Icons.restore_rounded, size: 18),
               tooltip: context.l10n.aiSessionResume,
               onPressed: () => ref
                   .read(aiSessionsProvider(conversationId).notifier)

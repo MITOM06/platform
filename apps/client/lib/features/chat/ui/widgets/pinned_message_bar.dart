@@ -31,7 +31,7 @@ class PinnedMessageBar extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         child: Row(
           children: [
-            const Icon(Icons.push_pin, size: 14, color: AppTheme.ponAccent),
+            const Icon(Icons.push_pin_rounded, size: 14, color: AppTheme.ponAccent),
             const SizedBox(width: 8),
             Expanded(
               child: Column(
@@ -56,7 +56,7 @@ class PinnedMessageBar extends StatelessWidget {
               ),
             ),
             IconButton(
-              icon: const Icon(Icons.close, size: 16),
+              icon: const Icon(Icons.close_rounded, size: 16),
               onPressed: onDismiss,
               padding: EdgeInsets.zero,
               constraints: const BoxConstraints(minWidth: 24, minHeight: 24),

@@ -178,7 +178,7 @@ class _ToolIndicatorRow extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(isSensitive ? Icons.gpp_maybe_rounded : Icons.construction,
+          Icon(isSensitive ? Icons.gpp_maybe_rounded : Icons.construction_rounded,
               size: 13, color: color),
           const SizedBox(width: 5),
           Flexible(

@@ -19,23 +19,23 @@ IconData fileIcon(String name) {
   final ext = name.toLowerCase().split('.').last;
   switch (ext) {
     case 'pdf':
-      return Icons.picture_as_pdf_outlined;
+      return Icons.picture_as_pdf_rounded;
     case 'doc':
     case 'docx':
-      return Icons.description_outlined;
+      return Icons.description_rounded;
     case 'xls':
     case 'xlsx':
     case 'csv':
-      return Icons.table_chart_outlined;
+      return Icons.table_chart_rounded;
     case 'ppt':
     case 'pptx':
-      return Icons.slideshow_outlined;
+      return Icons.slideshow_rounded;
     case 'zip':
     case 'rar':
     case '7z':
-      return Icons.folder_zip_outlined;
+      return Icons.folder_zip_rounded;
     default:
-      return Icons.insert_drive_file_outlined;
+      return Icons.insert_drive_file_rounded;
   }
 }
 

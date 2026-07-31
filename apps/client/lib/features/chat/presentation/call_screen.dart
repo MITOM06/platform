@@ -153,7 +153,7 @@ class _CallScreenState extends ConsumerState<CallScreen> {
                             RTCVideoViewObjectFit.RTCVideoViewObjectFitCover)
                     : Center(
                         child: Icon(
-                          Icons.phone_in_talk,
+                          Icons.phone_in_talk_rounded,
                           color: Colors.white.withValues(alpha: 0.4),
                           size: 96,
                         ),
@@ -227,7 +227,7 @@ class _CallScreenState extends ConsumerState<CallScreen> {
                   heroTag: 'end_call',
                   backgroundColor: Theme.of(context).colorScheme.error,
                   onPressed: _endCall,
-                  child: const Icon(Icons.call_end, color: Colors.white, size: 32),
+                  child: const Icon(Icons.call_end_rounded, color: Colors.white, size: 32),
                 ),
               ],
             ),

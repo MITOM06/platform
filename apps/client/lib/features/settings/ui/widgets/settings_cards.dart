@@ -185,7 +185,7 @@ class NotificationsCard extends StatelessWidget {
               color: accent.withValues(alpha: 0.1),
               shape: BoxShape.circle,
             ),
-            child: Icon(Icons.notifications_outlined, color: accent, size: 20),
+            child: Icon(Icons.notifications_rounded, color: accent, size: 20),
           ),
           title: Text(
             context.l10n.notifications,

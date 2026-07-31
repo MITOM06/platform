@@ -45,7 +45,7 @@ class TokenUsageRangeSelector extends StatelessWidget {
           if (customRange != null) ...[
             const SizedBox(width: 4),
             Chip(
-              avatar: const Icon(Icons.calendar_today,
+              avatar: const Icon(Icons.calendar_today_rounded,
                   size: 14, color: AppTheme.ponAccent),
               label: Text(
                 '${DateFormat('dd/MM').format(customRange!.start)} – '

@@ -134,14 +134,14 @@ class _CustomMcpSheetState extends ConsumerState<CustomMcpSheet> {
             PonTextField(
               controller: _nameCtrl,
               labelText: l10n.customMcpName,
-              prefixIcon: Icons.label_outline,
+              prefixIcon: Icons.label_outline_rounded,
               textInputAction: TextInputAction.next,
             ),
             const SizedBox(height: 12),
             PonTextField(
               controller: _urlCtrl,
               labelText: l10n.customMcpUrl,
-              prefixIcon: Icons.link,
+              prefixIcon: Icons.link_rounded,
               keyboardType: TextInputType.url,
               textInputAction: TextInputAction.next,
             ),
@@ -158,7 +158,7 @@ class _CustomMcpSheetState extends ConsumerState<CustomMcpSheet> {
               PonTextField(
                 controller: _credCtrl,
                 labelText: l10n.customMcpCredential,
-                prefixIcon: Icons.key_outlined,
+                prefixIcon: Icons.key_rounded,
                 obscureText: true,
                 enableVisibilityToggle: true,
               ),

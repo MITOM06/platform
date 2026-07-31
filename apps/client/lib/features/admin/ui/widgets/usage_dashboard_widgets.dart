@@ -155,7 +155,7 @@ class _WorstAnswerCard extends StatelessWidget {
         children: [
           Row(
             children: [
-              Icon(Icons.thumb_down_alt_outlined,
+              Icon(Icons.thumb_down_alt_rounded,
                   size: 14, color: Theme.of(context).colorScheme.error),
               const SizedBox(width: 6),
               Expanded(

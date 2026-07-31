@@ -65,7 +65,7 @@ class CallTile extends StatelessWidget {
                 if (muted)
                   const Padding(
                     padding: EdgeInsets.only(right: 4),
-                    child: Icon(Icons.mic_off, size: 14, color: Colors.white),
+                    child: Icon(Icons.mic_off_rounded, size: 14, color: Colors.white),
                   ),
                 Flexible(
                   child: Container(

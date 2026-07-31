@@ -152,32 +152,32 @@ class ConversationInfoSidebar extends ConsumerWidget {
                 // (MANAGE_WORKSPACE). Integrations + Usage stay open to every
                 // member. Mirrors web AiAssistantSection.
                 _AiSettingTile(
-                  icon: Icons.auto_awesome,
+                  icon: Icons.auto_awesome_rounded,
                   label: context.l10n.aiPersonality,
                   canManage: canManage,
                   onTap: () => context.push('/ai-persona/$conversationId'),
                 ),
                 _AiSettingTile(
-                  icon: Icons.psychology_outlined,
+                  icon: Icons.psychology_rounded,
                   label: context.l10n.aiContextTitle,
                   canManage: canManage,
                   onTap: () => context.push('/ai-context'),
                 ),
                 _AiSettingTile(
-                  icon: Icons.extension_outlined,
+                  icon: Icons.extension_rounded,
                   label: context.l10n.aiSkills,
                   canManage: canManage,
                   onTap: () => context.push('/skills'),
                 ),
                 ListTile(
                   dense: true,
-                  leading: const Icon(Icons.power_outlined, size: 18),
+                  leading: const Icon(Icons.power_rounded, size: 18),
                   title: Text(context.l10n.aiConnectedApps),
                   onTap: () => context.push('/integrations'),
                 ),
                 ListTile(
                   dense: true,
-                  leading: const Icon(Icons.bar_chart_outlined, size: 18),
+                  leading: const Icon(Icons.bar_chart_rounded, size: 18),
                   title: Text(context.l10n.aiUsage),
                   onTap: () => context.push('/token-usage'),
                 ),
@@ -196,13 +196,13 @@ class ConversationInfoSidebar extends ConsumerWidget {
             children: [
               ListTile(
                 dense: true,
-                leading: const Icon(Icons.color_lens_outlined, size: 18),
+                leading: const Icon(Icons.color_lens_rounded, size: 18),
                 title: Text(context.l10n.themeMenuItem),
                 onTap: () => showWallpaperDialog(context, ref, conversationId),
               ),
               ListTile(
                 dense: true,
-                leading: const Icon(Icons.add_reaction_outlined, size: 18),
+                leading: const Icon(Icons.add_reaction_rounded, size: 18),
                 title: Text(context.l10n.quickReactionTitle),
                 onTap: () => showQuickReactionDialog(context, ref, conversationId),
               ),
@@ -217,13 +217,13 @@ class ConversationInfoSidebar extends ConsumerWidget {
               if (isGroup && (conv?.admins.contains(currentUserId) ?? false)) ...[
                 ListTile(
                   dense: true,
-                  leading: const Icon(Icons.edit_outlined, size: 18),
+                  leading: const Icon(Icons.edit_rounded, size: 18),
                   title: Text(context.l10n.renameGroup),
                   onTap: () => context.push('/group-info/$conversationId'),
                 ),
                 ListTile(
                   dense: true,
-                  leading: const Icon(Icons.image_outlined, size: 18),
+                  leading: const Icon(Icons.image_rounded, size: 18),
                   title: Text(context.l10n.changeAvatar),
                   onTap: () => context.push('/group-info/$conversationId'),
                 ),
@@ -237,21 +237,21 @@ class ConversationInfoSidebar extends ConsumerWidget {
             children: [
               ListTile(
                 dense: true,
-                leading: const Icon(Icons.photo_library_outlined, size: 18),
+                leading: const Icon(Icons.photo_library_rounded, size: 18),
                 title: Text(context.l10n.tabMedia),
                 onTap: () =>
                     context.push('/shared-media/$conversationId'),
               ),
               ListTile(
                 dense: true,
-                leading: const Icon(Icons.insert_drive_file_outlined, size: 18),
+                leading: const Icon(Icons.insert_drive_file_rounded, size: 18),
                 title: Text(context.l10n.tabFiles),
                 onTap: () =>
                     context.push('/shared-media/$conversationId'),
               ),
               ListTile(
                 dense: true,
-                leading: const Icon(Icons.link_outlined, size: 18),
+                leading: const Icon(Icons.link_rounded, size: 18),
                 title: Text(context.l10n.tabLinks),
                 onTap: () =>
                     context.push('/shared-media/$conversationId'),
@@ -289,7 +289,7 @@ class ConversationInfoSidebar extends ConsumerWidget {
               if (!isGroup && !isAi && otherUserId != null)
                 ListTile(
                   dense: true,
-                  leading: Icon(Icons.block_outlined, size: 18,
+                  leading: Icon(Icons.block_rounded, size: 18,
                       color: Theme.of(context).colorScheme.error),
                   title: Text(context.l10n.blockUser,
                       style: TextStyle(color: Theme.of(context).colorScheme.error)),
@@ -299,7 +299,7 @@ class ConversationInfoSidebar extends ConsumerWidget {
               if (isGroup)
                 ListTile(
                   dense: true,
-                  leading: Icon(Icons.exit_to_app_outlined, size: 18,
+                  leading: Icon(Icons.exit_to_app_rounded, size: 18,
                       color: Theme.of(context).colorScheme.error),
                   title: Text(context.l10n.leaveGroup,
                       style: TextStyle(color: Theme.of(context).colorScheme.error)),
@@ -307,7 +307,7 @@ class ConversationInfoSidebar extends ConsumerWidget {
                 ),
               ListTile(
                 dense: true,
-                leading: Icon(Icons.delete_outline, size: 18,
+                leading: Icon(Icons.delete_outline_rounded, size: 18,
                     color: Theme.of(context).colorScheme.error),
                 title: Text(context.l10n.deleteConversation,
                     style: TextStyle(color: Theme.of(context).colorScheme.error)),
@@ -368,7 +368,7 @@ class _AiSettingTile extends StatelessWidget {
     return ListTile(
       dense: true,
       enabled: false,
-      leading: const Icon(Icons.lock_outline, size: 18),
+      leading: const Icon(Icons.lock_outline_rounded, size: 18),
       title: Text(label),
       subtitle: Text(
         context.l10n.adminOwnerOnly,

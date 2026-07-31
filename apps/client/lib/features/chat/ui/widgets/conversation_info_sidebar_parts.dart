@@ -62,7 +62,7 @@ class SidebarHeader extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(Icons.auto_awesome, size: 13, color: AppTheme.ponAccent),
+              const Icon(Icons.auto_awesome_rounded, size: 13, color: AppTheme.ponAccent),
               const SizedBox(width: 4),
               Text(
                 context.l10n.aiAssistant,
@@ -103,12 +103,12 @@ class SidebarActions extends StatelessWidget {
       children: [
         if (!isGroup && otherUserId != null)
           SidebarActionButton(
-            icon: Icons.person_outline,
+            icon: Icons.person_outline_rounded,
             label: context.l10n.viewProfile,
             onTap: () => showUserProfileDialog(context, otherUserId!),
           ),
         SidebarActionButton(
-          icon: isMuted ? Icons.notifications_off_outlined : Icons.notifications_outlined,
+          icon: isMuted ? Icons.notifications_off_rounded : Icons.notifications_rounded,
           label: isMuted
               ? context.l10n.unmuteNotifications
               : context.l10n.muteNotifications,
@@ -117,7 +117,7 @@ class SidebarActions extends StatelessWidget {
               .toggleMuteConversation(conversationId, !isMuted),
         ),
         SidebarActionButton(
-          icon: Icons.search_outlined,
+          icon: Icons.search_rounded,
           label: context.l10n.searchMessages,
           onTap: () {
             ref.read(showChatInfoSidebarProvider.notifier).state = false;

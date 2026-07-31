@@ -35,7 +35,7 @@ class WebSettingsButton extends StatelessWidget {
         shape: const CircleBorder(),
         elevation: 2,
         child: IconButton(
-          icon: const Icon(Icons.settings_outlined),
+          icon: const Icon(Icons.settings_rounded),
           color: accent,
           tooltip: context.l10n.tooltipSettings,
           onPressed: () => _openSettingsDialog(context),

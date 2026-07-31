@@ -43,7 +43,7 @@ void showConversationTileMenu(
           const SizedBox(height: 8),
           if (!isAnyBot && conv.unreadCount > 0)
             ListTile(
-              leading: const Icon(Icons.mark_chat_read_outlined),
+              leading: const Icon(Icons.mark_chat_read_rounded),
               title: Text(l10n.markAsRead),
               onTap: () {
                 Navigator.pop(sheetCtx);
@@ -52,7 +52,7 @@ void showConversationTileMenu(
             )
           else if (!isAnyBot)
             ListTile(
-              leading: const Icon(Icons.mark_chat_unread_outlined),
+              leading: const Icon(Icons.mark_chat_unread_rounded),
               title: Text(l10n.markAsUnread),
               onTap: () {
                 Navigator.pop(sheetCtx);
@@ -62,7 +62,7 @@ void showConversationTileMenu(
           // Mute: unmute directly; mute shows a duration picker bottom sheet.
           if (conv.isMuted)
             ListTile(
-              leading: const Icon(Icons.volume_up_outlined),
+              leading: const Icon(Icons.volume_up_rounded),
               title: Text(l10n.unmuteNotifications),
               onTap: () {
                 Navigator.pop(sheetCtx);
@@ -71,7 +71,7 @@ void showConversationTileMenu(
             )
           else
             ListTile(
-              leading: const Icon(Icons.volume_off_outlined),
+              leading: const Icon(Icons.volume_off_rounded),
               title: Text(l10n.muteNotifications),
               onTap: () {
                 Navigator.pop(sheetCtx);
@@ -96,7 +96,7 @@ void showConversationTileMenu(
           if (!conv.isGroup && otherUserId.isNotEmpty) ...[
             ListTile(
               leading:
-                  const Icon(Icons.phone_outlined),
+                  const Icon(Icons.phone_rounded),
               title: Text(l10n.voiceCall),
               onTap: () {
                 Navigator.pop(sheetCtx);
@@ -114,7 +114,7 @@ void showConversationTileMenu(
             ),
             ListTile(
               leading:
-                  const Icon(Icons.videocam_outlined),
+                  const Icon(Icons.videocam_rounded),
               title: Text(l10n.videoCall),
               onTap: () {
                 Navigator.pop(sheetCtx);
@@ -181,7 +181,7 @@ void showConversationTileMenu(
           if (!isConvBlocked)
             ListTile(
               leading:
-                  const Icon(Icons.archive_outlined),
+                  const Icon(Icons.archive_rounded),
               title: Text(l10n.archiveChat),
               onTap: () {
                 Navigator.pop(sheetCtx);

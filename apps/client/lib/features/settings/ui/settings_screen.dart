@@ -177,14 +177,14 @@ class SettingsScreen extends ConsumerWidget {
                 ),
                 const SizedBox(height: 24),
                 SettingsCard(
-                  icon: Icons.alarm_outlined,
+                  icon: Icons.alarm_rounded,
                   title: context.l10n.reminders,
                   onTap: () => context.push('/reminders'),
                 ),
                 if (ref.watch(canAccessAdminProvider)) ...[
                   const SizedBox(height: 24),
                   SettingsCard(
-                    icon: Icons.admin_panel_settings_outlined,
+                    icon: Icons.admin_panel_settings_rounded,
                     title: context.l10n.adminMenu,
                     subtitle: context.l10n.adminSettingsSubtitle,
                     onTap: () {
@@ -195,7 +195,7 @@ class SettingsScreen extends ConsumerWidget {
                 ],
                 const SizedBox(height: 24),
                 SettingsCard(
-                  icon: Icons.hub_outlined,
+                  icon: Icons.hub_rounded,
                   title: context.l10n.integrationsTitle,
                   subtitle: context.l10n.integrationsSettingsSubtitle,
                   onTap: () {
@@ -205,7 +205,7 @@ class SettingsScreen extends ConsumerWidget {
                 ),
                 const SizedBox(height: 24),
                 SettingsCard(
-                  icon: Icons.auto_awesome_outlined,
+                  icon: Icons.auto_awesome_rounded,
                   title: context.l10n.skillsTitle,
                   subtitle: context.l10n.skillsSettingsSubtitle,
                   onTap: () {
@@ -215,7 +215,7 @@ class SettingsScreen extends ConsumerWidget {
                 ),
                 const SizedBox(height: 24),
                 SettingsCard(
-                  icon: Icons.toll_outlined,
+                  icon: Icons.toll_rounded,
                   title: context.l10n.tokenUsage,
                   onTap: () => context.push('/token-usage'),
                 ),
@@ -231,7 +231,7 @@ class SettingsScreen extends ConsumerWidget {
                 ),
                 const SizedBox(height: 24),
                 SettingsCard(
-                  icon: Icons.shield_outlined,
+                  icon: Icons.shield_rounded,
                   title: context.l10n.legalScreenTitle,
                   onTap: () => context.push('/legal'),
                 ),

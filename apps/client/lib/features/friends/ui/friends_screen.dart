@@ -161,7 +161,7 @@ class _FriendsTab extends ConsumerWidget {
               child: PonTextField(
                 controller: controller,
                 labelText: context.l10n.searchHint,
-                prefixIcon: Icons.search,
+                prefixIcon: Icons.search_rounded,
                 onChanged: onSearchChanged,
               ),
             ),
@@ -207,7 +207,7 @@ class _FriendsTab extends ConsumerWidget {
                                       size: 20,
                                     ),
                                     IconButton(
-                                      icon: const Icon(Icons.person_remove_outlined,
+                                      icon: const Icon(Icons.person_remove_rounded,
                                           size: 20),
                                       color: AppTheme.ponAccent,
                                       tooltip: context.l10n.unfriend,
@@ -292,7 +292,7 @@ class _RequestsTab extends ConsumerWidget {
               child: PonTextField(
                 controller: controller,
                 labelText: context.l10n.searchHint,
-                prefixIcon: Icons.search,
+                prefixIcon: Icons.search_rounded,
                 onChanged: onSearchChanged,
               ),
             ),
@@ -344,7 +344,7 @@ class _RequestsTab extends ConsumerWidget {
                                       child: Text(context.l10n.acceptFriend),
                                     ),
                                     IconButton(
-                                      icon: const Icon(Icons.close, size: 20),
+                                      icon: const Icon(Icons.close_rounded, size: 20),
                                       color: AppTheme.ponAccent,
                                       tooltip: context.l10n.declineFriend,
                                       onPressed: () =>

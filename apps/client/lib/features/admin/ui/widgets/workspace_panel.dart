@@ -90,13 +90,13 @@ class _WorkspacePanelState extends ConsumerState<WorkspacePanel> {
             PonTextField(
               controller: _name,
               labelText: l10n.adminWsName,
-              prefixIcon: Icons.business_outlined,
+              prefixIcon: Icons.business_rounded,
             ),
             const SizedBox(height: 14),
             PonTextField(
               controller: _logoUrl,
               labelText: l10n.adminWsLogoUrl,
-              prefixIcon: Icons.image_outlined,
+              prefixIcon: Icons.image_rounded,
             ),
             const SizedBox(height: 14),
             Row(
@@ -105,7 +105,7 @@ class _WorkspacePanelState extends ConsumerState<WorkspacePanel> {
                   child: PonTextField(
                     controller: _primaryColor,
                     labelText: l10n.adminWsPrimaryColor,
-                    prefixIcon: Icons.palette_outlined,
+                    prefixIcon: Icons.palette_rounded,
                     onChanged: (_) => setState(() {}),
                   ),
                 ),

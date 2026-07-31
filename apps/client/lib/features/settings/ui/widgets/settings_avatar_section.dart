@@ -92,7 +92,7 @@ class _SettingsAvatarSectionState extends ConsumerState<SettingsAvatarSection> {
                             color: Colors.white,
                           ),
                         )
-                      : const Icon(Icons.camera_alt,
+                      : const Icon(Icons.camera_alt_rounded,
                           color: Colors.white, size: 16),
                 ),
               ),

@@ -262,7 +262,7 @@ class _ErrorState extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.cloud_off,
+            Icon(Icons.cloud_off_rounded,
                 size: 56, color: AppTheme.mutedText(context)),
             const SizedBox(height: 12),
             Text(

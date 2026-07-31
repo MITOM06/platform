@@ -101,7 +101,7 @@ class _PromptCard extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Icon(call.isVideo ? Icons.videocam : Icons.groups,
+          Icon(call.isVideo ? Icons.videocam_rounded : Icons.groups_rounded,
               color: AppTheme.ponAccent, size: 30),
           const SizedBox(width: 12),
           Expanded(
@@ -129,12 +129,12 @@ class _PromptCard extends StatelessWidget {
           ),
           IconButton(
             onPressed: onDecline,
-            icon: Icon(Icons.call_end, color: Theme.of(context).colorScheme.error),
+            icon: Icon(Icons.call_end_rounded, color: Theme.of(context).colorScheme.error),
             tooltip: l10n.callDecline,
           ),
           IconButton(
             onPressed: onAccept,
-            icon: const Icon(Icons.call, color: AppTheme.onlineGreen),
+            icon: const Icon(Icons.call_rounded, color: AppTheme.onlineGreen),
             tooltip: l10n.callAccept,
           ),
         ],

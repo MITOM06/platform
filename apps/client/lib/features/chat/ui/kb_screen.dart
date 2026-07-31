@@ -24,7 +24,7 @@ class KbScreen extends ConsumerWidget {
         onPressed: () => _pickAndUpload(context, ref),
         backgroundColor: AppTheme.ponAccent,
         // White on the burgundy FAB — black sat at roughly 2:1.
-        child: const Icon(Icons.upload_file, color: Colors.white),
+        child: const Icon(Icons.upload_file_rounded, color: Colors.white),
       ),
       body: docsAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
@@ -130,7 +130,7 @@ class _EmptyState extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(Icons.folder_open,
+          Icon(Icons.folder_open_rounded,
               size: 64, color: AppTheme.hairline(context)),
           const SizedBox(height: 16),
           Text(
@@ -156,7 +156,7 @@ class _DocumentTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ListTile(
-      leading: const Icon(Icons.description_outlined, color: AppTheme.ponAccent),
+      leading: const Icon(Icons.description_rounded, color: AppTheme.ponAccent),
       title: Text(
         doc.fileName,
         style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontSize: 14),
@@ -177,7 +177,7 @@ class _DocumentTile extends StatelessWidget {
         ],
       ),
       trailing: IconButton(
-        icon: Icon(Icons.delete_outline, color: Theme.of(context).colorScheme.error, size: 20),
+        icon: Icon(Icons.delete_outline_rounded, color: Theme.of(context).colorScheme.error, size: 20),
         onPressed: onDelete,
       ),
     );
@@ -214,7 +214,7 @@ class _StatusChip extends StatelessWidget {
       child = Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Icon(Icons.check_circle, size: 10, color: Colors.green),
+          const Icon(Icons.check_circle_rounded, size: 10, color: Colors.green),
           const SizedBox(width: 4),
           Text(context.l10n.kbReady,
               style: const TextStyle(fontSize: 10, color: Colors.green)),
@@ -225,7 +225,7 @@ class _StatusChip extends StatelessWidget {
       child = Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(Icons.error_outline, size: 10, color: Theme.of(context).colorScheme.error),
+          Icon(Icons.error_outline_rounded, size: 10, color: Theme.of(context).colorScheme.error),
           const SizedBox(width: 4),
           Text(context.l10n.kbError,
               style: TextStyle(fontSize: 10, color: Theme.of(context).colorScheme.error)),

@@ -243,7 +243,7 @@ class _ChatMessageListSection extends ConsumerWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.error_outline, size: 40, color: Theme.of(context).colorScheme.error),
+            Icon(Icons.error_outline_rounded, size: 40, color: Theme.of(context).colorScheme.error),
             const SizedBox(height: 12),
             Text(friendlyError(error),
                 style: TextStyle(color: AppTheme.mutedText(context))),

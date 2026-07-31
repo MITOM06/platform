@@ -43,13 +43,13 @@ class DepartmentsPanel extends ConsumerWidget {
                 PonTextField(
                   controller: nameCtrl,
                   labelText: l10n.adminDeptName,
-                  prefixIcon: Icons.badge_outlined,
+                  prefixIcon: Icons.badge_rounded,
                 ),
                 const SizedBox(height: 12),
                 PonTextField(
                   controller: descCtrl,
                   labelText: l10n.adminDeptDescription,
-                  prefixIcon: Icons.notes_outlined,
+                  prefixIcon: Icons.notes_rounded,
                 ),
                 if (canMembers) ...[
                   const SizedBox(height: 12),
@@ -159,7 +159,7 @@ class DepartmentsPanel extends ConsumerWidget {
         backgroundColor: AppTheme.ponAccent,
         foregroundColor: Colors.white,
         onPressed: () => _openEditor(context, ref),
-        icon: const Icon(Icons.add),
+        icon: const Icon(Icons.add_rounded),
         label: Text(l10n.adminDeptNew),
       ),
       body: async.when(
@@ -182,7 +182,7 @@ class DepartmentsPanel extends ConsumerWidget {
                   final d = departments[i];
                   return PonCard(
                     child: ListTile(
-                      leading: const Icon(Icons.groups_outlined,
+                      leading: const Icon(Icons.groups_rounded,
                           color: AppTheme.ponAccent),
                       title: Text(d.name,
                           style: TextStyle(color: Theme.of(context).colorScheme.onSurface)),
@@ -194,13 +194,13 @@ class DepartmentsPanel extends ConsumerWidget {
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           IconButton(
-                            icon: Icon(Icons.edit_outlined,
+                            icon: Icon(Icons.edit_rounded,
                                 color: AppTheme.mutedText(context)),
                             onPressed: () =>
                                 _openEditor(context, ref, existing: d),
                           ),
                           IconButton(
-                            icon: Icon(Icons.delete_outline,
+                            icon: Icon(Icons.delete_outline_rounded,
                                 color: Theme.of(context).colorScheme.error),
                             onPressed: () => _delete(context, ref, d),
                           ),
