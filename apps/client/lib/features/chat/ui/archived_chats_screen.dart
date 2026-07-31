@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/l10n/l10n_ext.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../assistant/state/assistant_provider.dart';
 import '../../auth/domain/auth_provider.dart';
 import '../../auth/domain/auth_state.dart';
 import '../domain/chat_provider.dart';
@@ -127,9 +128,17 @@ class _ArchivedTile extends ConsumerWidget {
     final profileAsync = otherUserId.isNotEmpty
         ? ref.watch(userProfileProvider(otherUserId))
         : null;
+    // Bot Factory personal assistants (`extbot:*` participants) are never
+    // real Mongo users, so `userProfileProvider` never resolves a name for
+    // them — '...' would stick forever, not just while loading. Resolve from
+    // the member's own assistant mapping instead (mirrors ConversationTile).
+    final isExtBot = !isGroup && otherUserId.startsWith('extbot:');
     final displayName = isGroup
         ? (conv.name ?? context.l10n.conversationDefault)
-        : (profileAsync?.valueOrNull?.displayName ?? '...');
+        : (isExtBot
+            ? (ref.watch(assistantProvider).valueOrNull?.name ??
+                context.l10n.assistantDefaultName)
+            : (profileAsync?.valueOrNull?.displayName ?? '...'));
     final tileLetter = displayName.isNotEmpty && displayName != '...'
         ? displayName[0].toUpperCase()
         : '?';
