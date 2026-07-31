@@ -39,21 +39,59 @@ feature itself. Everything created purely to *run* or *demo* it locally stays on
 
 ## Workflow
 
+`dev` is **one-way**: it is `main` plus the local-env commits, and it never flows
+back. Code moves `feature → main`; `main` flows *into* `dev`, never out of it.
+
 ```
-feature branch  →  merge into dev  →  members test locally on dev
-                                   →  promote ONLY the feature commits to main
+        main  ──────────────────────────────►  (production, always deployable)
+          │  ▲                             ▲
+   sync   │  │ promote (feature only)       │
+          ▼  │                              │
+        dev  ──────────► feat/x ────────────┘
+      (main + env)     (cut from dev,
+                        so you have the stack)
 ```
 
-- Keep dev-env changes in **separate commits** from feature changes, so
-  promoting to `main` is a clean cherry-pick of the feature commits and never
-  drags the setup along.
-- Never `git merge dev` into `main`. Promote by cherry-picking, or open a PR from
-  a feature branch that was cut from `main`.
+**1 — Set up once.** `git checkout dev && ./scripts/dev/up.sh --seed`
+
+**2 — Get the latest code from everyone else, keeping your env.** Merge `main`
+*into* `dev` — do not rebase a shared branch, that forces everyone to reset:
+
+```bash
+git checkout dev
+git fetch origin
+git merge origin/main          # dev = latest main + the env commits
+git push origin dev
+```
+
+**3 — Build your feature.** Branch from `dev` so the local stack is present:
+
+```bash
+git checkout -b feat/x dev
+# ...code, run ./scripts/dev/up.sh, test on localhost / your phone...
+```
+
+**4 — Promote to `main` without the env commits.** Replay only your own commits
+onto `main` — `--onto` drops everything `feat/x` inherited from `dev`:
+
+```bash
+git fetch origin
+git rebase --onto origin/main dev feat/x
+git diff origin/main...feat/x --stat     # must show ONLY your feature's files
+git push -u origin feat/x                # then open the PR into main
+```
+
+If that diff lists `scripts/dev/`, a seed script, a `*.local` env file or a
+`localhost` string, stop — the rebase base was wrong, or a dev-only change got
+mixed into a feature commit.
+
+- Keep dev-env changes in **separate commits** from feature changes; step 4 works
+  precisely because the two never share a commit.
+- Never `git merge dev` into `main`, and never open a PR from `dev`.
 - Prefer paths that make the split obvious: dev-only code under `scripts/dev/`,
   dev-only env in `*.development.local` / gitignored files.
-- Before any PR into `main`, check the diff for the five categories above:
-  `git diff main...HEAD --stat` — if you see `scripts/dev/`, a seed script, a
-  `.local` env file, or a `localhost` string, it does not belong in that PR.
+- `dev` staying permanently a few commits ahead of `main` is the expected steady
+  state, not debt to clean up.
 
 ## Why
 
