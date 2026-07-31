@@ -94,3 +94,6 @@ _workspace/
 
 # Testcontainers debris (compiled strategy class dumped at repo root during tests)
 org/
+
+# Local dev server logs (scripts/dev/up.sh)
+.dev-logs/
