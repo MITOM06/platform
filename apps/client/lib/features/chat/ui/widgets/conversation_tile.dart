@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/l10n/l10n_ext.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/widgets/motion_widgets.dart';
+import '../../../assistant/state/assistant_provider.dart';
 import '../../../auth/domain/auth_provider.dart';
 import '../../../auth/domain/auth_state.dart';
 import '../../../home/domain/home_providers.dart';
@@ -59,15 +60,23 @@ class ConversationTile extends ConsumerWidget {
     final dmNickname = (!isGroup && otherUserId.isNotEmpty)
         ? nicknames[otherUserId]
         : null;
+    final isAiBot = !isGroup && otherUserId == kAiBotUserId;
+    // Bot Factory personal assistants join as `extbot:*` participants — they
+    // are never real Mongo users, so `userProfileProvider` can never resolve a
+    // name for them and `displayName` would be stuck on the '...' placeholder
+    // forever (not just during a transient load). Resolve their name from the
+    // member's own assistant mapping instead — mirrors web ConversationItem's
+    // `isAnyBot ? (assistantName ?? t('aiAssistant')) : ...`.
+    final isExtBot = !isGroup && !isAiBot && otherUserId.startsWith('extbot:');
+    final isAnyBot = isAiBot || isExtBot;
     final displayName = isGroup
         ? (conv.name ?? context.l10n.conversationDefault)
-        : ((dmNickname != null && dmNickname.isNotEmpty)
-            ? dmNickname
-            : (profileData?.displayName ?? '...'));
-    final isAiBot = !isGroup && otherUserId == kAiBotUserId;
-    // Bot Factory personal assistants join as `extbot:*` participants — treat
-    // them as bots too. Mirrors web ConversationItem `isAnyBot`.
-    final isAnyBot = isAiBot || (!isGroup && otherUserId.startsWith('extbot:'));
+        : (isExtBot
+            ? (ref.watch(assistantProvider).valueOrNull?.name ??
+                context.l10n.assistantDefaultName)
+            : ((dmNickname != null && dmNickname.isNotEmpty)
+                ? dmNickname
+                : (profileData?.displayName ?? '...')));
     // Unread indicators are meaningless on bot conversations — web hides them
     // entirely (badge, bold title, border highlight) when the peer is a bot.
     final showUnread = conv.unreadCount > 0 && !isAnyBot;

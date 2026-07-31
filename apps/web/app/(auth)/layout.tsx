@@ -1,5 +1,6 @@
 import { getTranslations } from 'next-intl/server'
 import { AuthShowcasePanel } from '@/components/auth/AuthShowcasePanel'
+import { PageTransition } from '@/components/layout/PageTransition'
 
 function PonLogo({ className = 'size-9' }: { className?: string }) {
   return (
@@ -34,7 +35,9 @@ export default async function AuthLayout({ children }: { children: React.ReactNo
           <span className="text-sm text-muted-foreground">{t('tagline')}</span>
         </div>
 
-        <div className="relative z-10 w-full max-w-md motion-safe:pon-enter">{children}</div>
+        <PageTransition className="relative z-10 w-full max-w-md motion-safe:pon-enter">
+          {children}
+        </PageTransition>
       </div>
     </div>
   )

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../router/page_transitions.dart';
+
 /// Design tokens for the "Warm Grey & Burgundy" direction.
 /// Source of truth: `docs/superpowers/UI-REDESIGN-DIRECTION.md` §2.
 /// The old 3-colour neon brand set (cyan/peach/pink) was retired: there is now
@@ -78,10 +80,27 @@ class AppTheme {
           ? darkBorder
           : lightBorder;
 
+  /// One directional slide for every platform: pages come in from the right
+  /// going forward and leave to the right going back, instead of Material's
+  /// platform-dependent zoom/fade. Routes pushed through `go_router` build the
+  /// same motion via `slidePage()`; this covers the imperative
+  /// `Navigator.push(MaterialPageRoute(...))` ones.
+  static const PageTransitionsTheme _pageTransitions = PageTransitionsTheme(
+    builders: <TargetPlatform, PageTransitionsBuilder>{
+      TargetPlatform.android: PonPageTransitionsBuilder(),
+      TargetPlatform.iOS: PonPageTransitionsBuilder(),
+      TargetPlatform.macOS: PonPageTransitionsBuilder(),
+      TargetPlatform.windows: PonPageTransitionsBuilder(),
+      TargetPlatform.linux: PonPageTransitionsBuilder(),
+      TargetPlatform.fuchsia: PonPageTransitionsBuilder(),
+    },
+  );
+
   static ThemeData get darkTheme {
     return ThemeData(
       brightness: Brightness.dark,
       useMaterial3: true,
+      pageTransitionsTheme: _pageTransitions,
       scaffoldBackgroundColor: darkBackground,
       colorScheme: const ColorScheme.dark(
         primary: darkAccent,
@@ -206,6 +225,7 @@ class AppTheme {
     return ThemeData(
       brightness: Brightness.light,
       useMaterial3: true,
+      pageTransitionsTheme: _pageTransitions,
       scaffoldBackgroundColor: lightBackground,
       colorScheme: const ColorScheme.light(
         primary: lightAccent,

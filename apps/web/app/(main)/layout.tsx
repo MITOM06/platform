@@ -13,6 +13,7 @@ import { ActiveFriendsRow } from '@/components/chat/ActiveFriendsRow'
 import { AssistantEntry } from '@/components/chat/AssistantEntry'
 import { cn } from '@/lib/utils'
 import { MobileTabBar } from '@/components/layout/MobileTabBar'
+import { PageTransition } from '@/components/layout/PageTransition'
 import { SidebarProfileBar } from '@/components/layout/SidebarProfileBar'
 import { SidebarAiHubButton } from '@/components/layout/SidebarAiHubButton'
 import { NotificationBell } from '@/components/layout/NotificationBell'
@@ -175,14 +176,15 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
       {/* Main area. Full-width on every non-messaging page. On the conversation
           LIST (sidebar visible, no thread open) it's hidden on mobile so the
           list owns the screen; everywhere else it's always visible. */}
-      <main
+      <PageTransition
+        as="main"
         className={cn(
           'flex-1 overflow-hidden flex-col',
           showSidebar && !isConversationOpen ? 'hidden md:flex' : 'flex',
         )}
       >
         {children}
-      </main>
+      </PageTransition>
       {showTabBar && <MobileTabBar />}
     </div>
   )

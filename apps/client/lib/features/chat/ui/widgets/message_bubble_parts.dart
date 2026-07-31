@@ -342,14 +342,26 @@ class _CallSystemMessage extends StatelessWidget {
           : context.l10n.systemVoiceCallEnded(duration);
     }
 
+    // Was a neutral surface pill with a muted-colour icon+text — visually a
+    // different "species" from the accent-tinted call pill this replaced.
+    // Now a single tinted pill (accent tint for ended calls, error tint for
+    // missed) carrying both the icon and the text together, so there is only
+    // ever one call-log element per call, and it always shows the icon.
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final tintBg = isMissed
+        ? Theme.of(context).colorScheme.error.withValues(alpha: 0.14)
+        : (isDark ? AppTheme.darkAccentTint : AppTheme.lightAccentTint);
+    final tintFg = isMissed
+        ? Theme.of(context).colorScheme.error
+        : (isDark ? AppTheme.darkTintFg : AppTheme.ponAccent);
+
     return Center(
       child: Container(
         margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 40),
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.surface,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: AppTheme.hairline(context), width: 1),
+          color: tintBg,
+          borderRadius: BorderRadius.circular(16),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
@@ -357,21 +369,61 @@ class _CallSystemMessage extends StatelessWidget {
             Icon(
               isVideo ? Icons.videocam_rounded : Icons.call_rounded,
               size: 14,
-              color: isMissed
-                  ? Theme.of(context).colorScheme.error.withValues(alpha: 0.8)
-                  : AppTheme.mutedText(context),
+              color: tintFg,
             ),
             const SizedBox(width: 6),
             Text(
               text,
               style: TextStyle(
                 fontSize: 11.5,
-                color: AppTheme.mutedText(context),
+                fontWeight: FontWeight.w600,
+                color: tintFg,
               ),
             ),
           ],
         ),
       ),
+    );
+  }
+}
+
+/// Historical `type: "call_log"` messages (chat-service stopped writing new
+/// ones — see `ChatController` javadoc — but old rows still exist and still
+/// render as a plain-text bubble via the generic text fallback). Give them the
+/// same call icon as [_CallSystemMessage] so old and new call history read
+/// consistently, instead of an icon-less line of English text sitting inside
+/// an otherwise normal sent/received bubble.
+class LegacyCallLogContent extends StatelessWidget {
+  final String content;
+  final bool isSentByMe;
+  const LegacyCallLogContent({
+    super.key,
+    required this.content,
+    required this.isSentByMe,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final lower = content.toLowerCase();
+    final isVideo = lower.contains('video');
+    final isMissed = lower.contains('missed');
+    final color = isSentByMe ? Colors.white : Theme.of(context).colorScheme.onSurface;
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(
+          isVideo ? Icons.videocam_rounded : Icons.call_rounded,
+          size: 14,
+          color: isMissed ? color.withValues(alpha: 0.85) : color,
+        ),
+        const SizedBox(width: 6),
+        Flexible(
+          child: Text(
+            content,
+            style: TextStyle(color: color, fontSize: 14.5, height: 1.35),
+          ),
+        ),
+      ],
     );
   }
 }

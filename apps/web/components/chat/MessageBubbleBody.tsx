@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { useTranslations } from 'next-intl'
-import { AlertTriangle } from 'lucide-react'
+import { AlertTriangle, Phone, Video } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { firstUrl } from '@/lib/media'
 import { ImageContent, VideoContent } from './ImageContent'
@@ -38,6 +38,26 @@ export function MessageBubbleBody({ message, isOwn, isPinned }: Props) {
       return <VoiceMessage content={message.content} isOwn={isOwn} />
     case 'meeting_summary':
       return <MeetingSummaryCard content={message.content} isPinned={isPinned} />
+    case 'call_log': {
+      // Historical rows only — chat-service stopped writing new `call_log`
+      // messages in favour of the localized `system.call.*` pill (see
+      // MessageBubble.tsx). Old rows still exist and used to render as a
+      // plain icon-less line of English text; give them the same call icon
+      // so old and new call history read consistently (mirrors Flutter
+      // `LegacyCallLogContent`).
+      const lower = message.content.toLowerCase()
+      const isVideo = lower.includes('video')
+      return (
+        <span className="flex items-center gap-1.5">
+          {isVideo ? (
+            <Video className="size-3.5 shrink-0" />
+          ) : (
+            <Phone className="size-3.5 shrink-0" />
+          )}
+          {message.content}
+        </span>
+      )
+    }
     case 'ai':
       if (message.content === '__AI_ERROR__') {
         return (

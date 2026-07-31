@@ -14,6 +14,7 @@ import '../../features/chat/ui/archived_chats_screen.dart';
 import '../../features/chat/ui/blocked_conversations_screen.dart';
 import '../../features/home/ui/responsive_home_layout.dart';
 import '../utils/global_messenger.dart';
+import 'page_transitions.dart';
 import '../../features/chat/presentation/call_screen.dart';
 import '../../features/chat/presentation/group_call_screen.dart';
 import '../../features/chat/ui/group_info_screen.dart';
@@ -86,34 +87,9 @@ final _publicRoutes = {
   '/legal', // visible to everyone, pre- and post-login
 };
 
-/// Builds a page with a subtle fade + slide-up transition (iOS-like) used for
-/// the main standalone routes. Forward 220ms / reverse 180ms, Curves.easeOut,
-/// slide from Offset(0, 0.04).
-CustomTransitionPage<void> _fadeSlidePage(
-  GoRouterState state,
-  Widget child,
-) {
-  return CustomTransitionPage<void>(
-    key: state.pageKey,
-    child: child,
-    transitionDuration: const Duration(milliseconds: 220),
-    reverseTransitionDuration: const Duration(milliseconds: 180),
-    transitionsBuilder: (context, animation, secondaryAnimation, child) {
-      final curved = CurvedAnimation(parent: animation, curve: Curves.easeOut);
-      return FadeTransition(
-        opacity: curved,
-        child: SlideTransition(
-          position: Tween<Offset>(
-            begin: const Offset(0, 0.04),
-            end: Offset.zero,
-          ).animate(curved),
-          child: child,
-        ),
-      );
-    },
-  );
-}
-
+/// Every route builds its page through [slidePage] so navigation always reads
+/// as one horizontal movement: forward → in from the right, back → out to the
+/// right. See `page_transitions.dart`.
 @riverpod
 GoRouter appRouter(AppRouterRef ref) {
   final notifier = ref.watch(routerNotifierProvider.notifier);
@@ -122,6 +98,7 @@ GoRouter appRouter(AppRouterRef ref) {
     navigatorKey: rootNavigatorKey,
     initialLocation: '/login',
     refreshListenable: notifier,
+    observers: [NavDirectionObserver()],
     redirect: (context, state) {
       final authValue = ref.read(authNotifierProvider);
       final onboardingCompleted = ref.read(themeOnboardingNotifierProvider);
@@ -133,12 +110,12 @@ GoRouter appRouter(AppRouterRef ref) {
       final onPublic = _publicRoutes.contains(state.uri.path);
 
       if (!isAuth && !onPublic) return '/login';
-      
+
       if (isAuth) {
         if (!onboardingCompleted && state.uri.path != '/theme-onboarding') {
           return '/theme-onboarding';
         }
-        
+
         if (onboardingCompleted && state.uri.path == '/theme-onboarding') {
           return '/';
         }
@@ -147,6 +124,10 @@ GoRouter appRouter(AppRouterRef ref) {
         // pages like /legal stay reachable while signed in.
         if (_guestOnlyRoutes.contains(state.uri.path)) return '/';
       }
+
+      // Settled on a destination — work out whether this navigation is a step
+      // forward or a step back so every page in flight slides the same way.
+      PageNavDirection.resolve(state.uri.path);
       return null;
     },
     routes: [
@@ -154,38 +135,44 @@ GoRouter appRouter(AppRouterRef ref) {
       GoRoute(
         path: '/login',
         name: 'login',
-        builder: (context, state) => const LoginScreen(),
+        pageBuilder: (context, state) =>
+            slidePage(state, const LoginScreen()),
       ),
       GoRoute(
         path: '/register',
         name: 'register',
-        builder: (context, state) => const RegisterScreen(),
+        pageBuilder: (context, state) =>
+            slidePage(state, const RegisterScreen()),
       ),
       GoRoute(
         path: '/verify-otp',
         name: 'verify-otp',
-        builder: (context, state) {
+        pageBuilder: (context, state) {
           final email =
               Uri.decodeComponent(state.uri.queryParameters['email'] ?? '');
           final isForgotPassword =
               state.uri.queryParameters['isForgotPassword'] == 'true';
-          return VerifyOtpScreen(email: email, isForgotPassword: isForgotPassword);
+          return slidePage(
+            state,
+            VerifyOtpScreen(email: email, isForgotPassword: isForgotPassword),
+          );
         },
       ),
       GoRoute(
         path: '/forgot-password',
         name: 'forgot-password',
-        builder: (context, state) => const ForgotPasswordScreen(),
+        pageBuilder: (context, state) =>
+            slidePage(state, const ForgotPasswordScreen()),
       ),
       GoRoute(
         path: '/new-password',
         name: 'new-password',
-        builder: (context, state) {
+        pageBuilder: (context, state) {
           final email =
               Uri.decodeComponent(state.uri.queryParameters['email'] ?? '');
           final otpParam = state.uri.queryParameters['otp'];
           final otp = otpParam != null ? Uri.decodeComponent(otpParam) : null;
-          return NewPasswordScreen(email: email, otp: otp);
+          return slidePage(state, NewPasswordScreen(email: email, otp: otp));
         },
       ),
 
@@ -193,20 +180,21 @@ GoRouter appRouter(AppRouterRef ref) {
       GoRoute(
         path: '/theme-onboarding',
         name: 'theme-onboarding',
-        builder: (context, state) => const ThemeOnboardingScreen(),
+        pageBuilder: (context, state) =>
+            slidePage(state, const ThemeOnboardingScreen()),
       ),
       GoRoute(
         path: '/',
         name: 'conversations',
         pageBuilder: (context, state) =>
-            _fadeSlidePage(state, const ResponsiveHomeLayout()),
+            slidePage(state, const ResponsiveHomeLayout()),
         routes: [
           GoRoute(
             path: 'chat/:id',
             name: 'chat',
-            builder: (context, state) {
+            pageBuilder: (context, state) {
               final id = state.pathParameters['id']!;
-              return ChatScreen(conversationId: id);
+              return slidePage(state, ChatScreen(conversationId: id));
             },
           ),
         ],
@@ -214,33 +202,38 @@ GoRouter appRouter(AppRouterRef ref) {
       GoRoute(
         path: '/archived',
         name: 'archived',
-        builder: (context, state) => const ArchivedChatsScreen(),
+        pageBuilder: (context, state) =>
+            slidePage(state, const ArchivedChatsScreen()),
       ),
       GoRoute(
         path: '/blocked',
         name: 'blocked',
-        builder: (context, state) => const BlockedConversationsScreen(),
+        pageBuilder: (context, state) =>
+            slidePage(state, const BlockedConversationsScreen()),
       ),
       GoRoute(
         path: '/settings',
         name: 'settings',
         pageBuilder: (context, state) =>
-            _fadeSlidePage(state, const SettingsScreen()),
+            slidePage(state, const SettingsScreen()),
       ),
       GoRoute(
         path: '/settings/security',
         name: 'settings-security',
-        builder: (context, state) => const SecuritySettingsScreen(),
+        pageBuilder: (context, state) =>
+            slidePage(state, const SecuritySettingsScreen()),
       ),
       GoRoute(
         path: '/new-conversation',
         name: 'new-conversation',
-        builder: (context, state) => const NewConversationScreen(),
+        pageBuilder: (context, state) =>
+            slidePage(state, const NewConversationScreen()),
       ),
       GoRoute(
         path: '/new-group',
         name: 'new-group',
-        builder: (context, state) => const NewGroupScreen(),
+        pageBuilder: (context, state) =>
+            slidePage(state, const NewGroupScreen()),
       ),
       GoRoute(
         path: '/user/:id',
@@ -248,7 +241,7 @@ GoRouter appRouter(AppRouterRef ref) {
         pageBuilder: (context, state) {
           final id = state.pathParameters['id']!;
           final convId = state.uri.queryParameters['conversationId'];
-          return _fadeSlidePage(
+          return slidePage(
             state,
             UserProfileScreen(userId: id, conversationId: convId),
           );
@@ -258,100 +251,123 @@ GoRouter appRouter(AppRouterRef ref) {
         path: '/edit-profile',
         name: 'edit-profile',
         pageBuilder: (context, state) =>
-            _fadeSlidePage(state, const EditProfileScreen()),
+            slidePage(state, const EditProfileScreen()),
       ),
       GoRoute(
         path: '/friends',
         name: 'friends',
         pageBuilder: (context, state) =>
-            _fadeSlidePage(state, const FriendsScreen()),
+            slidePage(state, const FriendsScreen()),
       ),
       GoRoute(
         path: '/group-info/:id',
         name: 'group-info',
-        builder: (context, state) =>
-            GroupInfoScreen(conversationId: state.pathParameters['id']!),
+        pageBuilder: (context, state) => slidePage(
+          state,
+          GroupInfoScreen(conversationId: state.pathParameters['id']!),
+        ),
       ),
       GoRoute(
         path: '/explore',
         name: 'explore',
-        builder: (context, state) => const ExploreScreen(),
+        pageBuilder: (context, state) =>
+            slidePage(state, const ExploreScreen()),
       ),
       GoRoute(
         path: '/shared-media/:conversationId',
         name: 'shared-media',
-        builder: (context, state) => ExploreMediaScreen(
-          conversationId: state.pathParameters['conversationId']!,
+        pageBuilder: (context, state) => slidePage(
+          state,
+          ExploreMediaScreen(
+            conversationId: state.pathParameters['conversationId']!,
+          ),
         ),
       ),
       GoRoute(
         path: '/ai-context',
         name: 'ai-context',
-        builder: (context, state) => const AiContextScreen(),
+        pageBuilder: (context, state) =>
+            slidePage(state, const AiContextScreen()),
       ),
       GoRoute(
         path: '/ai-persona/:conversationId',
         name: 'ai-persona',
-        builder: (context, state) => AiPersonaScreen(
-          conversationId: state.pathParameters['conversationId']!,
+        pageBuilder: (context, state) => slidePage(
+          state,
+          AiPersonaScreen(
+            conversationId: state.pathParameters['conversationId']!,
+          ),
         ),
       ),
       GoRoute(
         path: '/kb/:conversationId',
         name: 'kb',
-        builder: (context, state) => KbScreen(
-          conversationId: state.pathParameters['conversationId']!,
+        pageBuilder: (context, state) => slidePage(
+          state,
+          KbScreen(
+            conversationId: state.pathParameters['conversationId']!,
+          ),
         ),
       ),
       GoRoute(
         path: '/reminders',
         name: 'reminders',
-        builder: (context, state) => const RemindersScreen(),
+        pageBuilder: (context, state) =>
+            slidePage(state, const RemindersScreen()),
       ),
       GoRoute(
         path: '/integrations',
         name: 'integrations',
-        builder: (context, state) => const IntegrationsScreen(),
+        pageBuilder: (context, state) =>
+            slidePage(state, const IntegrationsScreen()),
       ),
       GoRoute(
         path: '/skills',
         name: 'skills',
-        builder: (context, state) => const SkillsScreen(),
+        pageBuilder: (context, state) =>
+            slidePage(state, const SkillsScreen()),
       ),
       GoRoute(
         path: '/ai-hub',
         name: 'ai-hub',
-        builder: (context, state) => const AiHubScreen(),
+        pageBuilder: (context, state) =>
+            slidePage(state, const AiHubScreen()),
       ),
       GoRoute(
         path: '/assistant/setup',
         name: 'assistant-setup',
-        builder: (context, state) => const AssistantSetupScreen(),
+        pageBuilder: (context, state) =>
+            slidePage(state, const AssistantSetupScreen()),
       ),
       GoRoute(
         path: '/assistant/settings',
         name: 'assistant-settings',
-        builder: (context, state) => const AssistantSettingsScreen(),
+        pageBuilder: (context, state) =>
+            slidePage(state, const AssistantSettingsScreen()),
       ),
       GoRoute(
         path: '/admin',
         name: 'admin',
-        builder: (context, state) => const AdminScreen(),
+        pageBuilder: (context, state) =>
+            slidePage(state, const AdminScreen()),
       ),
       GoRoute(
         path: '/token-usage',
         name: 'token-usage',
-        builder: (context, state) => const TokenUsageScreen(),
+        pageBuilder: (context, state) =>
+            slidePage(state, const TokenUsageScreen()),
       ),
       GoRoute(
         path: '/legal',
         name: 'legal',
-        builder: (context, state) => const LegalScreen(),
+        pageBuilder: (context, state) =>
+            slidePage(state, const LegalScreen()),
       ),
       GoRoute(
         path: '/help',
         name: 'help',
-        builder: (context, state) => const HelpScreen(),
+        pageBuilder: (context, state) =>
+            slidePage(state, const HelpScreen()),
       ),
       GoRoute(
         path: '/call',
@@ -359,15 +375,18 @@ GoRouter appRouter(AppRouterRef ref) {
         // Always push the call over everything (incl. the web split layout and
         // any open dialogs/sheets) on the root navigator so it is fullscreen.
         parentNavigatorKey: rootNavigatorKey,
-        builder: (context, state) {
+        pageBuilder: (context, state) {
           final extra = state.extra as Map<String, dynamic>? ?? {};
-          return CallScreen(
-            targetId: extra['targetId'] as String? ?? '',
-            targetName: extra['targetName'] as String? ?? 'User',
-            conversationId: extra['conversationId'] as String? ?? '',
-            isCaller: extra['isCaller'] as bool? ?? false,
-            isVideo: extra['isVideo'] as bool? ?? true,
-            initialOfferSdp: extra['initialOfferSdp'] as String?,
+          return slidePage(
+            state,
+            CallScreen(
+              targetId: extra['targetId'] as String? ?? '',
+              targetName: extra['targetName'] as String? ?? 'User',
+              conversationId: extra['conversationId'] as String? ?? '',
+              isCaller: extra['isCaller'] as bool? ?? false,
+              isVideo: extra['isVideo'] as bool? ?? true,
+              initialOfferSdp: extra['initialOfferSdp'] as String?,
+            ),
           );
         },
       ),
@@ -376,7 +395,8 @@ GoRouter appRouter(AppRouterRef ref) {
         name: 'group-call',
         // Fullscreen over everything (incl. web split layout) on the root nav.
         parentNavigatorKey: rootNavigatorKey,
-        builder: (context, state) => const GroupCallScreen(),
+        pageBuilder: (context, state) =>
+            slidePage(state, const GroupCallScreen()),
       ),
     ],
   );
