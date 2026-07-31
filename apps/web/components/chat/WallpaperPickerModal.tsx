@@ -126,7 +126,8 @@ export function WallpaperPickerModal({ conversationId, open, onClose }: Props) {
       }}
       title={t('wallpaperPickerTitle')}
       footer={footer}
-      className="max-w-sm sm:max-w-[680px] p-0 gap-0 overflow-hidden"
+      className="p-0 gap-0 overflow-hidden"
+      desktopClassName="max-w-sm sm:max-w-[680px]"
     >
       {/* Two-panel body */}
       <div className="flex flex-col sm:flex-row min-h-0" style={{ maxHeight: '60vh' }}>

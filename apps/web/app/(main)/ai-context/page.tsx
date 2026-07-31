@@ -26,7 +26,7 @@ export default function AiContextPage() {
       </header>
 
       <div className="flex-1 overflow-y-auto">
-        <div className="mx-auto max-w-lg space-y-4 px-6 py-6">
+        <div className="mx-auto max-w-lg space-y-4 px-6 py-6 pb-tabbar md:pb-6">
           {isLoading && (
             <div className="flex flex-col items-center justify-center gap-3 py-20">
               <Loader2 className="size-8 animate-spin text-muted-foreground" />

@@ -12,14 +12,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Skeleton } from '@/components/ui/skeleton'
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog'
+import { ResponsiveModal } from '@/components/ui/responsive-modal'
 import {
   botAdminService,
   type BotSessionSummary,
@@ -77,15 +70,16 @@ function TokenDialog({
   const t = useTranslations('botAdmin')
   const tc = useTranslations('common')
   return (
-    <Dialog open={issued !== null} onOpenChange={(o) => !o && onClose()}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>{t('generateToken')}</DialogTitle>
-          <DialogDescription className="text-amber-600 dark:text-amber-400">
-            {t('tokenWarning')}
-          </DialogDescription>
-        </DialogHeader>
-        {issued && (
+    <ResponsiveModal
+      open={issued !== null}
+      onOpenChange={(o) => !o && onClose()}
+      title={t('generateToken')}
+      description={
+        <span className="text-amber-600 dark:text-amber-400">{t('tokenWarning')}</span>
+      }
+      footer={<Button onClick={onClose}>{tc('ok')}</Button>}
+    >
+      {issued && (
           <div className="space-y-4">
             <CopyField
               label={t('copyToken')}
@@ -98,12 +92,8 @@ function TokenDialog({
               copyLabel={t('mcpUrl')}
             />
           </div>
-        )}
-        <DialogFooter>
-          <Button onClick={onClose}>{tc('ok')}</Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+      )}
+    </ResponsiveModal>
   )
 }
 

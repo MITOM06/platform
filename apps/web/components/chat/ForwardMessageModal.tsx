@@ -5,8 +5,7 @@ import { Loader2, Send, Bot } from 'lucide-react'
 import { toast } from 'sonner'
 import { useQueryClient } from '@tanstack/react-query'
 import { useTranslations } from 'next-intl'
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
-import { DialogA11yDescription } from '@/components/common/dialog-a11y-description'
+import { ResponsiveModal } from '@/components/ui/responsive-modal'
 import { chatService } from '@/lib/api/chat'
 import { useConversations } from '@/lib/hooks/use-conversations'
 import { useUser } from '@/lib/hooks/use-user'
@@ -106,14 +105,14 @@ export function ForwardMessageModal({ message, onClose }: Props) {
   }
 
   return (
-    <Dialog open={!!message} onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle>{t('forwardTitle')}</DialogTitle>
-        </DialogHeader>
-          <DialogA11yDescription />
-
-        <div className="mt-2 space-y-1 max-h-80 overflow-y-auto">
+    <ResponsiveModal
+      open={!!message}
+      onOpenChange={(o) => !o && onClose()}
+      title={t('forwardTitle')}
+      desktopClassName="sm:max-w-md"
+      footer={<Button variant="outline" onClick={onClose}>{tCommon('cancel')}</Button>}
+    >
+      <div className="space-y-1 max-h-80 overflow-y-auto">
           {conversations?.map((conv) => {
             if (conv.id === message?.conversationId) return null
             return (
@@ -126,12 +125,7 @@ export function ForwardMessageModal({ message, onClose }: Props) {
               />
             )
           })}
-        </div>
-
-        <div className="flex justify-end pt-2">
-          <Button variant="outline" onClick={onClose}>{tCommon('cancel')}</Button>
-        </div>
-      </DialogContent>
-    </Dialog>
+      </div>
+    </ResponsiveModal>
   )
 }

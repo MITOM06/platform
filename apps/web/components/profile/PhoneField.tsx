@@ -12,13 +12,7 @@ import {
 } from 'firebase/auth'
 import { Button } from '@/components/ui/button'
 import { OtpInput } from '@/components/auth/OtpInput'
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from '@/components/ui/dialog'
+import { ResponsiveModal } from '@/components/ui/responsive-modal'
 import { authService } from '@/lib/api/auth'
 import { firebaseAuth } from '@/lib/firebase'
 import { cn } from '@/lib/utils'
@@ -202,31 +196,27 @@ export function PhoneField({ value, verified, onChange, disabled, labels }: Phon
   }
 
   const modal = (
-    <Dialog
+    <ResponsiveModal
       open={modalOpen}
       onOpenChange={(open) => {
         if (!open) clearRecaptcha()
         setModalOpen(open)
       }}
+      desktopClassName="max-w-sm"
+      title={step === 'phone' ? labels.modalPhoneTitle : labels.otpTitle}
+      description={
+        step === 'phone' ? (
+          labels.modalPhoneSubtitle
+        ) : (
+          <>
+            {labels.otpSubtitle}{' '}
+            <span className="font-medium text-foreground">{draft}</span>
+          </>
+        )
+      }
     >
-      <DialogContent className="max-w-sm">
-        {/* Invisible reCAPTCHA anchor — Firebase attaches the widget here */}
-        <div id="recaptcha-container" />
-        <DialogHeader>
-          <DialogTitle>
-            {step === 'phone' ? labels.modalPhoneTitle : labels.otpTitle}
-          </DialogTitle>
-          <DialogDescription>
-            {step === 'phone' ? (
-              labels.modalPhoneSubtitle
-            ) : (
-              <>
-                {labels.otpSubtitle}{' '}
-                <span className="font-medium text-foreground">{draft}</span>
-              </>
-            )}
-          </DialogDescription>
-        </DialogHeader>
+      {/* Invisible reCAPTCHA anchor — Firebase attaches the widget here */}
+      <div id="recaptcha-container" />
 
         {step === 'phone' ? (
           <div className="space-y-4 pt-2">
@@ -306,9 +296,8 @@ export function PhoneField({ value, verified, onChange, disabled, labels }: Phon
           >
             Terms
           </a>
-        </p>
-      </DialogContent>
-    </Dialog>
+      </p>
+    </ResponsiveModal>
   )
 
   // ── State 3: number present and verified ──

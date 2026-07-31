@@ -16,14 +16,7 @@ import {
 } from 'lucide-react'
 import { reminderService, type Reminder } from '@/lib/api/reminders'
 import { Button } from '@/components/ui/button'
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-} from '@/components/ui/dialog'
+import { ResponsiveModal } from '@/components/ui/responsive-modal'
 
 // ── Reminder Tile ────────────────────────────────────────────────────────────
 
@@ -160,7 +153,7 @@ export default function RemindersPage() {
           <div className="absolute -top-24 -left-24 w-72 h-72 rounded-full bg-primary/5 blur-3xl" />
         </div>
 
-        <div className="relative max-w-lg mx-auto px-6 py-6">
+        <div className="relative max-w-lg mx-auto px-6 py-6 pb-tabbar md:pb-6">
           {isLoading && (
             <div className="flex flex-col items-center justify-center py-20 gap-3">
               <Loader2 className="size-8 animate-spin text-primary" />
@@ -197,15 +190,14 @@ export default function RemindersPage() {
       </div>
 
       {/* Done confirmation dialog */}
-      <Dialog open={!!confirmDoneTarget} onOpenChange={(open) => !open && setConfirmDoneTarget(null)}>
-        <DialogContent className="sm:max-w-sm">
-          <DialogHeader>
-            <DialogTitle>{t('doneTitle')}</DialogTitle>
-            <DialogDescription>
-              {t('doneMessage', { text: confirmDoneTarget?.text ?? '' })}
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
+      <ResponsiveModal
+        open={!!confirmDoneTarget}
+        onOpenChange={(open) => !open && setConfirmDoneTarget(null)}
+        title={t('doneTitle')}
+        description={t('doneMessage', { text: confirmDoneTarget?.text ?? '' })}
+        desktopClassName="sm:max-w-sm"
+        footer={
+          <>
             <Button
               variant="outline"
               onClick={() => setConfirmDoneTarget(null)}
@@ -221,20 +213,19 @@ export default function RemindersPage() {
               {doneMutation.isPending && <Loader2 className="size-4 mr-2 animate-spin" />}
               {tc('confirm')}
             </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+          </>
+        }
+      />
 
       {/* Delete confirmation dialog */}
-      <Dialog open={!!deleteTarget} onOpenChange={(open) => !open && setDeleteTarget(null)}>
-        <DialogContent className="sm:max-w-sm">
-          <DialogHeader>
-            <DialogTitle>{t('deleteTitle')}</DialogTitle>
-            <DialogDescription>
-              {t('deleteMessage', { text: deleteTarget?.text ?? '' })}
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
+      <ResponsiveModal
+        open={!!deleteTarget}
+        onOpenChange={(open) => !open && setDeleteTarget(null)}
+        title={t('deleteTitle')}
+        description={t('deleteMessage', { text: deleteTarget?.text ?? '' })}
+        desktopClassName="sm:max-w-sm"
+        footer={
+          <>
             <Button
               variant="outline"
               onClick={() => setDeleteTarget(null)}
@@ -250,9 +241,9 @@ export default function RemindersPage() {
               {deleteMutation.isPending && <Loader2 className="size-4 mr-2 animate-spin" />}
               {tc('delete')}
             </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+          </>
+        }
+      />
     </div>
   )
 }

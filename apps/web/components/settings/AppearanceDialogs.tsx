@@ -6,13 +6,7 @@ import { useTheme } from 'next-themes'
 import { useLocale, useTranslations } from 'next-intl'
 import { Check, Sun, Moon, Monitor } from 'lucide-react'
 import { toast } from 'sonner'
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog'
-import { DialogA11yDescription } from '@/components/common/dialog-a11y-description'
+import { ResponsiveModal } from '@/components/ui/responsive-modal'
 import { setLocaleAction } from '@/lib/actions/locale'
 import { LOCALE_NAMES, SUPPORTED_LOCALES, type Locale } from '@/i18n/config'
 import { cn } from '@/lib/utils'
@@ -46,13 +40,13 @@ export function ThemePickerDialog({ open, onOpenChange }: DialogProps) {
   }
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-xs">
-        <DialogHeader>
-          <DialogTitle>{t('chooseThemeTitle')}</DialogTitle>
-        </DialogHeader>
-          <DialogA11yDescription />
-        <div className="flex flex-col gap-1.5">
+    <ResponsiveModal
+      open={open}
+      onOpenChange={onOpenChange}
+      title={t('chooseThemeTitle')}
+      desktopClassName="max-w-xs"
+    >
+      <div className="flex flex-col gap-1.5">
           {THEME_OPTIONS.map(({ value, icon: Icon, activeColor }) => {
             const active = current === value
             return (
@@ -72,9 +66,8 @@ export function ThemePickerDialog({ open, onOpenChange }: DialogProps) {
               </button>
             )
           })}
-        </div>
-      </DialogContent>
-    </Dialog>
+      </div>
+    </ResponsiveModal>
   )
 }
 
@@ -99,13 +92,13 @@ export function LanguagePickerDialog({ open, onOpenChange }: DialogProps) {
   }
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-xs">
-        <DialogHeader>
-          <DialogTitle>{t('chooseLanguageTitle')}</DialogTitle>
-        </DialogHeader>
-        <DialogA11yDescription />
-        <div className="flex max-h-[60vh] flex-col gap-1.5 overflow-y-auto">
+    <ResponsiveModal
+      open={open}
+      onOpenChange={onOpenChange}
+      title={t('chooseLanguageTitle')}
+      desktopClassName="max-w-xs"
+    >
+      <div className="flex max-h-[60dvh] flex-col gap-1.5 overflow-y-auto">
           {SUPPORTED_LOCALES.map((lng) => {
             const active = lng === locale
             return (
@@ -125,8 +118,7 @@ export function LanguagePickerDialog({ open, onOpenChange }: DialogProps) {
               </button>
             )
           })}
-        </div>
-      </DialogContent>
-    </Dialog>
+      </div>
+    </ResponsiveModal>
   )
 }

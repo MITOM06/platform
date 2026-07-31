@@ -19,14 +19,7 @@ import { kbService, type KbDocument } from '@/lib/api/kb'
 import { chatService } from '@/lib/api/chat'
 import { stompService } from '@/lib/stomp/client'
 import { Button } from '@/components/ui/button'
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-} from '@/components/ui/dialog'
+import { ResponsiveModal } from '@/components/ui/responsive-modal'
 
 // ── Status Chip ──────────────────────────────────────────────────────────────
 
@@ -257,7 +250,7 @@ export default function KbPage({ params }: { params: Promise<{ conversationId: s
           <div className="absolute -top-24 -left-24 w-72 h-72 rounded-full bg-primary/5 blur-3xl" />
         </div>
 
-        <div className="relative max-w-2xl mx-auto px-6 py-6">
+        <div className="relative max-w-2xl mx-auto px-6 py-6 pb-tabbar md:pb-6">
           {isLoading && (
             <div className="flex flex-col items-center justify-center py-20 gap-3">
               <Loader2 className="size-8 animate-spin text-primary" />
@@ -316,15 +309,14 @@ export default function KbPage({ params }: { params: Promise<{ conversationId: s
       </div>
 
       {/* Delete confirmation dialog */}
-      <Dialog open={!!deleteTarget} onOpenChange={(open) => !open && setDeleteTarget(null)}>
-        <DialogContent className="sm:max-w-sm">
-          <DialogHeader>
-            <DialogTitle>{t('deleteTitle')}</DialogTitle>
-            <DialogDescription>
-              {t('deleteMessage', { fileName: deleteTarget?.fileName ?? '' })}
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
+      <ResponsiveModal
+        open={!!deleteTarget}
+        onOpenChange={(open) => !open && setDeleteTarget(null)}
+        title={t('deleteTitle')}
+        description={t('deleteMessage', { fileName: deleteTarget?.fileName ?? '' })}
+        desktopClassName="sm:max-w-sm"
+        footer={
+          <>
             <Button
               variant="outline"
               onClick={() => setDeleteTarget(null)}
@@ -340,9 +332,9 @@ export default function KbPage({ params }: { params: Promise<{ conversationId: s
               {deleteMutation.isPending && <Loader2 className="size-4 mr-2 animate-spin" />}
               {tc('delete')}
             </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+          </>
+        }
+      />
     </div>
   )
 }

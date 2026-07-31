@@ -191,7 +191,8 @@ export function UserProfileDrawer({ userId, onClose }: Props) {
         // Keep the title for screen readers but hide it visually — the cover
         // photo (with a negative top margin) would otherwise overlap it.
         hideTitle
-        className="max-w-sm overflow-hidden p-0 gap-0"
+        className="overflow-hidden p-0 gap-0"
+        desktopClassName="max-w-sm"
       >
         {isLoading ? (
           <div className="flex justify-center py-12">

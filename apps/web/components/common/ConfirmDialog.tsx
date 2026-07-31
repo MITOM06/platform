@@ -1,14 +1,7 @@
 'use client'
 
 import { useTranslations } from 'next-intl'
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-} from '@/components/ui/dialog'
+import { ResponsiveModal } from '@/components/ui/responsive-modal'
 import { Button } from '@/components/ui/button'
 
 interface ConfirmDialogProps {
@@ -28,7 +21,8 @@ interface ConfirmDialogProps {
 /**
  * Generic confirmation dialog used before potentially-irreversible actions such
  * as blocking a user or removing a friend. Mirrors the LogoutConfirmDialog
- * pattern (radix Dialog) so confirmations look consistent across the app.
+ * pattern (ResponsiveModal: bottom sheet on mobile, centred dialog on desktop)
+ * so confirmations look consistent across the app.
  * Mobile mirror: the AlertDialog confirmations in the Flutter client.
  */
 export function ConfirmDialog({
@@ -44,13 +38,14 @@ export function ConfirmDialog({
   const tCommon = useTranslations('common')
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-sm">
-        <DialogHeader>
-          <DialogTitle>{title}</DialogTitle>
-          <DialogDescription>{description}</DialogDescription>
-        </DialogHeader>
-        <DialogFooter>
+    <ResponsiveModal
+      open={open}
+      onOpenChange={onOpenChange}
+      title={title}
+      description={description}
+      desktopClassName="sm:max-w-sm"
+      footer={
+        <>
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             {cancelLabel ?? tCommon('cancel')}
           </Button>
@@ -63,8 +58,8 @@ export function ConfirmDialog({
           >
             {confirmLabel}
           </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+        </>
+      }
+    />
   )
 }

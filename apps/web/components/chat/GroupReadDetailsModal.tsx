@@ -1,7 +1,6 @@
 import { CheckCheck } from 'lucide-react'
 import { useTranslations } from 'next-intl'
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
-import { DialogA11yDescription } from '@/components/common/dialog-a11y-description'
+import { ResponsiveModal } from '@/components/ui/responsive-modal'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { useUser } from '@/lib/hooks/use-user'
 import { absoluteMediaUrl } from '@/lib/media'
@@ -49,26 +48,25 @@ export function GroupReadDetailsModal({ message, open, onClose }: Props) {
   const readBy = message.readBy || []
 
   return (
-    <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="sm:max-w-[400px]">
-        <DialogHeader>
-          <DialogTitle>{t('readDetails')}</DialogTitle>
-        </DialogHeader>
-          <DialogA11yDescription />
-        <div className="max-h-[60vh] overflow-y-auto mt-2">
-          {readBy.length === 0 ? (
-            <div className="py-8 text-center text-sm text-muted-foreground">
-              {t('noReadsYet')}
-            </div>
-          ) : (
-            <div className="flex flex-col gap-1">
-              {readBy.map((uid) => (
-                <ReadUserTile key={uid} userId={uid} />
-              ))}
-            </div>
-          )}
-        </div>
-      </DialogContent>
-    </Dialog>
+    <ResponsiveModal
+      open={open}
+      onOpenChange={(o) => !o && onClose()}
+      title={t('readDetails')}
+      desktopClassName="sm:max-w-[400px]"
+    >
+      <div className="max-h-[60dvh] overflow-y-auto">
+        {readBy.length === 0 ? (
+          <div className="py-8 text-center text-sm text-muted-foreground">
+            {t('noReadsYet')}
+          </div>
+        ) : (
+          <div className="flex flex-col gap-1">
+            {readBy.map((uid) => (
+              <ReadUserTile key={uid} userId={uid} />
+            ))}
+          </div>
+        )}
+      </div>
+    </ResponsiveModal>
   )
 }

@@ -5,10 +5,7 @@ import { useTranslations } from 'next-intl'
 import {
   Sheet, SheetContent,
 } from '@/components/ui/sheet'
-import {
-  Dialog, DialogContent, DialogHeader, DialogTitle,
-  DialogDescription, DialogFooter,
-} from '@/components/ui/dialog'
+import { ResponsiveModal } from '@/components/ui/responsive-modal'
 import { Button } from '@/components/ui/button'
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion'
 import { authService } from '@/lib/api/auth'
@@ -201,22 +198,23 @@ export function ConversationSettingsDrawer({
     />
 
     {/* Confirmation dialog for Clear History */}
-    <Dialog open={s.confirmClearOpen} onOpenChange={s.setConfirmClearOpen}>
-      <DialogContent showCloseButton={false}>
-        <DialogHeader>
-          <DialogTitle>{t('clearHistory')}</DialogTitle>
-          <DialogDescription>{t('clearHistoryConfirm')}</DialogDescription>
-        </DialogHeader>
-        <DialogFooter>
+    <ResponsiveModal
+      open={s.confirmClearOpen}
+      onOpenChange={s.setConfirmClearOpen}
+      showCloseButton={false}
+      title={t('clearHistory')}
+      description={t('clearHistoryConfirm')}
+      footer={
+        <>
           <Button variant="outline" onClick={() => s.setConfirmClearOpen(false)}>
             {tCommon('cancel')}
           </Button>
           <Button variant="destructive" onClick={s.handleClearHistory} disabled={s.saving}>
             {tCommon('delete')}
           </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+        </>
+      }
+    />
 
     {/* Confirmation dialog for Block user */}
     <ConfirmDialog

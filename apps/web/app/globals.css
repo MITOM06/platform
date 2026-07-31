@@ -13,6 +13,10 @@
 
 /* Bottom space that clears the fixed mobile tab bar (h-16 = 4rem) + safe area. */
 @utility pb-tabbar { padding-bottom: calc(4rem + env(safe-area-inset-bottom)); }
+/* Bottom-sheet body padding. Plain `pb-safe` REPLACES the container's padding-bottom
+   with just the inset (usually 0), which pins content to the screen edge — this keeps
+   the 1.5rem gutter and adds the inset on top. */
+@utility pb-safe-6 { padding-bottom: calc(1.5rem + env(safe-area-inset-bottom)); }
 
 /* Hide the scrollbar while keeping the element scrollable (e.g. the attachment
    preview strip above the composer). */
@@ -147,6 +151,11 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-sans, Arial, Helvetica, sans-serif);
+  /* Safety net for mobile: unbreakable strings we render verbatim (emails, user
+     ids, MCP endpoints, bot tokens, audit action codes) are the usual cause of a
+     sideways-scrolling page on a 360px screen. This only kicks in for a word that
+     genuinely cannot fit — normal prose wraps at spaces exactly as before. */
+  overflow-wrap: break-word;
 }
 
 /* .pon-gradient / .pon-gradient-text were removed in L2 — a flat accent needs no

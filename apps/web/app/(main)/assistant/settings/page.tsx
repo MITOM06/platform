@@ -10,14 +10,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog'
+import { ResponsiveModal } from '@/components/ui/responsive-modal'
 import { AssistantModelSelect } from '@/components/chat/assistant/AssistantModelSelect'
 import {
   useAssistant,
@@ -101,7 +94,7 @@ function AssistantSettingsForm({ assistant }: { assistant: AssistantInfo }) {
       </header>
 
       <div className="flex-1 overflow-y-auto">
-        <div className="max-w-md mx-auto px-6 py-8 space-y-6">
+        <div className="max-w-md mx-auto px-6 py-8 space-y-6 pb-tabbar md:pb-8">
           <div className="space-y-2">
             <Label htmlFor="assistant-name">{ts('stepName')}</Label>
             <Input
@@ -157,13 +150,13 @@ function AssistantSettingsForm({ assistant }: { assistant: AssistantInfo }) {
         </div>
       </div>
 
-      <Dialog open={confirmOpen} onOpenChange={setConfirmOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>{t('deleteTitle')}</DialogTitle>
-            <DialogDescription>{t('deleteConfirm')}</DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
+      <ResponsiveModal
+        open={confirmOpen}
+        onOpenChange={setConfirmOpen}
+        title={t('deleteTitle')}
+        description={t('deleteConfirm')}
+        footer={
+          <>
             <Button
               variant="outline"
               onClick={() => setConfirmOpen(false)}
@@ -183,9 +176,9 @@ function AssistantSettingsForm({ assistant }: { assistant: AssistantInfo }) {
               )}
               {t('deleteButton')}
             </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+          </>
+        }
+      />
     </div>
   )
 }

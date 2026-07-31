@@ -26,9 +26,22 @@ interface ResponsiveModalProps {
   onOpenChange: (open: boolean) => void
   title?: ReactNode
   description?: ReactNode
-  children: ReactNode
+  /** Body content. Optional — a plain confirm is just a title, description and footer. */
+  children?: ReactNode
   footer?: ReactNode
+  /** Applied to BOTH branches. Only put here what is correct for a sheet AND a dialog. */
   className?: string
+  /**
+   * Classes for the desktop Dialog only. This is where width caps belong:
+   * `useIsMobile` flips to the bottom sheet below 768px, but a `sm:` utility is
+   * live from 640px up — so a `sm:max-w-md` passed via `className` would squeeze
+   * the sheet to 28rem on a 700px-wide tablet and leave it hanging off-centre.
+   */
+  desktopClassName?: string
+  /** Classes for the mobile bottom Sheet only. */
+  mobileClassName?: string
+  /** Hide the built-in close (X) — for content that supplies its own. */
+  showCloseButton?: boolean
   /**
    * Render the header (title/description) visually hidden but still present for
    * screen readers. Use when the content provides its own visual header and a
@@ -46,20 +59,32 @@ export function ResponsiveModal({
   children,
   footer,
   className,
+  desktopClassName,
+  mobileClassName,
+  showCloseButton = true,
   hideTitle = false,
 }: ResponsiveModalProps) {
   const isMobile = useIsMobile()
   const t = useTranslations('common')
 
   if (isMobile) {
+    // Padding lives on the container here, matching DialogContent, so the
+    // `{children}` body is inset too — SheetContent ships none of its own and
+    // the body would otherwise run edge-to-edge. SheetHeader/SheetFooter carry
+    // their own `p-6`, which would then double up, hence `p-0` on both.
     return (
       <Sheet open={open} onOpenChange={onOpenChange}>
         <SheetContent
           side="bottom"
-          className={cn('max-h-[90dvh] overflow-y-auto rounded-t-2xl pb-safe', className)}
+          showCloseButton={showCloseButton}
+          className={cn(
+            'max-h-[90dvh] overflow-y-auto rounded-t-2xl p-6 pb-safe-6',
+            className,
+            mobileClassName,
+          )}
         >
           {(title || description) && (
-            <SheetHeader className={cn(hideTitle && 'sr-only')}>
+            <SheetHeader className={cn('p-0', hideTitle && 'sr-only')}>
               {title && <SheetTitle>{title}</SheetTitle>}
               {description && <SheetDescription>{description}</SheetDescription>}
             </SheetHeader>
@@ -67,7 +92,7 @@ export function ResponsiveModal({
           {!title && <SheetTitle className="sr-only">{t('dialogTitle')}</SheetTitle>}
           {!description && <SheetDescription className="sr-only">{t('dialogDescription')}</SheetDescription>}
           {children}
-          {footer && <SheetFooter>{footer}</SheetFooter>}
+          {footer && <SheetFooter className="p-0">{footer}</SheetFooter>}
         </SheetContent>
       </Sheet>
     )
@@ -75,7 +100,10 @@ export function ResponsiveModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className={cn('max-h-[90dvh] overflow-y-auto', className)}>
+      <DialogContent
+        showCloseButton={showCloseButton}
+        className={cn('max-h-[90dvh] overflow-y-auto', className, desktopClassName)}
+      >
         {(title || description) && (
           <DialogHeader className={cn(hideTitle && 'sr-only')}>
             {title && <DialogTitle>{title}</DialogTitle>}

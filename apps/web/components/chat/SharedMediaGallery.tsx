@@ -3,8 +3,7 @@
 import { useQuery } from '@tanstack/react-query'
 import { useTranslations } from 'next-intl'
 import { Loader2, ImageIcon, FileText, Link as LinkIcon } from 'lucide-react'
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
-import { DialogA11yDescription } from '@/components/common/dialog-a11y-description'
+import { ResponsiveModal } from '@/components/ui/responsive-modal'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { chatService } from '@/lib/api/chat'
 import { absoluteMediaUrl, parseFileMeta, firstUrl } from '@/lib/media'
@@ -116,14 +115,13 @@ function GalleryTab({ conversationId, type }: { conversationId: string; type: st
 export function SharedMediaGallery({ conversationId, open, onClose }: Props) {
   const t = useTranslations('sharedMedia')
   return (
-    <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="sm:max-w-lg">
-        <DialogHeader>
-          <DialogTitle>{t('title')}</DialogTitle>
-        </DialogHeader>
-          <DialogA11yDescription />
-
-        <Tabs defaultValue="media">
+    <ResponsiveModal
+      open={open}
+      onOpenChange={(o) => !o && onClose()}
+      title={t('title')}
+      desktopClassName="sm:max-w-lg"
+    >
+      <Tabs defaultValue="media">
           <TabsList className="w-full">
             <TabsTrigger value="media" className="flex-1">
               <ImageIcon className="size-4" />
@@ -149,8 +147,7 @@ export function SharedMediaGallery({ conversationId, open, onClose }: Props) {
               <GalleryTab conversationId={conversationId} type="link" />
             </TabsContent>
           </div>
-        </Tabs>
-      </DialogContent>
-    </Dialog>
+      </Tabs>
+    </ResponsiveModal>
   )
 }

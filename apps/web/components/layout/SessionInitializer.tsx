@@ -78,7 +78,7 @@ export function SessionInitializer({ children }: { children: React.ReactNode }) 
 
   if (loading) {
     return (
-      <div className="h-screen w-screen flex flex-col items-center justify-center bg-background text-foreground gap-3">
+      <div className="h-dvh w-full flex flex-col items-center justify-center bg-background text-foreground gap-3">
         <Loader2 className="size-8 animate-spin text-primary" />
         <p className="text-sm font-medium text-muted-foreground animate-pulse">
           {t('sessionConnecting')}

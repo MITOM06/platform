@@ -3,10 +3,7 @@
 import { useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { Pencil, Check, X, Loader2 } from 'lucide-react'
-import {
-  Dialog, DialogContent, DialogHeader, DialogTitle,
-} from '@/components/ui/dialog'
-import { DialogA11yDescription } from '@/components/common/dialog-a11y-description'
+import { ResponsiveModal } from '@/components/ui/responsive-modal'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -48,13 +45,13 @@ export function NicknamesModal({
   const t = useTranslations('chat')
 
   return (
-    <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="max-w-sm">
-        <DialogHeader>
-          <DialogTitle>{t('nicknameModalTitle')}</DialogTitle>
-        </DialogHeader>
-          <DialogA11yDescription />
-        <div className="space-y-1 max-h-[60vh] overflow-y-auto -mx-1 px-1">
+    <ResponsiveModal
+      open={open}
+      onOpenChange={(o) => !o && onClose()}
+      title={t('nicknameModalTitle')}
+      desktopClassName="max-w-sm"
+    >
+      <div className="space-y-1 max-h-[60dvh] overflow-y-auto -mx-1 px-1">
           {participantIds.map((uid) => (
             <NicknameParticipantRow
               key={uid}
@@ -65,9 +62,8 @@ export function NicknamesModal({
               saving={saving}
             />
           ))}
-        </div>
-      </DialogContent>
-    </Dialog>
+      </div>
+    </ResponsiveModal>
   )
 }
 

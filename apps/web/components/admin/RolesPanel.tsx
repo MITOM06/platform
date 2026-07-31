@@ -9,14 +9,7 @@ import { Checkbox } from '@/components/ui/checkbox'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Skeleton } from '@/components/ui/skeleton'
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog'
+import { ResponsiveModal } from '@/components/ui/responsive-modal'
 import { useRoles, useRoleActions } from '@/lib/hooks/use-admin'
 import { CAPABILITIES } from '@/lib/api/admin-types'
 import type { Capability, PermissionMatrix, Role } from '@/lib/api/admin-types'
@@ -158,21 +151,13 @@ export function RolesPanel() {
         isPending={update.isPending}
       />
 
-      <Dialog open={!!cloneFrom} onOpenChange={(o) => !o && setCloneFrom(null)}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>{t('roleCloneTitle', { name: cloneFrom?.name ?? '' })}</DialogTitle>
-            <DialogDescription>{t('roleCloneDesc')}</DialogDescription>
-          </DialogHeader>
-          <div className="space-y-1.5 py-2">
-            <Label htmlFor="clone-name">{t('roleName')}</Label>
-            <Input
-              id="clone-name"
-              value={cloneName}
-              onChange={(e) => setCloneName(e.target.value)}
-            />
-          </div>
-          <DialogFooter>
+      <ResponsiveModal
+        open={!!cloneFrom}
+        onOpenChange={(o) => !o && setCloneFrom(null)}
+        title={t('roleCloneTitle', { name: cloneFrom?.name ?? '' })}
+        description={t('roleCloneDesc')}
+        footer={
+          <>
             <Button variant="outline" onClick={() => setCloneFrom(null)}>
               {t('cancel')}
             </Button>
@@ -182,9 +167,18 @@ export function RolesPanel() {
             >
               {t('roleClone')}
             </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+          </>
+        }
+      >
+        <div className="space-y-1.5 py-2">
+            <Label htmlFor="clone-name">{t('roleName')}</Label>
+            <Input
+              id="clone-name"
+              value={cloneName}
+              onChange={(e) => setCloneName(e.target.value)}
+            />
+        </div>
+      </ResponsiveModal>
     </div>
   )
 }

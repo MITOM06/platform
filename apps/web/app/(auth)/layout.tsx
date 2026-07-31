@@ -21,12 +21,12 @@ function PonLogo({ className = 'size-9' }: { className?: string }) {
 export default async function AuthLayout({ children }: { children: React.ReactNode }) {
   const t = await getTranslations('auth')
   return (
-    <div className="min-h-screen lg:grid lg:grid-cols-2">
+    <div className="min-h-dvh lg:grid lg:grid-cols-2">
       {/* Left — decorative showcase, desktop only */}
       <AuthShowcasePanel />
 
       {/* Right — form column (also the ONLY column on mobile/tablet) */}
-      <div className="relative flex flex-col items-center justify-center overflow-hidden bg-background p-4 min-h-screen lg:min-h-0">
+      <div className="relative flex flex-col items-center justify-center overflow-hidden bg-background p-4 min-h-dvh lg:min-h-0">
         {/* Brand mark — shown here too since the showcase panel is hidden below `lg`. */}
         <div className="relative z-10 mb-8 flex flex-col items-center gap-2 motion-safe:pon-stagger lg:hidden">
           <PonLogo className="size-16" />

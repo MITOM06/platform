@@ -218,7 +218,7 @@ export function NewConversationModal({ open, onClose, defaultTab }: Props) {
       open={open}
       onOpenChange={(o) => { if (!o) handleClose() }}
       title={t('newConvTitle')}
-      className="sm:max-w-md"
+      desktopClassName="sm:max-w-md"
     >
       <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'direct' | 'group')}>
         <TabsList className="w-full">

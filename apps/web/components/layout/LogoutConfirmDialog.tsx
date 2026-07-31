@@ -2,14 +2,7 @@
 
 import { LogOut } from 'lucide-react'
 import { useTranslations } from 'next-intl'
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-} from '@/components/ui/dialog'
+import { ResponsiveModal } from '@/components/ui/responsive-modal'
 import { Button } from '@/components/ui/button'
 
 interface LogoutConfirmDialogProps {
@@ -29,19 +22,21 @@ export function LogoutConfirmDialog({ open, onOpenChange, onConfirm }: LogoutCon
   const tCommon = useTranslations('common')
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-sm">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <div className="size-8 rounded-full bg-destructive/10 flex items-center justify-center">
-              <LogOut className="size-4 text-destructive" />
-            </div>
-            {t('logoutConfirmTitle')}
-          </DialogTitle>
-          <DialogDescription>{t('logoutConfirmMessage')}</DialogDescription>
-        </DialogHeader>
-
-        <DialogFooter>
+    <ResponsiveModal
+      open={open}
+      onOpenChange={onOpenChange}
+      desktopClassName="sm:max-w-sm"
+      title={
+        <span className="flex items-center gap-2">
+          <span className="size-8 rounded-full bg-destructive/10 flex items-center justify-center">
+            <LogOut className="size-4 text-destructive" />
+          </span>
+          {t('logoutConfirmTitle')}
+        </span>
+      }
+      description={t('logoutConfirmMessage')}
+      footer={
+        <>
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             {tCommon('cancel')}
           </Button>
@@ -54,8 +49,8 @@ export function LogoutConfirmDialog({ open, onOpenChange, onConfirm }: LogoutCon
           >
             {t('logout')}
           </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+        </>
+      }
+    />
   )
 }
