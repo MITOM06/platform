@@ -64,7 +64,7 @@ class ProfilePersonalInfo extends StatelessWidget {
       final items = <Widget>[];
       // bio is always visible.
       if (u.bio != null && u.bio!.isNotEmpty) {
-        items.add(ProfileInfoRow(icon: Icons.info_outline, label: l10n.profileBio, value: u.bio!));
+        items.add(ProfileInfoRow(icon: Icons.info_outline_rounded, label: l10n.profileBio, value: u.bio!));
       }
       // Per-field gating: self sees everything; otherwise honour the effective
       // visibility flag (server already strips hidden fields, this is a
@@ -72,11 +72,11 @@ class ProfilePersonalInfo extends StatelessWidget {
       if ((isSelf || u.effectiveShowGender) &&
           u.gender != null &&
           u.gender!.isNotEmpty) {
-        items.add(ProfileInfoRow(icon: Icons.wc_outlined, label: l10n.profileGender, value: u.gender!));
+        items.add(ProfileInfoRow(icon: Icons.wc_rounded, label: l10n.profileGender, value: u.gender!));
       }
       if ((isSelf || u.effectiveShowDateOfBirth) && u.dateOfBirth != null) {
         items.add(ProfileInfoRow(
-          icon: Icons.cake_outlined,
+          icon: Icons.cake_rounded,
           label: l10n.profileDateOfBirth,
           value: DateFormat.yMd(locale).format(u.dateOfBirth!),
         ));
@@ -84,7 +84,7 @@ class ProfilePersonalInfo extends StatelessWidget {
       if ((isSelf || u.effectiveShowPhoneNumber) &&
           u.phoneNumber != null &&
           u.phoneNumber!.isNotEmpty) {
-        items.add(ProfileInfoRow(icon: Icons.phone_outlined, label: l10n.profilePhone, value: u.phoneNumber!));
+        items.add(ProfileInfoRow(icon: Icons.phone_rounded, label: l10n.profilePhone, value: u.phoneNumber!));
       }
       if (items.isEmpty) return const SizedBox.shrink();
       return Padding(
@@ -133,7 +133,7 @@ class ProfilePersonalInfo extends StatelessWidget {
           const SizedBox(height: 8),
           ListTile(
             contentPadding: EdgeInsets.zero,
-            leading: const Icon(Icons.cake_outlined),
+            leading: const Icon(Icons.cake_rounded),
             title: Text(l10n.profileDateOfBirth),
             subtitle: Text(dob != null
                 ? DateFormat.yMd(locale).format(dob!)

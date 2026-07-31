@@ -120,7 +120,7 @@ class _IntegrationsScreenState extends ConsumerState<IntegrationsScreen>
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.add_link, color: AppTheme.ponAccent),
+            icon: const Icon(Icons.add_link_rounded, color: AppTheme.ponAccent),
             tooltip: l10n.customMcpTitle,
             onPressed: () => CustomMcpSheet.show(context),
           ),
@@ -193,7 +193,7 @@ class _CustomMcpCta extends StatelessWidget {
         ),
         child: Row(
           children: [
-            const Icon(Icons.dashboard_customize_outlined,
+            const Icon(Icons.dashboard_customize_rounded,
                 color: AppTheme.ponAccent),
             const SizedBox(width: 14),
             Expanded(
@@ -219,7 +219,7 @@ class _CustomMcpCta extends StatelessWidget {
                 ],
               ),
             ),
-            Icon(Icons.chevron_right, color: AppTheme.mutedText(context)),
+            Icon(Icons.chevron_right_rounded, color: AppTheme.mutedText(context)),
           ],
         ),
       ),
@@ -240,7 +240,7 @@ class _ErrorState extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.cloud_off,
+            Icon(Icons.cloud_off_rounded,
                 size: 56, color: AppTheme.mutedText(context)),
             const SizedBox(height: 12),
             Text(

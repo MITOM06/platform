@@ -95,7 +95,7 @@ class _DirectorySectionState extends ConsumerState<DirectorySection>
         content: PonTextField(
           controller: ctrl,
           labelText: l10n.directoryKeyLabel,
-          prefixIcon: Icons.key_outlined,
+          prefixIcon: Icons.key_rounded,
           obscureText: true,
           enableVisibilityToggle: true,
         ),
@@ -198,7 +198,7 @@ class _DirectorySectionState extends ConsumerState<DirectorySection>
             if (isAdmin)
               TextButton.icon(
                 onPressed: () => DirectoryAdminSheet.show(context),
-                icon: const Icon(Icons.add, size: 18, color: AppTheme.ponAccent),
+                icon: const Icon(Icons.add_rounded, size: 18, color: AppTheme.ponAccent),
                 label: Text(l10n.directoryAdd,
                     style: const TextStyle(color: AppTheme.ponAccent)),
               ),
@@ -217,7 +217,7 @@ class _DirectorySectionState extends ConsumerState<DirectorySection>
           controller: _searchCtrl,
           onChanged: (v) => setState(() => _query = v),
           labelText: l10n.directorySearch,
-          prefixIcon: Icons.search,
+          prefixIcon: Icons.search_rounded,
         ),
         const SizedBox(height: 14),
         itemsAsync.when(

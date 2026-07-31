@@ -64,7 +64,7 @@ class ConversationBottomBar extends StatelessWidget {
               child: Row(
                 children: [
                   _BottomTabItem(
-                    icon: Icons.chat_bubble_outline,
+                    icon: Icons.chat_bubble_outline_rounded,
                     label: l10n.tabChats,
                     isActive: activeIndex == 0,
                     accent: accent,
@@ -72,7 +72,7 @@ class ConversationBottomBar extends StatelessWidget {
                     isDark: isDark,
                   ),
                   _BottomTabItem(
-                    icon: Icons.archive_outlined,
+                    icon: Icons.archive_rounded,
                     label: l10n.tabArchived,
                     isActive: activeIndex == 1,
                     accent: accent,
@@ -80,7 +80,7 @@ class ConversationBottomBar extends StatelessWidget {
                     isDark: isDark,
                   ),
                   _BottomTabItem(
-                    icon: Icons.person_add_outlined,
+                    icon: Icons.person_add_rounded,
                     label: l10n.tabRequests,
                     isActive: activeIndex == 2,
                     accent: accent,
@@ -89,7 +89,7 @@ class ConversationBottomBar extends StatelessWidget {
                     badge: reqCount,
                   ),
                   _BottomTabItem(
-                    icon: Icons.add_comment_outlined,
+                    icon: Icons.add_comment_rounded,
                     label: l10n.tooltipNewConversation,
                     isActive: false,
                     accent: isDark

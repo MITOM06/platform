@@ -118,7 +118,7 @@ class _HdToggle extends StatelessWidget {
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(Icons.bolt,
+              Icon(Icons.bolt_rounded,
                   size: 12,
                   color: isAllHD ? AppTheme.ponAccent : Colors.white38),
               const SizedBox(width: 3),
@@ -192,7 +192,7 @@ class _StagedTile extends StatelessWidget {
                 shape: BoxShape.circle,
                 color: Colors.black87,
               ),
-              child: const Icon(Icons.close, size: 14, color: Colors.white),
+              child: const Icon(Icons.close_rounded, size: 14, color: Colors.white),
             ),
           ),
         ),
@@ -269,7 +269,7 @@ class _AddMoreButton extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.add, size: 24, color: AppTheme.ponAccent),
+            const Icon(Icons.add_rounded, size: 24, color: AppTheme.ponAccent),
             Text(
               label,
               style: const TextStyle(fontSize: 9, color: AppTheme.ponAccent),

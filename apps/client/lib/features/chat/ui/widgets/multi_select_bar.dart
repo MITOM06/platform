@@ -137,7 +137,7 @@ class MultiSelectBar extends ConsumerWidget {
                 children: [
                   Expanded(
                     child: _ActionButton(
-                      icon: Icons.forward_to_inbox_outlined,
+                      icon: Icons.forward_to_inbox_rounded,
                       label: l10n.forwardMessage,
                       color: AppTheme.ponAccent,
                       onPressed:

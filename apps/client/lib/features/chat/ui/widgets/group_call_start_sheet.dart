@@ -81,7 +81,7 @@ class _GroupCallStartSheetState extends ConsumerState<GroupCallStartSheet> {
             children: [
               Expanded(
                 child: _MediaChoice(
-                  icon: Icons.call,
+                  icon: Icons.call_rounded,
                   label: l10n.groupCallAudio,
                   selected: !_video,
                   onTap: () => setState(() => _video = false),
@@ -90,7 +90,7 @@ class _GroupCallStartSheetState extends ConsumerState<GroupCallStartSheet> {
               const SizedBox(width: 12),
               Expanded(
                 child: _MediaChoice(
-                  icon: Icons.videocam,
+                  icon: Icons.videocam_rounded,
                   label: l10n.groupCallVideo,
                   selected: _video,
                   onTap: () => setState(() => _video = true),
@@ -106,7 +106,7 @@ class _GroupCallStartSheetState extends ConsumerState<GroupCallStartSheet> {
             onChanged: (v) => setState(() => _aiNotetaker = v),
             title: Row(
               children: [
-                const Icon(Icons.auto_awesome,
+                const Icon(Icons.auto_awesome_rounded,
                     color: AppTheme.ponAccent, size: 18),
                 const SizedBox(width: 8),
                 Text(l10n.groupCallNotetakerToggle,
@@ -124,7 +124,7 @@ class _GroupCallStartSheetState extends ConsumerState<GroupCallStartSheet> {
             width: double.infinity,
             child: FilledButton.icon(
               onPressed: _start,
-              icon: const Icon(Icons.video_call),
+              icon: const Icon(Icons.video_call_rounded),
               label: Text(l10n.groupCallStartAction),
             ),
           ),

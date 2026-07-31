@@ -124,7 +124,7 @@ class _NotetakerBanner extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(Icons.auto_awesome, color: AppTheme.ponAccent, size: 18),
+          const Icon(Icons.auto_awesome_rounded, color: AppTheme.ponAccent, size: 18),
           const SizedBox(width: 8),
           Flexible(
             child: Text(
@@ -221,7 +221,7 @@ class _Controls extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           _RoundButton(
-            icon: call.micEnabled ? Icons.mic : Icons.mic_off,
+            icon: call.micEnabled ? Icons.mic_rounded : Icons.mic_off_rounded,
             active: call.micEnabled,
             onPressed: onToggleMic,
             tooltip: context.l10n.callToggleMic,
@@ -229,7 +229,7 @@ class _Controls extends StatelessWidget {
           if (call.isVideo) ...[
             const SizedBox(width: 18),
             _RoundButton(
-              icon: call.camEnabled ? Icons.videocam : Icons.videocam_off,
+              icon: call.camEnabled ? Icons.videocam_rounded : Icons.videocam_off_rounded,
               active: call.camEnabled,
               onPressed: onToggleCam,
               tooltip: context.l10n.callToggleCam,
@@ -241,7 +241,7 @@ class _Controls extends StatelessWidget {
             backgroundColor: Theme.of(context).colorScheme.error,
             onPressed: onLeave,
             tooltip: context.l10n.callLeave,
-            child: const Icon(Icons.call_end, color: Colors.white, size: 30),
+            child: const Icon(Icons.call_end_rounded, color: Colors.white, size: 30),
           ),
         ],
       ),

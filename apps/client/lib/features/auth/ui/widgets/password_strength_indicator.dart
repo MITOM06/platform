@@ -83,7 +83,7 @@ class PasswordStrengthIndicator extends StatelessWidget {
                 children: [
                   Icon(
                     passed
-                        ? Icons.check_circle_outline
+                        ? Icons.check_circle_outline_rounded
                         : Icons.radio_button_unchecked,
                     size: 14,
                     color: passed

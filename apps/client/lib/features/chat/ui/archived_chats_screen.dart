@@ -41,7 +41,7 @@ class ArchivedChatsScreen extends ConsumerWidget {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(Icons.cloud_off_outlined,
+                Icon(Icons.cloud_off_rounded,
                     size: 48, color: Theme.of(context).colorScheme.error),
                 const SizedBox(height: 16),
                 Text(
@@ -87,7 +87,7 @@ class _EmptyArchived extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(
-            Icons.archive_outlined,
+            Icons.archive_rounded,
             size: 64,
             color: accent.withValues(alpha: 0.6),
           ),
@@ -186,7 +186,7 @@ class _ArchivedTile extends ConsumerWidget {
                 )
               : null,
           trailing: IconButton(
-            icon: const Icon(Icons.unarchive_outlined),
+            icon: const Icon(Icons.unarchive_rounded),
             tooltip: context.l10n.unarchiveChat,
             color: isDark ? AppTheme.ponAccent : Theme.of(context).colorScheme.primary,
             onPressed: () => ref

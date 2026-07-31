@@ -137,7 +137,7 @@ class _NewPasswordScreenState extends ConsumerState<NewPasswordScreen> {
                               PonTextField(
                                 controller: _otpController,
                                 labelText: context.l10n.fieldOtp,
-                                prefixIcon: Icons.pin_outlined,
+                                prefixIcon: Icons.pin_rounded,
                                 keyboardType: TextInputType.number,
                                 maxLength: 6,
                                 counterText: '',
@@ -166,15 +166,15 @@ class _NewPasswordScreenState extends ConsumerState<NewPasswordScreen> {
                             PonTextField(
                               controller: _passwordController,
                               labelText: context.l10n.fieldNewPassword,
-                              prefixIcon: Icons.lock_outlined,
+                              prefixIcon: Icons.lock_rounded,
                               obscureText: _obscurePassword,
                               onChanged: (v) =>
                                   setState(() => _newPasswordValue = v),
                               suffixIcon: IconButton(
                                 icon: Icon(
                                   _obscurePassword
-                                      ? Icons.visibility_outlined
-                                      : Icons.visibility_off_outlined,
+                                      ? Icons.visibility_rounded
+                                      : Icons.visibility_off_rounded,
                                   color: AppTheme.mutedText(context),
                                 ),
                                 onPressed: () => setState(
@@ -212,7 +212,7 @@ class _NewPasswordScreenState extends ConsumerState<NewPasswordScreen> {
                             PonTextField(
                               controller: _confirmController,
                               labelText: context.l10n.fieldConfirmPassword,
-                              prefixIcon: Icons.lock_outline,
+                              prefixIcon: Icons.lock_outline_rounded,
                               obscureText: _obscurePassword,
                               textInputAction: TextInputAction.done,
                               onFieldSubmitted: (_) => _submit(),

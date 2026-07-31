@@ -141,7 +141,7 @@ class _AssistantSettingsScreenState
         PonTextField(
           controller: _nameCtrl,
           labelText: context.l10n.assistantSetupNamePlaceholder,
-          prefixIcon: Icons.smart_toy_outlined,
+          prefixIcon: Icons.smart_toy_rounded,
         ),
         const SizedBox(height: 20),
         Text(
@@ -194,7 +194,7 @@ class _AssistantSettingsScreenState
         const SizedBox(height: 12),
         TextButton.icon(
           onPressed: (_saving || _deleting) ? null : _confirmDelete,
-          icon: const Icon(Icons.delete_outline),
+          icon: const Icon(Icons.delete_outline_rounded),
           style: TextButton.styleFrom(foregroundColor: AppTheme.ponAccent),
           label: Text(context.l10n.assistantSettingsDeleteButton),
         ),

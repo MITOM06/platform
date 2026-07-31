@@ -94,7 +94,7 @@ class _EmptyState extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(Icons.alarm_off, size: 64,
+          Icon(Icons.alarm_off_rounded, size: 64,
               color: muted.withValues(alpha: 0.4)),
           const SizedBox(height: 16),
           Text(
@@ -141,7 +141,7 @@ class _ReminderTile extends StatelessWidget {
         ),
       ),
       child: ListTile(
-        leading: const Icon(Icons.alarm_outlined,
+        leading: const Icon(Icons.alarm_rounded,
             color: AppTheme.ponAccent, size: 22),
         title: Text(text,
             style: TextStyle(color: colorScheme.onSurface, fontSize: 15)),
@@ -152,13 +152,13 @@ class _ReminderTile extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             IconButton(
-              icon: const Icon(Icons.check_circle_outline,
+              icon: const Icon(Icons.check_circle_outline_rounded,
                   color: AppTheme.ponAccent, size: 20),
               tooltip: context.l10n.reminderDone,
               onPressed: onDone,
             ),
             IconButton(
-              icon: Icon(Icons.delete_outline,
+              icon: Icon(Icons.delete_outline_rounded,
                   color: colorScheme.onSurfaceVariant, size: 20),
               onPressed: onDelete,
             ),

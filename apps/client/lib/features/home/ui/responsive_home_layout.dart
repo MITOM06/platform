@@ -76,7 +76,7 @@ class _EmptyDetailPane extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(
-            Icons.forum_outlined,
+            Icons.forum_rounded,
             size: 72,
             color: accent.withValues(alpha: 0.5),
           ),

@@ -42,7 +42,7 @@ class PinnedMessagesSection extends ConsumerWidget {
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             child: Row(
               children: [
-                const Icon(Icons.push_pin, size: 15, color: AppTheme.ponAccent),
+                const Icon(Icons.push_pin_rounded, size: 15, color: AppTheme.ponAccent),
                 const SizedBox(width: 6),
                 Text(
                   context.l10n.pinnedMessagesTitle,
@@ -82,7 +82,7 @@ class _PinnedRow extends ConsumerWidget {
 
     return ListTile(
       dense: true,
-      leading: const Icon(Icons.push_pin_outlined,
+      leading: const Icon(Icons.push_pin_rounded,
           size: 18, color: AppTheme.ponAccent),
       title: Text(
         senderName,
@@ -98,7 +98,7 @@ class _PinnedRow extends ConsumerWidget {
         overflow: TextOverflow.ellipsis,
       ),
       trailing: IconButton(
-        icon: Icon(Icons.close, size: 18, color: AppTheme.mutedText(context)),
+        icon: Icon(Icons.close_rounded, size: 18, color: AppTheme.mutedText(context)),
         tooltip: context.l10n.unpinMessage,
         onPressed: () => ref
             .read(chatNotifierProvider(conversationId).notifier)

@@ -130,7 +130,7 @@ class _MediaThumb extends StatelessWidget {
         placeholder: (_, __) => Container(color: AppTheme.darkSurface),
         errorWidget: (_, __, ___) => Container(
           color: AppTheme.darkSurface,
-          child: const Icon(Icons.broken_image_outlined, color: Colors.white38),
+          child: const Icon(Icons.broken_image_rounded, color: Colors.white38),
         ),
       ),
     );

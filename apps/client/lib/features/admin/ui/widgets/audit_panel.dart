@@ -36,7 +36,7 @@ class _AuditPanelState extends ConsumerState<AuditPanel> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(Icons.fact_check_outlined,
+                Icon(Icons.fact_check_rounded,
                     size: 56, color: AppTheme.hairline(context)),
                 const SizedBox(height: 14),
                 Text(l10n.adminAuditTitle,
@@ -170,12 +170,12 @@ class _Pager extends StatelessWidget {
           const Spacer(),
           TextButton.icon(
             onPressed: onPrev,
-            icon: const Icon(Icons.chevron_left, size: 18),
+            icon: const Icon(Icons.chevron_left_rounded, size: 18),
             label: Text(l10n.adminAuditPrev),
           ),
           TextButton.icon(
             onPressed: onNext,
-            icon: const Icon(Icons.chevron_right, size: 18),
+            icon: const Icon(Icons.chevron_right_rounded, size: 18),
             label: Text(l10n.adminAuditNext),
           ),
         ],

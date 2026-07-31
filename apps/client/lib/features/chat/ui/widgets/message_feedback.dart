@@ -101,9 +101,11 @@ class _MessageFeedbackState extends ConsumerState<MessageFeedback> {
             mainAxisSize: MainAxisSize.min,
             children: [
               _FeedbackButton(
+                // filled vs "off" (outline) keeps the voted/not-voted shape
+                // distinction while staying in the rounded icon family.
                 icon: _rating == 'up'
-                    ? Icons.thumb_up_rounded
-                    : Icons.thumb_up_outlined,
+                    ? Icons.thumb_up_alt_rounded
+                    : Icons.thumb_up_off_alt_rounded,
                 active: _rating == 'up',
                 tooltip: context.l10n.feedbackHelpful,
                 onTap: _submitting ? null : () => _vote('up'),
@@ -111,8 +113,8 @@ class _MessageFeedbackState extends ConsumerState<MessageFeedback> {
               const SizedBox(width: 4),
               _FeedbackButton(
                 icon: _rating == 'down'
-                    ? Icons.thumb_down_rounded
-                    : Icons.thumb_down_outlined,
+                    ? Icons.thumb_down_alt_rounded
+                    : Icons.thumb_down_off_alt_rounded,
                 active: _rating == 'down',
                 tooltip: context.l10n.feedbackNotHelpful,
                 onTap: _submitting ? null : () => _vote('down'),

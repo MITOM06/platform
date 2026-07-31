@@ -37,11 +37,11 @@ class ConversationSearchBar extends StatelessWidget {
           isDense: true,
           hintText: context.l10n.searchConversationsHint,
           hintStyle: TextStyle(color: AppTheme.mutedText(context)),
-          prefixIcon: Icon(Icons.search,
+          prefixIcon: Icon(Icons.search_rounded,
               size: 20, color: AppTheme.mutedText(context)),
           suffixIcon: controller.text.isNotEmpty
               ? IconButton(
-                  icon: const Icon(Icons.close, size: 18),
+                  icon: const Icon(Icons.close_rounded, size: 18),
                   onPressed: () {
                     controller.clear();
                     onChanged('');

@@ -63,7 +63,7 @@ class AssistantNameStep extends StatelessWidget {
           PonTextField(
             controller: nameController,
             labelText: context.l10n.assistantSetupNamePlaceholder,
-            prefixIcon: Icons.smart_toy_outlined,
+            prefixIcon: Icons.smart_toy_rounded,
             textInputAction: TextInputAction.next,
           ),
           const SizedBox(height: 24),

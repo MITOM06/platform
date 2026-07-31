@@ -75,7 +75,7 @@ class AssistantEntryTile extends ConsumerWidget {
                 style: Theme.of(context).textTheme.bodySmall,
               ),
               trailing: IconButton(
-                icon: const Icon(Icons.settings_outlined),
+                icon: const Icon(Icons.settings_rounded),
                 tooltip: context.l10n.assistantSettingsTitle,
                 onPressed: () => context.push('/assistant/settings'),
               ),
@@ -99,7 +99,7 @@ class AssistantEntryTile extends ConsumerWidget {
           leading: CircleAvatar(
             backgroundColor:
                 Theme.of(context).colorScheme.surface.withValues(alpha: 0.5),
-            child: Icon(Icons.add, color: muted),
+            child: Icon(Icons.add_rounded, color: muted),
           ),
           title: Text(
             context.l10n.assistantSetupCta,

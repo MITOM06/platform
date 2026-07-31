@@ -99,7 +99,7 @@ class _SourceChipsRow extends StatelessWidget {
           Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(Icons.auto_stories, size: 12, color: muted),
+              Icon(Icons.auto_stories_rounded, size: 12, color: muted),
               const SizedBox(width: 4),
               Text(
                 context.l10n.sourcesLabel,
@@ -163,7 +163,7 @@ class _SourceChip extends StatelessWidget {
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(isWeb ? Icons.public : Icons.description_outlined,
+              Icon(isWeb ? Icons.public_rounded : Icons.description_rounded,
                   size: 12, color: AppTheme.ponAccent),
               const SizedBox(width: 4),
               Flexible(

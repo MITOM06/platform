@@ -122,7 +122,7 @@ class _SsoPanelState extends ConsumerState<SsoPanel> {
             PonTextField(
               controller: _domains,
               labelText: l10n.adminSsoAllowedDomains,
-              prefixIcon: Icons.alternate_email,
+              prefixIcon: Icons.alternate_email_rounded,
             ),
             _Muted(l10n.adminSsoAllowedDomainsHint),
             const SizedBox(height: 16),
@@ -283,7 +283,7 @@ class _MapRow extends StatelessWidget {
             ),
           ),
           IconButton(
-            icon: Icon(Icons.delete_outline, color: AppTheme.mutedText(context)),
+            icon: Icon(Icons.delete_outline_rounded, color: AppTheme.mutedText(context)),
             onPressed: onRemove,
           ),
         ],
@@ -302,7 +302,7 @@ class _AddBtn extends StatelessWidget {
         alignment: Alignment.centerLeft,
         child: TextButton.icon(
           onPressed: onTap,
-          icon: const Icon(Icons.add, color: AppTheme.ponAccent, size: 18),
+          icon: const Icon(Icons.add_rounded, color: AppTheme.ponAccent, size: 18),
           label: Text(label, style: const TextStyle(color: AppTheme.ponAccent)),
         ),
       );

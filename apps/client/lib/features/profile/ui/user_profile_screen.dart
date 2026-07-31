@@ -205,7 +205,7 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
                   // Role — always shown as the first info row (mirrors web).
                   // Falls back to the localized "Member" default.
                   ProfileCenteredInfoRow(
-                    icon: Icons.work_outline,
+                    icon: Icons.work_outline_rounded,
                     value: user.roleName ?? context.l10n.profileRoleMemberDefault,
                   ),
                   if (user.friendsCount != null) ...[
@@ -242,7 +242,7 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(Icons.cake_outlined, size: 16, color: AppTheme.mutedText(context)),
+                        Icon(Icons.cake_rounded, size: 16, color: AppTheme.mutedText(context)),
                         const SizedBox(width: 6),
                         Text(
                           DateFormat.yMMMd().format(user.dateOfBirth!.toLocal()),
@@ -276,9 +276,9 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
                         shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(10)),
                         tileColor: Theme.of(context).colorScheme.surface,
-                        leading: const Icon(Icons.perm_media_outlined),
+                        leading: const Icon(Icons.perm_media_rounded),
                         title: Text(context.l10n.sharedMediaTitle),
-                        trailing: const Icon(Icons.chevron_right),
+                        trailing: const Icon(Icons.chevron_right_rounded),
                         onTap: () => context
                             .push('/shared-media/${widget.conversationId}'),
                       ),

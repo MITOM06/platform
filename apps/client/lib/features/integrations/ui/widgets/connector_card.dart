@@ -262,7 +262,7 @@ class _ActionRow extends StatelessWidget {
             onPressed: onPermissions,
             visualDensity: VisualDensity.compact,
             tooltip: context.l10n.permManage,
-            icon: const Icon(Icons.tune, color: AppTheme.ponAccent, size: 20),
+            icon: const Icon(Icons.tune_rounded, color: AppTheme.ponAccent, size: 20),
           ),
           TextButton(
             onPressed: onManage,

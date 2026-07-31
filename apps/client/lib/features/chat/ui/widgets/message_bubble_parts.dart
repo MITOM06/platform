@@ -355,7 +355,7 @@ class _CallSystemMessage extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(
-              isVideo ? Icons.videocam : Icons.call,
+              isVideo ? Icons.videocam_rounded : Icons.call_rounded,
               size: 14,
               color: isMissed
                   ? Theme.of(context).colorScheme.error.withValues(alpha: 0.8)

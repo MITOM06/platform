@@ -132,7 +132,7 @@ class _WallpaperDialogState extends State<WallpaperDialog> {
                     ),
                   ),
                   IconButton(
-                    icon: Icon(Icons.close, color: AppTheme.mutedText(context)),
+                    icon: Icon(Icons.close_rounded, color: AppTheme.mutedText(context)),
                     onPressed: () => Navigator.pop(context),
                   ),
                 ],
@@ -155,7 +155,7 @@ class _WallpaperDialogState extends State<WallpaperDialog> {
                   // Default
                   _buildThemeTile(
                     preset: widget.presets.first,
-                    icon: Icon(Icons.block, color: AppTheme.mutedText(context), size: 20),
+                    icon: Icon(Icons.block_rounded, color: AppTheme.mutedText(context), size: 20),
                   ),
                   Divider(color: AppTheme.hairline(context), height: 1),
 
@@ -210,7 +210,7 @@ class _WallpaperDialogState extends State<WallpaperDialog> {
                               foregroundColor: AppTheme.ponAccent,
                               side: const BorderSide(color: AppTheme.ponAccent),
                             ),
-                            icon: const Icon(Icons.add_photo_alternate_outlined),
+                            icon: const Icon(Icons.add_photo_alternate_rounded),
                             label: Text(context.l10n.uploadImageButton),
                             onPressed: _uploadImage,
                           ),
@@ -301,7 +301,7 @@ class _WallpaperDialogState extends State<WallpaperDialog> {
               ),
               child: icon ??
                   (isSel
-                      ? const Icon(Icons.check, color: Colors.white, size: 18)
+                      ? const Icon(Icons.check_rounded, color: Colors.white, size: 18)
                       : null),
             ),
             const SizedBox(width: 12),
@@ -312,7 +312,7 @@ class _WallpaperDialogState extends State<WallpaperDialog> {
                       fontSize: 14)),
             ),
             if (isSel)
-              const Icon(Icons.check_circle, color: AppTheme.ponAccent, size: 18),
+              const Icon(Icons.check_circle_rounded, color: AppTheme.ponAccent, size: 18),
           ],
         ),
       ),

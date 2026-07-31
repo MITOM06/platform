@@ -73,7 +73,7 @@ class DirectoryCard extends StatelessWidget {
                 if (isAdmin) ...[
                   IconButton(
                     visualDensity: VisualDensity.compact,
-                    icon: Icon(Icons.edit_outlined,
+                    icon: Icon(Icons.edit_rounded,
                         size: 18, color: AppTheme.mutedText(context)),
                     tooltip: l10n.directoryEdit,
                     onPressed: onEdit,
@@ -81,7 +81,7 @@ class DirectoryCard extends StatelessWidget {
                   if (!entry.builtin)
                     IconButton(
                       visualDensity: VisualDensity.compact,
-                      icon: Icon(Icons.delete_outline,
+                      icon: Icon(Icons.delete_outline_rounded,
                           size: 18, color: AppTheme.mutedText(context)),
                       tooltip: l10n.directoryDelete,
                       onPressed: onDelete,

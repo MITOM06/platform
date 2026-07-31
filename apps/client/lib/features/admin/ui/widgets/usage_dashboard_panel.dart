@@ -33,7 +33,7 @@ class UsageDashboardPanel extends ConsumerWidget {
               TextButton.icon(
                 onPressed: () =>
                     ref.read(usageDashboardProvider.notifier).refresh(),
-                icon: const Icon(Icons.refresh, color: AppTheme.ponAccent),
+                icon: const Icon(Icons.refresh_rounded, color: AppTheme.ponAccent),
                 label: Text(l10n.usageRetry,
                     style: const TextStyle(color: AppTheme.ponAccent)),
               ),
@@ -78,7 +78,7 @@ class _RangeLabel extends StatelessWidget {
         : context.l10n.usageThisMonth;
     return Row(
       children: [
-        Icon(Icons.calendar_month_outlined,
+        Icon(Icons.calendar_month_rounded,
             size: 16, color: AppTheme.mutedText(context)),
         const SizedBox(width: 6),
         Text(text,
@@ -108,7 +108,7 @@ class _HeadlineCards extends StatelessWidget {
               child: UsageStatCard(
                 label: l10n.usageTotalTokens,
                 value: fmtCount(totals.totalTokens),
-                icon: Icons.toll_outlined,
+                icon: Icons.toll_rounded,
               ),
             ),
             const SizedBox(width: 12),
@@ -116,7 +116,7 @@ class _HeadlineCards extends StatelessWidget {
               child: UsageStatCard(
                 label: l10n.usageRequests,
                 value: fmtCount(totals.requestCount),
-                icon: Icons.question_answer_outlined,
+                icon: Icons.question_answer_rounded,
               ),
             ),
           ],
@@ -128,7 +128,7 @@ class _HeadlineCards extends StatelessWidget {
               child: UsageStatCard(
                 label: l10n.usageEstCost,
                 value: fmtUsd(totals.estimatedCostUsd),
-                icon: Icons.attach_money_outlined,
+                icon: Icons.attach_money_rounded,
               ),
             ),
             const SizedBox(width: 12),
@@ -136,7 +136,7 @@ class _HeadlineCards extends StatelessWidget {
               child: UsageStatCard(
                 label: l10n.usageThumbsDownRate,
                 value: '$downPct%',
-                icon: Icons.thumb_down_alt_outlined,
+                icon: Icons.thumb_down_alt_rounded,
                 alert: feedback.thumbsDownRate >= 0.2,
                 subtitle: l10n.usageFeedbackBreakdown(
                     feedback.down, feedback.total),

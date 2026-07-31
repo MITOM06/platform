@@ -114,7 +114,7 @@ class _FriendSearchTabState extends ConsumerState<FriendSearchTab> {
           child: PonTextField(
             controller: _controller,
             labelText: context.l10n.searchUsers,
-            prefixIcon: Icons.person_search,
+            prefixIcon: Icons.person_search_rounded,
             onChanged: _onChanged,
           ),
         ),
@@ -197,7 +197,7 @@ class _FriendSearchTabState extends ConsumerState<FriendSearchTab> {
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      const Icon(Icons.phone,
+                      const Icon(Icons.phone_rounded,
                           size: 12, color: AppTheme.ponAccent),
                       const SizedBox(width: 4),
                       Text(
@@ -227,7 +227,7 @@ class _FriendSearchTabState extends ConsumerState<FriendSearchTab> {
                     textStyle: const TextStyle(fontWeight: FontWeight.bold),
                   ),
                   onPressed: () => _sendRequest(user),
-                  icon: const Icon(Icons.person_add_alt_1, size: 18),
+                  icon: const Icon(Icons.person_add_alt_1_rounded, size: 18),
                   label: Text(context.l10n.addFriend),
                 ),
           onTap: () => context.push('/user/${user.id}'),

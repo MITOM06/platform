@@ -111,7 +111,7 @@ class _NoticeRow extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Icon(Icons.shield_outlined, size: 18, color: muted),
+          Icon(Icons.shield_rounded, size: 18, color: muted),
           const SizedBox(width: 10),
           Expanded(
             child: Text(
@@ -161,7 +161,7 @@ class _PhoneRow extends StatelessWidget {
       child: Row(
         children: [
           Icon(
-            verified ? Icons.verified : Icons.shield_outlined,
+            verified ? Icons.verified_rounded : Icons.shield_rounded,
             size: 18,
             color: verified ? AppTheme.onlineGreen : AppTheme.ponAccent,
           ),

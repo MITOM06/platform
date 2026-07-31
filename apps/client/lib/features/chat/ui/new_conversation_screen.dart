@@ -262,7 +262,7 @@ class _NewConversationScreenState
               ),
             ),
             IconButton(
-              icon: const Icon(Icons.add_circle, color: AppTheme.ponAccent),
+              icon: const Icon(Icons.add_circle_rounded, color: AppTheme.ponAccent),
               onPressed: _loading ? null : _addMember,
             ),
           ],
@@ -317,7 +317,7 @@ class _AiBotTile extends StatelessWidget {
                   shape: BoxShape.circle,
                   color: AppTheme.ponAccent,
                 ),
-                child: const Icon(Icons.smart_toy_outlined,
+                child: const Icon(Icons.smart_toy_rounded,
                     color: Colors.white, size: 24),
               ),
               const SizedBox(width: 14),

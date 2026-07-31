@@ -27,7 +27,7 @@ class SendFailedRetry extends ConsumerWidget {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.error_outline, size: 13, color: AppTheme.darkDanger),
+            const Icon(Icons.error_outline_rounded, size: 13, color: AppTheme.darkDanger),
             const SizedBox(width: 4),
             Text(
               context.l10n.messageSendFailedRetry,

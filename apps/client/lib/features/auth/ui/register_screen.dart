@@ -142,7 +142,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                               PonTextField(
                                 controller: _nameController,
                                 labelText: context.l10n.fieldDisplayName,
-                                prefixIcon: Icons.badge_outlined,
+                                prefixIcon: Icons.badge_rounded,
                                 validator: (v) {
                                   if (v == null || v.trim().isEmpty) {
                                     return context.l10n.valNameRequired;
@@ -159,7 +159,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                               PonTextField(
                                 controller: _emailController,
                                 labelText: context.l10n.fieldEmail,
-                                prefixIcon: Icons.email_outlined,
+                                prefixIcon: Icons.email_rounded,
                                 keyboardType: TextInputType.emailAddress,
                                 validator: (v) {
                                   if (v == null || v.isEmpty) {
@@ -177,15 +177,15 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                               PonTextField(
                                 controller: _passwordController,
                                 labelText: context.l10n.fieldPassword,
-                                prefixIcon: Icons.lock_outlined,
+                                prefixIcon: Icons.lock_rounded,
                                 obscureText: _obscurePassword,
                                 onChanged: (v) =>
                                     setState(() => _passwordValue = v),
                                 suffixIcon: IconButton(
                                   icon: Icon(
                                     _obscurePassword
-                                        ? Icons.visibility_outlined
-                                        : Icons.visibility_off_outlined,
+                                        ? Icons.visibility_rounded
+                                        : Icons.visibility_off_rounded,
                                     color: AppTheme.mutedText(context),
                                   ),
                                   onPressed: () => setState(() =>
@@ -221,7 +221,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                               PonTextField(
                                 controller: _confirmController,
                                 labelText: context.l10n.fieldConfirmPassword,
-                                prefixIcon: Icons.lock_outline,
+                                prefixIcon: Icons.lock_outline_rounded,
                                 obscureText: _obscurePassword,
                                 textInputAction: TextInputAction.done,
                                 onFieldSubmitted: (_) => _submit(),

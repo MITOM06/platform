@@ -58,19 +58,19 @@ Future<void> pickAndStageMedia(
         children: [
           const SizedBox(height: 12),
           ListTile(
-            leading: const Icon(Icons.photo_outlined, color: AppTheme.ponAccent),
+            leading: const Icon(Icons.photo_rounded, color: AppTheme.ponAccent),
             title: Text(l10n.attachPhoto,
                 style: TextStyle(color: textColor)),
             onTap: () => Navigator.pop(ctx, 'image'),
           ),
           ListTile(
-            leading: const Icon(Icons.videocam_outlined, color: AppTheme.ponAccent),
+            leading: const Icon(Icons.videocam_rounded, color: AppTheme.ponAccent),
             title: Text(l10n.attachVideo,
                 style: TextStyle(color: textColor)),
             onTap: () => Navigator.pop(ctx, 'video'),
           ),
           ListTile(
-            leading: const Icon(Icons.insert_drive_file_outlined,
+            leading: const Icon(Icons.insert_drive_file_rounded,
                 color: AppTheme.ponAccent),
             title: Text(l10n.attachFile,
                 style: TextStyle(color: textColor)),

@@ -37,7 +37,7 @@ class OtherUserActions extends ConsumerWidget {
       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
       children: [
         ProfileActionChip(
-          icon: Icons.message_outlined,
+          icon: Icons.message_rounded,
           label: context.l10n.actionMessage,
           onTap: () async {
             Navigator.of(context).pop();
@@ -49,7 +49,7 @@ class OtherUserActions extends ConsumerWidget {
         ),
         if (!isFriend && !pending)
           ProfileActionChip(
-            icon: Icons.person_add_outlined,
+            icon: Icons.person_add_rounded,
             label: context.l10n.actionAddFriend,
             onTap: () async {
               await ref.read(friendsRepositoryProvider).sendRequest(userId);

@@ -268,13 +268,13 @@ class MembersPanel extends ConsumerWidget {
                   ),
                 if (canManageMembers)
                   IconButton(
-                    icon: Icon(Icons.psychology_outlined,
+                    icon: Icon(Icons.psychology_rounded,
                         color: AppTheme.mutedText(context)),
                     tooltip: l10n.adminEditAiContext,
                     onPressed: () => _editAiContext(context, ref, m),
                   ),
                 IconButton(
-                  icon: Icon(Icons.edit_outlined, color: AppTheme.mutedText(context)),
+                  icon: Icon(Icons.edit_rounded, color: AppTheme.mutedText(context)),
                   onPressed: () => _edit(context, ref, m),
                 ),
               ],

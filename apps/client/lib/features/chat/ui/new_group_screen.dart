@@ -104,7 +104,7 @@ class _NewGroupScreenState extends ConsumerState<NewGroupScreen> {
                 isExpanded: true,
                 decoration: InputDecoration(
                   labelText: context.l10n.newConvDepartment,
-                  prefixIcon: const Icon(Icons.apartment_outlined),
+                  prefixIcon: const Icon(Icons.apartment_rounded),
                 ),
                 items: [
                   DropdownMenuItem(

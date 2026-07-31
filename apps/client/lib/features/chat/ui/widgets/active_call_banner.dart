@@ -52,7 +52,7 @@ class ActiveCallBanner extends ConsumerWidget {
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
           child: Row(
             children: [
-              const Icon(Icons.groups, color: AppTheme.ponAccent, size: 20),
+              const Icon(Icons.groups_rounded, color: AppTheme.ponAccent, size: 20),
               const SizedBox(width: 10),
               Expanded(
                 child: Text(

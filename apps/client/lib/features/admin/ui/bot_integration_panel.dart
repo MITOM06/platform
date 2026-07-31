@@ -154,7 +154,7 @@ class _BotRowState extends ConsumerState<_BotRow> {
                   ),
                 ),
                 if (!bot.enabled)
-                  Icon(Icons.block,
+                  Icon(Icons.block_rounded,
                       size: 18, color: AppTheme.mutedText(context)),
               ],
             ),
@@ -232,7 +232,7 @@ class _LastUsed extends StatelessWidget {
     }
     return Row(
       children: [
-        Icon(Icons.schedule,
+        Icon(Icons.schedule_rounded,
             size: 14, color: AppTheme.mutedText(context)),
         const SizedBox(width: 6),
         Text(
@@ -359,7 +359,7 @@ class _CopyField extends StatelessWidget {
               ),
               IconButton(
                 tooltip: l10n.botAdminCopyToken,
-                icon: const Icon(Icons.copy, size: 18, color: AppTheme.ponAccent),
+                icon: const Icon(Icons.copy_rounded, size: 18, color: AppTheme.ponAccent),
                 onPressed: () async {
                   await Clipboard.setData(ClipboardData(text: value));
                   showInfoSnackBar(l10n.botAdminCopyToken);

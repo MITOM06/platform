@@ -396,7 +396,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                     borderRadius: BorderRadius.circular(10)),
                 tileColor: Theme.of(context).colorScheme.surface,
                 leading:
-                    const Icon(Icons.work_outline, color: AppTheme.ponAccent),
+                    const Icon(Icons.work_outline_rounded, color: AppTheme.ponAccent),
                 title: Text(context.l10n.roleLabel,
                     style:
                         TextStyle(color: AppTheme.mutedText(context), fontSize: 12)),
@@ -422,7 +422,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                 decoration: InputDecoration(
                   labelText: context.l10n.profileGender,
                   prefixIcon:
-                      const Icon(Icons.wc_outlined, color: AppTheme.ponAccent),
+                      const Icon(Icons.wc_rounded, color: AppTheme.ponAccent),
                 ),
                 items: [
                   DropdownMenuItem(
@@ -430,7 +430,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(Icons.male, color: AppTheme.mutedText(context), size: 18),
+                        Icon(Icons.male_rounded, color: AppTheme.mutedText(context), size: 18),
                         const SizedBox(width: 8),
                         Text(context.l10n.genderMale),
                       ],
@@ -441,7 +441,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(Icons.female, color: AppTheme.mutedText(context), size: 18),
+                        Icon(Icons.female_rounded, color: AppTheme.mutedText(context), size: 18),
                         const SizedBox(width: 8),
                         Text(context.l10n.genderFemale),
                       ],
@@ -452,7 +452,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(Icons.transgender,
+                        Icon(Icons.transgender_rounded,
                             color: AppTheme.mutedText(context), size: 18),
                         const SizedBox(width: 8),
                         Text(context.l10n.genderOther),
@@ -469,7 +469,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                     borderRadius: BorderRadius.circular(10)),
                 tileColor: Theme.of(context).colorScheme.surface,
                 leading:
-                    const Icon(Icons.cake_outlined, color: AppTheme.ponAccent),
+                    const Icon(Icons.cake_rounded, color: AppTheme.ponAccent),
                 title: Text(context.l10n.dateOfBirth,
                     style: TextStyle(color: Theme.of(context).colorScheme.onSurface)),
                 subtitle: Text(
@@ -510,7 +510,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                   children: [
                     Row(
                       children: [
-                        const Icon(Icons.lock_outline,
+                        const Icon(Icons.lock_outline_rounded,
                             color: AppTheme.ponAccent, size: 18),
                         const SizedBox(width: 8),
                         Text(

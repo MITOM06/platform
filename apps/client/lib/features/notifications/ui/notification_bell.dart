@@ -14,7 +14,7 @@ class NotificationBell extends ConsumerWidget {
     final unread = ref.watch(unreadNotificationCountProvider);
 
     final icon = IconButton(
-      icon: const Icon(Icons.notifications_outlined),
+      icon: const Icon(Icons.notifications_rounded),
       tooltip: context.l10n.notificationsTitle,
       onPressed: () => _open(context, ref),
     );

@@ -90,8 +90,16 @@ class _SingleImageTile extends StatelessWidget {
         width: width ?? 200,
         height: height ?? 120,
         color: Colors.black26,
-        child: const Icon(Icons.broken_image_outlined, color: Colors.white54),
+        child: const Icon(Icons.broken_image_rounded, color: Colors.white54),
       ),
+    );
+
+    // The parent bubble paints a 14px radius but does not clip its children, so
+    // an unclipped image renders with hard 90° corners inside a rounded bubble.
+    // Clip here so both the standalone tile and the grid cells stay soft.
+    image = ClipRRect(
+      borderRadius: BorderRadius.circular(14),
+      child: image,
     );
 
     if (allUrls.length == 1) {
@@ -288,7 +296,8 @@ class _VideoContentState extends State<VideoContent> {
     final controller = _controller;
     final ready = controller != null && controller.value.isInitialized;
     return ClipRRect(
-      borderRadius: BorderRadius.circular(AppTheme.radiusCard),
+      // 14 to match the message bubble + multi-image grid, not radiusCard (12).
+      borderRadius: BorderRadius.circular(14),
       child: GestureDetector(
         onTap: () => showVideoPlayer(context, widget.url),
         child: Container(
@@ -308,7 +317,7 @@ class _VideoContentState extends State<VideoContent> {
                   ),
                 )
               else
-                const Icon(Icons.movie_creation_outlined,
+                const Icon(Icons.movie_creation_rounded,
                     color: Colors.white24, size: 48),
               Container(
                 decoration: const BoxDecoration(
