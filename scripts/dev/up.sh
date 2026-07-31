@@ -103,8 +103,12 @@ wait_http ai-service        http://localhost:3002/health           200      || w
 if [ "$DO_SEED" = 1 ]; then
   step "Seeding fake test data"
   node "$ROOT/scripts/dev/seed-users.js"
-  docker exec -i chat-mongo mongosh platform --quiet < "$ROOT/scripts/dev/seed-chat.js" \
-    | grep -vE '^\s*$' | sed 's/^[^>]*> //'
+  # --eval with the whole file, NOT `< file`: piping into stdin puts mongosh in
+  # REPL mode, where it evaluates line by line — multi-line statements get split
+  # ("Invalid REPL keyword" / "oldConvs.map is not a function") and the
+  # clean-slate delete silently never runs, so re-seeding duplicates everything.
+  docker exec -i chat-mongo mongosh platform --quiet \
+    --eval "$(cat "$ROOT/scripts/dev/seed-chat.js")"
   ok "seeded"
 fi
 
