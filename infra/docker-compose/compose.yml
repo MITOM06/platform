@@ -115,6 +115,9 @@ services:
       SPRING_RABBITMQ_PASSWORD: platform
       SPRING_DATA_MONGODB_URI: mongodb://mongo:27017/platform
       SPRING_DATA_REDIS_HOST: redis
+      # SecurityConfig refuses to start without this (no open-CORS default). Dev
+      # value covers the Next.js dev server and Flutter web; override in prod.
+      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-http://localhost:3000,http://localhost:4000}
       # Firebase Admin SDK (base64 của service-account JSON). Rỗng = FCM tắt (no-op an toàn).
       FIREBASE_SERVICE_ACCOUNT_BASE64: ${FIREBASE_SERVICE_ACCOUNT_BASE64:-}
       # Bean overriding needed: @EnableWebSocketMessageBroker registers SimpleUrlHandlerMapping
