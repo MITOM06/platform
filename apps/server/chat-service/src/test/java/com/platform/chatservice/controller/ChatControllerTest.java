@@ -192,8 +192,15 @@ class ChatControllerTest {
             anyList());
   }
 
+  /**
+   * The hang-up must reach the other peer — that is this handler's only job.
+   *
+   * <p>It must NOT also persist a call-log message. The clients send the coded, localizable {@code
+   * system.call.ended:{kind}:{secs}} themselves; a server-side {@code call_log} on top of that
+   * produced a second history entry whose content was hardcoded English.
+   */
   @Test
-  void callEnd_ShouldSaveCallLog() {
+  void callEnd_ShouldRelayToPeer_AndNotPersistAnyMessage() {
     com.platform.chatservice.dto.WebRTCSignalDto dto =
         new com.platform.chatservice.dto.WebRTCSignalDto();
     dto.setTargetId("user-789");
@@ -201,31 +208,30 @@ class ChatControllerTest {
     dto.setType("end");
     dto.setDuration(125); // 02:05
 
-    MessageResponse mockResponse =
-        new MessageResponse(
-            "msg-1",
-            "conv-999",
-            SENDER_ID,
-            "Call ended - 02:05",
-            "call_log",
-            List.of(SENDER_ID),
-            Instant.now());
-    when(messageService.sendMessage(eq(SENDER_ID), any(SendMessageRequest.class)))
-        .thenReturn(mockResponse);
-
     chatController.callEnd(dto, principal);
 
     verify(clusterBroker, times(1))
         .convertAndSendToUser(eq("user-789"), eq("/queue/webrtc"), eq(dto));
 
-    verify(messageService, times(1))
-        .sendMessage(
-            eq(SENDER_ID),
-            argThat(
-                req ->
-                    req.content().equals("Call ended - 02:05") && req.type().equals("call_log")));
+    // No message is written, so nothing English-only lands in the history and the
+    // conversation gets exactly one entry (the client's localized system message).
+    verify(messageService, never()).sendMessage(anyString(), any(SendMessageRequest.class));
+    verify(clusterBroker, never()).convertAndSend(startsWith("/topic/conversation/"), any());
+  }
+
+  /** A missed call (no duration) likewise persists nothing. */
+  @Test
+  void callEnd_WithNoDuration_StillPersistsNothing() {
+    com.platform.chatservice.dto.WebRTCSignalDto dto =
+        new com.platform.chatservice.dto.WebRTCSignalDto();
+    dto.setTargetId("user-789");
+    dto.setConversationId("conv-999");
+    dto.setType("end");
+
+    chatController.callEnd(dto, principal);
 
     verify(clusterBroker, times(1))
-        .convertAndSend(eq("/topic/conversation/conv-999"), eq(mockResponse));
+        .convertAndSendToUser(eq("user-789"), eq("/queue/webrtc"), eq(dto));
+    verify(messageService, never()).sendMessage(anyString(), any(SendMessageRequest.class));
   }
 }
