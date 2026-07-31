@@ -1,6 +1,5 @@
 import { useTranslations } from 'next-intl'
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
-import { DialogA11yDescription } from '@/components/common/dialog-a11y-description'
+import { ResponsiveModal } from '@/components/ui/responsive-modal'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { useUser } from '@/lib/hooks/use-user'
@@ -54,40 +53,37 @@ export function ReactionsDetailModal({ message, open, onClose }: Props) {
   const emojis = Array.from(reactorsByEmoji.keys())
 
   return (
-    <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="sm:max-w-[400px]">
-        <DialogHeader>
-          <DialogTitle>{t('reactionsDetail')}</DialogTitle>
-        </DialogHeader>
-          <DialogA11yDescription />
-        <div className="mt-2">
-          <Tabs defaultValue={emojis[0]} className="w-full">
-            <TabsList className="w-full justify-start overflow-x-auto rounded-none border-b bg-transparent h-auto p-0 pb-1">
-              {emojis.map((emoji) => (
-                <TabsTrigger 
-                  key={emoji} 
-                  value={emoji}
-                  className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:text-primary data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none px-4 py-2"
-                >
-                  <span className="text-lg leading-none mr-2">{emoji}</span>
-                  <span className="text-sm">{reactorsByEmoji.get(emoji)?.length}</span>
-                </TabsTrigger>
-              ))}
-            </TabsList>
-            <div className="max-h-[50vh] overflow-y-auto mt-4 px-1">
-              {emojis.map((emoji) => (
-                <TabsContent key={emoji} value={emoji} className="mt-0 outline-none">
-                  <div className="flex flex-col gap-1">
-                    {reactorsByEmoji.get(emoji)?.map((uid) => (
-                      <ReactorTile key={uid} userId={uid} />
-                    ))}
-                  </div>
-                </TabsContent>
-              ))}
-            </div>
-          </Tabs>
+    <ResponsiveModal
+      open={open}
+      onOpenChange={(o) => !o && onClose()}
+      title={t('reactionsDetail')}
+      desktopClassName="sm:max-w-[400px]"
+    >
+      <Tabs defaultValue={emojis[0]} className="w-full">
+        <TabsList className="w-full justify-start overflow-x-auto rounded-none border-b bg-transparent h-auto p-0 pb-1">
+          {emojis.map((emoji) => (
+            <TabsTrigger 
+              key={emoji} 
+              value={emoji}
+              className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:text-primary data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none px-4 py-2"
+            >
+              <span className="text-lg leading-none mr-2">{emoji}</span>
+              <span className="text-sm">{reactorsByEmoji.get(emoji)?.length}</span>
+            </TabsTrigger>
+          ))}
+        </TabsList>
+        <div className="max-h-[50dvh] overflow-y-auto mt-4 px-1">
+          {emojis.map((emoji) => (
+            <TabsContent key={emoji} value={emoji} className="mt-0 outline-none">
+              <div className="flex flex-col gap-1">
+                {reactorsByEmoji.get(emoji)?.map((uid) => (
+                  <ReactorTile key={uid} userId={uid} />
+                ))}
+              </div>
+            </TabsContent>
+          ))}
         </div>
-      </DialogContent>
-    </Dialog>
+      </Tabs>
+    </ResponsiveModal>
   )
 }

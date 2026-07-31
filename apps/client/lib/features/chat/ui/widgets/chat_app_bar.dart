@@ -77,7 +77,7 @@ class ChatScreenAppBar extends ConsumerWidget implements PreferredSizeWidget {
       decoration: BoxDecoration(
         border: Border(
           bottom: BorderSide(
-            color: AppTheme.darkBorder.withValues(alpha: 0.3),
+            color: AppTheme.hairline(context).withValues(alpha: 0.6),
             width: 1,
           ),
         ),

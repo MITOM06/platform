@@ -144,7 +144,7 @@ export function ConversationHeader({
 
   return (
     <div className="shrink-0">
-      <header className="h-14 border-b px-4 flex items-center gap-3 bg-background">
+      <header className="h-14 border-b border-border/60 px-4 flex items-center gap-3 bg-background">
         {/* Mobile back button — returns to the conversation list. Navigating to
             /conversations flips the layout's isConversationOpen to false, so the
             sidebar (list) reclaims the screen on mobile. Hidden on desktop. */}

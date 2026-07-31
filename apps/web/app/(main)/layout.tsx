@@ -72,7 +72,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
       {showSidebar && (
       <aside
         className={cn(
-          'w-full border-r flex-col shrink-0 relative overflow-hidden @container',
+          'w-full border-r border-border/60 flex-col shrink-0 relative overflow-hidden @container',
           isConversationOpen ? 'hidden md:flex' : 'flex',
           // Desktop: dynamic width driven by the drag handle / collapse toggle.
           'md:w-[var(--sidebar-w)]',
@@ -92,7 +92,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
           <div className="absolute -top-16 -left-16 size-40 rounded-full bg-primary blur-[60px] opacity-[0.06] dark:opacity-[0.09]" />
           <div className="absolute -bottom-16 -right-16 size-40 rounded-full bg-primary blur-[60px] opacity-[0.06] dark:opacity-[0.09]" />
         </div>
-        <div className="h-16 border-b px-2 @[200px]:px-4 flex items-center justify-center @[200px]:justify-between shrink-0 bg-background">
+        <div className="h-16 border-b border-border/60 px-2 @[200px]:px-4 flex items-center justify-center @[200px]:justify-between shrink-0 bg-background">
           {/* Logo & PON Text — text hides when the rail is compact */}
           <div className="flex items-center gap-2 select-none">
             <PonLogo className="size-8" />

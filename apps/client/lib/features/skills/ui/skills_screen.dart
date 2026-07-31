@@ -176,7 +176,7 @@ class _SkillTile extends StatelessWidget {
               decoration: BoxDecoration(
                 color: Theme.of(context).colorScheme.surface,
                 borderRadius: BorderRadius.circular(11),
-                border: Border.all(color: AppTheme.darkBorder),
+                border: Border.all(color: AppTheme.hairline(context)),
               ),
               child: Text(def.icon, style: const TextStyle(fontSize: 20)),
             ),

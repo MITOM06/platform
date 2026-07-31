@@ -227,6 +227,22 @@ one Claude Code session, one plan.md):
    batch 2's single-line regex missed — they must be cleaned before `pon_widgets.dart`'s param
    declarations can go, which is why the final pass re-greps the whole app rather than trusting any
    batch's "done".
+7. ~~Hairline regression sweep + Messenger-style border polish~~ ✅ **done** —
+   `plans/2026-07-30-ui-redesign-l3-batch7-hairline-regression.md`. Proof that "Layer 3 is complete"
+   in item 6 was **not** durable: owner reported near-black dividers in light mode, and a re-grep
+   found **16 Flutter call sites still using `AppTheme.darkBorder` unconditionally** — so they
+   painted `#332B27` even in light mode. Root cause is two-fold: features shipped *after* their
+   batch closed (Integrations/Skills — `connector_card`, `directory_card`, `directory_admin_sheet`,
+   `ai_settings_controls`, `skills_screen`), plus multi-line/`const BorderSide` forms that batch 2's
+   single-line regex could not match (same blind spot that created batch 6). All 16 now use the
+   `AppTheme.hairline(context)` resolver from item 1. Three sites needed `const` dropped, since
+   `hairline()` takes a `BuildContext`. Web had **no** equivalent bug — its `border-*` classes leave
+   the colour empty and inherit `* { border-color: var(--border) }` — so web got polish only: the
+   3 structural dividers (sidebar `border-r`, sidebar header, chat header) dropped to
+   `border-border/60`, with the 2 matching Flutter surfaces set to `alpha: 0.6` so both platforms
+   land on the same weight (the `--border`/`hairline` hexes are already identical per §2).
+   **Lesson: a batch marked "done" only certifies the files that existed that day.** Re-run the §2
+   token greps whenever a new feature area lands, not just at the end of a batch.
 
 Each batch plan must, per `.claude/rules/sync.md`, cover its web AND Flutter mirror together (not
 split across two sessions) so the two platforms never drift.

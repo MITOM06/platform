@@ -5,14 +5,7 @@ import { toast } from 'sonner'
 import { useTranslations } from 'next-intl'
 import { Loader2, Lock, LockOpen, KeyRound, Eye, EyeOff } from 'lucide-react'
 import { authService } from '@/lib/api/auth'
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-} from '@/components/ui/dialog'
+import { ResponsiveModal } from '@/components/ui/responsive-modal'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -105,21 +98,40 @@ export function ChangePasswordDialog({ open, onOpenChange }: ChangePasswordDialo
   }
 
   return (
-    <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <div className="size-8 rounded-full bg-primary/10 flex items-center justify-center">
-              <KeyRound className="size-4 text-primary" />
-            </div>
-            {t('title')}
-          </DialogTitle>
-          <DialogDescription>
-            {t('description')}
-          </DialogDescription>
-        </DialogHeader>
-
-        <div className="space-y-4 py-2">
+    <ResponsiveModal
+      open={open}
+      onOpenChange={handleClose}
+      desktopClassName="sm:max-w-md"
+      title={
+        <span className="flex items-center gap-2">
+          <span className="size-8 rounded-full bg-primary/10 flex items-center justify-center">
+            <KeyRound className="size-4 text-primary" />
+          </span>
+          {t('title')}
+        </span>
+      }
+      description={t('description')}
+      footer={
+        <>
+          <Button
+            variant="outline"
+            onClick={() => handleClose(false)}
+            disabled={saving}
+          >
+            {tCommon('cancel')}
+          </Button>
+          <Button
+            onClick={handleSubmit}
+            disabled={saving}
+            className="bg-primary hover:bg-primary/90"
+          >
+            {saving && <Loader2 className="size-4 mr-2 animate-spin" />}
+            {tCommon('save')}
+          </Button>
+        </>
+      }
+    >
+      <div className="space-y-4 py-2">
           {error && (
             <div className="rounded-lg bg-destructive/10 border border-destructive/20 px-3 py-2.5 text-sm text-destructive">
               {error}
@@ -224,26 +236,7 @@ export function ChangePasswordDialog({ open, onOpenChange }: ChangePasswordDialo
               </button>
             </div>
           </div>
-        </div>
-
-        <DialogFooter>
-          <Button
-            variant="outline"
-            onClick={() => handleClose(false)}
-            disabled={saving}
-          >
-            {tCommon('cancel')}
-          </Button>
-          <Button
-            onClick={handleSubmit}
-            disabled={saving}
-            className="bg-primary hover:bg-primary/90"
-          >
-            {saving && <Loader2 className="size-4 mr-2 animate-spin" />}
-            {tCommon('save')}
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+      </div>
+    </ResponsiveModal>
   )
 }

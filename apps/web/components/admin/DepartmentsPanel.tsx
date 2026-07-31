@@ -8,14 +8,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Skeleton } from '@/components/ui/skeleton'
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog'
+import { ResponsiveModal } from '@/components/ui/responsive-modal'
 import {
   Select,
   SelectContent,
@@ -135,13 +128,26 @@ export function DepartmentsPanel() {
         </div>
       )}
 
-      <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>{editing ? t('deptEdit') : t('deptNew')}</DialogTitle>
-            <DialogDescription>{t('deptDialogDesc')}</DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4 py-2">
+      <ResponsiveModal
+        open={open}
+        onOpenChange={setOpen}
+        title={editing ? t('deptEdit') : t('deptNew')}
+        description={t('deptDialogDesc')}
+        footer={
+          <>
+            <Button variant="outline" onClick={() => setOpen(false)}>
+              {t('cancel')}
+            </Button>
+            <Button
+              onClick={onSubmit}
+              disabled={!name.trim() || create.isPending || update.isPending}
+            >
+              {t('save')}
+            </Button>
+          </>
+        }
+      >
+        <div className="space-y-4 py-2">
             <div className="space-y-1.5">
               <Label htmlFor="dept-name">{t('deptName')}</Label>
               <Input
@@ -177,20 +183,8 @@ export function DepartmentsPanel() {
                 </Select>
               </div>
             )}
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setOpen(false)}>
-              {t('cancel')}
-            </Button>
-            <Button
-              onClick={onSubmit}
-              disabled={!name.trim() || create.isPending || update.isPending}
-            >
-              {t('save')}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+        </div>
+      </ResponsiveModal>
     </div>
   )
 }

@@ -3,14 +3,7 @@
 import { useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { Loader2 } from 'lucide-react'
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog'
+import { ResponsiveModal } from '@/components/ui/responsive-modal'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
@@ -71,14 +64,32 @@ export function ConnectorPermissionsDialog({
   }
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[440px]">
-        <DialogHeader>
-          <DialogTitle>{t('permissionsTitle')}</DialogTitle>
-          <DialogDescription>{t('permissionsSubtitle')}</DialogDescription>
-        </DialogHeader>
-
-        <div className="space-y-3 py-2">
+    <ResponsiveModal
+      open={open}
+      onOpenChange={onOpenChange}
+      title={t('permissionsTitle')}
+      description={t('permissionsSubtitle')}
+      desktopClassName="sm:max-w-[440px]"
+      footer={
+        <>
+          <Button
+            variant="ghost"
+            onClick={() => onOpenChange(false)}
+            disabled={updatePermissions.isPending}
+          >
+            {t('customCancel')}
+          </Button>
+          <Button onClick={handleSave} disabled={updatePermissions.isPending}>
+            {updatePermissions.isPending ? (
+              <Loader2 className="size-4 animate-spin" />
+            ) : (
+              t('directorySave')
+            )}
+          </Button>
+        </>
+      }
+    >
+      <div className="space-y-3 py-2">
           {ACTION_GROUPS.map((group) => {
             const id = `perm-${group}`
             return (
@@ -102,25 +113,7 @@ export function ConnectorPermissionsDialog({
               </div>
             )
           })}
-        </div>
-
-        <DialogFooter>
-          <Button
-            variant="ghost"
-            onClick={() => onOpenChange(false)}
-            disabled={updatePermissions.isPending}
-          >
-            {t('customCancel')}
-          </Button>
-          <Button onClick={handleSave} disabled={updatePermissions.isPending}>
-            {updatePermissions.isPending ? (
-              <Loader2 className="size-4 animate-spin" />
-            ) : (
-              t('directorySave')
-            )}
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+      </div>
+    </ResponsiveModal>
   )
 }

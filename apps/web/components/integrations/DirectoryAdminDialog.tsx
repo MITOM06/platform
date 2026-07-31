@@ -8,14 +8,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog'
+import { ResponsiveModal } from '@/components/ui/responsive-modal'
 import {
   Select,
   SelectContent,
@@ -133,16 +126,25 @@ export function DirectoryAdminDialog({
   const canSave = name.trim() && mcpUrl.trim() && (isEdit || slug.trim())
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[85vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>
-            {isEdit ? t('directoryEditTitle') : t('directoryAddTitle')}
-          </DialogTitle>
-          <DialogDescription>{t('directoryDialogDesc')}</DialogDescription>
-        </DialogHeader>
-
-        <div className="space-y-3">
+    <ResponsiveModal
+      open={open}
+      onOpenChange={onOpenChange}
+      title={isEdit ? t('directoryEditTitle') : t('directoryAddTitle')}
+      description={t('directoryDialogDesc')}
+      desktopClassName="max-h-[85dvh]"
+      footer={
+        <>
+          <Button variant="ghost" onClick={() => onOpenChange(false)}>
+            {t('directoryCancel')}
+          </Button>
+          <Button disabled={!canSave || pending} onClick={handleSave}>
+            {pending && <Loader2 className="size-4 animate-spin mr-1.5" />}
+            {t('directorySave')}
+          </Button>
+        </>
+      }
+    >
+      <div className="space-y-3">
           {!isEdit && (
             <div className="space-y-1.5">
               <Label htmlFor="dir-slug">{t('directorySlug')}</Label>
@@ -180,7 +182,7 @@ export function DirectoryAdminDialog({
               placeholder="https://mcp.example.com/mcp"
             />
           </div>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1.5">
               <Label>{t('directoryAuthMode')}</Label>
               <Select
@@ -219,7 +221,7 @@ export function DirectoryAdminDialog({
           {authMode === 'env-oauth' && (
             <div className="space-y-3 rounded-lg border p-3 bg-muted/30">
               <p className="text-xs text-muted-foreground">{t('directoryEnvHint')}</p>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div className="space-y-1.5">
                   <Label htmlFor="dir-cid">{t('directoryEnvClientId')}</Label>
                   <Input
@@ -257,18 +259,7 @@ export function DirectoryAdminDialog({
               </div>
             </div>
           )}
-        </div>
-
-        <DialogFooter>
-          <Button variant="ghost" onClick={() => onOpenChange(false)}>
-            {t('directoryCancel')}
-          </Button>
-          <Button disabled={!canSave || pending} onClick={handleSave}>
-            {pending && <Loader2 className="size-4 animate-spin mr-1.5" />}
-            {t('directorySave')}
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+      </div>
+    </ResponsiveModal>
   )
 }

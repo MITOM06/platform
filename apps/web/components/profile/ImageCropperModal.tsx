@@ -3,8 +3,7 @@
 import { useCallback, useState } from 'react'
 import Cropper, { type Area, type Point } from 'react-easy-crop'
 import { useTranslations } from 'next-intl'
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
-import { DialogA11yDescription } from '@/components/common/dialog-a11y-description'
+import { ResponsiveModal } from '@/components/ui/responsive-modal'
 import { Button } from '@/components/ui/button'
 import { Slider } from '@/components/ui/slider'
 
@@ -81,14 +80,23 @@ export function ImageCropperModal({ open, imageSrc, aspect, shape = 'rect', onCa
   }
 
   return (
-    <Dialog open={open} onOpenChange={(o) => !o && onCancel()}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle>{t('cropImage')}</DialogTitle>
-        </DialogHeader>
-          <DialogA11yDescription />
-
-        <div className="relative h-72 w-full bg-muted rounded-md overflow-hidden">
+    <ResponsiveModal
+      open={open}
+      onOpenChange={(o) => !o && onCancel()}
+      title={t('cropImage')}
+      desktopClassName="sm:max-w-md"
+      footer={
+        <>
+          <Button variant="outline" onClick={onCancel} disabled={processing}>
+            {t('cancelButton')}
+          </Button>
+          <Button onClick={handleConfirm} disabled={processing || !croppedArea}>
+            {processing ? t('processing') : t('confirmButton')}
+          </Button>
+        </>
+      }
+    >
+      <div className="relative h-72 w-full bg-muted rounded-md overflow-hidden">
           {imageSrc && (
             <Cropper
               image={imageSrc}
@@ -113,17 +121,7 @@ export function ImageCropperModal({ open, imageSrc, aspect, shape = 'rect', onCa
             value={[zoom]}
             onValueChange={(v) => setZoom(v[0])}
           />
-        </div>
-
-        <DialogFooter>
-          <Button variant="outline" onClick={onCancel} disabled={processing}>
-            {t('cancelButton')}
-          </Button>
-          <Button onClick={handleConfirm} disabled={processing || !croppedArea}>
-            {processing ? t('processing') : t('confirmButton')}
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+      </div>
+    </ResponsiveModal>
   )
 }

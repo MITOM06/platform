@@ -3,13 +3,7 @@
 import { useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { Phone, Video, Sparkles } from 'lucide-react'
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from '@/components/ui/dialog'
+import { ResponsiveModal } from '@/components/ui/responsive-modal'
 import { Button } from '@/components/ui/button'
 import { Switch } from '@/components/ui/switch'
 import { Label } from '@/components/ui/label'
@@ -44,14 +38,20 @@ export function StartCallSheet({ open, conversationId, onClose }: Props) {
   }
 
   return (
-    <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="sm:max-w-sm">
-        <DialogHeader>
-          <DialogTitle>{t('startGroupCall')}</DialogTitle>
-          <DialogDescription>{t('startGroupCallDesc')}</DialogDescription>
-        </DialogHeader>
-
-        <div className="grid grid-cols-2 gap-3 py-2">
+    <ResponsiveModal
+      open={open}
+      onOpenChange={(o) => !o && onClose()}
+      title={t('startGroupCall')}
+      description={t('startGroupCallDesc')}
+      desktopClassName="sm:max-w-sm"
+      footer={
+        <Button onClick={start} className="w-full gap-2">
+          {media === 'video' ? <Video className="size-4" /> : <Phone className="size-4" />}
+          {t('startCall')}
+        </Button>
+      }
+    >
+      <div className="grid grid-cols-2 gap-3 py-2">
           <MediaChoice
             active={media === 'audio'}
             label={t('audioCall')}
@@ -77,12 +77,7 @@ export function StartCallSheet({ open, conversationId, onClose }: Props) {
           <Switch id="ai-notetaker" checked={aiNotetaker} onCheckedChange={setAiNotetaker} />
         </div>
 
-        <Button onClick={start} className="mt-2 w-full gap-2">
-          {media === 'video' ? <Video className="size-4" /> : <Phone className="size-4" />}
-          {t('startCall')}
-        </Button>
-      </DialogContent>
-    </Dialog>
+    </ResponsiveModal>
   )
 }
 

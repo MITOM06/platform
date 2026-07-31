@@ -277,7 +277,7 @@ export default function EditProfilePage() {
           onAvatarPick={handleAvatarPick}
         />
 
-        <div className="relative max-w-3xl mx-auto px-6">
+        <div className="relative max-w-3xl mx-auto px-6 pb-tabbar md:pb-6">
           <Separator className="mb-6" />
 
           <ProfileForm

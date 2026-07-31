@@ -5,10 +5,23 @@ import 'package:flutter/material.dart';
 /// The old 3-colour neon brand set (cyan/peach/pink) was retired: there is now
 /// exactly ONE accent, and hierarchy is carried by text shade + weight.
 class AppTheme {
-  /// The single accent. Only ever means "this is the primary action" — never
-  /// decoration. A mid-tone burgundy so it works on both light and dark
-  /// surfaces from one constant.
+  /// The single accent, as a **mode-agnostic** constant. Only ever means "this
+  /// is the primary action" — never decoration. A mid-tone burgundy so it works
+  /// on both light and dark surfaces from one constant.
+  ///
+  /// Use this ONLY where the declaration site cannot tell which mode it is in
+  /// (a `const` colour in a widget, a static field). Anywhere the mode IS known
+  /// — the two [ColorScheme]s and the per-mode component themes below — use
+  /// [lightAccent]/[darkAccent] instead, per the P1 plan's rule: "Những chỗ CÓ
+  /// phân biệt light/dark … thì dùng đúng `#7A2E3A`/`#A8475A`".
   static const Color ponAccent = Color(0xFF96435B);
+
+  /// Canonical per-mode accent from the locked palette
+  /// (`docs/superpowers/UI-REDESIGN-DIRECTION.md` §2, "Accent / primary
+  /// action"). These are what web's `--primary` uses in `:root`/`.dark`, so
+  /// keeping them here is what makes the two clients render the same burgundy.
+  static const Color lightAccent = Color(0xFF7A2E3A);
+  static const Color darkAccent = Color(0xFFA8475A);
 
   /// Accent tints used as subtle backgrounds (selected row, badge, hover).
   static const Color darkAccentTint = Color(0xFF3A2A2C);
@@ -71,9 +84,9 @@ class AppTheme {
       useMaterial3: true,
       scaffoldBackgroundColor: darkBackground,
       colorScheme: const ColorScheme.dark(
-        primary: ponAccent,
-        secondary: ponAccent,
-        tertiary: ponAccent,
+        primary: darkAccent,
+        secondary: darkAccent,
+        tertiary: darkAccent,
         surface: darkSurface,
         onSurface: darkText,
         error: darkDanger,
@@ -111,7 +124,7 @@ class AppTheme {
             const EdgeInsets.symmetric(horizontal: 24, vertical: 18),
         labelStyle: TextStyle(color: Colors.white.withValues(alpha: 0.6)),
         floatingLabelStyle:
-            const TextStyle(color: ponAccent, fontWeight: FontWeight.w600),
+            const TextStyle(color: darkAccent, fontWeight: FontWeight.w600),
         hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.3)),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(10),
@@ -123,7 +136,7 @@ class AppTheme {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(10),
-          borderSide: const BorderSide(color: ponAccent, width: 2),
+          borderSide: const BorderSide(color: darkAccent, width: 2),
         ),
         errorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(10),
@@ -138,7 +151,7 @@ class AppTheme {
       ),
       filledButtonTheme: FilledButtonThemeData(
         style: FilledButton.styleFrom(
-          backgroundColor: ponAccent,
+          backgroundColor: darkAccent,
           foregroundColor: Colors.white,
           padding: const EdgeInsets.symmetric(vertical: 18),
           shape: RoundedRectangleBorder(
@@ -153,7 +166,7 @@ class AppTheme {
       ),
       textButtonTheme: TextButtonThemeData(
         style: TextButton.styleFrom(
-          foregroundColor: ponAccent,
+          foregroundColor: darkAccent,
           textStyle: const TextStyle(
             fontWeight: FontWeight.bold,
             fontSize: 15,
@@ -195,9 +208,9 @@ class AppTheme {
       useMaterial3: true,
       scaffoldBackgroundColor: lightBackground,
       colorScheme: const ColorScheme.light(
-        primary: ponAccent,
-        secondary: ponAccent,
-        tertiary: ponAccent,
+        primary: lightAccent,
+        secondary: lightAccent,
+        tertiary: lightAccent,
         surface: lightSurface,
         onSurface: lightText,
         error: lightDanger,
@@ -232,7 +245,7 @@ class AppTheme {
             const EdgeInsets.symmetric(horizontal: 24, vertical: 18),
         labelStyle: TextStyle(color: Colors.black.withValues(alpha: 0.5)),
         floatingLabelStyle:
-            const TextStyle(color: ponAccent, fontWeight: FontWeight.w600),
+            const TextStyle(color: lightAccent, fontWeight: FontWeight.w600),
         hintStyle: TextStyle(color: Colors.black.withValues(alpha: 0.3)),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(10),
@@ -244,7 +257,7 @@ class AppTheme {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(10),
-          borderSide: const BorderSide(color: ponAccent, width: 2),
+          borderSide: const BorderSide(color: lightAccent, width: 2),
         ),
         errorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(10),
@@ -259,7 +272,7 @@ class AppTheme {
       ),
       filledButtonTheme: FilledButtonThemeData(
         style: FilledButton.styleFrom(
-          backgroundColor: ponAccent,
+          backgroundColor: lightAccent,
           foregroundColor: Colors.white,
           padding: const EdgeInsets.symmetric(vertical: 18),
           shape: RoundedRectangleBorder(
@@ -274,7 +287,7 @@ class AppTheme {
       ),
       textButtonTheme: TextButtonThemeData(
         style: TextButton.styleFrom(
-          foregroundColor: ponAccent,
+          foregroundColor: lightAccent,
           textStyle: const TextStyle(
             fontWeight: FontWeight.bold,
             fontSize: 15,

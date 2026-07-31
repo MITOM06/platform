@@ -4,8 +4,7 @@ import { useQuery } from '@tanstack/react-query'
 import { Brain, Loader2, ChevronDown, ChevronUp } from 'lucide-react'
 import { useState } from 'react'
 import { useTranslations } from 'next-intl'
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
-import { DialogA11yDescription } from '@/components/common/dialog-a11y-description'
+import { ResponsiveModal } from '@/components/ui/responsive-modal'
 import { chatService } from '@/lib/api/chat'
 
 interface Props {
@@ -45,15 +44,17 @@ export function AiTraceModal({ messageId, onClose }: Props) {
   })
 
   return (
-    <Dialog open={!!messageId} onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="sm:max-w-lg max-h-[80vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <Brain className="size-5 text-primary" />
-            {t('aiTraceTitle')}
-          </DialogTitle>
-        </DialogHeader>
-          <DialogA11yDescription />
+    <ResponsiveModal
+      open={!!messageId}
+      onOpenChange={(o) => !o && onClose()}
+      desktopClassName="sm:max-w-lg"
+      title={
+        <span className="flex items-center gap-2">
+          <Brain className="size-5 text-primary" />
+          {t('aiTraceTitle')}
+        </span>
+      }
+    >
 
         {isLoading && (
           <div className="flex justify-center py-8">
@@ -113,9 +114,8 @@ export function AiTraceModal({ messageId, onClose }: Props) {
                 ))}
               </Section>
             )}
-          </div>
-        )}
-      </DialogContent>
-    </Dialog>
+        </div>
+      )}
+    </ResponsiveModal>
   )
 }

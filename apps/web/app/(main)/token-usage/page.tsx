@@ -107,19 +107,32 @@ function LineChart({ days, inputLabel, outputLabel, noDataLabel }: {
     y: PAD.top + chartH - f * chartH,
   }))
 
-  const handleMouseMove = useCallback((e: React.MouseEvent<SVGSVGElement>) => {
+  // Pointer-agnostic core so the chart is readable on touch too — a mouse-only
+  // handler leaves the tooltip permanently unreachable on a phone.
+  const showTooltipAt = useCallback((clientX: number, clientY: number) => {
     if (!svgRef.current || days.length === 0) return
     const rect = svgRef.current.getBoundingClientRect()
     const scaleX = W / rect.width
-    const mx = (e.clientX - rect.left) * scaleX - PAD.left
+    const mx = (clientX - rect.left) * scaleX - PAD.left
     const idx = Math.round((mx / chartW) * (days.length - 1))
     const clamped = Math.max(0, Math.min(days.length - 1, idx))
     const px = xOf(clamped)
-    const screenX = rect.left + px / scaleX
-    const screenY = e.clientY
-    setTooltip({ x: screenX, y: screenY, day: days[clamped], pointX: px })
+    setTooltip({ x: rect.left + px / scaleX, y: clientY, day: days[clamped], pointX: px })
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [days])
+
+  const handleMouseMove = useCallback(
+    (e: React.MouseEvent<SVGSVGElement>) => showTooltipAt(e.clientX, e.clientY),
+    [showTooltipAt],
+  )
+
+  const handleTouch = useCallback(
+    (e: React.TouchEvent<SVGSVGElement>) => {
+      const t = e.touches[0]
+      if (t) showTooltipAt(t.clientX, t.clientY)
+    },
+    [showTooltipAt],
+  )
 
   if (days.length === 0) {
     return (
@@ -135,13 +148,18 @@ function LineChart({ days, inputLabel, outputLabel, noDataLabel }: {
 
   return (
     <div className="relative">
+      {/* touch-pan-y: horizontal touches drive the tooltip, but the vertical swipe
+          must stay with the page or scrolling dies wherever the chart is. */}
       <svg
         ref={svgRef}
         viewBox={`0 0 ${W} ${H}`}
-        className="w-full"
+        className="w-full touch-pan-y"
         style={{ height: 240 }}
         onMouseMove={handleMouseMove}
         onMouseLeave={() => setTooltip(null)}
+        onTouchStart={handleTouch}
+        onTouchMove={handleTouch}
+        onTouchEnd={() => setTooltip(null)}
       >
         {/* Grid lines + Y labels */}
         {yTicks.map(({ v, y }) => (
@@ -290,7 +308,7 @@ export default function TokenUsagePage() {
           <div className="absolute -top-24 -left-24 w-72 h-72 rounded-full bg-primary/5 blur-3xl pointer-events-none" />
           <div className="absolute top-1/2 -right-24 w-72 h-72 rounded-full bg-primary/5 blur-3xl pointer-events-none" />
 
-          <div className="relative max-w-3xl mx-auto px-6 py-8">
+          <div className="relative max-w-3xl mx-auto px-6 py-8 pb-tabbar md:pb-8">
             {isLoading && (
               <div className="flex flex-col items-center justify-center py-20 gap-3">
                 <Loader2 className="size-8 animate-spin text-primary" />

@@ -129,7 +129,7 @@ export default function BlockedChatsPage() {
         <span className="font-semibold text-base">{tSettings('blockedChats')}</span>
       </header>
 
-      <div className="flex-1 overflow-y-auto p-2">
+      <div className="flex-1 overflow-y-auto p-2 pb-tabbar md:pb-2">
         {isLoading ? (
           <div className="flex justify-center py-8">
             <Loader2 className="size-6 animate-spin text-muted-foreground" />

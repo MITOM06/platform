@@ -80,8 +80,10 @@ export function SsoPanel() {
     patch: Partial<Row>,
   ) => setter(rows.map((r, idx) => (idx === i ? { ...r, ...patch } : r)))
 
+  // Full-width on mobile; the 10rem floor only applies once the row goes
+  // horizontal at sm, otherwise it fights the Input for a ~312px line.
   const selectClass =
-    'h-9 rounded-md border bg-background px-2 text-sm min-w-[10rem]'
+    'h-9 w-full sm:w-auto rounded-md border bg-background px-2 text-sm sm:min-w-[10rem]'
 
   return (
     <div className="space-y-8">
@@ -129,33 +131,36 @@ export function SsoPanel() {
       <section className="space-y-3">
         <h2 className="text-lg font-semibold">{t('ssoGroupRoleMap')}</h2>
         {roleRows.map((row, i) => (
-          <div key={i} className="flex items-center gap-2">
+          <div key={i} className="flex flex-col sm:flex-row sm:items-center gap-2">
             <Input
               value={row.group}
               onChange={(e) => setRow(roleRows, setRoleRows, i, { group: e.target.value })}
               placeholder={t('ssoGroupPlaceholder')}
             />
-            <span className="text-muted-foreground">→</span>
-            <select
-              className={selectClass}
-              value={row.value}
-              onChange={(e) => setRow(roleRows, setRoleRows, i, { value: e.target.value })}
-            >
-              <option value="">{t('ssoNone')}</option>
-              {roles.map((r) => (
-                <option key={r._id} value={r.name}>
-                  {r.name}
-                </option>
-              ))}
-            </select>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => setRoleRows(roleRows.filter((_, idx) => idx !== i))}
-              aria-label={t('ssoRemoveRow')}
-            >
-              <Trash2 className="size-4" />
-            </Button>
+            <span className="hidden sm:inline text-muted-foreground">→</span>
+            <div className="flex items-center gap-2">
+              <select
+                className={selectClass}
+                value={row.value}
+                onChange={(e) => setRow(roleRows, setRoleRows, i, { value: e.target.value })}
+              >
+                <option value="">{t('ssoNone')}</option>
+                {roles.map((r) => (
+                  <option key={r._id} value={r.name}>
+                    {r.name}
+                  </option>
+                ))}
+              </select>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setRoleRows(roleRows.filter((_, idx) => idx !== i))}
+                aria-label={t('ssoRemoveRow')}
+                className="shrink-0"
+              >
+                <Trash2 className="size-4" />
+              </Button>
+            </div>
           </div>
         ))}
         <Button
@@ -172,33 +177,36 @@ export function SsoPanel() {
       <section className="space-y-3">
         <h2 className="text-lg font-semibold">{t('ssoGroupDeptMap')}</h2>
         {deptRows.map((row, i) => (
-          <div key={i} className="flex items-center gap-2">
+          <div key={i} className="flex flex-col sm:flex-row sm:items-center gap-2">
             <Input
               value={row.group}
               onChange={(e) => setRow(deptRows, setDeptRows, i, { group: e.target.value })}
               placeholder={t('ssoGroupPlaceholder')}
             />
-            <span className="text-muted-foreground">→</span>
-            <select
-              className={selectClass}
-              value={row.value}
-              onChange={(e) => setRow(deptRows, setDeptRows, i, { value: e.target.value })}
-            >
-              <option value="">{t('ssoNone')}</option>
-              {departments.map((d) => (
-                <option key={d._id} value={d._id}>
-                  {d.name}
-                </option>
-              ))}
-            </select>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => setDeptRows(deptRows.filter((_, idx) => idx !== i))}
-              aria-label={t('ssoRemoveRow')}
-            >
-              <Trash2 className="size-4" />
-            </Button>
+            <span className="hidden sm:inline text-muted-foreground">→</span>
+            <div className="flex items-center gap-2">
+              <select
+                className={selectClass}
+                value={row.value}
+                onChange={(e) => setRow(deptRows, setDeptRows, i, { value: e.target.value })}
+              >
+                <option value="">{t('ssoNone')}</option>
+                {departments.map((d) => (
+                  <option key={d._id} value={d._id}>
+                    {d.name}
+                  </option>
+                ))}
+              </select>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setDeptRows(deptRows.filter((_, idx) => idx !== i))}
+                aria-label={t('ssoRemoveRow')}
+                className="shrink-0"
+              >
+                <Trash2 className="size-4" />
+              </Button>
+            </div>
           </div>
         ))}
         <Button

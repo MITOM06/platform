@@ -9,14 +9,7 @@ import { connectorService } from '@/lib/api/connector'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog'
+import { ResponsiveModal } from '@/components/ui/responsive-modal'
 import type { DirectoryEntry } from '@/lib/api/connector-types'
 
 interface DirectoryKeyDialogProps {
@@ -54,23 +47,13 @@ export function DirectoryKeyDialog({
   })
 
   return (
-    <Dialog open={!!entry} onOpenChange={onOpenChange}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>{t('directoryKeyTitle', { provider: entry?.name ?? '' })}</DialogTitle>
-          <DialogDescription>{t('directoryKeyDesc')}</DialogDescription>
-        </DialogHeader>
-        <div className="space-y-1.5">
-          <Label htmlFor="dir-key">{t('directoryKeyLabel')}</Label>
-          <Input
-            id="dir-key"
-            type="password"
-            value={credential}
-            onChange={(e) => setCredential(e.target.value)}
-            autoComplete="off"
-          />
-        </div>
-        <DialogFooter>
+    <ResponsiveModal
+      open={!!entry}
+      onOpenChange={onOpenChange}
+      title={t('directoryKeyTitle', { provider: entry?.name ?? '' })}
+      description={t('directoryKeyDesc')}
+      footer={
+        <>
           <Button variant="ghost" onClick={() => onOpenChange(false)}>
             {t('directoryCancel')}
           </Button>
@@ -81,8 +64,19 @@ export function DirectoryKeyDialog({
             {connect.isPending && <Loader2 className="size-4 animate-spin mr-1.5" />}
             {t('connect')}
           </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+        </>
+      }
+    >
+      <div className="space-y-1.5">
+          <Label htmlFor="dir-key">{t('directoryKeyLabel')}</Label>
+          <Input
+            id="dir-key"
+            type="password"
+            value={credential}
+            onChange={(e) => setCredential(e.target.value)}
+            autoComplete="off"
+          />
+      </div>
+    </ResponsiveModal>
   )
 }

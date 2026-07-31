@@ -142,7 +142,7 @@ function Lightbox({
   return (
     <Dialog open onOpenChange={(o) => !o && onClose()}>
       <DialogContent
-        className="flex h-fit w-fit max-h-[92vh] max-w-[95vw] items-center justify-center border-none bg-black/85 p-2 sm:p-3"
+        className="flex h-fit w-fit max-h-[92dvh] max-w-[95vw] items-center justify-center border-none bg-black/85 p-2 sm:p-3"
         showCloseButton={false}
       >
         <DialogTitle className="sr-only">{t('imageViewer')}</DialogTitle>
@@ -152,7 +152,7 @@ function Lightbox({
           <img
             src={absoluteMediaUrl(urls[index])}
             alt=""
-            className="block max-h-[88vh] max-w-[93vw] rounded-sm object-contain"
+            className="block max-h-[88dvh] max-w-[93vw] rounded-sm object-contain"
           />
 
           <div className="absolute right-3 top-3 flex items-center gap-2">
@@ -248,7 +248,7 @@ export function VideoContent({ content }: { content: string }) {
       {/* Inline video player dialog */}
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent
-          className="flex h-fit w-fit max-h-[92vh] max-w-[95vw] items-center justify-center border-none bg-black/85 p-2 sm:p-3"
+          className="flex h-fit w-fit max-h-[92dvh] max-w-[95vw] items-center justify-center border-none bg-black/85 p-2 sm:p-3"
           showCloseButton={false}
         >
           <DialogTitle className="sr-only">{t('videoViewer')}</DialogTitle>
@@ -259,7 +259,7 @@ export function VideoContent({ content }: { content: string }) {
               src={url}
               controls
               autoPlay
-              className="block max-h-[88vh] max-w-[93vw] rounded-sm object-contain outline-none"
+              className="block max-h-[88dvh] max-w-[93vw] rounded-sm object-contain outline-none"
             />
             <div className="absolute right-3 top-3 flex gap-2">
               <a

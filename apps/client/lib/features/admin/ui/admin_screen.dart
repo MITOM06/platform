@@ -164,7 +164,7 @@ class _Chip extends StatelessWidget {
               : Colors.transparent,
           borderRadius: BorderRadius.circular(10),
           border: Border.all(
-            color: active ? AppTheme.ponAccent : AppTheme.darkBorder,
+            color: active ? AppTheme.ponAccent : AppTheme.hairline(context),
           ),
         ),
         child: Row(

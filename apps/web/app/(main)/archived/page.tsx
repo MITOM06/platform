@@ -32,7 +32,7 @@ export default function ArchivedChatsPage() {
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto p-2">
+      <div className="flex-1 overflow-y-auto p-2 pb-tabbar md:pb-2">
         <ArchivedConversationList searchQuery={searchQuery} />
       </div>
     </div>

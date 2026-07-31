@@ -175,26 +175,26 @@ public class ChatController {
     clusterBroker.convertAndSendToUser(dto.getTargetId(), "/queue/webrtc", dto);
   }
 
+  /**
+   * Relays a hang-up to the other peer. Deliberately does NOT write a call-log message.
+   *
+   * <p>It used to save one, as type {@code call_log} with the content hardcoded in English ("Call
+   * ended - 02:05" / "Missed call"). That predates the coded system-message path: the hang-up
+   * initiator on both clients now sends {@code system.call.ended:{kind}:{secs}} / {@code
+   * system.call.missed:{kind}} itself (web {@code lib/webrtc/call-manager.ts}, Flutter {@code
+   * features/chat/domain/webrtc_service.dart}), which both clients humanize into a localized
+   * sentence. Keeping this write meant every ended 1-1 call appended TWO entries to the history —
+   * the localized system message plus an English-only {@code call_log} that no locale could
+   * translate, violating `.claude/rules/no-raw-system-data-in-ui.md`.
+   *
+   * <p>Historical {@code call_log} messages already in Mongo still render as before; only new ones
+   * stop being created.
+   */
   @MessageMapping("/call.end")
   public void callEnd(
       @Payload com.platform.chatservice.dto.WebRTCSignalDto dto, Principal principal) {
     dto.setSenderId(principal.getName());
     // Notify the other peer
     clusterBroker.convertAndSendToUser(dto.getTargetId(), "/queue/webrtc", dto);
-
-    // Save call log
-    String content = "Call ended";
-    if (dto.getDuration() != null && dto.getDuration() > 0) {
-      int minutes = dto.getDuration() / 60;
-      int seconds = dto.getDuration() % 60;
-      content = String.format("Call ended - %02d:%02d", minutes, seconds);
-    } else {
-      content = "Missed call";
-    }
-
-    SendMessageRequest logRequest =
-        new SendMessageRequest(dto.getConversationId(), content, "call_log", null);
-    MessageResponse response = messageService.sendMessage(principal.getName(), logRequest);
-    clusterBroker.convertAndSend("/topic/conversation/" + dto.getConversationId(), response);
   }
 }

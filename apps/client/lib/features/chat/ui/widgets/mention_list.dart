@@ -33,7 +33,7 @@ class MentionList extends ConsumerWidget {
       decoration: BoxDecoration(
         color: Theme.of(context).colorScheme.surface,
         border: Border(
-          top: BorderSide(color: AppTheme.darkBorder.withValues(alpha: 0.4)),
+          top: BorderSide(color: AppTheme.hairline(context).withValues(alpha: 0.4)),
         ),
       ),
       child: ListView.builder(

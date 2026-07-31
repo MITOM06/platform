@@ -11,7 +11,7 @@ export default function GlobalError({ error, reset }: { error: Error; reset: () 
   }, [error])
 
   return (
-    <div className="flex h-screen flex-col items-center justify-center gap-4">
+    <div className="flex h-dvh flex-col items-center justify-center gap-4">
       <h2 className="text-xl font-semibold">{t('somethingWrong')}</h2>
       <p className="text-sm text-muted-foreground">{error.message || t('unknownError')}</p>
       <Button onClick={reset}>{t('retry')}</Button>

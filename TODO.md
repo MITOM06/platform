@@ -624,3 +624,77 @@ Phase 2: auth 53/53 ✓ | ai 299/299 ✓ | chat 99/99 ✓ (1 Testcontainers test
 - Web missing `__AI_RATE_LIMITED__` sentinel — not reachable; web shows AI errors as a toast, never assigns sentinel content.
 
 **Docs cleanup (same sprint):** removed two unreferenced generic debug-scratch docs (`docs/deep_debug_strategy.md`, `docs/hidden_bug_audit_checklist.md`); refreshed `README.md`, `docs/roadmap.md`, `PON-ENTERPRISE-HANDOFF.md`, and this file to current state.
+
+---
+
+### SPRINT QC-5 — Post-UI-Redesign QC + Deep Debug `DONE` (2026-07-30)
+> QC run over the `feat/ui-redesign` branch (L1→L3 + final pass, 709 files). The redesign's own commits
+> verified analyze/test/build and computed contrast ratios, but as its message states, "none of which
+> catch 'looks wrong'" — so this sweep targeted semantic defects those gates cannot see. Every finding
+> below was verified against real code (and, for both fixes, by re-introducing the bug to prove the new
+> test fails).
+
+**QA LOG — QC Full 2026-07-30**
+Phase 1: auth build ✓ | ai build ✓ | connector build ✓ | chat compile ✓ | flutter analyze ✓ (0 issues) | web tsc ✓ | web eslint ✓ (0) | web build ✓
+Phase 2: auth 73/73 ✓ | chat 145/145 ✓ (144 → −1 replaced +2 new) | flutter 68/68 ✓ (60 + 8 new)
+Phase 3: infra (mongo 27018 + redis + rabbitmq) ✓ | auth-service :3001 ✓ 200 | chat-service :8080 ✓ 200
+Phase 4: API integration 13/15 ✓ — register/login/JWT-cross-service/conversation/message/readback/
+         access-control/presence all pass. The 2 non-passes were the harness's fault, not the product's:
+         `/auth/refresh` also requires `sid`, which the script omitted.
+Phase 5: i18n parity ✓ Flutter 1022 keys × 7 locales, 0 missing/extra · web 1340 keys × 7 locales, 0 missing/extra
+         no leftover neon hex (6AC9FF/FBB68B/FF85B3/00E5FF/4FE3FF/1A1A2E) outside comments · 0 `Colors.redAccent`
+         · 0 TODO/FIXME/HACK across the 488 changed code files
+
+**Fixed (verified):**
+- [x] **[Flutter] P1 — brand accent diverged from the locked palette AND from web.** `AppTheme.darkTheme`
+      / `lightTheme` built both `ColorScheme`s (and the input/filled/text button themes) from the
+      mode-agnostic `ponAccent` `#96435B` — a value the §2 palette table contains for *neither* mode.
+      Web reads `--primary` from `:root`/`.dark` and correctly renders `#7A2E3A`/`#A8475A`, so the two
+      clients showed a visibly different burgundy in both themes — broken per `.claude/rules/sync.md`.
+      This also contradicted the P1 plan's own rule: "Những chỗ CÓ phân biệt light/dark … thì dùng đúng
+      `#7A2E3A`/`#A8475A`"; `#96435B` was only ever meant for declaration sites that cannot branch on
+      mode. Added `AppTheme.lightAccent`/`darkAccent` and used them at all 14 sites inside the two theme
+      builders; the ~355 `const` call sites keep the sanctioned mid-tone. Contrast improves in light mode
+      (white-on-accent 6.5:1 → 9.2:1) and stays AA in dark (5.65:1).
+      New `test/core/app_theme_palette_test.dart` (8 tests) locks the whole §2 table + AA ratios.
+- [x] **[chat-service] P1 — every ended 1-1 call wrote a duplicate, English-only history entry.**
+      `ChatController.callEnd()` saved a `call_log` message with content hardcoded in English
+      (`"Call ended - 02:05"` / `"Missed call"`). That predates the coded system-message path: both
+      clients' hang-up initiator already sends `system.call.ended:{kind}:{secs}` /
+      `system.call.missed:{kind}` (web `lib/webrtc/call-manager.ts`, Flutter
+      `features/chat/domain/webrtc_service.dart`) and both humanize it into a localized sentence. So each
+      ended call appended TWO entries — the localized one plus an English-only `call_log` that no locale
+      could translate, violating `.claude/rules/no-raw-system-data-in-ui.md`. The web comment
+      "preventing duplicate messages" shows the author guarded against *peer* duplication but missed the
+      server's own write. Removed the write (the peer relay, this handler's real job, is untouched); no
+      client change needed. `callEnd_ShouldSaveCallLog` had been *asserting the bug*, which is why it
+      survived — replaced with two tests that assert nothing is persisted.
+      Backward-compatible: historical `call_log` messages still render exactly as before; only new ones
+      stop being created (no client creates the type, so it is now never produced).
+
+**Checked and found clean (no change needed):**
+- `GET /api/users/me` does NOT leak `otpCode`/`otpExpires`. `findById` only `select('-password')`, so this
+  looked like a leak, but the schema marks the OTP fields `select: false`. Probed empirically by
+  triggering `forgot-password` on a logged-in user and re-reading the profile — absent from the response.
+  (It does expose `__v`/`trustedDevices`/`fcmTokens`, but only to the owner of the profile.)
+- `MessageServicePaginationTest` took **596 s** in the first full run, which looked like a CI time bomb.
+  Re-measured with a warm Docker daemon: **32.8 s**. It was this machine's cold/contended Docker (the
+  same run had `docker compose up -d` hang for 5+ min on already-local images), not a code defect.
+- Remaining `Colors.amber`/`green`/`orange` are status semantics (warning / processing / password
+  strength), not decorative second accents — §2 explicitly leaves success/status colours out of scope.
+- Web/Flutter message-type parity holds: both render text/image/video/voice/file/sticker/system/ai and
+  `meeting_summary`.
+
+**Deliberately NOT changed (owner's call):**
+- Web declares two unused tokens, `--color-pon-blue: #4C7BFF` and `--color-online-green: #00E676`
+  (`pon-green` IS used, by the connector cards). Removing them would churn against the design record,
+  which lists "success green" and "connector brand colours" as deliberately kept.
+- The `call_log` type stays in `Message.java` / `lib/api/types.ts` for historical messages. Legacy rows
+  still render their stored English; back-filling them would mean parsing English prose, which is
+  fragile and not worth it.
+- Flutter's `ColorScheme.secondary` = accent while web's `--secondary` is a neutral. These are different
+  framework conventions (shadcn's `secondary` is a muted button fill), not a divergence to force.
+
+**Not covered by this sweep:** no visual/E2E pass on any of the ~76 redesigned screens — the two fixes
+above are code-level. `flutter analyze`, the widget tests and computed contrast ratios still cannot catch
+"looks wrong", so the redesign's own caveat stands: the owner's E2E look-and-feel review is still open.

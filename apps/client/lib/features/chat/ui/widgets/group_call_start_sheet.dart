@@ -162,7 +162,7 @@ class _MediaChoice extends StatelessWidget {
           border: Border.all(
             color: selected
                 ? AppTheme.ponAccent
-                : AppTheme.darkBorder.withValues(alpha: 0.6),
+                : AppTheme.hairline(context).withValues(alpha: 0.6),
             width: selected ? 2 : 1,
           ),
         ),

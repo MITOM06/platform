@@ -1,9 +1,7 @@
 'use client'
 
 import { useTranslations } from 'next-intl'
-import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
-} from '@/components/ui/dialog'
+import { ResponsiveModal } from '@/components/ui/responsive-modal'
 import { Button } from '@/components/ui/button'
 
 const MUTE_OPTIONS = [
@@ -29,13 +27,19 @@ export function MuteDurationPicker({ open, onClose, onSelect }: Props) {
   const t = useTranslations('chat')
   const tCommon = useTranslations('common')
   return (
-    <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
-      <DialogContent showCloseButton={false} className="max-w-xs">
-        <DialogHeader>
-          <DialogTitle>{t('muteNotifications')}</DialogTitle>
-          <DialogDescription className="sr-only">{t('muteNotifications')}</DialogDescription>
-        </DialogHeader>
-        <div className="flex flex-col gap-1 py-1">
+    <ResponsiveModal
+      open={open}
+      onOpenChange={(o) => !o && onClose()}
+      showCloseButton={false}
+      desktopClassName="max-w-xs"
+      title={t('muteNotifications')}
+      footer={
+        <Button variant="outline" className="w-full" onClick={onClose}>
+          {tCommon('cancel')}
+        </Button>
+      }
+    >
+      <div className="flex flex-col gap-1 py-1">
           {MUTE_OPTIONS.map(({ labelKey, seconds }) => (
             <Button
               key={seconds}
@@ -46,13 +50,7 @@ export function MuteDurationPicker({ open, onClose, onSelect }: Props) {
               {t(labelKey)}
             </Button>
           ))}
-        </div>
-        <div className="pt-1">
-          <Button variant="outline" className="w-full" onClick={onClose}>
-            {tCommon('cancel')}
-          </Button>
-        </div>
-      </DialogContent>
-    </Dialog>
+      </div>
+    </ResponsiveModal>
   )
 }

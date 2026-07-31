@@ -343,7 +343,7 @@ class _CopyField extends StatelessWidget {
           decoration: BoxDecoration(
             color: Theme.of(context).scaffoldBackgroundColor,
             borderRadius: BorderRadius.circular(10),
-            border: Border.all(color: AppTheme.darkBorder),
+            border: Border.all(color: AppTheme.hairline(context)),
           ),
           child: Row(
             children: [

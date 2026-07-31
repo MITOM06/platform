@@ -116,7 +116,7 @@ export default function SecurityPage() {
       </header>
 
       <div className="flex-1 overflow-y-auto">
-        <div className="max-w-2xl mx-auto px-6 py-8 space-y-8">
+        <div className="max-w-2xl mx-auto px-6 py-8 space-y-8 pb-tabbar md:pb-8">
           {!hasPassword && (
             <div className="flex gap-3 items-start rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-3.5">
               <AlertTriangle className="size-5 text-amber-500 shrink-0 mt-0.5" />

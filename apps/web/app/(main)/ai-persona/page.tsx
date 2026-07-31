@@ -206,7 +206,7 @@ export default function AiPersonaPage() {
           <div className="absolute -top-24 -left-24 w-72 h-72 rounded-full bg-primary/5 blur-3xl pointer-events-none dark:bg-primary/8" />
           <div className="absolute -bottom-24 -right-24 w-72 h-72 rounded-full bg-primary/5 blur-3xl pointer-events-none dark:bg-primary/8" />
 
-          <div className="relative max-w-md mx-auto px-6 py-8">
+          <div className="relative max-w-md mx-auto px-6 py-8 pb-tabbar md:pb-8">
             {isLoading ? (
               <div className="flex flex-col items-center justify-center py-20 gap-3">
                 <Loader2 className="size-8 animate-spin text-primary" />

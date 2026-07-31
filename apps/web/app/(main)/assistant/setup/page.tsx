@@ -76,7 +76,7 @@ export default function AssistantSetupPage() {
       </header>
 
       <div className="flex-1 overflow-y-auto">
-        <div className="max-w-md mx-auto px-6 py-8 space-y-6">
+        <div className="max-w-md mx-auto px-6 py-8 space-y-6 pb-tabbar md:pb-8">
           {/* Stepper */}
           <div className="flex items-center gap-2">
             {stepTitles.map((label, i) => (

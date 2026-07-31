@@ -6,8 +6,7 @@ import { toast } from 'sonner'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useTranslations } from 'next-intl'
 import { Search, Loader2, Hash, Users } from 'lucide-react'
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
-import { DialogA11yDescription } from '@/components/common/dialog-a11y-description'
+import { ResponsiveModal } from '@/components/ui/responsive-modal'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { chatService } from '@/lib/api/chat'
@@ -48,17 +47,18 @@ export function PublicChannelsModal({ open, onClose }: Props) {
   }
 
   return (
-    <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="sm:max-w-lg">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <Hash className="size-5" />
-            {t('publicChannelsTitle')}
-          </DialogTitle>
-        </DialogHeader>
-          <DialogA11yDescription />
-
-        <div className="relative">
+    <ResponsiveModal
+      open={open}
+      onOpenChange={(o) => !o && onClose()}
+      desktopClassName="sm:max-w-lg"
+      title={
+        <span className="flex items-center gap-2">
+          <Hash className="size-5" />
+          {t('publicChannelsTitle')}
+        </span>
+      }
+    >
+      <div className="relative">
           <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
           <Input
             placeholder={t('publicChannelsSearchPlaceholder')}
@@ -107,8 +107,7 @@ export function PublicChannelsModal({ open, onClose }: Props) {
               </div>
             )
           })}
-        </div>
-      </DialogContent>
-    </Dialog>
+      </div>
+    </ResponsiveModal>
   )
 }

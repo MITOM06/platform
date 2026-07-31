@@ -116,7 +116,7 @@ class _RolesPanelState extends ConsumerState<RolesPanel> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   _headerRow(roles, l10n),
-                  const Divider(color: AppTheme.darkBorder, height: 1),
+                  Divider(color: AppTheme.hairline(context), height: 1),
                   ...Cap.all.map((cap) => _capRow(cap, roles)),
                 ],
               ),
