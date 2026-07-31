@@ -85,7 +85,9 @@ dependencies:
   audioplayers: ^6.1.0
 
   # Error tracking
-  sentry_flutter: ^9.0.0
+  # Pinned: floating this pulls a new Sentry/HybridSDK pod pin and breaks `pod install`
+  # against a stale CocoaPods CDN cache. Bump deliberately + run `pod update Sentry`.
+  sentry_flutter: 9.25.0
 
   # Icons
   cupertino_icons: ^1.0.8
