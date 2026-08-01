@@ -17,25 +17,32 @@ paths:
 
 ## Project Structure
 
+One module per domain. Full per-module description: [`README.md`](../../apps/server/ai-service/README.md).
+
 ```
 apps/server/ai-service/src/
-  app.module.ts
+  app.module.ts                  — wires the modules below
   main.ts                        — bootstrap, port 3002
-  config/
-    configuration.ts             — typed env config via ConfigService
-  ai/
-    ai.module.ts
-    ai.service.ts                — Claude API call + streaming logic
-    ai.controller.ts             — health endpoint GET /health
-    ai.consumer.ts               — @RabbitSubscribe handler for ai.requests queue
-  rabbitmq/
-    rabbitmq.module.ts           — RabbitMqModule (AmqpConnection, queue/exchange config)
-  redis/
-    redis.module.ts
-    redis-subscriber.service.ts  — SUBSCRIBE kb:process / kb:delete only
-    redis-publisher.service.ts   — PUBLISH ai:response:{convId}
-  bot/
-    bot-seed.service.ts          — OnApplicationBootstrap: seed AI bot user
+  swagger.ts                     — Swagger UI at /docs
+  tracing.ts                     — OpenTelemetry init (must load before Nest)
+  config/configuration.ts        — typed env config via ConfigService
+  ai/                            — agentic Claude loop, streaming, ai.consumer.ts (@RabbitSubscribe)
+  ai-context/                    — role-aware workspace/department/member context block
+  memory/                        — long-term fact extraction, dedup, decay
+  kb/                            — RAG: parse → chunk → embed (Voyage) → Qdrant → retrieve
+  tools/                         — built-in tools + per-user MCP tools from connector-service
+  skills/                        — capability bundles, reads `user_skills`
+  persona/                       — per-conversation AI persona
+  session/                       — builds the Anthropic message list
+  usage/                         — token accounting, quota, cost, quality dashboard
+  scheduler/                     — due reminders + daily digest
+  retention/                     — periodic expiry sweep of derived data
+  call/                          — group-call AI notetaker
+  settings/  health/             — runtime settings; GET /health
+  rabbitmq/                      — AmqpConnection + queue/exchange declaration
+  redis/                         — SUBSCRIBE kb:process|kb:delete, PUBLISH ai:response:{convId}
+  bot/                           — OnApplicationBootstrap: seed the AI bot user
+  eval/                          — offline prompt-quality harness + baseline
 ```
 
 ## Environment Variables
