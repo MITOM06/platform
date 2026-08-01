@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/l10n/l10n_ext.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/utils/app_error.dart';
 import '../data/chat_repository.dart';
 import '../domain/kb_document_model.dart';
 import '../domain/kb_provider.dart';
@@ -28,7 +29,7 @@ class KbScreen extends ConsumerWidget {
       ),
       body: docsAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text(context.l10n.errorWithMsg('$e'))),
+        error: (e, _) => Center(child: Text(friendlyError(e))),
         data: (docs) => docs.isEmpty
             ? _EmptyState()
             : ListView.separated(

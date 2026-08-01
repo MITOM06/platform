@@ -136,11 +136,6 @@ class AppLocalizationsVi extends AppLocalizations {
   String get loadingDots => '...';
 
   @override
-  String errorWithMsg(String error) {
-    return 'Lỗi: $error';
-  }
-
-  @override
   String get loginTitle => 'Đăng Nhập';
 
   @override
@@ -3193,134 +3188,134 @@ class AppLocalizationsVi extends AppLocalizations {
   String get videoCannotPlay => 'Không thể phát video';
 
   @override
-  String get aiContextTitle => 'AI Context';
+  String get aiContextTitle => 'Ngữ cảnh AI';
 
   @override
-  String get aiContextIdentityTitle => 'Identity & organization';
+  String get aiContextIdentityTitle => 'Danh tính & tổ chức';
 
   @override
-  String get aiContextResponseStyleTitle => 'Response style';
+  String get aiContextResponseStyleTitle => 'Phong cách trả lời';
 
   @override
-  String get aiContextLearnedFactsTitle => 'What the AI has learned';
+  String get aiContextLearnedFactsTitle => 'Những gì AI đã học được';
 
   @override
-  String get aiContextCompanyTitle => 'Company context';
+  String get aiContextCompanyTitle => 'Ngữ cảnh công ty';
 
   @override
-  String get aiContextDepartmentTitle => 'Department context';
+  String get aiContextDepartmentTitle => 'Ngữ cảnh phòng ban';
 
   @override
-  String get aiContextLabelRole => 'Role';
+  String get aiContextLabelRole => 'Vai trò';
 
   @override
-  String get aiContextLabelDepartment => 'Department';
+  String get aiContextLabelDepartment => 'Phòng ban';
 
   @override
-  String get aiContextLabelJobTitle => 'Job title';
+  String get aiContextLabelJobTitle => 'Chức danh';
 
   @override
-  String get aiContextLabelProjects => 'Projects';
+  String get aiContextLabelProjects => 'Dự án';
 
   @override
-  String get aiContextRoleUnknown => 'Not assigned';
+  String get aiContextRoleUnknown => 'Chưa được gán';
 
   @override
-  String get aiContextNoDepartment => 'No department';
+  String get aiContextNoDepartment => 'Không có phòng ban';
 
   @override
-  String get aiContextNotSet => 'Not set';
+  String get aiContextNotSet => 'Chưa thiết lập';
 
   @override
   String get aiContextIdentityManaged =>
-      'These are set by your manager or admin.';
+      'Những thông tin này do quản lý hoặc admin của bạn thiết lập.';
 
   @override
-  String get aiContextStyleLabel => 'Preferred response style';
+  String get aiContextStyleLabel => 'Phong cách trả lời mong muốn';
 
   @override
-  String get aiContextStyleHint => 'e.g. concise, formal, code-first';
+  String get aiContextStyleHint => 'ví dụ: ngắn gọn, trang trọng, ưu tiên code';
 
   @override
-  String get aiContextPreferencesLabel => 'Other preferences';
+  String get aiContextPreferencesLabel => 'Tùy chọn khác';
 
   @override
   String get aiContextPreferencesHint =>
-      'e.g. avoid emoji, answer in Vietnamese';
+      'ví dụ: không dùng emoji, trả lời bằng tiếng Việt';
 
   @override
-  String get aiContextUpdate => 'Update';
+  String get aiContextUpdate => 'Cập nhật';
 
   @override
-  String get aiContextSaving => 'Saving...';
+  String get aiContextSaving => 'Đang lưu...';
 
   @override
-  String get aiContextStyleSaved => 'Response style updated';
+  String get aiContextStyleSaved => 'Đã cập nhật phong cách trả lời';
 
   @override
-  String get aiContextSaveError => 'Failed to save';
+  String get aiContextSaveError => 'Lưu không thành công';
 
   @override
-  String get aiContextKeyFacts => 'Key facts:';
+  String get aiContextKeyFacts => 'Thông tin chính:';
 
   @override
-  String get aiContextMemoryEmpty => 'Nothing learned yet';
+  String get aiContextMemoryEmpty => 'Chưa học được gì';
 
   @override
   String get aiContextMemoryEmptyHint =>
-      'As you chat, the assistant will remember useful facts about you here.';
+      'Khi bạn trò chuyện, trợ lý sẽ ghi nhớ những thông tin hữu ích về bạn tại đây.';
 
   @override
-  String get aiContextTierPublic => 'Public';
+  String get aiContextTierPublic => 'Công khai';
 
   @override
-  String get aiContextTierInternal => 'Internal';
+  String get aiContextTierInternal => 'Nội bộ';
 
   @override
-  String get aiContextTierConfidential => 'Confidential';
+  String get aiContextTierConfidential => 'Bảo mật';
 
   @override
-  String get adminEditAiContext => 'Edit AI context';
+  String get adminEditAiContext => 'Sửa ngữ cảnh AI';
 
   @override
-  String get adminAiContextJobTitle => 'Job title';
+  String get adminAiContextJobTitle => 'Chức danh';
 
   @override
-  String get adminAiContextProjects => 'Current projects';
+  String get adminAiContextProjects => 'Dự án hiện tại';
 
   @override
-  String get adminAiContextProjectsHint => 'One project per line';
+  String get adminAiContextProjectsHint => 'Mỗi dòng một dự án';
 
   @override
-  String get adminAiContextEntriesTitle => 'Company AI context';
+  String get adminAiContextEntriesTitle => 'Ngữ cảnh AI của công ty';
 
   @override
-  String get adminAiContextEntriesEmpty => 'No context entries yet.';
+  String get adminAiContextEntriesEmpty => 'Chưa có mục ngữ cảnh nào.';
 
   @override
-  String get adminEntryLabel => 'Label';
+  String get adminEntryLabel => 'Nhãn';
 
   @override
-  String get adminEntryText => 'Context';
+  String get adminEntryText => 'Nội dung ngữ cảnh';
 
   @override
-  String get adminEntryTier => 'Sensitivity';
+  String get adminEntryTier => 'Mức bảo mật';
 
   @override
-  String get adminEntryScope => 'Scope';
+  String get adminEntryScope => 'Phạm vi';
 
   @override
-  String get adminScopeCompany => 'Company';
+  String get adminScopeCompany => 'Công ty';
 
   @override
-  String get adminScopeDepartment => 'Department';
+  String get adminScopeDepartment => 'Phòng ban';
 
   @override
-  String get adminCreateEntry => 'Add entry';
+  String get adminCreateEntry => 'Thêm mục';
 
   @override
-  String get adminEditEntry => 'Edit entry';
+  String get adminEditEntry => 'Sửa mục';
 
   @override
-  String get adminDeleteEntry => 'Delete entry';
+  String get adminDeleteEntry => 'Xóa mục';
 }

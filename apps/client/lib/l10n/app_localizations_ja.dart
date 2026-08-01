@@ -133,11 +133,6 @@ class AppLocalizationsJa extends AppLocalizations {
   String get loadingDots => '...';
 
   @override
-  String errorWithMsg(String error) {
-    return 'エラー：$error';
-  }
-
-  @override
   String get loginTitle => 'ログイン';
 
   @override
@@ -981,7 +976,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get profileRoleMemberDefault => 'メンバー';
 
   @override
-  String get roleLabel => '役割';
+  String get roleLabel => 'ロール';
 
   @override
   String get privacySectionLabel => 'プライバシー';
@@ -3131,134 +3126,132 @@ class AppLocalizationsJa extends AppLocalizations {
   String get videoCannotPlay => '動画を再生できません';
 
   @override
-  String get aiContextTitle => 'AI Context';
+  String get aiContextTitle => 'AIコンテキスト';
 
   @override
-  String get aiContextIdentityTitle => 'Identity & organization';
+  String get aiContextIdentityTitle => '個人情報と組織';
 
   @override
-  String get aiContextResponseStyleTitle => 'Response style';
+  String get aiContextResponseStyleTitle => '応答スタイル';
 
   @override
-  String get aiContextLearnedFactsTitle => 'What the AI has learned';
+  String get aiContextLearnedFactsTitle => 'AIが学習した内容';
 
   @override
-  String get aiContextCompanyTitle => 'Company context';
+  String get aiContextCompanyTitle => '会社のコンテキスト';
 
   @override
-  String get aiContextDepartmentTitle => 'Department context';
+  String get aiContextDepartmentTitle => '部門のコンテキスト';
 
   @override
-  String get aiContextLabelRole => 'Role';
+  String get aiContextLabelRole => 'ロール';
 
   @override
-  String get aiContextLabelDepartment => 'Department';
+  String get aiContextLabelDepartment => '部門';
 
   @override
-  String get aiContextLabelJobTitle => 'Job title';
+  String get aiContextLabelJobTitle => '役職';
 
   @override
-  String get aiContextLabelProjects => 'Projects';
+  String get aiContextLabelProjects => 'プロジェクト';
 
   @override
-  String get aiContextRoleUnknown => 'Not assigned';
+  String get aiContextRoleUnknown => '未割り当て';
 
   @override
-  String get aiContextNoDepartment => 'No department';
+  String get aiContextNoDepartment => '部門なし';
 
   @override
-  String get aiContextNotSet => 'Not set';
+  String get aiContextNotSet => '未設定';
 
   @override
-  String get aiContextIdentityManaged =>
-      'These are set by your manager or admin.';
+  String get aiContextIdentityManaged => 'これらは上司または管理者が設定します。';
 
   @override
-  String get aiContextStyleLabel => 'Preferred response style';
+  String get aiContextStyleLabel => '希望する応答スタイル';
 
   @override
-  String get aiContextStyleHint => 'e.g. concise, formal, code-first';
+  String get aiContextStyleHint => '例：簡潔、フォーマル、コード優先';
 
   @override
-  String get aiContextPreferencesLabel => 'Other preferences';
+  String get aiContextPreferencesLabel => 'その他の設定';
 
   @override
-  String get aiContextPreferencesHint =>
-      'e.g. avoid emoji, answer in Vietnamese';
+  String get aiContextPreferencesHint => '例：絵文字を使わない、日本語で回答する';
 
   @override
-  String get aiContextUpdate => 'Update';
+  String get aiContextUpdate => '更新';
 
   @override
-  String get aiContextSaving => 'Saving...';
+  String get aiContextSaving => '保存中...';
 
   @override
-  String get aiContextStyleSaved => 'Response style updated';
+  String get aiContextStyleSaved => '応答スタイルを更新しました';
 
   @override
-  String get aiContextSaveError => 'Failed to save';
+  String get aiContextSaveError => '保存できませんでした';
 
   @override
-  String get aiContextKeyFacts => 'Key facts:';
+  String get aiContextKeyFacts => '主な情報:';
 
   @override
-  String get aiContextMemoryEmpty => 'Nothing learned yet';
+  String get aiContextMemoryEmpty => 'まだ学習した内容はありません';
 
   @override
   String get aiContextMemoryEmptyHint =>
-      'As you chat, the assistant will remember useful facts about you here.';
+      'チャットを続けると、アシスタントがあなたに関する有用な情報をここに記憶します。';
 
   @override
-  String get aiContextTierPublic => 'Public';
+  String get aiContextTierPublic => '公開';
 
   @override
-  String get aiContextTierInternal => 'Internal';
+  String get aiContextTierInternal => '社内';
 
   @override
-  String get aiContextTierConfidential => 'Confidential';
+  String get aiContextTierConfidential => '機密';
 
   @override
-  String get adminEditAiContext => 'Edit AI context';
+  String get adminEditAiContext => 'AIコンテキストを編集';
 
   @override
-  String get adminAiContextJobTitle => 'Job title';
+  String get adminAiContextJobTitle => '役職';
 
   @override
-  String get adminAiContextProjects => 'Current projects';
+  String get adminAiContextProjects => '現在のプロジェクト';
 
   @override
-  String get adminAiContextProjectsHint => 'One project per line';
+  String get adminAiContextProjectsHint => '1行に1つのプロジェクト';
 
   @override
-  String get adminAiContextEntriesTitle => 'Company AI context';
+  String get adminAiContextEntriesTitle => '会社のAIコンテキスト';
 
   @override
-  String get adminAiContextEntriesEmpty => 'No context entries yet.';
+  String get adminAiContextEntriesEmpty => 'コンテキスト項目がまだありません。';
 
   @override
-  String get adminEntryLabel => 'Label';
+  String get adminEntryLabel => 'ラベル';
 
   @override
-  String get adminEntryText => 'Context';
+  String get adminEntryText => 'コンテキスト';
 
   @override
-  String get adminEntryTier => 'Sensitivity';
+  String get adminEntryTier => '機密レベル';
 
   @override
-  String get adminEntryScope => 'Scope';
+  String get adminEntryScope => '適用範囲';
 
   @override
-  String get adminScopeCompany => 'Company';
+  String get adminScopeCompany => '会社';
 
   @override
-  String get adminScopeDepartment => 'Department';
+  String get adminScopeDepartment => '部門';
 
   @override
-  String get adminCreateEntry => 'Add entry';
+  String get adminCreateEntry => '項目を追加';
 
   @override
-  String get adminEditEntry => 'Edit entry';
+  String get adminEditEntry => '項目を編集';
 
   @override
-  String get adminDeleteEntry => 'Delete entry';
+  String get adminDeleteEntry => '項目を削除';
 }

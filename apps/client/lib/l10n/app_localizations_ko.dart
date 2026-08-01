@@ -133,11 +133,6 @@ class AppLocalizationsKo extends AppLocalizations {
   String get loadingDots => '...';
 
   @override
-  String errorWithMsg(String error) {
-    return '오류: $error';
-  }
-
-  @override
   String get loginTitle => '로그인';
 
   @override
@@ -3131,134 +3126,132 @@ class AppLocalizationsKo extends AppLocalizations {
   String get videoCannotPlay => '동영상을 재생할 수 없습니다';
 
   @override
-  String get aiContextTitle => 'AI Context';
+  String get aiContextTitle => 'AI 컨텍스트';
 
   @override
-  String get aiContextIdentityTitle => 'Identity & organization';
+  String get aiContextIdentityTitle => '신원 및 조직';
 
   @override
-  String get aiContextResponseStyleTitle => 'Response style';
+  String get aiContextResponseStyleTitle => '응답 스타일';
 
   @override
-  String get aiContextLearnedFactsTitle => 'What the AI has learned';
+  String get aiContextLearnedFactsTitle => 'AI가 학습한 내용';
 
   @override
-  String get aiContextCompanyTitle => 'Company context';
+  String get aiContextCompanyTitle => '회사 컨텍스트';
 
   @override
-  String get aiContextDepartmentTitle => 'Department context';
+  String get aiContextDepartmentTitle => '부서 컨텍스트';
 
   @override
-  String get aiContextLabelRole => 'Role';
+  String get aiContextLabelRole => '역할';
 
   @override
-  String get aiContextLabelDepartment => 'Department';
+  String get aiContextLabelDepartment => '부서';
 
   @override
-  String get aiContextLabelJobTitle => 'Job title';
+  String get aiContextLabelJobTitle => '직책';
 
   @override
-  String get aiContextLabelProjects => 'Projects';
+  String get aiContextLabelProjects => '프로젝트';
 
   @override
-  String get aiContextRoleUnknown => 'Not assigned';
+  String get aiContextRoleUnknown => '지정되지 않음';
 
   @override
-  String get aiContextNoDepartment => 'No department';
+  String get aiContextNoDepartment => '부서 없음';
 
   @override
-  String get aiContextNotSet => 'Not set';
+  String get aiContextNotSet => '설정되지 않음';
 
   @override
-  String get aiContextIdentityManaged =>
-      'These are set by your manager or admin.';
+  String get aiContextIdentityManaged => '이 항목은 상급자 또는 관리자가 설정합니다.';
 
   @override
-  String get aiContextStyleLabel => 'Preferred response style';
+  String get aiContextStyleLabel => '선호하는 응답 스타일';
 
   @override
-  String get aiContextStyleHint => 'e.g. concise, formal, code-first';
+  String get aiContextStyleHint => '예: 간결하게, 격식 있게, 코드 우선';
 
   @override
-  String get aiContextPreferencesLabel => 'Other preferences';
+  String get aiContextPreferencesLabel => '기타 선호 사항';
 
   @override
-  String get aiContextPreferencesHint =>
-      'e.g. avoid emoji, answer in Vietnamese';
+  String get aiContextPreferencesHint => '예: 이모지 사용 안 함, 한국어로 답변';
 
   @override
-  String get aiContextUpdate => 'Update';
+  String get aiContextUpdate => '업데이트';
 
   @override
-  String get aiContextSaving => 'Saving...';
+  String get aiContextSaving => '저장 중...';
 
   @override
-  String get aiContextStyleSaved => 'Response style updated';
+  String get aiContextStyleSaved => '응답 스타일이 업데이트되었습니다';
 
   @override
-  String get aiContextSaveError => 'Failed to save';
+  String get aiContextSaveError => '저장하지 못했습니다';
 
   @override
-  String get aiContextKeyFacts => 'Key facts:';
+  String get aiContextKeyFacts => '주요 정보:';
 
   @override
-  String get aiContextMemoryEmpty => 'Nothing learned yet';
+  String get aiContextMemoryEmpty => '아직 학습한 내용이 없습니다';
 
   @override
   String get aiContextMemoryEmptyHint =>
-      'As you chat, the assistant will remember useful facts about you here.';
+      '대화를 이어가면 어시스턴트가 회원님에 대한 유용한 정보를 여기에 기억합니다.';
 
   @override
-  String get aiContextTierPublic => 'Public';
+  String get aiContextTierPublic => '공개';
 
   @override
-  String get aiContextTierInternal => 'Internal';
+  String get aiContextTierInternal => '내부';
 
   @override
-  String get aiContextTierConfidential => 'Confidential';
+  String get aiContextTierConfidential => '기밀';
 
   @override
-  String get adminEditAiContext => 'Edit AI context';
+  String get adminEditAiContext => 'AI 컨텍스트 편집';
 
   @override
-  String get adminAiContextJobTitle => 'Job title';
+  String get adminAiContextJobTitle => '직책';
 
   @override
-  String get adminAiContextProjects => 'Current projects';
+  String get adminAiContextProjects => '현재 프로젝트';
 
   @override
-  String get adminAiContextProjectsHint => 'One project per line';
+  String get adminAiContextProjectsHint => '한 줄에 프로젝트 하나';
 
   @override
-  String get adminAiContextEntriesTitle => 'Company AI context';
+  String get adminAiContextEntriesTitle => '회사 AI 컨텍스트';
 
   @override
-  String get adminAiContextEntriesEmpty => 'No context entries yet.';
+  String get adminAiContextEntriesEmpty => '아직 컨텍스트 항목이 없습니다.';
 
   @override
-  String get adminEntryLabel => 'Label';
+  String get adminEntryLabel => '라벨';
 
   @override
-  String get adminEntryText => 'Context';
+  String get adminEntryText => '컨텍스트';
 
   @override
-  String get adminEntryTier => 'Sensitivity';
+  String get adminEntryTier => '민감도';
 
   @override
-  String get adminEntryScope => 'Scope';
+  String get adminEntryScope => '범위';
 
   @override
-  String get adminScopeCompany => 'Company';
+  String get adminScopeCompany => '회사';
 
   @override
-  String get adminScopeDepartment => 'Department';
+  String get adminScopeDepartment => '부서';
 
   @override
-  String get adminCreateEntry => 'Add entry';
+  String get adminCreateEntry => '항목 추가';
 
   @override
-  String get adminEditEntry => 'Edit entry';
+  String get adminEditEntry => '항목 편집';
 
   @override
-  String get adminDeleteEntry => 'Delete entry';
+  String get adminDeleteEntry => '항목 삭제';
 }
