@@ -259,9 +259,18 @@ BOOTSTRAP_OWNER_EMAIL=you@acme.com
 git clone https://github.com/MITOM06/platform.git && cd platform
 pnpm install
 
-# Start MongoDB, Redis, RabbitMQ, Qdrant, and Jaeger
-docker compose -f infra/docker-compose/compose.yml up -d
+# Infrastructure only — MongoDB, Redis, RabbitMQ, Qdrant, Jaeger
+docker compose -f infra/docker-compose/compose.yml up -d mongo mongo-setup redis rabbitmq qdrant jaeger
 ```
+
+> `compose.yml` also contains the four backend services, so a bare `up -d` starts **everything** in
+> Docker — pick one path or the other. Run the services in Docker (`up -d`, then skip Step 3) when you
+> just want the stack up; list the infra services as above when you want to run a service from source
+> with hot reload. Mixing both means two processes fighting over the same port.
+>
+> Running them in Docker requires `infra/docker-compose/.env` (copy `.env.example`) — `JWT_ACCESS_SECRET`
+> and `ALLOWED_ORIGINS` are mandatory; chat-service refuses to start without the latter rather than
+> defaulting to open CORS.
 
 Infrastructure services started:
 - **MongoDB** — `mongodb://localhost:27018` (port 27018, non-standard)

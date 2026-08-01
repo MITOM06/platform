@@ -101,6 +101,10 @@ services:
       dockerfile: Dockerfile
     environment:
       JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET}
+      # SecurityConfig throws on startup if this is unset — it will not fall back
+      # to open CORS. Everything is served from the single Caddy domain, so that
+      # origin is the whole allow-list; override only for extra front-ends.
+      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-https://${DOMAIN}}
       SPRING_DATA_MONGODB_URI: mongodb://mongo:27017/platform
       SPRING_DATA_REDIS_HOST: redis
       SPRING_RABBITMQ_HOST: rabbitmq
