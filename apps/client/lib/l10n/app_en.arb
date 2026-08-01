@@ -55,14 +55,6 @@
   "actionDelete": "Delete",
   "actionLeave": "Leave",
   "loadingDots": "...",
-  "errorWithMsg": "Error: {error}",
-  "@errorWithMsg": {
-    "placeholders": {
-      "error": {
-        "type": "String"
-      }
-    }
-  },
   "loginTitle": "Sign In",
   "fieldEmail": "Email",
   "fieldPassword": "Password",

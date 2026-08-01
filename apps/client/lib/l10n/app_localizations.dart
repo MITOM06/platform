@@ -342,12 +342,6 @@ abstract class AppLocalizations {
   /// **'...'**
   String get loadingDots;
 
-  /// No description provided for @errorWithMsg.
-  ///
-  /// In en, this message translates to:
-  /// **'Error: {error}'**
-  String errorWithMsg(String error);
-
   /// No description provided for @loginTitle.
   ///
   /// In en, this message translates to:

@@ -130,11 +130,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get loadingDots => '...';
 
   @override
-  String errorWithMsg(String error) {
-    return '错误：$error';
-  }
-
-  @override
   String get loginTitle => '登录';
 
   @override
@@ -3102,134 +3097,131 @@ class AppLocalizationsZh extends AppLocalizations {
   String get videoCannotPlay => '无法播放视频';
 
   @override
-  String get aiContextTitle => 'AI Context';
+  String get aiContextTitle => 'AI 上下文';
 
   @override
-  String get aiContextIdentityTitle => 'Identity & organization';
+  String get aiContextIdentityTitle => '身份与组织';
 
   @override
-  String get aiContextResponseStyleTitle => 'Response style';
+  String get aiContextResponseStyleTitle => '回复风格';
 
   @override
-  String get aiContextLearnedFactsTitle => 'What the AI has learned';
+  String get aiContextLearnedFactsTitle => 'AI 已了解的信息';
 
   @override
-  String get aiContextCompanyTitle => 'Company context';
+  String get aiContextCompanyTitle => '公司上下文';
 
   @override
-  String get aiContextDepartmentTitle => 'Department context';
+  String get aiContextDepartmentTitle => '部门上下文';
 
   @override
-  String get aiContextLabelRole => 'Role';
+  String get aiContextLabelRole => '角色';
 
   @override
-  String get aiContextLabelDepartment => 'Department';
+  String get aiContextLabelDepartment => '部门';
 
   @override
-  String get aiContextLabelJobTitle => 'Job title';
+  String get aiContextLabelJobTitle => '职位';
 
   @override
-  String get aiContextLabelProjects => 'Projects';
+  String get aiContextLabelProjects => '项目';
 
   @override
-  String get aiContextRoleUnknown => 'Not assigned';
+  String get aiContextRoleUnknown => '未分配';
 
   @override
-  String get aiContextNoDepartment => 'No department';
+  String get aiContextNoDepartment => '无部门';
 
   @override
-  String get aiContextNotSet => 'Not set';
+  String get aiContextNotSet => '未设置';
 
   @override
-  String get aiContextIdentityManaged =>
-      'These are set by your manager or admin.';
+  String get aiContextIdentityManaged => '这些信息由您的管理者或管理员设置。';
 
   @override
-  String get aiContextStyleLabel => 'Preferred response style';
+  String get aiContextStyleLabel => '偏好的回复风格';
 
   @override
-  String get aiContextStyleHint => 'e.g. concise, formal, code-first';
+  String get aiContextStyleHint => '例如：简洁、正式、代码优先';
 
   @override
-  String get aiContextPreferencesLabel => 'Other preferences';
+  String get aiContextPreferencesLabel => '其他偏好';
 
   @override
-  String get aiContextPreferencesHint =>
-      'e.g. avoid emoji, answer in Vietnamese';
+  String get aiContextPreferencesHint => '例如：不使用表情符号、用中文回答';
 
   @override
-  String get aiContextUpdate => 'Update';
+  String get aiContextUpdate => '更新';
 
   @override
-  String get aiContextSaving => 'Saving...';
+  String get aiContextSaving => '保存中...';
 
   @override
-  String get aiContextStyleSaved => 'Response style updated';
+  String get aiContextStyleSaved => '回复风格已更新';
 
   @override
-  String get aiContextSaveError => 'Failed to save';
+  String get aiContextSaveError => '保存失败';
 
   @override
-  String get aiContextKeyFacts => 'Key facts:';
+  String get aiContextKeyFacts => '关键信息：';
 
   @override
-  String get aiContextMemoryEmpty => 'Nothing learned yet';
+  String get aiContextMemoryEmpty => '尚未学到任何信息';
 
   @override
-  String get aiContextMemoryEmptyHint =>
-      'As you chat, the assistant will remember useful facts about you here.';
+  String get aiContextMemoryEmptyHint => '在您聊天的过程中，助手会在这里记住关于您的有用信息。';
 
   @override
-  String get aiContextTierPublic => 'Public';
+  String get aiContextTierPublic => '公开';
 
   @override
-  String get aiContextTierInternal => 'Internal';
+  String get aiContextTierInternal => '内部';
 
   @override
-  String get aiContextTierConfidential => 'Confidential';
+  String get aiContextTierConfidential => '机密';
 
   @override
-  String get adminEditAiContext => 'Edit AI context';
+  String get adminEditAiContext => '编辑 AI 上下文';
 
   @override
-  String get adminAiContextJobTitle => 'Job title';
+  String get adminAiContextJobTitle => '职位';
 
   @override
-  String get adminAiContextProjects => 'Current projects';
+  String get adminAiContextProjects => '当前项目';
 
   @override
-  String get adminAiContextProjectsHint => 'One project per line';
+  String get adminAiContextProjectsHint => '每行一个项目';
 
   @override
-  String get adminAiContextEntriesTitle => 'Company AI context';
+  String get adminAiContextEntriesTitle => '公司 AI 上下文';
 
   @override
-  String get adminAiContextEntriesEmpty => 'No context entries yet.';
+  String get adminAiContextEntriesEmpty => '暂无上下文条目。';
 
   @override
-  String get adminEntryLabel => 'Label';
+  String get adminEntryLabel => '标签';
 
   @override
-  String get adminEntryText => 'Context';
+  String get adminEntryText => '上下文内容';
 
   @override
-  String get adminEntryTier => 'Sensitivity';
+  String get adminEntryTier => '敏感级别';
 
   @override
-  String get adminEntryScope => 'Scope';
+  String get adminEntryScope => '范围';
 
   @override
-  String get adminScopeCompany => 'Company';
+  String get adminScopeCompany => '公司';
 
   @override
-  String get adminScopeDepartment => 'Department';
+  String get adminScopeDepartment => '部门';
 
   @override
-  String get adminCreateEntry => 'Add entry';
+  String get adminCreateEntry => '添加条目';
 
   @override
-  String get adminEditEntry => 'Edit entry';
+  String get adminEditEntry => '编辑条目';
 
   @override
-  String get adminDeleteEntry => 'Delete entry';
+  String get adminDeleteEntry => '删除条目';
 }

@@ -138,11 +138,6 @@ class AppLocalizationsFr extends AppLocalizations {
   String get loadingDots => '...';
 
   @override
-  String errorWithMsg(String error) {
-    return 'Erreur : $error';
-  }
-
-  @override
   String get loginTitle => 'Connexion';
 
   @override
@@ -3238,134 +3233,135 @@ class AppLocalizationsFr extends AppLocalizations {
   String get videoCannotPlay => 'Impossible de lire la vidéo';
 
   @override
-  String get aiContextTitle => 'AI Context';
+  String get aiContextTitle => 'Contexte IA';
 
   @override
-  String get aiContextIdentityTitle => 'Identity & organization';
+  String get aiContextIdentityTitle => 'Identité et organisation';
 
   @override
-  String get aiContextResponseStyleTitle => 'Response style';
+  String get aiContextResponseStyleTitle => 'Style de réponse';
 
   @override
-  String get aiContextLearnedFactsTitle => 'What the AI has learned';
+  String get aiContextLearnedFactsTitle => 'Ce que l\'IA a appris';
 
   @override
-  String get aiContextCompanyTitle => 'Company context';
+  String get aiContextCompanyTitle => 'Contexte de l\'entreprise';
 
   @override
-  String get aiContextDepartmentTitle => 'Department context';
+  String get aiContextDepartmentTitle => 'Contexte du département';
 
   @override
-  String get aiContextLabelRole => 'Role';
+  String get aiContextLabelRole => 'Rôle';
 
   @override
-  String get aiContextLabelDepartment => 'Department';
+  String get aiContextLabelDepartment => 'Département';
 
   @override
-  String get aiContextLabelJobTitle => 'Job title';
+  String get aiContextLabelJobTitle => 'Fonction';
 
   @override
-  String get aiContextLabelProjects => 'Projects';
+  String get aiContextLabelProjects => 'Projets';
 
   @override
-  String get aiContextRoleUnknown => 'Not assigned';
+  String get aiContextRoleUnknown => 'Non attribué';
 
   @override
-  String get aiContextNoDepartment => 'No department';
+  String get aiContextNoDepartment => 'Aucun département';
 
   @override
-  String get aiContextNotSet => 'Not set';
+  String get aiContextNotSet => 'Non défini';
 
   @override
   String get aiContextIdentityManaged =>
-      'These are set by your manager or admin.';
+      'Ces éléments sont définis par votre responsable ou administrateur.';
 
   @override
-  String get aiContextStyleLabel => 'Preferred response style';
+  String get aiContextStyleLabel => 'Style de réponse préféré';
 
   @override
-  String get aiContextStyleHint => 'e.g. concise, formal, code-first';
+  String get aiContextStyleHint => 'p. ex. concis, formel, code d\'abord';
 
   @override
-  String get aiContextPreferencesLabel => 'Other preferences';
+  String get aiContextPreferencesLabel => 'Autres préférences';
 
   @override
   String get aiContextPreferencesHint =>
-      'e.g. avoid emoji, answer in Vietnamese';
+      'p. ex. éviter les emojis, répondre en français';
 
   @override
-  String get aiContextUpdate => 'Update';
+  String get aiContextUpdate => 'Mettre à jour';
 
   @override
-  String get aiContextSaving => 'Saving...';
+  String get aiContextSaving => 'Enregistrement...';
 
   @override
-  String get aiContextStyleSaved => 'Response style updated';
+  String get aiContextStyleSaved => 'Style de réponse mis à jour';
 
   @override
-  String get aiContextSaveError => 'Failed to save';
+  String get aiContextSaveError => 'Échec de l\'enregistrement';
 
   @override
-  String get aiContextKeyFacts => 'Key facts:';
+  String get aiContextKeyFacts => 'Informations clés :';
 
   @override
-  String get aiContextMemoryEmpty => 'Nothing learned yet';
+  String get aiContextMemoryEmpty => 'Rien n\'a encore été appris';
 
   @override
   String get aiContextMemoryEmptyHint =>
-      'As you chat, the assistant will remember useful facts about you here.';
+      'Au fil de vos conversations, l\'assistant mémorisera ici des informations utiles à votre sujet.';
 
   @override
   String get aiContextTierPublic => 'Public';
 
   @override
-  String get aiContextTierInternal => 'Internal';
+  String get aiContextTierInternal => 'Interne';
 
   @override
-  String get aiContextTierConfidential => 'Confidential';
+  String get aiContextTierConfidential => 'Confidentiel';
 
   @override
-  String get adminEditAiContext => 'Edit AI context';
+  String get adminEditAiContext => 'Modifier le contexte IA';
 
   @override
-  String get adminAiContextJobTitle => 'Job title';
+  String get adminAiContextJobTitle => 'Fonction';
 
   @override
-  String get adminAiContextProjects => 'Current projects';
+  String get adminAiContextProjects => 'Projets en cours';
 
   @override
-  String get adminAiContextProjectsHint => 'One project per line';
+  String get adminAiContextProjectsHint => 'Un projet par ligne';
 
   @override
-  String get adminAiContextEntriesTitle => 'Company AI context';
+  String get adminAiContextEntriesTitle => 'Contexte IA de l\'entreprise';
 
   @override
-  String get adminAiContextEntriesEmpty => 'No context entries yet.';
+  String get adminAiContextEntriesEmpty =>
+      'Aucune entrée de contexte pour le moment.';
 
   @override
-  String get adminEntryLabel => 'Label';
+  String get adminEntryLabel => 'Libellé';
 
   @override
-  String get adminEntryText => 'Context';
+  String get adminEntryText => 'Contenu du contexte';
 
   @override
-  String get adminEntryTier => 'Sensitivity';
+  String get adminEntryTier => 'Sensibilité';
 
   @override
-  String get adminEntryScope => 'Scope';
+  String get adminEntryScope => 'Portée';
 
   @override
-  String get adminScopeCompany => 'Company';
+  String get adminScopeCompany => 'Entreprise';
 
   @override
-  String get adminScopeDepartment => 'Department';
+  String get adminScopeDepartment => 'Département';
 
   @override
-  String get adminCreateEntry => 'Add entry';
+  String get adminCreateEntry => 'Ajouter une entrée';
 
   @override
-  String get adminEditEntry => 'Edit entry';
+  String get adminEditEntry => 'Modifier l\'entrée';
 
   @override
-  String get adminDeleteEntry => 'Delete entry';
+  String get adminDeleteEntry => 'Supprimer l\'entrée';
 }

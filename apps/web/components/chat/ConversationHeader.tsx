@@ -80,6 +80,7 @@ export function ConversationHeader({
   onSearchToggle,
 }: Props) {
   const t = useTranslations('chat')
+  const tCall = useTranslations('call')
   const router = useRouter()
   const { data: conversation } = useConversation(conversationId)
   const queryClient = useQueryClient()
@@ -227,7 +228,7 @@ export function ConversationHeader({
               variant="ghost"
               size="icon"
               onClick={() => setStartCallOpen(true)}
-              title={t('groupCall')}
+              title={tCall('groupCall')}
               className="tap"
             >
               <Users className="size-4" />
