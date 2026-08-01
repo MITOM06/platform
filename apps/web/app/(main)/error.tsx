@@ -13,7 +13,8 @@ export default function MainError({ error, reset }: { error: Error; reset: () =>
   return (
     <div className="flex h-full flex-col items-center justify-center gap-4">
       <h2 className="text-lg font-semibold">{t('somethingWrong')}</h2>
-      <p className="text-sm text-muted-foreground">{error.message || t('unknownError')}</p>
+      {/* Never render error.message — it leaks raw exception text. Logged above instead. */}
+      <p className="text-sm text-muted-foreground">{t('unknownError')}</p>
       <Button onClick={reset}>{t('retry')}</Button>
     </div>
   )

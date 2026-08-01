@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/l10n/l10n_ext.dart';
+import '../../../../core/utils/app_error.dart';
 import '../../../auth/domain/auth_provider.dart';
 import '../../../auth/domain/auth_state.dart';
 import '../../domain/chat_provider.dart';
@@ -29,7 +30,7 @@ class ForwardDialog extends ConsumerWidget {
         height: 320,
         child: convs.when(
           loading: () => const Center(child: CircularProgressIndicator()),
-          error: (e, _) => Center(child: Text(l10n.errorWithMsg('$e'))),
+          error: (e, _) => Center(child: Text(friendlyError(e))),
           data: (list) {
             final targets =
                 list.where((c) => c.id != sourceConversationId).toList();

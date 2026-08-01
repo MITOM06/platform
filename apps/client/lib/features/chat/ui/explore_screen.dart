@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/l10n/l10n_ext.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/utils/app_error.dart';
 import '../data/chat_repository.dart';
 import '../domain/chat_state.dart';
 
@@ -76,7 +77,7 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
       ),
       body: channels.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text(l10n.errorWithMsg('$e'))),
+        error: (e, _) => Center(child: Text(friendlyError(e))),
         data: (list) {
           if (list.isEmpty) {
             return Center(child: Text(l10n.noPublicChannels));

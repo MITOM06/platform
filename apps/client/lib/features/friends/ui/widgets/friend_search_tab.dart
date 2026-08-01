@@ -139,7 +139,7 @@ class _FriendSearchTabState extends ConsumerState<FriendSearchTab> {
       return const Center(child: CircularProgressIndicator());
     }
     if (_error != null) {
-      return Center(child: Text(context.l10n.errorWithMsg(_error.toString())));
+      return Center(child: Text(friendlyError(_error!)));
     }
     if (_query.isEmpty) {
       return Center(child: Text(context.l10n.searchUsersPrompt));

@@ -136,11 +136,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get loadingDots => '...';
 
   @override
-  String errorWithMsg(String error) {
-    return 'Error: $error';
-  }
-
-  @override
   String get loginTitle => 'Sign In';
 
   @override
