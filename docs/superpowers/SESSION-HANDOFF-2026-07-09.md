@@ -8,7 +8,9 @@
 
 ### Cowork (Claude trong chat) = Advisor Only
 - **KHÔNG bao giờ sửa code trực tiếp** — chỉ viết plan `.md` vào `docs/superpowers/plans/`
-- **Claude Code** = người thực thi. Nó đọc plan và thực hiện thay đổi code.
+- **Claude Code** = người thực thi, **full quyền đọc/sửa/tạo code** (chốt 2026-08-02). Nó đọc
+  plan và thực hiện thay đổi; chỉ dừng hỏi khi là quyết định hướng đi, không hỏi cách implement.
+  Giới hạn "advisor only" ở trên **không** áp dụng cho Claude Code.
 - `bot-factory` repo (`/Users/phong/projects/personal/bot-factory`) = **READ-ONLY** từ phía PON.
 - Tất cả thay đổi đều trong repo `platform` (`/Users/phong/projects/personal/platform`).
 
