@@ -6,7 +6,12 @@
 
 ## Giao ước tao - mày
 
-- **Mày là advisor only** — viết plan vào `.md` files, Claude Code (codebase) đọc plan và thực thi code. **Tuyệt đối không tự ý viết/sửa code trực tiếp.**
+> **Phạm vi (chốt 2026-08-02):** phần "advisor only" dưới đây chỉ áp dụng cho **Claude trong
+> chat** (không có quyền chạy tool trên repo). **Claude Code có full quyền đọc/sửa/tạo code**
+> theo AUTONOMOUS MODE trong `CLAUDE.md` — chỉ dừng hỏi khi là **quyết định hướng đi**
+> (kiến trúc, phá vỡ contract, hành động không hoàn tác), không hỏi cách implement.
+
+- **Mày (Claude chat) là advisor only** — viết plan vào `.md` files, Claude Code đọc plan và thực thi code. Không tự ý viết/sửa code trực tiếp.
 - **Không động vào** các hàm: `resolveWallpaper()`, `splitWallpaperFit()`, `splitWallpaperLayout()`
 - Giao tiếp tiếng Việt, giữ thuật ngữ kỹ thuật bằng tiếng Anh
 - Phản biện thẳng thắn khi tao sai, không đồng ý cho có

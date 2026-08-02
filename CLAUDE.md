@@ -45,7 +45,8 @@ Chỉ dừng và hỏi khi gặp đúng các tình huống dưới đây — kh�
 
 ## CRITICAL RULES
 
-- **DO NOT modify `apps/server/auth-service/`** unless explicitly requested — service is complete.
+- **`apps/server/auth-service/` is fully editable** (read, modify, extend) — the earlier
+  "do not touch, service is complete" restriction was lifted; see `.claude/rules/auth-guard.md`.
 - **`apps/server/chat-service/`** — Spring Boot 3 (Go was deleted, migration complete).
 - **`apps/server/ai-service/`** — NestJS/TypeScript (Phase 2 — AI layer).
 - **`apps/client/`** — Flutter (React Native was replaced, migration complete).
