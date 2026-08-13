@@ -74,7 +74,11 @@ export function ChangePasswordDialog({ open, onOpenChange }: ChangePasswordDialo
       toast.success(t('success'))
       handleClose(false)
     } catch (e: unknown) {
-      // Map backend error messages
+      // Map the backend's English error text to a localized string. An unrecognised message must
+      // fall back to the generic localized copy — never `serverMsg` itself: that renders raw
+      // backend text in the user's UI, in English regardless of locale
+      // (.claude/rules/no-raw-system-data-in-ui.md). Mirrors the mobile dialog's `_mapError`,
+      // which already ends at `friendlyError(e)`.
       let message = t('genericError')
       if (e && typeof e === 'object' && 'response' in e) {
         const resp = (e as { response?: { data?: { message?: string } } }).response
@@ -86,8 +90,6 @@ export function ChangePasswordDialog({ open, onOpenChange }: ChangePasswordDialo
             message = t('currentRequired')
           } else if (serverMsg.includes('at least 6')) {
             message = t('atLeast6')
-          } else {
-            message = serverMsg
           }
         }
       }

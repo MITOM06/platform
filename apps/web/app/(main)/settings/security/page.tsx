@@ -86,14 +86,15 @@ export default function SecurityPage() {
       setNewPw('')
       setConfirmPw('')
     } catch (e: unknown) {
+      // An unrecognised server message falls back to the generic localized copy. Assigning
+      // `serverMsg` here would print raw English backend text into the UI regardless of locale
+      // (.claude/rules/no-raw-system-data-in-ui.md).
       let msg = t('genericError')
       const serverMsg = (e as ServerError)?.response?.data?.message
       if (serverMsg?.includes('Incorrect current password')) {
         msg = t('incorrectCurrent')
       } else if (serverMsg?.includes('Current password is required')) {
         msg = t('currentRequired')
-      } else if (serverMsg) {
-        msg = serverMsg
       }
       setError(msg)
     } finally {

@@ -28,7 +28,12 @@ String authErrorToString(BuildContext context, DioException e) {
       // Return the first validation error code
       return _codeToString(context, msg.first.toString(), null);
     }
-    if (msg is String && msg.isNotEmpty) return msg; // legacy plain-string fallback
+    // A plain-string `message` is NestJS's own English wording ("Unauthorized",
+    // "Internal server error") or an unmapped backend sentence. Returning it put raw
+    // English server text in front of the user whatever their language
+    // (.claude/rules/no-raw-system-data-in-ui.md); web's `parseAuthError` already falls
+    // through to GENERIC_ERROR here. Anything worth naming gets a `code` — add it to
+    // `_codeToString` rather than reviving this passthrough.
   }
   return context.l10n.errActionFailed;
 }
