@@ -705,6 +705,7 @@
       }
     }
   },
+  "authErrOtpSendFailed": "Impossible d'envoyer le code de vérification pour le moment. Appuyez sur renvoyer dans un instant.",
   "authErrEmailDomainInvalid": "Le domaine de l'e-mail n'existe pas ou n'a pas d'enregistrements MX.",
   "authErrEmailNotFound": "Cet e-mail n'existe pas dans le système.",
   "authErrEmailInUse": "Cet e-mail est déjà utilisé.",

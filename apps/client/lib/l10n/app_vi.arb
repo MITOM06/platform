@@ -705,6 +705,7 @@
       }
     }
   },
+  "authErrOtpSendFailed": "Hiện chưa gửi được mã xác minh. Vui lòng bấm gửi lại sau giây lát.",
   "authErrEmailDomainInvalid": "Tên miền email không tồn tại hoặc không có bản ghi MX.",
   "authErrEmailNotFound": "Email không tồn tại trong hệ thống.",
   "authErrEmailInUse": "Email này đã được sử dụng.",

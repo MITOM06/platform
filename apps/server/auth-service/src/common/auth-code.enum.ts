@@ -27,6 +27,13 @@ export enum AuthCode {
   OTP_RESEND_COOLDOWN = 'OTP_RESEND_COOLDOWN',
   TOO_MANY_OTP_REQUESTS = 'TOO_MANY_OTP_REQUESTS',
   EMAIL_DOMAIN_INVALID = 'EMAIL_DOMAIN_INVALID',
+  /**
+   * The account exists and an OTP was generated, but the mail provider refused to deliver it
+   * (bad SMTP credentials, quota, provider outage). The client must tell the user the code could
+   * not be sent and offer "resend" — NOT a generic failure, because retrying registration would
+   * only hit the same state again.
+   */
+  OTP_SEND_FAILED = 'OTP_SEND_FAILED',
 
   // ── 401 Unauthorized ────────────────────────────────────────────────────
   ACCOUNT_LOCKED = 'ACCOUNT_LOCKED',

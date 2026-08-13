@@ -705,6 +705,7 @@
       }
     }
   },
+  "authErrOtpSendFailed": "目前无法发送验证码，请稍后点击重新发送。",
   "authErrEmailDomainInvalid": "邮箱域名不存在或无MX记录。",
   "authErrEmailNotFound": "系统中不存在该邮箱。",
   "authErrEmailInUse": "该邮箱已被使用。",

@@ -47,6 +47,7 @@ export function authCodeToI18nKey(code: string): string {
     OTP_RESEND_COOLDOWN: 'errOtpResendCooldown',
     TOO_MANY_OTP_REQUESTS: 'errTooManyOtpRequests',
     EMAIL_DOMAIN_INVALID: 'errEmailDomainInvalid',
+    OTP_SEND_FAILED: 'errOtpSendFailed',
     ACCOUNT_LOCKED: 'errAccountLocked',
     LOGIN_FAILED_WITH_REMAINING: 'errLoginFailedWithRemaining',
     LOGIN_FAILED_LOCKED: 'errLoginFailedLocked',

@@ -88,6 +88,8 @@ String _codeToString(
     case 'OTP_RESEND_COOLDOWN':
       final ttl = _intParam(params, 'ttl');
       return l10n.authErrOtpResendCooldown(ttl);
+    case 'OTP_SEND_FAILED':
+      return l10n.authErrOtpSendFailed;
 
     // ── Email / validation errors ────────────────────────────────────────────
     case 'EMAIL_DOMAIN_INVALID':

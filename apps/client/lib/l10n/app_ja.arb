@@ -705,6 +705,7 @@
       }
     }
   },
+  "authErrOtpSendFailed": "現在、認証コードを送信できません。しばらくしてから再送信を押してください。",
   "authErrEmailDomainInvalid": "メールのドメインが存在しないか、MXレコードがありません。",
   "authErrEmailNotFound": "このメールアドレスはシステムに存在しません。",
   "authErrEmailInUse": "このメールアドレスはすでに使用されています。",
