@@ -165,7 +165,7 @@
     "errOtpWrongWithRemaining": "Incorrect OTP. {remaining} attempt(s) remaining.",
     "errOtpResendCooldown": "Please wait {ttl} seconds before requesting a new OTP.",
     "errEmailDomainInvalid": "Email domain does not exist or has no MX records.",
-    "errOtpSendFailed": "We couldn't send the verification code right now. Please tap resend in a moment.",
+    "errOtpSendFailed": "We couldn't send the verification code right now. Please try again in a moment.",
     "errAccountLocked": "Account temporarily locked for {minutes} minute(s) due to too many failed attempts.",
     "errLoginFailedWithRemaining": "Incorrect email or password. {remaining} attempt(s) remaining.",
     "errLoginFailedLocked": "Too many failed attempts. Account locked for {minutes} minute(s).",

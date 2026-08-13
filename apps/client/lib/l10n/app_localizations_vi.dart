@@ -1968,7 +1968,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get authErrOtpSendFailed =>
-      'Hiện chưa gửi được mã xác minh. Vui lòng bấm gửi lại sau giây lát.';
+      'Hiện chưa gửi được mã xác minh. Vui lòng thử lại sau giây lát.';
 
   @override
   String get authErrEmailDomainInvalid =>

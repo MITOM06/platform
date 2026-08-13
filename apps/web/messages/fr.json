@@ -165,7 +165,7 @@
     "errOtpWrongWithRemaining": "OTP incorrect. {remaining} tentative(s) restante(s).",
     "errOtpResendCooldown": "Veuillez patienter {ttl} secondes avant de demander un nouvel OTP.",
     "errEmailDomainInvalid": "Le domaine de l'adresse e-mail n'existe pas ou n'a pas d'enregistrements MX.",
-    "errOtpSendFailed": "Impossible d'envoyer le code de vérification pour le moment. Appuyez sur renvoyer dans un instant.",
+    "errOtpSendFailed": "Impossible d'envoyer le code de vérification pour le moment. Réessayez dans un instant.",
     "errAccountLocked": "Compte temporairement verrouillé pendant {minutes} minute(s) en raison de trop nombreux échecs.",
     "errLoginFailedWithRemaining": "E-mail ou mot de passe incorrect. {remaining} tentative(s) restante(s).",
     "errLoginFailedLocked": "Trop d'échecs. Compte verrouillé pendant {minutes} minute(s).",

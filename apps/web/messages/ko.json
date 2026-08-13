@@ -165,7 +165,7 @@
     "errOtpWrongWithRemaining": "OTP가 틀렸습니다. {remaining}번 더 시도할 수 있습니다.",
     "errOtpResendCooldown": "새 OTP를 요청하기 전에 {ttl}초 기다려 주세요.",
     "errEmailDomainInvalid": "이메일 도메인이 존재하지 않거나 MX 레코드가 없습니다.",
-    "errOtpSendFailed": "지금은 인증 코드를 보낼 수 없습니다. 잠시 후 재전송을 눌러 주세요.",
+    "errOtpSendFailed": "지금은 인증 코드를 보낼 수 없습니다. 잠시 후 다시 시도해 주세요.",
     "errAccountLocked": "로그인 실패가 너무 많아 계정이 {minutes}분간 잠겼습니다.",
     "errLoginFailedWithRemaining": "이메일 또는 비밀번호가 틀렸습니다. {remaining}번 더 시도할 수 있습니다.",
     "errLoginFailedLocked": "실패 횟수 초과. 계정이 {minutes}분간 잠겼습니다.",

@@ -595,8 +595,19 @@ export class AuthService {
     try {
       await this.mailService.sendOtpEmail(email, otp, locale);
     } catch (e) {
+      // Log enough to diagnose an outage, and nothing more. The full address is user PII, and a
+      // mail-provider error message carries connection/credential detail (nodemailer's is
+      // literally "Invalid login: 535-5.7.8 Username and Password not accepted"). Keep the
+      // recipient's DOMAIN — "every @acme.com send is failing" is the diagnosis, the local part
+      // never is — plus the provider's own error code, which is a stable non-sensitive symbol
+      // (EAUTH / ECONNECTION / EENVELOPE) and more actionable than the prose anyway.
+      const domain = email.slice(email.lastIndexOf('@'));
+      const err = e as { code?: string; responseCode?: number } | undefined;
+      const symptom =
+        err?.code ?? (e instanceof Error ? e.name : typeof e);
       this.logger.error(
-        `OTP email delivery failed for ${email}: ${e instanceof Error ? e.message : e}`,
+        `${AuthCode.OTP_SEND_FAILED}: recipient=***${domain} symptom=${symptom}` +
+          (err?.responseCode ? ` smtpStatus=${err.responseCode}` : ''),
       );
       throw new ServiceUnavailableException({ code: AuthCode.OTP_SEND_FAILED });
     }

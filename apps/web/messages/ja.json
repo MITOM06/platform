@@ -165,7 +165,7 @@
     "errOtpWrongWithRemaining": "OTPが間違っています。残り {remaining} 回試行できます。",
     "errOtpResendCooldown": "新しいOTPをリクエストする前に {ttl} 秒待ってください。",
     "errEmailDomainInvalid": "メールドメインが存在しないか、MXレコードがありません。",
-    "errOtpSendFailed": "現在、認証コードを送信できません。しばらくしてから再送信を押してください。",
+    "errOtpSendFailed": "現在、認証コードを送信できません。しばらくしてからもう一度お試しください。",
     "errAccountLocked": "ログイン失敗が多すぎるため、アカウントが {minutes} 分間ロックされました。",
     "errLoginFailedWithRemaining": "メールまたはパスワードが違います。残り {remaining} 回試行できます。",
     "errLoginFailedLocked": "失敗が多すぎます。アカウントが {minutes} 分間ロックされました。",

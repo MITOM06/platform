@@ -165,7 +165,7 @@
     "errOtpWrongWithRemaining": "OTP không đúng. Còn {remaining} lần thử.",
     "errOtpResendCooldown": "Vui lòng đợi {ttl} giây trước khi yêu cầu mã OTP mới.",
     "errEmailDomainInvalid": "Tên miền email không tồn tại hoặc không có bản ghi MX.",
-    "errOtpSendFailed": "Hiện chưa gửi được mã xác minh. Vui lòng bấm gửi lại sau giây lát.",
+    "errOtpSendFailed": "Hiện chưa gửi được mã xác minh. Vui lòng thử lại sau giây lát.",
     "errAccountLocked": "Tài khoản bị khóa tạm thời {minutes} phút do quá nhiều lần đăng nhập thất bại.",
     "errLoginFailedWithRemaining": "Email hoặc mật khẩu không đúng. Còn {remaining} lần thử.",
     "errLoginFailedLocked": "Quá nhiều lần thất bại. Tài khoản bị khóa trong {minutes} phút.",

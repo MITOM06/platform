@@ -705,7 +705,7 @@
       }
     }
   },
-  "authErrOtpSendFailed": "지금은 인증 코드를 보낼 수 없습니다. 잠시 후 재전송을 눌러 주세요.",
+  "authErrOtpSendFailed": "지금은 인증 코드를 보낼 수 없습니다. 잠시 후 다시 시도해 주세요.",
   "authErrEmailDomainInvalid": "이메일 도메인이 존재하지 않거나 MX 레코드가 없습니다.",
   "authErrEmailNotFound": "시스템에 해당 이메일이 존재하지 않습니다.",
   "authErrEmailInUse": "이 이메일은 이미 사용 중입니다.",

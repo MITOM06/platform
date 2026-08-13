@@ -27,13 +27,6 @@ export enum AuthCode {
   OTP_RESEND_COOLDOWN = 'OTP_RESEND_COOLDOWN',
   TOO_MANY_OTP_REQUESTS = 'TOO_MANY_OTP_REQUESTS',
   EMAIL_DOMAIN_INVALID = 'EMAIL_DOMAIN_INVALID',
-  /**
-   * The account exists and an OTP was generated, but the mail provider refused to deliver it
-   * (bad SMTP credentials, quota, provider outage). The client must tell the user the code could
-   * not be sent and offer "resend" — NOT a generic failure, because retrying registration would
-   * only hit the same state again.
-   */
-  OTP_SEND_FAILED = 'OTP_SEND_FAILED',
 
   // ── 401 Unauthorized ────────────────────────────────────────────────────
   ACCOUNT_LOCKED = 'ACCOUNT_LOCKED',
@@ -56,6 +49,19 @@ export enum AuthCode {
 
   // ── 409 Conflict ────────────────────────────────────────────────────────
   EMAIL_IN_USE = 'EMAIL_IN_USE',
+
+  // ── 503 Service Unavailable ─────────────────────────────────────────────
+  /**
+   * The account exists and an OTP was generated, but delivering the email failed — for ANY reason
+   * `deliverOtpEmail` catches: provider refusal (bad SMTP credentials, quota), a connection
+   * failure, a timeout, a malformed recipient.
+   *
+   * Distinct from a generic failure on purpose: retrying registration cannot help (the account is
+   * already created, so the retry takes the "unverified → resend" branch and fails the same way).
+   * The client must say the code could not be sent and offer resend, which succeeds once delivery
+   * recovers.
+   */
+  OTP_SEND_FAILED = 'OTP_SEND_FAILED',
 
   // ── Validation (class-validator, used as message string in decorators) ──
   VAL_EMAIL_INVALID = 'VAL_EMAIL_INVALID',

@@ -1993,7 +1993,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get authErrOtpSendFailed =>
-      'Impossible d\'envoyer le code de vérification pour le moment. Appuyez sur renvoyer dans un instant.';
+      'Impossible d\'envoyer le code de vérification pour le moment. Réessayez dans un instant.';
 
   @override
   String get authErrEmailDomainInvalid =>

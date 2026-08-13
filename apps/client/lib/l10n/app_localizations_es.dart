@@ -1983,7 +1983,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get authErrOtpSendFailed =>
-      'No pudimos enviar el código de verificación ahora. Toca reenviar en un momento.';
+      'No pudimos enviar el código de verificación ahora. Inténtalo de nuevo en un momento.';
 
   @override
   String get authErrEmailDomainInvalid =>

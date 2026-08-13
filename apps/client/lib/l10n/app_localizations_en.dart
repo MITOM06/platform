@@ -1966,7 +1966,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get authErrOtpSendFailed =>
-      'We couldn\'t send the verification code right now. Please tap resend in a moment.';
+      'We couldn\'t send the verification code right now. Please try again in a moment.';
 
   @override
   String get authErrEmailDomainInvalid =>

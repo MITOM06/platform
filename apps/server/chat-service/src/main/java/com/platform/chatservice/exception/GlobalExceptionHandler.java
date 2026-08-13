@@ -66,8 +66,15 @@ public class GlobalExceptionHandler {
    * argument). Still a client error, so it keeps 400 — but the message is fixed text: Spring's own
    * wording ("The given id must not be null") is internal detail, and {@code
    * .claude/rules/no-raw-system-data-in-ui.md} forbids it reaching a user-facing surface.
+   *
+   * <p>{@code IllegalArgumentException} ONLY. {@code IllegalStateException} belongs to {@link
+   * #handleGeneric}: in this service it means a server-side fault, not bad input — {@code
+   * BotFactoryClient} throws it for "base URL is not configured" and for every failed upstream
+   * call. Mapping it here reported an unconfigured or unreachable Bot Factory as "400 Bad request",
+   * blaming the caller for an outage and hiding it from monitoring. That is the exact mislabelling
+   * this handler was split out to stop.
    */
-  @ExceptionHandler({IllegalArgumentException.class, IllegalStateException.class})
+  @ExceptionHandler(IllegalArgumentException.class)
   public ResponseEntity<Map<String, Object>> handleIllegalArgument(RuntimeException ex) {
     log.warn("Rejected request: {}", ex.toString());
     return ResponseEntity.status(HttpStatus.BAD_REQUEST)

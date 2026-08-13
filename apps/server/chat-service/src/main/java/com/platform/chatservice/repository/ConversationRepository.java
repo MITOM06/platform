@@ -25,12 +25,17 @@ public interface ConversationRepository extends MongoRepository<Conversation, St
    * again.
    *
    * <p>Returns a list rather than {@code Optional} so a duplicate row (two concurrent creates
-   * racing past this check) degrades to "reuse the oldest" instead of throwing. Sorted by {@code
-   * createdAt} so every caller resolves to the same conversation.
+   * racing past this check) degrades to "reuse the oldest" instead of throwing.
+   *
+   * <p>{@code _id} is the tiebreaker, not decoration: MongoDB's sort is not stable, so ordering by
+   * {@code createdAt} alone is undefined between rows that share a value — and BSON dates are
+   * millisecond-precision, so the racing duplicates this list exists to tolerate are exactly the
+   * rows most likely to tie. Without it two callers could pick different conversations for the same
+   * pair of users.
    */
   @Query(
       value = "{ 'participants': { $all: ?0, $size: 2 }, 'type': 'direct' }",
-      sort = "{ 'createdAt': 1 }")
+      sort = "{ 'createdAt': 1, '_id': 1 }")
   List<Conversation> findOneOnOneConversations(List<String> participants);
 
   /** Public group channels visible to all (Task 52). */

@@ -3742,7 +3742,7 @@ abstract class AppLocalizations {
   /// No description provided for @authErrOtpSendFailed.
   ///
   /// In en, this message translates to:
-  /// **'We couldn\'t send the verification code right now. Please tap resend in a moment.'**
+  /// **'We couldn\'t send the verification code right now. Please try again in a moment.'**
   String get authErrOtpSendFailed;
 
   /// No description provided for @authErrEmailDomainInvalid.
