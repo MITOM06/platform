@@ -869,7 +869,7 @@
     "statusProcessing": "Đang xử lý",
     "statusReady": "Sẵn sàng",
     "statusError": "Lỗi",
-    "chunks": "{count} chunks",
+    "chunks": "{count} đoạn",
     "fileTypeError": "Chỉ hỗ trợ file PDF, Word và TXT",
     "fileSizeError": "File không được vượt quá 10MB",
     "uploadSuccess": "Đã tải lên tài liệu",
