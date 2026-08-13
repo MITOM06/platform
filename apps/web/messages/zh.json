@@ -451,6 +451,7 @@
     "systemThemeChanged": "聊天主题已更改",
     "systemQuickReactionChanged": "快捷回应已更改为 {emoji}",
     "systemNicknameChanged": "有人更改了昵称",
+    "systemMessageLabel": "系统消息",
     "clearHistory": "清除聊天记录",
     "deleteConversation": "删除会话",
     "clearHistoryConfirm": "删除所有聊天记录？此操作无法撤销。",

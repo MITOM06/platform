@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button'
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
+import { humanizeMessagePreview } from '@/lib/system-messages'
 import type { Message } from '@/lib/api/types'
 
 // Presentational sub-components extracted from MessageInput.tsx to keep the
@@ -32,7 +33,13 @@ export function ReplyBanner({
         <p className="text-[11px] font-semibold text-primary">
           {t('replyTo', { name: replyingTo.senderName || '' })}
         </p>
-        <p className="truncate text-xs text-muted-foreground">{replyingTo.content}</p>
+        {/* Humanized like the reply quote inside the bubble — replying to a system event,
+            a file or an image otherwise printed the raw `system.*` code, the JSON payload or
+            the /api/uploads URL straight into the composer
+            (.claude/rules/no-raw-system-data-in-ui.md). */}
+        <p className="truncate text-xs text-muted-foreground">
+          {humanizeMessagePreview(replyingTo.content, replyingTo.type, t)}
+        </p>
       </div>
       <Button variant="ghost" size="icon-xs" onClick={onCancelReply}>
         <X className="size-3.5" />

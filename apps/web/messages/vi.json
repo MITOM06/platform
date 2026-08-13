@@ -451,6 +451,7 @@
     "systemThemeChanged": "Chủ đề đoạn chat đã được thay đổi",
     "systemQuickReactionChanged": "Biểu tượng cảm xúc nhanh đã đổi thành {emoji}",
     "systemNicknameChanged": "Biệt danh đã được thay đổi",
+    "systemMessageLabel": "Tin nhắn hệ thống",
     "clearHistory": "Xóa lịch sử trò chuyện",
     "deleteConversation": "Xóa cuộc trò chuyện",
     "clearHistoryConfirm": "Xóa toàn bộ lịch sử? Hành động không thể hoàn tác.",

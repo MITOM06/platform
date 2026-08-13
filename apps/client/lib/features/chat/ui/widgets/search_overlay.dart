@@ -9,6 +9,7 @@ import '../../data/chat_repository.dart';
 import '../../domain/chat_provider.dart';
 import '../../domain/chat_state.dart';
 import 'conversation_avatar.dart';
+import 'message_preview_text.dart';
 
 class SearchOverlay extends ConsumerStatefulWidget {
   final String conversationId;
@@ -183,8 +184,11 @@ class _SearchResultTile extends ConsumerWidget {
         fallbackLetter: letter,
         size: 38,
       ),
+      // Search hits render raw `content`, so a matching system event or file message
+      // would otherwise print its code / JSON payload
+      // (.claude/rules/no-raw-system-data-in-ui.md).
       title: Text(
-        message.content,
+        messagePreviewFromContent(context, message.content),
         maxLines: 2,
         overflow: TextOverflow.ellipsis,
         style: TextStyle(color: textColor),

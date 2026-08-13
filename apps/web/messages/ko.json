@@ -451,6 +451,7 @@
     "systemThemeChanged": "채팅 테마가 변경되었습니다",
     "systemQuickReactionChanged": "빠른 반응이 {emoji}(으)로 변경되었습니다",
     "systemNicknameChanged": "별명이 변경되었습니다",
+    "systemMessageLabel": "시스템 메시지",
     "clearHistory": "채팅 기록 지우기",
     "deleteConversation": "대화 삭제",
     "clearHistoryConfirm": "모든 채팅 기록을 삭제할까요? 이 작업은 되돌릴 수 없습니다.",

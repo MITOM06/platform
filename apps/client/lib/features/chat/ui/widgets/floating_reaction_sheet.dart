@@ -200,7 +200,12 @@ class FloatingReactionSheet extends ConsumerWidget {
                               : firstImageUrl(message.content));
                         },
                       ),
-                    if (isSentByMe && !message.isMedia && !message.isFile)
+                    // Text only, matching web's `message.type === 'text'` gate. The old
+                    // `!isMedia && !isFile` check let "Edit" through for voice and sticker
+                    // messages (isMedia covers image+video only): the composer then opened
+                    // on the message's raw `/api/uploads/<id>.m4a` URL, and saving replaced
+                    // the audio with whatever text was typed.
+                    if (isSentByMe && message.type == 'text')
                       ListTile(
                         leading: const Icon(Icons.edit_rounded,
                             color: AppTheme.ponAccent),

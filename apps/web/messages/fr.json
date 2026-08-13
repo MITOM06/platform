@@ -451,6 +451,7 @@
     "systemThemeChanged": "Thème de la discussion modifié",
     "systemQuickReactionChanged": "Réaction rapide changée en {emoji}",
     "systemNicknameChanged": "Un surnom a été modifié",
+    "systemMessageLabel": "Message système",
     "clearHistory": "Effacer l'historique de la discussion",
     "deleteConversation": "Supprimer la conversation",
     "clearHistoryConfirm": "Supprimer tout l'historique de la discussion ? Cette action est irréversible.",

@@ -451,6 +451,7 @@
     "systemThemeChanged": "Se cambió el tema del chat",
     "systemQuickReactionChanged": "La reacción rápida se cambió a {emoji}",
     "systemNicknameChanged": "Se cambió un apodo",
+    "systemMessageLabel": "Mensaje del sistema",
     "clearHistory": "Borrar historial del chat",
     "deleteConversation": "Eliminar conversación",
     "clearHistoryConfirm": "¿Eliminar todo el historial del chat? Esta acción no se puede deshacer.",

@@ -451,6 +451,7 @@
     "systemThemeChanged": "Chat theme changed",
     "systemQuickReactionChanged": "Quick reaction changed to {emoji}",
     "systemNicknameChanged": "A nickname was changed",
+    "systemMessageLabel": "System message",
     "systemQuickReactionChangedShort": "Quick reaction changed",
     "systemGroupCreated": "Group created",
     "systemMembersAdded": "Members added",

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../../../core/l10n/l10n_ext.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../domain/chat_state.dart';
+import 'message_preview_text.dart';
 
 class EditComposerBar extends StatelessWidget {
   final MessageModel preview;
@@ -31,8 +32,11 @@ class EditComposerBar extends StatelessWidget {
                     fontWeight: FontWeight.w600,
                   ),
                 ),
+                // Edit is gated to text messages, so this is normally plain text —
+                // sanitized anyway as defence in depth, the same as the reply composer
+                // (.claude/rules/no-raw-system-data-in-ui.md).
                 Text(
-                  preview.content,
+                  messagePreviewFromContent(context, preview.content),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
