@@ -162,9 +162,10 @@ fi
 # ----------------------------------------------------------------- flutter
 LAN_IP="$(ipconfig getifaddr en0 2>/dev/null || ipconfig getifaddr en1 2>/dev/null || true)"
 
-# A simulator shares the Mac's loopback, so localhost works. A physical phone
-# does not — it has to come in over the LAN, and Docker already publishes every
-# port on 0.0.0.0, so the Mac's LAN IP is all that's needed.
+MDNS_HOST="$(scutil --get LocalHostName 2>/dev/null || true)"
+
+# A simulator shares the Mac's loopback, so localhost is correct and never goes
+# stale — pin the URLs outright.
 defines_for() {
   local host=$1
   printf '%s' "--dart-define=PON_AUTH_URL=http://$host:3001 \
@@ -173,8 +174,22 @@ defines_for() {
 --dart-define=PON_CONNECTOR_URL=http://$host:3003 \
 --dart-define=PON_WS_URL=ws://$host:8080/ws"
 }
+
+# A physical phone has to come in over the LAN, and the Mac's LAN IP is a DHCP
+# lease: it changes when you move between home, the office and a hotspot, which
+# would strand a build made at the previous desk. So rather than pinning URLs,
+# hand the app a hint plus the Bonjour name and let DevHostDiscovery re-resolve
+# the host on every launch — including a sweep of the phone's own subnet, which
+# works on a network neither machine has seen before. See
+# apps/client/lib/core/config/dev_host_discovery.dart.
+phone_defines_for() {
+  local host=$1
+  printf '%s' "--dart-define=PON_DEV_DISCOVERY=true \
+--dart-define=PON_DEV_HOST=$host \
+--dart-define=PON_DEV_MDNS=${MDNS_HOST:-unknown}.local"
+}
 read -r -a DEFINES <<<"$(defines_for localhost)"
-read -r -a PHONE_DEFINES <<<"$(defines_for "${LAN_IP:-<your-lan-ip>}")"
+read -r -a PHONE_DEFINES <<<"$(phone_defines_for "${LAN_IP:-<your-lan-ip>}")"
 
 step "Ready"
 cat <<EOF
@@ -200,7 +215,10 @@ EOF
 
 if [ "$DO_PHONE" = 1 ]; then
   step "Launching Flutter on a physical device"
-  [ -n "$LAN_IP" ] || die "couldn't determine the Mac's LAN IP (en0/en1) — is Wi-Fi on?"
+  # The LAN IP is only a hint now — the app re-resolves the host at startup and
+  # can find the Mac by sweeping the subnet even with no hint at all — so a
+  # missing one is a warning, not a reason to stop.
+  [ -n "$LAN_IP" ] || warn "couldn't read the Mac's LAN IP (en0/en1) — the app will fall back to discovery"
   # Pick the first real (non-emulator) mobile device flutter can see.
   phone_json="$(cd "$ROOT/apps/client" && flutter devices --machine 2>/dev/null)"
   phone_id="$(printf '%s' "$phone_json" | node -e '
@@ -217,8 +235,8 @@ if [ "$DO_PHONE" = 1 ]; then
     });
   ')"
   [ -n "$phone_id" ] || die "no physical phone found — plug it in (or enable wireless debugging) and check: flutter devices"
-  printf '  device: %s\n  backend: http://%s (phone must be on the same Wi-Fi)\n' \
-    "$(printf '%s' "$phone_id" | cut -f2)" "$LAN_IP"
+  printf '  device:  %s\n  backend: %s (hint) / %s — re-resolved at every launch\n  the phone still has to be on the same network as this Mac\n' \
+    "$(printf '%s' "$phone_id" | cut -f2)" "${LAN_IP:-none}" "${MDNS_HOST:-unknown}.local"
   cd "$ROOT/apps/client" \
     && exec flutter run -d "$(printf '%s' "$phone_id" | cut -f1)" "${PHONE_DEFINES[@]}"
 fi
