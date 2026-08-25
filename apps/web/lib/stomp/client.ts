@@ -9,7 +9,18 @@ export function resolveBrokerURL(): string | undefined {
   if (process.env.NEXT_PUBLIC_WS_URL) return process.env.NEXT_PUBLIC_WS_URL
   if (typeof window === 'undefined') return undefined
   const proto = window.location.protocol === 'https:' ? 'wss' : 'ws'
-  return `${proto}://${window.location.host}/ws`
+  const guessed = `${proto}://${window.location.host}/ws`
+  // Correct for single-origin self-host (the reverse proxy serves /ws), wrong on
+  // a dev machine: it dials the Next dev server, which never answers the
+  // upgrade, so realtime dies silently while REST keeps working. Say so.
+  if (process.env.NODE_ENV !== 'production') {
+    console.warn(
+      `[stomp] NEXT_PUBLIC_WS_URL is not set — guessing ${guessed}. ` +
+        'Running the local stack? set NEXT_PUBLIC_WS_URL=ws://localhost:8080/ws ' +
+        'in apps/web/.env.development.local (scripts/dev/up.sh generates it).',
+    )
+  }
+  return guessed
 }
 
 // Singleton STOMP client — one connection per session

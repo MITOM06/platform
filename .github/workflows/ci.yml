@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: [main, develop]
+    branches: [main, dev]
   pull_request:
     branches: [main]
 
@@ -18,6 +18,20 @@ jobs:
       - uses: gitleaks/gitleaks-action@v2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  # ── Environment Separation ────────────────────────────────────────────────
+  # A hardcoded production host is invisible when you run locally: the code just
+  # quietly talks to production. Mobile social login did exactly that for months.
+  env-separation:
+    name: Environment Separation (no hardcoded prod hosts)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: bash scripts/ci/check-env-leaks.sh
+      # Blocks a promotion that drags local bring-up tooling, fake seed data or a
+      # loosened iOS/Android network policy onto main. Warns elsewhere — `dev` is
+      # supposed to carry them. See .claude/rules/dev-local-only.md.
+      - run: bash scripts/ci/check-dev-only.sh
 
   # ── NestJS Auth Service ────────────────────────────────────────────────────
   auth-service:

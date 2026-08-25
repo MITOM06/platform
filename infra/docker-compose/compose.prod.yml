@@ -26,6 +26,12 @@ services:
 
   redis:
     image: redis:7
+    # Sessions and rotating refresh tokens live here (SessionService HSETs
+    # refreshHash/tokenVersion per session), so a restart without persistence
+    # signs every user out. appendonly survives a reboot or a docker pull.
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - redis_data:/data
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 10s
@@ -63,10 +69,15 @@ services:
     environment:
       NODE_ENV: production
       PORT: 3001
-      MONGO_URI: mongodb://mongo:27017/platform
-      MONGODB_URI: mongodb://mongo:27017/platform
-      REDIS_HOST: redis
-      REDIS_PORT: 6379
+      # Default = the containers in this file (fully self-hosted). Override to run
+      # "hybrid": compute here, data in a managed service (Atlas / Upstash / …).
+      # Set the *_URI/URL forms for managed providers — they carry credentials and
+      # TLS, which the bare host/port pair cannot express.
+      MONGO_URI: ${MONGO_URI:-mongodb://mongo:27017/platform}
+      MONGODB_URI: ${MONGODB_URI:-mongodb://mongo:27017/platform}
+      REDIS_URL: ${REDIS_URL:-}
+      REDIS_HOST: ${REDIS_HOST:-redis}
+      REDIS_PORT: ${REDIS_PORT:-6379}
       JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET}
       JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET}
       WORKSPACE_NAME: ${WORKSPACE_NAME}
@@ -76,6 +87,9 @@ services:
       MAIL_USER: ${MAIL_USER:-}
       MAIL_PASS: ${MAIL_PASS:-}
       DOMAIN: ${DOMAIN}
+      # Everything is served from the single Caddy domain. main.ts refuses to
+      # boot in production without this (no fallback to localhost origins).
+      CORS_ORIGINS: ${CORS_ORIGINS:-https://${DOMAIN}}
       OIDC_ENABLED: ${OIDC_ENABLED:-}
       OIDC_ISSUER: ${OIDC_ISSUER:-}
       OIDC_CLIENT_ID: ${OIDC_CLIENT_ID:-}
@@ -105,12 +119,21 @@ services:
       # to open CORS. Everything is served from the single Caddy domain, so that
       # origin is the whole allow-list; override only for extra front-ends.
       ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-https://${DOMAIN}}
-      SPRING_DATA_MONGODB_URI: mongodb://mongo:27017/platform
-      SPRING_DATA_REDIS_HOST: redis
-      SPRING_RABBITMQ_HOST: rabbitmq
-      SPRING_RABBITMQ_PORT: 5672
-      SPRING_RABBITMQ_USERNAME: platform
-      SPRING_RABBITMQ_PASSWORD: platform
+      # See ProdEnvironmentGuard — the addresses below are container names, so the
+      # guard passes; point one of them back at localhost and it refuses to boot.
+      SPRING_PROFILES_ACTIVE: prod
+      SPRING_DATA_MONGODB_URI: ${SPRING_DATA_MONGODB_URI:-mongodb://mongo:27017/platform}
+      SPRING_DATA_REDIS_URL: ${SPRING_DATA_REDIS_URL:-}
+      SPRING_DATA_REDIS_HOST: ${SPRING_DATA_REDIS_HOST:-redis}
+      SPRING_RABBITMQ_HOST: ${SPRING_RABBITMQ_HOST:-rabbitmq}
+      # A managed broker listens on 5671 with TLS and gives you a *named* vhost;
+      # leaving the vhost at the broker default '/' publishes into a vhost with no
+      # consumers, which is how AI went silent in production once already.
+      SPRING_RABBITMQ_PORT: ${SPRING_RABBITMQ_PORT:-5672}
+      SPRING_RABBITMQ_USERNAME: ${SPRING_RABBITMQ_USERNAME:-platform}
+      SPRING_RABBITMQ_PASSWORD: ${SPRING_RABBITMQ_PASSWORD:-platform}
+      SPRING_RABBITMQ_VIRTUAL_HOST: ${SPRING_RABBITMQ_VIRTUAL_HOST:-/}
+      SPRING_RABBITMQ_SSL_ENABLED: ${SPRING_RABBITMQ_SSL_ENABLED:-false}
       SPRING_MAIN_ALLOW_BEAN_DEFINITION_OVERRIDING: "true"
       SPRING_MAIL_HOST: ${MAIL_HOST:-}
       SPRING_MAIL_PORT: ${MAIL_PORT:-587}
@@ -134,9 +157,10 @@ services:
       NODE_ENV: production
       PORT: 3002
       JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET}
-      MONGODB_URI: mongodb://mongo:27017/platform
-      REDIS_HOST: redis
-      REDIS_PORT: 6379
+      MONGODB_URI: ${MONGODB_URI:-mongodb://mongo:27017/platform}
+      REDIS_URL: ${REDIS_URL:-}
+      REDIS_HOST: ${REDIS_HOST:-redis}
+      REDIS_PORT: ${REDIS_PORT:-6379}
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
       ANTHROPIC_MODEL: claude-sonnet-4-5
       ANTHROPIC_FALLBACK_MODEL: claude-haiku-4-5-20251001
@@ -144,10 +168,13 @@ services:
       AI_BOT_DISPLAY_NAME: ${AI_BOT_DISPLAY_NAME:-PON AI}
       REDIS_AI_REQUEST_CHANNEL: ai:request
       REDIS_AI_RESPONSE_PREFIX: ai:response
-      QDRANT_URL: http://qdrant:6333
+      QDRANT_URL: ${QDRANT_URL:-http://qdrant:6333}
       VOYAGE_API_KEY: ${VOYAGE_API_KEY:-}
       KB_EMBEDDING_MODEL: ${KB_EMBEDDING_MODEL:-voyage-3.5}
-      RABBITMQ_URL: amqp://platform:platform@rabbitmq:5672
+      RABBITMQ_URL: ${RABBITMQ_URL:-amqp://platform:platform@rabbitmq:5672}
+      # Everything is served from the single Caddy domain. main.ts refuses to
+      # boot in production without this (no fallback to localhost origins).
+      CORS_ORIGINS: ${CORS_ORIGINS:-https://${DOMAIN}}
       OTEL_ENABLED: "false"
       CONNECTOR_INTERNAL_URL: http://connector-service:3003
       INTERNAL_API_KEY: ${INTERNAL_API_KEY}
@@ -171,7 +198,7 @@ services:
       NODE_ENV: production
       PORT: 3003
       JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET}
-      MONGO_URI: mongodb://mongo:27017/platform
+      MONGO_URI: ${MONGO_URI:-mongodb://mongo:27017/platform}
       CONNECTOR_VAULT_KEY: ${CONNECTOR_VAULT_KEY}
       INTERNAL_API_KEY: ${INTERNAL_API_KEY}
       OAUTH_REDIRECT_BASE: https://${DOMAIN}/api/connector
@@ -232,6 +259,7 @@ networks:
 
 volumes:
   mongo_data:
+  redis_data:
   qdrant_data:
   rabbitmq_data:
   caddy_data:
