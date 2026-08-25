@@ -28,8 +28,10 @@ note() { found="${found}  - $1
 if git grep -qI 'NSAllowsLocalNetworking' -- apps/client/ios/Runner/Info.plist 2>/dev/null; then
   note "apps/client/ios/Runner/Info.plist: NSAllowsLocalNetworking (dev-only ATS relaxation)"
 fi
-# 2. Cleartext HTTP for a real device against the plain-http local stack.
-if git ls-files --error-unmatch apps/client/android/app/src/debug/AndroidManifest.xml >/dev/null 2>&1; then
+# 2. Cleartext HTTP for a real device against the plain-http local stack. The
+#    debug manifest itself is a normal tracked file and belongs on main; only
+#    the cleartext flag inside it is dev-only, so match content, not existence.
+if git grep -qI 'usesCleartextTraffic' -- apps/client/android/app/src/debug/AndroidManifest.xml 2>/dev/null; then
   note "apps/client/android/app/src/debug/AndroidManifest.xml: usesCleartextTraffic (dev-only)"
 fi
 # 3. Local bring-up tooling and seeded test accounts.
