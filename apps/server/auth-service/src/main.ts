@@ -48,17 +48,38 @@ async function bootstrap() {
   );
 
   // Restrict CORS to an env-driven allowlist instead of reflecting any origin.
-  // CORS_ORIGINS is a comma-separated list; falls back to known web + dev origins.
-  const defaultOrigins = [
-    'https://platform-web-omega-amber.vercel.app',
+  // CORS_ORIGINS is a comma-separated list.
+  // CORS origins are environment-specific — no single list is correct in both.
+  // Dev falls back to the local origins; production must state its own and
+  // refuses to start otherwise, mirroring chat-service's SecurityConfig. The
+  // previous fallback shipped 'http://localhost:3000' to the live API, so a dev
+  // origin was whitelisted in production whenever CORS_ORIGINS was unset.
+  const devOrigins = [
     'http://localhost:3000',
+    'http://localhost:4000',
     'http://localhost:8081',
   ];
-  const allowedOrigins = (process.env.CORS_ORIGINS
-    ? process.env.CORS_ORIGINS.split(',').map((o) => o.trim()).filter(Boolean)
-    : defaultOrigins
-  );
+  const configuredOrigins = (process.env.CORS_ORIGINS ?? '')
+    .split(',')
+    .map((o) => o.trim())
+    .filter(Boolean);
+  if (isProd && configuredOrigins.length === 0) {
+    throw new Error(
+      'CORS_ORIGINS must be set in production. Refusing to start with dev origins.',
+    );
+  }
+  const allowedOrigins = configuredOrigins.length
+    ? configuredOrigins
+    : devOrigins;
 
+  // Same class of trap as CORS: WEB_REDIRECT_URL had a 'http://localhost:8081'
+  // fallback, so forgetting it in production sent every social/SSO login back to
+  // a port on the user's own machine. Fail at boot, not mid-redirect.
+  if (isProd && !process.env.WEB_REDIRECT_URL) {
+    throw new Error(
+      'WEB_REDIRECT_URL must be set in production (OAuth login redirects there).',
+    );
+  }
   app.enableCors({
     origin: (
       origin: string | undefined,

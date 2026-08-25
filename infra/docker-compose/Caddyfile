@@ -16,6 +16,13 @@
 	handle_path /api/chat/* {
 		reverse_proxy chat-service:8080
 	}
+	# Both clients call ai-service through this prefix when everything is behind
+	# one domain (web: axios baseURL '/api/ai'; Flutter: AppConfig.aiBaseUrl ->
+	# https://$DOMAIN/api/ai). Without the route those requests fell through to
+	# the Next.js app and 404'd — the AI usage dashboard and session endpoints.
+	handle_path /api/ai/* {
+		reverse_proxy ai-service:3002
+	}
 
 	# STOMP WebSocket — keep the /ws path; Caddy proxies the upgrade transparently.
 	handle /ws {

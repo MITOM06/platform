@@ -78,11 +78,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   }
 
   Future<void> _launchOAuth(String provider) async {
-    const authBase = String.fromEnvironment('AUTH_BASE_URL',
-        defaultValue:
-            'https://auth-service-942942821810.asia-southeast1.run.app');
-    final uri =
-        Uri.parse('$authBase/auth/social/$provider/init?platform=mobile');
+    // Must go through AppConfig like every other call: a hardcoded default here
+    // sent social login to the PROD auth-service even when the rest of the app
+    // was pointed at a local stack (AUTH_BASE_URL is passed by nothing).
+    final uri = Uri.parse(
+        '${AppConfig.authBaseUrl}/auth/social/$provider/init?platform=mobile');
     try {
       await launchUrl(uri, mode: LaunchMode.externalApplication);
     } catch (_) {
