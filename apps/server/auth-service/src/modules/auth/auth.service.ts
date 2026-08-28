@@ -94,9 +94,11 @@ export class AuthService {
   async redirectWithLoginCode(userId: string, res: Response, platform: string) {
     const code = await this.createLoginCode(userId);
 
+    // Production is guaranteed to have this (main.ts refuses to boot without it),
+    // so the fallback is purely the local web dev server.
     const webRedirect =
       this.configService.get<string>('WEB_REDIRECT_URL') ||
-      'http://localhost:8081';
+      'http://localhost:3000/oauth-callback';
 
     if (platform === 'web') {
       return res.redirect(`${webRedirect}?code=${code}`);
@@ -109,7 +111,12 @@ export class AuthService {
     const encodedCode = encodeURIComponent(code);
     const iosDeeplink = `platform://auth?code=${encodedCode}`;
     // intent://auth?code=xxx#Intent;scheme=platform;package=<id>;end
-    const androidIntent = `intent://auth?code=${encodedCode}#Intent;scheme=platform;package=com.platform.platform_client;S.browser_fallback_url=https%3A%2F%2Fplatform-web-omega-amber.vercel.app%2Flogin;end`;
+    // Derive the browser fallback from WEB_REDIRECT_URL rather than hardcoding the
+    // production web host: a local build used to fall back to the live site.
+    const browserFallback = encodeURIComponent(
+      new URL('/login', webRedirect).toString(),
+    );
+    const androidIntent = `intent://auth?code=${encodedCode}#Intent;scheme=platform;package=com.platform.platform_client;S.browser_fallback_url=${browserFallback};end`;
 
     return res.send(`<!DOCTYPE html>
 <html>

@@ -166,6 +166,10 @@ jobs:
             X_CALLBACK_URL=https://auth-service-942942821810.asia-southeast1.run.app/auth/x/callback
             BASE_URL=https://auth-service-942942821810.asia-southeast1.run.app
             WEB_REDIRECT_URL=https://platform-web-omega-amber.vercel.app/oauth-callback
+            # Same origin chat-service gets via ALLOWED_ORIGINS. main.ts now
+            # refuses to boot in production without it rather than falling
+            # back to a list containing http://localhost:3000.
+            CORS_ORIGINS=https://platform-web-omega-amber.vercel.app
             MOBILE_DEEPLINK_URL=platform://auth
             FIREBASE_SERVICE_ACCOUNT_BASE64=${{ secrets.FIREBASE_SERVICE_ACCOUNT_BASE64 }}
 
@@ -189,10 +193,15 @@ jobs:
           env_vars: |
             JAVA_TOOL_OPTIONS=-XX:MaxRAMPercentage=75.0 -XX:+UseG1GC -XX:+UseContainerSupport
             SPRING_MAIN_ALLOW_BEAN_DEFINITION_OVERRIDING=true
+            # Activates ProdEnvironmentGuard: the revision refuses to start if any
+            # address below is empty or points at localhost. The '|| localhost'
+            # fallbacks that used to sit on these three lines meant a missing or
+            # renamed secret deployed a green revision wired to nothing.
+            SPRING_PROFILES_ACTIVE=prod
             JWT_ACCESS_SECRET=${{ secrets.JWT_ACCESS_SECRET }}
-            SPRING_DATA_MONGODB_URI=${{ secrets.MONGODB_URI || 'mongodb://localhost:27018/platform' }}
-            SPRING_DATA_REDIS_URL=${{ secrets.REDIS_URL || 'redis://localhost:6379' }}
-            SPRING_RABBITMQ_HOST=${{ secrets.RABBITMQ_HOST || 'localhost' }}
+            SPRING_DATA_MONGODB_URI=${{ secrets.MONGODB_URI }}
+            SPRING_DATA_REDIS_URL=${{ secrets.REDIS_URL }}
+            SPRING_RABBITMQ_HOST=${{ secrets.RABBITMQ_HOST }}
             SPRING_RABBITMQ_PORT=${{ secrets.RABBITMQ_PORT || '5672' }}
             SPRING_RABBITMQ_USERNAME=${{ secrets.RABBITMQ_USERNAME || 'platform' }}
             SPRING_RABBITMQ_PASSWORD=${{ secrets.RABBITMQ_PASSWORD || 'platform' }}
@@ -243,6 +252,8 @@ jobs:
             AI_MONTHLY_TOKEN_LIMIT=500000
             CONNECTOR_INTERNAL_URL=https://connector-service-lwnzrufcxa-as.a.run.app
             INTERNAL_API_KEY=${{ secrets.INTERNAL_API_KEY }}
+            # See auth-service above — required in production.
+            CORS_ORIGINS=https://platform-web-omega-amber.vercel.app
 
       # Deploy connector-service (MCP connectors / OAuth / token vault). min 1 +
       # CPU always allocated: it holds remote MCP connections and serves the

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
+import '../../../core/config/app_config.dart';
 import '../../../core/l10n/l10n_ext.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/motion_widgets.dart';
@@ -51,11 +52,11 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   }
 
   Future<void> _launchOAuth(String provider) async {
-    const authBase = String.fromEnvironment('AUTH_BASE_URL',
-        defaultValue:
-            'https://auth-service-942942821810.asia-southeast1.run.app');
-    final uri =
-        Uri.parse('$authBase/auth/social/$provider/init?platform=mobile');
+    // Must go through AppConfig like every other call: a hardcoded default here
+    // sent social login to the PROD auth-service even when the rest of the app
+    // was pointed at a local stack (AUTH_BASE_URL is passed by nothing).
+    final uri = Uri.parse(
+        '${AppConfig.authBaseUrl}/auth/social/$provider/init?platform=mobile');
     if (await canLaunchUrl(uri)) {
       await launchUrl(uri, mode: LaunchMode.externalApplication);
     } else if (mounted) {
