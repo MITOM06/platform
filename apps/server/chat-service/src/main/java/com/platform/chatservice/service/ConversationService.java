@@ -51,8 +51,8 @@ public class ConversationService {
 
   public ConversationResponse createConversation(String currentUserId, String participantId) {
     List<String> participants = List.of(currentUserId, participantId);
-    conversationRepository
-        .findOneOnOneConversation(participants)
+    conversationRepository.findOneOnOneConversations(participants).stream()
+        .findFirst()
         .ifPresent(
             existing -> {
               throw new DuplicateConversationException(existing.getId());

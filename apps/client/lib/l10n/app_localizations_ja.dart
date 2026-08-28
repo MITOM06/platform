@@ -1939,6 +1939,9 @@ class AppLocalizationsJa extends AppLocalizations {
   }
 
   @override
+  String get authErrOtpSendFailed => '現在、認証コードを送信できません。しばらくしてからもう一度お試しください。';
+
+  @override
   String get authErrEmailDomainInvalid => 'メールのドメインが存在しないか、MXレコードがありません。';
 
   @override

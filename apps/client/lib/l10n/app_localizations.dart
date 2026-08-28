@@ -3739,6 +3739,12 @@ abstract class AppLocalizations {
   /// **'Please wait {ttl} seconds before requesting a new OTP.'**
   String authErrOtpResendCooldown(int ttl);
 
+  /// No description provided for @authErrOtpSendFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'We couldn\'t send the verification code right now. Please try again in a moment.'**
+  String get authErrOtpSendFailed;
+
   /// No description provided for @authErrEmailDomainInvalid.
   ///
   /// In en, this message translates to:

@@ -1933,6 +1933,9 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
+  String get authErrOtpSendFailed => '目前无法发送验证码，请稍后重试。';
+
+  @override
   String get authErrEmailDomainInvalid => '邮箱域名不存在或无MX记录。';
 
   @override

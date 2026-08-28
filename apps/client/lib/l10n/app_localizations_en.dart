@@ -1965,6 +1965,10 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get authErrOtpSendFailed =>
+      'We couldn\'t send the verification code right now. Please try again in a moment.';
+
+  @override
   String get authErrEmailDomainInvalid =>
       'Email domain does not exist or has no MX records.';
 

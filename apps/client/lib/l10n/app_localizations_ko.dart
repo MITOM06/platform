@@ -1939,6 +1939,9 @@ class AppLocalizationsKo extends AppLocalizations {
   }
 
   @override
+  String get authErrOtpSendFailed => '지금은 인증 코드를 보낼 수 없습니다. 잠시 후 다시 시도해 주세요.';
+
+  @override
   String get authErrEmailDomainInvalid => '이메일 도메인이 존재하지 않거나 MX 레코드가 없습니다.';
 
   @override

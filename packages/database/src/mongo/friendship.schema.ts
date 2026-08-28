@@ -5,7 +5,9 @@ export type FriendshipDocument = Friendship & Document;
 
 export type FriendshipStatus = 'pending' | 'accepted';
 
-@NestSchema({ timestamps: true })
+// Pinned explicitly (same name Mongoose would derive) because chat-service reads this collection
+// via `@Document(collection = "friendships")`. See shared-collections.spec.ts.
+@NestSchema({ timestamps: true, collection: 'friendships' })
 export class Friendship {
   @Prop({ required: true, index: true })
   requesterId: string;

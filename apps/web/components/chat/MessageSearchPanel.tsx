@@ -6,6 +6,7 @@ import { Search, X, Loader2 } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { chatService } from '@/lib/api/chat'
+import { humanizeMessagePreview } from '@/lib/system-messages'
 import type { Message } from '@/lib/api/types'
 
 interface Props {
@@ -81,7 +82,12 @@ export function MessageSearchPanel({ conversationId, onClose }: Props) {
               className="px-2 py-1.5 rounded-md hover:bg-muted/60 cursor-pointer"
             >
               <p className="text-xs text-muted-foreground">{formatTime(msg.createdAt)}</p>
-              <p className="text-sm truncate">{msg.content}</p>
+              {/* Search hits are rendered from raw `content`, so a matching system event or
+                  file message would otherwise print its code / JSON payload
+                  (.claude/rules/no-raw-system-data-in-ui.md). */}
+              <p className="text-sm truncate">
+                {humanizeMessagePreview(msg.content, msg.type, t)}
+              </p>
             </div>
           ))}
           {!loading && query.trim() && results.length === 0 && (

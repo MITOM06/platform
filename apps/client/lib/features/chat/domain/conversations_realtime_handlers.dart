@@ -1,12 +1,14 @@
 import 'dart:async';
 import 'package:collection/collection.dart';
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart' show ScaffoldMessenger, SnackBar, Text;
+import 'package:flutter/material.dart'
+    show BuildContext, ScaffoldMessenger, SnackBar, Text;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/l10n/l10n_ext.dart';
 import '../../../core/router/app_router.dart';
 import '../../../core/services/notification_service.dart';
 import '../../../core/utils/global_messenger.dart';
+import '../ui/widgets/message_preview_text.dart';
 import 'chat_misc_providers.dart';
 import 'chat_state.dart';
 import 'webrtc_service.dart';
@@ -98,6 +100,36 @@ void handleWebRtcSignal(
   }
 }
 
+/// Builds the SANITIZED body line for the in-app banner and the OS notification.
+///
+/// Kept pure (context + values in, string out) so the no-raw-system-data rule can be
+/// regression-tested — the leak this guards was invisible from the widget tree.
+///
+/// Only image/video/file used to be masked here, so every OTHER non-text type fell through
+/// to raw `content`: a voice note or sticker pushed its `/api/uploads/<id>` URL, a group
+/// event pushed `system.nickname.changed:<userId>:<value>`, and a meeting summary pushed its
+/// JSON — onto the lock screen, where the user cannot even dismiss it by scrolling past
+/// (.claude/rules/no-raw-system-data-in-ui.md). Everything now goes through the same
+/// sanitizer the reply quotes and the conversation list use. System events carry no
+/// meaningful sender, so they drop the `"<name>: "` prefix the way web does.
+String notificationBodyText(
+  BuildContext context, {
+  required String name,
+  required bool isMention,
+  String? content,
+  String? messageType,
+}) {
+  final l10n = context.l10n;
+  if (isMention) return l10n.mentionNotificationBody(name);
+  if (messageType == 'image') return '$name: [${l10n.attachPhoto}]';
+  if (messageType == 'video') return '$name: [${l10n.attachVideo}]';
+  if (messageType == 'file') return '$name: [${l10n.attachFile}]';
+  if (content == null || content.isEmpty) return l10n.newNotificationBody(name);
+
+  final preview = messagePreviewFromContent(context, content);
+  return content.startsWith('system.') ? preview : '$name: $preview';
+}
+
 /// Resolves [senderId] to a display name then shows the top in-app banner and
 /// fires the OS/local notification with the same humanized title + body.
 Future<void> showIncomingMessageBanner(
@@ -122,22 +154,13 @@ Future<void> showIncomingMessageBanner(
   final l10n = context.l10n;
   final name = senderName.isNotEmpty ? senderName : l10n.conversationDefault;
 
-  String bodyText;
-  if (isMention) {
-    bodyText = l10n.mentionNotificationBody(name);
-  } else {
-    if (messageType == 'image') {
-      bodyText = '$name: [${l10n.attachPhoto}]';
-    } else if (messageType == 'video') {
-      bodyText = '$name: [${l10n.attachVideo}]';
-    } else if (messageType == 'file') {
-      bodyText = '$name: [${l10n.attachFile}]';
-    } else if (content != null && content.isNotEmpty) {
-      bodyText = '$name: $content';
-    } else {
-      bodyText = l10n.newNotificationBody(name);
-    }
-  }
+  final bodyText = notificationBodyText(
+    context,
+    name: name,
+    isMention: isMention,
+    content: content,
+    messageType: messageType,
+  );
 
   final title =
       isMention ? l10n.mentionNotificationTitle : l10n.newNotificationTitle;

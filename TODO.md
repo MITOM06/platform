@@ -698,3 +698,118 @@ Phase 5: i18n parity ✓ Flutter 1022 keys × 7 locales, 0 missing/extra · web 
 **Not covered by this sweep:** no visual/E2E pass on any of the ~76 redesigned screens — the two fixes
 above are code-level. `flutter analyze`, the widget tests and computed contrast ratios still cannot catch
 "looks wrong", so the redesign's own caveat stands: the owner's E2E look-and-feel review is still open.
+
+---
+
+## 🧪 QA LOG — QC Full 2026-08-13 (auth → services → user actions, web + mobile)
+
+Phase 1 — static: auth build ✓ | chat compile ✓ | ai build ✓ | connector build ✓ | web tsc+next build ✓ | flutter analyze ✓ (0 issues)
+Phase 2 — tests: auth 75/75 | chat 149/149 | ai 352/352 | connector 101/101 | web 93/93 | flutter 75/75
+Phase 3 — smoke: infra ✓ | auth-service ✓ | chat-service ✓ | ai-service ✓ | connector-service ✓
+Phase 4 — API E2E (2 real users, ~80 assertions): auth guards ✓ | friends ✓ | conversations ✓ | message
+  actions (send/edit/recall/react/pin/read/forward/delete-for-me/feedback) ✓ | group admin authz ✓ |
+  pagination contract ✓ | AI/KB/reminders/usage ✓ | connector ✓
+Phase 5 — issues found: **6**, all fixed and re-verified against the running stack.
+
+### Fixed
+1. **P1 — Block User did nothing.** `UserBlockSchema` had no explicit `collection`, so Mongoose wrote
+   `userblocks` while chat-service reads `user_blocks`. Blocked users could still DM and call.
+   → pinned `collection: 'user_blocks'`, migration `scripts/migrations/2026-08-13-user-blocks-collection.js`,
+   regression test `shared-collections.spec.ts`.
+2. **P1 — a 2-member group permanently broke "start a DM" with that person.**
+   `findOneOnOneConversation` matched on `participants` only, so a two-person group satisfied it:
+   the client was dropped into the group, and once both existed the query threw
+   `IncorrectResultSizeDataAccessException` (500, DM unreachable forever).
+   → added `'type': 'direct'`, returns a sorted list so duplicates degrade instead of throwing;
+   `DirectConversationLookupTest` (Testcontainers) covers it.
+3. **P1 — a failed OTP email bricked registration.** The account row was written before
+   `sendOtpEmail`, so one SMTP hiccup returned 500, and the retry took the "unverified → resend"
+   branch and failed identically — the email could never be registered or verified again.
+   → `deliverOtpEmail()` wraps every send, 503 + `OTP_SEND_FAILED`; mapped + localized in all 7
+   languages on web and mobile.
+4. **P2 — 400/404/405 all reached clients as 401.** Spring Security 6 filters the ERROR dispatch and
+   `OncePerRequestFilter` skips it, so `/error` came back "Full authentication is required". Both
+   clients read 401 as an expired session and burned a token refresh on plain validation errors.
+   → `/error` permitted.
+5. **P2 — every unhandled exception answered 400 with raw exception text.** Real outages (Mongo
+   timeout, NPE) looked like client errors in the UI and in monitoring, and the body echoed internal
+   detail — including a full Mongo query with user ids.
+   → typed 400 for `IllegalArgument/IllegalState`, opaque logged 500 otherwise.
+6. **P3 — web printed raw English backend text.** `ChangePasswordDialog` and `settings/security`
+   fell back to `serverMsg` for unrecognised errors; mobile already ended at `friendlyError()`.
+   → both fall back to the localized generic string.
+
+**Status: CLEAN** — 845/845 tests pass; all 6 fixes re-verified on the live local stack.
+
+**Not covered:** no browser/device UI pass (code + API level only); STOMP realtime fan-out was read
+for parity but not exercised with two live sockets; `/api/assistant/providers` returns 400 locally
+because Bot Factory is not configured (env, not a defect).
+
+### 🔴 FIX NOTES — raw system data / error text reaching users (2026-08-13, follow-up sweep)
+
+Audited every surface that can render a message's `content` or a backend error, on both clients.
+7 leaks found; the humanizers existed but three surfaces had never been routed through them.
+
+| # | Surface | Leaked | Platform |
+|---|---------|--------|----------|
+| 1 | Push / in-app notification body | `system.nickname.changed:<userId>:<value>`, `/api/uploads/<id>.m4a`, meeting-summary JSON — on the **lock screen**. Only image/video/file were masked; every other type fell through to raw `content` | mobile |
+| 2 | Reply composer banner | raw `system.*` code, file JSON, upload URL | **both** |
+| 3 | Message-search results | same | **both** |
+| 4 | `authErrorToString` string fallback | returned the backend's English sentence verbatim ("Unauthorized", "Internal server error") whatever the user's language | mobile |
+| 5 | Unknown `system.*` code | built English words out of the code (`📢 nickname changed`) instead of a localized label | web |
+| 6 | "Edit" on a voice message | `!isMedia && !isFile` misses voice/sticker → composer opened on the raw `/api/uploads/*.m4a` URL, and saving replaced the audio with text. Web already gates on `type === 'text'` | mobile |
+| 7 | change-password error (fixed earlier this sweep) | raw English server text | web |
+
+**Verified clean, left alone:** message bubbles (typed dispatch), pinned bar/section, conversation
+list, archived + request tiles, web notification hook, server-side FCM `pushBody` (`default ->
+"New message"`), shared-media "links" tab (user-shared URLs are the content).
+
+**Regression tests** (both fail against the old code — confirmed by reverting):
+`apps/web/components/chat/__tests__/ReplyBanner.test.tsx` (4),
+`apps/client/test/features/chat/no_raw_system_data_test.dart` (7).
+
+New i18n keys in all 7 languages × both platforms: `errOtpSendFailed` / `authErrOtpSendFailed`,
+`systemMessageLabel`. Parity re-checked: web 1342/1342, ARB 1022/1022 per locale.
+
+**Observed, NOT changed:** web's notification hook labels an `ai` message as an attachment
+(`messageType !== 'text'`), while the server's `pushBody` treats `ai` as text. Cosmetic
+inconsistency, not a leak — flagging rather than changing it mid-sweep.
+
+### 🌐 i18n SYNC AUDIT — 2026-08-13
+
+Checked each platform's 7 catalogues against its own template, on 9 axes (not just key counts).
+
+| Check | Web (`messages/*.json`) | Mobile (`lib/l10n/app_*.arb`) |
+|---|---|---|
+| Key parity vs template | ✅ 1342/1342 × 6 locales | ✅ 1022/1022 × 6 locales |
+| ICU placeholder parity | ✅ 0 mismatches | ✅ 0 mismatches |
+| Plural `other` branch present | ✅ | ✅ |
+| Blank values | ✅ none | ✅ none |
+| Duplicate keys (JSON silently keeps the last) | ✅ none | ✅ none |
+| Untranslated (identical to EN) | ⚠️ **1 real** → fixed | ✅ none real |
+| Keys referenced in code but undefined | ✅ 0 | n/a — compiler-checked |
+| Hardcoded UI strings bypassing i18n | ✅ 0 | ✅ 0 |
+| `@metadata` declares every placeholder | n/a | ✅ |
+
+**Locale config matches across platforms:** same 7 codes (en, vi, zh, ja, ko, es, fr), same native
+names, same `en` default. `flutter gen-l10n` verified idempotent — the generated
+`app_localizations*.dart` are in sync with the ARB, nothing stale committed.
+
+**Fixed:** `kb.chunks` was still `"{count} chunks"` in **vi** (the only locale left in English —
+zh/ja/ko/es/fr were all translated). Now `"{count} đoạn"`, matching mobile's `kbChunks` = `"đoạn"`
+so both platforms name the concept the same way.
+
+**Left as-is (correct, not gaps):** values that match EN because the word is identical — proper
+nouns (`PON Messenger v1.0`), format examples (`you@example.com`, `https://…`), the `/new` command,
+`remote-mcp · {label}`, and French `participant(s)` / `source(s)`. Web writes its one plural with
+the CLDR `one {…}` category while mobile uses the exact-value `=1{…}`; both are valid and select
+identically for these 7 locales.
+
+**Regression guards added** (both proven to fail against a deliberately broken catalogue — a
+deleted key and a dropped `{actorName}`):
+`apps/web/lib/__tests__/i18n-parity.test.ts` (28 assertions),
+`apps/client/test/l10n/arb_parity_test.dart` (29 assertions).
+They also assert the locale list on disk equals the supported list, so adding a language without
+its catalogue — or shipping a stray file — now fails CI.
+
+Totals after this sweep: web 125 tests, flutter 111 tests, all passing.

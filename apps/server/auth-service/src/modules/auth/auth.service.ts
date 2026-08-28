@@ -2,6 +2,8 @@ import {
   ConflictException,
   Inject,
   Injectable,
+  Logger,
+  ServiceUnavailableException,
   UnauthorizedException,
   NotFoundException,
 } from '@nestjs/common';
@@ -27,6 +29,8 @@ import { NotificationsService } from '../notifications/notifications.service';
 
 @Injectable()
 export class AuthService {
+  private readonly logger = new Logger(AuthService.name);
+
   constructor(
     private readonly mailService: MailService,
     private readonly jwt: JwtService,
@@ -300,7 +304,7 @@ export class AuthService {
       const otp = this.generateOtp();
       const expires = new Date(Date.now() + 5 * 60 * 1000);
       await this.usersService.updateOtp(user._id, this.hashOtp(otp), expires);
-      await this.mailService.sendOtpEmail(user.email, otp, locale);
+      await this.deliverOtpEmail(user.email, otp, locale);
       throw new UnauthorizedException({
         code: AuthCode.ACCOUNT_UNVERIFIED_OTP_SENT,
         params: { email: user.email },
@@ -376,7 +380,7 @@ export class AuthService {
     const expires = new Date(Date.now() + 5 * 60 * 1000);
 
     await this.usersService.updateOtp(user._id, this.hashOtp(otp), expires);
-    await this.mailService.sendOtpEmail(email, otp, locale);
+    await this.deliverOtpEmail(email, otp, locale);
     return { success: true, code: AuthCode.OTP_SENT };
   }
 
@@ -552,7 +556,7 @@ export class AuthService {
       const otp = this.generateOtp();
       const expires = new Date(Date.now() + 5 * 60 * 1000);
       await this.usersService.updateOtp(existingUser._id, this.hashOtp(otp), expires);
-      await this.mailService.sendOtpEmail(dto.email, otp, locale);
+      await this.deliverOtpEmail(dto.email, otp, locale);
       return {
         code: AuthCode.ACCOUNT_UNVERIFIED_OTP_SENT,
         userId: existingUser._id,
@@ -572,12 +576,48 @@ export class AuthService {
     const otp = this.generateOtp();
     const expires = new Date(Date.now() + 5 * 60 * 1000);
     await this.usersService.updateOtp(user._id, this.hashOtp(otp), expires);
-    await this.mailService.sendOtpEmail(dto.email, otp, locale);
+    await this.deliverOtpEmail(dto.email, otp, locale);
 
     return {
       code: AuthCode.REGISTER_SUCCESS,
       userId: user._id,
     };
+  }
+
+  /**
+   * Send an OTP email, converting a mail-provider failure into a typed 503 instead of letting it
+   * escape as an untyped 500.
+   *
+   * The account row is already written by the time we get here, so a raw throw left the caller
+   * with "Internal server error", an account they could not verify, and a retry that took the
+   * "unverified → resend" branch and failed identically — a permanent signup deadlock from one
+   * SMTP hiccup. With a typed code the client can say "we couldn't send the code" and offer
+   * resend, which succeeds as soon as the provider recovers.
+   */
+  private async deliverOtpEmail(
+    email: string,
+    otp: string,
+    locale: string,
+  ): Promise<void> {
+    try {
+      await this.mailService.sendOtpEmail(email, otp, locale);
+    } catch (e) {
+      // Log enough to diagnose an outage, and nothing more. The full address is user PII, and a
+      // mail-provider error message carries connection/credential detail (nodemailer's is
+      // literally "Invalid login: 535-5.7.8 Username and Password not accepted"). Keep the
+      // recipient's DOMAIN — "every @acme.com send is failing" is the diagnosis, the local part
+      // never is — plus the provider's own error code, which is a stable non-sensitive symbol
+      // (EAUTH / ECONNECTION / EENVELOPE) and more actionable than the prose anyway.
+      const domain = email.slice(email.lastIndexOf('@'));
+      const err = e as { code?: string; responseCode?: number } | undefined;
+      const symptom =
+        err?.code ?? (e instanceof Error ? e.name : typeof e);
+      this.logger.error(
+        `${AuthCode.OTP_SEND_FAILED}: recipient=***${domain} symptom=${symptom}` +
+          (err?.responseCode ? ` smtpStatus=${err.responseCode}` : ''),
+      );
+      throw new ServiceUnavailableException({ code: AuthCode.OTP_SEND_FAILED });
+    }
   }
 
   async resendOtp(email: string, locale: string = 'en') {
@@ -601,7 +641,7 @@ export class AuthService {
     const otp = this.generateOtp();
     const expires = new Date(Date.now() + 5 * 60 * 1000);
     await this.usersService.updateOtp(user._id, this.hashOtp(otp), expires);
-    await this.mailService.sendOtpEmail(email, otp, locale);
+    await this.deliverOtpEmail(email, otp, locale);
 
     // Reset attempt counter khi gửi lại OTP mới
     await this.redis.del(`otp_attempts:${email}`);

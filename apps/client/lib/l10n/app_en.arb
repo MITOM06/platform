@@ -988,6 +988,7 @@
       }
     }
   },
+  "authErrOtpSendFailed": "We couldn't send the verification code right now. Please try again in a moment.",
   "authErrEmailDomainInvalid": "Email domain does not exist or has no MX records.",
   "authErrEmailNotFound": "Email does not exist in the system.",
   "authErrEmailInUse": "This email is already in use.",

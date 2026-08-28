@@ -1992,6 +1992,10 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
+  String get authErrOtpSendFailed =>
+      'Impossible d\'envoyer le code de vérification pour le moment. Réessayez dans un instant.';
+
+  @override
   String get authErrEmailDomainInvalid =>
       'Le domaine de l\'e-mail n\'existe pas ou n\'a pas d\'enregistrements MX.';
 
