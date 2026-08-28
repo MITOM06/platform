@@ -1,6 +1,6 @@
 # Plan — Meeting Room Phase 1: LiveKit SFU + Screen Share
 
-**Ngày:** 2026-08-22 · **Trạng thái: PENDING (chưa bắt đầu)**
+**Ngày:** 2026-08-22 · cập nhật 2026-08-28 · **Trạng thái: PENDING (chưa bắt đầu), 3 quyết định đã chốt**
 **Spec:** `docs/superpowers/specs/2026-08-22-meeting-room-livekit-design.md`
 **Nhánh đề nghị:** `feat/meeting-livekit` cắt từ `dev` (cần local stack)
 
@@ -21,13 +21,15 @@
       File: `infra/docker-compose/compose.yml` (hoặc `compose.dev.yml`) — **chỉ nhánh `dev`**.
 - [ ] **M0.2** `infra/livekit/livekit.yaml`: keys, `rtc.use_external_ip`, `rtc.port_range`,
       `turn.enabled: true` + TLS, `room.auto_create: false`, `webhook.urls` → chat-service,
-      `webhook.api_key`.
+      `webhook.api_key`. **Không thêm coturn** — D4 chốt 1-1 cũng qua LiveKit, nên không còn
+      traffic P2P ngoài room để phục vụ.
 - [ ] **M0.3** Env var mới, **không default localhost** trên `main`:
       chat-service `LIVEKIT_URL` / `LIVEKIT_API_KEY` / `LIVEKIT_API_SECRET` /
       `LIVEKIT_WEBHOOK_KEY` / `CALL_TRANSPORT` (`mesh|sfu`, default `mesh`);
       web `NEXT_PUBLIC_LIVEKIT_URL`; Flutter dart-define `LIVEKIT_URL`.
 - [ ] **M0.4** Runbook deploy VM GCE: firewall (7880/tcp, 7881/tcp, 50000-60000/udp, 3478/udp),
-      TLS cho ws, systemd/compose autostart, healthcheck.
+      TLS cho ws, systemd/compose autostart, healthcheck. **Sizing: trần 25 người/phòng → ~4 vCPU**
+      (owner chốt 2026-08-28).
       File: `infra/README.md` (mục mới) — **được lên `main`** (không chứa giá trị local).
 - [ ] **M0.5** Cập nhật bảng Ports trong `CLAUDE.md` + `infra/README.md`.
 - [ ] **M0.6** Verify: 2 tab web join room test qua LiveKit CLI/`--dev`, thấy được nhau.
@@ -95,8 +97,9 @@
       active speaker, icon mute người khác, chỉ báo mạng. Tách widget cho ≤ 400 dòng/file.
 - [ ] **M3.7** Android screen share: `MediaProjection` + foreground service +
       `FOREGROUND_SERVICE_MEDIA_PROJECTION` trong `AndroidManifest.xml`.
-- [ ] **M3.8** iOS screen share: Broadcast Upload Extension + App Group (task riêng, có thể ship
-      sau web/Android). Ghi rõ vào release note nếu chưa xong.
+- [x] ~~**M3.8** iOS screen share: Broadcast Upload Extension + App Group.~~
+      **NGOÀI Phase 1** — owner chốt 2026-08-28 tách thành bản sau. Việc duy nhất còn lại trong
+      Phase 1: ghi vào release note rằng iOS chưa share được màn hình (web + Android thì có).
 - [ ] **M3.9** i18n: key mới vào **cả 7** file `lib/l10n/app_*.arb` + `flutter gen-l10n`.
 - [ ] **M3.10** `flutter analyze` sạch + `flutter test` xanh. Đo lag ở `--profile`, **không** debug.
 
@@ -109,13 +112,20 @@
 - [ ] **M4.4** Verify AI notetaker vẫn ra `meeting_summary` đúng như trước (contract không đổi).
 - [ ] **M4.5** Rollout: `CALL_TRANSPORT=mesh` → bật `sfu` staging → bật prod; rollback = đổi env.
 - [ ] **M4.6** Task cleanup (sau khi client mesh hết dùng): xoá `relaySignal`, mesh field trong
-      `WebRTCSignalDto`, `group-call-manager.ts`, `group_call_service.dart`.
+      `WebRTCSignalDto`, `group-call-manager.ts`, `group_call_service.dart`. Nhờ D4 (1-1 cũng qua
+      LiveKit) đây là xoá **sạch**, không phải giữ lại nhánh mesh cho 1-1.
 
 ---
 
-## Việc chưa quyết, cần hỏi owner khi tới
+## Quyết định của owner (chốt 2026-08-28)
 
-- [ ] D4 xác nhận lại: **1-1 cũng đi qua LiveKit**? Nếu owner muốn giữ 1-1 P2P → phải thêm
-      **coturn** vào M0 (TURN nhúng của LiveKit là room-scoped, không phục vụ P2P ngoài room).
-- [ ] iOS screen share có nằm trong Phase 1 hay tách bản sau (ảnh hưởng provisioning/ký app).
-- [ ] Trần số người cần đạt ở Phase 1 để chốt sizing VM (25? 50?).
+Ba việc treo ở bản 2026-08-22 đã được owner chốt. Không hỏi lại.
+
+| # | Quyết định | Ảnh hưởng lên plan |
+|---|---|---|
+| D4 | **1-1 cũng đi qua LiveKit.** Mọi call đều là SFU, không còn đường P2P nào. | **Không cần coturn** — bỏ hẳn khỏi M0. TURN nhúng của LiveKit đủ dùng vì không còn traffic ngoài room. Mesh code (`relaySignal`, `group-call-manager.ts`, `group_call_service.dart`) xoá được **toàn bộ** ở M4.6, không phải giữ lại nhánh 1-1. |
+| iOS | **Screen share iOS tách bản sau Phase 1.** Web + Android ship trước. | **M3.8 ra khỏi Phase 1** (xem dưới). Provisioning/ký app cho Broadcast Upload Extension không chặn được release. Phải ghi vào release note là iOS chưa share được màn hình. |
+| Sizing | **Trần 25 người/phòng.** | VM ~4 vCPU. M0.4 chốt sizing theo mức này; M4.2 giữ nguyên thang test 2/5/10/25. Chưa cần simulcast/layer switching ở Phase 1 — để dành nếu nâng lên 50. |
+
+Ghi chú D4: 1-1 qua SFU tốn băng thông server cho cả call 2 người, nhưng đổi lại
+fix bug P1 NAT cho **cả** 1-1 (hiện chỉ có STUN) và bỏ được ~550 dòng mesh trên 2 client.

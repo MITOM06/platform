@@ -31,7 +31,7 @@ qua bên thứ ba.
 | D1 | **LiveKit self-hosted** làm SFU | Khớp mô hình self-hosted single-tenant; có simulcast/SVC, TURN nhúng, egress recording, SDK cả JS + Flutter; bỏ được toàn bộ mesh code |
 | D2 | Deploy **1 VM (GCE) + docker compose** | Đủ cho quy mô 1 công ty/deployment, tái dùng pattern `infra/docker-compose/`; **Cloud Run không nhận UDP** nên không phải lựa chọn |
 | D3 | **Phase 1 chỉ đổi đường media + screen share**, giữ nguyên UX "bấm gọi trong conversation" | Verify được SFU trước khi xây Meeting domain; rủi ro thấp nhất |
-| D4 | **Cả 1-1 và group đều đi qua LiveKit** (một đường media duy nhất) | Hai đường media là nguồn bug lâu dài; TURN nhúng của LiveKit là room-scoped nên P2P 1-1 vẫn sẽ cần coturn riêng → gộp lại thì **không cần coturn**. Đánh đổi: 1-1 tốn băng thông server, không đáng kể ở quy mô một công ty. *Owner có thể override → khi đó phải thêm coturn cho nhánh 1-1.* |
+| D4 | **Cả 1-1 và group đều đi qua LiveKit** (một đường media duy nhất) | Hai đường media là nguồn bug lâu dài; TURN nhúng của LiveKit là room-scoped nên P2P 1-1 vẫn sẽ cần coturn riêng → gộp lại thì **không cần coturn**. Đánh đổi: 1-1 tốn băng thông server, không đáng kể ở quy mô một công ty. **Owner xác nhận 2026-08-28 — chốt, không override. Không thêm coturn.** |
 | D5 | **Không breaking change**: server quyết định transport per-call qua field mới `transport: 'mesh' \| 'sfu'` trong `call.started` + env `CALL_TRANSPORT` | Client mobile đã release vẫn chạy mesh; client mới đọc `transport`. Mesh và SFU **không** trộn trong cùng một call vì server quyết định cho cả phòng |
 | D6 | Server-side STT **để Phase 2** | Phase 1 giữ client STT nguyên trạng ⇒ contract `call:summarize` / `meeting_summary` không đổi, card 2 client không phải sửa |
 
