@@ -4,7 +4,13 @@
 > if you are actively building/extending that feature. Authoritative build state + remaining work:
 > [`../PON-ENTERPRISE-HANDOFF.md`](../PON-ENTERPRISE-HANDOFF.md).
 >
-> Last regenerated: 2026-07-11 (2026-07-10 batch fully executed — all 6 plans done & verified).
+> Last regenerated: 2026-08-28 (added the Meeting Room / LiveKit plan — the only PENDING one).
+
+## ⏳ PENDING — chưa bắt đầu
+
+| Plan | Scope | Trạng thái |
+|------|-------|------------|
+| `2026-08-22-meeting-room-livekit-phase1-plan.md` | Meeting Room Phase 1 — thay P2P mesh bằng **LiveKit SFU**: hạ tầng LiveKit + TURN (M0), chat-service thành authority thay vì relay SDP/ICE (M1), room web (M2) + Flutter (M3) với screen share / lobby / active speaker, QC & rollout theo cờ `CALL_TRANSPORT` (M4) | **PENDING — 0/44 task.** Spec đã chốt: [`../specs/2026-08-22-meeting-room-livekit-design.md`](../specs/2026-08-22-meeting-room-livekit-design.md). Nhánh đề nghị `feat/meeting-livekit` cắt từ `dev` (chưa tạo). **Không còn chặn** — owner chốt 3 quyết định ngày 2026-08-28: 1-1 cũng qua LiveKit (⇒ bỏ coturn khỏi M0), iOS screen share tách bản sau (⇒ M3.8 ra khỏi Phase 1), trần 25 người/phòng (⇒ VM ~4 vCPU). Xem bảng ở cuối plan. Fix bug P1 hiện tại: call chỉ có STUN, không TURN → fail sau NAT đối xứng / firewall doanh nghiệp |
 
 ## 🎨 UI Redesign (Warm Grey & Burgundy) — code complete, awaiting visual QA
 
