@@ -22,12 +22,12 @@ cd "$ROOT"
 # real label before '.run.app', so a comment saying '*.run.app' does not trip it.
 PATTERN='[0-9a-z][0-9a-z.-]*\.run\.app|platform-web-omega-amber\.vercel\.app'
 
-ALLOWED=(
-  # Single source of truth for the Flutter client's build-time defaults.
-  'apps/client/lib/core/config/app_config.dart'
-  # next/image remote allow-list — must name the hosts it may fetch from.
-  'apps/web/next.config.ts'
-)
+# Nothing is exempt any more. Both files that used to be were the *reason* for
+# this check: app_config.dart's Cloud Run defaults meant a Flutter build with no
+# --dart-define talked to production, and next.config.ts pinned the image
+# optimizer to two hostnames that have since been retired. Both now derive the
+# host from configuration, so a new entry here means a new leak.
+ALLOWED=()
 
 # bash 3.2 (the macOS default) has no mapfile, so collect into a temp file.
 hits="$(mktemp)"
@@ -40,7 +40,7 @@ git ls-files \
   | xargs -0 grep -nEI "$PATTERN" 2>/dev/null \
   | while IFS= read -r hit; do
       file="${hit%%:*}"
-      for allowed in "${ALLOWED[@]}"; do
+      for allowed in ${ALLOWED[@]+"${ALLOWED[@]}"}; do
         [ "$file" = "$allowed" ] && continue 2
       done
       printf '%s\n' "$hit"

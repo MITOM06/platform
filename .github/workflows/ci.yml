@@ -32,6 +32,11 @@ jobs:
       # loosened iOS/Android network policy onto main. Warns elsewhere — `dev` is
       # supposed to carry them. See .claude/rules/dev-local-only.md.
       - run: bash scripts/ci/check-dev-only.sh
+      # Promotion must be a *complete* configuration change: every variable a
+      # deployment requires is in its example file, no production deployment
+      # carries a development fallback, and every NEXT_PUBLIC_* the web app
+      # reads is documented. See docs/environments.md.
+      - run: bash scripts/ci/check-env-parity.sh
 
   # ── NestJS Auth Service ────────────────────────────────────────────────────
   auth-service:

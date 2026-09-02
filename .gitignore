@@ -7,6 +7,10 @@
 # matches the literal name only, so the .env.* rule would swallow them.
 !.env.*.example
 
+# Local stack logs (scripts/dev/up.sh). Untracked but not ignored meant a stray
+# `git add .` could commit a developer's service logs onto main.
+.dev-logs/
+
 # Firebase service account (admin SDK) — SECRET, never commit
 *firebase-adminsdk*.json
 # Firebase client config — generated per-project by `flutterfire configure`
