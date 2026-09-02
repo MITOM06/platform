@@ -132,26 +132,27 @@ cat <<EOF
   This hostname is new — a quick tunnel gets a fresh one every start. Three
   places hold a copy of it and all three need updating now.
 
-  1) VERCEL — set these five, then redeploy (env changes need a new build):
+  1) VERCEL — set this one variable, then redeploy (env changes need a build):
 
-     NEXT_PUBLIC_AUTH_URL=$URL/api/auth
-     NEXT_PUBLIC_CHAT_URL=$URL/api/chat
-     NEXT_PUBLIC_CONNECTOR_URL=$URL/api/connector
-     NEXT_PUBLIC_AI_URL=$URL/api/ai
-     NEXT_PUBLIC_WS_URL=wss://$HOST/ws
+     NEXT_PUBLIC_API_BASE=$URL
 
-     NEXT_PUBLIC_WS_URL is not optional here: without it the client derives
-     wss://<vercel-host>/ws, and Vercel does not serve the socket.
+     apps/web/lib/config/env.ts derives every base URL from it — /api/auth,
+     /api/chat, /api/ai, /api/connector and wss://$HOST/ws — exactly the routes
+     Caddyfile.mini serves. The old five NEXT_PUBLIC_*_URL variables still work
+     and still win individually, but you no longer have to keep five copies of
+     one hostname in sync.
 
      With the Vercel CLI, from apps/web:
-       for v in AUTH:api/auth CHAT:api/chat CONNECTOR:api/connector AI:api/ai; do
-         n=NEXT_PUBLIC_\${v%%:*}_URL
-         vercel env rm \$n production -y 2>/dev/null
-         echo "$URL/\${v#*:}" | vercel env add \$n production
+       vercel env rm NEXT_PUBLIC_API_BASE production -y 2>/dev/null
+       echo "$URL" | vercel env add NEXT_PUBLIC_API_BASE production
+       vercel --prod
+
+     If the five old variables are still set in the project, remove them —
+     they override NEXT_PUBLIC_API_BASE and will pin the app to a dead tunnel:
+       for n in AUTH CHAT CONNECTOR AI; do
+         vercel env rm NEXT_PUBLIC_\${n}_URL production -y 2>/dev/null
        done
        vercel env rm NEXT_PUBLIC_WS_URL production -y 2>/dev/null
-       echo "wss://$HOST/ws" | vercel env add NEXT_PUBLIC_WS_URL production
-       vercel --prod
 
   2) FLUTTER — rebuild against this host:
 

@@ -1,4 +1,8 @@
 // Media URL + file helpers — mirror Flutter `image_content.dart` / `file_content.dart`.
+import { serviceUrl, isRelative } from '@/lib/config/env'
+
+// When CHAT_URL is the same-origin relative path there is no prefix to add: the
+// upload path is already absolute against the current origin.
 
 /** Resolve a possibly-relative media URL against the chat-service base. */
 export function absoluteMediaUrl(url: string): string {
@@ -6,7 +10,8 @@ export function absoluteMediaUrl(url: string): string {
   if (url.startsWith('http') || url.startsWith('blob:') || url.startsWith('data:')) {
     return url
   }
-  const base = (process.env.NEXT_PUBLIC_CHAT_URL ?? '').replace(/\/$/, '')
+  const chat = serviceUrl('chat')
+  const base = isRelative(chat) ? '' : chat
   const sep = url.startsWith('/') ? '' : '/'
   return `${base}${sep}${url}`
 }

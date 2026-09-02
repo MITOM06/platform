@@ -19,6 +19,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Separator } from '@/components/ui/separator'
+import { AUTH_URL } from '@/lib/config/env'
 
 type FormData = { email: string; password: string }
 
@@ -27,9 +28,11 @@ export default function LoginPage() {
   const router = useRouter()
   const setAuth = useAuthStore((s) => s.setAuth)
   const [showPassword, setShowPassword] = useState(false)
-  const authUrl = process.env.NEXT_PUBLIC_AUTH_URL ?? ''
-  // Same-origin fallback so SSO works in the self-host (relative-URL) build too.
-  const authBase = process.env.NEXT_PUBLIC_AUTH_URL || '/api/auth'
+  // AUTH_URL always resolves — an absolute host when one is configured, the
+  // same-origin '/api/auth' otherwise — so the social/SSO links work in every
+  // deployment shape. They used to be hidden whenever the env var was unset,
+  // which silently removed social login from the self-host build.
+  const authBase = AUTH_URL
   const { data: sso } = useQuery({
     queryKey: ['sso-info'],
     queryFn: () => authService.getSsoInfo(),
@@ -184,8 +187,7 @@ export default function LoginPage() {
           </a>
         )}
 
-        {authUrl && (
-          <>
+        <>
             <div className="flex items-center gap-3 my-4">
               <Separator className="flex-1" />
               <span className="text-xs text-muted-foreground">{t('login.orContinueWith')}</span>
@@ -193,7 +195,7 @@ export default function LoginPage() {
             </div>
             <div className="flex flex-col gap-2">
               <a
-                href={`${authUrl}/auth/social/google/init?platform=web`}
+                href={`${authBase}/auth/social/google/init?platform=web`}
                 className="flex items-center justify-center gap-2 w-full rounded-[10px] border border-border px-4 py-2 text-sm font-medium hover:bg-muted transition-colors"
               >
                 <svg className="h-4 w-4" viewBox="0 0 24 24" aria-hidden>
@@ -206,8 +208,7 @@ export default function LoginPage() {
               </a>
 
             </div>
-          </>
-        )}
+        </>
 
         <p className="mt-4 text-center text-sm text-muted-foreground">
           {t('login.noAccount')}{' '}
