@@ -153,7 +153,9 @@ services:
       rabbitmq:
         condition: service_healthy
     environment:
-      NODE_ENV: production
+      # Local stack — never "production". The prod guards (main.ts) and every
+      # isProd branch must describe the deployed environment, not this one.
+      NODE_ENV: development
       PORT: 3002
       JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET}
       MONGODB_URI: mongodb://mongo:27017/platform
@@ -166,6 +168,7 @@ services:
       AI_BOT_DISPLAY_NAME: ${AI_BOT_DISPLAY_NAME:-PON AI}
       REDIS_AI_REQUEST_CHANNEL: ai:request
       REDIS_AI_RESPONSE_PREFIX: ai:response
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:3000,http://localhost:4000}
       QDRANT_URL: http://qdrant:6333
       VOYAGE_API_KEY: ${VOYAGE_API_KEY:-}
       KB_EMBEDDING_MODEL: ${KB_EMBEDDING_MODEL:-voyage-3.5}
@@ -193,7 +196,9 @@ services:
       mongo:
         condition: service_healthy
     environment:
-      NODE_ENV: production
+      # Local stack — never "production". The prod guards (main.ts) and every
+      # isProd branch must describe the deployed environment, not this one.
+      NODE_ENV: development
       PORT: 3003
       JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET}
       MONGO_URI: mongodb://mongo:27017/platform
@@ -201,6 +206,7 @@ services:
       INTERNAL_API_KEY: ${INTERNAL_API_KEY}
       OAUTH_REDIRECT_BASE: ${OAUTH_REDIRECT_BASE:-http://localhost:3003}
       CLIENT_REDIRECT_URL: ${CLIENT_REDIRECT_URL:-http://localhost:3000/integrations}
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:3000,http://localhost:4000}
       NOTION_CLIENT_ID: ${NOTION_CLIENT_ID:-}
       NOTION_CLIENT_SECRET: ${NOTION_CLIENT_SECRET:-}
       NOTION_MCP_URL: ${NOTION_MCP_URL:-https://mcp.notion.com/sse}

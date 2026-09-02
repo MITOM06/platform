@@ -155,6 +155,8 @@ services:
       # in each provider's console — see the runbook.
       OAUTH_REDIRECT_BASE: ${PON_API_BASE:?required}/api/connector
       CLIENT_REDIRECT_URL: ${WEB_ORIGIN:?required}/integrations
+      # Explicit allow-list — main.ts refuses to boot in production without one.
+      CORS_ORIGINS: ${WEB_ORIGIN:?required}
       NOTION_CLIENT_ID: ${NOTION_CLIENT_ID:-}
       NOTION_CLIENT_SECRET: ${NOTION_CLIENT_SECRET:-}
       NOTION_MCP_URL: ${NOTION_MCP_URL:-https://mcp.notion.com/sse}
