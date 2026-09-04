@@ -3,6 +3,9 @@
 .env.*
 !.env.example
 !.env.sample
+# Per-deployment templates (.env.mini.example, ...) — the negation above
+# matches the literal name only, so the .env.* rule would swallow them.
+!.env.*.example
 
 # Firebase service account (admin SDK) — SECRET, never commit
 *firebase-adminsdk*.json
