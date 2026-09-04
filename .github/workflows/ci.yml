@@ -77,6 +77,29 @@ jobs:
         env:
           JWT_ACCESS_SECRET: ci_test_secret_must_be_at_least_32_chars_long
 
+  # ── NestJS Connector Service ──────────────────────────────────────────────
+  # deploy.yml has always tested this service before shipping it, but CI did not,
+  # so its 100+ tests never ran on a pull request — including the boot guards that
+  # decide whether production comes up with an open CORS policy.
+  connector-service:
+    name: Connector Service (NestJS)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/server/connector-service
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: corepack enable
+      - name: Install dependencies
+        run: cd ../../../ && pnpm install --frozen-lockfile
+      - name: Build
+        run: pnpm run build
+      - name: Test
+        run: pnpm exec jest --ci
+
   # ── NestJS AI Service ─────────────────────────────────────────────────────
   ai-service:
     name: AI Service (NestJS)

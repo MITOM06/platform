@@ -20,7 +20,7 @@ A high-performance monorepo with four microservices, a Flutter mobile client, an
 
 </div>
 
-> **New here?** Start with [ONBOARDING.md](ONBOARDING.md) for a 5-minute quickstart and contributor conventions. Architecture diagrams live in [docs/architecture.md](docs/architecture.md).
+> **New here?** [ONBOARDING.md](ONBOARDING.md) is the one page for getting this running and contributing to it — including *which branch to clone*, which is not `main`. Architecture diagrams live in [docs/architecture.md](docs/architecture.md); how environments are kept apart, in [docs/environments.md](docs/environments.md).
 >
 > **Product direction:** PON is evolving from a chat app into a **self-hosted, single-tenant-per-deployment B2B AI-assistant platform** (one deployment = one company). The vision, revised roadmap, and current build state live in [docs/superpowers/PON-ENTERPRISE-HANDOFF.md](docs/superpowers/PON-ENTERPRISE-HANDOFF.md).
 
@@ -164,164 +164,49 @@ platform/
 
 ---
 
-## ⚙️ Environment Configuration
+## 🚀 Getting Started
 
-### 1. auth-service (`apps/server/auth-service/.env`)
-```env
-PORT=3001
-MONGO_URI=mongodb://localhost:27018/platform
-REDIS_URL=redis://localhost:6379
-JWT_ACCESS_SECRET=your_shared_secret_here
-JWT_EXPIRES=15m
-REFRESH_EXPIRES=7d
-MAIL_HOST=smtp.example.com
-MAIL_PORT=587
-MAIL_USER=noreply@example.com
-MAIL_PASS=your_mail_password
-```
+Full instructions — prerequisites, which branch to clone, what to ask the owner
+for, the feature workflow — are in **[ONBOARDING.md](ONBOARDING.md)**. The short
+version:
 
-### 2. chat-service (`apps/server/chat-service/src/main/resources/application.yml`)
-```yaml
-spring:
-  data:
-    mongodb:
-      uri: mongodb://localhost:27018/platform
-    redis:
-      host: localhost
-      port: 6379
-  rabbitmq:
-    host: localhost
-    port: 5672
-    username: platform
-    password: platform
-app:
-  jwt:
-    secret: ${JWT_ACCESS_SECRET}
-```
-
-### 3. ai-service (`apps/server/ai-service/.env`)
-```env
-PORT=3002
-MONGO_URI=mongodb://localhost:27018/platform
-REDIS_HOST=localhost
-REDIS_PORT=6379
-RABBITMQ_URL=amqp://platform:platform@localhost:5672
-ANTHROPIC_API_KEY=your_anthropic_api_key
-VOYAGE_API_KEY=your_voyage_api_key
-KB_EMBEDDING_MODEL=voyage-3.5
-QDRANT_URL=http://localhost:6333
-AI_BOT_USER_ID=ai-bot-000000000000000000000001
-AI_BOT_DISPLAY_NAME=PON AI
-# Connector-service internal API (per-user MCP tools)
-CONNECTOR_INTERNAL_URL=http://localhost:3003
-INTERNAL_API_KEY=shared_secret_with_connector_service
-```
-
-### 4. connector-service (`apps/server/connector-service/.env`)
-```env
-PORT=3003
-MONGO_URI=mongodb://localhost:27018/platform
-# AES-256-GCM vault key — MUST base64-decode to exactly 32 bytes (openssl rand -base64 32)
-CONNECTOR_VAULT_KEY=your_base64_32_byte_key
-# Must match ai-service INTERNAL_API_KEY
-INTERNAL_API_KEY=shared_secret_with_connector_service
-JWT_ACCESS_SECRET=your_shared_secret_here
-OAUTH_REDIRECT_BASE=http://localhost:3003
-CLIENT_REDIRECT_URL=http://localhost:3000/integrations
-# Per-provider OAuth (fill the ones you use)
-NOTION_CLIENT_ID=
-NOTION_CLIENT_SECRET=
-NOTION_MCP_URL=https://mcp.notion.com/sse
-GOOGLE_CLIENT_ID=
-GOOGLE_CLIENT_SECRET=
-```
-
-### 5. auth-service — enterprise bootstrap (same `.env` as above)
-```env
-WORKSPACE_NAME=Acme Inc
-# Email of the user who becomes Owner on first boot (seeds workspace + preset roles)
-BOOTSTRAP_OWNER_EMAIL=you@acme.com
-```
-
----
-
-## 🚀 Quick Start
-
-### Prerequisites
-- Docker & Docker Compose
-- Node.js ≥ 20 + pnpm
-- Flutter SDK 3.x
-- Java 21 + Maven
-
-### Step 1: Start Databases & Infrastructure
 ```bash
-# Clone the repository
 git clone https://github.com/MITOM06/platform.git && cd platform
+git checkout dev            # dev = main + the local-env commits; feature branches cut from here
 pnpm install
-
-# Infrastructure only — MongoDB, Redis, RabbitMQ, Qdrant, Jaeger
-docker compose -f infra/docker-compose/compose.yml up -d mongo mongo-setup redis rabbitmq qdrant jaeger
-```
-
-> `compose.yml` also contains the four backend services, so a bare `up -d` starts **everything** in
-> Docker — pick one path or the other. Run the services in Docker (`up -d`, then skip Step 3) when you
-> just want the stack up; list the infra services as above when you want to run a service from source
-> with hot reload. Mixing both means two processes fighting over the same port.
->
-> Running them in Docker requires `infra/docker-compose/.env` (copy `.env.example`) — `JWT_ACCESS_SECRET`
-> and `ALLOWED_ORIGINS` are mandatory; chat-service refuses to start without the latter rather than
-> defaulting to open CORS.
-
-Infrastructure services started:
-- **MongoDB** — `mongodb://localhost:27018` (port 27018, non-standard)
-- **Redis** — `redis://localhost:6379`
-- **RabbitMQ** — AMQP `localhost:5672`, Management UI http://localhost:15672 (platform/platform)
-- **Qdrant** — http://localhost:6333
-- **Jaeger** — UI http://localhost:16686, OTLP http://localhost:4318
-
-### Step 2: Set up Configuration
-Copy environment variables template and fill in API keys:
-```bash
+cp infra/docker-compose/.env.example     infra/docker-compose/.env
 cp apps/server/auth-service/.env.example apps/server/auth-service/.env
-cp apps/server/ai-service/.env.example apps/server/ai-service/.env
+cp apps/web/.env.example                 apps/web/.env.local
+./scripts/dev/up.sh --seed  # whole stack in Docker, seeded, web on :3000
 ```
 
-### Step 3: Run Backend Microservices
-**Start auth-service (NestJS)**:
+Editing one backend service with hot reload instead? That is *path B* in
+ONBOARDING — start the infrastructure **by name**, because `compose.yml` holds
+the four services too and a bare `up -d` starts them as well:
+
 ```bash
-cd apps/server/auth-service
-pnpm start:dev
-```
-**Start ai-service (NestJS)**:
-```bash
-cd apps/server/ai-service
-pnpm start:dev
-```
-**Start connector-service (NestJS)** — or `pnpm connector` from the repo root:
-```bash
-cd apps/server/connector-service
-pnpm start:dev
-```
-**Start chat-service (Spring Boot)**:
-```bash
-cd apps/server/chat-service
-mvn spring-boot:run
+docker compose -f infra/docker-compose/compose.yml up -d \
+  mongo mongo-setup redis rabbitmq qdrant jaeger
 ```
 
-### Step 4 (Option A): Run the Flutter App (Mobile)
-```bash
-cd apps/client
-flutter pub get
-dart run build_runner build --delete-conflicting-outputs
-flutter run
-```
+### Where configuration lives
 
-### Step 4 (Option B): Run the Next.js Web App
-```bash
-cd apps/web
-pnpm install
-pnpm dev
-```
+Each service's `.env.example` is the source of truth for its variables — they are
+kept in sync with the code by `scripts/ci/check-env-parity.sh`, so read those
+rather than a list in this file.
+
+| Deployment | Compose file | Env template |
+|---|---|---|
+| Local development | `infra/docker-compose/compose.yml` | `infra/docker-compose/.env.example` |
+| Production (single host + tunnel) | `infra/docker-compose/compose.mini.yml` | `infra/docker-compose/.env.mini.example` |
+| Self-host (one company, one stack) | `infra/docker-compose/compose.prod.yml` | `infra/docker-compose/.env.example` + `./bootstrap.sh` |
+
+Local and production differ by configuration only; how a build moves between
+them — one variable per client — is [docs/environments.md](docs/environments.md).
+
+Two invariants worth knowing before you start: `JWT_ACCESS_SECRET` must be
+identical across all four services, and MongoDB is on port **27018** locally, not
+27017.
 
 ---
 
@@ -335,9 +220,14 @@ See [docs/observability.md](docs/observability.md) for the full propagation prot
 
 ## ☁️ Self-host / Deploy Your Own
 
-The project is deployed via GitHub Actions (`.github/workflows/deploy.yml`) to:
-- **Backend services** — Google Cloud Run (one service per container)
-- **Web client** — Vercel (auto-deploy on push to `main`)
+Three deployment shapes, all from the same commit — they differ by configuration
+only ([docs/environments.md](docs/environments.md)):
+
+| | Backend | Web |
+|---|---|---|
+| **This project today** | one host behind a Cloudflare Tunnel, `compose.mini.yml` (images built by `.github/workflows/build-mini-images.yml`) | Vercel, auto-deploy on push to `main` |
+| **Cloud Run** | `.github/workflows/deploy.yml` — kept working, currently unused | Vercel |
+| **Self-host (a customer)** | `compose.prod.yml` — the whole stack, data included, behind Caddy on one domain | served by the same Caddy |
 
 **Deployment model (by design):** PON is **self-hosted, one deployment per company**. Each customer
 runs their own instance; companies are isolated at the infrastructure level (no shared multi-tenant
