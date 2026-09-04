@@ -1,18 +1,21 @@
 import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios'
 import { useAuthStore } from '@/lib/store/auth.store'
+import { AUTH_URL, CHAT_URL, CONNECTOR_URL, AI_URL } from '@/lib/config/env'
 
+// Base URLs come from lib/config/env.ts — one resolver for every environment, so
+// promoting a build is a configuration change and never a code change.
 export const authApi = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_AUTH_URL || '/api/auth',
+  baseURL: AUTH_URL,
   headers: { 'Content-Type': 'application/json' },
 })
 
 export const chatApi = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_CHAT_URL || '/api/chat',
+  baseURL: CHAT_URL,
   headers: { 'Content-Type': 'application/json' },
 })
 
 export const connectorApi = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_CONNECTOR_URL || '/api/connector',
+  baseURL: CONNECTOR_URL,
   headers: { 'Content-Type': 'application/json' },
 })
 
@@ -20,7 +23,7 @@ export const connectorApi = axios.create({
 // token-usage page still goes through chatApi; this instance targets ai-service's
 // own admin endpoints (e.g. GET /usage/dashboard).
 export const aiApi = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_AI_URL || '/api/ai',
+  baseURL: AI_URL,
   headers: { 'Content-Type': 'application/json' },
 })
 

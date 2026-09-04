@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import axios from 'axios'
+import { serverAuthUrl } from '@/lib/config/env'
 
 // Cookie lifetimes — keep in sync with /api/auth/set-cookie and /api/auth/session.
 const ACCESS_TOKEN_MAX_AGE = 900 // 15 minutes
@@ -22,7 +23,7 @@ export async function POST(request: NextRequest) {
 
   try {
     const { data } = await axios.post<{ accessToken: string; refreshToken: string }>(
-      `${process.env.NEXT_PUBLIC_AUTH_URL}/auth/refresh`,
+      `${serverAuthUrl(request.url)}/auth/refresh`,
       { sid, refreshToken },
       { headers: { 'Content-Type': 'application/json' } }
     )

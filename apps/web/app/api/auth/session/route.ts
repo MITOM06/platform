@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import axios from 'axios'
 import type { AuthUser } from '@/lib/store/auth.store'
+import { serverAuthUrl } from '@/lib/config/env'
 
 // Cookie lifetimes — keep in sync with /api/auth/set-cookie and /api/auth/refresh.
 const ACCESS_TOKEN_MAX_AGE = 900 // 15 minutes
@@ -30,7 +31,9 @@ export async function GET(request: NextRequest) {
   const sid = request.cookies.get('sid')?.value
   const refreshToken = request.cookies.get('refreshToken')?.value
 
-  const authUrl = process.env.NEXT_PUBLIC_AUTH_URL
+  // Resolved once per request: absolute when configured, otherwise this request's
+  // origin + '/api/auth' (single-domain self-host). See lib/config/env.ts.
+  const authUrl = serverAuthUrl(request.url)
 
   // Backend uses ROTATING refresh tokens with reuse detection: every successful
   // refresh invalidates the presented refresh token and returns a new one. If we

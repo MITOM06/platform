@@ -84,7 +84,7 @@ places hold a copy, and `up.sh` prints all three filled in:
 
 | Holder | What breaks until updated |
 |---|---|
-| Vercel `NEXT_PUBLIC_*` (5 vars) | web talks to a dead host; needs a redeploy |
+| Vercel `NEXT_PUBLIC_API_BASE` (1 var) | web talks to a dead host; needs a redeploy |
 | Flutter `--dart-define=PON_DOMAIN` | app talks to a dead host; needs a rebuild |
 | Google / Notion OAuth consoles | `redirect_uri_mismatch` on social login and connectors |
 
@@ -92,10 +92,14 @@ Email login, chat, realtime and AI keep working through a hostname change once
 Vercel is redeployed. Only the OAuth flows need console edits, and Google does
 not accept wildcards, so that part is manual.
 
-`NEXT_PUBLIC_WS_URL` is not optional on Vercel. Without it the client derives
-`wss://<vercel-host>/ws`, and Vercel does not serve the socket — realtime dies
-silently while REST keeps working, which is exactly the failure that started
-this whole workstream.
+It used to be five Vercel variables, one of which — `NEXT_PUBLIC_WS_URL` — was
+easy to forget: without it the client derived `wss://<vercel-host>/ws`, Vercel
+does not serve the socket, and realtime died silently while REST kept working.
+`apps/web/lib/config/env.ts` now derives all five (including the socket) from
+`NEXT_PUBLIC_API_BASE`, the same way the Flutter client derives them from
+`PON_DOMAIN`. **If the old five are still set in the Vercel project, delete
+them** — a per-service variable wins over the base and will pin the app to a
+dead tunnel. `up.sh` prints the command.
 
 ### Making it stop changing
 

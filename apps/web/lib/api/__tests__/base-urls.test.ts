@@ -49,3 +49,74 @@ describe('resolveBrokerURL', () => {
     vi.unstubAllGlobals()
   })
 })
+
+describe('NEXT_PUBLIC_API_BASE — one variable per environment', () => {
+  const ENV = { ...process.env }
+  afterEach(() => {
+    process.env = { ...ENV }
+    vi.resetModules()
+  })
+
+  const withApiBase = async (base: string) => {
+    for (const k of [
+      'NEXT_PUBLIC_AUTH_URL',
+      'NEXT_PUBLIC_CHAT_URL',
+      'NEXT_PUBLIC_AI_URL',
+      'NEXT_PUBLIC_CONNECTOR_URL',
+      'NEXT_PUBLIC_WS_URL',
+    ]) {
+      delete process.env[k]
+    }
+    process.env.NEXT_PUBLIC_API_BASE = base
+    vi.resetModules()
+    return import('../../config/env')
+  }
+
+  it('derives every service route from the single base', async () => {
+    const env = await withApiBase('https://api.example.com')
+    expect(env.AUTH_URL).toBe('https://api.example.com/api/auth')
+    expect(env.CHAT_URL).toBe('https://api.example.com/api/chat')
+    expect(env.AI_URL).toBe('https://api.example.com/api/ai')
+    expect(env.CONNECTOR_URL).toBe('https://api.example.com/api/connector')
+  })
+
+  it('derives the websocket URL, so a tunnel rename is one variable', async () => {
+    const env = await withApiBase('https://tunnel.example.com')
+    expect(env.wsUrlFromEnv()).toBe('wss://tunnel.example.com/ws')
+  })
+
+  it('tolerates a trailing slash', async () => {
+    const env = await withApiBase('https://api.example.com/')
+    expect(env.AUTH_URL).toBe('https://api.example.com/api/auth')
+  })
+
+  it('lets a per-service URL override the base', async () => {
+    await withApiBase('https://api.example.com')
+    process.env.NEXT_PUBLIC_CHAT_URL = 'http://localhost:8080'
+    vi.resetModules()
+    const env = await import('../../config/env')
+    expect(env.CHAT_URL).toBe('http://localhost:8080')
+    expect(env.AUTH_URL).toBe('https://api.example.com/api/auth')
+  })
+
+  it('falls back to same-origin paths when nothing is configured', async () => {
+    delete process.env.NEXT_PUBLIC_API_BASE
+    delete process.env.NEXT_PUBLIC_AUTH_URL
+    delete process.env.NEXT_PUBLIC_WS_URL
+    vi.resetModules()
+    const env = await import('../../config/env')
+    expect(env.AUTH_URL).toBe('/api/auth')
+    expect(env.wsUrlFromEnv()).toBeUndefined()
+    expect(env.usesSameOriginFallback).toBe(true)
+  })
+
+  it('resolves a relative base against the request origin on the server', async () => {
+    delete process.env.NEXT_PUBLIC_API_BASE
+    delete process.env.NEXT_PUBLIC_AUTH_URL
+    vi.resetModules()
+    const env = await import('../../config/env')
+    expect(env.serverAuthUrl('https://pon.acme.com/api/auth/session')).toBe(
+      'https://pon.acme.com/api/auth',
+    )
+  })
+})

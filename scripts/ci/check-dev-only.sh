@@ -40,7 +40,12 @@ for path in scripts/dev/up.sh scripts/dev/seed-users.js scripts/dev/seed-chat.js
     note "$path: local bring-up / fake seed data"
   fi
 done
-# 4. Any environment file pinning the app to a developer's machine.
+# 4. Local stack output. .dev-logs/ is gitignored now, but the rule is about what
+#    is *tracked*, and an ignore rule added later does not untrack a file.
+while IFS= read -r f; do
+  [ -n "$f" ] && note "$f: local stack log (belongs on dev, never tracked)"
+done < <(git ls-files '.dev-logs/*' 2>/dev/null)
+# 5. Any environment file pinning the app to a developer's machine.
 while IFS= read -r f; do
   [ -n "$f" ] && note "$f: tracked local env file (must stay gitignored)"
 done < <(git ls-files '*.development.local' '*.env.local' 2>/dev/null)

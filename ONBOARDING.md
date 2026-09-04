@@ -1,263 +1,292 @@
-# Onboarding Guide
+# Onboarding
 
-Welcome to **Platform** — a production-grade realtime messaging app with an AI assistant. This guide gets you running in 5 minutes and explains the conventions every contributor (human or AI agent) must follow.
+Welcome to **PON** — a self-hosted enterprise AI-assistant platform: realtime chat
+where every member gets a personal AI that can *act* for them through governed
+MCP connectors.
 
-For the full project overview see [README.md](README.md). For architecture diagrams see [docs/architecture.md](docs/architecture.md). For tracing see [docs/observability.md](docs/observability.md). For architecture decisions see [docs/decisions.md](docs/decisions.md).
+This is the one page for getting the project running and contributing to it. For
+what the product is and how it fits together, read [README.md](README.md); for
+code style and PR rules, [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ---
 
-## 5-Minute Quickstart
+## 1. Which branch do I clone?
 
-The shortest path from zero to a running stack:
+**`dev`.** Not `main`.
+
+```
+        main  ───────────────────────────────►  production; always deployable
+          │  ▲
+   sync   │  │ promote (rebase --onto — feature commits only)
+          ▼  │
+        dev  ──────────►  feat/your-thing
+   (main + local env)     (cut from dev, so the stack is there)
+```
+
+`main` is what gets deployed. Everything whose only job is to make the app *run
+on a laptop* — the bring-up script, seed data, test accounts, localhost wiring —
+lives on `dev` and must never reach `main`. `dev` is `main` plus those commits,
+and it only ever flows one way. The full rule is
+[`.claude/rules/dev-local-only.md`](.claude/rules/dev-local-only.md); CI enforces
+it (`scripts/ci/check-dev-only.sh`).
+
+So: clone, `git checkout dev`, and cut your feature branch from `dev`.
+
+---
+
+## 2. Get it running
+
+### Prerequisites
+
+| Tool | Needed for |
+|---|---|
+| Docker Desktop | everything — Mongo, Redis, RabbitMQ, Qdrant and the four services |
+| Node 20+ and pnpm 9 (`corepack enable`) | the web app, the seed script, any NestJS service you run from source |
+| Flutter SDK 3.44 | only if you work on the mobile app |
+| Xcode | only for iOS builds |
+| Java 21 + Maven | only if you run chat-service from source — path B below |
+
+### Path A — one command (what almost everyone wants)
 
 ```bash
-# 1. Clone and install JS dependencies
 git clone https://github.com/MITOM06/platform.git
 cd platform
+git checkout dev
 pnpm install
 
-# 2. Start all infrastructure (MongoDB, Redis, RabbitMQ, Qdrant, Jaeger)
-docker compose -f infra/docker-compose/compose.yml up -d
-
-# 3. Configure environment files
+cp infra/docker-compose/.env.example     infra/docker-compose/.env
 cp apps/server/auth-service/.env.example apps/server/auth-service/.env
-cp apps/server/ai-service/.env.example   apps/server/ai-service/.env
-# Edit both files: set JWT_ACCESS_SECRET (same value in both!),
-# ANTHROPIC_API_KEY, VOYAGE_API_KEY (RAG embeddings), and MAIL_* variables.
-# chat-service reads application.yml — set JWT_ACCESS_SECRET as an env var:
-export JWT_ACCESS_SECRET=your_shared_secret_here
+cp apps/web/.env.example                 apps/web/.env.local
 
-# 4. Start the backend services (separate terminals)
-cd apps/server/auth-service      && pnpm start:dev     # port 3001
-cd apps/server/ai-service        && pnpm start:dev     # port 3002
-cd apps/server/connector-service && pnpm start:dev     # port 3003
-cd apps/server/chat-service      && mvn spring-boot:run # port 8080
-
-# 5. Start a client
-# Flutter mobile:
-cd apps/client && flutter pub get && flutter run
-
-# Next.js web:
-cd apps/web && pnpm install && pnpm dev                # port 3000
+./scripts/dev/up.sh --seed
 ```
 
-See [README.md Quick Start](README.md#-quick-start) for detailed prerequisites (Docker, Node 20+, Flutter 3.x, Java 21, Maven).
+`up.sh` brings up the whole stack in Docker, waits for each service to be
+healthy, seeds test data, writes `apps/web/.env.development.local` and starts the
+web dev server. Log in at <http://localhost:3000> as `dev@pon.local` /
+`Devpass123!`.
 
-### Infrastructure services at a glance
+Mobile: `./scripts/dev/up.sh --phone` (real device over the LAN — lightest) or
+`--flutter` (iOS simulator).
 
-| Service | URL |
-|---------|-----|
-| MongoDB | `mongodb://localhost:27018` (non-standard port!) |
+Flags and troubleshooting live with the script itself, on the `dev` branch:
+[`scripts/dev/README.md`](https://github.com/MITOM06/platform/blob/dev/scripts/dev/README.md).
+(Both are dev-only, so they are not on `main` — that is the rule in section 1
+working as intended, not a missing file.)
+
+**What you need from the repo owner.** Only the third-party keys; the signing
+secrets are generated per machine:
+
+| Value | Without it |
+|---|---|
+| `ANTHROPIC_API_KEY` | the assistant stays silent |
+| `MAIL_HOST` / `MAIL_PORT` / `MAIL_USER` / `MAIL_PASS` | registration fails — the OTP email never sends |
+| `VOYAGE_API_KEY` *(optional)* | RAG and long-term memory are off; chat still works |
+| `GOOGLE_*` / `NOTION_*` *(optional)* | those connectors do not appear |
+| `FIREBASE_SERVICE_ACCOUNT_BASE64` *(optional)* | no push notifications |
+
+`JWT_ACCESS_SECRET`, `JWT_REFRESH_SECRET`, `SESSION_SECRET`,
+`CONNECTOR_VAULT_KEY` and `INTERNAL_API_KEY` are **generated per machine** by
+`up.sh` into `infra/docker-compose/.env.dev-secrets` (gitignored). Never ask for
+the production values and never paste them in: a token signed with the
+production secret on your laptop is accepted by the live API, and the production
+vault key decrypts every user's stored OAuth tokens.
+
+### Path B — running a service from source (hot reload)
+
+Take this path only when you are actively editing one backend service and want
+`start:dev` reloading. `compose.yml` contains **both** the infrastructure and the
+four services, so start the infrastructure *by name* — a bare `up -d` starts the
+services too and the two processes fight over the same port.
+
+```bash
+docker compose -f infra/docker-compose/compose.yml up -d \
+  mongo mongo-setup redis rabbitmq qdrant jaeger
+
+# One .env per service. All four must carry the SAME JWT_ACCESS_SECRET, and
+# ai-service + connector-service the same INTERNAL_API_KEY, or requests fail
+# with a 401 that looks like a login bug.
+cp apps/server/auth-service/.env.example      apps/server/auth-service/.env
+cp apps/server/ai-service/.env.example        apps/server/ai-service/.env
+cp apps/server/connector-service/.env.example apps/server/connector-service/.env
+cp apps/web/.env.example                      apps/web/.env.local
+
+# connector-service refuses to boot unless CONNECTOR_VAULT_KEY base64-decodes to
+# exactly 32 bytes:
+openssl rand -base64 32
+
+# chat-service reads application.yml and takes the secret from the environment:
+export JWT_ACCESS_SECRET=<the same value as the .env files>
+```
+
+Then, one terminal each:
+
+```bash
+cd apps/server/auth-service      && pnpm start:dev      # :3001
+cd apps/server/ai-service        && pnpm start:dev      # :3002
+cd apps/server/connector-service && pnpm start:dev      # :3003
+cd apps/server/chat-service      && mvn spring-boot:run # :8080
+cd apps/web                      && pnpm dev            # :3000
+```
+
+If you mix paths — services in Docker *and* from source — stop the Docker ones
+first: `docker compose -f infra/docker-compose/compose.yml stop auth-service
+chat-service ai-service connector-service`.
+
+### Infrastructure at a glance
+
+| Service | Address |
+|---|---|
+| MongoDB | `mongodb://localhost:27018` — port **27018**, not 27017 |
 | Redis | `redis://localhost:6379` |
-| RabbitMQ Management UI | http://localhost:15672 (user: `platform` / `platform`) |
-| Qdrant | http://localhost:6333 |
-| Jaeger UI (tracing) | http://localhost:16686 |
+| RabbitMQ | AMQP `localhost:5672` · UI <http://localhost:15672> (`platform`/`platform`) |
+| Qdrant | <http://localhost:6333> |
+| Jaeger (tracing) | <http://localhost:16686> |
 
 ---
 
-## Where Things Live
+## 3. Environments
 
-```
-platform/
-├── apps/
-│   ├── server/
-│   │   ├── auth-service/          # NestJS (port 3001) — JWT, OTP, OAuth, user search
-│   │   │   └── src/modules/
-│   │   │       ├── auth/          # login, register, OTP, OAuth flows
-│   │   │       └── users/         # user profile
-│   │   ├── chat-service/          # Spring Boot 3 (port 8080) — STOMP, REST, MongoDB
-│   │   │   └── src/main/java/.../
-│   │   │       ├── config/        # WebSocket STOMP & security config
-│   │   │       ├── controller/    # REST + WS endpoints
-│   │   │       ├── service/       # MessageService, ConversationService, FcmService
-│   │   │       └── security/      # AuthChannelInterceptor (JWT validation)
-│   │   ├── ai-service/            # NestJS (port 3002) — Claude, RAG, memory, routing
-│   │   │   └── src/
-│   │   │       ├── ai/            # Claude streaming, agentic loop, model router
-│   │   │       ├── memory/        # Long-term memory summarisation (MongoDB)
-│   │   │       ├── kb/            # Document parsing + Qdrant ingestion
-│   │   │       └── redis/         # Pub/Sub subscriber (kb:process, kb:delete)
-│   │   └── connector-service/     # NestJS (port 3003) — governed MCP connectors, OAuth, AES-256-GCM token vault
-│   ├── client/                    # Flutter 3 mobile app
-│   │   └── lib/
-│   │       ├── core/              # Dio clients, GoRouter, STOMP service, theme
-│   │       └── features/          # auth/, chat/, friends/, settings/
-│   └── web/                       # Next.js 16 web app
-│       ├── app/                   # App Router: (auth)/, (main)/conversations/, etc.
-│       ├── components/            # shadcn/ui + chat/ domain components
-│       └── lib/                   # axios instances, Zustand stores, STOMP client
-├── infra/
-│   └── docker-compose/compose.yml # All infrastructure services
-├── docs/
-│   ├── architecture.md            # Mermaid diagrams (this branch)
-│   ├── api-spec.md                # REST + STOMP endpoint reference
-│   ├── decisions.md               # Architecture Decision Records
-│   ├── observability.md           # OTel / Jaeger tracing guide
-│   ├── auth-error-codes.md        # Auth error code → i18n key mapping
-│   └── roadmap.md                 # Sprint progress
-└── packages/
-    └── database/src/              # Shared Mongoose schemas
-```
+Local and production are separated by configuration alone — the same commit runs
+in both, and promoting it is an environment change, never a code change. Read
+[docs/environments.md](docs/environments.md) before touching anything that names
+an address.
+
+Each client resolves every backend URL from **one** value:
+
+| | Local | Deployed |
+|---|---|---|
+| Web | `apps/web/.env.development.local` (written by `up.sh`) | `NEXT_PUBLIC_API_BASE` |
+| Mobile | `--dart-define=PON_CHAT_URL=http://…` | `--dart-define=PON_DOMAIN=<host>` |
+
+Per-service overrides (`NEXT_PUBLIC_CHAT_URL`, `PON_CHAT_URL`, …) win
+individually — that is how you point one service at your machine while the rest
+stay remote.
+
+Two things that will bite you if you forget them:
+
+- **Never hardcode a host in source.** `scripts/ci/check-env-leaks.sh` fails the
+  build over it, with no exemptions. A hardcoded production host is invisible
+  when you run locally — the app just quietly talks to production.
+- **Never commit local setup to `main`.** Keep dev-env changes in separate
+  commits from feature changes; section 4 depends on it.
 
 ---
 
-## Conventions Every Contributor Must Know
+## 4. Working on a feature
 
-### Package Managers — Use the Right One
-
-| Project | Tool | Command |
-|---------|------|---------|
-| JS/TS services (auth, ai) | **pnpm** | `pnpm install`, `pnpm start:dev` |
-| Next.js web | **pnpm** | `pnpm dev`, `pnpm test` |
-| Flutter mobile | **flutter pub** | `flutter pub get`, `flutter run` |
-| chat-service | **Maven** | `mvn spring-boot:run`, `mvn test` |
-
-Never use `npm` or `yarn` in this repo — the `pnpm-workspace.yaml` lockfile will break.
-
-### Critical Environment Variables
-
-```
-JWT_ACCESS_SECRET   — must be IDENTICAL across auth-service, chat-service, ai-service, and connector-service
-ANTHROPIC_API_KEY   — required for ai-service (Claude chat)
-VOYAGE_API_KEY      — KB/RAG + memory embeddings (Voyage AI, Anthropic's partner); unset = RAG off
+```bash
+git checkout dev
+git fetch origin && git merge origin/main   # latest code, your env untouched
+git checkout -b feat/your-thing dev
+# ...code, run ./scripts/dev/up.sh, test...
 ```
 
-MongoDB URI is always `mongodb://localhost:27018/platform` locally (port **27018**, not 27017).
+Promote to `main` by replaying **only your commits** — `--onto` drops everything
+the branch inherited from `dev`:
 
-### Error Code i18n Contract
-
-auth-service returns machine-readable error codes, **not** localized strings. Example:
-
-```json
-{ "code": "AUTH_INVALID_CREDENTIALS", "message": "Invalid credentials" }
+```bash
+git fetch origin
+git rebase --onto origin/main dev feat/your-thing
+git diff origin/main...feat/your-thing --stat   # must list ONLY your files
+git push -u origin feat/your-thing              # then open the PR into main
 ```
 
-Both clients map codes to localized text:
-- Flutter: `lib/features/auth/utils/auth_error.dart` → `context.l10n.<key>`
-- Web: `lib/auth/auth-error.ts` → `t('errors.<key>')`
+If that diff shows `scripts/dev/`, a seed script, a `*.local` env file or a
+`localhost` string, stop — the rebase base was wrong, or a dev-only change got
+mixed into a feature commit.
 
-The full code list is in [docs/auth-error-codes.md](docs/auth-error-codes.md). Never show raw codes in the UI.
+Before you open the PR, run what CI runs (section 5). Two rules the reviewers
+will hold you to:
 
-### Cross-Platform Sync Rule (Web ↔ Mobile)
-
-This is a messaging app. Every feature on one client must be mirrored on the other. Key mirrors:
-
-| Web component | Flutter equivalent |
-|--------------|-------------------|
-| `components/chat/MessageBubble.tsx` | `features/chat/ui/widgets/message_bubble.dart` |
-| `components/chat/MessageInput.tsx` | `features/chat/ui/widgets/chat_input_bar.dart` |
-| `app/(main)/conversations/[id]/page.tsx` | `features/chat/ui/chat_screen.dart` |
-| `lib/stomp/client.ts` | `features/chat/data/stomp_service.dart` |
-
-A feature that works on web but not mobile (or vice versa) is a P1 bug.
-
-### File Size Limits
-
-Enforced to prevent God classes:
-- Flutter UI screens/widgets: **400 lines max**
-- Spring Boot / NestJS services/controllers: **500 lines max** (ai-service: 300 lines max)
-
-Split into smaller files when limits are exceeded.
-
-### CI Gates
-
-CI runs on every push:
-- **gitleaks** secret scan — never commit API keys or secrets
-- **auth-service tests** — `pnpm test` (Jest)
-- **ai-service tests** — `pnpm test` (Jest)
-- **chat-service tests** — `mvn test` (Testcontainers integration tests)
-- **web tests** — `pnpm test` (Vitest)
-- **Flutter tests** — `flutter test`
-
-All gates must pass before merging. Run tests locally before pushing.
+- **Cross-platform sync.** This is a messaging app: a feature that works on web
+  but not mobile (or the reverse) is a P1 bug. Read the mirror file before you
+  start — [`.claude/rules/sync.md`](.claude/rules/sync.md) lists the pairs.
+- **Never show raw system data.** No error text, message codes, user ids, URLs or
+  JSON in the UI — humanize and localize at the source. See
+  [`.claude/rules/no-raw-system-data-in-ui.md`](.claude/rules/no-raw-system-data-in-ui.md).
 
 ---
 
-## Running Tests
+## 5. Tests and CI gates
 
-### auth-service (NestJS + Jest)
-```bash
-cd apps/server/auth-service
-pnpm test
-```
+Every job below runs on every pull request into `main`. Run them locally first.
 
-### ai-service (NestJS + Jest)
-```bash
-cd apps/server/ai-service
-pnpm test
-```
+| Gate | Command |
+|---|---|
+| Secret scan (gitleaks) | — (CI only) |
+| Environment separation | `bash scripts/ci/check-env-leaks.sh`<br>`bash scripts/ci/check-dev-only.sh`<br>`bash scripts/ci/check-env-parity.sh` |
+| auth-service | `cd apps/server/auth-service && pnpm test` |
+| chat-service | `cd apps/server/chat-service && mvn test` *(Testcontainers pulls images on first run)* |
+| connector-service | `cd apps/server/connector-service && pnpm test` |
+| ai-service | `cd apps/server/ai-service && pnpm test` |
+| web | `cd apps/web && pnpm exec tsc --noEmit && pnpm run lint && pnpm test && pnpm build` |
+| Flutter | `cd apps/client && flutter analyze && flutter test` |
 
-### chat-service (Spring Boot + Testcontainers)
-```bash
-cd apps/server/chat-service
-mvn test
-# Note: Testcontainers pulls Docker images on first run — takes ~1 min
-```
+chat-service also runs `spotless` (google-java-format) bound to `test-compile`:
+`mvn compile` can pass while `spotless:check` fails, so run `mvn spotless:apply`
+after editing Java.
 
-### Next.js web (Vitest)
-```bash
-cd apps/web
-pnpm test
-```
+### AI eval harness — before changing the assistant
 
-### Flutter mobile
-```bash
-cd apps/client
-flutter test
-```
-
----
-
-## Running the AI Eval Harness
-
-The ai-service ships an LLM-as-judge eval harness (`apps/server/ai-service/eval/`) that measures answer quality across 14 test cases (RAG grounding, refusal, persona, factual, instruction-following). This is a **manual pre-change check**, not a CI gate.
+`apps/server/ai-service/eval/` is an LLM-as-judge harness over 14 cases (RAG
+grounding, refusal, persona, factual, instruction-following). It is a manual
+pre-change check, not a CI gate. Run it before changing the system prompt,
+upgrading the primary model, or touching the agentic loop.
 
 ```bash
-# From repo root
 ANTHROPIC_API_KEY=sk-ant-... pnpm --filter ai-service eval
-
-# From inside the service directory
-cd apps/server/ai-service
-ANTHROPIC_API_KEY=sk-ant-... pnpm eval
-
-# Override models
-EVAL_SUT_MODEL=claude-sonnet-4-6 EVAL_JUDGE_MODEL=claude-haiku-4-5 \
-  ANTHROPIC_API_KEY=sk-ant-... pnpm eval
 ```
 
-Run the eval before changing the system prompt, upgrading the primary model, or modifying the agentic loop. See [apps/server/ai-service/eval/README.md](apps/server/ai-service/eval/README.md) for full details.
+See [apps/server/ai-service/eval/README.md](apps/server/ai-service/eval/README.md).
+
+### Tracing an AI request
+
+One `@AI` message produces a single trace across chat-service → RabbitMQ →
+ai-service → Redis → STOMP. Open <http://localhost:16686>, pick `chat-service` or
+`ai-service`, and look for `ai.request.publish`, `agentic_loop`,
+`ai.response.deliver`. Protocol: [docs/observability.md](docs/observability.md).
 
 ---
 
-## Viewing Distributed Traces in Jaeger
+## 6. Conventions
 
-The platform has end-to-end OpenTelemetry tracing across chat-service → RabbitMQ → ai-service → Redis → STOMP. All spans share a single `traceId`.
+**Package managers.** pnpm for all JS/TS (`pnpm-workspace.yaml`), `flutter pub`
+for mobile, Maven for chat-service. Never `npm` or `yarn`.
 
-```bash
-# Ensure infrastructure is running (Jaeger included)
-docker compose -f infra/docker-compose/compose.yml up -d
+**Ports.** auth 3001 · ai 3002 · connector 3003 · chat 8080 · web 3000 ·
+Mongo 27018.
 
-# Open Jaeger UI
-open http://localhost:16686
+**Shared secrets.** `JWT_ACCESS_SECRET` must be identical across all four
+services; `INTERNAL_API_KEY` identical between ai-service and connector-service.
+Changing one without the others produces 401s that look like login bugs.
 
-# Select "chat-service" or "ai-service" → Find Traces → click any AI request trace
-```
+**Error codes are the contract.** auth-service returns
+`{ "code": "AUTH_INVALID_CREDENTIALS", ... }`, not localized text. Clients map
+codes to strings — Flutter `lib/features/auth/utils/auth_error.dart`, web
+`lib/auth/auth-error.ts`. The list is [docs/auth-error-codes.md](docs/auth-error-codes.md).
+Never render a raw code.
 
-Key spans: `ai.request.publish` (chat-service), `agentic_loop` (ai-service), `ai.response.deliver` (chat-service).
+**i18n.** Seven languages on mobile (`lib/l10n/app_*.arb` — add the key to *all*
+of them) and `messages/*.json` on web. No hardcoded UI strings; see
+[`.claude/rules/i18n.md`](.claude/rules/i18n.md).
 
-Full tracing protocol is documented in [docs/observability.md](docs/observability.md).
+**File length.** Flutter screens/widgets 400 lines, NestJS/Spring services and
+controllers 500 (ai-service 300). Split rather than exceed —
+[`.claude/rules/clean-code.md`](.claude/rules/clean-code.md).
+
+**Where things live** — see the repository map in [README.md](README.md#-repository-structure).
 
 ---
 
-## AI Coding Agent Notes
+## 7. If you are an AI coding agent
 
-This repo uses a harness of specialized Claude agents. Before touching code:
-
-1. Read `CLAUDE.md` (project-wide rules) and the relevant sub-service `CLAUDE.md`.
-2. The `JWT_ACCESS_SECRET` env var must be **identical** across auth-service, chat-service, ai-service, and connector-service — never change it in one place without updating all.
-3. MongoDB port is **27018** locally (Docker maps 27018→27017 internally). Never use 27017 in local config.
-4. Never commit to `main` directly — always use feature branches.
-5. `apps/server/auth-service/` has full read+write access per `.claude/rules/auth-guard.md`.
-6. The AI error-code contract (`docs/auth-error-codes.md`) is a stable interface — clients depend on it.
-
-For active sprint status see `docs/roadmap.md`. For architecture decisions see `docs/decisions.md`.
+1. Read `CLAUDE.md` and the sub-service `CLAUDE.md` before touching code.
+2. The rules in `.claude/rules/` are not advisory — `sync.md`,
+   `no-raw-system-data-in-ui.md`, `dev-local-only.md` and `i18n.md` each
+   correspond to a class of bug that has shipped before.
+3. Never commit to `main` directly; never open a PR from `dev`.
+4. `apps/server/auth-service/` is fully editable
+   (`.claude/rules/auth-guard.md`).
+5. Current state and roadmap: [docs/roadmap.md](docs/roadmap.md) and
+   [docs/superpowers/PON-ENTERPRISE-HANDOFF.md](docs/superpowers/PON-ENTERPRISE-HANDOFF.md).

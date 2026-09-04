@@ -19,6 +19,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Separator } from '@/components/ui/separator'
 import { PasswordStrengthMeter } from '@/components/auth/PasswordStrengthMeter'
 import { Checkbox } from '@/components/ui/checkbox'
+import { AUTH_URL } from '@/lib/config/env'
 
 type FormData = { displayName: string; email: string; password: string; confirmPassword: string; agreeToTerms: boolean }
 
@@ -29,7 +30,9 @@ export default function RegisterPage() {
   const [showConfirm, setShowConfirm] = useState(false)
   const [passwordValue, setPasswordValue] = useState('')
 
-  const authUrl = process.env.NEXT_PUBLIC_AUTH_URL ?? ''
+  // Always resolves (absolute host, or the same-origin '/api/auth'), so the
+  // social links no longer disappear in a build with no explicit env var.
+  const authBase = AUTH_URL
 
   const schema = useMemo(
     () =>
@@ -210,8 +213,7 @@ export default function RegisterPage() {
           </Button>
         </form>
 
-        {authUrl && (
-          <>
+        <>
             <div className="flex items-center gap-3 my-4">
               <Separator className="flex-1" />
               <span className="text-xs text-muted-foreground">{t('login.orContinueWith')}</span>
@@ -219,7 +221,7 @@ export default function RegisterPage() {
             </div>
             <div className="flex flex-col gap-2">
               <a
-                href={`${authUrl}/auth/social/google/init?platform=web`}
+                href={`${authBase}/auth/social/google/init?platform=web`}
                 className="flex items-center justify-center gap-2 w-full rounded-[10px] border border-border px-4 py-2 text-sm font-medium hover:bg-muted transition-colors"
               >
                 <svg className="h-4 w-4" viewBox="0 0 24 24" aria-hidden>
@@ -232,8 +234,7 @@ export default function RegisterPage() {
               </a>
 
             </div>
-          </>
-        )}
+        </>
 
         <p className="mt-4 text-center text-sm text-muted-foreground">
           {t('register.hasAccount')}{' '}
