@@ -69,7 +69,7 @@ class ConversationServiceTest {
 
   @Test
   void createConversation_ShouldSaveAndReturnResponse() {
-    when(conversationRepository.findOneOnOneConversation(any())).thenReturn(Optional.empty());
+    when(conversationRepository.findOneOnOneConversations(any())).thenReturn(List.of());
     when(conversationCacheService.save(any(Conversation.class))).thenReturn(conversation);
 
     ConversationResponse response = conversationService.createConversation(USER_ID, OTHER_ID);
@@ -82,8 +82,7 @@ class ConversationServiceTest {
 
   @Test
   void createConversation_WhenDuplicate_ShouldThrowAndNotSave() {
-    when(conversationRepository.findOneOnOneConversation(any()))
-        .thenReturn(Optional.of(conversation));
+    when(conversationRepository.findOneOnOneConversations(any())).thenReturn(List.of(conversation));
 
     assertThatThrownBy(() -> conversationService.createConversation(USER_ID, OTHER_ID))
         .isInstanceOf(DuplicateConversationException.class)
@@ -95,7 +94,7 @@ class ConversationServiceTest {
 
   @Test
   void createConversation_WhenNotFriends_ShouldBePending() {
-    when(conversationRepository.findOneOnOneConversation(any())).thenReturn(Optional.empty());
+    when(conversationRepository.findOneOnOneConversations(any())).thenReturn(List.of());
     when(conversationCacheService.save(any(Conversation.class))).thenReturn(conversation);
 
     conversationService.createConversation(USER_ID, OTHER_ID);
@@ -107,7 +106,7 @@ class ConversationServiceTest {
 
   @Test
   void createConversation_WhenFriends_ShouldBeAccepted() {
-    when(conversationRepository.findOneOnOneConversation(any())).thenReturn(Optional.empty());
+    when(conversationRepository.findOneOnOneConversations(any())).thenReturn(List.of());
     when(friendshipRepository.findAcceptedBetween(USER_ID, OTHER_ID))
         .thenReturn(Optional.of(new com.platform.chatservice.model.Friendship()));
     when(conversationCacheService.save(any(Conversation.class))).thenReturn(conversation);
@@ -121,7 +120,7 @@ class ConversationServiceTest {
 
   @Test
   void createConversation_withExternalBot_isAutoAccepted() {
-    when(conversationRepository.findOneOnOneConversation(any())).thenReturn(Optional.empty());
+    when(conversationRepository.findOneOnOneConversations(any())).thenReturn(List.of());
     when(externalBotRepository.findByBotUserId("extbot:bf-1"))
         .thenReturn(
             Optional.of(

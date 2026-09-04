@@ -1,0 +1,85 @@
+# Publishes arm64 backend images to GHCR so the Mac mini can `docker compose
+# pull` instead of building. The mini is short on disk: building there means a
+# full pnpm store plus a Maven repo plus build cache (~30GB) for images that
+# total ~5GB.
+#
+# Deploy targets are deliberately split, not duplicated:
+#   deploy.yml               -> Cloud Run (x86, managed)
+#   build-mini-images.yml    -> GHCR (arm64, pulled by the mini)
+# Either can be disabled without touching the other.
+name: Build mini images (arm64 → GHCR)
+
+on:
+  # Chained off CI rather than `push`, so an image is only published from a
+  # commit whose tests actually passed. A green-but-broken image is worse here
+  # than on Cloud Run: there is no automatic rollback on the mini.
+  workflow_run:
+    workflows: [CI]
+    branches: [main]
+    types: [completed]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  build:
+    name: ${{ matrix.service }}
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
+    # Apple silicon. GitHub's arm64 runners are free on public repos and build
+    # natively — the same build under QEMU emulation on an x86 runner takes
+    # roughly an order of magnitude longer, mostly in javac and next build.
+    runs-on: ubuntu-24.04-arm
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # chat-service builds from its own directory (self-contained Maven
+          # project); the NestJS services need the workspace root for pnpm.
+          - service: auth-service
+            context: .
+            dockerfile: apps/server/auth-service/Dockerfile
+          - service: chat-service
+            context: apps/server/chat-service
+            dockerfile: apps/server/chat-service/Dockerfile
+          - service: ai-service
+            context: .
+            dockerfile: apps/server/ai-service/Dockerfile
+          - service: connector-service
+            context: .
+            dockerfile: apps/server/connector-service/Dockerfile
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # workflow_run checks out the default branch by default, not the
+          # commit CI actually validated.
+          ref: ${{ github.event.workflow_run.head_sha || github.ref }}
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # ghcr.io rejects an uppercase path component and the owner is `MITOM06`.
+      - id: repo
+        run: echo "lower=${GITHUB_REPOSITORY,,}" >> "$GITHUB_OUTPUT"
+
+      - uses: docker/setup-buildx-action@v3
+
+      - uses: docker/build-push-action@v6
+        with:
+          context: ${{ matrix.context }}
+          file: ${{ matrix.dockerfile }}
+          platforms: linux/arm64
+          push: true
+          # `latest` is what compose.mini.yml pulls by default; the sha tag is
+          # there so a bad rollout can be pinned back to a known-good build
+          # (IMAGE_TAG=<sha> docker compose -f compose.mini.yml up -d).
+          tags: |
+            ghcr.io/${{ steps.repo.outputs.lower }}/${{ matrix.service }}:latest
+            ghcr.io/${{ steps.repo.outputs.lower }}/${{ matrix.service }}:${{ github.event.workflow_run.head_sha || github.sha }}
+          cache-from: type=gha,scope=${{ matrix.service }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.service }}

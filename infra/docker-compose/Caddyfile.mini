@@ -1,0 +1,50 @@
+# Ingress for the Mac mini deployment. Cloudflare terminates TLS at its edge
+# and cloudflared connects to this over the internal Docker network, so there
+# is no certificate to obtain here and no port open on the host.
+{
+	auto_https off
+	# Cloudflare already logs edge requests; keep the mini's disk for data.
+	admin off
+}
+
+:80 {
+	# The web app is on Vercel and the Flutter client talks to this host
+	# directly, so this proxy serves the API only — there is no `handle`
+	# fallback to a Next.js container the way compose.prod.yml has.
+	#
+	# handle_path strips the matched prefix before proxying, so each service
+	# keeps its existing routes (auth: /auth /me /admin; chat: /api/...;
+	# connector: /oauth /connections /catalog).
+	handle_path /api/auth/* {
+		reverse_proxy auth-service:3001
+	}
+	handle_path /api/connector/* {
+		reverse_proxy connector-service:3003
+	}
+	handle_path /api/chat/* {
+		reverse_proxy chat-service:8080
+	}
+	# Both clients address ai-service through this prefix (web: axios baseURL
+	# '/api/ai'; Flutter: AppConfig.aiBaseUrl).
+	handle_path /api/ai/* {
+		reverse_proxy ai-service:3002
+	}
+
+	# STOMP WebSocket. Cloudflare Tunnel passes the upgrade through, and unlike
+	# Cloud Run there is no 300s idle cap to work around here.
+	handle /ws {
+		reverse_proxy chat-service:8080
+	}
+
+	# Liveness for the tunnel itself: answers even when every backend is down,
+	# which is what distinguishes "tunnel broken" from "service broken".
+	handle /_up {
+		respond "ok" 200
+	}
+
+	# Anything else is a client pointed at the wrong host — most likely a
+	# browser expecting the Vercel app. Say so instead of a bare 404 page.
+	handle {
+		respond "PON API host. The web app lives on Vercel." 404
+	}
+}

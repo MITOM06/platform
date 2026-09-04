@@ -178,21 +178,25 @@ void main() {
       expect(AppConfig.wsUrl, 'ws://172.20.10.3:8080/ws');
     });
 
-    test('clearing it restores the build-time Cloud Run defaults', () {
+    // The layer below the dev host used to be a hardcoded set of Cloud Run
+    // hostnames, so clearing the override sent a *debug* build at production.
+    // There is no baked-in host any more: a debug binary with no --dart-define
+    // falls back to the local stack, and a release one throws. See AppConfig.
+    test('clearing it falls back to the local stack, not to a deployed host', () {
       AppConfig.useDevHost('172.20.10.3');
       AppConfig.useDevHost(null);
 
       expect(AppConfig.devHost, isNull);
-      expect(AppConfig.authBaseUrl, startsWith('https://'));
-      expect(AppConfig.chatBaseUrl, contains('run.app'));
-      expect(AppConfig.wsUrl, startsWith('wss://'));
+      expect(AppConfig.authBaseUrl, 'http://localhost:3001');
+      expect(AppConfig.chatBaseUrl, 'http://localhost:8080');
+      expect(AppConfig.wsUrl, 'ws://localhost:8080/ws');
     });
 
     test('an empty host is treated as no override, not as a blank URL', () {
       AppConfig.useDevHost('');
 
       expect(AppConfig.devHost, isNull);
-      expect(AppConfig.authBaseUrl, startsWith('https://'));
+      expect(AppConfig.authBaseUrl, 'http://localhost:3001');
     });
   });
 }

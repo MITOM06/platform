@@ -1,0 +1,200 @@
+# PON on a Mac mini — compute here, data stays managed.
+#
+# This is compose.prod.yml with the data tier removed. mongo / redis / rabbitmq
+# / qdrant are NOT started: the deployment keeps using the same Atlas, Upstash,
+# CloudAMQP and Qdrant Cloud instances Cloud Run used, so no migration and no
+# second copy of the data. Every one of those addresses is therefore required —
+# there is no container to fall back to, and a silent fallback is what wired a
+# green revision to nothing once already.
+#
+# The web app is NOT here either; it stays on Vercel and calls this host
+# cross-origin, exactly as it called Cloud Run.
+#
+#   cd infra/docker-compose
+#   cp .env.mini.example .env.mini && $EDITOR .env.mini
+#   ../../scripts/mini/up.sh
+#
+# Ingress is Cloudflare Tunnel: cloudflared dials out to Cloudflare, so nothing
+# is port-forwarded and the mini's IP is never exposed. Caddy stays as the
+# single ingress because one tunnel maps to one local address, and four
+# services live behind four path prefixes.
+
+x-restart: &restart
+  restart: unless-stopped
+
+services:
+  auth-service:
+    image: ghcr.io/mitom06/platform/auth-service:${IMAGE_TAG:-latest}
+    <<: *restart
+    environment:
+      NODE_ENV: production
+      PORT: 3001
+      # --- managed data tier (required; no container to fall back to) ---
+      MONGO_URI: ${MONGODB_URI:?set MONGODB_URI to the Atlas connection string}
+      MONGODB_URI: ${MONGODB_URI:?set MONGODB_URI to the Atlas connection string}
+      REDIS_URL: ${REDIS_URL:?set REDIS_URL to the Upstash connection string}
+      # --- secrets (identical values to the Cloud Run deployment) ---
+      JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET:?required}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:?required}
+      SESSION_SECRET: ${SESSION_SECRET:?required}
+      JWT_ACCESS_EXPIRES: 15m
+      JWT_REFRESH_EXPIRES: 30d
+      REFRESH_TOKEN_TTL_SECONDS: 2592000
+      # --- addresses ---
+      # The browser reaches auth-service at <tunnel>/api/auth (Caddy strips the
+      # prefix), so every self-referential URL carries it. auth-service's own
+      # controller prefix is 'auth', hence the doubled segment in the callbacks.
+      BASE_URL: ${PON_API_BASE:?run scripts/mini/up.sh, it fills this}/api/auth
+      GOOGLE_CALLBACK_URL: ${PON_API_BASE}/api/auth/auth/google/callback
+      X_CALLBACK_URL: ${PON_API_BASE}/api/auth/auth/x/callback
+      # Where the browser lands after social login — the Vercel app, which does
+      # not move when the tunnel URL changes.
+      WEB_REDIRECT_URL: ${WEB_ORIGIN:?set WEB_ORIGIN to the Vercel URL}/oauth-callback
+      MOBILE_DEEPLINK_URL: platform://auth
+      # main.ts refuses to boot in production without this rather than falling
+      # back to a list containing http://localhost:3000.
+      CORS_ORIGINS: ${WEB_ORIGIN}
+      # --- optional integrations (blank = feature off) ---
+      MAIL_HOST: ${MAIL_HOST:-}
+      MAIL_PORT: ${MAIL_PORT:-587}
+      MAIL_USER: ${MAIL_USER:-}
+      MAIL_PASS: ${MAIL_PASS:-}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
+      FACEBOOK_APP_ID: ${FACEBOOK_APP_ID:-}
+      FACEBOOK_APP_SECRET: ${FACEBOOK_APP_SECRET:-}
+      X_CLIENT_ID: ${X_CLIENT_ID:-}
+      X_CLIENT_SECRET: ${X_CLIENT_SECRET:-}
+      FIREBASE_SERVICE_ACCOUNT_BASE64: ${FIREBASE_SERVICE_ACCOUNT_BASE64:-}
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:3001/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+    networks: [app-net]
+
+  chat-service:
+    image: ghcr.io/mitom06/platform/chat-service:${IMAGE_TAG:-latest}
+    <<: *restart
+    environment:
+      # The mini has real RAM but shares it with everything else running there;
+      # cap the heap rather than letting the JVM claim a share of the whole box.
+      JAVA_TOOL_OPTIONS: -XX:MaxRAMPercentage=75.0 -XX:+UseG1GC -XX:+UseContainerSupport
+      SPRING_MAIN_ALLOW_BEAN_DEFINITION_OVERRIDING: "true"
+      # ProdEnvironmentGuard: refuses to start if any address below is blank or
+      # loopback. That is the point — on this host a typo would otherwise mean
+      # chat-service quietly talking to nothing.
+      SPRING_PROFILES_ACTIVE: prod
+      JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET:?required}
+      SPRING_DATA_MONGODB_URI: ${MONGODB_URI:?required}
+      SPRING_DATA_REDIS_URL: ${REDIS_URL:?required}
+      SPRING_RABBITMQ_HOST: ${RABBITMQ_HOST:?set RABBITMQ_HOST to the CloudAMQP host}
+      SPRING_RABBITMQ_PORT: ${RABBITMQ_PORT:-5671}
+      SPRING_RABBITMQ_USERNAME: ${RABBITMQ_USERNAME:?required}
+      SPRING_RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD:?required}
+      # CloudAMQP gives you a *named* vhost. Leaving this at the broker default
+      # '/' publishes into a vhost with no consumers — which is how AI went
+      # silent in production once already.
+      SPRING_RABBITMQ_VIRTUAL_HOST: ${RABBITMQ_VHOST:?required — CloudAMQP vhost, not '/'}
+      SPRING_RABBITMQ_SSL_ENABLED: "true"
+      ALLOWED_ORIGINS: ${WEB_ORIGIN:?required}
+      BOTFACTORY_BASE_URL: ${BOTFACTORY_BASE_URL:-}
+      BOTFACTORY_WORKER_TOKEN: ${BOTFACTORY_WORKER_TOKEN:-}
+      MAIL_HOST: ${MAIL_HOST:-}
+      MAIL_PORT: ${MAIL_PORT:-587}
+      MAIL_USER: ${MAIL_USER:-}
+      MAIL_PASS: ${MAIL_PASS:-}
+      FIREBASE_SERVICE_ACCOUNT_BASE64: ${FIREBASE_SERVICE_ACCOUNT_BASE64:-}
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8080/health || exit 1"]
+      interval: 20s
+      timeout: 5s
+      retries: 15
+      start_period: 60s
+    networks: [app-net]
+
+  ai-service:
+    image: ghcr.io/mitom06/platform/ai-service:${IMAGE_TAG:-latest}
+    <<: *restart
+    environment:
+      NODE_ENV: production
+      PORT: 3002
+      OTEL_ENABLED: "false"
+      JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET:?required}
+      MONGODB_URI: ${MONGODB_URI:?required}
+      REDIS_URL: ${REDIS_URL:?required}
+      RABBITMQ_URL: ${RABBITMQ_URL:?set RABBITMQ_URL to the full amqps:// CloudAMQP URL}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:?required}
+      ANTHROPIC_MODEL: ${ANTHROPIC_MODEL:-claude-sonnet-4-5}
+      ANTHROPIC_FALLBACK_MODEL: ${ANTHROPIC_FALLBACK_MODEL:-claude-haiku-4-5-20251001}
+      VOYAGE_API_KEY: ${VOYAGE_API_KEY:-}
+      QDRANT_URL: ${QDRANT_URL:-}
+      AI_BOT_USER_ID: ai-bot-000000000000000000000001
+      AI_BOT_DISPLAY_NAME: ${AI_BOT_DISPLAY_NAME:-PON AI}
+      REDIS_AI_RESPONSE_PREFIX: ai:response
+      AI_MONTHLY_TOKEN_LIMIT: ${AI_MONTHLY_TOKEN_LIMIT:-500000}
+      # Service-to-service on app-net, so this one is a container address and
+      # does not follow the tunnel.
+      CONNECTOR_INTERNAL_URL: http://connector-service:3003
+      INTERNAL_API_KEY: ${INTERNAL_API_KEY:?required}
+      CORS_ORIGINS: ${WEB_ORIGIN:?required}
+    networks: [app-net]
+
+  connector-service:
+    image: ghcr.io/mitom06/platform/connector-service:${IMAGE_TAG:-latest}
+    <<: *restart
+    environment:
+      NODE_ENV: production
+      PORT: 3003
+      MONGO_URI: ${MONGODB_URI:?required}
+      CONNECTOR_VAULT_KEY: ${CONNECTOR_VAULT_KEY:?required — same key as Cloud Run, or stored tokens become unreadable}
+      INTERNAL_API_KEY: ${INTERNAL_API_KEY:?required}
+      JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET:?required}
+      # Notion/Google send the user back here, so this follows the tunnel URL.
+      # With a quick tunnel it changes on every restart and must be re-registered
+      # in each provider's console — see the runbook.
+      OAUTH_REDIRECT_BASE: ${PON_API_BASE:?required}/api/connector
+      CLIENT_REDIRECT_URL: ${WEB_ORIGIN:?required}/integrations
+      # Explicit allow-list — main.ts refuses to boot in production without one.
+      CORS_ORIGINS: ${WEB_ORIGIN:?required}
+      NOTION_CLIENT_ID: ${NOTION_CLIENT_ID:-}
+      NOTION_CLIENT_SECRET: ${NOTION_CLIENT_SECRET:-}
+      NOTION_MCP_URL: ${NOTION_MCP_URL:-https://mcp.notion.com/sse}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:3003/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+    networks: [app-net]
+
+  caddy:
+    image: caddy:2
+    <<: *restart
+    # No ACME here: Cloudflare terminates TLS at its edge and cloudflared
+    # reaches Caddy over the internal network, so Caddy serves plain HTTP.
+    command: ["caddy", "run", "--config", "/etc/caddy/Caddyfile", "--adapter", "caddyfile"]
+    volumes:
+      - ./Caddyfile.mini:/etc/caddy/Caddyfile:ro
+    # Loopback only — for curling the stack from the mini itself without going
+    # out to Cloudflare and back. Not reachable from the LAN.
+    ports:
+      - "127.0.0.1:8088:80"
+    networks: [app-net]
+
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    <<: *restart
+    # Quick tunnel: no account resources, no DNS, but Cloudflare assigns a new
+    # *.trycloudflare.com name on every start. scripts/mini/up.sh reads the name
+    # out of these logs and writes it back into .env.mini as PON_API_BASE.
+    # Swapping to a named tunnel later is this command plus a token, nothing else.
+    command: ["tunnel", "--no-autoupdate", "--url", "http://caddy:80"]
+    depends_on:
+      - caddy
+    networks: [app-net]
+
+networks:
+  app-net:
+    driver: bridge

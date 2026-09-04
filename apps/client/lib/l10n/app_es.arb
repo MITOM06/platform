@@ -705,6 +705,7 @@
       }
     }
   },
+  "authErrOtpSendFailed": "No pudimos enviar el código de verificación ahora. Inténtalo de nuevo en un momento.",
   "authErrEmailDomainInvalid": "El dominio del correo no existe o no tiene registros MX.",
   "authErrEmailNotFound": "El correo no existe en el sistema.",
   "authErrEmailInUse": "Este correo ya está en uso.",

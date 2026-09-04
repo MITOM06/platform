@@ -2,11 +2,14 @@ import { Client, type IMessage, type StompSubscription } from '@stomp/stompjs'
 import axios from 'axios'
 import { useAuthStore } from '@/lib/store/auth.store'
 import { isAuthFailure, refreshAccessToken as postRefresh } from '@/lib/api/axios'
+import { wsUrlFromEnv } from '@/lib/config/env'
 
 // Single-origin self-host has no NEXT_PUBLIC_WS_URL — derive wss://<host>/ws
 // from the page origin at runtime. Cloud Run / local dev set the env explicitly.
 export function resolveBrokerURL(): string | undefined {
-  if (process.env.NEXT_PUBLIC_WS_URL) return process.env.NEXT_PUBLIC_WS_URL
+  // NEXT_PUBLIC_WS_URL, else derived from NEXT_PUBLIC_API_BASE — see lib/config/env.ts.
+  const fromEnv = wsUrlFromEnv()
+  if (fromEnv) return fromEnv
   if (typeof window === 'undefined') return undefined
   const proto = window.location.protocol === 'https:' ? 'wss' : 'ws'
   const guessed = `${proto}://${window.location.host}/ws`

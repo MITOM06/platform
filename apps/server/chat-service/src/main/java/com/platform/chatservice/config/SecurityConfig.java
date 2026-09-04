@@ -56,6 +56,16 @@ public class SecurityConfig {
             auth ->
                 auth.requestMatchers("/health", "/ws", "/ws/**")
                     .permitAll()
+                    // Spring Security 6 filters the ERROR dispatch too, and OncePerRequestFilter
+                    // skips it, so the JWT filter never re-runs and the context is empty by then.
+                    // Without this, every error Spring forwards to /error — a missing @RequestParam
+                    // (400), an unknown route (404), a wrong method (405) — came back to the client
+                    // as 401 "Full authentication is required". Both clients treat 401 as an
+                    // expired session, so a plain validation error burned a token refresh and
+                    // showed the wrong message. Permit /error so the real status/body survives;
+                    // the endpoint itself is still guarded by the rules above.
+                    .requestMatchers("/error")
+                    .permitAll()
                     .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/uploads/**")
                     .permitAll()
                     .anyRequest()

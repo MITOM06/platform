@@ -3,6 +3,13 @@
 .env.*
 !.env.example
 !.env.sample
+# Per-deployment templates (.env.mini.example, ...) — the negation above
+# matches the literal name only, so the .env.* rule would swallow them.
+!.env.*.example
+
+# Local stack logs (scripts/dev/up.sh). Untracked but not ignored meant a stray
+# `git add .` could commit a developer's service logs onto main.
+.dev-logs/
 
 # Firebase service account (admin SDK) — SECRET, never commit
 *firebase-adminsdk*.json
@@ -95,5 +102,5 @@ _workspace/
 # Testcontainers debris (compiled strategy class dumped at repo root during tests)
 org/
 
-# Local dev server logs (scripts/dev/up.sh)
+# Local dev server logs (scripts/dev/up.sh) — dev-only, never committed
 .dev-logs/

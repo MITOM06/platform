@@ -95,9 +95,12 @@ export function humanizeSystemMessage(
       break
   }
 
-  // Unknown `system.*` code → degrade gracefully (mirror Flutter fallback).
+  // Unknown `system.*` code → a generic localized label, matching Flutter's
+  // `_systemPreviewLabel` fallback. This used to build words out of the code itself
+  // ("📢 nickname changed"), which showed machine-derived English to every user
+  // regardless of locale — the code leaking in a thin disguise.
   if (content.startsWith('system.')) {
-    return `📢 ${content.split(':')[0].replace('system.', '').replace(/\./g, ' ')}`
+    return t('systemMessageLabel')
   }
 
   // Plain text (incl. AI answers) — flatten markdown to a clean one-line preview

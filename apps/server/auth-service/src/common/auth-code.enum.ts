@@ -50,6 +50,19 @@ export enum AuthCode {
   // ── 409 Conflict ────────────────────────────────────────────────────────
   EMAIL_IN_USE = 'EMAIL_IN_USE',
 
+  // ── 503 Service Unavailable ─────────────────────────────────────────────
+  /**
+   * The account exists and an OTP was generated, but delivering the email failed — for ANY reason
+   * `deliverOtpEmail` catches: provider refusal (bad SMTP credentials, quota), a connection
+   * failure, a timeout, a malformed recipient.
+   *
+   * Distinct from a generic failure on purpose: retrying registration cannot help (the account is
+   * already created, so the retry takes the "unverified → resend" branch and fails the same way).
+   * The client must say the code could not be sent and offer resend, which succeeds once delivery
+   * recovers.
+   */
+  OTP_SEND_FAILED = 'OTP_SEND_FAILED',
+
   // ── Validation (class-validator, used as message string in decorators) ──
   VAL_EMAIL_INVALID = 'VAL_EMAIL_INVALID',
   VAL_EMAIL_REQUIRED = 'VAL_EMAIL_REQUIRED',

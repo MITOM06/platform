@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../../../core/l10n/l10n_ext.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../domain/chat_state.dart';
+import 'message_preview_text.dart';
 
 class ReplyComposerBar extends StatelessWidget {
   final MessageModel preview;
@@ -31,8 +32,12 @@ class ReplyComposerBar extends StatelessWidget {
                     fontWeight: FontWeight.w600,
                   ),
                 ),
+                // Sanitized like [ReplyQuote] inside the bubble: replying to a system
+                // event, a file or an image otherwise printed the raw `system.*` code,
+                // the JSON payload or the /api/uploads URL into the composer
+                // (.claude/rules/no-raw-system-data-in-ui.md).
                 Text(
-                  preview.content,
+                  messagePreviewFromContent(context, preview.content),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
