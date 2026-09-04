@@ -173,10 +173,15 @@ wait_http ai-service        http://localhost:3002/health           200      || w
 # never arrive until you reload. That is how a missing NEXT_PUBLIC_WS_URL passed
 # for "the local backend has no realtime". Check the handshake directly instead.
 check_realtime() {
-  local code
+  local code nonce
+  # RFC 6455 §1.3's example nonce, quoted verbatim from the spec. It is a
+  # constant every WebSocket implementation ships, not a credential — gitleaks
+  # reads any base64 blob next to the word "Key" as a generic-api-key, which has
+  # failed CI on this branch since the check was added.
+  nonce='dGhlIHNhbXBsZSBub25jZQ==' # gitleaks:allow
   code="$(curl -s -o /dev/null -w '%{http_code}' --max-time 4 \
     -H 'Connection: Upgrade' -H 'Upgrade: websocket' -H 'Sec-WebSocket-Version: 13' \
-    -H 'Sec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==' \
+    -H "Sec-WebSocket-Key: $nonce" \
     -H 'Origin: http://localhost:3000' http://localhost:8080/ws || true)"
   case "$code" in
     101) ok "websocket handshake 101 (realtime will work)" ;;
