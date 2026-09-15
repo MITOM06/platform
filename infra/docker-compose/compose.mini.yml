@@ -142,6 +142,13 @@ services:
       CONNECTOR_INTERNAL_URL: http://connector-service:3003
       INTERNAL_API_KEY: ${INTERNAL_API_KEY:?required}
       CORS_ORIGINS: ${WEB_ORIGIN:?required}
+    # ai-service was the one service with no probe, so up.sh reported a healthy
+    # stack while it sat in a Redis reconnect loop with port 3002 never opened.
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:3002/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
     networks: [app-net]
 
   connector-service:
