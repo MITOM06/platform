@@ -91,7 +91,12 @@ if [ -n "$CF_TOKEN" ]; then
   esac
   # A named tunnel's hostname is known before anything starts, so unlike the
   # quick path there is no two-phase dance here: everything comes up at once.
-  export CF_TUNNEL_COMMAND="tunnel --no-autoupdate run --token $CF_TOKEN"
+  # --protocol http2, not the default quic: under Docker Desktop on macOS the
+  # UDP receive buffer cannot be raised (cloudflared warns about it), and the
+  # QUIC transport then registers exactly one connection, goes silent, and the
+  # edge serves 1033 with the tunnel marked down. http2 registers all four and
+  # stays up.
+  export CF_TUNNEL_COMMAND="tunnel --no-autoupdate --protocol http2 run --token $CF_TOKEN"
   URL="$CONFIGURED_BASE"
   [ "$PULL" = 1 ] && { ylw "→ pulling images…"; "${COMPOSE[@]}" pull -q || die "pull failed"; }
   ylw "→ starting stack (named tunnel → $URL)…"

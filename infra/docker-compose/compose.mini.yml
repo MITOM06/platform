@@ -212,7 +212,7 @@ services:
     #
     # The choice cannot be made here with `sh -c`: the cloudflared image is
     # distroless and has no shell.
-    command: ${CF_TUNNEL_COMMAND:-tunnel --no-autoupdate --url http://caddy:80}
+    command: ${CF_TUNNEL_COMMAND:-tunnel --no-autoupdate --protocol http2 --url http://caddy:80}
     depends_on:
       - caddy
     networks: [app-net]
