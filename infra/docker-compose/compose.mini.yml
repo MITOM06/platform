@@ -186,11 +186,22 @@ services:
   cloudflared:
     image: cloudflare/cloudflared:latest
     <<: *restart
-    # Quick tunnel: no account resources, no DNS, but Cloudflare assigns a new
-    # *.trycloudflare.com name on every start. scripts/mini/up.sh reads the name
-    # out of these logs and writes it back into .env.mini as PON_API_BASE.
-    # Swapping to a named tunnel later is this command plus a token, nothing else.
-    command: ["tunnel", "--no-autoupdate", "--url", "http://caddy:80"]
+    # Two tunnel modes, one container — scripts/mini/up.sh picks by looking for
+    # CF_TUNNEL_TOKEN in .env.mini and passes the choice in as CF_TUNNEL_COMMAND:
+    #
+    #   named (token set)  tunnel --no-autoupdate run --token <token>
+    #     The hostname is the one routed in the Cloudflare dashboard and never
+    #     changes, so PON_API_BASE is a constant and no client has to be
+    #     re-pointed after a restart. This is what the mini runs.
+    #
+    #   quick (no token)   the default below
+    #     Cloudflare assigns a fresh *.trycloudflare.com name on every start;
+    #     up.sh reads it out of these logs and writes it into .env.mini. Kept as
+    #     the default so the stack still comes up on a machine with no domain.
+    #
+    # The choice cannot be made here with `sh -c`: the cloudflared image is
+    # distroless and has no shell.
+    command: ${CF_TUNNEL_COMMAND:-tunnel --no-autoupdate --url http://caddy:80}
     depends_on:
       - caddy
     networks: [app-net]
