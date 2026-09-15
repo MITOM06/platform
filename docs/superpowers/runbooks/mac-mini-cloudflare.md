@@ -193,6 +193,7 @@ Put that sha in `IMAGE_TAG` in `.env.mini` to make it stick.
 | Symptom | Where to look |
 |---|---|
 | Tunnel never connects | `docker logs $(docker compose -p pon-mini -f infra/docker-compose/compose.mini.yml ps -q cloudflared)` — a rejected token or no outbound network |
+| Edge serves **1033** and the dashboard says the tunnel is *down*, but cloudflared logged "Registered tunnel connection" | QUIC. Under Docker Desktop on macOS the UDP receive buffer cannot be raised, one connection registers and then dies silently. The kit forces `--protocol http2`; check the command actually carries it |
 | Tunnel connects, hostname 502s at the edge | the dashboard route points somewhere else: Public Hostname → Service must be `HTTP` → `caddy:80` |
 | Stack did not come back after a power cut | FileVault is on and the mini is sitting at the unlock screen, or Docker Desktop is not set to start at login |
 | Tunnel answers, service 502s | that service is down: `$C logs <service>` |
