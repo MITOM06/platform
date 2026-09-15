@@ -2,11 +2,17 @@
 #
 # Brings the PON backend up on the Mac mini behind a Cloudflare Tunnel.
 #
-# The awkward part this exists to handle: a quick tunnel's hostname is assigned
-# by Cloudflare at start time, but four services need to know it before they
-# start (OAuth callbacks, the auth-service BASE_URL). So the tunnel comes up
-# first, its name is read out of cloudflared's own logs, written back into
-# .env.mini, and only then does the rest of the stack start.
+# Two tunnel modes, chosen by whether CF_TUNNEL_TOKEN is set in .env.mini:
+#
+#   named — the mini's mode. The hostname was routed once in the Cloudflare
+#     dashboard and never changes, so PON_API_BASE is a constant in .env.mini
+#     and a restart re-points nothing.
+#
+#   quick — no account, no DNS, but Cloudflare assigns the hostname at start
+#     time and four services need to know it before they start (OAuth
+#     callbacks, the auth-service BASE_URL). So the tunnel comes up first, its
+#     name is read out of cloudflared's own logs, written back into .env.mini,
+#     and only then does the rest of the stack start.
 #
 #   ./scripts/mini/up.sh            # pull latest images, bring everything up
 #   ./scripts/mini/up.sh --no-pull  # reuse what is already on the mini
@@ -26,6 +32,10 @@ red()  { printf '\033[31m%s\033[0m\n' "$*"; }
 grn()  { printf '\033[32m%s\033[0m\n' "$*"; }
 ylw()  { printf '\033[33m%s\033[0m\n' "$*"; }
 die()  { red "✗ $*"; exit 1; }
+
+# Read one key out of .env.mini. Values are taken verbatim after the first '='
+# so tokens containing '=' survive.
+env_val() { grep -E "^$1=" "$ENV_FILE" 2>/dev/null | head -1 | cut -d= -f2-; }
 
 PULL=1
 case "${1:-}" in
@@ -47,8 +57,7 @@ for key in MONGODB_URI REDIS_URL RABBITMQ_HOST RABBITMQ_USERNAME RABBITMQ_PASSWO
            RABBITMQ_VHOST RABBITMQ_URL JWT_ACCESS_SECRET JWT_REFRESH_SECRET \
            SESSION_SECRET CONNECTOR_VAULT_KEY INTERNAL_API_KEY ANTHROPIC_API_KEY \
            WEB_ORIGIN; do
-  val="$(grep -E "^$key=" "$ENV_FILE" 2>/dev/null | head -1 | cut -d= -f2-)"
-  [ -z "$val" ] && missing="${missing}  - $key
+  [ -z "$(env_val "$key")" ] && missing="${missing}  - $key
 "
 done
 if [ -n "$missing" ]; then
@@ -64,45 +73,76 @@ if grep -qE '^RABBITMQ_VHOST=/$' "$ENV_FILE"; then
     reaches a vhost with no consumers and the assistant goes silent with no error."
 fi
 
-# ── 1. tunnel first ─────────────────────────────────────────────────────────
-# Compose interpolates the whole file even when starting a subset of services,
-# so PON_API_BASE has to hold *something* here. A shell variable outranks the
-# --env-file, so this placeholder never touches .env.mini.
-export PON_API_BASE="${PON_API_BASE:-https://pending.invalid}"
+CF_TOKEN="$(env_val CF_TUNNEL_TOKEN)"
+CONFIGURED_BASE="$(env_val PON_API_BASE)"
+CONFIGURED_BASE="${CONFIGURED_BASE%/}"   # a trailing slash doubles every path
 
-[ "$PULL" = 1 ] && { ylw "→ pulling images…"; "${COMPOSE[@]}" pull -q caddy cloudflared || die "pull failed"; }
-ylw "→ starting tunnel…"
-"${COMPOSE[@]}" up -d caddy cloudflared || die "could not start caddy/cloudflared"
+# ── 1. the tunnel ───────────────────────────────────────────────────────────
+if [ -n "$CF_TOKEN" ]; then
+  MODE=named
+  case "$CONFIGURED_BASE" in
+    https://*) ;;
+    *) die "CF_TUNNEL_TOKEN is set, so this is a named tunnel and the hostname
+    has to be the one you routed in the Cloudflare dashboard:
 
-ylw "→ waiting for Cloudflare to assign a hostname…"
-# Resolve the container once and read it with `docker logs`: `compose logs`
-# re-reads the whole project on every call and turns a 5-second wait into a
-# minute of polling overhead.
-CF="$("${COMPOSE[@]}" ps -q cloudflared)"
-[ -n "$CF" ] || die "cloudflared container did not start"
-URL=""
-for _ in $(seq 1 40); do
-  URL="$(docker logs "$CF" 2>&1 \
-        | grep -oE 'https://[a-z0-9-]+\.trycloudflare\.com' | tail -1)"
-  [ -n "$URL" ] && break
-  sleep 2
-done
-[ -n "$URL" ] || die "no tunnel hostname after 80s. Check: docker logs $CF"
-grn "✓ tunnel: $URL"
+        PON_API_BASE=https://api.example.com
 
-# ── 2. persist it, then start the rest ──────────────────────────────────────
-# BSD sed on macOS needs the empty -i argument; the mini is macOS by definition.
-if grep -qE '^PON_API_BASE=' "$ENV_FILE"; then
-  sed -i '' "s|^PON_API_BASE=.*|PON_API_BASE=$URL|" "$ENV_FILE"
+    found: '${CONFIGURED_BASE:-<blank>}'" ;;
+  esac
+  # A named tunnel's hostname is known before anything starts, so unlike the
+  # quick path there is no two-phase dance here: everything comes up at once.
+  # --protocol http2, not the default quic: under Docker Desktop on macOS the
+  # UDP receive buffer cannot be raised (cloudflared warns about it), and the
+  # QUIC transport then registers exactly one connection, goes silent, and the
+  # edge serves 1033 with the tunnel marked down. http2 registers all four and
+  # stays up.
+  export CF_TUNNEL_COMMAND="tunnel --no-autoupdate --protocol http2 run --token $CF_TOKEN"
+  URL="$CONFIGURED_BASE"
+  [ "$PULL" = 1 ] && { ylw "→ pulling images…"; "${COMPOSE[@]}" pull -q || die "pull failed"; }
+  ylw "→ starting stack (named tunnel → $URL)…"
+  "${COMPOSE[@]}" up -d || die "compose up failed — ${COMPOSE[*]} logs"
 else
-  printf '\nPON_API_BASE=%s\n' "$URL" >> "$ENV_FILE"
+  MODE=quick
+  # Compose interpolates the whole file even when starting a subset of services,
+  # so PON_API_BASE has to hold *something* here. A shell variable outranks the
+  # --env-file, so this placeholder never touches .env.mini.
+  export PON_API_BASE="${PON_API_BASE:-https://pending.invalid}"
+
+  [ "$PULL" = 1 ] && { ylw "→ pulling images…"; "${COMPOSE[@]}" pull -q caddy cloudflared || die "pull failed"; }
+  ylw "→ starting tunnel…"
+  "${COMPOSE[@]}" up -d caddy cloudflared || die "could not start caddy/cloudflared"
+
+  ylw "→ waiting for Cloudflare to assign a hostname…"
+  # Resolve the container once and read it with `docker logs`: `compose logs`
+  # re-reads the whole project on every call and turns a 5-second wait into a
+  # minute of polling overhead.
+  CF="$("${COMPOSE[@]}" ps -q cloudflared)"
+  [ -n "$CF" ] || die "cloudflared container did not start"
+  URL=""
+  for _ in $(seq 1 40); do
+    URL="$(docker logs "$CF" 2>&1 \
+          | grep -oE 'https://[a-z0-9-]+\.trycloudflare\.com' | tail -1)"
+    [ -n "$URL" ] && break
+    sleep 2
+  done
+  [ -n "$URL" ] || die "no tunnel hostname after 80s. Check: docker logs $CF"
+  grn "✓ tunnel: $URL"
+
+  # ── persist it, then start the rest ──────────────────────────────────────
+  # BSD sed on macOS needs the empty -i argument; the mini is macOS by definition.
+  if grep -qE '^PON_API_BASE=' "$ENV_FILE"; then
+    sed -i '' "s|^PON_API_BASE=.*|PON_API_BASE=$URL|" "$ENV_FILE"
+  else
+    printf '\nPON_API_BASE=%s\n' "$URL" >> "$ENV_FILE"
+  fi
+  unset PON_API_BASE   # from here on the file is the source of truth
+
+  [ "$PULL" = 1 ] && { ylw "→ pulling service images…"; "${COMPOSE[@]}" pull -q || die "pull failed"; }
+  ylw "→ starting services…"
+  "${COMPOSE[@]}" up -d || die "compose up failed — ${COMPOSE[*]} logs"
 fi
-unset PON_API_BASE   # from here on the file is the source of truth
 
-[ "$PULL" = 1 ] && { ylw "→ pulling service images…"; "${COMPOSE[@]}" pull -q || die "pull failed"; }
-ylw "→ starting services…"
-"${COMPOSE[@]}" up -d || die "compose up failed — ${COMPOSE[*]} logs"
-
+# ── 2. health ───────────────────────────────────────────────────────────────
 ylw "→ waiting for health…"
 for _ in $(seq 1 60); do
   unhealthy="$("${COMPOSE[@]}" ps --format '{{.Service}} {{.Health}}' 2>/dev/null \
@@ -117,20 +157,62 @@ else
   grn "✓ all services healthy"
 fi
 
-code="$(curl -s -o /dev/null -w '%{http_code}' "$URL/_up" || echo 000)"
+# `|| echo 000` would append to whatever curl already wrote, so the code is
+# defaulted afterwards instead.
+code="$(curl -s -o /dev/null -m 10 -w '%{http_code}' "$URL/_up" 2>/dev/null)"
+code="${code:-000}"
 [ "$code" = "200" ] && grn "✓ reachable through the tunnel ($URL/_up → 200)" \
                     || ylw "! tunnel returned $code — Cloudflare can take ~30s to propagate"
 
-WEB_ORIGIN="$(grep -E '^WEB_ORIGIN=' "$ENV_FILE" | head -1 | cut -d= -f2-)"
+WEB_ORIGIN="$(env_val WEB_ORIGIN)"
 HOST="${URL#https://}"
 
-cat <<EOF
+# ── 3. what now holds a copy of the hostname ────────────────────────────────
+if [ "$MODE" = named ]; then
+  cat <<EOF
+
+────────────────────────────────────────────────────────────────────────────
+  Backend is live at  $URL
+  Named tunnel: this hostname is permanent. Restarting the mini — or losing
+  power — brings the stack back on the same address, so nothing below has to
+  be redone. It is here for the first run and for a hostname change.
+
+  1) VERCEL — one variable, then redeploy (env changes need a build):
+
+       NEXT_PUBLIC_API_BASE=$URL
+
+     apps/web/lib/config/env.ts derives every base URL from it — /api/auth,
+     /api/chat, /api/ai, /api/connector and wss://$HOST/ws.
+
+     If the old five NEXT_PUBLIC_*_URL variables are still set in the project,
+     remove them: a per-service variable wins over the base and will pin the
+     app to whatever host it names.
+
+  2) FLUTTER — build against this host once:
+
+       flutter build apk --dart-define=PON_DOMAIN=$HOST
+
+  3) OAUTH CONSOLES — register these once and never again:
+
+       $URL/api/auth/auth/google/callback
+       $URL/api/auth/auth/x/callback
+       $URL/api/connector/oauth/notion/callback
+       $URL/api/connector/oauth/gmail/callback
+       $URL/api/connector/oauth/calendar/callback
+
+  Web app: $WEB_ORIGIN
+  Logs:    docker compose -p pon-mini -f infra/docker-compose/compose.mini.yml logs -f
+────────────────────────────────────────────────────────────────────────────
+EOF
+else
+  cat <<EOF
 
 ────────────────────────────────────────────────────────────────────────────
   Backend is live at  $URL
 
   This hostname is new — a quick tunnel gets a fresh one every start. Three
-  places hold a copy of it and all three need updating now.
+  places hold a copy of it and all three need updating now. Setting
+  CF_TUNNEL_TOKEN in .env.mini switches to a named tunnel and ends this.
 
   1) VERCEL — set this one variable, then redeploy (env changes need a build):
 
@@ -174,3 +256,4 @@ cat <<EOF
   Logs:    docker compose -p pon-mini -f infra/docker-compose/compose.mini.yml logs -f
 ────────────────────────────────────────────────────────────────────────────
 EOF
+fi
