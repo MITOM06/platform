@@ -67,7 +67,11 @@ services:
       X_CLIENT_SECRET: ${X_CLIENT_SECRET:-}
       FIREBASE_SERVICE_ACCOUNT_BASE64: ${FIREBASE_SERVICE_ACCOUNT_BASE64:-}
     healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://localhost:3001/health || exit 1"]
+      # 127.0.0.1, not localhost: in these images localhost resolves to ::1
+      # first and the services listen on 0.0.0.0 (IPv4 only), so a `localhost`
+      # probe is refused and the container is marked unhealthy while it is
+      # serving traffic perfectly well through the compose network.
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:3001/health || exit 1"]
       interval: 15s
       timeout: 5s
       retries: 10
@@ -106,7 +110,7 @@ services:
       MAIL_PASS: ${MAIL_PASS:-}
       FIREBASE_SERVICE_ACCOUNT_BASE64: ${FIREBASE_SERVICE_ACCOUNT_BASE64:-}
     healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://localhost:8080/health || exit 1"]
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:8080/health || exit 1"]
       interval: 20s
       timeout: 5s
       retries: 15
@@ -163,7 +167,7 @@ services:
       GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
       GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
     healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://localhost:3003/health || exit 1"]
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:3003/health || exit 1"]
       interval: 15s
       timeout: 5s
       retries: 10
