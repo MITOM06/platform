@@ -16,7 +16,12 @@
 	# keeps its existing routes (auth: /auth /me /admin; chat: /api/...;
 	# connector: /oauth /connections /catalog).
 	handle_path /api/auth/* {
-		reverse_proxy auth-service:3001
+		# handle_path strips /api/auth, so auth-service cannot tell what path the
+		# browser used. It needs that to build the social-login redirect; without
+		# it the redirect points at the host root and 404s before reaching Google.
+		reverse_proxy auth-service:3001 {
+			header_up X-Forwarded-Prefix /api/auth
+		}
 	}
 	handle_path /api/connector/* {
 		reverse_proxy connector-service:3003
