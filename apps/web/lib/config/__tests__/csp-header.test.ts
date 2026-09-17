@@ -29,13 +29,13 @@ describe('emitted Content-Security-Policy', () => {
   // The browser then blocked every API call the app makes — login and register
   // included — with "violates ... connect-src".
   it('allows the whole API origin rather than a single path', async () => {
-    const csp = await cspFor('https://api.ponplatform.com')
+    const csp = await cspFor('https://api.example.com')
 
     for (const name of ['connect-src', 'media-src', 'img-src']) {
       const d = directive(csp, name)
-      expect(d, `${name} must allow the API origin`).toContain('https://api.ponplatform.com')
+      expect(d, `${name} must allow the API origin`).toContain('https://api.example.com')
       expect(d, `${name} must not pin a path`).not.toMatch(
-        /https:\/\/api\.ponplatform\.com\/\S/,
+        /https:\/\/api\.example\.com\/\S/,
       )
     }
   })

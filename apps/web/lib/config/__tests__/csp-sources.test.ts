@@ -9,26 +9,26 @@ describe('cspSources', () => {
   // service and blocked every real call — including POST /api/auth/auth/login,
   // which is why nobody could log in or register.
   it('reduces a service base URL carrying a path to its origin', () => {
-    expect(cspSources(['https://api.ponplatform.com/api/auth'])).toEqual([
-      'https://api.ponplatform.com',
+    expect(cspSources(['https://api.example.com/api/auth'])).toEqual([
+      'https://api.example.com',
     ])
   })
 
   it('collapses services that share one origin into a single source', () => {
     expect(
       cspSources([
-        'https://api.ponplatform.com/api/auth',
-        'https://api.ponplatform.com/api/chat',
-        'https://api.ponplatform.com/api/ai',
-        'https://api.ponplatform.com/api/connector',
+        'https://api.example.com/api/auth',
+        'https://api.example.com/api/chat',
+        'https://api.example.com/api/ai',
+        'https://api.example.com/api/connector',
       ]),
-    ).toEqual(['https://api.ponplatform.com'])
+    ).toEqual(['https://api.example.com'])
   })
 
-  it('keeps distinct per-service hosts apart', () => {
+  it('keeps distinct per-service hosts apart (one host per service, as before)', () => {
     expect(
-      cspSources(['https://auth.example.run.app', 'https://chat.example.run.app']),
-    ).toEqual(['https://auth.example.run.app', 'https://chat.example.run.app'])
+      cspSources(['https://auth.example.com', 'https://chat.example.com']),
+    ).toEqual(['https://auth.example.com', 'https://chat.example.com'])
   })
 
   it('preserves a non-default port', () => {
