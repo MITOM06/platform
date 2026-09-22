@@ -75,3 +75,61 @@ describe('AuthController — social login platform resolution', () => {
     );
   });
 });
+
+describe('AuthController — social init redirect honours the public mount prefix', () => {
+  let controller: AuthController;
+
+  beforeEach(async () => {
+    const module: TestingModule = await Test.createTestingModule({
+      controllers: [AuthController],
+      providers: [
+        { provide: AuthService, useValue: { handleSocialLogin: jest.fn() } },
+        { provide: ConfigService, useValue: { get: jest.fn() } },
+        { provide: OidcService, useValue: {} },
+        { provide: SsoMappingService, useValue: {} },
+      ],
+    }).compile();
+
+    controller = module.get(AuthController);
+  });
+
+  function mockRes() {
+    return {
+      cookie: jest.fn(),
+      redirect: jest.fn(),
+    } as unknown as Response & { redirect: jest.Mock };
+  }
+
+  it('prefixes the redirect when a reverse proxy stripped the mount path', async () => {
+    // The Mac mini serves auth-service under /api/auth and Caddy's handle_path
+    // strips that before the request arrives, so a bare `/auth/google` bounces
+    // the browser to a path the proxy does not route (404) instead of Google.
+    const res = mockRes();
+    const req = { params: { provider: 'google' }, headers: { 'x-forwarded-prefix': '/api/auth' } };
+
+    await controller.initSocialLogin(req, res, 'web');
+
+    expect(res.redirect).toHaveBeenCalledWith('/api/auth/auth/google?platform=web');
+  });
+
+  it('stays relative when the service is mounted at the host root', async () => {
+    const res = mockRes();
+    const req = { params: { provider: 'google' }, headers: {} };
+
+    await controller.initSocialLogin(req, res, 'web');
+
+    expect(res.redirect).toHaveBeenCalledWith('/auth/google?platform=web');
+  });
+
+  it('ignores a prefix that could redirect off-host', async () => {
+    const res = mockRes();
+    const req = {
+      params: { provider: 'google' },
+      headers: { 'x-forwarded-prefix': '//evil.example.com' },
+    };
+
+    await controller.initSocialLogin(req, res, 'web');
+
+    expect(res.redirect).toHaveBeenCalledWith('/auth/google?platform=web');
+  });
+});
