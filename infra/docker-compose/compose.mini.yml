@@ -133,6 +133,12 @@ services:
       ANTHROPIC_FALLBACK_MODEL: ${ANTHROPIC_FALLBACK_MODEL:-claude-haiku-4-5-20251001}
       VOYAGE_API_KEY: ${VOYAGE_API_KEY:-}
       QDRANT_URL: ${QDRANT_URL:-}
+      # Managed Qdrant refuses unauthenticated requests. Empty for a local
+      # container, which has no auth.
+      QDRANT_API_KEY: ${QDRANT_API_KEY:-}
+      # Voyage's 200M free tokens apply only to the 4-series; the older
+      # voyage-3.5 has no free allowance, so the default matters.
+      KB_EMBEDDING_MODEL: ${KB_EMBEDDING_MODEL:-voyage-4-lite}
       AI_BOT_USER_ID: ai-bot-000000000000000000000001
       AI_BOT_DISPLAY_NAME: ${AI_BOT_DISPLAY_NAME:-PON AI}
       REDIS_AI_RESPONSE_PREFIX: ai:response

@@ -172,8 +172,11 @@ services:
       REDIS_AI_REQUEST_CHANNEL: ai:request
       REDIS_AI_RESPONSE_PREFIX: ai:response
       QDRANT_URL: ${QDRANT_URL:-http://qdrant:6333}
+      # Only needed when QDRANT_URL points at a managed cluster instead of the
+      # qdrant container in this stack.
+      QDRANT_API_KEY: ${QDRANT_API_KEY:-}
       VOYAGE_API_KEY: ${VOYAGE_API_KEY:-}
-      KB_EMBEDDING_MODEL: ${KB_EMBEDDING_MODEL:-voyage-3.5}
+      KB_EMBEDDING_MODEL: ${KB_EMBEDDING_MODEL:-voyage-4-lite}
       RABBITMQ_URL: ${RABBITMQ_URL:-amqp://${RABBITMQ_USERNAME}:${RABBITMQ_PASSWORD}@rabbitmq:5672}
       # Everything is served from the single Caddy domain. main.ts refuses to
       # boot in production without this (no fallback to localhost origins).

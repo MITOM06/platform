@@ -186,6 +186,8 @@ This document captures discussions and locked choices.
 
 > **Update (2026-06-23):** embeddings migrated from OpenAI `text-embedding-3-small` (1536-dim) to Voyage AI `voyage-3.5` (1024-dim); env var `OPENAI_API_KEY` → `VOYAGE_API_KEY`. The Qdrant collection is sized to the live model dimension automatically.
 
+> **Update (2026-09-23):** default model moved from `voyage-3.5` to **`voyage-4-lite`** (still 1024-dim, so nothing else changes). Voyage grants every account 200M free tokens on the 4-series and **none at all** on the older models, so the previous default billed from the first embedding — while the feature was never switched on in production anyway (`VOYAGE_API_KEY` and `QDRANT_URL` have been empty since the migration). Also: `QDRANT_API_KEY` is now read and sent. Managed Qdrant rejects unauthenticated requests, so before this a Qdrant Cloud URL could only ever answer 401 — the free tier was unusable regardless of configuration. Switching models invalidates stored vectors: embeddings are only comparable to others from the same model, so a change means rebuilding the collections.
+
 **Rationale:**
 - Qdrant is lightweight, easy to integrate in Docker Compose, and supports precise logical filters (e.g. matching `documentId`).
 - Voyage AI provides Claude-aligned embedding quality for conversational QA context while keeping the AI stack on a single vendor (Anthropic + its recommended partner).
