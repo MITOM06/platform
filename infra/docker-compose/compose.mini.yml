@@ -132,7 +132,7 @@ services:
       ANTHROPIC_MODEL: ${ANTHROPIC_MODEL:-claude-sonnet-4-5}
       ANTHROPIC_FALLBACK_MODEL: ${ANTHROPIC_FALLBACK_MODEL:-claude-haiku-4-5-20251001}
       VOYAGE_API_KEY: ${VOYAGE_API_KEY:-}
-      QDRANT_URL: ${QDRANT_URL:-}
+      QDRANT_URL: ${QDRANT_URL:-http://qdrant:6333}
       # Managed Qdrant refuses unauthenticated requests. Empty for a local
       # container, which has no auth.
       QDRANT_API_KEY: ${QDRANT_API_KEY:-}
@@ -223,6 +223,51 @@ services:
       - caddy
     networks: [app-net]
 
+  # Vector store for RAG and long-term memory. Self-hosted here rather than on
+  # Qdrant Cloud: the free managed tier is suspended after a week without
+  # traffic and deleted after four, which for a deployment this quiet means RAG
+  # dies on its own one day with nothing changed. The mini already runs Docker,
+  # and the data stays on the machine that owns it.
+  #
+  # No published ports — only ai-service talks to it, over app-net. This house
+  # has a public, unfirewalled IPv6 address, so anything bound to 0.0.0.0 here
+  # is on the open internet; an unauthenticated Qdrant must not be.
+  #
+  # Pinned to the server line matching @qdrant/js-client-rest (^1.18) rather
+  # than drifting on :latest.
+  #
+  # Pulling this on the mini itself fails: Docker Desktop's credential helper
+  # needs a user session to unlock the keychain, and there is none over SSH or
+  # under launchd. Docker Hub demands it even though the image is public, so
+  # pull it through a mirror that does not, then retag:
+  #   docker pull mirror.gcr.io/qdrant/qdrant:v1.18.3
+  #   docker tag  mirror.gcr.io/qdrant/qdrant:v1.18.3 qdrant/qdrant:v1.18.3
+  qdrant:
+    image: qdrant/qdrant:v1.18.3
+    <<: *restart
+    volumes:
+      - qdrant_data:/qdrant/storage
+    healthcheck:
+      # The image ships no curl and no wget, but it does have bash, so this
+      # speaks HTTP over /dev/tcp. 127.0.0.1 and never localhost: localhost
+      # resolves to ::1 while qdrant listens on IPv4, and the container would
+      # sit permanently unhealthy while serving perfectly.
+      test:
+        - CMD
+        - bash
+        - -c
+        - 'exec 3<>/dev/tcp/127.0.0.1/6333 && printf "GET /healthz HTTP/1.1\r\nHost: q\r\nConnection: close\r\n\r\n" >&3 && head -1 <&3 | grep -q 200'
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+    networks: [app-net]
+
 networks:
   app-net:
     driver: bridge
+
+# Qdrant is the only thing on this host that stores its own data; everything
+# else (Mongo, Redis, RabbitMQ) is managed off-machine.
+volumes:
+  qdrant_data:
