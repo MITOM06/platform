@@ -55,8 +55,13 @@ export class RetentionService implements OnModuleInit, OnModuleDestroy {
     try {
       if (this.memoryTtlDays > 0) {
         const cutoff = Date.now() - this.memoryTtlDays * 24 * 60 * 60 * 1000;
-        await this.memoryService.purgeFactsOlderThan(cutoff);
-        this.logger.log(`Memory TTL purge complete (cutoff ${new Date(cutoff).toISOString()})`);
+        const purged = await this.memoryService.purgeFactsOlderThan(cutoff);
+        const when = new Date(cutoff).toISOString();
+        if (purged) {
+          this.logger.log(`Memory TTL purge complete (cutoff ${when})`);
+        } else {
+          this.logger.warn(`Memory TTL purge did not run (cutoff ${when}) — see the error above`);
+        }
       }
       const purged = await this.kbProcessor.purgeOrphanedChunks();
       this.logger.log(`Retention sweep done (orphan KB docs purged: ${purged})`);
