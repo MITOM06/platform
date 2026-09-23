@@ -160,8 +160,8 @@ export class MemoryService {
    * The canonical Mongo `keyFacts` list self-heals on the next extraction; we
    * leave it untouched here to avoid a full re-scan on every purge.
    */
-  async purgeFactsOlderThan(cutoffMs: number): Promise<void> {
-    await this.vectorStore.deleteOlderThan(cutoffMs);
+  async purgeFactsOlderThan(cutoffMs: number): Promise<boolean> {
+    return this.vectorStore.deleteOlderThan(cutoffMs);
   }
 
   async incrementMessageCount(conversationId: string): Promise<number> {

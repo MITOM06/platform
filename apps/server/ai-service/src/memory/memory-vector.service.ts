@@ -185,16 +185,24 @@ export class MemoryVectorService {
   /**
    * Retention purge: delete all fact points created before `cutoffMs`.
    * No-op-safe when the collection is empty/missing.
+   *
+   * Returns whether the purge actually happened. Staying fail-soft is right —
+   * retention must never take the service down — but swallowing the error
+   * without saying so let the caller log "purge complete" on the line after
+   * "purge failed", which is worse than silence: it reads as evidence that
+   * retention works.
    */
-  async deleteOlderThan(cutoffMs: number): Promise<void> {
+  async deleteOlderThan(cutoffMs: number): Promise<boolean> {
     try {
       await this.ensureCollection();
       await this.client.delete(this.collection, {
         wait: true,
         filter: { must: [{ key: 'createdAt', range: { lt: cutoffMs } }] },
       });
+      return true;
     } catch (err) {
       this.logger.warn(`Memory TTL purge failed: ${(err as Error).message}`);
+      return false;
     }
   }
 }
