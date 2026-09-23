@@ -251,6 +251,7 @@ jobs:
             ANTHROPIC_FALLBACK_MODEL=claude-haiku-4-5-20251001
             VOYAGE_API_KEY=${{ secrets.VOYAGE_API_KEY }}
             QDRANT_URL=${{ secrets.QDRANT_URL }}
+            QDRANT_API_KEY=${{ secrets.QDRANT_API_KEY }}
             AI_BOT_USER_ID=ai-bot-000000000000000000000001
             AI_BOT_DISPLAY_NAME=${{ secrets.AI_BOT_DISPLAY_NAME }}
             REDIS_AI_RESPONSE_PREFIX=ai:response

@@ -25,7 +25,9 @@ export class EmbeddingService {
     if (!this.apiKey) {
       this.logger.warn('VOYAGE_API_KEY not set — EmbeddingService disabled (RAG/memory off)');
     }
-    this.model = this.configService.get<string>('config.kb.embeddingModel') ?? 'voyage-3.5';
+    // Keep this in step with configuration.ts: a second, different fallback
+    // here would silently win whenever config is absent.
+    this.model = this.configService.get<string>('config.kb.embeddingModel') ?? 'voyage-4-lite';
   }
 
   async embed(texts: string[]): Promise<number[][]> {

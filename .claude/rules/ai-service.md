@@ -61,8 +61,11 @@ AI_BOT_USER_ID=ai-bot-000000000000000000000001
 AI_BOT_DISPLAY_NAME=PON AI
 REDIS_AI_RESPONSE_PREFIX=ai:response
 QDRANT_URL=http://localhost:6333
+QDRANT_API_KEY=             # only for a managed cluster; a local container has no auth
 VOYAGE_API_KEY=...          # Voyage AI embeddings (RAG/memory); unset = RAG off
-KB_EMBEDDING_MODEL=voyage-3.5
+# 4-series only: Voyage's 200M free tokens do not apply to voyage-3.5 or any
+# other older model, so the default decides free vs billed from the first call.
+KB_EMBEDDING_MODEL=voyage-4-lite
 ```
 
 ## Message Bus Protocol

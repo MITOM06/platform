@@ -75,6 +75,10 @@ export default registerAs('config', () => ({
   },
   qdrant: {
     url: process.env.QDRANT_URL || 'http://localhost:6333',
+    // Managed Qdrant (Qdrant Cloud) rejects unauthenticated requests, so a
+    // cloud URL without this is a 401, not a connection error — which reads
+    // like the cluster is down. Unset for a local container, which has no auth.
+    apiKey: process.env.QDRANT_API_KEY || undefined,
   },
   voyage: {
     // Embeddings provider (Anthropic's recommended partner). LLM stays Claude;
@@ -89,8 +93,12 @@ export default registerAs('config', () => ({
     overFetch: parseInt(process.env.KB_OVERFETCH ?? '8', 10),
     // Minimum cosine score for a chunk to be considered grounded context.
     scoreThreshold: parseFloat(process.env.KB_SCORE_THRESHOLD ?? '0.5'),
-    embeddingModel: process.env.KB_EMBEDDING_MODEL ?? 'voyage-3.5',
-    // Vector size of the embedding model (voyage-3.5 = 1024). Used as the Qdrant
+    // voyage-4-lite, not voyage-3.5: the 4-series carries Voyage's 200M free
+    // tokens and the older models carry none, so the default decides whether a
+    // fresh deployment embeds for free or bills from the first request. Same
+    // 1024 dimensions, so embeddingDimensions below is unchanged.
+    embeddingModel: process.env.KB_EMBEDDING_MODEL ?? 'voyage-4-lite',
+    // Vector size of the embedding model (voyage-4-lite = 1024). Used as the Qdrant
     // collection dimension default. MUST match the model's output.
     embeddingDimensions: parseInt(process.env.KB_EMBEDDING_DIMENSIONS ?? '1024', 10),
     qdrantCollection: process.env.QDRANT_KB_COLLECTION ?? 'knowledge',
