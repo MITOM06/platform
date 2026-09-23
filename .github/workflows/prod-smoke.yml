@@ -1,0 +1,39 @@
+# Watches the deployment from outside, the way a user meets it.
+#
+# Every other check in this repo verifies the code. None of them noticed that
+# social login was dead in production for a day after the fix was merged: CI was
+# green, the image was published, health checks were healthy, and the one
+# request that mattered still 404'd. This runs that request.
+#
+# It needs no secrets and no route into the network — it only calls public
+# endpoints — so it stays honest about what an actual client can reach.
+name: Production smoke
+
+on:
+  schedule:
+    # Every 30 minutes. The mini redeploys itself within ~5 minutes of a merge
+    # (scripts/mini/install-autoupdate.sh), so this is not the deploy trigger —
+    # it is the check that the deployment still matches what main promises.
+    - cron: '*/30 * * * *'
+  workflow_dispatch:
+
+jobs:
+  smoke:
+    name: Public endpoints honour the client contract
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # The host lives in a repository variable, not in the file: this workflow
+      # must work unchanged for anyone self-hosting PON at their own address.
+      # Settings → Secrets and variables → Actions → Variables → PON_API_BASE
+      - name: Check the deployment
+        env:
+          PON_API_BASE: ${{ vars.PON_API_BASE }}
+        run: |
+          if [ -z "$PON_API_BASE" ]; then
+            echo "::warning::PON_API_BASE repository variable is not set — nothing to check."
+            echo "Set it under Settings → Secrets and variables → Actions → Variables."
+            exit 0
+          fi
+          bash scripts/mini/smoke.sh "$PON_API_BASE"
