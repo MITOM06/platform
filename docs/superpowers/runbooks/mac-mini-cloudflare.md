@@ -5,7 +5,7 @@ data stays in the same managed services, and the web app stays on Vercel.
 
 ```
   Browser ─────► Vercel (Next.js)  ─┐
-                                    ├──► https://<name>.trycloudflare.com
+                                    ├──► https://api.<your-domain>
   Flutter ──────────────────────────┘              │
                                                    │  Cloudflare edge
                                                    ▼
@@ -50,7 +50,43 @@ pmset -g | grep -E ' sleep| womp'      # sleep 0, womp 1
 `womp 1` brings it back after a power cut; also enable *Start up automatically
 after a power failure* in System Settings → Energy.
 
-**3. Fill in the environment.**
+**If the power in your area is unreliable, check FileVault.** With FileVault on,
+a mini that loses power stops at the unlock screen: nothing is decrypted, so the
+account never logs in, Docker Desktop never starts, and the stack stays down
+until somebody types the password in person. `restart: unless-stopped` cannot
+help — Docker itself is not running.
+
+```bash
+fdesetup status        # "FileVault is Off" is what an unattended server wants
+```
+
+The mini holds no data (everything is in the managed tier) so turning FileVault
+off costs little and is what makes an unattended reboot actually recover. If you
+keep it on, treat every power cut as a manual visit to the machine. A small UPS
+is worth more than either option: it turns a flicker into a non-event.
+
+**3. Create the tunnel** (Cloudflare Zero Trust dashboard, one time).
+
+Zero Trust → Networks → Tunnels → *Create a tunnel* → **Cloudflared** → name it
+`pon` → the install step shows a **connector token**; copy it, that is
+`CF_TUNNEL_TOKEN`. Do not run the docker command it offers — `compose.mini.yml`
+runs the connector itself.
+
+Then on the tunnel's *Public Hostname* tab add one route:
+
+| Field | Value |
+|---|---|
+| Subdomain | `api` |
+| Domain | your domain |
+| Service | `HTTP` → `caddy:80` |
+
+`caddy` resolves on the compose network, which is why the connector has to be
+the one in `compose.mini.yml` rather than a stray `cloudflared` on the host.
+
+Cloudflare creates the DNS record for you. Nothing is port-forwarded and the
+mini's IP is never published.
+
+**4. Fill in the environment.**
 ```bash
 cd infra/docker-compose
 cp .env.mini.example .env.mini
@@ -60,7 +96,11 @@ Every value is one the Cloud Run deployment already used — `gh secret list`
 names them, though GitHub cannot reveal the values, so take them from the
 Atlas / Upstash / CloudAMQP consoles or wherever you stored them.
 
-Two are worth extra care:
+Three are worth extra care:
+- `CF_TUNNEL_TOKEN` / `PON_API_BASE` — the pair that makes the address permanent.
+  The token is the connector token from step 3; `PON_API_BASE` is the hostname
+  you routed there, e.g. `https://api.example.com`. Setting one without the
+  other is refused rather than silently falling back to a quick tunnel.
 - `CONNECTOR_VAULT_KEY` — not merely an auth secret. A different key makes every
   stored OAuth token undecryptable and every user has to reconnect every
   connector.
@@ -68,55 +108,54 @@ Two are worth extra care:
   vhost with no consumers on it, so the assistant goes silent with no error
   anywhere. `up.sh` refuses to start on `/` for that reason.
 
-**4. Bring it up.**
+**5. Bring it up.**
 ```bash
 ./scripts/mini/up.sh
 ```
-It starts the tunnel, reads the hostname Cloudflare assigned, writes it back
-into `.env.mini`, starts the four services, waits for health, and prints
-everything that now needs the new hostname.
+It brings up the tunnel and the four services, waits for health, checks the
+stack answers through Cloudflare, and prints the three places that need the
+hostname on a first run. On a named tunnel it never rewrites `.env.mini`.
 
-## Every restart, the hostname changes
+## The hostname is fixed
 
-This deployment uses a **quick tunnel**: free, no account resources, no DNS —
-and a new `*.trycloudflare.com` name every time `cloudflared` starts. Three
-places hold a copy, and `up.sh` prints all three filled in:
+`CF_TUNNEL_TOKEN` in `.env.mini` selects a **named tunnel**: the hostname is the
+one routed in the dashboard, `PON_API_BASE` is a constant, and `up.sh` leaves it
+alone. A reboot, a `docker compose down`, a power cut — the stack comes back on
+the same address and no client is re-pointed. Three places hold a copy of that
+hostname and they are touched **once**, on the first run (`up.sh` prints all
+three filled in):
 
-| Holder | What breaks until updated |
+| Holder | Set to |
 |---|---|
-| Vercel `NEXT_PUBLIC_API_BASE` (1 var) | web talks to a dead host; needs a redeploy |
-| Flutter `--dart-define=PON_DOMAIN` | app talks to a dead host; needs a rebuild |
-| Google / Notion OAuth consoles | `redirect_uri_mismatch` on social login and connectors |
+| Vercel `NEXT_PUBLIC_API_BASE` (1 var) | `https://api.<domain>`, then redeploy |
+| Flutter `--dart-define=PON_DOMAIN` | `api.<domain>` at build time |
+| Google / Notion OAuth consoles | the five callback URLs `up.sh` prints |
 
-Email login, chat, realtime and AI keep working through a hostname change once
-Vercel is redeployed. Only the OAuth flows need console edits, and Google does
-not accept wildcards, so that part is manual.
+`apps/web/lib/config/env.ts` derives all five web base URLs — including
+`wss://<host>/ws` — from `NEXT_PUBLIC_API_BASE`, the same way the Flutter client
+derives them from `PON_DOMAIN`. **If the old per-service `NEXT_PUBLIC_*_URL`
+variables are still set in the Vercel project, delete them**: a per-service
+variable wins over the base and pins the app to whatever host it names. The one
+that used to be easy to miss was `NEXT_PUBLIC_WS_URL` — without it the client
+derived `wss://<vercel-host>/ws`, Vercel does not serve the socket, and realtime
+died silently while REST kept working.
 
-It used to be five Vercel variables, one of which — `NEXT_PUBLIC_WS_URL` — was
-easy to forget: without it the client derived `wss://<vercel-host>/ws`, Vercel
-does not serve the socket, and realtime died silently while REST kept working.
-`apps/web/lib/config/env.ts` now derives all five (including the socket) from
-`NEXT_PUBLIC_API_BASE`, the same way the Flutter client derives them from
-`PON_DOMAIN`. **If the old five are still set in the Vercel project, delete
-them** — a per-service variable wins over the base and will pin the app to a
-dead tunnel. `up.sh` prints the command.
+### Free-plan limits worth knowing
 
-### Making it stop changing
+- **100 MB per upload** through the Cloudflare proxy. Larger file uploads fail
+  at the edge, before they reach Caddy.
+- **100s timeout on plain HTTP requests.** WebSockets are exempt, so STOMP
+  realtime and AI streaming are unaffected.
 
-Point a domain at Cloudflare and switch to a **named tunnel**. That is one
-command and one token — everything else in `compose.mini.yml` is already
-hostname-agnostic:
+### Without a domain: quick tunnel
 
-```bash
-cloudflared tunnel login
-cloudflared tunnel create pon
-cloudflared tunnel route dns pon pon.yourdomain.com
-```
-Then in `compose.mini.yml` replace the `cloudflared` command with
-`["tunnel", "run", "--token", "${CF_TUNNEL_TOKEN}"]`, set
-`PON_API_BASE=https://pon.yourdomain.com` in `.env.mini` permanently, and
-`up.sh` stops rewriting it. Register the OAuth redirect URIs once and never
-again.
+Leave `CF_TUNNEL_TOKEN` blank and `up.sh` falls back to a quick tunnel: free, no
+account, no DNS — and a new `*.trycloudflare.com` name on **every start**, which
+means re-pointing Vercel (plus a redeploy), rebuilding the Flutter app, and
+re-registering the OAuth callbacks by hand each time. Email login, chat,
+realtime and AI survive a hostname change once Vercel is redeployed; the OAuth
+flows do not, and Google does not accept wildcards. It is a way to try the setup,
+not a way to run it.
 
 ## Day-to-day
 
@@ -153,12 +192,16 @@ Put that sha in `IMAGE_TAG` in `.env.mini` to make it stick.
 
 | Symptom | Where to look |
 |---|---|
-| `up.sh` finds no hostname | `docker logs $(docker compose -p pon-mini -f infra/docker-compose/compose.mini.yml ps -q cloudflared)` — usually no outbound network |
+| Tunnel never connects | `docker logs $(docker compose -p pon-mini -f infra/docker-compose/compose.mini.yml ps -q cloudflared)` — a rejected token or no outbound network |
+| Edge serves **1033** and the dashboard says the tunnel is *down*, but cloudflared logged "Registered tunnel connection" | QUIC. Under Docker Desktop on macOS the UDP receive buffer cannot be raised, one connection registers and then dies silently. The kit forces `--protocol http2`; check the command actually carries it |
+| Tunnel connects, hostname 502s at the edge | the dashboard route points somewhere else: Public Hostname → Service must be `HTTP` → `caddy:80` |
+| Stack did not come back after a power cut | FileVault is on and the mini is sitting at the unlock screen, or Docker Desktop is not set to start at login |
 | Tunnel answers, service 502s | that service is down: `$C logs <service>` |
 | chat-service exits at boot | `ProdEnvironmentGuard` rejected a blank or loopback address — it names the offending variable |
 | Assistant silent, no error | `RABBITMQ_VHOST`. Check CloudAMQP shows a consumer on `ai.requests` |
 | Everyone logged out after a restart | `REDIS_URL` wrong or pointing somewhere new — sessions and rotating refresh tokens live there |
-| `redirect_uri_mismatch` | hostname changed; re-register the callbacks `up.sh` printed |
+| `redirect_uri_mismatch` | the callbacks were never registered, or the hostname changed; re-register the five `up.sh` printed |
+| Upload of a large file fails at the edge | Cloudflare's free plan caps a request body at 100 MB |
 
 ## Cloud Run
 

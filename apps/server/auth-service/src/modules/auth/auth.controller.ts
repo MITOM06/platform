@@ -35,6 +35,7 @@ import { VerifyOtpDto } from './dto/verify-otp.dto';
 import { ResendOtpDto } from './dto/resend-otp.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
 import { normalizeLocale } from '../Email/otp-i18n';
+import { publicMountPrefix } from '../../common/public-mount-prefix';
 
 // Stricter per-IP limits for credential / OTP endpoints (5 requests / minute).
 // Names must match a ThrottlerModule.forRoot() definition; we override 'medium'.
@@ -121,9 +122,18 @@ export class AuthController {
     });
 
     // Carry platform in the query so GoogleOAuthGuard can forward it as `state`.
-    // Redirect về endpoint OAuth thật — AuthGuard sẽ kick off OAuth flow
+    // Redirect về endpoint OAuth thật — AuthGuard sẽ kick off OAuth flow.
+    //
+    // The target must be prefixed with the path this service is published under.
+    // Behind a proxy that strips its mount path (the Mac mini serves us at
+    // /api/auth via Caddy `handle_path`, which strips before proxying) a bare
+    // `/auth/${provider}` resolves against the host root — a path the proxy does
+    // not route, so the browser gets a 404 and never reaches the provider.
+    // Mounted at the host root (Cloud Run, local dev) the header is absent and
+    // the redirect stays relative exactly as before.
+    const prefix = publicMountPrefix(req);
     return res.redirect(
-      `/auth/${provider}?platform=${encodeURIComponent(resolvedPlatform)}`,
+      `${prefix}/auth/${provider}?platform=${encodeURIComponent(resolvedPlatform)}`,
     );
   }
 

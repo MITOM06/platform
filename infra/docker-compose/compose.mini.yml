@@ -67,7 +67,11 @@ services:
       X_CLIENT_SECRET: ${X_CLIENT_SECRET:-}
       FIREBASE_SERVICE_ACCOUNT_BASE64: ${FIREBASE_SERVICE_ACCOUNT_BASE64:-}
     healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://localhost:3001/health || exit 1"]
+      # 127.0.0.1, not localhost: in these images localhost resolves to ::1
+      # first and the services listen on 0.0.0.0 (IPv4 only), so a `localhost`
+      # probe is refused and the container is marked unhealthy while it is
+      # serving traffic perfectly well through the compose network.
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:3001/health || exit 1"]
       interval: 15s
       timeout: 5s
       retries: 10
@@ -106,7 +110,7 @@ services:
       MAIL_PASS: ${MAIL_PASS:-}
       FIREBASE_SERVICE_ACCOUNT_BASE64: ${FIREBASE_SERVICE_ACCOUNT_BASE64:-}
     healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://localhost:8080/health || exit 1"]
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:8080/health || exit 1"]
       interval: 20s
       timeout: 5s
       retries: 15
@@ -138,6 +142,13 @@ services:
       CONNECTOR_INTERNAL_URL: http://connector-service:3003
       INTERNAL_API_KEY: ${INTERNAL_API_KEY:?required}
       CORS_ORIGINS: ${WEB_ORIGIN:?required}
+    # ai-service was the one service with no probe, so up.sh reported a healthy
+    # stack while it sat in a Redis reconnect loop with port 3002 never opened.
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:3002/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
     networks: [app-net]
 
   connector-service:
@@ -163,7 +174,7 @@ services:
       GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
       GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
     healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://localhost:3003/health || exit 1"]
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:3003/health || exit 1"]
       interval: 15s
       timeout: 5s
       retries: 10
@@ -186,11 +197,22 @@ services:
   cloudflared:
     image: cloudflare/cloudflared:latest
     <<: *restart
-    # Quick tunnel: no account resources, no DNS, but Cloudflare assigns a new
-    # *.trycloudflare.com name on every start. scripts/mini/up.sh reads the name
-    # out of these logs and writes it back into .env.mini as PON_API_BASE.
-    # Swapping to a named tunnel later is this command plus a token, nothing else.
-    command: ["tunnel", "--no-autoupdate", "--url", "http://caddy:80"]
+    # Two tunnel modes, one container — scripts/mini/up.sh picks by looking for
+    # CF_TUNNEL_TOKEN in .env.mini and passes the choice in as CF_TUNNEL_COMMAND:
+    #
+    #   named (token set)  tunnel --no-autoupdate run --token <token>
+    #     The hostname is the one routed in the Cloudflare dashboard and never
+    #     changes, so PON_API_BASE is a constant and no client has to be
+    #     re-pointed after a restart. This is what the mini runs.
+    #
+    #   quick (no token)   the default below
+    #     Cloudflare assigns a fresh *.trycloudflare.com name on every start;
+    #     up.sh reads it out of these logs and writes it into .env.mini. Kept as
+    #     the default so the stack still comes up on a machine with no domain.
+    #
+    # The choice cannot be made here with `sh -c`: the cloudflared image is
+    # distroless and has no shell.
+    command: ${CF_TUNNEL_COMMAND:-tunnel --no-autoupdate --protocol http2 --url http://caddy:80}
     depends_on:
       - caddy
     networks: [app-net]

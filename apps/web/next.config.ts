@@ -1,6 +1,7 @@
 import createNextIntlPlugin from 'next-intl/plugin'
 import type { NextConfig } from 'next'
 import { AUTH_URL, CHAT_URL, AI_URL, CONNECTOR_URL, usesSameOriginFallback } from './lib/config/env'
+import { cspSources } from './lib/config/csp-sources'
 
 const withNextIntl = createNextIntlPlugin('./i18n/request.ts')
 
@@ -58,8 +59,12 @@ if (process.env.NODE_ENV === 'production' && usesSameOriginFallback) {
   )
 }
 
-const connectSrc = [AUTH_URL, CHAT_URL, AI_URL, CONNECTOR_URL].map(absolute).filter(Boolean)
-const mediaSrc = [CHAT_URL, AI_URL].map(absolute).filter(Boolean)
+// CSP sources are origins, never the service base URLs: a source carrying a
+// path matches that path and nothing below it, so `/api/auth` would permit one
+// URL and block every endpoint. See lib/config/csp-sources.ts.
+const connectSrc = cspSources([AUTH_URL, CHAT_URL, AI_URL, CONNECTOR_URL])
+const mediaSrc = cspSources([CHAT_URL, AI_URL])
+const imgSrc = cspSources([CHAT_URL])
 
 const nextConfig: NextConfig = {
   output: 'standalone',
@@ -96,7 +101,7 @@ const nextConfig: NextConfig = {
               "default-src 'self'",
               "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.gstatic.com https://apis.google.com",
               "style-src 'self' 'unsafe-inline'",
-              `img-src 'self' data: blob: ${chatUrl} https://lh3.googleusercontent.com https://images.unsplash.com https://www.notion.so https://linear.app https://sentry.io https://atlassian.com https://github.com https://stripe.com https://huggingface.co https://asana.com https://ssl.gstatic.com https://calendar.google.com`,
+              `img-src 'self' data: blob: ${imgSrc.join(' ')} https://lh3.googleusercontent.com https://images.unsplash.com https://www.notion.so https://linear.app https://sentry.io https://atlassian.com https://github.com https://stripe.com https://huggingface.co https://asana.com https://ssl.gstatic.com https://calendar.google.com`,
               // media-src is required for <audio>/<video> (voice messages, video, AI voice
               // replies). Without it these fall back to default-src 'self' and get blocked.
               `media-src 'self' data: blob: ${mediaSrc.join(' ')}`,
