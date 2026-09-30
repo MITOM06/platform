@@ -1,8 +1,14 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { RabbitSubscribe } from '@golevelup/nestjs-rabbitmq';
+import { MessageHandlerErrorBehavior, RabbitSubscribe } from '@golevelup/nestjs-rabbitmq';
 import { ConsumeMessage } from 'amqplib';
 import { propagation, context, trace, SpanStatusCode } from '@opentelemetry/api';
 import { AiService, AiRequestPayload } from './ai.service';
+import {
+  AI_EXCHANGE,
+  AI_QUEUE,
+  AI_QUEUE_ARGUMENTS,
+  AI_ROUTING_KEY,
+} from '../rabbitmq/rabbitmq.topology';
 
 @Injectable()
 export class AiConsumer {
@@ -12,17 +18,14 @@ export class AiConsumer {
   constructor(private readonly aiService: AiService) {}
 
   @RabbitSubscribe({
-    exchange: 'ai.direct',
-    routingKey: 'ai.request',
-    queue: 'ai.requests',
-    queueOptions: {
-      durable: true,
-      arguments: {
-        'x-dead-letter-exchange': 'ai.dead-letter',
-        'x-dead-letter-routing-key': 'dlq',
-        'x-message-ttl': 30000,
-      },
-    },
+    exchange: AI_EXCHANGE,
+    routingKey: AI_ROUTING_KEY,
+    queue: AI_QUEUE,
+    queueOptions: { durable: true, arguments: AI_QUEUE_ARGUMENTS },
+    // The library default is REQUEUE: a failed request was redelivered ~1/s until
+    // its 30s TTL ran out — dozens of model calls, AI_STREAM_ERROR events and
+    // rate-limit hits per user message. NACK without requeue dead-letters it once.
+    errorBehavior: MessageHandlerErrorBehavior.NACK,
   })
   async handleAiRequest(
     payload: AiRequestPayload,
@@ -71,8 +74,8 @@ export class AiConsumer {
           err,
         );
         // AiService already published AI_STREAM_ERROR to Redis for the client.
-        // Rethrow so RabbitMQ nacks and the message is dead-lettered per the
-        // configured DLX/TTL instead of being silently auto-acked.
+        // Rethrow so the NACK errorBehavior dead-letters the message to
+        // ai.requests.dlq (once — never requeued) instead of auto-acking it.
         throw err;
       } finally {
         span.end();
