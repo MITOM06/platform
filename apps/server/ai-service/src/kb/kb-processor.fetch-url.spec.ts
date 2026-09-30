@@ -29,7 +29,7 @@ describe('KbProcessorService.toFetchUrl', () => {
   });
 
   it('leaves an absolute URL untouched', () => {
-    const abs = 'https://api.example.run.app/api/uploads/abc123';
+    const abs = 'https://files.example.com/api/uploads/abc123';
     expect(toFetchUrl(makeService('http://chat-service:8080'), abs)).toBe(abs);
   });
 
