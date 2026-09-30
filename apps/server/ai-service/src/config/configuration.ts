@@ -140,6 +140,9 @@ export default registerAs('config', () => ({
   ai: {
     // When true, enable adaptive thinking on the primary model.
     enableThinking: process.env.AI_ENABLE_THINKING === 'true',
+    // IANA zone the assistant tells the time in, so "8pm tonight" becomes a real
+    // datetime for create_reminder. One deployment = one company, so one zone.
+    timeZone: process.env.AI_TIMEZONE ?? 'Asia/Ho_Chi_Minh',
   },
   cache: {
     // Anthropic prompt caching of the stable persona/tools prefix. On by default
