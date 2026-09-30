@@ -1,6 +1,8 @@
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { AuthService } from './auth.service';
+import { OtpService } from './otp.service';
+import { SocialLoginService } from './social-login.service';
 import { AuthController } from './auth.controller';
 import { SessionService } from './session.service';
 import { ClaimsService } from './claims.service';
@@ -53,6 +55,8 @@ import { PassportModule } from '@nestjs/passport';
   controllers: [AuthController],
   providers: [
     AuthService,
+    OtpService,
+    SocialLoginService,
     SessionService,
     ClaimsService,
     OidcService,

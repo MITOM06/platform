@@ -2,7 +2,7 @@
 
 import { useState, useRef, memo } from 'react'
 import { useTranslations, useLocale } from 'next-intl'
-import { Phone, Video, Check, CheckCheck } from 'lucide-react'
+import { Check, CheckCheck } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { MessageActions } from './MessageActions'
 import { UserProfileDrawer } from './UserProfileDrawer'
@@ -12,10 +12,10 @@ import { MessageFeedback } from './MessageFeedback'
 import { MessageSources } from './MessageSources'
 import { ExternalBotBubble } from './ExternalBotBubble'
 import { MessageBubbleBody } from './MessageBubbleBody'
+import { MessageReplyQuote } from './MessageReplyQuote'
+import { SystemMessageBubble } from './SystemMessageBubble'
 import { formatTime, ReactionBadge, BARE_TYPES, isEmojiOnly } from './message-bubble-helpers'
-import { humanizeSystemMessage, humanizeMessagePreview } from '@/lib/system-messages'
 import { useNickname, getNickname } from '@/lib/nicknames'
-import { useUser } from '@/lib/hooks/use-user'
 import { useQueryClient } from '@tanstack/react-query'
 import { type Message, isExternalBot } from '@/lib/api/types'
 
@@ -68,10 +68,7 @@ const MessageBubbleInner = function MessageBubble({
   const queryClient = useQueryClient()
   // Resolve nicknames for sender + reply-preview sender (W-15.4 parity).
   const senderNickname = useNickname(conversationId ?? '', message.senderId)
-  const replyNickname = useNickname(conversationId ?? '', message.replyPreview?.senderId)
   const senderDisplay = senderNickname || message.senderName || ''
-  // Resolve the replied-to message's author (not the current message's sender).
-  const { data: repliedSender } = useUser(message.replyPreview?.senderId)
   const [hovered, setHovered] = useState(false)
   const [longPressActive, setLongPressActive] = useState(false)
   const [profileUserId, setProfileUserId] = useState<string | null>(null)
@@ -155,31 +152,7 @@ const MessageBubbleInner = function MessageBubble({
   }
 
   if (message.type === 'system') {
-    // Humanise structured system events (parity with Flutter message_bubble_parts.dart).
-    const systemText = humanizeSystemMessage(message.content, t, { resolveName })
-    const isCallMsg = message.content.startsWith('system.call.')
-    const isVideoCall = isCallMsg && message.content.includes(':video')
-    const isMissedCall = isCallMsg && message.content.startsWith('system.call.missed:')
-    return wrapSelectable(
-      <div className="flex justify-center my-1">
-        <span
-          className={cn(
-            'flex items-center gap-1.5 text-[11px] font-medium rounded-full px-3 py-1.5',
-            isCallMsg
-              ? isMissedCall
-                ? 'text-destructive bg-destructive/10'
-                : 'text-primary bg-primary/10 dark:bg-primary/20'
-              : 'text-muted-foreground bg-muted/65 border border-border/20',
-          )}
-        >
-          {isCallMsg && (isVideoCall
-            ? <Video className="size-3 shrink-0" />
-            : <Phone className="size-3 shrink-0" />
-          )}
-          {systemText}
-        </span>
-      </div>,
-    )
+    return wrapSelectable(<SystemMessageBubble content={message.content} resolveName={resolveName} />)
   }
 
   // Personal assistant bot (Bot Factory) — distinct identity via ExternalBotBubble.
@@ -205,39 +178,13 @@ const MessageBubbleInner = function MessageBubble({
     )
 
   const replyPreview = message.replyPreview && (
-    <button
-      type="button"
-      className={cn(
-        'mb-2 w-full pl-2 border-l-2 text-left text-xs opacity-80 cursor-pointer select-none transition-colors hover:opacity-100 rounded-xs py-0.5',
-        isOwn
-          ? 'border-primary-foreground/40 bg-primary-foreground/10 hover:bg-primary-foreground/15'
-          : 'border-primary/50 bg-primary/5 hover:bg-primary/10',
-      )}
-      onClick={() => {
-        const el = document.getElementById(`message-${message.replyPreview?.messageId}`)
-        if (el) {
-          el.scrollIntoView({ behavior: 'smooth', block: 'center' })
-          el.classList.add('bg-primary/20', 'transition-all', 'duration-500', 'ring-2', 'ring-primary/40')
-          setTimeout(() => {
-            el.classList.remove('bg-primary/20', 'ring-2', 'ring-primary/40')
-          }, 2000)
-        }
-      }}
-    >
-      <p className="font-semibold mb-0.5">
-        {message.replyPreview.senderId === currentUserId
-          ? t('you')
-          : (replyNickname || repliedSender?.displayName || '')}
-      </p>
-      {/* Never render replied-to content raw (system code / upload URL / JSON
-          payload — rule: no-raw-system-data-in-ui); humanize by sniffing it. */}
-      <p className="truncate italic">
-        {humanizeMessagePreview(message.replyPreview.content, undefined, t, {
-          short: true,
-          resolveName,
-        })}
-      </p>
-    </button>
+    <MessageReplyQuote
+      replyPreview={message.replyPreview}
+      isOwn={isOwn}
+      currentUserId={currentUserId}
+      conversationId={conversationId}
+      resolveName={resolveName}
+    />
   )
 
   const openProfile = () => {
