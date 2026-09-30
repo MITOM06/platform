@@ -133,6 +133,10 @@ services:
       ANTHROPIC_FALLBACK_MODEL: ${ANTHROPIC_FALLBACK_MODEL:-claude-haiku-4-5-20251001}
       VOYAGE_API_KEY: ${VOYAGE_API_KEY:-}
       QDRANT_URL: ${QDRANT_URL:-}
+      # Base for RELATIVE /api/uploads/{id} refs (KB files, chat images). The
+      # code default is localhost:8080 — inside this container that is ai-service
+      # itself, so every KB upload and chat image fetch failed.
+      CHAT_INTERNAL_URL: ${CHAT_INTERNAL_URL:-http://chat-service:8080}
       AI_BOT_USER_ID: ai-bot-000000000000000000000001
       AI_BOT_DISPLAY_NAME: ${AI_BOT_DISPLAY_NAME:-PON AI}
       REDIS_AI_RESPONSE_PREFIX: ai:response

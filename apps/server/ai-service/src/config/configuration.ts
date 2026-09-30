@@ -188,10 +188,10 @@ export default registerAs('config', () => ({
     internalApiKey: process.env.INTERNAL_API_KEY,
   },
   chat: {
-    // chat-service base used to resolve RELATIVE `/api/uploads/{id}` media refs
-    // carried in AI history image turns (TASK-10 chat vision). KB receives
-    // absolute fileUrls already; chat history URLs are relative, so ai-service
-    // fetches them against this host (authless GridFS read, same as KB does).
+    // chat-service base used to resolve RELATIVE `/api/uploads/{id}` refs — both
+    // AI history image turns (TASK-10 chat vision) and KB fileUrls, which web and
+    // mobile send relative. Authless GridFS read. In Docker this MUST be set
+    // (compose: http://chat-service:8080) — localhost is the ai-service container.
     internalUrl: process.env.CHAT_INTERNAL_URL ?? 'http://localhost:8080',
     // ── TASK-10 Vision / image understanding (chat half) ────────────────────
     // Master switch for chat image attachments → image content blocks. OFF ⇒
