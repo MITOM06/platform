@@ -139,7 +139,16 @@ public class AiResponseListener implements MessageListener {
           // claim persists the message, preventing N duplicate inserts under multi-instance
           // (Cloud Run max-instances > 1). saveAiMessage already broadcasts the saved message to
           // the topic, so we must NOT broadcast it again here (would duplicate on clients).
-          String claimKey = "ai:done:" + convId + ":" + Integer.toHexString(fullContent.hashCode());
+          // Key on the per-reply id when ai-service sends one: keying on the text alone
+          // silently dropped any reply identical to one in the last DONE_CLAIM_TTL.
+          Object replyId = payload.get("replyId");
+          String claimKey =
+              "ai:done:"
+                  + convId
+                  + ":"
+                  + (replyId != null
+                      ? replyId.toString()
+                      : Integer.toHexString(fullContent.hashCode()));
           Boolean claimed = redisTemplate.opsForValue().setIfAbsent(claimKey, "1", DONE_CLAIM_TTL);
           if (Boolean.TRUE.equals(claimed)) {
             messageService.saveAiMessage(convId, fullContent, trace);

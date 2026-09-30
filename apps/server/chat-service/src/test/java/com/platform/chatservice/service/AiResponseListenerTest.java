@@ -138,6 +138,45 @@ class AiResponseListenerTest {
   }
 
   @Test
+  void onMessage_AI_STREAM_DONE_claimsPerReplyId_soIdenticalRepliesAreBothSaved() throws Exception {
+    // Two replies with the same text (e.g. "Đã nhớ!") must get different claim keys; keying on
+    // the text alone dropped the second one for DONE_CLAIM_TTL.
+    for (String replyId : List.of("reply-a", "reply-b")) {
+      Map<String, Object> payload =
+          Map.of(
+              "type", "AI_STREAM_DONE",
+              "fullContent", "Đã nhớ!",
+              "conversationId", "conv-1",
+              "replyId", replyId);
+      when(redisMessage.getBody()).thenReturn(objectMapper.writeValueAsBytes(payload));
+      listener.onMessage(redisMessage, null);
+    }
+
+    verify(valueOperations).setIfAbsent(eq("ai:done:conv-1:reply-a"), anyString(), any());
+    verify(valueOperations).setIfAbsent(eq("ai:done:conv-1:reply-b"), anyString(), any());
+    verify(messageService, org.mockito.Mockito.times(2))
+        .saveAiMessage(eq("conv-1"), eq("Đã nhớ!"), isNull());
+  }
+
+  @Test
+  void onMessage_AI_STREAM_DONE_withoutReplyId_fallsBackToContentHashClaim() throws Exception {
+    Map<String, Object> payload =
+        Map.of(
+            "type", "AI_STREAM_DONE",
+            "fullContent", "Full AI reply",
+            "conversationId", "conv-1");
+    when(redisMessage.getBody()).thenReturn(objectMapper.writeValueAsBytes(payload));
+
+    listener.onMessage(redisMessage, null);
+
+    verify(valueOperations)
+        .setIfAbsent(
+            eq("ai:done:conv-1:" + Integer.toHexString("Full AI reply".hashCode())),
+            anyString(),
+            any());
+  }
+
+  @Test
   void onMessage_AI_STREAM_DONE_whenClaimLost_doesNotPersist_butStillBroadcastsDone()
       throws Exception {
     // Another instance already claimed this DONE (SET NX returned false) → this instance must NOT
