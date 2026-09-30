@@ -39,23 +39,24 @@ feature itself. Everything created purely to *run* or *demo* it locally stays on
 
 ## Workflow
 
-`dev` is **one-way**: it is `main` plus the local-env commits, and it never flows
-back. Code moves `feature → main`; `main` flows *into* `dev`, never out of it.
+Every change is **debugged and tested on `dev` first, and only reaches `main`
+after it passes there.** `dev` is `main` plus the local-env commits; features
+flow *through* it, but `dev` itself never flows into `main`.
 
 ```
-        main  ──────────────────────────────►  (production, always deployable)
-          │  ▲                             ▲
-   sync   │  │ promote (feature only)       │
-          ▼  │                              │
-        dev  ──────────► feat/x ────────────┘
-      (main + env)     (cut from dev,
-                        so you have the stack)
+          feat/x  (cut from main — contains only the feature)
+         │      │
+  1. test│      │ 3. promote (PR feat/x → main) once dev testing passes
+         ▼      ▼
+        dev    main  ──────►  (production, always deployable)
+         ▲                │
+         └────────────────┘ 2. sync: main flows into dev
 ```
 
 **1 — Set up once.** `git checkout dev && ./scripts/dev/up.sh --seed`
 
-**2 — Get the latest code from everyone else, keeping your env.** Merge `main`
-*into* `dev` — do not rebase a shared branch, that forces everyone to reset:
+**2 — Keep `dev` current.** Merge `main` *into* `dev` — never rebase a shared
+branch, that forces everyone to reset:
 
 ```bash
 git checkout dev
@@ -64,30 +65,48 @@ git merge origin/main          # dev = latest main + the env commits
 git push origin dev
 ```
 
-**3 — Build your feature.** Branch from `dev` so the local stack is present:
-
-```bash
-git checkout -b feat/x dev
-# ...code, run ./scripts/dev/up.sh, test on localhost / your phone...
-```
-
-**4 — Promote to `main` without the env commits.** Replay only your own commits
-onto `main` — `--onto` drops everything `feat/x` inherited from `dev`:
+**3 — Build the feature on its own branch, cut from `main`.** The branch must
+contain only feature commits, so it can later go to `main` as-is:
 
 ```bash
 git fetch origin
-git rebase --onto origin/main dev feat/x
+git checkout -b feat/x origin/main
+# ...code, unit tests...
+git push -u origin feat/x
+```
+
+**4 — Debug and test on `dev`.** Merge the feature branch into `dev`, run the
+full local stack, and let the team test it there:
+
+```bash
+git checkout dev
+git merge --no-ff feat/x
+./scripts/dev/up.sh --build      # rebuild images with the feature
+git push origin dev              # teammates pull dev and test too
+```
+
+Bugs found on `dev` are fixed **on `feat/x`** (not on `dev`), then merged into
+`dev` again. Repeat until it passes.
+
+**5 — Promote to `main` only after it passed on `dev`.** Open the PR from
+`feat/x` into `main`. Check the diff first:
+
+```bash
 git diff origin/main...feat/x --stat     # must show ONLY your feature's files
-git push -u origin feat/x                # then open the PR into main
 ```
 
 If that diff lists `scripts/dev/`, a seed script, a `*.local` env file or a
-`localhost` string, stop — the rebase base was wrong, or a dev-only change got
-mixed into a feature commit.
+`localhost` string, stop — a dev-only change got mixed into a feature commit.
 
-- Keep dev-env changes in **separate commits** from feature changes; step 4 works
-  precisely because the two never share a commit.
-- Never `git merge dev` into `main`, and never open a PR from `dev`.
+- Never `git merge dev` into `main`, never open a PR from `dev`, and never
+  commit a feature directly on `dev` — `dev` carries seed data, test accounts
+  and localhost wiring that must not reach production (see *Why*).
+- Keep dev-env changes in **separate commits** on `dev`, never inside a feature
+  branch.
+- A feature branch that was (by mistake) cut from `dev` must be moved onto
+  `main` **before** its first merge into `dev`:
+  `git rebase --onto origin/main dev feat/x` — after the merge that range is
+  empty and the replay silently does nothing.
 - Prefer paths that make the split obvious: dev-only code under `scripts/dev/`,
   dev-only env in `*.development.local` / gitignored files.
 - `dev` staying permanently a few commits ahead of `main` is the expected steady

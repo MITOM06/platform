@@ -58,9 +58,9 @@ fi
 if [ "$branch" = "main" ]; then
   printf '\033[31m✗ dev-only artefacts on main:\033[0m\n%s' "$found"
   cat <<'MSG'
-  These belong on `dev` only — see .claude/rules/dev-local-only.md. A promotion
-  replays feature commits onto main and drops the env commits:
-    git rebase --onto origin/main dev feat/x
+  These belong on `dev` only — see .claude/rules/dev-local-only.md. Features are
+  cut from main, tested on dev, then promoted by a PR from the feature branch
+  (never from dev):
     git diff origin/main...feat/x --stat    # must list ONLY the feature's files
 MSG
   exit 1

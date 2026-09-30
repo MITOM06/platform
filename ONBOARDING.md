@@ -15,12 +15,13 @@ code style and PR rules, [CONTRIBUTING.md](CONTRIBUTING.md).
 **`dev`.** Not `main`.
 
 ```
-        main  ───────────────────────────────►  production; always deployable
-          │  ▲
-   sync   │  │ promote (rebase --onto — feature commits only)
-          ▼  │
-        dev  ──────────►  feat/your-thing
-   (main + local env)     (cut from dev, so the stack is there)
+          feat/your-thing  (cut from main — feature commits only)
+         │               │
+  1. test│               │ 3. PR into main, once it passed on dev
+         ▼               ▼
+        dev             main  ──────►  production; always deployable
+   (main + local env)    │
+         ▲───────────────┘ 2. sync: main flows into dev
 ```
 
 `main` is what gets deployed. Everything whose only job is to make the app *run
@@ -175,26 +176,30 @@ Two things that will bite you if you forget them:
 
 ## 4. Working on a feature
 
-```bash
-git checkout dev
-git fetch origin && git merge origin/main   # latest code, your env untouched
-git checkout -b feat/your-thing dev
-# ...code, run ./scripts/dev/up.sh, test...
-```
-
-Promote to `main` by replaying **only your commits** — `--onto` drops everything
-the branch inherited from `dev`:
+Debug and test on `dev` first; only a change that passed there goes to `main`.
 
 ```bash
 git fetch origin
-git rebase --onto origin/main dev feat/your-thing
+git checkout -b feat/your-thing origin/main   # feature commits only
+# ...code, unit tests...
+git push -u origin feat/your-thing
+
+git checkout dev
+git merge origin/main                          # dev = latest main + your env
+git merge --no-ff feat/your-thing              # try the feature on the full stack
+./scripts/dev/up.sh --build
+git push origin dev                            # teammates test it too
+```
+
+Fix bugs on `feat/your-thing` and merge it into `dev` again. Once it passes,
+open the PR from `feat/your-thing` into `main`:
+
+```bash
 git diff origin/main...feat/your-thing --stat   # must list ONLY your files
-git push -u origin feat/your-thing              # then open the PR into main
 ```
 
 If that diff shows `scripts/dev/`, a seed script, a `*.local` env file or a
-`localhost` string, stop — the rebase base was wrong, or a dev-only change got
-mixed into a feature commit.
+`localhost` string, stop — a dev-only change got mixed into a feature commit.
 
 Before you open the PR, run what CI runs (section 5). Two rules the reviewers
 will hold you to:

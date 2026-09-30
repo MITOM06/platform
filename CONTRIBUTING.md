@@ -12,20 +12,28 @@ runnable on a laptop — bring-up script, seed data, localhost wiring — and th
 must never reach `main` (`.claude/rules/dev-local-only.md`, enforced by
 `scripts/ci/check-dev-only.sh`).
 
-- Cut your branch from `dev`: `git checkout -b feat/<scope> dev`
+Every change is **debugged and tested on `dev` first**, and goes to `main` only
+after it passed there:
+
+- Cut your branch from `main`: `git checkout -b feat/<scope> origin/main`
 - Naming: `feat/<scope>`, `fix/<scope>`, `chore/<scope>`, `docs/<scope>`
-- Keep dev-env changes in **separate commits** from feature changes — the
-  promotion step below depends on it.
-- Promote by replaying only your commits onto `main`:
+- Test it on `dev`: merge the branch into `dev`, run the local stack, push `dev`
+  so the team can test too. Fix bugs **on the feature branch**, then merge again.
 
   ```bash
-  git fetch origin
-  git rebase --onto origin/main dev feat/<scope>
-  git diff origin/main...feat/<scope> --stat   # must list ONLY your files
-  git push -u origin feat/<scope>              # then open the PR into main
+  git checkout dev && git merge --no-ff feat/<scope>
+  ./scripts/dev/up.sh --build
+  git push origin dev
   ```
 
-- PRs target `main`. Never merge `dev` into `main`, and never open a PR from `dev`.
+- Once it passes on `dev`, open the PR from the feature branch into `main`:
+
+  ```bash
+  git diff origin/main...feat/<scope> --stat   # must list ONLY your files
+  ```
+
+- PRs target `main`. Never merge `dev` into `main`, never open a PR from `dev`,
+  and never commit a feature directly on `dev`.
 - Commits follow [Conventional Commits](https://www.conventionalcommits.org/):
   `feat:`, `fix:`, `chore:`, `docs:`, `ci:`, `refactor:`, `test:`.
 
