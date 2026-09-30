@@ -79,9 +79,12 @@ const nextConfig: NextConfig = {
           { key: 'X-Frame-Options', value: 'DENY' },
           { key: 'X-Content-Type-Options', value: 'nosniff' },
           { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
+          // `()` would disable camera/mic for the app itself: getUserMedia then
+          // rejects without prompting, breaking calls and voice messages.
+          // `(self)` still denies them to any cross-origin frame.
           {
             key: 'Permissions-Policy',
-            value: 'camera=(), microphone=(), geolocation=()',
+            value: 'camera=(self), microphone=(self), geolocation=()',
           },
           // HSTS — production only (Vercel is always HTTPS). Next.js does not
           // add this automatically, so set it explicitly.
