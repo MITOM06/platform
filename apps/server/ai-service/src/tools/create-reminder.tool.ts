@@ -15,7 +15,8 @@ export class CreateReminderTool {
         text: { type: 'string', description: 'What to remind the user about' },
         remindAt: {
           type: 'string',
-          description: 'ISO 8601 datetime string for when to send the reminder',
+          description:
+            'Absolute ISO 8601 datetime WITH offset, e.g. 2026-09-30T20:00:00+07:00, computed from the current date/time given in the system prompt',
         },
       },
       required: ['text', 'remindAt'],
@@ -35,7 +36,8 @@ export class CreateReminderTool {
       return `Tool error: Invalid date format '${remindAtStr}'. Use ISO 8601 format.`;
     }
     if (remindAt <= new Date()) {
-      return `Tool error: Reminder time must be in the future.`;
+      // Tell the model the real "now" so it can correct itself on retry.
+      return `Tool error: Reminder time must be in the future (now is ${new Date().toISOString()}).`;
     }
 
     await this.reminderModel.create({

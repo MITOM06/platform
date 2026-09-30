@@ -61,7 +61,7 @@ public class ConversationController {
   @PostMapping("/group")
   @ResponseStatus(HttpStatus.CREATED)
   public ConversationResponse createGroup(@RequestBody CreateGroupRequest request) {
-    ConversationResponse group = conversationService.createGroup(currentUserId(), request);
+    ConversationResponse group = conversationService.createGroup(currentPrincipal(), request);
     broadcastSystem(group.id(), "system.group.created");
     return group;
   }
@@ -279,9 +279,13 @@ public class ConversationController {
   }
 
   private String currentUserId() {
+    return currentPrincipal().getUserId();
+  }
+
+  private UserPrincipal currentPrincipal() {
     var authentication = SecurityContextHolder.getContext().getAuthentication();
     if (authentication instanceof UserPrincipal principal) {
-      return principal.getUserId();
+      return principal;
     }
     throw new UnauthorizedException("User is not authenticated");
   }

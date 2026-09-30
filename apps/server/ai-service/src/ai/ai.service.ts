@@ -22,6 +22,7 @@ import { ResolvedAiSettings } from '../settings/resolved-ai-settings';
 import { ChatImageService } from './chat-image.service';
 import { AiSessionService } from '../session/ai-session.service';
 import { CompactService } from '../session/compact.service';
+import { currentTimeContext } from './current-time';
 import { AgenticLoopService } from './agentic-loop.service';
 import {
   AiHistoryEntry,
@@ -68,6 +69,7 @@ export class AiService {
   private readonly primaryModel: string;
   private readonly fallbackModel: string;
   private readonly extractEveryTurns: number;
+  private readonly timeZone: string;
   private readonly routerConfig: RouterConfig;
 
   constructor(
@@ -97,6 +99,7 @@ export class AiService {
       this.configService.get<string>('config.anthropic.model') ?? 'claude-opus-4-8';
     this.fallbackModel =
       this.configService.get<string>('config.anthropic.fallbackModel') ?? 'claude-haiku-4-5';
+    this.timeZone = this.configService.get<string>('config.ai.timeZone') ?? 'Asia/Ho_Chi_Minh';
     this.extractEveryTurns =
       this.configService.get<number>('config.memory.extractEveryTurns') ?? 20;
     this.routerConfig = {
@@ -305,7 +308,7 @@ export class AiService {
       perms: payload.perms ?? [],
       departmentIds: payload.departmentIds ?? [],
       baseSystem,
-      volatileSystem: [skillInstructions, volatileContext.text]
+      volatileSystem: [currentTimeContext(new Date(), this.timeZone), skillInstructions, volatileContext.text]
         .filter((s) => s && s.trim())
         .join('\n\n'),
       ragSources: volatileContext.ragSources,

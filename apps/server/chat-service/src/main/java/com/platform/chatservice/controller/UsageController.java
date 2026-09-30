@@ -50,8 +50,7 @@ public class UsageController {
     }
 
     List<TokenUsage> rows =
-        tokenUsageRepository.findByUserIdAndDateBetweenOrderByDateAsc(
-            userId, fromDate.format(fmt), toDate.format(fmt));
+        tokenUsageRepository.findUsageInRange(userId, fromDate.format(fmt), toDate.format(fmt));
 
     Map<String, TokenUsage> byDate =
         rows.stream().collect(Collectors.toMap(TokenUsage::getDate, u -> u));
