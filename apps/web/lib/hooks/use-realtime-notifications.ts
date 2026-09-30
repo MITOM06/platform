@@ -89,7 +89,8 @@ export function useRealtimeNotifications(): void {
             ? payload.content
               ? humanizeMessagePreview(payload.content, payload.messageType, tChat, { short: true })
               : t('notificationFallback')
-            : payload.messageType && payload.messageType !== 'text'
+            : // Assistant replies are type "ai" but are plain text, not an attachment.
+              payload.messageType && payload.messageType !== 'text' && payload.messageType !== 'ai'
               ? t('notificationAttachment')
               : payload.content || t('notificationFallback')
 

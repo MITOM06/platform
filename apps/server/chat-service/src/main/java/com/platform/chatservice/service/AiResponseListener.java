@@ -2,6 +2,7 @@ package com.platform.chatservice.service;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.platform.chatservice.dto.MessageResponse;
 import com.platform.chatservice.model.AiTraceData;
 import io.micrometer.tracing.Span;
 import io.micrometer.tracing.Tracer;
@@ -35,6 +36,7 @@ public class AiResponseListener implements MessageListener {
 
   private final SimpMessagingTemplate messagingTemplate;
   private final MessageService messageService;
+  private final MessageNotificationService notificationService;
   private final ObjectMapper objectMapper;
   private final Tracer tracer;
   private final Propagator propagator;
@@ -138,11 +140,13 @@ public class AiResponseListener implements MessageListener {
           // so guard the Mongo write with an atomic SET NX claim: only the instance that wins the
           // claim persists the message, preventing N duplicate inserts under multi-instance
           // (Cloud Run max-instances > 1). saveAiMessage already broadcasts the saved message to
-          // the topic, so we must NOT broadcast it again here (would duplicate on clients).
+          // the topic, so we must NOT broadcast it again here (would duplicate on clients). The
+          // claim also makes this the one instance that notifies participants who are elsewhere.
           String claimKey = "ai:done:" + convId + ":" + Integer.toHexString(fullContent.hashCode());
           Boolean claimed = redisTemplate.opsForValue().setIfAbsent(claimKey, "1", DONE_CLAIM_TTL);
           if (Boolean.TRUE.equals(claimed)) {
-            messageService.saveAiMessage(convId, fullContent, trace);
+            MessageResponse saved = messageService.saveAiMessage(convId, fullContent, trace);
+            notificationService.notifyNewMessage(AiConstants.AI_BOT_USER_ID, saved);
           }
         }
         Map<String, Object> doneEvent = new HashMap<>();

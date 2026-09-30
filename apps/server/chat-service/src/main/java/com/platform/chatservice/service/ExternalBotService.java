@@ -1,5 +1,6 @@
 package com.platform.chatservice.service;
 
+import com.platform.chatservice.dto.MessageResponse;
 import com.platform.chatservice.model.ExternalBot;
 import com.platform.chatservice.repository.ExternalBotRepository;
 import java.util.List;
@@ -20,6 +21,7 @@ public class ExternalBotService {
   private final ExternalBotRepository externalBotRepository;
   private final BotFactoryClient botFactoryClient;
   private final AiMessageService aiMessageService;
+  private final MessageNotificationService notificationService;
 
   /**
    * The personal-assistant bot that should answer this message, or empty when the conversation is
@@ -41,14 +43,16 @@ public class ExternalBotService {
   }
 
   /**
-   * Ask Bot Factory for a reply (memory keyed per PON conversation) and persist+broadcast it as the
-   * bot. No-op when Bot Factory is unconfigured or returns nothing.
+   * Ask Bot Factory for a reply (memory keyed per PON conversation), persist+broadcast it as the
+   * bot and notify the owner. No-op when Bot Factory is unconfigured or returns nothing.
    */
   public void reply(ExternalBot bot, String conversationId, String content) {
     String replyText =
         botFactoryClient.chat(bot.getFactoryBotId(), content, "pon:" + conversationId);
     if (replyText != null && !replyText.isBlank()) {
-      aiMessageService.saveBotMessage(conversationId, bot.getBotUserId(), replyText);
+      MessageResponse saved =
+          aiMessageService.saveBotMessage(conversationId, bot.getBotUserId(), replyText);
+      notificationService.notifyNewMessage(bot.getBotUserId(), saved);
     }
   }
 }
