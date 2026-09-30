@@ -16,7 +16,8 @@ export class VectorStoreService {
 
   constructor(private readonly configService: ConfigService) {
     const url = this.configService.get<string>('config.qdrant.url') ?? 'http://localhost:6333';
-    this.client = new QdrantClient({ url });
+    const apiKey = this.configService.get<string>('config.qdrant.apiKey');
+    this.client = new QdrantClient({ url, apiKey });
     this.defaultDim = this.configService.get<number>('config.kb.embeddingDimensions') ?? 1024;
   }
 

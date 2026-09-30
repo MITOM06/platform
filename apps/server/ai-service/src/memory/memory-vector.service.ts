@@ -37,7 +37,8 @@ export class MemoryVectorService {
 
   constructor(private readonly configService: ConfigService) {
     const url = this.configService.get<string>('config.qdrant.url') ?? 'http://localhost:6333';
-    this.client = new QdrantClient({ url });
+    const apiKey = this.configService.get<string>('config.qdrant.apiKey');
+    this.client = new QdrantClient({ url, apiKey });
     this.collection =
       this.configService.get<string>('config.memory.qdrantCollection') ?? 'ai_memory';
     this.defaultDim = this.configService.get<number>('config.kb.embeddingDimensions') ?? 1024;
