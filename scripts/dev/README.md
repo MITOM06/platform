@@ -66,18 +66,25 @@ reset. Add `--build` after backend code changes, so the images are rebuilt.
 
 ## Working on a feature
 
-```bash
-git checkout -b feat/x dev     # branch off dev so the stack is present
-# ...code and test...
-```
-
-To promote it to `main` **without** dragging the dev setup along:
+Debug and test every change on `dev` first; it reaches `main` only after it
+passed here.
 
 ```bash
 git fetch origin
-git rebase --onto origin/main dev feat/x
+git checkout -b feat/x origin/main      # feature commits only
+# ...code, unit tests...
+git push -u origin feat/x
+
+git checkout dev && git merge --no-ff feat/x
+./scripts/dev/up.sh --build             # run the feature on the full stack
+git push origin dev                     # teammates test it too
+```
+
+Fix bugs on `feat/x`, merge it into `dev` again, repeat. Once it passes, open
+the PR from `feat/x` (never from `dev`) into `main`:
+
+```bash
 git diff origin/main...feat/x --stat    # must list ONLY your feature's files
-git push -u origin feat/x               # then open the PR into main
 ```
 
 If that diff shows `scripts/dev/`, a seed script or a `*.local` env file, stop —
