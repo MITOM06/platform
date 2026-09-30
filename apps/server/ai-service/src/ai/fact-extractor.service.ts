@@ -3,13 +3,31 @@ import { ConfigService } from '@nestjs/config';
 import Anthropic from '@anthropic-ai/sdk';
 import { MemoryService } from '../memory/memory.service';
 import type { AiRequestPayload } from './ai.service';
-
 /**
- * Periodic semantic fact extraction from conversation history.
- * Produces a short summary + discrete facts which MemoryService dedupes
- * (cosine) and embeds into the vector store, then rebuilds the canonical
- * Mongo list for client consumption.
+ * The last 20 turns as ONE user message holding a plain transcript. Sending them
+ * as real user/assistant turns broke extraction twice over: an image turn is an
+ * empty user message (400 "non-empty content"), and history usually ENDS with an
+ * assistant reply, which the API treats as a prefill to continue — the model
+ * carried on chatting instead of answering, so no FACTS line was ever produced.
  */
+export function toExtractionMessages(
+  history: AiRequestPayload['history'],
+): Anthropic.MessageParam[] {
+  const lines: string[] = [];
+  for (const h of history.slice(-20)) {
+    const text = (h.content ?? '').trim();
+    const content = h.type === 'image' ? (text ? `[image] ${text}` : '[image]') : text;
+    if (content) lines.push(`${h.role === 'user' ? 'User' : 'Assistant'}: ${content}`);
+  }
+  if (!lines.some((l) => l.startsWith('User: '))) return [];
+  return [
+    {
+      role: 'user',
+      content: `Conversation transcript:\n\n${lines.join('\n\n')}\n\nSummarize it and list the FACTS as instructed.`,
+    },
+  ];
+}
+
 @Injectable()
 export class FactExtractorService {
   private readonly logger = new Logger(FactExtractorService.name);
@@ -39,14 +57,14 @@ export class FactExtractorService {
       `Then on a new line write: FACTS: followed by a JSON array of up to 5 short, ` +
       `self-contained fact strings about the user (each independently meaningful).\n` +
       `Only include facts the user actually stated; do not invent.\n` +
+      // English facts for a Vietnamese user showed up untranslated on the memory
+      // screen and never deduped against facts saved in Vietnamese.
+      `Write the summary and every fact in the same language the user writes in.\n` +
       `Example:\n` +
       `The user discussed their Flutter project and asked about Redis pub/sub.\n` +
       `FACTS: ["Works on a Flutter + Spring Boot project called PON", "Uses Redis for message queue"]`;
 
-    const messages: Anthropic.MessageParam[] = history.slice(-20).map((h) => ({
-      role: h.role,
-      content: h.content,
-    }));
+    const messages = toExtractionMessages(history);
     if (messages.length === 0) return;
 
     const response = await this.anthropic.messages.create({
