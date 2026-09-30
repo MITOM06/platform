@@ -3,30 +3,15 @@ import { ConfigService } from '@nestjs/config';
 import { RabbitMQModule } from '@golevelup/nestjs-rabbitmq';
 import { AiConsumer } from '../ai/ai.consumer';
 import { AiModule } from '../ai/ai.module';
+import { buildRabbitConfig } from './rabbitmq.topology';
 
 @Module({
   imports: [
     RabbitMQModule.forRootAsync({
-      useFactory: (configService: ConfigService) => ({
-        uri: configService.get<string>('config.rabbitmqUrl') ?? 'amqp://platform:platform@localhost:5672',
-        exchanges: [
-          { name: 'ai.direct', type: 'direct' },
-        ],
-        queues: [
-          {
-            name: 'ai.requests',
-            options: {
-              durable: true,
-              arguments: {
-                'x-dead-letter-exchange': 'ai.dead-letter',
-                'x-dead-letter-routing-key': 'dlq',
-                'x-message-ttl': 30_000,
-              },
-            },
-          },
-        ],
-        connectionInitOptions: { wait: false },
-      }),
+      useFactory: (configService: ConfigService) =>
+        buildRabbitConfig(
+          configService.get<string>('config.rabbitmqUrl') ?? 'amqp://platform:platform@localhost:5672',
+        ),
       inject: [ConfigService],
     }),
     AiModule,
