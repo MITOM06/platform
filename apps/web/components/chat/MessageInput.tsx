@@ -137,6 +137,22 @@ export function MessageInput({
     }
   }
 
+  // Send a text message, then clear and refocus the box.
+  const sendText = async (content: string) => {
+    if (sending) return
+    setSending(true)
+    if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current)
+    onTypingChange?.(false)
+    try {
+      await onSend(content, 'text')
+      setValue('')
+      if (textareaRef.current) textareaRef.current.style.height = 'auto'
+      textareaRef.current?.focus()
+    } finally {
+      setSending(false)
+    }
+  }
+
   const handleSend = async () => {
     // Staged attachments take priority: upload + send, then stop (text isn't
     // sent in the same action — matches Messenger/Zalo).
@@ -157,36 +173,13 @@ export function MessageInput({
     }
 
     const content = value.trim()
-    if (!content || sending) return
-    setSending(true)
-    if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current)
-    onTypingChange?.(false)
-    try {
-      await onSend(content, 'text')
-      setValue('')
-      if (textareaRef.current) textareaRef.current.style.height = 'auto'
-      textareaRef.current?.focus()
-    } finally {
-      setSending(false)
-    }
+    if (!content) return
+    await sendText(content)
   }
 
   // `/new` slash command: send it as a plain text message. ai-service intercepts
   // it to start a fresh session (mirrors the AiSessionPanel "new" button).
-  const sendSlashNew = async () => {
-    if (sending) return
-    setSending(true)
-    if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current)
-    onTypingChange?.(false)
-    try {
-      await onSend('/new', 'text')
-      setValue('')
-      if (textareaRef.current) textareaRef.current.style.height = 'auto'
-      textareaRef.current?.focus()
-    } finally {
-      setSending(false)
-    }
-  }
+  const sendSlashNew = () => sendText('/new')
 
   // Show the `/new` suggestion only in 1-1 (direct) AI conversations, when the
   // input is exactly '/', and not while editing or mentioning. In GROUP AI
