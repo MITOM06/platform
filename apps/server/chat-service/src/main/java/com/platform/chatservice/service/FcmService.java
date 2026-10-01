@@ -27,8 +27,13 @@ public class FcmService {
 
   private static final String STATUS_KEY_PREFIX = "user:status:";
 
+  /**
+   * Push a new-message notification to {@code targetUserId}'s devices when they are offline. {@code
+   * title} is the sender's already-resolved display name — callers own the name resolution
+   * (assistants are not users, so a {@code users} lookup here could not name them).
+   */
   public void sendPushNotification(
-      String targetUserId, String senderName, String messageContent, String conversationId) {
+      String targetUserId, String title, String messageContent, String conversationId) {
     // FCM disabled (no Firebase app configured) → silent no-op.
     // NOTE: FirebaseMessaging.getInstance() THROWS when no app exists, so we must
     // check FirebaseApp.getApps() instead — otherwise chat.send would break.
@@ -76,32 +81,13 @@ public class FcmService {
         }
       }
 
-      // Fetch sender's name
-      String finalSenderName = "New Message";
-      try {
-        Query senderQuery =
-            new Query(
-                Criteria.where("_id")
-                    .is(new ObjectId(senderName))); // senderName is actually senderId here
-        senderQuery.fields().include("displayName");
-        Document senderDoc = mongoTemplate.findOne(senderQuery, Document.class, "users");
-        if (senderDoc != null && senderDoc.getString("displayName") != null) {
-          finalSenderName = senderDoc.getString("displayName");
-        }
-      } catch (Exception e) {
-        // fallback
-      }
-
       for (String token : tokens) {
         try {
           Message message =
               Message.builder()
                   .setToken(token)
                   .setNotification(
-                      Notification.builder()
-                          .setTitle(finalSenderName)
-                          .setBody(messageContent)
-                          .build())
+                      Notification.builder().setTitle(title).setBody(messageContent).build())
                   .setAndroidConfig(
                       AndroidConfig.builder()
                           .setPriority(AndroidConfig.Priority.HIGH)
