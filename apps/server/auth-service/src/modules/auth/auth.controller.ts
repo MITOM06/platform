@@ -10,11 +10,13 @@ import {
   Headers,
   HttpCode,
   HttpStatus,
+  BadRequestException,
 } from '@nestjs/common';
 import {
   ApiBearerAuth,
   ApiBody,
   ApiOperation,
+  ApiQuery,
   ApiResponse,
   ApiTags,
 } from '@nestjs/swagger';
@@ -25,7 +27,6 @@ import { AuthService } from './auth.service';
 import { OidcService } from './oidc/oidc.service';
 import { SsoMappingService } from './oidc/sso-mapping.service';
 import type { Response } from 'express';
-import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 import { ConfigService } from '@nestjs/config';
 import { ForgotPasswordDto } from './dto/forgot-password.dto';
@@ -35,10 +36,14 @@ import { VerifyOtpDto } from './dto/verify-otp.dto';
 import { ResendOtpDto } from './dto/resend-otp.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
 import { normalizeLocale } from '../Email/otp-i18n';
+import { AuthCode } from '../../common/auth-code.enum';
+import { InvitationAcceptService } from '../invitations/invitation-accept.service';
+import { OAuthRedirectService } from './oauth-redirect.service';
+import { SENSITIVE_THROTTLE } from './throttle';
 
-// Stricter per-IP limits for credential / OTP endpoints (5 requests / minute).
-// Names must match a ThrottlerModule.forRoot() definition; we override 'medium'.
-const SENSITIVE_THROTTLE = { medium: { limit: 5, ttl: 60000 } };
+// Social login providers PON supports. Team decision: Google only —
+// X/Twitter and Facebook are intentionally not supported (see docs/decisions.md).
+const SUPPORTED_SOCIAL_PROVIDERS = ['google'];
 
 @ApiTags('auth')
 @Controller('auth')
@@ -48,6 +53,8 @@ export class AuthController {
     private readonly configService: ConfigService,
     private readonly oidc: OidcService,
     private readonly ssoMapping: SsoMappingService,
+    private readonly invitations: InvitationAcceptService,
+    private readonly oauthRedirect: OAuthRedirectService,
   ) {}
 
   // ===================== SOCIAL LOGIN =====================
@@ -68,28 +75,23 @@ export class AuthController {
   @UseGuards(GoogleOAuthGuard)
   @ApiOperation({ summary: 'Google OAuth callback (redirects back to client)' })
   async googleCallback(@Req() req: any, @Res() res: Response) {
-    // ✅ Platform travels in the OAuth `state` param (echoed back by Google).
-    // Fall back to the cookie for backwards compatibility / older links.
+    // ✅ Platform travels in the OAuth `state` param (echoed back by Google) as
+    // "<platform>" (login) or "<platform>.<flowId>" (invite accept). Fall back
+    // to the cookie for backwards compatibility / older links.
+    const [statePlatform, flowId] = String(req.query?.state ?? '').split('.', 2);
     const platform =
-      req.query?.state || req.cookies?.['oauth_platform'] || 'mobile';
+      statePlatform || req.cookies?.['oauth_platform'] || 'mobile';
     res.clearCookie('oauth_platform');
-    return this.auth.handleSocialLogin(req.user, res, 'google', platform);
-  }
-
-
-
-  @Get('twitter')
-  @UseGuards(AuthGuard('twitter'))
-  @ApiOperation({ summary: 'Start Twitter/X OAuth flow' })
-  async twitter() {}
-
-  @Get('twitter/callback')
-  @UseGuards(AuthGuard('twitter'))
-  @ApiOperation({ summary: 'Twitter/X OAuth callback (redirects back to client)' })
-  async twitterCallback(@Req() req: any, @Res() res: Response) {
-    const platform = req.cookies?.['oauth_platform'] || 'mobile';
-    res.clearCookie('oauth_platform');
-    return this.auth.handleSocialLogin(req.user, res, 'twitter', platform);
+    // Browser navigation: failures must redirect with ?error=CODE, never JSON.
+    try {
+      if (flowId) {
+        const userId = await this.invitations.acceptWithGoogle(flowId, req.user);
+        return await this.oauthRedirect.redirectWithLoginCode(userId, res, platform);
+      }
+      return await this.auth.handleSocialLogin(req.user, res, 'google', platform);
+    } catch (err) {
+      return this.oauthRedirect.redirectWithError(res, platform, err);
+    }
   }
 
   // ===================== SET PLATFORM COOKIE =====================
@@ -100,18 +102,43 @@ export class AuthController {
   @ApiOperation({
     summary: 'Persist platform then redirect into the provider OAuth flow',
   })
+  @ApiQuery({ name: 'platform', required: false, enum: ['web', 'mobile'] })
+  @ApiQuery({
+    name: 'invite',
+    required: false,
+    description: 'Invitation token: accept the invitation with Google',
+  })
   async initSocialLogin(
     @Req() req: any,
     @Res() res: Response,
     @Query('platform') platform: string,
+    @Query('invite') invite?: string,
   ) {
-    const provider = req.params.provider; // google | twitter
-    const resolvedPlatform = platform || 'mobile';
+    const provider = req.params.provider;
+    if (!SUPPORTED_SOCIAL_PROVIDERS.includes(provider)) {
+      throw new BadRequestException({
+        code: AuthCode.SOCIAL_PROVIDER_UNSUPPORTED,
+      });
+    }
+    // Only 'web' is special-cased downstream; anything else is the mobile bridge.
+    // Normalising keeps '.' (the state separator) out of the platform value.
+    const resolvedPlatform = platform === 'web' ? 'web' : 'mobile';
 
-    // Fallback cookie (primary mechanism is the OAuth `state` param via query).
-    // Twitter enables `state: true` for PKCE/CSRF, so it can't overload `state`
-    // and still relies on this cookie — give it room to outlive the consent
-    // screen and proper SameSite/Secure so it survives the cross-site redirect.
+    // Invite accept: validate now (error → redirect, not JSON) and carry only a
+    // short-lived single-use flow id through OAuth — never the raw invite token.
+    let flowQuery = '';
+    if (invite) {
+      try {
+        const flowId = await this.invitations.startGoogleFlow(invite);
+        flowQuery = `&flow=${encodeURIComponent(flowId)}`;
+      } catch (err) {
+        return this.oauthRedirect.redirectWithError(res, resolvedPlatform, err);
+      }
+    }
+
+    // Fallback cookie: the primary carrier is the OAuth `state` param, set by
+    // GoogleOAuthGuard from ?platform=. Keep it long enough to outlive the
+    // consent screen, with SameSite/Secure so it survives the cross-site redirect.
     res.cookie('oauth_platform', resolvedPlatform, {
       httpOnly: true,
       maxAge: 10 * 60 * 1000, // 10 phút — đủ cho cả màn hình consent của Google
@@ -120,10 +147,9 @@ export class AuthController {
       path: '/',
     });
 
-    // Carry platform in the query so GoogleOAuthGuard can forward it as `state`.
-    // Redirect về endpoint OAuth thật — AuthGuard sẽ kick off OAuth flow
+    // Carry platform (+ flow) in the query so GoogleOAuthGuard can forward it as `state`.
     return res.redirect(
-      `/auth/${provider}?platform=${encodeURIComponent(resolvedPlatform)}`,
+      `/auth/${provider}?platform=${encodeURIComponent(resolvedPlatform)}${flowQuery}`,
     );
   }
 
@@ -141,9 +167,17 @@ export class AuthController {
   @Get('oidc/callback')
   @ApiOperation({ summary: 'OIDC callback (redirects back to client)' })
   async oidcCallback(@Req() req: any, @Res() res: Response) {
-    // handleCallback returns the chosen platform (stored in the Redis flow at /oidc/login).
-    const { platform, ...profile } = await this.oidc.handleCallback(req.query);
-    return this.auth.handleOidcLogin(profile, res, platform || 'web');
+    // handleCallback returns the chosen platform (stored in the Redis flow at
+    // /oidc/login). Until it succeeds the platform is unknown → web.
+    let platform = 'web';
+    try {
+      const { platform: flowPlatform, ...profile } =
+        await this.oidc.handleCallback(req.query);
+      platform = flowPlatform || 'web';
+      return await this.auth.handleOidcLogin(profile, res, platform);
+    } catch (err) {
+      return this.oauthRedirect.redirectWithError(res, platform, err);
+    }
   }
 
   @Get('sso/info')
@@ -174,18 +208,6 @@ export class AuthController {
   @ApiResponse({ status: 401, description: 'Invalid or expired refresh token' })
   async refresh(@Body() body: RefreshDto) {
     return this.auth.refresh(body.sid, body.refreshToken);
-  }
-
-  @Post('register')
-  @Throttle(SENSITIVE_THROTTLE)
-  @ApiOperation({ summary: 'Register a new account' })
-  @ApiResponse({ status: 201, description: 'Account created' })
-  @ApiResponse({ status: 409, description: 'Email already in use' })
-  async register(
-    @Body() dto: RegisterDto,
-    @Headers('accept-language') acceptLang?: string,
-  ) {
-    return this.auth.register(dto, normalizeLocale(acceptLang));
   }
 
   @Post('login')

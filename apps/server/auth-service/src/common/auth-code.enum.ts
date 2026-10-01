@@ -16,8 +16,11 @@ export enum AuthCode {
   OTP_VALID = 'OTP_VALID',
   OTP_RESENT = 'OTP_RESENT',
   PASSWORD_UPDATED = 'PASSWORD_UPDATED',
+  /** @deprecated Self sign-up was removed (invite-only onboarding). No longer emitted. */
   REGISTER_SUCCESS = 'REGISTER_SUCCESS',
   ACCOUNT_UNVERIFIED_OTP_SENT = 'ACCOUNT_UNVERIFIED_OTP_SENT',
+  /** 201 body of POST /auth/invitations/:token/accept-password. */
+  INVITATION_ACCEPTED = 'INVITATION_ACCEPTED',
 
   // ── 400 Bad Request ─────────────────────────────────────────────────────
   OTP_INVALID = 'OTP_INVALID',
@@ -26,7 +29,17 @@ export enum AuthCode {
   OTP_WRONG_WITH_REMAINING = 'OTP_WRONG_WITH_REMAINING',
   OTP_RESEND_COOLDOWN = 'OTP_RESEND_COOLDOWN',
   TOO_MANY_OTP_REQUESTS = 'TOO_MANY_OTP_REQUESTS',
+  /** @deprecated Only emitted by the removed POST /auth/register. */
   EMAIL_DOMAIN_INVALID = 'EMAIL_DOMAIN_INVALID',
+  SOCIAL_PROVIDER_UNSUPPORTED = 'SOCIAL_PROVIDER_UNSUPPORTED',
+  ROLE_NOT_FOUND = 'ROLE_NOT_FOUND',
+  DEPARTMENT_NOT_FOUND = 'DEPARTMENT_NOT_FOUND',
+  OWNER_ROLE_IMMUTABLE = 'OWNER_ROLE_IMMUTABLE',
+  CANNOT_BLOCK_SELF = 'CANNOT_BLOCK_SELF',
+  /** PATCH /admin/members/:id — an actor cannot change their own role. */
+  CANNOT_CHANGE_OWN_ROLE = 'CANNOT_CHANGE_OWN_ROLE',
+  /** PATCH /admin/members/:id — would leave no active Owner. */
+  LAST_OWNER_CANNOT_BE_DEMOTED = 'LAST_OWNER_CANNOT_BE_DEMOTED',
 
   // ── 401 Unauthorized ────────────────────────────────────────────────────
   ACCOUNT_LOCKED = 'ACCOUNT_LOCKED',
@@ -42,13 +55,45 @@ export enum AuthCode {
   REFRESH_TOKEN_REUSE = 'REFRESH_TOKEN_REUSE',
   REFRESH_TOKEN_INVALID = 'REFRESH_TOKEN_INVALID',
   REFRESH_TOKEN_ROTATED = 'REFRESH_TOKEN_ROTATED',
+  SSO_DISABLED = 'SSO_DISABLED',
+  SSO_DOMAIN_NOT_ALLOWED = 'SSO_DOMAIN_NOT_ALLOWED',
+
+  // ── 403 Forbidden ───────────────────────────────────────────────────────
+  /** Social/SSO sign-in for an email with no account (invite-only). */
+  ACCOUNT_NOT_PROVISIONED = 'ACCOUNT_NOT_PROVISIONED',
+  ACCOUNT_BLOCKED = 'ACCOUNT_BLOCKED',
+  /** No account yet, but a live invitation exists — finish via the email link. */
+  INVITATION_PENDING = 'INVITATION_PENDING',
+  /** Google account email differs from the invited email (OAuth redirect only). */
+  INVITATION_EMAIL_MISMATCH = 'INVITATION_EMAIL_MISMATCH',
+  OWNER_ROLE_ASSIGN_FORBIDDEN = 'OWNER_ROLE_ASSIGN_FORBIDDEN',
+  OWNER_BLOCK_FORBIDDEN = 'OWNER_BLOCK_FORBIDDEN',
 
   // ── 404 Not Found ───────────────────────────────────────────────────────
   EMAIL_NOT_FOUND = 'EMAIL_NOT_FOUND',
   USER_NOT_FOUND = 'USER_NOT_FOUND',
+  MEMBER_NOT_FOUND = 'MEMBER_NOT_FOUND',
+  /** Unknown invitation token (public endpoints). */
+  INVITATION_INVALID = 'INVITATION_INVALID',
+  /** Unknown invitation id (admin endpoints). */
+  INVITATION_NOT_FOUND = 'INVITATION_NOT_FOUND',
 
   // ── 409 Conflict ────────────────────────────────────────────────────────
+  /** @deprecated Only emitted by the removed POST /auth/register. */
   EMAIL_IN_USE = 'EMAIL_IN_USE',
+  INVITATION_ALREADY_ACCEPTED = 'INVITATION_ALREADY_ACCEPTED',
+  INVITATION_ALREADY_PENDING = 'INVITATION_ALREADY_PENDING',
+  INVITATION_NOT_PENDING = 'INVITATION_NOT_PENDING',
+  MEMBER_ALREADY_EXISTS = 'MEMBER_ALREADY_EXISTS',
+  LAST_OWNER_CANNOT_BE_BLOCKED = 'LAST_OWNER_CANNOT_BE_BLOCKED',
+
+  // ── 410 Gone ────────────────────────────────────────────────────────────
+  INVITATION_EXPIRED = 'INVITATION_EXPIRED',
+  INVITATION_REVOKED = 'INVITATION_REVOKED',
+
+  // ── 429 Too Many Requests ───────────────────────────────────────────────
+  /** params: { ttl: number } seconds until the invitation can be resent. */
+  INVITATION_RESEND_COOLDOWN = 'INVITATION_RESEND_COOLDOWN',
 
   // ── 503 Service Unavailable ─────────────────────────────────────────────
   /**
