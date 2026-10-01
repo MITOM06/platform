@@ -53,7 +53,7 @@ class __ChangePasswordDialogContentState
     // (Google) accounts have no password yet and must be able to set
     // one for the first time. The server enforces the current-password check
     // only for accounts that already have a password.
-    // Enforce the same strong-password requirements as the register screen.
+    // Enforce the same strong-password requirements as the invitation accept form.
     if (newPass.isEmpty) {
       setState(() => _errorText = context.l10n.valPasswordRequired);
       return;

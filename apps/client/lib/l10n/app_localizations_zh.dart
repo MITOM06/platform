@@ -145,12 +145,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get loginButton => '登录';
 
   @override
-  String get noAccountYet => '还没有账号？ ';
-
-  @override
-  String get registerNow => '立即注册';
-
-  @override
   String get valEmailRequired => '请输入邮箱';
 
   @override
@@ -348,9 +342,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get errLoginFailed => '登录失败，请重试';
 
   @override
-  String get registerTitle => '创建账号';
-
-  @override
   String get welcomeToApp => '欢迎来到 PON';
 
   @override
@@ -358,15 +349,6 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get fieldConfirmPassword => '确认密码';
-
-  @override
-  String get registerButton => '注册';
-
-  @override
-  String get haveAccount => '已有账号？ ';
-
-  @override
-  String get loginLink => '登录';
 
   @override
   String get valNameRequired => '请输入姓名';
@@ -379,9 +361,6 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get errEmailExists => '该邮箱已被注册';
-
-  @override
-  String get errRegisterFailed => '注册失败，请重试';
 
   @override
   String get verifyOtpTitle => '验证 OTP';
@@ -434,9 +413,6 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get sendOtpButton => '发送验证码';
-
-  @override
-  String get errEmailNotRegistered => '该邮箱尚未注册';
 
   @override
   String get errSendRequestFailed => '请求失败，请重试';
@@ -1654,9 +1630,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get loginWithGoogle => '使用 Google 登录';
 
   @override
-  String get registerWithGoogle => '使用 Google 注册';
-
-  @override
   String get orContinueWith => '或使用以下方式继续';
 
   @override
@@ -1671,7 +1644,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get termsOfService => '服务条款';
 
   @override
-  String get valMustAgreeTerms => '您必须同意服务条款才能注册';
+  String get valMustAgreeTerms => '您必须同意服务条款才能继续';
 
   @override
   String get youColon => '你：';
@@ -1908,9 +1881,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get authMsgPasswordUpdated => '密码已成功更新，请重新登录。';
 
   @override
-  String get authMsgRegisterSuccess => '注册成功，OTP已发送至您的邮箱。';
-
-  @override
   String get authMsgAccountUnverifiedOtpSent => '账户尚未验证，新OTP已发送至您的邮箱。';
 
   @override
@@ -1936,13 +1906,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get authErrOtpSendFailed => '目前无法发送验证码，请稍后重试。';
 
   @override
-  String get authErrEmailDomainInvalid => '邮箱域名不存在或无MX记录。';
-
-  @override
   String get authErrEmailNotFound => '系统中不存在该邮箱。';
-
-  @override
-  String get authErrEmailInUse => '该邮箱已被使用。';
 
   @override
   String get authErrValEmailInvalid => '邮箱格式无效。';
@@ -2432,6 +2396,12 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get adminMemberRoleNone => '无';
+
+  @override
+  String get adminMemberRoleLockedSelf => '你不能更改自己的角色。';
+
+  @override
+  String get adminMemberRoleLockedOwner => '只有所有者才能更改所有者的角色。';
 
   @override
   String get adminMemberDepartments => '部门';
@@ -3227,4 +3197,251 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get adminDeleteEntry => '删除条目';
+
+  @override
+  String get loginInviteOnlyHint => 'PON 仅限受邀使用。请向管理员申请邀请。';
+
+  @override
+  String get loginHaveInviteLink => '有邀请链接？';
+
+  @override
+  String get inviteLinkDialogTitle => '打开邀请';
+
+  @override
+  String get inviteLinkDialogHint => '粘贴邮件中的邀请链接';
+
+  @override
+  String get inviteLinkInvalid => '这不是有效的邀请链接。';
+
+  @override
+  String get inviteOpen => '打开';
+
+  @override
+  String get inviteCancel => '取消';
+
+  @override
+  String get inviteRetry => '重试';
+
+  @override
+  String get inviteTitle => '您已受邀';
+
+  @override
+  String inviteSubtitle(String inviter, String workspace, String role) {
+    return '$inviter 邀请您以 $role 身份加入 $workspace';
+  }
+
+  @override
+  String inviteSubtitleNoRole(String inviter, String workspace) {
+    return '$inviter 邀请您加入 $workspace';
+  }
+
+  @override
+  String get inviteContinueWithGoogle => '使用 Google 继续';
+
+  @override
+  String inviteGoogleHint(String email) {
+    return '请使用 $email 的 Google 账号';
+  }
+
+  @override
+  String get inviteOrSetPassword => '或设置密码';
+
+  @override
+  String get inviteSubmit => '创建账号';
+
+  @override
+  String get inviteInvalidTitle => '邀请无效';
+
+  @override
+  String get inviteInvalidBody => '此邀请链接无效。请检查邮件中的链接，或请管理员重新邀请。';
+
+  @override
+  String get inviteExpiredTitle => '邀请已过期';
+
+  @override
+  String get inviteExpiredBody => '此邀请已过期。请让管理员重新发送。';
+
+  @override
+  String get inviteRevokedTitle => '邀请已撤销';
+
+  @override
+  String get inviteRevokedBody => '此邀请已被管理员撤销。';
+
+  @override
+  String get inviteAcceptedTitle => '已接受';
+
+  @override
+  String get inviteAcceptedBody => '此邀请已被接受。请登录以继续。';
+
+  @override
+  String get inviteLoadFailedTitle => '无法加载邀请';
+
+  @override
+  String get inviteBackToLogin => '返回登录';
+
+  @override
+  String get authMsgInvitationAccepted => '已接受邀请。欢迎！';
+
+  @override
+  String get authErrAccountNotProvisioned =>
+      '你选择的账号尚无权访问 PON。请尝试其他账号，或请管理员向你发送邀请。';
+
+  @override
+  String get authErrAccountBlocked => '此账号已被封禁。请联系管理员。';
+
+  @override
+  String get authErrInvitationPending => '您有一个待处理的邀请。请打开邮件中的邀请链接完成设置。';
+
+  @override
+  String get authErrInvitationInvalid => '此邀请链接无效。';
+
+  @override
+  String get authErrInvitationExpired => '此邀请已过期。请让管理员重新发送。';
+
+  @override
+  String get authErrInvitationRevoked => '此邀请已被撤销。';
+
+  @override
+  String get authErrInvitationAlreadyAccepted => '此邀请已被接受。请登录。';
+
+  @override
+  String get authErrInvitationEmailMismatch => '请使用与受邀邮箱一致的 Google 账号登录。';
+
+  @override
+  String get authErrInvitationAlreadyPending => '此邮箱已有待处理的邀请。';
+
+  @override
+  String get authErrInvitationNotPending => '此邀请已不再处于待处理状态。';
+
+  @override
+  String get authErrInvitationNotFound => '未找到邀请。';
+
+  @override
+  String authErrInvitationResendCooldown(int ttl) {
+    return '请等待 $ttl 秒后再重新发送。';
+  }
+
+  @override
+  String get authErrMemberAlreadyExists => '已存在使用此邮箱的成员。';
+
+  @override
+  String get authErrMemberNotFound => '未找到成员。';
+
+  @override
+  String get authErrRoleNotFound => '未找到角色。';
+
+  @override
+  String get authErrDepartmentNotFound => '未找到部门。';
+
+  @override
+  String get authErrOwnerRoleAssignForbidden => '只有所有者才能授予所有者角色或更改所有者的角色。';
+
+  @override
+  String get authErrCannotChangeOwnRole => '你不能更改自己的角色。';
+
+  @override
+  String get authErrLastOwnerCannotBeDemoted => '不能降级最后一位所有者。请先将其他成员设为所有者。';
+
+  @override
+  String get authErrCannotBlockSelf => '您不能封禁自己的账号。';
+
+  @override
+  String get authErrOwnerBlockForbidden => '只有 Owner 才能封禁其他 Owner。';
+
+  @override
+  String get authErrLastOwnerCannotBeBlocked => '无法封禁最后一位 Owner。';
+
+  @override
+  String get authErrSsoDisabled => '单点登录已停用。';
+
+  @override
+  String get authErrSsoDomainNotAllowed => '您的邮箱域名不允许使用 SSO。';
+
+  @override
+  String get adminInviteMember => '邀请成员';
+
+  @override
+  String get adminInviteTitle => '邀请一位成员';
+
+  @override
+  String get adminInviteEmail => '邮箱地址';
+
+  @override
+  String get adminInviteRole => '角色';
+
+  @override
+  String get adminInviteDepartments => '部门';
+
+  @override
+  String get adminInviteSubmit => '发送邀请';
+
+  @override
+  String get adminInviteSent => '邀请已发送';
+
+  @override
+  String get adminInviteEmailFailed => '邀请已创建，但邮件发送失败。请检查邮件设置后重新发送。';
+
+  @override
+  String get adminPendingInvitations => '待处理的邀请';
+
+  @override
+  String get adminInviteStatusPending => '待处理';
+
+  @override
+  String get adminInviteStatusExpired => '已过期';
+
+  @override
+  String adminInviteExpires(String date) {
+    return '$date 过期';
+  }
+
+  @override
+  String adminInviteInvitedBy(String name) {
+    return '邀请人：$name';
+  }
+
+  @override
+  String get adminInviteResend => '重新发送';
+
+  @override
+  String get adminInviteResent => '邀请已重新发送';
+
+  @override
+  String get adminInviteRevoke => '撤销';
+
+  @override
+  String adminInviteRevokeConfirm(String email) {
+    return '撤销对 $email 的邀请？该链接将失效。';
+  }
+
+  @override
+  String get adminInviteRevoked => '邀请已撤销';
+
+  @override
+  String get adminMemberStatusBlocked => '已封禁';
+
+  @override
+  String get adminMemberBlock => '封禁';
+
+  @override
+  String get adminMemberUnblock => '解除封禁';
+
+  @override
+  String adminMemberBlockConfirm(String name) {
+    return '封禁 $name？对方将在所有设备上被登出。';
+  }
+
+  @override
+  String adminMemberUnblockConfirm(String name) {
+    return '解除封禁 $name？对方将可以重新登录。';
+  }
+
+  @override
+  String get adminMemberBlocked => '成员已封禁';
+
+  @override
+  String get adminMemberUnblocked => '成员已解除封禁';
+
+  @override
+  String get adminLoadFailed => '无法加载此部分，请重试。';
 }

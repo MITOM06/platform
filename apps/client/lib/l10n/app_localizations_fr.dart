@@ -153,12 +153,6 @@ class AppLocalizationsFr extends AppLocalizations {
   String get loginButton => 'SE CONNECTER';
 
   @override
-  String get noAccountYet => 'Pas encore de compte ? ';
-
-  @override
-  String get registerNow => 'Inscrivez-vous';
-
-  @override
   String get valEmailRequired => 'Veuillez saisir votre e-mail';
 
   @override
@@ -358,9 +352,6 @@ class AppLocalizationsFr extends AppLocalizations {
   String get errLoginFailed => 'Échec de la connexion, veuillez réessayer';
 
   @override
-  String get registerTitle => 'Créer un compte';
-
-  @override
   String get welcomeToApp => 'Bienvenue sur PON';
 
   @override
@@ -368,15 +359,6 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get fieldConfirmPassword => 'Confirmer le mot de passe';
-
-  @override
-  String get registerButton => 'S\'INSCRIRE';
-
-  @override
-  String get haveAccount => 'Vous avez déjà un compte ? ';
-
-  @override
-  String get loginLink => 'Se connecter';
 
   @override
   String get valNameRequired => 'Veuillez saisir votre nom';
@@ -389,9 +371,6 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get errEmailExists => 'Cet e-mail est déjà enregistré';
-
-  @override
-  String get errRegisterFailed => 'Échec de l\'inscription, veuillez réessayer';
 
   @override
   String get verifyOtpTitle => 'Vérifier l\'OTP';
@@ -445,9 +424,6 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get sendOtpButton => 'ENVOYER LE CODE OTP';
-
-  @override
-  String get errEmailNotRegistered => 'Cet e-mail n\'est pas enregistré';
 
   @override
   String get errSendRequestFailed => 'Échec de la demande, veuillez réessayer';
@@ -1705,9 +1681,6 @@ class AppLocalizationsFr extends AppLocalizations {
   String get loginWithGoogle => 'Se connecter avec Google';
 
   @override
-  String get registerWithGoogle => 'S\'inscrire avec Google';
-
-  @override
   String get orContinueWith => 'Ou continuer avec';
 
   @override
@@ -1723,7 +1696,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get valMustAgreeTerms =>
-      'Vous devez accepter les Conditions d\'Utilisation pour vous inscrire';
+      'Vous devez accepter les Conditions d\'Utilisation pour continuer';
 
   @override
   String get youColon => 'Vous :';
@@ -1964,10 +1937,6 @@ class AppLocalizationsFr extends AppLocalizations {
       'Mot de passe mis à jour avec succès. Veuillez vous reconnecter.';
 
   @override
-  String get authMsgRegisterSuccess =>
-      'Inscription réussie. Un OTP a été envoyé à votre adresse e-mail.';
-
-  @override
   String get authMsgAccountUnverifiedOtpSent =>
       'Compte non encore vérifié. Un nouvel OTP a été envoyé à votre adresse e-mail.';
 
@@ -1996,15 +1965,8 @@ class AppLocalizationsFr extends AppLocalizations {
       'Impossible d\'envoyer le code de vérification pour le moment. Réessayez dans un instant.';
 
   @override
-  String get authErrEmailDomainInvalid =>
-      'Le domaine de l\'e-mail n\'existe pas ou n\'a pas d\'enregistrements MX.';
-
-  @override
   String get authErrEmailNotFound =>
       'Cet e-mail n\'existe pas dans le système.';
-
-  @override
-  String get authErrEmailInUse => 'Cet e-mail est déjà utilisé.';
 
   @override
   String get authErrValEmailInvalid => 'Format d\'e-mail invalide.';
@@ -2537,6 +2499,14 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get adminMemberRoleNone => 'Aucun rôle';
+
+  @override
+  String get adminMemberRoleLockedSelf =>
+      'Vous ne pouvez pas modifier votre propre rôle.';
+
+  @override
+  String get adminMemberRoleLockedOwner =>
+      'Seul un Propriétaire peut modifier le rôle d\'un Propriétaire.';
 
   @override
   String get adminMemberDepartments => 'Départements';
@@ -3368,4 +3338,275 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get adminDeleteEntry => 'Supprimer l\'entrée';
+
+  @override
+  String get loginInviteOnlyHint =>
+      'PON fonctionne uniquement sur invitation. Demandez une invitation à votre administrateur.';
+
+  @override
+  String get loginHaveInviteLink => 'Vous avez un lien d\'invitation ?';
+
+  @override
+  String get inviteLinkDialogTitle => 'Ouvrir une invitation';
+
+  @override
+  String get inviteLinkDialogHint =>
+      'Collez le lien d\'invitation reçu par e-mail';
+
+  @override
+  String get inviteLinkInvalid => 'Ce lien d\'invitation ne semble pas valide.';
+
+  @override
+  String get inviteOpen => 'Ouvrir';
+
+  @override
+  String get inviteCancel => 'Annuler';
+
+  @override
+  String get inviteRetry => 'Réessayer';
+
+  @override
+  String get inviteTitle => 'Vous êtes invité';
+
+  @override
+  String inviteSubtitle(String inviter, String workspace, String role) {
+    return '$inviter vous a invité à rejoindre $workspace en tant que $role';
+  }
+
+  @override
+  String inviteSubtitleNoRole(String inviter, String workspace) {
+    return '$inviter vous a invité à rejoindre $workspace';
+  }
+
+  @override
+  String get inviteContinueWithGoogle => 'Continuer avec Google';
+
+  @override
+  String inviteGoogleHint(String email) {
+    return 'Utilisez le compte Google de $email';
+  }
+
+  @override
+  String get inviteOrSetPassword => 'ou définissez un mot de passe';
+
+  @override
+  String get inviteSubmit => 'Créer le compte';
+
+  @override
+  String get inviteInvalidTitle => 'Invitation non valide';
+
+  @override
+  String get inviteInvalidBody =>
+      'Ce lien d\'invitation n\'est pas valide. Vérifiez le lien dans votre e-mail ou demandez une nouvelle invitation à votre administrateur.';
+
+  @override
+  String get inviteExpiredTitle => 'Invitation expirée';
+
+  @override
+  String get inviteExpiredBody =>
+      'Cette invitation a expiré. Demandez à votre administrateur de la renvoyer.';
+
+  @override
+  String get inviteRevokedTitle => 'Invitation révoquée';
+
+  @override
+  String get inviteRevokedBody =>
+      'Cette invitation a été révoquée par votre administrateur.';
+
+  @override
+  String get inviteAcceptedTitle => 'Déjà acceptée';
+
+  @override
+  String get inviteAcceptedBody =>
+      'Cette invitation a déjà été acceptée. Connectez-vous pour continuer.';
+
+  @override
+  String get inviteLoadFailedTitle => 'Impossible de charger l\'invitation';
+
+  @override
+  String get inviteBackToLogin => 'Retour à la connexion';
+
+  @override
+  String get authMsgInvitationAccepted => 'Invitation acceptée. Bienvenue !';
+
+  @override
+  String get authErrAccountNotProvisioned =>
+      'Le compte choisi n\'a pas encore accès à PON. Essayez un autre compte ou demandez une invitation à votre administrateur.';
+
+  @override
+  String get authErrAccountBlocked =>
+      'Ce compte a été bloqué. Contactez votre administrateur.';
+
+  @override
+  String get authErrInvitationPending =>
+      'Vous avez une invitation en attente. Ouvrez le lien d\'invitation reçu par e-mail pour terminer la configuration.';
+
+  @override
+  String get authErrInvitationInvalid =>
+      'Ce lien d\'invitation n\'est pas valide.';
+
+  @override
+  String get authErrInvitationExpired =>
+      'Cette invitation a expiré. Demandez à votre administrateur de la renvoyer.';
+
+  @override
+  String get authErrInvitationRevoked => 'Cette invitation a été révoquée.';
+
+  @override
+  String get authErrInvitationAlreadyAccepted =>
+      'Cette invitation a déjà été acceptée. Veuillez vous connecter.';
+
+  @override
+  String get authErrInvitationEmailMismatch =>
+      'Connectez-vous avec le compte Google correspondant à l\'e-mail invité.';
+
+  @override
+  String get authErrInvitationAlreadyPending =>
+      'Cet e-mail a déjà une invitation en attente.';
+
+  @override
+  String get authErrInvitationNotPending =>
+      'Cette invitation n\'est plus en attente.';
+
+  @override
+  String get authErrInvitationNotFound => 'Invitation introuvable.';
+
+  @override
+  String authErrInvitationResendCooldown(int ttl) {
+    return 'Veuillez patienter $ttl s avant de renvoyer.';
+  }
+
+  @override
+  String get authErrMemberAlreadyExists =>
+      'Un membre avec cet e-mail existe déjà.';
+
+  @override
+  String get authErrMemberNotFound => 'Membre introuvable.';
+
+  @override
+  String get authErrRoleNotFound => 'Rôle introuvable.';
+
+  @override
+  String get authErrDepartmentNotFound => 'Département introuvable.';
+
+  @override
+  String get authErrOwnerRoleAssignForbidden =>
+      'Seul un Propriétaire peut attribuer le rôle de Propriétaire ou modifier le rôle d\'un Propriétaire.';
+
+  @override
+  String get authErrCannotChangeOwnRole =>
+      'Vous ne pouvez pas modifier votre propre rôle.';
+
+  @override
+  String get authErrLastOwnerCannotBeDemoted =>
+      'Le dernier Propriétaire ne peut pas être rétrogradé. Désignez d\'abord un autre membre comme Propriétaire.';
+
+  @override
+  String get authErrCannotBlockSelf =>
+      'Vous ne pouvez pas bloquer votre propre compte.';
+
+  @override
+  String get authErrOwnerBlockForbidden =>
+      'Seul un Owner peut bloquer un autre Owner.';
+
+  @override
+  String get authErrLastOwnerCannotBeBlocked =>
+      'Le dernier Owner ne peut pas être bloqué.';
+
+  @override
+  String get authErrSsoDisabled => 'L\'authentification unique est désactivée.';
+
+  @override
+  String get authErrSsoDomainNotAllowed =>
+      'Votre domaine e-mail n\'est pas autorisé pour le SSO.';
+
+  @override
+  String get adminInviteMember => 'Inviter un membre';
+
+  @override
+  String get adminInviteTitle => 'Inviter un membre';
+
+  @override
+  String get adminInviteEmail => 'Adresse e-mail';
+
+  @override
+  String get adminInviteRole => 'Rôle';
+
+  @override
+  String get adminInviteDepartments => 'Départements';
+
+  @override
+  String get adminInviteSubmit => 'Envoyer l\'invitation';
+
+  @override
+  String get adminInviteSent => 'Invitation envoyée';
+
+  @override
+  String get adminInviteEmailFailed =>
+      'Invitation créée, mais l\'e-mail n\'a pas pu être envoyé. Vérifiez les paramètres de messagerie et renvoyez-la.';
+
+  @override
+  String get adminPendingInvitations => 'Invitations en attente';
+
+  @override
+  String get adminInviteStatusPending => 'En attente';
+
+  @override
+  String get adminInviteStatusExpired => 'Expirée';
+
+  @override
+  String adminInviteExpires(String date) {
+    return 'Expire le $date';
+  }
+
+  @override
+  String adminInviteInvitedBy(String name) {
+    return 'Invité par $name';
+  }
+
+  @override
+  String get adminInviteResend => 'Renvoyer';
+
+  @override
+  String get adminInviteResent => 'Invitation renvoyée';
+
+  @override
+  String get adminInviteRevoke => 'Révoquer';
+
+  @override
+  String adminInviteRevokeConfirm(String email) {
+    return 'Révoquer l\'invitation de $email ? Le lien ne fonctionnera plus.';
+  }
+
+  @override
+  String get adminInviteRevoked => 'Invitation révoquée';
+
+  @override
+  String get adminMemberStatusBlocked => 'Bloqué';
+
+  @override
+  String get adminMemberBlock => 'Bloquer';
+
+  @override
+  String get adminMemberUnblock => 'Débloquer';
+
+  @override
+  String adminMemberBlockConfirm(String name) {
+    return 'Bloquer $name ? Cette personne sera déconnectée partout.';
+  }
+
+  @override
+  String adminMemberUnblockConfirm(String name) {
+    return 'Débloquer $name ? Cette personne pourra se reconnecter.';
+  }
+
+  @override
+  String get adminMemberBlocked => 'Membre bloqué';
+
+  @override
+  String get adminMemberUnblocked => 'Membre débloqué';
+
+  @override
+  String get adminLoadFailed =>
+      'Impossible de charger cette section. Veuillez réessayer.';
 }

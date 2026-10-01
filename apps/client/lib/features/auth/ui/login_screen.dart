@@ -13,6 +13,8 @@ import '../data/auth_repository.dart';
 import '../domain/auth_provider.dart';
 import '../domain/auth_state.dart';
 import '../utils/auth_error.dart';
+import 'widgets/invite_link_dialog.dart';
+import 'widgets/logout_reason_banner.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
@@ -167,6 +169,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                 textAlign: TextAlign.center,
                               ),
                               const SizedBox(height: 28),
+                              // Forced logout (e.g. account blocked) → why.
+                              const LogoutReasonBanner(),
 
                               // Email
                               PonTextField(
@@ -291,19 +295,23 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     ),
                   ],
 
-                  // Navigation to register
+                  // Invite-only: no self sign-up. Invitees open the link
+                  // from their email, or paste it here.
+                  const SizedBox(height: 24),
                   StaggeredEntrance(
                     index: 4,
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
+                    child: Column(
                       children: [
                         Text(
-                          context.l10n.noAccountYet,
-                          style: TextStyle(color: AppTheme.mutedText(context)),
+                          context.l10n.loginInviteOnlyHint,
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                              color: AppTheme.mutedText(context),
+                              fontSize: 13),
                         ),
                         TextButton(
-                          onPressed: () => context.go('/register'),
-                          child: Text(context.l10n.registerNow),
+                          onPressed: () => InviteLinkDialog.show(context),
+                          child: Text(context.l10n.loginHaveInviteLink),
                         ),
                       ],
                     ),

@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../data/admin_repository.dart';
 import '../data/models/admin_models.dart';
+import '../data/models/invitation_models.dart';
 import 'capabilities_provider.dart';
 
 /// Admin resource notifiers (workspace, departments, members, roles). Each loads
@@ -72,10 +73,74 @@ class MembersNotifier extends AsyncNotifier<List<Member>> {
       () => ref.read(adminRepositoryProvider).listMembers(),
     );
   }
+
+  /// Block / unblock. Patches the row in place from the server response so
+  /// the list doesn't flash a spinner. Errors propagate to the caller.
+  Future<void> setStatus(String id, String status) async {
+    final updated =
+        await ref.read(adminRepositoryProvider).setMemberStatus(id, status);
+    final current = state.valueOrNull;
+    if (current == null) {
+      ref.invalidateSelf();
+      return;
+    }
+    state = AsyncData([
+      for (final m in current) m.id == id ? updated : m,
+    ]);
+  }
 }
 
 final membersProvider =
     AsyncNotifierProvider<MembersNotifier, List<Member>>(MembersNotifier.new);
+
+// ── invitations ───────────────────────────────────────────────────────────────
+/// Actionable invitations (pending + expired). Mirrors the web
+/// `useInvitations` / `useCreateInvitation` / `useResendInvitation` /
+/// `useRevokeInvitation` hooks. Mutations return the server result (so the UI
+/// can warn on `emailSent: false`) and re-fetch the list; errors propagate.
+class InvitationsNotifier extends AsyncNotifier<List<Invitation>> {
+  @override
+  Future<List<Invitation>> build() =>
+      ref.read(adminRepositoryProvider).listInvitations();
+
+  Future<void> _reload() async {
+    state = await AsyncValue.guard(
+      () => ref.read(adminRepositoryProvider).listInvitations(),
+    );
+  }
+
+  Future<InvitationMutationResult> create({
+    required String email,
+    String? roleId,
+    List<String> departmentIds = const [],
+    String? locale,
+  }) async {
+    final result = await ref.read(adminRepositoryProvider).createInvitation(
+          email: email,
+          roleId: roleId,
+          departmentIds: departmentIds,
+          locale: locale,
+        );
+    await _reload();
+    return result;
+  }
+
+  Future<InvitationMutationResult> resend(String id) async {
+    final result = await ref.read(adminRepositoryProvider).resendInvitation(id);
+    await _reload();
+    return result;
+  }
+
+  Future<void> revoke(String id) async {
+    await ref.read(adminRepositoryProvider).revokeInvitation(id);
+    await _reload();
+  }
+}
+
+final invitationsProvider =
+    AsyncNotifierProvider<InvitationsNotifier, List<Invitation>>(
+  InvitationsNotifier.new,
+);
 
 // ── roles ─────────────────────────────────────────────────────────────────────
 class RolesNotifier extends AsyncNotifier<List<Role>> {

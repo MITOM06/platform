@@ -133,6 +133,33 @@ class AuthAuthenticated extends AuthState {
   const AuthAuthenticated(this.user);
 }
 
+/// Forced-logout reasons the login screen explains (allow-list — anything else
+/// is a plain logout with no message, so raw server codes never reach the UI).
+/// Mirror of web `LOGOUT_REASONS` (`lib/auth/force-logout.ts`).
+const kLogoutReasons = {'ACCOUNT_BLOCKED'};
+
+/// Codes the login screen may show as a persistent notice: the forced-logout
+/// reasons plus every code a Google / SSO error deep link
+/// (`platform://auth?error=CODE`) can carry. Mirror of web `LOGIN_NOTICES`.
+const kLoginNotices = {
+  ...kLogoutReasons,
+  'ACCOUNT_NOT_PROVISIONED',
+  'INVITATION_PENDING',
+  'INVITATION_INVALID',
+  'INVITATION_EXPIRED',
+  'INVITATION_REVOKED',
+  'INVITATION_ALREADY_ACCEPTED',
+  'INVITATION_EMAIL_MISMATCH',
+  'MEMBER_ALREADY_EXISTS',
+  'SOCIAL_EMAIL_UNAVAILABLE',
+  'SSO_DISABLED',
+  'SSO_DOMAIN_NOT_ALLOWED',
+  'GENERIC_ERROR',
+};
+
 class AuthUnauthenticated extends AuthState {
-  const AuthUnauthenticated();
+  /// Why the session ended when it was not the user's choice (e.g.
+  /// `ACCOUNT_BLOCKED`); `null` for a normal logout / fresh start.
+  final String? reason;
+  const AuthUnauthenticated({this.reason});
 }

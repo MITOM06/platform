@@ -60,8 +60,6 @@
   "fieldPassword": "Password",
   "forgotPasswordLink": "Forgot password?",
   "loginButton": "SIGN IN",
-  "noAccountYet": "Don't have an account? ",
-  "registerNow": "Sign up now",
   "valEmailRequired": "Please enter your email",
   "valEmailInvalid": "Invalid email",
   "valPasswordRequired": "Please enter your password",
@@ -134,18 +132,13 @@
   "fitContainLabel": "Contain",
   "fitFillLabel": "Fill",
   "errLoginFailed": "Sign in failed, please try again",
-  "registerTitle": "Create Account",
   "welcomeToApp": "Welcome to PON",
   "fieldDisplayName": "Display name",
   "fieldConfirmPassword": "Confirm password",
-  "registerButton": "SIGN UP",
-  "haveAccount": "Already have an account? ",
-  "loginLink": "Sign in",
   "valNameRequired": "Please enter your name",
   "valNameMin2": "Name must be at least 2 characters",
   "valPasswordMismatch": "Passwords do not match",
   "errEmailExists": "This email is already registered",
-  "errRegisterFailed": "Sign up failed, please try again",
   "verifyOtpTitle": "Verify OTP",
   "verifyAccountHeading": "Verify your account",
   "otpSentTo": "A 6-digit OTP was sent to\n{email}",
@@ -176,7 +169,6 @@
   "forgotHeading": "Forgot password?",
   "forgotSubtitle": "Enter your email to receive an OTP and set a new password",
   "sendOtpButton": "SEND OTP CODE",
-  "errEmailNotRegistered": "This email is not registered",
   "errSendRequestFailed": "Request failed, please try again",
   "newPasswordTitle": "New Password",
   "newPasswordHeading": "Create a new password",
@@ -752,7 +744,6 @@
   "pwReqDigit": "Digit (0-9)",
   "pwReqSpecial": "Special char (!@#$...)",
   "loginWithGoogle": "Sign in with Google",
-  "registerWithGoogle": "Sign up with Google",
   "orContinueWith": "Or continue with",
   "agreeToTerms": "I agree to the {privacyPolicy} and {termsOfService}",
   "@agreeToTerms": {
@@ -767,7 +758,7 @@
   },
   "privacyPolicy": "Privacy Policy",
   "termsOfService": "Terms of Service",
-  "valMustAgreeTerms": "You must agree to the Terms of Service to register",
+  "valMustAgreeTerms": "You must agree to the Terms of Service to continue",
   "youColon": "You:",
   "systemNicknameChanged": "Nickname was changed",
   "systemThemeChanged": "Chat theme changed",
@@ -967,7 +958,6 @@
   "authMsgOtpValid": "OTP verified successfully.",
   "authMsgOtpResent": "A new OTP has been sent.",
   "authMsgPasswordUpdated": "Password updated successfully. Please log in again.",
-  "authMsgRegisterSuccess": "Registration successful. OTP has been sent to your email.",
   "authMsgAccountUnverifiedOtpSent": "Account not yet verified. A new OTP has been sent to your email.",
   "authErrOtpInvalid": "Invalid OTP code.",
   "authErrOtpExpired": "OTP has expired.",
@@ -989,9 +979,7 @@
     }
   },
   "authErrOtpSendFailed": "We couldn't send the verification code right now. Please try again in a moment.",
-  "authErrEmailDomainInvalid": "Email domain does not exist or has no MX records.",
   "authErrEmailNotFound": "Email does not exist in the system.",
-  "authErrEmailInUse": "This email is already in use.",
   "authErrValEmailInvalid": "Invalid email format.",
   "authErrValEmailRequired": "Email is required.",
   "authErrValDisplaynameRequired": "Display name is required.",
@@ -1185,6 +1173,8 @@
   "adminMemberRevokeNote": "Saving revokes the member's active sessions.",
   "adminMemberRole": "Role",
   "adminMemberRoleNone": "No role",
+  "adminMemberRoleLockedSelf": "You can't change your own role.",
+  "adminMemberRoleLockedOwner": "Only an Owner can change an Owner's role.",
   "adminMemberDepartments": "Departments",
   "adminRoleHint": "Toggle each role's permissions. The Owner role is read-only.",
   "adminRoleCapability": "Capability",
@@ -1532,5 +1522,153 @@
   "adminScopeDepartment": "Department",
   "adminCreateEntry": "Add entry",
   "adminEditEntry": "Edit entry",
-  "adminDeleteEntry": "Delete entry"
+  "adminDeleteEntry": "Delete entry",
+  "loginInviteOnlyHint": "PON is invite-only. Ask your administrator for an invitation.",
+  "loginHaveInviteLink": "Have an invitation link?",
+  "inviteLinkDialogTitle": "Open an invitation",
+  "inviteLinkDialogHint": "Paste the invitation link from your email",
+  "inviteLinkInvalid": "This doesn't look like a valid invitation link.",
+  "inviteOpen": "Open",
+  "inviteCancel": "Cancel",
+  "inviteRetry": "Try again",
+  "inviteTitle": "You're invited",
+  "inviteSubtitle": "{inviter} invited you to join {workspace} as {role}",
+  "@inviteSubtitle": {
+    "placeholders": {
+      "inviter": {
+        "type": "String"
+      },
+      "workspace": {
+        "type": "String"
+      },
+      "role": {
+        "type": "String"
+      }
+    }
+  },
+  "inviteSubtitleNoRole": "{inviter} invited you to join {workspace}",
+  "@inviteSubtitleNoRole": {
+    "placeholders": {
+      "inviter": {
+        "type": "String"
+      },
+      "workspace": {
+        "type": "String"
+      }
+    }
+  },
+  "inviteContinueWithGoogle": "Continue with Google",
+  "inviteGoogleHint": "Use the Google account for {email}",
+  "@inviteGoogleHint": {
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
+  "inviteOrSetPassword": "or set a password",
+  "inviteSubmit": "Create account",
+  "inviteInvalidTitle": "Invalid invitation",
+  "inviteInvalidBody": "This invitation link is invalid. Check the link in your email or ask your administrator for a new one.",
+  "inviteExpiredTitle": "Invitation expired",
+  "inviteExpiredBody": "This invitation has expired. Ask your administrator to resend it.",
+  "inviteRevokedTitle": "Invitation revoked",
+  "inviteRevokedBody": "This invitation was revoked by your administrator.",
+  "inviteAcceptedTitle": "Already accepted",
+  "inviteAcceptedBody": "This invitation was already accepted. Sign in to continue.",
+  "inviteLoadFailedTitle": "Couldn't load the invitation",
+  "inviteBackToLogin": "Back to sign in",
+  "authMsgInvitationAccepted": "Invitation accepted. Welcome!",
+  "authErrAccountNotProvisioned": "The account you chose doesn't have access to PON yet. Try another account, or ask your administrator for an invitation.",
+  "authErrAccountBlocked": "This account has been blocked. Contact your administrator.",
+  "authErrInvitationPending": "You have a pending invitation. Open the invitation link in your email to finish setting up.",
+  "authErrInvitationInvalid": "This invitation link is invalid.",
+  "authErrInvitationExpired": "This invitation has expired. Ask your administrator to resend it.",
+  "authErrInvitationRevoked": "This invitation was revoked.",
+  "authErrInvitationAlreadyAccepted": "This invitation was already accepted. Please sign in.",
+  "authErrInvitationEmailMismatch": "Sign in with the Google account that matches the invited email.",
+  "authErrInvitationAlreadyPending": "This email already has a pending invitation.",
+  "authErrInvitationNotPending": "This invitation is no longer pending.",
+  "authErrInvitationNotFound": "Invitation not found.",
+  "authErrInvitationResendCooldown": "Please wait {ttl}s before resending.",
+  "@authErrInvitationResendCooldown": {
+    "placeholders": {
+      "ttl": {
+        "type": "int"
+      }
+    }
+  },
+  "authErrMemberAlreadyExists": "A member with this email already exists.",
+  "authErrMemberNotFound": "Member not found.",
+  "authErrRoleNotFound": "Role not found.",
+  "authErrDepartmentNotFound": "Department not found.",
+  "authErrOwnerRoleAssignForbidden": "Only an Owner can grant the Owner role or change an Owner's role.",
+  "authErrCannotChangeOwnRole": "You can't change your own role.",
+  "authErrLastOwnerCannotBeDemoted": "The last Owner can't be demoted. Make another member Owner first.",
+  "authErrCannotBlockSelf": "You cannot block your own account.",
+  "authErrOwnerBlockForbidden": "Only an Owner can block another Owner.",
+  "authErrLastOwnerCannotBeBlocked": "The last Owner cannot be blocked.",
+  "authErrSsoDisabled": "Single sign-on is disabled.",
+  "authErrSsoDomainNotAllowed": "Your email domain is not allowed for SSO.",
+  "adminInviteMember": "Invite member",
+  "adminInviteTitle": "Invite a member",
+  "adminInviteEmail": "Email address",
+  "adminInviteRole": "Role",
+  "adminInviteDepartments": "Departments",
+  "adminInviteSubmit": "Send invitation",
+  "adminInviteSent": "Invitation sent",
+  "adminInviteEmailFailed": "Invitation created, but the email could not be sent. Check the mail settings and resend it.",
+  "adminPendingInvitations": "Pending invitations",
+  "adminInviteStatusPending": "Pending",
+  "adminInviteStatusExpired": "Expired",
+  "adminInviteExpires": "Expires {date}",
+  "@adminInviteExpires": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "adminInviteInvitedBy": "Invited by {name}",
+  "@adminInviteInvitedBy": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "adminInviteResend": "Resend",
+  "adminInviteResent": "Invitation resent",
+  "adminInviteRevoke": "Revoke",
+  "adminInviteRevokeConfirm": "Revoke the invitation for {email}? The link will stop working.",
+  "@adminInviteRevokeConfirm": {
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
+  "adminInviteRevoked": "Invitation revoked",
+  "adminMemberStatusBlocked": "Blocked",
+  "adminMemberBlock": "Block",
+  "adminMemberUnblock": "Unblock",
+  "adminMemberBlockConfirm": "Block {name}? They will be signed out everywhere.",
+  "@adminMemberBlockConfirm": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "adminMemberUnblockConfirm": "Unblock {name}? They will be able to sign in again.",
+  "@adminMemberUnblockConfirm": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "adminMemberBlocked": "Member blocked",
+  "adminMemberUnblocked": "Member unblocked",
+  "adminLoadFailed": "Couldn't load this section. Please try again."
 }

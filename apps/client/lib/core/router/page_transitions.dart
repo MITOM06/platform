@@ -28,7 +28,6 @@ import '../theme/motion.dart';
 const Map<String, int> _flowSteps = <String, int>{
   '/login': 0,
   '/theme-onboarding': 0,
-  '/register': 1,
   '/forgot-password': 1,
   '/verify-otp': 2,
   '/new-password': 3,
@@ -65,8 +64,8 @@ class PageNavDirection {
   }
 
   static bool _isBackward(String from, String to) {
-    final int? fromStep = _flowSteps[from];
-    final int? toStep = _flowSteps[to];
+    final int? fromStep = _stepOf(from);
+    final int? toStep = _stepOf(to);
     // Inside the auth flow: compare steps.
     if (fromStep != null && toStep != null) return toStep < fromStep;
     // Entering or leaving the auth flow (login → home, logout → login) always
@@ -76,6 +75,11 @@ class PageNavDirection {
     // Deep links and `push()` targets stay forward — a push is never backwards.
     return to == '/' && from != '/';
   }
+
+  /// `/invite/<token>` is a path-parameter route, so it is matched by prefix
+  /// and sits at the same depth as the other screens one step off login.
+  static int? _stepOf(String path) =>
+      path.startsWith('/invite/') ? 1 : _flowSteps[path];
 
   static void _markDeclarative() {
     _declarative = true;
