@@ -30,7 +30,7 @@ class _StepScaffold extends StatelessWidget {
             style: Theme.of(context)
                 .textTheme
                 .headlineSmall
-                ?.copyWith(fontWeight: FontWeight.w700),
+                ?.copyWith(fontWeight: FontWeight.w600),
           ),
           const SizedBox(height: 20),
           child,
@@ -109,11 +109,11 @@ class _EmojiButton extends StatelessWidget {
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(14),
           color: selected
-              ? AppTheme.ponAccent.withValues(alpha: 0.15)
+              ? AppTheme.accent(context).withValues(alpha: 0.15)
               : Theme.of(context).colorScheme.surface.withValues(alpha: 0.4),
           border: Border.all(
             color: selected
-                ? AppTheme.ponAccent
+                ? AppTheme.accent(context)
                 : Theme.of(context)
                     .colorScheme
                     .onSurface
@@ -244,11 +244,11 @@ class AssistantProviderTile extends StatelessWidget {
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(14),
             color: selected
-                ? AppTheme.ponAccent.withValues(alpha: 0.12)
+                ? AppTheme.accent(context).withValues(alpha: 0.12)
                 : theme.colorScheme.surface.withValues(alpha: 0.4),
             border: Border.all(
               color: selected
-                  ? AppTheme.ponAccent
+                  ? AppTheme.accent(context)
                   : theme.colorScheme.onSurface.withValues(alpha: 0.12),
               width: selected ? 2 : 1,
             ),
@@ -260,7 +260,7 @@ class AssistantProviderTile extends StatelessWidget {
                     ? Icons.radio_button_checked
                     : Icons.radio_button_unchecked,
                 color: selected
-                    ? AppTheme.ponAccent
+                    ? AppTheme.accent(context)
                     : theme.colorScheme.onSurface.withValues(alpha: 0.4),
                 size: 20,
               ),
@@ -308,7 +308,7 @@ class AssistantConfirmStep extends StatelessWidget {
                     child: Text(
                       name,
                       style: theme.textTheme.titleLarge
-                          ?.copyWith(fontWeight: FontWeight.w700),
+                          ?.copyWith(fontWeight: FontWeight.w600),
                     ),
                   ),
                 ],

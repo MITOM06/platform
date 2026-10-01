@@ -28,7 +28,7 @@ class ProfileCenteredInfoRow extends StatelessWidget {
             child: Text(
               value,
               textAlign: TextAlign.center,
-              style: TextStyle(color: AppTheme.mutedText(context), fontSize: 13.5),
+              style: TextStyle(color: AppTheme.mutedText(context), fontSize: 14),
             ),
           ),
         ],
@@ -51,8 +51,8 @@ class ProfileCover extends StatelessWidget {
         : (hasCover ? '${DioClient.chatBaseUrl}$coverPhoto' : null);
     return Container(
       height: 160,
-      decoration: const BoxDecoration(
-        color: AppTheme.ponAccent,
+      decoration: BoxDecoration(
+        color: AppTheme.accent(context),
       ),
       child: url != null
           ? CachedNetworkImage(

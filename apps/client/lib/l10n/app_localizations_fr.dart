@@ -9,6 +9,9 @@ class AppLocalizationsFr extends AppLocalizations {
   AppLocalizationsFr([String locale = 'fr']) : super(locale);
 
   @override
+  String get appTagline => 'Connecter & Discuter';
+
+  @override
   String get appName => 'PON';
 
   @override
@@ -120,10 +123,10 @@ class AppLocalizationsFr extends AppLocalizations {
   String get actionConfirm => 'Confirmer';
 
   @override
-  String get actionRetry => 'RÉESSAYER';
+  String get actionRetry => 'Réessayer';
 
   @override
-  String get actionSave => 'ENREGISTRER';
+  String get actionSave => 'Enregistrer';
 
   @override
   String get actionLogout => 'Se déconnecter';
@@ -150,7 +153,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get forgotPasswordLink => 'Mot de passe oublié ?';
 
   @override
-  String get loginButton => 'SE CONNECTER';
+  String get loginButton => 'Se connecter';
 
   @override
   String get noAccountYet => 'Pas encore de compte ? ';
@@ -370,7 +373,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get fieldConfirmPassword => 'Confirmer le mot de passe';
 
   @override
-  String get registerButton => 'S\'INSCRIRE';
+  String get registerButton => 'S\'inscrire';
 
   @override
   String get haveAccount => 'Vous avez déjà un compte ? ';
@@ -408,7 +411,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get fieldOtp => 'Code OTP';
 
   @override
-  String get confirmButton => 'CONFIRMER';
+  String get confirmButton => 'Confirmer';
 
   @override
   String resendIn(int seconds) {
@@ -444,7 +447,7 @@ class AppLocalizationsFr extends AppLocalizations {
       'Saisissez votre e-mail pour recevoir un OTP et définir un nouveau mot de passe';
 
   @override
-  String get sendOtpButton => 'ENVOYER LE CODE OTP';
+  String get sendOtpButton => 'Envoyer le code OTP';
 
   @override
   String get errEmailNotRegistered => 'Cet e-mail n\'est pas enregistré';
@@ -516,7 +519,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get logoutConfirmBody => 'Voulez-vous vraiment vous déconnecter ?';
 
   @override
-  String get onboardingChooseTheme => 'CHOISISSEZ UN THÈME';
+  String get onboardingChooseTheme => 'Choisissez un thème';
 
   @override
   String get onboardingChooseSubtitle =>
@@ -534,7 +537,7 @@ class AppLocalizationsFr extends AppLocalizations {
       'S\'adapte automatiquement à votre appareil';
 
   @override
-  String get startExperience => 'COMMENCER L\'EXPÉRIENCE';
+  String get startExperience => 'Commencer l\'expérience';
 
   @override
   String get tooltipSettings => 'Paramètres';
@@ -593,7 +596,7 @@ class AppLocalizationsFr extends AppLocalizations {
       'Utilisateur introuvable ou erreur de connexion.';
 
   @override
-  String get startConversationButton => 'COMMENCER À DISCUTER';
+  String get startConversationButton => 'Commencer à discuter';
 
   @override
   String get chatDefaultTitle => 'Discussion';
@@ -618,6 +621,9 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get tabRequests => 'Demandes';
+
+  @override
+  String get tabNew => 'Nouveau';
 
   @override
   String get noRequests => 'Aucune demande en attente';
@@ -2129,7 +2135,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get customMcpUrl => 'URL du serveur';
 
   @override
-  String get customMcpAuth => 'AUTH';
+  String get customMcpAuth => 'Auth';
 
   @override
   String get customMcpAuthNone => 'Aucune';
@@ -3228,10 +3234,10 @@ class AppLocalizationsFr extends AppLocalizations {
   String get attachHdOff => 'SD — compressé';
 
   @override
-  String get hdOn => 'HD OUI';
+  String get hdOn => 'HD oui';
 
   @override
-  String get hdOff => 'HD NON';
+  String get hdOff => 'HD non';
 
   @override
   String get videoCannotPlay => 'Impossible de lire la vidéo';

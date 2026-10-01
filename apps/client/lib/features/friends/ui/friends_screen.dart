@@ -55,13 +55,13 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
           bottom: TabBar(
             indicator: UnderlineTabIndicator(
               borderSide: BorderSide(
-                color: isDark ? AppTheme.ponAccent : Theme.of(context).colorScheme.primary,
+                color: isDark ? AppTheme.accent(context) : Theme.of(context).colorScheme.primary,
                 width: 3.0,
               ),
             ),
-            labelColor: isDark ? AppTheme.ponAccent : Theme.of(context).colorScheme.primary,
+            labelColor: isDark ? AppTheme.accent(context) : Theme.of(context).colorScheme.primary,
             unselectedLabelColor: AppTheme.mutedText(context),
-            labelStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+            labelStyle: const TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
             unselectedLabelStyle: const TextStyle(fontWeight: FontWeight.normal, fontSize: 16),
             tabs: [
               Tab(text: context.l10n.friends),
@@ -119,7 +119,7 @@ class _FriendsTab extends ConsumerWidget {
             child: Text(context.l10n.actionCancel),
           ),
           TextButton(
-            style: TextButton.styleFrom(foregroundColor: AppTheme.ponAccent),
+            style: TextButton.styleFrom(foregroundColor: AppTheme.accent(context)),
             onPressed: () => Navigator.of(ctx).pop(true),
             child: Text(context.l10n.unfriend),
           ),
@@ -190,11 +190,11 @@ class _FriendsTab extends ConsumerWidget {
                                 ),
                                 title: Text(
                                   friend.displayName,
-                                  style: TextStyle(fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.onSurface),
+                                  style: TextStyle(fontWeight: FontWeight.w600, color: Theme.of(context).colorScheme.onSurface),
                                 ),
                                 subtitle: Text(
                                   friend.email,
-                                  style: TextStyle(color: AppTheme.mutedText(context), fontSize: 13),
+                                  style: TextStyle(color: AppTheme.mutedText(context), fontSize: 12),
                                 ),
                                 trailing: Row(
                                   mainAxisSize: MainAxisSize.min,
@@ -202,14 +202,14 @@ class _FriendsTab extends ConsumerWidget {
                                     Icon(
                                       Icons.chat_bubble_outline_rounded,
                                       color: isDark
-                                          ? AppTheme.ponAccent
+                                          ? AppTheme.accent(context)
                                           : Theme.of(context).colorScheme.primary,
                                       size: 20,
                                     ),
                                     IconButton(
                                       icon: const Icon(Icons.person_remove_rounded,
                                           size: 20),
-                                      color: AppTheme.ponAccent,
+                                      color: AppTheme.accent(context),
                                       tooltip: context.l10n.unfriend,
                                       onPressed: () =>
                                           _unfriend(ref, context, friend),
@@ -322,11 +322,11 @@ class _RequestsTab extends ConsumerWidget {
                                 ),
                                 title: Text(
                                   requester.displayName,
-                                  style: TextStyle(fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.onSurface),
+                                  style: TextStyle(fontWeight: FontWeight.w600, color: Theme.of(context).colorScheme.onSurface),
                                 ),
                                 subtitle: Text(
                                   requester.email,
-                                  style: TextStyle(color: AppTheme.mutedText(context), fontSize: 13),
+                                  style: TextStyle(color: AppTheme.mutedText(context), fontSize: 12),
                                 ),
                                 trailing: Row(
                                   mainAxisSize: MainAxisSize.min,
@@ -334,10 +334,10 @@ class _RequestsTab extends ConsumerWidget {
                                     TextButton(
                                       style: TextButton.styleFrom(
                                         foregroundColor: isDark
-                                            ? AppTheme.ponAccent
+                                            ? AppTheme.accent(context)
                                             : Theme.of(context).colorScheme.primary,
                                         textStyle: const TextStyle(
-                                            fontWeight: FontWeight.bold),
+                                            fontWeight: FontWeight.w600),
                                       ),
                                       onPressed: () =>
                                           _accept(ref, context, requester),
@@ -345,7 +345,7 @@ class _RequestsTab extends ConsumerWidget {
                                     ),
                                     IconButton(
                                       icon: const Icon(Icons.close_rounded, size: 20),
-                                      color: AppTheme.ponAccent,
+                                      color: AppTheme.accent(context),
                                       tooltip: context.l10n.declineFriend,
                                       onPressed: () =>
                                           _decline(ref, context, requester),

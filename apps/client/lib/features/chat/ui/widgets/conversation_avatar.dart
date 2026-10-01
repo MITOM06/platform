@@ -47,7 +47,7 @@ class ConversationAvatar extends StatelessWidget {
         fallbackLetter,
         style: TextStyle(
           color: Colors.white,
-          fontWeight: FontWeight.bold,
+          fontWeight: FontWeight.w600,
           fontSize: size * 0.36,
         ),
       );
@@ -75,7 +75,8 @@ class ConversationAvatar extends StatelessWidget {
               decoration: BoxDecoration(
                 color: AppTheme.onlineGreen,
                 shape: BoxShape.circle,
-                border: Border.all(color: AppTheme.darkBackground, width: 2),
+                border: Border.all(
+                    color: Theme.of(context).scaffoldBackgroundColor, width: 2),
               ),
             ),
           ),

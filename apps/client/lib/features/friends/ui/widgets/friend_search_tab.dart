@@ -173,7 +173,7 @@ class _FriendSearchTabState extends ConsumerState<FriendSearchTab> {
           title: Text(
             user.displayName,
             style:
-                TextStyle(fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.onSurface),
+                TextStyle(fontWeight: FontWeight.w600, color: Theme.of(context).colorScheme.onSurface),
           ),
           subtitle: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -181,7 +181,7 @@ class _FriendSearchTabState extends ConsumerState<FriendSearchTab> {
             children: [
               Text(
                 user.email,
-                style: TextStyle(color: AppTheme.mutedText(context), fontSize: 13),
+                style: TextStyle(color: AppTheme.mutedText(context), fontSize: 12),
               ),
               if (user.matchedBy == 'phone' && user.phoneNumber != null) ...[
                 const SizedBox(height: 4),
@@ -189,23 +189,23 @@ class _FriendSearchTabState extends ConsumerState<FriendSearchTab> {
                   padding:
                       const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                   decoration: BoxDecoration(
-                    color: AppTheme.ponAccent.withValues(alpha: 0.12),
+                    color: AppTheme.accent(context).withValues(alpha: 0.12),
                     border: Border.all(
-                        color: AppTheme.ponAccent.withValues(alpha: 0.3)),
+                        color: AppTheme.accent(context).withValues(alpha: 0.3)),
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      const Icon(Icons.phone_rounded,
-                          size: 12, color: AppTheme.ponAccent),
+                      Icon(Icons.phone_rounded,
+                          size: 12, color: AppTheme.accent(context)),
                       const SizedBox(width: 4),
                       Text(
                         user.phoneNumber!,
-                        style: const TextStyle(
-                          color: AppTheme.ponAccent,
+                        style: TextStyle(
+                          color: AppTheme.accent(context),
                           fontSize: 11,
-                          fontFamily: 'monospace',
+                          fontFamily: AppTheme.fontMono,
                         ),
                       ),
                     ],
@@ -217,14 +217,14 @@ class _FriendSearchTabState extends ConsumerState<FriendSearchTab> {
           trailing: alreadyRequested
               ? Text(
                   context.l10n.friendRequestPending,
-                  style: TextStyle(color: AppTheme.mutedText(context), fontSize: 13),
+                  style: TextStyle(color: AppTheme.mutedText(context), fontSize: 12),
                 )
               : TextButton.icon(
                   style: TextButton.styleFrom(
                     foregroundColor: isDark
-                        ? AppTheme.ponAccent
+                        ? AppTheme.accent(context)
                         : Theme.of(context).colorScheme.primary,
-                    textStyle: const TextStyle(fontWeight: FontWeight.bold),
+                    textStyle: const TextStyle(fontWeight: FontWeight.w600),
                   ),
                   onPressed: () => _sendRequest(user),
                   icon: const Icon(Icons.person_add_alt_1_rounded, size: 18),

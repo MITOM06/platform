@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../core/utils/app_error.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/l10n/l10n_ext.dart';
 import '../../../../core/theme/app_theme.dart';
@@ -66,7 +67,7 @@ class _CustomMcpSheetState extends ConsumerState<CustomMcpSheet> {
       setState(() => _tools = tools);
     } catch (e) {
       if (!mounted) return;
-      setState(() => _error = '$e');
+      setState(() => _error = friendlyError(e));
     } finally {
       if (mounted) setState(() => _discovering = false);
     }
@@ -92,7 +93,7 @@ class _CustomMcpSheetState extends ConsumerState<CustomMcpSheet> {
       if (!mounted) return;
       setState(() {
         _saving = false;
-        _error = '$e';
+        _error = friendlyError(e);
       });
     }
   }
@@ -119,7 +120,7 @@ class _CustomMcpSheetState extends ConsumerState<CustomMcpSheet> {
               style: TextStyle(
                 color: Theme.of(context).colorScheme.onSurface,
                 fontSize: 18,
-                fontWeight: FontWeight.bold,
+                fontWeight: FontWeight.w600,
               ),
             ),
             const SizedBox(height: 4),
@@ -127,7 +128,7 @@ class _CustomMcpSheetState extends ConsumerState<CustomMcpSheet> {
               l10n.customMcpSubtitle,
               style: TextStyle(
                 color: AppTheme.mutedText(context),
-                fontSize: 13,
+                fontSize: 12,
               ),
             ),
             const SizedBox(height: 18),
@@ -260,19 +261,19 @@ class _ToolsPreview extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 16),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: AppTheme.ponAccent.withValues(alpha: 0.06),
+        color: AppTheme.accent(context).withValues(alpha: 0.06),
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: AppTheme.ponAccent.withValues(alpha: 0.22)),
+        border: Border.all(color: AppTheme.accent(context).withValues(alpha: 0.22)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             context.l10n.customMcpToolsFound(tools.length),
-            style: const TextStyle(
-              color: AppTheme.ponAccent,
+            style: TextStyle(
+              color: AppTheme.accent(context),
               fontWeight: FontWeight.w600,
-              fontSize: 12.5,
+              fontSize: 12,
             ),
           ),
           const SizedBox(height: 6),
@@ -284,7 +285,7 @@ class _ToolsPreview extends StatelessWidget {
                     style: TextStyle(
                       color: AppTheme.mutedText(context),
                       fontSize: 12,
-                      fontFamily: 'monospace',
+                      fontFamily: AppTheme.fontMono,
                     ),
                   ),
                 ),

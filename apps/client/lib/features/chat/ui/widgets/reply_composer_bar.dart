@@ -17,7 +17,7 @@ class ReplyComposerBar extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(16, 8, 8, 8),
       child: Row(
         children: [
-          Container(width: 3, height: 36, color: AppTheme.ponAccent),
+          Container(width: 3, height: 36, color: AppTheme.accent(context)),
           const SizedBox(width: 10),
           Expanded(
             child: Column(
@@ -26,8 +26,8 @@ class ReplyComposerBar extends StatelessWidget {
               children: [
                 Text(
                   context.l10n.actionReply,
-                  style: const TextStyle(
-                    color: AppTheme.ponAccent,
+                  style: TextStyle(
+                    color: AppTheme.accent(context),
                     fontSize: 11,
                     fontWeight: FontWeight.w600,
                   ),
@@ -42,7 +42,7 @@ class ReplyComposerBar extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
                     color: AppTheme.mutedText(context),
-                    fontSize: 13,
+                    fontSize: 12,
                   ),
                 ),
               ],

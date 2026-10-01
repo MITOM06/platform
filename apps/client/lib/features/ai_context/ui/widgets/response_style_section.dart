@@ -56,7 +56,7 @@ class _ResponseStyleSectionState extends ConsumerState<ResponseStyleSection> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(l.aiContextResponseStyleTitle,
-              style: const TextStyle(fontWeight: FontWeight.bold)),
+              style: const TextStyle(fontWeight: FontWeight.w600)),
           const SizedBox(height: 12),
           Text(l.aiContextStyleLabel, style: const TextStyle(fontSize: 12)),
           const SizedBox(height: 4),

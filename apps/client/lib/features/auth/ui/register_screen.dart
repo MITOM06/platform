@@ -248,7 +248,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                                         setState(
                                             () => _agreeToTerms = val ?? false);
                                       },
-                                      activeColor: AppTheme.ponAccent,
+                                      activeColor: AppTheme.accent(context),
                                       side: BorderSide(
                                           color: AppTheme.mutedText(context)),
                                     ),
@@ -260,11 +260,11 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                                         setState(() =>
                                             _agreeToTerms = !_agreeToTerms);
                                       },
-                                      child: RichText(
-                                        text: TextSpan(
+                                      child: Text.rich(
+                                        TextSpan(
                                           style: TextStyle(
                                             color: AppTheme.mutedText(context),
-                                            fontSize: 13,
+                                            fontSize: 12,
                                           ),
                                           children:
                                               _buildTermsTextSpans(context),
@@ -325,11 +325,11 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
               isPrivacy
                   ? context.l10n.privacyPolicy
                   : context.l10n.termsOfService,
-              style: const TextStyle(
-                color: AppTheme.ponAccent,
-                fontWeight: FontWeight.bold,
+              style: TextStyle(
+                color: AppTheme.accent(context),
+                fontWeight: FontWeight.w600,
                 decoration: TextDecoration.underline,
-                decorationColor: AppTheme.ponAccent,
+                decorationColor: AppTheme.accent(context),
               ),
             ),
           ),

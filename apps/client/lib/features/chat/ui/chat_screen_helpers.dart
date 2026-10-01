@@ -58,20 +58,20 @@ Future<void> pickAndStageMedia(
         children: [
           const SizedBox(height: 12),
           ListTile(
-            leading: const Icon(Icons.photo_rounded, color: AppTheme.ponAccent),
+            leading: Icon(Icons.photo_rounded, color: AppTheme.accent(context)),
             title: Text(l10n.attachPhoto,
                 style: TextStyle(color: textColor)),
             onTap: () => Navigator.pop(ctx, 'image'),
           ),
           ListTile(
-            leading: const Icon(Icons.videocam_rounded, color: AppTheme.ponAccent),
+            leading: Icon(Icons.videocam_rounded, color: AppTheme.accent(context)),
             title: Text(l10n.attachVideo,
                 style: TextStyle(color: textColor)),
             onTap: () => Navigator.pop(ctx, 'video'),
           ),
           ListTile(
-            leading: const Icon(Icons.insert_drive_file_rounded,
-                color: AppTheme.ponAccent),
+            leading: Icon(Icons.insert_drive_file_rounded,
+                color: AppTheme.accent(context)),
             title: Text(l10n.attachFile,
                 style: TextStyle(color: textColor)),
             onTap: () => Navigator.pop(ctx, 'file'),
@@ -158,7 +158,7 @@ Future<void> showAutoDeletePicker(
           const SizedBox(height: 12),
           Text(l10n.disappearingMessages,
               style: TextStyle(
-                  color: textColor, fontWeight: FontWeight.bold)),
+                  color: textColor, fontWeight: FontWeight.w600)),
           const SizedBox(height: 8),
           ListTile(
             title: Text(l10n.disappearingOff,

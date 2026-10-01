@@ -47,8 +47,8 @@ class SettingsCard extends StatelessWidget {
             title,
             style: TextStyle(
               color: Theme.of(context).colorScheme.onSurface,
-              fontWeight: FontWeight.bold,
-              fontSize: 15,
+              fontWeight: FontWeight.w600,
+              fontSize: 16,
             ),
           ),
           subtitle: subtitle == null
@@ -57,7 +57,7 @@ class SettingsCard extends StatelessWidget {
                   subtitle!,
                   style: TextStyle(
                     color: AppTheme.mutedText(context),
-                    fontSize: 13,
+                    fontSize: 12,
                   ),
                 ),
           trailing: Icon(
@@ -89,7 +89,7 @@ class SecurityCard extends StatelessWidget {
   Widget build(BuildContext context) {
     // Amber is a semantic warning (no local password), not a second brand
     // accent — same carve-out as destructive/success in §2.
-    const amber = Color(0xFFF59E0B);
+    const amber = AppTheme.warning;
     final accent =
         hasPassword ? Theme.of(context).colorScheme.primary : amber;
     return PonCard(
@@ -131,8 +131,8 @@ class SecurityCard extends StatelessWidget {
             context.l10n.securityTitle,
             style: TextStyle(
               color: Theme.of(context).colorScheme.onSurface,
-              fontWeight: FontWeight.bold,
-              fontSize: 15,
+              fontWeight: FontWeight.w600,
+              fontSize: 16,
             ),
           ),
           subtitle: Text(
@@ -143,7 +143,7 @@ class SecurityCard extends StatelessWidget {
               color: hasPassword
                   ? (AppTheme.mutedText(context))
                   : amber,
-              fontSize: 13,
+              fontSize: 12,
             ),
           ),
           trailing: Icon(
@@ -191,8 +191,8 @@ class NotificationsCard extends StatelessWidget {
             context.l10n.notifications,
             style: TextStyle(
               color: Theme.of(context).colorScheme.onSurface,
-              fontWeight: FontWeight.bold,
-              fontSize: 15,
+              fontWeight: FontWeight.w600,
+              fontSize: 16,
             ),
           ),
           subtitle: Text(
@@ -201,11 +201,10 @@ class NotificationsCard extends StatelessWidget {
                 : context.l10n.notificationsDisabled,
             style: TextStyle(
               color: AppTheme.mutedText(context),
-              fontSize: 13,
+              fontSize: 12,
             ),
           ),
           value: enabled,
-          activeThumbColor: AppTheme.ponAccent,
           onChanged: onChanged,
         ),
       ),

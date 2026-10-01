@@ -1,23 +1,13 @@
 import 'package:flutter/material.dart';
 
 import '../router/page_transitions.dart';
+import 'pon_component_themes.dart';
 
 /// Design tokens for the "Warm Grey & Burgundy" direction.
 /// Source of truth: `docs/design-system.md` (web is the reference implementation).
 /// The old 3-colour neon brand set (cyan/peach/pink) was retired: there is now
 /// exactly ONE accent, and hierarchy is carried by text shade + weight.
 class AppTheme {
-  /// The single accent, as a **mode-agnostic** constant. Only ever means "this
-  /// is the primary action" — never decoration. A mid-tone burgundy so it works
-  /// on both light and dark surfaces from one constant.
-  ///
-  /// Use this ONLY where the declaration site cannot tell which mode it is in
-  /// (a `const` colour in a widget, a static field). Anywhere the mode IS known
-  /// — the two [ColorScheme]s and the per-mode component themes below — use
-  /// [lightAccent]/[darkAccent] instead, per the P1 plan's rule: "Những chỗ CÓ
-  /// phân biệt light/dark … thì dùng đúng `#7A2E3A`/`#A8475A`".
-  static const Color ponAccent = Color(0xFF96435B);
-
   /// Canonical per-mode accent from the locked palette
   /// (`docs/design-system.md` §2, `primary`). These are what web's `--primary` uses in `:root`/`.dark`, so
   /// keeping them here is what makes the two clients render the same burgundy.
@@ -42,6 +32,10 @@ class AppTheme {
   static const Color lightText = Color(0xFF241F1D);
   static const Color lightTextMuted = Color(0xFF6B6259);
 
+  /// Warning / caution (quota nearly used, interrupted reply, sensitive tool).
+  /// Web's `amber-500`. Semantic, so it is not an accent.
+  static const Color warning = Color(0xFFF59E0B);
+
   // Destructive stays semantically red — the accent hue is not overloaded.
   static const Color darkDanger = Color(0xFFE5484D);
   static const Color lightDanger = Color(0xFFB3261E);
@@ -55,6 +49,17 @@ class AppTheme {
   static const Color lightBackground = Color(0xFFF5F2ED);
   static const Color lightSurface = Colors.white;
   static const Color lightBorder = Color(0xFFDDD8D0);
+
+  // Quiet fill (web `--muted` / `--secondary`): incoming bubble, tab track,
+  // secondary button. And the navigation rail / list surface (web `--sidebar`).
+  static const Color lightMuted = Color(0xFFEFEAE3);
+  static const Color darkMuted = Color(0xFF2C2521);
+  static const Color lightSidebar = Color(0xFFEFEAE3);
+  static const Color darkSidebar = Color(0xFF151110);
+
+  /// Typeface for the whole app — the same Geist the web client loads.
+  static const String fontSans = 'Geist';
+  static const String fontMono = 'GeistMono';
 
   // Radius scale — controls 10, cards 12, full-screen sheets 16-20.
   static const double radiusControl = 10;
@@ -72,6 +77,35 @@ class AppTheme {
       Theme.of(context).brightness == Brightness.dark
           ? darkTextMuted
           : lightTextMuted;
+
+  /// The accent for the current mode — web's `--primary` (`#7A2E3A` light,
+  /// `#A8475A` dark). Always resolve the accent through this — there is no
+  /// mode-agnostic accent constant any more (the old `#96435B` matched neither
+  /// mode on web).
+  static Color accent(BuildContext context) =>
+      Theme.of(context).colorScheme.primary;
+
+  /// Subtle accent background (web `--accent`): selected row, hover, badge fill.
+  static Color accentTint(BuildContext context) =>
+      Theme.of(context).brightness == Brightness.dark
+          ? darkAccentTint
+          : lightAccentTint;
+
+  /// Readable burgundy text/icon on [accentTint] (web `--accent-foreground`).
+  static Color accentTintFg(BuildContext context) =>
+      Theme.of(context).brightness == Brightness.dark
+          ? darkTintFg
+          : lightAccent;
+
+  /// Quiet neutral fill (web `--muted`).
+  static Color mutedSurface(BuildContext context) =>
+      Theme.of(context).brightness == Brightness.dark ? darkMuted : lightMuted;
+
+  /// Navigation / list surface (web `--sidebar`).
+  static Color sidebar(BuildContext context) =>
+      Theme.of(context).brightness == Brightness.dark
+          ? darkSidebar
+          : lightSidebar;
 
   /// 1px hairline border — the only elevation device in this direction (§2 r3).
   static Color hairline(BuildContext context) =>
@@ -95,245 +129,177 @@ class AppTheme {
     },
   );
 
-  static ThemeData get darkTheme {
+  static const PonPalette _darkPalette = PonPalette(
+    accent: darkAccent,
+    onAccent: darkText,
+    text: darkText,
+    mutedText: darkTextMuted,
+    background: darkBackground,
+    surface: darkSurface,
+    mutedFill: darkMuted,
+    border: darkBorder,
+    accentTint: darkAccentTint,
+    accentTintFg: darkTintFg,
+    danger: darkDanger,
+  );
+
+  static const PonPalette _lightPalette = PonPalette(
+    accent: lightAccent,
+    onAccent: Colors.white,
+    text: lightText,
+    mutedText: lightTextMuted,
+    background: lightBackground,
+    surface: lightSurface,
+    mutedFill: lightMuted,
+    border: lightBorder,
+    accentTint: lightAccentTint,
+    accentTintFg: lightAccent,
+    danger: lightDanger,
+  );
+
+  static ThemeData get darkTheme => applyPonComponents(
+      _base(Brightness.dark, _darkPalette), _darkPalette, fontSans);
+
+  static ThemeData get lightTheme => applyPonComponents(
+      _base(Brightness.light, _lightPalette), _lightPalette, fontSans);
+
+  /// One builder for both modes, so light and dark can only differ by palette.
+  static ThemeData _base(Brightness brightness, PonPalette p) {
+    OutlineInputBorder field(Color color, double width) => OutlineInputBorder(
+          borderRadius: BorderRadius.circular(radiusControl),
+          borderSide: BorderSide(color: color, width: width),
+        );
+    // Every role is spelled out: a role left to Material's default brings back
+    // its teal/purple baseline (seen on the selected segmented button).
+    final scheme = ColorScheme(
+      brightness: brightness,
+      primary: p.accent,
+      onPrimary: p.onAccent,
+      primaryContainer: p.accentTint,
+      // The accent itself only reaches 2.7:1 on the dark tint, so text on the
+      // tint uses the lighter burgundy.
+      onPrimaryContainer: p.accentTintFg,
+      secondary: p.accent,
+      onSecondary: p.onAccent,
+      secondaryContainer: p.accentTint,
+      onSecondaryContainer: p.accentTintFg,
+      tertiary: p.accent,
+      onTertiary: p.onAccent,
+      tertiaryContainer: p.accentTint,
+      onTertiaryContainer: p.accentTintFg,
+      error: p.danger,
+      onError: Colors.white,
+      surface: p.surface,
+      onSurface: p.text,
+      onSurfaceVariant: p.mutedText,
+      surfaceContainerLowest: p.surface,
+      surfaceContainerLow: p.surface,
+      surfaceContainer: p.surface,
+      surfaceContainerHigh: p.mutedFill,
+      surfaceContainerHighest: p.mutedFill,
+      outline: p.border,
+      outlineVariant: p.border,
+      surfaceTint: Colors.transparent,
+      inverseSurface: p.text,
+      onInverseSurface: p.background,
+      inversePrimary: p.accentTintFg,
+    );
+
     return ThemeData(
-      brightness: Brightness.dark,
+      brightness: brightness,
       useMaterial3: true,
+      fontFamily: fontSans,
       pageTransitionsTheme: _pageTransitions,
-      scaffoldBackgroundColor: darkBackground,
-      colorScheme: const ColorScheme.dark(
-        primary: darkAccent,
-        secondary: darkAccent,
-        tertiary: darkAccent,
-        surface: darkSurface,
-        onSurface: darkText,
-        error: darkDanger,
-        onPrimary: darkText,
-        onSecondary: darkText,
-        primaryContainer: darkAccentTint,
-        // A lighter burgundy tint, not the accent itself: accent-on-tint only
-        // reaches 2.7:1, which fails WCAG for text.
-        onPrimaryContainer: darkTintFg,
-      ),
-      appBarTheme: const AppBarTheme(
+      scaffoldBackgroundColor: p.background,
+      colorScheme: scheme,
+      appBarTheme: AppBarTheme(
         backgroundColor: Colors.transparent,
         elevation: 0,
         centerTitle: false,
         titleTextStyle: TextStyle(
+          fontFamily: fontSans,
           fontSize: 20,
-          fontWeight: FontWeight.w700,
-          color: darkText,
-          letterSpacing: 0.2,
+          fontWeight: FontWeight.w600,
+          color: p.text,
+          letterSpacing: -0.2,
         ),
-        iconTheme: IconThemeData(color: darkText),
+        iconTheme: IconThemeData(color: p.text),
       ),
       cardTheme: CardThemeData(
-        color: darkSurface,
+        color: p.surface,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-          side: const BorderSide(color: darkBorder, width: 1),
+          borderRadius: BorderRadius.circular(radiusCard),
+          side: BorderSide(color: p.border),
         ),
         elevation: 0,
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: darkSurface,
+        fillColor: p.surface,
         contentPadding:
-            const EdgeInsets.symmetric(horizontal: 24, vertical: 18),
-        labelStyle: TextStyle(color: Colors.white.withValues(alpha: 0.6)),
+            const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
+        labelStyle: TextStyle(color: p.mutedText),
         floatingLabelStyle:
-            const TextStyle(color: darkAccent, fontWeight: FontWeight.w600),
-        hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.3)),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10),
-          borderSide: BorderSide.none,
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10),
-          borderSide: const BorderSide(color: darkBorder, width: 1.5),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10),
-          borderSide: const BorderSide(color: darkAccent, width: 2),
-        ),
-        errorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10),
-          borderSide: const BorderSide(color: darkDanger, width: 1.5),
-        ),
-        focusedErrorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10),
-          borderSide: const BorderSide(color: darkDanger, width: 2),
-        ),
-        prefixIconColor: Colors.white.withValues(alpha: 0.5),
-        suffixIconColor: Colors.white.withValues(alpha: 0.5),
+            TextStyle(color: p.accent, fontWeight: FontWeight.w600),
+        hintStyle: TextStyle(color: p.mutedText),
+        border: field(p.border, 1),
+        enabledBorder: field(p.border, 1),
+        focusedBorder: field(p.accent, 1.5),
+        errorBorder: field(p.danger, 1),
+        focusedErrorBorder: field(p.danger, 1.5),
+        prefixIconColor: p.mutedText,
+        suffixIconColor: p.mutedText,
       ),
       filledButtonTheme: FilledButtonThemeData(
         style: FilledButton.styleFrom(
-          backgroundColor: darkAccent,
+          backgroundColor: p.accent,
           foregroundColor: Colors.white,
-          padding: const EdgeInsets.symmetric(vertical: 18),
+          // 44 = the phone touch minimum; web's 36–40 desktop control scaled up.
+          minimumSize: const Size(64, 44),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(10),
+            borderRadius: BorderRadius.circular(radiusControl),
           ),
           textStyle: const TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.w700,
-            letterSpacing: 0.5,
+            fontFamily: fontSans,
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
           ),
         ),
       ),
       textButtonTheme: TextButtonThemeData(
         style: TextButton.styleFrom(
-          foregroundColor: darkAccent,
+          foregroundColor: p.accent,
           textStyle: const TextStyle(
-            fontWeight: FontWeight.bold,
-            fontSize: 15,
+            fontFamily: fontSans,
+            fontWeight: FontWeight.w600,
+            fontSize: 14,
           ),
         ),
       ),
-      listTileTheme: const ListTileThemeData(
-        contentPadding: EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-        iconColor: darkTextMuted,
-        textColor: darkText,
+      listTileTheme: ListTileThemeData(
+        contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+        iconColor: p.mutedText,
+        textColor: p.text,
       ),
-      // Sheets/dialogs were missing from the theme, which is why ~25 call sites
-      // hardcoded `backgroundColor: AppTheme.darkSurface` + a 24px radius (and
-      // so rendered a dark sheet in light mode). Centralised here instead.
-      bottomSheetTheme: const BottomSheetThemeData(
-        backgroundColor: darkSurface,
+      // Sheets/dialogs must come from the theme: when they were missing, ~25
+      // call sites hardcoded a dark sheet that then rendered dark in light mode.
+      bottomSheetTheme: BottomSheetThemeData(
+        backgroundColor: p.surface,
         surfaceTintColor: Colors.transparent,
         elevation: 0,
-        shape: RoundedRectangleBorder(
+        shape: const RoundedRectangleBorder(
           borderRadius:
               BorderRadius.vertical(top: Radius.circular(radiusSheet)),
         ),
       ),
       dialogTheme: DialogThemeData(
-        backgroundColor: darkSurface,
+        backgroundColor: p.surface,
         surfaceTintColor: Colors.transparent,
         elevation: 0,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(radiusCard),
-          side: const BorderSide(color: darkBorder, width: 1),
-        ),
-      ),
-    );
-  }
-
-  static ThemeData get lightTheme {
-    return ThemeData(
-      brightness: Brightness.light,
-      useMaterial3: true,
-      pageTransitionsTheme: _pageTransitions,
-      scaffoldBackgroundColor: lightBackground,
-      colorScheme: const ColorScheme.light(
-        primary: lightAccent,
-        secondary: lightAccent,
-        tertiary: lightAccent,
-        surface: lightSurface,
-        onSurface: lightText,
-        error: lightDanger,
-        onPrimary: Colors.white,
-        onSecondary: Colors.white,
-        primaryContainer: lightAccentTint,
-        onPrimaryContainer: Color(0xFF7A2E3A),
-      ),
-      appBarTheme: const AppBarTheme(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        titleTextStyle: TextStyle(
-          fontSize: 20,
-          fontWeight: FontWeight.w700,
-          color: lightText,
-          letterSpacing: 0.2,
-        ),
-        iconTheme: IconThemeData(color: lightText),
-      ),
-      cardTheme: CardThemeData(
-        color: lightSurface,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-          side: const BorderSide(color: lightBorder, width: 1),
-        ),
-        elevation: 0,
-      ),
-      inputDecorationTheme: InputDecorationTheme(
-        filled: true,
-        fillColor: lightSurface,
-        contentPadding:
-            const EdgeInsets.symmetric(horizontal: 24, vertical: 18),
-        labelStyle: TextStyle(color: Colors.black.withValues(alpha: 0.5)),
-        floatingLabelStyle:
-            const TextStyle(color: lightAccent, fontWeight: FontWeight.w600),
-        hintStyle: TextStyle(color: Colors.black.withValues(alpha: 0.3)),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10),
-          borderSide: BorderSide.none,
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10),
-          borderSide: const BorderSide(color: lightBorder, width: 1.5),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10),
-          borderSide: const BorderSide(color: lightAccent, width: 2),
-        ),
-        errorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10),
-          borderSide: const BorderSide(color: lightDanger, width: 1.5),
-        ),
-        focusedErrorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10),
-          borderSide: const BorderSide(color: lightDanger, width: 2),
-        ),
-        prefixIconColor: Colors.black.withValues(alpha: 0.4),
-        suffixIconColor: Colors.black.withValues(alpha: 0.4),
-      ),
-      filledButtonTheme: FilledButtonThemeData(
-        style: FilledButton.styleFrom(
-          backgroundColor: lightAccent,
-          foregroundColor: Colors.white,
-          padding: const EdgeInsets.symmetric(vertical: 18),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(10),
-          ),
-          textStyle: const TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.w700,
-            letterSpacing: 0.5,
-          ),
-        ),
-      ),
-      textButtonTheme: TextButtonThemeData(
-        style: TextButton.styleFrom(
-          foregroundColor: lightAccent,
-          textStyle: const TextStyle(
-            fontWeight: FontWeight.bold,
-            fontSize: 15,
-          ),
-        ),
-      ),
-      listTileTheme: const ListTileThemeData(
-        contentPadding: EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-        iconColor: lightTextMuted,
-        textColor: lightText,
-      ),
-      bottomSheetTheme: const BottomSheetThemeData(
-        backgroundColor: lightSurface,
-        surfaceTintColor: Colors.transparent,
-        elevation: 0,
-        shape: RoundedRectangleBorder(
-          borderRadius:
-              BorderRadius.vertical(top: Radius.circular(radiusSheet)),
-        ),
-      ),
-      dialogTheme: DialogThemeData(
-        backgroundColor: lightSurface,
-        surfaceTintColor: Colors.transparent,
-        elevation: 0,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(radiusCard),
-          side: const BorderSide(color: lightBorder, width: 1),
+          side: BorderSide(color: p.border),
         ),
       ),
     );

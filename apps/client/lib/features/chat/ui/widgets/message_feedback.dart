@@ -138,7 +138,7 @@ class _MessageFeedbackState extends ConsumerState<MessageFeedback> {
               controller: _commentController,
               maxLines: 2,
               minLines: 1,
-              style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontSize: 13),
+              style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontSize: 14),
               decoration: InputDecoration(
                 isDense: true,
                 hintText: context.l10n.feedbackCommentHint,
@@ -151,16 +151,16 @@ class _MessageFeedbackState extends ConsumerState<MessageFeedback> {
                   vertical: 8,
                 ),
                 filled: true,
-                fillColor: Colors.black.withValues(alpha: 0.25),
+                fillColor: AppTheme.mutedSurface(context),
                 enabledBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(10),
                   borderSide: BorderSide(
-                    color: AppTheme.ponAccent.withValues(alpha: 0.3),
+                    color: AppTheme.accent(context).withValues(alpha: 0.3),
                   ),
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(10),
-                  borderSide: const BorderSide(color: AppTheme.ponAccent),
+                  borderSide: BorderSide(color: AppTheme.accent(context)),
                 ),
               ),
             ),
@@ -169,7 +169,7 @@ class _MessageFeedbackState extends ConsumerState<MessageFeedback> {
           TextButton(
             onPressed: _submitting ? null : _sendComment,
             style: TextButton.styleFrom(
-              foregroundColor: AppTheme.ponAccent,
+              foregroundColor: AppTheme.accent(context),
               padding: const EdgeInsets.symmetric(horizontal: 10),
               minimumSize: const Size(0, 36),
             ),
@@ -197,7 +197,7 @@ class _FeedbackButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final color = active
-        ? AppTheme.ponAccent
+        ? AppTheme.accent(context)
         : AppTheme.mutedText(context);
     return Tooltip(
       message: tooltip,

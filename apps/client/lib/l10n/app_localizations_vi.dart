@@ -9,6 +9,9 @@ class AppLocalizationsVi extends AppLocalizations {
   AppLocalizationsVi([String locale = 'vi']) : super(locale);
 
   @override
+  String get appTagline => 'Kết nối & Trò chuyện';
+
+  @override
   String get appName => 'PON';
 
   @override
@@ -118,10 +121,10 @@ class AppLocalizationsVi extends AppLocalizations {
   String get actionConfirm => 'Xác nhận';
 
   @override
-  String get actionRetry => 'THỬ LẠI';
+  String get actionRetry => 'Thử lại';
 
   @override
-  String get actionSave => 'LƯU';
+  String get actionSave => 'Lưu';
 
   @override
   String get actionLogout => 'Đăng xuất';
@@ -136,7 +139,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get loadingDots => '...';
 
   @override
-  String get loginTitle => 'Đăng Nhập';
+  String get loginTitle => 'Đăng nhập';
 
   @override
   String get fieldEmail => 'Email';
@@ -148,7 +151,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get forgotPasswordLink => 'Quên mật khẩu?';
 
   @override
-  String get loginButton => 'ĐĂNG NHẬP';
+  String get loginButton => 'Đăng nhập';
 
   @override
   String get noAccountYet => 'Chưa có tài khoản? ';
@@ -354,7 +357,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get errLoginFailed => 'Đăng nhập thất bại, thử lại';
 
   @override
-  String get registerTitle => 'Tạo Tài Khoản';
+  String get registerTitle => 'Tạo tài khoản';
 
   @override
   String get welcomeToApp => 'Chào mừng bạn đến với PON';
@@ -366,7 +369,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get fieldConfirmPassword => 'Xác nhận mật khẩu';
 
   @override
-  String get registerButton => 'ĐĂNG KÝ';
+  String get registerButton => 'Đăng ký';
 
   @override
   String get haveAccount => 'Đã có tài khoản? ';
@@ -390,7 +393,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get errRegisterFailed => 'Đăng ký thất bại, thử lại';
 
   @override
-  String get verifyOtpTitle => 'Xác Thực OTP';
+  String get verifyOtpTitle => 'Xác thực OTP';
 
   @override
   String get verifyAccountHeading => 'Xác thực tài khoản';
@@ -404,7 +407,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get fieldOtp => 'Mã OTP';
 
   @override
-  String get confirmButton => 'XÁC NHẬN';
+  String get confirmButton => 'Xác nhận';
 
   @override
   String resendIn(int seconds) {
@@ -430,7 +433,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get errVerifyFailed => 'Xác thực thất bại, thử lại';
 
   @override
-  String get forgotTitle => 'Đặt Lại Mật Khẩu';
+  String get forgotTitle => 'Đặt lại mật khẩu';
 
   @override
   String get forgotHeading => 'Quên mật khẩu?';
@@ -440,7 +443,7 @@ class AppLocalizationsVi extends AppLocalizations {
       'Nhập email của bạn để nhận mã OTP thiết lập mật khẩu mới';
 
   @override
-  String get sendOtpButton => 'GỬI MÃ OTP';
+  String get sendOtpButton => 'Gửi mã OTP';
 
   @override
   String get errEmailNotRegistered => 'Email này chưa được đăng ký';
@@ -449,7 +452,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get errSendRequestFailed => 'Gửi yêu cầu thất bại, thử lại';
 
   @override
-  String get newPasswordTitle => 'Mật Khẩu Mới';
+  String get newPasswordTitle => 'Mật khẩu mới';
 
   @override
   String get newPasswordHeading => 'Tạo mật khẩu mới';
@@ -475,7 +478,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get errResetFailed => 'Đặt lại mật khẩu thất bại, thử lại';
 
   @override
-  String get settingsTitle => 'Cài Đặt';
+  String get settingsTitle => 'Cài đặt';
 
   @override
   String get valNameEmpty => 'Tên không được để trống';
@@ -511,7 +514,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get logoutConfirmBody => 'Bạn có chắc muốn đăng xuất không?';
 
   @override
-  String get onboardingChooseTheme => 'CHỌN GIAO DIỆN';
+  String get onboardingChooseTheme => 'Chọn giao diện';
 
   @override
   String get onboardingChooseSubtitle =>
@@ -527,7 +530,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get themeSystemSubtitle => 'Tự động đồng bộ với thiết bị của bạn';
 
   @override
-  String get startExperience => 'BẮT ĐẦU TRẢI NGHIỆM';
+  String get startExperience => 'Bắt đầu trải nghiệm';
 
   @override
   String get tooltipSettings => 'Cài đặt';
@@ -563,7 +566,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get conversationDefault => 'Cuộc trò chuyện';
 
   @override
-  String get newConversationTitle => 'Cuộc Trò Chuyện Mới';
+  String get newConversationTitle => 'Cuộc trò chuyện mới';
 
   @override
   String get startConversationHeading => 'Bắt đầu cuộc trò chuyện';
@@ -582,7 +585,7 @@ class AppLocalizationsVi extends AppLocalizations {
       'Không tìm thấy người dùng hoặc lỗi kết nối.';
 
   @override
-  String get startConversationButton => 'BẮT ĐẦU TRÒ CHUYỆN';
+  String get startConversationButton => 'Bắt đầu trò chuyện';
 
   @override
   String get chatDefaultTitle => 'Trò chuyện';
@@ -607,6 +610,9 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get tabRequests => 'Người lạ';
+
+  @override
+  String get tabNew => 'Tạo mới';
 
   @override
   String get noRequests => 'Không có lời mời nào';
@@ -2097,7 +2103,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get customMcpUrl => 'URL máy chủ';
 
   @override
-  String get customMcpAuth => 'XÁC THỰC';
+  String get customMcpAuth => 'Xác thực';
 
   @override
   String get customMcpAuthNone => 'Không';
@@ -3183,10 +3189,10 @@ class AppLocalizationsVi extends AppLocalizations {
   String get attachHdOff => 'SD — nén';
 
   @override
-  String get hdOn => 'HD BẬT';
+  String get hdOn => 'HD bật';
 
   @override
-  String get hdOff => 'HD TẮT';
+  String get hdOff => 'HD tắt';
 
   @override
   String get videoCannotPlay => 'Không thể phát video';

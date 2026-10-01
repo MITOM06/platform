@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../core/utils/app_error.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/l10n/l10n_ext.dart';
 import '../../../../core/theme/app_theme.dart';
@@ -100,7 +101,7 @@ class _AiContextEntriesPanelState extends ConsumerState<AiContextEntriesPanel> {
             TextButton(
               onPressed: () => Navigator.pop(ctx, true),
               child: Text(l.adminSave,
-                  style: const TextStyle(color: AppTheme.ponAccent)),
+                  style: TextStyle(color: AppTheme.accent(context))),
             ),
           ],
         ),
@@ -185,7 +186,7 @@ class _AiContextEntriesPanelState extends ConsumerState<AiContextEntriesPanel> {
                 ),
               const Spacer(),
               IconButton(
-                icon: const Icon(Icons.add_rounded, color: AppTheme.ponAccent),
+                icon: Icon(Icons.add_rounded, color: AppTheme.accent(context)),
                 tooltip: l.adminCreateEntry,
                 onPressed: canCreate ? () => _edit(context) : null,
               ),
@@ -196,7 +197,7 @@ class _AiContextEntriesPanelState extends ConsumerState<AiContextEntriesPanel> {
           child: entriesAsync.when(
             loading: () => const Center(child: CircularProgressIndicator()),
             error: (e, _) => Center(
-              child: Text('$e',
+              child: Text(friendlyError(e),
                   style: TextStyle(color: AppTheme.mutedText(context))),
             ),
             data: (entries) {

@@ -39,7 +39,7 @@ class AiConnectorChecklist extends StatelessWidget {
               .map(
                 (entry) => CheckboxListTile(
                   contentPadding: EdgeInsets.zero,
-                  activeColor: AppTheme.ponAccent,
+                  activeColor: AppTheme.accent(context),
                   controlAffinity: ListTileControlAffinity.leading,
                   title: Text(entry.name as String,
                       style: TextStyle(color: Theme.of(context).colorScheme.onSurface)),
@@ -81,14 +81,14 @@ class AiTriStateTile extends StatelessWidget {
           const SizedBox(height: 2),
           Text(subtitle,
               style: TextStyle(
-                  color: AppTheme.mutedText(context), fontSize: 13)),
+                  color: AppTheme.mutedText(context), fontSize: 12)),
           const SizedBox(height: 8),
           SegmentedButton<int>(
             showSelectedIcon: false,
             style: ButtonStyle(
               backgroundColor: WidgetStateProperty.resolveWith(
                 (s) => s.contains(WidgetState.selected)
-                    ? AppTheme.ponAccent.withValues(alpha: 0.18)
+                    ? AppTheme.accent(context).withValues(alpha: 0.18)
                     : Colors.transparent,
               ),
               foregroundColor: WidgetStateProperty.all(Theme.of(context).colorScheme.onSurface),
@@ -240,7 +240,7 @@ class AiSectionTitle extends StatelessWidget {
           style: TextStyle(
             color: Theme.of(context).colorScheme.onSurface,
             fontSize: 16,
-            fontWeight: FontWeight.bold,
+            fontWeight: FontWeight.w600,
           ),
         ),
       );
@@ -254,7 +254,7 @@ class AiMutedText extends StatelessWidget {
   Widget build(BuildContext context) => Text(
         text,
         style:
-            TextStyle(color: AppTheme.mutedText(context), fontSize: 13),
+            TextStyle(color: AppTheme.mutedText(context), fontSize: 12),
       );
 }
 

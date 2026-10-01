@@ -102,7 +102,7 @@ class _ConversationRequestTileState
     final avatarUrl = isGroup ? conv.avatarUrl : profileData?.avatarUrl;
 
     final accent =
-        isDark ? AppTheme.ponAccent : Theme.of(context).colorScheme.primary;
+        isDark ? AppTheme.accent(context) : Theme.of(context).colorScheme.primary;
 
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
@@ -141,7 +141,7 @@ class _ConversationRequestTileState
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(
                         fontWeight: FontWeight.w600,
-                        fontSize: 15,
+                        fontSize: 16,
                         color: Theme.of(context).colorScheme.onSurface,
                       ),
                     ),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../core/utils/app_error.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/l10n/l10n_ext.dart';
 import '../../../../core/theme/app_theme.dart';
@@ -90,7 +91,7 @@ class DepartmentsPanel extends ConsumerWidget {
             TextButton(
               onPressed: () => Navigator.pop(ctx, true),
               child: Text(l10n.adminSave,
-                  style: const TextStyle(color: AppTheme.ponAccent)),
+                  style: TextStyle(color: AppTheme.accent(context))),
             ),
           ],
         ),
@@ -156,7 +157,7 @@ class DepartmentsPanel extends ConsumerWidget {
     return Scaffold(
       backgroundColor: Colors.transparent,
       floatingActionButton: FloatingActionButton.extended(
-        backgroundColor: AppTheme.ponAccent,
+        backgroundColor: AppTheme.accent(context),
         foregroundColor: Colors.white,
         onPressed: () => _openEditor(context, ref),
         icon: const Icon(Icons.add_rounded),
@@ -165,7 +166,7 @@ class DepartmentsPanel extends ConsumerWidget {
       body: async.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, _) => Center(
-          child: Text('$e',
+          child: Text(friendlyError(e),
               style: TextStyle(color: AppTheme.mutedText(context))),
         ),
         data: (departments) => departments.isEmpty
@@ -182,8 +183,8 @@ class DepartmentsPanel extends ConsumerWidget {
                   final d = departments[i];
                   return PonCard(
                     child: ListTile(
-                      leading: const Icon(Icons.groups_rounded,
-                          color: AppTheme.ponAccent),
+                      leading: Icon(Icons.groups_rounded,
+                          color: AppTheme.accent(context)),
                       title: Text(d.name,
                           style: TextStyle(color: Theme.of(context).colorScheme.onSurface)),
                       subtitle: d.description == null

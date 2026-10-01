@@ -29,14 +29,14 @@ void main() {
       final scheme = AppTheme.lightTheme.colorScheme;
       expect(scheme.primary, paletteLightAccent);
       expect(scheme.secondary, paletteLightAccent);
-      expect(scheme.primary, isNot(AppTheme.ponAccent));
+      expect(scheme.primary, isNot(const Color(0xFF96435B)));
     });
 
     test('dark ColorScheme uses the dark accent, not the mid-tone', () {
       final scheme = AppTheme.darkTheme.colorScheme;
       expect(scheme.primary, paletteDarkAccent);
       expect(scheme.secondary, paletteDarkAccent);
-      expect(scheme.primary, isNot(AppTheme.ponAccent));
+      expect(scheme.primary, isNot(const Color(0xFF96435B)));
     });
 
     test('filled buttons are painted with the per-mode accent', () {

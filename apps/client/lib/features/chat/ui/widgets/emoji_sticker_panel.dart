@@ -53,10 +53,10 @@ class _EmojiStickerPanelState extends State<EmojiStickerPanel>
             color: widget.surfaceColor,
             child: TabBar(
               controller: _tabCtrl,
-              indicatorColor: AppTheme.ponAccent,
-              labelColor: AppTheme.ponAccent,
+              indicatorColor: AppTheme.accent(context),
+              labelColor: AppTheme.accent(context),
               unselectedLabelColor: AppTheme.mutedText(context),
-              labelStyle: const TextStyle(fontSize: 13),
+              labelStyle: const TextStyle(fontSize: 14),
               tabs: [
                 Tab(text: context.l10n.emojiTab),
                 Tab(text: context.l10n.stickerLabel),
@@ -123,7 +123,7 @@ class _StickerGrid extends StatelessWidget {
               (s) => InkWell(
                 onTap: () => onSelected(s),
                 borderRadius: BorderRadius.circular(12),
-                splashColor: AppTheme.ponAccent.withValues(alpha: 0.15),
+                splashColor: AppTheme.accent(context).withValues(alpha: 0.15),
                 child: Center(
                   child: Text(s, style: const TextStyle(fontSize: 46)),
                 ),

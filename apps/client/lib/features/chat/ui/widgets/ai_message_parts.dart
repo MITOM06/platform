@@ -27,9 +27,9 @@ class AiBotAvatar extends StatelessWidget {
           height: 28,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            color: avatarUrl == null ? AppTheme.ponAccent : null,
+            color: avatarUrl == null ? AppTheme.accent(context) : null,
             border: Border.all(
-                color: AppTheme.ponAccent.withValues(alpha: 0.6), width: 1),
+                color: AppTheme.accent(context).withValues(alpha: 0.6), width: 1),
           ),
           child: avatarUrl != null
               ? ClipOval(
@@ -55,7 +55,7 @@ class AiBotAvatar extends StatelessWidget {
             width: 10,
             height: 10,
             decoration: BoxDecoration(
-              color: AppTheme.ponAccent,
+              color: AppTheme.accent(context),
               shape: BoxShape.circle,
               border: Border.all(
                   color: Theme.of(context).scaffoldBackgroundColor, width: 1.5),
@@ -84,15 +84,15 @@ class _ExternalBotAvatar extends StatelessWidget {
       height: 28,
       // Flat accent fill: the old gradient introduced a teal second accent
       // (docs/design-system.md §1).
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         shape: BoxShape.circle,
-        color: AppTheme.ponAccent,
+        color: AppTheme.accent(context),
       ),
       child: Center(
         child: Text(
           name.isNotEmpty ? name[0].toUpperCase() : '🤖',
           style: const TextStyle(
-              color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
+              color: Colors.white, fontSize: 12, fontWeight: FontWeight.w600),
         ),
       ),
     );
@@ -169,7 +169,7 @@ class ExternalBotBubble extends ConsumerWidget {
                   Text(
                     timeStr,
                     style: TextStyle(
-                      fontSize: 9.5,
+                      fontSize: 10,
                       color: AppTheme.mutedText(context),
                     ),
                   ),
@@ -193,7 +193,7 @@ class QuotaExceededBubble extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Icon(Icons.data_usage_rounded, color: Color(0xFFFFB74D), size: 16),
+        const Icon(Icons.data_usage_rounded, color: AppTheme.warning, size: 16),
         const SizedBox(width: 6),
         Flexible(
           child: Column(
@@ -202,7 +202,7 @@ class QuotaExceededBubble extends StatelessWidget {
             children: [
               Text(
                 context.l10n.aiQuotaExceeded,
-                style: const TextStyle(color: Color(0xFFFFB74D), fontSize: 14),
+                style: const TextStyle(color: AppTheme.warning, fontSize: 14),
               ),
               const SizedBox(height: 4),
               GestureDetector(
@@ -210,7 +210,7 @@ class QuotaExceededBubble extends StatelessWidget {
                 child: Text(
                   context.l10n.viewUsage,
                   style: const TextStyle(
-                    color: Color(0xFFFFD54F),
+                    color: AppTheme.warning,
                     fontSize: 12,
                     decoration: TextDecoration.underline,
                   ),

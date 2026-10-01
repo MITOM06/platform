@@ -96,9 +96,9 @@ class MessageBubble extends ConsumerWidget {
       child: AnimatedContainer(
         duration: AppMotion.slow,
         color: (selectMode && isSelected)
-            ? AppTheme.ponAccent.withValues(alpha: 0.18)
+            ? AppTheme.accent(context).withValues(alpha: 0.18)
             : highlighted
-                ? AppTheme.ponAccent.withValues(alpha: 0.12)
+                ? AppTheme.accent(context).withValues(alpha: 0.12)
                 : Colors.transparent,
         child: selectMode
             ? GestureDetector(
@@ -172,7 +172,7 @@ class MessageBubble extends ConsumerWidget {
                         aiPersonaName,
                         style: TextStyle(
                           fontSize: 11,
-                          color: AppTheme.ponAccent.withValues(alpha: 0.9),
+                          color: AppTheme.accent(context).withValues(alpha: 0.9),
                           fontWeight: FontWeight.w600,
                         ),
                       ),
@@ -229,30 +229,29 @@ class MessageBubble extends ConsumerWidget {
                                   .withValues(alpha: 0.14)
                               : message.isAiQuotaExceeded ||
                                       message.isAiRateLimited
-                                  ? const Color(0xFFFFB74D)
+                                  ? AppTheme.warning
                                       .withValues(alpha: 0.16)
-                                  : message.isAiMessage && !message.recalled
-                                      ? (Theme.of(context).brightness ==
-                                              Brightness.dark
-                                          ? AppTheme.darkAccentTint
-                                          : AppTheme.lightAccentTint)
-                                      : isSentByMe && !message.recalled
-                                          ? AppTheme.ponAccent
-                                          : Theme.of(context)
-                                              .colorScheme
-                                              .surface,
+                                  // Same as web: mine = accent; theirs and the
+                                  // AI's = the muted fill at 70%.
+                                  : isSentByMe &&
+                                          !message.isAiMessage &&
+                                          !message.recalled
+                                      ? AppTheme.accent(context)
+                                      : AppTheme.mutedSurface(context)
+                                          .withValues(alpha: 0.7),
+                          // 14px, with the TOP corner nearest the sender
+                          // flattened to 4 (web: rounded-tr / rounded-tl).
                           borderRadius: BorderRadius.only(
-                            topLeft: const Radius.circular(14),
-                            topRight: const Radius.circular(14),
-                            bottomLeft:
-                                Radius.circular(isSentByMe ? 14 : 4),
-                            bottomRight:
-                                Radius.circular(isSentByMe ? 4 : 14),
+                            topLeft: Radius.circular(isSentByMe ? 14 : 4),
+                            topRight: Radius.circular(isSentByMe ? 4 : 14),
+                            bottomLeft: const Radius.circular(14),
+                            bottomRight: const Radius.circular(14),
                           ),
                           border: isSentByMe && !message.recalled
                               ? null
                               : Border.all(
-                                  color: AppTheme.hairline(context),
+                                  color: AppTheme.hairline(context)
+                                      .withValues(alpha: 0.5),
                                   width: 1,
                                 ),
                         ),
@@ -313,10 +312,10 @@ class _SelectCheck extends StatelessWidget {
       height: 22,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        color: selected ? AppTheme.ponAccent : Colors.transparent,
+        color: selected ? AppTheme.accent(context) : Colors.transparent,
         border: Border.all(
           color: selected
-              ? AppTheme.ponAccent
+              ? AppTheme.accent(context)
               : Theme.of(context).brightness == Brightness.dark
                   ? AppTheme.mutedText(context)
                   : AppTheme.mutedText(context),

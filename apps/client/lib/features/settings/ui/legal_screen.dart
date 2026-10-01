@@ -17,27 +17,27 @@ class LegalScreen extends StatelessWidget {
       (
         title: context.l10n.legalDataCollectionTitle,
         content: context.l10n.legalDataCollectionContent,
-        color: AppTheme.ponAccent,
+        color: Theme.of(context).colorScheme.onSurface,
       ),
       (
         title: context.l10n.legalDataUsageTitle,
         content: context.l10n.legalDataUsageContent,
-        color: AppTheme.ponAccent,
+        color: Theme.of(context).colorScheme.onSurface,
       ),
       (
         title: context.l10n.legalSecurityTitle,
         content: context.l10n.legalSecurityContent,
-        color: AppTheme.ponAccent,
+        color: Theme.of(context).colorScheme.onSurface,
       ),
       (
         title: context.l10n.legalUserRightsTitle,
         content: context.l10n.legalUserRightsContent,
-        color: AppTheme.ponAccent,
+        color: Theme.of(context).colorScheme.onSurface,
       ),
       (
         title: context.l10n.legalTermsTitle,
         content: context.l10n.legalTermsContent,
-        color: AppTheme.ponAccent,
+        color: Theme.of(context).colorScheme.onSurface,
       ),
     ];
 
@@ -82,8 +82,8 @@ class LegalScreen extends StatelessWidget {
                                 color: isDark
                                     ? s.color
                                     : Theme.of(context).colorScheme.primary,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 15,
+                                fontWeight: FontWeight.w600,
+                                fontSize: 16,
                               ),
                             ),
                             const SizedBox(height: 10),

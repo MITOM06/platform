@@ -1,4 +1,5 @@
 import 'package:collection/collection.dart';
+import '../../../../core/utils/app_error.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/l10n/l10n_ext.dart';
@@ -78,7 +79,7 @@ class MembersPanel extends ConsumerWidget {
                     ...depts.map(
                       (d) => CheckboxListTile(
                         contentPadding: EdgeInsets.zero,
-                        activeColor: AppTheme.ponAccent,
+                        activeColor: AppTheme.accent(context),
                         controlAffinity: ListTileControlAffinity.leading,
                         title: Text(d.name,
                             style: TextStyle(color: Theme.of(context).colorScheme.onSurface)),
@@ -104,7 +105,7 @@ class MembersPanel extends ConsumerWidget {
             TextButton(
               onPressed: () => Navigator.pop(ctx, true),
               child: Text(l10n.adminSave,
-                  style: const TextStyle(color: AppTheme.ponAccent)),
+                  style: TextStyle(color: AppTheme.accent(context))),
             ),
           ],
         ),
@@ -181,7 +182,7 @@ class MembersPanel extends ConsumerWidget {
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
             child: Text(l10n.adminSave,
-                style: const TextStyle(color: AppTheme.ponAccent)),
+                style: TextStyle(color: AppTheme.accent(context))),
           ),
         ],
       ),
@@ -217,7 +218,7 @@ class MembersPanel extends ConsumerWidget {
     return async.when(
       loading: () => const Center(child: CircularProgressIndicator()),
       error: (e, _) => Center(
-        child: Text('$e',
+        child: Text(friendlyError(e),
             style: TextStyle(color: AppTheme.mutedText(context))),
       ),
       data: (members) => ListView.separated(
@@ -231,7 +232,7 @@ class MembersPanel extends ConsumerWidget {
               child: Text(l10n.adminMemberHint,
                   style: TextStyle(
                       color: AppTheme.mutedText(context),
-                      fontSize: 13)),
+                      fontSize: 12)),
             );
           }
           final m = members[i - 1];
@@ -242,10 +243,10 @@ class MembersPanel extends ConsumerWidget {
             shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12)),
             leading: CircleAvatar(
-              backgroundColor: AppTheme.ponAccent.withValues(alpha: 0.15),
+              backgroundColor: AppTheme.accent(context).withValues(alpha: 0.15),
               child: Text(_initials(m.displayName),
-                  style: const TextStyle(
-                      color: AppTheme.ponAccent, fontSize: 13)),
+                  style: TextStyle(
+                      color: AppTheme.accent(context), fontSize: 14)),
             ),
             title: Text(m.displayName,
                 style: TextStyle(color: Theme.of(context).colorScheme.onSurface)),
@@ -259,12 +260,12 @@ class MembersPanel extends ConsumerWidget {
                     padding: const EdgeInsets.symmetric(
                         horizontal: 8, vertical: 3),
                     decoration: BoxDecoration(
-                      color: AppTheme.ponAccent.withValues(alpha: 0.15),
+                      color: AppTheme.accent(context).withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Text(roleName,
-                        style: const TextStyle(
-                            color: AppTheme.ponAccent, fontSize: 11)),
+                        style: TextStyle(
+                            color: AppTheme.accent(context), fontSize: 11)),
                   ),
                 if (canManageMembers)
                   IconButton(

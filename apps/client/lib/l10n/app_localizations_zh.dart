@@ -9,6 +9,9 @@ class AppLocalizationsZh extends AppLocalizations {
   AppLocalizationsZh([String locale = 'zh']) : super(locale);
 
   @override
+  String get appTagline => '连接与聊天';
+
+  @override
   String get appName => 'PON';
 
   @override
@@ -598,6 +601,9 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get tabRequests => '请求';
+
+  @override
+  String get tabNew => '新建';
 
   @override
   String get noRequests => '没有待处理的请求';

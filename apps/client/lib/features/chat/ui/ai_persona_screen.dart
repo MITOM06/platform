@@ -149,20 +149,20 @@ class _AiPersonaScreenState extends ConsumerState<AiPersonaScreen> {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: AppTheme.ponAccent.withValues(alpha: 0.08),
+                color: AppTheme.accent(context).withValues(alpha: 0.08),
                 borderRadius: BorderRadius.circular(8),
                 border: Border.all(
-                    color: AppTheme.ponAccent.withValues(alpha: 0.3), width: 1),
+                    color: AppTheme.accent(context).withValues(alpha: 0.3), width: 1),
               ),
               child: Row(
                 children: [
-                  const Icon(Icons.info_outline_rounded, size: 16, color: AppTheme.ponAccent),
+                  Icon(Icons.info_outline_rounded, size: 16, color: AppTheme.accent(context)),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
                       context.l10n.aiPersonaAdminOnly,
-                      style: const TextStyle(
-                          color: AppTheme.ponAccent, fontSize: 12),
+                      style: TextStyle(
+                          color: AppTheme.accent(context), fontSize: 12),
                     ),
                   ),
                 ],
@@ -199,16 +199,16 @@ class _AiPersonaScreenState extends ConsumerState<AiPersonaScreen> {
                           : null,
                     ),
                     if (_uploadingAvatar)
-                      const CircularProgressIndicator(
-                          color: AppTheme.ponAccent, strokeWidth: 2.5)
+                      CircularProgressIndicator(
+                          color: AppTheme.accent(context), strokeWidth: 2.5)
                     else
                       Positioned(
                         right: 0,
                         bottom: 0,
                         child: Container(
                           padding: const EdgeInsets.all(4),
-                          decoration: const BoxDecoration(
-                            color: AppTheme.ponAccent,
+                          decoration: BoxDecoration(
+                            color: AppTheme.accent(context),
                             shape: BoxShape.circle,
                           ),
                           // On the burgundy fill: white, not black (was ~2:1).
@@ -252,7 +252,7 @@ class _AiPersonaScreenState extends ConsumerState<AiPersonaScreen> {
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
-                  borderSide: const BorderSide(color: AppTheme.ponAccent),
+                  borderSide: BorderSide(color: AppTheme.accent(context)),
                 ),
               ),
             ),
@@ -303,13 +303,13 @@ class _ToneSelector extends StatelessWidget {
         return ChoiceChip(
           label: Text(t.$2),
           selected: selected,
-          selectedColor: AppTheme.ponAccent.withValues(alpha: 0.2),
+          selectedColor: AppTheme.accent(context).withValues(alpha: 0.2),
           labelStyle: TextStyle(
-            color: selected ? AppTheme.ponAccent : colorScheme.onSurfaceVariant,
+            color: selected ? AppTheme.accent(context) : colorScheme.onSurfaceVariant,
           ),
           side: BorderSide(
             color: selected
-                ? AppTheme.ponAccent
+                ? AppTheme.accent(context)
                 : colorScheme.onSurface.withValues(alpha: 0.2),
           ),
           backgroundColor: Colors.transparent,

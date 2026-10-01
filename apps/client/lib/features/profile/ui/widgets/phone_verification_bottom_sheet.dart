@@ -241,7 +241,7 @@ class _PhoneVerificationBottomSheetState
           Text(
             l10n.phoneVerifyTitle,
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
+                  fontWeight: FontWeight.w600,
                 ),
           ),
           const SizedBox(height: 16),
@@ -296,7 +296,7 @@ class _PhoneVerificationBottomSheetState
         const SizedBox(height: 16),
         FilledButton(
           style: FilledButton.styleFrom(
-            backgroundColor: AppTheme.ponAccent,
+            backgroundColor: AppTheme.accent(context),
             foregroundColor: Colors.white,
           ),
           onPressed: (_sending || !_hasValidNumber) ? null : _sendOtp,
@@ -341,7 +341,7 @@ class _PhoneVerificationBottomSheetState
         const SizedBox(height: 16),
         FilledButton(
           style: FilledButton.styleFrom(
-            backgroundColor: AppTheme.ponAccent,
+            backgroundColor: AppTheme.accent(context),
             foregroundColor: Colors.white,
           ),
           onPressed: _verifying ? null : _verify,

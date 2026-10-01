@@ -48,7 +48,7 @@ class BlockedConversationsScreen extends ConsumerWidget {
                 Text(
                   context.l10n.listLoadFailed,
                   style: TextStyle(
-                    fontWeight: FontWeight.bold,
+                    fontWeight: FontWeight.w600,
                     color: Theme.of(context).colorScheme.onSurface,
                   ),
                 ),
@@ -104,7 +104,7 @@ class _EmptyBlocked extends StatelessWidget {
             context.l10n.noBlockedChats,
             style: TextStyle(
               fontSize: 16,
-              fontWeight: FontWeight.bold,
+              fontWeight: FontWeight.w600,
               color: Theme.of(context).colorScheme.onSurface,
             ),
           ),
@@ -179,7 +179,7 @@ class _BlockedTile extends ConsumerWidget {
             style: TextStyle(
               fontWeight: FontWeight.w600,
               color: Theme.of(context).colorScheme.onSurface,
-              fontSize: 15,
+              fontSize: 16,
             ),
           ),
           trailing: TextButton(

@@ -107,7 +107,7 @@ class _NewPasswordScreenState extends ConsumerState<NewPasswordScreen> {
                   Text(
                     context.l10n.newPasswordHeading,
                     style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                          fontWeight: FontWeight.bold,
+                          fontWeight: FontWeight.w600,
                           color: Theme.of(context).colorScheme.onSurface,
                         ),
                     textAlign: TextAlign.center,

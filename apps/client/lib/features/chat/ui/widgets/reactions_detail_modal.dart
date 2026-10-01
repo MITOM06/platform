@@ -71,7 +71,7 @@ class _ReactionsDetailModalState extends ConsumerState<ReactionsDetailModal>
             context.l10n.reactionsDetail,
             style: TextStyle(
                 fontSize: 16,
-                fontWeight: FontWeight.bold,
+                fontWeight: FontWeight.w600,
                 color: Theme.of(context).colorScheme.onSurface),
           ),
           const SizedBox(height: 8),
@@ -84,9 +84,9 @@ class _ReactionsDetailModalState extends ConsumerState<ReactionsDetailModal>
                           '$e ${_reactorsByEmoji[e]!.length}',
                     ))
                 .toList(),
-            labelColor: AppTheme.ponAccent,
+            labelColor: AppTheme.accent(context),
             unselectedLabelColor: AppTheme.mutedText(context),
-            indicatorColor: AppTheme.ponAccent,
+            indicatorColor: AppTheme.accent(context),
           ),
           Expanded(
             child: TabBarView(

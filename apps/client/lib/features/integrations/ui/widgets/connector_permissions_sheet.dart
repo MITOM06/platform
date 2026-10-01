@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../core/utils/app_error.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/l10n/l10n_ext.dart';
 import '../../../../core/theme/app_theme.dart';
@@ -73,7 +74,7 @@ class _ConnectorPermissionsSheetState
       if (!mounted) return;
       setState(() {
         _saving = false;
-        _error = '$e';
+        _error = friendlyError(e);
       });
     }
   }
@@ -100,7 +101,7 @@ class _ConnectorPermissionsSheetState
               style: TextStyle(
                 color: Theme.of(context).colorScheme.onSurface,
                 fontSize: 18,
-                fontWeight: FontWeight.bold,
+                fontWeight: FontWeight.w600,
               ),
             ),
             const SizedBox(height: 4),
@@ -108,7 +109,7 @@ class _ConnectorPermissionsSheetState
               l10n.permissionsSubtitle,
               style: TextStyle(
                 color: AppTheme.mutedText(context),
-                fontSize: 13,
+                fontSize: 12,
               ),
             ),
             const SizedBox(height: 14),
@@ -176,7 +177,6 @@ class _PermTile extends StatelessWidget {
   Widget build(BuildContext context) {
     return SwitchListTile(
       contentPadding: EdgeInsets.zero,
-      activeThumbColor: AppTheme.ponAccent,
       value: value,
       onChanged: onChanged,
       title: Text(
@@ -184,7 +184,7 @@ class _PermTile extends StatelessWidget {
         style: TextStyle(
           color: Theme.of(context).colorScheme.onSurface,
           fontWeight: FontWeight.w600,
-          fontSize: 14.5,
+          fontSize: 14,
         ),
       ),
       subtitle: Text(

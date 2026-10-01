@@ -36,7 +36,7 @@ class MeetingSummaryBubble extends ConsumerWidget {
                     'PON AI',
                     style: TextStyle(
                       fontSize: 11,
-                      color: AppTheme.ponAccent.withValues(alpha: 0.9),
+                      color: AppTheme.accent(context).withValues(alpha: 0.9),
                       fontWeight: FontWeight.w600,
                     ),
                   ),
@@ -106,10 +106,10 @@ class MeetingSummaryCard extends StatelessWidget {
     return Container(
       constraints: const BoxConstraints(maxWidth: 360),
       decoration: BoxDecoration(
-        color: AppTheme.darkAccentTint.withValues(alpha: 0.55),
+        color: AppTheme.accentTint(context),
         borderRadius: BorderRadius.circular(AppTheme.radiusCard),
         border:
-            Border.all(color: AppTheme.ponAccent.withValues(alpha: 0.5)),
+            Border.all(color: AppTheme.accent(context).withValues(alpha: 0.5)),
       ),
       padding: const EdgeInsets.all(14),
       child: Column(
@@ -119,15 +119,15 @@ class MeetingSummaryCard extends StatelessWidget {
           // Header
           Row(
             children: [
-              const Icon(Icons.auto_awesome_rounded,
-                  color: AppTheme.ponAccent, size: 18),
+              Icon(Icons.auto_awesome_rounded,
+                  color: AppTheme.accent(context), size: 18),
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
                   context.l10n.meetingSummaryTitle,
                   style: TextStyle(
                       color: Theme.of(context).colorScheme.onSurface,
-                      fontSize: 15,
+                      fontSize: 16,
                       fontWeight: FontWeight.w600),
                 ),
               ),
@@ -181,9 +181,9 @@ class _SectionTitle extends StatelessWidget {
     return Text(
       text.toUpperCase(),
       style: TextStyle(
-        color: AppTheme.darkTintFg.withValues(alpha: 0.9),
+        color: AppTheme.accentTintFg(context),
         fontSize: 11,
-        fontWeight: FontWeight.w700,
+        fontWeight: FontWeight.w600,
         letterSpacing: 0.6,
       ),
     );
@@ -201,8 +201,8 @@ class _Bullet extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('•  ',
-              style: TextStyle(color: AppTheme.ponAccent, fontSize: 14)),
+          Text('•  ',
+              style: TextStyle(color: AppTheme.accent(context), fontSize: 14)),
           Expanded(
             child: Text(text,
                 style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontSize: 14)),
@@ -224,10 +224,10 @@ class _ChecklistItem extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Padding(
-            padding: EdgeInsets.only(top: 1, right: 6),
+          Padding(
+            padding: const EdgeInsets.only(top: 1, right: 6),
             child: Icon(Icons.check_box_outline_blank_rounded,
-                color: AppTheme.ponAccent, size: 16),
+                color: AppTheme.accent(context), size: 16),
           ),
           Expanded(
             child: Text(text,

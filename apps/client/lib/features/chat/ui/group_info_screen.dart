@@ -71,8 +71,8 @@ class GroupInfoScreen extends ConsumerWidget {
                           right: 0,
                           child: Container(
                             padding: const EdgeInsets.all(8),
-                            decoration: const BoxDecoration(
-                              color: AppTheme.ponAccent,
+                            decoration: BoxDecoration(
+                              color: AppTheme.accent(context),
                               shape: BoxShape.circle,
                             ),
                             child: const Icon(Icons.camera_alt_rounded,
@@ -90,7 +90,7 @@ class GroupInfoScreen extends ConsumerWidget {
                   style: TextStyle(
                       color: colorScheme.onSurface,
                       fontSize: 20,
-                      fontWeight: FontWeight.bold),
+                      fontWeight: FontWeight.w600),
                 ),
               ),
               const SizedBox(height: 4),
@@ -104,15 +104,15 @@ class GroupInfoScreen extends ConsumerWidget {
               if (isAdmin)
                 ListTile(
                   leading:
-                      const Icon(Icons.edit_rounded, color: AppTheme.ponAccent),
+                      Icon(Icons.edit_rounded, color: AppTheme.accent(context)),
                   title: Text(context.l10n.renameGroup,
                       style: TextStyle(color: colorScheme.onSurface)),
                   onTap: () => _renameGroup(context, ref, conv),
                 ),
               if (isAdmin)
                 ListTile(
-                  leading: const Icon(Icons.person_add_alt_1_rounded,
-                      color: AppTheme.ponAccent),
+                  leading: Icon(Icons.person_add_alt_1_rounded,
+                      color: AppTheme.accent(context)),
                   title: Text(context.l10n.addMembers,
                       style: TextStyle(color: colorScheme.onSurface)),
                   onTap: () => _addMember(context, ref),
@@ -125,8 +125,8 @@ class GroupInfoScreen extends ConsumerWidget {
                   context.l10n.members,
                   style: TextStyle(
                     color: colorScheme.onSurfaceVariant,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 14,
                   ),
                 ),
               ),
@@ -160,8 +160,8 @@ class GroupInfoScreen extends ConsumerWidget {
               }),
               Divider(color: dividerColor),
               ListTile(
-                leading: const Icon(Icons.perm_media_rounded,
-                    color: AppTheme.ponAccent),
+                leading: Icon(Icons.perm_media_rounded,
+                    color: AppTheme.accent(context)),
                 title: Text(context.l10n.sharedMediaTitle,
                     style: TextStyle(color: colorScheme.onSurface)),
                 trailing: Icon(Icons.chevron_right_rounded,
@@ -171,8 +171,8 @@ class GroupInfoScreen extends ConsumerWidget {
               if (isAdmin) ...[
                 Divider(color: dividerColor),
                 ListTile(
-                  leading: const Icon(Icons.smart_toy_rounded,
-                      color: AppTheme.ponAccent),
+                  leading: Icon(Icons.smart_toy_rounded,
+                      color: AppTheme.accent(context)),
                   title: Text(context.l10n.configureAiPersona,
                       style: TextStyle(color: colorScheme.onSurface)),
                   trailing: Icon(Icons.chevron_right_rounded,

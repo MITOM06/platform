@@ -108,8 +108,8 @@ class _DummyBubble extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
         decoration: BoxDecoration(
           gradient: outgoing
-              ? const LinearGradient(
-                  colors: [AppTheme.ponAccent, AppTheme.ponAccent],
+              ? LinearGradient(
+                  colors: [AppTheme.accent(context), AppTheme.accent(context)],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 )
@@ -119,7 +119,7 @@ class _DummyBubble extends StatelessWidget {
         ),
         child: Text(
           text,
-          style: const TextStyle(color: Colors.white, fontSize: 12.5),
+          style: const TextStyle(color: Colors.white, fontSize: 12),
         ),
       ),
     );
