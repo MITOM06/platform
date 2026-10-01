@@ -22,6 +22,7 @@ import { Throttle } from '@nestjs/throttler';
 import { AuthGuard } from '@nestjs/passport';
 import { GoogleOAuthGuard } from './guards/google-oauth.guard';
 import { AuthService } from './auth.service';
+import { SocialLoginService } from './social-login.service';
 import { OidcService } from './oidc/oidc.service';
 import { SsoMappingService } from './oidc/sso-mapping.service';
 import type { Response } from 'express';
@@ -46,6 +47,7 @@ const SENSITIVE_THROTTLE = { medium: { limit: 5, ttl: 60000 } };
 export class AuthController {
   constructor(
     private readonly auth: AuthService,
+    private readonly socialLogin: SocialLoginService,
     private readonly configService: ConfigService,
     private readonly oidc: OidcService,
     private readonly ssoMapping: SsoMappingService,
@@ -74,7 +76,7 @@ export class AuthController {
     const platform =
       req.query?.state || req.cookies?.['oauth_platform'] || 'mobile';
     res.clearCookie('oauth_platform');
-    return this.auth.handleSocialLogin(req.user, res, 'google', platform);
+    return this.socialLogin.handleSocialLogin(req.user, res, 'google', platform);
   }
 
 
@@ -90,7 +92,7 @@ export class AuthController {
   async twitterCallback(@Req() req: any, @Res() res: Response) {
     const platform = req.cookies?.['oauth_platform'] || 'mobile';
     res.clearCookie('oauth_platform');
-    return this.auth.handleSocialLogin(req.user, res, 'twitter', platform);
+    return this.socialLogin.handleSocialLogin(req.user, res, 'twitter', platform);
   }
 
   // ===================== SET PLATFORM COOKIE =====================
@@ -153,7 +155,7 @@ export class AuthController {
   async oidcCallback(@Req() req: any, @Res() res: Response) {
     // handleCallback returns the chosen platform (stored in the Redis flow at /oidc/login).
     const { platform, ...profile } = await this.oidc.handleCallback(req.query);
-    return this.auth.handleOidcLogin(profile, res, platform || 'web');
+    return this.socialLogin.handleOidcLogin(profile, res, platform || 'web');
   }
 
   @Get('sso/info')

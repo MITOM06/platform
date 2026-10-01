@@ -2,13 +2,10 @@ import {
   ConflictException,
   Inject,
   Injectable,
-  Logger,
-  ServiceUnavailableException,
   UnauthorizedException,
   NotFoundException,
 } from '@nestjs/common';
 import * as dns from 'node:dns';
-import { randomInt, createHash } from 'node:crypto';
 import { JwtService, JwtSignOptions } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { nanoid } from 'nanoid';
@@ -19,27 +16,20 @@ import { UsersService } from '../users/users.service';
 import * as bcrypt from 'bcrypt';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
-import { MailService } from '../Email/mail.service';
 import { BadRequestException } from '@nestjs/common/exceptions/bad-request.exception';
-import { Response } from 'express';
 import { AuthCode } from '../../common/auth-code.enum';
-import { OidcService } from './oidc/oidc.service';
-import { SsoMappingService } from './oidc/sso-mapping.service';
+import { OtpService } from './otp.service';
 import { NotificationsService } from '../notifications/notifications.service';
 
 @Injectable()
 export class AuthService {
-  private readonly logger = new Logger(AuthService.name);
-
   constructor(
-    private readonly mailService: MailService,
     private readonly jwt: JwtService,
     private readonly session: SessionService,
     private readonly claims: ClaimsService,
     private readonly usersService: UsersService,
     private readonly configService: ConfigService,
-    private readonly oidc: OidcService,
-    private readonly ssoMapping: SsoMappingService,
+    private readonly otp: OtpService,
     private readonly notificationsService: NotificationsService,
     @Inject(REDIS_CLIENT) private readonly redis: Redis,
   ) {}
@@ -67,22 +57,6 @@ export class AuthService {
       });
   }
 
-  // Cryptographically secure 6-digit OTP (100000–999999).
-  private generateOtp(): string {
-    return randomInt(100000, 1000000).toString();
-  }
-
-  /**
-   * One-way hash of an OTP before it is persisted. SHA-256 (not bcrypt) is the
-   * right tool here: OTPs are short-lived (5 min) and brute-force is already
-   * rate-limited at the verify layer, so we only need to ensure a DB dump can't
-   * reveal live OTPs. Compare hash-to-hash; never store or match the raw code.
-   */
-  private hashOtp(otp: string): string {
-    return createHash('sha256').update(otp).digest('hex');
-  }
-
-  // ===================== SOCIAL LOGIN =====================
   async handleSocialLogin(
     user: any,
     res: Response,
@@ -229,6 +203,7 @@ export class AuthService {
     return user._id.toString();
   }
 
+=======
   // ===================== BRUTE FORCE =====================
   async checkBruteForce(email: string) {
     const lockoutKey = `lockout:${email}`;
@@ -301,10 +276,7 @@ export class AuthService {
     // email-spam vector even with valid credentials.
     if (!user.isVerified) {
       await this.enforceForgotOtpRateLimit(user.email);
-      const otp = this.generateOtp();
-      const expires = new Date(Date.now() + 5 * 60 * 1000);
-      await this.usersService.updateOtp(user._id, this.hashOtp(otp), expires);
-      await this.deliverOtpEmail(user.email, otp, locale);
+      await this.otp.issue(user._id, user.email, locale);
       throw new UnauthorizedException({
         code: AuthCode.ACCOUNT_UNVERIFIED_OTP_SENT,
         params: { email: user.email },
@@ -376,11 +348,7 @@ export class AuthService {
     const user = await this.usersService.findByEmail(email);
     if (!user) throw new NotFoundException({ code: AuthCode.EMAIL_NOT_FOUND });
 
-    const otp = this.generateOtp();
-    const expires = new Date(Date.now() + 5 * 60 * 1000);
-
-    await this.usersService.updateOtp(user._id, this.hashOtp(otp), expires);
-    await this.deliverOtpEmail(email, otp, locale);
+    await this.otp.issue(user._id, email, locale);
     return { success: true, code: AuthCode.OTP_SENT };
   }
 
@@ -410,7 +378,7 @@ export class AuthService {
       throw new BadRequestException({ code: AuthCode.OTP_EXPIRED });
     }
 
-    if (user.otpCode !== this.hashOtp(otp)) {
+    if (!this.otp.matches(user.otpCode, otp)) {
       const remaining = maxAttempts - attempts;
       throw new BadRequestException({
         code: AuthCode.OTP_WRONG_WITH_REMAINING,
@@ -553,10 +521,7 @@ export class AuthService {
         throw new ConflictException({ code: AuthCode.EMAIL_IN_USE });
       }
       // Account exists but unverified → resend OTP instead of erroring
-      const otp = this.generateOtp();
-      const expires = new Date(Date.now() + 5 * 60 * 1000);
-      await this.usersService.updateOtp(existingUser._id, this.hashOtp(otp), expires);
-      await this.deliverOtpEmail(dto.email, otp, locale);
+      await this.otp.issue(existingUser._id, dto.email, locale);
       return {
         code: AuthCode.ACCOUNT_UNVERIFIED_OTP_SENT,
         userId: existingUser._id,
@@ -573,51 +538,12 @@ export class AuthService {
       isVerified: false,
     });
 
-    const otp = this.generateOtp();
-    const expires = new Date(Date.now() + 5 * 60 * 1000);
-    await this.usersService.updateOtp(user._id, this.hashOtp(otp), expires);
-    await this.deliverOtpEmail(dto.email, otp, locale);
+    await this.otp.issue(user._id, dto.email, locale);
 
     return {
       code: AuthCode.REGISTER_SUCCESS,
       userId: user._id,
     };
-  }
-
-  /**
-   * Send an OTP email, converting a mail-provider failure into a typed 503 instead of letting it
-   * escape as an untyped 500.
-   *
-   * The account row is already written by the time we get here, so a raw throw left the caller
-   * with "Internal server error", an account they could not verify, and a retry that took the
-   * "unverified → resend" branch and failed identically — a permanent signup deadlock from one
-   * SMTP hiccup. With a typed code the client can say "we couldn't send the code" and offer
-   * resend, which succeeds as soon as the provider recovers.
-   */
-  private async deliverOtpEmail(
-    email: string,
-    otp: string,
-    locale: string,
-  ): Promise<void> {
-    try {
-      await this.mailService.sendOtpEmail(email, otp, locale);
-    } catch (e) {
-      // Log enough to diagnose an outage, and nothing more. The full address is user PII, and a
-      // mail-provider error message carries connection/credential detail (nodemailer's is
-      // literally "Invalid login: 535-5.7.8 Username and Password not accepted"). Keep the
-      // recipient's DOMAIN — "every @acme.com send is failing" is the diagnosis, the local part
-      // never is — plus the provider's own error code, which is a stable non-sensitive symbol
-      // (EAUTH / ECONNECTION / EENVELOPE) and more actionable than the prose anyway.
-      const domain = email.slice(email.lastIndexOf('@'));
-      const err = e as { code?: string; responseCode?: number } | undefined;
-      const symptom =
-        err?.code ?? (e instanceof Error ? e.name : typeof e);
-      this.logger.error(
-        `${AuthCode.OTP_SEND_FAILED}: recipient=***${domain} symptom=${symptom}` +
-          (err?.responseCode ? ` smtpStatus=${err.responseCode}` : ''),
-      );
-      throw new ServiceUnavailableException({ code: AuthCode.OTP_SEND_FAILED });
-    }
   }
 
   async resendOtp(email: string, locale: string = 'en') {
@@ -638,10 +564,7 @@ export class AuthService {
     const user = await this.usersService.findByEmail(email);
     if (!user) throw new NotFoundException({ code: AuthCode.EMAIL_NOT_FOUND });
 
-    const otp = this.generateOtp();
-    const expires = new Date(Date.now() + 5 * 60 * 1000);
-    await this.usersService.updateOtp(user._id, this.hashOtp(otp), expires);
-    await this.deliverOtpEmail(email, otp, locale);
+    await this.otp.issue(user._id, email, locale);
 
     // Reset attempt counter khi gửi lại OTP mới
     await this.redis.del(`otp_attempts:${email}`);

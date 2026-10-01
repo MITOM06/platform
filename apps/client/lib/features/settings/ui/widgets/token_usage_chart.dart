@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_theme.dart';
 
-import '../token_usage_screen.dart' show TokenUsageDay;
+import '../../domain/token_usage_provider.dart' show TokenUsageDay;
 
 /// Stacked input/output token bar chart for the token usage screen. Extracted
 /// from token_usage_screen.dart (clean-code file limit).
