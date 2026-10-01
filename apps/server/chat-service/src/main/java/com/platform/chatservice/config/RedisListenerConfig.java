@@ -1,5 +1,6 @@
 package com.platform.chatservice.config;
 
+import com.platform.chatservice.security.SessionRevokedListener;
 import com.platform.chatservice.service.AiResponseListener;
 import com.platform.chatservice.service.CallSummaryListener;
 import com.platform.chatservice.service.ClusterBroadcastListener;
@@ -21,7 +22,8 @@ public class RedisListenerConfig {
       AiResponseListener aiResponseListener,
       KbStatusListener kbStatusListener,
       CallSummaryListener callSummaryListener,
-      ClusterBroadcastListener clusterBroadcastListener) {
+      ClusterBroadcastListener clusterBroadcastListener,
+      SessionRevokedListener sessionRevokedListener) {
     RedisMessageListenerContainer container = new RedisMessageListenerContainer();
     container.setConnectionFactory(connectionFactory);
     container.addMessageListener(aiResponseListener, new PatternTopic("ai:response:*"));
@@ -33,6 +35,10 @@ public class RedisListenerConfig {
     // different Cloud Run instances. Published by ClusterMessageBroker.
     container.addMessageListener(
         clusterBroadcastListener, new ChannelTopic(ClusterMessageBroker.CHANNEL));
+    // auth-service → every chat-service instance: a user's sessions were revoked (blocked, role
+    // changed, password reset, …) — close that user's open sockets right away.
+    container.addMessageListener(
+        sessionRevokedListener, new ChannelTopic(SessionRevokedListener.CHANNEL));
     return container;
   }
 }
