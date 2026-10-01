@@ -19,7 +19,7 @@ interface ChangePasswordDialogProps {
 export function ChangePasswordDialog({ open, onOpenChange }: ChangePasswordDialogProps) {
   const t = useTranslations('settings.changePasswordDialog')
   const tCommon = useTranslations('common')
-  const tReg = useTranslations('auth.register')
+  const tReg = useTranslations('auth.password')
   const [currentPassword, setCurrentPassword] = useState('')
   const [newPassword, setNewPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
