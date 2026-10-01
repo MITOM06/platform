@@ -35,6 +35,8 @@ Examples:
 - [ ] Is the message type handled in BOTH `MessageBubble.tsx` AND `message_bubble.dart`?
 - [ ] Are STOMP events handled in BOTH `conversations/[id]/page.tsx` AND `chat_screen.dart`?
 - [ ] Does i18n/l10n cover the new strings? (web: `messages/*.json`, mobile: `lib/l10n/app_*.arb`)
+- [ ] Do colours, type and spacing follow `docs/design-system.md`? Web is the visual source of
+      truth — a token changes on web first, then in `app_theme.dart` in the same PR.
 
 ## Real-Time Message Pipeline (must stay in sync on both platforms)
 
@@ -55,3 +57,4 @@ If a message type renders on web but not mobile, or vice versa — it's a **P1 b
 | STOMP client | `lib/stomp/client.ts` | `lib/core/services/stomp_service.dart` |
 | Media URLs | `lib/media.ts` `absoluteMediaUrl()` | `lib/core/utils/media_url.dart` |
 | i18n | `next-intl`, `messages/*.json` | Flutter ARB `lib/l10n/app_*.arb` |
+| Design tokens | `app/globals.css` | `lib/core/theme/app_theme.dart` |

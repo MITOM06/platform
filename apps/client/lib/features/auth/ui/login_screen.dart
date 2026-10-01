@@ -124,7 +124,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       // No decorative accent orbs: the accent means "primary action" only
-      // (UI-REDESIGN-DIRECTION.md §2 rules 1-2).
+      // (docs/design-system.md §1).
       body: SafeArea(
         child: Center(
           child: ConstrainedBox(

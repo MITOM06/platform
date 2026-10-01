@@ -255,5 +255,5 @@ git log --oneline main..HEAD               # full feature history
   to recover it on the `hotfix/session-secret-deploy` branch.
 - Nothing pushed to remote; no PR opened. Branch is local-only.
 - Reports per part: `_workspace/05_p1_mcp_connector_qa.md`, `06_p0_part1_report.md`, `07_p0_part2_report.md`.
-- UI/UX mockup (dark-neon, PON branding) reference is the artifact built this session (Integrations,
-  custom MCP, Skills, chat). Re-generate from `scratchpad/newera-mockup.html` if needed.
+- UI/UX: the early dark-neon mockup is obsolete. The visual language is now "Warm Grey & Burgundy" —
+  see `docs/design-system.md`.

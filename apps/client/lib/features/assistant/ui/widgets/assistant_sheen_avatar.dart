@@ -8,7 +8,7 @@ import '../../../../core/theme/motion.dart';
 /// in the app; everything else stays quiet.
 ///
 /// The base fill used to be a violet→teal gradient, i.e. both a gradient and a
-/// second accent (UI-REDESIGN-DIRECTION.md §2 rules 1-2). The sheen itself is a
+/// second accent (docs/design-system.md §1). The sheen itself is a
 /// lighting effect, not a brand gradient, so Layer 2's "motion tokens kept"
 /// carve-out applies and it stays.
 ///

@@ -8,7 +8,7 @@
 - WebSocket: **stomp_dart_client** (STOMP over raw WebSocket)
 - Navigation: **go_router**
 - Local storage: **flutter_secure_storage** (tokens), **shared_preferences** (settings)
-- UI: Material 3 + Dark Neon Theme (NeonButton, NeonTextField, NeonCard)
+- UI: Material 3 themed as "Warm Grey & Burgundy" — tokens in `AppTheme`, shared widgets `PonButton` / `PonTextField` / `PonCard`. Spec and the list of places mobile still differs from web: `docs/design-system.md`
 
 ## API Endpoints
 
@@ -34,13 +34,13 @@ lib/
 ├── core/
 │   ├── api/          # DioClient (authDio + chatDio) + interceptors
 │   ├── router/       # go_router + RouterNotifier
-│   ├── theme/        # AppTheme (neon dark)
+│   ├── theme/        # AppTheme (light + dark tokens), AppMotion
 │   ├── l10n/         # l10n extension (context.l10n)
 │   ├── config/       # AppConfig (base URLs, flags)
 │   ├── providers/    # cross-cutting providers (locale, connectivity, …)
 │   ├── utils/        # helpers (media URLs, formatters, …)
 │   ├── services/     # shared services (notifications, storage, …)
-│   └── widgets/      # NeonButton, NeonTextField, NeonCard, PonLogo
+│   └── widgets/      # PonButton, PonTextField, PonCard, PonLogo
 ├── features/         # feature-based: <name>/{data,domain,ui}
 │   ├── auth/
 │   │   ├── data/     # AuthRepository (login/register/OTP/searchUsers)

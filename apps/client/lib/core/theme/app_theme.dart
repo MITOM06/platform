@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import '../router/page_transitions.dart';
 
 /// Design tokens for the "Warm Grey & Burgundy" direction.
-/// Source of truth: `docs/superpowers/UI-REDESIGN-DIRECTION.md` §2.
+/// Source of truth: `docs/design-system.md` (web is the reference implementation).
 /// The old 3-colour neon brand set (cyan/peach/pink) was retired: there is now
 /// exactly ONE accent, and hierarchy is carried by text shade + weight.
 class AppTheme {
@@ -19,8 +19,7 @@ class AppTheme {
   static const Color ponAccent = Color(0xFF96435B);
 
   /// Canonical per-mode accent from the locked palette
-  /// (`docs/superpowers/UI-REDESIGN-DIRECTION.md` §2, "Accent / primary
-  /// action"). These are what web's `--primary` uses in `:root`/`.dark`, so
+  /// (`docs/design-system.md` §2, `primary`). These are what web's `--primary` uses in `:root`/`.dark`, so
   /// keeping them here is what makes the two clients render the same burgundy.
   static const Color lightAccent = Color(0xFF7A2E3A);
   static const Color darkAccent = Color(0xFFA8475A);

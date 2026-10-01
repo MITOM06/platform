@@ -83,7 +83,7 @@ class _ExternalBotAvatar extends StatelessWidget {
       width: 28,
       height: 28,
       // Flat accent fill: the old gradient introduced a teal second accent
-      // (UI-REDESIGN-DIRECTION.md §2 rules 1-2).
+      // (docs/design-system.md §1).
       decoration: const BoxDecoration(
         shape: BoxShape.circle,
         color: AppTheme.ponAccent,
