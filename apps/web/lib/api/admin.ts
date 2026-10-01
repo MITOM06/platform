@@ -2,11 +2,16 @@ import { authApi } from './axios'
 import type {
   AuditListResult,
   CreateDepartmentInput,
+  CreateInvitationInput,
   CreateRoleInput,
   Department,
+  Invitation,
+  InvitationListFilter,
+  InvitationMutationResult,
   MeCapabilities,
   Member,
   Role,
+  SettableMemberStatus,
   UpdateDepartmentInput,
   UpdateMemberInput,
   UpdateRoleInput,
@@ -57,6 +62,32 @@ export const adminService = {
 
   updateMember: (id: string, input: UpdateMemberInput) =>
     authApi.patch<Member>(`/admin/members/${id}`, input).then((r) => r.data),
+
+  setMemberStatus: (id: string, status: SettableMemberStatus) =>
+    authApi
+      .patch<Member>(`/admin/members/${id}/status`, { status })
+      .then((r) => r.data),
+
+  // ── invitations ───────────────────────────────────────────────────────────
+  listInvitations: (status?: InvitationListFilter) =>
+    authApi
+      .get<Invitation[]>('/admin/invitations', { params: status ? { status } : undefined })
+      .then((r) => (Array.isArray(r.data) ? r.data : [])),
+
+  createInvitation: (input: CreateInvitationInput) =>
+    authApi
+      .post<InvitationMutationResult>('/admin/invitations', input)
+      .then((r) => r.data),
+
+  resendInvitation: (id: string) =>
+    authApi
+      .post<InvitationMutationResult>(`/admin/invitations/${id}/resend`)
+      .then((r) => r.data),
+
+  revokeInvitation: (id: string) =>
+    authApi
+      .delete<{ success: boolean }>(`/admin/invitations/${id}`)
+      .then((r) => r.data),
 
   // ── roles ─────────────────────────────────────────────────────────────────
   listRoles: () =>

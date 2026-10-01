@@ -77,8 +77,11 @@ export async function GET(request: NextRequest) {
   }
 
   // Session is genuinely dead (auth-service rejected it) → destroy the cookies.
-  const clearSession = () => {
-    const res = NextResponse.json({ error: 'unauthorized' }, { status: 401 })
+  // Forward ACCOUNT_BLOCKED (the only code the login screen explains) so the
+  // client can tell the user why they were signed out.
+  const clearSession = (err?: unknown) => {
+    const code = upstreamCode(err) === 'ACCOUNT_BLOCKED' ? 'ACCOUNT_BLOCKED' : undefined
+    const res = NextResponse.json({ error: 'unauthorized', code }, { status: 401 })
     res.cookies.delete('accessToken')
     res.cookies.delete('refreshToken')
     res.cookies.delete('sid')
@@ -115,7 +118,7 @@ export async function GET(request: NextRequest) {
   const handleRefreshError = (err: unknown) => {
     if (!isUpstreamAuthRejection(err)) return transient()
     if (upstreamCode(err) === 'REFRESH_TOKEN_ROTATED') return raceLost()
-    return clearSession()
+    return clearSession(err)
   }
 
   if (!accessToken) {
@@ -152,6 +155,6 @@ export async function GET(request: NextRequest) {
         return handleRefreshError(err)
       }
     }
-    return clearSession()
+    return clearSession(error)
   }
 }
