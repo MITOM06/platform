@@ -97,12 +97,12 @@ class _PromptCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(AppTheme.radiusCard),
-        border: Border.all(color: AppTheme.ponAccent.withValues(alpha: 0.5)),
+        border: Border.all(color: AppTheme.accent(context).withValues(alpha: 0.5)),
       ),
       child: Row(
         children: [
           Icon(call.isVideo ? Icons.videocam_rounded : Icons.groups_rounded,
-              color: AppTheme.ponAccent, size: 30),
+              color: AppTheme.accent(context), size: 30),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
@@ -112,7 +112,7 @@ class _PromptCard extends StatelessWidget {
                   l10n.incomingGroupCallTitle,
                   style: TextStyle(
                       color: Theme.of(context).colorScheme.onSurface,
-                      fontSize: 15,
+                      fontSize: 16,
                       fontWeight: FontWeight.w600),
                 ),
                 const SizedBox(height: 2),

@@ -9,6 +9,9 @@ class AppLocalizationsJa extends AppLocalizations {
   AppLocalizationsJa([String locale = 'ja']) : super(locale);
 
   @override
+  String get appTagline => 'つながって、チャット';
+
+  @override
   String get appName => 'PON';
 
   @override
@@ -601,6 +604,9 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get tabRequests => 'リクエスト';
+
+  @override
+  String get tabNew => '新規';
 
   @override
   String get noRequests => '保留中のリクエストはありません';

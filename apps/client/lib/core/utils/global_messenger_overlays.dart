@@ -71,7 +71,7 @@ class _TopSlideBannerWidgetState extends State<TopSlideBannerWidget>
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final accent = widget.isError
         ? Theme.of(context).colorScheme.error
-        : (isDark ? AppTheme.ponAccent : Theme.of(context).colorScheme.primary);
+        : (isDark ? AppTheme.accent(context) : Theme.of(context).colorScheme.primary);
 
     return Positioned(
       top: 0,
@@ -115,15 +115,15 @@ class _TopSlideBannerWidgetState extends State<TopSlideBannerWidget>
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
                             style: TextStyle(
-                              fontSize: 13.5,
+                              fontSize: 14,
                               fontWeight: FontWeight.w500,
-                              color: isDark ? Colors.white : Colors.black87,
+                              color: Theme.of(context).colorScheme.onSurface,
                             ),
                           ),
                         ),
                         IconButton(
                           icon: const Icon(Icons.close_rounded, size: 18),
-                          color: isDark ? Colors.white38 : Colors.black38,
+                          color: AppTheme.mutedText(context),
                           onPressed: _animateOut,
                           padding: EdgeInsets.zero,
                           constraints: const BoxConstraints(),
@@ -210,7 +210,7 @@ class _TopSlideNotificationState extends State<TopSlideNotification>
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final scheme = Theme.of(context).colorScheme;
-    final accent = isDark ? AppTheme.ponAccent : scheme.primary;
+    final accent = scheme.primary;
 
     // Positioned (not full-screen) so taps outside the banner pass through.
     return Positioned(
@@ -259,9 +259,9 @@ class _TopSlideNotificationState extends State<TopSlideNotification>
                               shape: BoxShape.circle,
                               gradient: LinearGradient(
                                 colors: isDark
-                                    ? const [
-                                        AppTheme.ponAccent,
-                                        AppTheme.ponAccent
+                                    ? [
+                                        AppTheme.accent(context),
+                                        AppTheme.accent(context)
                                       ]
                                     : [scheme.primary, scheme.secondary],
                               ),
@@ -283,11 +283,10 @@ class _TopSlideNotificationState extends State<TopSlideNotification>
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
                                   style: TextStyle(
-                                    fontWeight: FontWeight.bold,
+                                    fontWeight: FontWeight.w600,
                                     fontSize: 14,
-                                    color: isDark
-                                        ? Colors.white
-                                        : Colors.black87,
+                                    color:
+                                        Theme.of(context).colorScheme.onSurface,
                                   ),
                                 ),
                                 const SizedBox(height: 2),
@@ -296,10 +295,8 @@ class _TopSlideNotificationState extends State<TopSlideNotification>
                                   maxLines: 2,
                                   overflow: TextOverflow.ellipsis,
                                   style: TextStyle(
-                                    fontSize: 13,
-                                    color: isDark
-                                        ? Colors.white.withValues(alpha: 0.7)
-                                        : Colors.black54,
+                                    fontSize: 12,
+                                    color: AppTheme.mutedText(context),
                                   ),
                                 ),
                               ],

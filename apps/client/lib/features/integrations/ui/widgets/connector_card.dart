@@ -45,7 +45,7 @@ class ConnectorCard extends StatelessWidget {
                     entry.name,
                     style: TextStyle(
                       color: Theme.of(context).colorScheme.onSurface,
-                      fontWeight: FontWeight.bold,
+                      fontWeight: FontWeight.w600,
                       fontSize: 16,
                     ),
                     overflow: TextOverflow.ellipsis,
@@ -60,7 +60,7 @@ class ConnectorCard extends StatelessWidget {
               entry.description,
               style: TextStyle(
                 color: AppTheme.mutedText(context),
-                fontSize: 13,
+                fontSize: 12,
                 height: 1.3,
               ),
             ),
@@ -146,7 +146,7 @@ class _ConnectorLogo extends StatelessWidget {
         style: TextStyle(
           color: AppTheme.mutedText(context),
           fontSize: 18,
-          fontWeight: FontWeight.bold,
+          fontWeight: FontWeight.w600,
         ),
       );
 }
@@ -164,7 +164,7 @@ class _StatusPill extends StatelessWidget {
       color = AppTheme.onlineGreen;
       label = context.l10n.connectorStatusConnected;
     } else if (available) {
-      color = AppTheme.ponAccent;
+      color = AppTheme.accent(context);
       label = context.l10n.connectorStatusAvailable;
     } else {
       color = AppTheme.offlineGrey;
@@ -181,8 +181,8 @@ class _StatusPill extends StatelessWidget {
         label.toUpperCase(),
         style: TextStyle(
           color: color,
-          fontSize: 9.5,
-          fontWeight: FontWeight.w700,
+          fontSize: 10,
+          fontWeight: FontWeight.w600,
           letterSpacing: 0.6,
         ),
       ),
@@ -199,16 +199,16 @@ class _ScopeChip extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
       decoration: BoxDecoration(
-        color: AppTheme.ponAccent.withValues(alpha: 0.08),
+        color: AppTheme.accent(context).withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(6),
-        border: Border.all(color: AppTheme.ponAccent.withValues(alpha: 0.2)),
+        border: Border.all(color: AppTheme.accent(context).withValues(alpha: 0.2)),
       ),
       child: Text(
         label,
-        style: const TextStyle(
-          color: AppTheme.ponAccent,
+        style: TextStyle(
+          color: AppTheme.accent(context),
           fontSize: 10.5,
-          fontFamily: 'monospace',
+          fontFamily: AppTheme.fontMono,
         ),
       ),
     );
@@ -245,7 +245,7 @@ class _ActionRow extends StatelessWidget {
             style: TextStyle(
               color: AppTheme.mutedText(context),
               fontSize: 11,
-              fontFamily: 'monospace',
+              fontFamily: AppTheme.fontMono,
             ),
             overflow: TextOverflow.ellipsis,
           ),
@@ -262,12 +262,12 @@ class _ActionRow extends StatelessWidget {
             onPressed: onPermissions,
             visualDensity: VisualDensity.compact,
             tooltip: context.l10n.permManage,
-            icon: const Icon(Icons.tune_rounded, color: AppTheme.ponAccent, size: 20),
+            icon: Icon(Icons.tune_rounded, color: AppTheme.accent(context), size: 20),
           ),
           TextButton(
             onPressed: onManage,
             child: Text(context.l10n.connectorManage,
-                style: const TextStyle(color: AppTheme.ponAccent)),
+                style: TextStyle(color: AppTheme.accent(context))),
           ),
         ]
         else if (available)
@@ -279,7 +279,7 @@ class _ActionRow extends StatelessWidget {
                 child: Text(context.l10n.connectorConnect,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(fontSize: 13)),
+                    style: const TextStyle(fontSize: 14)),
               ),
             ),
           )

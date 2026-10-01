@@ -108,6 +108,12 @@ abstract class AppLocalizations {
     Locale('zh')
   ];
 
+  /// Short brand line under the PON logo (same as web auth.tagline)
+  ///
+  /// In en, this message translates to:
+  /// **'Connect & Chat'**
+  String get appTagline;
+
   /// No description provided for @appName.
   ///
   /// In en, this message translates to:
@@ -309,13 +315,13 @@ abstract class AppLocalizations {
   /// No description provided for @actionRetry.
   ///
   /// In en, this message translates to:
-  /// **'RETRY'**
+  /// **'Retry'**
   String get actionRetry;
 
   /// No description provided for @actionSave.
   ///
   /// In en, this message translates to:
-  /// **'SAVE'**
+  /// **'Save'**
   String get actionSave;
 
   /// No description provided for @actionLogout.
@@ -369,7 +375,7 @@ abstract class AppLocalizations {
   /// No description provided for @loginButton.
   ///
   /// In en, this message translates to:
-  /// **'SIGN IN'**
+  /// **'Sign In'**
   String get loginButton;
 
   /// No description provided for @noAccountYet.
@@ -801,7 +807,7 @@ abstract class AppLocalizations {
   /// No description provided for @registerButton.
   ///
   /// In en, this message translates to:
-  /// **'SIGN UP'**
+  /// **'Sign Up'**
   String get registerButton;
 
   /// No description provided for @haveAccount.
@@ -873,7 +879,7 @@ abstract class AppLocalizations {
   /// No description provided for @confirmButton.
   ///
   /// In en, this message translates to:
-  /// **'CONFIRM'**
+  /// **'Confirm'**
   String get confirmButton;
 
   /// No description provided for @resendIn.
@@ -939,7 +945,7 @@ abstract class AppLocalizations {
   /// No description provided for @sendOtpButton.
   ///
   /// In en, this message translates to:
-  /// **'SEND OTP CODE'**
+  /// **'Send OTP Code'**
   String get sendOtpButton;
 
   /// No description provided for @errEmailNotRegistered.
@@ -1077,7 +1083,7 @@ abstract class AppLocalizations {
   /// No description provided for @onboardingChooseTheme.
   ///
   /// In en, this message translates to:
-  /// **'CHOOSE A THEME'**
+  /// **'Choose a Theme'**
   String get onboardingChooseTheme;
 
   /// No description provided for @onboardingChooseSubtitle.
@@ -1107,7 +1113,7 @@ abstract class AppLocalizations {
   /// No description provided for @startExperience.
   ///
   /// In en, this message translates to:
-  /// **'START EXPLORING'**
+  /// **'Start Exploring'**
   String get startExperience;
 
   /// No description provided for @tooltipSettings.
@@ -1215,7 +1221,7 @@ abstract class AppLocalizations {
   /// No description provided for @startConversationButton.
   ///
   /// In en, this message translates to:
-  /// **'START CHATTING'**
+  /// **'Start Chatting'**
   String get startConversationButton;
 
   /// No description provided for @chatDefaultTitle.
@@ -1265,6 +1271,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Requests'**
   String get tabRequests;
+
+  /// Short bottom-bar label for starting a new conversation
+  ///
+  /// In en, this message translates to:
+  /// **'New'**
+  String get tabNew;
 
   /// No description provided for @noRequests.
   ///
@@ -3970,7 +3982,7 @@ abstract class AppLocalizations {
   /// No description provided for @customMcpAuth.
   ///
   /// In en, this message translates to:
-  /// **'AUTH'**
+  /// **'Auth'**
   String get customMcpAuth;
 
   /// No description provided for @customMcpAuthNone.
@@ -5968,13 +5980,13 @@ abstract class AppLocalizations {
   /// No description provided for @hdOn.
   ///
   /// In en, this message translates to:
-  /// **'HD ON'**
+  /// **'HD On'**
   String get hdOn;
 
   /// No description provided for @hdOff.
   ///
   /// In en, this message translates to:
-  /// **'HD OFF'**
+  /// **'HD Off'**
   String get hdOff;
 
   /// No description provided for @videoCannotPlay.

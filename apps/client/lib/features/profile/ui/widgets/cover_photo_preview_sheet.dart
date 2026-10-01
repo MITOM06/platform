@@ -83,7 +83,7 @@ Future<bool?> showCoverPhotoPreviewSheet(BuildContext context, File imageFile) {
                     child: ElevatedButton(
                       onPressed: () => Navigator.of(ctx).pop(true),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: AppTheme.ponAccent,
+                        backgroundColor: AppTheme.accent(context),
                         foregroundColor: Colors.white,
                         padding: const EdgeInsets.symmetric(vertical: 14),
                         shape: RoundedRectangleBorder(

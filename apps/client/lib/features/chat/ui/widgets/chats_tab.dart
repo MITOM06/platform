@@ -30,7 +30,7 @@ class ChatsTab extends ConsumerWidget {
       loading: () => Center(
         child: CircularProgressIndicator(
           valueColor: AlwaysStoppedAnimation<Color>(
-            isDark ? AppTheme.ponAccent : Theme.of(context).colorScheme.primary,
+            isDark ? AppTheme.accent(context) : Theme.of(context).colorScheme.primary,
           ),
         ),
       ),
@@ -57,7 +57,7 @@ class ChatsTab extends ConsumerWidget {
             );
             return RefreshIndicator(
               color: isDark
-                  ? AppTheme.ponAccent
+                  ? AppTheme.accent(context)
                   : Theme.of(context).colorScheme.primary,
               backgroundColor: Theme.of(context).colorScheme.surface,
               onRefresh: () =>
@@ -98,7 +98,7 @@ class _EmptyChats extends StatelessWidget {
                 Icons.chat_bubble_outline_rounded,
                 size: 64,
                 color: isDark
-                    ? AppTheme.ponAccent
+                    ? AppTheme.accent(context)
                     : Theme.of(context)
                         .colorScheme
                         .primary
@@ -111,7 +111,7 @@ class _EmptyChats extends StatelessWidget {
                     : context.l10n.emptyConversations,
                 style: TextStyle(
                   fontSize: 16,
-                  fontWeight: FontWeight.bold,
+                  fontWeight: FontWeight.w600,
                   color: Theme.of(context).colorScheme.onSurface,
                 ),
               ),
@@ -156,7 +156,7 @@ class _ChatsError extends ConsumerWidget {
                 Text(
                   context.l10n.listLoadFailed,
                   style: TextStyle(
-                    fontWeight: FontWeight.bold,
+                    fontWeight: FontWeight.w600,
                     fontSize: 16,
                     color: Theme.of(context).colorScheme.onSurface,
                   ),

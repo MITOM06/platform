@@ -50,7 +50,7 @@ class EditProfileHeader extends StatelessWidget {
                     child: Container(
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(12),
-                        color: AppTheme.ponAccent,
+                        color: AppTheme.accent(context),
                       ),
                       child: Stack(
                         children: [
@@ -103,7 +103,8 @@ class EditProfileHeader extends StatelessWidget {
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
                           border: Border.all(
-                              color: AppTheme.darkBackground, width: 4),
+                              color: Theme.of(context).scaffoldBackgroundColor,
+                              width: 4),
                         ),
                         child: ConversationAvatar(
                           avatarUrl: user?.avatarUrl,
@@ -121,8 +122,8 @@ class EditProfileHeader extends StatelessWidget {
                           onTap: isLoading ? null : onTapAvatar,
                           child: Container(
                             padding: const EdgeInsets.all(6),
-                            decoration: const BoxDecoration(
-                              color: AppTheme.ponAccent,
+                            decoration: BoxDecoration(
+                              color: AppTheme.accent(context),
                               shape: BoxShape.circle,
                             ),
                             child: const Icon(Icons.camera_alt_rounded,

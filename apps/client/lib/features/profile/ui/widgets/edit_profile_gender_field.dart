@@ -21,7 +21,7 @@ class EditProfileGenderField extends StatelessWidget {
       decoration: InputDecoration(
         labelText: context.l10n.profileGender,
         prefixIcon:
-            const Icon(Icons.wc_rounded, color: AppTheme.ponAccent),
+            Icon(Icons.wc_rounded, color: AppTheme.accent(context)),
       ),
       items: [
         DropdownMenuItem(

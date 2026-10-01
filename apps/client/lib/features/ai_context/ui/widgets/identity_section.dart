@@ -40,7 +40,7 @@ class IdentitySection extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(l.aiContextIdentityTitle,
-              style: const TextStyle(fontWeight: FontWeight.bold)),
+              style: const TextStyle(fontWeight: FontWeight.w600)),
           const SizedBox(height: 8),
           row(l.aiContextLabelRole, role ?? l.aiContextRoleUnknown),
           row(

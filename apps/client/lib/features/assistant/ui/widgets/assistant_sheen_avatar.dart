@@ -61,16 +61,16 @@ class _AssistantSheenAvatarState extends State<AssistantSheenAvatar>
     final avatar = Container(
       width: widget.size,
       height: widget.size,
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         shape: BoxShape.circle,
-        color: AppTheme.ponAccent,
+        color: AppTheme.accent(context),
       ),
       child: Center(
         child: Text(
           widget.letter,
           style: const TextStyle(
             color: Colors.white,
-            fontWeight: FontWeight.bold,
+            fontWeight: FontWeight.w600,
           ),
         ),
       ),

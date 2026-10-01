@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/l10n/l10n_ext.dart';
-import '../../../../core/theme/app_theme.dart';
 import '../../domain/chat_provider.dart';
 
 /// Tap-to-retry affordance shown under an outgoing message whose optimistic
@@ -27,11 +26,11 @@ class SendFailedRetry extends ConsumerWidget {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.error_outline_rounded, size: 13, color: AppTheme.darkDanger),
+            Icon(Icons.error_outline_rounded, size: 13, color: Theme.of(context).colorScheme.error),
             const SizedBox(width: 4),
             Text(
               context.l10n.messageSendFailedRetry,
-              style: const TextStyle(fontSize: 10.5, color: AppTheme.darkDanger),
+              style: TextStyle(fontSize: 10.5, color: Theme.of(context).colorScheme.error),
             ),
           ],
         ),

@@ -7,13 +7,14 @@ import '../theme/app_theme.dart';
 class Otp6BoxInput extends StatefulWidget {
   final TextEditingController controller;
   final ValueChanged<String>? onCompleted;
-  final Color accentColor;
+  /// Defaults to the theme accent.
+  final Color? accentColor;
 
   const Otp6BoxInput({
     super.key,
     required this.controller,
     this.onCompleted,
-    this.accentColor = AppTheme.ponAccent,
+    this.accentColor,
   });
 
   @override
@@ -89,7 +90,8 @@ class _Otp6BoxInputState extends State<Otp6BoxInput> {
                       isActive:
                           isFocused && i == text.length && text.length < 6,
                       isFilled: i < text.length,
-                      accentColor: widget.accentColor,
+                      accentColor:
+                          widget.accentColor ?? AppTheme.accent(context),
                     ),
                   );
                 }),
@@ -159,8 +161,8 @@ class _OtpBox extends StatelessWidget {
               char,
               style: TextStyle(
                 fontSize: 24,
-                fontWeight: FontWeight.bold,
-                color: isDark ? Colors.white : Colors.black87,
+                fontWeight: FontWeight.w600,
+                color: Theme.of(context).colorScheme.onSurface,
               ),
             ),
     );

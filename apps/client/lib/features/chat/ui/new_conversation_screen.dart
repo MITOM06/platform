@@ -187,7 +187,7 @@ class _NewConversationScreenState
                         _error!,
                         style: TextStyle(
                           color: Theme.of(context).colorScheme.error,
-                          fontSize: 13,
+                          fontSize: 14,
                           fontWeight: FontWeight.w500,
                         ),
                       ),
@@ -262,7 +262,7 @@ class _NewConversationScreenState
               ),
             ),
             IconButton(
-              icon: const Icon(Icons.add_circle_rounded, color: AppTheme.ponAccent),
+              icon: Icon(Icons.add_circle_rounded, color: AppTheme.accent(context)),
               onPressed: _loading ? null : _addMember,
             ),
           ],
@@ -301,7 +301,7 @@ class _AiBotTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: AppTheme.darkAccentTint.withValues(alpha: 0.7),
+      color: AppTheme.accentTint(context),
       borderRadius: BorderRadius.circular(AppTheme.radiusCard),
       child: InkWell(
         borderRadius: BorderRadius.circular(AppTheme.radiusCard),
@@ -313,9 +313,9 @@ class _AiBotTile extends StatelessWidget {
               Container(
                 width: 44,
                 height: 44,
-                decoration: const BoxDecoration(
+                decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: AppTheme.ponAccent,
+                  color: AppTheme.accent(context),
                 ),
                 child: const Icon(Icons.smart_toy_rounded,
                     color: Colors.white, size: 24),
@@ -332,21 +332,21 @@ class _AiBotTile extends StatelessWidget {
                           style: TextStyle(
                               color: Theme.of(context).colorScheme.onSurface,
                               fontWeight: FontWeight.w600,
-                              fontSize: 15),
+                              fontSize: 16),
                         ),
                         const SizedBox(width: 6),
                         Container(
                           padding: const EdgeInsets.symmetric(
                               horizontal: 6, vertical: 2),
                           decoration: BoxDecoration(
-                            color: AppTheme.ponAccent,
+                            color: AppTheme.accent(context),
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: const Text('AI',
                               style: TextStyle(
                                   fontSize: 9,
                                   color: Colors.white,
-                                  fontWeight: FontWeight.bold)),
+                                  fontWeight: FontWeight.w600)),
                         ),
                       ],
                     ),
@@ -360,8 +360,8 @@ class _AiBotTile extends StatelessWidget {
                   ],
                 ),
               ),
-              const Icon(Icons.arrow_forward_ios_rounded,
-                  color: AppTheme.ponAccent, size: 16),
+              Icon(Icons.arrow_forward_ios_rounded,
+                  color: AppTheme.accent(context), size: 16),
             ],
           ),
         ),

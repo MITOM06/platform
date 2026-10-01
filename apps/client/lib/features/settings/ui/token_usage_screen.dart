@@ -90,8 +90,8 @@ class _TokenUsageScreenState extends ConsumerState<TokenUsageScreen> {
           ),
       builder: (context, child) => Theme(
         data: Theme.of(context).copyWith(
-          colorScheme: const ColorScheme.dark(
-            primary: AppTheme.ponAccent,
+          colorScheme: ColorScheme.dark(
+            primary: AppTheme.accent(context),
             // White, not black: black on burgundy is roughly 2:1.
             onPrimary: Colors.white,
           ),
@@ -160,8 +160,8 @@ class _Body extends StatelessWidget {
           Text(
             context.l10n.tokenUsageDailyChart,
             style: TextStyle(
-              fontSize: 15,
-              fontWeight: FontWeight.bold,
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
               color: Theme.of(context).colorScheme.onSurface,
             ),
           ),
@@ -197,8 +197,8 @@ class _QuotaProgressCard extends StatelessWidget {
     final barColor = fraction >= 0.9
         ? Theme.of(context).colorScheme.error
         : fraction >= 0.7
-            ? const Color(0xFFFFB74D)
-            : AppTheme.ponAccent;
+            ? AppTheme.warning
+            : AppTheme.accent(context);
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -220,7 +220,7 @@ class _QuotaProgressCard extends StatelessWidget {
               Text(
                 context.l10n.tokenUsageQuota,
                 style: TextStyle(
-                  fontSize: 13,
+                  fontSize: 14,
                   fontWeight: FontWeight.w600,
                   color: AppTheme.mutedText(context),
                 ),
@@ -229,8 +229,8 @@ class _QuotaProgressCard extends StatelessWidget {
               Text(
                 '${_fmt(used)} / ${_fmt(limit)}',
                 style: TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.bold,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
                   color: barColor,
                 ),
               ),
@@ -288,7 +288,7 @@ class _SummaryCards extends StatelessWidget {
                 label: context.l10n.tokenUsageThisMonth,
                 value: _fmt(totalInput + totalOutput),
                 icon: Icons.toll_rounded,
-                color: AppTheme.ponAccent,
+                color: AppTheme.accent(context),
                 isDark: isDark,
               ),
             ),
@@ -298,7 +298,7 @@ class _SummaryCards extends StatelessWidget {
                 label: context.l10n.tokenUsageRequests,
                 value: totalRequests.toString(),
                 icon: Icons.question_answer_rounded,
-                color: AppTheme.ponAccent,
+                color: AppTheme.accent(context),
                 isDark: isDark,
               ),
             ),
@@ -309,7 +309,7 @@ class _SummaryCards extends StatelessWidget {
           label: context.l10n.tokenUsageEstCost,
           value: context.l10n.tokenUsageCostUsd(estimatedCost.toStringAsFixed(4)),
           icon: Icons.attach_money_rounded,
-          color: AppTheme.ponAccent,
+          color: AppTheme.accent(context),
           isDark: isDark,
         ),
       ],
@@ -356,7 +356,7 @@ class _StatCard extends StatelessWidget {
             value,
             style: TextStyle(
               fontSize: 22,
-              fontWeight: FontWeight.bold,
+              fontWeight: FontWeight.w600,
               color: Theme.of(context).colorScheme.onSurface,
             ),
           ),

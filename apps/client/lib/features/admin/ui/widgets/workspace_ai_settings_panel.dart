@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../core/utils/app_error.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/l10n/l10n_ext.dart';
@@ -123,7 +124,7 @@ class _WorkspaceAiSettingsPanelState
 
     return wsAsync.when(
       loading: () => const Center(child: CircularProgressIndicator()),
-      error: (e, _) => AiErrorView(message: '$e'),
+      error: (e, _) => AiErrorView(message: friendlyError(e)),
       data: (ws) {
         _seed(ws.aiSettings);
         return ListView(
@@ -206,7 +207,6 @@ class _WorkspaceAiSettingsPanelState
             AiSectionTitle(l10n.adminAiConnectorsSection),
             SwitchListTile(
               contentPadding: EdgeInsets.zero,
-              activeThumbColor: AppTheme.ponAccent,
               title: Text(l10n.adminAiRestrictConnectors,
                   style: TextStyle(color: Theme.of(context).colorScheme.onSurface)),
               subtitle: Text(

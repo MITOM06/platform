@@ -164,7 +164,7 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
                     user.displayName,
                     style: const TextStyle(
                       fontSize: 22,
-                      fontWeight: FontWeight.bold,
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
                   // When the profile owner has blocked the viewer, show only
@@ -182,7 +182,7 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
                               .colorScheme
                               .onSurface
                               .withValues(alpha: 0.6),
-                          fontSize: 13,
+                          fontSize: 12,
                         ),
                       ),
                     ),
@@ -197,7 +197,7 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
                               .colorScheme
                               .onSurface
                               .withValues(alpha: 0.45),
-                          fontSize: 13,
+                          fontSize: 12,
                         ),
                       ),
                     ),
@@ -246,7 +246,7 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
                         const SizedBox(width: 6),
                         Text(
                           DateFormat.yMMMd().format(user.dateOfBirth!.toLocal()),
-                          style: TextStyle(color: AppTheme.mutedText(context), fontSize: 13.5),
+                          style: TextStyle(color: AppTheme.mutedText(context), fontSize: 14),
                         ),
                       ],
                     ),

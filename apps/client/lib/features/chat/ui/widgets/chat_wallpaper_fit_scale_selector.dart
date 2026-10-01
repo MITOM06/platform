@@ -32,7 +32,7 @@ class WallpaperFitScaleSelector extends StatelessWidget {
         const SizedBox(height: 16),
         Text(
           context.l10n.imageFitLabel,
-          style: const TextStyle(color: Colors.white70, fontSize: 13),
+          style: const TextStyle(color: Colors.white70, fontSize: 14),
         ),
         const SizedBox(height: 8),
         _buildFitSelector(context),
@@ -44,12 +44,12 @@ class WallpaperFitScaleSelector extends StatelessWidget {
             children: [
               Text(
                 context.l10n.wallpaperScale,
-                style: const TextStyle(color: Colors.white70, fontSize: 13),
+                style: const TextStyle(color: Colors.white70, fontSize: 14),
               ),
               const Spacer(),
               Text(
                 '$scale%',
-                style: const TextStyle(color: AppTheme.ponAccent, fontSize: 13),
+                style: TextStyle(color: AppTheme.accent(context), fontSize: 14),
               ),
             ],
           ),
@@ -59,7 +59,7 @@ class WallpaperFitScaleSelector extends StatelessWidget {
             max: kWallpaperMaxScale.toDouble(),
             divisions:
                 (kWallpaperMaxScale - kWallpaperMinScale) ~/ kWallpaperScaleStep,
-            activeColor: AppTheme.ponAccent,
+            activeColor: AppTheme.accent(context),
             label: '$scale%',
             onChanged: (v) => onScaleChanged(v.round()),
           ),
@@ -87,18 +87,18 @@ class WallpaperFitScaleSelector extends StatelessWidget {
                   alignment: Alignment.center,
                   decoration: BoxDecoration(
                     color: fit == opt.$1
-                        ? AppTheme.ponAccent.withValues(alpha: 0.18)
+                        ? AppTheme.accent(context).withValues(alpha: 0.18)
                         : Colors.white.withValues(alpha: 0.05),
                     borderRadius: BorderRadius.circular(10),
                     border: Border.all(
-                      color: fit == opt.$1 ? AppTheme.ponAccent : Colors.white12,
+                      color: fit == opt.$1 ? AppTheme.accent(context) : Colors.white12,
                     ),
                   ),
                   child: Text(
                     opt.$2,
                     style: TextStyle(
                       fontSize: 12,
-                      color: fit == opt.$1 ? AppTheme.ponAccent : Colors.white60,
+                      color: fit == opt.$1 ? AppTheme.accent(context) : Colors.white60,
                     ),
                   ),
                 ),

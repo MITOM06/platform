@@ -71,7 +71,7 @@ class _GalleryViewerState extends State<GalleryViewer> {
                   padding: const EdgeInsets.only(right: 8),
                   child: Text(
                     '${_currentIndex + 1} / ${widget.urls.length}',
-                    style: const TextStyle(color: Colors.white70, fontSize: 13),
+                    style: const TextStyle(color: Colors.white70, fontSize: 14),
                   ),
                 ),
               IconButton(

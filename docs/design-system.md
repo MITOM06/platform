@@ -3,7 +3,7 @@
 > **The web app is the source of truth.** Every value below is read from the
 > running web code (`apps/web/app/globals.css`, `apps/web/components/ui/*`,
 > `apps/web/components/chat/*`). Flutter (`apps/client`) implements the same
-> system; where it differs today is listed in [§10 Mobile drift](#10-mobile-drift--what-flutter-must-change).
+> system; what still differs is listed in [§10 Mobile sync status](#10-mobile-sync-status).
 >
 > Last verified against code: **2026-10-01**. How we got to this direction:
 > [`superpowers/UI-REDESIGN-DIRECTION.md`](superpowers/UI-REDESIGN-DIRECTION.md) (history only).
@@ -183,29 +183,49 @@ stagger by 60ms, capped at 6 items. Everything is disabled under
 - Never show ids, URLs, JSON or backend error text
   (`.claude/rules/no-raw-system-data-in-ui.md`).
 
-## 10. Mobile drift — what Flutter must change
+## 10. Mobile sync status
 
-Measured on 2026-10-01 in `apps/client/lib`. Web is the target.
+The Flutter client was brought onto this system on 2026-10-01
+(`feat/mobile-design-sync`). What changed, and what still differs:
 
-| # | Area | Web (target) | Flutter today | Fix |
-|---|---|---|---|---|
-| 1 | **Accent** | `#7A2E3A` light / `#A8475A` dark | A third burgundy, `AppTheme.ponAccent` `#96435B`, used at **356** call sites regardless of mode (2.8:1 on the dark page) | Replace with `Theme.of(context).colorScheme.primary`; keep `ponAccent` only for `const` contexts, then delete it |
-| 2 | **Typeface** | Geist + Geist Mono | No `fontFamily` set — Roboto on Android, SF on iOS; code uses generic `'monospace'` | Bundle Geist / Geist Mono and set them in `ThemeData` |
-| 3 | **Weights** | 600 and 500 carry 83%; 700 is rare | `FontWeight.bold` is the most used weight (104 + 9 `w700` of 214) | Map bold → `w600`; labels → `w500` |
-| 4 | **Control size** | Button 36–40 high, 14px / 500, no letter-spacing | `FilledButton` 16px / 700, letter-spacing 0.5, 18px vertical padding (≈56 high) | 44–48 high (touch minimum), 15–16px / 600, letter-spacing 0 |
-| 5 | **Input** | 1px border; focus = accent border + 3px ring; padding 12 | 1.5px border, 2px on focus, padding 24 × 18 | 1px / accent 1.5px on focus; padding 14 × 12 |
-| 6 | **Text tints** | `muted-foreground` token | Labels, hints and icons use `Colors.white/black.withValues(alpha:)` (67 sites) — cool grey on a warm page | `AppTheme.mutedText(context)` |
-| 7 | **Muted surface** | `secondary`/`muted` `#EFEAE3` / `#2C2521`, `sidebar` `#151110` dark | No token; each widget derives its own shade | Add `lightMuted` / `darkMuted` (+ sidebar) to `AppTheme` and expose via `surfaceContainerHighest` |
-| 8 | **Raw colours** | 0 decorative literals | 98 `Color(0x…)` outside the theme (wallpapers and brand logos are legitimate; the near-black `#121214`, `#09090B`, `#0F0F14` family is not) | Move chrome colours to tokens |
-| 9 | **Title style** | 600, `tracking-tight` | App-bar title 20 / 700, letter-spacing +0.2 | 20 / 600, letter-spacing 0 |
-| 10 | **Type scale** | 10 · 11 · 12 · 14 · 16 · 18 · 20 · 24 · 30 | Extra half sizes: 9.5, 11.5, 12.5, 13, 13.5, 14.5, 15 | Snap to the scale (13 → 14 or 12, 15 → 14 or 16) |
-| 11 | **Bubble width** | max 70% | max 82% | Acceptable on a phone; keep, but document |
-| 12 | **Icons** | lucide | Material Symbols Rounded | Accepted platform mapping (§7) |
+**Now in sync**
 
-Already in sync: surfaces, text and border hexes, destructive, radius scale (10 / 12, sheet 18 vs 16),
-bubble 14 / 4 corners, no shadows, no blur, motion tokens.
+| Area | Before | Now |
+|---|---|---|
+| Accent | A third burgundy `#96435B` at 356 call sites, same in both modes | `AppTheme.accent(context)` → `#7A2E3A` / `#A8475A`; the constant is deleted |
+| Typeface | System font (Roboto / SF), generic `monospace` | Geist + Geist Mono bundled (`assets/fonts`, OFL) |
+| Weights | `bold` was the most used weight | 400 / 500 / 600 only (the PON wordmark is the one exception) |
+| Type scale | 13, 15 and half sizes | 10 · 11 · 12 · 14 · 16 · 18 · 20 · 24 |
+| Buttons | ~56 high, 16 / 700, letter-spacing 0.5, ALL-CAPS labels | 44 high, 14 / 600, sentence case (`Sign In`, `Đăng nhập`) |
+| Outlined / secondary buttons, chips, tabs, switches, snackbars, menus | Material's pill-shaped defaults | Themed in `pon_component_themes.dart` to match `components/ui` |
+| Inputs | 1.5px border, 2px focus, 24 × 18 padding, white/black alpha hints | 1px border, 1.5px accent focus, 14 × 13 padding, `muted-foreground` hints |
+| Colour scheme | Unset roles fell back to Material teal (selected segmented button) | Every role spelled out from the palette |
+| Chat bubbles | Incoming on white, AI on the accent tint, bottom corner flattened, own timestamp unreadable | Incoming and AI on `muted` at 70%, top sender corner 4px, timestamp on-accent at 70% |
+| Inline code | Accent text on the muted-text colour; fell back to a proportional font | Geist Mono on the `muted` fill |
+| Light mode | PON AI tile, meeting-summary card and avatar rings used dark-only constants | Theme-aware resolvers |
+| Errors | About 20 places printed the raw exception (`Bad state: not-authenticated`) | `friendlyError()` everywhere |
+| Help / legal | Questions and section titles in the accent | Foreground text, as on web |
+| Bottom tab bar | 56 high, 10px labels, one label truncated | 64 high, 12 / 500, page colour, hairline (web `MobileTabBar`) |
 
-Items 1–3 are what make the two apps look like different products; do them first.
+`test/core/design_system_sync_test.dart` fails if any of these regress.
+
+**Still different — needs a product decision, not a style fix**
+
+| Area | Web | Mobile | Note |
+|---|---|---|---|
+| Bottom navigation | Chat · Friends · Explore · Settings | Chats · Archived · Requests · New; the rest sits in the header | Information architecture, not styling |
+| Card radius | 16 (`rounded-xl`) | 12 (`AppTheme.radiusCard`) | `PonCard` also draws list rows, where 12 is right |
+| Bubble width | max 70% | max 82% | Deliberate on a narrow screen |
+| Icons | lucide | Material Symbols Rounded | Accepted platform mapping (§7) |
+
+**Not yet reviewed with real data:** conversation list rows, the chat composer and header,
+group info, admin panels, the call screens. Their chrome is on the tokens, but spacing inside
+data-driven lists has only been seen in loading and empty states.
+
+**Reviewing the mobile UI.** `DESIGN_SHOTS=1 flutter test test/design/design_shots_test.dart`
+renders 31 screens in light and dark with the real fonts to `build/design_shots/` — no
+simulator needed. Text that shows as boxes there is text that does not inherit the theme
+font (use `Text.rich`, not `RichText`).
 
 ## 11. Known gaps on web
 

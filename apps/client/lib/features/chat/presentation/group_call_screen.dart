@@ -93,13 +93,13 @@ class _Header extends StatelessWidget {
             style: const TextStyle(
                 color: Colors.white,
                 fontSize: 20,
-                fontWeight: FontWeight.bold),
+                fontWeight: FontWeight.w600),
           ),
           const SizedBox(height: 2),
           Text(
             context.l10n.groupCallParticipants(call.presentCount),
             style: TextStyle(
-                color: Colors.white.withValues(alpha: 0.6), fontSize: 13),
+                color: Colors.white.withValues(alpha: 0.6), fontSize: 12),
           ),
         ],
       ),
@@ -119,19 +119,19 @@ class _NotetakerBanner extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppTheme.darkAccentTint.withValues(alpha: 0.8),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppTheme.ponAccent.withValues(alpha: 0.5)),
+        border: Border.all(color: AppTheme.accent(context).withValues(alpha: 0.5)),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(Icons.auto_awesome_rounded, color: AppTheme.ponAccent, size: 18),
+          Icon(Icons.auto_awesome_rounded, color: AppTheme.accent(context), size: 18),
           const SizedBox(width: 8),
           Flexible(
             child: Text(
               context.l10n.groupCallNotetakerActive,
               style: const TextStyle(
                   color: AppTheme.darkTintFg,
-                  fontSize: 13,
+                  fontSize: 14,
                   fontWeight: FontWeight.w500),
             ),
           ),

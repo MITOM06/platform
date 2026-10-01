@@ -20,7 +20,11 @@ class TokenUsageBarChart extends StatelessWidget {
     return SizedBox(
       height: 160,
       child: CustomPaint(
-        painter: _BarChartPainter(days: days, maxVal: maxVal),
+        painter: _BarChartPainter(
+          days: days,
+          maxVal: maxVal,
+          accent: AppTheme.accent(context),
+        ),
         size: Size.infinite,
       ),
     );
@@ -31,7 +35,13 @@ class _BarChartPainter extends CustomPainter {
   final List<TokenUsageDay> days;
   final int maxVal;
 
-  const _BarChartPainter({required this.days, required this.maxVal});
+  final Color accent;
+
+  const _BarChartPainter({
+    required this.days,
+    required this.maxVal,
+    required this.accent,
+  });
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -43,8 +53,8 @@ class _BarChartPainter extends CustomPainter {
     // One accent, two shades — the input series was still the old brand's
     // neon cyan (#00E5FF), which L1/L2 missed because it was a local literal.
     final inputPaint = Paint()
-      ..color = AppTheme.ponAccent.withValues(alpha: 0.45);
-    final outputPaint = Paint()..color = AppTheme.ponAccent;
+      ..color = accent.withValues(alpha: 0.45);
+    final outputPaint = Paint()..color = accent;
 
     for (int i = 0; i < days.length; i++) {
       final d = days[i];
@@ -69,5 +79,5 @@ class _BarChartPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(_BarChartPainter old) =>
-      old.days != days || old.maxVal != maxVal;
+      old.days != days || old.maxVal != maxVal || old.accent != accent;
 }

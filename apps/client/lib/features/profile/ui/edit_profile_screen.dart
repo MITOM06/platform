@@ -257,9 +257,9 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                   context.l10n.actionSave,
                   style: TextStyle(
                     color:
-                        _hasUnsavedChanges ? AppTheme.ponAccent : AppTheme.mutedText(context),
-                    fontWeight: FontWeight.bold,
-                    fontSize: 15,
+                        _hasUnsavedChanges ? AppTheme.accent(context) : AppTheme.mutedText(context),
+                    fontWeight: FontWeight.w600,
+                    fontSize: 16,
                   ),
                 ),
               ),
@@ -299,7 +299,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                     borderRadius: BorderRadius.circular(10)),
                 tileColor: Theme.of(context).colorScheme.surface,
                 leading:
-                    const Icon(Icons.work_outline_rounded, color: AppTheme.ponAccent),
+                    Icon(Icons.work_outline_rounded, color: AppTheme.accent(context)),
                 title: Text(context.l10n.roleLabel,
                     style:
                         TextStyle(color: AppTheme.mutedText(context), fontSize: 12)),
@@ -331,7 +331,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                     borderRadius: BorderRadius.circular(10)),
                 tileColor: Theme.of(context).colorScheme.surface,
                 leading:
-                    const Icon(Icons.cake_rounded, color: AppTheme.ponAccent),
+                    Icon(Icons.cake_rounded, color: AppTheme.accent(context)),
                 title: Text(context.l10n.dateOfBirth,
                     style: TextStyle(color: Theme.of(context).colorScheme.onSurface)),
                 subtitle: Text(

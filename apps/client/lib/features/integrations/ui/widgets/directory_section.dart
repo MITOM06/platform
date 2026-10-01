@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../core/utils/app_error.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../../core/l10n/l10n_ext.dart';
@@ -77,7 +78,7 @@ class _DirectorySectionState extends ConsumerState<DirectorySection>
       }
     } catch (e) {
       if (mounted) {
-        showErrorSnackBar('$e');
+        showErrorSnackBar(friendlyError(e));
         setState(() => _busySlug = null);
       }
     }
@@ -107,7 +108,7 @@ class _DirectorySectionState extends ConsumerState<DirectorySection>
           TextButton(
             onPressed: () => Navigator.pop(context, ctrl.text.trim()),
             child: Text(l10n.connectorConnect,
-                style: const TextStyle(color: AppTheme.ponAccent)),
+                style: TextStyle(color: AppTheme.accent(context))),
           ),
         ],
       ),
@@ -118,7 +119,7 @@ class _DirectorySectionState extends ConsumerState<DirectorySection>
       await ref.read(directoryProvider.notifier).connectKey(entry.slug, credential);
       if (mounted) showInfoSnackBar(context.l10n.directoryConnected(entry.name));
     } catch (e) {
-      if (mounted) showErrorSnackBar('$e');
+      if (mounted) showErrorSnackBar(friendlyError(e));
     }
   }
 
@@ -150,7 +151,7 @@ class _DirectorySectionState extends ConsumerState<DirectorySection>
     try {
       await ref.read(directoryProvider.notifier).disconnect(conn.id);
     } catch (e) {
-      if (mounted) showErrorSnackBar('$e');
+      if (mounted) showErrorSnackBar(friendlyError(e));
     }
   }
 
@@ -159,7 +160,7 @@ class _DirectorySectionState extends ConsumerState<DirectorySection>
       await ref.read(directoryProvider.notifier).deleteEntry(entry.id);
       if (mounted) showInfoSnackBar(context.l10n.directoryDeleteSuccess);
     } catch (e) {
-      if (mounted) showErrorSnackBar('$e');
+      if (mounted) showErrorSnackBar(friendlyError(e));
     }
   }
 
@@ -190,7 +191,7 @@ class _DirectorySectionState extends ConsumerState<DirectorySection>
                 l10n.sectionDirectoryTitle,
                 style: TextStyle(
                   color: Theme.of(context).colorScheme.onSurface,
-                  fontWeight: FontWeight.bold,
+                  fontWeight: FontWeight.w600,
                   fontSize: 18,
                 ),
               ),
@@ -198,9 +199,9 @@ class _DirectorySectionState extends ConsumerState<DirectorySection>
             if (isAdmin)
               TextButton.icon(
                 onPressed: () => DirectoryAdminSheet.show(context),
-                icon: const Icon(Icons.add_rounded, size: 18, color: AppTheme.ponAccent),
+                icon: Icon(Icons.add_rounded, size: 18, color: AppTheme.accent(context)),
                 label: Text(l10n.directoryAdd,
-                    style: const TextStyle(color: AppTheme.ponAccent)),
+                    style: TextStyle(color: AppTheme.accent(context))),
               ),
           ],
         ),
@@ -208,7 +209,7 @@ class _DirectorySectionState extends ConsumerState<DirectorySection>
           l10n.sectionDirectoryDesc,
           style: TextStyle(
             color: AppTheme.mutedText(context),
-            fontSize: 13,
+            fontSize: 12,
             height: 1.3,
           ),
         ),
@@ -227,7 +228,7 @@ class _DirectorySectionState extends ConsumerState<DirectorySection>
           ),
           error: (e, _) => Padding(
             padding: const EdgeInsets.symmetric(vertical: 16),
-            child: Text('$e',
+            child: Text(friendlyError(e),
                 style: TextStyle(color: AppTheme.mutedText(context))),
           ),
           data: (items) {
