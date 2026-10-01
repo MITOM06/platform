@@ -16,6 +16,7 @@ import 'core/services/notification_service.dart';
 import 'core/theme/app_theme.dart';
 import 'core/utils/global_messenger.dart';
 import 'features/auth/domain/auth_provider.dart';
+import 'features/auth/domain/invitation_preview.dart';
 import 'features/chat/data/stomp_service.dart';
 import 'features/chat/ui/widgets/incoming_group_call_prompt.dart';
 import 'firebase_options.dart';
@@ -205,12 +206,46 @@ class _PlatformAppState extends ConsumerState<PlatformApp>
   }
 
   void _handleDeepLink(Uri uri) {
-    if (uri.scheme == 'platform' && uri.host == 'auth') {
+    if (uri.scheme != 'platform') return;
+    if (uri.host == 'auth') {
+      // OAuth failure (API contract §1.5): platform://auth?error=<CODE>.
+      // Show the localized message for the code — never the raw code — and
+      // stay signed out.
+      final error = uri.queryParameters['error'];
+      if (error != null && error.isNotEmpty) {
+        _showDeepLinkError(error);
+        return;
+      }
       final code = uri.queryParameters['code'];
       if (code != null && code.isNotEmpty) {
         ref.read(authNotifierProvider.notifier).loginWithCode(code);
       }
+    } else if (uri.host == 'invite') {
+      // "Open in the PON app" from the web invite page.
+      final token = uri.queryParameters['token'];
+      if (token != null && isValidInviteToken(token)) {
+        _goWhenReady('/invite/$token');
+      }
     }
+  }
+
+  /// Cold-start deep links can arrive before the router has mounted; retry
+  /// after the first frame so the link is not silently dropped.
+  void _goWhenReady(String location) {
+    final ctx = rootNavigatorKey.currentContext;
+    if (ctx != null) {
+      ctx.go(location);
+      return;
+    }
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      rootNavigatorKey.currentContext?.go(location);
+    });
+  }
+
+  /// Shown as the login screen's persistent banner (mirror of web
+  /// `/login?reason=CODE`) rather than a SnackBar that can expire unseen.
+  void _showDeepLinkError(String code) {
+    ref.read(authNotifierProvider.notifier).showSignInNotice(code);
   }
 
   @override

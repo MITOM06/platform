@@ -8,13 +8,24 @@ import '../../data/models/admin_models.dart';
 import '../../state/admin_providers.dart';
 import '../../state/capabilities_provider.dart';
 import '../../../ai_context/data/ai_context_repository.dart';
+import '../../../auth/domain/auth_provider.dart';
+import '../../../auth/domain/auth_state.dart';
+import '../../../auth/utils/auth_error.dart';
+import 'admin_confirm_dialog.dart';
+import '../../utils/role_guard.dart';
+import 'invite_member_sheet.dart';
+import 'member_edit_dialog.dart';
+import 'member_tile.dart';
+import 'pending_invitations_section.dart';
 
-/// Members admin — list users, edit role + departments. Mirrors the web
-/// `MembersPanel`. Saving revokes the member's sessions (enforced server-side).
+/// Members admin — invite members, list users, edit role + departments,
+/// block/unblock. Mirrors the web `MembersPanel`. Saving or blocking revokes
+/// the member's sessions (enforced server-side).
 class MembersPanel extends ConsumerWidget {
   const MembersPanel({super.key});
 
-  Future<void> _edit(BuildContext context, WidgetRef ref, Member m) async {
+  Future<void> _edit(BuildContext context, WidgetRef ref, Member m,
+      {required bool isSelf}) async {
     final l10n = context.l10n;
     final canRoles = ref.read(hasCapabilityProvider(Cap.manageRoles));
     final canDepts = ref.read(hasCapabilityProvider(Cap.manageDepartments));
@@ -23,103 +34,40 @@ class MembersPanel extends ConsumerWidget {
     final depts = canDepts
         ? ref.read(departmentsProvider).valueOrNull ?? []
         : <Department>[];
+    final callerIsOwner =
+        ref.read(capabilitiesProvider).valueOrNull?.role == 'Owner';
+    final targetIsOwner =
+        roles.any((r) => r.id == m.roleId && r.isOwner);
 
-    String? roleId = m.roleId;
-    final selected = {...m.departmentIds};
-
-    final saved = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => StatefulBuilder(
-        builder: (ctx, setState) => AlertDialog(
-          title: Text(l10n.adminMemberEdit,
-              style: TextStyle(color: Theme.of(context).colorScheme.onSurface)),
-          content: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text('${m.displayName} · ${l10n.adminMemberRevokeNote}',
-                    style: TextStyle(color: AppTheme.mutedText(context), fontSize: 12)),
-                const SizedBox(height: 12),
-                if (canRoles)
-                  DropdownButtonFormField<String?>(
-                    initialValue: roleId,
-                    isExpanded: true,
-                    dropdownColor: Theme.of(context).colorScheme.surface,
-                    style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
-                    decoration: InputDecoration(
-                      labelText: l10n.adminMemberRole,
-                      labelStyle: TextStyle(color: AppTheme.mutedText(context)),
-                    ),
-                    items: [
-                      DropdownMenuItem(
-                          value: null, child: Text(l10n.adminMemberRoleNone)),
-                      ...roles.map((r) => DropdownMenuItem(
-                          value: r.id,
-                          child: Text(r.name,
-                              overflow: TextOverflow.ellipsis))),
-                    ],
-                    onChanged: (v) => setState(() => roleId = v),
-                  ),
-                if (canDepts) ...[
-                  const SizedBox(height: 12),
-                  Align(
-                    alignment: Alignment.centerLeft,
-                    child: Text(l10n.adminMemberDepartments,
-                        style: TextStyle(color: AppTheme.mutedText(context))),
-                  ),
-                  if (depts.isEmpty)
-                    Padding(
-                      padding: const EdgeInsets.only(top: 8),
-                      child: Text(l10n.adminDeptEmpty,
-                          style: TextStyle(color: AppTheme.mutedText(context))),
-                    )
-                  else
-                    ...depts.map(
-                      (d) => CheckboxListTile(
-                        contentPadding: EdgeInsets.zero,
-                        activeColor: AppTheme.ponAccent,
-                        controlAffinity: ListTileControlAffinity.leading,
-                        title: Text(d.name,
-                            style: TextStyle(color: Theme.of(context).colorScheme.onSurface)),
-                        value: selected.contains(d.id),
-                        onChanged: (_) => setState(() {
-                          if (selected.contains(d.id)) {
-                            selected.remove(d.id);
-                          } else {
-                            selected.add(d.id);
-                          }
-                        }),
-                      ),
-                    ),
-                ],
-              ],
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(ctx, false),
-              child: Text(l10n.adminCancel),
-            ),
-            TextButton(
-              onPressed: () => Navigator.pop(ctx, true),
-              child: Text(l10n.adminSave,
-                  style: const TextStyle(color: AppTheme.ponAccent)),
-            ),
-          ],
-        ),
+    final result = await MemberEditDialog.show(
+      context,
+      member: m,
+      roles: roles,
+      departments: depts,
+      canRoles: canRoles,
+      canDepts: canDepts,
+      callerIsOwner: callerIsOwner,
+      roleLock: memberRoleLock(
+        isSelf: isSelf,
+        targetIsOwner: targetIsOwner,
+        callerIsOwner: callerIsOwner,
       ),
     );
 
-    if (saved != true) return;
+    if (result == null) return;
     try {
       await ref.read(membersProvider.notifier).updateMember(m.id, {
-        if (roleId != null) 'roleId': roleId,
-        'departmentIds': selected.toList(),
+        // Locked rows / "no role" never send a role — only departments change.
+        if (result.roleId != null) 'roleId': result.roleId,
+        'departmentIds': result.departmentIds,
       });
       showInfoSnackBar(l10n.adminToastSaved);
-    } catch (_) {
-      showErrorSnackBar(l10n.adminToastError);
+    } catch (e) {
+      // Typed role-guard codes (CANNOT_CHANGE_OWN_ROLE, LAST_OWNER_CANNOT_BE_DEMOTED,
+      // OWNER_ROLE_ASSIGN_FORBIDDEN…) map to their own localized message.
+      showErrorSnackBar(context.mounted
+          ? authErrorMessage(context, e)
+          : l10n.adminToastError);
     }
   }
 
@@ -201,10 +149,28 @@ class MembersPanel extends ConsumerWidget {
     }
   }
 
-  String _initials(String name) {
-    final parts = name.trim().split(' ').where((p) => p.isNotEmpty).toList();
-    if (parts.isEmpty) return '?';
-    return parts.take(2).map((p) => p[0].toUpperCase()).join();
+  Future<void> _toggleBlock(
+      BuildContext context, WidgetRef ref, Member m) async {
+    final l10n = context.l10n;
+    final blocking = !m.isBlocked;
+    final ok = await confirmAdminAction(
+      context,
+      message: blocking
+          ? l10n.adminMemberBlockConfirm(m.displayName)
+          : l10n.adminMemberUnblockConfirm(m.displayName),
+      confirmLabel: blocking ? l10n.adminMemberBlock : l10n.adminMemberUnblock,
+      destructive: blocking,
+    );
+    if (!ok) return;
+    try {
+      await ref
+          .read(membersProvider.notifier)
+          .setStatus(m.id, blocking ? 'blocked' : 'active');
+      showInfoSnackBar(
+          blocking ? l10n.adminMemberBlocked : l10n.adminMemberUnblocked);
+    } catch (e) {
+      if (context.mounted) showErrorSnackBar(authErrorMessage(context, e));
+    }
   }
 
   @override
@@ -213,12 +179,27 @@ class MembersPanel extends ConsumerWidget {
     final async = ref.watch(membersProvider);
     final roles = ref.watch(rolesProvider).valueOrNull ?? [];
     final canManageMembers = ref.watch(hasCapabilityProvider(Cap.manageMembers));
+    final auth = ref.watch(authNotifierProvider).valueOrNull;
+    final selfId = auth is AuthAuthenticated ? auth.user.id : null;
 
     return async.when(
       loading: () => const Center(child: CircularProgressIndicator()),
       error: (e, _) => Center(
-        child: Text('$e',
-            style: TextStyle(color: AppTheme.mutedText(context))),
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(authErrorMessage(context, e),
+                  textAlign: TextAlign.center,
+                  style: TextStyle(color: AppTheme.mutedText(context))),
+              TextButton(
+                onPressed: () => ref.invalidate(membersProvider),
+                child: Text(l10n.inviteRetry),
+              ),
+            ],
+          ),
+        ),
       ),
       data: (members) => ListView.separated(
         padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
@@ -226,62 +207,57 @@ class MembersPanel extends ConsumerWidget {
         separatorBuilder: (_, __) => const SizedBox(height: 10),
         itemBuilder: (_, i) {
           if (i == 0) {
-            return Padding(
-              padding: const EdgeInsets.only(bottom: 4),
-              child: Text(l10n.adminMemberHint,
-                  style: TextStyle(
-                      color: AppTheme.mutedText(context),
-                      fontSize: 13)),
-            );
+            return _MembersHeader(canManageMembers: canManageMembers);
           }
           final m = members[i - 1];
           final roleName =
               roles.where((r) => r.id == m.roleId).map((r) => r.name).firstOrNull;
-          return ListTile(
-            tileColor: Theme.of(context).colorScheme.surface,
-            shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12)),
-            leading: CircleAvatar(
-              backgroundColor: AppTheme.ponAccent.withValues(alpha: 0.15),
-              child: Text(_initials(m.displayName),
-                  style: const TextStyle(
-                      color: AppTheme.ponAccent, fontSize: 13)),
-            ),
-            title: Text(m.displayName,
-                style: TextStyle(color: Theme.of(context).colorScheme.onSurface)),
-            subtitle: Text(m.email,
-                style: TextStyle(color: AppTheme.mutedText(context))),
-            trailing: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                if (roleName != null)
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 8, vertical: 3),
-                    decoration: BoxDecoration(
-                      color: AppTheme.ponAccent.withValues(alpha: 0.15),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Text(roleName,
-                        style: const TextStyle(
-                            color: AppTheme.ponAccent, fontSize: 11)),
-                  ),
-                if (canManageMembers)
-                  IconButton(
-                    icon: Icon(Icons.psychology_rounded,
-                        color: AppTheme.mutedText(context)),
-                    tooltip: l10n.adminEditAiContext,
-                    onPressed: () => _editAiContext(context, ref, m),
-                  ),
-                IconButton(
-                  icon: Icon(Icons.edit_rounded, color: AppTheme.mutedText(context)),
-                  onPressed: () => _edit(context, ref, m),
-                ),
-              ],
-            ),
+          return MemberTile(
+            member: m,
+            roleName: roleName,
+            canManageMembers: canManageMembers,
+            isSelf: m.id == selfId,
+            onEdit: () => _edit(context, ref, m, isSelf: m.id == selfId),
+            onEditAiContext: () => _editAiContext(context, ref, m),
+            onToggleBlock: () => _toggleBlock(context, ref, m),
           );
         },
       ),
+    );
+  }
+}
+
+/// Hint + "Invite member" action + the pending invitations block.
+class _MembersHeader extends StatelessWidget {
+  final bool canManageMembers;
+  const _MembersHeader({required this.canManageMembers});
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Row(
+          children: [
+            Expanded(
+              child: Text(l10n.adminMemberHint,
+                  style: TextStyle(
+                      color: AppTheme.mutedText(context), fontSize: 13)),
+            ),
+            if (canManageMembers)
+              TextButton.icon(
+                onPressed: () => InviteMemberSheet.show(context),
+                icon: const Icon(Icons.person_add_alt_1_rounded, size: 18),
+                label: Text(l10n.adminInviteMember),
+                style: TextButton.styleFrom(
+                    foregroundColor: AppTheme.ponAccent),
+              ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        if (canManageMembers) const PendingInvitationsSection(),
+      ],
     );
   }
 }

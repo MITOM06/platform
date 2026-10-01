@@ -24,9 +24,14 @@ const _expirySkew = Duration(seconds: 60);
 /// this distinction, a flaky refresh on an iOS background→resume cycle wiped
 /// the keychain and logged the user out on next launch.
 class RefreshRejectedException implements Exception {
-  const RefreshRejectedException();
+  const RefreshRejectedException({this.code});
+
+  /// The auth-service business code of the rejection (e.g. `ACCOUNT_BLOCKED`,
+  /// `SESSION_REVOKED`), when the body carried one.
+  final String? code;
+
   @override
-  String toString() => 'RefreshRejectedException';
+  String toString() => 'RefreshRejectedException($code)';
 }
 
 /// Single source of truth for obtaining a *valid* access token.
@@ -65,6 +70,27 @@ class TokenManager {
   /// Guards against concurrent refreshes (e.g. STOMP reconnect + a Dio 401
   /// firing at once) reusing the same rotating refresh token twice.
   Future<String?>? _inFlight;
+
+  /// Code of the last server rejection (`ACCOUNT_BLOCKED`, …), cleared by a
+  /// successful refresh. Read once by the forced-logout path so the login
+  /// screen can say WHY the user was signed out.
+  String? _lastRejectionCode;
+
+  /// Returns and clears the last rejection code (see [_lastRejectionCode]).
+  String? takeRejectionCode() {
+    final code = _lastRejectionCode;
+    _lastRejectionCode = null;
+    return code;
+  }
+
+  /// Records a rejection [code] observed outside a refresh (e.g. any request
+  /// answering 403 `ACCOUNT_BLOCKED`) so the forced logout can explain it.
+  void recordRejection(String? code) => _lastRejectionCode = code;
+
+  /// True when a refresh token + sid are stored (i.e. a session may exist).
+  Future<bool> hasRefreshCredentials() async =>
+      await _storage.read(key: _keyRefreshToken) != null &&
+      await _storage.read(key: _keySid) != null;
 
   /// Returns a valid access token, refreshing first if it is missing,
   /// unparseable, or expiring within [_expirySkew]. Returns `null` only when
@@ -139,13 +165,19 @@ class TokenManager {
       // Persist BOTH — refresh tokens rotate; dropping the new one logs out.
       await _storage.write(key: _keyAccessToken, value: newAccess);
       await _storage.write(key: _keyRefreshToken, value: newRefresh);
+      _lastRejectionCode = null;
       return newAccess;
     } on DioException catch (e) {
       final status = e.response?.statusCode;
       if (status == 401 || status == 403) {
         // Server genuinely rejected the refresh token — the session is dead.
-        debugPrint('[TokenManager] refresh rejected by server ($status)');
-        throw const RefreshRejectedException();
+        final data = e.response?.data;
+        final code = data is Map && data['code'] is String
+            ? data['code'] as String
+            : null;
+        debugPrint('[TokenManager] refresh rejected by server ($status $code)');
+        _lastRejectionCode = code;
+        throw RefreshRejectedException(code: code);
       }
       // Transient: no response (network down / resume race), timeout, or 5xx.
       // Keep the session — do NOT wipe credentials over a flaky network.

@@ -274,6 +274,9 @@ class Member {
   final String? roleId;
   final List<String> departmentIds;
 
+  /// `active` | `blocked` | `pending` (legacy). Missing → `active`.
+  final String status;
+
   const Member({
     required this.id,
     required this.displayName,
@@ -281,7 +284,10 @@ class Member {
     this.avatarUrl,
     this.roleId,
     required this.departmentIds,
+    this.status = 'active',
   });
+
+  bool get isBlocked => status == 'blocked';
 
   factory Member.fromJson(Map<String, dynamic> json) => Member(
         id: json['_id'] as String? ?? json['id'] as String,
@@ -290,6 +296,7 @@ class Member {
         avatarUrl: json['avatarUrl'] as String?,
         roleId: json['roleId']?.toString(),
         departmentIds: _stringList(json['departmentIds']),
+        status: json['status'] as String? ?? 'active',
       );
 }
 

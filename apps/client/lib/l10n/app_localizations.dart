@@ -372,18 +372,6 @@ abstract class AppLocalizations {
   /// **'SIGN IN'**
   String get loginButton;
 
-  /// No description provided for @noAccountYet.
-  ///
-  /// In en, this message translates to:
-  /// **'Don\'t have an account? '**
-  String get noAccountYet;
-
-  /// No description provided for @registerNow.
-  ///
-  /// In en, this message translates to:
-  /// **'Sign up now'**
-  String get registerNow;
-
   /// No description provided for @valEmailRequired.
   ///
   /// In en, this message translates to:
@@ -774,12 +762,6 @@ abstract class AppLocalizations {
   /// **'Sign in failed, please try again'**
   String get errLoginFailed;
 
-  /// No description provided for @registerTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Create Account'**
-  String get registerTitle;
-
   /// No description provided for @welcomeToApp.
   ///
   /// In en, this message translates to:
@@ -797,24 +779,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Confirm password'**
   String get fieldConfirmPassword;
-
-  /// No description provided for @registerButton.
-  ///
-  /// In en, this message translates to:
-  /// **'SIGN UP'**
-  String get registerButton;
-
-  /// No description provided for @haveAccount.
-  ///
-  /// In en, this message translates to:
-  /// **'Already have an account? '**
-  String get haveAccount;
-
-  /// No description provided for @loginLink.
-  ///
-  /// In en, this message translates to:
-  /// **'Sign in'**
-  String get loginLink;
 
   /// No description provided for @valNameRequired.
   ///
@@ -839,12 +803,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'This email is already registered'**
   String get errEmailExists;
-
-  /// No description provided for @errRegisterFailed.
-  ///
-  /// In en, this message translates to:
-  /// **'Sign up failed, please try again'**
-  String get errRegisterFailed;
 
   /// No description provided for @verifyOtpTitle.
   ///
@@ -941,12 +899,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'SEND OTP CODE'**
   String get sendOtpButton;
-
-  /// No description provided for @errEmailNotRegistered.
-  ///
-  /// In en, this message translates to:
-  /// **'This email is not registered'**
-  String get errEmailNotRegistered;
 
   /// No description provided for @errSendRequestFailed.
   ///
@@ -3270,12 +3222,6 @@ abstract class AppLocalizations {
   /// **'Sign in with Google'**
   String get loginWithGoogle;
 
-  /// No description provided for @registerWithGoogle.
-  ///
-  /// In en, this message translates to:
-  /// **'Sign up with Google'**
-  String get registerWithGoogle;
-
   /// No description provided for @orContinueWith.
   ///
   /// In en, this message translates to:
@@ -3303,7 +3249,7 @@ abstract class AppLocalizations {
   /// No description provided for @valMustAgreeTerms.
   ///
   /// In en, this message translates to:
-  /// **'You must agree to the Terms of Service to register'**
+  /// **'You must agree to the Terms of Service to continue'**
   String get valMustAgreeTerms;
 
   /// No description provided for @youColon.
@@ -3697,12 +3643,6 @@ abstract class AppLocalizations {
   /// **'Password updated successfully. Please log in again.'**
   String get authMsgPasswordUpdated;
 
-  /// No description provided for @authMsgRegisterSuccess.
-  ///
-  /// In en, this message translates to:
-  /// **'Registration successful. OTP has been sent to your email.'**
-  String get authMsgRegisterSuccess;
-
   /// No description provided for @authMsgAccountUnverifiedOtpSent.
   ///
   /// In en, this message translates to:
@@ -3745,23 +3685,11 @@ abstract class AppLocalizations {
   /// **'We couldn\'t send the verification code right now. Please try again in a moment.'**
   String get authErrOtpSendFailed;
 
-  /// No description provided for @authErrEmailDomainInvalid.
-  ///
-  /// In en, this message translates to:
-  /// **'Email domain does not exist or has no MX records.'**
-  String get authErrEmailDomainInvalid;
-
   /// No description provided for @authErrEmailNotFound.
   ///
   /// In en, this message translates to:
   /// **'Email does not exist in the system.'**
   String get authErrEmailNotFound;
-
-  /// No description provided for @authErrEmailInUse.
-  ///
-  /// In en, this message translates to:
-  /// **'This email is already in use.'**
-  String get authErrEmailInUse;
 
   /// No description provided for @authErrValEmailInvalid.
   ///
@@ -4710,6 +4638,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No role'**
   String get adminMemberRoleNone;
+
+  /// No description provided for @adminMemberRoleLockedSelf.
+  ///
+  /// In en, this message translates to:
+  /// **'You can\'t change your own role.'**
+  String get adminMemberRoleLockedSelf;
+
+  /// No description provided for @adminMemberRoleLockedOwner.
+  ///
+  /// In en, this message translates to:
+  /// **'Only an Owner can change an Owner\'s role.'**
+  String get adminMemberRoleLockedOwner;
 
   /// No description provided for @adminMemberDepartments.
   ///
@@ -6240,6 +6180,462 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Delete entry'**
   String get adminDeleteEntry;
+
+  /// No description provided for @loginInviteOnlyHint.
+  ///
+  /// In en, this message translates to:
+  /// **'PON is invite-only. Ask your administrator for an invitation.'**
+  String get loginInviteOnlyHint;
+
+  /// No description provided for @loginHaveInviteLink.
+  ///
+  /// In en, this message translates to:
+  /// **'Have an invitation link?'**
+  String get loginHaveInviteLink;
+
+  /// No description provided for @inviteLinkDialogTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Open an invitation'**
+  String get inviteLinkDialogTitle;
+
+  /// No description provided for @inviteLinkDialogHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Paste the invitation link from your email'**
+  String get inviteLinkDialogHint;
+
+  /// No description provided for @inviteLinkInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'This doesn\'t look like a valid invitation link.'**
+  String get inviteLinkInvalid;
+
+  /// No description provided for @inviteOpen.
+  ///
+  /// In en, this message translates to:
+  /// **'Open'**
+  String get inviteOpen;
+
+  /// No description provided for @inviteCancel.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get inviteCancel;
+
+  /// No description provided for @inviteRetry.
+  ///
+  /// In en, this message translates to:
+  /// **'Try again'**
+  String get inviteRetry;
+
+  /// No description provided for @inviteTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'re invited'**
+  String get inviteTitle;
+
+  /// No description provided for @inviteSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'{inviter} invited you to join {workspace} as {role}'**
+  String inviteSubtitle(String inviter, String workspace, String role);
+
+  /// No description provided for @inviteSubtitleNoRole.
+  ///
+  /// In en, this message translates to:
+  /// **'{inviter} invited you to join {workspace}'**
+  String inviteSubtitleNoRole(String inviter, String workspace);
+
+  /// No description provided for @inviteContinueWithGoogle.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue with Google'**
+  String get inviteContinueWithGoogle;
+
+  /// No description provided for @inviteGoogleHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Use the Google account for {email}'**
+  String inviteGoogleHint(String email);
+
+  /// No description provided for @inviteOrSetPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'or set a password'**
+  String get inviteOrSetPassword;
+
+  /// No description provided for @inviteSubmit.
+  ///
+  /// In en, this message translates to:
+  /// **'Create account'**
+  String get inviteSubmit;
+
+  /// No description provided for @inviteInvalidTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid invitation'**
+  String get inviteInvalidTitle;
+
+  /// No description provided for @inviteInvalidBody.
+  ///
+  /// In en, this message translates to:
+  /// **'This invitation link is invalid. Check the link in your email or ask your administrator for a new one.'**
+  String get inviteInvalidBody;
+
+  /// No description provided for @inviteExpiredTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Invitation expired'**
+  String get inviteExpiredTitle;
+
+  /// No description provided for @inviteExpiredBody.
+  ///
+  /// In en, this message translates to:
+  /// **'This invitation has expired. Ask your administrator to resend it.'**
+  String get inviteExpiredBody;
+
+  /// No description provided for @inviteRevokedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Invitation revoked'**
+  String get inviteRevokedTitle;
+
+  /// No description provided for @inviteRevokedBody.
+  ///
+  /// In en, this message translates to:
+  /// **'This invitation was revoked by your administrator.'**
+  String get inviteRevokedBody;
+
+  /// No description provided for @inviteAcceptedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Already accepted'**
+  String get inviteAcceptedTitle;
+
+  /// No description provided for @inviteAcceptedBody.
+  ///
+  /// In en, this message translates to:
+  /// **'This invitation was already accepted. Sign in to continue.'**
+  String get inviteAcceptedBody;
+
+  /// No description provided for @inviteLoadFailedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t load the invitation'**
+  String get inviteLoadFailedTitle;
+
+  /// No description provided for @inviteBackToLogin.
+  ///
+  /// In en, this message translates to:
+  /// **'Back to sign in'**
+  String get inviteBackToLogin;
+
+  /// No description provided for @authMsgInvitationAccepted.
+  ///
+  /// In en, this message translates to:
+  /// **'Invitation accepted. Welcome!'**
+  String get authMsgInvitationAccepted;
+
+  /// No description provided for @authErrAccountNotProvisioned.
+  ///
+  /// In en, this message translates to:
+  /// **'The account you chose doesn\'t have access to PON yet. Try another account, or ask your administrator for an invitation.'**
+  String get authErrAccountNotProvisioned;
+
+  /// No description provided for @authErrAccountBlocked.
+  ///
+  /// In en, this message translates to:
+  /// **'This account has been blocked. Contact your administrator.'**
+  String get authErrAccountBlocked;
+
+  /// No description provided for @authErrInvitationPending.
+  ///
+  /// In en, this message translates to:
+  /// **'You have a pending invitation. Open the invitation link in your email to finish setting up.'**
+  String get authErrInvitationPending;
+
+  /// No description provided for @authErrInvitationInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'This invitation link is invalid.'**
+  String get authErrInvitationInvalid;
+
+  /// No description provided for @authErrInvitationExpired.
+  ///
+  /// In en, this message translates to:
+  /// **'This invitation has expired. Ask your administrator to resend it.'**
+  String get authErrInvitationExpired;
+
+  /// No description provided for @authErrInvitationRevoked.
+  ///
+  /// In en, this message translates to:
+  /// **'This invitation was revoked.'**
+  String get authErrInvitationRevoked;
+
+  /// No description provided for @authErrInvitationAlreadyAccepted.
+  ///
+  /// In en, this message translates to:
+  /// **'This invitation was already accepted. Please sign in.'**
+  String get authErrInvitationAlreadyAccepted;
+
+  /// No description provided for @authErrInvitationEmailMismatch.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in with the Google account that matches the invited email.'**
+  String get authErrInvitationEmailMismatch;
+
+  /// No description provided for @authErrInvitationAlreadyPending.
+  ///
+  /// In en, this message translates to:
+  /// **'This email already has a pending invitation.'**
+  String get authErrInvitationAlreadyPending;
+
+  /// No description provided for @authErrInvitationNotPending.
+  ///
+  /// In en, this message translates to:
+  /// **'This invitation is no longer pending.'**
+  String get authErrInvitationNotPending;
+
+  /// No description provided for @authErrInvitationNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'Invitation not found.'**
+  String get authErrInvitationNotFound;
+
+  /// No description provided for @authErrInvitationResendCooldown.
+  ///
+  /// In en, this message translates to:
+  /// **'Please wait {ttl}s before resending.'**
+  String authErrInvitationResendCooldown(int ttl);
+
+  /// No description provided for @authErrMemberAlreadyExists.
+  ///
+  /// In en, this message translates to:
+  /// **'A member with this email already exists.'**
+  String get authErrMemberAlreadyExists;
+
+  /// No description provided for @authErrMemberNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'Member not found.'**
+  String get authErrMemberNotFound;
+
+  /// No description provided for @authErrRoleNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'Role not found.'**
+  String get authErrRoleNotFound;
+
+  /// No description provided for @authErrDepartmentNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'Department not found.'**
+  String get authErrDepartmentNotFound;
+
+  /// No description provided for @authErrOwnerRoleAssignForbidden.
+  ///
+  /// In en, this message translates to:
+  /// **'Only an Owner can grant the Owner role or change an Owner\'s role.'**
+  String get authErrOwnerRoleAssignForbidden;
+
+  /// No description provided for @authErrCannotChangeOwnRole.
+  ///
+  /// In en, this message translates to:
+  /// **'You can\'t change your own role.'**
+  String get authErrCannotChangeOwnRole;
+
+  /// No description provided for @authErrLastOwnerCannotBeDemoted.
+  ///
+  /// In en, this message translates to:
+  /// **'The last Owner can\'t be demoted. Make another member Owner first.'**
+  String get authErrLastOwnerCannotBeDemoted;
+
+  /// No description provided for @authErrCannotBlockSelf.
+  ///
+  /// In en, this message translates to:
+  /// **'You cannot block your own account.'**
+  String get authErrCannotBlockSelf;
+
+  /// No description provided for @authErrOwnerBlockForbidden.
+  ///
+  /// In en, this message translates to:
+  /// **'Only an Owner can block another Owner.'**
+  String get authErrOwnerBlockForbidden;
+
+  /// No description provided for @authErrLastOwnerCannotBeBlocked.
+  ///
+  /// In en, this message translates to:
+  /// **'The last Owner cannot be blocked.'**
+  String get authErrLastOwnerCannotBeBlocked;
+
+  /// No description provided for @authErrSsoDisabled.
+  ///
+  /// In en, this message translates to:
+  /// **'Single sign-on is disabled.'**
+  String get authErrSsoDisabled;
+
+  /// No description provided for @authErrSsoDomainNotAllowed.
+  ///
+  /// In en, this message translates to:
+  /// **'Your email domain is not allowed for SSO.'**
+  String get authErrSsoDomainNotAllowed;
+
+  /// No description provided for @adminInviteMember.
+  ///
+  /// In en, this message translates to:
+  /// **'Invite member'**
+  String get adminInviteMember;
+
+  /// No description provided for @adminInviteTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Invite a member'**
+  String get adminInviteTitle;
+
+  /// No description provided for @adminInviteEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'Email address'**
+  String get adminInviteEmail;
+
+  /// No description provided for @adminInviteRole.
+  ///
+  /// In en, this message translates to:
+  /// **'Role'**
+  String get adminInviteRole;
+
+  /// No description provided for @adminInviteDepartments.
+  ///
+  /// In en, this message translates to:
+  /// **'Departments'**
+  String get adminInviteDepartments;
+
+  /// No description provided for @adminInviteSubmit.
+  ///
+  /// In en, this message translates to:
+  /// **'Send invitation'**
+  String get adminInviteSubmit;
+
+  /// No description provided for @adminInviteSent.
+  ///
+  /// In en, this message translates to:
+  /// **'Invitation sent'**
+  String get adminInviteSent;
+
+  /// No description provided for @adminInviteEmailFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Invitation created, but the email could not be sent. Check the mail settings and resend it.'**
+  String get adminInviteEmailFailed;
+
+  /// No description provided for @adminPendingInvitations.
+  ///
+  /// In en, this message translates to:
+  /// **'Pending invitations'**
+  String get adminPendingInvitations;
+
+  /// No description provided for @adminInviteStatusPending.
+  ///
+  /// In en, this message translates to:
+  /// **'Pending'**
+  String get adminInviteStatusPending;
+
+  /// No description provided for @adminInviteStatusExpired.
+  ///
+  /// In en, this message translates to:
+  /// **'Expired'**
+  String get adminInviteStatusExpired;
+
+  /// No description provided for @adminInviteExpires.
+  ///
+  /// In en, this message translates to:
+  /// **'Expires {date}'**
+  String adminInviteExpires(String date);
+
+  /// No description provided for @adminInviteInvitedBy.
+  ///
+  /// In en, this message translates to:
+  /// **'Invited by {name}'**
+  String adminInviteInvitedBy(String name);
+
+  /// No description provided for @adminInviteResend.
+  ///
+  /// In en, this message translates to:
+  /// **'Resend'**
+  String get adminInviteResend;
+
+  /// No description provided for @adminInviteResent.
+  ///
+  /// In en, this message translates to:
+  /// **'Invitation resent'**
+  String get adminInviteResent;
+
+  /// No description provided for @adminInviteRevoke.
+  ///
+  /// In en, this message translates to:
+  /// **'Revoke'**
+  String get adminInviteRevoke;
+
+  /// No description provided for @adminInviteRevokeConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Revoke the invitation for {email}? The link will stop working.'**
+  String adminInviteRevokeConfirm(String email);
+
+  /// No description provided for @adminInviteRevoked.
+  ///
+  /// In en, this message translates to:
+  /// **'Invitation revoked'**
+  String get adminInviteRevoked;
+
+  /// No description provided for @adminMemberStatusBlocked.
+  ///
+  /// In en, this message translates to:
+  /// **'Blocked'**
+  String get adminMemberStatusBlocked;
+
+  /// No description provided for @adminMemberBlock.
+  ///
+  /// In en, this message translates to:
+  /// **'Block'**
+  String get adminMemberBlock;
+
+  /// No description provided for @adminMemberUnblock.
+  ///
+  /// In en, this message translates to:
+  /// **'Unblock'**
+  String get adminMemberUnblock;
+
+  /// No description provided for @adminMemberBlockConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Block {name}? They will be signed out everywhere.'**
+  String adminMemberBlockConfirm(String name);
+
+  /// No description provided for @adminMemberUnblockConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Unblock {name}? They will be able to sign in again.'**
+  String adminMemberUnblockConfirm(String name);
+
+  /// No description provided for @adminMemberBlocked.
+  ///
+  /// In en, this message translates to:
+  /// **'Member blocked'**
+  String get adminMemberBlocked;
+
+  /// No description provided for @adminMemberUnblocked.
+  ///
+  /// In en, this message translates to:
+  /// **'Member unblocked'**
+  String get adminMemberUnblocked;
+
+  /// No description provided for @adminLoadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t load this section. Please try again.'**
+  String get adminLoadFailed;
 }
 
 class _AppLocalizationsDelegate

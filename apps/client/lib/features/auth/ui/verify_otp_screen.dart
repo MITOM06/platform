@@ -132,10 +132,9 @@ class _VerifyOtpScreenState extends ConsumerState<VerifyOtpScreen> {
         title: Text(context.l10n.verifyOtpTitle),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
-          // Register verification came from /register; the forgot-password flow
-          // came from /login. Send the user back to where they actually were.
-          onPressed: () =>
-              context.go(widget.isForgotPassword ? '/login' : '/register'),
+          // Both remaining entry points (forgot-password and the legacy
+          // unverified-login OTP) start from /login — self sign-up is gone.
+          onPressed: () => context.go('/login'),
         ),
       ),
       // No decorative accent orbs: the accent means "primary action"

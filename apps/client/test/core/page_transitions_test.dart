@@ -24,6 +24,9 @@ Widget _page(String label, VoidCallback? onTap) => Scaffold(
       ),
     );
 
+/// `/invite/<token>` is matched by prefix in `_flowSteps` (one step off login).
+const _invitePath = '/invite/tok_0123456789abcdefghij';
+
 void main() {
   // Each test drives a tiny router that mirrors how app_router.dart is wired:
   // direction resolved in `redirect`, imperative pushes/pops via the observer.
@@ -138,25 +141,25 @@ void main() {
         GoRoute(
           path: '/login',
           pageBuilder: (context, state) =>
-              slidePage(state, _page('login', () => router.go('/register'))),
+              slidePage(state, _page('login', () => router.go(_invitePath))),
         ),
         GoRoute(
-          path: '/register',
+          path: '/invite/:token',
           pageBuilder: (context, state) =>
-              slidePage(state, _page('register', () => router.go('/login'))),
+              slidePage(state, _page('invite', () => router.go('/login'))),
         ),
       ],
     );
     await pumpApp(tester, router);
 
-    router.go('/register');
+    router.go(_invitePath);
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 60));
 
     expect(PageNavDirection.isBack, isFalse);
-    // Register comes from the right, login drifts left — a `go()` chain has to
+    // The invite page comes from the right, login drifts left — a `go()` chain has to
     // read as forward motion even though nothing was pushed onto the stack.
-    expect(_dxFraction(tester, 'register'), greaterThan(0.05));
+    expect(_dxFraction(tester, 'invite'), greaterThan(0.05));
     expect(_dxFraction(tester, 'login'), lessThan(0));
     await tester.pumpAndSettle();
 
@@ -167,7 +170,7 @@ void main() {
 
     expect(PageNavDirection.isBack, isTrue);
     expect(_dxFraction(tester, 'login'), lessThan(-0.05));
-    expect(_dxFraction(tester, 'register'), greaterThan(0.05));
+    expect(_dxFraction(tester, 'invite'), greaterThan(0.05));
 
     await tester.pumpAndSettle();
     expect(_dxFraction(tester, 'login'), 0);
