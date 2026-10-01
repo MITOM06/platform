@@ -280,6 +280,8 @@ jobs:
           env_vars: |
             NODE_ENV=production
             MONGO_URI=${{ secrets.MONGODB_URI }}
+            # Access-token session check (sess:{sid}) — same Redis as auth-service.
+            REDIS_URL=${{ secrets.REDIS_URL }}
             CONNECTOR_VAULT_KEY=${{ secrets.CONNECTOR_VAULT_KEY }}
             INTERNAL_API_KEY=${{ secrets.INTERNAL_API_KEY }}
             JWT_ACCESS_SECRET=${{ secrets.JWT_ACCESS_SECRET }}
