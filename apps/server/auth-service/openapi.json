@@ -71,6 +71,26 @@
         ]
       }
     },
+    "/api/users/me/phone/verify": {
+      "post": {
+        "operationId": "UsersController_verifyFirebasePhoneToken",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Verify Firebase Phone Auth token and save phone number",
+        "tags": [
+          "users"
+        ]
+      }
+    },
     "/api/users/device-tokens": {
       "post": {
         "operationId": "UsersController_addDeviceToken",
@@ -114,7 +134,7 @@
             "bearer": []
           }
         ],
-        "summary": "Search users by display name or email",
+        "summary": "Search users by display name, email, or exact phone",
         "tags": [
           "users"
         ]
@@ -218,6 +238,36 @@
             "bearer": []
           }
         ],
+        "tags": [
+          "users"
+        ]
+      }
+    },
+    "/api/users": {
+      "get": {
+        "operationId": "UsersController_findManyByIds",
+        "parameters": [
+          {
+            "name": "ids",
+            "required": true,
+            "in": "query",
+            "description": "Comma-separated user ids (max 100)",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Batch-fetch user profiles by id",
         "tags": [
           "users"
         ]
@@ -404,6 +454,95 @@
         ]
       }
     },
+    "/api/notifications": {
+      "get": {
+        "operationId": "NotificationsController_list",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List the caller's most recent 50 notifications",
+        "tags": [
+          "notifications"
+        ]
+      }
+    },
+    "/api/notifications/unread-count": {
+      "get": {
+        "operationId": "NotificationsController_unreadCount",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Count of unread notifications",
+        "tags": [
+          "notifications"
+        ]
+      }
+    },
+    "/api/notifications/{id}/read": {
+      "post": {
+        "operationId": "NotificationsController_markRead",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Mark a single notification as read",
+        "tags": [
+          "notifications"
+        ]
+      }
+    },
+    "/api/notifications/read-all": {
+      "post": {
+        "operationId": "NotificationsController_markAllRead",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Mark all unread notifications as read",
+        "tags": [
+          "notifications"
+        ]
+      }
+    },
     "/auth/google": {
       "get": {
         "operationId": "AuthController_google",
@@ -434,39 +573,46 @@
         ]
       }
     },
-    "/auth/twitter": {
-      "get": {
-        "operationId": "AuthController_twitter",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "summary": "Start Twitter/X OAuth flow",
-        "tags": [
-          "auth"
-        ]
-      }
-    },
-    "/auth/twitter/callback": {
-      "get": {
-        "operationId": "AuthController_twitterCallback",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "summary": "Twitter/X OAuth callback (redirects back to client)",
-        "tags": [
-          "auth"
-        ]
-      }
-    },
     "/auth/social/{provider}/init": {
       "get": {
         "operationId": "AuthController_initSocialLogin",
+        "parameters": [
+          {
+            "name": "platform",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "enum": [
+                "web",
+                "mobile"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "name": "invite",
+            "required": false,
+            "in": "query",
+            "description": "Invitation token: accept the invitation with Google",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Persist platform then redirect into the provider OAuth flow",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/auth/oidc/login": {
+      "get": {
+        "operationId": "AuthController_oidcLogin",
         "parameters": [
           {
             "name": "platform",
@@ -482,7 +628,37 @@
             "description": ""
           }
         },
-        "summary": "Persist platform then redirect into the provider OAuth flow",
+        "summary": "Begin OIDC SSO (redirects to the IdP)",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/auth/oidc/callback": {
+      "get": {
+        "operationId": "AuthController_oidcCallback",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "OIDC callback (redirects back to client)",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/auth/sso/info": {
+      "get": {
+        "operationId": "AuthController_ssoInfo",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Public: whether the SSO button should show",
         "tags": [
           "auth"
         ]
@@ -541,38 +717,19 @@
         ]
       }
     },
-    "/auth/register": {
-      "post": {
-        "operationId": "AuthController_register",
-        "parameters": [],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/RegisterDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": "Account created"
-          },
-          "409": {
-            "description": "Email already in use"
-          }
-        },
-        "summary": "Register a new account",
-        "tags": [
-          "auth"
-        ]
-      }
-    },
     "/auth/login": {
       "post": {
         "operationId": "AuthController_login",
-        "parameters": [],
+        "parameters": [
+          {
+            "name": "accept-language",
+            "required": true,
+            "in": "header",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -620,7 +777,16 @@
     "/auth/forgot-password": {
       "post": {
         "operationId": "AuthController_forgot",
-        "parameters": [],
+        "parameters": [
+          {
+            "name": "accept-language",
+            "required": true,
+            "in": "header",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -670,7 +836,16 @@
     "/auth/resend-otp": {
       "post": {
         "operationId": "AuthController_resend",
-        "parameters": [],
+        "parameters": [
+          {
+            "name": "accept-language",
+            "required": true,
+            "in": "header",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -714,6 +889,898 @@
         "summary": "Reset password using a verified OTP",
         "tags": [
           "auth"
+        ]
+      }
+    },
+    "/auth/invitations/{token}": {
+      "get": {
+        "operationId": "InvitationAcceptController_preview",
+        "parameters": [
+          {
+            "name": "token",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InvitationPreviewDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Preview an invitation (accept page)",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/auth/invitations/{token}/accept-password": {
+      "post": {
+        "operationId": "InvitationAcceptController_acceptPassword",
+        "parameters": [
+          {
+            "name": "token",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AcceptInvitationPasswordDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LoginTokensResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Accept an invitation by choosing a display name + password",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/admin/invitations": {
+      "post": {
+        "operationId": "AdminInvitationsController_create",
+        "parameters": [
+          {
+            "name": "accept-language",
+            "required": true,
+            "in": "header",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateInvitationDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InvitationMutationResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Invite an email (sends the invitation email)",
+        "tags": [
+          "admin"
+        ]
+      },
+      "get": {
+        "operationId": "AdminInvitationsController_list",
+        "parameters": [
+          {
+            "name": "status",
+            "required": false,
+            "in": "query",
+            "description": "Default (omitted) = pending + expired",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "pending",
+                "expired",
+                "accepted",
+                "revoked",
+                "all"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/InvitationViewDto"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List invitations (default: pending + expired)",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/admin/invitations/{id}/resend": {
+      "post": {
+        "operationId": "AdminInvitationsController_resend",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InvitationMutationResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Rotate the token, reset expiry and resend the email",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/admin/invitations/{id}": {
+      "delete": {
+        "operationId": "AdminInvitationsController_revoke",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Revoke a pending/expired invitation",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/me/capabilities": {
+      "get": {
+        "operationId": "MeController_capabilities",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Resolved role/permissions/departments + workspace config",
+        "tags": [
+          "me"
+        ]
+      }
+    },
+    "/admin/departments": {
+      "get": {
+        "operationId": "AdminController_listDepartments",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List departments",
+        "tags": [
+          "admin"
+        ]
+      },
+      "post": {
+        "operationId": "AdminController_createDepartment",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateDepartmentDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/admin/departments/{id}": {
+      "patch": {
+        "operationId": "AdminController_updateDepartment",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateDepartmentDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "admin"
+        ]
+      },
+      "delete": {
+        "operationId": "AdminController_deleteDepartment",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/admin/members": {
+      "get": {
+        "operationId": "AdminController_listMembers",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/MemberDto"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List members",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/admin/members/{id}": {
+      "patch": {
+        "operationId": "AdminController_updateMember",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateMemberDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Assign role/departments; revokes user sessions",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/admin/members/{id}/status": {
+      "patch": {
+        "operationId": "AdminController_setMemberStatus",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateMemberStatusDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MemberDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Block / unblock a member (block revokes all sessions)",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/admin/roles": {
+      "get": {
+        "operationId": "AdminController_listRoles",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "admin"
+        ]
+      },
+      "post": {
+        "operationId": "AdminController_createRole",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateRoleDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Create / clone a role",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/admin/roles/{id}": {
+      "patch": {
+        "operationId": "AdminController_updateRole",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateRoleDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Edit a role (Owner is immutable)",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/admin/workspace": {
+      "get": {
+        "operationId": "AdminController_getWorkspace",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "admin"
+        ]
+      },
+      "patch": {
+        "operationId": "AdminController_updateWorkspace",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateWorkspaceDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Update workspace name/branding/features/allow-list",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/admin/audit": {
+      "get": {
+        "operationId": "AdminController_listAudit",
+        "parameters": [
+          {
+            "name": "page",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Paginated audit trail (latest first)",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/ai-context/me": {
+      "get": {
+        "operationId": "AiContextController_getMine",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "ai-context"
+        ]
+      }
+    },
+    "/ai-context/me/style": {
+      "patch": {
+        "operationId": "AiContextController_updateMyStyle",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateSoftContextDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "ai-context"
+        ]
+      }
+    },
+    "/ai-context/users/{userId}": {
+      "get": {
+        "operationId": "AiContextController_getUser",
+        "parameters": [
+          {
+            "name": "userId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "ai-context"
+        ]
+      }
+    },
+    "/ai-context/users/{userId}/hard": {
+      "patch": {
+        "operationId": "AiContextController_updateHard",
+        "parameters": [
+          {
+            "name": "userId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateHardContextDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "ai-context"
+        ]
+      }
+    },
+    "/ai-context/entries": {
+      "get": {
+        "operationId": "AiContextController_listEntries",
+        "parameters": [
+          {
+            "name": "scope",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "scopeId",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "ai-context"
+        ]
+      },
+      "post": {
+        "operationId": "AiContextController_createEntry",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpsertEntryDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "ai-context"
+        ]
+      }
+    },
+    "/ai-context/entries/{id}": {
+      "patch": {
+        "operationId": "AiContextController_updateEntry",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpsertEntryDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "ai-context"
+        ]
+      },
+      "delete": {
+        "operationId": "AiContextController_deleteEntry",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "ai-context"
         ]
       }
     }
@@ -810,33 +1877,6 @@
           "refreshToken"
         ]
       },
-      "RegisterDto": {
-        "type": "object",
-        "properties": {
-          "displayName": {
-            "type": "string",
-            "example": "Jane Doe",
-            "description": "Public display name",
-            "minLength": 2
-          },
-          "email": {
-            "type": "string",
-            "example": "user@example.com",
-            "description": "Email address (must be unique)"
-          },
-          "password": {
-            "type": "string",
-            "example": "P@ssw0rd123",
-            "description": "Account password",
-            "minLength": 8
-          }
-        },
-        "required": [
-          "displayName",
-          "email",
-          "password"
-        ]
-      },
       "LoginDto": {
         "type": "object",
         "properties": {
@@ -927,6 +1967,532 @@
           "otp",
           "password"
         ]
+      },
+      "InvitationPreviewDto": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string"
+          },
+          "workspaceName": {
+            "type": "string"
+          },
+          "inviterName": {
+            "type": "string"
+          },
+          "roleName": {
+            "type": "string",
+            "nullable": true
+          },
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "email",
+          "workspaceName",
+          "inviterName",
+          "roleName",
+          "expiresAt"
+        ]
+      },
+      "AcceptInvitationPasswordDto": {
+        "type": "object",
+        "properties": {
+          "displayName": {
+            "type": "string",
+            "example": "Jane Doe",
+            "minLength": 2,
+            "maxLength": 50
+          },
+          "password": {
+            "type": "string",
+            "example": "P@ssw0rd123",
+            "minLength": 8
+          },
+          "deviceId": {
+            "type": "string",
+            "description": "Device identifier for the issued session"
+          },
+          "platform": {
+            "type": "string",
+            "enum": [
+              "web",
+              "mobile"
+            ],
+            "example": "web"
+          }
+        },
+        "required": [
+          "displayName",
+          "password"
+        ]
+      },
+      "LoginTokensUserDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          },
+          "displayName": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "email",
+          "displayName"
+        ]
+      },
+      "LoginTokensResponseDto": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "example": "INVITATION_ACCEPTED"
+          },
+          "accessToken": {
+            "type": "string"
+          },
+          "refreshToken": {
+            "type": "string"
+          },
+          "sid": {
+            "type": "string"
+          },
+          "user": {
+            "$ref": "#/components/schemas/LoginTokensUserDto"
+          }
+        },
+        "required": [
+          "code",
+          "accessToken",
+          "refreshToken",
+          "sid",
+          "user"
+        ]
+      },
+      "CreateInvitationDto": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "example": "jane@acme.com",
+            "description": "Email to invite"
+          },
+          "roleId": {
+            "type": "string",
+            "description": "Role to grant on accept. Defaults to the preset Member role."
+          },
+          "departmentIds": {
+            "description": "Initial departments",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "locale": {
+            "type": "string",
+            "enum": [
+              "en",
+              "vi",
+              "zh",
+              "ja",
+              "ko",
+              "es",
+              "fr"
+            ],
+            "description": "Invitation email language. Defaults to the Accept-Language of the request."
+          }
+        },
+        "required": [
+          "email"
+        ]
+      },
+      "InvitationInviterDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Inviter user id, or \"system\" for the boot-time Owner invite"
+          },
+          "displayName": {
+            "type": "string",
+            "nullable": true,
+            "description": "Inviter display name (workspace name for \"system\"); null if the inviter no longer exists"
+          }
+        },
+        "required": [
+          "id",
+          "displayName"
+        ]
+      },
+      "InvitationViewDto": {
+        "type": "object",
+        "properties": {
+          "_id": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string",
+            "example": "jane@acme.com"
+          },
+          "roleId": {
+            "type": "string"
+          },
+          "roleName": {
+            "type": "string",
+            "nullable": true,
+            "description": "null if the role was deleted"
+          },
+          "departmentIds": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "invitedBy": {
+            "$ref": "#/components/schemas/InvitationInviterDto"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "pending",
+              "expired",
+              "accepted",
+              "revoked"
+            ]
+          },
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "lastSentAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "sendCount": {
+            "type": "number"
+          },
+          "acceptedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "acceptedVia": {
+            "type": "string",
+            "enum": [
+              "password",
+              "google",
+              "oidc"
+            ],
+            "nullable": true
+          }
+        },
+        "required": [
+          "_id",
+          "email",
+          "roleId",
+          "roleName",
+          "departmentIds",
+          "invitedBy",
+          "status",
+          "expiresAt",
+          "createdAt",
+          "lastSentAt",
+          "sendCount",
+          "acceptedAt",
+          "acceptedVia"
+        ]
+      },
+      "InvitationMutationResponseDto": {
+        "type": "object",
+        "properties": {
+          "invitation": {
+            "$ref": "#/components/schemas/InvitationViewDto"
+          },
+          "emailSent": {
+            "type": "boolean",
+            "description": "false when the invitation was saved but the email could not be sent"
+          }
+        },
+        "required": [
+          "invitation",
+          "emailSent"
+        ]
+      },
+      "SuccessResponseDto": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "example": true
+          }
+        },
+        "required": [
+          "success"
+        ]
+      },
+      "CreateDepartmentDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "leadUserId": {
+            "type": "string",
+            "description": "User id of the department lead"
+          }
+        },
+        "required": [
+          "name"
+        ]
+      },
+      "UpdateDepartmentDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "leadUserId": {
+            "type": "string",
+            "description": "User id of the department lead"
+          }
+        }
+      },
+      "MemberDto": {
+        "type": "object",
+        "properties": {
+          "_id": {
+            "type": "string"
+          },
+          "displayName": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          },
+          "avatarUrl": {
+            "type": "string"
+          },
+          "roleId": {
+            "type": "string"
+          },
+          "departmentIds": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "active",
+              "blocked",
+              "pending"
+            ]
+          }
+        },
+        "required": [
+          "_id",
+          "displayName",
+          "email",
+          "departmentIds",
+          "status"
+        ]
+      },
+      "UpdateMemberDto": {
+        "type": "object",
+        "properties": {
+          "roleId": {
+            "type": "string",
+            "description": "Role id to assign to the member"
+          },
+          "departmentIds": {
+            "description": "Department ids the member belongs to",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "UpdateMemberStatusDto": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "active",
+              "blocked"
+            ]
+          }
+        },
+        "required": [
+          "status"
+        ]
+      },
+      "CreateRoleDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "permissions": {
+            "type": "object",
+            "description": "capability key -> enabled flag",
+            "example": {
+              "USE_PERSONAL_ASSISTANT": true
+            }
+          }
+        },
+        "required": [
+          "name"
+        ]
+      },
+      "UpdateRoleDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "permissions": {
+            "type": "object",
+            "description": "capability key -> enabled flag"
+          }
+        }
+      },
+      "WorkspaceSsoDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "WorkspaceAiSettingsDto": {
+        "type": "object",
+        "properties": {
+          "personaName": {
+            "type": "object",
+            "nullable": true
+          },
+          "defaultTone": {
+            "type": "string",
+            "enum": [
+              "friendly",
+              "professional",
+              "concise",
+              "creative"
+            ],
+            "nullable": true
+          },
+          "modelTier": {
+            "type": "string",
+            "enum": [
+              "auto",
+              "simple",
+              "mid",
+              "complex"
+            ],
+            "nullable": true
+          },
+          "webSearchEnabled": {
+            "type": "object",
+            "nullable": true
+          },
+          "thinkingEnabled": {
+            "type": "object",
+            "nullable": true
+          },
+          "monthlyTokenLimit": {
+            "type": "object",
+            "nullable": true,
+            "minimum": 0
+          },
+          "allowedConnectors": {
+            "nullable": true,
+            "description": "AI-specific MCP connector allow-list (catalog ids). null = inherit connectorAllowList; [] = allow none; must be a subset of connectorAllowList.",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "dailyDigestEnabled": {
+            "type": "object",
+            "nullable": true
+          },
+          "dailyDigestHour": {
+            "type": "object",
+            "nullable": true,
+            "minimum": 0,
+            "maximum": 23
+          }
+        }
+      },
+      "UpdateWorkspaceDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "logoUrl": {
+            "type": "string"
+          },
+          "primaryColor": {
+            "type": "string",
+            "example": "#96435B"
+          },
+          "features": {
+            "type": "object",
+            "description": "feature flag map"
+          },
+          "connectorAllowList": {
+            "description": "catalog connector ids members may personally connect",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "sso": {
+            "description": "SSO (OIDC) mapping config",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/WorkspaceSsoDto"
+              }
+            ]
+          },
+          "aiSettings": {
+            "description": "AI assistant defaults (TASK-12)",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/WorkspaceAiSettingsDto"
+              }
+            ]
+          }
+        }
+      },
+      "UpdateSoftContextDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "UpdateHardContextDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "UpsertEntryDto": {
+        "type": "object",
+        "properties": {}
       }
     }
   }
