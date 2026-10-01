@@ -1,6 +1,7 @@
 package com.platform.chatservice.config;
 
 import com.platform.chatservice.security.AuthChannelInterceptor;
+import com.platform.chatservice.security.WsSessionRegistry;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -9,10 +10,14 @@ import org.springframework.messaging.simp.config.ChannelRegistration;
 import org.springframework.messaging.simp.config.MessageBrokerRegistry;
 import org.springframework.scheduling.TaskScheduler;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
+import org.springframework.web.socket.CloseStatus;
+import org.springframework.web.socket.WebSocketHandler;
+import org.springframework.web.socket.WebSocketSession;
 import org.springframework.web.socket.config.annotation.EnableWebSocketMessageBroker;
 import org.springframework.web.socket.config.annotation.StompEndpointRegistry;
 import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerConfigurer;
 import org.springframework.web.socket.config.annotation.WebSocketTransportRegistration;
+import org.springframework.web.socket.handler.WebSocketHandlerDecorator;
 
 @Configuration
 @EnableWebSocketMessageBroker
@@ -20,6 +25,7 @@ import org.springframework.web.socket.config.annotation.WebSocketTransportRegist
 public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
   private final AuthChannelInterceptor authChannelInterceptor;
+  private final WsSessionRegistry wsSessionRegistry;
 
   @Value("${app.cors.allowed-origins:*}")
   private String allowedOrigins;
@@ -79,6 +85,29 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     registration
         .setMessageSizeLimit(64 * 1024) // 64KB max per STOMP message
         .setSendBufferSizeLimit(512 * 1024) // 512KB send buffer per session
-        .setSendTimeLimit(20_000); // 20s timeout if a client receives slowly
+        .setSendTimeLimit(20_000) // 20s timeout if a client receives slowly
+        // Track open sockets so a revoked auth session can be force-closed (WsSessionRegistry).
+        .addDecoratorFactory(this::trackSessions);
+  }
+
+  private WebSocketHandler trackSessions(WebSocketHandler handler) {
+    return new WebSocketHandlerDecorator(handler) {
+      @Override
+      public void afterConnectionEstablished(WebSocketSession session) throws Exception {
+        // Hand Spring the registry's thread-safe wrapper so the registry can push a STOMP ERROR
+        // frame on this socket without racing Spring's own outbound sends.
+        super.afterConnectionEstablished(wsSessionRegistry.register(session));
+      }
+
+      @Override
+      public void afterConnectionClosed(WebSocketSession session, CloseStatus closeStatus)
+          throws Exception {
+        try {
+          super.afterConnectionClosed(session, closeStatus);
+        } finally {
+          wsSessionRegistry.unregister(session.getId());
+        }
+      }
+    };
   }
 }

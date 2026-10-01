@@ -27,6 +27,8 @@ public class AuthChannelInterceptor implements ChannelInterceptor {
   private final JwtUtil jwtUtil;
   private final StringRedisTemplate redisTemplate;
   private final ConversationQueryService conversationQueryService;
+  private final SessionValidator sessionValidator;
+  private final WsSessionRegistry wsSessionRegistry;
 
   @Override
   public Message<?> preSend(@NonNull Message<?> message, @NonNull MessageChannel channel) {
@@ -53,6 +55,13 @@ public class AuthChannelInterceptor implements ChannelInterceptor {
       }
 
       String userId = jwtUtil.extractUserId(token);
+      String sid = jwtUtil.extractSid(token);
+      SessionStatus status = sessionValidator.validate(sid, userId);
+      if (!status.isValid()) {
+        // The STOMP ERROR frame's "message" header carries the code (e.g. SESSION_REVOKED).
+        throw new MessageDeliveryException(status.code());
+      }
+      wsSessionRegistry.bind(accessor.getSessionId(), userId, sid);
       accessor.setUser(
           new UserPrincipal(
               userId,
@@ -62,6 +71,13 @@ public class AuthChannelInterceptor implements ChannelInterceptor {
       // Presence key is set by PresenceEventListener.onConnect (fires after the
       // Principal is registered). No need to refresh here — the key doesn't exist yet.
       return message;
+    }
+
+    if (StompCommand.SEND.equals(accessor.getCommand())
+        || StompCommand.SUBSCRIBE.equals(accessor.getCommand())) {
+      if (!sessionStillValid(accessor)) {
+        return null; // frame dropped; the socket has been closed with the reason code
+      }
     }
 
     if (StompCommand.SUBSCRIBE.equals(accessor.getCommand())) {
@@ -90,6 +106,31 @@ public class AuthChannelInterceptor implements ChannelInterceptor {
     }
 
     return message;
+  }
+
+  /**
+   * Re-validate the auth session the socket connected with (≤5s cached). An invalid session closes
+   * the socket (close code 4401, reason = code) and drops the frame; a session-store outage only
+   * rejects the frame, it never disconnects the user.
+   */
+  private boolean sessionStillValid(StompHeaderAccessor accessor) {
+    if (accessor.getUser() == null) {
+      return true; // unauthenticated frames are handled (rejected) downstream as before
+    }
+    String wsSessionId = accessor.getSessionId();
+    WsSessionRegistry.Binding binding = wsSessionRegistry.bindingOf(wsSessionId);
+    SessionStatus status =
+        binding == null
+            ? SessionStatus.TOKEN_INVALID
+            : sessionValidator.validate(binding.sid(), binding.userId());
+    if (status.isValid()) {
+      return true;
+    }
+    if (status == SessionStatus.UNAVAILABLE) {
+      throw new MessageDeliveryException(status.code());
+    }
+    wsSessionRegistry.closeSession(wsSessionId, status.code());
+    return false;
   }
 
   @SuppressWarnings("null")

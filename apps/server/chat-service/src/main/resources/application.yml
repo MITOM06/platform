@@ -105,3 +105,8 @@ app:
   reminder:
     # Interval (ms) for the due-reminder delivery sweep. Default 60s.
     sweep-interval-ms: ${REMINDER_SWEEP_INTERVAL_MS:60000}
+  session:
+    # Auth-session (sess:{sid}) checks on REST + STOMP. Per-sid in-memory cache, capped at 5s.
+    cache-ttl-ms: ${SESSION_CACHE_TTL_MS:5000}
+    # Interval (ms) for re-validating every open WebSocket's auth session (closes revoked ones).
+    ws-sweep-interval-ms: ${SESSION_WS_SWEEP_INTERVAL_MS:30000}
