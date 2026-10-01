@@ -129,7 +129,7 @@ export class AuthService {
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Đang chuyển về ứng dụng...</title>
   <style>
-    /* Warm Grey & Burgundy palette (docs/superpowers/UI-REDESIGN-DIRECTION.md §2).
+    /* Warm Grey & Burgundy palette (docs/design-system.md §2).
        This page is served by auth-service, so it is outside both apps' theming
        and kept the old neon brand until the redesign's final pass. */
     body{font-family:sans-serif;display:flex;flex-direction:column;align-items:center;

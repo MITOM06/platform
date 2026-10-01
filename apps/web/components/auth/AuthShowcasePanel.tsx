@@ -51,7 +51,7 @@ export function AuthShowcasePanel() {
   // The panel deliberately commits to a single dark treatment regardless of the
   // viewer's theme. The `dark` class scopes the dark token set to this subtree,
   // so everything below stays token-driven — no hardcoded panel colours, no
-  // gradient, no glassmorphism, no glow (UI-REDESIGN-DIRECTION.md §2).
+  // gradient, no glassmorphism, no glow (docs/design-system.md §1).
   return (
     <div className="dark relative hidden overflow-hidden bg-background lg:flex lg:flex-col lg:justify-between lg:p-10">
       <div className="relative z-10 flex items-center gap-2">

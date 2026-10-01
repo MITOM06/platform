@@ -5,7 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:platform_client/core/theme/app_theme.dart';
 
 /// Locks the Flutter theme onto the palette table in
-/// `docs/superpowers/UI-REDESIGN-DIRECTION.md` §2.
+/// `docs/design-system.md` §2.
 ///
 /// Why this exists: web reads `--primary` from `:root`/`.dark` in
 /// `apps/web/app/globals.css` and therefore renders `#7A2E3A`/`#A8475A`, while

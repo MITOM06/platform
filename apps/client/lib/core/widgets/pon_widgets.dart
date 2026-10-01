@@ -100,7 +100,7 @@ class _PonLogoPainter extends CustomPainter {
 // ---------------------------------------------------------------------------
 // Surface card — an opaque surface + 1px hairline border. No glass, no glow.
 // Elevation is expressed as a background-shade step (background -> surface),
-// per UI-REDESIGN-DIRECTION.md §2 rule 3.
+// per docs/design-system.md §1.
 // ---------------------------------------------------------------------------
 class PonCard extends StatelessWidget {
   final Widget child;
@@ -134,7 +134,7 @@ class PonCard extends StatelessWidget {
 
 // ---------------------------------------------------------------------------
 // Primary action button — flat accent fill, 10px radius, press-scale only.
-// No gradient, no glow (UI-REDESIGN-DIRECTION.md §2 rules 2-4).
+// No gradient, no glow (docs/design-system.md §1).
 // ---------------------------------------------------------------------------
 class PonButton extends StatefulWidget {
   final VoidCallback? onPressed;

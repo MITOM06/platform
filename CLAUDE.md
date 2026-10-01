@@ -83,7 +83,7 @@ Start infra: `docker compose -f infra/docker-compose/compose.yml up -d`
 ## Stack — Phase 2 AI ✅ COMPLETE (2026-06-07, Sprint AI-6 DONE)
 
 - **Spring Boot 3 chat-service**: WebSocket (STOMP) + REST API + MongoDB + Redis + RabbitMQ + JWT validation ✅
-- **Flutter client**: Neon UI + Auth flow + Chat UI + Riverpod + STOMP wire ✅
+- **Flutter client**: Warm Grey & Burgundy UI + Auth flow + Chat UI + Riverpod + STOMP wire ✅
 - **NestJS auth-service**: JWT, OTP, refresh token, user search API ✅
 - **NestJS ai-service**: Anthropic Claude API + RabbitMQ consumer + Redis streaming + Memory + RAG + Tools + Persona ✅
 
@@ -117,6 +117,7 @@ Queue settings: 30-second message TTL, dead-letter exchange `ai.direct.dlq`.
 
 ## Reference Docs (load on demand, not auto-loaded)
 
+- Design system (colour, type, components — web is the source of truth): `docs/design-system.md`
 - Architecture decisions: `docs/decisions.md`
 - Roadmap & milestones: `docs/roadmap.md`
 - Chat service API spec: `docs/api-spec.md`
