@@ -3,7 +3,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
 import { PassportModule } from '@nestjs/passport';
 import { ScheduleModule } from '@nestjs/schedule';
-import { SharedJwtStrategy } from '@platform/database';
+import { DatabaseRedisModule, SharedJwtStrategy } from '@platform/database';
 import configuration from './config/configuration';
 import { AiModule } from './ai/ai.module';
 import { RedisModule } from './redis/redis.module';
@@ -39,6 +39,8 @@ const mongooseModule: DynamicModule = MongooseModule.forRootAsync({
     // Shared passport-jwt strategy so JwtAuthGuard can populate req.user for the
     // usage dashboard controller (TASK-13 — first ai-service guarded route).
     PassportModule.register({ defaultStrategy: 'jwt' }),
+    // REDIS_CLIENT (fail-fast) for SharedJwtStrategy's sess:{sid} revocation check.
+    DatabaseRedisModule,
     // First scheduler in ai-service (TASK-11 daily digest).
     ScheduleModule.forRoot(),
     mongooseModule,

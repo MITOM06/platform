@@ -195,6 +195,8 @@ services:
     depends_on:
       mongo:
         condition: service_healthy
+      redis:
+        condition: service_healthy
     environment:
       # Local stack — never "production". The prod guards (main.ts) and every
       # isProd branch must describe the deployed environment, not this one.
@@ -202,6 +204,9 @@ services:
       PORT: 3003
       JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET}
       MONGO_URI: mongodb://mongo:27017/platform
+      # Access-token session check (sess:{sid}) — shared Redis with auth-service.
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
       CONNECTOR_VAULT_KEY: ${CONNECTOR_VAULT_KEY}
       INTERNAL_API_KEY: ${INTERNAL_API_KEY}
       OAUTH_REDIRECT_BASE: ${OAUTH_REDIRECT_BASE:-http://localhost:3003}
