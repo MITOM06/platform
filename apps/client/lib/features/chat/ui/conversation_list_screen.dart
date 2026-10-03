@@ -71,11 +71,11 @@ class _ConversationListScreenState
             ),
             child: AppBar(
               titleSpacing: 8,
-              title: const Row(
+              title: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  PonLogo(size: 26, showText: false),
-                  SizedBox(width: 8),
+                  const PonLogo(size: 26, showText: false),
+                  const SizedBox(width: 8),
                   // Wordmark: plain accent text. The ShaderMask painted a
                   // degenerate [accent, accent] gradient, i.e. a flat fill via
                   // a shader (§2 rule 2).
@@ -88,7 +88,7 @@ class _ConversationListScreenState
                         fontWeight: FontWeight.w600,
                         fontSize: 22,
                         letterSpacing: 1.5,
-                        color: AppTheme.ponAccent,
+                        color: AppTheme.accent(context),
                       ),
                     ),
                   ),
@@ -114,7 +114,7 @@ class _ConversationListScreenState
                         shape: BoxShape.circle,
                         border: Border.all(
                           color: (isDark
-                                  ? AppTheme.ponAccent
+                                  ? AppTheme.accent(context)
                                   : Theme.of(context).colorScheme.primary)
                               .withValues(alpha: 0.5),
                           width: 1.5,

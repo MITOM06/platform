@@ -122,7 +122,7 @@ class ProfileActionChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final c = color ?? AppTheme.ponAccent;
+    final c = color ?? AppTheme.accent(context);
     return GestureDetector(
       onTap: onTap,
       child: Column(

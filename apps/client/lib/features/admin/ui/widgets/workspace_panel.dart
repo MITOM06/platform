@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../core/utils/app_error.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/l10n/l10n_ext.dart';
 import '../../../../core/theme/app_theme.dart';
@@ -80,7 +81,7 @@ class _WorkspacePanelState extends ConsumerState<WorkspacePanel> {
 
     return wsAsync.when(
       loading: () => const Center(child: CircularProgressIndicator()),
-      error: (e, _) => _Err(message: '$e'),
+      error: (e, _) => _Err(message: friendlyError(e)),
       data: (ws) {
         _seed(ws);
         return ListView(
@@ -129,7 +130,6 @@ class _WorkspacePanelState extends ConsumerState<WorkspacePanel> {
               ..._features.keys.map(
                 (k) => SwitchListTile(
                   contentPadding: EdgeInsets.zero,
-                  activeThumbColor: AppTheme.ponAccent,
                   title: Text(k, style: TextStyle(color: Theme.of(context).colorScheme.onSurface)),
                   value: _features[k] ?? false,
                   onChanged: (v) => setState(() => _features[k] = v),
@@ -149,7 +149,7 @@ class _WorkspacePanelState extends ConsumerState<WorkspacePanel> {
                           .map(
                             (entry) => CheckboxListTile(
                               contentPadding: EdgeInsets.zero,
-                              activeColor: AppTheme.ponAccent,
+                              activeColor: AppTheme.accent(context),
                               controlAffinity:
                                   ListTileControlAffinity.leading,
                               title: Text(entry.name,
@@ -180,9 +180,9 @@ class _WorkspacePanelState extends ConsumerState<WorkspacePanel> {
 
   Color _parseColor(String hex) {
     final cleaned = hex.replaceAll('#', '').trim();
-    if (cleaned.length != 6) return AppTheme.ponAccent;
+    if (cleaned.length != 6) return AppTheme.accent(context);
     final value = int.tryParse('FF$cleaned', radix: 16);
-    return value == null ? AppTheme.ponAccent : Color(value);
+    return value == null ? AppTheme.accent(context) : Color(value);
   }
 }
 
@@ -198,7 +198,7 @@ class _SectionTitle extends StatelessWidget {
           style: TextStyle(
             color: Theme.of(context).colorScheme.onSurface,
             fontSize: 16,
-            fontWeight: FontWeight.bold,
+            fontWeight: FontWeight.w600,
           ),
         ),
       );
@@ -211,7 +211,7 @@ class _Muted extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Text(
         text,
-        style: TextStyle(color: AppTheme.mutedText(context), fontSize: 13),
+        style: TextStyle(color: AppTheme.mutedText(context), fontSize: 12),
       );
 }
 

@@ -65,7 +65,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
         ),
       ),
       // No decorative accent orbs: the accent means "primary action"
-      // only (UI-REDESIGN-DIRECTION.md §2 rules 1-2).
+      // only (docs/design-system.md §1).
       body: SafeArea(
         child: Center(
           child: ConstrainedBox(
@@ -81,7 +81,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                   Text(
                     context.l10n.forgotHeading,
                     style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                          fontWeight: FontWeight.bold,
+                          fontWeight: FontWeight.w600,
                           color: Theme.of(context).colorScheme.onSurface,
                         ),
                     textAlign: TextAlign.center,

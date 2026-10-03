@@ -44,7 +44,7 @@ class CallTile extends StatelessWidget {
             Center(
               child: CircleAvatar(
                 radius: 34,
-                backgroundColor: AppTheme.ponAccent.withValues(alpha: 0.25),
+                backgroundColor: AppTheme.accent(context).withValues(alpha: 0.25),
                 child: Text(
                   label.isNotEmpty ? label[0].toUpperCase() : '?',
                   style: TextStyle(

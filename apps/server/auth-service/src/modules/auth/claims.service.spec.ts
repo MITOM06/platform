@@ -14,7 +14,7 @@ describe('ClaimsService', () => {
 
   beforeEach(async () => {
     userModel = { findById: jest.fn() };
-    roleModel = { findById: jest.fn() };
+    roleModel = { findById: jest.fn(), findOne: jest.fn().mockReturnValue(lean(null)) };
 
     const moduleRef = await Test.createTestingModule({
       providers: [
@@ -52,7 +52,7 @@ describe('ClaimsService', () => {
     expect(claims.depts).toEqual(['d1', 'd2']);
   });
 
-  it('falls back to Member with empty perms/depts when user has no role', async () => {
+  it('falls back to Member with empty perms/depts when no Member preset exists', async () => {
     userModel.findById.mockReturnValue(
       lean({ _id: 'u1', roleId: undefined, departmentIds: [] }),
     );
@@ -61,6 +61,46 @@ describe('ClaimsService', () => {
 
     expect(claims).toEqual({ role: 'Member', perms: [], depts: [] });
     expect(roleModel.findById).not.toHaveBeenCalled();
+  });
+
+  it('grants the preset Member role capabilities to a role-less user (D11)', async () => {
+    userModel.findById.mockReturnValue(
+      lean({ _id: 'u1', roleId: undefined, departmentIds: [] }),
+    );
+    roleModel.findOne.mockReturnValue(
+      lean({
+        name: 'Member',
+        permissions: {
+          [Capability.USE_PERSONAL_ASSISTANT]: true,
+          [Capability.MANAGE_MEMBERS]: false,
+        },
+      }),
+    );
+
+    const claims = await service.resolve('u1');
+
+    expect(roleModel.findOne).toHaveBeenCalledWith({ name: 'Member' });
+    expect(claims).toEqual({
+      role: 'Member',
+      perms: [Capability.USE_PERSONAL_ASSISTANT],
+      depts: [],
+    });
+  });
+
+  it('uses the Member preset for a dangling roleId and caches the lookup', async () => {
+    userModel.findById.mockReturnValue(
+      lean({ _id: 'u1', roleId: 'deleted-role', departmentIds: [] }),
+    );
+    roleModel.findById.mockReturnValue(lean(null));
+    roleModel.findOne.mockReturnValue(
+      lean({ name: 'Member', permissions: { [Capability.USE_PERSONAL_ASSISTANT]: true } }),
+    );
+
+    await service.resolve('u1');
+    const claims = await service.resolve('u1');
+
+    expect(claims.perms).toEqual([Capability.USE_PERSONAL_ASSISTANT]);
+    expect(roleModel.findOne).toHaveBeenCalledTimes(1);
   });
 
   it('falls back when the user does not exist', async () => {

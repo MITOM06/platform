@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../core/utils/app_error.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/l10n/l10n_ext.dart';
 import '../../../../core/theme/app_theme.dart';
@@ -27,7 +28,7 @@ class _AuditPanelState extends ConsumerState<AuditPanel> {
     return async.when(
       loading: () => const Center(child: CircularProgressIndicator()),
       error: (e, _) => Center(
-        child: Text('$e',
+        child: Text(friendlyError(e),
             style: TextStyle(color: AppTheme.mutedText(context))),
       ),
       data: (result) {
@@ -43,7 +44,7 @@ class _AuditPanelState extends ConsumerState<AuditPanel> {
                     style: TextStyle(
                         color: Theme.of(context).colorScheme.onSurface,
                         fontSize: 16,
-                        fontWeight: FontWeight.bold)),
+                        fontWeight: FontWeight.w600)),
                 const SizedBox(height: 8),
                 Text(l10n.adminAuditEmpty,
                     style:
@@ -106,14 +107,14 @@ class _AuditTile extends StatelessWidget {
                 padding:
                     const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                 decoration: BoxDecoration(
-                  color: AppTheme.ponAccent.withValues(alpha: 0.12),
+                  color: AppTheme.accent(context).withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(6),
                 ),
                 child: Text(entry.action,
-                    style: const TextStyle(
-                        color: AppTheme.ponAccent,
+                    style: TextStyle(
+                        color: AppTheme.accent(context),
                         fontSize: 11,
-                        fontFamily: 'monospace')),
+                        fontFamily: AppTheme.fontMono)),
               ),
               const Spacer(),
               if (when != null)

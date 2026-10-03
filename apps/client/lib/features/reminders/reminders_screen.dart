@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../core/utils/app_error.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import '../../core/l10n/l10n_ext.dart';
@@ -16,12 +17,12 @@ class RemindersScreen extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(
         title: Text(l10n.reminders,
-            style: const TextStyle(fontWeight: FontWeight.bold)),
+            style: const TextStyle(fontWeight: FontWeight.w600)),
       ),
       body: remindersAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, _) => Center(
-          child: Text('$e', style: TextStyle(color: Theme.of(context).colorScheme.error)),
+          child: Text(friendlyError(e), style: TextStyle(color: Theme.of(context).colorScheme.error)),
         ),
         data: (reminders) {
           if (reminders.isEmpty) {
@@ -101,7 +102,7 @@ class _EmptyState extends StatelessWidget {
             context.l10n.remindersEmpty,
             style: TextStyle(
               color: muted,
-              fontSize: 15,
+              fontSize: 14,
             ),
             textAlign: TextAlign.center,
           ),
@@ -141,10 +142,10 @@ class _ReminderTile extends StatelessWidget {
         ),
       ),
       child: ListTile(
-        leading: const Icon(Icons.alarm_rounded,
-            color: AppTheme.ponAccent, size: 22),
+        leading: Icon(Icons.alarm_rounded,
+            color: AppTheme.accent(context), size: 22),
         title: Text(text,
-            style: TextStyle(color: colorScheme.onSurface, fontSize: 15)),
+            style: TextStyle(color: colorScheme.onSurface, fontSize: 14)),
         subtitle: Text(dateStr,
             style: TextStyle(
                 color: colorScheme.onSurfaceVariant, fontSize: 12)),
@@ -152,8 +153,8 @@ class _ReminderTile extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             IconButton(
-              icon: const Icon(Icons.check_circle_outline_rounded,
-                  color: AppTheme.ponAccent, size: 20),
+              icon: Icon(Icons.check_circle_outline_rounded,
+                  color: AppTheme.accent(context), size: 20),
               tooltip: context.l10n.reminderDone,
               onPressed: onDone,
             ),

@@ -9,8 +9,7 @@ import type { Message } from '@/lib/api/types'
  * with `extbot:`). The display name + avatar come from `useAssistant()`, NOT a
  * user lookup — the bot is not a real user. Left-aligned like the `@AI` bubble;
  * no reactions / read receipts. Flat accent avatar — the old violet→teal
- * gradient was both a gradient and a second accent (UI-REDESIGN-DIRECTION.md
- * §2 rules 1-2). Mirrors Flutter's `_ExternalBotAvatar` in ai_message_parts.dart.
+ * gradient was both a gradient and a second accent (docs/design-system.md §1). Mirrors Flutter's `_ExternalBotAvatar` in ai_message_parts.dart.
  */
 export function ExternalBotBubble({ message }: { message: Message }) {
   const { data: assistant } = useAssistant()

@@ -49,7 +49,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       <body className="min-h-full flex flex-col">
         {/* Thin top progress bar during route navigation (YouTube/GitHub style).
             Uses the burgundy accent token; no glow (see the "no shadows for
-            elevation" rule in docs/superpowers/UI-REDESIGN-DIRECTION.md §2). */}
+            elevation" rule in docs/design-system.md §1). */}
         <NextTopLoader
           color="var(--primary)"
           height={3}

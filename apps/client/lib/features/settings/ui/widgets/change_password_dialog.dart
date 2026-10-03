@@ -53,7 +53,7 @@ class __ChangePasswordDialogContentState
     // (Google) accounts have no password yet and must be able to set
     // one for the first time. The server enforces the current-password check
     // only for accounts that already have a password.
-    // Enforce the same strong-password requirements as the register screen.
+    // Enforce the same strong-password requirements as the invitation accept form.
     if (newPass.isEmpty) {
       setState(() => _errorText = context.l10n.valPasswordRequired);
       return;
@@ -133,14 +133,14 @@ class __ChangePasswordDialogContentState
   @override
   Widget build(BuildContext context) {
     final activeColor = widget.isDark
-        ? AppTheme.ponAccent
+        ? AppTheme.accent(context)
         : Theme.of(context).colorScheme.primary;
 
     return AlertDialog(
       title: Text(
         context.l10n.changePasswordTitle,
         style: TextStyle(
-          fontWeight: FontWeight.bold,
+          fontWeight: FontWeight.w600,
           color: Theme.of(context).colorScheme.onSurface,
         ),
       ),
@@ -152,7 +152,7 @@ class __ChangePasswordDialogContentState
             if (_errorText != null) ...[
               Text(
                 _errorText!,
-                style: TextStyle(color: Theme.of(context).colorScheme.error, fontSize: 13),
+                style: TextStyle(color: Theme.of(context).colorScheme.error, fontSize: 14),
               ),
               const SizedBox(height: 12),
             ],
@@ -212,13 +212,13 @@ class __ChangePasswordDialogContentState
           ),
         ),
         if (_isLoading)
-          const Padding(
-            padding: EdgeInsets.symmetric(horizontal: 16.0),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16.0),
             child: SizedBox(
               width: 16,
               height: 16,
               child: CircularProgressIndicator(
-                  strokeWidth: 2, color: AppTheme.ponAccent),
+                  strokeWidth: 2, color: AppTheme.accent(context)),
             ),
           )
         else

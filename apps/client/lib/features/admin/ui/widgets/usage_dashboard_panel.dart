@@ -33,16 +33,16 @@ class UsageDashboardPanel extends ConsumerWidget {
               TextButton.icon(
                 onPressed: () =>
                     ref.read(usageDashboardProvider.notifier).refresh(),
-                icon: const Icon(Icons.refresh_rounded, color: AppTheme.ponAccent),
+                icon: Icon(Icons.refresh_rounded, color: AppTheme.accent(context)),
                 label: Text(l10n.usageRetry,
-                    style: const TextStyle(color: AppTheme.ponAccent)),
+                    style: TextStyle(color: AppTheme.accent(context))),
               ),
             ],
           ),
         ),
       ),
       data: (d) => RefreshIndicator(
-        color: AppTheme.ponAccent,
+        color: AppTheme.accent(context),
         backgroundColor: Theme.of(context).colorScheme.surface,
         onRefresh: () => ref.read(usageDashboardProvider.notifier).refresh(),
         child: ListView(

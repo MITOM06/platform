@@ -8,10 +8,11 @@ import { useTranslations } from 'next-intl'
 import { useAuthStore } from '@/lib/store/auth.store'
 import type { AuthUser } from '@/lib/store/auth.store'
 import { isAuthFailure } from '@/lib/api/axios'
+import { loginPath, logoutReasonFromError } from '@/lib/auth/force-logout'
 
 const PUBLIC_PATHS = [
   '/login',
-  '/register',
+  '/invite',
   '/verify-otp',
   '/oauth-callback',
   '/forgot-password',
@@ -53,10 +54,13 @@ export function SessionInitializer({ children }: { children: React.ReactNode }) 
         } catch (err) {
           if (isAuthFailure(err)) {
             authFailures++
-            if (authFailures >= 2) {
+            // A blocked account is final (and the route already wiped the
+            // cookies) — no point retrying; the login screen explains it.
+            const reason = logoutReasonFromError(err)
+            if (reason || authFailures >= 2) {
               if (!cancelled) {
                 clearAuth()
-                router.push('/login')
+                router.push(loginPath(reason))
               }
               break
             }

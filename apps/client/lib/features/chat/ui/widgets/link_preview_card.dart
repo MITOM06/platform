@@ -54,7 +54,7 @@ class LinkPreviewCard extends ConsumerWidget {
                             style: TextStyle(
                               fontSize: 10,
                               color:
-                                  AppTheme.ponAccent.withValues(alpha: 0.8),
+                                  AppTheme.accent(context).withValues(alpha: 0.8),
                               fontWeight: FontWeight.w600,
                             ),
                           ),
@@ -65,7 +65,7 @@ class LinkPreviewCard extends ConsumerWidget {
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                           style: TextStyle(
-                            fontSize: 13,
+                            fontSize: 14,
                             fontWeight: FontWeight.w600,
                             color: Theme.of(context).colorScheme.onSurface,
                           ),
@@ -79,7 +79,7 @@ class LinkPreviewCard extends ConsumerWidget {
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
                             style: TextStyle(
-                              fontSize: 11.5,
+                              fontSize: 11,
                               color: AppTheme.mutedText(context),
                             ),
                           ),

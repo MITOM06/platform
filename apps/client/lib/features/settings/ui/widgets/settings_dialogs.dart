@@ -15,7 +15,7 @@ void showThemeSelectionDialog(BuildContext context, WidgetRef ref) {
         title: Text(
           context.l10n.chooseThemeTitle,
           style: TextStyle(
-            fontWeight: FontWeight.bold,
+            fontWeight: FontWeight.w600,
             color: Theme.of(context).colorScheme.onSurface,
           ),
         ),
@@ -26,21 +26,21 @@ void showThemeSelectionDialog(BuildContext context, WidgetRef ref) {
               title: context.l10n.themeLight,
               icon: Icons.light_mode_rounded,
               themeMode: ThemeMode.light,
-              activeColor: Colors.amber,
+              activeColor: AppTheme.accent(context),
             ),
             const SizedBox(height: 8),
             ThemeDialogOption(
               title: context.l10n.themeDark,
               icon: Icons.dark_mode_rounded,
               themeMode: ThemeMode.dark,
-              activeColor: AppTheme.ponAccent,
+              activeColor: AppTheme.accent(context),
             ),
             const SizedBox(height: 8),
             ThemeDialogOption(
               title: context.l10n.themeSystem,
               icon: Icons.brightness_auto_rounded,
               themeMode: ThemeMode.system,
-              activeColor: AppTheme.ponAccent,
+              activeColor: AppTheme.accent(context),
             ),
           ],
         ),
@@ -57,7 +57,7 @@ void showLanguageSelectionDialog(BuildContext context, WidgetRef ref) {
         title: Text(
           context.l10n.chooseLanguageTitle,
           style: TextStyle(
-            fontWeight: FontWeight.bold,
+            fontWeight: FontWeight.w600,
             color: Theme.of(context).colorScheme.onSurface,
           ),
         ),
@@ -109,7 +109,7 @@ class ThemeDialogOption extends ConsumerWidget {
           color: isSelected
               ? activeColor
               : (Theme.of(context).colorScheme.onSurface),
-          fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+          fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
         ),
       ),
       trailing: isSelected
@@ -138,7 +138,7 @@ class LanguageDialogOption extends ConsumerWidget {
     final isSelected = active.languageCode == locale.languageCode;
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final activeColor = isDark
-        ? AppTheme.ponAccent
+        ? AppTheme.accent(context)
         : Theme.of(context).colorScheme.primary;
 
     return ListTile(
@@ -150,7 +150,7 @@ class LanguageDialogOption extends ConsumerWidget {
           color: isSelected
               ? activeColor
               : (Theme.of(context).colorScheme.onSurface),
-          fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+          fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
         ),
       ),
       trailing: isSelected
@@ -189,8 +189,8 @@ class SettingsLogoutCard extends ConsumerWidget {
             context.l10n.actionLogout,
             style: TextStyle(
               color: Theme.of(context).colorScheme.error,
-              fontWeight: FontWeight.bold,
-              fontSize: 15,
+              fontWeight: FontWeight.w600,
+              fontSize: 16,
             ),
           ),
           trailing: Icon(
@@ -212,7 +212,7 @@ class SettingsLogoutCard extends ConsumerWidget {
         title: Text(
           context.l10n.actionLogout,
           style: TextStyle(
-            fontWeight: FontWeight.bold,
+            fontWeight: FontWeight.w600,
             color: Theme.of(context).colorScheme.onSurface,
           ),
         ),

@@ -8,6 +8,7 @@ import {
   PRESET_ROLES,
 } from '@platform/database';
 import { BootstrapService } from './bootstrap.service';
+import { InvitationsService } from '../invitations/invitations.service';
 
 /**
  * In-memory fakes that emulate just enough of the Mongoose model surface the
@@ -56,6 +57,7 @@ describe('BootstrapService', () => {
   let roleModel: any;
   let userModel: any;
   let config: Record<string, string>;
+  let invitations: { createBootstrapOwnerInvite: jest.Mock };
 
   async function build() {
     const moduleRef = await Test.createTestingModule({
@@ -64,6 +66,7 @@ describe('BootstrapService', () => {
         { provide: getModelToken(Workspace.name), useValue: workspaceModel },
         { provide: getModelToken(Role.name), useValue: roleModel },
         { provide: getModelToken(User.name), useValue: userModel },
+        { provide: InvitationsService, useValue: invitations },
         {
           provide: ConfigService,
           useValue: { get: (k: string, d?: any) => config[k] ?? d },
@@ -78,6 +81,7 @@ describe('BootstrapService', () => {
     roleModel = makeCollectionModel();
     userModel = makeCollectionModel();
     config = { WORKSPACE_NAME: 'Acme Inc' };
+    invitations = { createBootstrapOwnerInvite: jest.fn().mockResolvedValue(undefined) };
   });
 
   it('seeds exactly 1 workspace and 4 roles, idempotently (run twice)', async () => {
@@ -126,5 +130,33 @@ describe('BootstrapService', () => {
     await service.onApplicationBootstrap();
 
     expect(userModel.updateOne).not.toHaveBeenCalled();
+  });
+
+  it('creates an Owner invitation when no user has the bootstrap email (D9)', async () => {
+    config = { BOOTSTRAP_OWNER_EMAIL: 'boss@acme.com' };
+
+    const service = await build();
+    await service.onApplicationBootstrap();
+
+    expect(invitations.createBootstrapOwnerInvite).toHaveBeenCalledWith('boss@acme.com');
+    expect(userModel.updateOne).not.toHaveBeenCalled();
+  });
+
+  it('does not invite when the bootstrap owner already exists', async () => {
+    config = { BOOTSTRAP_OWNER_EMAIL: 'boss@acme.com' };
+    userModel.docs.push({ _id: 'u1', email: 'boss@acme.com', roleId: 'existing' });
+
+    const service = await build();
+    await service.onApplicationBootstrap();
+
+    expect(invitations.createBootstrapOwnerInvite).not.toHaveBeenCalled();
+  });
+
+  it('never blocks boot when the invitation step fails', async () => {
+    config = { BOOTSTRAP_OWNER_EMAIL: 'boss@acme.com' };
+    invitations.createBootstrapOwnerInvite.mockRejectedValue(new Error('smtp down'));
+
+    const service = await build();
+    await expect(service.onApplicationBootstrap()).resolves.toBeUndefined();
   });
 });

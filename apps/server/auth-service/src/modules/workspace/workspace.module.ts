@@ -15,10 +15,12 @@ import { BootstrapService } from './bootstrap.service';
 import { WorkspaceService } from './workspace.service';
 import { MeController } from './me.controller';
 import { ClaimsService } from '../auth/claims.service';
+import { InvitationsModule } from '../invitations/invitations.module';
 
 @Module({
   imports: [
     PassportModule.register({ defaultStrategy: 'jwt' }),
+    InvitationsModule,
     MongooseModule.forFeature([
       { name: Workspace.name, schema: WorkspaceSchema },
       { name: Department.name, schema: DepartmentSchema },

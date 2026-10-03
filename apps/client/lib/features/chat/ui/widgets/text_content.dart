@@ -53,7 +53,7 @@ class _TextContentState extends ConsumerState<TextContent> {
     // bubble is a theme surface, so it must use onSurface — white-on-white
     // otherwise in light mode.
     final baseColor = widget.isSentByMe ? Colors.white : Theme.of(context).colorScheme.onSurface;
-    final baseStyle = TextStyle(color: baseColor, fontSize: 14.5, height: 1.35);
+    final baseStyle = TextStyle(color: baseColor, fontSize: 14, height: 1.35);
 
     // Build mention map (uid → displayName) for highlighting.
     final mentionMap = <String, String>{};
@@ -108,27 +108,30 @@ class _TextContentState extends ConsumerState<TextContent> {
   }
 
   MarkdownStyleSheet _mdStyleSheet(BuildContext context, Color textColor) {
-    final base = TextStyle(color: textColor, fontSize: 14.5, height: 1.35);
+    final base = TextStyle(color: textColor, fontSize: 14, height: 1.35);
     return MarkdownStyleSheet(
       p: base,
-      strong: base.copyWith(fontWeight: FontWeight.bold),
+      strong: base.copyWith(fontWeight: FontWeight.w600),
       em: base.copyWith(fontStyle: FontStyle.italic),
       code: base.copyWith(
-        fontFamily: 'monospace',
-        fontSize: 13,
-        color: AppTheme.ponAccent,
-        backgroundColor: AppTheme.mutedText(context),
+        fontFamily: AppTheme.fontMono,
+        fontSize: 12,
+        // Was accent text on the muted-TEXT colour: unreadable in both modes.
+        color: textColor,
+        backgroundColor: widget.isSentByMe
+            ? Colors.white.withValues(alpha: 0.16)
+            : AppTheme.mutedSurface(context),
       ),
       codeblockDecoration: BoxDecoration(
         color: AppTheme.mutedText(context),
         borderRadius: BorderRadius.circular(8),
       ),
       listBullet: base,
-      h1: base.copyWith(fontSize: 20, fontWeight: FontWeight.bold),
-      h2: base.copyWith(fontSize: 17, fontWeight: FontWeight.bold),
-      h3: base.copyWith(fontSize: 15, fontWeight: FontWeight.w600),
+      h1: base.copyWith(fontSize: 20, fontWeight: FontWeight.w600),
+      h2: base.copyWith(fontSize: 17, fontWeight: FontWeight.w600),
+      h3: base.copyWith(fontSize: 16, fontWeight: FontWeight.w600),
       a: base.copyWith(
-        color: AppTheme.ponAccent,
+        color: AppTheme.accent(context),
         decoration: TextDecoration.underline,
       ),
       blockquote: base.copyWith(
@@ -136,9 +139,9 @@ class _TextContentState extends ConsumerState<TextContent> {
         fontStyle: FontStyle.italic,
       ),
       blockquoteDecoration: BoxDecoration(
-        border: const Border(
-            left: BorderSide(color: AppTheme.ponAccent, width: 3)),
-        color: AppTheme.ponAccent.withValues(alpha: 0.05),
+        border: Border(
+            left: BorderSide(color: AppTheme.accent(context), width: 3)),
+        color: AppTheme.accent(context).withValues(alpha: 0.05),
       ),
     );
   }
@@ -154,8 +157,8 @@ class _TextContentState extends ConsumerState<TextContent> {
     final regex = RegExp(pattern, caseSensitive: false);
 
     final mentionStyle = baseStyle.copyWith(
-      color: AppTheme.ponAccent,
-      fontWeight: FontWeight.w700,
+      color: AppTheme.accent(context),
+      fontWeight: FontWeight.w600,
     );
 
     final spans = <InlineSpan>[];

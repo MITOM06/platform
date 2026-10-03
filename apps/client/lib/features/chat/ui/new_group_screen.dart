@@ -133,7 +133,7 @@ class _NewGroupScreenState extends ConsumerState<NewGroupScreen> {
                       .onSurface
                       .withValues(alpha: 0.6),
                   fontWeight: FontWeight.w600,
-                  fontSize: 13,
+                  fontSize: 14,
                 ),
               ),
             ),
@@ -175,7 +175,7 @@ class _NewGroupScreenState extends ConsumerState<NewGroupScreen> {
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
-                      activeColor: AppTheme.ponAccent,
+                      activeColor: AppTheme.accent(context),
                     );
                   },
                 );

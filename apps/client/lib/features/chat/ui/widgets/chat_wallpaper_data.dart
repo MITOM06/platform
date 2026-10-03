@@ -15,7 +15,7 @@ class WallpaperSectionHeader extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(16, 10, 16, 2),
       child: Row(
         children: [
-          Text(emoji, style: const TextStyle(fontSize: 13)),
+          Text(emoji, style: const TextStyle(fontSize: 14)),
           const SizedBox(width: 6),
           Text(label.toUpperCase(),
               style: const TextStyle(

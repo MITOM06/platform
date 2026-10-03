@@ -33,7 +33,7 @@ The Flutter client provides a cross-platform mobile UI (Android & iOS) for the P
 | WebSocket | `stomp_dart_client` (STOMP over WS) |
 | Secure storage | `flutter_secure_storage` (tokens) |
 | Preferences | `shared_preferences` |
-| UI | Material Design 3 + Dark Neon Theme |
+| UI | Material Design 3, "Warm Grey & Burgundy" theme (see `docs/design-system.md`) |
 | Voice messages | `record` (record) + `audioplayers` (playback) |
 | Emoji | `emoji_picker_flutter` |
 | i18n | Flutter ARB — 7 locales (en, vi, zh, ja, ko, es, fr) |
@@ -48,13 +48,13 @@ lib/
 ├── core/
 │   ├── api/                       # Dio instances (authDio :3001, chatDio :8080) + interceptors
 │   ├── router/                    # go_router config + RouterNotifier (+ generated)
-│   ├── theme/                     # AppTheme (neon dark)
+│   ├── theme/                     # AppTheme (light + dark tokens)
 │   ├── l10n/                      # l10n extension (context.l10n)
 │   ├── config/                    # AppConfig (base URLs, flags)
 │   ├── providers/                 # cross-cutting providers (locale, connectivity, …)
 │   ├── utils/                     # helpers (media URLs, formatters, …)
 │   ├── services/                  # shared services (notifications, storage, …)
-│   └── widgets/                   # NeonButton, NeonTextField, NeonCard, PonLogo
+│   └── widgets/                   # PonButton, PonTextField, PonCard, PonLogo
 ├── features/                      # feature-based: <name>/{data,domain,ui}
 │   ├── assistant/                 # personal assistant (Bot Factory bridge)
 │   ├── settings/

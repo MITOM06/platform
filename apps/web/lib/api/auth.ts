@@ -4,8 +4,9 @@ import type {
   UserSearchResult,
   UserSearchResponse,
   LoginRequest,
-  RegisterRequest,
   VerifyOtpRequest,
+  AcceptInvitationRequest,
+  InvitationPreview,
 } from './types'
 
 /** Profile gender — kept as a loose string union to mirror the auth-service
@@ -64,10 +65,6 @@ export interface LoginResponse {
   user: AuthUser
 }
 
-export interface RegisterResponse {
-  message: string
-}
-
 export interface VerifyOtpResponse {
   message: string
 }
@@ -84,11 +81,21 @@ export const authService = {
   login: (email: string, password: string) =>
     authApi.post<LoginResponse>('/auth/login', { email, password } satisfies LoginRequest),
 
-  register: (email: string, password: string, displayName: string) =>
-    authApi.post<RegisterResponse>(
-      '/auth/register',
-      { email, password, displayName } satisfies RegisterRequest,
-    ),
+  // ── Invitations (public, no JWT) ──────────────────────────────────────────
+  // The raw token only travels in the path (URL-encoded); it is never logged.
+  getInvitation: (token: string) =>
+    authApi
+      .get<InvitationPreview>(`/auth/invitations/${encodeURIComponent(token)}`)
+      .then((r) => r.data),
+
+  /** Accept by choosing a display name + password → same body as login (+ `code`). */
+  acceptInvitation: (token: string, displayName: string, password: string) =>
+    authApi
+      .post<LoginResponse & { code?: string }>(
+        `/auth/invitations/${encodeURIComponent(token)}/accept-password`,
+        { displayName, password, deviceId: 'web', platform: 'web' } satisfies AcceptInvitationRequest,
+      )
+      .then((r) => r.data),
 
   verifyOtp: (email: string, otp: string) =>
     authApi.post<VerifyOtpResponse>('/auth/verify-otp', { email, otp } satisfies VerifyOtpRequest),

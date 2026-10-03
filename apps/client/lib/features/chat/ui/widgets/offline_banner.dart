@@ -21,7 +21,7 @@ class OfflineBanner extends StatelessWidget {
                 context.l10n.offlineBanner,
                 style: TextStyle(
                   color: Theme.of(context).colorScheme.error,
-                  fontSize: 13,
+                  fontSize: 14,
                   fontWeight: FontWeight.w600,
                 ),
               ),

@@ -36,8 +36,8 @@ class EditProfilePrivacySection extends StatelessWidget {
         children: [
           Row(
             children: [
-              const Icon(Icons.lock_outline_rounded,
-                  color: AppTheme.ponAccent, size: 18),
+              Icon(Icons.lock_outline_rounded,
+                  color: AppTheme.accent(context), size: 18),
               const SizedBox(width: 8),
               Text(
                 context.l10n.privacySectionLabel,

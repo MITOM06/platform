@@ -111,7 +111,7 @@ class _HelpScreenState extends State<HelpScreen> {
               fc.category.title(l),
               style: TextStyle(
                 color: Theme.of(context).colorScheme.onSurface,
-                fontWeight: FontWeight.bold,
+                fontWeight: FontWeight.w600,
                 fontSize: 16,
               ),
             ),
@@ -186,7 +186,7 @@ class _SearchField extends StatelessWidget {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(AppTheme.radiusControl),
-          borderSide: const BorderSide(color: AppTheme.ponAccent, width: 1.5),
+          borderSide: BorderSide(color: AppTheme.accent(context), width: 1.5),
         ),
       ),
     );
@@ -215,7 +215,7 @@ class _EmptyState extends StatelessWidget {
             message,
             style: TextStyle(
               color: AppTheme.mutedText(context),
-              fontSize: 15,
+              fontSize: 14,
             ),
           ),
         ],

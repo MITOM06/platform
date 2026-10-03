@@ -38,8 +38,8 @@ class ChatMessageList extends StatelessWidget {
           chatState.messages.length + (chatState.isLoadingMore ? 1 : 0),
       itemBuilder: (context, index) {
         if (chatState.isLoadingMore && index == chatState.messages.length) {
-          return const Padding(
-            padding: EdgeInsets.all(16),
+          return Padding(
+            padding: const EdgeInsets.all(16),
             child: Center(
               child: SizedBox(
                 width: 20,
@@ -47,7 +47,7 @@ class ChatMessageList extends StatelessWidget {
                 child: CircularProgressIndicator(
                   strokeWidth: 2,
                   valueColor:
-                      AlwaysStoppedAnimation<Color>(AppTheme.ponAccent),
+                      AlwaysStoppedAnimation<Color>(AppTheme.accent(context)),
                 ),
               ),
             ),
@@ -150,7 +150,7 @@ class _DateDivider extends StatelessWidget {
           style: TextStyle(
               color: AppTheme.mutedText(context),
               fontSize: 11,
-              fontWeight: FontWeight.bold),
+              fontWeight: FontWeight.w600),
         ),
       ),
     );

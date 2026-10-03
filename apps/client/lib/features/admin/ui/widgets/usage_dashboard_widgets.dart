@@ -88,7 +88,7 @@ class UsagePerModelCostList extends StatelessWidget {
               fmtCount(r.outputTokens),
               fmtCount(r.requestCount),
             ),
-            accent: AppTheme.ponAccent,
+            accent: AppTheme.accent(context),
           ),
       ],
     );
@@ -112,7 +112,7 @@ class UsageTopUsersList extends StatelessWidget {
             title: top[i].label,
             trailing: fmtCount(top[i].totalTokens),
             subtitle: context.l10n.usageUserRequests(top[i].requestCount),
-            accent: AppTheme.ponAccent,
+            accent: AppTheme.accent(context),
           ),
       ],
     );
@@ -165,7 +165,7 @@ class _WorstAnswerCard extends StatelessWidget {
                       : context.l10n.usageNoPreview,
                   maxLines: 3,
                   overflow: TextOverflow.ellipsis,
-                  style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontSize: 13),
+                  style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontSize: 14),
                 ),
               ),
             ],
@@ -225,7 +225,7 @@ class UsageListTileCard extends StatelessWidget {
                   style: TextStyle(
                       color: accent,
                       fontSize: 12,
-                      fontWeight: FontWeight.bold)),
+                      fontWeight: FontWeight.w600)),
             ),
             const SizedBox(width: 12),
           ],
@@ -250,7 +250,7 @@ class UsageListTileCard extends StatelessWidget {
           const SizedBox(width: 8),
           Text(trailing,
               style: TextStyle(
-                  color: accent, fontSize: 14, fontWeight: FontWeight.bold)),
+                  color: accent, fontSize: 14, fontWeight: FontWeight.w600)),
         ],
       ),
     );

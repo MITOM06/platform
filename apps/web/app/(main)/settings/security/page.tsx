@@ -28,7 +28,7 @@ interface ServerError {
 
 export default function SecurityPage() {
   const t = useTranslations('settings.security')
-  const tReg = useTranslations('auth.register')
+  const tReg = useTranslations('auth.password')
   const tCommon = useTranslations('common')
   const user = useAuthStore((s) => s.user)
   const setAuth = useAuthStore((s) => s.setAuth)

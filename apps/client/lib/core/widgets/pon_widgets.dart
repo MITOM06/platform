@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import '../l10n/l10n_ext.dart';
 import '../theme/app_theme.dart';
 import '../theme/motion.dart';
 
@@ -32,18 +33,17 @@ class PonLogo extends StatelessWidget {
           'PON',
           style: TextStyle(
             fontSize: size * 0.48,
-            fontWeight: FontWeight.w900,
+            fontWeight: FontWeight.w700,
             color: scheme.primary,
             letterSpacing: 2,
           ),
         ),
         const SizedBox(height: 4),
         Text(
-          'Connect & Chat',
+          context.l10n.appTagline,
           style: TextStyle(
             fontSize: size * 0.15,
-            color: scheme.onSurface.withValues(alpha: 0.6),
-            letterSpacing: 0.5,
+            color: AppTheme.mutedText(context),
           ),
         ),
       ],
@@ -100,7 +100,7 @@ class _PonLogoPainter extends CustomPainter {
 // ---------------------------------------------------------------------------
 // Surface card — an opaque surface + 1px hairline border. No glass, no glow.
 // Elevation is expressed as a background-shade step (background -> surface),
-// per UI-REDESIGN-DIRECTION.md §2 rule 3.
+// per docs/design-system.md §1.
 // ---------------------------------------------------------------------------
 class PonCard extends StatelessWidget {
   final Widget child;
@@ -134,7 +134,7 @@ class PonCard extends StatelessWidget {
 
 // ---------------------------------------------------------------------------
 // Primary action button — flat accent fill, 10px radius, press-scale only.
-// No gradient, no glow (UI-REDESIGN-DIRECTION.md §2 rules 2-4).
+// No gradient, no glow (docs/design-system.md §1).
 // ---------------------------------------------------------------------------
 class PonButton extends StatefulWidget {
   final VoidCallback? onPressed;
@@ -176,7 +176,9 @@ class _PonButtonState extends State<PonButton> {
                 ? (isDark ? AppTheme.darkBorder : AppTheme.lightBorder)
                 : Theme.of(context).colorScheme.primary,
           ),
-          padding: const EdgeInsets.symmetric(vertical: 16),
+          // 44 high = the phone touch minimum (web's 36–40 control, scaled up).
+          constraints: const BoxConstraints(minHeight: 44),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           alignment: Alignment.center,
           child: widget.isLoading
               ? const SizedBox(
@@ -189,10 +191,10 @@ class _PonButtonState extends State<PonButton> {
                 )
               : DefaultTextStyle(
                   style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
+                    fontFamily: AppTheme.fontSans,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
                     color: Colors.white,
-                    letterSpacing: 0.5,
                   ),
                   child: widget.child,
                 ),
@@ -203,7 +205,7 @@ class _PonButtonState extends State<PonButton> {
 }
 
 // ---------------------------------------------------------------------------
-// Text field — focus is shown by the 2px accent border from
+// Text field — focus is shown by the accent border from
 // `inputDecorationTheme`, not by a neon glow.
 // ---------------------------------------------------------------------------
 class PonTextField extends StatefulWidget {

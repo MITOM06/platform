@@ -36,6 +36,20 @@ export class UsersService {
       .exec();
   }
 
+  /**
+   * Case-insensitive exact email lookup (invite-only onboarding: invitations
+   * store emails lowercase, legacy user rows may be mixed-case). Regex is
+   * anchored + escaped so it is an exact match, never a partial one.
+   */
+  async findByEmailInsensitive(email: string): Promise<UserDocument | null> {
+    const trimmed = (email ?? '').trim();
+    if (!trimmed) return null;
+    const escaped = trimmed.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    return this.userModel
+      .findOne({ email: { $regex: `^${escaped}$`, $options: 'i' } })
+      .exec();
+  }
+
   async findByPhone(phoneNumber: string): Promise<UserDocument | null> {
     return this.userModel
       .findOne({ phoneNumber })
@@ -143,7 +157,7 @@ export class UsersService {
   }
 
   // ✅ Link hoặc update socialId cho user đã tồn tại
-  // Dùng khi: user đăng nhập bằng email thường, sau đó link Google/Twitter
+  // Dùng khi: user đăng nhập bằng email thường, sau đó link Google
   async updateSocialId(
     userId: string,
     provider: string,

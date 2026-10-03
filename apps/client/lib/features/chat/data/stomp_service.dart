@@ -5,6 +5,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:stomp_dart_client/stomp_dart_client.dart';
 import '../../../core/api/token_manager.dart';
 import '../../../core/config/app_config.dart';
+import '../../auth/domain/auth_provider.dart';
 import '../domain/chat_state.dart';
 
 part 'stomp_service.g.dart';
@@ -49,6 +50,12 @@ class StompService extends _$StompService {
   bool _presenceSubPending = false;
   // Tracks whether we have successfully connected at least once this session.
   bool _everConnected = false;
+  // Set by a STOMP ERROR frame (CONNECT/SEND rejected, or the server's
+  // session-revoked push). chat-service revokes sessions instantly, so the
+  // access token may still look fresh locally while being dead server-side:
+  // the next attempt must FORCE a refresh instead of replaying it. Either the
+  // refresh yields a valid token, or it is rejected → logout. No loop.
+  bool _mustRefresh = false;
 
   @override
   void build() {}
@@ -89,6 +96,9 @@ class StompService extends _$StompService {
       _client = null;
     }
     _setAuthHeader(token);
+    // Fresh connect with a just-obtained token — a stale flag from a previous
+    // session must not force an extra refresh-token rotation.
+    _mustRefresh = false;
     _client = StompClient(
       config: StompConfig(
         url: AppConfig.wsUrl,
@@ -126,18 +136,33 @@ class StompService extends _$StompService {
   /// which is preferable to crashing the keep-alive provider.
   Future<void> _beforeConnect() async {
     try {
-      final token = await _tokenManager.getValidAccessToken();
+      final token = _mustRefresh
+          ? await _tokenManager.forceRefresh()
+          : await _tokenManager.getValidAccessToken();
       if (token != null) {
+        _mustRefresh = false;
         _setAuthHeader(token);
+      } else if (!await _tokenManager.hasRefreshCredentials()) {
+        // Logged out (credentials wiped): stop reconnecting with a dead token.
+        debugPrint('[STOMP] beforeConnect: no session — stopping reconnects');
+        disconnect();
       } else {
+        // Transient refresh failure (network): keep retrying.
         debugPrint('[STOMP] beforeConnect: no valid token available');
       }
+    } on RefreshRejectedException {
+      // Server rejected the session (revoked / ACCOUNT_BLOCKED): stop the
+      // reconnect loop and sign out — the login screen explains a block.
+      debugPrint('[STOMP] beforeConnect: session rejected — logging out');
+      disconnect();
+      ref.read(authNotifierProvider.notifier).forceLogout();
     } catch (e) {
       debugPrint('[STOMP] beforeConnect error: $e');
     }
   }
 
   void _onConnect(StompFrame frame) {
+    _mustRefresh = false;
     // Emit on the reconnect stream if this is not the initial connection.
     if (_everConnected) {
       _reconnectCtrl.add(null);
@@ -159,10 +184,12 @@ class StompService extends _$StompService {
   }
 
   void _onError(StompFrame frame) {
+    _mustRefresh = true;
     // Surface the failure (previously silent) so dead-token / auth rejections
     // are diagnosable. stomp_dart_client auto-reconnects via reconnectDelay,
-    // and `beforeConnect` refreshes the token before the next attempt — so an
-    // "Invalid or expired JWT token" error now self-heals instead of looping.
+    // and `beforeConnect` force-refreshes the token before the next attempt —
+    // so an expired/revoked token either self-heals or ends in a logout
+    // instead of looping. Debug log only; never shown to the user.
     debugPrint('[STOMP] error frame: command=${frame.command} '
         'message=${frame.headers['message']} body=${frame.body}');
   }

@@ -5,7 +5,7 @@ import { Test } from '@nestjs/testing';
 import { UnauthorizedException } from '@nestjs/common';
 import * as argon2 from 'argon2';
 import { REDIS_CLIENT } from '@platform/database';
-import { SessionService } from './session.service';
+import { SessionService, SESSIONS_REVOKED_CHANNEL } from './session.service';
 import { AuthCode } from '../../common/auth-code.enum';
 
 /**
@@ -155,4 +155,91 @@ describe('SessionService.rotateRefreshToken', () => {
     expect(code).toBe(AuthCode.REFRESH_TOKEN_ROTATED);
     expect(redis.multi).not.toHaveBeenCalled();
   });
+});
+
+/**
+ * revokeAllSessions — marks every sid revoked AND publishes
+ * `auth:sessions-revoked` so other services drop live connections instantly.
+ */
+describe('SessionService.revokeAllSessions / refresh-owner helpers', () => {
+  let service: SessionService;
+  let pipe: { hset: jest.Mock; srem: jest.Mock; exec: jest.Mock };
+  let redis: {
+    smembers: jest.Mock;
+    pipeline: jest.Mock;
+    publish: jest.Mock;
+    hget: jest.Mock;
+    hmget: jest.Mock;
+  };
+
+  beforeEach(async () => {
+    pipe = {
+      hset: jest.fn().mockReturnThis(),
+      srem: jest.fn().mockReturnThis(),
+      exec: jest.fn().mockResolvedValue([]),
+    };
+    redis = {
+      smembers: jest.fn().mockResolvedValue(['a', 'b']),
+      pipeline: jest.fn().mockReturnValue(pipe),
+      publish: jest.fn().mockResolvedValue(1),
+      hget: jest.fn(),
+      hmget: jest.fn(),
+    };
+    const moduleRef = await Test.createTestingModule({
+      providers: [SessionService, { provide: REDIS_CLIENT, useValue: redis }],
+    }).compile();
+    service = moduleRef.get(SessionService);
+  });
+
+  it('revokes every sid then publishes {userId, reason} on auth:sessions-revoked', async () => {
+    await service.revokeAllSessions('u1', 'blocked');
+
+    expect(pipe.hset).toHaveBeenCalledWith('sess:a', { revoked: '1' });
+    expect(pipe.hset).toHaveBeenCalledWith('sess:b', { revoked: '1' });
+    expect(pipe.exec).toHaveBeenCalled();
+    expect(SESSIONS_REVOKED_CHANNEL).toBe('auth:sessions-revoked');
+    expect(redis.publish).toHaveBeenCalledWith(
+      'auth:sessions-revoked',
+      JSON.stringify({ userId: 'u1', reason: 'blocked' }),
+    );
+    // Publish happens after the revoke is persisted.
+    expect(redis.publish.mock.invocationCallOrder[0]).toBeGreaterThan(
+      pipe.exec.mock.invocationCallOrder[0],
+    );
+  });
+
+  it('defaults reason to "other" and still publishes when no sid is tracked', async () => {
+    redis.smembers.mockResolvedValue([]);
+    await service.revokeAllSessions('u2');
+    expect(redis.pipeline).not.toHaveBeenCalled();
+    expect(redis.publish).toHaveBeenCalledWith(
+      'auth:sessions-revoked',
+      JSON.stringify({ userId: 'u2', reason: 'other' }),
+    );
+  });
+
+  it('a failed publish never throws out of the revoke', async () => {
+    redis.publish.mockRejectedValue(new Error('redis down'));
+    await expect(service.revokeAllSessions('u1', 'role_changed')).resolves.toBeUndefined();
+    expect(pipe.exec).toHaveBeenCalled();
+  });
+
+  it('peekSessionUserId reads userId even from a revoked session', async () => {
+    redis.hget.mockResolvedValue('u1');
+    await expect(service.peekSessionUserId('s1')).resolves.toBe('u1');
+    expect(redis.hget).toHaveBeenCalledWith('sess:s1', 'userId');
+    redis.hget.mockResolvedValue(null);
+    await expect(service.peekSessionUserId('gone')).resolves.toBeNull();
+  });
+
+  it('refreshTokenBelongsToSession matches current or previous hash only', async () => {
+    const cur = await argon2.hash('v1.cur');
+    const prev = await argon2.hash('v0.prev');
+    redis.hmget.mockResolvedValue([cur, prev]);
+    await expect(service.refreshTokenBelongsToSession('s1', 'v1.cur')).resolves.toBe(true);
+    await expect(service.refreshTokenBelongsToSession('s1', 'v0.prev')).resolves.toBe(true);
+    await expect(service.refreshTokenBelongsToSession('s1', 'v1.forged')).resolves.toBe(false);
+    redis.hmget.mockResolvedValue([null, null]);
+    await expect(service.refreshTokenBelongsToSession('s1', 'v1.cur')).resolves.toBe(false);
+  }, 30_000); // argon2 is slow under a fully parallel jest run
 });

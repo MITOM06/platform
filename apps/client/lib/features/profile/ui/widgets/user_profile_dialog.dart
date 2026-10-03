@@ -249,7 +249,7 @@ class _ProfileDialogContent extends ConsumerWidget {
                 decoration: BoxDecoration(
                   borderRadius:
                       const BorderRadius.vertical(top: Radius.circular(AppTheme.radiusSheet)),
-                  color: AppTheme.ponAccent.withValues(alpha: 0.2),
+                  color: AppTheme.accent(context).withValues(alpha: 0.2),
                   image: coverUrl != null
                       ? DecorationImage(
                           image: CachedNetworkImageProvider(coverUrl),
@@ -268,7 +268,7 @@ class _ProfileDialogContent extends ConsumerWidget {
                         radius: 40,
                         backgroundImage:
                             avatarUrl != null ? CachedNetworkImageProvider(avatarUrl) : null,
-                        backgroundColor: AppTheme.ponAccent.withValues(alpha: 0.3),
+                        backgroundColor: AppTheme.accent(context).withValues(alpha: 0.3),
                         child: avatarUrl == null
                             ? Text(
                                 u.displayName.isNotEmpty ? u.displayName[0].toUpperCase() : '?',
@@ -285,7 +285,7 @@ class _ProfileDialogContent extends ConsumerWidget {
                             child: Container(
                               padding: const EdgeInsets.all(4),
                               decoration: BoxDecoration(
-                                color: AppTheme.ponAccent,
+                                color: AppTheme.accent(context),
                                 shape: BoxShape.circle,
                                 border: Border.all(color: Theme.of(context).colorScheme.surface, width: 2),
                               ),
@@ -308,12 +308,12 @@ class _ProfileDialogContent extends ConsumerWidget {
                     controller: nameCtrl,
                     decoration:
                         InputDecoration(labelText: context.l10n.profileNameLabel),
-                    style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                    style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
                   )
                 : Text(
                     u.displayName,
                     textAlign: TextAlign.center,
-                    style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                    style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
                   ),
           ),
           const SizedBox(height: 12),
@@ -327,7 +327,7 @@ class _ProfileDialogContent extends ConsumerWidget {
                   context.l10n.profilePrivacySection,
                   style: TextStyle(
                     fontSize: 12,
-                    fontWeight: FontWeight.bold,
+                    fontWeight: FontWeight.w600,
                     color: AppTheme.mutedText(context),
                   ),
                 ),
@@ -374,7 +374,7 @@ class _ProfileDialogContent extends ConsumerWidget {
                                 : const Icon(Icons.check_rounded, size: 16),
                             label: Text(context.l10n.profileSave),
                             onPressed: saving ? null : onSave,
-                            style: FilledButton.styleFrom(backgroundColor: AppTheme.ponAccent),
+                            style: FilledButton.styleFrom(backgroundColor: AppTheme.accent(context)),
                           ),
                         ),
                       ],

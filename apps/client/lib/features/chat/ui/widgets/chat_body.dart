@@ -230,9 +230,9 @@ class _ChatMessageListSection extends ConsumerWidget {
     // Loading: only true on the very first load (before any data).
     final isLoading = ref.watch(provider.select((s) => s.isLoading && !s.hasValue));
     if (isLoading) {
-      return const Center(
+      return Center(
         child: CircularProgressIndicator(
-          valueColor: AlwaysStoppedAnimation<Color>(AppTheme.ponAccent),
+          valueColor: AlwaysStoppedAnimation<Color>(AppTheme.accent(context)),
         ),
       );
     }

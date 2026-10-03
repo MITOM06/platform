@@ -116,13 +116,13 @@ class _NoticeRow extends StatelessWidget {
           Expanded(
             child: Text(
               l10n.phoneNoticeText,
-              style: TextStyle(fontSize: 13, color: muted),
+              style: TextStyle(fontSize: 14, color: muted),
             ),
           ),
           const SizedBox(width: 8),
           TextButton(
             onPressed: onVerify,
-            style: TextButton.styleFrom(foregroundColor: AppTheme.ponAccent),
+            style: TextButton.styleFrom(foregroundColor: AppTheme.accent(context)),
             child: Text(l10n.phoneVerifyAction),
           ),
         ],
@@ -149,13 +149,13 @@ class _PhoneRow extends StatelessWidget {
     final l10n = context.l10n;
     final borderColor = verified
         ? AppTheme.onlineGreen.withValues(alpha: 0.4)
-        : AppTheme.ponAccent.withValues(alpha: 0.5);
+        : AppTheme.accent(context).withValues(alpha: 0.5);
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(8),
         border: Border.all(color: borderColor),
-        color: (verified ? AppTheme.onlineGreen : AppTheme.ponAccent)
+        color: (verified ? AppTheme.onlineGreen : AppTheme.accent(context))
             .withValues(alpha: 0.06),
       ),
       child: Row(
@@ -163,7 +163,7 @@ class _PhoneRow extends StatelessWidget {
           Icon(
             verified ? Icons.verified_rounded : Icons.shield_rounded,
             size: 18,
-            color: verified ? AppTheme.onlineGreen : AppTheme.ponAccent,
+            color: verified ? AppTheme.onlineGreen : AppTheme.accent(context),
           ),
           const SizedBox(width: 10),
           Expanded(
@@ -183,7 +183,7 @@ class _PhoneRow extends StatelessWidget {
                     fontSize: 12,
                     fontWeight: FontWeight.w600,
                     color:
-                        verified ? AppTheme.onlineGreen : AppTheme.ponAccent,
+                        verified ? AppTheme.onlineGreen : AppTheme.accent(context),
                   ),
                 ),
               ],
@@ -192,7 +192,7 @@ class _PhoneRow extends StatelessWidget {
           const SizedBox(width: 8),
           TextButton(
             onPressed: onAction,
-            style: TextButton.styleFrom(foregroundColor: AppTheme.ponAccent),
+            style: TextButton.styleFrom(foregroundColor: AppTheme.accent(context)),
             child: Text(
               verified ? l10n.phoneChangeNumber : l10n.phoneVerifyAction,
             ),

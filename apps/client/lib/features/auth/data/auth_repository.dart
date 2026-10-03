@@ -5,6 +5,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../../../core/api/dio_client.dart';
 import '../domain/auth_provider.dart';
 import '../domain/auth_state.dart';
+import '../domain/invitation_preview.dart';
 import '../domain/sso_info.dart';
 
 const _keyAccessToken = 'accessToken';
@@ -34,13 +35,42 @@ class AuthRepository {
     return user;
   }
 
-  Future<void> register(
-      String displayName, String email, String password) async {
-    await _dio.post('/auth/register', data: {
-      'displayName': displayName,
-      'email': email,
-      'password': password,
-    });
+  /// Public preview of an invitation (`GET /auth/invitations/:token`).
+  /// Throws a DioException carrying `INVITATION_INVALID` / `_EXPIRED` /
+  /// `_REVOKED` / `_ALREADY_ACCEPTED` when the link can't be used.
+  Future<InvitationPreview> getInvitation(String token) async {
+    final res =
+        await _dio.get('/auth/invitations/${Uri.encodeComponent(token)}');
+    return InvitationPreview.fromJson(
+        Map<String, dynamic>.from(res.data as Map));
+  }
+
+  /// Accepts an invitation by choosing a display name + password
+  /// (`POST /auth/invitations/:token/accept-password`). The response is the
+  /// same LoginTokens body as `/auth/login`, so the session is persisted the
+  /// same way and the signed-in user is returned.
+  Future<UserModel> acceptInvitationWithPassword(
+    String token,
+    String displayName,
+    String password,
+  ) async {
+    final response = await _dio.post(
+      '/auth/invitations/${Uri.encodeComponent(token)}/accept-password',
+      data: {
+        'displayName': displayName,
+        'password': password,
+        'platform': 'mobile',
+      },
+    );
+    final data = response.data as Map<String, dynamic>;
+    final user = UserModel.fromJson(data['user'] as Map<String, dynamic>);
+    await _saveCredentials(
+      accessToken: data['accessToken'] as String,
+      refreshToken: data['refreshToken'] as String,
+      sid: data['sid'] as String,
+      user: user,
+    );
+    return user;
   }
 
   Future<void> verifyOtp(String email, String otpCode) async {

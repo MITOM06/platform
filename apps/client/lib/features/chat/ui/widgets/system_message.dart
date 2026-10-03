@@ -97,7 +97,7 @@ class SystemMessage extends ConsumerWidget {
           text,
           textAlign: TextAlign.center,
           style: TextStyle(
-            fontSize: 11.5,
+            fontSize: 11,
             color: AppTheme.mutedText(context),
           ),
         ),
@@ -168,7 +168,7 @@ class _CallSystemMessage extends StatelessWidget {
         : (isDark ? AppTheme.darkAccentTint : AppTheme.lightAccentTint);
     final tintFg = isMissed
         ? Theme.of(context).colorScheme.error
-        : (isDark ? AppTheme.darkTintFg : AppTheme.ponAccent);
+        : (isDark ? AppTheme.darkTintFg : AppTheme.accent(context));
 
     return Center(
       child: Container(
@@ -190,7 +190,7 @@ class _CallSystemMessage extends StatelessWidget {
             Text(
               text,
               style: TextStyle(
-                fontSize: 11.5,
+                fontSize: 11,
                 fontWeight: FontWeight.w600,
                 color: tintFg,
               ),
@@ -235,7 +235,7 @@ class LegacyCallLogContent extends StatelessWidget {
         Flexible(
           child: Text(
             content,
-            style: TextStyle(color: color, fontSize: 14.5, height: 1.35),
+            style: TextStyle(color: color, fontSize: 14, height: 1.35),
           ),
         ),
       ],

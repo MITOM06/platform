@@ -199,16 +199,16 @@ class _WallpaperDialogState extends State<WallpaperDialog> {
                     padding:
                         const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                     child: _uploading
-                        ? const Center(
+                        ? Center(
                             child: CircularProgressIndicator(
                               valueColor:
-                                  AlwaysStoppedAnimation<Color>(AppTheme.ponAccent),
+                                  AlwaysStoppedAnimation<Color>(AppTheme.accent(context)),
                             ),
                           )
                         : OutlinedButton.icon(
                             style: OutlinedButton.styleFrom(
-                              foregroundColor: AppTheme.ponAccent,
-                              side: const BorderSide(color: AppTheme.ponAccent),
+                              foregroundColor: AppTheme.accent(context),
+                              side: BorderSide(color: AppTheme.accent(context)),
                             ),
                             icon: const Icon(Icons.add_photo_alternate_rounded),
                             label: Text(context.l10n.uploadImageButton),
@@ -242,7 +242,7 @@ class _WallpaperDialogState extends State<WallpaperDialog> {
                   const SizedBox(width: 8),
                   FilledButton(
                     style:
-                        FilledButton.styleFrom(backgroundColor: AppTheme.ponAccent),
+                        FilledButton.styleFrom(backgroundColor: AppTheme.accent(context)),
                     onPressed: _confirm,
                     child: Text(context.l10n.actionConfirm,
                         ),
@@ -285,7 +285,7 @@ class _WallpaperDialogState extends State<WallpaperDialog> {
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 border: Border.all(
-                  color: isSel ? AppTheme.ponAccent : AppTheme.hairline(context),
+                  color: isSel ? AppTheme.accent(context) : AppTheme.hairline(context),
                   width: isSel ? 2.5 : 1.5,
                 ),
                 gradient: colors != null
@@ -308,11 +308,11 @@ class _WallpaperDialogState extends State<WallpaperDialog> {
             Expanded(
               child: Text(name,
                   style: TextStyle(
-                      color: isSel ? AppTheme.ponAccent : AppTheme.mutedText(context),
+                      color: isSel ? AppTheme.accent(context) : AppTheme.mutedText(context),
                       fontSize: 14)),
             ),
             if (isSel)
-              const Icon(Icons.check_circle_rounded, color: AppTheme.ponAccent, size: 18),
+              Icon(Icons.check_circle_rounded, color: AppTheme.accent(context), size: 18),
           ],
         ),
       ),
@@ -330,7 +330,7 @@ class _WallpaperDialogState extends State<WallpaperDialog> {
   /// "Xem thêm / Ẩn bớt" toggle button.
   Widget _buildShowMoreButton() {
     return TextButton(
-      style: TextButton.styleFrom(foregroundColor: AppTheme.ponAccent),
+      style: TextButton.styleFrom(foregroundColor: AppTheme.accent(context)),
       onPressed: () => setState(() => _colorsExpanded = !_colorsExpanded),
       child: Text(_colorsExpanded
           ? context.l10n.wallpaperShowLess
@@ -362,7 +362,7 @@ class _WallpaperDialogState extends State<WallpaperDialog> {
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter)
             : null,
-        color: colors == null ? const Color(0xFF101014) : null,
+        color: colors == null ? AppTheme.darkBackground : null,
       ),
       child: colors == null
           ? Center(

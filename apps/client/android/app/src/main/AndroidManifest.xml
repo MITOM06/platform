@@ -38,12 +38,14 @@
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
-            <!-- OAuth deeplink: platform://auth?code=xxx -->
+            <!-- OAuth deeplink: platform://auth?code=xxx | platform://auth?error=CODE -->
+            <!-- Invitation deeplink: platform://invite?token=xxx (web invite page "Open in the app") -->
             <intent-filter>
                 <action android:name="android.intent.action.VIEW"/>
                 <category android:name="android.intent.category.DEFAULT"/>
                 <category android:name="android.intent.category.BROWSABLE"/>
                 <data android:scheme="platform" android:host="auth"/>
+                <data android:scheme="platform" android:host="invite"/>
             </intent-filter>
         </activity>
         <!-- FCM: use high-importance channel for all notification messages -->

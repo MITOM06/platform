@@ -1,12 +1,14 @@
 import {
   BadRequestException,
+  ConflictException,
+  ForbiddenException,
   Inject,
   Injectable,
   Logger,
   NotFoundException,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { isValidObjectId, Model } from 'mongoose';
 import {
   Workspace,
   WorkspaceDocument,
@@ -25,7 +27,8 @@ import {
   CreateDepartmentDto,
   UpdateDepartmentDto,
 } from './dto/department.dto';
-import { UpdateMemberDto } from './dto/member.dto';
+import { UpdateMemberDto, UpdateMemberStatusDto } from './dto/member.dto';
+import { AuthCode } from '../../common/auth-code.enum';
 import { CreateRoleDto, UpdateRoleDto } from './dto/role.dto';
 import { UpdateWorkspaceDto } from './dto/workspace.dto';
 
@@ -37,6 +40,8 @@ import { UpdateWorkspaceDto } from './dto/workspace.dto';
  */
 /** Redis channel ai-service subscribes to so it drops its cached AI settings. */
 export const AI_SETTINGS_INVALIDATE_CHANNEL = 'ai:settings:invalidate';
+
+const OWNER_ROLE_NAME = 'Owner';
 
 @Injectable()
 export class AdminService {
@@ -79,7 +84,7 @@ export class AdminService {
     const dept = await this.departmentModel
       .findByIdAndUpdate(id, { $set: dto }, { new: true })
       .exec();
-    if (!dept) throw new NotFoundException({ code: 'DEPARTMENT_NOT_FOUND' });
+    if (!dept) throw new NotFoundException({ code: AuthCode.DEPARTMENT_NOT_FOUND });
     await this.audit.record({
       actorId,
       action: 'department.update',
@@ -92,7 +97,7 @@ export class AdminService {
 
   async deleteDepartment(actorId: string, id: string) {
     const dept = await this.departmentModel.findByIdAndDelete(id).exec();
-    if (!dept) throw new NotFoundException({ code: 'DEPARTMENT_NOT_FOUND' });
+    if (!dept) throw new NotFoundException({ code: AuthCode.DEPARTMENT_NOT_FOUND });
     await this.audit.record({
       actorId,
       action: 'department.delete',
@@ -114,26 +119,154 @@ export class AdminService {
   /**
    * Assign a member's role and/or departments, then revoke all of their
    * sessions so stale permissions can't outlive a single access-token lifetime.
+   * A role change (roleId present AND different) is guarded by
+   * assertRoleChangeAllowed; an unchanged roleId is ignored.
    */
-  async updateMember(actorId: string, id: string, dto: UpdateMemberDto) {
-    const set: Record<string, unknown> = {};
-    if (dto.roleId !== undefined) set.roleId = dto.roleId;
-    if (dto.departmentIds !== undefined) set.departmentIds = dto.departmentIds;
+  async updateMember(
+    actorId: string,
+    actorRole: string | undefined,
+    id: string,
+    dto: UpdateMemberDto,
+  ) {
+    const member = isValidObjectId(id)
+      ? await this.userModel.findById(id).exec()
+      : null;
+    if (!member) throw new NotFoundException({ code: AuthCode.MEMBER_NOT_FOUND });
 
-    const member = await this.userModel
+    const set: Record<string, unknown> = {};
+    const currentRoleId = member.roleId?.toString();
+    const roleChanged = dto.roleId !== undefined && dto.roleId !== currentRoleId;
+    if (roleChanged) {
+      await this.assertRoleChangeAllowed(actorId, actorRole, id, currentRoleId, dto.roleId!);
+      set.roleId = dto.roleId;
+    }
+    if (dto.departmentIds !== undefined) set.departmentIds = dto.departmentIds;
+    if (Object.keys(set).length === 0) return member;
+
+    const updated = await this.userModel
       .findByIdAndUpdate(id, { $set: set }, { new: true })
       .exec();
-    if (!member) throw new NotFoundException({ code: 'MEMBER_NOT_FOUND' });
+    if (!updated) throw new NotFoundException({ code: AuthCode.MEMBER_NOT_FOUND });
 
-    await this.session.revokeAllSessions(id);
+    await this.session.revokeAllSessions(id, roleChanged ? 'role_changed' : 'other');
     await this.audit.record({
       actorId,
       action: 'member.update',
       targetType: 'member',
       targetId: id,
-      meta: { changes: set },
+      meta: roleChanged ? { changes: set, fromRoleId: currentRoleId ?? null } : { changes: set },
     });
-    return member;
+    return updated;
+  }
+
+  /**
+   * Owner-role guard for PATCH /admin/members/:id (contract A):
+   *  - own role                      → 400 CANNOT_CHANGE_OWN_ROLE
+   *  - unknown target role           → 404 ROLE_NOT_FOUND
+   *  - grant Owner / touch an Owner  → actor must be Owner, else 403 OWNER_ROLE_ASSIGN_FORBIDDEN
+   *  - demote the last ACTIVE Owner  → 400 LAST_OWNER_CANNOT_BE_DEMOTED
+   */
+  private async assertRoleChangeAllowed(
+    actorId: string,
+    actorRole: string | undefined,
+    targetId: string,
+    currentRoleId: string | undefined,
+    newRoleId: string,
+  ) {
+    if (targetId === actorId) {
+      throw new BadRequestException({ code: AuthCode.CANNOT_CHANGE_OWN_ROLE });
+    }
+    const newRole = await this.roleModel.findById(newRoleId).exec();
+    if (!newRole) throw new NotFoundException({ code: AuthCode.ROLE_NOT_FOUND });
+
+    const ownerRole =
+      newRole.name === OWNER_ROLE_NAME
+        ? newRole
+        : await this.roleModel.findOne({ name: OWNER_ROLE_NAME }).exec();
+    const ownerRoleId = ownerRole?._id.toString();
+    const grantsOwner = newRole.name === OWNER_ROLE_NAME;
+    const targetIsOwner = !!ownerRoleId && currentRoleId === ownerRoleId;
+    if ((grantsOwner || targetIsOwner) && actorRole !== OWNER_ROLE_NAME) {
+      throw new ForbiddenException({ code: AuthCode.OWNER_ROLE_ASSIGN_FORBIDDEN });
+    }
+
+    if (targetIsOwner && !grantsOwner) {
+      const otherActiveOwners = await this.userModel
+        .countDocuments({
+          _id: { $ne: targetId },
+          roleId: ownerRole!._id,
+          status: 'active',
+        })
+        .exec();
+      if (otherActiveOwners === 0) {
+        throw new BadRequestException({
+          code: AuthCode.LAST_OWNER_CANNOT_BE_DEMOTED,
+        });
+      }
+    }
+  }
+
+  /**
+   * Block / unblock a member. Blocking revokes every session (auth-service
+   * rejects the next request; chat-service within one access-token lifetime).
+   * Idempotent: same status → 200 with no audit and no revoke.
+   */
+  async setMemberStatus(
+    actorId: string,
+    actorRole: string | undefined,
+    id: string,
+    dto: UpdateMemberStatusDto,
+  ) {
+    const member = isValidObjectId(id)
+      ? await this.userModel.findById(id).exec()
+      : null;
+    if (!member) throw new NotFoundException({ code: AuthCode.MEMBER_NOT_FOUND });
+    if ((member.status ?? 'active') === dto.status) return this.memberView(id);
+
+    if (dto.status === 'blocked') {
+      if (id === actorId) {
+        throw new BadRequestException({ code: AuthCode.CANNOT_BLOCK_SELF });
+      }
+      const ownerRole = await this.roleModel.findOne({ name: 'Owner' }).exec();
+      const isOwner =
+        !!ownerRole && member.roleId?.toString() === ownerRole._id.toString();
+      if (isOwner) {
+        if (actorRole !== 'Owner') {
+          throw new ForbiddenException({ code: AuthCode.OWNER_BLOCK_FORBIDDEN });
+        }
+        const otherActiveOwners = await this.userModel
+          .countDocuments({
+            _id: { $ne: id },
+            roleId: ownerRole._id,
+            status: 'active',
+          })
+          .exec();
+        if (otherActiveOwners === 0) {
+          throw new ConflictException({
+            code: AuthCode.LAST_OWNER_CANNOT_BE_BLOCKED,
+          });
+        }
+      }
+    }
+
+    await this.userModel
+      .updateOne({ _id: id }, { $set: { status: dto.status } })
+      .exec();
+    if (dto.status === 'blocked') await this.session.revokeAllSessions(id, 'blocked');
+    await this.audit.record({
+      actorId,
+      action: dto.status === 'blocked' ? 'member.block' : 'member.unblock',
+      targetType: 'member',
+      targetId: id,
+    });
+    return this.memberView(id);
+  }
+
+  private memberView(id: string) {
+    return this.userModel
+      .findById(id)
+      .select('displayName email avatarUrl roleId departmentIds status')
+      .exec();
   }
 
   // ===================== ROLES =====================
@@ -160,9 +293,9 @@ export class AdminService {
   /** Edit a role's name/permissions. The Owner role is immutable. */
   async updateRole(actorId: string, id: string, dto: UpdateRoleDto) {
     const role = await this.roleModel.findById(id).exec();
-    if (!role) throw new NotFoundException({ code: 'ROLE_NOT_FOUND' });
+    if (!role) throw new NotFoundException({ code: AuthCode.ROLE_NOT_FOUND });
     if (role.name === 'Owner') {
-      throw new BadRequestException({ code: 'OWNER_ROLE_IMMUTABLE' });
+      throw new BadRequestException({ code: AuthCode.OWNER_ROLE_IMMUTABLE });
     }
 
     const set: Record<string, unknown> = {};
