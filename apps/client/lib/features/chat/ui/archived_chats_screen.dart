@@ -20,7 +20,7 @@ class ArchivedChatsScreen extends ConsumerWidget {
     final archivedAsync = ref.watch(archivedConversationsProvider);
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final accent =
-        isDark ? AppTheme.ponAccent : Theme.of(context).colorScheme.primary;
+        isDark ? AppTheme.accent(context) : Theme.of(context).colorScheme.primary;
 
     return Scaffold(
       appBar: AppBar(
@@ -48,7 +48,7 @@ class ArchivedChatsScreen extends ConsumerWidget {
                 Text(
                   context.l10n.listLoadFailed,
                   style: TextStyle(
-                    fontWeight: FontWeight.bold,
+                    fontWeight: FontWeight.w600,
                     color: Theme.of(context).colorScheme.onSurface,
                   ),
                 ),
@@ -97,7 +97,7 @@ class _EmptyArchived extends StatelessWidget {
             context.l10n.emptyArchivedChats,
             style: TextStyle(
               fontSize: 16,
-              fontWeight: FontWeight.bold,
+              fontWeight: FontWeight.w600,
               color: Theme.of(context).colorScheme.onSurface,
             ),
           ),
@@ -178,7 +178,7 @@ class _ArchivedTile extends ConsumerWidget {
             style: TextStyle(
               fontWeight: FontWeight.w600,
               color: Theme.of(context).colorScheme.onSurface,
-              fontSize: 15,
+              fontSize: 16,
             ),
           ),
           subtitle: conv.lastMessage != null
@@ -190,14 +190,14 @@ class _ArchivedTile extends ConsumerWidget {
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
                     color: AppTheme.mutedText(context),
-                    fontSize: 13,
+                    fontSize: 12,
                   ),
                 )
               : null,
           trailing: IconButton(
             icon: const Icon(Icons.unarchive_rounded),
             tooltip: context.l10n.unarchiveChat,
-            color: isDark ? AppTheme.ponAccent : Theme.of(context).colorScheme.primary,
+            color: isDark ? AppTheme.accent(context) : Theme.of(context).colorScheme.primary,
             onPressed: () => ref
                 .read(conversationsNotifierProvider.notifier)
                 .unarchiveConversation(conv.id),

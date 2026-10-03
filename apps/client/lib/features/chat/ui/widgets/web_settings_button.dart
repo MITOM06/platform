@@ -26,7 +26,7 @@ class WebSettingsButton extends StatelessWidget {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final accent =
-        isDark ? AppTheme.ponAccent : Theme.of(context).colorScheme.primary;
+        isDark ? AppTheme.accent(context) : Theme.of(context).colorScheme.primary;
 
     return Padding(
       padding: const EdgeInsets.all(12),

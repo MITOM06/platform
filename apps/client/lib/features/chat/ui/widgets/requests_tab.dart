@@ -23,7 +23,7 @@ class RequestsTab extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final accent =
-        isDark ? AppTheme.ponAccent : Theme.of(context).colorScheme.primary;
+        isDark ? AppTheme.accent(context) : Theme.of(context).colorScheme.primary;
 
     return convsAsync.when(
       loading: () => Center(
@@ -43,7 +43,7 @@ class RequestsTab extends ConsumerWidget {
               Text(
                 context.l10n.listLoadFailed,
                 style: TextStyle(
-                  fontWeight: FontWeight.bold,
+                  fontWeight: FontWeight.w600,
                   color: Theme.of(context).colorScheme.onSurface,
                 ),
               ),
@@ -114,7 +114,7 @@ class _EmptyRequests extends StatelessWidget {
                 context.l10n.noRequests,
                 style: TextStyle(
                   fontSize: 16,
-                  fontWeight: FontWeight.bold,
+                  fontWeight: FontWeight.w600,
                   color: Theme.of(context).colorScheme.onSurface,
                 ),
               ),

@@ -135,7 +135,7 @@ class _InvitationTile extends StatelessWidget {
             color: statusColor,
           ),
           if (invitation.roleName != null)
-            _Chip(label: invitation.roleName!, color: AppTheme.ponAccent),
+            _Chip(label: invitation.roleName!, color: AppTheme.accent(context)),
           if (details.isNotEmpty)
             Text(details.join(' · '),
                 style: TextStyle(color: muted, fontSize: 12)),

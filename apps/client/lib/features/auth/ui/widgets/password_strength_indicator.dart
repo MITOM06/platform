@@ -87,7 +87,7 @@ class PasswordStrengthIndicator extends StatelessWidget {
                         : Icons.radio_button_unchecked,
                     size: 14,
                     color: passed
-                        ? AppTheme.ponAccent
+                        ? AppTheme.accent(context)
                         : AppTheme.hairline(context),
                   ),
                   const SizedBox(width: 6),

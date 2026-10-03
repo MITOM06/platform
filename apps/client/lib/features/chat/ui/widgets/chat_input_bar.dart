@@ -154,7 +154,7 @@ class _ChatInputBarState extends State<ChatInputBar> {
             '${context.l10n.recording}  ${_fmtSeconds(_recordingSeconds)}',
             style: TextStyle(
               color: AppTheme.mutedText(context),
-              fontSize: 15,
+              fontSize: 14,
             ),
           ),
         ),
@@ -168,9 +168,9 @@ class _ChatInputBarState extends State<ChatInputBar> {
         ),
         AnimatedContainer(
           duration: const Duration(milliseconds: 200),
-          decoration: const BoxDecoration(
+          decoration: BoxDecoration(
             shape: BoxShape.circle,
-            color: AppTheme.ponAccent,
+            color: AppTheme.accent(context),
           ),
           child: IconButton(
             onPressed: _stopAndSend,
@@ -195,14 +195,14 @@ class _ChatInputBarState extends State<ChatInputBar> {
             widget.emojiActive
                 ? Icons.keyboard_rounded
                 : Icons.emoji_emotions_rounded,
-            color: AppTheme.ponAccent.withValues(alpha: 0.8),
+            color: AppTheme.accent(context).withValues(alpha: 0.8),
           ),
         ),
         IconButton(
           onPressed: widget.onAttach,
           icon: Icon(
             Icons.add_photo_alternate_rounded,
-            color: AppTheme.ponAccent.withValues(alpha: 0.85),
+            color: AppTheme.accent(context).withValues(alpha: 0.85),
           ),
         ),
         Expanded(
@@ -213,7 +213,7 @@ class _ChatInputBarState extends State<ChatInputBar> {
               onChanged: widget.onChanged,
               onSubmitted: (_) => widget.onSend(),
               textInputAction: TextInputAction.send,
-              style: TextStyle(color: textColor, fontSize: 15),
+              style: TextStyle(color: textColor, fontSize: 14),
               decoration: InputDecoration(
                 hintText: context.l10n.messageHint,
                 hintStyle: TextStyle(color: hintColor),
@@ -234,7 +234,7 @@ class _ChatInputBarState extends State<ChatInputBar> {
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(AppTheme.radiusControl),
                   borderSide:
-                      const BorderSide(color: AppTheme.ponAccent, width: 1.5),
+                      BorderSide(color: AppTheme.accent(context), width: 1.5),
                 ),
               ),
             ),
@@ -244,9 +244,9 @@ class _ChatInputBarState extends State<ChatInputBar> {
         if (_hasText || widget.hasAttachments)
           AnimatedContainer(
             duration: const Duration(milliseconds: 200),
-            decoration: const BoxDecoration(
+            decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: AppTheme.ponAccent,
+              color: AppTheme.accent(context),
             ),
             child: IconButton(
               onPressed: widget.onSend,
@@ -263,7 +263,7 @@ class _ChatInputBarState extends State<ChatInputBar> {
             onPressed: _startRecording,
             icon: Icon(
               Icons.mic_none_rounded,
-              color: AppTheme.ponAccent.withValues(alpha: 0.8),
+              color: AppTheme.accent(context).withValues(alpha: 0.8),
             ),
           )
         else

@@ -43,9 +43,9 @@ class MemberTile extends StatelessWidget {
       tileColor: Theme.of(context).colorScheme.surface,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       leading: CircleAvatar(
-        backgroundColor: AppTheme.ponAccent.withValues(alpha: 0.15),
+        backgroundColor: AppTheme.accent(context).withValues(alpha: 0.15),
         child: Text(initials(member.displayName),
-            style: const TextStyle(color: AppTheme.ponAccent, fontSize: 13)),
+            style: TextStyle(color: AppTheme.accent(context), fontSize: 14)),
       ),
       title: Text(
         member.displayName,
@@ -66,7 +66,7 @@ class MemberTile extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           if (roleName != null)
-            _Badge(label: roleName!, color: AppTheme.ponAccent),
+            _Badge(label: roleName!, color: AppTheme.accent(context)),
           if (canManageMembers)
             IconButton(
               icon: Icon(Icons.psychology_rounded, color: muted),

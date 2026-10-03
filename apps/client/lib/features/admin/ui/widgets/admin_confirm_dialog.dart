@@ -27,7 +27,7 @@ Future<bool> confirmAdminAction(
             style: TextStyle(
               color: destructive
                   ? Theme.of(ctx).colorScheme.error
-                  : AppTheme.ponAccent,
+                  : AppTheme.accent(context),
             ),
           ),
         ),

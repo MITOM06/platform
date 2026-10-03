@@ -5,11 +5,12 @@ import '../theme/app_theme.dart';
 // Bouncing Dots for Typing Indicator
 // ---------------------------------------------------------------------------
 class BouncingDots extends StatefulWidget {
-  final Color color;
+  /// Defaults to the theme accent.
+  final Color? color;
   final double size;
   const BouncingDots({
     super.key,
-    this.color = AppTheme.ponAccent,
+    this.color,
     this.size = 6.0,
   });
 
@@ -38,6 +39,7 @@ class _BouncingDotsState extends State<BouncingDots>
 
   @override
   Widget build(BuildContext context) {
+    final color = widget.color ?? AppTheme.accent(context);
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: List.generate(3, (index) {
@@ -64,7 +66,7 @@ class _BouncingDotsState extends State<BouncingDots>
                   width: widget.size,
                   height: widget.size,
                   decoration: BoxDecoration(
-                    color: widget.color.withValues(alpha: 0.8),
+                    color: color.withValues(alpha: 0.8),
                     shape: BoxShape.circle,
                   ),
                 ),

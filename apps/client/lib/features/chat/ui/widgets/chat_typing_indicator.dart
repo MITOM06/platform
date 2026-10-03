@@ -59,7 +59,7 @@ class _TypingBubble extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(width: 8),
-                const BouncingDots(size: 4.5, color: AppTheme.ponAccent),
+                BouncingDots(size: 4.5, color: AppTheme.accent(context)),
               ],
             ),
           ),

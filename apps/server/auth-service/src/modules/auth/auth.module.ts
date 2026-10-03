@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { AuthService } from './auth.service';
+import { OtpService } from './otp.service';
 import { AuthController } from './auth.controller';
 import { SessionService } from './session.service';
 import { ClaimsService } from './claims.service';
@@ -58,6 +59,7 @@ import { LoginAttemptsService } from './login-attempts.service';
   controllers: [AuthController, InvitationAcceptController],
   providers: [
     AuthService,
+    OtpService,
     SessionService,
     ClaimsService,
     OidcService,

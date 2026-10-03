@@ -1,5 +1,6 @@
 {
   "@@locale": "ja",
+  "appTagline": "つながって、チャット",
   "appName": "PON",
   "notificationsTitle": "通知",
   "notificationsSectionUnread": "未読",
@@ -187,6 +188,7 @@
   "tabChats": "チャット",
   "tabArchived": "アーカイブ",
   "tabRequests": "リクエスト",
+  "tabNew": "新規",
   "noRequests": "保留中のリクエストはありません",
   "declineRequest": "拒否",
   "dmRequestSubtitle": "メッセージを送りたい",

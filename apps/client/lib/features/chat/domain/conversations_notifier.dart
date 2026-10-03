@@ -257,6 +257,7 @@ class ConversationsNotifier extends _$ConversationsNotifier {
           convId: convId,
           senderId: senderId,
           isMention: isMention,
+          senderName: notif['senderName'] as String?,
           content: content,
           messageType: messageType,
         );
@@ -310,6 +311,7 @@ class ConversationsNotifier extends _$ConversationsNotifier {
     required String convId,
     required String senderId,
     required bool isMention,
+    String? senderName,
     String? content,
     String? messageType,
   }) =>
@@ -318,6 +320,7 @@ class ConversationsNotifier extends _$ConversationsNotifier {
         convId: convId,
         senderId: senderId,
         isMention: isMention,
+        senderName: senderName,
         content: content,
         messageType: messageType,
       );

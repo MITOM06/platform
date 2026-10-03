@@ -57,8 +57,8 @@ class AiHubTile extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
                     color: colorScheme.onSurface,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 16,
                   ),
                 ),
                 const SizedBox(height: 4),

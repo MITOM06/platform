@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../core/utils/app_error.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/l10n/l10n_ext.dart';
 import '../../../../core/theme/app_theme.dart';
@@ -95,7 +96,7 @@ class _SsoPanelState extends ConsumerState<SsoPanel> {
       error: (e, _) => Center(
         child: Padding(
           padding: const EdgeInsets.all(24),
-          child: Text('$e',
+          child: Text(friendlyError(e),
               textAlign: TextAlign.center,
               style: TextStyle(color: AppTheme.mutedText(context))),
         ),
@@ -112,7 +113,6 @@ class _SsoPanelState extends ConsumerState<SsoPanel> {
             const SizedBox(height: 8),
             SwitchListTile(
               contentPadding: EdgeInsets.zero,
-              activeThumbColor: AppTheme.ponAccent,
               title: Text(l10n.adminSsoEnabled,
                   style: TextStyle(color: Theme.of(context).colorScheme.onSurface)),
               value: _enabled,
@@ -302,8 +302,8 @@ class _AddBtn extends StatelessWidget {
         alignment: Alignment.centerLeft,
         child: TextButton.icon(
           onPressed: onTap,
-          icon: const Icon(Icons.add_rounded, color: AppTheme.ponAccent, size: 18),
-          label: Text(label, style: const TextStyle(color: AppTheme.ponAccent)),
+          icon: Icon(Icons.add_rounded, color: AppTheme.accent(context), size: 18),
+          label: Text(label, style: TextStyle(color: AppTheme.accent(context))),
         ),
       );
 }
@@ -317,7 +317,7 @@ class _Title extends StatelessWidget {
         padding: const EdgeInsets.only(bottom: 12),
         child: Text(text,
             style: TextStyle(
-                color: Theme.of(context).colorScheme.onSurface, fontSize: 16, fontWeight: FontWeight.bold)),
+                color: Theme.of(context).colorScheme.onSurface, fontSize: 16, fontWeight: FontWeight.w600)),
       );
 }
 
@@ -327,5 +327,5 @@ class _Muted extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Text(text,
-      style: TextStyle(color: AppTheme.mutedText(context), fontSize: 13));
+      style: TextStyle(color: AppTheme.mutedText(context), fontSize: 12));
 }

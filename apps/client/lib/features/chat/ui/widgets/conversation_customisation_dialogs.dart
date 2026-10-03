@@ -195,7 +195,7 @@ class _NicknameRowState extends ConsumerState<_NicknameRow> {
                 Text(
                   nameLabel,
                   style: TextStyle(
-                      color: Theme.of(context).colorScheme.onSurface, fontWeight: FontWeight.bold),
+                      color: Theme.of(context).colorScheme.onSurface, fontWeight: FontWeight.w600),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -210,8 +210,8 @@ class _NicknameRowState extends ConsumerState<_NicknameRow> {
                       contentPadding: const EdgeInsets.symmetric(vertical: 4),
                       enabledBorder: UnderlineInputBorder(
                           borderSide: BorderSide(color: AppTheme.hairline(context))),
-                      focusedBorder: const UnderlineInputBorder(
-                          borderSide: BorderSide(color: AppTheme.ponAccent)),
+                      focusedBorder: UnderlineInputBorder(
+                          borderSide: BorderSide(color: AppTheme.accent(context))),
                     ),
                     onSubmitted: (_) => _save(),
                   )
@@ -222,9 +222,9 @@ class _NicknameRowState extends ConsumerState<_NicknameRow> {
                         : context.l10n.nicknameNonePlaceholder,
                     style: TextStyle(
                       color: nickname.isNotEmpty
-                          ? AppTheme.ponAccent
+                          ? AppTheme.accent(context)
                           : AppTheme.mutedText(context),
-                      fontSize: 13,
+                      fontSize: 12,
                       fontStyle: nickname.isNotEmpty
                           ? FontStyle.normal
                           : FontStyle.italic,
@@ -238,7 +238,7 @@ class _NicknameRowState extends ConsumerState<_NicknameRow> {
           const SizedBox(width: 8),
           _editing
               ? IconButton(
-                  icon: const Icon(Icons.check_rounded, color: AppTheme.ponAccent, size: 20),
+                  icon: Icon(Icons.check_rounded, color: AppTheme.accent(context), size: 20),
                   onPressed: _save,
                 )
               : IconButton(

@@ -164,7 +164,7 @@ class _InviteMemberSheetState extends ConsumerState<InviteMemberSheet> {
                         label: Text(d.name),
                         selected: _departmentIds.contains(d.id),
                         selectedColor:
-                            AppTheme.ponAccent.withValues(alpha: 0.2),
+                            AppTheme.accent(context).withValues(alpha: 0.2),
                         onSelected: (sel) => setState(() {
                           sel
                               ? _departmentIds.add(d.id)

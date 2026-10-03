@@ -106,9 +106,9 @@ class _HeroCard extends StatelessWidget {
                 Container(
                   width: 56,
                   height: 56,
-                  decoration: const BoxDecoration(
+                  decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: AppTheme.ponAccent,
+                    color: AppTheme.accent(context),
                   ),
                   child: const Icon(Icons.auto_awesome_rounded,
                       color: Colors.white, size: 28),
@@ -131,7 +131,7 @@ class _HeroCard extends StatelessWidget {
                         l10n.startChatWithAI,
                         style: TextStyle(
                           color: AppTheme.mutedText(context),
-                          fontSize: 12.5,
+                          fontSize: 12,
                         ),
                       ),
                     ],
@@ -139,15 +139,15 @@ class _HeroCard extends StatelessWidget {
                 ),
                 const SizedBox(width: 8),
                 if (loading)
-                  const SizedBox(
+                  SizedBox(
                     width: 20,
                     height: 20,
                     child: CircularProgressIndicator(
-                        strokeWidth: 2, color: AppTheme.ponAccent),
+                        strokeWidth: 2, color: AppTheme.accent(context)),
                   )
                 else
-                  const Icon(Icons.arrow_forward_ios_rounded,
-                      color: AppTheme.ponAccent, size: 18),
+                  Icon(Icons.arrow_forward_ios_rounded,
+                      color: AppTheme.accent(context), size: 18),
               ],
             ),
           ),

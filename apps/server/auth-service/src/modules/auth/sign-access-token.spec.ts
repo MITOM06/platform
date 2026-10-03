@@ -8,7 +8,7 @@ import { AuthService } from './auth.service';
 import { SessionService } from './session.service';
 import { ClaimsService } from './claims.service';
 import { UsersService } from '../users/users.service';
-import { MailService } from '../Email/mail.service';
+import { OtpService } from './otp.service';
 import { SocialProvisioningService } from './social-provisioning.service';
 import { OAuthRedirectService } from './oauth-redirect.service';
 import { LoginAttemptsService } from './login-attempts.service';
@@ -29,7 +29,7 @@ describe('AuthService.signAccessToken — RBAC claims', () => {
         { provide: SessionService, useValue: {} },
         { provide: ClaimsService, useValue: {} },
         { provide: UsersService, useValue: {} },
-        { provide: MailService, useValue: {} },
+        { provide: OtpService, useValue: {} },
         { provide: SocialProvisioningService, useValue: {} },
         { provide: OAuthRedirectService, useValue: {} },
         { provide: LoginAttemptsService, useValue: {} },

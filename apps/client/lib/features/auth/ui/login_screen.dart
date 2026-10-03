@@ -126,7 +126,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       // No decorative accent orbs: the accent means "primary action" only
-      // (UI-REDESIGN-DIRECTION.md §2 rules 1-2).
+      // (docs/design-system.md §1).
       body: SafeArea(
         child: Center(
           child: ConstrainedBox(
@@ -307,7 +307,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           textAlign: TextAlign.center,
                           style: TextStyle(
                               color: AppTheme.mutedText(context),
-                              fontSize: 13),
+                              fontSize: 12),
                         ),
                         TextButton(
                           onPressed: () => InviteLinkDialog.show(context),

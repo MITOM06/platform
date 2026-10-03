@@ -61,7 +61,7 @@ class _NoPasswordBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const amber = Color(0xFFF59E0B);
+    const amber = AppTheme.warning;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       decoration: BoxDecoration(
@@ -82,7 +82,7 @@ class _NoPasswordBanner extends StatelessWidget {
                   context.l10n.securityNoPasswordTitle,
                   style: const TextStyle(
                     color: amber,
-                    fontWeight: FontWeight.bold,
+                    fontWeight: FontWeight.w600,
                     fontSize: 14,
                   ),
                 ),
@@ -91,7 +91,7 @@ class _NoPasswordBanner extends StatelessWidget {
                   context.l10n.securityNoPasswordSubtitle,
                   style: TextStyle(
                     color: amber.withValues(alpha: 0.85),
-                    fontSize: 12.5,
+                    fontSize: 12,
                     height: 1.3,
                   ),
                 ),
@@ -212,7 +212,7 @@ class _PasswordFormState extends ConsumerState<_PasswordForm> {
   Widget build(BuildContext context) {
     final isDark = widget.isDark;
     final accent =
-        isDark ? AppTheme.ponAccent : Theme.of(context).colorScheme.primary;
+        isDark ? AppTheme.accent(context) : Theme.of(context).colorScheme.primary;
 
     return PonCard(
       child: Padding(
@@ -241,8 +241,8 @@ class _PasswordFormState extends ConsumerState<_PasswordForm> {
                             : context.l10n.securitySetPasswordTitle,
                         style: TextStyle(
                           color: Theme.of(context).colorScheme.onSurface,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 15,
+                          fontWeight: FontWeight.w600,
+                          fontSize: 16,
                         ),
                       ),
                       const SizedBox(height: 2),
@@ -252,7 +252,7 @@ class _PasswordFormState extends ConsumerState<_PasswordForm> {
                             : context.l10n.securitySetPasswordSubtitle,
                         style: TextStyle(
                           color: AppTheme.mutedText(context),
-                          fontSize: 12.5,
+                          fontSize: 12,
                         ),
                       ),
                     ],
@@ -264,7 +264,7 @@ class _PasswordFormState extends ConsumerState<_PasswordForm> {
             if (_errorText != null) ...[
               Text(
                 _errorText!,
-                style: TextStyle(color: Theme.of(context).colorScheme.error, fontSize: 13),
+                style: TextStyle(color: Theme.of(context).colorScheme.error, fontSize: 14),
               ),
               const SizedBox(height: 12),
             ],
@@ -362,13 +362,13 @@ class _TwoFaPlaceholder extends StatelessWidget {
             context.l10n.securityTwoFaTitle,
             style: TextStyle(
               color: muted,
-              fontWeight: FontWeight.bold,
-              fontSize: 15,
+              fontWeight: FontWeight.w600,
+              fontSize: 16,
             ),
           ),
           subtitle: Text(
             context.l10n.securityTwoFaComingSoon,
-            style: TextStyle(color: muted, fontSize: 12.5),
+            style: TextStyle(color: muted, fontSize: 12),
           ),
           trailing: Container(
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),

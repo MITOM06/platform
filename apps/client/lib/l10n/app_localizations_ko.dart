@@ -9,6 +9,9 @@ class AppLocalizationsKo extends AppLocalizations {
   AppLocalizationsKo([String locale = 'ko']) : super(locale);
 
   @override
+  String get appTagline => '연결하고 채팅하기';
+
+  @override
   String get appName => 'PON';
 
   @override
@@ -577,6 +580,9 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get tabRequests => '요청';
+
+  @override
+  String get tabNew => '새 대화';
 
   @override
   String get noRequests => '대기 중인 요청이 없습니다';

@@ -97,19 +97,19 @@ class ConversationTile extends ConsumerWidget {
       decoration: BoxDecoration(
         color: isSelected
             ? (isDark
-                ? AppTheme.ponAccent.withValues(alpha: 0.12)
+                ? AppTheme.accent(context).withValues(alpha: 0.12)
                 : Theme.of(context).colorScheme.primary.withValues(alpha: 0.08))
             : Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(AppTheme.radiusCard),
         border: Border.all(
           color: isSelected
               ? (isDark
-                      ? AppTheme.ponAccent
+                      ? AppTheme.accent(context)
                       : Theme.of(context).colorScheme.primary)
                   .withValues(alpha: 0.6)
               : showUnread
                   ? (isDark
-                          ? AppTheme.ponAccent
+                          ? AppTheme.accent(context)
                           : Theme.of(context).colorScheme.primary)
                       .withValues(alpha: 0.25)
                   : (isDark
@@ -143,11 +143,11 @@ class ConversationTile extends ConsumerWidget {
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
                     fontWeight:
-                        showUnread ? FontWeight.bold : FontWeight.w600,
+                        showUnread ? FontWeight.w600 : FontWeight.w600,
                     color: showUnread
                         ? (Theme.of(context).colorScheme.onSurface)
                         : Theme.of(context).colorScheme.onSurface,
-                    fontSize: 15,
+                    fontSize: 16,
                   ),
                 ),
               ),
@@ -203,7 +203,7 @@ class ConversationTile extends ConsumerWidget {
                           : (isDark
                               ? AppTheme.mutedText(context)
                               : AppTheme.mutedText(context)),
-                      fontSize: 13,
+                      fontSize: 12,
                     ),
                   ),
                 )
@@ -214,7 +214,7 @@ class ConversationTile extends ConsumerWidget {
                       const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
                     color: isDark
-                        ? AppTheme.ponAccent
+                        ? AppTheme.accent(context)
                         : Theme.of(context).colorScheme.secondary,
                     borderRadius: BorderRadius.circular(10),
                   ),
@@ -223,7 +223,7 @@ class ConversationTile extends ConsumerWidget {
                     style: const TextStyle(
                       color: Colors.white,
                       fontSize: 10,
-                      fontWeight: FontWeight.bold,
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
                 )
@@ -291,9 +291,9 @@ class _AiBotTileAvatar extends StatelessWidget {
         Container(
           width: 48,
           height: 48,
-          decoration: const BoxDecoration(
+          decoration: BoxDecoration(
             shape: BoxShape.circle,
-            color: AppTheme.ponAccent,
+            color: AppTheme.accent(context),
           ),
           child: const Icon(Icons.smart_toy_rounded,
               color: Colors.white, size: 26),
@@ -304,7 +304,7 @@ class _AiBotTileAvatar extends StatelessWidget {
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
             decoration: BoxDecoration(
-              color: AppTheme.ponAccent,
+              color: AppTheme.accent(context),
               borderRadius: BorderRadius.circular(6),
               border: Border.all(
                   color: Theme.of(context).scaffoldBackgroundColor, width: 1.5),
@@ -313,7 +313,7 @@ class _AiBotTileAvatar extends StatelessWidget {
                 style: TextStyle(
                     fontSize: 8,
                     color: Colors.white,
-                    fontWeight: FontWeight.bold)),
+                    fontWeight: FontWeight.w600)),
           ),
         ),
       ],

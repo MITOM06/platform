@@ -204,7 +204,7 @@ class _CallScreenState extends ConsumerState<CallScreen> {
               children: [
                 Text(
                   widget.targetName,
-                  style: const TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold),
+                  style: const TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.w600),
                 ),
                 if (_isConnected)
                   Text(

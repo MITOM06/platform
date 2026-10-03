@@ -1,5 +1,6 @@
 {
   "@@locale": "ko",
+  "appTagline": "연결하고 채팅하기",
   "appName": "PON",
   "notificationsTitle": "알림",
   "notificationsSectionUnread": "읽지 않음",
@@ -187,6 +188,7 @@
   "tabChats": "채팅",
   "tabArchived": "보관됨",
   "tabRequests": "요청",
+  "tabNew": "새 대화",
   "noRequests": "대기 중인 요청이 없습니다",
   "declineRequest": "거절",
   "dmRequestSubtitle": "메시지를 보내려고 합니다",

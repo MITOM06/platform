@@ -53,7 +53,7 @@ class DirectoryCard extends StatelessWidget {
                         entry.name,
                         style: TextStyle(
                           color: Theme.of(context).colorScheme.onSurface,
-                          fontWeight: FontWeight.bold,
+                          fontWeight: FontWeight.w600,
                           fontSize: 16,
                         ),
                         overflow: TextOverflow.ellipsis,
@@ -64,7 +64,7 @@ class DirectoryCard extends StatelessWidget {
                         style: TextStyle(
                           color: AppTheme.mutedText(context),
                           fontSize: 10.5,
-                          fontFamily: 'monospace',
+                          fontFamily: AppTheme.fontMono,
                         ),
                       ),
                     ],
@@ -96,7 +96,7 @@ class DirectoryCard extends StatelessWidget {
               overflow: TextOverflow.ellipsis,
               style: TextStyle(
                 color: AppTheme.mutedText(context),
-                fontSize: 13,
+                fontSize: 12,
                 height: 1.3,
               ),
             ),
@@ -145,10 +145,10 @@ class _Monogram extends StatelessWidget {
       ),
       child: Text(
         letter,
-        style: const TextStyle(
-          color: AppTheme.ponAccent,
+        style: TextStyle(
+          color: AppTheme.accent(context),
           fontSize: 18,
-          fontWeight: FontWeight.bold,
+          fontWeight: FontWeight.w600,
         ),
       ),
     );
@@ -183,7 +183,7 @@ class _ActionRow extends StatelessWidget {
             style: TextStyle(
               color: AppTheme.mutedText(context),
               fontSize: 11,
-              fontFamily: 'monospace',
+              fontFamily: AppTheme.fontMono,
             ),
             overflow: TextOverflow.ellipsis,
           ),
@@ -199,7 +199,7 @@ class _ActionRow extends StatelessWidget {
           TextButton(
             onPressed: onManage,
             child: Text(context.l10n.connectorManage,
-                style: const TextStyle(color: AppTheme.ponAccent)),
+                style: TextStyle(color: AppTheme.accent(context))),
           )
         else
           Flexible(
@@ -210,7 +210,7 @@ class _ActionRow extends StatelessWidget {
                 child: Text(context.l10n.connectorConnect,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(fontSize: 13)),
+                    style: const TextStyle(fontSize: 14)),
               ),
             ),
           ),

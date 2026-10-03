@@ -1,81 +1,12 @@
-import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:intl/intl.dart';
-import '../../../core/api/dio_client.dart';
 import '../../../core/l10n/l10n_ext.dart';
 import '../../../core/utils/app_error.dart';
 import '../../../core/theme/app_theme.dart';
-import '../../auth/domain/auth_provider.dart';
+import '../domain/token_usage_provider.dart';
 import 'widgets/token_usage_chart.dart';
 import 'widgets/token_usage_range_selector.dart';
-
-// ── Quota / pricing config ──────────────────────────────────────────────────
-// Anthropic Claude per-token prices (USD) and the monthly token allowance.
-// Kept in one place so the numbers aren't scattered across the UI.
-const int kMonthlyTokenQuota = 500000;
-const double kInputTokenPrice = 0.000003;
-const double kOutputTokenPrice = 0.000015;
-
-// ── Model ─────────────────────────────────────────────────────────────────────
-
-class TokenUsageDay {
-  final String date;
-  final int inputTokens;
-  final int outputTokens;
-  final int requestCount;
-  final int totalTokens;
-
-  const TokenUsageDay({
-    required this.date,
-    required this.inputTokens,
-    required this.outputTokens,
-    required this.requestCount,
-    required this.totalTokens,
-  });
-
-  factory TokenUsageDay.fromJson(Map<String, dynamic> json) => TokenUsageDay(
-        date: json['date'] as String,
-        inputTokens: (json['inputTokens'] as num?)?.toInt() ?? 0,
-        outputTokens: (json['outputTokens'] as num?)?.toInt() ?? 0,
-        requestCount: (json['requestCount'] as num?)?.toInt() ?? 0,
-        totalTokens: (json['totalTokens'] as num?)?.toInt() ?? 0,
-      );
-}
-
-// ── Provider ──────────────────────────────────────────────────────────────────
-
-/// Shared chat-service Dio, built once and reused across token-usage fetches
-/// (was previously rebuilt on every request, leaking interceptors).
-final _chatDioProvider = Provider<Dio>((ref) {
-  const storage = FlutterSecureStorage();
-  return DioClient.createChatDio(
-    storage,
-    onForceLogout: () => ref.read(authNotifierProvider.notifier).forceLogout(),
-  );
-});
-
-/// Query params for the token-usage endpoint. Use [days] for the "last N days"
-/// preset mode, or [startDate]/[endDate] (ISO yyyy-MM-dd) for a custom range.
-typedef TokenUsageQuery = ({int? days, String? startDate, String? endDate});
-
-final tokenUsageProvider = FutureProvider.autoDispose
-    .family<List<TokenUsageDay>, TokenUsageQuery>((ref, query) async {
-  final dio = ref.read(_chatDioProvider);
-  final queryParams = <String, dynamic>{};
-  if (query.days != null) queryParams['days'] = query.days;
-  if (query.startDate != null) queryParams['startDate'] = query.startDate;
-  if (query.endDate != null) queryParams['endDate'] = query.endDate;
-
-  final response = await dio.get<List<dynamic>>(
-    '/api/usage/tokens',
-    queryParameters: queryParams,
-  );
-  return (response.data ?? [])
-      .map((e) => TokenUsageDay.fromJson(e as Map<String, dynamic>))
-      .toList();
-});
 
 // ── Screen ────────────────────────────────────────────────────────────────────
 
@@ -159,8 +90,8 @@ class _TokenUsageScreenState extends ConsumerState<TokenUsageScreen> {
           ),
       builder: (context, child) => Theme(
         data: Theme.of(context).copyWith(
-          colorScheme: const ColorScheme.dark(
-            primary: AppTheme.ponAccent,
+          colorScheme: ColorScheme.dark(
+            primary: AppTheme.accent(context),
             // White, not black: black on burgundy is roughly 2:1.
             onPrimary: Colors.white,
           ),
@@ -229,8 +160,8 @@ class _Body extends StatelessWidget {
           Text(
             context.l10n.tokenUsageDailyChart,
             style: TextStyle(
-              fontSize: 15,
-              fontWeight: FontWeight.bold,
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
               color: Theme.of(context).colorScheme.onSurface,
             ),
           ),
@@ -266,8 +197,8 @@ class _QuotaProgressCard extends StatelessWidget {
     final barColor = fraction >= 0.9
         ? Theme.of(context).colorScheme.error
         : fraction >= 0.7
-            ? const Color(0xFFFFB74D)
-            : AppTheme.ponAccent;
+            ? AppTheme.warning
+            : AppTheme.accent(context);
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -289,7 +220,7 @@ class _QuotaProgressCard extends StatelessWidget {
               Text(
                 context.l10n.tokenUsageQuota,
                 style: TextStyle(
-                  fontSize: 13,
+                  fontSize: 14,
                   fontWeight: FontWeight.w600,
                   color: AppTheme.mutedText(context),
                 ),
@@ -298,8 +229,8 @@ class _QuotaProgressCard extends StatelessWidget {
               Text(
                 '${_fmt(used)} / ${_fmt(limit)}',
                 style: TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.bold,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
                   color: barColor,
                 ),
               ),
@@ -357,7 +288,7 @@ class _SummaryCards extends StatelessWidget {
                 label: context.l10n.tokenUsageThisMonth,
                 value: _fmt(totalInput + totalOutput),
                 icon: Icons.toll_rounded,
-                color: AppTheme.ponAccent,
+                color: AppTheme.accent(context),
                 isDark: isDark,
               ),
             ),
@@ -367,7 +298,7 @@ class _SummaryCards extends StatelessWidget {
                 label: context.l10n.tokenUsageRequests,
                 value: totalRequests.toString(),
                 icon: Icons.question_answer_rounded,
-                color: AppTheme.ponAccent,
+                color: AppTheme.accent(context),
                 isDark: isDark,
               ),
             ),
@@ -378,7 +309,7 @@ class _SummaryCards extends StatelessWidget {
           label: context.l10n.tokenUsageEstCost,
           value: context.l10n.tokenUsageCostUsd(estimatedCost.toStringAsFixed(4)),
           icon: Icons.attach_money_rounded,
-          color: AppTheme.ponAccent,
+          color: AppTheme.accent(context),
           isDark: isDark,
         ),
       ],
@@ -425,7 +356,7 @@ class _StatCard extends StatelessWidget {
             value,
             style: TextStyle(
               fontSize: 22,
-              fontWeight: FontWeight.bold,
+              fontWeight: FontWeight.w600,
               color: Theme.of(context).colorScheme.onSurface,
             ),
           ),

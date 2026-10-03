@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../core/utils/app_error.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/l10n/l10n_ext.dart';
@@ -25,7 +26,7 @@ class BotIntegrationPanel extends ConsumerWidget {
         child: Padding(
           padding: const EdgeInsets.all(24),
           child: Text(
-            '$e',
+            friendlyError(e),
             textAlign: TextAlign.center,
             style: TextStyle(color: AppTheme.mutedText(context)),
           ),
@@ -139,7 +140,7 @@ class _BotRowState extends ConsumerState<_BotRow> {
                         style: TextStyle(
                           color: Theme.of(context).colorScheme.onSurface,
                           fontWeight: FontWeight.w600,
-                          fontSize: 15,
+                          fontSize: 16,
                         ),
                       ),
                       const SizedBox(height: 2),
@@ -197,13 +198,13 @@ class _Avatar extends StatelessWidget {
     final initial = name.trim().isEmpty ? '?' : name.trim()[0].toUpperCase();
     return CircleAvatar(
       radius: 20,
-      backgroundColor: AppTheme.ponAccent.withValues(alpha: 0.15),
+      backgroundColor: AppTheme.accent(context).withValues(alpha: 0.15),
       backgroundImage:
           (url != null && url!.isNotEmpty) ? NetworkImage(url!) : null,
       child: (url == null || url!.isEmpty)
           ? Text(initial,
-              style: const TextStyle(
-                  color: AppTheme.ponAccent, fontWeight: FontWeight.bold))
+              style: TextStyle(
+                  color: AppTheme.accent(context), fontWeight: FontWeight.w600))
           : null,
     );
   }
@@ -254,8 +255,8 @@ class _RevokeButton extends StatelessWidget {
     return OutlinedButton(
       onPressed: onPressed,
       style: OutlinedButton.styleFrom(
-        foregroundColor: AppTheme.ponAccent,
-        side: BorderSide(color: AppTheme.ponAccent.withValues(alpha: 0.7)),
+        foregroundColor: AppTheme.accent(context),
+        side: BorderSide(color: AppTheme.accent(context).withValues(alpha: 0.7)),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
         shape:
             RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppTheme.radiusCard)),
@@ -285,21 +286,21 @@ class _TokenDialog extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: AppTheme.ponAccent.withValues(alpha: 0.12),
+                color: AppTheme.accent(context).withValues(alpha: 0.12),
                 borderRadius: BorderRadius.circular(10),
                 border: Border.all(
-                    color: AppTheme.ponAccent.withValues(alpha: 0.4)),
+                    color: AppTheme.accent(context).withValues(alpha: 0.4)),
               ),
               child: Row(
                 children: [
-                  const Icon(Icons.warning_amber_rounded,
-                      color: AppTheme.ponAccent, size: 18),
+                  Icon(Icons.warning_amber_rounded,
+                      color: AppTheme.accent(context), size: 18),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
                       l10n.botAdminTokenWarning,
-                      style: const TextStyle(
-                          color: AppTheme.ponAccent, fontSize: 12),
+                      style: TextStyle(
+                          color: AppTheme.accent(context), fontSize: 12),
                     ),
                   ),
                 ],
@@ -316,7 +317,7 @@ class _TokenDialog extends StatelessWidget {
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
           child: Text(l10n.actionCancel,
-              style: const TextStyle(color: AppTheme.ponAccent)),
+              style: TextStyle(color: AppTheme.accent(context))),
         ),
       ],
     );
@@ -354,12 +355,12 @@ class _CopyField extends StatelessWidget {
                   style: TextStyle(
                       color: Theme.of(context).colorScheme.onSurface,
                       fontSize: 12,
-                      fontFamily: 'monospace'),
+                      fontFamily: AppTheme.fontMono),
                 ),
               ),
               IconButton(
                 tooltip: l10n.botAdminCopyToken,
-                icon: const Icon(Icons.copy_rounded, size: 18, color: AppTheme.ponAccent),
+                icon: Icon(Icons.copy_rounded, size: 18, color: AppTheme.accent(context)),
                 onPressed: () async {
                   await Clipboard.setData(ClipboardData(text: value));
                   showInfoSnackBar(l10n.botAdminCopyToken);

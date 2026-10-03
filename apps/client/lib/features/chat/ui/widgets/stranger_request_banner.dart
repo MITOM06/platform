@@ -28,7 +28,7 @@ class StrangerRequestBanner extends StatelessWidget {
               style: TextStyle(
                 color: Theme.of(context).colorScheme.onSurface,
                 fontWeight: FontWeight.w600,
-                fontSize: 15,
+                fontSize: 16,
               ),
             ),
             const SizedBox(height: 6),
@@ -37,7 +37,7 @@ class StrangerRequestBanner extends StatelessWidget {
               textAlign: TextAlign.center,
               style: TextStyle(
                 color: AppTheme.mutedText(context),
-                fontSize: 13,
+                fontSize: 12,
               ),
             ),
             const SizedBox(height: 14),

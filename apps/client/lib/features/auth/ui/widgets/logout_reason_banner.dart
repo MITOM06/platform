@@ -41,7 +41,7 @@ class LogoutReasonBanner extends ConsumerWidget {
             Expanded(
               child: Text(
                 authCodeToString(context, reason),
-                style: TextStyle(color: error, fontSize: 13),
+                style: TextStyle(color: error, fontSize: 14),
               ),
             ),
           ],

@@ -9,6 +9,9 @@ class AppLocalizationsEn extends AppLocalizations {
   AppLocalizationsEn([String locale = 'en']) : super(locale);
 
   @override
+  String get appTagline => 'Connect & Chat';
+
+  @override
   String get appName => 'PON';
 
   @override
@@ -118,10 +121,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get actionConfirm => 'Confirm';
 
   @override
-  String get actionRetry => 'RETRY';
+  String get actionRetry => 'Retry';
 
   @override
-  String get actionSave => 'SAVE';
+  String get actionSave => 'Save';
 
   @override
   String get actionLogout => 'Log out';
@@ -148,7 +151,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get forgotPasswordLink => 'Forgot password?';
 
   @override
-  String get loginButton => 'SIGN IN';
+  String get loginButton => 'Sign In';
 
   @override
   String get valEmailRequired => 'Please enter your email';
@@ -383,7 +386,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get fieldOtp => 'OTP code';
 
   @override
-  String get confirmButton => 'CONFIRM';
+  String get confirmButton => 'Confirm';
 
   @override
   String resendIn(int seconds) {
@@ -419,7 +422,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'Enter your email to receive an OTP and set a new password';
 
   @override
-  String get sendOtpButton => 'SEND OTP CODE';
+  String get sendOtpButton => 'Send OTP Code';
 
   @override
   String get errSendRequestFailed => 'Request failed, please try again';
@@ -487,7 +490,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get logoutConfirmBody => 'Are you sure you want to log out?';
 
   @override
-  String get onboardingChooseTheme => 'CHOOSE A THEME';
+  String get onboardingChooseTheme => 'Choose a Theme';
 
   @override
   String get onboardingChooseSubtitle =>
@@ -503,7 +506,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get themeSystemSubtitle => 'Automatically match your device';
 
   @override
-  String get startExperience => 'START EXPLORING';
+  String get startExperience => 'Start Exploring';
 
   @override
   String get tooltipSettings => 'Settings';
@@ -558,7 +561,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get errUserNotFoundOrConn => 'User not found or connection error.';
 
   @override
-  String get startConversationButton => 'START CHATTING';
+  String get startConversationButton => 'Start Chatting';
 
   @override
   String get chatDefaultTitle => 'Chat';
@@ -583,6 +586,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get tabRequests => 'Requests';
+
+  @override
+  String get tabNew => 'New';
 
   @override
   String get noRequests => 'No pending requests';
@@ -2058,7 +2064,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get customMcpUrl => 'Server URL';
 
   @override
-  String get customMcpAuth => 'AUTH';
+  String get customMcpAuth => 'Auth';
 
   @override
   String get customMcpAuthNone => 'None';
@@ -3149,10 +3155,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get attachHdOff => 'SD — compressed';
 
   @override
-  String get hdOn => 'HD ON';
+  String get hdOn => 'HD On';
 
   @override
-  String get hdOff => 'HD OFF';
+  String get hdOff => 'HD Off';
 
   @override
   String get videoCannotPlay => 'Cannot play video';

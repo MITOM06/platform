@@ -27,7 +27,7 @@ class TermsAgreementRow extends StatelessWidget {
           child: Checkbox(
             value: value,
             onChanged: (v) => onChanged(v ?? false),
-            activeColor: AppTheme.ponAccent,
+            activeColor: AppTheme.accent(context),
             side: BorderSide(color: AppTheme.mutedText(context)),
           ),
         ),
@@ -39,7 +39,7 @@ class TermsAgreementRow extends StatelessWidget {
               text: TextSpan(
                 style: TextStyle(
                   color: AppTheme.mutedText(context),
-                  fontSize: 13,
+                  fontSize: 12,
                 ),
                 children: _spans(context),
               ),
@@ -71,11 +71,11 @@ class TermsAgreementRow extends StatelessWidget {
               isPrivacy
                   ? context.l10n.privacyPolicy
                   : context.l10n.termsOfService,
-              style: const TextStyle(
-                color: AppTheme.ponAccent,
-                fontWeight: FontWeight.bold,
+              style: TextStyle(
+                color: AppTheme.accent(context),
+                fontWeight: FontWeight.w600,
                 decoration: TextDecoration.underline,
-                decorationColor: AppTheme.ponAccent,
+                decorationColor: AppTheme.accent(context),
               ),
             ),
           ),

@@ -82,9 +82,7 @@ class _SearchOverlayState extends ConsumerState<SearchOverlay> {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
     final textColor = Theme.of(context).colorScheme.onSurface;
-    final mutedColor = isDark
-        ? AppTheme.mutedText(context)
-        : Colors.black.withValues(alpha: 0.4);
+    final mutedColor = AppTheme.mutedText(context);
     final dividerColor = isDark
         ? AppTheme.hairline(context)
         : AppTheme.hairline(context);
@@ -106,7 +104,7 @@ class _SearchOverlayState extends ConsumerState<SearchOverlay> {
                       controller: _ctrl,
                       autofocus: true,
                       onChanged: _onChanged,
-                      style: TextStyle(color: textColor, fontSize: 15),
+                      style: TextStyle(color: textColor, fontSize: 14),
                       decoration: InputDecoration(
                         hintText: context.l10n.searchHint,
                         hintStyle: TextStyle(color: mutedColor),
@@ -120,10 +118,10 @@ class _SearchOverlayState extends ConsumerState<SearchOverlay> {
             Divider(height: 1, color: dividerColor),
             Expanded(
               child: _loading
-                  ? const Center(
+                  ? Center(
                       child: CircularProgressIndicator(
                         valueColor:
-                            AlwaysStoppedAnimation<Color>(AppTheme.ponAccent),
+                            AlwaysStoppedAnimation<Color>(AppTheme.accent(context)),
                       ),
                     )
                   : (_searched && _results.isEmpty)

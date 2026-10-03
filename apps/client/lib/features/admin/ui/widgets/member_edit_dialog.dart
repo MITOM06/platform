@@ -160,7 +160,7 @@ class _MemberEditDialogState extends State<MemberEditDialog> {
                 ...widget.departments.map(
                   (d) => CheckboxListTile(
                     contentPadding: EdgeInsets.zero,
-                    activeColor: AppTheme.ponAccent,
+                    activeColor: AppTheme.accent(context),
                     controlAffinity: ListTileControlAffinity.leading,
                     title: Text(d.name, style: TextStyle(color: onSurface)),
                     value: _selected.contains(d.id),
@@ -179,7 +179,7 @@ class _MemberEditDialogState extends State<MemberEditDialog> {
         TextButton(
           onPressed: _save,
           child: Text(l10n.adminSave,
-              style: const TextStyle(color: AppTheme.ponAccent)),
+              style: TextStyle(color: AppTheme.accent(context))),
         ),
       ],
     );

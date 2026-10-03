@@ -12,6 +12,7 @@ import { SessionService } from './session.service';
 import { ClaimsService } from './claims.service';
 import { UsersService } from '../users/users.service';
 import { MailService } from '../Email/mail.service';
+import { OtpService } from './otp.service';
 import { SsoMappingService } from './oidc/sso-mapping.service';
 import { NotificationsService } from '../notifications/notifications.service';
 import { SocialProvisioningService } from './social-provisioning.service';
@@ -81,6 +82,9 @@ describe('AuthService — account status enforcement (invite-only)', () => {
         },
         { provide: UsersService, useValue: users },
         { provide: MailService, useValue: {} },
+        // Real OtpService over the mocked UsersService/MailService, so OTP
+        // paths behave exactly as they do in production.
+        OtpService,
         { provide: SsoMappingService, useValue: {} },
         {
           provide: NotificationsService,

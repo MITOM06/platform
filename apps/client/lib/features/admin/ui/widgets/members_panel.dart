@@ -129,7 +129,7 @@ class MembersPanel extends ConsumerWidget {
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
             child: Text(l10n.adminSave,
-                style: const TextStyle(color: AppTheme.ponAccent)),
+                style: TextStyle(color: AppTheme.accent(context))),
           ),
         ],
       ),
@@ -243,7 +243,7 @@ class _MembersHeader extends StatelessWidget {
             Expanded(
               child: Text(l10n.adminMemberHint,
                   style: TextStyle(
-                      color: AppTheme.mutedText(context), fontSize: 13)),
+                      color: AppTheme.mutedText(context), fontSize: 12)),
             ),
             if (canManageMembers)
               TextButton.icon(
@@ -251,7 +251,7 @@ class _MembersHeader extends StatelessWidget {
                 icon: const Icon(Icons.person_add_alt_1_rounded, size: 18),
                 label: Text(l10n.adminInviteMember),
                 style: TextButton.styleFrom(
-                    foregroundColor: AppTheme.ponAccent),
+                    foregroundColor: AppTheme.accent(context)),
               ),
           ],
         ),

@@ -1,5 +1,6 @@
 {
   "@@locale": "zh",
+  "appTagline": "连接与聊天",
   "appName": "PON",
   "notificationsTitle": "通知",
   "notificationsSectionUnread": "未读",
@@ -187,6 +188,7 @@
   "tabChats": "聊天",
   "tabArchived": "已归档",
   "tabRequests": "请求",
+  "tabNew": "新建",
   "noRequests": "没有待处理的请求",
   "declineRequest": "拒绝",
   "dmRequestSubtitle": "想给你发消息",

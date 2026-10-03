@@ -75,13 +75,13 @@ class _SingleImageTile extends StatelessWidget {
         width: width ?? 220,
         height: height ?? 180,
         color: Colors.black26,
-        child: const Center(
+        child: Center(
           child: SizedBox(
             width: 22,
             height: 22,
             child: CircularProgressIndicator(
               strokeWidth: 2,
-              valueColor: AlwaysStoppedAnimation<Color>(AppTheme.ponAccent),
+              valueColor: AlwaysStoppedAnimation<Color>(AppTheme.accent(context)),
             ),
           ),
         ),
@@ -243,7 +243,7 @@ class _MultiImageGrid extends StatelessWidget {
                   style: const TextStyle(
                     color: Colors.white,
                     fontSize: 22,
-                    fontWeight: FontWeight.bold,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
               ),

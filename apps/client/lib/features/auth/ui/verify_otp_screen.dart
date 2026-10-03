@@ -138,7 +138,7 @@ class _VerifyOtpScreenState extends ConsumerState<VerifyOtpScreen> {
         ),
       ),
       // No decorative accent orbs: the accent means "primary action"
-      // only (UI-REDESIGN-DIRECTION.md §2 rules 1-2).
+      // only (docs/design-system.md §1).
       body: SafeArea(
         child: Center(
           child: ConstrainedBox(
@@ -160,7 +160,7 @@ class _VerifyOtpScreenState extends ConsumerState<VerifyOtpScreen> {
                       context.l10n.verifyAccountHeading,
                       style:
                           Theme.of(context).textTheme.headlineSmall?.copyWith(
-                                fontWeight: FontWeight.bold,
+                                fontWeight: FontWeight.w600,
                                 color: Theme.of(context).colorScheme.onSurface,
                               ),
                       textAlign: TextAlign.center,
@@ -192,7 +192,7 @@ class _VerifyOtpScreenState extends ConsumerState<VerifyOtpScreen> {
                             // 6-box OTP input
                             Otp6BoxInput(
                               controller: _otpController,
-                              accentColor: AppTheme.ponAccent,
+                              accentColor: AppTheme.accent(context),
                               onCompleted: (_) => _submit(),
                             ),
                             const SizedBox(height: 28),
@@ -225,7 +225,7 @@ class _VerifyOtpScreenState extends ConsumerState<VerifyOtpScreen> {
                                         style: TextStyle(
                                           color: _resendCooldown > 0
                                               ? AppTheme.mutedText(context)
-                                              : AppTheme.ponAccent,
+                                              : AppTheme.accent(context),
                                           fontWeight: FontWeight.w600,
                                         ),
                                       ),
