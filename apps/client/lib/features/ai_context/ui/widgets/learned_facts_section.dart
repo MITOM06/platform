@@ -17,7 +17,7 @@ class LearnedFactsSection extends ConsumerWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(l.aiContextLearnedFactsTitle,
-              style: const TextStyle(fontWeight: FontWeight.bold)),
+              style: const TextStyle(fontWeight: FontWeight.w600)),
           const SizedBox(height: 8),
           async.when(
             loading: () => const Padding(

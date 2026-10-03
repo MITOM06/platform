@@ -143,4 +143,41 @@ void main() {
     final result = await tm.getValidAccessToken();
     expect(result, isNull);
   });
+
+  test('a 403 ACCOUNT_BLOCKED refresh carries the code for the logout screen',
+      () async {
+    when(() => dio.post(any(), data: any(named: 'data'))).thenThrow(
+      DioException(
+        requestOptions: reqOpts(),
+        response: Response(
+          requestOptions: reqOpts(),
+          statusCode: 403,
+          data: {'code': 'ACCOUNT_BLOCKED'},
+        ),
+        type: DioExceptionType.badResponse,
+      ),
+    );
+
+    await expectLater(
+      tm.forceRefresh(),
+      throwsA(isA<RefreshRejectedException>()
+          .having((e) => e.code, 'code', 'ACCOUNT_BLOCKED')),
+    );
+    // Read once: the forced-logout path consumes it, a second read is empty.
+    expect(tm.takeRejectionCode(), 'ACCOUNT_BLOCKED');
+    expect(tm.takeRejectionCode(), isNull);
+  });
+
+  test('a successful refresh clears a stale rejection code', () async {
+    tm.recordRejection('ACCOUNT_BLOCKED');
+    when(() => dio.post(any(), data: any(named: 'data'))).thenAnswer(
+      (_) async => Response(
+        requestOptions: reqOpts(),
+        statusCode: 201,
+        data: {'accessToken': 'a', 'refreshToken': 'r'},
+      ),
+    );
+    await tm.forceRefresh();
+    expect(tm.takeRejectionCode(), isNull);
+  });
 }

@@ -24,7 +24,7 @@ class BlockedComposerNotice extends StatelessWidget {
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   color: AppTheme.mutedText(context),
-                  fontSize: 13,
+                  fontSize: 12,
                 ),
               ),
             ),

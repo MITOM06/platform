@@ -1,6 +1,10 @@
 package com.platform.chatservice.service;
 
 import com.platform.chatservice.dto.MessageResponse;
+import com.platform.chatservice.model.AiPersona;
+import com.platform.chatservice.model.ExternalBot;
+import com.platform.chatservice.repository.AiPersonaRepository;
+import com.platform.chatservice.repository.ExternalBotRepository;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
@@ -18,7 +22,8 @@ import org.springframework.stereotype.Service;
  * backgrounded (or who are viewing another screen) never learn about the message until a manual
  * reload. Historically only the STOMP path notified, so any message sent over REST (all web sends,
  * attachments, and the mobile REST fallback) was silent. That was the root cause of "no realtime
- * notification" reports.
+ * notification" reports. Assistant replies — the built-in AI and Bot Factory personal assistants —
+ * go through here too, since they usually land after the user has left the chat.
  */
 @Service
 @RequiredArgsConstructor
@@ -29,6 +34,17 @@ public class MessageNotificationService {
   private final MessageQueryService messageQueryService;
   private final ClusterMessageBroker clusterBroker;
   private final FcmService fcmService;
+  private final ExternalBotRepository externalBotRepository;
+  private final AiPersonaRepository aiPersonaRepository;
+
+  /** Longest assistant reply we put in a banner or push; the full text is in the chat. */
+  private static final int PREVIEW_MAX_CHARS = 200;
+
+  /** Name of the built-in AI when the conversation has no persona of its own. */
+  private static final String DEFAULT_AI_NAME = "PON AI";
+
+  /** Push title for a sender whose name cannot be resolved — never their id. */
+  private static final String UNKNOWN_SENDER_TITLE = "New message";
 
   /**
    * Notify all participants except the sender. Runs asynchronously — callers on the hot send path
@@ -55,9 +71,14 @@ public class MessageNotificationService {
     List<String> participants = conversationQueryService.getParticipants(conversationId);
     // Resolve the sender's human-readable name once (same for every recipient).
     // Clients display senderName directly, so it must never be a bare userId.
-    String senderDisplayName = messageQueryService.resolveDisplayName(senderId);
-    String content = response.content() != null ? response.content() : "";
+    String senderDisplayName = resolveSenderName(senderId, conversationId);
+    String pushTitle =
+        senderDisplayName.equals(senderId) ? UNKNOWN_SENDER_TITLE : senderDisplayName;
     String type = response.type() != null ? response.type() : "text";
+    String content = response.content() != null ? response.content() : "";
+    if ("ai".equals(type)) {
+      content = preview(content);
+    }
     String pushBody = pushBody(content, type);
 
     for (String participantId : participants) {
@@ -80,9 +101,43 @@ public class MessageNotificationService {
       clusterBroker.convertAndSendToUser(participantId, "/queue/notifications", notification);
 
       if (!muted) {
-        fcmService.sendPushNotification(participantId, senderId, pushBody, conversationId);
+        fcmService.sendPushNotification(participantId, pushTitle, pushBody, conversationId);
       }
     }
+  }
+
+  /**
+   * Display name for the sender. Assistants are not users: the built-in AI is named by the
+   * conversation's persona, a Bot Factory assistant ({@code extbot:*}) by its registry entry.
+   * Humans resolve from {@code users}, which falls back to the raw id when the lookup misses.
+   */
+  private String resolveSenderName(String senderId, String conversationId) {
+    if (AiConstants.AI_BOT_USER_ID.equals(senderId)) {
+      return aiPersonaRepository
+          .findByConversationId(conversationId)
+          .map(AiPersona::getName)
+          .filter(name -> !name.isBlank())
+          .orElse(DEFAULT_AI_NAME);
+    }
+    if (senderId.startsWith("extbot:")) {
+      return externalBotRepository
+          .findByBotUserId(senderId)
+          .map(ExternalBot::getName)
+          .filter(name -> name != null && !name.isBlank())
+          .orElse(DEFAULT_AI_NAME);
+    }
+    return messageQueryService.resolveDisplayName(senderId);
+  }
+
+  /**
+   * Assistant replies can run to pages of markdown; a banner or lock-screen push only needs the
+   * start of it, and FCM rejects payloads over 4 KB.
+   */
+  private static String preview(String content) {
+    if (content.length() <= PREVIEW_MAX_CHARS) {
+      return content;
+    }
+    return content.substring(0, PREVIEW_MAX_CHARS).stripTrailing() + "…";
   }
 
   /**

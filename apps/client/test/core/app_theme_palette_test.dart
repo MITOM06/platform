@@ -5,7 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:platform_client/core/theme/app_theme.dart';
 
 /// Locks the Flutter theme onto the palette table in
-/// `docs/superpowers/UI-REDESIGN-DIRECTION.md` §2.
+/// `docs/design-system.md` §2.
 ///
 /// Why this exists: web reads `--primary` from `:root`/`.dark` in
 /// `apps/web/app/globals.css` and therefore renders `#7A2E3A`/`#A8475A`, while
@@ -29,14 +29,14 @@ void main() {
       final scheme = AppTheme.lightTheme.colorScheme;
       expect(scheme.primary, paletteLightAccent);
       expect(scheme.secondary, paletteLightAccent);
-      expect(scheme.primary, isNot(AppTheme.ponAccent));
+      expect(scheme.primary, isNot(const Color(0xFF96435B)));
     });
 
     test('dark ColorScheme uses the dark accent, not the mid-tone', () {
       final scheme = AppTheme.darkTheme.colorScheme;
       expect(scheme.primary, paletteDarkAccent);
       expect(scheme.secondary, paletteDarkAccent);
-      expect(scheme.primary, isNot(AppTheme.ponAccent));
+      expect(scheme.primary, isNot(const Color(0xFF96435B)));
     });
 
     test('filled buttons are painted with the per-mode accent', () {

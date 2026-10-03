@@ -96,7 +96,7 @@ class _StreamingText extends StatelessWidget {
             content,
             style: TextStyle(
               color: Theme.of(context).colorScheme.onSurface,
-              fontSize: 15,
+              fontSize: 14,
               height: 1.45,
             ),
           ),
@@ -106,11 +106,11 @@ class _StreamingText extends StatelessWidget {
             // Snap between fully visible and hidden (no smooth fade) to match
             // the old hard on/off blink.
             opacity: _CursorBlink(cursorController),
-            child: const Text(
+            child: Text(
               '|',
               style: TextStyle(
-                color: AppTheme.ponAccent,
-                fontSize: 15,
+                color: AppTheme.accent(context),
+                fontSize: 14,
                 height: 1.45,
                 fontWeight: FontWeight.w300,
               ),
@@ -169,7 +169,7 @@ class _ToolIndicatorRow extends StatelessWidget {
     final isSensitive = sensitiveTools.contains(toolName);
     // Sensitive (state-changing / outbound) tools get a shield icon + red tint
     // so the user notices the assistant is about to act on their behalf.
-    final color = isSensitive ? AppTheme.darkDanger : const Color(0xFFFFB74D);
+    final color = isSensitive ? Theme.of(context).colorScheme.error : AppTheme.warning;
     final label = isSensitive
         ? '${_toolLabel(context, toolName)} · ${context.l10n.aiSensitiveAction}'
         : _toolLabel(context, toolName);
@@ -226,7 +226,7 @@ class _ThinkingDots extends StatelessWidget {
               height: 8,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: AppTheme.ponAccent
+                color: AppTheme.accent(context)
                     .withValues(alpha: opacity.clamp(0.15, 1.0)),
               ),
             );

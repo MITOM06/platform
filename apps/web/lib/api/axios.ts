@@ -1,6 +1,7 @@
 import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios'
 import { useAuthStore } from '@/lib/store/auth.store'
 import { AUTH_URL, CHAT_URL, CONNECTOR_URL, AI_URL } from '@/lib/config/env'
+import { forceLogout, logoutReasonFromError } from '@/lib/auth/force-logout'
 
 // Base URLs come from lib/config/env.ts — one resolver for every environment, so
 // promoting a build is a configuration change and never a code change.
@@ -132,15 +133,27 @@ const create401ResponseInterceptor = (apiInstance: typeof chatApi) => {
   return async (error: AxiosError) => {
     const original = error.config as InternalAxiosRequestConfig & { _retry?: boolean }
 
+    // The account was blocked while signed in (any service may answer 403
+    // ACCOUNT_BLOCKED). Refreshing cannot help — log out and let the login
+    // screen explain why. Anonymous calls (login form) keep their own handling.
+    if (
+      error.response?.status === 403 &&
+      logoutReasonFromError(error) === 'ACCOUNT_BLOCKED' &&
+      useAuthStore.getState().accessToken
+    ) {
+      await forceLogout(error)
+      return Promise.reject(error)
+    }
+
     if (
       error.response?.status !== 401 ||
       original._retry ||
       original.url?.includes('/auth/refresh') ||
       original.url?.includes('/api/auth/refresh') ||
-      // Skip auth endpoints (login/register/verify) — a 401 there is a real
+      // Skip auth endpoints (login/invitations/verify) — a 401 there is a real
       // credential error, not an expired session. Refreshing would loop.
       original.url?.includes('/auth/login') ||
-      original.url?.includes('/auth/register') ||
+      original.url?.includes('/auth/invitations') ||
       original.url?.includes('/auth/verify') ||
       // Public/anonymous call that 401s before any session exists (initial
       // load, logged-out browsing) → don't attempt a refresh that can't succeed.
@@ -175,13 +188,9 @@ const create401ResponseInterceptor = (apiInstance: typeof chatApi) => {
       // Only force logout when the refresh was genuinely rejected. On a transient
       // network error keep the session — the original request will fail this time
       // but the user stays logged in and can retry once the network recovers.
-      if (isAuthFailure(err)) {
-        useAuthStore.getState().clearAuth()
-        if (typeof window !== 'undefined') {
-          await axios.post('/api/auth/clear-cookie').catch(() => {})
-          window.location.href = '/login'
-        }
-      }
+      // A blocked account surfaces here as the refresh's ACCOUNT_BLOCKED code,
+      // which forceLogout forwards to the login screen.
+      if (isAuthFailure(err)) await forceLogout(err)
       return Promise.reject(err)
     } finally {
       isRefreshing = false

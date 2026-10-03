@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../core/utils/app_error.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../core/l10n/l10n_ext.dart';
@@ -63,7 +64,7 @@ class _IntegrationsScreenState extends ConsumerState<IntegrationsScreen>
       }
     } catch (e) {
       if (mounted) {
-        showErrorSnackBar('$e');
+        showErrorSnackBar(friendlyError(e));
         setState(() => _busyProvider = null);
       }
     }
@@ -76,7 +77,6 @@ class _IntegrationsScreenState extends ConsumerState<IntegrationsScreen>
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (_) => AlertDialog(
-        backgroundColor: Theme.of(context).colorScheme.surface,
         title: Text(item.entry.name,
             style: TextStyle(color: Theme.of(context).colorScheme.onSurface)),
         content: Text(
@@ -100,7 +100,7 @@ class _IntegrationsScreenState extends ConsumerState<IntegrationsScreen>
     try {
       await ref.read(integrationsProvider.notifier).disconnect(conn.id);
     } catch (e) {
-      if (mounted) showErrorSnackBar('$e');
+      if (mounted) showErrorSnackBar(friendlyError(e));
     }
   }
 
@@ -110,17 +110,15 @@ class _IntegrationsScreenState extends ConsumerState<IntegrationsScreen>
     final itemsAsync = ref.watch(integrationsProvider);
 
     return Scaffold(
-      backgroundColor: Theme.of(context).colorScheme.surface,
       appBar: AppBar(
-        backgroundColor: Theme.of(context).colorScheme.surface,
         title: Text(
           l10n.integrationsTitle,
           style: TextStyle(
-              color: Theme.of(context).colorScheme.onSurface, fontWeight: FontWeight.bold),
+              color: Theme.of(context).colorScheme.onSurface, fontWeight: FontWeight.w600),
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.add_link_rounded, color: AppTheme.ponAccent),
+            icon: Icon(Icons.add_link_rounded, color: AppTheme.accent(context)),
             tooltip: l10n.customMcpTitle,
             onPressed: () => CustomMcpSheet.show(context),
           ),
@@ -129,7 +127,7 @@ class _IntegrationsScreenState extends ConsumerState<IntegrationsScreen>
       body: itemsAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, _) => _ErrorState(
-          message: '$e',
+          message: friendlyError(e),
           onRetry: () => ref.read(integrationsProvider.notifier).refresh(),
         ),
         data: (items) => RefreshIndicator(
@@ -187,14 +185,14 @@ class _CustomMcpCta extends StatelessWidget {
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(AppTheme.radiusCard),
           border: Border.all(
-            color: AppTheme.ponAccent.withValues(alpha: 0.4),
+            color: AppTheme.accent(context).withValues(alpha: 0.4),
             width: 1.2,
           ),
         ),
         child: Row(
           children: [
-            const Icon(Icons.dashboard_customize_rounded,
-                color: AppTheme.ponAccent),
+            Icon(Icons.dashboard_customize_rounded,
+                color: AppTheme.accent(context)),
             const SizedBox(width: 14),
             Expanded(
               child: Column(
@@ -204,8 +202,8 @@ class _CustomMcpCta extends StatelessWidget {
                     l10n.customMcpTitle,
                     style: TextStyle(
                       color: Theme.of(context).colorScheme.onSurface,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 15,
+                      fontWeight: FontWeight.w600,
+                      fontSize: 16,
                     ),
                   ),
                   const SizedBox(height: 4),
@@ -213,7 +211,7 @@ class _CustomMcpCta extends StatelessWidget {
                     l10n.customMcpSubtitle,
                     style: TextStyle(
                       color: AppTheme.mutedText(context),
-                      fontSize: 12.5,
+                      fontSize: 12,
                     ),
                   ),
                 ],

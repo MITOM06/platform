@@ -35,15 +35,17 @@ class _VideoPlayerDialogState extends State<VideoPlayerDialog> {
     _controller = controller;
     try {
       await controller.initialize();
+      if (!mounted) return;
+      final accent = AppTheme.accent(context);
       _chewieController = ChewieController(
         videoPlayerController: controller,
         autoPlay: true,
         looping: false,
         aspectRatio: controller.value.aspectRatio,
         materialProgressColors: ChewieProgressColors(
-          playedColor: AppTheme.ponAccent,
-          bufferedColor: AppTheme.ponAccent.withValues(alpha: 0.3),
-          handleColor: AppTheme.ponAccent,
+          playedColor: accent,
+          bufferedColor: accent.withValues(alpha: 0.3),
+          handleColor: accent,
           backgroundColor: Colors.white24,
         ),
       );
@@ -89,8 +91,8 @@ class _VideoPlayerDialogState extends State<VideoPlayerDialog> {
               ),
             )
           else
-            const Center(
-              child: CircularProgressIndicator(color: AppTheme.ponAccent),
+            Center(
+              child: CircularProgressIndicator(color: AppTheme.accent(context)),
             ),
 
           // Close button

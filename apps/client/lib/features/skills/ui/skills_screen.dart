@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../core/utils/app_error.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:platform_client/l10n/app_localizations.dart';
 import '../../../core/l10n/l10n_ext.dart';
@@ -19,19 +20,17 @@ class SkillsScreen extends ConsumerWidget {
     final skillsAsync = ref.watch(skillsProvider);
 
     return Scaffold(
-      backgroundColor: Theme.of(context).colorScheme.surface,
       appBar: AppBar(
-        backgroundColor: Theme.of(context).colorScheme.surface,
         title: Text(
           l10n.skillsTitle,
           style: TextStyle(
-              color: Theme.of(context).colorScheme.onSurface, fontWeight: FontWeight.bold),
+              color: Theme.of(context).colorScheme.onSurface, fontWeight: FontWeight.w600),
         ),
       ),
       body: skillsAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, _) => _ErrorState(
-          message: '$e',
+          message: friendlyError(e),
           onRetry: () => ref.read(skillsProvider.notifier).refresh(),
         ),
         data: (enabledMap) => ListView(
@@ -49,8 +48,8 @@ class SkillsScreen extends ConsumerWidget {
             Text(
               l10n.skillsRealActionNote,
               style: TextStyle(
-                color: AppTheme.ponAccent.withValues(alpha: 0.85),
-                fontSize: 13,
+                color: AppTheme.accent(context).withValues(alpha: 0.85),
+                fontSize: 12,
                 height: 1.4,
               ),
             ),
@@ -80,7 +79,7 @@ class SkillsScreen extends ConsumerWidget {
     try {
       await ref.read(skillsProvider.notifier).setSkill(skillId, value);
     } catch (e) {
-      showErrorSnackBar('$e');
+      showErrorSnackBar(friendlyError(e));
     }
   }
 }
@@ -189,8 +188,8 @@ class _SkillTile extends StatelessWidget {
                     copy.name,
                     style: TextStyle(
                       color: colorScheme.onSurface,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 15,
+                      fontWeight: FontWeight.w600,
+                      fontSize: 16,
                     ),
                   ),
                   const SizedBox(height: 4),
@@ -198,7 +197,7 @@ class _SkillTile extends StatelessWidget {
                     copy.desc,
                     style: TextStyle(
                       color: colorScheme.onSurfaceVariant,
-                      fontSize: 13,
+                      fontSize: 12,
                       height: 1.3,
                     ),
                   ),
@@ -208,10 +207,10 @@ class _SkillTile extends StatelessWidget {
                       l10n.skillNeeds(needs),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        color: AppTheme.ponAccent,
+                      style: TextStyle(
+                        color: AppTheme.accent(context),
                         fontSize: 11,
-                        fontFamily: 'monospace',
+                        fontFamily: AppTheme.fontMono,
                       ),
                     ),
                   ],
@@ -221,7 +220,6 @@ class _SkillTile extends StatelessWidget {
             const SizedBox(width: 8),
             Switch(
               value: enabled,
-              activeThumbColor: AppTheme.ponAccent,
               onChanged: onChanged,
             ),
           ],

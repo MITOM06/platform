@@ -23,7 +23,7 @@ class KbScreen extends ConsumerWidget {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => _pickAndUpload(context, ref),
-        backgroundColor: AppTheme.ponAccent,
+        backgroundColor: AppTheme.accent(context),
         // White on the burgundy FAB — black sat at roughly 2:1.
         child: const Icon(Icons.upload_file_rounded, color: Colors.white),
       ),
@@ -138,7 +138,7 @@ class _EmptyState extends StatelessWidget {
             context.l10n.kbEmptyState,
             style: TextStyle(
               color: AppTheme.mutedText(context),
-              fontSize: 15,
+              fontSize: 14,
             ),
             textAlign: TextAlign.center,
           ),
@@ -157,7 +157,7 @@ class _DocumentTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ListTile(
-      leading: const Icon(Icons.description_rounded, color: AppTheme.ponAccent),
+      leading: Icon(Icons.description_rounded, color: AppTheme.accent(context)),
       title: Text(
         doc.fileName,
         style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontSize: 14),

@@ -104,7 +104,7 @@ class SettingsScreen extends ConsumerWidget {
                     style: TextStyle(
                       color: Theme.of(context).colorScheme.onSurface,
                       fontSize: 20,
-                      fontWeight: FontWeight.bold,
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
                 const SizedBox(height: 4),

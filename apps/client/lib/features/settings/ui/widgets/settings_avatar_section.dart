@@ -54,9 +54,9 @@ class _SettingsAvatarSectionState extends ConsumerState<SettingsAvatarSection> {
 
     return Container(
       padding: const EdgeInsets.all(4),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         shape: BoxShape.circle,
-        color: AppTheme.ponAccent,
+        color: AppTheme.accent(context),
       ),
       child: Container(
         padding: const EdgeInsets.all(3),
@@ -79,8 +79,8 @@ class _SettingsAvatarSectionState extends ConsumerState<SettingsAvatarSection> {
                 right: 0,
                 child: Container(
                   padding: const EdgeInsets.all(8),
-                  decoration: const BoxDecoration(
-                    color: AppTheme.ponAccent,
+                  decoration: BoxDecoration(
+                    color: AppTheme.accent(context),
                     shape: BoxShape.circle,
                   ),
                   child: _uploading

@@ -53,6 +53,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/users/me/phone/verify": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Verify Firebase Phone Auth token and save phone number */
+        post: operations["UsersController_verifyFirebasePhoneToken"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/users/device-tokens": {
         parameters: {
             query?: never;
@@ -76,7 +93,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Search users by display name or email */
+        /** Search users by display name, email, or exact phone */
         get: operations["UsersController_search"];
         put?: never;
         post?: never;
@@ -142,6 +159,23 @@ export interface paths {
             cookie?: never;
         };
         get: operations["UsersController_onlineFriends"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/users": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Batch-fetch user profiles by id */
+        get: operations["UsersController_findManyByIds"];
         put?: never;
         post?: never;
         delete?: never;
@@ -263,6 +297,74 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/notifications": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List the caller's most recent 50 notifications */
+        get: operations["NotificationsController_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/notifications/unread-count": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Count of unread notifications */
+        get: operations["NotificationsController_unreadCount"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/notifications/{id}/read": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Mark a single notification as read */
+        post: operations["NotificationsController_markRead"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/notifications/read-all": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Mark all unread notifications as read */
+        post: operations["NotificationsController_markAllRead"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/auth/google": {
         parameters: {
             query?: never;
@@ -297,40 +399,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/auth/twitter": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Start Twitter/X OAuth flow */
-        get: operations["AuthController_twitter"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/auth/twitter/callback": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Twitter/X OAuth callback (redirects back to client) */
-        get: operations["AuthController_twitterCallback"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/auth/social/{provider}/init": {
         parameters: {
             query?: never;
@@ -340,6 +408,57 @@ export interface paths {
         };
         /** Persist platform then redirect into the provider OAuth flow */
         get: operations["AuthController_initSocialLogin"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/oidc/login": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Begin OIDC SSO (redirects to the IdP) */
+        get: operations["AuthController_oidcLogin"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/oidc/callback": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** OIDC callback (redirects back to client) */
+        get: operations["AuthController_oidcCallback"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/sso/info": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Public: whether the SSO button should show */
+        get: operations["AuthController_ssoInfo"];
         put?: never;
         post?: never;
         delete?: never;
@@ -376,23 +495,6 @@ export interface paths {
         put?: never;
         /** Rotate the access token using a refresh token */
         post: operations["AuthController_refresh"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/auth/register": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Register a new account */
-        post: operations["AuthController_register"];
         delete?: never;
         options?: never;
         head?: never;
@@ -501,6 +603,357 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/auth/invitations/{token}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Preview an invitation (accept page) */
+        get: operations["InvitationAcceptController_preview"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/invitations/{token}/accept-password": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Accept an invitation by choosing a display name + password */
+        post: operations["InvitationAcceptController_acceptPassword"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/invitations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List invitations (default: pending + expired) */
+        get: operations["AdminInvitationsController_list"];
+        put?: never;
+        /** Invite an email (sends the invitation email) */
+        post: operations["AdminInvitationsController_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/invitations/{id}/resend": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Rotate the token, reset expiry and resend the email */
+        post: operations["AdminInvitationsController_resend"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/invitations/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Revoke a pending/expired invitation */
+        delete: operations["AdminInvitationsController_revoke"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/me/capabilities": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Resolved role/permissions/departments + workspace config */
+        get: operations["MeController_capabilities"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/departments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List departments */
+        get: operations["AdminController_listDepartments"];
+        put?: never;
+        post: operations["AdminController_createDepartment"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/departments/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: operations["AdminController_deleteDepartment"];
+        options?: never;
+        head?: never;
+        patch: operations["AdminController_updateDepartment"];
+        trace?: never;
+    };
+    "/admin/members": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List members */
+        get: operations["AdminController_listMembers"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/members/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Assign role/departments; revokes user sessions */
+        patch: operations["AdminController_updateMember"];
+        trace?: never;
+    };
+    "/admin/members/{id}/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Block / unblock a member (block revokes all sessions) */
+        patch: operations["AdminController_setMemberStatus"];
+        trace?: never;
+    };
+    "/admin/roles": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["AdminController_listRoles"];
+        put?: never;
+        /** Create / clone a role */
+        post: operations["AdminController_createRole"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/roles/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Edit a role (Owner is immutable) */
+        patch: operations["AdminController_updateRole"];
+        trace?: never;
+    };
+    "/admin/workspace": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["AdminController_getWorkspace"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Update workspace name/branding/features/allow-list */
+        patch: operations["AdminController_updateWorkspace"];
+        trace?: never;
+    };
+    "/admin/audit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Paginated audit trail (latest first) */
+        get: operations["AdminController_listAudit"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/ai-context/me": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["AiContextController_getMine"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/ai-context/me/style": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: operations["AiContextController_updateMyStyle"];
+        trace?: never;
+    };
+    "/ai-context/users/{userId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["AiContextController_getUser"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/ai-context/users/{userId}/hard": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: operations["AiContextController_updateHard"];
+        trace?: never;
+    };
+    "/ai-context/entries": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["AiContextController_listEntries"];
+        put?: never;
+        post: operations["AiContextController_createEntry"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/ai-context/entries/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: operations["AiContextController_deleteEntry"];
+        options?: never;
+        head?: never;
+        patch: operations["AiContextController_updateEntry"];
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -529,23 +982,6 @@ export interface components {
             sid: string;
             /** @description Opaque refresh token issued at login */
             refreshToken: string;
-        };
-        RegisterDto: {
-            /**
-             * @description Public display name
-             * @example Jane Doe
-             */
-            displayName: string;
-            /**
-             * @description Email address (must be unique)
-             * @example user@example.com
-             */
-            email: string;
-            /**
-             * @description Account password
-             * @example P@ssw0rd123
-             */
-            password: string;
         };
         LoginDto: {
             /**
@@ -602,6 +1038,173 @@ export interface components {
              */
             password: string;
         };
+        InvitationPreviewDto: {
+            email: string;
+            workspaceName: string;
+            inviterName: string;
+            roleName: string | null;
+            /** Format: date-time */
+            expiresAt: string;
+        };
+        AcceptInvitationPasswordDto: {
+            /** @example Jane Doe */
+            displayName: string;
+            /** @example P@ssw0rd123 */
+            password: string;
+            /** @description Device identifier for the issued session */
+            deviceId?: string;
+            /**
+             * @example web
+             * @enum {string}
+             */
+            platform?: "web" | "mobile";
+        };
+        LoginTokensUserDto: {
+            id: string;
+            email: string;
+            displayName: string;
+        };
+        LoginTokensResponseDto: {
+            /** @example INVITATION_ACCEPTED */
+            code: string;
+            accessToken: string;
+            refreshToken: string;
+            sid: string;
+            user: components["schemas"]["LoginTokensUserDto"];
+        };
+        CreateInvitationDto: {
+            /**
+             * @description Email to invite
+             * @example jane@acme.com
+             */
+            email: string;
+            /** @description Role to grant on accept. Defaults to the preset Member role. */
+            roleId?: string;
+            /** @description Initial departments */
+            departmentIds?: string[];
+            /**
+             * @description Invitation email language. Defaults to the Accept-Language of the request.
+             * @enum {string}
+             */
+            locale?: "en" | "vi" | "zh" | "ja" | "ko" | "es" | "fr";
+        };
+        InvitationInviterDto: {
+            /** @description Inviter user id, or "system" for the boot-time Owner invite */
+            id: string;
+            /** @description Inviter display name (workspace name for "system"); null if the inviter no longer exists */
+            displayName: string | null;
+        };
+        InvitationViewDto: {
+            _id: string;
+            /** @example jane@acme.com */
+            email: string;
+            roleId: string;
+            /** @description null if the role was deleted */
+            roleName: string | null;
+            departmentIds: string[];
+            invitedBy: components["schemas"]["InvitationInviterDto"];
+            /** @enum {string} */
+            status: "pending" | "expired" | "accepted" | "revoked";
+            /** Format: date-time */
+            expiresAt: string;
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            lastSentAt: string;
+            sendCount: number;
+            /** Format: date-time */
+            acceptedAt: string | null;
+            /** @enum {string|null} */
+            acceptedVia: "password" | "google" | "oidc" | null;
+        };
+        InvitationMutationResponseDto: {
+            invitation: components["schemas"]["InvitationViewDto"];
+            /** @description false when the invitation was saved but the email could not be sent */
+            emailSent: boolean;
+        };
+        SuccessResponseDto: {
+            /** @example true */
+            success: boolean;
+        };
+        CreateDepartmentDto: {
+            name: string;
+            description?: string;
+            /** @description User id of the department lead */
+            leadUserId?: string;
+        };
+        UpdateDepartmentDto: {
+            name?: string;
+            description?: string;
+            /** @description User id of the department lead */
+            leadUserId?: string;
+        };
+        MemberDto: {
+            _id: string;
+            displayName: string;
+            email: string;
+            avatarUrl?: string;
+            roleId?: string;
+            departmentIds: string[];
+            /** @enum {string} */
+            status: "active" | "blocked" | "pending";
+        };
+        UpdateMemberDto: {
+            /** @description Role id to assign to the member */
+            roleId?: string;
+            /** @description Department ids the member belongs to */
+            departmentIds?: string[];
+        };
+        UpdateMemberStatusDto: {
+            /** @enum {string} */
+            status: "active" | "blocked";
+        };
+        CreateRoleDto: {
+            name: string;
+            /**
+             * @description capability key -> enabled flag
+             * @example {
+             *       "USE_PERSONAL_ASSISTANT": true
+             *     }
+             */
+            permissions?: Record<string, never>;
+        };
+        UpdateRoleDto: {
+            name?: string;
+            /** @description capability key -> enabled flag */
+            permissions?: Record<string, never>;
+        };
+        WorkspaceSsoDto: Record<string, never>;
+        WorkspaceAiSettingsDto: {
+            personaName?: Record<string, never> | null;
+            /** @enum {string|null} */
+            defaultTone?: "friendly" | "professional" | "concise" | "creative" | null;
+            /** @enum {string|null} */
+            modelTier?: "auto" | "simple" | "mid" | "complex" | null;
+            webSearchEnabled?: Record<string, never> | null;
+            thinkingEnabled?: Record<string, never> | null;
+            monthlyTokenLimit?: Record<string, never> | null;
+            /** @description AI-specific MCP connector allow-list (catalog ids). null = inherit connectorAllowList; [] = allow none; must be a subset of connectorAllowList. */
+            allowedConnectors?: string[] | null;
+            dailyDigestEnabled?: Record<string, never> | null;
+            dailyDigestHour?: Record<string, never> | null;
+        };
+        UpdateWorkspaceDto: {
+            name?: string;
+            logoUrl?: string;
+            /** @example #96435B */
+            primaryColor?: string;
+            /** @description feature flag map */
+            features?: Record<string, never>;
+            /** @description catalog connector ids members may personally connect */
+            connectorAllowList?: string[];
+            /** @description SSO (OIDC) mapping config */
+            sso?: components["schemas"]["WorkspaceSsoDto"];
+            /** @description AI assistant defaults (TASK-12) */
+            aiSettings?: components["schemas"]["WorkspaceAiSettingsDto"];
+        };
+        UpdateSoftContextDto: Record<string, never>;
+        UpdateHardContextDto: Record<string, never>;
+        UpsertEntryDto: Record<string, never>;
     };
     responses: never;
     parameters: never;
@@ -663,6 +1266,23 @@ export interface operations {
         };
     };
     UsersController_changePassword: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    UsersController_verifyFirebasePhoneToken: {
         parameters: {
             query?: never;
             header?: never;
@@ -776,6 +1396,26 @@ export interface operations {
     UsersController_onlineFriends: {
         parameters: {
             query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    UsersController_findManyByIds: {
+        parameters: {
+            query: {
+                /** @description Comma-separated user ids (max 100) */
+                ids: string;
+            };
             header?: never;
             path?: never;
             cookie?: never;
@@ -923,6 +1563,76 @@ export interface operations {
             };
         };
     };
+    NotificationsController_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    NotificationsController_unreadCount: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    NotificationsController_markRead: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    NotificationsController_markAllRead: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     AuthController_google: {
         parameters: {
             query?: never;
@@ -957,45 +1667,66 @@ export interface operations {
             };
         };
     };
-    AuthController_twitter: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    AuthController_twitterCallback: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
     AuthController_initSocialLogin: {
+        parameters: {
+            query?: {
+                platform?: "web" | "mobile";
+                /** @description Invitation token: accept the invitation with Google */
+                invite?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AuthController_oidcLogin: {
         parameters: {
             query: {
                 platform: string;
             };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AuthController_oidcCallback: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AuthController_ssoInfo: {
+        parameters: {
+            query?: never;
             header?: never;
             path?: never;
             cookie?: never;
@@ -1061,39 +1792,12 @@ export interface operations {
             };
         };
     };
-    AuthController_register: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["RegisterDto"];
-            };
-        };
-        responses: {
-            /** @description Account created */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Email already in use */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
     AuthController_login: {
         parameters: {
             query?: never;
-            header?: never;
+            header: {
+                "accept-language": string;
+            };
             path?: never;
             cookie?: never;
         };
@@ -1139,7 +1843,9 @@ export interface operations {
     AuthController_forgot: {
         parameters: {
             query?: never;
-            header?: never;
+            header: {
+                "accept-language": string;
+            };
             path?: never;
             cookie?: never;
         };
@@ -1181,7 +1887,9 @@ export interface operations {
     AuthController_resend: {
         parameters: {
             query?: never;
-            header?: never;
+            header: {
+                "accept-language": string;
+            };
             path?: never;
             cookie?: never;
         };
@@ -1213,6 +1921,587 @@ export interface operations {
         };
         responses: {
             201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    InvitationAcceptController_preview: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                token: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InvitationPreviewDto"];
+                };
+            };
+        };
+    };
+    InvitationAcceptController_acceptPassword: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                token: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AcceptInvitationPasswordDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LoginTokensResponseDto"];
+                };
+            };
+        };
+    };
+    AdminInvitationsController_list: {
+        parameters: {
+            query?: {
+                /** @description Default (omitted) = pending + expired */
+                status?: "pending" | "expired" | "accepted" | "revoked" | "all";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InvitationViewDto"][];
+                };
+            };
+        };
+    };
+    AdminInvitationsController_create: {
+        parameters: {
+            query?: never;
+            header: {
+                "accept-language": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateInvitationDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InvitationMutationResponseDto"];
+                };
+            };
+        };
+    };
+    AdminInvitationsController_resend: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InvitationMutationResponseDto"];
+                };
+            };
+        };
+    };
+    AdminInvitationsController_revoke: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessResponseDto"];
+                };
+            };
+        };
+    };
+    MeController_capabilities: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AdminController_listDepartments: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AdminController_createDepartment: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateDepartmentDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AdminController_deleteDepartment: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AdminController_updateDepartment: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateDepartmentDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AdminController_listMembers: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MemberDto"][];
+                };
+            };
+        };
+    };
+    AdminController_updateMember: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateMemberDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AdminController_setMemberStatus: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateMemberStatusDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MemberDto"];
+                };
+            };
+        };
+    };
+    AdminController_listRoles: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AdminController_createRole: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateRoleDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AdminController_updateRole: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateRoleDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AdminController_getWorkspace: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AdminController_updateWorkspace: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateWorkspaceDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AdminController_listAudit: {
+        parameters: {
+            query: {
+                page: string;
+                limit: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AiContextController_getMine: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AiContextController_updateMyStyle: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateSoftContextDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AiContextController_getUser: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                userId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AiContextController_updateHard: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                userId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateHardContextDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AiContextController_listEntries: {
+        parameters: {
+            query: {
+                scope: string;
+                scopeId: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AiContextController_createEntry: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpsertEntryDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AiContextController_deleteEntry: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AiContextController_updateEntry: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpsertEntryDto"];
+            };
+        };
+        responses: {
+            200: {
                 headers: {
                     [name: string]: unknown;
                 };

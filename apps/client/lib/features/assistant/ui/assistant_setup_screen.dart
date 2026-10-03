@@ -210,7 +210,7 @@ class _ProgressBar extends StatelessWidget {
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(2),
                   color: active
-                      ? AppTheme.ponAccent
+                      ? AppTheme.accent(context)
                       : Theme.of(context)
                           .colorScheme
                           .onSurface

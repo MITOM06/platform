@@ -20,7 +20,7 @@ class ArchivedTab extends ConsumerWidget {
     final archivedAsync = ref.watch(archivedConversationsProvider);
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final accent =
-        isDark ? AppTheme.ponAccent : Theme.of(context).colorScheme.primary;
+        isDark ? AppTheme.accent(context) : Theme.of(context).colorScheme.primary;
 
     return archivedAsync.when(
       loading: () => Center(
@@ -40,7 +40,7 @@ class ArchivedTab extends ConsumerWidget {
               Text(
                 context.l10n.listLoadFailed,
                 style: TextStyle(
-                  fontWeight: FontWeight.bold,
+                  fontWeight: FontWeight.w600,
                   color: Theme.of(context).colorScheme.onSurface,
                 ),
               ),
@@ -113,7 +113,7 @@ class _EmptyArchived extends StatelessWidget {
                 context.l10n.emptyArchivedChats,
                 style: TextStyle(
                   fontSize: 16,
-                  fontWeight: FontWeight.bold,
+                  fontWeight: FontWeight.w600,
                   color: Theme.of(context).colorScheme.onSurface,
                 ),
               ),

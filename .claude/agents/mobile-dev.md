@@ -16,7 +16,7 @@ model: opus
 4. **i18n 필수**: 모든 UI 문자열은 `context.l10n.<key>`, ARB 7개 언어 파일 모두 업데이트
 5. **loading/error 상태**: 모든 async 작업에 필수 (`AsyncValue.when`)
 6. **파일 400줄 이하** — 초과 시 위젯 분리
-7. **Neon 테마**: `AppTheme.neonCyan`, `AppTheme.neonPurple`, `AppTheme.neonBlue`, 기본 모드 dark
+7. **디자인 시스템**: `docs/design-system.md` 준수 (웹이 기준). 색상은 `Theme.of(context).colorScheme` / `AppTheme.mutedText(context)` / `AppTheme.hairline(context)` 토큰만 사용 — hex·`Colors.*` 하드코딩 금지, 강조색은 burgundy 하나
 
 ## 입력
 

@@ -12,8 +12,10 @@ import '../../../core/widgets/pon_widgets.dart';
 import '../../auth/domain/auth_provider.dart';
 import '../../auth/domain/auth_state.dart';
 import '../../chat/data/chat_repository.dart';
+import 'widgets/cover_photo_preview_sheet.dart';
+import 'widgets/edit_profile_gender_field.dart';
 import 'widgets/edit_profile_header.dart';
-import 'widgets/edit_profile_privacy_toggle.dart';
+import 'widgets/edit_profile_privacy_section.dart';
 import 'widgets/phone_verification_section.dart';
 
 /// Lets the signed-in user edit their own profile (avatar, display name, bio).
@@ -161,7 +163,8 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
 
     // Show a preview + confirm sheet before uploading — the cover must never be
     // saved silently the moment a file is picked.
-    final confirmed = await _showCoverPreviewSheet(File(pickedFile.path));
+    final confirmed =
+        await showCoverPhotoPreviewSheet(context, File(pickedFile.path));
     if (confirmed != true || !mounted) return;
 
     setState(() => _isLoading = true);
@@ -179,106 +182,6 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
-  }
-
-  /// Bottom sheet previewing the picked cover image. Returns true only when the
-  /// user taps "Set as cover"; tapping "Cancel" or dismissing returns false.
-  Future<bool?> _showCoverPreviewSheet(File imageFile) {
-    return showModalBottomSheet<bool>(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (ctx) => Container(
-        decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.surface,
-          borderRadius: const BorderRadius.vertical(
-              top: Radius.circular(AppTheme.radiusSheet)),
-        ),
-        child: SafeArea(
-          top: false,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const SizedBox(height: 12),
-              Container(
-                width: 36,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: AppTheme.hairline(context),
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-              const SizedBox(height: 16),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: Text(
-                  ctx.l10n.coverPhotoPreviewTitle,
-                  style: TextStyle(
-                    color: Theme.of(context).colorScheme.onSurface,
-                    fontWeight: FontWeight.w600,
-                    fontSize: 16,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 12),
-              ClipRRect(
-                borderRadius: BorderRadius.circular(12),
-                child: Container(
-                  margin: const EdgeInsets.symmetric(horizontal: 16),
-                  height: 180,
-                  width: double.infinity,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(12),
-                    image: DecorationImage(
-                      image: FileImage(imageFile),
-                      fit: BoxFit.cover,
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 20),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: OutlinedButton(
-                        onPressed: () => Navigator.of(ctx).pop(false),
-                        style: OutlinedButton.styleFrom(
-                          foregroundColor: AppTheme.mutedText(context),
-                          side: BorderSide(color: AppTheme.hairline(context)),
-                          padding: const EdgeInsets.symmetric(vertical: 14),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                        ),
-                        child: Text(ctx.l10n.actionCancel),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: ElevatedButton(
-                        onPressed: () => Navigator.of(ctx).pop(true),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppTheme.ponAccent,
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(vertical: 14),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                        ),
-                        child: Text(ctx.l10n.saveCoverPhoto),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 24),
-            ],
-          ),
-        ),
-      ),
-    );
   }
 
   Future<void> _save() async {
@@ -354,9 +257,9 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                   context.l10n.actionSave,
                   style: TextStyle(
                     color:
-                        _hasUnsavedChanges ? AppTheme.ponAccent : AppTheme.mutedText(context),
-                    fontWeight: FontWeight.bold,
-                    fontSize: 15,
+                        _hasUnsavedChanges ? AppTheme.accent(context) : AppTheme.mutedText(context),
+                    fontWeight: FontWeight.w600,
+                    fontSize: 16,
                   ),
                 ),
               ),
@@ -396,7 +299,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                     borderRadius: BorderRadius.circular(10)),
                 tileColor: Theme.of(context).colorScheme.surface,
                 leading:
-                    const Icon(Icons.work_outline_rounded, color: AppTheme.ponAccent),
+                    Icon(Icons.work_outline_rounded, color: AppTheme.accent(context)),
                 title: Text(context.l10n.roleLabel,
                     style:
                         TextStyle(color: AppTheme.mutedText(context), fontSize: 12)),
@@ -417,49 +320,8 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                 },
               ),
               const SizedBox(height: 8),
-              DropdownButtonFormField<String>(
-                initialValue: _gender,
-                decoration: InputDecoration(
-                  labelText: context.l10n.profileGender,
-                  prefixIcon:
-                      const Icon(Icons.wc_rounded, color: AppTheme.ponAccent),
-                ),
-                items: [
-                  DropdownMenuItem(
-                    value: 'male',
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(Icons.male_rounded, color: AppTheme.mutedText(context), size: 18),
-                        const SizedBox(width: 8),
-                        Text(context.l10n.genderMale),
-                      ],
-                    ),
-                  ),
-                  DropdownMenuItem(
-                    value: 'female',
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(Icons.female_rounded, color: AppTheme.mutedText(context), size: 18),
-                        const SizedBox(width: 8),
-                        Text(context.l10n.genderFemale),
-                      ],
-                    ),
-                  ),
-                  DropdownMenuItem(
-                    value: 'other',
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(Icons.transgender_rounded,
-                            color: AppTheme.mutedText(context), size: 18),
-                        const SizedBox(width: 8),
-                        Text(context.l10n.genderOther),
-                      ],
-                    ),
-                  ),
-                ],
+              EditProfileGenderField(
+                value: _gender,
                 onChanged:
                     _isLoading ? null : (v) => setState(() => _gender = v),
               ),
@@ -469,7 +331,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                     borderRadius: BorderRadius.circular(10)),
                 tileColor: Theme.of(context).colorScheme.surface,
                 leading:
-                    const Icon(Icons.cake_rounded, color: AppTheme.ponAccent),
+                    Icon(Icons.cake_rounded, color: AppTheme.accent(context)),
                 title: Text(context.l10n.dateOfBirth,
                     style: TextStyle(color: Theme.of(context).colorScheme.onSurface)),
                 subtitle: Text(
@@ -500,52 +362,16 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
               const SizedBox(height: 20),
               // Privacy — grouped at the end (mirrors web where the whole privacy
               // block sits below the fields), instead of interleaved per field.
-              Container(
-                padding: const EdgeInsets.all(14),
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: AppTheme.hairline(context)),
-                ),
-                child: Column(
-                  children: [
-                    Row(
-                      children: [
-                        const Icon(Icons.lock_outline_rounded,
-                            color: AppTheme.ponAccent, size: 18),
-                        const SizedBox(width: 8),
-                        Text(
-                          context.l10n.privacySectionLabel,
-                          style: TextStyle(
-                            color: Theme.of(context).colorScheme.onSurface,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 6),
-                    EditProfilePrivacyToggle(
-                      label: context.l10n.profileShowDateOfBirth,
-                      value: _showDob,
-                      onChanged: _isLoading
-                          ? null
-                          : (v) => setState(() => _showDob = v),
-                    ),
-                    EditProfilePrivacyToggle(
-                      label: context.l10n.profileShowPhone,
-                      value: _showPhone,
-                      onChanged: _isLoading
-                          ? null
-                          : (v) => setState(() => _showPhone = v),
-                    ),
-                    EditProfilePrivacyToggle(
-                      label: context.l10n.profileShowGender,
-                      value: _showGender,
-                      onChanged: _isLoading
-                          ? null
-                          : (v) => setState(() => _showGender = v),
-                    ),
-                  ],
-                ),
+              EditProfilePrivacySection(
+                showDob: _showDob,
+                showPhone: _showPhone,
+                showGender: _showGender,
+                onShowDobChanged:
+                    _isLoading ? null : (v) => setState(() => _showDob = v),
+                onShowPhoneChanged:
+                    _isLoading ? null : (v) => setState(() => _showPhone = v),
+                onShowGenderChanged:
+                    _isLoading ? null : (v) => setState(() => _showGender = v),
               ),
               const SizedBox(height: 24),
             ],

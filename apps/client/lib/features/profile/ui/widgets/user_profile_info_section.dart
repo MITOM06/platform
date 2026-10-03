@@ -171,7 +171,6 @@ class _ShowToggle extends StatelessWidget {
         label,
         style: TextStyle(fontSize: 12, color: AppTheme.mutedText(context)),
       ),
-      activeThumbColor: AppTheme.ponAccent,
       dense: true,
       contentPadding: EdgeInsets.zero,
       visualDensity: VisualDensity.compact,
@@ -192,7 +191,7 @@ class ProfileInfoRow extends StatelessWidget {
       dense: true,
       leading: Icon(icon, size: 18, color: AppTheme.mutedText(context)),
       title: Text(label, style: TextStyle(fontSize: 11, color: AppTheme.mutedText(context))),
-      subtitle: Text(value, style: const TextStyle(fontSize: 13)),
+      subtitle: Text(value, style: const TextStyle(fontSize: 14)),
     );
   }
 }

@@ -1,46 +1,54 @@
 import {
-  ConflictException,
   Inject,
   Injectable,
-  Logger,
-  ServiceUnavailableException,
   UnauthorizedException,
   NotFoundException,
 } from '@nestjs/common';
-import * as dns from 'node:dns';
-import { randomInt, createHash } from 'node:crypto';
 import { JwtService, JwtSignOptions } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
-import { nanoid } from 'nanoid';
 import { REDIS_CLIENT, Redis } from '@platform/database';
 import { SessionService } from './session.service';
 import { ClaimsService } from './claims.service';
 import { UsersService } from '../users/users.service';
 import * as bcrypt from 'bcrypt';
-import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
-import { MailService } from '../Email/mail.service';
+import { OtpService } from './otp.service';
 import { BadRequestException } from '@nestjs/common/exceptions/bad-request.exception';
 import { Response } from 'express';
 import { AuthCode } from '../../common/auth-code.enum';
-import { OidcService } from './oidc/oidc.service';
 import { SsoMappingService } from './oidc/sso-mapping.service';
 import { NotificationsService } from '../notifications/notifications.service';
+import { assertCanSignIn } from './account-status';
+import { LoginAttemptsService } from './login-attempts.service';
+import { loginCodeKey, OAuthRedirectService } from './oauth-redirect.service';
+import {
+  SocialProfile,
+  SocialProvider,
+  SocialProvisioningService,
+} from './social-provisioning.service';
+
+/** A user as needed to mint a session (any UserDocument satisfies it). */
+interface TokenSubject {
+  _id: unknown;
+  email: string;
+  displayName: string;
+  phoneVerified?: boolean;
+}
 
 @Injectable()
 export class AuthService {
-  private readonly logger = new Logger(AuthService.name);
-
   constructor(
-    private readonly mailService: MailService,
     private readonly jwt: JwtService,
     private readonly session: SessionService,
     private readonly claims: ClaimsService,
     private readonly usersService: UsersService,
     private readonly configService: ConfigService,
-    private readonly oidc: OidcService,
     private readonly ssoMapping: SsoMappingService,
     private readonly notificationsService: NotificationsService,
+    private readonly socialProvisioning: SocialProvisioningService,
+    private readonly oauthRedirect: OAuthRedirectService,
+    private readonly loginAttempts: LoginAttemptsService,
+    private readonly otp: OtpService,
     @Inject(REDIS_CLIENT) private readonly redis: Redis,
   ) {}
 
@@ -67,98 +75,14 @@ export class AuthService {
       });
   }
 
-  // Cryptographically secure 6-digit OTP (100000–999999).
-  private generateOtp(): string {
-    return randomInt(100000, 1000000).toString();
-  }
-
-  /**
-   * One-way hash of an OTP before it is persisted. SHA-256 (not bcrypt) is the
-   * right tool here: OTPs are short-lived (5 min) and brute-force is already
-   * rate-limited at the verify layer, so we only need to ensure a DB dump can't
-   * reveal live OTPs. Compare hash-to-hash; never store or match the raw code.
-   */
-  private hashOtp(otp: string): string {
-    return createHash('sha256').update(otp).digest('hex');
-  }
-
-  // ===================== SOCIAL LOGIN =====================
   async handleSocialLogin(
-    user: any,
+    user: SocialProfile,
     res: Response,
-    provider: string,
+    provider: SocialProvider,
     platform: string = 'mobile',
   ) {
-    const userId = await this.ensureUserIdFromSocial(user, provider);
-    return this.redirectWithLoginCode(userId, res, platform);
-  }
-
-  // Mints a one-time login code for a resolved user and redirects (web) or
-  // serves the mobile deep-link bridge. Shared by social + OIDC SSO login.
-  async redirectWithLoginCode(userId: string, res: Response, platform: string) {
-    const code = await this.createLoginCode(userId);
-
-    // Production is guaranteed to have this (main.ts refuses to boot without it),
-    // so the fallback is purely the local web dev server.
-    const webRedirect =
-      this.configService.get<string>('WEB_REDIRECT_URL') ||
-      'http://localhost:3000/oauth-callback';
-
-    if (platform === 'web') {
-      return res.redirect(`${webRedirect}?code=${code}`);
-    }
-
-    // Mobile deep-link:
-    // - iOS Safari: platform://auth?code=xxx  (CFBundleURLSchemes handles it fine)
-    // - Android Chrome: intent:// URI — Chrome converts to Android Intent directly,
-    //   bypassing the custom-scheme block that affects platform:// redirects.
-    const encodedCode = encodeURIComponent(code);
-    const iosDeeplink = `platform://auth?code=${encodedCode}`;
-    // intent://auth?code=xxx#Intent;scheme=platform;package=<id>;end
-    // Derive the browser fallback from WEB_REDIRECT_URL rather than hardcoding the
-    // production web host: a local build used to fall back to the live site.
-    const browserFallback = encodeURIComponent(
-      new URL('/login', webRedirect).toString(),
-    );
-    const androidIntent = `intent://auth?code=${encodedCode}#Intent;scheme=platform;package=com.platform.platform_client;S.browser_fallback_url=${browserFallback};end`;
-
-    return res.send(`<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Đang chuyển về ứng dụng...</title>
-  <style>
-    /* Warm Grey & Burgundy palette (docs/superpowers/UI-REDESIGN-DIRECTION.md §2).
-       This page is served by auth-service, so it is outside both apps' theming
-       and kept the old neon brand until the redesign's final pass. */
-    body{font-family:sans-serif;display:flex;flex-direction:column;align-items:center;
-         justify-content:center;height:100vh;margin:0;background:#1A1614;color:#F3EEE8}
-    a{display:inline-block;margin-top:16px;padding:12px 24px;background:#96435B;
-      color:#fff;border-radius:10px;text-decoration:none;font-weight:600}
-    p{color:#B0A79C;font-size:14px}
-  </style>
-</head>
-<body>
-  <p>Đang chuyển về ứng dụng PON...</p>
-  <a id="btn" href="${iosDeeplink}">Mở ứng dụng</a>
-  <p id="msg" style="display:none">Không tự động mở? Nhấn nút bên trên.</p>
-  <script>
-    var ua = navigator.userAgent;
-    var isAndroid = /Android/.test(ua);
-    var deeplink = isAndroid ? ${JSON.stringify(androidIntent)} : ${JSON.stringify(iosDeeplink)};
-    document.getElementById('btn').href = deeplink;
-    // Auto-redirect after small delay (counts as page navigation)
-    setTimeout(function() {
-      window.location.replace(deeplink);
-      // Show fallback button if app didn't open within 2s
-      setTimeout(function() {
-        document.getElementById('msg').style.display = 'block';
-      }, 2000);
-    }, 300);
-  </script>
-</body>
-</html>`);
+    const userId = await this.socialProvisioning.resolveUserId(user, provider);
+    return this.oauthRedirect.redirectWithLoginCode(userId, res, platform);
   }
 
   // ===================== OIDC SSO =====================
@@ -168,16 +92,22 @@ export class AuthService {
     platform: string,
   ) {
     const gate = await this.ssoMapping.getGate();
-    if (!gate.enabled) throw new UnauthorizedException({ code: 'SSO_DISABLED' });
+    if (!gate.enabled) throw new UnauthorizedException({ code: AuthCode.SSO_DISABLED });
 
     // Enforce allowed email domains if configured (empty list = any domain).
     if (gate.allowedDomains.length > 0) {
       const domain = profile.email.split('@')[1]?.toLowerCase();
       const ok = gate.allowedDomains.some((d) => d.toLowerCase() === domain);
-      if (!ok) throw new UnauthorizedException({ code: 'SSO_DOMAIN_NOT_ALLOWED' });
+      if (!ok) {
+        throw new UnauthorizedException({ code: AuthCode.SSO_DOMAIN_NOT_ALLOWED });
+      }
     }
 
-    const userId = await this.ensureUserIdFromSocial(profile, 'oidc');
+    // JIT provisioning only for an explicit, admin-configured domain allow-list:
+    // an empty list means "any domain" and must not become an open sign-up.
+    const userId = await this.socialProvisioning.resolveUserId(profile, 'oidc', {
+      allowJit: gate.allowedDomains.length > 0,
+    });
     const { changed } = await this.ssoMapping.apply(
       userId,
       profile.email,
@@ -185,160 +115,82 @@ export class AuthService {
     );
     if (changed) {
       // role/dept changed → invalidate existing sessions so new claims take effect.
-      await this.session.revokeAllSessions(userId);
+      await this.session.revokeAllSessions(userId, 'role_changed');
     }
-    return this.redirectWithLoginCode(userId, res, platform);
-  }
-
-  async ensureUserIdFromSocial(
-    profile: any,
-    provider: string,
-  ): Promise<string> {
-    if (!profile?.email) {
-      throw new UnauthorizedException({ code: AuthCode.SOCIAL_EMAIL_UNAVAILABLE });
-    }
-
-    // 1. Tìm theo socialId trước
-    let user = await this.usersService.findBySocialId(provider, profile.id);
-
-    // 2. Nếu không tìm được theo socialId, thử tìm theo email
-    if (!user) {
-      user = await this.usersService.findByEmail(profile.email);
-    }
-
-    // 3. Nếu vẫn không có → tạo user mới
-    if (!user) {
-      const fallbackName = profile.email.split('@')[0];
-      user = await this.usersService.create({
-        displayName: profile.displayName || profile.name || fallbackName,
-        email: profile.email,
-        avatarUrl:
-          profile.avatar || profile.picture || profile.photos?.[0]?.value || '',
-        isVerified: true,
-        socialLinks: { [provider]: profile.id },
-      });
-    } else if (!user.socialLinks?.[provider]) {
-      // 4. User đã có nhưng chưa link provider này
-      await this.usersService.updateSocialId(
-        user._id.toString(),
-        provider,
-        profile.id,
-      );
-    }
-
-    return user._id.toString();
-  }
-
-  // ===================== BRUTE FORCE =====================
-  async checkBruteForce(email: string) {
-    const lockoutKey = `lockout:${email}`;
-    const isLocked = await this.redis.get(lockoutKey);
-
-    if (isLocked) {
-      const ttl = await this.redis.ttl(lockoutKey);
-      const minutes = Math.ceil(ttl / 60);
-      throw new UnauthorizedException({ code: AuthCode.ACCOUNT_LOCKED, params: { minutes } });
-    }
-  }
-
-  async handleFailedLogin(email: string): Promise<never> {
-    const maxAttempts = Number(
-      this.configService.get('MAX_FAILED_ATTEMPTS', 5),
-    );
-    const attemptsTTL = Number(
-      this.configService.get('FAILED_LOGIN_ATTEMPTS_TTL', 600),
-    );
-    const lockoutDuration = Number(
-      this.configService.get('LOCKOUT_DURATION', 300),
-    );
-
-    const attemptKey = `failed_attempts:${email}`;
-    const attempts = await this.redis.incr(attemptKey);
-
-    if (attempts === 1) {
-      await this.redis.expire(attemptKey, attemptsTTL);
-    }
-
-    if (attempts >= maxAttempts) {
-      await this.redis.set(`lockout:${email}`, '1', 'EX', lockoutDuration);
-      await this.redis.del(attemptKey);
-      throw new UnauthorizedException({
-        code: AuthCode.LOGIN_FAILED_LOCKED,
-        params: { maxAttempts, minutes: Math.ceil(lockoutDuration / 60) },
-      });
-    }
-
-    const remaining = maxAttempts - attempts;
-    throw new UnauthorizedException({
-      code: AuthCode.LOGIN_FAILED_WITH_REMAINING,
-      params: { remaining },
-    });
+    return this.oauthRedirect.redirectWithLoginCode(userId, res, platform);
   }
 
   // ===================== LOGIN / LOGOUT =====================
   async login(dto: LoginDto, locale: string = 'en') {
-    await this.checkBruteForce(dto.email);
+    await this.loginAttempts.checkBruteForce(dto.email);
     const user = await this.usersService.findByEmail(dto.email);
 
     // ✅ FIX: Kiểm tra user và throw ngay - TypeScript hiểu user không null sau đây
     if (!user) {
-      await this.handleFailedLogin(dto.email);
+      await this.loginAttempts.handleFailedLogin(dto.email);
       // handleFailedLogin return type là 'never' → TypeScript biết code dưới không chạy
       return; // unreachable, nhưng giúp TypeScript yên tâm
     }
 
-    const isMatch = await bcrypt.compare(dto.password, user.password);
+    // Google-only accounts have no local password: a failed attempt, not a 500.
+    const isMatch =
+      !!user.password && (await bcrypt.compare(dto.password, user.password));
     if (!isMatch) {
-      await this.handleFailedLogin(dto.email);
+      await this.loginAttempts.handleFailedLogin(dto.email);
       return; // unreachable
     }
 
+    // Correct credentials but a blocked / not-yet-accepted account: the attempt
+    // was not a guess, so clear the counter, then refuse (403).
+    if (user.status === 'blocked' || user.status === 'pending') {
+      await this.loginAttempts.reset(dto.email);
+      assertCanSignIn(user);
+    }
+
     // ── SECURITY: an unverified account must never receive a session. ──
-    // Credentials are correct but the email was never confirmed (user hit
-    // "back" on the OTP screen and logged in). Resend a fresh OTP and steer
-    // the client to /verify-otp instead of minting tokens. The per-email OTP
-    // rate limit (shared with forgot/resend) keeps this from being an
-    // email-spam vector even with valid credentials.
+    // Credentials are correct but the email was never confirmed (legacy
+    // accounts). Resend a fresh OTP and steer the client to /verify-otp instead
+    // of minting tokens. The per-email OTP rate limit (shared with
+    // forgot/resend) keeps this from being an email-spam vector.
     if (!user.isVerified) {
       await this.enforceForgotOtpRateLimit(user.email);
-      const otp = this.generateOtp();
-      const expires = new Date(Date.now() + 5 * 60 * 1000);
-      await this.usersService.updateOtp(user._id, this.hashOtp(otp), expires);
-      await this.deliverOtpEmail(user.email, otp, locale);
+      await this.otp.issue(user._id, user.email, locale);
       throw new UnauthorizedException({
         code: AuthCode.ACCOUNT_UNVERIFIED_OTP_SENT,
         params: { email: user.email },
       });
     }
 
-    const { sid, refreshToken } = await this.session.createSession({
-      userId: user._id.toString(),
-      deviceId: 'web-login',
-      platform: 'web',
-    });
+    const tokens = await this.issueTokensForUser(user, 'web-login', 'web');
+    await this.loginAttempts.reset(dto.email);
+    return { code: AuthCode.LOGIN_SUCCESS, ...tokens };
+  }
 
-    const accessToken = await this.signAccessTokenWithClaims(
-      user._id.toString(),
-      sid,
-    );
-    await this.redis.del(`failed_attempts:${dto.email}`);
+  /**
+   * Create a session + RBAC-claims access token for an already-authenticated
+   * user (password login, invitation accept). Returns the LoginTokens shape.
+   */
+  async issueTokensForUser(
+    user: TokenSubject,
+    deviceId: string,
+    platform: string,
+  ) {
+    const userId = String(user._id);
+    const { sid, refreshToken } = await this.session.createSession({
+      userId,
+      deviceId,
+      platform,
+    });
+    const accessToken = await this.signAccessTokenWithClaims(userId, sid);
 
     // Fire-and-forget: nudge the user to set a password / verify their phone.
-    this.triggerSetupNotifications(
-      user._id.toString(),
-      user.phoneVerified ?? false,
-    );
+    this.triggerSetupNotifications(userId, user.phoneVerified ?? false);
 
     return {
-      code: AuthCode.LOGIN_SUCCESS,
       accessToken,
       refreshToken,
       sid,
-      user: {
-        id: user._id,
-        email: user.email,
-        displayName: user.displayName,
-      },
+      user: { id: userId, email: user.email, displayName: user.displayName },
     };
   }
 
@@ -369,18 +221,20 @@ export class AuthService {
     }
   }
 
+  /** A blocked account never gets an OTP mailed (forgot-password / resend). */
+  private assertNotBlocked(user: { status?: string }): void {
+    if (user.status === 'blocked') assertCanSignIn(user);
+  }
+
   async forgotPassword(email: string, locale: string = 'en') {
     // ── Per-email rate limit: max 3 OTP sends per 10 minutes ──
     await this.enforceForgotOtpRateLimit(email);
 
     const user = await this.usersService.findByEmail(email);
     if (!user) throw new NotFoundException({ code: AuthCode.EMAIL_NOT_FOUND });
+    this.assertNotBlocked(user);
 
-    const otp = this.generateOtp();
-    const expires = new Date(Date.now() + 5 * 60 * 1000);
-
-    await this.usersService.updateOtp(user._id, this.hashOtp(otp), expires);
-    await this.deliverOtpEmail(email, otp, locale);
+    await this.otp.issue(user._id, email, locale);
     return { success: true, code: AuthCode.OTP_SENT };
   }
 
@@ -410,7 +264,7 @@ export class AuthService {
       throw new BadRequestException({ code: AuthCode.OTP_EXPIRED });
     }
 
-    if (user.otpCode !== this.hashOtp(otp)) {
+    if (!this.otp.matches(user.otpCode, otp)) {
       const remaining = maxAttempts - attempts;
       throw new BadRequestException({
         code: AuthCode.OTP_WRONG_WITH_REMAINING,
@@ -438,7 +292,7 @@ export class AuthService {
     await this.usersService.updatePassword(user._id.toString(), hashedPass);
 
     // ✅ IMPROVEMENT: Revoke tất cả sessions cũ khi đổi mật khẩu
-    await this.session.revokeAllSessions(user._id.toString());
+    await this.session.revokeAllSessions(user._id.toString(), 'password_reset');
 
     return {
       success: true,
@@ -476,56 +330,49 @@ export class AuthService {
     return this.signAccessToken({ sub, sid, role, perms, depts });
   }
 
-  async createLoginCode(userId: string) {
-    const code = nanoid(32);
-    await this.redis.set(`login_code:${code}`, userId, 'EX', 300);
-    return code;
-  }
-
   async exchangeLoginCode(code: string, deviceId?: string, platform?: string) {
-    const key = `login_code:${code}`;
-    const userId = await this.redis.get(key);
-
+    // GETDEL: the code is single-use even under concurrent exchanges.
+    const userId = await this.redis.getdel(loginCodeKey(code));
     if (!userId) {
       throw new UnauthorizedException({ code: AuthCode.LOGIN_CODE_INVALID });
     }
 
-    await this.redis.del(key);
+    // Re-check the account between OAuth callback and exchange (deleted / blocked).
+    const user = await this.usersService.findById(userId);
+    if (!user) {
+      throw new UnauthorizedException({ code: AuthCode.LOGIN_CODE_INVALID });
+    }
+    assertCanSignIn(user);
 
     const { sid, refreshToken } = await this.session.createSession({
       userId,
       deviceId: deviceId || 'unknown',
       platform: platform || 'web',
     });
-
     const accessToken = await this.signAccessTokenWithClaims(userId, sid);
 
-    // ✅ IMPROVEMENT: Trả về thông tin user
-    const user = await this.usersService.findById(userId);
-
-    if (user) {
-      // Fire-and-forget: nudge the user to set a password / verify their phone.
-      this.triggerSetupNotifications(userId, user.phoneVerified ?? false);
-    }
+    // Fire-and-forget: nudge the user to set a password / verify their phone.
+    this.triggerSetupNotifications(userId, user.phoneVerified ?? false);
 
     return {
       userId,
       sid,
       accessToken,
       refreshToken,
-      user: user
-        ? {
-            id: user._id,
-            email: user.email,
-            displayName: user.displayName,
-            avatarUrl: user.avatarUrl,
-            isVerified: user.isVerified,
-          }
-        : null,
+      user: {
+        id: user._id,
+        email: user.email,
+        displayName: user.displayName,
+        avatarUrl: user.avatarUrl,
+        isVerified: user.isVerified,
+      },
     };
   }
 
   async refresh(sid: string, refreshToken: string) {
+    // Status BEFORE session validity: blocking revokes every session, so rotating
+    // first would answer SESSION_REVOKED instead of 403 ACCOUNT_BLOCKED.
+    await this.assertRefreshOwnerCanSignIn(sid, refreshToken);
     const { userId, newRefreshToken } = await this.session.rotateRefreshToken({
       sid,
       refreshToken,
@@ -534,90 +381,25 @@ export class AuthService {
     return { accessToken, refreshToken: newRefreshToken };
   }
 
-  // ===================== REGISTER =====================
-  async register(dto: RegisterDto, locale: string = 'en') {
-    const domain = dto.email.split('@')[1];
-    try {
-      const records = await dns.promises.resolveMx(domain);
-      if (!records || records.length === 0) {
-        throw new BadRequestException({ code: AuthCode.EMAIL_DOMAIN_INVALID });
-      }
-    } catch (e) {
-      if (e instanceof BadRequestException) throw e;
-      throw new BadRequestException({ code: AuthCode.EMAIL_DOMAIN_INVALID });
-    }
-
-    const existingUser = await this.usersService.findByEmail(dto.email);
-    if (existingUser) {
-      if (existingUser.isVerified) {
-        throw new ConflictException({ code: AuthCode.EMAIL_IN_USE });
-      }
-      // Account exists but unverified → resend OTP instead of erroring
-      const otp = this.generateOtp();
-      const expires = new Date(Date.now() + 5 * 60 * 1000);
-      await this.usersService.updateOtp(existingUser._id, this.hashOtp(otp), expires);
-      await this.deliverOtpEmail(dto.email, otp, locale);
-      return {
-        code: AuthCode.ACCOUNT_UNVERIFIED_OTP_SENT,
-        userId: existingUser._id,
-      };
-    }
-
-    const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(dto.password, salt);
-
-    const user = await this.usersService.create({
-      displayName: dto.displayName,
-      email: dto.email,
-      password: hashedPassword,
-      isVerified: false,
-    });
-
-    const otp = this.generateOtp();
-    const expires = new Date(Date.now() + 5 * 60 * 1000);
-    await this.usersService.updateOtp(user._id, this.hashOtp(otp), expires);
-    await this.deliverOtpEmail(dto.email, otp, locale);
-
-    return {
-      code: AuthCode.REGISTER_SUCCESS,
-      userId: user._id,
-    };
-  }
-
   /**
-   * Send an OTP email, converting a mail-provider failure into a typed 503 instead of letting it
-   * escape as an untyped 500.
-   *
-   * The account row is already written by the time we get here, so a raw throw left the caller
-   * with "Internal server error", an account they could not verify, and a retry that took the
-   * "unverified → resend" branch and failed identically — a permanent signup deadlock from one
-   * SMTP hiccup. With a typed code the client can say "we couldn't send the code" and offer
-   * resend, which succeeds as soon as the provider recovers.
+   * Blocked / pending owner → revoke all sessions + 403. Only revealed to a caller
+   * holding a genuine (current or previous) refresh token of this session.
    */
-  private async deliverOtpEmail(
-    email: string,
-    otp: string,
-    locale: string,
-  ): Promise<void> {
-    try {
-      await this.mailService.sendOtpEmail(email, otp, locale);
-    } catch (e) {
-      // Log enough to diagnose an outage, and nothing more. The full address is user PII, and a
-      // mail-provider error message carries connection/credential detail (nodemailer's is
-      // literally "Invalid login: 535-5.7.8 Username and Password not accepted"). Keep the
-      // recipient's DOMAIN — "every @acme.com send is failing" is the diagnosis, the local part
-      // never is — plus the provider's own error code, which is a stable non-sensitive symbol
-      // (EAUTH / ECONNECTION / EENVELOPE) and more actionable than the prose anyway.
-      const domain = email.slice(email.lastIndexOf('@'));
-      const err = e as { code?: string; responseCode?: number } | undefined;
-      const symptom =
-        err?.code ?? (e instanceof Error ? e.name : typeof e);
-      this.logger.error(
-        `${AuthCode.OTP_SEND_FAILED}: recipient=***${domain} symptom=${symptom}` +
-          (err?.responseCode ? ` smtpStatus=${err.responseCode}` : ''),
-      );
-      throw new ServiceUnavailableException({ code: AuthCode.OTP_SEND_FAILED });
+  private async assertRefreshOwnerCanSignIn(sid: string, refreshToken: string) {
+    const userId = await this.session.peekSessionUserId(sid);
+    if (!userId) return;
+    const user = await this.usersService.findById(userId);
+    if (!user || (user.status !== 'blocked' && user.status !== 'pending')) {
+      return;
     }
+    if (!(await this.session.refreshTokenBelongsToSession(sid, refreshToken))) {
+      return;
+    }
+    await this.session.revokeAllSessions(
+      userId,
+      user.status === 'blocked' ? 'blocked' : 'other',
+    );
+    assertCanSignIn(user);
   }
 
   async resendOtp(email: string, locale: string = 'en') {
@@ -637,11 +419,9 @@ export class AuthService {
 
     const user = await this.usersService.findByEmail(email);
     if (!user) throw new NotFoundException({ code: AuthCode.EMAIL_NOT_FOUND });
+    this.assertNotBlocked(user);
 
-    const otp = this.generateOtp();
-    const expires = new Date(Date.now() + 5 * 60 * 1000);
-    await this.usersService.updateOtp(user._id, this.hashOtp(otp), expires);
-    await this.deliverOtpEmail(email, otp, locale);
+    await this.otp.issue(user._id, email, locale);
 
     // Reset attempt counter khi gửi lại OTP mới
     await this.redis.del(`otp_attempts:${email}`);

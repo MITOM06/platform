@@ -92,8 +92,8 @@ class _ReadUserTile extends ConsumerWidget {
         trailing: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.done_all_rounded,
-                size: 16, color: AppTheme.ponAccent),
+            Icon(Icons.done_all_rounded,
+                size: 16, color: AppTheme.accent(context)),
             const SizedBox(width: 4),
             Text(
               context.l10n.seenStatus,
@@ -106,7 +106,7 @@ class _ReadUserTile extends ConsumerWidget {
         ),
       ),
       loading: () => ListTile(
-        leading: const SizedBox(
+        leading: SizedBox(
           width: 40,
           height: 40,
           child: Center(
@@ -116,7 +116,7 @@ class _ReadUserTile extends ConsumerWidget {
               child: CircularProgressIndicator(
                 strokeWidth: 2,
                 valueColor:
-                    AlwaysStoppedAnimation<Color>(AppTheme.ponAccent),
+                    AlwaysStoppedAnimation<Color>(AppTheme.accent(context)),
               ),
             ),
           ),

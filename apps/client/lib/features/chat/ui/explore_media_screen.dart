@@ -127,9 +127,9 @@ class _MediaThumb extends StatelessWidget {
       child: CachedNetworkImage(
         imageUrl: url,
         fit: BoxFit.cover,
-        placeholder: (_, __) => Container(color: AppTheme.darkSurface),
+        placeholder: (_, __) => Container(color: AppTheme.mutedSurface(context)),
         errorWidget: (_, __, ___) => Container(
-          color: AppTheme.darkSurface,
+          color: AppTheme.mutedSurface(context),
           child: const Icon(Icons.broken_image_rounded, color: Colors.white38),
         ),
       ),
@@ -233,17 +233,17 @@ class _LinkTile extends ConsumerWidget {
         margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: AppTheme.darkSurface,
+          color: AppTheme.mutedSurface(context),
           borderRadius: BorderRadius.circular(10),
           border: Border.all(
-              color: AppTheme.ponAccent.withValues(alpha: 0.15), width: 1),
+              color: AppTheme.accent(context).withValues(alpha: 0.15), width: 1),
         ),
         child: preview.when(
           loading: () => Text(url,
-              style: const TextStyle(color: AppTheme.ponAccent, fontSize: 13),
+              style: TextStyle(color: AppTheme.accent(context), fontSize: 14),
               overflow: TextOverflow.ellipsis),
           error: (_, __) => Text(url,
-              style: const TextStyle(color: AppTheme.ponAccent, fontSize: 13),
+              style: TextStyle(color: AppTheme.accent(context), fontSize: 14),
               overflow: TextOverflow.ellipsis),
           data: (data) => Row(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -274,14 +274,14 @@ class _LinkTile extends ConsumerWidget {
                           ? data.title!
                           : url,
                       style: const TextStyle(
-                          fontSize: 13, fontWeight: FontWeight.w600),
+                          fontSize: 14, fontWeight: FontWeight.w600),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                     ),
                     if (data.description != null)
                       Text(data.description!,
                           style: TextStyle(
-                              fontSize: 11.5,
+                              fontSize: 11,
                               color: Colors.white.withValues(alpha: 0.7)),
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis),

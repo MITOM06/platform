@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../core/utils/app_error.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/l10n/l10n_ext.dart';
 import '../../../../core/theme/app_theme.dart';
@@ -122,7 +123,7 @@ class _DirectoryAdminSheetState extends ConsumerState<DirectoryAdminSheet> {
       if (!mounted) return;
       setState(() {
         _saving = false;
-        _error = '$e';
+        _error = friendlyError(e);
       });
     }
   }
@@ -144,7 +145,7 @@ class _DirectoryAdminSheetState extends ConsumerState<DirectoryAdminSheet> {
               style: TextStyle(
                 color: Theme.of(context).colorScheme.onSurface,
                 fontSize: 18,
-                fontWeight: FontWeight.bold,
+                fontWeight: FontWeight.w600,
               ),
             ),
             const SizedBox(height: 4),
@@ -152,7 +153,7 @@ class _DirectoryAdminSheetState extends ConsumerState<DirectoryAdminSheet> {
               l10n.directoryDialogDesc,
               style: TextStyle(
                 color: AppTheme.mutedText(context),
-                fontSize: 13,
+                fontSize: 12,
               ),
             ),
             const SizedBox(height: 18),
@@ -312,7 +313,7 @@ class _EnumDropdown<T> extends StatelessWidget {
           value: value,
           isExpanded: true,
           dropdownColor: Theme.of(context).colorScheme.surface,
-          style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontSize: 13),
+          style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontSize: 14),
           items: [
             for (final v in values)
               DropdownMenuItem<T>(value: v, child: Text(labelOf(v))),

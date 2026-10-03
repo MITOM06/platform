@@ -91,7 +91,7 @@ class _NewPasswordScreenState extends ConsumerState<NewPasswordScreen> {
         ),
       ),
       // No decorative accent orbs: the accent means "primary action"
-      // only (UI-REDESIGN-DIRECTION.md §2 rules 1-2).
+      // only (docs/design-system.md §1).
       body: SafeArea(
         child: Center(
           child: ConstrainedBox(
@@ -107,7 +107,7 @@ class _NewPasswordScreenState extends ConsumerState<NewPasswordScreen> {
                   Text(
                     context.l10n.newPasswordHeading,
                     style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                          fontWeight: FontWeight.bold,
+                          fontWeight: FontWeight.w600,
                           color: Theme.of(context).colorScheme.onSurface,
                         ),
                     textAlign: TextAlign.center,

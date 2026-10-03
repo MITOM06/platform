@@ -83,13 +83,13 @@ class MessageBubbleBody extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               const Icon(Icons.hourglass_top_rounded,
-                  color: Color(0xFFFFB74D), size: 16),
+                  color: AppTheme.warning, size: 16),
               const SizedBox(width: 6),
               Flexible(
                 child: Text(
                   context.l10n.aiErrRateLimited,
                   style: const TextStyle(
-                      color: Color(0xFFFFB74D), fontSize: 14),
+                      color: AppTheme.warning, fontSize: 14),
                 ),
               ),
             ],
@@ -98,14 +98,14 @@ class MessageBubbleBody extends StatelessWidget {
           Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(Icons.warning_amber_rounded,
-                  color: AppTheme.darkDanger, size: 16),
+              Icon(Icons.warning_amber_rounded,
+                  color: Theme.of(context).colorScheme.error, size: 16),
               const SizedBox(width: 6),
               Flexible(
                 child: Text(
                   context.l10n.aiErrStreamInterrupted,
-                  style: const TextStyle(
-                      color: AppTheme.darkDanger, fontSize: 14),
+                  style: TextStyle(
+                      color: Theme.of(context).colorScheme.error, fontSize: 14),
                 ),
               ),
             ],
@@ -114,14 +114,14 @@ class MessageBubbleBody extends StatelessWidget {
           Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(Icons.warning_amber_rounded,
-                  color: AppTheme.darkDanger, size: 16),
+              Icon(Icons.warning_amber_rounded,
+                  color: Theme.of(context).colorScheme.error, size: 16),
               const SizedBox(width: 6),
               Flexible(
                 child: Text(
                   context.l10n.aiErrUnavailable,
-                  style: const TextStyle(
-                      color: AppTheme.darkDanger, fontSize: 14),
+                  style: TextStyle(
+                      color: Theme.of(context).colorScheme.error, fontSize: 14),
                 ),
               ),
             ],
@@ -130,14 +130,14 @@ class MessageBubbleBody extends StatelessWidget {
           Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(Icons.warning_amber_rounded,
-                  color: AppTheme.darkDanger, size: 16),
+              Icon(Icons.warning_amber_rounded,
+                  color: Theme.of(context).colorScheme.error, size: 16),
               const SizedBox(width: 6),
               Flexible(
                 child: Text(
                   context.l10n.aiError,
-                  style: const TextStyle(
-                      color: AppTheme.darkDanger, fontSize: 14),
+                  style: TextStyle(
+                      color: Theme.of(context).colorScheme.error, fontSize: 14),
                 ),
               ),
             ],
@@ -169,9 +169,10 @@ class MessageBubbleBody extends StatelessWidget {
             Text(
               timeStr,
               style: TextStyle(
-                fontSize: 9.5,
+                fontSize: 10,
+                // On the accent bubble muted grey is ~2:1; use on-accent at 70%.
                 color: isSentByMe
-                    ? AppTheme.mutedText(context)
+                    ? Colors.white.withValues(alpha: 0.7)
                     : AppTheme.mutedText(context),
               ),
             ),
@@ -180,10 +181,10 @@ class MessageBubbleBody extends StatelessWidget {
               Text(
                 context.l10n.messageEdited,
                 style: TextStyle(
-                  fontSize: 9.5,
+                  fontSize: 10,
                   fontStyle: FontStyle.italic,
                   color: isSentByMe
-                      ? AppTheme.mutedText(context)
+                      ? Colors.white.withValues(alpha: 0.7)
                       : AppTheme.mutedText(context),
                 ),
               ),

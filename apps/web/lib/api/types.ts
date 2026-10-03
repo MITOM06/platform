@@ -13,12 +13,16 @@ export type AuthSchemas = AuthApiComponents['schemas']
 
 /** `POST /auth/login` request body (email, password). */
 export type LoginRequest = AuthSchemas['LoginDto']
-/** `POST /auth/register` request body (email, password, displayName). */
-export type RegisterRequest = AuthSchemas['RegisterDto']
 /** `POST /auth/refresh` request body (sid, refreshToken). */
 export type RefreshRequest = AuthSchemas['RefreshDto']
 /** `POST /auth/verify-otp` request body (email, otp). */
 export type VerifyOtpRequest = AuthSchemas['VerifyOtpDto']
+
+// ── Invitations (invite-only onboarding) ─────────────────────────────────────
+/** `POST /auth/invitations/:token/accept-password` request body. */
+export type AcceptInvitationRequest = AuthSchemas['AcceptInvitationPasswordDto']
+/** `GET /auth/invitations/:token` response — public preview. `roleName` is null for a deleted role. */
+export type InvitationPreview = AuthSchemas['InvitationPreviewDto']
 
 export interface Reaction {
   userId: string

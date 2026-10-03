@@ -9,8 +9,8 @@ import 'package:flutter/material.dart';
 /// blue `#4285F4`, red `#EA4335`, yellow `#FBBC05`, green `#34A853`.
 /// Renders crisply on dark backgrounds (the neon dark theme) as well as light.
 ///
-/// Shared between the login and register screens so the OAuth button looks
-/// identical on both.
+/// Shared between the login and invitation-accept screens so the OAuth button
+/// looks identical on both.
 class GoogleLogoIcon extends StatelessWidget {
   final double size;
 

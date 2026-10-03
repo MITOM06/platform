@@ -1,4 +1,5 @@
 import 'dart:convert';
+import '../../../../core/utils/app_error.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/l10n/l10n_ext.dart';
@@ -72,7 +73,7 @@ class _RolesPanelState extends ConsumerState<RolesPanel> {
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
             child: Text(l10n.adminRoleClone,
-                style: const TextStyle(color: AppTheme.ponAccent)),
+                style: TextStyle(color: AppTheme.accent(context))),
           ),
         ],
       ),
@@ -97,7 +98,7 @@ class _RolesPanelState extends ConsumerState<RolesPanel> {
     return async.when(
       loading: () => const Center(child: CircularProgressIndicator()),
       error: (e, _) => Center(
-        child: Text('$e',
+        child: Text(friendlyError(e),
             style: TextStyle(color: AppTheme.mutedText(context))),
       ),
       data: (roles) {
@@ -108,7 +109,7 @@ class _RolesPanelState extends ConsumerState<RolesPanel> {
             Text(l10n.adminRoleHint,
                 style: TextStyle(
                     color: AppTheme.mutedText(context),
-                    fontSize: 13)),
+                    fontSize: 12)),
             const SizedBox(height: 16),
             SingleChildScrollView(
               scrollDirection: Axis.horizontal,
@@ -134,7 +135,7 @@ class _RolesPanelState extends ConsumerState<RolesPanel> {
           width: _capColWidth,
           child: Text(l10n.adminRoleCapability,
               style: TextStyle(
-                  color: Theme.of(context).colorScheme.onSurface, fontWeight: FontWeight.bold)),
+                  color: Theme.of(context).colorScheme.onSurface, fontWeight: FontWeight.w600)),
         ),
         ...roles.map((r) => SizedBox(
               width: _roleColWidth,
@@ -146,8 +147,8 @@ class _RolesPanelState extends ConsumerState<RolesPanel> {
                       overflow: TextOverflow.ellipsis),
                   if (r.isPreset)
                     Text(l10n.adminRolePreset,
-                        style: const TextStyle(
-                            color: AppTheme.ponAccent, fontSize: 10)),
+                        style: TextStyle(
+                            color: AppTheme.accent(context), fontSize: 10)),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
@@ -164,7 +165,7 @@ class _RolesPanelState extends ConsumerState<RolesPanel> {
                           icon: Icon(Icons.save_rounded,
                               size: 16,
                               color: _isDirty(r)
-                                  ? AppTheme.ponAccent
+                                  ? AppTheme.accent(context)
                                   : AppTheme.hairline(context)),
                           tooltip: l10n.adminSave,
                           onPressed: _isDirty(r) ? () => _save(r) : null,
@@ -186,7 +187,7 @@ class _RolesPanelState extends ConsumerState<RolesPanel> {
           SizedBox(
             width: _capColWidth,
             child: Text(capabilityLabel(context, cap),
-                style: TextStyle(color: AppTheme.mutedText(context), fontSize: 13)),
+                style: TextStyle(color: AppTheme.mutedText(context), fontSize: 12)),
           ),
           ...roles.map((r) {
             final readOnly = r.isOwner;
@@ -196,7 +197,7 @@ class _RolesPanelState extends ConsumerState<RolesPanel> {
               width: _roleColWidth,
               child: Center(
                 child: Checkbox(
-                  activeColor: AppTheme.ponAccent,
+                  activeColor: AppTheme.accent(context),
                   value: checked,
                   onChanged: readOnly
                       ? null

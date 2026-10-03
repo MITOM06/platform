@@ -17,7 +17,6 @@ class FaqItemTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final accent = Theme.of(context).colorScheme.primary;
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
@@ -29,14 +28,13 @@ class FaqItemTile extends StatelessWidget {
           child: ExpansionTile(
             tilePadding: const EdgeInsets.symmetric(horizontal: 20),
             childrenPadding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
-            iconColor: accent,
-            collapsedIconColor: accent,
+            // web AccordionTrigger: foreground text, 14 / 500, muted chevron.
             title: Text(
               question,
               style: TextStyle(
-                color: accent,
-                fontWeight: FontWeight.bold,
-                fontSize: 15,
+                color: Theme.of(context).colorScheme.onSurface,
+                fontWeight: FontWeight.w500,
+                fontSize: 14,
               ),
             ),
             children: [

@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { AuthService } from './auth.service';
+import { OtpService } from './otp.service';
 import { AuthController } from './auth.controller';
 import { SessionService } from './session.service';
 import { ClaimsService } from './claims.service';
@@ -20,12 +21,16 @@ import { SsoMappingService } from './oidc/sso-mapping.service';
 import { JwtModule } from '@nestjs/jwt';
 import { UsersModule } from '../users/users.module';
 import { JwtStrategy } from './strategies/jwt.strategy';
-import { TwitterStrategy } from './strategies/x.strategy';
 import { GoogleStrategy } from './strategies/google.strategy';
 import { MailModule } from '../Email/mail.module';
 import { NotificationsModule } from '../notifications/notifications.module';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { PassportModule } from '@nestjs/passport';
+import { InvitationsModule } from '../invitations/invitations.module';
+import { InvitationAcceptController } from './invitation-accept.controller';
+import { SocialProvisioningService } from './social-provisioning.service';
+import { OAuthRedirectService } from './oauth-redirect.service';
+import { LoginAttemptsService } from './login-attempts.service';
 
 @Module({
   imports: [
@@ -40,6 +45,7 @@ import { PassportModule } from '@nestjs/passport';
     UsersModule,
     MailModule,
     NotificationsModule,
+    InvitationsModule,
     JwtModule.registerAsync({
       inject: [ConfigService],
       imports: [ConfigModule],
@@ -50,16 +56,19 @@ import { PassportModule } from '@nestjs/passport';
     }),
     DatabaseRedisModule,
   ],
-  controllers: [AuthController],
+  controllers: [AuthController, InvitationAcceptController],
   providers: [
     AuthService,
+    OtpService,
     SessionService,
     ClaimsService,
     OidcService,
     SsoMappingService,
+    SocialProvisioningService,
+    OAuthRedirectService,
+    LoginAttemptsService,
     JwtStrategy,
     ...(process.env.GOOGLE_CLIENT_ID ? [GoogleStrategy] : []),
-    ...(process.env.X_CLIENT_ID ? [TwitterStrategy] : []),
   ],
   exports: [AuthService],
 })

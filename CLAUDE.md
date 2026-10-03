@@ -11,7 +11,7 @@
 
 > **Direction (2026-06-19):** PON is pivoting from a chat app to a **self-hosted, single-tenant-per-deployment B2B AI-assistant platform** (one deployment = one company; Workspace → Departments → Members → Role). AI is central; users connect third-party tools via **governed MCP connectors** (`connector-service`, :3003) and the assistant acts for them from chat. Full state + roadmap: `docs/superpowers/PON-ENTERPRISE-HANDOFF.md`. Enterprise RBAC lives in auth-service + `packages/database/rbac` + `packages/database/auth`.
 
-> **Active workstream (2026-06-25): Bot Factory ↔ PON bridge.** Federate a separate personal-assistant product (Bot Factory) into PON chat as an external bot member (the member's 1-1 "trợ lý riêng"), coexisting with native `@AI` (the company "bot tổng"). **Phase 1 (server-side bridge) ✅ DONE & merged** (PR #81); **next = client UI** (`docs/superpowers/plans/2026-06-25-personal-assistant-client-ui.md`). **Direction/handoff:** `docs/superpowers/BOTFACTORY-BRIDGE-DIRECTION.md`. ⛔ The `bot-factory` repo is READ-ONLY; all changes are in this repo (mostly `chat-service`).
+> **Current state (2026-09-30):** Bot Factory ↔ PON bridge (server + client UI), AI Context and the Warm Grey & Burgundy UI redesign are all shipped. Production backend runs on a Mac mini behind a Cloudflare Tunnel (`infra/docker-compose/compose.mini.yml`), web on Vercel. The only plan not started is Meeting Room / LiveKit Phase 1. Plan status of record: `docs/superpowers/plans/README.md`. Bot Factory direction: `docs/superpowers/BOTFACTORY-BRIDGE-DIRECTION.md` — ⛔ the `bot-factory` repo is READ-ONLY; all changes are in this repo.
 
 ## AUTONOMOUS MODE — DEFAULT BEHAVIOR
 
@@ -83,7 +83,7 @@ Start infra: `docker compose -f infra/docker-compose/compose.yml up -d`
 ## Stack — Phase 2 AI ✅ COMPLETE (2026-06-07, Sprint AI-6 DONE)
 
 - **Spring Boot 3 chat-service**: WebSocket (STOMP) + REST API + MongoDB + Redis + RabbitMQ + JWT validation ✅
-- **Flutter client**: Neon UI + Auth flow + Chat UI + Riverpod + STOMP wire ✅
+- **Flutter client**: Warm Grey & Burgundy UI + Auth flow + Chat UI + Riverpod + STOMP wire ✅
 - **NestJS auth-service**: JWT, OTP, refresh token, user search API ✅
 - **NestJS ai-service**: Anthropic Claude API + RabbitMQ consumer + Redis streaming + Memory + RAG + Tools + Persona ✅
 
@@ -117,6 +117,7 @@ Queue settings: 30-second message TTL, dead-letter exchange `ai.direct.dlq`.
 
 ## Reference Docs (load on demand, not auto-loaded)
 
+- Design system (colour, type, components — web is the source of truth): `docs/design-system.md`
 - Architecture decisions: `docs/decisions.md`
 - Roadmap & milestones: `docs/roadmap.md`
 - Chat service API spec: `docs/api-spec.md`

@@ -139,7 +139,7 @@ class MultiSelectBar extends ConsumerWidget {
                     child: _ActionButton(
                       icon: Icons.forward_to_inbox_rounded,
                       label: l10n.forwardMessage,
-                      color: AppTheme.ponAccent,
+                      color: AppTheme.accent(context),
                       onPressed:
                           empty ? null : () => _forward(context, ref),
                     ),

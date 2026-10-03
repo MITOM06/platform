@@ -130,6 +130,9 @@ export interface CreateDepartmentInput {
 
 export type UpdateDepartmentInput = Partial<CreateDepartmentInput>
 
+/** Account status. `blocked` users cannot sign in; `pending` is legacy-only. */
+export type MemberStatus = 'active' | 'blocked' | 'pending'
+
 /** `GET /admin/members` item (projection: no secrets). */
 export interface Member {
   _id: string
@@ -138,8 +141,59 @@ export interface Member {
   avatarUrl?: string
   roleId?: string
   departmentIds?: string[]
-  status?: string
+  status?: MemberStatus
 }
+
+/** `PATCH /admin/members/:id/status` — only these two values are settable. */
+export type SettableMemberStatus = Exclude<MemberStatus, 'pending'>
+
+// ── Invitations (invite-only onboarding, plan §1.1/§1.2) ────────────────────
+
+/** `expired` is derived server-side (pending && expiresAt < now). */
+export type InvitationStatus = 'pending' | 'expired' | 'accepted' | 'revoked'
+
+/** `GET/POST /admin/invitations` item. Never carries the token. */
+export interface Invitation {
+  _id: string
+  email: string
+  roleId: string
+  /** Resolved role name; `null` when the role was deleted. */
+  roleName: string | null
+  departmentIds: string[]
+  /**
+   * `id === 'system'` for the bootstrap-owner invite (displayName = workspace name).
+   * `displayName` is `null` when the inviting user no longer exists — render a fallback, never the id.
+   */
+  invitedBy: { id: string; displayName: string | null }
+  status: InvitationStatus
+  expiresAt: string
+  createdAt: string
+  lastSentAt: string
+  sendCount: number
+  acceptedAt: string | null
+  acceptedVia: 'password' | 'google' | 'oidc' | null
+}
+
+/** `POST /admin/invitations` and `POST /admin/invitations/:id/resend` response. */
+export interface InvitationMutationResult {
+  invitation: Invitation
+  /** false ⇒ invitation stored but the email failed — admin should Resend later. */
+  emailSent: boolean
+}
+
+/** Email language for the invitation (the 7 supported UI locales). */
+export type InvitationLocale = 'en' | 'vi' | 'zh' | 'ja' | 'ko' | 'es' | 'fr'
+
+/** `POST /admin/invitations` body. `roleId` omitted ⇒ server defaults to Member. */
+export interface CreateInvitationInput {
+  email: string
+  roleId?: string
+  departmentIds?: string[]
+  locale?: InvitationLocale
+}
+
+/** `GET /admin/invitations?status=` filter; omitted = pending + expired. */
+export type InvitationListFilter = InvitationStatus | 'all'
 
 export interface UpdateMemberInput {
   roleId?: string

@@ -74,7 +74,7 @@ class _GroupCallStartSheetState extends ConsumerState<GroupCallStartSheet> {
             style: TextStyle(
                 color: Theme.of(context).colorScheme.onSurface,
                 fontSize: 18,
-                fontWeight: FontWeight.bold),
+                fontWeight: FontWeight.w600),
           ),
           const SizedBox(height: 16),
           Row(
@@ -102,15 +102,14 @@ class _GroupCallStartSheetState extends ConsumerState<GroupCallStartSheet> {
           SwitchListTile(
             contentPadding: EdgeInsets.zero,
             value: _aiNotetaker,
-            activeThumbColor: AppTheme.ponAccent,
             onChanged: (v) => setState(() => _aiNotetaker = v),
             title: Row(
               children: [
-                const Icon(Icons.auto_awesome_rounded,
-                    color: AppTheme.ponAccent, size: 18),
+                Icon(Icons.auto_awesome_rounded,
+                    color: AppTheme.accent(context), size: 18),
                 const SizedBox(width: 8),
                 Text(l10n.groupCallNotetakerToggle,
-                    style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontSize: 15)),
+                    style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontSize: 14)),
               ],
             ),
             subtitle: Text(
@@ -157,11 +156,11 @@ class _MediaChoice extends StatelessWidget {
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(14),
           color: selected
-              ? AppTheme.ponAccent.withValues(alpha: 0.18)
+              ? AppTheme.accent(context).withValues(alpha: 0.18)
               : Theme.of(context).scaffoldBackgroundColor,
           border: Border.all(
             color: selected
-                ? AppTheme.ponAccent
+                ? AppTheme.accent(context)
                 : AppTheme.hairline(context).withValues(alpha: 0.6),
             width: selected ? 2 : 1,
           ),
@@ -169,7 +168,7 @@ class _MediaChoice extends StatelessWidget {
         child: Column(
           children: [
             Icon(icon,
-                color: selected ? AppTheme.ponAccent : AppTheme.mutedText(context), size: 28),
+                color: selected ? AppTheme.accent(context) : AppTheme.mutedText(context), size: 28),
             const SizedBox(height: 6),
             Text(label,
                 style: TextStyle(

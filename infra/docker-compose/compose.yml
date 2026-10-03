@@ -175,7 +175,7 @@ services:
       # itself, so every KB upload and chat image fetch failed.
       CHAT_INTERNAL_URL: ${CHAT_INTERNAL_URL:-http://chat-service:8080}
       VOYAGE_API_KEY: ${VOYAGE_API_KEY:-}
-      KB_EMBEDDING_MODEL: ${KB_EMBEDDING_MODEL:-voyage-3.5}
+      KB_EMBEDDING_MODEL: ${KB_EMBEDDING_MODEL:-voyage-4-lite}
       AI_ENABLE_THINKING: ${AI_ENABLE_THINKING:-false}
       AI_THINKING_BUDGET: ${AI_THINKING_BUDGET:-8000}
       AI_MONTHLY_TOKEN_LIMIT: ${AI_MONTHLY_TOKEN_LIMIT:-500000}
@@ -199,6 +199,8 @@ services:
     depends_on:
       mongo:
         condition: service_healthy
+      redis:
+        condition: service_healthy
     environment:
       # Local stack — never "production". The prod guards (main.ts) and every
       # isProd branch must describe the deployed environment, not this one.
@@ -206,6 +208,9 @@ services:
       PORT: 3003
       JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET}
       MONGO_URI: mongodb://mongo:27017/platform
+      # Access-token session check (sess:{sid}) — shared Redis with auth-service.
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
       CONNECTOR_VAULT_KEY: ${CONNECTOR_VAULT_KEY}
       INTERNAL_API_KEY: ${INTERNAL_API_KEY}
       OAUTH_REDIRECT_BASE: ${OAUTH_REDIRECT_BASE:-http://localhost:3003}

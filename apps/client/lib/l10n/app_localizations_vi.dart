@@ -9,6 +9,9 @@ class AppLocalizationsVi extends AppLocalizations {
   AppLocalizationsVi([String locale = 'vi']) : super(locale);
 
   @override
+  String get appTagline => 'Kết nối & Trò chuyện';
+
+  @override
   String get appName => 'PON';
 
   @override
@@ -118,10 +121,10 @@ class AppLocalizationsVi extends AppLocalizations {
   String get actionConfirm => 'Xác nhận';
 
   @override
-  String get actionRetry => 'THỬ LẠI';
+  String get actionRetry => 'Thử lại';
 
   @override
-  String get actionSave => 'LƯU';
+  String get actionSave => 'Lưu';
 
   @override
   String get actionLogout => 'Đăng xuất';
@@ -136,7 +139,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get loadingDots => '...';
 
   @override
-  String get loginTitle => 'Đăng Nhập';
+  String get loginTitle => 'Đăng nhập';
 
   @override
   String get fieldEmail => 'Email';
@@ -148,13 +151,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get forgotPasswordLink => 'Quên mật khẩu?';
 
   @override
-  String get loginButton => 'ĐĂNG NHẬP';
-
-  @override
-  String get noAccountYet => 'Chưa có tài khoản? ';
-
-  @override
-  String get registerNow => 'Đăng ký ngay';
+  String get loginButton => 'Đăng nhập';
 
   @override
   String get valEmailRequired => 'Vui lòng nhập email';
@@ -354,9 +351,6 @@ class AppLocalizationsVi extends AppLocalizations {
   String get errLoginFailed => 'Đăng nhập thất bại, thử lại';
 
   @override
-  String get registerTitle => 'Tạo Tài Khoản';
-
-  @override
   String get welcomeToApp => 'Chào mừng bạn đến với PON';
 
   @override
@@ -364,15 +358,6 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get fieldConfirmPassword => 'Xác nhận mật khẩu';
-
-  @override
-  String get registerButton => 'ĐĂNG KÝ';
-
-  @override
-  String get haveAccount => 'Đã có tài khoản? ';
-
-  @override
-  String get loginLink => 'Đăng nhập';
 
   @override
   String get valNameRequired => 'Vui lòng nhập tên';
@@ -387,10 +372,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get errEmailExists => 'Email này đã được đăng ký';
 
   @override
-  String get errRegisterFailed => 'Đăng ký thất bại, thử lại';
-
-  @override
-  String get verifyOtpTitle => 'Xác Thực OTP';
+  String get verifyOtpTitle => 'Xác thực OTP';
 
   @override
   String get verifyAccountHeading => 'Xác thực tài khoản';
@@ -404,7 +386,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get fieldOtp => 'Mã OTP';
 
   @override
-  String get confirmButton => 'XÁC NHẬN';
+  String get confirmButton => 'Xác nhận';
 
   @override
   String resendIn(int seconds) {
@@ -430,7 +412,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get errVerifyFailed => 'Xác thực thất bại, thử lại';
 
   @override
-  String get forgotTitle => 'Đặt Lại Mật Khẩu';
+  String get forgotTitle => 'Đặt lại mật khẩu';
 
   @override
   String get forgotHeading => 'Quên mật khẩu?';
@@ -440,16 +422,13 @@ class AppLocalizationsVi extends AppLocalizations {
       'Nhập email của bạn để nhận mã OTP thiết lập mật khẩu mới';
 
   @override
-  String get sendOtpButton => 'GỬI MÃ OTP';
-
-  @override
-  String get errEmailNotRegistered => 'Email này chưa được đăng ký';
+  String get sendOtpButton => 'Gửi mã OTP';
 
   @override
   String get errSendRequestFailed => 'Gửi yêu cầu thất bại, thử lại';
 
   @override
-  String get newPasswordTitle => 'Mật Khẩu Mới';
+  String get newPasswordTitle => 'Mật khẩu mới';
 
   @override
   String get newPasswordHeading => 'Tạo mật khẩu mới';
@@ -475,7 +454,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get errResetFailed => 'Đặt lại mật khẩu thất bại, thử lại';
 
   @override
-  String get settingsTitle => 'Cài Đặt';
+  String get settingsTitle => 'Cài đặt';
 
   @override
   String get valNameEmpty => 'Tên không được để trống';
@@ -511,7 +490,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get logoutConfirmBody => 'Bạn có chắc muốn đăng xuất không?';
 
   @override
-  String get onboardingChooseTheme => 'CHỌN GIAO DIỆN';
+  String get onboardingChooseTheme => 'Chọn giao diện';
 
   @override
   String get onboardingChooseSubtitle =>
@@ -527,7 +506,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get themeSystemSubtitle => 'Tự động đồng bộ với thiết bị của bạn';
 
   @override
-  String get startExperience => 'BẮT ĐẦU TRẢI NGHIỆM';
+  String get startExperience => 'Bắt đầu trải nghiệm';
 
   @override
   String get tooltipSettings => 'Cài đặt';
@@ -563,7 +542,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get conversationDefault => 'Cuộc trò chuyện';
 
   @override
-  String get newConversationTitle => 'Cuộc Trò Chuyện Mới';
+  String get newConversationTitle => 'Cuộc trò chuyện mới';
 
   @override
   String get startConversationHeading => 'Bắt đầu cuộc trò chuyện';
@@ -582,7 +561,7 @@ class AppLocalizationsVi extends AppLocalizations {
       'Không tìm thấy người dùng hoặc lỗi kết nối.';
 
   @override
-  String get startConversationButton => 'BẮT ĐẦU TRÒ CHUYỆN';
+  String get startConversationButton => 'Bắt đầu trò chuyện';
 
   @override
   String get chatDefaultTitle => 'Trò chuyện';
@@ -607,6 +586,9 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get tabRequests => 'Người lạ';
+
+  @override
+  String get tabNew => 'Tạo mới';
 
   @override
   String get noRequests => 'Không có lời mời nào';
@@ -1681,9 +1663,6 @@ class AppLocalizationsVi extends AppLocalizations {
   String get loginWithGoogle => 'Đăng nhập bằng Google';
 
   @override
-  String get registerWithGoogle => 'Đăng ký bằng Google';
-
-  @override
   String get orContinueWith => 'Hoặc tiếp tục với';
 
   @override
@@ -1699,7 +1678,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get valMustAgreeTerms =>
-      'Bạn phải đồng ý với Điều khoản Dịch vụ để đăng ký';
+      'Bạn phải đồng ý với Điều khoản Dịch vụ để tiếp tục';
 
   @override
   String get youColon => 'Bạn:';
@@ -1939,10 +1918,6 @@ class AppLocalizationsVi extends AppLocalizations {
       'Cập nhật mật khẩu thành công. Vui lòng đăng nhập lại.';
 
   @override
-  String get authMsgRegisterSuccess =>
-      'Đăng ký thành công. Mã OTP đã được gửi tới email của bạn.';
-
-  @override
   String get authMsgAccountUnverifiedOtpSent =>
       'Tài khoản chưa được xác thực. Mã OTP mới đã được gửi tới email của bạn.';
 
@@ -1971,14 +1946,7 @@ class AppLocalizationsVi extends AppLocalizations {
       'Hiện chưa gửi được mã xác minh. Vui lòng thử lại sau giây lát.';
 
   @override
-  String get authErrEmailDomainInvalid =>
-      'Tên miền email không tồn tại hoặc không có bản ghi MX.';
-
-  @override
   String get authErrEmailNotFound => 'Email không tồn tại trong hệ thống.';
-
-  @override
-  String get authErrEmailInUse => 'Email này đã được sử dụng.';
 
   @override
   String get authErrValEmailInvalid => 'Định dạng email không hợp lệ.';
@@ -2097,7 +2065,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get customMcpUrl => 'URL máy chủ';
 
   @override
-  String get customMcpAuth => 'XÁC THỰC';
+  String get customMcpAuth => 'Xác thực';
 
   @override
   String get customMcpAuthNone => 'Không';
@@ -2498,6 +2466,14 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get adminMemberRoleNone => 'Không có';
+
+  @override
+  String get adminMemberRoleLockedSelf =>
+      'Bạn không thể tự thay đổi vai trò của mình.';
+
+  @override
+  String get adminMemberRoleLockedOwner =>
+      'Chỉ Chủ sở hữu mới có thể thay đổi vai trò của Chủ sở hữu.';
 
   @override
   String get adminMemberDepartments => 'Phòng ban';
@@ -3183,10 +3159,10 @@ class AppLocalizationsVi extends AppLocalizations {
   String get attachHdOff => 'SD — nén';
 
   @override
-  String get hdOn => 'HD BẬT';
+  String get hdOn => 'HD bật';
 
   @override
-  String get hdOff => 'HD TẮT';
+  String get hdOff => 'HD tắt';
 
   @override
   String get videoCannotPlay => 'Không thể phát video';
@@ -3322,4 +3298,271 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get adminDeleteEntry => 'Xóa mục';
+
+  @override
+  String get loginInviteOnlyHint =>
+      'PON chỉ dành cho người được mời. Hãy liên hệ quản trị viên để nhận lời mời.';
+
+  @override
+  String get loginHaveInviteLink => 'Bạn có liên kết lời mời?';
+
+  @override
+  String get inviteLinkDialogTitle => 'Mở lời mời';
+
+  @override
+  String get inviteLinkDialogHint => 'Dán liên kết lời mời từ email của bạn';
+
+  @override
+  String get inviteLinkInvalid => 'Đây không phải là liên kết lời mời hợp lệ.';
+
+  @override
+  String get inviteOpen => 'Mở';
+
+  @override
+  String get inviteCancel => 'Hủy';
+
+  @override
+  String get inviteRetry => 'Thử lại';
+
+  @override
+  String get inviteTitle => 'Bạn được mời';
+
+  @override
+  String inviteSubtitle(String inviter, String workspace, String role) {
+    return '$inviter đã mời bạn tham gia $workspace với vai trò $role';
+  }
+
+  @override
+  String inviteSubtitleNoRole(String inviter, String workspace) {
+    return '$inviter đã mời bạn tham gia $workspace';
+  }
+
+  @override
+  String get inviteContinueWithGoogle => 'Tiếp tục với Google';
+
+  @override
+  String inviteGoogleHint(String email) {
+    return 'Dùng tài khoản Google của $email';
+  }
+
+  @override
+  String get inviteOrSetPassword => 'hoặc đặt mật khẩu';
+
+  @override
+  String get inviteSubmit => 'Tạo tài khoản';
+
+  @override
+  String get inviteInvalidTitle => 'Lời mời không hợp lệ';
+
+  @override
+  String get inviteInvalidBody =>
+      'Liên kết lời mời không hợp lệ. Hãy kiểm tra liên kết trong email hoặc nhờ quản trị viên gửi lời mời mới.';
+
+  @override
+  String get inviteExpiredTitle => 'Lời mời đã hết hạn';
+
+  @override
+  String get inviteExpiredBody =>
+      'Lời mời này đã hết hạn. Hãy nhờ quản trị viên gửi lại.';
+
+  @override
+  String get inviteRevokedTitle => 'Lời mời đã bị thu hồi';
+
+  @override
+  String get inviteRevokedBody => 'Lời mời này đã bị quản trị viên thu hồi.';
+
+  @override
+  String get inviteAcceptedTitle => 'Đã chấp nhận';
+
+  @override
+  String get inviteAcceptedBody =>
+      'Lời mời này đã được chấp nhận. Hãy đăng nhập để tiếp tục.';
+
+  @override
+  String get inviteLoadFailedTitle => 'Không tải được lời mời';
+
+  @override
+  String get inviteBackToLogin => 'Quay lại đăng nhập';
+
+  @override
+  String get authMsgInvitationAccepted =>
+      'Đã chấp nhận lời mời. Chào mừng bạn!';
+
+  @override
+  String get authErrAccountNotProvisioned =>
+      'Tài khoản bạn vừa chọn chưa có quyền truy cập PON. Hãy thử tài khoản khác hoặc nhờ quản trị viên gửi lời mời.';
+
+  @override
+  String get authErrAccountBlocked =>
+      'Tài khoản này đã bị khóa. Hãy liên hệ quản trị viên.';
+
+  @override
+  String get authErrInvitationPending =>
+      'Bạn có một lời mời đang chờ. Mở liên kết lời mời trong email để hoàn tất thiết lập.';
+
+  @override
+  String get authErrInvitationInvalid => 'Liên kết lời mời không hợp lệ.';
+
+  @override
+  String get authErrInvitationExpired =>
+      'Lời mời này đã hết hạn. Hãy nhờ quản trị viên gửi lại.';
+
+  @override
+  String get authErrInvitationRevoked => 'Lời mời này đã bị thu hồi.';
+
+  @override
+  String get authErrInvitationAlreadyAccepted =>
+      'Lời mời này đã được chấp nhận. Vui lòng đăng nhập.';
+
+  @override
+  String get authErrInvitationEmailMismatch =>
+      'Hãy đăng nhập bằng tài khoản Google trùng với email được mời.';
+
+  @override
+  String get authErrInvitationAlreadyPending =>
+      'Email này đã có một lời mời đang chờ.';
+
+  @override
+  String get authErrInvitationNotPending =>
+      'Lời mời này không còn ở trạng thái chờ.';
+
+  @override
+  String get authErrInvitationNotFound => 'Không tìm thấy lời mời.';
+
+  @override
+  String authErrInvitationResendCooldown(int ttl) {
+    return 'Vui lòng đợi $ttl giây trước khi gửi lại.';
+  }
+
+  @override
+  String get authErrMemberAlreadyExists => 'Đã có thành viên dùng email này.';
+
+  @override
+  String get authErrMemberNotFound => 'Không tìm thấy thành viên.';
+
+  @override
+  String get authErrRoleNotFound => 'Không tìm thấy vai trò.';
+
+  @override
+  String get authErrDepartmentNotFound => 'Không tìm thấy phòng ban.';
+
+  @override
+  String get authErrOwnerRoleAssignForbidden =>
+      'Chỉ Chủ sở hữu mới có thể cấp vai trò Chủ sở hữu hoặc thay đổi vai trò của Chủ sở hữu.';
+
+  @override
+  String get authErrCannotChangeOwnRole =>
+      'Bạn không thể tự thay đổi vai trò của mình.';
+
+  @override
+  String get authErrLastOwnerCannotBeDemoted =>
+      'Không thể hạ vai trò của Chủ sở hữu cuối cùng. Hãy chỉ định một thành viên khác làm Chủ sở hữu trước.';
+
+  @override
+  String get authErrCannotBlockSelf =>
+      'Bạn không thể tự khóa tài khoản của mình.';
+
+  @override
+  String get authErrOwnerBlockForbidden =>
+      'Chỉ Owner mới có thể khóa một Owner khác.';
+
+  @override
+  String get authErrLastOwnerCannotBeBlocked =>
+      'Không thể khóa Owner cuối cùng.';
+
+  @override
+  String get authErrSsoDisabled => 'Đăng nhập một lần (SSO) đang bị tắt.';
+
+  @override
+  String get authErrSsoDomainNotAllowed =>
+      'Tên miền email của bạn không được phép dùng SSO.';
+
+  @override
+  String get adminInviteMember => 'Mời thành viên';
+
+  @override
+  String get adminInviteTitle => 'Mời một thành viên';
+
+  @override
+  String get adminInviteEmail => 'Địa chỉ email';
+
+  @override
+  String get adminInviteRole => 'Vai trò';
+
+  @override
+  String get adminInviteDepartments => 'Phòng ban';
+
+  @override
+  String get adminInviteSubmit => 'Gửi lời mời';
+
+  @override
+  String get adminInviteSent => 'Đã gửi lời mời';
+
+  @override
+  String get adminInviteEmailFailed =>
+      'Đã tạo lời mời nhưng không gửi được email. Hãy kiểm tra cấu hình mail và gửi lại.';
+
+  @override
+  String get adminPendingInvitations => 'Lời mời đang chờ';
+
+  @override
+  String get adminInviteStatusPending => 'Đang chờ';
+
+  @override
+  String get adminInviteStatusExpired => 'Đã hết hạn';
+
+  @override
+  String adminInviteExpires(String date) {
+    return 'Hết hạn $date';
+  }
+
+  @override
+  String adminInviteInvitedBy(String name) {
+    return 'Mời bởi $name';
+  }
+
+  @override
+  String get adminInviteResend => 'Gửi lại';
+
+  @override
+  String get adminInviteResent => 'Đã gửi lại lời mời';
+
+  @override
+  String get adminInviteRevoke => 'Thu hồi';
+
+  @override
+  String adminInviteRevokeConfirm(String email) {
+    return 'Thu hồi lời mời của $email? Liên kết sẽ không còn hoạt động.';
+  }
+
+  @override
+  String get adminInviteRevoked => 'Đã thu hồi lời mời';
+
+  @override
+  String get adminMemberStatusBlocked => 'Đã khóa';
+
+  @override
+  String get adminMemberBlock => 'Khóa';
+
+  @override
+  String get adminMemberUnblock => 'Mở khóa';
+
+  @override
+  String adminMemberBlockConfirm(String name) {
+    return 'Khóa $name? Người này sẽ bị đăng xuất khỏi mọi thiết bị.';
+  }
+
+  @override
+  String adminMemberUnblockConfirm(String name) {
+    return 'Mở khóa $name? Người này sẽ có thể đăng nhập lại.';
+  }
+
+  @override
+  String get adminMemberBlocked => 'Đã khóa thành viên';
+
+  @override
+  String get adminMemberUnblocked => 'Đã mở khóa thành viên';
+
+  @override
+  String get adminLoadFailed => 'Không tải được mục này. Vui lòng thử lại.';
 }

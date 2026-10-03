@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../core/utils/app_error.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/l10n/l10n_ext.dart';
@@ -70,12 +71,12 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
       appBar: AppBar(
         title: Text(l10n.adminTitle,
             style: TextStyle(
-                color: Theme.of(context).colorScheme.onSurface, fontWeight: FontWeight.bold)),
+                color: Theme.of(context).colorScheme.onSurface, fontWeight: FontWeight.w600)),
       ),
       body: capsAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, _) => Center(
-          child: Text('$e',
+          child: Text(friendlyError(e),
               style: TextStyle(color: AppTheme.mutedText(context))),
         ),
         data: (caps) {
@@ -160,21 +161,21 @@ class _Chip extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
         decoration: BoxDecoration(
           color: active
-              ? AppTheme.ponAccent.withValues(alpha: 0.15)
+              ? AppTheme.accent(context).withValues(alpha: 0.15)
               : Colors.transparent,
           borderRadius: BorderRadius.circular(10),
           border: Border.all(
-            color: active ? AppTheme.ponAccent : AppTheme.hairline(context),
+            color: active ? AppTheme.accent(context) : AppTheme.hairline(context),
           ),
         ),
         child: Row(
           children: [
             Icon(icon,
-                size: 16, color: active ? AppTheme.ponAccent : AppTheme.mutedText(context)),
+                size: 16, color: active ? AppTheme.accent(context) : AppTheme.mutedText(context)),
             const SizedBox(width: 6),
             Text(label,
                 style: TextStyle(
-                    color: active ? AppTheme.ponAccent : AppTheme.mutedText(context),
+                    color: active ? AppTheme.accent(context) : AppTheme.mutedText(context),
                     fontWeight: active ? FontWeight.w600 : FontWeight.normal)),
           ],
         ),

@@ -83,7 +83,7 @@ class _AssistantSettingsScreenState
           ),
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(true),
-            style: TextButton.styleFrom(foregroundColor: AppTheme.ponAccent),
+            style: TextButton.styleFrom(foregroundColor: AppTheme.accent(context)),
             child: Text(context.l10n.assistantSettingsDeleteButton),
           ),
         ],
@@ -195,7 +195,7 @@ class _AssistantSettingsScreenState
         TextButton.icon(
           onPressed: (_saving || _deleting) ? null : _confirmDelete,
           icon: const Icon(Icons.delete_outline_rounded),
-          style: TextButton.styleFrom(foregroundColor: AppTheme.ponAccent),
+          style: TextButton.styleFrom(foregroundColor: AppTheme.accent(context)),
           label: Text(context.l10n.assistantSettingsDeleteButton),
         ),
       ],

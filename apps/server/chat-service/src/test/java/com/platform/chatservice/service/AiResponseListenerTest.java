@@ -36,6 +36,7 @@ class AiResponseListenerTest {
 
   @Mock private SimpMessagingTemplate messagingTemplate;
   @Mock private MessageService messageService;
+  @Mock private MessageNotificationService notificationService;
   @Mock private Message redisMessage;
   @Mock private Tracer tracer;
   @Mock private Propagator propagator;
@@ -74,7 +75,13 @@ class AiResponseListenerTest {
 
     listener =
         new AiResponseListener(
-            messagingTemplate, messageService, objectMapper, tracer, propagator, redisTemplate);
+            messagingTemplate,
+            messageService,
+            notificationService,
+            objectMapper,
+            tracer,
+            propagator,
+            redisTemplate);
   }
 
   @Test
@@ -126,6 +133,9 @@ class AiResponseListenerTest {
     // saveAiMessage persists AND broadcasts the saved message itself (single-broadcast fix),
     // so the listener must NOT broadcast `saved` again — it only emits the AI_STREAM_DONE event.
     verify(messageService).saveAiMessage(eq("conv-1"), eq("Full AI reply"), isNull());
+    // The reply must reach participants who are not looking at this conversation (banner, unread
+    // badge, push) — the topic broadcast alone only reaches the open chat.
+    verify(notificationService).notifyNewMessage(AiConstants.AI_BOT_USER_ID, saved);
     verify(messagingTemplate, never()).convertAndSend(anyString(), (Object) eq(saved));
     verify(messagingTemplate)
         .convertAndSend(
@@ -193,6 +203,7 @@ class AiResponseListenerTest {
     listener.onMessage(redisMessage, null);
 
     verify(messageService, never()).saveAiMessage(any(), any(), any());
+    verify(notificationService, never()).notifyNewMessage(any(), any());
     verify(messagingTemplate)
         .convertAndSend(
             eq("/topic/conversation/conv-1"),

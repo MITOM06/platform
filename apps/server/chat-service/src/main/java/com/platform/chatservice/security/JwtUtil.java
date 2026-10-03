@@ -23,6 +23,11 @@ public class JwtUtil {
     return parseClaims(token).getSubject();
   }
 
+  /** Auth-service session id ({@code sid} claim), or null if the token has none. */
+  public String extractSid(String token) {
+    return parseClaims(token).get("sid", String.class);
+  }
+
   /** Role name claim (e.g. "Owner"), or null for legacy tokens. */
   public String extractRole(String token) {
     return parseClaims(token).get("role", String.class);

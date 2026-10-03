@@ -109,10 +109,10 @@ export default function ForgotPasswordPage() {
           password: z
             .string()
             .min(8, t('newPasswordMin'))
-            .regex(/[A-Z]/, tAuth('register.reqUppercase'))
-            .regex(/[a-z]/, tAuth('register.reqLowercase'))
-            .regex(/[0-9]/, tAuth('register.reqDigit'))
-            .regex(/[!@#$%^&*]/, tAuth('register.reqSpecial')),
+            .regex(/[A-Z]/, tAuth('password.reqUppercase'))
+            .regex(/[a-z]/, tAuth('password.reqLowercase'))
+            .regex(/[0-9]/, tAuth('password.reqDigit'))
+            .regex(/[!@#$%^&*]/, tAuth('password.reqSpecial')),
           confirm: z.string(),
         })
         .refine((d) => d.password === d.confirm, {
@@ -132,15 +132,15 @@ export default function ForgotPasswordPage() {
   const passwordValue = watchReset('password') ?? ''
 
   const strengthLabels = {
-    weak: tAuth('register.pwStrengthWeak'),
-    medium: tAuth('register.pwStrengthMedium'),
-    strong: tAuth('register.pwStrengthStrong'),
-    veryStrong: tAuth('register.pwStrengthVeryStrong'),
-    reqLength: tAuth('register.reqLength'),
-    reqUppercase: tAuth('register.reqUppercase'),
-    reqLowercase: tAuth('register.reqLowercase'),
-    reqDigit: tAuth('register.reqDigit'),
-    reqSpecial: tAuth('register.reqSpecial'),
+    weak: tAuth('password.pwStrengthWeak'),
+    medium: tAuth('password.pwStrengthMedium'),
+    strong: tAuth('password.pwStrengthStrong'),
+    veryStrong: tAuth('password.pwStrengthVeryStrong'),
+    reqLength: tAuth('password.reqLength'),
+    reqUppercase: tAuth('password.reqUppercase'),
+    reqLowercase: tAuth('password.reqLowercase'),
+    reqDigit: tAuth('password.reqDigit'),
+    reqSpecial: tAuth('password.reqSpecial'),
   }
 
   const onResetPassword = async ({ password }: { password: string; confirm: string }) => {

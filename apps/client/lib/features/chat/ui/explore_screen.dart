@@ -134,7 +134,7 @@ class _ChannelTileState extends ConsumerState<_ChannelTile> {
     final ch = widget.channel;
     return ListTile(
       leading: CircleAvatar(
-        backgroundColor: AppTheme.ponAccent.withValues(alpha: 0.2),
+        backgroundColor: AppTheme.accent(context).withValues(alpha: 0.2),
         // Cache + downscale the small (40px) avatar so the list scrolls
         // without re-decoding full-resolution images each frame.
         backgroundImage: ch.avatarUrl != null
@@ -145,7 +145,7 @@ class _ChannelTileState extends ConsumerState<_ChannelTile> {
               )
             : null,
         child: ch.avatarUrl == null
-            ? const Icon(Icons.tag_rounded, color: AppTheme.ponAccent)
+            ? Icon(Icons.tag_rounded, color: AppTheme.accent(context))
             : null,
       ),
       title: Text(ch.name ?? l10n.unnamedChannel),

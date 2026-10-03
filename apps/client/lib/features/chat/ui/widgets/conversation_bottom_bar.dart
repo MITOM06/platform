@@ -37,8 +37,7 @@ class ConversationBottomBar extends StatelessWidget {
   Widget build(BuildContext context) {
     final tabController = DefaultTabController.of(context);
     final l10n = context.l10n;
-    final accent =
-        isDark ? AppTheme.ponAccent : Theme.of(context).colorScheme.primary;
+    final accent = AppTheme.accent(context);
     final reqCount = _requestCount;
 
     return AnimatedBuilder(
@@ -48,19 +47,13 @@ class ConversationBottomBar extends StatelessWidget {
 
         return Container(
           decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.surface,
-            border: Border(
-              top: BorderSide(
-                color: isDark
-                    ? AppTheme.darkBorder.withValues(alpha: 0.3)
-                    : AppTheme.hairline(context),
-                width: 0.5,
-              ),
-            ),
+            // Mirrors web's MobileTabBar: page colour, 1px hairline, 64 high.
+            color: Theme.of(context).scaffoldBackgroundColor,
+            border: Border(top: BorderSide(color: AppTheme.hairline(context))),
           ),
           child: SafeArea(
             child: SizedBox(
-              height: 56,
+              height: 64,
               child: Row(
                 children: [
                   _BottomTabItem(
@@ -90,11 +83,9 @@ class ConversationBottomBar extends StatelessWidget {
                   ),
                   _BottomTabItem(
                     icon: Icons.add_comment_rounded,
-                    label: l10n.tooltipNewConversation,
+                    label: l10n.tabNew,
                     isActive: false,
-                    accent: isDark
-                        ? AppTheme.ponAccent
-                        : Theme.of(context).colorScheme.secondary,
+                    accent: accent,
                     onTap: onNewConversation,
                     isDark: isDark,
                     isAction: true,
@@ -147,7 +138,7 @@ class _BottomTabItem extends StatelessWidget {
             Stack(
               clipBehavior: Clip.none,
               children: [
-                Icon(icon, size: 22, color: color),
+                Icon(icon, size: 20, color: color),
                 if (badge > 0)
                   Positioned(
                     right: -8,
@@ -156,32 +147,30 @@ class _BottomTabItem extends StatelessWidget {
                       padding: const EdgeInsets.symmetric(
                           horizontal: 4, vertical: 1),
                       decoration: BoxDecoration(
-                        color: isDark
-                            ? AppTheme.ponAccent
-                            : Theme.of(context).colorScheme.secondary,
-                        borderRadius: BorderRadius.circular(8),
+                        color: AppTheme.accent(context),
+                        borderRadius: BorderRadius.circular(999),
                       ),
                       child: Text(
                         badge > 99 ? '99+' : '$badge',
                         style: const TextStyle(
                           color: Colors.white,
-                          fontSize: 8,
-                          fontWeight: FontWeight.bold,
+                          fontSize: 10,
+                          fontWeight: FontWeight.w600,
                         ),
                       ),
                     ),
                   ),
               ],
             ),
-            const SizedBox(height: 2),
+            const SizedBox(height: 4),
             Text(
               label,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: TextStyle(
-                fontSize: 10,
+                fontSize: 12,
                 color: color,
-                fontWeight: isActive ? FontWeight.w600 : FontWeight.normal,
+                fontWeight: FontWeight.w500,
               ),
             ),
           ],

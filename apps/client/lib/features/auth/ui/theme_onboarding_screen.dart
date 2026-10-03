@@ -128,7 +128,7 @@ class _ThemeOptionCard extends ConsumerWidget {
           color: isSelected ? tint : scheme.surface,
           borderRadius: BorderRadius.circular(AppTheme.radiusCard),
           border: Border.all(
-            color: isSelected ? AppTheme.ponAccent : AppTheme.hairline(context),
+            color: isSelected ? AppTheme.accent(context) : AppTheme.hairline(context),
             width: isSelected ? 1.5 : 1,
           ),
         ),
@@ -138,7 +138,7 @@ class _ThemeOptionCard extends ConsumerWidget {
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
                 color: isSelected
-                    ? AppTheme.ponAccent.withValues(alpha: 0.14)
+                    ? AppTheme.accent(context).withValues(alpha: 0.14)
                     : (isDark
                         ? AppTheme.darkBackground
                         : AppTheme.lightBackground),
@@ -147,7 +147,7 @@ class _ThemeOptionCard extends ConsumerWidget {
               child: Icon(
                 icon,
                 color: isSelected
-                    ? AppTheme.ponAccent
+                    ? AppTheme.accent(context)
                     : AppTheme.mutedText(context),
                 size: 28,
               ),
@@ -169,7 +169,7 @@ class _ThemeOptionCard extends ConsumerWidget {
                   Text(
                     subtitle,
                     style: TextStyle(
-                      fontSize: 13,
+                      fontSize: 12,
                       color: AppTheme.mutedText(context),
                     ),
                   ),
@@ -177,9 +177,9 @@ class _ThemeOptionCard extends ConsumerWidget {
               ),
             ),
             if (isSelected)
-              const Icon(
+              Icon(
                 Icons.check_circle_rounded,
-                color: AppTheme.ponAccent,
+                color: AppTheme.accent(context),
                 size: 26,
               ),
           ],

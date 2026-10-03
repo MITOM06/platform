@@ -132,19 +132,28 @@ String notificationBodyText(
 
 /// Resolves [senderId] to a display name then shows the top in-app banner and
 /// fires the OS/local notification with the same humanized title + body.
+///
+/// Assistants (the built-in AI and `extbot:*` personal assistants) have no user
+/// profile to look up, so their name comes from [senderName], which chat-service
+/// resolves from the persona / bot registry before sending.
 Future<void> showIncomingMessageBanner(
   Ref ref, {
   required String convId,
   required String senderId,
   required bool isMention,
+  String? senderName,
   String? content,
   String? messageType,
 }) async {
-  String senderName = '';
-  if (senderId.isNotEmpty) {
+  final isAssistant =
+      senderId == kAiBotUserId || senderId.startsWith('extbot:');
+  String resolvedName = '';
+  if (isAssistant) {
+    resolvedName = senderName ?? '';
+  } else if (senderId.isNotEmpty) {
     try {
       final profile = await ref.read(userProfileProvider(senderId).future);
-      senderName = profile.displayName;
+      resolvedName = profile.displayName;
     } catch (_) {}
   }
 
@@ -152,7 +161,7 @@ Future<void> showIncomingMessageBanner(
       ref.read(appRouterProvider).routerDelegate.navigatorKey.currentContext;
   if (context == null || !context.mounted) return;
   final l10n = context.l10n;
-  final name = senderName.isNotEmpty ? senderName : l10n.conversationDefault;
+  final name = resolvedName.isNotEmpty ? resolvedName : l10n.conversationDefault;
 
   final bodyText = notificationBodyText(
     context,

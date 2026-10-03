@@ -22,9 +22,8 @@ class EditProfilePrivacyToggle extends StatelessWidget {
       onChanged: onChanged,
       title: Text(
         label,
-        style: TextStyle(fontSize: 13, color: AppTheme.mutedText(context)),
+        style: TextStyle(fontSize: 12, color: AppTheme.mutedText(context)),
       ),
-      activeThumbColor: AppTheme.ponAccent,
       dense: true,
       contentPadding: EdgeInsets.zero,
       visualDensity: VisualDensity.compact,

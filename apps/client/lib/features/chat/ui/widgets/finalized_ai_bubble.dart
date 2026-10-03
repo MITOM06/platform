@@ -27,15 +27,14 @@ class FinalizedAiBubble extends StatelessWidget {
         MarkdownBody(
           data: content,
           styleSheet: MarkdownStyleSheet(
-            p: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontSize: 15, height: 1.45),
+            p: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontSize: 14, height: 1.45),
             // Inline code was tinted with a translucent purple (0x33B47FFF) —
             // an off-palette third colour. Uses the accent tint now.
             code: TextStyle(
-              color: AppTheme.ponAccent,
-              backgroundColor: Theme.of(context).brightness == Brightness.dark
-                  ? AppTheme.darkAccentTint
-                  : AppTheme.lightAccentTint,
-              fontSize: 13,
+              fontFamily: AppTheme.fontMono,
+              color: AppTheme.accentTintFg(context),
+              backgroundColor: AppTheme.accentTint(context),
+              fontSize: 12,
             ),
             codeblockDecoration: BoxDecoration(
               color: Theme.of(context).scaffoldBackgroundColor,
@@ -156,24 +155,24 @@ class _SourceChip extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
           constraints: const BoxConstraints(maxWidth: 220),
           decoration: BoxDecoration(
-            color: AppTheme.ponAccent.withValues(alpha: 0.08),
+            color: AppTheme.accent(context).withValues(alpha: 0.08),
             borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: AppTheme.ponAccent.withValues(alpha: 0.35)),
+            border: Border.all(color: AppTheme.accent(context).withValues(alpha: 0.35)),
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
               Icon(isWeb ? Icons.public_rounded : Icons.description_rounded,
-                  size: 12, color: AppTheme.ponAccent),
+                  size: 12, color: AppTheme.accent(context)),
               const SizedBox(width: 4),
               Flexible(
                 child: Text(
                   label,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 11,
-                    color: AppTheme.ponAccent,
+                    color: AppTheme.accent(context),
                   ),
                 ),
               ),

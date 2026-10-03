@@ -17,17 +17,17 @@ class TracePanel extends StatelessWidget {
         child: ExpansionTile(
           tilePadding: EdgeInsets.zero,
           childrenPadding: const EdgeInsets.only(left: 4, bottom: 8),
-          leading: const Icon(Icons.account_tree_rounded, size: 14, color: AppTheme.ponAccent),
+          leading: Icon(Icons.account_tree_rounded, size: 14, color: AppTheme.accent(context)),
           title: Text(
             context.l10n.aiTraceTitle,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 12,
-              color: AppTheme.ponAccent,
+              color: AppTheme.accent(context),
               fontStyle: FontStyle.italic,
             ),
           ),
-          iconColor: AppTheme.ponAccent,
-          collapsedIconColor: AppTheme.ponAccent,
+          iconColor: AppTheme.accent(context),
+          collapsedIconColor: AppTheme.accent(context),
           children: [
             if (trace.thinkingBlocks.isNotEmpty) _ThinkingSection(blocks: trace.thinkingBlocks),
             if (trace.toolCalls.isNotEmpty) _ToolCallsSection(toolCalls: trace.toolCalls),
@@ -47,13 +47,13 @@ class _ThinkingSection extends StatelessWidget {
   Widget build(BuildContext context) {
     return ExpansionTile(
       tilePadding: const EdgeInsets.symmetric(horizontal: 4),
-      leading: const Icon(Icons.psychology_rounded, size: 14, color: AppTheme.ponAccent),
+      leading: Icon(Icons.psychology_rounded, size: 14, color: AppTheme.accent(context)),
       title: Text(
         context.l10n.aiTraceThinking,
-        style: const TextStyle(fontSize: 12, color: AppTheme.ponAccent),
+        style: TextStyle(fontSize: 12, color: AppTheme.accent(context)),
       ),
-      iconColor: AppTheme.ponAccent,
-      collapsedIconColor: AppTheme.ponAccent,
+      iconColor: AppTheme.accent(context),
+      collapsedIconColor: AppTheme.accent(context),
       children: blocks.map((block) => _ThinkingBlock(text: block)).toList(),
     );
   }
@@ -76,10 +76,10 @@ class _ThinkingBlock extends StatelessWidget {
       child: SingleChildScrollView(
         child: Text(
           text,
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 11,
-            fontFamily: 'monospace',
-            color: AppTheme.darkTintFg,
+            fontFamily: AppTheme.fontMono,
+            color: AppTheme.accentTintFg(context),
           ),
         ),
       ),
@@ -100,14 +100,14 @@ class _ToolCallsSection extends StatelessWidget {
           padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 4),
           child: Row(
             children: [
-              const Icon(Icons.build_rounded, size: 12, color: AppTheme.ponAccent),
+              Icon(Icons.build_rounded, size: 12, color: AppTheme.accent(context)),
               const SizedBox(width: 4),
               Text(
                 context.l10n.aiTraceTools,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 11,
-                  color: AppTheme.ponAccent,
-                  fontWeight: FontWeight.bold,
+                  color: AppTheme.accent(context),
+                  fontWeight: FontWeight.w600,
                 ),
               ),
             ],
