@@ -197,7 +197,7 @@ This document captures discussions and locked choices.
 - Qdrant collection named `knowledge` is created on boot.
 - Redis channels `kb:process` and `kb:delete` are used to communicate jobs from `chat-service` to `ai-service`.
 - Custom text chunker uses 512-character chunks with 80-character overlap aligned to sentence boundaries.
-- Context is retrieved using cosine similarity with a score threshold >= `0.5` (`KB_SCORE_THRESHOLD`) for prompt injection. (The separate Cohere reranker uses its own `COHERE_RERANK_THRESHOLD` default `0.3`.)
+- Context is retrieved using cosine similarity with a recall floor >= `0.2` (`KB_SCORE_THRESHOLD`), then hybrid BM25 + optional Cohere rerank picks the top-K. (Lowered from 0.5 on 2026-10-03: with voyage-4-lite, chunks that answer the question scored 0.26–0.64 while off-topic ones scored up to 0.43, so 0.5 discarded most real answers.) (The separate Cohere reranker uses its own `COHERE_RERANK_THRESHOLD` default `0.3`.)
 
 ---
 

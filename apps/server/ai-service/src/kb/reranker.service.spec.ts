@@ -34,6 +34,24 @@ describe('RerankerService.fuseHybrid', () => {
     expect(ids.indexOf('C')).toBeLessThan(ids.indexOf('B'));
   });
 
+  it('matches accented Vietnamese keywords (not split at diacritics)', () => {
+    const candidates = [
+      cand('A', 0.9, 'Phụ cấp ăn trưa 1.200.000đ mỗi tháng, gửi xe miễn phí'),
+      cand('B', 0.85, 'Bảo hiểm sức khỏe gói Vàng cho nhân viên chính thức'),
+      cand('C', 0.8, 'Phép năm chưa dùng được chuyển sang quý 1 năm sau'),
+    ];
+    // ASCII-only tokenizing reduced "phép"/"năm" to "ph" (also in "Phụ"), so C
+    // never out-ranked the keyword-less B.
+    const ids = svc.fuseHybrid('phép năm', candidates).map((c) => c.documentId);
+    expect(ids.indexOf('C')).toBeLessThan(ids.indexOf('B'));
+  });
+
+  it('tokenizes whole Vietnamese words, NFC-normalized', () => {
+    const tokenize = (t: string) => (svc as unknown as { tokenize(t: string): string[] }).tokenize(t);
+    expect(tokenize('Phép NĂM chưa dùng')).toEqual(['phép', 'năm', 'chưa', 'dùng']);
+    expect(tokenize('phe\u0301p')).toEqual(['phép']); // decomposed é (e + U+0301)
+  });
+
   it('returns candidates unchanged when the query has no usable terms', () => {
     const candidates = [cand('A', 0.9, 'alpha'), cand('B', 0.8, 'beta')];
     expect(svc.fuseHybrid('  ', candidates)).toEqual(candidates);
