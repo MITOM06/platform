@@ -108,3 +108,32 @@ see `.claude/rules/dev-local-only.md`.
 | `up.sh` | one-shot bring-up: compose, health waits, seeding, web, Flutter |
 | `seed-users.js` | test accounts written straight to Mongo with a real bcrypt hash (deliberately not via `/auth/register`, which needs a live MX record and sends a real OTP email) |
 | `seed-chat.js` | fake conversations: call-log pills, legacy `call_log` rows, an `extbot:*` assistant DM, an archived DM, a group |
+| `seed-company/` | the fake company **NovaTech Solutions** — see below |
+
+## Fake company: NovaTech Solutions
+
+`--seed` also builds a whole company so every flow can be tested without
+creating data by hand. Re-run it on its own any time (idempotent — it wipes
+and rebuilds only its own data, tracked in the `dev_seed_manifest` collection):
+
+```bash
+node scripts/dev/seed-company/index.js           # (re)seed
+node scripts/dev/seed-company/index.js --reset   # remove the company only
+```
+
+| What | Details |
+|---|---|
+| Workspace | renamed *NovaTech Solutions*, AI persona "Nova", daily digest 8:00, connector allow-list |
+| 8 departments | Ban Giám đốc, Kỹ thuật, Sản phẩm & Thiết kế, Kinh doanh, Marketing, Nhân sự, Tài chính - Kế toán, CSKH — each with a lead |
+| 22 employees | `<name>@novatech.local` / `Devpass123!`, all 4 roles (Owner `quan.nguyen`, Admin `ha.tran` / `huy.huynh` / `nhung.vu`, Managers = department leads), avatars, one **blocked** account (`teo.nguyen`). `dev` / `alice` / `bob` join Kỹ thuật |
+| Invitations | 2 pending, 1 revoked, 1 expired |
+| AI context | company + per-department entries, incl. `VIEW_INTERNAL_CONTEXT` / `VIEW_CONFIDENTIAL_CONTEXT`-gated ones (log in as different roles to compare answers); personal context for 6 people |
+| 21 conversations | 8 department groups (with `departmentId` → dept-scoped RAG), a public company channel, a cross-department project group, a muted social group, DMs (unread, call logs, disappearing, archived, a pending message request), an AI chat, DMs between other employees |
+| Messages | text, replies, reactions, mentions, pinned, edited, recalled, system codes, files, images, AI answers with traces, a meeting-summary card |
+| Files + KB | Markdown, TXT, CSV, a real PDF and PNGs in GridFS; 7 of them registered as KB docs and embedded by ai-service (needs Redis + a Voyage key; otherwise they stay `pending`) |
+| AI data | reminders, long-term memory, 30 days of token usage, thumbs up/down feedback |
+| Admin | friend requests + notifications, audit-log entries |
+
+Log out and back in after seeding — role and department claims live in the JWT.
+Running `seed-chat.js` alone deletes every conversation `dev` is in, including
+the company's; re-run `seed-company` afterwards.
