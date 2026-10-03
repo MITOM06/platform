@@ -278,7 +278,7 @@ Operational notes:
 - 📚 **Knowledge Base & RAG:**
   - **Document Parsing:** Upload PDF, DOCX, or TXT documents directly in conversations.
   - **Vector Embedding Pipeline:** Automated chunking, Voyage AI vectorization, and Qdrant ingestion.
-  - **Hybrid retrieval:** vector search over an enlarged candidate pool, fused with in-process BM25 keyword scoring (RRF), optional Cohere rerank (`COHERE_API_KEY`), and only chunks scoring ≥ 0.5 (`KB_SCORE_THRESHOLD`) are injected into Claude.
+  - **Hybrid retrieval:** vector search over an enlarged candidate pool, fused with in-process BM25 keyword scoring (RRF), optional Cohere rerank (`COHERE_API_KEY`), after a low cosine recall floor (≥ 0.2, `KB_SCORE_THRESHOLD`) — voyage-4-lite scores real answers as low as ~0.26, so a precision cut on raw cosine drops them.
   - **Source Citation:** Renders citation cards below AI messages, linking directly to referenced documents.
 
 ### 🔌 MCP Connectors & Skills
