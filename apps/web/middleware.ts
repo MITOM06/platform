@@ -4,7 +4,9 @@ import { NextRequest, NextResponse } from 'next/server'
 // /oauth-callback must be reachable without a session: the user lands here from
 // Google with no cookie yet — the page exchanges the code, sets cookies, then
 // redirects to '/'. It is logged-out-only, hence it belongs here.
-const AUTH_ONLY_PATHS = ['/login', '/register', '/verify-otp', '/oauth-callback', '/forgot-password']
+// /invite/<token> is logged-out-only too: a signed-in user opening an invite
+// link is bounced home (the invitation is for a not-yet-existing account).
+const AUTH_ONLY_PATHS = ['/login', '/invite', '/verify-otp', '/oauth-callback', '/forgot-password']
 // Legal pages — accessible to everyone regardless of auth state
 const ALWAYS_PUBLIC_PATHS = ['/privacy', '/terms']
 

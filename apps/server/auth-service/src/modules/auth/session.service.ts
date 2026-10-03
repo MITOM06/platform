@@ -11,6 +11,21 @@ import { Redis, REDIS_CLIENT } from '@platform/database';
 import { AuthCode } from '../../common/auth-code.enum';
 
 /**
+ * Redis Pub/Sub channel published at the end of every `revokeAllSessions`.
+ * Payload: `{"userId":"<id>","reason":"<reason>"}`. Other services (chat-service
+ * WebSocket/STOMP, ai-service, connector-service) subscribe and drop every live
+ * connection / cached session for that user immediately.
+ */
+export const SESSIONS_REVOKED_CHANNEL = 'auth:sessions-revoked';
+
+export type SessionRevokeReason =
+  | 'blocked'
+  | 'role_changed'
+  | 'password_reset'
+  | 'refresh_reuse'
+  | 'other';
+
+/**
  * Refresh-token reuse-detection (rotating refresh tokens).
  *
  * Security model
@@ -198,7 +213,7 @@ export class SessionService {
             `Revoking ${this.revokeFamilyOnReuse ? 'ALL user sessions' : 'this session'}.`,
         );
         if (this.revokeFamilyOnReuse) {
-          await this.revokeAllSessions(data.userId);
+          await this.revokeAllSessions(data.userId, 'refresh_reuse');
         } else {
           await this.revokeSession(data.userId, params.sid);
         }
@@ -247,20 +262,70 @@ export class SessionService {
       .exec();
   }
 
-  async revokeAllSessions(userId: string) {
+  async revokeAllSessions(
+    userId: string,
+    reason: SessionRevokeReason = 'other',
+  ) {
     const userSessKey = this.userSessSetKey(userId);
     const sids: string[] = await this.redis.smembers(userSessKey);
-    if (!sids || sids.length === 0) {
-      return;
+    if (sids && sids.length > 0) {
+      const pipeline = this.redis.pipeline();
+      for (const sid of sids) {
+        const key = this.sessKey(sid);
+        pipeline.hset(key, { revoked: '1' });
+        pipeline.srem(userSessKey, sid);
+      }
+      await pipeline.exec();
     }
+    // Published even when no sid is tracked: a service may still hold a live
+    // socket for this user (e.g. the session set expired before the hash).
+    await this.publishSessionsRevoked(userId, reason);
+  }
 
-    const pipeline = this.redis.pipeline();
-    for (const sid of sids) {
-      const key = this.sessKey(sid);
-      pipeline.hset(key, { revoked: '1' });
-      pipeline.srem(userSessKey, sid);
+  /** Never throws: a failed publish must not undo / fail the revoke itself. */
+  private async publishSessionsRevoked(
+    userId: string,
+    reason: SessionRevokeReason,
+  ) {
+    try {
+      await this.redis.publish(
+        SESSIONS_REVOKED_CHANNEL,
+        JSON.stringify({ userId, reason }),
+      );
+    } catch (err) {
+      this.logger.warn(
+        `Failed to publish ${SESSIONS_REVOKED_CHANNEL} for user=${userId}: ${(err as Error).message}`,
+      );
     }
-    await pipeline.exec();
+  }
+
+  /**
+   * userId stored on `sess:{sid}`, ignoring the `revoked` flag (null if the
+   * hash is gone). Lets refresh check the account status BEFORE session
+   * validity; callers must confirm ownership with refreshTokenBelongsToSession
+   * before revealing anything derived from it.
+   */
+  async peekSessionUserId(sid: string): Promise<string | null> {
+    const userId = await this.redis.hget(this.sessKey(sid), 'userId');
+    return userId || null;
+  }
+
+  /** True when the token matches the current or previous refresh hash (revoked or not). */
+  async refreshTokenBelongsToSession(
+    sid: string,
+    refreshToken: string,
+  ): Promise<boolean> {
+    const [refreshHash, prevRefreshHash] = await this.redis.hmget(
+      this.sessKey(sid),
+      'refreshHash',
+      'prevRefreshHash',
+    );
+    for (const hash of [refreshHash, prevRefreshHash]) {
+      if (hash && (await argon2.verify(hash, refreshToken).catch(() => false))) {
+        return true;
+      }
+    }
+    return false;
   }
 
   async listSessions(userId: string) {

@@ -27,7 +27,6 @@ import 'package:platform_client/features/auth/domain/auth_state.dart';
 import 'package:platform_client/features/auth/ui/forgot_password_screen.dart';
 import 'package:platform_client/features/auth/ui/login_screen.dart';
 import 'package:platform_client/features/auth/ui/new_password_screen.dart';
-import 'package:platform_client/features/auth/ui/register_screen.dart';
 import 'package:platform_client/features/auth/ui/theme_onboarding_screen.dart';
 import 'package:platform_client/features/auth/ui/verify_otp_screen.dart';
 import 'package:platform_client/features/chat/domain/chat_misc_providers.dart';
@@ -251,7 +250,6 @@ final _screens = <String, Widget Function()>{
   '09_chat_thread': () => const _ChatGallery(),
   '00_gallery': () => const _Gallery(),
   '01_login': () => const LoginScreen(),
-  '02_register': () => const RegisterScreen(),
   '03_forgot_password': () => const ForgotPasswordScreen(),
   '04_verify_otp': () => const VerifyOtpScreen(email: 'khang@pon.vn'),
   '05_new_password': () =>

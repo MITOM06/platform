@@ -130,7 +130,7 @@ class _PasswordFormState extends ConsumerState<_PasswordForm> {
     super.dispose();
   }
 
-  /// Validates the new password against the same rules as the register screen.
+  /// Validates the new password against the same rules as the invitation accept form.
   String? _validate(BuildContext context, String newPass, String confirm) {
     final l10n = context.l10n;
     if (newPass.isEmpty) return l10n.valPasswordRequired;

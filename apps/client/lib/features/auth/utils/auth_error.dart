@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import '../../../core/l10n/l10n_ext.dart';
+import '../../../core/utils/app_error.dart';
 
 /// Parses a DioException from auth-service and returns a localized error string.
 ///
@@ -55,6 +56,29 @@ String? authErrorCode(Object error) {
   return null;
 }
 
+/// Localized message for a bare auth `code` — used where no HTTP response
+/// exists, e.g. the OAuth error deep link `platform://auth?error=<CODE>`
+/// (API contract §1.5). Unknown codes fall back to the generic message; the raw
+/// code itself is never shown.
+String authCodeToString(BuildContext context, String code) =>
+    _codeToString(context, code, null);
+
+/// Localized message for any error thrown by an auth-service call.
+///
+/// A DioException carrying an auth `code` (or validation code) maps to that
+/// code's specific message; one without a body (network down, timeout, 5xx
+/// HTML) goes through [friendlyError] so the user still gets the right
+/// category. Never returns the raw exception text.
+String authErrorMessage(BuildContext context, Object error) {
+  if (error is DioException) {
+    final data = error.response?.data;
+    final hasCode = authErrorCode(error) != null ||
+        (data is Map && data['message'] is List);
+    if (hasCode) return authErrorToString(context, error);
+  }
+  return friendlyError(error);
+}
+
 String _codeToString(
   BuildContext context,
   String code,
@@ -75,8 +99,8 @@ String _codeToString(
       return l10n.authMsgOtpResent;
     case 'PASSWORD_UPDATED':
       return l10n.authMsgPasswordUpdated;
-    case 'REGISTER_SUCCESS':
-      return l10n.authMsgRegisterSuccess;
+    case 'INVITATION_ACCEPTED':
+      return l10n.authMsgInvitationAccepted;
     case 'ACCOUNT_UNVERIFIED_OTP_SENT':
       return l10n.authMsgAccountUnverifiedOtpSent;
 
@@ -97,12 +121,8 @@ String _codeToString(
       return l10n.authErrOtpSendFailed;
 
     // ── Email / validation errors ────────────────────────────────────────────
-    case 'EMAIL_DOMAIN_INVALID':
-      return l10n.authErrEmailDomainInvalid;
     case 'EMAIL_NOT_FOUND':
       return l10n.authErrEmailNotFound;
-    case 'EMAIL_IN_USE':
-      return l10n.authErrEmailInUse;
     case 'VAL_EMAIL_INVALID':
       return l10n.authErrValEmailInvalid;
     case 'VAL_EMAIL_REQUIRED':
@@ -124,6 +144,55 @@ String _codeToString(
     case 'LOGIN_FAILED_LOCKED':
       final minutes = _intParam(params, 'minutes');
       return l10n.authErrLoginFailedLocked(minutes);
+    case 'ACCOUNT_NOT_PROVISIONED':
+      return l10n.authErrAccountNotProvisioned;
+    case 'ACCOUNT_BLOCKED':
+      return l10n.authErrAccountBlocked;
+
+    // ── Invitations ──────────────────────────────────────────────────────────
+    case 'INVITATION_PENDING':
+      return l10n.authErrInvitationPending;
+    case 'INVITATION_INVALID':
+      return l10n.authErrInvitationInvalid;
+    case 'INVITATION_EXPIRED':
+      return l10n.authErrInvitationExpired;
+    case 'INVITATION_REVOKED':
+      return l10n.authErrInvitationRevoked;
+    case 'INVITATION_ALREADY_ACCEPTED':
+      return l10n.authErrInvitationAlreadyAccepted;
+    case 'INVITATION_EMAIL_MISMATCH':
+      return l10n.authErrInvitationEmailMismatch;
+    case 'INVITATION_ALREADY_PENDING':
+      return l10n.authErrInvitationAlreadyPending;
+    case 'INVITATION_NOT_PENDING':
+      return l10n.authErrInvitationNotPending;
+    case 'INVITATION_NOT_FOUND':
+      return l10n.authErrInvitationNotFound;
+    case 'INVITATION_RESEND_COOLDOWN':
+      final ttl = _intParam(params, 'ttl');
+      return l10n.authErrInvitationResendCooldown(ttl);
+
+    // ── Admin: members / roles / departments ─────────────────────────────────
+    case 'MEMBER_ALREADY_EXISTS':
+      return l10n.authErrMemberAlreadyExists;
+    case 'MEMBER_NOT_FOUND':
+      return l10n.authErrMemberNotFound;
+    case 'ROLE_NOT_FOUND':
+      return l10n.authErrRoleNotFound;
+    case 'DEPARTMENT_NOT_FOUND':
+      return l10n.authErrDepartmentNotFound;
+    case 'OWNER_ROLE_ASSIGN_FORBIDDEN':
+      return l10n.authErrOwnerRoleAssignForbidden;
+    case 'CANNOT_CHANGE_OWN_ROLE':
+      return l10n.authErrCannotChangeOwnRole;
+    case 'LAST_OWNER_CANNOT_BE_DEMOTED':
+      return l10n.authErrLastOwnerCannotBeDemoted;
+    case 'CANNOT_BLOCK_SELF':
+      return l10n.authErrCannotBlockSelf;
+    case 'OWNER_BLOCK_FORBIDDEN':
+      return l10n.authErrOwnerBlockForbidden;
+    case 'LAST_OWNER_CANNOT_BE_BLOCKED':
+      return l10n.authErrLastOwnerCannotBeBlocked;
 
     // ── Token / session errors ───────────────────────────────────────────────
     case 'TOKEN_INVALID':
@@ -142,6 +211,9 @@ String _codeToString(
       return l10n.authErrRefreshTokenRotated;
     case 'TOKEN_SESSION_MISMATCH':
       return l10n.authErrTokenSessionMismatch;
+    // 503 while the session store is unreachable — transient, never a logout.
+    case 'SESSION_CHECK_UNAVAILABLE':
+      return l10n.errServer;
 
     // ── Social / misc errors ─────────────────────────────────────────────────
     case 'SOCIAL_EMAIL_UNAVAILABLE':
@@ -150,6 +222,10 @@ String _codeToString(
       return l10n.authErrLoginCodeInvalid;
     case 'USER_NOT_FOUND':
       return l10n.authErrUserNotFound;
+    case 'SSO_DISABLED':
+      return l10n.authErrSsoDisabled;
+    case 'SSO_DOMAIN_NOT_ALLOWED':
+      return l10n.authErrSsoDomainNotAllowed;
 
     default:
       return l10n.errActionFailed;

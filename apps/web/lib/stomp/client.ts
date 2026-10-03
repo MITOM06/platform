@@ -1,8 +1,8 @@
 import { Client, type IMessage, type StompSubscription } from '@stomp/stompjs'
-import axios from 'axios'
 import { useAuthStore } from '@/lib/store/auth.store'
 import { isAuthFailure, refreshAccessToken as postRefresh } from '@/lib/api/axios'
 import { wsUrlFromEnv } from '@/lib/config/env'
+import { forceLogout } from '@/lib/auth/force-logout'
 
 // Single-origin self-host has no NEXT_PUBLIC_WS_URL — derive wss://<host>/ws
 // from the page origin at runtime. Cloud Run / local dev set the env explicitly.
@@ -48,7 +48,7 @@ type RefreshOutcome =
   | { token: string }
   // authFailed=true → refresh token genuinely rejected (logout). false →
   // transient network error; keep the session and let STOMP retry reconnecting.
-  | { token: null; authFailed: boolean }
+  | { token: null; authFailed: boolean; error: unknown }
 
 async function refreshAccessToken(): Promise<RefreshOutcome> {
   try {
@@ -60,7 +60,7 @@ async function refreshAccessToken(): Promise<RefreshOutcome> {
     if (user) useAuthStore.getState().setAuth(user, token)
     return { token }
   } catch (err) {
-    return { token: null, authFailed: isAuthFailure(err) }
+    return { token: null, authFailed: isAuthFailure(err), error: err }
   }
 }
 
@@ -72,6 +72,15 @@ export const stompService = {
         client.deactivate()
         client = null
       }
+
+      // Set when the server sent a STOMP ERROR frame (CONNECT rejected, frame
+      // rejected, or the revocation push). The access token may still look
+      // fresh, but chat-service revokes sessions instantly (block / role change),
+      // so the next attempt must refresh first. Without this, every reconnect
+      // replays the revoked token and loops forever; with it, the refresh either
+      // yields a valid token or fails → logout. A plain socket close (network,
+      // Cloud Run timeout) does not set it, so outages don't churn refreshes.
+      let mustRefresh = false
 
       // Capture instance locally — beforeConnect must reference this stable variable,
       // never the module-level `client`, which can be nulled by disconnect().
@@ -87,20 +96,17 @@ export const stompService = {
           let currentToken = useAuthStore.getState().accessToken ?? token
 
           // Proactively refresh if token is expired or expiring within 60s so
-          // STOMP reconnects succeed even after long idle periods.
-          if (isTokenExpiredOrExpiringSoon(currentToken)) {
+          // STOMP reconnects succeed even after long idle periods — or when the
+          // server just rejected/closed this session (see mustRefresh).
+          if (mustRefresh || isTokenExpiredOrExpiringSoon(currentToken)) {
             const result = await refreshAccessToken()
             if (result.token === null) {
               if (result.authFailed) {
-                // Refresh token genuinely rejected — stop reconnect loop and
-                // send user to login.
+                // Refresh token genuinely rejected (revoked / ACCOUNT_BLOCKED) —
+                // stop the reconnect loop and send the user to login.
                 instance.deactivate()
                 client = null
-                useAuthStore.getState().clearAuth()
-                if (typeof window !== 'undefined') {
-                  await axios.post('/api/auth/clear-cookie').catch(() => {})
-                  window.location.href = '/login'
-                }
+                await forceLogout(result.error)
                 return
               }
               // Transient network error (wifi sleep / ERR_NETWORK_CHANGED).
@@ -109,17 +115,25 @@ export const stompService = {
               return
             }
             currentToken = result.token
+            mustRefresh = false
           }
 
           instance.connectHeaders = { Authorization: `Bearer ${currentToken}` }
         },
         onConnect: () => {
+          mustRefresh = false
           resolve()
           connectResolvers.forEach((r) => r())
           connectResolvers = []
           notifyStateChange(true)
         },
-        onStompError: (frame) => reject(new Error(frame.headers['message'])),
+        onStompError: (frame) => {
+          // Server-side rejection (e.g. revoked session on CONNECT/SEND or the
+          // revocation push). Never surfaced as text — callers only learn that
+          // the first connect failed.
+          mustRefresh = true
+          reject(new Error(frame.command))
+        },
         onDisconnect: () => {
           // Do NOT null client here — STOMP manages reconnection internally.
           // Nulling here causes beforeConnect to crash on the next reconnect attempt.

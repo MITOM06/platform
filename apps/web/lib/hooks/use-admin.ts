@@ -7,8 +7,12 @@ import {
 import { useTranslations } from 'next-intl'
 import { toast } from 'sonner'
 import { adminService } from '@/lib/api/admin'
+import { authCodeToI18nKey, parseAuthError } from '@/lib/auth/auth-error'
 import type {
   CreateDepartmentInput,
+  CreateInvitationInput,
+  InvitationMutationResult,
+  SettableMemberStatus,
   CreateRoleInput,
   UpdateDepartmentInput,
   UpdateMemberInput,
@@ -104,6 +108,9 @@ export function useMembers(enabled = true) {
 export function useUpdateMember() {
   const qc = useQueryClient()
   const t = useTranslations('admin')
+  // Typed role-guard codes (CANNOT_CHANGE_OWN_ROLE, LAST_OWNER_CANNOT_BE_DEMOTED,
+  // OWNER_ROLE_ASSIGN_FORBIDDEN, ROLE_NOT_FOUND…) → their own localized message.
+  const onError = useAuthErrorToast()
   return useMutation({
     mutationFn: ({ id, input }: { id: string; input: UpdateMemberInput }) =>
       adminService.updateMember(id, input),
@@ -111,7 +118,102 @@ export function useUpdateMember() {
       qc.invalidateQueries({ queryKey: ['admin-members'] })
       toast.success(t('toastSaved'))
     },
-    onError: () => toast.error(t('toastError')),
+    onError,
+  })
+}
+
+/**
+ * Toast a typed auth-service error (`{code, params}`) as its localized `auth.*`
+ * message — never the raw server text (no-raw-system-data rule).
+ */
+function useAuthErrorToast() {
+  const tAuth = useTranslations('auth')
+  return (err: unknown) => {
+    const { code, params } = parseAuthError(err)
+    toast.error(tAuth(authCodeToI18nKey(code), params))
+  }
+}
+
+/** Block / unblock a member (`PATCH /admin/members/:id/status`). */
+export function useSetMemberStatus() {
+  const qc = useQueryClient()
+  const t = useTranslations('admin')
+  const onError = useAuthErrorToast()
+  return useMutation({
+    mutationFn: ({ id, status }: { id: string; status: SettableMemberStatus }) =>
+      adminService.setMemberStatus(id, status),
+    onSuccess: (_member, { status }) => {
+      qc.invalidateQueries({ queryKey: ['admin-members'] })
+      toast.success(t(status === 'blocked' ? 'memberBlocked' : 'memberUnblocked'))
+    },
+    onError,
+  })
+}
+
+// ── invitations ───────────────────────────────────────────────────────────────
+const INVITATIONS_KEY = ['admin-invitations'] as const
+
+/** Actionable invitations (server default: pending + expired). */
+export function useInvitations(enabled = true) {
+  return useQuery({
+    queryKey: INVITATIONS_KEY,
+    queryFn: () => adminService.listInvitations(),
+    enabled,
+  })
+}
+
+/** Shared success handling for create/resend: warn when the email failed. */
+function useInvitationResultToast() {
+  const t = useTranslations('admin')
+  return (result: InvitationMutationResult, successKey: string) => {
+    if (result.emailSent) toast.success(t(successKey))
+    else toast.warning(t('inviteEmailFailed'))
+  }
+}
+
+export function useCreateInvitation() {
+  const qc = useQueryClient()
+  const onError = useAuthErrorToast()
+  const notify = useInvitationResultToast()
+  return useMutation({
+    mutationFn: (input: CreateInvitationInput) => adminService.createInvitation(input),
+    onSuccess: (result) => {
+      qc.invalidateQueries({ queryKey: INVITATIONS_KEY })
+      notify(result, 'inviteSent')
+    },
+    onError,
+  })
+}
+
+export function useResendInvitation() {
+  const qc = useQueryClient()
+  const onError = useAuthErrorToast()
+  const notify = useInvitationResultToast()
+  return useMutation({
+    mutationFn: (id: string) => adminService.resendInvitation(id),
+    onSuccess: (result) => {
+      qc.invalidateQueries({ queryKey: INVITATIONS_KEY })
+      notify(result, 'inviteResent')
+    },
+    onError: (err) => {
+      // A user was created meanwhile (e.g. SSO JIT) → server auto-revoked it.
+      qc.invalidateQueries({ queryKey: INVITATIONS_KEY })
+      onError(err)
+    },
+  })
+}
+
+export function useRevokeInvitation() {
+  const qc = useQueryClient()
+  const t = useTranslations('admin')
+  const onError = useAuthErrorToast()
+  return useMutation({
+    mutationFn: (id: string) => adminService.revokeInvitation(id),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: INVITATIONS_KEY })
+      toast.success(t('inviteRevoked'))
+    },
+    onError,
   })
 }
 

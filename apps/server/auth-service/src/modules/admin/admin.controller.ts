@@ -10,7 +10,12 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
-import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiOkResponse,
+  ApiOperation,
+  ApiTags,
+} from '@nestjs/swagger';
 import { Capability, CurrentUser, JwtUser } from '@platform/database';
 import {
   RequirePermission,
@@ -21,7 +26,11 @@ import {
   CreateDepartmentDto,
   UpdateDepartmentDto,
 } from './dto/department.dto';
-import { UpdateMemberDto } from './dto/member.dto';
+import {
+  MemberDto,
+  UpdateMemberDto,
+  UpdateMemberStatusDto,
+} from './dto/member.dto';
 import { CreateRoleDto, UpdateRoleDto } from './dto/role.dto';
 import { UpdateWorkspaceDto } from './dto/workspace.dto';
 
@@ -73,6 +82,7 @@ export class AdminController {
   @Get('members')
   @RequirePermission(Capability.MANAGE_MEMBERS)
   @ApiOperation({ summary: 'List members' })
+  @ApiOkResponse({ type: [MemberDto] })
   listMembers() {
     return this.adminService.listMembers();
   }
@@ -85,7 +95,19 @@ export class AdminController {
     @Param('id') id: string,
     @Body() dto: UpdateMemberDto,
   ) {
-    return this.adminService.updateMember(user.sub, id, dto);
+    return this.adminService.updateMember(user.sub, user.role, id, dto);
+  }
+
+  @Patch('members/:id/status')
+  @RequirePermission(Capability.MANAGE_MEMBERS)
+  @ApiOperation({ summary: 'Block / unblock a member (block revokes all sessions)' })
+  @ApiOkResponse({ type: MemberDto })
+  setMemberStatus(
+    @CurrentUser() user: JwtUser,
+    @Param('id') id: string,
+    @Body() dto: UpdateMemberStatusDto,
+  ) {
+    return this.adminService.setMemberStatus(user.sub, user.role, id, dto);
   }
 
   // ===================== ROLES =====================

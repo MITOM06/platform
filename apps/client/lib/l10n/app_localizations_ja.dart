@@ -151,12 +151,6 @@ class AppLocalizationsJa extends AppLocalizations {
   String get loginButton => 'ログイン';
 
   @override
-  String get noAccountYet => 'アカウントをお持ちでないですか？ ';
-
-  @override
-  String get registerNow => '今すぐ登録';
-
-  @override
   String get valEmailRequired => 'メールを入力してください';
 
   @override
@@ -354,9 +348,6 @@ class AppLocalizationsJa extends AppLocalizations {
   String get errLoginFailed => 'ログインに失敗しました。再試行してください';
 
   @override
-  String get registerTitle => 'アカウント作成';
-
-  @override
   String get welcomeToApp => 'PON へようこそ';
 
   @override
@@ -364,15 +355,6 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get fieldConfirmPassword => 'パスワード（確認）';
-
-  @override
-  String get registerButton => '登録';
-
-  @override
-  String get haveAccount => 'すでにアカウントをお持ちですか？ ';
-
-  @override
-  String get loginLink => 'ログイン';
 
   @override
   String get valNameRequired => '名前を入力してください';
@@ -385,9 +367,6 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get errEmailExists => 'このメールは既に登録されています';
-
-  @override
-  String get errRegisterFailed => '登録に失敗しました。再試行してください';
 
   @override
   String get verifyOtpTitle => 'OTP 認証';
@@ -440,9 +419,6 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get sendOtpButton => 'OTP を送信';
-
-  @override
-  String get errEmailNotRegistered => 'このメールは登録されていません';
 
   @override
   String get errSendRequestFailed => 'リクエストに失敗しました。再試行してください';
@@ -1664,9 +1640,6 @@ class AppLocalizationsJa extends AppLocalizations {
   String get loginWithGoogle => 'Googleでサインイン';
 
   @override
-  String get registerWithGoogle => 'Googleでサインアップ';
-
-  @override
   String get orContinueWith => 'または次で続行';
 
   @override
@@ -1681,7 +1654,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get termsOfService => '利用規約';
 
   @override
-  String get valMustAgreeTerms => '登録するには利用規約に同意する必要があります';
+  String get valMustAgreeTerms => '続行するには利用規約に同意する必要があります';
 
   @override
   String get youColon => 'あなた:';
@@ -1919,9 +1892,6 @@ class AppLocalizationsJa extends AppLocalizations {
   String get authMsgPasswordUpdated => 'パスワードが更新されました。再度ログインしてください。';
 
   @override
-  String get authMsgRegisterSuccess => '登録が完了しました。OTPがメールに送信されました。';
-
-  @override
   String get authMsgAccountUnverifiedOtpSent =>
       'アカウントはまだ確認されていません。新しいOTPがメールに送信されました。';
 
@@ -1948,13 +1918,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get authErrOtpSendFailed => '現在、認証コードを送信できません。しばらくしてからもう一度お試しください。';
 
   @override
-  String get authErrEmailDomainInvalid => 'メールのドメインが存在しないか、MXレコードがありません。';
-
-  @override
   String get authErrEmailNotFound => 'このメールアドレスはシステムに存在しません。';
-
-  @override
-  String get authErrEmailInUse => 'このメールアドレスはすでに使用されています。';
 
   @override
   String get authErrValEmailInvalid => 'メールの形式が無効です。';
@@ -2451,6 +2415,12 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get adminMemberRoleNone => 'なし';
+
+  @override
+  String get adminMemberRoleLockedSelf => '自分のロールは変更できません。';
+
+  @override
+  String get adminMemberRoleLockedOwner => 'オーナーのロールを変更できるのはオーナーのみです。';
 
   @override
   String get adminMemberDepartments => '部門';
@@ -3263,4 +3233,258 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get adminDeleteEntry => '項目を削除';
+
+  @override
+  String get loginInviteOnlyHint => 'PON は招待制です。管理者に招待を依頼してください。';
+
+  @override
+  String get loginHaveInviteLink => '招待リンクをお持ちですか？';
+
+  @override
+  String get inviteLinkDialogTitle => '招待を開く';
+
+  @override
+  String get inviteLinkDialogHint => 'メールに記載された招待リンクを貼り付けてください';
+
+  @override
+  String get inviteLinkInvalid => '有効な招待リンクではありません。';
+
+  @override
+  String get inviteOpen => '開く';
+
+  @override
+  String get inviteCancel => 'キャンセル';
+
+  @override
+  String get inviteRetry => '再試行';
+
+  @override
+  String get inviteTitle => '招待が届いています';
+
+  @override
+  String inviteSubtitle(String inviter, String workspace, String role) {
+    return '$inviter さんが $role として $workspace に招待しました';
+  }
+
+  @override
+  String inviteSubtitleNoRole(String inviter, String workspace) {
+    return '$inviter さんから $workspace への招待が届いています';
+  }
+
+  @override
+  String get inviteContinueWithGoogle => 'Google で続行';
+
+  @override
+  String inviteGoogleHint(String email) {
+    return '$email の Google アカウントを使用してください';
+  }
+
+  @override
+  String get inviteOrSetPassword => 'またはパスワードを設定';
+
+  @override
+  String get inviteSubmit => 'アカウントを作成';
+
+  @override
+  String get inviteInvalidTitle => '無効な招待';
+
+  @override
+  String get inviteInvalidBody =>
+      'この招待リンクは無効です。メール内のリンクを確認するか、管理者に新しい招待を依頼してください。';
+
+  @override
+  String get inviteExpiredTitle => '招待の有効期限切れ';
+
+  @override
+  String get inviteExpiredBody => 'この招待は有効期限が切れています。管理者に再送を依頼してください。';
+
+  @override
+  String get inviteRevokedTitle => '招待は取り消されました';
+
+  @override
+  String get inviteRevokedBody => 'この招待は管理者によって取り消されました。';
+
+  @override
+  String get inviteAcceptedTitle => '承諾済み';
+
+  @override
+  String get inviteAcceptedBody => 'この招待はすでに承諾されています。サインインして続行してください。';
+
+  @override
+  String get inviteLoadFailedTitle => '招待を読み込めませんでした';
+
+  @override
+  String get inviteBackToLogin => 'サインインに戻る';
+
+  @override
+  String get authMsgInvitationAccepted => '招待を承諾しました。ようこそ！';
+
+  @override
+  String get authErrAccountNotProvisioned =>
+      '選択したアカウントにはまだ PON へのアクセス権がありません。別のアカウントを試すか、管理者に招待を依頼してください。';
+
+  @override
+  String get authErrAccountBlocked => 'このアカウントはブロックされています。管理者に連絡してください。';
+
+  @override
+  String get authErrInvitationPending =>
+      '保留中の招待があります。メール内の招待リンクを開いて設定を完了してください。';
+
+  @override
+  String get authErrInvitationInvalid => 'この招待リンクは無効です。';
+
+  @override
+  String get authErrInvitationExpired => 'この招待は有効期限が切れています。管理者に再送を依頼してください。';
+
+  @override
+  String get authErrInvitationRevoked => 'この招待は取り消されました。';
+
+  @override
+  String get authErrInvitationAlreadyAccepted =>
+      'この招待はすでに承諾されています。サインインしてください。';
+
+  @override
+  String get authErrInvitationEmailMismatch =>
+      '招待されたメールアドレスと一致する Google アカウントでサインインしてください。';
+
+  @override
+  String get authErrInvitationAlreadyPending => 'このメールアドレスにはすでに保留中の招待があります。';
+
+  @override
+  String get authErrInvitationNotPending => 'この招待は保留中ではありません。';
+
+  @override
+  String get authErrInvitationNotFound => '招待が見つかりません。';
+
+  @override
+  String authErrInvitationResendCooldown(int ttl) {
+    return '再送するまで $ttl 秒お待ちください。';
+  }
+
+  @override
+  String get authErrMemberAlreadyExists => 'このメールアドレスのメンバーはすでに存在します。';
+
+  @override
+  String get authErrMemberNotFound => 'メンバーが見つかりません。';
+
+  @override
+  String get authErrRoleNotFound => 'ロールが見つかりません。';
+
+  @override
+  String get authErrDepartmentNotFound => '部署が見つかりません。';
+
+  @override
+  String get authErrOwnerRoleAssignForbidden =>
+      'オーナーロールの付与やオーナーのロール変更ができるのはオーナーのみです。';
+
+  @override
+  String get authErrCannotChangeOwnRole => '自分のロールは変更できません。';
+
+  @override
+  String get authErrLastOwnerCannotBeDemoted =>
+      '最後のオーナーは降格できません。先に別のメンバーをオーナーにしてください。';
+
+  @override
+  String get authErrCannotBlockSelf => '自分のアカウントはブロックできません。';
+
+  @override
+  String get authErrOwnerBlockForbidden => '他の Owner をブロックできるのは Owner のみです。';
+
+  @override
+  String get authErrLastOwnerCannotBeBlocked => '最後の Owner はブロックできません。';
+
+  @override
+  String get authErrSsoDisabled => 'シングルサインオンは無効です。';
+
+  @override
+  String get authErrSsoDomainNotAllowed => 'お使いのメールドメインは SSO で許可されていません。';
+
+  @override
+  String get adminInviteMember => 'メンバーを招待';
+
+  @override
+  String get adminInviteTitle => 'メンバーを招待する';
+
+  @override
+  String get adminInviteEmail => 'メールアドレス';
+
+  @override
+  String get adminInviteRole => 'ロール';
+
+  @override
+  String get adminInviteDepartments => '部署';
+
+  @override
+  String get adminInviteSubmit => '招待を送信';
+
+  @override
+  String get adminInviteSent => '招待を送信しました';
+
+  @override
+  String get adminInviteEmailFailed =>
+      '招待は作成されましたが、メールを送信できませんでした。メール設定を確認して再送してください。';
+
+  @override
+  String get adminPendingInvitations => '保留中の招待';
+
+  @override
+  String get adminInviteStatusPending => '保留中';
+
+  @override
+  String get adminInviteStatusExpired => '期限切れ';
+
+  @override
+  String adminInviteExpires(String date) {
+    return '$date に期限切れ';
+  }
+
+  @override
+  String adminInviteInvitedBy(String name) {
+    return '招待者: $name';
+  }
+
+  @override
+  String get adminInviteResend => '再送';
+
+  @override
+  String get adminInviteResent => '招待を再送しました';
+
+  @override
+  String get adminInviteRevoke => '取り消す';
+
+  @override
+  String adminInviteRevokeConfirm(String email) {
+    return '$email への招待を取り消しますか？リンクは使用できなくなります。';
+  }
+
+  @override
+  String get adminInviteRevoked => '招待を取り消しました';
+
+  @override
+  String get adminMemberStatusBlocked => 'ブロック中';
+
+  @override
+  String get adminMemberBlock => 'ブロック';
+
+  @override
+  String get adminMemberUnblock => 'ブロック解除';
+
+  @override
+  String adminMemberBlockConfirm(String name) {
+    return '$name さんをブロックしますか？すべての端末からサインアウトされます。';
+  }
+
+  @override
+  String adminMemberUnblockConfirm(String name) {
+    return '$name さんのブロックを解除しますか？再びサインインできるようになります。';
+  }
+
+  @override
+  String get adminMemberBlocked => 'メンバーをブロックしました';
+
+  @override
+  String get adminMemberUnblocked => 'メンバーのブロックを解除しました';
+
+  @override
+  String get adminLoadFailed => 'このセクションを読み込めませんでした。もう一度お試しください。';
 }

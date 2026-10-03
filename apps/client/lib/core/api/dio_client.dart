@@ -191,6 +191,19 @@ class _TokenRefreshInterceptor extends Interceptor {
 
   @override
   void onError(DioException err, ErrorInterceptorHandler handler) async {
+    // The account was blocked while signed in: any service may answer 403
+    // ACCOUNT_BLOCKED. Refreshing can't help — log out and let the login
+    // screen explain why. Anonymous calls (the login form) have no bearer
+    // token and keep their own error handling.
+    if (err.response?.statusCode == 403 &&
+        _bodyCode(err) == 'ACCOUNT_BLOCKED' &&
+        err.requestOptions.headers['Authorization'] != null) {
+      TokenManager.shared.recordRejection('ACCOUNT_BLOCKED');
+      await _clearCredentials();
+      onForceLogout?.call();
+      return handler.next(err);
+    }
+
     final alreadyRetried = err.requestOptions.extra[_retriedKey] == true;
     if (err.response?.statusCode != 401 || alreadyRetried) {
       return handler.next(err);
@@ -248,6 +261,11 @@ class _TokenRefreshInterceptor extends Interceptor {
     } catch (_) {
       return handler.next(err);
     }
+  }
+
+  static String? _bodyCode(DioException err) {
+    final data = err.response?.data;
+    return data is Map && data['code'] is String ? data['code'] as String : null;
   }
 
   /// Delete only the auth tokens — NOT the whole secure store. Using

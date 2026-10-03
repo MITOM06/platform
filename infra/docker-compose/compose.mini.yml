@@ -168,6 +168,8 @@ services:
       NODE_ENV: production
       PORT: 3003
       MONGO_URI: ${MONGODB_URI:?required}
+      # Access-token session check (sess:{sid}) — same Redis as auth-service.
+      REDIS_URL: ${REDIS_URL:?required}
       CONNECTOR_VAULT_KEY: ${CONNECTOR_VAULT_KEY:?required — same key as Cloud Run, or stored tokens become unreadable}
       INTERNAL_API_KEY: ${INTERNAL_API_KEY:?required}
       JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET:?required}

@@ -15,7 +15,7 @@ This document captures discussions and locked choices.
 **Decision:** Keep the NestJS auth-service. Do not migrate it to Spring Boot.
 
 **Rationale:**
-- The auth service is already complete: JWT, refresh tokens, OTP email, social login (Google/Facebook/X), and brute force protection.
+- The auth service is already complete: JWT, refresh tokens, OTP email, social login (Google only — X/Twitter and Facebook removed by team decision), and brute force protection.
 - Migration would consume unnecessary time and carry high risk (Redis sessions, complex social OAuth flows).
 - PRJ4 requires Java Enterprise — writing `chat-service` in Spring Boot is sufficient to satisfy the requirement.
 
@@ -274,3 +274,27 @@ Web UI:  http://localhost:15672  (user: platform / platform)
 - `packages/database` gains `user-block.schema.ts` and drops `blockedUsers` from `User`. Note: this package commits compiled `.js`/`.d.ts` inside `src/`, and auth-service's Jest resolves `src/*.js` before `*.ts` — after editing the package run `cd packages/database && npx tsc -p . --outDir src` to refresh in-src artifacts (separate from `pnpm build`, which emits to `dist/`).
 - chat-service adds `ReminderSweepService` and repoints its `UserBlock` model at `user_blocks`; `app.reminder.sweep-interval-ms` (default 60s) is configurable.
 - ai-service writes the shared `kb_documents` collection and carries the `notified` field on its reminder schema for parity.
+
+---
+
+## ADR-012: Invite-only onboarding (admin invitations replace self sign-up)
+
+**Date:** 2026-10-01  
+**Status:** Accepted
+
+**Context:** PON is a self-hosted, single-tenant B2B platform (one deployment = one company). Open self sign-up (`POST /auth/register`) and Google sign-in auto-creating accounts let anyone with the URL join the company workspace.
+
+**Decision:** Accounts are created only by accepting an admin invitation (or by the bootstrap owner / SSO JIT, below).
+
+- **`invitations` collection; the User is created only at accept time** — a pending invite never occupies the unique email index or leaks into user lookups. Stored status `pending|accepted|revoked`; `expired` is derived (`pending && expiresAt < now`), so no cron/TTL job.
+- **Token:** 256-bit `base64url`, only `sha256(token)` stored, 7-day expiry; resend rotates token + expiry (60 s cooldown per invitation). The raw token appears only in the email link — never in API responses, logs, audit meta or redirects.
+- **Accept** via password (`POST /auth/invitations/:token/accept-password`) or Google (`/auth/social/google/init?invite=`). The Google path keeps the token out of OAuth `state`: a single-use Redis flow id (`invite_oauth:<flowId>`, 10 min) travels as `state = "<platform>.<flowId>"`; the Google email must equal the invited email. Accept is atomic (conditional `findOneAndUpdate`), so double-submits yield exactly one account.
+- **Social sign-in no longer provisions accounts:** unknown email → `ACCOUNT_NOT_PROVISIONED` (or `INVITATION_PENDING` if a live invite exists). Exceptions: `BOOTSTRAP_OWNER_EMAIL` (created as Owner; it also receives an Owner invitation at boot when no such user exists) and OIDC SSO JIT **only** when the SSO gate is enabled *and* `allowedDomains` is non-empty (an empty list means "any domain" and must not become open sign-up).
+- **`User.status` is enforced** on login, Google/OIDC, login-code exchange, refresh and OTP requests (`blocked` → `ACCOUNT_BLOCKED`). Admins block/unblock via `PATCH /admin/members/:id/status`; blocking revokes all sessions. Self-block, Admin-blocks-Owner and blocking the last active Owner are rejected.
+- **Browser-redirect flows never return JSON**: OAuth/SSO failures redirect with `?error=<AuthCode>` (web `/oauth-callback`, mobile `platform://auth?error=`).
+- Role-less users (legacy, JIT, deleted role) receive the preset **Member** capabilities instead of none. Granting the Owner role by invitation requires the actor to be Owner.
+
+**Consequences:**
+- `POST /auth/register` is gone (404); `REGISTER_SUCCESS`, `EMAIL_DOMAIN_INVALID`, `EMAIL_IN_USE` stay in `AuthCode` as deprecated (never removed).
+- Invite links are web pages (`<origin of WEB_REDIRECT_URL>/invite/<token>`); the mobile app is reached through `platform://invite?token=` from that page. No new env vars.
+- chat-service only verifies JWT signatures, so a blocked user's already-issued access token stays valid there for ≤ `JWT_ACCESS_EXPIRES` (15 min). Accepted, documented limitation (follow-up: session/status check in chat-service).

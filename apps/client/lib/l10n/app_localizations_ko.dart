@@ -151,12 +151,6 @@ class AppLocalizationsKo extends AppLocalizations {
   String get loginButton => '로그인';
 
   @override
-  String get noAccountYet => '계정이 없으신가요? ';
-
-  @override
-  String get registerNow => '지금 가입';
-
-  @override
   String get valEmailRequired => '이메일을 입력하세요';
 
   @override
@@ -354,9 +348,6 @@ class AppLocalizationsKo extends AppLocalizations {
   String get errLoginFailed => '로그인에 실패했습니다. 다시 시도하세요';
 
   @override
-  String get registerTitle => '계정 만들기';
-
-  @override
   String get welcomeToApp => 'PON에 오신 것을 환영합니다';
 
   @override
@@ -364,15 +355,6 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get fieldConfirmPassword => '비밀번호 확인';
-
-  @override
-  String get registerButton => '가입';
-
-  @override
-  String get haveAccount => '이미 계정이 있으신가요? ';
-
-  @override
-  String get loginLink => '로그인';
 
   @override
   String get valNameRequired => '이름을 입력하세요';
@@ -385,9 +367,6 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get errEmailExists => '이미 등록된 이메일입니다';
-
-  @override
-  String get errRegisterFailed => '가입에 실패했습니다. 다시 시도하세요';
 
   @override
   String get verifyOtpTitle => 'OTP 인증';
@@ -440,9 +419,6 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get sendOtpButton => 'OTP 코드 보내기';
-
-  @override
-  String get errEmailNotRegistered => '등록되지 않은 이메일입니다';
 
   @override
   String get errSendRequestFailed => '요청에 실패했습니다. 다시 시도하세요';
@@ -1664,9 +1640,6 @@ class AppLocalizationsKo extends AppLocalizations {
   String get loginWithGoogle => 'Google로 로그인';
 
   @override
-  String get registerWithGoogle => 'Google로 가입';
-
-  @override
   String get orContinueWith => '또는 다음으로 계속하기';
 
   @override
@@ -1681,7 +1654,7 @@ class AppLocalizationsKo extends AppLocalizations {
   String get termsOfService => '서비스 약관';
 
   @override
-  String get valMustAgreeTerms => '가입하려면 서비스 약관에 동의해야 합니다';
+  String get valMustAgreeTerms => '계속하려면 서비스 약관에 동의해야 합니다';
 
   @override
   String get youColon => '나:';
@@ -1919,9 +1892,6 @@ class AppLocalizationsKo extends AppLocalizations {
   String get authMsgPasswordUpdated => '비밀번호가 성공적으로 업데이트되었습니다. 다시 로그인하세요.';
 
   @override
-  String get authMsgRegisterSuccess => '등록이 완료되었습니다. OTP가 이메일로 전송되었습니다.';
-
-  @override
   String get authMsgAccountUnverifiedOtpSent =>
       '계정이 아직 인증되지 않았습니다. 새 OTP가 이메일로 전송되었습니다.';
 
@@ -1948,13 +1918,7 @@ class AppLocalizationsKo extends AppLocalizations {
   String get authErrOtpSendFailed => '지금은 인증 코드를 보낼 수 없습니다. 잠시 후 다시 시도해 주세요.';
 
   @override
-  String get authErrEmailDomainInvalid => '이메일 도메인이 존재하지 않거나 MX 레코드가 없습니다.';
-
-  @override
   String get authErrEmailNotFound => '시스템에 해당 이메일이 존재하지 않습니다.';
-
-  @override
-  String get authErrEmailInUse => '이 이메일은 이미 사용 중입니다.';
 
   @override
   String get authErrValEmailInvalid => '이메일 형식이 올바르지 않습니다.';
@@ -2451,6 +2415,12 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get adminMemberRoleNone => '없음';
+
+  @override
+  String get adminMemberRoleLockedSelf => '자신의 역할은 변경할 수 없습니다.';
+
+  @override
+  String get adminMemberRoleLockedOwner => '소유자만 소유자의 역할을 변경할 수 있습니다.';
 
   @override
   String get adminMemberDepartments => '부서';
@@ -3263,4 +3233,257 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get adminDeleteEntry => '항목 삭제';
+
+  @override
+  String get loginInviteOnlyHint => 'PON은 초대 전용입니다. 관리자에게 초대를 요청하세요.';
+
+  @override
+  String get loginHaveInviteLink => '초대 링크가 있으신가요?';
+
+  @override
+  String get inviteLinkDialogTitle => '초대 열기';
+
+  @override
+  String get inviteLinkDialogHint => '이메일에 있는 초대 링크를 붙여넣으세요';
+
+  @override
+  String get inviteLinkInvalid => '올바른 초대 링크가 아닙니다.';
+
+  @override
+  String get inviteOpen => '열기';
+
+  @override
+  String get inviteCancel => '취소';
+
+  @override
+  String get inviteRetry => '다시 시도';
+
+  @override
+  String get inviteTitle => '초대를 받으셨습니다';
+
+  @override
+  String inviteSubtitle(String inviter, String workspace, String role) {
+    return '$inviter님이 $role(으)로 $workspace에 초대했습니다';
+  }
+
+  @override
+  String inviteSubtitleNoRole(String inviter, String workspace) {
+    return '$inviter님이 $workspace에 초대했습니다';
+  }
+
+  @override
+  String get inviteContinueWithGoogle => 'Google로 계속하기';
+
+  @override
+  String inviteGoogleHint(String email) {
+    return '$email의 Google 계정을 사용하세요';
+  }
+
+  @override
+  String get inviteOrSetPassword => '또는 비밀번호 설정';
+
+  @override
+  String get inviteSubmit => '계정 만들기';
+
+  @override
+  String get inviteInvalidTitle => '유효하지 않은 초대';
+
+  @override
+  String get inviteInvalidBody =>
+      '이 초대 링크는 유효하지 않습니다. 이메일의 링크를 확인하거나 관리자에게 새 초대를 요청하세요.';
+
+  @override
+  String get inviteExpiredTitle => '만료된 초대';
+
+  @override
+  String get inviteExpiredBody => '이 초대는 만료되었습니다. 관리자에게 재전송을 요청하세요.';
+
+  @override
+  String get inviteRevokedTitle => '취소된 초대';
+
+  @override
+  String get inviteRevokedBody => '이 초대는 관리자에 의해 취소되었습니다.';
+
+  @override
+  String get inviteAcceptedTitle => '이미 수락됨';
+
+  @override
+  String get inviteAcceptedBody => '이 초대는 이미 수락되었습니다. 로그인하여 계속하세요.';
+
+  @override
+  String get inviteLoadFailedTitle => '초대를 불러올 수 없습니다';
+
+  @override
+  String get inviteBackToLogin => '로그인으로 돌아가기';
+
+  @override
+  String get authMsgInvitationAccepted => '초대를 수락했습니다. 환영합니다!';
+
+  @override
+  String get authErrAccountNotProvisioned =>
+      '선택한 계정은 아직 PON에 접근할 수 없습니다. 다른 계정으로 시도하거나 관리자에게 초대를 요청하세요.';
+
+  @override
+  String get authErrAccountBlocked => '이 계정은 차단되었습니다. 관리자에게 문의하세요.';
+
+  @override
+  String get authErrInvitationPending =>
+      '대기 중인 초대가 있습니다. 이메일의 초대 링크를 열어 설정을 완료하세요.';
+
+  @override
+  String get authErrInvitationInvalid => '이 초대 링크는 유효하지 않습니다.';
+
+  @override
+  String get authErrInvitationExpired => '이 초대는 만료되었습니다. 관리자에게 재전송을 요청하세요.';
+
+  @override
+  String get authErrInvitationRevoked => '이 초대는 취소되었습니다.';
+
+  @override
+  String get authErrInvitationAlreadyAccepted => '이 초대는 이미 수락되었습니다. 로그인해 주세요.';
+
+  @override
+  String get authErrInvitationEmailMismatch =>
+      '초대된 이메일과 일치하는 Google 계정으로 로그인하세요.';
+
+  @override
+  String get authErrInvitationAlreadyPending => '이 이메일에는 이미 대기 중인 초대가 있습니다.';
+
+  @override
+  String get authErrInvitationNotPending => '이 초대는 더 이상 대기 상태가 아닙니다.';
+
+  @override
+  String get authErrInvitationNotFound => '초대를 찾을 수 없습니다.';
+
+  @override
+  String authErrInvitationResendCooldown(int ttl) {
+    return '$ttl초 후에 다시 전송해 주세요.';
+  }
+
+  @override
+  String get authErrMemberAlreadyExists => '이 이메일을 사용하는 멤버가 이미 있습니다.';
+
+  @override
+  String get authErrMemberNotFound => '멤버를 찾을 수 없습니다.';
+
+  @override
+  String get authErrRoleNotFound => '역할을 찾을 수 없습니다.';
+
+  @override
+  String get authErrDepartmentNotFound => '부서를 찾을 수 없습니다.';
+
+  @override
+  String get authErrOwnerRoleAssignForbidden =>
+      '소유자만 소유자 역할을 부여하거나 소유자의 역할을 변경할 수 있습니다.';
+
+  @override
+  String get authErrCannotChangeOwnRole => '자신의 역할은 변경할 수 없습니다.';
+
+  @override
+  String get authErrLastOwnerCannotBeDemoted =>
+      '마지막 소유자의 역할은 낮출 수 없습니다. 먼저 다른 멤버를 소유자로 지정하세요.';
+
+  @override
+  String get authErrCannotBlockSelf => '자신의 계정은 차단할 수 없습니다.';
+
+  @override
+  String get authErrOwnerBlockForbidden => '다른 Owner는 Owner만 차단할 수 있습니다.';
+
+  @override
+  String get authErrLastOwnerCannotBeBlocked => '마지막 Owner는 차단할 수 없습니다.';
+
+  @override
+  String get authErrSsoDisabled => '싱글 사인온이 비활성화되어 있습니다.';
+
+  @override
+  String get authErrSsoDomainNotAllowed => '이메일 도메인이 SSO에 허용되지 않습니다.';
+
+  @override
+  String get adminInviteMember => '멤버 초대';
+
+  @override
+  String get adminInviteTitle => '멤버 초대하기';
+
+  @override
+  String get adminInviteEmail => '이메일 주소';
+
+  @override
+  String get adminInviteRole => '역할';
+
+  @override
+  String get adminInviteDepartments => '부서';
+
+  @override
+  String get adminInviteSubmit => '초대 보내기';
+
+  @override
+  String get adminInviteSent => '초대를 보냈습니다';
+
+  @override
+  String get adminInviteEmailFailed =>
+      '초대는 생성되었지만 이메일을 보내지 못했습니다. 메일 설정을 확인한 후 다시 보내세요.';
+
+  @override
+  String get adminPendingInvitations => '대기 중인 초대';
+
+  @override
+  String get adminInviteStatusPending => '대기 중';
+
+  @override
+  String get adminInviteStatusExpired => '만료됨';
+
+  @override
+  String adminInviteExpires(String date) {
+    return '$date 만료';
+  }
+
+  @override
+  String adminInviteInvitedBy(String name) {
+    return '초대한 사람: $name';
+  }
+
+  @override
+  String get adminInviteResend => '재전송';
+
+  @override
+  String get adminInviteResent => '초대를 다시 보냈습니다';
+
+  @override
+  String get adminInviteRevoke => '취소';
+
+  @override
+  String adminInviteRevokeConfirm(String email) {
+    return '$email에 대한 초대를 취소할까요? 링크가 더 이상 작동하지 않습니다.';
+  }
+
+  @override
+  String get adminInviteRevoked => '초대를 취소했습니다';
+
+  @override
+  String get adminMemberStatusBlocked => '차단됨';
+
+  @override
+  String get adminMemberBlock => '차단';
+
+  @override
+  String get adminMemberUnblock => '차단 해제';
+
+  @override
+  String adminMemberBlockConfirm(String name) {
+    return '$name님을 차단할까요? 모든 기기에서 로그아웃됩니다.';
+  }
+
+  @override
+  String adminMemberUnblockConfirm(String name) {
+    return '$name님의 차단을 해제할까요? 다시 로그인할 수 있게 됩니다.';
+  }
+
+  @override
+  String get adminMemberBlocked => '멤버를 차단했습니다';
+
+  @override
+  String get adminMemberUnblocked => '멤버 차단을 해제했습니다';
+
+  @override
+  String get adminLoadFailed => '이 섹션을 불러올 수 없습니다. 다시 시도해 주세요.';
 }

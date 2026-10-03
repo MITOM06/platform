@@ -15,12 +15,14 @@ import {
   UserDocument,
   PRESET_ROLES,
 } from '@platform/database';
+import { InvitationsService } from '../invitations/invitations.service';
 
 /**
  * Seeds the single-deployment enterprise foundation on startup:
  *   1. the singleton Workspace config doc,
  *   2. the preset Role templates (Owner/Admin/Manager/Member),
- *   3. the first Owner (a user matching BOOTSTRAP_OWNER_EMAIL with no role yet).
+ *   3. the first Owner (a user matching BOOTSTRAP_OWNER_EMAIL with no role yet),
+ *      or — when no such user exists — an Owner invitation emailed to it.
  *
  * Every step is idempotent — running it twice yields exactly one workspace and
  * four roles, so it is safe to re-run on every boot and on every redeploy.
@@ -35,6 +37,7 @@ export class BootstrapService implements OnApplicationBootstrap {
     @InjectModel(Role.name) private readonly roleModel: Model<RoleDocument>,
     @InjectModel(User.name) private readonly userModel: Model<UserDocument>,
     private readonly configService: ConfigService,
+    private readonly invitations: InvitationsService,
   ) {}
 
   async onApplicationBootstrap(): Promise<void> {
@@ -76,13 +79,19 @@ export class BootstrapService implements OnApplicationBootstrap {
   /**
    * If BOOTSTRAP_OWNER_EMAIL matches an existing user that has no role yet,
    * assign the Owner role. Never overwrites an already-assigned role.
+   * With invite-only onboarding there is no sign-up, so when no user exists
+   * an Owner invitation is created + emailed (idempotent; never blocks boot).
    */
   private async ensureBootstrapOwner(): Promise<void> {
     const email = this.configService.get<string>('BOOTSTRAP_OWNER_EMAIL');
     if (!email) return;
 
     const user = await this.userModel.findOne({ email }).exec();
-    if (!user || user.roleId) return;
+    if (!user) {
+      await this.ensureBootstrapOwnerInvite(email);
+      return;
+    }
+    if (user.roleId) return;
 
     const ownerRole = await this.roleModel.findOne({ name: 'Owner' }).exec();
     if (!ownerRole) return;
@@ -92,5 +101,15 @@ export class BootstrapService implements OnApplicationBootstrap {
       { $set: { roleId: ownerRole._id } },
     );
     this.logger.log(`Assigned Owner role to bootstrap owner ${email}`);
+  }
+
+  private async ensureBootstrapOwnerInvite(email: string): Promise<void> {
+    try {
+      await this.invitations.createBootstrapOwnerInvite(email);
+    } catch (err) {
+      this.logger.warn(
+        `Bootstrap owner invitation skipped: ${err instanceof Error ? err.name : typeof err}`,
+      );
+    }
   }
 }

@@ -2,10 +2,11 @@
 
 import { useState } from 'react'
 import { useTranslations } from 'next-intl'
-import { Pencil, Brain } from 'lucide-react'
+import { UserPlus } from 'lucide-react'
 import { EditMemberAiContextModal } from '@/components/admin/EditMemberAiContextModal'
-import { Avatar, AvatarFallback } from '@/components/ui/avatar'
-import { Badge } from '@/components/ui/badge'
+import { InviteMemberDialog } from '@/components/admin/InviteMemberDialog'
+import { MemberRow } from '@/components/admin/MemberRow'
+import { PendingInvitationsList } from '@/components/admin/PendingInvitationsList'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Label } from '@/components/ui/label'
@@ -22,16 +23,15 @@ import {
   useDepartments,
   useMembers,
   useRoles,
+  useSetMemberStatus,
   useUpdateMember,
 } from '@/lib/hooks/use-admin'
-import { useHasCapability } from '@/lib/hooks/use-capabilities'
+import { useCapabilities, useHasCapability } from '@/lib/hooks/use-capabilities'
+import { OWNER_ROLE_NAME, assignableRoles, memberRoleLock } from '@/lib/admin/role-guard'
+import { useAuthStore } from '@/lib/store/auth.store'
 import type { Member } from '@/lib/api/admin-types'
 
 const NO_ROLE = '__none__'
-
-function initials(name: string) {
-  return name.split(' ').slice(0, 2).map((w) => w[0]).join('').toUpperCase()
-}
 
 export function MembersPanel() {
   const t = useTranslations('admin')
@@ -42,6 +42,9 @@ export function MembersPanel() {
   const { data: roles = [] } = useRoles(canRoles)
   const { data: departments = [] } = useDepartments(canDepts)
   const updateMember = useUpdateMember()
+  const setMemberStatus = useSetMemberStatus()
+  const selfId = useAuthStore((s) => s.user?.id)
+  const callerIsOwner = useCapabilities().data?.role === OWNER_ROLE_NAME
 
   const [editing, setEditing] = useState<Member | null>(null)
   const [open, setOpen] = useState(false)
@@ -49,6 +52,24 @@ export function MembersPanel() {
   const [deptIds, setDeptIds] = useState<string[]>([])
   const [aiCtxMember, setAiCtxMember] = useState<Member | null>(null)
   const [aiCtxOpen, setAiCtxOpen] = useState(false)
+  const [inviteOpen, setInviteOpen] = useState(false)
+  // Bumped per open so the invite dialog remounts with a fresh form.
+  const [inviteKey, setInviteKey] = useState(0)
+  const [statusTarget, setStatusTarget] = useState<Member | null>(null)
+
+  const openInvite = () => {
+    setInviteKey((k) => k + 1)
+    setInviteOpen(true)
+  }
+
+  const targetBlocked = statusTarget?.status === 'blocked'
+  const confirmStatus = () => {
+    if (!statusTarget) return
+    setMemberStatus.mutate(
+      { id: statusTarget._id, status: targetBlocked ? 'active' : 'blocked' },
+      { onSettled: () => setStatusTarget(null) },
+    )
+  }
 
   const openAiContext = (m: Member) => {
     setAiCtxMember(m)
@@ -67,13 +88,28 @@ export function MembersPanel() {
       prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id],
     )
 
+  const roleName = (id?: string) => roles.find((r) => r._id === id)?.name
+
+  // Own row and (for non-Owners) an Owner's row: role is read-only, departments
+  // stay editable. Owner option is offered to Owners only.
+  const roleLock = editing
+    ? memberRoleLock({
+        isSelf: editing._id === selfId,
+        targetIsOwner: roleName(editing.roleId) === OWNER_ROLE_NAME,
+        callerIsOwner,
+      })
+    : null
+  // A locked picker still lists every role so the current one (maybe Owner) renders.
+  const roleOptions = roleLock ? roles : assignableRoles(roles, callerIsOwner)
+
   const onSubmit = () => {
     if (!editing) return
     updateMember.mutate(
       {
         id: editing._id,
         input: {
-          roleId: roleId === NO_ROLE ? undefined : roleId,
+          // Never send a role for a locked row — only departments change.
+          roleId: roleLock || roleId === NO_ROLE ? undefined : roleId,
           departmentIds: deptIds,
         },
       },
@@ -81,46 +117,71 @@ export function MembersPanel() {
     )
   }
 
-  const roleName = (id?: string) => roles.find((r) => r._id === id)?.name
-
   if (isLoading) return <Skeleton className="h-64 rounded-xl" />
 
   return (
     <div className="space-y-2">
-      <p className="text-sm text-muted-foreground pb-2">{t('memberHint')}</p>
-      {members.map((m) => (
-        <div
-          key={m._id}
-          className="flex items-center gap-3 rounded-lg border px-4 py-3"
-        >
-          <Avatar className="size-9">
-            <AvatarFallback className="text-xs bg-primary/10 text-primary">
-              {initials(m.displayName)}
-            </AvatarFallback>
-          </Avatar>
-          <div className="min-w-0 flex-1">
-            <p className="font-medium truncate">{m.displayName}</p>
-            <p className="text-sm text-muted-foreground truncate">{m.email}</p>
-          </div>
-          {roleName(m.roleId) && (
-            <Badge variant="secondary">{roleName(m.roleId)}</Badge>
-          )}
-          {canManageMembers && (
-            <Button
-              variant="ghost"
-              size="icon"
-              className="tap"
-              title={t('editAiContext')}
-              onClick={() => openAiContext(m)}
-            >
-              <Brain className="size-4" />
-            </Button>
-          )}
-          <Button variant="ghost" size="icon" className="tap" onClick={() => openEdit(m)}>
-            <Pencil className="size-4" />
+      <div className="flex flex-wrap items-center justify-between gap-2 pb-2">
+        <p className="text-sm text-muted-foreground">{t('memberHint')}</p>
+        {canManageMembers && (
+          <Button size="sm" className="gap-1.5" onClick={openInvite}>
+            <UserPlus className="size-4" />
+            {t('inviteMember')}
           </Button>
-        </div>
+        )}
+      </div>
+      {canManageMembers && <PendingInvitationsList />}
+      {members.map((m) => (
+        <MemberRow
+          key={m._id}
+          member={m}
+          roleName={roleName(m.roleId)}
+          isSelf={m._id === selfId}
+          canManageMembers={canManageMembers}
+          onEdit={openEdit}
+          onAiContext={openAiContext}
+          onToggleBlock={setStatusTarget}
+        />
       ))}
+
+      {canManageMembers && (
+        <InviteMemberDialog
+          key={inviteKey}
+          open={inviteOpen}
+          onOpenChange={setInviteOpen}
+          canRoles={canRoles}
+          canDepts={canDepts}
+          roles={roles}
+          departments={departments}
+        />
+      )}
+
+      <ResponsiveModal
+        open={!!statusTarget}
+        onOpenChange={(o) => !o && setStatusTarget(null)}
+        title={t(targetBlocked ? 'memberUnblock' : 'memberBlock')}
+        description={
+          statusTarget
+            ? t(targetBlocked ? 'memberUnblockConfirm' : 'memberBlockConfirm', {
+                name: statusTarget.displayName,
+              })
+            : undefined
+        }
+        footer={
+          <>
+            <Button variant="outline" onClick={() => setStatusTarget(null)}>
+              {t('cancel')}
+            </Button>
+            <Button
+              variant={targetBlocked ? 'default' : 'destructive'}
+              onClick={confirmStatus}
+              disabled={setMemberStatus.isPending}
+            >
+              {t(targetBlocked ? 'memberUnblock' : 'memberBlock')}
+            </Button>
+          </>
+        }
+      />
 
       <EditMemberAiContextModal
         member={aiCtxMember}
@@ -148,19 +209,24 @@ export function MembersPanel() {
           {canRoles && (
             <div className="space-y-1.5">
               <Label>{t('memberRole')}</Label>
-              <Select value={roleId} onValueChange={setRoleId}>
-                <SelectTrigger>
+              <Select value={roleId} onValueChange={setRoleId} disabled={!!roleLock}>
+                <SelectTrigger data-testid="member-role-select">
                   <SelectValue placeholder={t('memberRoleNone')} />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value={NO_ROLE}>{t('memberRoleNone')}</SelectItem>
-                  {roles.map((r) => (
+                  {roleOptions.map((r) => (
                     <SelectItem key={r._id} value={r._id}>
                       {r.name}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
+              {roleLock && (
+                <p className="text-xs text-muted-foreground" data-testid="member-role-locked">
+                  {t(roleLock === 'self' ? 'memberRoleLockedSelf' : 'memberRoleLockedOwner')}
+                </p>
+              )}
             </div>
           )}
           {canDepts && (

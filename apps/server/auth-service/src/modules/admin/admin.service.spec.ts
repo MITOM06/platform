@@ -67,34 +67,158 @@ describe('AdminService', () => {
   });
 
   describe('updateMember', () => {
-    it('sets role + departments AND revokes the user sessions', async () => {
-      userModel.findByIdAndUpdate.mockReturnValue(
-        execable({ _id: 'u1', roleId: 'r1', departmentIds: ['d1'] }),
-      );
+    const OWNER_ROLE = '64b000000000000000000001';
+    const ADMIN_ROLE = '64b000000000000000000002';
+    const MEMBER_ROLE = '64b000000000000000000003';
+    const TARGET = '64b0000000000000000000aa';
+    const ACTOR = '64b0000000000000000000bb';
+    const DEPT = '64b0000000000000000000d1';
+    const roles: Record<string, any> = {
+      [OWNER_ROLE]: { _id: { toString: () => OWNER_ROLE }, name: 'Owner' },
+      [ADMIN_ROLE]: { _id: { toString: () => ADMIN_ROLE }, name: 'Admin' },
+      [MEMBER_ROLE]: { _id: { toString: () => MEMBER_ROLE }, name: 'Member' },
+    };
 
-      const res = await service.updateMember('actor1', 'u1', {
-        roleId: 'r1',
-        departmentIds: ['d1'],
+    function target(roleId: string | undefined, status = 'active') {
+      userModel.findById.mockReturnValue(execable({ _id: TARGET, roleId, status }));
+    }
+
+    async function expectCode(p: Promise<unknown>, status: number, code: string) {
+      await expect(p).rejects.toMatchObject({ status, response: { code } });
+      expect(userModel.findByIdAndUpdate).not.toHaveBeenCalled();
+      expect(session.revokeAllSessions).not.toHaveBeenCalled();
+    }
+
+    beforeEach(() => {
+      userModel.findById = jest.fn();
+      userModel.countDocuments = jest.fn().mockReturnValue(execable(1));
+      userModel.findByIdAndUpdate.mockImplementation((id: string, upd: any) =>
+        execable({ _id: id, ...upd.$set }),
+      );
+      roleModel.findById.mockImplementation((id: string) => execable(roles[id] ?? null));
+      roleModel.findOne = jest.fn().mockReturnValue(execable(roles[OWNER_ROLE]));
+    });
+
+    it('sets role + departments, revokes sessions (role_changed) and audits', async () => {
+      target(MEMBER_ROLE);
+      const res = await service.updateMember(ACTOR, 'Admin', TARGET, {
+        roleId: ADMIN_ROLE,
+        departmentIds: [DEPT],
       });
 
       expect(userModel.findByIdAndUpdate).toHaveBeenCalledWith(
-        'u1',
-        { $set: { roleId: 'r1', departmentIds: ['d1'] } },
+        TARGET,
+        { $set: { roleId: ADMIN_ROLE, departmentIds: [DEPT] } },
         { new: true },
       );
-      expect(session.revokeAllSessions).toHaveBeenCalledWith('u1');
+      expect(session.revokeAllSessions).toHaveBeenCalledWith(TARGET, 'role_changed');
       expect(audit.record).toHaveBeenCalledWith(
-        expect.objectContaining({ action: 'member.update', targetId: 'u1' }),
+        expect.objectContaining({ action: 'member.update', targetId: TARGET }),
       );
-      expect(res).toMatchObject({ _id: 'u1' });
+      expect(res).toMatchObject({ _id: TARGET });
     });
 
-    it('throws when the member does not exist', async () => {
-      userModel.findByIdAndUpdate.mockReturnValue(execable(null));
-      await expect(
-        service.updateMember('actor1', 'missing', { roleId: 'r1' }),
-      ).rejects.toBeInstanceOf(NotFoundException);
+    it('404 MEMBER_NOT_FOUND for an unknown / malformed id', async () => {
+      await expectCode(
+        service.updateMember(ACTOR, 'Owner', 'missing', { roleId: ADMIN_ROLE }),
+        404,
+        'MEMBER_NOT_FOUND',
+      );
+      userModel.findById.mockReturnValue(execable(null));
+      await expectCode(
+        service.updateMember(ACTOR, 'Owner', TARGET, { roleId: ADMIN_ROLE }),
+        404,
+        'MEMBER_NOT_FOUND',
+      );
+    });
+
+    it('404 ROLE_NOT_FOUND for an unknown roleId', async () => {
+      target(MEMBER_ROLE);
+      await expectCode(
+        service.updateMember(ACTOR, 'Owner', TARGET, { roleId: '64b0000000000000000000ff' }),
+        404,
+        'ROLE_NOT_FOUND',
+      );
+    });
+
+    it('400 CANNOT_CHANGE_OWN_ROLE — even for an Owner', async () => {
+      userModel.findById.mockReturnValue(execable({ _id: ACTOR, roleId: OWNER_ROLE }));
+      await expectCode(
+        service.updateMember(ACTOR, 'Owner', ACTOR, { roleId: ADMIN_ROLE }),
+        400,
+        'CANNOT_CHANGE_OWN_ROLE',
+      );
+    });
+
+    it('self: departments may still change (no role guard)', async () => {
+      userModel.findById.mockReturnValue(execable({ _id: ACTOR, roleId: ADMIN_ROLE }));
+      await service.updateMember(ACTOR, 'Admin', ACTOR, {
+        roleId: ADMIN_ROLE, // unchanged → ignored
+        departmentIds: [DEPT],
+      });
+      expect(userModel.findByIdAndUpdate).toHaveBeenCalledWith(
+        ACTOR,
+        { $set: { departmentIds: [DEPT] } },
+        { new: true },
+      );
+      expect(session.revokeAllSessions).toHaveBeenCalledWith(ACTOR, 'other');
+    });
+
+    it('unchanged roleId and nothing else → no write, no revoke', async () => {
+      target(ADMIN_ROLE);
+      await service.updateMember(ACTOR, 'Admin', TARGET, { roleId: ADMIN_ROLE });
+      expect(userModel.findByIdAndUpdate).not.toHaveBeenCalled();
       expect(session.revokeAllSessions).not.toHaveBeenCalled();
+      expect(audit.record).not.toHaveBeenCalled();
+    });
+
+    it('403 OWNER_ROLE_ASSIGN_FORBIDDEN when a non-Owner grants Owner', async () => {
+      target(MEMBER_ROLE);
+      await expectCode(
+        service.updateMember(ACTOR, 'Admin', TARGET, { roleId: OWNER_ROLE }),
+        403,
+        'OWNER_ROLE_ASSIGN_FORBIDDEN',
+      );
+    });
+
+    it('403 OWNER_ROLE_ASSIGN_FORBIDDEN when a non-Owner changes an Owner', async () => {
+      target(OWNER_ROLE);
+      await expectCode(
+        service.updateMember(ACTOR, 'Admin', TARGET, { roleId: MEMBER_ROLE }),
+        403,
+        'OWNER_ROLE_ASSIGN_FORBIDDEN',
+      );
+    });
+
+    it('an Owner may grant Owner', async () => {
+      target(ADMIN_ROLE);
+      await service.updateMember(ACTOR, 'Owner', TARGET, { roleId: OWNER_ROLE });
+      expect(userModel.findByIdAndUpdate).toHaveBeenCalledWith(
+        TARGET,
+        { $set: { roleId: OWNER_ROLE } },
+        { new: true },
+      );
+    });
+
+    it('400 LAST_OWNER_CANNOT_BE_DEMOTED when no other active Owner remains', async () => {
+      target(OWNER_ROLE);
+      userModel.countDocuments.mockReturnValue(execable(0));
+      await expectCode(
+        service.updateMember(ACTOR, 'Owner', TARGET, { roleId: ADMIN_ROLE }),
+        400,
+        'LAST_OWNER_CANNOT_BE_DEMOTED',
+      );
+      expect(userModel.countDocuments).toHaveBeenCalledWith({
+        _id: { $ne: TARGET },
+        roleId: roles[OWNER_ROLE]._id,
+        status: 'active',
+      });
+    });
+
+    it('an Owner may demote another Owner while an active Owner remains', async () => {
+      target(OWNER_ROLE);
+      await service.updateMember(ACTOR, 'Owner', TARGET, { roleId: ADMIN_ROLE });
+      expect(session.revokeAllSessions).toHaveBeenCalledWith(TARGET, 'role_changed');
     });
   });
 
@@ -234,6 +358,102 @@ describe('AdminService', () => {
       ).resolves.toBeDefined();
       // No connectorAllowList lookup needed for the empty (allow-none) case.
       expect(workspaceModel.findOne).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('setMemberStatus', () => {
+    const OWNER_ROLE_ID = '64b000000000000000000001';
+    const TARGET = '64b0000000000000000000aa';
+    const ACTOR = '64b0000000000000000000bb';
+
+    function memberDoc(doc: any) {
+      const q = execable(doc);
+      return { ...q, select: jest.fn().mockReturnValue(execable(doc)) };
+    }
+
+    beforeEach(() => {
+      userModel.findById = jest.fn();
+      userModel.updateOne = jest.fn().mockReturnValue(execable({ modifiedCount: 1 }));
+      userModel.countDocuments = jest.fn().mockReturnValue(execable(1));
+      roleModel.findOne = jest
+        .fn()
+        .mockReturnValue(execable({ _id: { toString: () => OWNER_ROLE_ID }, name: 'Owner' }));
+    });
+
+    it('404 MEMBER_NOT_FOUND for an unknown / malformed id', async () => {
+      await expect(
+        service.setMemberStatus(ACTOR, 'Admin', 'not-an-id', { status: 'blocked' }),
+      ).rejects.toMatchObject({ response: { code: 'MEMBER_NOT_FOUND' } });
+    });
+
+    it('400 CANNOT_BLOCK_SELF', async () => {
+      userModel.findById.mockReturnValue(memberDoc({ _id: ACTOR, status: 'active' }));
+      await expect(
+        service.setMemberStatus(ACTOR, 'Owner', ACTOR, { status: 'blocked' }),
+      ).rejects.toMatchObject({ response: { code: 'CANNOT_BLOCK_SELF' } });
+      expect(session.revokeAllSessions).not.toHaveBeenCalled();
+    });
+
+    it('403 OWNER_BLOCK_FORBIDDEN when a non-Owner blocks an Owner', async () => {
+      userModel.findById.mockReturnValue(
+        memberDoc({ _id: TARGET, status: 'active', roleId: OWNER_ROLE_ID }),
+      );
+      await expect(
+        service.setMemberStatus(ACTOR, 'Admin', TARGET, { status: 'blocked' }),
+      ).rejects.toMatchObject({ response: { code: 'OWNER_BLOCK_FORBIDDEN' } });
+    });
+
+    it('409 LAST_OWNER_CANNOT_BE_BLOCKED when no other active Owner exists', async () => {
+      userModel.findById.mockReturnValue(
+        memberDoc({ _id: TARGET, status: 'active', roleId: OWNER_ROLE_ID }),
+      );
+      userModel.countDocuments.mockReturnValue(execable(0));
+      await expect(
+        service.setMemberStatus(ACTOR, 'Owner', TARGET, { status: 'blocked' }),
+      ).rejects.toMatchObject({ response: { code: 'LAST_OWNER_CANNOT_BE_BLOCKED' } });
+    });
+
+    it('blocks: persists status, revokes all sessions, audits member.block', async () => {
+      userModel.findById.mockReturnValue(
+        memberDoc({ _id: TARGET, status: 'active', roleId: 'member-role' }),
+      );
+      await service.setMemberStatus(ACTOR, 'Admin', TARGET, { status: 'blocked' });
+
+      expect(userModel.updateOne).toHaveBeenCalledWith(
+        { _id: TARGET },
+        { $set: { status: 'blocked' } },
+      );
+      expect(session.revokeAllSessions).toHaveBeenCalledWith(TARGET, 'blocked');
+      expect(audit.record).toHaveBeenCalledWith(
+        expect.objectContaining({ action: 'member.block', targetType: 'member', targetId: TARGET }),
+      );
+    });
+
+    it('an Owner may block another Owner while one active Owner remains', async () => {
+      userModel.findById.mockReturnValue(
+        memberDoc({ _id: TARGET, status: 'active', roleId: OWNER_ROLE_ID }),
+      );
+      await service.setMemberStatus(ACTOR, 'Owner', TARGET, { status: 'blocked' });
+      expect(session.revokeAllSessions).toHaveBeenCalledWith(TARGET, 'blocked');
+    });
+
+    it('unblocks without revoking sessions and audits member.unblock', async () => {
+      userModel.findById.mockReturnValue(memberDoc({ _id: TARGET, status: 'blocked' }));
+      await service.setMemberStatus(ACTOR, 'Admin', TARGET, { status: 'active' });
+
+      expect(session.revokeAllSessions).not.toHaveBeenCalled();
+      expect(audit.record).toHaveBeenCalledWith(
+        expect.objectContaining({ action: 'member.unblock' }),
+      );
+    });
+
+    it('is idempotent: same status → no write, no revoke, no audit', async () => {
+      userModel.findById.mockReturnValue(memberDoc({ _id: TARGET, status: 'blocked' }));
+      await service.setMemberStatus(ACTOR, 'Admin', TARGET, { status: 'blocked' });
+
+      expect(userModel.updateOne).not.toHaveBeenCalled();
+      expect(session.revokeAllSessions).not.toHaveBeenCalled();
+      expect(audit.record).not.toHaveBeenCalled();
     });
   });
 });

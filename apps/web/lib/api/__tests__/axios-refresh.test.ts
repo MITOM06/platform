@@ -385,4 +385,118 @@ describe('axios 401-refresh interceptor', () => {
     expect((r1 as AxiosResponse).data).toEqual({ retried: true })
     expect((r2 as AxiosResponse).data).toEqual({ retried: true })
   })
+
+  // ── Forced logout (instant block / revoked session) ──────────────────────
+
+  describe('forced logout', () => {
+    const realLocation = window.location
+    let nav: { href: string }
+
+    beforeEach(() => {
+      nav = { href: '' }
+      Object.defineProperty(window, 'location', { configurable: true, value: nav })
+    })
+    afterEach(() => {
+      Object.defineProperty(window, 'location', { configurable: true, value: realLocation })
+    })
+
+    function httpError(status: number, data: unknown, url = '/api/conversations') {
+      const config = { url, headers: new axios.AxiosHeaders(), method: 'get' } as InternalAxiosRequestConfig
+      return new axios.AxiosError('failed', 'ERR_BAD_REQUEST', config, null, {
+        status,
+        statusText: '',
+        headers: {},
+        config,
+        data,
+      } as AxiosResponse)
+    }
+
+    it('refreshes on a chat-service 401 SESSION_REVOKED and logs out once the refresh is rejected', async () => {
+      const refreshRejected = httpError(401, { error: 'refresh_rejected', code: 'SESSION_REVOKED' }, '/api/auth/refresh')
+      let refreshCalls = 0
+      const adapter: SimpleAdapter = (config) => {
+        if (config.url?.includes('/api/auth/refresh')) {
+          refreshCalls++
+          return Promise.reject(refreshRejected)
+        }
+        return Promise.resolve({ data: {}, status: 200, statusText: 'OK', headers: {}, config } as AxiosResponse)
+      }
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      axios.defaults.adapter = adapter as any
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      chatApi.defaults.adapter = adapter as any
+
+      const handler = getInterceptorHandler()
+      const err = httpError(401, { code: 'SESSION_REVOKED' }) as AxiosError
+      await expect(handler(err)).rejects.toBe(refreshRejected)
+
+      expect(refreshCalls).toBe(1)
+      expect(getStoreState().clearAuth).toHaveBeenCalledTimes(1)
+      // Plain revocation → plain login screen, no reason, no raw server text.
+      expect(nav.href).toBe('/login')
+    })
+
+    it('sends a blocked user to /login?reason=ACCOUNT_BLOCKED when the refresh says ACCOUNT_BLOCKED', async () => {
+      // The Next.js refresh proxy maps the upstream 403 to 401 and forwards the code.
+      const blocked = httpError(401, { error: 'refresh_rejected', code: 'ACCOUNT_BLOCKED' }, '/api/auth/refresh')
+      const adapter = buildSequentialAdapter([
+        { type: 'reject', error: blocked },
+        { type: 'resolve', data: {} }, // clear-cookie
+      ])
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      axios.defaults.adapter = adapter as any
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      chatApi.defaults.adapter = adapter as any
+
+      const handler = getInterceptorHandler()
+      await expect(handler(make401('/api/conversations'))).rejects.toBe(blocked)
+
+      expect(getStoreState().clearAuth).toHaveBeenCalledTimes(1)
+      expect(nav.href).toBe('/login?reason=ACCOUNT_BLOCKED')
+    })
+
+    it('logs out immediately (no refresh) when any request answers 403 ACCOUNT_BLOCKED', async () => {
+      const urls: string[] = []
+      const adapter: SimpleAdapter = (config) => {
+        urls.push(config.url ?? '')
+        return Promise.resolve({ data: {}, status: 200, statusText: 'OK', headers: {}, config } as AxiosResponse)
+      }
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      axios.defaults.adapter = adapter as any
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      chatApi.defaults.adapter = adapter as any
+
+      const handler = getInterceptorHandler()
+      await expect(handler(httpError(403, { code: 'ACCOUNT_BLOCKED' }))).rejects.toThrow()
+
+      expect(urls).toEqual(['/api/auth/clear-cookie'])
+      expect(getStoreState().clearAuth).toHaveBeenCalledTimes(1)
+      expect(nav.href).toBe('/login?reason=ACCOUNT_BLOCKED')
+    })
+
+    it('treats 503 SESSION_CHECK_UNAVAILABLE as transient: no refresh, no logout', async () => {
+      let calls = 0
+      const adapter: SimpleAdapter = () => {
+        calls++
+        return Promise.reject(new Error('unexpected call'))
+      }
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      axios.defaults.adapter = adapter as any
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      chatApi.defaults.adapter = adapter as any
+
+      const handler = getInterceptorHandler()
+      await expect(handler(httpError(503, { code: 'SESSION_CHECK_UNAVAILABLE' }))).rejects.toThrow()
+      expect(calls).toBe(0)
+      expect(getStoreState().clearAuth).not.toHaveBeenCalled()
+      expect(nav.href).toBe('')
+    })
+
+    it('ignores a 403 that is not ACCOUNT_BLOCKED (plain permission error)', async () => {
+      const handler = getInterceptorHandler()
+      await expect(handler(httpError(403, { code: 'INSUFFICIENT_PERMISSION' }))).rejects.toThrow()
+      expect(getStoreState().clearAuth).not.toHaveBeenCalled()
+      expect(nav.href).toBe('')
+    })
+  })
 })

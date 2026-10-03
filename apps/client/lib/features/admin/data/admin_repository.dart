@@ -4,6 +4,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../../../core/api/dio_client.dart';
 import '../../auth/domain/auth_provider.dart';
 import 'models/admin_models.dart';
+import 'models/invitation_models.dart';
 
 /// Talks to the auth-service (:3001) admin + capability endpoints over
 /// [authDio]. Identity comes from the JWT; the backend authorizes each route by
@@ -60,6 +61,51 @@ class AdminRepository {
 
   Future<void> updateMember(String id, Map<String, dynamic> body) async {
     await _dio.patch('/admin/members/$id', data: body);
+  }
+
+  /// Block (`blocked`) or unblock (`active`) a member. Blocking revokes all of
+  /// the member's sessions server-side.
+  Future<Member> setMemberStatus(String id, String status) async {
+    final res =
+        await _dio.patch('/admin/members/$id/status', data: {'status': status});
+    return Member.fromJson(res.data as Map<String, dynamic>);
+  }
+
+  // ── invitations ─────────────────────────────────────────────────────────
+  /// No [status] → the actionable ones (pending + expired).
+  Future<List<Invitation>> listInvitations({String? status}) async {
+    final res = await _dio.get(
+      '/admin/invitations',
+      queryParameters: {if (status != null) 'status': status},
+    );
+    return (res.data as List<dynamic>)
+        .map((e) => Invitation.fromJson(e as Map<String, dynamic>))
+        .toList();
+  }
+
+  /// [locale] is the invitation email's language (the admin's app locale).
+  Future<InvitationMutationResult> createInvitation({
+    required String email,
+    String? roleId,
+    List<String> departmentIds = const [],
+    String? locale,
+  }) async {
+    final res = await _dio.post('/admin/invitations', data: {
+      'email': email,
+      if (roleId != null) 'roleId': roleId,
+      if (departmentIds.isNotEmpty) 'departmentIds': departmentIds,
+      if (locale != null) 'locale': locale,
+    });
+    return InvitationMutationResult.fromJson(res.data as Map<String, dynamic>);
+  }
+
+  Future<InvitationMutationResult> resendInvitation(String id) async {
+    final res = await _dio.post('/admin/invitations/$id/resend');
+    return InvitationMutationResult.fromJson(res.data as Map<String, dynamic>);
+  }
+
+  Future<void> revokeInvitation(String id) async {
+    await _dio.delete('/admin/invitations/$id');
   }
 
   // ── roles ───────────────────────────────────────────────────────────────
