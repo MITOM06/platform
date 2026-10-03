@@ -18,6 +18,7 @@ export class KbProcessorService {
   private readonly visionEnabled: boolean;
   private readonly visionPdfEnabled: boolean;
   private readonly visionMinTextChars: number;
+  private readonly chatBaseUrl: string;
 
   constructor(
     @InjectModel(KbDocument.name) private readonly kbDocumentModel: Model<KbDocumentDocument>,
@@ -35,6 +36,9 @@ export class KbProcessorService {
     this.visionPdfEnabled = this.configService.get<boolean>('config.kb.visionPdfEnabled') ?? true;
     this.visionMinTextChars =
       this.configService.get<number>('config.kb.visionMinTextChars') ?? 64;
+    this.chatBaseUrl = (
+      this.configService.get<string>('config.chat.internalUrl') ?? 'http://localhost:8080'
+    ).replace(/\/+$/, '');
   }
 
   async processDocument(payload: KbProcessPayload): Promise<void> {
@@ -64,7 +68,7 @@ export class KbProcessorService {
 
       // Fetch file content (SSRF guard runs first — see validateFileUrl).
       this.validateFileUrl(fileUrl);
-      const response = await fetch(fileUrl);
+      const response = await fetch(this.toFetchUrl(fileUrl));
       if (!response.ok) throw new Error(`HTTP ${response.status} fetching ${fileUrl}`);
       const arrayBuffer = await response.arrayBuffer();
       const buffer = Buffer.from(arrayBuffer);
@@ -127,6 +131,15 @@ export class KbProcessorService {
         })
         .catch(() => {});
     }
+  }
+
+  /**
+   * Clients (web + mobile) upload with the RELATIVE `/api/uploads/{id}` that
+   * chat-service returned; Node's fetch cannot resolve that, so it is fetched
+   * from chat-service's internal base (same as chat vision). Absolute URLs pass.
+   */
+  private toFetchUrl(fileUrl: string): string {
+    return fileUrl.startsWith('/') ? `${this.chatBaseUrl}${fileUrl}` : fileUrl;
   }
 
   /**

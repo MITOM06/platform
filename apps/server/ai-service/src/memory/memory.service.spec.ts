@@ -108,3 +108,97 @@ describe('MemoryService', () => {
     expect(count).toBe(3);
   });
 });
+
+describe('MemoryService.addFacts — batched embedding', () => {
+  const makeService = (embed: jest.Mock) => {
+    const model = { findOneAndUpdate: jest.fn().mockResolvedValue({}) };
+    const vector = {
+      nearest: jest.fn().mockResolvedValue(null),
+      upsertFact: jest.fn().mockResolvedValue(undefined),
+      listFacts: jest.fn().mockResolvedValue([]),
+    };
+    const service = new MemoryService(model as any, vector as any, { embed } as any, { get: jest.fn() } as any);
+    return { service, vector };
+  };
+
+  it('embeds all facts in ONE call and stores each (per-fact calls hit Voyage 3 RPM)', async () => {
+    const embed = jest.fn().mockResolvedValue([[1], [2], [3]]);
+    const { service, vector } = makeService(embed);
+
+    const stored = await service.addFacts('c', 'u', ['Tên là Phong', 'Thích phở', 'Học tiếng Nhật'], 's', 3);
+
+    expect(embed).toHaveBeenCalledTimes(1);
+    expect(embed).toHaveBeenCalledWith(['Tên là Phong', 'Thích phở', 'Học tiếng Nhật']);
+    expect(vector.upsertFact).toHaveBeenCalledTimes(3);
+    expect(vector.upsertFact.mock.calls[1][2]).toMatchObject({ text: 'Thích phở', vector: [2] });
+    expect(stored).toBe(3);
+  });
+
+  it('stores nothing (no throw) when the embedding call fails', async () => {
+    const embed = jest.fn().mockRejectedValue(new Error('Voyage embeddings 500'));
+    const { service, vector } = makeService(embed);
+
+    await expect(service.addFacts('c', 'u', ['a', 'b'], 's', 3)).resolves.toBe(0);
+    expect(vector.upsertFact).not.toHaveBeenCalled();
+  });
+
+  it('skips blank facts before embedding', async () => {
+    const embed = jest.fn().mockResolvedValue([[1]]);
+    const { service } = makeService(embed);
+
+    await service.addFacts('c', 'u', ['  ', 'Thích phở', ''], 's', 3);
+    expect(embed).toHaveBeenCalledWith(['Thích phở']);
+  });
+});
+
+describe('MemoryService.addFacts — 429 handling', () => {
+  const make = (embed: jest.Mock) => {
+    const vector = {
+      nearest: jest.fn().mockResolvedValue(null),
+      upsertFact: jest.fn().mockResolvedValue(undefined),
+      listFacts: jest.fn().mockResolvedValue([]),
+    };
+    const service = new MemoryService(
+      { findOneAndUpdate: jest.fn().mockResolvedValue({}) } as any,
+      vector as any,
+      { embed } as any,
+      { get: jest.fn() } as any,
+    );
+    service.retryDelaysMs = [0, 0];
+    return { service, vector };
+  };
+  const rateLimited = () => new Error('Voyage embeddings 429: reduced rate limits of 3 RPM');
+
+  it('background extraction waits out a 429 and still stores the facts', async () => {
+    const embed = jest.fn().mockRejectedValueOnce(rateLimited()).mockResolvedValueOnce([[1], [2]]);
+    const { service, vector } = make(embed);
+
+    await expect(service.addFacts('c', 'u', ['Nuôi chó tên Bơ', 'Chơi cầu lông'], 's', 3)).resolves.toBe(2);
+    expect(embed).toHaveBeenCalledTimes(2);
+    expect(vector.upsertFact).toHaveBeenCalledTimes(2);
+  });
+
+  it('gives up after the retry budget', async () => {
+    const embed = jest.fn().mockRejectedValue(rateLimited());
+    const { service } = make(embed);
+
+    await expect(service.addFacts('c', 'u', ['a'], 's', 3)).resolves.toBe(0);
+    expect(embed).toHaveBeenCalledTimes(3);
+  });
+
+  it('does not retry non-429 errors', async () => {
+    const embed = jest.fn().mockRejectedValue(new Error('Voyage embeddings 500'));
+    const { service } = make(embed);
+
+    await service.addFacts('c', 'u', ['a'], 's', 3);
+    expect(embed).toHaveBeenCalledTimes(1);
+  });
+
+  it('remember_fact (user-requested) fails fast instead of stalling the live reply', async () => {
+    const embed = jest.fn().mockRejectedValue(rateLimited());
+    const { service } = make(embed);
+
+    await expect(service.addFacts('c', 'u', ['a'], 's', 3, 'user-requested')).resolves.toBe(0);
+    expect(embed).toHaveBeenCalledTimes(1);
+  });
+});

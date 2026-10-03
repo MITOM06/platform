@@ -12,6 +12,7 @@ import com.platform.chatservice.repository.ConversationRepository;
 import com.platform.chatservice.repository.ExternalBotRepository;
 import com.platform.chatservice.repository.FriendshipRepository;
 import com.platform.chatservice.repository.MessageRepository;
+import com.platform.chatservice.security.UserPrincipal;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -76,10 +77,12 @@ public class ConversationService {
     return toResponse(saved, currentUserId, 0L);
   }
 
-  public ConversationResponse createGroup(String creatorId, CreateGroupRequest request) {
+  public ConversationResponse createGroup(UserPrincipal creator, CreateGroupRequest request) {
     if (request.name() == null || request.name().trim().isEmpty()) {
       throw new IllegalArgumentException("Group name cannot be empty");
     }
+    requireDepartmentAccess(creator, request.departmentId());
+    final String creatorId = creator.getUserId();
     // Creator is always a participant + admin; dedupe ids preserving order.
     LinkedHashSet<String> members = new LinkedHashSet<>();
     members.add(creatorId);
@@ -105,6 +108,19 @@ public class ConversationService {
                 .pendingMembers(pendingMembers)
                 .build());
     return toResponse(saved, creatorId, 0L);
+  }
+
+  /**
+   * A group's departmentId scopes its AI bot to that department's knowledge base (ai-service
+   * searches every document with the same departmentId). Taking it from the request unchecked let
+   * any member open a group "in" another department and read that department's documents through
+   * the assistant — so only a member of the department, or someone who manages departments, may
+   * attach one.
+   */
+  static void requireDepartmentAccess(UserPrincipal creator, String departmentId) {
+    if (departmentId == null || departmentId.isBlank()) return;
+    if (creator.inDepartment(departmentId) || creator.hasPermission("MANAGE_DEPARTMENTS")) return;
+    throw new ForbiddenException("Not a member of this department");
   }
 
   public ConversationResponse updateGroup(

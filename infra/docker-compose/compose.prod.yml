@@ -190,6 +190,10 @@ services:
       # Only needed when QDRANT_URL points at a managed cluster instead of the
       # qdrant container in this stack.
       QDRANT_API_KEY: ${QDRANT_API_KEY:-}
+      # Base for RELATIVE /api/uploads/{id} refs (KB files, chat images). The
+      # code default is localhost:8080 — inside this container that is ai-service
+      # itself, so every KB upload and chat image fetch failed.
+      CHAT_INTERNAL_URL: ${CHAT_INTERNAL_URL:-http://chat-service:8080}
       VOYAGE_API_KEY: ${VOYAGE_API_KEY:-}
       KB_EMBEDDING_MODEL: ${KB_EMBEDDING_MODEL:-voyage-4-lite}
       RABBITMQ_URL: ${RABBITMQ_URL:-amqp://${RABBITMQ_USERNAME}:${RABBITMQ_PASSWORD}@rabbitmq:5672}

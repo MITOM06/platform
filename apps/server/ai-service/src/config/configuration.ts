@@ -148,6 +148,9 @@ export default registerAs('config', () => ({
   ai: {
     // When true, enable adaptive thinking on the primary model.
     enableThinking: process.env.AI_ENABLE_THINKING === 'true',
+    // IANA zone the assistant tells the time in, so "8pm tonight" becomes a real
+    // datetime for create_reminder. One deployment = one company, so one zone.
+    timeZone: process.env.AI_TIMEZONE ?? 'Asia/Ho_Chi_Minh',
   },
   cache: {
     // Anthropic prompt caching of the stable persona/tools prefix. On by default
@@ -196,10 +199,10 @@ export default registerAs('config', () => ({
     internalApiKey: process.env.INTERNAL_API_KEY,
   },
   chat: {
-    // chat-service base used to resolve RELATIVE `/api/uploads/{id}` media refs
-    // carried in AI history image turns (TASK-10 chat vision). KB receives
-    // absolute fileUrls already; chat history URLs are relative, so ai-service
-    // fetches them against this host (authless GridFS read, same as KB does).
+    // chat-service base used to resolve RELATIVE `/api/uploads/{id}` refs — both
+    // AI history image turns (TASK-10 chat vision) and KB fileUrls, which web and
+    // mobile send relative. Authless GridFS read. In Docker this MUST be set
+    // (compose: http://chat-service:8080) — localhost is the ai-service container.
     internalUrl: process.env.CHAT_INTERNAL_URL ?? 'http://localhost:8080',
     // ── TASK-10 Vision / image understanding (chat half) ────────────────────
     // Master switch for chat image attachments → image content blocks. OFF ⇒

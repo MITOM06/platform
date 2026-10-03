@@ -170,6 +170,10 @@ services:
       REDIS_AI_RESPONSE_PREFIX: ai:response
       CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:3000,http://localhost:4000}
       QDRANT_URL: http://qdrant:6333
+      # Base for RELATIVE /api/uploads/{id} refs (KB files, chat images). The
+      # code default is localhost:8080 — inside this container that is ai-service
+      # itself, so every KB upload and chat image fetch failed.
+      CHAT_INTERNAL_URL: ${CHAT_INTERNAL_URL:-http://chat-service:8080}
       VOYAGE_API_KEY: ${VOYAGE_API_KEY:-}
       KB_EMBEDDING_MODEL: ${KB_EMBEDDING_MODEL:-voyage-4-lite}
       AI_ENABLE_THINKING: ${AI_ENABLE_THINKING:-false}

@@ -1,8 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import * as mammoth from 'mammoth';
-// pdf-parse is a CJS module without proper ESM default export typings
-// eslint-disable-next-line @typescript-eslint/no-require-imports
-const pdfParse = require('pdf-parse') as (buf: Buffer) => Promise<{ text: string }>;
+import { PDFParse } from 'pdf-parse';
+
+/** pdf-parse v2 separates pages with `-- N of M --`; that is not document text. */
+const PAGE_MARKER = /^\s*-- \d+ of \d+ --\s*$/gm;
 
 export class UnsupportedFileTypeException extends Error {
   constructor(mimeType: string) {
@@ -37,8 +38,15 @@ export class DocumentExtractorService {
     const mime = mimeType.toLowerCase();
 
     if (mime === 'application/pdf') {
-      const result = await pdfParse(buffer);
-      return result.text;
+      // pdf-parse v2 is class-based. The v1 call style (`pdfParse(buffer)`) threw
+      // "pdfParse is not a function", so every PDF upload ended in status=error.
+      const parser = new PDFParse({ data: buffer });
+      try {
+        const result = await parser.getText();
+        return result.text.replace(PAGE_MARKER, '').trim();
+      } finally {
+        await parser.destroy();
+      }
     }
 
     if (

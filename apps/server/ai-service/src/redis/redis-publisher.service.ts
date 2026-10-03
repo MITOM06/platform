@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto';
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import Redis from 'ioredis';
 import { ConfigService } from '@nestjs/config';
@@ -19,7 +20,14 @@ export class RedisPublisherService {
 
   async publish(conversationId: string, payload: object): Promise<void> {
     const channel = `${this.responsePrefix}:${conversationId}`;
-    const enriched = { ...payload, conversationId };
+    const enriched: Record<string, unknown> = { ...payload, conversationId };
+    // Every chat-service instance receives the same DONE event and claims it
+    // once before persisting. The claim used to key on a hash of the text, so a
+    // reply identical to one in the last 5 min ("Đã nhớ!", "OK") was never
+    // saved. A per-reply id keeps instances deduped but replies distinct.
+    if (enriched['type'] === 'AI_STREAM_DONE' && !enriched['replyId']) {
+      enriched['replyId'] = randomUUID();
+    }
     await this.client.publish(channel, JSON.stringify(this.injectTrace(enriched)));
     this.logger.debug(`Published to ${channel}`);
   }
