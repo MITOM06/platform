@@ -73,6 +73,54 @@ half-configured:
    configuration only if the feature *added* a variable — in which case it is
    already in the example file, because the parity gate would have failed.
 
+## How production picks a merge up
+
+The mini follows `main` by itself. A launchd agent runs
+`scripts/mini/redeploy.sh` every few minutes; it fast-forwards the checkout,
+pulls the images CI published, restarts only when something actually changed,
+and then *checks that the result works*. If the check fails it puts the previous
+build back and exits non-zero.
+
+```bash
+./scripts/mini/install-autoupdate.sh            # enable, checks every 5 min
+./scripts/mini/install-autoupdate.sh --status   # last check, last deploy, log path
+./scripts/mini/install-autoupdate.sh --uninstall
+./scripts/mini/redeploy.sh --force              # deploy now, ignore the no-change check
+```
+
+Pull, not push: CI cannot reach the mini — it is behind Tailscale with no public
+port — and giving a GitHub runner an SSH key into a home network is a far bigger
+door than this problem warrants. Nothing is granted the right to tell the mini
+what to run; it asks.
+
+Three things about this machine are load-bearing, all learned the hard way:
+
+- **A merged commit on disk is not a running commit.** The mini had the
+  social-login fix checked out for a day while still serving the build from a
+  week earlier — every health check green. `redeploy.sh` compares image ids and
+  the commit, not the checkout.
+- **`docker compose pull` ignores `DOCKER_CONFIG`.** Under launchd there is no
+  user session, so Docker Desktop's keychain credential helper fails outright.
+  The images are public, so `redeploy.sh` pulls them one at a time with an empty
+  `credsStore` and then brings the stack up with `--no-pull`.
+- **A bind-mounted single file goes stale.** `Caddyfile.mini` is mounted into
+  the Caddy container; a checkout replaces the file with a new inode and the
+  running container keeps the old one, so it sees no config at all and serves
+  what it parsed at startup. `restart` does not fix it — the container has to be
+  recreated.
+
+### Watching it from outside
+
+`scripts/mini/smoke.sh <base-url>` asserts what a client actually receives,
+including the one request that broke in production while everything else looked
+healthy: the social-login init redirect must keep its `/api/auth` mount prefix.
+`redeploy.sh` runs it after every deploy, and
+`.github/workflows/prod-smoke.yml` runs it on a schedule so a deployment that
+drifts from `main` turns the repo red instead of waiting for a user to notice.
+That workflow needs no secrets — it only calls public endpoints — but it does
+need the `PON_API_BASE` repository variable (Settings → Secrets and variables →
+Actions → Variables); without it the run warns and passes.
+
 ## Still shared between environments — decide, then close
 
 These are not code problems; they need a console and an owner's decision.

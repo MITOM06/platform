@@ -38,6 +38,17 @@ jobs:
       # reads is documented. See docs/environments.md.
       - run: bash scripts/ci/check-env-parity.sh
 
+  # ── Deployment Scripts ────────────────────────────────────────────────────
+  # The production smoke check is the only test that asserts what a browser
+  # actually gets back, so it has to be tested itself — a check that cannot fail
+  # is worse than none, because it reads as reassurance.
+  deploy-scripts:
+    name: Deployment Scripts (smoke check)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: bash scripts/mini/smoke.test.sh
+
   # ── NestJS Auth Service ────────────────────────────────────────────────────
   auth-service:
     name: Auth Service (NestJS)
