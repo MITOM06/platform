@@ -4,6 +4,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { ConfigService } from '@nestjs/config';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
+import { SocialLoginService } from './social-login.service';
 import { OidcService } from './oidc/oidc.service';
 import { SsoMappingService } from './oidc/sso-mapping.service';
 import type { Response } from 'express';
@@ -18,7 +19,8 @@ describe('AuthController — social login platform resolution', () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [AuthController],
       providers: [
-        { provide: AuthService, useValue: { handleSocialLogin } },
+        { provide: AuthService, useValue: {} },
+        { provide: SocialLoginService, useValue: { handleSocialLogin } },
         { provide: ConfigService, useValue: { get: jest.fn() } },
         { provide: OidcService, useValue: {} },
         { provide: SsoMappingService, useValue: {} },
@@ -83,7 +85,11 @@ describe('AuthController — social init redirect honours the public mount prefi
     const module: TestingModule = await Test.createTestingModule({
       controllers: [AuthController],
       providers: [
-        { provide: AuthService, useValue: { handleSocialLogin: jest.fn() } },
+        { provide: AuthService, useValue: {} },
+        {
+          provide: SocialLoginService,
+          useValue: { handleSocialLogin: jest.fn() },
+        },
         { provide: ConfigService, useValue: { get: jest.fn() } },
         { provide: OidcService, useValue: {} },
         { provide: SsoMappingService, useValue: {} },
