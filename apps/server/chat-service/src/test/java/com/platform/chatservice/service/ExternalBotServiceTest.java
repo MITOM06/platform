@@ -5,8 +5,10 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
+import com.platform.chatservice.dto.MessageResponse;
 import com.platform.chatservice.model.ExternalBot;
 import com.platform.chatservice.repository.ExternalBotRepository;
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
@@ -24,10 +26,15 @@ class ExternalBotServiceTest {
   @Mock private ExternalBotRepository externalBotRepository;
   @Mock private BotFactoryClient botFactoryClient;
   @Mock private AiMessageService aiMessageService;
+  @Mock private MessageNotificationService notificationService;
 
   private ExternalBotService service() {
     return new ExternalBotService(
-        conversationQueryService, externalBotRepository, botFactoryClient, aiMessageService);
+        conversationQueryService,
+        externalBotRepository,
+        botFactoryClient,
+        aiMessageService,
+        notificationService);
   }
 
   private ExternalBot bot() {
@@ -69,10 +76,18 @@ class ExternalBotServiceTest {
   }
 
   @Test
-  void reply_persistsReturnedText() {
+  void reply_persistsReturnedText_andNotifiesTheOwner() {
+    MessageResponse saved =
+        new MessageResponse(
+            "msg-1", "conv-1", "extbot:bf-1", "hi back", "ai", List.of(), Instant.now());
     when(botFactoryClient.chat("bf-1", "hello", "pon:conv-1")).thenReturn("hi back");
+    when(aiMessageService.saveBotMessage("conv-1", "extbot:bf-1", "hi back")).thenReturn(saved);
+
     service().reply(bot(), "conv-1", "hello");
+
     verify(aiMessageService).saveBotMessage("conv-1", "extbot:bf-1", "hi back");
+    // Bot Factory can take a while; the owner has often left the chat by the time it answers.
+    verify(notificationService).notifyNewMessage("extbot:bf-1", saved);
   }
 
   @Test
@@ -80,5 +95,6 @@ class ExternalBotServiceTest {
     when(botFactoryClient.chat(any(), any(), any())).thenReturn(null);
     service().reply(bot(), "conv-1", "hello");
     verify(aiMessageService, never()).saveBotMessage(eq("conv-1"), any(), any());
+    verify(notificationService, never()).notifyNewMessage(any(), any());
   }
 }
