@@ -306,14 +306,24 @@ export class KbProcessorService {
     const knownSet = new Set(known.map((d) => d.documentId));
 
     const orphans = chunkDocIds.filter((id) => !knownSet.has(id));
+    // Count deletions that succeeded, not ones we tried: every failure here is
+    // caught and logged, so returning orphans.length would report a clean purge
+    // of N documents in the same sweep where all N failed.
+    let deleted = 0;
     for (const documentId of orphans) {
-      await this.vectorStore.deleteDocument(this.collection, documentId).catch((err) => {
+      try {
+        await this.vectorStore.deleteDocument(this.collection, documentId);
+        deleted++;
+      } catch (err) {
         this.logger.warn(`Failed to purge orphan chunks for ${documentId}: ${(err as Error).message}`);
-      });
+      }
     }
-    if (orphans.length > 0) {
-      this.logger.log(`Purged ${orphans.length} orphaned KB document(s) from vector store`);
+    if (deleted > 0) {
+      this.logger.log(`Purged ${deleted} orphaned KB document(s) from vector store`);
     }
-    return orphans.length;
+    if (deleted < orphans.length) {
+      this.logger.warn(`${orphans.length - deleted} orphaned KB document(s) could not be purged`);
+    }
+    return deleted;
   }
 }
