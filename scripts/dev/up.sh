@@ -214,6 +214,9 @@ if [ "$DO_SEED" = 1 ]; then
   # clean-slate delete silently never runs, so re-seeding duplicates everything.
   docker exec -i chat-mongo mongosh platform --quiet \
     --eval "$(cat "$ROOT/scripts/dev/seed-chat.js")"
+  # After seed-chat: its clean slate deletes every conversation dev is in,
+  # including the company's — this re-creates them.
+  node "$ROOT/scripts/dev/seed-company/index.js"
   ok "seeded"
 fi
 
