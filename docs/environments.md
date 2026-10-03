@@ -64,10 +64,10 @@ half-configured:
 
 ## Promoting a change
 
-1. Build and test on the local stack (`scripts/dev/up.sh` on `dev`).
-2. Replay your commits onto `main` without the env commits — see
-   `.claude/rules/dev-local-only.md`:
-   `git rebase --onto origin/main dev feat/x`
+1. Cut `feat/x` from `main`, merge it into `dev` and debug/test it on the local
+   stack (`scripts/dev/up.sh --build`) — see `.claude/rules/dev-local-only.md`.
+2. Once it passes on `dev`, open the PR from `feat/x` (never from `dev`) into
+   `main`; `git diff origin/main...feat/x --stat` must list only its files.
 3. `bash scripts/ci/check-env-leaks.sh && bash scripts/ci/check-dev-only.sh && bash scripts/ci/check-env-parity.sh`
 4. Merge. Production picks the change up from its own env file; you change
    configuration only if the feature *added* a variable — in which case it is
