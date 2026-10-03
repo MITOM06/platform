@@ -11,10 +11,16 @@ const bcrypt = require(path.join(ROOT, 'node_modules/bcrypt'));
 const { MongoClient } = require(path.join(ROOT, 'node_modules/mongodb'));
 
 const PASSWORD = 'Devpass123!';
+// `role` is the preset role name assigned to each dev account so the JWT carries
+// the right `perms` claim (auth-service ClaimsService resolves roleId -> perms).
+// Without it users get `perms: []` and every RBAC-gated endpoint (connectors,
+// custom MCP, sensitive skills) 403s. dev = Owner (can demo everything incl.
+// admin-only custom MCP); alice/bob = Member (can connect personal connectors
+// but not add custom MCP nor run sensitive skills — shows the governance split).
 const USERS = [
-  { email: 'dev@pon.local', displayName: 'Phong Dev' },
-  { email: 'alice@pon.local', displayName: 'Alice Test' },
-  { email: 'bob@pon.local', displayName: 'Bob Test' },
+  { email: 'dev@pon.local', displayName: 'Phong Dev', role: 'Owner' },
+  { email: 'alice@pon.local', displayName: 'Alice Test', role: 'Member' },
+  { email: 'bob@pon.local', displayName: 'Bob Test', role: 'Member' },
 ];
 
 (async () => {
@@ -25,9 +31,26 @@ const USERS = [
   const client = await MongoClient.connect(
     'mongodb://localhost:27018/platform?directConnection=true',
   );
-  const users = client.db('platform').collection('users');
+  const db = client.db('platform');
+  const users = db.collection('users');
+  const roles = db.collection('roles');
+
+  // Preset roles are seeded by auth-service's BootstrapService on boot; up.sh
+  // waits for the services to be healthy before running this seed, so they exist
+  // by now. Map name -> _id once and reuse.
+  const roleIdByName = {};
+  for (const r of await roles.find({}, { projection: { name: 1 } }).toArray()) {
+    roleIdByName[r.name] = r._id;
+  }
 
   for (const u of USERS) {
+    const roleId = roleIdByName[u.role];
+    if (!roleId) {
+      console.warn(
+        `!! role "${u.role}" not found — ${u.email} will have no perms. ` +
+          `Is auth-service up (it seeds preset roles on boot)?`,
+      );
+    }
     await users.updateOne(
       { email: u.email },
       {
@@ -41,13 +64,14 @@ const USERS = [
           fcmTokens: [],
           socialLinks: {},
           updatedAt: new Date(),
+          ...(roleId ? { roleId } : {}),
         },
         $setOnInsert: { createdAt: new Date() },
       },
       { upsert: true },
     );
     const doc = await users.findOne({ email: u.email }, { projection: { _id: 1 } });
-    console.log(`${doc._id}  ${u.email}  (${u.displayName})`);
+    console.log(`${doc._id}  ${u.email}  (${u.displayName})  role=${u.role}`);
   }
 
   console.log(`\npassword for all three: ${PASSWORD}`);
