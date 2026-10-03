@@ -297,4 +297,4 @@ async function buildFiles() {
   };
 }
 
-module.exports = { buildFiles, avatarPng };
+module.exports = { buildFiles, avatarPng, makePdf };
