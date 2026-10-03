@@ -218,9 +218,16 @@ async function a2(ctx) {
 
   // Users' _id is an ObjectId; querying it with the string id from the JWT/message never matches.
   const idHint = (file) => `Nếu trả lời có ID thô (24 ký tự hex) hoặc "User not found": ${file} tra users bằng _id dạng string — phải đổi sang ObjectId (new Types.ObjectId(id)). Vi phạm rule no-raw-system-data-in-ui.`;
-  await toolCase('A2.7', 'search_messages', ctx.engGroup, '@AI tìm trong nhóm này tin nhắn nào nhắc tới "PR #212" và ai gửi?',
-    (t, r) => has(t, 'Pham Duc Anh') && !/[0-9a-f]{24}/.test(t + r), 'trả lời nêu TÊN "Phạm Đức Anh", không có ID thô', idHint('search-messages.tool.ts (dòng ~47)'));
-  await toolCase('A2.8', 'summarize_conversation', ctx.engGroup, '@AI dùng công cụ tóm tắt cuộc trò chuyện của nhóm này trong 3 gạch đầu dòng');
+  // Plant a message from alice in the test group (never the seeded groups: AI
+  // answers left there by earlier runs end up in history and the model copies them).
+  const pr = `PR #${L.RUN}`;
+  await L.db.collection('messages').insertOne({
+    conversationId: group, senderId: ctx.alice.id, type: 'text', content: `${pr} (refactor KB processor) cần review gấp trước giờ freeze`,
+    readBy: [ctx.alice.id], reactions: [], recalled: false, deletedFor: [], mentions: [], createdAt: new Date(),
+  });
+  await toolCase('A2.7', 'search_messages', group, `@AI tìm trong nhóm này tin nhắn nào nhắc tới "${pr}" và ai gửi?`,
+    (t, r) => has(t, 'Alice Test') && !/[0-9a-f]{24}/.test(t + r), 'trả lời nêu TÊN "Alice Test", không có ID thô', idHint('search-messages.tool.ts (dòng ~47)'));
+  await toolCase('A2.8', 'summarize_conversation', group, '@AI dùng công cụ tóm tắt cuộc trò chuyện của nhóm này trong 3 gạch đầu dòng');
   await toolCase('A2.9', 'get_user_info', group, '@AI dùng công cụ get_user_info xem hồ sơ của tôi rồi cho biết tên hiển thị của tôi',
     (t, r) => has(r, 'Phong Dev') && has(t, 'Phong Dev'), 'KẾT QUẢ TOOL (không phải câu trả lời) chứa "Phong Dev"', idHint('get-user-info.tool.ts (dòng ~22)'));
   await toolCase('A2.10', 'search_knowledge_base', group, '@AI dùng công cụ tìm kiếm tài liệu (knowledge base) để cho biết người phụ trách kho và số nội bộ', (t) => has(t, '2207'), 'trả lời chứa số nội bộ 2207');

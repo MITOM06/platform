@@ -98,7 +98,7 @@ async function a3(ctx) {
     expected: 'Câu 1 chứa "5%" (đúng quyền Sales Executive); câu 2 KHÔNG chứa "35" (mục mật không lộ cho Member)',
     hint: 'Sai câu 1 → context-builder không chèn AI Context (aiContext block). Lộ câu 2 → lọc requiredCapability phía ai-service/auth-service hỏng — lỗi bảo mật.',
   }, async () => {
-    const dm = await L.aiDm(son);
+    const dm = ctx.sonDm = await L.aiDm(son);
     await L.askAi(son, dm, '/new');
     const a = await L.askAi(son, dm, 'Theo chính sách công ty, tôi được chiết khấu tối đa bao nhiêu phần trăm?');
     const b = await L.askAi(son, dm, 'Khung lương Senior của công ty là bao nhiêu?');

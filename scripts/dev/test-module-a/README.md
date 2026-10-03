@@ -110,10 +110,12 @@ Chạy bộ test với `--keep` trước để có sẵn nhóm `[TEST-A] <RUN>` 
 
 ## Kết quả lượt chạy 03/10/2026
 
-**34 PASS / 3 FAIL / 4 MANUAL.** Cả 3 FAIL đều là lỗi thật:
+**Lượt đầu (code `main`):** 34 PASS / 3 FAIL / 4 MANUAL. Cả 3 FAIL đều là lỗi thật, đã sửa ở PR #162 (`fix/ai-tools-user-lookup-rag-threshold`):
 
-| Case | Lỗi | Nguyên nhân / nơi sửa |
+| Case | Lỗi | Nguyên nhân / cách sửa |
 |---|---|---|
-| A2.3 | Câu hỏi gần như trùng văn bản vẫn trả lời "không có thông tin", `sources=[]` | Điểm tương đồng của voyage-4-lite thấp hơn `kb.scoreThreshold = 0.5` nên RAG bị chặn (`context-builder.service.ts`). Kết quả không ổn định: A2.4 với câu hỏi khác lại qua. |
-| A2.7 | AI hiện **ID người dùng thô** (`6ac0…`) thay vì tên | `search-messages.tool.ts` tra `users` bằng `_id` dạng string, trong khi `_id` là ObjectId nên không khớp và rơi về ID thô. Vi phạm `no-raw-system-data-in-ui` (P1). |
-| A2.9 | Tool `get_user_info` luôn trả "User not found" | Cùng lỗi: `get-user-info.tool.ts` dùng `findOne({ _id: ctx.userId })` với string. |
+| A2.3 | Câu hỏi gần như trùng văn bản vẫn trả lời "không có thông tin", `sources=[]` | Đo trên voyage-4-lite: câu trả lời đúng chỉ được 0.26–0.64 điểm, nên ngưỡng `KB_SCORE_THRESHOLD` 0.5 loại mất phần lớn. Hạ ngưỡng xuống 0.2, sửa tokenizer BM25 bị cắt vụn tiếng Việt có dấu |
+| A2.7 | AI hiện **ID người dùng thô** (`6ac0…`) thay vì tên | `search-messages.tool.ts` tra `users` bằng `_id` dạng string, trong khi `_id` là ObjectId. Dùng helper `toObjectId`, không bao giờ fallback ra ID thô |
+| A2.9 | `get_user_info` luôn trả "User not found" | Cùng lỗi ở `get-user-info.tool.ts` |
+
+**Sau khi sửa (ai-service build từ PR #162):** A2.3, A2.7, A2.9 đều PASS; A5.6 và A5.7 vẫn PASS (hạ ngưỡng không làm lộ KB phòng ban khác).

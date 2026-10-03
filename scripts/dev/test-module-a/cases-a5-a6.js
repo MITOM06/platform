@@ -17,7 +17,7 @@ async function a5(ctx) {
     expected: 'AI_STREAM_ERROR code=AI_RATE_LIMITED, không gọi model (web/mobile hiện toast "gửi quá nhanh")',
     hint: 'Không bị chặn → AI_RATE_LIMIT_ENABLED=false hoặc rate-limiter.service.ts đọc sai key/cửa sổ.',
   }, async () => {
-    const dm = await L.aiDm(minh);
+    const dm = ctx.minhDm = await L.aiDm(minh);
     const minute = Math.floor(Date.now() / 60000);
     const keys = [minute, minute + 1].map((m) => `ai:rl:req:${minh.id}:${m}`);
     for (const k of keys) await L.redis.set(k, 20, 'EX', 120);
@@ -40,7 +40,7 @@ async function a5(ctx) {
     const date = `${today().slice(0, 7)}-00`; // sorts into this month, never collides with a real day
     await L.db.collection('token_usage').insertOne({ userId: thu.id, date, inputTokens: limit + 1, outputTokens: 0, requestCount: 1, testRun: L.RUN });
     try {
-      const dm = await L.aiDm(thu);
+      const dm = ctx.thuDm = await L.aiDm(thu);
       const a = await L.askAi(thu, dm, 'Xin chào');
       return { pass: a.error?.code === 'AI_QUOTA_EXCEEDED', actual: `limit=${limit}; ${describeAi(a)}` };
     } finally {

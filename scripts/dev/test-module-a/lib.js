@@ -57,7 +57,11 @@ async function test(id, title, spec, body) {
   begin(id, title, spec);
   try {
     const r = await body();
-    end(r.status || (r.pass ? 'PASS' : 'FAIL'), r.actual, r.hint || spec.hint);
+    // Upstream model failure ≠ broken feature: point at the real cause instead.
+    const upstream = /AI_UNAVAILABLE|AI_STREAM_INTERRUPTED/.test(String(r.actual))
+      ? 'Lỗi phía model, không phải logic của case: `docker logs ai-service | grep -iE "credit|overloaded|status:"` (hết credit Anthropic, 529 overloaded, key sai). Nạp credit / chờ rồi chạy lại.'
+      : null;
+    end(r.status || (r.pass ? 'PASS' : 'FAIL'), r.actual, upstream || r.hint || spec.hint);
   } catch (e) {
     end('FAIL', `Lỗi khi chạy: ${e.message}`, spec.hint);
   }

@@ -45,7 +45,7 @@ async function preflight() {
 }
 
 async function setup() {
-  const ctx = { cleanup: { convs: [], reminders: [], callIds: [] } };
+  const ctx = { startedAt: new Date(), cleanup: { convs: [], reminders: [], callIds: [] } };
   for (const [k, email] of Object.entries(ACCOUNTS)) ctx[k] = await L.login(email);
   ctx.devDm = await L.aiDm(ctx.dev);
   ctx.groupName = `[TEST-A] ${L.RUN}`;
@@ -73,9 +73,16 @@ async function cleanup(ctx) {
   await L.db.collection('messages').deleteMany({ conversationId: { $in: ids } });
   for (const c of ['ai_memories', 'ai_personas', 'call_sessions']) await L.db.collection(c).deleteMany({ conversationId: { $in: ids } });
   await L.db.collection('conversations').deleteMany({ _id: { $in: ids.map((i) => new L.ObjectId(i)) } });
+  // A5.6/A5.7 (and A3.7) talk in seeded chats: drop this run's turns there so the
+  // next run's model doesn't read them back as history.
+  const seeded = [ctx.engGroup, ctx.salesGroup, ctx.devDm, ...['son', 'minh', 'thu'].map((k) => ctx[`${k}Dm`])].filter(Boolean);
+  const turns = await L.db.collection('messages').deleteMany({ conversationId: { $in: seeded }, createdAt: { $gte: ctx.startedAt } });
+  for (const id of seeded) {
+    await L.db.collection('ai_sessions').deleteMany({ conversationId: id, createdAt: { $gte: ctx.startedAt } }).catch(() => {});
+  }
   for (const id of ctx.cleanup.reminders) await L.api(ctx.dev.token, 'DELETE', `${CFG.CHAT}/api/reminders/${id}`);
   for (const id of ctx.cleanup.callIds) await L.redis.del(`call:transcript:${id}`);
-  console.log(`\n🧹 Đã dọn ${ids.length} nhóm test, ${kb.length} tài liệu KB, ${ctx.cleanup.reminders.length} reminder (dùng --keep để giữ lại).`);
+  console.log(`\n🧹 Đã dọn ${ids.length} nhóm test, ${turns.deletedCount} tin nhắn test trong các chat seed, ${kb.length} tài liệu KB, ${ctx.cleanup.reminders.length} reminder (dùng --keep để giữ lại).`);
 }
 
 // ------------------------------------------------------------- digest (A4.5)
