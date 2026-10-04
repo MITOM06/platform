@@ -4,6 +4,7 @@ import { useEffect } from 'react'
 import { useTranslations } from 'next-intl'
 import { Phone, PhoneOff, Video } from 'lucide-react'
 import { useCallStore } from '@/lib/store/call.store'
+import { useCallAlerts } from '@/lib/hooks/use-call-alerts'
 import { callManager, INCOMING_RING_TIMEOUT_MS } from '@/lib/webrtc/call-manager'
 import { Button } from '@/components/ui/button'
 import { VoiceCallModal } from './VoiceCallModal'
@@ -27,6 +28,9 @@ export function CallOverlay() {
   const groupCallId = useCallStore((s) => s.groupCallId)
   const incomingGroupCall = useCallStore((s) => s.incomingGroupCall)
 
+  // Ringtone/ringback, caller name, background notification, end-reason toasts.
+  useCallAlerts()
+
   // Drive the in-call duration timer (1-on-1 only; GroupCallModal owns its own).
   useEffect(() => {
     if (status !== 'connected') return
@@ -42,9 +46,7 @@ export function CallOverlay() {
   // (tab closed, connection dropped), stop showing a prompt nobody can answer.
   useEffect(() => {
     if (status !== 'incoming') return
-    const id = setTimeout(() => {
-      if (useCallStore.getState().status === 'incoming') useCallStore.getState().reset()
-    }, INCOMING_RING_TIMEOUT_MS)
+    const id = setTimeout(() => callManager.dismissIncoming(), INCOMING_RING_TIMEOUT_MS)
     return () => clearTimeout(id)
   }, [status])
 
@@ -68,13 +70,13 @@ export function CallOverlay() {
           <Button
             variant="destructive"
             className="flex-1 gap-2"
-            onClick={() => callManager.endCall()}
+            onClick={() => callManager.endCall('declined')}
           >
             <PhoneOff className="size-4" /> {t('decline')}
           </Button>
           <Button
             className="flex-1 gap-2 bg-[#00C853] hover:bg-[#00B248]"
-            onClick={() => callManager.acceptIncoming()}
+            onClick={() => void callManager.acceptIncoming()}
           >
             {video ? <Video className="size-4" /> : <Phone className="size-4" />} {t('answer')}
           </Button>
