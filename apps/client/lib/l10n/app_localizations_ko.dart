@@ -3489,4 +3489,34 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get adminLoadFailed => '이 섹션을 불러올 수 없습니다. 다시 시도해 주세요.';
+
+  @override
+  String callDeclined(String name) {
+    return '$name님이 통화를 거절했습니다';
+  }
+
+  @override
+  String callBusy(String name) {
+    return '$name님이 다른 통화 중입니다';
+  }
+
+  @override
+  String callPeerMediaError(String name) {
+    return '$name님의 마이크 또는 카메라를 켤 수 없습니다';
+  }
+
+  @override
+  String get callEnded => '통화가 종료되었습니다';
+
+  @override
+  String get callConnectionLost => '연결이 끊겨 통화가 종료되었습니다';
+
+  @override
+  String get callSpeaker => '스피커';
+
+  @override
+  String get callSwitchCamera => '카메라 전환';
+
+  @override
+  String get callHangUp => '통화 종료';
 }

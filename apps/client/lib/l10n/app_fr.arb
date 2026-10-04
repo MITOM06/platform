@@ -1225,5 +1225,22 @@
   "adminMemberUnblockConfirm": "Débloquer {name} ? Cette personne pourra se reconnecter.",
   "adminMemberBlocked": "Membre bloqué",
   "adminMemberUnblocked": "Membre débloqué",
-  "adminLoadFailed": "Impossible de charger cette section. Veuillez réessayer."
+  "adminLoadFailed": "Impossible de charger cette section. Veuillez réessayer.",
+  "callDeclined": "{name} a refusé l'appel",
+  "@callDeclined": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "callBusy": "{name} est déjà en appel",
+  "@callBusy": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "callPeerMediaError": "{name} n'a pas pu activer son micro ou sa caméra",
+  "@callPeerMediaError": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "callEnded": "Appel terminé",
+  "callConnectionLost": "Appel interrompu : connexion perdue",
+  "callSpeaker": "Haut-parleur",
+  "callSwitchCamera": "Changer de caméra",
+  "callHangUp": "Raccrocher"
 }

@@ -1,7 +1,9 @@
+import 'dart:async';
 import 'dart:convert';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
 import '../data/stomp_service.dart';
+import 'call_rules.dart';
 
 /// 1-1 WebRTC (audio + video) over the chat-service STOMP signaling channel.
 ///
@@ -17,6 +19,10 @@ class WebRTCService {
   Function(MediaStream)? onRemoteStream;
   Function()? onCallEnded;
 
+  /// Fired when a call ends, so the UI can explain why (see `callEndNotice`).
+  /// `byPeer` = the other side ended it.
+  void Function(CallEndReason reason, bool byPeer)? onEndNotice;
+
   String? _targetId;
   String? _conversationId;
 
@@ -29,6 +35,9 @@ class WebRTCService {
   /// Used to decide between an "ended" vs "missed" call system message.
   bool _connected = false;
 
+  /// When remote media first arrived — the call duration is measured from it.
+  DateTime? _mediaSince;
+
   /// Send the chat system message that logs the call in history. Returns
   /// `system.call.ended:{kind}:{secs}` or `system.call.missed:{kind}`.
   /// Mirrors web `call-manager.ts` so both platforms render identically.
@@ -40,10 +49,26 @@ class WebRTCService {
   final List<RTCIceCandidate> _pendingCandidates = [];
   bool _remoteDescriptionSet = false;
 
+  /// Candidates the caller sent while we were still ringing (no peer
+  /// connection yet). See [EarlyIceBuffer].
+  final EarlyIceBuffer _early = EarlyIceBuffer();
+
+  Timer? _disconnectTimer;
+  bool _micOn = true;
+  bool _cameraOn = true;
+  bool _speakerOn = false;
+
   WebRTCService(this._stompService);
 
   /// True while a 1-on-1 call holds a peer connection (ringing or connected).
   bool get isActive => _peerConnection != null;
+
+  /// The other party of the active call, or null.
+  String? get peerId => isActive ? _targetId : null;
+
+  bool get micOn => _micOn;
+  bool get cameraOn => _cameraOn;
+  bool get speakerOn => _speakerOn;
 
   /// How long an outgoing call rings before it is given up as missed. There
   /// is no server-side ring state, so without this the caller sat on
@@ -54,16 +79,21 @@ class WebRTCService {
   /// Callee-side safety net, slightly longer than the caller's ring.
   static const incomingRingTimeout = Duration(seconds: 50);
 
+  /// How long a `disconnected` connection may recover before the call ends.
+  /// Mirrors web `DISCONNECT_GRACE_MS`.
+  static const disconnectGrace = Duration(seconds: 8);
+
   /// The `system.call.missed:{kind}` call-log content (see [endCall]).
   static String missedCallLog({required bool isVideo}) =>
       'system.call.missed:${isVideo ? 'video' : 'voice'}';
 
-  /// Tell [targetId] the call is over. Used directly when declining an
-  /// incoming call that never got a peer connection (no [initialize]).
+  /// Tell [targetId] the call is over and why. Used directly when declining
+  /// or rejecting (busy) a call that never got a peer connection.
   void sendEnd({
     required String targetId,
     required String conversationId,
     int duration = 0,
+    CallEndReason reason = CallEndReason.hangup,
   }) {
     _stompService.sendRawMessage(
       destination: '/app/call.end',
@@ -71,6 +101,7 @@ class WebRTCService {
         'targetId': targetId,
         'conversationId': conversationId,
         'type': 'end',
+        'reason': reason.wire,
         'duration': duration,
       }),
     );
@@ -80,6 +111,9 @@ class WebRTCService {
   /// decide whether an incoming call should open the camera.
   static bool sdpHasVideo(String? sdp) =>
       sdp != null && sdp.contains('m=video');
+
+  /// A call from [senderId] is ringing: keep its early ICE candidates.
+  void expectCallFrom(String senderId) => _early.expect(senderId);
 
   Future<void> initialize(
     String targetId,
@@ -91,9 +125,12 @@ class WebRTCService {
     _isVideo = isVideo;
     _remoteDescriptionSet = false;
     _connected = false;
+    _mediaSince = null;
+    _micOn = true;
+    _cameraOn = isVideo;
     _pendingCandidates.clear();
 
-    _peerConnection = await createPeerConnection({
+    final pc = await createPeerConnection({
       'iceServers': [
         {
           'urls': [
@@ -104,8 +141,11 @@ class WebRTCService {
       ],
       'sdpSemantics': 'unified-plan',
     });
+    _peerConnection = pc;
+    // Candidates the caller sent while we were ringing.
+    _pendingCandidates.addAll(_early.takeFor(targetId).map(_toCandidate));
 
-    _peerConnection?.onIceCandidate = (RTCIceCandidate candidate) {
+    pc.onIceCandidate = (RTCIceCandidate candidate) {
       _stompService.sendRawMessage(
         destination: '/app/call.ice',
         body: jsonEncode({
@@ -122,9 +162,29 @@ class WebRTCService {
     };
 
     // Unified Plan: remote media arrives track-by-track via onTrack.
-    _peerConnection?.onTrack = (RTCTrackEvent event) {
+    pc.onTrack = (RTCTrackEvent event) {
       if (event.streams.isNotEmpty) {
+        _mediaSince ??= DateTime.now();
         onRemoteStream?.call(event.streams.first);
+      }
+    };
+
+    pc.onConnectionState = (RTCPeerConnectionState state) {
+      if (_peerConnection != pc) return;
+      switch (state) {
+        case RTCPeerConnectionState.RTCPeerConnectionStateConnected:
+          _disconnectTimer?.cancel();
+          _disconnectTimer = null;
+        case RTCPeerConnectionState.RTCPeerConnectionStateDisconnected:
+          // Often transient (Wi-Fi ↔ 4G): give it a chance to recover.
+          _disconnectTimer ??= Timer(disconnectGrace, () {
+            _disconnectTimer = null;
+            if (_peerConnection == pc) endCall(reason: CallEndReason.failed);
+          });
+        case RTCPeerConnectionState.RTCPeerConnectionStateFailed:
+          endCall(reason: CallEndReason.failed);
+        default:
+          break;
       }
     };
 
@@ -136,8 +196,11 @@ class WebRTCService {
 
     // Unified Plan: add each track individually (not the whole stream).
     for (final track in _localStream!.getTracks()) {
-      await _peerConnection?.addTrack(track, _localStream!);
+      await pc.addTrack(track, _localStream!);
     }
+
+    // Video calls are held at arm's length → loudspeaker; voice → earpiece.
+    await setSpeakerOn(_isVideo);
   }
 
   Future<void> makeCall() async {
@@ -183,13 +246,15 @@ class WebRTCService {
     await _flushPendingCandidates();
   }
 
-  Future<void> handleIceCandidate(Map<String, dynamic> candidateMap) async {
-    if (_peerConnection == null) return;
-    final candidate = RTCIceCandidate(
-      candidateMap['candidate'] as String?,
-      candidateMap['sdpMid'] as String?,
-      candidateMap['sdpMLineIndex'] as int?,
-    );
+  Future<void> handleIceCandidate(
+    Map<String, dynamic> candidateMap, {
+    String? senderId,
+  }) async {
+    if (_peerConnection == null) {
+      _early.add(senderId, candidateMap);
+      return;
+    }
+    final candidate = _toCandidate(candidateMap);
     // Buffer until the remote description exists, else addCandidate throws.
     if (!_remoteDescriptionSet) {
       _pendingCandidates.add(candidate);
@@ -197,6 +262,13 @@ class WebRTCService {
     }
     await _peerConnection!.addCandidate(candidate);
   }
+
+  static RTCIceCandidate _toCandidate(Map<String, dynamic> m) =>
+      RTCIceCandidate(
+        m['candidate'] as String?,
+        m['sdpMid'] as String?,
+        m['sdpMLineIndex'] as int?,
+      );
 
   Future<void> _flushPendingCandidates() async {
     _remoteDescriptionSet = true;
@@ -206,14 +278,41 @@ class WebRTCService {
     _pendingCandidates.clear();
   }
 
-  Future<void> endCall({int duration = 0}) async {
+  /// The peer sent `end`. Only the current peer can end the active call;
+  /// a ringing caller cancelling just drops its early candidates.
+  void handleRemoteEnd({String? from, String? reasonWire}) {
+    if (!isActive) {
+      _early.reset();
+      return;
+    }
+    if (!endTargetsCurrentCall(from: from, peerId: peerId)) return;
+    final reason = CallEndReason.fromWire(reasonWire);
+    if (reason == CallEndReason.busy) {
+      // The callee never rang: log the attempt as a missed call.
+      onSendCallLog?.call(missedCallLog(isVideo: _isVideo));
+    }
+    onEndNotice?.call(reason, true);
+    dispose();
+  }
+
+  /// Hang up / give up: tell the peer why, log the call, tear down.
+  /// [duration] defaults to the time since remote media arrived.
+  Future<void> endCall({
+    int? duration,
+    CallEndReason reason = CallEndReason.hangup,
+  }) async {
+    final secs = duration ??
+        (_mediaSince == null
+            ? 0
+            : DateTime.now().difference(_mediaSince!).inSeconds);
     final targetId = _targetId;
     final conversationId = _conversationId;
     if (targetId != null && conversationId != null) {
       sendEnd(
         targetId: targetId,
         conversationId: conversationId,
-        duration: duration,
+        duration: secs,
+        reason: reason,
       );
     }
 
@@ -222,23 +321,61 @@ class WebRTCService {
     // so the call is logged exactly once. Mirrors web call-manager.ts format
     // `system.call.ended:{kind}:{secs}` / `system.call.missed:{kind}`.
     final content = _connected
-        ? 'system.call.ended:${_isVideo ? 'video' : 'voice'}:$duration'
+        ? 'system.call.ended:${_isVideo ? 'video' : 'voice'}:$secs'
         : missedCallLog(isVideo: _isVideo);
     onSendCallLog?.call(content);
 
+    onEndNotice?.call(reason, false);
     dispose();
   }
 
+  /// Tear down a call that never reached the peer (e.g. our own mic/camera
+  /// failed before the offer was sent): no signal, no call log.
+  void failLocally(CallEndReason reason) {
+    onEndNotice?.call(reason, false);
+    dispose();
+  }
+
+  Future<void> setMicOn(bool on) async {
+    _micOn = on;
+    for (final t in _localStream?.getAudioTracks() ?? <MediaStreamTrack>[]) {
+      t.enabled = on;
+    }
+  }
+
+  Future<void> setCameraOn(bool on) async {
+    _cameraOn = on;
+    for (final t in _localStream?.getVideoTracks() ?? <MediaStreamTrack>[]) {
+      t.enabled = on;
+    }
+  }
+
+  Future<void> setSpeakerOn(bool on) async {
+    _speakerOn = on;
+    await Helper.setSpeakerphoneOn(on);
+  }
+
+  Future<void> switchCamera() async {
+    final tracks = _localStream?.getVideoTracks() ?? <MediaStreamTrack>[];
+    if (tracks.isNotEmpty) await Helper.switchCamera(tracks.first);
+  }
+
   void dispose() {
+    _disconnectTimer?.cancel();
+    _disconnectTimer = null;
     for (final track in _localStream?.getTracks() ?? <MediaStreamTrack>[]) {
       track.stop();
     }
     _localStream?.dispose();
-    _peerConnection?.close();
-    _peerConnection?.dispose();
-    _peerConnection = null;
+    _localStream = null;
+    final pc = _peerConnection;
+    _peerConnection = null; // before close(): no re-entry from onConnectionState
+    pc?.close();
+    pc?.dispose();
     _pendingCandidates.clear();
     _remoteDescriptionSet = false;
+    _early.reset();
+    _mediaSince = null;
     onCallEnded?.call();
   }
 }

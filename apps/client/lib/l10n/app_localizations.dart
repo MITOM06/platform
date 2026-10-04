@@ -6654,6 +6654,54 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Couldn\'t load this section. Please try again.'**
   String get adminLoadFailed;
+
+  /// No description provided for @callDeclined.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} declined the call'**
+  String callDeclined(String name);
+
+  /// No description provided for @callBusy.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} is on another call'**
+  String callBusy(String name);
+
+  /// No description provided for @callPeerMediaError.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} couldn\'t turn on their microphone or camera'**
+  String callPeerMediaError(String name);
+
+  /// No description provided for @callEnded.
+  ///
+  /// In en, this message translates to:
+  /// **'Call ended'**
+  String get callEnded;
+
+  /// No description provided for @callConnectionLost.
+  ///
+  /// In en, this message translates to:
+  /// **'Call dropped — connection lost'**
+  String get callConnectionLost;
+
+  /// No description provided for @callSpeaker.
+  ///
+  /// In en, this message translates to:
+  /// **'Speaker'**
+  String get callSpeaker;
+
+  /// No description provided for @callSwitchCamera.
+  ///
+  /// In en, this message translates to:
+  /// **'Switch camera'**
+  String get callSwitchCamera;
+
+  /// No description provided for @callHangUp.
+  ///
+  /// In en, this message translates to:
+  /// **'End call'**
+  String get callHangUp;
 }
 
 class _AppLocalizationsDelegate

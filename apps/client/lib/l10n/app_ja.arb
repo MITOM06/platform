@@ -1225,5 +1225,22 @@
   "adminMemberUnblockConfirm": "{name} さんのブロックを解除しますか？再びサインインできるようになります。",
   "adminMemberBlocked": "メンバーをブロックしました",
   "adminMemberUnblocked": "メンバーのブロックを解除しました",
-  "adminLoadFailed": "このセクションを読み込めませんでした。もう一度お試しください。"
+  "adminLoadFailed": "このセクションを読み込めませんでした。もう一度お試しください。",
+  "callDeclined": "{name}さんが通話を拒否しました",
+  "@callDeclined": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "callBusy": "{name}さんは別の通話中です",
+  "@callBusy": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "callPeerMediaError": "{name}さんのマイクまたはカメラを起動できませんでした",
+  "@callPeerMediaError": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "callEnded": "通話が終了しました",
+  "callConnectionLost": "接続が切れたため通話が終了しました",
+  "callSpeaker": "スピーカー",
+  "callSwitchCamera": "カメラを切り替え",
+  "callHangUp": "通話を終了"
 }

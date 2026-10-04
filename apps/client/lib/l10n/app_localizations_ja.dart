@@ -3490,4 +3490,34 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get adminLoadFailed => 'このセクションを読み込めませんでした。もう一度お試しください。';
+
+  @override
+  String callDeclined(String name) {
+    return '$nameさんが通話を拒否しました';
+  }
+
+  @override
+  String callBusy(String name) {
+    return '$nameさんは別の通話中です';
+  }
+
+  @override
+  String callPeerMediaError(String name) {
+    return '$nameさんのマイクまたはカメラを起動できませんでした';
+  }
+
+  @override
+  String get callEnded => '通話が終了しました';
+
+  @override
+  String get callConnectionLost => '接続が切れたため通話が終了しました';
+
+  @override
+  String get callSpeaker => 'スピーカー';
+
+  @override
+  String get callSwitchCamera => 'カメラを切り替え';
+
+  @override
+  String get callHangUp => '通話を終了';
 }

@@ -3566,4 +3566,34 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get adminLoadFailed =>
       'Couldn\'t load this section. Please try again.';
+
+  @override
+  String callDeclined(String name) {
+    return '$name declined the call';
+  }
+
+  @override
+  String callBusy(String name) {
+    return '$name is on another call';
+  }
+
+  @override
+  String callPeerMediaError(String name) {
+    return '$name couldn\'t turn on their microphone or camera';
+  }
+
+  @override
+  String get callEnded => 'Call ended';
+
+  @override
+  String get callConnectionLost => 'Call dropped — connection lost';
+
+  @override
+  String get callSpeaker => 'Speaker';
+
+  @override
+  String get callSwitchCamera => 'Switch camera';
+
+  @override
+  String get callHangUp => 'End call';
 }
