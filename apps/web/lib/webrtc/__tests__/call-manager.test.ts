@@ -86,6 +86,19 @@ describe('outgoing ring', () => {
     expect(useCallStore.getState().status).toBe('idle')
     expect(onEndNotice).toHaveBeenCalledWith('declined', true, 'Bob')
     vi.advanceTimersByTime(RING_TIMEOUT_MS)
+    expect(endSignals()).toHaveLength(1) // only the echo below — no ring-timeout end
+  })
+
+  it('after a decline, tells every session of the callee to stop ringing', async () => {
+    await callManager.startCall('bob', 'Bob', 'conv-1', false)
+    callManager.handleSignal({ type: 'end', senderId: 'bob', reason: 'declined' })
+    expect(endSignals()).toHaveLength(1)
+    expect(endSignals()[0][1]).toMatchObject({ targetId: 'bob', conversationId: 'conv-1', reason: 'hangup' })
+  })
+
+  it('does not echo an end when the peer simply hung up', async () => {
+    await callManager.startCall('bob', 'Bob', 'conv-1', false)
+    callManager.handleSignal({ type: 'end', senderId: 'bob', reason: 'hangup' })
     expect(endSignals()).toHaveLength(0)
   })
 
@@ -203,5 +216,41 @@ describe('connection health', () => {
     pc.goTo('disconnected')
     vi.advanceTimersByTime(DISCONNECT_GRACE_MS)
     expect(endSignals()[0][1]).toMatchObject({ reason: 'failed' })
+  })
+})
+
+describe('call ended while the mic/camera is still opening', () => {
+  const pendingMedia = () => {
+    const track = { stop: vi.fn(), enabled: true }
+    const stream = { getTracks: () => [track], getAudioTracks: () => [track], getVideoTracks: () => [] }
+    let resolve!: (s: typeof stream) => void
+    getUserMedia.mockReturnValueOnce(new Promise((r) => (resolve = r)))
+    return { track, stream, resolve: () => resolve(stream) }
+  }
+
+  it('callee: the caller giving up during the permission prompt ends silently', async () => {
+    const media = pendingMedia()
+    offerFrom('alice')
+    const accepting = callManager.acceptIncoming()
+    callManager.handleSignal({ type: 'end', senderId: 'alice', reason: 'no_answer' })
+    media.resolve()
+    await accepting
+    expect(endSignals()).toHaveLength(0)
+    expect(onEndNotice).not.toHaveBeenCalled()
+    expect(useCallStore.getState().status).toBe('idle')
+    expect(media.track.stop).toHaveBeenCalled() // late stream released
+  })
+
+  it('caller: hanging up during the permission prompt places no call and logs nothing', async () => {
+    const media = pendingMedia()
+    const starting = callManager.startCall('bob', 'Bob', 'conv-1', false)
+    callManager.endCall()
+    media.resolve()
+    await expect(starting).resolves.toBeUndefined()
+    expect(publish).not.toHaveBeenCalled()
+    expect(sendMessage).not.toHaveBeenCalled()
+    expect(media.track.stop).toHaveBeenCalled()
+    vi.advanceTimersByTime(RING_TIMEOUT_MS)
+    expect(publish).not.toHaveBeenCalled()
   })
 })

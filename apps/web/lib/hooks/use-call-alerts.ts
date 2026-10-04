@@ -8,6 +8,7 @@ import { useUser } from '@/lib/hooks/use-user'
 import { useNickname } from '@/lib/nicknames'
 import { callManager } from '@/lib/webrtc/call-manager'
 import { endNoticeKey } from '@/lib/webrtc/call-end-notice'
+import { showCallNotification } from '@/lib/webrtc/call-notification'
 import { playTone, stopTone, toneFor } from '@/lib/webrtc/call-sounds'
 
 /**
@@ -47,17 +48,11 @@ export function useCallAlerts(): void {
   // Background tab: an OS notification so the ring is not missed.
   useEffect(() => {
     if (status !== 'incoming') return
-    if (typeof document === 'undefined' || document.visibilityState !== 'hidden') return
-    if (typeof Notification === 'undefined' || Notification.permission !== 'granted') return
-    const n = new Notification(video ? t('incomingVideo') : t('incomingVoice'), {
-      body: resolvedName || t('peerFallback'),
-      tag: 'pon-incoming-call',
-    })
-    n.onclick = () => {
-      window.focus()
-      n.close()
-    }
-    return () => n.close()
+    const close = showCallNotification(
+      video ? t('incomingVideo') : t('incomingVoice'),
+      resolvedName || t('peerFallback'),
+    )
+    return () => close?.()
   }, [status, video, resolvedName, t])
 
   // Explain why a call closed (declined, busy, no answer, connection lost…).

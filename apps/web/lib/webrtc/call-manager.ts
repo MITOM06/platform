@@ -2,58 +2,29 @@ import { stompService } from '@/lib/stomp/client'
 import { useCallStore } from '@/lib/store/call.store'
 import { chatService } from '@/lib/api/chat'
 import type { CallEndReason } from './call-end-notice'
+import {
+  CallCancelledError,
+  DISCONNECT_GRACE_MS,
+  ICE_SERVERS,
+  REJECTIONS,
+  RING_TIMEOUT_MS,
+  type WebRTCSignal,
+} from './call-config'
 
 export type { CallEndReason } from './call-end-notice'
+export {
+  DISCONNECT_GRACE_MS,
+  INCOMING_RING_TIMEOUT_MS,
+  RING_TIMEOUT_MS,
+  type WebRTCSignal,
+} from './call-config'
 
 /**
  * Web counterpart of the Flutter `WebRTCService`. Owns a single
  * `RTCPeerConnection` and drives the call lifecycle over the chat-service STOMP
- * signaling channel (`/app/call.*` → `/user/queue/webrtc`).
- *
- * Uses Unified Plan (`addTrack` / `ontrack`) — matches the mobile peer so SDP
- * negotiation is symmetric.
+ * signaling channel (`/app/call.*` → `/user/queue/webrtc`). Unified Plan
+ * (`addTrack` / `ontrack`) — matches the mobile peer so SDP is symmetric.
  */
-export interface WebRTCSignal {
-  senderId?: string
-  targetId?: string
-  conversationId?: string
-  type: 'offer' | 'answer' | 'ice' | 'end' | 'call-ring' | 'call-blocked'
-  sdp?: string
-  candidate?: RTCIceCandidateInit
-  /** On `end`: why the call ended. Absent from older clients (= 'hangup'). */
-  reason?: CallEndReason
-  // ── Group-call fields (Track A §3). Absent on legacy 1-on-1 signals. ───────
-  /** Present on every mesh signal; routes the signal into the group manager. */
-  callId?: string
-  /** Mesh peer id the signal was relayed from (server-filled). */
-  fromId?: string
-  /** Ring metadata (`type:'call-ring'`). */
-  startedByName?: string
-  media?: 'audio' | 'video'
-  aiNotetaker?: boolean
-}
-
-/**
- * How long an outgoing 1-on-1 call rings before it is given up as missed.
- * There is no server-side ring state, so without this the caller sat on
- * "Calling…" forever whenever the callee was offline, never saw the ring, or
- * ignored it. Mirrors Flutter `WebRTCService.ringTimeout`.
- */
-export const RING_TIMEOUT_MS = 45_000
-/** Callee-side safety net, slightly longer than the caller's ring. */
-export const INCOMING_RING_TIMEOUT_MS = RING_TIMEOUT_MS + 5_000
-/**
- * How long a `disconnected` connection may try to recover (Wi-Fi ↔ 4G hand-off,
- * short loss) before the call is ended. Mirrors Flutter `disconnectGrace`.
- */
-export const DISCONNECT_GRACE_MS = 8_000
-
-const ICE_SERVERS: RTCConfiguration = {
-  iceServers: [
-    { urls: ['stun:stun.l.google.com:19302', 'stun:stun1.l.google.com:19302'] },
-  ],
-}
-
 class CallManager {
   private pc: RTCPeerConnection | null = null
   private localStream: MediaStream | null = null
@@ -72,6 +43,8 @@ class CallManager {
    */
   private expectingFrom: string | null = null
   private earlyCandidates: RTCIceCandidateInit[] = []
+  /** Caller only: the offer has left. Before that, hanging up signals nothing. */
+  private offerSent = false
 
   onLocalStream: ((s: MediaStream) => void) | null = null
   onRemoteStream: ((s: MediaStream) => void) | null = null
@@ -103,16 +76,21 @@ class CallManager {
   ): Promise<void> {
     useCallStore.getState().setOutgoing({ peerId: targetId, peerName: targetName, conversationId, video })
     try {
-      await this.setup(targetId, conversationId, video)
-      const offer = await this.pc!.createOffer()
-      await this.pc!.setLocalDescription(offer)
+      const pc = await this.setup(targetId, conversationId, video)
+      const offer = await pc.createOffer()
+      this.assertLive(pc)
+      await pc.setLocalDescription(offer)
+      this.assertLive(pc)
       stompService.publish('/app/call.offer', {
         targetId,
         conversationId,
         type: 'offer',
         sdp: offer.sdp,
       })
+      this.offerSent = true
     } catch (err) {
+      // Hung up while the mic/camera was opening: already torn down, nothing to report.
+      if (err instanceof CallCancelledError) return
       this.teardown(true)
       throw err
     }
@@ -131,24 +109,35 @@ class CallManager {
     if (!peerId || !conversationId || !pendingOfferSdp || this.pc) return
     // Match the caller's media: only enable local video if the offer has a video m-line.
     const video = pendingOfferSdp.includes('m=video')
+    let pc: RTCPeerConnection
     try {
-      await this.setup(peerId, conversationId, video)
-    } catch {
+      pc = await this.setup(peerId, conversationId, video)
+    } catch (err) {
+      // The caller gave up while the permission prompt was open: already gone.
+      if (err instanceof CallCancelledError) return
       // Mic/camera denied or missing: tell the caller instead of leaving
       // them ringing, and explain it locally.
       this.endCall('media_error')
       return
     }
-    await this.pc!.setRemoteDescription({ type: 'offer', sdp: pendingOfferSdp })
-    await this.flushPending()
-    const answer = await this.pc!.createAnswer()
-    await this.pc!.setLocalDescription(answer)
-    stompService.publish('/app/call.answer', {
-      targetId: peerId,
-      conversationId,
-      type: 'answer',
-      sdp: answer.sdp,
-    })
+    try {
+      await pc.setRemoteDescription({ type: 'offer', sdp: pendingOfferSdp })
+      await this.flushPending()
+      this.assertLive(pc)
+      const answer = await pc.createAnswer()
+      this.assertLive(pc)
+      await pc.setLocalDescription(answer)
+      this.assertLive(pc)
+      stompService.publish('/app/call.answer', {
+        targetId: peerId,
+        conversationId,
+        type: 'answer',
+        sdp: answer.sdp,
+      })
+    } catch (err) {
+      if (err instanceof CallCancelledError) return
+      this.endCall('failed') // unusable offer: don't leave the prompt stuck
+    }
   }
 
   /** Route an inbound 1-on-1 signal (from `/user/queue/webrtc`). */
@@ -177,19 +166,15 @@ class CallManager {
     const targetId = this.targetId ?? store.peerId
     const conversationId = this.conversationId ?? store.conversationId
     const peerName = store.peerName
-    if (targetId && conversationId) {
-      stompService.publish('/app/call.end', {
-        targetId,
-        conversationId,
-        type: 'end',
-        reason,
-        duration: store.durationSeconds,
-      })
+    // A caller hanging up before its offer left: the callee never rang.
+    const reachedPeer = store.status !== 'outgoing' || this.offerSent
+    if (reachedPeer && targetId && conversationId) {
+      this.publishEnd(targetId, conversationId, reason, store.durationSeconds)
     }
     // Emit a system message so both sides see the call log in the chat history.
     // Only the hang-up initiator sends this (the peer's teardown via 'end'
     // signal does not call endCall, preventing duplicate messages).
-    if (conversationId) {
+    if (reachedPeer && conversationId) {
       const kind = store.video ? 'video' : 'voice'
       this.sendCallLog(
         conversationId,
@@ -227,14 +212,7 @@ class CallManager {
     const st = useCallStore.getState()
     if (st.status !== 'idle' || st.groupCallId) {
       // Same caller re-sending (reconnect) → keep ringing; anyone else → busy.
-      if (st.peerId === from) return
-      stompService.publish('/app/call.end', {
-        targetId: from,
-        conversationId,
-        type: 'end',
-        reason: 'busy',
-        duration: 0,
-      })
+      if (st.peerId !== from) this.publishEnd(from, conversationId, 'busy')
       return
     }
     this.expectingFrom = from
@@ -260,9 +238,18 @@ class CallManager {
       // The callee never rang: log the attempt so it shows as a missed call.
       this.sendCallLog(st.conversationId, `system.call.missed:${st.video ? 'video' : 'voice'}`)
     }
+    if (REJECTIONS.has(reason) && st.peerId && st.conversationId) {
+      // The callee may be signed in elsewhere (web + phone): one session
+      // rejected, the others are still ringing — tell them all it is over.
+      this.publishEnd(st.peerId, st.conversationId, 'hangup')
+    }
     this.teardown(true)
     // A caller cancelling before we answered just makes the prompt go away.
     if (!wasIncoming) this.onEndNotice?.(reason, true, peerName)
+  }
+
+  private publishEnd(targetId: string, conversationId: string, reason: CallEndReason, duration = 0): void {
+    stompService.publish('/app/call.end', { targetId, conversationId, type: 'end', reason, duration })
   }
 
   private sendCallLog(conversationId: string, content: string): void {
@@ -271,7 +258,17 @@ class CallManager {
     })
   }
 
-  private async setup(targetId: string, conversationId: string, video: boolean): Promise<void> {
+  /** Throws when the call was torn down while we were awaiting. */
+  private assertLive(pc: RTCPeerConnection): void {
+    if (this.pc !== pc) throw new CallCancelledError()
+  }
+
+  /** Builds the connection and opens the mic/camera. Resolves with the live pc. */
+  private async setup(
+    targetId: string,
+    conversationId: string,
+    video: boolean,
+  ): Promise<RTCPeerConnection> {
     this.targetId = targetId
     this.conversationId = conversationId
     this.remoteDescriptionSet = false
@@ -321,11 +318,18 @@ class CallManager {
       }
     }
 
-    this.localStream = await navigator.mediaDevices.getUserMedia({ audio: true, video })
-    this.onLocalStream?.(this.localStream)
-    for (const track of this.localStream.getTracks()) {
-      pc.addTrack(track, this.localStream)
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video })
+    if (this.pc !== pc) {
+      // Ended while the permission prompt was open: release the late stream.
+      stream.getTracks().forEach((t) => t.stop())
+      throw new CallCancelledError()
     }
+    this.localStream = stream
+    this.onLocalStream?.(stream)
+    for (const track of stream.getTracks()) {
+      pc.addTrack(track, stream)
+    }
+    return pc
   }
 
   private async handleAnswer(sdp: string): Promise<void> {
@@ -384,6 +388,7 @@ class CallManager {
     this.pendingCandidates = []
     this.expectingFrom = null
     this.earlyCandidates = []
+    this.offerSent = false
     if (notifyUi) {
       this.onEnded?.()
       useCallStore.getState().reset()
