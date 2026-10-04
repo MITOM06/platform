@@ -8,6 +8,7 @@ import '../../../core/router/app_router.dart';
 import '../../../core/services/notification_service.dart';
 import '../../../core/utils/global_messenger.dart';
 import '../ui/widgets/message_preview_text.dart';
+import 'call_rules.dart';
 import 'chat_misc_providers.dart';
 import 'chat_state.dart';
 import 'incoming_call.dart';
@@ -26,6 +27,7 @@ void handleWebRtcSignal(
     // callId) are handled by GroupCallSignaling. Ignore them here so the
     // legacy 1-on-1 flow stays untouched.
     if (type == 'call-ring' || signal['callId'] != null) return;
+    final webrtc = ref.read(webRtcServiceProvider);
 
     // The callee has us blocked — notify the caller and bail.
     if (type == 'call-blocked') {
@@ -42,7 +44,7 @@ void handleWebRtcSignal(
       // Mirror web: close the call screen. dispose() fires onCallEnded →
       // Navigator.pop() in CallScreen. Safe to call even when no active
       // call exists — WebRTCService.dispose() is idempotent.
-      ref.read(webRtcServiceProvider).dispose();
+      webrtc.dispose();
       return;
     }
 
@@ -52,25 +54,33 @@ void handleWebRtcSignal(
       final sdp = signal['sdp'] as String?;
       if (senderId == null || convId == null || sdp == null) return;
 
-      // Already ringing or in a call → ignore the second offer (mirror web,
-      // which ignores offers while not idle).
-      if (ref.read(incomingCallProvider) != null ||
-          ref.read(webRtcServiceProvider).isActive) {
-        return;
-      }
-
-      // Show the accept/decline prompt (IncomingCallPrompt). It used to be a
-      // transient banner whose only action was "tap = answer": the callee
-      // could not decline, and ignoring it left the caller ringing forever.
-      ref.read(incomingCallProvider.notifier).set(IncomingCall(
-            senderId: senderId,
+      switch (decideIncomingOffer(
+        from: senderId,
+        ringingFrom: ref.read(incomingCallProvider)?.senderId,
+        inCallWith: webrtc.peerId,
+      )) {
+        case IncomingOfferAction.ignore:
+          return; // the same caller re-sent its offer
+        case IncomingOfferAction.replyBusy:
+          webrtc.sendEnd(
+            targetId: senderId,
             conversationId: convId,
-            sdp: sdp,
-            isVideo: WebRTCService.sdpHasVideo(sdp),
-          ));
+            reason: CallEndReason.busy,
+          );
+          return;
+        case IncomingOfferAction.ring:
+          // Show the accept/decline prompt (IncomingCallPrompt) and keep the
+          // caller's early ICE candidates until the call is answered.
+          webrtc.expectCallFrom(senderId);
+          ref.read(incomingCallProvider.notifier).set(IncomingCall(
+                senderId: senderId,
+                conversationId: convId,
+                sdp: sdp,
+                isVideo: WebRTCService.sdpHasVideo(sdp),
+              ));
+      }
     } else {
-      // For answer, ice, end, we need to pass them to WebRTCService if it's active.
-      final webrtc = ref.read(webRtcServiceProvider);
+      // answer / ice / end go to WebRTCService.
       if (type == 'answer') {
         final sdp = signal['sdp'] as String?;
         if (sdp == null) return;
@@ -78,17 +88,23 @@ void handleWebRtcSignal(
       } else if (type == 'ice') {
         final candidate = signal['candidate'] as Map?;
         if (candidate == null) return;
-        webrtc.handleIceCandidate(Map<String, dynamic>.from(candidate));
+        webrtc.handleIceCandidate(
+          Map<String, dynamic>.from(candidate),
+          senderId: signal['senderId'] as String?,
+        );
       } else if (type == 'end') {
         // Peer hung up: tear down locally only. Do NOT re-publish /app/call.end
         // or send a system call-log message — the hang-up initiator already
         // did both, otherwise we'd ping-pong and log the call twice.
         // A caller hanging up (or ringing out) before we answered also
-        // dismisses the incoming prompt.
-        ref
-            .read(incomingCallProvider.notifier)
-            .clearFrom(signal['senderId'] as String?);
-        webrtc.dispose();
+        // dismisses the incoming prompt. An `end` from anyone but the current
+        // peer is ignored by handleRemoteEnd.
+        final from = signal['senderId'] as String?;
+        ref.read(incomingCallProvider.notifier).clearFrom(from);
+        webrtc.handleRemoteEnd(
+          from: from,
+          reasonWire: signal['reason'] as String?,
+        );
       }
     }
   } catch (e) {

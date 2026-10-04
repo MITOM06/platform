@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'call_sounds.dart';
 import 'webrtc_service.dart';
 
 /// A 1-on-1 call offer waiting for the user to accept or decline.
@@ -38,12 +39,14 @@ class IncomingCallNotifier extends Notifier<IncomingCall?> {
     _expiry?.cancel();
     _expiry = Timer(WebRTCService.incomingRingTimeout, clear);
     state = call;
+    unawaited(ref.read(callSoundsProvider).play(CallTone.ringtone));
   }
 
   void clear() {
     _expiry?.cancel();
     _expiry = null;
     state = null;
+    unawaited(ref.read(callSoundsProvider).stop());
   }
 
   /// Clears the prompt only if it belongs to [senderId] (an `end` from someone

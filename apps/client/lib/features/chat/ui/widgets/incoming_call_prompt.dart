@@ -5,6 +5,7 @@ import '../../../../core/router/app_router.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../data/chat_repository.dart';
 import '../../domain/call_name_resolver.dart';
+import '../../domain/call_rules.dart';
 import '../../domain/incoming_call.dart';
 import '../../domain/webrtc_service.dart';
 
@@ -35,6 +36,7 @@ class IncomingCallPrompt extends ConsumerWidget {
     ref.read(webRtcServiceProvider).sendEnd(
           targetId: call.senderId,
           conversationId: call.conversationId,
+          reason: CallEndReason.declined,
         );
     ref
         .read(chatRepositoryProvider)
