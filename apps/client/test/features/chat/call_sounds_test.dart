@@ -46,7 +46,8 @@ void main() {
     await sounds.stop();
   });
 
-  testWidgets('playing the same tone twice does not restart it', (tester) async {
+  testWidgets('playing the same tone twice does not restart it',
+      (tester) async {
     await sounds.play(CallTone.ringtone);
     await sounds.play(CallTone.ringtone);
     expect(player.calls, ['loop:ringtone:false']);
