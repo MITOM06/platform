@@ -11,6 +11,7 @@ import '../ui/widgets/message_preview_text.dart';
 import 'call_rules.dart';
 import 'chat_misc_providers.dart';
 import 'chat_state.dart';
+import 'group_call_controller.dart';
 import 'incoming_call.dart';
 import 'webrtc_service.dart';
 
@@ -58,6 +59,7 @@ void handleWebRtcSignal(
         from: senderId,
         ringingFrom: ref.read(incomingCallProvider)?.senderId,
         inCallWith: webrtc.peerId,
+        inGroupCall: ref.read(groupCallControllerProvider).isActive,
       )) {
         case IncomingOfferAction.ignore:
           return; // the same caller re-sent its offer

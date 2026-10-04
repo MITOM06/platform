@@ -22,20 +22,30 @@ enum CallEndReason {
 enum IncomingOfferAction { ring, ignore, replyBusy }
 
 /// What to do with an incoming offer from [from] while possibly already
-/// ringing ([ringingFrom]) or in a call ([inCallWith]).
+/// ringing ([ringingFrom]), in a 1-on-1 call ([inCallWith]) or in a group
+/// call ([inGroupCall]).
 IncomingOfferAction decideIncomingOffer({
   required String from,
   String? ringingFrom,
   String? inCallWith,
+  bool inGroupCall = false,
 }) {
   if (ringingFrom == from || inCallWith == from) {
     return IncomingOfferAction.ignore;
   }
-  if (ringingFrom != null || inCallWith != null) {
+  if (ringingFrom != null || inCallWith != null || inGroupCall) {
     return IncomingOfferAction.replyBusy;
   }
   return IncomingOfferAction.ring;
 }
+
+/// After the callee rejects (declines, is busy, cannot open the mic), the
+/// caller tells the callee's user that the call is over, so the callee's other
+/// signed-in sessions (web + phone) stop ringing too.
+bool endsCalleeSessions(CallEndReason reason) =>
+    reason == CallEndReason.declined ||
+    reason == CallEndReason.busy ||
+    reason == CallEndReason.mediaError;
 
 /// A stray/late `end` from anyone but the current peer must not end the call.
 bool endTargetsCurrentCall({required String? from, required String? peerId}) =>

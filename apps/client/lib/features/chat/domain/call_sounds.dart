@@ -15,28 +15,62 @@ abstract class TonePlayer {
   Future<void> stop();
 }
 
+/// The audio session a tone plays in. audioplayers applies it app-wide
+/// (Android `AudioManager.mode`, the iOS `AVAudioSession` category), so:
+/// - the ringtone (before any call) obeys the iPhone silent switch;
+/// - the ringback plays while WebRTC already holds the mic, so it must join
+///   the voice-call session (in-communication mode, play-and-record with
+///   Bluetooth) — a media context would flip the whole call to MODE_NORMAL /
+///   playback and break echo cancellation, routing and AirPods.
+AudioContext audioContextFor(CallTone tone, {bool speaker = false}) {
+  if (tone == CallTone.ringtone) {
+    return AudioContextConfig(respectSilence: true).build();
+  }
+  return AudioContext(
+    android: AudioContextAndroid(
+      isSpeakerphoneOn: speaker,
+      stayAwake: false,
+      contentType: AndroidContentType.speech,
+      usageType: AndroidUsageType.voiceCommunication,
+      audioFocus: AndroidAudioFocus.none,
+      audioMode: AndroidAudioMode.inCommunication,
+    ),
+    iOS: AudioContextIOS(
+      category: AVAudioSessionCategory.playAndRecord,
+      options: {
+        AVAudioSessionOptions.allowBluetooth,
+        AVAudioSessionOptions.allowBluetoothA2DP,
+        if (speaker) AVAudioSessionOptions.defaultToSpeaker,
+      },
+    ),
+  );
+}
+
 class AudioplayersTonePlayer implements TonePlayer {
   final AudioPlayer _player = AudioPlayer();
+  CallTone? _last;
 
   @override
   Future<void> loop(CallTone tone, {bool speaker = false}) async {
     await _player.stop();
-    await _player.setAudioContext(tone == CallTone.ringtone
-        // Ringtone obeys the iPhone silent switch (vibration still runs).
-        ? AudioContextConfig(respectSilence: true).build()
-        // Ringback plays while WebRTC holds the mic: mix, don't steal focus.
-        : AudioContextConfig(
-            route: speaker
-                ? AudioContextConfigRoute.speaker
-                : AudioContextConfigRoute.earpiece,
-            focus: AudioContextConfigFocus.mixWithOthers,
-          ).build());
+    await _player.setAudioContext(audioContextFor(tone, speaker: speaker));
     await _player.setReleaseMode(ReleaseMode.loop);
+    _last = tone;
     await _player.play(AssetSource('sounds/${tone.name}.wav'));
   }
 
   @override
-  Future<void> stop() => _player.stop();
+  Future<void> stop() async {
+    await _player.stop();
+    // iOS keeps the ringtone's silent-switch (ambient) category app-wide,
+    // which would mute voice notes afterwards: restore audioplayers' default.
+    // Not on Android, where the global call rewrites AudioManager.mode.
+    if (_last == CallTone.ringtone &&
+        defaultTargetPlatform == TargetPlatform.iOS) {
+      await AudioPlayer.global.setAudioContext(AudioContextConfig().build());
+    }
+    _last = null;
+  }
 }
 
 /// Ringtone (+ vibration) for the callee, ringback for the caller.

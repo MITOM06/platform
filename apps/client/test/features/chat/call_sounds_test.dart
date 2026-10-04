@@ -1,3 +1,5 @@
+import 'package:audioplayers/audioplayers.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:platform_client/features/chat/domain/call_sounds.dart';
 
@@ -57,5 +59,38 @@ void main() {
   testWidgets('stop without a tone does nothing', (tester) async {
     await sounds.stop();
     expect(player.calls, isEmpty);
+  });
+
+  group('audioContextFor', () {
+    test('ringback joins the voice-call session instead of hijacking it', () {
+      final ctx = audioContextFor(CallTone.ringback, speaker: false);
+      expect(ctx.android.audioMode, AndroidAudioMode.inCommunication);
+      expect(ctx.android.usageType, AndroidUsageType.voiceCommunication);
+      expect(ctx.android.audioFocus, AndroidAudioFocus.none);
+      expect(ctx.android.isSpeakerphoneOn, isFalse);
+      expect(ctx.iOS.category, AVAudioSessionCategory.playAndRecord);
+      expect(
+          ctx.iOS.options,
+          containsAll([
+            AVAudioSessionOptions.allowBluetooth,
+            AVAudioSessionOptions.allowBluetoothA2DP,
+          ]));
+      expect(ctx.iOS.options,
+          isNot(contains(AVAudioSessionOptions.defaultToSpeaker)));
+    });
+
+    test('video-call ringback goes to the loudspeaker', () {
+      final ctx = audioContextFor(CallTone.ringback, speaker: true);
+      expect(ctx.android.isSpeakerphoneOn, isTrue);
+      expect(ctx.iOS.options, contains(AVAudioSessionOptions.defaultToSpeaker));
+    });
+
+    test('the ringtone obeys the silent switch', () {
+      // AudioContextConfig only builds the iOS half when running on iOS.
+      debugDefaultTargetPlatformOverride = TargetPlatform.iOS;
+      addTearDown(() => debugDefaultTargetPlatformOverride = null);
+      expect(audioContextFor(CallTone.ringtone).iOS.category,
+          AVAudioSessionCategory.ambient);
+    });
   });
 }

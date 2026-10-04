@@ -1,9 +1,16 @@
 import 'dart:async';
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
 import '../data/stomp_service.dart';
 import 'call_rules.dart';
+
+/// The call was ended (hang-up, peer cancel) while setup was still awaiting —
+/// e.g. the OS permission dialog was open. Not an error to report.
+class CallCancelledException implements Exception {
+  const CallCancelledException();
+}
 
 /// 1-1 WebRTC (audio + video) over the chat-service STOMP signaling channel.
 ///
@@ -54,6 +61,15 @@ class WebRTCService {
   final EarlyIceBuffer _early = EarlyIceBuffer();
 
   Timer? _disconnectTimer;
+
+  /// Bumped by [dispose]; setup steps compare it after each await so a call
+  /// ended mid-setup stops instead of failing with a bogus media error.
+  int _generation = 0;
+
+  /// The peer knows about this call: we sent the offer, or it called us.
+  /// A caller hanging up before its offer left signals and logs nothing.
+  bool _signaled = false;
+
   bool _micOn = true;
   bool _cameraOn = true;
   bool _speakerOn = false;
@@ -115,11 +131,19 @@ class WebRTCService {
   /// A call from [senderId] is ringing: keep its early ICE candidates.
   void expectCallFrom(String senderId) => _early.expect(senderId);
 
+  void _ensureLive(int generation) {
+    if (generation != _generation) throw const CallCancelledException();
+  }
+
+  /// [incoming] = answering a call (the caller already knows about it).
   Future<void> initialize(
     String targetId,
     String conversationId, {
     bool isVideo = true,
+    bool incoming = false,
   }) async {
+    final generation = _generation;
+    _signaled = incoming;
     _targetId = targetId;
     _conversationId = conversationId;
     _isVideo = isVideo;
@@ -141,6 +165,10 @@ class WebRTCService {
       ],
       'sdpSemantics': 'unified-plan',
     });
+    if (generation != _generation) {
+      await pc.close();
+      throw const CallCancelledException();
+    }
     _peerConnection = pc;
     // Candidates the caller sent while we were ringing.
     _pendingCandidates.addAll(_early.takeFor(targetId).map(_toCandidate));
@@ -188,15 +216,24 @@ class WebRTCService {
       }
     };
 
-    _localStream = await navigator.mediaDevices.getUserMedia({
+    final stream = await navigator.mediaDevices.getUserMedia({
       'audio': true,
       'video': _isVideo,
     });
-    onLocalStream?.call(_localStream!);
+    if (generation != _generation) {
+      // Ended while the permission dialog was open: release the late stream.
+      for (final t in stream.getTracks()) {
+        t.stop();
+      }
+      await stream.dispose();
+      throw const CallCancelledException();
+    }
+    _localStream = stream;
+    onLocalStream?.call(stream);
 
     // Unified Plan: add each track individually (not the whole stream).
-    for (final track in _localStream!.getTracks()) {
-      await pc.addTrack(track, _localStream!);
+    for (final track in stream.getTracks()) {
+      await pc.addTrack(track, stream);
     }
 
     // Video calls are held at arm's length → loudspeaker; voice → earpiece.
@@ -204,8 +241,13 @@ class WebRTCService {
   }
 
   Future<void> makeCall() async {
-    RTCSessionDescription offer = await _peerConnection!.createOffer();
-    await _peerConnection!.setLocalDescription(offer);
+    final generation = _generation;
+    final pc = _peerConnection;
+    if (pc == null) throw const CallCancelledException();
+    final offer = await pc.createOffer();
+    _ensureLive(generation);
+    await pc.setLocalDescription(offer);
+    _ensureLive(generation);
 
     _stompService.sendRawMessage(
       destination: '/app/call.offer',
@@ -216,16 +258,23 @@ class WebRTCService {
         'sdp': offer.sdp,
       }),
     );
+    _signaled = true;
   }
 
   Future<void> handleOffer(String sdp) async {
+    final generation = _generation;
+    final pc = _peerConnection;
+    if (pc == null) throw const CallCancelledException();
     _connected = true;
-    await _peerConnection!
-        .setRemoteDescription(RTCSessionDescription(sdp, 'offer'));
+    await pc.setRemoteDescription(RTCSessionDescription(sdp, 'offer'));
+    _ensureLive(generation);
     await _flushPendingCandidates();
+    _ensureLive(generation);
 
-    RTCSessionDescription answer = await _peerConnection!.createAnswer();
-    await _peerConnection!.setLocalDescription(answer);
+    final answer = await pc.createAnswer();
+    _ensureLive(generation);
+    await pc.setLocalDescription(answer);
+    _ensureLive(generation);
 
     _stompService.sendRawMessage(
       destination: '/app/call.answer',
@@ -260,7 +309,17 @@ class WebRTCService {
       _pendingCandidates.add(candidate);
       return;
     }
-    await _peerConnection!.addCandidate(candidate);
+    await _addCandidateSafely(candidate);
+  }
+
+  /// One malformed/late candidate (e.g. an empty end-of-candidates line) must
+  /// not abort the call. Mirrors web `flushPending`.
+  Future<void> _addCandidateSafely(RTCIceCandidate candidate) async {
+    try {
+      await _peerConnection?.addCandidate(candidate);
+    } catch (e) {
+      debugPrint('ICE candidate ignored: $e');
+    }
   }
 
   static RTCIceCandidate _toCandidate(Map<String, dynamic> m) =>
@@ -272,8 +331,8 @@ class WebRTCService {
 
   Future<void> _flushPendingCandidates() async {
     _remoteDescriptionSet = true;
-    for (final c in _pendingCandidates) {
-      await _peerConnection?.addCandidate(c);
+    for (final c in List.of(_pendingCandidates)) {
+      await _addCandidateSafely(c);
     }
     _pendingCandidates.clear();
   }
@@ -282,7 +341,12 @@ class WebRTCService {
   /// a ringing caller cancelling just drops its early candidates.
   void handleRemoteEnd({String? from, String? reasonWire}) {
     if (!isActive) {
-      _early.reset();
+      // Answering but the peer connection is not built yet: stop that setup.
+      if (from != null && from == _targetId) {
+        dispose();
+      } else {
+        _early.reset();
+      }
       return;
     }
     if (!endTargetsCurrentCall(from: from, peerId: peerId)) return;
@@ -290,6 +354,12 @@ class WebRTCService {
     if (reason == CallEndReason.busy) {
       // The callee never rang: log the attempt as a missed call.
       onSendCallLog?.call(missedCallLog(isVideo: _isVideo));
+    }
+    final conversationId = _conversationId;
+    if (endsCalleeSessions(reason) && from != null && conversationId != null) {
+      // The callee may be signed in elsewhere (web + phone): one session
+      // rejected, the others are still ringing — tell them all it is over.
+      sendEnd(targetId: from, conversationId: conversationId);
     }
     onEndNotice?.call(reason, true);
     dispose();
@@ -307,7 +377,8 @@ class WebRTCService {
             : DateTime.now().difference(_mediaSince!).inSeconds);
     final targetId = _targetId;
     final conversationId = _conversationId;
-    if (targetId != null && conversationId != null) {
+    final signaled = _signaled;
+    if (signaled && targetId != null && conversationId != null) {
       sendEnd(
         targetId: targetId,
         conversationId: conversationId,
@@ -323,7 +394,7 @@ class WebRTCService {
     final content = _connected
         ? 'system.call.ended:${_isVideo ? 'video' : 'voice'}:$secs'
         : missedCallLog(isVideo: _isVideo);
-    onSendCallLog?.call(content);
+    if (signaled) onSendCallLog?.call(content);
 
     onEndNotice?.call(reason, false);
     dispose();
@@ -361,6 +432,10 @@ class WebRTCService {
   }
 
   void dispose() {
+    _generation++;
+    _signaled = false;
+    _targetId = null;
+    _conversationId = null;
     _disconnectTimer?.cancel();
     _disconnectTimer = null;
     for (final track in _localStream?.getTracks() ?? <MediaStreamTrack>[]) {

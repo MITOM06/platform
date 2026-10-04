@@ -82,16 +82,24 @@ class _CallScreenState extends ConsumerState<CallScreen> {
     };
 
     webrtc.onLocalStream = (stream) {
+      if (!mounted) return;
       setState(() {
         _localRenderer.srcObject = stream;
       });
     };
     
     webrtc.onRemoteStream = (stream) {
+      if (!mounted) return;
+      if (!_isConnected && widget.isCaller) {
+        // The ringback joined the call's audio session; once it stops, hand
+        // routing back to WebRTC (re-applies the call's speaker setting).
+        unawaited(_sounds
+            .stop()
+            .then((_) => webrtc.setSpeakerOn(webrtc.speakerOn)));
+      }
       setState(() {
         _remoteRenderer.srcObject = stream;
         _isConnected = true;
-        unawaited(_sounds.stop());
         _startTimer();
       });
     };
@@ -122,6 +130,7 @@ class _CallScreenState extends ConsumerState<CallScreen> {
         widget.targetId,
         widget.conversationId,
         isVideo: effectiveVideo,
+        incoming: !widget.isCaller,
       );
 
       if (widget.isCaller) {
@@ -131,6 +140,10 @@ class _CallScreenState extends ConsumerState<CallScreen> {
       } else if (widget.initialOfferSdp != null) {
         await webrtc.handleOffer(widget.initialOfferSdp!);
       }
+    } on CallCancelledException {
+      // The call ended while setup was awaiting (e.g. the caller gave up while
+      // the permission dialog was open): already torn down, nothing to report.
+      return;
     } catch (e) {
       // Mic/camera denied or missing. The callee tells the caller (and logs a
       // missed call); a caller whose offer never left just tears down. Both
@@ -186,6 +199,19 @@ class _CallScreenState extends ConsumerState<CallScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // Back gesture / button = hang up. Leaving the screen with the call alive
+    // kept the mic open with no UI and made every later caller get "busy".
+    // endCall() → dispose() → onCallEnded pops the route itself.
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop) _endCall();
+      },
+      child: _buildCall(context),
+    );
+  }
+
+  Widget _buildCall(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.black,
       body: Stack(

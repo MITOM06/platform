@@ -36,6 +36,10 @@ void main() {
       expect(decideIncomingOffer(from: 'a', inCallWith: 'a'),
           IncomingOfferAction.ignore);
     });
+    test('replies busy while in a group call', () {
+      expect(decideIncomingOffer(from: 'b', inGroupCall: true),
+          IncomingOfferAction.replyBusy);
+    });
     test('replies busy to anyone else while ringing or in a call', () {
       expect(decideIncomingOffer(from: 'b', ringingFrom: 'a'),
           IncomingOfferAction.replyBusy);
@@ -49,6 +53,17 @@ void main() {
       expect(endTargetsCurrentCall(from: 'a', peerId: 'a'), isTrue);
       expect(endTargetsCurrentCall(from: 'b', peerId: 'a'), isFalse);
       expect(endTargetsCurrentCall(from: 'a', peerId: null), isFalse);
+    });
+  });
+
+  group('endsCalleeSessions', () {
+    test('a rejection must reach the callee\'s other signed-in sessions', () {
+      expect(endsCalleeSessions(CallEndReason.declined), isTrue);
+      expect(endsCalleeSessions(CallEndReason.busy), isTrue);
+      expect(endsCalleeSessions(CallEndReason.mediaError), isTrue);
+      expect(endsCalleeSessions(CallEndReason.hangup), isFalse);
+      expect(endsCalleeSessions(CallEndReason.noAnswer), isFalse);
+      expect(endsCalleeSessions(CallEndReason.failed), isFalse);
     });
   });
 
