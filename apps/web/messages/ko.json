@@ -1363,6 +1363,8 @@
   },
   "call": {
     "peerFallback": "사용자",
+    "mediaError": "카메라 또는 마이크에 접근할 수 없습니다. 브라우저 권한을 확인하세요.",
+    "noAnswer": "응답이 없습니다",
     "calling": "전화 거는 중…",
     "muteMic": "마이크 끄기",
     "unmuteMic": "마이크 켜기",

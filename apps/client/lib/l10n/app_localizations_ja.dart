@@ -858,6 +858,9 @@ class AppLocalizationsJa extends AppLocalizations {
   String get callMediaError => 'カメラ/マイクにアクセスできません（HTTPS または localhost が必要）';
 
   @override
+  String get callNoAnswer => '応答がありません';
+
+  @override
   String get callUnknownCaller => '誰か';
 
   @override

@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'package:collection/collection.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart'
     show BuildContext, ScaffoldMessenger, SnackBar, Text;
@@ -11,11 +10,11 @@ import '../../../core/utils/global_messenger.dart';
 import '../ui/widgets/message_preview_text.dart';
 import 'chat_misc_providers.dart';
 import 'chat_state.dart';
+import 'incoming_call.dart';
 import 'webrtc_service.dart';
 
 /// Handles a raw 1-on-1 WebRTC [signal]. Group-call signals (call-ring + mesh
 /// offer/answer/ice carrying a callId) are handled elsewhere and ignored here.
-/// [conversations] is the current conversation list (for caller-name lookup).
 void handleWebRtcSignal(
   Ref ref,
   Map<String, dynamic> signal,
@@ -30,8 +29,11 @@ void handleWebRtcSignal(
 
     // The callee has us blocked — notify the caller and bail.
     if (type == 'call-blocked') {
-      final context =
-          ref.read(appRouterProvider).routerDelegate.navigatorKey.currentContext;
+      final context = ref
+          .read(appRouterProvider)
+          .routerDelegate
+          .navigatorKey
+          .currentContext;
       if (context != null && context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(context.l10n.callBlocked)),
@@ -50,32 +52,22 @@ void handleWebRtcSignal(
       final sdp = signal['sdp'] as String?;
       if (senderId == null || convId == null || sdp == null) return;
 
-      // Show incoming call dialog
-      final router = ref.read(appRouterProvider);
-      final context = router.routerDelegate.navigatorKey.currentContext;
-      if (context == null) return;
-      final l10n = context.l10n;
-
-      // Resolve caller display name from local conversation state if available.
-      String callerName = l10n.callUnknownCaller;
-      final conv = conversations?.firstWhereOrNull((c) => c.id == convId);
-      if (conv?.name != null) {
-        callerName = conv!.name!;
+      // Already ringing or in a call → ignore the second offer (mirror web,
+      // which ignores offers while not idle).
+      if (ref.read(incomingCallProvider) != null ||
+          ref.read(webRtcServiceProvider).isActive) {
+        return;
       }
 
-      showInAppNotification(
-        l10n.callIncoming,
-        l10n.callIncomingBody(callerName),
-        onTap: () {
-          router.push('/call', extra: {
-            'targetId': senderId, // we reply back to sender
-            'targetName': callerName,
-            'conversationId': convId,
-            'isCaller': false,
-            'initialOfferSdp': sdp,
-          });
-        },
-      );
+      // Show the accept/decline prompt (IncomingCallPrompt). It used to be a
+      // transient banner whose only action was "tap = answer": the callee
+      // could not decline, and ignoring it left the caller ringing forever.
+      ref.read(incomingCallProvider.notifier).set(IncomingCall(
+            senderId: senderId,
+            conversationId: convId,
+            sdp: sdp,
+            isVideo: WebRTCService.sdpHasVideo(sdp),
+          ));
     } else {
       // For answer, ice, end, we need to pass them to WebRTCService if it's active.
       final webrtc = ref.read(webRtcServiceProvider);
@@ -91,6 +83,11 @@ void handleWebRtcSignal(
         // Peer hung up: tear down locally only. Do NOT re-publish /app/call.end
         // or send a system call-log message — the hang-up initiator already
         // did both, otherwise we'd ping-pong and log the call twice.
+        // A caller hanging up (or ringing out) before we answered also
+        // dismisses the incoming prompt.
+        ref
+            .read(incomingCallProvider.notifier)
+            .clearFrom(signal['senderId'] as String?);
         webrtc.dispose();
       }
     }
@@ -161,7 +158,8 @@ Future<void> showIncomingMessageBanner(
       ref.read(appRouterProvider).routerDelegate.navigatorKey.currentContext;
   if (context == null || !context.mounted) return;
   final l10n = context.l10n;
-  final name = resolvedName.isNotEmpty ? resolvedName : l10n.conversationDefault;
+  final name =
+      resolvedName.isNotEmpty ? resolvedName : l10n.conversationDefault;
 
   final bodyText = notificationBodyText(
     context,

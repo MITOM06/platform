@@ -1728,6 +1728,12 @@ abstract class AppLocalizations {
   /// **'Cannot access camera/microphone (HTTPS or localhost required)'**
   String get callMediaError;
 
+  /// No description provided for @callNoAnswer.
+  ///
+  /// In en, this message translates to:
+  /// **'No answer'**
+  String get callNoAnswer;
+
   /// No description provided for @callUnknownCaller.
   ///
   /// In en, this message translates to:

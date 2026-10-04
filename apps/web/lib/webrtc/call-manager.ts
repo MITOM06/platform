@@ -28,6 +28,18 @@ export interface WebRTCSignal {
   aiNotetaker?: boolean
 }
 
+/**
+ * How long an outgoing 1-on-1 call rings before it is given up as missed.
+ * There is no server-side ring state, so without this the caller sat on
+ * "Calling…" forever whenever the callee was offline, never saw the ring, or
+ * ignored it. The callee's prompt is cleared by the `end` this sends (and by
+ * its own [INCOMING_RING_TIMEOUT_MS] if that `end` never arrives).
+ * Mirrors Flutter `WebRTCService.ringTimeout`.
+ */
+export const RING_TIMEOUT_MS = 45_000
+/** Callee-side safety net, slightly longer than the caller's ring. */
+export const INCOMING_RING_TIMEOUT_MS = RING_TIMEOUT_MS + 5_000
+
 const ICE_SERVERS: RTCConfiguration = {
   iceServers: [
     { urls: ['stun:stun.l.google.com:19302', 'stun:stun1.l.google.com:19302'] },
@@ -42,10 +54,13 @@ class CallManager {
   private conversationId: string | null = null
   private remoteDescriptionSet = false
   private pendingCandidates: RTCIceCandidateInit[] = []
+  private ringTimer: ReturnType<typeof setTimeout> | null = null
 
   onLocalStream: ((s: MediaStream) => void) | null = null
   onRemoteStream: ((s: MediaStream) => void) | null = null
   onEnded: (() => void) | null = null
+  /** Fired when an outgoing call rings out unanswered ([RING_TIMEOUT_MS]). */
+  onNoAnswer: (() => void) | null = null
 
   getLocalStream(): MediaStream | null {
     return this.localStream
@@ -54,7 +69,11 @@ class CallManager {
     return this.remoteStream
   }
 
-  /** Start an outgoing call to `targetId`. `video=false` → audio-only voice call. */
+  /**
+   * Start an outgoing call to `targetId`. `video=false` → audio-only voice call.
+   * Rejects (after resetting the call UI) when the camera/mic can't be opened,
+   * so the caller is never left on "Calling…" for a call that was never placed.
+   */
   async startCall(
     targetId: string,
     targetName: string,
@@ -62,15 +81,26 @@ class CallManager {
     video = true,
   ): Promise<void> {
     useCallStore.getState().setOutgoing({ peerId: targetId, peerName: targetName, conversationId, video })
-    await this.setup(targetId, conversationId, video)
-    const offer = await this.pc!.createOffer()
-    await this.pc!.setLocalDescription(offer)
-    stompService.publish('/app/call.offer', {
-      targetId,
-      conversationId,
-      type: 'offer',
-      sdp: offer.sdp,
-    })
+    try {
+      await this.setup(targetId, conversationId, video)
+      const offer = await this.pc!.createOffer()
+      await this.pc!.setLocalDescription(offer)
+      stompService.publish('/app/call.offer', {
+        targetId,
+        conversationId,
+        type: 'offer',
+        sdp: offer.sdp,
+      })
+    } catch (err) {
+      this.teardown(true)
+      throw err
+    }
+    this.ringTimer = setTimeout(() => {
+      this.ringTimer = null
+      if (useCallStore.getState().status !== 'outgoing') return
+      this.endCall()
+      this.onNoAnswer?.()
+    }, RING_TIMEOUT_MS)
   }
 
   /** Accept the incoming offer currently held in the store. */
@@ -171,6 +201,7 @@ class CallManager {
       if (e.streams[0]) {
         this.remoteStream = e.streams[0]
         this.onRemoteStream?.(e.streams[0])
+        this.clearRingTimer()
         useCallStore.getState().setConnected()
       }
     }
@@ -214,8 +245,14 @@ class CallManager {
     this.pendingCandidates = []
   }
 
+  private clearRingTimer(): void {
+    if (this.ringTimer) clearTimeout(this.ringTimer)
+    this.ringTimer = null
+  }
+
   /** Tear down media + connection. `notifyUi` resets the store/overlay. */
   private teardown(notifyUi: boolean): void {
+    this.clearRingTimer()
     this.localStream?.getTracks().forEach((t) => t.stop())
     this.localStream = null
     this.remoteStream = null

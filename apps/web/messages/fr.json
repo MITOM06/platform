@@ -1363,6 +1363,8 @@
   },
   "call": {
     "peerFallback": "Utilisateur",
+    "mediaError": "Impossible d'accéder à la caméra ou au micro. Vérifiez les autorisations du navigateur.",
+    "noAnswer": "Pas de réponse",
     "calling": "Appel en cours…",
     "muteMic": "Couper le micro",
     "unmuteMic": "Activer le micro",

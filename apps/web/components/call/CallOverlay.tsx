@@ -2,9 +2,10 @@
 
 import { useEffect } from 'react'
 import { useTranslations } from 'next-intl'
+import { toast } from 'sonner'
 import { Phone, PhoneOff, Video } from 'lucide-react'
 import { useCallStore } from '@/lib/store/call.store'
-import { callManager } from '@/lib/webrtc/call-manager'
+import { callManager, INCOMING_RING_TIMEOUT_MS } from '@/lib/webrtc/call-manager'
 import { Button } from '@/components/ui/button'
 import { VoiceCallModal } from './VoiceCallModal'
 import { VideoCallModal } from './VideoCallModal'
@@ -37,6 +38,24 @@ export function CallOverlay() {
     }, 1000)
     return () => clearInterval(id)
   }, [status, setDuration])
+
+  // Tell the caller why the call closed when it rang out unanswered.
+  useEffect(() => {
+    callManager.onNoAnswer = () => toast(t('noAnswer'))
+    return () => {
+      callManager.onNoAnswer = null
+    }
+  }, [t])
+
+  // Callee-side safety net: if the caller vanished without sending `end`
+  // (tab closed, connection dropped), stop showing a prompt nobody can answer.
+  useEffect(() => {
+    if (status !== 'incoming') return
+    const id = setTimeout(() => {
+      if (useCallStore.getState().status === 'incoming') useCallStore.getState().reset()
+    }, INCOMING_RING_TIMEOUT_MS)
+    return () => clearTimeout(id)
+  }, [status])
 
   // ── Group call takes over the screen when active ──────────────────────────
   if (groupCallId) return <GroupCallModal />

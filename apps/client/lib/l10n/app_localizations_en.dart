@@ -867,6 +867,9 @@ class AppLocalizationsEn extends AppLocalizations {
       'Cannot access camera/microphone (HTTPS or localhost required)';
 
   @override
+  String get callNoAnswer => 'No answer';
+
+  @override
   String get callUnknownCaller => 'Someone';
 
   @override

@@ -855,6 +855,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get callMediaError => '无法访问摄像头/麦克风（需要 HTTPS 或 localhost）';
 
   @override
+  String get callNoAnswer => '无人接听';
+
+  @override
   String get callUnknownCaller => '某人';
 
   @override

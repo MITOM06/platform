@@ -858,6 +858,9 @@ class AppLocalizationsKo extends AppLocalizations {
   String get callMediaError => '카메라/마이크에 접근할 수 없습니다 (HTTPS 또는 localhost 필요)';
 
   @override
+  String get callNoAnswer => '응답이 없습니다';
+
+  @override
   String get callUnknownCaller => '누군가';
 
   @override

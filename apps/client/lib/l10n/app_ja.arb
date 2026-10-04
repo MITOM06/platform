@@ -272,6 +272,7 @@
   "callCalling": "{name} に発信中…",
   "callConnecting": "接続中…",
   "callMediaError": "カメラ/マイクにアクセスできません（HTTPS または localhost が必要）",
+  "callNoAnswer": "応答がありません",
   "callUnknownCaller": "誰か",
   "callToggleMic": "マイクの切り替え",
   "callToggleCam": "カメラの切り替え",

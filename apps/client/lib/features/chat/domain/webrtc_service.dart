@@ -42,6 +42,40 @@ class WebRTCService {
 
   WebRTCService(this._stompService);
 
+  /// True while a 1-on-1 call holds a peer connection (ringing or connected).
+  bool get isActive => _peerConnection != null;
+
+  /// How long an outgoing call rings before it is given up as missed. There
+  /// is no server-side ring state, so without this the caller sat on
+  /// "Calling…" forever whenever the callee was offline or never answered.
+  /// Mirrors web `RING_TIMEOUT_MS` in `call-manager.ts`.
+  static const ringTimeout = Duration(seconds: 45);
+
+  /// Callee-side safety net, slightly longer than the caller's ring.
+  static const incomingRingTimeout = Duration(seconds: 50);
+
+  /// The `system.call.missed:{kind}` call-log content (see [endCall]).
+  static String missedCallLog({required bool isVideo}) =>
+      'system.call.missed:${isVideo ? 'video' : 'voice'}';
+
+  /// Tell [targetId] the call is over. Used directly when declining an
+  /// incoming call that never got a peer connection (no [initialize]).
+  void sendEnd({
+    required String targetId,
+    required String conversationId,
+    int duration = 0,
+  }) {
+    _stompService.sendRawMessage(
+      destination: '/app/call.end',
+      body: jsonEncode({
+        'targetId': targetId,
+        'conversationId': conversationId,
+        'type': 'end',
+        'duration': duration,
+      }),
+    );
+  }
+
   /// True when the SDP advertises a video media section (`m=video`). Used to
   /// decide whether an incoming call should open the camera.
   static bool sdpHasVideo(String? sdp) =>
@@ -173,24 +207,23 @@ class WebRTCService {
   }
 
   Future<void> endCall({int duration = 0}) async {
-    _stompService.sendRawMessage(
-      destination: '/app/call.end',
-      body: jsonEncode({
-        'targetId': _targetId,
-        'conversationId': _conversationId,
-        'type': 'end',
-        'duration': duration,
-      }),
-    );
+    final targetId = _targetId;
+    final conversationId = _conversationId;
+    if (targetId != null && conversationId != null) {
+      sendEnd(
+        targetId: targetId,
+        conversationId: conversationId,
+        duration: duration,
+      );
+    }
 
     // Emit a system message so both sides see the call log in chat history.
     // Only the hang-up initiator runs this (the peer tears down via dispose()),
     // so the call is logged exactly once. Mirrors web call-manager.ts format
     // `system.call.ended:{kind}:{secs}` / `system.call.missed:{kind}`.
-    final kind = _isVideo ? 'video' : 'voice';
     final content = _connected
-        ? 'system.call.ended:$kind:$duration'
-        : 'system.call.missed:$kind';
+        ? 'system.call.ended:${_isVideo ? 'video' : 'voice'}:$duration'
+        : missedCallLog(isVideo: _isVideo);
     onSendCallLog?.call(content);
 
     dispose();

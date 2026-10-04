@@ -272,6 +272,7 @@
   "callCalling": "Llamando a {name}…",
   "callConnecting": "Conectando…",
   "callMediaError": "No se puede acceder a la cámara/micrófono (se requiere HTTPS o localhost)",
+  "callNoAnswer": "Sin respuesta",
   "callUnknownCaller": "Alguien",
   "callToggleMic": "Activar/desactivar micrófono",
   "callToggleCam": "Activar/desactivar cámara",

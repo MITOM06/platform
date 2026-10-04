@@ -272,6 +272,7 @@
   "callCalling": "Đang gọi {name}…",
   "callConnecting": "Đang kết nối…",
   "callMediaError": "Không thể truy cập camera/micro (cần HTTPS hoặc localhost)",
+  "callNoAnswer": "Không có người trả lời",
   "callUnknownCaller": "Ai đó",
   "callToggleMic": "Bật/tắt micro",
   "callToggleCam": "Bật/tắt camera",

@@ -867,6 +867,9 @@ class AppLocalizationsVi extends AppLocalizations {
       'Không thể truy cập camera/micro (cần HTTPS hoặc localhost)';
 
   @override
+  String get callNoAnswer => 'Không có người trả lời';
+
+  @override
   String get callUnknownCaller => 'Ai đó';
 
   @override

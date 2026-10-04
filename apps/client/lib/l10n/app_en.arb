@@ -416,6 +416,7 @@
   },
   "callConnecting": "Connecting…",
   "callMediaError": "Cannot access camera/microphone (HTTPS or localhost required)",
+  "callNoAnswer": "No answer",
   "callUnknownCaller": "Someone",
   "callToggleMic": "Toggle microphone",
   "callToggleCam": "Toggle camera",

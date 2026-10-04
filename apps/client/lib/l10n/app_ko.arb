@@ -272,6 +272,7 @@
   "callCalling": "{name}님에게 전화 거는 중…",
   "callConnecting": "연결 중…",
   "callMediaError": "카메라/마이크에 접근할 수 없습니다 (HTTPS 또는 localhost 필요)",
+  "callNoAnswer": "응답이 없습니다",
   "callUnknownCaller": "누군가",
   "callToggleMic": "마이크 전환",
   "callToggleCam": "카메라 전환",

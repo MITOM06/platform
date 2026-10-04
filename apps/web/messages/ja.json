@@ -1363,6 +1363,8 @@
   },
   "call": {
     "peerFallback": "ユーザー",
+    "mediaError": "カメラまたはマイクにアクセスできません。ブラウザの権限を確認してください。",
+    "noAnswer": "応答がありません",
     "calling": "発信中…",
     "muteMic": "マイクをオフ",
     "unmuteMic": "マイクをオン",

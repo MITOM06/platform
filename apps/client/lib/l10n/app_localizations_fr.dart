@@ -880,6 +880,9 @@ class AppLocalizationsFr extends AppLocalizations {
       'Impossible d\'accéder à la caméra/au micro (HTTPS ou localhost requis)';
 
   @override
+  String get callNoAnswer => 'Pas de réponse';
+
+  @override
   String get callUnknownCaller => 'Quelqu\'un';
 
   @override

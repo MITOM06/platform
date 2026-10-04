@@ -32,6 +32,7 @@ class _CallScreenState extends ConsumerState<CallScreen> {
   final RTCVideoRenderer _localRenderer = RTCVideoRenderer();
   final RTCVideoRenderer _remoteRenderer = RTCVideoRenderer();
   Timer? _callTimer;
+  Timer? _ringTimer;
   int _durationSeconds = 0;
   bool _isConnected = false;
   bool _isVideoCall = true;
@@ -95,6 +96,7 @@ class _CallScreenState extends ConsumerState<CallScreen> {
 
       if (widget.isCaller) {
         await webrtc.makeCall();
+        _ringTimer = Timer(WebRTCService.ringTimeout, _onRingTimeout);
       } else if (widget.initialOfferSdp != null) {
         await webrtc.handleOffer(widget.initialOfferSdp!);
       }
@@ -111,7 +113,18 @@ class _CallScreenState extends ConsumerState<CallScreen> {
     }
   }
 
+  /// Nobody picked up within [WebRTCService.ringTimeout]: hang up (which
+  /// tells the callee and logs a missed call) instead of ringing forever.
+  void _onRingTimeout() {
+    if (!mounted || _isConnected) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(context.l10n.callNoAnswer)),
+    );
+    _endCall();
+  }
+
   void _startTimer() {
+    _ringTimer?.cancel();
     _callTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
       setState(() {
         _durationSeconds++;
@@ -126,13 +139,15 @@ class _CallScreenState extends ConsumerState<CallScreen> {
   }
 
   void _endCall() {
+    // endCall() → dispose() → onCallEnded closes this screen. Popping here as
+    // well used to pop twice, closing the chat screen underneath too.
     ref.read(webRtcServiceProvider).endCall(duration: _durationSeconds);
-    Navigator.of(context).pop();
   }
 
   @override
   void dispose() {
     _callTimer?.cancel();
+    _ringTimer?.cancel();
     _localRenderer.dispose();
     _remoteRenderer.dispose();
     super.dispose();

@@ -1363,6 +1363,8 @@
   },
   "call": {
     "peerFallback": "Người dùng",
+    "mediaError": "Không thể truy cập camera hoặc micro. Hãy kiểm tra quyền của trình duyệt.",
+    "noAnswer": "Không có người trả lời",
     "calling": "Đang gọi…",
     "muteMic": "Tắt mic",
     "unmuteMic": "Bật mic",
