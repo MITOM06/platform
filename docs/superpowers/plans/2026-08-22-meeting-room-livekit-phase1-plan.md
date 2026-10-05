@@ -1,5 +1,7 @@
 # Plan — Meeting Room Phase 1: LiveKit SFU + Screen Share
 
+> ⚠️ **SUPERSEDED 2026-10-05 — không thực thi plan này.** Thay bằng 4 plan theo spec `2026-10-05-calls-and-meetings-design.md`: `2026-10-05-rtc-foundation-livekit.md`, `2026-10-05-calls-on-livekit.md`, `2026-10-05-meetings-p1-core.md`, `2026-10-05-meetings-p2-ai.md`. Lý do: plan này viết cho VM GCE (prod giờ là Mac mini sau Cloudflare Tunnel, không chuyển UDP), thiếu migrate cuộc gọi 1-1, thiếu triển khai prod/self-host, cắt nhánh từ `dev`, và gộp Cuộc gọi với Phòng họp làm một.
+
 **Ngày:** 2026-08-22 · cập nhật 2026-08-28 · **Trạng thái: PENDING (chưa bắt đầu), 3 quyết định đã chốt**
 **Spec:** `docs/superpowers/specs/2026-08-22-meeting-room-livekit-design.md`
 **Nhánh đề nghị:** `feat/meeting-livekit` cắt từ `dev` (cần local stack)

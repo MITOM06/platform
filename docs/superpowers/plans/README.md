@@ -5,7 +5,7 @@
 > [`../PON-ENTERPRISE-HANDOFF.md`](../PON-ENTERPRISE-HANDOFF.md).
 >
 > Last regenerated: 2026-09-30 (added the AI Context plans and UI-redesign batches 7–8, which had
-> shipped but were never indexed). Meeting Room / LiveKit is still the only PENDING plan.
+> shipped but were never indexed). Updated 2026-10-05: Cuộc gọi & Phòng họp tách thành 4 plan PENDING (xem bảng dưới); plan LiveKit 2026-08-22 bị thay thế.
 >
 > **Unticked `- [ ]` boxes inside a plan do not mean the work is open** — most plans were executed
 > without ticking their steps. This index is the status of record.
@@ -14,7 +14,11 @@
 
 | Plan | Scope | Trạng thái |
 |------|-------|------------|
-| `2026-08-22-meeting-room-livekit-phase1-plan.md` | Meeting Room Phase 1 — thay P2P mesh bằng **LiveKit SFU**: hạ tầng LiveKit + TURN (M0), chat-service thành authority thay vì relay SDP/ICE (M1), room web (M2) + Flutter (M3) với screen share / lobby / active speaker, QC & rollout theo cờ `CALL_TRANSPORT` (M4) | **PENDING — 0/44 task.** Spec đã chốt: [`../specs/2026-08-22-meeting-room-livekit-design.md`](../specs/2026-08-22-meeting-room-livekit-design.md). Nhánh đề nghị `feat/meeting-livekit` cắt từ `dev` (chưa tạo). **Không còn chặn** — owner chốt 3 quyết định ngày 2026-08-28: 1-1 cũng qua LiveKit (⇒ bỏ coturn khỏi M0), iOS screen share tách bản sau (⇒ M3.8 ra khỏi Phase 1), trần 25 người/phòng (⇒ VM ~4 vCPU). Xem bảng ở cuối plan. Fix bug P1 hiện tại: call chỉ có STUN, không TURN → fail sau NAT đối xứng / firewall doanh nghiệp |
+| `2026-10-05-rtc-foundation-livekit.md` | Nền media dùng chung: lớp `rtc` trong chat-service (token LiveKit, webhook có xác thực, room API), LiveKit trong self-host stack + máy media riêng cho triển khai Mac mini, runbook | **PENDING — 10 task, plan step-level có code.** Spec: [`../specs/2026-10-05-calls-and-meetings-design.md`](../specs/2026-10-05-calls-and-meetings-design.md). Không đổi hành vi người dùng (`CALL_TRANSPORT=mesh` mặc định). Deploy prod cần owner chọn máy media (spec §8) — **không chặn việc code** |
+| `2026-10-05-calls-on-livekit.md` | **Cuộc gọi** 1-1 + nhóm kiểu Messenger/Zalo qua LiveKit sau cờ `CALL_TRANSPORT`: fix P1 NAT (chỉ có STUN), `answered_elsewhere`, busy phía server, roster từ webhook | **PENDING — milestone plan (C1–C4)**, viết step-level trước mỗi milestone. Phụ thuộc Foundation + `2026-10-04-call-1on1-reliability.md`. Module B (Trí) |
+| `2026-10-05-meetings-p1-core.md` | **Phòng họp** (tính năng mới, kiểu Meet/Teams): họp ngay/lên lịch, link `/meet/{code}`, màn chờ + phòng chờ, host/co-host, giơ tay, reaction, chat, ghi chú chung/riêng, share màn hình, layout, capability `HOST_MEETING` | **PENDING — milestone plan (MT1–MT8).** Phụ thuộc Foundation; chạy song song được với Calls |
+| `2026-10-05-meetings-p2-ai.md` | AI trong họp: phụ đề có tên người nói, biên bản (transcript + ghi chú + chat), action items → nhắc việc, `@AI` trong chat họp | **PENDING — milestone plan (AI1–AI5).** Phụ thuộc Meetings P1. Module A |
+| ~~`2026-08-22-meeting-room-livekit-phase1-plan.md`~~ | Meeting Room Phase 1 (LiveKit) | **SUPERSEDED 2026-10-05** bởi 4 plan trên — không thực thi |
 
 ## 🎨 UI Redesign (Warm Grey & Burgundy) — code complete, awaiting visual QA
 

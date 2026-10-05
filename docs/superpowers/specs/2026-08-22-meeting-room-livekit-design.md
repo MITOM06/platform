@@ -1,5 +1,7 @@
 # Meeting Room — LiveKit SFU Migration (Design)
 
+> ⚠️ **SUPERSEDED 2026-10-05** bởi `2026-10-05-calls-and-meetings-design.md` — owner tách **Cuộc gọi** (Messenger/Zalo) và **Phòng họp** (Meet/Teams) thành hai tính năng. Các quyết định D1, D4, D5, D6 và 3 quyết định ngày 2026-08-28 được kế thừa ở tài liệu mới. Giữ file này làm lịch sử.
+
 **Ngày:** 2026-08-22 · **Trạng thái:** ĐÃ CHỐT, chưa implement
 **Thay thế phần media của:** `docs/superpowers/specs/2026-06-22-track-a-group-call-contracts.md`
 (contract §1 CallSession, §3 call events, §4 Redis keys, §5 AI summary, §6 `meeting_summary`
