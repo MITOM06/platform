@@ -353,3 +353,18 @@ export interface DashboardResponse {
   topUsers: UsageTopUser[]
   feedback: UsageFeedback
 }
+
+// ─── Calls on LiveKit (docs/api-spec.md "Calls on LiveKit") ───────────────────
+
+/** Media path the server picks for a call. */
+export type CallTransport = 'mesh' | 'sfu'
+
+export interface CallConfig {
+  transport: CallTransport
+  livekitUrl?: string | null
+}
+
+export interface CallToken {
+  url: string
+  token: string
+}
