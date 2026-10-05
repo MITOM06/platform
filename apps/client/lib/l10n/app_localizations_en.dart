@@ -3232,6 +3232,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get aiContextSaveError => 'Failed to save';
 
   @override
+  String get aiContextLearnedFactsLoadError =>
+      'Couldn\'t load what the assistant has learned.';
+
+  @override
   String get aiContextKeyFacts => 'Key facts:';
 
   @override
@@ -4066,5 +4070,196 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String tokenUsageQuotaResets(String date) {
     return 'Resets on $date';
+  }
+
+  @override
+  String authErrRoleGrantExceedsOwnPermissions(String capabilities) {
+    return 'You can\'t grant permissions you don\'t have yourself: $capabilities.';
+  }
+
+  @override
+  String get authErrRoleGrantExceedsOwnPermissionsGeneric =>
+      'You can\'t grant permissions you don\'t have yourself.';
+
+  @override
+  String get authErrCannotEditOwnRole => 'You can\'t edit your own role.';
+
+  @override
+  String get authErrPresetRoleRenameForbidden =>
+      'Built-in roles can\'t be renamed.';
+
+  @override
+  String get authErrRoleNameTaken => 'A role with this name already exists.';
+
+  @override
+  String get authErrOwnerRoleImmutable =>
+      'The Owner role can\'t be modified or deleted.';
+
+  @override
+  String get authErrOwnerSsoMappingForbidden =>
+      'Only an Owner can map SSO groups to the Owner role.';
+
+  @override
+  String get authErrInsufficientPermission =>
+      'You don\'t have permission to do this.';
+
+  @override
+  String get authErrAiContextEntryNotFound =>
+      'This context entry no longer exists.';
+
+  @override
+  String get authErrAiConnectorsNotInAllowList =>
+      'The selected AI connectors must also be allowed in the workspace connector list.';
+
+  @override
+  String authErrPasswordTooShortMin(int min) {
+    return 'Password must be at least $min characters.';
+  }
+
+  @override
+  String get adminCapManageAiContext => 'Manage AI context';
+
+  @override
+  String get adminCapViewInternalContext => 'View internal context';
+
+  @override
+  String get adminCapViewConfidentialContext => 'View confidential context';
+
+  @override
+  String get adminCapUnknown => 'Other permission';
+
+  @override
+  String get adminAuditSystem => 'System';
+
+  @override
+  String get adminAuditFormerMember => 'A former member';
+
+  @override
+  String get adminAuditActionOther => 'Other action';
+
+  @override
+  String get adminAuditActionWorkspaceUpdate => 'Workspace updated';
+
+  @override
+  String get adminAuditActionDepartmentCreate => 'Department created';
+
+  @override
+  String get adminAuditActionDepartmentUpdate => 'Department updated';
+
+  @override
+  String get adminAuditActionDepartmentDelete => 'Department deleted';
+
+  @override
+  String get adminAuditActionMemberUpdate => 'Member updated';
+
+  @override
+  String get adminAuditActionMemberSsoUpdate => 'Member updated by SSO';
+
+  @override
+  String get adminAuditActionMemberBlock => 'Member blocked';
+
+  @override
+  String get adminAuditActionMemberUnblock => 'Member unblocked';
+
+  @override
+  String get adminAuditActionRoleCreate => 'Role created';
+
+  @override
+  String get adminAuditActionRoleUpdate => 'Role updated';
+
+  @override
+  String get adminAuditActionInvitationCreate => 'Invitation sent';
+
+  @override
+  String get adminAuditActionInvitationResend => 'Invitation resent';
+
+  @override
+  String get adminAuditActionInvitationRevoke => 'Invitation revoked';
+
+  @override
+  String get adminAuditActionInvitationAccept => 'Invitation accepted';
+
+  @override
+  String get adminAuditActionConnectorConnect => 'Connector connected';
+
+  @override
+  String get adminAuditActionConnectorDisconnect => 'Connector disconnected';
+
+  @override
+  String get adminAuditActionConnectorReplace => 'Connector reconnected';
+
+  @override
+  String get adminAuditActionConnectionPermissionsUpdate =>
+      'Connector permissions updated';
+
+  @override
+  String get adminAuditActionCustomMcpAdd => 'Custom MCP added';
+
+  @override
+  String get adminAuditActionCustomMcpDelete => 'Custom MCP removed';
+
+  @override
+  String get adminAuditActionDirectoryCreate => 'Directory entry added';
+
+  @override
+  String get adminAuditActionDirectoryUpdate => 'Directory entry updated';
+
+  @override
+  String get adminAuditActionDirectoryDelete => 'Directory entry removed';
+
+  @override
+  String get adminAuditActionSensitiveSkillRun => 'Sensitive skill run';
+
+  @override
+  String get adminAuditTargetWorkspace => 'Workspace';
+
+  @override
+  String get adminAuditTargetMember => 'A member';
+
+  @override
+  String get adminAuditTargetRole => 'A role';
+
+  @override
+  String get adminAuditTargetDepartment => 'A department';
+
+  @override
+  String get adminAuditTargetInvitation => 'An invitation';
+
+  @override
+  String get adminAuditTargetConnector => 'A connector';
+
+  @override
+  String get adminAuditTargetDirectoryEntry => 'A directory entry';
+
+  @override
+  String get adminAuditTargetTool => 'A tool';
+
+  @override
+  String get adminAuditTargetOther => 'Something else';
+
+  @override
+  String get adminAiConnectorsAllAllowed =>
+      'The workspace allow-list is empty, so every connector is allowed. Pick the ones the AI may use.';
+
+  @override
+  String get errAssistantSetupIncomplete =>
+      'Add a persona and pick a model to finish setting up your assistant.';
+
+  @override
+  String get errAssistantNotConfigured =>
+      'Personal assistants aren\'t available on this workspace yet. Ask your administrator.';
+
+  @override
+  String get errAssistantUpstreamFailed =>
+      'The assistant service didn\'t respond. Please try again in a moment.';
+
+  @override
+  String adminBotOwnedBy(String name) {
+    return 'Owned by $name';
+  }
+
+  @override
+  String adminRoleCloneDefaultName(String name) {
+    return '$name copy';
   }
 }

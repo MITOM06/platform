@@ -6067,6 +6067,12 @@ abstract class AppLocalizations {
   /// **'Failed to save'**
   String get aiContextSaveError;
 
+  /// Shown in the AI Context screen when the learned-facts (memory) section fails to load.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t load what the assistant has learned.'**
+  String get aiContextLearnedFactsLoadError;
+
   /// No description provided for @aiContextKeyFacts.
   ///
   /// In en, this message translates to:
@@ -7440,6 +7446,348 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Resets on {date}'**
   String tokenUsageQuotaResets(String date);
+
+  /// No description provided for @authErrRoleGrantExceedsOwnPermissions.
+  ///
+  /// In en, this message translates to:
+  /// **'You can\'t grant permissions you don\'t have yourself: {capabilities}.'**
+  String authErrRoleGrantExceedsOwnPermissions(String capabilities);
+
+  /// No description provided for @authErrRoleGrantExceedsOwnPermissionsGeneric.
+  ///
+  /// In en, this message translates to:
+  /// **'You can\'t grant permissions you don\'t have yourself.'**
+  String get authErrRoleGrantExceedsOwnPermissionsGeneric;
+
+  /// No description provided for @authErrCannotEditOwnRole.
+  ///
+  /// In en, this message translates to:
+  /// **'You can\'t edit your own role.'**
+  String get authErrCannotEditOwnRole;
+
+  /// No description provided for @authErrPresetRoleRenameForbidden.
+  ///
+  /// In en, this message translates to:
+  /// **'Built-in roles can\'t be renamed.'**
+  String get authErrPresetRoleRenameForbidden;
+
+  /// No description provided for @authErrRoleNameTaken.
+  ///
+  /// In en, this message translates to:
+  /// **'A role with this name already exists.'**
+  String get authErrRoleNameTaken;
+
+  /// No description provided for @authErrOwnerRoleImmutable.
+  ///
+  /// In en, this message translates to:
+  /// **'The Owner role can\'t be modified or deleted.'**
+  String get authErrOwnerRoleImmutable;
+
+  /// No description provided for @authErrOwnerSsoMappingForbidden.
+  ///
+  /// In en, this message translates to:
+  /// **'Only an Owner can map SSO groups to the Owner role.'**
+  String get authErrOwnerSsoMappingForbidden;
+
+  /// No description provided for @authErrInsufficientPermission.
+  ///
+  /// In en, this message translates to:
+  /// **'You don\'t have permission to do this.'**
+  String get authErrInsufficientPermission;
+
+  /// No description provided for @authErrAiContextEntryNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'This context entry no longer exists.'**
+  String get authErrAiContextEntryNotFound;
+
+  /// No description provided for @authErrAiConnectorsNotInAllowList.
+  ///
+  /// In en, this message translates to:
+  /// **'The selected AI connectors must also be allowed in the workspace connector list.'**
+  String get authErrAiConnectorsNotInAllowList;
+
+  /// No description provided for @authErrPasswordTooShortMin.
+  ///
+  /// In en, this message translates to:
+  /// **'Password must be at least {min} characters.'**
+  String authErrPasswordTooShortMin(int min);
+
+  /// No description provided for @adminCapManageAiContext.
+  ///
+  /// In en, this message translates to:
+  /// **'Manage AI context'**
+  String get adminCapManageAiContext;
+
+  /// No description provided for @adminCapViewInternalContext.
+  ///
+  /// In en, this message translates to:
+  /// **'View internal context'**
+  String get adminCapViewInternalContext;
+
+  /// No description provided for @adminCapViewConfidentialContext.
+  ///
+  /// In en, this message translates to:
+  /// **'View confidential context'**
+  String get adminCapViewConfidentialContext;
+
+  /// No description provided for @adminCapUnknown.
+  ///
+  /// In en, this message translates to:
+  /// **'Other permission'**
+  String get adminCapUnknown;
+
+  /// No description provided for @adminAuditSystem.
+  ///
+  /// In en, this message translates to:
+  /// **'System'**
+  String get adminAuditSystem;
+
+  /// No description provided for @adminAuditFormerMember.
+  ///
+  /// In en, this message translates to:
+  /// **'A former member'**
+  String get adminAuditFormerMember;
+
+  /// No description provided for @adminAuditActionOther.
+  ///
+  /// In en, this message translates to:
+  /// **'Other action'**
+  String get adminAuditActionOther;
+
+  /// No description provided for @adminAuditActionWorkspaceUpdate.
+  ///
+  /// In en, this message translates to:
+  /// **'Workspace updated'**
+  String get adminAuditActionWorkspaceUpdate;
+
+  /// No description provided for @adminAuditActionDepartmentCreate.
+  ///
+  /// In en, this message translates to:
+  /// **'Department created'**
+  String get adminAuditActionDepartmentCreate;
+
+  /// No description provided for @adminAuditActionDepartmentUpdate.
+  ///
+  /// In en, this message translates to:
+  /// **'Department updated'**
+  String get adminAuditActionDepartmentUpdate;
+
+  /// No description provided for @adminAuditActionDepartmentDelete.
+  ///
+  /// In en, this message translates to:
+  /// **'Department deleted'**
+  String get adminAuditActionDepartmentDelete;
+
+  /// No description provided for @adminAuditActionMemberUpdate.
+  ///
+  /// In en, this message translates to:
+  /// **'Member updated'**
+  String get adminAuditActionMemberUpdate;
+
+  /// No description provided for @adminAuditActionMemberSsoUpdate.
+  ///
+  /// In en, this message translates to:
+  /// **'Member updated by SSO'**
+  String get adminAuditActionMemberSsoUpdate;
+
+  /// No description provided for @adminAuditActionMemberBlock.
+  ///
+  /// In en, this message translates to:
+  /// **'Member blocked'**
+  String get adminAuditActionMemberBlock;
+
+  /// No description provided for @adminAuditActionMemberUnblock.
+  ///
+  /// In en, this message translates to:
+  /// **'Member unblocked'**
+  String get adminAuditActionMemberUnblock;
+
+  /// No description provided for @adminAuditActionRoleCreate.
+  ///
+  /// In en, this message translates to:
+  /// **'Role created'**
+  String get adminAuditActionRoleCreate;
+
+  /// No description provided for @adminAuditActionRoleUpdate.
+  ///
+  /// In en, this message translates to:
+  /// **'Role updated'**
+  String get adminAuditActionRoleUpdate;
+
+  /// No description provided for @adminAuditActionInvitationCreate.
+  ///
+  /// In en, this message translates to:
+  /// **'Invitation sent'**
+  String get adminAuditActionInvitationCreate;
+
+  /// No description provided for @adminAuditActionInvitationResend.
+  ///
+  /// In en, this message translates to:
+  /// **'Invitation resent'**
+  String get adminAuditActionInvitationResend;
+
+  /// No description provided for @adminAuditActionInvitationRevoke.
+  ///
+  /// In en, this message translates to:
+  /// **'Invitation revoked'**
+  String get adminAuditActionInvitationRevoke;
+
+  /// No description provided for @adminAuditActionInvitationAccept.
+  ///
+  /// In en, this message translates to:
+  /// **'Invitation accepted'**
+  String get adminAuditActionInvitationAccept;
+
+  /// No description provided for @adminAuditActionConnectorConnect.
+  ///
+  /// In en, this message translates to:
+  /// **'Connector connected'**
+  String get adminAuditActionConnectorConnect;
+
+  /// No description provided for @adminAuditActionConnectorDisconnect.
+  ///
+  /// In en, this message translates to:
+  /// **'Connector disconnected'**
+  String get adminAuditActionConnectorDisconnect;
+
+  /// No description provided for @adminAuditActionConnectorReplace.
+  ///
+  /// In en, this message translates to:
+  /// **'Connector reconnected'**
+  String get adminAuditActionConnectorReplace;
+
+  /// No description provided for @adminAuditActionConnectionPermissionsUpdate.
+  ///
+  /// In en, this message translates to:
+  /// **'Connector permissions updated'**
+  String get adminAuditActionConnectionPermissionsUpdate;
+
+  /// No description provided for @adminAuditActionCustomMcpAdd.
+  ///
+  /// In en, this message translates to:
+  /// **'Custom MCP added'**
+  String get adminAuditActionCustomMcpAdd;
+
+  /// No description provided for @adminAuditActionCustomMcpDelete.
+  ///
+  /// In en, this message translates to:
+  /// **'Custom MCP removed'**
+  String get adminAuditActionCustomMcpDelete;
+
+  /// No description provided for @adminAuditActionDirectoryCreate.
+  ///
+  /// In en, this message translates to:
+  /// **'Directory entry added'**
+  String get adminAuditActionDirectoryCreate;
+
+  /// No description provided for @adminAuditActionDirectoryUpdate.
+  ///
+  /// In en, this message translates to:
+  /// **'Directory entry updated'**
+  String get adminAuditActionDirectoryUpdate;
+
+  /// No description provided for @adminAuditActionDirectoryDelete.
+  ///
+  /// In en, this message translates to:
+  /// **'Directory entry removed'**
+  String get adminAuditActionDirectoryDelete;
+
+  /// No description provided for @adminAuditActionSensitiveSkillRun.
+  ///
+  /// In en, this message translates to:
+  /// **'Sensitive skill run'**
+  String get adminAuditActionSensitiveSkillRun;
+
+  /// No description provided for @adminAuditTargetWorkspace.
+  ///
+  /// In en, this message translates to:
+  /// **'Workspace'**
+  String get adminAuditTargetWorkspace;
+
+  /// No description provided for @adminAuditTargetMember.
+  ///
+  /// In en, this message translates to:
+  /// **'A member'**
+  String get adminAuditTargetMember;
+
+  /// No description provided for @adminAuditTargetRole.
+  ///
+  /// In en, this message translates to:
+  /// **'A role'**
+  String get adminAuditTargetRole;
+
+  /// No description provided for @adminAuditTargetDepartment.
+  ///
+  /// In en, this message translates to:
+  /// **'A department'**
+  String get adminAuditTargetDepartment;
+
+  /// No description provided for @adminAuditTargetInvitation.
+  ///
+  /// In en, this message translates to:
+  /// **'An invitation'**
+  String get adminAuditTargetInvitation;
+
+  /// No description provided for @adminAuditTargetConnector.
+  ///
+  /// In en, this message translates to:
+  /// **'A connector'**
+  String get adminAuditTargetConnector;
+
+  /// No description provided for @adminAuditTargetDirectoryEntry.
+  ///
+  /// In en, this message translates to:
+  /// **'A directory entry'**
+  String get adminAuditTargetDirectoryEntry;
+
+  /// No description provided for @adminAuditTargetTool.
+  ///
+  /// In en, this message translates to:
+  /// **'A tool'**
+  String get adminAuditTargetTool;
+
+  /// No description provided for @adminAuditTargetOther.
+  ///
+  /// In en, this message translates to:
+  /// **'Something else'**
+  String get adminAuditTargetOther;
+
+  /// No description provided for @adminAiConnectorsAllAllowed.
+  ///
+  /// In en, this message translates to:
+  /// **'The workspace allow-list is empty, so every connector is allowed. Pick the ones the AI may use.'**
+  String get adminAiConnectorsAllAllowed;
+
+  /// No description provided for @errAssistantSetupIncomplete.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a persona and pick a model to finish setting up your assistant.'**
+  String get errAssistantSetupIncomplete;
+
+  /// No description provided for @errAssistantNotConfigured.
+  ///
+  /// In en, this message translates to:
+  /// **'Personal assistants aren\'t available on this workspace yet. Ask your administrator.'**
+  String get errAssistantNotConfigured;
+
+  /// No description provided for @errAssistantUpstreamFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'The assistant service didn\'t respond. Please try again in a moment.'**
+  String get errAssistantUpstreamFailed;
+
+  /// No description provided for @adminBotOwnedBy.
+  ///
+  /// In en, this message translates to:
+  /// **'Owned by {name}'**
+  String adminBotOwnedBy(String name);
+
+  /// No description provided for @adminRoleCloneDefaultName.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} copy'**
+  String adminRoleCloneDefaultName(String name);
 }
 
 class _AppLocalizationsDelegate

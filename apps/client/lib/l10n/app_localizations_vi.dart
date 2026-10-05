@@ -3236,6 +3236,10 @@ class AppLocalizationsVi extends AppLocalizations {
   String get aiContextSaveError => 'Lưu không thành công';
 
   @override
+  String get aiContextLearnedFactsLoadError =>
+      'Không tải được những điều trợ lý đã ghi nhớ.';
+
+  @override
   String get aiContextKeyFacts => 'Thông tin chính:';
 
   @override
@@ -4038,5 +4042,199 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String tokenUsageQuotaResets(String date) {
     return 'Làm mới vào $date';
+  }
+
+  @override
+  String authErrRoleGrantExceedsOwnPermissions(String capabilities) {
+    return 'Bạn không thể cấp quyền mà chính bạn không có: $capabilities.';
+  }
+
+  @override
+  String get authErrRoleGrantExceedsOwnPermissionsGeneric =>
+      'Bạn không thể cấp quyền mà chính bạn không có.';
+
+  @override
+  String get authErrCannotEditOwnRole =>
+      'Bạn không thể chỉnh sửa vai trò của chính mình.';
+
+  @override
+  String get authErrPresetRoleRenameForbidden =>
+      'Không thể đổi tên vai trò mặc định.';
+
+  @override
+  String get authErrRoleNameTaken => 'Đã có vai trò mang tên này.';
+
+  @override
+  String get authErrOwnerRoleImmutable =>
+      'Không thể sửa hoặc xoá vai trò Owner.';
+
+  @override
+  String get authErrOwnerSsoMappingForbidden =>
+      'Chỉ Owner mới được ánh xạ nhóm SSO vào vai trò Owner.';
+
+  @override
+  String get authErrInsufficientPermission =>
+      'Bạn không có quyền thực hiện thao tác này.';
+
+  @override
+  String get authErrAiContextEntryNotFound =>
+      'Mục ngữ cảnh này không còn tồn tại.';
+
+  @override
+  String get authErrAiConnectorsNotInAllowList =>
+      'Các connector AI được chọn phải nằm trong danh sách connector được phép của workspace.';
+
+  @override
+  String authErrPasswordTooShortMin(int min) {
+    return 'Mật khẩu phải có ít nhất $min ký tự.';
+  }
+
+  @override
+  String get adminCapManageAiContext => 'Quản lý ngữ cảnh AI';
+
+  @override
+  String get adminCapViewInternalContext => 'Xem ngữ cảnh nội bộ';
+
+  @override
+  String get adminCapViewConfidentialContext => 'Xem ngữ cảnh bảo mật';
+
+  @override
+  String get adminCapUnknown => 'Quyền khác';
+
+  @override
+  String get adminAuditSystem => 'Hệ thống';
+
+  @override
+  String get adminAuditFormerMember => 'Một thành viên cũ';
+
+  @override
+  String get adminAuditActionOther => 'Thao tác khác';
+
+  @override
+  String get adminAuditActionWorkspaceUpdate => 'Cập nhật workspace';
+
+  @override
+  String get adminAuditActionDepartmentCreate => 'Tạo phòng ban';
+
+  @override
+  String get adminAuditActionDepartmentUpdate => 'Cập nhật phòng ban';
+
+  @override
+  String get adminAuditActionDepartmentDelete => 'Xoá phòng ban';
+
+  @override
+  String get adminAuditActionMemberUpdate => 'Cập nhật thành viên';
+
+  @override
+  String get adminAuditActionMemberSsoUpdate =>
+      'Thành viên được cập nhật qua SSO';
+
+  @override
+  String get adminAuditActionMemberBlock => 'Khoá thành viên';
+
+  @override
+  String get adminAuditActionMemberUnblock => 'Mở khoá thành viên';
+
+  @override
+  String get adminAuditActionRoleCreate => 'Tạo vai trò';
+
+  @override
+  String get adminAuditActionRoleUpdate => 'Cập nhật vai trò';
+
+  @override
+  String get adminAuditActionInvitationCreate => 'Gửi lời mời';
+
+  @override
+  String get adminAuditActionInvitationResend => 'Gửi lại lời mời';
+
+  @override
+  String get adminAuditActionInvitationRevoke => 'Thu hồi lời mời';
+
+  @override
+  String get adminAuditActionInvitationAccept => 'Chấp nhận lời mời';
+
+  @override
+  String get adminAuditActionConnectorConnect => 'Kết nối connector';
+
+  @override
+  String get adminAuditActionConnectorDisconnect => 'Ngắt kết nối connector';
+
+  @override
+  String get adminAuditActionConnectorReplace => 'Kết nối lại connector';
+
+  @override
+  String get adminAuditActionConnectionPermissionsUpdate =>
+      'Cập nhật quyền connector';
+
+  @override
+  String get adminAuditActionCustomMcpAdd => 'Thêm MCP tuỳ chỉnh';
+
+  @override
+  String get adminAuditActionCustomMcpDelete => 'Xoá MCP tuỳ chỉnh';
+
+  @override
+  String get adminAuditActionDirectoryCreate => 'Thêm mục danh bạ connector';
+
+  @override
+  String get adminAuditActionDirectoryUpdate =>
+      'Cập nhật mục danh bạ connector';
+
+  @override
+  String get adminAuditActionDirectoryDelete => 'Xoá mục danh bạ connector';
+
+  @override
+  String get adminAuditActionSensitiveSkillRun => 'Chạy kỹ năng nhạy cảm';
+
+  @override
+  String get adminAuditTargetWorkspace => 'Workspace';
+
+  @override
+  String get adminAuditTargetMember => 'Một thành viên';
+
+  @override
+  String get adminAuditTargetRole => 'Một vai trò';
+
+  @override
+  String get adminAuditTargetDepartment => 'Một phòng ban';
+
+  @override
+  String get adminAuditTargetInvitation => 'Một lời mời';
+
+  @override
+  String get adminAuditTargetConnector => 'Một connector';
+
+  @override
+  String get adminAuditTargetDirectoryEntry => 'Một mục danh bạ';
+
+  @override
+  String get adminAuditTargetTool => 'Một công cụ';
+
+  @override
+  String get adminAuditTargetOther => 'Đối tượng khác';
+
+  @override
+  String get adminAiConnectorsAllAllowed =>
+      'Danh sách connector được phép của workspace đang trống nên mọi connector đều được phép. Chọn những connector AI được dùng.';
+
+  @override
+  String get errAssistantSetupIncomplete =>
+      'Hãy nhập tính cách và chọn mô hình để hoàn tất thiết lập trợ lý.';
+
+  @override
+  String get errAssistantNotConfigured =>
+      'Workspace này chưa bật trợ lý riêng. Hãy liên hệ quản trị viên.';
+
+  @override
+  String get errAssistantUpstreamFailed =>
+      'Dịch vụ trợ lý không phản hồi. Vui lòng thử lại sau giây lát.';
+
+  @override
+  String adminBotOwnedBy(String name) {
+    return 'Thuộc về $name';
+  }
+
+  @override
+  String adminRoleCloneDefaultName(String name) {
+    return '$name (bản sao)';
   }
 }

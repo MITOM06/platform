@@ -3259,6 +3259,10 @@ class AppLocalizationsEs extends AppLocalizations {
   String get aiContextSaveError => 'No se pudo guardar';
 
   @override
+  String get aiContextLearnedFactsLoadError =>
+      'No se pudo cargar lo que el asistente ha aprendido.';
+
+  @override
   String get aiContextKeyFacts => 'Datos clave:';
 
   @override
@@ -4099,5 +4103,200 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String tokenUsageQuotaResets(String date) {
     return 'Se restablece el $date';
+  }
+
+  @override
+  String authErrRoleGrantExceedsOwnPermissions(String capabilities) {
+    return 'No puedes conceder permisos que tú no tienes: $capabilities.';
+  }
+
+  @override
+  String get authErrRoleGrantExceedsOwnPermissionsGeneric =>
+      'No puedes conceder permisos que tú no tienes.';
+
+  @override
+  String get authErrCannotEditOwnRole => 'No puedes editar tu propio rol.';
+
+  @override
+  String get authErrPresetRoleRenameForbidden =>
+      'Los roles predefinidos no se pueden renombrar.';
+
+  @override
+  String get authErrRoleNameTaken => 'Ya existe un rol con este nombre.';
+
+  @override
+  String get authErrOwnerRoleImmutable =>
+      'El rol Owner no se puede modificar ni eliminar.';
+
+  @override
+  String get authErrOwnerSsoMappingForbidden =>
+      'Solo un Owner puede asignar grupos SSO al rol Owner.';
+
+  @override
+  String get authErrInsufficientPermission =>
+      'No tienes permiso para hacer esto.';
+
+  @override
+  String get authErrAiContextEntryNotFound =>
+      'Esta entrada de contexto ya no existe.';
+
+  @override
+  String get authErrAiConnectorsNotInAllowList =>
+      'Los conectores de IA seleccionados también deben estar permitidos en la lista de conectores del espacio de trabajo.';
+
+  @override
+  String authErrPasswordTooShortMin(int min) {
+    return 'La contraseña debe tener al menos $min caracteres.';
+  }
+
+  @override
+  String get adminCapManageAiContext => 'Gestionar el contexto de IA';
+
+  @override
+  String get adminCapViewInternalContext => 'Ver el contexto interno';
+
+  @override
+  String get adminCapViewConfidentialContext => 'Ver el contexto confidencial';
+
+  @override
+  String get adminCapUnknown => 'Otro permiso';
+
+  @override
+  String get adminAuditSystem => 'Sistema';
+
+  @override
+  String get adminAuditFormerMember => 'Un antiguo miembro';
+
+  @override
+  String get adminAuditActionOther => 'Otra acción';
+
+  @override
+  String get adminAuditActionWorkspaceUpdate =>
+      'Espacio de trabajo actualizado';
+
+  @override
+  String get adminAuditActionDepartmentCreate => 'Departamento creado';
+
+  @override
+  String get adminAuditActionDepartmentUpdate => 'Departamento actualizado';
+
+  @override
+  String get adminAuditActionDepartmentDelete => 'Departamento eliminado';
+
+  @override
+  String get adminAuditActionMemberUpdate => 'Miembro actualizado';
+
+  @override
+  String get adminAuditActionMemberSsoUpdate => 'Miembro actualizado por SSO';
+
+  @override
+  String get adminAuditActionMemberBlock => 'Miembro bloqueado';
+
+  @override
+  String get adminAuditActionMemberUnblock => 'Miembro desbloqueado';
+
+  @override
+  String get adminAuditActionRoleCreate => 'Rol creado';
+
+  @override
+  String get adminAuditActionRoleUpdate => 'Rol actualizado';
+
+  @override
+  String get adminAuditActionInvitationCreate => 'Invitación enviada';
+
+  @override
+  String get adminAuditActionInvitationResend => 'Invitación reenviada';
+
+  @override
+  String get adminAuditActionInvitationRevoke => 'Invitación revocada';
+
+  @override
+  String get adminAuditActionInvitationAccept => 'Invitación aceptada';
+
+  @override
+  String get adminAuditActionConnectorConnect => 'Conector conectado';
+
+  @override
+  String get adminAuditActionConnectorDisconnect => 'Conector desconectado';
+
+  @override
+  String get adminAuditActionConnectorReplace => 'Conector reconectado';
+
+  @override
+  String get adminAuditActionConnectionPermissionsUpdate =>
+      'Permisos del conector actualizados';
+
+  @override
+  String get adminAuditActionCustomMcpAdd => 'MCP personalizado añadido';
+
+  @override
+  String get adminAuditActionCustomMcpDelete => 'MCP personalizado eliminado';
+
+  @override
+  String get adminAuditActionDirectoryCreate => 'Entrada de directorio añadida';
+
+  @override
+  String get adminAuditActionDirectoryUpdate =>
+      'Entrada de directorio actualizada';
+
+  @override
+  String get adminAuditActionDirectoryDelete =>
+      'Entrada de directorio eliminada';
+
+  @override
+  String get adminAuditActionSensitiveSkillRun =>
+      'Habilidad sensible ejecutada';
+
+  @override
+  String get adminAuditTargetWorkspace => 'Espacio de trabajo';
+
+  @override
+  String get adminAuditTargetMember => 'Un miembro';
+
+  @override
+  String get adminAuditTargetRole => 'Un rol';
+
+  @override
+  String get adminAuditTargetDepartment => 'Un departamento';
+
+  @override
+  String get adminAuditTargetInvitation => 'Una invitación';
+
+  @override
+  String get adminAuditTargetConnector => 'Un conector';
+
+  @override
+  String get adminAuditTargetDirectoryEntry => 'Una entrada de directorio';
+
+  @override
+  String get adminAuditTargetTool => 'Una herramienta';
+
+  @override
+  String get adminAuditTargetOther => 'Otro elemento';
+
+  @override
+  String get adminAiConnectorsAllAllowed =>
+      'La lista de permitidos del espacio de trabajo está vacía, así que se permiten todos los conectores. Elige los que puede usar la IA.';
+
+  @override
+  String get errAssistantSetupIncomplete =>
+      'Añade una personalidad y elige un modelo para terminar de configurar tu asistente.';
+
+  @override
+  String get errAssistantNotConfigured =>
+      'Los asistentes personales aún no están disponibles en este espacio de trabajo. Consulta a tu administrador.';
+
+  @override
+  String get errAssistantUpstreamFailed =>
+      'El servicio del asistente no respondió. Inténtalo de nuevo en un momento.';
+
+  @override
+  String adminBotOwnedBy(String name) {
+    return 'Propiedad de $name';
+  }
+
+  @override
+  String adminRoleCloneDefaultName(String name) {
+    return 'Copia de $name';
   }
 }

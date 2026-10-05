@@ -3281,6 +3281,10 @@ class AppLocalizationsFr extends AppLocalizations {
   String get aiContextSaveError => 'Échec de l\'enregistrement';
 
   @override
+  String get aiContextLearnedFactsLoadError =>
+      'Impossible de charger ce que l’assistant a appris.';
+
+  @override
   String get aiContextKeyFacts => 'Informations clés :';
 
   @override
@@ -4127,5 +4131,199 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String tokenUsageQuotaResets(String date) {
     return 'Réinitialisation le $date';
+  }
+
+  @override
+  String authErrRoleGrantExceedsOwnPermissions(String capabilities) {
+    return 'Vous ne pouvez pas accorder des autorisations que vous n\'avez pas : $capabilities.';
+  }
+
+  @override
+  String get authErrRoleGrantExceedsOwnPermissionsGeneric =>
+      'Vous ne pouvez pas accorder des autorisations que vous n\'avez pas.';
+
+  @override
+  String get authErrCannotEditOwnRole =>
+      'Vous ne pouvez pas modifier votre propre rôle.';
+
+  @override
+  String get authErrPresetRoleRenameForbidden =>
+      'Les rôles prédéfinis ne peuvent pas être renommés.';
+
+  @override
+  String get authErrRoleNameTaken => 'Un rôle portant ce nom existe déjà.';
+
+  @override
+  String get authErrOwnerRoleImmutable =>
+      'Le rôle Owner ne peut être ni modifié ni supprimé.';
+
+  @override
+  String get authErrOwnerSsoMappingForbidden =>
+      'Seul un Owner peut associer des groupes SSO au rôle Owner.';
+
+  @override
+  String get authErrInsufficientPermission =>
+      'Vous n\'avez pas l\'autorisation d\'effectuer cette action.';
+
+  @override
+  String get authErrAiContextEntryNotFound =>
+      'Cette entrée de contexte n\'existe plus.';
+
+  @override
+  String get authErrAiConnectorsNotInAllowList =>
+      'Les connecteurs IA sélectionnés doivent aussi être autorisés dans la liste des connecteurs de l\'espace de travail.';
+
+  @override
+  String authErrPasswordTooShortMin(int min) {
+    return 'Le mot de passe doit contenir au moins $min caractères.';
+  }
+
+  @override
+  String get adminCapManageAiContext => 'Gérer le contexte IA';
+
+  @override
+  String get adminCapViewInternalContext => 'Voir le contexte interne';
+
+  @override
+  String get adminCapViewConfidentialContext => 'Voir le contexte confidentiel';
+
+  @override
+  String get adminCapUnknown => 'Autre autorisation';
+
+  @override
+  String get adminAuditSystem => 'Système';
+
+  @override
+  String get adminAuditFormerMember => 'Un ancien membre';
+
+  @override
+  String get adminAuditActionOther => 'Autre action';
+
+  @override
+  String get adminAuditActionWorkspaceUpdate => 'Espace de travail mis à jour';
+
+  @override
+  String get adminAuditActionDepartmentCreate => 'Service créé';
+
+  @override
+  String get adminAuditActionDepartmentUpdate => 'Service mis à jour';
+
+  @override
+  String get adminAuditActionDepartmentDelete => 'Service supprimé';
+
+  @override
+  String get adminAuditActionMemberUpdate => 'Membre mis à jour';
+
+  @override
+  String get adminAuditActionMemberSsoUpdate => 'Membre mis à jour par SSO';
+
+  @override
+  String get adminAuditActionMemberBlock => 'Membre bloqué';
+
+  @override
+  String get adminAuditActionMemberUnblock => 'Membre débloqué';
+
+  @override
+  String get adminAuditActionRoleCreate => 'Rôle créé';
+
+  @override
+  String get adminAuditActionRoleUpdate => 'Rôle mis à jour';
+
+  @override
+  String get adminAuditActionInvitationCreate => 'Invitation envoyée';
+
+  @override
+  String get adminAuditActionInvitationResend => 'Invitation renvoyée';
+
+  @override
+  String get adminAuditActionInvitationRevoke => 'Invitation révoquée';
+
+  @override
+  String get adminAuditActionInvitationAccept => 'Invitation acceptée';
+
+  @override
+  String get adminAuditActionConnectorConnect => 'Connecteur connecté';
+
+  @override
+  String get adminAuditActionConnectorDisconnect => 'Connecteur déconnecté';
+
+  @override
+  String get adminAuditActionConnectorReplace => 'Connecteur reconnecté';
+
+  @override
+  String get adminAuditActionConnectionPermissionsUpdate =>
+      'Autorisations du connecteur mises à jour';
+
+  @override
+  String get adminAuditActionCustomMcpAdd => 'MCP personnalisé ajouté';
+
+  @override
+  String get adminAuditActionCustomMcpDelete => 'MCP personnalisé supprimé';
+
+  @override
+  String get adminAuditActionDirectoryCreate => 'Entrée d\'annuaire ajoutée';
+
+  @override
+  String get adminAuditActionDirectoryUpdate =>
+      'Entrée d\'annuaire mise à jour';
+
+  @override
+  String get adminAuditActionDirectoryDelete => 'Entrée d\'annuaire supprimée';
+
+  @override
+  String get adminAuditActionSensitiveSkillRun =>
+      'Compétence sensible exécutée';
+
+  @override
+  String get adminAuditTargetWorkspace => 'Espace de travail';
+
+  @override
+  String get adminAuditTargetMember => 'Un membre';
+
+  @override
+  String get adminAuditTargetRole => 'Un rôle';
+
+  @override
+  String get adminAuditTargetDepartment => 'Un service';
+
+  @override
+  String get adminAuditTargetInvitation => 'Une invitation';
+
+  @override
+  String get adminAuditTargetConnector => 'Un connecteur';
+
+  @override
+  String get adminAuditTargetDirectoryEntry => 'Une entrée d\'annuaire';
+
+  @override
+  String get adminAuditTargetTool => 'Un outil';
+
+  @override
+  String get adminAuditTargetOther => 'Autre élément';
+
+  @override
+  String get adminAiConnectorsAllAllowed =>
+      'La liste d\'autorisation de l\'espace de travail est vide : tous les connecteurs sont autorisés. Choisissez ceux que l\'IA peut utiliser.';
+
+  @override
+  String get errAssistantSetupIncomplete =>
+      'Ajoutez une personnalité et choisissez un modèle pour terminer la configuration de votre assistant.';
+
+  @override
+  String get errAssistantNotConfigured =>
+      'Les assistants personnels ne sont pas encore disponibles dans cet espace de travail. Contactez votre administrateur.';
+
+  @override
+  String get errAssistantUpstreamFailed =>
+      'Le service de l\'assistant n\'a pas répondu. Réessayez dans un instant.';
+
+  @override
+  String adminBotOwnedBy(String name) {
+    return 'Appartient à $name';
+  }
+
+  @override
+  String adminRoleCloneDefaultName(String name) {
+    return 'Copie de $name';
   }
 }

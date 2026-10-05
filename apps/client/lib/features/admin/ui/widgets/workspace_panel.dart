@@ -8,6 +8,7 @@ import '../../../../core/widgets/pon_widgets.dart';
 import '../../../integrations/data/connector_repository.dart';
 import '../../../integrations/data/models/connector_models.dart';
 import '../../state/admin_providers.dart';
+import '../../utils/admin_error.dart';
 
 /// Catalog of connectors (id + name) for the allow-list multi-select. Reuses the
 /// connector-service catalog endpoint via the connector repository.
@@ -67,7 +68,7 @@ class _WorkspacePanelState extends ConsumerState<WorkspacePanel> {
       });
       if (mounted) showInfoSnackBar(l10n.adminToastSaved);
     } catch (e) {
-      if (mounted) showErrorSnackBar(l10n.adminToastError);
+      if (mounted) showErrorSnackBar(adminErrorMessage(context, e));
     } finally {
       if (mounted) setState(() => _saving = false);
     }

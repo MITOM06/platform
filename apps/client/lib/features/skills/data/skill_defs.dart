@@ -11,14 +11,10 @@ class SkillDef {
   /// Connector provider ids this skill needs (e.g. 'notion', 'gmail').
   final List<String> requires;
 
-  /// Extra non-connector requirements (e.g. 'web') shown as plain labels.
-  final List<String> extras;
-
   const SkillDef({
     required this.id,
     required this.icon,
     this.requires = const [],
-    this.extras = const [],
   });
 }
 
@@ -39,7 +35,6 @@ const List<SkillDef> kSkillDefs = [
     id: 'researcher',
     icon: '📚',
     requires: ['drive'],
-    extras: ['web'],
   ),
   SkillDef(
     id: 'projectKeeper',

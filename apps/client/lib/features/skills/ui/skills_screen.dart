@@ -24,7 +24,8 @@ class SkillsScreen extends ConsumerWidget {
         title: Text(
           l10n.skillsTitle,
           style: TextStyle(
-              color: Theme.of(context).colorScheme.onSurface, fontWeight: FontWeight.w600),
+              color: Theme.of(context).colorScheme.onSurface,
+              fontWeight: FontWeight.w600),
         ),
       ),
       body: skillsAsync.when(
@@ -104,30 +105,15 @@ class SkillsScreen extends ConsumerWidget {
         desc: l10n.skillMeetingNotesDesc
       );
     case 'inboxTriage':
-      return (
-        name: l10n.skillInboxTriageName,
-        desc: l10n.skillInboxTriageDesc
-      );
+      return (name: l10n.skillInboxTriageName, desc: l10n.skillInboxTriageDesc);
     case 'dataAnalyst':
-      return (
-        name: l10n.skillDataAnalystName,
-        desc: l10n.skillDataAnalystDesc
-      );
+      return (name: l10n.skillDataAnalystName, desc: l10n.skillDataAnalystDesc);
     case 'docDrafter':
-      return (
-        name: l10n.skillDocDrafterName,
-        desc: l10n.skillDocDrafterDesc
-      );
+      return (name: l10n.skillDocDrafterName, desc: l10n.skillDocDrafterDesc);
     case 'translator':
-      return (
-        name: l10n.skillTranslatorName,
-        desc: l10n.skillTranslatorDesc
-      );
+      return (name: l10n.skillTranslatorName, desc: l10n.skillTranslatorDesc);
     case 'webSearch':
-      return (
-        name: l10n.skillWebSearchName,
-        desc: l10n.skillWebSearchDesc
-      );
+      return (name: l10n.skillWebSearchName, desc: l10n.skillWebSearchDesc);
     case 'weatherForecast':
       return (
         name: l10n.skillWeatherForecastName,
@@ -156,10 +142,8 @@ class _SkillTile extends StatelessWidget {
     final copy = skillCopy(l10n, def.id);
     // Mirror web: resolve connector ids to display labels and drop any id that
     // doesn't map to a known connector (never render a raw id).
-    final needs = [
-      ...def.requires.map(_providerLabel).whereType<String>(),
-      ...def.extras,
-    ].join(' · ');
+    final needs =
+        def.requires.map(_providerLabel).whereType<String>().join(' · ');
 
     return PonCard(
       borderRadius: 16,

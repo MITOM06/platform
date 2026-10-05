@@ -3171,6 +3171,9 @@ class AppLocalizationsKo extends AppLocalizations {
   String get aiContextSaveError => '저장하지 못했습니다';
 
   @override
+  String get aiContextLearnedFactsLoadError => '어시스턴트가 기억한 내용을 불러오지 못했습니다.';
+
+  @override
   String get aiContextKeyFacts => '주요 정보:';
 
   @override
@@ -3943,5 +3946,191 @@ class AppLocalizationsKo extends AppLocalizations {
   @override
   String tokenUsageQuotaResets(String date) {
     return '$date에 초기화';
+  }
+
+  @override
+  String authErrRoleGrantExceedsOwnPermissions(String capabilities) {
+    return '본인에게 없는 권한은 부여할 수 없습니다: $capabilities.';
+  }
+
+  @override
+  String get authErrRoleGrantExceedsOwnPermissionsGeneric =>
+      '본인에게 없는 권한은 부여할 수 없습니다.';
+
+  @override
+  String get authErrCannotEditOwnRole => '자신의 역할은 편집할 수 없습니다.';
+
+  @override
+  String get authErrPresetRoleRenameForbidden => '기본 제공 역할은 이름을 바꿀 수 없습니다.';
+
+  @override
+  String get authErrRoleNameTaken => '같은 이름의 역할이 이미 있습니다.';
+
+  @override
+  String get authErrOwnerRoleImmutable => 'Owner 역할은 수정하거나 삭제할 수 없습니다.';
+
+  @override
+  String get authErrOwnerSsoMappingForbidden =>
+      'SSO 그룹을 Owner 역할에 매핑할 수 있는 사람은 Owner뿐입니다.';
+
+  @override
+  String get authErrInsufficientPermission => '이 작업을 수행할 권한이 없습니다.';
+
+  @override
+  String get authErrAiContextEntryNotFound => '이 컨텍스트 항목은 더 이상 존재하지 않습니다.';
+
+  @override
+  String get authErrAiConnectorsNotInAllowList =>
+      '선택한 AI 커넥터는 워크스페이스 허용 커넥터 목록에 있어야 합니다.';
+
+  @override
+  String authErrPasswordTooShortMin(int min) {
+    return '비밀번호는 $min자 이상이어야 합니다.';
+  }
+
+  @override
+  String get adminCapManageAiContext => 'AI 컨텍스트 관리';
+
+  @override
+  String get adminCapViewInternalContext => '내부 컨텍스트 보기';
+
+  @override
+  String get adminCapViewConfidentialContext => '기밀 컨텍스트 보기';
+
+  @override
+  String get adminCapUnknown => '기타 권한';
+
+  @override
+  String get adminAuditSystem => '시스템';
+
+  @override
+  String get adminAuditFormerMember => '이전 멤버';
+
+  @override
+  String get adminAuditActionOther => '기타 작업';
+
+  @override
+  String get adminAuditActionWorkspaceUpdate => '워크스페이스 업데이트';
+
+  @override
+  String get adminAuditActionDepartmentCreate => '부서 생성';
+
+  @override
+  String get adminAuditActionDepartmentUpdate => '부서 업데이트';
+
+  @override
+  String get adminAuditActionDepartmentDelete => '부서 삭제';
+
+  @override
+  String get adminAuditActionMemberUpdate => '멤버 업데이트';
+
+  @override
+  String get adminAuditActionMemberSsoUpdate => 'SSO로 멤버 업데이트';
+
+  @override
+  String get adminAuditActionMemberBlock => '멤버 차단';
+
+  @override
+  String get adminAuditActionMemberUnblock => '멤버 차단 해제';
+
+  @override
+  String get adminAuditActionRoleCreate => '역할 생성';
+
+  @override
+  String get adminAuditActionRoleUpdate => '역할 업데이트';
+
+  @override
+  String get adminAuditActionInvitationCreate => '초대 보냄';
+
+  @override
+  String get adminAuditActionInvitationResend => '초대 다시 보냄';
+
+  @override
+  String get adminAuditActionInvitationRevoke => '초대 취소';
+
+  @override
+  String get adminAuditActionInvitationAccept => '초대 수락';
+
+  @override
+  String get adminAuditActionConnectorConnect => '커넥터 연결';
+
+  @override
+  String get adminAuditActionConnectorDisconnect => '커넥터 연결 해제';
+
+  @override
+  String get adminAuditActionConnectorReplace => '커넥터 다시 연결';
+
+  @override
+  String get adminAuditActionConnectionPermissionsUpdate => '커넥터 권한 업데이트';
+
+  @override
+  String get adminAuditActionCustomMcpAdd => '사용자 지정 MCP 추가';
+
+  @override
+  String get adminAuditActionCustomMcpDelete => '사용자 지정 MCP 삭제';
+
+  @override
+  String get adminAuditActionDirectoryCreate => '디렉터리 항목 추가';
+
+  @override
+  String get adminAuditActionDirectoryUpdate => '디렉터리 항목 업데이트';
+
+  @override
+  String get adminAuditActionDirectoryDelete => '디렉터리 항목 삭제';
+
+  @override
+  String get adminAuditActionSensitiveSkillRun => '민감한 스킬 실행';
+
+  @override
+  String get adminAuditTargetWorkspace => '워크스페이스';
+
+  @override
+  String get adminAuditTargetMember => '멤버';
+
+  @override
+  String get adminAuditTargetRole => '역할';
+
+  @override
+  String get adminAuditTargetDepartment => '부서';
+
+  @override
+  String get adminAuditTargetInvitation => '초대';
+
+  @override
+  String get adminAuditTargetConnector => '커넥터';
+
+  @override
+  String get adminAuditTargetDirectoryEntry => '디렉터리 항목';
+
+  @override
+  String get adminAuditTargetTool => '도구';
+
+  @override
+  String get adminAuditTargetOther => '기타 대상';
+
+  @override
+  String get adminAiConnectorsAllAllowed =>
+      '워크스페이스 허용 목록이 비어 있어 모든 커넥터가 허용됩니다. AI가 사용할 커넥터를 선택하세요.';
+
+  @override
+  String get errAssistantSetupIncomplete =>
+      '어시스턴트 설정을 마치려면 페르소나를 입력하고 모델을 선택하세요.';
+
+  @override
+  String get errAssistantNotConfigured =>
+      '이 워크스페이스에서는 아직 개인 어시스턴트를 사용할 수 없습니다. 관리자에게 문의하세요.';
+
+  @override
+  String get errAssistantUpstreamFailed =>
+      '어시스턴트 서비스가 응답하지 않았습니다. 잠시 후 다시 시도하세요.';
+
+  @override
+  String adminBotOwnedBy(String name) {
+    return '소유자: $name';
+  }
+
+  @override
+  String adminRoleCloneDefaultName(String name) {
+    return '$name 사본';
   }
 }

@@ -1510,6 +1510,10 @@
   "aiContextSaving": "Saving...",
   "aiContextStyleSaved": "Response style updated",
   "aiContextSaveError": "Failed to save",
+  "aiContextLearnedFactsLoadError": "Couldn't load what the assistant has learned.",
+  "@aiContextLearnedFactsLoadError": {
+    "description": "Shown in the AI Context screen when the learned-facts (memory) section fails to load."
+  },
   "aiContextKeyFacts": "Key facts:",
   "aiContextMemoryEmpty": "Nothing learned yet",
   "aiContextMemoryEmptyHint": "As you chat, the assistant will remember useful facts about you here.",
@@ -2035,6 +2039,91 @@
   "@tokenUsageQuotaResets": {
     "placeholders": {
       "date": {
+        "type": "String"
+      }
+    }
+  },
+  "authErrRoleGrantExceedsOwnPermissions": "You can't grant permissions you don't have yourself: {capabilities}.",
+  "@authErrRoleGrantExceedsOwnPermissions": {
+    "placeholders": {
+      "capabilities": {
+        "type": "String"
+      }
+    }
+  },
+  "authErrRoleGrantExceedsOwnPermissionsGeneric": "You can't grant permissions you don't have yourself.",
+  "authErrCannotEditOwnRole": "You can't edit your own role.",
+  "authErrPresetRoleRenameForbidden": "Built-in roles can't be renamed.",
+  "authErrRoleNameTaken": "A role with this name already exists.",
+  "authErrOwnerRoleImmutable": "The Owner role can't be modified or deleted.",
+  "authErrOwnerSsoMappingForbidden": "Only an Owner can map SSO groups to the Owner role.",
+  "authErrInsufficientPermission": "You don't have permission to do this.",
+  "authErrAiContextEntryNotFound": "This context entry no longer exists.",
+  "authErrAiConnectorsNotInAllowList": "The selected AI connectors must also be allowed in the workspace connector list.",
+  "authErrPasswordTooShortMin": "Password must be at least {min} characters.",
+  "@authErrPasswordTooShortMin": {
+    "placeholders": {
+      "min": {
+        "type": "int"
+      }
+    }
+  },
+  "adminCapManageAiContext": "Manage AI context",
+  "adminCapViewInternalContext": "View internal context",
+  "adminCapViewConfidentialContext": "View confidential context",
+  "adminCapUnknown": "Other permission",
+  "adminAuditSystem": "System",
+  "adminAuditFormerMember": "A former member",
+  "adminAuditActionOther": "Other action",
+  "adminAuditActionWorkspaceUpdate": "Workspace updated",
+  "adminAuditActionDepartmentCreate": "Department created",
+  "adminAuditActionDepartmentUpdate": "Department updated",
+  "adminAuditActionDepartmentDelete": "Department deleted",
+  "adminAuditActionMemberUpdate": "Member updated",
+  "adminAuditActionMemberSsoUpdate": "Member updated by SSO",
+  "adminAuditActionMemberBlock": "Member blocked",
+  "adminAuditActionMemberUnblock": "Member unblocked",
+  "adminAuditActionRoleCreate": "Role created",
+  "adminAuditActionRoleUpdate": "Role updated",
+  "adminAuditActionInvitationCreate": "Invitation sent",
+  "adminAuditActionInvitationResend": "Invitation resent",
+  "adminAuditActionInvitationRevoke": "Invitation revoked",
+  "adminAuditActionInvitationAccept": "Invitation accepted",
+  "adminAuditActionConnectorConnect": "Connector connected",
+  "adminAuditActionConnectorDisconnect": "Connector disconnected",
+  "adminAuditActionConnectorReplace": "Connector reconnected",
+  "adminAuditActionConnectionPermissionsUpdate": "Connector permissions updated",
+  "adminAuditActionCustomMcpAdd": "Custom MCP added",
+  "adminAuditActionCustomMcpDelete": "Custom MCP removed",
+  "adminAuditActionDirectoryCreate": "Directory entry added",
+  "adminAuditActionDirectoryUpdate": "Directory entry updated",
+  "adminAuditActionDirectoryDelete": "Directory entry removed",
+  "adminAuditActionSensitiveSkillRun": "Sensitive skill run",
+  "adminAuditTargetWorkspace": "Workspace",
+  "adminAuditTargetMember": "A member",
+  "adminAuditTargetRole": "A role",
+  "adminAuditTargetDepartment": "A department",
+  "adminAuditTargetInvitation": "An invitation",
+  "adminAuditTargetConnector": "A connector",
+  "adminAuditTargetDirectoryEntry": "A directory entry",
+  "adminAuditTargetTool": "A tool",
+  "adminAuditTargetOther": "Something else",
+  "adminAiConnectorsAllAllowed": "The workspace allow-list is empty, so every connector is allowed. Pick the ones the AI may use.",
+  "errAssistantSetupIncomplete": "Add a persona and pick a model to finish setting up your assistant.",
+  "errAssistantNotConfigured": "Personal assistants aren't available on this workspace yet. Ask your administrator.",
+  "errAssistantUpstreamFailed": "The assistant service didn't respond. Please try again in a moment.",
+  "adminBotOwnedBy": "Owned by {name}",
+  "@adminBotOwnedBy": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "adminRoleCloneDefaultName": "{name} copy",
+  "@adminRoleCloneDefaultName": {
+    "placeholders": {
+      "name": {
         "type": "String"
       }
     }

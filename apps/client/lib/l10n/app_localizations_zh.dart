@@ -3142,6 +3142,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get aiContextSaveError => '保存失败';
 
   @override
+  String get aiContextLearnedFactsLoadError => '无法加载助手已了解的信息。';
+
+  @override
   String get aiContextKeyFacts => '关键信息：';
 
   @override
@@ -3906,5 +3909,186 @@ class AppLocalizationsZh extends AppLocalizations {
   @override
   String tokenUsageQuotaResets(String date) {
     return '$date 重置';
+  }
+
+  @override
+  String authErrRoleGrantExceedsOwnPermissions(String capabilities) {
+    return '你不能授予自己没有的权限：$capabilities。';
+  }
+
+  @override
+  String get authErrRoleGrantExceedsOwnPermissionsGeneric => '你不能授予自己没有的权限。';
+
+  @override
+  String get authErrCannotEditOwnRole => '你不能编辑自己的角色。';
+
+  @override
+  String get authErrPresetRoleRenameForbidden => '内置角色无法重命名。';
+
+  @override
+  String get authErrRoleNameTaken => '已存在同名角色。';
+
+  @override
+  String get authErrOwnerRoleImmutable => 'Owner 角色无法修改或删除。';
+
+  @override
+  String get authErrOwnerSsoMappingForbidden =>
+      '只有 Owner 才能将 SSO 组映射到 Owner 角色。';
+
+  @override
+  String get authErrInsufficientPermission => '你没有执行此操作的权限。';
+
+  @override
+  String get authErrAiContextEntryNotFound => '此上下文条目已不存在。';
+
+  @override
+  String get authErrAiConnectorsNotInAllowList => '所选的 AI 连接器必须在工作区允许的连接器列表中。';
+
+  @override
+  String authErrPasswordTooShortMin(int min) {
+    return '密码至少需要 $min 个字符。';
+  }
+
+  @override
+  String get adminCapManageAiContext => '管理 AI 上下文';
+
+  @override
+  String get adminCapViewInternalContext => '查看内部上下文';
+
+  @override
+  String get adminCapViewConfidentialContext => '查看机密上下文';
+
+  @override
+  String get adminCapUnknown => '其他权限';
+
+  @override
+  String get adminAuditSystem => '系统';
+
+  @override
+  String get adminAuditFormerMember => '前成员';
+
+  @override
+  String get adminAuditActionOther => '其他操作';
+
+  @override
+  String get adminAuditActionWorkspaceUpdate => '更新了工作区';
+
+  @override
+  String get adminAuditActionDepartmentCreate => '创建了部门';
+
+  @override
+  String get adminAuditActionDepartmentUpdate => '更新了部门';
+
+  @override
+  String get adminAuditActionDepartmentDelete => '删除了部门';
+
+  @override
+  String get adminAuditActionMemberUpdate => '更新了成员';
+
+  @override
+  String get adminAuditActionMemberSsoUpdate => '通过 SSO 更新了成员';
+
+  @override
+  String get adminAuditActionMemberBlock => '封禁了成员';
+
+  @override
+  String get adminAuditActionMemberUnblock => '解封了成员';
+
+  @override
+  String get adminAuditActionRoleCreate => '创建了角色';
+
+  @override
+  String get adminAuditActionRoleUpdate => '更新了角色';
+
+  @override
+  String get adminAuditActionInvitationCreate => '发送了邀请';
+
+  @override
+  String get adminAuditActionInvitationResend => '重新发送了邀请';
+
+  @override
+  String get adminAuditActionInvitationRevoke => '撤销了邀请';
+
+  @override
+  String get adminAuditActionInvitationAccept => '接受了邀请';
+
+  @override
+  String get adminAuditActionConnectorConnect => '连接了连接器';
+
+  @override
+  String get adminAuditActionConnectorDisconnect => '断开了连接器';
+
+  @override
+  String get adminAuditActionConnectorReplace => '重新连接了连接器';
+
+  @override
+  String get adminAuditActionConnectionPermissionsUpdate => '更新了连接器权限';
+
+  @override
+  String get adminAuditActionCustomMcpAdd => '添加了自定义 MCP';
+
+  @override
+  String get adminAuditActionCustomMcpDelete => '删除了自定义 MCP';
+
+  @override
+  String get adminAuditActionDirectoryCreate => '添加了目录条目';
+
+  @override
+  String get adminAuditActionDirectoryUpdate => '更新了目录条目';
+
+  @override
+  String get adminAuditActionDirectoryDelete => '删除了目录条目';
+
+  @override
+  String get adminAuditActionSensitiveSkillRun => '运行了敏感技能';
+
+  @override
+  String get adminAuditTargetWorkspace => '工作区';
+
+  @override
+  String get adminAuditTargetMember => '一名成员';
+
+  @override
+  String get adminAuditTargetRole => '一个角色';
+
+  @override
+  String get adminAuditTargetDepartment => '一个部门';
+
+  @override
+  String get adminAuditTargetInvitation => '一个邀请';
+
+  @override
+  String get adminAuditTargetConnector => '一个连接器';
+
+  @override
+  String get adminAuditTargetDirectoryEntry => '一个目录条目';
+
+  @override
+  String get adminAuditTargetTool => '一个工具';
+
+  @override
+  String get adminAuditTargetOther => '其他对象';
+
+  @override
+  String get adminAiConnectorsAllAllowed =>
+      '工作区允许列表为空，因此所有连接器均被允许。请选择 AI 可以使用的连接器。';
+
+  @override
+  String get errAssistantSetupIncomplete => '请填写人设并选择模型，以完成助手设置。';
+
+  @override
+  String get errAssistantNotConfigured => '此工作区尚未启用个人助手，请联系管理员。';
+
+  @override
+  String get errAssistantUpstreamFailed => '助手服务未响应，请稍后重试。';
+
+  @override
+  String adminBotOwnedBy(String name) {
+    return '所有者：$name';
+  }
+
+  @override
+  String adminRoleCloneDefaultName(String name) {
+    return '$name 副本';
   }
 }

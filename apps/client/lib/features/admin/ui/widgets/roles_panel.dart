@@ -8,6 +8,7 @@ import '../../../../core/utils/global_messenger.dart';
 import '../../../../core/widgets/pon_widgets.dart';
 import '../../data/models/admin_models.dart';
 import '../../state/admin_providers.dart';
+import '../../utils/admin_error.dart';
 import 'cap_label.dart';
 
 const _capColWidth = 180.0;
@@ -47,14 +48,18 @@ class _RolesPanelState extends ConsumerState<RolesPanel> {
           .read(rolesProvider.notifier)
           .edit(r.id, {'permissions': _edited[r.id]});
       showInfoSnackBar(l10n.adminToastSaved);
-    } catch (_) {
-      showErrorSnackBar(l10n.adminToastError);
+    } catch (e) {
+      // ROLE_GRANT_EXCEEDS_OWN_PERMISSIONS / CANNOT_EDIT_OWN_ROLE / … → their
+      // own localized message (HANDOFF §5.1).
+      showErrorSnackBar(
+          mounted ? adminErrorMessage(context, e) : l10n.adminToastError);
     }
   }
 
   Future<void> _clone(Role r) async {
     final l10n = context.l10n;
-    final ctrl = TextEditingController(text: '${r.name} copy');
+    final ctrl =
+        TextEditingController(text: l10n.adminRoleCloneDefaultName(r.name));
     final ok = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -85,8 +90,9 @@ class _RolesPanelState extends ConsumerState<RolesPanel> {
         'permissions': Map<String, bool>.from(r.permissions),
       });
       showInfoSnackBar(l10n.adminToastSaved);
-    } catch (_) {
-      showErrorSnackBar(l10n.adminToastError);
+    } catch (e) {
+      showErrorSnackBar(
+          mounted ? adminErrorMessage(context, e) : l10n.adminToastError);
     }
   }
 
