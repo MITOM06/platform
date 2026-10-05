@@ -36,6 +36,24 @@ class GroupCallController extends _$GroupCallController {
   final Map<String, RemotePeer> _remotePeers = {};
   bool _localRendererReady = false;
 
+  /// The call's conversation topic, held while in the call so `call.roster`
+  /// (the tiles) and `call.ended` arrive with that chat closed.
+  String? _heldConversation;
+
+  void _holdConversation(String conversationId) {
+    _releaseConversation();
+    _heldConversation = conversationId;
+    ref.read(stompServiceProvider.notifier).subscribeConversation(conversationId);
+  }
+
+  void _releaseConversation() {
+    final held = _heldConversation;
+    _heldConversation = null;
+    if (held != null) {
+      ref.read(stompServiceProvider.notifier).unsubscribeConversation(held);
+    }
+  }
+
   RTCVideoRenderer get localRenderer => _localRenderer;
   Map<String, RemotePeer> get remotePeers => _remotePeers;
 
@@ -95,6 +113,7 @@ class GroupCallController extends _$GroupCallController {
   }) async {
     if (state.callId == callId && state.joined) return;
 
+    _holdConversation(conversationId);
     if (transport == CallTransport.sfu) {
       await _joinSfu(
         callId: callId,
@@ -116,6 +135,7 @@ class GroupCallController extends _$GroupCallController {
       await _service.startLocalMedia(isVideo: isVideo);
     } catch (e) {
       debugPrint('Group call media error: $e');
+      _releaseConversation();
       rethrow;
     }
 
@@ -169,7 +189,14 @@ class GroupCallController extends _$GroupCallController {
           .read(stompServiceProvider.notifier)
           .sendRawMessage(destination: '/app/call.accept', body: '{"callId":"$callId"}');
     }
-    await _sfu.start(callId, isVideo: isVideo);
+    try {
+      await _sfu.start(callId, isVideo: isVideo);
+    } catch (_) {
+      // Like the mesh path: no call screen, the caller shows the error. Leave
+      // the server-side call so it is not left counting us in.
+      await leave();
+      rethrow;
+    }
     if (isStarter && aiNotetaker) _startStt(callId);
   }
 
@@ -227,6 +254,7 @@ class GroupCallController extends _$GroupCallController {
     await _stt.stop();
     await _service.dispose();
     await _sfu.dispose();
+    _releaseConversation();
     for (final p in _remotePeers.values) {
       p.renderer.dispose();
     }
@@ -240,6 +268,7 @@ class GroupCallController extends _$GroupCallController {
     await _stt.stop();
     await _service.dispose();
     await _sfu.dispose();
+    _releaseConversation();
     for (final p in _remotePeers.values) {
       p.renderer.dispose();
     }

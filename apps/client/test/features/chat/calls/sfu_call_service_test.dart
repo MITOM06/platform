@@ -62,6 +62,7 @@ class _Session implements RtcSession {
   bool disconnected = false;
   Object? connectError;
   final micCalls = <bool>[];
+  final speakerCalls = <bool>[];
 
   @override
   Future<void> connect(String url, String token, {required bool video}) async {
@@ -91,6 +92,8 @@ class _Session implements RtcSession {
   Future<void> setCamera(bool on) async {}
   @override
   Future<void> switchCamera() async {}
+  @override
+  Future<void> setSpeaker(bool on) async => speakerCalls.add(on);
   @override
   Future<void> disconnect() async => disconnected = true;
 }
@@ -137,6 +140,7 @@ void main() {
       },
       probeMedia: (_) async => probeOk,
       peerGrace: const Duration(milliseconds: 40),
+      pendingStartDeadline: const Duration(milliseconds: 30),
     )
       ..onEndNotice = ((r, byPeer) => notices.add((r, byPeer)))
       ..onSendCallLog = logs.add
@@ -358,4 +362,31 @@ void main() {
       expect(call.micOn, isFalse);
     });
   });
+
+  group('final-review fixes', () {
+    test('call-blocked ends a pending outgoing call and frees the caller', () async {
+      await call.startOutgoing(targetId: 'bob', conversationId: 'conv', isVideo: false);
+      call.handleSignal({'type': 'call-blocked', 'conversationId': 'conv'});
+      expect(ended, 1);
+      expect(call.isActive, isFalse);
+      expect(port.held, isEmpty);
+    });
+
+    test('a call hung up before it started is not busy and gives up waiting', () async {
+      await call.startOutgoing(targetId: 'bob', conversationId: 'conv', isVideo: false);
+      await call.endCall();
+      expect(call.isActive, isFalse); // a new ring must not be answered busy
+      expect(port.held, ['conv']); // still waiting to cancel…
+      await Future<void>.delayed(const Duration(milliseconds: 60));
+      expect(port.held, isEmpty); // …but not forever
+    });
+
+    test('sets the audio route for the call kind once in the room', () async {
+      call.prepareIncoming(targetId: 'alice', conversationId: 'conv', callId: 'c1', isVideo: false);
+      await call.answer();
+      await flush();
+      expect(sessions.single.speakerCalls, [false]);
+    });
+  });
 }
+

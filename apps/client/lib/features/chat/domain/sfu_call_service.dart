@@ -57,6 +57,10 @@ class SfuCallService implements DirectCallEngine {
   final Future<bool> Function(bool video) _probeMedia;
   final Duration _peerGrace;
 
+  /// How long a hang-up before `call.started` waits for that id to cancel it.
+  final Duration _pendingStartDeadline;
+  Timer? _pendingTimer;
+
   SfuCallService({
     required CallSignalPort port,
     required CallsApi api,
@@ -64,12 +68,14 @@ class SfuCallService implements DirectCallEngine {
     required RtcSessionFactory sessionFactory,
     required Future<bool> Function(bool video) probeMedia,
     Duration peerGrace = const Duration(seconds: 8),
+    Duration pendingStartDeadline = const Duration(seconds: 15),
   })  : _port = port,
         _api = api,
         _transport = transport,
         _sessionFactory = sessionFactory,
         _probeMedia = probeMedia,
-        _peerGrace = peerGrace;
+        _peerGrace = peerGrace,
+        _pendingStartDeadline = pendingStartDeadline;
 
   @override
   Function(MediaStream)? onLocalStream;
@@ -109,7 +115,8 @@ class SfuCallService implements DirectCallEngine {
   bool _speakerOn = false;
 
   /// A LiveKit 1-on-1 is starting, ringing out, or running.
-  bool get isActive => _callId != null || _pendingStart;
+  bool get isActive =>
+      _callId != null || (_pendingStart && _cancelledBeforeStart == null);
 
   @override
   bool get micOn => _micOn;
@@ -184,6 +191,11 @@ class SfuCallService implements DirectCallEngine {
         }
         onEndNotice?.call(reason, true);
         dispose();
+      case 'call-blocked':
+        // The callee has us blocked: no call.started will ever come.
+        if (!_incoming && !_connected && (_pendingStart || _callId != null)) {
+          dispose();
+        }
       case 'call-ring-cancel':
         // Our own answer echoes back as answered_elsewhere: ignore it then.
         if (!_incoming || _accepting || signal['callId'] != _callId) return;
@@ -218,6 +230,14 @@ class SfuCallService implements DirectCallEngine {
       } else if (_pendingStart) {
         _cancelledBeforeStart = reason; // the callee never rang: nothing to log
         keepPending = true;
+        // A call.start lost on a dropping socket never answers: stop waiting.
+        _pendingTimer?.cancel();
+        _pendingTimer = Timer(_pendingStartDeadline, () {
+          _pendingTimer = null;
+          _pendingStart = false;
+          _cancelledBeforeStart = null;
+          _release();
+        });
       }
     } else if (callId != null) {
       _port.send('/app/call.leave', {'callId': callId});
@@ -250,11 +270,7 @@ class SfuCallService implements DirectCallEngine {
   @override
   Future<void> setSpeakerOn(bool on) async {
     _speakerOn = on;
-    try {
-      await Helper.setSpeakerphoneOn(on);
-    } catch (_) {
-      // no audio route to change (tests, desktop)
-    }
+    await _session?.setSpeaker(on);
   }
 
   @override
@@ -311,6 +327,8 @@ class SfuCallService implements DirectCallEngine {
   void _onStarted(String? callId, String? transport) {
     if (!_pendingStart || callId == null) return;
     _pendingStart = false;
+    _pendingTimer?.cancel();
+    _pendingTimer = null;
     final cancelled = _cancelledBeforeStart;
     if (cancelled != null) {
       _cancelledBeforeStart = null;
@@ -375,7 +393,9 @@ class SfuCallService implements DirectCallEngine {
           reason: e is MediaAccessException
               ? CallEndReason.mediaError
               : CallEndReason.failed);
+      return;
     }
+    if (_session == session) await setSpeakerOn(_isVideo);
   }
 
   void _onPeers() {
@@ -415,6 +435,8 @@ class SfuCallService implements DirectCallEngine {
     reconnecting.value = false;
     poorConnection.value = false;
     if (!keepPending) {
+      _pendingTimer?.cancel();
+      _pendingTimer = null;
       _pendingStart = false;
       _cancelledBeforeStart = null;
       _release();

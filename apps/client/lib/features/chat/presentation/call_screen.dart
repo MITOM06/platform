@@ -124,11 +124,14 @@ class _CallScreenState extends ConsumerState<CallScreen> {
       }
     };
 
-    // Persist a call-log system message on hang-up (initiator only).
+    // Persist a call-log system message on hang-up (initiator only). Captured
+    // now: a LiveKit engine may log after this screen is gone (e.g. a busy
+    // reply to a call hung up before it started), when `ref` is unusable.
+    final repo = ref.read(chatRepositoryProvider);
+    final conversationId = widget.conversationId;
     webrtc.onSendCallLog = (content) {
-      ref
-          .read(chatRepositoryProvider)
-          .sendMessageRest(widget.conversationId, content, type: 'system')
+      repo
+          .sendMessageRest(conversationId, content, type: 'system')
           // Best-effort: a failed call log must not block hang-up.
           .ignore();
     };

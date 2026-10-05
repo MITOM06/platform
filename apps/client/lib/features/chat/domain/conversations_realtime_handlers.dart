@@ -47,6 +47,7 @@ void handleWebRtcSignal(
       // Navigator.pop() in CallScreen. Safe to call even when no active
       // call exists — WebRTCService.dispose() is idempotent.
       webrtc.dispose();
+      ref.read(sfuCallServiceProvider).handleSignal(signal);
       return;
     }
 

@@ -36,14 +36,18 @@ class SfuGroupMedia {
   bool get isActive => _callId != null;
 
   /// Fetch a token for [callId] and enter its room.
+  ///
+  /// Throws [RoomConnectException] / [MediaAccessException] when the room
+  /// cannot be entered, so the caller can stay off the call screen and say so.
   Future<void> start(String callId, {required bool isVideo}) async {
+    await dispose(); // never leave a previous room publishing with no UI
     _callId = callId;
     CallToken token;
     try {
       token = await _api.getToken(callId);
     } catch (_) {
-      if (_callId == callId) onRoomGone?.call(RtcEnd.failed);
-      return;
+      if (_callId == callId) _callId = null;
+      throw const RoomConnectException();
     }
     if (_callId != callId) return;
     final session = _sessionFactory();
@@ -57,8 +61,13 @@ class SfuGroupMedia {
       };
     try {
       await session.connect(token.url, token.token, video: isVideo);
-    } catch (_) {
-      if (_session == session) onRoomGone?.call(RtcEnd.failed);
+    } catch (e) {
+      if (_session == session) {
+        _session = null;
+        _callId = null;
+      }
+      if (e is MediaAccessException) rethrow;
+      throw const RoomConnectException();
     }
   }
 

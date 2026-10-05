@@ -31,8 +31,22 @@ class LiveKitSession implements RtcSession {
 
   @override
   Future<void> connect(String url, String token, {required bool video}) async {
+    // Video calls default to the loudspeaker, voice calls to the earpiece —
+    // otherwise LiveKit's iOS session prefers the speaker for both.
+    try {
+      await Hardware.instance.setPreferSpeakerOutput(video);
+    } catch (_) {
+      // not iOS
+    }
     final room = Room(
-        roomOptions: const RoomOptions(adaptiveStream: false, dynacast: true));
+      roomOptions: const RoomOptions(
+        adaptiveStream: false,
+        dynacast: true,
+        // Muting must not stop the mic track: with no local track LiveKit
+        // switches the iOS session to playback-only and the call goes silent.
+        defaultAudioCaptureOptions: AudioCaptureOptions(stopAudioCaptureOnMute: false),
+      ),
+    );
     _room = room;
     _leaving = false;
     _wire(room);
@@ -88,6 +102,9 @@ class LiveKitSession implements RtcSession {
         ?.track;
     if (track != null) await rtc.Helper.switchCamera(track.mediaStreamTrack);
   }
+
+  @override
+  Future<void> setSpeaker(bool on) async => _room?.setSpeakerOn(on);
 
   @override
   Future<void> disconnect() => _close();

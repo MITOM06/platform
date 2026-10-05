@@ -56,6 +56,9 @@ abstract class RtcSession {
   Future<void> setMic(bool on);
   Future<void> setCamera(bool on);
   Future<void> switchCamera();
+
+  /// Loudspeaker vs earpiece (through LiveKit's own audio session handling).
+  Future<void> setSpeaker(bool on);
   Future<void> disconnect();
 }
 

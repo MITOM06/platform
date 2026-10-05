@@ -63,12 +63,15 @@ class _Session implements RtcSession {
   @override
   Future<void> switchCamera() async {}
   @override
+  Future<void> setSpeaker(bool on) async {}
+  @override
   Future<void> disconnect() async => disconnected = true;
 }
 
 void main() {
   late _Api api;
   late _Session session;
+  late List<_Session> made;
   late SfuGroupMedia media;
   late List<String> remote;
   late List<String> removed;
@@ -76,8 +79,15 @@ void main() {
 
   setUp(() {
     api = _Api();
-    session = _Session();
-    media = SfuGroupMedia(api: api, sessionFactory: () => session)
+    made = [];
+    media = SfuGroupMedia(
+      api: api,
+      sessionFactory: () {
+        session = _Session();
+        made.add(session);
+        return session;
+      },
+    )
       ..onRemoteStream = ((id, _) => remote.add(id))
       ..onPeerRemoved = ((id) => removed.add(id))
       ..onRoomGone = ((reason) => ends.add(reason));
@@ -108,10 +118,17 @@ void main() {
     expect(ends, [RtcEnd.ended]);
   });
 
-  test('a token failure is reported as failed', () async {
+  test('a token failure makes the join fail, so no call screen opens', () async {
     api.tokenError = Exception('503');
+    await expectLater(media.start('c1', isVideo: false), throwsA(isA<RoomConnectException>()));
+    expect(ends, isEmpty);
+  });
+
+  test('starting another call leaves the previous room first', () async {
     await media.start('c1', isVideo: false);
-    expect(ends, [RtcEnd.failed]);
+    await media.start('c2', isVideo: false);
+    expect(made, hasLength(2));
+    expect(made.first.disconnected, isTrue);
   });
 
   test('mic toggles reach the room and dispose leaves it', () async {
