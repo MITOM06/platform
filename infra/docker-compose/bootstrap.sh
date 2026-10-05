@@ -40,6 +40,10 @@ fill_secret JWT_ACCESS_SECRET  "openssl rand -hex 32"
 fill_secret JWT_REFRESH_SECRET "openssl rand -hex 32"
 fill_secret CONNECTOR_VAULT_KEY "openssl rand -base64 32"
 fill_secret INTERNAL_API_KEY   "openssl rand -hex 32"
+# LiveKit media server (calls + meetings). The key is a public name, the secret
+# signs every access token and webhook; LiveKit wants >= 32 characters.
+fill_secret LIVEKIT_API_KEY    "echo API$(openssl rand -hex 6)"
+fill_secret LIVEKIT_API_SECRET "openssl rand -hex 32"
 # The bundled RabbitMQ used to run on platform/platform, a pair published in
 # this repo and shared with the local dev stack. Generate them per deployment.
 fill_secret RABBITMQ_USERNAME  "echo pon"

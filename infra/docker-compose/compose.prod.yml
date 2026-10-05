@@ -157,6 +157,11 @@ services:
       SPRING_MAIL_PORT: ${MAIL_PORT:-587}
       SPRING_MAIL_USERNAME: ${MAIL_USER:-}
       SPRING_MAIL_PASSWORD: ${MAIL_PASS:-}
+      LIVEKIT_URL: wss://rtc.${DOMAIN}
+      LIVEKIT_API_URL: https://rtc.${DOMAIN}
+      LIVEKIT_API_KEY: ${LIVEKIT_API_KEY:?run bootstrap.sh}
+      LIVEKIT_API_SECRET: ${LIVEKIT_API_SECRET:?run bootstrap.sh}
+      CALL_TRANSPORT: ${CALL_TRANSPORT:-mesh}
     depends_on:
       mongo:
         condition: service_healthy
@@ -267,11 +272,46 @@ services:
     networks: [app-net]
     restart: unless-stopped
 
+  # Media server for calls and meetings
+  # (docs/superpowers/specs/2026-10-05-calls-and-meetings-design.md).
+  # Host networking: WebRTC needs the host's real public IP and a wide UDP range;
+  # publishing 10,000 ports through docker-proxy one by one is not workable.
+  # Signalling reaches it through Caddy at rtc.${DOMAIN}; media goes straight to
+  # the host: UDP 50000-60000, TCP 7881, TURN UDP 3478.
+  livekit:
+    image: livekit/livekit-server:v1.8
+    network_mode: host
+    environment:
+      LIVEKIT_CONFIG: |
+        port: 7880
+        rtc:
+          tcp_port: 7881
+          port_range_start: 50000
+          port_range_end: 60000
+          use_external_ip: true
+        turn:
+          enabled: true
+          domain: rtc.${DOMAIN}
+          udp_port: 3478
+        keys:
+          ${LIVEKIT_API_KEY:?run bootstrap.sh}: ${LIVEKIT_API_SECRET:?run bootstrap.sh}
+        webhook:
+          api_key: ${LIVEKIT_API_KEY:?run bootstrap.sh}
+          urls:
+            - https://${DOMAIN}/api/chat/api/rtc/livekit/webhook
+        room:
+          auto_create: true
+          max_participants: 25
+          empty_timeout: 300
+    restart: unless-stopped
   caddy:
     image: caddy:2
     ports:
       - "80:80"
       - "443:443"
+    # livekit runs on the host network; this name reaches it from the bridge.
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     environment:
       DOMAIN: ${DOMAIN}
       ACME_EMAIL: ${ACME_EMAIL:-admin@example.com}
