@@ -35,6 +35,7 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
 class AiResponseListenerTest {
 
   @Mock private SimpMessagingTemplate messagingTemplate;
+  @Mock private ClusterMessageBroker clusterBroker;
   @Mock private MessageService messageService;
   @Mock private MessageNotificationService notificationService;
   @Mock private Message redisMessage;
@@ -76,6 +77,7 @@ class AiResponseListenerTest {
     listener =
         new AiResponseListener(
             messagingTemplate,
+            clusterBroker,
             messageService,
             notificationService,
             objectMapper,
@@ -109,7 +111,9 @@ class AiResponseListenerTest {
   }
 
   @Test
-  void onMessage_AI_STREAM_DONE_savesMessageAndBroadcastsBoth() throws Exception {
+  @SuppressWarnings("unchecked")
+  void onMessage_AI_STREAM_DONE_persistsThenDeliversMessageAndDoneInOneOrderedClusterBatch()
+      throws Exception {
     Map<String, Object> payload =
         Map.of(
             "type", "AI_STREAM_DONE",
@@ -125,26 +129,26 @@ class AiResponseListenerTest {
             "ai",
             List.of(),
             Instant.now());
-    when(messageService.saveAiMessage(eq("conv-1"), eq("Full AI reply"), isNull()))
+    when(messageService.persistAiMessage(eq("conv-1"), eq("Full AI reply"), isNull()))
         .thenReturn(saved);
 
     listener.onMessage(redisMessage, null);
 
-    // saveAiMessage persists AND broadcasts the saved message itself (single-broadcast fix),
-    // so the listener must NOT broadcast `saved` again — it only emits the AI_STREAM_DONE event.
-    verify(messageService).saveAiMessage(eq("conv-1"), eq("Full AI reply"), isNull());
+    // Persist WITHOUT broadcasting, then deliver [saved, DONE] together so every client — on any
+    // instance — sees the saved message before AI_STREAM_DONE.
+    org.mockito.ArgumentCaptor<List<Object>> batch =
+        org.mockito.ArgumentCaptor.forClass(List.class);
+    verify(clusterBroker).convertAndSendAll(eq("/topic/conversation/conv-1"), batch.capture());
+    org.assertj.core.api.Assertions.assertThat(batch.getValue()).hasSize(2);
+    org.assertj.core.api.Assertions.assertThat(batch.getValue().get(0)).isSameAs(saved);
+    org.assertj.core.api.Assertions.assertThat(
+            ((Map<String, Object>) batch.getValue().get(1)).get("type"))
+        .isEqualTo("AI_STREAM_DONE");
     // The reply must reach participants who are not looking at this conversation (banner, unread
     // badge, push) — the topic broadcast alone only reaches the open chat.
     verify(notificationService).notifyNewMessage(AiConstants.AI_BOT_USER_ID, saved);
-    verify(messagingTemplate, never()).convertAndSend(anyString(), (Object) eq(saved));
-    verify(messagingTemplate)
-        .convertAndSend(
-            eq("/topic/conversation/conv-1"),
-            (Object)
-                argThat(
-                    arg ->
-                        arg instanceof Map
-                            && "AI_STREAM_DONE".equals(((Map<?, ?>) arg).get("type"))));
+    verify(messageService, never()).saveAiMessage(any(), any(), any());
+    verifyNoInteractions(messagingTemplate);
   }
 
   @Test
@@ -165,7 +169,7 @@ class AiResponseListenerTest {
     verify(valueOperations).setIfAbsent(eq("ai:done:conv-1:reply-a"), anyString(), any());
     verify(valueOperations).setIfAbsent(eq("ai:done:conv-1:reply-b"), anyString(), any());
     verify(messageService, org.mockito.Mockito.times(2))
-        .saveAiMessage(eq("conv-1"), eq("Đã nhớ!"), isNull());
+        .persistAiMessage(eq("conv-1"), eq("Đã nhớ!"), isNull());
   }
 
   @Test
@@ -187,10 +191,11 @@ class AiResponseListenerTest {
   }
 
   @Test
-  void onMessage_AI_STREAM_DONE_whenClaimLost_doesNotPersist_butStillBroadcastsDone()
+  void onMessage_AI_STREAM_DONE_whenClaimLost_doesNothing_theWinnerDeliversEverything()
       throws Exception {
     // Another instance already claimed this DONE (SET NX returned false) → this instance must NOT
-    // persist the AI message (prevents duplicate Mongo inserts) but still emits the DONE event.
+    // persist (no duplicate insert) and must not emit DONE either: the winner delivers the saved
+    // message + DONE cluster-wide in one ordered batch.
     when(valueOperations.setIfAbsent(anyString(), anyString(), any(Duration.class)))
         .thenReturn(false);
     Map<String, Object> payload =
@@ -202,8 +207,20 @@ class AiResponseListenerTest {
 
     listener.onMessage(redisMessage, null);
 
-    verify(messageService, never()).saveAiMessage(any(), any(), any());
+    verify(messageService, never()).persistAiMessage(any(), any(), any());
     verify(notificationService, never()).notifyNewMessage(any(), any());
+    verifyNoInteractions(messagingTemplate, clusterBroker);
+  }
+
+  @Test
+  void onMessage_AI_STREAM_DONE_withoutContent_endsTheStreamLocally_withoutClaiming()
+      throws Exception {
+    Map<String, Object> payload = Map.of("type", "AI_STREAM_DONE", "conversationId", "conv-1");
+    when(redisMessage.getBody()).thenReturn(objectMapper.writeValueAsBytes(payload));
+
+    listener.onMessage(redisMessage, null);
+
+    verify(valueOperations, never()).setIfAbsent(anyString(), anyString(), any(Duration.class));
     verify(messagingTemplate)
         .convertAndSend(
             eq("/topic/conversation/conv-1"),
@@ -212,6 +229,31 @@ class AiResponseListenerTest {
                     arg ->
                         arg instanceof Map
                             && "AI_STREAM_DONE".equals(((Map<?, ?>) arg).get("type"))));
+    verifyNoInteractions(clusterBroker);
+  }
+
+  @Test
+  void onMessage_AI_STREAM_DONE_whenPersistFails_stillEndsTheStreamClusterWide() throws Exception {
+    Map<String, Object> payload =
+        Map.of(
+            "type", "AI_STREAM_DONE",
+            "fullContent", "Full AI reply",
+            "conversationId", "conv-1");
+    when(redisMessage.getBody()).thenReturn(objectMapper.writeValueAsBytes(payload));
+    when(messageService.persistAiMessage(any(), any(), any()))
+        .thenThrow(new RuntimeException("mongo down"));
+
+    listener.onMessage(redisMessage, null);
+
+    verify(clusterBroker)
+        .convertAndSend(
+            eq("/topic/conversation/conv-1"),
+            (Object)
+                argThat(
+                    arg ->
+                        arg instanceof Map
+                            && "AI_STREAM_DONE".equals(((Map<?, ?>) arg).get("type"))));
+    verify(notificationService, never()).notifyNewMessage(any(), any());
   }
 
   @Test
@@ -225,7 +267,7 @@ class AiResponseListenerTest {
 
     listener.onMessage(redisMessage, null);
 
-    verify(messageService, never()).saveAiMessage(any(), any(), any());
+    verify(messageService, never()).persistAiMessage(any(), any(), any());
     verify(messagingTemplate)
         .convertAndSend(
             eq("/topic/conversation/conv-1"),

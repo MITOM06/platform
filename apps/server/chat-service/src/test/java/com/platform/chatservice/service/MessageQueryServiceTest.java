@@ -159,14 +159,45 @@ class MessageQueryServiceTest {
             .createdAt(Instant.now())
             .build();
     when(conversationRepository.findById(CONV_ID)).thenReturn(Optional.of(conversation));
-    when(messageRepository.findByConversationIdAndCreatedAtGreaterThanOrderByCreatedAtAsc(
-            eq(CONV_ID), eq(after), any()))
-        .thenReturn(List.of(newer));
+    when(mongoTemplate.find(any(Query.class), eq(Message.class))).thenReturn(List.of(newer));
 
-    List<MessageResponse> results = messageQueryService.getMessagesSince(SENDER_ID, CONV_ID, after);
+    PageResponse<MessageResponse> results =
+        messageQueryService.getMessagesSince(SENDER_ID, CONV_ID, after, null);
 
-    assertThat(results).hasSize(1);
-    assertThat(results.get(0).id()).isEqualTo("msg-new");
+    assertThat(results.content()).hasSize(1);
+    assertThat(results.content().get(0).id()).isEqualTo("msg-new");
+    assertThat(results.hasNext()).isFalse();
+  }
+
+  /** Catch-up used to stop at 50 rows with no way to know more existed. */
+  @Test
+  void getMessagesSince_WhenMoreThanAPage_ReportsHasNext_AndReturnsOldestFirstPage() {
+    Instant after = Instant.parse("2026-10-05T00:00:00Z");
+    List<Message> rows = new java.util.ArrayList<>();
+    for (int i = 0; i < MessageQueryService.CATCH_UP_PAGE_SIZE + 1; i++) {
+      rows.add(
+          Message.builder()
+              .id("m-" + i)
+              .conversationId(CONV_ID)
+              .senderId(OTHER_ID)
+              .content("c" + i)
+              .type("text")
+              .createdAt(after.plusSeconds(i + 1))
+              .build());
+    }
+    when(conversationRepository.findById(CONV_ID)).thenReturn(Optional.of(conversation));
+    org.mockito.ArgumentCaptor<Query> query = org.mockito.ArgumentCaptor.forClass(Query.class);
+    when(mongoTemplate.find(query.capture(), eq(Message.class))).thenReturn(rows);
+
+    PageResponse<MessageResponse> page =
+        messageQueryService.getMessagesSince(SENDER_ID, CONV_ID, after, "m-prev");
+
+    assertThat(page.content()).hasSize(MessageQueryService.CATCH_UP_PAGE_SIZE);
+    assertThat(page.content().get(0).id()).isEqualTo("m-0");
+    assertThat(page.hasNext()).isTrue();
+    // over-fetch by one, oldest first, visibility pushed into the query
+    assertThat(query.getValue().getLimit()).isEqualTo(MessageQueryService.CATCH_UP_PAGE_SIZE + 1);
+    assertThat(query.getValue().getQueryObject().toString()).contains("deletedFor");
   }
 
   @Test
@@ -174,7 +205,8 @@ class MessageQueryServiceTest {
     when(conversationRepository.findById(CONV_ID)).thenReturn(Optional.of(conversation));
 
     assertThatThrownBy(
-            () -> messageQueryService.getMessagesSince("intruder-999", CONV_ID, Instant.now()))
+            () ->
+                messageQueryService.getMessagesSince("intruder-999", CONV_ID, Instant.now(), null))
         .isInstanceOf(ConversationNotFoundException.class);
 
     verifyNoInteractions(messageRepository);

@@ -4,29 +4,39 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
-import static org.mockito.Mockito.verifyNoInteractions;
 
 import com.platform.chatservice.dto.ConversationResponse;
 import com.platform.chatservice.exception.ConversationNotFoundException;
 import com.platform.chatservice.exception.DuplicateConversationException;
+import com.platform.chatservice.exception.ErrorCodes;
+import com.platform.chatservice.exception.ForbiddenException;
 import com.platform.chatservice.model.Conversation;
 import com.platform.chatservice.repository.ConversationRepository;
+import com.platform.chatservice.repository.ExternalBotRepository;
+import com.platform.chatservice.repository.FriendshipRepository;
 import com.platform.chatservice.repository.MessageRepository;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import org.bson.Document;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.mongodb.core.FindAndModifyOptions;
 import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.mongodb.core.query.UpdateDefinition;
 
 /**
- * Unit tests for the write-side of the conversation domain ({@link ConversationService}). The
- * read/list side lives in {@link ConversationQueryServiceTest}. A real {@link ConversationMapper}
- * (wired over the mocked {@link MessageRepository}) is used so response assertions exercise the
- * same mapping the production code does.
+ * Unit tests for the shared-state write side of the conversation domain ({@link
+ * ConversationService}). Every mutation must be a single atomic {@code findAndModify} (never a
+ * whole-document {@code save()}), admin-gated actions must answer {@code GROUP_ADMIN_REQUIRED}, and
+ * membership changes must invalidate the STOMP membership cache. A real {@link ConversationMapper}
+ * and {@link ConversationWriteSupport} run over mocked persistence.
  */
 @ExtendWith(MockitoExtension.class)
 class ConversationServiceTest {
@@ -34,14 +44,16 @@ class ConversationServiceTest {
   @Mock private ConversationRepository conversationRepository;
   @Mock private ConversationCacheService conversationCacheService;
   @Mock private MessageRepository messageRepository;
-  @Mock private com.platform.chatservice.repository.FriendshipRepository friendshipRepository;
+  @Mock private FriendshipRepository friendshipRepository;
   @Mock private MongoTemplate mongoTemplate;
-  @Mock private com.platform.chatservice.repository.ExternalBotRepository externalBotRepository;
+  @Mock private ExternalBotRepository externalBotRepository;
+  @Mock private ConversationMembershipCache membershipCache;
 
   private ConversationService conversationService;
 
   private static final String USER_ID = "user-001";
   private static final String OTHER_ID = "user-002";
+  private static final String THIRD_ID = "user-003";
   private static final String CONV_ID = "conv-001";
 
   private Conversation conversation;
@@ -49,15 +61,17 @@ class ConversationServiceTest {
   @BeforeEach
   void setUp() {
     ConversationMapper conversationMapper = new ConversationMapper(messageRepository);
+    ConversationWriteSupport support =
+        new ConversationWriteSupport(
+            conversationCacheService, mongoTemplate, messageRepository, conversationMapper);
     conversationService =
         new ConversationService(
             conversationRepository,
             conversationCacheService,
-            messageRepository,
             friendshipRepository,
-            mongoTemplate,
             externalBotRepository,
-            conversationMapper);
+            support,
+            membershipCache);
 
     conversation =
         Conversation.builder()
@@ -66,6 +80,40 @@ class ConversationServiceTest {
             .createdAt(Instant.now())
             .build();
   }
+
+  private Conversation group(String... admins) {
+    return Conversation.builder()
+        .id(CONV_ID)
+        .type(Conversation.TYPE_GROUP)
+        .name("Team")
+        .participants(new ArrayList<>(List.of(USER_ID, OTHER_ID, THIRD_ID)))
+        .admins(new ArrayList<>(List.of(admins)))
+        .createdBy(USER_ID)
+        .createdAt(Instant.now())
+        .build();
+  }
+
+  private void found(Conversation c) {
+    when(conversationCacheService.findByIdOptional(CONV_ID)).thenReturn(Optional.of(c));
+  }
+
+  /** Stub every atomic update to return {@code result}; returns the captor of the updates. */
+  private ArgumentCaptor<UpdateDefinition> updatesReturning(Conversation result) {
+    ArgumentCaptor<UpdateDefinition> captor = ArgumentCaptor.forClass(UpdateDefinition.class);
+    when(mongoTemplate.findAndModify(
+            any(Query.class),
+            captor.capture(),
+            any(FindAndModifyOptions.class),
+            eq(Conversation.class)))
+        .thenReturn(result);
+    return captor;
+  }
+
+  private static Document op(UpdateDefinition update, String operator) {
+    return update.getUpdateObject().get(operator, Document.class);
+  }
+
+  // ------------------------------------------------------------------ create
 
   @Test
   void createConversation_ShouldSaveAndReturnResponse() {
@@ -77,7 +125,6 @@ class ConversationServiceTest {
     assertThat(response.id()).isEqualTo(CONV_ID);
     assertThat(response.participants()).containsExactlyInAnyOrder(USER_ID, OTHER_ID);
     assertThat(response.unreadCount()).isZero();
-    verify(conversationCacheService).save(any(Conversation.class));
   }
 
   @Test
@@ -99,7 +146,7 @@ class ConversationServiceTest {
 
     conversationService.createConversation(USER_ID, OTHER_ID);
 
-    var captor = org.mockito.ArgumentCaptor.forClass(Conversation.class);
+    var captor = ArgumentCaptor.forClass(Conversation.class);
     verify(conversationCacheService).save(captor.capture());
     assertThat(captor.getValue().getStatus()).isEqualTo(Conversation.STATUS_PENDING);
   }
@@ -113,7 +160,7 @@ class ConversationServiceTest {
 
     conversationService.createConversation(USER_ID, OTHER_ID);
 
-    var captor = org.mockito.ArgumentCaptor.forClass(Conversation.class);
+    var captor = ArgumentCaptor.forClass(Conversation.class);
     verify(conversationCacheService).save(captor.capture());
     assertThat(captor.getValue().getStatus()).isEqualTo(Conversation.STATUS_ACCEPTED);
   }
@@ -128,8 +175,7 @@ class ConversationServiceTest {
                     .botUserId("extbot:bf-1")
                     .enabled(true)
                     .build()));
-    org.mockito.ArgumentCaptor<Conversation> captor =
-        org.mockito.ArgumentCaptor.forClass(Conversation.class);
+    ArgumentCaptor<Conversation> captor = ArgumentCaptor.forClass(Conversation.class);
     when(conversationCacheService.save(captor.capture())).thenAnswer(inv -> inv.getArgument(0));
 
     conversationService.createConversation(USER_ID, "extbot:bf-1");
@@ -138,8 +184,10 @@ class ConversationServiceTest {
     verifyNoInteractions(friendshipRepository);
   }
 
+  // ------------------------------------------------------------------ accept / get
+
   @Test
-  void acceptConversation_ByRecipient_ShouldSetAccepted() {
+  void acceptConversation_ByRecipient_ShouldSetAcceptedAtomically() {
     Conversation pending =
         Conversation.builder()
             .id(CONV_ID)
@@ -148,14 +196,18 @@ class ConversationServiceTest {
             .status(Conversation.STATUS_PENDING)
             .createdAt(Instant.now())
             .build();
-    when(conversationCacheService.findByIdOptional(CONV_ID)).thenReturn(Optional.of(pending));
-    when(conversationCacheService.save(any(Conversation.class)))
-        .thenAnswer(inv -> inv.getArgument(0));
+    found(pending);
+    Conversation accepted = pending.toBuilder().status(Conversation.STATUS_ACCEPTED).build();
+    var updates = updatesReturning(accepted);
     when(messageRepository.countUnread(CONV_ID, OTHER_ID)).thenReturn(0L);
 
     ConversationResponse response = conversationService.acceptConversation(OTHER_ID, CONV_ID);
 
     assertThat(response.status()).isEqualTo(Conversation.STATUS_ACCEPTED);
+    assertThat(op(updates.getValue(), "$set").get("status"))
+        .isEqualTo(Conversation.STATUS_ACCEPTED);
+    verify(conversationCacheService, never()).save(any());
+    verify(conversationCacheService).evict(CONV_ID);
   }
 
   @Test
@@ -168,16 +220,16 @@ class ConversationServiceTest {
             .status(Conversation.STATUS_PENDING)
             .createdAt(Instant.now())
             .build();
-    when(conversationCacheService.findByIdOptional(CONV_ID)).thenReturn(Optional.of(pending));
+    found(pending);
 
     assertThatThrownBy(() -> conversationService.acceptConversation(USER_ID, CONV_ID))
-        .isInstanceOf(com.platform.chatservice.exception.ForbiddenException.class);
-    verify(conversationCacheService, never()).save(any());
+        .isInstanceOf(ForbiddenException.class);
+    verifyNoInteractions(mongoTemplate);
   }
 
   @Test
   void getConversation_ShouldReturnConversation() {
-    when(conversationCacheService.findByIdOptional(CONV_ID)).thenReturn(Optional.of(conversation));
+    found(conversation);
     when(messageRepository.countUnread(CONV_ID, USER_ID)).thenReturn(3L);
 
     ConversationResponse response = conversationService.getConversation(USER_ID, CONV_ID);
@@ -188,7 +240,7 @@ class ConversationServiceTest {
 
   @Test
   void getConversation_WhenUserNotParticipant_ShouldThrow() {
-    when(conversationCacheService.findByIdOptional(CONV_ID)).thenReturn(Optional.of(conversation));
+    found(conversation);
 
     assertThatThrownBy(() -> conversationService.getConversation("intruder-999", CONV_ID))
         .isInstanceOf(ConversationNotFoundException.class);
@@ -202,132 +254,279 @@ class ConversationServiceTest {
         .isInstanceOf(ConversationNotFoundException.class);
   }
 
+  // ------------------------------------------------------------------ disappearing messages
+
+  /** E2E: a non-admin group member could switch it on (and the sweep then wiped the history). */
   @Test
-  void muteConversation_ShouldSetMutedUntilExpiry() {
-    when(conversationCacheService.findByIdOptional(CONV_ID)).thenReturn(Optional.of(conversation));
-    when(conversationCacheService.save(any(Conversation.class)))
-        .thenAnswer(inv -> inv.getArgument(0));
-    when(messageRepository.countUnread(CONV_ID, USER_ID)).thenReturn(0L);
+  void setAutoDelete_InGroup_ByNonAdmin_IsForbiddenWithCode() {
+    found(group(USER_ID));
 
-    long durationSeconds = 3600L;
-    long beforeCall = System.currentTimeMillis();
-    ConversationResponse response =
-        conversationService.muteConversation(USER_ID, CONV_ID, durationSeconds);
-    long slack = 2_000L; // 2-second slack for test execution time
-
-    assertThat(response.isMuted()).isTrue();
-    assertThat(response.muteExpiresAt()).isNotNull();
-    assertThat(response.muteExpiresAt()).isGreaterThan(System.currentTimeMillis());
-    assertThat(response.muteExpiresAt())
-        .isLessThanOrEqualTo(beforeCall + durationSeconds * 1_000L + slack);
+    assertThatThrownBy(() -> conversationService.setAutoDelete(OTHER_ID, CONV_ID, 86_400))
+        .isInstanceOf(ForbiddenException.class)
+        .extracting("code")
+        .isEqualTo(ErrorCodes.GROUP_ADMIN_REQUIRED);
+    verifyNoInteractions(mongoTemplate);
   }
 
   @Test
-  void muteConversation_Forever_ShouldSetForeverSentinel() {
-    when(conversationCacheService.findByIdOptional(CONV_ID)).thenReturn(Optional.of(conversation));
-    when(conversationCacheService.save(any(Conversation.class)))
-        .thenAnswer(inv -> inv.getArgument(0));
-    when(messageRepository.countUnread(CONV_ID, USER_ID)).thenReturn(0L);
+  void setAutoDelete_InGroup_ByAdmin_EnablesAndStampsEnabledAt() {
+    Conversation g = group(USER_ID);
+    found(g);
+    Instant before = Instant.now();
+    var updates =
+        updatesReturning(
+            g.toBuilder().autoDeleteSeconds(86_400).autoDeleteEnabledAt(Instant.now()).build());
 
-    ConversationResponse response = conversationService.muteConversation(USER_ID, CONV_ID, -1L);
+    ConversationService.AutoDeleteChange change =
+        conversationService.setAutoDelete(USER_ID, CONV_ID, 86_400);
 
-    assertThat(response.isMuted()).isTrue();
-    assertThat(response.muteExpiresAt()).isEqualTo(9_200_000_000_000_000L);
+    assertThat(change.changed()).isTrue();
+    assertThat(change.seconds()).isEqualTo(86_400);
+    Document set = op(updates.getValue(), "$set");
+    assertThat(set.get("autoDeleteSeconds")).isEqualTo(86_400);
+    assertThat((Instant) set.get("autoDeleteEnabledAt")).isAfterOrEqualTo(before);
+    assertThat(change.conversation().autoDeleteSeconds()).isEqualTo(86_400);
+    assertThat(change.conversation().autoDeleteEnabledAt()).isNotNull();
   }
 
   @Test
-  void unmuteConversation_ShouldRemoveUserFromMutedUntil() {
-    java.util.Map<String, Long> mutedUntil = new java.util.HashMap<>();
-    mutedUntil.put(USER_ID, System.currentTimeMillis() + 3_600_000L);
-    conversation.setMutedUntil(mutedUntil);
-    when(conversationCacheService.findByIdOptional(CONV_ID)).thenReturn(Optional.of(conversation));
-    when(conversationCacheService.save(any(Conversation.class)))
-        .thenAnswer(inv -> inv.getArgument(0));
-    when(messageRepository.countUnread(CONV_ID, USER_ID)).thenReturn(0L);
+  void setAutoDelete_InDirectChat_AnyParticipantMayEnable() {
+    found(conversation);
+    var updates = updatesReturning(conversation.toBuilder().autoDeleteSeconds(3600).build());
 
-    ConversationResponse response = conversationService.unmuteConversation(USER_ID, CONV_ID);
+    ConversationService.AutoDeleteChange change =
+        conversationService.setAutoDelete(OTHER_ID, CONV_ID, 3600);
 
-    assertThat(response.isMuted()).isFalse();
+    assertThat(change.changed()).isTrue();
+    assertThat(op(updates.getValue(), "$set")).containsKey("autoDeleteEnabledAt");
+  }
+
+  /** Changing the window while enabled keeps the original instant (messages since then follow). */
+  @Test
+  void setAutoDelete_ChangingWindow_KeepsEnabledAt() {
+    Instant enabledAt = Instant.parse("2026-10-01T00:00:00Z");
+    Conversation g =
+        group(USER_ID).toBuilder().autoDeleteSeconds(86_400).autoDeleteEnabledAt(enabledAt).build();
+    found(g);
+    var updates = updatesReturning(g.toBuilder().autoDeleteSeconds(3600).build());
+
+    conversationService.setAutoDelete(USER_ID, CONV_ID, 3600);
+
+    Document set = op(updates.getValue(), "$set");
+    assertThat(set.get("autoDeleteSeconds")).isEqualTo(3600);
+    assertThat(set).doesNotContainKey("autoDeleteEnabledAt");
   }
 
   @Test
-  void archiveConversation_ShouldAddUserToArchivedList() {
-    when(conversationCacheService.findByIdOptional(CONV_ID)).thenReturn(Optional.of(conversation));
-    when(conversationCacheService.save(any(Conversation.class)))
-        .thenAnswer(inv -> inv.getArgument(0));
-    when(messageRepository.countUnread(CONV_ID, USER_ID)).thenReturn(0L);
-
-    ConversationResponse response = conversationService.archiveConversation(USER_ID, CONV_ID);
-
-    assertThat(response.isArchived()).isTrue();
-  }
-
-  @Test
-  void unarchiveConversation_ShouldRemoveUserFromArchivedList() {
-    conversation.setArchivedBy(new java.util.ArrayList<>(List.of(USER_ID)));
-    when(conversationCacheService.findByIdOptional(CONV_ID)).thenReturn(Optional.of(conversation));
-    when(conversationCacheService.save(any(Conversation.class)))
-        .thenAnswer(inv -> inv.getArgument(0));
-    when(messageRepository.countUnread(CONV_ID, USER_ID)).thenReturn(0L);
-
-    ConversationResponse response = conversationService.unarchiveConversation(USER_ID, CONV_ID);
-
-    assertThat(response.isArchived()).isFalse();
-  }
-
-  @Test
-  void markConversationUnread_WhenMessageExists_ShouldAtomicallyPullUserFromReadBy() {
-    when(conversationCacheService.findByIdOptional(CONV_ID)).thenReturn(Optional.of(conversation));
-    com.platform.chatservice.model.Message lastMsg =
-        com.platform.chatservice.model.Message.builder()
-            .id("msg-001")
-            .conversationId(CONV_ID)
-            .senderId(OTHER_ID)
-            .readBy(new java.util.ArrayList<>(List.of(USER_ID, OTHER_ID)))
-            .createdAt(Instant.now())
+  void setAutoDelete_Disabling_UnsetsBothFields() {
+    Conversation g =
+        group(USER_ID).toBuilder()
+            .autoDeleteSeconds(3600)
+            .autoDeleteEnabledAt(Instant.now())
             .build();
-    when(messageRepository.findByConversationIdOrderByCreatedAtDesc(eq(CONV_ID), any()))
-        .thenReturn(new org.springframework.data.domain.PageImpl<>(List.of(lastMsg)));
-    when(messageRepository.countUnread(CONV_ID, USER_ID)).thenReturn(1L);
+    found(g);
+    var updates = updatesReturning(group(USER_ID));
 
-    ConversationResponse response = conversationService.markConversationUnread(USER_ID, CONV_ID);
+    ConversationService.AutoDeleteChange change =
+        conversationService.setAutoDelete(USER_ID, CONV_ID, 0);
 
-    assertThat(response.unreadCount()).isEqualTo(1L);
-    // New implementation performs an atomic $pull on the last message (mirrors
-    // markConversationRead)
-    // instead of a read-modify-write + save.
-    var updateCaptor =
-        org.mockito.ArgumentCaptor.forClass(
-            org.springframework.data.mongodb.core.query.Update.class);
-    verify(mongoTemplate)
-        .updateFirst(
-            any(org.springframework.data.mongodb.core.query.Query.class),
-            updateCaptor.capture(),
-            eq(com.platform.chatservice.model.Message.class));
-    String updateDoc = updateCaptor.getValue().getUpdateObject().toString();
-    assertThat(updateDoc).contains("$pull").contains(USER_ID);
-    verify(messageRepository, never()).save(any());
+    assertThat(change.changed()).isTrue();
+    assertThat(change.seconds()).isZero();
+    assertThat(op(updates.getValue(), "$unset"))
+        .containsKeys("autoDeleteSeconds", "autoDeleteEnabledAt");
   }
 
   @Test
-  void markConversationRead_ShouldAtomicallyAddUserToReadByForAllUnreadMessages() {
-    when(conversationCacheService.findByIdOptional(CONV_ID)).thenReturn(Optional.of(conversation));
+  void setAutoDelete_SameValue_IsANoOp() {
+    Conversation g =
+        group(USER_ID).toBuilder()
+            .autoDeleteSeconds(3600)
+            .autoDeleteEnabledAt(Instant.now())
+            .build();
+    found(g);
 
-    ConversationResponse response = conversationService.markConversationRead(USER_ID, CONV_ID);
+    ConversationService.AutoDeleteChange change =
+        conversationService.setAutoDelete(USER_ID, CONV_ID, 3600);
 
-    assertThat(response.unreadCount()).isZero();
-    // New implementation performs a single atomic $addToSet across all unread
-    // messages instead of read-modify-write + saveAll.
-    var updateCaptor =
-        org.mockito.ArgumentCaptor.forClass(
-            org.springframework.data.mongodb.core.query.Update.class);
-    verify(mongoTemplate)
-        .updateMulti(
-            any(org.springframework.data.mongodb.core.query.Query.class),
-            updateCaptor.capture(),
-            eq(com.platform.chatservice.model.Message.class));
-    String updateDoc = updateCaptor.getValue().getUpdateObject().toString();
-    assertThat(updateDoc).contains("$addToSet").contains(USER_ID);
-    verify(messageRepository, never()).saveAll(anyList());
+    assertThat(change.changed()).isFalse();
+    verifyNoInteractions(mongoTemplate);
+  }
+
+  /** Enabled before the field existed: re-saving the same value starts the clock now. */
+  @Test
+  void setAutoDelete_LegacyEnabledWithoutInstant_StampsIt() {
+    Conversation legacy = group(USER_ID).toBuilder().autoDeleteSeconds(3600).build();
+    found(legacy);
+    var updates = updatesReturning(legacy);
+
+    ConversationService.AutoDeleteChange change =
+        conversationService.setAutoDelete(USER_ID, CONV_ID, 3600);
+
+    assertThat(change.changed()).isTrue();
+    assertThat(op(updates.getValue(), "$set")).containsKey("autoDeleteEnabledAt");
+  }
+
+  // ------------------------------------------------------------------ members
+
+  @Test
+  void addMembers_AddsOnlyNewcomers_AsPending_Atomically_AndInvalidatesMembership() {
+    Conversation g = group(USER_ID);
+    found(g);
+    var updates = updatesReturning(g);
+
+    conversationService.addMembers(USER_ID, CONV_ID, List.of(OTHER_ID, "user-004", "user-004"));
+
+    Document addToSet = op(updates.getValue(), "$addToSet");
+    Object[] participants =
+        (Object[])
+            ((org.springframework.data.mongodb.core.query.Update.Modifier)
+                    addToSet.get("participants"))
+                .getValue();
+    Object[] pending =
+        (Object[])
+            ((org.springframework.data.mongodb.core.query.Update.Modifier)
+                    addToSet.get("pendingMembers"))
+                .getValue();
+    assertThat(participants).containsExactly("user-004");
+    assertThat(pending).containsExactly("user-004");
+    verify(membershipCache).invalidate(CONV_ID);
+    verify(conversationCacheService, never()).save(any());
+  }
+
+  @Test
+  void addMembers_ByNonAdmin_IsForbiddenWithCode() {
+    found(group(USER_ID));
+
+    assertThatThrownBy(() -> conversationService.addMembers(OTHER_ID, CONV_ID, List.of("u-9")))
+        .isInstanceOf(ForbiddenException.class)
+        .extracting("code")
+        .isEqualTo(ErrorCodes.GROUP_ADMIN_REQUIRED);
+  }
+
+  @Test
+  void removeMember_OtherByNonAdmin_IsForbiddenWithCode() {
+    found(group(USER_ID));
+
+    assertThatThrownBy(() -> conversationService.removeMember(OTHER_ID, CONV_ID, THIRD_ID))
+        .isInstanceOf(ForbiddenException.class)
+        .extracting("code")
+        .isEqualTo(ErrorCodes.GROUP_ADMIN_REQUIRED);
+    verifyNoInteractions(mongoTemplate);
+  }
+
+  @Test
+  void removeMember_PullsTargetFromEveryList_AndInvalidatesMembership() {
+    Conversation g = group(USER_ID);
+    found(g);
+    Conversation after = g.toBuilder().participants(List.of(USER_ID, OTHER_ID)).build();
+    var updates = updatesReturning(after);
+
+    ConversationResponse response = conversationService.removeMember(USER_ID, CONV_ID, THIRD_ID);
+
+    Document pull = op(updates.getValue(), "$pull");
+    assertThat(pull.get("participants")).isEqualTo(THIRD_ID);
+    assertThat(pull.get("admins")).isEqualTo(THIRD_ID);
+    assertThat(pull.get("pendingMembers")).isEqualTo(THIRD_ID);
+    assertThat(response.participants()).doesNotContain(THIRD_ID);
+    verify(membershipCache).invalidate(CONV_ID);
+  }
+
+  /** The last admin leaving promotes the first remaining HUMAN member (never a bot). */
+  @Test
+  void removeMember_LastAdminLeaving_PromotesFirstHuman_OnlyIfStillNoAdmin() {
+    Conversation g = group(USER_ID);
+    found(g);
+    Conversation afterLeave =
+        g.toBuilder()
+            .participants(List.of(AiConstants.AI_BOT_USER_ID, OTHER_ID, THIRD_ID))
+            .admins(new ArrayList<>())
+            .build();
+    Conversation promoted = afterLeave.toBuilder().admins(List.of(OTHER_ID)).build();
+    ArgumentCaptor<Query> queries = ArgumentCaptor.forClass(Query.class);
+    ArgumentCaptor<UpdateDefinition> updates = ArgumentCaptor.forClass(UpdateDefinition.class);
+    when(mongoTemplate.findAndModify(
+            queries.capture(),
+            updates.capture(),
+            any(FindAndModifyOptions.class),
+            eq(Conversation.class)))
+        .thenReturn(afterLeave, promoted);
+
+    ConversationResponse response = conversationService.removeMember(USER_ID, CONV_ID, USER_ID);
+
+    assertThat(response.admins()).containsExactly(OTHER_ID);
+    assertThat(op(updates.getAllValues().get(1), "$push").get("admins")).isEqualTo(OTHER_ID);
+    // The promotion is conditional on the group STILL having no admin.
+    assertThat(queries.getAllValues().get(1).getQueryObject().toJson()).contains("admins");
+  }
+
+  @Test
+  void removeMember_SelfLeave_IsAllowedForNonAdmins() {
+    Conversation g = group(USER_ID);
+    found(g);
+    updatesReturning(g.toBuilder().participants(List.of(USER_ID, THIRD_ID)).build());
+
+    ConversationResponse response = conversationService.removeMember(OTHER_ID, CONV_ID, OTHER_ID);
+
+    assertThat(response.participants()).containsExactly(USER_ID, THIRD_ID);
+  }
+
+  @Test
+  void joinChannel_AddsCallerAtomically_AndInvalidatesMembership() {
+    Conversation channel = group(USER_ID).toBuilder().publicChannel(true).build();
+    found(channel);
+    var updates = updatesReturning(channel);
+
+    conversationService.joinChannel("user-009", CONV_ID);
+
+    assertThat(op(updates.getValue(), "$addToSet").get("participants")).isEqualTo("user-009");
+    verify(membershipCache).invalidate(CONV_ID);
+  }
+
+  @Test
+  void joinChannel_PrivateGroup_IsForbidden() {
+    found(group(USER_ID));
+
+    assertThatThrownBy(() -> conversationService.joinChannel("user-009", CONV_ID))
+        .isInstanceOf(ForbiddenException.class);
+    verifyNoInteractions(mongoTemplate);
+  }
+
+  // ------------------------------------------------------------------ group info / wallpaper
+
+  @Test
+  void updateGroup_SetsNameAndUnsetsBlankAvatar_Atomically() {
+    Conversation g = group(USER_ID).toBuilder().avatarUrl("/a.png").build();
+    found(g);
+    var updates = updatesReturning(g.toBuilder().name("New").avatarUrl(null).build());
+
+    ConversationResponse response = conversationService.updateGroup(USER_ID, CONV_ID, " New ", "");
+
+    assertThat(op(updates.getValue(), "$set").get("name")).isEqualTo("New");
+    assertThat(op(updates.getValue(), "$unset")).containsKey("avatarUrl");
+    assertThat(response.name()).isEqualTo("New");
+  }
+
+  @Test
+  void setWallpaper_AnyParticipant_SetsOrResets() {
+    var updates = updatesReturning(conversation.toBuilder().wallpaper("preset:x").build());
+
+    conversationService.setWallpaper(OTHER_ID, CONV_ID, "preset:x");
+    conversationService.setWallpaper(OTHER_ID, CONV_ID, " ");
+
+    assertThat(op(updates.getAllValues().get(0), "$set").get("wallpaper")).isEqualTo("preset:x");
+    assertThat(op(updates.getAllValues().get(1), "$unset")).containsKey("wallpaper");
+  }
+
+  @Test
+  void setWallpaper_ByNonParticipant_Is404() {
+    when(mongoTemplate.findAndModify(
+            any(Query.class),
+            any(UpdateDefinition.class),
+            any(FindAndModifyOptions.class),
+            eq(Conversation.class)))
+        .thenReturn(null);
+
+    assertThatThrownBy(() -> conversationService.setWallpaper("intruder", CONV_ID, "preset:x"))
+        .isInstanceOf(ConversationNotFoundException.class);
   }
 }

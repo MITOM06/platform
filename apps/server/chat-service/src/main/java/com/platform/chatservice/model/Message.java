@@ -23,7 +23,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
   @CompoundIndex(name = "conv_sender", def = "{'conversationId': 1, 'senderId': 1}"),
 })
 @Data
-@Builder
+@Builder(toBuilder = true)
 @NoArgsConstructor
 @AllArgsConstructor
 public class Message {
@@ -89,5 +89,8 @@ public class Message {
     private String messageId;
     private String senderId;
     private String content;
+
+    /** True once the quoted message was recalled — {@code content} is then blank. */
+    private boolean recalled;
   }
 }

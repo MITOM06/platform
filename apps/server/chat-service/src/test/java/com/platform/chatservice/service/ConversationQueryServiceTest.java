@@ -3,7 +3,6 @@ package com.platform.chatservice.service;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
-import static org.mockito.Mockito.verifyNoInteractions;
 
 import com.platform.chatservice.dto.ConversationResponse;
 import com.platform.chatservice.dto.PageResponse;
@@ -66,9 +65,14 @@ class ConversationQueryServiceTest {
   @SuppressWarnings("unchecked")
   void listConversations_ShouldReturnPagedResult() {
     var pageable = PageRequest.of(0, 20);
-    when(conversationRepository.findByParticipantsContainingOrderByLastMessageAtDesc(
-            USER_ID, pageable))
-        .thenReturn(new PageImpl<>(List.of(conversation)));
+    org.mockito.ArgumentCaptor<org.springframework.data.mongodb.core.query.Query> query =
+        org.mockito.ArgumentCaptor.forClass(
+            org.springframework.data.mongodb.core.query.Query.class);
+    when(mongoTemplate.find(query.capture(), eq(Conversation.class)))
+        .thenReturn(List.of(conversation));
+    when(mongoTemplate.count(
+            any(org.springframework.data.mongodb.core.query.Query.class), eq(Conversation.class)))
+        .thenReturn(1L);
 
     AggregationResults<Document> aggResults = mock(AggregationResults.class);
     when(aggResults.getMappedResults()).thenReturn(List.of());
@@ -82,21 +86,51 @@ class ConversationQueryServiceTest {
     assertThat(result.content().get(0).id()).isEqualTo(CONV_ID);
     assertThat(result.page()).isZero();
     assertThat(result.totalElements()).isEqualTo(1L);
+    // Filters are part of the query (they used to be applied after paging).
+    String json = query.getValue().getQueryObject().toJson();
+    assertThat(json).contains("hiddenFor").contains("blockedBy").contains("archivedBy");
+    assertThat(query.getValue().getLimit()).isEqualTo(20);
+  }
+
+  @Test
+  void listConversations_Archived_SelectsOnlyArchived() {
+    org.mockito.ArgumentCaptor<org.springframework.data.mongodb.core.query.Query> query =
+        org.mockito.ArgumentCaptor.forClass(
+            org.springframework.data.mongodb.core.query.Query.class);
+    when(mongoTemplate.find(query.capture(), eq(Conversation.class))).thenReturn(List.of());
+
+    conversationQueryService.listConversations(USER_ID, PageRequest.of(1, 10), true);
+
+    Document q = query.getValue().getQueryObject();
+    assertThat(q.get("archivedBy")).isEqualTo(USER_ID);
+    assertThat(query.getValue().getSkip()).isEqualTo(10L);
   }
 
   @Test
   @SuppressWarnings("unchecked")
   void listConversations_WhenEmpty_ShouldReturnEmptyPage() {
     var pageable = PageRequest.of(0, 20);
-    when(conversationRepository.findByParticipantsContainingOrderByLastMessageAtDesc(
-            USER_ID, pageable))
-        .thenReturn(new PageImpl<>(List.of()));
+    when(mongoTemplate.find(
+            any(org.springframework.data.mongodb.core.query.Query.class), eq(Conversation.class)))
+        .thenReturn(List.of());
 
     PageResponse<ConversationResponse> result =
         conversationQueryService.listConversations(USER_ID, pageable);
 
     assertThat(result.content()).isEmpty();
-    verifyNoInteractions(mongoTemplate);
+    verify(mongoTemplate, never())
+        .aggregate(any(Aggregation.class), anyString(), eq(Document.class));
+  }
+
+  @Test
+  void listPublicChannels_QuotesTheSearchTerm() {
+    when(conversationRepository.findPublicGroupsByName(anyString(), any()))
+        .thenReturn(new PageImpl<>(List.of()));
+
+    conversationQueryService.listPublicChannels(".*(a+)+$", PageRequest.of(0, 20));
+
+    verify(conversationRepository)
+        .findPublicGroupsByName(eq(java.util.regex.Pattern.quote(".*(a+)+$")), any());
   }
 
   @Test

@@ -24,7 +24,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
       def = "{'publicChannel': 1, 'lastMessageAt': -1}"),
 })
 @Data
-@Builder
+@Builder(toBuilder = true)
 @NoArgsConstructor
 @AllArgsConstructor
 public class Conversation {
@@ -87,6 +87,13 @@ public class Conversation {
   private Integer autoDeleteSeconds;
 
   /**
+   * When disappearing messages were (last) switched on. Only messages created at/after this instant
+   * are ever swept, so enabling the setting can never wipe the history that predates it. Kept when
+   * the window is changed while enabled; removed together with {@code autoDeleteSeconds}.
+   */
+  private Instant autoDeleteEnabledAt;
+
+  /**
    * Per-user "clear history" / "delete chat" cutoff: messages at or before this instant are hidden
    * for that user only.
    */
@@ -142,8 +149,30 @@ public class Conversation {
   @NoArgsConstructor
   @AllArgsConstructor
   public static class LastMessage {
+    /** Id of the message this preview mirrors (null on legacy previews). */
+    private String messageId;
+
     private String content;
     private String senderId;
+
+    /** Message type ("text", "image", "system", …); null on legacy previews. */
+    private String type;
+
+    /** True once the mirrored message was recalled — content is then blank. */
+    private boolean recalled;
+
     private Instant createdAt;
+
+    /** Preview of {@code message}, stamped {@code at} (its createdAt, or now if unset). */
+    public static LastMessage of(Message message, Instant at) {
+      return LastMessage.builder()
+          .messageId(message.getId())
+          .content(message.isRecalled() ? "" : message.getContent())
+          .senderId(message.getSenderId())
+          .type(message.getType())
+          .recalled(message.isRecalled())
+          .createdAt(at)
+          .build();
+    }
   }
 }

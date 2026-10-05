@@ -1,8 +1,19 @@
 package com.platform.chatservice.dto;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import java.time.Instant;
 import java.util.List;
 
+/**
+ * A conversation as seen by ONE viewer (REST responses, and the per-user {@code
+ * CONVERSATION_UPDATED} event on {@code /user/queue/notifications}).
+ *
+ * <p>The viewer-specific fields — {@code unreadCount}, {@code isMuted}, {@code muteExpiresAt},
+ * {@code isArchived}, {@code isBlocked} — are nullable and omitted from the JSON when null. {@link
+ * #withoutViewerState()} produces the shared form broadcast on {@code /topic/conversation/{id}}:
+ * every member receives the same payload, so it must never carry the actor's own mute / archive /
+ * block / unread state (clients merge it into their per-user copy).
+ */
 public record ConversationResponse(
     String id,
     String type,
@@ -14,38 +25,39 @@ public record ConversationResponse(
     Integer autoDeleteSeconds,
     LastMessageDto lastMessage,
     Instant lastMessageAt,
-    long unreadCount,
+    @JsonInclude(JsonInclude.Include.NON_NULL) Long unreadCount,
     Instant createdAt,
     String status,
     boolean isPublic,
     List<PinnedMessageDto> pinnedMessages,
-    boolean isMuted,
-    boolean isArchived,
+    @JsonInclude(JsonInclude.Include.NON_NULL) Boolean isMuted,
+    @JsonInclude(JsonInclude.Include.NON_NULL) Boolean isArchived,
     String wallpaper,
-    boolean isBlocked,
-    Long muteExpiresAt,
-    List<String> pendingMembers) {
-  public record LastMessageDto(String content, String senderId, Instant createdAt) {}
+    @JsonInclude(JsonInclude.Include.NON_NULL) Boolean isBlocked,
+    @JsonInclude(JsonInclude.Include.NON_NULL) Long muteExpiresAt,
+    List<String> pendingMembers,
+    @JsonInclude(JsonInclude.Include.NON_NULL) Instant autoDeleteEnabledAt) {
+
+  /**
+   * Preview of the newest message. {@code messageId}, {@code type} and {@code recalled} are
+   * additive: {@code recalled == true} means the message was unsent ({@code content} is blank) and
+   * clients render their localized "message recalled" label; {@code messageId}/{@code type} are
+   * null on previews written before they existed.
+   */
+  public record LastMessageDto(
+      String content,
+      String senderId,
+      Instant createdAt,
+      @JsonInclude(JsonInclude.Include.NON_NULL) String messageId,
+      @JsonInclude(JsonInclude.Include.NON_NULL) String type,
+      boolean recalled) {}
 
   public record PinnedMessageDto(
       String id, String senderId, String content, Instant createdAt, String type) {}
 
-  /** Backward-compatible constructor without isPublic/pinnedMessages. */
-  public ConversationResponse(
-      String id,
-      String type,
-      String name,
-      String avatarUrl,
-      List<String> participants,
-      List<String> admins,
-      String createdBy,
-      Integer autoDeleteSeconds,
-      LastMessageDto lastMessage,
-      Instant lastMessageAt,
-      long unreadCount,
-      Instant createdAt,
-      String status) {
-    this(
+  /** The same conversation with every viewer-specific field removed (shared topic payload). */
+  public ConversationResponse withoutViewerState() {
+    return new ConversationResponse(
         id,
         type,
         name,
@@ -56,59 +68,17 @@ public record ConversationResponse(
         autoDeleteSeconds,
         lastMessage,
         lastMessageAt,
-        unreadCount,
-        createdAt,
-        status,
-        false,
-        List.of(),
-        false,
-        false,
         null,
-        false,
-        null,
-        List.of());
-  }
-
-  /** Backward-compatible constructor without the wallpaper field. */
-  public ConversationResponse(
-      String id,
-      String type,
-      String name,
-      String avatarUrl,
-      List<String> participants,
-      List<String> admins,
-      String createdBy,
-      Integer autoDeleteSeconds,
-      LastMessageDto lastMessage,
-      Instant lastMessageAt,
-      long unreadCount,
-      Instant createdAt,
-      String status,
-      boolean isPublic,
-      List<PinnedMessageDto> pinnedMessages,
-      boolean isMuted,
-      boolean isArchived) {
-    this(
-        id,
-        type,
-        name,
-        avatarUrl,
-        participants,
-        admins,
-        createdBy,
-        autoDeleteSeconds,
-        lastMessage,
-        lastMessageAt,
-        unreadCount,
         createdAt,
         status,
         isPublic,
         pinnedMessages,
-        isMuted,
-        isArchived,
         null,
-        false,
         null,
-        List.of());
+        wallpaper,
+        null,
+        null,
+        pendingMembers,
+        autoDeleteEnabledAt);
   }
 }

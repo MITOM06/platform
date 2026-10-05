@@ -1,5 +1,6 @@
 package com.platform.chatservice.exception;
 
+import java.util.LinkedHashMap;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -32,7 +33,7 @@ public class GlobalExceptionHandler {
   @ExceptionHandler(ForbiddenException.class)
   public ResponseEntity<Map<String, Object>> handleForbidden(ForbiddenException ex) {
     return ResponseEntity.status(HttpStatus.FORBIDDEN)
-        .body(Map.of("error", "Forbidden", "message", ex.getMessage(), "statusCode", 403));
+        .body(body("Forbidden", ex.getMessage(), ex.getCode(), 403));
   }
 
   @ExceptionHandler(DuplicateConversationException.class)
@@ -51,7 +52,22 @@ public class GlobalExceptionHandler {
   @ExceptionHandler(BadRequestException.class)
   public ResponseEntity<Map<String, Object>> handleBadRequest(BadRequestException ex) {
     return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-        .body(Map.of("error", "Bad request", "message", ex.getMessage(), "statusCode", 400));
+        .body(body("Bad request", ex.getMessage(), ex.getCode(), 400));
+  }
+
+  /** Errors with an explicit status + stable code (e.g. 502/503 from the assistant bridge). */
+  @ExceptionHandler(ApiException.class)
+  public ResponseEntity<Map<String, Object>> handleApi(ApiException ex) {
+    if (ex.getStatus().is5xxServerError()) {
+      log.warn("{} {}: {}", ex.getStatus().value(), ex.getCode(), ex.getMessage(), ex.getCause());
+    }
+    return ResponseEntity.status(ex.getStatus())
+        .body(
+            body(
+                ex.getStatus().getReasonPhrase(),
+                ex.getMessage(),
+                ex.getCode(),
+                ex.getStatus().value()));
   }
 
   @ExceptionHandler(RateLimitExceededException.class)
@@ -92,5 +108,23 @@ public class GlobalExceptionHandler {
     log.error("Unhandled exception", ex);
     return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
         .body(Map.of("error", "Internal server error", "statusCode", 500));
+  }
+
+  /**
+   * Error body shape shared by the coded handlers: {@code {error, message, statusCode}} plus a
+   * top-level {@code code} when the failure has a stable reason ({@link ErrorCodes}). {@code
+   * message} is English diagnostics; clients localize by {@code code}.
+   */
+  private static Map<String, Object> body(String error, String message, String code, int status) {
+    Map<String, Object> body = new LinkedHashMap<>();
+    body.put("error", error);
+    if (message != null) {
+      body.put("message", message);
+    }
+    if (code != null) {
+      body.put("code", code);
+    }
+    body.put("statusCode", status);
+    return body;
   }
 }

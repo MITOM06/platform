@@ -42,7 +42,13 @@ public record MessageResponse(
         List.of());
   }
 
-  public record ReplyPreviewDto(String messageId, String senderId, String content) {}
+  /** {@code recalled == true}: the quoted message was unsent and {@code content} is blank. */
+  public record ReplyPreviewDto(
+      String messageId, String senderId, String content, boolean recalled) {
+    public ReplyPreviewDto(String messageId, String senderId, String content) {
+      this(messageId, senderId, content, false);
+    }
+  }
 
   public record ReactionDto(String userId, String emoji) {}
 }

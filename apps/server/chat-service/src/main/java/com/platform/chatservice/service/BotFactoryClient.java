@@ -109,6 +109,19 @@ public class BotFactoryClient {
         BotFactoryBotResponse.class);
   }
 
+  /** Fetch a bot (persona + default provider). Throws on failure. */
+  public BotFactoryBotResponse getBot(String botId) {
+    return sendJson("GET", "/api/bots/" + botId, null, BotFactoryBotResponse.class);
+  }
+
+  /** True when both the base URL and the worker token are set (admin calls can succeed). */
+  public boolean isConfigured() {
+    return props.getBaseUrl() != null
+        && !props.getBaseUrl().isBlank()
+        && props.getWorkerToken() != null
+        && !props.getWorkerToken().isBlank();
+  }
+
   /** Delete a bot from Bot Factory. Cascades its MCP servers. */
   public void deleteBot(String botId) {
     sendJson("DELETE", "/api/bots/" + botId, null, null);

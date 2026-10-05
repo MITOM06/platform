@@ -16,13 +16,13 @@ import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
-import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
 /**
- * AI message persistence + trace retrieval. Extracted from {@code MessageService} to keep that
- * class within the clean-code line limit. Behavior is unchanged: {@link #saveAiMessage} still
- * performs the single broadcast of the saved AI message to the conversation topic.
+ * AI / assistant message persistence + trace retrieval. Every broadcast goes through {@link
+ * ClusterMessageBroker} so a bot reply, a fired reminder or a meeting summary reaches clients
+ * connected to ANY chat-service instance (a local {@code SimpMessagingTemplate} send only reached
+ * the instance that happened to persist it).
  */
 @Service
 @RequiredArgsConstructor
@@ -30,17 +30,24 @@ public class AiMessageService {
 
   private final MessageRepository messageRepository;
   private final ConversationRepository conversationRepository;
-  private final SimpMessagingTemplate messagingTemplate;
+  private final ClusterMessageBroker clusterBroker;
   private final MessageMapper messageMapper;
   private final MongoTemplate mongoTemplate;
   private final ConversationCacheService conversationCacheService;
 
   /**
    * Save an AI-generated message (with optional trace) and broadcast it to the conversation topic.
-   * Called by AiResponseListener when AI_STREAM_DONE is received from Redis.
+   * Used for fired reminders; the streaming path uses {@link #persistAiMessage} so it can deliver
+   * the message and its {@code AI_STREAM_DONE} in one ordered batch.
    */
   public MessageResponse saveAiMessage(String conversationId, String content, AiTraceData trace) {
     return persistAndBroadcast(conversationId, AiConstants.AI_BOT_USER_ID, content, "ai", trace);
+  }
+
+  /** Persist an AI message and bump the conversation WITHOUT broadcasting it. */
+  public MessageResponse persistAiMessage(
+      String conversationId, String content, AiTraceData trace) {
+    return persist(conversationId, AiConstants.AI_BOT_USER_ID, content, "ai", trace);
   }
 
   /**
@@ -54,6 +61,13 @@ public class AiMessageService {
 
   private MessageResponse persistAndBroadcast(
       String conversationId, String senderId, String content, String type, AiTraceData trace) {
+    MessageResponse response = persist(conversationId, senderId, content, type, trace);
+    clusterBroker.convertAndSend("/topic/conversation/" + conversationId, response);
+    return response;
+  }
+
+  private MessageResponse persist(
+      String conversationId, String senderId, String content, String type, AiTraceData trace) {
     Message message =
         messageRepository.save(
             Message.builder()
@@ -66,11 +80,8 @@ public class AiMessageService {
                 .build());
 
     Instant savedAt = message.getCreatedAt() != null ? message.getCreatedAt() : Instant.now();
-    bumpConversation(conversationId, content, senderId, savedAt);
-
-    MessageResponse response = messageMapper.toResponse(message);
-    messagingTemplate.convertAndSend("/topic/conversation/" + conversationId, response);
-    return response;
+    bumpConversation(conversationId, message, savedAt);
+    return messageMapper.toResponse(message);
   }
 
   /**
@@ -78,18 +89,11 @@ public class AiMessageService {
    * the load-then-save of the whole document (which clobbered concurrent archive/mute/member writes
    * and bypassed the conversation cache).
    */
-  private void bumpConversation(
-      String conversationId, String content, String senderId, Instant at) {
+  private void bumpConversation(String conversationId, Message message, Instant at) {
     mongoTemplate.updateFirst(
         new Query(Criteria.where("_id").is(conversationId)),
         new Update()
-            .set(
-                "lastMessage",
-                Conversation.LastMessage.builder()
-                    .content(content)
-                    .senderId(senderId)
-                    .createdAt(at)
-                    .build())
+            .set("lastMessage", Conversation.LastMessage.of(message, at))
             .set("lastMessageAt", at),
         Conversation.class);
     conversationCacheService.evict(conversationId);
@@ -102,22 +106,10 @@ public class AiMessageService {
    * message id so the caller can backfill {@code CallSession.summaryMessageId}.
    */
   public String saveMeetingSummary(String conversationId, String contentJson) {
-    Message message =
-        messageRepository.save(
-            Message.builder()
-                .conversationId(conversationId)
-                .senderId(AiConstants.AI_BOT_USER_ID)
-                .content(contentJson)
-                .type("meeting_summary")
-                .readBy(new ArrayList<>())
-                .build());
-
-    Instant savedAt = message.getCreatedAt() != null ? message.getCreatedAt() : Instant.now();
-    bumpConversation(conversationId, contentJson, AiConstants.AI_BOT_USER_ID, savedAt);
-
-    MessageResponse response = messageMapper.toResponse(message);
-    messagingTemplate.convertAndSend("/topic/conversation/" + conversationId, response);
-    return message.getId();
+    MessageResponse response =
+        persistAndBroadcast(
+            conversationId, AiConstants.AI_BOT_USER_ID, contentJson, "meeting_summary", null);
+    return response.id();
   }
 
   /**

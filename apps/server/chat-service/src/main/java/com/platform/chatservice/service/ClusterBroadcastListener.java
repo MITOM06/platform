@@ -36,6 +36,16 @@ public class ClusterBroadcastListener implements MessageListener {
         log.warn("Cluster broadcast missing destination; dropping");
         return;
       }
+      JsonNode batch = envelope.get("payloads");
+      if (batch != null && batch.isArray()) {
+        // Ordered batch (ClusterMessageBroker#convertAndSendAll): deliver one after the other on
+        // this thread so the broker keeps the publish order for every subscriber.
+        for (JsonNode item : batch) {
+          messagingTemplate.convertAndSend(
+              destination, objectMapper.treeToValue(item, Object.class));
+        }
+        return;
+      }
       JsonNode payloadNode = envelope.get("payload");
       // Re-hydrate the payload as a generic tree; Jackson re-serializes it to the identical wire
       // JSON the STOMP converter would have produced from the original object.

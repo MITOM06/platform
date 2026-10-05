@@ -9,6 +9,7 @@ import io.micrometer.tracing.Tracer;
 import io.micrometer.tracing.propagation.Propagator;
 import java.time.Duration;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -35,6 +36,7 @@ public class AiResponseListener implements MessageListener {
   private static final Duration DONE_CLAIM_TTL = Duration.ofMinutes(5);
 
   private final SimpMessagingTemplate messagingTemplate;
+  private final ClusterMessageBroker clusterBroker;
   private final MessageService messageService;
   private final MessageNotificationService notificationService;
   private final ObjectMapper objectMapper;
@@ -127,37 +129,6 @@ public class AiResponseListener implements MessageListener {
         String fullContent = (String) payload.get("fullContent");
         @SuppressWarnings("unchecked")
         Map<String, Object> traceMap = (Map<String, Object>) payload.get("trace");
-        AiTraceData trace = null;
-        if (traceMap != null) {
-          try {
-            trace = objectMapper.convertValue(traceMap, AiTraceData.class);
-          } catch (Exception ex) {
-            log.warn("Failed to deserialize AiTraceData", ex);
-          }
-        }
-        if (fullContent != null && !fullContent.isBlank()) {
-          // Every instance subscribed to the Redis ai:response:* pattern receives this DONE event,
-          // so guard the Mongo write with an atomic SET NX claim: only the instance that wins the
-          // claim persists the message, preventing N duplicate inserts under multi-instance
-          // (Cloud Run max-instances > 1). saveAiMessage already broadcasts the saved message to
-          // the topic, so we must NOT broadcast it again here (would duplicate on clients). The
-          // claim also makes this the one instance that notifies participants who are elsewhere.
-          // Key on the per-reply id when ai-service sends one: keying on the text alone
-          // silently dropped any reply identical to one in the last DONE_CLAIM_TTL.
-          Object replyId = payload.get("replyId");
-          String claimKey =
-              "ai:done:"
-                  + convId
-                  + ":"
-                  + (replyId != null
-                      ? replyId.toString()
-                      : Integer.toHexString(fullContent.hashCode()));
-          Boolean claimed = redisTemplate.opsForValue().setIfAbsent(claimKey, "1", DONE_CLAIM_TTL);
-          if (Boolean.TRUE.equals(claimed)) {
-            MessageResponse saved = messageService.saveAiMessage(convId, fullContent, trace);
-            notificationService.notifyNewMessage(AiConstants.AI_BOT_USER_ID, saved);
-          }
-        }
         Map<String, Object> doneEvent = new HashMap<>();
         doneEvent.put("type", "AI_STREAM_DONE");
         doneEvent.put("senderId", AiConstants.AI_BOT_USER_ID);
@@ -168,7 +139,54 @@ public class AiResponseListener implements MessageListener {
         // as-is (no field reconstruction/stripping). Default to an empty list.
         Object sources = payload.get("sources");
         doneEvent.put("sources", sources != null ? sources : java.util.List.of());
-        messagingTemplate.convertAndSend(topic, doneEvent);
+
+        if (fullContent == null || fullContent.isBlank()) {
+          // Nothing to persist. Every instance receives this Redis event, so each one tells its
+          // own clients that the stream ended.
+          messagingTemplate.convertAndSend(topic, doneEvent);
+          return;
+        }
+        // Every instance subscribed to the Redis ai:response:* pattern receives this DONE event,
+        // so guard the Mongo write with an atomic SET NX claim: only the instance that wins the
+        // claim persists the message (no N duplicate inserts under multi-instance) and it alone
+        // delivers BOTH the persisted message and the DONE event, cluster-wide, in one ordered
+        // batch — clients always see the saved message before AI_STREAM_DONE. Losers send nothing.
+        // Key on the per-reply id when ai-service sends one: keying on the text alone
+        // silently dropped any reply identical to one in the last DONE_CLAIM_TTL.
+        Object replyId = payload.get("replyId");
+        String claimKey =
+            "ai:done:"
+                + convId
+                + ":"
+                + (replyId != null
+                    ? replyId.toString()
+                    : Integer.toHexString(fullContent.hashCode()));
+        Boolean claimed = redisTemplate.opsForValue().setIfAbsent(claimKey, "1", DONE_CLAIM_TTL);
+        if (!Boolean.TRUE.equals(claimed)) {
+          return;
+        }
+        AiTraceData trace = null;
+        if (traceMap != null) {
+          try {
+            trace = objectMapper.convertValue(traceMap, AiTraceData.class);
+          } catch (Exception ex) {
+            log.warn("Failed to deserialize AiTraceData", ex);
+          }
+        }
+        MessageResponse saved = null;
+        try {
+          saved = messageService.persistAiMessage(convId, fullContent, trace);
+        } catch (Exception ex) {
+          log.error("Failed to persist AI reply for conversation {}", convId, ex);
+        }
+        if (saved == null) {
+          // Still end the stream everywhere so no client keeps a spinner up.
+          clusterBroker.convertAndSend(topic, doneEvent);
+          return;
+        }
+        clusterBroker.convertAndSendAll(topic, List.of(saved, doneEvent));
+        // The claiming instance is also the one that notifies participants who are elsewhere.
+        notificationService.notifyNewMessage(AiConstants.AI_BOT_USER_ID, saved);
       }
       case "AI_STREAM_ERROR" -> {
         String error = (String) payload.getOrDefault("error", "AI is temporarily unavailable.");

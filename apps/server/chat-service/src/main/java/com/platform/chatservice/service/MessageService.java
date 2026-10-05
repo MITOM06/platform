@@ -1,10 +1,12 @@
 package com.platform.chatservice.service;
 
+import com.mongodb.client.result.UpdateResult;
 import com.platform.chatservice.dto.AiTraceResponse;
 import com.platform.chatservice.dto.MessageResponse;
-import com.platform.chatservice.dto.PinResult;
 import com.platform.chatservice.dto.SendMessageRequest;
+import com.platform.chatservice.exception.BadRequestException;
 import com.platform.chatservice.exception.ConversationNotFoundException;
+import com.platform.chatservice.exception.ErrorCodes;
 import com.platform.chatservice.exception.ForbiddenException;
 import com.platform.chatservice.exception.MessageNotFoundException;
 import com.platform.chatservice.model.AiTraceData;
@@ -16,6 +18,7 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.mongodb.core.FindAndModifyOptions;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
@@ -23,23 +26,15 @@ import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.stereotype.Service;
 
 /**
- * Write-side of the message domain: sending, editing, recalling, reactions, pin/unpin, forwarding
- * and system-message creation. Read/query concerns (pagination, search, AI history) live in {@link
- * MessageQueryService}; AI-message persistence lives in {@link AiMessageService}.
+ * Write-side of the message domain: sending, editing, recalling, forwarding and system-message
+ * creation. Reactions, delete-for-me and pins live in {@link MessageInteractionService}; read/query
+ * concerns in {@link MessageQueryService}; AI-message persistence in {@link AiMessageService}.
  */
 @Service
 @RequiredArgsConstructor
 public class MessageService {
 
   private static final String SYSTEM_SENDER = "system";
-
-  /** Max pinned messages per conversation (matches Conversation model comment). */
-  static final int MAX_PINNED_MESSAGES = 2;
-
-  /** System-message content codes for pin/unpin notices (see THE PIN SYSTEM-MESSAGE CONTRACT). */
-  private static final String SYS_PINNED_PREFIX = "system.message.pinned:";
-
-  private static final String SYS_UNPINNED_PREFIX = "system.message.unpinned:";
 
   private final MessageRepository messageRepository;
   private final ConversationRepository conversationRepository;
@@ -49,6 +44,12 @@ public class MessageService {
   private final AiMessageService aiMessageService;
   private final ConversationCacheService conversationCacheService;
 
+  /**
+   * Outcome of a recall / edit: the updated message, and whether it was the conversation's newest
+   * message (so {@code lastMessage} was refreshed and the conversation lists must be told).
+   */
+  public record MessageChange(MessageResponse message, boolean previewChanged) {}
+
   public MessageResponse sendMessage(String senderId, SendMessageRequest request) {
     if (request.content() == null || request.content().trim().isEmpty()) {
       throw new IllegalArgumentException("Message content cannot be empty");
@@ -57,18 +58,15 @@ public class MessageService {
         conversationRepository
             .findById(request.conversationId())
             .orElseThrow(() -> new ConversationNotFoundException(request.conversationId()));
-    if (!conversation.getParticipants().contains(senderId)) {
+    if (conversation.getParticipants() == null
+        || !conversation.getParticipants().contains(senderId)) {
       throw new ConversationNotFoundException(request.conversationId());
     }
-    // Block User: reject if the sender blocked, or is blocked by, any other
-    // participant of the conversation (covers both directions).
-    for (String participant : conversation.getParticipants()) {
-      if (!participant.equals(senderId) && helper.isBlockedBetween(senderId, participant)) {
-        throw new ForbiddenException("Cannot send message: user is blocked");
-      }
-    }
+    String type = MessageTypePolicy.resolveClientType(request.type(), request.content());
+    requireNotBlockedInDirect(conversation, senderId);
 
-    Message.ReplyPreview replyPreview = helper.buildReplyPreview(request.replyToId());
+    Message.ReplyPreview replyPreview =
+        helper.buildReplyPreview(request.replyToId(), conversation.getId());
     List<String> mentions =
         helper.parseMentions(request.content(), conversation.getParticipants(), senderId);
 
@@ -78,9 +76,9 @@ public class MessageService {
                 .conversationId(request.conversationId())
                 .senderId(senderId)
                 .content(request.content())
-                .type(request.type() != null ? request.type() : "text")
+                .type(type)
                 .readBy(new ArrayList<>(List.of(senderId)))
-                .replyToId(request.replyToId())
+                .replyToId(replyPreview == null ? null : request.replyToId())
                 .replyPreview(replyPreview)
                 .mentions(mentions)
                 .build());
@@ -91,13 +89,7 @@ public class MessageService {
     // caller never intended to touch. The cache is evicted so the next read reloads fresh.
     Update update =
         new Update()
-            .set(
-                "lastMessage",
-                Conversation.LastMessage.builder()
-                    .content(message.getContent())
-                    .senderId(senderId)
-                    .createdAt(sentAt)
-                    .build())
+            .set("lastMessage", Conversation.LastMessage.of(message, sentAt))
             .set("lastMessageAt", sentAt)
             // A new message un-hides the conversation for everyone who had deleted it.
             .set("hiddenFor", new ArrayList<String>());
@@ -109,6 +101,23 @@ public class MessageService {
     bumpConversation(request.conversationId(), update);
 
     return toResponse(message);
+  }
+
+  /**
+   * Block User applies to DIRECT conversations only. It used to reject the send when ANY
+   * participant had blocked the sender — so blocking someone silenced them in every group the two
+   * happened to share.
+   */
+  private void requireNotBlockedInDirect(Conversation conversation, String senderId) {
+    if (conversation.isGroup()) {
+      return;
+    }
+    for (String participant : conversation.getParticipants()) {
+      if (!participant.equals(senderId) && helper.isBlockedBetween(senderId, participant)) {
+        throw new ForbiddenException(
+            ErrorCodes.USER_BLOCKED, "Cannot send message: user is blocked");
+      }
+    }
   }
 
   /**
@@ -131,20 +140,14 @@ public class MessageService {
                 .conversationId(conversationId)
                 .senderId(SYSTEM_SENDER)
                 .content(content)
-                .type("system")
+                .type(MessageTypePolicy.SYSTEM)
                 .readBy(new ArrayList<>())
                 .build());
     Instant at = message.getCreatedAt() != null ? message.getCreatedAt() : Instant.now();
     bumpConversation(
         conversationId,
         new Update()
-            .set(
-                "lastMessage",
-                Conversation.LastMessage.builder()
-                    .content(content)
-                    .senderId(SYSTEM_SENDER)
-                    .createdAt(at)
-                    .build())
+            .set("lastMessage", Conversation.LastMessage.of(message, at))
             .set("lastMessageAt", at));
     return toResponse(message);
   }
@@ -164,34 +167,11 @@ public class MessageService {
   }
 
   /**
-   * Toggle a single reaction per user (Messenger-style): the new emoji replaces any existing
-   * reaction from the same user.
+   * Recall (unsend) for everyone — only the original sender may do this. Atomic on the message;
+   * also blanks the text quoted by replies to it and, when it was the newest message, the
+   * conversation's {@code lastMessage} preview (marked {@code recalled}).
    */
-  public MessageResponse addReaction(String userId, String messageId, String emoji) {
-    Message message = helper.requireParticipantMessage(userId, messageId);
-    List<Message.Reaction> reactions =
-        message.getReactions() == null
-            ? new ArrayList<>()
-            : new ArrayList<>(message.getReactions());
-    reactions.removeIf(r -> userId.equals(r.getUserId()));
-    reactions.add(Message.Reaction.builder().userId(userId).emoji(emoji).build());
-    message.setReactions(reactions);
-    return toResponse(messageRepository.save(message));
-  }
-
-  public MessageResponse removeReaction(String userId, String messageId) {
-    Message message = helper.requireParticipantMessage(userId, messageId);
-    if (message.getReactions() != null) {
-      List<Message.Reaction> reactions = new ArrayList<>(message.getReactions());
-      reactions.removeIf(r -> userId.equals(r.getUserId()));
-      message.setReactions(reactions);
-      messageRepository.save(message);
-    }
-    return toResponse(message);
-  }
-
-  /** Recall (unsend) for everyone — only the original sender may do this. */
-  public MessageResponse recallMessage(String userId, String messageId) {
+  public MessageChange recallMessage(String userId, String messageId) {
     Message message =
         messageRepository
             .findById(messageId)
@@ -199,18 +179,45 @@ public class MessageService {
     if (!userId.equals(message.getSenderId())) {
       throw new ForbiddenException("Only the sender can recall this message");
     }
-    message.setRecalled(true);
-    message.setContent("");
-    message.setReactions(new ArrayList<>());
-    message.setReplyPreview(null);
-    return toResponse(messageRepository.save(message));
+    Message updated =
+        mongoTemplate.findAndModify(
+            new Query(Criteria.where("_id").is(messageId).and("senderId").is(userId)),
+            new Update()
+                .set("recalled", true)
+                .set("content", "")
+                .set("reactions", new ArrayList<>())
+                .unset("replyPreview"),
+            FindAndModifyOptions.options().returnNew(true),
+            Message.class);
+    if (updated == null) {
+      throw new MessageNotFoundException(messageId);
+    }
+    // Quotes of the recalled message must not keep its text.
+    mongoTemplate.updateMulti(
+        new Query(
+            Criteria.where("conversationId")
+                .is(message.getConversationId())
+                .and("replyPreview.messageId")
+                .is(messageId)),
+        new Update().set("replyPreview.content", "").set("replyPreview.recalled", true),
+        Message.class);
+    boolean previewChanged =
+        refreshPreviewIfLatest(
+            message,
+            new Update()
+                .set("lastMessage.content", "")
+                .set("lastMessage.recalled", true)
+                .set("lastMessage.messageId", messageId));
+    return new MessageChange(toResponse(updated), previewChanged);
   }
 
   /**
-   * Edit a message's content — only the original sender may do this, and recalled messages cannot
-   * be edited. Stamps {@code editedAt}.
+   * Edit a message's content — only the original sender may do this, only text messages (the only
+   * kind either client offers to edit; editing e.g. a client-sent system notice would let its code
+   * be rewritten), and never a recalled message. Stamps {@code editedAt}; refreshes the
+   * conversation preview when the edited message is the newest.
    */
-  public MessageResponse editMessage(String userId, String messageId, String newContent) {
+  public MessageChange editMessage(String userId, String messageId, String newContent) {
     if (newContent == null || newContent.trim().isEmpty()) {
       throw new IllegalArgumentException("Message content cannot be empty");
     }
@@ -224,110 +231,73 @@ public class MessageService {
     if (message.isRecalled()) {
       throw new IllegalArgumentException("Cannot edit a recalled message");
     }
-    message.setContent(newContent.trim());
-    message.setEditedAt(Instant.now());
-    return toResponse(messageRepository.save(message));
-  }
-
-  /** Hide a message for the requesting user only. Caller must be a conversation participant. */
-  public void deleteForMe(String userId, String messageId) {
-    Message message = helper.requireParticipantMessage(userId, messageId);
-    List<String> deletedFor =
-        message.getDeletedFor() == null
-            ? new ArrayList<>()
-            : new ArrayList<>(message.getDeletedFor());
-    if (!deletedFor.contains(userId)) {
-      deletedFor.add(userId);
-      message.setDeletedFor(deletedFor);
-      messageRepository.save(message);
+    String type = message.getType() == null ? MessageTypePolicy.TEXT : message.getType();
+    if (!MessageTypePolicy.TEXT.equals(type)) {
+      throw new BadRequestException(
+          ErrorCodes.MESSAGE_TYPE_NOT_ALLOWED, "Only text messages can be edited");
     }
+    String content = newContent.trim();
+    MessageTypePolicy.resolveClientType(MessageTypePolicy.TEXT, content);
+    Message updated =
+        mongoTemplate.findAndModify(
+            new Query(
+                Criteria.where("_id")
+                    .is(messageId)
+                    .and("senderId")
+                    .is(userId)
+                    .and("recalled")
+                    .ne(true)),
+            new Update().set("content", content).set("editedAt", Instant.now()),
+            FindAndModifyOptions.options().returnNew(true),
+            Message.class);
+    if (updated == null) {
+      // Recalled (or deleted) between the read and the write.
+      throw new IllegalArgumentException("Cannot edit a recalled message");
+    }
+    boolean previewChanged =
+        refreshPreviewIfLatest(
+            message,
+            new Update()
+                .set("lastMessage.content", content)
+                .set("lastMessage.messageId", messageId));
+    return new MessageChange(toResponse(updated), previewChanged);
   }
 
   /**
-   * Pin a message in its conversation (Task 53). Any participant may pin in a direct chat; group
-   * chats require admin rights. Keeps at most 5 pins, newest first. Returns the updated
-   * conversation so the client can refresh the pinned-message header.
+   * Conditionally apply {@code previewUpdate} to the conversation, only if its {@code lastMessage}
+   * still mirrors {@code message} (by id; legacy previews without an id match on sender +
+   * timestamp). Atomic — a newer message landing concurrently is never overwritten.
    */
-  public PinResult pinMessage(String userId, String messageId) {
-    Message message =
-        messageRepository
-            .findById(messageId)
-            .orElseThrow(() -> new MessageNotFoundException(messageId));
-    Conversation conversation =
-        conversationRepository
-            .findById(message.getConversationId())
-            .orElseThrow(() -> new ConversationNotFoundException(message.getConversationId()));
-    if (!conversation.getParticipants().contains(userId)) {
-      throw new ForbiddenException("Not a participant of this conversation");
+  private boolean refreshPreviewIfLatest(Message message, Update previewUpdate) {
+    List<Criteria> mirrors = new ArrayList<>();
+    mirrors.add(Criteria.where("lastMessage.messageId").is(message.getId()));
+    if (message.getCreatedAt() != null && message.getSenderId() != null) {
+      mirrors.add(
+          new Criteria()
+              .andOperator(
+                  Criteria.where("lastMessage.messageId").exists(false),
+                  Criteria.where("lastMessage.senderId").is(message.getSenderId()),
+                  Criteria.where("lastMessage.createdAt").is(message.getCreatedAt())));
     }
-    if (message.isRecalled()) {
-      throw new IllegalArgumentException("Cannot pin a recalled message");
+    Query query =
+        new Query(
+            new Criteria()
+                .andOperator(
+                    Criteria.where("_id").is(message.getConversationId()),
+                    new Criteria().orOperator(mirrors.toArray(new Criteria[0]))));
+    UpdateResult result = mongoTemplate.updateFirst(query, previewUpdate, Conversation.class);
+    if (result == null || result.getModifiedCount() == 0) {
+      return false;
     }
-    if ("call_log".equals(message.getType())) {
-      throw new IllegalArgumentException("Cannot pin a call message");
-    }
-    if ("system".equals(message.getType())) {
-      throw new IllegalArgumentException("Cannot pin a system message");
-    }
-    if (conversation.isGroup()) {
-      boolean isAdmin =
-          conversation.getAdmins() != null && conversation.getAdmins().contains(userId);
-      if (!isAdmin) {
-        throw new ForbiddenException("Only admins can pin messages in a group");
-      }
-    }
-    List<String> pinned =
-        conversation.getPinnedMessages() == null
-            ? new ArrayList<>()
-            : new ArrayList<>(conversation.getPinnedMessages());
-    pinned.remove(messageId);
-    pinned.add(0, messageId);
-    if (pinned.size() > MAX_PINNED_MESSAGES) {
-      pinned = pinned.subList(0, MAX_PINNED_MESSAGES);
-    }
-    conversation.setPinnedMessages(pinned);
-    conversationRepository.save(conversation);
-    // Persisted centered notice; eviction of an older pin emits NO extra "unpinned" message.
-    MessageResponse systemMessage =
-        createSystemMessage(conversation.getId(), SYS_PINNED_PREFIX + userId);
-    return new PinResult(conversation.getId(), pinned, systemMessage);
-  }
-
-  /** Unpin a message. Same permission rules as pinMessage. */
-  public PinResult unpinMessage(String userId, String messageId) {
-    Message message =
-        messageRepository
-            .findById(messageId)
-            .orElseThrow(() -> new MessageNotFoundException(messageId));
-    Conversation conversation =
-        conversationRepository
-            .findById(message.getConversationId())
-            .orElseThrow(() -> new ConversationNotFoundException(message.getConversationId()));
-    if (!conversation.getParticipants().contains(userId)) {
-      throw new ForbiddenException("Not a participant of this conversation");
-    }
-    if (conversation.isGroup()) {
-      boolean isAdmin =
-          conversation.getAdmins() != null && conversation.getAdmins().contains(userId);
-      if (!isAdmin) {
-        throw new ForbiddenException("Only admins can unpin messages in a group");
-      }
-    }
-    List<String> pinned =
-        conversation.getPinnedMessages() == null
-            ? new ArrayList<>()
-            : new ArrayList<>(conversation.getPinnedMessages());
-    pinned.remove(messageId);
-    conversation.setPinnedMessages(pinned);
-    conversationRepository.save(conversation);
-    MessageResponse systemMessage =
-        createSystemMessage(conversation.getId(), SYS_UNPINNED_PREFIX + userId);
-    return new PinResult(conversation.getId(), pinned, systemMessage);
+    conversationCacheService.evict(message.getConversationId());
+    return true;
   }
 
   /**
    * Forward a message to a target conversation (Task 53). Creates a copy of the original content in
-   * the target conversation as a new message from the forwarding user.
+   * the target conversation as a new message from the forwarding user. Assistant replies are
+   * forwarded as text; server-only kinds (system notices, call logs, meeting summaries) cannot be
+   * forwarded.
    */
   public MessageResponse forwardMessage(
       String userId, String messageId, String targetConversationId) {
@@ -342,13 +312,12 @@ public class MessageService {
         conversationRepository
             .findById(original.getConversationId())
             .orElseThrow(() -> new ConversationNotFoundException(original.getConversationId()));
-    if (!srcConv.getParticipants().contains(userId)) {
+    if (srcConv.getParticipants() == null || !srcConv.getParticipants().contains(userId)) {
       throw new ForbiddenException("Not a participant of source conversation");
     }
+    String type = MessageTypePolicy.forwardedType(original.getType());
     return sendMessage(
-        userId,
-        new SendMessageRequest(
-            targetConversationId, original.getContent(), original.getType(), null));
+        userId, new SendMessageRequest(targetConversationId, original.getContent(), type, null));
   }
 
   MessageResponse toResponse(Message m) {
@@ -357,10 +326,15 @@ public class MessageService {
 
   /**
    * Save an AI-generated message (with optional trace) and broadcast it to the conversation topic.
-   * Called by AiResponseListener when AI_STREAM_DONE is received from Redis.
    */
   public MessageResponse saveAiMessage(String conversationId, String content, AiTraceData trace) {
     return aiMessageService.saveAiMessage(conversationId, content, trace);
+  }
+
+  /** Persist an AI reply without broadcasting it (the caller delivers it in an ordered batch). */
+  public MessageResponse persistAiMessage(
+      String conversationId, String content, AiTraceData trace) {
+    return aiMessageService.persistAiMessage(conversationId, content, trace);
   }
 
   /**

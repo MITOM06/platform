@@ -26,7 +26,8 @@ public class MessageMapper {
             : new MessageResponse.ReplyPreviewDto(
                 m.getReplyPreview().getMessageId(),
                 m.getReplyPreview().getSenderId(),
-                m.getReplyPreview().getContent());
+                m.getReplyPreview().isRecalled() ? "" : m.getReplyPreview().getContent(),
+                m.getReplyPreview().isRecalled());
     return new MessageResponse(
         m.getId(),
         m.getConversationId(),

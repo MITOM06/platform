@@ -32,11 +32,12 @@ class MessagePinTest {
   @Mock private MessageRepository messageRepository;
   @Mock private ConversationRepository conversationRepository;
   @Mock private MongoTemplate mongoTemplate;
-  @Mock private org.springframework.messaging.simp.SimpMessagingTemplate messagingTemplate;
+  @Mock private ClusterMessageBroker clusterBroker;
   @Mock private MessageServiceHelper messageServiceHelper;
   @Mock private ConversationCacheService conversationCacheService;
 
   private MessageService messageService;
+  private MessageInteractionService interactionService;
 
   private static final String SENDER_ID = "user-001";
   private static final String OTHER_ID = "user-002";
@@ -53,7 +54,7 @@ class MessagePinTest {
         new AiMessageService(
             messageRepository,
             conversationRepository,
-            messagingTemplate,
+            clusterBroker,
             messageMapper,
             mongoTemplate,
             conversationCacheService);
@@ -65,6 +66,15 @@ class MessagePinTest {
             messageServiceHelper,
             messageMapper,
             aiMessageService,
+            conversationCacheService);
+    interactionService =
+        new MessageInteractionService(
+            messageRepository,
+            conversationRepository,
+            mongoTemplate,
+            messageServiceHelper,
+            messageMapper,
+            messageService,
             conversationCacheService);
 
     conversation =
@@ -82,16 +92,36 @@ class MessagePinTest {
   }
 
   @Test
-  void editMessage_BySender_ShouldUpdateContentAndStampEditedAt() {
+  void editMessage_BySender_ShouldUpdateContentAndStampEditedAt_Atomically() {
     when(messageRepository.findById(MSG_ID)).thenReturn(Optional.of(savedMessage));
-    when(messageRepository.save(any(Message.class))).thenAnswer(inv -> inv.getArgument(0));
+    Message edited =
+        savedMessage.toBuilder().content("Edited text").editedAt(Instant.now()).build();
+    when(mongoTemplate.findAndModify(
+            any(org.springframework.data.mongodb.core.query.Query.class),
+            any(org.springframework.data.mongodb.core.query.UpdateDefinition.class),
+            any(org.springframework.data.mongodb.core.FindAndModifyOptions.class),
+            eq(Message.class)))
+        .thenReturn(edited);
 
-    MessageResponse response = messageService.editMessage(SENDER_ID, MSG_ID, "Edited text");
+    MessageService.MessageChange change =
+        messageService.editMessage(SENDER_ID, MSG_ID, "Edited text");
 
-    assertThat(response.content()).isEqualTo("Edited text");
-    assertThat(response.editedAt()).isNotNull();
-    verify(messageRepository)
-        .save(argThat(m -> "Edited text".equals(m.getContent()) && m.getEditedAt() != null));
+    assertThat(change.message().content()).isEqualTo("Edited text");
+    assertThat(change.message().editedAt()).isNotNull();
+    assertThat(change.previewChanged()).isFalse(); // updateFirst unstubbed → preview untouched
+    verify(messageRepository, never()).save(any(Message.class));
+  }
+
+  /** Only text can be edited — e.g. a client-sent system notice must not be rewritable. */
+  @Test
+  void editMessage_NonText_IsRejected() {
+    savedMessage.setType("system");
+    when(messageRepository.findById(MSG_ID)).thenReturn(Optional.of(savedMessage));
+
+    assertThatThrownBy(() -> messageService.editMessage(SENDER_ID, MSG_ID, "x"))
+        .isInstanceOf(com.platform.chatservice.exception.BadRequestException.class)
+        .extracting("code")
+        .isEqualTo(com.platform.chatservice.exception.ErrorCodes.MESSAGE_TYPE_NOT_ALLOWED);
   }
 
   @Test
@@ -128,15 +158,19 @@ class MessagePinTest {
   // -----------------------------------------------------------------------
 
   @Test
-  void pinMessage_WhenParticipant_ShouldAddToPinnedList() {
+  void pinMessage_WhenParticipant_ShouldPinAtomically() {
     when(messageRepository.findById(MSG_ID)).thenReturn(Optional.of(savedMessage));
     when(conversationRepository.findById(CONV_ID)).thenReturn(Optional.of(conversation));
-    when(conversationRepository.save(any(Conversation.class)))
-        .thenAnswer(inv -> inv.getArgument(0));
+    when(mongoTemplate.findAndModify(
+            any(org.springframework.data.mongodb.core.query.Query.class),
+            any(org.springframework.data.mongodb.core.query.UpdateDefinition.class),
+            any(org.springframework.data.mongodb.core.FindAndModifyOptions.class),
+            eq(Conversation.class)))
+        .thenReturn(conversation.toBuilder().pinnedMessages(List.of(MSG_ID)).build());
     // createSystemMessage persists the "X pinned a message" notice.
     when(messageRepository.save(any(Message.class))).thenReturn(savedMessage);
 
-    var result = messageService.pinMessage(SENDER_ID, MSG_ID);
+    var result = interactionService.pinMessage(SENDER_ID, MSG_ID);
 
     assertThat(result.conversationId()).isEqualTo(CONV_ID);
     assertThat(result.pinnedMessages()).containsExactly(MSG_ID);
@@ -147,7 +181,7 @@ class MessagePinTest {
     when(messageRepository.findById(MSG_ID)).thenReturn(Optional.of(savedMessage));
     when(conversationRepository.findById(CONV_ID)).thenReturn(Optional.of(conversation));
 
-    assertThatThrownBy(() -> messageService.pinMessage("outsider", MSG_ID))
+    assertThatThrownBy(() -> interactionService.pinMessage("outsider", MSG_ID))
         .isInstanceOf(ForbiddenException.class);
   }
 
@@ -158,7 +192,7 @@ class MessagePinTest {
     when(messageRepository.findById(MSG_ID)).thenReturn(Optional.of(recalled));
     when(conversationRepository.findById(CONV_ID)).thenReturn(Optional.of(conversation));
 
-    assertThatThrownBy(() -> messageService.pinMessage(SENDER_ID, MSG_ID))
+    assertThatThrownBy(() -> interactionService.pinMessage(SENDER_ID, MSG_ID))
         .isInstanceOf(IllegalArgumentException.class)
         .hasMessageContaining("recalled");
   }
@@ -168,12 +202,16 @@ class MessagePinTest {
     conversation.setPinnedMessages(new java.util.ArrayList<>(List.of(MSG_ID)));
     when(messageRepository.findById(MSG_ID)).thenReturn(Optional.of(savedMessage));
     when(conversationRepository.findById(CONV_ID)).thenReturn(Optional.of(conversation));
-    when(conversationRepository.save(any(Conversation.class)))
-        .thenAnswer(inv -> inv.getArgument(0));
+    when(mongoTemplate.findAndModify(
+            any(org.springframework.data.mongodb.core.query.Query.class),
+            any(org.springframework.data.mongodb.core.query.UpdateDefinition.class),
+            any(org.springframework.data.mongodb.core.FindAndModifyOptions.class),
+            eq(Conversation.class)))
+        .thenReturn(conversation.toBuilder().pinnedMessages(List.of()).build());
     // createSystemMessage persists the "X unpinned a message" notice.
     when(messageRepository.save(any(Message.class))).thenReturn(savedMessage);
 
-    var result = messageService.unpinMessage(SENDER_ID, MSG_ID);
+    var result = interactionService.unpinMessage(SENDER_ID, MSG_ID);
 
     assertThat(result.pinnedMessages()).doesNotContain(MSG_ID);
   }

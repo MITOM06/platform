@@ -15,11 +15,14 @@ import com.platform.chatservice.security.UserPrincipal;
 import com.platform.chatservice.service.AiFeedbackService;
 import com.platform.chatservice.service.AiRedisPublisher;
 import com.platform.chatservice.service.ClusterMessageBroker;
+import com.platform.chatservice.service.ConversationEventPublisher;
 import com.platform.chatservice.service.ConversationService;
 import com.platform.chatservice.service.ExternalBotService;
+import com.platform.chatservice.service.MessageInteractionService;
 import com.platform.chatservice.service.MessageNotificationService;
 import com.platform.chatservice.service.MessageQueryService;
 import com.platform.chatservice.service.MessageService;
+import com.platform.chatservice.service.MessageTypePolicy;
 import com.platform.chatservice.service.RateLimiterService;
 import java.util.List;
 import java.util.Map;
@@ -46,6 +49,8 @@ public class MessageController {
   private final AiFeedbackService aiFeedbackService;
   private final ExternalBotService externalBotService;
   private final ConversationService conversationService;
+  private final MessageInteractionService interactionService;
+  private final ConversationEventPublisher conversationEvents;
 
   @PostMapping
   @ResponseStatus(HttpStatus.CREATED)
@@ -61,12 +66,13 @@ public class MessageController {
     messageNotificationService.notifyNewMessage(uid, response);
 
     // Same fan-out as the STOMP path: trigger the AI on an explicit @AI mention, OR on any message
-    // in a 1-1 conversation with the native AI bot (no mention required there).
-    boolean hasMention =
-        request.content() != null && AI_MENTION_PATTERN.matcher(request.content()).find();
+    // in a 1-1 conversation with the native AI bot (no mention required there). Only TEXT does:
+    // stickers, voice notes, file JSON and system codes are not prompts.
+    boolean isText =
+        request.content() != null && MessageTypePolicy.triggersAssistant(response.type());
+    boolean hasMention = isText && AI_MENTION_PATTERN.matcher(request.content()).find();
     boolean isDirectAi =
-        request.content() != null
-            && conversationService.isDirectAiConversation(request.conversationId());
+        isText && conversationService.isDirectAiConversation(request.conversationId());
     if (hasMention || isDirectAi) {
       final String convId = request.conversationId();
       final String raw = request.content();
@@ -88,7 +94,7 @@ public class MessageController {
             }
           });
     }
-    if (request.content() != null) {
+    if (isText) {
       final String botConvId = request.conversationId();
       final String botRaw = request.content();
       externalBotService
@@ -109,7 +115,9 @@ public class MessageController {
   @PutMapping("/{id}")
   public MessageResponse editMessage(
       @PathVariable String id, @jakarta.validation.Valid @RequestBody EditMessageRequest request) {
-    MessageResponse updated = messageService.editMessage(currentUserId(), id, request.content());
+    MessageService.MessageChange change =
+        messageService.editMessage(currentUserId(), id, request.content());
+    MessageResponse updated = change.message();
     clusterBroker.convertAndSend(
         "/topic/conversation/" + updated.conversationId(),
         Map.of(
@@ -118,6 +126,10 @@ public class MessageController {
             "conversationId", updated.conversationId(),
             "content", updated.content(),
             "editedAt", updated.editedAt().toString()));
+    if (change.previewChanged()) {
+      // It was the newest message: conversation lists must show the edited text.
+      conversationEvents.publishShared(updated.conversationId());
+    }
     return updated;
   }
 
@@ -137,21 +149,31 @@ public class MessageController {
   @PostMapping("/{id}/reactions")
   public MessageResponse addReaction(
       @PathVariable String id, @RequestBody ReactionRequest request) {
-    MessageResponse updated = messageService.addReaction(currentUserId(), id, request.emoji());
+    String uid = currentUserId();
+    rateLimiterService.checkReactionRate(uid);
+    MessageResponse updated = interactionService.addReaction(uid, id, request.emoji());
     broadcastReaction(updated);
     return updated;
   }
 
   @DeleteMapping("/{id}/reactions")
   public MessageResponse removeReaction(@PathVariable String id) {
-    MessageResponse updated = messageService.removeReaction(currentUserId(), id);
+    String uid = currentUserId();
+    rateLimiterService.checkReactionRate(uid);
+    MessageResponse updated = interactionService.removeReaction(uid, id);
     broadcastReaction(updated);
     return updated;
   }
 
+  /**
+   * Recall for everyone. Broadcasts MESSAGE_RECALLED; when the recalled message was the newest, the
+   * conversation's {@code lastMessage} becomes {@code recalled:true} (blank content) and a shared
+   * CONVERSATION_UPDATED refreshes every member's list. Quotes of it are blanked server-side.
+   */
   @DeleteMapping("/{id}")
   public MessageResponse recall(@PathVariable String id) {
-    MessageResponse updated = messageService.recallMessage(currentUserId(), id);
+    MessageService.MessageChange change = messageService.recallMessage(currentUserId(), id);
+    MessageResponse updated = change.message();
     clusterBroker.convertAndSend(
         "/topic/conversation/" + updated.conversationId(),
         Map.of(
@@ -161,13 +183,16 @@ public class MessageController {
             updated.id(),
             "conversationId",
             updated.conversationId()));
+    if (change.previewChanged()) {
+      conversationEvents.publishShared(updated.conversationId());
+    }
     return updated;
   }
 
   @PostMapping("/{id}/delete-for-me")
   @ResponseStatus(HttpStatus.NO_CONTENT)
   public void deleteForMe(@PathVariable String id) {
-    messageService.deleteForMe(currentUserId(), id);
+    interactionService.deleteForMe(currentUserId(), id);
   }
 
   /** Returns the AI trace for a message. 404 if the message has no trace (non-AI messages). */
@@ -182,7 +207,7 @@ public class MessageController {
    */
   @PostMapping("/{id}/pin")
   public Map<String, Object> pinMessage(@PathVariable String id) {
-    PinResult result = messageService.pinMessage(currentUserId(), id);
+    PinResult result = interactionService.pinMessage(currentUserId(), id);
     broadcastPinResult(id, result);
     return Map.of("pinnedMessages", result.pinnedMessages());
   }
@@ -193,7 +218,7 @@ public class MessageController {
    */
   @DeleteMapping("/{id}/pin")
   public Map<String, Object> unpinMessage(@PathVariable String id) {
-    PinResult result = messageService.unpinMessage(currentUserId(), id);
+    PinResult result = interactionService.unpinMessage(currentUserId(), id);
     broadcastPinResult(id, result);
     return Map.of("pinnedMessages", result.pinnedMessages());
   }
@@ -225,10 +250,13 @@ public class MessageController {
   @ResponseStatus(HttpStatus.CREATED)
   public MessageResponse forwardMessage(
       @PathVariable String id, @RequestBody ForwardMessageRequest request) {
+    String uid = currentUserId();
+    // A forward creates a message like any send — same per-user rate limit.
+    rateLimiterService.checkMessageRate(uid);
     MessageResponse forwarded =
-        messageService.forwardMessage(currentUserId(), id, request.targetConversationId());
+        messageService.forwardMessage(uid, id, request.targetConversationId());
     clusterBroker.convertAndSend("/topic/conversation/" + forwarded.conversationId(), forwarded);
-    messageNotificationService.notifyNewMessage(currentUserId(), forwarded);
+    messageNotificationService.notifyNewMessage(uid, forwarded);
     return forwarded;
   }
 

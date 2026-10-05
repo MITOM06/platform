@@ -1,6 +1,8 @@
 package com.platform.chatservice.service;
 
+import com.platform.chatservice.exception.BadRequestException;
 import com.platform.chatservice.exception.ConversationNotFoundException;
+import com.platform.chatservice.exception.ErrorCodes;
 import com.platform.chatservice.exception.ForbiddenException;
 import com.platform.chatservice.exception.MessageNotFoundException;
 import com.platform.chatservice.model.Conversation;
@@ -50,18 +52,29 @@ class MessageServiceHelper {
     return message;
   }
 
-  Message.ReplyPreview buildReplyPreview(String replyToId) {
+  /**
+   * Snapshot of the message being replied to. The target must live in the SAME conversation: {@code
+   * replyToId} used to be looked up globally, so replying in one chat with the id of a message from
+   * someone else's private chat copied that message's text into {@code replyPreview}. An unknown or
+   * foreign id is rejected with {@code 400 REPLY_TARGET_INVALID}.
+   */
+  Message.ReplyPreview buildReplyPreview(String replyToId, String conversationId) {
     if (replyToId == null || replyToId.isBlank()) return null;
-    return messageRepository
-        .findById(replyToId)
-        .map(
-            m ->
-                Message.ReplyPreview.builder()
-                    .messageId(m.getId())
-                    .senderId(m.getSenderId())
-                    .content(snippet(m.getContent()))
-                    .build())
-        .orElse(null);
+    Message target =
+        messageRepository
+            .findById(replyToId)
+            .filter(m -> conversationId != null && conversationId.equals(m.getConversationId()))
+            .orElseThrow(
+                () ->
+                    new BadRequestException(
+                        ErrorCodes.REPLY_TARGET_INVALID,
+                        "Reply target is not a message of this conversation"));
+    return Message.ReplyPreview.builder()
+        .messageId(target.getId())
+        .senderId(target.getSenderId())
+        .content(target.isRecalled() ? "" : snippet(target.getContent()))
+        .recalled(target.isRecalled())
+        .build();
   }
 
   private String snippet(String content) {

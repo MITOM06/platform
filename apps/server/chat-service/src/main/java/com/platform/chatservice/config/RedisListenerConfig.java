@@ -5,6 +5,7 @@ import com.platform.chatservice.service.AiResponseListener;
 import com.platform.chatservice.service.CallSummaryListener;
 import com.platform.chatservice.service.ClusterBroadcastListener;
 import com.platform.chatservice.service.ClusterMessageBroker;
+import com.platform.chatservice.service.ConversationMembershipCache;
 import com.platform.chatservice.service.KbStatusListener;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -23,7 +24,8 @@ public class RedisListenerConfig {
       KbStatusListener kbStatusListener,
       CallSummaryListener callSummaryListener,
       ClusterBroadcastListener clusterBroadcastListener,
-      SessionRevokedListener sessionRevokedListener) {
+      SessionRevokedListener sessionRevokedListener,
+      ConversationMembershipCache conversationMembershipCache) {
     RedisMessageListenerContainer container = new RedisMessageListenerContainer();
     container.setConnectionFactory(connectionFactory);
     container.addMessageListener(aiResponseListener, new PatternTopic("ai:response:*"));
@@ -39,6 +41,10 @@ public class RedisListenerConfig {
     // changed, password reset, …) — close that user's open sockets right away.
     container.addMessageListener(
         sessionRevokedListener, new ChannelTopic(SessionRevokedListener.CHANNEL));
+    // Membership of a conversation changed on some instance — drop the cached participants so the
+    // outbound STOMP filter stops delivering to removed members right away.
+    container.addMessageListener(
+        conversationMembershipCache, new ChannelTopic(ConversationMembershipCache.CHANNEL));
     return container;
   }
 }

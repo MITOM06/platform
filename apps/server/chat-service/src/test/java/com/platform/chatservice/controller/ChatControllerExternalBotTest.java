@@ -9,6 +9,7 @@ import com.platform.chatservice.model.ExternalBot;
 import com.platform.chatservice.service.AiRedisPublisher;
 import com.platform.chatservice.service.CallService;
 import com.platform.chatservice.service.ClusterMessageBroker;
+import com.platform.chatservice.service.ConversationMembershipCache;
 import com.platform.chatservice.service.ConversationService;
 import com.platform.chatservice.service.ExternalBotService;
 import com.platform.chatservice.service.MessageNotificationService;
@@ -37,6 +38,7 @@ class ChatControllerExternalBotTest {
   @Mock private CallService callService;
   @Mock private ExternalBotService externalBotService;
   @Mock private ConversationService conversationService;
+  @Mock private ConversationMembershipCache membershipCache;
   @Mock private MessageResponse messageResponse;
 
   @Test
@@ -51,9 +53,11 @@ class ChatControllerExternalBotTest {
             aiRedisPublisher,
             callService,
             externalBotService,
-            conversationService);
+            conversationService,
+            membershipCache);
 
     when(messageService.sendMessage(any(), any())).thenReturn(messageResponse);
+    when(messageResponse.type()).thenReturn("text");
     ExternalBot bot =
         ExternalBot.builder()
             .botUserId("extbot:bf-1")
@@ -85,9 +89,11 @@ class ChatControllerExternalBotTest {
             aiRedisPublisher,
             callService,
             externalBotService,
-            conversationService);
+            conversationService,
+            membershipCache);
 
     when(messageService.sendMessage(any(), any())).thenReturn(messageResponse);
+    when(messageResponse.type()).thenReturn("text");
     when(externalBotService.resolveAssistant("conv-1", "user-1")).thenReturn(Optional.empty());
 
     ChatMessageDto dto = new ChatMessageDto();
@@ -99,5 +105,37 @@ class ChatControllerExternalBotTest {
     controller.send(dto, principal);
 
     verify(externalBotService, after(300).never()).reply(any(), any(), any());
+  }
+
+  /** A sticker / voice note / file to the personal assistant is not a prompt. */
+  @Test
+  void send_nonTextMessage_neverTriggersAssistant() {
+    ChatController controller =
+        new ChatController(
+            messageService,
+            messageQueryService,
+            clusterBroker,
+            messageNotificationService,
+            rateLimiterService,
+            aiRedisPublisher,
+            callService,
+            externalBotService,
+            conversationService,
+            membershipCache);
+    when(messageService.sendMessage(any(), any())).thenReturn(messageResponse);
+    when(messageResponse.type()).thenReturn("sticker");
+    when(externalBotService.resolveAssistant("conv-1", "user-1"))
+        .thenReturn(Optional.of(ExternalBot.builder().botUserId("extbot:bf-1").build()));
+
+    ChatMessageDto dto = new ChatMessageDto();
+    dto.setConversationId("conv-1");
+    dto.setContent("https://cdn/sticker.webp");
+    dto.setType("sticker");
+    Principal principal = () -> "user-1";
+
+    controller.send(dto, principal);
+
+    verify(externalBotService, after(300).never()).reply(any(), any(), any());
+    verify(externalBotService, never()).resolveAssistant(any(), any());
   }
 }
