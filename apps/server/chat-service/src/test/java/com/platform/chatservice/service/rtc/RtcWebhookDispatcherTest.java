@@ -24,16 +24,16 @@ class RtcWebhookDispatcherTest {
     }
 
     @Override
-    public void onParticipantJoined(String room, String identity) {
+    public void onParticipantJoined(RtcParticipantEvent e) {
       if (explode) {
         throw new IllegalStateException("boom");
       }
-      calls.add("joined " + room + " " + identity);
+      calls.add("joined " + e.room() + " " + e.identity() + " " + e.participantSid());
     }
 
     @Override
-    public void onParticipantLeft(String room, String identity) {
-      calls.add("left " + room + " " + identity);
+    public void onParticipantLeft(RtcParticipantEvent e) {
+      calls.add("left " + e.room() + " " + e.identity() + " " + e.participantSid());
     }
 
     @Override
@@ -46,6 +46,7 @@ class RtcWebhookDispatcherTest {
     return new LiveKitWebhookEvent(
         "evt-1",
         type,
+        1_700_000_000L,
         new LiveKitWebhookEvent.Room(room, "RM_1"),
         identity == null ? null : new LiveKitWebhookEvent.Participant(identity, "A", "PA_1"));
   }
@@ -60,8 +61,8 @@ class RtcWebhookDispatcherTest {
     dispatcher.dispatch(event(LiveKitWebhookEvent.PARTICIPANT_LEFT, "meet_m1", "u2"));
     dispatcher.dispatch(event(LiveKitWebhookEvent.ROOM_FINISHED, "meet_m1", null));
 
-    assertThat(calls.calls).containsExactly("joined call_c1 u1");
-    assertThat(meetings.calls).containsExactly("left meet_m1 u2", "finished meet_m1");
+    assertThat(calls.calls).containsExactly("joined call_c1 u1 PA_1");
+    assertThat(meetings.calls).containsExactly("left meet_m1 u2 PA_1", "finished meet_m1");
   }
 
   @Test
@@ -73,7 +74,7 @@ class RtcWebhookDispatcherTest {
     dispatcher.dispatch(event("track_published", "call_c1", "u1"));
     dispatcher.dispatch(event(LiveKitWebhookEvent.PARTICIPANT_JOINED, "call_c1", null));
     dispatcher.dispatch(
-        new LiveKitWebhookEvent("e", LiveKitWebhookEvent.ROOM_FINISHED, null, null));
+        new LiveKitWebhookEvent("e", LiveKitWebhookEvent.ROOM_FINISHED, null, null, null));
     dispatcher.dispatch(null);
 
     assertThat(calls.calls).isEmpty();
@@ -88,5 +89,24 @@ class RtcWebhookDispatcherTest {
     dispatcher.dispatch(event(LiveKitWebhookEvent.PARTICIPANT_JOINED, "call_c1", "u1"));
 
     assertThat(calls.calls).isEmpty(); // no exception escaped
+  }
+
+  @Test
+  void handlersGetTheSessionEventIdAndTimestamp() {
+    List<RtcParticipantEvent> seen = new ArrayList<>();
+    RtcRoomEventHandler capture =
+        new Recording(RtcRooms.CALL_PREFIX) {
+          @Override
+          public void onParticipantLeft(RtcParticipantEvent e) {
+            seen.add(e);
+          }
+        };
+    new RtcWebhookDispatcher(List.of(capture))
+        .dispatch(event(LiveKitWebhookEvent.PARTICIPANT_LEFT, "call_c1", "u1"));
+
+    assertThat(seen)
+        .containsExactly(
+            new RtcParticipantEvent(
+                "call_c1", "u1", "PA_1", "evt-1", java.time.Instant.ofEpochSecond(1_700_000_000L)));
   }
 }

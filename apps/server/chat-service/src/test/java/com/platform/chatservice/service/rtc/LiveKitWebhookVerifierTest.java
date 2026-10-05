@@ -82,7 +82,7 @@ class LiveKitWebhookVerifierTest {
 
   @Test
   void rejectsAnExpiredToken() throws Exception {
-    assertThat(verifier.verify(signed("APIkey1", SECRET, sha256(BODY), -10), BODY)).isFalse();
+    assertThat(verifier.verify(signed("APIkey1", SECRET, sha256(BODY), -120), BODY)).isFalse();
   }
 
   @Test
@@ -97,5 +97,31 @@ class LiveKitWebhookVerifierTest {
     String header = signed("APIkey1", SECRET, sha256(BODY), 60);
     props.setUrl("");
     assertThat(verifier.verify(header, BODY)).isFalse();
+  }
+
+  @Test
+  void toleratesAMediaHostClockAFewSecondsAhead() {
+    // LiveKit sets nbf = now on its own host; a separate media host may run slightly ahead.
+    Instant ahead = Instant.now().plusSeconds(3);
+    String header =
+        Jwts.builder()
+            .setIssuer("APIkey1")
+            .setNotBefore(Date.from(ahead))
+            .setExpiration(Date.from(ahead.plusSeconds(300)))
+            .claim("sha256", sha256Unchecked(BODY))
+            .signWith(
+                Keys.hmacShaKeyFor(SECRET.getBytes(StandardCharsets.UTF_8)),
+                SignatureAlgorithm.HS256)
+            .compact();
+
+    assertThat(verifier.verify(header, BODY)).isTrue();
+  }
+
+  private static String sha256Unchecked(String body) {
+    try {
+      return sha256(body);
+    } catch (Exception e) {
+      throw new IllegalStateException(e);
+    }
   }
 }

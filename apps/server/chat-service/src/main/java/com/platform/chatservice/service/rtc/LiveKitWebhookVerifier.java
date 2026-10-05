@@ -20,6 +20,12 @@ import org.springframework.util.StringUtils;
 @RequiredArgsConstructor
 public class LiveKitWebhookVerifier {
 
+  /**
+   * LiveKit stamps nbf/exp with its own clock; on a separate media host that clock can run a little
+   * ahead of ours, and a zero-skew check would then drop genuine webhooks (ghost participants).
+   */
+  static final long ALLOWED_CLOCK_SKEW_SECONDS = 30;
+
   private final LiveKitProperties props;
 
   public boolean verify(String authorizationHeader, String body) {
@@ -34,6 +40,7 @@ public class LiveKitWebhookVerifier {
       Claims claims =
           Jwts.parserBuilder()
               .setSigningKey(props.signingKey())
+              .setAllowedClockSkewSeconds(ALLOWED_CLOCK_SKEW_SECONDS)
               .build()
               .parseClaimsJws(token)
               .getBody();
