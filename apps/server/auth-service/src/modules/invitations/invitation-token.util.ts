@@ -25,14 +25,24 @@ export function generateFlowId(): string {
 }
 
 /**
- * `${origin of WEB_REDIRECT_URL}/invite/<token>`. Production is guaranteed to
- * have WEB_REDIRECT_URL (main.ts refuses to boot without it) — the fallback is
- * the same local-web-dev fallback `redirectWithLoginCode` has always used.
+ * Origin of WEB_REDIRECT_URL — the web client every email link points to.
+ * Production is guaranteed to have WEB_REDIRECT_URL (main.ts refuses to boot
+ * without it) — the fallback is the same local-web-dev fallback
+ * `redirectWithLoginCode` has always used.
  */
-export function buildInviteUrl(config: ConfigService, token: string): string {
+function webOrigin(config: ConfigService): string {
   const webRedirect =
     config.get<string>('WEB_REDIRECT_URL') ||
     'http://localhost:3000/oauth-callback';
-  const origin = new URL(webRedirect).origin;
-  return new URL(`/invite/${token}`, origin).toString();
+  return new URL(webRedirect).origin;
+}
+
+/** `${web origin}/invite/<token>`. */
+export function buildInviteUrl(config: ConfigService, token: string): string {
+  return new URL(`/invite/${token}`, webOrigin(config)).toString();
+}
+
+/** `${web origin}/login` — the "Open PON" button of the welcome email. */
+export function buildWebLoginUrl(config: ConfigService): string {
+  return new URL('/login', webOrigin(config)).toString();
 }

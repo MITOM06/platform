@@ -11,14 +11,17 @@ import {
   HttpCode,
   HttpStatus,
   BadRequestException,
+  Type,
 } from '@nestjs/common';
 import {
   ApiBearerAuth,
   ApiBody,
+  ApiExtraModels,
   ApiOperation,
   ApiQuery,
   ApiResponse,
   ApiTags,
+  getSchemaPath,
 } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
 import { AuthGuard } from '@nestjs/passport';
@@ -31,7 +34,8 @@ import { LoginDto } from './dto/login.dto';
 import { ConfigService } from '@nestjs/config';
 import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { RefreshDto } from './dto/refresh.dto';
-import { ExchangeDto } from './dto/exchange.dto';
+import { ExchangeDto, ExchangeResponseDto } from './dto/exchange.dto';
+import { LoginTokensResponseDto } from '../invitations/dto/invitation-view.dto';
 import { VerifyOtpDto } from './dto/verify-otp.dto';
 import { ResendOtpDto } from './dto/resend-otp.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
@@ -41,12 +45,26 @@ import { AuthCode } from '../../common/auth-code.enum';
 import { InvitationAcceptService } from '../invitations/invitation-accept.service';
 import { OAuthRedirectService } from './oauth-redirect.service';
 import { SENSITIVE_THROTTLE } from './throttle';
+import { MfaRequiredResponseDto } from '../mfa/dto/mfa.dto';
+
+/** 201 of login / exchange: tokens, or MFA_REQUIRED for a privileged user. */
+const signInResponse = (tokens: Type<unknown>, description: string) => ({
+  status: 201,
+  description,
+  schema: {
+    oneOf: [
+      { $ref: getSchemaPath(tokens) },
+      { $ref: getSchemaPath(MfaRequiredResponseDto) },
+    ],
+  },
+});
 
 // Social login providers PON supports. Team decision: Google only —
 // X/Twitter and Facebook are intentionally not supported (see docs/decisions.md).
 const SUPPORTED_SOCIAL_PROVIDERS = ['google'];
 
 @ApiTags('auth')
+@ApiExtraModels(ExchangeResponseDto, LoginTokensResponseDto, MfaRequiredResponseDto)
 @Controller('auth')
 export class AuthController {
   constructor(
@@ -207,7 +225,12 @@ export class AuthController {
   @Post('exchange')
   @Throttle(SENSITIVE_THROTTLE)
   @ApiOperation({ summary: 'Exchange a one-time login code for tokens' })
-  @ApiResponse({ status: 201, description: 'Access + refresh tokens issued' })
+  @ApiResponse(
+    signInResponse(
+      ExchangeResponseDto,
+      'Tokens issued, or MFA_REQUIRED (privileged user, Google sign-in)',
+    ),
+  )
   async exchange(@Body() body: ExchangeDto) {
     return this.auth.exchangeLoginCode(body.code, body.deviceId, body.platform);
   }
@@ -224,7 +247,12 @@ export class AuthController {
   @Post('login')
   @Throttle(SENSITIVE_THROTTLE)
   @ApiOperation({ summary: 'Authenticate with email + password' })
-  @ApiResponse({ status: 201, description: 'Login succeeded; tokens issued' })
+  @ApiResponse(
+    signInResponse(
+      LoginTokensResponseDto,
+      'LOGIN_SUCCESS + tokens, or MFA_REQUIRED (privileged user)',
+    ),
+  )
   @ApiResponse({ status: 401, description: 'Invalid credentials' })
   async login(
     @Body() dto: LoginDto,
@@ -239,8 +267,13 @@ export class AuthController {
   @UseGuards(AuthGuard('jwt'))
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Revoke the current session' })
-  async logout(@Req() req: any, @Body() body: { sid: string }) {
-    return this.auth.logout(req.user.sub, body.sid);
+  async logout(@Req() req: any) {
+    // The session to end is the one this access token belongs to (`sid` claim,
+    // already checked against Redis by the JWT strategy) — never a body field.
+    // Taking `sid` from the body let any signed-in user end someone else's
+    // session, and a missing body sid wrote a junk `sess:undefined` key.
+    // Clients still send `{ sid }`; it is ignored.
+    return this.auth.logout(req.user.sub, req.user.sid);
   }
 
   // ===================== FORGOT PASSWORD =====================

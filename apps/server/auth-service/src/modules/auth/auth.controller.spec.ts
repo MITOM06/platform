@@ -305,9 +305,10 @@ describe('AuthController — Google callback (invite accept + error redirects)',
       req.user,
     );
     expect(handleSocialLogin).not.toHaveBeenCalled();
+    // Google invite accept → a Google grant, so 2FA applies at exchange.
     expect(redis.set).toHaveBeenCalledWith(
       'login_code:test-id',
-      'new-user-id',
+      JSON.stringify({ userId: 'new-user-id', via: 'google' }),
       'EX',
       300,
     );
@@ -409,5 +410,17 @@ describe('AuthController — Google callback (invite accept + error redirects)',
     expect(redirect).toHaveBeenCalledWith(
       `${WEB}?error=SSO_DOMAIN_NOT_ALLOWED`,
     );
+  });
+});
+
+describe('AuthController — logout', () => {
+  it('ends the session of the access token, ignoring any sid in the body', async () => {
+    const logout = jest.fn().mockResolvedValue({ success: true });
+    const { controller } = await buildController({ auth: { logout } });
+
+    const req = { user: { sub: 'u1', sid: 'own-sid' }, body: { sid: 'victim-sid' } };
+    await controller.logout(req);
+
+    expect(logout).toHaveBeenCalledWith('u1', 'own-sid');
   });
 });

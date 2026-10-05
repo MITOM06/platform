@@ -31,6 +31,8 @@ import { InvitationAcceptController } from './invitation-accept.controller';
 import { SocialProvisioningService } from './social-provisioning.service';
 import { OAuthRedirectService } from './oauth-redirect.service';
 import { LoginAttemptsService } from './login-attempts.service';
+import { MfaModule } from '../mfa/mfa.module';
+import { MfaLoginController } from './mfa-login.controller';
 
 @Module({
   imports: [
@@ -46,6 +48,7 @@ import { LoginAttemptsService } from './login-attempts.service';
     MailModule,
     NotificationsModule,
     InvitationsModule,
+    MfaModule,
     JwtModule.registerAsync({
       inject: [ConfigService],
       imports: [ConfigModule],
@@ -56,7 +59,7 @@ import { LoginAttemptsService } from './login-attempts.service';
     }),
     DatabaseRedisModule,
   ],
-  controllers: [AuthController, InvitationAcceptController],
+  controllers: [AuthController, InvitationAcceptController, MfaLoginController],
   providers: [
     AuthService,
     OtpService,
