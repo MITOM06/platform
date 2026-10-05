@@ -1,28 +1,27 @@
 import { createHmac, randomBytes, timingSafeEqual } from 'crypto';
-import {
-  BadRequestException,
-  ForbiddenException,
-  Injectable,
-  Logger,
-  NotFoundException,
-} from '@nestjs/common';
+import { ForbiddenException, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
-import {
-  Capability,
-  JwtUser,
-  Workspace,
-  WorkspaceDocument,
-} from '@platform/database';
-import { CATALOG, CatalogEntry, findCatalogEntry } from '../catalog/catalog';
+import { Capability, JwtUser } from '@platform/database';
+import { CatalogEntry, findCatalogEntry } from '../catalog/catalog';
 import { TokenVaultService } from '../vault/token-vault.service';
 import { AuditService } from '../audit/audit.service';
+import { ConnectionScope } from '../connections/schemas/user-connection.schema';
 import {
-  ConnectionScope,
-  UserConnection,
-  UserConnectionDocument,
-} from '../connections/schemas/user-connection.schema';
+  CATALOG_ONLY_FIELDS,
+  ConnectionStoreService,
+  DIRECTORY_ONLY_FIELDS,
+} from '../connections/connection-store.service';
+import { ConnectorPolicyService } from '../governance/connector-policy.service';
+import { PermResolverService } from '../internal/perm-resolver.service';
+import {
+  buildClientRedirect,
+  callbackErrorCode,
+  OAuthCallbackErrorCode,
+  OAuthFlowError,
+  parseOAuthErrorCode,
+  providerErrorCode,
+  TokenEndpointError,
+} from './oauth-errors';
 
 export interface OAuthStatePayload {
   userId: string;
@@ -54,6 +53,25 @@ interface TokenResponse {
   [k: string]: unknown;
 }
 
+type Tier = 'workspace' | 'personal' | 'both';
+
+/**
+ * Static-catalog OAuth (Notion/Google): state signing, authorization, token
+ * exchange and persistence. Also hosts the connect-authorization rules shared
+ * with the dynamic directory flow.
+ *
+ * Callbacks never throw: every failure redirects the popup to
+ * `CLIENT_REDIRECT_URL?error=<CODE>&provider=<slug>` (codes in oauth-errors.ts),
+ * so a raw `{"message": ...}` body can never be rendered in the browser.
+ *
+ * The signed state is bound to the member and provider, carries a 10-minute
+ * TTL and is re-validated at the callback (member still active, capability
+ * still held, connector still allowed). It is NOT bound to the browser that
+ * started the flow: the start call is an XHR from the web app (third-party
+ * cookie context in the Vercel + tunnel deployment) or a Dio call from the
+ * mobile app (no browser cookie jar at all), so a binding cookie cannot be set
+ * without client changes.
+ */
 @Injectable()
 export class OAuthService {
   private readonly logger = new Logger(OAuthService.name);
@@ -64,10 +82,9 @@ export class OAuthService {
   constructor(
     private readonly cfg: ConfigService,
     private readonly vault: TokenVaultService,
-    @InjectModel(UserConnection.name)
-    private readonly connModel: Model<UserConnectionDocument>,
-    @InjectModel(Workspace.name)
-    private readonly workspaceModel: Model<WorkspaceDocument>,
+    private readonly store: ConnectionStoreService,
+    private readonly policy: ConnectorPolicyService,
+    private readonly perms: PermResolverService,
     private readonly audit: AuditService,
   ) {}
 
@@ -84,30 +101,25 @@ export class OAuthService {
   }
 
   verifyState(state: string): OAuthStatePayload {
-    const [encoded, sig] = (state ?? '').split('.');
-    if (!encoded || !sig) {
-      throw new BadRequestException('Malformed OAuth state');
-    }
-    const expected = this.hmac(encoded);
+    const [encoded, sig] = String(state ?? '').split('.');
+    if (!encoded || !sig) throw new OAuthFlowError('STATE_INVALID');
     const a = Buffer.from(sig);
-    const b = Buffer.from(expected);
+    const b = Buffer.from(this.hmac(encoded));
     if (a.length !== b.length || !timingSafeEqual(a, b)) {
-      throw new BadRequestException('Invalid OAuth state signature');
+      throw new OAuthFlowError('STATE_INVALID');
     }
     let payload: OAuthStatePayload;
     try {
-      payload = JSON.parse(
-        Buffer.from(encoded, 'base64url').toString('utf8'),
-      ) as OAuthStatePayload;
+      payload = JSON.parse(Buffer.from(encoded, 'base64url').toString('utf8')) as OAuthStatePayload;
     } catch {
-      throw new BadRequestException('Corrupt OAuth state payload');
+      throw new OAuthFlowError('STATE_INVALID');
+    }
+    if (!payload || typeof payload.userId !== 'string' || typeof payload.provider !== 'string') {
+      throw new OAuthFlowError('STATE_INVALID');
     }
     // Reject stale states so a leaked/paused authorize URL can't be replayed.
-    if (
-      typeof payload.iat === 'number' &&
-      Date.now() - payload.iat > OAuthService.STATE_TTL_MS
-    ) {
-      throw new BadRequestException('OAuth state expired');
+    if (typeof payload.iat !== 'number' || Date.now() - payload.iat > OAuthService.STATE_TTL_MS) {
+      throw new OAuthFlowError('STATE_EXPIRED');
     }
     return payload;
   }
@@ -117,81 +129,48 @@ export class OAuthService {
     return createHmac('sha256', secret).update(data).digest('hex');
   }
 
-  // ── Authorize URL ─────────────────────────────────────────────────────────
+  // ── Authorization ─────────────────────────────────────────────────────────
 
-  async startAuthorization(
-    provider: string,
-    user: JwtUser,
-  ): Promise<{ authorizeUrl: string }> {
+  async startAuthorization(provider: string, user: JwtUser): Promise<{ authorizeUrl: string }> {
     const entry = this.requireOAuthEntry(provider);
-    const scope = await this.authorizeConnect(entry, user);
+    const scope = await this.authorizeTier(entry.tier, entry.id, user);
     const state = this.signState({ userId: user.sub, provider, scope });
     return { authorizeUrl: this.buildAuthorizeUrl(entry, state) };
   }
 
   /**
-   * Decide whether `user` may connect `entry` and which scope the resulting
-   * connection takes. Workspace-tier connectors need CONNECT_WORKSPACE_CONNECTOR;
-   * personal-tier (or 'both') need CONNECT_PERSONAL_CONNECTOR AND the provider
-   * being present in the workspace allow-list. Throws ForbiddenException on deny.
+   * Decide whether `user` may connect `providerId` and which scope the
+   * connection takes. Shared by the catalog and the directory flows.
+   * Workspace tier needs CONNECT_WORKSPACE_CONNECTOR; personal/both need
+   * CONNECT_PERSONAL_CONNECTOR. Either way the workspace allow-list must allow
+   * the provider. Throws 403 `INSUFFICIENT_PERMISSION` / `CONNECTOR_NOT_ALLOWED`.
    */
-  private async authorizeConnect(
-    entry: CatalogEntry,
-    user: JwtUser,
-  ): Promise<ConnectionScope> {
-    return this.authorizeTier(entry.tier, entry.id, user);
+  async authorizeTier(tier: Tier, providerId: string, user: JwtUser): Promise<ConnectionScope> {
+    const scope: ConnectionScope = tier === 'workspace' ? 'workspace' : 'personal';
+    const required = OAuthService.requiredCapability(scope);
+    if (!(user.perms ?? []).includes(required)) {
+      throw new ForbiddenException({ code: 'INSUFFICIENT_PERMISSION', required });
+    }
+    await this.policy.assertConnectAllowed(providerId);
+    return scope;
   }
 
   /**
-   * Decide scope + permission for connecting a connector of a given tier.
-   * Shared by the static catalog flow and the dynamic directory flow.
-   * Workspace-tier needs CONNECT_WORKSPACE_CONNECTOR; personal/both need
-   * CONNECT_PERSONAL_CONNECTOR AND the provider being in the workspace
-   * allow-list. Throws ForbiddenException on deny.
+   * The callback is unauthenticated (identity comes from the signed state), so
+   * re-check what may have changed since the flow started.
    */
-  async authorizeTier(
-    tier: 'workspace' | 'personal' | 'both',
-    providerId: string,
-    user: JwtUser,
-  ): Promise<ConnectionScope> {
-    const perms = new Set(user.perms ?? []);
-
-    if (tier === 'workspace') {
-      if (!perms.has(Capability.CONNECT_WORKSPACE_CONNECTOR)) {
-        throw new ForbiddenException({
-          code: 'INSUFFICIENT_PERMISSION',
-          required: Capability.CONNECT_WORKSPACE_CONNECTOR,
-        });
-      }
-      return 'workspace';
+  async recheckAtCallback(userId: string, providerId: string, scope: ConnectionScope): Promise<void> {
+    const member = await this.perms.resolveMember(userId);
+    if (!member.active || !member.perms.has(OAuthService.requiredCapability(scope))) {
+      throw new OAuthFlowError('INSUFFICIENT_PERMISSION');
     }
-
-    // personal | both -> personal connect flow
-    if (!perms.has(Capability.CONNECT_PERSONAL_CONNECTOR)) {
-      throw new ForbiddenException({
-        code: 'INSUFFICIENT_PERMISSION',
-        required: Capability.CONNECT_PERSONAL_CONNECTOR,
-      });
-    }
-    const allowList = await this.connectorAllowList();
-    if (!allowList.includes(providerId)) {
-      throw new ForbiddenException({
-        code: 'CONNECTOR_NOT_ALLOWED',
-        provider: providerId,
-      });
-    }
-    return 'personal';
+    await this.policy.assertConnectAllowed(providerId);
   }
 
-  private async connectorAllowList(): Promise<string[]> {
-    const ws = await this.workspaceModel.findOne().lean();
-    const configured = ws?.connectorAllowList ?? [];
-    if (configured.length > 0) return configured;
-    // Single-tenant default: when the workspace hasn't explicitly restricted
-    // connectors, allow every available built-in connector so members can link
-    // Gmail/Calendar/Notion out of the box. An admin can still narrow access by
-    // populating Workspace.connectorAllowList.
-    return CATALOG.filter((e) => e.available).map((e) => e.id);
+  private static requiredCapability(scope: ConnectionScope): Capability {
+    return scope === 'workspace'
+      ? Capability.CONNECT_WORKSPACE_CONNECTOR
+      : Capability.CONNECT_PERSONAL_CONNECTOR;
   }
 
   buildAuthorizeUrl(entry: CatalogEntry, state: string): string {
@@ -212,8 +191,7 @@ export class OAuthService {
   }
 
   private redirectUri(provider: string): string {
-    const base = this.cfg.get<string>('oauthRedirectBase');
-    return `${base}/oauth/${provider}/callback`;
+    return `${this.cfg.get<string>('oauthRedirectBase')}/oauth/${provider}/callback`;
   }
 
   // ── Code exchange ─────────────────────────────────────────────────────────
@@ -222,29 +200,22 @@ export class OAuthService {
     const cfg = entry.oauth!;
     const clientId = process.env[cfg.clientIdEnv] ?? '';
     const clientSecret = process.env[cfg.clientSecretEnv] ?? '';
-    const redirectUri = this.redirectUri(entry.id);
-    const authStyle = cfg.authStyle ?? 'basic';
-    const bodyFormat = cfg.bodyFormat ?? 'json';
-
     const headers: Record<string, string> = { Accept: 'application/json' };
     const params: Record<string, string> = {
       grant_type: 'authorization_code',
       code,
-      redirect_uri: redirectUri,
+      redirect_uri: this.redirectUri(entry.id),
     };
     // 'body' auth style carries the client credentials in the request body
     // (Google); 'basic' uses the Authorization header (Notion).
-    if (authStyle === 'body') {
+    if ((cfg.authStyle ?? 'basic') === 'body') {
       params.client_id = clientId;
       params.client_secret = clientSecret;
     } else {
-      headers.Authorization = `Basic ${Buffer.from(
-        `${clientId}:${clientSecret}`,
-      ).toString('base64')}`;
+      headers.Authorization = `Basic ${Buffer.from(`${clientId}:${clientSecret}`).toString('base64')}`;
     }
-
     let body: string;
-    if (bodyFormat === 'form') {
+    if ((cfg.bodyFormat ?? 'json') === 'form') {
       headers['Content-Type'] = 'application/x-www-form-urlencoded';
       body = new URLSearchParams(params).toString();
     } else {
@@ -252,13 +223,17 @@ export class OAuthService {
       body = JSON.stringify(params);
     }
 
-    const res = await fetch(cfg.tokenUrl, { method: 'POST', headers, body });
-
+    const res = await fetch(cfg.tokenUrl, {
+      method: 'POST',
+      headers,
+      body,
+      signal: AbortSignal.timeout(10_000),
+    });
     if (!res.ok) {
       const text = await res.text().catch(() => '');
-      throw new BadRequestException(
-        `OAuth token exchange failed (${res.status}): ${text.slice(0, 200)}`,
-      );
+      const oauthError = parseOAuthErrorCode(text);
+      this.logger.warn(`${entry.id} token exchange failed (${res.status}): ${text.slice(0, 200)}`);
+      throw new TokenEndpointError(res.status, oauthError);
     }
     return (await res.json()) as TokenResponse;
   }
@@ -272,83 +247,78 @@ export class OAuthService {
     entry: CatalogEntry,
     scope: ConnectionScope = 'personal',
   ): Promise<void> {
-    // Compute an absolute expiry so adapters can pre-emptively refresh Google
-    // access tokens (harmless for providers without `expires_in`, e.g. Notion).
+    // Absolute expiry so adapters can pre-emptively refresh Google tokens
+    // (harmless for providers without `expires_in`, e.g. Notion).
     if (typeof tokens.expires_in === 'number' && !tokens.expiry_date) {
       tokens.expiry_date = Date.now() + tokens.expires_in * 1000;
     }
-    const blob = this.vault.encrypt(JSON.stringify(tokens));
-    const accountLabel =
-      tokens.workspace_name ?? tokens.owner?.user?.name ?? undefined;
-    const scopes = tokens.scope ? tokens.scope.split(' ') : entry.scopes;
-
-    await this.connModel.updateOne(
-      { userId, provider },
-      {
-        $set: {
-          status: 'active',
-          scope,
-          scopes,
-          mcpUrl: entry.mcpUrl,
-          encryptedTokens: blob,
-          ...(accountLabel ? { accountLabel } : {}),
-        },
+    const accountLabel = tokens.workspace_name ?? tokens.owner?.user?.name ?? undefined;
+    await this.store.upsert({
+      userId,
+      provider,
+      scope,
+      set: {
+        scopes: tokens.scope ? tokens.scope.split(' ') : entry.scopes,
+        mcpUrl: entry.mcpUrl,
+        encryptedTokens: this.vault.encrypt(JSON.stringify(tokens)),
+        ...(accountLabel ? { accountLabel } : {}),
       },
-      { upsert: true },
-    );
+      // A directory connect may have left its refresh plumbing on this record.
+      unset: [...DIRECTORY_ONLY_FIELDS, ...(accountLabel ? [] : CATALOG_ONLY_FIELDS)],
+    });
   }
 
   // ── Callback orchestration ────────────────────────────────────────────────
 
-  async handleCallback(
-    provider: string,
-    code: string,
-    state: string,
-    error?: string,
-  ): Promise<string> {
-    const payload = this.verifyState(state);
-    if (payload.provider !== provider) {
-      throw new BadRequestException('State/provider mismatch');
+  /** Exchange + persist; returns the client redirect URL. Never throws. */
+  async handleCallback(provider: string, code: string, state: string, error?: string): Promise<string> {
+    try {
+      const payload = this.verifyState(state);
+      if (payload.provider !== provider) throw new OAuthFlowError('STATE_INVALID');
+      if (error) return this.redirectError(providerErrorCode(String(error)), provider);
+      if (!code || typeof code !== 'string') return this.redirectError('MISSING_CODE', provider);
+      const entry = this.requireOAuthEntry(provider);
+      const scope = payload.scope === 'workspace' ? 'workspace' : 'personal';
+      await this.recheckAtCallback(payload.userId, provider, scope);
+      const tokens = await this.exchangeCode(entry, code);
+      await this.persist(payload.userId, provider, tokens, entry, scope);
+      // Workspace connects affect every member and are audited; personal
+      // connects are the member's own and are not.
+      if (scope === 'workspace') {
+        await this.audit.record({
+          actorId: payload.userId,
+          action: 'connector.connect',
+          targetType: 'connector',
+          targetId: provider,
+          meta: { scope },
+        });
+      }
+      return this.redirectConnected(provider);
+    } catch (err) {
+      const code = callbackErrorCode(err);
+      if (code === 'INTERNAL_ERROR') {
+        this.logger.error(`OAuth callback for ${provider} failed`, err as Error);
+      }
+      return this.redirectError(code, provider);
     }
-    // Provider-side denial (?error=access_denied) or a missing code (user
-    // declined): bounce back to the client with an error code instead of
-    // throwing a raw provider body the browser would render as JSON
-    // (.claude/rules/no-raw-system-data-in-ui.md).
-    if (error || !code) {
-      return this.clientRedirect('error', error ?? 'missing_code');
-    }
-    const entry = this.requireOAuthEntry(provider);
-    const tokens = await this.exchangeCode(entry, code);
-    const scope = payload.scope ?? 'personal';
-    await this.persist(payload.userId, provider, tokens, entry, scope);
-    // Audit workspace-scoped connects (shared resource affecting every member).
-    // Personal connects are the user's own and are not audit-logged.
-    if (scope === 'workspace') {
-      await this.audit.record({
-        actorId: payload.userId,
-        action: 'connector.connect',
-        targetType: 'connector',
-        targetId: provider,
-        meta: { scope },
-      });
-    }
-    return this.clientRedirect('connected', provider);
   }
 
-  /** Bounce back to the client app with a single query param (success or error). */
-  private clientRedirect(param: 'connected' | 'error', value: string): string {
-    const clientUrl = this.cfg.get<string>('clientRedirectUrl') ?? '';
-    const sep = clientUrl.includes('?') ? '&' : '?';
-    return `${clientUrl}${sep}${param}=${encodeURIComponent(value)}`;
+  redirectConnected(provider: string): string {
+    return buildClientRedirect(this.clientUrl(), { connected: provider });
+  }
+
+  redirectError(code: OAuthCallbackErrorCode, provider?: string): string {
+    return buildClientRedirect(this.clientUrl(), { error: code, provider });
+  }
+
+  private clientUrl(): string {
+    return this.cfg.get<string>('clientRedirectUrl') ?? '';
   }
 
   private requireOAuthEntry(provider: string): CatalogEntry {
     const entry = findCatalogEntry(provider);
-    if (!entry || !entry.available) {
-      throw new NotFoundException(`Unknown connector: ${provider}`);
-    }
-    if (entry.authType !== 'oauth2' || !entry.oauth) {
-      throw new BadRequestException(`Connector ${provider} does not use OAuth`);
+    if (!entry || !entry.available || entry.authType !== 'oauth2' || !entry.oauth) {
+      throw new NotFoundException({ code: 'CONNECTOR_UNAVAILABLE', provider });
     }
     return entry;
   }

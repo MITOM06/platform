@@ -8,6 +8,14 @@ export interface EncBlob {
   data: string;
 }
 
+const IV_BYTES = 12;
+/**
+ * GCM tag length is pinned: without `authTagLength` Node accepts tags as short
+ * as 4 bytes on decrypt, which turns a 128-bit integrity check into a 32-bit
+ * one an attacker who can write a blob could brute-force.
+ */
+const TAG_BYTES = 16;
+
 /**
  * AES-256-GCM token vault. Encrypts/decrypts third-party credentials before
  * they touch MongoDB. The key comes from CONNECTOR_VAULT_KEY (base64, 32 bytes,
@@ -24,8 +32,8 @@ export class TokenVaultService {
   }
 
   encrypt(plain: string): EncBlob {
-    const iv = randomBytes(12);
-    const c = createCipheriv('aes-256-gcm', this.key, iv);
+    const iv = randomBytes(IV_BYTES);
+    const c = createCipheriv('aes-256-gcm', this.key, iv, { authTagLength: TAG_BYTES });
     const data = Buffer.concat([c.update(plain, 'utf8'), c.final()]);
     return {
       iv: iv.toString('base64'),
@@ -35,12 +43,13 @@ export class TokenVaultService {
   }
 
   decrypt(b: EncBlob): string {
-    const d = createDecipheriv(
-      'aes-256-gcm',
-      this.key,
-      Buffer.from(b.iv, 'base64'),
-    );
-    d.setAuthTag(Buffer.from(b.tag, 'base64'));
+    const iv = Buffer.from(b?.iv ?? '', 'base64');
+    const tag = Buffer.from(b?.tag ?? '', 'base64');
+    if (iv.length !== IV_BYTES || tag.length !== TAG_BYTES) {
+      throw new Error('Invalid encrypted blob');
+    }
+    const d = createDecipheriv('aes-256-gcm', this.key, iv, { authTagLength: TAG_BYTES });
+    d.setAuthTag(tag);
     return Buffer.concat([
       d.update(Buffer.from(b.data, 'base64')),
       d.final(),
