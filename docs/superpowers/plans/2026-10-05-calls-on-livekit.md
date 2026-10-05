@@ -67,7 +67,7 @@
 | `/topic/conversation/{id}` | `call.ended` | `{ callId, reason }` — mới, thay cho tín hiệu `end` trên đường sfu |
 | `/user/queue/webrtc` | `call-ring` | như cũ **+** `transport` |
 | `/user/queue/webrtc` | `call-ring-cancel` | `{ callId, reason }` — mới; gửi tới **mọi phiên** của người nhận khi: người gọi huỷ (`hangup`/`no_answer`), người nhận nghe ở máy khác (`answered_elsewhere`), hoặc từ chối ở máy khác (`declined`) |
-| `/user/queue/webrtc` | `call-declined` | `{ callId, reason, by }` — mới; tới người gọi |
+| `/user/queue/webrtc` | `call-declined` | `{ callId, conversationId, reason, senderId }` (`senderId` = người từ chối; `callId` null khi người nhận đang bận nên không tạo cuộc gọi) — mới; tới người gọi |
 
 ### Redis
 

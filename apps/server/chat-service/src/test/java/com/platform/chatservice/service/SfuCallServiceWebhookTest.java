@@ -25,12 +25,13 @@ class SfuCallServiceWebhookTest {
 
   @Mock private CallService calls;
   @Mock private CallBusyRegistry busy;
+  @Mock private CallTimers timers;
   private SfuCallService service;
   private CallSession session;
 
   @BeforeEach
   void setUp() {
-    service = new SfuCallService(calls, busy, null, null, null, null);
+    service = new SfuCallService(calls, busy, null, null, null, null, timers);
     session =
         CallSession.builder()
             .callId("c1")
@@ -41,6 +42,15 @@ class SfuCallServiceWebhookTest {
             .participants(new ArrayList<>())
             .build();
     when(calls.activeSession("c1")).thenReturn(Optional.of(session));
+    when(calls.saveIfActive(session)).thenReturn(true);
+  }
+
+  /** Runs whatever the service scheduled (the disconnect grace check). */
+  private void runScheduled() {
+    org.mockito.ArgumentCaptor<Runnable> task = org.mockito.ArgumentCaptor.forClass(Runnable.class);
+    verify(timers, org.mockito.Mockito.atLeastOnce())
+        .after(org.mockito.ArgumentMatchers.eq(SfuCallService.DISCONNECT_GRACE), task.capture());
+    task.getValue().run();
   }
 
   private static RtcParticipantEvent ev(String identity, String sid) {
@@ -67,7 +77,7 @@ class SfuCallServiceWebhookTest {
     assertThat(p("bob").getSid()).isEqualTo("PA_1");
     assertThat(p("bob").getJoinedAt()).isNotNull();
     assertThat(p("bob").getLeftAt()).isNull();
-    verify(calls).save(session);
+    verify(calls).saveIfActive(session);
     verify(calls).broadcastRoster(session);
     verify(busy).markBusy("bob", "c1");
   }
@@ -81,6 +91,8 @@ class SfuCallServiceWebhookTest {
 
     assertThat(p("bob").getLeftAt()).isNotNull();
     verify(busy).clear("bob", "c1");
+    verify(calls, never()).endCall(anyString(), anyString()); // not before the grace period
+    runScheduled();
     verify(calls).endCall("c1", "failed");
   }
 
@@ -133,7 +145,32 @@ class SfuCallServiceWebhookTest {
     service.onParticipantLeft(ev("bob", "PA_B"));
 
     assertThat(session.getParticipants()).isEmpty();
-    verify(calls, never()).save(session);
+    verify(calls, never()).saveIfActive(session);
     verify(calls, never()).endCall(anyString(), anyString());
+  }
+
+  // ---- final-review fixes ----
+
+  @Test
+  void aDirectCallSurvivesLeftThenJoinedFromANewSession() {
+    service.onParticipantJoined(ev("alice", "PA_A"));
+    service.onParticipantJoined(ev("bob", "PA_OLD"));
+
+    service.onParticipantLeft(ev("bob", "PA_OLD")); // LiveKit drops the old session first
+    service.onParticipantJoined(ev("bob", "PA_NEW")); // …then the new one becomes active
+    runScheduled();
+
+    verify(calls, never()).endCall(anyString(), anyString());
+    assertThat(p("bob").getLeftAt()).isNull();
+  }
+
+  @Test
+  void aWebhookForAnEndedSessionChangesNothingVisible() {
+    when(calls.saveIfActive(session)).thenReturn(false); // ended between read and write
+
+    service.onParticipantJoined(ev("bob", "PA_B"));
+
+    verify(calls, never()).broadcastRoster(session);
+    verify(busy, never()).markBusy(anyString(), anyString());
   }
 }

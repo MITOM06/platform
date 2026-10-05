@@ -74,6 +74,9 @@ public class CallSession {
     /** LiveKit participant sid of the session currently in the room (sfu only). */
     private String sid;
 
+    /** When they tapped Answer (sfu only) — set before they reach LiveKit, unlike joinedAt. */
+    private Instant acceptedAt;
+
     /** Null while the participant is still in the call. */
     private Instant leftAt;
   }

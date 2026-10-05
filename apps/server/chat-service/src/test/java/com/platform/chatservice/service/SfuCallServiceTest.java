@@ -29,12 +29,13 @@ class SfuCallServiceTest {
 
   @Mock private CallService calls;
   @Mock private CallBusyRegistry busy;
+  @Mock private CallTimers timers;
   private SfuCallService service;
   private CallSession session;
 
   @BeforeEach
   void setUp() {
-    service = new SfuCallService(calls, busy, null, null, null, null);
+    service = new SfuCallService(calls, busy, null, null, null, null, timers);
     session = session("direct", "alice", "bob");
   }
 
@@ -54,6 +55,7 @@ class SfuCallServiceTest {
     members.addAll(List.of(others));
     when(calls.activeSession("c1")).thenReturn(Optional.of(s));
     when(calls.membersOf("conv")).thenReturn(members);
+    when(calls.saveIfActive(s)).thenReturn(true);
     return s;
   }
 
@@ -158,6 +160,50 @@ class SfuCallServiceTest {
 
     verify(busy, never()).markBusy(anyString(), anyString());
     verify(calls, never()).sendToUser(anyString(), any());
+    verify(calls, never()).endCall(anyString(), anyString());
+  }
+
+  // ---- final-review fixes ----
+
+  @Test
+  void aMissingReasonFallsBackInsteadOfThrowing() {
+    service.decline("bob", "c1", null);
+    verify(calls).endCall("c1", "declined");
+
+    session("direct", "alice", "bob");
+    service.cancel("alice", "c1", null);
+    verify(calls).endCall("c1", "hangup");
+  }
+
+  @Test
+  void acceptRecordsTheCalleeOnTheSession() {
+    service.accept("bob", "c1");
+
+    assertThat(session.getParticipants())
+        .anySatisfy(
+            p -> {
+              assertThat(p.getUserId()).isEqualTo("bob");
+              assertThat(p.getAcceptedAt()).isNotNull();
+              assertThat(p.getJoinedAt()).isNull();
+            });
+    verify(calls).saveIfActive(session);
+  }
+
+  @Test
+  void cancelAfterTheCalleeAcceptedIsIgnored() {
+    service.accept("bob", "c1");
+
+    service.cancel("alice", "c1", "no_answer");
+
+    verify(calls, never()).endCall(anyString(), anyString());
+  }
+
+  @Test
+  void declineAfterAnsweringOrByTheCallerIsIgnored() {
+    service.accept("bob", "c1");
+    service.decline("bob", "c1", "declined"); // stale second device
+    service.decline("alice", "c1", "declined"); // caller declining their own call
+
     verify(calls, never()).endCall(anyString(), anyString());
   }
 }

@@ -47,6 +47,8 @@ class CallServiceSfuTest {
   @Mock private ValueOperations<String, String> values;
   @Mock private LiveKitRoomClient roomClient;
   @Mock private CallBusyRegistry busy;
+  @Mock private org.springframework.data.mongodb.core.MongoTemplate mongo;
+  @Mock private CallTimers timers;
   private LiveKitProperties props;
   private CallService service;
 
@@ -68,7 +70,9 @@ class CallServiceSfuTest {
             new ObjectMapper(),
             props,
             roomClient,
-            busy);
+            busy,
+            mongo,
+            timers);
   }
 
   private void conversation(String id, String... members) {
@@ -188,6 +192,18 @@ class CallServiceSfuTest {
             .participants(list)
             .build();
     when(sessions.findByCallId("c1")).thenReturn(Optional.of(s));
+    when(mongo.findAndReplace(any(org.springframework.data.mongodb.core.query.Query.class), eq(s)))
+        .thenReturn(s);
+    when(mongo.findAndModify(
+            any(org.springframework.data.mongodb.core.query.Query.class),
+            any(org.springframework.data.mongodb.core.query.Update.class),
+            any(org.springframework.data.mongodb.core.FindAndModifyOptions.class),
+            eq(CallSession.class)))
+        .thenAnswer(
+            inv -> {
+              s.setEndedAt(Instant.now());
+              return s;
+            });
     return s;
   }
 
@@ -235,5 +251,86 @@ class CallServiceSfuTest {
     service.endCall("c1");
 
     verify(roomClient, never()).deleteRoom(anyString());
+  }
+
+  // ---- final-review fixes ----
+
+  @Test
+  void endCallFreesEveryMemberEvenOnesWhoNeverJoined() {
+    conversation("conv", "alice", "bob");
+    activeSfu("direct", "alice"); // bob was rung (maybe accepted) but never reached LiveKit
+
+    service.endCall("c1", "no_answer");
+
+    verify(busy, org.mockito.Mockito.atLeastOnce()).clear("bob", "c1");
+  }
+
+  @Test
+  void aConcurrentEndBroadcastsOnlyOnce() {
+    activeSfu("group", "alice", "bob");
+    when(mongo.findAndModify(
+            any(org.springframework.data.mongodb.core.query.Query.class),
+            any(org.springframework.data.mongodb.core.query.Update.class),
+            any(org.springframework.data.mongodb.core.FindAndModifyOptions.class),
+            eq(CallSession.class)))
+        .thenReturn(null); // another path already ended it
+
+    service.endCall("c1", "hangup");
+
+    assertThat(broadcast("conv")).isEmpty();
+    verify(roomClient, never()).deleteRoom(anyString());
+  }
+
+  @Test
+  void aStrangerCannotHangUpSomeoneElsesCall() {
+    activeSfu("direct", "alice", "bob");
+
+    service.leaveCall("mallory", "c1");
+
+    assertThat(broadcast("conv")).isEmpty();
+    verify(roomClient, never()).deleteRoom(anyString());
+  }
+
+  @Test
+  void anUnansweredSfuCallIsReapedByTheServer() {
+    conversation("conv", "alice", "bob");
+    service.startCall("alice", "conv", "audio", false);
+    CallSession s = saved();
+    when(sessions.findByCallId(s.getCallId())).thenReturn(Optional.of(s));
+    when(mongo.findAndModify(
+            any(org.springframework.data.mongodb.core.query.Query.class),
+            any(org.springframework.data.mongodb.core.query.Update.class),
+            any(org.springframework.data.mongodb.core.FindAndModifyOptions.class),
+            eq(CallSession.class)))
+        .thenReturn(s);
+
+    ArgumentCaptor<Runnable> reaper = ArgumentCaptor.forClass(Runnable.class);
+    verify(timers).after(eq(CallService.RING_REAPER_DELAY), reaper.capture());
+    reaper.getValue().run();
+
+    assertThat(sentTo("bob"))
+        .anySatisfy(
+            r -> {
+              assertThat(r.getType()).isEqualTo("call-ring-cancel");
+              assertThat(r.getReason()).isEqualTo("no_answer");
+            });
+    assertThat(broadcast("conv")).anySatisfy(e -> assertThat(e.getReason()).isEqualTo("no_answer"));
+  }
+
+  @Test
+  void theReaperLeavesAnAnsweredCallAlone() {
+    conversation("conv", "alice", "bob");
+    service.startCall("alice", "conv", "audio", false);
+    CallSession s = saved();
+    s.getParticipants()
+        .add(CallSession.Participant.builder().userId("bob").acceptedAt(Instant.now()).build());
+    when(sessions.findByCallId(s.getCallId())).thenReturn(Optional.of(s));
+
+    ArgumentCaptor<Runnable> reaper = ArgumentCaptor.forClass(Runnable.class);
+    verify(timers).after(eq(CallService.RING_REAPER_DELAY), reaper.capture());
+    reaper.getValue().run();
+
+    assertThat(broadcast("conv"))
+        .noneSatisfy(e -> assertThat(e.getEvent()).isEqualTo("call.ended"));
   }
 }

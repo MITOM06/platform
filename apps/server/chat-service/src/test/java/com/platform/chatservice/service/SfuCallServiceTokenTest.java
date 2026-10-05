@@ -53,7 +53,8 @@ class SfuCallServiceTokenTest {
     props.setUrl("wss://rtc.example.com");
     props.setApiKey("APIkey1");
     props.setApiSecret("0123456789abcdef0123456789abcdef");
-    service = new SfuCallService(calls, busy, props, new LiveKitTokenService(props), blocks, mongo);
+    service =
+        new SfuCallService(calls, busy, props, new LiveKitTokenService(props), blocks, mongo, null);
     session =
         CallSession.builder()
             .callId("c1")

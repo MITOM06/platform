@@ -12,9 +12,11 @@ import com.platform.chatservice.service.rtc.RtcGrant;
 import com.platform.chatservice.service.rtc.RtcParticipantEvent;
 import com.platform.chatservice.service.rtc.RtcRoomEventHandler;
 import com.platform.chatservice.service.rtc.RtcRooms;
+import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import lombok.RequiredArgsConstructor;
@@ -43,6 +45,13 @@ public class SfuCallService implements RtcRoomEventHandler {
   private static final Set<String> CANCEL_REASONS = Set.of("hangup", "no_answer");
   private static final ObjectMapper JSON = new ObjectMapper();
 
+  /**
+   * How long a 1-on-1 waits after a participant drops before calling it failed. LiveKit removes the
+   * old session before a rejoin/full reconnect becomes active, so "left" then "joined" is the
+   * normal order — ending at once would kill every rejoin. Same 8s the clients use.
+   */
+  static final Duration DISCONNECT_GRACE = Duration.ofSeconds(8);
+
   /** What a client needs to join the call's LiveKit room. */
   public record CallToken(String url, String token) {}
 
@@ -52,12 +61,24 @@ public class SfuCallService implements RtcRoomEventHandler {
   private final LiveKitTokenService tokens;
   private final UserBlockRepository blocks;
   private final MongoTemplate mongo;
+  private final CallTimers timers;
 
   /** The callee answered: they are busy now, and their other devices stop ringing. */
   public void accept(String userId, String callId) {
     sfuSessionFor(userId, callId)
         .ifPresent(
             s -> {
+              CallSession.Participant p = participant(s, userId);
+              if (p == null) {
+                p = CallSession.Participant.builder().userId(userId).build();
+                s.getParticipants().add(p);
+              }
+              if (p.getAcceptedAt() == null) {
+                p.setAcceptedAt(Instant.now());
+              }
+              if (!calls.saveIfActive(s)) {
+                return;
+              }
               busy.markBusy(userId, callId);
               calls.sendToUser(userId, ringCancel(callId, "answered_elsewhere"));
             });
@@ -66,9 +87,11 @@ public class SfuCallService implements RtcRoomEventHandler {
   /** The callee declined (or could not take it): a 1-on-1 ends, a group call goes on. */
   public void decline(String userId, String callId, String reason) {
     sfuSessionFor(userId, callId)
+        .filter(s -> !userId.equals(s.getStartedBy()))
+        .filter(s -> !hasAnswered(s, userId)) // a stale device must not kill a live call
         .ifPresent(
             s -> {
-              String why = DECLINE_REASONS.contains(reason) ? reason : "declined";
+              String why = reason != null && DECLINE_REASONS.contains(reason) ? reason : "declined";
               calls.sendToUser(userId, ringCancel(callId, "declined"));
               if ("direct".equals(s.getKind())) {
                 calls.sendToUser(
@@ -89,10 +112,10 @@ public class SfuCallService implements RtcRoomEventHandler {
   public void cancel(String userId, String callId, String reason) {
     sfuSessionFor(userId, callId)
         .filter(s -> userId.equals(s.getStartedBy()))
-        .filter(s -> nobodyElseJoined(s))
+        .filter(s -> !CallService.answeredByOthers(s))
         .ifPresent(
             s -> {
-              String why = CANCEL_REASONS.contains(reason) ? reason : "hangup";
+              String why = reason != null && CANCEL_REASONS.contains(reason) ? reason : "hangup";
               calls.membersOf(s.getConversationId()).stream()
                   .filter(m -> !m.equals(userId))
                   .forEach(m -> calls.sendToUser(m, ringCancel(callId, why)));
@@ -186,7 +209,9 @@ public class SfuCallService implements RtcRoomEventHandler {
               }
               p.setLeftAt(null);
               p.setSid(e.participantSid());
-              calls.save(s);
+              if (!calls.saveIfActive(s)) {
+                return;
+              }
               calls.broadcastRoster(s);
               busy.markBusy(e.identity(), s.getCallId());
             });
@@ -207,12 +232,18 @@ public class SfuCallService implements RtcRoomEventHandler {
                 return; // an older session, kicked when they rejoined from another device
               }
               p.setLeftAt(Instant.now());
-              calls.save(s);
+              if (!calls.saveIfActive(s)) {
+                return;
+              }
               calls.broadcastRoster(s);
               busy.clear(e.identity(), s.getCallId());
               if ("direct".equals(s.getKind())) {
-                // Gone without hanging up: dropped connection or killed app.
-                calls.endCall(s.getCallId(), "failed");
+                // Gone without hanging up: a dropped connection or a killed app — unless the same
+                // person comes back (rejoin, full reconnect) within the grace period.
+                String callId = s.getCallId();
+                String identity = e.identity();
+                String sid = e.participantSid();
+                timers.after(DISCONNECT_GRACE, () -> endIfStillGone(callId, identity, sid));
               } else if (s.getParticipants().stream().allMatch(x -> x.getLeftAt() != null)) {
                 calls.endCall(s.getCallId(), "hangup");
               }
@@ -225,6 +256,18 @@ public class SfuCallService implements RtcRoomEventHandler {
     if (callId != null) {
       calls.endCall(callId, "hangup");
     }
+  }
+
+  private void endIfStillGone(String callId, String identity, String sid) {
+    calls
+        .activeSession(callId)
+        .ifPresent(
+            s -> {
+              CallSession.Participant p = participant(s, identity);
+              if (p != null && p.getLeftAt() != null && Objects.equals(p.getSid(), sid)) {
+                calls.endCall(callId, "failed");
+              }
+            });
   }
 
   private Optional<CallSession> sfuSessionForRoom(String room) {
@@ -247,9 +290,9 @@ public class SfuCallService implements RtcRoomEventHandler {
         .filter(s -> calls.membersOf(s.getConversationId()).contains(userId));
   }
 
-  private static boolean nobodyElseJoined(CallSession s) {
-    return s.getParticipants().stream()
-        .noneMatch(p -> !p.getUserId().equals(s.getStartedBy()) && p.getJoinedAt() != null);
+  private static boolean hasAnswered(CallSession s, String userId) {
+    CallSession.Participant p = participant(s, userId);
+    return p != null && (p.getAcceptedAt() != null || p.getJoinedAt() != null);
   }
 
   private static WebRTCSignalDto ringCancel(String callId, String reason) {

@@ -20,6 +20,11 @@ import java.util.Optional;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.mongodb.core.FindAndModifyOptions;
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
@@ -48,6 +53,12 @@ public class CallService {
   /** STOMP per-user destination for mesh/ring signaling. */
   private static final String WEBRTC_QUEUE = "/queue/webrtc";
 
+  /**
+   * How long an sfu call may ring with nobody answering before the server ends it itself — the
+   * clients give up at 45s/50s; this catches a caller whose app died before it could cancel.
+   */
+  static final Duration RING_REAPER_DELAY = Duration.ofSeconds(60);
+
   /** Transcript buffer lives ~2h. */
   private static final Duration TRANSCRIPT_TTL = Duration.ofHours(2);
 
@@ -60,6 +71,8 @@ public class CallService {
   private final LiveKitProperties liveKitProperties;
   private final LiveKitRoomClient liveKitRoomClient;
   private final CallBusyRegistry busyRegistry;
+  private final MongoTemplate mongoTemplate;
+  private final CallTimers timers;
 
   // ----------------------------------------------------------------------------------------------
   // call.start
@@ -126,6 +139,7 @@ public class CallService {
     callSessionRepository.save(session);
     if (sfu) {
       busyRegistry.markBusy(userId, callId);
+      timers.after(RING_REAPER_DELAY, () -> expireUnanswered(callId));
     }
 
     redisTemplate.opsForValue().set(ACTIVE_KEY_PREFIX + conversationId, callId);
@@ -197,8 +211,9 @@ public class CallService {
         existing.setJoinedAt(now);
       }
     }
-    callSessionRepository.save(session);
-    broadcastRoster(session);
+    if (saveIfActive(session)) {
+      broadcastRoster(session);
+    }
   }
 
   /** Mark the caller as left; broadcast roster; end the call if no one remains. */
@@ -208,10 +223,15 @@ public class CallService {
       return;
     }
     CallSession.Participant existing = findParticipant(session, userId);
+    if (isSfu(session) && existing == null) {
+      return; // not in this call — cannot hang it up for the people who are
+    }
     if (existing != null && existing.getLeftAt() == null) {
       existing.setLeftAt(Instant.now());
     }
-    callSessionRepository.save(session);
+    if (!saveIfActive(session)) {
+      return;
+    }
     broadcastRoster(session);
     if (isSfu(session)) {
       busyRegistry.clear(userId, callId);
@@ -238,12 +258,20 @@ public class CallService {
 
   /** As {@link #endCall(String)}, telling clients why: hangup | declined | busy | … */
   public void endCall(String callId, String reason) {
-    CallSession session = callSessionRepository.findByCallId(callId).orElse(null);
-    if (session == null || session.getEndedAt() != null) {
+    if (callId == null) {
       return;
     }
-    session.setEndedAt(Instant.now());
-    callSessionRepository.save(session);
+    // Atomic claim: a hang-up and a LiveKit webhook can race to end the same call; only the one
+    // that flips endedAt broadcasts, closes the room and asks for a summary.
+    CallSession session =
+        mongoTemplate.findAndModify(
+            new Query(Criteria.where("callId").is(callId).and("endedAt").is(null)),
+            new Update().set("endedAt", Instant.now()),
+            FindAndModifyOptions.options().returnNew(true),
+            CallSession.class);
+    if (session == null) {
+      return;
+    }
 
     CallEventDto event =
         CallEventDto.builder().event("call.ended").callId(callId).reason(reason).build();
@@ -252,8 +280,11 @@ public class CallService {
     redisTemplate.delete(ACTIVE_KEY_PREFIX + session.getConversationId());
 
     if (isSfu(session)) {
+      // Every member, not just those LiveKit saw join: someone who answered but never connected
+      // was marked busy too. clear() only drops a key that still points at this call.
       busyRegistry.clear(session.getStartedBy(), callId);
       session.getParticipants().forEach(p -> busyRegistry.clear(p.getUserId(), callId));
+      membersOf(session.getConversationId()).forEach(m -> busyRegistry.clear(m, callId));
       try {
         liveKitRoomClient.deleteRoom(RtcRooms.forCall(callId));
       } catch (RuntimeException e) {
@@ -337,8 +368,46 @@ public class CallService {
     return findSession(callId).filter(s -> s.getEndedAt() == null);
   }
 
-  void save(CallSession session) {
-    callSessionRepository.save(session);
+  /**
+   * Write {@code session} back only while it is still running — never resurrect a call another path
+   * ended between our read and this write. False when it had already ended.
+   */
+  boolean saveIfActive(CallSession session) {
+    return mongoTemplate.findAndReplace(
+            new Query(Criteria.where("callId").is(session.getCallId()).and("endedAt").is(null)),
+            session)
+        != null;
+  }
+
+  /** Server-side ring timeout for sfu calls (see {@link #RING_REAPER_DELAY}). */
+  void expireUnanswered(String callId) {
+    activeSession(callId)
+        .filter(CallService::isSfu)
+        .filter(s -> !answeredByOthers(s))
+        .ifPresent(
+            s -> {
+              membersOf(s.getConversationId()).stream()
+                  .filter(m -> !m.equals(s.getStartedBy()))
+                  .forEach(
+                      m ->
+                          sendToUser(
+                              m,
+                              WebRTCSignalDto.builder()
+                                  .type("call-ring-cancel")
+                                  .callId(callId)
+                                  .reason("no_answer")
+                                  .build()));
+              endCall(callId, "no_answer");
+            });
+  }
+
+  /** Someone other than the caller answered or reached the room. */
+  static boolean answeredByOthers(CallSession s) {
+    return s.getParticipants().stream()
+        .anyMatch(
+            p ->
+                !p.getUserId().equals(s.getStartedBy())
+                    && (p.getJoinedAt() != null || p.getAcceptedAt() != null));
   }
 
   void sendToUser(String userId, WebRTCSignalDto dto) {
