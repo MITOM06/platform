@@ -22,6 +22,7 @@ describe('SessionService.rotateRefreshToken', () => {
   let service: SessionService;
   let redis: {
     hgetall: jest.Mock;
+    hget: jest.Mock;
     eval: jest.Mock;
     multi: jest.Mock;
     pipeline: jest.Mock;
@@ -63,6 +64,7 @@ describe('SessionService.rotateRefreshToken', () => {
     };
     redis = {
       hgetall: jest.fn(),
+      hget: jest.fn().mockResolvedValue('u1'),
       eval: jest.fn().mockResolvedValue(1),
       multi: jest.fn().mockReturnValue(multiChain),
       pipeline: jest.fn().mockReturnValue(multiChain),
@@ -242,4 +244,42 @@ describe('SessionService.revokeAllSessions / refresh-owner helpers', () => {
     redis.hmget.mockResolvedValue([null, null]);
     await expect(service.refreshTokenBelongsToSession('s1', 'v1.cur')).resolves.toBe(false);
   }, 30_000); // argon2 is slow under a fully parallel jest run
+});
+
+describe('SessionService.revokeSession ownership', () => {
+  let service: SessionService;
+  const multiChain = {
+    hset: jest.fn().mockReturnThis(),
+    srem: jest.fn().mockReturnThis(),
+    exec: jest.fn().mockResolvedValue([]),
+  };
+  const redis = { hget: jest.fn(), multi: jest.fn().mockReturnValue(multiChain) };
+
+  beforeEach(async () => {
+    jest.clearAllMocks();
+    const moduleRef = await Test.createTestingModule({
+      providers: [SessionService, { provide: REDIS_CLIENT, useValue: redis }],
+    }).compile();
+    service = moduleRef.get(SessionService);
+  });
+
+  it("revokes the caller's own session", async () => {
+    redis.hget.mockResolvedValue('u1');
+    await service.revokeSession('u1', 's1');
+    expect(redis.hget).toHaveBeenCalledWith('sess:s1', 'userId');
+    expect(multiChain.hset).toHaveBeenCalledWith('sess:s1', { revoked: '1' });
+  });
+
+  it("never touches another user's session", async () => {
+    redis.hget.mockResolvedValue('someone-else');
+    await service.revokeSession('u1', 's1');
+    expect(redis.multi).not.toHaveBeenCalled();
+  });
+
+  it('an unknown or missing sid writes nothing (no stray sess:* key)', async () => {
+    redis.hget.mockResolvedValue(null);
+    await service.revokeSession('u1', 'nope');
+    await service.revokeSession('u1', undefined as unknown as string);
+    expect(redis.multi).not.toHaveBeenCalled();
+  });
 });

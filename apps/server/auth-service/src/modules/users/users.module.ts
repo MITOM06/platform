@@ -4,7 +4,14 @@ import { UsersService } from './users.service';
 import { UsersController } from './users.controller';
 import { FriendsModule } from '../friends/friends.module';
 import { FirebaseAdminModule } from '../firebase/firebase.module';
-import { User, UserSchema, UserBlock, UserBlockSchema } from '@platform/database';
+import {
+  Role,
+  RoleSchema,
+  User,
+  UserSchema,
+  UserBlock,
+  UserBlockSchema,
+} from '@platform/database';
 
 @Module({
   imports: [
@@ -12,6 +19,8 @@ import { User, UserSchema, UserBlock, UserBlockSchema } from '@platform/database
     MongooseModule.forFeature([
       { name: User.name, schema: UserSchema },
       { name: UserBlock.name, schema: UserBlockSchema },
+      // Read-only: resolve the role name for /me and public profiles.
+      { name: Role.name, schema: RoleSchema },
     ]),
     // FriendsService cung cấp số bạn bè + danh sách bạn online cho UsersController
     FriendsModule,

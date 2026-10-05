@@ -9,8 +9,8 @@
 
 | Context | Where the code appears |
 |---------|------------------------|
-| HTTP exception (4xx) | `response.body.message.code` (string) |
-| HTTP exception with dynamic values | `response.body.message.code` + `response.body.message.params` (object) |
+| HTTP exception (4xx) | `response.body.code` (string) — the thrown object is the body, at top level |
+| HTTP exception with dynamic values | `response.body.code` + `response.body.params` (object) |
 | Success body | `response.body.code` (replaces former `message` field) |
 | class-validator DTO violation | each entry in `response.body.message[]` array is a code string |
 
@@ -120,11 +120,128 @@ TOKEN_SESSION_MISMATCH | TOKEN_INVALID`; a Redis outage answers `503 SESSION_CHE
 (do not log out on 503).
 
 **`auth:sessions-revoked`** (Redis Pub/Sub, published by auth-service at the end of every
-`revokeAllSessions`): payload `{"userId":"<id>","reason":"blocked|role_changed|password_reset|refresh_reuse|other"}`.
+`revokeAllSessions`): payload `{"userId":"<id>","reason":"blocked|role_changed|password_reset|refresh_reuse|mfa_reset|other"}`.
 
 `MEMBER_NOT_FOUND`, `ROLE_NOT_FOUND`, `DEPARTMENT_NOT_FOUND`, `OWNER_ROLE_IMMUTABLE`,
 `SSO_DISABLED` and `SSO_DOMAIN_NOT_ALLOWED` (above) were string literals and are now
 members of the `AuthCode` enum — values unchanged.
+
+### Set-password onboarding & change password (2026-10-02)
+
+`POST /api/users/me/change-password` `{ currentPassword?, newPassword }` (also used to set the
+FIRST password: `currentPassword` is only required when the account already has one). Every
+failure is a top-level `{ code }` body — never class-validator's `message[]`, never raw text.
+Check order: `VAL_PASSWORD_TOO_SHORT` → `USER_NOT_FOUND` → `CURRENT_PASSWORD_REQUIRED` →
+`CURRENT_PASSWORD_INCORRECT`. Success: `201 { "success": true }`.
+
+| Code | HTTP status / context | English default text | params |
+|------|-----------------------|----------------------|--------|
+| `VAL_PASSWORD_TOO_SHORT` | 400 | Password must be at least 8 characters. (policy was 6 + raw English text before) | — |
+| `CURRENT_PASSWORD_REQUIRED` | 400 | Enter your current password. | — |
+| `CURRENT_PASSWORD_INCORRECT` | 400 | Your current password is incorrect. | — |
+| `USER_NOT_FOUND` | 404 | User not found. | — |
+
+**`mustSetPassword: boolean`** — `true` only for an account created by accepting an invitation
+with **Continue with Google**. Exposed in `GET /api/users/me` (next to `hasPassword`) and in the
+`user` object of `POST /auth/login`, `POST /auth/exchange` and
+`POST /auth/invitations/:token/accept-password`. Clients gate the app behind "Create your PON
+password" while it is `true`. A successful change-password or `POST /auth/reset-password`
+clears it. It is an onboarding step, not a security boundary: no endpoint refuses a flagged user.
+
+After an invitation is accepted (password or Google) the invitee also gets a localized
+**welcome email** (invitation locale; Google variant adds the "create your PON password" step).
+It is fire-and-forget: a mail failure never fails or delays the accept.
+
+### Mandatory 2FA (TOTP) for Owner & Admin (2026-10-03)
+
+Who: a user whose role is **Owner** or **Admin**, or any role that grants `MANAGE_WORKSPACE`,
+`MANAGE_MEMBERS` or `MANAGE_ROLES` ("privileged"). Everyone else signs in without 2FA. Applies to
+`POST /auth/login` and `POST /auth/exchange` of a **Google** login code. **OIDC SSO is exempt** (the
+identity provider owns MFA). Every sign-in needs a code (no "remember this device"). Existing
+sessions are not revoked at rollout. TOTP = RFC 6238, SHA-1, 6 digits, 30 s, ±1 step (Google
+Authenticator), issuer `PON`, account = email. A code is accepted once per time-step (a replay of
+the same code is `MFA_CODE_INVALID`).
+
+**Sign-in.** For a privileged user, login / exchange answer `201` with NO tokens:
+`{ "code": "MFA_REQUIRED", "mfaToken": "<opaque>", "enrollmentRequired": true|false, "user": { "id", "email", "displayName" } }`.
+`mfaToken` is valid 5 minutes, single use, and burned after 5 wrong codes. Then (public, no JWT,
+5 req/min/IP):
+
+- `enrollmentRequired: true` (updated 2026-10-05: the backup codes must be acknowledged before any
+  session exists):
+  1. `POST /auth/mfa/enroll/start { mfaToken }` → `{ otpauthUrl, secret, qrDataUrl }` (same
+     pending secret on every call for one token).
+  2. `POST /auth/mfa/enroll/confirm { mfaToken, code }` → **`{ "code": "MFA_BACKUP_CODES_ISSUED", "backupCodes": string[10] }`**
+     (`XXXXX-XXXXX`; stored as sha256 hashes). The account is now enrolled, but **no tokens and no
+     session are issued**. The same `mfaToken` moves to the backup-codes step, valid **10 minutes
+     from confirm**. (`deviceId?` / `platform?` are still accepted here and become the defaults of
+     step 4.)
+  3. `POST /auth/mfa/enroll/codes { mfaToken }` → `{ backupCodes }`: the same 10 codes again, as
+     often as needed until step 4 (e.g. after a page reload).
+  4. `POST /auth/mfa/enroll/complete { mfaToken, deviceId?, platform? }` (after the user confirmed
+     they saved the codes) → login-success shape (`code: "LOGIN_SUCCESS"`, `accessToken`,
+     `refreshToken`, `sid`, `user` incl. `mustSetPassword`). Single use: the backup-codes step and
+     its codes are gone afterwards; a second call → `MFA_TOKEN_INVALID`.
+
+  Abandoning after step 2 (closed tab, killed app, 10 minutes passed) leaves the account enrolled:
+  the next sign-in answers `MFA_REQUIRED` with `enrollmentRequired: false` (verify mode), the codes
+  from step 2 work, and new ones can be generated in Settings.
+- `enrollmentRequired: false` → `POST /auth/mfa/verify { mfaToken, code? | backupCode?, deviceId?, platform? }`
+  (exactly one of `code` / `backupCode`; sending both or neither counts as a wrong code) →
+  login-success shape + `backupCodesRemaining: number`. A backup code works once.
+
+`deviceId` / `platform` default to those of the sign-in (`web-login` / `web` for password login,
+the exchange body values for Google). The set-password gate (`user.mustSetPassword`) applies after
+2FA, as after a normal login.
+
+**Signed-in.** `GET /api/users/me` adds `mfaEnabled` (enrolled) and `mfaRequired` (privileged,
+from the token's role/perms claims). `POST /api/users/me/mfa/backup-codes { code }` (current TOTP;
+backup codes not accepted) → `{ backupCodes: string[10] }`, old codes stop working.
+`GET /admin/members` items add `mfaEnabled`. `POST /admin/members/:id/mfa/reset` (Owner only) →
+`{ success: true }`: clears enrollment + backup codes, revokes the member's sessions
+(`auth:sessions-revoked` reason `mfa_reset`); they re-enroll at their next sign-in.
+
+| Code | HTTP status / context | English default text | params |
+|------|-----------------------|----------------------|--------|
+| `MFA_REQUIRED` | 201 body (login / exchange) | Enter the code from your authenticator app. (not an error) | — |
+| `MFA_BACKUP_CODES_ISSUED` | 201 body (`enroll/confirm`) | Save your backup codes, then continue. (not an error; no tokens yet) | — |
+| `MFA_TOKEN_INVALID` | 401 (`/auth/mfa/*`) | Your sign-in session expired. Please sign in again. | — |
+| `MFA_CODE_INVALID` | 401 (`/auth/mfa/*`) · **400** on `POST /api/users/me/mfa/backup-codes` | The code is incorrect. {remaining} attempts left. | `remaining: number` |
+| `MFA_TOO_MANY_ATTEMPTS` | 401 (`/auth/mfa/*`, token burned) · **400** on backup-code regeneration | Too many incorrect codes. Please sign in again. | — |
+| `MFA_NOT_ENROLLED` | 400 | Two-factor authentication is not set up for this step. | — |
+| `MFA_ALREADY_ENROLLED` | 400 | Two-factor authentication is already set up. Please sign in again. | — |
+| `MFA_RESET_FORBIDDEN` | 403 | Only an Owner can reset two-factor authentication. | — |
+| `MFA_RESET_SELF_FORBIDDEN` | 400 | You cannot reset your own two-factor authentication. | — |
+| `MEMBER_NOT_FOUND` | 404 (reset: bot / unknown / malformed id) | Member not found. | — |
+
+Details:
+
+- `MFA_NOT_ENROLLED`: `verify` called with an enrollment or backup-codes-step token,
+  `enroll/confirm` before `enroll/start`, `enroll/codes` / `enroll/complete` before
+  `enroll/confirm` (or with a verify token), or backup-code regeneration by a user who never
+  enrolled.
+- `MFA_ALREADY_ENROLLED`: `enroll/start` / `enroll/confirm` called with a verify token or after
+  `enroll/confirm` succeeded, or the account was enrolled meanwhile (restart sign-in).
+- `MFA_TOKEN_INVALID` also covers: an Owner reset this user's 2FA after the password step or
+  between `enroll/confirm` and `enroll/complete` (restart → enrollment), the backup-codes step
+  expired (10 minutes) or was already completed, or the account was deleted. A blocked account
+  gets `403 ACCOUNT_BLOCKED`.
+- Per-user cap: after 20 wrong codes within 15 minutes across all of a user's tokens,
+  `/auth/mfa/*` answers `MFA_TOO_MANY_ATTEMPTS` until the window passes. Backup-code regeneration
+  allows 5 wrong codes per 15 minutes.
+- The JWT endpoint (`backup-codes`) never answers 401 for a wrong code, so a typo cannot trigger
+  the clients' refresh-then-logout handling.
+- Reset check order: `MFA_RESET_FORBIDDEN` (actor not Owner, from the JWT role) →
+  `MFA_RESET_SELF_FORBIDDEN` → `MEMBER_NOT_FOUND`.
+
+**Storage.** `User.mfa = { enabled, secretEnc (select:false), enrolledAt, backupCodeHashes (select:false) }`.
+`secretEnc` = AES-256-GCM, key = HKDF-SHA256(`SESSION_SECRET`, info `pon-mfa-totp`), the user id
+bound as AAD. **Rotating `SESSION_SECRET` invalidates every enrollment** (verification fails with a
+500 and an error log): an Owner must reset the affected members, who then re-enroll. Audit actions:
+`mfa.enrolled` (at `enroll/confirm`; `enroll/complete` records nothing), `mfa.verified_backup_code`,
+`mfa.backup_codes_regenerated`, `mfa.reset`. Between `enroll/confirm` and `enroll/complete` the
+issued codes sit in the Redis pending record (`mfa:pending:<sha256(token)>`, stage
+`codes_pending`, TTL 10 minutes), encrypted like the TOTP secret; `enroll/complete` deletes it.
 
 ## OAuth / SSO redirect errors
 
@@ -146,15 +263,12 @@ MEMBER_ALREADY_EXISTS, SOCIAL_EMAIL_UNAVAILABLE, SSO_DISABLED, SSO_DOMAIN_NOT_AL
 ### HTTP exception (400/401/404/409)
 
 ```json
-{
-  "statusCode": 401,
-  "message": { "code": "ACCOUNT_LOCKED", "params": { "minutes": 5 } }
-}
+{ "code": "ACCOUNT_LOCKED", "params": { "minutes": 5 } }
 ```
 
-> NestJS wraps the thrown object in the standard exception envelope.
-> Clients should read `error.response.data.message.code` (axios) or
-> `body.message.code` (fetch).
+> NestJS sends the thrown object verbatim as the body (no `message` wrapper).
+> Clients read `error.response.data.code` (axios) or `body.code` (fetch).
+> Only class-validator DTO violations use the `message[]` array (below).
 
 ### Success body (code replaces former `message` string)
 
@@ -164,7 +278,7 @@ MEMBER_ALREADY_EXISTS, SOCIAL_EMAIL_UNAVAILABLE, SSO_DISABLED, SSO_DOMAIN_NOT_AL
   "accessToken": "...",
   "refreshToken": "...",
   "sid": "...",
-  "user": { "id": "...", "email": "...", "displayName": "..." }
+  "user": { "id": "...", "email": "...", "displayName": "...", "mustSetPassword": false }
 }
 ```
 

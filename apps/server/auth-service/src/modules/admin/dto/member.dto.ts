@@ -45,4 +45,7 @@ export class MemberDto {
 
   @ApiProperty({ enum: ['active', 'blocked', 'pending'] })
   status: 'active' | 'blocked' | 'pending';
+
+  @ApiProperty({ description: 'The member has an enrolled authenticator (2FA)' })
+  mfaEnabled: boolean;
 }

@@ -2,12 +2,21 @@ import { MailerService } from '@nestjs-modules/mailer';
 import { Injectable } from '@nestjs/common';
 import { getOtpEmailStrings, SupportedLocale } from './otp-i18n';
 import { getInviteEmailStrings } from './invite-i18n';
+import { getWelcomeEmailStrings, WelcomeVariant } from './welcome-i18n';
 
 export interface InviteEmailContext {
   inviteUrl: string;
   workspaceName: string;
   inviterName: string;
   roleName: string;
+}
+
+export interface WelcomeEmailContext {
+  loginUrl: string;
+  displayName: string;
+  workspaceName: string;
+  roleName: string;
+  variant: WelcomeVariant;
 }
 
 @Injectable()
@@ -50,6 +59,30 @@ export class MailService {
       subject: t.subject,
       template: './invite',
       context: { inviteUrl: ctx.inviteUrl, email, t },
+    });
+  }
+
+  /** "Your PON account is active" after an invitation is accepted. */
+  async sendWelcomeEmail(
+    email: string,
+    ctx: WelcomeEmailContext,
+    locale: string = 'en',
+  ) {
+    const t = getWelcomeEmailStrings(
+      locale,
+      {
+        name: ctx.displayName,
+        workspace: ctx.workspaceName,
+        role: ctx.roleName,
+      },
+      ctx.variant,
+    );
+
+    await this.mailerService.sendMail({
+      to: email,
+      subject: t.subject,
+      template: './welcome',
+      context: { loginUrl: ctx.loginUrl, email, t },
     });
   }
 }

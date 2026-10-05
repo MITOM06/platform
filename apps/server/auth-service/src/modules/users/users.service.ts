@@ -5,8 +5,10 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { Model, isValidObjectId } from 'mongoose';
 import {
+  Role,
+  RoleDocument,
   User,
   UserDocument,
   UserBlock,
@@ -14,6 +16,8 @@ import {
 } from '@platform/database';
 import * as bcrypt from 'bcrypt';
 import { FirebaseAdminService } from '../firebase/firebase-admin.service';
+import { AuthCode } from '../../common/auth-code.enum';
+import { MIN_PASSWORD_LENGTH } from '../../common/password-policy';
 
 @Injectable()
 export class UsersService {
@@ -25,7 +29,29 @@ export class UsersService {
     private userBlockModel: Model<UserBlockDocument>,
     private readonly firebaseAdmin: FirebaseAdminService,
     // ❌ Xóa: SessionService — UsersService không cần biết về session
+    @InjectModel(Role.name) private roleModel?: Model<RoleDocument>,
   ) {}
+
+  /**
+   * The effective role name for a user's `roleId`: the Role's name, or
+   * 'Member' when no role is assigned or it was deleted — the same fallback
+   * ClaimsService puts in the JWT, so /me and the token never disagree.
+   * Looked up by id because `User.roleId` has no Mongoose `ref` (adding one
+   * would turn `roleId` in every user payload into an object).
+   */
+  async getRoleName(roleId: unknown): Promise<string> {
+    const id = roleId?.toString();
+    if (!id || !isValidObjectId(id) || !this.roleModel) return 'Member';
+    const role = await this.roleModel.findById(id).select('name').lean().exec();
+    return role?.name ?? 'Member';
+  }
+
+  /** Every role's name by id, for batch profile lookups (a deployment has a handful of roles). */
+  async getRoleNameMap(): Promise<Map<string, string>> {
+    if (!this.roleModel) return new Map();
+    const roles = await this.roleModel.find().select('name').lean().exec();
+    return new Map(roles.map((r) => [String(r._id), r.name]));
+  }
 
   async findByEmail(email: string): Promise<UserDocument | null> {
     // otpCode/otpExpires are select:false (never leak via /me or /search); the
@@ -122,9 +148,14 @@ export class UsersService {
       .exec();
   }
 
+  /**
+   * Single write path for a new password (change / first set / reset). Setting
+   * any password also completes the Google-invite onboarding step, so the
+   * `mustSetPassword` flag is cleared here.
+   */
   async updatePassword(userId: string, passwordHash: string): Promise<void> {
     await this.userModel.findByIdAndUpdate(userId, {
-      $set: { password: passwordHash },
+      $set: { password: passwordHash, mustSetPassword: false },
       $unset: { otpCode: '', otpExpires: '' },
     });
   }
@@ -321,30 +352,47 @@ export class UsersService {
     return user;
   }
 
+  /**
+   * Change the password, or set the first one (Google-only accounts have none,
+   * so `currentPassword` is only required when a password already exists).
+   * Also the "create your PON password" onboarding step: success clears
+   * `mustSetPassword` (see updatePassword). That flag is a client onboarding
+   * gate, not a security boundary — the user is already a legitimate member, so
+   * no other endpoint checks it.
+   */
   async changePassword(
     userId: string,
-    currentPassword?: string,
-    newPassword?: string,
+    currentPassword?: unknown,
+    newPassword?: unknown,
   ): Promise<{ success: boolean }> {
-    if (!newPassword || newPassword.length < 6) {
-      throw new ConflictException('New password must be at least 6 characters');
+    if (
+      typeof newPassword !== 'string' ||
+      newPassword.length < MIN_PASSWORD_LENGTH
+    ) {
+      throw new BadRequestException({ code: AuthCode.VAL_PASSWORD_TOO_SHORT });
     }
 
-    const user = await this.userModel
-      .findById(userId)
-      .select('+password')
-      .exec();
+    let user: UserDocument | null = null;
+    try {
+      user = await this.userModel.findById(userId).select('+password').exec();
+    } catch (err: any) {
+      if (err?.name !== 'CastError') throw err;
+    }
     if (!user) {
-      throw new ConflictException('User not found');
+      throw new NotFoundException({ code: AuthCode.USER_NOT_FOUND });
     }
 
     if (user.password) {
-      if (!currentPassword) {
-        throw new ConflictException('Current password is required');
+      if (typeof currentPassword !== 'string' || !currentPassword) {
+        throw new BadRequestException({
+          code: AuthCode.CURRENT_PASSWORD_REQUIRED,
+        });
       }
       const isMatch = await bcrypt.compare(currentPassword, user.password);
       if (!isMatch) {
-        throw new ConflictException('Incorrect current password');
+        throw new BadRequestException({
+          code: AuthCode.CURRENT_PASSWORD_INCORRECT,
+        });
       }
     }
 

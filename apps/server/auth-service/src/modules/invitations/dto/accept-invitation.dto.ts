@@ -8,6 +8,7 @@ import {
 } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { AuthCode } from '../../../common/auth-code.enum';
+import { MIN_PASSWORD_LENGTH } from '../../../common/password-policy';
 
 export class AcceptInvitationPasswordDto {
   @ApiProperty({ example: 'Jane Doe', minLength: 2, maxLength: 50 })
@@ -17,9 +18,9 @@ export class AcceptInvitationPasswordDto {
   @MaxLength(50)
   displayName: string;
 
-  @ApiProperty({ example: 'P@ssw0rd123', minLength: 8 })
+  @ApiProperty({ example: 'P@ssw0rd123', minLength: MIN_PASSWORD_LENGTH })
   @IsString()
-  @MinLength(8, { message: AuthCode.VAL_PASSWORD_TOO_SHORT })
+  @MinLength(MIN_PASSWORD_LENGTH, { message: AuthCode.VAL_PASSWORD_TOO_SHORT })
   password: string;
 
   @ApiPropertyOptional({

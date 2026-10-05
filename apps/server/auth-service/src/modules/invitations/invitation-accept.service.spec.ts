@@ -39,6 +39,11 @@ describe('InvitationAcceptService', () => {
   let users: { findByEmailInsensitive: jest.Mock; create: jest.Mock };
   let audit: { record: jest.Mock };
   let redis: { set: jest.Mock; getdel: jest.Mock };
+  let mailer: {
+    workspaceName: jest.Mock;
+    inviterName: jest.Mock;
+    sendWelcome: jest.Mock;
+  };
 
   beforeEach(async () => {
     invitationModel = {
@@ -65,6 +70,11 @@ describe('InvitationAcceptService', () => {
     };
     audit = { record: jest.fn().mockResolvedValue(undefined) };
     redis = { set: jest.fn().mockResolvedValue('OK'), getdel: jest.fn() };
+    mailer = {
+      workspaceName: jest.fn().mockResolvedValue('Acme'),
+      inviterName: jest.fn().mockResolvedValue('Khang'),
+      sendWelcome: jest.fn().mockResolvedValue(undefined),
+    };
 
     const moduleRef = await Test.createTestingModule({
       providers: [
@@ -74,13 +84,7 @@ describe('InvitationAcceptService', () => {
         { provide: getModelToken(Department.name), useValue: departmentModel },
         { provide: UsersService, useValue: users },
         { provide: AuditService, useValue: audit },
-        {
-          provide: InvitationMailerService,
-          useValue: {
-            workspaceName: jest.fn().mockResolvedValue('Acme'),
-            inviterName: jest.fn().mockResolvedValue('Khang'),
-          },
-        },
+        { provide: InvitationMailerService, useValue: mailer },
         { provide: REDIS_CLIENT, useValue: redis },
       ],
     }).compile();
@@ -276,6 +280,76 @@ describe('InvitationAcceptService', () => {
       });
       expect(invitationModel.findOneAndUpdate).not.toHaveBeenCalled();
       expect(users.create).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('mustSetPassword + welcome email', () => {
+    const PASSWORD_DTO = { displayName: 'Jane', password: 'P@ssw0rd!' };
+    const GOOGLE_PROFILE = {
+      id: 'g-123',
+      email: 'jane@acme.com',
+      displayName: 'Jane G',
+    };
+
+    it('password accept: flag NOT set, welcome email with the password variant', async () => {
+      await service.acceptWithPassword(TOKEN, PASSWORD_DTO);
+      expect(users.create.mock.calls[0][0]).not.toHaveProperty(
+        'mustSetPassword',
+      );
+      expect(mailer.sendWelcome).toHaveBeenCalledTimes(1);
+      expect(mailer.sendWelcome).toHaveBeenCalledWith(
+        expect.objectContaining({ email: 'jane@acme.com' }),
+        'Jane',
+        'password',
+      );
+    });
+
+    it('Google accept: user created with mustSetPassword:true, welcome email with the google variant', async () => {
+      redis.getdel.mockResolvedValue(INV_ID);
+      await service.acceptWithGoogle('flow_abcdefghijklmnop', GOOGLE_PROFILE);
+      expect(users.create.mock.calls[0][0]).toMatchObject({
+        mustSetPassword: true,
+      });
+      expect(mailer.sendWelcome).toHaveBeenCalledTimes(1);
+      expect(mailer.sendWelcome).toHaveBeenCalledWith(
+        expect.objectContaining({ email: 'jane@acme.com' }),
+        'Jane G',
+        'google',
+      );
+    });
+
+    it('SSO accept: no flag, no welcome email', async () => {
+      await service.acceptWithSso(invDoc() as any, { displayName: 'Jane S' });
+      expect(users.create.mock.calls[0][0]).not.toHaveProperty(
+        'mustSetPassword',
+      );
+      expect(mailer.sendWelcome).not.toHaveBeenCalled();
+    });
+
+    it('a failing welcome email never fails the accept', async () => {
+      mailer.sendWelcome.mockRejectedValue(new Error('smtp down'));
+      await expect(
+        service.acceptWithPassword(TOKEN, PASSWORD_DTO),
+      ).resolves.toBeDefined();
+      redis.getdel.mockResolvedValue(INV_ID);
+      await expect(
+        service.acceptWithGoogle('flow_abcdefghijklmnop', GOOGLE_PROFILE),
+      ).resolves.toBe('new-user');
+    });
+
+    it('a hanging welcome email never delays the accept (fire-and-forget)', async () => {
+      mailer.sendWelcome.mockReturnValue(new Promise(() => undefined));
+      await expect(
+        service.acceptWithPassword(TOKEN, PASSWORD_DTO),
+      ).resolves.toBeDefined();
+    });
+
+    it('no welcome email when the accept fails', async () => {
+      users.create.mockRejectedValue({ code: 11000 });
+      await expect(
+        service.acceptWithPassword(TOKEN, PASSWORD_DTO),
+      ).rejects.toMatchObject({ response: { code: 'MEMBER_ALREADY_EXISTS' } });
+      expect(mailer.sendWelcome).not.toHaveBeenCalled();
     });
   });
 });

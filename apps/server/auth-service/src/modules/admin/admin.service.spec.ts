@@ -66,6 +66,46 @@ describe('AdminService', () => {
     service = moduleRef.get(AdminService);
   });
 
+  describe('bot accounts', () => {
+    const ACTOR = '64b0000000000000000000bb';
+
+    it('listMembers excludes bot accounts', async () => {
+      userModel.find.mockReturnValue({ select: () => execable([]) });
+      await service.listMembers();
+      expect(userModel.find).toHaveBeenCalledWith({ isBot: { $ne: true } });
+    });
+
+    it('listMembers adds mfaEnabled and never exposes the raw mfa sub-document', async () => {
+      const select = jest.fn().mockReturnValue(
+        execable([
+          { toObject: () => ({ _id: 'a', email: 'a@x', mfa: { enabled: true } }) },
+          { toObject: () => ({ _id: 'b', email: 'b@x' }) },
+        ]),
+      );
+      userModel.find.mockReturnValue({ select });
+      const members = await service.listMembers();
+      expect(select).toHaveBeenCalledWith(expect.stringContaining('mfa.enabled'));
+      expect(select.mock.calls[0][0]).not.toMatch(/secretEnc|backupCodeHashes/);
+      expect(members).toEqual([
+        { _id: 'a', email: 'a@x', mfaEnabled: true },
+        { _id: 'b', email: 'b@x', mfaEnabled: false },
+      ]);
+    });
+
+    it('a bot account cannot be edited or blocked', async () => {
+      const BOT = '64b0000000000000000000cc';
+      userModel.findById = jest.fn().mockReturnValue(execable({ _id: BOT, isBot: true }));
+      await expect(
+        service.updateMember(ACTOR, 'Owner', BOT, { departmentIds: [] }),
+      ).rejects.toMatchObject({ status: 404, response: { code: 'MEMBER_NOT_FOUND' } });
+      await expect(
+        service.setMemberStatus(ACTOR, 'Owner', BOT, { status: 'blocked' }),
+      ).rejects.toMatchObject({ status: 404, response: { code: 'MEMBER_NOT_FOUND' } });
+      expect(userModel.findByIdAndUpdate).not.toHaveBeenCalled();
+      expect(session.revokeAllSessions).not.toHaveBeenCalled();
+    });
+  });
+
   describe('updateMember', () => {
     const OWNER_ROLE = '64b000000000000000000001';
     const ADMIN_ROLE = '64b000000000000000000002';
@@ -367,8 +407,9 @@ describe('AdminService', () => {
     const ACTOR = '64b0000000000000000000bb';
 
     function memberDoc(doc: any) {
-      const q = execable(doc);
-      return { ...q, select: jest.fn().mockReturnValue(execable(doc)) };
+      const hydrated = { ...doc, toObject: () => ({ ...doc }) };
+      const q = execable(hydrated);
+      return { ...q, select: jest.fn().mockReturnValue(execable(hydrated)) };
     }
 
     beforeEach(() => {

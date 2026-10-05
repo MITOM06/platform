@@ -23,6 +23,7 @@ export type SessionRevokeReason =
   | 'role_changed'
   | 'password_reset'
   | 'refresh_reuse'
+  | 'mfa_reset'
   | 'other';
 
 /**
@@ -253,8 +254,16 @@ export class SessionService {
     return { userId: data.userId, newRefreshToken: newRefresh };
   }
 
+  /**
+   * Revoke one session — only if it exists and belongs to `userId`. Anything
+   * else is a no-op, so a caller can never revoke another user's session and
+   * an unknown sid never creates a stray `sess:*` key.
+   */
   async revokeSession(userId: string, sid: string) {
+    if (!userId || !sid) return;
     const key = this.sessKey(sid);
+    const owner = await this.redis.hget(key, 'userId');
+    if (owner !== userId) return;
     await this.redis
       .multi()
       .hset(key, { revoked: '1' })

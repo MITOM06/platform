@@ -25,6 +25,7 @@ import {
 } from '@platform/database';
 import { AuthCode } from '../../common/auth-code.enum';
 import { AuditService } from '../audit/audit.service';
+import { WelcomeVariant } from '../Email/welcome-i18n';
 import { UsersService } from '../users/users.service';
 import { AcceptInvitationPasswordDto } from './dto/accept-invitation.dto';
 import { InvitationPreviewDto } from './dto/invitation-view.dto';
@@ -104,10 +105,12 @@ export class InvitationAcceptService {
     const inv = await this.findByToken(token);
     this.assertAcceptable(inv);
     const password = await bcrypt.hash(dto.password, await bcrypt.genSalt(10));
-    return this.claimAndCreateUser(inv, 'password', {
+    const user = await this.claimAndCreateUser(inv, 'password', {
       displayName: dto.displayName.trim(),
       password,
     });
+    this.sendWelcome(inv, user, 'password');
+    return user;
   }
 
   /** Validates the invitation; returns a single-use flow id for the Google round-trip. */
@@ -155,7 +158,12 @@ export class InvitationAcceptService {
       displayName: profile.displayName || inv.email.split('@')[0],
       avatarUrl: profile.avatar || '',
       socialLinks: profile.id ? { google: profile.id } : {},
+      // The ONLY place this flag is set: clients ask a Google invitee to create
+      // a PON password before using the app (an onboarding step, not a security
+      // boundary — any password change / reset clears it).
+      mustSetPassword: true,
     });
+    this.sendWelcome(inv, user, 'google');
     return user._id.toString();
   }
 
@@ -189,6 +197,17 @@ export class InvitationAcceptService {
   }
 
   // ===================== INTERNALS =====================
+  /** Fire-and-forget: the welcome email never fails or delays an accept. */
+  private sendWelcome(
+    inv: InvitationDocument,
+    user: UserDocument,
+    variant: WelcomeVariant,
+  ): void {
+    void this.mailer
+      .sendWelcome(inv, user.displayName, variant)
+      .catch(() => undefined);
+  }
+
   /**
    * Atomically claim the invitation (exactly one concurrent accept wins), then
    * create the user. Any user-creation failure reverts the claim to pending; a
