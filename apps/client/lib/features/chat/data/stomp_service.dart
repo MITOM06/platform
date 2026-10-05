@@ -7,6 +7,7 @@ import '../../../core/api/token_manager.dart';
 import '../../../core/config/app_config.dart';
 import '../../auth/domain/auth_provider.dart';
 import '../domain/chat_state.dart';
+import 'conversation_subscription_counter.dart';
 
 part 'stomp_service.g.dart';
 
@@ -198,7 +199,11 @@ class StompService extends _$StompService {
     debugPrint('[STOMP] websocket error: $error');
   }
 
+  /// Who holds each conversation topic (chat screen, an active call).
+  final ConversationSubscriptionCounter _convHolders = ConversationSubscriptionCounter();
+
   void subscribeConversation(String conversationId) {
+    if (!_convHolders.acquire(conversationId)) return; // already subscribed for someone else
     _pendingConvSubs.add(conversationId);
     if (_client?.connected ?? false) {
       _doSubscribeConversation(conversationId);
@@ -301,6 +306,7 @@ class StompService extends _$StompService {
   }
 
   void unsubscribeConversation(String conversationId) {
+    if (!_convHolders.release(conversationId)) return; // another holder still needs it
     _pendingConvSubs.remove(conversationId);
     _subs.remove('msg_$conversationId')?.call();
     _subs.remove('typ_$conversationId')?.call();
