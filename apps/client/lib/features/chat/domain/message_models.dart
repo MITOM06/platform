@@ -2,6 +2,9 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 
 import 'ai_models.dart';
+import 'ai_pending_action.dart';
+
+export 'ai_pending_action.dart';
 
 @immutable
 class ReactionModel {
@@ -73,6 +76,12 @@ class MessageModel {
   final List<String> activeTools;
   // Subset of activeTools flagged sensitive (state-changing / outbound) by ai-service
   final List<String> sensitiveTools;
+  // Sensitive AI actions held for in-chat confirmation (CONTRACTS-ROUND2 §F2):
+  // one confirmation card each. Null when the reply has none.
+  final List<AiPendingAction>? pendingActions;
+  // ai-service `replyId` of the stream a persisted AI message came from —
+  // lets the client swap exactly that streaming bubble (absent on others).
+  final String? aiReplyId;
 
   const MessageModel({
     required this.id,
@@ -96,6 +105,8 @@ class MessageModel {
     this.trace,
     this.activeTools = const [],
     this.sensitiveTools = const [],
+    this.pendingActions,
+    this.aiReplyId,
   });
 
   bool get isEdited => editedAt != null;
@@ -203,10 +214,16 @@ class MessageModel {
           .map((e) => ReactionModel.fromJson(e as Map<String, dynamic>))
           .toList(),
       recalled: json['recalled'] as bool? ?? false,
-      editedAt: json['editedAt'] != null
-          ? DateTime.parse(json['editedAt'] as String)
+      // Absent on most messages; never let a malformed value throw.
+      editedAt: json['editedAt'] is String
+          ? DateTime.tryParse(json['editedAt'] as String)
           : null,
       mentions: List<String>.from(json['mentions'] as List? ?? []),
+      pendingActions: parsePendingActions(json['pendingActions']),
+      aiReplyId: json['aiReplyId'] is String &&
+              (json['aiReplyId'] as String).isNotEmpty
+          ? json['aiReplyId'] as String
+          : null,
     );
   }
 
@@ -232,6 +249,8 @@ class MessageModel {
     AiTrace? trace,
     List<String>? activeTools,
     List<String>? sensitiveTools,
+    List<AiPendingAction>? pendingActions,
+    String? aiReplyId,
   }) {
     return MessageModel(
       id: id ?? this.id,
@@ -255,6 +274,8 @@ class MessageModel {
       trace: trace ?? this.trace,
       activeTools: activeTools ?? this.activeTools,
       sensitiveTools: sensitiveTools ?? this.sensitiveTools,
+      pendingActions: pendingActions ?? this.pendingActions,
+      aiReplyId: aiReplyId ?? this.aiReplyId,
     );
   }
 }

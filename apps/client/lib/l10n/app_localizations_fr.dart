@@ -3801,4 +3801,331 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get authErrSocialAccountConflict =>
       'Cet e-mail est déjà lié à un autre compte de connexion';
+
+  @override
+  String get aiActionConfirm => 'Confirmer';
+
+  @override
+  String get aiActionCancel => 'Annuler';
+
+  @override
+  String get aiActionSendEmail => 'Envoyer un e-mail';
+
+  @override
+  String get aiActionDraftEmail => 'Brouillon d’e-mail';
+
+  @override
+  String get aiActionCreateEvent => 'Créer un événement';
+
+  @override
+  String get aiActionUpdateEvent => 'Modifier un événement';
+
+  @override
+  String get aiActionCreatePage => 'Créer une page';
+
+  @override
+  String get aiActionUpdatePage => 'Modifier une page';
+
+  @override
+  String get aiActionGeneric => 'Exécuter une action';
+
+  @override
+  String aiActionGenericNamed(String tool) {
+    return 'Exécuter « $tool »';
+  }
+
+  @override
+  String aiActionVia(String connector) {
+    return 'via $connector';
+  }
+
+  @override
+  String aiActionWaitingFor(String name) {
+    return 'En attente de la confirmation de $name';
+  }
+
+  @override
+  String get aiActionFieldTo => 'À';
+
+  @override
+  String get aiActionFieldSubject => 'Objet';
+
+  @override
+  String get aiActionFieldTitle => 'Titre';
+
+  @override
+  String get aiActionFieldWhen => 'Quand';
+
+  @override
+  String get aiActionStatusConfirmed => 'Effectué';
+
+  @override
+  String get aiActionStatusCancelled => 'Annulé';
+
+  @override
+  String get aiActionStatusFailed => 'Échec';
+
+  @override
+  String get aiActionStatusExpired => 'Expiré';
+
+  @override
+  String get aiActionStatusHandled => 'Déjà traité';
+
+  @override
+  String get aiActionErrNotFound => 'Cette action n’existe plus';
+
+  @override
+  String get aiActionErrNotOwner =>
+      'Seule la personne à l’origine de la demande peut confirmer';
+
+  @override
+  String get aiActionErrAlreadyResolved => 'Cette action a déjà été traitée';
+
+  @override
+  String get aiActionErrExpired => 'Cette demande a expiré';
+
+  @override
+  String get aiActionErrGeneric => 'Impossible d’effectuer cette action';
+
+  @override
+  String get aiToolWebSearch => 'Recherche sur le web';
+
+  @override
+  String get aiToolRememberFact => 'Enregistrement en mémoire';
+
+  @override
+  String get aiToolCreateReminder => 'Création d’un rappel';
+
+  @override
+  String get aiToolGetUserInfo => 'Recherche d’un collègue';
+
+  @override
+  String get aiToolSearchKnowledgeBase =>
+      'Recherche dans la base de connaissances';
+
+  @override
+  String get aiToolSearchMessages => 'Recherche dans les messages';
+
+  @override
+  String get aiToolSummarizeConversation => 'Résumé de la conversation';
+
+  @override
+  String aiToolOnConnector(String tool, String connector) {
+    return '$tool sur $connector';
+  }
+
+  @override
+  String get aiTraceToolAwaiting => 'En attente de confirmation';
+
+  @override
+  String get aiTraceToolDone => 'Terminé';
+
+  @override
+  String get aiTraceToolNotRun => 'Non exécuté';
+
+  @override
+  String aiTraceTokens(String input, String output) {
+    return '$input entrée · $output sortie';
+  }
+
+  @override
+  String aiTraceCacheTokens(String read, String written) {
+    return 'cache $read lus · $written écrits';
+  }
+
+  @override
+  String aiTraceThinkingTokens(String count) {
+    return '$count de réflexion';
+  }
+
+  @override
+  String aiTraceDuration(String seconds) {
+    return '$seconds s';
+  }
+
+  @override
+  String aiTraceSteps(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count étapes',
+      one: '1 étape',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get connectorGenericName => 'Connecteur';
+
+  @override
+  String get connectorCustomName => 'Serveur MCP personnalisé';
+
+  @override
+  String get connectorReconnect => 'Reconnecter';
+
+  @override
+  String get connectorStatusReconnect => 'Reconnexion nécessaire';
+
+  @override
+  String get connectorStatusUnavailable => 'Indisponible';
+
+  @override
+  String get connectorDisconnectWorkspaceConfirm =>
+      'Déconnecter ce connecteur de l’espace de travail ? Tout le monde perdra l’accès à ses outils.';
+
+  @override
+  String connectorDisconnected(String name) {
+    return '$name déconnecté';
+  }
+
+  @override
+  String get customMcpListTitle => 'Vos serveurs MCP';
+
+  @override
+  String get customMcpDelete => 'Supprimer';
+
+  @override
+  String get customMcpDeleteConfirm =>
+      'Supprimer ce serveur MCP ? L’IA n’utilisera plus ses outils.';
+
+  @override
+  String customMcpDeleted(String name) {
+    return '$name supprimé';
+  }
+
+  @override
+  String get directoryDeleteConfirm => 'Supprimer cette entrée de l’annuaire ?';
+
+  @override
+  String get directoryAuthOauth => 'Connexion OAuth';
+
+  @override
+  String get directoryAuthMcpOauth => 'OAuth (serveur MCP)';
+
+  @override
+  String get directoryAuthEnvOauth => 'OAuth (application de l’espace)';
+
+  @override
+  String get directoryAuthApiKey => 'Clé d’API';
+
+  @override
+  String get directoryAuthNone => 'Aucune connexion requise';
+
+  @override
+  String get scopeEmailSend => 'Envoyer des e-mails';
+
+  @override
+  String get scopeEmailDraft => 'Créer des brouillons';
+
+  @override
+  String get scopeEmailRead => 'Lire les e-mails';
+
+  @override
+  String get scopeEmailManage => 'Gérer les e-mails';
+
+  @override
+  String get scopeCalendarRead => 'Consulter l’agenda';
+
+  @override
+  String get scopeCalendarEvents => 'Gérer les événements';
+
+  @override
+  String get scopeCalendarManage => 'Gérer les agendas';
+
+  @override
+  String get scopeFilesRead => 'Lire les fichiers';
+
+  @override
+  String get scopeFilesManage => 'Gérer les fichiers';
+
+  @override
+  String get scopeReadContent => 'Lire le contenu';
+
+  @override
+  String get scopeInsertContent => 'Ajouter du contenu';
+
+  @override
+  String get scopeUpdateContent => 'Modifier le contenu';
+
+  @override
+  String get scopeOther => 'Autres accès';
+
+  @override
+  String get connErrUnsafeUrl =>
+      'Cette adresse n’est pas autorisée. Utilisez une URL https publique.';
+
+  @override
+  String get connErrDiscoveryFailed => 'Impossible de joindre ce serveur MCP';
+
+  @override
+  String get connErrInsufficientPermission =>
+      'Vous n’avez pas l’autorisation de faire cela';
+
+  @override
+  String get connErrNotAllowed =>
+      'Ce connecteur n’est pas autorisé dans votre espace de travail';
+
+  @override
+  String get connErrUnavailable =>
+      'Ce connecteur est indisponible pour le moment';
+
+  @override
+  String get connErrOauthSetup =>
+      'La connexion de ce connecteur n’est pas encore configurée';
+
+  @override
+  String get connErrBotBridgeDisabled =>
+      'Le service d’assistant personnel n’est pas configuré';
+
+  @override
+  String get connErrBotNotFound => 'Assistant introuvable';
+
+  @override
+  String get connErrBotOwnerMismatch =>
+      'Cet assistant appartient à un autre membre';
+
+  @override
+  String get connErrMemberInactive => 'Le compte de ce membre est inactif';
+
+  @override
+  String oauthConnected(String name) {
+    return '$name connecté';
+  }
+
+  @override
+  String oauthErrAccessDenied(String name) {
+    return 'Vous avez refusé l’accès à $name';
+  }
+
+  @override
+  String oauthErrFailed(String name) {
+    return 'Impossible de connecter $name';
+  }
+
+  @override
+  String oauthNotCompleted(String name) {
+    return 'La connexion à $name n’a pas abouti';
+  }
+
+  @override
+  String get oauthErrExpired =>
+      'La connexion a pris trop de temps. Veuillez réessayer.';
+
+  @override
+  String get tokenUsageDailyChartTitle => 'Utilisation quotidienne';
+
+  @override
+  String get tokenUsageTotalInRange => 'Total sur la période choisie';
+
+  @override
+  String get tokenUsageQuotaBlocked =>
+      'L’IA est désactivée pour cet espace de travail';
+
+  @override
+  String get tokenUsageQuotaExceeded => 'Limite mensuelle d’IA atteinte';
+
+  @override
+  String tokenUsageQuotaResets(String date) {
+    return 'Réinitialisation le $date';
+  }
 }

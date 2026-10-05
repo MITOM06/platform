@@ -3598,4 +3598,313 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get authErrSocialAccountConflict => '此邮箱已关联到其他登录账号';
+
+  @override
+  String get aiActionConfirm => '确认';
+
+  @override
+  String get aiActionCancel => '取消';
+
+  @override
+  String get aiActionSendEmail => '发送邮件';
+
+  @override
+  String get aiActionDraftEmail => '草拟邮件';
+
+  @override
+  String get aiActionCreateEvent => '创建日历事件';
+
+  @override
+  String get aiActionUpdateEvent => '更新日历事件';
+
+  @override
+  String get aiActionCreatePage => '创建页面';
+
+  @override
+  String get aiActionUpdatePage => '更新页面';
+
+  @override
+  String get aiActionGeneric => '执行操作';
+
+  @override
+  String aiActionGenericNamed(String tool) {
+    return '执行“$tool”';
+  }
+
+  @override
+  String aiActionVia(String connector) {
+    return '通过 $connector';
+  }
+
+  @override
+  String aiActionWaitingFor(String name) {
+    return '等待 $name 确认';
+  }
+
+  @override
+  String get aiActionFieldTo => '收件人';
+
+  @override
+  String get aiActionFieldSubject => '主题';
+
+  @override
+  String get aiActionFieldTitle => '标题';
+
+  @override
+  String get aiActionFieldWhen => '时间';
+
+  @override
+  String get aiActionStatusConfirmed => '已完成';
+
+  @override
+  String get aiActionStatusCancelled => '已取消';
+
+  @override
+  String get aiActionStatusFailed => '失败';
+
+  @override
+  String get aiActionStatusExpired => '已过期';
+
+  @override
+  String get aiActionStatusHandled => '已处理';
+
+  @override
+  String get aiActionErrNotFound => '此操作已不存在';
+
+  @override
+  String get aiActionErrNotOwner => '只有发起请求的人才能确认';
+
+  @override
+  String get aiActionErrAlreadyResolved => '此操作已被处理';
+
+  @override
+  String get aiActionErrExpired => '此请求已过期';
+
+  @override
+  String get aiActionErrGeneric => '无法完成此操作';
+
+  @override
+  String get aiToolWebSearch => '正在搜索网络';
+
+  @override
+  String get aiToolRememberFact => '正在保存到记忆';
+
+  @override
+  String get aiToolCreateReminder => '正在创建提醒';
+
+  @override
+  String get aiToolGetUserInfo => '正在查找同事';
+
+  @override
+  String get aiToolSearchKnowledgeBase => '正在搜索知识库';
+
+  @override
+  String get aiToolSearchMessages => '正在搜索消息';
+
+  @override
+  String get aiToolSummarizeConversation => '正在总结对话';
+
+  @override
+  String aiToolOnConnector(String tool, String connector) {
+    return '在 $connector 上 $tool';
+  }
+
+  @override
+  String get aiTraceToolAwaiting => '等待确认';
+
+  @override
+  String get aiTraceToolDone => '完成';
+
+  @override
+  String get aiTraceToolNotRun => '未执行';
+
+  @override
+  String aiTraceTokens(String input, String output) {
+    return '输入 $input · 输出 $output';
+  }
+
+  @override
+  String aiTraceCacheTokens(String read, String written) {
+    return '缓存 读 $read · 写 $written';
+  }
+
+  @override
+  String aiTraceThinkingTokens(String count) {
+    return '思考 $count';
+  }
+
+  @override
+  String aiTraceDuration(String seconds) {
+    return '$seconds 秒';
+  }
+
+  @override
+  String aiTraceSteps(int count) {
+    return '$count 步';
+  }
+
+  @override
+  String get connectorGenericName => '连接器';
+
+  @override
+  String get connectorCustomName => '自定义 MCP 服务器';
+
+  @override
+  String get connectorReconnect => '重新连接';
+
+  @override
+  String get connectorStatusReconnect => '需要重新连接';
+
+  @override
+  String get connectorStatusUnavailable => '不可用';
+
+  @override
+  String get connectorDisconnectWorkspaceConfirm =>
+      '断开这个工作区连接器？工作区内所有人都将无法使用它的工具。';
+
+  @override
+  String connectorDisconnected(String name) {
+    return '已断开 $name';
+  }
+
+  @override
+  String get customMcpListTitle => '你的 MCP 服务器';
+
+  @override
+  String get customMcpDelete => '移除';
+
+  @override
+  String get customMcpDeleteConfirm => '移除此 MCP 服务器？AI 将不再使用它的工具。';
+
+  @override
+  String customMcpDeleted(String name) {
+    return '已移除 $name';
+  }
+
+  @override
+  String get directoryDeleteConfirm => '删除此目录条目？';
+
+  @override
+  String get directoryAuthOauth => 'OAuth 登录';
+
+  @override
+  String get directoryAuthMcpOauth => 'OAuth（MCP 服务器）';
+
+  @override
+  String get directoryAuthEnvOauth => 'OAuth（工作区应用）';
+
+  @override
+  String get directoryAuthApiKey => 'API 密钥';
+
+  @override
+  String get directoryAuthNone => '无需登录';
+
+  @override
+  String get scopeEmailSend => '发送邮件';
+
+  @override
+  String get scopeEmailDraft => '创建草稿';
+
+  @override
+  String get scopeEmailRead => '读取邮件';
+
+  @override
+  String get scopeEmailManage => '管理邮件';
+
+  @override
+  String get scopeCalendarRead => '查看日历';
+
+  @override
+  String get scopeCalendarEvents => '管理日程';
+
+  @override
+  String get scopeCalendarManage => '管理日历';
+
+  @override
+  String get scopeFilesRead => '读取文件';
+
+  @override
+  String get scopeFilesManage => '管理文件';
+
+  @override
+  String get scopeReadContent => '读取内容';
+
+  @override
+  String get scopeInsertContent => '添加内容';
+
+  @override
+  String get scopeUpdateContent => '编辑内容';
+
+  @override
+  String get scopeOther => '其他权限';
+
+  @override
+  String get connErrUnsafeUrl => '不允许使用该地址。请使用公开的 https 网址。';
+
+  @override
+  String get connErrDiscoveryFailed => '无法连接该 MCP 服务器';
+
+  @override
+  String get connErrInsufficientPermission => '你没有执行此操作的权限';
+
+  @override
+  String get connErrNotAllowed => '你的工作区不允许使用此连接器';
+
+  @override
+  String get connErrUnavailable => '此连接器目前不可用';
+
+  @override
+  String get connErrOauthSetup => '此连接器尚未配置登录';
+
+  @override
+  String get connErrBotBridgeDisabled => '个人助理服务尚未配置';
+
+  @override
+  String get connErrBotNotFound => '找不到助理';
+
+  @override
+  String get connErrBotOwnerMismatch => '此助理属于其他成员';
+
+  @override
+  String get connErrMemberInactive => '该成员的账号未激活';
+
+  @override
+  String oauthConnected(String name) {
+    return '已连接 $name';
+  }
+
+  @override
+  String oauthErrAccessDenied(String name) {
+    return '你拒绝了 $name 的访问';
+  }
+
+  @override
+  String oauthErrFailed(String name) {
+    return '无法连接 $name';
+  }
+
+  @override
+  String oauthNotCompleted(String name) {
+    return '$name 的连接未完成';
+  }
+
+  @override
+  String get oauthErrExpired => '登录超时，请重试。';
+
+  @override
+  String get tokenUsageDailyChartTitle => '每日用量';
+
+  @override
+  String get tokenUsageTotalInRange => '所选时间段合计';
+
+  @override
+  String get tokenUsageQuotaBlocked => '此工作区已关闭 AI';
+
+  @override
+  String get tokenUsageQuotaExceeded => '已达到本月 AI 上限';
+
+  @override
+  String tokenUsageQuotaResets(String date) {
+    return '$date 重置';
+  }
 }

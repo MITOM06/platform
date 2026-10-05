@@ -217,13 +217,20 @@ class ChatAiStreamHandler {
     final updated = List<MessageModel>.from(current.messages);
 
     switch (type) {
-      case 'AI_TOOL_CALL':
       case 'AI_ACTION_PENDING':
+        // A sensitive action held for confirmation: its card shows in this
+        // bubble right away, while the reply is still streaming.
+        _arm(slot);
+        final action = AiPendingAction.tryParse(event['action'],
+            requesterId: event['requesterId'] as String?);
+        if (action == null) return;
+        updated[idx] = message.copyWith(
+            pendingActions:
+                upsertPendingAction(message.pendingActions, action));
+      case 'AI_TOOL_CALL':
         _arm(slot);
         final toolName = event['toolName'] as String? ?? '';
-        if (type == 'AI_ACTION_PENDING' || toolName.isEmpty || slot.persisted) {
-          return;
-        }
+        if (toolName.isEmpty || slot.persisted) return;
         final tools = List<String>.from(message.activeTools)..add(toolName);
         final sensitive = List<String>.from(message.sensitiveTools);
         if (event['sensitive'] == true && !sensitive.contains(toolName)) {
@@ -247,13 +254,20 @@ class ChatAiStreamHandler {
         final rawTrace = event['trace'];
         final trace =
             rawTrace is Map<String, dynamic> ? AiTrace.fromJson(rawTrace) : null;
+        final actions = mergePendingActions(
+          message.pendingActions,
+          parsePendingActions(event['pendingActions'],
+              requesterId: event['requesterId'] as String?),
+        );
         if (slot.persisted) {
           // Persisted message first (current servers): DONE only adds
-          // sources + trace to it, then the reply is complete.
+          // sources + trace (+ any confirmation cards) to it, then the reply
+          // is complete.
           _drop(slot);
           updated[idx] = message.copyWith(
             sources: (sources != null && sources.isNotEmpty) ? sources : null,
             trace: trace,
+            pendingActions: actions,
           );
         } else {
           // DONE first (older servers) or nothing to persist: finalize the
@@ -269,6 +283,7 @@ class ChatAiStreamHandler {
             trace: trace,
             activeTools: [],
             sensitiveTools: [],
+            pendingActions: actions,
           );
         }
       case 'AI_STREAM_ERROR':
@@ -294,28 +309,41 @@ class ChatAiStreamHandler {
   /// list, or null when no tracked reply matches (the caller then treats it
   /// as an ordinary new message).
   ///
-  /// The persisted message carries no `replyId`, so it is matched to, in
-  /// order: a reply whose DONE already arrived; a streaming reply whose text
-  /// it continues; the oldest reply that streamed text; this device's oldest
-  /// pending request (e.g. a cached answer that streamed nothing).
+  /// A persisted message carrying `aiReplyId` swaps exactly the reply with
+  /// that `replyId`. Without it (older servers) — or when no tracked reply
+  /// is bound to that id yet — it is matched to, in order: a reply whose DONE
+  /// already arrived; a streaming reply whose text it continues; the oldest
+  /// reply that streamed text; this device's oldest pending request (e.g. a
+  /// cached answer that streamed nothing). A reply already bound to a
+  /// DIFFERENT `replyId` is never taken.
   List<MessageModel>? reconcilePersisted(
     List<MessageModel> messages,
     MessageModel message,
   ) {
     if (!message.isAiMessage || _slots.isEmpty) return null;
     if (messages.any((m) => m.id == message.id)) return null;
+    final replyId = message.aiReplyId;
+    if (replyId != null && _finished.contains(replyId)) return null;
     final open = _slots.where((s) => !s.persisted).toList();
+    final exact = replyId == null
+        ? null
+        : open.firstWhereOrNull((s) => s.replyId == replyId);
+    final candidates = replyId == null
+        ? open
+        : open.where((s) => s.replyId == null).toList();
     String textOf(AiReplySlot s) =>
         messages.firstWhereOrNull((m) => m.id == s.localId)?.content.trim() ??
         '';
-    final slot = open.firstWhereOrNull((s) => s.done) ??
-        open.firstWhereOrNull((s) =>
+    final slot = exact ??
+        candidates.firstWhereOrNull((s) => s.done) ??
+        candidates.firstWhereOrNull((s) =>
             s.receivedChunk &&
             textOf(s).isNotEmpty &&
             message.content.trim().startsWith(textOf(s))) ??
-        open.firstWhereOrNull((s) => s.receivedChunk) ??
-        open.firstWhereOrNull((s) => s.mine);
+        candidates.firstWhereOrNull((s) => s.receivedChunk) ??
+        candidates.firstWhereOrNull((s) => s.mine);
     if (slot == null) return null;
+    if (replyId != null) slot.replyId ??= replyId;
     final idx = messages.indexWhere((m) => m.id == slot.localId);
     if (idx == -1) {
       _drop(slot);
@@ -326,6 +354,8 @@ class ChatAiStreamHandler {
     updated[idx] = message.copyWith(
       sources: message.sources ?? placeholder.sources,
       trace: message.trace ?? placeholder.trace,
+      pendingActions: mergePendingActions(
+          placeholder.pendingActions, message.pendingActions),
     );
     if (slot.done) {
       _drop(slot);

@@ -1825,5 +1825,218 @@
   "authErrUserBlocked": "Not available — one of you has blocked the other",
   "authErrCurrentPasswordRequired": "Enter your current password",
   "authErrSsoEmailUnverified": "Your sign-in provider hasn't verified this email address",
-  "authErrSocialAccountConflict": "This email is already linked to a different sign-in account"
+  "authErrSocialAccountConflict": "This email is already linked to a different sign-in account",
+  "aiActionConfirm": "Confirm",
+  "aiActionCancel": "Cancel",
+  "aiActionSendEmail": "Send email",
+  "aiActionDraftEmail": "Draft email",
+  "aiActionCreateEvent": "Create calendar event",
+  "aiActionUpdateEvent": "Update calendar event",
+  "aiActionCreatePage": "Create page",
+  "aiActionUpdatePage": "Update page",
+  "aiActionGeneric": "Run an action",
+  "aiActionGenericNamed": "Run “{tool}”",
+  "@aiActionGenericNamed": {
+    "placeholders": {
+      "tool": {
+        "type": "String"
+      }
+    }
+  },
+  "aiActionVia": "via {connector}",
+  "@aiActionVia": {
+    "placeholders": {
+      "connector": {
+        "type": "String"
+      }
+    }
+  },
+  "aiActionWaitingFor": "Waiting for {name} to confirm",
+  "@aiActionWaitingFor": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "aiActionFieldTo": "To",
+  "aiActionFieldSubject": "Subject",
+  "aiActionFieldTitle": "Title",
+  "aiActionFieldWhen": "When",
+  "aiActionStatusConfirmed": "Done",
+  "aiActionStatusCancelled": "Cancelled",
+  "aiActionStatusFailed": "Failed",
+  "aiActionStatusExpired": "Expired",
+  "aiActionStatusHandled": "Already handled",
+  "aiActionErrNotFound": "This action no longer exists",
+  "aiActionErrNotOwner": "Only the person who asked can confirm this",
+  "aiActionErrAlreadyResolved": "This action was already handled",
+  "aiActionErrExpired": "This request expired",
+  "aiActionErrGeneric": "Couldn’t complete this action",
+  "aiToolWebSearch": "Searching the web",
+  "aiToolRememberFact": "Saving to memory",
+  "aiToolCreateReminder": "Creating a reminder",
+  "aiToolGetUserInfo": "Looking up a colleague",
+  "aiToolSearchKnowledgeBase": "Searching the knowledge base",
+  "aiToolSearchMessages": "Searching messages",
+  "aiToolSummarizeConversation": "Summarizing the conversation",
+  "aiToolOnConnector": "{tool} on {connector}",
+  "@aiToolOnConnector": {
+    "placeholders": {
+      "tool": {
+        "type": "String"
+      },
+      "connector": {
+        "type": "String"
+      }
+    }
+  },
+  "aiTraceToolAwaiting": "Awaiting confirmation",
+  "aiTraceToolDone": "Done",
+  "aiTraceToolNotRun": "Not run",
+  "aiTraceTokens": "{input} in · {output} out",
+  "@aiTraceTokens": {
+    "placeholders": {
+      "input": {
+        "type": "String"
+      },
+      "output": {
+        "type": "String"
+      }
+    }
+  },
+  "aiTraceCacheTokens": "cache {read} read · {written} written",
+  "@aiTraceCacheTokens": {
+    "placeholders": {
+      "read": {
+        "type": "String"
+      },
+      "written": {
+        "type": "String"
+      }
+    }
+  },
+  "aiTraceThinkingTokens": "{count} thinking",
+  "@aiTraceThinkingTokens": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "aiTraceDuration": "{seconds}s",
+  "@aiTraceDuration": {
+    "placeholders": {
+      "seconds": {
+        "type": "String"
+      }
+    }
+  },
+  "aiTraceSteps": "{count, plural, =1{1 step} other{{count} steps}}",
+  "@aiTraceSteps": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "connectorGenericName": "Connector",
+  "connectorCustomName": "Custom MCP server",
+  "connectorReconnect": "Reconnect",
+  "connectorStatusReconnect": "Reconnect needed",
+  "connectorStatusUnavailable": "Unavailable",
+  "connectorDisconnectWorkspaceConfirm": "Disconnect this workspace connector? Everyone in the workspace loses access to its tools.",
+  "connectorDisconnected": "{name} disconnected",
+  "@connectorDisconnected": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "customMcpListTitle": "Your MCP servers",
+  "customMcpDelete": "Remove",
+  "customMcpDeleteConfirm": "Remove this MCP server? The AI will no longer use its tools.",
+  "customMcpDeleted": "{name} removed",
+  "@customMcpDeleted": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "directoryDeleteConfirm": "Delete this directory entry?",
+  "directoryAuthOauth": "OAuth sign-in",
+  "directoryAuthMcpOauth": "OAuth (MCP server)",
+  "directoryAuthEnvOauth": "OAuth (workspace app)",
+  "directoryAuthApiKey": "API key",
+  "directoryAuthNone": "No sign-in needed",
+  "scopeEmailSend": "Send email",
+  "scopeEmailDraft": "Create drafts",
+  "scopeEmailRead": "Read email",
+  "scopeEmailManage": "Manage email",
+  "scopeCalendarRead": "Read calendar",
+  "scopeCalendarEvents": "Manage events",
+  "scopeCalendarManage": "Manage calendars",
+  "scopeFilesRead": "Read files",
+  "scopeFilesManage": "Manage files",
+  "scopeReadContent": "Read content",
+  "scopeInsertContent": "Add content",
+  "scopeUpdateContent": "Edit content",
+  "scopeOther": "Other access",
+  "connErrUnsafeUrl": "That address isn’t allowed. Use a public https URL.",
+  "connErrDiscoveryFailed": "Couldn’t reach that MCP server",
+  "connErrInsufficientPermission": "You don’t have permission to do this",
+  "connErrNotAllowed": "This connector isn’t allowed in your workspace",
+  "connErrUnavailable": "This connector is unavailable right now",
+  "connErrOauthSetup": "This connector isn’t set up for sign-in yet",
+  "connErrBotBridgeDisabled": "The personal assistant service isn’t configured",
+  "connErrBotNotFound": "Assistant not found",
+  "connErrBotOwnerMismatch": "This assistant belongs to another member",
+  "connErrMemberInactive": "This member’s account is inactive",
+  "oauthConnected": "{name} connected",
+  "@oauthConnected": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "oauthErrAccessDenied": "You declined access to {name}",
+  "@oauthErrAccessDenied": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "oauthErrFailed": "Couldn’t connect {name}",
+  "@oauthErrFailed": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "oauthNotCompleted": "Connecting {name} wasn’t completed",
+  "@oauthNotCompleted": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "oauthErrExpired": "The sign-in took too long. Please try again.",
+  "tokenUsageDailyChartTitle": "Daily usage",
+  "tokenUsageTotalInRange": "Total in the selected range",
+  "tokenUsageQuotaBlocked": "AI is turned off for this workspace",
+  "tokenUsageQuotaExceeded": "Monthly AI limit reached",
+  "tokenUsageQuotaResets": "Resets on {date}",
+  "@tokenUsageQuotaResets": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  }
 }

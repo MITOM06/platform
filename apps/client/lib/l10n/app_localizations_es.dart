@@ -3775,4 +3775,329 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get authErrSocialAccountConflict =>
       'Este correo ya está vinculado a otra cuenta de inicio de sesión';
+
+  @override
+  String get aiActionConfirm => 'Confirmar';
+
+  @override
+  String get aiActionCancel => 'Cancelar';
+
+  @override
+  String get aiActionSendEmail => 'Enviar correo';
+
+  @override
+  String get aiActionDraftEmail => 'Borrador de correo';
+
+  @override
+  String get aiActionCreateEvent => 'Crear evento de calendario';
+
+  @override
+  String get aiActionUpdateEvent => 'Actualizar evento de calendario';
+
+  @override
+  String get aiActionCreatePage => 'Crear página';
+
+  @override
+  String get aiActionUpdatePage => 'Actualizar página';
+
+  @override
+  String get aiActionGeneric => 'Ejecutar una acción';
+
+  @override
+  String aiActionGenericNamed(String tool) {
+    return 'Ejecutar «$tool»';
+  }
+
+  @override
+  String aiActionVia(String connector) {
+    return 'mediante $connector';
+  }
+
+  @override
+  String aiActionWaitingFor(String name) {
+    return 'Esperando a que $name confirme';
+  }
+
+  @override
+  String get aiActionFieldTo => 'Para';
+
+  @override
+  String get aiActionFieldSubject => 'Asunto';
+
+  @override
+  String get aiActionFieldTitle => 'Título';
+
+  @override
+  String get aiActionFieldWhen => 'Cuándo';
+
+  @override
+  String get aiActionStatusConfirmed => 'Hecho';
+
+  @override
+  String get aiActionStatusCancelled => 'Cancelado';
+
+  @override
+  String get aiActionStatusFailed => 'Falló';
+
+  @override
+  String get aiActionStatusExpired => 'Caducado';
+
+  @override
+  String get aiActionStatusHandled => 'Ya gestionado';
+
+  @override
+  String get aiActionErrNotFound => 'Esta acción ya no existe';
+
+  @override
+  String get aiActionErrNotOwner => 'Solo quien lo pidió puede confirmarlo';
+
+  @override
+  String get aiActionErrAlreadyResolved => 'Esta acción ya se gestionó';
+
+  @override
+  String get aiActionErrExpired => 'Esta solicitud caducó';
+
+  @override
+  String get aiActionErrGeneric => 'No se pudo completar esta acción';
+
+  @override
+  String get aiToolWebSearch => 'Buscando en la web';
+
+  @override
+  String get aiToolRememberFact => 'Guardando en la memoria';
+
+  @override
+  String get aiToolCreateReminder => 'Creando un recordatorio';
+
+  @override
+  String get aiToolGetUserInfo => 'Buscando a un compañero';
+
+  @override
+  String get aiToolSearchKnowledgeBase => 'Buscando en la base de conocimiento';
+
+  @override
+  String get aiToolSearchMessages => 'Buscando mensajes';
+
+  @override
+  String get aiToolSummarizeConversation => 'Resumiendo la conversación';
+
+  @override
+  String aiToolOnConnector(String tool, String connector) {
+    return '$tool en $connector';
+  }
+
+  @override
+  String get aiTraceToolAwaiting => 'Esperando confirmación';
+
+  @override
+  String get aiTraceToolDone => 'Hecho';
+
+  @override
+  String get aiTraceToolNotRun => 'No ejecutado';
+
+  @override
+  String aiTraceTokens(String input, String output) {
+    return '$input entrada · $output salida';
+  }
+
+  @override
+  String aiTraceCacheTokens(String read, String written) {
+    return 'caché $read leídos · $written escritos';
+  }
+
+  @override
+  String aiTraceThinkingTokens(String count) {
+    return '$count de razonamiento';
+  }
+
+  @override
+  String aiTraceDuration(String seconds) {
+    return '$seconds s';
+  }
+
+  @override
+  String aiTraceSteps(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count pasos',
+      one: '1 paso',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get connectorGenericName => 'Conector';
+
+  @override
+  String get connectorCustomName => 'Servidor MCP personalizado';
+
+  @override
+  String get connectorReconnect => 'Reconectar';
+
+  @override
+  String get connectorStatusReconnect => 'Hay que reconectar';
+
+  @override
+  String get connectorStatusUnavailable => 'No disponible';
+
+  @override
+  String get connectorDisconnectWorkspaceConfirm =>
+      '¿Desconectar este conector del espacio de trabajo? Todos perderán el acceso a sus herramientas.';
+
+  @override
+  String connectorDisconnected(String name) {
+    return '$name desconectado';
+  }
+
+  @override
+  String get customMcpListTitle => 'Tus servidores MCP';
+
+  @override
+  String get customMcpDelete => 'Quitar';
+
+  @override
+  String get customMcpDeleteConfirm =>
+      '¿Quitar este servidor MCP? La IA dejará de usar sus herramientas.';
+
+  @override
+  String customMcpDeleted(String name) {
+    return '$name quitado';
+  }
+
+  @override
+  String get directoryDeleteConfirm => '¿Eliminar esta entrada del directorio?';
+
+  @override
+  String get directoryAuthOauth => 'Inicio de sesión OAuth';
+
+  @override
+  String get directoryAuthMcpOauth => 'OAuth (servidor MCP)';
+
+  @override
+  String get directoryAuthEnvOauth => 'OAuth (app del espacio de trabajo)';
+
+  @override
+  String get directoryAuthApiKey => 'Clave de API';
+
+  @override
+  String get directoryAuthNone => 'Sin inicio de sesión';
+
+  @override
+  String get scopeEmailSend => 'Enviar correos';
+
+  @override
+  String get scopeEmailDraft => 'Crear borradores';
+
+  @override
+  String get scopeEmailRead => 'Leer correos';
+
+  @override
+  String get scopeEmailManage => 'Gestionar correos';
+
+  @override
+  String get scopeCalendarRead => 'Ver el calendario';
+
+  @override
+  String get scopeCalendarEvents => 'Gestionar eventos';
+
+  @override
+  String get scopeCalendarManage => 'Gestionar calendarios';
+
+  @override
+  String get scopeFilesRead => 'Leer archivos';
+
+  @override
+  String get scopeFilesManage => 'Gestionar archivos';
+
+  @override
+  String get scopeReadContent => 'Leer contenido';
+
+  @override
+  String get scopeInsertContent => 'Añadir contenido';
+
+  @override
+  String get scopeUpdateContent => 'Editar contenido';
+
+  @override
+  String get scopeOther => 'Otros accesos';
+
+  @override
+  String get connErrUnsafeUrl =>
+      'Esa dirección no está permitida. Usa una URL https pública.';
+
+  @override
+  String get connErrDiscoveryFailed =>
+      'No se pudo contactar con ese servidor MCP';
+
+  @override
+  String get connErrInsufficientPermission =>
+      'No tienes permiso para hacer esto';
+
+  @override
+  String get connErrNotAllowed =>
+      'Este conector no está permitido en tu espacio de trabajo';
+
+  @override
+  String get connErrUnavailable => 'Este conector no está disponible ahora';
+
+  @override
+  String get connErrOauthSetup =>
+      'Este conector aún no tiene configurado el inicio de sesión';
+
+  @override
+  String get connErrBotBridgeDisabled =>
+      'El servicio de asistente personal no está configurado';
+
+  @override
+  String get connErrBotNotFound => 'No se encontró el asistente';
+
+  @override
+  String get connErrBotOwnerMismatch =>
+      'Este asistente pertenece a otro miembro';
+
+  @override
+  String get connErrMemberInactive => 'La cuenta de este miembro está inactiva';
+
+  @override
+  String oauthConnected(String name) {
+    return '$name conectado';
+  }
+
+  @override
+  String oauthErrAccessDenied(String name) {
+    return 'Rechazaste el acceso a $name';
+  }
+
+  @override
+  String oauthErrFailed(String name) {
+    return 'No se pudo conectar $name';
+  }
+
+  @override
+  String oauthNotCompleted(String name) {
+    return 'La conexión con $name no se completó';
+  }
+
+  @override
+  String get oauthErrExpired =>
+      'El inicio de sesión tardó demasiado. Inténtalo de nuevo.';
+
+  @override
+  String get tokenUsageDailyChartTitle => 'Uso diario';
+
+  @override
+  String get tokenUsageTotalInRange => 'Total del periodo seleccionado';
+
+  @override
+  String get tokenUsageQuotaBlocked =>
+      'La IA está desactivada en este espacio de trabajo';
+
+  @override
+  String get tokenUsageQuotaExceeded => 'Se alcanzó el límite mensual de IA';
+
+  @override
+  String tokenUsageQuotaResets(String date) {
+    return 'Se restablece el $date';
+  }
 }

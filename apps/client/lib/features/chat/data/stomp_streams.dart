@@ -105,7 +105,7 @@ class StompStreams {
           messageId: data['messageId'] as String,
           content: data['content'] as String?,
           editedAt: editedAt is String ? DateTime.tryParse(editedAt) : null,
-          pendingActions: data['pendingActions'] as List?,
+          pendingActions: parsePendingActions(data['pendingActions']),
         ));
         return;
       case 'CONVERSATION_UPDATED':

@@ -3,16 +3,19 @@ import '../../../../core/l10n/l10n_ext.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/widgets/pon_widgets.dart';
 import '../../data/models/connector_models.dart';
+import '../../utils/connector_labels.dart';
 
-/// Neon card for one MCP directory entry — mirrors the web `DirectoryCard`:
-/// monogram badge, name + tier/auth meta, description, 1-click Connect/Manage,
-/// and admin edit/delete actions when [isAdmin].
+/// Card for one MCP directory entry — mirrors the web `DirectoryCard`:
+/// monogram badge, name + localized tier/auth meta, description, 1-click
+/// Connect / Reconnect / Manage, and admin edit/delete actions when [isAdmin].
 class DirectoryCard extends StatelessWidget {
   final DirectoryItem item;
   final bool busy;
   final bool isAdmin;
   final VoidCallback onConnect;
-  final VoidCallback onManage;
+
+  /// Null when the caller may not disconnect this connection.
+  final VoidCallback? onManage;
   final VoidCallback? onEdit;
   final VoidCallback? onDelete;
 
@@ -60,11 +63,11 @@ class DirectoryCard extends StatelessWidget {
                       ),
                       const SizedBox(height: 2),
                       Text(
-                        '${_tierLabel(context)} · ${directoryAuthModeToString(entry.authMode)}',
+                        '${directoryTierLabel(l10n, entry.tier)} · '
+                        '${directoryAuthModeLabel(l10n, entry.authMode)}',
                         style: TextStyle(
                           color: AppTheme.mutedText(context),
-                          fontSize: 10.5,
-                          fontFamily: AppTheme.fontMono,
+                          fontSize: 12,
                         ),
                       ),
                     ],
@@ -103,8 +106,10 @@ class DirectoryCard extends StatelessWidget {
             const SizedBox(height: 14),
             _ActionRow(
               connected: connected,
+              needsReconnect: item.needsReconnect,
+              available: entry.available,
               busy: busy,
-              accountLabel: item.connection?.accountLabel,
+              meta: connectionMetaLabel(l10n, item.connection),
               onConnect: onConnect,
               onManage: onManage,
             ),
@@ -112,18 +117,6 @@ class DirectoryCard extends StatelessWidget {
         ),
       ),
     );
-  }
-
-  String _tierLabel(BuildContext context) {
-    final l10n = context.l10n;
-    switch (item.entry.tier) {
-      case DirectoryTier.workspace:
-        return l10n.tierWorkspace;
-      case DirectoryTier.personal:
-        return l10n.tierPersonal;
-      case DirectoryTier.both:
-        return l10n.tierBoth;
-    }
   }
 }
 
@@ -157,33 +150,39 @@ class _Monogram extends StatelessWidget {
 
 class _ActionRow extends StatelessWidget {
   final bool connected;
+  final bool needsReconnect;
+  final bool available;
   final bool busy;
-  final String? accountLabel;
+  final String? meta;
   final VoidCallback onConnect;
-  final VoidCallback onManage;
+  final VoidCallback? onManage;
 
   const _ActionRow({
     required this.connected,
+    required this.needsReconnect,
+    required this.available,
     required this.busy,
-    required this.accountLabel,
+    required this.meta,
     required this.onConnect,
     required this.onManage,
   });
 
   @override
   Widget build(BuildContext context) {
-    final meta = (accountLabel != null && accountLabel!.isNotEmpty)
-        ? 'remote-mcp · $accountLabel'
-        : 'remote-mcp';
+    final l10n = context.l10n;
+    final String? status = needsReconnect
+        ? l10n.connectorStatusReconnect
+        : (!connected && !available ? l10n.connectorStatusUnavailable : meta);
     return Row(
       children: [
         Expanded(
           child: Text(
-            meta,
+            status ?? '',
             style: TextStyle(
-              color: AppTheme.mutedText(context),
-              fontSize: 11,
-              fontFamily: AppTheme.fontMono,
+              color: needsReconnect
+                  ? AppTheme.warning
+                  : AppTheme.mutedText(context),
+              fontSize: 12,
             ),
             overflow: TextOverflow.ellipsis,
           ),
@@ -196,18 +195,23 @@ class _ActionRow extends StatelessWidget {
             child: CircularProgressIndicator(strokeWidth: 2),
           )
         else if (connected)
-          TextButton(
-            onPressed: onManage,
-            child: Text(context.l10n.connectorManage,
-                style: TextStyle(color: AppTheme.accent(context))),
-          )
-        else
+          (onManage == null
+              ? const SizedBox.shrink()
+              : TextButton(
+                  onPressed: onManage,
+                  child: Text(l10n.connectorManage,
+                      style: TextStyle(color: AppTheme.accent(context))),
+                ))
+        else if (available)
           Flexible(
             child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 120),
+              constraints: const BoxConstraints(maxWidth: 140),
               child: PonButton(
                 onPressed: onConnect,
-                child: Text(context.l10n.connectorConnect,
+                child: Text(
+                    needsReconnect
+                        ? l10n.connectorReconnect
+                        : l10n.connectorConnect,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: const TextStyle(fontSize: 14)),

@@ -38,8 +38,16 @@ class ToolCallEntry {
 class AiTrace {
   final List<String> thinkingBlocks;
   final List<ToolCallEntry> toolCalls;
+
+  /// TOTAL prompt tokens (prompt-cache reads and writes included).
   final int inputTokens;
   final int outputTokens;
+
+  /// Prompt-cache reads — a subset of [inputTokens].
+  final int cachedInputTokens;
+
+  /// Prompt-cache writes — a subset of [inputTokens].
+  final int cacheCreationInputTokens;
   final int thinkingTokens;
   final int processingMs;
   final String model;
@@ -50,6 +58,8 @@ class AiTrace {
     required this.toolCalls,
     required this.inputTokens,
     required this.outputTokens,
+    this.cachedInputTokens = 0,
+    this.cacheCreationInputTokens = 0,
     required this.thinkingTokens,
     required this.processingMs,
     required this.model,
@@ -63,6 +73,9 @@ class AiTrace {
             .toList(),
         inputTokens: (json['inputTokens'] as num?)?.toInt() ?? 0,
         outputTokens: (json['outputTokens'] as num?)?.toInt() ?? 0,
+        cachedInputTokens: (json['cachedInputTokens'] as num?)?.toInt() ?? 0,
+        cacheCreationInputTokens:
+            (json['cacheCreationInputTokens'] as num?)?.toInt() ?? 0,
         thinkingTokens: (json['thinkingTokens'] as num?)?.toInt() ?? 0,
         processingMs: (json['processingMs'] as num?)?.toInt() ?? 0,
         model: json['model'] as String? ?? '',

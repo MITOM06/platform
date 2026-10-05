@@ -3634,4 +3634,314 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get authErrSocialAccountConflict => '이 이메일은 이미 다른 로그인 계정에 연결되어 있습니다';
+
+  @override
+  String get aiActionConfirm => '확인';
+
+  @override
+  String get aiActionCancel => '취소';
+
+  @override
+  String get aiActionSendEmail => '이메일 보내기';
+
+  @override
+  String get aiActionDraftEmail => '이메일 초안 작성';
+
+  @override
+  String get aiActionCreateEvent => '캘린더 일정 만들기';
+
+  @override
+  String get aiActionUpdateEvent => '캘린더 일정 수정';
+
+  @override
+  String get aiActionCreatePage => '페이지 만들기';
+
+  @override
+  String get aiActionUpdatePage => '페이지 수정';
+
+  @override
+  String get aiActionGeneric => '작업 실행';
+
+  @override
+  String aiActionGenericNamed(String tool) {
+    return '“$tool” 실행';
+  }
+
+  @override
+  String aiActionVia(String connector) {
+    return '$connector 사용';
+  }
+
+  @override
+  String aiActionWaitingFor(String name) {
+    return '$name님의 확인을 기다리는 중';
+  }
+
+  @override
+  String get aiActionFieldTo => '받는 사람';
+
+  @override
+  String get aiActionFieldSubject => '제목';
+
+  @override
+  String get aiActionFieldTitle => '제목';
+
+  @override
+  String get aiActionFieldWhen => '일시';
+
+  @override
+  String get aiActionStatusConfirmed => '완료됨';
+
+  @override
+  String get aiActionStatusCancelled => '취소됨';
+
+  @override
+  String get aiActionStatusFailed => '실패';
+
+  @override
+  String get aiActionStatusExpired => '만료됨';
+
+  @override
+  String get aiActionStatusHandled => '이미 처리됨';
+
+  @override
+  String get aiActionErrNotFound => '이 작업은 더 이상 존재하지 않습니다';
+
+  @override
+  String get aiActionErrNotOwner => '요청한 사람만 확인할 수 있습니다';
+
+  @override
+  String get aiActionErrAlreadyResolved => '이 작업은 이미 처리되었습니다';
+
+  @override
+  String get aiActionErrExpired => '이 요청은 만료되었습니다';
+
+  @override
+  String get aiActionErrGeneric => '이 작업을 완료할 수 없습니다';
+
+  @override
+  String get aiToolWebSearch => '웹 검색 중';
+
+  @override
+  String get aiToolRememberFact => '기억에 저장 중';
+
+  @override
+  String get aiToolCreateReminder => '리마인더 만드는 중';
+
+  @override
+  String get aiToolGetUserInfo => '동료 정보 조회 중';
+
+  @override
+  String get aiToolSearchKnowledgeBase => '지식 베이스 검색 중';
+
+  @override
+  String get aiToolSearchMessages => '메시지 검색 중';
+
+  @override
+  String get aiToolSummarizeConversation => '대화 요약 중';
+
+  @override
+  String aiToolOnConnector(String tool, String connector) {
+    return '$connector에서 $tool';
+  }
+
+  @override
+  String get aiTraceToolAwaiting => '확인 대기 중';
+
+  @override
+  String get aiTraceToolDone => '완료';
+
+  @override
+  String get aiTraceToolNotRun => '실행 안 됨';
+
+  @override
+  String aiTraceTokens(String input, String output) {
+    return '입력 $input · 출력 $output';
+  }
+
+  @override
+  String aiTraceCacheTokens(String read, String written) {
+    return '캐시 읽기 $read · 쓰기 $written';
+  }
+
+  @override
+  String aiTraceThinkingTokens(String count) {
+    return '사고 $count';
+  }
+
+  @override
+  String aiTraceDuration(String seconds) {
+    return '$seconds초';
+  }
+
+  @override
+  String aiTraceSteps(int count) {
+    return '$count단계';
+  }
+
+  @override
+  String get connectorGenericName => '커넥터';
+
+  @override
+  String get connectorCustomName => '사용자 지정 MCP 서버';
+
+  @override
+  String get connectorReconnect => '다시 연결';
+
+  @override
+  String get connectorStatusReconnect => '다시 연결해야 합니다';
+
+  @override
+  String get connectorStatusUnavailable => '사용할 수 없음';
+
+  @override
+  String get connectorDisconnectWorkspaceConfirm =>
+      '이 워크스페이스 커넥터의 연결을 끊을까요? 워크스페이스의 모든 사람이 해당 도구를 사용할 수 없게 됩니다.';
+
+  @override
+  String connectorDisconnected(String name) {
+    return '$name 연결을 끊었습니다';
+  }
+
+  @override
+  String get customMcpListTitle => '내 MCP 서버';
+
+  @override
+  String get customMcpDelete => '삭제';
+
+  @override
+  String get customMcpDeleteConfirm =>
+      '이 MCP 서버를 삭제할까요? AI가 더 이상 해당 도구를 사용하지 않습니다.';
+
+  @override
+  String customMcpDeleted(String name) {
+    return '$name을(를) 삭제했습니다';
+  }
+
+  @override
+  String get directoryDeleteConfirm => '이 디렉터리 항목을 삭제할까요?';
+
+  @override
+  String get directoryAuthOauth => 'OAuth 로그인';
+
+  @override
+  String get directoryAuthMcpOauth => 'OAuth (MCP 서버)';
+
+  @override
+  String get directoryAuthEnvOauth => 'OAuth (워크스페이스 앱)';
+
+  @override
+  String get directoryAuthApiKey => 'API 키';
+
+  @override
+  String get directoryAuthNone => '로그인 필요 없음';
+
+  @override
+  String get scopeEmailSend => '이메일 보내기';
+
+  @override
+  String get scopeEmailDraft => '초안 만들기';
+
+  @override
+  String get scopeEmailRead => '이메일 읽기';
+
+  @override
+  String get scopeEmailManage => '이메일 관리';
+
+  @override
+  String get scopeCalendarRead => '캘린더 보기';
+
+  @override
+  String get scopeCalendarEvents => '일정 관리';
+
+  @override
+  String get scopeCalendarManage => '캘린더 관리';
+
+  @override
+  String get scopeFilesRead => '파일 읽기';
+
+  @override
+  String get scopeFilesManage => '파일 관리';
+
+  @override
+  String get scopeReadContent => '콘텐츠 읽기';
+
+  @override
+  String get scopeInsertContent => '콘텐츠 추가';
+
+  @override
+  String get scopeUpdateContent => '콘텐츠 수정';
+
+  @override
+  String get scopeOther => '기타 권한';
+
+  @override
+  String get connErrUnsafeUrl => '허용되지 않는 주소입니다. 공개 https URL을 사용하세요.';
+
+  @override
+  String get connErrDiscoveryFailed => '해당 MCP 서버에 연결할 수 없습니다';
+
+  @override
+  String get connErrInsufficientPermission => '이 작업을 할 권한이 없습니다';
+
+  @override
+  String get connErrNotAllowed => '이 커넥터는 워크스페이스에서 허용되지 않습니다';
+
+  @override
+  String get connErrUnavailable => '이 커넥터는 지금 사용할 수 없습니다';
+
+  @override
+  String get connErrOauthSetup => '이 커넥터는 아직 로그인이 설정되지 않았습니다';
+
+  @override
+  String get connErrBotBridgeDisabled => '개인 비서 서비스가 설정되지 않았습니다';
+
+  @override
+  String get connErrBotNotFound => '비서를 찾을 수 없습니다';
+
+  @override
+  String get connErrBotOwnerMismatch => '이 비서는 다른 멤버의 것입니다';
+
+  @override
+  String get connErrMemberInactive => '이 멤버의 계정은 비활성 상태입니다';
+
+  @override
+  String oauthConnected(String name) {
+    return '$name에 연결되었습니다';
+  }
+
+  @override
+  String oauthErrAccessDenied(String name) {
+    return '$name 접근을 거부했습니다';
+  }
+
+  @override
+  String oauthErrFailed(String name) {
+    return '$name에 연결할 수 없습니다';
+  }
+
+  @override
+  String oauthNotCompleted(String name) {
+    return '$name 연결이 완료되지 않았습니다';
+  }
+
+  @override
+  String get oauthErrExpired => '로그인 시간이 너무 오래 걸렸습니다. 다시 시도하세요.';
+
+  @override
+  String get tokenUsageDailyChartTitle => '일별 사용량';
+
+  @override
+  String get tokenUsageTotalInRange => '선택한 기간의 합계';
+
+  @override
+  String get tokenUsageQuotaBlocked => '이 워크스페이스에서는 AI가 꺼져 있습니다';
+
+  @override
+  String get tokenUsageQuotaExceeded => '이번 달 AI 한도에 도달했습니다';
+
+  @override
+  String tokenUsageQuotaResets(String date) {
+    return '$date에 초기화';
+  }
 }

@@ -8,6 +8,7 @@ import '../../ai_context/domain/ai_context_providers.dart';
 import '../../assistant/state/assistant_provider.dart';
 import '../../chat/data/stomp_service.dart';
 import '../../chat/domain/active_call_provider.dart';
+import '../../chat/domain/ai_actions_provider.dart';
 import '../../chat/domain/ai_memory_provider.dart';
 import '../../chat/domain/ai_persona_provider.dart';
 import '../../chat/domain/ai_session_provider.dart';
@@ -18,7 +19,9 @@ import '../../friends/domain/friends_provider.dart';
 import '../../home/domain/home_providers.dart';
 import '../../integrations/state/integrations_provider.dart';
 import '../../notifications/domain/notifications_provider.dart';
+import '../../integrations/state/oauth_flow_provider.dart';
 import '../../reminders/reminder_provider.dart';
+import '../../settings/domain/ai_quota_provider.dart';
 import '../../skills/state/skills_provider.dart';
 
 /// Drops every piece of state that belongs to the signed-in account.
@@ -69,8 +72,15 @@ void resetSessionState(Ref ref) {
     () => ref.invalidate(aiSessionsProvider),
     () => ref.invalidate(myAiContextProvider),
     () => ref.invalidate(kbDocumentsProvider),
+    () => ref.invalidate(aiActionsProvider),
+    () => ref.invalidate(aiQuotaProvider),
+    () => ref.invalidate(connectionsProvider),
+    () => ref.invalidate(connectorCatalogProvider),
+    () => ref.invalidate(directoryEntriesProvider),
     () => ref.invalidate(integrationsProvider),
     () => ref.invalidate(directoryProvider),
+    () => ref.invalidate(customMcpProvider),
+    () => ref.invalidate(oauthFlowProvider),
     () => ref.invalidate(skillsProvider),
   ]) {
     invalidate();
@@ -90,7 +100,11 @@ void invalidateClaimsDependentState(Ref ref) {
   ref.invalidate(auditLogProvider);
   ref.invalidate(usageDashboardProvider);
   ref.invalidate(myAiContextProvider);
-  ref.invalidate(integrationsProvider);
-  ref.invalidate(directoryProvider);
+  ref.invalidate(aiQuotaProvider);
+  // Connector governance (allow-list, workspace connections) follows the role.
+  ref.invalidate(connectionsProvider);
+  ref.invalidate(connectorCatalogProvider);
+  ref.invalidate(directoryEntriesProvider);
+  ref.invalidate(customMcpProvider);
   ref.invalidate(skillsProvider);
 }

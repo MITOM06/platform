@@ -3635,4 +3635,313 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get authErrSocialAccountConflict => 'このメールは別のサインインアカウントに既にリンクされています';
+
+  @override
+  String get aiActionConfirm => '確認';
+
+  @override
+  String get aiActionCancel => 'キャンセル';
+
+  @override
+  String get aiActionSendEmail => 'メールを送信';
+
+  @override
+  String get aiActionDraftEmail => 'メールの下書き';
+
+  @override
+  String get aiActionCreateEvent => 'カレンダーの予定を作成';
+
+  @override
+  String get aiActionUpdateEvent => 'カレンダーの予定を更新';
+
+  @override
+  String get aiActionCreatePage => 'ページを作成';
+
+  @override
+  String get aiActionUpdatePage => 'ページを更新';
+
+  @override
+  String get aiActionGeneric => '操作を実行';
+
+  @override
+  String aiActionGenericNamed(String tool) {
+    return '「$tool」を実行';
+  }
+
+  @override
+  String aiActionVia(String connector) {
+    return '$connector 経由';
+  }
+
+  @override
+  String aiActionWaitingFor(String name) {
+    return '$name の確認待ち';
+  }
+
+  @override
+  String get aiActionFieldTo => '宛先';
+
+  @override
+  String get aiActionFieldSubject => '件名';
+
+  @override
+  String get aiActionFieldTitle => 'タイトル';
+
+  @override
+  String get aiActionFieldWhen => '日時';
+
+  @override
+  String get aiActionStatusConfirmed => '完了';
+
+  @override
+  String get aiActionStatusCancelled => 'キャンセル済み';
+
+  @override
+  String get aiActionStatusFailed => '失敗';
+
+  @override
+  String get aiActionStatusExpired => '期限切れ';
+
+  @override
+  String get aiActionStatusHandled => '処理済み';
+
+  @override
+  String get aiActionErrNotFound => 'この操作はもう存在しません';
+
+  @override
+  String get aiActionErrNotOwner => '依頼した本人だけが確認できます';
+
+  @override
+  String get aiActionErrAlreadyResolved => 'この操作はすでに処理されています';
+
+  @override
+  String get aiActionErrExpired => 'このリクエストは期限切れです';
+
+  @override
+  String get aiActionErrGeneric => 'この操作を完了できませんでした';
+
+  @override
+  String get aiToolWebSearch => 'ウェブを検索中';
+
+  @override
+  String get aiToolRememberFact => '記憶に保存中';
+
+  @override
+  String get aiToolCreateReminder => 'リマインダーを作成中';
+
+  @override
+  String get aiToolGetUserInfo => '同僚を検索中';
+
+  @override
+  String get aiToolSearchKnowledgeBase => 'ナレッジベースを検索中';
+
+  @override
+  String get aiToolSearchMessages => 'メッセージを検索中';
+
+  @override
+  String get aiToolSummarizeConversation => '会話を要約中';
+
+  @override
+  String aiToolOnConnector(String tool, String connector) {
+    return '$connector で$tool';
+  }
+
+  @override
+  String get aiTraceToolAwaiting => '確認待ち';
+
+  @override
+  String get aiTraceToolDone => '完了';
+
+  @override
+  String get aiTraceToolNotRun => '未実行';
+
+  @override
+  String aiTraceTokens(String input, String output) {
+    return '入力 $input · 出力 $output';
+  }
+
+  @override
+  String aiTraceCacheTokens(String read, String written) {
+    return 'キャッシュ 読込 $read · 書込 $written';
+  }
+
+  @override
+  String aiTraceThinkingTokens(String count) {
+    return '思考 $count';
+  }
+
+  @override
+  String aiTraceDuration(String seconds) {
+    return '$seconds 秒';
+  }
+
+  @override
+  String aiTraceSteps(int count) {
+    return '$count ステップ';
+  }
+
+  @override
+  String get connectorGenericName => 'コネクタ';
+
+  @override
+  String get connectorCustomName => 'カスタム MCP サーバー';
+
+  @override
+  String get connectorReconnect => '再接続';
+
+  @override
+  String get connectorStatusReconnect => '再接続が必要です';
+
+  @override
+  String get connectorStatusUnavailable => '利用できません';
+
+  @override
+  String get connectorDisconnectWorkspaceConfirm =>
+      'このワークスペースのコネクタを切断しますか？ワークスペース全員がそのツールを使えなくなります。';
+
+  @override
+  String connectorDisconnected(String name) {
+    return '$name を切断しました';
+  }
+
+  @override
+  String get customMcpListTitle => 'あなたの MCP サーバー';
+
+  @override
+  String get customMcpDelete => '削除';
+
+  @override
+  String get customMcpDeleteConfirm => 'この MCP サーバーを削除しますか？AI はそのツールを使わなくなります。';
+
+  @override
+  String customMcpDeleted(String name) {
+    return '$name を削除しました';
+  }
+
+  @override
+  String get directoryDeleteConfirm => 'このディレクトリ項目を削除しますか？';
+
+  @override
+  String get directoryAuthOauth => 'OAuth サインイン';
+
+  @override
+  String get directoryAuthMcpOauth => 'OAuth（MCP サーバー）';
+
+  @override
+  String get directoryAuthEnvOauth => 'OAuth（ワークスペースのアプリ）';
+
+  @override
+  String get directoryAuthApiKey => 'API キー';
+
+  @override
+  String get directoryAuthNone => 'サインイン不要';
+
+  @override
+  String get scopeEmailSend => 'メールの送信';
+
+  @override
+  String get scopeEmailDraft => '下書きの作成';
+
+  @override
+  String get scopeEmailRead => 'メールの閲覧';
+
+  @override
+  String get scopeEmailManage => 'メールの管理';
+
+  @override
+  String get scopeCalendarRead => 'カレンダーの閲覧';
+
+  @override
+  String get scopeCalendarEvents => '予定の管理';
+
+  @override
+  String get scopeCalendarManage => 'カレンダーの管理';
+
+  @override
+  String get scopeFilesRead => 'ファイルの閲覧';
+
+  @override
+  String get scopeFilesManage => 'ファイルの管理';
+
+  @override
+  String get scopeReadContent => 'コンテンツの閲覧';
+
+  @override
+  String get scopeInsertContent => 'コンテンツの追加';
+
+  @override
+  String get scopeUpdateContent => 'コンテンツの編集';
+
+  @override
+  String get scopeOther => 'その他のアクセス';
+
+  @override
+  String get connErrUnsafeUrl => 'このアドレスは使用できません。公開されている https の URL を使ってください。';
+
+  @override
+  String get connErrDiscoveryFailed => 'その MCP サーバーに接続できませんでした';
+
+  @override
+  String get connErrInsufficientPermission => 'この操作を行う権限がありません';
+
+  @override
+  String get connErrNotAllowed => 'このコネクタはワークスペースで許可されていません';
+
+  @override
+  String get connErrUnavailable => 'このコネクタは現在利用できません';
+
+  @override
+  String get connErrOauthSetup => 'このコネクタはまだサインインが設定されていません';
+
+  @override
+  String get connErrBotBridgeDisabled => 'パーソナルアシスタントのサービスが設定されていません';
+
+  @override
+  String get connErrBotNotFound => 'アシスタントが見つかりません';
+
+  @override
+  String get connErrBotOwnerMismatch => 'このアシスタントは別のメンバーのものです';
+
+  @override
+  String get connErrMemberInactive => 'このメンバーのアカウントは無効です';
+
+  @override
+  String oauthConnected(String name) {
+    return '$name に接続しました';
+  }
+
+  @override
+  String oauthErrAccessDenied(String name) {
+    return '$name へのアクセスを拒否しました';
+  }
+
+  @override
+  String oauthErrFailed(String name) {
+    return '$name に接続できませんでした';
+  }
+
+  @override
+  String oauthNotCompleted(String name) {
+    return '$name の接続が完了していません';
+  }
+
+  @override
+  String get oauthErrExpired => 'サインインに時間がかかりすぎました。もう一度お試しください。';
+
+  @override
+  String get tokenUsageDailyChartTitle => '日別の使用量';
+
+  @override
+  String get tokenUsageTotalInRange => '選択期間の合計';
+
+  @override
+  String get tokenUsageQuotaBlocked => 'このワークスペースでは AI がオフになっています';
+
+  @override
+  String get tokenUsageQuotaExceeded => '今月の AI 上限に達しました';
+
+  @override
+  String tokenUsageQuotaResets(String date) {
+    return '$date にリセット';
+  }
 }

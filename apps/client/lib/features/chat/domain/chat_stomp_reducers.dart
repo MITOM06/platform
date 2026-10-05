@@ -60,17 +60,22 @@ class ChatStompReducers {
 
   /// Apply a MESSAGE_UPDATED to the matching message (and, for a real edit,
   /// to the reply quotes of it). An update without `editedAt` (AI
-  /// pending-action status) never marks the message as edited.
+  /// pending-action status) never marks the message as edited; its
+  /// `pendingActions` list is authoritative for the confirmation cards.
   static List<MessageModel> applyEdit(
     List<MessageModel> messages,
     MessageUpdateEvent event,
   ) {
     final content = event.content;
+    final actions = event.pendingActions;
     return messages.map((m) {
       if (m.id == event.messageId) {
         return m.copyWith(
           content: event.isEdit ? content : null,
           editedAt: event.editedAt,
+          pendingActions: actions == null
+              ? null
+              : applyServerPendingActions(m.pendingActions, actions),
         );
       }
       final quote = m.replyPreview;
@@ -111,6 +116,11 @@ class ChatStompReducers {
         ..[existingIdx] = message.copyWith(
           sources: message.sources ?? existing.sources,
           trace: message.trace ?? existing.trace,
+          // The incoming copy is the newer server state of the cards.
+          pendingActions: message.pendingActions == null
+              ? existing.pendingActions
+              : applyServerPendingActions(
+                  existing.pendingActions, message.pendingActions!),
         );
     }
 

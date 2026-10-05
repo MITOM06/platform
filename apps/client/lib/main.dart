@@ -17,11 +17,13 @@ import 'core/utils/app_error.dart';
 import 'core/utils/global_messenger.dart';
 import 'features/auth/domain/auth_provider.dart';
 import 'features/auth/domain/auth_state.dart';
+import 'features/admin/state/capabilities_provider.dart';
 import 'features/auth/domain/invitation_preview.dart';
 import 'features/chat/data/stomp_service.dart';
 import 'features/chat/domain/conversations_realtime_handlers.dart'
     show displayableSenderName;
 import 'features/chat/ui/widgets/incoming_group_call_prompt.dart';
+import 'features/integrations/state/oauth_flow_provider.dart';
 import 'features/notifications/domain/notifications_provider.dart';
 import 'firebase_options.dart';
 import 'l10n/app_localizations.dart';
@@ -177,6 +179,8 @@ class _PlatformAppState extends ConsumerState<PlatformApp>
       stomp.disconnect();
     } else if (state == AppLifecycleState.resumed) {
       _reconnectStomp();
+      // Back from a connector's OAuth page in the browser: report the result.
+      ref.read(oauthFlowProvider.notifier).onResume();
     }
   }
 
@@ -192,6 +196,9 @@ class _PlatformAppState extends ConsumerState<PlatformApp>
     }
     // Pick up notifications that arrived while the app was in background.
     ref.read(notificationsProvider.notifier).refreshSilently();
+    // Role / permission changes made while backgrounded: menus must follow
+    // without a re-login (a CLAIMS_CHANGED may have been missed offline).
+    ref.read(capabilitiesProvider.notifier).refreshSilently();
   }
 
   /// Show a local notification for foreground FCM messages when STOMP is not
@@ -256,6 +263,12 @@ class _PlatformAppState extends ConsumerState<PlatformApp>
       final code = uri.queryParameters['code'];
       if (code != null && code.isNotEmpty) {
         ref.read(authNotifierProvider.notifier).loginWithCode(code);
+      }
+    } else if (uri.host == 'integrations') {
+      // Connector OAuth return, if the deployment redirects to the app:
+      // platform://integrations?connected=<slug> | ?error=<CODE>&provider=<slug>.
+      if (ref.read(authNotifierProvider).valueOrNull is AuthAuthenticated) {
+        ref.read(oauthFlowProvider.notifier).onDeepLink(uri);
       }
     } else if (uri.host == 'invite') {
       // "Open in the PON app" from the web invite page.

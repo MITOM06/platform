@@ -3745,4 +3745,326 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get authErrSocialAccountConflict =>
       'This email is already linked to a different sign-in account';
+
+  @override
+  String get aiActionConfirm => 'Confirm';
+
+  @override
+  String get aiActionCancel => 'Cancel';
+
+  @override
+  String get aiActionSendEmail => 'Send email';
+
+  @override
+  String get aiActionDraftEmail => 'Draft email';
+
+  @override
+  String get aiActionCreateEvent => 'Create calendar event';
+
+  @override
+  String get aiActionUpdateEvent => 'Update calendar event';
+
+  @override
+  String get aiActionCreatePage => 'Create page';
+
+  @override
+  String get aiActionUpdatePage => 'Update page';
+
+  @override
+  String get aiActionGeneric => 'Run an action';
+
+  @override
+  String aiActionGenericNamed(String tool) {
+    return 'Run “$tool”';
+  }
+
+  @override
+  String aiActionVia(String connector) {
+    return 'via $connector';
+  }
+
+  @override
+  String aiActionWaitingFor(String name) {
+    return 'Waiting for $name to confirm';
+  }
+
+  @override
+  String get aiActionFieldTo => 'To';
+
+  @override
+  String get aiActionFieldSubject => 'Subject';
+
+  @override
+  String get aiActionFieldTitle => 'Title';
+
+  @override
+  String get aiActionFieldWhen => 'When';
+
+  @override
+  String get aiActionStatusConfirmed => 'Done';
+
+  @override
+  String get aiActionStatusCancelled => 'Cancelled';
+
+  @override
+  String get aiActionStatusFailed => 'Failed';
+
+  @override
+  String get aiActionStatusExpired => 'Expired';
+
+  @override
+  String get aiActionStatusHandled => 'Already handled';
+
+  @override
+  String get aiActionErrNotFound => 'This action no longer exists';
+
+  @override
+  String get aiActionErrNotOwner =>
+      'Only the person who asked can confirm this';
+
+  @override
+  String get aiActionErrAlreadyResolved => 'This action was already handled';
+
+  @override
+  String get aiActionErrExpired => 'This request expired';
+
+  @override
+  String get aiActionErrGeneric => 'Couldn’t complete this action';
+
+  @override
+  String get aiToolWebSearch => 'Searching the web';
+
+  @override
+  String get aiToolRememberFact => 'Saving to memory';
+
+  @override
+  String get aiToolCreateReminder => 'Creating a reminder';
+
+  @override
+  String get aiToolGetUserInfo => 'Looking up a colleague';
+
+  @override
+  String get aiToolSearchKnowledgeBase => 'Searching the knowledge base';
+
+  @override
+  String get aiToolSearchMessages => 'Searching messages';
+
+  @override
+  String get aiToolSummarizeConversation => 'Summarizing the conversation';
+
+  @override
+  String aiToolOnConnector(String tool, String connector) {
+    return '$tool on $connector';
+  }
+
+  @override
+  String get aiTraceToolAwaiting => 'Awaiting confirmation';
+
+  @override
+  String get aiTraceToolDone => 'Done';
+
+  @override
+  String get aiTraceToolNotRun => 'Not run';
+
+  @override
+  String aiTraceTokens(String input, String output) {
+    return '$input in · $output out';
+  }
+
+  @override
+  String aiTraceCacheTokens(String read, String written) {
+    return 'cache $read read · $written written';
+  }
+
+  @override
+  String aiTraceThinkingTokens(String count) {
+    return '$count thinking';
+  }
+
+  @override
+  String aiTraceDuration(String seconds) {
+    return '${seconds}s';
+  }
+
+  @override
+  String aiTraceSteps(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count steps',
+      one: '1 step',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get connectorGenericName => 'Connector';
+
+  @override
+  String get connectorCustomName => 'Custom MCP server';
+
+  @override
+  String get connectorReconnect => 'Reconnect';
+
+  @override
+  String get connectorStatusReconnect => 'Reconnect needed';
+
+  @override
+  String get connectorStatusUnavailable => 'Unavailable';
+
+  @override
+  String get connectorDisconnectWorkspaceConfirm =>
+      'Disconnect this workspace connector? Everyone in the workspace loses access to its tools.';
+
+  @override
+  String connectorDisconnected(String name) {
+    return '$name disconnected';
+  }
+
+  @override
+  String get customMcpListTitle => 'Your MCP servers';
+
+  @override
+  String get customMcpDelete => 'Remove';
+
+  @override
+  String get customMcpDeleteConfirm =>
+      'Remove this MCP server? The AI will no longer use its tools.';
+
+  @override
+  String customMcpDeleted(String name) {
+    return '$name removed';
+  }
+
+  @override
+  String get directoryDeleteConfirm => 'Delete this directory entry?';
+
+  @override
+  String get directoryAuthOauth => 'OAuth sign-in';
+
+  @override
+  String get directoryAuthMcpOauth => 'OAuth (MCP server)';
+
+  @override
+  String get directoryAuthEnvOauth => 'OAuth (workspace app)';
+
+  @override
+  String get directoryAuthApiKey => 'API key';
+
+  @override
+  String get directoryAuthNone => 'No sign-in needed';
+
+  @override
+  String get scopeEmailSend => 'Send email';
+
+  @override
+  String get scopeEmailDraft => 'Create drafts';
+
+  @override
+  String get scopeEmailRead => 'Read email';
+
+  @override
+  String get scopeEmailManage => 'Manage email';
+
+  @override
+  String get scopeCalendarRead => 'Read calendar';
+
+  @override
+  String get scopeCalendarEvents => 'Manage events';
+
+  @override
+  String get scopeCalendarManage => 'Manage calendars';
+
+  @override
+  String get scopeFilesRead => 'Read files';
+
+  @override
+  String get scopeFilesManage => 'Manage files';
+
+  @override
+  String get scopeReadContent => 'Read content';
+
+  @override
+  String get scopeInsertContent => 'Add content';
+
+  @override
+  String get scopeUpdateContent => 'Edit content';
+
+  @override
+  String get scopeOther => 'Other access';
+
+  @override
+  String get connErrUnsafeUrl =>
+      'That address isn’t allowed. Use a public https URL.';
+
+  @override
+  String get connErrDiscoveryFailed => 'Couldn’t reach that MCP server';
+
+  @override
+  String get connErrInsufficientPermission =>
+      'You don’t have permission to do this';
+
+  @override
+  String get connErrNotAllowed =>
+      'This connector isn’t allowed in your workspace';
+
+  @override
+  String get connErrUnavailable => 'This connector is unavailable right now';
+
+  @override
+  String get connErrOauthSetup => 'This connector isn’t set up for sign-in yet';
+
+  @override
+  String get connErrBotBridgeDisabled =>
+      'The personal assistant service isn’t configured';
+
+  @override
+  String get connErrBotNotFound => 'Assistant not found';
+
+  @override
+  String get connErrBotOwnerMismatch =>
+      'This assistant belongs to another member';
+
+  @override
+  String get connErrMemberInactive => 'This member’s account is inactive';
+
+  @override
+  String oauthConnected(String name) {
+    return '$name connected';
+  }
+
+  @override
+  String oauthErrAccessDenied(String name) {
+    return 'You declined access to $name';
+  }
+
+  @override
+  String oauthErrFailed(String name) {
+    return 'Couldn’t connect $name';
+  }
+
+  @override
+  String oauthNotCompleted(String name) {
+    return 'Connecting $name wasn’t completed';
+  }
+
+  @override
+  String get oauthErrExpired => 'The sign-in took too long. Please try again.';
+
+  @override
+  String get tokenUsageDailyChartTitle => 'Daily usage';
+
+  @override
+  String get tokenUsageTotalInRange => 'Total in the selected range';
+
+  @override
+  String get tokenUsageQuotaBlocked => 'AI is turned off for this workspace';
+
+  @override
+  String get tokenUsageQuotaExceeded => 'Monthly AI limit reached';
+
+  @override
+  String tokenUsageQuotaResets(String date) {
+    return 'Resets on $date';
+  }
 }

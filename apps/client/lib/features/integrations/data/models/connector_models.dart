@@ -89,6 +89,10 @@ class ConnectionView {
   final String id;
   final String provider;
   final ConnectionStatus status;
+
+  /// `personal` (only its owner) or `workspace` (shared org-wide; deleting it
+  /// needs CONNECT_WORKSPACE_CONNECTOR).
+  final String scope;
   final List<String> scopes;
   final String? accountLabel;
   final DateTime? lastUsedAt;
@@ -101,6 +105,7 @@ class ConnectionView {
     required this.id,
     required this.provider,
     required this.status,
+    this.scope = 'personal',
     required this.scopes,
     required this.accountLabel,
     required this.lastUsedAt,
@@ -111,6 +116,7 @@ class ConnectionView {
         id: json['id'] as String? ?? json['_id'] as String,
         provider: json['provider'] as String,
         status: _statusFromString(json['status'] as String?),
+        scope: json['scope'] as String? ?? 'personal',
         scopes: (json['scopes'] as List<dynamic>? ?? const [])
             .map((e) => e as String)
             .toList(),
@@ -126,6 +132,11 @@ class ConnectionView {
       );
 
   bool get isActive => status == ConnectionStatus.active;
+
+  /// The refresh token died — the user must reconnect.
+  bool get needsReconnect => status == ConnectionStatus.expired;
+
+  bool get isWorkspace => scope == 'workspace';
 }
 
 /// A tool preview returned by `POST /custom-mcp/discover`.
@@ -151,6 +162,9 @@ class ConnectorItem {
   const ConnectorItem({required this.entry, this.connection});
 
   bool get isConnected => connection?.isActive ?? false;
+
+  /// Connected once, but the grant expired — show "reconnect".
+  bool get needsReconnect => connection?.needsReconnect ?? false;
 
   /// The connected connection's granted AI action groups, or all four when not
   /// connected.
@@ -271,6 +285,9 @@ class DirectoryItem {
   const DirectoryItem({required this.entry, this.connection});
 
   bool get isConnected => connection?.isActive ?? false;
+
+  /// Connected once, but the grant expired — show "reconnect".
+  bool get needsReconnect => connection?.needsReconnect ?? false;
 }
 
 /// Result of `GET /oauth/directory/:slug/start` — varies by auth mode.

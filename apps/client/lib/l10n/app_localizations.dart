@@ -6888,6 +6888,558 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'This email is already linked to a different sign-in account'**
   String get authErrSocialAccountConflict;
+
+  /// No description provided for @aiActionConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm'**
+  String get aiActionConfirm;
+
+  /// No description provided for @aiActionCancel.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get aiActionCancel;
+
+  /// No description provided for @aiActionSendEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'Send email'**
+  String get aiActionSendEmail;
+
+  /// No description provided for @aiActionDraftEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'Draft email'**
+  String get aiActionDraftEmail;
+
+  /// No description provided for @aiActionCreateEvent.
+  ///
+  /// In en, this message translates to:
+  /// **'Create calendar event'**
+  String get aiActionCreateEvent;
+
+  /// No description provided for @aiActionUpdateEvent.
+  ///
+  /// In en, this message translates to:
+  /// **'Update calendar event'**
+  String get aiActionUpdateEvent;
+
+  /// No description provided for @aiActionCreatePage.
+  ///
+  /// In en, this message translates to:
+  /// **'Create page'**
+  String get aiActionCreatePage;
+
+  /// No description provided for @aiActionUpdatePage.
+  ///
+  /// In en, this message translates to:
+  /// **'Update page'**
+  String get aiActionUpdatePage;
+
+  /// No description provided for @aiActionGeneric.
+  ///
+  /// In en, this message translates to:
+  /// **'Run an action'**
+  String get aiActionGeneric;
+
+  /// No description provided for @aiActionGenericNamed.
+  ///
+  /// In en, this message translates to:
+  /// **'Run “{tool}”'**
+  String aiActionGenericNamed(String tool);
+
+  /// No description provided for @aiActionVia.
+  ///
+  /// In en, this message translates to:
+  /// **'via {connector}'**
+  String aiActionVia(String connector);
+
+  /// No description provided for @aiActionWaitingFor.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting for {name} to confirm'**
+  String aiActionWaitingFor(String name);
+
+  /// No description provided for @aiActionFieldTo.
+  ///
+  /// In en, this message translates to:
+  /// **'To'**
+  String get aiActionFieldTo;
+
+  /// No description provided for @aiActionFieldSubject.
+  ///
+  /// In en, this message translates to:
+  /// **'Subject'**
+  String get aiActionFieldSubject;
+
+  /// No description provided for @aiActionFieldTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Title'**
+  String get aiActionFieldTitle;
+
+  /// No description provided for @aiActionFieldWhen.
+  ///
+  /// In en, this message translates to:
+  /// **'When'**
+  String get aiActionFieldWhen;
+
+  /// No description provided for @aiActionStatusConfirmed.
+  ///
+  /// In en, this message translates to:
+  /// **'Done'**
+  String get aiActionStatusConfirmed;
+
+  /// No description provided for @aiActionStatusCancelled.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancelled'**
+  String get aiActionStatusCancelled;
+
+  /// No description provided for @aiActionStatusFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed'**
+  String get aiActionStatusFailed;
+
+  /// No description provided for @aiActionStatusExpired.
+  ///
+  /// In en, this message translates to:
+  /// **'Expired'**
+  String get aiActionStatusExpired;
+
+  /// No description provided for @aiActionStatusHandled.
+  ///
+  /// In en, this message translates to:
+  /// **'Already handled'**
+  String get aiActionStatusHandled;
+
+  /// No description provided for @aiActionErrNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'This action no longer exists'**
+  String get aiActionErrNotFound;
+
+  /// No description provided for @aiActionErrNotOwner.
+  ///
+  /// In en, this message translates to:
+  /// **'Only the person who asked can confirm this'**
+  String get aiActionErrNotOwner;
+
+  /// No description provided for @aiActionErrAlreadyResolved.
+  ///
+  /// In en, this message translates to:
+  /// **'This action was already handled'**
+  String get aiActionErrAlreadyResolved;
+
+  /// No description provided for @aiActionErrExpired.
+  ///
+  /// In en, this message translates to:
+  /// **'This request expired'**
+  String get aiActionErrExpired;
+
+  /// No description provided for @aiActionErrGeneric.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn’t complete this action'**
+  String get aiActionErrGeneric;
+
+  /// No description provided for @aiToolWebSearch.
+  ///
+  /// In en, this message translates to:
+  /// **'Searching the web'**
+  String get aiToolWebSearch;
+
+  /// No description provided for @aiToolRememberFact.
+  ///
+  /// In en, this message translates to:
+  /// **'Saving to memory'**
+  String get aiToolRememberFact;
+
+  /// No description provided for @aiToolCreateReminder.
+  ///
+  /// In en, this message translates to:
+  /// **'Creating a reminder'**
+  String get aiToolCreateReminder;
+
+  /// No description provided for @aiToolGetUserInfo.
+  ///
+  /// In en, this message translates to:
+  /// **'Looking up a colleague'**
+  String get aiToolGetUserInfo;
+
+  /// No description provided for @aiToolSearchKnowledgeBase.
+  ///
+  /// In en, this message translates to:
+  /// **'Searching the knowledge base'**
+  String get aiToolSearchKnowledgeBase;
+
+  /// No description provided for @aiToolSearchMessages.
+  ///
+  /// In en, this message translates to:
+  /// **'Searching messages'**
+  String get aiToolSearchMessages;
+
+  /// No description provided for @aiToolSummarizeConversation.
+  ///
+  /// In en, this message translates to:
+  /// **'Summarizing the conversation'**
+  String get aiToolSummarizeConversation;
+
+  /// No description provided for @aiToolOnConnector.
+  ///
+  /// In en, this message translates to:
+  /// **'{tool} on {connector}'**
+  String aiToolOnConnector(String tool, String connector);
+
+  /// No description provided for @aiTraceToolAwaiting.
+  ///
+  /// In en, this message translates to:
+  /// **'Awaiting confirmation'**
+  String get aiTraceToolAwaiting;
+
+  /// No description provided for @aiTraceToolDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Done'**
+  String get aiTraceToolDone;
+
+  /// No description provided for @aiTraceToolNotRun.
+  ///
+  /// In en, this message translates to:
+  /// **'Not run'**
+  String get aiTraceToolNotRun;
+
+  /// No description provided for @aiTraceTokens.
+  ///
+  /// In en, this message translates to:
+  /// **'{input} in · {output} out'**
+  String aiTraceTokens(String input, String output);
+
+  /// No description provided for @aiTraceCacheTokens.
+  ///
+  /// In en, this message translates to:
+  /// **'cache {read} read · {written} written'**
+  String aiTraceCacheTokens(String read, String written);
+
+  /// No description provided for @aiTraceThinkingTokens.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} thinking'**
+  String aiTraceThinkingTokens(String count);
+
+  /// No description provided for @aiTraceDuration.
+  ///
+  /// In en, this message translates to:
+  /// **'{seconds}s'**
+  String aiTraceDuration(String seconds);
+
+  /// No description provided for @aiTraceSteps.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 step} other{{count} steps}}'**
+  String aiTraceSteps(int count);
+
+  /// No description provided for @connectorGenericName.
+  ///
+  /// In en, this message translates to:
+  /// **'Connector'**
+  String get connectorGenericName;
+
+  /// No description provided for @connectorCustomName.
+  ///
+  /// In en, this message translates to:
+  /// **'Custom MCP server'**
+  String get connectorCustomName;
+
+  /// No description provided for @connectorReconnect.
+  ///
+  /// In en, this message translates to:
+  /// **'Reconnect'**
+  String get connectorReconnect;
+
+  /// No description provided for @connectorStatusReconnect.
+  ///
+  /// In en, this message translates to:
+  /// **'Reconnect needed'**
+  String get connectorStatusReconnect;
+
+  /// No description provided for @connectorStatusUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Unavailable'**
+  String get connectorStatusUnavailable;
+
+  /// No description provided for @connectorDisconnectWorkspaceConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Disconnect this workspace connector? Everyone in the workspace loses access to its tools.'**
+  String get connectorDisconnectWorkspaceConfirm;
+
+  /// No description provided for @connectorDisconnected.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} disconnected'**
+  String connectorDisconnected(String name);
+
+  /// No description provided for @customMcpListTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Your MCP servers'**
+  String get customMcpListTitle;
+
+  /// No description provided for @customMcpDelete.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove'**
+  String get customMcpDelete;
+
+  /// No description provided for @customMcpDeleteConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove this MCP server? The AI will no longer use its tools.'**
+  String get customMcpDeleteConfirm;
+
+  /// No description provided for @customMcpDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} removed'**
+  String customMcpDeleted(String name);
+
+  /// No description provided for @directoryDeleteConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete this directory entry?'**
+  String get directoryDeleteConfirm;
+
+  /// No description provided for @directoryAuthOauth.
+  ///
+  /// In en, this message translates to:
+  /// **'OAuth sign-in'**
+  String get directoryAuthOauth;
+
+  /// No description provided for @directoryAuthMcpOauth.
+  ///
+  /// In en, this message translates to:
+  /// **'OAuth (MCP server)'**
+  String get directoryAuthMcpOauth;
+
+  /// No description provided for @directoryAuthEnvOauth.
+  ///
+  /// In en, this message translates to:
+  /// **'OAuth (workspace app)'**
+  String get directoryAuthEnvOauth;
+
+  /// No description provided for @directoryAuthApiKey.
+  ///
+  /// In en, this message translates to:
+  /// **'API key'**
+  String get directoryAuthApiKey;
+
+  /// No description provided for @directoryAuthNone.
+  ///
+  /// In en, this message translates to:
+  /// **'No sign-in needed'**
+  String get directoryAuthNone;
+
+  /// No description provided for @scopeEmailSend.
+  ///
+  /// In en, this message translates to:
+  /// **'Send email'**
+  String get scopeEmailSend;
+
+  /// No description provided for @scopeEmailDraft.
+  ///
+  /// In en, this message translates to:
+  /// **'Create drafts'**
+  String get scopeEmailDraft;
+
+  /// No description provided for @scopeEmailRead.
+  ///
+  /// In en, this message translates to:
+  /// **'Read email'**
+  String get scopeEmailRead;
+
+  /// No description provided for @scopeEmailManage.
+  ///
+  /// In en, this message translates to:
+  /// **'Manage email'**
+  String get scopeEmailManage;
+
+  /// No description provided for @scopeCalendarRead.
+  ///
+  /// In en, this message translates to:
+  /// **'Read calendar'**
+  String get scopeCalendarRead;
+
+  /// No description provided for @scopeCalendarEvents.
+  ///
+  /// In en, this message translates to:
+  /// **'Manage events'**
+  String get scopeCalendarEvents;
+
+  /// No description provided for @scopeCalendarManage.
+  ///
+  /// In en, this message translates to:
+  /// **'Manage calendars'**
+  String get scopeCalendarManage;
+
+  /// No description provided for @scopeFilesRead.
+  ///
+  /// In en, this message translates to:
+  /// **'Read files'**
+  String get scopeFilesRead;
+
+  /// No description provided for @scopeFilesManage.
+  ///
+  /// In en, this message translates to:
+  /// **'Manage files'**
+  String get scopeFilesManage;
+
+  /// No description provided for @scopeReadContent.
+  ///
+  /// In en, this message translates to:
+  /// **'Read content'**
+  String get scopeReadContent;
+
+  /// No description provided for @scopeInsertContent.
+  ///
+  /// In en, this message translates to:
+  /// **'Add content'**
+  String get scopeInsertContent;
+
+  /// No description provided for @scopeUpdateContent.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit content'**
+  String get scopeUpdateContent;
+
+  /// No description provided for @scopeOther.
+  ///
+  /// In en, this message translates to:
+  /// **'Other access'**
+  String get scopeOther;
+
+  /// No description provided for @connErrUnsafeUrl.
+  ///
+  /// In en, this message translates to:
+  /// **'That address isn’t allowed. Use a public https URL.'**
+  String get connErrUnsafeUrl;
+
+  /// No description provided for @connErrDiscoveryFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn’t reach that MCP server'**
+  String get connErrDiscoveryFailed;
+
+  /// No description provided for @connErrInsufficientPermission.
+  ///
+  /// In en, this message translates to:
+  /// **'You don’t have permission to do this'**
+  String get connErrInsufficientPermission;
+
+  /// No description provided for @connErrNotAllowed.
+  ///
+  /// In en, this message translates to:
+  /// **'This connector isn’t allowed in your workspace'**
+  String get connErrNotAllowed;
+
+  /// No description provided for @connErrUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'This connector is unavailable right now'**
+  String get connErrUnavailable;
+
+  /// No description provided for @connErrOauthSetup.
+  ///
+  /// In en, this message translates to:
+  /// **'This connector isn’t set up for sign-in yet'**
+  String get connErrOauthSetup;
+
+  /// No description provided for @connErrBotBridgeDisabled.
+  ///
+  /// In en, this message translates to:
+  /// **'The personal assistant service isn’t configured'**
+  String get connErrBotBridgeDisabled;
+
+  /// No description provided for @connErrBotNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'Assistant not found'**
+  String get connErrBotNotFound;
+
+  /// No description provided for @connErrBotOwnerMismatch.
+  ///
+  /// In en, this message translates to:
+  /// **'This assistant belongs to another member'**
+  String get connErrBotOwnerMismatch;
+
+  /// No description provided for @connErrMemberInactive.
+  ///
+  /// In en, this message translates to:
+  /// **'This member’s account is inactive'**
+  String get connErrMemberInactive;
+
+  /// No description provided for @oauthConnected.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} connected'**
+  String oauthConnected(String name);
+
+  /// No description provided for @oauthErrAccessDenied.
+  ///
+  /// In en, this message translates to:
+  /// **'You declined access to {name}'**
+  String oauthErrAccessDenied(String name);
+
+  /// No description provided for @oauthErrFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn’t connect {name}'**
+  String oauthErrFailed(String name);
+
+  /// No description provided for @oauthNotCompleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Connecting {name} wasn’t completed'**
+  String oauthNotCompleted(String name);
+
+  /// No description provided for @oauthErrExpired.
+  ///
+  /// In en, this message translates to:
+  /// **'The sign-in took too long. Please try again.'**
+  String get oauthErrExpired;
+
+  /// No description provided for @tokenUsageDailyChartTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Daily usage'**
+  String get tokenUsageDailyChartTitle;
+
+  /// No description provided for @tokenUsageTotalInRange.
+  ///
+  /// In en, this message translates to:
+  /// **'Total in the selected range'**
+  String get tokenUsageTotalInRange;
+
+  /// No description provided for @tokenUsageQuotaBlocked.
+  ///
+  /// In en, this message translates to:
+  /// **'AI is turned off for this workspace'**
+  String get tokenUsageQuotaBlocked;
+
+  /// No description provided for @tokenUsageQuotaExceeded.
+  ///
+  /// In en, this message translates to:
+  /// **'Monthly AI limit reached'**
+  String get tokenUsageQuotaExceeded;
+
+  /// No description provided for @tokenUsageQuotaResets.
+  ///
+  /// In en, this message translates to:
+  /// **'Resets on {date}'**
+  String tokenUsageQuotaResets(String date);
 }
 
 class _AppLocalizationsDelegate

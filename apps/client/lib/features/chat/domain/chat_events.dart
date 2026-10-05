@@ -71,9 +71,9 @@ class MessageUpdateEvent {
   final String messageId;
   final String? content;
   final DateTime? editedAt;
-  // Raw `pendingActions[]` of an AI message (sensitive-action confirmation
-  // cards); null when the event is a plain edit.
-  final List<dynamic>? pendingActions;
+  // The AI message's full `pendingActions[]` after a status change
+  // (sensitive-action confirmation cards); null when the event is a plain edit.
+  final List<AiPendingAction>? pendingActions;
 
   const MessageUpdateEvent({
     required this.conversationId,

@@ -3725,4 +3725,318 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get authErrSocialAccountConflict =>
       'Email này đã được liên kết với một tài khoản đăng nhập khác';
+
+  @override
+  String get aiActionConfirm => 'Xác nhận';
+
+  @override
+  String get aiActionCancel => 'Huỷ';
+
+  @override
+  String get aiActionSendEmail => 'Gửi email';
+
+  @override
+  String get aiActionDraftEmail => 'Soạn email nháp';
+
+  @override
+  String get aiActionCreateEvent => 'Tạo sự kiện lịch';
+
+  @override
+  String get aiActionUpdateEvent => 'Cập nhật sự kiện lịch';
+
+  @override
+  String get aiActionCreatePage => 'Tạo trang';
+
+  @override
+  String get aiActionUpdatePage => 'Cập nhật trang';
+
+  @override
+  String get aiActionGeneric => 'Thực hiện một thao tác';
+
+  @override
+  String aiActionGenericNamed(String tool) {
+    return 'Thực hiện “$tool”';
+  }
+
+  @override
+  String aiActionVia(String connector) {
+    return 'qua $connector';
+  }
+
+  @override
+  String aiActionWaitingFor(String name) {
+    return 'Đang chờ $name xác nhận';
+  }
+
+  @override
+  String get aiActionFieldTo => 'Gửi tới';
+
+  @override
+  String get aiActionFieldSubject => 'Tiêu đề';
+
+  @override
+  String get aiActionFieldTitle => 'Tên';
+
+  @override
+  String get aiActionFieldWhen => 'Thời gian';
+
+  @override
+  String get aiActionStatusConfirmed => 'Đã thực hiện';
+
+  @override
+  String get aiActionStatusCancelled => 'Đã huỷ';
+
+  @override
+  String get aiActionStatusFailed => 'Thất bại';
+
+  @override
+  String get aiActionStatusExpired => 'Đã hết hạn';
+
+  @override
+  String get aiActionStatusHandled => 'Đã được xử lý';
+
+  @override
+  String get aiActionErrNotFound => 'Thao tác này không còn nữa';
+
+  @override
+  String get aiActionErrNotOwner => 'Chỉ người yêu cầu mới xác nhận được';
+
+  @override
+  String get aiActionErrAlreadyResolved => 'Thao tác này đã được xử lý';
+
+  @override
+  String get aiActionErrExpired => 'Yêu cầu này đã hết hạn';
+
+  @override
+  String get aiActionErrGeneric => 'Không thể hoàn tất thao tác này';
+
+  @override
+  String get aiToolWebSearch => 'Đang tìm trên web';
+
+  @override
+  String get aiToolRememberFact => 'Đang ghi nhớ';
+
+  @override
+  String get aiToolCreateReminder => 'Đang tạo nhắc việc';
+
+  @override
+  String get aiToolGetUserInfo => 'Đang tra cứu đồng nghiệp';
+
+  @override
+  String get aiToolSearchKnowledgeBase => 'Đang tìm trong kho tài liệu';
+
+  @override
+  String get aiToolSearchMessages => 'Đang tìm tin nhắn';
+
+  @override
+  String get aiToolSummarizeConversation => 'Đang tóm tắt cuộc trò chuyện';
+
+  @override
+  String aiToolOnConnector(String tool, String connector) {
+    return '$tool trên $connector';
+  }
+
+  @override
+  String get aiTraceToolAwaiting => 'Đang chờ xác nhận';
+
+  @override
+  String get aiTraceToolDone => 'Xong';
+
+  @override
+  String get aiTraceToolNotRun => 'Chưa chạy';
+
+  @override
+  String aiTraceTokens(String input, String output) {
+    return '$input vào · $output ra';
+  }
+
+  @override
+  String aiTraceCacheTokens(String read, String written) {
+    return 'cache $read đọc · $written ghi';
+  }
+
+  @override
+  String aiTraceThinkingTokens(String count) {
+    return '$count suy luận';
+  }
+
+  @override
+  String aiTraceDuration(String seconds) {
+    return '$seconds giây';
+  }
+
+  @override
+  String aiTraceSteps(int count) {
+    return '$count bước';
+  }
+
+  @override
+  String get connectorGenericName => 'Kết nối';
+
+  @override
+  String get connectorCustomName => 'Máy chủ MCP tự thêm';
+
+  @override
+  String get connectorReconnect => 'Kết nối lại';
+
+  @override
+  String get connectorStatusReconnect => 'Cần kết nối lại';
+
+  @override
+  String get connectorStatusUnavailable => 'Không khả dụng';
+
+  @override
+  String get connectorDisconnectWorkspaceConfirm =>
+      'Ngắt kết nối dùng chung của workspace? Mọi người trong workspace sẽ mất quyền dùng công cụ của nó.';
+
+  @override
+  String connectorDisconnected(String name) {
+    return 'Đã ngắt kết nối $name';
+  }
+
+  @override
+  String get customMcpListTitle => 'Máy chủ MCP của bạn';
+
+  @override
+  String get customMcpDelete => 'Gỡ bỏ';
+
+  @override
+  String get customMcpDeleteConfirm =>
+      'Gỡ máy chủ MCP này? AI sẽ không dùng công cụ của nó nữa.';
+
+  @override
+  String customMcpDeleted(String name) {
+    return 'Đã gỡ $name';
+  }
+
+  @override
+  String get directoryDeleteConfirm => 'Xoá mục này khỏi danh mục?';
+
+  @override
+  String get directoryAuthOauth => 'Đăng nhập OAuth';
+
+  @override
+  String get directoryAuthMcpOauth => 'OAuth (máy chủ MCP)';
+
+  @override
+  String get directoryAuthEnvOauth => 'OAuth (ứng dụng của workspace)';
+
+  @override
+  String get directoryAuthApiKey => 'Khoá API';
+
+  @override
+  String get directoryAuthNone => 'Không cần đăng nhập';
+
+  @override
+  String get scopeEmailSend => 'Gửi email';
+
+  @override
+  String get scopeEmailDraft => 'Tạo thư nháp';
+
+  @override
+  String get scopeEmailRead => 'Đọc email';
+
+  @override
+  String get scopeEmailManage => 'Quản lý email';
+
+  @override
+  String get scopeCalendarRead => 'Xem lịch';
+
+  @override
+  String get scopeCalendarEvents => 'Quản lý sự kiện';
+
+  @override
+  String get scopeCalendarManage => 'Quản lý lịch';
+
+  @override
+  String get scopeFilesRead => 'Đọc tệp';
+
+  @override
+  String get scopeFilesManage => 'Quản lý tệp';
+
+  @override
+  String get scopeReadContent => 'Đọc nội dung';
+
+  @override
+  String get scopeInsertContent => 'Thêm nội dung';
+
+  @override
+  String get scopeUpdateContent => 'Sửa nội dung';
+
+  @override
+  String get scopeOther => 'Quyền khác';
+
+  @override
+  String get connErrUnsafeUrl =>
+      'Địa chỉ này không được phép. Hãy dùng URL https công khai.';
+
+  @override
+  String get connErrDiscoveryFailed => 'Không kết nối được tới máy chủ MCP đó';
+
+  @override
+  String get connErrInsufficientPermission => 'Bạn không có quyền làm việc này';
+
+  @override
+  String get connErrNotAllowed =>
+      'Kết nối này không được phép trong workspace của bạn';
+
+  @override
+  String get connErrUnavailable => 'Kết nối này hiện không khả dụng';
+
+  @override
+  String get connErrOauthSetup => 'Kết nối này chưa được cấu hình đăng nhập';
+
+  @override
+  String get connErrBotBridgeDisabled =>
+      'Dịch vụ trợ lý riêng chưa được cấu hình';
+
+  @override
+  String get connErrBotNotFound => 'Không tìm thấy trợ lý';
+
+  @override
+  String get connErrBotOwnerMismatch => 'Trợ lý này thuộc về thành viên khác';
+
+  @override
+  String get connErrMemberInactive => 'Tài khoản thành viên này đang bị khoá';
+
+  @override
+  String oauthConnected(String name) {
+    return 'Đã kết nối $name';
+  }
+
+  @override
+  String oauthErrAccessDenied(String name) {
+    return 'Bạn đã từ chối cấp quyền cho $name';
+  }
+
+  @override
+  String oauthErrFailed(String name) {
+    return 'Không kết nối được $name';
+  }
+
+  @override
+  String oauthNotCompleted(String name) {
+    return 'Chưa hoàn tất kết nối $name';
+  }
+
+  @override
+  String get oauthErrExpired =>
+      'Quá trình đăng nhập quá lâu. Vui lòng thử lại.';
+
+  @override
+  String get tokenUsageDailyChartTitle => 'Mức dùng theo ngày';
+
+  @override
+  String get tokenUsageTotalInRange => 'Tổng trong khoảng đã chọn';
+
+  @override
+  String get tokenUsageQuotaBlocked => 'AI đang bị tắt cho workspace này';
+
+  @override
+  String get tokenUsageQuotaExceeded => 'Đã dùng hết hạn mức AI của tháng';
+
+  @override
+  String tokenUsageQuotaResets(String date) {
+    return 'Làm mới vào $date';
+  }
 }
