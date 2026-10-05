@@ -85,6 +85,8 @@
 
 ### C1 — chat-service: cuộc gọi sfu
 
+> ✅ **Xong 2026-10-05** trên `feat/calls-livekit` — plan step-level `2026-10-05-calls-c1-server.md`; chat-service 277/277 test + spotless.
+
 **Files:**
 - Create: `apps/server/chat-service/src/main/java/com/platform/chatservice/service/SfuCallService.java` — accept/decline/cancel, busy, cấp token, cài `RtcRoomEventHandler` cho `call_*`.
 - Create: `.../controller/CallRestController.java` — `GET /api/calls/config`, `POST /api/calls/{callId}/token`.

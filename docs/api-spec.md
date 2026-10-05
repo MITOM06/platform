@@ -523,3 +523,34 @@ Signaling payloads use `WebRTCSignalDto`; transcript chunks use `CallTranscriptD
   Payload: `{ "callId": "string" }`
 - **Append transcript (AI notetaker STT):** `/app/call.transcript`  
   Payload: `{ "callId": "string", "text": "string", "ts": 1234567890 }`
+
+### Calls on LiveKit (`CALL_TRANSPORT=sfu`)
+
+Plan: `docs/superpowers/plans/2026-10-05-calls-on-livekit.md`. The server picks the media path
+for the whole call; `mesh` (default) keeps the routes above unchanged.
+
+**REST**
+
+- `GET /api/calls/config` → `{ "transport": "mesh" | "sfu", "livekitUrl"?: "wss://…" }`
+- `POST /api/calls/{callId}/token` → `{ "url": "wss://…", "token": "<jwt>" }`  
+  Errors (`{ "error", "code", "statusCode" }`, no internal message):
+  `403 CALL_FORBIDDEN` (not a member / blocked in a 1-on-1), `404 CALL_NOT_FOUND`,
+  `409 CALL_ENDED`, `409 CALL_NOT_SFU`, `503 CALLS_UNAVAILABLE`.
+
+**Client publishes** (in addition to `/app/call.start` — used for 1-on-1 too on sfu — and `/app/call.leave`)
+
+- `/app/call.accept` `{ "callId" }` — callee answered.
+- `/app/call.decline` `{ "callId", "reason": "declined | busy | media_error" }`
+- `/app/call.cancel` `{ "callId", "reason": "hangup | no_answer" }` — caller gave up before anyone joined.
+
+**Server sends**
+
+- `/topic/conversation/{id}`: `call.started` adds `transport` and `livekitUrl`; `call.roster`
+  comes from LiveKit webhooks; `call.ended` adds `reason`
+  (`hangup | declined | busy | no_answer | media_error | failed`).
+- `/user/queue/webrtc`: `call-ring` adds `transport`; new `call-ring-cancel { callId, reason }`
+  (to every session of the callee: `answered_elsewhere`, `declined`, or the caller's
+  `hangup | no_answer`); new `call-declined { callId, conversationId, reason, senderId }` to the
+  caller (`callId` is null when the callee was already busy and no call was created).
+
+**LiveKit webhook:** `POST /api/rtc/livekit/webhook` (no user JWT; signed by the LiveKit API secret).
